@@ -18,6 +18,8 @@ struct skr_lua_state_extra_t
     skr_vfs_t* vfs;
 };
 RUNTIME_EXTERN_C RUNTIME_API void skr_lua_setroot(lua_State* L, const char* directory);
+RUNTIME_EXTERN_C int
+luaopen_clonefunc(lua_State *L);
 
 void replaceAll(skr::string& str, const skr::string_view& from, const skr::string_view& to) {
     if(from.empty())
@@ -52,7 +54,8 @@ int skr_load_file(lua_State* L) {
     auto size = skr_vfs_fsize(file);
     eastl::vector<char> buffer(size);
     skr_vfs_fread(file, buffer.data(), 0, size);
-    if(luaL_loadbuffer(L,buffer.data(), size, fn)==0) {
+    skr::string name = skr::string("@") + fn;
+    if(luaL_loadbuffer(L,buffer.data(), size, name.c_str())==0) {
         return 1;
     }
     else {
@@ -110,6 +113,12 @@ lua_State* skr_lua_newstate(skr_vfs_t* vfs)
     lua_newtable(L);
     lua_pushvalue(L, -1);
     lua_setglobal(L, "skr");
+    lua_pop(L, 1);
+
+    // bind clone
+    lua_getglobal(L, "skr");
+    luaopen_clonefunc(L);
+    lua_setfield(L, -2, "clonefunc");
     lua_pop(L, 1);
 
     // bind skr types
@@ -305,8 +314,9 @@ inline skr::string join(const eastl::vector<skr::string_view>& tokens, const skr
     string s;
     for (auto& token : tokens)
     {
+        if (!s.empty())
+            s.insert(s.end(), delimiters.begin(), delimiters.end());
         s.insert(s.end(), token.begin(), token.end());
-        s.insert(s.end(), delimiters.begin(), delimiters.end());
     }
     return s;
 }
@@ -314,7 +324,10 @@ inline skr::string join(const eastl::vector<skr::string_view>& tokens, const skr
 template<int level>
 int skr_lua_log(lua_State* L)
 {
-    skr::string str = "[lua] ";
+    lua_Debug ar;
+    lua_getstack(L, 1, &ar);
+    lua_getinfo(L, "nSl", &ar);
+    skr::string str = skr::format("[{} : {}]:\t", ar.namewhat, ar.name);
     int top = lua_gettop(L);
     for(int n=1;n<=top;n++) {
         size_t len;
@@ -323,20 +336,25 @@ int skr_lua_log(lua_State* L)
         //TODO: use string builder?
         if(s) str+=s;
     }
-    
-    lua_Debug ar;
-    lua_getstack(L, 1, &ar);
-    lua_getinfo(L, "nSl", &ar);
     const int line = ar.currentline;
     const char* src = ar.source;
-    skr::string_view Source(src);
-    if (Source.ends_with(".lua"))
-        Source = Source.substr(0, Source.size() - 4);
-    eastl::vector<skr::string_view> tokens;
-    split(Source, tokens, "/");
-    
-    const auto modulename = join(tokens, ".");
-    log_log(level, modulename.c_str(), line, str.c_str());
+    if(line != -1)
+    {
+        skr::string_view Source(src);
+        if (Source.ends_with(".lua"))
+            Source = Source.substr(0, Source.size() - 4);
+        if (Source.starts_with("@"))
+            Source = Source.substr(1);
+        eastl::vector<skr::string_view> tokens;
+        split(Source, tokens, "/");
+        
+        const auto modulename = join(tokens, ".");
+        log_log(level, modulename.c_str(), line, str.c_str());
+    }
+    else 
+    {
+        log_log(level, "unknown", 0, str.c_str());
+    }
     return 0;
 }
 
@@ -409,3 +427,60 @@ const skr_resource_handle_t* check_resource(lua_State* L, int index)
     return (skr_resource_handle_t*)luaL_checkudata(L, index, "skr_resource_handle_t");
 }
 } // namespace skr::lua
+
+// from https://github.com/cloudwu/luareload/blob/proto/clonefunc.c
+extern "C"
+{
+#include <lua/lstate.h>
+#include <lua/lobject.h>
+#include <lua/lfunc.h>
+#include <lua/lgc.h>
+}
+
+static int
+lclone(lua_State *L) {
+	if (!lua_isfunction(L, 1) || lua_iscfunction(L,1))
+		return luaL_error(L, "Need lua function");
+	const LClosure *c = (const LClosure *)lua_topointer(L,1);
+	int n = (int)luaL_optinteger(L, 2, 0);
+	if (n < 0 || n > c->p->sizep)
+		return 0;
+	luaL_checkstack(L, 1, NULL);
+	Proto *p;
+	if (n==0) {
+		p = c->p;
+	} else {
+		p = c->p->p[n-1];
+	}
+
+	lua_lock(L);
+	LClosure *cl = luaF_newLclosure(L, p->sizeupvalues);
+	luaF_initupvals(L, cl);
+	cl->p = p;
+	setclLvalue2s(L, L->top++, cl);
+	lua_unlock(L);
+
+	return 1;
+}
+
+static int
+lproto(lua_State *L) {
+	if (!lua_isfunction(L, 1) || lua_iscfunction(L,1))
+		return 0;
+	const LClosure *c = (const LClosure *)lua_topointer(L,1);
+	lua_pushlightuserdata(L, c->p);
+	lua_pushinteger(L, c->p->sizep);
+	return 2;
+}
+
+int
+luaopen_clonefunc(lua_State *L) {
+	luaL_checkversion(L);
+	luaL_Reg l[] = {
+		{ "clone", lclone },
+		{ "proto", lproto },
+		{ NULL, NULL },
+	};
+	luaL_newlib(L, l);
+	return 1;
+}
