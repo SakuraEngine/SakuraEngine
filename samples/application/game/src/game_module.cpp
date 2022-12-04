@@ -384,7 +384,8 @@ void imgui_button_spawn_girl(SRendererId renderer)
         ImGui::End();  
     }
 }
-
+EXTERN_C int
+luaopen_clonefunc(lua_State *L);
 int SGameModule::main_module_exec(int argc, char** argv)
 {
     ZoneScopedN("GameExecution");
@@ -492,6 +493,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
     // Lua
     auto L = skr_lua_newstate(resource_vfs);
     skr_lua_bind_imgui(L);
+    luaL_dostring(L, "local module = require \"game\"; module:init()");
 
     // Time
     SHiresTimer tick_timer;
@@ -611,6 +613,14 @@ int SGameModule::main_module_exec(int argc, char** argv)
             {
                 ImGui::Begin(u8"Information");
                 ImGui::Text("RenderFPS: %d", (uint32_t)fps);
+                ImGui::End();
+            }
+            {
+                ImGui::Begin(u8"Lua");
+                if(ImGui::Button("Hotfix"))
+                {
+                    luaL_dostring(L, "local module = require \"hotfix\"; module.reload({\"game\"})");
+                }
                 ImGui::End();
             }
             imgui_button_spawn_girl(game_renderer);

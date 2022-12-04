@@ -210,7 +210,9 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
                 ct = callbackArg.type.declaration
                 cargs = callbackArg.type.type_details.arguments
                 crut = underlying_type(callbackArg.type.type_details.return_type.declaration)
-                currCRet = -2
+                currCRet = 0
+                CRetCount = 0
+                currCArg = 0
             %>
             if(!lua_isfunction(L, ${currParam}))
                 luaL_error(L, "argument ${callbackArg.name} must be a function");
@@ -222,28 +224,40 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
                 <% caut = underlying_type(cArg.type.declaration) %>
             %if not is_inout(cArg.type.declaration):
                 ${push_methods[caut](cArg.name)}
+                <% currCArg += stack_sizes[caut] %>
+            %else:
+                <% CRetCount += stack_sizes[caut] %>
             %endif
             %endfor
             %if crut != "void":
-                lua_pcall(L, ${len(cargs)-1}, ${stack_sizes[crut]}, 0);
+                <% CRetCount += stack_sizes[crut]%>
+                ${crut} ret = {};
+                if(lua_pcall(L, ${currCArg}, ${CRetCount}, 0) != LUA_OK)
+                {
+                    lua_getglobal(L, "skr");
+                    lua_getfield(L, -1, "log_error");
+                    lua_pushvalue(L, -3);
+                    lua_call(L, 1, 0);
+                    lua_pop(L, 2);
+                    return ret;
+                }
+                ${check_methods[crut]("ret", -CRetCount+currCRet, None)}
+                <% currCRet += stack_sizes[crut] %>
             %else:
-                lua_pcall(L, ${len(cargs)-1}, 0, 0);
+                if(lua_pcall(L, ${currCArg}, 0, 0) != LUA_OK)
+                    luaL_error(L, lua_tostring(L, -1));
             %endif
             %for cArg in cargs[1:]:
                 <% caut = underlying_type(cArg.type.declaration) %>
             %if is_inout(cArg.type.declaration):
-                ${check_methods[caut]("*"+cArg.name, currCRet, None)}
-                <% currCRet -= stack_sizes[caut] %>
+                ${check_methods[caut]("*"+cArg.name, -CRetCount+currCRet, None)}
+                <% currCRet += stack_sizes[caut] %>
             %endif
             %endfor
 
+                lua_pop(L, ${CRetCount});
             %if crut != "void":
-                ${crut} ret;
-                ${check_methods[crut]("ret", -1, None)}
-                lua_pop(L, ${-currCRet - 1});
                 return ret;
-            %else:
-                lua_pop(L, ${-currCRet - 1});
             %endif
             };
             ${arg.type.declaration} ${arg.name} = L;
