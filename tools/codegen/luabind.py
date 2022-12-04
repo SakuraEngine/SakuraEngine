@@ -1,4 +1,5 @@
 import os
+import re
 
 BASE = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
 class Generator(object):
@@ -13,12 +14,15 @@ class Generator(object):
 
     def generate_forward(self, db, args):
         template = os.path.join(BASE, "luabind.h.mako")
-        if self.filter_types(db.records) and self.filter_types(db.enums) and self.filter_functions(db.functions):
-            return db.render(template, db=db, generator = self, api=args.api+"_API")
+        if self.filter_types(db.records) or self.filter_types(db.enums) or self.filter_functions(db.functions): 
+            return db.render(template, db=db, generator = self, api=args.api+"_API", module = re.sub(r'(?<!^)(?=[A-Z])', '_', args.module).lower())
         return ""
     
     def generate_impl(self, db, args):
         template = os.path.join(BASE, "luabind.cpp.mako")
-        if self.filter_rtti(db.records) and self.filter_types(db.enums) and self.filter_functions(db.functions):
-            return db.render(template, db=db, generator = self)
+        itemplate = os.path.join(BASE, "luabind_intelli.lua.mako")
+        icontent = db.render(itemplate, db=db, generator = self, module = re.sub(r'(?<!^)(?=[A-Z])', '_', args.module).lower())
+        db.write(os.path.join(args.outdir, "luabind_intelli.lua"), icontent)
+        if self.filter_types(db.records) or self.filter_types(db.enums) or self.filter_functions(db.functions): 
+            return db.render(template, db=db, generator = self, module = re.sub(r'(?<!^)(?=[A-Z])', '_', args.module).lower())
         return ""

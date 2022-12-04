@@ -262,8 +262,6 @@ struct RUNTIME_API skr_method_t {
 // base types
 namespace skr 
 {
-template <class T>
-bool is_object_v = std::is_base_of_v<skr::SInterface, T>;
 namespace type
 {
     // bool
@@ -708,8 +706,12 @@ bool skr_value_ref_t::Convertible() const
 template <class T>
 T skr_value_ref_t::Convert()
 {
-    std::aligned_storage_t<sizeof(T), alignof(T)> storage;
+    using Y = std::conditional_t<std::is_reference_v<T>, std::add_pointer_t<std::remove_reference_t<T>>, T>;
+    std::aligned_storage_t<sizeof(Y), alignof(Y)> storage;
     skr::type::type_of<T>::get()->Convert(&storage, ptr, type);
-    return std::move(*std::launder(reinterpret_cast<T*>(&storage)));
+    if constexpr (std::is_reference_v<T>)
+        return **std::launder(reinterpret_cast<Y*>(&storage));
+    else
+        return *std::launder(reinterpret_cast<T*>(&storage));
 }
 #endif

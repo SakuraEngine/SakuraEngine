@@ -2,8 +2,7 @@
 #include "type/type.hpp"
 
 <%
-types = generator.filter_types(db.records)
-types = types + generator.filter_types(db.enums)
+types = generator.filter_types(db.records) + generator.filter_types(db.enums)
 %>
 %for type in types:
 static struct RegisterName${type.id}Helper

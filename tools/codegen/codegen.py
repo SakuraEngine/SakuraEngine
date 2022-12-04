@@ -65,6 +65,7 @@ class MetaDatabase(object):
         self.enums = []
         self.name_to_record = {}
         self.name_to_enum = {}
+        self.functions = []
         self.includes = set()
 
     def add_include(self, path):
@@ -97,6 +98,9 @@ class MetaDatabase(object):
                 self.enums.append(enum)
                 self.add_include(enum.fileName)
             self.name_to_enum[enum.name] = enum
+        for function in meta.functions:
+            self.add_include(function.fileName)
+            self.functions.append(function)
 
     def render(self, filename, **context):
         try:
@@ -128,7 +132,17 @@ class MetaDatabase(object):
         return ", ".join(["args["+str(i)+"].Convert<"+field.type+">()" for i, (name, field) in enumerate(vars(desc.parameters).items())])
     def signature(self, record, desc):
         return self.retType + "(" + (record.name + "::" if record else "") + "*)(" + str.join(", ",  [x.type for name, x in vars(desc.fields).items()]) + ")" + ("const" if desc.isConst else "")
+    def write(self, path, content):
+        RE_PYTHON_ADDR = re.compile(r"<.+? object at 0x[0-9a-fA-F]+>")
+        directory = os.path.dirname(path)
+        if not os.path.exists(directory):
+            os.makedirs(directory, exist_ok=True)
+        open(path, "wb").write(content.encode("utf-8"))
 
+        python_addr = RE_PYTHON_ADDR.search(content)
+        if python_addr:
+            abort('Found "{}" in {} ({})'.format(
+                python_addr.group(0), os.path.basename(path), path))
 
 
 def load_generator(i, path):
@@ -136,18 +150,6 @@ def load_generator(i, path):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return getattr(module, "Generator")()
-
-def write(path, content):
-    RE_PYTHON_ADDR = re.compile(r"<.+? object at 0x[0-9a-fA-F]+>")
-    directory = os.path.dirname(path)
-    if not os.path.exists(directory):
-        os.makedirs(directory, exist_ok=True)
-    open(path, "wb").write(content.encode("utf-8"))
-
-    python_addr = RE_PYTHON_ADDR.search(content)
-    if python_addr:
-        abort('Found "{}" in {} ({})'.format(
-            python_addr.group(0), os.path.basename(path), path))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="generate code from meta files")
@@ -189,14 +191,14 @@ if __name__ == '__main__':
             if hasattr(generator, "generate_forward"):
                 forward_content = forward_content + generator.generate_forward(header_db, args)
         generated_header = re.sub(r"(.*?)\.(.*?)\.meta", r"\g<1>.generated.\g<2>", header_db.relative_path)
-        write(os.path.join(args.outdir, generated_header), forward_content)
+        db.write(os.path.join(args.outdir, generated_header), forward_content)
 
     impl_content : str = db.generate_impl()
     for generator in generators:
         if hasattr(generator, "generate_impl"):
             impl_content = impl_content + generator.generate_impl(db, args)
 
-    write(os.path.join(args.outdir, "generated.cpp"), impl_content)
+    db.write(os.path.join(args.outdir, "generated.cpp"), impl_content)
 
 
     
