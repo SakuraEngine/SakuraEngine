@@ -1,8 +1,3 @@
-imgui_sources_dir = "$(projectdir)/thirdparty/imgui"
-imgui_includes_dir = "$(projectdir)/thirdparty/imgui/include"
-cimgui_sources_dir = "$(projectdir)/thirdparty/dear_bindings/cimgui/src"
-cimgui_includes_dir = "$(projectdir)/thirdparty/dear_bindings/cimgui/include"
-
 target("imgui")
     set_group("00.thirdparty")
     if(has_config("shipping_one_archive")) then
@@ -10,7 +5,7 @@ target("imgui")
     else
         add_defines("RUNTIME_SHARED")
     end
-    add_includedirs(imgui_includes_dir, {public=true})
+    add_includedirs("imgui/include", {public=true})
     after_build(function(target)
         imgui_fontdir = path.join(os.projectdir(), "SDKs/SourceSansPro-Regular.ttf")
         os.cp(imgui_fontdir, path.join(target:targetdir(), "../resources/font").."/")
@@ -24,24 +19,22 @@ target("imgui")
     --     end
     -- else
         set_kind("static")
-        add_files(imgui_sources_dir.."/unitybuild.cpp")
+        add_files("imgui/unitybuild.cpp")
     -- end
 
 target("cimgui")
     set_group("00.thirdparty")
     set_kind("static")
     add_deps("imgui", {public=true})
-    add_includedirs(cimgui_includes_dir, {public=true})
-    add_includedirs(imgui_sources_dir, {public=false})
-    add_files(cimgui_sources_dir.."/cimgui.cpp")
-
+    add_includedirs("imgui", {public=false})
+    add_includedirs("dear_bindings/cimgui/include", {public=true})
+    add_files("dear_bindings/cimgui/src/cimgui.cpp")
 
 shared_module("SkrImGui", "SKR_IMGUI", engine_version)
     set_group("01.modules")
     public_dependency("SkrRenderGraph", engine_version)
     add_deps("cimgui")
     add_includedirs("include", {public=true})
-    add_includedirs(imgui_includes_dir, {public=true})
     add_files("src/build.*.cpp")
     -- add render graph shaders
     add_rules("utils.dxc", {

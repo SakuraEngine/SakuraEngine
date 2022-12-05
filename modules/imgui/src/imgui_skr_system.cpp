@@ -1,4 +1,3 @@
-#define IMGUI_IMPORT SKR_IMGUI_API
 #include "SkrImGui/skr_imgui.config.h"
 #include <EASTL/vector.h>
 #include <containers/string.hpp>
@@ -14,11 +13,7 @@
 
 namespace skr::imgui
 {
-static ImGuiContext* GImGuiContext = nullptr;
-SKR_IMGUI_API ImGuiContext* imgui_context()
-{
-    return GImGuiContext;
-}
+RUNTIME_EXPORT ImGuiContext* GImGuiContext = nullptr;
 
 void imgui_create_window(ImGuiViewport* viewport);
 void imgui_destroy_window(ImGuiViewport* viewport);
