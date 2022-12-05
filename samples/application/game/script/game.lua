@@ -20,7 +20,8 @@ function module:update()
         end, 3)
         skr.iterate_query(self.query, function(view)
             for i = 0, view.length - 1 do
-                local state = view[i]
+                -- entity, comp1, comp2, comp3, ...
+                local ent, state = view(i)
                 imgui.Text("state: " .. tostring(state.currtime))
             end
         end)
