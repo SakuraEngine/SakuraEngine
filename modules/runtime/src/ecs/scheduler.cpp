@@ -596,7 +596,7 @@ eastl::vector<skr::task::event_t> dual::scheduler_t::schedule_custom_job(const d
         }
         else
         {
-            int groupIndex = 0;
+            int groupIndex = 0;(void)groupIndex;
             for (auto group : groups)
             {
                 auto localType = group->index(params.types[i]);

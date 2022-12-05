@@ -1,6 +1,7 @@
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "SkrRenderer/render_device.h"
 #include "utils/format.hpp"
+#include "utils/hash.h"
 #include "utils/make_zeroed.hpp"
 #include "utils/threaded_service.h"
 #include "platform/memory.h"

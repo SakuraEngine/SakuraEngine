@@ -1,12 +1,11 @@
+#include "resource_request_impl.hpp"
+#include "task/task.hpp"
+#include "platform/guid.hpp"
+#include "ecs/entities.hpp"
 #include "platform/debug.h"
 #include "platform/thread.h"
 #include "containers/hashmap.hpp"
-#include "utils/defer.hpp"
 #include "utils/io.h"
-#include "utils/log.hpp"
-#include "resource/resource_system.h"
-#include "resource/resource_handle.h"
-#include "resource/resource_header.hpp"
 #include "platform/vfs.h"
 #include "resource/resource_factory.h"
 
@@ -100,7 +99,7 @@ skr_resource_record_t* SResourceSystemImpl::_GetRecord(void* resource)
 void SResourceSystemImpl::_DestroyRecord(skr_resource_record_t* record)
 {
     //SMutexLock lock(recordMutex);
-    auto request = record->activeRequest;
+    auto request = static_cast<SResourceRequestImpl*>(record->activeRequest);
     if (request)
         request->resourceRecord = nullptr;
     resourceRecords.erase(record->header.guid);
@@ -154,7 +153,7 @@ void SResourceSystemImpl::LoadResource(skr_resource_handle_t& handle, bool requi
         (requireInstalled && record->loadingStatus == SKR_LOADING_STATUS_INSTALLED) ||
         record->loadingStatus == SKR_LOADING_STATUS_ERROR) // already loaded
         return;
-    auto request = record->activeRequest;
+    auto request = static_cast<SResourceRequestImpl*>(record->activeRequest);
     if (request)
     {
         request->requireLoading = true;
@@ -162,7 +161,7 @@ void SResourceSystemImpl::LoadResource(skr_resource_handle_t& handle, bool requi
     }
     else
     {
-        auto request = SkrNew<SResourceRequest>();
+        auto request = SkrNew<SResourceRequestImpl>();
         request->requestInstall = requireInstalled;
         request->resourceRecord = record;
         request->isLoading = request->requireLoading = true;
@@ -199,14 +198,14 @@ void SResourceSystemImpl::_UnloadResource(skr_resource_record_t* record)
             _DestroyRecord(record);
             return;
         }
-        auto request = record->activeRequest;
+        auto request = static_cast<SResourceRequestImpl*>(record->activeRequest);
         if (request)
         {
             request->requireLoading = false;
         }
         else // new unload
         {
-            auto request = SkrNew<SResourceRequest>();
+            auto request = SkrNew<SResourceRequestImpl>();
             request->requestInstall = false;
             request->resourceRecord = record;
             request->isLoading = request->requireLoading = false;
@@ -290,7 +289,9 @@ void SResourceSystemImpl::Shutdown()
 
 void SResourceSystemImpl::_ClearFinishedRequests()
 {
-    requests.erase(std::remove_if(requests.begin(), requests.end(), [&](SResourceRequest* request) {
+    requests.erase(std::remove_if(requests.begin(), requests.end(), 
+        [&](SResourceRequest* req) {
+        auto request = static_cast<SResourceRequestImpl*>(req);
         if (request->Okay())
         {
             if (request->resourceRecord)
@@ -308,14 +309,16 @@ void SResourceSystemImpl::_ClearFinishedRequests()
         }
         if (request->Failed())
         {
-            failedRequests.push_back(request);
+            failedRequests.push_back(req);
             counter.decrement();
             return true;
         }
         return false;
     }),
     requests.end());
-    failedRequests.erase(std::remove_if(failedRequests.begin(), failedRequests.end(), [&](SResourceRequest* request) {
+    failedRequests.erase(std::remove_if(failedRequests.begin(), failedRequests.end(), 
+    [&](SResourceRequest* req) {
+        auto request = static_cast<SResourceRequestImpl*>(req);
         if(!request->resourceRecord)
         {
             SkrDelete(request);
@@ -336,8 +339,9 @@ void SResourceSystemImpl::Update()
     }
     // TODO: time limit
     {
-        for (auto request : to_update_requests)
+        for (auto req : to_update_requests)
         {
+            auto request = static_cast<SResourceRequestImpl*>(req);
             uint32_t spinCounter = 0;
             ESkrLoadingPhase LastPhase;
             while(!request->Okay() && !request->AsyncSerde() && spinCounter < 16)
@@ -374,8 +378,9 @@ void SResourceSystemImpl::_UpdateAsyncSerde()
     serdeBatch.clear();
     serdeBatch.reserve(100);
     float timeBudget = 100.f;
-    for (auto request : requests)
+    for (auto req : requests)
     {
+        auto request = static_cast<SResourceRequestImpl*>(req);
         if(request->currentPhase == SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE && !request->serdeScheduled)
         {
             request->serdeScheduled = true;
