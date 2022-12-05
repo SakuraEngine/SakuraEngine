@@ -93,6 +93,9 @@ public:
     }
 
     // create resource
+    CGPUBufferId createCGPUBuffer(const skr_vram_buffer_io_t& buffer_io, uint64_t backfill_size) SKR_NOEXCEPT;
+    CGPUTextureId createCGPUTexture(const skr_vram_texture_io_t& texture_io) SKR_NOEXCEPT;
+
     void createResource(Task& task) SKR_NOEXCEPT;
     void tryCreateBufferResource(Task& task) SKR_NOEXCEPT;
     void tryCreateTextureResource(Task& task) SKR_NOEXCEPT;

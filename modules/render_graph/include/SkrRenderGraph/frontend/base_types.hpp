@@ -323,14 +323,16 @@ struct SKR_RENDER_GRAPH_API PassContext {
     }
 };
 
-struct RenderPassContext : public PassContext {
-    CGPURenderPassEncoderId encoder;
+struct BindablePassContext : public PassContext {
     skr::span<CGPUDescriptorSetId> desc_sets;
 };
 
-struct SKR_RENDER_GRAPH_API ComputePassContext : public PassContext {
+struct RenderPassContext : public BindablePassContext {
+    CGPURenderPassEncoderId encoder;
+};
+
+struct SKR_RENDER_GRAPH_API ComputePassContext : public BindablePassContext {
     CGPUComputePassEncoderId encoder;
-    skr::span<CGPUDescriptorSetId> desc_sets;
 };
 
 struct CopyPassContext : public PassContext {
