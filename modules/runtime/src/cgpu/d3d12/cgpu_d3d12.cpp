@@ -1573,8 +1573,7 @@ void cgpu_compute_encoder_bind_descriptor_set_d3d12(CGPUComputePassEncoderId enc
     Cmd->pDxCmdList->SetComputeRootDescriptorTable(set->index, { Cmd->mBoundHeapStartHandles[0].ptr + Set->mCbvSrvUavHandle });
 }
 
-bool reset_root_signature(CGPUCommandBuffer_D3D12* pCmd, ECGPUPipelineType type,
-ID3D12RootSignature* pRootSignature)
+bool reset_root_signature(CGPUCommandBuffer_D3D12* pCmd, ECGPUPipelineType type, ID3D12RootSignature* pRootSignature)
 {
     // Set root signature if the current one differs from pRootSignature
     if (pCmd->pBoundRootSignature != pRootSignature)
