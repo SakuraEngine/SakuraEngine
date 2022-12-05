@@ -10,6 +10,7 @@
 
 #define D3D12_GPU_VIRTUAL_ADDRESS_NULL ((D3D12_GPU_VIRTUAL_ADDRESS)0)
 #define D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN ((D3D12_GPU_VIRTUAL_ADDRESS)-1)
+#define D3D12_DESCRIPTOR_ID_NONE (D3D12_CPU_DESCRIPTOR_HANDLE{(size_t)~0})
 
 #ifdef __cplusplus
 extern "C" {
@@ -195,22 +196,24 @@ typedef struct CGPUAdapter_D3D12 {
     bool mEnhancedBarriersSupported : 1;
 } CGPUAdapter_D3D12;
 
+typedef struct CGPUEmptyDescriptors_D3D12 {
+    D3D12_CPU_DESCRIPTOR_HANDLE Sampler;
+    D3D12_CPU_DESCRIPTOR_HANDLE TextureSRV[CGPU_TEX_DIMENSION_COUNT];
+    D3D12_CPU_DESCRIPTOR_HANDLE TextureUAV[CGPU_TEX_DIMENSION_COUNT];
+    D3D12_CPU_DESCRIPTOR_HANDLE BufferSRV;
+    D3D12_CPU_DESCRIPTOR_HANDLE BufferUAV;
+    D3D12_CPU_DESCRIPTOR_HANDLE BufferCBV;
+} CGPUEmptyDescriptors_D3D12;
+
 typedef struct CGPUDevice_D3D12 {
     CGPUDevice super;
     struct D3D12Util_DescriptorHeap** pCPUDescriptorHeaps;
     struct D3D12Util_DescriptorHeap** pCbvSrvUavHeaps;
     struct D3D12Util_DescriptorHeap** pSamplerHeaps;
+    struct CGPUEmptyDescriptors_D3D12* pNullDescriptors;
     ID3D12Device* pDxDevice;
-    struct ID3D12CommandQueue** const ppCommandQueues[CGPU_QUEUE_TYPE_COUNT]
-#ifdef __cplusplus
-    = {}
-#endif
-    ;
-    const uint32_t pCommandQueueCounts[CGPU_QUEUE_TYPE_COUNT]
-#ifdef __cplusplus
-    = {}
-#endif
-    ;
+    struct ID3D12CommandQueue** const ppCommandQueues[CGPU_QUEUE_TYPE_COUNT] SKR_IF_CPP(= {});
+    const uint32_t pCommandQueueCounts[CGPU_QUEUE_TYPE_COUNT] SKR_IF_CPP(= {});
 #ifdef __cplusplus
     class D3D12MA::Allocator* pResourceAllocator;
 #else

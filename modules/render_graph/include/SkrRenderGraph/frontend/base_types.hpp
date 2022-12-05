@@ -324,14 +324,20 @@ struct SKR_RENDER_GRAPH_API PassContext {
 };
 
 struct BindablePassContext : public PassContext {
+    friend class RenderGraphBackend;
+
     skr::span<CGPUDescriptorSetId> desc_sets;
 };
-
+ 
 struct RenderPassContext : public BindablePassContext {
+    friend class RenderGraphBackend;
+
     CGPURenderPassEncoderId encoder;
 };
 
 struct SKR_RENDER_GRAPH_API ComputePassContext : public BindablePassContext {
+    friend class RenderGraphBackend;
+
     CGPUComputePassEncoderId encoder;
 };
 

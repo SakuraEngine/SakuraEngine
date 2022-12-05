@@ -184,6 +184,7 @@ CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDes
     D->pCPUDescriptorHeaps = (D3D12Util_DescriptorHeap**)cgpu_malloc(D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES * sizeof(D3D12Util_DescriptorHeap*));
     D->pCbvSrvUavHeaps = (D3D12Util_DescriptorHeap**)cgpu_malloc(sizeof(D3D12Util_DescriptorHeap*));
     D->pSamplerHeaps = (D3D12Util_DescriptorHeap**)cgpu_malloc(sizeof(D3D12Util_DescriptorHeap*));
+    D->pNullDescriptors = (CGPUEmptyDescriptors_D3D12*)cgpu_calloc(1, sizeof(CGPUEmptyDescriptors_D3D12));
     for (uint32_t i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++i)
     {
         D3D12_DESCRIPTOR_HEAP_DESC desc = {};
@@ -217,6 +218,64 @@ CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDes
         desc.NumDescriptors = 1 << 11;
         desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
         D3D12Util_CreateDescriptorHeap(D->pDxDevice, &desc, &D->pSamplerHeaps[i]);
+    }
+    // Allocate NULL Descriptors
+    {
+    D->pNullDescriptors->Sampler = D3D12_DESCRIPTOR_ID_NONE;
+    D3D12_SAMPLER_DESC samplerDesc = {};
+    samplerDesc.AddressU = samplerDesc.AddressV = samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    D->pNullDescriptors->Sampler = D3D12Util_ConsumeDescriptorHandles(
+        D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER], 1).mCpu;
+    D->pDxDevice->CreateSampler(&samplerDesc, D->pNullDescriptors->Sampler);
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = DXGI_FORMAT_R8_UINT;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+	uavDesc.Format = DXGI_FORMAT_R8_UINT;
+
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
+	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1D;
+    D3D12Util_CreateSRV(D, NULL, &srvDesc, &D->pNullDescriptors->TextureSRV[CGPU_TEX_DIMENSION_1D]);
+    D3D12Util_CreateUAV(D, NULL, NULL, &uavDesc, &D->pNullDescriptors->TextureUAV[CGPU_TEX_DIMENSION_1D]);
+
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+    D3D12Util_CreateSRV(D, NULL, &srvDesc, &D->pNullDescriptors->TextureSRV[CGPU_TEX_DIMENSION_2D]);
+    D3D12Util_CreateUAV(D, NULL, NULL, &uavDesc, &D->pNullDescriptors->TextureUAV[CGPU_TEX_DIMENSION_2D]);
+
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+    D3D12Util_CreateSRV(D, NULL, &srvDesc, &D->pNullDescriptors->TextureSRV[CGPU_TEX_DIMENSION_2DMS]);
+
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
+    D3D12Util_CreateSRV(D, NULL, &srvDesc, &D->pNullDescriptors->TextureSRV[CGPU_TEX_DIMENSION_3D]);
+    D3D12Util_CreateUAV(D, NULL, NULL, &uavDesc, &D->pNullDescriptors->TextureUAV[CGPU_TEX_DIMENSION_3D]);
+
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+    D3D12Util_CreateSRV(D, NULL, &srvDesc, &D->pNullDescriptors->TextureSRV[CGPU_TEX_DIMENSION_CUBE]);
+
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1DARRAY;
+    uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1DARRAY;
+    D3D12Util_CreateSRV(D, NULL, &srvDesc, &D->pNullDescriptors->TextureSRV[CGPU_TEX_DIMENSION_1D_ARRAY]);
+    D3D12Util_CreateUAV(D, NULL, NULL, &uavDesc, &D->pNullDescriptors->TextureUAV[CGPU_TEX_DIMENSION_1D_ARRAY]);
+
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+    uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+    D3D12Util_CreateSRV(D, NULL, &srvDesc, &D->pNullDescriptors->TextureSRV[CGPU_TEX_DIMENSION_2D_ARRAY]);
+    D3D12Util_CreateUAV(D, NULL, NULL, &uavDesc, &D->pNullDescriptors->TextureUAV[CGPU_TEX_DIMENSION_2D_ARRAY]);
+    
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY;
+    D3D12Util_CreateSRV(D, NULL, &srvDesc, &D->pNullDescriptors->TextureSRV[CGPU_TEX_DIMENSION_2DMS_ARRAY]);
+
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBEARRAY;
+    D3D12Util_CreateSRV(D, NULL, &srvDesc, &D->pNullDescriptors->TextureSRV[CGPU_TEX_DIMENSION_CUBE_ARRAY]);
+
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+    D3D12Util_CreateSRV(D, NULL, &srvDesc, &D->pNullDescriptors->BufferSRV);
+    D3D12Util_CreateUAV(D, NULL, NULL, &uavDesc, &D->pNullDescriptors->BufferUAV);
+    D3D12Util_CreateCBV(D, NULL, &D->pNullDescriptors->BufferCBV);
     }
     // Pipeline cache
     D3D12_FEATURE_DATA_SHADER_CACHE feature = {};
@@ -283,6 +342,7 @@ void cgpu_free_device_d3d12(CGPUDeviceId device)
     cgpu_free(D->pCPUDescriptorHeaps);
     cgpu_free(D->pCbvSrvUavHeaps);
     cgpu_free(D->pSamplerHeaps);
+    cgpu_free(D->pNullDescriptors);
     // Release D3D12 Device
     SAFE_RELEASE(D->pDxDevice);
     SAFE_RELEASE(D->pPipelineLibrary);
@@ -561,6 +621,17 @@ void cgpu_free_root_signature_d3d12(CGPURootSignatureId signature)
     return;
 }
 
+uint32_t descriptor_count_needed(CGPUShaderResource* resource)
+{
+    if (resource->dim == CGPU_TEX_DIMENSION_1D_ARRAY ||
+        resource->dim == CGPU_TEX_DIMENSION_2D_ARRAY ||
+        resource->dim == CGPU_TEX_DIMENSION_2DMS_ARRAY ||
+        resource->dim == CGPU_TEX_DIMENSION_CUBE_ARRAY)
+        return resource->size;
+    else
+        return 1;
+}
+
 CGPUDescriptorSetId cgpu_create_descriptor_set_d3d12(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc)
 {
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
@@ -576,7 +647,9 @@ CGPUDescriptorSetId cgpu_create_descriptor_set_d3d12(CGPUDeviceId device, const 
     for (uint32_t i = 0; i < param_table->resources_count; i++)
     {
         if (param_table->resources[i].type == CGPU_RESOURCE_TYPE_SAMPLER)
+        {
             SamplerCount++;
+        }
         else if (param_table->resources[i].type == CGPU_RESOURCE_TYPE_TEXTURE ||
                  param_table->resources[i].type == CGPU_RESOURCE_TYPE_RW_TEXTURE ||
                  param_table->resources[i].type == CGPU_RESOURCE_TYPE_BUFFER ||
@@ -586,7 +659,7 @@ CGPUDescriptorSetId cgpu_create_descriptor_set_d3d12(CGPUDeviceId device, const 
                  param_table->resources[i].type == CGPU_RESOURCE_TYPE_TEXTURE_CUBE ||
                  param_table->resources[i].type == CGPU_RESOURCE_TYPE_UNIFORM_BUFFER)
         {
-            CbvSrvUavCount++;
+            CbvSrvUavCount += descriptor_count_needed(&param_table->resources[i]);
         }
     }
     // CBV/SRV/UAV
@@ -594,30 +667,55 @@ CGPUDescriptorSetId cgpu_create_descriptor_set_d3d12(CGPUDeviceId device, const 
     Set->mSamplerHandle = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN;
     if (CbvSrvUavCount)
     {
-        auto StartHandle = D3D12Util_ConsumeDescriptorHandles(pCbvSrvUavHeap, param_table->resources_count);
+        auto StartHandle = D3D12Util_ConsumeDescriptorHandles(pCbvSrvUavHeap, CbvSrvUavCount);
         Set->mCbvSrvUavHandle = StartHandle.mGpu.ptr - pCbvSrvUavHeap->mStartHandle.mGpu.ptr;
         Set->mCbvSrvUavStride = CbvSrvUavCount * pCbvSrvUavHeap->mDescriptorSize;
     }
     if (SamplerCount)
     {
-        auto StartHandle = D3D12Util_ConsumeDescriptorHandles(pSamplerHeap, param_table->resources_count);
+        auto StartHandle = D3D12Util_ConsumeDescriptorHandles(pSamplerHeap, SamplerCount);
         Set->mSamplerHandle = StartHandle.mGpu.ptr - pSamplerHeap->mStartHandle.mGpu.ptr;
         Set->mSamplerStride = SamplerCount * pSamplerHeap->mDescriptorSize;
     }
-    // TODO: Bind NULL handles on creation
+    // Bind NULL handles on creation
+    if (CbvSrvUavCount || SamplerCount)
+    {
+        uint32_t CbvSrvUavHeapOffset = 0;
+        uint32_t SamplerHeapOffset = 0;
+        for (uint32_t i = 0; i < param_table->resources_count; ++i)
+        {
+            const auto dimension = param_table->resources[i].dim;
+            auto srcHandle = D3D12_DESCRIPTOR_ID_NONE;
+            auto srcSamplerHandle = D3D12_DESCRIPTOR_ID_NONE;
+            switch (param_table->resources[i].type)
+            {
+            case CGPU_RESOURCE_TYPE_TEXTURE: srcHandle = D->pNullDescriptors->TextureSRV[dimension];break;
+            case CGPU_RESOURCE_TYPE_BUFFER: srcHandle = D->pNullDescriptors->BufferSRV;break;
+            case CGPU_RESOURCE_TYPE_RW_BUFFER: srcHandle = D->pNullDescriptors->BufferUAV;break;
+            case CGPU_RESOURCE_TYPE_UNIFORM_BUFFER: srcHandle = D->pNullDescriptors->BufferCBV;break;
+            case CGPU_RESOURCE_TYPE_SAMPLER: srcSamplerHandle = D->pNullDescriptors->Sampler;break;
+            default: break;
+            }
+            if (srcHandle.ptr != D3D12_DESCRIPTOR_ID_NONE.ptr)
+            {
+                for (uint32_t j = 0; j < param_table->resources[i].size; j++)
+                {
+                    D3D12Util_CopyDescriptorHandle(pCbvSrvUavHeap, srcHandle, Set->mCbvSrvUavHandle, CbvSrvUavHeapOffset);
+                    CbvSrvUavHeapOffset++;
+                }
+            }
+            if (srcSamplerHandle.ptr != D3D12_DESCRIPTOR_ID_NONE.ptr)
+            {
+                for (uint32_t j = 0; j < param_table->resources[i].size; j++)
+                {
+                    D3D12Util_CopyDescriptorHandle(pSamplerHeap, srcSamplerHandle, Set->mSamplerHandle, SamplerHeapOffset);
+                    SamplerHeapOffset++;
+                }
+            }
+        }
+    }
     // TODO: Support root descriptors
     return &Set->super;
-}
-
-uint32_t descriptor_count_needed(CGPUShaderResource* resource)
-{
-    if (resource->dim == CGPU_TEX_DIMENSION_1D_ARRAY ||
-        resource->dim == CGPU_TEX_DIMENSION_2D_ARRAY ||
-        resource->dim == CGPU_TEX_DIMENSION_2DMS_ARRAY ||
-        resource->dim == CGPU_TEX_DIMENSION_CUBE_ARRAY)
-        return resource->size;
-    else
-        return 1;
 }
 
 void cgpu_update_descriptor_set_d3d12(CGPUDescriptorSetId set, const struct CGPUDescriptorData* datas, uint32_t count)

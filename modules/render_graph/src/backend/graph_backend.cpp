@@ -383,9 +383,9 @@ skr::span<CGPUDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(
         {
             auto& rw_edge = tex_rw_edges[e_idx];
             auto rw_set_binding =
-            rw_edge->name.empty() ?
-            eastl::pair<uint32_t, uint32_t>(rw_edge->set, rw_edge->binding) :
-            calculate_bind_set(rw_edge->name.c_str(), root_sig);
+                rw_edge->name.empty() ?
+                eastl::pair<uint32_t, uint32_t>(rw_edge->set, rw_edge->binding) :
+                calculate_bind_set(rw_edge->name.c_str(), root_sig);
             if (rw_set_binding.first == set_idx)
             {
                 auto texture_readwrite = rw_edge->get_texture_node();
@@ -463,7 +463,7 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
 {
     ZoneScopedC(tracy::Color::LightBlue);
     ZoneName(pass->name.c_str(), pass->name.size());
-    ComputePassContext stack = {};
+    ComputePassContext pass_context = {};
     // resource de-virtualize
     eastl::vector<CGPUTextureBarrier> tex_barriers = {};
     eastl::vector<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
@@ -473,9 +473,9 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
         tex_barriers, resolved_textures,
         buffer_barriers, resolved_buffers);
     // allocate & update descriptor sets
-    stack.desc_sets = alloc_update_pass_descsets(executor, pass);
-    stack.resolved_buffers = resolved_buffers;
-    stack.resolved_textures = resolved_textures;
+    pass_context.desc_sets = alloc_update_pass_descsets(executor, pass);
+    pass_context.resolved_buffers = resolved_buffers;
+    pass_context.resolved_textures = resolved_textures;
     // call cgpu apis
     CGPUResourceBarrierDescriptor barriers = {};
     if (!tex_barriers.empty())
@@ -494,20 +494,19 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
     // dispatch
     CGPUComputePassDescriptor pass_desc = {};
     pass_desc.name = pass->get_name();
-    stack.cmd = executor.gfx_cmd_buf;
-    stack.encoder = cgpu_cmd_begin_compute_pass(executor.gfx_cmd_buf, &pass_desc);
+    pass_context.cmd = executor.gfx_cmd_buf;
+    pass_context.encoder = cgpu_cmd_begin_compute_pass(executor.gfx_cmd_buf, &pass_desc);
     if(pass->pipeline)
-        cgpu_compute_encoder_bind_pipeline(stack.encoder, pass->pipeline);
-    for (auto desc_set : stack.desc_sets)
+        cgpu_compute_encoder_bind_pipeline(pass_context.encoder, pass->pipeline);
+    for (auto desc_set : pass_context.desc_sets)
     {
-        if (!desc_set->updated) continue;
-        cgpu_compute_encoder_bind_descriptor_set(stack.encoder, desc_set);
+        cgpu_compute_encoder_bind_descriptor_set(pass_context.encoder, desc_set);
     }
     {
         ZoneScopedN("PassExecutor");
-        pass->executor(*this, stack);
+        pass->executor(*this, pass_context);
     }
-    cgpu_cmd_end_compute_pass(executor.gfx_cmd_buf, stack.encoder);
+    cgpu_cmd_end_compute_pass(executor.gfx_cmd_buf, pass_context.encoder);
     cgpu_cmd_end_event(executor.gfx_cmd_buf);
     // deallocate
     deallocate_resources(pass);
@@ -612,7 +611,6 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     if (pass->pipeline) cgpu_render_encoder_bind_pipeline(stack.encoder, pass->pipeline);
     for (auto desc_set : stack.desc_sets)
     {
-        if (!desc_set->updated) continue;
         cgpu_render_encoder_bind_descriptor_set(stack.encoder, desc_set);
         // executor.write_marker(skr::format("Pass-{}-BindDescriptors", pass->get_name()).c_str());
     }

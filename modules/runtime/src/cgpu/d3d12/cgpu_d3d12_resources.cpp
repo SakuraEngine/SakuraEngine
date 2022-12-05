@@ -281,13 +281,13 @@ void cgpu_cmd_transfer_texture_to_texture_d3d12(CGPUCommandBufferId cmd, const s
     D3D12_TEXTURE_COPY_LOCATION src = {};
     D3D12_TEXTURE_COPY_LOCATION dst = {};
     D->pDxDevice->GetCopyableFootprints(
-    &src_resourceDesc, src_subresource, 1,
-    0, &src.PlacedFootprint,
-    NULL, NULL, NULL);
+        &src_resourceDesc, src_subresource, 1,
+        0, &src.PlacedFootprint,
+        NULL, NULL, NULL);
     D->pDxDevice->GetCopyableFootprints(
-    &dst_resourceDesc, dst_subresource, 1,
-    0, &dst.PlacedFootprint,
-    NULL, NULL, NULL);
+        &dst_resourceDesc, dst_subresource, 1,
+        0, &dst.PlacedFootprint,
+        NULL, NULL, NULL);
     src.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
     src.pResource = Src->pDxResource;
     src.SubresourceIndex = src_subresource;
@@ -310,10 +310,10 @@ void cgpu_cmd_transfer_buffer_to_texture_d3d12(CGPUCommandBufferId cmd, const st
     CGPUTexture_D3D12* Dst = (CGPUTexture_D3D12*)desc->dst;
 
     uint32_t subresource = CALC_SUBRESOURCE_INDEX(
-    desc->dst_subresource.mip_level,
-    desc->dst_subresource.base_array_layer,
-    0, 1,
-    desc->dst_subresource.layer_count);
+        desc->dst_subresource.mip_level,
+        desc->dst_subresource.base_array_layer,
+        0, 1,
+        desc->dst_subresource.layer_count);
     D3D12_RESOURCE_DESC resourceDesc = Dst->pDxResource->GetDesc();
 
     D3D12_TEXTURE_COPY_LOCATION src = {};
@@ -381,11 +381,9 @@ CGPUSamplerId cgpu_create_sampler_d3d12(CGPUDeviceId device, const struct CGPUSa
     ((desc->mipmap_mode == CGPU_MIPMAP_MODE_LINEAR) ? D3D12_FLOAT32_MAX : 0.0f);
     ;
     pSampler->mDxDesc = add_desc;
-    pSampler->mDxHandle =
-    D3D12Util_ConsumeDescriptorHandles(
-    D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER], 1)
-    .mCpu;
-    D->pDxDevice->CreateSampler(&pSampler->mDxDesc, pSampler->mDxHandle);
+    pSampler->mDxHandle = D3D12Util_ConsumeDescriptorHandles(
+        D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER], 1).mCpu;
+        D->pDxDevice->CreateSampler(&pSampler->mDxDesc, pSampler->mDxHandle);
     return &pSampler->super;
 }
 
@@ -395,8 +393,8 @@ void cgpu_free_sampler_d3d12(CGPUSamplerId sampler)
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)sampler->device;
 
     D3D12Util_ReturnDescriptorHandles(
-    D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER],
-    pSampler->mDxHandle, 1);
+        D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER],
+        pSampler->mDxHandle, 1);
     cgpu_delete(pSampler);
 }
 
