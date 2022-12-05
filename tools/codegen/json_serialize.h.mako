@@ -2,6 +2,7 @@
 #ifdef __cplusplus
 #include "json/reader_fwd.h"
 #include "json/writer_fwd.h"
+#include "type/enum_to_string.hpp"
 namespace skr::json
 {
 %for record in generator.filter_types(db.records):
@@ -29,6 +30,17 @@ namespace skr::json
     struct ${api} WriteTrait<const ${enum.name}&>
     {
         static void Write(skr_json_writer_t* writer, ${enum.name} v);
+    };
+%endfor
+}
+namespace skr::type
+{
+%for enum in generator.filter_types(db.enums):
+    template <>
+    struct ${api} EnumToStringTrait<${enum.name}>
+    {
+        static std::string_view ToString(${enum.name} v);
+        static bool FromString(std::string_view str, ${enum.name}& v);
     };
 %endfor
 }

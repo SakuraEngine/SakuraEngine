@@ -42,7 +42,7 @@
     #define sreflect __attribute__((annotate("__reflect__")))
     #define sfull_reflect __attribute__((annotate("__full_reflect__")))
     #define snoreflect __attribute__((annotate("__noreflect__")))
-    #define sattr(...) sreflect __attribute__((annotate(STRINGIFY(__VA_ARGS__))))
+    #define sattr(...) __attribute__((annotate(STRINGIFY(__VA_ARGS__))))
     #define spush_attr(...) __attribute__((annotate("__push__" STRINGIFY(__VA_ARGS__))))
     #define spop_attr() __attribute__((annotate("__pop__")))
 

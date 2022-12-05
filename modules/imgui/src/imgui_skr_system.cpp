@@ -14,10 +14,10 @@
 
 namespace skr::imgui
 {
-SKR_IMGUI_API ImGuiContext*& imgui_context()
+static ImGuiContext* GImGuiContext = nullptr;
+SKR_IMGUI_API ImGuiContext* imgui_context()
 {
-    static ImGuiContext* ctx = nullptr;
-    return ctx;
+    return GImGuiContext;
 }
 
 void imgui_create_window(ImGuiViewport* viewport);

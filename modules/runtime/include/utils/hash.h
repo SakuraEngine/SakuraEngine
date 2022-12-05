@@ -104,3 +104,9 @@ constexpr uint32_t hash_crc32(std::basic_string_view<T> str)
 }
 } // namespace skr
 #endif
+
+#ifdef __cplusplus
+// used for switch Name
+#define switchname(n) switch(std::string_view __str = n; skr::hash_crc32(__str))
+#define casestr(s) case skr::hash_crc32(std::string_view(s)): if(__str != std::string_view(s)) break;
+#endif
