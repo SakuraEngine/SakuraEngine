@@ -1,5 +1,5 @@
 #pragma once
-#include "api.h"
+#include "cgpu/api.h"
 
 typedef const char* CGPUXName;
 DEFINE_CGPU_OBJECT(CGPUXBindTable)
@@ -12,7 +12,10 @@ RUNTIME_EXTERN_C RUNTIME_API
 void cgpux_bind_table_update(CGPUXBindTableId table, const struct CGPUDescriptorData* datas, uint32_t count);
 
 RUNTIME_EXTERN_C RUNTIME_API
-void cgpux_bind_table_override(CGPUXBindTableId table, CGPUXBindTableId another);
+void cgpux_render_encoder_bind_bind_table(CGPURenderPassEncoderId encoder, CGPUXBindTableId table);
+
+RUNTIME_EXTERN_C RUNTIME_API
+void cgpux_compute_encoder_bind_bind_table(CGPUComputePassEncoderId encoder, CGPUXBindTableId table);
 
 RUNTIME_EXTERN_C RUNTIME_API
 void cgpux_free_bind_table(CGPUXBindTableId bind_table);

@@ -12,6 +12,7 @@ enum
     kRenderGraphDynamicResourceTag = 0x02
 };
 
+struct CGPUXBindTable;
 namespace skr
 {
 namespace render_graph
@@ -326,7 +327,7 @@ struct SKR_RENDER_GRAPH_API PassContext {
 struct BindablePassContext : public PassContext {
     friend class RenderGraphBackend;
 
-    skr::span<CGPUDescriptorSetId> desc_sets;
+    const struct CGPUXBindTable* bind_table;
 };
  
 struct RenderPassContext : public BindablePassContext {

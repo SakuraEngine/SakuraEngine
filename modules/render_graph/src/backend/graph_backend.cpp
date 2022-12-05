@@ -42,9 +42,9 @@ void RenderGraphFrameExecutor::commit(CGPUQueueId gfx_queue, uint64_t frame_inde
 
 void RenderGraphFrameExecutor::reset_begin(TextureViewPool& texture_view_pool)
 {
-    for (auto desc_heap : desc_set_pools)
+    for (auto bind_table_pool : bind_table_pools)
     {
-        desc_heap.second->reset();
+        bind_table_pool.second->reset();
     }
     for (auto aliasing_texture : aliasing_textures)
     {
@@ -94,7 +94,7 @@ void RenderGraphFrameExecutor::finalize()
     gfx_cmd_buf = nullptr;
     gfx_cmd_pool = nullptr;
     exec_fence = nullptr;
-    for (auto [rs, pool] : desc_set_pools)
+    for (auto [rs, pool] : bind_table_pools)
     {
         pool->destroy();
         SkrDelete(pool);
@@ -275,28 +275,25 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
         });
 }
 
-eastl::pair<uint32_t, uint32_t> calculate_bind_set(const char8_t* name, CGPURootSignatureId root_sig, ECGPUResourceType* type = nullptr)
+const CGPUShaderResource* find_shader_resource(const char8_t* name, CGPURootSignatureId root_sig, ECGPUResourceType* type = nullptr)
 {
-    uint32_t set = 0, binding = 0;
     auto name_hash = cgpu_hash(name, strlen(name), (size_t)root_sig->device);
     for (uint32_t i = 0; i < root_sig->table_count; i++)
     {
         for (uint32_t j = 0; j < root_sig->tables[i].resources_count; j++)
         {
-            if (root_sig->tables[i].resources[j].name_hash == name_hash)
+            const auto& resource = root_sig->tables[i].resources[j];
+            if (resource.name_hash == name_hash)
             {
-                set = root_sig->tables[i].resources[j].set;
-                binding = root_sig->tables[i].resources[j].binding;
-                if (type) *type = root_sig->tables[i].resources[j].type;
-                return { set, binding };
+                if (type) *type = resource.type;
+                return &root_sig->tables[i].resources[j];
             }
         }
     }
-    return { UINT32_MAX, UINT32_MAX };
+    return nullptr;
 }
 
-skr::span<CGPUDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(
-    RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT
+CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT
 {
     ZoneScopedN("UpdateBindings");
     CGPURootSignatureId root_sig = nullptr;
@@ -311,30 +308,35 @@ skr::span<CGPUDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(
         root_sig = ((ComputePassNode*)pass)->root_signature;
     if (!root_sig) return {};
     // Allocate or get descriptor set heap
-    auto&& desc_set_heap = executor.desc_set_pools.find(root_sig);
-    if (desc_set_heap == executor.desc_set_pools.end())
-        executor.desc_set_pools.emplace(root_sig, SkrNew<DescSetHeap>(root_sig));
-    auto desc_sets = executor.desc_set_pools[root_sig]->pop();
+    auto&& table_pool_iter = executor.bind_table_pools.find(root_sig);
+    if (table_pool_iter == executor.bind_table_pools.end())
+        executor.bind_table_pools.emplace(root_sig, SkrNew<BindTablePool>(root_sig));
+    eastl::string bind_table_keys = "";
     // Bind resources
-    for (uint32_t set_idx = 0; set_idx < desc_sets.size(); set_idx++)
+    eastl::vector<CGPUDescriptorData> desc_set_updates;
+    eastl::vector<const char*> bindTableValueNames = {};
+    // CBV Buffers
+    eastl::vector<CGPUBufferId> cbvs(buf_read_edges.size());
+    eastl::vector<CGPUTextureViewId> srvs(tex_read_edges.size());
+    eastl::vector<CGPUTextureViewId> uavs(tex_rw_edges.size());
     {
-        eastl::vector<CGPUDescriptorData> desc_set_updates;
-        // CBV Buffers
-        eastl::vector<CGPUBufferId> cbvs(buf_read_edges.size());
         for (uint32_t e_idx = 0; e_idx < buf_read_edges.size(); e_idx++)
         {
             auto& read_edge = buf_read_edges[e_idx];
-            auto read_set_binding =
-                read_edge->name.empty() ?
-                eastl::pair<uint32_t, uint32_t>(read_edge->set, read_edge->binding) :
-                calculate_bind_set(read_edge->name.c_str(), root_sig);
-            ECGPUResourceType resource_type = root_sig->tables[read_set_binding.first].resources[read_set_binding.second].type;
-            if (read_set_binding.first == set_idx)
+            SKR_ASSERT(!read_edge->name.empty());
+            // TODO: refactor this
+            const auto& resource = *find_shader_resource(read_edge->name.c_str(), root_sig);
+
+            ECGPUResourceType resource_type = resource.type;
             {
+                bind_table_keys += read_edge->name.empty() ? resource.name : read_edge->name;
+                bind_table_keys += ";";
+                bindTableValueNames.emplace_back(resource.name);
+
                 auto buffer_readed = read_edge->get_buffer_node();
                 CGPUDescriptorData update = {};
                 update.count = 1;
-                update.binding = read_set_binding.second;
+                update.name = resource.name;
                 update.binding_type = resource_type;
                 cbvs[e_idx] = resolve(executor, *buffer_readed);
                 update.buffers = &cbvs[e_idx];
@@ -342,20 +344,21 @@ skr::span<CGPUDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(
             }
         }
         // SRVs
-        eastl::vector<CGPUTextureViewId> srvs(tex_read_edges.size());
         for (uint32_t e_idx = 0; e_idx < tex_read_edges.size(); e_idx++)
         {
             auto& read_edge = tex_read_edges[e_idx];
-            auto read_set_binding =
-                read_edge->name.empty() ?
-                eastl::pair<uint32_t, uint32_t>(read_edge->set, read_edge->binding) :
-                calculate_bind_set(read_edge->name.c_str(), root_sig);
-            if (read_set_binding.first == set_idx)
+            SKR_ASSERT(!read_edge->name.empty());
+            const auto& resource = *find_shader_resource(read_edge->name.c_str(), root_sig);
+
             {
+                bind_table_keys += read_edge->name.empty() ? resource.name : read_edge->name;
+                bind_table_keys += ";";
+                bindTableValueNames.emplace_back(resource.name);
+
                 auto texture_readed = read_edge->get_texture_node();
                 CGPUDescriptorData update = {};
                 update.count = 1;
-                update.binding = read_set_binding.second;
+                update.name = resource.name;
                 update.binding_type = CGPU_RESOURCE_TYPE_TEXTURE;
                 CGPUTextureViewDescriptor view_desc = {};
                 view_desc.texture = resolve(executor, *texture_readed);
@@ -378,20 +381,21 @@ skr::span<CGPUDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(
             }
         }
         // UAVs
-        eastl::vector<CGPUTextureViewId> uavs(tex_rw_edges.size());
         for (uint32_t e_idx = 0; e_idx < tex_rw_edges.size(); e_idx++)
         {
             auto& rw_edge = tex_rw_edges[e_idx];
-            auto rw_set_binding =
-                rw_edge->name.empty() ?
-                eastl::pair<uint32_t, uint32_t>(rw_edge->set, rw_edge->binding) :
-                calculate_bind_set(rw_edge->name.c_str(), root_sig);
-            if (rw_set_binding.first == set_idx)
+            SKR_ASSERT(!rw_edge->name.empty());
+            const auto& resource = *find_shader_resource(rw_edge->name.c_str(), root_sig);
+
             {
+                bind_table_keys += rw_edge->name.empty() ? resource.name : rw_edge->name;
+                bind_table_keys += ";";
+                bindTableValueNames.emplace_back(resource.name);
+
                 auto texture_readwrite = rw_edge->get_texture_node();
                 CGPUDescriptorData update = {};
                 update.count = 1;
-                update.binding = rw_set_binding.second;
+                update.name = resource.name;
                 update.binding_type = CGPU_RESOURCE_TYPE_RW_TEXTURE;
                 CGPUTextureViewDescriptor view_desc = {};
                 view_desc.texture = resolve(executor, *texture_readwrite);
@@ -408,13 +412,10 @@ skr::span<CGPUDescriptorSetId> RenderGraphBackend::alloc_update_pass_descsets(
                 desc_set_updates.emplace_back(update);
             }
         }
-        auto update_count = desc_set_updates.size();
-        if (update_count)
-        {
-            cgpu_update_descriptor_set(desc_sets[set_idx], desc_set_updates.data(), (uint32_t)desc_set_updates.size());
-        }
     }
-    return desc_sets;
+    auto bind_table = executor.bind_table_pools[root_sig]->pop(bind_table_keys.c_str(), bindTableValueNames.data(), bindTableValueNames.size());
+    cgpux_bind_table_update(bind_table, desc_set_updates.data(), desc_set_updates.size());
+    return bind_table;
 }
 
 void RenderGraphBackend::deallocate_resources(PassNode* pass) SKR_NOEXCEPT
@@ -473,7 +474,7 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
         tex_barriers, resolved_textures,
         buffer_barriers, resolved_buffers);
     // allocate & update descriptor sets
-    pass_context.desc_sets = alloc_update_pass_descsets(executor, pass);
+    pass_context.bind_table = alloc_update_pass_bind_table(executor, pass);
     pass_context.resolved_buffers = resolved_buffers;
     pass_context.resolved_textures = resolved_textures;
     // call cgpu apis
@@ -498,10 +499,7 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
     pass_context.encoder = cgpu_cmd_begin_compute_pass(executor.gfx_cmd_buf, &pass_desc);
     if(pass->pipeline)
         cgpu_compute_encoder_bind_pipeline(pass_context.encoder, pass->pipeline);
-    for (auto desc_set : pass_context.desc_sets)
-    {
-        cgpu_compute_encoder_bind_descriptor_set(pass_context.encoder, desc_set);
-    }
+    cgpux_compute_encoder_bind_bind_table(pass_context.encoder, pass_context.bind_table);
     {
         ZoneScopedN("PassExecutor");
         pass->executor(*this, pass_context);
@@ -516,7 +514,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
 {
     ZoneScopedC(tracy::Color::LightPink);
     ZoneName(pass->name.c_str(), pass->name.size());
-    RenderPassContext stack = {};
+    RenderPassContext pass_context = {};
     // resource de-virtualize
     eastl::vector<CGPUTextureBarrier> tex_barriers = {};
     eastl::vector<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
@@ -526,9 +524,9 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         tex_barriers, resolved_textures,
         buffer_barriers, resolved_buffers);
     // allocate & update descriptor sets
-    stack.desc_sets = alloc_update_pass_descsets(executor, pass);
-    stack.resolved_buffers = resolved_buffers;
-    stack.resolved_textures = resolved_textures;
+    pass_context.bind_table = alloc_update_pass_bind_table(executor, pass);
+    pass_context.resolved_buffers = resolved_buffers;
+    pass_context.resolved_textures = resolved_textures;
     // call cgpu apis
     CGPUResourceBarrierDescriptor barriers = {};
     if (!tex_barriers.empty())
@@ -605,20 +603,16 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     pass_desc.name = pass->get_name();
     pass_desc.color_attachments = color_attachments.data();
     pass_desc.depth_stencil = &ds_attachment;
-    stack.cmd = executor.gfx_cmd_buf;
+    pass_context.cmd = executor.gfx_cmd_buf;
     executor.write_marker(skr::format("Pass-{}-BeginPass", pass->get_name()).c_str());
-    stack.encoder = cgpu_cmd_begin_render_pass(executor.gfx_cmd_buf, &pass_desc);
-    if (pass->pipeline) cgpu_render_encoder_bind_pipeline(stack.encoder, pass->pipeline);
-    for (auto desc_set : stack.desc_sets)
-    {
-        cgpu_render_encoder_bind_descriptor_set(stack.encoder, desc_set);
-        // executor.write_marker(skr::format("Pass-{}-BindDescriptors", pass->get_name()).c_str());
-    }
+    pass_context.encoder = cgpu_cmd_begin_render_pass(executor.gfx_cmd_buf, &pass_desc);
+    if (pass->pipeline) cgpu_render_encoder_bind_pipeline(pass_context.encoder, pass->pipeline);
+    cgpux_render_encoder_bind_bind_table(pass_context.encoder, pass_context.bind_table);
     {
         ZoneScopedN("PassExecutor");
-        pass->executor(*this, stack);
+        pass->executor(*this, pass_context);
     }
-    cgpu_cmd_end_render_pass(executor.gfx_cmd_buf, stack.encoder);
+    cgpu_cmd_end_render_pass(executor.gfx_cmd_buf, pass_context.encoder);
     executor.write_marker(skr::format("Pass-{}-EndRenderPass", pass->get_name()).c_str());
     cgpu_cmd_end_event(executor.gfx_cmd_buf);
     // deallocate
