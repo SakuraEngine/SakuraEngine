@@ -22,6 +22,7 @@ rule("utils.dxc")
         batchcmds:mkdir(spv_outputdir)
         batchcmds:vrunv(dxc.vexec, 
             {"-Wno-ignored-attributes",
+            "-all_resources_bound",
             "-spirv",
             -- "-fspv-reflect",
             vformat("-fspv-target-env=vulkan1.1"), 
@@ -44,6 +45,7 @@ rule("utils.dxc")
         batchcmds:mkdir(dxil_outputdir)
         batchcmds:vrunv(dxc.vexec, 
             {"-Wno-ignored-attributes", 
+            "-all_resources_bound", 
             "-Fo ", dxilfilepath, 
             "-T ", target_profile,
             path.join(os.projectdir(), sourcefile_hlsl)})

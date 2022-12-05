@@ -34,7 +34,7 @@ static struct SkrMeshResourceUtil
         RegisteredVertexLayout(const CGPUVertexLayout& layout, skr_vertex_layout_id id, const char* name)
             : CGPUVertexLayout(layout), id(id), name(name)
         {
-            hash = eastl::hash<CGPUVertexLayout>()(layout);
+            hash = cgpux::hash<CGPUVertexLayout>()(layout);
         }
         skr_vertex_layout_id id;
         skr::string name;
@@ -76,7 +76,7 @@ static struct SkrMeshResourceUtil
     {
         SMutexLock lock(vertex_layouts_mutex_);
 
-        auto hash = eastl::hash<CGPUVertexLayout>()(layout);
+        auto hash = cgpux::hash<CGPUVertexLayout>()(layout);
         auto iter = hash_map.find(hash);
         if (iter == hash_map.end())
         {
@@ -90,7 +90,7 @@ static struct SkrMeshResourceUtil
     {
         SMutexLock lock(vertex_layouts_mutex_);
 
-        auto hash = eastl::hash<CGPUVertexLayout>()(*pLayout);
+        auto hash = cgpux::hash<CGPUVertexLayout>()(*pLayout);
         auto iter = hash_map.find(hash);
         if (iter == hash_map.end())
         {
@@ -103,7 +103,7 @@ static struct SkrMeshResourceUtil
     {
         SMutexLock lock(vertex_layouts_mutex_);
 
-        auto hash = eastl::hash<CGPUVertexLayout>()(*pLayout);
+        auto hash = cgpux::hash<CGPUVertexLayout>()(*pLayout);
         auto iter = hash_map.find(hash);
         if (iter == hash_map.end())
         {
