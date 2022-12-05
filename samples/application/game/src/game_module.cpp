@@ -45,6 +45,8 @@
 #include "utils/types.h"
 #include "SkrInspector/inspect_value.h"
 
+#include "lua/skr_lua.h"
+
 SWindowHandle window;
 uint32_t backbuffer_index;
 extern void create_imgui_resources(skr_vfs_t* resource_vfs, SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph);
@@ -382,7 +384,8 @@ void imgui_button_spawn_girl(SRendererId renderer)
         ImGui::End();  
     }
 }
-
+EXTERN_C int
+luaopen_clonefunc(lua_State *L);
 int SGameModule::main_module_exec(int argc, char** argv)
 {
     ZoneScopedN("GameExecution");
@@ -487,6 +490,11 @@ int SGameModule::main_module_exec(int argc, char** argv)
             inputSystem.AddInputAction(action);
         }
     }
+    // Lua
+    auto L = skr_lua_newstate(resource_vfs);
+    skr_lua_bind_imgui(L);
+    luaL_dostring(L, "local module = require \"game\"; module:init()");
+
     // Time
     SHiresTimer tick_timer;
     int64_t elapsed_us = 0;
@@ -607,9 +615,21 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 ImGui::Text("RenderFPS: %d", (uint32_t)fps);
                 ImGui::End();
             }
+            {
+                ImGui::Begin(u8"Lua");
+                if(ImGui::Button("Hotfix"))
+                {
+                    luaL_dostring(L, "local module = require \"hotfix\"; module.reload({\"game\"})");
+                }
+                ImGui::End();
+            }
             imgui_button_spawn_girl(game_renderer);
             skr::inspect::update_value_inspector();
             // quit |= skg::GameLoop(ctx);
+        }
+        {
+            ZoneScopedN("Lua");
+            luaL_dostring(L, "local module = require \"game\"; module:update()");
         }
         // move
         // [has]skr_movement_t, [inout]skr_translation_t, [in]skr_scale_t, [in]skr_index_component_t, !skr_camera_t

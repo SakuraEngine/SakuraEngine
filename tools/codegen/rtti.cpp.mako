@@ -67,11 +67,12 @@ namespace skr::type
         
         %for i, method in enumerate(methods):
             %if vars(method.parameters):
-                static skr_field_t params${i}[] = {
+                static skr_field_t _params${i}[] = {
                 %for name, field in vars(method.parameters).items():
                     { "${name}", type_of<${field.type}>::get(), ${field.offset}},
                 %endfor
                 };
+                static skr::span<skr_field_t> params${i} = _params${i};
             %else:
                 static skr::span<skr_field_t> params${i};
             %endif
@@ -175,7 +176,7 @@ namespace skr::type
                 %endfor
                 }
                 SKR_UNREACHABLE_CODE();
-                return skr::string("${enum.name}::Unknown");
+                return skr::string("${enum.name}::INVALID_ENUMERATOR");
             },
             enumerators
         };

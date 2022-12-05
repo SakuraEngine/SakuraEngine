@@ -11,6 +11,10 @@ namespace skr::type
         {
             return {${db.guid_constant(record)}}; 
         }
+        inline static SKR_CONSTEXPR std::string_view str()
+        {
+            return "${record.attrs.guid}";
+        }
     };
 %endfor
 %for enum in generator.filter_types(db.enums):
@@ -20,6 +24,10 @@ namespace skr::type
         inline static SKR_CONSTEXPR skr_guid_t get()
         {
             return {${db.guid_constant(enum)}}; 
+        }
+        inline static SKR_CONSTEXPR std::string_view str()
+        {
+            return "${enum.attrs.guid}";
         }
     };
 %endfor
