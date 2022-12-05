@@ -125,11 +125,11 @@ namespace ImGui
 */
 
 #ifndef IMGUI_IMPORT
-#ifdef RUNTIME_ALL_STATIC
-    #define IMGUI_IMPORT
+#ifdef RUNTIME_ALL_STATIC 
+    #define IMGUI_IMPORT extern
 #else
     #if defined(_MSC_VER)
-        #define IMGUI_IMPORT __declspec(dllimport)
+        #define IMGUI_IMPORT __declspec(dllimport) extern
     #else
         #define IMGUI_IMPORT __attribute__((visibility("default")))
     #endif
@@ -139,8 +139,7 @@ namespace ImGui
 struct ImGuiContext;
 namespace skr::imgui
 {
-extern IMGUI_IMPORT ImGuiContext* GImGuiContext;
-IMGUI_IMPORT ImGuiContext* imgui_context();
+IMGUI_IMPORT ImGuiContext* GImGuiContext;
 }
 
 #define GImGui skr::imgui::GImGuiContext
