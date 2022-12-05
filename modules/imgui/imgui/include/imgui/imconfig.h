@@ -131,7 +131,7 @@ namespace ImGui
     #if defined(_MSC_VER)
         #define IMGUI_IMPORT __declspec(dllimport) extern
     #else
-        #define IMGUI_IMPORT __attribute__((visibility("default")))
+        #define IMGUI_IMPORT __attribute__((visibility("default"))) extern
     #endif
 #endif
 #endif
