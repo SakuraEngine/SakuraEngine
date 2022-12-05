@@ -3,6 +3,7 @@
 #include "ecs/SmallVector.h"
 #include <EASTL/vector.h>
 #include <EASTL/unique_ptr.h>
+#include "containers/string.hpp"
 
 namespace dual
 {

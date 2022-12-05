@@ -48,6 +48,7 @@ static struct RegisterComponent${type.id}Helper
         desc.resourceFields = 0;
     %endif
         desc.guid = {${db.guid_constant(type)}};
+        desc.guidStr = "${type.attrs.guid}";
         desc.flags = 0;
     %if hasattr(type.attrs.component, "pin"):
         desc.flags |= DTF_PIN;
