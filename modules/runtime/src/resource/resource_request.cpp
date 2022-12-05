@@ -1,41 +1,40 @@
-#include "resource/resource_system.h"
+#include "resource_request_impl.hpp"
 #include "platform/debug.h"
 #include "utils/defer.hpp"
 #include "utils/io.h"
 #include "utils/log.hpp"
 #include "platform/vfs.h"
 #include "resource/resource_factory.h"
-#include "type/type.hpp"
+#include "binary/reader.h"
 
 namespace skr
 {
 namespace resource
 {
-
 // resource request implementation
-skr_guid_t SResourceRequest::GetGuid() const
+skr_guid_t SResourceRequestImpl::GetGuid() const
 {
     return resourceRecord->header.guid;
 }
 
-skr::span<const uint8_t> SResourceRequest::GetData() const
+skr::span<const uint8_t> SResourceRequestImpl::GetData() const
 {
     return skr::span<const uint8_t>(data, size);
 }
 
 #ifdef SKR_RESOURCE_DEV_MODE
-skr::span<const uint8_t> SResourceRequest::GetArtifactsData() const
+skr::span<const uint8_t> SResourceRequestImpl::GetArtifactsData() const
 {
     return skr::span<const uint8_t>(artifactsData, artifactsSize);
 }
 #endif
 
-skr::span<const skr_guid_t> SResourceRequest::GetDependencies() const
+skr::span<const skr_guid_t> SResourceRequestImpl::GetDependencies() const
 {
     return skr::span<const skr_guid_t>(dependencies.data(), dependencies.size());
 }
 
-void SResourceRequest::UpdateLoad(bool requestInstall)
+void SResourceRequestImpl::UpdateLoad(bool requestInstall)
 {
     if (isLoading)
         return;
@@ -91,7 +90,7 @@ void SResourceRequest::UpdateLoad(bool requestInstall)
     }
 }
 
-void SResourceRequest::UpdateUnload()
+void SResourceRequestImpl::UpdateUnload()
 {
     if (!isLoading)
         return;
@@ -152,7 +151,7 @@ void SResourceRequest::UpdateUnload()
     }
 }
 
-void SResourceRequest::OnRequestFileFinished()
+void SResourceRequestImpl::OnRequestFileFinished()
 {
     if (resourceUrl.empty() || vfs == nullptr)
     {
@@ -181,8 +180,12 @@ void SResourceRequest::OnRequestFileFinished()
     }
 }
 
+void SResourceRequestImpl::OnRequestLoadFinished()
+{
+    
+}
 
-void SResourceRequest::_LoadDependencies()
+void SResourceRequestImpl::_LoadDependencies()
 {
     if(dependenciesLoaded)
         return;
@@ -192,7 +195,7 @@ void SResourceRequest::_LoadDependencies()
         dep.resolve(true, resourceRecord->id, SKR_REQUESTER_DEPENDENCY);
 }
 
-void SResourceRequest::_UnloadDependencies()
+void SResourceRequestImpl::_UnloadDependencies()
 {
     if(!dependenciesLoaded)
         return;
@@ -202,7 +205,7 @@ void SResourceRequest::_UnloadDependencies()
         dep.unload();
 }
 
-void SResourceRequest::_LoadFinished()
+void SResourceRequestImpl::_LoadFinished()
 {
     resourceRecord->SetStatus(SKR_LOADING_STATUS_LOADED);
     if (data)
@@ -224,14 +227,19 @@ void SResourceRequest::_LoadFinished()
         currentPhase = SKR_LOADING_PHASE_INSTALL_RESOURCE;
 }
 
-void SResourceRequest::_InstallFinished()
+void SResourceRequestImpl::_InstallFinished()
 {
     resourceRecord->SetStatus(SKR_LOADING_STATUS_INSTALLED);
     currentPhase = SKR_LOADING_PHASE_FINISHED;
     return;
 }
 
-void SResourceRequest::Update()
+void SResourceRequestImpl::_UnloadResource()
+{
+
+}
+
+void SResourceRequestImpl::Update()
 {
     SMutexLock lock(updateMutex.mMutex);
     if (requireLoading != isLoading)
@@ -484,7 +492,7 @@ void SResourceRequest::Update()
     }
 }
 
-void SResourceRequest::LoadTask()
+void SResourceRequestImpl::LoadTask()
 {
     skr::binary::SpanReader reader{ GetData() };
     skr_binary_reader_t archive{ reader };
@@ -498,23 +506,23 @@ void SResourceRequest::LoadTask()
     serdeEvent.signal();
 }
 
-bool SResourceRequest::Okay()
+bool SResourceRequestImpl::Okay()
 {
     bool installed = resourceRecord && !(resourceRecord->loadingStatus == SKR_LOADING_STATUS_LOADED);
     return (currentPhase == SKR_LOADING_PHASE_FINISHED) && (isLoading == requireLoading) && (requestInstall <= installed);
 }
 
-bool SResourceRequest::Failed()
+bool SResourceRequestImpl::Failed()
 {
     return !resourceRecord || (resourceRecord->loadingStatus == SKR_LOADING_STATUS_ERROR);
 }
 
-bool SResourceRequest::AsyncSerde()
+bool SResourceRequestImpl::AsyncSerde()
 {
     return currentPhase == SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE && !serdeScheduled;
 }
 
-bool SResourceRequest::Yielded()
+bool SResourceRequestImpl::Yielded()
 {
     switch (currentPhase)
     {
@@ -526,6 +534,18 @@ bool SResourceRequest::Yielded()
             return true;
         default:
             return false;
+    }
+}
+
+void SResourceRegistry::FillRequest(SResourceRequest* r, skr_resource_header_t header, skr_vfs_t* vfs, const char* uri)
+{
+    auto request = static_cast<SResourceRequestImpl*>(r);
+    if (request)
+    {
+        request->resourceRecord->header.type = header.type;
+        request->resourceRecord->header.version = header.version;
+        request->vfs = vfs;
+        request->resourceUrl = uri;
     }
 }
 

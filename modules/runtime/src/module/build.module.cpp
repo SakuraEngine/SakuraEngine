@@ -23,6 +23,7 @@ auto log_locker = +[](bool isLocked, void* pMutex){
         skr_release_mutex((SMutex*)pMutex);
     }
 };
+
 void SkrRuntimeModule::on_load(int argc, char** argv)
 {
 #ifdef TRACY_ENABLE

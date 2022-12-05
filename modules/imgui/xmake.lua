@@ -19,12 +19,14 @@ target("imgui")
     --     end
     -- else
         set_kind("static")
+        set_optimize("fastest")
         add_files("imgui/unitybuild.cpp")
     -- end
 
 target("cimgui")
     set_group("00.thirdparty")
     set_kind("static")
+    set_optimize("fastest")
     add_deps("imgui", {public=true})
     add_includedirs("imgui", {public=false})
     add_includedirs("dear_bindings/cimgui/include", {public=true})

@@ -15,12 +15,18 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     add_defines(defs_list, {public = true})
     add_cxflags(project_cxflags, {public = true, force = true})
     add_includedirs(include_dir_list, {public = true})
+    -- add source files
     add_files(source_list)
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
+    if (is_os("macosx")) then 
+        add_files("src/**/build.*.m", "src/**/build.*.mm")
+    end
+
     -- add deps & links
     add_deps("SkrDependencyGraph", "lua", {public = false})
     add_deps("vulkan", {public = true})
     add_packages(packages_list, {public = true})
+
     -- runtime compile definitions
     after_load(function (target,  opt)
         if (target:get("kind") == "shared") then
@@ -32,7 +38,10 @@ shared_module("SkrRT", "RUNTIME", engine_version)
             target:add("defines", "EASTL_API=EA_EXPORT", "EASTL_EASTDC_API=EA_EXPORT", "MARL_BUILDING_DLL")
         end
     end)
+
     -- link system libs/frameworks
+    add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public = true})
+    add_links(links_list, {public = true})
     if (is_os("windows")) then 
         add_links("advapi32", "Shcore", "user32", "shell32", "Ole32", {public = true})
     end
@@ -40,11 +49,11 @@ shared_module("SkrRT", "RUNTIME", engine_version)
         add_mxflags(project_cxflags, project_mxflags, {public = true, force = true})
         add_mxflags("-fno-objc-arc", {force = true})
         add_frameworks("CoreFoundation", "Cocoa", "Metal", "IOKit", {public = true})
-        add_files("src/**/build.*.m", "src/**/build.*.mm")
+    end
+    if has_config("is_unix") then 
+        add_syslinks("pthread")
     end
 
-    add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public = true})
-    add_links(links_list, {public = true})
     -- boost ctx
     do
         local platform = "x86_64"
@@ -110,15 +119,14 @@ shared_module("SkrRT", "RUNTIME", engine_version)
         add_files("$(projectdir)/thirdparty/boost_context/asm/make_"..file)
         add_files("$(projectdir)/thirdparty/boost_context/asm/jump_"..file)
     end
-    if has_config("is_unix") then 
-        add_syslinks("pthread")
-    end 
-    add_files("$(projectdir)/thirdparty/FiberTaskingLib/source/*.cpp")
+   
+    -- add FTL source 
+    add_files("$(projectdir)/thirdparty/FiberTaskingLib/source/build.*.cpp")
     
     -- add marl source
     add_defines("MARL_USE_EASTL", {public = true})
     local marl_source_dir = "$(projectdir)/thirdparty/marl"
-    add_files(marl_source_dir.."/src/**.cpp")
+    add_files(marl_source_dir.."/src/build.*.cpp")
     if not has_config("is_msvc") then 
         add_files(marl_source_dir.."/src/**.c")
         add_files(marl_source_dir.."/src/**.S")

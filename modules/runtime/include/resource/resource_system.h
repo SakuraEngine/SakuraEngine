@@ -1,15 +1,8 @@
-// TODO: virtualize this file
 #pragma once
-#include <EASTL/fixed_vector.h>
-#include "ecs/entities.hpp"
-#include "platform/thread.h"
-#include "platform/guid.hpp"
 #include "platform/vfs.h"
 #include "resource/resource_handle.h"
 #include "resource/resource_header.hpp"
-#include "utils/io.h"
 #include "utils/types.h"
-#include "task/task.hpp"
 
 struct skr_io_ram_service_t;
 
@@ -42,7 +35,6 @@ typedef enum ESkrLoadingPhase
     SKR_LOADING_PHASE_FINISHED,
 } ESkrLoadingPhase;
 #if defined(__cplusplus)
-#include <platform/filesystem.hpp>
 
 namespace skr
 {
@@ -54,68 +46,34 @@ struct SResourceSystem;
 struct SResourceSystemImpl;
 
 struct RUNTIME_API SResourceRequest {
-    friend struct SResourceSystem;
-    friend struct SResourceRegistry;
-    friend struct SResourceSystemImpl;
+    virtual ~SResourceRequest() = default;
 public:
-    skr_guid_t GetGuid() const;
-    skr::span<const uint8_t> GetData() const;
+    virtual skr_guid_t GetGuid() const = 0;
+    virtual skr::span<const uint8_t> GetData() const = 0;
 #ifdef SKR_RESOURCE_DEV_MODE
-    skr::span<const uint8_t> GetArtifactsData() const;
+    virtual skr::span<const uint8_t> GetArtifactsData() const = 0;
 #endif
-    skr::span<const skr_guid_t> GetDependencies() const;
+    virtual skr::span<const skr_guid_t> GetDependencies() const = 0;
 
-    void UpdateLoad(bool requestInstall);
-    void UpdateUnload();
-    void Update();
+    virtual void UpdateLoad(bool requestInstall) = 0;
+    virtual void UpdateUnload() = 0;
+    virtual void Update() = 0;
 
-    bool Okay();
-    bool Yielded();
-    bool Failed();
-    bool AsyncSerde();
+    virtual bool Okay() = 0;
+    virtual bool Yielded() = 0;
+    virtual bool Failed() = 0;
+    virtual bool AsyncSerde() = 0;
 
-    void OnRequestFileFinished();
-    void OnRequestLoadFinished();
+    virtual void OnRequestFileFinished() = 0;
+    virtual void OnRequestLoadFinished() = 0;
 
-    void LoadTask();
+    virtual void LoadTask() = 0;
 protected:
-    void _LoadDependencies();
-    void _UnloadDependencies();
-    void _LoadFinished();
-    void _InstallFinished();
-    void _UnloadResource();
-
-    ESkrLoadingPhase currentPhase;
-    std::atomic_bool isLoading;
-    std::atomic_bool requireLoading;
-    std::atomic_bool requestInstall;
-
-    SResourceSystem* system;
-    SResourceFactory* factory;
-    skr_vfs_t* vfs;
-
-    eastl::fixed_vector<skr_guid_t, 4> dependencies;
-    skr_resource_record_t* resourceRecord;
-    skr_async_request_t ioRequest;
-    skr_async_ram_destination_t ioDestination;
-    skr::string resourceUrl;
-#ifdef SKR_RESOURCE_DEV_MODE
-    skr_async_request_t artifactsIoRequest;
-    skr_async_ram_destination_t artifactsIoDestination;
-    skr::string artifactsUrl;
-#endif
-    uint8_t* data;
-    uint64_t size;
-#ifdef SKR_RESOURCE_DEV_MODE
-    uint8_t* artifactsData;
-    uint64_t artifactsSize;
-#endif
-    skr::task::event_t serdeEvent;
-    bool serdeScheduled;
-    int serdeResult; 
-
-    SMutexObject updateMutex;
-    bool dependenciesLoaded = false;
+    virtual void _LoadDependencies() = 0;
+    virtual void _UnloadDependencies() = 0;
+    virtual void _LoadFinished() = 0;
+    virtual void _InstallFinished() = 0;
+    virtual void _UnloadResource() = 0;
 };
 
 struct RUNTIME_API SResourceRegistry {
@@ -123,16 +81,7 @@ public:
     virtual bool RequestResourceFile(SResourceRequest* request) = 0;
     virtual void CancelRequestFile(SResourceRequest* requst) = 0;
 
-    void FillRequest(SResourceRequest* request, skr_resource_header_t header, skr_vfs_t* vfs, const char* uri)
-    {
-        if (request)
-        {
-            request->resourceRecord->header.type = header.type;
-            request->resourceRecord->header.version = header.version;
-            request->vfs = vfs;
-            request->resourceUrl = uri;
-        }
-    }
+    void FillRequest(SResourceRequest* request, skr_resource_header_t header, skr_vfs_t* vfs, const char* uri);
 };
 
 struct RUNTIME_API SResourceSystem {

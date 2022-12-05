@@ -1,3 +1,4 @@
+#include <platform/filesystem.hpp>
 #include "SkrRenderer/resources/texture_resource.h"
 #include "cgpu/api.h"
 #include "containers/sptr.hpp"

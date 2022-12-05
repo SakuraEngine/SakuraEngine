@@ -3,6 +3,7 @@
 #include "GameRuntime/gamert.h"
 #include "utils/format.hpp"
 #include "utils/make_zeroed.hpp"
+#include "platform/filesystem.hpp"
 #include "platform/configure.h"
 #include "platform/memory.h"
 #include "platform/time.h"

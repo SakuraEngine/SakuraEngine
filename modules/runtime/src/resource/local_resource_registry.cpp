@@ -1,10 +1,11 @@
 ﻿#include <platform/filesystem.hpp>
 #include "utils/defer.hpp"
-#include "utils/format.hpp"
 #include "platform/vfs.h"
 #include "resource/local_resource_registry.hpp"
 #include "resource/resource_header.hpp"
 #include "utils/log.hpp"
+#include "binary/reader.h"
+#include "platform/guid.hpp"
 
 namespace skr::resource
 {
