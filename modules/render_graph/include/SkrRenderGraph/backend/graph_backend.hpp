@@ -3,7 +3,7 @@
 #include "texture_pool.hpp"
 #include "buffer_pool.hpp"
 #include "texture_view_pool.hpp"
-#include "desc_set_heap.hpp"
+#include "bind_table_pool.hpp"
 
 #include "cgpu/extensions/cgpu_marker_buffer.h"
 
@@ -31,7 +31,7 @@ public:
     CGPUFenceId exec_fence = nullptr;
     uint64_t exec_frame = 0;
     eastl::vector<CGPUTextureId> aliasing_textures;
-    eastl::unordered_map<CGPURootSignatureId, DescSetHeap*> desc_set_pools;
+    eastl::unordered_map<CGPURootSignatureId, BindTablePool*> bind_table_pools;
 
     CGPUMarkerBufferId marker_buffer = nullptr;
     uint32_t marker_idx = 0;
@@ -71,7 +71,7 @@ protected:
     void calculate_barriers(RenderGraphFrameExecutor& executor, PassNode* pass,
     eastl::vector<CGPUTextureBarrier>& tex_barriers, eastl::vector<eastl::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
     eastl::vector<CGPUBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) SKR_NOEXCEPT;
-    skr::span<CGPUDescriptorSetId> alloc_update_pass_descsets(RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT;
+    CGPUXBindTableId alloc_update_pass_bind_table(RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT;
     void deallocate_resources(PassNode* pass) SKR_NOEXCEPT;
 
     void execute_compute_pass(RenderGraphFrameExecutor& executor, ComputePassNode* pass) SKR_NOEXCEPT;

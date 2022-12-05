@@ -4,15 +4,7 @@
 #if defined(_WIN32)
 
 #ifdef SKR_RUNTIME_USE_MIMALLOC
-    RUNTIME_EXTERN_C RUNTIME_API void* mi_malloc(size_t size) SKR_NOEXCEPT;
-    RUNTIME_EXTERN_C RUNTIME_API void* mi_calloc(size_t count, size_t size) SKR_NOEXCEPT;
-    RUNTIME_EXTERN_C RUNTIME_API void* mi_calloc_aligned(size_t count, size_t size, size_t alignment) SKR_NOEXCEPT;
-    RUNTIME_EXTERN_C RUNTIME_API void* mi_malloc_aligned(size_t size, size_t alignment) SKR_NOEXCEPT;
-    RUNTIME_EXTERN_C RUNTIME_API void* mi_new_n(size_t count, size_t size);
-    RUNTIME_EXTERN_C RUNTIME_API void* mi_new_aligned(size_t size, size_t alignment);
-    RUNTIME_EXTERN_C RUNTIME_API void mi_free(void* p) SKR_NOEXCEPT;
-    RUNTIME_EXTERN_C RUNTIME_API void mi_free_aligned(void* p, size_t alignment) SKR_NOEXCEPT;
-    RUNTIME_EXTERN_C RUNTIME_API void* mi_realloc(void* p, size_t newsize) SKR_NOEXCEPT;
+    #include "mimalloc/mimalloc.h"
 #else
 #include <malloc.h>
 #include <string.h>

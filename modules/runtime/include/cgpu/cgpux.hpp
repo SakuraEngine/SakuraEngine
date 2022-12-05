@@ -12,17 +12,23 @@ struct CGPUXBindTable
 public:
     struct Location
     {
-        uint32_t set;
-        uint32_t binding;
+        const uint32_t set = 0;
+        const uint32_t binding = 0;
+        // when value is 0, it means that the value is not set or marked dirty
+        uint64_t value_hash = 0;
+        CGPUDescriptorData value = {};
     };
 
     RUNTIME_API static CGPUXBindTableId Create(CGPUDeviceId device, const struct CGPUXBindTableDescriptor* desc) SKR_NOEXCEPT;
     RUNTIME_API static void Free(CGPUXBindTableId table) SKR_NOEXCEPT;
 
-    RUNTIME_API void Override(const struct CGPUXBindTable* rhs) SKR_NOEXCEPT;
     RUNTIME_API void Update(const struct CGPUDescriptorData* datas, uint32_t count) SKR_NOEXCEPT;
+    RUNTIME_API void Bind(CGPURenderPassEncoderId encoder) const SKR_NOEXCEPT;
+    RUNTIME_API void Bind(CGPUComputePassEncoderId encoder) const SKR_NOEXCEPT;
 
 protected:
+    void updateDescSetsIfDirty() const SKR_NOEXCEPT;
+
     // flatten name hashes 
     uint64_t* name_hashes = nullptr;
     // set index location for flattened name hashes
@@ -32,6 +38,12 @@ protected:
     // all sets
     uint32_t sets_count = 0;
     CGPUDescriptorSetId* sets = nullptr;
+};
+
+struct CGPUXMegedBindTable
+{
+    uint32_t sets_count = 0;
+    CGPUDescriptorSetId* merged = nullptr;
 };
 
 namespace cgpux

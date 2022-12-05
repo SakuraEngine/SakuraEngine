@@ -4,6 +4,7 @@
 #include "utils/make_zeroed.hpp"
 #include <EASTL/set.h>
 
+#include "SkrRenderGraph/backend/bind_table_pool.hpp"
 #include "SkrRenderGraph/backend/desc_set_heap.hpp"
 #include "SkrRenderGraph/backend/buffer_pool.hpp"
 #include "SkrRenderGraph/backend/texture_pool.hpp"
@@ -15,6 +16,63 @@ namespace skr
 {
 namespace render_graph
 {
+// Bind Table Pool
+
+void BindTablePool::expand(const char* keys, const CGPUXName* names, uint32_t names_count, size_t set_count)
+{
+    auto existed_block = pool.find(keys);
+    if (existed_block == pool.end())
+    {
+        pool.emplace(skr::string(keys), BindTablesBlock{});
+    }
+    auto& block = pool[keys];
+    block.bind_tables.reserve(block.bind_tables.size() + set_count);
+    for (size_t i = 0; i < set_count; ++i)
+    {
+        CGPUXBindTableDescriptor table_desc = {};
+        table_desc.root_signature = root_sig;
+        table_desc.names = names;
+        table_desc.names_count = names_count;
+        auto new_table = cgpux_create_bind_table(root_sig->device, &table_desc);
+        block.bind_tables.emplace_back(new_table);
+    }
+}
+
+CGPUXBindTableId BindTablePool::pop(const char* keys, const CGPUXName* names, uint32_t names_count)
+{
+    auto existed_block = pool.find(keys);
+    if (existed_block == pool.end())
+    {
+        pool.insert(std::make_pair( skr::string(keys), BindTablesBlock{} ));
+    }
+    auto& block = pool[keys];
+    if (block.cursor >= block.bind_tables.size())
+    {
+        expand(keys, names, names_count);
+    }
+    return block.bind_tables[block.cursor++];
+}
+
+void BindTablePool::reset() 
+{ 
+    for (auto& [name, block] : pool)
+    {
+        block.cursor = 0;
+    }
+}
+
+void BindTablePool::destroy()
+{
+    for (auto& [name, block] : pool)
+    {
+        block.cursor = 0;
+        for (auto& bind_table : block.bind_tables)
+        {
+            cgpux_free_bind_table(bind_table);
+        }
+    }
+}
+
 // Descriptor Set Heap
 
 void DescSetHeap::expand(size_t set_count)
