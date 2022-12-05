@@ -27,7 +27,7 @@ namespace skr::type
         }
         inline static SKR_CONSTEXPR std::string_view str()
         {
-            return "${record.attrs.guid}";
+            return "${enum.attrs.guid}";
         }
     };
 %endfor
