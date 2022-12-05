@@ -11,11 +11,10 @@ CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXB
     const auto locations_size = desc->names_count * sizeof(CGPUXBindTable::Location);
     const auto sets_size = rs->table_count * sizeof(CGPUDescriptorSetId);
     const auto total_size = sizeof(CGPUXBindTable) + hashes_size + locations_size + sets_size;
-    CGPUXBindTable* table = (CGPUXBindTable*)cgpu_calloc(1, total_size);
+    CGPUXBindTable* table = (CGPUXBindTable*)cgpu_calloc_aligned(1, total_size, alignof(CGPUXBindTable));
     uint64_t* pHashes = (uint64_t*)(table + 1);
     CGPUXBindTable::Location* pLocations = (CGPUXBindTable::Location*)(pHashes + desc->names_count);
     CGPUDescriptorSetId* pSets = (CGPUDescriptorSetId*)(pLocations + desc->names_count);
-    CGPUDescriptorSetId* pMergedSets = (CGPUDescriptorSetId*)(pSets + rs->table_count);
     table->names_count = desc->names_count;
     table->name_hashes = pHashes;
     table->name_locations = pLocations;
@@ -49,7 +48,6 @@ CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXB
                     if (!pSets[setIdx]) 
                     {
                         pSets[setIdx] = cgpu_create_descriptor_set(device, &setDesc);
-                        pMergedSets[setIdx] = pSets[setIdx];
                     }
                     break;
                 }
