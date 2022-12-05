@@ -502,8 +502,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
     auto GetStorage = +[](lua_State* L) -> int
     {
         lua_pushlightuserdata(L, g_game_module->game_world);
-        luaL_getmetatable(L, "skr_opaque_t");
-        lua_setmetatable(L, -2);
         return 1;
     };
     lua_pushcfunction(L, GetStorage);

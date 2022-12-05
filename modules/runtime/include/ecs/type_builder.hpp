@@ -59,6 +59,7 @@ struct RUNTIME_API type_builder_t {
         dual_type_index_t types[] = {(dual_id_of<T>::get())...};
         return with(types, sizeof...(T));
     }
+    void reserve(uint32_t size);
     dual_type_set_t build();
 protected:
     llvm_vecsmall::SmallVector<dual_type_index_t, 8> indices;
