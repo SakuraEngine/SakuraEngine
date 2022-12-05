@@ -72,7 +72,7 @@ void CGPUXBindTable::Update(const struct CGPUDescriptorData* datas, uint32_t cou
                 if (name_hash == name_hashes[j])
                 {
                     const auto& location = name_locations[j];
-                    if (location.value_hash != value_hash)
+                    if (location.value_hash != value_hash) //TODO: FIX ME
                     {
                         auto& loc = name_locations[j];
                         loc.value = data;
