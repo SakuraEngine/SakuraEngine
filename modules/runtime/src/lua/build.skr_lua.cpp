@@ -150,11 +150,6 @@ void bind_unknown(lua_State* L)
             lua_pushboolean(L, a == b);
             return 1;
         } },
-        { "__tostring", [](lua_State* L) -> int {
-            void* a = *(void**)lua_touserdata(L, 1);
-            lua_pushfstring(L, "skr_unknown %p", a);
-            return 1;
-        } },
         { nullptr, nullptr }
     };
     luaL_newmetatable(L, "skr_opaque_t");
@@ -291,7 +286,7 @@ void bind_skr_resource_handle(lua_State* L)
                      lua_pushlightuserdata(L, resource);
                      lua_pushcclosure(
                      L, +[](lua_State* L) -> int {
-                         auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+                         auto resource = (skr_resource_handle_t*)lua_touserdata(L, lua_upvalueindex(1));
                          bool requireInstall = lua_toboolean(L, 2);
                          if (!resource->is_resolved())
                              resource->resolve(requireInstall, (uint64_t)L, SKR_REQUESTER_SCRIPT);
@@ -305,7 +300,7 @@ void bind_skr_resource_handle(lua_State* L)
                      lua_pushlightuserdata(L, resource);
                      lua_pushcclosure(
                      L, +[](lua_State* L) -> int {
-                         auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+                         auto resource = (skr_resource_handle_t*)lua_touserdata(L, lua_upvalueindex(1));
                          lua_pushboolean(L, resource->is_resolved());
                          return 1;
                      },
@@ -317,7 +312,7 @@ void bind_skr_resource_handle(lua_State* L)
                      lua_pushlightuserdata(L, resource);
                      lua_pushcclosure(
                      L, +[](lua_State* L) -> int {
-                         auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+                         auto resource = (skr_resource_handle_t*)lua_touserdata(L, lua_upvalueindex(1));
                          if (!resource->is_resolved())
                          {
                              return 0;
@@ -342,7 +337,7 @@ void bind_skr_resource_handle(lua_State* L)
                      lua_pushlightuserdata(L, resource);
                      lua_pushcclosure(
                      L, +[](lua_State* L) -> int {
-                         auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+                         auto resource = (skr_resource_handle_t*)lua_touserdata(L, lua_upvalueindex(1));
                          if (resource->is_resolved())
                              resource->unload();
                          else
@@ -469,6 +464,29 @@ const skr_guid_t* check_guid(lua_State* L, int index)
     return (skr_guid_t*)luaL_checkudata(L, index, "skr_guid_t");
 }
 
+const skr_guid_t* opt_guid(lua_State* L, int index, const skr_guid_t* def)
+{
+    if (lua_isnoneornil(L, index))
+        return def;
+    return check_guid(L, index);
+}
+
+int push_enum(lua_State *L, long long v)
+{
+    lua_pushinteger(L, v);
+    return 1;
+}
+
+long long check_enum(lua_State *L, int index)
+{
+    return luaL_checkinteger(L, index);
+}
+
+long long opt_enum(lua_State *L, int index, long long def)
+{
+    return luaL_optinteger(L, index, def);
+}
+
 int push_string(lua_State* L, const skr::string& str)
 {
     lua_pushstring(L, str.c_str());
@@ -486,6 +504,11 @@ skr::string check_string(lua_State* L, int index)
     return lua_tostring(L, index);
 }
 
+skr::string opt_string(lua_State* L, int index, const skr::string& def)
+{
+    return luaL_optstring(L, index, def.c_str());
+}
+
 int push_resource(lua_State* L, const skr_resource_handle_t* resource)
 {
     auto ud = (skr_resource_handle_t*)lua_newuserdata(L, sizeof(skr_resource_handle_t));
@@ -500,9 +523,16 @@ const skr_resource_handle_t* check_resource(lua_State* L, int index)
     return (skr_resource_handle_t*)luaL_checkudata(L, index, "skr_resource_handle_t");
 }
 
+const skr_resource_handle_t* opt_resource(lua_State* L, int index, const skr_resource_handle_t* def)
+{
+    if (lua_isnoneornil(L, index))
+        return def;
+    return check_resource(L, index);
+}
+
 int push_unknown(lua_State *L, void *value, std::string_view tid)
 {
-    lua_pushlightuserdata(L, value);
+    *(void**)lua_newuserdata(L, sizeof(void*)) = value;
     luaL_getmetatable(L, tid.data());
     if (lua_isnil(L, -1))
     {
