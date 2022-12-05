@@ -4,6 +4,7 @@ function module:init()
     self.value = 0.0
     self.selected = 0
     self.counter = 0
+    self.query = skr.create_query(game.GetStorage(), "[in]game::anim_state_t")
 end
 
 ---@type IMGUI
@@ -17,7 +18,13 @@ function module:update()
         _, self.selected = imgui.ListBoxCallback("item1", self.selected, function(idx) 
             return true, "item" .. idx
         end, 3)
-    end)
+        skr.iterate_query(self.query, function(view)
+            for i = 0, view.length - 1 do
+                local state = view[i]
+                imgui.Text("state: " .. tostring(state.currtime))
+            end
+        end)
+    end) 
     if not succ then
         skr.print(err)
     end

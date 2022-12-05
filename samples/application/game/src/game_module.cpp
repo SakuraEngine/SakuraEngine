@@ -60,7 +60,6 @@ const bool bUseInputSystem = false;
 
 // TODO: Refactor this
 CGPUVertexLayout vertex_layout = {};
-
 class SGameModule : public skr::IDynamicModule
 {
     virtual void on_load(int argc, char** argv) override;
@@ -89,6 +88,7 @@ class SGameModule : public skr::IDynamicModule
 
     skr::task::scheduler_t scheduler;
 };
+static SGameModule* g_game_module = nullptr;
 
 IMPLEMENT_DYNAMIC_MODULE(SGameModule, Game);
 
@@ -252,6 +252,7 @@ void SGameModule::on_load(int argc, char** argv)
         dualJ_bind_storage(game_world);
     }
     installResourceFactories();
+    g_game_module = this;
 }
 
 void create_test_scene(SRendererId renderer)
@@ -493,7 +494,24 @@ int SGameModule::main_module_exec(int argc, char** argv)
     // Lua
     auto L = skr_lua_newstate(resource_vfs);
     skr_lua_bind_imgui(L);
-    luaL_dostring(L, "local module = require \"game\"; module:init()");
+    skr_lua_open_game_runtime(L);
+    lua_newtable(L);
+    lua_pushvalue(L, -1);
+    lua_setglobal(L, "game");
+    auto GetStorage = +[](lua_State* L) -> int
+    {
+        lua_pushlightuserdata(L, g_game_module->game_world);
+        luaL_getmetatable(L, "skr_opaque_t");
+        lua_setmetatable(L, -2);
+        return 1;
+    };
+    lua_pushcfunction(L, GetStorage);
+    lua_setfield(L, -2, "GetStorage");
+    lua_pop(L, 1);
+    if(luaL_dostring(L, "local module = require \"game\"; module:init()") != LUA_OK)
+    {
+        SKR_LOG_ERROR("luaL_dostring error: {}", lua_tostring(L, -1));
+    }
 
     // Time
     SHiresTimer tick_timer;
@@ -619,7 +637,10 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 ImGui::Begin(u8"Lua");
                 if(ImGui::Button("Hotfix"))
                 {
-                    luaL_dostring(L, "local module = require \"hotfix\"; module.reload({\"game\"})");
+                    if(luaL_dostring(L, "local module = require \"hotfix\"; module.reload({\"game\"})") != LUA_OK)
+                    {
+                        SKR_LOG_ERROR("luaL_dostring error: {}", lua_tostring(L, -1));
+                    }
                 }
                 ImGui::End();
             }
@@ -629,7 +650,10 @@ int SGameModule::main_module_exec(int argc, char** argv)
         }
         {
             ZoneScopedN("Lua");
-            luaL_dostring(L, "local module = require \"game\"; module:update()");
+            if(luaL_dostring(L, "local module = require \"game\"; module:update()") != LUA_OK)
+            {
+                SKR_LOG_ERROR("luaL_dostring error: {}", lua_tostring(L, -1));
+            }
         }
         // move
         // [has]skr_movement_t, [inout]skr_translation_t, [in]skr_scale_t, [in]skr_index_component_t, !skr_camera_t
@@ -805,6 +829,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
 
 void SGameModule::on_unload()
 {
+    g_game_module = nullptr;
     SKR_LOG_INFO("game unloaded!");
     if (bUseJob)
     {

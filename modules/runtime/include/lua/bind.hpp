@@ -8,6 +8,9 @@
 
 namespace skr::lua
 {
+    RUNTIME_API int push_enum(lua_State* L, long long v);
+    RUNTIME_API long long check_enum(lua_State* L, int index);
+    RUNTIME_API long long opt_enum(lua_State* L, int index, long long def);
     RUNTIME_API int push_guid(lua_State* L, const skr_guid_t* guid);
     RUNTIME_API const skr_guid_t* check_guid(lua_State* L, int index);
     RUNTIME_API const skr_guid_t* opt_guid(lua_State* L, int index, const skr_guid_t* def);
@@ -101,16 +104,16 @@ namespace skr::lua
         using type = T;
         static int push(lua_State* L, type value)
         {
-            lua_pushinteger(L, static_cast<long long>(value));
+            push_enum(L, static_cast<long long>(value));
             return 1;
         }
         static type check(lua_State* L, int index)
         {
-            return static_cast<type>(luaL_checkinteger(L, index));
+            return static_cast<type>(check_enum(L, index));
         }
         static type opt(lua_State* L, int index, type def)
         {
-            return static_cast<type>(luaL_optinteger(L, index, static_cast<long long>(def)));
+            return static_cast<type>(opt_enum(L, index, static_cast<long long>(def)));
         }
     };
     
@@ -146,6 +149,84 @@ namespace skr::lua
     };
 
     template<>
+    struct BindTrait<float>
+    {
+        static int push(lua_State* L, float value)
+        {
+            lua_pushnumber(L, value);
+            return 1;
+        }
+        static float check(lua_State* L, int index)
+        {
+            return (float)luaL_checknumber(L, index);
+        }
+        static float opt(lua_State* L, int index, float def)
+        {
+            return (float)luaL_optnumber(L, index, def);
+        }
+    };
+
+    template<>
+    struct BindTrait<double>
+    {
+        static int push(lua_State* L, double value)
+        {
+            lua_pushnumber(L, value);
+            return 1;
+        }
+        static double check(lua_State* L, int index)
+        {
+            return luaL_checknumber(L, index);
+        }
+        static double opt(lua_State* L, int index, double def)
+        {
+            return luaL_optnumber(L, index, def);
+        }
+    };
+
+    #define BindInt(type) \
+    template<> \
+    struct BindTrait<type> \
+    { \
+        static int push(lua_State* L, type value) \
+        { \
+            lua_pushinteger(L, value); \
+            return 1; \
+        } \
+        static type check(lua_State* L, int index) \
+        { \
+            return (type)luaL_checkinteger(L, index); \
+        } \
+        static type opt(lua_State* L, int index, type def) \
+        { \
+            return (type)luaL_optinteger(L, index, def); \
+        } \
+    };
+    BindInt(uint32_t);
+    BindInt(int32_t);
+    BindInt(uint64_t);
+    BindInt(int64_t);
+    #undef BindInt
+    
+    template<>
+    struct BindTrait<bool>
+    {
+        static int push(lua_State* L, bool value)
+        {
+            lua_pushboolean(L, value);
+            return 1;
+        }
+        static bool check(lua_State* L, int index)
+        {
+            return lua_toboolean(L, index) != 0;
+        }
+        static bool opt(lua_State* L, int index, bool def)
+        {
+            return lua_isnoneornil(L, index) ? def : lua_toboolean(L, index) != 0;
+        }
+    };
+
+    template<>
     struct BindTrait<skr_guid_t>
     {
         static int push(lua_State* L, const skr_guid_t& guid)
@@ -172,14 +253,33 @@ namespace skr::lua
             return push_resource(L, &resource);
         }
 
-        static const skr_resource_handle_t check(lua_State* L, int index)
+        static const skr_resource_handle_t& check(lua_State* L, int index)
         {
             return *check_resource(L, index);
         }
 
-        static const skr_resource_handle_t opt(lua_State* L, int index, const skr_resource_handle_t& def)
+        static const skr_resource_handle_t& opt(lua_State* L, int index, const skr_resource_handle_t& def)
         {
             return *opt_resource(L, index, &def);
+        }
+    };
+
+    template<class T>
+    struct BindTrait<resource::TResourceHandle<T>>
+    {
+        static int push(lua_State* L, const resource::TResourceHandle<T>& resource)
+        {
+            return push_resource(L, (const skr_resource_handle_t*)&resource);
+        }
+
+        static const resource::TResourceHandle<T>& check(lua_State* L, int index)
+        {
+            return *(resource::TResourceHandle<T>*)check_resource(L, index);
+        }
+
+        static const resource::TResourceHandle<T>& opt(lua_State* L, int index, const resource::TResourceHandle<T>& def)
+        {
+            return *(resource::TResourceHandle<T>*)opt_resource(L, index, &def);
         }
     };
 

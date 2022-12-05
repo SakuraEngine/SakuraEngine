@@ -16,11 +16,14 @@ namespace game sreflect
     sattr("component" : 
     {
         "custom" : "::dual::managed_component"
-    }) 
+    })
+    sattr("scriptable" : true)
     anim_state_t
     {
         SKR_RESOURCE_FIELD(skr_anim_resource_t, animation_resource);
+        sattr("native" : true)
         eastl::vector<ozz::math::SoaTransform> local_transforms;
+        sattr("native" : true)
         ozz::animation::SamplingJob::Context sampling_context;
         float currtime = 0.f;
     };
