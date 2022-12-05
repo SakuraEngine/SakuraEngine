@@ -60,8 +60,7 @@ void D3D12Util_ResetDescriptorHeap(struct D3D12Util_DescriptorHeap* pHeap);
 void D3D12Util_FreeDescriptorHeap(struct D3D12Util_DescriptorHeap* pHeap);
 
 // Consume & Return
-D3D12Util_DescriptorHandle D3D12Util_ConsumeDescriptorHandles(
-struct D3D12Util_DescriptorHeap* pHeap, uint32_t count);
+D3D12Util_DescriptorHandle D3D12Util_ConsumeDescriptorHandles(struct D3D12Util_DescriptorHeap* pHeap, uint32_t count);
 void D3D12Util_ReturnDescriptorHandles(
 struct D3D12Util_DescriptorHeap* pHeap, D3D12_CPU_DESCRIPTOR_HANDLE handle, uint32_t count);
 

@@ -42,10 +42,6 @@ const skr::span<CGPUDescriptorSetId> DescSetHeap::pop()
 }
 void DescSetHeap::reset() 
 { 
-    for (uint32_t i = 0; i < heap.size(); i++)
-    {
-        ((CGPUDescriptorSet*)heap[i])->updated = false;
-    }
     cursor = 0;
 }
 void DescSetHeap::destroy()
