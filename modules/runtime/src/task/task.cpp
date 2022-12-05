@@ -17,6 +17,7 @@ counter_t::counter_t(bool inverse)
 event_t::event_t()
 {
     internal = eastl::make_shared<ftl::TaskCounter>(nullptr);
+    internal->Add(1);
 }
 
 thread_local scheduler_t* scheduler = nullptr;
