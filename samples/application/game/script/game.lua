@@ -15,7 +15,7 @@ function module:update()
         imgui.Text("This is some useful text." .. tostring(self.counter))
         _, self.value = imgui.DragFloat("float", self.value)
         _, self.selected = imgui.ListBoxCallback("item1", self.selected, function(idx) 
-            return self.a * self.b, "item" .. idx
+            return true, "item" .. idx
         end, 3)
     end)
     if not succ then
