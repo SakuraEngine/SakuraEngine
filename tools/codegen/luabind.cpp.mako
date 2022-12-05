@@ -26,7 +26,7 @@
         lua_pushcfunction(L, +[](lua_State* L)
         {
         %if record:
-            auto& record = **reinterpret_cast<${record.name}**>(lua_touserdata(L, lua_upvalueindex(1)));
+            auto& record = **reinterpret_cast<${record.name}**>(lua_touserdata(L, 1));
         %endif
             <% 
                 out_params = []
@@ -132,8 +132,6 @@ void skr_lua_open_${module}(lua_State* L)
                 casestr("${db.short_name(method.name)}")
                 {
                     ${bind_function(method, record)}
-                    lua_pushlightuserdata(L, &record);
-                    lua_setupvalue(L, -2, 1);
                     return 1;
                 }
             %endfor

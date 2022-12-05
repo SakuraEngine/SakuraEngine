@@ -8,12 +8,16 @@
 #include "lua/bind.hpp"
 #include "utils/log.h"
 #include "platform/vfs.h"
+#include "ecs/dual.h"
 
+namespace skr::lua
+{
 void bind_skr_guid(lua_State* L);
 void bind_skr_resource_handle(lua_State* L);
 void bind_skr_log(lua_State* L);
 void bind_unknown(lua_State* L);
 void bind_ecs(lua_State* L);
+} // namespace skr::lua
 
 struct skr_lua_state_extra_t
 {
@@ -124,19 +128,19 @@ lua_State* skr_lua_newstate(skr_vfs_t* vfs)
     lua_pop(L, 1);
 
     // bind skr types
-    {
-        
-    }
-
-    bind_skr_guid(L);
-    bind_skr_resource_handle(L);
+    skr::lua::bind_unknown(L);
+    skr::lua::bind_skr_guid(L);
+    skr::lua::bind_skr_resource_handle(L);
+    skr::lua::bind_ecs(L);
 
     // bind skr functions
-    bind_skr_log(L);
+    skr::lua::bind_skr_log(L);
 
     return L;
 }
 
+namespace skr::lua
+{
 void bind_unknown(lua_State* L)
 {
     luaL_Reg metamethods[] = {
@@ -153,7 +157,7 @@ void bind_unknown(lua_State* L)
         } },
         { nullptr, nullptr }
     };
-    luaL_newmetatable(L, "skr_unknown_t");
+    luaL_newmetatable(L, "skr_opaque_t");
     luaL_setfuncs(L, metamethods, 0);
     lua_pop(L, 1);
     luaL_Reg uniquemetamethods[] = {
@@ -166,7 +170,7 @@ void bind_unknown(lua_State* L)
         metamethods[1],
         { nullptr, nullptr }
     };
-    luaL_newmetatable(L, "[unique]skr_unknown_t");
+    luaL_newmetatable(L, "[unique]skr_opaque_t");
     luaL_setfuncs(L, uniquemetamethods, 0);
     lua_pop(L, 1);
     luaL_Reg sharedmetamethods[] = {
@@ -179,7 +183,7 @@ void bind_unknown(lua_State* L)
         metamethods[1],
         { nullptr, nullptr }
     };
-    luaL_newmetatable(L, "[shared]skr_unknown_t");
+    luaL_newmetatable(L, "[shared]skr_opaque_t");
     luaL_setfuncs(L, sharedmetamethods, 0);
     lua_pop(L, 1);
     luaL_Reg objectmetamethods[] = {
@@ -192,7 +196,7 @@ void bind_unknown(lua_State* L)
         metamethods[1],
         { nullptr, nullptr }
     };
-    luaL_newmetatable(L, "[object]skr_unknown_t");
+    luaL_newmetatable(L, "[object]skr_opaque_t");
     luaL_setfuncs(L, objectmetamethods, 0);
     lua_pop(L, 1);
 }
@@ -447,6 +451,7 @@ void bind_skr_log(lua_State* L)
     lua_setfield(L, -2, "log_fatal");
     lua_pop(L, 1);
 }
+} // namespace skr::lua
 
 namespace skr::lua
 {
@@ -502,7 +507,7 @@ int push_unknown(lua_State *L, void *value, std::string_view tid)
     if (lua_isnil(L, -1))
     {
         lua_pop(L, 1);
-        luaL_getmetatable(L, "skr_unknown_t");
+        luaL_getmetatable(L, "skr_opaque_t");
         lua_setmetatable(L, -2);
         return 0;
     }
@@ -557,7 +562,7 @@ int push_unknown_value(lua_State *L, const void *value, std::string_view tid, si
     {
         SKR_UNREACHABLE_CODE();
         lua_pop(L, 1);
-        luaL_getmetatable(L, "[unique]skr_unknown_t");
+        luaL_getmetatable(L, "[unique]skr_opaque_t");
         lua_setmetatable(L, -2);
         return 0;
     }
@@ -579,7 +584,7 @@ int push_sptr(lua_State *L, const skr::SPtr<void> &value, std::string_view tid)
     {
         SKR_UNREACHABLE_CODE();
         lua_pop(L, 1);
-        luaL_getmetatable(L, "[shared]skr_unknown_t");
+        luaL_getmetatable(L, "[shared]skr_opaque_t");
         lua_setmetatable(L, -2);
         return 0;
     }
@@ -592,7 +597,7 @@ int push_sptr(lua_State *L, const skr::SPtr<void> &value, std::string_view tid)
 
 skr::SPtr<void> check_sptr(lua_State *L, int index, std::string_view tid)
 {
-    void*  p = skr_check_unknown(L, index, tid, "[shared]skr_unknown_t");
+    void*  p = skr_check_unknown(L, index, tid, "[shared]skr_opaque_t");
     return *(skr::SPtr<void>*)((char*)p + sizeof(void*));
 }
 
@@ -607,7 +612,7 @@ int push_sobjectptr(lua_State *L, const skr::SObjectPtr<SInterface> &value, std:
     {
         SKR_UNREACHABLE_CODE();
         lua_pop(L, 1);
-        luaL_getmetatable(L, "[object]skr_unknown_t");
+        luaL_getmetatable(L, "[object]skr_opaque_t");
         lua_setmetatable(L, -2);
         return 0;
     }
@@ -620,7 +625,7 @@ int push_sobjectptr(lua_State *L, const skr::SObjectPtr<SInterface> &value, std:
 
 skr::SObjectPtr<SInterface> check_sobjectptr(lua_State *L, int index, std::string_view tid)
 {
-    void*  p = skr_check_unknown(L, index, tid, "[object]skr_unknown_t");
+    void*  p = skr_check_unknown(L, index, tid, "[object]skr_opaque_t");
     return *(skr::SObjectPtr<SInterface>*)((char*)p + sizeof(void*));
 
 }

@@ -58,6 +58,7 @@ enum dual_callback_flags SKR_IF_CPP(: uint32_t)
 typedef struct dual_type_description_t {
     dual_guid_t guid;
     const char* name;
+    const char* guidStr;
     /**
      * a pinned component will not removed when destroying or copy when instantiating, and user should remove them manually
      * destroyed entity with pinned component will be marked by a dead component and will be erased when all pinned component is removed
