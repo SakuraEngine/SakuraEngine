@@ -4,6 +4,7 @@
 #include "resource/resource_handle.h"
 #include "utils/traits.hpp"
 #include "utils/join.hpp"
+#include "lua/lua.hpp"
 
 namespace skr::lua
 {
@@ -112,7 +113,6 @@ namespace skr::lua
             return static_cast<type>(luaL_optinteger(L, index, static_cast<long long>(def)));
         }
     };
-
     
     template<class T>
     struct BindTrait<const T&, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::type::type_id<T>>>>
