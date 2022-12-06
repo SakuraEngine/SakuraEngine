@@ -23,8 +23,6 @@ public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
-    //const uint32_t set = UINT32_MAX;
-    //const uint32_t binding = UINT32_MAX;
     const skr::string name = "";
     const uint64_t name_hash = 0;
 
@@ -48,8 +46,6 @@ public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
-    //const uint32_t set;
-    //const uint32_t binding;
     const skr::string name = "";
     const uint64_t name_hash = 0;
 
@@ -104,8 +100,6 @@ public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
-    // const uint32_t set;
-    // const uint32_t binding;
     const skr::string name = "";
     const uint64_t name_hash = 0;
 
