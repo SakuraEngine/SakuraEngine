@@ -1,9 +1,10 @@
 #pragma once
-#include <atomic>
+#include "SkrRenderGraph/module.configure.h"
 #include "containers/hashmap.hpp"
 #include "containers/string.hpp"
 #include "containers/vector.hpp"
-#include "cgpu/cgpux.h"
+#include <EASTL/fixed_vector.h>
+#include "cgpu/cgpux.hpp"
 
 namespace skr
 {
@@ -27,11 +28,48 @@ public:
 protected:
     struct BindTablesBlock
     {
-        eastl::vector<CGPUXBindTableId> bind_tables;
+        skr::vector<CGPUXBindTableId> bind_tables;
         uint32_t cursor = 0;
     };
     const CGPURootSignatureId root_sig;
     skr::flat_hash_map<skr::string, BindTablesBlock, skr::hash<skr::string>> pool;
+};
+
+class MergedBindTablePool
+{
+    struct Key
+    {
+        struct View
+        {
+            const CGPUXBindTableId* tables;
+            uint32_t count;
+        };
+        struct hasher
+        {
+            SKR_RENDER_GRAPH_API size_t operator() (const Key& val) const;
+            SKR_RENDER_GRAPH_API size_t operator() (const View& val) const;
+        };
+        struct equal_to
+        {
+            SKR_RENDER_GRAPH_API size_t operator()(const Key& lhs, const Key& rhs) const;
+            SKR_RENDER_GRAPH_API size_t operator()(const Key& lhs, const View& other) const;
+        };
+        eastl::fixed_vector<CGPUXBindTableId, 3> tables;
+    };
+    static_assert(sizeof(Key) <= 8 * sizeof(size_t), "Key should be under single cacheline!");
+
+    MergedBindTablePool(CGPURootSignatureId root_sig)
+        : root_sig(root_sig)
+    {
+    }
+    
+    CGPUXMergedBindTableId pop(const CGPUXBindTableId* tables, uint32_t count);
+    void reset();
+    void destroy();
+
+protected:
+    const CGPURootSignatureId root_sig;
+    skr::flat_hash_map<Key, CGPUXMergedBindTableId, Key::hasher, Key::equal_to> pool;
 };
 } // namespace render_graph
 } // namespace skr

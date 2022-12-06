@@ -305,7 +305,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
         root_sig = ((RenderPassNode*)pass)->root_signature;
     else if (pass->pass_type == EPassType::Compute)
         root_sig = ((ComputePassNode*)pass)->root_signature;
-    if (!root_sig) return {};
+    if (!root_sig) return nullptr;
     // Allocate or get descriptor set heap
     auto&& table_pool_iter = executor.bind_table_pools.find(root_sig);
     if (table_pool_iter == executor.bind_table_pools.end())
@@ -479,6 +479,7 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
     pass_context.bind_table = alloc_update_pass_bind_table(executor, pass);
     pass_context.resolved_buffers = resolved_buffers;
     pass_context.resolved_textures = resolved_textures;
+    pass_context.executor = &executor;
     // call cgpu apis
     CGPUResourceBarrierDescriptor barriers = {};
     if (!tex_barriers.empty())
@@ -529,6 +530,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     pass_context.bind_table = alloc_update_pass_bind_table(executor, pass);
     pass_context.resolved_buffers = resolved_buffers;
     pass_context.resolved_textures = resolved_textures;
+    pass_context.executor = &executor;
     // call cgpu apis
     CGPUResourceBarrierDescriptor barriers = {};
     if (!tex_barriers.empty())
