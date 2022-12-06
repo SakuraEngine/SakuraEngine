@@ -48,6 +48,15 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
                     .set_depth_stencil(depth_buffer);
             },
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& pass_context) {
+                for (uint32_t i = 0; i < drawcalls.count; i++)
+                {
+                    ZoneScopedN("UpdateTextures");
+                    auto&& dc = drawcalls.drawcalls[i];
+                    if (dc.desperated || (dc.index_buffer.buffer == nullptr) || (dc.vertex_buffer_count == 0)) continue;
+
+                    CGPUXBindTableId tables[2] = { dc.bind_table, pass_context.bind_table };
+                    cgpux_merged_bind_table_merge(dc.merged_table, tables, 2);
+                }
                 cgpu_render_encoder_set_viewport(pass_context.encoder,
                     0.0f, 0.0f,
                     (float)Csm::kMaskResolution, (float)Csm::kMaskResolution,
@@ -61,8 +70,6 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
                     if (dc.desperated || (dc.index_buffer.buffer == nullptr) || (dc.vertex_buffer_count == 0)) continue;
                     {
                         ZoneScopedN("BindTextures");
-                        CGPUXBindTableId tables[2] = { dc.bind_table, pass_context.bind_table };
-                        cgpux_merged_bind_table_merge(dc.merged_table, tables, 2);
                         cgpux_render_encoder_bind_merged_bind_table(pass_context.encoder, dc.merged_table);
                     }
                     {
