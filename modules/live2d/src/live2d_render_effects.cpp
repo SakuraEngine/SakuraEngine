@@ -401,7 +401,8 @@ protected:
                     auto bind_table = cgpux_create_bind_table(pipeline->device, &bind_table_desc);
                     bind_tables[texture_view] = bind_table;
 
-                    CGPUDescriptorData datas[1];
+                    CGPUDescriptorData datas[1] = {};
+                    datas[0] = make_zeroed<CGPUDescriptorData>();
                     datas[0].name = "color_texture";
                     datas[0].count = 1;
                     datas[0].textures = &texture_view;
@@ -424,8 +425,9 @@ protected:
                     bind_table_desc.names_count = 1;
                     auto bind_table = cgpux_create_bind_table(pipeline->device, &bind_table_desc);
                     mask_bind_tables[texture_view] = bind_table;
-
-                    CGPUDescriptorData datas[1];
+                    
+                    CGPUDescriptorData datas[1] = {};
+                    datas[0] = make_zeroed<CGPUDescriptorData>();
                     datas[0].name = "color_texture";
                     datas[0].count = 1;
                     datas[0].textures = &texture_view;
