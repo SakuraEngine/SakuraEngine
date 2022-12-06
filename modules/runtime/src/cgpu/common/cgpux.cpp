@@ -2,8 +2,6 @@
 #include "common_utils.h"
 #include "cgpu/cgpux.hpp"
 
-#define CGPUX_BIND_TABLE_HASH_SEED 0x114514
-
 CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXBindTableDescriptor* desc) SKR_NOEXCEPT
 {
     auto rs = desc->root_signature;
@@ -20,11 +18,12 @@ CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXB
     table->name_locations = pLocations;
     table->sets_count = rs->table_count;
     table->sets = pSets;
+    table->root_signature = desc->root_signature;
     // calculate hashes for each name
     for (uint32_t i = 0; i < desc->names_count; i++)
     {
         const auto name = desc->names[i];
-        pHashes[i] = cgpu_hash(name, strlen(name), CGPUX_BIND_TABLE_HASH_SEED);
+        pHashes[i] = cgpu_name_hash(name, strlen(name));
     }
     // calculate active sets
     for (uint32_t setIdx = 0; setIdx < rs->table_count; setIdx++)
@@ -32,7 +31,7 @@ CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXB
         for (uint32_t bindIdx = 0; bindIdx < rs->tables[setIdx].resources_count; bindIdx++)
         {
             const auto res = rs->tables[setIdx].resources[bindIdx];
-            const auto hash = cgpu_hash(res.name, strlen(res.name), CGPUX_BIND_TABLE_HASH_SEED);
+            const auto hash = cgpu_name_hash(res.name, strlen(res.name));
             for (uint32_t k = 0; k < desc->names_count; k++)
             {
                 if (hash == pHashes[k])
@@ -59,14 +58,15 @@ CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXB
 
 void CGPUXBindTable::Update(const struct CGPUDescriptorData* datas, uint32_t count) SKR_NOEXCEPT
 {
+    const auto device = root_signature->device;
     for (uint32_t i = 0; i < count; i++)
     {
         bool updated = false;
         const auto& data = datas[i];
-        const auto value_hash = cgpu_hash(&datas[i], sizeof(CGPUDescriptorData), CGPUX_BIND_TABLE_HASH_SEED);
+        const auto value_hash = cgpu_hash(&datas[i], sizeof(CGPUDescriptorData), (size_t)device);
         if (data.name)
         {
-            const auto name_hash = cgpu_hash(data.name, strlen(data.name), CGPUX_BIND_TABLE_HASH_SEED);
+            const auto name_hash = cgpu_name_hash(data.name, strlen(data.name));
             for (uint32_t j = 0; j < names_count; j++)
             {
                 if (name_hash == name_hashes[j])
@@ -96,6 +96,7 @@ void CGPUXBindTable::Update(const struct CGPUDescriptorData* datas, uint32_t cou
 
 void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
 {
+    const auto device = root_signature->device;
     for (uint32_t i = 0; i < names_count; i++)
     {
         const auto& location = name_locations[i];
@@ -103,7 +104,7 @@ void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
         {
             const auto& set = sets[location.set];
             cgpu_update_descriptor_set(set, &location.value, 1);
-            const_cast<uint64_t&>(location.value_hash) = cgpu_hash(&location.value, sizeof(CGPUDescriptorData), CGPUX_BIND_TABLE_HASH_SEED);
+            const_cast<uint64_t&>(location.value_hash) = cgpu_hash(&location.value, sizeof(CGPUDescriptorData), (size_t)device);
         }
     }
 }

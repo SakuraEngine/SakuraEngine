@@ -32,10 +32,11 @@ public:
                 auto SRV = (TextureReadEdge*)rg_edge;
                 if (SRV->name.empty())
                 {
-                    label = "SRV:s";
-                    label.append(skr::to_string(SRV->set))
-                    .append("b")
-                    .append(skr::to_string(SRV->binding));
+                    label = "SRV";
+                    //label = "SRV:s";
+                    //label.append(skr::to_string(SRV->set))
+                    //.append("b")
+                    //.append(skr::to_string(SRV->binding));
                 }
                 else
                 {
@@ -48,10 +49,11 @@ public:
                 auto UAV = (TextureReadWriteEdge*)rg_edge;
                 if (UAV->name.empty())
                 {
-                    label = "UAV:s";
-                    label.append(skr::to_string(UAV->set))
-                    .append("b")
-                    .append(skr::to_string(UAV->binding));
+                    label = "UAV";
+                    //label = "UAV:s";
+                    //label.append(skr::to_string(UAV->set))
+                    //.append("b")
+                    //.append(skr::to_string(UAV->binding));
                 }
                 else
                 {

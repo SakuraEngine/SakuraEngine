@@ -400,7 +400,7 @@ void reflectionRecordShaderResources(ID3D12ReflectionT* d3d12reflection, ECGPUSh
         d3d12reflection->GetResourceBindingDesc(i, &bindDesc);
         const size_t source_len = strlen(bindDesc.Name);
         Reflection->shader_resources[i].name = (char8_t*)cgpu_malloc(sizeof(char8_t) * (source_len + 1));
-        Reflection->shader_resources[i].name_hash = cgpu_hash(bindDesc.Name, strlen(bindDesc.Name), *(size_t*)&S->super.device);
+        Reflection->shader_resources[i].name_hash = cgpu_name_hash(bindDesc.Name, strlen(bindDesc.Name));
         // We are very sure it's windows platform
         strcpy_s((char8_t*)Reflection->shader_resources[i].name, source_len + 1, bindDesc.Name);
         Reflection->shader_resources[i].type = gD3D12_TO_DESCRIPTOR[bindDesc.Type];

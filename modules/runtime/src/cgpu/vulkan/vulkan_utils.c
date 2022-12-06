@@ -305,7 +305,7 @@ void VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vu
                     current_res->type = RTLut[current_binding->descriptor_type];
                     current_res->name = current_binding->name;
                     current_res->name_hash =
-                    cgpu_hash(current_binding->name, strlen(current_binding->name), (size_t)device);
+                    cgpu_name_hash(current_binding->name, strlen(current_binding->name));
                     current_res->size = current_binding->count;
                     // Solve Dimension
                     if ((current_binding->type_description->type_flags & SPV_REFLECT_TYPE_FLAG_EXTERNAL_IMAGE) ||
@@ -332,7 +332,7 @@ void VkUtil_InitializeShaderReflection(CGPUDeviceId device, CGPUShaderLibrary_Vu
                 current_res->binding = 0;
                 current_res->name = push_constants_name;
                 current_res->name_hash =
-                cgpu_hash(current_res->name, strlen(current_res->name), (size_t)device);
+                cgpu_name_hash(current_res->name, strlen(current_res->name));
                 current_res->stages = S->pReflect->shader_stage;
                 current_res->size = root_sets[i]->size;
                 current_res->offset = root_sets[i]->offset;

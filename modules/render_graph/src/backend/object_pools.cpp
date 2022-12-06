@@ -5,7 +5,6 @@
 #include <EASTL/set.h>
 
 #include "SkrRenderGraph/backend/bind_table_pool.hpp"
-#include "SkrRenderGraph/backend/desc_set_heap.hpp"
 #include "SkrRenderGraph/backend/buffer_pool.hpp"
 #include "SkrRenderGraph/backend/texture_pool.hpp"
 #include "SkrRenderGraph/backend/texture_view_pool.hpp"
@@ -70,44 +69,6 @@ void BindTablePool::destroy()
         {
             cgpux_free_bind_table(bind_table);
         }
-    }
-}
-
-// Descriptor Set Heap
-
-void DescSetHeap::expand(size_t set_count)
-{
-    auto old_count = heap.size();
-    for (uint32_t i = 0; i < root_sig->table_count; i++)
-    {
-        CGPUDescriptorSetDescriptor desc = {};
-        desc.root_signature = root_sig;
-        desc.set_index = i;
-        auto new_set = cgpu_create_descriptor_set(root_sig->device, &desc);
-        heap.emplace_back(new_set);
-
-        SKR_LOG_TRACE("create set %d in heap, address %lld", i + old_count, new_set);
-        SKR_ASSERT(new_set->root_signature->device);
-    }
-}
-const skr::span<CGPUDescriptorSetId> DescSetHeap::pop()
-{
-    if (cursor >= heap.size()) expand();
-    auto res = skr::span<CGPUDescriptorSetId>(
-    heap.data() + cursor, root_sig->table_count);
-    cursor += root_sig->table_count;
-    return res;
-}
-void DescSetHeap::reset() 
-{ 
-    cursor = 0;
-}
-void DescSetHeap::destroy()
-{
-    for (uint32_t i = 0; i < heap.size(); i++)
-    {
-        SKR_LOG_TRACE("destroy set %d in heap with %d sets, address %lld", i, heap.size(), (int64_t)heap[i]);
-        cgpu_free_descriptor_set(heap[i]);
     }
 }
 

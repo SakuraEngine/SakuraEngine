@@ -29,6 +29,7 @@ public:
 protected:
     void updateDescSetsIfDirty() const SKR_NOEXCEPT;
 
+    CGPURootSignatureId root_signature = nullptr;
     // flatten name hashes 
     uint64_t* name_hashes = nullptr;
     // set index location for flattened name hashes

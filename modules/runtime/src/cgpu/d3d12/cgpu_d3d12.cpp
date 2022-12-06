@@ -735,7 +735,7 @@ void cgpu_update_descriptor_set_d3d12(CGPUDescriptorSetId set, const struct CGPU
         uint32_t HeapOffset = 0;
         if (pParam->name != CGPU_NULLPTR)
         {
-            size_t argNameHash = cgpu_hash(pParam->name, strlen(pParam->name), *(size_t*)&D);
+            size_t argNameHash = cgpu_name_hash(pParam->name, strlen(pParam->name));
             for (uint32_t j = 0; j < ParamTable->resources_count; j++)
             {
                 if (ParamTable->resources[j].name_hash == argNameHash)
