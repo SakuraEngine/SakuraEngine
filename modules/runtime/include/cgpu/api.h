@@ -763,12 +763,13 @@ typedef struct CGPUDescriptorData {
             const uint64_t* sizes;
         } buffers_params;
         // Descriptor set buffer extraction options
-        struct
-        {
-            struct CGPUPipelineShaderDescriptor* shader;
-            uint32_t buffer_index;
-            ECGPUShaderStage shader_stage;
-        } extraction_params;
+        // TODO: Support descriptor buffer extraction
+        //struct
+        //{
+        //    struct CGPUPipelineShaderDescriptor* shader;
+        //    uint32_t buffer_index;
+        //    ECGPUShaderStage shader_stage;
+        //} extraction_params;
         struct
         {
             uint32_t uav_mip_slice;
@@ -778,6 +779,7 @@ typedef struct CGPUDescriptorData {
     };
     union
     {
+        const void** ptrs;
         /// Array of texture descriptors (srv and uav textures)
         CGPUTextureViewId* textures;
         /// Array of sampler descriptors

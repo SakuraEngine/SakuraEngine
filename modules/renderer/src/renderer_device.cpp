@@ -151,7 +151,6 @@ void RendererDeviceImpl::initialize(const Builder& builder)
 void RendererDeviceImpl::finalize()
 {
     skr_io_vram_service_t::destroy(vram_service);
-
     for (auto& swapchain : swapchains)
     {
         if (swapchain.second) cgpu_free_swapchain(swapchain.second);
@@ -163,24 +162,25 @@ void RendererDeviceImpl::finalize()
     }
     surfaces.clear();
     cgpu_free_sampler(linear_sampler);
+    // free dstorage services & queues
+#ifdef _WIN32
+    cgpu_win_free_decompress_service(decompress_service);
+#endif
+    if(file_dstorage_queue) cgpu_free_dstorage_queue(file_dstorage_queue);
+    if(memory_dstorage_queue) cgpu_free_dstorage_queue(memory_dstorage_queue);
+    // free queues & device
     for (auto& cpy_queue : cpy_queues)
     {
         if (cpy_queue && cpy_queue != gfx_queue) 
             cgpu_free_queue(cpy_queue);
     }
     cpy_queues.clear();
-
-#ifdef _WIN32
-    cgpu_win_free_decompress_service(decompress_service);
-#endif
-    if(file_dstorage_queue) cgpu_free_dstorage_queue(file_dstorage_queue);
-    if(memory_dstorage_queue) cgpu_free_dstorage_queue(memory_dstorage_queue);
-
     cgpu_free_queue(gfx_queue);
     cgpu_free_device(device);
+    // free nsight tracker
     if (nsight_tracker) cgpu_free_nsight_tracker(nsight_tracker);
     cgpu_free_instance(instance);
-
+    // join & destroy aux threads
     for (auto& aux_service : aux_services)
     {
         aux_service->drain();
@@ -191,7 +191,7 @@ void RendererDeviceImpl::finalize()
 #define MAX_CPY_QUEUE_COUNT 2
 void RendererDeviceImpl::create_api_objects(const Builder& builder)
 {
-    // Create instance
+    // create instance
     CGPUInstanceDescriptor instance_desc = {};
     instance_desc.backend = builder.backend;
     instance_desc.enable_debug_layer = builder.enable_debug_layer;
@@ -199,27 +199,28 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
     instance_desc.enable_set_name = builder.enable_set_name;
     instance = cgpu_create_instance(&instance_desc);
 
-    // Filter adapters
+    // filter adapters
     uint32_t adapters_count = 0;
     cgpu_enum_adapters(instance, CGPU_NULLPTR, &adapters_count);
     CGPUAdapterId adapters[64];
     cgpu_enum_adapters(instance, adapters, &adapters_count);
     adapter = adapters[0];
 
+    // create default nsight tracker on nvidia devices
     if (cgpux_adapter_is_nvidia(adapter))
     {
         CGPUNSightTrackerDescriptor desc = {};
         nsight_tracker = cgpu_create_nsight_tracker(instance, &desc);
     }
 
-    // Create device
+    // create device
     const auto cpy_queue_count_ = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_TRANSFER);
     CGPUQueueGroupDescriptor Gs[2];
     Gs[0].queue_type = CGPU_QUEUE_TYPE_GRAPHICS;
     Gs[0].queue_count = 1;
     Gs[1].queue_type = CGPU_QUEUE_TYPE_TRANSFER;
     Gs[1].queue_count = cgpu_min(cpy_queue_count_, MAX_CPY_QUEUE_COUNT);
-    if (Gs[1].queue_count)
+    if (Gs[1].queue_count) // request at least one copy queue by default
     {
         CGPUDeviceDescriptor device_desc = {};
         device_desc.queue_groups = Gs;
@@ -232,7 +233,7 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
             cpy_queues[i] = cgpu_get_queue(device, CGPU_QUEUE_TYPE_TRANSFER, i);
         }
     }
-    else
+    else // fallback: request only one graphics queue
     {
         CGPUDeviceDescriptor device_desc = {};
         device_desc.queue_groups = Gs;
@@ -268,7 +269,7 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
         }
     }
 
-    // Sampler
+    // create default linear sampler
     CGPUSamplerDescriptor sampler_desc = {};
     sampler_desc.address_u = CGPU_ADDRESS_MODE_REPEAT;
     sampler_desc.address_v = CGPU_ADDRESS_MODE_REPEAT;
@@ -286,13 +287,13 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
 
 CGPUSwapChainId RendererDeviceImpl::register_window(SWindowHandle window)
 {
-    // find registered
+    // find registered swapchain
     {
         auto _ = swapchains.find(window);
         if (_ != swapchains.end()) return _->second;
     }
+    // find registered surface
     CGPUSurfaceId surface = nullptr;
-    // find registered
     {
         auto _ = surfaces.find(window);
         if (_ != surfaces.end())
@@ -305,7 +306,7 @@ CGPUSwapChainId RendererDeviceImpl::register_window(SWindowHandle window)
     }
     int32_t width, height;
     skr_window_get_extent(window, &width, &height);
-    // Create swapchain
+    // create swapchain
     CGPUSwapChainDescriptor chain_desc = {};
     chain_desc.present_queues = &gfx_queue;
     chain_desc.present_queues_count = 1;
@@ -345,7 +346,7 @@ CGPUSwapChainId RendererDeviceImpl::recreate_window_swapchain(SWindowHandle wind
     }
     int32_t width, height;
     skr_window_get_extent(window, &width, &height);
-    // Create swapchain
+    // create swapchain
     CGPUSwapChainDescriptor chain_desc = {};
     chain_desc.present_queues = &gfx_queue;
     chain_desc.present_queues_count = 1;

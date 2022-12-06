@@ -2,16 +2,42 @@
 #include "common_utils.h"
 #include "cgpu/cgpux.hpp"
 
+void CGPUXBindTableValue::Initialize(const CGPUXBindTableLocation& loc, const CGPUDescriptorData& rhs)
+{
+    data = rhs;
+    data.name = nullptr;
+    data.binding = loc.binding;
+    binded = false;
+    resources.resize(data.count);
+    offsets.resize(data.count);
+    sizes.resize(data.count);
+    for (uint32_t i = 0; i < data.count; i++)
+    {
+        resources[i] = data.ptrs[i];
+        if (data.buffers_params.offsets)
+        {
+            offsets[i] = data.buffers_params.offsets[i];
+        }
+        if (data.buffers_params.sizes)
+        {
+            sizes[i] = data.buffers_params.sizes[i];
+        }
+    }
+    data.ptrs = resources.data();
+    data.buffers_params.offsets = offsets.data();
+    data.buffers_params.sizes = sizes.data();
+}
+
 CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXBindTableDescriptor* desc) SKR_NOEXCEPT
 {
     auto rs = desc->root_signature;
     const auto hashes_size = desc->names_count * sizeof(uint64_t);
-    const auto locations_size = desc->names_count * sizeof(CGPUXBindTable::Location);
+    const auto locations_size = desc->names_count * sizeof(CGPUXBindTableLocation);
     const auto sets_size = rs->table_count * sizeof(CGPUDescriptorSetId);
     const auto total_size = sizeof(CGPUXBindTable) + hashes_size + locations_size + sets_size;
     CGPUXBindTable* table = (CGPUXBindTable*)cgpu_calloc_aligned(1, total_size, alignof(CGPUXBindTable));
     uint64_t* pHashes = (uint64_t*)(table + 1);
-    CGPUXBindTable::Location* pLocations = (CGPUXBindTable::Location*)(pHashes + desc->names_count);
+    CGPUXBindTableLocation* pLocations = (CGPUXBindTableLocation*)(pHashes + desc->names_count);
     CGPUDescriptorSetId* pSets = (CGPUDescriptorSetId*)(pLocations + desc->names_count);
     table->names_count = desc->names_count;
     table->name_hashes = pHashes;
@@ -37,10 +63,10 @@ CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXB
                 if (hash == pHashes[k])
                 {
                     // initialize location set/binding
+                    new (pLocations + k) CGPUXBindTableLocation();
                     const_cast<uint32_t&>(pLocations[k].set) = res.set;
                     const_cast<uint32_t&>(pLocations[k].binding) = res.binding;
 
-                    pLocations[k].value_hash = 0;
                     CGPUDescriptorSetDescriptor setDesc = {};
                     setDesc.root_signature = desc->root_signature;
                     setDesc.set_index = setIdx;
@@ -58,12 +84,10 @@ CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXB
 
 void CGPUXBindTable::Update(const struct CGPUDescriptorData* datas, uint32_t count) SKR_NOEXCEPT
 {
-    const auto device = root_signature->device;
     for (uint32_t i = 0; i < count; i++)
     {
         bool updated = false;
         const auto& data = datas[i];
-        const auto value_hash = cgpu_hash(&datas[i], sizeof(CGPUDescriptorData), (size_t)device);
         if (data.name)
         {
             const auto name_hash = cgpu_name_hash(data.name, strlen(data.name));
@@ -72,13 +96,10 @@ void CGPUXBindTable::Update(const struct CGPUDescriptorData* datas, uint32_t cou
                 if (name_hash == name_hashes[j])
                 {
                     const auto& location = name_locations[j];
-                    if (location.value_hash != value_hash) //TODO: FIX ME
+                    if (!cgpux::equal_to<CGPUDescriptorData>()(data, location.value.data))
                     {
                         auto& loc = name_locations[j];
-                        loc.value = data;
-                        loc.value.binding = loc.binding;
-                        loc.value.name = nullptr;
-                        loc.value_hash = 0; // mark slot dirty
+                        loc.value.Initialize(loc, data);
                     }
                     updated = true;
                     break;
@@ -96,15 +117,15 @@ void CGPUXBindTable::Update(const struct CGPUDescriptorData* datas, uint32_t cou
 
 void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
 {
-    const auto device = root_signature->device;
     for (uint32_t i = 0; i < names_count; i++)
     {
         const auto& location = name_locations[i];
-        if (location.value_hash == 0)
+        if (!location.value.binded)
         {
             const auto& set = sets[location.set];
-            cgpu_update_descriptor_set(set, &location.value, 1);
-            const_cast<uint64_t&>(location.value_hash) = cgpu_hash(&location.value, sizeof(CGPUDescriptorData), (size_t)device);
+            cgpu_update_descriptor_set(set, &location.value.data, 1);
+            // late update value hash
+            const_cast<bool&>(location.value.binded) = true;
         }
     }
 }
@@ -137,6 +158,11 @@ void CGPUXBindTable::Free(CGPUXBindTableId table) SKR_NOEXCEPT
     {
         if (table->sets[i]) cgpu_free_descriptor_set(table->sets[i]);
     }
+    for (uint32_t i = 0; i < table->names_count; i++)
+    {
+        table->name_locations[i].~CGPUXBindTableLocation();
+    }
+    ((CGPUXBindTable*)table)->~CGPUXBindTable();
     cgpu_free((void*)table);
 }
 

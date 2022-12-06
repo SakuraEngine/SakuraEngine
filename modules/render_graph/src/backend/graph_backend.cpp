@@ -412,8 +412,8 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
             }
         }
     }
-    auto bind_table = executor.bind_table_pools[root_sig]->pop(bind_table_keys.c_str(), bindTableValueNames.data(), bindTableValueNames.size());
-    cgpux_bind_table_update(bind_table, desc_set_updates.data(), desc_set_updates.size());
+    auto bind_table = executor.bind_table_pools[root_sig]->pop(bind_table_keys.c_str(), bindTableValueNames.data(), (uint32_t)bindTableValueNames.size());
+    cgpux_bind_table_update(bind_table, desc_set_updates.data(), (uint32_t)desc_set_updates.size());
     return bind_table;
 }
 
