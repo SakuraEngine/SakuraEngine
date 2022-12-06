@@ -56,8 +56,8 @@ https://user-images.githubusercontent.com/39457738/192722537-6ab035a5-2789-43d0-
 | `SkrLive2d` | [live2d] | Live2d 的渲染后端 |
 | `SkrInputSystem` | [gaininput] | 输入的上层封装 |
 | `SkrAnim` | [ozz-animation] | 动画资源管理，动画计算的基础功能 |
-| `devtime/tweak' | - | 提供轻量的常量热更方案 |
-| ·devtime/inspect' | - | 提供运行时的变量状态可视化 |
+| `devtime/tweak` | - | 提供轻量的常量热更方案 |
+| `devtime/inspect` | - | 提供运行时的变量状态可视化 |
 | `SkrToolCore` | - | 管理并驱动资源烘焙流程 |
 | `SkrAnimTool` | [ozz-animation] | 导入并烘焙动画相关资源 |
 | `SkrGLTFTool` | [cgltf] | 导入gltf模型并烘焙 |
