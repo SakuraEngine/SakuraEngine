@@ -740,7 +740,7 @@ void cgpu_update_descriptor_set_vulkan(CGPUDescriptorSetId set, const struct CGP
         const CGPUShaderResource* ResData = CGPU_NULLPTR;
         if (pParam->name != CGPU_NULLPTR)
         {
-            size_t argNameHash = cgpu_hash(pParam->name, strlen(pParam->name), *(size_t*)&D);
+            size_t argNameHash = cgpu_name_hash(pParam->name, strlen(pParam->name));
             for (uint32_t p = 0; p < ParamTable->resources_count; p++)
             {
                 if (ParamTable->resources[p].name_hash == argNameHash)

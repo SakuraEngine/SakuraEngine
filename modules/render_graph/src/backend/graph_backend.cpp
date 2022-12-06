@@ -275,9 +275,8 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
         });
 }
 
-const CGPUShaderResource* find_shader_resource(const char8_t* name, CGPURootSignatureId root_sig, ECGPUResourceType* type = nullptr)
+const CGPUShaderResource* find_shader_resource(uint64_t name_hash, CGPURootSignatureId root_sig, ECGPUResourceType* type = nullptr)
 {
-    auto name_hash = cgpu_hash(name, strlen(name), (size_t)root_sig->device);
     for (uint32_t i = 0; i < root_sig->table_count; i++)
     {
         for (uint32_t j = 0; j < root_sig->tables[i].resources_count; j++)
@@ -325,7 +324,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
             auto& read_edge = buf_read_edges[e_idx];
             SKR_ASSERT(!read_edge->name.empty());
             // TODO: refactor this
-            const auto& resource = *find_shader_resource(read_edge->name.c_str(), root_sig);
+            const auto& resource = *find_shader_resource(read_edge->name_hash, root_sig);
 
             ECGPUResourceType resource_type = resource.type;
             {
@@ -348,7 +347,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
         {
             auto& read_edge = tex_read_edges[e_idx];
             SKR_ASSERT(!read_edge->name.empty());
-            const auto& resource = *find_shader_resource(read_edge->name.c_str(), root_sig);
+            const auto& resource = *find_shader_resource(read_edge->name_hash, root_sig);
 
             {
                 bind_table_keys += read_edge->name.empty() ? resource.name : read_edge->name;
@@ -385,7 +384,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
         {
             auto& rw_edge = tex_rw_edges[e_idx];
             SKR_ASSERT(!rw_edge->name.empty());
-            const auto& resource = *find_shader_resource(rw_edge->name.c_str(), root_sig);
+            const auto& resource = *find_shader_resource(rw_edge->name_hash, root_sig);
 
             {
                 bind_table_keys += rw_edge->name.empty() ? resource.name : rw_edge->name;

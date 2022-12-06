@@ -4,6 +4,7 @@
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include <containers/hashmap.hpp>
 #include "utils/log.h"
+#include "utils/hash.h"
 #include "utils/concurrent_queue.h"
 
 namespace skr
@@ -236,19 +237,10 @@ TextureEdge::TextureEdge(ERelationshipType type, ECGPUResourceState requested_st
 
 // 3.1 Texture Read Edge
 
-TextureReadEdge::TextureReadEdge(uint32_t set, uint32_t binding, TextureSRVHandle handle, ECGPUResourceState state)
+TextureReadEdge::TextureReadEdge(const skr::string_view name, TextureSRVHandle handle, ECGPUResourceState state)
     : TextureEdge(ERelationshipType::TextureRead, state)
-    , set(set)
-    , binding(binding)
-    , handle(handle)
-
-{
-}
-TextureReadEdge::TextureReadEdge(const char8_t* name, TextureSRVHandle handle, ECGPUResourceState state)
-    : TextureEdge(ERelationshipType::TextureRead, state)
-    , set(UINT32_MAX)
-    , binding(UINT32_MAX)
     , name(name)
+    , name_hash(cgpu_name_hash(name.data(), name.size()))
     , handle(handle)
 {
 }
@@ -285,20 +277,10 @@ PassNode* TextureRenderEdge::get_pass_node()
 
 // 3.3 Texture UAV edge
 
-TextureReadWriteEdge::TextureReadWriteEdge(uint32_t set, uint32_t binding, TextureUAVHandle handle, ECGPUResourceState state)
+TextureReadWriteEdge::TextureReadWriteEdge(const skr::string_view name, TextureUAVHandle handle, ECGPUResourceState state)
     : TextureEdge(ERelationshipType::TextureReadWrite, state)
-    , set(set)
-    , binding(binding)
-    , handle(handle)
-
-{
-}
-
-TextureReadWriteEdge::TextureReadWriteEdge(const char8_t* name, TextureUAVHandle handle, ECGPUResourceState state)
-    : TextureEdge(ERelationshipType::TextureReadWrite, state)
-    , set(UINT32_MAX)
-    , binding(UINT32_MAX)
     , name(name)
+    , name_hash(cgpu_name_hash(name.data(), name.size()))
     , handle(handle)
 
 {
@@ -320,6 +302,7 @@ PipelineBufferEdge::PipelineBufferEdge(PipelineBufferHandle handle, ECGPUResourc
     : BufferEdge(ERelationshipType::PipelineBuffer, state)
     , handle(handle)
 {
+
 }
 
 BufferNode* PipelineBufferEdge::get_buffer_node()
@@ -334,11 +317,10 @@ PassNode* PipelineBufferEdge::get_pass_node()
 
 // 3.5 Buffer read edge
 
-BufferReadEdge::BufferReadEdge(const char8_t* name, BufferRangeHandle handle, ECGPUResourceState state)
+BufferReadEdge::BufferReadEdge(const skr::string_view name, BufferRangeHandle handle, ECGPUResourceState state)
     : BufferEdge(ERelationshipType::BufferRead, state)
-    , set(UINT32_MAX)
-    , binding(UINT32_MAX)
     , name (name)
+    , name_hash(cgpu_name_hash(name.data(), name.size()))
     , handle(handle)
 {
 }

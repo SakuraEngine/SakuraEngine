@@ -23,9 +23,10 @@ public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
-    const uint32_t set = UINT32_MAX;
-    const uint32_t binding = UINT32_MAX;
+    //const uint32_t set = UINT32_MAX;
+    //const uint32_t binding = UINT32_MAX;
     const skr::string name = "";
+    const uint64_t name_hash = 0;
 
     TextureNode* get_texture_node() final;
     PassNode* get_pass_node() final;
@@ -35,8 +36,7 @@ public:
     inline uint32_t get_mip_count() const { return handle.mip_count; }
     inline ECGPUTextureDimension get_dimension() const { return handle.dim; }
 
-    TextureReadEdge(uint32_t set, uint32_t binding, TextureSRVHandle handle, ECGPUResourceState state = CGPU_RESOURCE_STATE_SHADER_RESOURCE);
-    TextureReadEdge(const char8_t* name, TextureSRVHandle handle, ECGPUResourceState state = CGPU_RESOURCE_STATE_SHADER_RESOURCE);
+    TextureReadEdge(const skr::string_view name, TextureSRVHandle handle, ECGPUResourceState state = CGPU_RESOURCE_STATE_SHADER_RESOURCE);
 protected:
     const TextureSRVHandle handle;
 };
@@ -48,15 +48,15 @@ public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
-    const uint32_t set;
-    const uint32_t binding;
-    const skr::string name;
+    //const uint32_t set;
+    //const uint32_t binding;
+    const skr::string name = "";
+    const uint64_t name_hash = 0;
 
     TextureNode* get_texture_node() final;
     PassNode* get_pass_node() final;
 
-    TextureReadWriteEdge(uint32_t set, uint32_t binding, TextureUAVHandle handle, ECGPUResourceState state = CGPU_RESOURCE_STATE_UNORDERED_ACCESS);
-    TextureReadWriteEdge(const char8_t* name, TextureUAVHandle handle, ECGPUResourceState state = CGPU_RESOURCE_STATE_UNORDERED_ACCESS);
+    TextureReadWriteEdge(const skr::string_view name, TextureUAVHandle handle, ECGPUResourceState state = CGPU_RESOURCE_STATE_UNORDERED_ACCESS);
 protected:
     const TextureUAVHandle handle;
 };
@@ -104,14 +104,15 @@ public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
-    const uint32_t set;
-    const uint32_t binding;
-    const skr::string name;
+    // const uint32_t set;
+    // const uint32_t binding;
+    const skr::string name = "";
+    const uint64_t name_hash = 0;
 
     BufferNode* get_buffer_node() final;
     PassNode* get_pass_node() final;
 
-    BufferReadEdge(const char8_t* name, BufferRangeHandle handle, ECGPUResourceState state);
+    BufferReadEdge(const skr::string_view name, BufferRangeHandle handle, ECGPUResourceState state);
 protected:
     BufferRangeHandle handle;
 };
