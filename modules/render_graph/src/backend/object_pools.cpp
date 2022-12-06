@@ -15,6 +15,48 @@ namespace skr
 {
 namespace render_graph
 {
+
+// Merged Bind Table Pool
+
+size_t MergedBindTablePool::Key::hasher::operator()(const MergedBindTablePool::Key& val) const
+{
+    return skr_hash(val.tables.data(), val.tables.size() * sizeof(CGPUXBindTableId), CGPU_NAME_HASH_SEED);   
+}
+
+size_t MergedBindTablePool::Key::equal_to::operator()(const MergedBindTablePool::Key& lhs, const MergedBindTablePool::Key& rhs) const
+{
+    return lhs.tables == rhs.tables;
+}
+
+size_t MergedBindTablePool::Key::equal_to::operator()(const MergedBindTablePool::Key& lhs, const MergedBindTablePool::Key::View& rhs) const
+{
+    if (lhs.tables.size() != rhs.count) return false;
+    for (size_t i = 0; i < lhs.tables.size(); ++i)
+    {
+        if (lhs.tables[i] != rhs.tables[i])
+            return false;
+    }
+    return true;
+}
+
+CGPUXMergedBindTableId MergedBindTablePool::pop(const CGPUXBindTableId* tables, uint32_t count)
+{
+    const auto hash = skr_hash(tables, count * sizeof(CGPUXBindTableId), CGPU_NAME_HASH_SEED);
+    const auto view = Key::View{tables, count};
+    // pool.find(view, hash);
+    return nullptr;
+}
+
+void MergedBindTablePool::reset()
+{
+
+}
+
+void MergedBindTablePool::destroy()
+{
+
+}
+
 // Bind Table Pool
 
 void BindTablePool::expand(const char* keys, const CGPUXName* names, uint32_t names_count, size_t set_count)

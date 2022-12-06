@@ -306,31 +306,21 @@ struct SKR_RENDER_GRAPH_API PassContext {
     skr::span<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers;
     skr::span<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures;
 
-    inline CGPUBufferId resolve(BufferHandle buffer_handle) const
-    {
-        for (auto iter : resolved_buffers)
-        {
-            if (iter.first == buffer_handle) return iter.second;
-        }
-        return nullptr;
-    }
-    inline CGPUTextureId resolve(TextureHandle tex_handle) const
-    {
-        for (auto iter : resolved_textures)
-        {
-            if (iter.first == tex_handle) return iter.second;
-        }
-        return nullptr;
-    }
+    CGPUBufferId resolve(BufferHandle buffer_handle) const;
+    CGPUTextureId resolve(TextureHandle tex_handle) const;
 };
 
-struct BindablePassContext : public PassContext {
+struct SKR_RENDER_GRAPH_API BindablePassContext : public PassContext {
     friend class RenderGraphBackend;
 
+    void merge_and_bind_tables(const struct CGPUXBindTable** tables, uint32_t count);
+
     const struct CGPUXBindTable* bind_table;
+protected:
+    class RenderGraphFrameExecutor* executor;
 };
  
-struct RenderPassContext : public BindablePassContext {
+struct SKR_RENDER_GRAPH_API RenderPassContext : public BindablePassContext {
     friend class RenderGraphBackend;
 
     CGPURenderPassEncoderId encoder;
@@ -342,7 +332,7 @@ struct SKR_RENDER_GRAPH_API ComputePassContext : public BindablePassContext {
     CGPUComputePassEncoderId encoder;
 };
 
-struct CopyPassContext : public PassContext {
+struct SKR_RENDER_GRAPH_API CopyPassContext : public PassContext {
     CGPUCommandBufferId cmd;
 };
 } // namespace render_graph
