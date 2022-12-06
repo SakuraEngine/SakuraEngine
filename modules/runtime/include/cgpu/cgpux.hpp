@@ -4,15 +4,21 @@
 #include <EASTL/fixed_vector.h>
 
 struct CGPUXBindTableLocation;
+struct CGPUXBindTable;
+struct CGPUXMergedBindTable;
 
 struct CGPUXBindTableValue
 {
+    friend struct CGPUXBindTable;
+    friend struct CGPUXMergedBindTable;
+public:
     CGPUXBindTableValue() = default;
     CGPUXBindTableValue(const CGPUXBindTableValue&) = delete;
     CGPUXBindTableValue& operator=(const CGPUXBindTableValue&) = delete;
 
     void Initialize(const CGPUXBindTableLocation& loc, const CGPUDescriptorData& rhs);
 
+protected:
     bool binded = false;
     CGPUDescriptorData data = {};
     // arena
@@ -23,7 +29,7 @@ struct CGPUXBindTableValue
 
 struct CGPUXBindTableLocation
 {
-    const uint32_t set = 0;
+    const uint32_t tbl_idx = 0;
     const uint32_t binding = 0;
     CGPUXBindTableValue value;
 };
@@ -35,6 +41,7 @@ struct CGPUXBindTableLocation
 // overriden_sets_count: 2, overriden_sets: set0 & set2
 struct CGPUXBindTable 
 {
+    friend struct CGPUXMergedBindTable;
 public:
     RUNTIME_API static CGPUXBindTableId Create(CGPUDeviceId device, const struct CGPUXBindTableDescriptor* desc) SKR_NOEXCEPT;
     RUNTIME_API static void Free(CGPUXBindTableId table) SKR_NOEXCEPT;
@@ -58,11 +65,28 @@ protected:
     CGPUDescriptorSetId* sets = nullptr;
 };
 
-struct CGPUXMegedBindTable
+struct CGPUXMergedBindTable
 {
+    // on initialize we create no descriptor sets for the table
+    // on merge:
+    // 1. detect overlap sets, for example, multiple tables update set-1, then we'll create a new set-1 and update it with these tables
+    // 2. for no-overlap sets, we'll just copy them to the merged table
+public:
+    RUNTIME_API static CGPUXMergedBindTableId Create(CGPUDeviceId device, const struct CGPUXMergedBindTableDescriptor* desc) SKR_NOEXCEPT;
+    RUNTIME_API static void Free(CGPUXMergedBindTableId table) SKR_NOEXCEPT;
+
+    RUNTIME_API void Merge(const CGPUXBindTableId* tables, uint32_t count) SKR_NOEXCEPT;
+    RUNTIME_API void Bind(CGPURenderPassEncoderId encoder) const SKR_NOEXCEPT;
+    RUNTIME_API void Bind(CGPUComputePassEncoderId encoder) const SKR_NOEXCEPT;
+
+protected:
+    void mergeUpdateForTable(const CGPUXBindTableId* bind_tables, uint32_t count, uint32_t tbl_idx) SKR_NOEXCEPT;
+
+    CGPURootSignatureId root_signature = nullptr;
     uint32_t sets_count = 0;
+    CGPUDescriptorSetId* copied = nullptr;
     CGPUDescriptorSetId* merged = nullptr;
-    CGPUXBindTableLocation* all_locations = nullptr;
+    CGPUDescriptorSetId* result = nullptr;
 };
 
 namespace cgpux

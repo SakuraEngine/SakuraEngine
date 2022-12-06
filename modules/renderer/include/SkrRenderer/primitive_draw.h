@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
 #include "cgpu/api.h"
+#include "cgpu/cgpux.h"
 
 #ifdef __cplusplus
 #include "containers/span.hpp"
@@ -30,8 +31,8 @@ typedef struct skr_index_buffer_view_t {
 
 typedef struct skr_primitive_draw_t {
     CGPURenderPipelineId pipeline;
-    const CGPUDescriptorSetId* descriptor_sets;
-    uint32_t descriptor_set_count;
+    CGPUXBindTableId bind_table;
+    CGPUXMergedBindTableId merged_table;
     const char* push_const_name;
     const uint8_t* push_const;
     const skr_vertex_buffer_view_t* vertex_buffers;
