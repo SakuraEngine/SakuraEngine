@@ -145,9 +145,10 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     }
 
     eastl::vector_map<CGPUTextureViewId, CGPUXBindTableId> bind_tables;
-    eastl::vector_map<CGPUTextureViewId, CGPUXMergedBindTableId> merged_tables;
+    eastl::vector_map<CGPUTextureViewId, eastl::array<CGPUXMergedBindTableId, RG_MAX_FRAME_IN_FLIGHT>> merged_tables;
     eastl::vector_map<CGPUTextureViewId, CGPUXBindTableId> mask_bind_tables;
-    eastl::vector_map<CGPUTextureViewId, CGPUXMergedBindTableId> mask_merged_tables;
+    eastl::vector_map<CGPUTextureViewId, eastl::array<CGPUXMergedBindTableId, RG_MAX_FRAME_IN_FLIGHT>> mask_merged_tables;
+
     eastl::vector_map<skr_live2d_render_model_id, skr::span<const uint32_t>> sorted_drawable_list;
     eastl::vector_map<skr_live2d_render_model_id, eastl::vector<uint32_t>> sorted_mask_drawable_lists;
     const float kMotionFramesPerSecond = 240.0f;
@@ -233,7 +234,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                 {
                                     auto texture_view = skr_live2d_render_model_get_texture_view(render_model, drawable);
                                     drawcall.bind_table = bind_tables[texture_view];
-                                    drawcall.merged_table = merged_tables[texture_view];
+                                    drawcall.merged_table = merged_tables[texture_view][async_slot_index];
                                 }
                             }
                         }
@@ -346,7 +347,8 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                         {
                                             auto texture_view = skr_live2d_render_model_get_texture_view(render_model, clipDrawIndex);
                                             drawcall.bind_table = mask_bind_tables[texture_view];
-                                            drawcall.merged_table = mask_merged_tables[texture_view];
+                                            // TODO: refactor this to use a single managed merged table
+                                            drawcall.merged_table = mask_merged_tables[texture_view][async_slot_index];
                                         }
                                     }
                                 }
@@ -359,8 +361,13 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
     }
 
+    uint64_t frame_count = 0;
+    uint64_t async_slot_index = 0;
     skr_primitive_draw_packet_t produce_draw_packets(IPrimitiveRenderPass* pass, dual_storage_t* storage) override
     {
+        frame_count++;
+        async_slot_index = frame_count % RG_MAX_FRAME_IN_FLIGHT;
+
         skr_primitive_draw_packet_t packet = {};
         if (strcmp(pass->identity(), live2d_mask_pass_name) == 0)
         {
@@ -411,8 +418,11 @@ protected:
 
                     CGPUXMergedBindTableDescriptor merged_table_desc = {};
                     merged_table_desc.root_signature = pipeline->root_signature;
-                    auto merged_table = cgpux_create_megred_bind_table(pipeline->device, &merged_table_desc);
-                    merged_tables[texture_view] = merged_table;
+                    for (uint32_t k = 0; k < RG_MAX_FRAME_IN_FLIGHT; k++)
+                    {
+                        auto merged_table = cgpux_create_megred_bind_table(pipeline->device, &merged_table_desc);
+                        merged_tables[texture_view][k] = merged_table;
+                    }
                 }
             }
             {
@@ -436,8 +446,11 @@ protected:
 
                     CGPUXMergedBindTableDescriptor merged_table_desc = {};
                     merged_table_desc.root_signature = mask_pipeline->root_signature;
-                    auto merged_table = cgpux_create_megred_bind_table(mask_pipeline->device, &merged_table_desc);
-                    mask_merged_tables[texture_view] = merged_table;
+                    for (uint32_t k = 0; k < RG_MAX_FRAME_IN_FLIGHT; k++)
+                    {
+                        auto merged_table = cgpux_create_megred_bind_table(mask_pipeline->device, &merged_table_desc);
+                        mask_merged_tables[texture_view][k] = merged_table;
+                    }
                 }
             }
         }

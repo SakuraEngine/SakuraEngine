@@ -135,6 +135,8 @@ void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
         {
             const auto& set = sets[location.tbl_idx];
             // TODO: batch update for better performance
+            // this update is kinda dangerous during draw-call because update-after-bind may happen
+            // TODO: fix this
             cgpu_update_descriptor_set(set, &location.value.data, 1);
             const_cast<bool&>(location.value.binded) = true;
         }
@@ -294,6 +296,8 @@ void CGPUXMergedBindTable::mergeUpdateForTable(const CGPUXBindTableId* bind_tabl
             }
         }
     }
+    // this update is kinda dangerous during draw-call because update-after-bind may happen
+    // TODO: fix this
     cgpu_update_descriptor_set(to_update, datas.data(), datas.size());
 }
 
