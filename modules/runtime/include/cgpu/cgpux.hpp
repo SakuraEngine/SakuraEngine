@@ -122,28 +122,36 @@ template <>
 struct equal_to<CGPUDescriptorData> {
     size_t operator()(const CGPUDescriptorData& a, const CGPUDescriptorData& b) const
     {
-        if (a.binding != b.binding) return false;
-        if (a.binding_type != b.binding_type) return false;
-        if (a.count != b.count) return false;
+        if (a.binding != b.binding) 
+            return false;
+        if (a.binding_type != b.binding_type) 
+            return false;
+        if (a.count != b.count) 
+            return false;
         for (uint32_t i = 0; i < a.count; i++)
         {
-            if (a.ptrs[i] != b.ptrs[i]) return false;
+            if (a.ptrs[i] != b.ptrs[i]) 
+                return false;
         }
         // extra parameters
         if (a.buffers_params.offsets)
         {
-            if (!b.buffers_params.offsets) return false;
+            if (!b.buffers_params.offsets) 
+                return false;
             for (uint32_t i = 0; i < a.count; i++)
             {
-                if (a.buffers_params.offsets[i] != b.buffers_params.offsets[i]) return false;
+                if (a.buffers_params.offsets[i] != b.buffers_params.offsets[i]) 
+                    return false;
             }
         }
         if (a.buffers_params.sizes)
         {
-            if (a.buffers_params.sizes) return false;
+            if (a.buffers_params.sizes) 
+                return false;
             for (uint32_t i = 0; i < a.count; i++)
             {
-                if (a.buffers_params.sizes[i] != b.buffers_params.sizes[i]) return false;
+                if (a.buffers_params.sizes[i] != b.buffers_params.sizes[i]) 
+                    return false;
             }
         }
         return true;

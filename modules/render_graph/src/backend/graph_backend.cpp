@@ -337,6 +337,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
                 update.count = 1;
                 update.name = resource.name;
                 update.binding_type = resource_type;
+                update.binding = resource.binding;
                 cbvs[e_idx] = resolve(executor, *buffer_readed);
                 update.buffers = &cbvs[e_idx];
                 desc_set_updates.emplace_back(update);
@@ -359,6 +360,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
                 update.count = 1;
                 update.name = resource.name;
                 update.binding_type = CGPU_RESOURCE_TYPE_TEXTURE;
+                update.binding = resource.binding;
                 CGPUTextureViewDescriptor view_desc = {};
                 view_desc.texture = resolve(executor, *texture_readed);
                 view_desc.base_array_layer = read_edge->get_array_base();
@@ -396,6 +398,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
                 update.count = 1;
                 update.name = resource.name;
                 update.binding_type = CGPU_RESOURCE_TYPE_RW_TEXTURE;
+                update.binding = resource.binding;
                 CGPUTextureViewDescriptor view_desc = {};
                 view_desc.texture = resolve(executor, *texture_readwrite);
                 view_desc.base_array_layer = 0;

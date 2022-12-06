@@ -13,23 +13,30 @@ void CGPUXBindTableValue::Initialize(const CGPUXBindTableLocation& loc, const CG
     data.binding = loc.binding;
     binded = false;
     resources.resize(data.count);
-    offsets.resize(data.count);
-    sizes.resize(data.count);
     for (uint32_t i = 0; i < data.count; i++)
     {
         resources[i] = data.ptrs[i];
-        if (data.buffers_params.offsets)
+    }
+    data.ptrs = resources.data();
+
+    if (data.buffers_params.offsets)
+    {
+        offsets.resize(data.count);
+        for (uint32_t i = 0; i < data.count; i++)
         {
             offsets[i] = data.buffers_params.offsets[i];
         }
-        if (data.buffers_params.sizes)
+        data.buffers_params.offsets = offsets.data();
+    }
+    if (data.buffers_params.sizes)
+    {
+        sizes.resize(data.count);
+        for (uint32_t i = 0; i < data.count; i++)
         {
             sizes[i] = data.buffers_params.sizes[i];
         }
+        data.buffers_params.sizes = sizes.data();
     }
-    data.ptrs = resources.data();
-    data.buffers_params.offsets = offsets.data();
-    data.buffers_params.sizes = sizes.data();
 }
 
 CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXBindTableDescriptor* desc) SKR_NOEXCEPT
@@ -271,6 +278,8 @@ void CGPUXMergedBindTable::mergeUpdateForTable(const CGPUXBindTableId* bind_tabl
     ZoneScopedN("CGPUXMergedBindTable::UpdateDescriptors");
 
     auto to_update = merged[tbl_idx];
+    // TODO: refactor & remove this vector
+    eastl::vector<CGPUDescriptorData> datas;
     // foreach table location to update values
     for (uint32_t i = 0; i < count; i++)
     {
@@ -280,12 +289,12 @@ void CGPUXMergedBindTable::mergeUpdateForTable(const CGPUXBindTableId* bind_tabl
             if (location.tbl_idx == tbl_idx)
             {
                 ZoneScopedN("CGPUXMergedBindTable::UpdateDescriptor");
-                // TODO: batch update for better performance
-                cgpu_update_descriptor_set(to_update, &location.value.data, 1);
+                // batch update for better performance
+                datas.emplace_back(location.value.data);
             }
         }
     }
-
+    cgpu_update_descriptor_set(to_update, datas.data(), datas.size());
 }
 
 void CGPUXMergedBindTable::Bind(CGPURenderPassEncoderId encoder) const SKR_NOEXCEPT
