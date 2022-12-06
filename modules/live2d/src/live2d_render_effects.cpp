@@ -144,8 +144,10 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
 
     }
 
-    eastl::vector_map<CGPUTextureViewId, CGPUDescriptorSetId> descriptor_sets;
-    eastl::vector_map<CGPUTextureViewId, CGPUDescriptorSetId> mask_descriptor_sets;
+    eastl::vector_map<CGPUTextureViewId, CGPUXBindTableId> bind_tables;
+    eastl::vector_map<CGPUTextureViewId, CGPUXMergedBindTableId> merged_tables;
+    eastl::vector_map<CGPUTextureViewId, CGPUXBindTableId> mask_bind_tables;
+    eastl::vector_map<CGPUTextureViewId, CGPUXMergedBindTableId> mask_merged_tables;
     eastl::vector_map<skr_live2d_render_model_id, skr::span<const uint32_t>> sorted_drawable_list;
     eastl::vector_map<skr_live2d_render_model_id, eastl::vector<uint32_t>> sorted_mask_drawable_lists;
     const float kMotionFramesPerSecond = 240.0f;
@@ -230,8 +232,8 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                 drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
                                 {
                                     auto texture_view = skr_live2d_render_model_get_texture_view(render_model, drawable);
-                                    drawcall.descriptor_set_count = 1;
-                                    drawcall.descriptor_sets = &descriptor_sets[texture_view];
+                                    drawcall.bind_table = bind_tables[texture_view];
+                                    drawcall.merged_table = merged_tables[texture_view];
                                 }
                             }
                         }
@@ -343,8 +345,8 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                         drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
                                         {
                                             auto texture_view = skr_live2d_render_model_get_texture_view(render_model, clipDrawIndex);
-                                            drawcall.descriptor_set_count = 1;
-                                            drawcall.descriptor_sets = &mask_descriptor_sets[texture_view];
+                                            drawcall.bind_table = mask_bind_tables[texture_view];
+                                            drawcall.merged_table = mask_merged_tables[texture_view];
                                         }
                                     }
                                 }
@@ -380,6 +382,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     }
 
 protected:
+    const char* color_texture_name = "color_texture";
     void updateTexture(skr_live2d_render_model_id render_model)
     {
         // create descriptor sets if not existed
@@ -388,37 +391,51 @@ protected:
         {
             auto texture_view = skr_live2d_render_model_get_texture_view(render_model, j);
             {
-                auto iter = descriptor_sets.find(texture_view);
-                if (iter == descriptor_sets.end())
+                auto iter = bind_tables.find(texture_view);
+                if (iter == bind_tables.end())
                 {
-                    CGPUDescriptorSetDescriptor desc_set_desc = {};
-                    desc_set_desc.root_signature = pipeline->root_signature;
-                    desc_set_desc.set_index = 0;
-                    auto desc_set = cgpu_create_descriptor_set(pipeline->device, &desc_set_desc);
-                    descriptor_sets[texture_view] = desc_set;
+                    CGPUXBindTableDescriptor bind_table_desc = {};
+                    bind_table_desc.root_signature = pipeline->root_signature;
+                    bind_table_desc.names = &color_texture_name;
+                    bind_table_desc.names_count = 1;
+                    auto bind_table = cgpux_create_bind_table(pipeline->device, &bind_table_desc);
+                    bind_tables[texture_view] = bind_table;
+
                     CGPUDescriptorData datas[1];
                     datas[0].name = "color_texture";
                     datas[0].count = 1;
                     datas[0].textures = &texture_view;
                     datas[0].binding_type = CGPU_RESOURCE_TYPE_TEXTURE;
-                    cgpu_update_descriptor_set(desc_set, datas, 1);
+                    cgpux_bind_table_update(bind_table, datas, 1);
+
+                    CGPUXMergedBindTableDescriptor merged_table_desc = {};
+                    merged_table_desc.root_signature = pipeline->root_signature;
+                    auto merged_table = cgpux_create_megred_bind_table(pipeline->device, &merged_table_desc);
+                    merged_tables[texture_view] = merged_table;
                 }
             }
             {
-                auto iter = mask_descriptor_sets.find(texture_view);
-                if (iter == mask_descriptor_sets.end())
+                auto iter = mask_bind_tables.find(texture_view);
+                if (iter == mask_bind_tables.end())
                 {
-                    CGPUDescriptorSetDescriptor desc_set_desc = {};
-                    desc_set_desc.root_signature = mask_pipeline->root_signature;
-                    desc_set_desc.set_index = 0;
-                    auto desc_set = cgpu_create_descriptor_set(pipeline->device, &desc_set_desc);
-                    mask_descriptor_sets[texture_view] = desc_set;
+                    CGPUXBindTableDescriptor bind_table_desc = {};
+                    bind_table_desc.root_signature = mask_pipeline->root_signature;
+                    bind_table_desc.names = &color_texture_name;
+                    bind_table_desc.names_count = 1;
+                    auto bind_table = cgpux_create_bind_table(pipeline->device, &bind_table_desc);
+                    mask_bind_tables[texture_view] = bind_table;
+
                     CGPUDescriptorData datas[1];
                     datas[0].name = "color_texture";
                     datas[0].count = 1;
                     datas[0].textures = &texture_view;
                     datas[0].binding_type = CGPU_RESOURCE_TYPE_TEXTURE;
-                    cgpu_update_descriptor_set(desc_set, datas, 1);
+                    cgpux_bind_table_update(bind_table, datas, 1);
+
+                    CGPUXMergedBindTableDescriptor merged_table_desc = {};
+                    merged_table_desc.root_signature = mask_pipeline->root_signature;
+                    auto merged_table = cgpux_create_megred_bind_table(mask_pipeline->device, &merged_table_desc);
+                    mask_merged_tables[texture_view] = merged_table;
                 }
             }
         }

@@ -2,6 +2,10 @@
 #include "common_utils.h"
 #include "cgpu/cgpux.hpp"
 
+#include "tracy/Tracy.hpp"
+
+// CGPUX bind table apis
+
 void CGPUXBindTableValue::Initialize(const CGPUXBindTableLocation& loc, const CGPUDescriptorData& rhs)
 {
     data = rhs;
@@ -64,7 +68,7 @@ CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXB
                 {
                     // initialize location set/binding
                     new (pLocations + k) CGPUXBindTableLocation();
-                    const_cast<uint32_t&>(pLocations[k].set) = res.set;
+                    const_cast<uint32_t&>(pLocations[k].tbl_idx) = setIdx;
                     const_cast<uint32_t&>(pLocations[k].binding) = res.binding;
 
                     CGPUDescriptorSetDescriptor setDesc = {};
@@ -122,9 +126,9 @@ void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
         const auto& location = name_locations[i];
         if (!location.value.binded)
         {
-            const auto& set = sets[location.set];
+            const auto& set = sets[location.tbl_idx];
+            // TODO: batch update for better performance
             cgpu_update_descriptor_set(set, &location.value.data, 1);
-            // late update value hash
             const_cast<bool&>(location.value.binded) = true;
         }
     }
@@ -171,7 +175,6 @@ CGPUXBindTableId cgpux_create_bind_table(CGPUDeviceId device, const struct CGPUX
     return CGPUXBindTable::Create(device, desc);
 }
 
-
 void cgpux_bind_table_update(CGPUXBindTableId table, const struct CGPUDescriptorData* datas, uint32_t count)
 {
     return ((CGPUXBindTable*)table)->Update(datas, count);
@@ -190,4 +193,154 @@ void cgpux_compute_encoder_bind_bind_table(CGPUComputePassEncoderId encoder, CGP
 void cgpux_free_bind_table(CGPUXBindTableId bind_table)
 {
     CGPUXBindTable::Free(bind_table);
+}
+
+// CGPUX merged bind table apis
+
+CGPUXMergedBindTableId CGPUXMergedBindTable::Create(CGPUDeviceId device, const struct CGPUXMergedBindTableDescriptor *desc) SKR_NOEXCEPT
+{
+    SKR_ASSERT(desc->root_signature);
+
+    const auto total_size = sizeof(CGPUXMergedBindTable) + 3 * desc->root_signature->table_count * sizeof(CGPUDescriptorSetId);
+    CGPUXMergedBindTable* table = (CGPUXMergedBindTable*)cgpu_calloc_aligned(1, total_size, alignof(CGPUXMergedBindTable));
+    table->root_signature = desc->root_signature;
+    table->sets_count = desc->root_signature->table_count;
+    table->copied = (CGPUDescriptorSetId*)(table + 1);
+    table->merged = table->copied + table->sets_count;
+    table->result = table->merged + table->sets_count;
+    return table;
+}
+
+void CGPUXMergedBindTable::Merge(const CGPUXBindTableId* bind_tables, uint32_t count) SKR_NOEXCEPT
+{
+    ZoneScopedN("CGPUXMergedBindTable::Merge");
+
+    // detect overlap sets at ${i}
+    const auto notfound_index = root_signature->table_count;
+    const auto overlap_index = UINT32_MAX;
+    for (uint32_t tblIdx = 0; tblIdx < root_signature->table_count; tblIdx++)
+    {
+        uint32_t source_table = notfound_index;
+        for (uint32_t j = 0; j < count; j++)
+        {
+            if (bind_tables[j]->sets[tblIdx] != nullptr)
+            {
+                if (source_table == notfound_index)
+                {
+                    source_table = j;
+                }
+                else
+                {
+                    // overlap detected
+                    source_table = overlap_index;
+                    break;
+                }
+            }
+        }
+        if (source_table == notfound_index) // not found set
+        {
+            // ... do nothing now
+        }
+        else if (source_table == overlap_index)
+        {
+            ZoneScopedN("CGPUXMergedBindTable::MergeOverlap");
+            
+            if (!merged[tblIdx]) 
+            {
+                CGPUDescriptorSetDescriptor setDesc = {};
+                setDesc.root_signature = root_signature;
+                setDesc.set_index = tblIdx;
+                merged[tblIdx] = cgpu_create_descriptor_set(root_signature->device, &setDesc);
+            }
+            // update merged value
+            mergeUpdateForTable(bind_tables, count, tblIdx);
+        }
+        else // direct copy from source table
+        {
+            copied[tblIdx] = bind_tables[source_table]->sets[tblIdx];
+        }
+    }
+    for (uint32_t tblIdx = 0; tblIdx < root_signature->table_count; tblIdx++)
+    {
+        result[tblIdx] = merged[tblIdx] ? merged[tblIdx] : copied[tblIdx];
+    }
+}
+
+void CGPUXMergedBindTable::mergeUpdateForTable(const CGPUXBindTableId* bind_tables, uint32_t count, uint32_t tbl_idx) SKR_NOEXCEPT
+{
+    ZoneScopedN("CGPUXMergedBindTable::UpdateDescriptors");
+
+    auto to_update = merged[tbl_idx];
+    // foreach table location to update values
+    for (uint32_t i = 0; i < count; i++)
+    {
+        for (uint32_t j = 0; j < bind_tables[i]->names_count; j++)
+        {
+            const auto& location = bind_tables[i]->name_locations[j];
+            if (location.tbl_idx == tbl_idx)
+            {
+                ZoneScopedN("CGPUXMergedBindTable::UpdateDescriptor");
+                // TODO: batch update for better performance
+                cgpu_update_descriptor_set(to_update, &location.value.data, 1);
+            }
+        }
+    }
+
+}
+
+void CGPUXMergedBindTable::Bind(CGPURenderPassEncoderId encoder) const SKR_NOEXCEPT
+{
+    for (uint32_t i = 0; i < sets_count; i++)
+    {
+        if (result[i] != nullptr)
+        {
+            cgpu_render_encoder_bind_descriptor_set(encoder, result[i]);
+        }
+    }
+}
+
+void CGPUXMergedBindTable::Bind(CGPUComputePassEncoderId encoder) const SKR_NOEXCEPT
+{
+    for (uint32_t i = 0; i < sets_count; i++)
+    {
+        if (result[i] != nullptr)
+        {
+            cgpu_compute_encoder_bind_descriptor_set(encoder, result[i]);
+        }
+    }
+}
+
+void CGPUXMergedBindTable::Free(CGPUXMergedBindTableId table) SKR_NOEXCEPT
+{
+    for (uint32_t i = 0; i < table->sets_count; i++)
+    {
+        // free merged sets
+        if (table->merged[i]) cgpu_free_descriptor_set(table->merged[i]);
+    }
+    ((CGPUXMergedBindTable*)table)->~CGPUXMergedBindTable();
+}
+
+CGPUXMergedBindTableId cgpux_create_megred_bind_table(CGPUDeviceId device, const struct CGPUXMergedBindTableDescriptor* desc)
+{
+    return CGPUXMergedBindTable::Create(device, desc);
+}
+
+void cgpux_merged_bind_table_merge(CGPUXMergedBindTableId table, const CGPUXBindTableId* tables, uint32_t count)
+{
+    return ((CGPUXMergedBindTable*)table)->Merge(tables, count);
+}
+
+void cgpux_render_encoder_bind_merged_bind_table(CGPURenderPassEncoderId encoder, CGPUXMergedBindTableId table)
+{
+    table->Bind(encoder);
+}
+
+void cgpux_compute_encoder_bind_merged_bind_table(CGPUComputePassEncoderId encoder, CGPUXMergedBindTableId table)
+{
+    table->Bind(encoder);
+}
+
+void cgpux_free_merged_bind_table(CGPUXMergedBindTableId merged_table)
+{
+    CGPUXMergedBindTable::Free(merged_table);
 }

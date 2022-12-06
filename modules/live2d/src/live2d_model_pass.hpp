@@ -44,12 +44,12 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
                     .write(0, out_color, CGPU_LOAD_ACTION_CLEAR)
                     .set_depth_stencil(depth_buffer);
             },
-            [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
-                cgpu_render_encoder_set_viewport(stack.encoder,
+            [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& pass_context) {
+                cgpu_render_encoder_set_viewport(pass_context.encoder,
                     0.0f, 0.0f,
                     (float)back_desc->width, (float)back_desc->height,
                     0.f, 1.f);
-                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, back_desc->width, back_desc->height);
+                cgpu_render_encoder_set_scissor(pass_context.encoder, 0, 0, back_desc->width, back_desc->height);
                 CGPURenderPipelineId old_pipeline = nullptr;
                 for (uint32_t i = 0; i < drawcalls.count; i++)
                 {
@@ -60,19 +60,18 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
 
                     if (old_pipeline != dc.pipeline)
                     {
-                        cgpu_render_encoder_bind_pipeline(stack.encoder, dc.pipeline);
+                        cgpu_render_encoder_bind_pipeline(pass_context.encoder, dc.pipeline);
                         old_pipeline = dc.pipeline;
                     }
                     {
                         ZoneScopedN("BindTextures");
-                        for (uint32_t j = 0; j < dc.descriptor_set_count; j++)
-                        {
-                            cgpu_render_encoder_bind_descriptor_set(stack.encoder, dc.descriptor_sets[j]);
-                        }
+                        CGPUXBindTableId tables[2] = { dc.bind_table, pass_context.bind_table };
+                        cgpux_merged_bind_table_merge(dc.merged_table, tables, 2);
+                        cgpux_render_encoder_bind_merged_bind_table(pass_context.encoder, dc.merged_table);
                     }
                     {
                         ZoneScopedN("BindGeometry");
-                        cgpu_render_encoder_bind_index_buffer(stack.encoder, dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
+                        cgpu_render_encoder_bind_index_buffer(pass_context.encoder, dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
                         CGPUBufferId vertex_buffers[2] = {
                             dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer
                         };
@@ -82,15 +81,15 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
                         const uint32_t offsets[2] = {
                             dc.vertex_buffers[0].offset, dc.vertex_buffers[1].offset
                         };
-                        cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 2, vertex_buffers, strides, offsets);
+                        cgpu_render_encoder_bind_vertex_buffers(pass_context.encoder, 2, vertex_buffers, strides, offsets);
                     }
                     {
                         ZoneScopedN("PushConstants");
-                        cgpu_render_encoder_push_constants(stack.encoder, dc.pipeline->root_signature, dc.push_const_name, dc.push_const);
+                        cgpu_render_encoder_push_constants(pass_context.encoder, dc.pipeline->root_signature, dc.push_const_name, dc.push_const);
                     }
                     {
                         ZoneScopedN("DrawIndexed");
-                        cgpu_render_encoder_draw_indexed_instanced(stack.encoder, dc.index_buffer.index_count, dc.index_buffer.first_index, 1, 0, 0);
+                        cgpu_render_encoder_draw_indexed_instanced(pass_context.encoder, dc.index_buffer.index_count, dc.index_buffer.first_index, 1, 0, 0);
                     }
                 }
             });
