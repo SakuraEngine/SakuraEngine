@@ -226,15 +226,29 @@ namespace skr::lua
             lua_setfield(L, -2, "cast_entities");
         }
 
+        // bind query
+        {
+            luaL_Reg metamethods[] = {
+                {"__gc", +[](lua_State* L) -> int {
+                    auto query = *(dual_query_t**)lua_touserdata(L, 1);
+                    if(!query) return 0;
+                    dualQ_release(query);
+                    return 0;
+                }},
+                {NULL, NULL}
+            };
+            luaL_newmetatable(L, "dual_query_t");
+            luaL_setfuncs(L, metamethods, 0);
+            lua_pop(L, 1);
+        }
+
         // bind create query
         {
             auto trampoline = +[](lua_State* L) -> int {
                 dual_storage_t* storage = (dual_storage_t*)lua_touserdata(L, 1);
                 const char* literal = luaL_checkstring(L, 2);
                 auto query = dualQ_from_literal(storage, literal);
-                lua_pushlightuserdata(L, query);
-                //luaL_getmetatable(L, "skr_opaque_t");
-                //lua_setmetatable(L, -2);
+                *(dual_query_t**)lua_newuserdata(L, sizeof(void*)) = query;
                 return 1;
             };
             lua_pushcfunction(L, trampoline);
@@ -244,12 +258,12 @@ namespace skr::lua
         // bind iterate query
         {
             auto trampoline = +[](lua_State* L) -> int {
-                auto query = (dual_query_t*)lua_touserdata(L, 1);
+                auto query = *(dual_query_t**)luaL_checkudata(L, 1, "dual_query_t");
                 if(!query) return 0;
                 luaL_argexpected(L, lua_isfunction(L, 2), 2, "function");
                 dual_view_callback_t callback = +[](void* userdata, dual_chunk_view_t* view) -> void {
                     lua_State* L = (lua_State*)userdata;
-                    dual_query_t* query = (dual_query_t*)lua_touserdata(L, 1);
+                    dual_query_t* query = *(dual_query_t**)lua_touserdata(L, 1);
                     dual::fixed_stack_scope_t scope(dual::localStack);
                     auto luaView = query_chunk_view(view, query);
                     lua_pushvalue(L, 2);
