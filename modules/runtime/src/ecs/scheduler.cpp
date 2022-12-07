@@ -7,6 +7,7 @@
 #include "storage.hpp"
 #include "ecs/callback.hpp"
 #include "type.hpp"
+#include "utils/log.h"
 
 #include "tracy/Tracy.hpp"
 
@@ -671,7 +672,11 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     ZoneScopedN("dualJ::schedule_ecs");
     if (counter)
     {
-        *counter = SkrNew<dual_counter_t>(dual::scheduler_t::get().schedule_ecs_job(query, batchSize, callback, u, init, teardown, resources));
+        auto c = dual::scheduler_t::get().schedule_ecs_job(query, batchSize, callback, u, init, teardown, resources);
+        if(!*counter)
+            *counter = SkrNew<dual_counter_t>(c);
+        else
+            (*counter)->counter = c;
     }
     else
     {
@@ -686,6 +691,11 @@ void dualJ_schedule_custom(const dual_query_t* query, dual_counter_t* counter, d
     {
         callback(u, SkrNew<dual_counter_t>(std::move(result)));
     }
+}
+
+dual_counter_t* dualJ_create_counter()
+{
+    return SkrNew<dual_counter_t>();
 }
 
 void dualJ_wait_counter(dual_counter_t* counter, int pin)

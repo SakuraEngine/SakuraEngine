@@ -191,10 +191,8 @@ struct SkrTracedNew
     template<class F>
     [[nodiscard]] FORCEINLINE F* NewLambda(F&& lambda)
     {
-        const std::string_view name = skr::demangle<T>();
-        TracyMessage(name.data(), name.size());
         using ValueType = std::remove_reference_t<F>;
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), ssourcelocation.data());
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(F), alignof(F), sourcelocation.data());
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE auto(std::forward<F>(lambda));
     }

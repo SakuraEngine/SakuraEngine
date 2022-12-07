@@ -647,6 +647,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             skr::inspect::update_value_inspector();
             // quit |= skg::GameLoop(ctx);
         }
+        if(false)
         {
             ZoneScopedN("Lua");
             if(luaL_dostring(L, "local module = require \"game\"; module:update()") != LUA_OK)
@@ -755,10 +756,10 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 }
             });
             dualJ_schedule_ecs(cameraQuery, 128, DUAL_LAMBDA_POINTER(playerJob), nullptr, nullptr);
-            {
-                ZoneScopedN("DualJSync");
-                dualJ_wait_all();
-            }
+        }
+        {
+            ZoneScopedN("DualJSync");
+            dualJ_wait_all();
         }
         {
             ZoneScopedN("RegisterPasses");
