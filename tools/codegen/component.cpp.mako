@@ -11,6 +11,7 @@
 // BEGIN DUAL GENERATED
 #include "ecs/dual.h"
 #include "ecs/array.hpp"
+#include "ecs/luabind.hpp"
 
 %for type in generator.filter_records(db.records):
 static struct RegisterComponent${type.id}Helper
@@ -21,7 +22,7 @@ static struct RegisterComponent${type.id}Helper
         desc.name = "${type.name}";
         
     %if hasattr(type.attrs.component, "buffer"):
-        desc.size = sizeof(dual::array_component_T<${type.name}, ${type.attrs.component.buffer}>);
+        desc.size = sizeof(dual::array_comp_T<${type.name}, ${type.attrs.component.buffer}>);
     %else:
         desc.size = std::is_empty_v<${type.name}> ? 0 : sizeof(${type.name});
     %endif
@@ -62,6 +63,8 @@ static struct RegisterComponent${type.id}Helper
         desc.elementSize = 0;
     %endif
         desc.alignment = alignof(${type.name});
+
+        dual::SetLuaBindCallback<${type.name}>(desc);
     
     %if hasattr(type.attrs.component, "custom"):
         ${type.attrs.component.custom}(desc, skr::type_t<${type.name}>{});

@@ -33,6 +33,8 @@ typedef struct dual_callback_v {
     void (*serialize)(dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* writer) SKR_IF_CPP(=nullptr);
     void (*deserialize)(dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* reader) SKR_IF_CPP(=nullptr);
     void (*map)(dual_chunk_t* chunk, EIndex index, char* data, dual_mapper_t* v) SKR_IF_CPP(=nullptr);
+    int (*lua_push)(dual_chunk_t* chunk, EIndex index, char* data, struct lua_State* L) SKR_IF_CPP(=nullptr);
+    void (*lua_check)(dual_chunk_t* chunk, EIndex index, char* data, struct lua_State* L, int idx) SKR_IF_CPP(=nullptr);
 } dual_callback_v;
 
 enum dual_type_flags SKR_IF_CPP(: uint32_t)
