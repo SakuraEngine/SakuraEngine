@@ -30,7 +30,7 @@ struct sreflect sattr(
 typedef struct skr_child_t skr_child_t;
 
 #ifdef __cplusplus
-using skr_children_t = dual::array_component_T<skr_child_t, 4>;
+using skr_children_t = dual::array_comp_T<skr_child_t, 4>;
 #endif
 
 struct sreflect sattr(
@@ -47,21 +47,21 @@ struct sreflect sattr(
     "guid" : "1CD632F6-3149-42E6-9114-647B0C803F32",
     "component" : true
 )
-skr_name_t
+skr_name_comp_t
 {
     char str[32];
 };
-typedef struct skr_name_t skr_name_t;
+typedef struct skr_name_comp_t skr_name_comp_t;
 
 struct sreflect sattr(
     "guid" : "b08ec011-9b94-47f7-9926-c66d41d735e9",
     "component" : true
 )
-skr_index_component_t
+skr_index_comp_t
 {
     uint32_t value;
 };
-typedef struct skr_index_component_t skr_index_component_t;
+typedef struct skr_index_comp_t skr_index_comp_t;
 
 // transforms
 

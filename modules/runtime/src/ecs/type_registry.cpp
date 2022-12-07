@@ -74,7 +74,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         auto desc = make_zeroed<type_description_t>();
         desc.guid = skr::guid::make_guid_unsafe("{B68B1CAB-98FF-4298-A22E-68B404034B1B}");
         desc.name = "mask";
-        desc.size = sizeof(dual_mask_component_t);
+        desc.size = sizeof(dual_mask_comp_t);
         desc.elementSize = 0;
         desc.alignment = DUAL_MASK_ALIGN;
         desc.entityFieldsCount = 0;
@@ -102,7 +102,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         auto desc = make_zeroed<type_description_t>();
         desc.guid = skr::guid::make_guid_unsafe("{A55D73D3-D41C-4683-89E1-8B211C115303}");
         desc.name = "dirty";
-        desc.size = sizeof(dual_dirty_component_t);
+        desc.size = sizeof(dual_dirty_comp_t);
         desc.elementSize = 0;
         desc.alignment = DUAL_MASK_ALIGN;
         desc.entityFieldsCount = 0;

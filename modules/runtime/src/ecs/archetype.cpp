@@ -428,7 +428,7 @@ bool dual_group_t::share(const dual_type_set_t& subtype) const noexcept
     return false;
 }
 
-dual_mask_component_t dual_group_t::get_shared_mask(const dual_type_set_t& subtype) const noexcept
+dual_mask_comp_t dual_group_t::get_shared_mask(const dual_type_set_t& subtype) const noexcept
 {
     using namespace dual;
     eastl::bitset<32> mask;
@@ -454,7 +454,7 @@ void dual_group_t::get_shared_type(dual_type_set_t& result, void* buffer) const 
         dual_type_set_t merged;
         if (metaGroup->archetype->withMask)
         {
-            auto mask = *(dual_mask_component_t*)dualV_get_owned_ro(&view, kMaskComponent);
+            auto mask = *(dual_mask_comp_t*)dualV_get_owned_ro(&view, kMaskComponent);
             merged = set_utils<dual_type_index_t>::merge_with_mask(result, metaGroup->type.type, mask, buffer);
         }
         else
@@ -496,7 +496,7 @@ const void* dual_group_t::get_shared_ro(dual_type_index_t t) const noexcept
     return nullptr;
 }
 
-dual_mask_component_t dual_group_t::get_mask(const dual_type_set_t& subtype) const noexcept
+dual_mask_comp_t dual_group_t::get_mask(const dual_type_set_t& subtype) const noexcept
 {
     using namespace dual;
     eastl::bitset<32> mask;

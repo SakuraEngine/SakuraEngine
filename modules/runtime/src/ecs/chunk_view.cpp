@@ -17,15 +17,15 @@
 
 namespace dual
 {
-static dual_array_component_t* new_array(void* ptr, size_t cap, size_t elemSize, size_t align)
+static dual_array_comp_t* new_array(void* ptr, size_t cap, size_t elemSize, size_t align)
 {
-    size_t arraySize = cap - sizeof(dual_array_component_t);
-    void* arrayData = (char*)ptr + sizeof(dual_array_component_t);
+    size_t arraySize = cap - sizeof(dual_array_comp_t);
+    void* arrayData = (char*)ptr + sizeof(dual_array_comp_t);
     eastl::align(align, elemSize, arrayData, arraySize);
-    return new (ptr) dual_array_component_t{ arrayData, arraySize };
+    return new (ptr) dual_array_comp_t{ arrayData, arraySize };
 }
 
-bool is_array_small(dual_array_component_t* ptr)
+bool is_array_small(dual_array_comp_t* ptr)
 {
     return ptr->BeginX < ((char*)(ptr + 1) + alignof(std::max_align_t));
 }
@@ -78,7 +78,7 @@ static void destruct_impl(dual_chunk_view_t view, type_index_t type, EIndex offs
     if (type.is_buffer())
         forloop (j, 0, view.count)
         {
-            auto array = (dual_array_component_t*)((size_t)j * size + src);
+            auto array = (dual_array_comp_t*)((size_t)j * size + src);
             if (destructor)
                 for (char* curr = (char*)array->BeginX; curr != array->EndX; curr += elemSize)
                     destructor(view.chunk, view.start + j, curr);
@@ -86,7 +86,7 @@ static void destruct_impl(dual_chunk_view_t view, type_index_t type, EIndex offs
                 for (char* curr = (char*)array->BeginX; curr != array->EndX; curr += elemSize)
                     patchResources(curr);
             if (!is_array_small(array))
-                dual_array_component_t::free(array->BeginX);
+                dual_array_comp_t::free(array->BeginX);
         }
     else if (destructor)
         forloop (j, 0, view.count)
@@ -109,8 +109,8 @@ static void move_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uint32_t
         {
             forloop (j, 0, dstV.count)
             {
-                auto arrayDst = (dual_array_component_t*)((size_t)j * size + dst);
-                auto arraySrc = (dual_array_component_t*)((size_t)j * size + src);
+                auto arrayDst = (dual_array_comp_t*)((size_t)j * size + dst);
+                auto arraySrc = (dual_array_comp_t*)((size_t)j * size + src);
                 if (!is_array_small(arraySrc)) // memory is on heap
                     *arrayDst = *arraySrc;    // just steal it
                 else                          // memory is in chunk
@@ -175,12 +175,12 @@ static void duplicate_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uin
         {
             forloop (j, 0, dstV.count)
             {
-                auto arrayDst = (dual_array_component_t*)((size_t)j * size + dst);
-                auto arraySrc = (dual_array_component_t*)src;
+                auto arrayDst = (dual_array_comp_t*)((size_t)j * size + dst);
+                auto arraySrc = (dual_array_comp_t*)src;
                 if (!is_array_small(arraySrc))
                 {
                     size_t cap = (char*)arraySrc->EndX - (char*)arraySrc->BeginX;
-                    arrayDst->BeginX = dual_array_component_t::allocate(cap);
+                    arrayDst->BeginX = dual_array_comp_t::allocate(cap);
                     arrayDst->EndX = arrayDst->CapacityX = (char*)arrayDst->BeginX + cap;
                 }
                 else
@@ -205,18 +205,18 @@ static void duplicate_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uin
         {
             forloop (j, 0, dstV.count)
             {
-                auto arraySrc = (dual_array_component_t*)src;
+                auto arraySrc = (dual_array_comp_t*)src;
                 if (!is_array_small(arraySrc))
                 {
-                    auto arrayDst = (dual_array_component_t*)((size_t)j * size + dst);
+                    auto arrayDst = (dual_array_comp_t*)((size_t)j * size + dst);
                     size_t cap = (char*)arraySrc->EndX - (char*)arraySrc->BeginX;
-                    arrayDst->BeginX = dual_array_component_t::allocate(cap);
+                    arrayDst->BeginX = dual_array_comp_t::allocate(cap);
                     arrayDst->EndX = arrayDst->CapacityX = (char*)arrayDst->BeginX + cap;
                     memcpy(arrayDst->BeginX, arraySrc->BeginX, cap);
                 }
                 if(resourceFields.count > 0)
                 {
-                    auto arrayDst = (dual_array_component_t*)((size_t)j * size + dst);
+                    auto arrayDst = (dual_array_comp_t*)((size_t)j * size + dst);
                     for (char* curr = (char*)arrayDst->BeginX; curr != arrayDst->EndX; curr += elemSize)
                         patchResources(curr);
                 }

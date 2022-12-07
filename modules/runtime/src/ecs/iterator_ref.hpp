@@ -52,7 +52,7 @@ static void iter_ref_impl(dual_chunk_view_t view, type_index_t type, EIndex offs
         {
             forloop (j, 0, view.count)
             {
-                auto array = (dual_array_component_t*)((size_t)j * size + src);
+                auto array = (dual_array_comp_t*)((size_t)j * size + src);
                 for (char* curr = (char*)array->BeginX; curr < array->EndX; curr += elemSize)
                     iter_element(view.chunk, view.start + j, curr);
                 iter.move();
