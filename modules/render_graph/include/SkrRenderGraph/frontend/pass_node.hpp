@@ -1,8 +1,25 @@
 #pragma once
-#include <EASTL/vector.h>
 #include "SkrRenderGraph/frontend/base_types.hpp"
 #include "SkrRenderGraph/frontend/resource_node.hpp"
 #include "SkrRenderGraph/frontend/resource_edge.hpp"
+#include <EASTL/vector.h>
+
+#ifdef RG_USE_FIXED_VECTOR
+#include <EASTL/fixed_vector.h>
+#endif
+
+namespace skr {
+namespace render_graph
+{
+#ifdef RG_USE_FIXED_VECTOR
+    template<typename T, uint32_t N = 4>
+    using graph_edges_vector = eastl::fixed_vector<T, N>;  
+#else
+    template<typename T, uint32_t N = 4>
+    using graph_edges_vector = eastl::vector<T>;
+#endif
+}
+}
 
 namespace skr
 {
@@ -41,13 +58,13 @@ public:
 protected:
     bool can_be_lone = false;
     PassNode(EPassType pass_type, uint32_t order);
-    eastl::vector<TextureReadEdge*> in_texture_edges;
-    eastl::vector<TextureRenderEdge*> out_texture_edges;
-    eastl::vector<TextureReadWriteEdge*> inout_texture_edges;
+    graph_edges_vector<TextureReadEdge*> in_texture_edges;
+    graph_edges_vector<TextureRenderEdge*> out_texture_edges;
+    graph_edges_vector<TextureReadWriteEdge*> inout_texture_edges;
 
-    eastl::vector<BufferReadEdge*> in_buffer_edges;
-    eastl::vector<BufferReadWriteEdge*> out_buffer_edges;
-    eastl::vector<PipelineBufferEdge*> ppl_buffer_edges;
+    graph_edges_vector<BufferReadEdge*> in_buffer_edges;
+    graph_edges_vector<BufferReadWriteEdge*> out_buffer_edges;
+    graph_edges_vector<PipelineBufferEdge*> ppl_buffer_edges;
 };
 
 class RenderPassNode : public PassNode
@@ -91,8 +108,8 @@ public:
     CopyPassNode(uint32_t order);
 protected:
     CopyPassExecuteFunction executor;
-    eastl::vector<eastl::pair<TextureSubresourceHandle, TextureSubresourceHandle>> t2ts;
-    eastl::vector<eastl::pair<BufferRangeHandle, BufferRangeHandle>> b2bs;
+    graph_edges_vector<eastl::pair<TextureSubresourceHandle, TextureSubresourceHandle>, 2> t2ts;
+    graph_edges_vector<eastl::pair<BufferRangeHandle, BufferRangeHandle>, 2> b2bs;
 };
 
 class PresentPassNode : public PassNode

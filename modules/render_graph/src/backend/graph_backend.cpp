@@ -5,7 +5,6 @@
 #include "platform/memory.h"
 #include "utils/hash.h"
 #include "utils/log.h"
-#include "utils/format.hpp"
 #include <EASTL/set.h>
 
 #include "tracy/Tracy.hpp"
@@ -367,7 +366,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
 
             ECGPUResourceType resource_type = resource.type;
             {
-                bind_table_keys += read_edge->name.empty() ? resource.name : read_edge->name;
+                bind_table_keys += read_edge->name.empty() ? resource.name : read_edge->name.c_str();
                 bind_table_keys += ";";
                 bindTableValueNames.emplace_back(resource.name);
 
@@ -390,7 +389,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
             const auto& resource = *find_shader_resource(read_edge->name_hash, root_sig);
 
             {
-                bind_table_keys += read_edge->name.empty() ? resource.name : read_edge->name;
+                bind_table_keys += read_edge->name.empty() ? resource.name : read_edge->name.c_str();
                 bind_table_keys += ";";
                 bindTableValueNames.emplace_back(resource.name);
 
@@ -428,7 +427,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
             const auto& resource = *find_shader_resource(rw_edge->name_hash, root_sig);
 
             {
-                bind_table_keys += rw_edge->name.empty() ? resource.name : rw_edge->name;
+                bind_table_keys += rw_edge->name.empty() ? resource.name : rw_edge->name.c_str();
                 bind_table_keys += ";";
                 bindTableValueNames.emplace_back(resource.name);
 
@@ -477,6 +476,8 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass) SKR_NOEXCEPT
         {
             if (!texture->frame_aliasing)
             {
+                ZoneScopedN("VirtualDeallocate::TextureFromPool");
+
                 texture_pool.deallocate(texture->descriptor, texture->frame_texture,
                     edge->requested_state, { frame_index, texture->tags });
             }
@@ -495,6 +496,8 @@ void RenderGraphBackend::deallocate_resources(PassNode* pass) SKR_NOEXCEPT
         });
         if (is_last_user)
         {
+            ZoneScopedN("VirtualDeallocate::BufferFromPool");
+
             buffer_pool.deallocate(buffer->descriptor, buffer->frame_buffer,
                 edge->requested_state, { frame_index, buffer->tags });
         }
@@ -591,7 +594,10 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
     {
         ZoneScopedN("WriteBarrierMarker");
-        executor.write_marker(skr::format("Pass-{}-BeginBarrier", pass->get_name()).c_str());
+        graph_big_object_string message = "Pass-";
+        message += pass->get_name();
+        message += "-BeginBarrier";
+        executor.write_marker(message.c_str());
     }
     // color attachments
     // TODO: MSAA
@@ -656,7 +662,10 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     pass_context.cmd = executor.gfx_cmd_buf;
     {
         ZoneScopedN("WriteBeginPassMarker");
-        executor.write_marker(skr::format("Pass-{}-BeginPass", pass->get_name()).c_str());
+        graph_big_object_string message = "Pass-";
+        message += pass->get_name();
+        message += "-BeginPass";
+        executor.write_marker(message.c_str());
     }
     {
         ZoneScopedN("BeginRenderPass");
@@ -674,7 +683,10 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     cgpu_cmd_end_render_pass(executor.gfx_cmd_buf, pass_context.encoder);
     {
         ZoneScopedN("WriteEndPassMarker");
-        executor.write_marker(skr::format("Pass-{}-EndRenderPass", pass->get_name()).c_str());
+        graph_big_object_string message = "Pass-";
+        message += pass->get_name();
+        message += "-EndRenderPass";
+        executor.write_marker(message.c_str());
     }
     cgpu_cmd_end_event(executor.gfx_cmd_buf);
     // deallocate

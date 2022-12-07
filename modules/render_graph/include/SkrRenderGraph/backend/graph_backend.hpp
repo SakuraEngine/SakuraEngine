@@ -38,7 +38,7 @@ public:
     CGPUMarkerBufferId marker_buffer = nullptr;
     uint32_t marker_idx = 0;
     uint32_t valid_marker_val = 1;
-    eastl::vector<skr::string> marker_messages;
+    eastl::vector<graph_big_object_string> marker_messages;
 protected:
     skr::flat_hash_map<CGPURootSignatureId, MergedBindTablePool*> merged_table_pools;
 };

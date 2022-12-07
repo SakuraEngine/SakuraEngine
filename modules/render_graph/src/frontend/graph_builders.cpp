@@ -47,6 +47,8 @@ RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::frontend_only(
 
 PassHandle RenderGraph::add_render_pass(const RenderPassSetupFunction& setup, const RenderPassExecuteFunction& executor) SKR_NOEXCEPT
 {
+    ZoneScopedN("CopyPassBuilder::add_render_pass");
+
     const uint32_t passes_size = static_cast<uint32_t>(passes.size());
     auto newPass = object_factory->Allocate<RenderPassNode>(passes_size);
     passes.emplace_back(newPass);
@@ -63,8 +65,8 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_name(const c
 {
     if (name)
     {
-        graph.blackboard->add_pass(name, &node);
         node.set_name(name);
+        graph.blackboard->add_pass(node.get_name(), &node);
     }
     return *this;
 }
@@ -235,6 +237,8 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::can_be_lone() SKR_NO
 
 RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_buffer(BufferRangeHandle src, BufferRangeHandle dst) SKR_NOEXCEPT
 {
+    ZoneScopedN("CopyPassBuilder::buffer_to_buffer");
+
     auto allocated_in = graph.object_factory->Allocate<BufferReadEdge>("CopySrc", src, CGPU_RESOURCE_STATE_COPY_SOURCE);
     auto allocated_out = graph.object_factory->Allocate<BufferReadWriteEdge>(dst, CGPU_RESOURCE_STATE_COPY_DEST);
     auto&& in_edge = node.in_buffer_edges.emplace_back(allocated_in);
@@ -247,6 +251,8 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_buffer(Buf
 
 RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::texture_to_texture(TextureSubresourceHandle src, TextureSubresourceHandle dst) SKR_NOEXCEPT
 {
+    ZoneScopedN("CopyPassBuilder::texture_to_texture");
+
     auto allocated_in = graph.object_factory->Allocate<TextureReadEdge>("CopySrc", src._this, CGPU_RESOURCE_STATE_COPY_SOURCE);
     auto allocated_out = graph.object_factory->Allocate<TextureRenderEdge>(0u, dst._this, fastclear_0000, CGPU_RESOURCE_STATE_COPY_DEST);
     auto&& in_edge = node.in_texture_edges.emplace_back(allocated_in);
@@ -328,9 +334,9 @@ RenderGraph::BufferBuilder::BufferBuilder(RenderGraph& graph, BufferNode& node) 
 RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::set_name(const char* name) SKR_NOEXCEPT
 {
     // blackboard
-    graph.blackboard->add_buffer(name, &node);
     node.set_name(name);
     node.descriptor.name = node.get_name();
+    graph.blackboard->add_buffer(node.descriptor.name, &node);
     return *this;
 }
 
@@ -440,6 +446,8 @@ RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::prefer_on_host() SKR_NOE
 
 BufferHandle RenderGraph::create_buffer(const BufferSetupFunction& setup) SKR_NOEXCEPT
 {
+    ZoneScopedN("RenderGraph::create_buffer(handle)");
+
     auto newBuf = object_factory->Allocate<BufferNode>();
     resources.emplace_back(newBuf);
     graph->insert(newBuf);
@@ -471,9 +479,9 @@ RenderGraph::TextureBuilder::TextureBuilder(RenderGraph& graph, TextureNode& nod
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(const char* name) SKR_NOEXCEPT
 {
     // blackboard
-    graph.blackboard->add_texture(name, &node);
     node.set_name(name);
     node.descriptor.name = node.get_name();
+    graph.blackboard->add_texture(node.descriptor.name, &node);
     return *this;
 }
 
@@ -564,6 +572,8 @@ RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_lone() SKR_NOEXC
 
 TextureHandle RenderGraph::create_texture(const TextureSetupFunction& setup) SKR_NOEXCEPT
 {
+    ZoneScopedN("RenderGraph::create_texture(handle)");
+
     auto newTex = object_factory->Allocate<TextureNode>();
     resources.emplace_back(newTex);
     graph->insert(newTex);

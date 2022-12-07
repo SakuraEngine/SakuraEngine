@@ -1,5 +1,6 @@
 #include "SkrImGui/skr_imgui.config.h"
 #include <EASTL/vector.h>
+#include <EASTL/fixed_vector.h>
 #include <containers/string.hpp>
 #include "utils/log.h"
 #include "platform/input.h"
@@ -10,6 +11,8 @@
     #endif
 #include <windows.h>
 #endif
+
+#include "tracy/Tracy.hpp"
 
 namespace skr::imgui
 {
@@ -123,6 +126,8 @@ void skr_imgui_new_frame(SWindowHandle window, float delta_time)
 
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {
+        ZoneScopedN("UpdateMonitors");
+
         // Register platform interface (will be coupled with a renderer interface)
         ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
         platform_io.Platform_CreateWindow = &skr::imgui::imgui_create_window;
@@ -145,7 +150,7 @@ void skr_imgui_new_frame(SWindowHandle window, float delta_time)
         main_viewport->PlatformHandleRaw = skr_window_get_native_handle(window);
 
         // update monitors
-        eastl::vector<SMonitorHandle> skr_monitors;
+        eastl::fixed_vector<SMonitorHandle, 4> skr_monitors; // 4 inline monitors that I think is enough for non-allocation.
         platform_io.Monitors.resize(0);
         uint32_t monitor_count = 0;
         skr_get_all_monitors(&monitor_count, nullptr);
@@ -170,6 +175,8 @@ void skr_imgui_new_frame(SWindowHandle window, float delta_time)
     // ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
     // for (int i = 0; i < platform_io.Viewports.Size; i++)
     {
+        ZoneScopedN("UpdateInput");
+
         imgui_update_mouse_and_buttons(window);
     }
 

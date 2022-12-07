@@ -21,7 +21,7 @@ namespace eastl
 	/// Defines the size of the SSO buffer which is used to hold the specified capture state of the callable.
 	///
 	#ifndef EASTL_FUNCTION_DEFAULT_CAPTURE_SSO_SIZE
-		#define EASTL_FUNCTION_DEFAULT_CAPTURE_SSO_SIZE (2 * sizeof(void*))
+		#define EASTL_FUNCTION_DEFAULT_CAPTURE_SSO_SIZE (6 * sizeof(void*))
 	#endif
 
 	static_assert(EASTL_FUNCTION_DEFAULT_CAPTURE_SSO_SIZE >= sizeof(void*), "functor storage must be able to hold at least a pointer!");
@@ -127,6 +127,10 @@ namespace eastl
 		}
 	#endif // EASTL_RTTI_ENABLED
 	};
+
+#if UINT64_MAX == UINTPTR_MAX // x64
+	static_assert(sizeof(function<void(int, float, const char*)>) <= 64, "function<> requires single cacheline!");
+#endif
 
 	template <typename R, typename... Args>
 	bool operator==(const function<R(Args...)>& f, std::nullptr_t) EA_NOEXCEPT

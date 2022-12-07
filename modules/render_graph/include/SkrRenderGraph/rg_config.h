@@ -41,3 +41,6 @@
         #define SKR_RENDER_GRAPH_LOCAL
     #endif
 #endif
+
+#define RG_USE_FIXED_STRING
+#define RG_USE_FIXED_VECTOR
