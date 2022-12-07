@@ -388,6 +388,12 @@ typedef int64_t host_ptr_t;
     #endif
 #endif
 
+#if defined(RUNTIME_COMPILER_MSVC) && !defined(RUNTIME_COMPILER_CLANG)
+#define SKR_TEMPLATE
+#else
+#define SKR_TEMPLATE template
+#endif
+
 #ifndef RUNTIME_MANUAL_CONFIG_COMPILER_TRAITS
     #if defined(RUNTIME_COMPILER_MSVC)
         #define RUNTIME_COMPILER_VERSION _MSC_VER
