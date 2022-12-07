@@ -40,8 +40,11 @@ namespace skr::lua
     // RUNTIME_API int push_float4(lua_State* L, const skr_float4_t* float4);
     // RUNTIME_API skr_float4_t check_float4(lua_State* L, int index);
 
+    template<class T, class=void>
+    struct DefaultBindTrait;
+
     template<class T>
-    struct BindTrait<T*, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::type::type_id<T>>>>
+    struct DefaultBindTrait<T*, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::type::type_id<T>>>>
     {
         static int push(lua_State* L, T* value)
         {
@@ -54,12 +57,13 @@ namespace skr::lua
     };
 
     template<class T>
-    struct BindTrait<T, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::type::type_id<T>>>>
+    struct DefaultBindTrait<T, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::type::type_id<T>>>>
     {
         static int push(lua_State* L, const T& value)
         {
             static constexpr std::string_view prefix = "[unique]";
-            return push_unknown_value(L, value, join_v<prefix, skr::type::type_id<T>::str()>, sizeof(T), +[](void* dst, const void* src) {
+            static constexpr std::string_view tid = skr::type::type_id<T>::str();
+            return push_unknown_value(L, value, join_v<prefix, tid>, sizeof(T), +[](void* dst, const void* src) {
                 new (dst) T(*(const T*)src);
             }, +[](void* dst) {
                 ((T*)dst)->~T();
@@ -72,12 +76,13 @@ namespace skr::lua
     };
 
     template<class T>
-    struct BindTrait<skr::SPtr<T>, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::type::type_id<T>>>>
+    struct DefaultBindTrait<skr::SPtr<T>, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::type::type_id<T>>>>
     {
         static int push(lua_State* L, const skr::SPtr<T>& value)
         {
             static constexpr std::string_view prefix = "[shared]";
-            return push_sptr(L, value, join_v<prefix, skr::type::type_id<T>::str()>);
+            static constexpr std::string_view tid = skr::type::type_id<T>::str();
+            return push_sptr(L, value, join_v<prefix, tid>);
         }
         static skr::SPtr<T> check(lua_State* L, int index)
         {
@@ -86,12 +91,13 @@ namespace skr::lua
     };
 
     template<class T>
-    struct BindTrait<skr::SObjectPtr<T>, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::type::type_id<T>>>>
+    struct DefaultBindTrait<skr::SObjectPtr<T>, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::type::type_id<T>>>>
     {
         static int push(lua_State* L, const skr::SObjectPtr<T>& value)
         {
             static constexpr std::string_view prefix = "[shared]";
-            return push_sobjectptr(L, value, join_v<prefix, skr::type::type_id<T>::str()>);
+            static constexpr std::string_view tid = skr::type::type_id<T>::str();
+            return push_sobjectptr(L, value, join_v<prefix, tid>);
         }
         static skr::SObjectPtr<T> check(lua_State* L, int index)
         {
@@ -100,7 +106,7 @@ namespace skr::lua
     };
 
     template <class T>
-    struct BindTrait<T, std::enable_if_t<std::is_enum_v<T>>>
+    struct DefaultBindTrait<T, std::enable_if_t<std::is_enum_v<T>>>
     {
         using type = T;
         static int push(lua_State* L, type value)
@@ -119,28 +125,34 @@ namespace skr::lua
     };
     
     template<class T>
-    struct BindTrait<const T&, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::type::type_id<T>>>>
+    struct DefaultBindTrait<const T&, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::type::type_id<T>>>>
     {
         static int push(lua_State* L, const T& value)
         {
-            return BindTrait<T>::push(L, value);
+            return DefaultBindTrait<T>::push(L, value);
         }
         static const T& check(lua_State* L, int index)
         {
-            return BindTrait<T>::check(L, index);
+            return DefaultBindTrait<T>::check(L, index);
         }
     };
 
     template<class T>
     int push(lua_State* L, const T& value)
     {
-        return BindTrait<T>::push(L, value);
+        if constexpr(skr::is_complete_v<BindTrait<T>>)
+            return BindTrait<T>::push(L, value);
+        else
+            return DefaultBindTrait<T>::push(L, value);
     }
 
     template<class T>
     T check(lua_State* L, int index)
     {
-        return BindTrait<T>::check(L, index);
+        if constexpr(skr::is_complete_v<BindTrait<T>>)
+            return BindTrait<T>::check(L, index);
+        else
+            return DefaultBindTrait<T>::check(L, index);
     }
 
     struct shared_userdata_t

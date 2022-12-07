@@ -47,8 +47,7 @@ typedef struct skr_parent_t skr_parent_t;
 
 struct sreflect sattr(
     "guid" : "1CD632F6-3149-42E6-9114-647B0C803F32",
-    "component" : true,
-    "scriptable" : true
+    "component" : true
 )
 skr_name_comp_t
 {
