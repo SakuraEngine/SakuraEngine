@@ -3,26 +3,18 @@
 #include "allocator_sakura.h"
 #include <stdlib.h>
 
-#include "tracy/TracyC.h"
+#include "platform/memory.h"
 
-extern "C"
-{
-	extern void* _sakura_malloc(size_t size);
-	extern void* _sakura_malloc_aligned(size_t size, size_t alignment);
-	extern void _sakura_free(void* p);
-	extern void _sakura_free_aligned(void* p, size_t alignment);
-}
-#define core_malloc _sakura_malloc
-#define core_memalign _sakura_malloc_aligned
-#define core_free _sakura_free
-#define core_free_aligned _sakura_free_aligned
+#define core_malloc sakura_malloc
+#define core_memalign sakura_malloc_aligned
+#define core_free sakura_free
+#define core_free_aligned sakura_free_aligned
 
 	namespace eastl
 	{
 		void* allocator_sakura::allocate(size_t n, int /*flags*/)
 		{ 
 			void* p = core_memalign(n, 1);
-			TracyCAlloc(p, n);
 			return p;
 		}
 
@@ -32,7 +24,6 @@ extern "C"
 													// aligned on e.g. 64 also is aligned at an offset of 64 by definition.
 			{
 			    void* p = core_memalign(n, alignment);
-				TracyCAlloc(p, n);
 				return p;
 			}
 
@@ -41,7 +32,6 @@ extern "C"
 
 		void allocator_sakura::deallocate(void* p, size_t /*n*/)
 		{ 
-			TracyCFree(p);
 			core_free_aligned(p, 1);
 		}
 

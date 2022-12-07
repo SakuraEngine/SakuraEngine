@@ -16,6 +16,7 @@ RUNTIME_EXTERN_C RUNTIME_API void* _sakura_realloc(void* p, size_t newsize);
 #include "tracy/TracyC.h"
 
 #define SKR_ALLOC_TRACY_MARKER_COLOR 0xff0000
+#define SKR_DEALLOC_TRACY_MARKER_COLOR 0x0000ff
 FORCEINLINE void* SkrMallocWithCZone(size_t size, const char* line)
 {
     TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
@@ -72,7 +73,7 @@ FORCEINLINE void* SkrNewAlignedWithCZone(size_t size, size_t alignment, const ch
 
 FORCEINLINE void SkrFreeWithCZone(void* p, const char* line)
 {
-    TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
+    TracyCZoneC(z, SKR_DEALLOC_TRACY_MARKER_COLOR, 1);
     TracyCZoneName(z, line, strlen(line));
     _sakura_free(p);
     TracyCZoneEnd(z);
@@ -80,7 +81,7 @@ FORCEINLINE void SkrFreeWithCZone(void* p, const char* line)
 
 FORCEINLINE void SkrFreeAlignedWithCZone(void* p, size_t alignment, const char* line)
 {
-    TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
+    TracyCZoneC(z, SKR_DEALLOC_TRACY_MARKER_COLOR, 1);
     TracyCZoneName(z, line, strlen(line));
     _sakura_free_aligned(p, alignment);
     TracyCZoneEnd(z);
