@@ -175,6 +175,7 @@ int main(int argc, char** argv)
     scheduler.unbind();
     system.Shutdown();
     DestroyResourceSystem(*project);
+    std::this_thread::sleep_for(std::chrono::seconds(5));
     {
         ZoneScopedN("ThreadExit");
         moduleManager->destroy_module_graph();
