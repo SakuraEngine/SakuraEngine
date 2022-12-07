@@ -140,3 +140,27 @@ struct skr_transform_system {
 
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_setup(dual_storage_t* world, skr_transform_system* system);
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_update(skr_transform_system* query);
+
+#ifdef __cplusplus
+#include "lua/bind.hpp"
+
+namespace skr::lua
+{
+    SKR_SCENE_API int push_name_comp(lua_State* L, const skr_name_comp_t& value);
+    SKR_SCENE_API skr_name_comp_t check_name_comp(lua_State* L, int index);
+    template<>
+    struct BindTrait<skr_name_comp_t>
+    {
+        static int push(lua_State* L, const skr_name_comp_t& value)
+        {
+            return push_name_comp(L, value);
+        }
+
+        static skr_name_comp_t check(lua_State* L, int index)
+        {
+            return check_name_comp(L, index);
+        }
+    };
+}
+
+#endif

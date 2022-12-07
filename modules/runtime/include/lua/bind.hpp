@@ -1,3 +1,4 @@
+#pragma once
 #include "lua/bind_fwd.hpp"
 #include "containers/string.hpp"
 #include "containers/sptr.hpp"
