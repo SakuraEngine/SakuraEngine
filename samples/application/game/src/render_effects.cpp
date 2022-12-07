@@ -30,7 +30,7 @@ const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT_S8_UINT;
 
 skr_render_pass_name_t forward_pass_name = "ForwardPass";
 struct RenderPassForward : public IPrimitiveRenderPass {
-    dual_query_t* skin_query = nullptr;
+    dual::query_t skin_query;
     void on_update(SRendererId renderer, skr::render_graph::RenderGraph* render_graph) override
     {
         namespace rg = skr::render_graph;
@@ -40,7 +40,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
         if (!skin_query)
         {
             auto sig = "[in]skr_render_mesh_comp_t, [in]skr_render_anim_comp_t, [in]skr_render_skel_comp_t, [in]skr_render_skin_comp_t";
-            skin_query = dualQ_from_literal(storage, sig);
+            *skin_query = dualQ_from_literal(storage, sig);
         }
         auto updateSkinJob = SkrNewLambda(
             [&](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
@@ -201,14 +201,18 @@ struct RenderPassForward : public IPrimitiveRenderPass {
         {
             ZoneScopedN("PrepareMeshResource");
             // prepare skin mesh resources for rendering
-            dualQ_get_views(skin_query, DUAL_LAMBDA(uploadVertices));
+            dualQ_get_views(*skin_query, DUAL_LAMBDA(uploadVertices));
         }
         // wait last skin dispatch
-        if (pSkinCounter) dualJ_wait_counter(pSkinCounter, true);
+        
+        if (pSkinCounter)
+            dualJ_wait_counter(*pSkinCounter, true);
+        else
+            *pSkinCounter = dualJ_create_counter();
         // late skin dispatch for next frame
-        dualJ_schedule_ecs(skin_query, 4, DUAL_LAMBDA_POINTER(updateSkinJob), nullptr, &pSkinCounter);
+        dualJ_schedule_ecs(*skin_query, 4, DUAL_LAMBDA_POINTER(updateSkinJob), nullptr, &*pSkinCounter);
     }
-    dual_counter_t* pSkinCounter = nullptr;
+    dual::counter_t pSkinCounter;
 
     void post_update(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph) override
     {
@@ -292,7 +296,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                     barrier_desc.buffer_barriers_count = (uint32_t)barriers.size();
                     cgpu_cmd_resource_barrier(context.cmd, &barrier_desc);
                     };
-                    dualQ_get_views(skin_query, DUAL_LAMBDA(barrierVertices));
+                    dualQ_get_views(*skin_query, DUAL_LAMBDA(barrierVertices));
                 });
             renderGraph->add_render_pass(
                 [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {

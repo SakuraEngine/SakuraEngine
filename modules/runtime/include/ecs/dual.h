@@ -700,6 +700,7 @@ typedef struct dual_resource_operation_t {
  * @param u
  * @param init initializer function, called at the beginning of job
  * @param resources
+ * @param counter counter used to sync jobs, if *counter is null, a new counter will be created
  */
 RUNTIME_API void dualJ_schedule_ecs(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
 dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources, dual_counter_t** counter);
@@ -715,6 +716,12 @@ typedef void (*dual_schedule_callback_t)(void* u, dual_counter_t* counter);
  * @param resources
  */
 RUNTIME_API void dualJ_schedule_custom(const dual_query_t* query, dual_counter_t* counter, dual_schedule_callback_t callback, void* u, dual_resource_operation_t* resources);
+/**
+ * @brief create a counter object
+ * counter is used to sync jobs, counter need to be released manually
+ * @return dual_counter_t*
+ */
+RUNTIME_API dual_counter_t* dualJ_create_counter();
 /**
  * @brief wait until counter equal to zero (when job is done)
  *
@@ -771,17 +778,61 @@ struct dual_id_of {
 #include "type/type_helper.hpp"
 namespace dual
 {
-    struct dualJ_storage_scope_t
+    struct storage_scope_t
     {
-        dual_storage_t* storage;
-        dualJ_storage_scope_t(dual_storage_t* storage)
+        dual_storage_t* storage = nullptr;
+        storage_scope_t(dual_storage_t* storage)
             : storage(storage)
         {
             dualJ_bind_storage(storage);
         }
-        ~dualJ_storage_scope_t()
+        ~storage_scope_t()
         {
             dualJ_unbind_storage(storage);
+        }
+    };
+
+    struct query_t
+    {
+        dual_query_t* query = nullptr;
+        ~query_t()
+        {
+            if(query)
+                dualQ_release(query);
+        }
+        explicit operator bool() const
+        {
+            return query != nullptr;
+        }
+        dual_query_t*& operator*()
+        {
+            return query;
+        }
+        dual_query_t*const & operator*() const
+        {
+            return query;
+        }
+    };
+
+    struct counter_t
+    {
+        dual_counter_t* counter;
+        ~counter_t()
+        {
+            if(counter)
+                dualJ_release_counter(counter);
+        }
+        explicit operator bool() const
+        {
+            return counter != nullptr;
+        }
+        dual_counter_t*& operator*()
+        {
+            return counter;
+        }
+        dual_counter_t* const& operator*() const
+        {
+            return counter;
         }
     };
     
