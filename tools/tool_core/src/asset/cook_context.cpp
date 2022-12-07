@@ -3,8 +3,6 @@
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "utils/io.h"
-#include "utils/lazy.hpp"
-
 #include "json/reader.h"
 
 namespace skd::asset

@@ -10,6 +10,7 @@
 #include "json/reader.h"
 #include "json/writer.h"
 #include "binary/writer.h"
+#include <atomic>
 
 #include "tracy/Tracy.hpp"
 
@@ -150,7 +151,6 @@ bool SCookSystemImpl::AllCompleted() const
     return mainCounter.test();
 }
 
-#include <atomic>
 skr_io_ram_service_t* SCookSystemImpl::getIOService() 
 {
     SMutexLock lock(ioMutex);

@@ -3,10 +3,12 @@
 #include "platform/window.h"
 #include "utils/make_zeroed.hpp"
 #include "utils/log.h"
+
 #include "ecs/dual.h"
 #include "ecs/type_builder.hpp"
 #include "ecs/callback.hpp"
 #include "ecs/array.hpp"
+
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrScene/scene.h"
 #include "SkrRenderer/render_effect.h"
