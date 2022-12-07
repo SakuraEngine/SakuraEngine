@@ -42,22 +42,36 @@ void RenderGraphFrameExecutor::commit(CGPUQueueId gfx_queue, uint64_t frame_inde
 
 void RenderGraphFrameExecutor::reset_begin(TextureViewPool& texture_view_pool)
 {
-    for (auto bind_table_pool : bind_table_pools)
     {
-        bind_table_pool.second->reset();
+        ZoneScopedN("ResetBindTables");
+        for (auto bind_table_pool : bind_table_pools)
+        {
+            bind_table_pool.second->reset();
+        }
     }
-    for (auto aliasing_texture : aliasing_textures)
+
     {
-        texture_view_pool.erase(aliasing_texture);
-        cgpu_free_texture(aliasing_texture);
+        ZoneScopedN("ResetAliasingBinds");
+        for (auto aliasing_texture : aliasing_textures)
+        {
+            texture_view_pool.erase(aliasing_texture);
+            cgpu_free_texture(aliasing_texture);
+        }
+        aliasing_textures.clear();
     }
-    aliasing_textures.clear();
 
-    marker_idx = 0;
-    marker_messages.clear();
-    valid_marker_val++;
+    {
+        ZoneScopedN("ResetMarkerBuffer");
+        marker_idx = 0;
+        marker_messages.clear();
+        valid_marker_val++;
+    }
 
-    cgpu_reset_command_pool(gfx_cmd_pool);
+    {
+        ZoneScopedN("ResetCommandPool");
+        cgpu_reset_command_pool(gfx_cmd_pool);
+    }
+
     cgpu_cmd_begin(gfx_cmd_buf);
     write_marker("Frame Begin");
 }
@@ -466,6 +480,7 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
 {
     ZoneScopedC(tracy::Color::LightBlue);
     ZoneName(pass->name.c_str(), pass->name.size());
+
     ComputePassContext pass_context = {};
     // resource de-virtualize
     stack_vector<CGPUTextureBarrier> tex_barriers = {};
@@ -501,7 +516,9 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
     pass_context.cmd = executor.gfx_cmd_buf;
     pass_context.encoder = cgpu_cmd_begin_compute_pass(executor.gfx_cmd_buf, &pass_desc);
     if(pass->pipeline)
+    {
         cgpu_compute_encoder_bind_pipeline(pass_context.encoder, pass->pipeline);
+    }
     cgpux_compute_encoder_bind_bind_table(pass_context.encoder, pass_context.bind_table);
     {
         ZoneScopedN("PassExecutor");
@@ -547,7 +564,10 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     CGPUEventInfo event = { pass->name.c_str(), { 1.f, 0.5f, 0.5f, 1.f } };
     cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
-    executor.write_marker(skr::format("Pass-{}-BeginBarrier", pass->get_name()).c_str());
+    {
+        ZoneScopedN("WriteBarrierMarker");
+        executor.write_marker(skr::format("Pass-{}-BeginBarrier", pass->get_name()).c_str());
+    }
     // color attachments
     // TODO: MSAA
     stack_vector<CGPUColorAttachment> color_attachments = {};
@@ -609,16 +629,28 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     pass_desc.color_attachments = color_attachments.data();
     pass_desc.depth_stencil = &ds_attachment;
     pass_context.cmd = executor.gfx_cmd_buf;
-    executor.write_marker(skr::format("Pass-{}-BeginPass", pass->get_name()).c_str());
-    pass_context.encoder = cgpu_cmd_begin_render_pass(executor.gfx_cmd_buf, &pass_desc);
-    if (pass->pipeline) cgpu_render_encoder_bind_pipeline(pass_context.encoder, pass->pipeline);
+    {
+        ZoneScopedN("WriteBeginPassMarker");
+        executor.write_marker(skr::format("Pass-{}-BeginPass", pass->get_name()).c_str());
+    }
+    {
+        ZoneScopedN("BeginRenderPass");
+        pass_context.encoder = cgpu_cmd_begin_render_pass(executor.gfx_cmd_buf, &pass_desc);
+    }
+    if (pass->pipeline) 
+    {
+        cgpu_render_encoder_bind_pipeline(pass_context.encoder, pass->pipeline);
+    }
     cgpux_render_encoder_bind_bind_table(pass_context.encoder, pass_context.bind_table);
     {
         ZoneScopedN("PassExecutor");
         pass->executor(*this, pass_context);
     }
     cgpu_cmd_end_render_pass(executor.gfx_cmd_buf, pass_context.encoder);
-    executor.write_marker(skr::format("Pass-{}-EndRenderPass", pass->get_name()).c_str());
+    {
+        ZoneScopedN("WriteEndPassMarker");
+        executor.write_marker(skr::format("Pass-{}-EndRenderPass", pass->get_name()).c_str());
+    }
     cgpu_cmd_end_event(executor.gfx_cmd_buf);
     // deallocate
     deallocate_resources(pass);
@@ -729,6 +761,8 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
         executor.reset_begin(texture_view_pool);
         if (profiler) profiler->on_cmd_begin(*this, executor);
         {
+            ZoneScopedN("GraphExecutorBeginEvent");
+
             skr::string frameLabel = "Frame";
             frameLabel.append(skr::to_string(frame_index));
             CGPUEventInfo event = { frameLabel.c_str(), { 0.8f, 0.8f, 0.8f, 1.f } };
