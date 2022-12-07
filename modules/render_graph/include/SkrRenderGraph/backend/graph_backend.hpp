@@ -20,6 +20,8 @@ public:
     void initialize(CGPUQueueId gfx_queue, CGPUDeviceId device);
     void finalize();
 
+    const struct CGPUXMergedBindTable* merge_tables(const struct CGPUXBindTable **tables, uint32_t count);
+
     void commit(CGPUQueueId gfx_queue, uint64_t frame_index);
     void reset_begin(TextureViewPool& texture_view_pool);
 
@@ -31,12 +33,14 @@ public:
     CGPUFenceId exec_fence = nullptr;
     uint64_t exec_frame = 0;
     eastl::vector<CGPUTextureId> aliasing_textures;
-    eastl::unordered_map<CGPURootSignatureId, BindTablePool*> bind_table_pools;
+    skr::flat_hash_map<CGPURootSignatureId, BindTablePool*> bind_table_pools;
 
     CGPUMarkerBufferId marker_buffer = nullptr;
     uint32_t marker_idx = 0;
     uint32_t valid_marker_val = 1;
     eastl::vector<skr::string> marker_messages;
+protected:
+    skr::flat_hash_map<CGPURootSignatureId, MergedBindTablePool*> merged_table_pools;
 };
 
 // TODO: optimize stack allocation

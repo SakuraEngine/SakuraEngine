@@ -20,12 +20,25 @@ namespace render_graph
 
 size_t MergedBindTablePool::Key::hasher::operator()(const MergedBindTablePool::Key& val) const
 {
-    return skr_hash(val.tables.data(), val.tables.size() * sizeof(CGPUXBindTableId), CGPU_NAME_HASH_SEED);   
+    const auto size = val.tables.size() * sizeof(CGPUXBindTableId);
+    return skr_hash(val.tables.data(), size, CGPU_NAME_HASH_SEED);   
+}
+
+size_t MergedBindTablePool::Key::hasher::operator()(const MergedBindTablePool::Key::View& val) const
+{
+    const auto size = val.count * sizeof(CGPUXBindTableId);
+    return skr_hash(val.tables, size, CGPU_NAME_HASH_SEED);   
 }
 
 size_t MergedBindTablePool::Key::equal_to::operator()(const MergedBindTablePool::Key& lhs, const MergedBindTablePool::Key& rhs) const
 {
-    return lhs.tables == rhs.tables;
+    if (lhs.tables.size() != rhs.tables.size()) return false;
+    for (uint32_t i = 0; i < lhs.tables.size(); ++i)
+    {
+        if (lhs.tables[i] != rhs.tables[i])
+            return false;
+    }
+    return true;
 }
 
 size_t MergedBindTablePool::Key::equal_to::operator()(const MergedBindTablePool::Key& lhs, const MergedBindTablePool::Key::View& rhs) const
@@ -41,20 +54,46 @@ size_t MergedBindTablePool::Key::equal_to::operator()(const MergedBindTablePool:
 
 CGPUXMergedBindTableId MergedBindTablePool::pop(const CGPUXBindTableId* tables, uint32_t count)
 {
-    const auto hash = skr_hash(tables, count * sizeof(CGPUXBindTableId), CGPU_NAME_HASH_SEED);
     const auto view = Key::View{tables, count};
-    pool.find(view, hash);
+    auto found = pool.find(view);
+    if (found == pool.end()) // allocate and do merge
+    {
+        CGPUXMergedBindTableDescriptor desc = {};
+        desc.root_signature = root_sig;
+        GuradedMergedBindTable guarded = {};
+        guarded.table =  cgpux_create_megred_bind_table(root_sig->device, &desc);
+        cgpux_merged_bind_table_merge(guarded.table, tables, count); // only merge once otherwise reset has triggered
+        guarded.update_gurad = true;
+        pool.emplace(Key(tables, count), guarded);
+        return guarded.table;
+    }
+    else
+    {
+        auto& table = found->second;
+        if (!table.update_gurad)
+        {
+            cgpux_merged_bind_table_merge(table.table, tables, count);
+            table.update_gurad = true;
+        }
+        return table.table;
+    }
     return nullptr;
 }
 
 void MergedBindTablePool::reset()
 {
-
+    for (auto& [key, table] : pool)
+    {
+        table.update_gurad = false;
+    }
 }
 
 void MergedBindTablePool::destroy()
 {
-
+    for (auto& [key, table] : pool)
+    {
+        cgpux_free_merged_bind_table(table.table);
+    }
 }
 
 // Bind Table Pool

@@ -12,6 +12,7 @@ namespace render_graph
 {
 // thread-unsafe descriptor set heap
 // it's supposed to be resized only once at compile
+// TODO: lifetime management (GC)
 class BindTablePool
 {
     friend class RenderGraphBackend;
@@ -35,6 +36,7 @@ protected:
     skr::flat_hash_map<skr::string, BindTablesBlock, skr::hash<skr::string>> pool;
 };
 
+// TODO: lifetime management (GC)
 class MergedBindTablePool
 {
     struct Key
@@ -58,22 +60,32 @@ class MergedBindTablePool
             SKR_RENDER_GRAPH_API size_t operator()(const Key& lhs, const Key& rhs) const;
             SKR_RENDER_GRAPH_API size_t operator()(const Key& lhs, const View& other) const;
         };
+        inline Key() = default;
+        inline Key(const CGPUXBindTableId* tables, uint32_t count)
+            : tables(tables, tables + count)
+        {
+        }
         eastl::fixed_vector<CGPUXBindTableId, 3> tables;
     };
     static_assert(sizeof(Key) <= 8 * sizeof(size_t), "Key should be under single cacheline!");
+    struct GuradedMergedBindTable
+    {
+        CGPUXMergedBindTableId table;
+        bool update_gurad = false;
+    };
 
+public:
     MergedBindTablePool(CGPURootSignatureId root_sig)
         : root_sig(root_sig)
     {
     }
-    
     CGPUXMergedBindTableId pop(const CGPUXBindTableId* tables, uint32_t count);
     void reset();
     void destroy();
 
 protected:
     const CGPURootSignatureId root_sig;
-    skr::flat_hash_map<Key, CGPUXMergedBindTableId, Key::hasher, Key::equal_to> pool;
+    skr::flat_hash_map<Key, GuradedMergedBindTable, Key::hasher, Key::equal_to> pool;
 };
 } // namespace render_graph
 } // namespace skr
