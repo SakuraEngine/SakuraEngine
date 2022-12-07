@@ -15,7 +15,7 @@ public:
     ModuleManagerImpl()
     {
         auto sucess = processSymbolTable.load(nullptr);
-        assert(sucess && "Failed to load symbol table");
+        assert(sucess && "Failed to load symbol table");(void)sucess;
         dependency_graph = skr::DependencyGraph::Create();
     }
     ~ModuleManagerImpl()

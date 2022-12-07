@@ -1,4 +1,5 @@
 #include <EASTL/string.h>
+#include <EASTL/fixed_string.h>
 #include "platform/configure.h"
 #include "platform/memory.h"
 #include "utils/log.h"
@@ -59,6 +60,9 @@ SKR_IMGUI_API void render_graph_imgui_initialize(const RenderGraphImGuiDescripto
 void imguir_render_draw_data(ImDrawData* draw_data, 
     skr::render_graph::RenderGraph* render_graph, skr::render_graph::TextureRTVHandle target, ECGPULoadAction load_action)
 {
+    ZoneScopedN("RenderIMGUI");
+    using graph_name_string = eastl::fixed_string<char, 32>;
+
     bool useCVV = false;
 #ifdef SKR_OS_MACOSX
     useCVV = false;
@@ -67,20 +71,28 @@ void imguir_render_draw_data(ImDrawData* draw_data,
     {
         // create or resize the vertex/index buffers
         // auto device = render_graph->get_backend_device();
-        size_t vertex_size = draw_data->TotalVtxCount * sizeof(ImDrawVert);
-        size_t index_size = draw_data->TotalIdxCount * sizeof(ImDrawIdx);
+        uint32_t vertex_size = draw_data->TotalVtxCount * (uint32_t)sizeof(ImDrawVert);
+        uint32_t index_size = draw_data->TotalIdxCount * (uint32_t)sizeof(ImDrawIdx);
         auto font_handle = render_graph->create_texture(
             [=](rg::RenderGraph& g, rg::TextureBuilder& builder) {
-                skr::string name = "imgui_font-";
-                name.append(skr::to_string(draw_data->OwnerViewport->ID));
+                ZoneScopedN("ConstructTextureHandle");
+
+                graph_name_string name = "imgui_font-";
+                name.append(skr::to_string(draw_data->OwnerViewport->ID).c_str());
                 builder.set_name(name.c_str())
                     .import(font_texture, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
             });
         // vb & ib
         auto vertex_buffer_handle = render_graph->create_buffer(
             [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-                skr::string name = "imgui_vertices-";
-                name.append(skr::to_string(draw_data->OwnerViewport->ID));
+                ZoneScopedN("ConstructVBHandle");
+                graph_name_string name;
+                {
+                    ZoneScopedN("ConstructVBName");
+
+                    name = "imgui_vertices-";
+                    name.append(skr::to_string(draw_data->OwnerViewport->ID).c_str());
+                }
                 builder.set_name(name.c_str())
                     .size(vertex_size)
                     .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
@@ -91,8 +103,10 @@ void imguir_render_draw_data(ImDrawData* draw_data,
             });
         auto index_buffer_handle = render_graph->create_buffer(
             [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-                skr::string name = "imgui_indices-";
-                name.append(skr::to_string(draw_data->OwnerViewport->ID));
+                ZoneScopedN("ConstructIBHandle");
+
+                graph_name_string name = "imgui_indices-";
+                name.append(skr::to_string(draw_data->OwnerViewport->ID).c_str());
                 builder.set_name(name.c_str())
                     .size(index_size)
                     .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
@@ -105,8 +119,10 @@ void imguir_render_draw_data(ImDrawData* draw_data,
         {
             auto upload_buffer_handle = render_graph->create_buffer(
                 [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-                skr::string name = "imgui_upload-";
-                name.append(skr::to_string(draw_data->OwnerViewport->ID));
+                ZoneScopedN("ConstructUploadPass");
+
+                graph_name_string name = "imgui_upload-";
+                name.append(skr::to_string(draw_data->OwnerViewport->ID).c_str());
                 builder.set_name(name.c_str())
                         .size(index_size + vertex_size)
                         .with_tags(kRenderGraphDefaultResourceTag)
@@ -114,8 +130,10 @@ void imguir_render_draw_data(ImDrawData* draw_data,
                 });
             render_graph->add_copy_pass(
                 [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
-                skr::string name = "imgui_copy-";
-                name.append(skr::to_string(draw_data->OwnerViewport->ID));
+                ZoneScopedN("ConstructCopyPass");
+
+                graph_name_string name = "imgui_copy-";
+                name.append(skr::to_string(draw_data->OwnerViewport->ID).c_str());
                 builder.set_name(name.c_str())
                     .buffer_to_buffer(upload_buffer_handle.range(0, vertex_size), vertex_buffer_handle.range(0, vertex_size))
                     .buffer_to_buffer(upload_buffer_handle.range(vertex_size, vertex_size + index_size), index_buffer_handle.range(0, index_size));
@@ -136,8 +154,10 @@ void imguir_render_draw_data(ImDrawData* draw_data,
         }
         auto constant_buffer = render_graph->create_buffer(
             [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-                skr::string name = "imgui_cbuffer-";
-                name.append(skr::to_string(draw_data->OwnerViewport->ID));
+                ZoneScopedN("ConstructCBHandle");
+
+                graph_name_string name = "imgui_cbuffer-";
+                name.append(skr::to_string(draw_data->OwnerViewport->ID).c_str());
                 builder.set_name(name.c_str())
                     .size(sizeof(float) * 4 * 4)
                     .memory_usage(CGPU_MEM_USAGE_CPU_TO_GPU)
@@ -146,9 +166,12 @@ void imguir_render_draw_data(ImDrawData* draw_data,
                     .as_uniform_buffer();
             });
         // add pass
-        render_graph->add_render_pass([=](rg::RenderGraph& g, rg::RenderPassBuilder& builder) {
-            skr::string name = "imgui_render-";
-            name.append(skr::to_string(draw_data->OwnerViewport->ID));
+        render_graph->add_render_pass(
+            [&](rg::RenderGraph& g, rg::RenderPassBuilder& builder) {
+            ZoneScopedN("ConstructRenderPass");
+
+            graph_name_string name = "imgui_render-";
+            name.append(skr::to_string(draw_data->OwnerViewport->ID).c_str());
             builder.set_name(name.c_str())
                 .set_pipeline(render_pipeline)
                 .read("Constants", constant_buffer.range(0, sizeof(float) * 4 * 4))
@@ -159,6 +182,8 @@ void imguir_render_draw_data(ImDrawData* draw_data,
         },
         [target, useCVV, draw_data, constant_buffer, index_buffer_handle, vertex_buffer_handle]
         (rg::RenderGraph& g, rg::RenderPassContext& context) {
+            ZoneScopedN("ImGuiPass");
+
             // auto target_node = g.resolve(target);
             const auto target_desc = g.resolve_descriptor(target);
             SKR_ASSERT(target_desc && "ImGui render target not found!");
@@ -256,6 +281,8 @@ SKR_IMGUI_API void render_graph_imgui_add_render_pass(skr::render_graph::RenderG
     // Update and Render additional Platform Windows
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {
+        ZoneScopedN("UpdateImGuiWindows");
+
         io.BackendRendererUserData = render_graph;
         ImGui::UpdatePlatformWindows();
         ImGui::RenderPlatformWindowsDefault();

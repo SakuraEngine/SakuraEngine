@@ -4,6 +4,15 @@
 #include "containers/span.hpp"
 #include "containers/string.hpp"
 
+#ifdef RG_USE_FIXED_STRING
+#include <EASTL/fixed_string.h>
+using graph_object_string = eastl::fixed_string<char, 32>;
+using graph_big_object_string = eastl::fixed_string<char, 64>;
+#else
+using graph_object_string = skr::string;
+using graph_big_object_string = skr::string;
+#endif
+
 enum
 {
     kRenderGraphInvalidResourceTag = 0x00,
@@ -293,7 +302,7 @@ struct RenderGraphNode : public DependencyGraphNode {
     const EObjectType type;
     const uint32_t pooled_size = 0;
 protected:
-    skr::string name;
+    graph_object_string name = "";
 };
 
 struct RenderGraphEdge : public DependencyGraphEdge {

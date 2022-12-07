@@ -25,6 +25,8 @@
 #include "live2d_mask_pass.hpp"
 #include "live2d_clipping.hpp"
 
+#include <EASTL/fixed_vector.h>
+
 #include "rtm/matrix4x4f.h"
 
 #include "tracy/Tracy.hpp"
@@ -148,7 +150,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     eastl::vector_map<CGPUTextureViewId, CGPUXBindTableId> mask_bind_tables;
 
     eastl::vector_map<skr_live2d_render_model_id, skr::span<const uint32_t>> sorted_drawable_list;
-    eastl::vector_map<skr_live2d_render_model_id, eastl::vector<uint32_t>> sorted_mask_drawable_lists;
+    eastl::vector_map<skr_live2d_render_model_id, eastl::fixed_vector<uint32_t, 4>> sorted_mask_drawable_lists;
     const float kMotionFramesPerSecond = 240.0f;
     eastl::vector_map<skr_live2d_render_model_id, STimer> motion_timers;
     uint32_t last_ms = 0;
@@ -245,9 +247,15 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     skr_primitive_draw_list_view_t mask_draw_list;
     void produce_mask_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* storage) 
     {
-        mask_drawcalls.resize(0);
-        sorted_mask_drawable_lists.resize(0);
-        auto counterF = [&](dual_chunk_view_t* r_cv) {
+        {
+            ZoneScopedN("FrameCleanUp");
+
+            mask_drawcalls.resize(0);
+            sorted_mask_drawable_lists.resize(0);
+        }
+        auto updateMaskF = [&](dual_chunk_view_t* r_cv) {
+            ZoneScopedN("UpdateMaskF");
+
             auto models = dual::get_owned_rw<skr_live2d_render_model_comp_t>(r_cv);
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
@@ -352,7 +360,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                 }
             }
         };
-        dualQ_get_views(effect_query, DUAL_LAMBDA(counterF));
+        dualQ_get_views(effect_query, DUAL_LAMBDA(updateMaskF));
     }
 
     uint64_t frame_count = 0;
@@ -365,6 +373,8 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         skr_primitive_draw_packet_t packet = {};
         if (strcmp(pass->identity(), live2d_mask_pass_name) == 0)
         {
+            ZoneScopedN("ProduceMaskDrawPackets");
+
             produce_mask_drawcall(pass, storage);
             mask_draw_list.drawcalls = mask_drawcalls.data();
             mask_draw_list.count = (uint32_t)mask_drawcalls.size();
@@ -373,6 +383,8 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         }
         if (strcmp(pass->identity(), live2d_pass_name) == 0)
         {
+            ZoneScopedN("ProduceModelDrawPackets");
+
             produce_model_drawcall(pass, storage);
             model_draw_list.drawcalls = model_drawcalls.data();
             model_draw_list.count = (uint32_t)model_drawcalls.size();

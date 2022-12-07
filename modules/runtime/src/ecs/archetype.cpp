@@ -163,7 +163,7 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
     structure.length = firstTag;
     archetype_t* archetype = get_archetype(structure);
     const auto typeSize = static_cast<uint32_t>(data_size(inType));
-    assert((sizeof(dual_group_t) + typeSize) < kGroupBlockSize);
+    assert((sizeof(dual_group_t) + typeSize) < kGroupBlockSize);(void)typeSize;
     dual_group_t& proto = *new (groupPool.allocate()) dual_group_t();
     char* buffer = (char*)(&proto + 1);
     proto.firstFree = 0;

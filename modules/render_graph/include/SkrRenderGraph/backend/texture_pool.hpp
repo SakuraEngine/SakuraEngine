@@ -1,5 +1,5 @@
 #pragma once
-#include <EASTL/unordered_map.h>
+#include <containers/hashmap.hpp>
 #include <EASTL/deque.h>
 #include "cgpu/api.h"
 
@@ -54,7 +54,7 @@ public:
 
 protected:
     CGPUDeviceId device;
-    eastl::unordered_map<Key, eastl::deque<PooledTexture>, Key::hasher> textures;
+    skr::flat_hash_map<Key, eastl::deque<PooledTexture>, Key::hasher> textures;
 };
 } // namespace render_graph
 } // namespace skr

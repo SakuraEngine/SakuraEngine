@@ -30,7 +30,12 @@ public:
         {
             case ERelationshipType::TextureRead: {
                 auto SRV = (TextureReadEdge*)rg_edge;
-                if (SRV->name.empty())
+                if (auto name = SRV->get_name())
+                {
+                    label = "SRV: ";
+                    label.append(name);
+                }
+                else
                 {
                     label = "SRV";
                     //label = "SRV:s";
@@ -38,27 +43,22 @@ public:
                     //.append("b")
                     //.append(skr::to_string(SRV->binding));
                 }
-                else
-                {
-                    label = "SRV: ";
-                    label.append(SRV->name);
-                }
             }
             break;
             case ERelationshipType::TextureReadWrite: {
                 auto UAV = (TextureReadWriteEdge*)rg_edge;
-                if (UAV->name.empty())
+                if (auto name = UAV->get_name())
+                {
+                    label = "UAV: ";
+                    label.append(name);
+                }
+                else
                 {
                     label = "UAV";
                     //label = "UAV:s";
                     //label.append(skr::to_string(UAV->set))
                     //.append("b")
                     //.append(skr::to_string(UAV->binding));
-                }
-                else
-                {
-                    label = "UAV: ";
-                    label.append(UAV->name);
                 }
             }
             break;

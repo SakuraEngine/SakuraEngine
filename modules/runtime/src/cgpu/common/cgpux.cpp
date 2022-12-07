@@ -298,7 +298,7 @@ void CGPUXMergedBindTable::mergeUpdateForTable(const CGPUXBindTableId* bind_tabl
     }
     // this update is kinda dangerous during draw-call because update-after-bind may happen
     // TODO: fix this
-    cgpu_update_descriptor_set(to_update, datas.data(), datas.size());
+    cgpu_update_descriptor_set(to_update, datas.data(), (uint32_t)datas.size());
 }
 
 void CGPUXMergedBindTable::Bind(CGPURenderPassEncoderId encoder) const SKR_NOEXCEPT
