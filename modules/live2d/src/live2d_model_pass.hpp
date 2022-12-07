@@ -52,7 +52,7 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
                     if (dc.desperated || (dc.index_buffer.buffer == nullptr) || (dc.vertex_buffer_count == 0)) continue;
 
                     CGPUXBindTableId tables[2] = { dc.bind_table, pass_context.bind_table };
-                    pass_context.merge_and_bind_tables(tables, 2);
+                    pass_context.merge_tables(tables, 2);
                 }
                 cgpu_render_encoder_set_viewport(pass_context.encoder,
                     0.0f, 0.0f,
