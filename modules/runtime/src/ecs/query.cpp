@@ -189,14 +189,13 @@ dual_query_t* dual_storage_t::make_query(const dual_filter_t& filter, const dual
     queries.push_back(result);
     return result;
 }
-
 //[in][rand]$|comp''
 dual_query_t* dual_storage_t::make_query(const char* inDesc)
 {
     using namespace dual;
     skr::string desc(inDesc);
 #ifdef _WIN32
-    desc.erase(eastl::remove_if(desc.begin(), desc.end(), std::isspace), desc.end());
+    desc.erase(eastl::remove_if(desc.begin(), desc.end(), [](char c) -> bool { return std::isspace(c); }), desc.end());
 #else
     desc.erase(eastl::remove_if(desc.begin(), desc.end(), isspace), desc.end());
 #endif

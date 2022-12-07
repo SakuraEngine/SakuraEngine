@@ -140,6 +140,82 @@ FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line)
 
 #include "tracy/Tracy.hpp"
 
+#if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
+#include <string_view>
+#include "utils/demangle.hpp"
+template<std::string_view const& sourcelocation>
+struct SkrTracedNew
+{
+    template<class T, class... TArgs>
+    [[nodiscard]] FORCEINLINE T* New(TArgs&&... params)
+    {
+        const std::string_view name = skr::demangle<T>();
+        TracyMessage(name.data(), name.size());
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data());
+        SKR_ASSERT(pMemory != nullptr);
+        return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
+    }
+
+    template<class T>
+    [[nodiscard]] FORCEINLINE T* New()
+    {
+        const std::string_view name = skr::demangle<T>();
+        TracyMessage(name.data(), name.size());
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data());
+        SKR_ASSERT(pMemory != nullptr);
+        return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
+    }
+
+    template<class T, class... TArgs>
+    [[nodiscard]] FORCEINLINE T* NewSized(size_t size, TArgs&&... params)
+    {
+        const std::string_view name = skr::demangle<T>();
+        TracyMessage(name.data(), name.size());
+        SKR_ASSERT(size >= sizeof(T));
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data());
+        SKR_ASSERT(pMemory != nullptr);
+        return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
+    }
+
+    template<class T>
+    [[nodiscard]] FORCEINLINE T* NewSized(size_t size)
+    {
+        const std::string_view name = skr::demangle<T>();
+        TracyMessage(name.data(), name.size());
+        SKR_ASSERT(size >= sizeof(T));
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data());
+        SKR_ASSERT(pMemory != nullptr);
+        return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
+    }
+
+    template<class F>
+    [[nodiscard]] FORCEINLINE F* NewLambda(F&& lambda)
+    {
+        const std::string_view name = skr::demangle<T>();
+        TracyMessage(name.data(), name.size());
+        using ValueType = std::remove_reference_t<F>;
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), ssourcelocation.data());
+        SKR_ASSERT(pMemory != nullptr);
+        return new (pMemory) DEBUG_NEW_SOURCE_LINE auto(std::forward<F>(lambda));
+    }
+
+    template<class T>
+    void Delete(T* pType)
+    {
+        if (pType != nullptr)
+        {
+            const std::string_view name = skr::demangle<T>();
+            TracyMessage(name.data(), name.size());
+            pType->~T();
+            SkrFreeAlignedWithCZone((void*)pType, alignof(T), sourcelocation.data());
+        }
+    }
+};
+#define SkrNew []{ static constexpr std::string_view sourcelocation = SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)); return SkrTracedNew<sourcelocation>{}; }().template New
+#define SkrNewSized []{ static constexpr std::string_view sourcelocation = SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)); return SkrTracedNew<sourcelocation>{}; }().template NewSized
+#define SkrNewLambda []{ static constexpr std::string_view sourcelocation = SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)); return SkrTracedNew<sourcelocation>{}; }().template NewLambda
+#define SkrDelete []{ static constexpr std::string_view sourcelocation = SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)); return SkrTracedNew<sourcelocation>{}; }().template Delete
+#else
 template <typename T, typename... TArgs>
 [[nodiscard]] FORCEINLINE T* SkrNew(TArgs&&... params)
 {
@@ -202,6 +278,7 @@ void SkrDelete(T* pType)
         sakura_free_aligned((void*)pType, alignof(T));
     }
 }
+#endif
 
 template<class T> 
 struct skr_stl_allocator 

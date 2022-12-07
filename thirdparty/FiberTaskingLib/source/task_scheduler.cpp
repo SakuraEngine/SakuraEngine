@@ -29,6 +29,7 @@
 #include "ftl/fiber.h"
 #include "ftl/task_counter.h"
 #include "ftl/thread_abstraction.h"
+#include "containers/string.hpp"
 #include <memory>
 #include <mutex>
 #include "platform/memory.h"
@@ -94,9 +95,9 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void* const arg)
     // Switch
 #ifdef TRACY_ENABLE
     {
-        skr::string thread_id = "worker";
-        thread_id += skr::to_string(index);
-        TracyFiberEnter(thread_id.c_str());
+        ::skr::string threadId = "worker";
+        threadId += ::skr::to_string(index);
+        TracyFiberEnter(threadId.c_str());
         taskScheduler->m_tls[index].ThreadFiber.SwitchToFiber(freeFiber);
         TracyFiberLeave;
     }
