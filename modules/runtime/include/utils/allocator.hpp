@@ -31,7 +31,7 @@ public:
     void deallocate(_Ty* const _Ptr, const size_t _Count)
     {
         // no overflow check on the following multiply; we assume _Allocate did that check
-        sakura_free_aligned(_Ptr, sizeof(_Ty) * _Count, alignof(_Ty));
+        sakura_free_aligned(_Ptr, alignof(_Ty));
     }
 
     _Ty* allocate(const size_t _Count)

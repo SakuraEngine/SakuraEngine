@@ -43,7 +43,7 @@ CGPUXMergedBindTableId MergedBindTablePool::pop(const CGPUXBindTableId* tables, 
 {
     const auto hash = skr_hash(tables, count * sizeof(CGPUXBindTableId), CGPU_NAME_HASH_SEED);
     const auto view = Key::View{tables, count};
-    // pool.find(view, hash);
+    pool.find(view, hash);
     return nullptr;
 }
 

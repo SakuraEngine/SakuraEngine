@@ -40,7 +40,7 @@ struct SKR_RENDER_GRAPH_API NodeAndEdgeFactoryImpl final : public NodeAndEdgeFac
         {
             void* block;
             while (blocks.try_dequeue(block))
-                ::sakura_free(block);
+                sakura_free(block);
         }
         void* allocate()
         {
@@ -49,14 +49,14 @@ struct SKR_RENDER_GRAPH_API NodeAndEdgeFactoryImpl final : public NodeAndEdgeFac
                 return block;
             {
                 ZoneScopedN("DualPoolAllocation");
-                return ::sakura_calloc(1, blockSize);
+                return sakura_calloc(1, blockSize);
             }
         }
         void free(void* block)
         {
             if (blocks.try_enqueue(block))
                 return;
-            ::sakura_free(block);
+            sakura_free(block);
         }
     };
 

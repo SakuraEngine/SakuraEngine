@@ -46,11 +46,15 @@ class MergedBindTablePool
         };
         struct hasher
         {
+            using is_transparent = void;
+
             SKR_RENDER_GRAPH_API size_t operator() (const Key& val) const;
             SKR_RENDER_GRAPH_API size_t operator() (const View& val) const;
         };
         struct equal_to
         {
+            using is_transparent = void;
+
             SKR_RENDER_GRAPH_API size_t operator()(const Key& lhs, const Key& rhs) const;
             SKR_RENDER_GRAPH_API size_t operator()(const Key& lhs, const View& other) const;
         };

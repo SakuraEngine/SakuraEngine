@@ -41,61 +41,61 @@
 #endif
 
 #if defined(_WIN32)
-RUNTIME_API void* sakura_malloc(size_t size) SKR_NOEXCEPT
+RUNTIME_API void* _sakura_malloc(size_t size) 
 {
     void* p = mi_malloc(size);
     TracyCAlloc(p, size);
     return p;
 }
 
-RUNTIME_API void* sakura_calloc(size_t count, size_t size) SKR_NOEXCEPT
+RUNTIME_API void* _sakura_calloc(size_t count, size_t size) 
 {
     void* p = mi_calloc(count, size);
     TracyCAlloc(p, size);
     return p;
 }
 
-RUNTIME_API void* sakura_calloc_aligned(size_t count, size_t size, size_t alignment) SKR_NOEXCEPT
+RUNTIME_API void* _sakura_calloc_aligned(size_t count, size_t size, size_t alignment) 
 {
     void* p = mi_calloc_aligned(count, size, alignment);
     TracyCAlloc(p, size);
     return p;
 }
 
-RUNTIME_API void* sakura_malloc_aligned(size_t size, size_t alignment) SKR_NOEXCEPT
+RUNTIME_API void* _sakura_malloc_aligned(size_t size, size_t alignment) 
 {
     void* p = mi_malloc_aligned(size, alignment);
     TracyCAlloc(p, size);
     return p;
 }
 
-RUNTIME_EXTERN_C RUNTIME_API void* sakura_new_n(size_t count, size_t size)
+RUNTIME_EXTERN_C RUNTIME_API void* _sakura_new_n(size_t count, size_t size) 
 {
     void* p = mi_new_n(count, size);
     TracyCAlloc(p, size * count);
     return p;
 }
 
-RUNTIME_API void* sakura_new_aligned(size_t size, size_t alignment)
+RUNTIME_API void* _sakura_new_aligned(size_t size, size_t alignment) 
 {
     void* p = mi_new_aligned(size, alignment);
     TracyCAlloc(p, size);
     return p;
 }
 
-RUNTIME_API void sakura_free(void* p) SKR_NOEXCEPT
+RUNTIME_API void _sakura_free(void* p) 
 {
     TracyCFree(p);
     mi_free(p);
 }
 
-RUNTIME_API void sakura_free_aligned(void* p, size_t alignment) SKR_NOEXCEPT
+RUNTIME_API void _sakura_free_aligned(void* p, size_t alignment) 
 {
     TracyCFree(p);
     mi_free_aligned(p, alignment);
 }
 
-RUNTIME_API void* sakura_realloc(void* p, size_t newsize) SKR_NOEXCEPT
+RUNTIME_API void* _sakura_realloc(void* p, size_t newsize) 
 {
     TracyCFree(p);
     void* np = mi_realloc(p, newsize);
@@ -124,28 +124,28 @@ FORCEINLINE static void* calloc_aligned(size_t count, size_t size, size_t alignm
     return ptr;
 }
 
-RUNTIME_API void* sakura_malloc(size_t size) SKR_NOEXCEPT
+RUNTIME_API void* _sakura_malloc(size_t size) 
 {
     return malloc(size);
 }
 
-RUNTIME_API void* sakura_calloc(size_t count, size_t size) SKR_NOEXCEPT
+RUNTIME_API void* _sakura_calloc(size_t count, size_t size) 
 {
     return calloc(count, size);
 }
 
-RUNTIME_EXTERN_C RUNTIME_API void* sakura_new_n(size_t count, size_t size)
+RUNTIME_EXTERN_C RUNTIME_API void* _sakura_new_n(size_t count, size_t size)
 {
     void* p = malloc(count * size);
     return p;
 }
 
-RUNTIME_API void* sakura_calloc_aligned(size_t count, size_t size, size_t alignment) SKR_NOEXCEPT
+RUNTIME_API void* _sakura_calloc_aligned(size_t count, size_t size, size_t alignment) 
 {
     return calloc_aligned(count, size, alignment);
 }
 
-RUNTIME_API void* sakura_malloc_aligned(size_t size, size_t alignment) SKR_NOEXCEPT
+RUNTIME_API void* _sakura_malloc_aligned(size_t size, size_t alignment) 
 {
 #if !defined(_WIN32)
     void* ptr = (alignment == 1) ? malloc(size) : aligned_alloc(size, alignment);
@@ -159,7 +159,7 @@ RUNTIME_API void* sakura_malloc_aligned(size_t size, size_t alignment) SKR_NOEXC
     return ptr;
 }
 
-RUNTIME_API void* sakura_new_aligned(size_t size, size_t alignment)
+RUNTIME_API void* _sakura_new_aligned(size_t size, size_t alignment)
 {
 #if !defined(_WIN32)
     void* ptr = (alignment == 1) ? malloc(size) : aligned_alloc(size, alignment);
@@ -173,19 +173,19 @@ RUNTIME_API void* sakura_new_aligned(size_t size, size_t alignment)
     return ptr;
 }
 
-RUNTIME_API void sakura_free(void* p) SKR_NOEXCEPT
+RUNTIME_API void _sakura_free(void* p) 
 {
     free(p);
 }
 
 #define free_aligned(p, alignment) free((p))
 
-RUNTIME_API void sakura_free_aligned(void* p, size_t alignment) SKR_NOEXCEPT
+RUNTIME_API void _sakura_free_aligned(void* p, size_t alignment) 
 {
     free_aligned(p, alignment);
 }
 
-RUNTIME_API void* sakura_realloc(void* p, size_t newsize) SKR_NOEXCEPT
+RUNTIME_API void* _sakura_realloc(void* p, size_t newsize) 
 {
     return realloc(p, newsize);
 }

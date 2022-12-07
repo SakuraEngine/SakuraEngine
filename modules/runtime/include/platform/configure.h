@@ -490,6 +490,10 @@ typedef int64_t host_ptr_t;
     #define TRACY_FIBERS
 #endif
 
+#ifdef TRACY_ENABLE
+#define TRACY_TRACE_ALLOCATION
+#endif
+
 #ifdef __cplusplus
 
 namespace skr

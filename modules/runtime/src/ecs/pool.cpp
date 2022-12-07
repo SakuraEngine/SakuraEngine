@@ -18,7 +18,7 @@ pool_t::~pool_t()
 {
     void* block;
     while (blocks.try_dequeue(block))
-       ::dual_free(block);
+       dual_free(block);
 }
 
 void* pool_t::allocate()
@@ -28,7 +28,7 @@ void* pool_t::allocate()
         return block;
     {
         ZoneScopedN("DualPoolAllocation");
-        return ::dual_calloc(1, blockSize);
+        return dual_calloc(1, blockSize);
     }
 }
 
@@ -36,7 +36,7 @@ void pool_t::free(void* block)
 {
     if (blocks.try_enqueue(block))
         return;
-    ::dual_free(block);
+    dual_free(block);
 }
 
 fixed_pool_t::fixed_pool_t(size_t blockSize, size_t blockCount)
