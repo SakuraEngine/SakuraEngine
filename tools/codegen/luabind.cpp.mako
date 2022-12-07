@@ -12,9 +12,12 @@
             for subcategory in subcategories:
                 finalcat = finalcat.setdefault(subcategory, {})
         finalcat.setdefault("___ENUMS___", []).append(enum)
-
+    lua_binders = []
     for function in generator.filter_types(db.functions):
         finalcat = categories
+        if hasattr(function.attrs, "lua_binder"):
+            lua_binders.append(function)
+            continue
         if hasattr(function.attrs.scriptable, "category"):
             category = function.attrs.scriptable.category
             subcategories = category.split(".")
@@ -209,6 +212,9 @@ void skr_lua_open_${module}(lua_State* L)
     lua_pop(L, 1);
     }
 %endfor
+%for function in lua_binders:
+    ${function.name}(L);
+%endfor 
     lua_setfield(L, -2, "${module}");
 }
 // END LUA GENERATED
