@@ -44,9 +44,9 @@ protected:
 };
 
 // TODO: optimize stack allocation
-// static constexpr size_t stack_vector_fixed_count = 8;
+static constexpr size_t stack_vector_fixed_count = 8;
 template <typename T>
-using stack_vector = eastl::vector<T>;
+using stack_vector = eastl::fixed_vector<T, stack_vector_fixed_count>;
 
 class RenderGraphBackend : public RenderGraph
 {
