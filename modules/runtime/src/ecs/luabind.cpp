@@ -249,6 +249,8 @@ namespace skr::lua
                 const char* literal = luaL_checkstring(L, 2);
                 auto query = dualQ_from_literal(storage, literal);
                 *(dual_query_t**)lua_newuserdata(L, sizeof(void*)) = query;
+                luaL_getmetatable(L, "dual_query_t");
+                lua_setmetatable(L, -2);
                 return 1;
             };
             lua_pushcfunction(L, trampoline);
