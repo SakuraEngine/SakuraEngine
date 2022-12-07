@@ -417,7 +417,10 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
             query->storage->validate(validatedMeta.any_meta);
             query->storage->validate(validatedMeta.none_meta);
         }
-        if (sharedData->hasRandomWrite || batchSize == 0)
+        //TODO: expose this as a parameter
+        bool scheduleSubchunkJobs = !sharedData->hasWriteChunkComponent;
+        bool singleJob = sharedData->hasRandomWrite || batchSize == 0 || sharedData->entityCount <= batchSize;
+        if (singleJob)
         {
             uint32_t startIndex = 0;
             forloop (i, 0, sharedData->groupCount)
@@ -439,14 +442,12 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
             eastl::vector<batch_t> batches;
             eastl::vector<task_t>& tasks = sharedData->tasks;
             {
-                ZoneScopedN("JobPrepareBatch");
-
+                ZoneScopedN("JobBatching");
                 batches.reserve(sharedData->entityCount / batchSize);
                 tasks.reserve(batches.capacity());
                 uint32_t batchRemain = batchSize;
                 batch_t currBatch;
                 currBatch.startTask = currBatch.endTask = 0;
-                bool scheduleSubchunkJobs = true;
                 EIndex startIndex = 0;
                 dual_chunk_t* currentChunk = nullptr;
                 forloop (i, 0, sharedData->groupCount)
@@ -502,25 +503,26 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                     currBatch.endTask = tasks.size();
                     batches.push_back(currBatch);
                 }
-                
-                skr::task::counter_t counter;
-                counter.add((uint32_t)batches.size());
-                for(auto batch : batches)
-                {
-                    skr::task::schedule([batch, sharedData, counter]() mutable
-                    {
-                        SKR_DEFER({
-                            counter.decrement();
-                        });
-                        forloop (i, batch.startTask, batch.endTask)
-                        {
-                            auto task = sharedData->tasks[i];
-                            sharedData->callback(sharedData->userdata, sharedData->query->storage, &task.view, sharedData->localTypes + task.groupIndex * sharedData->query->parameters.length, task.startIndex);
-                        }
-                    }, nullptr);
-                }
-                counter.wait(false);
             }
+            
+            
+            skr::task::counter_t counter;
+            counter.add((uint32_t)batches.size());
+            for(auto batch : batches)
+            {
+                skr::task::schedule([batch, sharedData, counter]() mutable
+                {
+                    SKR_DEFER({
+                        counter.decrement();
+                    });
+                    forloop (i, batch.startTask, batch.endTask)
+                    {
+                        auto task = sharedData->tasks[i];
+                        sharedData->callback(sharedData->userdata, sharedData->query->storage, &task.view, sharedData->localTypes + task.groupIndex * sharedData->query->parameters.length, task.startIndex);
+                    }
+                }, nullptr);
+            }
+            counter.wait(false);
         }
 
         {
