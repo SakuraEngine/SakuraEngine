@@ -209,10 +209,10 @@ struct SkrTracedNew
         }
     }
 };
-#define SkrNew []{ static constexpr std::string_view sourcelocation = SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)); return SkrTracedNew<sourcelocation>{}; }().template New
-#define SkrNewSized []{ static constexpr std::string_view sourcelocation = SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)); return SkrTracedNew<sourcelocation>{}; }().template NewSized
-#define SkrNewLambda []{ static constexpr std::string_view sourcelocation = SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)); return SkrTracedNew<sourcelocation>{}; }().template NewLambda
-#define SkrDelete []{ static constexpr std::string_view sourcelocation = SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)); return SkrTracedNew<sourcelocation>{}; }().template Delete
+#define SkrNew []{ static constexpr std::string_view sourcelocation = SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)); return SkrTracedNew<sourcelocation>{}; }().SKR_TEMPLATE New
+#define SkrNewSized []{ static constexpr std::string_view sourcelocation = SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)); return SkrTracedNew<sourcelocation>{}; }().SKR_TEMPLATE NewSized
+#define SkrNewLambda []{ static constexpr std::string_view sourcelocation = SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)); return SkrTracedNew<sourcelocation>{}; }().SKR_TEMPLATE NewLambda
+#define SkrDelete []{ static constexpr std::string_view sourcelocation = SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)); return SkrTracedNew<sourcelocation>{}; }().SKR_TEMPLATE Delete
 #else
 template <typename T, typename... TArgs>
 [[nodiscard]] FORCEINLINE T* SkrNew(TArgs&&... params)
