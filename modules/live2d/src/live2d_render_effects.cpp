@@ -162,7 +162,6 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         // TODO: Correct Projection
         projection.Scale(static_cast<float>(100.f) / static_cast<float>(100.f), 1.0f);
         // TODO: View Matrix
-
         model_drawcalls.resize(0);
         auto counterF = [&](dual_chunk_view_t* r_cv) {
             auto models = dual::get_owned_rw<skr_live2d_render_model_comp_t>(r_cv);
@@ -344,7 +343,6 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                         {
                                             auto texture_view = skr_live2d_render_model_get_texture_view(render_model, clipDrawIndex);
                                             drawcall.bind_table = mask_bind_tables[texture_view];
-                                            // TODO: refactor this to use a single managed merged table
                                         }
                                     }
                                 }
