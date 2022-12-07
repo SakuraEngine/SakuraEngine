@@ -43,13 +43,16 @@ skr_parent_t
 };
 typedef struct skr_parent_t skr_parent_t;
 
+#define SKR_SCENE_MAX_NAME_LENGTH 32
+
 struct sreflect sattr(
     "guid" : "1CD632F6-3149-42E6-9114-647B0C803F32",
-    "component" : true
+    "component" : true,
+    "scriptable" : true
 )
 skr_name_comp_t
 {
-    char str[32];
+    char str[SKR_SCENE_MAX_NAME_LENGTH + 1];
 };
 typedef struct skr_name_comp_t skr_name_comp_t;
 

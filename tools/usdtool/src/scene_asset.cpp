@@ -50,7 +50,7 @@ void ImportTraversal(skd::SUSDPrimId prim, TranverseContext& ctx, children_t* ch
         else
             transformType = dual_id_of<skr_l2r_t>::get();
         builder.with(transformType);
-        builder.with<skr_name_t>();
+        builder.with<skr_name_comp_t>();
         if(children)
             builder.with<skr_parent_t>();
         if(!ecsChildren.empty())
@@ -61,7 +61,7 @@ void ImportTraversal(skd::SUSDPrimId prim, TranverseContext& ctx, children_t* ch
         {
             auto self = *dualV_get_entities(view);
             auto ctransform = (skr_float4x4_t*)dualV_get_owned_ro(view, transformType);
-            auto cname = dual::get_owned_rw<skr_name_t>(view);
+            auto cname = dual::get_owned_rw<skr_name_comp_t>(view);
             if(!ecsChildren.empty())
             {
                 auto cchildren = dual::get_owned_rw<skr_child_t, children_t>(view);
@@ -86,7 +86,12 @@ void ImportTraversal(skd::SUSDPrimId prim, TranverseContext& ctx, children_t* ch
             else
                 *ctransform = skr_float4x4_t();
             auto name = prim->GetName();
-            auto len = std::min(name.size(), 31ull);
+            size_t len = name.size();
+            if(len > SKR_SCENE_MAX_NAME_LENGTH)
+            {
+                SKR_LOG_WARN("Prim name is longer than the maximum allowed length. Truncating to %d characters.", SKR_SCENE_MAX_NAME_LENGTH);
+                len = SKR_SCENE_MAX_NAME_LENGTH;
+            }
             memcpy(cname->str, name.c_str(), len);
             cname->str[len] = 0;
         };
