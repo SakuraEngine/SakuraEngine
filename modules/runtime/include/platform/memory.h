@@ -95,13 +95,9 @@ FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line)
     return ptr;
 }
 
-#if defined(_WIN32) && !defined(__clang__)
-#pragma warning( disable : 5103 )
-#endif
-
 #define SKR_ALLOC_STRINGFY_IMPL(X) #X
 #define SKR_ALLOC_STRINGFY(X) SKR_ALLOC_STRINGFY_IMPL(X)
-#define SKR_ALLOC_CAT_IMPL(X,Y) X##Y
+#define SKR_ALLOC_CAT_IMPL(X,Y) X  Y
 #define SKR_ALLOC_CAT(X,Y) SKR_ALLOC_CAT_IMPL(X,Y)
 
 #define sakura_malloc(size) SkrMallocWithCZone((size), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) )

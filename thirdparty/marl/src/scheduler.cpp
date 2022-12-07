@@ -403,7 +403,7 @@ void Scheduler::Worker::start() {
       Worker::current = this;
       mainFiber = Fiber::createFromCurrentThread(scheduler->cfg.allocator, 0);
 #ifdef TRACY_ENABLE
-      TracyFiberEnter("mainFiber");
+      // TracyFiberEnter("mainFiber");
 #endif
       currentFiber = mainFiber.get();
       break;
@@ -428,7 +428,7 @@ void Scheduler::Worker::stop() {
       runUntilShutdown();
 #ifdef TRACY_ENABLE
       // Leave the main fiber
-      TracyFiberLeave;
+      // TracyFiberLeave;
 #endif
       Worker::current = nullptr;
       break;
