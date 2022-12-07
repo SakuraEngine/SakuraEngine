@@ -232,8 +232,8 @@ TEST(GraphTest, RenderGraphFrontEnd)
     graph->add_render_pass(
     [=](render_graph::RenderGraph&, render_graph::RenderPassBuilder& builder) {
         builder.set_name("defer_lighting")
-        .read(0, 0, gbuffer0)
-        .read(0, 1, gbuffer1)
+        .read("GBuffer0", gbuffer0)
+        .read("GBuffer1", gbuffer1)
         .write(0, back_buffer);
     },
     render_graph::RenderPassExecuteFunction());

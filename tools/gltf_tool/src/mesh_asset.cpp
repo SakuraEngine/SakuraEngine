@@ -1,13 +1,10 @@
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "platform/guid.hpp"
-#include "utils/make_zeroed.hpp"
 #include "utils/defer.hpp"
 #include "utils/log.hpp"
-#include "cgpu/api.h"
 #include "SkrGLTFTool/mesh_asset.hpp"
 #include "SkrGLTFTool/gltf_utils.hpp"
 #include "SkrToolCore/project/project.hpp"
-#include "SkrToolCore/asset/json_utils.hpp"
 #include "SkrToolCore/asset/json_utils.hpp"
 
 void* skd::asset::SGltfMeshImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context) 

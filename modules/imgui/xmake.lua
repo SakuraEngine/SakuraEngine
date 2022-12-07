@@ -10,18 +10,20 @@ target("imgui")
         imgui_fontdir = path.join(os.projectdir(), "SDKs/SourceSansPro-Regular.ttf")
         os.cp(imgui_fontdir, path.join(target:targetdir(), "../resources/font").."/")
     end)
-    -- if (is_os("windows")) then 
-    --     set_kind("headeronly")    
-    --     if (is_mode("release")) then
-    --         add_links(sdk_libs_dir.."imgui", {public=true} )
-    --     else
-    --         add_links(sdk_libs_dir.."imguid", {public=true} )
-    --     end
-    -- else
+    -- contains in imgui-$(plat)-$(arch).zip
+    if (is_os("windows")) then 
+         set_kind("headeronly")    
+         if (is_mode("release")) then
+             add_links(sdk_libs_dir.."imgui", {public=true} )
+         else
+             add_links(sdk_libs_dir.."imguid", {public=true} )
+         end
+    else
         set_kind("static")
-        set_optimize("fastest")
-        add_files("imgui/unitybuild.cpp")
-    -- end
+        -- compiles very slow, so we use precompiled version for this optimization level
+        -- set_optimize("fastest")
+        add_files("imgui/build.*.cpp")
+    end
 
 target("cimgui")
     set_group("00.thirdparty")
@@ -30,7 +32,20 @@ target("cimgui")
     add_deps("imgui", {public=true})
     add_includedirs("imgui", {public=false})
     add_includedirs("dear_bindings/cimgui/include", {public=true})
-    add_files("dear_bindings/cimgui/src/cimgui.cpp")
+    -- contains in imgui-$(plat)-$(arch).zip
+    if (is_os("windows")) then 
+         set_kind("headeronly")    
+         if (is_mode("release")) then
+             add_links(sdk_libs_dir.."cimgui", {public=true} )
+         else
+             add_links(sdk_libs_dir.."cimguid", {public=true} )
+         end
+    else
+        set_kind("static")
+        -- compiles very slow, so we use precompiled version for this optimization level
+        -- set_optimize("fastest")
+        add_files("dear_bindings/cimgui/src/cimgui.cpp")
+    end
 
 shared_module("SkrImGui", "SKR_IMGUI", engine_version)
     set_group("01.modules")
