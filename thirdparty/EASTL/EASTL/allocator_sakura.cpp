@@ -22,7 +22,7 @@ extern "C"
 		void* allocator_sakura::allocate(size_t n, int /*flags*/)
 		{ 
 			void* p = core_memalign(n, 1);
-			TracyCAllocN(p, n, "EASTL");
+			TracyCAlloc(p, n);
 			return p;
 		}
 
@@ -32,7 +32,7 @@ extern "C"
 													// aligned on e.g. 64 also is aligned at an offset of 64 by definition.
 			{
 			    void* p = core_memalign(n, alignment);
-				TracyCAllocN(p, n, "EASTL");
+				TracyCAlloc(p, n);
 				return p;
 			}
 

@@ -14,9 +14,11 @@ RUNTIME_EXTERN_C RUNTIME_API void* _sakura_realloc(void* p, size_t newsize);
 #if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
 #include "string.h"
 #include "tracy/TracyC.h"
+
+#define SKR_ALLOC_TRACY_MARKER_COLOR 0xff0000
 FORCEINLINE void* SkrMallocWithCZone(size_t size, const char* line)
 {
-    TracyCZone(z, 1);
+    TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
     TracyCZoneName(z, line, strlen(line));
     void* ptr = _sakura_malloc(size);
     TracyCZoneEnd(z);
@@ -25,7 +27,7 @@ FORCEINLINE void* SkrMallocWithCZone(size_t size, const char* line)
 
 FORCEINLINE void* SkrCallocWithCZone(size_t count, size_t size, const char* line)
 {
-    TracyCZone(z, 1);
+    TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
     TracyCZoneName(z, line, strlen(line));
     void* ptr = _sakura_calloc(count, size);
     TracyCZoneEnd(z);
@@ -34,7 +36,7 @@ FORCEINLINE void* SkrCallocWithCZone(size_t count, size_t size, const char* line
 
 FORCEINLINE void* SkrMallocAlignedWithCZone(size_t size, size_t alignment, const char* line)
 {
-    TracyCZone(z, 1);
+    TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
     TracyCZoneName(z, line, strlen(line));
     void* ptr = _sakura_malloc_aligned(size, alignment);
     TracyCZoneEnd(z);
@@ -43,7 +45,7 @@ FORCEINLINE void* SkrMallocAlignedWithCZone(size_t size, size_t alignment, const
 
 FORCEINLINE void* SkrCallocAlignedWithCZone(size_t count, size_t size, size_t alignment, const char* line)
 {
-    TracyCZone(z, 1);
+    TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
     TracyCZoneName(z, line, strlen(line));
     void* ptr = _sakura_calloc_aligned(count, size, alignment);
     TracyCZoneEnd(z);
@@ -52,7 +54,7 @@ FORCEINLINE void* SkrCallocAlignedWithCZone(size_t count, size_t size, size_t al
 
 FORCEINLINE void* SkrNewNWithCZone(size_t count, size_t size, const char* line)
 {
-    TracyCZone(z, 1);
+    TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
     TracyCZoneName(z, line, strlen(line));
     void* ptr = _sakura_new_n(count, size);
     TracyCZoneEnd(z);
@@ -61,7 +63,7 @@ FORCEINLINE void* SkrNewNWithCZone(size_t count, size_t size, const char* line)
 
 FORCEINLINE void* SkrNewAlignedWithCZone(size_t size, size_t alignment, const char* line)
 {
-    TracyCZone(z, 1);
+    TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
     TracyCZoneName(z, line, strlen(line));
     void* ptr = _sakura_new_aligned(size, alignment);
     TracyCZoneEnd(z);
@@ -70,7 +72,7 @@ FORCEINLINE void* SkrNewAlignedWithCZone(size_t size, size_t alignment, const ch
 
 FORCEINLINE void SkrFreeWithCZone(void* p, const char* line)
 {
-    TracyCZone(z, 1);
+    TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
     TracyCZoneName(z, line, strlen(line));
     _sakura_free(p);
     TracyCZoneEnd(z);
@@ -78,7 +80,7 @@ FORCEINLINE void SkrFreeWithCZone(void* p, const char* line)
 
 FORCEINLINE void SkrFreeAlignedWithCZone(void* p, size_t alignment, const char* line)
 {
-    TracyCZone(z, 1);
+    TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
     TracyCZoneName(z, line, strlen(line));
     _sakura_free_aligned(p, alignment);
     TracyCZoneEnd(z);
@@ -86,22 +88,32 @@ FORCEINLINE void SkrFreeAlignedWithCZone(void* p, size_t alignment, const char* 
 
 FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line)
 {
-    TracyCZone(z, 1);
+    TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
     TracyCZoneName(z, line, strlen(line));
     void* ptr = _sakura_realloc(p, newsize);
     TracyCZoneEnd(z);
     return ptr;
 }
 
-#define sakura_malloc(size) SkrMallocWithCZone((size), __FILE__)
-#define sakura_calloc(count, size) SkrCallocWithCZone((count), (size), __FILE__)
-#define sakura_malloc_aligned(size, alignment) SkrMallocAlignedWithCZone((size), (alignment), __FILE__)
-#define sakura_calloc_aligned(count, size, alignment) SkrCallocAlignedWithCZone((count), (size), (alignment), __FILE__)
-#define sakura_new_n(count, size) SkrNewNWithCZone((count), (size), __FILE__)
-#define sakura_new_aligned(size, alignment) SkrNewAlignedWithCZone((size), (alignment), __FILE__)
-#define sakura_free(p) SkrFreeWithCZone((p), __FILE__)
-#define sakura_free_aligned(p, alignment) SkrFreeAlignedWithCZone((p), (alignment), __FILE__)
-#define sakura_realloc(p, newsize) SkrReallocWithCZone((p), (newsize), __FILE__)
+#if defined(_WIN32) && !defined(__clang__)
+#pragma warning( disable : 5103 )
+#endif
+
+#define SKR_ALLOC_STRINGFY_IMPL(X) #X
+#define SKR_ALLOC_STRINGFY(X) SKR_ALLOC_STRINGFY_IMPL(X)
+#define SKR_ALLOC_CAT_IMPL(X,Y) X##Y
+#define SKR_ALLOC_CAT(X,Y) SKR_ALLOC_CAT_IMPL(X,Y)
+
+#define sakura_malloc(size) SkrMallocWithCZone((size), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) )
+#define sakura_calloc(count, size) SkrCallocWithCZone((count), (size), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) )
+#define sakura_malloc_aligned(size, alignment) SkrMallocAlignedWithCZone((size), (alignment), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) )
+#define sakura_calloc_aligned(count, size, alignment) SkrCallocAlignedWithCZone((count), (size), (alignment), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) )
+#define sakura_new_n(count, size) SkrNewNWithCZone((count), (size), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) )
+#define sakura_new_aligned(size, alignment) SkrNewAlignedWithCZone((size), (alignment), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) )
+#define sakura_free(p) SkrFreeWithCZone((p), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) )
+#define sakura_free_aligned(p, alignment) SkrFreeAlignedWithCZone((p), (alignment), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) )
+#define sakura_realloc(p, newsize) SkrReallocWithCZone((p), (newsize), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) )
+
 #else
 #define sakura_malloc(size) _sakura_malloc(size)
 #define sakura_calloc(count, size) _sakura_calloc((count), (size))
