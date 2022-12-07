@@ -402,7 +402,9 @@ void Scheduler::Worker::start() {
     case Mode::SingleThreaded: {
       Worker::current = this;
       mainFiber = Fiber::createFromCurrentThread(scheduler->cfg.allocator, 0);
+#ifdef TRACY_ENABLE
       TracyFiberEnter("mainFiber");
+#endif
       currentFiber = mainFiber.get();
       break;
     }
@@ -416,10 +418,6 @@ void Scheduler::Worker::stop() {
     case Mode::MultiThreaded: {
       enqueue(Task([this] { 
         shutdown = true; 
-#ifdef TRACY_ENABLE
-        // Leave the worker fiber
-        TracyFiberLeave;
-#endif
       }, Task::Flags::SameThread));
       thread.join();
       break;
@@ -590,7 +588,9 @@ bool Scheduler::Worker::steal(Task& out) {
 
 void Scheduler::Worker::run() {
   //Enter worker fiber
+#ifdef TRACY_ENABLE
   TracyFiberEnter(Fiber::current()->name.c_str());
+#endif
   if (mode == Mode::MultiThreaded) {
     MARL_NAME_THREAD("Thread<%.2d> Fiber<%.2d>", int(id), Fiber::current()->id);
     // This is the entry point for a multi-threaded worker.
@@ -602,6 +602,10 @@ void Scheduler::Worker::run() {
   }
   ASSERT_FIBER_STATE(currentFiber, Fiber::State::Running);
   runUntilShutdown();
+#ifdef TRACY_ENABLE
+  // Leave the worker fiber
+  TracyFiberLeave;
+#endif
   switchToFiber(mainFiber.get());
 }
 
