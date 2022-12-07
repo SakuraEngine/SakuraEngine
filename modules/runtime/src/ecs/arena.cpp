@@ -12,13 +12,13 @@ fixed_arena_t::fixed_arena_t(size_t capacity)
 {
     ZoneScopedN("DualFixedArenaAllocation");
     
-    buffer = ::dual_calloc(1, capacity);
+    buffer = dual_calloc(1, capacity);
 }
 
 fixed_arena_t::~fixed_arena_t()
 {
     if (buffer)
-        ::dual_free(buffer);
+        dual_free(buffer);
 }
 
 void fixed_arena_t::forget()
@@ -46,7 +46,7 @@ void struct_arena_base_t::initialize(size_t a)
 {
     ZoneScopedN("DualArenaAllocation");
 
-    buffer = ::dual_calloc_aligned(1, capacity, a);
+    buffer = dual_calloc_aligned(1, capacity, a);
 }
 void struct_arena_base_t::record(size_t s, size_t a)
 {

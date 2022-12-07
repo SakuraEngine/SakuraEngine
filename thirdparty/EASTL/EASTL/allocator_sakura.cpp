@@ -7,16 +7,15 @@
 
 extern "C"
 {
-	extern void* sakura_malloc(size_t size);
-	extern void* sakura_malloc_aligned(size_t size, size_t alignment);
-	extern void sakura_free(void* p);
-	extern void sakura_free_aligned(void* p, size_t alignment);
-
+	extern void* _sakura_malloc(size_t size);
+	extern void* _sakura_malloc_aligned(size_t size, size_t alignment);
+	extern void _sakura_free(void* p);
+	extern void _sakura_free_aligned(void* p, size_t alignment);
 }
-#define core_malloc ::sakura_malloc
-#define core_memalign ::sakura_malloc_aligned
-#define core_free ::sakura_free
-#define core_free_aligned ::sakura_free_aligned
+#define core_malloc _sakura_malloc
+#define core_memalign _sakura_malloc_aligned
+#define core_free _sakura_free
+#define core_free_aligned _sakura_free_aligned
 
 	namespace eastl
 	{

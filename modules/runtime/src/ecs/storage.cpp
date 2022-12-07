@@ -26,7 +26,7 @@ dual_storage_t::~dual_storage_t()
         scheduler->remove_storage(this);
     scheduler = nullptr;
     for(auto q : queries)
-        ::sakura_free((void*)q);
+        sakura_free((void*)q);
     for (auto iter : groups)
         iter.second->clear();
 }

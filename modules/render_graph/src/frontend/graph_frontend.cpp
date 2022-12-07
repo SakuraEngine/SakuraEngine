@@ -212,12 +212,14 @@ bool RenderGraph::compile() SKR_NOEXCEPT
 {
     ZoneScopedN("RenderGraphCompile");
     {
-        ZoneScopedN("Cull");
+        ZoneScopedN("RenderGraphCull");
         // 1.cull
         resources.erase(
         eastl::remove_if(resources.begin(), resources.end(),
         [this](ResourceNode* resource) {
-            ZoneScopedN("Resource");
+            ZoneScopedC(tracy::Color::SteelBlue);
+            ZoneName(resource->name.c_str(), resource->name.size());
+
             const bool lone = !(resource->incoming_edges() + resource->outgoing_edges());
             {
                 ZoneScopedN("RecordDealloc");
@@ -229,7 +231,9 @@ bool RenderGraph::compile() SKR_NOEXCEPT
         passes.erase(
         eastl::remove_if(passes.begin(), passes.end(),
         [this](PassNode* pass) {
-            ZoneScopedN("Pass");
+            ZoneScopedC(tracy::Color::SteelBlue);
+            ZoneName(pass->name.c_str(), pass->name.size());
+
             const bool lone = !(pass->incoming_edges() + pass->outgoing_edges());
             const bool can_be_lone = pass->can_be_lone;
             const bool culled = lone && !can_be_lone;

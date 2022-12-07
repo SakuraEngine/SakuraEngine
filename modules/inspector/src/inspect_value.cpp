@@ -9,7 +9,7 @@
 #include <containers/variant.hpp>
 #include <containers/string.hpp>
 #include <chrono>
-#include "SkrImgui/skr_imgui.h"
+#include "SkrImGui/skr_imgui.h"
 #include "utils/format.hpp"
 
 

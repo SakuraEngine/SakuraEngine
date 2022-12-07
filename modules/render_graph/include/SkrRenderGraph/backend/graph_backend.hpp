@@ -39,6 +39,11 @@ public:
     eastl::vector<skr::string> marker_messages;
 };
 
+// TODO: optimize stack allocation
+// static constexpr size_t stack_vector_fixed_count = 8;
+template <typename T>
+using stack_vector = eastl::vector<T>;
+
 class RenderGraphBackend : public RenderGraph
 {
 public:
@@ -69,8 +74,8 @@ protected:
     CGPUBufferId resolve(RenderGraphFrameExecutor& executor, const BufferNode& node) SKR_NOEXCEPT;
 
     void calculate_barriers(RenderGraphFrameExecutor& executor, PassNode* pass,
-    eastl::vector<CGPUTextureBarrier>& tex_barriers, eastl::vector<eastl::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
-    eastl::vector<CGPUBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) SKR_NOEXCEPT;
+        stack_vector<CGPUTextureBarrier>& tex_barriers, stack_vector<eastl::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
+        stack_vector<CGPUBufferBarrier>& buf_barriers, stack_vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) SKR_NOEXCEPT;
     CGPUXBindTableId alloc_update_pass_bind_table(RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT;
     void deallocate_resources(PassNode* pass) SKR_NOEXCEPT;
 

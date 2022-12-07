@@ -239,8 +239,8 @@ CGPUBufferId RenderGraphBackend::resolve(RenderGraphFrameExecutor& executor, con
 }
 
 void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, PassNode* pass,
-    eastl::vector<CGPUTextureBarrier>& tex_barriers, eastl::vector<eastl::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
-    eastl::vector<CGPUBufferBarrier>& buf_barriers, eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) SKR_NOEXCEPT
+    stack_vector<CGPUTextureBarrier>& tex_barriers, stack_vector<eastl::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
+    stack_vector<CGPUBufferBarrier>& buf_barriers, stack_vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) SKR_NOEXCEPT
 {
     ZoneScopedN("CalculateBarriers");
     tex_barriers.reserve(pass->textures_count());
@@ -312,12 +312,12 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
         executor.bind_table_pools.emplace(root_sig, SkrNew<BindTablePool>(root_sig));
     eastl::string bind_table_keys = "";
     // Bind resources
-    eastl::vector<CGPUDescriptorData> desc_set_updates;
-    eastl::vector<const char*> bindTableValueNames = {};
+    stack_vector<CGPUDescriptorData> desc_set_updates;
+    stack_vector<const char*> bindTableValueNames = {};
     // CBV Buffers
-    eastl::vector<CGPUBufferId> cbvs(buf_read_edges.size());
-    eastl::vector<CGPUTextureViewId> srvs(tex_read_edges.size());
-    eastl::vector<CGPUTextureViewId> uavs(tex_rw_edges.size());
+    stack_vector<CGPUBufferId> cbvs(buf_read_edges.size());
+    stack_vector<CGPUTextureViewId> srvs(tex_read_edges.size());
+    stack_vector<CGPUTextureViewId> uavs(tex_rw_edges.size());
     {
         for (uint32_t e_idx = 0; e_idx < buf_read_edges.size(); e_idx++)
         {
@@ -468,10 +468,10 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
     ZoneName(pass->name.c_str(), pass->name.size());
     ComputePassContext pass_context = {};
     // resource de-virtualize
-    eastl::vector<CGPUTextureBarrier> tex_barriers = {};
-    eastl::vector<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
-    eastl::vector<CGPUBufferBarrier> buffer_barriers = {};
-    eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers = {};
+    stack_vector<CGPUTextureBarrier> tex_barriers = {};
+    stack_vector<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
+    stack_vector<CGPUBufferBarrier> buffer_barriers = {};
+    stack_vector<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers = {};
     calculate_barriers(executor, pass,
         tex_barriers, resolved_textures,
         buffer_barriers, resolved_buffers);
@@ -517,12 +517,13 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
 {
     ZoneScopedC(tracy::Color::LightPink);
     ZoneName(pass->name.c_str(), pass->name.size());
+
     RenderPassContext pass_context = {};
     // resource de-virtualize
-    eastl::vector<CGPUTextureBarrier> tex_barriers = {};
-    eastl::vector<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
-    eastl::vector<CGPUBufferBarrier> buffer_barriers = {};
-    eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers = {};
+    stack_vector<CGPUTextureBarrier> tex_barriers = {};
+    stack_vector<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
+    stack_vector<CGPUBufferBarrier> buffer_barriers = {};
+    stack_vector<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers = {};
     calculate_barriers(executor, pass,
         tex_barriers, resolved_textures,
         buffer_barriers, resolved_buffers);
@@ -549,7 +550,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     executor.write_marker(skr::format("Pass-{}-BeginBarrier", pass->get_name()).c_str());
     // color attachments
     // TODO: MSAA
-    eastl::vector<CGPUColorAttachment> color_attachments = {};
+    stack_vector<CGPUColorAttachment> color_attachments = {};
     CGPUDepthStencilAttachment ds_attachment = {};
     auto write_edges = pass->tex_write_edges();
     for (auto& write_edge : write_edges)
@@ -628,10 +629,10 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
     ZoneScopedC(tracy::Color::LightYellow);
     ZoneName(pass->name.c_str(), pass->name.size());
     // resource de-virtualize
-    eastl::vector<CGPUTextureBarrier> tex_barriers = {};
-    eastl::vector<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
-    eastl::vector<CGPUBufferBarrier> buffer_barriers = {};
-    eastl::vector<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers = {};
+    stack_vector<CGPUTextureBarrier> tex_barriers = {};
+    stack_vector<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures = {};
+    stack_vector<CGPUBufferBarrier> buffer_barriers = {};
+    stack_vector<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers = {};
     calculate_barriers(executor, pass,
         tex_barriers, resolved_textures,
         buffer_barriers, resolved_buffers);

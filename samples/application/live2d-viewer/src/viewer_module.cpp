@@ -246,7 +246,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
             elapsed_us = 0;
         }
         {
-            ZoneScopedN("ImGUI");
+            ZoneScopedN("ImGUINewFrame");
 
             auto& io = ImGui::GetIO();
             io.DisplaySize = ImVec2(

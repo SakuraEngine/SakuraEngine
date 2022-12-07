@@ -392,6 +392,8 @@ protected:
     const char* color_texture_name = "color_texture";
     void updateTexture(skr_live2d_render_model_id render_model)
     {
+        ZoneScopedN("Live2D::updateTexture");
+
         // create descriptor sets if not existed
         const auto ib_c = render_model->index_buffer_views.size();
         for (uint32_t j = 0; j < ib_c; j++)
@@ -401,6 +403,8 @@ protected:
                 auto iter = bind_tables.find(texture_view);
                 if (iter == bind_tables.end())
                 {
+                    ZoneScopedN("Live2D::createBindTable");
+
                     CGPUXBindTableDescriptor bind_table_desc = {};
                     bind_table_desc.root_signature = pipeline->root_signature;
                     bind_table_desc.names = &color_texture_name;
@@ -429,6 +433,8 @@ protected:
                 auto iter = mask_bind_tables.find(texture_view);
                 if (iter == mask_bind_tables.end())
                 {
+                    ZoneScopedN("Live2D::createBindTable");
+
                     CGPUXBindTableDescriptor bind_table_desc = {};
                     bind_table_desc.root_signature = mask_pipeline->root_signature;
                     bind_table_desc.names = &color_texture_name;
@@ -458,6 +464,8 @@ protected:
 
     void updateModelMotion(skr_live2d_render_model_id render_model)
     {
+        ZoneScopedN("Live2D::updateModelMotion");
+
         const auto model_resource = render_model->model_resource_id;
         last_ms = skr_timer_get_msec(&motion_timers[render_model], true);
         static float delta_sum = 0.f;

@@ -11,6 +11,8 @@
 #include <EASTL/vector.h>
 #include <EASTL/vector_map.h>
 
+#include "tracy/Tracy.hpp"
+
 struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectProcessor {
     RenderEffectProcessorVtblProxy(VtblRenderEffectProcessor vtbl)
         : vtbl(vtbl)
@@ -98,6 +100,8 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
             {
                 if (pass && processor)
                 {
+                    ZoneScopedN("ProduceDrawPacket");
+
                     auto packet = processor->produce_draw_packets(pass, storage);
                     draw_packets[pass->identity()].emplace_back(packet);
                 }
@@ -115,6 +119,8 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
                 {
                     for (uint32_t i = 0; i < pass_draw_packet.count; i++)
                     {
+                        ZoneScopedN("PassExecute");
+
                         pass->execute(render_graph, pass_draw_packet.lists[i]);
                     }
                 }
