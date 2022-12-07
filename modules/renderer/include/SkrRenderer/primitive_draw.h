@@ -32,7 +32,6 @@ typedef struct skr_index_buffer_view_t {
 typedef struct skr_primitive_draw_t {
     CGPURenderPipelineId pipeline;
     CGPUXBindTableId bind_table;
-    CGPUXMergedBindTableId merged_table;
     const char* push_const_name;
     const uint8_t* push_const;
     const skr_vertex_buffer_view_t* vertex_buffers;

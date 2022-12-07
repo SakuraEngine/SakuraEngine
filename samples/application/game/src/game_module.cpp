@@ -710,9 +710,13 @@ int SGameModule::main_module_exec(int argc, char** argv)
                             continue;
                         if(state.sampling_context.max_tracks() == 0)
                         {
+                            ZoneScopedN("InitializeAnimState");
                             game::InitializeAnimState(&state, skeleton_resource);
                         }
-                        game::UpdateAnimState(&state, skeleton_resource, (float)deltaTime, &anim);
+                        {
+                            ZoneScopedN("UpdateAnimState");
+                            game::UpdateAnimState(&state, skeleton_resource, (float)deltaTime, &anim);
+                        }
                     }
                 };
                 skr_render_effect_access(game_renderer, view, "ForwardEffectSkin", DUAL_LAMBDA(syncEffect));

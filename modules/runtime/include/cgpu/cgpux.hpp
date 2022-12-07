@@ -50,6 +50,11 @@ public:
     RUNTIME_API void Bind(CGPURenderPassEncoderId encoder) const SKR_NOEXCEPT;
     RUNTIME_API void Bind(CGPUComputePassEncoderId encoder) const SKR_NOEXCEPT;
 
+    inline CGPURootSignatureId GetRootSignature() const SKR_NOEXCEPT
+    {
+        return root_signature;
+    }
+
 protected:
     void updateDescSetsIfDirty() const SKR_NOEXCEPT;
 

@@ -51,6 +51,14 @@ void RenderGraphFrameExecutor::reset_begin(TextureViewPool& texture_view_pool)
     }
 
     {
+        ZoneScopedN("ResetMergedTables");
+        for (auto merged_table_pool : merged_table_pools)
+        {
+            merged_table_pool.second->reset();
+        }
+    }
+
+    {
         ZoneScopedN("ResetAliasingBinds");
         for (auto aliasing_texture : aliasing_textures)
         {
@@ -100,6 +108,16 @@ void RenderGraphFrameExecutor::print_error_trace(uint64_t frame_index)
     }
 }
 
+CGPUXMergedBindTableId RenderGraphFrameExecutor::merge_tables(const struct CGPUXBindTable **tables, uint32_t count)
+{
+    auto root_sig = tables[0]->GetRootSignature();
+    if (merged_table_pools.find(root_sig) == merged_table_pools.end())
+    {
+        merged_table_pools[root_sig] = SkrNew<MergedBindTablePool>(root_sig);
+    }
+    return merged_table_pools[root_sig]->pop(tables, count);
+}
+
 void RenderGraphFrameExecutor::finalize()
 {
     if (gfx_cmd_buf) cgpu_free_command_buffer(gfx_cmd_buf);
@@ -109,6 +127,11 @@ void RenderGraphFrameExecutor::finalize()
     gfx_cmd_pool = nullptr;
     exec_fence = nullptr;
     for (auto [rs, pool] : bind_table_pools)
+    {
+        pool->destroy();
+        SkrDelete(pool);
+    }
+    for (auto [rs, pool] : merged_table_pools)
     {
         pool->destroy();
         SkrDelete(pool);
@@ -323,7 +346,9 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
     // Allocate or get descriptor set heap
     auto&& table_pool_iter = executor.bind_table_pools.find(root_sig);
     if (table_pool_iter == executor.bind_table_pools.end())
+    {
         executor.bind_table_pools.emplace(root_sig, SkrNew<BindTablePool>(root_sig));
+    }
     eastl::string bind_table_keys = "";
     // Bind resources
     stack_vector<CGPUDescriptorData> desc_set_updates;

@@ -13,6 +13,7 @@ enum
 };
 
 struct CGPUXBindTable;
+struct CGPUXMergedBindTable;
 namespace skr
 {
 namespace render_graph
@@ -313,7 +314,7 @@ struct SKR_RENDER_GRAPH_API PassContext {
 struct SKR_RENDER_GRAPH_API BindablePassContext : public PassContext {
     friend class RenderGraphBackend;
 
-    void merge_and_bind_tables(const struct CGPUXBindTable** tables, uint32_t count);
+    const struct CGPUXMergedBindTable* merge_tables(const struct CGPUXBindTable** tables, uint32_t count) SKR_NOEXCEPT;
 
     const struct CGPUXBindTable* bind_table;
 protected:
@@ -323,11 +324,15 @@ protected:
 struct SKR_RENDER_GRAPH_API RenderPassContext : public BindablePassContext {
     friend class RenderGraphBackend;
 
+    void merge_and_bind_tables(const struct CGPUXBindTable** tables, uint32_t count) SKR_NOEXCEPT;
+
     CGPURenderPassEncoderId encoder;
 };
 
 struct SKR_RENDER_GRAPH_API ComputePassContext : public BindablePassContext {
     friend class RenderGraphBackend;
+
+    void merge_and_bind_tables(const struct CGPUXBindTable** tables, uint32_t count) SKR_NOEXCEPT;
 
     CGPUComputePassEncoderId encoder;
 };
