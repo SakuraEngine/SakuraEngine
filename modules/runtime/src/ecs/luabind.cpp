@@ -6,14 +6,17 @@
 #include "type_registry.hpp"
 #include "ecs/type_builder.hpp"
 #include "ecs/callback.hpp"
+#include "ecs/array.hpp"
+
 namespace dual
 {
 extern thread_local fixed_stack_t localStack;
 }
 namespace skr::lua
 {
-        using lua_push_t = int (*)(dual_chunk_t* chunk, EIndex index, char* data, struct lua_State* L);
-        using lua_check_t = void (*)(dual_chunk_t* chunk, EIndex index, char* data, struct lua_State* L, int idx);
+    using lua_push_t = int (*)(dual_chunk_t* chunk, EIndex index, char* data, struct lua_State* L);
+    using lua_check_t = void (*)(dual_chunk_t* chunk, EIndex index, char* data, struct lua_State* L, int idx);
+
     struct lua_chunk_view_t {
         dual_chunk_view_t view;
         uint32_t count;
@@ -21,8 +24,19 @@ namespace skr::lua
         void** datas;
         uint32_t* strides;
         const char** guidStrs;
+        uint32_t* elementSizes;
         lua_push_t* lua_pushs;
         lua_check_t* lua_checks;
+    };
+
+    struct lua_array_view_t {
+        dual_chunk_view_t view;
+        uint32_t index;
+        dual_array_comp_t arr;
+        uint32_t stride;
+        const char* guidStr;
+        lua_push_t lua_push;
+        lua_check_t lua_check;
     };
 
     static lua_chunk_view_t init_chunk_view(dual_chunk_view_t* view, dual_entity_type_t& type)
@@ -32,6 +46,7 @@ namespace skr::lua
         luaView.datas = dual::localStack.allocate<void*>(type.type.length);
         luaView.strides = dual::localStack.allocate<uint32_t>(type.type.length);
         luaView.guidStrs = dual::localStack.allocate<const char*>(type.type.length);
+        luaView.elementSizes = dual::localStack.allocate<uint32_t>(type.type.length);
         luaView.lua_pushs = dual::localStack.allocate<lua_push_t>(type.type.length);
         luaView.lua_checks = dual::localStack.allocate<lua_check_t>(type.type.length);
         luaView.entities = dualV_get_entities(view);
@@ -42,6 +57,7 @@ namespace skr::lua
             auto& desc = typeReg.descriptions[dual::type_index_t(type.type.data[i]).index()];
             luaView.strides[i] = desc.size;
             luaView.guidStrs[i] = desc.guidStr;
+            luaView.elementSizes[i] = desc.elementSize;
             luaView.lua_pushs[i] = desc.callback.lua_push;
             luaView.lua_checks[i] = desc.callback.lua_check;
         }
@@ -54,6 +70,7 @@ namespace skr::lua
         luaView.datas = dual::localStack.allocate<void*>(query->parameters.length);
         luaView.strides = dual::localStack.allocate<uint32_t>(query->parameters.length);
         luaView.guidStrs = dual::localStack.allocate<const char*>(query->parameters.length);
+        luaView.elementSizes = dual::localStack.allocate<uint32_t>(query->parameters.length);
         luaView.lua_pushs = dual::localStack.allocate<lua_push_t>(query->parameters.length);
         luaView.lua_checks = dual::localStack.allocate<lua_check_t>(query->parameters.length);
         luaView.entities = dualV_get_entities(view);
@@ -67,6 +84,7 @@ namespace skr::lua
             auto& desc = typeReg.descriptions[dual::type_index_t(query->parameters.types[i]).index()];
             luaView.strides[i] = desc.size;
             luaView.guidStrs[i] = desc.guidStr;
+            luaView.elementSizes[i] = desc.elementSize;
             luaView.lua_pushs[i] = desc.callback.lua_push;
             luaView.lua_checks[i] = desc.callback.lua_check;
         }
@@ -281,7 +299,9 @@ namespace skr::lua
                     dual::fixed_stack_scope_t scope(dual::localStack);
                     auto luaView = query_chunk_view(view, query);
                     lua_pushvalue(L, 2);
-                    *(lua_chunk_view_t**)lua_newuserdata(L, sizeof(void*)) = &luaView;
+
+                    auto ptr = (lua_chunk_view_t**)lua_newuserdata(L, sizeof(void*));
+                    *ptr = &luaView;
                     luaL_getmetatable(L, "lua_chunk_view_t");
                     lua_setmetatable(L, -2);
                     if(lua_pcall(L, 1, 0, 0) != LUA_OK)
@@ -292,6 +312,7 @@ namespace skr::lua
                         lua_call(L, 1, 0);
                         lua_pop(L, 2);
                     }
+                    *ptr = nullptr;
                 };
                 void* u = (void*)L;
                 dualQ_get_views(query, callback, u);
@@ -302,11 +323,13 @@ namespace skr::lua
         }
         lua_pop(L, 1);
 
-        // bind query chunk view
+        // bind lua chunk view
         {
             luaL_Reg metamethods[] = {
                 { "__index", +[](lua_State* L) -> int {
                     lua_chunk_view_t* view = *(lua_chunk_view_t**)luaL_checkudata(L, 1, "lua_chunk_view_t");
+                    if(!view) 
+                        return luaL_error(L, "chunk view cannot be accessed after query iteration");
                     auto field = luaL_checkstring(L, 2);
                     
                     if(strcmp(field, "length") == 0)
@@ -324,6 +347,10 @@ namespace skr::lua
                             int compId = luaL_checkinteger(L, 3);
                             luaL_argexpected(L, index < view->view.count, 2, "index out of bounds");
                             luaL_argexpected(L, index < view->count, 3, "index out of bounds");
+                            if(view->elementSizes[compId] != 0)
+                            {
+                                return luaL_error(L, "array component is not direct writable %s", view->guidStrs[compId]);
+                            }
                             auto check = view->lua_checks[compId];
                             if(!check)
                             {
@@ -344,6 +371,8 @@ namespace skr::lua
                 } },
                 {"__call", +[](lua_State* L) -> int {
                     lua_chunk_view_t* view = *(lua_chunk_view_t**)luaL_checkudata(L, 1, "lua_chunk_view_t");
+                    if(!view) 
+                        return luaL_error(L, "chunk view cannot be accessed after query iteration");
                     uint32_t index = luaL_checkinteger(L, 2);
                     luaL_argexpected(L, index < view->view.count, 2, "index out of bounds");
                     lua_pushinteger(L, view->entities[index]);
@@ -354,6 +383,20 @@ namespace skr::lua
                         if(data == nullptr)
                         {
                             lua_pushnil(L);
+                            ret++;
+                        }
+                        else if(view->elementSizes[i] != 0)
+                        {
+                            auto arr = (lua_array_view_t*)lua_newuserdata(L, sizeof(lua_array_view_t));
+                            arr->arr = *(dual_array_comp_t*)((uint8_t*)data + index * view->strides[i]);
+                            arr->view = view->view;
+                            arr->index = index;
+                            arr->stride = view->elementSizes[i];
+                            arr->guidStr = view->guidStrs[i];
+                            arr->lua_push = view->lua_pushs[i];
+                            arr->lua_check = view->lua_checks[i];
+                            luaL_getmetatable(L, "lua_array_view_t");
+                            lua_setmetatable(L, -2);
                             ret++;
                         }
                         else if(auto push = view->lua_pushs[i])
@@ -377,6 +420,52 @@ namespace skr::lua
                 { NULL, NULL }
             };
             luaL_newmetatable(L, "lua_chunk_view_t");
+            luaL_setfuncs(L, metamethods, 0);
+            lua_pop(L, 1);
+        }
+
+        //bind lua array view
+        {
+            luaL_Reg metamethods[] = {
+                { "__index", +[](lua_State* L) -> int {
+                    lua_array_view_t* view = (lua_array_view_t*)luaL_checkudata(L, 1, "lua_array_view_t");
+                    auto field = luaL_checkstring(L, 2);
+                    
+                    if(strcmp(field, "length") == 0)
+                    {
+                        auto size = ((uint8_t*)view->arr.EndX - (uint8_t*)view->arr.BeginX) / view->stride;
+                        lua_pushinteger(L, size);
+                        return 1;
+                    }
+                    else 
+                    {
+                        return luaL_error(L, "invalid array view field '%s'", field);
+                    }
+                    return 0;
+                }},
+                {"__call", +[](lua_State* L) -> int {
+                    lua_array_view_t* view = (lua_array_view_t*)luaL_checkudata(L, 1, "lua_array_view_t");
+                    uint32_t index = luaL_checkinteger(L, 2);
+                    auto size = ((uint8_t*)view->arr.EndX - (uint8_t*)view->arr.BeginX) / view->stride;
+                    luaL_argexpected(L, index < size, 2, "index out of bounds");
+                    if(view->lua_push)
+                    {
+                        return view->lua_push(view->view.chunk, view->view.start+view->index, (char *)view->arr.BeginX + view->stride * index, L);
+                    }
+                    else
+                    {
+                        auto data = (char *)view->arr.BeginX + view->stride * index;
+                        *(void**)lua_newuserdata(L, sizeof(void*)) = data;
+                        luaL_getmetatable(L, view->guidStr);
+                        if(lua_isnil(L, -1))
+                            luaL_getmetatable(L, "skr_opaque_t");
+                        lua_setmetatable(L, -2);
+                        return 1;
+                    }
+                }},
+                { NULL, NULL }
+            };
+            luaL_newmetatable(L, "lua_array_view_t");
             luaL_setfuncs(L, metamethods, 0);
             lua_pop(L, 1);
         }
