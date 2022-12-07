@@ -26,6 +26,7 @@ SUSDPrimId SUSDStageImpl::GetDefaultPrim()
 
 SUSDStageId USDCoreOpenStage(const char *path)
 {
+    ZoneScopedN("USDCoreOpenStage");
     pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(path);
     auto root = stage->GetPseudoRoot();
     return skr::SObjectPtr<SUSDStageImpl>::Create(stage);

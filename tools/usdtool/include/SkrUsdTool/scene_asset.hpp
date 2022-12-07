@@ -30,7 +30,7 @@ struct sreflect
 SKRUSDTOOL_API SSceneCooker final : public SCooker 
 { 
     bool Cook(SCookContext * ctx) override;
-    uint32_t Version() override;
+    uint32_t Version() override { return kDevelopmentVersion; }
 }
 sregister_cooker("EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A");
 

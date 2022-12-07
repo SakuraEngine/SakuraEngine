@@ -254,6 +254,7 @@ dual_entity_t dual_storage_t::deserialize_prefab(skr_binary_reader_t* s)
 
 void dual_storage_t::serialize(skr_binary_writer_t* s)
 {
+    ZoneScopedN("dual_storage_t::serialize");
     using namespace dual;
     namespace bin = skr::binary;
     if(scheduler)
@@ -261,17 +262,22 @@ void dual_storage_t::serialize(skr_binary_writer_t* s)
         SKR_ASSERT(scheduler->is_main_thread(this));
         scheduler->sync_storage(this);
     }
-    bin::Archive(s, (uint32_t)entities.entries.size());
-    bin::Archive(s, (uint32_t)entities.freeEntries.size());
-    ArchiveBuffer(s, entities.freeEntries.data(), static_cast<uint32_t>(entities.freeEntries.size()));
+    {
+        ZoneScopedN("serialize entities");
+        bin::Archive(s, (uint32_t)entities.entries.size());
+        bin::Archive(s, (uint32_t)entities.freeEntries.size());
+        ArchiveBuffer(s, entities.freeEntries.data(), static_cast<uint32_t>(entities.freeEntries.size()));
+    }
     bin::Archive(s, (uint32_t)groups.size());
     for (auto& pair : groups)
     {
+        ZoneScopedN("serialize group");
         auto group = pair.second;
         serialize_type(group->type, s, true);
         bin::Archive(s, (uint32_t)group->chunks.size());
         for(auto c : group->chunks)
         {
+            ZoneScopedN("serialize chunk");
             dual_chunk_view_t view = { c, 0, c->count };
             serialize_view(group, view, s, nullptr, true);
         }
@@ -281,13 +287,15 @@ void dual_storage_t::serialize(skr_binary_writer_t* s)
 void dual_storage_t::deserialize(skr_binary_reader_t* s)
 {
     using namespace dual;
+    ZoneScopedN("dual_storage_t::deserialize");
     namespace bin = skr::binary;
     if(scheduler)
     {
         SKR_ASSERT(scheduler->is_main_thread(this));
         scheduler->sync_storage(this);
     }
-    // todo: assert(entities.entries.size() == 0)
+    // empty storage expected
+    SKR_ASSERT(entities.entries.size() == 0);
     uint32_t size = 0;
     bin::Archive(s, size);
     entities.entries.resize(size);
@@ -299,6 +307,7 @@ void dual_storage_t::deserialize(skr_binary_reader_t* s)
     bin::Archive(s, groupSize);
     forloop (i, 0, groupSize)
     {
+        ZoneScopedN("deserialize group");
         fixed_stack_scope_t _(localStack);
         auto type = deserialize_type(localStack, s, true);
         auto group = construct_group(type);
@@ -306,6 +315,7 @@ void dual_storage_t::deserialize(skr_binary_reader_t* s)
         bin::Archive(s, chunkCount);
         forloop (j, 0, chunkCount)
         {
+            ZoneScopedN("deserialize chunk");
             dual_chunk_view_t view;
             serialize_view(group, view, nullptr, s, true);
             auto ents = dualV_get_entities(&view);
