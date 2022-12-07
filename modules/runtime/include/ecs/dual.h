@@ -68,8 +68,8 @@ typedef struct dual_type_description_t {
     uint32_t flags;
     /**
      * the storage size in chunk of this component, generally it is sizeof(T)
-     * when this is a array component, it could be sizeof(T) * I + sizeof(dual_array_component_t) where I means the inline element count of the array
-     * @see dual_array_component_t
+     * when this is a array component, it could be sizeof(T) * I + sizeof(dual_array_comp_t) where I means the inline element count of the array
+     * @see dual_array_comp_t
      */
     uint16_t size;
     /**
@@ -180,10 +180,10 @@ typedef struct dual_meta_filter_t {
 } dual_meta_filter_t;
 
 // header data of a array component
-typedef struct dual_array_component_t dual_array_component_t;
+typedef struct dual_array_comp_t dual_array_comp_t;
 
-typedef uint32_t dual_mask_component_t;
-typedef uint32_t dual_dirty_component_t;
+typedef uint32_t dual_mask_comp_t;
+typedef uint32_t dual_dirty_comp_t;
 
 // APIS
 /**
@@ -206,8 +206,8 @@ RUNTIME_API void dual_shutdown();
 
 RUNTIME_API void dual_make_guid(skr_guid_t* guid);
 
-RUNTIME_API void* dualA_begin(dual_array_component_t* array);
-RUNTIME_API void* dualA_end(dual_array_component_t* array);
+RUNTIME_API void* dualA_begin(dual_array_comp_t* array);
+RUNTIME_API void* dualA_end(dual_array_comp_t* array);
 
 typedef void (*dual_view_callback_t)(void* u, dual_chunk_view_t* view);
 typedef void (*dual_group_callback_t)(void* u, dual_group_t* view);

@@ -262,7 +262,7 @@ void create_test_scene(SRendererId renderer)
     auto renderableT_builder = make_zeroed<dual::type_builder_t>();
     renderableT_builder
         .with<skr_translation_t, skr_rotation_t, skr_scale_t>()
-        .with<skr_index_component_t, skr_movement_t>()
+        .with<skr_index_comp_t, skr_movement_t>()
         .with<skr_render_effect_t>();
     // allocate renderable
     auto renderableT = make_zeroed<dual_entity_type_t>();
@@ -272,7 +272,7 @@ void create_test_scene(SRendererId renderer)
         auto translations = dual::get_owned_rw<skr_translation_t>(view);
         auto rotations = dual::get_owned_rw<skr_rotation_t>(view);
         auto scales = dual::get_owned_rw<skr_scale_t>(view);
-        auto indices = dual::get_owned_rw<skr_index_component_t>(view);
+        auto indices = dual::get_owned_rw<skr_index_comp_t>(view);
         auto movements = dual::get_owned_rw<skr_movement_t>(view);
         auto states = dual::get_owned_rw<game::anim_state_t>(view);
         for (uint32_t i = 0; i < view->count; i++)
@@ -524,7 +524,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
     dual_query_t* cameraQuery;
     dual_query_t* animQuery;
     moveQuery = dualQ_from_literal(game_world, 
-        "[has]skr_movement_t, [inout]skr_translation_t, [in]skr_scale_t, [in]skr_index_component_t, !skr_camera_t");
+        "[has]skr_movement_t, [inout]skr_translation_t, [in]skr_scale_t, [in]skr_index_comp_t, !skr_camera_t");
     cameraQuery = dualQ_from_literal(game_world, 
         "[has]skr_movement_t, [inout]skr_translation_t, [inout]skr_camera_t");
     animQuery = dualQ_from_literal(game_world, 
@@ -656,7 +656,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             }
         }
         // move
-        // [has]skr_movement_t, [inout]skr_translation_t, [in]skr_scale_t, [in]skr_index_component_t, !skr_camera_t
+        // [has]skr_movement_t, [inout]skr_translation_t, [in]skr_scale_t, [in]skr_index_comp_t, !skr_camera_t
         if (bUseJob)
         {
             ZoneScopedN("MoveSystem");
@@ -670,7 +670,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 float lerps[] = { 12.5, 20 };
                 auto translations = (skr_translation_t*)dualV_get_owned_rw_local(view, localTypes[0]);
                 auto scales = (skr_scale_t*)dualV_get_owned_ro_local(view, localTypes[1]);(void)scales;
-                auto indices = (skr_index_component_t*)dualV_get_owned_ro_local(view, localTypes[2]);
+                auto indices = (skr_index_comp_t*)dualV_get_owned_ro_local(view, localTypes[2]);
                 for (uint32_t i = 0; i < view->count; i++)
                 {
                     const auto actual_idx = indices[i].value;

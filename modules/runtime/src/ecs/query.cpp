@@ -726,7 +726,7 @@ void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filte
                 }
                 auto count = c->count;
                 dual_chunk_view_t view = { c, 0, c->count };
-                auto masks = (dual_mask_component_t*)dualV_get_owned_ro(&view, kMaskComponent);
+                auto masks = (dual_mask_comp_t*)dualV_get_owned_ro(&view, kMaskComponent);
                 EIndex i = 0;
                 while (i < count)
                 {
@@ -791,7 +791,7 @@ void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filte
         else
 #endif
         { // todo: should we simd this snipest too
-            auto match = [&](dual_mask_component_t mask) {
+            auto match = [&](dual_mask_comp_t mask) {
                 return (mask & allmask) == allmask && (mask & nonemask) == 0 && (anymask == 0 || (mask & anymask) != 0);
             };
             for(auto c : group->chunks)
@@ -802,7 +802,7 @@ void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filte
                 }
                 auto count = c->count;
                 dual_chunk_view_t view = { c, 0, c->count };
-                auto masks = (dual_mask_component_t*)dualV_get_owned_ro(&view, kMaskComponent);
+                auto masks = (dual_mask_comp_t*)dualV_get_owned_ro(&view, kMaskComponent);
                 EIndex i = 0;
                 while (i < count)
                 {

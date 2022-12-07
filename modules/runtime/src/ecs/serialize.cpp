@@ -41,7 +41,7 @@ static void serialize_impl(const dual_chunk_view_t& view, dual_type_index_t type
         {
             forloop (i, 0, view.count)
             {
-                auto array = (dual_array_component_t*)((size_t)i * size + src);
+                auto array = (dual_array_comp_t*)((size_t)i * size + src);
                 intptr_t padding = ((char*)array->BeginX - (char*)(array + 1));
                 intptr_t length = ((char*)array->EndX - (char*)array->BeginX);
                 bin::Archive(s, (uint32_t)padding);
@@ -56,7 +56,7 @@ static void serialize_impl(const dual_chunk_view_t& view, dual_type_index_t type
         {
             forloop (i, 0, view.count)
             {
-                auto array = (dual_array_component_t*)((size_t)i * size + src);
+                auto array = (dual_array_comp_t*)((size_t)i * size + src);
                 uint32_t padding = 0, length = 0;
                 bin::Archive(ds, padding);
                 bin::Archive(ds, length);

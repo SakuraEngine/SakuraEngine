@@ -61,10 +61,10 @@ struct dual_group_t {
     bool share(dual_type_index_t type) const noexcept;
     bool own(const dual_type_set_t& subtype) const noexcept;
     bool share(const dual_type_set_t& subtype) const noexcept;
-    dual_mask_component_t get_shared_mask(const dual_type_set_t& subtype) const noexcept;
+    dual_mask_comp_t get_shared_mask(const dual_type_set_t& subtype) const noexcept;
     void get_shared_type(dual_type_set_t& result, void* buffer) const noexcept;
     const dual_group_t* get_owner(dual_type_index_t type) const noexcept;
-    dual_mask_component_t get_mask(const dual_type_set_t& subtype) const noexcept;
+    dual_mask_comp_t get_mask(const dual_type_set_t& subtype) const noexcept;
     const void* get_shared_ro(dual_type_index_t type) const noexcept;
     size_t data_size();
 

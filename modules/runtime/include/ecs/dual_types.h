@@ -55,7 +55,7 @@ enum pool_type_t
 };
 
 template <class T, size_t N>
-struct array_component_T;
-using link_array_t = array_component_T<dual_entity_t, kLinkComponentSize>;
+struct array_comp_T;
+using link_array_t = array_comp_T<dual_entity_t, kLinkComponentSize>;
 }
 #endif

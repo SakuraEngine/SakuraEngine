@@ -230,7 +230,7 @@ void skr_renderer_remove_render_effect(SRendererId r, skr_render_effect_name_t n
     }
 }
 
-using render_effects_t = dual::array_component_T<skr_render_effect_t, 4>;
+using render_effects_t = dual::array_comp_T<skr_render_effect_t, 4>;
 
 void skr_render_effect_attach(SRendererId r, dual_chunk_view_t* g_cv, skr_render_effect_name_t effect_name)
 {
