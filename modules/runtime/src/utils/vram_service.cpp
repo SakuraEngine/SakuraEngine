@@ -192,12 +192,17 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
         const auto& buffer_io = buffer_task->buffer_io;
         const auto& destination = buffer_task->destination;
         CGPUUploadTask* upload = allocateCGPUUploadTask(buffer_io.device, buffer_io.transfer_queue, buffer_io.opt_semaphore);
-        skr::string name = buffer_io.vbuffer.buffer_name ? buffer_io.vbuffer.buffer_name : "";
-        name += "-upload";
-        upload->upload_buffer = cgpux_create_mapped_upload_buffer(buffer_io.device, buffer_io.src_memory.size, name.c_str());
+        {
+            ZoneScopedN("PrepareUploadBuffer");
+            skr::string name = buffer_io.vbuffer.buffer_name ? buffer_io.vbuffer.buffer_name : "";
+            name += "-upload";
+            upload->upload_buffer = cgpux_create_mapped_upload_buffer(buffer_io.device, buffer_io.src_memory.size, name.c_str());
+        }
 
         if (buffer_io.src_memory.bytes)
         {
+            ZoneScopedN("MemcpyToUploadBuffer");
+
             memcpy((uint8_t*)upload->upload_buffer->cpu_mapped_address, 
                 buffer_io.src_memory.bytes, buffer_io.src_memory.size);
         }
@@ -206,6 +211,8 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
         
         if (buffer_io.src_memory.bytes)
         {
+            ZoneScopedN("MakeBarrier");
+
             CGPUBufferToBufferTransfer vb_cpy = {};
             vb_cpy.dst = destination->buffer;
             vb_cpy.dst_offset = buffer_io.vbuffer.offset;
@@ -225,7 +232,10 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
             buffer_barrier.queue_type = buffer_io.transfer_queue->type;
         }
         
-        task.task_batch->buffer_barriers.emplace_back(buffer_barrier);
+        {
+            ZoneScopedN("Emplace");
+            task.task_batch->buffer_barriers.emplace_back(buffer_barrier);
+        }
 
         buffer_task->upload_task = upload;
     }
@@ -244,12 +254,17 @@ void skr::io::VRAMServiceImpl::tryUploadTextureResource(skr::io::VRAMServiceImpl
         const auto& texture_io = texture_task->texture_io;
         const auto& destination = texture_task->destination;
         CGPUUploadTask* upload = allocateCGPUUploadTask(texture_io.device, texture_io.transfer_queue, texture_io.opt_semaphore);
-        skr::string name = texture_io.vtexture.texture_name ? texture_io.vtexture.texture_name : "";
-        name += "-upload";
-        upload->upload_buffer = cgpux_create_mapped_upload_buffer(texture_io.device, texture_io.src_memory.size, name.c_str());
+        {
+            ZoneScopedN("PrepareUploadBuffer");
+            skr::string name = texture_io.vtexture.texture_name ? texture_io.vtexture.texture_name : "";
+            name += "-upload";
+            upload->upload_buffer = cgpux_create_mapped_upload_buffer(texture_io.device, texture_io.src_memory.size, name.c_str());
+        }
 
         if (texture_io.src_memory.bytes)
         {
+            ZoneScopedN("MemcpyToUploadBuffer");
+
             memcpy((uint8_t*)upload->upload_buffer->cpu_mapped_address, texture_io.src_memory.bytes, texture_io.src_memory.size);
         }
         
@@ -257,6 +272,8 @@ void skr::io::VRAMServiceImpl::tryUploadTextureResource(skr::io::VRAMServiceImpl
         
         if (texture_io.src_memory.bytes)
         {
+            ZoneScopedN("MakeBarrier");
+
             CGPUBufferToTextureTransfer tex_cpy = {};
             tex_cpy.dst = destination->texture;
             tex_cpy.dst_subresource.aspects = CGPU_TVA_COLOR;
@@ -279,7 +296,10 @@ void skr::io::VRAMServiceImpl::tryUploadTextureResource(skr::io::VRAMServiceImpl
             texture_barrier.queue_type = texture_io.transfer_queue->type;
         }
         
-        task.task_batch->texture_barriers.emplace_back(texture_barrier);
+        {
+            ZoneScopedN("Emplace");
+            task.task_batch->texture_barriers.emplace_back(texture_barrier);
+        }
 
         texture_task->upload_task = upload;
     }
