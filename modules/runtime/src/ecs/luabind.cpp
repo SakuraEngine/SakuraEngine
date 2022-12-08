@@ -339,10 +339,9 @@ namespace skr::lua
                     }
                     else if(strcmp(field, "set"))
                     {
-                        lua_pushlightuserdata(L, view);
-                        lua_pushcclosure(L, +[](lua_State* L)
+                        lua_pushcfunction(L, +[](lua_State* L)
                         {
-                            lua_chunk_view_t* view = (lua_chunk_view_t*)lua_touserdata(L, lua_upvalueindex(1));
+                            lua_chunk_view_t* view = (lua_chunk_view_t*)luaL_checkudata(L, 1, "lua_chunk_view_t");
                             int index = luaL_checkinteger(L, 2);
                             int compId = luaL_checkinteger(L, 3);
                             luaL_argexpected(L, index < view->view.count, 2, "index out of bounds");
@@ -360,7 +359,7 @@ namespace skr::lua
                             data = (uint8_t*)data + index * view->strides[compId];
                             check(view->view.chunk, view->view.start + index, (char*)data, L, 4);
                             return 1;
-                        }, 1);
+                        });
                         return 1;
                     }
                     else 

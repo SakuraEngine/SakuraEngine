@@ -26,11 +26,10 @@
         finalcat.setdefault("___FUNCTIONS___", []).append(function)
 %>
 <%def name="bind_function(function, record)">
-        lua_pushlightuserdata(L, &record);
-        lua_pushcclosure(L, +[](lua_State* L)
+        lua_pushcfunction(L, +[](lua_State* L)
         {
         %if record:
-            auto& record = *reinterpret_cast<${record.name}*>(lua_touserdata(L, lua_upvalueindex(1)));
+            auto& record = **reinterpret_cast<${record.name}**>(lua_touserdata(L, 1));
         %endif
             <% 
                 out_params = []
@@ -77,7 +76,7 @@
             skr::lua::push<${name}_t>(L, ${name});
         %endfor
             return ${len(out_params) + (1 if has_return else 0)};
-        }, ${1 if record else 0});
+        });
 </%def>
 <%def name="bind_category(cat)">
     <% 
