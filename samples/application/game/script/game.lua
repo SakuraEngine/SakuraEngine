@@ -15,24 +15,27 @@ function module:DrawEntity(entity, name, children, view)
     end
     local flag = imgui.TreeNodeFlags_OpenOnArrow
     if children == nil then
-        flag = flag + imgui.TreeNodeFlags_Leaf
+        flag = flag + imgui.TreeNodeFlags_Leaf + imgui.TreeNodeFlags_NoTreePushOnOpen
     end
     imgui.PushIDInt(entity)
     local opened = imgui.TreeNodeEx(name, flag)
     imgui.PopID()
+    
     if opened and children~=nil then
         local childrenTable = newtable(children.length, 0)
+        --skr.print("entity: " .. tostring(entity) .. " name: " .. tostring(name) .. " children: " .. tostring(children) .. " children.length " .. tostring(children.length));
         for i = 0, children.length - 1 do
             table.insert(childrenTable, children(i))
         end
         view:with(childrenTable, function(cview)
             for i = 0, cview.length - 1 do
-                local ent, name, children = cview(i);
-                self:DrawEntity(ent, name, children, cview)
+                local centity, cname, cchildren = cview(i);
+                --skr.print("centity: " .. tostring(centity))
+                self:DrawEntity(centity, cname, cchildren, cview)
             end
         end)
+        imgui.TreePop()
     end
-    imgui.TreePop()
 end
 
 function module:DrawHireachy()
