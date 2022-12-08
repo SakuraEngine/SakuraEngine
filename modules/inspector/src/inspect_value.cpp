@@ -71,12 +71,12 @@ struct inspect_system : public skr::ModuleSubsystem
         {
             case SKR_TYPE_CATEGORY_BOOL:
             {
-                ImGui::Checkbox(skr::format("##Value{}", tweak.ident).c_str(), &value.As<bool>());
+                ImGui::Checkbox("##Value", &value.As<bool>());
             }
             break;
             case SKR_TYPE_CATEGORY_F32:
             {
-                ImGui::DragFloat(skr::format("##Value{}", tweak.ident).c_str(), &value.As<float>());
+                ImGui::DragFloat("##Value", &value.As<float>());
             }
             break;
             case SKR_TYPE_CATEGORY_I32:
@@ -115,7 +115,8 @@ struct inspect_system : public skr::ModuleSubsystem
         {
             if(ImGui::CollapsingHeader(pair.first.c_str()))
             {
-                if(ImGui::BeginTable(skr::format("##{}", pair.first).c_str(), 3))
+                ImGui::PushID(pair.first.c_str());
+                if(ImGui::BeginTable("##Table", 3))
                 {
                     ImGui::TableSetupScrollFreeze(0, 1);
                     ImGui::TableSetupColumn("Override", ImGuiTableColumnFlags_WidthFixed, 100);
@@ -128,7 +129,8 @@ struct inspect_system : public skr::ModuleSubsystem
                     {
                         auto& value = p.second;
                         bool override = value.override.HasValue();
-                        ImGui::Checkbox(skr::format("##Override{}", value.ident).c_str(), &override);
+                        ImGui::PushID(value.ident);
+                        ImGui::Checkbox("##Override", &override);
                         ImGui::TableNextColumn();
                         ImGui::Text("%d: \"%s\"", p.first, value.expr);
                         ImGui::TableNextColumn();
@@ -145,10 +147,12 @@ struct inspect_system : public skr::ModuleSubsystem
                             DrawInspect(value, value.value);
                             ImGui::EndDisabled();
                         }
+                        ImGui::PopID();
                         ImGui::TableNextColumn();
                     }
                     ImGui::EndTable();
                 }
+                ImGui::PopID();
             }
         }
         ImGui::End();
