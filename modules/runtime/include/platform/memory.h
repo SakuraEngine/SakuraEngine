@@ -143,9 +143,10 @@ FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line)
 #if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
 #include <string_view>
 #include "utils/demangle.hpp"
-template<std::string_view const& sourcelocation>
 struct SkrTracedNew
 {
+    const std::string_view sourcelocation;
+    constexpr SkrTracedNew(std::string_view sourcelocation) noexcept : sourcelocation(sourcelocation) {}
     template<class T, class... TArgs>
     [[nodiscard]] FORCEINLINE T* New(TArgs&&... params)
     {
@@ -209,10 +210,10 @@ struct SkrTracedNew
         }
     }
 };
-#define SkrNew []{ static constexpr std::string_view sourcelocation = SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)); return SkrTracedNew<sourcelocation>{}; }().SKR_TEMPLATE New
-#define SkrNewSized []{ static constexpr std::string_view sourcelocation = SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)); return SkrTracedNew<sourcelocation>{}; }().SKR_TEMPLATE NewSized
-#define SkrNewLambda []{ static constexpr std::string_view sourcelocation = SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)); return SkrTracedNew<sourcelocation>{}; }().SKR_TEMPLATE NewLambda
-#define SkrDelete []{ static constexpr std::string_view sourcelocation = SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)); return SkrTracedNew<sourcelocation>{}; }().SKR_TEMPLATE Delete
+#define SkrNew SkrTracedNew{ SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) }.New
+#define SkrNewSized SkrTracedNew{ SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) }.NewSized
+#define SkrNewLambda SkrTracedNew{ SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) }.NewLambda
+#define SkrDelete SkrTracedNew{ SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) }.Delete
 #else
 template <typename T, typename... TArgs>
 [[nodiscard]] FORCEINLINE T* SkrNew(TArgs&&... params)
