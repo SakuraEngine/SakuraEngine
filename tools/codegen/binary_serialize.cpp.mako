@@ -71,10 +71,10 @@ void BlobTrait<${record.name}>::BuildArena(skr_blob_arena_builder_t& arena, ${re
 %if field.arraySize > 0:
     for(int i = 0; i < ${field.arraySize}; ++i)
     {
-        BlobTrait<${field.rawType}>::BuildArena(arena, dst.${name}[i], src.${name}[i]);
+        ::skr::binary::BuildArena<${field.type}>(arena, dst.${name}[i], src.${name}[i]);
     }
 %else:
-    BlobTrait<${field.rawType}>::BuildArena(arena, dst.${name}, src.${name});
+    ::skr::binary::BuildArena<${field.type}>(arena, dst.${name}, src.${name});
 %endif
 %endfor
 }
@@ -87,10 +87,10 @@ void BlobTrait<${record.name}>::Remap(skr_blob_arena_t& arena, ${record.name}& d
 %if field.arraySize > 0:
     for(int i = 0; i < ${field.arraySize}; ++i)
     {
-        BlobTrait<${field.rawType}>::Remap(arena, dst.${name}[i]);
+        ::skr::binary::Remap<${field.type}>(arena, dst.${name}[i]);
     }
 %else:
-    BlobTrait<${field.rawType}>::Remap(arena, dst.${name});
+    ::skr::binary::Remap<${field.type}>(arena, dst.${name});
 %endif
 %endfor
 }
