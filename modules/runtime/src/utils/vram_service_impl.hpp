@@ -181,12 +181,19 @@ public:
         {
             auto it = cmds.find(queue);
             if (it != cmds.end()) return it->second;
-            CGPUCommandBufferDescriptor cmd_desc = {};
-            cmd_desc.is_secondary = false;
-            auto cmd = cgpu_create_command_buffer(get_cmd_pool(queue), &cmd_desc);
-            cmds[queue] = cmd;
-            cgpu_cmd_begin(cmd);
-            return cmd;
+            else
+            {
+                ZoneScopedN("CreateCommandBuffer");
+                CGPUCommandBufferDescriptor cmd_desc = {};
+                cmd_desc.is_secondary = false;
+                auto cmd = cgpu_create_command_buffer(get_cmd_pool(queue), &cmd_desc);
+                cmds[queue] = cmd;
+                {
+                    ZoneScopedN("Begin");
+                    cgpu_cmd_begin(cmd);
+                }
+                return cmd;
+            }
         }
         ~TaskBatch()
         {
