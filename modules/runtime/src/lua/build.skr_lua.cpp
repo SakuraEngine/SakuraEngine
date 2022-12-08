@@ -283,36 +283,31 @@ void bind_skr_resource_handle(lua_State* L)
              {
                  casestr("resolve")
                  {
-                     lua_pushlightuserdata(L, resource);
-                     lua_pushcclosure(
+                     lua_pushcfunction(
                      L, +[](lua_State* L) -> int {
-                         auto resource = (skr_resource_handle_t*)lua_touserdata(L, lua_upvalueindex(1));
+                         auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
                          bool requireInstall = lua_toboolean(L, 2);
                          if (!resource->is_resolved())
                              resource->resolve(requireInstall, (uint64_t)L, SKR_REQUESTER_SCRIPT);
                          return 0;
-                     },
-                     1);
+                     });
                      return 1;
                  }
                  casestr("is_resolved")
                  {
-                     lua_pushlightuserdata(L, resource);
-                     lua_pushcclosure(
+                     lua_pushcfunction(
                      L, +[](lua_State* L) -> int {
-                         auto resource = (skr_resource_handle_t*)lua_touserdata(L, lua_upvalueindex(1));
+                         auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
                          lua_pushboolean(L, resource->is_resolved());
                          return 1;
-                     },
-                     1);
+                     });
                      return 1;
                  }
                  casestr("get_resolved")
                  {
-                     lua_pushlightuserdata(L, resource);
-                     lua_pushcclosure(
+                     lua_pushcfunction(
                      L, +[](lua_State* L) -> int {
-                         auto resource = (skr_resource_handle_t*)lua_touserdata(L, lua_upvalueindex(1));
+                         auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
                          if (!resource->is_resolved())
                          {
                              return 0;
@@ -328,23 +323,20 @@ void bind_skr_resource_handle(lua_State* L)
                          luaL_getmetatable(L, type->Name());
                          lua_setmetatable(L, -2);
                          return 1;
-                     },
-                     1);
+                     });
                      return 1;
                  }
                  casestr("unload")
                  {
-                     lua_pushlightuserdata(L, resource);
-                     lua_pushcclosure(
+                     lua_pushcfunction(
                      L, +[](lua_State* L) -> int {
-                         auto resource = (skr_resource_handle_t*)lua_touserdata(L, lua_upvalueindex(1));
+                         auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
                          if (resource->is_resolved())
                              resource->unload();
                          else
                              SKR_LOG_DEBUG("skr_resource_handle_t::unload called on unresolved resource.");
                          return 0;
-                     },
-                     1);
+                     });
                      return 1;
                  }
                  default: {
