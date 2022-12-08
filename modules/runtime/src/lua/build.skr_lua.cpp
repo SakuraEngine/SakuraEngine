@@ -121,6 +121,15 @@ lua_State* skr_lua_newstate(skr_vfs_t* vfs)
     lua_setglobal(L, "skr");
     lua_pop(L, 1);
 
+    // bind utilities
+    lua_pushcfunction(L, +[](lua_State* L) -> int {
+        auto asize = luaL_checkinteger(L, 1);
+        auto nsize = luaL_checkinteger(L, 2);
+        lua_createtable(L, asize, nsize);
+        return 1;
+    });
+    lua_setglobal(L, "newtable");
+
     // bind clone
     lua_getglobal(L, "skr");
     luaopen_clonefunc(L);
@@ -135,6 +144,7 @@ lua_State* skr_lua_newstate(skr_vfs_t* vfs)
 
     // bind skr functions
     skr::lua::bind_skr_log(L);
+
 
     return L;
 }
