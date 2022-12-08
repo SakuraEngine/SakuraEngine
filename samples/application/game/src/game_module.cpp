@@ -46,6 +46,8 @@
 #include "utils/types.h"
 #include "SkrInspector/inspect_value.h"
 
+#include "SkrScene/resources/scene_resource.h"
+
 #include "lua/skr_lua.h"
 
 SWindowHandle window;
@@ -76,6 +78,7 @@ class SGameModule : public skr::IDynamicModule
     skr::resource::SAnimFactory* animFactory = nullptr;
     skr::resource::SSkelFactory* skeletonFactory = nullptr;
     skr::resource::SSkinFactory* skinFactory = nullptr;
+    skr::resource::SSceneFactory* sceneFactory = nullptr;
 
     skr_vfs_t* resource_vfs = nullptr;
     skr_vfs_t* tex_resource_vfs = nullptr;
@@ -184,6 +187,11 @@ void SGameModule::installResourceFactories()
         skinFactory = SkrNew<skr::resource::SSkinFactory>();
         resource_system->RegisterFactory(skinFactory);
     }
+    // scene factory
+    {
+        sceneFactory = SkrNew<skr::resource::SSceneFactory>();
+        resource_system->RegisterFactory(sceneFactory);
+    }
 
     skr_resource_handle_t shaderHdl("0c11a646-93ec-4cd8-8bc4-72c1aca8ec57"_guid);
     shaderHdl.resolve(true, 0, SKR_REQUESTER_SYSTEM);
@@ -225,6 +233,7 @@ void SGameModule::uninstallResourceFactories()
     SkrDelete(animFactory);
     SkrDelete(skeletonFactory);
     SkrDelete(skinFactory);
+    SkrDelete(sceneFactory);
 
     skr_free_renderer(game_renderer);
     
@@ -511,6 +520,9 @@ int SGameModule::main_module_exec(int argc, char** argv)
     {
         SKR_LOG_ERROR("luaL_dostring error: {}", lua_tostring(L, -1));
     }
+    namespace res = skr::resource;
+    res::TResourceHandle<skr_scene_resource_t> scene_handle = skr::guid::make_guid_unsafe("FB84A5BD-2FD2-46A2-ABF4-2D2610CFDAD9");
+    scene_handle.resolve(true, 0, SKR_REQUESTER_SYSTEM);
 
     // Time
     SHiresTimer tick_timer;
@@ -623,6 +635,12 @@ int SGameModule::main_module_exec(int argc, char** argv)
         
             inputSystem.Update(deltaTime);
         }
+        if(auto scene = scene_handle.get_resolved())
+        {
+            ZoneScopedN("MergeScene");
+            dualS_merge(game_renderer->get_dual_storage(), scene->storage);
+            scene_handle.reset();
+        }
         {
             ZoneScopedN("ImGUI");
 
@@ -638,7 +656,8 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 {
                     if(luaL_dostring(L, "local module = require \"hotfix\"; module.reload({\"game\"})") != LUA_OK)
                     {
-                        SKR_LOG_ERROR("luaL_dostring error: {}", lua_tostring(L, -1));
+                        SKR_LOG_ERROR("luaL_dostring error: %s", lua_tostring(L, -1));
+                        lua_pop(L, 1);
                     }
                 }
                 ImGui::End();
@@ -647,12 +666,12 @@ int SGameModule::main_module_exec(int argc, char** argv)
             skr::inspect::update_value_inspector();
             // quit |= skg::GameLoop(ctx);
         }
-        if(false)
         {
             ZoneScopedN("Lua");
             if(luaL_dostring(L, "local module = require \"game\"; module:update()") != LUA_OK)
             {
-                SKR_LOG_ERROR("luaL_dostring error: {}", lua_tostring(L, -1));
+                SKR_LOG_ERROR("luaL_dostring error: %s", lua_tostring(L, -1));
+                lua_pop(L, 1);
             }
         }
         // move
