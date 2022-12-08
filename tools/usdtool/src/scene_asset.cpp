@@ -50,15 +50,15 @@ void ImportTraversal(skd::SUSDPrimId prim, TranverseContext& ctx, children_t* ch
             dual::type_builder_t builder;
             dual_type_index_t transformType;
             if(!children)
-                transformType = dual_id_of<skr_l2w_t>::get();
+                transformType = dual_id_of<skr_l2w_comp_t>::get();
             else
-                transformType = dual_id_of<skr_l2r_t>::get();
+                transformType = dual_id_of<skr_l2r_comp_t>::get();
             builder.with(transformType);
             builder.with<skr_name_comp_t>();
             if(children)
-                builder.with<skr_parent_t>();
+                builder.with<skr_parent_comp_t>();
             if(!ecsChildren.empty())
-                builder.with<skr_child_t>();
+                builder.with<skr_child_comp_t>();
             auto type = make_zeroed<dual_entity_type_t>();
             type.type = builder.build();
             auto Init = [&](dual_chunk_view_t* view)
@@ -68,14 +68,14 @@ void ImportTraversal(skd::SUSDPrimId prim, TranverseContext& ctx, children_t* ch
                 auto cname = dual::get_owned_rw<skr_name_comp_t>(view);
                 if(!ecsChildren.empty())
                 {
-                    auto cchildren = dual::get_owned_rw<skr_child_t, children_t>(view);
+                    auto cchildren = dual::get_owned_rw<skr_child_comp_t, children_t>(view);
                     cchildren->resize(ecsChildren.size());
                     std::memcpy(cchildren->data(), ecsChildren.data(), ecsChildren.size() * sizeof(dual_entity_t));
                     for(auto ent : ecsChildren)
                     {
                         dual_chunk_view_t childView;
                         dualS_access(ctx.world, ent, &childView);
-                        auto cparent = (skr_parent_t*)dualV_get_owned_ro(&childView, dual_id_of<skr_parent_t>::get());
+                        auto cparent = (skr_parent_comp_t*)dualV_get_owned_ro(&childView, dual_id_of<skr_parent_comp_t>::get());
                         cparent->entity = self;
                     }
                 }

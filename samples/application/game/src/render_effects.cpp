@@ -407,7 +407,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         // initialize queries
         mesh_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr_render_mesh_comp_t");
         draw_mesh_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr_render_mesh_comp_t, [out]skr_render_group_t");
-        camera_query = dualQ_from_literal(storage, "[in]skr_camera_t");
+        camera_query = dualQ_from_literal(storage, "[in]skr_camera_comp_t");
     }
 
     void release_queries()
@@ -501,8 +501,8 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             { 0.f, 0.f, 1.f, 0.f } /*up*/
         );
         auto cameraSetup = [&](dual_chunk_view_t* g_cv) {
-            auto cameras = dual::get_owned_rw<skr_camera_t>(g_cv);
-            auto camera_transforms = dual::get_owned_rw<skr_translation_t>(g_cv);
+            auto cameras = dual::get_owned_rw<skr_camera_comp_t>(g_cv);
+            auto camera_transforms = dual::get_owned_rw<skr_translation_comp_t>(g_cv);
             SKR_ASSERT(g_cv->count <= 1);
             if (cameras)
             {
@@ -541,9 +541,9 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             {
                 auto g_batch_callback = [&](dual_chunk_view_t* g_cv) {
                     //SKR_LOG_DEBUG("batch: %d -> %d", g_cv->start, g_cv->count);
-                    auto translations = dual::get_owned_rw<skr_translation_t>(g_cv);
-                    auto rotations = dual::get_owned_rw<skr_rotation_t>(g_cv);(void)rotations;
-                    auto scales = dual::get_owned_rw<skr_scale_t>(g_cv);
+                    auto translations = dual::get_owned_rw<skr_translation_comp_t>(g_cv);
+                    auto rotations = dual::get_owned_rw<skr_rotation_comp_t>(g_cv);(void)rotations;
+                    auto scales = dual::get_owned_rw<skr_scale_comp_t>(g_cv);
                     for (uint32_t g_idx = 0; g_idx < g_cv->count; g_idx++, r_idx++)
                     {
                         const auto quat = rtm::quat_from_euler_rh(
@@ -912,7 +912,7 @@ struct RenderEffectForwardSkin : public RenderEffectForward
     {
         mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr_render_mesh_comp_t");
         draw_mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr_render_mesh_comp_t, [out]skr_render_group_t");
-        camera_query = dualQ_from_literal(storage, "[in]skr_camera_t");
+        camera_query = dualQ_from_literal(storage, "[in]skr_camera_comp_t");
         install_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr_render_anim_comp_t, [in]skr_render_skel_comp_t, [in]skr_render_skin_comp_t");
     }
 

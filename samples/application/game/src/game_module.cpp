@@ -261,19 +261,19 @@ void create_test_scene(SRendererId renderer)
     // allocate 100 movable cubes
     auto renderableT_builder = make_zeroed<dual::type_builder_t>();
     renderableT_builder
-        .with<skr_translation_t, skr_rotation_t, skr_scale_t>()
-        .with<skr_index_comp_t, skr_movement_t>()
+        .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
+        .with<skr_index_comp_t, skr_movement_comp_t>()
         .with<skr_render_effect_t>();
     // allocate renderable
     auto renderableT = make_zeroed<dual_entity_type_t>();
     renderableT.type = renderableT_builder.build();
     uint32_t init_idx = 0;
     auto primSetup = [&](dual_chunk_view_t* view) {
-        auto translations = dual::get_owned_rw<skr_translation_t>(view);
-        auto rotations = dual::get_owned_rw<skr_rotation_t>(view);
-        auto scales = dual::get_owned_rw<skr_scale_t>(view);
+        auto translations = dual::get_owned_rw<skr_translation_comp_t>(view);
+        auto rotations = dual::get_owned_rw<skr_rotation_comp_t>(view);
+        auto scales = dual::get_owned_rw<skr_scale_comp_t>(view);
         auto indices = dual::get_owned_rw<skr_index_comp_t>(view);
-        auto movements = dual::get_owned_rw<skr_movement_t>(view);
+        auto movements = dual::get_owned_rw<skr_movement_comp_t>(view);
         auto states = dual::get_owned_rw<game::anim_state_t>(view);
         for (uint32_t i = 0; i < view->count; i++)
         {
@@ -312,9 +312,9 @@ void create_test_scene(SRendererId renderer)
     // allocate 1 player entity
     auto playerT_builder = make_zeroed<dual::type_builder_t>();
     playerT_builder
-        .with<skr_translation_t, skr_rotation_t, skr_scale_t>()
-        .with<skr_movement_t>()
-        .with<skr_camera_t>();
+        .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
+        .with<skr_movement_comp_t>()
+        .with<skr_camera_comp_t>();
     auto playerT = make_zeroed<dual_entity_type_t>();
     playerT.type = playerT_builder.build();
     dualS_allocate_type(renderer->get_dual_storage(), &playerT, 1, DUAL_LAMBDA(primSetup));
@@ -324,7 +324,7 @@ void create_test_scene(SRendererId renderer)
     // allocate 1 static(unmovable) gltf mesh
     auto static_renderableT_builderT = make_zeroed<dual::type_builder_t>();
     static_renderableT_builderT
-        .with<skr_translation_t, skr_rotation_t, skr_scale_t>()
+        .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
         .with<skr_render_effect_t, game::anim_state_t>();
     auto static_renderableT = make_zeroed<dual_entity_type_t>();
     static_renderableT.type = static_renderableT_builderT.build();
@@ -338,9 +338,9 @@ void async_attach_render_mesh(SRendererId renderer)
     auto filter = make_zeroed<dual_filter_t>();
     auto meta = make_zeroed<dual_meta_filter_t>();
     auto renderable_type = make_zeroed<dual::type_builder_t>();
-    renderable_type.with<skr_render_effect_t, skr_translation_t>();
+    renderable_type.with<skr_render_effect_t, skr_translation_comp_t>();
     auto static_type = make_zeroed<dual::type_builder_t>();
-    static_type.with<skr_movement_t>();
+    static_type.with<skr_movement_comp_t>();
     filter.all = renderable_type.build();
     filter.none = static_type.build();
     auto attchFunc = [=](dual_chunk_view_t* view) {
@@ -524,9 +524,9 @@ int SGameModule::main_module_exec(int argc, char** argv)
     dual_query_t* cameraQuery;
     dual_query_t* animQuery;
     moveQuery = dualQ_from_literal(game_world, 
-        "[has]skr_movement_t, [inout]skr_translation_t, [in]skr_scale_t, [in]skr_index_comp_t, !skr_camera_t");
+        "[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_scale_comp_t, [in]skr_index_comp_t, !skr_camera_comp_t");
     cameraQuery = dualQ_from_literal(game_world, 
-        "[has]skr_movement_t, [inout]skr_translation_t, [inout]skr_camera_t");
+        "[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [inout]skr_camera_comp_t");
     animQuery = dualQ_from_literal(game_world, 
         "[in]skr_render_effect_t, [in]game::anim_state_t, [out]<rand>?skr_render_anim_comp_t, [in]<rand>?skr_render_skel_comp_t");
     while (!quit)
@@ -608,7 +608,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         resource_system->Update();
         // Update camera
         auto cameraUpdate = [=](dual_chunk_view_t* view){
-            auto cameras = dual::get_owned_rw<skr_camera_t>(view);
+            auto cameras = dual::get_owned_rw<skr_camera_comp_t>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {
                 cameras[i].viewport_width = swapchain->back_buffers[0]->width;
@@ -656,7 +656,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             }
         }
         // move
-        // [has]skr_movement_t, [inout]skr_translation_t, [in]skr_scale_t, [in]skr_index_comp_t, !skr_camera_t
+        // [has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_scale_comp_t, [in]skr_index_comp_t, !skr_camera_comp_t
         if (bUseJob)
         {
             ZoneScopedN("MoveSystem");
@@ -668,8 +668,8 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 ZoneScopedN("MoveJob");
                 
                 float lerps[] = { 12.5, 20 };
-                auto translations = (skr_translation_t*)dualV_get_owned_rw_local(view, localTypes[0]);
-                auto scales = (skr_scale_t*)dualV_get_owned_ro_local(view, localTypes[1]);(void)scales;
+                auto translations = (skr_translation_comp_t*)dualV_get_owned_rw_local(view, localTypes[0]);
+                auto scales = (skr_scale_comp_t*)dualV_get_owned_ro_local(view, localTypes[1]);(void)scales;
                 auto indices = (skr_index_comp_t*)dualV_get_owned_ro_local(view, localTypes[2]);
                 for (uint32_t i = 0; i < view->count; i++)
                 {
@@ -724,7 +724,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             });
             dualJ_schedule_ecs(animQuery, 128, DUAL_LAMBDA_POINTER(animJob), nullptr, nullptr);
         }
-        // [has]skr_movement_t, [inout]skr_translation_t, [in]skr_camera_t
+        // [has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_camera_comp_t
         if (bUseJob)
         {
             ZoneScopedN("PlayerSystem");
@@ -732,7 +732,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             auto playerJob = SkrNewLambda([=](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
                 ZoneScopedN("PlayerJob");
                 
-                auto translations = (skr_translation_t*)dualV_get_owned_rw_local(view, localTypes[0]);
+                auto translations = (skr_translation_comp_t*)dualV_get_owned_rw_local(view, localTypes[0]);
                 auto forward = skr_float3_t{0.f, 1.f, 0.f};
                 auto right = skr_float3_t{1.f, 0.f, 0.f};
                 for (uint32_t i = 0; i < view->count; i++)
