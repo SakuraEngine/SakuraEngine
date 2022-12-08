@@ -52,5 +52,23 @@ namespace skr
                 }
             }
         };
+
+        template<class T>
+        void BuildArena(skr_blob_arena_builder_t& arena, T& dst, const typename BlobBuilderType<T>::type& src)
+        {
+            if constexpr(is_complete_v<BlobTrait<T>>)
+            {
+                BlobTrait<T>::BuildArena(arena, dst, src);
+            }
+        }
+
+        template<class T>
+        void Remap(skr_blob_arena_t& arena, T& dst)
+        {
+            if constexpr(is_complete_v<BlobTrait<T>>)
+            {
+                BlobTrait<T>::Remap(arena, dst);
+            }
+        }
     }
 }
