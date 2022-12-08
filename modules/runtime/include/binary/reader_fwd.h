@@ -22,7 +22,7 @@ int Archive(skr_binary_reader_t* reader, T&& value)
 template <class T>
 int Archive(skr_binary_reader_t* reader, skr_blob_arena_t& arena, T&& value)
 {
-    if constexpr (is_complete_v<BlobTrait<T>>)
+    if constexpr (is_complete_v<BlobTrait<std::decay_t<T>>>)
         return ReadTrait<std::decay_t<T>>::Read(reader, arena, value);
     else
         return ReadTrait<std::decay_t<T>>::Read(reader, value);
