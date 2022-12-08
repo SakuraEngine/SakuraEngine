@@ -1,3 +1,5 @@
+#include <containers/hashmap.hpp>
+#include "SkrRenderer/resources/shader_resource.hpp"
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 #include "utils/hash.h"
 #include "utils/make_zeroed.hpp"
@@ -19,7 +21,7 @@ bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_opt
                 return false;
             }
             keys.insert(opt.key);
-            kvs.insert({opt.key, opt});
+            kvs.insert({ opt.key, opt });
         }
     }
     dst.reserve(keys.size());
@@ -54,12 +56,10 @@ namespace skr
 {
 namespace resource
 {
-struct SKR_RENDERER_API SShaderOptionsFactoryImpl : public SShaderOptionsFactory
-{
+struct SKR_RENDERER_API SShaderOptionsFactoryImpl : public SShaderOptionsFactory {
     SShaderOptionsFactoryImpl(const SShaderOptionsFactoryImpl::Root& root)
         : root(root)
     {
-
     }
 
     ~SShaderOptionsFactoryImpl() noexcept = default;
@@ -84,13 +84,13 @@ struct SKR_RENDERER_API SShaderOptionsFactoryImpl : public SShaderOptionsFactory
     {
         auto options = (skr_shader_options_resource_t*)record->resource;
         SkrDelete(options);
-        return true; 
+        return true;
     }
     bool Uninstall(skr_resource_record_t* record) override
     {
         return true;
     }
-    
+
     Root root;
 };
 
@@ -99,7 +99,7 @@ SShaderOptionsFactory* SShaderOptionsFactory::Create(const Root& root)
     return SkrNew<SShaderOptionsFactoryImpl>(root);
 }
 
-void SShaderOptionsFactory::Destroy(SShaderOptionsFactory *factory)
+void SShaderOptionsFactory::Destroy(SShaderOptionsFactory* factory)
 {
     return SkrDelete(factory);
 }

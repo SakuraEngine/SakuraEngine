@@ -8,10 +8,6 @@ struct VSIn
 #ifdef VERTEX_HAS_TANGENT
     centroid float4 tangent : TANGENT;
 #endif
-#ifdef VERTEX_HAS_SKIN
-    centroid uint4 joints : JOINTS;
-    centroid float4 weights : WEIGHTS;
-#endif
 };
 
 struct VSOut

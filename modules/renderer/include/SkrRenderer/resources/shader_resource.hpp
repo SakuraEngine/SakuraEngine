@@ -5,8 +5,9 @@
 #include "resource/resource_factory.h"
 #include <containers/string.hpp>
 #include <containers/hashmap.hpp>
+
 #ifndef __meta__
-#include "SkrRenderer/resources/shader_resource.generated.h"
+    #include "SkrRenderer/resources/shader_resource.generated.h"
 #endif
 
 sreflect_struct("guid" : "5a54720c-34b2-444c-8e3a-5977c94136c3")
@@ -128,3 +129,4 @@ struct SKR_RENDERER_API SShaderResourceFactory : public SResourceFactory {
 };
 } // namespace resource
 } // namespace skr
+namespace skr::binary { template <> struct BlobBuilderType<skr_stable_shader_hash_t> { using type = skr_stable_shader_hash_t; }; }

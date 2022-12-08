@@ -10,10 +10,11 @@
             "default_resource": "cb5fe6d7-5d91-4f3b-81b0-0a7afbf1a7cb"
         }
     ],
-    "option_values": [
-        {
-            "key": "VERTEX_HAS_SKIN",
-            "value": "off"
-        }
+    "switch_defaults": [
+
+    ]
+    ],
+    "option_defaults": [
+
     ]
 }

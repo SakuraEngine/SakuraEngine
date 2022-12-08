@@ -45,11 +45,13 @@ bool SMaterialTypeCooker::Cook(SCookContext *ctx)
     //-----load config
     // no cook config for config, skipping
     //-----import resource object
-    auto options = ctx->Import<skr_material_type_asset_t>();
-    if(!options) return false;
-    SKR_DEFER({ ctx->Destroy(options); });
+    auto material_type = ctx->Import<skr_material_type_asset_t>();
+    if(!material_type) return false;
+    SKR_DEFER({ ctx->Destroy(material_type); });
     eastl::vector<uint8_t> buffer;
-    buffer.emplace_back(1);
+    skr::binary::VectorWriter writer{&buffer};
+    skr_binary_writer_t archive(writer);
+    skr::binary::Archive(&archive, *material_type);
 
     //------save resource to disk
     auto file = fopen(outputPath.u8string().c_str(), "wb");
