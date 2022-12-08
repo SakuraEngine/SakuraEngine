@@ -163,7 +163,7 @@ namespace skr::lua
         static skr_child_comp_t check(lua_State* L, int index)
         {
             skr_child_comp_t result;
-            result.entity = luaL_checkinteger(L, index);
+            result.entity = static_cast<dual_entity_t>(luaL_checkinteger(L, index));
             return result;
         }
     };

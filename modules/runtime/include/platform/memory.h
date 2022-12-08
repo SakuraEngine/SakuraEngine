@@ -20,6 +20,7 @@ RUNTIME_EXTERN_C RUNTIME_API void* _sakura_realloc(void* p, size_t newsize);
 FORCEINLINE void* SkrMallocWithCZone(size_t size, const char* line)
 {
     TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
+    TracyCZoneText(z, line, strlen(line));
     TracyCZoneName(z, line, strlen(line));
     void* ptr = _sakura_malloc(size);
     TracyCZoneEnd(z);
@@ -29,6 +30,7 @@ FORCEINLINE void* SkrMallocWithCZone(size_t size, const char* line)
 FORCEINLINE void* SkrCallocWithCZone(size_t count, size_t size, const char* line)
 {
     TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
+    TracyCZoneText(z, line, strlen(line));
     TracyCZoneName(z, line, strlen(line));
     void* ptr = _sakura_calloc(count, size);
     TracyCZoneEnd(z);
@@ -38,6 +40,7 @@ FORCEINLINE void* SkrCallocWithCZone(size_t count, size_t size, const char* line
 FORCEINLINE void* SkrMallocAlignedWithCZone(size_t size, size_t alignment, const char* line)
 {
     TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
+    TracyCZoneText(z, line, strlen(line));
     TracyCZoneName(z, line, strlen(line));
     void* ptr = _sakura_malloc_aligned(size, alignment);
     TracyCZoneEnd(z);
@@ -47,6 +50,7 @@ FORCEINLINE void* SkrMallocAlignedWithCZone(size_t size, size_t alignment, const
 FORCEINLINE void* SkrCallocAlignedWithCZone(size_t count, size_t size, size_t alignment, const char* line)
 {
     TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
+    TracyCZoneText(z, line, strlen(line));
     TracyCZoneName(z, line, strlen(line));
     void* ptr = _sakura_calloc_aligned(count, size, alignment);
     TracyCZoneEnd(z);
@@ -56,6 +60,7 @@ FORCEINLINE void* SkrCallocAlignedWithCZone(size_t count, size_t size, size_t al
 FORCEINLINE void* SkrNewNWithCZone(size_t count, size_t size, const char* line)
 {
     TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
+    TracyCZoneText(z, line, strlen(line));
     TracyCZoneName(z, line, strlen(line));
     void* ptr = _sakura_new_n(count, size);
     TracyCZoneEnd(z);
@@ -65,6 +70,7 @@ FORCEINLINE void* SkrNewNWithCZone(size_t count, size_t size, const char* line)
 FORCEINLINE void* SkrNewAlignedWithCZone(size_t size, size_t alignment, const char* line)
 {
     TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
+    TracyCZoneText(z, line, strlen(line));
     TracyCZoneName(z, line, strlen(line));
     void* ptr = _sakura_new_aligned(size, alignment);
     TracyCZoneEnd(z);
@@ -74,6 +80,7 @@ FORCEINLINE void* SkrNewAlignedWithCZone(size_t size, size_t alignment, const ch
 FORCEINLINE void SkrFreeWithCZone(void* p, const char* line)
 {
     TracyCZoneC(z, SKR_DEALLOC_TRACY_MARKER_COLOR, 1);
+    TracyCZoneText(z, line, strlen(line));
     TracyCZoneName(z, line, strlen(line));
     _sakura_free(p);
     TracyCZoneEnd(z);
@@ -82,6 +89,7 @@ FORCEINLINE void SkrFreeWithCZone(void* p, const char* line)
 FORCEINLINE void SkrFreeAlignedWithCZone(void* p, size_t alignment, const char* line)
 {
     TracyCZoneC(z, SKR_DEALLOC_TRACY_MARKER_COLOR, 1);
+    TracyCZoneText(z, line, strlen(line));
     TracyCZoneName(z, line, strlen(line));
     _sakura_free_aligned(p, alignment);
     TracyCZoneEnd(z);
@@ -90,6 +98,7 @@ FORCEINLINE void SkrFreeAlignedWithCZone(void* p, size_t alignment, const char* 
 FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line)
 {
     TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
+    TracyCZoneText(z, line, strlen(line));
     TracyCZoneName(z, line, strlen(line));
     void* ptr = _sakura_realloc(p, newsize);
     TracyCZoneEnd(z);

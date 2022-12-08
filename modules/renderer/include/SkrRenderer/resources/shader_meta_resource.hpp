@@ -1,7 +1,8 @@
 #pragma once
-#include "shader_resource.hpp"
+#include "resource/resource_factory.h"
+#include "SkrRenderer/fwd_types.h"
 #ifndef __meta__
-#include "SkrRenderer/resources/shader_meta_resource.generated.h"
+    #include "SkrRenderer/resources/shader_meta_resource.generated.h"
 #endif
 
 sreflect_enum_class("guid": "c289eaaf-ace9-4a86-8072-b173377f7d19")
