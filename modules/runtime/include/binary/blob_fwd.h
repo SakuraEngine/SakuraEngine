@@ -49,6 +49,7 @@ struct BlobTrait;
 template <class T, class = void>
 struct BlobBuilderType
 {
+    using type = T;
     static_assert(sizeof(T), "BlobBuilderType not implemented for this type");
 };
 template <class T>
