@@ -11,6 +11,7 @@
 #include "mask.hpp"
 #include "iterator_ref.hpp"
 #include "scheduler.hpp"
+#include "utils/parallel_for.hpp"
 
 dual_storage_t::dual_storage_t()
     : archetypeArena(dual::get_default_pool())
@@ -294,6 +295,7 @@ void dual_storage_t::instantiate(const dual_entity_t* src, uint32_t n, uint32_t 
 dual_chunk_view_t dual_storage_t::entity_view(dual_entity_t e) const
 {
     using namespace dual;
+    SKR_ASSERT(e_id(e) < entities.entries.size());
     auto& entry = entities.entries[e_id(e)];
     return { entry.chunk, entry.indexInChunk, 1 };
 }
@@ -642,13 +644,11 @@ void dual_storage_t::merge(dual_storage_t& src)
     eastl::vector<dual_chunk_t*> chunks;
     struct payload_t {
         mapper* m;
-        dual_chunk_t** chunks;
         uint32_t start, end;
     };
     eastl::vector<payload_t> payloads;
     payload_t payload;
     payload.m = &m;
-    payload.chunks = chunks.data();
     payload.start = payload.end = 0;
     uint32_t sizePerBatch = 1024 * 16;
     uint32_t sizeRemain = sizePerBatch;
@@ -675,25 +675,23 @@ void dual_storage_t::merge(dual_storage_t& src)
         payload.end = (uint32_t)chunks.size();
         payloads.push_back(payload);
     }
-    skr::task::counter_t counter;
-    counter.add((uint32_t)payloads.size());
-    for(auto payload : payloads)
+    using iter_t = decltype(payloads)::iterator;
+    skr::parallel_for(payloads.begin(), payloads.end(), 1, 
+    [&chunks](iter_t begin, iter_t end)
     {
-        skr::task::schedule([payload, counter]() mutable
+        for(auto i = begin; i<end; ++i)
         {
-            forloop (i, payload.start, payload.end)
+            for(auto j=i->start; j<i->end; ++j)
             {
-                auto c = payload.chunks[i];
+                auto c = chunks[j];
                 auto ents = (dual_entity_t*)c->get_entities();
                 forloop (j, 0, c->count)
-                    payload.m->map(ents[j]);
-                iterator_ref_chunk( c, *payload.m );
-                iterator_ref_view({ c, 0, c->count }, *payload.m);
+                    i->m->map(ents[j]);
+                iterator_ref_chunk( c, *(i->m) );
+                iterator_ref_view({ c, 0, c->count }, *(i->m));
             }
-            counter.decrement();
-        }, nullptr);
-    }
-    counter.wait(true);
+        }
+    });
     for (auto& i : src.groups)
     {
         dual_group_t* g = i.second;
