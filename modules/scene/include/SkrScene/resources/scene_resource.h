@@ -9,7 +9,7 @@
     #include "SkrScene/resources/scene_resource.generated.h"
 #endif
 
-sreflect_struct("guid": "2DEFA834-5CF3-45A5-867E-8E0ED0F7D6AE")
+sreflect_struct("guid": "EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A")
 sattr("rtti" : true) // this is required for the resource to be automatically deserialized
 skr_scene_resource_t
 {
@@ -19,7 +19,6 @@ skr_scene_resource_t
 
 namespace skr::resource
 {
-
     // scene resource factory, base class
     // derive from this class to implement your own game specific install logic
     class SKR_SCENE_API SSceneFactory : public SResourceFactory
