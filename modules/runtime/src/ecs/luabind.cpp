@@ -84,6 +84,7 @@ namespace skr::lua
     {
         lua_chunk_view_t luaView { parent->storage, *view, parent->count, parent->readonly, parent->entities, parent->types, parent->datas, parent->strides, parent->guidStrs, parent->elementSizes, parent->lua_pushs, parent->lua_checks };
         luaView.datas = dual::localStack.allocate<void*>(parent->count);
+        luaView.entities = dualV_get_entities(view);
         forloop(i, 0, parent->count)
         {
             if((luaView.operations && !luaView.operations[i].readonly) || luaView.readonly)
@@ -483,7 +484,8 @@ namespace skr::lua
                                 dual::fixed_stack_scope_t scope(dual::localStack);
                                 auto luaView = inherit_chunk_view(view, parent);
                                 lua_pushvalue(L, 3);
-                                *(lua_chunk_view_t**)lua_newuserdata(L, sizeof(void*)) = &luaView;
+                                auto ptr = (lua_chunk_view_t**)lua_newuserdata(L, sizeof(void*));
+                                *ptr = &luaView;
                                 luaL_getmetatable(L, "lua_chunk_view_t");
                                 lua_setmetatable(L, -2);
                                 if(lua_pcall(L, 1, 0, 0) != LUA_OK)
@@ -494,6 +496,7 @@ namespace skr::lua
                                     lua_call(L, 1, 0);
                                     lua_pop(L, 2);
                                 }
+                                *ptr = nullptr;
                             };
                             dualS_batch(parent->storage, entities.data(), entities.size(), DUAL_LAMBDA(callback));
                             return 0;
