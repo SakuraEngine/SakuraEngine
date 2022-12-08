@@ -151,6 +151,22 @@ namespace skr::lua
             return check_name_comp(L, index);
         }
     };
+    template<>
+    struct BindTrait<skr_child_comp_t>
+    {
+        static int push(lua_State* L, const skr_child_comp_t& value)
+        {
+            lua_pushinteger(L, value.entity);
+            return 1;
+        }
+
+        static skr_child_comp_t check(lua_State* L, int index)
+        {
+            skr_child_comp_t result;
+            result.entity = luaL_checkinteger(L, index);
+            return result;
+        }
+    };
 }
 
 #endif
