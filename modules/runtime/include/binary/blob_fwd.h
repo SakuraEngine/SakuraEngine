@@ -50,12 +50,17 @@ template <class T, class = void>
 struct BlobBuilderType
 {
     using type = T;
-    static_assert(sizeof(T), "BlobBuilderType not implemented for this type");
+    static_assert(!sizeof(T), "BlobBuilderType not implemented for this type");
 };
 template <class T>
 struct BlobBuilderType<T, std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>>>
 {
     using type = T;
+};
+template <class T, size_t size>
+struct BlobBuilderType<T[size], std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>>>
+{
+    using type = T[size];
 };
 template<class T>
 auto make_blob_builder()

@@ -1,13 +1,11 @@
 local module = {}
-
+local imgui = require "imgui"
 function module:init()
     self.animQuery = skr.create_query(game.GetStorage(), "[in]game::anim_state_t")
     -- root entities
     self.outlineQuery = skr.create_query(game.GetStorage(), "[in]?skr_name_comp_t, [in]?skr_child_comp_t, [has]!skr_parent_comp_t")
 end
 
----@type IMGUI
-local imgui = skr.imgui
 
 function module:DrawEntity(entity, name, children, view)
     if name == nil then
@@ -58,6 +56,7 @@ function module:DrawAnimState()
 end
 
 function module:update()
+    imgui.ShowDemoWindow(true)
     imgui.Begin("Hello, world!")
     local succ, err = pcall(function()
         self:DrawHireachy();
