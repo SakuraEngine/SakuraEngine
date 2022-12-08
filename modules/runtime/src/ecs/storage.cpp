@@ -581,6 +581,12 @@ void dual_storage_t::batch(const dual_entity_t* ents, EIndex count, dual_view_ca
 {
     if(count == 0)
         return;
+    else if(count == 1)
+    {
+        dual_chunk_view_t v = entity_view(ents[0]);
+        callback(u, &v);
+        return;
+    }
     EIndex current = 0;
     auto view = entity_view(ents[current++]);
     while (current < count)
@@ -670,14 +676,14 @@ void dual_storage_t::merge(dual_storage_t& src)
                 sizeRemain -= sizeToPatch;
         }
     }
-    if (payload.end != payloads.size())
+    if (payload.end != chunks.size())
     {
         payload.end = (uint32_t)chunks.size();
         payloads.push_back(payload);
     }
     using iter_t = decltype(payloads)::iterator;
     skr::parallel_for(payloads.begin(), payloads.end(), 1, 
-    [&chunks](iter_t begin, iter_t end)
+    [this, &chunks](iter_t begin, iter_t end)
     {
         for(auto i = begin; i<end; ++i)
         {
@@ -685,8 +691,11 @@ void dual_storage_t::merge(dual_storage_t& src)
             {
                 auto c = chunks[j];
                 auto ents = (dual_entity_t*)c->get_entities();
-                forloop (j, 0, c->count)
-                    i->m->map(ents[j]);
+                forloop (k, 0, c->count)
+                {
+                    i->m->map(ents[k]);
+                    entities.entries[ents[k]] = { c, k };
+                }
                 iterator_ref_chunk( c, *(i->m) );
                 iterator_ref_view({ c, 0, c->count }, *(i->m));
             }
