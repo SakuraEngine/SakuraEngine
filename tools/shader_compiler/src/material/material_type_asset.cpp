@@ -56,6 +56,7 @@ bool SMaterialTypeCooker::Cook(SCookContext *ctx)
     for (const auto& shader_asset : material_type->shader_assets)
     {
         ctx->AddStaticDependency(shader_asset.get_guid(), true);
+        ctx->AddRuntimeDependency(shader_asset.get_guid());
         // simly write guids to runtime resource handle sequence
         runtime_material_type.shader_resources.emplace_back(shader_asset.get_guid());
     }
