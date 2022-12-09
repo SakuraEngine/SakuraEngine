@@ -33,11 +33,5 @@ SKRUSDTOOL_API SSceneCooker final : public SCooker
     uint32_t Version() override { return kDevelopmentVersion; }
 }
 sregister_cooker("EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A");
-
-struct SKRUSDTOOL_API SSceneImporterFactory final : public SImporterFactory {
-    bool CanImport(const SAssetRecord* record) override { SKR_UNIMPLEMENTED_FUNCTION(); return false; } 
-    skr_guid_t GetResourceType() override { SKR_UNIMPLEMENTED_FUNCTION(); return {}; }
-    void CreateImporter(const SAssetRecord* record) override;
-};
 } // namespace asset
 } // namespace skd

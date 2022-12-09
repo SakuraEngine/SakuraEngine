@@ -157,18 +157,4 @@ bool SSceneCooker::Cook(SCookContext* ctx)
     return ctx->Save(resource);
 }
 
-void SSceneImporterFactory::CreateImporter(const SAssetRecord *record)
-{
-    auto u8Path = record->path.u8string();
-    //pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(u8Path);
-    //SSceneImporter sceneImporter;
-    //for(auto prim : stage->Traverse())
-    //{
-    //    if(prim.IsA<pxr::UsdGeomMesh>())
-    //    {
-    //        SUSDMeshImporter meshImporter;
-    //    }
-    //}
-}
-
 } // namespace game::asset

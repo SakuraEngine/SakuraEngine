@@ -95,20 +95,5 @@ uint32_t STextureCooker::Version()
     return kDevelopmentVersion;
 }
 
-bool STextureImporterFactory::CanImport(const SAssetRecord *record)
-{
-    return true;
-}
-
-skr_guid_t STextureImporterFactory::GetResourceType()
-{
-    return skr_guid_t();
-}
-
-void STextureImporterFactory::CreateImporter(const SAssetRecord *record)
-{
-
-}
-
 } // namespace asset
 } // namespace skd
