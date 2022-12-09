@@ -56,7 +56,7 @@
     #define spop_attr()
 
 	#if __skr_clangd__
-        #define sstatic_ctor(expr) __attribute__((assume(((void)expr, true))))
+        #define sstatic_ctor(expr) //__attribute__((assume(((void)expr, true))))
     #else
         #define sstatic_ctor(expr)
     #endif
