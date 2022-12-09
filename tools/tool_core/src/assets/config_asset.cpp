@@ -87,23 +87,5 @@ bool SConfigCooker::Cook(SCookContext* ctx)
     ctx->Save(*resource);
     return true;
 }
-
-bool SJsonConfigImporterFactory::CanImport(const SAssetRecord* record)
-{
-    if (record->path.extension() == ".json")
-        return true;
-    return false;
-}
-
-skr_guid_t SJsonConfigImporterFactory::GetResourceType()
-{
-    return get_type_id_skr_config_resource_t();
-}
-
-void SJsonConfigImporterFactory::CreateImporter(const SAssetRecord* record)
-{
-    // TODO: invoke user interface?
-    SKR_UNIMPLEMENTED_FUNCTION();
-}
 } // namespace asset
 } // namespace skd

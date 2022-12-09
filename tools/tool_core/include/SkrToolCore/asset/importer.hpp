@@ -40,9 +40,7 @@ struct SImporterRegistry {
 TOOL_CORE_API SImporterRegistry* GetImporterRegistry();
 
 struct SImporterFactory {
-    virtual bool CanImport(const SAssetRecord* record) = 0;
-    virtual skr_guid_t GetResourceType() = 0;
-    virtual void CreateImporter(const SAssetRecord* record) = 0;
+    virtual bool EnumerateImporters(skr::string_view path, eastl::vector<SImporter*>& out) = 0;
 };
 } // namespace asset
 } // namespace skd
