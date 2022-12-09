@@ -474,6 +474,8 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             return {};
         uint32_t c = 0;
         auto counterF = [&](dual_chunk_view_t* r_cv) {
+            ZoneScopedN("PreCalculateDrawCallCount");
+          
             auto meshes = dual::get_owned_rw<skr_render_mesh_comp_t>(r_cv);
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
@@ -501,6 +503,8 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             { 0.f, 0.f, 1.f, 0.f } /*up*/
         );
         auto cameraSetup = [&](dual_chunk_view_t* g_cv) {
+            ZoneScopedN("CameraSetup");
+
             auto cameras = dual::get_owned_rw<skr_camera_comp_t>(g_cv);
             auto camera_transforms = dual::get_owned_rw<skr_translation_comp_t>(g_cv);
             SKR_ASSERT(g_cv->count <= 1);
@@ -530,6 +534,8 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         // draw static meshess
         {
         auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
+            ZoneScopedN("ProduceAll");
+
             uint32_t r_idx = 0;
             uint32_t dc_idx = 0;
 
@@ -540,42 +546,54 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             if (unbatched_g_ents)
             {
                 auto g_batch_callback = [&](dual_chunk_view_t* g_cv) {
+                    ZoneScopedN("BatchedEnts");
+
                     //SKR_LOG_DEBUG("batch: %d -> %d", g_cv->start, g_cv->count);
                     auto translations = dual::get_owned_rw<skr_translation_comp_t>(g_cv);
                     auto rotations = dual::get_owned_rw<skr_rotation_comp_t>(g_cv);(void)rotations;
                     auto scales = dual::get_owned_rw<skr_scale_comp_t>(g_cv);
                     for (uint32_t g_idx = 0; g_idx < g_cv->count; g_idx++, r_idx++)
                     {
-                        const auto quat = rtm::quat_from_euler_rh(
-                            rtm::scalar_deg_to_rad(-rotations[g_idx].euler.pitch),
-                            rtm::scalar_deg_to_rad(rotations[g_idx].euler.yaw),
-                            rtm::scalar_deg_to_rad(rotations[g_idx].euler.roll));
-                        const rtm::vector4f translation = rtm::vector_set(
-                            translations[g_idx].value.x, translations[g_idx].value.y,
-                            translations[g_idx].value.z, 0.f);
-                        const rtm::vector4f scale = rtm::vector_set(
-                            scales[g_idx].value.x, scales[g_idx].value.y,
-                            scales[g_idx].value.z, 0.f
-                        );
-		                const rtm::qvvf transform = rtm::qvv_set(quat, translation, scale);
-                        const rtm::matrix4x4f matrix = rtm::matrix_cast(rtm::matrix_from_qvv(transform));
-                        skr_float4x4_t world = *(skr_float4x4_t*)&matrix;
+                        ZoneScopedN("ChunkView");
+
+                        // Model Matrix
+                        skr_float4x4_t model_matrix;
+                        {
+                            ZoneScopedN("CalculateModelMatrix");
+                            
+                            const auto quat = rtm::quat_from_euler_rh(
+                                rtm::scalar_deg_to_rad(-rotations[g_idx].euler.pitch),
+                                rtm::scalar_deg_to_rad(rotations[g_idx].euler.yaw),
+                                rtm::scalar_deg_to_rad(rotations[g_idx].euler.roll));
+                            const rtm::vector4f translation = rtm::vector_set(
+                                translations[g_idx].value.x, translations[g_idx].value.y,
+                                translations[g_idx].value.z, 0.f);
+                            const rtm::vector4f scale = rtm::vector_set(
+                                scales[g_idx].value.x, scales[g_idx].value.y,
+                                scales[g_idx].value.z, 0.f
+                            );
+                            const rtm::qvvf transform = rtm::qvv_set(quat, translation, scale);
+                            const rtm::matrix4x4f matrix = rtm::matrix_cast(rtm::matrix_from_qvv(transform));
+                            model_matrix = *(skr_float4x4_t*)&matrix;
+                        }
+
                         // drawcall
                         auto status = meshes[r_idx].mesh_resource.get_status();
                         if (status == SKR_LOADING_STATUS_INSTALLED)
                         {
                             auto resourcePtr = (skr_mesh_resource_t*)meshes[r_idx].mesh_resource.get_ptr();
-                            
                             auto renderMesh = resourcePtr->render_mesh;
                 
                             const auto& cmds = renderMesh->primitive_commands;
                             if(anims && !anims->vbs.empty())
                             {
-                                for (size_t i=0; i < resourcePtr->primitives.size(); ++i)
+                                ZoneScopedN("SkinDrawCalls");
+
+                                for (size_t i = 0; i < resourcePtr->primitives.size(); ++i)
                                 {
                                     auto& cmd = cmds[i];
                                     auto& push_const = push_constants.emplace_back();
-                                    push_const.world = world;
+                                    push_const.model = model_matrix;
                                     auto& drawcall = mesh_drawcalls.emplace_back();
                                     drawcall.pipeline = pipeline;
                                     drawcall.push_const_name = push_constants_name;
@@ -588,13 +606,15 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                             }
                             else 
                             {
+                                ZoneScopedN("StaticMeshDrawCalls");
+
                                 for (auto&& cmd : cmds)
                                 {
                                     // resources may be ready after produce_drawcall, so we need to check it here
                                     if (push_constants.capacity() <= dc_idx) return;
 
                                     auto& push_const = push_constants.emplace_back();
-                                    push_const.world = world;
+                                    push_const.model = model_matrix;
                                     auto& drawcall = mesh_drawcalls.emplace_back();
                                     drawcall.pipeline = pipeline;
                                     drawcall.push_const_name = push_constants_name;
@@ -608,11 +628,13 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                         }
                         else
                         {
+                            ZoneScopedN("FallbackGeometryDrawCalls");
+
                             // resources may be ready after produce_drawcall, so we need to check it here
                             if (push_constants.capacity() <= dc_idx) return;
 
                             auto& push_const = push_constants.emplace_back();
-                            push_const.world = world;
+                            push_const.model = model_matrix;
                             auto& drawcall = mesh_drawcalls.emplace_back();
                             drawcall.pipeline = pipeline;
                             drawcall.push_const_name = push_constants_name;
@@ -659,7 +681,7 @@ protected:
     dual_query_t* camera_query = nullptr;
     dual_type_index_t identity_type = {};
     struct PushConstants {
-        skr_float4x4_t world;
+        skr_float4x4_t model;
     };
     eastl::vector<PushConstants> push_constants;
     RenderPassForward::DrawCallListData forward_pass_data;
