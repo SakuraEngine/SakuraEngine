@@ -38,6 +38,7 @@ bool IsAsset(skr::filesystem::path path)
     return false;
 }
 
+skr::resource::SShaderResourceFactory* shaderResourceFactory = nullptr;
 skr::resource::SShaderOptionsFactory* shaderOptionsFactory = nullptr;
 skr::resource::SSkelFactory* skelFactory = nullptr;
 skr::resource::SMaterialTypeFactory* matTypeFactory = nullptr;
@@ -56,6 +57,13 @@ void InitializeResourceSystem(skd::SProject& proj)
         shaderOptionsFactory = skr::resource::SShaderOptionsFactory::Create(factoryRoot);
         resource_system->RegisterFactory(shaderOptionsFactory);
     }
+    // shader resource factory
+    {
+        skr::resource::SShaderResourceFactory::Root factoryRoot = {};
+        factoryRoot.dont_create_shader = true;
+        shaderResourceFactory = skr::resource::SShaderResourceFactory::Create(factoryRoot);
+        resource_system->RegisterFactory(shaderResourceFactory);
+    }
     // material type factory
     {
         skr::resource::SMaterialTypeFactory::Root factoryRoot = {};
@@ -72,6 +80,7 @@ void DestroyResourceSystem(skd::SProject& proj)
 {
     skr::resource::SMaterialTypeFactory::Destroy(matTypeFactory);
     skr::resource::SShaderOptionsFactory::Destroy(shaderOptionsFactory);
+    skr::resource::SShaderResourceFactory::Destroy(shaderResourceFactory);
 
     skr::resource::GetResourceSystem()->Shutdown();
     SkrDelete(registry);

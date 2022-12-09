@@ -116,15 +116,15 @@ bool SShaderCooker::Cook(SCookContext* ctx)
     {
         const auto guid = switch_asset.get_guid();
         auto idx = ctx->AddStaticDependency(guid, true);
-        auto collection = static_cast<skr_shader_options_resource_t*>(ctx->GetStaticDependency(idx).get_ptr());
-        switch_assets.emplace_back(collection);
+        auto opts_resource = static_cast<skr_shader_options_resource_t*>(ctx->GetStaticDependency(idx).get_ptr());
+        switch_assets.emplace_back(opts_resource);
     }
     for (auto option_asset : importer->option_assets)
     {
         const auto guid = option_asset.get_guid();
         auto idx = ctx->AddStaticDependency(guid, true);
-        auto collection = static_cast<skr_shader_options_resource_t*>(ctx->GetStaticDependency(idx).get_ptr());
-        option_assets.emplace_back(collection);
+        auto opts_resource = static_cast<skr_shader_options_resource_t*>(ctx->GetStaticDependency(idx).get_ptr());
+        option_assets.emplace_back(opts_resource);
     }
 
     eastl::vector<skr_shader_option_t> flat_static_options = {};
@@ -232,54 +232,53 @@ bool SShaderCooker::Cook(SCookContext* ctx)
         });     // end foreach dynamic variant
     });         // end foreach variant
 
+
     // make resource to write
-    auto resource = make_zeroed<skr_platform_shader_collection_resource_t>();
-    resource.root_guid = assetRecord->guid;
-    // add root variant, root variant has two entries: md5-stable-hash & 0
+    skr_platform_shader_collection_resource_t resource = {};
+    auto blob = skr::make_blob_builder<skr_shader_switch_sequence_t>();
+    // initialize & serialize
     {
-        const auto root_hash = make_zeroed<skr_stable_shader_hash_t>();
-        for (auto&& staticVariant : allOutResources)
+        resource.root_guid = assetRecord->guid;
+        // add root variant, root variant has two entries: md5-stable-hash & 0
         {
-            auto& rootOptionVar = staticVariant.GetDynamicVariants(dynamic_stable_hashes[0]);
-            staticVariant.option_variants.insert({ root_hash, rootOptionVar });
+            const auto root_hash = make_zeroed<skr_stable_shader_hash_t>();
+            for (auto&& staticVariant : allOutResources)
+            {
+                auto& rootOptionVar = staticVariant.GetDynamicVariants(dynamic_stable_hashes[0]);
+                staticVariant.option_variants.insert({ root_hash, rootOptionVar });
+            }
+            resource.switch_variants.emplace(root_hash, allOutResources[0]);
         }
-        resource.switch_variants.emplace(root_hash, allOutResources[0]);
-    }
-    // add shader variants
-    for (size_t variant_index = 0u; variant_index < static_variants.size(); variant_index++)
-    {
-        const auto& variantResource = allOutResources[variant_index];
-        resource.switch_variants.emplace(variantResource.stable_hash, variantResource);
-    }
-    // deserialize
-    {
-        // make archive
-        eastl::vector<uint8_t> resource_data;
-        skr::binary::VectorWriter writer{ &resource_data };
-        skr_binary_writer_t archive(writer);
-        skr::binary::Write(&archive, resource);
-        // write to file
-        auto file = fopen(outputPath.u8string().c_str(), "wb");
-        if (!file)
+        // add shader variants
+        for (size_t variant_index = 0u; variant_index < static_variants.size(); variant_index++)
         {
-            SKR_LOG_FMT_ERROR("[SShaderCooker::Cook] failed to write cooked file for resource {}! path: {}",
-            assetRecord->guid, assetRecord->path.u8string());
-            return false;
+            const auto& variantResource = allOutResources[variant_index];
+            resource.switch_variants.emplace(variantResource.stable_hash, variantResource);
         }
-        SKR_DEFER({ fclose(file); });
-        fwrite(resource_data.data(), resource_data.size(), 1, file);
+        // add static seq
+        for (auto&& static_switch : flat_static_options)
+        {
+            blob.keys.emplace_back(static_switch.key);
+        }
+        resource.arena = skr::binary::make_arena<skr_shader_switch_sequence_t>(resource.switch_sequence, blob);
+
+        ctx->Save(resource);
     }
-    // deserialize
+    // serialize a json file for visual debugging
     {
+        skr_platform_shader_collection_json_t json_resource = {};
+        json_resource.switch_variants = resource.switch_variants;
+        json_resource.switch_sequence = blob.keys;
+
         // make archive
         skr_json_writer_t writer(2);
-        skr::json::Write(&writer, resource);
+        skr::json::Write(&writer, json_resource);
         auto jPath = outputPath.u8string() + ".json";
         // write to file
         auto file = fopen(jPath.c_str(), "wb");
         if (!file)
         {
-            SKR_LOG_FMT_ERROR("[SShaderCooker::Cook] failed to write cooked file for resource {}! path: {}",
+            SKR_LOG_FMT_ERROR("[SShaderCooker::Cook] failed to write cooked file for json_resource {}! path: {}",
             assetRecord->guid, assetRecord->path.u8string());
             return false;
         }

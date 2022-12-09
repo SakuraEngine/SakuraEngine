@@ -89,8 +89,16 @@ skr_platform_shader_resource_t
     uint32_t active_slot = 0;
 };
 
+sreflect_struct("guid": "1aa0274d-cff0-4dff-bddd-ca38c17229db")
+sattr("blob" : true)
+skr_shader_switch_sequence_t
+{
+    skr::span<skr::string_view> keys;
+};
+GENERATED_BLOB_BUILDER(skr_shader_switch_sequence_t)
+
 sreflect_struct("guid" : "1c7d845a-fde8-4487-b1c9-e9c48d6a9867")
-sattr("serialize" : ["json", "bin"], "rtti" : true)
+sattr("serialize" : "bin", "rtti" : true)
 skr_platform_shader_collection_resource_t
 {
     using stable_hash_t = skr_stable_shader_hash_t;
@@ -107,6 +115,32 @@ skr_platform_shader_collection_resource_t
     // hash=0 -> root_variant;
     sattr("no-rtti" : true)
     skr::flat_hash_map<stable_hash_t, skr_platform_shader_resource_t, stable_hasher_t> switch_variants;
+
+    sattr("no-rtti" : true, "arena" : "arena")
+    skr_shader_switch_sequence_t switch_sequence;
+    sattr("no-rtti" : true)
+    skr_blob_arena_t arena;
+};
+
+sreflect_struct("guid" : "a633ea13-53d8-4202-b6f1-ec882ac409ec")
+sattr("serialize" : ["json", "bin"], "rtti" : true)
+skr_platform_shader_collection_json_t
+{
+    using stable_hash_t = skr_stable_shader_hash_t;
+    using stable_hasher_t = skr_stable_shader_hash_t::hasher;
+
+    sattr("no-rtti" : true)
+    inline skr_platform_shader_resource_t& GetRootStaticVariant() SKR_NOEXCEPT {
+        auto found = switch_variants.find(kZeroStableShaderHash);
+        SKR_ASSERT(found != switch_variants.end());
+        return found->second;
+    }
+
+    skr_guid_t root_guid;
+    // hash=0 -> root_variant;
+    sattr("no-rtti" : true)
+    skr::flat_hash_map<stable_hash_t, skr_platform_shader_resource_t, stable_hasher_t> switch_variants;
+    skr::vector<eastl::string> switch_sequence;
 };
 
 namespace skr sreflect
@@ -121,6 +155,7 @@ struct SKR_RENDERER_API SShaderResourceFactory : public SResourceFactory {
         skr_io_ram_service_t* ram_service = nullptr;
         SRenderDeviceId render_device = nullptr;
         skr_threaded_service_t* aux_service = nullptr;
+        bool dont_create_shader = false;
     };
 
     float AsyncSerdeLoadFactor() override { return 1.f; }

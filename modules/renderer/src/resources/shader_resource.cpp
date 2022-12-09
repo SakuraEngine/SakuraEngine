@@ -136,12 +136,15 @@ bool SShaderResourceFactoryImpl::Unload(skr_resource_record_t* record)
 
 ESkrInstallStatus SShaderResourceFactoryImpl::Install(skr_resource_record_t* record)
 {
+    if (root.dont_create_shader) return SKR_INSTALL_STATUS_SUCCEED;
+    
     auto bytes_vfs = root.bytecode_vfs;
     auto shader_collection = static_cast<skr_platform_shader_collection_resource_t*>(record->resource);
     auto&& root_switch_variant = shader_collection->GetRootStaticVariant();
     auto* pPlatformResource = &root_switch_variant;
     auto&& root_option_variant = root_switch_variant.GetRootDynamicVariants();
     bool launch_success = false;
+    // load bytecode and create CGPU shader
     for (uint32_t i = 0u; i < root_option_variant.size(); i++)
     {
         const auto& identifier = root_option_variant[i];
