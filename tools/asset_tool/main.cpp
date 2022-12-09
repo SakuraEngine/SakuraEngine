@@ -1,4 +1,4 @@
-
+#include "SkrAssetTool/module.h"
 
 int main()
 {
