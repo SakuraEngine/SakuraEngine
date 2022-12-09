@@ -453,7 +453,15 @@ void SResourceRequestImpl::Update()
         case SKR_LOADING_PHASE_CANCLE_WAITFOR_IO: {
             if (!ioRequest.is_ready())
             {
-                ioService->defer_cancel(&ioRequest);
+                // request cancle
+                if (!skr_atomic32_load_acquire(&ioRequest.request_cancel))
+                {
+                    ioService->defer_cancel(&ioRequest);
+                }
+                else if (!ioRequest.is_cancelled()) 
+                {
+                    break; // continue to wait for cancel
+                }
             }
             currentPhase = SKR_LOADING_PHASE_FINISHED;
             resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADED);
