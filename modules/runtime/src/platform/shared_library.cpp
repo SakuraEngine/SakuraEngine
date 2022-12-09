@@ -168,7 +168,11 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
         else
         {
             auto wpath = skr::filesystem::path(path);
-            _handle = LoadLibrary(wpath.c_str());
+            _handle = GetModuleHandle(wpath.c_str());
+            if (_handle == NULL)
+            {
+                _handle = LoadLibrary(wpath.c_str());
+            }
         }
         if (!_handle)
         {
