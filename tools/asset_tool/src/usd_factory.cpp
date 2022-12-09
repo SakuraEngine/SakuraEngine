@@ -1,3 +1,5 @@
+
+#ifdef WITH_USDTOOL
 #include "SkrAssetTool/usd_factory.h"
 #include "UsdCore/stage.hpp"
 #include "SkrImGui/imgui_utils.h"
@@ -17,6 +19,8 @@ public:
     int Import(const skr::string& path) override;
     int Update() override;
 
+    int TraversePrim(const skd::SUSDPrimId& prim);
+
     SUSDStageId _stage;
     bool _createNewAsset = false;
     SSceneImporter* _importer = nullptr;
@@ -32,26 +36,27 @@ bool SUsdImporterFactoryImpl::CanImport(const skr::string& path) const
     return false;
 }
 
-static void TraversePrim(const skd::SUSDPrimId& prim)
+int SUsdImporterFactoryImpl::TraversePrim(const skd::SUSDPrimId& prim)
 {
+
+    //check if prim is mesh
     auto children = prim->GetChildren();
 
     for (auto& child : children)
     {
         TraversePrim(child);
     }
+
+    return 0;
 }
 
 int SUsdImporterFactoryImpl::Import(const skr::string& path)
 {
-    auto stage = skd::USDCoreOpenStage(path.c_str());
-    if (!stage)
+    _stage = skd::USDCoreOpenStage(path.c_str());
+    if (!_stage)
     {
         return -1;
     }
-
-    auto root = stage->GetPseudoRoot();
-    TraversePrim(root);
     return 0;
 }
 
@@ -88,9 +93,9 @@ int SUsdImporterFactoryImpl::Update()
                     SKR_LOG_ERROR("load asset json failed");
                     return -1;
                 }
-                simdjson::dom::parser parser;
-                simdjson::dom::element doc;
-                if(auto error = parser.parse(json).get(doc); error != simdjson::SUCCESS)
+                simdjson::ondemand::parser parser;
+                simdjson::ondemand::value doc;
+                if(auto error = parser.iterate(json).get(doc); error != simdjson::SUCCESS)
                 {
                     SKR_LOG_ERROR("failed to parse json; %s", simdjson::error_message(error));
                     return -1;
@@ -115,7 +120,17 @@ int SUsdImporterFactoryImpl::Update()
                     return -1;
                 }
                 _importer = SkrNew<SSceneImporter>();
-                skr::json::Read(std::move(importer), *_importer);
+                if(auto error = skr::json::Read(std::move(importer), *_importer); error != skr::json::SUCCESS)
+                {
+                    SKR_LOG_ERROR("read importer failed %s", skr::json::error_message(error));
+                    return -1;
+                }
+            }
+            
+            auto root = _stage->GetPseudoRoot();
+            if(auto result = TraversePrim(root); result != 0)
+            {
+                return result;
             }
         }
     }
@@ -126,3 +141,4 @@ int SUsdImporterFactoryImpl::Update()
     return 0;
 }
 } // namespace skd::asset
+#endif
