@@ -1,6 +1,8 @@
 #ifndef __TRACYAPI_H__
 #define __TRACYAPI_H__
 
+#include "platform/configure.h"
+
 #if defined _WIN32
 #  if defined TRACY_EXPORTS
 #    define TRACY_API __declspec(dllexport)
