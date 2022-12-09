@@ -461,6 +461,8 @@ void SDXCLibrary::UnloadLibraries() SKR_NOEXCEPT
 
 void SDXCLibrary::Initialize()
 {
+    ZoneScopedNS("SDXCLibrary::Initialize", 4);
+
     SDXCLibrary::LoadDXCLibrary();
     SDXCLibrary::LoadDXILLibrary();
 
