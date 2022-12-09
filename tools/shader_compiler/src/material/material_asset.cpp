@@ -56,13 +56,20 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
     runtime_material.material_type_version = material->material_type_version;
     runtime_material.material_type = material->material_type.get_guid();
 
-    auto idx = ctx->AddStaticDependency(runtime_material.material_type.get_guid(), false);
+    auto idx = ctx->AddStaticDependency(runtime_material.material_type.get_guid(), true);
     auto matType= static_cast<skr_material_type_resource_t*>(ctx->GetStaticDependency(idx).get_ptr());
-    (void)matType;
     auto blob = skr::make_blob_builder<skr_material_overrides_t>();
     
     // calculate switch macros for material & place variants
-    
+    for (auto& shader_resource : matType->shader_resources)
+    {
+        eastl::vector<skr_shader_option_t> flat_switches = {};
+        shader_resource.resolve(false, nullptr);
+        const auto shader_collection = shader_resource.get_ptr();
+        (void)shader_collection;
+        // skr_shader_options_resource_t::flatten_options(flat_switches, );
+    }
+
 
     // value overrides
     for (const auto& prop : material->override_values)
@@ -113,7 +120,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
             {
                 auto vblob = skr::make_blob_builder<skr_material_value_double_t>();
                 vblob.slot_name = prop.slot_name;
-                vblob.value = (int32_t)prop.value;
+                vblob.value = prop.value;
                 blob.doubles.emplace_back(vblob);
             }
             break;

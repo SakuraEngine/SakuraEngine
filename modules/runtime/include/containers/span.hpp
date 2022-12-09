@@ -97,7 +97,7 @@ struct WriteTrait<const skr::span<T>&> {
         auto buffer = (char*)arena.get_buffer();
         SKR_ASSERT(ptr >= buffer);
         uint32_t offset = (uint32_t)(ptr - buffer);
-        SKR_ASSERT(arena.get_size() || offset < arena.get_size());
+        SKR_ASSERT(!arena.get_size() || offset < arena.get_size());
         int ret = skr::binary::Archive(writer, offset);
         if (ret != 0) {
             return ret;

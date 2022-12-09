@@ -32,7 +32,7 @@ sattr("blob" : true)
 skr_material_value_double_t
 {
     skr_material_property_name_view_t slot_name;
-    float value;
+    double value;
 };
 GENERATED_BLOB_BUILDER(skr_material_value_double_t)
 
