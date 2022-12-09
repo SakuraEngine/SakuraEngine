@@ -62,7 +62,7 @@ protected:
 SResourceSystemImpl::SResourceSystemImpl()
     : counter(true)
 {
-    skr_init_mutex(&recordMutex);
+    skr_init_mutex_recursive(&recordMutex);
 }
 
 SResourceSystemImpl::~SResourceSystemImpl()
