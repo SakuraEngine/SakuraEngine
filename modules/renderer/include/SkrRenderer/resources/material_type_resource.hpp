@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
 #include "SkrRenderer/resources/shader_resource.hpp"
+#include "SkrRenderer/resources/shader_meta_resource.hpp"
 
 #ifndef __meta__
 #include "SkrRenderer/resources/material_type_resource.generated.h"
@@ -64,3 +65,21 @@ skr_material_type_resource_t
     skr::vector<skr_shader_option_instance_t> switch_defaults;
     skr::vector<skr_shader_option_instance_t> option_defaults;
 };
+
+namespace skr sreflect
+{
+namespace resource sreflect
+{
+struct SKR_RENDERER_API SMaterialTypeFactory : public SResourceFactory {
+    virtual ~SMaterialTypeFactory() = default;
+
+    struct Root {
+        uint32_t __nothing__;
+    };
+
+    float AsyncSerdeLoadFactor() override { return 1.f; }
+    [[nodiscard]] static SMaterialTypeFactory* Create(const Root& root);
+    static void Destroy(SMaterialTypeFactory* factory); 
+};
+} // namespace resource
+} // namespace skr

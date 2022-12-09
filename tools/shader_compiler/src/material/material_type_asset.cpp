@@ -44,14 +44,40 @@ bool SMaterialTypeCooker::Cook(SCookContext *ctx)
     const auto assetRecord = ctx->GetAssetRecord();
     //-----load config
     // no cook config for config, skipping
+
     //-----import resource object
     auto material_type = ctx->Import<skr_material_type_asset_t>();
     if(!material_type) return false;
     SKR_DEFER({ ctx->Destroy(material_type); });
+
+    // convert to runtime resource
+    skr_material_type_resource_t runtime_material_type;
+    runtime_material_type.version = material_type->version;
+    runtime_material_type.shader_resources.reserve(material_type->shader_assets.size());
+    for (const auto& shader_asset : material_type->shader_assets)
+    {
+        ctx->AddRuntimeDependency(shader_asset.get_guid());
+        // simly write guids to runtime resource handle sequence
+        runtime_material_type.shader_resources.emplace_back(shader_asset.get_guid());
+    }
+    runtime_material_type.default_values.reserve(material_type->properties.size());
+    for (const auto& property : material_type->properties)
+    {
+        skr_material_value_t runtime_value;
+        runtime_value.slot_name = property.name;
+        runtime_value.prop_type = property.prop_type;
+        runtime_value.value = property.default_value;
+        runtime_value.resource = property.default_resource.get_guid();
+        runtime_material_type.default_values.emplace_back(runtime_value);
+    }
+    runtime_material_type.switch_defaults = material_type->switch_defaults;
+    runtime_material_type.option_defaults = material_type->option_defaults;
+
+    // write runtime resource to disk
     eastl::vector<uint8_t> buffer;
     skr::binary::VectorWriter writer{&buffer};
     skr_binary_writer_t archive(writer);
-    skr::binary::Archive(&archive, *material_type);
+    skr::binary::Archive(&archive, runtime_material_type);
 
     //------save resource to disk
     auto file = fopen(outputPath.u8string().c_str(), "wb");
