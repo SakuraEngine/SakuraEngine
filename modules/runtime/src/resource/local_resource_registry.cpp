@@ -35,7 +35,7 @@ bool SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
     skr::binary::SpanReader reader = {buffer};
     skr_binary_reader_t archive{reader};
     skr_resource_header_t header;
-    if(header.ReadWithoutDeps(&archive) != 0)
+    if(skr::binary::Read(&archive, header) != 0)
         return false;
     SKR_ASSERT(header.guid == guid);
     auto resourcePath = headerPath;
