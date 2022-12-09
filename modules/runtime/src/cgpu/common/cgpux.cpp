@@ -224,6 +224,12 @@ void CGPUXMergedBindTable::Merge(const CGPUXBindTableId* bind_tables, uint32_t c
 {
     ZoneScopedN("CGPUXMergedBindTable::Merge");
 
+    // reset result slots
+    for (uint32_t tblIdx = 0; tblIdx < root_signature->table_count; tblIdx++)
+    {
+        result[tblIdx] = nullptr;
+    }
+
     // detect overlap sets at ${i}
     const auto notfound_index = root_signature->table_count;
     const auto overlap_index = UINT32_MAX;
@@ -263,15 +269,13 @@ void CGPUXMergedBindTable::Merge(const CGPUXBindTableId* bind_tables, uint32_t c
             }
             // update merged value
             mergeUpdateForTable(bind_tables, count, tblIdx);
+            result[tblIdx] = merged[tblIdx];
         }
         else // direct copy from source table
         {
             copied[tblIdx] = bind_tables[source_table]->sets[tblIdx];
+            result[tblIdx] = copied[tblIdx];
         }
-    }
-    for (uint32_t tblIdx = 0; tblIdx < root_signature->table_count; tblIdx++)
-    {
-        result[tblIdx] = merged[tblIdx] ? merged[tblIdx] : copied[tblIdx];
     }
 }
 
@@ -297,7 +301,7 @@ void CGPUXMergedBindTable::mergeUpdateForTable(const CGPUXBindTableId* bind_tabl
         }
     }
     // this update is kinda dangerous during draw-call because update-after-bind may happen
-    // TODO: fix this
+    // TODO: give some runtime warning
     cgpu_update_descriptor_set(to_update, datas.data(), (uint32_t)datas.size());
 }
 

@@ -7,8 +7,11 @@ struct VSOut
     float2 uv  : TEXCOORD1;
 };
 
+[[vk::binding(0, 0)]]
 Texture2D color_texture : register(t0, space0);
+[[vk::binding(0, 1)]]
 Texture2D mask_texture : register(t0, space1);
+[[vk::binding(1, 0)]]
 SamplerState color_sampler : register(s0, space2);
 
 float4 main(VSOut input) : SV_TARGET
