@@ -96,14 +96,14 @@ namespace skr sreflect
 {
 namespace resource sreflect
 {
-struct SKR_RENDERER_API SMaterialTypeFactory : public SResourceFactory {
-    virtual ~SMaterialTypeFactory() = default;
+struct SKR_RENDERER_API SMaterialFactory : public SResourceFactory {
+    virtual ~SMaterialFactory() = default;
 
     struct Root {
         SRenderDeviceId render_device = nullptr;
     };
-    [[nodiscard]] static SMaterialTypeFactory* Create(const Root& root);
-    static void Destroy(SMaterialTypeFactory* factory); 
+    [[nodiscard]] static SMaterialFactory* Create(const Root& root);
+    static void Destroy(SMaterialFactory* factory); 
 };
 } // namespace resource
 } // namespace skr

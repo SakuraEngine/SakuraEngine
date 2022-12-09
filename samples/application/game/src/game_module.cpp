@@ -34,6 +34,7 @@
 #include "SkrRenderer/resources/texture_resource.h"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRenderer/resources/shader_resource.hpp"
+#include "SkrRenderer/resources/material_type_resource.hpp"
 #include "SkrRenderer/resources/material_resource.hpp"
 #include "SkrAnim/resources/animation_resource.h"
 #include "SkrAnim/resources/skeleton_resource.h"
@@ -75,6 +76,8 @@ class SGameModule : public skr::IDynamicModule
     skr::resource::STextureFactory* textureFactory = nullptr;
     skr::resource::SMeshFactory* meshFactory = nullptr;
     skr::resource::SShaderResourceFactory* shaderFactory = nullptr;
+    skr::resource::SMaterialTypeFactory* matTypeFactory = nullptr;
+
     skr::resource::SAnimFactory* animFactory = nullptr;
     skr::resource::SSkelFactory* skeletonFactory = nullptr;
     skr::resource::SSkinFactory* skinFactory = nullptr;
@@ -172,6 +175,12 @@ void SGameModule::installResourceFactories()
         shaderFactory = skr::resource::SShaderResourceFactory::Create(factoryRoot);
         resource_system->RegisterFactory(shaderFactory);
     }
+    // material type factory
+    {
+        skr::resource::SMaterialTypeFactory::Root factoryRoot = {};
+        matTypeFactory = skr::resource::SMaterialTypeFactory::Create(factoryRoot);
+        resource_system->RegisterFactory(matTypeFactory);
+    }
     // anim factory
     {
         animFactory = SkrNew<skr::resource::SAnimFactory>();
@@ -182,7 +191,7 @@ void SGameModule::installResourceFactories()
         skeletonFactory = SkrNew<skr::resource::SSkelFactory>();
         resource_system->RegisterFactory(skeletonFactory);
     }
-    // skeleton factory
+    // skin factory
     {
         skinFactory = SkrNew<skr::resource::SSkinFactory>();
         resource_system->RegisterFactory(skinFactory);
@@ -193,27 +202,29 @@ void SGameModule::installResourceFactories()
         resource_system->RegisterFactory(sceneFactory);
     }
 
-    skr_resource_handle_t shaderHdl("0c11a646-93ec-4cd8-8bc4-72c1aca8ec57"_guid);
-    shaderHdl.resolve(true, 0, SKR_REQUESTER_SYSTEM);
+    skr_resource_handle_t matType("bdf63849-5a52-4d71-be4a-11d115c4a490"_guid);
+    matType.resolve(true, 0, SKR_REQUESTER_SYSTEM);
     // texture
     {
-        while (shaderHdl.get_status() != SKR_LOADING_STATUS_INSTALLED && shaderHdl.get_status() != SKR_LOADING_STATUS_ERROR)
+        while (matType.get_status() != SKR_LOADING_STATUS_INSTALLED && matType.get_status() != SKR_LOADING_STATUS_ERROR)
         {
-            auto status = shaderHdl.get_status();(void)status;
+            auto status = matType.get_status();(void)status;
             resource_system->Update();
         }
-        auto final_status = shaderHdl.get_status();
+        auto final_status = matType.get_status();
         if (final_status != SKR_LOADING_STATUS_ERROR)
         {
-            auto shader_collection = (skr_platform_shader_collection_resource_t*)shaderHdl.get_ptr();
+            auto material_type = (skr_material_type_resource_t*)matType.get_ptr();
+            material_type->shader_resources[0].resolve(true, 0, SKR_REQUESTER_SYSTEM);
+            auto shader_collection = material_type->shader_resources[0].get_resolved(true);
             auto&& root_variant_iter = shader_collection->switch_variants.find(kZeroStableShaderHash);
             SKR_ASSERT(root_variant_iter != shader_collection->switch_variants.end() && "Root shader variant missing!");
             auto* root_variant = &root_variant_iter->second;
             SKR_ASSERT(root_variant->shader->entrys_count && "Root shader variant entry missing!");
             SKR_LOG_TRACE("Shader Loaded: entry name - %s", root_variant->shader->entry_reflections[0].entry_name);
-            resource_system->UnloadResource(shaderHdl);
+            resource_system->UnloadResource(matType);
             resource_system->Update();
-            while (shaderHdl.get_status(true) != SKR_LOADING_STATUS_UNLOADED)
+            while (matType.get_status(true) != SKR_LOADING_STATUS_UNLOADED)
             {
                 resource_system->Update();
             }
