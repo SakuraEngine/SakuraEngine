@@ -544,6 +544,7 @@ void SResourceRegistry::FillRequest(SResourceRequest* r, skr_resource_header_t h
     {
         request->resourceRecord->header.type = header.type;
         request->resourceRecord->header.version = header.version;
+        request->resourceRecord->header.dependencies = header.dependencies;
         request->vfs = vfs;
         request->resourceUrl = uri;
     }
