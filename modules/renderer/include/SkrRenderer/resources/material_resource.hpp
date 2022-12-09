@@ -9,21 +9,39 @@
 
 using skr_material_property_name_view_t = skr::string_view;
 
+sreflect_struct("guid": "e2c14489-3223-489a-8e30-95d2014e99f2")
+sattr("blob" : true)
+skr_material_value_bool_t
+{
+    skr_material_property_name_view_t slot_name;
+    bool value;
+};
+GENERATED_BLOB_BUILDER(skr_material_value_bool_t)
+
 sreflect_struct("guid": "bb5b5c8e-367c-4ec8-b4ee-60c14c212160")
 sattr("blob" : true)
 skr_material_value_float_t
 {
     skr_material_property_name_view_t slot_name;
-    skr::span<float> value;
+    float value;
 };
 GENERATED_BLOB_BUILDER(skr_material_value_float_t)
+
+sreflect_struct("guid": "ce285a7f-0713-4e55-b960-be4b8022a620")
+sattr("blob" : true)
+skr_material_value_double_t
+{
+    skr_material_property_name_view_t slot_name;
+    float value;
+};
+GENERATED_BLOB_BUILDER(skr_material_value_double_t)
 
 sreflect_struct("guid": "7b9c85a6-292f-4bd0-85bf-6fd3dec8410a")
 sattr("blob" : true)
 skr_material_value_float2_t
 {
     skr_material_property_name_view_t slot_name;
-    skr::span<skr_float2_t> value;
+    skr_float2_t value;
 };
 GENERATED_BLOB_BUILDER(skr_material_value_float2_t)
 
@@ -32,7 +50,7 @@ sattr("blob" : true)
 skr_material_value_float3_t
 {
     skr_material_property_name_view_t slot_name;
-    skr::span<skr_float3_t> value;
+    skr_float3_t value;
 };
 GENERATED_BLOB_BUILDER(skr_material_value_float3_t)
 
@@ -41,7 +59,7 @@ sattr("blob" : true)
 skr_material_value_float4_t
 {
     skr_material_property_name_view_t slot_name;
-    skr::span<skr_float4_t> value;
+    skr_float4_t value;
 };
 GENERATED_BLOB_BUILDER(skr_material_value_float4_t)
 
@@ -50,7 +68,7 @@ sattr("blob" : true)
 skr_material_value_texture_t
 {
     skr_material_property_name_view_t slot_name;
-    skr::span<skr_guid_t> value;
+    skr_guid_t value;
 };
 GENERATED_BLOB_BUILDER(skr_material_value_texture_t)
 
@@ -71,10 +89,12 @@ sattr("blob" : true)
 skr_material_overrides_t
 {
     skr::span<skr_material_shader_variant> switch_variants;
+    skr::span<skr_material_value_bool_t> bools;
     skr::span<skr_material_value_float_t> floats;
     skr::span<skr_material_value_float2_t> float2s;
     skr::span<skr_material_value_float3_t> float3s;
     skr::span<skr_material_value_float4_t> float4s;
+    skr::span<skr_material_value_double_t> doubles;
     skr::span<skr_material_value_texture_t> textures;
 };
 GENERATED_BLOB_BUILDER(skr_material_overrides_t)
@@ -84,8 +104,8 @@ sattr("rtti": true, "serialize" : "bin")
 skr_material_resource_t
 {
     uint32_t material_type_version;
-
     skr_material_type_handle_t material_type;
+    
     sattr("no-rtti" : true, "arena" : "arena")
     skr_material_overrides_t overrides;
     sattr("no-rtti" : true)

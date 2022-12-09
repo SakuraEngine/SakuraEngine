@@ -41,8 +41,8 @@ SKR_SHADER_COMPILER_API SMaterialImporter final : public SImporter
     // stable hash for material paramters, can be used by PSO cache or other places.
     uint64_t identity[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-    void* Import(skr_io_ram_service_t*, SCookContext* context) override { return nullptr; }
-    void Destroy(void* resource) override { return; }
+    void* Import(skr_io_ram_service_t*, SCookContext* context) override;
+    void Destroy(void* resource) override;
 }
 sregister_importer();
 
@@ -51,7 +51,7 @@ sregister_importer();
 sreflect_struct("guid" : "0e3b550f-cdd7-4796-a6d5-0c457e0640bd")
 SKR_SHADER_COMPILER_API SMaterialCooker final : public SCooker
 {
-    bool Cook(SCookContext * ctx) override { return false; }
+    bool Cook(SCookContext * ctx) override;
     uint32_t Version() override { return kDevelopmentVersion; }
 }
 sregister_cooker("2efad635-b331-4fc6-8c52-2f8ca954823e");

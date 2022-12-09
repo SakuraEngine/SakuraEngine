@@ -1,4 +1,3 @@
-#pragma once
 #include "SkrRenderer/resources/material_type_resource.hpp"
 
 namespace skr
