@@ -262,6 +262,9 @@
 #ifdef TRACY_FIBERS
 #  define TracyFiberEnter( fiber ) tracy::Profiler::EnterFiber( fiber )
 #  define TracyFiberLeave tracy::Profiler::LeaveFiber()
+#else
+#  define TracyFiberEnter( fiber )
+#  define TracyFiberLeave
 #endif
 
 #endif
