@@ -23,6 +23,7 @@
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
+#include "SkrRenderer/resources/material_type_resource.hpp"
 #include "SkrRenderer/resources/material_resource.hpp"
 #include "utils/make_zeroed.hpp"
 #include "SkrAnim/resources/skeleton_resource.h"
@@ -39,6 +40,7 @@ bool IsAsset(skr::filesystem::path path)
 
 skr::resource::SShaderOptionsFactory* shaderOptionsFactory = nullptr;
 skr::resource::SSkelFactory* skelFactory = nullptr;
+skr::resource::SMaterialTypeFactory* matTypeFactory = nullptr;
 skr::resource::SLocalResourceRegistry* registry = nullptr;
 
 void InitializeResourceSystem(skd::SProject& proj)
@@ -54,6 +56,12 @@ void InitializeResourceSystem(skd::SProject& proj)
         shaderOptionsFactory = skr::resource::SShaderOptionsFactory::Create(factoryRoot);
         resource_system->RegisterFactory(shaderOptionsFactory);
     }
+    // material type factory
+    {
+        skr::resource::SMaterialTypeFactory::Root factoryRoot = {};
+        matTypeFactory = skr::resource::SMaterialTypeFactory::Create(factoryRoot);
+        resource_system->RegisterFactory(matTypeFactory);
+    }
     {
         skelFactory = SkrNew<skr::resource::SSkelFactory>();
         resource_system->RegisterFactory(skelFactory);
@@ -62,6 +70,7 @@ void InitializeResourceSystem(skd::SProject& proj)
 
 void DestroyResourceSystem(skd::SProject& proj)
 {
+    skr::resource::SMaterialTypeFactory::Destroy(matTypeFactory);
     skr::resource::SShaderOptionsFactory::Destroy(shaderOptionsFactory);
 
     skr::resource::GetResourceSystem()->Shutdown();

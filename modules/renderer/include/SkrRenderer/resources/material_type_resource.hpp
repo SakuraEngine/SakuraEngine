@@ -13,6 +13,9 @@ ESkrMaterialPropertyType : uint32_t
 {
     BOOL,
     FLOAT,
+    FLOAT2,
+    FLOAT3,
+    FLOAT4,
     DOUBLE,
     TEXTURE,
     BUFFER,
@@ -36,6 +39,11 @@ skr_material_property_t
     double default_value = 0.0;
     double min_value = 0.0;
     double max_value = DBL_MAX;
+
+    skr_float4_t default_vec;
+    skr_float4_t min_vec = { 0.0f, 0.0f, 0.0f, 0.0f };
+    skr_float4_t max_vec = { FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX };
+
     resource_handle default_resource = {};
 };
 
@@ -51,6 +59,7 @@ skr_material_value_t
     skr_material_property_name_t slot_name;
 
     double value = 0.0;
+    skr_float4_t vec = { 0.0f, 0.0f, 0.0f, 0.0f };
     resource_handle resource;
 };
 
@@ -74,7 +83,7 @@ struct SKR_RENDERER_API SMaterialTypeFactory : public SResourceFactory {
     virtual ~SMaterialTypeFactory() = default;
 
     struct Root {
-        uint32_t __nothing__;
+        SRenderDeviceId render_device = nullptr;
     };
 
     float AsyncSerdeLoadFactor() override { return 1.f; }

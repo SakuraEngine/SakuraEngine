@@ -77,6 +77,7 @@ class SGameModule : public skr::IDynamicModule
     skr::resource::SMeshFactory* meshFactory = nullptr;
     skr::resource::SShaderResourceFactory* shaderFactory = nullptr;
     skr::resource::SMaterialTypeFactory* matTypeFactory = nullptr;
+    skr::resource::SMaterialFactory* matFactory = nullptr;
 
     skr::resource::SAnimFactory* animFactory = nullptr;
     skr::resource::SSkelFactory* skeletonFactory = nullptr;
@@ -178,9 +179,19 @@ void SGameModule::installResourceFactories()
     // material type factory
     {
         skr::resource::SMaterialTypeFactory::Root factoryRoot = {};
+        factoryRoot.render_device = game_render_device;
         matTypeFactory = skr::resource::SMaterialTypeFactory::Create(factoryRoot);
         resource_system->RegisterFactory(matTypeFactory);
     }
+    // material factory
+    {
+        skr::resource::SMaterialFactory::Root factoryRoot = {};
+        factoryRoot.render_device = game_render_device;
+        matFactory = skr::resource::SMaterialFactory::Create(factoryRoot);
+        resource_system->RegisterFactory(matFactory);
+    }
+
+
     // anim factory
     {
         animFactory = SkrNew<skr::resource::SAnimFactory>();
@@ -241,6 +252,8 @@ void SGameModule::uninstallResourceFactories()
     skr::resource::STextureFactory::Destroy(textureFactory);
     skr::resource::SMeshFactory::Destroy(meshFactory);
     skr::resource::SShaderResourceFactory::Destroy(shaderFactory);
+    skr::resource::SMaterialTypeFactory::Destroy(matTypeFactory);
+    skr::resource::SMaterialFactory::Destroy(matFactory);
     SkrDelete(animFactory);
     SkrDelete(skeletonFactory);
     SkrDelete(skinFactory);

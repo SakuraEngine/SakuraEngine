@@ -41,7 +41,6 @@ void SMaterialTypeImporter::Destroy(void *resource)
 bool SMaterialTypeCooker::Cook(SCookContext *ctx)
 {
     const auto outputPath = ctx->GetOutputPath();
-    const auto assetRecord = ctx->GetAssetRecord();
     //-----load config
     // no cook config for config, skipping
 
