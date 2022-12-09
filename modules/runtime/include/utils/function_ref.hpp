@@ -1,6 +1,5 @@
 #pragma once
 #include <type_traits>
-#include <tuple>
 
 namespace skr
 {
@@ -93,54 +92,35 @@ function_ref<R(Args...)>& rhs) noexcept
 }
 
 template <class F, class = void>
-struct function_trait;
-
-template <class F>
-struct function_trait<F, std::void_t<decltype(F::operator())>> {
-    using return_type = typename function_trait<decltype(F::operator())>::return_type;
-    using argument_types = typename function_trait<decltype(F::operator())>::argument_types;
-    using function_ref = typename function_trait<decltype(F::operator())>::function_ref;
-};
+struct function_trait : public function_trait<decltype(&F::operator())> {};
 
 template <class R, class... Args>
 struct function_trait<R(Args...)> {
-    using return_type = R;
-    using argument_types = std::tuple<Args...>;
     using raw = R(Args...);
 };
 
 template <class T, class R, class... Args>
 struct function_trait<R (T::*)(Args...)> {
-    using return_type = R;
-    using argument_types = std::tuple<Args...>;
     using raw = R(Args...);
 };
 
 template <class T, class R, class... Args>
 struct function_trait<R (T::*)(Args...) noexcept(true)> {
-    using return_type = R;
-    using argument_types = std::tuple<Args...>;
     using raw = R(Args...);
 };
 
 template <class T, class R, class... Args>
 struct function_trait<R (T::*)(Args...) const> {
-    using return_type = R;
-    using argument_types = std::tuple<Args...>;
     using raw = R(Args...);
 };
 
 template <class T, class R, class... Args>
 struct function_trait<R (T::*)(Args...) const noexcept(true)> {
-    using return_type = R;
-    using argument_types = std::tuple<Args...>;
     using raw = R(Args...);
 };
 
 template <class R, class... Args>
 struct function_trait<R (*)(Args...)> {
-    using return_type = R;
-    using argument_types = std::tuple<Args...>;
     using raw = R(Args...);
 };
 
@@ -148,7 +128,7 @@ template <template <class... T> class Tmp, class F>
 struct map;
 
 template <template <class... T> class Tmp, class... Args>
-struct map<Tmp, std::tuple<Args...>> {
+struct map<Tmp, void(Args...)> {
     using type = Tmp<Args...>;
 };
 
@@ -156,5 +136,5 @@ template <template <class... T> class Tmp, class F>
 using map_t = typename map<Tmp, F>::type;
 
 template <typename F>
-function_ref(F) -> function_ref<typename function_trait<F>::raw>;
+function_ref(F&&) -> function_ref<typename function_trait<std::remove_reference_t<F>>::raw>;
 } // namespace skr
