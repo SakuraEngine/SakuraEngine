@@ -1,30 +1,25 @@
 #pragma once
+#include "utils/traits.hpp"
+#include "utils/function_ref.hpp"
 
 namespace dual
 {
+    template<class F, class R, class... Args>
+    auto get_trampoline(skr::type_t<R(Args...)>)
+    {
+        return +[](void* u, Args... args) -> R {
+            return std::invoke(*reinterpret_cast<F*>(u), std::forward<Args>(args)...);
+        };
+    }
+
     template<class F>
-    struct CallbackHelper;
-
-    template<class R, class T, class... As>
-    struct CallbackHelper<R(T::*)(As...) const>
+    auto get_trampoline()
     {
-        template<R(T::* F)(As...) const>
-        static R Call(void* u, As... as)
-        {
-            return (((const T*)u)->*F)(as...);
-        }
-    };
-
-    template<class R, class T, class... As>
-    struct CallbackHelper<R(T::*)(As...)>
-    {
-        template<R(T::* F)(As...)>
-        static R Call(void* u, As... as)
-        {
-            return (((T*)u)->*F)(as...);
-        }
-    };
+        using T = std::decay_t<F>;
+        using raw = typename skr::function_trait<T>::raw;
+        return get_trampoline<T>(skr::type_t<raw>{});
+    }
 }
 
-#define DUAL_LAMBDA(f) &dual::CallbackHelper<decltype(&decltype(f)::operator())>::Call<&decltype(f)::operator()>, &f
-#define DUAL_LAMBDA_POINTER(f) &dual::CallbackHelper<decltype(&std::remove_reference_t<decltype(*f)>::operator())>::Call<&std::remove_reference_t<decltype(*f)>::operator()>, f, nullptr, +[](void* u, EIndex entityCount) { SkrDelete(((decltype(f))u)); }
+#define DUAL_LAMBDA(f) dual::get_trampoline<decltype(f)>(), &f
+#define DUAL_LAMBDA_POINTER(f) dual::get_trampoline<decltype(*f)>(), f, nullptr, +[](void* u, EIndex entityCount) { SkrDelete(((decltype(f))u)); }
