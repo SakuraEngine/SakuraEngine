@@ -21,7 +21,16 @@ template <class T>
 int Archive(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const T& value)
 {
     if constexpr (is_complete_v<BlobTrait<T>>)
+    {
+        if (arena.get_buffer() == nullptr)
+        {
+#ifdef _DEBUG
+            SKR_ASSERT(!arena.get_size());
+#endif
+            return 0;
+        }
         return WriteTrait<const T&>::Write(writer, arena, value);
+    }
     else
         return WriteTrait<const T&>::Write(writer, value);
 }

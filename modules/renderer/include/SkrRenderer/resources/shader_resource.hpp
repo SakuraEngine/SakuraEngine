@@ -123,17 +123,16 @@ skr_platform_shader_collection_resource_t
 
     skr_guid_t root_guid;
     // hash=0 -> root_variant;
-    sattr("no-rtti" : true)
+    spush_attr("no-rtti" : true)
     skr::flat_hash_map<stable_hash_t, skr_platform_shader_resource_t, stable_hasher_t> switch_variants;
 
-    sattr("no-rtti" : true, "arena" : "switch_arena")
-    skr_shader_switch_sequence_t switch_sequence;
-    sattr("no-rtti" : true, "arena" : "option_arena")
-    skr_shader_option_sequence_t option_sequence;
-    sattr("no-rtti" : true)
     skr_blob_arena_t switch_arena;
-    sattr("no-rtti" : true)
     skr_blob_arena_t option_arena;
+
+    sattr("arena" : "switch_arena")
+    skr_shader_switch_sequence_t switch_sequence;
+    sattr("arena" : "option_arena")
+    skr_shader_option_sequence_t option_sequence;
 };
 
 sreflect_struct("guid" : "a633ea13-53d8-4202-b6f1-ec882ac409ec")
