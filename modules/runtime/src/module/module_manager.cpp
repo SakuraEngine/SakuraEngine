@@ -133,12 +133,17 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const skr::string& name)
     initName.append(mName);
     // try load in program
     IModule* (*func)() = nullptr;
+
+    skr::string metaymbolname = "__skr_module_meta__";
+    metaymbolname.append(name);
+    const bool is_proc_mod = processSymbolTable.hasSymbol(metaymbolname.c_str());
+    
     if (processSymbolTable.hasSymbol(initName.c_str()))
     {
         func = processSymbolTable.get<IModule*()>(initName.c_str());
     }
 #ifndef SHIPPING_ONE_ARCHIVE
-    if (func == nullptr)
+    if (!is_proc_mod && func == nullptr)
     {
         // try load dll
         skr::string filename;
