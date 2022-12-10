@@ -94,8 +94,18 @@ sattr("blob" : true)
 skr_shader_switch_sequence_t
 {
     skr::span<skr::string_view> keys;
+    skr::span<skr::span<skr::string_view>> values;
 };
 GENERATED_BLOB_BUILDER(skr_shader_switch_sequence_t)
+
+sreflect_struct("guid": "8372f075-b4ce-400d-929f-fb0e57c1c887")
+sattr("blob" : true)
+skr_shader_option_sequence_t
+{
+    skr::span<skr::string_view> keys;
+    skr::span<skr::span<skr::string_view>> values;
+};
+GENERATED_BLOB_BUILDER(skr_shader_option_sequence_t)
 
 sreflect_struct("guid" : "1c7d845a-fde8-4487-b1c9-e9c48d6a9867")
 sattr("serialize" : "bin", "rtti" : true)
@@ -116,10 +126,14 @@ skr_platform_shader_collection_resource_t
     sattr("no-rtti" : true)
     skr::flat_hash_map<stable_hash_t, skr_platform_shader_resource_t, stable_hasher_t> switch_variants;
 
-    sattr("no-rtti" : true, "arena" : "arena")
+    sattr("no-rtti" : true, "arena" : "switch_arena")
     skr_shader_switch_sequence_t switch_sequence;
+    sattr("no-rtti" : true, "arena" : "option_arena")
+    skr_shader_option_sequence_t option_sequence;
     sattr("no-rtti" : true)
-    skr_blob_arena_t arena;
+    skr_blob_arena_t switch_arena;
+    sattr("no-rtti" : true)
+    skr_blob_arena_t option_arena;
 };
 
 sreflect_struct("guid" : "a633ea13-53d8-4202-b6f1-ec882ac409ec")
@@ -140,7 +154,11 @@ skr_platform_shader_collection_json_t
     // hash=0 -> root_variant;
     sattr("no-rtti" : true)
     skr::flat_hash_map<stable_hash_t, skr_platform_shader_resource_t, stable_hasher_t> switch_variants;
+    
     skr::vector<eastl::string> switch_sequence;
+    skr::vector<skr::vector<skr::string>> switch_values_sequence;
+    skr::vector<eastl::string> option_sequence;
+    skr::vector<skr::vector<skr::string>> option_values_sequence;
 };
 
 namespace skr sreflect

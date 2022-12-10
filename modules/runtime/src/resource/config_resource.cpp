@@ -2,6 +2,7 @@
 #include "EASTL/vector.h"
 #include "platform/configure.h"
 #include "platform/debug.h"
+#include "platform/guid.hpp"
 #include "platform/memory.h"
 #include "platform/vfs.h"
 #include "resource/resource_factory.h"
@@ -9,6 +10,8 @@
 #include "type/type.hpp"
 #include "utils/defer.hpp"
 #include "resource/resource_system.h"
+#include "binary/reader.h"
+#include "binary/writer.h"
 
 skr_config_resource_t::~skr_config_resource_t()
 {

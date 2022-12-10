@@ -235,7 +235,8 @@ bool SShaderCooker::Cook(SCookContext* ctx)
 
     // make resource to write
     skr_platform_shader_collection_resource_t resource = {};
-    auto blob = skr::make_blob_builder<skr_shader_switch_sequence_t>();
+    auto switches_blob = skr::make_blob_builder<skr_shader_switch_sequence_t>();
+    auto options_blob = skr::make_blob_builder<skr_shader_option_sequence_t>();
     // initialize & serialize
     {
         resource.root_guid = assetRecord->guid;
@@ -258,9 +259,24 @@ bool SShaderCooker::Cook(SCookContext* ctx)
         // add static seq
         for (auto&& static_switch : flat_static_options)
         {
-            blob.keys.emplace_back(static_switch.key);
+            switches_blob.keys.emplace_back(static_switch.key);
+            auto& values = switches_blob.values.emplace_back();
+            for (const auto& value : static_switch.value_selections)
+            {
+                values.emplace_back(value);
+            }
         }
-        resource.arena = skr::binary::make_arena<skr_shader_switch_sequence_t>(resource.switch_sequence, blob);
+        for (auto&& option_switch : flat_dynamic_options)
+        {
+            options_blob.keys.emplace_back(option_switch.key);
+            auto& values = options_blob.values.emplace_back();
+            for (const auto& value : option_switch.value_selections)
+            {
+                values.emplace_back(value);
+            }
+        }
+        resource.switch_arena = skr::binary::make_arena<skr_shader_switch_sequence_t>(resource.switch_sequence, switches_blob);
+        resource.option_arena = skr::binary::make_arena<skr_shader_option_sequence_t>(resource.option_sequence, options_blob);
 
         ctx->Save(resource);
     }
@@ -268,7 +284,10 @@ bool SShaderCooker::Cook(SCookContext* ctx)
     {
         skr_platform_shader_collection_json_t json_resource = {};
         json_resource.switch_variants = resource.switch_variants;
-        json_resource.switch_sequence = blob.keys;
+        json_resource.switch_sequence = switches_blob.keys;
+        json_resource.switch_values_sequence = switches_blob.values;
+        json_resource.option_sequence = options_blob.keys;
+        json_resource.option_values_sequence = options_blob.values;
 
         // make archive
         skr_json_writer_t writer(2);

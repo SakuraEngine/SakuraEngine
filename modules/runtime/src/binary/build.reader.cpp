@@ -160,20 +160,33 @@ int ReadTrait<skr_blob_arena_t>::Read(skr_binary_reader_t* reader, skr_blob_aren
     int ret = ReadTrait<uint64_t>::Read(reader, base);
     if (ret != 0)
         return ret;
+
     uint32_t size;
     ret = ReadTrait<uint32_t>::Read(reader, size);
     if (ret != 0)
         return ret;
+
     uint32_t align;
     ret = ReadTrait<uint32_t>::Read(reader, align);
     if (ret != 0)
         return ret;
-    void* buffer = sakura_malloc_aligned(size, align);
-    ret = ReadValue(reader, buffer, size);
-    if (ret != 0)
+
+    if (size == 0)
+    {
+        arena = skr_blob_arena_t(nullptr, base, 0, align);
         return ret;
-    arena = skr_blob_arena_t(buffer, base, size, align);
-    return ret;
+    }
+    else
+    {
+
+        void* buffer = sakura_malloc_aligned(size, align);
+        ret = ReadValue(reader, buffer, size);
+        if (ret != 0)
+            return ret;
+        arena = skr_blob_arena_t(buffer, base, size, align);
+        return ret;
+    }
+
 }
 
 } // namespace skr::binary
