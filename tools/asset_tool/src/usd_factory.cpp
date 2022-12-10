@@ -15,15 +15,18 @@
 
 namespace skd::asset
 {
-class SUsdImporterFactoryImpl : public SUsdImporterFactory
+class SUsdImporterFactoryImpl : public SImporterFactory
 {
 public:
     virtual ~SUsdImporterFactoryImpl() = default;
     bool CanImport(const skr::string& path) const override;
     int Import(const skr::string& path) override;
     int Update() override;
+    skr::string GetName() const override { return "USD Importer"; }
+    skr::string GetDescription() const override { return "USD Importer"; }
 
     int TraversePrim(const skd::SUSDPrimId& prim);
+    void Clear();
 
     SUSDStageId _stage;
     bool _createNewAsset = false;
@@ -35,6 +38,19 @@ public:
     skr::string _assetFolder;
     skr::string _filePath;
 };
+
+void SUsdImporterFactoryImpl::Clear()
+{
+    _stage = nullptr;
+    _createNewAsset = false;
+    _importer = nullptr;
+    _childImporter = nullptr;
+    _assetPrims.clear();
+    _selectedPrim = nullptr;
+    _assetPath.clear();
+    _assetFolder.clear();
+    _filePath.clear();
+}
 
 bool SUsdImporterFactoryImpl::CanImport(const skr::string& path) const
 {
@@ -79,7 +95,6 @@ int SUsdImporterFactoryImpl::Import(const skr::string& path)
 
 int SUsdImporterFactoryImpl::Update()
 {
-    ImGui::Begin("USD Importer");
     if(!_importer)
     {
         ImGui::Checkbox("create new asset", &_createNewAsset);
@@ -125,7 +140,7 @@ int SUsdImporterFactoryImpl::Update()
                     return -1;
                 }
                 simdjson::ondemand::value importerType;
-                if(auto error = importer["type"].get(importerType); error != simdjson::SUCCESS)
+                if(auto error = importer["importerType"].get(importerType); error != simdjson::SUCCESS)
                 {
                     SKR_LOG_ERROR("no importer type in asset json %s", simdjson::error_message(error));
                     return -1;
@@ -143,6 +158,7 @@ int SUsdImporterFactoryImpl::Update()
                     SKR_LOG_ERROR("read importer failed %s", skr::json::error_message(error));
                     return -1;
                 }
+                _assetFolder = assetPath.parent_path().u8string().c_str();
             }
             
             auto root = _stage->GetPseudoRoot();
@@ -192,7 +208,7 @@ int SUsdImporterFactoryImpl::Update()
                 json::Write(&writer, skr::type::type_id<skr_mesh_resource_t>::get());
                 writer.Key("importer");
                 writer.StartObject();
-                writer.Key("type");
+                writer.Key("importerType");
                 json::Write(&writer, skr::type::type_id<SUSDMeshImporter>::get());
                 writer.Key("assetPath");
                 writer.String(_filePath.c_str());
@@ -207,13 +223,17 @@ int SUsdImporterFactoryImpl::Update()
                 std::ofstream file(assetPath.u8string());
                 file << writer.Str().c_str();
             }
+            skr_json_writer_t writer{3};
+            skr::json::Write(&writer, *_importer);
+            std::ofstream file(_assetPath.c_str());
+            file << writer.Str().c_str();
+            Clear();
             return 1;
         }
     }
-    ImGui::End();
     return 0;
 }
-SUsdImporterFactory* GetUsdImporterFactory()
+SImporterFactory* GetUsdImporterFactory()
 {
     return SkrNew<SUsdImporterFactoryImpl>();
 }

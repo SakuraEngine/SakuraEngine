@@ -38,10 +38,6 @@ struct SImporterRegistry {
 };
 
 TOOL_CORE_API SImporterRegistry* GetImporterRegistry();
-
-struct SImporterFactory {
-    virtual bool EnumerateImporters(skr::string_view path, eastl::vector<SImporter*>& out) = 0;
-};
 } // namespace asset
 } // namespace skd
 

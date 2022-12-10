@@ -5,15 +5,17 @@
 
 namespace skd::asset
 {
-    class SUsdImporterFactory
+    class SImporterFactory
     {
     public:
+        virtual ~SImporterFactory() = default;
         virtual bool CanImport(const skr::string& path) const = 0;
         virtual int Import(const skr::string& path) = 0;
         virtual int Update() = 0;
-        virtual ~SUsdImporterFactory() = default;
+        virtual skr::string GetName() const = 0;
+        virtual skr::string GetDescription() const = 0;
     };
 
-    SKR_ASSET_TOOL_API SUsdImporterFactory* GetUsdImporterFactory();
+    SKR_ASSET_TOOL_API SImporterFactory* GetUsdImporterFactory();
 }
 #endif
