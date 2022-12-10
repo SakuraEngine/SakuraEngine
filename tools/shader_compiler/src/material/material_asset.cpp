@@ -63,15 +63,28 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
     // calculate switch macros for material & place variants
     for (auto& shader_resource : matType->shader_resources)
     {
-        eastl::vector<skr_shader_option_t> flat_switches = {};
+        eastl::vector<uint32_t> switch_indices = {};
+        eastl::vector<uint32_t> option_indices = {};
         shader_resource.resolve(false, nullptr);
+        // initiate static switches to a permutation in shader collection 
         const auto shader_collection = shader_resource.get_ptr();
-        (void)shader_collection;
-        const auto shader_collection2 = shader_resource.get_ptr();
-        (void)shader_collection2;
-        // skr_shader_options_resource_t::flatten_options(flat_switches, );
-    }
+        switch_indices.resize(shader_collection->switch_sequence.keys.size());
+        option_indices.resize(shader_collection->option_sequence.keys.size());
+        // calculate final values for static switches
 
+        // calculate final asset values for options
+
+        // calculate hashes and record
+        const auto switch_hash =skr_shader_switch_sequence_t::calculate_stable_hash(shader_collection->switch_sequence, switch_indices);
+        const auto option_hash = skr_shader_option_sequence_t::calculate_stable_hash(shader_collection->option_sequence, option_indices);
+    
+        auto& variant = blob.switch_variants.emplace_back(); 
+        variant.switch_indices = switch_indices;
+        variant.option_indices = option_indices;
+        variant.switch_hash = switch_hash;
+        variant.option_hash = option_hash;
+        variant.shader_collection = shader_resource.get_guid();
+    }
 
     // value overrides
     for (const auto& prop : material->override_values)

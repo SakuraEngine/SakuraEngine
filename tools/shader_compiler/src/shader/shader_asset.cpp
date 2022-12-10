@@ -259,6 +259,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
         // add static seq
         for (auto&& static_switch : flat_static_options)
         {
+            switches_blob.types.emplace_back(static_switch.type);
             switches_blob.keys.emplace_back(static_switch.key);
             auto& values = switches_blob.values.emplace_back();
             for (const auto& value : static_switch.value_selections)
@@ -268,6 +269,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
         }
         for (auto&& option_switch : flat_dynamic_options)
         {
+            options_blob.types.emplace_back(option_switch.type);
             options_blob.keys.emplace_back(option_switch.key);
             auto& values = options_blob.values.emplace_back();
             for (const auto& value : option_switch.value_selections)
@@ -284,9 +286,13 @@ bool SShaderCooker::Cook(SCookContext* ctx)
     {
         skr_platform_shader_collection_json_t json_resource = {};
         json_resource.switch_variants = resource.switch_variants;
-        json_resource.switch_sequence = switches_blob.keys;
+
+        json_resource.switch_type_sequence = switches_blob.types;
+        json_resource.switch_key_sequence = switches_blob.keys;
         json_resource.switch_values_sequence = switches_blob.values;
-        json_resource.option_sequence = options_blob.keys;
+        
+        json_resource.option_type_sequence = options_blob.types;
+        json_resource.option_key_sequence = options_blob.keys;
         json_resource.option_values_sequence = options_blob.values;
 
         // make archive

@@ -33,7 +33,11 @@ skr_stable_shader_hash_t
     };
 
     sattr("no-rtti" : true)
+    SKR_RENDERER_API static skr_stable_shader_hash_t hash_string(const char* str, uint32_t size) SKR_NOEXCEPT;
+
+    sattr("no-rtti" : true)
     SKR_RENDERER_API static skr_stable_shader_hash_t from_string(const char* str) SKR_NOEXCEPT;
+    
     SKR_RENDERER_API skr_stable_shader_hash_t(uint32_t a, uint32_t b, uint32_t c, uint32_t d) SKR_NOEXCEPT;
     SKR_RENDERER_API explicit operator skr::string() const SKR_NOEXCEPT;
 };
@@ -93,8 +97,12 @@ sreflect_struct("guid": "1aa0274d-cff0-4dff-bddd-ca38c17229db")
 sattr("blob" : true)
 skr_shader_switch_sequence_t
 {
+    skr::span<ESkrShaderOptionType> types;
     skr::span<skr::string_view> keys;
     skr::span<skr::span<skr::string_view>> values;
+
+    sattr("no-rtti" : true) SKR_RENDERER_API
+    static skr_stable_shader_hash_t calculate_stable_hash(const skr_shader_switch_sequence_t& seq, skr::span<uint32_t> indices);
 };
 GENERATED_BLOB_BUILDER(skr_shader_switch_sequence_t)
 
@@ -102,8 +110,12 @@ sreflect_struct("guid": "8372f075-b4ce-400d-929f-fb0e57c1c887")
 sattr("blob" : true)
 skr_shader_option_sequence_t
 {
+    skr::span<ESkrShaderOptionType> types;
     skr::span<skr::string_view> keys;
     skr::span<skr::span<skr::string_view>> values;
+
+    sattr("no-rtti" : true) SKR_RENDERER_API
+    static skr_stable_shader_hash_t calculate_stable_hash(const skr_shader_option_sequence_t& seq, skr::span<uint32_t> indices);
 };
 GENERATED_BLOB_BUILDER(skr_shader_option_sequence_t)
 
@@ -154,9 +166,11 @@ skr_platform_shader_collection_json_t
     sattr("no-rtti" : true)
     skr::flat_hash_map<stable_hash_t, skr_platform_shader_resource_t, stable_hasher_t> switch_variants;
     
-    skr::vector<eastl::string> switch_sequence;
+    skr::vector<eastl::string> switch_key_sequence;
+    skr::vector<ESkrShaderOptionType> switch_type_sequence;
     skr::vector<skr::vector<skr::string>> switch_values_sequence;
-    skr::vector<eastl::string> option_sequence;
+    skr::vector<eastl::string> option_key_sequence;
+    skr::vector<ESkrShaderOptionType> option_type_sequence;
     skr::vector<skr::vector<skr::string>> option_values_sequence;
 };
 
