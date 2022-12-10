@@ -25,7 +25,7 @@ shared_module("SkrAssetTool", "SKR_ASSET_TOOL", engine_version)
 executable_module("SkrAssetImport", "SKR_ASSET_IMPORT", engine_version)
     set_group("02.tools")
     public_dependency("SkrAssetTool", engine_version)
-    add_files("main.cpp", "imgui.cpp")
+    add_files("main.cpp", "imgui.cpp", "imgui_impl_sdl.cpp")
     if(has_config("build_usdtool")) then
         public_dependency("SkrUsdTool", engine_version)
         add_defines("WITH_USDTOOL", {public = false})

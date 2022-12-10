@@ -25,6 +25,8 @@
 #include "tracy/Tracy.hpp"
 
 #include "SkrAssetTool/usd_factory.h"
+#include "imgui_impl_sdl.h"
+#include "SkrImGui/imgui_utils.h"
 
 class SAssetImportModule : public skr::IDynamicModule
 {
@@ -76,22 +78,12 @@ extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_gr
 
 int SAssetImportModule::main_module_exec(int argc, char** argv)
 {
-    // if(argc != 2)
-    // {
-    //     SKR_LOG_ERROR("Usage: asset_tool.exe <asset_path>");
-    //     return -1;
-    // }
-    SKR_LOG_INFO("asset tool executed with args: {}", argv[1]);
-    auto factory = skd::asset::GetUsdImporterFactory();
-    //auto path = argv[1];
-    //C:\Users\BenzzZX\Desktop\Development\Sakura.Runtime\samples\application\game\assets\scenes\Kitchen_set\Kitchen_set_instanced.usd
-    auto path = "C:\\Users\\BenzzZX\\Desktop\\Development\\Sakura.Runtime\\samples\\application\\game\\assets\\scenes\\Kitchen_set\\Kitchen_set_instanced.usd";
-    if(!factory->CanImport(path))
-    {
-        SKR_LOG_ERROR("Can't import asset: %s", path);
-        return -1;
-    }
-    factory->Import(path);
+    skr::string filePath;
+    eastl::vector<skd::asset::SImporterFactory*> factories;
+    #ifdef WITH_USDTOOL
+    factories.push_back(skd::asset::GetUsdImporterFactory());
+    #endif
+    eastl::vector<skd::asset::SImporterFactory*> availableFactories;
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) 
         return -1;
@@ -100,8 +92,7 @@ int SAssetImportModule::main_module_exec(int argc, char** argv)
     auto gfx_queue = render_device->get_gfx_queue();
     auto window_desc = make_zeroed<SWindowDescroptor>();
     window_desc.flags = SKR_WINDOW_CENTERED | SKR_WINDOW_RESIZABLE;
-    // TODO: Resizable swapchain
-    window_desc.height = 1500;
+    window_desc.height = 1000;
     window_desc.width = 1500;
     window = skr_create_window(
         skr::format("Asset Tool [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).c_str(),
@@ -118,6 +109,7 @@ int SAssetImportModule::main_module_exec(int argc, char** argv)
             .enable_memory_aliasing();
     });
     create_imgui_resources(render_device, renderGraph, resource_vfs);
+    ImGui_ImplSDL2_InitForCGPU((SDL_Window*)window, swapchain);
     uint64_t frame_index = 0;
     SHiresTimer tick_timer;
     skr_init_hires_timer(&tick_timer);
@@ -129,17 +121,16 @@ int SAssetImportModule::main_module_exec(int argc, char** argv)
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            if (SDL_GetWindowID((SDL_Window*)window) == event.window.windowID)
+            ImGui_ImplSDL2_ProcessEvent(&event);
+            if (event.type == SDL_WINDOWEVENT)
             {
-                if (event.type == SDL_WINDOWEVENT)
+                Uint8 window_event = event.window.event;
+                if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
                 {
-                    Uint8 window_event = event.window.event;
-                    if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
-                    {
-                        cgpu_wait_queue_idle(gfx_queue);
-                        cgpu_wait_fences(&present_fence, 1);
-                        swapchain = skr_render_device_recreate_window_swapchain(render_device, window);
-                    }
+                    cgpu_wait_queue_idle(gfx_queue);
+                    cgpu_wait_fences(&present_fence, 1);
+                    swapchain = skr_render_device_recreate_window_swapchain(render_device, window);
+                    ImGui_ImplSDL2_UpdateSwapChain(swapchain);
                 }
             }
             if (event.type == SDL_WINDOWEVENT)
@@ -167,15 +158,62 @@ int SAssetImportModule::main_module_exec(int argc, char** argv)
         {
             ZoneScopedN("ImGUINewFrame");
 
-            auto& io = ImGui::GetIO();
-            io.DisplaySize = ImVec2(
-            (float)swapchain->back_buffers[0]->width,
-            (float)swapchain->back_buffers[0]->height);
-            skr_imgui_new_frame(window, 1.f / 60.f);
+            ImGui_ImplSDL2_NewFrame();
+            ImGui::NewFrame();
+            // auto& io = ImGui::GetIO();
+            // io.DisplaySize = ImVec2(
+            // (float)swapchain->back_buffers[0]->width,
+            // (float)swapchain->back_buffers[0]->height);
+            // skr_imgui_new_frame(window, 1.f / 60.f);
         }
         {
-            if(factory->Update() != 0)
-                quit = true;
+            ImGui::Begin("Asset Importer");
+            if(availableFactories.empty())
+            {
+                ImGui::InputText("File Path", &filePath);
+                ImGui::SameLine();
+                if(ImGui::Button("Import"))
+                {
+                    for(auto factory : factories)
+                        if(factory->CanImport(filePath))
+                            availableFactories.push_back(factory);
+                    if(availableFactories.empty())
+                        SKR_LOG_ERROR("No importer found for file: %s", filePath.c_str());
+                    if(availableFactories.size() == 1)
+                        if(availableFactories.front()->Import(filePath) != 0)
+                        {
+                            availableFactories.clear();
+                            SKR_LOG_ERROR("Failed to import file: %s", filePath.c_str());
+                        }
+                }
+            }
+            else if(availableFactories.size() > 1)
+            {
+                for(auto factory : availableFactories)
+                {
+                    if(ImGui::Button(factory->GetName().c_str()))
+                    {
+                        if(factory->Import(filePath) == 0)
+                        {
+                            availableFactories.clear();
+                            availableFactories.push_back(factory);
+                            break;
+                        }
+                        else
+                        {
+                            availableFactories.erase(std::find(availableFactories.begin(), availableFactories.end(), factory));
+                            SKR_LOG_ERROR("Failed to import file: %s", filePath.c_str());
+                            break;
+                        }
+                    }
+                }
+            }
+            else if(availableFactories.size() == 1)
+            {
+                if(availableFactories.front()->Update() != 0)
+                    availableFactories.clear();
+            }
+            ImGui::End();
         }
         {
             ZoneScopedN("AcquireFrame");
