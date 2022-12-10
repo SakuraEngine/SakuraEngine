@@ -14,6 +14,8 @@
 #include "pxr/usd/sdf/schema.h"
 #include "pxr/usd/usd/primFlags.h"
 #include "pxr/usd/usd/schemaRegistry.h"
+#include "pxr/usd/usd/primRange.h"
+#include "pxr/usd/usd/modelAPI.h"
 #include "utils/defer.hpp"
 
 namespace skd
@@ -185,6 +187,31 @@ eastl::vector<SUSDPrim::SharedId> SUSDPrimImpl::GetFilteredChildren(bool travers
     return children;
 }
 
+eastl::vector<SUSDPrim::SharedId> SUSDPrimImpl::GetAllPrimsOfType(const char *schemaType, skr::function_ref<bool (SharedId)> pruneChildren) const SKR_NOEXCEPT
+{
+    eastl::vector<SUSDPrim::SharedId> prims;
+    pxr::UsdPrimRange primRange{prim, pxr::UsdTraverseInstanceProxies()};
+    pxr::TfType type = pxr::UsdSchemaRegistry::GetTypeFromName(pxr::TfToken(schemaType));
+    if(type.IsUnknown())
+    {
+        return prims;
+    }
+    skr::SObjectPtr<SUSDPrimImpl> boxed = skr::SObjectPtr<SUSDPrimImpl>::Create(prim);
+    for(auto it = primRange.begin(); it != primRange.end();++it)
+    {
+        boxed->prim = *it;
+        if (it->IsA(type))
+        {
+            prims.emplace_back(skr::SObjectPtr<SUSDPrimImpl>::Create(*it));
+        }
+        if (pruneChildren && pruneChildren(boxed))
+        {
+            it.PruneChildren();
+        }
+    }
+    return prims;
+}
+
 bool SUSDPrimImpl::HasPayload() const SKR_NOEXCEPT
 {
     return prim.HasPayload();
@@ -250,5 +277,20 @@ skr::string SUSDPrimImpl::GetName() const SKR_NOEXCEPT
 skr::string SUSDPrimImpl::GetTypeName() const SKR_NOEXCEPT 
 {
     return prim.GetTypeName().GetString().c_str();
+}
+
+skr::string SUSDPrimImpl::GetKind() const SKR_NOEXCEPT 
+{
+    pxr::UsdModelAPI model(prim);
+    pxr::TfToken kind;
+    if(model && model.GetKind(&kind))
+    {
+        return kind.GetString().c_str();
+    }
+    else 
+    {
+        prim.GetMetadata(pxr::SdfFieldKeys->Kind, &kind);
+        return kind.GetString().c_str();
+    }
 }
 }

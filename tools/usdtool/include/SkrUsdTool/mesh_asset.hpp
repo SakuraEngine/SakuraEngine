@@ -18,8 +18,8 @@ SKRUSDTOOL_API SUSDMeshImporter final : public SImporter
     // the SDF path of Mesh asset
     sattr("no-default" : true)
     skr::string primPath;
-    void* Import(skr_io_ram_service_t*, SCookContext* context) override { SKR_UNIMPLEMENTED_FUNCTION(); return nullptr; }
-    void Destroy(void *) override { SKR_UNIMPLEMENTED_FUNCTION(); }
+    void* Import(skr_io_ram_service_t*, SCookContext* context) override;
+    void Destroy(void *) override;
 }
 sregister_importer();
 } // namespace asset

@@ -1,4 +1,3 @@
-#include "SkrAssetTool/module.h"
 #include <EASTL/algorithm.h>
 
 #include "../../../cgpu/common/utils.h"
@@ -27,6 +26,7 @@
 #include "SkrAssetTool/usd_factory.h"
 #include "imgui_impl_sdl.h"
 #include "SkrImGui/imgui_utils.h"
+#include "nfd.h"
 
 class SAssetImportModule : public skr::IDynamicModule
 {
@@ -171,6 +171,17 @@ int SAssetImportModule::main_module_exec(int argc, char** argv)
             if(availableFactories.empty())
             {
                 ImGui::InputText("File Path", &filePath);
+                ImGui::SameLine();
+                if(ImGui::Button("browse"))
+                {
+                    nfdchar_t* outPath = nullptr;
+                    nfdresult_t result = NFD_OpenDialog("*", nullptr, &outPath);
+                    if(result == NFD_OKAY)
+                    {
+                        filePath = outPath;
+                        free(outPath);
+                    }
+                }
                 ImGui::SameLine();
                 if(ImGui::Button("Import"))
                 {

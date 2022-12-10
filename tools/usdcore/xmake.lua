@@ -6,6 +6,7 @@ target("UsdCore")
         rootdir = "include/UsdCore"
     })
     public_dependency("SkrToolCore", engine_version)
+    add_deps("cgltf");
     add_includedirs("include",{public=true})
     add_files("src/**.cpp")
 
