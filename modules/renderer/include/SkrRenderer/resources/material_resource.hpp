@@ -80,7 +80,16 @@ skr_material_shader_variant
     skr_guid_t shader_collection;
 
     // variant hash of static switches -> skr_platform_shader_resource_t
-    skr_stable_shader_hash_t variant_hash;
+    skr_stable_shader_hash_t switch_hash;
+
+    // static switch value selection indices, const during runtime
+    skr::span<uint32_t> switch_indices; 
+
+    // variant hash of default options -> skr_platform_shader_identifier_t
+    skr_stable_shader_hash_t option_hash;
+
+    // options value selection indices, immutable during runtime
+    skr::span<uint32_t> option_indices; 
 };
 GENERATED_BLOB_BUILDER(skr_material_shader_variant)
 

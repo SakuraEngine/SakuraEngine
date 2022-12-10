@@ -1,9 +1,8 @@
 #include <containers/hashmap.hpp>
-#include "SkrRenderer/resources/shader_resource.hpp"
-#include "SkrRenderer/resources/shader_meta_resource.hpp"
-#include "utils/hash.h"
 #include "utils/make_zeroed.hpp"
 #include <EASTL/set.h>
+#include <EASTL/sort.h>
+#include "option_utils.hpp"
 
 bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_option_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
 {
@@ -29,27 +28,17 @@ bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_opt
     {
         dst.push_back(kvs[key]);
     }
+    // sort result by key
+    eastl::stable_sort(dst.begin(), dst.end(), 
+        [](const skr_shader_option_t& a, const skr_shader_option_t& b) { return a.key < b.key; });
     return true;
 }
 
 skr_stable_shader_hash_t skr_shader_option_instance_t::calculate_stable_hash(skr::span<skr_shader_option_instance_t> ordered_options)
 {
-    // TODO: check ordered here
-    eastl::string sourceString;
-    for (auto&& option : ordered_options)
-    {
-        sourceString += option.key;
-        sourceString += "=";
-        sourceString += option.value;
-        sourceString += ";";
-    }
-    auto result = make_zeroed<skr_stable_shader_hash_t>();
-    const uint32_t seeds[4] = { 114u, 514u, 1919u, 810u };
-    result.valuea = skr_hash32(sourceString.c_str(), (uint32_t)sourceString.size(), seeds[0]);
-    result.valueb = skr_hash32(sourceString.c_str(), (uint32_t)sourceString.size(), seeds[1]);
-    result.valuec = skr_hash32(sourceString.c_str(), (uint32_t)sourceString.size(), seeds[2]);
-    result.valued = skr_hash32(sourceString.c_str(), (uint32_t)sourceString.size(), seeds[3]);
-    return result;
+    option_utils::opt_signature_string signatureString;
+    option_utils::stringfy(signatureString, ordered_options);
+    return skr_stable_shader_hash_t::hash_string(signatureString.c_str(), (uint32_t)signatureString.size());
 }
 
 namespace skr

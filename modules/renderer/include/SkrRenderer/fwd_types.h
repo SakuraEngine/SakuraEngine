@@ -41,6 +41,7 @@ typedef struct skr_mesh_resource_t* skr_mesh_resource_id;
     using skr_shader_resource_handle_t = skr::resource::TResourceHandle<skr_platform_shader_resource_t>;
     using skr_material_type_handle_t = skr::resource::TResourceHandle<skr_material_type_resource_t>;
     using skr_shader_collection_handle_t = skr::resource::TResourceHandle<skr_platform_shader_collection_resource_t>;
+    enum class ESkrShaderOptionType : uint32_t;
 #else
     typedef struct skr_resource_handle_t skr_shader_resource_handle_t;
     typedef struct skr_resource_handle_t skr_material_type_handle_t;
