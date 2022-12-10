@@ -67,6 +67,8 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
         shader_resource.resolve(false, nullptr);
         const auto shader_collection = shader_resource.get_ptr();
         (void)shader_collection;
+        const auto shader_collection2 = shader_resource.get_ptr();
+        (void)shader_collection2;
         // skr_shader_options_resource_t::flatten_options(flat_switches, );
     }
 

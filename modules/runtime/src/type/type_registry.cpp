@@ -1146,6 +1146,7 @@ void skr_type_t::Destruct(void* address) const
             auto& obj = ((const RecordType&)(*this));
             if (obj.nativeMethods.dtor)
                 obj.nativeMethods.dtor(address);
+            break;
         }
         case SKR_TYPE_CATEGORY_STR: {
             ((skr::string*)address)->~basic_string();
