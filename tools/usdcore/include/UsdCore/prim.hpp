@@ -2,6 +2,7 @@
 #include "UsdCore/attribute.hpp"
 #include "UsdCore/sdfpath.hpp"
 #include "containers/span.hpp"
+#include "utils/function_ref.hpp"
 #include <EASTL/optional.h>
 
 namespace skd
@@ -39,6 +40,7 @@ namespace skd
 
         virtual eastl::vector<SharedId> GetChildren() const SKR_NOEXCEPT = 0;
         virtual eastl::vector<SharedId> GetFilteredChildren(bool traverseInstanceProxies) const SKR_NOEXCEPT = 0;
+        virtual eastl::vector<SharedId> GetAllPrimsOfType(const char* schemaType, skr::function_ref<bool(SharedId)> pruneChildren) const SKR_NOEXCEPT = 0;
 
         virtual bool HasPayload() const SKR_NOEXCEPT = 0;
         virtual bool IsLoaded() const SKR_NOEXCEPT = 0;
@@ -54,6 +56,7 @@ namespace skd
 
         virtual skr::string GetName() const SKR_NOEXCEPT = 0;
         virtual skr::string GetTypeName() const SKR_NOEXCEPT = 0;
+        virtual skr::string GetKind() const SKR_NOEXCEPT = 0;
     };
     using SUSDPrimId = SUSDPrim::SharedId;
 

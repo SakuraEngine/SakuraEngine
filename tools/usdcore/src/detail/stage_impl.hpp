@@ -12,6 +12,7 @@ struct SUSDStageImpl : public USDWrapperWithRC<SUSDStage>
 
     virtual SUSDPrimId GetPseudoRoot() override;
     virtual SUSDPrimId GetDefaultPrim() override;
+    virtual SUSDPrimId GetPrimAtPath(const char* path) override;
 
 protected:
     pxr::UsdStageRefPtr stage;

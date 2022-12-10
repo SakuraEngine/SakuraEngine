@@ -38,6 +38,7 @@ struct SUSDPrimImpl : public USDWrapperWithRC<SUSDPrim>
 
     virtual eastl::vector<SharedId> GetChildren() const SKR_NOEXCEPT override;
     virtual eastl::vector<SharedId> GetFilteredChildren(bool traverseInstanceProxies) const SKR_NOEXCEPT override;
+    virtual eastl::vector<SharedId> GetAllPrimsOfType(const char* schemaType, skr::function_ref<bool(SharedId)> pruneChildren) const SKR_NOEXCEPT override;
 
     virtual bool HasPayload() const SKR_NOEXCEPT override;
     virtual bool IsLoaded() const SKR_NOEXCEPT override;
@@ -53,8 +54,8 @@ struct SUSDPrimImpl : public USDWrapperWithRC<SUSDPrim>
 
     virtual skr::string GetName() const SKR_NOEXCEPT override;
     virtual skr::string GetTypeName() const SKR_NOEXCEPT override;
-
-protected:
+    virtual skr::string GetKind() const SKR_NOEXCEPT override;
+    
     pxr::UsdPrim prim;
 };
 }

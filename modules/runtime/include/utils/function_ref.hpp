@@ -23,6 +23,7 @@ class function_ref<R(Args...)>
 {
 public:
     constexpr function_ref() noexcept = delete;
+    constexpr function_ref(std::nullptr_t) noexcept {}
 
     /// Creates a `function_ref` which refers to the same callable as `rhs`.
     constexpr function_ref(const function_ref<R(Args...)>& rhs) noexcept = default;
@@ -47,6 +48,8 @@ public:
     /// Makes `*this` refer to the same callable as `rhs`.
     constexpr function_ref<R(Args...)>&
     operator=(const function_ref<R(Args...)>& rhs) noexcept = default;
+
+    explicit operator bool() const noexcept { return callback_ != nullptr; }
 
     /// Makes `*this` refer to `f`.
     ///

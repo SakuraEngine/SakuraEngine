@@ -1,5 +1,5 @@
-
 #ifdef WITH_USDTOOL
+#include "SkrUsdTool/scene_asset.hpp"
 #include "SkrAssetTool/usd_factory.h"
 #include "UsdCore/stage.hpp"
 #include "SkrUsdTool/mesh_asset.hpp"
@@ -10,7 +10,9 @@
 #include "json/writer.h"
 #include "utils/log.h"
 #include "ecs/dual.h"
+#include "UsdCore/core.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"
+#include "nfd.h"
 #include <fstream>
 
 namespace skd::asset
@@ -64,18 +66,9 @@ bool SUsdImporterFactoryImpl::CanImport(const skr::string& path) const
 int SUsdImporterFactoryImpl::TraversePrim(const SUSDPrimId& prim)
 {
     //check if prim is mesh
-    _assetPrims.insert(std::make_pair(prim->GetPrimPath()->GetString(), prim));
-    if(prim->GetTypeName() == "UsdGeomMesh")
-    {
-        auto iter = _importer->redirectors.find(prim->GetPrimPath()->GetString());
-        if(iter == _importer->redirectors.end())
-        {
-            return 0;
-        }
-        
-    }
+    
 
-    auto children = prim->GetChildren();
+    auto children = prim->GetFilteredChildren(true);
     for (auto& child : children)
         TraversePrim(child);
 
@@ -105,6 +98,17 @@ int SUsdImporterFactoryImpl::Update()
         else
         {
             ImGui::InputText("new asset", &_assetPath);
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("browse"))
+        {
+            nfdchar_t* outPath = nullptr;
+            nfdresult_t result = NFD_OpenDialog("meta", nullptr, &outPath);
+            if(result == NFD_OKAY)
+            {
+                _assetPath = outPath;
+                free(outPath);
+            }
         }
         if(ImGui::Button("import"))
         {
@@ -162,15 +166,19 @@ int SUsdImporterFactoryImpl::Update()
             }
             
             auto root = _stage->GetPseudoRoot();
-            if(auto result = TraversePrim(root); result != 0)
+            auto allMeshPrims = root->GetAllPrimsOfType("UsdGeomMesh", nullptr);
+            for(auto& prim : allMeshPrims)
             {
-                return result;
+                auto iter = _importer->redirectors.find(prim->GetPrimPath()->GetString());
+                if(iter != _importer->redirectors.end())
+                    continue;
+                _assetPrims.insert(std::make_pair(prim->GetPrimPath()->GetString(), prim));
             }
         }
     }
     else
     {
-        if(ImGui::BeginTable("AssetList", 3))
+        if(ImGui::BeginTable("AssetList", 3, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY, {0, 1000}))
         {
             ImGui::TableSetupColumn("Name");
             ImGui::TableSetupColumn("Path");
@@ -193,6 +201,17 @@ int SUsdImporterFactoryImpl::Update()
             ImGui::EndTable();
         }
         ImGui::InputText("Asset Folder", &_assetFolder);
+        ImGui::SameLine();
+        if(ImGui::Button("browse"))
+        {
+            nfdchar_t* outPath = nullptr;
+            nfdresult_t result = NFD_PickFolder(nullptr, &outPath);
+            if(result == NFD_OKAY)
+            {
+                _assetPath = outPath;
+                free(outPath);
+            }
+        }
         if(ImGui::Button("Import All"))
         {
             for(auto& [path, prim] : _assetPrims)
@@ -235,6 +254,7 @@ int SUsdImporterFactoryImpl::Update()
 }
 SImporterFactory* GetUsdImporterFactory()
 {
+    USDCoreInitialize();
     return SkrNew<SUsdImporterFactoryImpl>();
 }
 } // namespace skd::asset

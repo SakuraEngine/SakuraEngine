@@ -24,6 +24,11 @@ SUSDPrimId SUSDStageImpl::GetDefaultPrim()
     return skr::SObjectPtr<SUSDPrimImpl>::Create(stage->GetDefaultPrim());
 }
 
+SUSDPrimId SUSDStageImpl::GetPrimAtPath(const char* path)
+{
+    return skr::SObjectPtr<SUSDPrimImpl>::Create(stage->GetPrimAtPath(pxr::SdfPath(path)));
+}
+
 SUSDStageId USDCoreOpenStage(const char *path)
 {
     ZoneScopedN("USDCoreOpenStage");

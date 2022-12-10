@@ -8,6 +8,7 @@ namespace skd
         virtual ~SUSDStage() = default; 
         virtual SUSDPrimId GetPseudoRoot() = 0;
         virtual SUSDPrimId GetDefaultPrim() = 0;
+        virtual SUSDPrimId GetPrimAtPath(const char* path) = 0;
         // virtual SUSDPrimId GetPrimAtPath() = 0;
     };
     using SUSDStageId = skr::SObjectPtr<SUSDStage>;
