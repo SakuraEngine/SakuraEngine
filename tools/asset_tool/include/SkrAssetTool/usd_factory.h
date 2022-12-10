@@ -1,5 +1,6 @@
 #pragma once
 #ifdef WITH_USDTOOL
+#include "SkrAssetTool/module.configure.h"
 #include "SkrUsdTool/scene_asset.hpp"
 
 namespace skd::asset
@@ -13,6 +14,6 @@ namespace skd::asset
         virtual ~SUsdImporterFactory() = default;
     };
 
-    SUsdImporterFactory* GetUsdImporterFactory();
+    SKR_ASSET_TOOL_API SUsdImporterFactory* GetUsdImporterFactory();
 }
 #endif

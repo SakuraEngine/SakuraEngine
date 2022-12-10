@@ -11,6 +11,8 @@
 #include <chrono>
 #include "SkrImGui/skr_imgui.h"
 #include "utils/format.hpp"
+#include "utils/defer.hpp"
+#include "SkrImgui/imgui_utils.h"
 
 
 namespace skr::inspect
@@ -157,9 +159,117 @@ struct inspect_system : public skr::ModuleSubsystem
         }
         ImGui::End();
     }
+
+    void DrawObject(const skr_value_ref_t& object, const skr::string& name);
+    void DrawLeaf(const skr_value_ref_t& value, const skr::string& name);
+    void DrawPropertyPannel(const skr_value_ref_t& object);
     
     SMutexObject _mutex;
 };
+
+void inspect_system::DrawObject(const skr_value_ref_t &object, const skr::string &name)
+{
+    SKR_ASSERT(object.type->type == SKR_TYPE_CATEGORY_OBJ);
+    ImGui::PushID(object.ptr);
+    SKR_DEFER({ ImGui::PopID(); });
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::AlignTextToFramePadding();
+    bool nodeOpen = ImGui::TreeNodeEx("Object", ImGuiTreeNodeFlags_SpanFullWidth, "%s", name.c_str());
+    if(nodeOpen)
+    {
+        auto& rtype = *(skr::type::RecordType*)object.type;
+        for(auto& field : rtype.fields)
+        {
+            skr_value_ref_t child = {(char*)object.ptr + field.offset, field.type};
+            if(field.type->type == SKR_TYPE_CATEGORY_OBJ)
+                DrawObject(child, field.name);
+            else
+            {
+                ImGui::PushID(&field);
+                SKR_DEFER({ ImGui::PopID(); });
+                DrawLeaf(child, field.name);
+            }
+        }
+    }
+}
+
+void inspect_system::DrawLeaf(const skr_value_ref_t &value, const skr::string &name)
+{
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::AlignTextToFramePadding();
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
+    ImGui::TreeNodeEx("Field", flags, "%s", name.c_str());
+    ImGui::TableSetColumnIndex(1);
+    ImGui::SetNextItemWidth(-FLT_MIN);
+    switch(value.type->type)
+    {
+        case SKR_TYPE_CATEGORY_I32:
+        {
+            ImGui::InputScalar("##value", ImGuiDataType_S32, value.ptr);
+            break;
+        }
+        case SKR_TYPE_CATEGORY_U32:
+        {
+            ImGui::InputScalar("##value", ImGuiDataType_U32, value.ptr);
+            break;
+        }
+        case SKR_TYPE_CATEGORY_I64:
+        {
+            ImGui::InputScalar("##value", ImGuiDataType_S64, value.ptr);
+            break;
+        }
+        case SKR_TYPE_CATEGORY_U64:
+        {
+            ImGui::InputScalar("##value", ImGuiDataType_U64, value.ptr);
+            break;
+        }
+        case SKR_TYPE_CATEGORY_F32:
+        {
+            ImGui::InputFloat("##value", (float*)value.ptr);
+            break;
+        }
+        case SKR_TYPE_CATEGORY_F64:
+        {
+            ImGui::InputDouble("##value", (double*)value.ptr);
+            break;
+        }
+        case SKR_TYPE_CATEGORY_BOOL:
+        {
+            ImGui::Checkbox("##value", (bool*)value.ptr);
+            break;
+        }
+        case SKR_TYPE_CATEGORY_STR:
+        {
+            skr::string* v = (skr::string*)value.ptr;
+            ImGui::InputText("##value", v);
+            break;
+        }
+        case SKR_TYPE_CATEGORY_HANDLE:
+            //TODO: draw handle
+        default:
+        {
+            ImGui::Text("Unsupported field type");
+            break;
+        }
+    }
+}
+
+void inspect_system::DrawPropertyPannel(const skr_value_ref_t &object)
+{
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 2));
+    if(ImGui::BeginTable("Properties", 2, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_Resizable))
+    {
+        ImGui::TableSetupColumn("Name");
+        ImGui::TableSetupColumn("Value");
+        ImGui::TableSetupScrollFreeze(0, 1);
+        ImGui::TableHeadersRow();
+        DrawObject(object, "Root");
+        ImGui::EndTable();
+    }
+    ImGui::PopStyleVar();
+}
 
 inspected_object* add_inspected_object(void* value, const skr_type_t* type, const char* name, const char* file, int line)
 {
