@@ -45,6 +45,11 @@ option("build_AAA")
     set_description("Toggle to build AAA project")
 option_end()
 
+option("use_async_codegen")
+    set_default(false)
+    set_description("Toggle to use async codegen")
+option_end()
+
 option("use_tracy")
     -- "auto", "enable", "disable"
     set_default("auto")
