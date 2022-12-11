@@ -291,6 +291,15 @@ function generate_once(targetname)
             end)
         end
     end
+
+    -- wait all
+    if(not has_config("use_async_codegen")) then
+        for _, target in ipairs(targets) do
+            if (target:rule("c++.codegen")) then
+                scheduler.co_group_wait(target:name()..".cpp-codegen")
+            end
+        end
+    end
 end
 
 function main(targetname)

@@ -1,9 +1,12 @@
 task("run-codegen-jobs")
     on_run(function (targetname)
-        import("core.base.scheduler")
         import("meta_codegen")
-        -- meta_codegen(target)
-        scheduler.co_start(meta_codegen, targetname)
+        if(has_config("use_async_codegen")) then
+            import("core.base.scheduler")
+            scheduler.co_start(meta_codegen, targetname)
+        else
+            meta_codegen(target)
+        end
     end)
 
 rule("c++.codegen")
@@ -28,10 +31,12 @@ rule("c++.codegen")
     end)
 
     on_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
-        -- wait finisg
-        import("core.base.scheduler")
-        scheduler.co_group_wait(target:name()..".cpp-codegen")
-        
+        -- wait async codegen finish
+        if(has_config("use_async_codegen")) then
+            import("core.base.scheduler")
+            scheduler.co_group_wait(target:name()..".cpp-codegen")
+        end
+
         -- add to sourcebatch
         local gendir = target:data("meta.codegen.dir")
         local sourcebatches = target:sourcebatches()
