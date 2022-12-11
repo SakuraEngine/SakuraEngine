@@ -46,7 +46,7 @@ option("build_AAA")
 option_end()
 
 option("use_async_codegen")
-    set_default(false)
+    set_default(true)
     set_description("Toggle to use async codegen")
 option_end()
 
