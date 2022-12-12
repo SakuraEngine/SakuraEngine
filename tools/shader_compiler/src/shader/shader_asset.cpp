@@ -235,7 +235,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
 
     // make resource to write
     skr_platform_shader_collection_resource_t resource = {};
-    auto switches_blob = skr::make_blob_builder<skr_shader_switch_sequence_t>();
+    auto switches_blob = skr::make_blob_builder<skr_shader_option_sequence_t>();
     auto options_blob = skr::make_blob_builder<skr_shader_option_sequence_t>();
     // initialize & serialize
     {
@@ -277,7 +277,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
                 values.emplace_back(value);
             }
         }
-        resource.switch_arena = skr::binary::make_arena<skr_shader_switch_sequence_t>(resource.switch_sequence, switches_blob);
+        resource.switch_arena = skr::binary::make_arena<skr_shader_option_sequence_t>(resource.switch_sequence, switches_blob);
         resource.option_arena = skr::binary::make_arena<skr_shader_option_sequence_t>(resource.option_sequence, options_blob);
 
         ctx->Save(resource);
@@ -285,6 +285,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
     // serialize a json file for visual debugging
     {
         skr_platform_shader_collection_json_t json_resource = {};
+        json_resource.root_guid = resource.root_guid;
         json_resource.switch_variants = resource.switch_variants;
 
         json_resource.switch_type_sequence = switches_blob.types;

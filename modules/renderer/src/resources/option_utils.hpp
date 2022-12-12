@@ -18,18 +18,6 @@ inline void stringfy(opt_signature_string& string, skr::span<skr_shader_option_i
     }
 }
 
-inline void stringfy(opt_signature_string& string, const skr_shader_switch_sequence_t& seq, skr::span<uint32_t> indices)
-{
-    for (uint32_t i = 0; i < seq.keys.size(); i++)
-    {
-        const auto selection = indices[i];
-        string += seq.keys[i].data();
-        string += "=";
-        string += seq.values[i][selection].data();
-        string += ";";
-    }
-}
-
 inline void stringfy(opt_signature_string& string, const skr_shader_option_sequence_t& seq, skr::span<uint32_t> indices)
 {
     for (uint32_t i = 0; i < seq.keys.size(); i++)

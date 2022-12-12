@@ -27,6 +27,7 @@ size_t skr_stable_shader_hash_t::hasher::operator()(const skr_stable_shader_hash
 
 skr_stable_shader_hash_t skr_stable_shader_hash_t::hash_string(const char* str, uint32_t size) SKR_NOEXCEPT
 {
+    if (!size) return skr_stable_shader_hash_t(0, 0, 0, 0);
     auto result = make_zeroed<skr_stable_shader_hash_t>();
     const uint32_t seeds[4] = { 114u, 514u, 1919u, 810u };
     result.valuea = skr_hash32(str, size, seeds[0]);
@@ -51,11 +52,33 @@ skr_stable_shader_hash_t::operator skr::string() const SKR_NOEXCEPT
     return skr::format("{}{}{}{}", valuea, valueb, valuec, valued);
 }
 
-skr_stable_shader_hash_t skr_shader_switch_sequence_t::calculate_stable_hash(const skr_shader_switch_sequence_t& seq, skr::span<uint32_t> indices)
+uint32_t skr_shader_option_sequence_t::find_key_index(skr::string_view in_key) const SKR_NOEXCEPT
 {
-    option_utils::opt_signature_string signatureString;
-    option_utils::stringfy(signatureString, seq, indices);
-    return skr_stable_shader_hash_t::hash_string(signatureString.c_str(), (uint32_t)signatureString.size());
+    for (uint32_t at = 0; at < keys.size(); at++)
+    {
+        const auto& key = keys[at];
+        if (key == in_key) return at;
+    }
+    return UINT32_MAX;
+}
+
+uint32_t skr_shader_option_sequence_t::find_value_index(uint32_t key_index, skr::string_view in_value) const SKR_NOEXCEPT
+{
+    for (uint32_t v_idx = 0; v_idx < values[key_index].size(); v_idx++)
+    {
+        const auto& value = values[key_index][v_idx];
+        if (value == in_value)
+        {
+            return v_idx;
+        }
+    }
+    return UINT32_MAX;
+}
+
+uint32_t skr_shader_option_sequence_t::find_value_index(skr::string_view in_key, skr::string_view in_value) const SKR_NOEXCEPT
+{
+    uint32_t key_index = find_key_index(in_key);
+    return find_value_index(key_index, in_value);
 }
 
 skr_stable_shader_hash_t skr_shader_option_sequence_t::calculate_stable_hash(const skr_shader_option_sequence_t& seq, skr::span<uint32_t> indices)
