@@ -34,6 +34,20 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
         cprint("${green}[%s]: compiling.meta ${clear}%s", target:name(), path.relative(outdir))
     end
 
+    if is_host("windows") and not opt.rawargs then
+        -- local msvc = target:toolchain("msvc")
+        -- argv2 = winos.cmdargv(argv,  { envs = msvc:runenvs() })
+        -- too long arguments?
+        local limit = 4096
+        local argn = 0
+        for _, arg in ipairs(argv) do
+            arg = tostring(arg)
+            argn = argn + #arg
+        end
+        if argn > limit then
+            cprint("${color.warning}Warning: Too long arguments detected: target @%s with %d characters!", target:name(), argn)
+        end
+    end
     os.runv(meta.program, argv)
 
     if not opt.quiet then
