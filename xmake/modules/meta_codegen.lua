@@ -20,7 +20,7 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
     end
     local compiler_inst = compiler.load(sourcekind, opt)
     local program, argv = compiler_inst:compargv(sourcefile, sourcefile..".o", opt)
-    if opt.cl then
+    if opt.msvc then
         table.insert(argv, "--driver-mode=cl")
         --table.insert(argv, "/Tp")
     end
@@ -35,8 +35,6 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
     end
 
     if is_host("windows") and not opt.rawargs then
-        -- local msvc = target:toolchain("msvc")
-        -- argv2 = winos.cmdargv(argv,  { envs = msvc:runenvs() })
         -- too long arguments?
         local limit = 4096
         local argn = 0
@@ -47,8 +45,11 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
         if argn > limit then
             cprint("${color.warning}Warning: Too long arguments detected: target @%s with %d characters!", target:name(), argn)
         end
+        -- os.runv(meta.program, (opt and opt.rawargs) and argv or winos.cmdargv(argv))
+        os.runv(meta.program, argv)
+    else
+        os.runv(meta.program, argv)
     end
-    os.runv(meta.program, argv)
 
     if not opt.quiet then
         local now = os.time()
@@ -272,7 +273,7 @@ function generate_once(targetname)
     -- parameters
     local opt = opt or {}
     if has_config("is_msvc") then
-        opt.cl = true
+        opt.msvc = true
     end
 
     -- collect header batch
