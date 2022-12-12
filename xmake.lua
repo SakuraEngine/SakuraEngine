@@ -44,7 +44,7 @@ includes("xmake/rules.lua")
 
 target("SkrRoot")
     set_kind("headeronly")
-    -- install sdks for wuindows platform
+    -- install sdks for windows platform
     libs_to_install = { "tracyclient" }
     if(os.host() == "windows") then
         table.insert(libs_to_install, "dstorage")

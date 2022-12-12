@@ -63,27 +63,40 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
     // calculate switch macros for material & place variants
     for (auto& shader_resource : matType->shader_resources)
     {
-        eastl::vector<uint32_t> switch_indices = {};
-        eastl::vector<uint32_t> option_indices = {};
+        auto& variant = blob.switch_variants.emplace_back(); 
+
         shader_resource.resolve(false, nullptr);
         // initiate static switches to a permutation in shader collection 
         const auto shader_collection = shader_resource.get_ptr();
-        switch_indices.resize(shader_collection->switch_sequence.keys.size());
-        option_indices.resize(shader_collection->option_sequence.keys.size());
+        variant.switch_indices.resize(shader_collection->switch_sequence.keys.size());
+        variant.option_indices.resize(shader_collection->option_sequence.keys.size());
         // calculate final values for static switches
-
+        for (uint32_t switch_i = 0; switch_i < variant.switch_indices.size(); switch_i++)
+        {
+            // default value
+            const auto& default_value  = matType->switch_defaults[switch_i];
+            const auto default_index = shader_collection->switch_sequence.find_value_index(default_value.key, default_value.value);
+            SKR_ASSERT(default_index != UINT32_MAX && "Invalid switch default value");
+            variant.switch_indices[switch_i] = default_index;
+            // TODO: override
+        }
         // calculate final asset values for options
-
+        for (uint32_t option_i = 0; option_i < variant.option_indices.size(); option_i++)
+        {
+            // default value
+            const auto& default_value  = matType->option_defaults[option_i];
+            const auto default_index = shader_collection->option_sequence.find_value_index(default_value.key, default_value.value);
+            SKR_ASSERT(default_index != UINT32_MAX && "Invalid option default value");
+            variant.option_indices[option_i] = default_index;
+            // TODO: override
+        }
         // calculate hashes and record
-        const auto switch_hash =skr_shader_switch_sequence_t::calculate_stable_hash(shader_collection->switch_sequence, switch_indices);
-        const auto option_hash = skr_shader_option_sequence_t::calculate_stable_hash(shader_collection->option_sequence, option_indices);
+        const auto switch_hash = skr_shader_option_sequence_t::calculate_stable_hash(shader_collection->switch_sequence, variant.switch_indices);
+        const auto option_hash = skr_shader_option_sequence_t::calculate_stable_hash(shader_collection->option_sequence, variant.option_indices);
     
-        auto& variant = blob.switch_variants.emplace_back(); 
-        variant.switch_indices = switch_indices;
-        variant.option_indices = option_indices;
         variant.switch_hash = switch_hash;
         variant.option_hash = option_hash;
-        variant.shader_collection = shader_resource.get_guid();
+        variant.shader_collection = shader_resource.get_record()->header.guid;
     }
 
     // value overrides
