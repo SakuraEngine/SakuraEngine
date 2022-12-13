@@ -19,7 +19,7 @@ shared_module("SkrAssetTool", "SKR_ASSET_TOOL", engine_version)
     end
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},
-        rootdir = "include/",
+        rootdir = "include",
         api = "SKR_ASSET_TOOL"
     })
     set_exceptions("no-cxx")

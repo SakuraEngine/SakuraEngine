@@ -20,6 +20,8 @@ struct SUSDPrimImpl : public USDWrapperWithRC<SUSDPrim>
     virtual bool IsPseudoRoot() const SKR_NOEXCEPT override;
     virtual bool IsModel() const SKR_NOEXCEPT override;
     virtual bool IsGroup() const SKR_NOEXCEPT override;
+    virtual bool IsInstance() const SKR_NOEXCEPT override;
+    virtual bool IsInstanceProxy() const SKR_NOEXCEPT override;
 
     virtual eastl::vector<skr::string> GetAppliedSchemas() const SKR_NOEXCEPT override;
 
@@ -35,10 +37,12 @@ struct SUSDPrimImpl : public USDWrapperWithRC<SUSDPrim>
     virtual void GetLocalToWorldTransformation(skr::span<double, 16> result, double time, SUSDSdfPathId sdfPath) const SKR_NOEXCEPT override;
 
     virtual SharedId GetParent() const SKR_NOEXCEPT override;
+    virtual SharedId GetPrototype() const SKR_NOEXCEPT override;
+    virtual SharedId GetPrimInPrototype() const SKR_NOEXCEPT override;
 
     virtual eastl::vector<SharedId> GetChildren() const SKR_NOEXCEPT override;
     virtual eastl::vector<SharedId> GetFilteredChildren(bool traverseInstanceProxies) const SKR_NOEXCEPT override;
-    virtual eastl::vector<SharedId> GetAllPrimsOfType(const char* schemaType, skr::function_ref<bool(SharedId)> pruneChildren) const SKR_NOEXCEPT override;
+    virtual eastl::vector<SharedId> GetAllPrimsOfType(bool traverseInstanceProxies, const char* schemaType, skr::function_ref<bool(SharedId)> pruneChildren) const SKR_NOEXCEPT override;
 
     virtual bool HasPayload() const SKR_NOEXCEPT override;
     virtual bool IsLoaded() const SKR_NOEXCEPT override;

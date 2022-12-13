@@ -22,6 +22,8 @@ namespace skd
         virtual bool IsPseudoRoot() const SKR_NOEXCEPT = 0;
         virtual bool IsModel() const SKR_NOEXCEPT = 0;
         virtual bool IsGroup() const SKR_NOEXCEPT = 0;
+        virtual bool IsInstance() const SKR_NOEXCEPT = 0;
+        virtual bool IsInstanceProxy() const SKR_NOEXCEPT = 0;
 
         virtual eastl::vector<skr::string> GetAppliedSchemas() const = 0;
 
@@ -37,10 +39,12 @@ namespace skd
         virtual void GetLocalToWorldTransformation(skr::span<double, 16> result, double time, SUSDSdfPathId sdfPath) const = 0;
 
         virtual SharedId GetParent() const SKR_NOEXCEPT = 0;
+        virtual SharedId GetPrototype() const SKR_NOEXCEPT = 0;
+        virtual SharedId GetPrimInPrototype() const SKR_NOEXCEPT = 0;
 
         virtual eastl::vector<SharedId> GetChildren() const SKR_NOEXCEPT = 0;
         virtual eastl::vector<SharedId> GetFilteredChildren(bool traverseInstanceProxies) const SKR_NOEXCEPT = 0;
-        virtual eastl::vector<SharedId> GetAllPrimsOfType(const char* schemaType, skr::function_ref<bool(SharedId)> pruneChildren) const SKR_NOEXCEPT = 0;
+        virtual eastl::vector<SharedId> GetAllPrimsOfType(bool traverseInstanceProxies, const char* schemaType, skr::function_ref<bool(SharedId)> pruneChildren) const SKR_NOEXCEPT = 0;
 
         virtual bool HasPayload() const SKR_NOEXCEPT = 0;
         virtual bool IsLoaded() const SKR_NOEXCEPT = 0;
