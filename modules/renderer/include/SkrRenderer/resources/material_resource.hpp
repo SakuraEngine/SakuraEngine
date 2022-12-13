@@ -76,10 +76,10 @@ sreflect_struct("guid": "7cbbb808-20d9-4bff-b72d-3c23d5b00f2b")
 sattr("blob" : true)
 skr_material_shader_variant
 {
-    // refers to a skr_platform_shader_collection_resource_t 
+    // refers to a skr_shader_collection_resource_t 
     skr_guid_t shader_collection;
 
-    // variant hash of static switches -> skr_platform_shader_resource_t
+    // variant hash of static switches -> skr_multi_shader_resource_t
     skr_stable_shader_hash_t switch_hash;
 
     // static switch value selection indices, const during runtime

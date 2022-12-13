@@ -122,7 +122,7 @@ struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFacto
 
     struct ShaderRequest
     {
-        ShaderRequest(SShaderResourceFactoryImpl* factory, const char* uri, skr_platform_shader_resource_t* platform_shader)
+        ShaderRequest(SShaderResourceFactoryImpl* factory, const char* uri, skr_multi_shader_resource_t* platform_shader)
             : factory(factory), bytes_uri(uri), platform_shader(platform_shader)
         {
 
@@ -145,7 +145,7 @@ struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFacto
 
         SShaderResourceFactoryImpl* factory = nullptr;
         skr::string bytes_uri;
-        skr_platform_shader_resource_t* platform_shader = nullptr;
+        skr_multi_shader_resource_t* platform_shader = nullptr;
         skr_async_request_t bytes_request;
         skr_async_ram_destination_t bytes_destination;
         skr_async_request_t aux_request;
@@ -153,7 +153,7 @@ struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFacto
     };
 
     Root root;
-    skr::flat_hash_map<skr_platform_shader_resource_t*, SPtr<ShaderRequest>> mShaderRequests;
+    skr::flat_hash_map<skr_multi_shader_resource_t*, SPtr<ShaderRequest>> mShaderRequests;
 };
 
 SShaderResourceFactory* SShaderResourceFactory::Create(const Root& root)
@@ -168,13 +168,13 @@ void SShaderResourceFactory::Destroy(SShaderResourceFactory *factory)
 
 skr_type_id_t SShaderResourceFactoryImpl::GetResourceType()
 {
-    const auto resource_type = skr::type::type_id<skr_platform_shader_collection_resource_t>::get();
+    const auto resource_type = skr::type::type_id<skr_shader_collection_resource_t>::get();
     return resource_type;
 }
 
 bool SShaderResourceFactoryImpl::Unload(skr_resource_record_t* record)
 { 
-    auto shader_collection = (skr_platform_shader_collection_resource_t*)record->resource;
+    auto shader_collection = (skr_shader_collection_resource_t*)record->resource;
     for (auto&& [hash, variant] : shader_collection->switch_variants)
     {
         if (variant.shader) cgpu_free_shader_library(variant.shader);
@@ -188,7 +188,7 @@ ESkrInstallStatus SShaderResourceFactoryImpl::Install(skr_resource_record_t* rec
     if (root.dont_create_shader) return SKR_INSTALL_STATUS_SUCCEED;
     
     auto bytes_vfs = root.bytecode_vfs;
-    auto shader_collection = static_cast<skr_platform_shader_collection_resource_t*>(record->resource);
+    auto shader_collection = static_cast<skr_shader_collection_resource_t*>(record->resource);
     auto&& root_switch_variant = shader_collection->GetRootStaticVariant();
     auto* pPlatformResource = &root_switch_variant;
     auto&& root_option_variant = root_switch_variant.GetRootDynamicVariants();
@@ -252,7 +252,7 @@ bool SShaderResourceFactoryImpl::Uninstall(skr_resource_record_t* record)
 
 ESkrInstallStatus SShaderResourceFactoryImpl::UpdateInstall(skr_resource_record_t* record)
 {
-    auto shader_collection = static_cast<skr_platform_shader_collection_resource_t*>(record->resource);
+    auto shader_collection = static_cast<skr_shader_collection_resource_t*>(record->resource);
     auto&& root_variant_iter = shader_collection->switch_variants.find(kZeroStableShaderHash);
     SKR_ASSERT(root_variant_iter != shader_collection->switch_variants.end() && "Root shader variant missing!");
     auto* root_variant = &root_variant_iter->second;

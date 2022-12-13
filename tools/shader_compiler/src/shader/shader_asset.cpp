@@ -145,7 +145,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
     };
     // begin compile
     // auto system = skd::asset::GetCookSystem();
-    eastl::vector<skr_platform_shader_resource_t> allOutResources(static_variants.size());
+    eastl::vector<skr_multi_shader_resource_t> allOutResources(static_variants.size());
     // foreach variants
     skr::parallel_for(static_variants.begin(), static_variants.end(), 1,
     [&](const auto* pVariant, const auto* _) -> void {
@@ -234,7 +234,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
 
 
     // make resource to write
-    skr_platform_shader_collection_resource_t resource = {};
+    skr_shader_collection_resource_t resource = {};
     auto switches_blob = skr::make_blob_builder<skr_shader_option_sequence_t>();
     auto options_blob = skr::make_blob_builder<skr_shader_option_sequence_t>();
     // initialize & serialize

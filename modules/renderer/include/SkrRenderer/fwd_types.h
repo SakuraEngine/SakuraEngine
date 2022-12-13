@@ -20,8 +20,8 @@ typedef skr_guid_t skr_vertex_layout_id;
 typedef struct skr_stable_shader_hash_t skr_stable_shader_hash_t;
 typedef struct skr_platform_shader_hash_t skr_platform_shader_hash_t;
 typedef struct skr_platform_shader_identifier_t skr_platform_shader_identifier_t;
-typedef struct skr_platform_shader_resource_t skr_platform_shader_resource_t;
-typedef struct skr_platform_shader_collection_resource_t skr_platform_shader_collection_resource_t;
+typedef struct skr_multi_shader_resource_t skr_multi_shader_resource_t;
+typedef struct skr_shader_collection_resource_t skr_shader_collection_resource_t;
 
 typedef struct skr_shader_option_instance_t skr_shader_option_instance_t;
 typedef struct skr_shader_option_t skr_shader_option_t;
@@ -38,9 +38,9 @@ typedef struct skr_mesh_resource_t skr_mesh_resource_t;
 typedef struct skr_mesh_resource_t* skr_mesh_resource_id;
 
 #ifdef __cplusplus
-    using skr_shader_resource_handle_t = skr::resource::TResourceHandle<skr_platform_shader_resource_t>;
+    using skr_shader_resource_handle_t = skr::resource::TResourceHandle<skr_multi_shader_resource_t>;
     using skr_material_type_handle_t = skr::resource::TResourceHandle<skr_material_type_resource_t>;
-    using skr_shader_collection_handle_t = skr::resource::TResourceHandle<skr_platform_shader_collection_resource_t>;
+    using skr_shader_collection_handle_t = skr::resource::TResourceHandle<skr_shader_collection_resource_t>;
     enum class ESkrShaderOptionType : uint32_t;
 #else
     typedef struct skr_resource_handle_t skr_shader_resource_handle_t;

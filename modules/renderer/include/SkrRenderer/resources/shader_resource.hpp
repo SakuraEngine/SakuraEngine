@@ -63,7 +63,7 @@ skr_platform_shader_identifier_t
 
 sreflect_struct("guid" : "6c07aa34-249f-45b8-8080-dd2462ad5312")
 sattr("serialize" : ["json", "bin"], "rtti" : true)
-skr_platform_shader_resource_t
+skr_multi_shader_resource_t
 {
     using stable_hash_t = skr_stable_shader_hash_t;
     using stable_hasher_t = skr_stable_shader_hash_t::hasher;
@@ -117,13 +117,13 @@ GENERATED_BLOB_BUILDER(skr_shader_option_sequence_t)
 
 sreflect_struct("guid" : "1c7d845a-fde8-4487-b1c9-e9c48d6a9867")
 sattr("serialize" : "bin", "rtti" : true)
-skr_platform_shader_collection_resource_t
+skr_shader_collection_resource_t
 {
     using stable_hash_t = skr_stable_shader_hash_t;
     using stable_hasher_t = skr_stable_shader_hash_t::hasher;
 
     sattr("no-rtti" : true)
-    inline skr_platform_shader_resource_t& GetRootStaticVariant() SKR_NOEXCEPT {
+    inline skr_multi_shader_resource_t& GetRootStaticVariant() SKR_NOEXCEPT {
         auto found = switch_variants.find(kZeroStableShaderHash);
         SKR_ASSERT(found != switch_variants.end());
         return found->second;
@@ -132,7 +132,7 @@ skr_platform_shader_collection_resource_t
     skr_guid_t root_guid;
     // hash=0 -> root_variant;
     spush_attr("no-rtti" : true)
-    skr::flat_hash_map<stable_hash_t, skr_platform_shader_resource_t, stable_hasher_t> switch_variants;
+    skr::flat_hash_map<stable_hash_t, skr_multi_shader_resource_t, stable_hasher_t> switch_variants;
 
     skr_blob_arena_t switch_arena;
     skr_blob_arena_t option_arena;
@@ -151,7 +151,7 @@ skr_platform_shader_collection_json_t
     using stable_hasher_t = skr_stable_shader_hash_t::hasher;
 
     sattr("no-rtti" : true)
-    inline skr_platform_shader_resource_t& GetRootStaticVariant() SKR_NOEXCEPT {
+    inline skr_multi_shader_resource_t& GetRootStaticVariant() SKR_NOEXCEPT {
         auto found = switch_variants.find(kZeroStableShaderHash);
         SKR_ASSERT(found != switch_variants.end());
         return found->second;
@@ -160,7 +160,7 @@ skr_platform_shader_collection_json_t
     skr_guid_t root_guid;
     // hash=0 -> root_variant;
     sattr("no-rtti" : true)
-    skr::flat_hash_map<stable_hash_t, skr_platform_shader_resource_t, stable_hasher_t> switch_variants;
+    skr::flat_hash_map<stable_hash_t, skr_multi_shader_resource_t, stable_hasher_t> switch_variants;
     
     skr::vector<skr::string> switch_key_sequence;
     skr::vector<ESkrShaderOptionType> switch_type_sequence;
