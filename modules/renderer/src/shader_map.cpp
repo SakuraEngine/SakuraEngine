@@ -13,6 +13,12 @@ namespace skr
 {
 struct ShaderMapImpl : public skr_shader_map_t
 {
+    ShaderMapImpl(const skr_shader_map_root_t& root)
+        : root(root)
+    {
+
+    }
+
     CGPUShaderLibraryId find_shader(const skr_platform_shader_identifier_t& id) SKR_NOEXCEPT override;
     ESkrShaderMapShaderStatus install_shader(const skr_platform_shader_identifier_t& id) SKR_NOEXCEPT override;
     bool free_shader(const skr_platform_shader_identifier_t& id) SKR_NOEXCEPT override;
@@ -99,8 +105,8 @@ bool ShaderMapImpl::free_shader(const skr_platform_shader_identifier_t& identifi
     if (found != map.end())
     {
     #ifdef _DEBUG
-        const auto before = skr_atomic32_load_relaxed(&found->second->rc);
-        SKR_ASSERT(before > 0);
+        const auto frame = skr_atomic32_load_relaxed(&found->second->frame);
+        SKR_ASSERT(frame != UINT64_MAX && "this shader is freed but never installed, check your code for errors!");
     #endif
         skr_atomic32_add_relaxed(&found->second->rc, -1);
         return true;
@@ -131,6 +137,7 @@ ESkrShaderMapShaderStatus ShaderMapImpl::install_shader_from_vfs(const skr_platf
 {
     bool launch_success = false;
     auto bytes_vfs = root.bytecode_vfs;
+    SKR_ASSERT(bytes_vfs);
     const auto hash = identifier.hash;
     const auto uri = skr::format("{}#{}-{}-{}-{}.bytes", hash.flags, 
         hash.encoded_digits[0], hash.encoded_digits[1], hash.encoded_digits[2], hash.encoded_digits[3]);
@@ -173,13 +180,13 @@ ESkrShaderMapShaderStatus ShaderMapImpl::install_shader_from_vfs(const skr_platf
     ram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_RAM_LOADING] = (void*)sRequest.get();
     root.ram_service->request(bytes_vfs, &ram_texture_io, &sRequest->bytes_request, &sRequest->bytes_destination);
     launch_success = true;
-    return launch_success ? SKR_SHADER_MAP_SHADER_STATUS_REQUESTED : SKR_SHADER_MAP_SHADER_STATUS_NONE;
+    return launch_success ? SKR_SHADER_MAP_SHADER_STATUS_REQUESTED : SKR_SHADER_MAP_SHADER_STATUS_FAILED;
 }
 
 void ShaderMapImpl::new_frame(uint64_t index) SKR_NOEXCEPT
 {
     SKR_ASSERT(index > frame_index);
-    
+
     frame_index = index;
 }
 
@@ -197,6 +204,50 @@ void ShaderMapImpl::garbage_collect(uint64_t critical_frame) SKR_NOEXCEPT
         }
     }
 }
-
-
 } // namespace skr
+
+skr_shader_map_id skr_shader_map_t::Create(const struct skr_shader_map_root_t* desc) SKR_NOEXCEPT
+{
+    return SkrNew<skr::ShaderMapImpl>(*desc);
+}
+
+bool skr_shader_map_t::Free(skr_shader_map_id shader_map) SKR_NOEXCEPT
+{
+    SkrDelete(shader_map);
+    return true;
+}
+
+skr_shader_map_id skr_shader_map_create(const struct skr_shader_map_root_t* desc)
+{
+    return skr_shader_map_t::Create(desc);
+}
+
+ESkrShaderMapShaderStatus skr_shader_map_install_shader(skr_shader_map_id shaderMap, const skr_platform_shader_identifier_t* key)
+{
+    return shaderMap->install_shader(*key);
+}
+
+CGPUShaderLibraryId skr_shader_map_find_shader(skr_shader_map_id shaderMap, const skr_platform_shader_identifier_t* id)
+{
+    return shaderMap->find_shader(*id);
+}
+
+void skr_shader_map_free_shader(skr_shader_map_id shaderMap, const skr_platform_shader_identifier_t* id)
+{
+    shaderMap->free_shader(*id);
+}
+
+void skr_shader_map_new_frame(skr_shader_map_id shaderMap, uint64_t frame_index)
+{
+    shaderMap->new_frame(frame_index);
+}
+
+void skr_shader_map_garbage_collect(skr_shader_map_id shaderMap, uint64_t critical_frame)
+{
+    shaderMap->garbage_collect(critical_frame);
+}
+
+void skr_shader_map_free(skr_shader_map_id id)
+{
+    skr_shader_map_t::Free(id);
+}

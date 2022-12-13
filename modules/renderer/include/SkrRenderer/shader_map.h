@@ -6,7 +6,7 @@
 
 typedef struct skr_shader_map_key_t skr_shader_map_key_t;
 typedef struct skr_shader_map_t skr_shader_map_t;
-typedef const struct skr_shader_map_t* skr_shader_map_id;
+typedef struct skr_shader_map_t* skr_shader_map_id;
 typedef struct skr_shader_map_root_t skr_shader_map_root_t;
 
 typedef enum ESkrShaderMapShaderStatus
@@ -59,7 +59,6 @@ typedef struct skr_shader_map_root_t {
     struct skr_io_ram_service_t* ram_service = nullptr;
     SRenderDeviceId render_device = nullptr;
     skr_threaded_service_t* aux_service = nullptr;
-    bool dont_create_shader = false;
 } skr_shader_map_root_t;
 
 #ifdef __cplusplus
@@ -68,11 +67,11 @@ typedef struct skr_shader_map_root_t {
 //                                      -> {stable_hash} -> shader_identifier (final)
 struct SKR_RENDERER_API skr_shader_map_t
 {
+    virtual ~skr_shader_map_t() = default;
+
     virtual ESkrShaderMapShaderStatus install_shader(const skr_platform_shader_identifier_t& id) SKR_NOEXCEPT = 0;
     virtual CGPUShaderLibraryId find_shader(const skr_platform_shader_identifier_t& id) SKR_NOEXCEPT = 0;
     virtual bool free_shader(const skr_platform_shader_identifier_t& id) SKR_NOEXCEPT = 0;
-
-    virtual bool uninstall_shader(const skr_platform_shader_identifier_t& id) SKR_NOEXCEPT = 0;
 
     virtual void new_frame(uint64_t frame_index) SKR_NOEXCEPT = 0;
     virtual void garbage_collect(uint64_t critical_frame) SKR_NOEXCEPT = 0;
