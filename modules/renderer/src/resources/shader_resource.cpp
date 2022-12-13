@@ -52,6 +52,16 @@ skr_stable_shader_hash_t::operator skr::string() const SKR_NOEXCEPT
     return skr::format("{}{}{}{}", valuea, valueb, valuec, valued);
 }
 
+size_t skr_platform_shader_hash_t::hasher::operator()(const skr_platform_shader_hash_t& hash) const
+{
+    return skr_hash(&hash, sizeof(hash), 114514u);
+}
+
+size_t skr_platform_shader_identifier_t::hasher::operator()(const skr_platform_shader_identifier_t& hash) const
+{
+    return skr_hash(&hash, sizeof(hash), 114514u);
+}
+
 uint32_t skr_shader_option_sequence_t::find_key_index(skr::string_view in_key) const SKR_NOEXCEPT
 {
     for (uint32_t at = 0; at < keys.size(); at++)

@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRenderer/fwd_types.h"
+#include "SkrRenderer/shader_hash.h"
 #include "utils/io.h"
 #include "cgpu/api.h"
 #include "resource/resource_factory.h"
@@ -10,57 +10,6 @@
     #include "SkrRenderer/resources/shader_resource.generated.h"
 #endif
 
-sreflect_struct("guid" : "5a54720c-34b2-444c-8e3a-5977c94136c3")
-sattr("serialize" : ["json", "bin"], "rtti" : true)
-skr_stable_shader_hash_t 
-{
-    inline constexpr skr_stable_shader_hash_t() = default;
-
-    uint32_t valuea = 0;
-    uint32_t valueb = 0;
-    uint32_t valuec = 0;
-    uint32_t valued = 0;
-    
-    sattr("no-rtti" : true)
-    inline bool operator==(const skr_stable_shader_hash_t& other) const
-    {
-        return valuea == other.valuea && valueb == other.valueb && valuec == other.valuec && valued == other.valued;
-    }
-
-    struct hasher
-    {
-        SKR_RENDERER_API size_t operator()(const skr_stable_shader_hash_t& hash) const;
-    };
-
-    sattr("no-rtti" : true)
-    SKR_RENDERER_API static skr_stable_shader_hash_t hash_string(const char* str, uint32_t size) SKR_NOEXCEPT;
-
-    sattr("no-rtti" : true)
-    SKR_RENDERER_API static skr_stable_shader_hash_t from_string(const char* str) SKR_NOEXCEPT;
-    
-    SKR_RENDERER_API skr_stable_shader_hash_t(uint32_t a, uint32_t b, uint32_t c, uint32_t d) SKR_NOEXCEPT;
-    SKR_RENDERER_API explicit operator skr::string() const SKR_NOEXCEPT;
-};
-static constexpr skr_stable_shader_hash_t kZeroStableShaderHash = skr_stable_shader_hash_t();
-
-sreflect_struct("guid" : "0291f512-747e-4b64-ba5c-5fdc412220a3")
-sattr("serialize" : ["json", "bin"], "rtti" : true)
-skr_platform_shader_hash_t 
-{
-    uint32_t flags;
-    uint32_t encoded_digits[4];
-};
-
-sreflect_struct("guid" : "b0b69898-166f-49de-a675-7b04405b98b1")
-sattr("serialize" : ["json", "bin"], "rtti" : true)
-skr_platform_shader_identifier_t 
-{
-    skr::TEnumAsByte<ECGPUShaderBytecodeType> bytecode_type;
-    skr::TEnumAsByte<ECGPUShaderStage> shader_stage;
-    skr_platform_shader_hash_t hash;
-    skr::string entry;
-};
-
 sreflect_struct("guid" : "6c07aa34-249f-45b8-8080-dd2462ad5312")
 sattr("serialize" : ["json", "bin"], "rtti" : true)
 skr_multi_shader_resource_t
@@ -70,6 +19,7 @@ skr_multi_shader_resource_t
 
     stable_hash_t stable_hash;
     skr::TEnumAsByte<ECGPUShaderStage> shader_stage;
+    skr::string entry;
 
     sattr("no-rtti" : true)
     inline skr::vector<skr_platform_shader_identifier_t>& GetRootDynamicVariants() SKR_NOEXCEPT{

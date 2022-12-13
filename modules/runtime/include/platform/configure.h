@@ -119,7 +119,7 @@ extern const char* $name;
 #if defined(__cplusplus)
     #define SKR_CONSTEXPR constexpr
 #else
-    #define SKR_CONSTEXPR
+    #define SKR_CONSTEXPR const
 #endif
 
 #ifdef __cplusplus
