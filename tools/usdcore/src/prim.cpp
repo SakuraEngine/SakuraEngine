@@ -17,6 +17,7 @@
 #include "pxr/usd/usd/primRange.h"
 #include "pxr/usd/usd/modelAPI.h"
 #include "utils/defer.hpp"
+#include "utils/log.h"
 
 namespace skd
 {
@@ -78,6 +79,16 @@ bool SUSDPrimImpl::IsModel() const SKR_NOEXCEPT
 bool SUSDPrimImpl::IsGroup() const SKR_NOEXCEPT
 {
     return prim.IsGroup();
+}
+
+bool SUSDPrimImpl::IsInstance() const SKR_NOEXCEPT
+{
+    return prim.IsInstance();
+}
+
+bool SUSDPrimImpl::IsInstanceProxy() const SKR_NOEXCEPT
+{
+    return prim.IsInstanceProxy();
 }
 
 eastl::vector<skr::string> SUSDPrimImpl::GetAppliedSchemas() const SKR_NOEXCEPT
@@ -160,6 +171,16 @@ SUSDPrimId SUSDPrimImpl::GetParent() const SKR_NOEXCEPT
     return skr::SObjectPtr<SUSDPrimImpl>::Create(prim.GetParent());
 }
 
+SUSDPrimId SUSDPrimImpl::GetPrototype() const SKR_NOEXCEPT
+{
+    return skr::SObjectPtr<SUSDPrimImpl>::Create(prim.GetPrototype());
+}
+
+SUSDPrimId SUSDPrimImpl::GetPrimInPrototype() const SKR_NOEXCEPT
+{
+    return skr::SObjectPtr<SUSDPrimImpl>::Create(prim.GetPrimInPrototype());
+}
+
 eastl::vector<SUSDPrim::SharedId> SUSDPrimImpl::GetChildren() const SKR_NOEXCEPT
 {
     pxr::UsdPrimSiblingRange primChildren = prim.GetChildren();
@@ -174,10 +195,7 @@ eastl::vector<SUSDPrim::SharedId> SUSDPrimImpl::GetChildren() const SKR_NOEXCEPT
 eastl::vector<SUSDPrim::SharedId> SUSDPrimImpl::GetFilteredChildren(bool traverseInstanceProxies) const SKR_NOEXCEPT
 {
     pxr::Usd_PrimFlagsPredicate predicate = pxr::UsdPrimDefaultPredicate;
-    if (traverseInstanceProxies)
-    {
-        predicate = pxr::UsdTraverseInstanceProxies(predicate);
-    } 
+    predicate.TraverseInstanceProxies(traverseInstanceProxies);
     pxr::UsdPrimSiblingRange primChildren = prim.GetFilteredChildren(predicate);
     eastl::vector<SharedId> children;
     for (const pxr::UsdPrim& child : primChildren)
@@ -187,10 +205,12 @@ eastl::vector<SUSDPrim::SharedId> SUSDPrimImpl::GetFilteredChildren(bool travers
     return children;
 }
 
-eastl::vector<SUSDPrim::SharedId> SUSDPrimImpl::GetAllPrimsOfType(const char *schemaType, skr::function_ref<bool (SharedId)> pruneChildren) const SKR_NOEXCEPT
+eastl::vector<SUSDPrim::SharedId> SUSDPrimImpl::GetAllPrimsOfType(bool traverseInstanceProxies, const char *schemaType, skr::function_ref<bool (SharedId)> pruneChildren) const SKR_NOEXCEPT
 {
+    pxr::Usd_PrimFlagsPredicate predicate = pxr::UsdPrimDefaultPredicate;
+    predicate.TraverseInstanceProxies(traverseInstanceProxies);
     eastl::vector<SUSDPrim::SharedId> prims;
-    pxr::UsdPrimRange primRange{prim, pxr::UsdTraverseInstanceProxies()};
+    pxr::UsdPrimRange primRange{prim, predicate};
     pxr::TfType type = pxr::UsdSchemaRegistry::GetTypeFromName(pxr::TfToken(schemaType));
     if(type.IsUnknown())
     {

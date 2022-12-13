@@ -7,6 +7,7 @@ namespace skd
     { 
         virtual ~SUSDStage() = default; 
         virtual SUSDPrimId GetPseudoRoot() = 0;
+        virtual eastl::vector<SUSDPrimId> GetPrototypes() = 0;
         virtual SUSDPrimId GetDefaultPrim() = 0;
         virtual SUSDPrimId GetPrimAtPath(const char* path) = 0;
         // virtual SUSDPrimId GetPrimAtPath() = 0;

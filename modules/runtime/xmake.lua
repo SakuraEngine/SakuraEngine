@@ -43,7 +43,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public = true})
     add_links(links_list, {public = true})
     if (is_os("windows")) then 
-        add_syslinks("advapi32", "Shcore", "user32", "shell32", "Ole32", {public = true})
+        add_links("advapi32", "Shcore", "user32", "shell32", "Ole32", {public = true})
     end
     if (is_os("macosx")) then 
         add_mxflags(project_cxflags, project_mxflags, {public = true, force = true})

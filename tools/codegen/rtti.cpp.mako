@@ -53,7 +53,7 @@ namespace skr::type
             };
         <%
             fields = [(name, field) for name, field in vars(record.fields).items() if not hasattr(field.attrs, "no-rtti")]
-            methods = [method for method in record.methods if not hasattr(method.attrs, "no-rtti")]
+            methods = [method for method in record.methods if hasattr(method.attrs, "rtti")]
         %>
         %if fields:
             static skr_field_t fields[] = {
@@ -64,8 +64,7 @@ namespace skr::type
         %else:
             static skr::span<skr_field_t> fields;
         %endif
-        
-        %for i, method in enumerate(generator.filter_rtti(methods)):
+        %for i, method in methods:
             %if vars(method.parameters):
                 static skr_field_t _params${i}[] = {
                 %for name, field in vars(method.parameters).items():
@@ -80,7 +79,7 @@ namespace skr::type
         
         %if methods:
         static skr_method_t methods[] = {
-        %for i, method in enumerate(generator.filter_rtti(methods)):
+        %for i, method in methods:
             {
                 "${db.short_name(method.name)}", 
             %if method.retType == "void":

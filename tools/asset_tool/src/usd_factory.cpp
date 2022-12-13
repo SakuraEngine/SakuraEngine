@@ -166,22 +166,24 @@ int SUsdImporterFactoryImpl::Update()
             }
             
             auto root = _stage->GetPseudoRoot();
-            auto allMeshPrims = root->GetAllPrimsOfType("UsdGeomMesh", nullptr);
+            auto allMeshPrims = root->GetAllPrimsOfType(true, "UsdGeomMesh", nullptr);
             for(auto& prim : allMeshPrims)
             {
                 auto iter = _importer->redirectors.find(prim->GetPrimPath()->GetString());
                 if(iter != _importer->redirectors.end())
                     continue;
-                _assetPrims.insert(std::make_pair(prim->GetPrimPath()->GetString(), prim));
+                auto protoPrim = prim->IsInstanceProxy() ? prim->GetPrimInPrototype() : prim;
+                _assetPrims.insert(std::make_pair(prim->GetPrimPath()->GetString(), protoPrim));
             }
         }
     }
     else
     {
-        if(ImGui::BeginTable("AssetList", 3, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY, {0, 1000}))
+        if(ImGui::BeginTable("AssetList", 4, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY, {0, 1000}))
         {
             ImGui::TableSetupColumn("Name");
             ImGui::TableSetupColumn("Path");
+            ImGui::TableSetupColumn("ProtoPath");
             ImGui::TableSetupColumn("Type");
             ImGui::TableSetupScrollFreeze(0, 1);
             ImGui::TableHeadersRow();
@@ -194,8 +196,10 @@ int SUsdImporterFactoryImpl::Update()
                     _selectedPrim = prim;
                 }
                 ImGui::TableSetColumnIndex(1);
-                ImGui::Text("%s", prim->GetPrimPath()->GetString().c_str());
+                ImGui::Text("%s", path.c_str());
                 ImGui::TableSetColumnIndex(2);
+                ImGui::Text("%s", prim->GetPrimPath()->GetString().c_str());
+                ImGui::TableSetColumnIndex(3);
                 ImGui::Text("%s", prim->GetTypeName().c_str());
             }
             ImGui::EndTable();
@@ -214,38 +218,54 @@ int SUsdImporterFactoryImpl::Update()
         }
         if(ImGui::Button("Import All"))
         {
+            skr::flat_hash_map<skr::string, skr_guid_t, skr::hash<skr::string>> _protoPrims;
             for(auto& [path, prim] : _assetPrims)
             {
-                skr_guid_t newGuid;
-                dual_make_guid(&newGuid);
-                _importer->redirectors[path] = newGuid;
-                skr_json_writer_t writer{3};
-                writer.StartObject();
-                writer.Key("guid");
-                json::Write(&writer, newGuid);
-                writer.Key("type");
-                json::Write(&writer, skr::type::type_id<skr_mesh_resource_t>::get());
-                writer.Key("importer");
-                writer.StartObject();
-                writer.Key("importerType");
-                json::Write(&writer, skr::type::type_id<SUSDMeshImporter>::get());
-                writer.Key("assetPath");
-                writer.String(_filePath.c_str());
-                writer.Key("primPath");
-                writer.String(path.c_str());
-                writer.EndObject();
-                writer.EndObject();
-                skr::filesystem::path assetPath(_assetFolder.c_str());
-                assetPath /= skr::filesystem::path(path.c_str());
-                assetPath.replace_extension(".mesh.meta");
-                skr::filesystem::create_directories(assetPath.parent_path());
-                std::ofstream file(assetPath.u8string());
-                file << writer.Str().c_str();
+                auto protoPath = prim->GetPrimPath()->GetString();
+                auto iter = _protoPrims.find(protoPath);
+                if(iter == _protoPrims.end())
+                {
+                    skr_guid_t newGuid;
+                    dual_make_guid(&newGuid);
+                    _protoPrims.insert(std::make_pair(protoPath, newGuid));
+                    skr_json_writer_t writer{3};
+                    writer.StartObject();
+                    writer.Key("guid");
+                    json::Write(&writer, newGuid);
+                    writer.Key("type");
+                    json::Write(&writer, skr::type::type_id<skr_mesh_resource_t>::get());
+                    writer.Key("importer");
+                    writer.StartObject();
+                    writer.Key("importerType");
+                    json::Write(&writer, skr::type::type_id<SUSDMeshImporter>::get());
+                    writer.Key("assetPath");
+                    writer.String(_filePath.c_str());
+                    writer.Key("primPath");
+                    writer.String(path.c_str());
+                    writer.EndObject();
+                    writer.EndObject();
+                    skr::filesystem::path assetPath(_assetFolder.c_str());
+                    assetPath /= skr::filesystem::path(path.c_str());
+                    assetPath.replace_extension(".mesh.meta");
+                    skr::filesystem::create_directories(assetPath.parent_path());
+                    std::ofstream file(assetPath.u8string());
+                    file << writer.Str().c_str();
+                }
+            }
+            for(auto& [path, prim] : _assetPrims)
+            {
+                auto& protoguid = _protoPrims[prim->GetPrimPath()->GetString()];
+                _importer->redirectors[path] = protoguid;
             }
             skr_json_writer_t writer{3};
             skr::json::Write(&writer, *_importer);
             std::ofstream file(_assetPath.c_str());
             file << writer.Str().c_str();
+            Clear();
+            return 1;
+        }
+        if(ImGui::Button("Go Back"))
+        {
             Clear();
             return 1;
         }
