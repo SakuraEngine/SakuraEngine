@@ -65,7 +65,7 @@ namespace skr::type
             static skr::span<skr_field_t> fields;
         %endif
         
-        %for i, method in enumerate(methods):
+        %for i, method in enumerate(generator.filter_rtti(methods)):
             %if vars(method.parameters):
                 static skr_field_t _params${i}[] = {
                 %for name, field in vars(method.parameters).items():
@@ -80,7 +80,7 @@ namespace skr::type
         
         %if methods:
         static skr_method_t methods[] = {
-        %for i, method in enumerate(methods):
+        %for i, method in enumerate(generator.filter_rtti(methods)):
             {
                 "${db.short_name(method.name)}", 
             %if method.retType == "void":
