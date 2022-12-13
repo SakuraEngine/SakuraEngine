@@ -149,8 +149,10 @@ bool SShaderCooker::Cook(SCookContext* ctx)
     // foreach variants
     skr::parallel_for(static_variants.begin(), static_variants.end(), 1,
     [&](const auto* pVariant, const auto* _) -> void {
+        const auto* shaderImporter = static_cast<SShaderImporter*>(ctx->GetImporter());
         const uint64_t static_varidx = pVariant - static_variants.begin();
         auto& outResource = allOutResources[static_varidx];
+        outResource.entry = shaderImporter->entry;
         outResource.stable_hash = static_stable_hashes[static_varidx];
         for (const auto dyn_hash : dynamic_stable_hashes)
         {
@@ -225,7 +227,6 @@ bool SShaderCooker::Cook(SCookContext* ctx)
                     compiler->FreeCompileResult(compiled);
                     // fill platform identifier
                     identifier.bytecode_type = format;
-                    identifier.entry = shaderImporter->entry;
                 }
                 SkrShaderCompiler_Destroy(compiler);
             }); // end foreach target profile
