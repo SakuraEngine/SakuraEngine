@@ -31,6 +31,7 @@
 #include "task/task.hpp"
 
 #include "resource/local_resource_registry.hpp"
+#include "SkrRenderer/shader_map.h"
 #include "SkrRenderer/resources/texture_resource.h"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRenderer/resources/shader_resource.hpp"
@@ -88,6 +89,8 @@ class SGameModule : public skr::IDynamicModule
     skr_vfs_t* tex_resource_vfs = nullptr;
     skr_vfs_t* shader_bytes_vfs = nullptr;
     skr_io_ram_service_t* ram_service = nullptr;
+    skr_shader_map_t* shadermap = nullptr;
+
     skr::resource::SLocalResourceRegistry* registry;
 
     struct dual_storage_t* game_world = nullptr;
@@ -163,16 +166,24 @@ void SGameModule::installResourceFactories()
         auto shaderResourceRoot = gameResourceRoot / shaderType;
         auto u8ShaderResourceRoot = shaderResourceRoot.u8string();
 
+        // create shader vfs
         skr_vfs_desc_t shader_vfs_desc = {};
         shader_vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
         shader_vfs_desc.override_mount_dir = u8ShaderResourceRoot.c_str();
         shader_bytes_vfs = skr_create_vfs(&shader_vfs_desc);
 
+        // create shader map
+        skr_shader_map_root_t shadermapRoot = {};
+        shadermapRoot.bytecode_vfs = shader_bytes_vfs;
+        shadermapRoot.ram_service = ram_service;
+        shadermapRoot.render_device = game_render_device;
+        shadermapRoot.aux_service = game_render_device->get_aux_service(0);
+        shadermap = skr_shader_map_create(&shadermapRoot);
+
+        // create shader resource factory
         skr::resource::SShaderResourceFactory::Root factoryRoot = {};
-        factoryRoot.bytecode_vfs = shader_bytes_vfs;
-        factoryRoot.ram_service = ram_service;
         factoryRoot.render_device = game_render_device;
-        factoryRoot.aux_service = game_render_device->get_aux_service(0);
+        factoryRoot.shadermap = shadermap;
         shaderFactory = skr::resource::SShaderResourceFactory::Create(factoryRoot);
         resource_system->RegisterFactory(shaderFactory);
     }
@@ -230,9 +241,6 @@ void SGameModule::installResourceFactories()
             auto shader_collection = material_type->shader_resources[0].get_resolved(true);
             auto&& root_variant_iter = shader_collection->switch_variants.find(kZeroStableShaderHash);
             SKR_ASSERT(root_variant_iter != shader_collection->switch_variants.end() && "Root shader variant missing!");
-            auto* root_variant = &root_variant_iter->second;
-            SKR_ASSERT(root_variant->shader->entrys_count && "Root shader variant entry missing!");
-            SKR_LOG_TRACE("Shader Loaded: entry name - %s", root_variant->shader->entry_reflections[0].entry_name);
             resource_system->UnloadResource(matType);
             resource_system->Update();
             while (matType.get_status(true) != SKR_LOADING_STATUS_UNLOADED)
@@ -259,6 +267,7 @@ void SGameModule::uninstallResourceFactories()
     SkrDelete(skinFactory);
     SkrDelete(sceneFactory);
 
+    skr_shader_map_free(shadermap);
     skr_free_renderer(game_renderer);
     
     skr::resource::GetResourceSystem()->Shutdown();

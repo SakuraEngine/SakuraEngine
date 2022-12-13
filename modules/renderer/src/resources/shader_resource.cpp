@@ -1,3 +1,4 @@
+#include "SkrRenderer/shader_map.h"
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "SkrRenderer/render_device.h"
 #include "utils/format.hpp"
@@ -130,40 +131,7 @@ struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFacto
         }
     }
 
-    struct ShaderRequest
-    {
-        ShaderRequest(SShaderResourceFactoryImpl* factory, const char* uri, skr_multi_shader_resource_t* platform_shader)
-            : factory(factory), bytes_uri(uri), platform_shader(platform_shader)
-        {
-
-        }
-
-        bool createShader()
-        {
-            auto render_device = factory->root.render_device;
-            const auto& shader_destination = bytes_destination;
-    
-            auto desc = make_zeroed<CGPUShaderLibraryDescriptor>();
-            desc.code = (const uint32_t*)shader_destination.bytes;
-            desc.code_size = (uint32_t)shader_destination.size;
-            desc.name = bytes_uri.c_str();
-            desc.stage = (ECGPUShaderStage)platform_shader->shader_stage;
-            platform_shader->shader = cgpu_create_shader_library(render_device->get_cgpu_device(), &desc);
-            skr_atomic32_add_relaxed(&shader_created, 1);
-            return true;
-        }
-
-        SShaderResourceFactoryImpl* factory = nullptr;
-        skr::string bytes_uri;
-        skr_multi_shader_resource_t* platform_shader = nullptr;
-        skr_async_request_t bytes_request;
-        skr_async_ram_destination_t bytes_destination;
-        skr_async_request_t aux_request;
-        SAtomic32 shader_created = 0;
-    };
-
     Root root;
-    skr::flat_hash_map<skr_multi_shader_resource_t*, SPtr<ShaderRequest>> mShaderRequests;
 };
 
 SShaderResourceFactory* SShaderResourceFactory::Create(const Root& root)
@@ -187,7 +155,13 @@ bool SShaderResourceFactoryImpl::Unload(skr_resource_record_t* record)
     auto shader_collection = (skr_shader_collection_resource_t*)record->resource;
     for (auto&& [hash, variant] : shader_collection->switch_variants)
     {
-        if (variant.shader) cgpu_free_shader_library(variant.shader);
+        for (auto&& [platform, opt_variant] : variant.option_variants)
+        {
+            for (auto&& identifier : opt_variant)
+            {
+                root.shadermap->free_shader(identifier);
+            }
+        }
     }
     SkrDelete(shader_collection);
     return true; 
@@ -197,10 +171,8 @@ ESkrInstallStatus SShaderResourceFactoryImpl::Install(skr_resource_record_t* rec
 {
     if (root.dont_create_shader) return SKR_INSTALL_STATUS_SUCCEED;
     
-    auto bytes_vfs = root.bytecode_vfs;
     auto shader_collection = static_cast<skr_shader_collection_resource_t*>(record->resource);
     auto&& root_switch_variant = shader_collection->GetRootStaticVariant();
-    auto* pPlatformResource = &root_switch_variant;
     auto&& root_option_variant = root_switch_variant.GetRootDynamicVariants();
     bool launch_success = false;
     // load bytecode and create CGPU shader
@@ -210,49 +182,15 @@ ESkrInstallStatus SShaderResourceFactoryImpl::Install(skr_resource_record_t* rec
         const auto runtime_bytecode_type = GetRuntimeBytecodeType();
         if (identifier.bytecode_type == runtime_bytecode_type)
         {
-            const auto hash = identifier.hash;
-            const auto uri = skr::format("{}#{}-{}-{}-{}.bytes", hash.flags, 
-                hash.encoded_digits[0], hash.encoded_digits[1], hash.encoded_digits[2], hash.encoded_digits[3]);
-            auto sRequest = SPtr<ShaderRequest>::Create(this, uri.c_str(), pPlatformResource);
-            auto found = mShaderRequests.find(pPlatformResource);
-            SKR_ASSERT(found == mShaderRequests.end());
-            mShaderRequests.emplace(pPlatformResource, sRequest);
-            
-            auto ram_texture_io = make_zeroed<skr_ram_io_t>();
-            ram_texture_io.path = sRequest->bytes_uri.c_str();
-            ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
-                ZoneScopedN("LoadShaderBytes");
-                
-                auto sRequest = (ShaderRequest*)data;
-                auto factory = sRequest->factory;
-                if (auto aux_service = factory->root.aux_service) // create shaders on aux thread
-                {
-                    auto aux_task = make_zeroed<skr_service_task_t>();
-                    aux_task.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* usrdata){
-                        ZoneScopedN("CreateShader(AuxService)");
-
-                        auto sRequest = (ShaderRequest*)usrdata;
-                        sRequest->createShader();
-                    };
-                    aux_task.callback_datas[SKR_ASYNC_IO_STATUS_OK] = sRequest;
-                    aux_service->request(&aux_task, &sRequest->aux_request);
-                }
-                else // create shaders inplace
-                {
-                    ZoneScopedN("CreateShader(InPlace)");
-
-                    sRequest->createShader();
-                }
-            };
-            ram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)sRequest.get();
-            root.ram_service->request(bytes_vfs, &ram_texture_io, &sRequest->bytes_request, &sRequest->bytes_destination);
-
-            launch_success = true;
-            pPlatformResource->active_slot = i;
+            const auto status = root.shadermap->install_shader(identifier);
+            if (status != SKR_SHADER_MAP_SHADER_STATUS_FAILED)
+            {
+                launch_success = true;
+            }
             break;
         }
     }
-    return launch_success ? SKR_INSTALL_STATUS_INPROGRESS : SKR_INSTALL_STATUS_FAILED;
+    return launch_success ? SKR_INSTALL_STATUS_SUCCEED : SKR_INSTALL_STATUS_FAILED;
 }
 
 bool SShaderResourceFactoryImpl::Uninstall(skr_resource_record_t* record)
@@ -262,27 +200,7 @@ bool SShaderResourceFactoryImpl::Uninstall(skr_resource_record_t* record)
 
 ESkrInstallStatus SShaderResourceFactoryImpl::UpdateInstall(skr_resource_record_t* record)
 {
-    auto shader_collection = static_cast<skr_shader_collection_resource_t*>(record->resource);
-    auto&& root_variant_iter = shader_collection->switch_variants.find(kZeroStableShaderHash);
-    SKR_ASSERT(root_variant_iter != shader_collection->switch_variants.end() && "Root shader variant missing!");
-    auto* root_variant = &root_variant_iter->second;
-    auto sRequest = mShaderRequests.find(root_variant);
-    if (sRequest != mShaderRequests.end())
-    {
-        auto okay = skr_atomic32_load_acquire(&sRequest->second->shader_created);
-        auto status = okay ? SKR_INSTALL_STATUS_SUCCEED : SKR_INSTALL_STATUS_INPROGRESS;
-        if (okay)
-        {
-            sakura_free(sRequest->second->bytes_destination.bytes);
-            mShaderRequests.erase(root_variant);
-        }
-        return status;
-    }
-    else
-    {
-        SKR_UNREACHABLE_CODE();
-    }
-    return ESkrInstallStatus::SKR_INSTALL_STATUS_FAILED;
+    return SKR_INSTALL_STATUS_SUCCEED;
 }
 
 } // namespace resource

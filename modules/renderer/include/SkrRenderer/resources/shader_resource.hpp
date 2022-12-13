@@ -36,11 +36,6 @@ skr_multi_shader_resource_t
 
     sattr("no-rtti" : true)
     skr::flat_hash_map<stable_hash_t, skr::vector<skr_platform_shader_identifier_t>, stable_hasher_t> option_variants;
-
-    sattr("transient": true, "no-rtti" : true)
-    CGPUShaderLibraryId shader = nullptr;
-    sattr("transient": true, "no-rtti" : true)
-    uint32_t active_slot = 0;
 };
 
 sreflect_struct("guid": "8372f075-b4ce-400d-929f-fb0e57c1c887")
@@ -120,6 +115,7 @@ skr_platform_shader_collection_json_t
     skr::vector<skr::vector<skr::string>> option_values_sequence;
 };
 
+struct skr_shader_map_t;
 namespace skr sreflect
 {
 namespace resource sreflect
@@ -128,10 +124,8 @@ struct SKR_RENDERER_API SShaderResourceFactory : public SResourceFactory {
     virtual ~SShaderResourceFactory() = default;
 
     struct Root {
-        skr_vfs_t* bytecode_vfs = nullptr;
-        skr_io_ram_service_t* ram_service = nullptr;
+        skr_shader_map_t* shadermap = nullptr;
         SRenderDeviceId render_device = nullptr;
-        skr_threaded_service_t* aux_service = nullptr;
         bool dont_create_shader = false;
     };
 
