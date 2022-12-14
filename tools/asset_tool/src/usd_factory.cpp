@@ -32,7 +32,7 @@ public:
 
     SUSDStageId _stage;
     bool _createNewAsset = false;
-    SSceneImporter* _importer = nullptr;
+    SUSDSceneImporter* _importer = nullptr;
     SImporter* _childImporter = nullptr;
     skr::flat_hash_map<skr::string, SUSDPrimId, skr::hash<skr::string>> _assetPrims;
     SUSDPrimId _selectedPrim;
@@ -114,7 +114,7 @@ int SUsdImporterFactoryImpl::Update()
         {
             if(_createNewAsset)
             {
-                _importer = SkrNew<SSceneImporter>();
+                _importer = SkrNew<SUSDSceneImporter>();
             }
             else
             {
@@ -151,12 +151,12 @@ int SUsdImporterFactoryImpl::Update()
                 }
                 skr_guid_t _importerType;
                 skr::json::Read(std::move(importerType), _importerType);
-                if(!(_importerType == skr::type::type_id<SSceneImporter>::get()))
+                if(!(_importerType == skr::type::type_id<SUSDSceneImporter>::get()))
                 {
                     SKR_LOG_ERROR("importer type not match");
                     return -1;
                 }
-                _importer = SkrNew<SSceneImporter>();
+                _importer = SkrNew<SUSDSceneImporter>();
                 if(auto error = skr::json::Read(std::move(importer), *_importer); error != skr::json::SUCCESS)
                 {
                     SKR_LOG_ERROR("read importer failed %s", skr::json::error_message(error));
@@ -275,7 +275,8 @@ int SUsdImporterFactoryImpl::Update()
 SImporterFactory* GetUsdImporterFactory()
 {
     USDCoreInitialize();
-    return SkrNew<SUsdImporterFactoryImpl>();
+    static SUsdImporterFactoryImpl factory;
+    return &factory;
 }
 } // namespace skd::asset
 #endif

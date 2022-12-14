@@ -14,7 +14,7 @@ namespace skd sreflect
 namespace asset sreflect
 {
 sreflect_struct("guid" : "4F0E4239-A07F-4F48-B54F-FBF406C60DC3", "serialize" : "json")
-SKRUSDTOOL_API SSceneImporter final : public SImporter
+SKRUSDTOOL_API SUSDSceneImporter final : public SImporter
 {
     sattr("no-default" : true)
     skr::string assetPath;
@@ -27,7 +27,7 @@ SKRUSDTOOL_API SSceneImporter final : public SImporter
 sregister_importer();
 
 sreflect_struct("guid" : "A4E9937D-792B-4ABB-BFDB-42066B92E910")
-SKRUSDTOOL_API SSceneCooker final : public SCooker 
+SKRUSDTOOL_API SUSDSceneCooker final : public SCooker 
 { 
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override { return kDevelopmentVersion; }

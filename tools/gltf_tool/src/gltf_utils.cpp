@@ -244,7 +244,8 @@ void CookGLTFMeshData(const cgltf_data* gltf_data, SMeshCookConfig* cfg, skr_mes
     {
         shuffle_layout_name = skr_mesh_resource_query_vertex_layout(shuffle_layout_id, &shuffle_layout);
     }
-
+    
+    //FIXME: select mesh to cook
     out_resource.name = gltf_data->meshes[0].name ? gltf_data->meshes[0].name : "";
     if (out_resource.name.empty()) out_resource.name = "gltfMesh";
     // record primitvies
@@ -296,6 +297,7 @@ void CookGLTFMeshData_SplitSkin(const cgltf_data* gltf_data, SMeshCookConfig* cf
         shuffle_layout_name = skr_mesh_resource_query_vertex_layout(shuffle_layout_id, &shuffle_layout);
     }
 
+    //FIXME: select mesh to cook
     out_resource.name = gltf_data->meshes[0].name;
     if (out_resource.name.empty()) out_resource.name = "gltfMesh";
     // record primitvies

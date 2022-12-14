@@ -123,11 +123,11 @@ void SGameModule::installResourceFactories()
 
     registry = SkrNew<skr::resource::SLocalResourceRegistry>(resource_vfs);
     skr::resource::GetResourceSystem()->Initialize(registry, ram_service);
-    // 
+    //
 
     using namespace skr::guid::literals;
     auto resource_system = skr::resource::GetResourceSystem();
-    
+
     auto gameResourceRoot = resourceRoot / "game";
     auto u8TextureRoot = gameResourceRoot.u8string();
     // texture factory
@@ -202,7 +202,6 @@ void SGameModule::installResourceFactories()
         resource_system->RegisterFactory(matFactory);
     }
 
-
     // anim factory
     {
         animFactory = SkrNew<skr::resource::SAnimFactory>();
@@ -218,6 +217,27 @@ void SGameModule::installResourceFactories()
         skinFactory = SkrNew<skr::resource::SSkinFactory>();
         resource_system->RegisterFactory(skinFactory);
     }
+    struct GameSceneFactory : public skr::resource::SSceneFactory {
+        virtual ESkrInstallStatus Install(skr_resource_record_t* record) override
+        {
+            auto renderableT_builder = make_zeroed<dual::type_builder_t>();
+            renderableT_builder.with<skr_render_effect_t>();
+            auto renderableT = make_zeroed<dual_entity_type_t>();
+            renderableT.type = renderableT_builder.build();
+            auto detlaT = make_zeroed<dual_delta_type_t>();
+            detlaT.added = renderableT;
+            skr_scene_resource_t* scene = (skr_scene_resource_t*)record->resource;
+            auto callback = [&](dual_chunk_view_t* view) {
+                auto callback2 = [&](dual_chunk_view_t* view, dual_chunk_view_t* oldView) {
+                    skr_render_effect_attach(renderer, view, "ForwardEffect");
+                };
+                dualS_cast_view_delta(scene->storage, view, &detlaT, DUAL_LAMBDA(callback2));
+            };
+            dualS_all(scene->storage, false, false, DUAL_LAMBDA(callback));
+            return SKR_INSTALL_STATUS_SUCCEED;
+        }
+        SRendererId renderer;
+    };
     // scene factory
     {
         sceneFactory = SkrNew<skr::resource::SSceneFactory>();
@@ -230,13 +250,14 @@ void SGameModule::installResourceFactories()
     {
         while (material.get_status() != SKR_LOADING_STATUS_INSTALLED && material.get_status() != SKR_LOADING_STATUS_ERROR)
         {
-            auto status = material.get_status();(void)status;
+            auto status = material.get_status();
+            (void)status;
             resource_system->Update();
         }
         auto final_status = material.get_status();
         if (final_status != SKR_LOADING_STATUS_ERROR)
         {
-            auto pMaterial =  (skr_material_resource_t*)material.get_ptr();
+            auto pMaterial = (skr_material_resource_t*)material.get_ptr();
             pMaterial->material_type.resolve(true, 0, SKR_REQUESTER_SYSTEM);
             auto material_type = pMaterial->material_type.get_ptr();
             material_type->shader_resources[0].resolve(true, 0, SKR_REQUESTER_SYSTEM);
@@ -271,7 +292,7 @@ void SGameModule::uninstallResourceFactories()
 
     skr_shader_map_free(shadermap);
     skr_free_renderer(game_renderer);
-    
+
     skr::resource::GetResourceSystem()->Shutdown();
     SkrDelete(registry);
 
@@ -286,7 +307,7 @@ void SGameModule::uninstallResourceFactories()
 void SGameModule::on_load(int argc, char** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
-    
+
     game_world = dualS_create();
     game_render_device = skr_get_default_render_device();
     game_renderer = skr_create_renderer(game_render_device, game_world);
@@ -305,9 +326,9 @@ void create_test_scene(SRendererId renderer)
     // allocate 100 movable cubes
     auto renderableT_builder = make_zeroed<dual::type_builder_t>();
     renderableT_builder
-        .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
-        .with<skr_index_comp_t, skr_movement_comp_t>()
-        .with<skr_render_effect_t>();
+    .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
+    .with<skr_index_comp_t, skr_movement_comp_t>()
+    .with<skr_render_effect_t>();
     // allocate renderable
     auto renderableT = make_zeroed<dual_entity_type_t>();
     renderableT.type = renderableT_builder.build();
@@ -334,14 +355,14 @@ void create_test_scene(SRendererId renderer)
                 rotations[i].euler = { 90.f, 0.f, 0.f };
                 scales[i].value = { .25f, .25f, .25f };
             }
-            if(states)
+            if (states)
             {
                 using namespace skr::guid::literals;
                 states[i].animation_resource = "FBF4CC70-8B1D-4C30-B788-245C5CCE7EE6"_guid;
                 states[i].animation_resource.resolve(true, renderer->get_dual_storage());
             }
         }
-        if(auto feature_arrs = dualV_get_owned_rw(view, dual_id_of<skr_render_effect_t>::get()))
+        if (auto feature_arrs = dualV_get_owned_rw(view, dual_id_of<skr_render_effect_t>::get()))
         {
             if (movements)
                 skr_render_effect_attach(renderer, view, "ForwardEffect");
@@ -356,9 +377,9 @@ void create_test_scene(SRendererId renderer)
     // allocate 1 player entity
     auto playerT_builder = make_zeroed<dual::type_builder_t>();
     playerT_builder
-        .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
-        .with<skr_movement_comp_t>()
-        .with<skr_camera_comp_t>();
+    .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
+    .with<skr_movement_comp_t>()
+    .with<skr_camera_comp_t>();
     auto playerT = make_zeroed<dual_entity_type_t>();
     playerT.type = playerT_builder.build();
     dualS_allocate_type(renderer->get_dual_storage(), &playerT, 1, DUAL_LAMBDA(primSetup));
@@ -368,8 +389,8 @@ void create_test_scene(SRendererId renderer)
     // allocate 1 static(unmovable) gltf mesh
     auto static_renderableT_builderT = make_zeroed<dual::type_builder_t>();
     static_renderableT_builderT
-        .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
-        .with<skr_render_effect_t, game::anim_state_t>();
+    .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
+    .with<skr_render_effect_t, game::anim_state_t>();
     auto static_renderableT = make_zeroed<dual_entity_type_t>();
     static_renderableT.type = static_renderableT_builderT.build();
     dualS_allocate_type(renderer->get_dual_storage(), &static_renderableT, 1, DUAL_LAMBDA(primSetup));
@@ -394,8 +415,8 @@ void async_attach_render_mesh(SRendererId renderer)
             auto skin_comps = dual::get_owned_rw<skr_render_skin_comp_t>(view);
             auto skel_comps = dual::get_owned_rw<skr_render_skel_comp_t>(view);
             // auto anim_comps = dual::get_owned_rw<skr_render_anim_comp_t>(view);
-            
-            for(uint32_t i = 0; i < view->count; i++)
+
+            for (uint32_t i = 0; i < view->count; i++)
             {
                 auto& mesh_comp = mesh_comps[i];
                 auto& skin_comp = skin_comps[i];
@@ -418,7 +439,7 @@ const char* gltf_file = "scene.gltf";
 const char* gltf_file2 = "scene.gltf";
 void imgui_button_spawn_girl(SRendererId renderer)
 {
-    static bool onceGuard  = true;
+    static bool onceGuard = true;
     if (onceGuard)
     {
         ImGui::Begin(u8"AsyncMesh");
@@ -427,30 +448,30 @@ void imgui_button_spawn_girl(SRendererId renderer)
             async_attach_render_mesh(renderer);
             onceGuard = false;
         }
-        ImGui::End();  
+        ImGui::End();
     }
 }
 
-RUNTIME_EXTERN_C int luaopen_clonefunc(lua_State *L);
+RUNTIME_EXTERN_C int luaopen_clonefunc(lua_State* L);
 int SGameModule::main_module_exec(int argc, char** argv)
 {
     ZoneScopedN("GameExecution");
     // auto moduleManager = skr_get_module_manager();
     SKR_LOG_INFO("game executed as main module!");
-    
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) 
+
+    if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
         return -1;
-        
+
     auto render_device = skr_get_default_render_device();
     auto cgpu_device = render_device->get_cgpu_device();
     auto gfx_queue = render_device->get_gfx_queue();
     auto window_desc = make_zeroed<SWindowDescroptor>();
-    window_desc.flags = SKR_WINDOW_CENTERED | SKR_WINDOW_RESIZABLE;// | SKR_WINDOW_BOARDLESS;
+    window_desc.flags = SKR_WINDOW_CENTERED | SKR_WINDOW_RESIZABLE; // | SKR_WINDOW_BOARDLESS;
     window_desc.height = BACK_BUFFER_HEIGHT;
     window_desc.width = BACK_BUFFER_WIDTH;
     window = skr_create_window(
-        skr::format("Game [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).c_str(),
-        &window_desc);
+    skr::format("Game [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).c_str(),
+    &window_desc);
     // Initialize renderer
     auto swapchain = skr_render_device_register_window(render_device, window);
     auto present_fence = cgpu_create_fence(cgpu_device);
@@ -458,8 +479,8 @@ int SGameModule::main_module_exec(int argc, char** argv)
     auto renderGraph = render_graph::RenderGraph::create(
     [=](skr::render_graph::RenderGraphBuilder& builder) {
         builder.with_device(cgpu_device)
-            .with_gfx_queue(gfx_queue)
-            .enable_memory_aliasing();
+        .with_gfx_queue(gfx_queue)
+        .enable_memory_aliasing();
     });
     game_initialize_render_effects(game_renderer, renderGraph, resource_vfs);
     create_test_scene(game_renderer);
@@ -479,8 +500,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             auto controls1 = eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeySpace);
             controls1->AddInteraction(eastl::make_shared<InteractionTap<float>>());
             action->AddControl(controls1);
-            action->ListenEvent([](float value, ControlsBase<float>* _c, Interaction* i, Interaction::EvendId eventId)
-            {
+            action->ListenEvent([](float value, ControlsBase<float>* _c, Interaction* i, Interaction::EvendId eventId) {
                 SKR_LOG_DEBUG("Tap_Float %f", value);
             });
             inputSystem.AddInputAction(action);
@@ -491,14 +511,13 @@ int SGameModule::main_module_exec(int argc, char** argv)
             auto interactionPress = eastl::make_shared<InteractionPress<float>>(PressBehavior::PressAndRelease, 0.5f);
             controls1->AddInteraction(interactionPress);
             action->AddControl(controls1);
-            action->ListenEvent([interactionPress](float value, ControlsBase<float>* _c, Interaction* i, Interaction::EvendId eventId)
-            {
-                if(interactionPress.get() == i)
+            action->ListenEvent([interactionPress](float value, ControlsBase<float>* _c, Interaction* i, Interaction::EvendId eventId) {
+                if (interactionPress.get() == i)
                 {
-                    //if(((InteractionPress<float>*)i)->GetPressEventType(eventId) == PressEventType::Press)
-                    //    SKR_LOG_DEBUG("Press_Float Press %f", value);
-                    //else
-                    //    SKR_LOG_DEBUG("Press_Float Release %f", value);
+                    // if(((InteractionPress<float>*)i)->GetPressEventType(eventId) == PressEventType::Press)
+                    //     SKR_LOG_DEBUG("Press_Float Press %f", value);
+                    // else
+                    //     SKR_LOG_DEBUG("Press_Float Release %f", value);
                 }
             });
             inputSystem.AddInputAction(action);
@@ -507,30 +526,27 @@ int SGameModule::main_module_exec(int argc, char** argv)
             auto action = eastl::make_shared<InputAction<skr_float2_t>>();
             auto controls1 = eastl::make_shared<Vector2Control>();
             controls1->Bind(
-                Vector2Control::ButtonDirection{
-                    eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyW),
-                    eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyS),
-                    eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyA),
-                    eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyD),
-                }
-            );
+            Vector2Control::ButtonDirection{
+            eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyW),
+            eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyS),
+            eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyA),
+            eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyD),
+            });
             controls1->Bind(
-                Vector2Control::StickDirection{
-                    eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_PAD, PadButtonLeftStickX),
-                    eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_PAD, PadButtonLeftStickY),
-                }
-            );
+            Vector2Control::StickDirection{
+            eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_PAD, PadButtonLeftStickX),
+            eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_PAD, PadButtonLeftStickY),
+            });
             auto interactionPress = eastl::make_shared<InteractionPress<skr_float2_t>>(PressBehavior::PressAndRelease, 0.5f);
             controls1->AddInteraction(interactionPress);
             action->AddControl(controls1);
-            action->ListenEvent([interactionPress](skr_float2_t value, ControlsBase<skr_float2_t>* _c, Interaction* i, Interaction::EvendId eventId)
-            {
-                if(interactionPress.get() == i)
+            action->ListenEvent([interactionPress](skr_float2_t value, ControlsBase<skr_float2_t>* _c, Interaction* i, Interaction::EvendId eventId) {
+                if (interactionPress.get() == i)
                 {
-                    //if(((InteractionPress<skr::math::Vector2f>*)i)->GetPressEventType(eventId) == PressEventType::Press)
-                    //    SKR_LOG_DEBUG("Press_Float Press    x:%f,y:%f", value.X, value.Y);
-                    //else
-                    //    SKR_LOG_DEBUG("Press_Float Release  x:%f,y:%f", value.X, value.Y);
+                    // if(((InteractionPress<skr::math::Vector2f>*)i)->GetPressEventType(eventId) == PressEventType::Press)
+                    //     SKR_LOG_DEBUG("Press_Float Press    x:%f,y:%f", value.X, value.Y);
+                    // else
+                    //     SKR_LOG_DEBUG("Press_Float Release  x:%f,y:%f", value.X, value.Y);
                 }
             });
             inputSystem.AddInputAction(action);
@@ -543,15 +559,14 @@ int SGameModule::main_module_exec(int argc, char** argv)
     lua_newtable(L);
     lua_pushvalue(L, -1);
     lua_setglobal(L, "game");
-    auto GetStorage = +[](lua_State* L) -> int
-    {
+    auto GetStorage = +[](lua_State* L) -> int {
         lua_pushlightuserdata(L, g_game_module->game_world);
         return 1;
     };
     lua_pushcfunction(L, GetStorage);
     lua_setfield(L, -2, "GetStorage");
     lua_pop(L, 1);
-    if(luaL_dostring(L, "local module = require \"game\"; module:init()") != LUA_OK)
+    if (luaL_dostring(L, "local module = require \"game\"; module:init()") != LUA_OK)
     {
         SKR_LOG_ERROR("luaL_dostring error: {}", lua_tostring(L, -1));
     }
@@ -570,12 +585,12 @@ int SGameModule::main_module_exec(int argc, char** argv)
     dual_query_t* moveQuery;
     dual_query_t* cameraQuery;
     dual_query_t* animQuery;
-    moveQuery = dualQ_from_literal(game_world, 
-        "[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_scale_comp_t, [in]skr_index_comp_t, !skr_camera_comp_t");
-    cameraQuery = dualQ_from_literal(game_world, 
-        "[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [inout]skr_camera_comp_t");
-    animQuery = dualQ_from_literal(game_world, 
-        "[in]skr_render_effect_t, [in]game::anim_state_t, [out]<rand>?skr_render_anim_comp_t, [in]<rand>?skr_render_skel_comp_t");
+    moveQuery = dualQ_from_literal(game_world,
+    "[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_scale_comp_t, [in]skr_index_comp_t, !skr_camera_comp_t");
+    cameraQuery = dualQ_from_literal(game_world,
+    "[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [inout]skr_camera_comp_t");
+    animQuery = dualQ_from_literal(game_world,
+    "[in]skr_render_effect_t, [in]game::anim_state_t, [out]<rand>?skr_render_anim_comp_t, [in]<rand>?skr_render_skel_comp_t");
     while (!quit)
     {
         FrameMark;
@@ -605,7 +620,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
                         break;
                     }
                 }
-                    
+
                 if (window_event == SDL_WINDOWEVENT_CLOSE || window_event == SDL_WINDOWEVENT_MOVED || window_event == SDL_WINDOWEVENT_RESIZED)
                     if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)SDL_GetWindowFromID(event.window.windowID)))
                     {
@@ -624,9 +639,9 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 if (bUseInputSystem)
                 {
 #if defined(GAINPUT_PLATFORM_WIN)
-                inputSystem.GetHardwareManager().HandleMessage((MSG&)msg->msg);
+                    inputSystem.GetHardwareManager().HandleMessage((MSG&)msg->msg);
 #elif defined(GAINPUT_PLATFORM_LINUX)
-                inputSystem.GetHardwareManager().HandleMessage((XEvent&)msg->msg);
+                    inputSystem.GetHardwareManager().HandleMessage((XEvent&)msg->msg);
 #endif
                 }
             }
@@ -654,7 +669,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         auto resource_system = skr::resource::GetResourceSystem();
         resource_system->Update();
         // Update camera
-        auto cameraUpdate = [=](dual_chunk_view_t* view){
+        auto cameraUpdate = [=](dual_chunk_view_t* view) {
             auto cameras = dual::get_owned_rw<skr_camera_comp_t>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {
@@ -667,10 +682,10 @@ int SGameModule::main_module_exec(int argc, char** argv)
         if (bUseInputSystem)
         {
             ZoneScopedN("Input");
-        
+
             inputSystem.Update(deltaTime);
         }
-        if(auto scene = scene_handle.get_resolved())
+        if (auto scene = scene_handle.get_resolved())
         {
             ZoneScopedN("MergeScene");
             dualS_merge(game_renderer->get_dual_storage(), scene->storage);
@@ -687,9 +702,9 @@ int SGameModule::main_module_exec(int argc, char** argv)
             }
             {
                 ImGui::Begin(u8"Lua");
-                if(ImGui::Button("Hotfix"))
+                if (ImGui::Button("Hotfix"))
                 {
-                    if(luaL_dostring(L, "local module = require \"hotfix\"; module.reload({\"game\"})") != LUA_OK)
+                    if (luaL_dostring(L, "local module = require \"hotfix\"; module.reload({\"game\"})") != LUA_OK)
                     {
                         SKR_LOG_ERROR("luaL_dostring error: %s", lua_tostring(L, -1));
                         lua_pop(L, 1);
@@ -703,7 +718,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         }
         {
             ZoneScopedN("Lua");
-            if(luaL_dostring(L, "local module = require \"game\"; module:update()") != LUA_OK)
+            if (luaL_dostring(L, "local module = require \"game\"; module:update()") != LUA_OK)
             {
                 SKR_LOG_ERROR("luaL_dostring error: %s", lua_tostring(L, -1));
                 lua_pop(L, 1);
@@ -716,14 +731,14 @@ int SGameModule::main_module_exec(int argc, char** argv)
             ZoneScopedN("MoveSystem");
             auto timer = clock();
             auto total_sec = (double)timer / CLOCKS_PER_SEC;
-            
-            auto moveJob = SkrNewLambda([=]
-                (dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+
+            auto moveJob = SkrNewLambda([=](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
                 ZoneScopedN("MoveJob");
-                
+
                 float lerps[] = { 12.5, 20 };
                 auto translations = (skr_translation_comp_t*)dualV_get_owned_rw_local(view, localTypes[0]);
-                auto scales = (skr_scale_comp_t*)dualV_get_owned_ro_local(view, localTypes[1]);(void)scales;
+                auto scales = (skr_scale_comp_t*)dualV_get_owned_ro_local(view, localTypes[1]);
+                (void)scales;
                 auto indices = (skr_index_comp_t*)dualV_get_owned_ro_local(view, localTypes[2]);
                 for (uint32_t i = 0; i < view->count; i++)
                 {
@@ -735,7 +750,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
                     const auto row = (actual_idx / 10);
                     translations[i].value = {
                         ((float)col - 4.5f) * lscale,
-                        ((float)row - 4.5f) * lscale + 50.f, 
+                        ((float)row - 4.5f) * lscale + 50.f,
                         0.f
                     };
                 }
@@ -745,25 +760,24 @@ int SGameModule::main_module_exec(int argc, char** argv)
         // [inout]skr_render_anim_comp_t, [in]game::anim_state_t, [in]skr_render_skel_comp_t
         {
             ZoneScopedN("AnimSystem");
-            auto animJob = SkrNewLambda([=]
-                (dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+            auto animJob = SkrNewLambda([=](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
                 ZoneScopedN("AnimJob");
                 auto states = (game::anim_state_t*)dualV_get_owned_ro_local(view, localTypes[1]);
                 uint32_t g_id = 0;
                 auto syncEffect = [&](dual_chunk_view_t* view) {
                     auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(view);
                     auto skels = dual::get_component_ro<skr_render_skel_comp_t>(view);
-                    for(uint32_t i = 0; i < view->count; ++i, ++g_id)
+                    for (uint32_t i = 0; i < view->count; ++i, ++g_id)
                     {
                         auto& anim = anims[i];
                         auto& skel = skels[i];
                         auto& state = states[g_id];
                         auto skeleton_resource = skel.skeleton.get_resolved();
-                        if(!skeleton_resource)
+                        if (!skeleton_resource)
                             continue;
-                        if(anim.buffers.empty())
+                        if (anim.buffers.empty())
                             continue;
-                        if(state.sampling_context.max_tracks() == 0)
+                        if (state.sampling_context.max_tracks() == 0)
                         {
                             ZoneScopedN("InitializeAnimState");
                             game::InitializeAnimState(&state, skeleton_resource);
@@ -785,10 +799,10 @@ int SGameModule::main_module_exec(int argc, char** argv)
 
             auto playerJob = SkrNewLambda([=](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
                 ZoneScopedN("PlayerJob");
-                
+
                 auto translations = (skr_translation_comp_t*)dualV_get_owned_rw_local(view, localTypes[0]);
-                auto forward = skr_float3_t{0.f, 1.f, 0.f};
-                auto right = skr_float3_t{1.f, 0.f, 0.f};
+                auto forward = skr_float3_t{ 0.f, 1.f, 0.f };
+                auto right = skr_float3_t{ 1.f, 0.f, 0.f };
                 for (uint32_t i = 0; i < view->count; i++)
                 {
                     const auto kSpeed = 15.f;
@@ -859,7 +873,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             auto frame_index = renderGraph->execute();
             {
                 ZoneScopedN("CollectGarbage");
-                if ( (frame_index > (RG_MAX_FRAME_IN_FLIGHT * 10)) && (frame_index % (RG_MAX_FRAME_IN_FLIGHT * 10) == 0))
+                if ((frame_index > (RG_MAX_FRAME_IN_FLIGHT * 10)) && (frame_index % (RG_MAX_FRAME_IN_FLIGHT * 10) == 0))
                     renderGraph->collect_garbage(frame_index - 10 * RG_MAX_FRAME_IN_FLIGHT);
             }
         }
