@@ -117,7 +117,7 @@ skr_material_resource_t
 
     sattr("no-rtti" : true)
     skr_blob_arena_t arena;
-        
+    
     sattr("no-rtti" : true, "arena" : "arena")
     skr_material_overrides_t overrides;
 };

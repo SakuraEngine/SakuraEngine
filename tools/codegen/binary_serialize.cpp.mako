@@ -8,7 +8,7 @@
 
 <%def name="archive_field(name, field, array)">
 %if hasattr(field.attrs, "arena"):
-    ret = Archive(archive, record.${field.attrs.arena}, record.${name}${array});
+    ret = Archive(archive, arena_${field.attrs.arena}, record.${name}${array});
 %else:
     ret = Archive(archive, record.${name}${array});
 %endif
@@ -44,7 +44,12 @@ int __Archive(S* archive, ${record.name}& record)
 {
     int ret = 0;
     %for name, field in generator.filter_fields(record.fields):
-    %if field.arraySize > 0:
+    %if field.type == "skr_blob_arena_t":
+    auto& arena_${name} = record.${name};
+    ret = Archive(archive, arena_${name});
+    if(ret != 0)
+        return ret;
+    %elif field.arraySize > 0:
     for(int i = 0; i < ${field.arraySize}; ++i)
     {
         ${archive_field(name, field, "[i]")}
