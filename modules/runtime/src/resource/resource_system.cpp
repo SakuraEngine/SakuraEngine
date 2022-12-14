@@ -59,9 +59,9 @@ protected:
     dual::entity_registry_t resourceIds;
     task::counter_t counter;
     bool quit = false;
-    skr::flat_hash_map<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;
-    skr::flat_hash_map<void*, skr_resource_record_t*> resourceToRecord;
-    skr::flat_hash_map<skr_type_id_t, SResourceFactory*, skr::guid::hash> resourceFactories;
+    skr::parallel_flat_hash_map<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;
+    skr::parallel_flat_hash_map<void*, skr_resource_record_t*> resourceToRecord;
+    skr::parallel_flat_hash_map<skr_type_id_t, SResourceFactory*, skr::guid::hash> resourceFactories;
 };
 
 SResourceSystemImpl::SResourceSystemImpl()
