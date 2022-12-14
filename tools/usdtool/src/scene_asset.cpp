@@ -108,7 +108,7 @@ void ImportTraversal(skd::SUSDPrimId prim, TranverseContext& ctx, children_t* ch
     }
 }
 
-void* SSceneImporter::Import(skr_io_ram_service_t*, SCookContext* context)
+void* SUSDSceneImporter::Import(skr_io_ram_service_t*, SCookContext* context)
 {
     dual_storage_t* world = nullptr;
     auto u8Path = context->AddFileDependency(assetPath.c_str()).u8string();
@@ -127,13 +127,13 @@ void* SSceneImporter::Import(skr_io_ram_service_t*, SCookContext* context)
     return world;
 }
 
-void SSceneImporter::Destroy(void* resource)
+void SUSDSceneImporter::Destroy(void* resource)
 {
     auto world = (dual_storage_t*)resource;
     dualS_release(world);
 }
 
-bool SSceneCooker::Cook(SCookContext* ctx)
+bool SUSDSceneCooker::Cook(SCookContext* ctx)
 {
     const auto outputPath = ctx->GetOutputPath();
     //-----load config

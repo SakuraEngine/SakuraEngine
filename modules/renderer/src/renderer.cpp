@@ -9,7 +9,7 @@
 
 #include <containers/hashmap.hpp>
 #include <EASTL/vector.h>
-#include <EASTL/vector_map.h>
+#include <EASTL/fixed_vector.h>
 
 #include "tracy/Tracy.hpp"
 
@@ -239,7 +239,7 @@ void skr_render_effect_attach(SRendererId r, dual_chunk_view_t* g_cv, skr_render
     SKR_ASSERT(feature_arrs && "No render effect component in chunk view");
     if (feature_arrs)
     {
-        auto world = renderer->get_dual_storage();
+        auto world = dualC_get_storage(g_cv->chunk);
         auto&& i_processor = renderer->processors_map.find(effect_name);
 
         if (i_processor == renderer->processors_map.end())
@@ -288,8 +288,10 @@ void skr_render_effect_attach(SRendererId r, dual_chunk_view_t* g_cv, skr_render
 
 void skr_render_effect_detach(SRendererId r, dual_chunk_view_t* cv, skr_render_effect_name_t effect_name)
 {
-    if (cv)
+    if (cv && cv->count)
     {
+        eastl::fixed_vector<dual_entity_t, 16> render_effects;
+        render_effects.reserve(cv->count);
         auto feature_arrs = (render_effects_t*)dualV_get_owned_rw(cv, dual_id_of<skr_render_effect_t>::get());
         if (feature_arrs)
         {
@@ -301,46 +303,50 @@ void skr_render_effect_detach(SRendererId r, dual_chunk_view_t* cv, skr_render_e
                 {
                     if (strcmp(_.name, effect_name) == 0)
                     {
+                        render_effects.emplace_back(_.effect_entity);
                         _.name = nullptr;
                         _.effect_entity = DUAL_NULL_ENTITY;
                         removed_index = i;
+                        break;
                     }
                 }
                 features.erase(features.begin() + removed_index);
             }
         }
+        auto storage = dualC_get_storage(cv->chunk);
+        auto callback = [&](dual_chunk_view_t* view) {
+            dualS_destroy(storage, view);
+        };
+        dualS_batch(r->get_dual_storage(), render_effects.data(), render_effects.size(), DUAL_LAMBDA(callback));
     }
 }
 
-void skr_render_effect_add_delta(SRendererId r, const SGameEntity* entities, uint32_t count,
+void skr_render_effect_add_delta(SRendererId r, dual_chunk_view_t* cv,
     skr_render_effect_name_t effect_name, dual_delta_type_t delta,
     dual_cast_callback_t callback, void* user_data)
 {
-    if (count)
+    if (cv && cv->count)
     {
-        auto storage = r->get_dual_storage();
+        auto storage = dualC_get_storage(cv->chunk);
         SKR_ASSERT(storage && "No dual storage");
         eastl::vector<dual_entity_t> render_effects;
-        render_effects.reserve(count);
+        render_effects.reserve(cv->count);
         // batch game ents to collect render effects
-        auto game_batch_callback = [&](dual_chunk_view_t* view) {
-            auto feature_arrs = (render_effects_t*)dualV_get_owned_rw(view, dual_id_of<skr_render_effect_t>::get());
-            if (feature_arrs)
+        auto feature_arrs = (render_effects_t*)dualV_get_owned_rw(cv, dual_id_of<skr_render_effect_t>::get());
+        if (feature_arrs)
+        {
+            for (uint32_t i = 0; i < cv->count; i++)
             {
-                for (uint32_t i = 0; i < view->count; i++)
+                auto& features = feature_arrs[i];
+                for (auto& _ : features)
                 {
-                    auto& features = feature_arrs[i];
-                    for (auto& _ : features)
+                    if (strcmp(_.name, effect_name) == 0)
                     {
-                        if (strcmp(_.name, effect_name) == 0)
-                        {
-                            render_effects.emplace_back(_.effect_entity);
-                        }
+                        render_effects.emplace_back(_.effect_entity);
                     }
                 }
             }
-        };
-        dualS_batch(storage, entities, count, DUAL_LAMBDA(game_batch_callback));
+        }
         // do cast for render effects
         auto render_batch_callback = [&](dual_chunk_view_t* view) {
             dualS_cast_view_delta(storage, view, &delta, callback, user_data);
@@ -353,7 +359,7 @@ void skr_render_effect_access(SRendererId r, dual_chunk_view_t* cv, skr_render_e
 {
     if (cv && cv->count)
     {
-        auto storage = r->get_dual_storage();
+        auto storage = dualC_get_storage(cv->chunk);
         SKR_ASSERT(storage && "No dual storage");
         eastl::vector<dual_entity_t> batch_render_effects;
         batch_render_effects.reserve(cv->count);
