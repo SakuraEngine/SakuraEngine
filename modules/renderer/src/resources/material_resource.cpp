@@ -16,23 +16,33 @@ struct SMaterialFactoryImpl : public SMaterialFactory
     {
         return skr::type::type_id<skr_material_resource_t>::get();
     }
+    
     bool AsyncIO() override { return true; }
+    
     bool Unload(skr_resource_record_t* record) override
     {
-        // TODO: RC management for shader collection resource
         auto material = static_cast<skr_material_resource_t*>(record->resource);
         SkrDelete(material);
         return true;
     }
+
     ESkrInstallStatus Install(skr_resource_record_t* record) override
     {
         auto material = static_cast<skr_material_resource_t*>(record->resource);
+        // install shaders
+        
+        // make RS
+        
+        // make PSO
+
         return material ? SKR_INSTALL_STATUS_SUCCEED : SKR_INSTALL_STATUS_FAILED;
     }
+    
     bool Uninstall(skr_resource_record_t* record) override
     {
         return true;
     }
+    
     ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override
     {
         return SKR_INSTALL_STATUS_SUCCEED;

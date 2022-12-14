@@ -1,7 +1,7 @@
 #pragma once
 #include "platform/configure.h"
 #include "SkrRenderer/module.configure.h"
-#include "SkrRenderer/shader_hash.h"
+#include "SkrRenderer/fwd_types.h"
 #include "cgpu/api.h"
 
 typedef struct skr_shader_map_key_t skr_shader_map_key_t;

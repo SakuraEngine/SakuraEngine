@@ -224,26 +224,28 @@ void SGameModule::installResourceFactories()
         resource_system->RegisterFactory(sceneFactory);
     }
 
-    skr_resource_handle_t matType("bdf63849-5a52-4d71-be4a-11d115c4a490"_guid);
-    matType.resolve(true, 0, SKR_REQUESTER_SYSTEM);
+    skr_resource_handle_t material("017c24bb-6dbb-45c3-9672-1cbc95cfd9f2"_guid);
+    material.resolve(true, 0, SKR_REQUESTER_SYSTEM);
     // texture
     {
-        while (matType.get_status() != SKR_LOADING_STATUS_INSTALLED && matType.get_status() != SKR_LOADING_STATUS_ERROR)
+        while (material.get_status() != SKR_LOADING_STATUS_INSTALLED && material.get_status() != SKR_LOADING_STATUS_ERROR)
         {
-            auto status = matType.get_status();(void)status;
+            auto status = material.get_status();(void)status;
             resource_system->Update();
         }
-        auto final_status = matType.get_status();
+        auto final_status = material.get_status();
         if (final_status != SKR_LOADING_STATUS_ERROR)
         {
-            auto material_type = (skr_material_type_resource_t*)matType.get_ptr();
+            auto pMaterial =  (skr_material_resource_t*)material.get_ptr();
+            pMaterial->material_type.resolve(true, 0, SKR_REQUESTER_SYSTEM);
+            auto material_type = pMaterial->material_type.get_ptr();
             material_type->shader_resources[0].resolve(true, 0, SKR_REQUESTER_SYSTEM);
             auto shader_collection = material_type->shader_resources[0].get_resolved(true);
             auto&& root_variant_iter = shader_collection->switch_variants.find(kZeroStableShaderHash);
             SKR_ASSERT(root_variant_iter != shader_collection->switch_variants.end() && "Root shader variant missing!");
-            resource_system->UnloadResource(matType);
+            resource_system->UnloadResource(material);
             resource_system->Update();
-            while (matType.get_status(true) != SKR_LOADING_STATUS_UNLOADED)
+            while (material.get_status(true) != SKR_LOADING_STATUS_UNLOADED)
             {
                 resource_system->Update();
             }
