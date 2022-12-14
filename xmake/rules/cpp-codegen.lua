@@ -23,6 +23,10 @@ rule("c++.codegen")
 
         target:data_set("meta.codegen.dir", gendir)
         target:add("includedirs", gendir, {public = true})
+
+        local rule = target:rule("c++.build"):clone()
+        rule:add("deps", "c++.codegen", {order = true})
+        target:rule_add(rule)
     end)
 
     before_build_files(function (target, sourcebatch, opt)
