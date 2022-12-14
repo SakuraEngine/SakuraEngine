@@ -25,20 +25,20 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
         --table.insert(argv, "/Tp")
     end
     table.insert(argv, "-I"..os.projectdir()..vformat("/SDKs/tools/$(host)/meta-include"))
-    
+
     if not opt.quiet then
         cprint("${green}[%s]: compiling.meta ${clear}%s", target:name(), path.relative(outdir))
     end
 
     if is_host("windows") and not opt.rawargs then
-        -- argv = winos.cmdargv(argv)
+        argv = winos.cmdargv(argv)
     end
 
     local argv2 = {sourcefile, "--output="..path.absolute(outdir), "--root="..rootdir or path.absolute(target:scriptdir()), "--"}
     for k,v in pairs(argv2) do  
         table.insert(argv, k, v)
     end
-
+    
     os.runv(meta.program, argv)
 
     if not opt.quiet then
