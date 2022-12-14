@@ -3,11 +3,11 @@
 #include "platform/guid.hpp"
 #include "ecs/entities.hpp"
 #include "platform/debug.h"
-#include "platform/thread.h"
 #include "containers/hashmap.hpp"
 #include "utils/io.h"
 #include "platform/vfs.h"
 #include "resource/resource_factory.h"
+#include "utils/concurrent_queue.h"
 
 namespace skr::resource
 {
@@ -47,13 +47,18 @@ protected:
 
     SResourceRegistry* resourceRegistry = nullptr;
     skr_io_ram_service_t* ioService = nullptr; 
-    eastl::vector<SResourceRequest*> requests;
+
+    moodycamel::ConcurrentQueue<SResourceRequest*> requests;
+
+    // these requests are only handled inside this system and is thread-unsafe
+
     eastl::vector<SResourceRequest*> failedRequests;
+    eastl::vector<SResourceRequest*> toUpdateRequests;
+    eastl::vector<SResourceRequest*> serdeBatch;
+
     dual::entity_registry_t resourceIds;
-    SMutex recordMutex;
     task::counter_t counter;
     bool quit = false;
-    eastl::vector<SResourceRequest*> serdeBatch;
     skr::flat_hash_map<skr_guid_t, skr_resource_record_t*, skr::guid::hash> resourceRecords;
     skr::flat_hash_map<void*, skr_resource_record_t*> resourceToRecord;
     skr::flat_hash_map<skr_type_id_t, SResourceFactory*, skr::guid::hash> resourceFactories;
@@ -62,12 +67,12 @@ protected:
 SResourceSystemImpl::SResourceSystemImpl()
     : counter(true)
 {
-    skr_init_mutex_recursive(&recordMutex);
+
 }
 
 SResourceSystemImpl::~SResourceSystemImpl()
 {
-    skr_destroy_mutex(&recordMutex);
+
 }
 
 skr_resource_record_t* SResourceSystemImpl::_GetOrCreateRecord(const skr_guid_t& guid)
@@ -98,7 +103,6 @@ skr_resource_record_t* SResourceSystemImpl::_GetRecord(void* resource)
 
 void SResourceSystemImpl::_DestroyRecord(skr_resource_record_t* record)
 {
-    //SMutexLock lock(recordMutex);
     auto request = static_cast<SResourceRequestImpl*>(record->activeRequest);
     if (request)
         request->resourceRecord = nullptr;
@@ -144,7 +148,6 @@ void SResourceSystemImpl::UnregisterFactory(skr_type_id_t type)
 void SResourceSystemImpl::LoadResource(skr_resource_handle_t& handle, bool requireInstalled, uint64_t requester, ESkrRequesterType requesterType)
 {
     SKR_ASSERT(!quit);
-    SMutexLock lock(recordMutex);
     SKR_ASSERT(!handle.is_resolved());
     auto record = _GetOrCreateRecord(handle.get_guid());
     auto requesterId = record->AddReference(requester, requesterType);
@@ -172,13 +175,12 @@ void SResourceSystemImpl::LoadResource(skr_resource_handle_t& handle, bool requi
         record->activeRequest = request;
         record->loadingStatus = SKR_LOADING_STATUS_LOADING;
         counter.add(1);
-        requests.push_back(request);
+        requests.enqueue(request);
     }
 }
 
 void SResourceSystemImpl::UnloadResource(skr_resource_handle_t& handle)
 {
-    SMutexLock lock(recordMutex);
     SKR_ASSERT(handle.is_resolved() && !handle.is_null());
     auto record = handle.get_record();
     SKR_ASSERT(record->loadingStatus != SKR_LOADING_STATUS_UNLOADED);
@@ -191,7 +193,6 @@ void SResourceSystemImpl::UnloadResource(skr_resource_handle_t& handle)
 void SResourceSystemImpl::_UnloadResource(skr_resource_record_t* record)
 {
     SKR_ASSERT(!quit);
-    SMutexLock lock(recordMutex);
     if (!record->IsReferenced()) // unload
     {
         if (record->loadingStatus == SKR_LOADING_STATUS_ERROR || record->loadingStatus == SKR_LOADING_STATUS_UNLOADED)
@@ -227,7 +228,7 @@ void SResourceSystemImpl::_UnloadResource(skr_resource_record_t* record)
             request->factory = this->FindFactory(record->header.type);
             record->activeRequest = request;
             counter.add(1);
-            requests.push_back(request);
+            requests.enqueue(request);
         }
     }
 }
@@ -240,7 +241,6 @@ void SResourceSystemImpl::FlushResource(skr_resource_handle_t& handle)
 
 ESkrLoadingStatus SResourceSystemImpl::GetResourceStatus(const skr_guid_t& handle)
 {
-    SMutexLock lock(recordMutex);
     auto record = _GetRecord(handle);
     if (!record) return SKR_LOADING_STATUS_UNLOADED;
     return record->loadingStatus;
@@ -272,7 +272,8 @@ void SResourceSystemImpl::Shutdown()
     }
     _ClearFinishedRequests();
     quit = false;
-    while(!requests.empty())
+    Update(); // fill toUpdateRequests once
+    while(!toUpdateRequests.empty())
     {
         Update();
     }
@@ -290,7 +291,7 @@ void SResourceSystemImpl::Shutdown()
 
 void SResourceSystemImpl::_ClearFinishedRequests()
 {
-    requests.erase(std::remove_if(requests.begin(), requests.end(), 
+    toUpdateRequests.erase(std::remove_if(toUpdateRequests.begin(), toUpdateRequests.end(), 
         [&](SResourceRequest* req) {
         auto request = static_cast<SResourceRequestImpl*>(req);
         if (request->Okay())
@@ -316,7 +317,7 @@ void SResourceSystemImpl::_ClearFinishedRequests()
         }
         return false;
     }),
-    requests.end());
+    toUpdateRequests.end());
     
     failedRequests.erase(std::remove_if(failedRequests.begin(), failedRequests.end(), 
     [&](SResourceRequest* req) {
@@ -333,15 +334,17 @@ void SResourceSystemImpl::_ClearFinishedRequests()
 void SResourceSystemImpl::Update()
 {
     SKR_ASSERT(!quit);
-    eastl::vector<SResourceRequest*> to_update_requests;
     {
-        SMutexLock lock(recordMutex);
+        SResourceRequest* request = nullptr;
+        while (requests.try_dequeue(request))
+        {
+            toUpdateRequests.emplace_back(request);
+        }
         _ClearFinishedRequests();
-        to_update_requests = requests;
     }
     // TODO: time limit
     {
-        for (auto req : to_update_requests)
+        for (auto req : toUpdateRequests)
         {
             auto request = static_cast<SResourceRequestImpl*>(req);
             uint32_t spinCounter = 0;
@@ -380,7 +383,7 @@ void SResourceSystemImpl::_UpdateAsyncSerde()
     serdeBatch.clear();
     serdeBatch.reserve(100);
     float timeBudget = 100.f;
-    for (auto req : requests)
+    for (auto req : toUpdateRequests)
     {
         auto request = static_cast<SResourceRequestImpl*>(req);
         if(request->currentPhase == SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE && !request->serdeScheduled)
