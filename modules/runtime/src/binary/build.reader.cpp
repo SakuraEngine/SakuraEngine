@@ -178,7 +178,8 @@ int ReadTrait<skr_blob_arena_t>::Read(skr_binary_reader_t* reader, skr_blob_aren
     }
     else
     {
-
+        // FIXME: fix 0 alignment during serialization
+        align = (align == 0) ? 1u : align;
         void* buffer = sakura_malloc_aligned(size, align);
         ret = ReadValue(reader, buffer, size);
         if (ret != 0)
