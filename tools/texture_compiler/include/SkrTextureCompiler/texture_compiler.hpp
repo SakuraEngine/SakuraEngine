@@ -22,13 +22,13 @@ SKR_TEXTURE_COMPILER_API STextureImporter final : public SImporter
 }
 sregister_importer();
 
-struct sreflect
+sreflect_struct("guid" : "F9B45BF9-3767-4B40-B0B3-D4BBC228BCEC")
 SKR_TEXTURE_COMPILER_API STextureCooker final : public SCooker 
 { 
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override;
 }
-sregister_cooker("f8821efb-f027-4367-a244-9cc3efb3a3bf");
+sregister_default_cooker("f8821efb-f027-4367-a244-9cc3efb3a3bf");
 
 }
 }

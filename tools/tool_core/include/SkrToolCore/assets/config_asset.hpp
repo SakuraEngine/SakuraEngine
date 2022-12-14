@@ -22,11 +22,13 @@ TOOL_CORE_API SJsonConfigImporter final : public SImporter
 sattr("serialize" : "json")
 sregister_importer();
 
-struct sreflect TOOL_CORE_API SConfigCooker final : public SCooker
+
+sreflect_struct("guid" : "EC5275CA-E406-4051-9403-77517C421890")
+TOOL_CORE_API SConfigCooker final : public SCooker
 {
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override;
 }
-sregister_cooker("8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74");
+sregister_default_cooker("8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74");
 } // namespace asset
 } // namespace skd

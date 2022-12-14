@@ -8,6 +8,7 @@
 #include "utils/log.hpp"
 #include "utils/defer.hpp"
 #include "binary/writer.h"
+#include "utils/function_ref.hpp"
 
 struct skr_io_ram_service_t;
 namespace skr {namespace task { class event_t; }}
@@ -19,6 +20,7 @@ struct SAssetRecord {
     SProject* project;
     skr_guid_t guid;
     skr_guid_t type;
+    skr_guid_t cooker;
     skr::filesystem::path path;
     simdjson::padded_string meta;
 };
@@ -133,17 +135,15 @@ public:
     virtual void WaitForAll() = 0;
     virtual bool AllCompleted() const = 0;
 
-    virtual void RegisterCooker(skr_guid_t type, SCooker* cooker) = 0;
+    virtual void RegisterCooker(bool isDefault, skr_guid_t cooker, skr_guid_t type, SCooker* instance) = 0;
     virtual void UnregisterCooker(skr_guid_t type) = 0;
 
-    virtual SCooker* GetCooker(skr_guid_t type) const = 0;
     virtual SAssetRecord* GetAssetRecord(skr_guid_t type) const = 0;
 
     virtual SAssetRecord* GetAssetRecord(const skr_guid_t& guid) = 0;
     virtual SAssetRecord* ImportAsset(SProject* project, skr::filesystem::path path) = 0;
 
-    virtual void ParallelForEachAsset(uint32_t batch, eastl::function<void(skr::span<SAssetRecord*>)> f) = 0;
-    virtual void ParallelForEachCooker(uint32_t batch, eastl::function<void(skr::span<SCooker*>)> f) = 0;
+    virtual void ParallelForEachAsset(uint32_t batch, skr::function_ref<void(skr::span<SAssetRecord*>)> f) = 0;
 
     virtual skr_io_ram_service_t* getIOService() = 0;
 

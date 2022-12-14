@@ -29,7 +29,7 @@ SKR_SHADER_COMPILER_API SShaderOptionsCooker final : public SCooker
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override;
 }
-sregister_cooker("fc9b4a8e-06c7-41e2-a159-f4cf6930ccfc");
+sregister_default_cooker("fc9b4a8e-06c7-41e2-a159-f4cf6930ccfc");
 
 sreflect_struct("guid" : "a897c990-abea-4f48-8880-e1ae9a93d777")
 sattr("serialize" : "json")
@@ -55,6 +55,6 @@ SKR_SHADER_COMPILER_API SShaderCooker final : public SCooker
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override;
 }
-sregister_cooker("1c7d845a-fde8-4487-b1c9-e9c48d6a9867");
+sregister_default_cooker("1c7d845a-fde8-4487-b1c9-e9c48d6a9867");
 } // namespace asset
 } // namespace skd

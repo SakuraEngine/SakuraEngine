@@ -27,11 +27,17 @@ struct SCookSystemImpl : public skd::asset::SCookSystem
     void WaitForAll() override;
     bool AllCompleted() const override;
 
-    void RegisterCooker(skr_guid_t type, SCooker* cooker) override;
+    void RegisterCooker(bool isDefault, skr_guid_t cooker, skr_guid_t type, SCooker* instance) override;
     void UnregisterCooker(skr_guid_t type) override;
-    SCooker* GetCooker(skr_guid_t type) const override
+    SCooker* GetCooker(SAssetRecord* record) const
     {
-        auto it = cookers.find(type);
+        if(record->cooker == skr_guid_t{})
+        {
+            auto it = defaultCookers.find(record->type);
+            if (it != defaultCookers.end()) return it->second;
+            return nullptr;
+        }
+        auto it = cookers.find(record->cooker);
         if (it != cookers.end()) return it->second;
         return nullptr;
     }
@@ -51,25 +57,12 @@ struct SCookSystemImpl : public skd::asset::SCookSystem
     {
         skr::parallel_for(std::move(begin), std::move(end), batch, std::move(f));
     }
-    void ParallelForEachAsset(uint32_t batch, eastl::function<void(skr::span<SAssetRecord*>)> f) override
+    void ParallelForEachAsset(uint32_t batch, skr::function_ref<void(skr::span<SAssetRecord*>)> f) override
     {
         ParallelFor(assets.begin(), assets.end(), batch, 
         [f, batch](auto begin, auto end){
             skr::vector<SAssetRecord*> records;
             records.reserve(batch);
-            for (auto it = begin; it != end; ++it)
-            {
-                records.emplace_back(it->second);
-            }
-            f(records);
-        });
-    }
-    void ParallelForEachCooker(uint32_t batch, eastl::function<void(skr::span<SCooker*>)> f) override
-    {
-        ParallelFor(cookers.begin(), cookers.end(), batch, 
-        [f, batch](auto begin, auto end){
-            skr::vector<SCooker*> records;
-            records.resize(batch);
             for (auto it = begin; it != end; ++it)
             {
                 records.emplace_back(it->second);
@@ -84,6 +77,7 @@ protected:
 
     skr::task::counter_t mainCounter;
 
+    skr::flat_hash_map<skr_guid_t, SCooker*, skr::guid::hash> defaultCookers;
     skr::flat_hash_map<skr_guid_t, SCooker*, skr::guid::hash> cookers;
     SMutex assetMutex;
     skr_io_ram_service_t* ioServices[ioServicesMaxCount];
@@ -136,9 +130,9 @@ SCookSystem* GetCookSystem()
     return &SkrToolCoreModule::cook_system;
 }
 
-void RegisterCookerToSystem(SCookSystem* system, skr_guid_t type, SCooker* cooker)
+void RegisterCookerToSystem(SCookSystem* system, bool isDefault, skr_guid_t cooker, skr_guid_t type, SCooker* instance)
 {
-    system->RegisterCooker(type, cooker);
+    system->RegisterCooker(isDefault, cooker, type, instance);
 }
 
 void SCookSystemImpl::WaitForAll()
@@ -181,7 +175,8 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
     {
         auto system = static_cast<SCookSystemImpl*>(GetCookSystem());
         const auto metaAsset = jobContext->record;
-        auto cooker = system->GetCooker(metaAsset->type);
+        auto cooker = system->GetCooker(metaAsset);
+        SKR_ASSERT(cooker);
         // Trace
         ZoneScoped;
         const auto rtti_type = type::GetTypeRegistry()->get_type(metaAsset->type);
@@ -279,11 +274,17 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
     return counter;
 }
 
-void SCookSystemImpl::RegisterCooker(skr_guid_t guid, SCooker* cooker)
+void SCookSystemImpl::RegisterCooker(bool isDefault, skr_guid_t cooker, skr_guid_t type, SCooker* instance)
 {
-    SKR_ASSERT(cooker->system == nullptr);
-    cooker->system = this;
-    cookers.insert(std::make_pair(guid, cooker));
+    SKR_ASSERT(instance->system == nullptr);
+    instance->system = this;
+    cookers.insert(std::make_pair(cooker, instance));
+    if (isDefault)
+    {
+        auto result = defaultCookers.insert(std::make_pair(type, instance));
+        SKR_ASSERT(result.second);
+        (void)result;
+    }
 }
 
 void SCookSystemImpl::UnregisterCooker(skr_guid_t guid)
@@ -317,6 +318,12 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
     auto resourcePath = metaAsset->project->outputPath / fmt::format("{}.bin", metaAsset->guid);
     auto dependencyPath = metaAsset->project->dependencyPath / fmt::format("{}.d", metaAsset->guid);
     auto checkUpToDate = [&]() -> bool {
+        auto cooker = GetCooker(metaAsset);
+        if(!cooker)
+        {
+            SKR_LOG_INFO("[SCookSystemImpl::EnsureCooked] cooker not found! asset path: %s", metaAsset->path.u8string().c_str());
+            return true;
+        }
         std::error_code ec = {};
         if (!skr::filesystem::is_regular_file(resourcePath, ec))
         {
@@ -369,10 +376,8 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
             return false;
         }
         {
-            auto iter = cookers.find(metaAsset->type);
-            SKR_ASSERT(iter != cookers.end());
             
-            if (iter->second->Version() == UINT32_MAX)
+            if (cooker->Version() == UINT32_MAX)
             {
                 SKR_LOG_INFO("[SCookSystemImpl::EnsureCooked] dev cooker version (UINT32_MAX)! asset path: %s", metaAsset->path.u8string().c_str());
                 return false;
@@ -390,7 +395,7 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
                 SKR_LOG_INFO("[SCookSystemImpl::EnsureCooked] resource header read failed! asset path: %s", metaAsset->path.u8string().c_str());
                 return false;
             }
-            if (header.version != iter->second->Version())
+            if (header.version != cooker->Version())
             {
                 SKR_LOG_INFO("[SCookSystemImpl::EnsureCooked] cooker version changed! asset path: %s", metaAsset->path.u8string().c_str());
                 return false;
@@ -473,6 +478,11 @@ SAssetRecord* SCookSystemImpl::ImportAsset(SProject* project, skr::filesystem::p
         skr::json::Read(std::move(otype).value_unsafe(), record->type);
     else
         std::memset(&record->type, 0, sizeof(skr_guid_t));
+    auto ctype = doc["cookerType"];
+    if (ctype.error() == simdjson::SUCCESS)
+        skr::json::Read(std::move(ctype).value_unsafe(), record->cooker);
+    else
+        std::memset(&record->cooker, 0, sizeof(skr_guid_t));
     record->path = path;
     record->project = project;
     SMutexLock lock(assetMutex);

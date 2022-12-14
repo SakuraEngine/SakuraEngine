@@ -40,6 +40,6 @@ GLTFTOOL_API SMeshCooker final : public SCooker
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override;
 }
-sregister_cooker("3b8ca511-33d1-4db4-b805-00eea6a8d5e1");
+sregister_default_cooker("3b8ca511-33d1-4db4-b805-00eea6a8d5e1");
 } // namespace asset
 } // namespace skd
