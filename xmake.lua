@@ -62,12 +62,16 @@ target("SkrRoot")
     before_build(function(target)
         import("core.base.option")
         local targetname = option.get("target")
-        import("core.base.scheduler")
         local function upzip_tasks(targetname)
             import("core.project.task")
             task.run("run-codegen-jobs", {}, targetname)
         end
-        scheduler.co_start(upzip_tasks, targetname)
+        if(has_config("use_async_codegen")) then
+            import("core.base.scheduler")
+            scheduler.co_start(upzip_tasks, targetname)
+        else
+            upzip_tasks(targetname)
+        end
     end)
 target_end()
 
