@@ -26,6 +26,8 @@ rule("c++.codegen")
     end)
 
     before_build_files(function (target, sourcebatch, opt)
+        -- avoid duplicate linking of object files
+        sourcebatch.objectfiles = {}
         -- wait async codegen finish
         if(has_config("use_async_codegen")) then
             import("core.base.scheduler")
