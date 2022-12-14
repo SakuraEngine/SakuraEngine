@@ -191,6 +191,7 @@ void SResourceSystemImpl::UnloadResource(skr_resource_handle_t& handle)
 void SResourceSystemImpl::_UnloadResource(skr_resource_record_t* record)
 {
     SKR_ASSERT(!quit);
+    SMutexLock lock(recordMutex);
     if (!record->IsReferenced()) // unload
     {
         if (record->loadingStatus == SKR_LOADING_STATUS_ERROR || record->loadingStatus == SKR_LOADING_STATUS_UNLOADED)
@@ -316,6 +317,7 @@ void SResourceSystemImpl::_ClearFinishedRequests()
         return false;
     }),
     requests.end());
+    
     failedRequests.erase(std::remove_if(failedRequests.begin(), failedRequests.end(), 
     [&](SResourceRequest* req) {
         auto request = static_cast<SResourceRequestImpl*>(req);
