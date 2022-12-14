@@ -25,12 +25,15 @@ rule("c++.codegen")
         target:add("includedirs", gendir, {public = true})
     end)
 
-    before_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
+    before_build_files(function (target, sourcebatch, opt)
         -- wait async codegen finish
         if(has_config("use_async_codegen")) then
             import("core.base.scheduler")
             scheduler.co_group_wait(target:name()..".cpp-codegen")
         end
+    end)
+
+    before_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
         -- avoid duplicate linking of object files
         sourcebatch.objectfiles = {}
     end)
