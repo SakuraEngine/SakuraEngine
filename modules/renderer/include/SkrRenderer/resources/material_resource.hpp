@@ -114,11 +114,12 @@ skr_material_resource_t
 {
     uint32_t material_type_version;
     skr_material_type_handle_t material_type;
-    
-    sattr("no-rtti" : true, "arena" : "arena")
-    skr_material_overrides_t overrides;
+
     sattr("no-rtti" : true)
     skr_blob_arena_t arena;
+        
+    sattr("no-rtti" : true, "arena" : "arena")
+    skr_material_overrides_t overrides;
 };
 
 namespace skr sreflect
