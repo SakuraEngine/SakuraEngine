@@ -26,12 +26,12 @@ SKRUSDTOOL_API SSceneImporter final : public SImporter
 }
 sregister_importer();
 
-struct sreflect
+sreflect_struct("guid" : "A4E9937D-792B-4ABB-BFDB-42066B92E910")
 SKRUSDTOOL_API SSceneCooker final : public SCooker 
 { 
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override { return kDevelopmentVersion; }
 }
-sregister_cooker("EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A");
+sregister_default_cooker("EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A");
 } // namespace asset
 } // namespace skd

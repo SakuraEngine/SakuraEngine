@@ -37,11 +37,12 @@ SKR_ANIMTOOL_API SSkelGltfImporter : public skd::asset::SImporter
 }
 sregister_importer();
 
-struct sreflect SKR_ANIMTOOL_API SSkelCooker final : public SCooker
+sreflect_struct("guid" : "E3581419-8B44-4EF9-89FA-552DA6FE982A")
+SKR_ANIMTOOL_API SSkelCooker final : public SCooker
 {
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override { return kDevelopmentVersion; }
 }
-sregister_cooker("1876BF35-E4DC-450B-B9D4-09259397F4BA");
+sregister_default_cooker("1876BF35-E4DC-450B-B9D4-09259397F4BA");
 } // namespace asset sreflect
 } // namespace skd sreflect

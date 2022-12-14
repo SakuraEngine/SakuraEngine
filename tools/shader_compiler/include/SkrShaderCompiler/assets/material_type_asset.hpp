@@ -52,7 +52,7 @@ SKR_SHADER_COMPILER_API SMaterialTypeCooker final : public SCooker
     bool Cook(SCookContext* ctx) override;
     uint32_t Version() override { return kDevelopmentVersion; }
 }
-sregister_cooker("83264b35-3fde-4fff-8ee1-89abce2e445b");
+sregister_default_cooker("83264b35-3fde-4fff-8ee1-89abce2e445b");
 
 } // namespace asset
 } // namespace skd

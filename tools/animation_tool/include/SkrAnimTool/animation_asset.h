@@ -88,11 +88,12 @@ SAnimCookSettings
     eastl::vector<SAnimOptimizationOverride> override; //  Per joint optimization setting override
 };
 
-struct sreflect SKR_ANIMTOOL_API SAnimCooker : public skd::asset::SCooker
+sreflect_struct("guid" : "81F1C813-1ABA-41BE-8D7A-F6C88E73E891")
+SKR_ANIMTOOL_API SAnimCooker : public skd::asset::SCooker
 {
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override { return kDevelopmentVersion; }
 }
-sregister_cooker("5D6DC46B-8696-4DD8-ADE4-C27D07CEDCCD");
+sregister_default_cooker("5D6DC46B-8696-4DD8-ADE4-C27D07CEDCCD");
 } // namespace asset sreflect
 } // namespace skd sreflect
