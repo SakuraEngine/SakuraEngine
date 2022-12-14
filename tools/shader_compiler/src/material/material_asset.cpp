@@ -57,6 +57,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
     runtime_material.material_type = material->material_type.get_guid();
 
     auto idx = ctx->AddStaticDependency(runtime_material.material_type.get_guid(), true);
+    ctx->AddRuntimeDependency(runtime_material.material_type.get_guid());
     auto matType= static_cast<skr_material_type_resource_t*>(ctx->GetStaticDependency(idx).get_ptr());
     auto blob = skr::make_blob_builder<skr_material_overrides_t>();
     

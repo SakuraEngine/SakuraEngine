@@ -153,13 +153,16 @@ skr_type_id_t SShaderResourceFactoryImpl::GetResourceType()
 bool SShaderResourceFactoryImpl::Unload(skr_resource_record_t* record)
 { 
     auto shader_collection = (skr_shader_collection_resource_t*)record->resource;
-    for (auto&& [hash, variant] : shader_collection->switch_variants)
+    if (!root.dont_create_shader)
     {
-        for (auto&& [platform, opt_variant] : variant.option_variants)
+        for (auto&& [hash, variant] : shader_collection->switch_variants)
         {
-            for (auto&& identifier : opt_variant)
+            for (auto&& [platform, opt_variant] : variant.option_variants)
             {
-                root.shadermap->free_shader(identifier);
+                for (auto&& identifier : opt_variant)
+                {
+                    root.shadermap->free_shader(identifier);
+                }
             }
         }
     }
