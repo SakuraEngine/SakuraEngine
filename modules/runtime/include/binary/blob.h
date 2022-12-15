@@ -60,6 +60,10 @@ namespace skr
             {
                 BlobTrait<T>::BuildArena(arena, dst, src);
             }
+            else // fallback to copy
+            {
+                dst = src;
+            }
         }
 
         template<class T>
