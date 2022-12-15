@@ -4,6 +4,7 @@
 #include "SkrRenderer/shader_hash.h"
 #include "containers/hashmap.hpp"
 #include "containers/sptr.hpp"
+#include "utils/defer.hpp"
 #include "utils/format.hpp"
 #include "utils/make_zeroed.hpp"
 #include "utils/threaded_service.h"
@@ -47,6 +48,9 @@ struct ShaderMapImpl : public skr_shader_map_t
 
         bool createShader()
         {
+            // erase request when exit this scope
+            SKR_DEFER({factory->mShaderRequests.erase(identifier);});
+
             auto render_device = factory->root.render_device;
             const auto& shader_destination = bytes_destination;
     
@@ -195,7 +199,16 @@ void ShaderMapImpl::garbage_collect(uint64_t critical_frame) SKR_NOEXCEPT
     {
         if (skr_atomic32_load_relaxed(&it->second->rc) == 0 && skr_atomic64_load_relaxed(&it->second->frame) < critical_frame)
         {
-            it = map.erase(it);
+            if (mShaderRequests.find(it->first) != mShaderRequests.end())
+            {
+                // shader is still loading, skip & wait for it to finish
+                // TODO: cancel shader loading
+                ++it;
+            }
+            else
+            {
+                it = map.erase(it);
+            }
         }
         else
         {

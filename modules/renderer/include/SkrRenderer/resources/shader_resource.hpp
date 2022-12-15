@@ -23,9 +23,7 @@ skr_multi_shader_resource_t
 
     sattr("no-rtti" : true)
     inline skr::vector<skr_platform_shader_identifier_t>& GetRootDynamicVariants() SKR_NOEXCEPT{
-        auto found = option_variants.find(kZeroStableShaderHash);
-        SKR_ASSERT(found != option_variants.end());
-        return found->second;
+        return GetDynamicVariants(kZeroStableShaderHash);
     }
     sattr("no-rtti" : true)
     inline skr::vector<skr_platform_shader_identifier_t>& GetDynamicVariants(stable_hash_t hash) SKR_NOEXCEPT{
@@ -69,7 +67,12 @@ skr_shader_collection_resource_t
 
     sattr("no-rtti" : true)
     inline skr_multi_shader_resource_t& GetRootStaticVariant() SKR_NOEXCEPT {
-        auto found = switch_variants.find(kZeroStableShaderHash);
+        return GetStaticVariant(kZeroStableShaderHash);
+    }
+
+    sattr("no-rtti" : true)
+    inline skr_multi_shader_resource_t& GetStaticVariant(const skr_stable_shader_hash_t& hash) SKR_NOEXCEPT {
+        auto found = switch_variants.find(hash);
         SKR_ASSERT(found != switch_variants.end());
         return found->second;
     }
@@ -97,7 +100,12 @@ skr_platform_shader_collection_json_t
 
     sattr("no-rtti" : true)
     inline skr_multi_shader_resource_t& GetRootStaticVariant() SKR_NOEXCEPT {
-        auto found = switch_variants.find(kZeroStableShaderHash);
+        return GetStaticVariant(kZeroStableShaderHash);
+    }
+
+    sattr("no-rtti" : true)
+    inline skr_multi_shader_resource_t& GetStaticVariant(const skr_stable_shader_hash_t& hash) SKR_NOEXCEPT {
+        auto found = switch_variants.find(hash);
         SKR_ASSERT(found != switch_variants.end());
         return found->second;
     }
@@ -132,6 +140,8 @@ struct SKR_RENDERER_API SShaderResourceFactory : public SResourceFactory {
     float AsyncSerdeLoadFactor() override { return 1.f; }
     [[nodiscard]] static SShaderResourceFactory* Create(const Root& root);
     static void Destroy(SShaderResourceFactory* factory); 
+
+    static ECGPUShaderBytecodeType GetRuntimeBytecodeType(ECGPUBackend backend);
 };
 } // namespace resource
 } // namespace skr

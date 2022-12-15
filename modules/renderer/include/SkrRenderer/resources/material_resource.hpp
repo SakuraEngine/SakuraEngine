@@ -120,6 +120,9 @@ skr_material_resource_t
     
     sattr("no-rtti" : true, "arena" : "arena")
     skr_material_overrides_t overrides;
+
+    sattr("no-rtti" : true, "transient": true)
+    skr::vector<skr_platform_shader_identifier_t> runtime_installed;
 };
 
 namespace skr sreflect
@@ -131,6 +134,9 @@ struct SKR_RENDERER_API SMaterialFactory : public SResourceFactory {
 
     struct Root {
         SRenderDeviceId render_device = nullptr;
+        skr_vfs_t* bytecode_vfs = nullptr;
+        skr_io_ram_service_t* ram_service = nullptr;
+        skr_threaded_service_t* aux_service = nullptr;
     };
     [[nodiscard]] static SMaterialFactory* Create(const Root& root);
     static void Destroy(SMaterialFactory* factory); 
