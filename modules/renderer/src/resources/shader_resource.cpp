@@ -119,18 +119,6 @@ struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFacto
     bool Uninstall(skr_resource_record_t* record) override;
     ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override;
 
-    ECGPUShaderBytecodeType GetRuntimeBytecodeType() const
-    {
-        const auto backend = root.render_device->get_backend();
-        switch (backend)
-        {
-        case CGPU_BACKEND_D3D12: return CGPU_SHADER_BYTECODE_TYPE_DXIL;
-        case CGPU_BACKEND_VULKAN: return CGPU_SHADER_BYTECODE_TYPE_SPIRV;
-        case CGPU_BACKEND_METAL: return CGPU_SHADER_BYTECODE_TYPE_MTL;
-        default: return CGPU_SHADER_BYTECODE_TYPE_COUNT;
-        }
-    }
-
     Root root;
 };
 
@@ -142,6 +130,17 @@ SShaderResourceFactory* SShaderResourceFactory::Create(const Root& root)
 void SShaderResourceFactory::Destroy(SShaderResourceFactory *factory)
 {
     return SkrDelete(factory);
+}
+
+ECGPUShaderBytecodeType SShaderResourceFactory::GetRuntimeBytecodeType(ECGPUBackend backend)
+{
+    switch (backend)
+    {
+    case CGPU_BACKEND_D3D12: return CGPU_SHADER_BYTECODE_TYPE_DXIL;
+    case CGPU_BACKEND_VULKAN: return CGPU_SHADER_BYTECODE_TYPE_SPIRV;
+    case CGPU_BACKEND_METAL: return CGPU_SHADER_BYTECODE_TYPE_MTL;
+    default: return CGPU_SHADER_BYTECODE_TYPE_COUNT;
+    }
 }
 
 skr_type_id_t SShaderResourceFactoryImpl::GetResourceType()
@@ -182,7 +181,7 @@ ESkrInstallStatus SShaderResourceFactoryImpl::Install(skr_resource_record_t* rec
     for (uint32_t i = 0u; i < root_option_variant.size(); i++)
     {
         const auto& identifier = root_option_variant[i];
-        const auto runtime_bytecode_type = GetRuntimeBytecodeType();
+        const auto runtime_bytecode_type = SShaderResourceFactory::GetRuntimeBytecodeType(root.render_device->get_backend());
         if (identifier.bytecode_type == runtime_bytecode_type)
         {
             const auto status = root.shadermap->install_shader(identifier);

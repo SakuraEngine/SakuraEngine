@@ -75,6 +75,7 @@ namespace skr::resource
 template <class T>
 struct TResourceHandle : skr_resource_handle_t {
     using skr_resource_handle_t::skr_resource_handle_t;
+    // TODO: T* resolve
     T* get_resolved(bool requireInstalled = true) const
     {
         return (T*)skr_resource_handle_t::get_resolved(requireInstalled);
