@@ -147,12 +147,15 @@ namespace skr::lua
     }
 
     template<class T>
-    T check(lua_State* L, int index)
+    T check(lua_State* L, int index, int& used)
     {
         if constexpr(skr::is_complete_v<BindTrait<T>>)
-            return BindTrait<T>::check(L, index);
+            return BindTrait<T>::check(L, index, used);
         else
+        {
+            used = 1;
             return DefaultBindTrait<T>::check(L, index);
+        }
     }
 
     struct shared_userdata_t
@@ -169,8 +172,9 @@ namespace skr::lua
             lua_pushnumber(L, value);
             return 1;
         }
-        static float check(lua_State* L, int index)
+        static float check(lua_State* L, int index, int& used)
         {
+            used = 1;
             return (float)luaL_checknumber(L, index);
         }
         static float opt(lua_State* L, int index, float def)
@@ -187,8 +191,9 @@ namespace skr::lua
             lua_pushnumber(L, value);
             return 1;
         }
-        static double check(lua_State* L, int index)
+        static double check(lua_State* L, int index, int& used)
         {
+            used = 1;
             return luaL_checknumber(L, index);
         }
         static double opt(lua_State* L, int index, double def)
@@ -206,12 +211,14 @@ namespace skr::lua
             lua_pushinteger(L, value); \
             return 1; \
         } \
-        static type check(lua_State* L, int index) \
+        static type check(lua_State* L, int index, int& used) \
         { \
+            used = 1; \
             return (type)luaL_checkinteger(L, index); \
         } \
-        static type opt(lua_State* L, int index, type def) \
+        static type opt(lua_State* L, int index, type def, int& used) \
         { \
+            used = 1; \
             return (type)luaL_optinteger(L, index, def); \
         } \
     };
@@ -229,8 +236,9 @@ namespace skr::lua
             lua_pushboolean(L, value);
             return 1;
         }
-        static bool check(lua_State* L, int index)
+        static bool check(lua_State* L, int index, int& used)
         {
+            used = 1;
             return lua_toboolean(L, index) != 0;
         }
         static bool opt(lua_State* L, int index, bool def)
@@ -247,8 +255,9 @@ namespace skr::lua
             return push_guid(L, &guid);
         }
 
-        static const skr_guid_t check(lua_State* L, int index)
+        static const skr_guid_t check(lua_State* L, int index, int& used)
         {
+            used = 1;
             return *check_guid(L, index);
         }
 
@@ -266,8 +275,9 @@ namespace skr::lua
             return push_resource(L, &resource);
         }
 
-        static const skr_resource_handle_t& check(lua_State* L, int index)
+        static const skr_resource_handle_t& check(lua_State* L, int index, int& used)
         {
+            used = 1;
             return *check_resource(L, index);
         }
 
@@ -285,8 +295,9 @@ namespace skr::lua
             return push_resource(L, (const skr_resource_handle_t*)&resource);
         }
 
-        static const resource::TResourceHandle<T>& check(lua_State* L, int index)
+        static const resource::TResourceHandle<T>& check(lua_State* L, int index, int& used)
         {
+            used = 1;
             return *(resource::TResourceHandle<T>*)check_resource(L, index);
         }
 
@@ -304,8 +315,9 @@ namespace skr::lua
             return push_string(L, str);
         }
 
-        static skr::string check(lua_State* L, int index)
+        static skr::string check(lua_State* L, int index, int& used)
         {
+            used = 1;
             return check_string(L, index);
         }
 
@@ -359,6 +371,21 @@ namespace skr::lua
     }
 
     template<class T>
+    using deref_t = std::conditional_t<std::is_reference_v<T>, T, decltype(*std::declval<T>())>;
+
+    template<class T>
+    decltype(auto) deref(T value)
+    {
+        return *value;
+    }
+
+    template<class T>
+    decltype(auto) deref(T& value)
+    {
+        return value;
+    }
+
+    template<class T>
     struct SharedUserdata
     {
         T* data;
@@ -370,4 +397,43 @@ namespace skr::lua
         {
         }
     };
+
+    template<class ...Ts>
+    void Call(lua_State* L, Ts&&... args)
+    {
+        auto oldTop = lua_gettop(L);
+        int n[] = {BindTrait<Ts>::Push(L, std::forward<Ts>(args))...};
+        int nargs = 0;
+        for (int i = 0; i < sizeof...(Ts); ++i)
+            nargs += n[i];
+        if(lua_pcall(L, nargs, 0, 0) != LUA_OK)
+        {
+            lua_getglobal(L, "skr");
+            lua_getfield(L, -1, "log_error");
+            lua_pushvalue(L, -3);
+            lua_call(L, 1, 0);
+            lua_pop(L, 2);
+        }
+        lua_settop(L, oldTop);
+    }
+
+    template<class R, class ...Ts>
+    R CallR(lua_State* L, Ts&&... args)
+    {
+        auto oldTop = lua_gettop(L);
+        int n[] = {BindTrait<Ts>::Push(L, std::forward<Ts>(args))...};
+        int nargs = 0;
+        for (int i = 0; i < sizeof...(Ts); ++i)
+            nargs += n[i];
+        if(lua_pcall(L, nargs, LUA_MULTRET, 0) != LUA_OK)
+        {
+            lua_getglobal(L, "skr");
+            lua_getfield(L, -1, "log_error");
+            lua_pushvalue(L, -3);
+            lua_call(L, 1, 0);
+            lua_pop(L, 2);
+        }
+        R ret = BindTrait<R>::Check(L, -1);
+        lua_settop(L, oldTop);
+    }
 }

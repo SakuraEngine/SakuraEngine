@@ -28,6 +28,8 @@
 <%def name="bind_function(function, record)">
         lua_pushcfunction(L, +[](lua_State* L)
         {
+            int currArg = 1;
+            int usedArg = 0;
         %if record:
             auto& record = **reinterpret_cast<${record.name}**>(lua_touserdata(L, 1));
         %endif
@@ -45,6 +47,64 @@
                 elif hasattr(param.attrs, "inout"):
                     out_params.append(name)
             %>
+        
+        %if param.type.replace(" ", "") == "void*":
+            void* ${name} = L;
+        %elif param.isCallback:
+            <%
+                callback = param.functor
+                cparamlist = ", ".join([cparam.type + " " + cname for cname, cparam in vars(callback.parameters).items()])
+                ccapture = ""
+                if param.isFunctor:
+                    ccapture = "L"
+                chas_return = callback.retType != "void"
+            %>
+            if(!lua_isfunction(L, ${i + 1 - out_params_count}))
+                luaL_error(L, "expected function for parameter ${name}");
+            usedArg = 1;
+            using ${name}_t = param.type;
+            ${name}_t ${name} = [${ccapture}](${cparamlist})
+            {
+                int oldTop = lua_gettop(L);
+                %for name, param in vars(callback.parameters).items():
+                %if hasattr(param.attrs, "userdata"):
+                lua_State* L = reinterpret_cast<lua_State*>(name);
+                %endif
+                %endfor
+                lua_pushvalue(L, ${i + 1 - out_params_count});
+                int ncargs = 0;
+                %for name, param in vars(callback.parameters).items():
+                %if not hasattr(param.attrs, "userdata") and not hasattr(param.attrs, "out"):
+                ncargs += skr::lua::push<${param.type}>(L, ${name});
+                %endif
+                %endfor
+                if(lua_pcall(L, ncargs, LUA_MULTRET, 0) != LUA_OK)
+                {
+                    lua_getglobal(L, "skr");
+                    lua_getfield(L, -1, "log_error");
+                    lua_pushvalue(L, -3);
+                    lua_call(L, 1, 0);
+                    lua_pop(L, 2);
+                    return ret;
+                }
+                int currRet = -1;
+                int usedRet = 0;
+                %for name, param in reversed(vars(callback.parameters).items()):
+                %if hasattr(param.attrs, "out") or hasattr(param.attrs, "inout"):
+                skr::lua::deref(${name}) = skr::lua::check<skr::lua::deref_t<${param.type}>>(L, currRet, usedRet);
+                currRet -= usedRet;
+                %endif
+                %endfor
+                %if chas_return:
+                auto result = skr::lua::check<${callback.retType}>(L, currRet, usedRet);
+                currRet -= usedRet;
+                %endif
+                lua_settop(L, oldTop);
+                %if chas_return:
+                return result;
+                %endif
+            };
+        %else:
         %if hasattr(param.attrs, "out") or hasattr(param.attrs, "inout"):
             using ${name}_t = skr::lua::refed_t<${param.type}>;
         %else:
@@ -54,12 +114,15 @@
             ${name}_t _${name};
             ${param.type} ${name} = skr::lua::ref<${param.type}>(_${name});
         %elif hasattr(param.attrs, "inout"):
-            ${name}_t _${name} = skr::lua::check<${name}_t>(L, ${i + 1 - out_params_count});
+            ${name}_t _${name} = skr::lua::check<${name}_t>(L, currArg, usedArg);
             ${param.type} ${name} = skr::lua::ref<${param.type}>(_${name});
         %else:
-            ${param.type} ${name} = skr::lua::check<${name}_t>(L, ${i + 1 - out_params_count});
+            ${param.type} ${name} = skr::lua::check<${name}_t>(L, currArg, usedArg);
         %endif
+        %endif
+            currArg += usedArg;
         %endfor
+        int nRet = 0;
         %if has_return:
             ${function.retType} result = \
         %endif
@@ -70,12 +133,12 @@
         %endif
             (${", ".join([name for name in vars(function.parameters).keys()])});
         %if has_return:
-            skr::lua::push<${function.retType}>(L, result);
+            nRet += skr::lua::push<${function.retType}>(L, result);
         %endif
         %for name in out_params:
-            skr::lua::push<${name}_t>(L, ${name});
+            nRet += skr::lua::push<${name}_t>(L, ${name});
         %endfor
-            return ${len(out_params) + (1 if has_return else 0)};
+            return nRet;
         });
 </%def>
 <%def name="bind_category(cat)">
@@ -149,13 +212,14 @@ void skr_lua_open_${module}(lua_State* L)
         {
             auto& record = **reinterpret_cast<${record.name}**>(lua_touserdata(L, 1));
             auto key = lua_tostring(L, 2);
+            int used = 0;
             switchname(key)
             {
             %for name, field in vars(record.fields).items():
                 <% if hasattr(field.attrs, "native"): continue %>
                 casestr("${name}")
                 {
-                    record.${name} = skr::lua::check<${field.type}>(L, 3);
+                    record.${name} = skr::lua::check<${field.type}>(L, 3, used);
                     return 0;
                 }
             %endfor
