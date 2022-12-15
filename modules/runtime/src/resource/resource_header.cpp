@@ -70,6 +70,8 @@ int WriteTrait<const skr_resource_header_t&>::Write(skr_binary_writer_t *writer,
 
 uint32_t skr_resource_record_t::AddReference(uint64_t requester, ESkrRequesterType requesterType)
 {
+    #if TRACK_RESOURCE_REQUESTS
+    SMutexLock lock(mutex.mMutex);
     if (requesterType == SKR_REQUESTER_ENTITY)
     {
         entityRefCount++;
@@ -108,9 +110,14 @@ uint32_t skr_resource_record_t::AddReference(uint64_t requester, ESkrRequesterTy
         objectReferences.push_back(object_requester{ id, (void*)requester, requesterType });
         return id;
     }
+    #else
+    ++referenceCount;
+    #endif
 }
 void skr_resource_record_t::RemoveReference(uint32_t id, ESkrRequesterType requesterType)
 {
+    #if TRACK_RESOURCE_REQUESTS
+    SMutexLock lock(mutex.mMutex);
     if (requesterType == SKR_REQUESTER_ENTITY)
     {
         entityRefCount--;
@@ -133,10 +140,17 @@ void skr_resource_record_t::RemoveReference(uint32_t id, ESkrRequesterType reque
         SKR_ASSERT(iter != objectReferences.end());
         objectReferences.erase_unsorted(iter);
     }
+    #else
+    --referenceCount;
+    #endif
 }
 bool skr_resource_record_t::IsReferenced() const
 {
-    return entityRefCount > 0 || objectReferences.size() > 0;
+    #if TRACK_RESOURCE_REQUESTS
+    return entityRefCount > 0 || objectReferences.size() > 0 || scriptRefCount > 0;
+    #else
+    return referenceCount > 0;
+    #endif
 }
 void skr_resource_record_t::SetStatus(ESkrLoadingStatus newStatus)
 {

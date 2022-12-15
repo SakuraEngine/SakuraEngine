@@ -45,7 +45,7 @@ typedef enum ESkrLoadingStatus : uint32_t
 
 typedef struct skr_resource_record_t skr_resource_record_t;
 struct lua_State;
-
+#define TRACK_RESOURCE_REQUESTS 1
 namespace skr::resource
 {
 struct SResourceRequest;
@@ -66,6 +66,7 @@ struct RUNTIME_API skr_resource_record_t {
     eastl::vector<callback_t> callbacks[SKR_LOADING_STATUS_COUNT];
     SMutexObject mutex;
     ESkrLoadingStatus loadingStatus = SKR_LOADING_STATUS_UNLOADED;
+    #ifdef TRACK_RESOURCE_REQUESTS
     struct object_requester {
         uint32_t id;
         void* requester = nullptr;
@@ -91,6 +92,9 @@ struct RUNTIME_API skr_resource_record_t {
     eastl::vector<script_requester> scriptReferences;
     uint32_t entityRefCount = 0;
     uint32_t scriptRefCount = 0;
+    #else
+    std::atomic<uint32_t> referenceCount = 0;
+    #endif
     skr_resource_header_t header;
     skr::resource::SResourceRequest* activeRequest;
 

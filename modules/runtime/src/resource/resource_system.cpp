@@ -49,6 +49,7 @@ protected:
     skr_io_ram_service_t* ioService = nullptr; 
 
     moodycamel::ConcurrentQueue<SResourceRequest*> requests;
+    SMutexObject recordMutex; // this mutex is used to protect the resourceRecords and resourceToRecord maps
 
     // these requests are only handled inside this system and is thread-unsafe
 
@@ -77,6 +78,7 @@ SResourceSystemImpl::~SResourceSystemImpl()
 
 skr_resource_record_t* SResourceSystemImpl::_GetOrCreateRecord(const skr_guid_t& guid)
 {
+    SMutexLock Lock(recordMutex.mMutex);
     auto record = _GetRecord(guid);
     if (!record)
     {
@@ -103,6 +105,7 @@ skr_resource_record_t* SResourceSystemImpl::_GetRecord(void* resource)
 
 void SResourceSystemImpl::_DestroyRecord(skr_resource_record_t* record)
 {
+    SMutexLock Lock(recordMutex.mMutex);
     auto request = static_cast<SResourceRequestImpl*>(record->activeRequest);
     if (request)
         request->resourceRecord = nullptr;
@@ -241,6 +244,7 @@ void SResourceSystemImpl::FlushResource(skr_resource_handle_t& handle)
 
 ESkrLoadingStatus SResourceSystemImpl::GetResourceStatus(const skr_guid_t& handle)
 {
+    SMutexLock Lock(recordMutex.mMutex);
     auto record = _GetRecord(handle);
     if (!record) return SKR_LOADING_STATUS_UNLOADED;
     return record->loadingStatus;
