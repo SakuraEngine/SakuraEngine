@@ -12,6 +12,7 @@ python = find_sdk.find_embed_python() or find_sdk.find_program("python3")
 function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
     opt = opt or {}
     opt.target = target
+    opt.rawargs = true
     local last = os.time()
     -- load compiler and get compilation command
     local sourcekind = opt.sourcekind
@@ -30,7 +31,7 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
         cprint("${green}[%s]: compiling.meta ${clear}%s", target:name(), path.relative(outdir))
     end
 
-    if is_host("windows") and not opt.rawargs then
+    if is_host("windows") then
         argv = winos.cmdargv(argv)
     end
 
@@ -38,7 +39,6 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
     for k,v in pairs(argv2) do  
         table.insert(argv, k, v)
     end
-    
     os.runv(meta.program, argv)
 
     if not opt.quiet then
