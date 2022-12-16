@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrAssetTool/importer_factory.h"
+
 #ifdef WITH_USDTOOL
 namespace skd::asset
 {
