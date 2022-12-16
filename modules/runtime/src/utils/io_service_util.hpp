@@ -135,9 +135,9 @@ struct TaskBase
     
     void setTaskStatus(SkrAsyncIOStatus value)
     {
-        skr_atomic32_store_relaxed(&request->status, value);
         if (callbacks[value] != nullptr)
             callbacks[value](request, callback_datas[value]);
+        skr_atomic32_store_relaxed(&request->status, value);
     }
 };
 
