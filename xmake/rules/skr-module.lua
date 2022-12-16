@@ -32,6 +32,39 @@ rule("skr.module")
         -- add codegen headers to include dir
         local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
         target:add("includedirs", gendir, {public = true})
+
+        local target_gendir = path.join(target:autogendir({root = true}), target:plat())
+        local jsonfile = path.join(target_gendir, "module", "module.configure.json")
+        local embedfile = path.join(target_gendir, "module", "module.configure.cpp")
+        local headerfile = path.join(target_gendir, "codegen", target:name(), "module.configure.h")
+
+        -- generate dummies
+        if (not os.exists(jsonfile)) then
+            io.writefile(jsonfile, "")
+        end
+        if (not os.exists(embedfile)) then
+            io.writefile(embedfile, "")
+        end
+        if (not os.exists(headerfile)) then
+            io.writefile(headerfile, "")
+        end
+        target:add("files", embedfile)
+
+        target:data_set("module.meta.cpp", embedfile)
+        target:data_set("module.meta.json", jsonfile)
+        target:data_set("module.meta.header", headerfile)
+        target:data_set("module.meta.includedir", target_gendir)
+
+        if (target:rule("c++.unity_build")) then
+            local unity_build = target:rule("c++.unity_build"):clone()
+            unity_build:add("deps", "skr.module", {order = true})
+            target:rule_add(unity_build)
+        end
+        if (target:rule("c.unity_build")) then
+            local cunity_build = target:rule("c.unity_build"):clone()
+            cunity_build:add("deps", "skr.module", {order = true})
+            target:rule_add(cunity_build)
+        end
     end)
     on_config(function(target)
         -- imports
@@ -42,48 +75,14 @@ rule("skr.module")
         -- calculate deps
         local api = target:extraconf("rules", "skr.module", "api")
         local dep_modules = module_codegen.resolve_skr_module_dependencies(target)
-        local target_gendir = path.join(target:autogendir({root = true}), target:plat())
-        local jsonfile = path.join(target_gendir, "module", "module.configure.json")
-        local embedfile = path.join(target_gendir, "module", "module.configure.cpp")
-        local headerfile = path.join(target_gendir, "codegen", target:name(), "module.configure.h")
         -- need build this target?
-        module_codegen.skr_module_gen_json(target, jsonfile, dep_modules)
-        module_codegen.skr_module_gen_cpp(target, embedfile, dep_modules)
-        module_codegen.skr_module_gen_header(target, headerfile, api)
-        target:data_set("module.meta.cpp", embedfile)
-        target:data_set("module.meta.includedir", target_gendir)
+        module_codegen.skr_module_gen_json(target, target:data("module.meta.json"), dep_modules)
+        module_codegen.skr_module_gen_cpp(target, target:data("module.meta.cpp"), dep_modules)
+        module_codegen.skr_module_gen_header(target, target:data("module.meta.header"), api)
     end)
     before_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
-        -- profile compile time
-        --for _, sourcefile in ipairs(sourcebatch.sourcefiles) do
-        --    local sourcefile_cx = path.absolute(sourcefile)
-        --    local objectfile = target:objectfile(sourcefile)
-        --    batchcmds:compile(sourcefile_cx, objectfile, {configs = {includedirs = gendir, languages = "c++17"}})
-            -- add deps
-        --    batchcmds:set_depmtime(os.mtime(objectfile))
-        --    batchcmds:set_depcache(target:dependfile(objectfile))
-        --end
-
         -- avoid duplicate linking of object files
         sourcebatch.objectfiles = {}
-        -- add to sourcebatch
-        local file = target:data("module.meta.cpp")
-        local includedir = target:data("module.meta.target_gendir")
-        -- compile generated cpp files
-        local sourcefile_cx = path.absolute(file)
-        -- add objectfile
-        local objectfile = target:objectfile(file)
-        table.insert(sourcebatch.objectfiles, objectfile)
-        if not opt.quiet then
-            batchcmds:show_progress(opt.progress, "${color.build.object}[%s]: compiling.module.meta %s", target:name(), file)
-        end
-        -- add commands
-        batchcmds:mkdir(path.directory(sourcefile_cx))
-        batchcmds:compile(sourcefile_cx, objectfile, {configs = {includedirs = includedir, languages = "c++17"}})
-        -- add deps
-        batchcmds:add_depfiles(sourcefile_cx)
-        batchcmds:set_depmtime(os.mtime(objectfile))
-        batchcmds:set_depcache(target:dependfile(objectfile))
     end)
 rule_end()
 
