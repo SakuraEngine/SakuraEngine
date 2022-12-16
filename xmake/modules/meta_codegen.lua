@@ -52,6 +52,7 @@ function meta_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
     local changedheaders = target:data("reflection.changedheaders")
     -- generate dummy .cpp file
     if(changedheaders ~= nil and #changedheaders > 0) then
+        local verbose = option.get("verbose")
         -- compile jsons to c++
         local unity_cpp = io.open(sourcefile, "w")
         for _, headerfile in ipairs(changedheaders) do
@@ -59,7 +60,9 @@ function meta_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
             sourcefile = path.absolute(sourcefile)
             local relative_include = path.relative(headerfile, path.directory(sourcefile))
             unity_cpp:print("#include \"%s\"", relative_include)
-            cprint("${magenta}[%s]: meta.header ${clear}%s", target:name(), path.relative(headerfile))
+            if verbose then
+                cprint("${magenta}[%s]: meta.header ${clear}%s", target:name(), path.relative(headerfile))
+            end
         end
         unity_cpp:close()
         -- build generated cpp to json

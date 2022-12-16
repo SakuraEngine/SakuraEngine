@@ -29,17 +29,19 @@ rule("c++.codegen")
         target:rule_add(rule)
     end)
 
-    before_build(function (target)
-        -- wait async codegen finish
-        if(has_config("use_async_codegen")) then
-            import("core.base.scheduler")
-            scheduler.co_group_wait(target:name()..".cpp-codegen")
-        end
-    end)
-
     before_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
         -- avoid duplicate linking of object files
         sourcebatch.objectfiles = {}
+        -- wait async codegen finish
+        if(has_config("use_async_codegen")) then
+            import("core.base.scheduler")
+            for _, dep in pairs(target:deps()) do
+                if dep:rule("c++.codegen") then
+                    scheduler.co_group_wait(dep:name()..".cpp-codegen")
+                end
+            end
+            scheduler.co_group_wait(target:name()..".cpp-codegen")
+        end
     end)
 
     on_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
