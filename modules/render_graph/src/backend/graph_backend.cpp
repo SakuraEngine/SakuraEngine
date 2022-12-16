@@ -630,7 +630,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
             ds_attachment.depth_store_action = pass->depth_store_action;
             ds_attachment.stencil_load_action = pass->stencil_load_action;
             ds_attachment.stencil_store_action = pass->stencil_store_action;
-            ds_attachment.clear_depth = 1.f; // TODO:Remove this
+            ds_attachment.clear_depth = pass->clear_depth;
             ds_attachment.write_depth = true;
         }
         else

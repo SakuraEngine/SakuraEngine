@@ -42,7 +42,7 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
                     .set_root_signature(drawcalls.drawcalls->pipeline->root_signature)
                     .read("mask_texture", mask_buffer)
                     .write(0, out_color, CGPU_LOAD_ACTION_CLEAR)
-                    .set_depth_stencil(depth_buffer);
+                    .set_depth_stencil(depth_buffer.clear_depth(1.f));
             },
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& pass_context) {
                 for (uint32_t i = 0; i < drawcalls.count; i++)

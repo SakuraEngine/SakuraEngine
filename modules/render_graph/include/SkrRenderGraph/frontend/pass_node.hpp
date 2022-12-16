@@ -84,6 +84,7 @@ protected:
     ECGPUStoreAction depth_store_action;
     ECGPULoadAction stencil_load_action;
     ECGPUStoreAction stencil_store_action;
+    float clear_depth = 0.f;
 };
 
 class ComputePassNode : public PassNode

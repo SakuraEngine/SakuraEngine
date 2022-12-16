@@ -510,7 +510,7 @@ int main(int argc, char* argv[])
                 .set_pipeline(gbuffer_pipeline)
                 .write(0, gbuffer_color, CGPU_LOAD_ACTION_CLEAR)
                 .write(1, gbuffer_normal, CGPU_LOAD_ACTION_CLEAR)
-                .set_depth_stencil(gbuffer_depth);
+                .set_depth_stencil(gbuffer_depth.clear_depth(1.f));
             },
             [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
                 cgpu_render_encoder_set_viewport(stack.encoder,
