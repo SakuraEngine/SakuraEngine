@@ -1,6 +1,7 @@
 #pragma once
 #include "GameRuntime/module.configure.h"
 #include "resource/config_resource.h"
+#include "utils/function_ref.hpp"
 #ifndef __meta__
     #include "GameRuntime/backend_config.generated.h"
 #endif
@@ -9,7 +10,7 @@ sreflect_enum("guid" : "b4b7f387-d8c2-465c-9b3a-6d83a3d198b1")
 sattr("serialize" : ["json", "bin"])
 sattr("rtti" : true)
 sattr("scriptable" : true)
-ECGPUBackEnd SKRENUM(uint32_t){
+ECGPUBackEnd SKRENUM(uint32_t){ 
     Vulkan, 
     DX12, 
     Metal
@@ -26,6 +27,8 @@ config_backend_t
     void GetBackend2(sattr("out" : true) ECGPUBackEnd& outBackend) const { outBackend = backend; }
     void GetSetBackend(sattr("inout" : true) ECGPUBackEnd& outBackend) { ECGPUBackEnd old = backend; backend = outBackend; outBackend = old; }
     void CopyBackend(const config_backend_t& other) { backend = other.backend; }
+    void SetBackendCallback(void (*callback)(sattr("userdata" : true) void* userdata, sattr("out" : true) ECGPUBackEnd&), void* userdata) { callback(userdata, backend); }
+    void GetBackendCallback(skr::function_ref<void(ECGPUBackEnd)> callback) const { callback(backend); }
 
     sattr("native" : true)
     void* dirtyStuff() { return this; }

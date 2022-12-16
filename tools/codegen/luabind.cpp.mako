@@ -50,6 +50,7 @@
         
         %if param.type.replace(" ", "") == "void*":
             void* ${name} = L;
+            usedArg = 0;
         %elif param.isCallback:
             <%
                 callback = param.functor
@@ -62,15 +63,15 @@
             if(!lua_isfunction(L, ${i + 1 - out_params_count}))
                 luaL_error(L, "expected function for parameter ${name}");
             usedArg = 1;
-            using ${name}_t = param.type;
+            using ${name}_t = ${param.type};
             ${name}_t ${name} = [${ccapture}](${cparamlist})
             {
-                int oldTop = lua_gettop(L);
                 %for name, param in vars(callback.parameters).items():
                 %if hasattr(param.attrs, "userdata"):
-                lua_State* L = reinterpret_cast<lua_State*>(name);
+                lua_State* L = reinterpret_cast<lua_State*>(${name});
                 %endif
                 %endfor
+                int oldTop = lua_gettop(L);
                 lua_pushvalue(L, ${i + 1 - out_params_count});
                 int ncargs = 0;
                 %for name, param in vars(callback.parameters).items():
@@ -85,13 +86,18 @@
                     lua_pushvalue(L, -3);
                     lua_call(L, 1, 0);
                     lua_pop(L, 2);
-                    return ret;
+                    %if chas_return:
+                    return {};
+                    %else:
+                    return;
+                    %endif
                 }
                 int currRet = -1;
                 int usedRet = 0;
                 %for name, param in reversed(vars(callback.parameters).items()):
                 %if hasattr(param.attrs, "out") or hasattr(param.attrs, "inout"):
-                skr::lua::deref(${name}) = skr::lua::check<skr::lua::deref_t<${param.type}>>(L, currRet, usedRet);
+                decltype(auto) _${name} = skr::lua::deref<${param.type}>(${name});
+                _${name} = skr::lua::check<decltype(_${name})>(L, currRet, usedRet);
                 currRet -= usedRet;
                 %endif
                 %endfor
@@ -108,7 +114,7 @@
         %if hasattr(param.attrs, "out") or hasattr(param.attrs, "inout"):
             using ${name}_t = skr::lua::refed_t<${param.type}>;
         %else:
-            using ${name}_t = ${param.type};
+            using ${name}_t = std::remove_reference_t<${param.type}>;
         %endif
         %if hasattr(param.attrs, "out"):
             ${name}_t _${name};
