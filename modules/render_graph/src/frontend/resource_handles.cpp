@@ -58,7 +58,7 @@ TextureRTVHandle::ShaderWriteHandle(const handle_t _this)
 {
 }
 
-TextureRTVHandle TextureRTVHandle::write_mip(uint32_t mip)
+TextureRTVHandle TextureRTVHandle::write_mip(uint32_t mip) const
 {
     TextureRTVHandle _ = *this;
     _.mip_level = mip;
@@ -87,6 +87,21 @@ BufferCBVHandle::ShaderReadHandle(const handle_t _this)
 BufferUAVHandle::ShaderReadWriteHandle(const handle_t _this)
     : _this(_this)
 {
+}
+
+// ds
+TextureDSVHandle TextureHandle::clear_depth(float depth) const
+{
+    TextureDSVHandle _ = *this;
+    _.cleardepth = depth;
+    return _;
+}
+
+TextureDSVHandle TextureDSVHandle::clear_depth(float depth) const
+{
+    TextureDSVHandle _ = *this;
+    _.cleardepth = depth;
+    return _;
 }
 
 // VB/IB

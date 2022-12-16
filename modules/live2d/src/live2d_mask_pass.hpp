@@ -45,7 +45,7 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
                     // we know that the drawcalls always have a same pipeline
                     .set_pipeline(drawcalls.drawcalls->pipeline)
                     .write(0, out_color, CGPU_LOAD_ACTION_CLEAR, fastclear_1111)
-                    .set_depth_stencil(depth_buffer);
+                    .set_depth_stencil(depth_buffer.clear_depth(1.f));
             },
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& pass_context) {
                 for (uint32_t i = 0; i < drawcalls.count; i++)

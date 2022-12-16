@@ -103,6 +103,7 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_depth_stenci
     node.depth_store_action = dstore_action;
     node.stencil_load_action = sload_action;
     node.stencil_store_action = sstore_action;
+    node.clear_depth = handle.cleardepth;
     return *this;
 }
 

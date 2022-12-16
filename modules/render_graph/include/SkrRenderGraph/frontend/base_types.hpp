@@ -203,8 +203,8 @@ struct SKR_RENDER_GRAPH_API ObjectHandle<EObjectType::Texture> {
         friend class RenderGraph;
         friend class TextureRenderEdge;
         const handle_t _this;
-        ShaderWriteHandle write_mip(uint32_t mip_level);
-        ShaderWriteHandle write_array(uint32_t base, uint32_t count);
+        ShaderWriteHandle write_mip(uint32_t mip_level) const;
+        ShaderWriteHandle write_array(uint32_t base, uint32_t count) const;
         inline operator ObjectHandle<EObjectType::Texture>() const { return ObjectHandle<EObjectType::Texture>(_this); }
 
         ShaderWriteHandle(const handle_t _this);            
@@ -219,11 +219,15 @@ struct SKR_RENDER_GRAPH_API ObjectHandle<EObjectType::Texture> {
         friend class RenderGraph;
         friend class TextureRenderEdge;
 
+        DepthStencilHandle clear_depth(float depth) const;
+
     protected:
         inline DepthStencilHandle(const handle_t _this)
             : ShaderWriteHandle(_this)
         {
         }
+
+        float cleardepth = 0.f;
     };
 
     struct SKR_RENDER_GRAPH_API ShaderReadWriteHandle {
@@ -265,6 +269,7 @@ struct SKR_RENDER_GRAPH_API ObjectHandle<EObjectType::Texture> {
     inline operator ShaderReadWriteHandle() const { return ShaderReadWriteHandle(handle); }
     // ds
     inline operator DepthStencilHandle() const { return DepthStencilHandle(handle); }
+    DepthStencilHandle clear_depth(float depth) const;
     // subresource
     inline operator SubresourceHandle() const { return SubresourceHandle(handle); }
     friend class RenderGraph;

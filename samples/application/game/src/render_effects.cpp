@@ -307,7 +307,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                         .set_pipeline(drawcalls.drawcalls->pipeline)
                         .read("ForwardRenderConstants", cbuffer.range(0, sizeof(skr_float4x4_t)))
                         .write(0, out_color, CGPU_LOAD_ACTION_CLEAR)
-                        .set_depth_stencil(depth_buffer);
+                        .set_depth_stencil(depth_buffer.clear_depth(1.f));
                 },
                 [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
                     auto cb = stack.resolve(cbuffer);

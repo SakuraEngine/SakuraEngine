@@ -4,7 +4,6 @@
 #include "SkrRenderer/fwd_types.h"
 #include "cgpu/api.h"
 
-typedef struct skr_shader_map_key_t skr_shader_map_key_t;
 typedef struct skr_shader_map_t skr_shader_map_t;
 typedef struct skr_shader_map_t* skr_shader_map_id;
 typedef struct skr_shader_map_root_t skr_shader_map_root_t;

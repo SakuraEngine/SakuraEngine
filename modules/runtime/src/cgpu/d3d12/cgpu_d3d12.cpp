@@ -1094,8 +1094,7 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
     }
     if (!SUCCEEDED(result))
     {
-        CHECK_HRESULT(D->pDxDevice->CreateGraphicsPipelineState(
-        &pipeline_state_desc, IID_PPV_ARGS(&PPL->pDxPipelineState)));
+        CHECK_HRESULT(D->pDxDevice->CreateGraphicsPipelineState(&pipeline_state_desc, IID_PPV_ARGS(&PPL->pDxPipelineState)));
         // Pipeline cache
         if (D->pPipelineLibrary)
         {
