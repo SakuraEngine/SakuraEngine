@@ -58,7 +58,14 @@ target("SkrRoot")
     add_rules("utils.install-libs", { libnames = libs_to_install })
     -- core deps
     add_deps("simdjson", "fmt", "boost", {public = true})
-    -- unzip & link sdks
+    -- generate codegen fences
+    after_load(function(target)
+        import("meta_codegen")
+        if(has_config("use_async_codegen")) then
+            meta_codegen.generate_fences(nil)
+        end
+    end)
+    -- dispatch codegen task
     before_build(function(target)
         import("core.base.option")
         local targetname = option.get("target")
