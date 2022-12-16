@@ -140,21 +140,23 @@ namespace skr::lua
     template<class T>
     int push(lua_State* L, const T& value)
     {
+        using TT = std::remove_const_t<std::remove_reference_t<T>>;
         if constexpr(skr::is_complete_v<BindTrait<T>>)
-            return BindTrait<T>::push(L, value);
+            return BindTrait<TT>::push(L, value);
         else
-            return DefaultBindTrait<T>::push(L, value);
+            return DefaultBindTrait<TT>::push(L, value);
     }
 
     template<class T>
-    T check(lua_State* L, int index, int& used)
+    decltype(auto) check(lua_State* L, int index, int& used)
     {
+        using TT = std::remove_const_t<std::remove_reference_t<T>>;
         if constexpr(skr::is_complete_v<BindTrait<T>>)
-            return BindTrait<T>::check(L, index, used);
+            return BindTrait<TT>::check(L, index, used);
         else
         {
             used = 1;
-            return DefaultBindTrait<T>::check(L, index);
+            return DefaultBindTrait<TT>::check(L, index);
         }
     }
 
@@ -371,18 +373,12 @@ namespace skr::lua
     }
 
     template<class T>
-    using deref_t = std::conditional_t<std::is_reference_v<T>, T, decltype(*std::declval<T>())>;
-
-    template<class T>
     decltype(auto) deref(T value)
     {
-        return *value;
-    }
-
-    template<class T>
-    decltype(auto) deref(T& value)
-    {
-        return value;
+        if constexpr(std::is_reference_v<std::remove_const_t<T>>)
+            return value;
+        else
+            return *value;
     }
 
     template<class T>
