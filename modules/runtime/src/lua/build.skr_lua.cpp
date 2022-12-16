@@ -107,7 +107,8 @@ lua_State* skr_lua_newstate(skr_vfs_t* vfs)
 
     int loaderTable = lua_gettop(L);
 
-    for(int i=lua_rawlen(L,loaderTable)+1;i>2;i--) {
+    for(auto i = lua_rawlen(L,loaderTable) + 1; i > 2u; i--) 
+    {
         lua_rawgeti(L,loaderTable,i-1);
         lua_rawseti(L,loaderTable,i);
     }
@@ -125,7 +126,7 @@ lua_State* skr_lua_newstate(skr_vfs_t* vfs)
     lua_pushcfunction(L, +[](lua_State* L) -> int {
         auto asize = luaL_checkinteger(L, 1);
         auto nsize = luaL_checkinteger(L, 2);
-        lua_createtable(L, asize, nsize);
+        lua_createtable(L, (int)asize, (int)nsize);
         return 1;
     });
     lua_setglobal(L, "newtable");

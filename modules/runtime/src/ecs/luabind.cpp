@@ -396,7 +396,7 @@ namespace skr::lua
                         lua_pushcfunction(L, +[](lua_State* L) -> int
                         {
                             lua_chunk_view_t* view = (lua_chunk_view_t*)luaL_checkudata(L, 1, "lua_chunk_view_t");
-                            int index = luaL_checkinteger(L, 2);
+                            int index = (int)luaL_checkinteger(L, 2);
                             int compId = 0;
                             luaL_argexpected(L, lua_isstring(L, 3) || lua_isinteger(L, 3), 3, "expected name or localindex");
                             if(lua_isstring(L, 3))
@@ -407,10 +407,10 @@ namespace skr::lua
                             }
                             else if(lua_isinteger(L, 3))
                             {
-                                compId = luaL_checkinteger(L, 3);
+                                compId = (int)luaL_checkinteger(L, 3);
                             }
-                            luaL_argexpected(L, index < view->view.count, 2, "index out of bounds");
-                            luaL_argexpected(L, index < view->count, 3, "index out of bounds");
+                            luaL_argexpected(L, index < (int)view->view.count, 2, "index out of bounds");
+                            luaL_argexpected(L, index < (int)view->count, 3, "index out of bounds");
                             if(view->elementSizes[compId] != 0)
                             {
                                 return (int)luaL_error(L, "array component is not direct writable %s", view->guidStrs[compId]);
@@ -432,9 +432,9 @@ namespace skr::lua
                         lua_pushcfunction(L, +[](lua_State* L) -> int
                         {
                             lua_chunk_view_t* view = (lua_chunk_view_t*)luaL_checkudata(L, 1, "lua_chunk_view_t");
-                            int index = luaL_checkinteger(L, 2);
-                            luaL_argexpected(L, index < view->view.count, 2, "index out of bounds");
-                            luaL_argexpected(L, index < view->count, 3, "index out of bounds");
+                            int index = (int)luaL_checkinteger(L, 2);
+                            luaL_argexpected(L, index < (int)view->view.count, 2, "index out of bounds");
+                            luaL_argexpected(L, index < (int)view->count, 3, "index out of bounds");
                             auto entity = view->entities[index];
                             lua_pushinteger(L, entity);
                             return 1;
@@ -446,7 +446,7 @@ namespace skr::lua
                         lua_pushcfunction(L, +[](lua_State* L) -> int
                         {
                             lua_chunk_view_t* view = (lua_chunk_view_t*)luaL_checkudata(L, 1, "lua_chunk_view_t");
-                            int index = luaL_checkinteger(L, 2);
+                            int index = (int)luaL_checkinteger(L, 2);
                             int compId = 0;
                             luaL_argexpected(L, lua_isstring(L, 3) || lua_isinteger(L, 3), 3, "expected name or localindex");
                             if(lua_isstring(L, 3))
@@ -457,7 +457,7 @@ namespace skr::lua
                             }
                             else if(lua_isinteger(L, 3))
                             {
-                                compId = luaL_checkinteger(L, 3);
+                                compId = (int)luaL_checkinteger(L, 3);
                             }
                             return view->pushComponent(L, compId, index);
                         });
@@ -498,7 +498,7 @@ namespace skr::lua
                                 }
                                 *ptr = nullptr;
                             };
-                            dualS_batch(parent->storage, entities.data(), entities.size(), DUAL_LAMBDA(callback));
+                            dualS_batch(parent->storage, entities.data(), (uint32_t)entities.size(), DUAL_LAMBDA(callback));
                             return 0;
                         };
                         lua_pushcfunction(L, trampoline);
@@ -514,7 +514,7 @@ namespace skr::lua
                     lua_chunk_view_t* view = *(lua_chunk_view_t**)luaL_checkudata(L, 1, "lua_chunk_view_t");
                     if(!view) 
                         return luaL_error(L, "chunk view cannot be accessed after query iteration");
-                    uint32_t index = luaL_checkinteger(L, 2);
+                    uint32_t index = (uint32_t)luaL_checkinteger(L, 2);
                     luaL_argexpected(L, index < view->view.count, 2, "index out of bounds");
                     lua_pushinteger(L, view->entities[index]);
                     uint32_t ret = 1;
@@ -550,7 +550,7 @@ namespace skr::lua
                 }},
                 {"__call", +[](lua_State* L) -> int {
                     lua_array_view_t* view = (lua_array_view_t*)luaL_checkudata(L, 1, "lua_array_view_t");
-                    uint32_t index = luaL_checkinteger(L, 2);
+                    uint32_t index = (uint32_t)luaL_checkinteger(L, 2);
                     auto size = ((uint8_t*)view->arr.EndX - (uint8_t*)view->arr.BeginX) / view->stride;
                     luaL_argexpected(L, index < size, 2, "index out of bounds");
                     if(view->lua_push)

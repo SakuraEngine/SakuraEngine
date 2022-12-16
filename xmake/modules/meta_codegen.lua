@@ -307,6 +307,9 @@ function generate_once(targetname)
                 scheduler.co_group_wait(target:name()..".cpp-codegen")
             end
         end
+        print("wait all sync codegen.")
+    else
+        print("use async codegen.")
     end
 end
 
