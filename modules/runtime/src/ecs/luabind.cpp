@@ -177,12 +177,12 @@ namespace skr::lua
                 //iterate array
                 auto count = lua_rawlen(L, 2);
                 dual::type_builder_t builder;
-                builder.reserve(count);
+                builder.reserve((uint32_t)count);
                 for(auto i = 1; i <= count; ++i)
                 {
                     lua_rawgeti(L, 2, i);
                     auto type = luaL_checkinteger(L, -1);
-                    builder.with(type);
+                    builder.with((dual_type_index_t)type);
                     lua_pop(L, 1);
                 }
                 dual_entity_type_t type;
@@ -203,7 +203,7 @@ namespace skr::lua
                         lua_pop(L, 2);
                     }
                 };
-                dualS_allocate_type(storage, &type, size, DUAL_LAMBDA(callback));
+                dualS_allocate_type(storage, &type, (EIndex)size, DUAL_LAMBDA(callback));
                 return 0;
             };
             lua_pushcfunction(L, trampoline);
@@ -258,24 +258,24 @@ namespace skr::lua
                     lua_pop(L, 1);
                 }
                     auto addCount = lua_rawlen(L, 3);
-                    addBuilder.reserve(addCount);
+                    addBuilder.reserve((uint32_t)addCount);
                     for(auto i = 1; i <= addCount; ++i)
                     {
                         lua_rawgeti(L, 3, i);
                         auto type = luaL_checkinteger(L, -1);
-                        addBuilder.with(type);
+                        addBuilder.with((dual_type_index_t)type);
                         lua_pop(L, 1);
                     }
                 uint32_t param = 4;
                 if(lua_istable(L, 4))
                 {
                     auto removeCount = lua_rawlen(L, 4);
-                    removeBuilder.reserve(removeCount);
+                    removeBuilder.reserve((uint32_t)removeCount);
                     for(auto i = 1; i <= removeCount; ++i)
                     {
                         lua_rawgeti(L, 4, i);
                         auto type = luaL_checkinteger(L, -1);
-                        removeBuilder.with(type);
+                        removeBuilder.with((dual_type_index_t)type);
                         lua_pop(L, 1);
                     }
                     param = 5;
@@ -393,7 +393,7 @@ namespace skr::lua
                     }
                     else if(strcmp(field, "set") == 0)
                     {
-                        lua_pushcfunction(L, +[](lua_State* L)
+                        lua_pushcfunction(L, +[](lua_State* L) -> int
                         {
                             lua_chunk_view_t* view = (lua_chunk_view_t*)luaL_checkudata(L, 1, "lua_chunk_view_t");
                             int index = luaL_checkinteger(L, 2);
@@ -413,12 +413,12 @@ namespace skr::lua
                             luaL_argexpected(L, index < view->count, 3, "index out of bounds");
                             if(view->elementSizes[compId] != 0)
                             {
-                                return luaL_error(L, "array component is not direct writable %s", view->guidStrs[compId]);
+                                return (int)luaL_error(L, "array component is not direct writable %s", view->guidStrs[compId]);
                             }
                             auto check = view->lua_checks[compId];
                             if(!check)
                             {
-                                return luaL_error(L, "component is not direct writable %s", view->guidStrs[compId]);
+                                return (int)luaL_error(L, "component is not direct writable %s", view->guidStrs[compId]);
                             }
                             auto data = view->datas[compId];
                             data = (uint8_t*)data + index * view->strides[compId];
@@ -429,7 +429,7 @@ namespace skr::lua
                     }
                     else if(strcmp(field, "entity") == 0)
                     {
-                        lua_pushcfunction(L, +[](lua_State* L)
+                        lua_pushcfunction(L, +[](lua_State* L) -> int
                         {
                             lua_chunk_view_t* view = (lua_chunk_view_t*)luaL_checkudata(L, 1, "lua_chunk_view_t");
                             int index = luaL_checkinteger(L, 2);
@@ -443,7 +443,7 @@ namespace skr::lua
                     }
                     else if(strcmp(field, "get") == 0)
                     {
-                        lua_pushcfunction(L, +[](lua_State* L)
+                        lua_pushcfunction(L, +[](lua_State* L) -> int
                         {
                             lua_chunk_view_t* view = (lua_chunk_view_t*)luaL_checkudata(L, 1, "lua_chunk_view_t");
                             int index = luaL_checkinteger(L, 2);
