@@ -240,6 +240,44 @@ function compile_task(compile_func, target, opt)
     end
 end
 
+function generate_fences(targetname)
+    import("core.project.rule")
+    local all_targets = project.ordertargets()
+    local targets = {}
+    if (targetname ~= nil and targetname ~= "") then
+        table.insert(targets, project.target(targetname))
+        local deps = project.target(targetname):deps()
+        for _, pending_target in pairs(all_targets) do
+            -- ensure needed
+            for __, dep in pairs(deps) do
+                if (pending_target:name() == dep:name()) then
+                    table.insert(targets, pending_target)
+                end
+            end
+        end
+    else
+        targets = all_targets
+    end
+
+    -- inject fence rules
+    for _, target in ipairs(targets) do
+        local need_fence = false
+        for __, dep in pairs(target:deps()) do
+            if (dep:rule("c++.codegen")) then
+                -- inject fence rule for dependency with c++.codegen rule
+                need_fence = true
+            end
+        end
+        if (target:rule("c++.codegen")) then
+            need_fence = true
+        end
+        if (need_fence) then
+            local fence = project.rule("c++.codegen.fence") or rule.rule("c++.codegen.fence")
+            target:rule_add(fence)
+        end
+    end
+end
+    
 function generate_once(targetname)
     local all_targets = project.ordertargets()
     local targets = {}
@@ -300,8 +338,8 @@ function generate_once(targetname)
         end
     end
 
-    -- wait all
     if(not has_config("use_async_codegen")) then
+        -- wait all
         for _, target in ipairs(targets) do
             if (target:rule("c++.codegen")) then
                 scheduler.co_group_wait(target:name()..".cpp-codegen")

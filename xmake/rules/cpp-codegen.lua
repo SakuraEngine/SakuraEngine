@@ -9,8 +9,32 @@ task("run-codegen-jobs")
         end
     end)
 
+rule("c++.codegen.fence")
+    set_sourcekinds("cxx")
+    on_load(function (target, opt)
+        local rule = target:rule("c++.build"):clone()
+        rule:add("deps", "c++.codegen", {order = true})
+        target:rule_add(rule)
+    end)
+    before_buildcmd_files(function (target, batchcmds, sourcebatch, opt)
+        -- avoid duplicate linking of object files
+        sourcebatch.objectfiles = {}
+        -- wait async codegen finish
+        if(has_config("use_async_codegen")) then
+            import("core.base.scheduler")
+            for _, dep in pairs(target:deps()) do
+                if dep:rule("c++.codegen") then
+                    -- scheduler.co_group_wait(dep:name()..".cpp-codegen")
+                end
+            end
+            if target:rule("c++.codegen") then
+                scheduler.co_group_wait(target:name()..".cpp-codegen")
+            end
+        end
+    end)
+
 rule("c++.codegen")
-    -- add_deps("c++")
+    -- add_deps("c++.codegen.fence")
     set_sourcekinds("cxx")
     on_load(function (target, opt)
         local gendir = path.join(target:autogendir({root = true}), target:plat(), "codegen")
@@ -27,19 +51,6 @@ rule("c++.codegen")
         local rule = target:rule("c++.build"):clone()
         rule:add("deps", "c++.codegen", {order = true})
         target:rule_add(rule)
-    end)
-
-    before_build(function (target)
-        -- wait async codegen finish
-        if(has_config("use_async_codegen")) then
-            import("core.base.scheduler")
-            for _, dep in pairs(target:deps()) do
-                if dep:rule("c++.codegen") then
-                    scheduler.co_group_wait(dep:name()..".cpp-codegen")
-                end
-            end
-            scheduler.co_group_wait(target:name()..".cpp-codegen")
-        end
     end)
 
     before_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
