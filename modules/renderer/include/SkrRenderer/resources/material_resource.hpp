@@ -121,8 +121,12 @@ skr_material_resource_t
     sattr("no-rtti" : true, "arena" : "arena")
     skr_material_overrides_t overrides;
 
-    sattr("no-rtti" : true, "transient": true)
-    skr::vector<skr_platform_shader_identifier_t> runtime_installed;
+    spush_attr("no-rtti" : true, "transient": true)
+    skr::vector<skr_platform_shader_identifier_t> installed_shaders;
+    skr::vector<skr::string_view> shader_entries;
+    skr::vector<ECGPUShaderStage> shader_stages;
+    CGPURootSignatureId root_signature;
+    CGPURenderPipelineId pipeline;
 };
 
 namespace skr sreflect
