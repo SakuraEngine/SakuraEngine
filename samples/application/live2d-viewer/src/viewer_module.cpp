@@ -1,3 +1,4 @@
+#include "math.h"
 #include <EASTL/algorithm.h>
 
 #include "../../../cgpu/common/utils.h"
@@ -254,6 +255,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
             (float)swapchain->back_buffers[0]->height);
             skr_imgui_new_frame(window, 1.f / 60.f);
         }
+        static uint32_t sample_count = 0;
         {
             ImGui::Begin("Live2DViewer");
 #ifdef _DEBUG
@@ -268,12 +270,32 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
             ImGui::Text("MotionEvalFPS(Fixed): %d", 240);
             ImGui::Text("PhysicsEvalFPS(Fixed): %d", 240);
             ImGui::Text("RenderFPS: %d", (uint32_t)fps);
+            const char* items[] = { "1x", "2x", "4x", "8x" };
+            static int sample_index = 0;
+            const char* combo_preview_value = items[sample_index];  // Pass in the preview value visible before opening the combo (it could be anything)
+            ImGui::Text("MSAA");
+            ImGui::SameLine();
+            if (ImGui::BeginCombo("", combo_preview_value, ImGuiComboFlags_PopupAlignLeft))
+            {
+                for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+                {
+                    const bool is_selected = (sample_index == n);
+                    if (ImGui::Selectable(items[n], is_selected))
+                        sample_index = n;
+
+                    // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                    if (is_selected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
             ImGui::End();
+            sample_count = ::pow(2, sample_index);
         }
         {
             ZoneScopedN("RegisterPasses");
 
-            skr_live2d_register_render_effects(l2d_renderer, renderGraph);
+            skr_live2d_register_render_effects(l2d_renderer, renderGraph, (uint32_t)sample_count);
         }
         {
             ZoneScopedN("AcquireFrame");

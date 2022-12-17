@@ -91,6 +91,18 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::write(
     return *this;
 }
 
+// 0 ... CGPU_MAX_MRT_COUNT-1 RTs
+// CGPU_MAX_MRT_COUNT DS
+// CGPU_MAX_MRT_COUNT + 1 .. 2 * CGPU_MAX_MRT_COUNT ResolveTargets
+RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::resolve_msaa(uint32_t mrt_index, TextureSubresourceHandle handle)
+{
+    auto allocated = graph.object_factory->Allocate<TextureRenderEdge>(
+        CGPU_MAX_MRT_COUNT + 1 + mrt_index, handle._this, fastclear_0000, CGPU_RESOURCE_STATE_RESOLVE_DEST);
+    auto&& edge = node.out_texture_edges.emplace_back(allocated);
+    graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
+    return *this;
+}
+
 RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_depth_stencil(TextureDSVHandle handle,
     ECGPULoadAction dload_action, ECGPUStoreAction dstore_action,
     ECGPULoadAction sload_action, ECGPUStoreAction sstore_action) SKR_NOEXCEPT
@@ -473,6 +485,7 @@ RenderGraph::TextureBuilder::TextureBuilder(RenderGraph& graph, TextureNode& nod
     : graph(graph),
       node(node)
 {
+    node.descriptor.sample_count = CGPU_SAMPLE_COUNT_1;
     node.descriptor.descriptors = CGPU_RESOURCE_TYPE_TEXTURE;
     node.descriptor.is_dedicated = false;
 }

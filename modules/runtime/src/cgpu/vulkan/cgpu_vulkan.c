@@ -1205,7 +1205,9 @@ CGPURenderPipelineId cgpu_create_render_pipeline_vulkan(CGPUDeviceId device, con
     {
         rp_desc.pColorFormats[i] = desc->color_formats[i];
         if(desc->color_resolve_disable_mask & (CGPU_SLOT_0 << i))
+        {
             rp_desc.pResolveMasks[i] = false;
+        }
         else if(rp_desc.mSampleCount != CGPU_SAMPLE_COUNT_1)
         {
             rp_desc.pResolveMasks[i] = true;
@@ -2455,6 +2457,7 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan_impl(CGPUDeviceId device, const CGP
         Ts[i].super.is_cube = false;
         Ts[i].super.array_size_minus_one = 0;
         Ts[i].super.device = &D->super;
+        Ts[i].super.sample_count = CGPU_SAMPLE_COUNT_1; // TODO: ?
         Ts[i].super.format = VkUtil_FormatTranslateToCGPU(surface_format.format);
         Ts[i].super.aspect_mask = VkUtil_DeterminAspectMask(Ts[i].super.format, false);
         Ts[i].super.depth = 1;

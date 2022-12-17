@@ -4,6 +4,25 @@ namespace skr
 {
 namespace render_graph
 {
+static const auto NULL_TEXTURE_HANDLE = TextureHandle();
+// tex
+TextureSRVHandle TextureHandle::read_mip(uint32_t base, uint32_t count) const
+{
+    ShaderReadHandle _ = *this;
+    _.mip_base = base;
+    _.mip_count = count;
+    return _;
+}
+
+TextureSRVHandle TextureHandle::read_array(uint32_t base, uint32_t count) const
+{
+    ShaderReadHandle _ = *this;
+    _.array_base = base;
+    _.array_count = count;
+    return _;
+}
+
+// srv
 TextureSRVHandle TextureSRVHandle::read_mip(uint32_t base, uint32_t count) const
 {
     ShaderReadHandle _ = *this;
@@ -37,22 +56,7 @@ TextureSRVHandle::ShaderReadHandle(const handle_t _this,
 {
 }
 
-TextureSRVHandle TextureHandle::read_mip(uint32_t base, uint32_t count) const
-{
-    ShaderReadHandle _ = *this;
-    _.mip_base = base;
-    _.mip_count = count;
-    return _;
-}
-
-TextureSRVHandle TextureHandle::read_array(uint32_t base, uint32_t count) const
-{
-    ShaderReadHandle _ = *this;
-    _.array_base = base;
-    _.array_count = count;
-    return _;
-}
-
+// rtv
 TextureRTVHandle::ShaderWriteHandle(const handle_t _this)
     : _this(_this)
 {

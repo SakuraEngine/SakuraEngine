@@ -59,14 +59,17 @@ public:
         RenderPassBuilder& read(uint32_t set, uint32_t binding, TextureSRVHandle handle) SKR_NOEXCEPT;
         RenderPassBuilder& read(const char8_t* name, TextureSRVHandle handle) SKR_NOEXCEPT;
         RenderPassBuilder& write(uint32_t mrt_index, TextureRTVHandle handle,
-        ECGPULoadAction load_action = CGPU_LOAD_ACTION_CLEAR,
-        CGPUClearValue clear_color = fastclear_0000,
-        ECGPUStoreAction store_action = CGPU_STORE_ACTION_STORE) SKR_NOEXCEPT;
+            ECGPULoadAction load_action = CGPU_LOAD_ACTION_CLEAR,
+            CGPUClearValue clear_color = fastclear_0000,
+            ECGPUStoreAction store_action = CGPU_STORE_ACTION_STORE) SKR_NOEXCEPT;
+        RenderPassBuilder& resolve_msaa(uint32_t mrt_index, TextureSubresourceHandle handle);
+        
         RenderPassBuilder& set_depth_stencil(TextureDSVHandle handle,
             ECGPULoadAction dload_action = CGPU_LOAD_ACTION_CLEAR,
             ECGPUStoreAction dstore_action = CGPU_STORE_ACTION_STORE,
             ECGPULoadAction sload_action = CGPU_LOAD_ACTION_CLEAR,
             ECGPUStoreAction sstore_action = CGPU_STORE_ACTION_STORE) SKR_NOEXCEPT;
+
         // buffers
         RenderPassBuilder& read(const char8_t* name, BufferRangeHandle handle) SKR_NOEXCEPT;
         RenderPassBuilder& read(uint32_t set, uint32_t binding, BufferRangeHandle handle) SKR_NOEXCEPT;
@@ -209,6 +212,10 @@ public:
     const CGPUBufferDescriptor* resolve_descriptor(BufferHandle hdl) SKR_NOEXCEPT;
     const CGPUTextureDescriptor* resolve_descriptor(TextureHandle hdl) SKR_NOEXCEPT;
     
+    inline Blackboard& get_blackboard() SKR_NOEXCEPT
+    {
+        return *blackboard;
+    }
     virtual uint64_t execute(RenderGraphProfiler* profiler = nullptr) SKR_NOEXCEPT;
     virtual CGPUDeviceId get_backend_device() SKR_NOEXCEPT { return nullptr; }
     virtual CGPUQueueId get_gfx_queue() SKR_NOEXCEPT { return nullptr; }

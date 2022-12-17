@@ -122,6 +122,7 @@ ResourceNode::ResourceNode(EObjectType type) SKR_NOEXCEPT
 TextureNode::TextureNode() SKR_NOEXCEPT
     : ResourceNode(EObjectType::Texture)
 {
+    descriptor.sample_count = CGPU_SAMPLE_COUNT_1;
 }
 
 BufferNode::BufferNode() SKR_NOEXCEPT

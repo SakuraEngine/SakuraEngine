@@ -3,6 +3,7 @@
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include "platform/debug.h"
 #include "platform/memory.h"
+#include "platform/thread.h"
 #include "utils/hash.h"
 #include "utils/log.h"
 #include <EASTL/set.h>
@@ -105,6 +106,7 @@ void RenderGraphFrameExecutor::print_error_trace(uint64_t frame_index)
             SKR_LOG_INFO("\tCommand %d: %s (marker %d)", i, marker_messages[i].c_str(), fill_data[i]);
         }
     }
+    skr_thread_sleep(2000);
 }
 
 CGPUXMergedBindTableId RenderGraphFrameExecutor::merge_tables(const struct CGPUXBindTable **tables, uint32_t count)
@@ -600,14 +602,33 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         executor.write_marker(message.c_str());
     }
     // color attachments
-    // TODO: MSAA
     stack_vector<CGPUColorAttachment> color_attachments = {};
     CGPUDepthStencilAttachment ds_attachment = {};
     auto write_edges = pass->tex_write_edges();
+    auto pass_sample_count = CGPU_SAMPLE_COUNT_1;
     for (auto& write_edge : write_edges)
     {
         // TODO: MSAA
         auto texture_target = write_edge->get_texture_node();
+        if (write_edge->mrt_index > CGPU_MAX_MRT_COUNT) continue; // Resolve Targets
+        
+        TextureNode* resolve_target = nullptr;
+        const auto sample_count = texture_target->descriptor.sample_count;
+        if (sample_count != CGPU_SAMPLE_COUNT_1)
+        {
+            pass_sample_count = sample_count; // TODO: REFACTOR THIS
+            for (auto& write_edge2 : write_edges) // find resolve target
+            {
+                if (write_edge2->mrt_index == write_edge->mrt_index + 1 + CGPU_MAX_MRT_COUNT)
+                {
+                    if (write_edge2->get_texture_node()->descriptor.sample_count == CGPU_SAMPLE_COUNT_1)
+                    {
+                        resolve_target = write_edge2->get_texture_node();
+                    }
+                    break;
+                }
+            }
+        }
         const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(
             (ECGPUFormat)resolve(executor, *texture_target)->format);
         const bool is_depth_only = FormatUtil_IsDepthOnlyFormat(
@@ -624,7 +645,14 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
                 is_depth_only ? CGPU_TVA_DEPTH : CGPU_TVA_DEPTH | CGPU_TVA_STENCIL;
             view_desc.format = (ECGPUFormat)view_desc.texture->format;
             view_desc.usages = CGPU_TVU_RTV_DSV;
-            view_desc.dims = CGPU_TEX_DIMENSION_2D;
+            if (sample_count == CGPU_SAMPLE_COUNT_1)
+            {
+                view_desc.dims = CGPU_TEX_DIMENSION_2D;
+            }
+            else
+            {
+                view_desc.dims = CGPU_TEX_DIMENSION_2DMS;
+            }
             ds_attachment.view = texture_view_pool.allocate(view_desc, frame_index);
             ds_attachment.depth_load_action = pass->depth_load_action;
             ds_attachment.depth_store_action = pass->depth_store_action;
@@ -636,17 +664,42 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         else
         {
             CGPUColorAttachment attachment = {};
-            CGPUTextureViewDescriptor view_desc = {};
-            view_desc.texture = resolve(executor, *texture_target);
-            view_desc.base_array_layer = write_edge->get_array_base();
-            view_desc.array_layer_count = write_edge->get_array_count();
-            view_desc.base_mip_level = write_edge->get_mip_level();
-            view_desc.mip_level_count = 1; // TODO: mip
-            view_desc.format = (ECGPUFormat)view_desc.texture->format;
-            view_desc.aspects = CGPU_TVA_COLOR;
-            view_desc.usages = CGPU_TVU_RTV_DSV;
-            view_desc.dims = CGPU_TEX_DIMENSION_2D;
-            attachment.view = texture_view_pool.allocate(view_desc, frame_index);
+            if (resolve_target) // alocate resolve view
+            {
+                auto msaaTexture = resolve(executor, *resolve_target);
+                CGPUTextureViewDescriptor view_desc = {};
+                view_desc.texture = msaaTexture;
+                view_desc.base_array_layer = 0; // TODO: resolve MSAA to specific slice ?
+                view_desc.array_layer_count = 1;
+                view_desc.base_mip_level = 0;
+                view_desc.mip_level_count = 1; // TODO: resolve MSAA to specific mip slice?
+                view_desc.format = (ECGPUFormat)view_desc.texture->format;
+                view_desc.aspects = CGPU_TVA_COLOR;
+                view_desc.usages = CGPU_TVU_RTV_DSV;
+                view_desc.dims = CGPU_TEX_DIMENSION_2D;
+                attachment.resolve_view = texture_view_pool.allocate(view_desc, frame_index);
+            }
+            // allocate target view
+            {
+                CGPUTextureViewDescriptor view_desc = {};
+                view_desc.texture = resolve(executor, *texture_target);
+                view_desc.base_array_layer = write_edge->get_array_base();
+                view_desc.array_layer_count = write_edge->get_array_count();
+                view_desc.base_mip_level = write_edge->get_mip_level();
+                view_desc.mip_level_count = 1; // TODO: mip
+                view_desc.format = (ECGPUFormat)view_desc.texture->format;
+                view_desc.aspects = CGPU_TVA_COLOR;
+                view_desc.usages = CGPU_TVU_RTV_DSV;
+                if (sample_count == CGPU_SAMPLE_COUNT_1)
+                {
+                    view_desc.dims = CGPU_TEX_DIMENSION_2D;
+                }
+                else
+                {
+                    view_desc.dims = CGPU_TEX_DIMENSION_2DMS;
+                }
+                attachment.view = texture_view_pool.allocate(view_desc, frame_index);
+            }
             attachment.load_action = pass->load_actions[write_edge->mrt_index];
             attachment.store_action = pass->store_actions[write_edge->mrt_index];
             attachment.clear_color = write_edge->clear_value;
@@ -655,7 +708,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     }
     CGPURenderPassDescriptor pass_desc = {};
     pass_desc.render_target_count = (uint32_t)color_attachments.size();
-    pass_desc.sample_count = CGPU_SAMPLE_COUNT_1;
+    pass_desc.sample_count = pass_sample_count;
     pass_desc.name = pass->get_name();
     pass_desc.color_attachments = color_attachments.data();
     pass_desc.depth_stencil = &ds_attachment;
