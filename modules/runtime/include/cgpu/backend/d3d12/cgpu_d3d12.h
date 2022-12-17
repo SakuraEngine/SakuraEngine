@@ -264,7 +264,7 @@ typedef struct CGPUCommandBuffer_D3D12 {
     uint32_t mNodeIndex : 4;
     uint32_t mType : 3;
     CGPUCommandPool_D3D12* pCmdPool;
-    D3D12_RENDER_PASS_ENDING_ACCESS_RESOLVE_SUBRESOURCE_PARAMETERS mSubResolveResource;
+    D3D12_RENDER_PASS_ENDING_ACCESS_RESOLVE_SUBRESOURCE_PARAMETERS mSubResolveResource[CGPU_MAX_MRT_COUNT];
 } CGPUCommandBuffer_D3D12;
 
 typedef struct CGPUShaderLibrary_D3D12 {

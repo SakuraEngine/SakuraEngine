@@ -158,6 +158,31 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
 
     eastl::vector<skr_primitive_draw_t> model_drawcalls;
     skr_primitive_draw_list_view_t model_draw_list;
+    inline CGPURenderPipelineId get_pipeline() const
+    {
+        switch ((uint32_t)sample_count)
+        {
+        case 1: return pipeline;
+        case 2: return msaa2_pipeline;
+        case 4: return msaa4_pipeline;
+        case 8: return msaa8_pipeline;
+        default: return pipeline;
+        }
+        return pipeline;
+    }
+    inline CGPURenderPipelineId get_mask_pipeline() const
+    {
+        switch ((uint32_t)sample_count)
+        {
+        case 1: return mask_pipeline;
+        case 2: return msaa2_mask_pipeline;
+        case 4: return msaa4_mask_pipeline;
+        case 8: return msaa8_mask_pipeline;
+        default: return mask_pipeline;
+        }
+        return mask_pipeline;
+    }
+
     void produce_model_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* storage) 
     {
         CubismMatrix44 projection;
@@ -167,6 +192,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         model_drawcalls.resize(0);
         auto counterF = [&](dual_chunk_view_t* r_cv) {
             auto models = dual::get_owned_rw<skr_live2d_render_model_comp_t>(r_cv);
+            const auto proper_pipeline = get_pipeline();
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
                 if (models[i].vram_request.is_ready())
@@ -220,11 +246,11 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                             if (!visibility)
                             {
                                 drawcall.desperated = true;
-                                drawcall.pipeline = pipeline;
+                                drawcall.pipeline = proper_pipeline;
                             }
                             else
                             {
-                                drawcall.pipeline = pipeline;
+                                drawcall.pipeline = proper_pipeline;
                                 drawcall.push_const_name = push_constants_name;
                                 drawcall.push_const = (const uint8_t*)(push_constants[render_model].data() + drawable);
                                 drawcall.index_buffer = *cmd.ibv;
@@ -256,6 +282,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         auto updateMaskF = [&](dual_chunk_view_t* r_cv) {
             ZoneScopedN("UpdateMaskF");
 
+            const auto proper_pipeline = get_mask_pipeline();
             auto models = dual::get_owned_rw<skr_live2d_render_model_comp_t>(r_cv);
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
@@ -338,11 +365,11 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                     if (!visibility)
                                     {
                                         drawcall.desperated = true;
-                                        drawcall.pipeline = mask_pipeline;
+                                        drawcall.pipeline = proper_pipeline;
                                     }
                                     else
                                     {
-                                        drawcall.pipeline = mask_pipeline;
+                                        drawcall.pipeline = proper_pipeline;
                                         drawcall.push_const_name = push_constants_name;
                                         drawcall.push_const = (const uint8_t*)(&push_const);
                                         drawcall.index_buffer = *cmd.ibv;
@@ -363,6 +390,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         dualQ_get_views(effect_query, DUAL_LAMBDA(updateMaskF));
     }
 
+    double sample_count = 1.0;
     uint64_t frame_count = 0;
     uint64_t async_slot_index = 0;
     skr_primitive_draw_packet_t produce_draw_packets(IPrimitiveRenderPass* pass, dual_storage_t* storage) override
@@ -522,7 +550,13 @@ protected:
     CGPUDepthStateDescriptor depth_state = {};
 
     CGPURenderPipelineId pipeline = nullptr;
+    CGPURenderPipelineId msaa2_pipeline = nullptr;
+    CGPURenderPipelineId msaa4_pipeline = nullptr;
+    CGPURenderPipelineId msaa8_pipeline = nullptr;
     CGPURenderPipelineId mask_pipeline = nullptr;
+    CGPURenderPipelineId msaa2_mask_pipeline = nullptr;
+    CGPURenderPipelineId msaa4_mask_pipeline = nullptr;
+    CGPURenderPipelineId msaa8_mask_pipeline = nullptr;
 };
 MaskPassLive2D* live2d_mask_pass = SkrNew<MaskPassLive2D>();
 RenderPassLive2D* live2d_pass = SkrNew<RenderPassLive2D>();
@@ -642,6 +676,12 @@ void RenderEffectLive2D::prepare_pipeline(SRendererId renderer)
     rp_desc.rasterizer_state = &rs_state;
     rp_desc.depth_state = &depth_state;
     pipeline = cgpu_create_render_pipeline(cgpu_device, &rp_desc);
+    rp_desc.sample_count = CGPU_SAMPLE_COUNT_2;
+    msaa2_pipeline = cgpu_create_render_pipeline(cgpu_device, &rp_desc);
+    rp_desc.sample_count = CGPU_SAMPLE_COUNT_4;
+    msaa4_pipeline = cgpu_create_render_pipeline(cgpu_device, &rp_desc);
+    rp_desc.sample_count = CGPU_SAMPLE_COUNT_8;
+    msaa8_pipeline = cgpu_create_render_pipeline(cgpu_device, &rp_desc);
 
     cgpu_free_shader_library(vs);
     cgpu_free_shader_library(ps);
@@ -651,6 +691,9 @@ void RenderEffectLive2D::free_pipeline(SRendererId renderer)
 {
     auto sig_to_free = pipeline->root_signature;
     cgpu_free_render_pipeline(pipeline);
+    cgpu_free_render_pipeline(msaa2_pipeline);
+    cgpu_free_render_pipeline(msaa4_pipeline);
+    cgpu_free_render_pipeline(msaa8_pipeline);
     cgpu_free_root_signature(sig_to_free);
 }
 
@@ -717,6 +760,12 @@ void RenderEffectLive2D::prepare_mask_pipeline(SRendererId renderer)
     rp_desc.rasterizer_state = &rs_state;
     rp_desc.depth_state = &depth_state;
     mask_pipeline = cgpu_create_render_pipeline(cgpu_device, &rp_desc);
+    rp_desc.sample_count = CGPU_SAMPLE_COUNT_2;
+    msaa2_mask_pipeline = cgpu_create_render_pipeline(cgpu_device, &rp_desc);
+    rp_desc.sample_count = CGPU_SAMPLE_COUNT_4;
+    msaa4_mask_pipeline = cgpu_create_render_pipeline(cgpu_device, &rp_desc);
+    rp_desc.sample_count = CGPU_SAMPLE_COUNT_8;
+    msaa8_mask_pipeline = cgpu_create_render_pipeline(cgpu_device, &rp_desc);
 
     cgpu_free_shader_library(vs);
     cgpu_free_shader_library(ps);
@@ -726,6 +775,9 @@ void RenderEffectLive2D::free_mask_pipeline(SRendererId renderer)
 {
     auto sig_to_free = mask_pipeline->root_signature;
     cgpu_free_render_pipeline(mask_pipeline);
+    cgpu_free_render_pipeline(msaa2_mask_pipeline);
+    cgpu_free_render_pipeline(msaa4_mask_pipeline);
+    cgpu_free_render_pipeline(msaa8_mask_pipeline);
     cgpu_free_root_signature(sig_to_free);
 }
 
@@ -737,8 +789,11 @@ void skr_live2d_initialize_render_effects(live2d_renderer_t* renderer, live2d_re
     skr_renderer_register_render_effect(renderer, live2d_effect_name, live2d_effect);
 }
 
-void skr_live2d_register_render_effects(live2d_renderer_t* renderer, live2d_render_graph_t* render_graph)
+void skr_live2d_register_render_effects(live2d_renderer_t* renderer, live2d_render_graph_t* render_graph, uint32_t sample_count)
 {
+    live2d_effect->sample_count = (double)sample_count;
+    auto& blackboard = render_graph->get_blackboard();
+    blackboard.set_value("l2d_msaa", live2d_effect->sample_count);
     skr_renderer_register_render_pass(renderer, live2d_mask_pass_name, live2d_mask_pass);
     skr_renderer_register_render_pass(renderer, live2d_pass_name, live2d_pass);
 }

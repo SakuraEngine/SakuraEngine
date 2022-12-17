@@ -674,6 +674,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
     T->pVkImage = pVkImage;
     if (pVkDeviceMemory) T->pVkDeviceMemory = pVkDeviceMemory;
     if (vmaAllocation) T->pVkAllocation = vmaAllocation;
+    T->super.sample_count = desc->sample_count;
     T->super.width = desc->width;
     T->super.height = desc->height;
     T->super.depth = desc->depth;

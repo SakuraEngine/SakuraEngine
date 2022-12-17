@@ -56,6 +56,23 @@ public:
         return nullptr;
     }
 
+    bool value(const char* name, double& v) SKR_NOEXCEPT final override
+    {
+        auto it = named_values.find(name);
+        if (it != named_values.end())
+        {
+            v = it->second;
+            return true;
+        }
+        return false;
+    }
+
+    bool set_value(const char* name, double v) SKR_NOEXCEPT final override
+    {
+        named_values[name] = v;
+        return true;
+    }
+
     bool add_pass(const char* name, class PassNode* pass) SKR_NOEXCEPT final override
     {
         auto it = named_passes.find(name);
@@ -126,6 +143,7 @@ protected:
     FlatStringMap<class PassNode*> named_passes;
     FlatStringMap<class TextureNode*> named_textures;
     FlatStringMap<class BufferNode*> named_buffers;
+    FlatStringMap<double> named_values;
 };
 
 Blackboard* Blackboard::Create() SKR_NOEXCEPT

@@ -1022,7 +1022,7 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
     stream_output_desc.RasterizedStream = 0;
     // Sample
     DECLARE_ZERO(DXGI_SAMPLE_DESC, sample_desc);
-    sample_desc.Count = (UINT)(desc->sample_count);
+    sample_desc.Count = (UINT)(desc->sample_count ? desc->sample_count : 1);
     sample_desc.Quality = (UINT)(desc->sample_quality);
     DECLARE_ZERO(D3D12_CACHED_PIPELINE_STATE, cached_pso_desc);
     cached_pso_desc.pCachedBlob = NULL;
@@ -1665,8 +1665,9 @@ void cgpu_cmd_end_compute_pass_d3d12(CGPUCommandBufferId cmd, CGPUComputePassEnc
     // DO NOTHING NOW
 }
 
+#define USE_D3D12_RENDER_PASS
 // Render CMDs
-#if 1
+
 CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd, const struct CGPURenderPassDescriptor* desc)
 {
     CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)cmd;
@@ -1702,16 +1703,16 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd
             Resolve.Format = clearValues[i].Format;
             Resolve.pSrcResource = T->pDxResource;
             Resolve.pDstResource = T_Resolve->pDxResource;
-            Cmd->mSubResolveResource.SrcRect = { 0, 0, 0, 0 };
-            Cmd->mSubResolveResource.DstX = 0;
-            Cmd->mSubResolveResource.DstY = 0;
-            Cmd->mSubResolveResource.SrcSubresource = 0;
-            Cmd->mSubResolveResource.DstSubresource = CALC_SUBRESOURCE_INDEX(
+            Cmd->mSubResolveResource[i].SrcRect = { 0, 0, 0, 0 };
+            Cmd->mSubResolveResource[i].DstX = 0;
+            Cmd->mSubResolveResource[i].DstY = 0;
+            Cmd->mSubResolveResource[i].SrcSubresource = 0;
+            Cmd->mSubResolveResource[i].DstSubresource = CALC_SUBRESOURCE_INDEX(
                 0, 0, 0,
                 T->super.mip_levels, T->super.array_size_minus_one + 1);
             Resolve.PreserveResolveSource = false;
             Resolve.SubresourceCount = 1;
-            Resolve.pSubresourceParameters = &Cmd->mSubResolveResource;
+            Resolve.pSubresourceParameters = &Cmd->mSubResolveResource[i];
         }
         else
         {
@@ -1752,9 +1753,22 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd
     cgpu_warn("ID3D12GraphicsCommandList4 is not defined!");
     return (CGPURenderPassEncoderId)&Cmd->super;
 }
-#else
-CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd, const struct CGPURenderPassDescriptor* desc)
+
+void cgpu_cmd_end_render_pass_d3d12(CGPUCommandBufferId cmd, CGPURenderPassEncoderId encoder)
 {
+    CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)cmd;
+#ifdef __ID3D12GraphicsCommandList4_FWD_DEFINED__
+    ID3D12GraphicsCommandList4* CmdList4 = (ID3D12GraphicsCommandList4*)Cmd->pDxCmdList;
+    CmdList4->EndRenderPass();
+    return;
+#endif
+    cgpu_warn("ID3D12GraphicsCommandList4 is not defined!");
+}
+
+CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12_fallback(CGPUCommandBufferId cmd, const struct CGPURenderPassDescriptor* desc)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+
     CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)cmd;
     ID3D12GraphicsCommandList* pCmdList = Cmd->pDxCmdList;
     D3D12_CPU_DESCRIPTOR_HANDLE Rtvs[CGPU_MAX_MRT_COUNT];
@@ -1769,11 +1783,18 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd
         auto DTV = (CGPUTextureView_D3D12*)desc->depth_stencil->view;
         Dtv = DTV->mDxRtvDsvDescriptorHandle;
     }
-    pCmdList->OMSetRenderTargets(desc->render_target_count, Rtvs, 
-        FALSE, desc->depth_stencil ? &Dtv : nullptr);
+    
+    pCmdList->OMSetRenderTargets(desc->render_target_count, Rtvs, FALSE, desc->depth_stencil ? &Dtv : nullptr);
+
     return (CGPURenderPassEncoderId)&Cmd->super;
 }
-#endif
+
+void cgpu_cmd_end_render_pass_d3d12_fallback(CGPUCommandBufferId cmd, CGPURenderPassEncoderId encoder)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+    // CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)cmd;
+    // ID3D12GraphicsCommandList* pCmdList = Cmd->pDxCmdList;
+}
 
 void cgpu_render_encoder_bind_descriptor_set_d3d12(CGPURenderPassEncoderId encoder, CGPUDescriptorSetId set)
 {
@@ -1870,17 +1891,6 @@ void cgpu_render_encoder_draw_indexed_instanced_d3d12(CGPURenderPassEncoderId en
     Cmd->pDxCmdList->DrawIndexedInstanced((UINT)index_count, (UINT)instance_count, (UINT)first_index, (UINT)first_vertex, (UINT)first_instance);
 }
 
-void cgpu_cmd_end_render_pass_d3d12(CGPUCommandBufferId cmd, CGPURenderPassEncoderId encoder)
-{
-    CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)cmd;
-#ifdef __ID3D12GraphicsCommandList4_FWD_DEFINED__
-    ID3D12GraphicsCommandList4* CmdList4 = (ID3D12GraphicsCommandList4*)Cmd->pDxCmdList;
-    CmdList4->EndRenderPass();
-    return;
-#endif
-    cgpu_warn("ID3D12GraphicsCommandList4 is not defined!");
-}
-
 // SwapChain APIs
 CGPUSwapChainId cgpu_create_swapchain_d3d12_impl(CGPUDeviceId device, const CGPUSwapChainDescriptor* desc, CGPUSwapChain_D3D12* old)
 {
@@ -1954,6 +1964,7 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12_impl(CGPUDeviceId device, const CGPU
         Ts[i].super.is_cube = false;
         Ts[i].super.array_size_minus_one = 0;
         Ts[i].super.device = &D->super;
+        Ts[i].super.sample_count = CGPU_SAMPLE_COUNT_1; // TODO: ?
         Ts[i].super.format = desc->format;
         Ts[i].super.aspect_mask = 1;
         Ts[i].super.depth = 1;

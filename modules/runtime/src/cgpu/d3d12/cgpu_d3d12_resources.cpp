@@ -452,15 +452,15 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
         // textures and 64KB for everything else. On XBox, We have to explicitlly
         // assign D3D12_DEFAULT_MSAA_RESOURCE_PLACEMENT_ALIGNMENT if MSAA is used
         resDesc.Alignment =
-        (UINT)desc->sample_count > 1 ?
-        D3D12_DEFAULT_MSAA_RESOURCE_PLACEMENT_ALIGNMENT :
-        0;
+            (UINT)desc->sample_count > 1 ?
+            D3D12_DEFAULT_MSAA_RESOURCE_PLACEMENT_ALIGNMENT :
+            0;
         resDesc.Width = desc->width;
         resDesc.Height = desc->height;
         resDesc.DepthOrArraySize = (UINT16)(desc->array_size != 1 ? desc->array_size : desc->depth);
         resDesc.MipLevels = (UINT16)desc->mip_levels;
         resDesc.Format = DXGIUtil_FormatToTypeless(dxFormat);
-        resDesc.SampleDesc.Count = (UINT)desc->sample_count;
+        resDesc.SampleDesc.Count = (UINT)desc->sample_count ? desc->sample_count : 1;
         resDesc.SampleDesc.Quality = (UINT)desc->sample_quality;
         resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
         resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
@@ -653,6 +653,7 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
 
     T->pDxAllocation = pDxAllocation;
     T->pDxResource = pDxResource;
+    T->super.sample_count = desc->sample_count;
     T->super.is_aliasing = desc->is_aliasing;
     T->super.is_dedicated = is_dedicated;
     T->super.can_alias = can_alias_allocation || desc->is_aliasing;

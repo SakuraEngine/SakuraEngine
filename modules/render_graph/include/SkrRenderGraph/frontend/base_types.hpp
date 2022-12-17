@@ -177,6 +177,22 @@ using PipelineBufferHandle = BufferHandle::PipelineReferenceHandle;
 
 template <>
 struct SKR_RENDER_GRAPH_API ObjectHandle<EObjectType::Texture> {
+    struct SKR_RENDER_GRAPH_API SubresourceHandle {
+        friend struct ObjectHandle<EObjectType::Texture>;
+        friend class RenderGraph;
+        friend class RenderGraphBackend;
+        friend class TextureCopyEdge;
+        inline operator ObjectHandle<EObjectType::Texture>() const { return ObjectHandle<EObjectType::Texture>(_this); }
+
+        SubresourceHandle(const handle_t _this);
+    protected:
+        handle_t _this;
+        uint32_t mip_level = 0;
+        uint32_t array_base = 0;
+        uint32_t array_count = 1;
+        CGPUTextureViewAspects aspects = CGPU_TVA_COLOR;
+    };
+
     struct SKR_RENDER_GRAPH_API ShaderReadHandle {
         friend struct ObjectHandle<EObjectType::Texture>;
         friend class RenderGraph;
@@ -184,13 +200,13 @@ struct SKR_RENDER_GRAPH_API ObjectHandle<EObjectType::Texture> {
         ShaderReadHandle read_mip(uint32_t base, uint32_t count) const;
         ShaderReadHandle read_array(uint32_t base, uint32_t count) const;
         ShaderReadHandle dimension(ECGPUTextureDimension dim) const;
-        const handle_t _this;
         inline operator ObjectHandle<EObjectType::Texture>() const { return ObjectHandle<EObjectType::Texture>(_this); }
 
         ShaderReadHandle(const handle_t _this,
             const uint32_t mip_base = 0, const uint32_t mip_count = 1,
             const uint32_t array_base = 0, const uint32_t array_count = 1);
     protected:
+        handle_t _this;
         uint32_t mip_base = 0;
         uint32_t mip_count = 1;
         uint32_t array_base = 0;
@@ -202,13 +218,13 @@ struct SKR_RENDER_GRAPH_API ObjectHandle<EObjectType::Texture> {
         friend struct ObjectHandle<EObjectType::Texture>;
         friend class RenderGraph;
         friend class TextureRenderEdge;
-        const handle_t _this;
         ShaderWriteHandle write_mip(uint32_t mip_level) const;
         ShaderWriteHandle write_array(uint32_t base, uint32_t count) const;
         inline operator ObjectHandle<EObjectType::Texture>() const { return ObjectHandle<EObjectType::Texture>(_this); }
 
         ShaderWriteHandle(const handle_t _this);            
     protected:
+        handle_t _this;
         uint32_t mip_level = 0;
         uint32_t array_base = 0;
         uint32_t array_count = 1;
@@ -220,7 +236,6 @@ struct SKR_RENDER_GRAPH_API ObjectHandle<EObjectType::Texture> {
         friend class TextureRenderEdge;
 
         DepthStencilHandle clear_depth(float depth) const;
-
     protected:
         inline DepthStencilHandle(const handle_t _this)
             : ShaderWriteHandle(_this)
@@ -234,26 +249,11 @@ struct SKR_RENDER_GRAPH_API ObjectHandle<EObjectType::Texture> {
         friend struct ObjectHandle<EObjectType::Texture>;
         friend class RenderGraph;
         friend class TextureReadWriteEdge;
-        const handle_t _this;
         inline operator ObjectHandle<EObjectType::Texture>() const { return ObjectHandle<EObjectType::Texture>(_this); }
 
         ShaderReadWriteHandle(const handle_t _this);
-    };
-
-    struct SKR_RENDER_GRAPH_API SubresourceHandle {
-        friend struct ObjectHandle<EObjectType::Texture>;
-        friend class RenderGraph;
-        friend class RenderGraphBackend;
-        friend class TextureCopyEdge;
-        const handle_t _this;
-        inline operator ObjectHandle<EObjectType::Texture>() const { return ObjectHandle<EObjectType::Texture>(_this); }
-
-        SubresourceHandle(const handle_t _this);
     protected:
-        uint32_t mip_level = 0;
-        uint32_t array_base = 0;
-        uint32_t array_count = 1;
-        CGPUTextureViewAspects aspects = CGPU_TVA_COLOR;
+        handle_t _this;
     };
 
     inline operator handle_t() const { return handle; }
@@ -263,8 +263,8 @@ struct SKR_RENDER_GRAPH_API ObjectHandle<EObjectType::Texture> {
     ShaderReadHandle read_array(uint32_t base, uint32_t count) const;
     // write
     inline operator ShaderWriteHandle() const { return ShaderWriteHandle(handle); }
-    ShaderWriteHandle write_mip(uint32_t mip_level);
-    ShaderWriteHandle write_array(uint32_t base, uint32_t count);
+    ShaderWriteHandle write_mip(uint32_t mip_level) const;
+    ShaderWriteHandle write_array(uint32_t base, uint32_t count) const;
     // readwrite
     inline operator ShaderReadWriteHandle() const { return ShaderReadWriteHandle(handle); }
     // ds
@@ -291,7 +291,7 @@ protected:
 
 private:
     handle_t handle = UINT64_MAX;
-};
+}; // ObjectHandle<EObjectType::Texture>
 using PassHandle = ObjectHandle<EObjectType::Pass>;
 using TextureHandle = ObjectHandle<EObjectType::Texture>;
 using TextureSRVHandle = TextureHandle::ShaderReadHandle;
