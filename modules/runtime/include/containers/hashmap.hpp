@@ -21,6 +21,12 @@ class Hash = phmap::priv::hash_default_hash<K>,
 class Eq = phmap::priv::hash_default_eq<K>,
 class Allocator = skr_stl_allocator<K>>
 using flat_hash_set = phmap::flat_hash_set<K, Hash, Eq, Allocator>;
+
+template <class K, 
+class Hash = phmap::priv::hash_default_hash<K>,
+class Eq = phmap::priv::hash_default_eq<K>,
+class Allocator = skr_stl_allocator<K>>
+using parallel_flat_hash_set = phmap::parallel_flat_hash_set<K, Hash, Eq, Allocator, 4, std::shared_mutex>;
 } // namespace skr
 
 #include "binary/reader.h"
