@@ -22,6 +22,7 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
                 .sample_count((ECGPUSampleCount)sample_level)
                 .allow_render_target();
         });(void)live2d_mask_msaa;
+
         auto mask = renderGraph->create_texture(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
             builder.set_name("live2d_mask")
@@ -30,6 +31,7 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
                 .owns_memory()
                 .allow_render_target();
         });(void)mask;
+        
         auto depth = renderGraph->create_texture(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
             double sample_level = 1.0;

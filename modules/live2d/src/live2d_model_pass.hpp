@@ -24,6 +24,7 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
                 .sample_count((ECGPUSampleCount)sample_level)
                 .allow_render_target();
         });(void)msaaTarget;
+        
         auto depth = renderGraph->create_texture(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
             double sample_level = 1.0;
