@@ -105,21 +105,6 @@ struct SMaterialFactoryImpl : public SMaterialFactory
             }
             SKR_ASSERT(installed && "Specific shader resource in material not installed!");
         }
-        // make RS. CGPU has rs pools so we can just create a pooled RS here.
-        // CGPU will route it to the right backend unique RootSignature.
-        CGPURootSignatureDescriptor rs_desc = {};
-        rs_desc.pool = rs_pool;
-        rs_desc.shader_count = static_cast<uint32_t>(material->installed_shaders.size());
-        rs_desc.shaders = nullptr; // FIXME: we need to get the shader pointers from the async shader map
-        // TODO: static samplers & push constants
-        rs_desc.push_constant_count = 0;
-        rs_desc.push_constant_names = nullptr;
-        rs_desc.static_sampler_count = 0;
-        rs_desc.static_samplers = nullptr;
-        rs_desc.static_sampler_names = nullptr;
-        // material->root_signature = cgpu_create_root_signature(cgpu_device, &rs_desc);
-        // make PSO
-
         return material ? SKR_INSTALL_STATUS_INPROGRESS : SKR_INSTALL_STATUS_FAILED;
     }
     

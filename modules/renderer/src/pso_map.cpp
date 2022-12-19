@@ -256,6 +256,19 @@ struct PSOMapImpl : public skr_pso_map_t
         return SKR_PSO_MAP_PSO_STATUS_NONE;
     }
 
+    virtual CGPURenderPipelineId find_pso(skr_pso_map_key_id key) SKR_NOEXCEPT override
+    {
+        auto found = sets.find(key);
+        if (found != sets.end())
+        {
+            if (skr_atomic32_load_relaxed(&found->get()->frame) != UINT64_MAX)
+            {
+                return found->get()->pso;
+            }
+        }
+        return nullptr;
+    }
+
     virtual bool uninstall_pso(skr_pso_map_key_id key) SKR_NOEXCEPT override
     {
         auto found = sets.find(key);
@@ -338,6 +351,11 @@ void skr_pso_map_free_key(skr_pso_map_id map, skr_pso_map_key_id key)
 ESkrPSOMapPSOStatus skr_pso_map_install_pso(skr_pso_map_id mao, skr_pso_map_key_id key)
 {
     return mao->install_pso(key);
+}
+
+CGPURenderPipelineId skr_pso_map_find_pso(skr_pso_map_id map, skr_pso_map_key_id key)
+{
+    return map->find_pso(key);
 }
 
 bool skr_pso_map_uninstall_pso(skr_pso_map_id mao, skr_pso_map_key_id key)
