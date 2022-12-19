@@ -36,6 +36,11 @@ void skr_pso_map_free_key(skr_pso_map_id map, skr_pso_map_key_id key);
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API
 ESkrPSOMapPSOStatus skr_pso_map_install_pso(skr_pso_map_id mao, skr_pso_map_key_id key);
 
+// thread-safe.
+// fetch pso in pso map
+SKR_RENDERER_EXTERN_C SKR_RENDERER_API 
+CGPURenderPipelineId skr_pso_map_find_pso(skr_pso_map_id map, skr_pso_map_key_id key);
+
 // (RC) request a pso uninstall
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API
 bool skr_pso_map_uninstall_pso(skr_pso_map_id mao, skr_pso_map_key_id key);
@@ -66,6 +71,7 @@ struct SKR_RENDERER_API skr_pso_map_t
     virtual skr_pso_map_key_id create_key(const struct CGPURenderPipelineDescriptor* desc) SKR_NOEXCEPT = 0;
     virtual void free_key(skr_pso_map_key_id key) SKR_NOEXCEPT = 0;
     virtual ESkrPSOMapPSOStatus install_pso(skr_pso_map_key_id key) SKR_NOEXCEPT = 0;
+    virtual CGPURenderPipelineId find_pso(skr_pso_map_key_id key) SKR_NOEXCEPT = 0;
     virtual bool uninstall_pso(skr_pso_map_key_id key) SKR_NOEXCEPT = 0;
 
     virtual void new_frame(uint64_t frame_index) SKR_NOEXCEPT = 0;
