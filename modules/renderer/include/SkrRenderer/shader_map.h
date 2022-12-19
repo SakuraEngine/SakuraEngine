@@ -56,7 +56,8 @@ void skr_shader_map_free(skr_shader_map_id shader_map);
 typedef struct skr_shader_map_root_t {
     struct skr_vfs_t* bytecode_vfs = nullptr;
     struct skr_io_ram_service_t* ram_service = nullptr;
-    SRenderDeviceId render_device = nullptr;
+    
+    CGPUDeviceId device = nullptr;
     skr_threaded_service_t* aux_service = nullptr;
 } skr_shader_map_root_t;
 

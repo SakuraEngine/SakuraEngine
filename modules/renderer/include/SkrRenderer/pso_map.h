@@ -38,7 +38,7 @@ ESkrPSOMapPSOStatus skr_pso_map_install_pso(skr_pso_map_id mao, skr_pso_map_key_
 
 // (RC) request a pso uninstall
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API
-void skr_pso_map_uninstall_pso(skr_pso_map_id mao, skr_pso_map_key_id key);
+bool skr_pso_map_uninstall_pso(skr_pso_map_id mao, skr_pso_map_key_id key);
 
 // pso map new frame
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API
@@ -54,7 +54,7 @@ SKR_RENDERER_EXTERN_C SKR_RENDERER_API
 void skr_pso_map_free(skr_pso_map_id pso_map);
 
 typedef struct skr_pso_map_root_t {
-    SRenderDeviceId render_device = nullptr;
+    CGPUDeviceId device = nullptr;
     skr_threaded_service_t* aux_service = nullptr;
 } skr_pso_map_root_t;
 
@@ -66,7 +66,7 @@ struct SKR_RENDERER_API skr_pso_map_t
     virtual skr_pso_map_key_id create_key(const struct CGPURenderPipelineDescriptor* desc) SKR_NOEXCEPT = 0;
     virtual void free_key(skr_pso_map_key_id key) SKR_NOEXCEPT = 0;
     virtual ESkrPSOMapPSOStatus install_pso(skr_pso_map_key_id key) SKR_NOEXCEPT = 0;
-    virtual void uninstall_pso(skr_pso_map_key_id key) SKR_NOEXCEPT = 0;
+    virtual bool uninstall_pso(skr_pso_map_key_id key) SKR_NOEXCEPT = 0;
 
     virtual void new_frame(uint64_t frame_index) SKR_NOEXCEPT = 0;
     virtual void garbage_collect(uint64_t critical_frame) SKR_NOEXCEPT = 0;

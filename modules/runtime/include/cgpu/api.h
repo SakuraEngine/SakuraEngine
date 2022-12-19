@@ -120,9 +120,9 @@ typedef struct CGPUConstantSpecialization {
     uint32_t constantID;
     union
     {
-        uint32_t u;
-        int32_t i;
-        float f;
+        uint64_t u;
+        int64_t i;
+        double f;
     };
 } CGPUConstantSpecialization;
 
@@ -1029,6 +1029,7 @@ typedef struct CGPUComputePassDescriptor {
     const char8_t* name;
 } CGPUComputePassDescriptor;
 
+// caution: this must be a restrict flatten-POD struct (no array pointer, no c-str, ...) cause we directly hash it in cgpux.hpp
 typedef struct CGPUColorAttachment {
     CGPUTextureViewId view;
     CGPUTextureViewId resolve_view;
@@ -1037,6 +1038,7 @@ typedef struct CGPUColorAttachment {
     CGPUClearValue clear_color;
 } CGPUColorAttachment;
 
+// caution: this must be a restrict flatten-POD struct (no array pointer, no c-str, ...) cause we directly hash it in cgpux.hpp
 typedef struct CGPUDepthStencilAttachment {
     CGPUTextureViewId view;
     ECGPULoadAction depth_load_action;
@@ -1083,6 +1085,7 @@ typedef struct CGPUComputePipelineDescriptor {
     CGPUPipelineShaderDescriptor* compute_shader;
 } CGPUComputePipelineDescriptor;
 
+// caution: this must be a restrict flatten-POD struct (no array pointer, no c-str, ...) cause we directly hash it in cgpux.hpp
 typedef struct CGPUBlendStateDescriptor {
     /// Source blend factor per render target.
     ECGPUBlendConstant src_factors[CGPU_MAX_MRT_COUNT];
@@ -1104,6 +1107,7 @@ typedef struct CGPUBlendStateDescriptor {
     bool independent_blend;
 } CGPUBlendStateDescriptor;
 
+// caution: this must be a restrict flatten-POD struct (no array pointer, no c-str, ...) cause we directly hash it in cgpux.hpp
 typedef struct CGPUDepthStateDesc {
     bool depth_test;
     bool depth_write;
@@ -1121,6 +1125,7 @@ typedef struct CGPUDepthStateDesc {
     ECGPUStencilOp stencil_back_pass;
 } CGPUDepthStateDescriptor;
 
+// caution: this must be a restrict flatten-POD struct (no array pointer, no c-str, ...) cause we directly hash it in cgpux.hpp
 typedef struct CGPURasterizerStateDescriptor {
     ECGPUCullMode cull_mode;
     int32_t depth_bias;
@@ -1132,6 +1137,7 @@ typedef struct CGPURasterizerStateDescriptor {
     bool enable_depth_clamp;
 } CGPURasterizerStateDescriptor;
 
+// caution: this must be a restrict flatten-POD struct (no array pointer, no c-str, ...) cause we directly hash it in cgpux.hpp
 typedef struct CGPUVertexAttribute {
     // TODO: handle this in a better way
     char8_t semantic_name[64];
@@ -1143,6 +1149,7 @@ typedef struct CGPUVertexAttribute {
     ECGPUVertexInputRate rate;
 } CGPUVertexAttribute;
 
+// caution: this must be a restrict flatten-POD struct (no array pointer, no c-str, ...) cause we directly hash it in cgpux.hpp
 typedef struct CGPUVertexLayout {
     uint32_t attribute_count;
     CGPUVertexAttribute attributes[CGPU_MAX_VERTEX_ATTRIBS];
@@ -1159,6 +1166,9 @@ typedef struct CGPURenderPipelineDescriptor {
     const CGPUBlendStateDescriptor* blend_state;
     const CGPUDepthStateDescriptor* depth_state;
     const CGPURasterizerStateDescriptor* rasterizer_state;
+
+    // caution: if any of these platten parameters have been changed, the hasher in cgpux.hpp must be updated
+
     const ECGPUFormat* color_formats;
     uint32_t render_target_count;
     ECGPUSampleCount sample_count;

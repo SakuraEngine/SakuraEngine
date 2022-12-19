@@ -142,7 +142,7 @@ struct SKR_RENDERER_API SMaterialFactory : public SResourceFactory {
     virtual ~SMaterialFactory() = default;
 
     struct Root {
-        SRenderDeviceId render_device = nullptr;
+        CGPUDeviceId device = nullptr;
         skr_vfs_t* bytecode_vfs = nullptr;
         skr_io_ram_service_t* ram_service = nullptr;
         skr_threaded_service_t* aux_service = nullptr;
