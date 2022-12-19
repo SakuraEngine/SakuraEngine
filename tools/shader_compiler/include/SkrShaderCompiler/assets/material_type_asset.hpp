@@ -33,6 +33,8 @@ skr_material_type_asset_t
     // default value for options
     // options can be provided variantly at runtime, if not provided, the default value will be used
     eastl::vector<skr_shader_option_instance_t> option_defaults;
+
+    skr_vertex_layout_id vertex_type;
 };
 
 sreflect_struct("guid" : "c0fc5581-f644-4752-bb30-0e7f652533b7")

@@ -72,6 +72,7 @@ bool SMaterialTypeCooker::Cook(SCookContext *ctx)
     }
     runtime_material_type.switch_defaults = material_type->switch_defaults;
     runtime_material_type.option_defaults = material_type->option_defaults;
+    runtime_material_type.vertex_type = material_type->vertex_type;
 
     // write runtime resource to disk
     ctx->Save(runtime_material_type);

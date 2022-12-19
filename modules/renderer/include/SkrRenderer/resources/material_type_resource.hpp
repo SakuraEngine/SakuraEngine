@@ -73,6 +73,7 @@ skr_material_type_resource_t
     skr::vector<skr_material_value_t> default_values;
     skr::vector<skr_shader_option_instance_t> switch_defaults;
     skr::vector<skr_shader_option_instance_t> option_defaults;
+    skr_vertex_layout_id vertex_type;
 };
 
 namespace skr sreflect

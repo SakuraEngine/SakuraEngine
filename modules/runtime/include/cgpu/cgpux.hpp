@@ -188,7 +188,9 @@ struct equal_to<CGPUPipelineShaderDescriptor> {
         if (a.library != b.library) return false;
         if (a.stage != b.stage) return false;
         if (a.num_constants != b.num_constants) return false;
-        if (::strcmp(a.entry, b.entry) != 0) return false;
+        if (a.entry && !b.entry) return false;
+        if (!a.entry && b.entry) return false;
+        if (a.entry && ::strcmp(a.entry, b.entry) != 0) return false;
         for (uint32_t i = 0; i < a.num_constants; i++)
         {
             if (a.constants[i].constantID != b.constants[i].constantID) return false;
@@ -203,8 +205,8 @@ struct hash<CGPUPipelineShaderDescriptor> {
     size_t operator()(const CGPUPipelineShaderDescriptor& val) const 
     {
         size_t result = val.stage;
-        const auto entry_hash = skr_hash(val.entry, strlen(val.entry), CGPU_NAME_HASH_SEED); 
-        const auto constants_hash = skr_hash(val.constants, sizeof(CGPUConstantSpecialization) * val.num_constants, CGPU_NAME_HASH_SEED);
+        const auto entry_hash = val.entry ? skr_hash(val.entry, strlen(val.entry), CGPU_NAME_HASH_SEED) : 0; 
+        const auto constants_hash = val.constants ? skr_hash(val.constants, sizeof(CGPUConstantSpecialization) * val.num_constants, CGPU_NAME_HASH_SEED) : 0;
         const auto pLibrary = static_cast<const void*>(val.library);
         hash_combine(result, entry_hash, constants_hash, pLibrary);    
         return result;   

@@ -181,7 +181,8 @@ struct SkrTracedNew
     {
         const std::string_view name = skr::demangle<T>();
         TracyMessage(name.data(), name.size());
-        void* pMemory = SkrCallocAlignedWithCZone(1, sizeof(T), alignof(T), sourcelocation.data());
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data());
+        memset(pMemory, 0, sizeof(T));
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
     }
@@ -191,7 +192,8 @@ struct SkrTracedNew
     {
         const std::string_view name = skr::demangle<T>();
         TracyMessage(name.data(), name.size());
-        void* pMemory = SkrCallocAlignedWithCZone(1, sizeof(T), alignof(T), sourcelocation.data());
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data());
+        memset(pMemory, 0, sizeof(T));
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
     }
@@ -270,7 +272,8 @@ template <typename T, typename... TArgs>
 {
     ZoneScopedN("SkrNew");
 
-    void* pMemory = sakura_calloc_aligned(1, sizeof(T), alignof(T));
+    void* pMemory = sakura_new_aligned(sizeof(T), alignof(T));
+    memset(pMemory, 0, sizeof(T));
     SKR_ASSERT(pMemory != nullptr);
     return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
 }
@@ -280,7 +283,8 @@ template <typename T>
 {
     ZoneScopedN("SkrNew");
     
-    void* pMemory = sakura_calloc_aligned(1, sizeof(T), alignof(T));
+    void* pMemory = sakura_new_aligned(sizeof(T), alignof(T));.
+    memset(pMemory, 0, sizeof(T));
     SKR_ASSERT(pMemory != nullptr);
     return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
 }

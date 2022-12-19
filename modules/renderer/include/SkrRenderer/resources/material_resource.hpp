@@ -126,13 +126,8 @@ skr_material_resource_t
     skr::vector<skr::string_view> shader_entries;
     skr::vector<ECGPUShaderStage> shader_stages;
     CGPURootSignatureId root_signature;
-    CGPURenderPipelineId pipeline;
-
-    SKR_RENDERER_API void make_pso_desc(CGPURenderPipelineDescriptor& out_desc) SKR_NOEXCEPT;
+    struct skr_pso_map_key_t* key;
 };
-
-SKR_RENDERER_EXTERN_C SKR_RENDERER_API 
-void skr_material_make_pso_desc(const struct skr_material_resource_t* material, CGPURenderPipelineDescriptor* out_desc);
 
 namespace skr sreflect
 {

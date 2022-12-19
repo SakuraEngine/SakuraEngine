@@ -15,5 +15,6 @@
     ],
     "option_defaults": [
         { "key": "ShaderModel", "value": "SM_6_3" }
-    ]
+    ],
+    "vertex_type": "C35BD99A-B0A8-4602-AFCC-6BBEACC90321"
 }

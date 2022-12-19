@@ -4,11 +4,6 @@
 #include "SkrRenderer/fwd_types.h"
 #include "cgpu/api.h"
 
-typedef struct skr_pso_map_key_t skr_pso_map_key_t;
-typedef struct skr_pso_map_key_t* skr_pso_map_key_id;
-typedef struct skr_pso_map_t* skr_pso_map_id;
-typedef struct skr_pso_map_root_t skr_pso_map_root_t;
-
 typedef enum ESkrPSOMapPSOStatus
 {
     SKR_PSO_MAP_PSO_STATUS_NONE,
@@ -34,7 +29,7 @@ void skr_pso_map_free_key(skr_pso_map_id map, skr_pso_map_key_id key);
 
 // (RC) request a pso install
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API
-ESkrPSOMapPSOStatus skr_pso_map_install_pso(skr_pso_map_id mao, skr_pso_map_key_id key);
+ESkrPSOMapPSOStatus skr_pso_map_install_pso(skr_pso_map_id map, skr_pso_map_key_id key);
 
 // thread-safe.
 // fetch pso in pso map
@@ -43,7 +38,7 @@ CGPURenderPipelineId skr_pso_map_find_pso(skr_pso_map_id map, skr_pso_map_key_id
 
 // (RC) request a pso uninstall
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API
-bool skr_pso_map_uninstall_pso(skr_pso_map_id mao, skr_pso_map_key_id key);
+bool skr_pso_map_uninstall_pso(skr_pso_map_id map, skr_pso_map_key_id key);
 
 // pso map new frame
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API
