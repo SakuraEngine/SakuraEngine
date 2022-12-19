@@ -265,6 +265,7 @@ template <typename T>
     return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
 }
 
+template <typename T>
 [[nodiscard]] FORCEINLINE T* SkrNewZeroed(TArgs&&... params)
 {
     ZoneScopedN("SkrNew");
