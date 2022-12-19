@@ -292,12 +292,13 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         return skr_pso_map_create_key(pso_map, &desc);
     }
 
-    CGPURenderPipelineId requestPSO(skr_resource_record_t* record, skr_material_resource_t* material, skr::span<CGPUShaderLibraryId> shaders)
+    CGPURenderPipelineId requestPSO(skr_resource_record_t* record, skr_material_resource_t* material, skr::span<CGPUShaderLibraryId> shaders, bool& fail)
     {
         if (!material->key)
         {
             material->key = make_pso_map_key(material, shaders);
-            skr_pso_map_install_pso(pso_map, material->key);
+            auto status = skr_pso_map_install_pso(pso_map, material->key);
+            if (status == SKR_PSO_MAP_PSO_STATUS_FAILED) fail = true;
         }
         return skr_pso_map_find_pso(pso_map, material->key);
     }
@@ -320,8 +321,10 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         material->root_signature = requestRS(record, shaders);
 
         // 3.make PSO, root signature needs to be ready for the request.
-        const auto pso = material->root_signature ? requestPSO(record, material, shaders): nullptr;
+        bool exception = false;
+        const auto pso = material->root_signature ? requestPSO(record, material, shaders, exception) : nullptr;
 
+        if (exception) return SKR_INSTALL_STATUS_FAILED;
         return pso ? SKR_INSTALL_STATUS_SUCCEED : SKR_INSTALL_STATUS_INPROGRESS;
     }
 
