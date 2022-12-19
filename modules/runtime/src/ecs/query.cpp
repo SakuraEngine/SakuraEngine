@@ -468,7 +468,8 @@ void dual_storage_t::destroy_query(dual_query_t* query)
 {
     auto iter = eastl::find(queries.begin(), queries.end(), query);
     SKR_ASSERT(iter != queries.end());
-    SkrDelete(query);
+    query->~dual_query_t();
+    dual_free(query);
     queries.erase(iter);
     queriesBuilt = false;
 }
