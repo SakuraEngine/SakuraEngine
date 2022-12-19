@@ -4,9 +4,11 @@
 #include "utils/make_zeroed.hpp"
 #include "utils/threaded_service.h"
 #include "SkrRenderer/render_device.h"
+#include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRenderer/resources/material_resource.hpp"
 #include "SkrRenderer/resources/material_type_resource.hpp"
 #include "SkrRenderer/shader_map.h"
+#include "SkrRenderer/pso_map.h"
 #include "platform/guid.hpp"
 
 namespace skr
@@ -19,19 +21,29 @@ struct SMaterialFactoryImpl : public SMaterialFactory
     SMaterialFactoryImpl(const SMaterialFactoryImpl::Root& root)
         : root(root)
     {
+        // 1.create shader map
         skr_shader_map_root_t shader_map_root;
         shader_map_root.bytecode_vfs = root.bytecode_vfs;
         shader_map_root.ram_service = root.ram_service;
         shader_map_root.device = root.device;
         shader_map_root.aux_service = root.aux_service;
         shader_map = skr_shader_map_create(&shader_map_root);
+
+        // 2.create root signature pool
         CGPURootSignaturePoolDescriptor rs_pool_desc = {};
         rs_pool_desc.name = "MaterialRootSignaturePool";
         rs_pool = cgpu_create_root_signature_pool(root.device, &rs_pool_desc);
+
+        // 3.create pso map
+        skr_pso_map_root_t pso_map_root;
+        pso_map_root.aux_service = root.aux_service;
+        pso_map_root.device = root.device;
+        pso_map = skr_pso_map_create(&pso_map_root);
     }
 
     ~SMaterialFactoryImpl()
     {
+        skr_pso_map_free(pso_map);
         if (rs_pool) cgpu_free_root_signature_pool(rs_pool);
         skr_shader_map_free(shader_map);
     }
@@ -46,9 +58,17 @@ struct SMaterialFactoryImpl : public SMaterialFactory
     bool Unload(skr_resource_record_t* record) override
     {
         auto material = static_cast<skr_material_resource_t*>(record->resource);
-        // free RS
+        // 1.free PSO & map key
+        if (material->key) 
+        {
+            pso_map->uninstall_pso(material->key);
+            pso_map->free_key(material->key);
+        }
+
+        // 2.free RS
         if (material->root_signature) cgpu_free_root_signature(material->root_signature);
-        // RC free installed shaders
+
+        // 3.RC free installed shaders
         for (const auto installedId : material->installed_shaders)
         {
             shader_map->free_shader(installedId);
@@ -97,7 +117,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
                             }
                             else
                             {
-                                SKR_UNREACHABLE_CODE();
+                                SKR_UNREACHABLE_CODE(); // shader install failed handler
                             }
                         }
                     }
@@ -182,10 +202,110 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         }
     }
 
+    skr_pso_map_key_id make_pso_map_key(skr_material_resource_t* material, skr::span<CGPUShaderLibraryId> shaders) const SKR_NOEXCEPT
+    {
+        auto desc = make_zeroed<CGPURenderPipelineDescriptor>();
+        desc.root_signature = material->root_signature;
+        // 1.fill pipeline shaders
+        auto vertex_shader = make_zeroed<CGPUPipelineShaderDescriptor>();
+        auto tesc_shader = make_zeroed<CGPUPipelineShaderDescriptor>();
+        auto tese_shader = make_zeroed<CGPUPipelineShaderDescriptor>();
+        auto geom_shader = make_zeroed<CGPUPipelineShaderDescriptor>();
+        auto fragment_shader = make_zeroed<CGPUPipelineShaderDescriptor>();
+        for (uint32_t i = 0; i < shaders.size(); i++)
+        {
+            CGPUPipelineShaderDescriptor* ref = &vertex_shader;
+            switch (material->shader_stages[i])
+            {
+            case CGPU_SHADER_STAGE_VERT:
+                ref = &vertex_shader; 
+                desc.vertex_shader = &vertex_shader;
+                break;
+            case CGPU_SHADER_STAGE_TESC:
+                ref = &tesc_shader; 
+                desc.tesc_shader = &tesc_shader;
+                break;
+            case CGPU_SHADER_STAGE_TESE:
+                ref = &tese_shader;
+                desc.tese_shader = &tese_shader;
+                break;
+            case CGPU_SHADER_STAGE_GEOM:
+                ref = &geom_shader; 
+                desc.geom_shader = &geom_shader;
+                break;
+            case CGPU_SHADER_STAGE_FRAG:
+                ref = &fragment_shader; 
+                desc.fragment_shader = &fragment_shader;
+                break;
+            default:
+                SKR_ASSERT(false && "wrong shader stage");
+                break;
+            }
+            ref->library = shaders[i];
+            ref->entry = material->shader_entries[i].data();
+            ref->stage = material->shader_stages[i];
+            // TODO: const spec
+            ref->constants = nullptr;
+            ref->num_constants = 0; 
+        }
+        // 2.fill vertex layout
+        auto vert_layout = make_zeroed<CGPUVertexLayout>();
+        const auto matType = material->material_type.get_resolved();
+        const auto vertType = matType->vertex_type;
+        skr_mesh_resource_query_vertex_layout(vertType, &vert_layout);
+        desc.vertex_layout = &vert_layout;
+        // 3.fill blend state
+        auto blend_state = make_zeroed<CGPUBlendStateDescriptor>();
+        blend_state.src_factors[0] = CGPU_BLEND_CONST_ONE; // TODO: MRT
+        blend_state.dst_factors[0] = CGPU_BLEND_CONST_ZERO; 
+        blend_state.src_alpha_factors[0] = CGPU_BLEND_CONST_ONE;
+        blend_state.dst_alpha_factors[0] = CGPU_BLEND_CONST_ZERO;
+        blend_state.blend_modes[0] = CGPU_BLEND_MODE_ADD; 
+        blend_state.blend_alpha_modes[0] = CGPU_BLEND_MODE_ADD; 
+        blend_state.masks[0] = CGPU_COLOR_MASK_ALL; 
+        blend_state.alpha_to_coverage = false;
+        blend_state.independent_blend = false;
+        desc.blend_state = &blend_state;
+        // 4.fill depth state 
+        auto depth_state = make_zeroed<CGPUDepthStateDescriptor>();
+        depth_state.depth_func = CGPU_CMP_LEQUAL; // TODO: Depth Contril
+        depth_state.depth_write = true; // TODO: Depth Write Control
+        depth_state.depth_test = true; // TODO: Depth Test Control
+        desc.depth_state = &depth_state;
+        // 5.fill raster state 
+        auto raster_desc = make_zeroed<CGPURasterizerStateDescriptor>();
+        raster_desc.cull_mode = CGPU_CULL_MODE_BACK; // TODO: Cull Mode Control
+        raster_desc.depth_bias = 0; // TODO: Depth Bias Control
+        raster_desc.fill_mode = CGPU_FILL_MODE_SOLID; // TODO: Fill Mode Control
+        raster_desc.front_face = CGPU_FRONT_FACE_CCW; // TODO: Front Face Control
+        desc.rasterizer_state = &raster_desc;
+        // 6.miscs
+        const auto fmt = CGPU_FORMAT_B8G8R8A8_UNORM;
+        desc.render_target_count = 1; // TODO: MRT
+        desc.color_formats = &fmt; // TODO: use correct screen buffer format
+        desc.sample_count = CGPU_SAMPLE_COUNT_1; // TODO: MSAA
+        desc.sample_quality = 0u; // TODO: MSAA
+        desc.color_resolve_disable_mask = 0u; // TODO: Color resolve mask (this is a vulkan-only feature)
+        desc.depth_stencil_format = CGPU_FORMAT_D32_SFLOAT; // TODO: depth stencil format
+        desc.prim_topology = CGPU_PRIM_TOPO_TRI_LIST; // TODO: non-triangle list topology support
+        desc.enable_indirect_command = false; // TODO: indirect command support
+        return skr_pso_map_create_key(pso_map, &desc);
+    }
+
+    CGPURenderPipelineId requestPSO(skr_resource_record_t* record, skr_material_resource_t* material, skr::span<CGPUShaderLibraryId> shaders)
+    {
+        if (!material->key)
+        {
+            material->key = make_pso_map_key(material, shaders);
+            skr_pso_map_install_pso(pso_map, material->key);
+        }
+        return skr_pso_map_find_pso(pso_map, material->key);
+    }
+
     ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override
     {
         auto material = static_cast<skr_material_resource_t*>(record->resource);
-        // all shaders are installed ?
+        // 1.all shaders are installed ?
         eastl::fixed_vector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
         for (const auto& identifier : material->installed_shaders)
         {
@@ -194,15 +314,16 @@ struct SMaterialFactoryImpl : public SMaterialFactory
             else
                 return SKR_INSTALL_STATUS_INPROGRESS;
         }
-        // make RS. CGPU has rs pools so we can just create a pooled RS here.
-        // CGPU will route it to the right backend unique RootSignature.
-        const auto rootSignature = requestRS(record, shaders);
-        return rootSignature ? SKR_INSTALL_STATUS_SUCCEED : SKR_INSTALL_STATUS_INPROGRESS;
-    }
 
-    skr_shader_map_id shader_map = nullptr;
-    CGPURootSignaturePoolId rs_pool = nullptr;
-    Root root;
+        // 2.make RS. CGPU has rs pools so we can just create a pooled RS here.
+        // CGPU will route it to the right backend unique RootSignature.
+        material->root_signature = requestRS(record, shaders);
+
+        // 3.make PSO, root signature needs to be ready for the request.
+        const auto pso = material->root_signature ? requestPSO(record, material, shaders): nullptr;
+
+        return pso ? SKR_INSTALL_STATUS_SUCCEED : SKR_INSTALL_STATUS_INPROGRESS;
+    }
 
     struct RootSignatureRequest
     {
@@ -218,6 +339,11 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         eastl::fixed_vector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
     };
     skr::flat_hash_map<skr_guid_t, SPtr<RootSignatureRequest>, skr::guid::hash> mRootSignatureRequests;
+
+    skr_shader_map_id shader_map = nullptr;
+    skr_pso_map_id pso_map = nullptr;
+    CGPURootSignaturePoolId rs_pool = nullptr;
+    Root root;
 };
 
 SMaterialFactory* SMaterialFactory::Create(const Root &root)

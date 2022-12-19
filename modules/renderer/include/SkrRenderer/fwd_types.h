@@ -37,6 +37,15 @@ typedef struct skr_mesh_section_t skr_mesh_section_t;
 typedef struct skr_mesh_resource_t skr_mesh_resource_t;
 typedef struct skr_mesh_resource_t* skr_mesh_resource_id;
 
+typedef struct skr_shader_map_t skr_shader_map_t;
+typedef struct skr_shader_map_t* skr_shader_map_id;
+typedef struct skr_shader_map_root_t skr_shader_map_root_t;
+
+typedef struct skr_pso_map_key_t skr_pso_map_key_t;
+typedef struct skr_pso_map_key_t* skr_pso_map_key_id;
+typedef struct skr_pso_map_t* skr_pso_map_id;
+typedef struct skr_pso_map_root_t skr_pso_map_root_t;
+
 #ifdef __cplusplus
     using skr_shader_resource_handle_t = skr::resource::TResourceHandle<skr_multi_shader_resource_t>;
     using skr_material_type_handle_t = skr::resource::TResourceHandle<skr_material_type_resource_t>;

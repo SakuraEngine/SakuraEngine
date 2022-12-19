@@ -232,7 +232,21 @@ bool SShaderCooker::Cook(SCookContext* ctx)
             }); // end foreach target profile
         });     // end foreach dynamic variant
     });         // end foreach variant
-
+    
+    // resolve output stage
+    for (auto&& staticVariant : allOutResources)
+    {
+        for (auto&& multiShader : staticVariant.option_variants)
+        {
+            const ECGPUShaderStage stage = multiShader.second[0].shader_stage; 
+            for (auto&& identifier : multiShader.second)
+            {
+                SKR_ASSERT(stage == identifier.shader_stage);
+                break;
+            }
+            staticVariant.shader_stage = stage;
+        }
+    }
 
     // make resource to write
     skr_shader_collection_resource_t resource = {};

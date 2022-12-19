@@ -317,7 +317,7 @@ void skr_render_effect_detach(SRendererId r, dual_chunk_view_t* cv, skr_render_e
         auto callback = [&](dual_chunk_view_t* view) {
             dualS_destroy(storage, view);
         };
-        dualS_batch(r->get_dual_storage(), render_effects.data(), render_effects.size(), DUAL_LAMBDA(callback));
+        dualS_batch(r->get_dual_storage(), render_effects.data(), (EIndex)render_effects.size(), DUAL_LAMBDA(callback));
     }
 }
 

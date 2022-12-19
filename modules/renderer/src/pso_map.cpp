@@ -35,37 +35,43 @@ struct skr_pso_map_key_t
 
     SAtomic64 frame = UINT64_MAX;
     SAtomic32 rc = 0;
+    SAtomic32 pso_rc = 0;
     CGPURenderPipelineId pso = nullptr;
 };
 
 skr_pso_map_key_t::skr_pso_map_key_t(const CGPURenderPipelineDescriptor& desc, uint64_t frame) SKR_NOEXCEPT
     : root_signature(desc.root_signature->pool_sig ? desc.root_signature->pool_sig : desc.root_signature), 
-    descriptor(desc), frame(frame), rc(0)
+    frame(frame), rc(0), pso_rc(0)
 {
     if (desc.vertex_shader)
     {
         vertex_shader = *desc.vertex_shader;
         vertex_specializations = skr::vector<CGPUConstantSpecialization>(desc.vertex_shader->constants, desc.vertex_shader->constants + desc.vertex_shader->num_constants);
+        descriptor.vertex_shader = &vertex_shader;
     }
     if (desc.tesc_shader)
     {
         tesc_shader = *desc.tesc_shader;
         tesc_specializations = skr::vector<CGPUConstantSpecialization>(desc.tesc_shader->constants, desc.tesc_shader->constants + desc.tesc_shader->num_constants);
+        descriptor.tesc_shader = &tesc_shader;
     }
     if (desc.tese_shader)
     {
         tese_shader = *desc.tese_shader;
         tese_specializations = skr::vector<CGPUConstantSpecialization>(desc.tese_shader->constants, desc.tese_shader->constants + desc.tese_shader->num_constants);
+        descriptor.tese_shader = &tese_shader;
     }
     if (desc.geom_shader)
     {
         geom_shader = *desc.geom_shader;
         geom_specializations = skr::vector<CGPUConstantSpecialization>(desc.geom_shader->constants, desc.geom_shader->constants + desc.geom_shader->num_constants);
+        descriptor.geom_shader = &geom_shader;
     }
     if (desc.fragment_shader)
     {
         fragment_shader = *desc.fragment_shader;
         fragment_specializations = skr::vector<CGPUConstantSpecialization>(desc.fragment_shader->constants, desc.fragment_shader->constants + desc.fragment_shader->num_constants);
+        descriptor.fragment_shader = &fragment_shader;
     }
     if (desc.vertex_layout) vertex_layout = *desc.vertex_layout;
     if (desc.blend_state) blend_state = *desc.blend_state;
@@ -80,6 +86,11 @@ skr_pso_map_key_t::skr_pso_map_key_t(const CGPURenderPipelineDescriptor& desc, u
     {
         color_formats[i] = desc.color_formats[i];
     }
+    descriptor.root_signature = root_signature;
+    descriptor.vertex_layout = &vertex_layout;
+    descriptor.blend_state = &blend_state;
+    descriptor.depth_state = &depth_state;
+    descriptor.rasterizer_state = &rasterizer_state;
 }
 
 namespace skr
@@ -143,7 +154,7 @@ struct PSOMapImpl : public skr_pso_map_t
 
     virtual void free_key(skr_pso_map_key_id key) SKR_NOEXCEPT override
     {
-        auto found = sets.find(key);
+        auto found = sets.find(key->descriptor);
         if (found != sets.end())
         {
             // deref
@@ -221,10 +232,18 @@ struct PSOMapImpl : public skr_pso_map_t
 
     virtual ESkrPSOMapPSOStatus install_pso(skr_pso_map_key_id key) SKR_NOEXCEPT override
     {
-        auto found = sets.find(key);
+        auto found = sets.find(key->descriptor);
+        const auto pso_rc = skr_atomic32_load_relaxed(&key->pso_rc);
+        skr_atomic32_add_relaxed(&key->pso_rc, 1);
         // 1. found mapped pso
         if (found != sets.end())
         {
+            // 1.0 install pso if pso has no rc
+            if (pso_rc == 0)
+            {
+               return install_pso_impl(key);
+            }
+            
             auto pFound = found->get();
             // 1.1 found alive pso request
             auto found_request = mRequests.find(key);
@@ -240,16 +259,13 @@ struct PSOMapImpl : public skr_pso_map_t
                 return SKR_PSO_MAP_PSO_STATUS_FAILED;
             }
 
-            // 1.3 request is done, add rc & record frame index
-            skr_atomic32_add_relaxed(&pFound->rc, 1);
+            // 1.3 request is done, record frame index
             skr_atomic64_store_relaxed(&pFound->frame, frame_index);
             return SKR_PSO_MAP_PSO_STATUS_INSTALLED;
         }
         // 2. not found mapped pso
         else
         {
-            // add rc & fire request
-            skr_atomic32_add_relaxed(&key->rc, 1);
             // keep skr_pso_map_key_t::frame at UINT64_MAX until pso is created
             return install_pso_impl(key);
         }
@@ -258,10 +274,11 @@ struct PSOMapImpl : public skr_pso_map_t
 
     virtual CGPURenderPipelineId find_pso(skr_pso_map_key_id key) SKR_NOEXCEPT override
     {
-        auto found = sets.find(key);
+        auto found = sets.find(key->descriptor);
         if (found != sets.end())
         {
-            if (skr_atomic32_load_relaxed(&found->get()->frame) != UINT64_MAX)
+            const auto frame = skr_atomic32_load_relaxed(&found->get()->frame);
+            if (frame != UINT64_MAX)
             {
                 return found->get()->pso;
             }
@@ -271,14 +288,14 @@ struct PSOMapImpl : public skr_pso_map_t
 
     virtual bool uninstall_pso(skr_pso_map_key_id key) SKR_NOEXCEPT override
     {
-        auto found = sets.find(key);
+        auto found = sets.find(key->descriptor);
         if (found != sets.end())
         {
         #ifdef _DEBUG
             const auto frame = skr_atomic32_load_relaxed(&found->get()->frame);
             SKR_ASSERT(frame != UINT64_MAX && "this shader is freed but never installed, check your code for errors!");
         #endif
-            skr_atomic32_add_relaxed(&found->get()->rc, -1);
+            skr_atomic32_add_relaxed(&found->get()->pso_rc, -1);
             return true;
         }
         return false;
@@ -304,7 +321,7 @@ struct PSOMapImpl : public skr_pso_map_t
                 }
                 else
                 {
-                    it = sets.erase(it);
+                    it = sets.erase(it); // free key
                 }
             }
             else
@@ -312,6 +329,7 @@ struct PSOMapImpl : public skr_pso_map_t
                 ++it;
             }
         }
+        // TODO: control pso create/dealloc with pso_rc
     }
 
     skr_pso_map_root_t root;
@@ -348,9 +366,9 @@ void skr_pso_map_free_key(skr_pso_map_id map, skr_pso_map_key_id key)
     map->free_key(key);
 }
 
-ESkrPSOMapPSOStatus skr_pso_map_install_pso(skr_pso_map_id mao, skr_pso_map_key_id key)
+ESkrPSOMapPSOStatus skr_pso_map_install_pso(skr_pso_map_id map, skr_pso_map_key_id key)
 {
-    return mao->install_pso(key);
+    return map->install_pso(key);
 }
 
 CGPURenderPipelineId skr_pso_map_find_pso(skr_pso_map_id map, skr_pso_map_key_id key)
@@ -358,9 +376,9 @@ CGPURenderPipelineId skr_pso_map_find_pso(skr_pso_map_id map, skr_pso_map_key_id
     return map->find_pso(key);
 }
 
-bool skr_pso_map_uninstall_pso(skr_pso_map_id mao, skr_pso_map_key_id key)
+bool skr_pso_map_uninstall_pso(skr_pso_map_id map, skr_pso_map_key_id key)
 {
-    return mao->uninstall_pso(key);
+    return map->uninstall_pso(key);
 }
 
 void skr_pso_map_new_frame(skr_pso_map_id psoMap, uint64_t frame_index)
