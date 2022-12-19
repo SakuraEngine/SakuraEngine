@@ -176,7 +176,7 @@ void CGPUXBindTable::Free(CGPUXBindTableId table) SKR_NOEXCEPT
         table->name_locations[i].~CGPUXBindTableLocation();
     }
     ((CGPUXBindTable*)table)->~CGPUXBindTable();
-    cgpu_free((void*)table);
+    cgpu_free_aligned((void*)table);
 }
 
 CGPUXBindTableId cgpux_create_bind_table(CGPUDeviceId device, const struct CGPUXBindTableDescriptor* desc)
