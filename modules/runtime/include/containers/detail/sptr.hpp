@@ -33,6 +33,11 @@ public:
     {
         return SPtrHelper<T, EmbedRC>(SkrNew<T>(std::forward<Args>(args)...));
     }
+    template<typename...Args>
+    static SPtrHelper<T, EmbedRC> CreateZeroed(Args&&... args) SKR_NOEXCEPT
+    {
+        return SPtrHelper<T, EmbedRC>(SkrNewZeroed<T>(std::forward<Args>(args)...));
+    }
     
     void swap(this_type& lp) SKR_NOEXCEPT;
     void release() SKR_NOEXCEPT;
