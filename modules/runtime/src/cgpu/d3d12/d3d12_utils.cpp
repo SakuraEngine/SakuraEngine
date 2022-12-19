@@ -316,7 +316,9 @@ void D3D12Util_CreateDMAAllocator(CGPUInstance_D3D12* I, CGPUAdapter_D3D12* A, C
     allocationCallbacks.pAllocate = +[](size_t size, size_t alignment, void*) {
         return cgpu_memalign(size, alignment);
     };
-    allocationCallbacks.pFree = +[](void* ptr, void*) { cgpu_free_aligned(ptr); };
+    allocationCallbacks.pFree = +[](void* ptr, void*) { 
+        cgpu_free_aligned(ptr, 1); //TODO: Fix this 
+    };
     desc.pAllocationCallbacks = &allocationCallbacks;
     desc.Flags |= D3D12MA::ALLOCATOR_FLAG_MSAA_TEXTURES_ALWAYS_COMMITTED;
     if (!SUCCEEDED(D3D12MA::CreateAllocator(&desc, &D->pResourceAllocator)))

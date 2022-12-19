@@ -837,7 +837,7 @@ void cgpu_free_descriptor_set_vulkan(CGPUDescriptorSetId set)
     CGPUDescriptorSet_Vulkan* Set = (CGPUDescriptorSet_Vulkan*)set;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)set->root_signature->device;
     VkUtil_ReturnDescriptorSets(D->pDescriptorPool, &Set->pVkDescriptorSet, 1);
-    cgpu_free_aligned(Set);
+    cgpu_free_aligned(Set, _Alignof(CGPUDescriptorSet_Vulkan));
 }
 
 CGPUComputePipelineId cgpu_create_compute_pipeline_vulkan(CGPUDeviceId device, const struct CGPUComputePipelineDescriptor* desc)
@@ -1568,7 +1568,7 @@ void cgpu_free_command_buffer_vulkan(CGPUCommandBufferId cmd)
     CGPUQueue_Vulkan* Q = (CGPUQueue_Vulkan*)P->super.queue;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)Q->super.device;
     D->mVkDeviceTable.vkFreeCommandBuffers(D->pVkDevice, P->pVkCmdPool, 1, &(Cmd->pVkCmdBuf));
-    cgpu_free_aligned(Cmd);
+    cgpu_free_aligned(Cmd, _Alignof(CGPUCommandBuffer_Vulkan));
 }
 
 void cgpu_free_command_pool_vulkan(CGPUCommandPoolId pool)
