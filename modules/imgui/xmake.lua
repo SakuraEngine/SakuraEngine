@@ -11,7 +11,7 @@ target("imgui")
         os.cp(imgui_fontdir, path.join(target:targetdir(), "../resources/font").."/")
     end)
     -- contains in imgui-$(plat)-$(arch).zip
-    if (is_os("windows")) then 
+    if (is_os("windows") and not is_mode("asan")) then 
          set_kind("headeronly")    
          if (is_mode("release")) then
              add_links(sdk_libs_dir.."imgui", {public=true} )
@@ -33,7 +33,7 @@ target("cimgui")
     add_includedirs("imgui", {public=false})
     add_includedirs("dear_bindings/cimgui/include", {public=true})
     -- contains in imgui-$(plat)-$(arch).zip
-    if (is_os("windows")) then 
+    if (is_os("windows") and not is_mode("asan")) then 
          set_kind("headeronly")    
          if (is_mode("release")) then
              add_links(sdk_libs_dir.."cimgui", {public=true} )

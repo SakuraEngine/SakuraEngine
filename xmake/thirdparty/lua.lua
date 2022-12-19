@@ -7,7 +7,7 @@ target("lua")
     set_kind("static")
     add_includedirs(lua_include_dir, {public = true})
     add_includedirs(lua_include_dir_private, {public = false})
-    if (is_os("windows")) then 
+    if (is_os("windows") and not is_mode("asan")) then 
         set_kind("headeronly")
         if (is_mode("release")) then
             add_links(sdk_libs_dir.."lua", {public=true} )

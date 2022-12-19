@@ -10,20 +10,22 @@ shared_module("SkrImageCoder", "SKR_IMAGE_CODER", engine_version)
     if (is_os("windows")) then 
         add_linkdirs("lib/windows/x64", {public=true})
 
-        add_includedirs("include", "libpng/1.5.2", {public=true})
-        if (is_mode("release")) then
-            add_links("libpng15_static", {public=true})
-            add_links("turbojpeg_static", {public=true})
+        add_includedirs("include", {public=true})
+        add_includedirs("libpng/1.5.2", {public=false})
+        if (is_mode("asan")) then
+            add_links("libpng15_static", {public=false})
+        elseif (is_mode("release")) then
+            add_links("libpng15_static", {public=false})
         else
-            add_links("libpng15_staticd", {public=true})
-            add_links("turbojpeg_static", {public=true})
+            add_links("libpng15_staticd", {public=false})
         end
+        add_links("turbojpeg_static", {public=false})
     end
     -- png
     if (is_os("macosx")) then 
-        add_linkdirs("lib/macos/x86_64", {public=true})
+        add_linkdirs("lib/macos/x86_64", {public=false})
 
-        add_includedirs("include", "libpng/1.5.27", {public=true})
-        add_links("png", {public=true})
-        add_links("turbojpeg", {public=true})
+        add_includedirs("include", "libpng/1.5.27", {public=false})
+        add_links("png", {public=false})
+        add_links("turbojpeg", {public=false})
     end

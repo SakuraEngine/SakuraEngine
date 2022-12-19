@@ -8,7 +8,7 @@ target("fmt")
     add_defines("FMT_EXCEPTIONS=0", {public = true})
     add_includedirs(fmt_include_dir, {public = true})
     add_cxflags(project_cxflags, {public = true})
-    if (is_os("windows")) then 
+    if (is_os("windows") and not is_mode("asan")) then 
         set_kind("headeronly")
         if (is_mode("release")) then
             add_links(sdk_libs_dir.."fmt", {public=true} )

@@ -5,29 +5,12 @@ set_policy("build.ccache", false)
 -- wait xmake 2.7.4 release
 -- add_rules("plugin.compile_commands.autoupdate", { outputdir = ".vscode" })
 
-add_rules("mode.debug", "mode.release", "mode.releasedbg")
+add_rules("mode.debug", "mode.release", "mode.releasedbg", "mode.asan")
 add_moduledirs("xmake/modules")
 
 includes("xmake/options.lua")
 
 set_languages("c11", "cxx17")
-
-if (is_os("windows")) then 
-    add_defines("_WINDOWS")
-    add_defines("UNICODE")
-    add_defines("_UNICODE")
-    add_defines("NOMINMAX")
-    add_defines("_CRT_SECURE_NO_WARNINGS")
-    if (is_mode("release")) then
-        set_runtimes("MD")
-    else
-        set_runtimes("MDd")
-    end
-else
-    add_requires("python")
-    add_requires("libsdl")
-    add_requires("gtest")
-end
 
 engine_version = "0.1.0"
 default_unity_batch_size = 8
@@ -38,6 +21,25 @@ packages_list = {}
 defs_list = {}
 links_list = {}
 generator_list = {}
+
+if (is_os("windows")) then 
+    add_defines("_WINDOWS")
+    add_defines("UNICODE")
+    add_defines("_UNICODE")
+    add_defines("NOMINMAX")
+    add_defines("_CRT_SECURE_NO_WARNINGS")
+    if (is_mode("release")) then
+        set_runtimes("MD")
+    elseif (is_mode("asan")) then
+        table.insert(defs_list, "_DISABLE_VECTOR_ANNOTATION")
+    else
+        set_runtimes("MDd")
+    end
+else
+    add_requires("python")
+    add_requires("libsdl")
+    add_requires("gtest")
+end
 
 includes("xmake/options_detect.lua")
 includes("xmake/rules.lua")

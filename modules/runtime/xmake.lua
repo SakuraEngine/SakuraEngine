@@ -13,6 +13,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     set_group("01.modules")
     add_deps("SkrRoot", {public = true})
     add_defines(defs_list, {public = true})
+    add_ldflags(project_ldflags, {public = true, force = true})
     add_cxflags(project_cxflags, {public = true, force = true})
     add_includedirs(include_dir_list, {public = true})
     -- add source files

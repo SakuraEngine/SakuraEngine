@@ -9,6 +9,9 @@ shared_module("SkrLive2D", "SKR_LIVE2D", engine_version)
     -- link to cubism core
     if (is_os("windows")) then 
         add_linkdirs("CubismNativeCore/lib/windows/x86_64/142", {public=true})
+        if (is_mode("asan")) then
+            set_runtimes("MD") -- csmiPlatformDependentLogPrint uses freopen
+        end
         if (is_mode("release")) then
             add_links("Live2DCubismCore_MD", {public=true})
         else
