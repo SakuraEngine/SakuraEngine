@@ -284,7 +284,7 @@ template <typename T>
 {
     ZoneScopedN("SkrNew");
     
-    void* pMemory = sakura_new_aligned(sizeof(T), alignof(T));.
+    void* pMemory = sakura_new_aligned(sizeof(T), alignof(T));
     memset(pMemory, 0, sizeof(T));
     SKR_ASSERT(pMemory != nullptr);
     return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
