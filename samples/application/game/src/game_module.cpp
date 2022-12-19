@@ -176,7 +176,7 @@ void SGameModule::installResourceFactories()
         skr_shader_map_root_t shadermapRoot = {};
         shadermapRoot.bytecode_vfs = shader_bytes_vfs;
         shadermapRoot.ram_service = ram_service;
-        shadermapRoot.render_device = game_render_device;
+        shadermapRoot.device = game_render_device->get_cgpu_device();
         shadermapRoot.aux_service = game_render_device->get_aux_service(0);
         shadermap = skr_shader_map_create(&shadermapRoot);
 
@@ -187,6 +187,7 @@ void SGameModule::installResourceFactories()
         shaderFactory = skr::resource::SShaderResourceFactory::Create(factoryRoot);
         resource_system->RegisterFactory(shaderFactory);
     }
+
     // material type factory
     {
         skr::resource::SMaterialTypeFactory::Root factoryRoot = {};
@@ -194,10 +195,11 @@ void SGameModule::installResourceFactories()
         matTypeFactory = skr::resource::SMaterialTypeFactory::Create(factoryRoot);
         resource_system->RegisterFactory(matTypeFactory);
     }
+
     // material factory
     {
         skr::resource::SMaterialFactory::Root factoryRoot = {};
-        factoryRoot.render_device = game_render_device;
+        factoryRoot.device = game_render_device->get_cgpu_device();
         factoryRoot.aux_service = game_render_device->get_aux_service(0);
         factoryRoot.ram_service = ram_service;
         factoryRoot.bytecode_vfs = shader_bytes_vfs;
@@ -210,11 +212,13 @@ void SGameModule::installResourceFactories()
         animFactory = SkrNew<skr::resource::SAnimFactory>();
         resource_system->RegisterFactory(animFactory);
     }
+
     // skeleton factory
     {
         skeletonFactory = SkrNew<skr::resource::SSkelFactory>();
         resource_system->RegisterFactory(skeletonFactory);
     }
+    
     // skin factory
     {
         skinFactory = SkrNew<skr::resource::SSkinFactory>();

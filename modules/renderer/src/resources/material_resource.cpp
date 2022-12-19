@@ -19,16 +19,15 @@ struct SMaterialFactoryImpl : public SMaterialFactory
     SMaterialFactoryImpl(const SMaterialFactoryImpl::Root& root)
         : root(root)
     {
-        const auto cgpu_device = root.render_device->get_cgpu_device();
         skr_shader_map_root_t shader_map_root;
         shader_map_root.bytecode_vfs = root.bytecode_vfs;
         shader_map_root.ram_service = root.ram_service;
-        shader_map_root.render_device = root.render_device;
+        shader_map_root.device = root.device;
         shader_map_root.aux_service = root.aux_service;
         shader_map = skr_shader_map_create(&shader_map_root);
         CGPURootSignaturePoolDescriptor rs_pool_desc = {};
         rs_pool_desc.name = "MaterialRootSignaturePool";
-        rs_pool = cgpu_create_root_signature_pool(cgpu_device, &rs_pool_desc);
+        rs_pool = cgpu_create_root_signature_pool(root.device, &rs_pool_desc);
     }
 
     ~SMaterialFactoryImpl()
@@ -84,7 +83,8 @@ struct SMaterialFactoryImpl : public SMaterialFactory
                     const auto platform_ids = multiShader.GetDynamicVariants(option_hash);
                     for (auto platform_id : platform_ids)
                     {
-                        const auto bytecode_type = SShaderResourceFactory::GetRuntimeBytecodeType(root.render_device->get_backend());
+                        const auto backend = root.device->adapter->instance->backend;
+                        const auto bytecode_type = SShaderResourceFactory::GetRuntimeBytecodeType(backend);
                         if (bytecode_type == platform_id.bytecode_type)
                         {
                             const auto status = shader_map->install_shader(platform_id);
@@ -130,7 +130,6 @@ struct SMaterialFactoryImpl : public SMaterialFactory
     
     CGPURootSignatureId createMaterialRS(const skr_material_resource_t* material, skr::span<CGPUShaderLibraryId> shaders) const
     {
-        const auto cgpu_device = root.render_device->get_cgpu_device();
         CGPUPipelineShaderDescriptor ppl_shaders[CGPU_SHADER_STAGE_COUNT];
         for (size_t i = 0; i < shaders.size(); i++)
         {
@@ -148,7 +147,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         rs_desc.static_sampler_count = 0;
         rs_desc.static_samplers = nullptr;
         rs_desc.static_sampler_names = nullptr;
-        return cgpu_create_root_signature(cgpu_device, &rs_desc);
+        return cgpu_create_root_signature(root.device, &rs_desc);
     }
 
     CGPURootSignatureId requestRS(skr_resource_record_t* record, skr::span<CGPUShaderLibraryId> shaders)

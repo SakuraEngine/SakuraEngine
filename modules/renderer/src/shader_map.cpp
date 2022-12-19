@@ -51,7 +51,7 @@ struct ShaderMapImpl : public skr_shader_map_t
             // erase request when exit this scope
             SKR_DEFER({factory->mShaderRequests.erase(identifier);});
 
-            auto render_device = factory->root.render_device;
+            auto device = factory->root.device;
             const auto& shader_destination = bytes_destination;
     
             skr_atomic32_add_relaxed(&shader_status, SKR_SHADER_MAP_SHADER_STATUS_LOADED);
@@ -61,7 +61,7 @@ struct ShaderMapImpl : public skr_shader_map_t
             desc.code_size = (uint32_t)shader_destination.size;
             desc.name = bytes_uri.c_str();
             desc.stage = identifier.shader_stage;
-            const auto created_shader = cgpu_create_shader_library(render_device->get_cgpu_device(), &desc);
+            const auto created_shader = cgpu_create_shader_library(device, &desc);
             if (!created_shader)
             {
                 skr_atomic32_add_relaxed(&shader_status, SKR_SHADER_MAP_SHADER_STATUS_FAILED);
@@ -120,14 +120,33 @@ bool ShaderMapImpl::free_shader(const skr_platform_shader_identifier_t& identifi
 ESkrShaderMapShaderStatus ShaderMapImpl::install_shader(const skr_platform_shader_identifier_t& identifier) SKR_NOEXCEPT
 {
     auto found = map.find(identifier);
+    // 1. found mapped shader
     if (found != map.end())
     {
+        // 1.1 found alive shader request
+        auto found_request = mShaderRequests.find(identifier);
+        if (found_request != mShaderRequests.end())
+        {
+            auto status = skr_atomic32_load_relaxed(&found_request->second->shader_status);
+            return (ESkrShaderMapShaderStatus)status;
+        }
+
+        // 1.2 request is done or failed
+        const auto frame = skr_atomic32_load_relaxed(&found->second->frame);
+        if (frame == UINT64_MAX)
+        {
+            return SKR_SHADER_MAP_SHADER_STATUS_FAILED;
+        }
+        
+        // 1.3 request is done, add rc & record frame index
         skr_atomic32_add_relaxed(&found->second->rc, 1);
         skr_atomic64_store_relaxed(&found->second->frame, frame_index);
         return SKR_SHADER_MAP_SHADER_STATUS_INSTALLED;
     }
+    // 2. not found mapped shader
     else
     {
+        // fire request
         auto mapped_shader = SPtr<MappedShader>::Create();
         skr_atomic32_add_relaxed(&mapped_shader->rc, 1);
         // keep mapped_shader::frame at UINT64_MAX until shader is loaded
