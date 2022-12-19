@@ -291,11 +291,9 @@ void SResourceRequestImpl::Update()
                     auto file = skr_vfs_fopen(vfs, resourceUrl.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
                     SKR_DEFER({ skr_vfs_fclose(file); });
                     auto fsize = skr_vfs_fsize(file);
-                    eastl::vector<uint8_t> buffer(fsize);
-                    skr_vfs_fread(file, buffer.data(), 0, fsize);
-                    data = buffer.data();
-                    size = buffer.size();
-                    buffer.reset_lose_memory();
+                    data = (uint8_t*)sakura_malloc(fsize);
+                    size = fsize;
+                    skr_vfs_fread(file, data, 0, fsize);
                 }
 #ifdef SKR_RESOURCE_DEV_MODE
                 if (!artifactsUrl.empty())
@@ -303,11 +301,9 @@ void SResourceRequestImpl::Update()
                     auto file = skr_vfs_fopen(vfs, artifactsUrl.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
                     SKR_DEFER({ skr_vfs_fclose(file); });
                     auto fsize = skr_vfs_fsize(file);
-                    eastl::vector<uint8_t> buffer(fsize);
-                    skr_vfs_fread(file, buffer.data(), 0, fsize);
-                    artifactsData = buffer.data();
-                    size = buffer.size();
-                    buffer.reset_lose_memory();
+                    artifactsData = (uint8_t*)sakura_malloc(fsize);
+                    size = fsize;
+                    skr_vfs_fread(file, data, 0, fsize);
                 }
 #endif
                 currentPhase = SKR_LOADING_PHASE_DESER_RESOURCE;
