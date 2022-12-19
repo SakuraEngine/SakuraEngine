@@ -11,6 +11,7 @@ option("pointer-size")
     add_cxxsnippets("VOID_P_SIZE", 'printf("%d", sizeof(void*)); return 0;', {output = true, number = true})
 option_end()
 
+project_ldflags = {}
 project_cxflags = {}
 project_mxflags = {}
 if(has_config("is_clang")) then
@@ -31,6 +32,9 @@ if(has_config("is_clang")) then
     if(has_config("is_msvc")) then
         table.insert(project_cxflags, "-Wno-microsoft-cast")
         table.insert(project_cxflags, "-Wno-microsoft-enum-forward-reference")
+        if (is_mode("asan")) then
+            table.insert(project_ldflags, "-fsanitize=address")
+        end
     end
 end
 
@@ -38,4 +42,7 @@ if(has_config("is_msvc")) then
     table.insert(project_cxflags, "/FC")
     table.insert(project_cxflags, "/GR-")
     table.insert(project_cxflags, "/wd4251")
+    if (is_mode("asan")) then
+        table.insert(project_ldflags, "/fsanitize=address")
+    end
 end

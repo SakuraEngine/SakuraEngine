@@ -9,7 +9,8 @@ target("simdjson")
     add_defines("SIMDJSON_AVX512_ALLOWED=0")
     add_includedirs(simdjson_include_dir)
     add_cxflags(project_cxflags, {public = true})
-    if (is_os("windows")) then 
+    add_defines(defs_list, {public = true})
+    if (is_os("windows") and not is_mode("asan")) then 
         set_kind("headeronly")    
         if (is_mode("release")) then
             add_links(sdk_libs_dir.."simdjson", {public=true} )

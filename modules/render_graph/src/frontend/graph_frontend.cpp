@@ -80,7 +80,7 @@ public:
         {
             return false;
         }
-        named_passes.emplace(name, pass);
+        named_passes.emplace(pass->get_name(), pass);
         return true;
     }
 
@@ -91,7 +91,7 @@ public:
         {
             return false;
         }
-        named_textures.emplace(name, texture);
+        named_textures.emplace(texture->get_name(), texture);
         return true;
     }
 
@@ -102,7 +102,7 @@ public:
         {
             return false;
         }
-        named_buffers.emplace(name, buffer);
+        named_buffers.emplace(buffer->get_name(), buffer);
         return true;
     }
 

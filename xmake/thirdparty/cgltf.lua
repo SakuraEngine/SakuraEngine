@@ -6,7 +6,8 @@ target("cgltf")
     set_kind("headeronly")
     add_includedirs(cgltf_include_dir, {public = true})
     add_cxflags(project_cxflags, {public = true})
-    if (is_os("windows")) then 
+    add_defines(defs_list, {public = true})
+    if (is_os("windows") and not is_mode("asan")) then 
         add_links(sdk_libs_dir.."cgltf", {public=true} )
     else
         set_kind("static")

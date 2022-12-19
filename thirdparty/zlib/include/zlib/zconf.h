@@ -13,3 +13,4 @@
     #error ZLib: "Unsupported Apple platform""
     #endif
 #endif
+#endif

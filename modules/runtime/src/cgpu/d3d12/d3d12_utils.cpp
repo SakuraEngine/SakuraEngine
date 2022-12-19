@@ -134,7 +134,7 @@ void D3D12Util_QueryAllAdapters(CGPUInstance_D3D12* instance, uint32_t* count, b
 {
     cgpu_assert(instance->pAdapters == nullptr && "getProperGpuCount should be called only once!");
     cgpu_assert(instance->mAdaptersCount == 0 && "getProperGpuCount should be called only once!");
-    IDXGIAdapter4* adapter = NULL;
+    IDXGIAdapter* _adapter = NULL;
     eastl::vector<IDXGIAdapter4*> dxgi_adapters;
     eastl::vector<D3D_FEATURE_LEVEL> adapter_levels;
     // Find number of usable GPUs
@@ -143,10 +143,12 @@ void D3D12Util_QueryAllAdapters(CGPUInstance_D3D12* instance, uint32_t* count, b
     for (UINT i = 0;
          instance->pDXGIFactory->EnumAdapterByGpuPreference(i,
          DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
-         IID_PPV_ARGS(&adapter)) != DXGI_ERROR_NOT_FOUND;
+         IID_PPV_ARGS(&_adapter)) != DXGI_ERROR_NOT_FOUND;
          i++)
     {
         DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc)
+        IDXGIAdapter4* adapter = nullptr;
+        _adapter->QueryInterface(IID_PPV_ARGS(&adapter));
         adapter->GetDesc3(&desc);
         // Ignore Microsoft Driver
         if (!(desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE))
@@ -155,7 +157,8 @@ void D3D12Util_QueryAllAdapters(CGPUInstance_D3D12* instance, uint32_t* count, b
             for (uint32_t level = 0; level < level_c; ++level)
             {
                 // Make sure the adapter can support a D3D12 device
-                if (SUCCEEDED(D3D12CreateDevice(adapter, d3d_feature_levels[level], __uuidof(ID3D12Device), NULL)))
+                ID3D12Device* pDevice = CGPU_NULLPTR;
+                if (SUCCEEDED(D3D12CreateDevice(adapter, d3d_feature_levels[level], __uuidof(ID3D12Device), (void**)&pDevice)))
                 {
                     DECLARE_ZERO(CGPUAdapter_D3D12, cgpuAdapter)
                     HRESULT hres = adapter->QueryInterface(IID_PPV_ARGS(&cgpuAdapter.pDxActiveGPU));
