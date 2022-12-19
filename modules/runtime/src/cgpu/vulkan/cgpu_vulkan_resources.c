@@ -371,7 +371,7 @@ void cgpu_free_buffer_vulkan(CGPUBufferId buffer)
         B->pVkStorageTexelView = VK_NULL_HANDLE;
     }
     vmaDestroyBuffer(D->pVmaAllocator, B->pVkBuffer, B->pVkAllocation);
-    cgpu_free_aligned(B);
+    cgpu_free_aligned(B, _Alignof(CGPUBuffer_Vulkan));
 }
 
 // Texture/TextureView APIs
@@ -778,7 +778,7 @@ void cgpu_free_texture_vulkan(CGPUTextureId texture)
             D->mVkDeviceTable.vkDestroyImage(D->pVkDevice, T->pVkImage, GLOBAL_VkAllocationCallbacks);
         }
     }
-    cgpu_free_aligned(T);
+    cgpu_free_aligned(T, _Alignof(CGPUTexture_Vulkan));
 }
 
 CGPUTextureViewId cgpu_create_texture_view_vulkan(CGPUDeviceId device, const struct CGPUTextureViewDescriptor* desc)
@@ -874,7 +874,7 @@ void cgpu_free_texture_view_vulkan(CGPUTextureViewId render_target)
         D->mVkDeviceTable.vkDestroyImageView(D->pVkDevice, TV->pVkRTVDSVDescriptor, GLOBAL_VkAllocationCallbacks);
     if (VK_NULL_HANDLE != TV->pVkUAVDescriptor)
         D->mVkDeviceTable.vkDestroyImageView(D->pVkDevice, TV->pVkUAVDescriptor, GLOBAL_VkAllocationCallbacks);
-    cgpu_free_aligned(TV);
+    cgpu_free_aligned(TV, _Alignof(CGPUTextureView_Vulkan));
 }
 
 bool cgpu_try_bind_aliasing_texture_vulkan(CGPUDeviceId device, const struct CGPUTextureAliasingBindDescriptor* desc)
@@ -952,7 +952,7 @@ void cgpu_free_sampler_vulkan(CGPUSamplerId sampler)
     CGPUSampler_Vulkan* S = (CGPUSampler_Vulkan*)sampler;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)sampler->device;
     D->mVkDeviceTable.vkDestroySampler(D->pVkDevice, S->pVkSampler, GLOBAL_VkAllocationCallbacks);
-    cgpu_free_aligned(S);
+    cgpu_free_aligned(S, _Alignof(CGPUSampler_Vulkan));
 }
 
 // Shader APIs
