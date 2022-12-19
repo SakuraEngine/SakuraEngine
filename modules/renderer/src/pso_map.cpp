@@ -232,6 +232,8 @@ struct PSOMapImpl : public skr_pso_map_t
 
     virtual ESkrPSOMapPSOStatus install_pso(skr_pso_map_key_id key) SKR_NOEXCEPT override
     {
+        if (!key) return SKR_PSO_MAP_PSO_STATUS_FAILED;
+        
         auto found = sets.find(key->descriptor);
         const auto pso_rc = skr_atomic32_load_relaxed(&key->pso_rc);
         skr_atomic32_add_relaxed(&key->pso_rc, 1);
@@ -274,6 +276,8 @@ struct PSOMapImpl : public skr_pso_map_t
 
     virtual CGPURenderPipelineId find_pso(skr_pso_map_key_id key) SKR_NOEXCEPT override
     {
+        if (!key) return nullptr;
+
         auto found = sets.find(key->descriptor);
         if (found != sets.end())
         {
