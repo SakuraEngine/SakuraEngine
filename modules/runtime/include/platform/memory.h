@@ -177,6 +177,26 @@ struct SkrTracedNew
     }
 
     template<class T, class... TArgs>
+    [[nodiscard]] FORCEINLINE T* NewZeroed(TArgs&&... params)
+    {
+        const std::string_view name = skr::demangle<T>();
+        TracyMessage(name.data(), name.size());
+        void* pMemory = SkrCallocAlignedWithCZone(1, sizeof(T), alignof(T), sourcelocation.data());
+        SKR_ASSERT(pMemory != nullptr);
+        return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
+    }
+
+    template<class T>
+    [[nodiscard]] FORCEINLINE T* NewZeroed()
+    {
+        const std::string_view name = skr::demangle<T>();
+        TracyMessage(name.data(), name.size());
+        void* pMemory = SkrCallocAlignedWithCZone(1, sizeof(T), alignof(T), sourcelocation.data());
+        SKR_ASSERT(pMemory != nullptr);
+        return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
+    }
+
+    template<class T, class... TArgs>
     [[nodiscard]] FORCEINLINE T* NewSized(size_t size, TArgs&&... params)
     {
         const std::string_view name = skr::demangle<T>();
@@ -220,6 +240,7 @@ struct SkrTracedNew
     }
 };
 #define SkrNew SkrTracedNew{ SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) }.New
+#define SkrNewZeroed SkrTracedNew{ SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) }.NewZeroed
 #define SkrNewSized SkrTracedNew{ SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) }.NewSized
 #define SkrNewLambda SkrTracedNew{ SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) }.NewLambda
 #define SkrDelete SkrTracedNew{ SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) }.Delete
@@ -240,6 +261,25 @@ template <typename T>
     ZoneScopedN("SkrNew");
     
     void* pMemory = sakura_new_aligned(sizeof(T), alignof(T));
+    SKR_ASSERT(pMemory != nullptr);
+    return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
+}
+
+[[nodiscard]] FORCEINLINE T* SkrNewZeroed(TArgs&&... params)
+{
+    ZoneScopedN("SkrNew");
+
+    void* pMemory = sakura_calloc_aligned(1, sizeof(T), alignof(T));
+    SKR_ASSERT(pMemory != nullptr);
+    return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
+}
+
+template <typename T>
+[[nodiscard]] FORCEINLINE T* SkrNewZeroed()
+{
+    ZoneScopedN("SkrNew");
+    
+    void* pMemory = sakura_calloc_aligned(1, sizeof(T), alignof(T));
     SKR_ASSERT(pMemory != nullptr);
     return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
 }
