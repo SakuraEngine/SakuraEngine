@@ -12,7 +12,7 @@ RUNTIME_EXTERN_C RUNTIME_API void _sakura_free_aligned(void* p, size_t alignment
 RUNTIME_EXTERN_C RUNTIME_API void* _sakura_realloc(void* p, size_t newsize);
 
 #if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
-#include "string.h"
+#include "string.h"  // memset
 #include "tracy/TracyC.h"
 
 #define SKR_ALLOC_TRACY_MARKER_COLOR 0xff0000
@@ -140,6 +140,7 @@ FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line)
 
 #if defined(__cplusplus)
 #include "platform/debug.h"
+#include "string.h"    // memset
 #include <cstddef>     // std::size_t
 #include <cstdint>     // PTRDIFF_MAX
 #if (__cplusplus >= 201103L) || (_MSC_VER > 1900)  // C++11
