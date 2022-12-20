@@ -36,7 +36,7 @@ void skr_init_skin_component(skr_render_skin_comp_t* component, skr_skeleton_res
     }
 }
 
-void skr_init_anim_component(skr_render_anim_comp_t* component, skr_mesh_resource_t* mesh, skr_skeleton_resource_t* skeleton)
+void skr_init_anim_component(skr_render_anim_comp_t* component, const skr_mesh_resource_t* mesh, skr_skeleton_resource_t* skeleton)
 {
     component->buffers.resize(1);
     component->vbs.resize(1);
@@ -47,9 +47,9 @@ void skr_init_anim_component(skr_render_anim_comp_t* component, skr_mesh_resourc
     size_t buffer_size = 0, position_offset = 0, normal_offset = 0, tangent_offset = 0;
     for (size_t i = 0; i < mesh->primitives.size(); ++i)
     {
-        auto& prim = mesh->primitives[i];
+        const auto& prim = mesh->primitives[i];
         auto vertex_count = prim.vertex_count;
-        skr_vertex_buffer_entry_t *joints_buffer = nullptr, *weights_buffer = nullptr, *positions_buffer = nullptr, *normals_buffer = nullptr, *tangents_buffer = nullptr;
+        const skr_vertex_buffer_entry_t *joints_buffer = nullptr, *weights_buffer = nullptr, *positions_buffer = nullptr, *normals_buffer = nullptr, *tangents_buffer = nullptr;
         for (auto& view : prim.vertex_buffers)
         {
             if (view.attribute == SKR_VERT_ATTRIB_JOINTS)
@@ -101,7 +101,7 @@ void skr_init_anim_component(skr_render_anim_comp_t* component, skr_mesh_resourc
     component->buffers[0].size = buffer_size;
 }
 
-void skr_cpu_skin(skr_render_skin_comp_t* skin, skr_render_anim_comp_t* anim, skr_mesh_resource_t* mesh)
+void skr_cpu_skin(skr_render_skin_comp_t* skin, skr_render_anim_comp_t* anim, const skr_mesh_resource_t* mesh)
 {
     auto skin_resource = skin->skin_resource.get_resolved();
     for (size_t i = 0; i < mesh->primitives.size(); ++i)
@@ -109,7 +109,7 @@ void skr_cpu_skin(skr_render_skin_comp_t* skin, skr_render_anim_comp_t* anim, sk
         ozz::geometry::SkinningJob job;
         auto& prim = mesh->primitives[i];
         auto vertex_count = prim.vertex_count;
-        skr_vertex_buffer_entry_t *joints_buffer = nullptr, *weights_buffer = nullptr, *positions_buffer = nullptr, *normals_buffer = nullptr, *tangents_buffer = nullptr;
+        const skr_vertex_buffer_entry_t *joints_buffer = nullptr, *weights_buffer = nullptr, *positions_buffer = nullptr, *normals_buffer = nullptr, *tangents_buffer = nullptr;
         for (auto& view : prim.vertex_buffers)
         {
             if (view.attribute == SKR_VERT_ATTRIB_JOINTS)
@@ -125,7 +125,7 @@ void skr_cpu_skin(skr_render_skin_comp_t* skin, skr_render_anim_comp_t* anim, sk
         }
         SKR_ASSERT(joints_buffer && weights_buffer);
 
-        auto buffer_span = [&](skr_vertex_buffer_entry_t* buffer, auto t, uint32_t comps = 1) {
+        auto buffer_span = [&](const skr_vertex_buffer_entry_t* buffer, auto t, uint32_t comps = 1) {
             using T = typename decltype(t)::type;
             SKR_ASSERT(buffer->stride == sizeof(T) * comps);
             auto offset = mesh->bins[buffer->buffer_index].bin.bytes + buffer->offset;

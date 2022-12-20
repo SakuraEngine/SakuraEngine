@@ -54,29 +54,10 @@ struct RenderPassForward : public IPrimitiveRenderPass {
             auto sig = "[in]skr_render_mesh_comp_t, [in]skr_render_anim_comp_t";
             *anim_query = dualQ_from_literal(storage, sig);
         }
-        auto updateSkinJob = SkrNewLambda(
-            [&](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
-            auto meshes = dual::get_owned_rw<skr_render_mesh_comp_t>(view);
-            auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(view);
-            auto skins = dual::get_owned_rw<skr_render_skin_comp_t>(view);
-            
-            for (uint32_t i = 0; i < view->count; i++)
-            {
-                auto mesh_resource = meshes[i].mesh_resource.get_resolved();
-                if(!mesh_resource)
-                    continue;
-                if (!skins[i].joint_remaps.empty() && !anims[i].buffers.empty())
-                {
-                    ZoneScopedN("CPU Skin");
-
-                    skr_cpu_skin(skins + i, anims + i, mesh_resource);
-                }
-            }
-        });
 
         auto ensureBuffers = [&](dual_chunk_view_t* r_cv) {
             const auto cgpu_device = renderer->get_render_device()->get_cgpu_device();
-            auto meshes = dual::get_owned_rw<skr_render_mesh_comp_t>(r_cv);
+            const auto meshes = dual::get_component_ro<skr_render_mesh_comp_t>(r_cv);
             auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
             auto skins = dual::get_owned_rw<skr_render_skin_comp_t>(r_cv);
             auto skels = dual::get_owned_rw<skr_render_skel_comp_t>(r_cv);
@@ -292,17 +273,40 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                 });   
             }
         }
-        // wait last skin dispatch
-        if (pSkinCounter)
-            dualJ_wait_counter(*pSkinCounter, true);
-        else
-            *pSkinCounter = dualJ_create_counter();
-            
-        // late skin dispatch for next frame
-        dualJ_schedule_ecs(*skin_query, 4, DUAL_LAMBDA_POINTER(updateSkinJob), nullptr, &*pSkinCounter);
+        {
+            ZoneScopedN("SkinSystem");
+
+            // wait last skin dispatch
+            if (pSkinCounter)
+                dualJ_wait_counter(*pSkinCounter, true);
+            else
+                *pSkinCounter = dualJ_create_counter();
+                
+            // skin dispatch for the frame
+            auto cpuSkinJob = SkrNewLambda(
+                [&](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+                const auto meshes = dual::get_component_ro<skr_render_mesh_comp_t>(view);
+                auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(view);
+                auto skins = dual::get_owned_rw<skr_render_skin_comp_t>(view);
+                
+                for (uint32_t i = 0; i < view->count; i++)
+                {
+                    auto mesh_resource = meshes[i].mesh_resource.get_resolved();
+                    if(!mesh_resource)
+                        continue;
+                    if (!skins[i].joint_remaps.empty() && !anims[i].buffers.empty())
+                    {
+                        ZoneScopedN("CPU Skin");
+
+                        skr_cpu_skin(skins + i, anims + i, mesh_resource);
+                    }
+                }
+            });
+            dualJ_schedule_ecs(*skin_query, 4, DUAL_LAMBDA_POINTER(cpuSkinJob), nullptr, &*pSkinCounter);
+        }
     }
     dual::counter_t pSkinCounter;
-
+    
     void post_update(const skr_primitive_pass_context_t* context) override
     {
 
@@ -577,8 +581,11 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         uint32_t c = 0;
         auto counterF = [&](dual_chunk_view_t* r_cv) {
             ZoneScopedN("PreCalculateDrawCallCount");
-          
-            auto meshes = dual::get_owned_rw<skr_render_mesh_comp_t>(r_cv);
+            const skr_render_mesh_comp_t* meshes = nullptr;
+            {
+                ZoneScopedN("FetchRenderMeshes");
+                meshes = dual::get_component_ro<skr_render_mesh_comp_t>(r_cv);
+            }
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
                 auto status = meshes[i].mesh_resource.get_status();
@@ -595,6 +602,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             }
         };
         dualQ_get_views(mesh_query, DUAL_LAMBDA(counterF));
+
         model_matrices.clear();
         push_constants.clear();
         mesh_drawcalls.clear();
@@ -604,31 +612,32 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         // draw static meshess
         {
         auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
-            ZoneScopedN("ProduceAll");
-
             uint32_t r_idx = 0;
             uint32_t dc_idx = 0;
 
             auto identities = (forward_effect_identity_t*)dualV_get_owned_rw(r_cv, identity_type);
             auto unbatched_g_ents = (dual_entity_t*)identities;
-            auto meshes = dual::get_owned_rw<skr_render_mesh_comp_t>(r_cv);
-            auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
+            const auto meshes = dual::get_component_ro<skr_render_mesh_comp_t>(r_cv);
+            const auto anims = dual::get_component_ro<skr_render_anim_comp_t>(r_cv);
             if (unbatched_g_ents)
             {
                 auto g_batch_callback = [&](dual_chunk_view_t* g_cv) {
                     ZoneScopedN("BatchedEnts");
 
                     //SKR_LOG_DEBUG("batch: %d -> %d", g_cv->start, g_cv->count);
-                    auto translations = dual::get_owned_rw<skr_translation_comp_t>(g_cv);
-                    auto rotations = dual::get_owned_rw<skr_rotation_comp_t>(g_cv);(void)rotations;
-                    auto scales = dual::get_owned_rw<skr_scale_comp_t>(g_cv);
+                    const auto translations = dual::get_component_ro<skr_translation_comp_t>(g_cv);
+                    const auto rotations = dual::get_component_ro<skr_rotation_comp_t>(g_cv);(void)rotations;
+                    const auto scales = dual::get_component_ro<skr_scale_comp_t>(g_cv);
                     {
-                        ZoneScopedN("WaitParallelFor");
-
+                        ZoneScopedN("ComputeModelMatrices");
+#ifdef NDEBUG
+                        const size_t batch_size = 256u;
+#else
                         const size_t batch_size = 64u;
+#endif
                         skr::parallel_for(translations, translations + g_cv->count, batch_size, 
                         [translations, rotations, scales, this] (auto&& begin, auto&& end){
-                            ZoneScopedN("ParallelModelMatrix");
+                            ZoneScopedN("ModelMatrixJob");
                         
                             const auto base_cursor = begin - translations;
                             uint32_t i = 0;
@@ -655,7 +664,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                                     model_matrix = *(skr_float4x4_t*)&matrix;
                                 }
                             }
-                        });
+                        }, 9u); // if we are under 8 * 64/256 ents, use inplace sync compute
                     }
 
                     {
