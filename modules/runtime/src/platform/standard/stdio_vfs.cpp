@@ -4,6 +4,8 @@
 #include <platform/filesystem.hpp>
 #include "platform/memory.h"
 
+#include "tracy/Tracy.hpp"
+
 struct skr_vfile_stdio_t : public skr_vfile_t {
     FILE* fh;
 };
@@ -11,22 +13,29 @@ struct skr_vfile_stdio_t : public skr_vfile_t {
 skr_vfile_t* skr_llfio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mode, ESkrFileCreation creation) SKR_NOEXCEPT
 {
     skr::filesystem::path p;
-    if(auto in_p = skr::filesystem::path(path); in_p.is_absolute())
     {
-        p = in_p;
-    } 
-    else
-    {
-        p = fs->mount_dir ? fs->mount_dir : path;
-        if(fs->mount_dir)
+        ZoneScopedN("CalculatePath");
+        if(auto in_p = skr::filesystem::path(path); in_p.is_absolute())
         {
-            p /= path;
+            p = in_p;
+        } 
+        else
+        {
+            p = fs->mount_dir ? fs->mount_dir : path;
+            if(fs->mount_dir)
+            {
+                p /= path;
+            }
         }
     }
     auto filePath = p.u8string();
     const auto* filePathStr = filePath.c_str();
     const char8_t* modeStr = skr_vfs_filemode_to_string(mode);
-    FILE* cfile = fopen(filePathStr, modeStr);
+    FILE* cfile = nullptr;
+    {
+        ZoneScopedN("stdio::fopen");
+        cfile = fopen(filePathStr, modeStr);
+    }
     std::error_code ec = {};
     // SKR_LOG_TRACE("CurrentPath: %s", skr::filesystem::current_path(ec).u8string().c_str());
     // Might fail to open the file for read+write if file doesn't exist
@@ -34,6 +43,8 @@ skr_vfile_t* skr_llfio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mo
     {
         if ((mode & SKR_FM_READ_WRITE) == SKR_FM_READ_WRITE)
         {
+            ZoneScopedN("RetryOpenRW");
+
             modeStr = skr_vfs_overwirte_filemode_to_string(mode);
             cfile = fopen(filePath.c_str(), modeStr);
         }
@@ -43,11 +54,14 @@ skr_vfile_t* skr_llfio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mo
         SKR_LOG_ERROR("Error opening file: %s -- %s (error: %s)", filePath.c_str(), modeStr, strerror(errno));
         return nullptr;
     }
-    skr_vfile_stdio_t* vfile = SkrNew<skr_vfile_stdio_t>();
-    vfile->mode = mode;
-    vfile->fs = fs;
-    vfile->fh = cfile;
-    return vfile;
+    {
+        ZoneScopedN("WrapHandle");
+        skr_vfile_stdio_t* vfile = SkrNew<skr_vfile_stdio_t>();
+        vfile->mode = mode;
+        vfile->fs = fs;
+        vfile->fh = cfile;
+        return vfile;
+    }
 }
 
 size_t skr_llfio_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_t byte_count) SKR_NOEXCEPT
@@ -55,8 +69,15 @@ size_t skr_llfio_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_
     if (file)
     {
         auto vfile = (skr_vfile_stdio_t*)file;
-        fseek(vfile->fh, (long)offset, SEEK_SET); // seek to offset of file
-        size_t bytesRead = fread(out_buffer, 1, byte_count, vfile->fh);
+        {
+            ZoneScopedN("stdio::fseek(offset)");
+            fseek(vfile->fh, (long)offset, SEEK_SET); // seek to offset of file
+        }
+        size_t bytesRead = 0;
+        {
+            ZoneScopedN("stdio::fread");
+            bytesRead = fread(out_buffer, 1, byte_count, vfile->fh);
+        }
         if (bytesRead != byte_count)
         {
             if (ferror(vfile->fh) != 0)
@@ -64,7 +85,10 @@ size_t skr_llfio_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_
                 SKR_LOG_WARN("Error reading from system FileStream: %s", strerror(errno));
             }
         }
-        fseek(vfile->fh, 0, SEEK_SET); // seek back to beginning of file
+        {
+            ZoneScopedN("stdio::fseek(back)");
+            fseek(vfile->fh, 0, SEEK_SET); // seek back to beginning of file
+        }
         return bytesRead;
     }
     return -1;

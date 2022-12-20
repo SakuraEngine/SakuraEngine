@@ -283,7 +283,10 @@ struct TaskContainer
             TracyCZone(requestZone, 1);
             TracyCZoneName(requestZone, "ioRequest(Lockless)", strlen("ioRequest(Lockless)"));
             back.setTaskStatus(SKR_ASYNC_IO_STATUS_ENQUEUED);
-            task_requests.enqueue(back);
+            {
+                ZoneScopedN("EnqueueLockless");
+                task_requests.enqueue(back);
+            }
             skr_atomic32_store_release(&back.request->request_cancel, 0);
             TracyCZoneEnd(requestZone);
         }
@@ -318,7 +321,13 @@ struct TaskContainer
 
     const bool isLockless = false;
     SMutex taskMutex;
-    moodycamel::ConcurrentQueue<Task> task_requests;
+    struct IOTaskConcurrentQueueTraits : public moodycamel::ConcurrentQueueDefaultTraits
+    {
+        static const bool RECYCLE_ALLOCATED_BLOCKS = true;
+        static inline void* malloc(size_t size) { return sakura_malloc(size); }
+    	static inline void free(void* ptr) { return sakura_free(ptr); }
+    };
+    moodycamel::ConcurrentQueue<Task, IOTaskConcurrentQueueTraits> task_requests;
     eastl::deque<Task> tasks;
 };
 
