@@ -14,6 +14,7 @@ void skr_render_mesh_initialize(skr_render_mesh_id render_mesh, skr_mesh_resourc
 {
     uint32_t ibv_c = 0;
     uint32_t vbv_c = 0;
+    // 1. calculate the number of index buffer views and vertex buffer views
     for (uint32_t i = 0; i < mesh_resource->sections.size(); i++)
     {
         const auto& section = mesh_resource->sections[i];
@@ -24,9 +25,11 @@ void skr_render_mesh_initialize(skr_render_mesh_id render_mesh, skr_mesh_resourc
             ibv_c++;
         }
     }
+    // 2. do early reserve
     render_mesh->mesh_resource_id = mesh_resource;
     render_mesh->index_buffer_views.reserve(ibv_c);
     render_mesh->vertex_buffer_views.reserve(vbv_c);
+    // 3. fill sections
     for (uint32_t i = 0; i < mesh_resource->sections.size(); i++)
     {
         const auto& section = mesh_resource->sections[i];
@@ -38,6 +41,7 @@ void skr_render_mesh_initialize(skr_render_mesh_id render_mesh, skr_mesh_resourc
             auto& prim = mesh_resource->primitives[prim_idx];
             auto& mesh_ibv = render_mesh->index_buffer_views.emplace_back();
             auto vbv_start = render_mesh->vertex_buffer_views.size();
+            // 3.1 fill vbvs
             for (uint32_t j = 0; j < prim.vertex_buffers.size(); j++)
             {
                 auto& mesh_vbv = render_mesh->vertex_buffer_views.emplace_back();
@@ -46,6 +50,7 @@ void skr_render_mesh_initialize(skr_render_mesh_id render_mesh, skr_mesh_resourc
                 mesh_vbv.offset = prim.vertex_buffers[j].offset;
                 mesh_vbv.stride = prim.vertex_buffers[j].stride;
             }
+            // 3.2 fill ibv
             const auto buffer_index = prim.index_buffer.buffer_index;
             mesh_ibv.buffer = render_mesh->buffers[buffer_index];
             mesh_ibv.offset = prim.index_buffer.index_offset;
@@ -66,4 +71,10 @@ void skr_render_mesh_free(skr_render_mesh_id render_mesh)
         cgpu_free_buffer(buffer);
     }
     SkrDelete(render_mesh);
+}
+
+skr_primitive_draw_packet_t IMeshRenderEffect::produce_draw_packets(const skr_primitive_draw_context_t* context) SKR_NOEXCEPT
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+    return {};
 }

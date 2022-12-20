@@ -32,6 +32,7 @@
 
 #include "resource/local_resource_registry.hpp"
 #include "SkrRenderer/shader_map.h"
+#include "SkrRenderer/render_viewport.h"
 #include "SkrRenderer/resources/texture_resource.h"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRenderer/resources/shader_resource.hpp"
@@ -384,9 +385,9 @@ void create_test_scene(SRendererId renderer)
     // allocate 1 player entity
     auto playerT_builder = make_zeroed<dual::type_builder_t>();
     playerT_builder
-    .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
-    .with<skr_movement_comp_t>()
-    .with<skr_camera_comp_t>();
+        .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
+        .with<skr_movement_comp_t>()
+        .with<skr_camera_comp_t>();
     auto playerT = make_zeroed<dual_entity_type_t>();
     playerT.type = playerT_builder.build();
     dualS_allocate_type(renderer->get_dual_storage(), &playerT, 1, DUAL_LAMBDA(primSetup));
@@ -581,12 +582,19 @@ int SGameModule::main_module_exec(int argc, char** argv)
     res::TResourceHandle<skr_scene_resource_t> scene_handle = skr::guid::make_guid_unsafe("FB84A5BD-2FD2-46A2-ABF4-2D2610CFDAD9");
     scene_handle.resolve(true, 0, SKR_REQUESTER_SYSTEM);
 
+    // Viewport
+    {
+        auto viewport_manager = game_renderer->get_viewport_manager();
+        viewport_manager->register_viewport("main_viewport");
+    }
+    
     // Time
     SHiresTimer tick_timer;
     int64_t elapsed_us = 0;
     int64_t elapsed_frame = 0;
     int64_t fps = 60;
     skr_init_hires_timer(&tick_timer);
+
     // loop
     bool quit = false;
     dual_query_t* moveQuery;
@@ -672,19 +680,24 @@ int SGameModule::main_module_exec(int argc, char** argv)
             elapsed_frame = 0;
             elapsed_us = 0;
         }
+        
         // Update resources
         auto resource_system = skr::resource::GetResourceSystem();
         resource_system->Update();
+
         // Update camera
         auto cameraUpdate = [=](dual_chunk_view_t* view) {
             auto cameras = dual::get_owned_rw<skr_camera_comp_t>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {
+                cameras[i].renderer = game_renderer;
+                cameras[i].viewport_id = 0u; // TODO: viewport id
                 cameras[i].viewport_width = swapchain->back_buffers[0]->width;
                 cameras[i].viewport_height = swapchain->back_buffers[0]->height;
             }
         };
         dualQ_get_views(cameraQuery, DUAL_LAMBDA(cameraUpdate));
+
         // Input
         if (bUseInputSystem)
         {
@@ -731,6 +744,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 lua_pop(L, 1);
             }
         }
+
         // move
         // [has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_scale_comp_t, [in]skr_index_comp_t, !skr_camera_comp_t
         if (bUseJob)
@@ -764,6 +778,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             });
             dualJ_schedule_ecs(moveQuery, 1024, DUAL_LAMBDA_POINTER(moveJob), nullptr, nullptr);
         }
+
         // [inout]skr_render_anim_comp_t, [in]game::anim_state_t, [in]skr_render_skel_comp_t
         {
             ZoneScopedN("AnimSystem");
@@ -799,6 +814,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             });
             dualJ_schedule_ecs(animQuery, 128, DUAL_LAMBDA_POINTER(animJob), nullptr, nullptr);
         }
+
         // [has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_camera_comp_t
         if (bUseJob)
         {
@@ -832,10 +848,17 @@ int SGameModule::main_module_exec(int argc, char** argv)
             });
             dualJ_schedule_ecs(cameraQuery, 128, DUAL_LAMBDA_POINTER(playerJob), nullptr, nullptr);
         }
+
+        // sync all jobs here
         {
             ZoneScopedN("DualJSync");
             dualJ_wait_all();
         }
+
+        // Resolve camera to viewports
+        auto viewport_manager = game_renderer->get_viewport_manager();
+        skr_resolve_cameras_to_viewport(viewport_manager, game_world);
+
         {
             ZoneScopedN("RegisterPasses");
             game_register_render_effects(game_renderer, renderGraph);

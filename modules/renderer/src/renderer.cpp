@@ -4,6 +4,8 @@
 #include "ecs/array.hpp"
 #include "ecs/callback.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
+
+#include "SkrRenderer/render_viewport.h"
 #include "SkrRenderer/render_effect.h"
 #include "SkrRenderer/skr_renderer.h"
 
@@ -68,7 +70,7 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
     SkrRendererImpl(SRenderDeviceId render_device, dual_storage_t* storage) SKR_NOEXCEPT
         : render_device(render_device), storage(storage)
     {
-
+        viewport_manager = SViewportManager::Create(storage);
     }
 
     ~SkrRendererImpl() override
@@ -77,6 +79,7 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
         {
             if (proxy) SkrDelete(proxy);
         }
+        SViewportManager::Free(viewport_manager);
     }
 
     SRenderDeviceId get_render_device() const override
@@ -143,6 +146,14 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
         passes.clear();
         passes_map.clear();
     }
+
+    SViewportManager* get_viewport_manager() const override
+    {
+        return viewport_manager;
+    }
+
+    SViewportManager* viewport_manager = nullptr;
+
     template<typename T>
     using FlatStringMap = skr::flat_hash_map<skr::string, T, skr::hash<skr::string>>;
 

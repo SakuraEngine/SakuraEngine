@@ -11,6 +11,7 @@
 #include "SkrImGui/skr_imgui_rg.h"
 #include "SkrScene/scene.h"
 #include "SkrRenderer/skr_renderer.h"
+#include "SkrRenderer/render_viewport.h"
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRenderer/render_effect.h"
@@ -222,22 +223,18 @@ struct RenderPassForward : public IPrimitiveRenderPass {
 
     }
 
-    struct DrawCallListData
-    {
-        skr_float4x4_t view_projection;
-        uint32_t viewport_width;
-        uint32_t viewport_height;
-    };
-
     ECGPUShadingRate shading_rate = CGPU_SHADING_RATE_FULL;
     void execute(const skr_primitive_pass_context_t* context, skr_primitive_draw_list_view_t drawcalls) override
     {
         auto renderGraph = context->render_graph;
-        const auto list_data = *(DrawCallListData*)drawcalls.user_data;
+        // TODO: multi-viewport
+        auto viewport_manager = context->renderer->get_viewport_manager();
+        auto viewport = viewport_manager->find_viewport(0u); // the main viewport
+
         auto depth = renderGraph->create_texture(
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
                 builder.set_name("depth")
-                    .extent(list_data.viewport_width, list_data.viewport_height)
+                    .extent(viewport->viewport_width, viewport->viewport_height)
                     .format(depth_format)
                     .owns_memory()
                     .allow_depth_stencil();
@@ -316,14 +313,14 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                 [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
                     auto cb = stack.resolve(cbuffer);
                     SKR_ASSERT(cb && "cbuffer not found");
-                    ::memcpy(cb->cpu_mapped_address, &list_data.view_projection, sizeof(list_data.view_projection));
+                    ::memcpy(cb->cpu_mapped_address, &viewport->view_projection, sizeof(viewport->view_projection));
                     cgpu_render_encoder_set_viewport(stack.encoder,
                         0.0f, 0.0f,
-                        (float)list_data.viewport_width, (float)list_data.viewport_height,
+                        (float)viewport->viewport_width, (float)viewport->viewport_height,
                         0.f, 1.f);
                     cgpu_render_encoder_set_scissor(stack.encoder,
                         0, 0, 
-                        list_data.viewport_width, list_data.viewport_height);
+                        viewport->viewport_width, viewport->viewport_height);
                     
                     for (uint32_t i = 0; i < drawcalls.count; i++)
                     {
@@ -411,14 +408,12 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         // initialize queries
         mesh_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr_render_mesh_comp_t");
         draw_mesh_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr_render_mesh_comp_t, [out]skr_render_group_t");
-        camera_query = dualQ_from_literal(storage, "[in]skr_camera_comp_t");
     }
 
     void release_queries()
     {
         dualQ_release(mesh_query);
         dualQ_release(draw_mesh_query);
-        dualQ_release(camera_query);
     }
 
     void on_unregister(SRendererId renderer, dual_storage_t* storage) override
@@ -504,40 +499,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
         mesh_drawcalls.clear();
         push_constants.reserve(c);
         mesh_drawcalls.reserve(c);
-        auto view = rtm::look_at_matrix(
-            { 0.f, -135.f, 55.f, 1.f } /*eye*/, 
-            { 0.f, 0.f, 50.f, 1.f } /*at*/,
-            { 0.f, 0.f, 1.f, 0.f } /*up*/
-        );
-        auto cameraSetup = [&](dual_chunk_view_t* g_cv) {
-            ZoneScopedN("CameraSetup");
-
-            auto cameras = dual::get_owned_rw<skr_camera_comp_t>(g_cv);
-            auto camera_transforms = dual::get_owned_rw<skr_translation_comp_t>(g_cv);
-            SKR_ASSERT(g_cv->count <= 1);
-            if (cameras)
-            {
-                forward_pass_data.viewport_width = cameras->viewport_width;
-                forward_pass_data.viewport_height = cameras->viewport_height;
-
-                const rtm::vector4f eye = rtm::vector_load3((const uint8_t*)&camera_transforms->value);
-                const rtm::vector4f camera_dir = rtm::vector_set(0.f, 1.f, 0.f, 0.f);
-                const rtm::vector4f focus_pos = rtm::vector_add(eye, camera_dir);
-                view = rtm::look_at_matrix(
-                    eye /*eye*/, 
-                    focus_pos /*at*/,
-                    { 0.f, 0.f, 1.f } /*up*/
-                );
-                auto proj = rtm::perspective_fov(                    
-                    3.1415926f / 2.f, 
-                    (float)forward_pass_data.viewport_width / (float)forward_pass_data.viewport_height, 
-                    1.f, 1000.f);
-
-                auto result2 = rtm::matrix_mul(view, proj);
-                forward_pass_data.view_projection = *(skr_float4x4_t*)&result2;
-            }
-        };
-        dualQ_get_views(camera_query, DUAL_LAMBDA(cameraSetup));
         // draw static meshess
         {
         auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
@@ -661,7 +622,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
 
         mesh_draw_list.drawcalls = mesh_drawcalls.data();
         mesh_draw_list.count = (uint32_t)mesh_drawcalls.size();
-        mesh_draw_list.user_data = &forward_pass_data;
         packet.count = 1;
         packet.lists = &mesh_draw_list;
         return packet;
@@ -685,13 +645,11 @@ protected:
     dual_query_t* mesh_query = nullptr;
     dual_query_t* draw_mesh_query = nullptr;
     dual_query_t* draw_skin_query = nullptr;
-    dual_query_t* camera_query = nullptr;
     dual_type_index_t identity_type = {};
     struct PushConstants {
         skr_float4x4_t model;
     };
     eastl::vector<PushConstants> push_constants;
-    RenderPassForward::DrawCallListData forward_pass_data;
 };
 RenderEffectForward* forward_effect = nullptr;
 
@@ -941,7 +899,6 @@ struct RenderEffectForwardSkin : public RenderEffectForward
     {
         mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr_render_mesh_comp_t");
         draw_mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr_render_mesh_comp_t, [out]skr_render_group_t");
-        camera_query = dualQ_from_literal(storage, "[in]skr_camera_comp_t");
         install_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr_render_anim_comp_t, [in]skr_render_skel_comp_t, [in]skr_render_skin_comp_t");
     }
 
@@ -949,7 +906,6 @@ struct RenderEffectForwardSkin : public RenderEffectForward
     {
         dualQ_release(mesh_query);
         dualQ_release(draw_mesh_query);
-        dualQ_release(camera_query);
         dualQ_release(install_query);
     }
 
