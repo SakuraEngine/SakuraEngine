@@ -193,8 +193,6 @@ struct PSOMapImpl : public skr_pso_map_t
         if (auto aux_service = root.aux_service)
         {
             auto sRequest = SPtr<PSORequest>::Create(this, key);
-            auto found = mRequests.find(key);
-            SKR_ASSERT(found == mRequests.end());
             mRequests.emplace(key, sRequest);
 
             auto aux_task = make_zeroed<skr_service_task_t>();
@@ -284,21 +282,19 @@ struct PSOMapImpl : public skr_pso_map_t
     {
         if (!key) return nullptr;
 
-        auto found = sets.find(key->descriptor);
-        if (found != sets.end())
+        const auto pso_status = skr_atomic32_load_relaxed(&key->pso_status);
+        if (pso_status == SKR_PSO_MAP_PSO_STATUS_INSTALLED)
         {
-            const auto pso_status = skr_atomic32_load_relaxed(&found->get()->pso_status);
-            if (pso_status == SKR_PSO_MAP_PSO_STATUS_INSTALLED)
-            {
-                // clearFinishedRequests();
-                return found->get()->pso;
-            }
+            // clearFinishedRequests();
+            return key->pso;
         }
         return nullptr;
     }
 
     virtual bool uninstall_pso(skr_pso_map_key_id key) SKR_NOEXCEPT override
     {
+        if (!key) return false;
+
         auto found = sets.find(key->descriptor);
         if (found != sets.end())
         {
