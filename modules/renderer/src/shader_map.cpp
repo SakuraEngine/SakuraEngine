@@ -171,7 +171,7 @@ ESkrShaderMapShaderStatus ShaderMapImpl::install_shader_from_vfs(const skr_platf
     auto ram_texture_io = make_zeroed<skr_ram_io_t>();
     ram_texture_io.path = sRequest->bytes_uri.c_str();
     ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
-        ZoneScopedN("LoadShaderBytes");
+        ZoneScopedN("CreateShaderFromBytes");
         
         auto sRequest = (ShaderRequest*)data;
         auto factory = sRequest->factory;
