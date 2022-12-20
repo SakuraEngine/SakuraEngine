@@ -273,39 +273,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                 });   
             }
         }
-        {
-            ZoneScopedN("SkinSystem");
-
-            // wait last skin dispatch
-            if (pSkinCounter)
-                dualJ_wait_counter(*pSkinCounter, true);
-            else
-                *pSkinCounter = dualJ_create_counter();
-                
-            // skin dispatch for the frame
-            auto cpuSkinJob = SkrNewLambda(
-                [&](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
-                const auto meshes = dual::get_component_ro<skr_render_mesh_comp_t>(view);
-                auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(view);
-                auto skins = dual::get_owned_rw<skr_render_skin_comp_t>(view);
-                
-                for (uint32_t i = 0; i < view->count; i++)
-                {
-                    auto mesh_resource = meshes[i].mesh_resource.get_resolved();
-                    if(!mesh_resource)
-                        continue;
-                    if (!skins[i].joint_remaps.empty() && !anims[i].buffers.empty())
-                    {
-                        ZoneScopedN("CPU Skin");
-
-                        skr_cpu_skin(skins + i, anims + i, mesh_resource);
-                    }
-                }
-            });
-            dualJ_schedule_ecs(*skin_query, 4, DUAL_LAMBDA_POINTER(cpuSkinJob), nullptr, &*pSkinCounter);
-        }
     }
-    dual::counter_t pSkinCounter;
     
     void post_update(const skr_primitive_pass_context_t* context) override
     {
