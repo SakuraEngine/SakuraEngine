@@ -95,51 +95,58 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
     void render(skr::render_graph::RenderGraph* render_graph) override
     {
         // produce draw calls
-        for (auto& pass : passes)
         {
-            draw_packets[pass->identity()].clear();
-            // used out
-            for (auto& processor : processors)
+            ZoneScopedN("ForeachProcessors(Sync)");
+            for (auto& pass : passes)
             {
-                if (pass && processor)
+                draw_packets[pass->identity()].clear();
+                // used out
+                for (auto& processor : processors)
                 {
-                    ZoneScopedN("ProduceDrawPacket");
+                    if (pass && processor)
+                    {
+                        ZoneScopedN("ProduceDrawPacket");
 
-                    skr_primitive_draw_context_t draw_context = {};
-                    draw_context.renderer = this;
-                    draw_context.render_graph = render_graph;
-                    draw_context.pass = pass;
-                    draw_context.storage = storage;
+                        skr_primitive_draw_context_t draw_context = {};
+                        draw_context.renderer = this;
+                        draw_context.render_graph = render_graph;
+                        draw_context.pass = pass;
+                        draw_context.storage = storage;
 
-                    auto packet = processor->produce_draw_packets(&draw_context);
-                    draw_packets[pass->identity()].emplace_back(packet);
+                        auto packet = processor->produce_draw_packets(&draw_context);
+                        draw_packets[pass->identity()].emplace_back(packet);
+                    }
                 }
             }
         }
+
         // execute draw calls
-        for (auto& pass : passes)
         {
-            if (pass)
+            ZoneScopedN("ForeachPasses(Sync)");
+            for (auto& pass : passes)
             {
-                skr_primitive_pass_context_t pass_context = {};
-                pass_context.renderer = this;
-                pass_context.render_graph = render_graph;
-                pass_context.storage = storage;
-
-                pass->on_update(&pass_context);
-
-                auto& pass_draw_packets = draw_packets[pass->identity()];
-                for (auto pass_draw_packet : pass_draw_packets)
+                if (pass)
                 {
-                    for (uint32_t i = 0; i < pass_draw_packet.count; i++)
+                    skr_primitive_pass_context_t pass_context = {};
+                    pass_context.renderer = this;
+                    pass_context.render_graph = render_graph;
+                    pass_context.storage = storage;
+
+                    pass->on_update(&pass_context);
+
+                    auto& pass_draw_packets = draw_packets[pass->identity()];
+                    for (auto pass_draw_packet : pass_draw_packets)
                     {
-                        ZoneScopedN("PassExecute");
+                        for (uint32_t i = 0; i < pass_draw_packet.count; i++)
+                        {
+                            ZoneScopedN("PassExecute");
 
-                        pass->execute(&pass_context, pass_draw_packet.lists[i]);
+                            pass->execute(&pass_context, pass_draw_packet.lists[i]);
+                        }
                     }
-                }
 
-                pass->post_update(&pass_context);
+                    pass->post_update(&pass_context);
+                }
             }
         }
 

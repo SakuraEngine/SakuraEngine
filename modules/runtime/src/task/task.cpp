@@ -80,6 +80,10 @@ void scheduler_t::initialize(const scheudler_config_t& config)
 {
     marl::Scheduler::Config cfg;
     cfg.workerThread.count = config.numThreads;
+    if (!cfg.workerThread.count)
+    {
+        cfg.allCores();
+    }
     internal = new marl::Scheduler(cfg);
 }
 scheudler_config_t::scheudler_config_t()
