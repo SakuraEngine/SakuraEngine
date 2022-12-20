@@ -393,8 +393,11 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     double sample_count = 1.0;
     uint64_t frame_count = 0;
     uint64_t async_slot_index = 0;
-    skr_primitive_draw_packet_t produce_draw_packets(IPrimitiveRenderPass* pass, dual_storage_t* storage) override
+    skr_primitive_draw_packet_t produce_draw_packets(const skr_primitive_draw_context_t* context) override
     {
+        auto pass = context->pass;
+        auto storage = context->storage;
+        
         frame_count++;
         async_slot_index = frame_count % RG_MAX_FRAME_IN_FLIGHT;
 

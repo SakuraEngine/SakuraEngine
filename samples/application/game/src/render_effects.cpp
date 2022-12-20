@@ -31,12 +31,15 @@ const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT_S8_UINT;
 skr_render_pass_name_t forward_pass_name = "ForwardPass";
 struct RenderPassForward : public IPrimitiveRenderPass {
     dual::query_t skin_query;
-    void on_update(SRendererId renderer, skr::render_graph::RenderGraph* render_graph) override
+    void on_update(const skr_primitive_pass_context_t* context) override
     {
         namespace rg = skr::render_graph;
         ZoneScopedN("ForwardPass Update");
 
-        auto storage = renderer->get_dual_storage();
+        auto renderer = context->renderer;
+        auto render_graph = context->render_graph;
+        auto storage = context->storage;
+
         if (!skin_query)
         {
             auto sig = "[in]skr_render_mesh_comp_t, [in]skr_render_anim_comp_t, [in]skr_render_skel_comp_t, [in]skr_render_skin_comp_t";
@@ -214,7 +217,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
     }
     dual::counter_t pSkinCounter;
 
-    void post_update(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph) override
+    void post_update(const skr_primitive_pass_context_t* context) override
     {
 
     }
@@ -227,8 +230,9 @@ struct RenderPassForward : public IPrimitiveRenderPass {
     };
 
     ECGPUShadingRate shading_rate = CGPU_SHADING_RATE_FULL;
-    void execute(skr::render_graph::RenderGraph* renderGraph, skr_primitive_draw_list_view_t drawcalls) override
+    void execute(const skr_primitive_pass_context_t* context, skr_primitive_draw_list_view_t drawcalls) override
     {
+        auto renderGraph = context->render_graph;
         const auto list_data = *(DrawCallListData*)drawcalls.user_data;
         auto depth = renderGraph->create_texture(
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
@@ -466,8 +470,11 @@ struct RenderEffectForward : public IRenderEffectProcessor {
 
     eastl::vector<skr_primitive_draw_t> mesh_drawcalls;
     skr_primitive_draw_list_view_t mesh_draw_list;
-    skr_primitive_draw_packet_t produce_draw_packets(IPrimitiveRenderPass* pass, dual_storage_t* storage) override
+    skr_primitive_draw_packet_t produce_draw_packets(const skr_primitive_draw_context_t* context) override
     {
+        auto pass = context->pass;
+        auto storage = context->storage;
+
         skr_primitive_draw_packet_t packet = {};
         // query from identity component
         if (strcmp(pass->identity(), forward_pass_name) != 0)
