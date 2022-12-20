@@ -828,7 +828,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
             });
             dualJ_schedule_ecs(animQuery, 128, DUAL_LAMBDA_POINTER(animJob), nullptr, nullptr);
         }
-        /*
         {
             ZoneScopedN("SkinSystem");
 
@@ -860,7 +859,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
             });
             dualJ_schedule_ecs(skinQuery, 4, DUAL_LAMBDA_POINTER(cpuSkinJob), nullptr, &*pSkinCounter);
         }
-        */
         // [has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_camera_comp_t
         if (bUseJob)
         {
