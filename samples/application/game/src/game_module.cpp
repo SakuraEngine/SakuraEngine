@@ -598,15 +598,21 @@ int SGameModule::main_module_exec(int argc, char** argv)
 
     // loop
     bool quit = false;
+    dual::counter_t pSkinCounter;
+    pSkinCounter.counter = nullptr;
+    dual_query_t* skinQuery;
     dual_query_t* moveQuery;
     dual_query_t* cameraQuery;
     dual_query_t* animQuery;
     moveQuery = dualQ_from_literal(game_world,
-    "[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_scale_comp_t, [in]skr_index_comp_t, !skr_camera_comp_t");
+        "[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_scale_comp_t, [in]skr_index_comp_t, !skr_camera_comp_t");
     cameraQuery = dualQ_from_literal(game_world,
-    "[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [inout]skr_camera_comp_t");
+        "[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [inout]skr_camera_comp_t");
     animQuery = dualQ_from_literal(game_world,
-    "[in]skr_render_effect_t, [in]game::anim_state_t, [out]<rand>?skr_render_anim_comp_t, [in]<rand>?skr_render_skel_comp_t");
+        "[in]skr_render_effect_t, [in]game::anim_state_t, [out]<rand>?skr_render_anim_comp_t, [in]<rand>?skr_render_skel_comp_t");
+    skinQuery = dualQ_from_literal(game_world, 
+        "[inout]skr_render_anim_comp_t, [inout]skr_render_skin_comp_t, [in]skr_render_mesh_comp_t");
+
     while (!quit)
     {
         FrameMark;
@@ -754,7 +760,8 @@ int SGameModule::main_module_exec(int argc, char** argv)
             auto timer = clock();
             auto total_sec = (double)timer / CLOCKS_PER_SEC;
 
-            auto moveJob = SkrNewLambda([=](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+            auto moveJob = SkrNewLambda(
+                [=](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
                 ZoneScopedN("MoveJob");
 
                 float lerps[] = { 12.5, 20 };
@@ -778,6 +785,12 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 }
             });
             dualJ_schedule_ecs(moveQuery, 1024, DUAL_LAMBDA_POINTER(moveJob), nullptr, nullptr);
+        }
+
+        // sync all jobs here ?
+        {
+            // ZoneScopedN("DualJSync");
+            // dualJ_wait_all();
         }
 
         // [inout]skr_render_anim_comp_t, [in]game::anim_state_t, [in]skr_render_skel_comp_t
@@ -815,7 +828,39 @@ int SGameModule::main_module_exec(int argc, char** argv)
             });
             dualJ_schedule_ecs(animQuery, 128, DUAL_LAMBDA_POINTER(animJob), nullptr, nullptr);
         }
+        /*
+        {
+            ZoneScopedN("SkinSystem");
 
+            // wait last skin dispatch
+            if (pSkinCounter)
+                dualJ_wait_counter(*pSkinCounter, true);
+            else
+                *pSkinCounter = dualJ_create_counter();
+                
+            // skin dispatch for the frame
+            auto cpuSkinJob = SkrNewLambda(
+                [&](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+                const auto meshes = dual::get_component_ro<skr_render_mesh_comp_t>(view);
+                auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(view);
+                auto skins = dual::get_owned_rw<skr_render_skin_comp_t>(view);
+                
+                for (uint32_t i = 0; i < view->count; i++)
+                {
+                    auto mesh_resource = meshes[i].mesh_resource.get_resolved();
+                    if(!mesh_resource)
+                        continue;
+                    if (!skins[i].joint_remaps.empty() && !anims[i].buffers.empty())
+                    {
+                        ZoneScopedN("CPU Skin");
+
+                        skr_cpu_skin(skins + i, anims + i, mesh_resource);
+                    }
+                }
+            });
+            dualJ_schedule_ecs(skinQuery, 4, DUAL_LAMBDA_POINTER(cpuSkinJob), nullptr, &*pSkinCounter);
+        }
+        */
         // [has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_camera_comp_t
         if (bUseJob)
         {
@@ -848,12 +893,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 }
             });
             dualJ_schedule_ecs(cameraQuery, 128, DUAL_LAMBDA_POINTER(playerJob), nullptr, nullptr);
-        }
-
-        // sync all jobs here
-        {
-            ZoneScopedN("DualJSync");
-            dualJ_wait_all();
         }
 
         // resolve camera to viewports
