@@ -8,8 +8,10 @@
 const skr_render_pass_name_t live2d_pass_name = "Live2DPass";
 
 struct RenderPassLive2D : public IPrimitiveRenderPass {
-    void on_update(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph) override
+    void on_update(const skr_primitive_pass_context_t* context) override
     {
+        auto renderGraph = context->render_graph;
+
         auto backbuffer = renderGraph->get_texture("backbuffer");
         const auto back_desc = renderGraph->resolve_descriptor(backbuffer);
         auto msaaTarget = renderGraph->create_texture(
@@ -39,13 +41,14 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
         });(void)depth;
     }
 
-    void post_update(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph) override
+    void post_update(const skr_primitive_pass_context_t* context) override
     {
 
     }
 
-    void execute(skr::render_graph::RenderGraph* renderGraph, skr_primitive_draw_list_view_t drawcalls) override
+    void execute(const skr_primitive_pass_context_t* context, skr_primitive_draw_list_view_t drawcalls) override
     {
+        auto renderGraph = context->render_graph;
         auto backbuffer = renderGraph->get_texture("backbuffer");
         const auto back_desc = renderGraph->resolve_descriptor(backbuffer);
         if (drawcalls.count)

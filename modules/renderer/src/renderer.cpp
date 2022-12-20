@@ -50,11 +50,11 @@ struct SKR_RENDERER_API RenderEffectProcessorVtblProxy : public IRenderEffectPro
             vtbl.initialize_data(renderer, storage, game_cv, render_cv);
     }
 
-    skr_primitive_draw_packet_t produce_draw_packets(IPrimitiveRenderPass* pass, dual_storage_t* storage) override
+    skr_primitive_draw_packet_t produce_draw_packets(const skr_primitive_draw_context_t* context) override
     {
         skr_primitive_draw_packet_t result = {};
         if (vtbl.produce_draw_packets)
-            vtbl.produce_draw_packets(pass, storage, &result);
+            vtbl.produce_draw_packets(context, &result);
         return result;
     }
 
@@ -102,7 +102,13 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
                 {
                     ZoneScopedN("ProduceDrawPacket");
 
-                    auto packet = processor->produce_draw_packets(pass, storage);
+                    skr_primitive_draw_context_t draw_context = {};
+                    draw_context.renderer = this;
+                    draw_context.render_graph = render_graph;
+                    draw_context.pass = pass;
+                    draw_context.storage = storage;
+
+                    auto packet = processor->produce_draw_packets(&draw_context);
                     draw_packets[pass->identity()].emplace_back(packet);
                 }
             }
@@ -112,7 +118,12 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
         {
             if (pass)
             {
-                pass->on_update(this, render_graph);
+                skr_primitive_pass_context_t pass_context = {};
+                pass_context.renderer = this;
+                pass_context.render_graph = render_graph;
+                pass_context.storage = storage;
+
+                pass->on_update(&pass_context);
 
                 auto& pass_draw_packets = draw_packets[pass->identity()];
                 for (auto pass_draw_packet : pass_draw_packets)
@@ -121,11 +132,11 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
                     {
                         ZoneScopedN("PassExecute");
 
-                        pass->execute(render_graph, pass_draw_packet.lists[i]);
+                        pass->execute(&pass_context, pass_draw_packet.lists[i]);
                     }
                 }
 
-                pass->post_update(this, render_graph);
+                pass->post_update(&pass_context);
             }
         }
 

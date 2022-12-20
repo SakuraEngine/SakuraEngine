@@ -49,6 +49,14 @@ SKR_RENDERER_EXTERN_C SKR_RENDERER_API void skr_render_effect_access(SRendererId
 typedef void (*SProcRenderEffectAccess)(SRendererId, dual_chunk_view_t* cv,
     skr_render_effect_name_t effect_name, dual_view_callback_t view, void* u);
 
+typedef struct skr_primitive_draw_context_t 
+{
+    SRendererId renderer;
+    skr::render_graph::RenderGraph* render_graph;
+    IPrimitiveRenderPass* pass;
+    dual_storage_t* storage;
+} skr_primitive_draw_context_t;
+
 // Effect interfaces
 typedef void (*SProcRenderEffectOnRegister)(SRendererId, dual_storage_t*);
 typedef void (*SProcRenderEffectOnUnregister)(SRendererId, dual_storage_t*);
@@ -56,7 +64,7 @@ typedef void (*SProcRenderEffectGetTypeSet)(const dual_chunk_view_t* cv, dual_ty
 typedef dual_type_index_t (*SProcRenderEffectGetIdentityType)();
 typedef void (*SProcRenderEffectInitializeData)(SRendererId, dual_storage_t*, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv);
 // Drawcall interfaces for effect processor
-typedef void (*SProcRenderEffectProduceDrawPackets)(IPrimitiveRenderPass* pass, dual_storage_t* storage, skr_primitive_draw_packet_t* result);
+typedef void (*SProcRenderEffectProduceDrawPackets)(const skr_primitive_draw_context_t* constext, skr_primitive_draw_packet_t* result);
 
 typedef struct VtblRenderEffectProcessor {
     SProcRenderEffectOnRegister on_register;
@@ -80,7 +88,7 @@ typedef struct SKR_RENDERER_API IRenderEffectProcessor {
     virtual dual_type_index_t get_identity_type() = 0;
     virtual void initialize_data(SRendererId renderer, dual_storage_t* storage, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv) = 0;
 
-    virtual skr_primitive_draw_packet_t produce_draw_packets(IPrimitiveRenderPass* pass, dual_storage_t* storage) = 0;
+    virtual skr_primitive_draw_packet_t produce_draw_packets(const skr_primitive_draw_context_t* context) = 0;
 #endif
 } IRenderEffectProcessor;
 

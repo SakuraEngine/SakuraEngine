@@ -321,9 +321,9 @@ void cgpu_cmd_transfer_buffer_to_texture_d3d12(CGPUCommandBufferId cmd, const st
     src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
     src.pResource = Src->pDxResource;
     D->pDxDevice->GetCopyableFootprints(
-    &resourceDesc, subresource, 1,
-    desc->src_offset, &src.PlacedFootprint,
-    NULL, NULL, NULL);
+        &resourceDesc, subresource, 1,
+        desc->src_offset, &src.PlacedFootprint,
+        NULL, NULL, NULL);
     src.PlacedFootprint.Offset = desc->src_offset;
     dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
     dst.pResource = Dst->pDxResource;
