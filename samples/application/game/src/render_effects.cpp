@@ -22,6 +22,8 @@
 #include "platform/vfs.h"
 #include <platform/filesystem.hpp>
 
+#include "utils/parallel_for.hpp"
+
 #include "resource/resource_system.h"
 #include "GameRuntime/game_animation.h"
 
@@ -32,6 +34,7 @@ const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT_S8_UINT;
 skr_render_pass_name_t forward_pass_name = "ForwardPass";
 struct RenderPassForward : public IPrimitiveRenderPass {
     dual::query_t skin_query;
+    dual::query_t anim_query;
     void on_update(const skr_primitive_pass_context_t* context) override
     {
         namespace rg = skr::render_graph;
@@ -45,6 +48,11 @@ struct RenderPassForward : public IPrimitiveRenderPass {
         {
             auto sig = "[in]skr_render_mesh_comp_t, [in]skr_render_anim_comp_t, [in]skr_render_skel_comp_t, [in]skr_render_skin_comp_t";
             *skin_query = dualQ_from_literal(storage, sig);
+        }
+        if (!anim_query)
+        {
+            auto sig = "[in]skr_render_mesh_comp_t, [in]skr_render_anim_comp_t";
+            *anim_query = dualQ_from_literal(storage, sig);
         }
         auto updateSkinJob = SkrNewLambda(
             [&](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
@@ -66,7 +74,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
             }
         });
 
-        auto uploadVertices = [&](dual_chunk_view_t* r_cv) {
+        auto ensureBuffers = [&](dual_chunk_view_t* r_cv) {
             const auto cgpu_device = renderer->get_render_device()->get_cgpu_device();
             auto meshes = dual::get_owned_rw<skr_render_mesh_comp_t>(r_cv);
             auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
@@ -159,41 +167,8 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                         }
                     }
                     const auto vertex_size = anim->buffers[j].size;
-                    if (!use_dynamic_buffer)
-                    {
-                        ZoneScopedN("UploadVB");
-
-                        auto vb_name = mesh_resource->name + skr::to_string(j);
-                        auto ub_name = "upload-" + vb_name;
-                        auto pass_name = "skin_copy-" + vb_name;
-                        // use copy pass
-                        auto upload_buffer_handle = render_graph->create_buffer(
-                            [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-                                builder.set_name(ub_name.c_str())
-                                    .size(vertex_size)
-                                    .with_tags(kRenderGraphDefaultResourceTag)
-                                    .as_upload_buffer();
-                        });
-                        auto vertex_buffer_handle = render_graph->create_buffer(
-                        [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-                            builder.set_name(vb_name.c_str())
-                                .import(anim->vbs[j], CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-                        });
-                        render_graph->add_copy_pass(
-                        [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
-                            builder.set_name(pass_name.c_str())
-                                .buffer_to_buffer(upload_buffer_handle.range(0, vertex_size), vertex_buffer_handle.range(0, vertex_size));
-                        },
-                        [=](rg::RenderGraph& g, rg::CopyPassContext& context){
-                            ZoneScopedN("Copy SkinMesh");
-
-                            auto upload_buffer = context.resolve(upload_buffer_handle);
-                            void* vtx_dst = upload_buffer->cpu_mapped_address;
-                            memcpy(vtx_dst, anim->buffers[j].bytes, vertex_size);
-                        });
-                    }
-                    else
-                    {
+                    if (use_dynamic_buffer)
+                    {                        
                         ZoneScopedN("CVVUpdateVB");
 
                         void* vtx_dst = anim->vbs[j]->cpu_mapped_address;
@@ -205,14 +180,124 @@ struct RenderPassForward : public IPrimitiveRenderPass {
         {
             ZoneScopedN("PrepareMeshResource");
             // prepare skin mesh resources for rendering
-            dualQ_get_views(*skin_query, DUAL_LAMBDA(uploadVertices));
+            // TODO: skin_query -> anim_query
+            dualQ_get_views(*skin_query, DUAL_LAMBDA(ensureBuffers));
+        }
+        {
+            uint64_t vertices_size = 0; 
+            {
+                ZoneScopedN("CalculateSkinMeshSize");
+
+                auto calcUploadBufferSize = [&](dual_chunk_view_t* r_cv) {
+                    auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
+                    for (uint32_t i = 0; i < r_cv->count; i++)
+                    {
+                        auto* anim = anims + i;
+                        const bool use_dynamic_buffer = anim->use_dynamic_buffer;
+                        if (use_dynamic_buffer) continue;
+                        for (size_t j = 0u; j < anim->buffers.size(); j++)
+                        {
+                            vertices_size += anim->buffers[j].size;
+                        }
+                    }
+                };
+                dualQ_get_views(*anim_query, DUAL_LAMBDA(calcUploadBufferSize));
+            }
+
+            if (vertices_size != 0)
+            {
+                auto upload_buffer_handle = render_graph->create_buffer(
+                    [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
+                        builder.set_name("SkinMeshUploadBuffer")
+                            .size(vertices_size)
+                            .with_tags(kRenderGraphDefaultResourceTag)
+                            .as_upload_buffer();
+                });
+
+                render_graph->add_copy_pass(
+                [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
+                    builder.set_name("CopySkinMesh")
+                        .from_buffer(upload_buffer_handle.range(0, vertices_size))
+                        .can_be_lone();
+                },
+                [this, upload_buffer_handle](rg::RenderGraph& g, rg::CopyPassContext& context) {
+                    ZoneScopedN("CopySkinMesh");
+
+                    auto uploadVertices = [&](dual_chunk_view_t* r_cv) {
+                        skr_render_anim_comp_t* anims = nullptr;
+                        {
+                            ZoneScopedN("FetchAnims");
+
+                            // duel to dependency, anims fetch here may block a bit, waiting CPU skinning job done
+                            anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
+                        }
+
+                        auto upload_buffer = context.resolve(upload_buffer_handle);
+                        auto mapped = (uint8_t*)upload_buffer->cpu_mapped_address;
+
+                        // barrier from vb to copy dest
+                        {
+                            ZoneScopedN("Barriers");
+                            CGPUResourceBarrierDescriptor barrier_desc = {};
+                            eastl::vector<CGPUBufferBarrier> barriers;
+                            for (uint32_t i = 0; i < r_cv->count; i++)
+                            {
+                                auto* anim = anims + i;
+                                for (size_t j = 0u; j < anim->buffers.size(); j++)
+                                {
+                                    const bool use_dynamic_buffer = anim->use_dynamic_buffer;
+                                    if (anim->vbs[j] && !use_dynamic_buffer)
+                                    {
+                                        CGPUBufferBarrier& barrier = barriers.emplace_back();
+                                        barrier.buffer = anim->vbs[j];
+                                        barrier.src_state = CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+                                        barrier.dst_state = CGPU_RESOURCE_STATE_COPY_DEST;
+                                    }
+                                }
+                            }
+                            barrier_desc.buffer_barriers = barriers.data();
+                            barrier_desc.buffer_barriers_count = (uint32_t)barriers.size();
+                            cgpu_cmd_resource_barrier(context.cmd, &barrier_desc);
+                        }
+
+                        // upload
+                        {
+                            ZoneScopedN("MemCopies");
+                            uint64_t cursor = 0;
+                            for (uint32_t i = 0; i < r_cv->count; i++)
+                            {
+                                auto* anim = anims + i;
+                                const bool use_dynamic_buffer = anim->use_dynamic_buffer;
+                                if (use_dynamic_buffer) continue;
+                                for (size_t j = 0u; j < anim->buffers.size(); j++)
+                                {
+                                    // memcpy
+                                    memcpy(mapped + cursor, anim->buffers[j].bytes, anim->buffers[j].size);
+
+                                    // queue cpy
+                                    CGPUBufferToBufferTransfer b2b = {};
+                                    b2b.src = upload_buffer;
+                                    b2b.src_offset = cursor;
+                                    b2b.dst = anim->vbs[j];
+                                    b2b.dst_offset = 0;
+                                    b2b.size = anim->buffers[j].size;
+                                    cgpu_cmd_transfer_buffer_to_buffer(context.cmd, &b2b);
+
+                                    cursor += anim->buffers[j].size;
+                                }
+                            }
+                        }
+                    };
+                    dualQ_get_views(*anim_query, DUAL_LAMBDA(uploadVertices));
+                });   
+            }
         }
         // wait last skin dispatch
-        
         if (pSkinCounter)
             dualJ_wait_counter(*pSkinCounter, true);
         else
             *pSkinCounter = dualJ_create_counter();
+            
         // late skin dispatch for next frame
         dualJ_schedule_ecs(*skin_query, 4, DUAL_LAMBDA_POINTER(updateSkinJob), nullptr, &*pSkinCounter);
     }
@@ -273,31 +358,43 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                         .can_be_lone();
                 },
                 [=](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassContext& context){
-                    ZoneScopedN("BarrierSkinMesh");
+                    ZoneScopedN("BarrierSkinMeshes");
                     CGPUResourceBarrierDescriptor barrier_desc = {};
                     eastl::vector<CGPUBufferBarrier> barriers;
                     auto barrierVertices = [&](dual_chunk_view_t* r_cv) {
-                    auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
-                    for (uint32_t i = 0; i < r_cv->count; i++)
-                    {
-                        auto* anim = anims + i;
-                        for (size_t j = 0u; j < anim->buffers.size(); j++)
+                        skr_render_anim_comp_t* anims = nullptr;
                         {
-                            const bool use_dynamic_buffer = anim->use_dynamic_buffer;
-                            if (anim->vbs[j] && !use_dynamic_buffer)
+                            ZoneScopedN("FetchAnims");
+
+                            // duel to dependency, anims fetch here may block a bit, waiting CPU skinning job done
+                            anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
+                        }
+
+                        for (uint32_t i = 0; i < r_cv->count; i++)
+                        {
+                            auto* anim = anims + i;
+                            for (size_t j = 0u; j < anim->buffers.size(); j++)
                             {
-                                CGPUBufferBarrier& barrier = barriers.emplace_back();
-                                barrier.buffer = anim->vbs[j];
-                                barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
-                                barrier.dst_state = CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+                                const bool use_dynamic_buffer = anim->use_dynamic_buffer;
+                                if (anim->vbs[j] && !use_dynamic_buffer)
+                                {
+                                    CGPUBufferBarrier& barrier = barriers.emplace_back();
+                                    barrier.buffer = anim->vbs[j];
+                                    barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
+                                    barrier.dst_state = CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+                                }
                             }
                         }
-                    }
-                    barrier_desc.buffer_barriers = barriers.data();
-                    barrier_desc.buffer_barriers_count = (uint32_t)barriers.size();
-                    cgpu_cmd_resource_barrier(context.cmd, &barrier_desc);
+
+                        {
+                            ZoneScopedN("RecordBarrier");
+                            
+                            barrier_desc.buffer_barriers = barriers.data();
+                            barrier_desc.buffer_barriers_count = (uint32_t)barriers.size();
+                            cgpu_cmd_resource_barrier(context.cmd, &barrier_desc);
+                        }
                     };
-                    dualQ_get_views(*skin_query, DUAL_LAMBDA(barrierVertices));
+                    dualQ_get_views(*anim_query, DUAL_LAMBDA(barrierVertices));
                 });
             renderGraph->add_render_pass(
                 [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
@@ -322,13 +419,15 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                         0, 0, 
                         viewport->viewport_width, viewport->viewport_height);
                     
+                    {
+                    ZoneScopedN("DrawCalls");
                     for (uint32_t i = 0; i < drawcalls.count; i++)
                     {
-                        ZoneScopedN("DrawCall");
+                        // ZoneScopedN("DrawCall");
 
                         auto&& dc = drawcalls.drawcalls[i];
                         {
-                            ZoneScopedN("BindGeometry");
+                            // ZoneScopedN("BindGeometry");
                             cgpu_render_encoder_bind_index_buffer(stack.encoder, 
                                 dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
                             CGPUBufferId vertex_buffers[16] = { 0 };
@@ -343,14 +442,15 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                             cgpu_render_encoder_bind_vertex_buffers(stack.encoder, dc.vertex_buffer_count, vertex_buffers, strides, offsets);
                         }
                         {
-                            ZoneScopedN("PushConstants");
+                            // ZoneScopedN("PushConstants");
                             cgpu_render_encoder_push_constants(stack.encoder, dc.pipeline->root_signature, dc.push_const_name, dc.push_const);
                         }
                         cgpu_render_encoder_set_shading_rate(stack.encoder, shading_rate, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH);
                         {
-                            ZoneScopedN("DrawIndexed");
+                            // ZoneScopedN("DrawIndexed");
                             cgpu_render_encoder_draw_indexed_instanced(stack.encoder, dc.index_buffer.index_count, dc.index_buffer.first_index, 1, 0, 0);
                         }
+                    }
                     }
                 });
         }
@@ -495,8 +595,10 @@ struct RenderEffectForward : public IRenderEffectProcessor {
             }
         };
         dualQ_get_views(mesh_query, DUAL_LAMBDA(counterF));
+        model_matrices.clear();
         push_constants.clear();
         mesh_drawcalls.clear();
+        model_matrices.resize(c);
         push_constants.reserve(c);
         mesh_drawcalls.reserve(c);
         // draw static meshess
@@ -520,31 +622,47 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                     auto translations = dual::get_owned_rw<skr_translation_comp_t>(g_cv);
                     auto rotations = dual::get_owned_rw<skr_rotation_comp_t>(g_cv);(void)rotations;
                     auto scales = dual::get_owned_rw<skr_scale_comp_t>(g_cv);
+                    {
+                        ZoneScopedN("WaitParallelFor");
+
+                        const size_t batch_size = 64u;
+                        skr::parallel_for(translations, translations + g_cv->count, batch_size, 
+                        [translations, rotations, scales, this] (auto&& begin, auto&& end){
+                            ZoneScopedN("ParallelModelMatrix");
+                        
+                            const auto base_cursor = begin - translations;
+                            uint32_t i = 0;
+                            for (auto iter = begin; iter < end; iter++, i++)
+                            {
+                                auto g_idx = base_cursor + i;
+                                
+                                // Model Matrix
+                                skr_float4x4_t& model_matrix = model_matrices[g_idx];
+                                {                                    
+                                    const auto quat = rtm::quat_from_euler_rh(
+                                        rtm::scalar_deg_to_rad(-rotations[g_idx].euler.pitch),
+                                        rtm::scalar_deg_to_rad(rotations[g_idx].euler.yaw),
+                                        rtm::scalar_deg_to_rad(rotations[g_idx].euler.roll));
+                                    const rtm::vector4f translation = rtm::vector_set(
+                                        translations[g_idx].value.x, translations[g_idx].value.y,
+                                        translations[g_idx].value.z, 0.f);
+                                    const rtm::vector4f scale = rtm::vector_set(
+                                        scales[g_idx].value.x, scales[g_idx].value.y,
+                                        scales[g_idx].value.z, 0.f
+                                    );
+                                    const rtm::qvvf transform = rtm::qvv_set(quat, translation, scale);
+                                    const rtm::matrix4x4f matrix = rtm::matrix_cast(rtm::matrix_from_qvv(transform));
+                                    model_matrix = *(skr_float4x4_t*)&matrix;
+                                }
+                            }
+                        });
+                    }
+
+                    {
+                    ZoneScopedN("RecordDrawList");
                     for (uint32_t g_idx = 0; g_idx < g_cv->count; g_idx++, r_idx++)
                     {
-                        ZoneScopedN("ChunkView");
-
-                        // Model Matrix
-                        skr_float4x4_t model_matrix;
-                        {
-                            ZoneScopedN("CalculateModelMatrix");
-                            
-                            const auto quat = rtm::quat_from_euler_rh(
-                                rtm::scalar_deg_to_rad(-rotations[g_idx].euler.pitch),
-                                rtm::scalar_deg_to_rad(rotations[g_idx].euler.yaw),
-                                rtm::scalar_deg_to_rad(rotations[g_idx].euler.roll));
-                            const rtm::vector4f translation = rtm::vector_set(
-                                translations[g_idx].value.x, translations[g_idx].value.y,
-                                translations[g_idx].value.z, 0.f);
-                            const rtm::vector4f scale = rtm::vector_set(
-                                scales[g_idx].value.x, scales[g_idx].value.y,
-                                scales[g_idx].value.z, 0.f
-                            );
-                            const rtm::qvvf transform = rtm::qvv_set(quat, translation, scale);
-                            const rtm::matrix4x4f matrix = rtm::matrix_cast(rtm::matrix_from_qvv(transform));
-                            model_matrix = *(skr_float4x4_t*)&matrix;
-                        }
-
+                        const auto& model_matrix = model_matrices[g_idx];
                         // drawcall
                         auto status = meshes[r_idx].mesh_resource.get_status();
                         if (status == SKR_LOADING_STATUS_INSTALLED)
@@ -555,8 +673,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                             const auto& cmds = renderMesh->primitive_commands;
                             if(anims && !anims->vbs.empty())
                             {
-                                ZoneScopedN("SkinDrawCalls");
-
                                 for (size_t i = 0; i < resourcePtr->primitives.size(); ++i)
                                 {
                                     auto& cmd = cmds[i];
@@ -574,8 +690,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                             }
                             else 
                             {
-                                ZoneScopedN("StaticMeshDrawCalls");
-
                                 for (auto&& cmd : cmds)
                                 {
                                     // resources may be ready after produce_drawcall, so we need to check it here
@@ -596,8 +710,6 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                         }
                         else
                         {
-                            ZoneScopedN("FallbackGeometryDrawCalls");
-
                             // resources may be ready after produce_drawcall, so we need to check it here
                             if (push_constants.capacity() <= dc_idx) return;
 
@@ -612,6 +724,7 @@ struct RenderEffectForward : public IRenderEffectProcessor {
                             drawcall.vertex_buffer_count = 5;
                             dc_idx++;
                         }
+                    }
                     }
                 };
                 dualS_batch(storage, unbatched_g_ents, r_cv->count, DUAL_LAMBDA(g_batch_callback));
@@ -650,6 +763,7 @@ protected:
         skr_float4x4_t model;
     };
     eastl::vector<PushConstants> push_constants;
+    eastl::vector<skr_float4x4_t> model_matrices;
 };
 RenderEffectForward* forward_effect = nullptr;
 
@@ -916,7 +1030,6 @@ struct RenderEffectForwardSkin : public RenderEffectForward
         release_queries();
     }
 
-    
     dual_query_t* install_query = nullptr;
 };
 RenderEffectForwardSkin* forward_effect_skin = nullptr;

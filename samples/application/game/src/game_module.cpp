@@ -11,6 +11,7 @@
 #include "platform/window.h"
 #include "ecs/callback.hpp"
 #include "ecs/type_builder.hpp"
+#include "SkrRenderGraph/frontend/resource_node.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 
 #include "SkrImGui/skr_imgui.h"
@@ -855,14 +856,40 @@ int SGameModule::main_module_exec(int argc, char** argv)
             dualJ_wait_all();
         }
 
-        // Resolve camera to viewports
+        // resolve camera to viewports
         auto viewport_manager = game_renderer->get_viewport_manager();
         skr_resolve_cameras_to_viewport(viewport_manager, game_world);
 
+        // register passes
         {
             ZoneScopedN("RegisterPasses");
             game_register_render_effects(game_renderer, renderGraph);
         }
+
+        // early render jobs. When the main timeline is doing present jobs, we can do some work in parallel
+        auto back_buffer = renderGraph->create_texture(
+        [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+            builder.set_name("backbuffer")
+                .import(swapchain->back_buffers[backbuffer_index], CGPU_RESOURCE_STATE_UNDEFINED)
+                .allow_render_target();
+        });
+        {
+            ZoneScopedN("RenderScene");
+            skr_renderer_render_frame(game_renderer, renderGraph);
+        }
+
+        // present, blocks the main timeline, early render jobs can take their time
+        {
+            ZoneScopedN("QueuePresentSwapchain");
+            // present
+            CGPUQueuePresentDescriptor present_desc = {};
+            present_desc.index = backbuffer_index;
+            present_desc.swapchain = swapchain;
+            cgpu_queue_present(gfx_queue, &present_desc);
+            render_graph_imgui_present_sub_viewports();
+        }
+
+        // acquire
         {
             ZoneScopedN("AcquireFrame");
 
@@ -872,32 +899,33 @@ int SGameModule::main_module_exec(int argc, char** argv)
             acquire_desc.fence = present_fence;
             backbuffer_index = cgpu_acquire_next_image(swapchain, &acquire_desc);
         }
+
         // render graph setup & compile & exec
         CGPUTextureId native_backbuffer = swapchain->back_buffers[backbuffer_index];
-        auto back_buffer = renderGraph->create_texture(
-        [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-            builder.set_name("backbuffer")
-            .import(native_backbuffer, CGPU_RESOURCE_STATE_UNDEFINED)
-            .allow_render_target();
-        });
-        {
-            ZoneScopedN("RenderScene");
-            skr_renderer_render_frame(game_renderer, renderGraph);
-        }
+        bool reimported = renderGraph->resolve(back_buffer)->reimport(native_backbuffer);
+        SKR_ASSERT(reimported && "Failed to reimport backbuffer");
         {
             ZoneScopedN("RenderIMGUI");
             render_graph_imgui_add_render_pass(renderGraph, back_buffer, CGPU_LOAD_ACTION_LOAD);
         }
-        renderGraph->add_present_pass(
-        [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
-            builder.set_name("present_pass")
-            .swapchain(swapchain, backbuffer_index)
-            .texture(back_buffer, true);
-        });
+
+        // blit backbuffer & present
+        {
+            renderGraph->add_present_pass(
+            [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
+                builder.set_name("present_pass")
+                .swapchain(swapchain, backbuffer_index)
+                .texture(back_buffer, true);
+            });
+        }
+        
+        // compile render graph
         {
             ZoneScopedN("CompileRenderGraph");
             renderGraph->compile();
         }
+
+        // execute render graph
         {
             ZoneScopedN("ExecuteRenderGraph");
             auto frame_index = renderGraph->execute();
@@ -906,15 +934,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 if ((frame_index > (RG_MAX_FRAME_IN_FLIGHT * 10)) && (frame_index % (RG_MAX_FRAME_IN_FLIGHT * 10) == 0))
                     renderGraph->collect_garbage(frame_index - 10 * RG_MAX_FRAME_IN_FLIGHT);
             }
-        }
-        {
-            ZoneScopedN("QueuePresentSwapchain");
-            // present
-            CGPUQueuePresentDescriptor present_desc = {};
-            present_desc.index = backbuffer_index;
-            present_desc.swapchain = swapchain;
-            cgpu_queue_present(gfx_queue, &present_desc);
-            render_graph_imgui_present_sub_viewports();
         }
     }
     // clean up

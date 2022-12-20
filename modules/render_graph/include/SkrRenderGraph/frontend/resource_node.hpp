@@ -32,6 +32,12 @@ public:
     friend class RenderGraphBackend;
 
     TextureNode() SKR_NOEXCEPT;
+    inline bool reimport(CGPUTextureId texture)
+    {
+        if (!imported) return false;
+        frame_texture = texture;
+        return true;
+    }
     inline const TextureHandle get_handle() const SKR_NOEXCEPT { return TextureHandle(get_id()); }
     inline const CGPUTextureDescriptor& get_desc() const SKR_NOEXCEPT { return descriptor; }
     inline const uint32_t get_size() const SKR_NOEXCEPT
@@ -63,6 +69,12 @@ public:
 
     BufferNode() SKR_NOEXCEPT;
 
+    inline bool reimport(CGPUBufferId buffer)
+    {
+        if (!imported) return false;
+        frame_buffer = buffer;
+        return true;
+    }
     inline const BufferHandle get_handle() const SKR_NOEXCEPT { return BufferHandle(get_id()); }
     inline const CGPUBufferDescriptor& get_desc() const SKR_NOEXCEPT { return descriptor; }
 

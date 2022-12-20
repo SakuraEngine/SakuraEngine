@@ -20,6 +20,8 @@
 #endif
 #include "internal/utils.hpp"
 
+#include "tracy/Tracy.hpp"
+
 namespace skr
 {
 inline void split(const skr::string_view& s, eastl::vector<skr::string_view>& tokens, const skr::string_view& delimiters = " ")
@@ -479,6 +481,9 @@ void dual_storage_t::build_queries()
     using namespace dual;
     if (queriesBuilt)
         return;
+    
+    ZoneScopedN("dual_storage_t::build_queries");
+    
     // solve phase collision (overloading)
     struct phase_entry {
         dual_type_index_t type;
