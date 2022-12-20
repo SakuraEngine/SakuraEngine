@@ -3,7 +3,6 @@
 #include "SkrRenderer/fwd_types.h"
 #include <containers/string.hpp>
 #include <containers/vector.hpp>
-#include "resource/resource_factory.h"
 #ifndef __meta__
     #include "SkrRenderer/resources/mesh_resource.generated.h"
 #endif
@@ -51,6 +50,7 @@ skr_index_buffer_entry_t
 typedef struct skr_index_buffer_entry_t skr_index_buffer_entry_t;
 
 #ifdef __cplusplus
+#include "resource/resource_factory.h"
 
 sreflect_struct("guid" : "b0b69898-166f-49de-a675-7b04405b98b1")
 sattr("rtti" : true, "serialize" : "bin")

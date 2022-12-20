@@ -77,6 +77,7 @@ typedef struct VtblRenderEffectProcessor {
     SProcRenderEffectProduceDrawPackets produce_draw_packets;
 } VtblRenderEffectProcessor;
 
+// render effect is a base class which iterates the world and produce drawcalls
 typedef struct SKR_RENDERER_API IRenderEffectProcessor {
 #ifdef __cplusplus
     virtual ~IRenderEffectProcessor() = default;

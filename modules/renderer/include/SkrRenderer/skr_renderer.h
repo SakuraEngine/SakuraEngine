@@ -4,6 +4,7 @@
 #include "SkrRenderer/fwd_types.h"
 
 struct dual_storage_t;
+struct SViewportManager;
 
 struct SKR_RENDERER_API SRenderer {
 #ifdef __cplusplus
@@ -12,6 +13,7 @@ struct SKR_RENDERER_API SRenderer {
 
     virtual SRenderDeviceId get_render_device() const = 0;
     virtual dual_storage_t* get_dual_storage() const = 0;
+    virtual SViewportManager* get_viewport_manager() const = 0;
 #endif
 };
 
