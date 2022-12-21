@@ -35,10 +35,13 @@ skr_render_pass_name_t forward_pass_name = "ForwardPass";
 struct RenderPassForward : public IPrimitiveRenderPass {
     dual::query_t skin_query;
     dual::query_t anim_query;
+    bool need_clear = true;
     void on_update(const skr_primitive_pass_context_t* context) override
     {
         namespace rg = skr::render_graph;
         ZoneScopedN("ForwardPass Update");
+
+        need_clear = true;
 
         auto renderer = context->renderer;
         auto render_graph = context->render_graph;
@@ -46,7 +49,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
 
         if (!skin_query)
         {
-            auto sig = "[in]skr_render_mesh_comp_t, [in]skr_render_anim_comp_t, [in]skr_render_skel_comp_t, [in]skr_render_skin_comp_t";
+            auto sig = "[in]skr_render_mesh_comp_t, [in]skr_render_skel_comp_t, [inout]skr_render_anim_comp_t, [inout]skr_render_skin_comp_t";
             *skin_query = dualQ_from_literal(storage, sig);
         }
         if (!anim_query)
@@ -163,7 +166,6 @@ struct RenderPassForward : public IPrimitiveRenderPass {
         {
             ZoneScopedN("PrepareMeshResource");
             // prepare skin mesh resources for rendering
-            // TODO: skin_query -> anim_query
             dualQ_get_views(*skin_query, DUAL_LAMBDA(ensureBuffers));
         }
         // upload skin mesh data
@@ -379,8 +381,16 @@ struct RenderPassForward : public IPrimitiveRenderPass {
                         // we know that the drawcalls always have a same pipeline
                         .set_pipeline(drawcalls.drawcalls->pipeline)
                         .read("ForwardRenderConstants", cbuffer.range(0, sizeof(skr_float4x4_t)))
-                        .write(0, out_color, CGPU_LOAD_ACTION_CLEAR)
-                        .set_depth_stencil(depth_buffer.clear_depth(1.f));
+                        .write(0, out_color, need_clear ? CGPU_LOAD_ACTION_CLEAR : CGPU_LOAD_ACTION_LOAD);
+                    if (need_clear)
+                    {
+                        builder.set_depth_stencil(depth_buffer.clear_depth(1.f));
+                    }
+                    else
+                    {
+                        builder.set_depth_stencil(depth_buffer, CGPU_LOAD_ACTION_LOAD);
+                    }
+                    need_clear = false;
                 },
                 [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
                     auto cb = stack.resolve(cbuffer);
