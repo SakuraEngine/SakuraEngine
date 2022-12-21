@@ -916,6 +916,8 @@ int SGameModule::main_module_exec(int argc, char** argv)
         }
 
         // present, blocks the main timeline, early render jobs can take their time
+        static bool bHasFrameToPresent = false;
+        if (bHasFrameToPresent)
         {
             ZoneScopedN("QueuePresentSwapchain");
             // present
@@ -924,6 +926,10 @@ int SGameModule::main_module_exec(int argc, char** argv)
             present_desc.swapchain = swapchain;
             cgpu_queue_present(gfx_queue, &present_desc);
             render_graph_imgui_present_sub_viewports();
+        }
+        else
+        {
+            bHasFrameToPresent = true;
         }
 
         // acquire
