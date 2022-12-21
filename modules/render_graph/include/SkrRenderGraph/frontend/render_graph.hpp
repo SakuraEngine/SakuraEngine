@@ -135,7 +135,7 @@ public:
         friend class RenderGraph;
 
         PresentPassBuilder& set_name(const char* name) SKR_NOEXCEPT;
-        PresentPassBuilder& swapchain(CGPUSwapChainId chain, uint32_t idnex) SKR_NOEXCEPT;
+        PresentPassBuilder& swapchain(CGPUSwapChainId chain, uint32_t index) SKR_NOEXCEPT;
         PresentPassBuilder& texture(TextureHandle texture, bool is_backbuffer = true) SKR_NOEXCEPT;
 
     protected:

@@ -11,6 +11,8 @@
 #include "platform/window.h"
 #include "ecs/callback.hpp"
 #include "ecs/type_builder.hpp"
+
+#include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/resource_node.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 
@@ -932,7 +934,28 @@ int SGameModule::main_module_exec(int argc, char** argv)
             bHasFrameToPresent = true;
         }
 
-        // acquire
+        // render graph setup & compile & exec
+        {
+            ZoneScopedN("RenderIMGUI");
+            render_graph_imgui_add_render_pass(renderGraph, back_buffer, CGPU_LOAD_ACTION_LOAD);
+        }
+
+        // blit backbuffer & present
+        auto present_pass = renderGraph->add_present_pass(
+            [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
+                builder.set_name("present_pass")
+                    .swapchain(swapchain, backbuffer_index)
+                    .texture(back_buffer, true);
+            });
+        
+        // compile render graph
+        {
+            ZoneScopedN("CompileRenderGraph");
+            renderGraph->compile();
+        }
+
+        // acquire & reimport underlying buffer just before graph execution
+        // prevents the main timeline from blocking by the acquire image call
         {
             ZoneScopedN("AcquireFrame");
 
@@ -942,31 +965,11 @@ int SGameModule::main_module_exec(int argc, char** argv)
             acquire_desc.fence = present_fence;
             backbuffer_index = cgpu_acquire_next_image(swapchain, &acquire_desc);
         }
-
-        // render graph setup & compile & exec
         CGPUTextureId native_backbuffer = swapchain->back_buffers[backbuffer_index];
         bool reimported = renderGraph->resolve(back_buffer)->reimport(native_backbuffer);
-        SKR_ASSERT(reimported && "Failed to reimport backbuffer");
-        {
-            ZoneScopedN("RenderIMGUI");
-            render_graph_imgui_add_render_pass(renderGraph, back_buffer, CGPU_LOAD_ACTION_LOAD);
-        }
+        reimported &= static_cast<skr::render_graph::PresentPassNode*>(renderGraph->resolve(present_pass))->reimport(swapchain, backbuffer_index);
 
-        // blit backbuffer & present
-        {
-            renderGraph->add_present_pass(
-            [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
-                builder.set_name("present_pass")
-                .swapchain(swapchain, backbuffer_index)
-                .texture(back_buffer, true);
-            });
-        }
-        
-        // compile render graph
-        {
-            ZoneScopedN("CompileRenderGraph");
-            renderGraph->compile();
-        }
+        SKR_ASSERT(reimported && "Failed to reimport backbuffer");
 
         // execute render graph
         {
