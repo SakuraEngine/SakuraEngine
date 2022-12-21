@@ -119,6 +119,14 @@ public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
+    inline bool reimport(CGPUSwapChainId swapchain, uint32_t index)
+    {
+        if (!swapchain) return false;
+        descriptor.swapchain = swapchain;
+        descriptor.index = index;
+        return true;
+    }
+
     PresentPassNode(uint32_t order);
 protected:
     CGPUQueuePresentDescriptor descriptor;
