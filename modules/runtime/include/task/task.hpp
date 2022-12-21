@@ -61,7 +61,6 @@ namespace skr::task
         weak_counter_t& operator=(const weak_counter_t& other) { internal = other.internal; return *this; }
         weak_counter_t& operator=(weak_counter_t&& other) { internal = std::move(other.internal); return *this; }
         bool operator==(const weak_counter_t& other) const { return internal.lock() == other.internal.lock(); }
-        size_t hash() const { if (auto ptr = internal.lock()) return std::hash<void*>{}(ptr.get()); else return 0; }
         counter_t lock() const { return counter_t(internal.lock()); }
         bool expired() const { return internal.expired(); }
     private:
@@ -101,7 +100,6 @@ namespace skr::task
         weak_event_t& operator=(const weak_event_t& other) { internal = other.internal; return *this; }
         weak_event_t& operator=(weak_event_t&& other) { internal = std::move(other.internal); return *this; }
         bool operator==(const weak_event_t& other) const { return internal.lock() == other.internal.lock(); }
-        size_t hash() const { if (auto ptr = internal.lock()) return std::hash<void*>{}(ptr.get()); else return 0; }
         event_t lock() const { return event_t(internal.lock()); }
         bool expired() const { return internal.expired(); }
     private:
@@ -214,7 +212,6 @@ namespace skr::task
         weak_counter_t(const counter_t& counter) : internal(counter.internal) {}
         weak_counter_t(const weak_counter_t& other) : internal(other.internal) {}
         bool operator==(const weak_counter_t& other) const { return internal == other.internal; }
-        size_t hash() const { return internal.hash(); }
         counter_t lock() const { return internal.lock(); }
         bool expired() const { return internal.expired(); }
         
@@ -262,7 +259,6 @@ namespace skr::task
         weak_event_t(const event_t& event) : internal(event.internal) {}
         weak_event_t(const weak_event_t& other) : internal(other.internal) {}
         bool operator==(const weak_event_t& other) const { return internal == other.internal; }
-        size_t hash() const { return internal.hash(); }
         event_t lock() const { return internal.lock(); }
         bool expired() const { return internal.expired(); }
     private:
