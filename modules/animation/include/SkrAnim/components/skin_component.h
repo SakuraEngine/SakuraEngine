@@ -48,7 +48,7 @@ skr_render_anim_comp_t
 };
 
 struct skr_render_skel_comp_t;
-SKR_ANIM_API void skr_init_skin_component(skr_render_skin_comp_t* component, skr_skeleton_resource_t* skeleton);
+SKR_ANIM_API void skr_init_skin_component(skr_render_skin_comp_t* component, const skr_skeleton_resource_t* skeleton);
 SKR_ANIM_API void skr_init_anim_component(skr_render_anim_comp_t* component, const skr_mesh_resource_t* mesh, skr_skeleton_resource_t* skeleton);
 
 SKR_ANIM_API void skr_cpu_skin(skr_render_skin_comp_t* skin, skr_render_anim_comp_t* anim, const skr_mesh_resource_t* mesh);

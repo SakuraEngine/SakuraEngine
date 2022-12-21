@@ -58,27 +58,29 @@ struct RenderPassForward : public IPrimitiveRenderPass {
         auto ensureBuffers = [&](dual_chunk_view_t* r_cv) {
             const auto cgpu_device = renderer->get_render_device()->get_cgpu_device();
             const auto meshes = dual::get_component_ro<skr_render_mesh_comp_t>(r_cv);
+            const auto skels = dual::get_component_ro<skr_render_skel_comp_t>(r_cv);
             auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
             auto skins = dual::get_owned_rw<skr_render_skin_comp_t>(r_cv);
-            auto skels = dual::get_owned_rw<skr_render_skel_comp_t>(r_cv);
 
             {
                 ZoneScopedN("InitializeComponents");
                 for (uint32_t i = 0; i < r_cv->count; i++)
                 {
-                    auto mesh_resource = meshes[i].mesh_resource.get_resolved();
+                    const auto mesh_resource = meshes[i].mesh_resource.get_resolved();
                     if(!mesh_resource)
                         continue;
+                        
                     if(skins[i].joint_remaps.empty())
                     {
-                        auto skin_resource = skins[i].skin_resource.get_resolved();
-                        auto skel_resource = skels[i].skeleton.get_resolved();
+                        const auto skin_resource = skins[i].skin_resource.get_resolved();
+                        const auto skel_resource = skels[i].skeleton.get_resolved();
                         if(skel_resource && skin_resource)
                             skr_init_skin_component(&skins[i], skel_resource);
                     }
+
                     if(anims[i].buffers.empty())
                     {
-                        auto skel_resource = skels[i].skeleton.get_resolved();
+                        const auto skel_resource = skels[i].skeleton.get_resolved();
                         if(skel_resource)
                             skr_init_anim_component(&anims[i], mesh_resource, skel_resource);
                     }
@@ -164,6 +166,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
             // TODO: skin_query -> anim_query
             dualQ_get_views(*skin_query, DUAL_LAMBDA(ensureBuffers));
         }
+        // upload skin mesh data
         {
             uint64_t vertices_size = 0; 
             {
@@ -274,7 +277,7 @@ struct RenderPassForward : public IPrimitiveRenderPass {
             }
         }
     }
-    
+
     void post_update(const skr_primitive_pass_context_t* context) override
     {
 
