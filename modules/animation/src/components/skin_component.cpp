@@ -16,7 +16,7 @@ skr_render_anim_comp_t::~skr_render_anim_comp_t()
     }
 }
 
-void skr_init_skin_component(skr_render_skin_comp_t* component, skr_skeleton_resource_t* skeleton)
+void skr_init_skin_component(skr_render_skin_comp_t* component, const skr_skeleton_resource_t* skeleton)
 {
     auto skin = component->skin_resource.get_resolved();
     if(!skin)
