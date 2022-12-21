@@ -167,25 +167,27 @@ void dual::scheduler_t::sync_storage(const dual_storage_t* storage)
 namespace dual
 {
 struct hash_shared_ptr {
-    size_t operator()(const skr::task::weak_event_t& value) const
+    size_t operator()(const skr::task::event_t& value) const
     {
         return value.hash();
     }
 };
-using DependencySet = skr::flat_hash_set<skr::task::weak_event_t, hash_shared_ptr>;
+using DependencySet = skr::flat_hash_set<skr::task::event_t, hash_shared_ptr>;
 void update_entry(job_dependency_entry_t& entry, skr::task::event_t job, bool readonly, bool atomic, DependencySet& dependencies)
 {
     SKR_ASSERT(job);
     if (readonly)
     {
         for (auto& dp : entry.owned)
-            dependencies.insert(dp);
+            if(auto ptr = dp.lock())
+                dependencies.insert(ptr);
         entry.shared.push_back(job);
     }
     else
     {
         for (auto& dp : entry.shared)
-            dependencies.insert(dp);
+            if(auto ptr = dp.lock())
+                dependencies.insert(ptr);
         if (atomic)
         {
             entry.owned.push_back(job);
@@ -193,7 +195,8 @@ void update_entry(job_dependency_entry_t& entry, skr::task::event_t job, bool re
         else
         {
             for (auto& dp : entry.owned)
-                dependencies.insert(dp);
+                if(auto ptr = dp.lock())
+                    dependencies.insert(ptr);
             entry.shared.clear();
             entry.owned.clear();
             entry.owned.push_back(job);
@@ -622,7 +625,7 @@ eastl::vector<skr::task::event_t> dual::scheduler_t::schedule_custom_job(const d
 
     eastl::vector<skr::task::event_t> result;
     for(auto& counter : dependencies)
-        if(auto ptr = counter.lock())
+        if(auto ptr = counter)
             result.push_back(ptr);
     return result;
 }
@@ -645,7 +648,7 @@ eastl::vector<skr::task::event_t> dual::scheduler_t::sync_resources(const skr::t
     result.resize(dependencies.size());
     uint32_t dependencyIndex = 0;
     for (auto dependency : dependencies)
-        if(auto ptr = dependency.lock())
+        if(auto ptr = dependency)
             result[dependencyIndex++] = ptr;
 
     return result;

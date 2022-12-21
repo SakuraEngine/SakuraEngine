@@ -151,7 +151,6 @@ class WeakEvent
     MARL_NO_EXPORT inline WeakEvent& operator=(WeakEvent&& other) { shared = std::move(other.shared); return *this; }
     MARL_NO_EXPORT inline bool expired() const { return shared.expired(); }
     MARL_NO_EXPORT inline bool operator==(const WeakEvent& other) const { return shared.lock() == other.shared.lock(); }
-    MARL_NO_EXPORT inline size_t hash() const { if(auto ptr = shared.lock()) return std::hash<void*>{}(ptr.get()); else return 0; }
     Event lock() const { return Event(shared.lock()); }
   private:
   marl::weak_ptr<Event::Shared> shared;
