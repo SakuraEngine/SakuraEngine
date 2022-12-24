@@ -567,7 +567,7 @@ auto dualV_get_owned(const dual_chunk_view_t* view, dual_type_index_t type)
         chunk->timestamps()[id] = structure->storage->timestamp;
     auto scheduler = structure->storage->scheduler;
     if (scheduler && scheduler->is_main_thread(structure->storage))
-        scheduler->sync_entry(structure, id);
+        scheduler->sync_entry(structure, id, readonly);
     EIndex offset = 0;
     if (!type_index_t(type).is_chunk())
         offset = structure->sizes[id] * view->start;

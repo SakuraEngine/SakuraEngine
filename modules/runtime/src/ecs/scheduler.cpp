@@ -93,7 +93,7 @@ void dual::scheduler_t::sync_archetype(dual::archetype_t* type)
         dep.wait(true);
 }
 
-void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i)
+void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i, bool readonly)
 {
     SKR_ASSERT(is_main_thread(type->storage));
     // TODO: performance optimization
@@ -103,17 +103,18 @@ void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i)
         SMutexLock entryLock(entryMutex.mMutex);
         auto pair = dependencyEntries.find(type);
         if (pair == dependencyEntries.end()) 
-        {
             return;
-        };
         auto entries = pair->second.data();
         for (auto dep : entries[i].owned)
             if(auto ptr = dep.lock())
                 deps.push_back(ptr);
-        for (auto p : entries[i].shared)
-            if(auto ptr = p.lock())
-                deps.push_back(ptr);
-        entries[i].shared.clear();
+        if(!readonly)
+        {
+            for (auto p : entries[i].shared)
+                if(auto ptr = p.lock())
+                    deps.push_back(ptr);
+            entries[i].shared.clear();
+        }
         entries[i].owned.clear();
     }
             
