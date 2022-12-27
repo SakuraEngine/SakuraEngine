@@ -1,4 +1,8 @@
 #include "string.h"
+
+#include "utils/make_zeroed.hpp"
+#include "SkrRenderer/render_mesh.h"
+
 #include "SkrAnim/components/skin_component.h"
 #include "SkrAnim/components/skeleton_component.h"
 #include "SkrAnim/ozz/geometry/skinning_job.h"
@@ -101,7 +105,74 @@ void skr_init_anim_component(skr_render_anim_comp_t* component, const skr_mesh_r
     component->buffers[0].size = buffer_size;
 }
 
-void skr_cpu_skin(skr_render_skin_comp_t* skin, skr_render_anim_comp_t* anim, const skr_mesh_resource_t* mesh)
+void skr_init_anim_buffers(CGPUDeviceId device, skr_render_anim_comp_t* anim, const skr_mesh_resource_t* mesh)
+{
+    auto mesh_resource = mesh;
+    for (size_t j = 0u; j < anim->buffers.size(); j++)
+    {
+        const bool use_dynamic_buffer = anim->use_dynamic_buffer;
+        if (!anim->vbs[j])
+        {
+            ZoneScopedN("CreateVB");
+
+            auto vb_desc = make_zeroed<CGPUBufferDescriptor>();
+            vb_desc.name = mesh_resource->name.c_str(); // TODO: buffer name
+            vb_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
+            vb_desc.flags = anim->use_dynamic_buffer ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE;
+            vb_desc.memory_usage = anim->use_dynamic_buffer ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY;
+            vb_desc.prefer_on_device = true;
+            vb_desc.size = anim->buffers[j].size;
+            SKR_ASSERT(vb_desc.size > 0);
+            anim->vbs[j] = cgpu_create_buffer(device, &vb_desc);
+            auto renderMesh = mesh_resource->render_mesh;
+            anim->views.reserve(renderMesh->vertex_buffer_views.size());
+            for(size_t k = 0; k < anim->primitives.size(); ++k)
+            {
+                auto& prim = anim->primitives[k];
+                auto vbv_start = anim->views.size();
+                for(size_t z = 0; z < renderMesh->primitive_commands[k].vbvs.size(); ++z)
+                {
+                    auto& vbv = renderMesh->primitive_commands[k].vbvs[z];
+                    auto attr = mesh_resource->primitives[k].vertex_buffers[z].attribute;
+                    if(attr == SKR_VERT_ATTRIB_POSITION)
+                    {
+                        auto& view = anim->views.emplace_back();
+                        view.buffer = anim->vbs[j];
+                        view.offset = prim.position.offset;
+                        view.stride = prim.position.stride;
+                    }
+                    else if(attr == SKR_VERT_ATTRIB_NORMAL)
+                    {
+                        auto& view = anim->views.emplace_back();
+                        view.buffer = anim->vbs[j];
+                        view.offset = prim.normal.offset;
+                        view.stride = prim.normal.stride;
+                    }
+                    else if(attr == SKR_VERT_ATTRIB_TANGENT)
+                    {
+                        auto& view = anim->views.emplace_back();
+                        view.buffer = anim->vbs[j];
+                        view.offset = prim.tangent.offset;
+                        view.stride = prim.tangent.stride;
+                    }
+                    else
+                        anim->views.push_back(vbv);
+                }
+                prim.views = skr::span(anim->views.data() + vbv_start, renderMesh->primitive_commands[k].vbvs.size());
+            }
+        }
+        const auto vertex_size = anim->buffers[j].size;
+        if (use_dynamic_buffer)
+        {                        
+            ZoneScopedN("CVVUpdateVB");
+
+            void* vtx_dst = anim->vbs[j]->cpu_mapped_address;
+            memcpy(vtx_dst, anim->buffers[j].bytes, vertex_size);
+        }
+    }
+}
+
+void skr_cpu_skin(skr_render_skin_comp_t* skin, const skr_render_anim_comp_t* anim, const skr_mesh_resource_t* mesh)
 {
     auto skin_resource = skin->skin_resource.get_resolved();
     for (size_t i = 0; i < mesh->primitives.size(); ++i)
