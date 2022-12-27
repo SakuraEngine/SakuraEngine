@@ -254,35 +254,6 @@ void SGameModule::installResourceFactories()
         sceneFactory = SkrNew<skr::resource::SSceneFactory>();
         resource_system->RegisterFactory(sceneFactory);
     }
-
-    skr_resource_handle_t material("017c24bb-6dbb-45c3-9672-1cbc95cfd9f2"_guid);
-    material.resolve(true, 0, SKR_REQUESTER_SYSTEM);
-    // texture
-    {
-        while (material.get_status() != SKR_LOADING_STATUS_INSTALLED && material.get_status() != SKR_LOADING_STATUS_ERROR)
-        {
-            auto status = material.get_status();
-            (void)status;
-            resource_system->Update();
-        }
-        auto final_status = material.get_status();
-        if (final_status != SKR_LOADING_STATUS_ERROR)
-        {
-            auto pMaterial = (skr_material_resource_t*)material.get_ptr();
-            pMaterial->material_type.resolve(true, 0, SKR_REQUESTER_SYSTEM);
-            auto material_type = pMaterial->material_type.get_ptr();
-            material_type->shader_resources[0].resolve(true, 0, SKR_REQUESTER_SYSTEM);
-            auto shader_collection = material_type->shader_resources[0].get_resolved(true);
-            auto&& root_variant_iter = shader_collection->switch_variants.find(kZeroStableShaderHash);
-            SKR_ASSERT(root_variant_iter != shader_collection->switch_variants.end() && "Root shader variant missing!");
-            resource_system->UnloadResource(material);
-            resource_system->Update();
-            while (material.get_status(true) != SKR_LOADING_STATUS_UNLOADED)
-            {
-                resource_system->Update();
-            }
-        }
-    }
 }
 
 void SGameModule::uninstallResourceFactories()
@@ -446,8 +417,6 @@ void async_attach_render_mesh(SRendererId renderer)
     dualS_query(renderer->get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
 }
 
-const char* gltf_file = "scene.gltf";
-const char* gltf_file2 = "scene.gltf";
 void imgui_button_spawn_girl(SRendererId renderer)
 {
     static bool onceGuard = true;

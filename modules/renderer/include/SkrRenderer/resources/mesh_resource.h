@@ -57,7 +57,7 @@ sattr("rtti" : true, "serialize" : "bin")
 skr_mesh_primitive_t 
 {
     skr_vertex_layout_id vertex_layout_id;
-    skr_guid_t material_inst;
+    uint32_t material_index;
     skr::vector<skr_vertex_buffer_entry_t> vertex_buffers;
     struct skr_index_buffer_entry_t index_buffer;
     uint32_t vertex_count;
@@ -97,6 +97,9 @@ skr_mesh_resource_t
     skr::vector<skr_mesh_section_t> sections;
     skr::vector<skr_mesh_primitive_t> primitives;
     skr::vector<skr_mesh_buffer_t> bins;
+
+    using material_handle_t = skr::resource::TResourceHandle<skr_material_resource_t>;
+    skr::vector<material_handle_t> materials;
     
     bool install_to_vram SKR_IF_CPP(= true);
     bool install_to_ram SKR_IF_CPP(= true); // TODO: configure this in asset

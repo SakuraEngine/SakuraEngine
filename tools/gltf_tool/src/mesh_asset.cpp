@@ -61,6 +61,12 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
         // TODO: support ram-only mode install
         mesh.install_to_vram = true;
     }
+    mesh.materials.reserve(importer->materials.size());
+    for (const auto material : importer->materials)
+    {
+        ctx->AddRuntimeDependency(material);
+        mesh.materials.emplace_back(material);
+    }
 
     //----- write resource object
     if(!ctx->Save(mesh)) return false;
