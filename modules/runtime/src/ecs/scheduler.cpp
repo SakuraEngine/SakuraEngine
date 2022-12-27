@@ -668,6 +668,11 @@ void dualJ_remove_resource(dual_entity_t id)
 
 struct dual_counter_t {
     dual_counter_t() = default;
+    dual_counter_t(const skr::task::event_t& event)
+        : counter(event)
+    {
+        
+    }
     dual_counter_t(nullptr_t) : counter(nullptr) {}
     skr::task::event_t counter;
 };
