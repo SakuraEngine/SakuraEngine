@@ -57,6 +57,13 @@ typedef struct skr_primitive_draw_context_t
     dual_storage_t* storage;
 } skr_primitive_draw_context_t;
 
+typedef struct skr_primitive_update_context_t 
+{
+    SRendererId renderer;
+    skr::render_graph::RenderGraph* render_graph;
+    dual_storage_t* storage;
+} skr_primitive_update_context_t;
+
 // Effect interfaces
 typedef void (*SProcRenderEffectOnRegister)(SRendererId, dual_storage_t*);
 typedef void (*SProcRenderEffectOnUnregister)(SRendererId, dual_storage_t*);
@@ -90,6 +97,9 @@ typedef struct SKR_RENDERER_API IRenderEffectProcessor {
     virtual void initialize_data(SRendererId renderer, dual_storage_t* storage, dual_chunk_view_t* game_cv, dual_chunk_view_t* render_cv) = 0;
 
     virtual skr_primitive_draw_packet_t produce_draw_packets(const skr_primitive_draw_context_t* context) = 0;
+
+    virtual void on_update(const skr_primitive_update_context_t* context) {};
+    virtual void post_update(const skr_primitive_update_context_t* context) {};
 #endif
 } IRenderEffectProcessor;
 

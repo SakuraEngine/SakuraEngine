@@ -97,6 +97,16 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
         // produce draw calls
         {
             ZoneScopedN("ForeachProcessors(Sync)");
+            for (auto& processor : processors)
+            {
+                skr_primitive_update_context_t update_context = {};
+                update_context.renderer = this;
+                update_context.render_graph = render_graph;
+                update_context.storage = storage;
+
+                processor->on_update(&update_context);
+            }
+
             for (auto& pass : passes)
             {
                 draw_packets[pass->identity()].clear();
@@ -117,6 +127,16 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
                         draw_packets[pass->identity()].emplace_back(packet);
                     }
                 }
+            }
+
+            for (auto& processor : processors)
+            {
+                skr_primitive_update_context_t update_context = {};
+                update_context.renderer = this;
+                update_context.render_graph = render_graph;
+                update_context.storage = storage;
+
+                processor->post_update(&update_context);
             }
         }
 

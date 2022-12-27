@@ -26,7 +26,7 @@ executable_module("Game", "GAME", engine_version)
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/Game",
         dxil_outdir = "/../resources/shaders/Game"})
-    add_files("src/main.cpp", "src/render_resources.cpp", "src/render_effects.cpp",  "src/game_module.cpp")
+    add_files("src/**.cpp")
     add_files("shaders/**.hlsl")
     add_files("script/**.lua")
     if (is_os("windows")) then 

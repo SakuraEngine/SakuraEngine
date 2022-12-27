@@ -224,7 +224,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                     const auto raw_format = (encoded_format == IMAGE_CODER_COLOR_FORMAT_BGRA) ? IMAGE_CODER_COLOR_FORMAT_RGBA : encoded_format;
                     if (auto raw_data = coder->get_raw_data_view(raw_format, coder->get_bit_depth());!raw_data.empty())
                     {
-                        // upload
+                        // upload texture
                         auto& texture_io_request = render_model->texture_io_requests[idx];
                         auto& texture_destination = render_model->texture_destinations[idx];
                         auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();

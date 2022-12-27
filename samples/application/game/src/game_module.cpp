@@ -602,6 +602,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
     bool quit = false;
     dual::counter_t pSkinCounter;
     pSkinCounter.counter = nullptr;
+    dual_query_t* initAnimSkinQuery;
     dual_query_t* skinQuery;
     dual_query_t* moveQuery;
     dual_query_t* cameraQuery;
@@ -612,8 +613,10 @@ int SGameModule::main_module_exec(int argc, char** argv)
         "[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [inout]skr_camera_comp_t");
     animQuery = dualQ_from_literal(game_world,
         "[in]skr_render_effect_t, [in]game::anim_state_t, [out]<rand>?skr_render_anim_comp_t, [in]<rand>?skr_render_skel_comp_t");
+    initAnimSkinQuery = dualQ_from_literal(game_world, 
+        "[inout]skr_render_anim_comp_t, [inout]skr_render_skin_comp_t, [in]skr_render_mesh_comp_t, [in]skr_render_skel_comp_t");
     skinQuery = dualQ_from_literal(game_world, 
-        "[inout]skr_render_anim_comp_t, [inout]skr_render_skin_comp_t, [in]skr_render_mesh_comp_t");
+        "[in]skr_render_anim_comp_t, [inout]skr_render_skin_comp_t, [in]skr_render_mesh_comp_t, [in]skr_render_skel_comp_t");
 
     while (!quit)
     {
@@ -833,6 +836,36 @@ int SGameModule::main_module_exec(int argc, char** argv)
         {
             ZoneScopedN("SkinSystem");
 
+            auto initAnimSkinComps = [&](dual_chunk_view_t* r_cv) {
+                const auto meshes = dual::get_component_ro<skr_render_mesh_comp_t>(r_cv);
+                const auto skels = dual::get_component_ro<skr_render_skel_comp_t>(r_cv);
+                const auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
+                const auto skins = dual::get_owned_rw<skr_render_skin_comp_t>(r_cv);
+                
+                ZoneScopedN("InitializeAnimSkinComponents");
+                for (uint32_t i = 0; i < r_cv->count; i++)
+                {
+                    const auto mesh_resource = meshes[i].mesh_resource.get_resolved();
+                    const auto skel_resource = skels[i].skeleton.get_resolved();
+                    const auto skin_resource = skins[i].skin_resource.get_resolved();
+                    if (!mesh_resource || !skel_resource || !skin_resource) continue;
+
+                    if(skins[i].joint_remaps.empty())
+                    {
+                        skr_init_skin_component(&skins[i], skel_resource);
+                    }
+                    if (anims[i].buffers.empty())
+                    {
+                        skr_init_anim_component(&anims[i], mesh_resource, skel_resource);
+                    }
+                    skr_init_anim_buffers(cgpu_device, &anims[i], mesh_resource);
+                }
+            };
+            {
+                // prepare skin mesh resources for rendering
+                dualQ_get_views(initAnimSkinQuery, DUAL_LAMBDA(initAnimSkinComps));
+            }
+
             // wait last skin dispatch
             if (pSkinCounter)
                 dualJ_wait_counter(*pSkinCounter, true);
@@ -843,7 +876,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             auto cpuSkinJob = SkrNewLambda(
                 [&](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
                 const auto meshes = dual::get_component_ro<skr_render_mesh_comp_t>(view);
-                auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(view);
+                const auto anims = dual::get_component_ro<skr_render_anim_comp_t>(view);
                 auto skins = dual::get_owned_rw<skr_render_skin_comp_t>(view);
                 
                 for (uint32_t i = 0; i < view->count; i++)
