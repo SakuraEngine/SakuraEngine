@@ -8,6 +8,8 @@
 #include "SkrRenderer/render_mesh.h"
 #include <platform/filesystem.hpp>
 
+#include "ecs/callback.hpp"
+
 #include "tracy/Tracy.hpp"
 
 void skr_render_mesh_initialize(skr_render_mesh_id render_mesh, skr_mesh_resource_id mesh_resource)
@@ -75,6 +77,37 @@ void skr_render_mesh_free(skr_render_mesh_id render_mesh)
 
 skr_primitive_draw_packet_t IMeshRenderEffect::produce_draw_packets(const skr_primitive_draw_context_t* context) SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    auto pass = context->pass;
+    auto storage = context->storage;
+
+    skr_primitive_draw_packet_t packet = {};
+    // 0. only produce for forward pass
+    // TODO: refactor this to support multi-pass rendering
+    if (strcmp(pass->identity(), "ForwardPass") != 0) return {};
+    // 1. calculate primitive count
+    uint32_t primitiveCount = 0;
+    auto counterF = [&](dual_chunk_view_t* r_cv) {
+        ZoneScopedN("PreCalculateDrawCallCount");
+        const skr_render_mesh_comp_t* meshes = nullptr;
+        {
+            ZoneScopedN("FetchRenderMeshes");
+            meshes = dual::get_component_ro<skr_render_mesh_comp_t>(r_cv);
+        }
+        for (uint32_t i = 0; i < r_cv->count; i++)
+        {
+            auto status = meshes[i].mesh_resource.get_status();
+            if (status == SKR_LOADING_STATUS_INSTALLED)
+            {
+                auto resourcePtr = (skr_mesh_resource_t*)meshes[i].mesh_resource.get_ptr();
+                auto renderMesh = resourcePtr->render_mesh;
+                primitiveCount += (uint32_t)renderMesh->primitive_commands.size();
+            }
+            else
+            {
+                primitiveCount++;
+            }
+        }
+    };
+    
     return {};
 }

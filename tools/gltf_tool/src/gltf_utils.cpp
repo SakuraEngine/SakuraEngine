@@ -263,9 +263,10 @@ void CookGLTFMeshData(const cgltf_data* gltf_data, SMeshCookConfig* cfg, skr_mes
             EmplaceAllGLTFMeshVertices(node_->mesh, shuffle_layout_name ? &shuffle_layout : nullptr, buffer0, new_primitives);
             for (uint32_t j = 0; j < node_->mesh->primitives_count; j++)
             {
+                const auto& gltf_prim = node_->mesh->primitives[j];
                 auto& prim = new_primitives[j];
                 prim.vertex_layout_id = shuffle_layout_id;
-                prim.material_inst = make_zeroed<skr_guid_t>(); // TODO: Material assignment
+                prim.material_index = static_cast<uint32_t>(gltf_prim.material - gltf_data->materials);
                 mesh_section.primive_indices.emplace_back(out_resource.primitives.size() + j);
             }
             out_resource.primitives.reserve(out_resource.primitives.size() + new_primitives.size());
@@ -316,9 +317,10 @@ void CookGLTFMeshData_SplitSkin(const cgltf_data* gltf_data, SMeshCookConfig* cf
             EmplaceSkinGLTFMeshVertices(node_->mesh, shuffle_layout_name ? &shuffle_layout : nullptr, buffer1, 1, new_primitives);
             for (uint32_t j = 0; j < node_->mesh->primitives_count; j++)
             {
+                const auto& gltf_prim = node_->mesh->primitives[j];
                 auto& prim = new_primitives[j];
                 prim.vertex_layout_id = shuffle_layout_id;
-                prim.material_inst = make_zeroed<skr_guid_t>(); // TODO: Material assignment
+                prim.material_index = static_cast<uint32_t>(gltf_prim.material - gltf_data->materials);
                 mesh_section.primive_indices.emplace_back(out_resource.primitives.size() + j);
             }
             out_resource.primitives.reserve(out_resource.primitives.size() + new_primitives.size());
