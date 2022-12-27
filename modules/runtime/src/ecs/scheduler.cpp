@@ -667,6 +667,8 @@ void dualJ_remove_resource(dual_entity_t id)
 }
 
 struct dual_counter_t {
+    dual_counter_t() = default;
+    dual_counter_t(nullptr_t) : counter(nullptr) {}
     skr::task::event_t counter;
 };
 
@@ -676,10 +678,6 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     ZoneScopedN("dualJ::schedule_ecs");
     
     auto c = dual::scheduler_t::get().schedule_ecs_job(query, batchSize, callback, u, init, teardown, resources);
-    if(!c)
-    {
-        return false;
-    }
     if (counter)
     {
         if(!*counter)
@@ -687,7 +685,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         else
             (*counter)->counter = c;
     }
-    return true;
+    return !!c;
 }
 
 void dualJ_schedule_custom(const dual_query_t* query, dual_counter_t* counter, dual_schedule_callback_t callback, void* u, dual_resource_operation_t* resources)
@@ -699,14 +697,17 @@ void dualJ_schedule_custom(const dual_query_t* query, dual_counter_t* counter, d
     }
 }
 
-dual_counter_t* dualJ_create_counter()
+dual_counter_t* dualJ_create_counter(bool null)
 {
+    if(null)
+        return SkrNew<dual_counter_t>(nullptr);
     return SkrNew<dual_counter_t>();
 }
 
 void dualJ_wait_counter(dual_counter_t* counter, int pin)
 {
-    counter->counter.wait(pin);
+    if(counter->counter)
+        counter->counter.wait(pin);
 }
 
 void dualJ_release_counter(dual_counter_t* counter)

@@ -722,9 +722,10 @@ RUNTIME_API void dualJ_schedule_custom(const dual_query_t* query, dual_counter_t
 /**
  * @brief create a counter object
  * counter is used to sync jobs, counter need to be released manually
+ * @param null if true, counter will be null
  * @return dual_counter_t*
  */
-RUNTIME_API dual_counter_t* dualJ_create_counter();
+RUNTIME_API dual_counter_t* dualJ_create_counter(bool null);
 /**
  * @brief wait until counter equal to zero (when job is done)
  *

@@ -839,7 +839,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             if (pSkinCounter)
                 dualJ_wait_counter(*pSkinCounter, true);
             else
-                *pSkinCounter = dualJ_create_counter();
+                *pSkinCounter = dualJ_create_counter(true);
                 
             // skin dispatch for the frame
             auto cpuSkinJob = SkrNewLambda(
