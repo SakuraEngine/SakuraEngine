@@ -670,22 +670,24 @@ struct dual_counter_t {
     skr::task::event_t counter;
 };
 
-void dualJ_schedule_ecs(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
+bool dualJ_schedule_ecs(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
 dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources, dual_counter_t** counter)
 {
     ZoneScopedN("dualJ::schedule_ecs");
+    
+    auto c = dual::scheduler_t::get().schedule_ecs_job(query, batchSize, callback, u, init, teardown, resources);
+    if(!c)
+    {
+        return false;
+    }
     if (counter)
     {
-        auto c = dual::scheduler_t::get().schedule_ecs_job(query, batchSize, callback, u, init, teardown, resources);
         if(!*counter)
             *counter = SkrNew<dual_counter_t>(c);
         else
             (*counter)->counter = c;
     }
-    else
-    {
-        dual::scheduler_t::get().schedule_ecs_job(query, batchSize, callback, u, init, teardown, resources);
-    }
+    return true;
 }
 
 void dualJ_schedule_custom(const dual_query_t* query, dual_counter_t* counter, dual_schedule_callback_t callback, void* u, dual_resource_operation_t* resources)

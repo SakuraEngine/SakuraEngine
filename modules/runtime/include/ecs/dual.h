@@ -703,8 +703,9 @@ typedef struct dual_resource_operation_t {
  * @param init initializer function, called at the beginning of job
  * @param resources
  * @param counter counter used to sync jobs, if *counter is null, a new counter will be created
+ * @return false if job is skipped
  */
-RUNTIME_API void dualJ_schedule_ecs(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
+RUNTIME_API bool dualJ_schedule_ecs(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
 dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources, dual_counter_t** counter);
 
 typedef void (*dual_schedule_callback_t)(void* u, dual_counter_t* counter);
