@@ -15,6 +15,7 @@
 struct skr_pso_map_key_t
 {
     skr_pso_map_key_t(const CGPURenderPipelineDescriptor& desc, uint64_t frame) SKR_NOEXCEPT;
+    ~skr_pso_map_key_t() SKR_NOEXCEPT;
 
     CGPURootSignatureId root_signature;
     CGPUPipelineShaderDescriptor vertex_shader;
@@ -47,6 +48,7 @@ skr_pso_map_key_t::skr_pso_map_key_t(const CGPURenderPipelineDescriptor& desc, u
     : root_signature(desc.root_signature->pool_sig ? desc.root_signature->pool_sig : desc.root_signature), 
     frame(frame), rc(0), pso_rc(0)
 {
+    descriptor.root_signature = root_signature;
     if (desc.vertex_shader)
     {
         vertex_shader = *desc.vertex_shader;
@@ -78,9 +80,16 @@ skr_pso_map_key_t::skr_pso_map_key_t(const CGPURenderPipelineDescriptor& desc, u
         descriptor.fragment_shader = &fragment_shader;
     }
     if (desc.vertex_layout) vertex_layout = *desc.vertex_layout;
+    descriptor.vertex_layout = &vertex_layout;
+
     if (desc.blend_state) blend_state = *desc.blend_state;
+    descriptor.blend_state = &blend_state;
+
     if (desc.depth_state) depth_state = *desc.depth_state;
+    descriptor.depth_state = &depth_state;
+
     if (desc.rasterizer_state) rasterizer_state = *desc.rasterizer_state;
+    descriptor.rasterizer_state = &rasterizer_state;
 
     for (uint32_t i = 0; i < CGPU_MAX_MRT_COUNT; ++i)
     {
@@ -90,11 +99,19 @@ skr_pso_map_key_t::skr_pso_map_key_t(const CGPURenderPipelineDescriptor& desc, u
     {
         color_formats[i] = desc.color_formats[i];
     }
-    descriptor.root_signature = root_signature;
-    descriptor.vertex_layout = &vertex_layout;
-    descriptor.blend_state = &blend_state;
-    descriptor.depth_state = &depth_state;
-    descriptor.rasterizer_state = &rasterizer_state;
+    descriptor.color_formats = color_formats;
+    descriptor.render_target_count = desc.render_target_count;
+    descriptor.sample_count = desc.sample_count;
+    descriptor.sample_quality = desc.sample_quality;
+    descriptor.color_resolve_disable_mask = desc.color_resolve_disable_mask;
+    descriptor.depth_stencil_format = desc.depth_stencil_format;
+    descriptor.prim_topology = desc.prim_topology;
+    descriptor.enable_indirect_command = desc.enable_indirect_command;
+}
+
+skr_pso_map_key_t::~skr_pso_map_key_t() SKR_NOEXCEPT
+{
+    root_signature = nullptr;
 }
 
 namespace skr
@@ -151,7 +168,14 @@ struct PSOMapImpl : public skr_pso_map_t
         else
         {
             auto key = SPtr<skr_pso_map_key_t>::CreateZeroed(*desc, frame_index);
-            sets.insert(key);
+            const auto oldSize = sets.size();
+            auto inserted = sets.insert(key);
+            const auto newSize = sets.size();
+            if (!inserted.second || oldSize == newSize)
+            {
+                SKR_ASSERT(0 && "Failed to insert key!");
+                return nullptr;
+            }
             return key.get();
         }
     }
@@ -194,6 +218,7 @@ struct PSOMapImpl : public skr_pso_map_t
         {
             auto sRequest = SPtr<PSORequest>::Create(this, key);
             mRequests.emplace(key, sRequest);
+            skr_atomic64_store_relaxed(&sRequest->key->pso_status, SKR_PSO_MAP_PSO_STATUS_REQUESTED);
 
             auto aux_task = make_zeroed<skr_service_task_t>();
             aux_task.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* usrdata){
@@ -247,9 +272,16 @@ struct PSOMapImpl : public skr_pso_map_t
             auto pFound = found->get();
             const auto pso_status = skr_atomic32_load_relaxed(&pFound->pso_status);
             // 1.0 install pso if pso has no rc
-            if (pso_status == SKR_PSO_MAP_PSO_STATUS_UNINSTALLED || pso_rc == 0)
+            if (pso_status == SKR_PSO_MAP_PSO_STATUS_UNINSTALLED)
             {
-               return install_pso_impl(key);
+                if (pso_rc == 0)
+                {
+                   return install_pso_impl(key);
+                }
+                else
+                {
+                    SKR_UNREACHABLE_CODE();
+                }
             }
             // 1.1 request is failed
             else if (pso_status == SKR_PSO_MAP_PSO_STATUS_FAILED)
