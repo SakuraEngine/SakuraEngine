@@ -7,4 +7,4 @@ shared_module("SkrGui", "SKR_GUI", engine_version)
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders", 
         dxil_outdir = "/../resources/shaders"})
-    add_files("shaders/*.hlsl")
+    -- add_files("shaders/*.hlsl")
