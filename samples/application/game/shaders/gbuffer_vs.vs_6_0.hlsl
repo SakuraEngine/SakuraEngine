@@ -16,7 +16,7 @@ struct VSOut
     centroid float4 normal : NORMAL;
 };
 
-cbuffer ForwardRenderConstants
+struct ForwardRenderConstants
 {
     float4x4 view_proj;
 };
@@ -28,11 +28,14 @@ struct RootConstants
 [[vk::push_constant]]
 ConstantBuffer<RootConstants> push_constants;
 
+[[vk::binding(0, 0)]]
+ConstantBuffer<ForwardRenderConstants> pass_cb : register(b0, space0);
+
 VSOut main(const VSIn input)
 {
     VSOut output;
     float4 posW = mul(float4(input.position, 1.0f), push_constants.model);
-    float4 posH = mul(posW, view_proj);
+    float4 posH = mul(posW, pass_cb.view_proj);
     output.position = posH;
     output.uv = input.uv * push_constants.model[0][0];
     output.normal = float4(input.normal, 0.f);

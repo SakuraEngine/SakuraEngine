@@ -57,7 +57,8 @@ typedef struct skr_primitive_draw_packet_t {
 struct skr_render_primitive_command_t {
     skr::span<const skr_vertex_buffer_view_t> vbvs;
     const skr_index_buffer_view_t* ibv;
-    uint64_t characteristic;
+    uint32_t primitive_index;
+    uint32_t material_index;
 };
 }
 #endif

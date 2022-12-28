@@ -2,6 +2,7 @@
 #include "SkrRenderer/module.configure.h"
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "resource/resource_factory.h"
+#include "cgpu/cgpux.h"
 
 #ifndef __meta__
 #include "SkrRenderer/resources/material_resource.generated.h"
@@ -125,8 +126,11 @@ skr_material_resource_t
     skr::vector<skr_platform_shader_identifier_t> installed_shaders;
     skr::vector<skr::string_view> shader_entries;
     skr::vector<ECGPUShaderStage> shader_stages;
+
     CGPURootSignatureId root_signature;
     struct skr_pso_map_key_t* key;
+    CGPURenderPipelineId pso;
+    CGPUXBindTableId bind_table;
 };
 
 namespace skr sreflect

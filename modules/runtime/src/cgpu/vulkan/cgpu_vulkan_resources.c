@@ -298,10 +298,13 @@ void cgpu_cmd_transfer_buffer_to_texture_vulkan(CGPUCommandBufferId cmd, const s
         const uint32_t height = cgpu_max(1, desc->dst->height >> desc->dst_subresource.mip_level);
         const uint32_t depth = cgpu_max(1, desc->dst->depth >> desc->dst_subresource.mip_level);
 
+		const uint32_t xBlocksCount = width / FormatUtil_WidthOfBlock(fmt);
+		const uint32_t yBlocksCount = height / FormatUtil_HeightOfBlock(fmt);
+
         VkBufferImageCopy copy = {
             .bufferOffset = desc->src_offset,
-            .bufferRowLength = width * FormatUtil_WidthOfBlock(fmt),
-            .bufferImageHeight = height * FormatUtil_HeightOfBlock(fmt),
+            .bufferRowLength = xBlocksCount * FormatUtil_WidthOfBlock(fmt),
+            .bufferImageHeight = yBlocksCount * FormatUtil_HeightOfBlock(fmt),
             .imageSubresource.aspectMask = (VkImageAspectFlags)desc->dst->aspect_mask,
             .imageSubresource.mipLevel = desc->dst_subresource.mip_level,
             .imageSubresource.baseArrayLayer = desc->dst_subresource.base_array_layer,

@@ -10,9 +10,14 @@ struct VSOut
 #endif
 };
 
+[[vk::binding(0, 1)]]
+Texture2D color_texture : register(t0, space1);
+[[vk::binding(0, 2)]]
+SamplerState color_sampler : register(s0, space2);
+
 void main(VSOut psIn,     
     out float4 o_color : SV_Target0) : SV_TARGET
 {
     float2 uv = psIn.uv;
-    o_color = float4(1.f, 1.f, 1.f, 1.f) * abs(psIn.normal);
+    o_color = color_texture.Sample(color_sampler, uv);
 }

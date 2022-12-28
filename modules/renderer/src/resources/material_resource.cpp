@@ -67,6 +67,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
 
         // 2.free RS
         if (material->root_signature) cgpu_free_root_signature(material->root_signature);
+        if (material->bind_table) cgpux_free_bind_table(material->bind_table);
 
         // 3.RC free installed shaders
         for (const auto installedId : material->installed_shaders)
@@ -147,12 +148,58 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         rs_desc.shader_count = static_cast<uint32_t>(shaders.size());
         rs_desc.shaders = ppl_shaders; // FIXME: we need to get the shader pointers from the async shader map
         // TODO: static samplers & push constants
-        rs_desc.push_constant_count = 0;
-        rs_desc.push_constant_names = nullptr;
+        rs_desc.push_constant_count = 1;
+        const char* push_const_name = "push_constants";
+        rs_desc.push_constant_names = &push_const_name;
         rs_desc.static_sampler_count = 0;
         rs_desc.static_samplers = nullptr;
         rs_desc.static_sampler_names = nullptr;
-        return cgpu_create_root_signature(root.device, &rs_desc);
+        const auto root_signature = cgpu_create_root_signature(root.device, &rs_desc);
+        return root_signature;
+    }
+
+    const char* sampler_name = "color_sampler";
+    CGPUXBindTableId createMaterialBindTable(const skr_material_resource_t* material, CGPURootSignatureId root_signature) const
+    {
+        // make bind table
+        CGPUXBindTableDescriptor table_desc = {};
+        table_desc.root_signature = root_signature;
+        // TODO: multi bind table
+        eastl::fixed_vector<const char*, 16> slot_names;
+        for (uint32_t i = 0; i < root_signature->table_count; i++)
+        {
+            const auto& table = root_signature->tables[i];
+            for (uint32_t j = 0; j < table.resources_count; j++)
+            {
+                const auto& resource = table.resources[j];
+                if (resource.type == CGPU_RESOURCE_TYPE_SAMPLER)
+                {
+                    // SKR_UNIMPLEMENTED_FUNCTION();
+                }
+                else if (resource.type == CGPU_RESOURCE_TYPE_TEXTURE)
+                {
+                    for (const auto& override : material->overrides.textures)
+                    {
+                        if (override.slot_name.starts_with(resource.name) 
+                        && strlen(resource.name) == override.slot_name.size()) // slot name matches
+                        {
+                            slot_names.emplace_back(resource.name);
+                        }
+                    }
+                }
+                else if (resource.type == CGPU_RESOURCE_TYPE_BUFFER)
+                {
+                    // SKR_UNIMPLEMENTED_FUNCTION();
+                }
+            }
+        }
+        // TODO: remove this hack
+        slot_names.emplace_back(sampler_name);
+
+        table_desc.names_count = slot_names.size();
+        table_desc.names = slot_names.data();
+        const auto bind_table = cgpux_create_bind_table(root.device, &table_desc);
+        return bind_table;
     }
 
     CGPURootSignatureId requestRS(skr_resource_record_t* record, skr::span<CGPUShaderLibraryId> shaders)
@@ -165,6 +212,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         if (root.aux_service == nullptr)
         {
             material->root_signature = createMaterialRS(material, shaders);
+            material->bind_table = createMaterialBindTable(material, material->root_signature);
             return material->root_signature;
         }
 
@@ -178,6 +226,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
             if (ready)
             {
                 material->root_signature = rsRequest->root_signature;
+                material->bind_table = rsRequest->bind_table;
                 mRootSignatureRequests.erase(materialGUID);
             }
             return material->root_signature;
@@ -194,6 +243,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
                 const auto factory = rsRequest->factory;
 
                 rsRequest->root_signature = factory->createMaterialRS(rsRequest->material, rsRequest->shaders);
+                rsRequest->bind_table = factory->createMaterialBindTable(rsRequest->material, rsRequest->root_signature);
             };
             aux_task.callback_datas[SKR_ASYNC_IO_STATUS_OK] = rsRequest.get();
             aux_service->request(&aux_task, &rsRequest->request);
@@ -286,7 +336,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         desc.sample_count = CGPU_SAMPLE_COUNT_1; // TODO: MSAA
         desc.sample_quality = 0u; // TODO: MSAA
         desc.color_resolve_disable_mask = 0u; // TODO: Color resolve mask (this is a vulkan-only feature)
-        desc.depth_stencil_format = CGPU_FORMAT_D32_SFLOAT; // TODO: depth stencil format
+        desc.depth_stencil_format = CGPU_FORMAT_D32_SFLOAT_S8_UINT; // TODO: depth stencil format
         desc.prim_topology = CGPU_PRIM_TOPO_TRI_LIST; // TODO: non-triangle list topology support
         desc.enable_indirect_command = false; // TODO: indirect command support
         return skr_pso_map_create_key(pso_map, &desc);
@@ -322,10 +372,10 @@ struct SMaterialFactoryImpl : public SMaterialFactory
 
         // 3.make PSO, root signature needs to be ready for the request.
         bool exception = false;
-        const auto pso = material->root_signature ? requestPSO(record, material, shaders, exception) : nullptr;
+        material->pso = material->root_signature ? requestPSO(record, material, shaders, exception) : nullptr;
 
         if (exception) return SKR_INSTALL_STATUS_FAILED;
-        return pso ? SKR_INSTALL_STATUS_SUCCEED : SKR_INSTALL_STATUS_INPROGRESS;
+        return material->pso ? SKR_INSTALL_STATUS_SUCCEED : SKR_INSTALL_STATUS_INPROGRESS;
     }
 
     struct RootSignatureRequest
@@ -339,6 +389,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         const skr_material_resource_t* material = nullptr;
         SMaterialFactoryImpl* factory = nullptr;
         CGPURootSignatureId root_signature = nullptr;
+        CGPUXBindTableId bind_table = nullptr;
         eastl::fixed_vector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
     };
     skr::flat_hash_map<skr_guid_t, SPtr<RootSignatureRequest>, skr::guid::hash> mRootSignatureRequests;

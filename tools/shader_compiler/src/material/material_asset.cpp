@@ -159,6 +159,9 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
                 vblob.slot_name = prop.slot_name;
                 vblob.value = prop.resource.get_guid();
                 blob.textures.emplace_back(vblob);
+
+                // Add runtime resource dependency
+                ctx->AddRuntimeDependency(prop.resource.get_guid());
             }
             break;
             case ESkrMaterialPropertyType::BUFFER:
