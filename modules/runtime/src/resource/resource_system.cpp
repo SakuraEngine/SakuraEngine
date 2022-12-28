@@ -184,55 +184,57 @@ void SResourceSystemImpl::LoadResource(skr_resource_handle_t& handle, bool requi
 
 void SResourceSystemImpl::UnloadResource(skr_resource_handle_t& handle)
 {
+    if(quit)
+        return;
     SKR_ASSERT(handle.is_resolved() && !handle.is_null());
     auto record = handle.get_record();
     SKR_ASSERT(record->loadingStatus != SKR_LOADING_STATUS_UNLOADED);
     record->RemoveReference(handle.get_requester_id(), handle.get_requester_type());
     auto guid = handle.guid = record->header.guid; (void)guid;// force flush handle to guid
-    _UnloadResource(record);
+    if (!record->IsReferenced()) // unload
+    {
+        _UnloadResource(record);
+    }
 }
 
 
 void SResourceSystemImpl::_UnloadResource(skr_resource_record_t* record)
 {
     SKR_ASSERT(!quit);
-    if (!record->IsReferenced()) // unload
+    if (record->loadingStatus == SKR_LOADING_STATUS_ERROR || record->loadingStatus == SKR_LOADING_STATUS_UNLOADED)
     {
-        if (record->loadingStatus == SKR_LOADING_STATUS_ERROR || record->loadingStatus == SKR_LOADING_STATUS_UNLOADED)
+        _DestroyRecord(record);
+        return;
+    }
+    auto request = static_cast<SResourceRequestImpl*>(record->activeRequest);
+    if (request)
+    {
+        request->requireLoading = false;
+    }
+    else // new unload
+    {
+        auto request = SkrNew<SResourceRequestImpl>();
+        request->requestInstall = false;
+        request->resourceRecord = record;
+        request->isLoading = request->requireLoading = false;
+        request->system = this;
+        request->vfs = nullptr;
+        if (record->loadingStatus == SKR_LOADING_STATUS_INSTALLED)
         {
-            _DestroyRecord(record);
-            return;
+            request->currentPhase = SKR_LOADING_PHASE_UNINSTALL_RESOURCE;
+            record->loadingStatus = SKR_LOADING_STATUS_UNINSTALLING;
         }
-        auto request = static_cast<SResourceRequestImpl*>(record->activeRequest);
-        if (request)
+        else if (record->loadingStatus == SKR_LOADING_STATUS_LOADED)
         {
-            request->requireLoading = false;
+            request->currentPhase = SKR_LOADING_PHASE_UNLOAD_RESOURCE;
+            record->loadingStatus = SKR_LOADING_STATUS_UNLOADING;
         }
-        else // new unload
-        {
-            auto request = SkrNew<SResourceRequestImpl>();
-            request->requestInstall = false;
-            request->resourceRecord = record;
-            request->isLoading = request->requireLoading = false;
-            request->system = this;
-            request->vfs = nullptr;
-            if (record->loadingStatus == SKR_LOADING_STATUS_INSTALLED)
-            {
-                request->currentPhase = SKR_LOADING_PHASE_UNINSTALL_RESOURCE;
-                record->loadingStatus = SKR_LOADING_STATUS_UNINSTALLING;
-            }
-            else if (record->loadingStatus == SKR_LOADING_STATUS_LOADED)
-            {
-                request->currentPhase = SKR_LOADING_PHASE_UNLOAD_RESOURCE;
-                record->loadingStatus = SKR_LOADING_STATUS_UNLOADING;
-            }
-            else
-                SKR_UNREACHABLE_CODE();
-            request->factory = this->FindFactory(record->header.type);
-            record->activeRequest = request;
-            counter.add(1);
-            requests.enqueue(request);
-        }
+        else
+            SKR_UNREACHABLE_CODE();
+        request->factory = this->FindFactory(record->header.type);
+        record->activeRequest = request;
+        counter.add(1);
+        requests.enqueue(request);
     }
 }
 
@@ -269,19 +271,15 @@ void SResourceSystemImpl::Shutdown()
         auto record = pair.second;
         if (record->loadingStatus == SKR_LOADING_STATUS_ERROR || record->loadingStatus == SKR_LOADING_STATUS_UNLOADED)
             continue;
-        if(!pair.second->activeRequest)
-        {
-            _UnloadResource(record);
-        }
+        _UnloadResource(record);
     }
     _ClearFinishedRequests();
-    quit = false;
+    quit = true;
     Update(); // fill toUpdateRequests once
     while(!toUpdateRequests.empty())
     {
         Update();
     }
-    quit = true;
     for(auto pair : resourceRecords)
     {
         auto record = pair.second;
@@ -337,7 +335,6 @@ void SResourceSystemImpl::_ClearFinishedRequests()
 
 void SResourceSystemImpl::Update()
 {
-    SKR_ASSERT(!quit);
     {
         SResourceRequest* request = nullptr;
         while (requests.try_dequeue(request))
