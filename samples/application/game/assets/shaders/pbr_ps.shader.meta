@@ -1,0 +1,12 @@
+{
+    "guid": "f47a81a9-bc86-4d1d-899a-efd03c735153",
+    "type": "1c7d845a-fde8-4487-b1c9-e9c48d6a9867",
+    "importer": {
+        "importerType": "a897c990-abea-4f48-8880-e1ae9a93d777",
+        "sourcePath": "pbr_ps.hlsl",
+        "entry": "main",
+        "target": "ps_6_0",
+        "switch_assets": [ "a2bf8869-6805-4f3e-a9a3-d5eeda48fcbd" ],
+        "option_assets": [ "da7a1556-e2b6-4fac-b7c7-f3eca43c7d89" ]
+    }
+}

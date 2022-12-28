@@ -72,13 +72,17 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
 
     struct DStorageRequest
     {
+        DStorageRequest()
+        {
+            texture_destination.texture = nullptr;
+        }
         ~DStorageRequest()
         {
             SKR_LOG_TRACE("DStorage for texture resource %s finished!", absPath.c_str());
         }
         std::string absPath;
         skr_async_request_t vtexture_request;
-        skr_async_vtexture_destination_t texture_destination;
+        skr_async_vtexture_destination_t texture_destination = {};
     };
 
     struct UploadRequest
@@ -87,7 +91,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
         UploadRequest(STextureFactoryImpl* factory, const char* resource_uri, skr_texture_resource_id texture_resource)
             : factory(factory), resource_uri(resource_uri), texture_resource(texture_resource)
         {
-
+            texture_destination.texture = nullptr;
         }
         ~UploadRequest()
         {
@@ -99,7 +103,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
         skr_async_request_t ram_request;
         skr_async_ram_destination_t ram_destination;
         skr_async_request_t vram_request;
-        skr_async_vtexture_destination_t texture_destination;
+        skr_async_vtexture_destination_t texture_destination = {};
     };
 
     Root root;
@@ -127,6 +131,7 @@ skr_type_id_t STextureFactoryImpl::GetResourceType()
 bool STextureFactoryImpl::Unload(skr_resource_record_t* record)
 { 
     auto texture_resource = (skr_texture_resource_t*)record->resource;
+    if (texture_resource->texture_view) cgpu_free_texture_view(texture_resource->texture_view);
     if (texture_resource->texture) cgpu_free_texture(texture_resource->texture);
     SkrDelete(texture_resource);
     return true; 
@@ -284,6 +289,19 @@ ESkrInstallStatus STextureFactoryImpl::UpdateInstall(skr_resource_record_t* reco
             if (okay)
             {
                 texture_resource->texture = dRequest->second->texture_destination.texture;
+                // TODO: mipmap view
+                CGPUTextureViewDescriptor view_desc = {};
+                view_desc.texture = texture_resource->texture;
+                view_desc.array_layer_count = 1;
+                view_desc.base_array_layer = 0;
+                view_desc.mip_level_count = 1;
+                view_desc.base_mip_level = 0;
+                view_desc.aspects = CGPU_TVA_COLOR;
+                view_desc.dims = CGPU_TEX_DIMENSION_2D;
+                view_desc.format = (ECGPUFormat)texture_resource->format;
+                view_desc.usages = CGPU_TVU_SRV;
+                texture_resource->texture_view = cgpu_create_texture_view(root.render_device->get_cgpu_device(), &view_desc);
+
                 mDStorageRequests.erase(texture_resource);
                 mInstallTypes.erase(texture_resource);
             }
@@ -304,6 +322,19 @@ ESkrInstallStatus STextureFactoryImpl::UpdateInstall(skr_resource_record_t* reco
             if (okay)
             {
                 texture_resource->texture = uRequest->second->texture_destination.texture;
+                // TODO: mipmap view
+                CGPUTextureViewDescriptor view_desc = {};
+                view_desc.texture = texture_resource->texture;
+                view_desc.array_layer_count = 1;
+                view_desc.base_array_layer = 0;
+                view_desc.mip_level_count = 1;
+                view_desc.base_mip_level = 0;
+                view_desc.aspects = CGPU_TVA_COLOR;
+                view_desc.dims = CGPU_TEX_DIMENSION_2D;
+                view_desc.format = (ECGPUFormat)texture_resource->format;
+                view_desc.usages = CGPU_TVU_SRV;
+                texture_resource->texture_view = cgpu_create_texture_view(root.render_device->get_cgpu_device(), &view_desc);
+
                 mUploadRequests.erase(texture_resource);
                 mInstallTypes.erase(texture_resource);
             }

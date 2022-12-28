@@ -1,8 +1,10 @@
 #include "utils/log.h"
 #include "utils/make_zeroed.hpp"
 #include "utils/log.hpp"
-#include "cgpu/api.h"
 #include "platform/memory.h"
+
+#include "cgpu/api.h"
+#include "cgpu/cgpux.h"
 
 #include "ecs/callback.hpp"
 #include "ecs/dual.h"
@@ -15,6 +17,8 @@
 #include "rfx_skmesh.hpp"
 
 #include "SkrRenderer/skr_renderer.h"
+#include "SkrRenderer/resources/material_resource.hpp"
+#include "SkrRenderer/resources/texture_resource.h"
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRenderer/render_group.h"
 #include "SkrAnim/components/skin_component.h"
@@ -237,8 +241,52 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                 {
                     auto resourcePtr = (skr_mesh_resource_t*)meshes[r_idx].mesh_resource.get_ptr();
                     auto renderMesh = resourcePtr->render_mesh;
-        
+
+                    // early resolve all materials
+                    for (auto& material : resourcePtr->materials)
+                    {
+                        material.resolve(true, nullptr);
+                    }
+                    bool materials_ready = true;
+                    for (const auto& material : resourcePtr->materials)
+                    {
+                        if (!material.is_resolved())
+                        {
+                            materials_ready = false;
+                            break;
+                        } 
+                    }
+                    if (!materials_ready) continue;
+
+                    // update texture values
+                    for (auto& material : resourcePtr->materials)
+                    {
+                        if (auto pMaterial = material.get_resolved())
+                        {
+                            skr::resource::TResourceHandle<skr_texture_resource_t> hdl = pMaterial->overrides.textures[0].value;
+                            hdl.resolve(true, nullptr);
+                            const auto textureResource = hdl.get_resolved();
+                            
+                            CGPUDescriptorData datas[2];
+                            datas[0] = make_zeroed<CGPUDescriptorData>();
+                            datas[0].name = "color_texture";
+                            datas[0].count = 1;
+                            datas[0].textures = &textureResource->texture_view;
+                            datas[0].binding_type = CGPU_RESOURCE_TYPE_TEXTURE;
+
+                            auto sampler = context->renderer->get_render_device()->get_linear_sampler();
+                            datas[1] = make_zeroed<CGPUDescriptorData>();
+                            datas[1].name = "color_sampler";
+                            datas[1].count = 1;
+                            datas[1].samplers = &sampler;
+                            datas[1].binding_type = CGPU_RESOURCE_TYPE_SAMPLER;
+                            cgpux_bind_table_update(pMaterial->bind_table, datas, 2);
+                        }
+                    }
+
+                    // record draw calls
                     const auto& cmds = renderMesh->primitive_commands;
+                    const auto& materials = resourcePtr->materials;
                     if(anims && !anims->vbs.empty())
                     {
                         for (size_t i = 0; i < resourcePtr->primitives.size(); ++i)
@@ -260,13 +308,14 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                     {
                         for (auto&& cmd : cmds)
                         {
-                            // resources may be ready after produce_drawcall, so we need to check it here
-                            if (push_constants.capacity() <= dc_idx) return;
+                            const auto material = materials[cmd.material_index].get_ptr();
+                            SKR_ASSERT(material->pso && "Material not ready! (no PSO)");
 
                             auto& push_const = push_constants.emplace_back();
                             push_const.model = model_matrix;
                             auto& drawcall = mesh_drawcalls.emplace_back();
-                            drawcall.pipeline = pipeline;
+                            drawcall.pipeline = material->pso ? material->pso : pipeline;
+                            drawcall.bind_table = material->bind_table;
                             drawcall.push_const_name = push_constants_name;
                             drawcall.push_const = (const uint8_t*)(&push_const);
                             drawcall.index_buffer = *cmd.ibv;
@@ -278,9 +327,6 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                 }
                 else
                 {
-                    // resources may be ready after produce_drawcall, so we need to check it here
-                    if (push_constants.capacity() <= dc_idx) return;
-
                     auto& push_const = push_constants.emplace_back();
                     push_const.model = model_matrix;
                     auto& drawcall = mesh_drawcalls.emplace_back();
@@ -476,7 +522,6 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     vertex_layout.attributes[3] = { "NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 3, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attributes[4] = { "TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 4, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attribute_count = 4;
-
 
     const auto fmt = CGPU_FORMAT_B8G8R8A8_UNORM;
     auto rp_desc = make_zeroed<CGPURenderPipelineDescriptor>();

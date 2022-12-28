@@ -244,8 +244,8 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                 const auto depth_buffer = renderGraph->get_texture("depth");
                 builder.set_name("forward_pass")
                     // we know that the drawcalls always have a same pipeline
-                    .set_pipeline(drawcalls.drawcalls->pipeline)
-                    .read("ForwardRenderConstants", cbuffer.range(0, sizeof(skr_float4x4_t)))
+                    .set_root_signature(drawcalls.drawcalls->pipeline->root_signature)
+                    .read("pass_cb", cbuffer.range(0, sizeof(skr_float4x4_t)))
                     .write(0, out_color, need_clear ? CGPU_LOAD_ACTION_CLEAR : CGPU_LOAD_ACTION_LOAD);
                 if (need_clear)
                 {
@@ -257,28 +257,59 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                 }
                 need_clear = false;
             },
-            [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& stack) {
-                auto cb = stack.resolve(cbuffer);
+            [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& pass_context) {
+                for (uint32_t i = 0; i < drawcalls.count; i++)
+                {
+                    ZoneScopedN("UpdateBindTables");
+                    auto&& dc = drawcalls.drawcalls[i];
+                    if (!dc.bind_table || dc.desperated || (dc.index_buffer.buffer == nullptr) || (dc.vertex_buffer_count == 0)) continue;
+                    
+                    CGPUXBindTableId tables[2] = { dc.bind_table, pass_context.bind_table };
+                    pass_context.merge_tables(tables, 2);
+                }
+
+                auto cb = pass_context.resolve(cbuffer);
                 SKR_ASSERT(cb && "cbuffer not found");
                 ::memcpy(cb->cpu_mapped_address, &viewport->view_projection, sizeof(viewport->view_projection));
-                cgpu_render_encoder_set_viewport(stack.encoder,
+                cgpu_render_encoder_set_viewport(pass_context.encoder,
                     0.0f, 0.0f,
                     (float)viewport->viewport_width, (float)viewport->viewport_height,
                     0.f, 1.f);
-                cgpu_render_encoder_set_scissor(stack.encoder,
+                cgpu_render_encoder_set_scissor(pass_context.encoder,
                     0, 0, 
                     viewport->viewport_width, viewport->viewport_height);
                 
                 {
                 ZoneScopedN("DrawCalls");
+                CGPURenderPipelineId old_pipeline = nullptr;
                 for (uint32_t i = 0; i < drawcalls.count; i++)
                 {
                     // ZoneScopedN("DrawCall");
 
                     auto&& dc = drawcalls.drawcalls[i];
+                    if (dc.desperated || (dc.index_buffer.buffer == nullptr) || (dc.vertex_buffer_count == 0)) continue;
+                    
+                    if (old_pipeline != dc.pipeline)
+                    {
+                        cgpu_render_encoder_bind_pipeline(pass_context.encoder, dc.pipeline);
+                        old_pipeline = dc.pipeline;
+                    }
+
+                    {
+                        if (dc.bind_table)
+                        {
+                            CGPUXBindTableId tables[2] = { dc.bind_table, pass_context.bind_table };
+                            pass_context.merge_and_bind_tables(tables, 2);
+                        }
+                        else
+                        {
+                            cgpux_render_encoder_bind_bind_table(pass_context.encoder, pass_context.bind_table);
+                        }
+                    }
+
                     {
                         // ZoneScopedN("BindGeometry");
-                        cgpu_render_encoder_bind_index_buffer(stack.encoder, 
+                        cgpu_render_encoder_bind_index_buffer(pass_context.encoder, 
                             dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
                         CGPUBufferId vertex_buffers[16] = { 0 };
                         uint32_t strides[16] = { 0 };
@@ -289,16 +320,16 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                             strides[i] = dc.vertex_buffers[i].stride;
                             offsets[i] = dc.vertex_buffers[i].offset;
                         }
-                        cgpu_render_encoder_bind_vertex_buffers(stack.encoder, dc.vertex_buffer_count, vertex_buffers, strides, offsets);
+                        cgpu_render_encoder_bind_vertex_buffers(pass_context.encoder, dc.vertex_buffer_count, vertex_buffers, strides, offsets);
                     }
                     {
                         // ZoneScopedN("PushConstants");
-                        cgpu_render_encoder_push_constants(stack.encoder, dc.pipeline->root_signature, dc.push_const_name, dc.push_const);
+                        cgpu_render_encoder_push_constants(pass_context.encoder, dc.pipeline->root_signature, dc.push_const_name, dc.push_const);
                     }
-                    cgpu_render_encoder_set_shading_rate(stack.encoder, shading_rate, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH);
+                    cgpu_render_encoder_set_shading_rate(pass_context.encoder, shading_rate, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH, CGPU_SHADING_RATE_COMBINER_PASSTHROUGH);
                     {
                         // ZoneScopedN("DrawIndexed");
-                        cgpu_render_encoder_draw_indexed_instanced(stack.encoder, dc.index_buffer.index_count, dc.index_buffer.first_index, 1, 0, 0);
+                        cgpu_render_encoder_draw_indexed_instanced(pass_context.encoder, dc.index_buffer.index_count, dc.index_buffer.first_index, 1, 0, 0);
                     }
                 }
                 }

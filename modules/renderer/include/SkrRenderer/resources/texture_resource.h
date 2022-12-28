@@ -18,9 +18,10 @@ skr_texture_resource_t
     uint32_t width;
     uint32_t height;
     uint32_t depth;
-    sattr("transient": true)
-    sattr("no-rtti": true)
+
+    spush_attr("no-rtti" : true, "transient": true)
     CGPUTextureId texture;
+    CGPUTextureViewId texture_view;
 };
 typedef struct skr_texture_resource_t skr_texture_resource_t;
 typedef struct skr_texture_resource_t* skr_texture_resource_id;

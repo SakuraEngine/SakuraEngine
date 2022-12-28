@@ -322,6 +322,7 @@ void create_test_scene(SRendererId renderer)
         auto indices = dual::get_owned_rw<skr_index_comp_t>(view);
         auto movements = dual::get_owned_rw<skr_movement_comp_t>(view);
         auto states = dual::get_owned_rw<game::anim_state_t>(view);
+        
         for (uint32_t i = 0; i < view->count; i++)
         {
             if (movements)
@@ -371,8 +372,8 @@ void create_test_scene(SRendererId renderer)
     // allocate 1 static(unmovable) gltf mesh
     auto static_renderableT_builderT = make_zeroed<dual::type_builder_t>();
     static_renderableT_builderT
-    .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
-    .with<skr_render_effect_t, game::anim_state_t>();
+        .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
+        .with<skr_render_effect_t, game::anim_state_t>();
     auto static_renderableT = make_zeroed<dual_entity_type_t>();
     static_renderableT.type = static_renderableT_builderT.build();
     dualS_allocate_type(renderer->get_dual_storage(), &static_renderableT, 1, DUAL_LAMBDA(primSetup));
@@ -380,7 +381,7 @@ void create_test_scene(SRendererId renderer)
     SKR_LOG_DEBUG("Create Scene 2!");
 }
 
-void async_attach_render_mesh(SRendererId renderer)
+void async_attach_skin_mesh(SRendererId renderer)
 {
     auto filter = make_zeroed<dual_filter_t>();
     auto meta = make_zeroed<dual_meta_filter_t>();
@@ -417,13 +418,45 @@ void async_attach_render_mesh(SRendererId renderer)
     dualS_query(renderer->get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
 }
 
+void async_attach_render_mesh(SRendererId renderer)
+{
+    auto filter = make_zeroed<dual_filter_t>();
+    auto meta = make_zeroed<dual_meta_filter_t>();
+    auto renderable_type = make_zeroed<dual::type_builder_t>();
+    renderable_type.with<skr_render_effect_t, skr_translation_comp_t>();
+    auto static_type = make_zeroed<dual::type_builder_t>();
+    static_type.with<skr_movement_comp_t>();
+    filter.all = renderable_type.build();
+    filter.none = static_type.build();
+    auto attchFunc = [=](dual_chunk_view_t* view) {
+        auto requestSetup = [=](dual_chunk_view_t* view) {
+            using namespace skr::guid::literals;
+            auto mesh_comps = dual::get_owned_rw<skr_render_mesh_comp_t>(view);
+
+            for (uint32_t i = 0; i < view->count; i++)
+            {
+                auto& mesh_comp = mesh_comps[i];
+                mesh_comp.mesh_resource = "79bb81eb-4e9f-4301-bf0c-a15b10a1cc3b"_guid;
+                mesh_comp.mesh_resource.resolve(true, renderer->get_dual_storage());
+            }
+        };
+        skr_render_effect_access(renderer, view, "ForwardEffectSkin", DUAL_LAMBDA(requestSetup));
+    };
+    dualS_query(renderer->get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
+}
+
 void imgui_button_spawn_girl(SRendererId renderer)
 {
     static bool onceGuard = true;
     if (onceGuard)
     {
         ImGui::Begin(u8"AsyncMesh");
-        if (ImGui::Button(u8"LoadMesh(AsResource)"))
+        if (ImGui::Button(u8"LoadSkinMesh(AsResource)"))
+        {
+            async_attach_skin_mesh(renderer);
+            onceGuard = false;
+        }
+        else if (ImGui::Button(u8"LoadMesh(AsResource)"))
         {
             async_attach_render_mesh(renderer);
             onceGuard = false;

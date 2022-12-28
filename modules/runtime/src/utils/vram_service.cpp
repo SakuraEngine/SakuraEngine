@@ -695,7 +695,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                     foreach_task(task);
                     SKR_ASSERT(task.step == kStepFinished);
                 }
-                SKR_LOG_TRACE("Delete DirectStorage Batch %d with %d Tasks", batch.second->id, batch.second->tasks.size());
+                SKR_LOG_TRACE("Delete Upload/DirectStorage Batch %d with %d Tasks", batch.second->id, batch.second->tasks.size());
                 SkrDelete(batch.second);
                 batch.second = nullptr;
             }

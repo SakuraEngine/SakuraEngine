@@ -18,7 +18,7 @@ struct VSOut
     float4 tangent : TANGENT;
 };
 
-cbuffer ForwardRenderConstants
+struct ForwardRenderConstants
 {
     float4x4 view_proj;
 };
@@ -30,25 +30,19 @@ struct RootConstants
 [[vk::push_constant]]
 ConstantBuffer<RootConstants> push_constants;
 
+[[vk::binding(0, 0)]]
+ConstantBuffer<ForwardRenderConstants> pass_cb : register(b0, space0);
+
 VSOut main(const VSIn input)
 {
     VSOut output;
     float4 posW = mul(float4(input.position, 1.0f), push_constants.model);
-    float4 posH = mul(posW, view_proj);
+    float4 posH = mul(posW, pass_cb.view_proj);
     output.position = posH;
     output.uv = input.uv;
     output.normal = float4(input.normal, 0.f);
 #ifdef VERTEX_HAS_TANGENT // if (VERTEX_HAS_TANGENT.on)
     output.tangent = input.tangent;
-#endif
-#ifdef SM_5_0
-    output.uv = input.uv.yx;
-#endif
-#ifdef SM_6_3
-    output.uv = output.uv.yx;
-#endif
-#ifdef SM_6_6
-    output.uv = output.uv.yx;
 #endif
     return output;
 }

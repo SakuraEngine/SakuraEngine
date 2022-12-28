@@ -11,6 +11,7 @@ void CGPUXBindTableValue::Initialize(const CGPUXBindTableLocation& loc, const CG
     data = rhs;
     data.name = nullptr;
     data.binding = loc.binding;
+    data.binding_type = rhs.binding_type;
     binded = false;
     resources.resize(data.count);
     for (uint32_t i = 0; i < data.count; i++)
