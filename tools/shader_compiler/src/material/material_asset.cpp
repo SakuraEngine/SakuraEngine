@@ -75,7 +75,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
         for (uint32_t switch_i = 0; switch_i < variant.switch_indices.size(); switch_i++)
         {
             // default value
-            const auto& default_value  = matType->switch_defaults[switch_i];
+            const auto& default_value = matType->switch_defaults[switch_i];
             const auto default_index = shader_collection->switch_sequence.find_value_index(default_value.key, default_value.value);
             SKR_ASSERT(default_index != UINT32_MAX && "Invalid switch default value");
             variant.switch_indices[switch_i] = default_index;
@@ -85,7 +85,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
         for (uint32_t option_i = 0; option_i < variant.option_indices.size(); option_i++)
         {
             // default value
-            const auto& default_value  = matType->option_defaults[option_i];
+            const auto& default_value = matType->option_defaults[option_i];
             const auto default_index = shader_collection->option_sequence.find_value_index(default_value.key, default_value.value);
             SKR_ASSERT(default_index != UINT32_MAX && "Invalid option default value");
             variant.option_indices[option_i] = default_index;
@@ -99,6 +99,27 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
         variant.option_hash = option_hash;
         variant.shader_collection = shader_resource.get_record()->header.guid;
     }
+
+    // if material->overrides do not include a value, use default variant in material type
+    for (const auto& default_value : matType->default_values)
+    {
+        bool overrided = false;
+        for (const auto& override_value : material->override_values)
+        {
+            if (default_value.slot_name == override_value.slot_name)
+            {
+                overrided = true;
+                break;
+            }
+        }
+        if (!overrided)
+        {
+            material->override_values.emplace_back(default_value);
+        }
+    }
+
+    // TODO: check & validate material overrides
+
 
     // value overrides
     for (const auto& prop : material->override_values)
@@ -164,8 +185,18 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
                 ctx->AddRuntimeDependency(prop.resource.get_guid());
             }
             break;
-            case ESkrMaterialPropertyType::BUFFER:
             case ESkrMaterialPropertyType::SAMPLER:
+            {
+                auto vblob = skr::make_blob_builder<skr_material_value_sampler_t>();
+                vblob.slot_name = prop.slot_name;
+                vblob.value = prop.resource.get_guid();
+                blob.samplers.emplace_back(vblob);
+
+                // Add runtime resource dependency
+                ctx->AddRuntimeDependency(prop.resource.get_guid());
+            }
+            break;
+            case ESkrMaterialPropertyType::BUFFER:
             {
                 SKR_UNIMPLEMENTED_FUNCTION();
             }

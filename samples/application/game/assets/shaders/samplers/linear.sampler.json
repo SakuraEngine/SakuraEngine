@@ -1,0 +1,9 @@
+{
+    "min_filter": "LINEAR",
+    "mag_filter": "LINEAR",
+    "mipmap_mode": "LINEAR",
+    "address_u": "REPEAT",
+    "address_v": "REPEAT",
+    "address_w": "REPEAT",
+    "compare_func": "NEVER"
+}

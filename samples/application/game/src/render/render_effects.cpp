@@ -259,6 +259,7 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                     if (!materials_ready) continue;
 
                     // update texture values
+                    // TODO: remove this hack
                     for (auto& material : resourcePtr->materials)
                     {
                         if (auto pMaterial = material.get_resolved())
@@ -274,11 +275,12 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                             datas[0].textures = &textureResource->texture_view;
                             datas[0].binding_type = CGPU_RESOURCE_TYPE_TEXTURE;
 
-                            auto sampler = context->renderer->get_render_device()->get_linear_sampler();
+                            skr::resource::TResourceHandle<skr_texture_sampler_resource_t> hdl1 = pMaterial->overrides.samplers[0].value;
+                            hdl1.resolve(true, nullptr);
                             datas[1] = make_zeroed<CGPUDescriptorData>();
                             datas[1].name = "color_sampler";
                             datas[1].count = 1;
-                            datas[1].samplers = &sampler;
+                            datas[1].samplers = &hdl1.get_resolved()->sampler;
                             datas[1].binding_type = CGPU_RESOURCE_TYPE_SAMPLER;
                             cgpux_bind_table_update(pMaterial->bind_table, datas, 2);
                         }

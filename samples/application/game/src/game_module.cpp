@@ -79,6 +79,7 @@ class SGameModule : public skr::IDynamicModule
     void uninstallResourceFactories();
 
     skr::resource::STextureFactory* textureFactory = nullptr;
+    skr::resource::STextureSamplerFactory* textureSamplerFactory = nullptr;
     skr::resource::SMeshFactory* meshFactory = nullptr;
     skr::resource::SShaderResourceFactory* shaderFactory = nullptr;
     skr::resource::SMaterialTypeFactory* matTypeFactory = nullptr;
@@ -134,6 +135,13 @@ void SGameModule::installResourceFactories()
 
     auto gameResourceRoot = resourceRoot / "game";
     auto u8TextureRoot = gameResourceRoot.u8string();
+    // texture sampler factory
+    {
+        skr::resource::STextureSamplerFactory::Root factoryRoot = {};
+        factoryRoot.device = game_render_device->get_cgpu_device();
+        textureSamplerFactory = skr::resource::STextureSamplerFactory::Create(factoryRoot);
+        resource_system->RegisterFactory(textureSamplerFactory);
+    }
     // texture factory
     {
         skr_vfs_desc_t tex_vfs_desc = {};
@@ -262,6 +270,7 @@ void SGameModule::uninstallResourceFactories()
     auto resource_system = skr::resource::GetResourceSystem();
     resource_system->Shutdown();
 
+    skr::resource::STextureSamplerFactory::Destroy(textureSamplerFactory);
     skr::resource::STextureFactory::Destroy(textureFactory);
     skr::resource::SMeshFactory::Destroy(meshFactory);
     skr::resource::SShaderResourceFactory::Destroy(shaderFactory);
