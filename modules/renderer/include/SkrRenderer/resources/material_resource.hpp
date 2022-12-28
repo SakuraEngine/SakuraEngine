@@ -73,6 +73,15 @@ skr_material_value_texture_t
 };
 GENERATED_BLOB_BUILDER(skr_material_value_texture_t)
 
+sreflect_struct("guid": "760d78ba-c42c-49fa-9164-6968e7693461")
+sattr("blob" : true)
+skr_material_value_sampler_t
+{
+    skr_material_property_name_view_t slot_name;
+    skr_guid_t value;
+};
+GENERATED_BLOB_BUILDER(skr_material_value_sampler_t)
+
 sreflect_struct("guid": "7cbbb808-20d9-4bff-b72d-3c23d5b00f2b")
 sattr("blob" : true)
 skr_material_shader_variant
@@ -106,6 +115,7 @@ skr_material_overrides_t
     skr::span<skr_material_value_float4_t> float4s;
     skr::span<skr_material_value_double_t> doubles;
     skr::span<skr_material_value_texture_t> textures;
+    skr::span<skr_material_value_sampler_t> samplers;
 };
 GENERATED_BLOB_BUILDER(skr_material_overrides_t)
 

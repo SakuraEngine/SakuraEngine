@@ -29,6 +29,9 @@ void* SMaterialTypeImporter::Import(skr_io_ram_service_t* ioService, SCookContex
     // create source code wrapper
     auto type_asset = SkrNew<skr_material_type_asset_t>();
     skr::json::Read(std::move(json_value), *type_asset);
+    
+    SKR_ASSERT(!type_asset->vertex_type.isZero() && "Vertex type must be specified for material type!");
+
     return type_asset;
 }
 

@@ -8,6 +8,13 @@
             "prop_type": "TEXTURE",
             "description": "base color texture for unlit material to render",
             "default_resource": "cb5fe6d7-5d91-4f3b-81b0-0a7afbf1a7cb"
+        },
+        {
+            "name": "color_sampler",
+            "display_name": "ColorSampler",
+            "prop_type": "SAMPLER",
+            "description": "sampler used by color texture",
+            "default_resource": "671b8967-4e82-405a-ab47-95c81e12059d"
         }
     ],
     "switch_defaults": [

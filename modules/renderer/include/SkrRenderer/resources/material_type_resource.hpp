@@ -20,6 +20,7 @@ ESkrMaterialPropertyType : uint32_t
     TEXTURE,
     BUFFER,
     SAMPLER,
+    STATIC_SAMPLER,
     COUNT
 };
 

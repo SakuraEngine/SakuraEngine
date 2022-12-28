@@ -146,7 +146,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         CGPURootSignatureDescriptor rs_desc = {};
         rs_desc.pool = rs_pool;
         rs_desc.shader_count = static_cast<uint32_t>(shaders.size());
-        rs_desc.shaders = ppl_shaders; // FIXME: we need to get the shader pointers from the async shader map
+        rs_desc.shaders = ppl_shaders; 
         // TODO: static samplers & push constants
         rs_desc.push_constant_count = 1;
         const char* push_const_name = "push_constants";
@@ -174,7 +174,14 @@ struct SMaterialFactoryImpl : public SMaterialFactory
                 const auto& resource = table.resources[j];
                 if (resource.type == CGPU_RESOURCE_TYPE_SAMPLER)
                 {
-                    // SKR_UNIMPLEMENTED_FUNCTION();
+                    for (const auto& override : material->overrides.samplers)
+                    {
+                        if (override.slot_name.starts_with(resource.name) 
+                        && strlen(resource.name) == override.slot_name.size()) // slot name matches
+                        {
+                            slot_names.emplace_back(resource.name);
+                        }
+                    }
                 }
                 else if (resource.type == CGPU_RESOURCE_TYPE_TEXTURE)
                 {
@@ -193,9 +200,6 @@ struct SMaterialFactoryImpl : public SMaterialFactory
                 }
             }
         }
-        // TODO: remove this hack
-        slot_names.emplace_back(sampler_name);
-
         table_desc.names_count = slot_names.size();
         table_desc.names = slot_names.data();
         const auto bind_table = cgpux_create_bind_table(root.device, &table_desc);
