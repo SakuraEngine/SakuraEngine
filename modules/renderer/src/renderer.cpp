@@ -155,14 +155,10 @@ struct SKR_RENDERER_API SkrRendererImpl : public SRenderer
                     pass->on_update(&pass_context);
 
                     auto& pass_draw_packets = draw_packets[pass->identity()];
-                    for (auto pass_draw_packet : pass_draw_packets)
                     {
-                        for (uint32_t i = 0; i < pass_draw_packet.count; i++)
-                        {
-                            ZoneScopedN("PassExecute");
+                        ZoneScopedN("PassExecute");
 
-                            pass->execute(&pass_context, pass_draw_packet.lists[i]);
-                        }
+                        pass->execute(&pass_context, pass_draw_packets);
                     }
 
                     pass->post_update(&pass_context);

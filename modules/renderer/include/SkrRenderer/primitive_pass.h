@@ -26,7 +26,7 @@ struct IPrimitiveRenderPass {
     virtual void on_update(const skr_primitive_pass_context_t* context) = 0;
     virtual void post_update(const skr_primitive_pass_context_t* context) = 0;
 
-    virtual void execute(const skr_primitive_pass_context_t* context, skr_primitive_draw_list_view_t dc) = 0;
+    virtual void execute(const skr_primitive_pass_context_t* context, skr::span<const skr_primitive_draw_packet_t> dcs) = 0;
     virtual skr_render_pass_name_t identity() const = 0;
 #endif
 };
