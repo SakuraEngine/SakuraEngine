@@ -31,6 +31,7 @@ namespace render_graph
 class ResourceNode;
 class TextureNode;
 class BufferNode;
+class RenderGraphBackend;
 
 struct PassContext;
 struct ComputePassContext;
