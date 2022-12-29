@@ -4,10 +4,9 @@ struct VSIn
 {
     float3 position : POSITION;
     float2 uv : TEXCOORD0;
+    float2 uv1 : TEXCOORD1;
     centroid float3 normal : NORMAL;
-#ifdef VERTEX_HAS_TANGENT
     centroid float4 tangent : TANGENT;
-#endif
 };
 
 struct VSOut
@@ -41,8 +40,6 @@ VSOut main(const VSIn input)
     output.position = posH;
     output.uv = input.uv;
     output.normal = float4(input.normal, 0.f);
-#ifdef VERTEX_HAS_TANGENT // if (VERTEX_HAS_TANGENT.on)
     output.tangent = input.tangent;
-#endif
     return output;
 }

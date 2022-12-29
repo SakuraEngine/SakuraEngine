@@ -164,10 +164,10 @@ struct SMaterialFactoryImpl : public SMaterialFactory
     const char* sampler_name = "color_sampler";
     CGPUXBindTableId createMaterialBindTable(const skr_material_resource_t* material, CGPURootSignatureId root_signature) const
     {
-        // make bind table
+        // 1.make bind table
+        // TODO: multi bind table
         CGPUXBindTableDescriptor table_desc = {};
         table_desc.root_signature = root_signature;
-        // TODO: multi bind table
         eastl::fixed_vector<const char*, 16> slot_names;
         for (uint32_t i = 0; i < root_signature->table_count; i++)
         {
@@ -206,7 +206,8 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         table_desc.names_count = slot_names.size();
         table_desc.names = slot_names.data();
         const auto bind_table = cgpux_create_bind_table(root.device, &table_desc);
-        // update values
+
+        // 2.update values
         eastl::fixed_vector<CGPUDescriptorData, 16> updates;
         for (const auto& override : material->overrides.samplers)
         {
