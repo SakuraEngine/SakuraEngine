@@ -4,10 +4,13 @@
 #include "utils/make_zeroed.hpp"
 #include "utils/threaded_service.h"
 #include "SkrRenderer/render_device.h"
+
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRenderer/resources/material_resource.hpp"
 #include "SkrRenderer/resources/material_type_resource.hpp"
+#include "SkrRenderer/resources/texture_resource.h"
 #include "SkrRenderer/shader_map.h"
+
 #include "SkrRenderer/pso_map.h"
 #include "platform/guid.hpp"
 
@@ -203,6 +206,31 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         table_desc.names_count = slot_names.size();
         table_desc.names = slot_names.data();
         const auto bind_table = cgpux_create_bind_table(root.device, &table_desc);
+        // update values
+        eastl::fixed_vector<CGPUDescriptorData, 16> updates;
+        for (const auto& override : material->overrides.samplers)
+        {
+            skr::resource::TResourceHandle<skr_texture_sampler_resource_t> hdl = override.value;
+            hdl.resolve(true, nullptr);
+
+            auto& update = updates.emplace_back();
+            update.name = override.slot_name.data();
+            update.count = 1;
+            update.samplers = &hdl.get_resolved()->sampler;
+            update.binding_type = CGPU_RESOURCE_TYPE_SAMPLER;
+        }
+        for (const auto& override : material->overrides.textures)
+        {
+            skr::resource::TResourceHandle<skr_texture_resource_t> hdl = override.value;
+            hdl.resolve(true, nullptr);
+
+            auto& update = updates.emplace_back();
+            update.name = override.slot_name.data();
+            update.count = 1; // TODO: Tex array parameter
+            update.textures = &hdl.get_resolved()->texture_view;
+            update.binding_type = CGPU_RESOURCE_TYPE_TEXTURE;
+        }
+        cgpux_bind_table_update(bind_table, updates.data(), updates.size());
         return bind_table;
     }
 

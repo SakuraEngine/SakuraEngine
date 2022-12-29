@@ -258,34 +258,6 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                     }
                     if (!materials_ready) continue;
 
-                    // update texture values
-                    // TODO: remove this hack
-                    for (auto& material : resourcePtr->materials)
-                    {
-                        if (auto pMaterial = material.get_resolved())
-                        {
-                            skr::resource::TResourceHandle<skr_texture_resource_t> hdl = pMaterial->overrides.textures[0].value;
-                            hdl.resolve(true, nullptr);
-                            const auto textureResource = hdl.get_resolved();
-                            
-                            CGPUDescriptorData datas[2];
-                            datas[0] = make_zeroed<CGPUDescriptorData>();
-                            datas[0].name = "color_texture";
-                            datas[0].count = 1;
-                            datas[0].textures = &textureResource->texture_view;
-                            datas[0].binding_type = CGPU_RESOURCE_TYPE_TEXTURE;
-
-                            skr::resource::TResourceHandle<skr_texture_sampler_resource_t> hdl1 = pMaterial->overrides.samplers[0].value;
-                            hdl1.resolve(true, nullptr);
-                            datas[1] = make_zeroed<CGPUDescriptorData>();
-                            datas[1].name = "color_sampler";
-                            datas[1].count = 1;
-                            datas[1].samplers = &hdl1.get_resolved()->sampler;
-                            datas[1].binding_type = CGPU_RESOURCE_TYPE_SAMPLER;
-                            cgpux_bind_table_update(pMaterial->bind_table, datas, 2);
-                        }
-                    }
-
                     // record draw calls
                     const auto& cmds = renderMesh->primitive_commands;
                     const auto& materials = resourcePtr->materials;
