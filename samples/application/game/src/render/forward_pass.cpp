@@ -250,7 +250,6 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
             const auto depth_buffer = renderGraph->get_texture("depth");
             builder.set_name("forward_pass")
                 // we know that the drawcalls always have a same pipeline
-                .set_root_signature(root_signature)
                 .read("pass_cb", cbuffer.range(0, sizeof(skr_float4x4_t)))
                 .write(0, out_color, need_clear ? CGPU_LOAD_ACTION_CLEAR : CGPU_LOAD_ACTION_LOAD);
             if (need_clear)
@@ -265,19 +264,6 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
         },
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& pass_context) {
             auto cb = pass_context.resolve(cbuffer);
-
-            for (uint32_t i = 0; i < drawcalls.size(); i++)
-                for (uint32_t j = 0; j < drawcalls[i].count; j++)
-                    for (uint32_t k = 0; k < drawcalls[i].lists[k].count; k++)
-                    {
-                        ZoneScopedN("UpdateBindTables");
-                        auto&& dc = drawcalls[i].lists[j].drawcalls[k];
-                        if (!dc.bind_table || dc.desperated || (dc.index_buffer.buffer == nullptr) || (dc.vertex_buffer_count == 0)) continue;
-                        
-                        CGPUXBindTableId tables[2] = { dc.bind_table, pass_context.bind_table };
-                        pass_context.merge_tables(tables, 2);
-                    }
-
             SKR_ASSERT(cb && "cbuffer not found");
             ::memcpy(cb->cpu_mapped_address, &viewport->view_projection, sizeof(viewport->view_projection));
             cgpu_render_encoder_set_viewport(pass_context.encoder,
@@ -291,6 +277,8 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
             {
             ZoneScopedN("DrawCalls");
             CGPURenderPipelineId old_pipeline = nullptr;
+            CGPUXBindTableId bind_table1 = nullptr;
+            CGPUXBindTableId bind_table2 = nullptr;
             for (uint32_t i = 0; i < drawcalls.size(); i++)
             for (uint32_t j = 0; j < drawcalls[i].count; j++)
             for (uint32_t k = 0; k < drawcalls[i].lists[j].count; k++)
@@ -304,14 +292,25 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                     old_pipeline = dc.pipeline;
                 }
 
+                // THIS IS A HACK: all effects only produce one RS for now, we must FIX THIS later
+                // TODO: fix this hack (implement a batch update for bind tables of different RS)
+                if (dc.bind_table && !bind_table1)
+                {
+                    bind_table1 = pass_context.create_and_update_bind_table(dc.pipeline->root_signature);
+                }
+                else if (!bind_table2)
+                {
+                    bind_table2 = pass_context.create_and_update_bind_table(dc.pipeline->root_signature);
+                }
+
                 if (dc.bind_table)
                 {
-                    CGPUXBindTableId tables[2] = { dc.bind_table, pass_context.bind_table };
+                    CGPUXBindTableId tables[2] = { dc.bind_table, bind_table1 };
                     pass_context.merge_and_bind_tables(tables, 2);
                 }
                 else
                 {
-                    cgpux_render_encoder_bind_bind_table(pass_context.encoder, pass_context.bind_table);
+                    cgpux_render_encoder_bind_bind_table(pass_context.encoder, bind_table2);
                 }
 
                 {

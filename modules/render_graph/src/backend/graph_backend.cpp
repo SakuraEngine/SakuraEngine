@@ -330,20 +330,16 @@ const CGPUShaderResource* find_shader_resource(uint64_t name_hash, CGPURootSigna
     return nullptr;
 }
 
-CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT
+CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFrameExecutor& executor, PassNode* pass, CGPURootSignatureId root_sig) SKR_NOEXCEPT
 {
+    if (!root_sig) return nullptr;
+
     ZoneScopedN("UpdateBindings");
-    CGPURootSignatureId root_sig = nullptr;
     auto tex_read_edges = pass->tex_read_edges();
     auto tex_rw_edges = pass->tex_readwrite_edges();
     auto buf_read_edges = pass->buf_read_edges();
     auto buf_rw_edges = pass->buf_readwrite_edges(); (void)buf_rw_edges;
-    // Get Root Signature
-    if (pass->pass_type == EPassType::Render)
-        root_sig = ((RenderPassNode*)pass)->root_signature;
-    else if (pass->pass_type == EPassType::Compute)
-        root_sig = ((ComputePassNode*)pass)->root_signature;
-    if (!root_sig) return nullptr;
+
     // Allocate or get descriptor set heap
     auto&& table_pool_iter = executor.bind_table_pools.find(root_sig);
     if (table_pool_iter == executor.bind_table_pools.end())
@@ -521,8 +517,9 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
         tex_barriers, resolved_textures,
         buffer_barriers, resolved_buffers);
     // allocate & update descriptor sets
-    pass_context.bind_table = alloc_update_pass_bind_table(executor, pass);
-    pass_context.root_signature = pass->root_signature;
+    pass_context.graph = this;
+    pass_context.pass = pass;
+    pass_context.bind_table = alloc_update_pass_bind_table(executor, pass, pass->root_signature);
     pass_context.resolved_buffers = resolved_buffers;
     pass_context.resolved_textures = resolved_textures;
     pass_context.executor = &executor;
@@ -576,8 +573,9 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         tex_barriers, resolved_textures,
         buffer_barriers, resolved_buffers);
     // allocate & update descriptor sets
-    pass_context.bind_table = alloc_update_pass_bind_table(executor, pass);
-    pass_context.root_signature = pass->root_signature;
+    pass_context.graph = this;
+    pass_context.pass = pass;
+    pass_context.bind_table = alloc_update_pass_bind_table(executor, pass, pass->root_signature);
     pass_context.resolved_buffers = resolved_buffers;
     pass_context.resolved_textures = resolved_textures;
     pass_context.executor = &executor;
