@@ -522,6 +522,7 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
         buffer_barriers, resolved_buffers);
     // allocate & update descriptor sets
     pass_context.bind_table = alloc_update_pass_bind_table(executor, pass);
+    pass_context.root_signature = pass->root_signature;
     pass_context.resolved_buffers = resolved_buffers;
     pass_context.resolved_textures = resolved_textures;
     pass_context.executor = &executor;
@@ -576,6 +577,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         buffer_barriers, resolved_buffers);
     // allocate & update descriptor sets
     pass_context.bind_table = alloc_update_pass_bind_table(executor, pass);
+    pass_context.root_signature = pass->root_signature;
     pass_context.resolved_buffers = resolved_buffers;
     pass_context.resolved_textures = resolved_textures;
     pass_context.executor = &executor;
@@ -728,7 +730,10 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     {
         cgpu_render_encoder_bind_pipeline(pass_context.encoder, pass->pipeline);
     }
-    cgpux_render_encoder_bind_bind_table(pass_context.encoder, pass_context.bind_table);
+    if(pass_context.bind_table)
+    {
+        cgpux_render_encoder_bind_bind_table(pass_context.encoder, pass_context.bind_table);
+    }
     {
         ZoneScopedN("PassExecutor");
         pass->executor(*this, pass_context);

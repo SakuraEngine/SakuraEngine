@@ -1344,8 +1344,8 @@ CGPUCommandBufferId cgpu_create_command_buffer_d3d12(CGPUCommandPoolId pool, con
 
     ID3D12PipelineState* initialState = NULL;
     CHECK_HRESULT(D->pDxDevice->CreateCommandList(
-    nodeMask, gDx12CmdTypeTranslator[Cmd->mType], P->pDxCmdAlloc, initialState,
-    __uuidof(Cmd->pDxCmdList), (void**)&(Cmd->pDxCmdList)));
+        nodeMask, gDx12CmdTypeTranslator[Cmd->mType], P->pDxCmdAlloc, initialState,
+        __uuidof(Cmd->pDxCmdList), (void**)&(Cmd->pDxCmdList)));
 
     // Command lists are addd in the recording state, but there is nothing
     // to record yet. The main loop expects it to be closed, so close it now.
