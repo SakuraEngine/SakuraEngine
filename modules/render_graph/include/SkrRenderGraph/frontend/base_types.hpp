@@ -317,6 +317,8 @@ struct RenderGraphEdge : public DependencyGraphEdge {
 };
 
 struct SKR_RENDER_GRAPH_API PassContext {
+    PassNode* pass = nullptr;
+    skr::render_graph::RenderGraphBackend* graph = nullptr;
     CGPUCommandBufferId cmd;
     skr::span<eastl::pair<BufferHandle, CGPUBufferId>> resolved_buffers;
     skr::span<eastl::pair<TextureHandle, CGPUTextureId>> resolved_textures;
@@ -328,10 +330,10 @@ struct SKR_RENDER_GRAPH_API PassContext {
 struct SKR_RENDER_GRAPH_API BindablePassContext : public PassContext {
     friend class RenderGraphBackend;
 
+    const struct CGPUXBindTable* create_and_update_bind_table(CGPURootSignatureId root_sig) SKR_NOEXCEPT;
     const struct CGPUXMergedBindTable* merge_tables(const struct CGPUXBindTable** tables, uint32_t count) SKR_NOEXCEPT;
 
     const struct CGPUXBindTable* bind_table;
-    CGPURootSignatureId root_signature;
 protected:
     class RenderGraphFrameExecutor* executor;
 };

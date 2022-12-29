@@ -24,6 +24,11 @@ CGPUTextureId PassContext::resolve(TextureHandle tex_handle) const
     return nullptr;
 }
 
+const struct CGPUXBindTable* BindablePassContext::create_and_update_bind_table(CGPURootSignatureId root_sig) SKR_NOEXCEPT
+{
+    return graph->alloc_update_pass_bind_table(*executor, pass, root_sig);
+}
+
 const struct CGPUXMergedBindTable* BindablePassContext::merge_tables(const struct CGPUXBindTable **tables, uint32_t count) SKR_NOEXCEPT
 {
     // allocate merged table from pool in executor

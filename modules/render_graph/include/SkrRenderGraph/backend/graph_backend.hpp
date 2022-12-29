@@ -50,6 +50,7 @@ using stack_vector = eastl::fixed_vector<T, stack_vector_fixed_count>;
 
 class RenderGraphBackend : public RenderGraph
 {
+    friend struct BindablePassContext; 
 public:
     void devirtualize(TextureNode* node);
     void devirtualize(PassNode* node);
@@ -80,7 +81,7 @@ protected:
     void calculate_barriers(RenderGraphFrameExecutor& executor, PassNode* pass,
         stack_vector<CGPUTextureBarrier>& tex_barriers, stack_vector<eastl::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
         stack_vector<CGPUBufferBarrier>& buf_barriers, stack_vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) SKR_NOEXCEPT;
-    CGPUXBindTableId alloc_update_pass_bind_table(RenderGraphFrameExecutor& executor, PassNode* pass) SKR_NOEXCEPT;
+    CGPUXBindTableId alloc_update_pass_bind_table(RenderGraphFrameExecutor& executor, PassNode* pass, CGPURootSignatureId root_sig) SKR_NOEXCEPT;
     void deallocate_resources(PassNode* pass) SKR_NOEXCEPT;
 
     void execute_compute_pass(RenderGraphFrameExecutor& executor, ComputePassNode* pass) SKR_NOEXCEPT;
