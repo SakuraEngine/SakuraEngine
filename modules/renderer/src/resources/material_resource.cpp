@@ -66,8 +66,8 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         }
 
         // 2.free RS
-        if (material->root_signature) cgpu_free_root_signature(material->root_signature);
         if (material->bind_table) cgpux_free_bind_table(material->bind_table);
+        if (material->root_signature) cgpu_free_root_signature(material->root_signature);
 
         // 3.RC free installed shaders
         for (const auto installedId : material->installed_shaders)
