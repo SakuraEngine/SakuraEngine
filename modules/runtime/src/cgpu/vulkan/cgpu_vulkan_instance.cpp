@@ -272,7 +272,7 @@ CGPUInstanceId cgpu_create_instance_vulkan(CGPUInstanceDescriptor const* desc)
         (uint32_t)blackboard.instance_extensions.size());
 
     DECLARE_ZERO(VkInstanceCreateInfo, createInfo)
-#ifdef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
+#if defined(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME) && defined(_MACOS)
     createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 #endif
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
