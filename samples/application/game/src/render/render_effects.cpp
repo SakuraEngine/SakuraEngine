@@ -283,13 +283,15 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                         for (auto&& cmd : cmds)
                         {
                             const auto material = materials[cmd.material_index].get_ptr();
-                            SKR_ASSERT(material->pso && "Material not ready! (no PSO)");
+                            // TODO: FIX this HACK
+                            const auto& pass = material->installed_passes[0];
+                            SKR_ASSERT(pass.pso && "Material not ready! (no PSO)");
 
                             auto& push_const = push_constants.emplace_back();
                             push_const.model = model_matrix;
                             auto& drawcall = mesh_drawcalls.emplace_back();
-                            drawcall.pipeline = material->pso ? material->pso : pipeline;
-                            drawcall.bind_table = material->bind_table;
+                            drawcall.pipeline = pass.pso ? pass.pso : pipeline;
+                            drawcall.bind_table = pass.bind_table;
                             drawcall.push_const_name = push_constants_name;
                             drawcall.push_const = (const uint8_t*)(&push_const);
                             drawcall.index_buffer = *cmd.ibv;

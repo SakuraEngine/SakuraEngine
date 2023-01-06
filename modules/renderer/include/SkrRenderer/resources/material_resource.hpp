@@ -132,15 +132,24 @@ skr_material_resource_t
     sattr("no-rtti" : true, "arena" : "arena")
     skr_material_overrides_t overrides;
 
-    spush_attr("no-rtti" : true, "transient": true)
-    skr::vector<skr_platform_shader_identifier_t> installed_shaders;
-    skr::vector<skr::string_view> shader_entries;
-    skr::vector<ECGPUShaderStage> shader_stages;
+    typedef struct installed_shader {
+        skr_platform_shader_identifier_t identifier;
+        skr::string_view entry;
+        ECGPUShaderStage stage;
+    } installed_shader;
 
-    CGPURootSignatureId root_signature;
-    struct skr_pso_map_key_t* key;
-    CGPURenderPipelineId pso;
-    CGPUXBindTableId bind_table;
+    typedef struct installed_pass {
+        skr::string name;
+        skr::vector<installed_shader> shaders;
+        ESkrInstallStatus status;
+        CGPURootSignatureId root_signature;
+        struct skr_pso_map_key_t* key;
+        CGPURenderPipelineId pso;
+        CGPUXBindTableId bind_table;
+    } installed_pass;
+
+    spush_attr("no-rtti" : true, "transient": true)
+    skr::vector<installed_pass> installed_passes;
 };
 
 namespace skr sreflect

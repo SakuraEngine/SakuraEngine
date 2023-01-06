@@ -62,7 +62,8 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
     auto blob = skr::make_blob_builder<skr_material_overrides_t>();
     
     // calculate switch macros for material & place variants
-    for (auto& shader_resource : matType->shader_resources)
+    for (auto& pass : matType->passes)
+    for (auto& shader_resource : pass.shader_resources)
     {
         auto& variant = blob.switch_variants.emplace_back(); 
 

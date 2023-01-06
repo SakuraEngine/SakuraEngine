@@ -58,27 +58,37 @@ struct SMaterialFactoryImpl : public SMaterialFactory
     
     bool AsyncIO() override { return true; }
     
-    bool Unload(skr_resource_record_t* record) override
+    bool Unload_Pass(skr_material_resource_t::installed_pass& pass)
     {
-        auto material = static_cast<skr_material_resource_t*>(record->resource);
         // 1.free PSO & map key
-        if (material->key) 
+        if (pass.key) 
         {
-            pso_map->uninstall_pso(material->key);
-            pso_map->free_key(material->key);
+            pso_map->uninstall_pso(pass.key);
+            pso_map->free_key(pass.key);
         }
 
         // 2.free RS
-        if (material->bind_table) cgpux_free_bind_table(material->bind_table);
-        if (material->root_signature) cgpu_free_root_signature(material->root_signature);
+        if (pass.bind_table) cgpux_free_bind_table(pass.bind_table);
+        if (pass.root_signature) cgpu_free_root_signature(pass.root_signature);
 
         // 3.RC free installed shaders
-        for (const auto installedId : material->installed_shaders)
+        for (const auto installed_shader : pass.shaders)
         {
-            shader_map->free_shader(installedId);
+            shader_map->free_shader(installed_shader.identifier);
         }
-        SkrDelete(material);
+
         return true;
+    }
+
+    bool Unload(skr_resource_record_t* record) override
+    {
+        auto material = static_cast<skr_material_resource_t*>(record->resource);
+        bool unloaded = true;
+        for (auto& pass : material->installed_passes)
+        {
+            unloaded &= Unload_Pass(pass);
+        }
+        return unloaded;
     }
 
     ESkrInstallStatus Install(skr_resource_record_t* record) override
@@ -87,47 +97,55 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         if (!material->material_type.is_resolved()) 
             material->material_type.resolve(true, nullptr);
         auto matType = material->material_type.get_resolved();
-        material->installed_shaders.reserve(matType->shader_resources.size()); // early reserve
+        // TODO: early reserve
         // install shaders
-        for (auto& shader : matType->shader_resources)
+        for (auto& pass_template : matType->passes)
         {
-            bool installed = false;
-            if (!shader.is_resolved()) 
-                shader.resolve(true, nullptr);
-            const auto pShaderCollection = shader.get_resolved();
-            const auto shaderCollectionGUID = shader.get_record()->header.guid;
-            for (auto switchVariant : material->overrides.switch_variants)
+            auto& installed_pass = material->installed_passes.emplace_back();
+            installed_pass.name = pass_template.pass;
+            for (auto& shader : pass_template.shader_resources)
             {
-                const auto theCollectionGUID = switchVariant.shader_collection;
-                if (theCollectionGUID == shaderCollectionGUID) // hit this variant
+                bool installed = false;
+                if (!shader.is_resolved()) shader.resolve(true, nullptr);
+                const auto pShaderCollection = shader.get_resolved();
+                const auto shaderCollectionGUID = shader.get_record()->header.guid;
+                for (auto switchVariant : material->overrides.switch_variants)
                 {
-                    const auto switch_hash = switchVariant.switch_hash;
-                    const auto option_hash = switchVariant.option_hash;
-                    auto& multiShader = pShaderCollection->GetStaticVariant(switch_hash);
-                    const auto platform_ids = multiShader.GetDynamicVariants(option_hash);
-                    for (auto platform_id : platform_ids)
+                    const auto theCollectionGUID = switchVariant.shader_collection;
+                    if (theCollectionGUID == shaderCollectionGUID) // hit this variant
                     {
-                        const auto backend = root.device->adapter->instance->backend;
-                        const auto bytecode_type = SShaderResourceFactory::GetRuntimeBytecodeType(backend);
-                        if (bytecode_type == platform_id.bytecode_type)
+                        const auto switch_hash = switchVariant.switch_hash;
+                        const auto option_hash = switchVariant.option_hash;
+                        auto& multiShader = pShaderCollection->GetStaticVariant(switch_hash);
+                        const auto platform_ids = multiShader.GetDynamicVariants(option_hash);
+                        for (auto platform_id : platform_ids)
                         {
-                            const auto status = shader_map->install_shader(platform_id);
-                            if (status != SKR_SHADER_MAP_SHADER_STATUS_FAILED)
+                            const auto backend = root.device->adapter->instance->backend;
+                            const auto bytecode_type = SShaderResourceFactory::GetRuntimeBytecodeType(backend);
+                            if (bytecode_type == platform_id.bytecode_type)
                             {
-                                material->installed_shaders.emplace_back(platform_id);
-                                material->shader_entries.emplace_back(multiShader.entry);
-                                material->shader_stages.emplace_back(multiShader.shader_stage);
-                                installed = true;
-                            }
-                            else
-                            {
-                                SKR_UNREACHABLE_CODE(); // shader install failed handler
+                                const auto status = shader_map->install_shader(platform_id);
+                                if (status != SKR_SHADER_MAP_SHADER_STATUS_FAILED)
+                                {
+                                    auto& installed_shader = installed_pass.shaders.emplace_back();
+                                    installed_shader.identifier = platform_id;
+                                    installed_shader.entry = multiShader.entry;
+                                    installed_shader.stage = multiShader.shader_stage;
+
+                                    installed = true;
+                                }
+                                else
+                                {
+                                    SKR_UNREACHABLE_CODE(); // shader install failed handler
+                                }
                             }
                         }
                     }
                 }
+                SKR_ASSERT(installed && "Specific shader resource in material not installed!");
             }
-            SKR_ASSERT(installed && "Specific shader resource in material not installed!");
+            // all shaders have been installed
+            installed_pass.status = SKR_INSTALL_STATUS_INPROGRESS;
         }
         return material ? SKR_INSTALL_STATUS_INPROGRESS : SKR_INSTALL_STATUS_FAILED;
     }
@@ -137,14 +155,14 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         return true;
     }
     
-    CGPURootSignatureId createMaterialRS(const skr_material_resource_t* material, skr::span<CGPUShaderLibraryId> shaders) const
+    CGPURootSignatureId createMaterialRS( skr_material_resource_t::installed_pass& installed_pass, skr::span<CGPUShaderLibraryId> shaders) const
     {
         CGPUPipelineShaderDescriptor ppl_shaders[CGPU_SHADER_STAGE_COUNT];
-        for (size_t i = 0; i < shaders.size(); i++)
+        for (size_t i = 0; i < installed_pass.shaders.size(); i++)
         {
             ppl_shaders[i].library = shaders[i];
-            ppl_shaders[i].entry = material->shader_entries[i].data();
-            ppl_shaders[i].stage = material->shader_stages[i];
+            ppl_shaders[i].entry = installed_pass.shaders[i].entry.data();
+            ppl_shaders[i].stage = installed_pass.shaders[i].stage;
         }
         CGPURootSignatureDescriptor rs_desc = {};
         rs_desc.pool = rs_pool;
@@ -235,18 +253,18 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         return bind_table;
     }
 
-    CGPURootSignatureId requestRS(skr_resource_record_t* record, skr::span<CGPUShaderLibraryId> shaders)
+    CGPURootSignatureId requestRS(skr_resource_record_t* record, skr_material_resource_t::installed_pass& installed_pass, skr::span<CGPUShaderLibraryId> shaders)
     {
         auto material = static_cast<skr_material_resource_t*>(record->resource);
         // 0.return if ready
-        if (material->root_signature) return material->root_signature; // already created
+        if (installed_pass.root_signature) return installed_pass.root_signature; // already created
 
         // 1.sync version
         if (root.aux_service == nullptr)
         {
-            material->root_signature = createMaterialRS(material, shaders);
-            material->bind_table = createMaterialBindTable(material, material->root_signature);
-            return material->root_signature;
+            installed_pass.root_signature = createMaterialRS(installed_pass, shaders);
+            installed_pass.bind_table = createMaterialBindTable(material, installed_pass.root_signature);
+            return installed_pass.root_signature;
         }
 
         // 2.async version
@@ -258,16 +276,16 @@ struct SMaterialFactoryImpl : public SMaterialFactory
             const auto ready = rsRequest->request.is_ready();
             if (ready)
             {
-                material->root_signature = rsRequest->root_signature;
-                material->bind_table = rsRequest->bind_table;
+                installed_pass.root_signature = rsRequest->root_signature;
+                installed_pass.bind_table = rsRequest->bind_table;
                 mRootSignatureRequests.erase(materialGUID);
             }
-            return material->root_signature;
+            return installed_pass.root_signature;
         }
         else
         {
             // 2.2.1 fire async create task
-            auto rsRequest = SPtr<RootSignatureRequest>::Create(material, this, shaders);
+            auto rsRequest = SPtr<RootSignatureRequest>::Create(material, this, installed_pass, shaders);
             auto aux_service = root.aux_service;
             auto aux_task = make_zeroed<skr_service_task_t>();
             aux_task.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* usrdata){
@@ -275,7 +293,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
                 auto rsRequest = static_cast<RootSignatureRequest*>(usrdata);
                 const auto factory = rsRequest->factory;
 
-                rsRequest->root_signature = factory->createMaterialRS(rsRequest->material, rsRequest->shaders);
+                rsRequest->root_signature = factory->createMaterialRS(rsRequest->installed_pass, rsRequest->shaders);
                 rsRequest->bind_table = factory->createMaterialBindTable(rsRequest->material, rsRequest->root_signature);
             };
             aux_task.callback_datas[SKR_ASYNC_IO_STATUS_OK] = rsRequest.get();
@@ -285,10 +303,10 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         }
     }
 
-    skr_pso_map_key_id make_pso_map_key(skr_material_resource_t* material, skr::span<CGPUShaderLibraryId> shaders) const SKR_NOEXCEPT
+    skr_pso_map_key_id makePsoMapKey(skr_material_resource_t* material, skr_material_resource_t::installed_pass& installed_pass, skr::span<CGPUShaderLibraryId> shaders) const SKR_NOEXCEPT
     {
         auto desc = make_zeroed<CGPURenderPipelineDescriptor>();
-        desc.root_signature = material->root_signature;
+        desc.root_signature = installed_pass.root_signature;
         // 1.fill pipeline shaders
         auto vertex_shader = make_zeroed<CGPUPipelineShaderDescriptor>();
         auto tesc_shader = make_zeroed<CGPUPipelineShaderDescriptor>();
@@ -298,7 +316,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         for (uint32_t i = 0; i < shaders.size(); i++)
         {
             CGPUPipelineShaderDescriptor* ref = &vertex_shader;
-            switch (material->shader_stages[i])
+            switch (installed_pass.shaders[i].stage)
             {
             case CGPU_SHADER_STAGE_VERT:
                 ref = &vertex_shader; 
@@ -325,8 +343,8 @@ struct SMaterialFactoryImpl : public SMaterialFactory
                 break;
             }
             ref->library = shaders[i];
-            ref->entry = material->shader_entries[i].data();
-            ref->stage = material->shader_stages[i];
+            ref->entry = installed_pass.shaders[i].entry.data();
+            ref->stage = installed_pass.shaders[i].stage;
             // TODO: const spec
             ref->constants = nullptr;
             ref->num_constants = 0; 
@@ -375,51 +393,69 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         return skr_pso_map_create_key(pso_map, &desc);
     }
 
-    CGPURenderPipelineId requestPSO(skr_resource_record_t* record, skr_material_resource_t* material, skr::span<CGPUShaderLibraryId> shaders, bool& fail)
+    CGPURenderPipelineId requestPSO(skr_resource_record_t* record, skr_material_resource_t::installed_pass& installed_pass, skr::span<CGPUShaderLibraryId> shaders, bool& fail)
     {
-        if (!material->key)
+        auto material = static_cast<skr_material_resource_t*>(record->resource);
+        if (!installed_pass.key)
         {
-            material->key = make_pso_map_key(material, shaders);
-            auto status = skr_pso_map_install_pso(pso_map, material->key);
+            installed_pass.key = makePsoMapKey(material, installed_pass, shaders);
+            auto status = skr_pso_map_install_pso(pso_map, installed_pass.key);
             if (status == SKR_PSO_MAP_PSO_STATUS_FAILED) fail = true;
         }
-        return skr_pso_map_find_pso(pso_map, material->key);
+        return skr_pso_map_find_pso(pso_map, installed_pass.key);
+    }
+
+    ESkrInstallStatus UpdateInstall_Pass(skr_resource_record_t* record, skr_material_resource_t::installed_pass& installed_pass)
+    {
+        // 1.all shaders are installed ?
+        eastl::fixed_vector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
+        for (const auto& identifier : installed_pass.shaders)
+        {
+            if (auto library = shader_map->find_shader(identifier.identifier))
+            {
+                shaders.emplace_back(library);
+            }
+            else
+            {
+                installed_pass.status = SKR_INSTALL_STATUS_INPROGRESS;
+                return SKR_INSTALL_STATUS_INPROGRESS;
+            }
+        }
+
+        // 2.make RS. CGPU has rs pools so we can just create a pooled RS here.
+        // CGPU will route it to the right backend unique RootSignature.
+        installed_pass.root_signature = requestRS(record, installed_pass, shaders);
+
+        // 3.make PSO, root signature needs to be ready for the request.
+        bool exception = false;
+        installed_pass.pso = installed_pass.root_signature ? requestPSO(record, installed_pass, shaders, exception) : nullptr;
+        if (exception) return SKR_INSTALL_STATUS_FAILED;
+        return installed_pass.pso ? SKR_INSTALL_STATUS_SUCCEED : SKR_INSTALL_STATUS_INPROGRESS;
     }
 
     ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override
     {
         auto material = static_cast<skr_material_resource_t*>(record->resource);
-        // 1.all shaders are installed ?
-        eastl::fixed_vector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
-        for (const auto& identifier : material->installed_shaders)
+        // foreach pass check if all shaders are installed.
+        bool all_okay = true;
+        for (auto& installed_pass : material->installed_passes)
         {
-            if (auto library = shader_map->find_shader(identifier))
-                shaders.emplace_back(library);
-            else
-                return SKR_INSTALL_STATUS_INPROGRESS;
+            const auto pass_status = UpdateInstall_Pass(record, installed_pass);
+            if (pass_status != SKR_INSTALL_STATUS_SUCCEED) all_okay = false;
         }
-
-        // 2.make RS. CGPU has rs pools so we can just create a pooled RS here.
-        // CGPU will route it to the right backend unique RootSignature.
-        material->root_signature = requestRS(record, shaders);
-
-        // 3.make PSO, root signature needs to be ready for the request.
-        bool exception = false;
-        material->pso = material->root_signature ? requestPSO(record, material, shaders, exception) : nullptr;
-
-        if (exception) return SKR_INSTALL_STATUS_FAILED;
-        return material->pso ? SKR_INSTALL_STATUS_SUCCEED : SKR_INSTALL_STATUS_INPROGRESS;
+        return all_okay ? SKR_INSTALL_STATUS_SUCCEED : SKR_INSTALL_STATUS_INPROGRESS;
     }
 
     struct RootSignatureRequest
     {
-        RootSignatureRequest(const skr_material_resource_t* material, SMaterialFactoryImpl* factory, skr::span<CGPUShaderLibraryId> shaders)
-            : material(material), factory(factory), shaders(shaders.data(), shaders.data() + shaders.size())
+        RootSignatureRequest(const skr_material_resource_t* material, SMaterialFactoryImpl* factory, skr_material_resource_t::installed_pass& installed_pass, skr::span<CGPUShaderLibraryId> shaders)
+            : material(material), installed_pass(installed_pass), factory(factory), shaders(shaders.data(), shaders.data() + shaders.size())
         {
 
         }
         skr_async_request_t request;
         const skr_material_resource_t* material = nullptr;
+        skr_material_resource_t::installed_pass& installed_pass;
         SMaterialFactoryImpl* factory = nullptr;
         CGPURootSignatureId root_signature = nullptr;
         CGPUXBindTableId bind_table = nullptr;
