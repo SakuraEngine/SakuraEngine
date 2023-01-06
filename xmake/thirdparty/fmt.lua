@@ -10,10 +10,11 @@ target("fmt")
     add_cxflags(project_cxflags, {public = true})
     if (is_os("windows") and not is_mode("asan")) then 
         set_kind("headeronly")
+        add_linkdirs(sdk_libs_dir, {public=true})
         if (is_mode("release")) then
-            add_links(sdk_libs_dir.."fmt", {public=true} )
+            add_links("fmt", {public=true} )
         else
-            add_links(sdk_libs_dir.."fmtd", {public=true} )
+            add_links("fmtd", {public=true} )
         end
     else
         set_kind("static")

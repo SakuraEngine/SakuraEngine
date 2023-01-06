@@ -12,10 +12,11 @@ target("simdjson")
     add_defines(defs_list, {public = true})
     if (is_os("windows") and not is_mode("asan")) then 
         set_kind("headeronly")    
+        add_linkdirs(sdk_libs_dir, {public=true})
         if (is_mode("release")) then
-            add_links(sdk_libs_dir.."simdjson", {public=true} )
+            add_links("simdjson", {public=true} )
         else
-            add_links(sdk_libs_dir.."simdjsond", {public=true} )
+            add_links("simdjsond", {public=true} )
         end
     else
         set_kind("static")    

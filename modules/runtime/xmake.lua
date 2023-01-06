@@ -44,7 +44,8 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public = true})
     add_links(links_list, {public = true})
     if (is_os("windows")) then 
-        add_links("advapi32", "Shcore", "user32", "shell32", "Ole32", {public = true})
+        add_syslinks("advapi32", "user32", "shell32", "Ole32", {public = true})
+        add_syslinks("Shcore")
     end
     if (is_os("macosx")) then 
         add_mxflags(project_cxflags, project_mxflags, {public = true, force = true})
@@ -138,8 +139,9 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     -- install dxc on windows platform
     if (is_os("windows")) then 
         add_rules("utils.install-libs", { libnames = {"dxc"} })
-        add_links("$(buildir)/$(os)/$(arch)/$(mode)/nvapi_x64", {public = true})
-        add_links("$(buildir)/$(os)/$(arch)/$(mode)/WinPixEventRuntime", {public = true})
+        add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public=true})
+        add_links("nvapi_x64", {public = true})
+        add_links("WinPixEventRuntime", {public = true})
         -- we do not support x86 windows
         -- add_links("$(buildir)/$(os)/$(arch)/$(mode)/nvapi_x86")
     end
