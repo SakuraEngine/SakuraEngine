@@ -55,13 +55,14 @@ bool SMaterialTypeCooker::Cook(SCookContext *ctx)
     // convert to runtime resource
     skr_material_type_resource_t runtime_material_type;
     runtime_material_type.version = material_type->version;
-    runtime_material_type.shader_resources.reserve(material_type->shader_assets.size());
-    for (const auto& shader_asset : material_type->shader_assets)
+    runtime_material_type.passes.reserve(material_type->passes.size());
+    for (const auto& pass : material_type->passes)
+    for (const auto& shader_asset : pass.shader_resources)
     {
         ctx->AddStaticDependency(shader_asset.get_guid(), true);
         ctx->AddRuntimeDependency(shader_asset.get_guid());
         // simly write guids to runtime resource handle sequence
-        runtime_material_type.shader_resources.emplace_back(shader_asset.get_guid());
+        runtime_material_type.passes.emplace_back(pass);
     }
     runtime_material_type.default_values.reserve(material_type->properties.size());
     for (const auto& property : material_type->properties)

@@ -1,6 +1,8 @@
 {
     "version": 0,
-    "shader_assets": ["cf42657b-e2ee-4c3a-b520-d81b95f0ada4", "0c11a646-93ec-4cd8-8bc4-72c1aca8ec57"],
+    "passes": [
+        { "pass": "FowardPass", "shader_resources": ["cf42657b-e2ee-4c3a-b520-d81b95f0ada4", "0c11a646-93ec-4cd8-8bc4-72c1aca8ec57"] }
+    ],
     "properties": [
         {
             "name": "color_texture",

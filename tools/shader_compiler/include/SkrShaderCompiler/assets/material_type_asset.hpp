@@ -21,7 +21,7 @@ skr_material_type_asset_t
     uint32_t version;
 
     // shader assets
-    eastl::vector<skr_resource_handle_t> shader_assets;
+    eastl::vector<skr_material_pass_t> passes;
 
     // properties are mapped to shader parameter bindings (scalars, vectors, matrices, buffers, textures, etc.)
     eastl::vector<skr_material_property_t> properties;

@@ -64,13 +64,21 @@ skr_material_value_t
     resource_handle resource;
 };
 
+sreflect_struct("guid" : "ed2e3476-90a3-4f2f-ac97-808f63d1eb11")
+sattr("rtti": true, "serialize" : ["json", "bin"])
+skr_material_pass_t
+{
+    skr::string pass;
+    skr::vector<skr_shader_collection_handle_t> shader_resources;
+};
+
 sreflect_struct("guid" : "83264b35-3fde-4fff-8ee1-89abce2e445b")
 sattr("rtti": true, "serialize" : ["json", "bin"])
 skr_material_type_resource_t
 {
     uint32_t version;
     
-    skr::vector<skr_shader_collection_handle_t> shader_resources;
+    skr::vector<skr_material_pass_t> passes;
     skr::vector<skr_material_value_t> default_values;
     skr::vector<skr_shader_option_instance_t> switch_defaults;
     skr::vector<skr_shader_option_instance_t> option_defaults;
