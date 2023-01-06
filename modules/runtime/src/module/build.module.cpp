@@ -11,6 +11,7 @@ extern "C" void dualX_register_types();
         #define WIN32_LEAN_AND_MEAN
     #endif
     #include <shellscalingapi.h>
+    #pragma comment(lib, "Shcore.lib")
 #endif
 
 auto log_locker = +[](bool isLocked, void* pMutex){

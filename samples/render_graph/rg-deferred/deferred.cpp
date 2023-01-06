@@ -244,16 +244,11 @@ bool fragmentLightingPass = true;
 bool lockFPS = true;
 bool DPIAware = false;
 
-#ifdef SKR_OS_WINDOWS
-    #include <shellscalingapi.h>
-#endif
+#include "runtime_module.h"
 
 int main(int argc, char* argv[])
 {
-#ifdef SKR_OS_WINDOWS
-    ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
-    DPIAware = true;
-#endif
+    DPIAware = skr_runtime_is_dpi_aware();
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) return -1;
     SWindowDescroptor window_desc = {};
