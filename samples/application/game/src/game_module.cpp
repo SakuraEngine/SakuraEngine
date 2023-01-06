@@ -67,8 +67,6 @@ extern void game_finalize_render_effects(SRendererId renderer, skr::render_graph
 const bool bUseJob = true;
 const bool bUseInputSystem = false;
 
-// TODO: Refactor this
-CGPUVertexLayout vertex_layout = {};
 class SGameModule : public skr::IDynamicModule
 {
     virtual void on_load(int argc, char** argv) override;
@@ -276,6 +274,7 @@ void SGameModule::uninstallResourceFactories()
     skr::resource::SShaderResourceFactory::Destroy(shaderFactory);
     skr::resource::SMaterialTypeFactory::Destroy(matTypeFactory);
     skr::resource::SMaterialFactory::Destroy(matFactory);
+    
     SkrDelete(animFactory);
     SkrDelete(skeletonFactory);
     SkrDelete(skinFactory);

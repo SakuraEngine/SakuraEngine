@@ -131,6 +131,7 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
     skr_primitive_draw_packet_t packet = {};
     // 0. only produce for forward pass
     if (strcmp(pass->identity(), forward_pass_name) != 0) return {};
+    
     // 1. calculate primitive count
     uint32_t primitiveCount = 0;
     auto counterF = [&](dual_chunk_view_t* r_cv) {
@@ -156,6 +157,7 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
         }
     };
     dualQ_get_views(mesh_query, DUAL_LAMBDA(counterF));
+
     // 2. resize data buffers
     model_matrices.clear();
     push_constants.clear();
@@ -163,8 +165,8 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
     model_matrices.resize(primitiveCount);
     push_constants.reserve(primitiveCount);
     mesh_drawcalls.reserve(primitiveCount);
+
     // 3. fill draw packets
-    {
     auto r_effect_callback = [&](dual_chunk_view_t* r_cv) {
         uint32_t r_idx = 0;
         uint32_t dc_idx = 0;
@@ -266,10 +268,16 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                         for (size_t i = 0; i < resourcePtr->primitives.size(); ++i)
                         {
                             auto& cmd = cmds[i];
+                            const auto material = materials[cmd.material_index].get_ptr();
+                            // TODO: FIX this HACK
+                            const auto& pass = material->installed_passes[0];
+                            SKR_ASSERT(pass.pso && "Material not ready! (no PSO)");
+
                             auto& push_const = push_constants.emplace_back();
                             push_const.model = model_matrix;
                             auto& drawcall = mesh_drawcalls.emplace_back();
-                            drawcall.pipeline = pipeline;
+                            drawcall.pipeline = pass.pso ? pass.pso : pipeline;
+                            drawcall.bind_table = pass.bind_table;
                             drawcall.push_const_name = push_constants_name;
                             drawcall.push_const = (const uint8_t*)(&push_const);
                             drawcall.index_buffer = *cmd.ibv;
@@ -320,7 +328,8 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
         dualS_batch(storage, unbatched_g_ents, r_cv->count, DUAL_LAMBDA(gBatchCallback));
     };
     dualQ_get_views(draw_mesh_query, DUAL_LAMBDA(r_effect_callback));
-    }
+
+    // 4. return packet info
     mesh_draw_list.drawcalls = mesh_drawcalls.data();
     mesh_draw_list.count = (uint32_t)mesh_drawcalls.size();
     packet.count = 1;
@@ -551,12 +560,12 @@ void RenderEffectForwardSkin::on_register(SRendererId renderer, dual_storage_t* 
         desc.guid = guid;
         desc.alignment = alignof(forward_effect_identity_t);
         identity_type = dualT_register_type(&desc);
-        type_builder.with(identity_type);
-        type_builder.with<skr_render_mesh_comp_t>();
-        type_builder.with<skr_render_group_t>();
-        type_builder.with<skr_render_anim_comp_t>();
-        type_builder.with<skr_render_skel_comp_t>();
-        type_builder.with<skr_render_skin_comp_t>();
+        type_builder.with(identity_type)
+            .with<skr_render_mesh_comp_t>()
+            .with<skr_render_group_t>()
+            .with<skr_render_anim_comp_t>()
+            .with<skr_render_skel_comp_t>()
+            .with<skr_render_skin_comp_t>();
         typeset = type_builder.build();
     }
     initialize_queries(storage);
