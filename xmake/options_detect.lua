@@ -14,6 +14,13 @@ option_end()
 project_ldflags = {}
 project_cxflags = {}
 project_mxflags = {}
+
+-- uses utf-8 charset at runtime
+if is_host("windows") then
+    table.insert(project_cxflags, "/execution-charset:utf-8")
+    table.insert(project_cxflags, "/source-charset:utf-8")
+end
+
 if(has_config("is_clang")) then
     table.insert(project_cxflags, "-Wno-unused-command-line-argument")
     table.insert(project_cxflags, "-Wno-format")
