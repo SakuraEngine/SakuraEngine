@@ -6,10 +6,10 @@ target("Zig-CGPUMandelbrot")
     set_kind("binary")
     -- we use shaders compiled by "Example-CGPUMandelbrot" target
     -- add_files("cgpu-mandelbrot/**.hlsl")
-    -- public_dependency("SkrRT", engine_version)
-    set_toolchains("@zig")
-    -- add_files("cgpu-mandelbrot/lodepng.c")
+    public_dependency("SkrRT", engine_version)
+    set_toolchains("@zig", {zigcc = false})
     add_files("cgpu-mandelbrot/mandelbrot.zig")
+    add_files("cgpu-mandelbrot/cgpu.zig")
 end 
 
 target("Example-CGPUMandelbrot")
