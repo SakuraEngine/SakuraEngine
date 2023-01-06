@@ -21,10 +21,7 @@
 
 skr_mesh_resource_t::~skr_mesh_resource_t() SKR_NOEXCEPT
 {
-    for (auto&& bin : bins)
-    {
-        if (bin.bin.bytes) sakura_free(bin.bin.bytes);
-    }
+
 }
 
 static struct SkrMeshResourceUtil
@@ -496,6 +493,7 @@ ESkrInstallStatus SMeshFactoryImpl::UpdateInstall(skr_resource_record_t* record)
                     for (auto&& bin : mesh_resource->bins)
                     {
                         sakura_free(bin.bin.bytes);
+                        bin.bin.bytes = nullptr;
                     }
                 }
                 mDStorageRequests.erase(mesh_resource);
@@ -522,6 +520,14 @@ bool SMeshFactoryImpl::Unload(skr_resource_record_t* record)
 bool SMeshFactoryImpl::Uninstall(skr_resource_record_t* record)
 {
     auto mesh_resource = (skr_mesh_resource_id)record->resource;
+    if (mesh_resource->install_to_ram)
+    {
+        for (auto&& bin : mesh_resource->bins)
+        {
+            sakura_free(bin.bin.bytes);
+            bin.bin.bytes = nullptr;
+        }
+    }
     skr_render_mesh_free(mesh_resource->render_mesh);
     mesh_resource->render_mesh = nullptr;
     return true; 
