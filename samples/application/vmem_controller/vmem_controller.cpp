@@ -167,12 +167,11 @@ void SVMemCCModule::imgui_ui()
     ImGui::End();
 }
 
+#include "runtime_module.h"
+
 int SVMemCCModule::main_module_exec(int argc, char** argv)
 {
-#ifdef SKR_OS_WINDOWS
-    ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
-    DPIAware = true;
-#endif
+    DPIAware = skr_runtime_is_dpi_aware();
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) return -1;
     SWindowDescroptor window_desc = {};
     window_desc.flags = SKR_WINDOW_CENTERED | SKR_WINDOW_RESIZABLE;

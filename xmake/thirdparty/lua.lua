@@ -9,10 +9,11 @@ target("lua")
     add_includedirs(lua_include_dir_private, {public = false})
     if (is_os("windows") and not is_mode("asan")) then 
         set_kind("headeronly")
+        add_linkdirs(sdk_libs_dir, {public=true})
         if (is_mode("release")) then
-            add_links(sdk_libs_dir.."lua", {public=true} )
+            add_links("lua", {public=true} )
         else
-            add_links(sdk_libs_dir.."luad", {public=true} )
+            add_links("luad", {public=true} )
         end
     else
         set_kind("static")

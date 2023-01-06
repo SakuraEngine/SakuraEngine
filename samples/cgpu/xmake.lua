@@ -1,3 +1,17 @@
+if has_config("use_zig") then 
+add_requires("zig 0.10.x")
+
+target("Zig-CGPUMandelbrot")
+    set_group("04.examples/cgpu")
+    set_kind("binary")
+    -- we use shaders compiled by "Example-CGPUMandelbrot" target
+    -- add_files("cgpu-mandelbrot/**.hlsl")
+    -- public_dependency("SkrRT", engine_version)
+    set_toolchains("@zig")
+    -- add_files("cgpu-mandelbrot/lodepng.c")
+    add_files("cgpu-mandelbrot/mandelbrot.zig")
+end 
+
 target("Example-CGPUMandelbrot")
     set_group("04.examples/cgpu")
     set_exceptions("no-cxx")

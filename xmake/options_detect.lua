@@ -17,7 +17,7 @@ project_mxflags = {}
 if(has_config("is_clang")) then
     table.insert(project_cxflags, "-Wno-unused-command-line-argument")
     table.insert(project_cxflags, "-Wno-format")
-    table.insert(project_cxflags, "-Wno-deprecated-builtins")
+    -- table.insert(project_cxflags, "-Wno-deprecated-builtins")
     table.insert(project_cxflags, "-Wno-switch")
     table.insert(project_cxflags, "-Wno-misleading-indentation")
     table.insert(project_cxflags, "-Wno-unknown-pragmas")
