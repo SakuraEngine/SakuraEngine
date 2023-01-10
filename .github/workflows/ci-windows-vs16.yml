@@ -19,7 +19,7 @@ jobs:
           xmake g -c
           xmake l setup.lua
       - name: ConfigureDebug
-        run: xmake f -m debug --cc=clang-cl --cxx=clang-cl -c -y -v --build_tests=n --build_editors=n --build_usdtool=n --policies=build.ccache:n
+        run: xmake f -m debug --toolchain=clang-cl -c -y -v --build_tests=n --build_editors=n --build_usdtool=n --policies=build.ccache:n
       - name: Debug
         if: success() || failure()
         shell: cmd
@@ -28,7 +28,7 @@ jobs:
         if: success() || failure()
         shell: cmd
         run: |
-          xmake f -m release --cc=clang-cl --cxx=clang-cl -c -y -v --build_tests=n --build_editors=n --use_tracy=disable --policies=build.ccache:n
+          xmake f -m release --toolchain=clang-cl -c -y -v --build_tests=n --build_editors=n --use_tracy=disable --policies=build.ccache:n
           xmake -y -v
       - name: UploadGeneratedFiles
         if: success() || failure()
