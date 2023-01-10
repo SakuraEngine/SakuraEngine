@@ -11,3 +11,14 @@ shared_module("SkrGLTFTool", "GLTFTOOL", engine_version)
     add_files("src/**.cpp")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_deps("cgltf")
+
+    -- add_files("lib/src/**.cpp", {unity_ignored = true})
+    -- meshoptimizer
+    if (is_os("windows")) then 
+        add_linkdirs("lib/MeshOpt/windows", {public=true})
+    elseif (is_os("macosx")) then 
+        add_linkdirs("lib/MeshOpt/macos", {public=true})
+    else
+        add_files("lib/MeshOpt/src/**.cpp", {unity_ignored = true})
+    end 
+    add_links("MeshOptimizer", {public=true})
