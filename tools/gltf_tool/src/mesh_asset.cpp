@@ -2,12 +2,15 @@
 #include "platform/guid.hpp"
 #include "utils/defer.hpp"
 #include "utils/log.hpp"
+#include "utils/parallel_for.hpp"
 #include "SkrGLTFTool/mesh_asset.hpp"
 #include "SkrGLTFTool/gltf_utils.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/asset/json_utils.hpp"
 
 #include "MeshOpt/meshoptimizer.h"
+
+#include "tracy/Tracy.hpp"
 
 void* skd::asset::SGltfMeshImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context) 
 {
@@ -65,10 +68,18 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
     }
 
     //----- optimize mesh
-    // vertex cache optimization should go first as it provides starting order for overdraw
-	const float kOverDrawThreshold = 1.01f; // allow up to 1% worse ACMR to get more reordering opportunities for overdraw
-    for (auto& prim : mesh.primitives)
     {
+    ZoneScopedN("WaitOptimizeMesh");
+
+    // allow up to 1% worse ACMR to get more reordering opportunities for overdraw
+	const float kOverDrawThreshold = 1.01f; 
+    // for (auto& prim : mesh.primitives)
+    skr::parallel_for(mesh.primitives.begin(), mesh.primitives.end(), 1, 
+    [&](auto begin, auto end)
+    {
+        ZoneScopedN("OptimizeMesh");
+
+        const auto& prim = *begin;
         auto& indices_blob = blobs[prim.index_buffer.buffer_index];
         const auto first_index = prim.index_buffer.first_index;
         const auto index_stride = prim.index_buffer.stride;
@@ -93,7 +104,11 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
         {
             SKR_ASSERT(optimized_indices[i] < vertex_count && "Invalid index");
         }
+
+        // vertex cache optimization should go first as it provides starting order for overdraw
         meshopt_optimizeVertexCache(indices_ptr, indices_ptr, index_count, vertex_count);
+
+        // reorder indices for overdraw, balancing overdraw and vertex cache efficiency
         for (const auto& vb : prim.vertex_buffers)
         {
             if (vb.attribute == ESkrVertexAttribute::SKR_VERT_ATTRIB_POSITION)
@@ -109,9 +124,13 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
                 meshopt_optimizeOverdraw(indices_ptr, indices_ptr, index_count, 
                     (float*)vertices.data(), vertices.size(), 
                     sizeof(skr_float3_t), kOverDrawThreshold);
+
+                // vertex fetch optimization should go last as it depends on the final index order
                 // TODO: meshopt_optimizeVertexFetch
             }
         }
+
+        // write optimized indices
         for (size_t i = 0; i < index_count; i++)
         {
             if (index_stride == sizeof(uint8_t))
@@ -123,6 +142,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
             else if (index_stride == sizeof(uint64_t))
                 *(uint64_t*)(indices_blob.data() + index_offset + first_index + i * index_stride) = optimized_indices[i];
         }
+    });
     }
 
     //----- write materials
