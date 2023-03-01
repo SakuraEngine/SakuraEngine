@@ -1,0 +1,15 @@
+{
+    "guid": "18db1369-ba32-4e91-aa52-b2ed1556f576",
+    "type": "3b8ca511-33d1-4db4-b805-00eea6a8d5e1",
+    "importer": {
+        "importerType": "D72E2056-3C12-402A-A8B8-148CB8EAB922",
+        "assetPath": "loli/scene.gltf",
+        "materials": [
+            "16d4cdcd-909d-4a3a-8904-e593aa673c7c", "16d4cdcd-909d-4a3a-8904-e593aa673c7c", 
+            "c5a5fa95-f21b-4341-be9e-c68b1ee291c5", "8f7da8f5-644d-4c50-ade3-5d734e586304",
+            "43f32977-854f-4028-8e63-49b8df888aff", "2655b94e-beb3-4e74-a08e-ee6a67a956ad", 
+            "0edc15c2-9571-4679-b7ee-acc0e9966dcd", "31780b12-ae55-4b74-8f14-3401d27eec1c"
+        ]
+    },
+    "vertexType": "C35BD99A-B0A8-4602-AFCC-6BBEACC90321"
+}

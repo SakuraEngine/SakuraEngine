@@ -1,0 +1,11 @@
+Model Information:
+* title:	Luoli Run
+* source:	https://sketchfab.com/3d-models/luoli-run-3bb3c812efa1447a9bb82000856d9bf3
+* author:	小玉耀 (https://sketchfab.com/Xiaoyuyao)
+
+Model License:
+* license type:	CC-BY-NC-ND-4.0 (http://creativecommons.org/licenses/by-nc-nd/4.0/)
+* requirements:	Author must be credited. No commercial use. Modified versions can not be distributed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Luoli Run" (https://sketchfab.com/3d-models/luoli-run-3bb3c812efa1447a9bb82000856d9bf3) by 小玉耀 (https://sketchfab.com/Xiaoyuyao) licensed under CC-BY-NC-ND-4.0 (http://creativecommons.org/licenses/by-nc-nd/4.0/)

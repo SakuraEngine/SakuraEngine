@@ -349,7 +349,7 @@ void create_test_scene(SRendererId renderer)
             if (states)
             {
                 using namespace skr::guid::literals;
-                states[i].animation_resource = "FBF4CC70-8B1D-4C30-B788-245C5CCE7EE6"_guid;
+                states[i].animation_resource = "83c0db0b-08cd-4951-b1c3-65c2008d0113"_guid;
                 states[i].animation_resource.resolve(true, renderer->get_dual_storage());
             }
         }
@@ -413,11 +413,11 @@ void async_attach_skin_mesh(SRendererId renderer)
                 auto& skin_comp = skin_comps[i];
                 auto& skel_comp = skel_comps[i];
                 // auto& anim_comp = anim_comps[i];
-                mesh_comp.mesh_resource = "2f9a3ffa-fa79-48d7-b95d-104ef03740f7"_guid;
+                mesh_comp.mesh_resource = "18db1369-ba32-4e91-aa52-b2ed1556f576"_guid;
                 mesh_comp.mesh_resource.resolve(true, renderer->get_dual_storage());
-                skin_comp.skin_resource = "D1E4F32C-7C43-486E-87AB-EDF565A43E80"_guid;
+                skin_comp.skin_resource = "40ce668a-d6bb-4134-b244-b0a7ac552245"_guid;
                 skin_comp.skin_resource.resolve(true, renderer->get_dual_storage());
-                skel_comp.skeleton = "23F44FD5-6F87-4E6D-A232-1A99D015E21A"_guid;
+                skel_comp.skeleton = "d1acf969-91d6-4233-8d2b-33fca7c98a1c"_guid;
                 skel_comp.skeleton.resolve(true, renderer->get_dual_storage());
             }
         };
