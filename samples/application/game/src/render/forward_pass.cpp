@@ -17,6 +17,8 @@
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 
+#include <EASTL/vector_map.h>
+
 #include "tracy/Tracy.hpp"
 
 void RenderPassForward::on_update(const skr_primitive_pass_context_t* context) 
@@ -277,8 +279,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
             {
             ZoneScopedN("DrawCalls");
             CGPURenderPipelineId old_pipeline = nullptr;
-            CGPUXBindTableId bind_table1 = nullptr;
-            CGPUXBindTableId bind_table2 = nullptr;
+            eastl::vector_map<CGPURootSignatureId, CGPUXBindTableId> bind_tables;
             for (uint32_t i = 0; i < drawcalls.size(); i++)
             for (uint32_t j = 0; j < drawcalls[i].count; j++)
             for (uint32_t k = 0; k < drawcalls[i].lists[j].count; k++)
@@ -292,25 +293,20 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                     old_pipeline = dc.pipeline;
                 }
 
-                // THIS IS A HACK: all effects only produce one RS for now, we must FIX THIS later
-                // TODO: fix this hack (implement a batch update for bind tables of different RS)
-                if (dc.bind_table && !bind_table1)
+                CGPURootSignatureId dcRS = dc.pipeline->root_signature;
+                if (bind_tables.find(dcRS) == bind_tables.end())
                 {
-                    bind_table1 = pass_context.create_and_update_bind_table(dc.pipeline->root_signature);
+                    bind_tables[dcRS] = pass_context.create_and_update_bind_table(dc.pipeline->root_signature);
                 }
-                else if (!bind_table2)
-                {
-                    bind_table2 = pass_context.create_and_update_bind_table(dc.pipeline->root_signature);
-                }
-
+                CGPUXBindTableId pass_table = bind_tables[dcRS];
                 if (dc.bind_table)
                 {
-                    CGPUXBindTableId tables[2] = { dc.bind_table, bind_table1 };
+                    CGPUXBindTableId tables[2] = { dc.bind_table, pass_table };
                     pass_context.merge_and_bind_tables(tables, 2);
                 }
                 else
                 {
-                    cgpux_render_encoder_bind_bind_table(pass_context.encoder, bind_table2);
+                    cgpux_render_encoder_bind_bind_table(pass_context.encoder, pass_table);
                 }
 
                 {
