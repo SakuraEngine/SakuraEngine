@@ -124,6 +124,14 @@ struct PSOMapImpl : public skr_pso_map_t
 
     }
 
+    ~PSOMapImpl()
+    {
+        for (auto& it : sets)
+        {
+            cgpu_free_render_pipeline(it->pso);
+        }
+    }
+
     struct key_ptr_equal
     {
         using is_transparent = void;
