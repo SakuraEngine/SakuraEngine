@@ -11,8 +11,6 @@ shared_module("SkrMeshCore", "MESH_CORE", engine_version)
     add_files("src/**.cpp")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
 
-    add_deps("cgltf")
-
     -- meshoptimizer
     if (is_os("windows")) then 
         add_linkdirs("lib/MeshOpt/windows", {public=true})
