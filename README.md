@@ -234,13 +234,16 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 
 ### 编译
 使用以下命令编译
+
 ```
 > xmake l setup.lua
 > xmake f -m debug --build_usdtool=n -c
 > xmake project -k compile_commands
 > xmake 
 ```
-目前版本构建中途失败可能产生 codegen 中断或是不全的问题，可以删除 /build 文件夹后重试。如进一步出现问题，请务必上报 issues 😀
+Tips：
+- 默认构建只包含模块。要构建工具或例子，需要在 xmake f 时加上 --build_cgpu_samples=true 等参数 (详见 xmake/options.lua);
+- 目前版本构建中途失败可能产生 codegen 中断或是不全的问题，可以删除 /build 文件夹后重试。如进一步出现问题，请务必上报 issues 😀
 
 ## 编辑环境
 推荐使用 vscode + clangd 作为编辑环境，使用命令 `xmake project -k compile_commands` 来生成 clangd 需要的数据集
