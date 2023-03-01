@@ -1,6 +1,6 @@
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrAnimTool/skin_asset.h"
-#include "SkrGLTFTool/gltf_utils.hpp"
+#include "SkrMeshCore/mesh_processing.hpp"
 #include "SkrAnim/resources/skin_resource.h"
 #include "cgltf/cgltf.h"
 

@@ -4,7 +4,7 @@
 #include "utils/log.hpp"
 #include "utils/parallel_for.hpp"
 #include "SkrGLTFTool/mesh_asset.hpp"
-#include "SkrGLTFTool/gltf_utils.hpp"
+#include "SkrGLTFTool/mesh_processing.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/asset/json_utils.hpp"
 
