@@ -32,9 +32,9 @@ int ReadTrait<skr_resource_header_t>::Read(skr_binary_reader_t *reader, skr_reso
     if (ret != 0)
         return ret;
     header.dependencies.resize(size);
-    for (auto &dep : header.dependencies)
+    for (uint32_t i = 0; i < size; i++)
     {
-        ret = bin::Archive(reader, dep);
+        ret = bin::Archive(reader, header.dependencies[i]);
         if (ret != 0)
             return ret;
     }
@@ -57,7 +57,8 @@ int WriteTrait<const skr_resource_header_t&>::Write(skr_binary_writer_t *writer,
     ret = bin::Archive(writer, header.type);
     if (ret != 0)
         return ret;
-    ret = bin::Archive(writer, (uint32_t)header.dependencies.size());
+    const auto dependencies_size = (uint32_t)header.dependencies.size();
+    ret = bin::Archive(writer, dependencies_size);
     for (auto &dep : header.dependencies)
     {
         ret = bin::Archive(writer, dep);

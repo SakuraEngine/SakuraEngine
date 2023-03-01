@@ -9,14 +9,16 @@ struct skr_binary_reader_t {
     {
         user_data = &user;
         vread = [](void* user, void* data, size_t size) {
-            return static_cast<T*>(user)->read(data, size);
+            const auto err = static_cast<T*>(user)->read(data, size);
+            return err;
         };
     }
     int (*vread)(void* user_data, void* data, size_t size);
     void* user_data;
     int read(void* data, size_t size)
     {
-        return vread(user_data, data, size);
+        const auto err = vread(user_data, data, size);
+        return err;
     }
 };
 namespace skr
@@ -25,7 +27,8 @@ namespace binary
 {
 inline int ReadValue(skr_binary_reader_t* reader, void* data, size_t size)
 {
-    return reader->read(data, size);
+    const auto err =  reader->read(data, size);
+    return err;
 }
 
 template <class T>
