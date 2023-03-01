@@ -218,7 +218,7 @@ void skr_cpu_skin(skr_render_skin_comp_t* skin, const skr_render_anim_comp_t* an
         if (normals_buffer)
             job.in_normals = buffer_span(normals_buffer, skr::type_t<float>(), 3);
         job.in_normals_stride = normals_buffer->stride;
-        if (tangents_buffer)
+        if (tangents_buffer && tangents_buffer->stride)
             job.in_tangents = buffer_span(tangents_buffer, skr::type_t<float>(), 4);
         job.in_tangents_stride = tangents_buffer->stride;
         job.in_positions = buffer_span(positions_buffer, skr::type_t<float>(), 3);

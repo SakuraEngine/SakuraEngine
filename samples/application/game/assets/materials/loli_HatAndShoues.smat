@@ -1,0 +1,8 @@
+{
+    "material_type_version": 0,
+
+    "material_type": "bdf63849-5a52-4d71-be4a-11d115c4a490",
+    "override_values": [
+        { "slot_name": "color_texture", "prop_type": "TEXTURE", "resource": "52f47455-ddce-4950-a4a9-779728280dd3" }   
+    ]
+}

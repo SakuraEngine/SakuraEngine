@@ -11,5 +11,5 @@ void main(VSOut psIn,
     out float4 o_color : SV_Target0) : SV_TARGET
 {
     float2 uv = psIn.uv;
-    o_color = float4(1.f, 1.f, 1.f, 1.f) * abs(psIn.normal);
+    o_color = 0.5f + 0.5f * psIn.normal;
 }

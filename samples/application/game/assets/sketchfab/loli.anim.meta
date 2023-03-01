@@ -1,0 +1,11 @@
+{
+    "guid": "83c0db0b-08cd-4951-b1c3-65c2008d0113",
+    "type": "5D6DC46B-8696-4DD8-ADE4-C27D07CEDCCD",
+    "importer": {
+        "importerType": "37d07586-0901-480a-8dcd-1f1f8220569c",
+        "assetPath": "loli/scene.gltf",
+        "samplingRate" : 0,
+        "animationName" : "CINEMA_4D___"
+    },
+    "skeletonAsset" : "d1acf969-91d6-4233-8d2b-33fca7c98a1c"
+}
