@@ -731,7 +731,7 @@ void cgpu_update_descriptor_set_vulkan(CGPUDescriptorSetId set, const struct CGP
     SetLayout_Vulkan* SetLayout = &RS->pSetLayouts[set->index];
     const CGPUParameterTable* ParamTable = &RS->super.tables[table_index];
     VkDescriptorUpdateData* pUpdateData = Set->pUpdateData;
-    memset(pUpdateData, 0, count * sizeof(VkDescriptorUpdateData));
+    // memset(pUpdateData, 0, count * sizeof(VkDescriptorUpdateData));
     bool dirty = false;
     for (uint32_t i = 0; i < count; i++)
     {
