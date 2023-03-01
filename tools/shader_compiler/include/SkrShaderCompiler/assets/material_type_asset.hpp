@@ -13,7 +13,6 @@ namespace skd sreflect
 {
 namespace asset sreflect
 {
-
 sreflect_struct("guid" : "329fddb1-73a6-4b4b-8f9f-f4acca58a6e5")
 sattr("rtti": true, "serialize" : ["json", "bin"])
 skr_material_type_asset_t

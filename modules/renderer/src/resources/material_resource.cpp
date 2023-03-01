@@ -357,15 +357,43 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         desc.vertex_layout = &vert_layout;
         // 3.fill blend state
         auto blend_state = make_zeroed<CGPUBlendStateDescriptor>();
-        blend_state.src_factors[0] = CGPU_BLEND_CONST_ONE; // TODO: MRT
-        blend_state.dst_factors[0] = CGPU_BLEND_CONST_ZERO; 
-        blend_state.src_alpha_factors[0] = CGPU_BLEND_CONST_ONE;
-        blend_state.dst_alpha_factors[0] = CGPU_BLEND_CONST_ZERO;
-        blend_state.blend_modes[0] = CGPU_BLEND_MODE_ADD; 
-        blend_state.blend_alpha_modes[0] = CGPU_BLEND_MODE_ADD; 
-        blend_state.masks[0] = CGPU_COLOR_MASK_ALL; 
         blend_state.alpha_to_coverage = false;
-        blend_state.independent_blend = false;
+        blend_state.independent_blend = true;
+        // TODO: MRT & Custom Blend
+        const auto pass_index = &installed_pass - material->installed_passes.data();
+        const auto& blend_modes = matType->passes[pass_index].blend_modes;
+        for (uint32_t i = 0; i < CGPU_MAX_MRT_COUNT; i++)
+        {
+            blend_state.blend_modes[i] = CGPU_BLEND_MODE_ADD; 
+            blend_state.blend_alpha_modes[i] = CGPU_BLEND_MODE_ADD; 
+            blend_state.masks[i] = CGPU_COLOR_MASK_ALL; 
+            const auto blend_mode = (blend_modes.size() > i) ? blend_modes[i] : 
+                (blend_modes.size() ? blend_modes.back() : EMaterialBlendMode::Opaque);
+            switch (blend_mode)
+            {
+                case EMaterialBlendMode::Opaque:
+                {
+                    blend_state.src_factors[i] = CGPU_BLEND_CONST_ONE; 
+                    blend_state.dst_factors[i] = CGPU_BLEND_CONST_ZERO; 
+                    blend_state.src_alpha_factors[i] = CGPU_BLEND_CONST_ONE;
+                    blend_state.dst_alpha_factors[i] = CGPU_BLEND_CONST_ZERO;
+                }
+                break;
+                case EMaterialBlendMode::Blend:
+                {
+                    blend_state.src_factors[i] = CGPU_BLEND_CONST_SRC_ALPHA; 
+                    blend_state.dst_factors[i] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA; 
+                    blend_state.src_alpha_factors[i] = CGPU_BLEND_CONST_ONE;
+                    blend_state.dst_alpha_factors[i] = CGPU_BLEND_CONST_ZERO;
+                }
+                break;
+                case EMaterialBlendMode::Mask:
+                {
+                    SKR_UNIMPLEMENTED_FUNCTION();
+                }
+                break;
+            }
+        }
         desc.blend_state = &blend_state;
         // 4.fill depth state 
         auto depth_state = make_zeroed<CGPUDepthStateDescriptor>();
@@ -375,9 +403,16 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         desc.depth_state = &depth_state;
         // 5.fill raster state 
         auto raster_desc = make_zeroed<CGPURasterizerStateDescriptor>();
-        raster_desc.cull_mode = CGPU_CULL_MODE_BACK; // TODO: Cull Mode Control
         raster_desc.depth_bias = 0; // TODO: Depth Bias Control
         raster_desc.fill_mode = CGPU_FILL_MODE_SOLID; // TODO: Fill Mode Control
+        if (matType->passes[pass_index].two_sided)
+        {
+            raster_desc.cull_mode = CGPU_CULL_MODE_NONE; 
+        }
+        else
+        {
+            raster_desc.cull_mode = CGPU_CULL_MODE_BACK; // TODO: Cull Mode Control
+        }
         raster_desc.front_face = CGPU_FRONT_FACE_CCW; // TODO: Front Face Control
         desc.rasterizer_state = &raster_desc;
         // 6.miscs

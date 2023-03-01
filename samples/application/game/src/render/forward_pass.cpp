@@ -325,6 +325,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                         strides[i] = dc.vertex_buffers[i].stride;
                         offsets[i] = dc.vertex_buffers[i].offset;
                     }
+                    // FIXME: sort & remove 0-stride streams
                     cgpu_render_encoder_bind_vertex_buffers(pass_context.encoder, dc.vertex_buffer_count, vertex_buffers, strides, offsets);
                 }
                 cgpu_render_encoder_push_constants(pass_context.encoder, dc.pipeline->root_signature, dc.push_const_name, dc.push_const);
