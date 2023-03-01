@@ -127,24 +127,38 @@ void CGPUXBindTable::Update(const struct CGPUDescriptorData* datas, uint32_t cou
     updateDescSetsIfDirty();
 }
 
+#include <EASTL/fixed_set.h>
+
 void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
 {
+    eastl::fixed_set<uint32_t, 4> needsUpdateIndices;
     for (uint32_t i = 0; i < names_count; i++)
     {
         const auto& location = name_locations[i];
         if (!location.value.binded)
         {
-            const auto& set = sets[location.tbl_idx];
-            // TODO: batch update for better performance
-            // this update is kinda dangerous during draw-call because update-after-bind may happen
-            // TODO: fix this
-            const auto& table = set->root_signature->tables[location.tbl_idx];
-            const auto rsBindingType = table.resources[location.binding].type; 
-            const auto thisBindingType = location.value.data.binding_type;
-            SKR_ASSERT(rsBindingType == thisBindingType && "Binding type mismatch");
-            cgpu_update_descriptor_set(set, &location.value.data, 1);
-            const_cast<bool&>(location.value.binded) = true;
+            needsUpdateIndices.insert(location.tbl_idx);
         }
+    }
+    for (auto setIdx : needsUpdateIndices)
+    {
+        eastl::fixed_vector<CGPUDescriptorData, 4> datas;
+        for (uint32_t i = 0; i < names_count; i++)
+        {
+            const auto& location = name_locations[i];
+            if (!location.value.binded && location.tbl_idx == setIdx)
+            {
+                const auto& set = sets[location.tbl_idx];
+                // TODO: batch update for better performance
+                // this update is kinda dangerous during draw-call because update-after-bind may happen
+                // TODO: fix this
+                datas.emplace_back(location.value.data);
+                const_cast<bool&>(location.value.binded) = true;
+            }
+        }
+        const auto updateDataCount = datas.size();
+        if (updateDataCount)
+            cgpu_update_descriptor_set(sets[setIdx], datas.data(), updateDataCount);
     }
 }
 
