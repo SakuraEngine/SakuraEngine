@@ -19,6 +19,17 @@ struct ShaderMapImpl : public skr_shader_map_t
 
     }
 
+    ~ShaderMapImpl()
+    {
+        for (auto iter : map)
+        {
+            if (skr_atomic32_load_relaxed(&iter.second->frame) != UINT64_MAX)
+            {
+                cgpu_free_shader_library(iter.second->shader);
+            }
+        }
+    }
+
     CGPUShaderLibraryId find_shader(const skr_platform_shader_identifier_t& id) SKR_NOEXCEPT override;
     ESkrShaderMapShaderStatus install_shader(const skr_platform_shader_identifier_t& id) SKR_NOEXCEPT override;
     bool free_shader(const skr_platform_shader_identifier_t& id) SKR_NOEXCEPT override;
