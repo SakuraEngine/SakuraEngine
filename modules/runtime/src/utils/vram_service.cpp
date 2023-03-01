@@ -70,6 +70,7 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
         {
             SKR_ASSERT( (ds_buffer_task->buffer_io.dstorage.path) && "buffer_io.path must be set");
             auto ds_file = cgpu_dstorage_open_file(buffer_io.dstorage.queue, task.path.c_str());
+            SKR_ASSERT( (ds_file) && "file must be opened");
             ds_buffer_task->dstorage_task = allocateCGPUDStorageTask(buffer_io.device, buffer_io.dstorage.queue, ds_file);
             if (destination->buffer) 
             {
@@ -136,6 +137,7 @@ void skr::io::VRAMServiceImpl::tryCreateTextureResource(skr::io::VRAMServiceImpl
             const auto& texture_io = ds_texture_task->texture_io;
             const auto& destination = ds_texture_task->destination;
             auto ds_file = cgpu_dstorage_open_file(texture_io.dstorage.queue, task.path.c_str());
+            SKR_ASSERT( (ds_file) && "file must be opened");
             ds_texture_task->dstorage_task = allocateCGPUDStorageTask(texture_io.device, texture_io.dstorage.queue, ds_file);
             if (destination->texture) 
             {

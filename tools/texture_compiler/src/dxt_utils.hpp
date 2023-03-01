@@ -62,7 +62,7 @@ inline static skr::string Util_CompressedTypeString(ECGPUFormat format)
     }
 }
 
-FORCEINLINE static eastl::vector<uint8_t> Util_DXTCompressWithImageCoder(skr_image_coder_id image_coder, ECGPUFormat compressed_format)
+inline static eastl::vector<uint8_t> Util_DXTCompressWithImageCoder(skr_image_coder_id image_coder, ECGPUFormat compressed_format)
 {
     // fetch RGBA data
     uint8_t* rgba_data = nullptr;
@@ -77,15 +77,25 @@ FORCEINLINE static eastl::vector<uint8_t> Util_DXTCompressWithImageCoder(skr_ima
         return {};
     }
     // compress
+    rgba_surface rgba_surface = {};
     const auto image_width = skr_image_coder_get_width(image_coder);
     const auto image_height = skr_image_coder_get_height(image_coder);
-    const auto compressed_size = Util_DXBCCompressedSize(image_width, image_height, compressed_format);
-    eastl::vector<uint8_t> compressed_data(compressed_size);
-    rgba_surface rgba_surface = {};
+    switch (raw_format)
+    {
+    case IMAGE_CODER_COLOR_FORMAT_RGBA:
+    case IMAGE_CODER_COLOR_FORMAT_BGRA:
+        rgba_surface.stride = image_width * 4;
+        break;
+    case IMAGE_CODER_COLOR_FORMAT_Gray:
+    case IMAGE_CODER_COLOR_FORMAT_GrayF:
+        rgba_surface.stride = image_width;
+        break;
+    }
     rgba_surface.ptr = rgba_data;
     rgba_surface.width = image_width;
     rgba_surface.height = image_height;
-    rgba_surface.stride = image_width * 4;
+    const auto compressed_size = Util_DXBCCompressedSize(image_width, image_height, compressed_format);
+    eastl::vector<uint8_t> compressed_data(compressed_size);
     switch (compressed_format)
     {
         case CGPU_FORMAT_DXBC1_RGB_UNORM:

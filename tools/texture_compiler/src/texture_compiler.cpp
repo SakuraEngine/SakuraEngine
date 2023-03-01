@@ -58,11 +58,15 @@ bool STextureCooker::Cook(SCookContext *ctx)
     const auto image_coder = uncompressed->image_coder;
     const auto format = skr_image_coder_get_color_format(image_coder);
     ECGPUFormat compressed_format = CGPU_FORMAT_UNDEFINED;
-    switch (format)
+    switch (format) // TODO: format shuffle
     {
-        case IMAGE_CODER_COLOR_FORMAT_RGBA: // TODO: format shuffle
+        case IMAGE_CODER_COLOR_FORMAT_Gray: 
+        case IMAGE_CODER_COLOR_FORMAT_GrayF:
+            compressed_format = CGPU_FORMAT_DXBC4_UNORM; 
+            break;
+        case IMAGE_CODER_COLOR_FORMAT_RGBA:
         default:
-            compressed_format = CGPU_FORMAT_DXBC1_RGBA_UNORM; // TODO: determine format
+            compressed_format = CGPU_FORMAT_DXBC3_UNORM; 
             break;
     }
     // DXT
