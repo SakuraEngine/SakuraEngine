@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrGLTFTool/module.configure.h"
+#include "SkrMeshCore/mesh_processing.hpp"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/asset/cooker.hpp"
 #ifndef __meta__
@@ -27,14 +28,6 @@ GLTFTOOL_API SGltfMeshImporter final : public SImporter
     void Destroy(void* resource) override;
 }
 sregister_importer();
-
-sreflect_struct("guid" : "9A2C9CBF-517D-4197-BDE3-E40D85D88320")
-sattr("serialize" : "json")
-GLTFTOOL_API SMeshCookConfig
-{
-    sattr("no-default" : true)
-    skr_guid_t vertexType;
-};
 
 sreflect_struct("guid" : "5a378356-7bfa-461a-9f96-4bbbd2e95368")
 GLTFTOOL_API SMeshCooker final : public SCooker
