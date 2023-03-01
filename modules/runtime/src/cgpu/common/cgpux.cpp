@@ -138,6 +138,10 @@ void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
             // TODO: batch update for better performance
             // this update is kinda dangerous during draw-call because update-after-bind may happen
             // TODO: fix this
+            const auto& table = set->root_signature->tables[location.tbl_idx];
+            const auto rsBindingType = table.resources[location.binding].type; 
+            const auto thisBindingType = location.value.data.binding_type;
+            SKR_ASSERT(rsBindingType == thisBindingType && "Binding type mismatch");
             cgpu_update_descriptor_set(set, &location.value.data, 1);
             const_cast<bool&>(location.value.binded) = true;
         }

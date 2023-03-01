@@ -64,12 +64,24 @@ skr_material_value_t
     resource_handle resource;
 };
 
+sreflect_enum("guid" : "575331c4-785f-4a4d-b320-4490bb7a6180")
+sattr("rtti": true, "serialize" : ["json", "bin"])
+EMaterialBlendMode : uint32_t
+{
+    Opaque,
+    Blend,
+    Mask,
+    Count
+};
+
 sreflect_struct("guid" : "ed2e3476-90a3-4f2f-ac97-808f63d1eb11")
 sattr("rtti": true, "serialize" : ["json", "bin"])
 skr_material_pass_t
 {
     skr::string pass;
     skr::vector<skr_shader_collection_handle_t> shader_resources;
+    skr::vector<EMaterialBlendMode> blend_modes;
+    bool two_sided = false;
 };
 
 sreflect_struct("guid" : "83264b35-3fde-4fff-8ee1-89abce2e445b")

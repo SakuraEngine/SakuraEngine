@@ -1,7 +1,11 @@
 {
     "version": 0,
     "passes": [
-        { "pass": "ForwardPass", "shader_resources": ["cf42657b-e2ee-4c3a-b520-d81b95f0ada4", "f47a81a9-bc86-4d1d-899a-efd03c735153"] }
+        { 
+            "pass": "ForwardPass", 
+            "shader_resources": ["cf42657b-e2ee-4c3a-b520-d81b95f0ada4", 
+            "f47a81a9-bc86-4d1d-899a-efd03c735153"] 
+        }
     ],
     "properties": [
         {
