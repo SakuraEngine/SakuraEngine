@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <memory.h>
-#include "SkrGui/nanovg.h"
+#include "nanovg.h"
 
 #ifdef _MSC_VER
 #pragma warning(disable: 4100)  // unreferenced formal parameter
