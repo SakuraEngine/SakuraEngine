@@ -1,0 +1,28 @@
+# Xmake cache
+.xmake/
+build/
+
+# Clangd cache
+.cache/clangd/
+
+# Build files
+x64/
+
+# nuget packages
+packages/
+
+# Generated files
+compile_commands.json
+
+# Visual Studio cache/options directory
+.vs/
+
+# Visual Studio Code cache/options directory
+.vscode/settings.json
+
+# JetBrains Rider cache/options directory
+.idea/
+
+# JetBrains Rider auto-generated XML file
+*.sln.DotSettings
+

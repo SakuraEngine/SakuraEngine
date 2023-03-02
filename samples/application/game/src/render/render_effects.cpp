@@ -273,7 +273,7 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                             if (materials.size())
                             {
                                 const auto material = materials[cmd.material_index].get_ptr();
-                                // TODO: FIX this HACK
+                                // TODO: Add multi-pass
                                 const auto& pass = material->installed_passes[0];
                                 SKR_ASSERT(pass.pso && "Material not ready! (no PSO)");
                                 proper_pipeline = pass.pso;
@@ -301,7 +301,7 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                             if (materials.size())
                             {
                                 const auto material = materials[cmd.material_index].get_ptr();
-                                // TODO: FIX this HACK
+                                // TODO: Add multi-pass
                                 const auto& pass = material->installed_passes[0];
                                 SKR_ASSERT(pass.pso && "Material not ready! (no PSO)");
                                 proper_pipeline = pass.pso;

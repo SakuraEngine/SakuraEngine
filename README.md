@@ -214,6 +214,7 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - marl e007bd3 (Apache-2.0)
 - cpu_features v0.7.0 (Apache-2.0)
 - EASTL v3.19.05, master-db16065 (BSD-3-Clause)
+- OpenString 81926cc (MIT)
 
 ## 作为动态库引入的开源库和版本
 - Qt-Advanced-Docking-System 3cd6d76 LGPL-2.1 

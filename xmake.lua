@@ -16,6 +16,7 @@ engine_version = "0.1.0"
 default_unity_batch_size = 8
 
 include_dir_list = {"include"}
+private_include_dir_list = {}
 source_list = {}
 packages_list = {}
 defs_list = {}
