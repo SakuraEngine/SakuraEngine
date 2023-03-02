@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+    <Type Name="easy::index_interval">
+        <DisplayString Condition="lower_.type == 2 &amp; upper_.type == 2">
+            (-∞,+∞)
+        </DisplayString>
+        <DisplayString Condition="lower_.type == 2 &amp; upper_.type == 1">
+            (-∞,{upper_.value})
+        </DisplayString>
+        <DisplayString Condition="lower_.type == 2 &amp; upper_.type == 0">
+            (-∞,{upper_.value}]
+        </DisplayString>
+        <DisplayString Condition="lower_.type == 1 &amp; upper_.type == 2">
+            ({lower_.value},+∞)
+        </DisplayString>
+        <DisplayString Condition="lower_.type == 0 &amp; upper_.type == 2">
+            [{lower_.value},+∞)
+        </DisplayString>
+        <DisplayString Condition="lower_.type == 1 &amp; upper_.type == 1">
+            ({lower_.value},{upper_.value})
+        </DisplayString>
+        <DisplayString Condition="lower_.type == 1 &amp; upper_.type == 0">
+            ({lower_.value},{upper_.value}]
+        </DisplayString>
+        <DisplayString Condition="lower_.type == 0 &amp; upper_.type == 1">
+            [{lower_.value},{upper_.value})
+        </DisplayString>
+        <DisplayString Condition="lower_.type == 0 &amp; upper_.type == 0">
+            [{lower_.value},{upper_.value}]
+        </DisplayString>
+        <DisplayString>
+            invalid
+        </DisplayString>
+    </Type>
+
+    <Type Name="easy::codeunit_sequence_view">
+        <DisplayString>{data_,[size_]}</DisplayString>
+        <Expand HideRawView="true">
+            <Item Name="size">size_</Item>
+        </Expand>
+    </Type>
+
+    <Type Name="easy::codeunit_sequence">
+        <DisplayString>{((easy::codeunit_sequence::sso*)this)->alloc ? ((easy::codeunit_sequence::norm*)this)->data : ((easy::codeunit_sequence::sso*)this)->data._Elems}</DisplayString>
+        <Expand HideRawView="true">
+            <Item Name="allocated">(bool)(((easy::codeunit_sequence::sso*)this)->alloc)</Item>
+            <Item Name="size">((easy::codeunit_sequence::sso*)this)->alloc ? ((easy::codeunit_sequence::norm*)this)->size : (easy::u32)((easy::codeunit_sequence::sso*)this)->size</Item>
+            <Item Name="capacity">((easy::codeunit_sequence::sso*)this)->alloc ? ((easy::codeunit_sequence::norm*)this)->capacity : easy::codeunit_sequence::SSO_SIZE_MAX</Item>
+            <Item Name="data">((easy::codeunit_sequence::sso*)this)->alloc ? ((easy::codeunit_sequence::norm*)this)->data : (easy::u32)((easy::codeunit_sequence::sso*)this)->data._Elems</Item>
+        </Expand>
+    </Type>
+
+</AutoVisualizer>
