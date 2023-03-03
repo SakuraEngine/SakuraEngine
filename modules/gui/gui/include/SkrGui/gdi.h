@@ -1,8 +1,6 @@
 #pragma once
 #include "SkrGui/module.configure.h"
-#include "platform/configure.h"
 #include "utils/types.h"
-#include <containers/span.hpp>
 
 namespace skr { namespace render_graph { class RenderGraph; } }
 
@@ -11,13 +9,26 @@ namespace gdi {
 
 using index_t = uint16_t;
 
+template<typename T>
+struct LiteDataView
+{
+    inline constexpr uint64_t size() const SKR_NOEXCEPT { return size_; }
+    inline SKR_CONSTEXPR T* data() const SKR_NOEXCEPT { return data_; }
+    inline SKR_CONSTEXPR T& operator[](uint64_t index) const SKR_NOEXCEPT { return data_[index]; }
+    inline SKR_CONSTEXPR T* begin() const SKR_NOEXCEPT { return data_; }
+    inline SKR_CONSTEXPR T* end() const SKR_NOEXCEPT { return data_ + size_; }
+    inline SKR_CONSTEXPR bool empty() const SKR_NOEXCEPT { return size_ == 0; }
+    T* data_ = nullptr;
+    uint64_t size_ = 0;
+};
+
 enum class EGDIBackend
 {
     NANOVG,
     Count
 };
 
-struct SKR_GUI_API SGDIPaint
+struct SGDIPaint
 {
 
 };
@@ -45,6 +56,7 @@ struct SGDIElementDrawCommand
 
 struct SKR_GUI_API SGDIElement
 {
+    friend struct SGDIRenderer;
     virtual ~SGDIElement() SKR_NOEXCEPT = default;
     
     virtual void begin_frame(float devicePixelRatio) = 0;
@@ -63,7 +75,7 @@ struct SKR_GUI_API SGDICanvas
 
     virtual void add_element(SGDIElement* element, const skr_float4_t& transform) SKR_NOEXCEPT = 0;
     virtual void remove_element(SGDIElement* element) SKR_NOEXCEPT = 0;
-    virtual skr::span<SGDIElement*> all_elements() SKR_NOEXCEPT = 0;
+    virtual LiteDataView<SGDIElement*> all_elements() SKR_NOEXCEPT = 0;
 };
 
 struct SKR_GUI_API SGDICanvasGroup
@@ -72,7 +84,7 @@ struct SKR_GUI_API SGDICanvasGroup
 
     virtual void add_canvas(SGDICanvas* canvas) SKR_NOEXCEPT = 0;
     virtual void remove_canvas(SGDICanvas* canvas) SKR_NOEXCEPT = 0;
-    virtual skr::span<SGDICanvas*> all_canvas() SKR_NOEXCEPT = 0;
+    virtual LiteDataView<SGDICanvas*> all_canvas() SKR_NOEXCEPT = 0;
 };
 
 struct SKR_GUI_API SGDIDevice
@@ -94,12 +106,12 @@ struct SKR_GUI_API SGDIDevice
 
 struct SGDIRendererDescriptor
 {
-    void* usr_data;
+    void* usr_data = nullptr;
 };
 
 struct SGDIRenderParams
 {
-    void* usr_data;
+    void* usr_data = nullptr;
 };
 
 struct SKR_GUI_API SGDIRenderer
@@ -109,6 +121,10 @@ struct SKR_GUI_API SGDIRenderer
     virtual int initialize(const SGDIRendererDescriptor* desc) SKR_NOEXCEPT = 0;
     virtual int finalize() SKR_NOEXCEPT = 0;
     virtual void render(SGDICanvasGroup* canvas_group, SGDIRenderParams* params) SKR_NOEXCEPT = 0;
+
+    virtual LiteDataView<SGDIVertex> fetch_element_vertices(SGDIElement* element) SKR_NOEXCEPT;
+    virtual LiteDataView<index_t> fetch_element_indices(SGDIElement* element) SKR_NOEXCEPT;
+    virtual LiteDataView<SGDIElementDrawCommand> fetch_element_draw_commands(SGDIElement* element) SKR_NOEXCEPT;
 };
 
 } }
