@@ -2,12 +2,14 @@
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "utils/make_zeroed.hpp"
 #include "SkrGui/gdi.h"
+#include "SkrGuiRenderer/renderer.hpp"
 
 thread_local render_application_t App;
 
 thread_local skr::gdi::SGDIDevice* gdi_device = nullptr;
 thread_local skr::gdi::SGDICanvas* gdi_canvas = nullptr;
 thread_local skr::gdi::SGDICanvasGroup* gdi_canvas_group = nullptr;
+thread_local skr::gdi::SGDIRenderer_RenderGraph* gdi_renderer = nullptr;
 
 int main(int argc, char* argv[])
 {
@@ -25,12 +27,19 @@ int main(int argc, char* argv[])
     });
     // create GDI objects
     skr::gdi::SGDIElement* test_element = nullptr;
-    gdi_device = skr::gdi::SGDIDevice::Create(App.device, skr::gdi::EGDIBackend::NANOVG);
+    gdi_device = skr::gdi::SGDIDevice::Create(skr::gdi::EGDIBackend::NANOVG);
     gdi_canvas_group = gdi_device->create_canvas_group();
     gdi_canvas = gdi_device->create_canvas();
     test_element = gdi_device->create_element();
     gdi_canvas_group->add_canvas(gdi_canvas);
     gdi_canvas->add_element(test_element, {0.f, 0.f, 0.f, 0.f});
+    // create GDI renderer
+    skr::gdi::SGDIRendererDescriptor gdir_desc = {};
+    skr::gdi::SGDIRendererDescriptor_RenderGraph gdir_desc2 = {};
+    gdir_desc2.device = App.device;
+    gdi_renderer = SkrNew<skr::gdi::SGDIRenderer_RenderGraph>();
+    gdir_desc.usr_data = &gdir_desc2;
+    gdi_renderer->initialize(&gdir_desc);
     // loop
     bool quit = false;
     while (!quit)
@@ -76,7 +85,11 @@ int main(int argc, char* argv[])
                 .allow_render_target();
             });
         // render GDI canvas group
-        gdi_device->render(graph, gdi_canvas_group);
+        skr::gdi::SGDIRenderParams gdir_params = {};
+        skr::gdi::SGDIRenderParams_RenderGraph gdir_params2 = {};
+        gdir_params2.render_graph = graph;
+        gdir_params.usr_data = &gdir_params2;
+        gdi_renderer->render(gdi_canvas_group, &gdir_params);
         // do present
         graph->add_present_pass(
             [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
@@ -103,6 +116,8 @@ int main(int argc, char* argv[])
     gdi_device->free_canvas(gdi_canvas);
     gdi_device->free_canvas_group(gdi_canvas_group);
     skr::gdi::SGDIDevice::Free(gdi_device);
+    gdi_renderer->finalize();
+    SkrDelete(gdi_renderer);
     // free gfx objects
     app_wait_gpu_idle(&App);
     app_finalize(&App);

@@ -1,0 +1,5 @@
+shared_module("SkrGui", "SKR_GUI", engine_version)
+    set_group("01.modules")
+    public_dependency("SkrRT", engine_version)
+    add_includedirs("include", {public=true})
+    add_files("src/**.cpp")

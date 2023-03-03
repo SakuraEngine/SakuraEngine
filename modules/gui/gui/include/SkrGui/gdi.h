@@ -1,14 +1,15 @@
 #pragma once
-#include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrGui/module.configure.h"
 #include "platform/configure.h"
 #include "utils/types.h"
-#include <containers/vector.hpp>
+#include <containers/span.hpp>
 
 namespace skr { namespace render_graph { class RenderGraph; } }
 
 namespace skr {
 namespace gdi {
+
+using index_t = uint16_t;
 
 enum class EGDIBackend
 {
@@ -36,6 +37,12 @@ struct SGDIVertex
     uint32_t     color; 
 };
 
+struct SGDIElementDrawCommand
+{
+    uint32_t first_index;
+    uint32_t index_count;
+};
+
 struct SKR_GUI_API SGDIElement
 {
     virtual ~SGDIElement() SKR_NOEXCEPT = default;
@@ -54,29 +61,25 @@ struct SKR_GUI_API SGDICanvas
 {
     virtual ~SGDICanvas() SKR_NOEXCEPT = default;
 
-    virtual void add_element(SGDIElement* element, const skr_float4_t& transform);
-    virtual void remove_element(SGDIElement* element);
-    virtual skr::span<SGDIElement*> all_elements();
-protected:
-    skr::vector<SGDIElement*> all_elements_;
+    virtual void add_element(SGDIElement* element, const skr_float4_t& transform) SKR_NOEXCEPT = 0;
+    virtual void remove_element(SGDIElement* element) SKR_NOEXCEPT = 0;
+    virtual skr::span<SGDIElement*> all_elements() SKR_NOEXCEPT = 0;
 };
 
 struct SKR_GUI_API SGDICanvasGroup
 {
     virtual ~SGDICanvasGroup() SKR_NOEXCEPT = default;
 
-    virtual void add_canvas(SGDICanvas* canvas);
-    virtual void remove_canvas(SGDICanvas* canvas);
-    virtual skr::span<SGDICanvas*> all_canvas();
-protected:
-    skr::vector<SGDICanvas*> all_canvas_;
+    virtual void add_canvas(SGDICanvas* canvas) SKR_NOEXCEPT = 0;
+    virtual void remove_canvas(SGDICanvas* canvas) SKR_NOEXCEPT = 0;
+    virtual skr::span<SGDICanvas*> all_canvas() SKR_NOEXCEPT = 0;
 };
 
 struct SKR_GUI_API SGDIDevice
 {
     virtual ~SGDIDevice() SKR_NOEXCEPT = default;
 
-    [[nodiscard]] static SGDIDevice* Create(CGPUDeviceId device, EGDIBackend backend);
+    [[nodiscard]] static SGDIDevice* Create(EGDIBackend backend);
     static void Free(SGDIDevice* device);
 
     [[nodiscard]] virtual SGDICanvas* create_canvas();
@@ -87,8 +90,25 @@ struct SKR_GUI_API SGDIDevice
 
     [[nodiscard]] virtual SGDIElement* create_element() = 0;
     virtual void free_element(SGDIElement* element) = 0;
+};
 
-    virtual void render(skr::render_graph::RenderGraph* rg, SGDICanvasGroup* canvas_group) = 0;
+struct SGDIRendererDescriptor
+{
+    void* usr_data;
+};
+
+struct SGDIRenderParams
+{
+    void* usr_data;
+};
+
+struct SKR_GUI_API SGDIRenderer
+{
+    virtual ~SGDIRenderer() SKR_NOEXCEPT = default;
+
+    virtual int initialize(const SGDIRendererDescriptor* desc) SKR_NOEXCEPT = 0;
+    virtual int finalize() SKR_NOEXCEPT = 0;
+    virtual void render(SGDICanvasGroup* canvas_group, SGDIRenderParams* params) SKR_NOEXCEPT = 0;
 };
 
 } }
