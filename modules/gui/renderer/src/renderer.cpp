@@ -209,10 +209,10 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
             SGDIElementDrawCommand_RenderGraph command2 = {};
             command2.first_index = command.first_index;
             command2.index_count = command.index_count;
-            command2.ib_offset = ib_cursor * sizeof(index_t);
-            command2.vb_offset = vb_cursor * sizeof(SGDIVertex);
-            command2.tb_offset = tb_cursor * sizeof(rtm::matrix4x4f);
-            command2.pb_offset = pb_cursor * sizeof(rtm::matrix4x4f);
+            command2.ib_offset = static_cast<uint32_t>(ib_cursor * sizeof(index_t));
+            command2.vb_offset = static_cast<uint32_t>(vb_cursor * sizeof(SGDIVertex));
+            command2.tb_offset = static_cast<uint32_t>(tb_cursor * sizeof(rtm::matrix4x4f));
+            command2.pb_offset = static_cast<uint32_t>(pb_cursor * sizeof(rtm::matrix4x4f));
             canvas_group_data->render_commands.emplace_back(command2);
         }
     }
