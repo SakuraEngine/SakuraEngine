@@ -80,7 +80,7 @@ CGPURenderPipelineId create_render_pipeline(CGPUDeviceId device, ECGPUFormat tar
     CGPURasterizerStateDescriptor rs_state = {};
     rs_state.cull_mode = CGPU_CULL_MODE_NONE;
     rs_state.fill_mode = CGPU_FILL_MODE_SOLID;
-    rs_state.front_face = CGPU_FRONT_FACE_CW;
+    rs_state.front_face = CGPU_FRONT_FACE_CCW;
     rs_state.slope_scaled_depth_bias = 0.f;
     rs_state.enable_depth_clamp = false;
     rs_state.enable_scissor = true;
