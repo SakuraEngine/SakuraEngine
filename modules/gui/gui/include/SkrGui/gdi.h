@@ -33,11 +33,6 @@ struct SGDIPaint
 
 };
 
-struct SGDITransform
-{
-    skr_float4x4_t transform;
-};
-
 struct SGDIVertex
 {
     skr_float4_t position;

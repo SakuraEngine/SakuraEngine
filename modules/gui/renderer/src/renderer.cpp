@@ -1,4 +1,5 @@
 #include "SkrGuiRenderer/renderer.hpp"
+#include "rtm/qvvf.h"
 
 namespace skr {
 namespace gdi {
@@ -76,6 +77,16 @@ CGPURenderPipelineId create_render_pipeline(CGPUDeviceId device, ECGPUFormat tar
     rp_desc.fragment_shader = &ppl_shaders[1];
     rp_desc.render_target_count = 1;
     rp_desc.color_formats = &target_format;
+    CGPURasterizerStateDescriptor rs_state = {};
+    rs_state.cull_mode = CGPU_CULL_MODE_NONE;
+    rs_state.fill_mode = CGPU_FILL_MODE_SOLID;
+    rs_state.front_face = CGPU_FRONT_FACE_CW;
+    rs_state.slope_scaled_depth_bias = 0.f;
+    rs_state.enable_depth_clamp = false;
+    rs_state.enable_scissor = true;
+    rs_state.enable_multi_sample = false;
+    rs_state.depth_bias = 0;
+    rp_desc.rasterizer_state = &rs_state;
     auto pipeline = cgpu_create_render_pipeline(device, &rp_desc);
     cgpu_free_shader_library(vertex_shader);
     cgpu_free_shader_library(fragment_shader);
@@ -98,7 +109,8 @@ int SGDIRenderer_RenderGraph::initialize(const SGDIRendererDescriptor* desc) SKR
     vertex_layout.attributes[4] = { "UV_Two", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, uv2_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attributes[5] = { "COLOR", 1, CGPU_FORMAT_R8G8B8A8_UNORM, 0, color_offset, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attributes[6] = { "TRANSFORM", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 1, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
-    vertex_layout.attribute_count = 7;
+    vertex_layout.attributes[7] = { "PROJECTION", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 2, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
+    vertex_layout.attribute_count = 8;
     pipeline = create_render_pipeline(pDesc->device, CGPU_FORMAT_B8G8R8A8_UNORM, &vertex_layout);
     return 0;
 }
@@ -111,6 +123,24 @@ int SGDIRenderer_RenderGraph::finalize() SKR_NOEXCEPT
     return 0;
 }
 
+/*
+skr_float4x4_t orthographic(float Left, float Right, float Bottom, float Top, float NearZ, float FarZ)
+{
+    float RL, TB, FN;
+    RL = 1.0f / (Right  - Left);
+    TB = 1.0f / (Top    - Bottom);
+    FN =-1.0f / (FarZ - NearZ);
+
+    return 
+    {{
+        { 2.0f * RL, 0.f, 0.f, 0.f },
+        { 0.f, 2.0f * TB, 0.f, 0.f },
+        { 0.f, 0.f, 2.0f * FN, -1.f },
+        { -(Right + Left) * RL, -(Top + Bottom) * TB, (FarZ + NearZ) * FN, 1.f }
+    }};
+}
+*/
+
 void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderParams* params) SKR_NOEXCEPT
 {
     const auto pParams = reinterpret_cast<SGDIRenderParams_RenderGraph*>(params->usr_data);
@@ -121,6 +151,7 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
     uint64_t vertex_count = 0u;
     uint64_t index_count = 0u;
     uint64_t transform_count = 0u;
+    uint64_t projection_count = 0u;
     uint64_t command_count = 0u;
     // 1. loop prepare counters & render data
     for (auto canvas : canvas_span)
@@ -134,20 +165,16 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
         vertex_count += element_vertices.size();
         index_count += element_indices.size();
         transform_count += 1;
+        projection_count += 1;
         command_count += element_commands.size();
     }
     }
-    canvas_group_data->render_commands.clear();
-    canvas_group_data->render_vertices.clear();
-    canvas_group_data->render_indices.clear();
-    canvas_group_data->render_transforms.clear();
     canvas_group_data->render_vertices.reserve(vertex_count);
     canvas_group_data->render_indices.reserve(index_count);
     canvas_group_data->render_transforms.reserve(transform_count);
+    canvas_group_data->render_projections.reserve(projection_count);
     canvas_group_data->render_commands.reserve(command_count);
-    uint64_t vb_cursor = 0u;
-    uint64_t ib_cursor = 0u;
-    uint64_t tb_cursor = 0u;
+    uint64_t vb_cursor = 0u, ib_cursor = 0u, tb_cursor = 0u, pb_cursor = 0u;
     for (auto canvas : canvas_span)
     {
     for (auto element : canvas->all_elements())
@@ -156,15 +183,45 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
         const auto element_indices = fetch_element_indices(element);
         const auto element_commands = fetch_element_draw_commands(element);
 
+        // insert data
         vb_cursor = canvas_group_data->render_vertices.size();
         ib_cursor = canvas_group_data->render_indices.size();
         tb_cursor = canvas_group_data->render_transforms.size();
+        pb_cursor = canvas_group_data->render_projections.size();
         canvas_group_data->render_vertices.insert(canvas_group_data->render_vertices.end(), element_vertices.begin(), element_vertices.end());
         canvas_group_data->render_indices.insert(canvas_group_data->render_indices.end(), element_indices.begin(), element_indices.end());
-        // TODO: deal with transform
+
+        // transform
         auto& transform = canvas_group_data->render_transforms.emplace_back();
-        transform.transform.M[0][0] = 900.0f;
-        transform.transform.M[0][1] = 900.0f;
+        const auto scaleX = 1.f;
+        const auto scaleY = 1.f;
+        const auto scaleZ = 1.f;
+        const auto transformX = 0.f;
+        const auto transformY = 0.f;
+        const auto transformZ = 1.f;
+        const auto transformW = 1.f;
+        const auto pitchInDegrees = 0.f;
+        const auto yawInDegrees = 0.f;
+        const auto rollInDegrees = 0.f;
+        const auto quat = rtm::quat_from_euler_rh(
+            rtm::scalar_deg_to_rad(-pitchInDegrees),
+            rtm::scalar_deg_to_rad(yawInDegrees),
+            rtm::scalar_deg_to_rad(rollInDegrees));
+        const rtm::vector4f translation = rtm::vector_set(transformX, transformY, transformZ, transformW);
+        const rtm::vector4f scale = rtm::vector_set(scaleX, scaleY, scaleZ, 0.f);
+        const auto transform_qvv = rtm::qvv_set(quat, translation, scale);
+        transform = rtm::matrix_cast(rtm::matrix_from_qvv(transform_qvv));
+        
+        // projection
+        auto& projection = canvas_group_data->render_projections.emplace_back();
+        const auto view = rtm::look_at_matrix_lh(
+            {450.f, 450.f, 0.f} /*eye*/, 
+            {450.f, 450.f, 1000.f} /*at*/,
+            { 0.f, 1.f, 0.f } /*up*/
+        );
+        const auto proj = rtm::orthographic_lh(900.f, 900.f, 0.f, 1000.f);
+        projection = rtm::matrix_mul(view, proj);
+
         for (auto command : element_commands)
         {
             SGDIElementDrawCommand_RenderGraph command2 = {};
@@ -172,7 +229,8 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
             command2.index_count = command.index_count;
             command2.ib_offset = ib_cursor * sizeof(index_t);
             command2.vb_offset = vb_cursor * sizeof(SGDIVertex);
-            command2.tb_offset = tb_cursor * sizeof(SGDITransform);
+            command2.tb_offset = tb_cursor * sizeof(rtm::matrix4x4f);
+            command2.pb_offset = pb_cursor * sizeof(rtm::matrix4x4f);
             canvas_group_data->render_commands.emplace_back(command2);
         }
     }
@@ -181,11 +239,12 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
     // 2. prepare render resource
     const uint64_t vertices_size = vertex_count * sizeof(SGDIVertex);
     const uint64_t indices_size = index_count * sizeof(index_t);
-    const uint64_t transform_size = transform_count * sizeof(SGDITransform);
+    const uint64_t transform_size = transform_count * sizeof(rtm::matrix4x4f);
+    const uint64_t projection_size = projection_count * sizeof(rtm::matrix4x4f);
     const bool useCVV = false;
     auto vertex_buffer = rg->create_buffer(
         [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
-            builder.set_name("nvg_vertex_buffer")
+            builder.set_name("gdi_vertex_buffer")
                 .size(vertices_size)
                 .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
                 .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
@@ -195,8 +254,18 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
         });
     auto transform_buffer = rg->create_buffer(
         [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
-            builder.set_name("nvg_transform_buffer")
+            builder.set_name("gdi_transform_buffer")
                 .size(transform_size)
+                .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
+                .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
+                .with_tags(useCVV ? kRenderGraphDynamicResourceTag : kRenderGraphDefaultResourceTag)
+                .prefer_on_device()
+                .as_vertex_buffer();
+        });
+    auto projection_buffer = rg->create_buffer(
+        [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
+            builder.set_name("gdi_projection_buffer")
+                .size(projection_size)
                 .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
                 .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
                 .with_tags(useCVV ? kRenderGraphDynamicResourceTag : kRenderGraphDefaultResourceTag)
@@ -205,7 +274,7 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
         });
     auto index_buffer = rg->create_buffer(
         [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
-            builder.set_name("nvg_index_buffer")
+            builder.set_name("gdi_index_buffer")
                 .size(indices_size)
                 .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
                 .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
@@ -213,11 +282,9 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
                 .prefer_on_device()
                 .as_index_buffer();
         });
-    canvas_group_data->vertex_buffers.clear();
-    canvas_group_data->transform_buffers.clear();
-    canvas_group_data->index_buffers.clear();
     canvas_group_data->vertex_buffers.emplace_back(vertex_buffer);
     canvas_group_data->transform_buffers.emplace_back(transform_buffer);
+    canvas_group_data->projection_buffers.emplace_back(projection_buffer);
     canvas_group_data->index_buffers.emplace_back(index_buffer);
 
     // 3. copy/upload geometry data to GPU
@@ -226,32 +293,41 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
         auto upload_buffer_handle = rg->create_buffer(
             [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
             ZoneScopedN("ConstructUploadPass");
-            builder.set_name("nvg_upload_buffer")
-                    .size(indices_size + vertices_size + transform_size)
+            builder.set_name("gdi_upload_buffer")
+                    .size(indices_size + vertices_size + transform_size + projection_size)
                     .with_tags(kRenderGraphDefaultResourceTag)
                     .as_upload_buffer();
             });
         rg->add_copy_pass(
             [=](render_graph::RenderGraph& g, render_graph::CopyPassBuilder& builder) {
             ZoneScopedN("ConstructCopyPass");
-            builder.set_name("nvg_copy_pass")
+            builder.set_name("gdi_copy_pass")
                 .buffer_to_buffer(upload_buffer_handle.range(0, vertices_size), vertex_buffer.range(0, vertices_size))
                 .buffer_to_buffer(upload_buffer_handle.range(vertices_size, vertices_size + indices_size), index_buffer.range(0, indices_size))
-                .buffer_to_buffer(upload_buffer_handle.range(vertices_size + indices_size, vertices_size + indices_size + transform_size), transform_buffer.range(0, transform_size));
+                .buffer_to_buffer(upload_buffer_handle.range(vertices_size + indices_size, vertices_size + indices_size + transform_size), transform_buffer.range(0, transform_size))
+                .buffer_to_buffer(upload_buffer_handle.range(vertices_size + indices_size + transform_size, vertices_size + indices_size + transform_size + projection_size), projection_buffer.range(0, projection_size));
             },
             [upload_buffer_handle, canvas_group_data](render_graph::RenderGraph& g, render_graph::CopyPassContext& context){
                 auto upload_buffer = context.resolve(upload_buffer_handle);
                 const uint64_t vertices_count = canvas_group_data->render_vertices.size();
                 const uint64_t indices_count = canvas_group_data->render_indices.size();
+                const uint64_t transforms_count = canvas_group_data->render_transforms.size();
+                const uint64_t projections_count = canvas_group_data->render_projections.size();
+
                 SGDIVertex* vtx_dst = (SGDIVertex*)upload_buffer->cpu_mapped_address;
                 index_t* idx_dst = (index_t*)(vtx_dst + vertices_count);
-                SGDITransform* transform_dst = (SGDITransform*)(idx_dst + indices_count);
+                rtm::matrix4x4f* transform_dst = (rtm::matrix4x4f*)(idx_dst + indices_count);
+                rtm::matrix4x4f* projection_dst = (rtm::matrix4x4f*)(transform_dst + transforms_count);
+
                 const skr::span<SGDIVertex> render_vertices = canvas_group_data->render_vertices;
                 const skr::span<index_t> render_indices = canvas_group_data->render_indices;
-                const skr::span<SGDITransform> render_transforms = canvas_group_data->render_transforms;
+                const skr::span<rtm::matrix4x4f> render_transforms = canvas_group_data->render_transforms;
+                const skr::span<rtm::matrix4x4f> render_projections = canvas_group_data->render_projections;
+
                 memcpy(vtx_dst, render_vertices.data(), vertices_count * sizeof(SGDIVertex));
                 memcpy(idx_dst, render_indices.data(), indices_count * sizeof(index_t));
-                memcpy(transform_dst, render_transforms.data(), render_transforms.size() * sizeof(SGDITransform));
+                memcpy(transform_dst, render_transforms.data(), transforms_count * sizeof(rtm::matrix4x4f));
+                memcpy(projection_dst, render_projections.data(), projections_count * sizeof(rtm::matrix4x4f));
             });
     }
 
@@ -260,39 +336,42 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
     // skr::vector<SGDICanvas*> canvas_copy(canvas_span.begin(), canvas_span.end());
     rg->add_render_pass([&](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
         ZoneScopedN("ConstructRenderPass");
-        builder.set_name("nvg_gdi_render_pass")
+        builder.set_name("gdi_render_pass")
             .set_pipeline(pipeline)
             .use_buffer(vertex_buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
             .use_buffer(transform_buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
+            .use_buffer(projection_buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
             .use_buffer(index_buffer, CGPU_RESOURCE_STATE_INDEX_BUFFER)
             .write(0, target, CGPU_LOAD_ACTION_CLEAR);
     },
-    [target, canvas_group_data, useCVV, index_buffer, vertex_buffer, transform_buffer]
-    (render_graph::RenderGraph& g, render_graph::RenderPassContext& context) {
-        ZoneScopedN("GDI(NVG)RenderPass");
+    [target, canvas_group_data, useCVV, index_buffer, vertex_buffer, transform_buffer, projection_buffer]
+    (render_graph::RenderGraph& g, render_graph::RenderPassContext& ctx) {
+        ZoneScopedN("GDI-RenderPass");
         const auto target_desc = g.resolve_descriptor(target);
-        auto resolved_ib = context.resolve(index_buffer);
-        auto resolved_vb = context.resolve(vertex_buffer);
-        auto resolved_tb = context.resolve(transform_buffer);
-        CGPUBufferId vertex_streams[2] = { resolved_vb, resolved_tb };
-        const uint32_t vertex_stream_strides[2] = { sizeof(SGDIVertex), sizeof(SGDITransform) };
-        cgpu_render_encoder_set_viewport(context.encoder,
+        auto resolved_ib = ctx.resolve(index_buffer);
+        auto resolved_vb = ctx.resolve(vertex_buffer);
+        auto resolved_tb = ctx.resolve(transform_buffer);
+        auto resolved_pb = ctx.resolve(projection_buffer);
+        CGPUBufferId vertex_streams[3] = { resolved_vb, resolved_tb, resolved_pb };
+        const uint32_t vertex_stream_strides[3] = { sizeof(SGDIVertex), sizeof(rtm::matrix4x4f), sizeof(rtm::matrix4x4f) };
+
+        cgpu_render_encoder_set_viewport(ctx.encoder,
             0.0f, 0.0f,
             (float)target_desc->width,
             (float)target_desc->height,
             0.f, 1.f);
-        cgpu_render_encoder_set_scissor(context.encoder,
+        cgpu_render_encoder_set_scissor(ctx.encoder,
             0, 0, 
             target_desc->width, target_desc->height);
+
         const skr::span<SGDIElementDrawCommand_RenderGraph> render_commands = canvas_group_data->render_commands;
         for (const auto& command : render_commands)
         {
-            const uint32_t vertex_stream_offsets[2] = { command.vb_offset, command.tb_offset };
-            cgpu_render_encoder_bind_index_buffer(context.encoder,
-                resolved_ib, sizeof(index_t), command.ib_offset);
-            cgpu_render_encoder_bind_vertex_buffers(context.encoder,
-                2, vertex_streams, vertex_stream_strides, vertex_stream_offsets);
-            cgpu_render_encoder_draw_indexed_instanced(context.encoder,
+            const uint32_t vertex_stream_offsets[3] = { command.vb_offset, command.tb_offset, command.pb_offset };
+            cgpu_render_encoder_bind_index_buffer(ctx.encoder, resolved_ib, sizeof(index_t), command.ib_offset);
+            cgpu_render_encoder_bind_vertex_buffers(ctx.encoder,
+                3, vertex_streams, vertex_stream_strides, vertex_stream_offsets);
+            cgpu_render_encoder_draw_indexed_instanced(ctx.encoder,
                 command.index_count,command.first_index,
                 1, 0, 0);
         }

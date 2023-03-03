@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
         {
             test_element->begin_frame(1.f);
             test_element->begin_path();
-            test_element->rect(100, 100, 300, 300);
+            test_element->rect(150, 150, 300, 300);
             test_element->fill_color(155u, 30u, 120u, 255u);
             test_element->fill();
         }
