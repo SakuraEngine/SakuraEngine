@@ -10,6 +10,32 @@ constexpr uint32_t RTM_SELECT_1 = ~RTM_SELECT_0;
 static const rtm::mask4f RTM_SELECT_1110F = rtm::mask_set(RTM_SELECT_1, RTM_SELECT_1, RTM_SELECT_1, RTM_SELECT_0);
 
 RTM_DISABLE_SECURITY_COOKIE_CHECK inline 
+rtm::matrix4x4f RTM_SIMD_CALL orthographic(float ViewWidth, float ViewHeight, float NearZ, float FarZ) RTM_NO_EXCEPT
+{
+    float fRange = 1.0f / (NearZ - FarZ);
+
+    const auto col0 = rtm::vector_set(2.0f / ViewWidth, 0.f, 0.f, 0.f);
+    const auto col1 = rtm::vector_set(0.f, 2.0f / ViewHeight, 0.f, 0.f);
+    const auto col2 = rtm::vector_set(0.f, 0.f, fRange, 0.f);
+    const auto col3 = rtm::vector_set(0.f, 0.f, fRange * NearZ, 1.f);
+
+    return rtm::matrix_set(col0, col1, col2, col3);
+}
+
+RTM_DISABLE_SECURITY_COOKIE_CHECK inline 
+rtm::matrix4x4f RTM_SIMD_CALL orthographic_lh(float ViewWidth, float ViewHeight, float NearZ, float FarZ) RTM_NO_EXCEPT
+{
+    float fRange = 1.0f / (FarZ - NearZ);
+
+    const auto col0 = rtm::vector_set(2.0f / ViewWidth, 0.f, 0.f, 0.f);
+    const auto col1 = rtm::vector_set(0.f, 2.0f / ViewHeight, 0.f, 0.f);
+    const auto col2 = rtm::vector_set(0.f, 0.f, fRange, 0.f);
+    const auto col3 = rtm::vector_set(0.f, 0.f, -fRange * NearZ, 1.f);
+
+    return rtm::matrix_set(col0, col1, col2, col3);
+}
+
+RTM_DISABLE_SECURITY_COOKIE_CHECK inline 
 rtm::matrix4x4f RTM_SIMD_CALL perspective_fov(float FovAngleY, float AspectRatio, float NearZ, float FarZ) RTM_NO_EXCEPT
 {
     float    SinFov;
@@ -56,6 +82,13 @@ rtm::matrix4x4f RTM_SIMD_CALL look_to_matrix(rtm::vector4f_arg0 EyePosition, rtm
 {
     const auto NegEyeDirection = rtm::vector_neg(EyeDirection);
     return look_to_matrix_lh(EyePosition, NegEyeDirection, UpDirection);
+}
+
+RTM_DISABLE_SECURITY_COOKIE_CHECK inline 
+rtm::matrix4x4f RTM_SIMD_CALL look_at_matrix_lh(rtm::vector4f_arg0 EyePosition, rtm::vector4f_arg1 FocusPosition, rtm::vector4f_arg2 UpDirection) RTM_NO_EXCEPT
+{
+    const auto EyeDirection = rtm::vector_sub(FocusPosition, EyePosition);
+    return look_to_matrix_lh(EyePosition, EyeDirection, UpDirection);
 }
 
 RTM_DISABLE_SECURITY_COOKIE_CHECK inline 

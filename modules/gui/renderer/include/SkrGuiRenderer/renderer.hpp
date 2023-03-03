@@ -3,6 +3,7 @@
 #include "SkrGui/gdi.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include <containers/vector.hpp>
+#include "rtm/rtmx.h"
 
 namespace skr {
 namespace gdi {
@@ -16,6 +17,7 @@ struct SGDIElementDrawCommand_RenderGraph
     uint32_t ib_offset;
     uint32_t vb_offset;
     uint32_t tb_offset;
+    uint32_t pb_offset;
 };
 
 struct SKR_GUI_RENDERER_API SGDICanvasGroupData_RenderGraph
@@ -30,11 +32,13 @@ struct SKR_GUI_RENDERER_API SGDICanvasGroupData_RenderGraph
 
     skr::vector<skr::render_graph::BufferHandle> vertex_buffers;
     skr::vector<skr::render_graph::BufferHandle> transform_buffers;
+    skr::vector<skr::render_graph::BufferHandle> projection_buffers;
     skr::vector<skr::render_graph::BufferHandle> index_buffers;
 
     skr::vector<SGDIElementDrawCommand_RenderGraph> render_commands;
     skr::vector<SGDIVertex> render_vertices;
-    skr::vector<SGDITransform> render_transforms;
+    skr::vector<rtm::matrix4x4f> render_transforms;
+    skr::vector<rtm::matrix4x4f> render_projections;
     skr::vector<index_t> render_indices;
 };
 
