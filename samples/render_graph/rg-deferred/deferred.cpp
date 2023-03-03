@@ -1,5 +1,5 @@
 #include "cube_geometry.h"
-#include "../../cgpu/common/utils.h"
+#include "../../common/utils.h"
 #include "gbuffer_pipeline.h"
 #include "lighting_pipeline.h"
 #include "blit_pipeline.h"

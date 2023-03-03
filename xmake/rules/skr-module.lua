@@ -34,6 +34,9 @@ rule("skr.module")
         target:add("includedirs", gendir, {public = true})
 
         local target_gendir = path.join(target:autogendir({root = true}), target:plat())
+        if (path.is_absolute(target_gendir)) then
+            print("Detect incorrect abs path: \""..target_gendir.."\", report this to xmake!")
+        end
         target_gendir = path.absolute(target_gendir)
         -- HACK: this absolute path may contains lower-case drive letter on windows
         if (os.host() == "windows") then

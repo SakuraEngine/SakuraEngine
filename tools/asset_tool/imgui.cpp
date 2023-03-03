@@ -1,5 +1,5 @@
 
-#include "../../../../samples/cgpu/common/utils.h"
+#include "../../../../samples/common/utils.h"
 #include "platform/memory.h"
 #include "platform/window.h"
 #include "utils/make_zeroed.hpp"

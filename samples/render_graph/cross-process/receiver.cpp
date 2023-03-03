@@ -6,7 +6,7 @@
 #include <string> // TODO: replace this (std::stoi)
 #include <platform/filesystem.hpp>
 
-#include "../../cgpu/common/utils.h"
+#include "../../common/utils.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "cgpu/extensions/cgpu_nsight.h"
 

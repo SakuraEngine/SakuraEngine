@@ -1,4 +1,4 @@
-#include "../../cgpu/common/utils.h"
+#include "../../common/utils.h"
 #include "platform/thread.h"
 #include "utils/log.h"
 #include "utils/make_zeroed.hpp"
