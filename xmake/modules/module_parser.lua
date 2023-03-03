@@ -37,7 +37,6 @@ end
 function _generate_moduledeps(target, sourcefile, opt)
     local dependfile = _get_dependfile_of_modulesource(target, sourcefile)
     depend.on_changed(function ()
-
         -- trace
         vprint("generating.moduledeps %s", sourcefile)
 
