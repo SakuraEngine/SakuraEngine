@@ -123,24 +123,6 @@ int SGDIRenderer_RenderGraph::finalize() SKR_NOEXCEPT
     return 0;
 }
 
-/*
-skr_float4x4_t orthographic(float Left, float Right, float Bottom, float Top, float NearZ, float FarZ)
-{
-    float RL, TB, FN;
-    RL = 1.0f / (Right  - Left);
-    TB = 1.0f / (Top    - Bottom);
-    FN =-1.0f / (FarZ - NearZ);
-
-    return 
-    {{
-        { 2.0f * RL, 0.f, 0.f, 0.f },
-        { 0.f, 2.0f * TB, 0.f, 0.f },
-        { 0.f, 0.f, 2.0f * FN, -1.f },
-        { -(Right + Left) * RL, -(Top + Bottom) * TB, (FarZ + NearZ) * FN, 1.f }
-    }};
-}
-*/
-
 void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderParams* params) SKR_NOEXCEPT
 {
     const auto pParams = reinterpret_cast<SGDIRenderParams_RenderGraph*>(params->usr_data);
