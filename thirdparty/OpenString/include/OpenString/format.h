@@ -114,11 +114,13 @@ namespace details
                     return { run_type::plain_text, { '[', from, index, ')' } };
                 if(format[index] == format[index+1])
                     return { run_type::escaped_brace, { '[', index, index + 1, ']' } };
+                const i32 index_next = this->format.index_any_of("{}"_cuqv, { '(', index, '~' });
+                /*
                 if(format[index] == '}')
                     throw format_error("Unclosed right brace is not allowed!"_cuqv);
-                const i32 index_next = this->format.index_any_of("{}"_cuqv, { '(', index, '~' });
                 if(index_next == index_invalid || format[index_next] == '{')
                     throw format_error("Unclosed left brace is not allowed!"_cuqv);
+                */
                 return { run_type::formatter, { '[', index, index_next, ']' } };
             }
             
@@ -203,23 +205,31 @@ namespace details
                 i32 current_index = next_index;
                 if (index_run.is_empty())
                 {
+                    /*
                     if(next_index == manual_index)
                         throw format_error("Manual index is not allowed mixing with automatic index!"_cuqv);
+                    */
                     ++next_index;
                 }
                 else
                 {
+                    /*
                     if(next_index > 0)
                         throw format_error("Automatic index is not allowed mixing with manual index!"_cuqv);
+                    */
                     const auto [ last, error ] = std::from_chars(index_run.c_str(), index_run.last(), current_index);
+                    /*
                     if(last != index_run.last())
                         throw format_error("Invalid format index [{}]!"_cuqv, index_run);
+                    */
                     next_index = manual_index;
                 }
+                /*
                 if(current_index < 0)
                     throw format_error("Invalid format index [{}]: Index should not be negative!"_cuqv, current_index);
                 if(current_index >= argument_count)
                     throw format_error("Invalid format index [{}]: Index should be less than count of argument [{}]!"_cuqv, current_index, argument_count);
+                */
                 result += arguments[current_index].format(specification);
             }
                 break;
@@ -394,7 +404,9 @@ codeunit_sequence formatter<T>::format_argument(const T& value, const codeunit_s
         return format("[Undefined type (raw:{})]"_cuqv, raw);
 
     const codeunit_sequence message = format("Undefined format with raw memory bytes:{}!"_cuqv, raw);
+    /*
     throw format_error(message.view());
+    */
 }
 
 OPEN_STRING_NS_END
