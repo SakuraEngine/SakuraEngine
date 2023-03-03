@@ -46,8 +46,10 @@ codeunit_sequence details::format_integer(const i64& value, const codeunit_seque
             {
                 const codeunit_sequence_view holding_view = parsing.subview({ '(', zero_index, '~' });
                 const auto [ last, error ] = std::from_chars(holding_view.c_str(), holding_view.last(), holding);
+                /*
                 if(last != holding_view.last())
                     throw format_error("Invalid format specification [{}]!"_cuqv, specification);
+                */
                 parsing = parsing.subview({ '[', 0, zero_index, ')' });
             }
         }
@@ -59,8 +61,10 @@ codeunit_sequence details::format_integer(const i64& value, const codeunit_seque
                 parsing = parsing.subview({ '[', 0, -1, ')' });
             }
         }
+        /*
         if(!parsing.is_empty())
             throw format_error("Invalid format specification [{}]!"_cuqv, specification);
+        */
     }
     i32 base = 10;
     codeunit_sequence_view prefix;
@@ -129,13 +133,17 @@ codeunit_sequence details::format_float(const float& value, const codeunit_seque
             {
                 const codeunit_sequence_view precision_view = parsing.subview({ '(', dot_index, '~' });
                 const auto [ last, error ] = std::from_chars(precision_view.c_str(), precision_view.last(), precision);
+                /*
                 if(last != precision_view.last())
                     throw format_error("Invalid format specification [{}]!"_cuqv, specification);
+                */
                 parsing = parsing.subview({ '[', 0, dot_index, ')' });
             }
         }
+        /*
         if(!parsing.is_empty())
             throw format_error("Invalid format specification [{}]!"_cuqv, specification);
+        */
     }
     switch (type) 
     {
@@ -150,9 +158,11 @@ codeunit_sequence details::format_float(const float& value, const codeunit_seque
     default:
         break;
     }
+    /*
     static constexpr i32 max_precision = 9;
     if(precision > max_precision)
         throw format_error("Too high precision for float [{}]!"_cuqv, precision);
+    */
     codeunit_sequence result;
     const bool negative = value < 0;
     if(negative)
