@@ -75,20 +75,20 @@ void cgpu_free_instance_d3d12(CGPUInstanceId instance)
         SAFE_RELEASE(to_destroy->pDXDebug);
     }
     cgpu_delete(to_destroy);
+
+#if !defined(XBOX) && defined(_WIN32)
+    D3D12Util_UnloadDxcDLL();
+#endif
+
 #ifdef _DEBUG
     {
         IDXGIDebug1* dxgiDebug;
         if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug))))
         {
-            dxgiDebug->ReportLiveObjects(
-            DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_SUMMARY | DXGI_DEBUG_RLO_IGNORE_INTERNAL));
+            dxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
         }
         SAFE_RELEASE(dxgiDebug);
     }
-#endif
-
-#if !defined(XBOX) && defined(_WIN32)
-    D3D12Util_UnloadDxcDLL();
 #endif
 }
 

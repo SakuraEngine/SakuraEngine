@@ -164,6 +164,7 @@ void D3D12Util_QueryAllAdapters(CGPUInstance_D3D12* instance, uint32_t* count, b
                     HRESULT hres = adapter->QueryInterface(IID_PPV_ARGS(&cgpuAdapter.pDxActiveGPU));
                     if (SUCCEEDED(hres))
                     {
+                        SAFE_RELEASE(pDevice);
                         SAFE_RELEASE(cgpuAdapter.pDxActiveGPU);
                         instance->mAdaptersCount++;
                         // Add ref
@@ -181,6 +182,7 @@ void D3D12Util_QueryAllAdapters(CGPUInstance_D3D12* instance, uint32_t* count, b
             *foundSoftwareAdapter = true;
             SAFE_RELEASE(adapter);
         }
+        SAFE_RELEASE(_adapter);
     }
     *count = instance->mAdaptersCount;
     instance->pAdapters = (CGPUAdapter_D3D12*)cgpu_malloc(sizeof(CGPUAdapter_D3D12) * instance->mAdaptersCount);
