@@ -1,7 +1,8 @@
 #pragma once
 #include "SkrGuiRenderer/module.configure.h"
-#include "SkrGui/private/gdi_private.h"
+#include "SkrGui/gdi.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
+#include <containers/vector.hpp>
 
 namespace skr {
 namespace gdi {

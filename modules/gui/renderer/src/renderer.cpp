@@ -127,11 +127,14 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
     {
     for (auto element : canvas->all_elements())
     {
-        auto element_private = static_cast<SGDIElementPrivate*>(element);
-        vertex_count += element_private->vertices.size();
-        index_count += element_private->indices.size();
+        const auto element_vertices = fetch_element_vertices(element);
+        const auto element_indices = fetch_element_indices(element);
+        const auto element_commands = fetch_element_draw_commands(element);
+        
+        vertex_count += element_vertices.size();
+        index_count += element_indices.size();
         transform_count += 1;
-        command_count += element_private->commands.size();
+        command_count += element_commands.size();
     }
     }
     canvas_group_data->render_commands.clear();
@@ -149,17 +152,20 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
     {
     for (auto element : canvas->all_elements())
     {
-        auto element_private = static_cast<SGDIElementPrivate*>(element);
+        const auto element_vertices = fetch_element_vertices(element);
+        const auto element_indices = fetch_element_indices(element);
+        const auto element_commands = fetch_element_draw_commands(element);
+
         vb_cursor = canvas_group_data->render_vertices.size();
         ib_cursor = canvas_group_data->render_indices.size();
         tb_cursor = canvas_group_data->render_transforms.size();
-        canvas_group_data->render_vertices.insert(canvas_group_data->render_vertices.end(), element_private->vertices.begin(), element_private->vertices.end());
-        canvas_group_data->render_indices.insert(canvas_group_data->render_indices.end(), element_private->indices.begin(), element_private->indices.end());
+        canvas_group_data->render_vertices.insert(canvas_group_data->render_vertices.end(), element_vertices.begin(), element_vertices.end());
+        canvas_group_data->render_indices.insert(canvas_group_data->render_indices.end(), element_indices.begin(), element_indices.end());
         // TODO: deal with transform
         auto& transform = canvas_group_data->render_transforms.emplace_back();
         transform.transform.M[0][0] = 900.0f;
         transform.transform.M[0][1] = 900.0f;
-        for (auto command : element_private->commands)
+        for (auto command : element_commands)
         {
             SGDIElementDrawCommand_RenderGraph command2 = {};
             command2.first_index = command.first_index;

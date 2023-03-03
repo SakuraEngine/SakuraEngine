@@ -17,7 +17,7 @@ struct SKR_GUI_API SGDICanvasPrivate : public SGDICanvas
 {
     virtual void add_element(SGDIElement* element, const skr_float4_t& transform) SKR_NOEXCEPT;
     virtual void remove_element(SGDIElement* element) SKR_NOEXCEPT;
-    virtual skr::span<SGDIElement*> all_elements() SKR_NOEXCEPT;
+    virtual LiteDataView<SGDIElement*> all_elements() SKR_NOEXCEPT;
 
     skr::vector<SGDIElement*> all_elements_;
 };
@@ -26,7 +26,7 @@ struct SKR_GUI_API SGDICanvasGroupPrivate : public SGDICanvasGroup
 {
     virtual void add_canvas(SGDICanvas* canvas) SKR_NOEXCEPT;
     virtual void remove_canvas(SGDICanvas* canvas) SKR_NOEXCEPT;
-    virtual skr::span<SGDICanvas*> all_canvas() SKR_NOEXCEPT;
+    virtual LiteDataView<SGDICanvas*> all_canvas() SKR_NOEXCEPT;
     skr::vector<SGDICanvas*> all_canvas_;
 };
 
