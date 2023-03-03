@@ -1,5 +1,5 @@
 #pragma once
-#include "../../cgpu/common/utils.h"
+#include "../../common/utils.h"
 #include "utils/types.h"
 
 const ECGPUFormat gbuffer_formats[] = {

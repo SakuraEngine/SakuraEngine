@@ -156,7 +156,7 @@ void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
                 const_cast<bool&>(location.value.binded) = true;
             }
         }
-        const auto updateDataCount = datas.size();
+        const auto updateDataCount = static_cast<uint32_t>(datas.size());
         if (updateDataCount)
             cgpu_update_descriptor_set(sets[setIdx], datas.data(), updateDataCount);
     }

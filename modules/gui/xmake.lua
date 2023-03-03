@@ -5,6 +5,6 @@ shared_module("SkrGui", "SKR_GUI", engine_version)
     add_files("src/**.cpp")
     -- add render graph shaders
     add_rules("utils.dxc", {
-        spv_outdir = "/../resources/shaders", 
-        dxil_outdir = "/../resources/shaders"})
-    -- add_files("shaders/*.hlsl")
+        spv_outdir = "/../resources/shaders/GUI", 
+        dxil_outdir = "/../resources/shaders/GUI"})
+    add_files("shaders/*.hlsl")

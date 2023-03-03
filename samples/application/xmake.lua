@@ -60,3 +60,5 @@ executable_module("Live2DViewer", "LIVE2D_VIEWER", engine_version)
     if (is_os("windows")) then 
         add_files("/../../resources/windows/sakura.rc")
     end
+
+includes("ogui2/xmake.lua")
