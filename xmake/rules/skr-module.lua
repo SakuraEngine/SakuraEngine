@@ -34,6 +34,12 @@ rule("skr.module")
         target:add("includedirs", gendir, {public = true})
 
         local target_gendir = path.join(target:autogendir({root = true}), target:plat())
+        target_gendir = path.absolute(target_gendir)
+        -- HACK: this absolute path may contains lower-case drive letter on windows
+        if (os.host() == "windows") then
+            target_gendir = target_gendir:gsub("^%l", string.upper)
+        end
+
         local jsonfile = path.join(target_gendir, "module", "module.configure.json")
         local embedfile = path.join(target_gendir, "module", "module.configure.cpp")
         local headerfile = path.join(target_gendir, "codegen", target:name(), "module.configure.h")
