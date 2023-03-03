@@ -14,10 +14,10 @@ struct SGDIElementDrawCommand_RenderGraph
     // material
     uint32_t first_index;
     uint32_t index_count;
-    uint64_t ib_offset;
-    uint64_t vb_offset;
-    uint64_t tb_offset;
-    uint64_t pb_offset;
+    uint32_t ib_offset;
+    uint32_t vb_offset;
+    uint32_t tb_offset;
+    uint32_t pb_offset;
 };
 
 struct SKR_GUI_RENDERER_API SGDICanvasGroupData_RenderGraph
