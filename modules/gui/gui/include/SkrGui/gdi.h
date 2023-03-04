@@ -32,7 +32,7 @@ enum class EGDIBackend
     Count
 };
 
-struct SGDIPaint
+struct SKR_GUI_API SGDIPaint
 {
     virtual ~SGDIPaint() SKR_NOEXCEPT = default;
 
@@ -80,6 +80,9 @@ struct SKR_GUI_API SGDICanvas
     virtual void add_element(SGDIElement* element, const skr_float4_t& transform) SKR_NOEXCEPT = 0;
     virtual void remove_element(SGDIElement* element) SKR_NOEXCEPT = 0;
     virtual LiteSpan<SGDIElement*> all_elements() SKR_NOEXCEPT = 0;
+
+    skr_float2_t pivot = { 0.5f, 0.5f };
+    skr_float2_t size = { 900.0f, 900.0f };
 };
 
 struct SKR_GUI_API SGDICanvasGroup

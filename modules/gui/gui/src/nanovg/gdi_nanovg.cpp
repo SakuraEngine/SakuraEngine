@@ -180,9 +180,9 @@ static void nvg__renderPath(SGDIElementNVG* element, const NVGpath& path, NVGpai
     auto push_vertex = [&](const NVGvertex& nv)
     {
         SGDIVertex v;
-        v.position = {nv.x, nv.y};
+        v.position = { nv.x, nv.y, 0.f, 1.f };
         v.aa = {nv.u, fringe};
-        const auto pos = rtm::vector_load((const uint8_t*)&v.position);
+        const rtm::vector4f pos = rtm::vector_load((const uint8_t*)&v.position);
         const auto col0 = rtm::vector_set(transform.M[0][0], transform.M[0][1], transform.M[0][2], transform.M[0][3]);
         const auto col1 = rtm::vector_set(transform.M[1][0], transform.M[1][1], transform.M[1][2], transform.M[1][3]);
         const auto col2 = rtm::vector_set(transform.M[2][0], transform.M[2][1], transform.M[2][2], transform.M[2][3]);
