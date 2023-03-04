@@ -189,8 +189,8 @@ static void nvg__renderPath(SGDIElementNVG* element, const NVGpath& path, NVGpai
         const auto col3 = rtm::vector_set(transform.M[3][0], transform.M[3][1], transform.M[3][2], transform.M[3][3]);
         const auto trans = rtm::matrix_set(col0, col1, col2, col3);
         auto imgSpace = rtm::matrix_mul_vector(pos, trans);
-        const auto imgSpaceX = rtm::vector_get_x(imgSpace);
-        const auto imgSpaceY = rtm::vector_get_y(imgSpace);
+        const float imgSpaceX = rtm::vector_get_x(imgSpace);
+        const float imgSpaceY = rtm::vector_get_y(imgSpace);
         v.texcoord = nvg__remapUV({ imgSpaceX, imgSpaceY }, extend, paint->box);
         v.color = ToColor32ABGR(paint->innerColor);
         vertices.push_back(v);
