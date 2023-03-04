@@ -45,6 +45,7 @@ struct SKR_GUI_RENDERER_API SGDICanvasGroupData_RenderGraph
 
 struct SGDIRendererDescriptor_RenderGraph
 {
+    ECGPUFormat target_format;
     CGPUDeviceId device = nullptr;
     CGPUQueueId transfer_queue = nullptr;
     skr_vfs_t* vfs = nullptr;
@@ -111,6 +112,7 @@ struct SKR_GUI_RENDERER_API SGDIRenderer_RenderGraph : public SGDIRenderer
     CGPUDeviceId device = nullptr;
     CGPUQueueId transfer_queue = nullptr;
     CGPUSamplerId static_color_sampler = nullptr;
+    ECGPUFormat target_format;
 };
 
 } }
