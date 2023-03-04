@@ -329,6 +329,36 @@ void SGDIElementNVG::rounded_rect_varying(float x, float y, float w, float h, fl
     nvgRoundedRectVarying(nvg, x, y, w, h, radTopLeft, radTopRight, radBottomRight, radBottomLeft);
 }
 
+void SGDIElementNVG::move_to(float x, float y)
+{
+    nvgMoveTo(nvg, x, y);
+}
+
+void SGDIElementNVG::line_to(float x, float y)
+{
+    nvgLineTo(nvg, x, y);
+}
+
+void SGDIElementNVG::stroke_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a)
+{
+    nvgStrokeColor(nvg, nvgRGBA(r, g, b, a));
+}
+
+void SGDIElementNVG::stroke_color(float r, float g, float b, float a)
+{
+    nvgStrokeColor(nvg, nvgRGBAf(r, g, b, a));
+}
+
+void SGDIElementNVG::stroke_width(float size)
+{
+    nvgStrokeWidth(nvg, size);
+}
+
+void SGDIElementNVG::stroke()
+{
+    nvgStroke(nvg);
+}
+
 void SGDIElementNVG::fill_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a)
 {
     nvgFillColor(nvg, nvgRGBA(r, g, b, a));
@@ -362,9 +392,9 @@ void SGDIPaintNVG::set_pattern(float cx, float cy, float w, float h, float angle
     nvg_paint = nvgMaterialPattern(nullptr, cx, cy, w, h, angle, material, color);
 } 
 
-void SGDICanvasNVG::add_element(SGDIElement* element, const skr_float4_t& transform) SKR_NOEXCEPT
+void SGDICanvasNVG::add_element(SGDIElement* element) SKR_NOEXCEPT
 {
-    SGDICanvasPrivate::add_element(element, transform);
+    SGDICanvasPrivate::add_element(element);
 }
 
 SGDICanvasGroup* SGDIDeviceNVG::create_canvas_group()

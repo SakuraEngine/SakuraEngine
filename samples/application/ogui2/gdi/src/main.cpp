@@ -17,6 +17,61 @@ skr::gdi::SGDICanvas* gdi_canvas = nullptr;
 skr::gdi::SGDICanvasGroup* gdi_canvas_group = nullptr;
 skr::gdi::SGDIRenderer_RenderGraph* gdi_renderer = nullptr;
 
+skr::gdi::SGDICanvas* background_canvas = nullptr;
+skr::gdi::SGDIElement* background_element = nullptr;
+
+void initialize_renderer()
+{
+    {
+        std::error_code ec = {};
+        auto resourceRoot = (skr::filesystem::current_path(ec) / "../resources");
+        auto u8ResourceRoot = resourceRoot.u8string();
+        skr_vfs_desc_t vfs_desc = {};
+        vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
+        vfs_desc.override_mount_dir = u8ResourceRoot.c_str();
+        resource_vfs = skr_create_vfs(&vfs_desc);
+    }
+    {
+        auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
+        ioServiceDesc.name = "GUI-RAMService";
+        ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
+        ioServiceDesc.sleep_time = 1000 / 60;
+        ioServiceDesc.lockless = true;
+        ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
+        ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
+    }
+    {
+        auto ioServiceDesc = make_zeroed<skr_vram_io_service_desc_t>();
+        ioServiceDesc.name = "GUI-VRAMService";
+        ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
+        ioServiceDesc.sleep_time = 1000 / 60;
+        ioServiceDesc.lockless = true;
+        ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
+        vram_service = skr_io_vram_service_t::create(&ioServiceDesc);
+    }
+    {
+        auto ioServiceDesc = make_zeroed<skr_threaded_service_desc_t>();
+        ioServiceDesc.name = "GUI-AuxService";
+        ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
+        ioServiceDesc.sleep_time = 1000 / 60;
+        ioServiceDesc.lockless = true;
+        ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
+        aux_service = skr_threaded_service_t::create(&ioServiceDesc);
+    }
+    skr::gdi::SGDIRendererDescriptor gdir_desc = {};
+    skr::gdi::SGDIRendererDescriptor_RenderGraph gdir_desc2 = {};
+    gdir_desc2.target_format = (ECGPUFormat)App.swapchain->back_buffers[0]->format;
+    gdir_desc2.device = App.device;
+    gdir_desc2.transfer_queue = App.gfx_queue;
+    gdir_desc2.vfs = resource_vfs;
+    gdir_desc2.ram_service = ram_service;
+    gdir_desc2.vram_service = vram_service;
+    gdir_desc2.aux_service = aux_service;
+    gdi_renderer = SkrNew<skr::gdi::SGDIRenderer_RenderGraph>();
+    gdir_desc.usr_data = &gdir_desc2;
+    gdi_renderer->initialize(&gdir_desc);
+}
+
 int main(int argc, char* argv[])
 {
     App = make_zeroed<render_application_t>();
@@ -35,62 +90,22 @@ int main(int argc, char* argv[])
     gdi_device = skr::gdi::SGDIDevice::Create(skr::gdi::EGDIBackend::NANOVG);
     gdi_canvas_group = gdi_device->create_canvas_group();
     gdi_canvas = gdi_device->create_canvas();
+    background_canvas = gdi_device->create_canvas();
+    gdi_canvas_group->add_canvas(background_canvas);
     gdi_canvas_group->add_canvas(gdi_canvas);
 
     skr::gdi::SGDIElement* test_element = gdi_device->create_element();
+    skr::gdi::SGDIElement* debug_element = gdi_device->create_element();
     skr::gdi::SGDIPaint* test_paint = gdi_device->create_paint();
-    gdi_canvas->add_element(test_element, {0.f, 0.f, 0.f, 0.f});
+    gdi_canvas->add_element(debug_element);
+    gdi_canvas->add_element(test_element);
+
+    background_element = gdi_device->create_element();
+    background_canvas->add_element(background_element);
+
     // create GDI renderer
-    {
-        {
-            std::error_code ec = {};
-            auto resourceRoot = (skr::filesystem::current_path(ec) / "../resources");
-            auto u8ResourceRoot = resourceRoot.u8string();
-            skr_vfs_desc_t vfs_desc = {};
-            vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
-            vfs_desc.override_mount_dir = u8ResourceRoot.c_str();
-            resource_vfs = skr_create_vfs(&vfs_desc);
-        }
-        {
-            auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
-            ioServiceDesc.name = "GUI-RAMService";
-            ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
-            ioServiceDesc.sleep_time = 1000 / 60;
-            ioServiceDesc.lockless = true;
-            ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
-            ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
-        }
-        {
-            auto ioServiceDesc = make_zeroed<skr_vram_io_service_desc_t>();
-            ioServiceDesc.name = "GUI-VRAMService";
-            ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
-            ioServiceDesc.sleep_time = 1000 / 60;
-            ioServiceDesc.lockless = true;
-            ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
-            vram_service = skr_io_vram_service_t::create(&ioServiceDesc);
-        }
-        {
-            auto ioServiceDesc = make_zeroed<skr_threaded_service_desc_t>();
-            ioServiceDesc.name = "GUI-AuxService";
-            ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
-            ioServiceDesc.sleep_time = 1000 / 60;
-            ioServiceDesc.lockless = true;
-            ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
-            aux_service = skr_threaded_service_t::create(&ioServiceDesc);
-        }
-        skr::gdi::SGDIRendererDescriptor gdir_desc = {};
-        skr::gdi::SGDIRendererDescriptor_RenderGraph gdir_desc2 = {};
-        gdir_desc2.target_format = (ECGPUFormat)App.swapchain->back_buffers[0]->format;
-        gdir_desc2.device = App.device;
-        gdir_desc2.transfer_queue = App.gfx_queue;
-        gdir_desc2.vfs = resource_vfs;
-        gdir_desc2.ram_service = ram_service;
-        gdir_desc2.vram_service = vram_service;
-        gdir_desc2.aux_service = aux_service;
-        gdi_renderer = SkrNew<skr::gdi::SGDIRenderer_RenderGraph>();
-        gdir_desc.usr_data = &gdir_desc2;
-        gdi_renderer->initialize(&gdir_desc);
-    }
+    initialize_renderer();
+
     // create GDI texture
     {
         skr::gdi::SGDITextureDescriptor tex_desc = {};
@@ -130,6 +145,32 @@ int main(int argc, char* argv[])
         App.backbuffer_index = cgpu_acquire_next_image(App.swapchain, &acquire_desc);
         // GDI
         {
+            background_element->begin_frame(1.f);
+            background_element->begin_path();
+            const auto epsillon = 5.f;
+            background_element->stroke_width(2.f);
+            background_element->stroke_color(125u, 125u, 255u, 200u);
+            for (uint32_t i = 0; i < 10; ++i)
+            {
+                const auto pos = eastl::max(i * 100.f, epsillon);
+                background_element->move_to(0.f, pos);
+                background_element->line_to(900.f, pos);
+            }
+            for (uint32_t i = 0; i < 10; ++i)
+            {
+                const auto pos = eastl::max(i * 100.f, epsillon);
+                background_element->move_to(pos, 0.f);
+                background_element->line_to(pos, 900);
+            }
+            background_element->stroke();
+        }
+        {
+            debug_element->begin_frame(1.f);
+            debug_element->begin_path();
+            debug_element->rect(120, 120, 300, 300);
+            debug_element->fill_color(128u, 0u, 0u, 128u);
+            debug_element->fill();
+
             test_element->begin_frame(1.f);
             test_element->begin_path();
             test_element->rect(120, 120, 300, 300);
@@ -179,8 +220,11 @@ int main(int argc, char* argv[])
     app_wait_gpu_idle(&App);
     // free GDI objects
     if (test_element) gdi_device->free_element(test_element);
+    if (debug_element) gdi_device->free_element(debug_element);
     if (test_paint) gdi_device->free_paint(test_paint);
     if (test_texture) gdi_renderer->free_texture(test_texture);
+    if (background_element) gdi_device->free_element(background_element);
+    gdi_device->free_canvas(background_canvas);
     gdi_device->free_canvas(gdi_canvas);
     gdi_device->free_canvas_group(gdi_canvas_group);
     skr::gdi::SGDIDevice::Free(gdi_device);

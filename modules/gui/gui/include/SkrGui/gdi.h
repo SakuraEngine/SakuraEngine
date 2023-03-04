@@ -67,6 +67,15 @@ struct SKR_GUI_API SGDIElement
     virtual void begin_path() = 0;
     virtual void rect(float x, float y, float w, float h) = 0;
     virtual void rounded_rect_varying(float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft) = 0;
+    
+    virtual void move_to(float x, float y) = 0;
+    virtual void line_to(float x, float y) = 0;
+    
+    virtual void stroke_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a) = 0;
+    virtual void stroke_color(float r, float g, float b, float a) = 0;
+    virtual void stroke_width(float size) = 0;
+    virtual void stroke() = 0;
+
     virtual void fill_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a) = 0;
     virtual void fill_color(float r, float g, float b, float a) = 0;
     virtual void fill_paint(SGDIPaint* paint) = 0;
@@ -77,11 +86,11 @@ struct SKR_GUI_API SGDICanvas
 {
     virtual ~SGDICanvas() SKR_NOEXCEPT = default;
 
-    virtual void add_element(SGDIElement* element, const skr_float4_t& transform) SKR_NOEXCEPT = 0;
+    virtual void add_element(SGDIElement* element) SKR_NOEXCEPT = 0;
     virtual void remove_element(SGDIElement* element) SKR_NOEXCEPT = 0;
     virtual LiteSpan<SGDIElement*> all_elements() SKR_NOEXCEPT = 0;
 
-    skr_float2_t pivot = { 0.5f, 0.5f };
+    skr_float2_t pivot = { 0.f, 0.f };
     skr_float2_t size = { 900.0f, 900.0f };
 };
 

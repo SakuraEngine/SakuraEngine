@@ -13,6 +13,15 @@ struct SGDIElementNVG : public SGDIElementPrivate
     void begin_path() final;
     void rect(float x, float y, float w, float h) final;
     void rounded_rect_varying(float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft) final;
+    
+    void move_to(float x, float y) final;
+    void line_to(float x, float y) final;
+
+    void stroke_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a) final;
+    void stroke_color(float r, float g, float b, float a) final;
+    void stroke_width(float size) final;
+    void stroke() final;
+
     void fill_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a) final;
     void fill_color(float r, float g, float b, float a) final;
     void fill_paint(SGDIPaint* paint) final;
@@ -37,7 +46,7 @@ struct SGDICanvasGroupNVG : public SGDICanvasGroupPrivate
 
 struct SGDICanvasNVG : public SGDICanvasPrivate
 {
-    void add_element(SGDIElement* element, const skr_float4_t& transform) SKR_NOEXCEPT final;
+    void add_element(SGDIElement* element) SKR_NOEXCEPT final;
 };
 
 struct SGDIDeviceNVG : public SGDIDevicePrivate
