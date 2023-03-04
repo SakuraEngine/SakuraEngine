@@ -9,4 +9,7 @@ shared_module("SkrGuiRenderer", "SKR_GUI_RENDERER", engine_version)
         spv_outdir = "/../resources/shaders/GUI", 
         dxil_outdir = "/../resources/shaders/GUI"})
     add_files("shaders/*.hlsl")
-    
+    if (is_os("windows") or is_os("macosx")) then 
+        public_dependency("SkrImageCoder", engine_version)
+        add_defines("SKR_GUI_RENDERER_USE_IMAGE_CODER")
+    end

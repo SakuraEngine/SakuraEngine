@@ -16,6 +16,7 @@ struct VSOut
 {
     float4 position : SV_POSITION;
     float2 texcoord : TEXCOORD0;
+    float2 aa : AA;
     float2 clip_uv : UV;
     float2 clip_uv2 : UV_Two;
     float4 color : COLOR;
@@ -27,8 +28,11 @@ VSOut main(const VSIn input)
     float4 posW = mul(float4(input.position.xyz, 1.0f), input.model);
     float4 posH = mul(posW, input.projection);
     output.position = posH;
-    output.color = input.color;
     output.texcoord = input.texcoord;
+    output.aa = input.aa;
+    output.clip_uv = input.clip_uv;
+    output.clip_uv2 = input.clip_uv2;
+    output.color = input.color;
     return output;
 }
 

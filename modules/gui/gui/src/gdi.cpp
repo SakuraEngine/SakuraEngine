@@ -21,7 +21,7 @@ void SGDICanvasPrivate::remove_element(SGDIElement* element) SKR_NOEXCEPT
     }
 }
 
-LiteDataView<SGDIElement*> SGDICanvasPrivate::all_elements() SKR_NOEXCEPT
+LiteSpan<SGDIElement*> SGDICanvasPrivate::all_elements() SKR_NOEXCEPT
 {
     return { all_elements_.data(), all_elements_.size() };
 }
@@ -40,7 +40,7 @@ void SGDICanvasGroupPrivate::remove_canvas(SGDICanvas* canvas) SKR_NOEXCEPT
     }
 }
 
-LiteDataView<SGDICanvas*> SGDICanvasGroupPrivate::all_canvas() SKR_NOEXCEPT
+LiteSpan<SGDICanvas*> SGDICanvasGroupPrivate::all_canvas() SKR_NOEXCEPT
 {
     return { all_canvas_.data(), all_canvas_.size() };
 }
@@ -85,19 +85,19 @@ void SGDIDevice::free_canvas_group(SGDICanvasGroup* canvas_group)
     SkrDelete(canvas_group);
 }
 
-LiteDataView<SGDIVertex> SGDIRenderer::fetch_element_vertices(SGDIElement* element) SKR_NOEXCEPT
+LiteSpan<SGDIVertex> SGDIRenderer::fetch_element_vertices(SGDIElement* element) SKR_NOEXCEPT
 {
     const auto element_private = static_cast<SGDIElementPrivate*>(element);
     return { element_private->vertices.data(), element_private->vertices.size() };
 }
 
-LiteDataView<index_t> SGDIRenderer::fetch_element_indices(SGDIElement* element) SKR_NOEXCEPT
+LiteSpan<index_t> SGDIRenderer::fetch_element_indices(SGDIElement* element) SKR_NOEXCEPT
 {
     const auto element_private = static_cast<SGDIElementPrivate*>(element);
     return { element_private->indices.data(), element_private->indices.size() };
 }
 
-LiteDataView<SGDIElementDrawCommand> SGDIRenderer::fetch_element_draw_commands(SGDIElement* element) SKR_NOEXCEPT
+LiteSpan<SGDIElementDrawCommand> SGDIRenderer::fetch_element_draw_commands(SGDIElement* element) SKR_NOEXCEPT
 {
     const auto element_private = static_cast<SGDIElementPrivate*>(element);
     return { element_private->commands.data(), element_private->commands.size() };

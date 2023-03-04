@@ -25,8 +25,11 @@ public:
 
     virtual bool get_raw_data(uint8_t* pData, uint64_t* pSize, EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT override;
     virtual bool get_encoded_data(uint8_t* pData, uint64_t* pSize) const SKR_NOEXCEPT override;
+    virtual void steal_encoded_data(struct skr_blob_t* pBlob) SKR_NOEXCEPT override;
+
     virtual skr::span<const uint8_t> get_raw_data_view(EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT override;
     virtual skr::span<const uint8_t> get_encoded_data_view() const SKR_NOEXCEPT override;
+    virtual void steal_raw_data(struct skr_blob_t* pBlob, EImageCoderColorFormat format, uint32_t bit_depth) SKR_NOEXCEPT override;
 
     virtual EImageCoderColorFormat get_color_format() const SKR_NOEXCEPT override;
     virtual uint32_t get_width() const SKR_NOEXCEPT override;
