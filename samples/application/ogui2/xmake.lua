@@ -5,5 +5,6 @@ target("OpenGUI_DemoResources")
         outdir = "/../resources/OpenGUI", 
         rootdir = os.curdir().."/resources"})
     add_files("resources/**.png")
+    add_files("resources/dummy.c")
 
 includes("gdi/xmake.lua")
