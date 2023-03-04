@@ -1,5 +1,5 @@
 target("OpenGUI_DemoResources")
-    set_kind("object")
+    set_kind("static")
     add_rules("utils.install-resources", {
         extensions = {".png"},
         outdir = "/../resources/OpenGUI", 
