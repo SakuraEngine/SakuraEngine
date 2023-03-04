@@ -104,6 +104,8 @@ inline int app_resize_window(render_application_t* pApp, uint32_t w, uint32_t h)
     chain_desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
     chain_desc.enable_vsync = true;
     pApp->swapchain = cgpu_create_swapchain(pApp->device, &chain_desc);
+    pApp->window_width = w;
+    pApp->window_height = h;
     return 0;
 }
 

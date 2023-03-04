@@ -135,6 +135,8 @@ int main(int argc, char* argv[])
                 if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
                 {
                     app_resize_window(&App, event.window.data1, event.window.data2);
+                    gdi_canvas->size = { (float)App.window_width, (float)App.window_height };
+                    background_canvas->size = { (float)App.window_width, (float)App.window_height };
                 }
             }
         }
@@ -145,22 +147,76 @@ int main(int argc, char* argv[])
         App.backbuffer_index = cgpu_acquire_next_image(App.swapchain, &acquire_desc);
         // GDI
         {
+            const bool bDrawRelativeXMesh = false;
+            const bool bDrawRelativeYMesh = false;
+
             background_element->begin_frame(1.f);
-            background_element->begin_path();
             const auto epsillon = 5.f;
+            const auto absUnitX = 10.f;
+            const auto absUnitY = absUnitX;
+            const auto unitX = App.window_width / 100.f;
+            const auto unitY = App.window_height / 100.f;
+            // draw relative main-meshes
+            if (bDrawRelativeXMesh)
+            {
+                background_element->begin_path();
+                background_element->stroke_width(2.f);
+                background_element->stroke_color(0u, 200u, 64u, 200u);
+                for (uint32_t i = 0; i < 10; ++i)
+                {
+                    const auto pos = eastl::max(i * unitY * 10.f, epsillon);
+                    background_element->move_to(0.f, pos);
+                    background_element->line_to((float)App.window_width, pos);
+                }
+                background_element->stroke();
+            }
+            if (bDrawRelativeYMesh)
+            {
+                background_element->begin_path();
+                background_element->stroke_width(2.f);
+                background_element->stroke_color(200u, 0u, 64u, 200u);
+                for (uint32_t i = 0; i < 10; ++i)
+                {
+                    const auto pos = eastl::max(i * unitX * 10.f, epsillon);
+                    background_element->move_to(pos, 0.f);
+                    background_element->line_to(pos, (float)App.window_height);
+                }
+                background_element->stroke();
+            }
+
+            // draw absolute main-meshes
+            background_element->begin_path();
             background_element->stroke_width(2.f);
             background_element->stroke_color(125u, 125u, 255u, 200u);
-            for (uint32_t i = 0; i < 10; ++i)
+            for (uint32_t i = 0; i < App.window_height / absUnitY / 10; ++i)
             {
-                const auto pos = eastl::max(i * 100.f, epsillon);
+                const auto pos = eastl::max(i * absUnitY * 10.f, epsillon);
                 background_element->move_to(0.f, pos);
-                background_element->line_to(900.f, pos);
+                background_element->line_to((float)App.window_width, pos);
             }
-            for (uint32_t i = 0; i < 10; ++i)
+            for (uint32_t i = 0; i < App.window_width / absUnitX / 10; ++i)
             {
-                const auto pos = eastl::max(i * 100.f, epsillon);
+                const auto pos = eastl::max(i * absUnitX * 10.f, epsillon);
                 background_element->move_to(pos, 0.f);
-                background_element->line_to(pos, 900);
+                background_element->line_to(pos, (float)App.window_height);
+            }
+            background_element->stroke();
+            
+            // draw absolute sub-meshes
+            background_element->begin_path();
+            background_element->stroke_width(1.f);
+            background_element->stroke_color(88u, 88u, 222u, 180u);
+            for (uint32_t i = 0; i < App.window_height / absUnitY; ++i)
+            {
+                const auto pos = eastl::max(i * absUnitY, epsillon);
+                background_element->move_to(0.f, pos);
+                background_element->line_to((float)App.window_width, pos);
+            }
+            for (uint32_t i = 0; i < App.window_width / absUnitX; ++i)
+            {
+                const auto pos = eastl::max(i * absUnitX, epsillon);
+                background_element->move_to(pos, 0.f);
+                background_element->line_to(pos, (float)App.window_height);
             }
             background_element->stroke();
         }
