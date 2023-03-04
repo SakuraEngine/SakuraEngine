@@ -20,7 +20,7 @@ struct SKR_GUI_API SGDIPaintPrivate : public SGDIPaint
 
 struct SKR_GUI_API SGDICanvasPrivate : public SGDICanvas
 {
-    virtual void add_element(SGDIElement* element, const skr_float4_t& transform) SKR_NOEXCEPT;
+    virtual void add_element(SGDIElement* element) SKR_NOEXCEPT;
     virtual void remove_element(SGDIElement* element) SKR_NOEXCEPT;
     virtual LiteSpan<SGDIElement*> all_elements() SKR_NOEXCEPT;
 

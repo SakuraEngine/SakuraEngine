@@ -7,7 +7,7 @@
 namespace skr {
 namespace gdi {
 
-void SGDICanvasPrivate::add_element(SGDIElement* element, const skr_float4_t& transform) SKR_NOEXCEPT
+void SGDICanvasPrivate::add_element(SGDIElement* element) SKR_NOEXCEPT
 {
     all_elements_.emplace_back(element);
 }
