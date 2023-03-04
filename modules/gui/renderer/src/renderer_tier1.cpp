@@ -323,15 +323,20 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
         
         // projection
         auto& projection = canvas_group_data->render_projections.emplace_back();
-        const auto view = rtm::look_at_matrix_lh(
-            {450.f, 450.f, 0.f} /*eye*/, 
-            {450.f, 450.f, 1000.f} /*at*/,
-            { 0.f, 1.f, 0.f } /*up*/
+        const skr_float2_t canvas_size = canvas->size;
+        const skr_float2_t canvas_pivot = canvas->pivot;
+        const skr_float2_t abs_canvas_pivot = { canvas_pivot.x * canvas_size.x, canvas_pivot.y * canvas_size.y };
+        const skr_float2_t zero_point =  { canvas_size.x * 0.5f, canvas_size.y * 0.5f };
+        const skr_float2_t eye_position = { zero_point.x - abs_canvas_pivot.x, zero_point.y - abs_canvas_pivot.y };
+        const auto view = rtm::look_at_matrix(
+            {eye_position.x, eye_position.y, 0.f} /*eye*/, 
+            {eye_position.x, eye_position.y, 1000.f} /*at*/,
+            { 0.f, -1.f, 0.f } /*up*/
         );
-        const auto proj = rtm::orthographic_lh(900.f, 900.f, 0.f, 1000.f);
+        const auto proj = rtm::orthographic(canvas_size.x, canvas_size.y, 0.f, 1000.f);
         projection = rtm::matrix_mul(view, proj);
 
-        for (auto command : element_commands)
+        for (const auto& command : element_commands)
         {
             SGDIElementDrawCommand_RenderGraph command2 = {};
             command2.texture = command.texture;

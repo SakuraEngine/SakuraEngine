@@ -132,13 +132,13 @@ int main(int argc, char* argv[])
         {
             test_element->begin_frame(1.f);
             test_element->begin_path();
-            test_element->rect(150, 150, 300, 300);
+            test_element->rect(120, 120, 300, 300);
             skr_float4_t color = {1.f, 1.f, 1.f, 1.f};
             if (test_texture->get_state() != skr::gdi::EGDIResourceState::Okay)
             {
                 color.w = 0.f; // set transparent if texture is not ready
             }
-            test_paint->set_pattern(150, 150, 300, 300, 0, test_texture, color);
+            test_paint->set_pattern(120, 120, 300, 300, 0, test_texture, color);
             test_element->fill_paint(test_paint);
             test_element->fill();
         }
