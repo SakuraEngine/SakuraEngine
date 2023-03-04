@@ -21,6 +21,14 @@ struct SGDIElementNVG : public SGDIElementPrivate
     NVGcontext* nvg = nullptr;
 };
 
+struct SGDIPaintNVG : public SGDIPaintPrivate
+{
+    void set_pattern(float cx, float cy, float w, float h, float angle, SGDITextureId texture, skr_float4_t ocol) SKR_NOEXCEPT final;
+    void set_pattern(float cx, float cy, float w, float h, float angle, SGDIMaterialId texture, skr_float4_t ocol) SKR_NOEXCEPT final;
+
+    NVGpaint nvg_paint;
+};
+
 struct SGDICanvasGroupNVG : public SGDICanvasGroupPrivate
 {
     // void add_canvas(SGDICanvas* canvas) final;
@@ -46,6 +54,9 @@ struct SGDIDeviceNVG : public SGDIDevicePrivate
 
     SGDIElement* create_element() final;
     void free_element(SGDIElement* element) final;
+
+    SGDIPaint* create_paint() final;
+    void free_paint(SGDIPaint* paint) final;
 };
 
 

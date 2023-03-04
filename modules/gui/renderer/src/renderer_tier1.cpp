@@ -65,10 +65,12 @@ CGPURenderPipelineId create_render_pipeline(CGPUDeviceId device, ECGPUFormat tar
     ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = "main";
     ppl_shaders[1].library = fragment_shader;
+    
     CGPURootSignatureDescriptor rs_desc = {};
     rs_desc.shaders = ppl_shaders;
     rs_desc.shader_count = 2;
     auto root_sig = cgpu_create_root_signature(device, &rs_desc);
+
     CGPURenderPipelineDescriptor rp_desc = {};
     rp_desc.root_signature = root_sig;
     rp_desc.prim_topology = CGPU_PRIM_TOPO_TRI_LIST;
@@ -77,6 +79,7 @@ CGPURenderPipelineId create_render_pipeline(CGPUDeviceId device, ECGPUFormat tar
     rp_desc.fragment_shader = &ppl_shaders[1];
     rp_desc.render_target_count = 1;
     rp_desc.color_formats = &target_format;
+
     CGPURasterizerStateDescriptor rs_state = {};
     rs_state.cull_mode = CGPU_CULL_MODE_NONE;
     rs_state.fill_mode = CGPU_FILL_MODE_SOLID;
@@ -87,12 +90,105 @@ CGPURenderPipelineId create_render_pipeline(CGPUDeviceId device, ECGPUFormat tar
     rs_state.enable_multi_sample = false;
     rs_state.depth_bias = 0;
     rp_desc.rasterizer_state = &rs_state;
+
+    CGPUBlendStateDescriptor blend_state = {};
+    for (uint32_t i = 0; i < 1; i++)
+    {
+        blend_state.blend_modes[i] = CGPU_BLEND_MODE_ADD; 
+        blend_state.blend_alpha_modes[i] = CGPU_BLEND_MODE_ADD; 
+        blend_state.masks[i] = CGPU_COLOR_MASK_ALL; 
+
+        blend_state.src_factors[i] = CGPU_BLEND_CONST_SRC_ALPHA; 
+        blend_state.dst_factors[i] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA; 
+        blend_state.src_alpha_factors[i] = CGPU_BLEND_CONST_ONE;
+        blend_state.dst_alpha_factors[i] = CGPU_BLEND_CONST_ZERO;
+    }
+    rp_desc.blend_state = &blend_state;
+
+    auto pipeline = cgpu_create_render_pipeline(device, &rp_desc);
+    cgpu_free_shader_library(vertex_shader);
+    cgpu_free_shader_library(fragment_shader);
+    return pipeline;
+}
+
+CGPURenderPipelineId create_render_pipeline2(CGPUDeviceId device, ECGPUFormat target_format, CGPUVertexLayout* pLayout, CGPUSamplerId static_color_sampler)
+{
+    uint32_t *vs_bytes, vs_length;
+    uint32_t *fs_bytes, fs_length;
+    read_shader_bytes("GUI/vertex", &vs_bytes, &vs_length, device->adapter->instance->backend);
+    read_shader_bytes("GUI/pixel2", &fs_bytes, &fs_length, device->adapter->instance->backend);
+    CGPUShaderLibraryDescriptor vs_desc = {};
+    vs_desc.stage = CGPU_SHADER_STAGE_VERT;
+    vs_desc.name = "VertexShaderLibrary";
+    vs_desc.code = vs_bytes;
+    vs_desc.code_size = vs_length;
+    CGPUShaderLibraryDescriptor ps_desc = {};
+    ps_desc.name = "FragmentShaderLibrary";
+    ps_desc.stage = CGPU_SHADER_STAGE_FRAG;
+    ps_desc.code = fs_bytes;
+    ps_desc.code_size = fs_length;
+    CGPUShaderLibraryId vertex_shader = cgpu_create_shader_library(device, &vs_desc);
+    CGPUShaderLibraryId fragment_shader = cgpu_create_shader_library(device, &ps_desc);
+    free(vs_bytes);
+    free(fs_bytes);
+    CGPUPipelineShaderDescriptor ppl_shaders[2];
+    ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
+    ppl_shaders[0].entry = "main";
+    ppl_shaders[0].library = vertex_shader;
+    ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
+    ppl_shaders[1].entry = "main";
+    ppl_shaders[1].library = fragment_shader;
+
+    const char* static_sampler_name = "color_sampler";
+    CGPURootSignatureDescriptor rs_desc = {};
+    rs_desc.shaders = ppl_shaders;
+    rs_desc.shader_count = 2;
+    rs_desc.static_sampler_count = 1;
+    rs_desc.static_sampler_names = &static_sampler_name;
+    rs_desc.static_samplers = &static_color_sampler;
+    auto root_sig = cgpu_create_root_signature(device, &rs_desc);
+
+    CGPURenderPipelineDescriptor rp_desc = {};
+    rp_desc.root_signature = root_sig;
+    rp_desc.prim_topology = CGPU_PRIM_TOPO_TRI_LIST;
+    rp_desc.vertex_layout = pLayout;
+    rp_desc.vertex_shader = &ppl_shaders[0];
+    rp_desc.fragment_shader = &ppl_shaders[1];
+    rp_desc.render_target_count = 1;
+    rp_desc.color_formats = &target_format;
+    
+    CGPURasterizerStateDescriptor rs_state = {};
+    rs_state.cull_mode = CGPU_CULL_MODE_NONE;
+    rs_state.fill_mode = CGPU_FILL_MODE_SOLID;
+    rs_state.front_face = CGPU_FRONT_FACE_CCW;
+    rs_state.slope_scaled_depth_bias = 0.f;
+    rs_state.enable_depth_clamp = false;
+    rs_state.enable_scissor = true;
+    rs_state.enable_multi_sample = false;
+    rs_state.depth_bias = 0;
+    rp_desc.rasterizer_state = &rs_state;
+
+    CGPUBlendStateDescriptor blend_state = {};
+    for (uint32_t i = 0; i < 1; i++)
+    {
+        blend_state.blend_modes[i] = CGPU_BLEND_MODE_ADD; 
+        blend_state.blend_alpha_modes[i] = CGPU_BLEND_MODE_ADD; 
+        blend_state.masks[i] = CGPU_COLOR_MASK_ALL; 
+
+        blend_state.src_factors[i] = CGPU_BLEND_CONST_SRC_ALPHA; 
+        blend_state.dst_factors[i] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA; 
+        blend_state.src_alpha_factors[i] = CGPU_BLEND_CONST_ONE;
+        blend_state.dst_alpha_factors[i] = CGPU_BLEND_CONST_ZERO;
+    }
+    rp_desc.blend_state = &blend_state;
+
     auto pipeline = cgpu_create_render_pipeline(device, &rp_desc);
     cgpu_free_shader_library(vertex_shader);
     cgpu_free_shader_library(fragment_shader);
     return pipeline;
 }
 // HACK
+
 int SGDIRenderer_RenderGraph::initialize(const SGDIRendererDescriptor* desc) SKR_NOEXCEPT
 {
     const auto pDesc = reinterpret_cast<SGDIRendererDescriptor_RenderGraph*>(desc->usr_data);
@@ -111,15 +207,45 @@ int SGDIRenderer_RenderGraph::initialize(const SGDIRendererDescriptor* desc) SKR
     vertex_layout.attributes[6] = { "TRANSFORM", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 1, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
     vertex_layout.attributes[7] = { "PROJECTION", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 2, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
     vertex_layout.attribute_count = 8;
-    pipeline = create_render_pipeline(pDesc->device, CGPU_FORMAT_B8G8R8A8_UNORM, &vertex_layout);
+    
+    aux_service = pDesc->aux_service;
+    vfs = pDesc->vfs;
+    ram_service = pDesc->ram_service;
+    vram_service = pDesc->vram_service;
+    device = pDesc->device;
+    transfer_queue = pDesc->transfer_queue;
+
+    CGPUSamplerDescriptor sampler_desc = {};
+    sampler_desc.address_u = CGPU_ADDRESS_MODE_REPEAT;
+    sampler_desc.address_v = CGPU_ADDRESS_MODE_REPEAT;
+    sampler_desc.address_w = CGPU_ADDRESS_MODE_REPEAT;
+    sampler_desc.mipmap_mode = CGPU_MIPMAP_MODE_LINEAR;
+    sampler_desc.min_filter = CGPU_FILTER_TYPE_LINEAR;
+    sampler_desc.mag_filter = CGPU_FILTER_TYPE_LINEAR;
+    sampler_desc.compare_func = CGPU_CMP_NEVER;
+    static_color_sampler = cgpu_create_sampler(device, &sampler_desc);
+
+    single_color_pipeline = create_render_pipeline(pDesc->device, CGPU_FORMAT_B8G8R8A8_UNORM, &vertex_layout);
+    texture_pipeline = create_render_pipeline2(pDesc->device, CGPU_FORMAT_B8G8R8A8_UNORM, &vertex_layout, static_color_sampler);
+
     return 0;
 }
 
 int SGDIRenderer_RenderGraph::finalize() SKR_NOEXCEPT
 {
-    auto rs = pipeline->root_signature;
-    cgpu_free_render_pipeline(pipeline);
-    cgpu_free_root_signature(rs);
+    aux_service = nullptr;
+
+    auto free_rs_and_pipeline = +[](CGPURenderPipelineId pipeline)
+    {
+        if (!pipeline) return;
+        auto rs = pipeline->root_signature;
+        cgpu_free_render_pipeline(pipeline);
+        cgpu_free_root_signature(rs);
+    };
+    free_rs_and_pipeline(single_color_pipeline);
+    free_rs_and_pipeline(texture_pipeline);
+    free_rs_and_pipeline(material_pipeline);
+    if (static_color_sampler) cgpu_free_sampler(static_color_sampler);
     return 0;
 }
 
@@ -207,6 +333,8 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
         for (auto command : element_commands)
         {
             SGDIElementDrawCommand_RenderGraph command2 = {};
+            command2.texture = command.texture;
+            command2.material = command.material;
             command2.first_index = command.first_index;
             command2.index_count = command.index_count;
             command2.ib_offset = static_cast<uint32_t>(ib_cursor * sizeof(index_t));
@@ -319,14 +447,13 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
     rg->add_render_pass([&](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
         ZoneScopedN("ConstructRenderPass");
         builder.set_name("gdi_render_pass")
-            .set_pipeline(pipeline)
             .use_buffer(vertex_buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
             .use_buffer(transform_buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
             .use_buffer(projection_buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
             .use_buffer(index_buffer, CGPU_RESOURCE_STATE_INDEX_BUFFER)
             .write(0, target, CGPU_LOAD_ACTION_CLEAR);
     },
-    [target, canvas_group_data, useCVV, index_buffer, vertex_buffer, transform_buffer, projection_buffer]
+    [this, target, canvas_group_data, useCVV, index_buffer, vertex_buffer, transform_buffer, projection_buffer]
     (render_graph::RenderGraph& g, render_graph::RenderPassContext& ctx) {
         ZoneScopedN("GDI-RenderPass");
         const auto target_desc = g.resolve_descriptor(target);
@@ -347,8 +474,24 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
             target_desc->width, target_desc->height);
 
         const skr::span<SGDIElementDrawCommand_RenderGraph> render_commands = canvas_group_data->render_commands;
+        CGPURenderPipelineId pipeline_cache = nullptr;
         for (const auto& command : render_commands)
         {
+            const bool use_texture = command.texture && (command.texture->get_state() == EGDIResourceState::Okay);
+
+            CGPURenderPipelineId this_pipeline = use_texture ? texture_pipeline : single_color_pipeline;
+            if (pipeline_cache != this_pipeline)
+            {
+                cgpu_render_encoder_bind_pipeline(ctx.encoder, this_pipeline);
+                pipeline_cache = this_pipeline;
+            }
+
+            if (use_texture)
+            {
+                const auto gui_texture = static_cast<SGDITexture_RenderGraph*>(command.texture);
+                cgpux_render_encoder_bind_bind_table(ctx.encoder, gui_texture->bind_table);
+            }
+
             const uint32_t vertex_stream_offsets[3] = { command.vb_offset, command.tb_offset, command.pb_offset };
             cgpu_render_encoder_bind_index_buffer(ctx.encoder, resolved_ib, sizeof(index_t), command.ib_offset);
             cgpu_render_encoder_bind_vertex_buffers(ctx.encoder,

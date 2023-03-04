@@ -2,6 +2,7 @@ target("OpenGUI_GDIDemo")
     set_group("04.examples/application")
     set_kind("binary")
     add_files("src/*.cpp") 
+    add_deps("OpenGUI_DemoResources")
     public_dependency("SkrGui", "0.1.0")
     public_dependency("SkrGuiRenderer", "0.1.0")
     -- shaders

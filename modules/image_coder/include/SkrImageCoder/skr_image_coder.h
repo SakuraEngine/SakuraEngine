@@ -55,8 +55,11 @@ struct SKR_IMAGE_CODER_API skr_image_coder_t {
 
     virtual bool get_raw_data(uint8_t* pData, uint64_t* pSize, EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT = 0;
     virtual skr::span<const uint8_t> get_raw_data_view(EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT = 0;
+    virtual void steal_raw_data(struct skr_blob_t* pBlob, EImageCoderColorFormat format, uint32_t bit_depth) = 0;
+
     virtual bool get_encoded_data(uint8_t* pData, uint64_t* pSize) const SKR_NOEXCEPT = 0;
     virtual skr::span<const uint8_t> get_encoded_data_view() const SKR_NOEXCEPT = 0;
+    virtual void steal_encoded_data(struct skr_blob_t* pBlob) = 0;
 
     virtual EImageCoderFormat get_image_format() const SKR_NOEXCEPT = 0;
     virtual EImageCoderColorFormat get_color_format() const SKR_NOEXCEPT = 0;

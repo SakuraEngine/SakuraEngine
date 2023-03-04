@@ -201,6 +201,16 @@ skr::span<const uint8_t> BaseImageCoder::get_raw_data_view(EImageCoderColorForma
     return raw_view;
 }
 
+void BaseImageCoder::steal_raw_data(struct skr_blob_t* pBlob, EImageCoderColorFormat format, uint32_t bit_depth) SKR_NOEXCEPT
+{
+    lazy_decode(format, bit_depth);
+    pBlob->bytes = raw_data.bytes;
+    pBlob->size = raw_data.size;
+    raw_data.bytes = nullptr;
+    raw_data.size = 0;
+    raw_view = {};
+}
+
 skr::span<const uint8_t> BaseImageCoder::get_encoded_data_view() const SKR_NOEXCEPT
 {
     lazy_encode();
@@ -214,6 +224,16 @@ bool BaseImageCoder::get_encoded_data(uint8_t* pData, uint64_t* pSize) const SKR
     memcpy(pData, encoded_view.data(), encoded_view.size());
     *pSize = encoded_view.size();
     return true;
+}
+
+void BaseImageCoder::steal_encoded_data(struct skr_blob_t* pBlob) SKR_NOEXCEPT
+{
+    lazy_encode();
+    pBlob->bytes = encoded_data.bytes;
+    pBlob->size = encoded_data.size;
+    encoded_data.bytes = nullptr;
+    encoded_data.size = 0;
+    encoded_view = {};
 }
 
 EImageCoderColorFormat BaseImageCoder::get_color_format() const SKR_NOEXCEPT

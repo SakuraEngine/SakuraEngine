@@ -526,16 +526,16 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
                 auto input_slot = (CGPUSampler_D3D12*)desc->static_samplers[j];
                 if (strcmp(RST_slot.name, desc->static_sampler_names[j]) == 0)
                 {
-                    D3D12_SAMPLER_DESC& desc = input_slot->mDxDesc;
-                    staticSamplerDescs[i].Filter = desc.Filter;
-                    staticSamplerDescs[i].AddressU = desc.AddressU;
-                    staticSamplerDescs[i].AddressV = desc.AddressV;
-                    staticSamplerDescs[i].AddressW = desc.AddressW;
-                    staticSamplerDescs[i].MipLODBias = desc.MipLODBias;
-                    staticSamplerDescs[i].MaxAnisotropy = desc.MaxAnisotropy;
-                    staticSamplerDescs[i].ComparisonFunc = desc.ComparisonFunc;
-                    staticSamplerDescs[i].MinLOD = desc.MinLOD;
-                    staticSamplerDescs[i].MaxLOD = desc.MaxLOD;
+                    D3D12_SAMPLER_DESC& dxSamplerDesc = input_slot->mDxDesc;
+                    staticSamplerDescs[i].Filter = dxSamplerDesc.Filter;
+                    staticSamplerDescs[i].AddressU = dxSamplerDesc.AddressU;
+                    staticSamplerDescs[i].AddressV = dxSamplerDesc.AddressV;
+                    staticSamplerDescs[i].AddressW = dxSamplerDesc.AddressW;
+                    staticSamplerDescs[i].MipLODBias = dxSamplerDesc.MipLODBias;
+                    staticSamplerDescs[i].MaxAnisotropy = dxSamplerDesc.MaxAnisotropy;
+                    staticSamplerDescs[i].ComparisonFunc = dxSamplerDesc.ComparisonFunc;
+                    staticSamplerDescs[i].MinLOD = dxSamplerDesc.MinLOD;
+                    staticSamplerDescs[i].MaxLOD = dxSamplerDesc.MaxLOD;
                     staticSamplerDescs[i].BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
 
                     CGPUShaderResource* samplerResource = &RST_slot;

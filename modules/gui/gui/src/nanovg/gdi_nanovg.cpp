@@ -237,8 +237,6 @@ static void nvg__renderFill(void* uptr, NVGpaint* paint, NVGcompositeOperationSt
     auto element = (SGDIElementNVG*)uptr;
     /*
     PrimDrawResource resource;
-    resource.texture = (TextureHandle)paint->image;
-    resource.material = (MaterialHandle)paint->material;
     resource.compositeOperation = compositeOperation;
     resource.noGamma = paint->noGamma;
     */
@@ -249,9 +247,13 @@ static void nvg__renderFill(void* uptr, NVGpaint* paint, NVGcompositeOperationSt
         auto& command = element->commands.emplace_back();
         auto begin = element->indices.size();
         for(int i=0; i<npaths; ++i)
+        {
             nvg__renderPath(element, paths[i], paint, invTransform, 1.f);
+        }
         command.index_count = static_cast<uint32_t>(element->indices.size() - begin);
         command.first_index = static_cast<uint32_t>(begin);
+        command.material = static_cast<SGDIMaterialId>(paint->material);
+        command.texture = static_cast<SGDITextureId>(paint->image);
     }
     //slow path
     else 
@@ -265,24 +267,22 @@ static void nvg__renderStroke(void* uptr, NVGpaint* paint, NVGcompositeOperation
     auto element = (SGDIElementNVG*)uptr;
     /*
     PrimDrawResource resource;
-    resource.texture = (TextureHandle)paint->image;
-    resource.material = (MaterialHandle)paint->material;
     resource.compositeOperation = compositeOperation;
     resource.noGamma = paint->noGamma;
     */
     auto invTransform = nvg__getMatrix(paint);
     //fast path
-    /*
-    auto& command = dc->current->GetCommand(resource);
-    auto& indices = dc->current->indices;
-    */
     auto& command = element->commands.emplace_back();
     auto begin = element->indices.size();
     float aa = (fringe * 0.5f + strokeWidth * 0.5f) / fringe;
     for(int i=0; i < npaths; ++i)
+    {
         nvg__renderPath(element, paths[i], paint, invTransform, aa);
+    }
     command.index_count = static_cast<uint32_t>(element->indices.size() - begin);
     command.first_index = static_cast<uint32_t>(begin);
+    command.material = static_cast<SGDIMaterialId>(paint->material);
+    command.texture = static_cast<SGDITextureId>(paint->image);
 }
 
 //
@@ -341,13 +341,26 @@ void SGDIElementNVG::fill_color(float r, float g, float b, float a)
 
 void SGDIElementNVG::fill_paint(SGDIPaint* paint)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    auto nvg_paint = static_cast<SGDIPaintNVG*>(paint);
+    nvgFillPaint(nvg, nvg_paint->nvg_paint);
 }
 
 void SGDIElementNVG::fill()
 {
     nvgFill(nvg);
 }
+
+void SGDIPaintNVG::set_pattern(float cx, float cy, float w, float h, float angle, SGDITextureId texture, skr_float4_t ocol) SKR_NOEXCEPT
+{
+    NVGcolor color = nvgRGBAf(ocol.x, ocol.y, ocol.z, ocol.w);
+    nvg_paint = nvgImagePattern(nullptr, cx, cy, w, h, angle, texture, color);
+}
+
+void SGDIPaintNVG::set_pattern(float cx, float cy, float w, float h, float angle, SGDIMaterialId material, skr_float4_t ocol) SKR_NOEXCEPT
+{
+    NVGcolor color = nvgRGBAf(ocol.x, ocol.y, ocol.z, ocol.w);
+    nvg_paint = nvgMaterialPattern(nullptr, cx, cy, w, h, angle, material, color);
+} 
 
 void SGDICanvasNVG::add_element(SGDIElement* element, const skr_float4_t& transform) SKR_NOEXCEPT
 {
@@ -389,6 +402,16 @@ SGDIElement* SGDIDeviceNVG::create_element()
 void SGDIDeviceNVG::free_element(SGDIElement* element)
 {
     SkrDelete(element);
+}
+
+SGDIPaint* SGDIDeviceNVG::create_paint()
+{
+    return SkrNew<SGDIPaintNVG>();
+}
+
+void SGDIDeviceNVG::free_paint(SGDIPaint* paint)
+{
+    SkrDelete(paint);
 }
 
 } }
