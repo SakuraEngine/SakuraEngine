@@ -80,6 +80,7 @@ int main(int argc, char* argv[])
         }
         skr::gdi::SGDIRendererDescriptor gdir_desc = {};
         skr::gdi::SGDIRendererDescriptor_RenderGraph gdir_desc2 = {};
+        gdir_desc2.target_format = (ECGPUFormat)App.swapchain->back_buffers[0]->format;
         gdir_desc2.device = App.device;
         gdir_desc2.transfer_queue = App.gfx_queue;
         gdir_desc2.vfs = resource_vfs;

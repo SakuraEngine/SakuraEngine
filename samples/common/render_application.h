@@ -30,8 +30,8 @@ inline int app_create_gfx_objects(render_application_t* pApp)
     // Create instance
     CGPUInstanceDescriptor instance_desc = {};
     instance_desc.backend = pApp->backend;
-    instance_desc.enable_debug_layer = false;
-    instance_desc.enable_gpu_based_validation = false;
+    instance_desc.enable_debug_layer = true;
+    instance_desc.enable_gpu_based_validation = true;
     instance_desc.enable_set_name = true;
     pApp->instance = cgpu_create_instance(&instance_desc);
 

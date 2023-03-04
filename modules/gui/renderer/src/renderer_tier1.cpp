@@ -65,7 +65,7 @@ CGPURenderPipelineId create_render_pipeline(CGPUDeviceId device, ECGPUFormat tar
     ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = "main";
     ppl_shaders[1].library = fragment_shader;
-    
+
     CGPURootSignatureDescriptor rs_desc = {};
     rs_desc.shaders = ppl_shaders;
     rs_desc.shader_count = 2;
@@ -208,6 +208,7 @@ int SGDIRenderer_RenderGraph::initialize(const SGDIRendererDescriptor* desc) SKR
     vertex_layout.attributes[7] = { "PROJECTION", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 2, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
     vertex_layout.attribute_count = 8;
     
+    target_format = pDesc->target_format;
     aux_service = pDesc->aux_service;
     vfs = pDesc->vfs;
     ram_service = pDesc->ram_service;
@@ -225,8 +226,8 @@ int SGDIRenderer_RenderGraph::initialize(const SGDIRendererDescriptor* desc) SKR
     sampler_desc.compare_func = CGPU_CMP_NEVER;
     static_color_sampler = cgpu_create_sampler(device, &sampler_desc);
 
-    single_color_pipeline = create_render_pipeline(pDesc->device, CGPU_FORMAT_B8G8R8A8_UNORM, &vertex_layout);
-    texture_pipeline = create_render_pipeline2(pDesc->device, CGPU_FORMAT_B8G8R8A8_UNORM, &vertex_layout, static_color_sampler);
+    single_color_pipeline = create_render_pipeline(pDesc->device, target_format, &vertex_layout);
+    texture_pipeline = create_render_pipeline2(pDesc->device, target_format, &vertex_layout, static_color_sampler);
 
     return 0;
 }
