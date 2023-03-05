@@ -9,6 +9,7 @@ static const ECGPUBackend platform_default_backend = CGPU_BACKEND_VULKAN;
 
 typedef struct render_application_t 
 {
+    const char* window_title;
     SDL_Window* sdl_window;
     SDL_SysWMinfo wmInfo;
     uint32_t window_width;
@@ -76,7 +77,7 @@ inline int app_create_gfx_objects(render_application_t* pApp)
 inline int app_create_window(render_application_t* pApp, uint32_t width, uint32_t height)
 {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
-    pApp->sdl_window = SDL_CreateWindow(gCGPUBackendNames[pApp->backend],
+    pApp->sdl_window = SDL_CreateWindow(pApp->window_title ? pApp->window_title :gCGPUBackendNames[pApp->backend],
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         width, height,
         SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);

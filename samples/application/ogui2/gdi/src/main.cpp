@@ -72,10 +72,100 @@ void initialize_renderer()
     gdi_renderer->initialize(&gdir_desc);
 }
 
+void draw_background_canvas()
+{
+    const bool bDrawRelativeXMesh = false;
+    const bool bDrawRelativeYMesh = false;
+    const float window_width = static_cast<float>(App.window_width);
+    const float window_height = static_cast<float>(App.window_height);
+
+    background_element->begin_frame(1.f);
+    // draw background
+    {            
+        background_element->begin_path();
+        background_element->rect(0, 0, window_width, window_height);
+        background_element->fill_color(235u, 235u, 235u, 255u);
+        background_element->fill();
+    }
+    const auto epsillon = 3.f;
+    const auto absUnitX = 10.f;
+    const auto absUnitY = absUnitX;
+    const auto unitX = App.window_width / 100.f;
+    const auto unitY = App.window_height / 100.f;
+
+    // draw relative main-meshes
+    if (bDrawRelativeXMesh)
+    {
+        background_element->begin_path();
+        background_element->stroke_width(2.f);
+        background_element->stroke_color(0u, 200u, 64u, 200u);
+        for (uint32_t i = 0; i < 10; ++i)
+        {
+            const auto pos = eastl::max(i * unitY * 10.f, epsillon);
+            background_element->move_to(0.f, pos);
+            background_element->line_to(window_width, pos);
+        }
+        background_element->stroke();
+    }
+    if (bDrawRelativeYMesh)
+    {
+        background_element->begin_path();
+        background_element->stroke_width(2.f);
+        background_element->stroke_color(200u, 0u, 64u, 200u);
+        for (uint32_t i = 0; i < 10; ++i)
+        {
+            const auto pos = eastl::max(i * unitX * 10.f, epsillon);
+            background_element->move_to(pos, 0.f);
+            background_element->line_to(pos, window_height);
+        }
+        background_element->stroke();
+    }
+
+    // draw absolute main-meshes
+    background_element->begin_path();
+    background_element->stroke_width(2.f);
+    background_element->stroke_color(125u, 125u, 255u, 200u);
+    for (uint32_t i = 0; i < App.window_height / absUnitY / 10; ++i)
+    {
+        const auto pos = eastl::max(i * absUnitY * 10.f, epsillon);
+        background_element->move_to(0.f, pos);
+        background_element->line_to(window_width, pos);
+    }
+    for (uint32_t i = 0; i < App.window_width / absUnitX / 10; ++i)
+    {
+        const auto pos = eastl::max(i * absUnitX * 10.f, epsillon);
+        background_element->move_to(pos, 0.f);
+        background_element->line_to(pos, window_height);
+    }
+    background_element->stroke();
+    
+    // draw absolute sub-meshes
+    background_element->begin_path();
+    background_element->stroke_width(1.f);
+    background_element->stroke_color(88u, 88u, 222u, 180u);
+    for (uint32_t i = 0; i < App.window_height / absUnitY; ++i)
+    {
+        const auto pos = eastl::max(i * absUnitY, epsillon);
+        background_element->move_to(0.f, pos);
+        background_element->line_to(window_width, pos);
+    }
+    for (uint32_t i = 0; i < App.window_width / absUnitX; ++i)
+    {
+        const auto pos = eastl::max(i * absUnitX, epsillon);
+        background_element->move_to(pos, 0.f);
+        background_element->line_to(pos, window_height);
+    }
+    background_element->stroke();
+}
+
 int main(int argc, char* argv[])
 {
     App = make_zeroed<render_application_t>();
     App.backend = platform_default_backend;
+    skr::string app_name = "GDI [backend:";
+    app_name += gCGPUBackendNames[App.backend];
+    app_name += "]";
+    App.window_title = app_name.c_str();
     if (app_create_window(&App, 900, 900)) return -1;
     if (app_create_gfx_objects(&App)) return -1;
     // initialize
@@ -93,7 +183,9 @@ int main(int argc, char* argv[])
     background_canvas = gdi_device->create_canvas();
     gdi_canvas_group->add_canvas(background_canvas);
     gdi_canvas_group->add_canvas(gdi_canvas);
-
+    gdi_canvas->size = { (float)App.window_width, (float)App.window_height };
+    background_canvas->size = { (float)App.window_width, (float)App.window_height };
+    
     skr::gdi::SGDIElement* test_element = gdi_device->create_element();
     skr::gdi::SGDIElement* debug_element = gdi_device->create_element();
     skr::gdi::SGDIPaint* test_paint = gdi_device->create_paint();
@@ -146,80 +238,7 @@ int main(int argc, char* argv[])
         acquire_desc.fence = App.present_fence;
         App.backbuffer_index = cgpu_acquire_next_image(App.swapchain, &acquire_desc);
         // GDI
-        {
-            const bool bDrawRelativeXMesh = false;
-            const bool bDrawRelativeYMesh = false;
-
-            background_element->begin_frame(1.f);
-            const auto epsillon = 5.f;
-            const auto absUnitX = 10.f;
-            const auto absUnitY = absUnitX;
-            const auto unitX = App.window_width / 100.f;
-            const auto unitY = App.window_height / 100.f;
-            // draw relative main-meshes
-            if (bDrawRelativeXMesh)
-            {
-                background_element->begin_path();
-                background_element->stroke_width(2.f);
-                background_element->stroke_color(0u, 200u, 64u, 200u);
-                for (uint32_t i = 0; i < 10; ++i)
-                {
-                    const auto pos = eastl::max(i * unitY * 10.f, epsillon);
-                    background_element->move_to(0.f, pos);
-                    background_element->line_to((float)App.window_width, pos);
-                }
-                background_element->stroke();
-            }
-            if (bDrawRelativeYMesh)
-            {
-                background_element->begin_path();
-                background_element->stroke_width(2.f);
-                background_element->stroke_color(200u, 0u, 64u, 200u);
-                for (uint32_t i = 0; i < 10; ++i)
-                {
-                    const auto pos = eastl::max(i * unitX * 10.f, epsillon);
-                    background_element->move_to(pos, 0.f);
-                    background_element->line_to(pos, (float)App.window_height);
-                }
-                background_element->stroke();
-            }
-
-            // draw absolute main-meshes
-            background_element->begin_path();
-            background_element->stroke_width(2.f);
-            background_element->stroke_color(125u, 125u, 255u, 200u);
-            for (uint32_t i = 0; i < App.window_height / absUnitY / 10; ++i)
-            {
-                const auto pos = eastl::max(i * absUnitY * 10.f, epsillon);
-                background_element->move_to(0.f, pos);
-                background_element->line_to((float)App.window_width, pos);
-            }
-            for (uint32_t i = 0; i < App.window_width / absUnitX / 10; ++i)
-            {
-                const auto pos = eastl::max(i * absUnitX * 10.f, epsillon);
-                background_element->move_to(pos, 0.f);
-                background_element->line_to(pos, (float)App.window_height);
-            }
-            background_element->stroke();
-            
-            // draw absolute sub-meshes
-            background_element->begin_path();
-            background_element->stroke_width(1.f);
-            background_element->stroke_color(88u, 88u, 222u, 180u);
-            for (uint32_t i = 0; i < App.window_height / absUnitY; ++i)
-            {
-                const auto pos = eastl::max(i * absUnitY, epsillon);
-                background_element->move_to(0.f, pos);
-                background_element->line_to((float)App.window_width, pos);
-            }
-            for (uint32_t i = 0; i < App.window_width / absUnitX; ++i)
-            {
-                const auto pos = eastl::max(i * absUnitX, epsillon);
-                background_element->move_to(pos, 0.f);
-                background_element->line_to(pos, (float)App.window_height);
-            }
-            background_element->stroke();
-        }
+        draw_background_canvas();
         {
             debug_element->begin_frame(1.f);
             debug_element->begin_path();
