@@ -1,6 +1,5 @@
 #pragma once
 #include "platform/configure.h"
-#include "text.hpp"
 // #define SKR_USE_STL_STRING 
 
 #if !defined(SKR_USE_STL_STRING)
