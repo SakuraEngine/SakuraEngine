@@ -1,4 +1,5 @@
 target("freetype")
+    set_group("00.thirdparty")
     set_kind("static")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_includedirs("freetype/include", {public=true})
