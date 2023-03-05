@@ -91,7 +91,7 @@ struct SKR_GUI_API SGDICanvas
     virtual LiteSpan<SGDIElement*> all_elements() SKR_NOEXCEPT = 0;
 
     skr_float2_t pivot = { 0.f, 0.f };
-    skr_float2_t size = { 900.0f, 900.0f };
+    skr_float2_t size = { 0.f, 0.0f };
 };
 
 struct SKR_GUI_API SGDICanvasGroup
