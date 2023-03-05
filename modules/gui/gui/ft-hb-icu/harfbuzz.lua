@@ -1,4 +1,5 @@
 target("harfbuzz")
+    set_group("00.thirdparty")
     set_kind("static")
     add_includedirs("harfbuzz/src", {public=true})
     add_deps("freetype", "icu", {public=true})

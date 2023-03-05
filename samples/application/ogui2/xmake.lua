@@ -1,4 +1,5 @@
 target("OpenGUI_DemoResources")
+    set_group("04.examples/application")
     set_kind("static")
     add_rules("utils.install-resources", {
         extensions = {".png"},

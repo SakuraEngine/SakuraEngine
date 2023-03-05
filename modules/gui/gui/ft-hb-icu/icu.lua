@@ -1,4 +1,5 @@
 target("icu")
+    set_group("00.thirdparty")
     set_kind("static")
     add_includedirs("icu4c/source/common", {public=true})
     add_includedirs("icu4c/source/i18n", {public=true})
