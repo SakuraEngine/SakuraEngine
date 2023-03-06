@@ -30,6 +30,7 @@
 
 #pragma once
 #include "config.h"
+#include "utils/hash.h"
 #include <cmath>
 
 namespace godot{
@@ -64,6 +65,11 @@ struct Vector2 {
 			x /= l;
 			y /= l;
 		}
+	}
+
+	Vector2 ceil() const
+	{
+		return Vector2(::ceil(x), ::ceil(y));
 	}
 
 	Vector2 normalized() const
@@ -231,6 +237,9 @@ _FORCE_INLINE_ bool Vector2i::operator==(const Vector2i &p_vec2) const {
 _FORCE_INLINE_ bool Vector2i::operator!=(const Vector2i &p_vec2) const {
 	return x != p_vec2.x || y != p_vec2.y;
 }
+
+template<> struct Hasher<Vector2i> { inline size_t operator()(const Vector2i& v) const { return skr_hash(&v, sizeof(v), SKR_DEFAULT_HASH_SEED);  } };
+template<> struct Hasher<Vector2> { inline size_t operator()(const Vector2& v) const { return skr_hash(&v, sizeof(v), SKR_DEFAULT_HASH_SEED);  } };
 
 typedef Vector2i Size2i;
 typedef Vector2i Point2i;

@@ -29,8 +29,9 @@
 /*************************************************************************/
 
 #pragma once
-#include "config.h"
-#include "error_macros.h"
+#include "text_server/config.h"
+#include "text_server/error_macros.h"
+#include "text_server/containers.h"
 
 namespace godot{
 template<class T>
@@ -518,6 +519,12 @@ public:
 	String(const char32_t *p_str, int p_clip_to_len);
 	String(const StrRange &p_range);
 };
+
+#if UINTPTR_MAX == UINT32_MAX
+template<> struct Hasher<String> { inline size_t operator()(const String& x) const { return x.hash32(); } };
+#else
+template<> struct Hasher<String> { inline size_t operator()(const String& x) const { return x.hash64(); } };
+#endif
 
 bool operator==(const char *p_chr, const String &p_str);
 bool operator==(const wchar_t *p_chr, const String &p_str);

@@ -28,8 +28,9 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 #pragma once
-#include "rect2.h"
-#include "vector2.h"
+#include "text_server/rect2.h"
+#include "text_server/vector2.h"
+#include "text_server/containers.h"
 #include <cmath>
 
 namespace godot {

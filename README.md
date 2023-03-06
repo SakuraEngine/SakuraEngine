@@ -215,6 +215,10 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - cpu_features v0.7.0 (Apache-2.0)
 - EASTL v3.19.05, master-db16065 (BSD-3-Clause)
 - OpenString 81926cc (MIT)
+- godot 5dccc940e7 (MIT)
+- freetype 2.13.0 (GNU)
+- icu 72.1 ([LICENSE](https://github.com/unicode-org/icu/blob/main/icu4c/LICENSE))
+- harfbuzz 7.1.0 ([LICENSE](https://github.com/harfbuzz/harfbuzz/blob/main/COPYING))
 
 ## 作为动态库引入的开源库和版本
 - Qt-Advanced-Docking-System 3cd6d76 LGPL-2.1 

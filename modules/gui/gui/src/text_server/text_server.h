@@ -28,14 +28,19 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 #pragma once
-#include "rid.h"
-#include "ustring.h"
-#include "rect2.h"
-#include "vector3.h"
-#include "color.h"
-#include "transform_2d.h"
+#include "text_server/rid.h"
+#include "text_server/ustring.h"
+#include "text_server/rect2.h"
+#include "text_server/vector3.h"
+#include "text_server/color.h"
+#include "text_server/transform_2d.h"
+#include "text_server/image_texture.h"
 
 namespace godot{
+using TextServerVariants = Map<uint32_t, Vector3i>;
+using TextServerFeatures = Map<uint32_t, uint32_t>;
+using VariationCoordinates = Map<uint32_t, double>;
+
 typedef Vector<uint8_t> PackedByteArray;
 typedef Vector<int32_t> PackedInt32Array;
 typedef Vector<int64_t> PackedInt64Array;
@@ -45,9 +50,6 @@ typedef Vector<String> PackedStringArray;
 typedef Vector<Vector2> PackedVector2Array;
 typedef Vector<Vector3> PackedVector3Array;
 typedef Vector<Color> PackedColorArray;
-
-template <typename T>
-class TypedArray;
 
 struct Glyph;
 struct CaretInfo;
@@ -298,12 +300,11 @@ public:
 	virtual void font_set_embolden(const RID &p_font_rid, double p_strength) = 0;
 	virtual double font_get_embolden(const RID &p_font_rid) const = 0;
 
-	// TODO
 	virtual void font_set_transform(const RID &p_font_rid, const Transform2D &p_transform) = 0;
 	virtual Transform2D font_get_transform(const RID &p_font_rid) const = 0;
 
-	// virtual void font_set_variation_coordinates(const RID &p_font_rid, const Dictionary &p_variation_coordinates) = 0;
-	// virtual Dictionary font_get_variation_coordinates(const RID &p_font_rid) const = 0;
+	virtual void font_set_variation_coordinates(const RID &p_font_rid, const VariationCoordinates &p_variation_coordinates) = 0;
+	virtual VariationCoordinates font_get_variation_coordinates(const RID &p_font_rid) const = 0;
 
 	virtual void font_set_oversampling(const RID &p_font_rid, double p_oversampling) = 0;
 	virtual double font_get_oversampling(const RID &p_font_rid) const = 0;
@@ -360,6 +361,7 @@ public:
 
 	// TODO
 	// virtual Dictionary font_get_glyph_contours(const RID &p_font, int64_t p_size, int64_t p_index) const = 0;
+	virtual bool font_get_glyph_contours(const RID& p_font, int64_t p_size, int64_t p_index, Vector<Vector3> &r_points, Vector<int32_t> &r_contours, bool &r_orientation) const;
 
 	virtual TypedArray<Vector2i> font_get_kerning_list(const RID &p_font_rid, int64_t p_size) const = 0;
 	virtual void font_clear_kerning_map(const RID &p_font_rid, int64_t p_size) = 0;
@@ -391,11 +393,11 @@ public:
 	virtual void font_remove_script_support_override(const RID &p_font_rid, const String &p_script) = 0;
 	virtual PackedStringArray font_get_script_support_overrides(const RID &p_font_rid) = 0;
 
-	virtual void font_set_opentype_feature_overrides(const RID &p_font_rid, const  Map<uint32_t, double> &p_overrides) = 0;
-	virtual Map<uint32_t, double> font_get_opentype_feature_overrides(const RID &p_font_rid) const = 0;
+	virtual void font_set_opentype_feature_overrides(const RID &p_font_rid, const TextServerFeatures& p_overrides) = 0;
+	virtual TextServerFeatures font_get_opentype_feature_overrides(const RID &p_font_rid) const = 0;
 
-	virtual Map<uint32_t, double> font_supported_feature_list(const RID &p_font_rid) const = 0;
-	virtual Map<uint32_t, double> font_supported_variation_list(const RID &p_font_rid) const = 0;
+	virtual TextServerFeatures font_supported_feature_list(const RID &p_font_rid) const = 0;
+	virtual TextServerVariants font_supported_variation_list(const RID &p_font_rid) const = 0;
 
 	virtual double font_get_global_oversampling() const = 0;
 	virtual void font_set_global_oversampling(double p_oversampling) = 0;
@@ -413,8 +415,8 @@ public:
 	virtual Direction shaped_text_get_direction(const RID &p_shaped) const = 0;
 	virtual Direction shaped_text_get_inferred_direction(const RID &p_shaped) const = 0;
 
-	// TODO
-	// virtual void shaped_text_set_bidi_override(const RID &p_shaped, const Array &p_override) = 0;
+	// TODO: BIDI
+	// virtual void shaped_text_set_bidi_override(const RID &p_shaped, const Array& p_override) = 0;
 
 	virtual void shaped_text_set_custom_punctuation(const RID &p_shaped, const String &p_punct) = 0;
 	virtual String shaped_text_get_custom_punctuation(const RID &p_shaped) const = 0;
@@ -431,13 +433,13 @@ public:
 	virtual void shaped_text_set_spacing(const RID &p_shaped, SpacingType p_spacing, int64_t p_value) = 0;
 	virtual int64_t shaped_text_get_spacing(const RID &p_shaped, SpacingType p_spacing) const = 0;
 
-	virtual bool shaped_text_add_string(const RID &p_shaped, const String &p_text, const TypedArray<RID> &p_fonts, int64_t p_size, const Map<uint32_t, double>& p_opentype_features = {}, const String &p_language = "", const Variant &p_meta = Variant()) = 0;
+	virtual bool shaped_text_add_string(const RID &p_shaped, const String &p_text, const TypedArray<RID> &p_fonts, int64_t p_size, const TextServerFeatures& p_opentype_features = {}, const String &p_language = "", const Variant &p_meta = Variant()) = 0;
 	virtual bool shaped_text_add_object(const RID &p_shaped, const Variant &p_key, const Size2 &p_size, InlineAlignment p_inline_align = INLINE_ALIGNMENT_CENTER, int64_t p_length = 1, double p_baseline = 0.0) = 0;
 	virtual bool shaped_text_resize_object(const RID &p_shaped, const Variant &p_key, const Size2 &p_size, InlineAlignment p_inline_align = INLINE_ALIGNMENT_CENTER, double p_baseline = 0.0) = 0;
 
 	virtual int64_t shaped_get_span_count(const RID &p_shaped) const = 0;
 	virtual Variant shaped_get_span_meta(const RID &p_shaped, int64_t p_index) const = 0;
-	virtual void shaped_set_span_update_font(const RID &p_shaped, int64_t p_index, const TypedArray<RID> &p_fonts, int64_t p_size, const Map<uint32_t, double>& p_opentype_features = {}) = 0;
+	virtual void shaped_set_span_update_font(const RID &p_shaped, int64_t p_index, const TypedArray<RID> &p_fonts, int64_t p_size, const TextServerFeatures& p_opentype_features = {}) = 0;
 
 	virtual RID shaped_text_substr(const RID &p_shaped, int64_t p_start, int64_t p_length) const = 0; // Copy shaped substring (e.g. line break) without reshaping, but correctly reordered, preservers range.
 	virtual RID shaped_text_get_parent(const RID &p_shaped) const = 0;
