@@ -46,6 +46,11 @@ target("freetype")
         "freetype/src/type42/type42.c",
         "freetype/src/winfonts/winfnt.c"
     )
+    -- use skr zlib
+    add_deps("zlib", {public=true})
+    add_includedirs("ft-zlib", {public=false})
+    add_defines("FT_CONFIG_OPTION_SYSTEM_ZLIB", {public=false})
+
     if (is_plat("windows")) then
         add_files("freetype/builds/windows/ftsystem.c", "freetype/builds/windows/ftdebug.c")
     else
