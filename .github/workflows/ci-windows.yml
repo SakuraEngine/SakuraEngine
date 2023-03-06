@@ -40,13 +40,13 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: build-artifacts
+          name: build-artifacts-${{ matrix.os }}-${{ matrix.toolchain }}
           path: build/.gens
       - name: UploadCompileResults
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: build-binaries
+          name: build-binaries-${{ matrix.os }}-${{ matrix.toolchain }}
           path: build/windows
       - name: RemoveBuildDir
         uses: JesseTG/rm@v1.0.3
@@ -62,11 +62,11 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: shipping-artifacts
+          name: shipping-artifacts-${{ matrix.os }}-${{ matrix.toolchain }}
           path: build/.gens
       - name: UploadShipping
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: shipping-binaries
+          name: shipping-binaries-${{ matrix.os }}-${{ matrix.toolchain }}
           path: build/windows
