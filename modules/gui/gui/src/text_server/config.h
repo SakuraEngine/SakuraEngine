@@ -2,6 +2,7 @@
 #include "platform/configure.h"
 #include <limits>
 #include <type_traits>
+#include <cmath>
 
 namespace godot{
 #if defined(_WIN32) || defined(_WIN64)
