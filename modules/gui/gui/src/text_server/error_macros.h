@@ -30,6 +30,7 @@
 #pragma once
 
 #include "config.h"
+#include <cmath>
 
 namespace godot{
 class String;
