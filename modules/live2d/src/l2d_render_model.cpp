@@ -139,6 +139,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     const uint32_t texture_count = resource->model_setting->GetTextureCount();
     auto render_model = SkrNew<skr_live2d_render_model_async_t>(request, resource);
     request->render_model = render_model;
+    render_model->use_dynamic_buffer = request->use_dynamic_buffer;
     render_model->device = device;
     render_model->transfer_queue = request->queue_override;
     render_model->vram_service = vram_service;

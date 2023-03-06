@@ -16,7 +16,7 @@
 
 #include "utils/make_zeroed.hpp"
 
-
+#include "module/module_manager.hpp"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_effect.h"
 
@@ -30,6 +30,14 @@
 #include "SkrImageCoder/extensions/win_dstorage_decompressor.h"
 #endif
 
+enum DemoUploadMethod
+{
+    DEMO_UPLOAD_METHOD_DIRECT_STORAGE_FILE = 0,
+    DEMO_UPLOAD_METHOD_DIRECT_STORAGE_MEMORY = 1,
+    DEMO_UPLOAD_METHOD_UPLOAd = 2,
+    DEMO_UPLOAD_METHOD_COUNT
+};
+
 class SLive2DViewerModule : public skr::IDynamicModule
 {
     virtual void on_load(int argc, char** argv) override;
@@ -38,6 +46,9 @@ class SLive2DViewerModule : public skr::IDynamicModule
 
 public:
     static SLive2DViewerModule* Get();
+
+    bool bUseCVV = false;
+    DemoUploadMethod upload_method;
 
     SWindowHandle window;
     uint32_t backbuffer_index;
@@ -107,18 +118,44 @@ extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_gr
 #include "ecs/callback.hpp"
 #include "ecs/type_builder.hpp"
 
-void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service)
+void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service, 
+    bool bUseCVV, DemoUploadMethod upload_method)
 {
+    auto storage = renderer->get_dual_storage();
     auto renderableT_builder = make_zeroed<dual::type_builder_t>();
     renderableT_builder
         .with<skr_render_effect_t>();
     // allocate renderable
     auto renderableT = make_zeroed<dual_entity_type_t>();
     renderableT.type = renderableT_builder.build();
+
+    // deallocate existed
+    {
+        auto filter = make_zeroed<dual_filter_t>();
+        filter.all = renderableT.type;
+        auto meta = make_zeroed<dual_meta_filter_t>();
+        auto freeFunc = [&](dual_chunk_view_t* view) {
+            auto modelFree = [=](dual_chunk_view_t* view) {
+                auto mesh_comps = dual::get_owned_rw<skr_live2d_render_model_comp_t>(view);
+                for (uint32_t i = 0; i < view->count; i++)
+                {
+                    while (!mesh_comps[i].vram_request.is_ready()) {}
+                    skr_live2d_render_model_free(mesh_comps[i].vram_request.render_model);
+                    while (!mesh_comps[i].ram_request.is_ready()) {}
+                    skr_live2d_model_free(mesh_comps[i].ram_request.model_resource);
+                }
+            };
+            skr_render_effect_access(renderer, view, "Live2DEffect", DUAL_LAMBDA(modelFree));
+            skr_render_effect_detach(renderer, view, "Live2DEffect");
+            dualS_destroy(storage, view);
+        };
+        dualS_query(storage, &filter, &meta, DUAL_LAMBDA(freeFunc));
+    }
+
+    // allocate new
     auto live2dEntSetup = [&](dual_chunk_view_t* view) {
         skr_render_effect_attach(renderer, view, "Live2DEffect");
         
-        auto ents = (dual_entity_t*)dualV_get_entities(view);
         auto modelSetup = [=](dual_chunk_view_t* view) {
             auto render_device = renderer->get_render_device();
             auto file_dstorage_queue = render_device->get_file_dstorage_queue();
@@ -128,12 +165,19 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
             {
                 auto& vram_request = mesh_comps[i].vram_request;
                 auto& ram_request = mesh_comps[i].ram_request;
-                vram_request.file_dstorage_queue_override = file_dstorage_queue;
-                vram_request.memory_dstorage_queue_override = memory_dstorage_queue;
+                if (upload_method == DEMO_UPLOAD_METHOD_DIRECT_STORAGE_FILE)
+                {
+                    vram_request.file_dstorage_queue_override = file_dstorage_queue;
+                }
+                else if (upload_method == DEMO_UPLOAD_METHOD_DIRECT_STORAGE_MEMORY)
+                {
+                    vram_request.memory_dstorage_queue_override = memory_dstorage_queue;
+                }
                 vram_request.vfs_override = resource_vfs;
                 vram_request.queue_override = render_device->get_gfx_queue();
                 ram_request.vfs_override = resource_vfs;
                 ram_request.callback_data = &vram_request;
+                vram_request.use_dynamic_buffer = bUseCVV;
                 ram_request.finish_callback = +[](skr_live2d_ram_io_request_t* request, void* data)
                 {
                     auto pRenderModelRequest = (skr_live2d_render_model_request_t*)data;
@@ -144,15 +188,13 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
                     auto cgpu_device = render_device->get_cgpu_device();
                     skr_live2d_render_model_create_from_raw(ram_service, vram_service, cgpu_device, request->model_resource, pRenderModelRequest);
                 };
-                if (i == 1)
-                    skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Mao/mao_pro_t02.model3.json", &ram_request);
-                else
-                    skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Hiyori/Hiyori.model3.json", &ram_request);
+                // skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Mao/mao_pro_t02.model3.json", &ram_request);
+                skr_live2d_model_create_from_json(ram_service, "Live2DViewer/Hiyori/Hiyori.model3.json", &ram_request);
             }
         };
         skr_render_effect_access(renderer, view, "Live2DEffect", DUAL_LAMBDA(modelSetup));
     };
-    dualS_allocate_type(renderer->get_dual_storage(), &renderableT, 1, DUAL_LAMBDA(live2dEntSetup));
+    dualS_allocate_type(storage, &renderableT, 1, DUAL_LAMBDA(live2dEntSetup));
 }
 
 int SLive2DViewerModule::main_module_exec(int argc, char** argv)
@@ -187,7 +229,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     });
     create_imgui_resources(render_device, renderGraph, resource_vfs);
     skr_live2d_initialize_render_effects(l2d_renderer, renderGraph, resource_vfs);
-    create_test_scene(l2d_renderer, resource_vfs, ram_service, vram_service);
+    create_test_scene(l2d_renderer, resource_vfs, ram_service, vram_service, bUseCVV, upload_method);
     uint64_t frame_index = 0;
     SHiresTimer tick_timer;
     int64_t elapsed_us = 0;
@@ -256,6 +298,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
             skr_imgui_new_frame(window, 1.f / 60.f);
         }
         static uint32_t sample_count = 0;
+        bool bPrevUseCVV = bUseCVV;
         {
             ImGui::Begin("Live2DViewer");
 #ifdef _DEBUG
@@ -270,27 +313,57 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
             ImGui::Text("MotionEvalFPS(Fixed): %d", 240);
             ImGui::Text("PhysicsEvalFPS(Fixed): %d", 240);
             ImGui::Text("RenderFPS: %d", (uint32_t)fps);
-            const char* items[] = { "1x", "2x", "4x", "8x" };
-            static int sample_index = 0;
-            const char* combo_preview_value = items[sample_index];  // Pass in the preview value visible before opening the combo (it could be anything)
-            ImGui::Text("MSAA");
+            ImGui::Text("UseCVV");
             ImGui::SameLine();
-            if (ImGui::BeginCombo("", combo_preview_value, ImGuiComboFlags_PopupAlignLeft))
+            ImGui::Checkbox("##UseCVV", &bUseCVV);
             {
-                for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+                const char* items[] = { "DirectStorage(File)", "DirectStorage(Memory)", "UploadBuffer" };
+                ImGui::Text("UploadMethod");
+                ImGui::SameLine();
+                const char* combo_preview_value = items[upload_method];  // Pass in the preview value visible before opening the combo (it could be anything)
+                if (ImGui::BeginCombo("##UploadMethod", combo_preview_value, ImGuiComboFlags_PopupAlignLeft))
                 {
-                    const bool is_selected = (sample_index == n);
-                    if (ImGui::Selectable(items[n], is_selected))
-                        sample_index = n;
+                    for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+                    {
+                        const bool is_selected = (upload_method == n);
+                        if (ImGui::Selectable(items[n], is_selected))
+                            upload_method = static_cast<DemoUploadMethod>(n);
 
-                    // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-                    if (is_selected)
-                        ImGui::SetItemDefaultFocus();
+                        // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                        if (is_selected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
                 }
-                ImGui::EndCombo();
+            }
+            {
+                static int sample_index = 0;
+                const char* items[] = { "1x", "2x", "4x", "8x" };
+                ImGui::Text("MSAA");
+                ImGui::SameLine();
+                const char* combo_preview_value = items[sample_index];  // Pass in the preview value visible before opening the combo (it could be anything)
+                if (ImGui::BeginCombo("##MSAA", combo_preview_value, ImGuiComboFlags_PopupAlignLeft))
+                {
+                    for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+                    {
+                        const bool is_selected = (sample_index == n);
+                        if (ImGui::Selectable(items[n], is_selected))
+                            sample_index = n;
+
+                        // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                        if (is_selected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+                sample_count = static_cast<uint32_t>(::pow(2, sample_index));
             }
             ImGui::End();
-            sample_count = ::pow(2, sample_index);
+        }
+        if (bPrevUseCVV != bUseCVV)
+        {
+            cgpu_wait_queue_idle(gfx_queue);
+            create_test_scene(l2d_renderer, resource_vfs, ram_service, vram_service, bUseCVV, upload_method);
         }
         {
             ZoneScopedN("RegisterPasses");
