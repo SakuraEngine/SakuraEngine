@@ -1,4 +1,4 @@
-name: windows-vs2022
+name: windows-build
 
 on: [push, pull_request]
 
