@@ -31,13 +31,13 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: build-artifacts-${{ matrix.os }}-${{ matrix.toolchain }}
+          name: build-artifacts-macosx-clang
           path: build/.gens
       - name: UploadDevelopmentBuild
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: build-binaries-${{ matrix.os }}-${{ matrix.toolchain }}
+          name: build-binaries-macosx-clang
           path: build/macosx
       - name: RemoveBuildDir
         uses: JesseTG/rm@v1.0.3
@@ -52,11 +52,11 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: shipping-artifacts-${{ matrix.os }}-${{ matrix.toolchain }}
+          name: shipping-artifacts-macosx-clang
           path: build/.gens
       - name: UploadShipping
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: shipping-binaries-${{ matrix.os }}-${{ matrix.toolchain }}
+          name: shipping-binaries-macosx-clang
           path: build/macosx
