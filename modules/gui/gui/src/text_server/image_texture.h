@@ -9,6 +9,7 @@ struct Image
 	enum Format
 	{
 		FORMAT_RGBA8,
+		FORMAT_LA8,
 		FORMAT_COUNT
 	};
 

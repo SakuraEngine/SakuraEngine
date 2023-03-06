@@ -10,6 +10,7 @@ target("harfbuzz")
         "harfbuzz/src/hb-blob.cc",
         "harfbuzz/src/hb-buffer-serialize.cc",
         "harfbuzz/src/hb-buffer.cc",
+        "harfbuzz/src/hb-buffer-verify.cc",
         "harfbuzz/src/hb-common.cc",
         "harfbuzz/src/hb-common.cc",
         "harfbuzz/src/hb-draw.cc",
