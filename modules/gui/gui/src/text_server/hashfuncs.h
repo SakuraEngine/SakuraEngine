@@ -40,7 +40,6 @@
 #include "text_server/string_name.h"
 
 #include <cmath>
-#include <intrin.h>
 
 namespace godot {
 
