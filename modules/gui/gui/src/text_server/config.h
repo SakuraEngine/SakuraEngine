@@ -1,13 +1,8 @@
 #pragma once
-#include "platform/Configure.h"
-#include <cstdlib>
-#include <vector>
-#include <set>
-#include <map>
-#include <list>
-#include <unordered_map>
-#include <cinttypes>
-#include <memory>
+#include "platform/configure.h"
+#include <limits>
+#include <type_traits>
+
 namespace godot{
 #if defined(_WIN32) || defined(_WIN64)
 #define WINDOWS_ENABLED
@@ -71,94 +66,6 @@ static inline uint64_t BSWAP64(uint64_t x) {
 #endif
 
 using real_t = float;
-
-template<class T>
-class Vector : public std::vector<T>
-{
-public:
-	bool has(const T& key) const
-	{
-		return std::find(this->begin(), this->end(), key) != this->end();
-	}
-    void remove(size_t inPos)
-    {
-        this->erase(this->begin() + inPos);
-    }
-	void remove(const T& key)
-	{
-		this->erase(std::remove(this->begin(), this->end(), key), this->end());
-	}
-    void reverse()
-    {
-        std::reverse(this->begin(), this->end());
-    }
-	bool is_empty() const
-	{
-		return this->size() == 0;
-	}
-	T* ptrw()
-	{
-		return this->data();
-	}
-	const T* ptr() const
-	{
-		return this->data();
-	}
-	void insert(size_t pos, const T& v)
-	{
-		std::vector<T>::insert(this->begin() + pos, v);
-	}
-	void append_array(const Vector<T>& other)
-	{
-		std::vector<T>::insert(this->end(), other.begin(), other.end());
-	}
-};
-
-template<class T>
-class Set : public std::set<T>
-{
-public:
-	bool has(const T& key) const
-	{
-		return this->find(key) != this->end();
-	}
-};
-
-template<class K, class T>
-class Map : public std::map<K, T>
-{
-public:
-	bool is_empty() const
-	{
-		return this->size() == 0;
-	}
-
-	bool has(const K& key) const
-	{
-		return this->find(key) != this->end();
-	}
-};
-
-template<class K, class T>
-class HashMap : public std::unordered_map<K, T>
-{
-	public:
-	bool has(const K& key) const
-	{
-		return this->find(key) != this->end();
-	}
-};
-
-template<class T>
-using List = std::list<T>;
-
-using Variant = void*;
-
-template<class T>
-using Ref = std::shared_ptr<T>;
-
-using PackedByteArray = Vector<uint8_t>;
-using PackedInt32Array = Vector<int32_t>;
 
 enum InlineAlignment {
 	// Image alignment points.
@@ -253,38 +160,6 @@ enum Error {
 	ERR_MAX, // Not being returned, value represents the number of errors
 };
 
-template <class T>
-void memdelete(T *p_class)
-{
-	delete p_class;
-}
-
-void memfree(void* p_ptr);
-
-void* memalloc(size_t size);
-
-void* memrealloc(void* p_ptr, size_t size);
-
-#define memnew_placement(ptr, T) new(ptr) T
-#define memnew(T) new T
-
-template <class T>
-class BitField {
-	int64_t value = 0;
-
-public:
-	_FORCE_INLINE_ void set_flag(T p_flag) { value |= (int64_t)p_flag; }
-	_FORCE_INLINE_ bool has_flag(T p_flag) const { return value & (int64_t)p_flag; }
-	_FORCE_INLINE_ bool is_empty() const { return value == 0; }
-	_FORCE_INLINE_ void clear_flag(T p_flag) { value &= ~(int64_t)p_flag; }
-	_FORCE_INLINE_ void clear() { value = 0; }
-	_FORCE_INLINE_ BitField() = default;
-	_FORCE_INLINE_ BitField(int64_t p_value) { value = p_value; }
-	_FORCE_INLINE_ BitField(T p_value) { value = (int64_t)p_value; }
-	_FORCE_INLINE_ operator int64_t() const { return value; }
-	_FORCE_INLINE_ operator Variant() const { return value; }
-};
-
 // Generic swap template.
 #ifndef SWAP
 #define SWAP(m_x, m_y) __swap_tmpl((m_x), (m_y))
@@ -296,21 +171,21 @@ inline void __swap_tmpl(T &x, T &y) {
 }
 #endif // SWAP
 
-// TODO
-using Image = void*;
-
 template<class T>
 typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
     almost_equal(T x, T y, int ulp)
 {
     // the machine epsilon has to be scaled to the magnitude of the values used
     // and multiplied by the desired precision in ULPs (units in the last place)
-    return std::fabs(x-y) <= std::numeric_limits<T>::epsilon() * std::fabs(x+y) * ulp
+    return ::fabs(x-y) <= std::numeric_limits<T>::epsilon() * ::fabs(x+y) * ulp
         // unless the result is subnormal
-        || std::fabs(x-y) < std::numeric_limits<T>::min();
+        || ::fabs(x-y) < std::numeric_limits<T>::min();
 }
 
 #define UNIT_EPSILON 0.001
+
+template<class K>
+struct Hasher;
 
 // Function to find the next power of 2 to an integer.
 inline unsigned int next_power_of_2(unsigned int x) {
@@ -334,3 +209,5 @@ class TextServer* get_text_server();
 
 #define MODULE_FREETYPE_ENABLED
 }
+
+#include "text_server/mod_bind.h"

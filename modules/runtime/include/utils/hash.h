@@ -10,6 +10,14 @@
 extern "C" {
 #endif
 
+#define SKR_DEFAULT_HASH_SEED_32 1610612741
+#define SKR_DEFAULT_HASH_SEED_64 8053064571610612741
+#if UINTPTR_MAX == UINT32_MAX
+#define SKR_DEFAULT_HASH_SEED SKR_DEFAULT_HASH_SEED_32
+#else
+#define SKR_DEFAULT_HASH_SEED SKR_DEFAULT_HASH_SEED_64
+#endif
+
 FORCEINLINE static size_t skr_hash(const void* buffer, size_t size, size_t seed)
 {
 #if SIZE_MAX == UINT64_MAX
