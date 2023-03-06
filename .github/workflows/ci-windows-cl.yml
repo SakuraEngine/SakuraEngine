@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build-windows-cl:
-    runs-on: windows-latest
+    runs-on: [windows-latest, windows-2019]
     steps:
       - name: Checkout code
         uses: nschloe/action-cached-lfs-checkout@v1
