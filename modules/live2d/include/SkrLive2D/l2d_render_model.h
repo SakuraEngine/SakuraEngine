@@ -4,6 +4,7 @@
 #include "cgpu/io.h"
 #include "SkrRenderer/primitive_draw.h"
 #include "l2d_model_resource.h"
+#include <EASTL/vector_map.h>
 
 typedef struct skr_live2d_clipping_manager_t skr_live2d_clipping_manager_t;
 typedef struct skr_live2d_clipping_manager_t* skr_live2d_clipping_manager_id;
@@ -19,6 +20,7 @@ typedef struct skr_live2d_render_model_request_t {
     ECGPUDStorageSource dstorage_source;
     skr_live2d_render_model_id render_model;
     SAtomic32 io_status;
+    bool use_dynamic_buffer;
 #ifdef __cplusplus
     SKR_LIVE2D_API bool is_ready() const SKR_NOEXCEPT;
     SKR_LIVE2D_API SkrAsyncIOStatus get_status() const SKR_NOEXCEPT;
@@ -62,6 +64,9 @@ struct skr_live2d_render_model_t {
     eastl::vector<skr_vertex_buffer_view_t> vertex_buffer_views;
     eastl::vector<skr_index_buffer_view_t> index_buffer_views;
     eastl::vector<skr_render_primitive_command_t> primitive_commands;
+    // bind table cache
+    eastl::vector_map<CGPUTextureViewId, CGPUXBindTableId> bind_tables;
+    eastl::vector_map<CGPUTextureViewId, CGPUXBindTableId> mask_bind_tables;
 };
 
 #include "ecs/dual.h"

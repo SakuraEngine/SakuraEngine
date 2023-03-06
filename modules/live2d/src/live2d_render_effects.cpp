@@ -146,9 +146,6 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
 
     }
 
-    eastl::vector_map<CGPUTextureViewId, CGPUXBindTableId> bind_tables;
-    eastl::vector_map<CGPUTextureViewId, CGPUXBindTableId> mask_bind_tables;
-
     eastl::vector_map<skr_live2d_render_model_id, skr::span<const uint32_t>> sorted_drawable_list;
     eastl::vector_map<skr_live2d_render_model_id, eastl::fixed_vector<uint32_t, 4>> sorted_mask_drawable_lists;
     const float kMotionFramesPerSecond = 240.0f;
@@ -183,7 +180,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         return mask_pipeline;
     }
 
-    void produce_model_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* storage) 
+    void produce_model_drawcall(const skr_primitive_draw_context_t* context, dual_storage_t* storage) 
     {
         CubismMatrix44 projection;
         // TODO: Correct Projection
@@ -258,7 +255,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                 drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
                                 {
                                     auto texture_view = skr_live2d_render_model_get_texture_view(render_model, drawable);
-                                    drawcall.bind_table = bind_tables[texture_view];
+                                    drawcall.bind_table = render_model->bind_tables[texture_view];
                                 }
                             }
                         }
@@ -271,7 +268,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
 
     eastl::vector<skr_primitive_draw_t> mask_drawcalls;
     skr_primitive_draw_list_view_t mask_draw_list;
-    void produce_mask_drawcall(IPrimitiveRenderPass* pass, dual_storage_t* storage) 
+    void produce_mask_drawcall(const skr_primitive_draw_context_t* context, dual_storage_t* storage) 
     {
         {
             ZoneScopedN("FrameCleanUp");
@@ -293,7 +290,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                     mask_push_constants[render_model].resize(0);
 
                     // TODO: move this to (some manager?) other than update morph/phys in a render pass
-                    updateModelMotion(render_model);
+                    updateModelMotion(context->render_graph, render_model);
                     updateTexture(render_model);
                     // record constant parameters
                     if (auto clipping_manager = render_model->clipping_manager)
@@ -377,7 +374,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
                                         drawcall.vertex_buffer_count = (uint32_t)cmd.vbvs.size();
                                         {
                                             auto texture_view = skr_live2d_render_model_get_texture_view(render_model, clipDrawIndex);
-                                            drawcall.bind_table = mask_bind_tables[texture_view];
+                                            drawcall.bind_table = render_model->mask_bind_tables[texture_view];
                                         }
                                     }
                                 }
@@ -406,7 +403,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         {
             ZoneScopedN("ProduceMaskDrawPackets");
 
-            produce_mask_drawcall(pass, storage);
+            produce_mask_drawcall(context, storage);
             mask_draw_list.drawcalls = mask_drawcalls.data();
             mask_draw_list.count = (uint32_t)mask_drawcalls.size();
             packet.count = 1;
@@ -416,7 +413,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         {
             ZoneScopedN("ProduceModelDrawPackets");
 
-            produce_model_drawcall(pass, storage);
+            produce_model_drawcall(context, storage);
             model_draw_list.drawcalls = model_drawcalls.data();
             model_draw_list.count = (uint32_t)model_drawcalls.size();
             packet.count = 1;
@@ -437,8 +434,8 @@ protected:
         {
             auto texture_view = skr_live2d_render_model_get_texture_view(render_model, j);
             {
-                auto iter = bind_tables.find(texture_view);
-                if (iter == bind_tables.end())
+                auto iter = render_model->bind_tables.find(texture_view);
+                if (iter == render_model->bind_tables.end())
                 {
                     ZoneScopedN("Live2D::createBindTable");
 
@@ -447,7 +444,7 @@ protected:
                     bind_table_desc.names = &color_texture_name;
                     bind_table_desc.names_count = 1;
                     auto bind_table = cgpux_create_bind_table(pipeline->device, &bind_table_desc);
-                    bind_tables[texture_view] = bind_table;
+                    render_model->bind_tables[texture_view] = bind_table;
 
                     CGPUDescriptorData datas[1] = {};
                     datas[0] = make_zeroed<CGPUDescriptorData>();
@@ -459,8 +456,8 @@ protected:
                 }
             }
             {
-                auto iter = mask_bind_tables.find(texture_view);
-                if (iter == mask_bind_tables.end())
+                auto iter = render_model->mask_bind_tables.find(texture_view);
+                if (iter == render_model->mask_bind_tables.end())
                 {
                     ZoneScopedN("Live2D::createBindTable");
 
@@ -469,7 +466,7 @@ protected:
                     bind_table_desc.names = &color_texture_name;
                     bind_table_desc.names_count = 1;
                     auto bind_table = cgpux_create_bind_table(pipeline->device, &bind_table_desc);
-                    mask_bind_tables[texture_view] = bind_table;
+                    render_model->mask_bind_tables[texture_view] = bind_table;
                     
                     CGPUDescriptorData datas[1] = {};
                     datas[0] = make_zeroed<CGPUDescriptorData>();
@@ -483,7 +480,25 @@ protected:
         }
     }
 
-    void updateModelMotion(skr_live2d_render_model_id render_model)
+    static const void* getVBData(skr_live2d_render_model_id render_model, uint32_t index, uint32_t& out_vcount)
+    {
+        const auto model_resource = render_model->model_resource_id;
+        const void* pSrc = nullptr;
+        // pos-uv-pos-uv...
+        if (index % 2 == 0)
+        {
+            pSrc = skr_live2d_model_get_drawable_vertex_positions(
+                model_resource, index / 2, &out_vcount);
+        }
+        else
+        {
+            pSrc = skr_live2d_model_get_drawable_vertex_uvs(
+                model_resource, (index - 1) / 2, &out_vcount);
+        }
+        return pSrc;
+    }
+
+    void updateModelMotion(skr::render_graph::RenderGraph* render_graph, skr_live2d_render_model_id render_model)
     {
         ZoneScopedN("Live2D::updateModelMotion");
 
@@ -495,28 +510,94 @@ protected:
         {
             skr_live2d_model_update(model_resource, delta_sum);
             delta_sum = 0.f;
+            const auto vb_c = render_model->vertex_buffer_views.size();
             // update buffer
-            if (render_model->use_dynamic_buffer)
+            if (render_model->use_dynamic_buffer && vb_c) // direct copy vertices to CVV buffer
             {
-                const auto vb_c = render_model->vertex_buffer_views.size();
                 for (uint32_t j = 0; j < vb_c; j++)
                 {
                     auto& view = render_model->vertex_buffer_views[j];
-                    const void* pSrc = nullptr;
                     uint32_t vcount = 0;
-                    // pos-uv-pos-uv...
-                    if (j % 2 == 0)
+                    const void* pSrc = getVBData(render_model, j, vcount);
+                    if (render_model->use_dynamic_buffer) // direct copy vertices to CVV buffer
                     {
-                        pSrc = skr_live2d_model_get_drawable_vertex_positions(
-                            model_resource, j / 2, &vcount);
+                        memcpy((uint8_t*)view.buffer->cpu_mapped_address + view.offset, pSrc, vcount * view.stride);
                     }
-                    else
-                    {
-                        pSrc = skr_live2d_model_get_drawable_vertex_uvs(
-                            model_resource, (j - 1) / 2, &vcount);
-                    }
-                    memcpy((uint8_t*)view.buffer->cpu_mapped_address + view.offset, pSrc, vcount * view.stride);
                 }
+            }
+            else if (vb_c)
+            {
+                uint64_t totalVertexSize = 0;
+                eastl::vector<skr::render_graph::BufferHandle> imported_vbs;
+                eastl::vector<uint64_t> vb_sizes;
+                eastl::vector<uint64_t> vb_offsets;
+                if (!render_model->use_dynamic_buffer)
+                {
+                    imported_vbs.resize(vb_c);
+                    vb_sizes.resize(vb_c);
+                    vb_offsets.resize(vb_c);
+                }
+                for (uint32_t j = 0; j < vb_c; j++)
+                {
+                    auto& view = render_model->vertex_buffer_views[j];
+                    uint32_t vcount = 0;
+                    const void* pSrc = getVBData(render_model, j, vcount); (void)pSrc;
+                    imported_vbs[j] = render_graph->create_buffer(
+                            [=](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
+                            skr::string name = "live2d_vb-";
+                            name.append(skr::to_string((uint64_t)render_model).c_str());
+                            name.append(skr::to_string(j).c_str());
+                            builder.set_name(name.c_str())
+                                    .import(view.buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+                            });
+                    vb_sizes[j] = vcount * view.stride;
+                    vb_offsets[j] = view.offset;
+                    totalVertexSize += vcount * view.stride;
+                }
+                if (totalVertexSize)
+                {
+                namespace rg = skr::render_graph;
+
+                auto upload_buffer = render_graph->create_buffer(
+                    [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
+                    ZoneScopedN("ConstructUploadPass");
+
+                    skr::string name = "live2d_upload-";
+                    name.append(skr::to_string((uint64_t)render_model).c_str());
+                    builder.set_name(name.c_str())
+                            .size(totalVertexSize)
+                            .with_tags(kRenderGraphDefaultResourceTag)
+                            .as_upload_buffer();
+                    });
+                render_graph->add_copy_pass(
+                [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
+                    ZoneScopedN("ConstructCopyPass");
+                    skr::string name = "live2d_copy-";
+                    name.append(skr::to_string((uint64_t)render_model).c_str());
+                    builder.set_name(name.c_str());
+                    uint64_t range_cursor = 0;
+                    for (uint32_t j = 0; j < vb_c; j++)
+                    {
+                        const auto vb_size = vb_sizes[j];
+                        builder.buffer_to_buffer(
+                            upload_buffer.range(range_cursor, range_cursor + vb_size),
+                            imported_vbs[j].range(vb_offsets[j], vb_offsets[j] + vb_size));
+                        range_cursor += vb_size;
+                    }
+                    },
+                    [upload_buffer_hdl = upload_buffer, vb_c, render_model](rg::RenderGraph& g, rg::CopyPassContext& context){
+                        auto upload_buffer = context.resolve(upload_buffer_hdl);
+                        uint8_t* range_cursor =(uint8_t*)upload_buffer->cpu_mapped_address;
+                        for (uint32_t j = 0; j < vb_c; j++)
+                        {
+                            auto& view = render_model->vertex_buffer_views[j];
+                            uint32_t vcount = 0;
+                            const void* pSrc = getVBData(render_model, j, vcount);
+                            memcpy(range_cursor, pSrc, vcount * view.stride);
+                            range_cursor += vcount * view.stride;
+                        }
+                    });
+            }
             }
             if (auto clipping_manager = render_model->clipping_manager)
             {
