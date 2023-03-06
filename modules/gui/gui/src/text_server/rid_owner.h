@@ -33,6 +33,7 @@
 #include "text_server/config.h"
 #include "text_server/rid.h"
 #include "text_server/containers.h"
+#include "text_server/memory.h"
 
 #include <stdio.h>
 #include <typeinfo>
