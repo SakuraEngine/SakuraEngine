@@ -43,9 +43,9 @@ jobs:
           name: build-binaries
           path: build/windows
       - name: RemoveBuildDir
-          uses: JesseTG/rm@v1.0.3
-          with:
-            path: build
+        uses: JesseTG/rm@v1.0.3
+        with:
+          path: build
       - name: Shipping
         if: success() || failure()
         shell: cmd
