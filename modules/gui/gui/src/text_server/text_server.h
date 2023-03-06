@@ -361,7 +361,7 @@ public:
 
 	// TODO
 	// virtual Dictionary font_get_glyph_contours(const RID &p_font, int64_t p_size, int64_t p_index) const = 0;
-	virtual bool font_get_glyph_contours(const RID& p_font, int64_t p_size, int64_t p_index, Vector<Vector3> &r_points, Vector<int32_t> &r_contours, bool &r_orientation) const;
+	virtual bool font_get_glyph_contours(const RID& p_font, int64_t p_size, int64_t p_index, Vector<Vector3> &r_points, Vector<int32_t> &r_contours, bool &r_orientation) const = 0;
 
 	virtual TypedArray<Vector2i> font_get_kerning_list(const RID &p_font_rid, int64_t p_size) const = 0;
 	virtual void font_clear_kerning_map(const RID &p_font_rid, int64_t p_size) = 0;

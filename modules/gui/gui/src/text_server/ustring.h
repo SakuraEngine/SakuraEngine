@@ -1,106 +1,43 @@
-/*************************************************************************/
-/*  ustring.h                                                            */
-/*************************************************************************/
-/*                       This file is part of:                           */
-/*                           GODOT ENGINE                                */
-/*                      https://godotengine.org                          */
-/*************************************************************************/
-/* Copyright (c) 2007-2021 Juan Linietsky, Ariel Manzur.                 */
-/* Copyright (c) 2014-2021 Godot Engine contributors (cf. AUTHORS.md).   */
-/*                                                                       */
-/* Permission is hereby granted, free of charge, to any person obtaining */
-/* a copy of this software and associated documentation files (the       */
-/* "Software"), to deal in the Software without restriction, including   */
-/* without limitation the rights to use, copy, modify, merge, publish,   */
-/* distribute, sublicense, and/or sell copies of the Software, and to    */
-/* permit persons to whom the Software is furnished to do so, subject to */
-/* the following conditions:                                             */
-/*                                                                       */
-/* The above copyright notice and this permission notice shall be        */
-/* included in all copies or substantial portions of the Software.       */
-/*                                                                       */
-/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,       */
-/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF    */
-/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.*/
-/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY  */
-/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,  */
-/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     */
-/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
-/*************************************************************************/
+/**************************************************************************/
+/*  ustring.h                                                             */
+/**************************************************************************/
+/*                         This file is part of:                          */
+/*                             GODOT ENGINE                               */
+/*                        https://godotengine.org                         */
+/**************************************************************************/
+/* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
+/* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
+/*                                                                        */
+/* Permission is hereby granted, free of charge, to any person obtaining  */
+/* a copy of this software and associated documentation files (the        */
+/* "Software"), to deal in the Software without restriction, including    */
+/* without limitation the rights to use, copy, modify, merge, publish,    */
+/* distribute, sublicense, and/or sell copies of the Software, and to     */
+/* permit persons to whom the Software is furnished to do so, subject to  */
+/* the following conditions:                                              */
+/*                                                                        */
+/* The above copyright notice and this permission notice shall be         */
+/* included in all copies or substantial portions of the Software.        */
+/*                                                                        */
+/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,        */
+/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF     */
+/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. */
+/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY   */
+/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,   */
+/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE      */
+/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
+/**************************************************************************/
 
-#pragma once
-#include "text_server/config.h"
-#include "text_server/error_macros.h"
+#ifndef USTRING_GODOT_H
+#define USTRING_GODOT_H
+
+// Note: _GODOT suffix added to header guard to avoid conflict with ICU header.
+
+#include "text_server/char_utils.h"
+#include "text_server/cowdata.h"
 #include "text_server/containers.h"
 
-namespace godot{
-template<class T>
-class CowData
-{
-    mutable Vector<T> data;
-public:
-    _FORCE_INLINE_ T *_get_data() const {
-		return reinterpret_cast<T *>(data.data());
-	}
-
-    void _copy_on_write() {}
-
-    _FORCE_INLINE_ T *ptrw() {
-		_copy_on_write();
-		return (T *)_get_data();
-	}
-
-	_FORCE_INLINE_ const T *ptr() const {
-		return _get_data();
-	}
-
-    _FORCE_INLINE_ int size() const {
-        return data.size();
-    }
-
-    _FORCE_INLINE_ Error resize(int p_size) {
-        data.resize(p_size);
-        return OK;
-    }
-
-    _FORCE_INLINE_ void remove(int p_index) {
-        data.erase(data.begin() + p_index);
-    }
-
-    _FORCE_INLINE_ void set(int p_index, const T &p_elem) {
-		ERR_FAIL_INDEX(p_index, size());
-		_copy_on_write();
-		_get_data()[p_index] = p_elem;
-	}
-
-	_FORCE_INLINE_ T &get_m(int p_index) {
-		CRASH_BAD_INDEX(p_index, size());
-		_copy_on_write();
-		return _get_data()[p_index];
-	}
-
-	_FORCE_INLINE_ const T &get(int p_index) const {
-		CRASH_BAD_INDEX(p_index, size());
-
-		return _get_data()[p_index];
-	}
-
-    
-	void _ref(const CowData *p_from)
-    {
-        _ref(*p_from);
-    }
-	void _ref(const CowData &p_from)
-    {
-        data = p_from.data;
-    }
-
-    int find(const T &p_val, int p_from) const
-    {
-        return std::find(data.begin() + p_from, data.end(), p_val) - data.begin();
-    }
-};
-
+namespace godot {
 
 /*************************************************************************/
 /*  CharProxy                                                            */
@@ -116,11 +53,15 @@ class CharProxy {
 	CowData<T> &_cowdata;
 	static const T _null = 0;
 
-	_FORCE_INLINE_ CharProxy(const int &p_index, CowData<T> &cowdata) :
+	_FORCE_INLINE_ CharProxy(const int &p_index, CowData<T> &p_cowdata) :
 			_index(p_index),
-			_cowdata(cowdata) {}
+			_cowdata(p_cowdata) {}
 
 public:
+	_FORCE_INLINE_ CharProxy(const CharProxy<T> &p_other) :
+			_index(p_other._index),
+			_cowdata(p_other._cowdata) {}
+
 	_FORCE_INLINE_ operator T() const {
 		if (unlikely(_index == _cowdata.size())) {
 			return _null;
@@ -133,22 +74,12 @@ public:
 		return _cowdata.ptr() + _index;
 	}
 
-	_FORCE_INLINE_ void operator=(const T &other) const {
-		_cowdata.set(_index, other);
+	_FORCE_INLINE_ void operator=(const T &p_other) const {
+		_cowdata.set(_index, p_other);
 	}
 
-	_FORCE_INLINE_ void operator=(const CharProxy<T> &other) const {
-		_cowdata.set(_index, other.operator T());
-	}
-};
-
-struct StrRange {
-	const char32_t *c_str;
-	int len;
-
-	StrRange(const char32_t *p_c_str = nullptr, int p_len = 0) {
-		c_str = p_c_str;
-		len = p_len;
+	_FORCE_INLINE_ void operator=(const CharProxy<T> &p_other) const {
+		_cowdata.set(_index, p_other.operator T());
 	}
 };
 
@@ -179,13 +110,10 @@ public:
 
 	_FORCE_INLINE_ Char16String() {}
 	_FORCE_INLINE_ Char16String(const Char16String &p_str) { _cowdata._ref(p_str._cowdata); }
-	_FORCE_INLINE_ Char16String &operator=(const Char16String &p_str) {
-		_cowdata._ref(p_str._cowdata);
-		return *this;
-	}
+	_FORCE_INLINE_ void operator=(const Char16String &p_str) { _cowdata._ref(p_str._cowdata); }
 	_FORCE_INLINE_ Char16String(const char16_t *p_cstr) { copy_from(p_cstr); }
 
-	Char16String &operator=(const char16_t *p_cstr);
+	void operator=(const char16_t *p_cstr);
 	bool operator<(const Char16String &p_right) const;
 	Char16String &operator+=(char16_t p_char);
 	int length() const { return size() ? size() - 1 : 0; }
@@ -223,14 +151,12 @@ public:
 
 	_FORCE_INLINE_ CharString() {}
 	_FORCE_INLINE_ CharString(const CharString &p_str) { _cowdata._ref(p_str._cowdata); }
-	_FORCE_INLINE_ CharString &operator=(const CharString &p_str) {
-		_cowdata._ref(p_str._cowdata);
-		return *this;
-	}
+	_FORCE_INLINE_ void operator=(const CharString &p_str) { _cowdata._ref(p_str._cowdata); }
 	_FORCE_INLINE_ CharString(const char *p_cstr) { copy_from(p_cstr); }
 
-	CharString &operator=(const char *p_cstr);
+	void operator=(const char *p_cstr);
 	bool operator<(const CharString &p_right) const;
+	bool operator==(const CharString &p_right) const;
 	CharString &operator+=(char p_char);
 	int length() const { return size() ? size() - 1 : 0; }
 	const char *get_data() const;
@@ -243,6 +169,16 @@ protected:
 /*************************************************************************/
 /*  String                                                               */
 /*************************************************************************/
+
+struct StrRange {
+	const char32_t *c_str;
+	int len;
+
+	StrRange(const char32_t *p_c_str = nullptr, int p_len = 0) {
+		c_str = p_c_str;
+		len = p_len;
+	}
+};
 
 class String {
 	CowData<char32_t> _cowdata;
@@ -261,6 +197,7 @@ class String {
 
 	bool _base_is_subsequence_of(const String &p_string, bool case_insensitive) const;
 	int _count(const String &p_string, int p_from, int p_to, bool p_case_insensitive) const;
+	String _camelcase_to_underscore() const;
 
 public:
 	enum {
@@ -270,7 +207,7 @@ public:
 	_FORCE_INLINE_ char32_t *ptrw() { return _cowdata.ptrw(); }
 	_FORCE_INLINE_ const char32_t *ptr() const { return _cowdata.ptr(); }
 
-	void remove(int p_index) { _cowdata.remove(p_index); }
+	void remove_at(int p_index) { _cowdata.remove_at(p_index); }
 
 	_FORCE_INLINE_ void clear() { resize(0); }
 
@@ -291,6 +228,7 @@ public:
 	bool operator==(const String &p_str) const;
 	bool operator!=(const String &p_str) const;
 	String operator+(const String &p_str) const;
+	String operator+(char32_t p_char) const;
 
 	String &operator+=(const String &);
 	String &operator+=(char32_t p_char);
@@ -336,6 +274,9 @@ public:
 
 	bool is_valid_string() const;
 
+	/* debug, error messages */
+	void print_unicode_error(const String &p_message, bool p_critical = false) const;
+
 	/* complex helpers */
 	String substr(int p_from, int p_chars = -1) const;
 	int find(const String &p_str, int p_from = 0) const; ///< return <0 if failed
@@ -352,11 +293,10 @@ public:
 	bool ends_with(const String &p_string) const;
 	bool is_enclosed_in(const String &p_string) const;
 	bool is_subsequence_of(const String &p_string) const;
-	bool is_subsequence_ofi(const String &p_string) const;
+	bool is_subsequence_ofn(const String &p_string) const;
 	bool is_quoted() const;
 	Vector<String> bigrams() const;
 	float similarity(const String &p_string) const;
-	String format(const Variant &values, String placeholder = "{_}") const;
 	String replace_first(const String &p_key, const String &p_with) const;
 	String replace(const String &p_key, const String &p_with) const;
 	String replace(const char *p_key, const char *p_with) const;
@@ -369,6 +309,7 @@ public:
 	String trim_suffix(const String &p_suffix) const;
 	String lpad(int min_length, const String &character = " ") const;
 	String rpad(int min_length, const String &character = " ") const;
+	// String sprintf(const Array &values, bool *error) const;
 	String quote(String quotechar = "\"") const;
 	String unquote() const;
 	static String num(double p_num, int p_decimals = -1);
@@ -395,16 +336,19 @@ public:
 	static double to_float(const char32_t *p_str, const char32_t **r_end = nullptr);
 
 	String capitalize() const;
-	String camelcase_to_underscore(bool lowercase = true) const;
+	String to_camel_case() const;
+	String to_pascal_case() const;
+	String to_snake_case() const;
 
+	String get_with_code_lines() const;
 	int get_slice_count(String p_splitter) const;
 	String get_slice(String p_splitter, int p_slice) const;
 	String get_slicec(char32_t p_splitter, int p_slice) const;
 
-	Vector<String> split(const String &p_splitter, bool p_allow_empty = true, int p_maxsplit = 0) const;
-	Vector<String> rsplit(const String &p_splitter, bool p_allow_empty = true, int p_maxsplit = 0) const;
+	Vector<String> split(const String &p_splitter = "", bool p_allow_empty = true, int p_maxsplit = 0) const;
+	Vector<String> rsplit(const String &p_splitter = "", bool p_allow_empty = true, int p_maxsplit = 0) const;
 	Vector<String> split_spaces() const;
-	Vector<float> split_floats(const String &p_splitter, bool p_allow_empty = true) const;
+	Vector<double> split_floats(const String &p_splitter, bool p_allow_empty = true) const;
 	Vector<float> split_floats_mk(const Vector<String> &p_splitters, bool p_allow_empty = true) const;
 	Vector<int> split_ints(const String &p_splitter, bool p_allow_empty = true) const;
 	Vector<int> split_ints_mk(const Vector<String> &p_splitters, bool p_allow_empty = true) const;
@@ -419,8 +363,9 @@ public:
 	int count(const String &p_string, int p_from = 0, int p_to = 0) const;
 	int countn(const String &p_string, int p_from = 0, int p_to = 0) const;
 
-	String left(int p_pos) const;
-	String right(int p_pos) const;
+	String left(int p_len) const;
+	String right(int p_len) const;
+	String indent(const String &p_prefix) const;
 	String dedent() const;
 	String strip_edges(bool left = true, bool right = true) const;
 	String strip_escapes() const;
@@ -428,17 +373,16 @@ public:
 	String rstrip(const String &p_chars) const;
 	String get_extension() const;
 	String get_basename() const;
-	String plus_file(const String &p_file) const;
+	String path_join(const String &p_file) const;
 	char32_t unicode_at(int p_idx) const;
 
-	void erase(int p_pos, int p_chars);
-
 	CharString ascii(bool p_allow_extended = false) const;
-	bool parse_utf8(const char *p_utf8, int p_len = -1); //return true on error
+	CharString utf8() const;
+	Error parse_utf8(const char *p_utf8, int p_len = -1, bool p_skip_cr = false);
 	static String utf8(const char *p_utf8, int p_len = -1);
 
 	Char16String utf16() const;
-	bool parse_utf16(const char16_t *p_utf16, int p_len = -1); //return true on error
+	Error parse_utf16(const char16_t *p_utf16, int p_len = -1);
 	static String utf16(const char16_t *p_utf16, int p_len = -1);
 
 	static uint32_t hash(const char32_t *p_cstr, int p_len); /* hash the string */
@@ -449,18 +393,14 @@ public:
 	static uint32_t hash(const char *p_cstr); /* hash the string */
 	uint32_t hash() const; /* hash the string */
 	uint64_t hash64() const; /* hash the string */
-	String md5_text() const;
-	String sha1_text() const;
-	String sha256_text() const;
-	Vector<uint8_t> md5_buffer() const;
-	Vector<uint8_t> sha1_buffer() const;
-	Vector<uint8_t> sha256_buffer() const;
 
 	_FORCE_INLINE_ bool is_empty() const { return length() == 0; }
+	_FORCE_INLINE_ bool contains(const char *p_str) const { return find(p_str) != -1; }
+	_FORCE_INLINE_ bool contains(const String &p_str) const { return find(p_str) != -1; }
 
 	// path functions
 	bool is_absolute_path() const;
-	bool is_rel_path() const;
+	bool is_relative_path() const;
 	bool is_resource_file() const;
 	String path_to(const String &p_path) const;
 	String path_to_file(const String &p_path) const;
@@ -468,6 +408,7 @@ public:
 	String get_file() const;
 	static String humanize_size(uint64_t p_size);
 	String simplify_path() const;
+	bool is_network_share_path() const;
 
 	String xml_escape(bool p_escape_quotes = false) const;
 	String xml_unescape() const;
@@ -477,20 +418,19 @@ public:
 	String c_escape_multiline() const;
 	String c_unescape() const;
 	String json_escape() const;
-	String word_wrap(int p_chars_per_line) const;
 	Error parse_url(String &r_scheme, String &r_host, int &r_port, String &r_path) const;
 
 	String property_name_encode() const;
 
 	// node functions
 	static const String invalid_node_name_characters;
-	String validate_node_name() const;
+	String validate_identifier() const;
+	String validate_filename() const;
 
 	bool is_valid_identifier() const;
 	bool is_valid_int() const;
 	bool is_valid_float() const;
 	bool is_valid_hex_number(bool p_with_prefix) const;
-	bool is_valid_html_color() const;
 	bool is_valid_ip_address() const;
 	bool is_valid_filename() const;
 
@@ -500,11 +440,7 @@ public:
 
 	_FORCE_INLINE_ String() {}
 	_FORCE_INLINE_ String(const String &p_str) { _cowdata._ref(p_str._cowdata); }
-
-	String &operator=(const String &p_str) {
-		_cowdata._ref(p_str._cowdata);
-		return *this;
-	}
+	_FORCE_INLINE_ void operator=(const String &p_str) { _cowdata._ref(p_str._cowdata); }
 
 	Vector<uint8_t> to_ascii_buffer() const;
 	Vector<uint8_t> to_utf8_buffer() const;
@@ -591,17 +527,21 @@ String DTRN(const String &p_text, const String &p_text_plural, int p_n, const St
 #define TTRGET(m_value) TTR(m_value)
 
 #else
-#define TTR(m_value) (String())
-#define TTRN(m_value) (String())
-#define DTR(m_value) (String())
-#define DTRN(m_value) (String())
 #define TTRC(m_value) (m_value)
 #define TTRGET(m_value) (m_value)
 #endif
 
-// Runtime translate for the public node API.
-String RTR(const String &p_text, const String &p_context = "");
-String RTRN(const String &p_text, const String &p_text_plural, int p_n, const String &p_context = "");
+// Use this to mark property names for editor translation.
+// Often for dynamic properties defined in _get_property_list().
+// Property names defined directly inside EDITOR_DEF, GLOBAL_DEF, and ADD_PROPERTY macros don't need this.
+#define PNAME(m_value) (m_value)
+
+// Similar to PNAME, but to mark groups, i.e. properties with PROPERTY_USAGE_GROUP.
+// Groups defined directly inside ADD_GROUP macros don't need this.
+// The arguments are the same as ADD_GROUP. m_prefix is only used for extraction.
+#define GNAME(m_value, m_prefix) (m_value)
+
+bool select_word(const String &p_s, int p_col, int &r_beg, int &r_end);
 
 _FORCE_INLINE_ void sarray_add_str(Vector<String> &arr) {
 }
@@ -622,4 +562,7 @@ _FORCE_INLINE_ Vector<String> sarray(P... p_args) {
 	sarray_add_str(arr, p_args...);
 	return arr;
 }
-}
+
+} // namespace godot
+
+#endif // USTRING_GODOT_H

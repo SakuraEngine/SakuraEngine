@@ -3,7 +3,6 @@
 #include <new>
 
 namespace godot {
-#if 0
 
 const bool kHasRenderer_HACK()
 {
@@ -13,6 +12,12 @@ const bool kHasSystemFont()
 {
     return false;
 } 
+
+const String kGetLocale()
+{
+	SKR_UNIMPLEMENTED_FUNCTION();
+	return "";
+}
 
 hb_font_funcs_t *TextServerAdvanced::funcs = nullptr;
 
@@ -270,6 +275,465 @@ _FORCE_INLINE_ bool is_connected_to_prev(char32_t p_chr, char32_t p_pchr) {
 
 bool TextServerAdvanced::icu_data_loaded = false;
 
+bool TextServerAdvanced::_has_feature(Feature p_feature) const {
+	switch (p_feature) {
+		case FEATURE_SIMPLE_LAYOUT:
+		case FEATURE_BIDI_LAYOUT:
+		case FEATURE_VERTICAL_LAYOUT:
+		case FEATURE_SHAPING:
+		case FEATURE_KASHIDA_JUSTIFICATION:
+		case FEATURE_BREAK_ITERATORS:
+		case FEATURE_FONT_BITMAP:
+#ifdef MODULE_FREETYPE_ENABLED
+		case FEATURE_FONT_DYNAMIC:
+#endif
+#ifdef MODULE_MSDFGEN_ENABLED
+		case FEATURE_FONT_MSDF:
+#endif
+		case FEATURE_FONT_VARIABLE:
+		case FEATURE_CONTEXT_SENSITIVE_CASE_CONVERSION:
+		case FEATURE_USE_SUPPORT_DATA:
+		case FEATURE_UNICODE_IDENTIFIERS:
+		case FEATURE_UNICODE_SECURITY:
+			return true;
+		default: {
+		}
+	}
+	return false;
+}
+
+String TextServerAdvanced::_get_name() const {
+#ifdef GDEXTENSION
+	return "ICU / HarfBuzz / Graphite (GDExtension)";
+#else
+	return "ICU / HarfBuzz / Graphite (Built-in)";
+#endif
+}
+
+int64_t TextServerAdvanced::_get_features() const {
+	int64_t interface_features = FEATURE_SIMPLE_LAYOUT | FEATURE_BIDI_LAYOUT | FEATURE_VERTICAL_LAYOUT | FEATURE_SHAPING | FEATURE_KASHIDA_JUSTIFICATION | FEATURE_BREAK_ITERATORS | FEATURE_FONT_BITMAP | FEATURE_FONT_VARIABLE | FEATURE_CONTEXT_SENSITIVE_CASE_CONVERSION | FEATURE_USE_SUPPORT_DATA;
+#ifdef MODULE_FREETYPE_ENABLED
+	interface_features |= FEATURE_FONT_DYNAMIC;
+#endif
+#ifdef MODULE_MSDFGEN_ENABLED
+	interface_features |= FEATURE_FONT_MSDF;
+#endif
+
+	return interface_features;
+}
+
+void TextServerAdvanced::_free_rid(const RID &p_rid) {
+	_THREAD_SAFE_METHOD_
+	if (font_owner.owns(p_rid)) {
+		MutexLock ftlock(ft_mutex);
+
+		FontAdvanced *fd = font_owner.get_or_null(p_rid);
+		{
+			MutexLock lock(fd->mutex);
+			font_owner.free(p_rid);
+		}
+		memdelete(fd);
+	} else if (shaped_owner.owns(p_rid)) {
+		ShapedTextDataAdvanced *sd = shaped_owner.get_or_null(p_rid);
+		{
+			MutexLock lock(sd->mutex);
+			shaped_owner.free(p_rid);
+		}
+		memdelete(sd);
+	}
+}
+
+bool TextServerAdvanced::_has(const RID &p_rid) {
+	_THREAD_SAFE_METHOD_
+	return font_owner.owns(p_rid) || shaped_owner.owns(p_rid);
+}
+
+bool TextServerAdvanced::_load_support_data(const String &p_filename) {
+	_THREAD_SAFE_METHOD_
+
+#ifdef ICU_STATIC_DATA
+	if (!icu_data_loaded) {
+		UErrorCode err = U_ZERO_ERROR;
+		u_init(&err); // Do not check for errors, since we only load part of the data.
+		icu_data_loaded = true;
+	}
+#else
+	if (!icu_data_loaded) {
+		/*
+		String filename = (p_filename.is_empty()) ? String("res://") + _MKSTR(ICU_DATA_NAME) : p_filename;
+
+		Ref<FileAccess> f = FileAccess::open(filename, FileAccess::READ);
+		if (f.is_null()) {
+			return false;
+		}
+		uint64_t len = f->get_length();
+		PackedByteArray icu_data = f->get_buffer(len);
+
+		UErrorCode err = U_ZERO_ERROR;
+		udata_setCommonData(icu_data.ptr(), &err);
+		if (U_FAILURE(err)) {
+			ERR_FAIL_V_MSG(false, u_errorName(err));
+		}
+
+		err = U_ZERO_ERROR;
+		u_init(&err);
+		if (U_FAILURE(err)) {
+			ERR_FAIL_V_MSG(false, u_errorName(err));
+		}
+		icu_data_loaded = true;
+		*/
+		SKR_UNIMPLEMENTED_FUNCTION();
+		icu_data_loaded = false;
+	}
+#endif
+	return true;
+}
+
+String TextServerAdvanced::_get_support_data_filename() const {
+	return _MKSTR(ICU_DATA_NAME);
+}
+
+String TextServerAdvanced::_get_support_data_info() const {
+	return String("ICU break iteration data (") + _MKSTR(ICU_DATA_NAME) + String(").");
+}
+
+bool TextServerAdvanced::_save_support_data(const String &p_filename) const {
+	_THREAD_SAFE_METHOD_
+#ifdef ICU_STATIC_DATA
+
+	// Store data to the res file if it's available.
+
+	Ref<FileAccess> f = FileAccess::open(p_filename, FileAccess::WRITE);
+	if (f.is_null()) {
+		return false;
+	}
+
+	PackedByteArray icu_data;
+	icu_data.resize(U_ICUDATA_SIZE);
+	memcpy(icu_data.ptrw(), U_ICUDATA_ENTRY_POINT, U_ICUDATA_SIZE);
+	f->store_buffer(icu_data);
+
+	return true;
+#else
+	return false;
+#endif
+}
+
+bool TextServerAdvanced::_is_locale_right_to_left(const String &p_locale) const {
+	String l = p_locale.get_slicec('_', 0);
+	if ((l == "ar") || (l == "dv") || (l == "he") || (l == "fa") || (l == "ff") || (l == "ku") || (l == "ur")) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+void TextServerAdvanced::_insert_feature_sets() {
+	// Registered OpenType feature tags.
+	// Name, Tag, Data Type, Hidden
+	/*
+	_insert_feature("access_all_alternates", HB_TAG('a', 'a', 'l', 't'), Variant::Type::INT, false);
+	_insert_feature("above_base_forms", HB_TAG('a', 'b', 'v', 'f'), Variant::Type::INT, true);
+	_insert_feature("above_base_mark_positioning", HB_TAG('a', 'b', 'v', 'm'), Variant::Type::INT, true);
+	_insert_feature("above_base_substitutions", HB_TAG('a', 'b', 'v', 's'), Variant::Type::INT, true);
+	_insert_feature("alternative_fractions", HB_TAG('a', 'f', 'r', 'c'), Variant::Type::INT, false);
+	_insert_feature("akhands", HB_TAG('a', 'k', 'h', 'n'), Variant::Type::INT, true);
+	_insert_feature("below_base_forms", HB_TAG('b', 'l', 'w', 'f'), Variant::Type::INT, true);
+	_insert_feature("below_base_mark_positioning", HB_TAG('b', 'l', 'w', 'm'), Variant::Type::INT, true);
+	_insert_feature("below_base_substitutions", HB_TAG('b', 'l', 'w', 's'), Variant::Type::INT, true);
+	_insert_feature("contextual_alternates", HB_TAG('c', 'a', 'l', 't'), Variant::Type::BOOL, false);
+	_insert_feature("case_sensitive_forms", HB_TAG('c', 'a', 's', 'e'), Variant::Type::BOOL, false);
+	_insert_feature("glyph_composition", HB_TAG('c', 'c', 'm', 'p'), Variant::Type::INT, true);
+	_insert_feature("conjunct_form_after_ro", HB_TAG('c', 'f', 'a', 'r'), Variant::Type::INT, true);
+	_insert_feature("contextual_half_width_spacing", HB_TAG('c', 'h', 'w', 's'), Variant::Type::INT, true);
+	_insert_feature("conjunct_forms", HB_TAG('c', 'j', 'c', 't'), Variant::Type::INT, true);
+	_insert_feature("contextual_ligatures", HB_TAG('c', 'l', 'i', 'g'), Variant::Type::BOOL, false);
+	_insert_feature("centered_cjk_punctuation", HB_TAG('c', 'p', 'c', 't'), Variant::Type::BOOL, false);
+	_insert_feature("capital_spacing", HB_TAG('c', 'p', 's', 'p'), Variant::Type::BOOL, false);
+	_insert_feature("contextual_swash", HB_TAG('c', 's', 'w', 'h'), Variant::Type::INT, false);
+	_insert_feature("cursive_positioning", HB_TAG('c', 'u', 'r', 's'), Variant::Type::INT, true);
+	_insert_feature("character_variant_01", HB_TAG('c', 'v', '0', '1'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_02", HB_TAG('c', 'v', '0', '2'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_03", HB_TAG('c', 'v', '0', '3'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_04", HB_TAG('c', 'v', '0', '4'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_05", HB_TAG('c', 'v', '0', '5'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_06", HB_TAG('c', 'v', '0', '6'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_07", HB_TAG('c', 'v', '0', '7'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_08", HB_TAG('c', 'v', '0', '8'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_09", HB_TAG('c', 'v', '0', '9'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_10", HB_TAG('c', 'v', '1', '0'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_11", HB_TAG('c', 'v', '1', '1'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_12", HB_TAG('c', 'v', '1', '2'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_13", HB_TAG('c', 'v', '1', '3'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_14", HB_TAG('c', 'v', '1', '4'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_15", HB_TAG('c', 'v', '1', '5'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_16", HB_TAG('c', 'v', '1', '6'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_17", HB_TAG('c', 'v', '1', '7'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_18", HB_TAG('c', 'v', '1', '8'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_19", HB_TAG('c', 'v', '1', '9'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_20", HB_TAG('c', 'v', '2', '0'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_21", HB_TAG('c', 'v', '2', '1'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_22", HB_TAG('c', 'v', '2', '2'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_23", HB_TAG('c', 'v', '2', '3'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_24", HB_TAG('c', 'v', '2', '4'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_25", HB_TAG('c', 'v', '2', '5'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_26", HB_TAG('c', 'v', '2', '6'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_27", HB_TAG('c', 'v', '2', '7'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_28", HB_TAG('c', 'v', '2', '8'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_29", HB_TAG('c', 'v', '2', '9'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_30", HB_TAG('c', 'v', '3', '0'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_31", HB_TAG('c', 'v', '3', '1'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_32", HB_TAG('c', 'v', '3', '2'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_33", HB_TAG('c', 'v', '3', '3'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_34", HB_TAG('c', 'v', '3', '4'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_35", HB_TAG('c', 'v', '3', '5'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_36", HB_TAG('c', 'v', '3', '6'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_37", HB_TAG('c', 'v', '3', '7'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_38", HB_TAG('c', 'v', '3', '8'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_39", HB_TAG('c', 'v', '3', '9'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_40", HB_TAG('c', 'v', '4', '0'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_41", HB_TAG('c', 'v', '4', '1'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_42", HB_TAG('c', 'v', '4', '2'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_43", HB_TAG('c', 'v', '4', '3'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_44", HB_TAG('c', 'v', '4', '4'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_45", HB_TAG('c', 'v', '4', '5'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_46", HB_TAG('c', 'v', '4', '6'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_47", HB_TAG('c', 'v', '4', '7'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_48", HB_TAG('c', 'v', '4', '8'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_49", HB_TAG('c', 'v', '4', '9'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_50", HB_TAG('c', 'v', '5', '0'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_51", HB_TAG('c', 'v', '5', '1'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_52", HB_TAG('c', 'v', '5', '2'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_53", HB_TAG('c', 'v', '5', '3'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_54", HB_TAG('c', 'v', '5', '4'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_55", HB_TAG('c', 'v', '5', '5'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_56", HB_TAG('c', 'v', '5', '6'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_57", HB_TAG('c', 'v', '5', '7'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_58", HB_TAG('c', 'v', '5', '8'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_59", HB_TAG('c', 'v', '5', '9'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_60", HB_TAG('c', 'v', '6', '0'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_61", HB_TAG('c', 'v', '6', '1'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_62", HB_TAG('c', 'v', '6', '2'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_63", HB_TAG('c', 'v', '6', '3'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_64", HB_TAG('c', 'v', '6', '4'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_65", HB_TAG('c', 'v', '6', '5'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_66", HB_TAG('c', 'v', '6', '6'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_67", HB_TAG('c', 'v', '6', '7'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_68", HB_TAG('c', 'v', '6', '8'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_69", HB_TAG('c', 'v', '6', '9'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_70", HB_TAG('c', 'v', '7', '0'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_71", HB_TAG('c', 'v', '7', '1'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_72", HB_TAG('c', 'v', '7', '2'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_73", HB_TAG('c', 'v', '7', '3'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_74", HB_TAG('c', 'v', '7', '4'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_75", HB_TAG('c', 'v', '7', '5'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_76", HB_TAG('c', 'v', '7', '6'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_77", HB_TAG('c', 'v', '7', '7'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_78", HB_TAG('c', 'v', '7', '8'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_79", HB_TAG('c', 'v', '7', '9'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_80", HB_TAG('c', 'v', '8', '0'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_81", HB_TAG('c', 'v', '8', '1'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_82", HB_TAG('c', 'v', '8', '2'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_83", HB_TAG('c', 'v', '8', '3'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_84", HB_TAG('c', 'v', '8', '4'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_85", HB_TAG('c', 'v', '8', '5'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_86", HB_TAG('c', 'v', '8', '6'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_87", HB_TAG('c', 'v', '8', '7'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_88", HB_TAG('c', 'v', '8', '8'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_89", HB_TAG('c', 'v', '8', '9'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_90", HB_TAG('c', 'v', '9', '0'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_91", HB_TAG('c', 'v', '9', '1'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_92", HB_TAG('c', 'v', '9', '2'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_93", HB_TAG('c', 'v', '9', '3'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_94", HB_TAG('c', 'v', '9', '4'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_95", HB_TAG('c', 'v', '9', '5'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_96", HB_TAG('c', 'v', '9', '6'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_97", HB_TAG('c', 'v', '9', '7'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_98", HB_TAG('c', 'v', '9', '8'), Variant::Type::BOOL, false);
+	_insert_feature("character_variant_99", HB_TAG('c', 'v', '9', '9'), Variant::Type::BOOL, false);
+	_insert_feature("petite_capitals_from_capitals", HB_TAG('c', '2', 'p', 'c'), Variant::Type::BOOL, false);
+	_insert_feature("small_capitals_from_capitals", HB_TAG('c', '2', 's', 'c'), Variant::Type::BOOL, false);
+	_insert_feature("distances", HB_TAG('d', 'i', 's', 't'), Variant::Type::INT, true);
+	_insert_feature("discretionary_ligatures", HB_TAG('d', 'l', 'i', 'g'), Variant::Type::BOOL, false);
+	_insert_feature("denominators", HB_TAG('d', 'n', 'o', 'm'), Variant::Type::BOOL, false);
+	_insert_feature("dotless_forms", HB_TAG('d', 't', 'l', 's'), Variant::Type::INT, true);
+	_insert_feature("expert_forms", HB_TAG('e', 'x', 'p', 't'), Variant::Type::BOOL, true);
+	_insert_feature("final_glyph_on_line_alternates", HB_TAG('f', 'a', 'l', 't'), Variant::Type::INT, false);
+	_insert_feature("terminal_forms_2", HB_TAG('f', 'i', 'n', '2'), Variant::Type::INT, true);
+	_insert_feature("terminal_forms_3", HB_TAG('f', 'i', 'n', '3'), Variant::Type::INT, true);
+	_insert_feature("terminal_forms", HB_TAG('f', 'i', 'n', 'a'), Variant::Type::INT, true);
+	_insert_feature("flattened_accent_forms", HB_TAG('f', 'l', 'a', 'c'), Variant::Type::INT, true);
+	_insert_feature("fractions", HB_TAG('f', 'r', 'a', 'c'), Variant::Type::BOOL, false);
+	_insert_feature("full_widths", HB_TAG('f', 'w', 'i', 'd'), Variant::Type::BOOL, false);
+	_insert_feature("half_forms", HB_TAG('h', 'a', 'l', 'f'), Variant::Type::INT, true);
+	_insert_feature("halant_forms", HB_TAG('h', 'a', 'l', 'n'), Variant::Type::INT, true);
+	_insert_feature("alternate_half_widths", HB_TAG('h', 'a', 'l', 't'), Variant::Type::BOOL, false);
+	_insert_feature("historical_forms", HB_TAG('h', 'i', 's', 't'), Variant::Type::INT, false);
+	_insert_feature("horizontal_kana_alternates", HB_TAG('h', 'k', 'n', 'a'), Variant::Type::BOOL, false);
+	_insert_feature("historical_ligatures", HB_TAG('h', 'l', 'i', 'g'), Variant::Type::BOOL, false);
+	_insert_feature("hangul", HB_TAG('h', 'n', 'g', 'l'), Variant::Type::INT, false);
+	_insert_feature("hojo_kanji_forms", HB_TAG('h', 'o', 'j', 'o'), Variant::Type::INT, false);
+	_insert_feature("half_widths", HB_TAG('h', 'w', 'i', 'd'), Variant::Type::BOOL, false);
+	_insert_feature("initial_forms", HB_TAG('i', 'n', 'i', 't'), Variant::Type::INT, true);
+	_insert_feature("isolated_forms", HB_TAG('i', 's', 'o', 'l'), Variant::Type::INT, true);
+	_insert_feature("italics", HB_TAG('i', 't', 'a', 'l'), Variant::Type::INT, false);
+	_insert_feature("justification_alternates", HB_TAG('j', 'a', 'l', 't'), Variant::Type::INT, false);
+	_insert_feature("jis78_forms", HB_TAG('j', 'p', '7', '8'), Variant::Type::INT, false);
+	_insert_feature("jis83_forms", HB_TAG('j', 'p', '8', '3'), Variant::Type::INT, false);
+	_insert_feature("jis90_forms", HB_TAG('j', 'p', '9', '0'), Variant::Type::INT, false);
+	_insert_feature("jis2004_forms", HB_TAG('j', 'p', '0', '4'), Variant::Type::INT, false);
+	_insert_feature("kerning", HB_TAG('k', 'e', 'r', 'n'), Variant::Type::BOOL, false);
+	_insert_feature("left_bounds", HB_TAG('l', 'f', 'b', 'd'), Variant::Type::INT, false);
+	_insert_feature("standard_ligatures", HB_TAG('l', 'i', 'g', 'a'), Variant::Type::BOOL, false);
+	_insert_feature("leading_jamo_forms", HB_TAG('l', 'j', 'm', 'o'), Variant::Type::INT, true);
+	_insert_feature("lining_figures", HB_TAG('l', 'n', 'u', 'm'), Variant::Type::INT, false);
+	_insert_feature("localized_forms", HB_TAG('l', 'o', 'c', 'l'), Variant::Type::INT, true);
+	_insert_feature("left_to_right_alternates", HB_TAG('l', 't', 'r', 'a'), Variant::Type::INT, true);
+	_insert_feature("left_to_right_mirrored_forms", HB_TAG('l', 't', 'r', 'm'), Variant::Type::INT, true);
+	_insert_feature("mark_positioning", HB_TAG('m', 'a', 'r', 'k'), Variant::Type::INT, true);
+	_insert_feature("medial_forms_2", HB_TAG('m', 'e', 'd', '2'), Variant::Type::INT, true);
+	_insert_feature("medial_forms", HB_TAG('m', 'e', 'd', 'i'), Variant::Type::INT, true);
+	_insert_feature("mathematical_greek", HB_TAG('m', 'g', 'r', 'k'), Variant::Type::BOOL, false);
+	_insert_feature("mark_to_mark_positioning", HB_TAG('m', 'k', 'm', 'k'), Variant::Type::INT, true);
+	_insert_feature("mark_positioning_via_substitution", HB_TAG('m', 's', 'e', 't'), Variant::Type::INT, true);
+	_insert_feature("alternate_annotation_forms", HB_TAG('n', 'a', 'l', 't'), Variant::Type::INT, false);
+	_insert_feature("nlc_kanji_forms", HB_TAG('n', 'l', 'c', 'k'), Variant::Type::INT, false);
+	_insert_feature("nukta_forms", HB_TAG('n', 'u', 'k', 't'), Variant::Type::INT, true);
+	_insert_feature("numerators", HB_TAG('n', 'u', 'm', 'r'), Variant::Type::BOOL, false);
+	_insert_feature("oldstyle_figures", HB_TAG('o', 'n', 'u', 'm'), Variant::Type::INT, false);
+	_insert_feature("optical_bounds", HB_TAG('o', 'p', 'b', 'd'), Variant::Type::INT, true);
+	_insert_feature("ordinals", HB_TAG('o', 'r', 'd', 'n'), Variant::Type::BOOL, false);
+	_insert_feature("ornaments", HB_TAG('o', 'r', 'n', 'm'), Variant::Type::INT, false);
+	_insert_feature("proportional_alternate_widths", HB_TAG('p', 'a', 'l', 't'), Variant::Type::BOOL, false);
+	_insert_feature("petite_capitals", HB_TAG('p', 'c', 'a', 'p'), Variant::Type::BOOL, false);
+	_insert_feature("proportional_kana", HB_TAG('p', 'k', 'n', 'a'), Variant::Type::BOOL, false);
+	_insert_feature("proportional_figures", HB_TAG('p', 'n', 'u', 'm'), Variant::Type::BOOL, false);
+	_insert_feature("pre_base_forms", HB_TAG('p', 'r', 'e', 'f'), Variant::Type::INT, true);
+	_insert_feature("pre_base_substitutions", HB_TAG('p', 'r', 'e', 's'), Variant::Type::INT, true);
+	_insert_feature("post_base_forms", HB_TAG('p', 's', 't', 'f'), Variant::Type::INT, true);
+	_insert_feature("post_base_substitutions", HB_TAG('p', 's', 't', 's'), Variant::Type::INT, true);
+	_insert_feature("proportional_widths", HB_TAG('p', 'w', 'i', 'd'), Variant::Type::BOOL, false);
+	_insert_feature("quarter_widths", HB_TAG('q', 'w', 'i', 'd'), Variant::Type::BOOL, false);
+	_insert_feature("randomize", HB_TAG('r', 'a', 'n', 'd'), Variant::Type::INT, false);
+	_insert_feature("required_contextual_alternates", HB_TAG('r', 'c', 'l', 't'), Variant::Type::BOOL, true);
+	_insert_feature("rakar_forms", HB_TAG('r', 'k', 'r', 'f'), Variant::Type::INT, true);
+	_insert_feature("required_ligatures", HB_TAG('r', 'l', 'i', 'g'), Variant::Type::BOOL, true);
+	_insert_feature("reph_forms", HB_TAG('r', 'p', 'h', 'f'), Variant::Type::INT, true);
+	_insert_feature("right_bounds", HB_TAG('r', 't', 'b', 'd'), Variant::Type::INT, false);
+	_insert_feature("right_to_left_alternates", HB_TAG('r', 't', 'l', 'a'), Variant::Type::INT, true);
+	_insert_feature("right_to_left_mirrored_forms", HB_TAG('r', 't', 'l', 'm'), Variant::Type::INT, true);
+	_insert_feature("ruby_notation_forms", HB_TAG('r', 'u', 'b', 'y'), Variant::Type::INT, false);
+	_insert_feature("required_variation_alternates", HB_TAG('r', 'v', 'r', 'n'), Variant::Type::INT, true);
+	_insert_feature("stylistic_alternates", HB_TAG('s', 'a', 'l', 't'), Variant::Type::INT, false);
+	_insert_feature("scientific_inferiors", HB_TAG('s', 'i', 'n', 'f'), Variant::Type::BOOL, false);
+	_insert_feature("optical_size", HB_TAG('s', 'i', 'z', 'e'), Variant::Type::INT, false);
+	_insert_feature("small_capitals", HB_TAG('s', 'm', 'c', 'p'), Variant::Type::BOOL, false);
+	_insert_feature("simplified_forms", HB_TAG('s', 'm', 'p', 'l'), Variant::Type::INT, false);
+	_insert_feature("stylistic_set_01", HB_TAG('s', 's', '0', '1'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_02", HB_TAG('s', 's', '0', '2'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_03", HB_TAG('s', 's', '0', '3'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_04", HB_TAG('s', 's', '0', '4'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_05", HB_TAG('s', 's', '0', '5'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_06", HB_TAG('s', 's', '0', '6'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_07", HB_TAG('s', 's', '0', '7'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_08", HB_TAG('s', 's', '0', '8'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_09", HB_TAG('s', 's', '0', '9'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_10", HB_TAG('s', 's', '1', '0'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_11", HB_TAG('s', 's', '1', '1'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_12", HB_TAG('s', 's', '1', '2'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_13", HB_TAG('s', 's', '1', '3'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_14", HB_TAG('s', 's', '1', '4'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_15", HB_TAG('s', 's', '1', '5'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_16", HB_TAG('s', 's', '1', '6'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_17", HB_TAG('s', 's', '1', '7'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_18", HB_TAG('s', 's', '1', '8'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_19", HB_TAG('s', 's', '1', '9'), Variant::Type::BOOL, false);
+	_insert_feature("stylistic_set_20", HB_TAG('s', 's', '2', '0'), Variant::Type::BOOL, false);
+	_insert_feature("math_script_style_alternates", HB_TAG('s', 's', 't', 'y'), Variant::Type::INT, true);
+	_insert_feature("stretching_glyph_decomposition", HB_TAG('s', 't', 'c', 'h'), Variant::Type::INT, true);
+	_insert_feature("subscript", HB_TAG('s', 'u', 'b', 's'), Variant::Type::BOOL, false);
+	_insert_feature("superscript", HB_TAG('s', 'u', 'p', 's'), Variant::Type::BOOL, false);
+	_insert_feature("swash", HB_TAG('s', 'w', 's', 'h'), Variant::Type::INT, false);
+	_insert_feature("titling", HB_TAG('t', 'i', 't', 'l'), Variant::Type::BOOL, false);
+	_insert_feature("trailing_jamo_forms", HB_TAG('t', 'j', 'm', 'o'), Variant::Type::INT, true);
+	_insert_feature("traditional_name_forms", HB_TAG('t', 'n', 'a', 'm'), Variant::Type::INT, false);
+	_insert_feature("tabular_figures", HB_TAG('t', 'n', 'u', 'm'), Variant::Type::BOOL, false);
+	_insert_feature("traditional_forms", HB_TAG('t', 'r', 'a', 'd'), Variant::Type::INT, false);
+	_insert_feature("third_widths", HB_TAG('t', 'w', 'i', 'd'), Variant::Type::BOOL, false);
+	_insert_feature("unicase", HB_TAG('u', 'n', 'i', 'c'), Variant::Type::BOOL, false);
+	_insert_feature("alternate_vertical_metrics", HB_TAG('v', 'a', 'l', 't'), Variant::Type::INT, false);
+	_insert_feature("vattu_variants", HB_TAG('v', 'a', 't', 'u'), Variant::Type::INT, true);
+	_insert_feature("vertical_contextual_half_width_spacing", HB_TAG('v', 'c', 'h', 'w'), Variant::Type::BOOL, false);
+	_insert_feature("vertical_alternates", HB_TAG('v', 'e', 'r', 't'), Variant::Type::INT, false);
+	_insert_feature("alternate_vertical_half_metrics", HB_TAG('v', 'h', 'a', 'l'), Variant::Type::BOOL, false);
+	_insert_feature("vowel_jamo_forms", HB_TAG('v', 'j', 'm', 'o'), Variant::Type::INT, true);
+	_insert_feature("vertical_kana_alternates", HB_TAG('v', 'k', 'n', 'a'), Variant::Type::INT, false);
+	_insert_feature("vertical_kerning", HB_TAG('v', 'k', 'r', 'n'), Variant::Type::BOOL, false);
+	_insert_feature("proportional_alternate_vertical_metrics", HB_TAG('v', 'p', 'a', 'l'), Variant::Type::BOOL, false);
+	_insert_feature("vertical_alternates_and_rotation", HB_TAG('v', 'r', 't', '2'), Variant::Type::INT, false);
+	_insert_feature("vertical_alternates_for_rotation", HB_TAG('v', 'r', 't', 'r'), Variant::Type::INT, false);
+	_insert_feature("slashed_zero", HB_TAG('z', 'e', 'r', 'o'), Variant::Type::BOOL, false);
+
+	// Registered OpenType variation tag.
+	_insert_feature("italic", HB_TAG('i', 't', 'a', 'l'), Variant::Type::INT, false);
+	_insert_feature("optical_size", HB_TAG('o', 'p', 's', 'z'), Variant::Type::INT, false);
+	_insert_feature("slant", HB_TAG('s', 'l', 'n', 't'), Variant::Type::INT, false);
+	_insert_feature("width", HB_TAG('w', 'd', 't', 'h'), Variant::Type::INT, false);
+	_insert_feature("weight", HB_TAG('w', 'g', 'h', 't'), Variant::Type::INT, false);
+	*/
+}
+
+// TODO: Variant
+/*
+_FORCE_INLINE_ void TextServerAdvanced::_insert_feature(const StringName &p_name, int32_t p_tag, Variant::Type p_vtype, bool p_hidden) {
+	FeatureInfo fi;
+	fi.name = p_name;
+	fi.vtype = p_vtype;
+	fi.hidden = p_hidden;
+
+	feature_sets.insert(p_name, p_tag);
+	feature_sets_inv.insert(p_tag, fi);
+}
+*/
+
+int64_t TextServerAdvanced::_name_to_tag(const String &p_name) const {
+	if (feature_sets.has(p_name)) {
+		return feature_sets[p_name];
+	}
+
+	// No readable name, use tag string.
+	return hb_tag_from_string(p_name.replace("custom_", "").ascii().get_data(), -1);
+}
+
+// TODO: Variant
+/*
+Variant::Type TextServerAdvanced::_get_tag_type(int64_t p_tag) const {
+	if (feature_sets_inv.has(p_tag)) {
+		return feature_sets_inv[p_tag].vtype;
+	}
+	return Variant::Type::INT;
+}
+*/
+
+bool TextServerAdvanced::_get_tag_hidden(int64_t p_tag) const {
+	if (feature_sets_inv.has(p_tag)) {
+		return feature_sets_inv[p_tag].hidden;
+	}
+	return false;
+}
+
+String TextServerAdvanced::_tag_to_name(int64_t p_tag) const {
+	if (feature_sets_inv.has(p_tag)) {
+		return feature_sets_inv[p_tag].name;
+	}
+
+	// No readable name, use tag string.
+	char name[5];
+	memset(name, 0, 5);
+	hb_tag_to_string(p_tag, name);
+	return String("custom_") + String(name);
+}
+
 /*************************************************************************/
 /* Font Glyph Rendering                                                  */
 /*************************************************************************/
@@ -347,6 +811,119 @@ _FORCE_INLINE_ TextServerAdvanced::FontTexturePosition TextServerAdvanced::find_
 
 // TODO
 #ifdef MODULE_MSDFGEN_ENABLED 
+#endif
+
+#ifdef MODULE_FREETYPE_ENABLED
+_FORCE_INLINE_ TextServerAdvanced::FontGlyph TextServerAdvanced::rasterize_bitmap(FontForSizeAdvanced *p_data, int p_rect_margin, FT_Bitmap bitmap, int yofs, int xofs, const Vector2 &advance, bool p_bgra) const {
+	int w = bitmap.width;
+	int h = bitmap.rows;
+	int color_size = 2;
+
+	switch (bitmap.pixel_mode) {
+		case FT_PIXEL_MODE_MONO:
+		case FT_PIXEL_MODE_GRAY: {
+			color_size = 2;
+		} break;
+		case FT_PIXEL_MODE_BGRA: {
+			color_size = 4;
+		} break;
+		case FT_PIXEL_MODE_LCD: {
+			color_size = 4;
+			w /= 3;
+		} break;
+		case FT_PIXEL_MODE_LCD_V: {
+			color_size = 4;
+			h /= 3;
+		} break;
+	}
+
+	int mw = w + p_rect_margin * 4;
+	int mh = h + p_rect_margin * 4;
+
+	ERR_FAIL_COND_V(mw > 4096, FontGlyph());
+	ERR_FAIL_COND_V(mh > 4096, FontGlyph());
+
+	Image::Format require_format = color_size == 4 ? Image::FORMAT_RGBA8 : Image::FORMAT_LA8;
+
+	FontTexturePosition tex_pos = find_texture_pos_for_glyph(p_data, color_size, require_format, mw, mh, false);
+	ERR_FAIL_COND_V(tex_pos.index < 0, FontGlyph());
+
+	// Fit character in char texture.
+	ShelfPackTexture &tex = p_data->textures[tex_pos.index];
+
+	{
+		uint8_t *wr = tex.imgdata.ptrw();
+
+		for (int i = 0; i < h; i++) {
+			for (int j = 0; j < w; j++) {
+				int ofs = ((i + tex_pos.y + p_rect_margin * 2) * tex.texture_w + j + tex_pos.x + p_rect_margin * 2) * color_size;
+				ERR_FAIL_COND_V(ofs >= tex.imgdata.size(), FontGlyph());
+				switch (bitmap.pixel_mode) {
+					case FT_PIXEL_MODE_MONO: {
+						int byte = i * bitmap.pitch + (j >> 3);
+						int bit = 1 << (7 - (j % 8));
+						wr[ofs + 0] = 255; // grayscale as 1
+						wr[ofs + 1] = (bitmap.buffer[byte] & bit) ? 255 : 0;
+					} break;
+					case FT_PIXEL_MODE_GRAY:
+						wr[ofs + 0] = 255; // grayscale as 1
+						wr[ofs + 1] = bitmap.buffer[i * bitmap.pitch + j];
+						break;
+					case FT_PIXEL_MODE_BGRA: {
+						int ofs_color = i * bitmap.pitch + (j << 2);
+						wr[ofs + 2] = bitmap.buffer[ofs_color + 0];
+						wr[ofs + 1] = bitmap.buffer[ofs_color + 1];
+						wr[ofs + 0] = bitmap.buffer[ofs_color + 2];
+						wr[ofs + 3] = bitmap.buffer[ofs_color + 3];
+					} break;
+					case FT_PIXEL_MODE_LCD: {
+						int ofs_color = i * bitmap.pitch + (j * 3);
+						if (p_bgra) {
+							wr[ofs + 0] = bitmap.buffer[ofs_color + 0];
+							wr[ofs + 1] = bitmap.buffer[ofs_color + 1];
+							wr[ofs + 2] = bitmap.buffer[ofs_color + 2];
+							wr[ofs + 3] = 255;
+						} else {
+							wr[ofs + 0] = bitmap.buffer[ofs_color + 2];
+							wr[ofs + 1] = bitmap.buffer[ofs_color + 1];
+							wr[ofs + 2] = bitmap.buffer[ofs_color + 0];
+							wr[ofs + 3] = 255;
+						}
+					} break;
+					case FT_PIXEL_MODE_LCD_V: {
+						int ofs_color = i * bitmap.pitch * 3 + j;
+						if (p_bgra) {
+							wr[ofs + 0] = bitmap.buffer[ofs_color + bitmap.pitch * 2];
+							wr[ofs + 1] = bitmap.buffer[ofs_color + bitmap.pitch];
+							wr[ofs + 2] = bitmap.buffer[ofs_color + 0];
+							wr[ofs + 3] = 255;
+						} else {
+							wr[ofs + 0] = bitmap.buffer[ofs_color + 0];
+							wr[ofs + 1] = bitmap.buffer[ofs_color + bitmap.pitch];
+							wr[ofs + 2] = bitmap.buffer[ofs_color + bitmap.pitch * 2];
+							wr[ofs + 3] = 255;
+						}
+					} break;
+					default:
+						ERR_FAIL_V_MSG(FontGlyph(), "Font uses unsupported pixel format: " + String::num_int64(bitmap.pixel_mode) + ".");
+						break;
+				}
+			}
+		}
+	}
+
+	tex.dirty = true;
+
+	FontGlyph chr;
+	chr.advance = advance * p_data->scale / p_data->oversampling;
+	chr.texture_idx = tex_pos.index;
+	chr.found = true;
+
+	chr.uv_rect = Rect2(tex_pos.x + p_rect_margin, tex_pos.y + p_rect_margin, w + p_rect_margin * 2, h + p_rect_margin * 2);
+	chr.rect.position = Vector2(xofs - p_rect_margin, -yofs - p_rect_margin) * p_data->scale / p_data->oversampling;
+	chr.rect.size = chr.uv_rect.size * p_data->scale / p_data->oversampling;
+	return chr;
+}
 #endif
 
 /*************************************************************************/
@@ -1173,6 +1750,16 @@ String TextServerAdvanced::_font_get_style_name(const RID &p_font_rid) const {
 	Vector2i size = _get_size(fd, 16);
 	ERR_FAIL_COND_V(!_ensure_cache_for_size(fd, size), String());
 	return fd->style_name;
+}
+
+void TextServerAdvanced::_font_set_weight(const RID &p_font_rid, int64_t p_weight) {
+	FontAdvanced *fd = font_owner.get_or_null(p_font_rid);
+	ERR_FAIL_COND(!fd);
+
+	MutexLock lock(fd->mutex);
+	Vector2i size = _get_size(fd, 16);
+	ERR_FAIL_COND(!_ensure_cache_for_size(fd, size));
+	fd->weight = CLAMP(p_weight, 100, 999);
 }
 
 int64_t TextServerAdvanced::_font_get_weight(const RID &p_font_rid) const {
@@ -5346,7 +5933,7 @@ void TextServerAdvanced::_insert_num_systems_lang() {
 }
 
 String TextServerAdvanced::_format_number(const String &p_string, const String &p_language) const {
-	const StringName lang = (p_language.is_empty()) ? TranslationServer::get_singleton()->get_tool_locale() : p_language;
+	const StringName lang = (p_language.is_empty()) ? kGetLocale() : p_language;
 
 	String res = p_string;
 	for (int i = 0; i < num_systems.size(); i++) {
@@ -5371,7 +5958,7 @@ String TextServerAdvanced::_format_number(const String &p_string, const String &
 }
 
 String TextServerAdvanced::_parse_number(const String &p_string, const String &p_language) const {
-	const StringName lang = (p_language.is_empty()) ? TranslationServer::get_singleton()->get_tool_locale() : p_language;
+	const StringName lang = (p_language.is_empty()) ? kGetLocale() : p_language;
 
 	String res = p_string;
 	for (int i = 0; i < num_systems.size(); i++) {
@@ -5399,7 +5986,7 @@ String TextServerAdvanced::_parse_number(const String &p_string, const String &p
 }
 
 String TextServerAdvanced::_percent_sign(const String &p_language) const {
-	const StringName lang = (p_language.is_empty()) ? TranslationServer::get_singleton()->get_tool_locale() : p_language;
+	const StringName lang = (p_language.is_empty()) ? kGetLocale() : p_language;
 
 	for (int i = 0; i < num_systems.size(); i++) {
 		if (num_systems[i].lang.has(lang)) {
@@ -5432,9 +6019,9 @@ int64_t TextServerAdvanced::_is_confusable(const String &p_string, const PackedS
 	for (int i = 0; i < p_dict.size(); i++) {
 		Char16String word = p_dict[i].utf16();
 		int32_t len = uspoof_getSkeleton(sc_conf, 0, word.get_data(), -1, NULL, 0, &status);
-		skeletons.write[i] = (UChar *)memalloc(++len * sizeof(UChar));
+		skeletons[i] = (UChar *)memalloc(++len * sizeof(UChar));
 		status = U_ZERO_ERROR;
-		uspoof_getSkeleton(sc_conf, 0, word.get_data(), -1, skeletons.write[i], len, &status);
+		uspoof_getSkeleton(sc_conf, 0, word.get_data(), -1, skeletons[i], len, &status);
 	}
 
 	int32_t len = uspoof_getSkeleton(sc_conf, 0, utf16.get_data(), -1, NULL, 0, &status);
@@ -5450,7 +6037,7 @@ int64_t TextServerAdvanced::_is_confusable(const String &p_string, const PackedS
 	memfree(skel);
 
 	for (int i = 0; i < skeletons.size(); i++) {
-		memfree(skeletons.write[i]);
+		memfree(skeletons[i]);
 	}
 
 	ERR_FAIL_COND_V_MSG(U_FAILURE(status), -1, u_errorName(status));
@@ -5536,7 +6123,7 @@ String TextServerAdvanced::_string_to_upper(const String &p_string, const String
 	if (p_string.is_empty()) {
 		return p_string;
 	}
-	const String lang = (p_language.is_empty()) ? TranslationServer::get_singleton()->get_tool_locale() : p_language;
+	const String lang = (p_language.is_empty()) ? kGetLocale() : p_language;
 
 	// Convert to UTF-16.
 	Char16String utf16 = p_string.utf16();
@@ -5564,7 +6151,7 @@ String TextServerAdvanced::_string_to_lower(const String &p_string, const String
 	if (p_string.is_empty()) {
 		return p_string;
 	}
-	const String lang = (p_language.is_empty()) ? TranslationServer::get_singleton()->get_tool_locale() : p_language;
+	const String lang = (p_language.is_empty()) ? kGetLocale() : p_language;
 	// Convert to UTF-16.
 	Char16String utf16 = p_string.utf16();
 
@@ -5582,7 +6169,7 @@ String TextServerAdvanced::_string_to_lower(const String &p_string, const String
 }
 
 PackedInt32Array TextServerAdvanced::_string_get_word_breaks(const String &p_string, const String &p_language, int64_t p_chars_per_line) const {
-	const String lang = (p_language.is_empty()) ? TranslationServer::get_singleton()->get_tool_locale() : p_language;
+	const String lang = (p_language.is_empty()) ? kGetLocale() : p_language;
 	// Convert to UTF-16.
 	Char16String utf16 = p_string.utf16();
 
@@ -5877,7 +6464,9 @@ TextServerAdvanced::TextServerAdvanced() {
 
 void TextServerAdvanced::_cleanup() {
 	_THREAD_SAFE_METHOD_
-	for (const KeyValue<SystemFontKey, SystemFontCache> &E : system_fonts) {
+	// TODO: system font
+	/*
+	for (const auto& E : system_fonts) {
 		const Vector<SystemFontCacheRec> &sysf_cache = E.value.var;
 		for (const SystemFontCacheRec &F : sysf_cache) {
 			_free_rid(F.rid);
@@ -5885,6 +6474,7 @@ void TextServerAdvanced::_cleanup() {
 	}
 	system_fonts.clear();
 	system_font_data.clear();
+	*/
 }
 
 TextServerAdvanced::~TextServerAdvanced() {
@@ -5909,5 +6499,4 @@ TextServerAdvanced::~TextServerAdvanced() {
 
 	std::atexit(u_cleanup);
 }
-#endif
 } // namespace godot
