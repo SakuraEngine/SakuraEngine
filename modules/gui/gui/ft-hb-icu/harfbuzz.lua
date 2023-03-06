@@ -1,6 +1,7 @@
 target("harfbuzz")
     set_group("00.thirdparty")
     set_kind("static")
+    set_optimize("fastest")
     add_includedirs("harfbuzz/src", {public=true})
     add_deps("freetype", "icu", {public=true})
     add_files(
@@ -67,6 +68,23 @@ target("harfbuzz")
     -- icu integration
     add_files("harfbuzz/src/hb-icu.cc")
     add_defines("HAVE_ICU", "HAVE_ICU_BUILTIN", {public=false})
+    -- CoreText integration
+    if (is_plat("macosx")) then
+        print("harfbuzz: use macosx CoreText in ApplicationServices framework!")
+
+        add_defines("HAVE_CORETEXT", {public=false})
+        add_files("harfbuzz/src/hb-coretext.cc")
+        add_frameworks("ApplicationServices", {public=false})
+    elseif (is_plat("iphoneos")) then
+        print("harfbuzz: use iphoneos CoreText framework!")
+
+        add_defines("HAVE_CORETEXT", {public=false})
+        add_files("harfbuzz/src/hb-coretext.cc")
+        add_frameworks("CoreGraphics", "CoreText", {public=false})
+    end
     --
     add_defines("HAVE_OT", {public=false})
     add_defines("HB_NO_MT", {public=false})
+    if (is_plat("windows")) then
+        add_cxflags("/wd4267", "/wd4244", "/source-charset:utf-8", {public=false})
+    end

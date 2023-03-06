@@ -1,6 +1,7 @@
 target("icu")
     set_group("00.thirdparty")
     set_kind("static")
+    set_optimize("fastest")
     add_includedirs("icu4c/source/common", {public=true})
     add_includedirs("icu4c/source/i18n", {public=true})
     add_files("icu4c/source/common/**.cpp")

@@ -1,6 +1,7 @@
 target("freetype")
     set_group("00.thirdparty")
     set_kind("static")
+    set_optimize("fastest")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_includedirs("freetype/include", {public=true})
     add_files(
@@ -51,3 +52,7 @@ target("freetype")
         add_files("freetype/src/base/ftsystem.c", "freetype/src/base/ftdebug.c")
     end
     add_defines("FT2_BUILD_LIBRARY", {public=false})
+
+    if (is_plat("windows")) then
+        add_cxflags("/wd4267", "/wd4244", "/source-charset:utf-8", {public=false})
+    end
