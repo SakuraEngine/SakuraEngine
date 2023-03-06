@@ -273,14 +273,12 @@ class TextServerAdvanced : public TextServer {
 		int weight = 400;
 		int stretch = 100;
 
-		// TODO
-		// HashMap<Vector2i, FontForSizeAdvanced*, VariantHasher, VariantComparator> cache;
-		Map<Vector2i, FontForSizeAdvanced*> cache;
+		HashMap<Vector2i, FontForSizeAdvanced*> cache;
 
 		bool face_init = false;
 		HashSet<uint32_t> supported_scripts;
 		TextServerFeatures supported_features;
-		Map<uint32_t, Vector3i> supported_varaitions;
+		TextServerVariants supported_varaitions;
 		TextServerFeatures feature_overrides;
 
 		// Language/script support override.
@@ -491,7 +489,6 @@ class TextServerAdvanced : public TextServer {
 	mutable RID_PtrOwner<FontAdvanced> font_owner;
 	mutable RID_PtrOwner<ShapedTextDataAdvanced> shaped_owner;
 
-	/*
 	struct SystemFontKey {
 		String font_name;
 		TextServer::FontAntialiasing antialiasing = TextServer::FONT_ANTIALIASING_GRAY;
@@ -548,8 +545,8 @@ class TextServerAdvanced : public TextServer {
 
 	struct SystemFontKeyHasher {
 		_FORCE_INLINE_ static uint32_t hash(const SystemFontKey &p_a) {
-			uint32_t hash = p_a.font_name.hash();
-			hash = hash_murmur3_one_32(p_a.variation_coordinates.hash(), hash);
+			uint64_t hash = p_a.font_name.hash();
+			hash = hash_murmur3_one_32(p_a.variation_coordinates.hash32(), hash);
 			hash = hash_murmur3_one_32(p_a.weight, hash);
 			hash = hash_murmur3_one_32(p_a.stretch, hash);
 			hash = hash_murmur3_one_32(p_a.msdf_range, hash);
@@ -563,10 +560,12 @@ class TextServerAdvanced : public TextServer {
 			hash = hash_murmur3_one_real(p_a.transform[1].y, hash);
 			return hash_fmix32(hash_murmur3_one_32(((int)p_a.mipmaps) | ((int)p_a.msdf << 1) | ((int)p_a.italic << 2) | ((int)p_a.force_autohinter << 3) | ((int)p_a.hinting << 4) | ((int)p_a.subpixel_positioning << 8) | ((int)p_a.antialiasing << 12), hash));
 		}
+		size_t operator()(const SystemFontKey &p_a) const {
+			return hash(p_a);
+		}
 	};
 	mutable HashMap<SystemFontKey, SystemFontCache, SystemFontKeyHasher> system_fonts;
 	mutable HashMap<String, PackedByteArray> system_font_data;
-	*/
 
 	void _realign(ShapedTextDataAdvanced *p_sd) const;
 	int64_t _convert_pos(const String &p_utf32, const Char16String &p_utf16, int64_t p_pos) const;
@@ -767,7 +766,7 @@ public: // MODBINDs
 	MODBIND3RC(RID, font_get_glyph_texture_rid, const RID &, const Vector2i &, int64_t);
 	MODBIND3RC(Size2, font_get_glyph_texture_size, const RID &, const Vector2i &, int64_t);
 
-	// TODO:
+	// SKR MODIFIED 
 	// MODBIND3RC(Dictionary, font_get_glyph_contours, const RID &, int64_t, int64_t);
 	MODBIND6RC(bool, font_get_glyph_contours, const RID &, int64_t, int64_t, Vector<Vector3>&, Vector<int32_t>&, bool&);
 
@@ -820,7 +819,7 @@ public: // MODBINDs
 	MODBIND1RC(Direction, shaped_text_get_direction, const RID &);
 	MODBIND1RC(Direction, shaped_text_get_inferred_direction, const RID &);
 
-	// MODBIND2(shaped_text_set_bidi_override, const RID &, const Array &);
+	MODBIND2(shaped_text_set_bidi_override, const RID &, const Vector<Vector3i> &);
 
 	MODBIND2(shaped_text_set_custom_punctuation, const RID &, const String &);
 	MODBIND1RC(String, shaped_text_get_custom_punctuation, const RID &);

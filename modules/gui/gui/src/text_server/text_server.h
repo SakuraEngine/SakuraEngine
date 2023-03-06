@@ -37,9 +37,9 @@
 #include "text_server/image_texture.h"
 
 namespace godot{
-using TextServerVariants = Map<uint32_t, Vector3i>;
-using TextServerFeatures = Map<uint32_t, uint32_t>;
-using VariationCoordinates = Map<uint32_t, double>;
+using TextServerVariants = HashMap<uint32_t, Vector3i>;
+using TextServerFeatures = HashMap<uint32_t, uint32_t>;
+using VariationCoordinates = HashMap<uint32_t, double>;
 
 typedef Vector<uint8_t> PackedByteArray;
 typedef Vector<int32_t> PackedInt32Array;
@@ -359,7 +359,7 @@ public:
 	virtual RID font_get_glyph_texture_rid(const RID &p_font_rid, const Vector2i &p_size, int64_t p_glyph) const = 0;
 	virtual Size2 font_get_glyph_texture_size(const RID &p_font_rid, const Vector2i &p_size, int64_t p_glyph) const = 0;
 
-	// TODO
+	// SKR MODIFIED 
 	// virtual Dictionary font_get_glyph_contours(const RID &p_font, int64_t p_size, int64_t p_index) const = 0;
 	virtual bool font_get_glyph_contours(const RID& p_font, int64_t p_size, int64_t p_index, Vector<Vector3> &r_points, Vector<int32_t> &r_contours, bool &r_orientation) const = 0;
 
@@ -415,8 +415,7 @@ public:
 	virtual Direction shaped_text_get_direction(const RID &p_shaped) const = 0;
 	virtual Direction shaped_text_get_inferred_direction(const RID &p_shaped) const = 0;
 
-	// TODO: BIDI
-	// virtual void shaped_text_set_bidi_override(const RID &p_shaped, const Array& p_override) = 0;
+	virtual void shaped_text_set_bidi_override(const RID &p_shaped, const Vector<Vector3i>& p_override) = 0;
 
 	virtual void shaped_text_set_custom_punctuation(const RID &p_shaped, const String &p_punct) = 0;
 	virtual String shaped_text_get_custom_punctuation(const RID &p_shaped) const = 0;
@@ -454,10 +453,10 @@ public:
 	virtual bool shaped_text_is_ready(const RID &p_shaped) const = 0;
 
 	virtual const Glyph *shaped_text_get_glyphs(const RID &p_shaped) const = 0;
-	// TODO
+	// SKR USELESS
 	// TypedArray<Dictionary> _shaped_text_get_glyphs_wrapper(const RID &p_shaped) const;
 	virtual const Glyph *shaped_text_sort_logical(const RID &p_shaped) = 0;
-	// TODO
+	// SKR USELESS
 	// TypedArray<Dictionary> _shaped_text_sort_logical_wrapper(const RID &p_shaped);
 	virtual int64_t shaped_text_get_glyph_count(const RID &p_shaped) const = 0;
 
@@ -470,7 +469,7 @@ public:
 	virtual int64_t shaped_text_get_trim_pos(const RID &p_shaped) const = 0;
 	virtual int64_t shaped_text_get_ellipsis_pos(const RID &p_shaped) const = 0;
 	virtual const Glyph *shaped_text_get_ellipsis_glyphs(const RID &p_shaped) const = 0;
-	// TODO
+	// SKR USELESS
 	// TypedArray<Dictionary> _shaped_text_get_ellipsis_glyphs_wrapper(const RID &p_shaped) const;
 	virtual int64_t shaped_text_get_ellipsis_glyph_count(const RID &p_shaped) const = 0;
 
@@ -489,7 +488,7 @@ public:
 	virtual Direction shaped_text_get_dominant_direction_in_range(const RID &p_shaped, int64_t p_start, int64_t p_end) const;
 
 	virtual CaretInfo shaped_text_get_carets(const RID &p_shaped, int64_t p_position) const;
-	// TODO
+	// SKR USELESS
 	// Dictionary _shaped_text_get_carets_wrapper(const RID &p_shaped, int64_t p_position) const;
 
 	virtual Vector<Vector2> shaped_text_get_selection(const RID &p_shaped, int64_t p_start, int64_t p_end) const;
@@ -523,8 +522,7 @@ public:
 	virtual String string_to_upper(const String &p_string, const String &p_language = "") const = 0;
 	virtual String string_to_lower(const String &p_string, const String &p_language = "") const = 0;
 
-	// TODO
-	// TypedArray<Vector3i> parse_structured_text(StructuredTextParser p_parser_type, const Array &p_args, const String &p_text) const;
+	TypedArray<Vector3i> parse_structured_text(StructuredTextParser p_parser_type, const Vector<String> &p_args, const String &p_text) const;
 
 	virtual void cleanup() {}
 
