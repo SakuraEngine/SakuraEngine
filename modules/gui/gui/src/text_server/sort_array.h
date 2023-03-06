@@ -30,6 +30,7 @@
 
 #pragma once
 #include "text_server/config.h"
+#include "text_server/error_macros.h"
 
 #define ERR_BAD_COMPARE(cond)                                         \
 	if (unlikely(cond)) {                                             \

@@ -28,8 +28,9 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 #pragma once
-#include "config.h"
-#include "vector2.h"
+#include "text_server/config.h"
+#include "text_server/vector2.h"
+#include "text_server/error_macros.h"
 
 namespace godot{
 
