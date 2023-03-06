@@ -1,5 +1,6 @@
 #pragma once
 #include "text_server/safe_refcount.h"
+#include <new>
 
 namespace godot
 {

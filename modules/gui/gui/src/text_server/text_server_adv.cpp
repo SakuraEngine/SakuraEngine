@@ -1466,7 +1466,7 @@ _FORCE_INLINE_ bool TextServerAdvanced::_ensure_cache_for_size(FontAdvanced *p_f
 						ftr["label"] = String((const char32_t *)lbl.ptr());
 					}
                     */
-                    p_font_data->supported_features.insert(feature_tags[i]);
+                    p_font_data->supported_features[feature_tags[i]] = 1;
 #else
 #ifndef _MSC_VER
 #warning Building with HarfBuzz < 2.1.0, readable OpenType feature names disabled.
@@ -1503,7 +1503,7 @@ _FORCE_INLINE_ bool TextServerAdvanced::_ensure_cache_for_size(FontAdvanced *p_f
 						ftr["label"] = String((const char32_t *)lbl.ptr());
 					}
                     */
-                    p_font_data->supported_features.insert(feature_tags[i]);
+                    p_font_data->supported_features[feature_tags[i]] = 1;
 #else
 #ifndef _MSC_VER
 #warning Building with HarfBuzz < 2.1.0, readable OpenType feature names disabled.
@@ -3572,9 +3572,7 @@ String TextServerAdvanced::_shaped_text_get_custom_punctuation(const RID &p_shap
 	return sd->custom_punct;
 }
 
-// TODO: BIDI
-/*
-void TextServerAdvanced::_shaped_text_set_bidi_override(const RID &p_shaped, const Array &p_override) {
+void TextServerAdvanced::_shaped_text_set_bidi_override(const RID &p_shaped, const Vector<Vector3i>& p_override) {
 	ShapedTextDataAdvanced *sd = shaped_owner.get_or_null(p_shaped);
 	ERR_FAIL_COND(!sd);
 
@@ -3584,17 +3582,12 @@ void TextServerAdvanced::_shaped_text_set_bidi_override(const RID &p_shaped, con
 	}
 	sd->bidi_override.clear();
 	for (int i = 0; i < p_override.size(); i++) {
-		if (p_override[i].get_type() == Variant::VECTOR3I) {
-			const Vector3i &r = p_override[i];
-			sd->bidi_override.push_back(r);
-		} else if (p_override[i].get_type() == Variant::VECTOR2I) {
-			const Vector2i &r = p_override[i];
-			sd->bidi_override.push_back(Vector3i(r.x, r.y, DIRECTION_INHERITED));
-		}
+		Vector3i r = p_override[i];
+		r.z = r.z ? r.z : DIRECTION_INHERITED;
+		sd->bidi_override.push_back(r);
 	}
 	invalidate(sd, false);
 }
-*/
 
 void TextServerAdvanced::_shaped_text_set_orientation(const RID &p_shaped, TextServer::Orientation p_orientation) {
 	ShapedTextDataAdvanced *sd = shaped_owner.get_or_null(p_shaped);

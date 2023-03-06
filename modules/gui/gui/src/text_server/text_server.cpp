@@ -566,7 +566,7 @@ CaretInfo TextServer::shaped_text_get_carets(const RID &p_shaped, int64_t p_posi
 	return caret;
 }
 
-// TODO
+// SKR USELESS
 /*
 Dictionary TextServer::_shaped_text_get_carets_wrapper(const RID &p_shaped, int64_t p_position) const {
 	Dictionary ret;
@@ -1184,9 +1184,7 @@ String TextServer::strip_diacritics(const String &p_string) const {
 	return result;
 }
 
-// TODO
-/*
-TypedArray<Vector3i> TextServer::parse_structured_text(StructuredTextParser p_parser_type, const Array &p_args, const String &p_text) const {
+TypedArray<Vector3i> TextServer::parse_structured_text(StructuredTextParser p_parser_type, const Vector<String> &p_args, const String &p_text) const {
 	TypedArray<Vector3i> ret;
 	switch (p_parser_type) {
 		case STRUCTURED_TEXT_URI: {
@@ -1241,7 +1239,7 @@ TypedArray<Vector3i> TextServer::parse_structured_text(StructuredTextParser p_pa
 			}
 		} break;
 		case STRUCTURED_TEXT_LIST: {
-			if (p_args.size() == 1 && p_args[0].get_type() == Variant::STRING) {
+			if (p_args.size() == 1) {
 				Vector<String> tags = p_text.split(String(p_args[0]));
 				int prev = 0;
 				for (int i = 0; i < tags.size(); i++) {
@@ -1342,6 +1340,8 @@ TypedArray<Vector3i> TextServer::parse_structured_text(StructuredTextParser p_pa
 	return ret;
 }
 
+/*
+// SKR USELESS
 TypedArray<Dictionary> TextServer::_shaped_text_get_glyphs_wrapper(const RID &p_shaped) const {
 	TypedArray<Dictionary> ret;
 
@@ -1367,6 +1367,7 @@ TypedArray<Dictionary> TextServer::_shaped_text_get_glyphs_wrapper(const RID &p_
 	return ret;
 }
 
+// SKR USELESS
 TypedArray<Dictionary> TextServer::_shaped_text_sort_logical_wrapper(const RID &p_shaped) {
 	Array ret;
 
@@ -1392,6 +1393,7 @@ TypedArray<Dictionary> TextServer::_shaped_text_sort_logical_wrapper(const RID &
 	return ret;
 }
 
+// SKR USELESS
 TypedArray<Dictionary> TextServer::_shaped_text_get_ellipsis_glyphs_wrapper(const RID &p_shaped) const {
 	TypedArray<Dictionary> ret;
 

@@ -2,6 +2,8 @@
 #include "text_server/config.h"
 #include "text_server/sort_array.h"
 
+#include "utils/hash.h"
+
 #include <containers/vector.hpp>
 #include <EASTL/set.h>
 #include <EASTL/map.h>
@@ -99,7 +101,6 @@ public:
 	}
 };
 
-
 template <typename T>
 class TypedArray : public Vector<T>
 {
@@ -136,15 +137,24 @@ public:
 	{
 		return this->size() == 0;
 	}
-
 	bool has(const K& key) const
 	{
 		return this->find(key) != this->end();
 	}
+	uint32_t hash32() const
+	{
+		uint32_t hash = SKR_DEFAULT_HASH_SEED_32;
+		for (const auto& e : *this)
+		{
+			hash = skr_hash32(&e.first, sizeof(e.first), hash);
+			hash = skr_hash32(&e.second, sizeof(e.second), hash);
+		}
+		return hash;
+	}
 };
 
-template<class K, class T>
-class HashMap : public skr::flat_hash_map<K, T, godot::Hasher<K>>
+template<class K, class T, class Hasher = godot::Hasher<K>>
+class HashMap : public skr::flat_hash_map<K, T, Hasher>
 {
 public:
 	bool has(const K& key) const
@@ -163,6 +173,16 @@ public:
 	bool is_empty() const 
 	{
 		return this->size() == 0;
+	}
+	uint32_t hash32() const
+	{
+		uint32_t hash = SKR_DEFAULT_HASH_SEED_32;
+		for (const auto& e : *this)
+		{
+			hash = skr_hash32(&e.first, sizeof(e.first), hash);
+			hash = skr_hash32(&e.second, sizeof(e.second), hash);
+		}
+		return hash;
 	}
 };
 
