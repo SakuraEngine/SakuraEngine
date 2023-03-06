@@ -34,11 +34,33 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: artifact-files
+          name: build-artifacts
           path: build/.gens
-      - name: UploadCompileResults
+      - name: UploadDevelopmentBuild
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: artifact-files
+          name: build-binaries
+          path: build/windows
+      - name: RemoveBuildDir
+          uses: JesseTG/rm@v1.0.3
+          with:
+            path: build
+      - name: Shipping
+        if: success() || failure()
+        shell: cmd
+        run: |
+          xmake f -m release --toolchain=clang-cl -c -y -v --build_tests=n --build_editors=n --shipping_one_archive=y --use_tracy=disable --policies=build.ccache:n
+          xmake -y -v
+      - name: UploadGeneratedFiles2
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: shipping-artifacts
+          path: build/.gens
+      - name: UploadShipping
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: shipping-binaries
           path: build/windows
