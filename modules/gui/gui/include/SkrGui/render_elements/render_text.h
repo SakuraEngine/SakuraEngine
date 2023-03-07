@@ -1,14 +1,15 @@
-#include "SkrGui/element.h"
+#pragma once
+#include "SkrGui/render_elements/element.h"
 
 namespace skr
 {
 namespace gui
 {
-class RenderBox : public RenderElement
+class RenderText : public RenderElement
 {
 public:
-    RenderBox();
-    virtual ~RenderBox();
+    RenderText();
+    virtual ~RenderText();
 
     virtual void layout(struct Constraints* constraints, bool needSize = false) override;
     virtual void draw(gdi::SGDICanvas* canvas) override;
