@@ -1,5 +1,6 @@
 #pragma once
 #include "text_server/config.h"
+#include "text_server/memory.h"
 #include "text_server/sort_array.h"
 
 #include "utils/hash.h"
@@ -14,6 +15,9 @@
 namespace godot{
 template<class K>
 struct Hasher : public eastl::hash<K> {};
+
+template<class K>
+struct Comparator {};
 
 template<class T>
 class Span : public skr::span<T>
@@ -194,7 +198,18 @@ using Variant = void*;
 template<class T>
 struct Ref : public eastl::shared_ptr<T>
 {
+	Ref() = default;
+	Ref(T* p_ptr)
+	{
+		this->reset(p_ptr);
+	}
+
+	void instantiate() {
+		this->reset((T*)memnew(T));
+	}
+
 	bool is_null() const { return !this->get(); }
+	bool is_valid() const { return this->get(); }
 };
 
 template <class T>
@@ -212,7 +227,11 @@ public:
 	_FORCE_INLINE_ BitField(T p_value) { value = (int64_t)p_value; }
 	_FORCE_INLINE_ operator int64_t() const { return value; }
 	_FORCE_INLINE_ operator Variant() const { return value; }
+	_FORCE_INLINE_ bool operator!=(const BitField<T> &p_other) const { return (int64_t)p_other != value; }
+	_FORCE_INLINE_ bool operator==(const BitField<T> &p_other) const { return (int64_t)p_other == value; }
 };
+template<typename T>
+_FORCE_INLINE_ bool operator==(const BitField<T> &a, const BitField<T> &b) { return (int64_t)a == (int64_t)b; }
 
 using PackedByteArray = Vector<uint8_t>;
 using PackedInt32Array = Vector<int32_t>;
