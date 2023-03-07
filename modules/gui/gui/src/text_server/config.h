@@ -89,11 +89,11 @@ enum InlineAlignment {
 };
 
 
-enum HAlign {
-	HALIGN_LEFT,
-	HALIGN_CENTER,
-	HALIGN_RIGHT,
-	HALIGN_FILL,
+enum HorizontalAlignment {
+	HORIZONTAL_ALIGNMENT_LEFT,
+	HORIZONTAL_ALIGNMENT_CENTER,
+	HORIZONTAL_ALIGNMENT_RIGHT,
+	HORIZONTAL_ALIGNMENT_FILL
 };
 
 /** Error List. Please never compare an error against FAILED

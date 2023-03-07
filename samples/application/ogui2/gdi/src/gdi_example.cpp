@@ -12,6 +12,8 @@ skr_io_ram_service_t* ram_service = nullptr;
 skr_io_vram_service_t* vram_service = nullptr;
 skr_threaded_service_t* aux_service = nullptr;
 
+// godot::TextServerAdvanced* text_server = nullptr;
+
 skr::gdi::SGDIDevice* gdi_device = nullptr;
 skr::gdi::SGDICanvas* gdi_canvas = nullptr;
 skr::gdi::SGDICanvasGroup* gdi_canvas_group = nullptr;

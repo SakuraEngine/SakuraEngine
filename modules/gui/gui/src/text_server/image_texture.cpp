@@ -1,7 +1,6 @@
 #include "text_server/image_texture.h"
 
 namespace godot {
-
 Ref<Image> Image::create_from_data(uint32_t w, uint32_t h, bool p_use_mipmaps, Format format, const Vector<uint8_t> &p_data)
 {
     SKR_UNIMPLEMENTED_FUNCTION();
