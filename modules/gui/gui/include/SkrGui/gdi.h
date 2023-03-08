@@ -86,6 +86,9 @@ struct SKR_GUI_API SGDIElement
     virtual void fill_color(float r, float g, float b, float a) = 0;
     virtual void fill_paint(SGDIPaint* paint) = 0;
     virtual void fill() = 0;
+
+    virtual void set_z(float z) = 0;
+    virtual float get_z() const = 0;
 };
 
 struct SKR_GUI_API SGDICanvas

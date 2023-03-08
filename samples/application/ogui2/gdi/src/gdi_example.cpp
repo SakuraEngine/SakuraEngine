@@ -247,6 +247,7 @@ int main(int argc, char* argv[])
             debug_element->begin_path();
             debug_element->rect(120, 120, 300, 300);
             debug_element->fill_color(128u, 0u, 0u, 128u);
+            debug_element->set_z(5.f);
             debug_element->fill();
 
             test_element->begin_frame(1.f);
@@ -259,16 +260,28 @@ int main(int argc, char* argv[])
             }
             test_paint->set_pattern(120, 120, 300, 300, 0, test_texture, color);
             test_element->fill_paint(test_paint);
+            test_element->set_z(10.f);
             test_element->fill();
         }
         // render graph setup & compile & exec
-        CGPUTextureId to_import = App.swapchain->back_buffers[App.backbuffer_index];
+        CGPUTextureId imported_backbuffer = App.swapchain->back_buffers[App.backbuffer_index];
         auto back_buffer = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
                 builder.set_name("backbuffer")
-                .import(to_import, CGPU_RESOURCE_STATE_PRESENT)
+                .import(imported_backbuffer, CGPU_RESOURCE_STATE_PRESENT)
                 .allow_render_target();
-            });
+            });(void)back_buffer;
+        auto depth = graph->create_texture(
+            [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
+                // double sample_level = 1.0;
+                // g.get_blackboard().value("l2d_msaa", sample_level);
+                builder.set_name("depth")
+                    .extent(App.swapchain->back_buffers[0]->width, App.swapchain->back_buffers[0]->height)
+                    .format(CGPU_FORMAT_D32_SFLOAT)
+                    .owns_memory()
+                    // .sample_count((ECGPUSampleCount)sample_level)
+                    .allow_depth_stencil();
+            });(void)depth;
         // render GDI canvas group
         skr::gdi::SGDIRenderParams gdir_params = {};
         skr::gdi::SGDIRenderParams_RenderGraph gdir_params2 = {};
