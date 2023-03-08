@@ -11,9 +11,13 @@ using index_t = uint16_t;
 struct SGDIImage;
 struct SGDITexture;
 struct SGDIMaterial;
+struct SGDIRenderer;
 typedef struct SGDIImage* SGDIImageId;
 typedef struct SGDITexture* SGDITextureId;
 typedef struct SGDIMaterial* SGDIMaterialId;
+typedef struct SGDIRenderer* SGDIRendererId;
+
+// gdi
 
 template<typename T>
 struct LiteSpan
@@ -125,6 +129,8 @@ struct SKR_GUI_API SGDIDevice
     virtual void free_paint(SGDIPaint* paint) = 0;
 };
 
+// renderer
+
 struct SGDIRendererDescriptor
 {
     void* usr_data = nullptr;
@@ -145,17 +151,22 @@ enum class EGDIResourceState : uint32_t
     Count = 5
 };
 
+enum class EGDIImageFormat
+{
+    None = 0,
+    RGB8 = 1,
+    RGBA8 = 2,
+    LA8 = 3,
+    R8 = 4,
+    Count
+};
+
 enum class EGDITextureType : uint32_t
 {
     Texture2D,
     Texture2DArray,
     Atlas,
     Count
-};
-
-struct SKR_GUI_API SGDIImage
-{
-    virtual ~SGDIImage() SKR_NOEXCEPT = default;
 };
 
 enum class EGDIImageSource : uint32_t
@@ -173,19 +184,10 @@ enum class EGDITextureSource : uint32_t
     Count
 };
 
-enum EGDITextureFormat
-{
-    None = 0,
-    RGB8 = 1,
-    RGBA8 = 2,
-    LA8 = 3,
-    Count
-};
-
 typedef struct SGDIImageDescriptor
 {
     EGDIImageSource source;
-    EGDITextureFormat format;
+    EGDIImageFormat format;
     union
     {
         struct
@@ -207,7 +209,7 @@ typedef struct SGDIImageDescriptor
 typedef struct SGDITextureDescriptor
 {
     EGDITextureSource source;
-    EGDITextureFormat format;
+    EGDIImageFormat format;
     union
     {
         struct 
@@ -225,16 +227,33 @@ typedef struct SGDITextureDescriptor
         struct
         {
             const char* u8Uri = nullptr;
+            uint32_t w = 0;
+            uint32_t h = 0;
+            uint32_t mip_count = 0;
         } from_file;
     };
     void* usr_data = nullptr;
 } SGDITextureDescriptor;
 
+struct SKR_GUI_API SGDIImage
+{
+    virtual ~SGDIImage() SKR_NOEXCEPT = default;
+    virtual EGDIResourceState get_state() const SKR_NOEXCEPT = 0;
+    virtual SGDIRendererId get_renderer() const SKR_NOEXCEPT = 0;
+    virtual uint32_t get_width() const SKR_NOEXCEPT = 0;
+    virtual uint32_t get_height() const SKR_NOEXCEPT = 0;
+    virtual LiteSpan<const uint8_t> get_data() const SKR_NOEXCEPT = 0;
+    virtual EGDIImageFormat get_format() const SKR_NOEXCEPT = 0;
+};
+
 struct SKR_GUI_API SGDITexture
 {
     virtual ~SGDITexture() SKR_NOEXCEPT = default;
-    
     virtual EGDIResourceState get_state() const SKR_NOEXCEPT = 0;
+    virtual SGDIRendererId get_renderer() const SKR_NOEXCEPT = 0;
+    virtual uint32_t get_width() const SKR_NOEXCEPT = 0;
+    virtual uint32_t get_height() const SKR_NOEXCEPT = 0;
+    
     virtual EGDITextureType get_type() const SKR_NOEXCEPT = 0;
 };
 
@@ -251,6 +270,7 @@ struct SKR_GUI_API SGDIRenderer
     virtual int finalize() SKR_NOEXCEPT = 0;
     virtual SGDIImageId create_image(const SGDIImageDescriptor* descriptor) SKR_NOEXCEPT = 0;
     virtual SGDITextureId create_texture(const SGDITextureDescriptor* descriptor) SKR_NOEXCEPT = 0;
+    virtual void free_image(SGDIImageId image) SKR_NOEXCEPT = 0;
     virtual void free_texture(SGDITextureId texture) SKR_NOEXCEPT = 0;
     virtual void render(SGDICanvasGroup* canvas_group, SGDIRenderParams* params) SKR_NOEXCEPT = 0;
 

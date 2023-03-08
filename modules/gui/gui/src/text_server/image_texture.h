@@ -1,6 +1,7 @@
 #pragma once
 #include "text_server/vector2.h"
 #include "text_server/rid.h"
+#include "text_server/rid_owner.h"
 #include "text_server/containers.h"
 
 namespace skr { namespace gdi { struct SGDIRenderer; struct SGDIImage; struct SGDITexture;  }  }
@@ -14,13 +15,15 @@ struct Image
 		FORMAT_RGB8,
 		FORMAT_RGBA8,
 		FORMAT_LA8,
+		FORMAT_R8,
 		FORMAT_COUNT
 	};
 
-	[[nodiscard]] static Ref<Image> create_from_data(skr::gdi::SGDIRenderer* renderer, uint32_t w, uint32_t h, bool p_use_mipmaps, Format format, const Vector<uint8_t> &p_data);
+	[[nodiscard]] static Ref<Image> create_from_data(skr::gdi::SGDIRenderer* renderer, uint32_t w, uint32_t h,
+		bool p_use_mipmaps, Format format, const Span<const uint8_t> &p_data);
 
 	void generate_mipmaps();
-	Span<uint8_t> get_data();
+	Span<const uint8_t> get_data();
 	uint32_t get_width() const;
 	uint32_t get_height() const;
 	Format get_format() const;
@@ -37,6 +40,9 @@ struct ImageTexture
 	void update(const Ref<Image> image);
 	RID get_rid() const;
 
+	RID rid = {};
 	skr::gdi::SGDITexture* underlying = nullptr;
+
+	static RID_PtrOwner<ImageTexture> texture_owner;
 };
 } // namespace godot

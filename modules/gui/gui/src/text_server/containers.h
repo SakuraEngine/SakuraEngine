@@ -12,6 +12,12 @@
 #include <containers/hashmap.hpp>
 #include <EASTL/shared_ptr.h>
 
+#ifdef DEBUG_ENABLED
+#define SORT_ARRAY_VALIDATE_ENABLED true
+#else
+#define SORT_ARRAY_VALIDATE_ENABLED false
+#endif
+
 namespace godot{
 template<class K>
 struct Hasher : public eastl::hash<K> {};
@@ -22,15 +28,21 @@ struct Comparator {};
 template<class T>
 class Span : public skr::span<T>
 {
+public:
+	Span() SKR_NOEXCEPT = default;
+	
+	template<typename U>
+	Span(const skr::vector<U>& other) SKR_NOEXCEPT 
+		: skr::span<T>(other.data(), other.size())
+	{
+	}
 
+	template<typename U>
+	Span(const U* ptr, size_t size) SKR_NOEXCEPT
+		: skr::span<T>(ptr, size)
+	{
+	}
 };
-
-#ifdef DEBUG_ENABLED
-#define SORT_ARRAY_VALIDATE_ENABLED true
-#else
-#define SORT_ARRAY_VALIDATE_ENABLED false
-#endif
-
 
 template<class T>
 class Vector : public skr::vector<T>
@@ -38,9 +50,11 @@ class Vector : public skr::vector<T>
 public:
 	Vector() = default;
 	Vector(const Vector<T>& other) = default;
-	Vector(const Span<T>& other) : skr::vector<T>(other) {}
+	template<typename U>
+	Vector(const Span<U>& other) : skr::vector<T>(other) {}
 	Vector& operator=(const Vector<T>& other) = default;
-	inline Vector& operator=(const Span<T>& other)
+	template<typename U>
+	inline Vector& operator=(const Span<U>& other)
 	{
 		this->clear();
 		skr::vector<T>::insert(this->end(), other.begin(), other.end());
