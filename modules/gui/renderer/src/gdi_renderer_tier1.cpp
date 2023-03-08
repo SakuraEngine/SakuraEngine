@@ -89,6 +89,12 @@ CGPURenderPipelineId create_render_pipeline(CGPUDeviceId device, ECGPUFormat tar
     rs_state.depth_bias = 0;
     rp_desc.rasterizer_state = &rs_state;
 
+    CGPUDepthStateDescriptor depth_state = {};
+    depth_state.depth_func = CGPU_CMP_LEQUAL; 
+    depth_state.depth_write = true; 
+    depth_state.depth_test = true;
+    rp_desc.depth_state = &depth_state;
+
     CGPUBlendStateDescriptor blend_state = {};
     for (uint32_t i = 0; i < 1; i++)
     {
@@ -165,6 +171,12 @@ CGPURenderPipelineId create_render_pipeline2(CGPUDeviceId device, ECGPUFormat ta
     rs_state.enable_multi_sample = false;
     rs_state.depth_bias = 0;
     rp_desc.rasterizer_state = &rs_state;
+
+    CGPUDepthStateDescriptor depth_state = {};
+    depth_state.depth_func = CGPU_CMP_LEQUAL; 
+    depth_state.depth_write = true; 
+    depth_state.depth_test = true;
+    rp_desc.depth_state = &depth_state;
 
     CGPUBlendStateDescriptor blend_state = {};
     for (uint32_t i = 0; i < 1; i++)
@@ -305,7 +317,7 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
         const auto scaleZ = 1.f;
         const auto transformX = 0.f;
         const auto transformY = 0.f;
-        const auto transformZ = 1.f;
+        const auto transformZ = 1000.f - element->get_z();
         const auto transformW = 1.f;
         const auto pitchInDegrees = 0.f;
         const auto yawInDegrees = 0.f;
@@ -447,6 +459,7 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
 
     // 4. loop & record render commands
     skr::render_graph::TextureRTVHandle target = rg->get_texture("backbuffer");
+    skr::render_graph::TextureDSVHandle depth = rg->get_texture("depth");
     // skr::vector<SGDICanvas*> canvas_copy(canvas_span.begin(), canvas_span.end());
     rg->add_render_pass([&](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
         ZoneScopedN("ConstructRenderPass");
@@ -455,6 +468,7 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
             .use_buffer(transform_buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
             .use_buffer(projection_buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
             .use_buffer(index_buffer, CGPU_RESOURCE_STATE_INDEX_BUFFER)
+            .set_depth_stencil(depth.clear_depth(1.f))
             .write(0, target, CGPU_LOAD_ACTION_CLEAR);
     },
     [this, target, canvas_group_data, useCVV, index_buffer, vertex_buffer, transform_buffer, projection_buffer]

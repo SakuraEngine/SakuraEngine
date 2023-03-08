@@ -8,6 +8,17 @@ struct SKR_GUI_API SGDIElementPrivate : public SGDIElement
 {
     virtual ~SGDIElementPrivate() SKR_NOEXCEPT = default;
     
+    void set_z(float _z) final
+    {
+        z = _z;
+    }
+
+    virtual float get_z() const
+    {
+        return z;
+    }
+
+    float z = 0.f;
     skr::vector<SGDIVertex> vertices;
     skr::vector<index_t> indices;
     skr::vector<SGDIElementDrawCommand> commands;
