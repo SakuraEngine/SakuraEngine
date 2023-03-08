@@ -9,3 +9,6 @@ shared_module("SkrGui", "SKR_GUI", engine_version)
     add_includedirs("include", {public=true})
     add_includedirs("src", {public=false})
     add_files("src/**.cpp")
+    if (is_plat("windows")) then
+        add_cxflags("/wd4267", "/wd4244", "/wd4018","/source-charset:utf-8", {public=false})
+    end
