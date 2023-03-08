@@ -83,6 +83,11 @@
 /*************************************************************************/
 namespace godot {
 	
+struct SkrGuiData
+{
+	skr::gdi::SGDIRenderer* gdi_renderer = nullptr;
+};
+
 class TextServerAdvanced : public TextServer {
 
 	_THREAD_SAFE_CLASS_
@@ -896,8 +901,9 @@ public: // MODBINDs
 
 	MODBIND0(cleanup);
 
-	TextServerAdvanced();
+	TextServerAdvanced(const SkrGuiData& gui_data);
 	~TextServerAdvanced();
+	SkrGuiData gui_data = {};
 };
 
 } // namespace godot

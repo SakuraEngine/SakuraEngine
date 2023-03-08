@@ -8,8 +8,10 @@ namespace skr {
 namespace gdi {
 
 using index_t = uint16_t;
+struct SGDIImage;
 struct SGDITexture;
 struct SGDIMaterial;
+typedef struct SGDIImage* SGDIImageId;
 typedef struct SGDITexture* SGDITextureId;
 typedef struct SGDIMaterial* SGDIMaterialId;
 
@@ -151,9 +153,80 @@ enum class EGDITextureType : uint32_t
     Count
 };
 
+struct SKR_GUI_API SGDIImage
+{
+    virtual ~SGDIImage() SKR_NOEXCEPT = default;
+};
+
+enum class EGDIImageSource : uint32_t
+{
+    File,
+    Data,
+    Count
+};
+
+enum class EGDITextureSource : uint32_t
+{
+    File,
+    Image,
+    Data,
+    Count
+};
+
+enum EGDITextureFormat
+{
+    None = 0,
+    RGB8 = 1,
+    RGBA8 = 2,
+    LA8 = 3,
+    Count
+};
+
+typedef struct SGDIImageDescriptor
+{
+    EGDIImageSource source;
+    EGDITextureFormat format;
+    union
+    {
+        struct
+        {
+            const uint8_t* data = nullptr;
+            uint64_t size = 0;
+            uint32_t w = 0;
+            uint32_t h = 0;
+            uint32_t mip_count = 0;
+        } from_data;
+        struct
+        {
+            const char* u8Uri = nullptr;
+        } from_file;
+    };
+    void* usr_data = nullptr;
+} SGDIImageDescriptor;
+
 typedef struct SGDITextureDescriptor
 {
-    const char* u8Uri = nullptr;
+    EGDITextureSource source;
+    EGDITextureFormat format;
+    union
+    {
+        struct 
+        {
+            SGDIImage* image = nullptr;
+        } from_image;
+        struct
+        {
+            const uint8_t* data = nullptr;
+            uint64_t size = 0;
+            uint32_t w = 0;
+            uint32_t h = 0;
+            uint32_t mip_count = 0;
+        } from_data;
+        struct
+        {
+            const char* u8Uri = nullptr;
+        } from_file;
+    };
     void* usr_data = nullptr;
 } SGDITextureDescriptor;
 
@@ -176,11 +249,15 @@ struct SKR_GUI_API SGDIRenderer
     // Tier 1
     virtual int initialize(const SGDIRendererDescriptor* desc) SKR_NOEXCEPT = 0;
     virtual int finalize() SKR_NOEXCEPT = 0;
+    virtual SGDIImageId create_image(const SGDIImageDescriptor* descriptor) SKR_NOEXCEPT = 0;
     virtual SGDITextureId create_texture(const SGDITextureDescriptor* descriptor) SKR_NOEXCEPT = 0;
     virtual void free_texture(SGDITextureId texture) SKR_NOEXCEPT = 0;
     virtual void render(SGDICanvasGroup* canvas_group, SGDIRenderParams* params) SKR_NOEXCEPT = 0;
 
     // Tier 2
+    virtual bool support_mipmap_generation() const SKR_NOEXCEPT = 0;
+
+    // Tier 3
 };
 
 } }

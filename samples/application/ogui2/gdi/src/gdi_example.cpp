@@ -2,7 +2,7 @@
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "utils/make_zeroed.hpp"
 #include "SkrGui/gdi.h"
-#include "SkrGuiRenderer/renderer.hpp"
+#include "SkrGuiRenderer/gdi_renderer.hpp"
 #include "platform/filesystem.hpp"
 #include "platform/vfs.h"
 
@@ -204,7 +204,8 @@ int main(int argc, char* argv[])
     {
         skr::gdi::SGDITextureDescriptor tex_desc = {};
         skr::gdi::SGDITextureDescriptor_RenderGraph tex_desc2 = {};
-        tex_desc.u8Uri = "OpenGUI/rubduck.png";
+        tex_desc.source = skr::gdi::EGDITextureSource::File;
+        tex_desc.from_file.u8Uri = "OpenGUI/rubduck.png";
         tex_desc2.useImageCoder = true;
         tex_desc.usr_data = &tex_desc2;
         test_texture = gdi_renderer->create_texture(&tex_desc);
