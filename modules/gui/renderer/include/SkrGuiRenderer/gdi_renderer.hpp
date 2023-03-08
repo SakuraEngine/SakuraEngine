@@ -59,10 +59,62 @@ struct SGDIRenderParams_RenderGraph
     skr::render_graph::RenderGraph* render_graph = nullptr;
 };
 
+struct SGDIImageDescriptor_RenderGraph
+{
+    bool useImageCoder = false;
+    skr_guid_t guid;
+};
+
 struct SGDITextureDescriptor_RenderGraph
 {
     bool useImageCoder = false;
     skr_guid_t guid;
+};
+
+struct SKR_GUI_RENDERER_API SGDIImageAsyncData_RenderGraph
+{
+    bool useImageCoder = false;
+    skr::string uri = "";
+    skr_async_request_t ram_request = {};
+    skr_async_ram_destination_t ram_destination = {};
+    skr_async_request_t aux_request = {};
+    skr_blob_t raw_data = {};
+    skr_threaded_service_t* aux_service = nullptr; 
+    
+    uint32_t height = 0;
+    uint32_t width = 0;
+    uint32_t depth = 0;
+    ECGPUFormat format = CGPU_FORMAT_UNDEFINED;
+
+    void DoAsync(skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT;
+
+protected:
+    eastl::function<void()> ram_io_enqueued_callback = {};
+    eastl::function<void()> ram_data_finsihed_callback = {};
+};
+
+struct SKR_GUI_RENDERER_API SGDITextureAsyncData_RenderGraph : public SGDIImageAsyncData_RenderGraph
+{
+    skr_async_request_t vram_request = {};
+    skr_async_vtexture_destination_t vram_destination = {};
+
+    CGPUDeviceId device;
+    CGPUQueueId transfer_queue;
+    CGPURootSignatureId root_signature = nullptr;
+    skr_io_vram_service_t* vram_service = nullptr; 
+
+    void DoAsync(struct SGDITexture_RenderGraph* texture, skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT;
+
+protected:
+    eastl::function<void()> vram_enqueued_callback = {};
+    eastl::function<void()> vram_finsihed_callback = {};
+};
+
+struct SKR_GUI_RENDERER_API SGDIImage_RenderGraph : public SGDIImage
+{
+
+    EGDIImageSource source = EGDIImageSource::Count;
+    SGDIImageAsyncData_RenderGraph async_data;
 };
 
 struct SKR_GUI_RENDERER_API SGDITexture_RenderGraph : public SGDITexture
@@ -76,30 +128,25 @@ struct SKR_GUI_RENDERER_API SGDITexture_RenderGraph : public SGDITexture
     CGPUTextureViewId texture_view = nullptr;
     CGPUSamplerId sampler = nullptr;
     CGPUXBindTableId bind_table = nullptr;
-    SAtomic32 state = static_cast<uint32_t>(EGDIResourceState::Requsted);
-    skr::string uri = "";
     
-    // things helps texture to initialize
-    CGPUDeviceId device;
-    CGPUQueueId transfer_queue;
-    CGPURootSignatureId root_signature = nullptr;
-    skr_async_request_t ram_request = {};
-    skr_async_request_t aux_request = {};
-    skr_async_request_t vram_request = {};
-    skr_async_ram_destination_t ram_destination = {};
-    skr_async_vtexture_destination_t vram_destination = {};
-    skr_blob_t raw_data = {};
-    skr_threaded_service_t* aux_service = nullptr; 
-    skr_io_vram_service_t* vram_service = nullptr; 
+    SAtomic32 state = static_cast<uint32_t>(EGDIResourceState::Requsted);
+    EGDITextureSource source = EGDITextureSource::Count;
+    
+    SGDITextureAsyncData_RenderGraph async_data;
 };
 
 struct SKR_GUI_RENDERER_API SGDIRenderer_RenderGraph : public SGDIRenderer
 {
+    // Tier 1
     int initialize(const SGDIRendererDescriptor* desc) SKR_NOEXCEPT final;
     int finalize() SKR_NOEXCEPT final;
+    SGDIImageId create_image(const SGDIImageDescriptor* descriptor) SKR_NOEXCEPT final;
     SGDITextureId create_texture(const SGDITextureDescriptor* descriptor) SKR_NOEXCEPT final;
     void free_texture(SGDITextureId texture) SKR_NOEXCEPT final;
     void render(SGDICanvasGroup* canvas_group, SGDIRenderParams* params) SKR_NOEXCEPT final;
+
+    // Tier 2
+    bool support_mipmap_generation() const SKR_NOEXCEPT final;
 
     CGPUVertexLayout vertex_layout = {};
     CGPURenderPipelineId single_color_pipeline = nullptr;

@@ -33,17 +33,13 @@
 
 #include "text_server/text_server.h"
 #include "text_server/hashfuncs.h"
+#include <EASTL/bonus/lru_cache.h>
 
-namespace godot {
+namespace godot 
+{ 
+	class TextLine;
+	class TextParagraph;
 
-class TextLine;
-class TextParagraph;
-
-/*************************************************************************/
-/*  Font                                                                 */
-/*************************************************************************/
-
-class Font {
 	struct ShapedTextKey {
 		String text;
 		int font_size = 14;
@@ -79,8 +75,21 @@ class Font {
 			return hash_fmix32(hash);
 		}
 	};
+}
 
+namespace eastl { template<> struct hash<godot::ShapedTextKey> { size_t operator()(const godot::ShapedTextKey& p) const { return godot::ShapedTextKeyHasher::hash(p); } }; }
+
+namespace godot {
+/*************************************************************************/
+/*  Font                                                                 */
+/*************************************************************************/
+class Font {
 	// Shaped string cache.
+	using TextLineCache = eastl::lru_cache<ShapedTextKey, Ref<TextLine>>;
+	using TextParagraphCache = eastl::lru_cache<ShapedTextKey, Ref<TextParagraph>>;
+
+	mutable TextLineCache cache = TextLineCache(64);
+	mutable TextParagraphCache cache_wrap = TextParagraphCache(16);
 	// mutable LRUCache<ShapedTextKey, Ref<TextLine>, ShapedTextKeyHasher> cache;
 	// mutable LRUCache<ShapedTextKey, Ref<TextParagraph>, ShapedTextKeyHasher> cache_wrap;
 
