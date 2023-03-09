@@ -1712,13 +1712,15 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd
             Resolve.Format = clearValues[i].Format;
             Resolve.pSrcResource = T->pDxResource;
             Resolve.pDstResource = T_Resolve->pDxResource;
-            Cmd->mSubResolveResource[i].SrcRect = { 0, 0, 0, 0 };
+            // Cmd->mSubResolveResource[i].SrcRect = { 0, 0, 0, 0 };
+            // RenderDoc has a bug, it will crash if SrcRect is zero
+            Cmd->mSubResolveResource[i].SrcRect = { 0, 0, (LONG)T->super.width, (LONG)T->super.height };
             Cmd->mSubResolveResource[i].DstX = 0;
             Cmd->mSubResolveResource[i].DstY = 0;
             Cmd->mSubResolveResource[i].SrcSubresource = 0;
             Cmd->mSubResolveResource[i].DstSubresource = CALC_SUBRESOURCE_INDEX(
                 0, 0, 0,
-                T->super.mip_levels, T->super.array_size_minus_one + 1);
+                T_Resolve->super.mip_levels, T_Resolve->super.array_size_minus_one + 1);
             Resolve.PreserveResolveSource = false;
             Resolve.SubresourceCount = 1;
             Resolve.pSubresourceParameters = &Cmd->mSubResolveResource[i];
