@@ -312,12 +312,30 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
 
         // transform
         auto& transform = canvas_group_data->render_transforms.emplace_back();
+
+        // calculate z offset
+        float hardware_zmin, hardware_zmax;
+        float transformZ = 0.f;
+        if (support_hardware_z(&hardware_zmin, &hardware_zmax) && canvas->is_hardware_z_enabled())
+        {
+            const auto hardware_zrange = hardware_zmax - hardware_zmin;
+            int32_t z_min = 0, z_max = 1000;
+            canvas->get_zrange(&z_min, &z_max);
+            const float z_unit = hardware_zrange / (z_max - z_min);
+            const float element_z = element->get_z() * z_unit;
+            transformZ = hardware_zmax - element_z + hardware_zmin;
+        }
+        else
+        {
+            // TODO: element sort
+            transformZ = 0.f;
+        }
+        // compose transform
         const auto scaleX = 1.f;
         const auto scaleY = 1.f;
         const auto scaleZ = 1.f;
         const auto transformX = 0.f;
         const auto transformY = 0.f;
-        const auto transformZ = 1000.f - element->get_z();
         const auto transformW = 1.f;
         const auto pitchInDegrees = 0.f;
         const auto yawInDegrees = 0.f;

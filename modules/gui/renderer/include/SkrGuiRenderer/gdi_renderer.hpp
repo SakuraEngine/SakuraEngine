@@ -187,6 +187,12 @@ struct SKR_GUI_RENDERER_API SGDIRenderer_RenderGraph : public SGDIRenderer
     void render(SGDICanvasGroup* canvas_group, SGDIRenderParams* params) SKR_NOEXCEPT final;
 
     // Tier 2
+    bool support_hardware_z(float* out_min, float* out_max) const SKR_NOEXCEPT final
+    {
+        if (out_min) *out_min = 0;
+        if (out_max) *out_max = 1000.f;
+        return true;
+    }
     bool support_mipmap_generation() const SKR_NOEXCEPT final;
 
     CGPUVertexLayout vertex_layout = {};

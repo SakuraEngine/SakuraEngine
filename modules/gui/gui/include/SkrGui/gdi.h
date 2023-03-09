@@ -87,8 +87,8 @@ struct SKR_GUI_API SGDIElement
     virtual void fill_paint(SGDIPaint* paint) = 0;
     virtual void fill() = 0;
 
-    virtual void set_z(float z) = 0;
-    virtual float get_z() const = 0;
+    virtual void set_z(int32_t z) = 0;
+    virtual int32_t get_z() const = 0;
 };
 
 struct SKR_GUI_API SGDICanvas
@@ -98,6 +98,13 @@ struct SKR_GUI_API SGDICanvas
     virtual void add_element(SGDIElement* element) SKR_NOEXCEPT = 0;
     virtual void remove_element(SGDIElement* element) SKR_NOEXCEPT = 0;
     virtual LiteSpan<SGDIElement*> all_elements() SKR_NOEXCEPT = 0;
+
+    virtual void set_zrange(int32_t min, int32_t max) SKR_NOEXCEPT = 0;
+    virtual void get_zrange(int32_t* out_min, int32_t* out_max) SKR_NOEXCEPT = 0;
+
+    virtual void enable_hardware_z() SKR_NOEXCEPT = 0;
+    virtual void disable_hardware_z() SKR_NOEXCEPT = 0;
+    virtual bool is_hardware_z_enabled() const SKR_NOEXCEPT = 0;
 
     skr_float2_t pivot = { 0.f, 0.f };
     skr_float2_t size = { 0.f, 0.0f };
@@ -278,6 +285,7 @@ struct SKR_GUI_API SGDIRenderer
     virtual void render(SGDICanvasGroup* canvas_group, SGDIRenderParams* params) SKR_NOEXCEPT = 0;
 
     // Tier 2
+    virtual bool support_hardware_z(float* out_min, float* max) const SKR_NOEXCEPT = 0;
     virtual bool support_mipmap_generation() const SKR_NOEXCEPT = 0;
 
     // Tier 3
