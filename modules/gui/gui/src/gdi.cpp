@@ -1,7 +1,7 @@
 #include "platform/debug.h"
 #include "platform/memory.h"
-#include "SkrGui/gdi/gdi_renderer.h"
-#include "private/gdi_private.h"
+#include "SkrGui/interface/gdi_renderer.hpp"
+#include "private/gdi_private.hpp"
 
 #include "nanovg/gdi_nanovg.hpp"
 

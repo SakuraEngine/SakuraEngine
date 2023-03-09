@@ -2,6 +2,8 @@
 #include "gdi_application.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "utils/make_zeroed.hpp"
+#include "SkrGui/interface/gdi_renderer.hpp"
+
 #include "SkrGuiRenderer/gdi_renderer.hpp"
 
 struct gdi_example_application : public gdi_application_t
@@ -136,7 +138,7 @@ struct gdi_example_application : public gdi_application_t
         return true;
     }
 
-    const ECGPUSampleCount sample_count = CGPU_SAMPLE_COUNT_1;
+    ECGPUSampleCount sample_count = CGPU_SAMPLE_COUNT_1;
     void declare_render_resources()
     {
         namespace render_graph = skr::render_graph;
@@ -200,6 +202,10 @@ struct gdi_example_application : public gdi_application_t
 
         // render graph setup & compile & exec
         graph->compile();
+        if (frame_index == 0)
+        {
+            render_graph::RenderGraphViz::write_graphviz(*graph, "gdi_renderer.gv");
+        }
         frame_index = graph->execute();
 
         // present
@@ -208,8 +214,6 @@ struct gdi_example_application : public gdi_application_t
         present_desc.index = gfx.backbuffer_index;
         present_desc.swapchain = gfx.swapchain;
         cgpu_queue_present(gfx.gfx_queue, &present_desc);
-        if (frame_index == 0)
-            render_graph::RenderGraphViz::write_graphviz(*graph, "render_graph_demo.gv");
     }
 
     void render()

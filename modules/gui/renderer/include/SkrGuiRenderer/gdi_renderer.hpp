@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrGuiRenderer/module.configure.h"
-#include "SkrGui/gdi/gdi_renderer.h"
+#include "SkrGui/interface/gdi_renderer.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include <containers/vector.hpp>
 #include <EASTL/vector_map.h>
