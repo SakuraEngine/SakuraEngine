@@ -321,9 +321,15 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
             const auto hardware_zrange = hardware_zmax - hardware_zmin;
             int32_t z_min = 0, z_max = 1000;
             canvas->get_zrange(&z_min, &z_max);
-            const float z_unit = hardware_zrange / (z_max - z_min);
-            const float element_z = element->get_z() * z_unit;
-            transformZ = hardware_zmax - element_z + hardware_zmin;
+
+            // remap z range from [min, max] to [0, max - min]
+            const auto element_z =  ::fmax(element->get_z(), z_min) - z_min;
+            z_max = ::fmax(z_max - z_min, 0);
+            z_min = 0;
+
+            const auto z_unit = hardware_zrange / static_cast<float>(z_max - z_min);
+            const auto element_hardware_z = element_z * z_unit;
+            transformZ = hardware_zmax - element_hardware_z + hardware_zmin;
         }
         else
         {
