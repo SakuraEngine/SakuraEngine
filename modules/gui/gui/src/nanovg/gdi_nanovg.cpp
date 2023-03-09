@@ -254,7 +254,7 @@ static void nvg__renderFill(void* uptr, NVGpaint* paint, NVGcompositeOperationSt
         command.first_index = static_cast<uint32_t>(begin);
         command.material = static_cast<SGDIMaterialId>(paint->material);
         command.texture = static_cast<SGDITextureId>(paint->image);
-        if (command.texture && command.texture->get_state() != EGDIResourceState::Okay)
+        if (command.texture && ((SGDIResource*)command.texture)->get_state() != EGDIResourceState::Okay)
         {
             command.texture = nullptr;
         }
@@ -287,7 +287,7 @@ static void nvg__renderStroke(void* uptr, NVGpaint* paint, NVGcompositeOperation
     command.first_index = static_cast<uint32_t>(begin);
     command.material = static_cast<SGDIMaterialId>(paint->material);
     command.texture = static_cast<SGDITextureId>(paint->image);
-    if (command.texture && command.texture->get_state() != EGDIResourceState::Okay)
+    if (command.texture && ((SGDIResource*)command.texture)->get_state() != EGDIResourceState::Okay)
     {
         command.texture = nullptr;
     }
