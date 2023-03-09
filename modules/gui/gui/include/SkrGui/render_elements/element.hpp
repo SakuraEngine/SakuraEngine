@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrGui/module.configure.h"
-#include "SkrGui/gdi/gdi.h"
+#include "SkrGui/gdi/gdi.hpp"
 #include "EASTL/vector.h"
 #include "rtm/matrix4x4f.h"
 

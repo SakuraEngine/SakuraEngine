@@ -1,5 +1,5 @@
 #pragma once 
-#include "gdi.h"
+#include "SkrGui/gdi/gdi.hpp"
 
 namespace skr {
 namespace gdi {

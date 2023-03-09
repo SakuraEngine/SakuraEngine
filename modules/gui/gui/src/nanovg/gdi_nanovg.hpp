@@ -1,5 +1,5 @@
 #pragma once
-#include "../private/gdi_private.h"
+#include "../private/gdi_private.hpp"
 #include "nanovg.h"
 
 namespace skr {

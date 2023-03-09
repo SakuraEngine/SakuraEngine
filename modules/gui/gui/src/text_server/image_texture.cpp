@@ -1,5 +1,5 @@
 #include "text_server/image_texture.h"
-#include "SkrGui/gdi/gdi_renderer.h"
+#include "SkrGui/interface/gdi_renderer.hpp"
 
 namespace godot {
 skr::gdi::EGDIImageFormat translate_format(ImageFormat format)

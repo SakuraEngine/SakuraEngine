@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrGui/gdi/gdi.h"
+#include "SkrGui/gdi/gdi.hpp"
 #include <containers/vector.hpp>
 
 namespace skr {
