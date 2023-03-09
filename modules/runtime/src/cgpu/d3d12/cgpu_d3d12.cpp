@@ -1060,6 +1060,7 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
     wchar_t pipelineName[PSO_NAME_LENGTH] = {};
     size_t psoShaderHash = 0;
     size_t psoRenderHash = 0;
+    size_t rootSignatureNumber = (size_t)RS->pDxRootSignature;
     if (D->pPipelineLibrary)
     {
         // Calculate graphics pso shader hash
@@ -1088,9 +1089,8 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
             psoRenderHash = cgpu_hash(&pipeline_state_desc.InputLayout.pInputElementDescs[i],
             sizeof(D3D12_INPUT_ELEMENT_DESC), psoRenderHash);
         }
-        swprintf(pipelineName, PSO_NAME_LENGTH, L"%S_S%zuR%zu", "GRAPHICSPSO", psoShaderHash, psoRenderHash);
-        result = D->pPipelineLibrary->LoadGraphicsPipeline(pipelineName,
-        &pipeline_state_desc, IID_ARGS(&PPL->pDxPipelineState));
+        swprintf(pipelineName, PSO_NAME_LENGTH, L"%S_S%zu_R%zu_RS%zu", "GRAPHICSPSO", psoShaderHash, psoRenderHash, rootSignatureNumber);
+        result = D->pPipelineLibrary->LoadGraphicsPipeline(pipelineName, &pipeline_state_desc, IID_ARGS(&PPL->pDxPipelineState));
     }
     if (!SUCCEEDED(result))
     {
@@ -1098,9 +1098,18 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
         // Pipeline cache
         if (D->pPipelineLibrary)
         {
-            CHECK_HRESULT(D->pPipelineLibrary->StorePipeline(pipelineName, PPL->pDxPipelineState));
+            result = D->pPipelineLibrary->StorePipeline(pipelineName, PPL->pDxPipelineState);
+            if (!SUCCEEDED(result))
+            {
+                cgpu_warn("Failed to store pipeline state object to pipeline library %ls. hash: (%lld) hr:(0x%08x)", pipelineName, psoRenderHash, result);
+            }
+            else
+            {
+                cgpu_trace("Succeeded to store pipeline state object to pipeline library %ls. hash: (%lld) hr:(0x%08x)", pipelineName, psoRenderHash, result);
+            }
         }
     }
+
     D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
     switch (desc->prim_topology)
     {
