@@ -67,6 +67,7 @@ option_variant_seq_t& out_variants, variant_seq_hashe_seq_t& out_stable_hahses)
 
     // [ [z: "on", y: "a", z: "1"], [x: "on", y: "a", z: "2"] ...]
     (void)out_variants;
+    
     if (!selection_seqs.empty())
     {
         // [ ["on", "a", "1"], ["on", "a", "2"] ...]

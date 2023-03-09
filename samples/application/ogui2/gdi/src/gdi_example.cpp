@@ -212,6 +212,7 @@ int main(int argc, char* argv[])
     }
     // loop
     bool quit = false;
+    uint64_t frame_index = 0;
     while (!quit)
     {
         SDL_Event event;
@@ -247,7 +248,7 @@ int main(int argc, char* argv[])
             debug_element->begin_path();
             debug_element->rect(120, 120, 300, 300);
             debug_element->fill_color(128u, 0u, 0u, 128u);
-            debug_element->set_z(5.f);
+            debug_element->set_z(5);
             debug_element->fill();
 
             test_element->begin_frame(1.f);
@@ -260,9 +261,10 @@ int main(int argc, char* argv[])
             }
             test_paint->set_pattern(120, 120, 300, 300, 0, test_texture, color);
             test_element->fill_paint(test_paint);
-            test_element->set_z(10.f);
+            test_element->set_z(10);
             test_element->fill();
         }
+
         // render graph setup & compile & exec
         CGPUTextureId imported_backbuffer = App.swapchain->back_buffers[App.backbuffer_index];
         auto back_buffer = graph->create_texture(
@@ -282,12 +284,14 @@ int main(int argc, char* argv[])
                     // .sample_count((ECGPUSampleCount)sample_level)
                     .allow_depth_stencil();
             });(void)depth;
+
         // render GDI canvas group
         skr::gdi::SGDIRenderParams gdir_params = {};
         skr::gdi::SGDIRenderParams_RenderGraph gdir_params2 = {};
         gdir_params2.render_graph = graph;
         gdir_params.usr_data = &gdir_params2;
         gdi_renderer->render(gdi_canvas_group, &gdir_params);
+
         // do present
         graph->add_present_pass(
             [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
@@ -296,7 +300,8 @@ int main(int argc, char* argv[])
                 .texture(back_buffer, true);
             });
         graph->compile();
-        const auto frame_index = graph->execute();
+        frame_index = graph->execute();
+
         // present
         cgpu_wait_queue_idle(App.gfx_queue);
         CGPUQueuePresentDescriptor present_desc = {};

@@ -58,10 +58,10 @@ struct SGDIVertex
 
 struct SGDIElementDrawCommand
 {
-    SGDITextureId texture;
-    SGDIMaterialId material;
-    uint32_t first_index;
-    uint32_t index_count;
+    SGDITextureId texture = nullptr;
+    SGDIMaterialId material = nullptr;
+    uint32_t first_index = 0;
+    uint32_t index_count = 0;
 };
 
 struct SKR_GUI_API SGDIElement

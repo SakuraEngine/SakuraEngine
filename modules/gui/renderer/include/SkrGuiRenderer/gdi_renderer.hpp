@@ -3,6 +3,7 @@
 #include "SkrGui/gdi.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include <containers/vector.hpp>
+#include <EASTL/vector_map.h>
 
 #include "cgpu/cgpux.h"
 #include "cgpu/io.h"
@@ -13,16 +14,27 @@
 namespace skr {
 namespace gdi {
 
+enum EGDIRendererPipelineAttribute
+{
+    GDI_RENDERER_PIPELINE_ATTRIBUTE_TEST_Z = 0x00000001,
+    GDI_RENDERER_PIPELINE_ATTRIBUTE_TEXTURED = GDI_RENDERER_PIPELINE_ATTRIBUTE_TEST_Z << 1,
+    GDI_RENDERER_PIPELINE_ATTRIBUTE_WRITE_Z = GDI_RENDERER_PIPELINE_ATTRIBUTE_TEXTURED << 1,
+    GDI_RENDERER_PIPELINE_ATTRIBUTE_CUSTOM_SAMPLER = GDI_RENDERER_PIPELINE_ATTRIBUTE_WRITE_Z << 1,
+    GDI_RENDERER_PIPELINE_ATTRIBUTE_COUNT = 4
+};
+using GDIRendererPipelineAttributes = uint32_t;
+
 struct SGDIElementDrawCommand_RenderGraph
 {
-    SGDITextureId texture;
-    SGDIMaterialId material;
-    uint32_t first_index;
-    uint32_t index_count;
-    uint32_t ib_offset;
-    uint32_t vb_offset;
-    uint32_t tb_offset;
-    uint32_t pb_offset;
+    GDIRendererPipelineAttributes attributes = 0;
+    SGDITextureId texture = nullptr;
+    SGDIMaterialId material = nullptr;
+    uint32_t first_index = 0;
+    uint32_t index_count = 0;
+    uint32_t ib_offset = 0;
+    uint32_t vb_offset = 0;
+    uint32_t tb_offset = 0;
+    uint32_t pb_offset = 0;
 };
 
 struct SKR_GUI_RENDERER_API SGDICanvasGroupData_RenderGraph
@@ -195,10 +207,12 @@ struct SKR_GUI_RENDERER_API SGDIRenderer_RenderGraph : public SGDIRenderer
     }
     bool support_mipmap_generation() const SKR_NOEXCEPT final;
 
+protected:
+    CGPURenderPipelineId createRenderPipeline(GDIRendererPipelineAttributes attributes);
+    void createRenderPipelines();
+
     CGPUVertexLayout vertex_layout = {};
-    CGPURenderPipelineId single_color_pipeline = nullptr;
-    CGPURenderPipelineId texture_pipeline = nullptr;
-    CGPURenderPipelineId material_pipeline = nullptr;
+    eastl::vector_map<GDIRendererPipelineAttributes, CGPURenderPipelineId> pipelines;
     skr_threaded_service_t* aux_service = nullptr;
     skr_io_ram_service_t* ram_service = nullptr;
     skr_io_vram_service_t* vram_service = nullptr;
@@ -206,6 +220,7 @@ struct SKR_GUI_RENDERER_API SGDIRenderer_RenderGraph : public SGDIRenderer
     CGPUDeviceId device = nullptr;
     CGPUQueueId transfer_queue = nullptr;
     CGPUSamplerId static_color_sampler = nullptr;
+    CGPURootSignaturePoolId rs_pool = nullptr;
     ECGPUFormat target_format;
 };
 
