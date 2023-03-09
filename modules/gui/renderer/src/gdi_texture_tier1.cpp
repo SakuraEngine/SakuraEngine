@@ -411,7 +411,7 @@ SGDITextureId SGDIRenderer_RenderGraph::create_texture(const SGDITextureDescript
     texture->async_data.vram_service = vram_service;
     texture->async_data.device = device;
     texture->async_data.transfer_queue = transfer_queue;
-    texture->async_data.root_signature = texture_pipeline->root_signature;
+    texture->async_data.root_signature = pipelines[GDI_RENDERER_PIPELINE_ATTRIBUTE_TEXTURED]->root_signature;
 
     if (texture->source == EGDITextureSource::Image)
     {
