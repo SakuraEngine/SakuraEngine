@@ -39,7 +39,8 @@ inline static void read_shader_bytes(const char* virtual_path, uint32_t** bytes,
     read_bytes(shader_file, (char8_t**)bytes, length);
 }
 
-CGPURenderPipelineId SGDIRenderer_RenderGraph::createRenderPipeline(GDIRendererPipelineAttributes attributes)
+CGPURenderPipelineId SGDIRenderer_RenderGraph::createRenderPipeline(
+    GDIRendererPipelineAttributes attributes, ECGPUSampleCount sample_count)
 {
     const bool use_texture = attributes & GDI_RENDERER_PIPELINE_ATTRIBUTE_TEXTURED;
     uint32_t *vs_bytes = nullptr, vs_length = 0;
@@ -129,9 +130,21 @@ CGPURenderPipelineId SGDIRenderer_RenderGraph::createRenderPipeline(GDIRendererP
     }
     rp_desc.blend_state = &blend_state;
 
+    rp_desc.sample_count = sample_count;
+
     auto pipeline = cgpu_create_render_pipeline(device, &rp_desc);
     cgpu_free_shader_library(vertex_shader);
     cgpu_free_shader_library(fragment_shader);
+    return pipeline;
+}
+
+CGPURenderPipelineId SGDIRenderer_RenderGraph::findOrCreateRenderPipeline(GDIRendererPipelineAttributes attributes, ECGPUSampleCount sample_count)
+{
+    PipelineKey key = {attributes, sample_count};
+    auto it = pipelines.find(key);
+    if (it != pipelines.end()) return it->second;
+    auto pipeline = createRenderPipeline(attributes, sample_count);
+    pipelines[key] = pipeline;
     return pipeline;
 }
 
@@ -158,7 +171,8 @@ void SGDIRenderer_RenderGraph::createRenderPipelines()
             attributes |= flag;
         }
         if (!validateAttributes(attributes)) continue;
-        pipelines[attributes] = createRenderPipeline(attributes);
+        PipelineKey key = { attributes, CGPU_SAMPLE_COUNT_1 };
+        pipelines[key] = createRenderPipeline(attributes);
     }
 }
 // HACK
@@ -462,6 +476,7 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
     // skr::vector<SGDICanvas*> canvas_copy(canvas_span.begin(), canvas_span.end());
     rg->add_render_pass([&](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
         ZoneScopedN("ConstructRenderPass");
+        const auto back_desc = g.resolve_descriptor(target);
         builder.set_name("gdi_render_pass")
             .use_buffer(vertex_buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
             .use_buffer(transform_buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
@@ -469,6 +484,11 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
             .use_buffer(index_buffer, CGPU_RESOURCE_STATE_INDEX_BUFFER)
             .set_depth_stencil(depth.clear_depth(1.f))
             .write(0, target, CGPU_LOAD_ACTION_CLEAR);
+        if (back_desc->sample_count > 1)
+        {
+            skr::render_graph::TextureHandle real_target = rg->get_texture("presentbuffer");
+            builder.resolve_msaa(0, real_target);
+        }
     },
     [this, target, canvas_group_data, useCVV, index_buffer, vertex_buffer, transform_buffer, projection_buffer]
     (render_graph::RenderGraph& g, render_graph::RenderPassContext& ctx) {
@@ -491,16 +511,17 @@ void SGDIRenderer_RenderGraph::render(SGDICanvasGroup* canvas_group, SGDIRenderP
             target_desc->width, target_desc->height);
 
         const skr::span<SGDIElementDrawCommand_RenderGraph> render_commands = canvas_group_data->render_commands;
-        GDIRendererPipelineAttributes pipeline_attributes_cache = ~0;
+        PipelineKey pipeline_key_cache = { UINT32_MAX, CGPU_SAMPLE_COUNT_1 };
+
         for (const auto& command : render_commands)
         {
             const bool use_texture = command.texture && (command.texture->get_state() == EGDIResourceState::Okay);
-
-            if (pipeline_attributes_cache != command.attributes)
+            PipelineKey key = { command.attributes, target_desc->sample_count };
+            if (pipeline_key_cache != key)
             {
-                CGPURenderPipelineId this_pipeline = pipelines[command.attributes];
+                CGPURenderPipelineId this_pipeline = findOrCreateRenderPipeline(key.attributes, key.sample_count);
                 cgpu_render_encoder_bind_pipeline(ctx.encoder, this_pipeline);
-                pipeline_attributes_cache = command.attributes;
+                pipeline_key_cache = key;
             }
 
             if (use_texture)

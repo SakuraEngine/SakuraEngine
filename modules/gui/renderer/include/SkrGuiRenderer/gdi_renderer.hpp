@@ -208,11 +208,29 @@ struct SKR_GUI_RENDERER_API SGDIRenderer_RenderGraph : public SGDIRenderer
     bool support_mipmap_generation() const SKR_NOEXCEPT final;
 
 protected:
-    CGPURenderPipelineId createRenderPipeline(GDIRendererPipelineAttributes attributes);
+    CGPURenderPipelineId findOrCreateRenderPipeline(GDIRendererPipelineAttributes attributes, ECGPUSampleCount sample_count = CGPU_SAMPLE_COUNT_1);
+    CGPURenderPipelineId createRenderPipeline(GDIRendererPipelineAttributes attributes, ECGPUSampleCount sample_count = CGPU_SAMPLE_COUNT_1);
     void createRenderPipelines();
 
     CGPUVertexLayout vertex_layout = {};
-    eastl::vector_map<GDIRendererPipelineAttributes, CGPURenderPipelineId> pipelines;
+    struct PipelineKey
+    {
+        GDIRendererPipelineAttributes attributes;
+        ECGPUSampleCount sample_count;
+        inline bool operator==(const PipelineKey& other) const
+        {
+            return attributes == other.attributes && sample_count == other.sample_count;
+        }
+        inline bool operator!=(const PipelineKey& other) const
+        {
+            return attributes != other.attributes || sample_count != other.sample_count;
+        }
+        inline bool operator<(const PipelineKey& other) const
+        {
+            return attributes < other.attributes || (attributes == other.attributes && sample_count < other.sample_count);
+        }
+    };
+    eastl::vector_map<PipelineKey, CGPURenderPipelineId> pipelines;
     skr_threaded_service_t* aux_service = nullptr;
     skr_io_ram_service_t* ram_service = nullptr;
     skr_io_vram_service_t* vram_service = nullptr;

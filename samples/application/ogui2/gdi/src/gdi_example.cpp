@@ -136,6 +136,7 @@ struct gdi_example_application : public gdi_application_t
         return true;
     }
 
+    const ECGPUSampleCount sample_count = CGPU_SAMPLE_COUNT_1;
     void declare_render_resources()
     {
         namespace render_graph = skr::render_graph;
@@ -147,21 +148,41 @@ struct gdi_example_application : public gdi_application_t
 
         // declare resources
         CGPUTextureId imported_backbuffer = gfx.swapchain->back_buffers[gfx.backbuffer_index];
-        back_buffer = graph->create_texture(
-            [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+        if (sample_count != CGPU_SAMPLE_COUNT_1)
+        {
+            back_buffer = graph->create_texture(
+                [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+                    builder.set_name("presentbuffer")
+                    .import(imported_backbuffer, CGPU_RESOURCE_STATE_PRESENT)
+                    .allow_render_target();
+                });
+            const auto back_desc = graph->resolve_descriptor(back_buffer);
+            auto msaaTarget = graph->create_texture(
+            [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
                 builder.set_name("backbuffer")
-                .import(imported_backbuffer, CGPU_RESOURCE_STATE_PRESENT)
-                .allow_render_target();
-            });
+                    .extent(back_desc->width, back_desc->height)
+                    .format(back_desc->format)
+                    .owns_memory()
+                    .sample_count(sample_count)
+                    .allow_render_target();
+            });(void)msaaTarget;
+        }
+        else
+        {
+            back_buffer = graph->create_texture(
+                [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+                    builder.set_name("backbuffer")
+                    .import(imported_backbuffer, CGPU_RESOURCE_STATE_PRESENT)
+                    .allow_render_target();
+                });
+        }
         depth_buffer = graph->create_texture(
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
-                // double sample_level = 1.0;
-                // g.get_blackboard().value("l2d_msaa", sample_level);
                 builder.set_name("depth")
                     .extent(gfx.swapchain->back_buffers[0]->width, gfx.swapchain->back_buffers[0]->height)
                     .format(CGPU_FORMAT_D32_SFLOAT)
                     .owns_memory()
-                    // .sample_count((ECGPUSampleCount)sample_level)
+                    .sample_count(sample_count)
                     .allow_depth_stencil();
             });
     }
