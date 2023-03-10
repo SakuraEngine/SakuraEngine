@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrGui/render_elements/element.hpp"
 
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, SGDIDevice, skr_gdi_device)
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, SGDIElement, skr_gdi_element)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIDevice, skr_gdi_device)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIElement, skr_gdi_element)
 
 namespace skr {
 namespace gui {

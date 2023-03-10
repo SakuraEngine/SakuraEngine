@@ -4,7 +4,7 @@
 namespace skr {
 namespace gui {
 
-void draw_background_canvas(gdi::SGDIElement* element, float window_width, float window_height)
+void draw_background_canvas(gdi::GDIElement* element, float window_width, float window_height)
 {
     const bool bDrawRelativeXMesh = false;
     const bool bDrawRelativeYMesh = false;

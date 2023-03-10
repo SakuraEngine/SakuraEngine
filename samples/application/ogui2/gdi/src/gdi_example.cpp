@@ -125,8 +125,8 @@ struct gdi_example_application : public gdi_application_t
         gdi_canvas->add_element(debug_element);
         gdi_canvas->add_element(test_element);
         {
-            skr::gdi::SGDITextureDescriptor tex_desc = {};
-            skr::gdi::SGDITextureDescriptor_RenderGraph tex_desc2 = {};
+            skr::gdi::GDITextureDescriptor tex_desc = {};
+            skr::gdi::GDITextureDescriptor_RenderGraph tex_desc2 = {};
             tex_desc.source = skr::gdi::EGDITextureSource::File;
             tex_desc.from_file.u8Uri = "OpenGUI/rubduck.png";
             tex_desc2.useImageCoder = true;
@@ -277,16 +277,16 @@ struct gdi_example_application : public gdi_application_t
     skr::render_graph::TextureHandle depth_buffer;
     uint64_t frame_index = 0;
 
-    skr::gdi::SGDICanvas* gdi_canvas = nullptr;
-    skr::gdi::SGDIViewport* gdi_viewport = nullptr;
+    skr::gdi::GDICanvas* gdi_canvas = nullptr;
+    skr::gdi::GDIViewport* gdi_viewport = nullptr;
 
-    skr::gdi::SGDICanvas* background_render_group = nullptr;
-    skr::gdi::SGDIElement* background_element = nullptr;
+    skr::gdi::GDICanvas* background_render_group = nullptr;
+    skr::gdi::GDIElement* background_element = nullptr;
 
-    skr::gdi::SGDITextureId test_texture = nullptr;
-    skr::gdi::SGDIPaint* test_paint = nullptr;
-    skr::gdi::SGDIElement* test_element = nullptr;
-    skr::gdi::SGDIElement* debug_element = nullptr;
+    skr::gdi::GDITextureId test_texture = nullptr;
+    skr::gdi::GDIPaint* test_paint = nullptr;
+    skr::gdi::GDIElement* test_element = nullptr;
+    skr::gdi::GDIElement* debug_element = nullptr;
 };
 
 int main(int argc, char* argv[])

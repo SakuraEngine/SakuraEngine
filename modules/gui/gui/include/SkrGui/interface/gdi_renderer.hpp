@@ -9,7 +9,7 @@ typedef struct skr_gdi_viewport_render_params_t {
 namespace skr {
 namespace gdi {
 
-struct SGDIRendererDescriptor
+struct GDIRendererDescriptor
 {
     void* usr_data = nullptr;
 };
@@ -49,7 +49,7 @@ enum class EGDITextureSource : uint32_t
     Count
 };
 
-typedef struct SGDIImageDescriptor
+typedef struct GDIImageDescriptor
 {
     EGDIImageSource source;
     EGDIImageFormat format;
@@ -69,9 +69,9 @@ typedef struct SGDIImageDescriptor
         } from_file;
     };
     void* usr_data = nullptr;
-} SGDIImageDescriptor;
+} GDIImageDescriptor;
 
-typedef struct SGDITextureDescriptor
+typedef struct GDITextureDescriptor
 {
     EGDITextureSource source;
     EGDIImageFormat format;
@@ -98,22 +98,22 @@ typedef struct SGDITextureDescriptor
         } from_file;
     };
     void* usr_data = nullptr;
-} SGDITextureDescriptor;
+} GDITextureDescriptor;
 
-struct SKR_GUI_API IGDIImage : public SGDIResource
+struct SKR_GUI_API IGDIImage : public GDIResource
 {
     virtual ~IGDIImage() SKR_NOEXCEPT = default;
-    virtual SGDIRendererId get_renderer() const SKR_NOEXCEPT = 0;
+    virtual GDIRendererId get_renderer() const SKR_NOEXCEPT = 0;
     virtual uint32_t get_width() const SKR_NOEXCEPT = 0;
     virtual uint32_t get_height() const SKR_NOEXCEPT = 0;
     virtual LiteSpan<const uint8_t> get_data() const SKR_NOEXCEPT = 0;
     virtual EGDIImageFormat get_format() const SKR_NOEXCEPT = 0;
 };
 
-struct SKR_GUI_API IGDITexture : public SGDIResource
+struct SKR_GUI_API IGDITexture : public GDIResource
 {
     virtual ~IGDITexture() SKR_NOEXCEPT = default;
-    virtual SGDIRendererId get_renderer() const SKR_NOEXCEPT = 0;
+    virtual GDIRendererId get_renderer() const SKR_NOEXCEPT = 0;
     virtual uint32_t get_width() const SKR_NOEXCEPT = 0;
     virtual uint32_t get_height() const SKR_NOEXCEPT = 0;
     
@@ -124,18 +124,18 @@ struct SKR_GUI_API IGDIRenderer
 {
     virtual ~IGDIRenderer() SKR_NOEXCEPT = default;
 
-    virtual LiteSpan<SGDIVertex> fetch_element_vertices(SGDIElement* element) SKR_NOEXCEPT;
-    virtual LiteSpan<index_t> fetch_element_indices(SGDIElement* element) SKR_NOEXCEPT;
-    virtual LiteSpan<SGDIElementDrawCommand> fetch_element_draw_commands(SGDIElement* element) SKR_NOEXCEPT;
+    virtual LiteSpan<GDIVertex> fetch_element_vertices(GDIElement* element) SKR_NOEXCEPT;
+    virtual LiteSpan<index_t> fetch_element_indices(GDIElement* element) SKR_NOEXCEPT;
+    virtual LiteSpan<GDIElementDrawCommand> fetch_element_draw_commands(GDIElement* element) SKR_NOEXCEPT;
 
     // Tier 1
-    virtual int initialize(const SGDIRendererDescriptor* desc) SKR_NOEXCEPT = 0;
+    virtual int initialize(const GDIRendererDescriptor* desc) SKR_NOEXCEPT = 0;
     virtual int finalize() SKR_NOEXCEPT = 0;
-    [[nodiscard]] virtual SGDIImageId create_image(const SGDIImageDescriptor* descriptor) SKR_NOEXCEPT = 0;
-    [[nodiscard]] virtual SGDITextureId create_texture(const SGDITextureDescriptor* descriptor) SKR_NOEXCEPT = 0;
-    virtual void free_image(SGDIImageId image) SKR_NOEXCEPT = 0;
-    virtual void free_texture(SGDITextureId texture) SKR_NOEXCEPT = 0;
-    virtual void render(SGDIViewport* render_group, const ViewportRenderParams* params) SKR_NOEXCEPT = 0;
+    [[nodiscard]] virtual GDIImageId create_image(const GDIImageDescriptor* descriptor) SKR_NOEXCEPT = 0;
+    [[nodiscard]] virtual GDITextureId create_texture(const GDITextureDescriptor* descriptor) SKR_NOEXCEPT = 0;
+    virtual void free_image(GDIImageId image) SKR_NOEXCEPT = 0;
+    virtual void free_texture(GDITextureId texture) SKR_NOEXCEPT = 0;
+    virtual void render(GDIViewport* render_group, const ViewportRenderParams* params) SKR_NOEXCEPT = 0;
 
     // Tier 2
     virtual bool support_hardware_z(float* out_min, float* max) const SKR_NOEXCEPT = 0;

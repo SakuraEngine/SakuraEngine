@@ -2,11 +2,11 @@
 #include "SkrGui/module.configure.h"
 #include "platform/configure.h"
 
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, SGDIDevice, skr_gdi_device)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIDevice, skr_gdi_device)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIRenderer, skr_gdi_renderer)
 SKR_DECLARE_TYPE_ID_FWD(skr::gui, IPlatformWindow, skr_gui_platform_window);
 SKR_DECLARE_TYPE_ID_FWD(skr::gui, RenderWindow, skr_gui_render_window);
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, SGDIViewport, skr_gdi_viewport)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIViewport, skr_gdi_viewport)
 
 typedef struct skr_gui_window_context_draw_params_t {
     void* usr_data SKR_IF_CPP(= nullptr);

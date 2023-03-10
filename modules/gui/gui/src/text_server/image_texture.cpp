@@ -34,7 +34,7 @@ Ref<Image> Image::create_from_data(skr::gdi::IGDIRenderer* renderer, uint32_t w,
 {
     Ref<Image> image;
     image.instantiate();
-    skr::gdi::SGDIImageDescriptor desc = {};
+    skr::gdi::GDIImageDescriptor desc = {};
     desc.format = translate_format(format);
     desc.source = skr::gdi::EGDIImageSource::Data;
     desc.from_data.data = p_data.data();
@@ -81,7 +81,7 @@ Ref<ImageTexture> ImageTexture::create_from_image(skr::gdi::IGDIRenderer* render
 {
     Ref<ImageTexture> texture;
     texture.instantiate();
-    skr::gdi::SGDITextureDescriptor desc = {};
+    skr::gdi::GDITextureDescriptor desc = {};
     desc.format = translate_format(image->get_format());
     desc.source = skr::gdi::EGDITextureSource::Image;
     desc.from_image.image = image->underlying;

@@ -8,12 +8,12 @@
 namespace skr {
 namespace gdi {
 
-void SGDICanvasPrivate::add_element(SGDIElement* element) SKR_NOEXCEPT
+void GDICanvasPrivate::add_element(GDIElement* element) SKR_NOEXCEPT
 {
     all_elements_.emplace_back(element);
 }
 
-void SGDICanvasPrivate::remove_element(SGDIElement* element) SKR_NOEXCEPT
+void GDICanvasPrivate::remove_element(GDIElement* element) SKR_NOEXCEPT
 {
     auto it = eastl::find(all_elements_.begin(), all_elements_.end(), element);
     if (it != all_elements_.end()) 
@@ -22,22 +22,22 @@ void SGDICanvasPrivate::remove_element(SGDIElement* element) SKR_NOEXCEPT
     }
 }
 
-void SGDICanvasPrivate::clear_elements() SKR_NOEXCEPT
+void GDICanvasPrivate::clear_elements() SKR_NOEXCEPT
 {
     all_elements_.clear();
 }
 
-LiteSpan<SGDIElement*> SGDICanvasPrivate::all_elements() SKR_NOEXCEPT
+LiteSpan<GDIElement*> GDICanvasPrivate::all_elements() SKR_NOEXCEPT
 {
     return { all_elements_.data(), all_elements_.size() };
 }
 
-void SGDIViewportPrivate::add_canvas(SGDICanvas* canvas) SKR_NOEXCEPT
+void GDIViewportPrivate::add_canvas(GDICanvas* canvas) SKR_NOEXCEPT
 {
     all_canvas_.emplace_back(canvas);
 }
 
-void SGDIViewportPrivate::remove_canvas(SGDICanvas* canvas) SKR_NOEXCEPT
+void GDIViewportPrivate::remove_canvas(GDICanvas* canvas) SKR_NOEXCEPT
 {
     auto it = eastl::find(all_canvas_.begin(), all_canvas_.end(), canvas);
     if (it != all_canvas_.end()) 
@@ -46,22 +46,22 @@ void SGDIViewportPrivate::remove_canvas(SGDICanvas* canvas) SKR_NOEXCEPT
     }
 }
 
-void SGDIViewportPrivate::clear_canvas() SKR_NOEXCEPT
+void GDIViewportPrivate::clear_canvas() SKR_NOEXCEPT
 {
     all_canvas_.clear();
 }
 
-LiteSpan<SGDICanvas*> SGDIViewportPrivate::all_canvas() SKR_NOEXCEPT
+LiteSpan<GDICanvas*> GDIViewportPrivate::all_canvas() SKR_NOEXCEPT
 {
     return { all_canvas_.data(), all_canvas_.size() };
 }
 
-SGDIDevice* SGDIDevice::Create(EGDIBackend backend)
+GDIDevice* GDIDevice::Create(EGDIBackend backend)
 {
     switch (backend) {
     case EGDIBackend::NANOVG:
     {
-        auto nvgDevice =  SkrNew<SGDIDeviceNVG>();
+        auto nvgDevice =  SkrNew<GDIDeviceNVG>();
         nvgDevice->initialize();
         return nvgDevice;
     }
@@ -71,46 +71,46 @@ SGDIDevice* SGDIDevice::Create(EGDIBackend backend)
     }
 }
     
-void SGDIDevice::Free(SGDIDevice* device)
+void GDIDevice::Free(GDIDevice* device)
 {
     SkrDelete(device);
 }
 
-SGDIViewport* SGDIDevice::create_viewport()
+GDIViewport* GDIDevice::create_viewport()
 {
-    return SkrNew<SGDIViewportPrivate>();
+    return SkrNew<GDIViewportPrivate>();
 }
 
-void SGDIDevice::free_viewport(SGDIViewport* canvas)
+void GDIDevice::free_viewport(GDIViewport* canvas)
 {
     SkrDelete(canvas);
 }
 
-SGDICanvas* SGDIDevice::create_canvas()
+GDICanvas* GDIDevice::create_canvas()
 {
-    return SkrNew<SGDICanvasPrivate>();
+    return SkrNew<GDICanvasPrivate>();
 }
 
-void SGDIDevice::free_canvas(SGDICanvas* render_group)
+void GDIDevice::free_canvas(GDICanvas* render_group)
 {
     SkrDelete(render_group);
 }
 
-LiteSpan<SGDIVertex> IGDIRenderer::fetch_element_vertices(SGDIElement* element) SKR_NOEXCEPT
+LiteSpan<GDIVertex> IGDIRenderer::fetch_element_vertices(GDIElement* element) SKR_NOEXCEPT
 {
-    const auto element_private = static_cast<SGDIElementPrivate*>(element);
+    const auto element_private = static_cast<GDIElementPrivate*>(element);
     return { element_private->vertices.data(), element_private->vertices.size() };
 }
 
-LiteSpan<index_t> IGDIRenderer::fetch_element_indices(SGDIElement* element) SKR_NOEXCEPT
+LiteSpan<index_t> IGDIRenderer::fetch_element_indices(GDIElement* element) SKR_NOEXCEPT
 {
-    const auto element_private = static_cast<SGDIElementPrivate*>(element);
+    const auto element_private = static_cast<GDIElementPrivate*>(element);
     return { element_private->indices.data(), element_private->indices.size() };
 }
 
-LiteSpan<SGDIElementDrawCommand> IGDIRenderer::fetch_element_draw_commands(SGDIElement* element) SKR_NOEXCEPT
+LiteSpan<GDIElementDrawCommand> IGDIRenderer::fetch_element_draw_commands(GDIElement* element) SKR_NOEXCEPT
 {
-    const auto element_private = static_cast<SGDIElementPrivate*>(element);
+    const auto element_private = static_cast<GDIElementPrivate*>(element);
     return { element_private->commands.data(), element_private->commands.size() };
 }
 

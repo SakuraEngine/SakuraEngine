@@ -3,8 +3,8 @@
 #include "SkrGui/fwd_containers.hpp"
 #include "utils/types.h"
 
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, SGDICanvas, skr_gdi_canvas)
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, SGDIViewport, skr_gdi_viewport)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDICanvas, skr_gdi_canvas)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIViewport, skr_gdi_viewport)
 
 namespace skr {
 namespace gui {

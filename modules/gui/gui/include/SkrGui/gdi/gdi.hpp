@@ -8,12 +8,12 @@ namespace gdi {
 using index_t = uint16_t;
 struct IGDIImage;
 struct IGDITexture;
-struct SGDIMaterial;
+struct GDIMaterial;
 struct IGDIRenderer;
-typedef struct IGDIImage* SGDIImageId;
-typedef struct IGDITexture* SGDITextureId;
-typedef struct SGDIMaterial* SGDIMaterialId;
-typedef struct IGDIRenderer* SGDIRendererId;
+typedef struct IGDIImage* GDIImageId;
+typedef struct IGDITexture* GDITextureId;
+typedef struct GDIMaterial* GDIMaterialId;
+typedef struct IGDIRenderer* GDIRendererId;
 
 // gdi
 
@@ -36,7 +36,7 @@ enum class EGDIBackend
     Count
 };
     
-struct SGDIVertex
+struct GDIVertex
 {
     skr_float4_t position;
     skr_float2_t texcoord;
@@ -56,32 +56,32 @@ enum class EGDIResourceState : uint32_t
     Count = 5
 };
 
-struct SKR_GUI_API SGDIResource
+struct SKR_GUI_API GDIResource
 {
-    virtual ~SGDIResource() SKR_NOEXCEPT = default;
+    virtual ~GDIResource() SKR_NOEXCEPT = default;
     virtual EGDIResourceState get_state() const SKR_NOEXCEPT = 0;
 };
 
-struct SGDIElementDrawCommand
+struct GDIElementDrawCommand
 {
-    SGDITextureId texture = nullptr;
-    SGDIMaterialId material = nullptr;
+    GDITextureId texture = nullptr;
+    GDIMaterialId material = nullptr;
     uint32_t first_index = 0;
     uint32_t index_count = 0;
 };
 
-struct SKR_GUI_API SGDIPaint
+struct SKR_GUI_API GDIPaint
 {
-    virtual ~SGDIPaint() SKR_NOEXCEPT = default;
+    virtual ~GDIPaint() SKR_NOEXCEPT = default;
 
-    virtual void set_pattern(float cx, float cy, float w, float h, float angle, SGDITextureId texture, skr_float4_t ocol) SKR_NOEXCEPT = 0;
-    virtual void set_pattern(float cx, float cy, float w, float h, float angle, SGDIMaterialId material, skr_float4_t ocol) SKR_NOEXCEPT = 0;
+    virtual void set_pattern(float cx, float cy, float w, float h, float angle, GDITextureId texture, skr_float4_t ocol) SKR_NOEXCEPT = 0;
+    virtual void set_pattern(float cx, float cy, float w, float h, float angle, GDIMaterialId material, skr_float4_t ocol) SKR_NOEXCEPT = 0;
 };
 
-struct SKR_GUI_API SGDIElement
+struct SKR_GUI_API GDIElement
 {
     friend struct IGDIRenderer;
-    virtual ~SGDIElement() SKR_NOEXCEPT = default;
+    virtual ~GDIElement() SKR_NOEXCEPT = default;
     
     virtual void begin_frame(float devicePixelRatio) = 0;
     virtual void begin_path() = 0;
@@ -98,20 +98,20 @@ struct SKR_GUI_API SGDIElement
 
     virtual void fill_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a) = 0;
     virtual void fill_color(float r, float g, float b, float a) = 0;
-    virtual void fill_paint(SGDIPaint* paint) = 0;
+    virtual void fill_paint(GDIPaint* paint) = 0;
     virtual void fill() = 0;
 
     virtual void set_z(int32_t z) = 0;
     virtual int32_t get_z() const = 0;
 };
 
-struct SKR_GUI_API SGDICanvas
+struct SKR_GUI_API GDICanvas
 {
-    virtual ~SGDICanvas() SKR_NOEXCEPT = default;
+    virtual ~GDICanvas() SKR_NOEXCEPT = default;
 
-    virtual void add_element(SGDIElement* element) SKR_NOEXCEPT = 0;
-    virtual void remove_element(SGDIElement* element) SKR_NOEXCEPT = 0;
-    virtual LiteSpan<SGDIElement*> all_elements() SKR_NOEXCEPT = 0;
+    virtual void add_element(GDIElement* element) SKR_NOEXCEPT = 0;
+    virtual void remove_element(GDIElement* element) SKR_NOEXCEPT = 0;
+    virtual LiteSpan<GDIElement*> all_elements() SKR_NOEXCEPT = 0;
     virtual void clear_elements() SKR_NOEXCEPT = 0;
 
     virtual void set_zrange(int32_t min, int32_t max) SKR_NOEXCEPT = 0;
@@ -125,41 +125,41 @@ struct SKR_GUI_API SGDICanvas
     skr_float2_t size = { 0.f, 0.0f };
 };
 
-struct SKR_GUI_API SGDIViewport
+struct SKR_GUI_API GDIViewport
 {
-    virtual ~SGDIViewport() SKR_NOEXCEPT = default;
+    virtual ~GDIViewport() SKR_NOEXCEPT = default;
 
-    virtual void add_canvas(SGDICanvas* canvas) SKR_NOEXCEPT = 0;
-    virtual void remove_canvas(SGDICanvas* canvas) SKR_NOEXCEPT = 0;
+    virtual void add_canvas(GDICanvas* canvas) SKR_NOEXCEPT = 0;
+    virtual void remove_canvas(GDICanvas* canvas) SKR_NOEXCEPT = 0;
     virtual void clear_canvas() SKR_NOEXCEPT = 0;
-    virtual LiteSpan<SGDICanvas*> all_canvas() SKR_NOEXCEPT = 0;
+    virtual LiteSpan<GDICanvas*> all_canvas() SKR_NOEXCEPT = 0;
 };
 
-struct SKR_GUI_API SGDIDevice
+struct SKR_GUI_API GDIDevice
 {
-    virtual ~SGDIDevice() SKR_NOEXCEPT = default;
+    virtual ~GDIDevice() SKR_NOEXCEPT = default;
 
-    [[nodiscard]] static SGDIDevice* Create(EGDIBackend backend);
-    static void Free(SGDIDevice* device);
+    [[nodiscard]] static GDIDevice* Create(EGDIBackend backend);
+    static void Free(GDIDevice* device);
 
-    [[nodiscard]] virtual SGDICanvas* create_canvas();
-    virtual void free_canvas(SGDICanvas* canvas);
+    [[nodiscard]] virtual GDICanvas* create_canvas();
+    virtual void free_canvas(GDICanvas* canvas);
 
-    [[nodiscard]] virtual SGDIViewport* create_viewport();
-    virtual void free_viewport(SGDIViewport* render_group);
+    [[nodiscard]] virtual GDIViewport* create_viewport();
+    virtual void free_viewport(GDIViewport* render_group);
 
-    [[nodiscard]] virtual SGDIElement* create_element() = 0;
-    virtual void free_element(SGDIElement* element) = 0;
+    [[nodiscard]] virtual GDIElement* create_element() = 0;
+    virtual void free_element(GDIElement* element) = 0;
 
-    [[nodiscard]] virtual SGDIPaint* create_paint() = 0;
-    virtual void free_paint(SGDIPaint* paint) = 0;
+    [[nodiscard]] virtual GDIPaint* create_paint() = 0;
+    virtual void free_paint(GDIPaint* paint) = 0;
 };
 
 } }
 
-SKR_DECLARE_TYPE_ID(skr::gdi::SGDIResource, skr_gdi_resource)
-SKR_DECLARE_TYPE_ID(skr::gdi::SGDIPaint, skr_gdi_paint)
-SKR_DECLARE_TYPE_ID(skr::gdi::SGDIElement, skr_gdi_elements)
-SKR_DECLARE_TYPE_ID(skr::gdi::SGDICanvas, skr_gdi_canvas)
-SKR_DECLARE_TYPE_ID(skr::gdi::SGDIViewport, skr_gdi_viewport)
-SKR_DECLARE_TYPE_ID(skr::gdi::SGDIDevice, skr_gdi_device);
+SKR_DECLARE_TYPE_ID(skr::gdi::GDIResource, skr_gdi_resource)
+SKR_DECLARE_TYPE_ID(skr::gdi::GDIPaint, skr_gdi_paint)
+SKR_DECLARE_TYPE_ID(skr::gdi::GDIElement, skr_gdi_elements)
+SKR_DECLARE_TYPE_ID(skr::gdi::GDICanvas, skr_gdi_canvas)
+SKR_DECLARE_TYPE_ID(skr::gdi::GDIViewport, skr_gdi_viewport)
+SKR_DECLARE_TYPE_ID(skr::gdi::GDIDevice, skr_gdi_device);
