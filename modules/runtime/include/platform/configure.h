@@ -214,6 +214,18 @@ typedef char char8_t;
     #endif
 #endif
 
+#ifdef __cplusplus
+#define SKR_DECLARE_TYPE_ID_FWD(ns, type, ctype) namespace ns { struct type; } using ctype##_id = ns::type*;
+#else
+#define SKR_DECLARE_TYPE_ID_FWD(ns, type, ctype) typedef struct ctype* ctype##_id;
+#endif
+
+#ifdef __cplusplus
+#define SKR_DECLARE_TYPE_ID(type, ctype) typedef struct type ctype##_t; typedef type* ctype##_id;
+#else
+#define SKR_DECLARE_TYPE_ID(type, ctype) typedef struct ctype##_t ctype##_t; typedef ctype##_t* ctype##_id;
+#endif
+
 #if defined(__cplusplus)
     #define DECLARE_ZERO(type, var) type var = {};
 #else

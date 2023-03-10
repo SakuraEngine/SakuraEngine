@@ -131,7 +131,7 @@ protected:
     eastl::function<void()> vram_finsihed_callback = {};
 };
 
-struct SKR_GUI_RENDERER_API SGDIImage_RenderGraph : public SGDIImage
+struct SKR_GUI_RENDERER_API SGDIImage_RenderGraph : public IGDIImage
 {
     SGDIImage_RenderGraph(struct SGDIRenderer_RenderGraph* renderer) SKR_NOEXCEPT
         : renderer(renderer) { }
@@ -160,7 +160,7 @@ struct SKR_GUI_RENDERER_API SGDIImage_RenderGraph : public SGDIImage
     struct SGDIRenderer_RenderGraph* renderer = nullptr;
 };
 
-struct SKR_GUI_RENDERER_API SGDITexture_RenderGraph : public SGDITexture
+struct SKR_GUI_RENDERER_API SGDITexture_RenderGraph : public IGDITexture
 {
     SGDITexture_RenderGraph(struct SGDIRenderer_RenderGraph* renderer) SKR_NOEXCEPT
         : intermediate_image(renderer), renderer(renderer) { }
@@ -187,7 +187,7 @@ struct SKR_GUI_RENDERER_API SGDITexture_RenderGraph : public SGDITexture
     struct SGDIRenderer_RenderGraph* renderer = nullptr;
 };
 
-struct SKR_GUI_RENDERER_API SGDIRenderer_RenderGraph : public SGDIRenderer
+struct SKR_GUI_RENDERER_API SGDIRenderer_RenderGraph : public IGDIRenderer
 {
     // Tier 1
     int initialize(const SGDIRendererDescriptor* desc) SKR_NOEXCEPT final;

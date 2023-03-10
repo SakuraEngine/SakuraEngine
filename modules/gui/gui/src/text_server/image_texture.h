@@ -4,7 +4,7 @@
 #include "text_server/rid_owner.h"
 #include "text_server/containers.h"
 
-namespace skr { namespace gdi { struct SGDIRenderer; struct SGDIImage; struct SGDITexture;  }  }
+namespace skr { namespace gdi { struct IGDIRenderer; struct IGDIImage; struct IGDITexture;  }  }
 
 namespace godot {
 struct Image 
@@ -19,7 +19,7 @@ struct Image
 		FORMAT_COUNT
 	};
 
-	[[nodiscard]] static Ref<Image> create_from_data(skr::gdi::SGDIRenderer* renderer, uint32_t w, uint32_t h,
+	[[nodiscard]] static Ref<Image> create_from_data(skr::gdi::IGDIRenderer* renderer, uint32_t w, uint32_t h,
 		bool p_use_mipmaps, Format format, const Span<const uint8_t> &p_data);
 
 	void generate_mipmaps();
@@ -28,20 +28,20 @@ struct Image
 	uint32_t get_height() const;
 	Format get_format() const;
 
-	skr::gdi::SGDIImage* underlying = nullptr;
+	skr::gdi::IGDIImage* underlying = nullptr;
 };
 using ImageFormat = Image::Format;
 
 struct ImageTexture
 {
-	[[nodiscard]] static Ref<ImageTexture> create_from_image(skr::gdi::SGDIRenderer* renderer, Ref<Image> image);
+	[[nodiscard]] static Ref<ImageTexture> create_from_image(skr::gdi::IGDIRenderer* renderer, Ref<Image> image);
 
 	Size2 get_size() const;
 	void update(const Ref<Image> image);
 	RID get_rid() const;
 
 	RID rid = {};
-	skr::gdi::SGDITexture* underlying = nullptr;
+	skr::gdi::IGDITexture* underlying = nullptr;
 
 	static RID_PtrOwner<ImageTexture> texture_owner;
 };

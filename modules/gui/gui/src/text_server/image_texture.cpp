@@ -29,7 +29,7 @@ ImageFormat translate_format(skr::gdi::EGDIImageFormat format)
     return ImageFormat::FORMAT_None;
 }
 
-Ref<Image> Image::create_from_data(skr::gdi::SGDIRenderer* renderer, uint32_t w, uint32_t h, 
+Ref<Image> Image::create_from_data(skr::gdi::IGDIRenderer* renderer, uint32_t w, uint32_t h, 
     bool p_use_mipmaps, Format format, const Span<const uint8_t> &p_data)
 {
     Ref<Image> image;
@@ -77,7 +77,7 @@ ImageFormat Image::get_format() const
 }
 
 RID_PtrOwner<ImageTexture> ImageTexture::texture_owner = {};
-Ref<ImageTexture> ImageTexture::create_from_image(skr::gdi::SGDIRenderer* renderer, Ref<Image> image)
+Ref<ImageTexture> ImageTexture::create_from_image(skr::gdi::IGDIRenderer* renderer, Ref<Image> image)
 {
     Ref<ImageTexture> texture;
     texture.instantiate();

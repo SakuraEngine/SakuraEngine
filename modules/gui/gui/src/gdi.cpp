@@ -86,19 +86,19 @@ void SGDIDevice::free_canvas_group(SGDICanvasGroup* canvas_group)
     SkrDelete(canvas_group);
 }
 
-LiteSpan<SGDIVertex> SGDIRenderer::fetch_element_vertices(SGDIElement* element) SKR_NOEXCEPT
+LiteSpan<SGDIVertex> IGDIRenderer::fetch_element_vertices(SGDIElement* element) SKR_NOEXCEPT
 {
     const auto element_private = static_cast<SGDIElementPrivate*>(element);
     return { element_private->vertices.data(), element_private->vertices.size() };
 }
 
-LiteSpan<index_t> SGDIRenderer::fetch_element_indices(SGDIElement* element) SKR_NOEXCEPT
+LiteSpan<index_t> IGDIRenderer::fetch_element_indices(SGDIElement* element) SKR_NOEXCEPT
 {
     const auto element_private = static_cast<SGDIElementPrivate*>(element);
     return { element_private->indices.data(), element_private->indices.size() };
 }
 
-LiteSpan<SGDIElementDrawCommand> SGDIRenderer::fetch_element_draw_commands(SGDIElement* element) SKR_NOEXCEPT
+LiteSpan<SGDIElementDrawCommand> IGDIRenderer::fetch_element_draw_commands(SGDIElement* element) SKR_NOEXCEPT
 {
     const auto element_private = static_cast<SGDIElementPrivate*>(element);
     return { element_private->commands.data(), element_private->commands.size() };

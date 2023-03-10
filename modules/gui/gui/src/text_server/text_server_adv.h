@@ -85,7 +85,7 @@ namespace godot {
 	
 struct SkrGuiData
 {
-	skr::gdi::SGDIRenderer* gdi_renderer = nullptr;
+	skr::gdi::IGDIRenderer* gdi_renderer = nullptr;
 };
 
 class TextServerAdvanced : public TextServer {
