@@ -400,9 +400,19 @@ void SGDIPaintNVG::set_pattern(float cx, float cy, float w, float h, float angle
     nvg_paint = nvgMaterialPattern(nullptr, cx, cy, w, h, angle, material, color);
 } 
 
-void SGDIRenderGroupNVG::add_element(SGDIElement* element) SKR_NOEXCEPT
+void SGDICanvasNVG::add_element(SGDIElement* element) SKR_NOEXCEPT
 {
-    SGDIRenderGroupPrivate::add_element(element);
+    SGDICanvasPrivate::add_element(element);
+}
+
+SGDIViewport* SGDIDeviceNVG::create_viewport()
+{
+    return SkrNew<SGDIViewportNVG>();
+}
+
+void SGDIDeviceNVG::free_viewport(SGDIViewport* canvas)
+{
+    SkrDelete(canvas);
 }
 
 SGDICanvas* SGDIDeviceNVG::create_canvas()
@@ -410,17 +420,7 @@ SGDICanvas* SGDIDeviceNVG::create_canvas()
     return SkrNew<SGDICanvasNVG>();
 }
 
-void SGDIDeviceNVG::free_canvas(SGDICanvas* canvas)
-{
-    SkrDelete(canvas);
-}
-
-SGDIRenderGroup* SGDIDeviceNVG::create_render_group()
-{
-    return SkrNew<SGDIRenderGroupNVG>();
-}
-
-void SGDIDeviceNVG::free_render_group(SGDIRenderGroup* group)
+void SGDIDeviceNVG::free_canvas(SGDICanvas* group)
 {
     SkrDelete(group);
 }

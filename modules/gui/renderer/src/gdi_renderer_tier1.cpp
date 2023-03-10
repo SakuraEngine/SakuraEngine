@@ -244,22 +244,22 @@ int SGDIRenderer_RenderGraph::finalize() SKR_NOEXCEPT
     return 0;
 }
 
-void SGDIRenderer_RenderGraph::render(SGDICanvas* canvas, SGDIRenderParams* params) SKR_NOEXCEPT
+void SGDIRenderer_RenderGraph::render(SGDIViewport* viewport, SGDIRenderParams* params) SKR_NOEXCEPT
 {
     const auto pParams = reinterpret_cast<SGDIRenderParams_RenderGraph*>(params->usr_data);
     auto rg = pParams->render_graph;
-    auto render_group_data = SkrNew<SGDIRenderGroupData_RenderGraph>(canvas);
-    const auto render_group_span = canvas->all_render_groups();
-    if (render_group_span.empty()) return;
+    auto viewport_data = SkrNew<SGDIViewportData_RenderGraph>(viewport);
+    const auto all_canvas = viewport->all_canvas();
+    if (all_canvas.empty()) return;
     uint64_t vertex_count = 0u;
     uint64_t index_count = 0u;
     uint64_t transform_count = 0u;
     uint64_t projection_count = 0u;
     uint64_t command_count = 0u;
     // 1. loop prepare counters & render data
-    for (auto render_group : render_group_span)
+    for (auto canvas : all_canvas)
     {
-    for (auto element : render_group->all_elements())
+    for (auto element : canvas->all_elements())
     {
         const auto element_vertices = fetch_element_vertices(element);
         const auto element_indices = fetch_element_indices(element);
@@ -272,37 +272,37 @@ void SGDIRenderer_RenderGraph::render(SGDICanvas* canvas, SGDIRenderParams* para
         command_count += element_commands.size();
     }
     }
-    render_group_data->render_vertices.reserve(vertex_count);
-    render_group_data->render_indices.reserve(index_count);
-    render_group_data->render_transforms.reserve(transform_count);
-    render_group_data->render_projections.reserve(projection_count);
-    render_group_data->render_commands.reserve(command_count);
+    viewport_data->render_vertices.reserve(vertex_count);
+    viewport_data->render_indices.reserve(index_count);
+    viewport_data->render_transforms.reserve(transform_count);
+    viewport_data->render_projections.reserve(projection_count);
+    viewport_data->render_commands.reserve(command_count);
     uint64_t vb_cursor = 0u, ib_cursor = 0u, tb_cursor = 0u, pb_cursor = 0u;
-    for (auto render_group : render_group_span)
+    for (auto canvas : all_canvas)
     {
-    for (auto element : render_group->all_elements())
+    for (auto element : canvas->all_elements())
     {
         const auto element_vertices = fetch_element_vertices(element);
         const auto element_indices = fetch_element_indices(element);
         const auto element_commands = fetch_element_draw_commands(element);
 
         // insert data
-        vb_cursor = render_group_data->render_vertices.size();
-        ib_cursor = render_group_data->render_indices.size();
-        tb_cursor = render_group_data->render_transforms.size();
-        pb_cursor = render_group_data->render_projections.size();
-        render_group_data->render_vertices.insert(render_group_data->render_vertices.end(), element_vertices.begin(), element_vertices.end());
-        render_group_data->render_indices.insert(render_group_data->render_indices.end(), element_indices.begin(), element_indices.end());
+        vb_cursor = viewport_data->render_vertices.size();
+        ib_cursor = viewport_data->render_indices.size();
+        tb_cursor = viewport_data->render_transforms.size();
+        pb_cursor = viewport_data->render_projections.size();
+        viewport_data->render_vertices.insert(viewport_data->render_vertices.end(), element_vertices.begin(), element_vertices.end());
+        viewport_data->render_indices.insert(viewport_data->render_indices.end(), element_indices.begin(), element_indices.end());
 
         // calculate z offset
         float hardware_zmin, hardware_zmax;
         float transformZ = 0.f;
-        const bool use_hardware_z = support_hardware_z(&hardware_zmin, &hardware_zmax) && render_group->is_hardware_z_enabled();
+        const bool use_hardware_z = support_hardware_z(&hardware_zmin, &hardware_zmax) && canvas->is_hardware_z_enabled();
         if (use_hardware_z)
         {
             const auto hardware_zrange = hardware_zmax - hardware_zmin;
             int32_t z_min = 0, z_max = 1000;
-            render_group->get_zrange(&z_min, &z_max);
+            canvas->get_zrange(&z_min, &z_max);
 
             // remap z range from [min, max] to [0, max - min]
             const auto element_z =  (float)::fmax(element->get_z(), z_min) - z_min;
@@ -320,7 +320,7 @@ void SGDIRenderer_RenderGraph::render(SGDICanvas* canvas, SGDIRenderParams* para
         }
 
         // compose transform
-        auto& transform = render_group_data->render_transforms.emplace_back();
+        auto& transform = viewport_data->render_transforms.emplace_back();
         const auto scaleX = 1.f;
         const auto scaleY = 1.f;
         const auto scaleZ = 1.f;
@@ -340,9 +340,9 @@ void SGDIRenderer_RenderGraph::render(SGDICanvas* canvas, SGDIRenderParams* para
         transform = rtm::matrix_cast(rtm::matrix_from_qvv(transform_qvv));
         
         // projection
-        auto& projection = render_group_data->render_projections.emplace_back();
-        const skr_float2_t canvas_size = render_group->size;
-        const skr_float2_t canvas_pivot = render_group->pivot;
+        auto& projection = viewport_data->render_projections.emplace_back();
+        const skr_float2_t canvas_size = canvas->size;
+        const skr_float2_t canvas_pivot = canvas->pivot;
         const skr_float2_t abs_canvas_pivot = { canvas_pivot.x * canvas_size.x, canvas_pivot.y * canvas_size.y };
         const skr_float2_t zero_point =  { canvas_size.x * 0.5f, canvas_size.y * 0.5f };
         const skr_float2_t eye_position = { zero_point.x - abs_canvas_pivot.x, zero_point.y - abs_canvas_pivot.y };
@@ -370,7 +370,7 @@ void SGDIRenderer_RenderGraph::render(SGDICanvas* canvas, SGDIRenderParams* para
             command2.attributes |= use_hardware_z ? GDI_RENDERER_PIPELINE_ATTRIBUTE_TEST_Z : 0;
             command2.attributes |= use_hardware_z ? GDI_RENDERER_PIPELINE_ATTRIBUTE_WRITE_Z : 0;
 
-            render_group_data->render_commands.emplace_back(command2);
+            viewport_data->render_commands.emplace_back(command2);
         }
     }
     }
@@ -421,10 +421,10 @@ void SGDIRenderer_RenderGraph::render(SGDICanvas* canvas, SGDIRenderParams* para
                 .prefer_on_device()
                 .as_index_buffer();
         });
-    render_group_data->vertex_buffers.emplace_back(vertex_buffer);
-    render_group_data->transform_buffers.emplace_back(transform_buffer);
-    render_group_data->projection_buffers.emplace_back(projection_buffer);
-    render_group_data->index_buffers.emplace_back(index_buffer);
+    viewport_data->vertex_buffers.emplace_back(vertex_buffer);
+    viewport_data->transform_buffers.emplace_back(transform_buffer);
+    viewport_data->projection_buffers.emplace_back(projection_buffer);
+    viewport_data->index_buffers.emplace_back(index_buffer);
 
     // 3. copy/upload geometry data to GPU
     if (!useCVV)
@@ -446,22 +446,22 @@ void SGDIRenderer_RenderGraph::render(SGDICanvas* canvas, SGDIRenderParams* para
                 .buffer_to_buffer(upload_buffer_handle.range(vertices_size + indices_size, vertices_size + indices_size + transform_size), transform_buffer.range(0, transform_size))
                 .buffer_to_buffer(upload_buffer_handle.range(vertices_size + indices_size + transform_size, vertices_size + indices_size + transform_size + projection_size), projection_buffer.range(0, projection_size));
             },
-            [upload_buffer_handle, render_group_data](render_graph::RenderGraph& g, render_graph::CopyPassContext& context){
+            [upload_buffer_handle, viewport_data](render_graph::RenderGraph& g, render_graph::CopyPassContext& context){
                 auto upload_buffer = context.resolve(upload_buffer_handle);
-                const uint64_t vertices_count = render_group_data->render_vertices.size();
-                const uint64_t indices_count = render_group_data->render_indices.size();
-                const uint64_t transforms_count = render_group_data->render_transforms.size();
-                const uint64_t projections_count = render_group_data->render_projections.size();
+                const uint64_t vertices_count = viewport_data->render_vertices.size();
+                const uint64_t indices_count = viewport_data->render_indices.size();
+                const uint64_t transforms_count = viewport_data->render_transforms.size();
+                const uint64_t projections_count = viewport_data->render_projections.size();
 
                 SGDIVertex* vtx_dst = (SGDIVertex*)upload_buffer->cpu_mapped_address;
                 index_t* idx_dst = (index_t*)(vtx_dst + vertices_count);
                 rtm::matrix4x4f* transform_dst = (rtm::matrix4x4f*)(idx_dst + indices_count);
                 rtm::matrix4x4f* projection_dst = (rtm::matrix4x4f*)(transform_dst + transforms_count);
 
-                const skr::span<SGDIVertex> render_vertices = render_group_data->render_vertices;
-                const skr::span<index_t> render_indices = render_group_data->render_indices;
-                const skr::span<rtm::matrix4x4f> render_transforms = render_group_data->render_transforms;
-                const skr::span<rtm::matrix4x4f> render_projections = render_group_data->render_projections;
+                const skr::span<SGDIVertex> render_vertices = viewport_data->render_vertices;
+                const skr::span<index_t> render_indices = viewport_data->render_indices;
+                const skr::span<rtm::matrix4x4f> render_transforms = viewport_data->render_transforms;
+                const skr::span<rtm::matrix4x4f> render_projections = viewport_data->render_projections;
 
                 memcpy(vtx_dst, render_vertices.data(), vertices_count * sizeof(SGDIVertex));
                 memcpy(idx_dst, render_indices.data(), indices_count * sizeof(index_t));
@@ -473,7 +473,7 @@ void SGDIRenderer_RenderGraph::render(SGDICanvas* canvas, SGDIRenderParams* para
     // 4. loop & record render commands
     skr::render_graph::TextureRTVHandle target = rg->get_texture("backbuffer");
     skr::render_graph::TextureDSVHandle depth = rg->get_texture("depth");
-    // skr::vector<SGDICanvas*> canvas_copy(canvas_span.begin(), canvas_span.end());
+    // skr::vector<SGDIViewport*> canvas_copy(canvas_span.begin(), canvas_span.end());
     rg->add_render_pass([&](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
         ZoneScopedN("ConstructRenderPass");
         const auto back_desc = g.resolve_descriptor(target);
@@ -490,7 +490,7 @@ void SGDIRenderer_RenderGraph::render(SGDICanvas* canvas, SGDIRenderParams* para
             builder.resolve_msaa(0, real_target);
         }
     },
-    [this, target, render_group_data, useCVV, index_buffer, vertex_buffer, transform_buffer, projection_buffer]
+    [this, target, viewport_data, useCVV, index_buffer, vertex_buffer, transform_buffer, projection_buffer]
     (render_graph::RenderGraph& g, render_graph::RenderPassContext& ctx) {
         ZoneScopedN("GDI-RenderPass");
         const auto target_desc = g.resolve_descriptor(target);
@@ -510,7 +510,7 @@ void SGDIRenderer_RenderGraph::render(SGDICanvas* canvas, SGDIRenderParams* para
             0, 0, 
             target_desc->width, target_desc->height);
 
-        const skr::span<SGDIElementDrawCommand_RenderGraph> render_commands = render_group_data->render_commands;
+        const skr::span<SGDIElementDrawCommand_RenderGraph> render_commands = viewport_data->render_commands;
         PipelineKey pipeline_key_cache = { UINT32_MAX, CGPU_SAMPLE_COUNT_1 };
 
         for (const auto& command : render_commands)
@@ -538,7 +538,7 @@ void SGDIRenderer_RenderGraph::render(SGDICanvas* canvas, SGDIRenderParams* para
                 command.index_count,command.first_index,
                 1, 0, 0);
         }
-        SkrDelete(render_group_data);
+        SkrDelete(viewport_data);
     });
 }
 
