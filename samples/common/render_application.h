@@ -30,7 +30,7 @@ typedef struct render_application_t
 inline int app_create_gfx_objects(render_application_t* pApp)
 {
     // Create instance
-    CGPUInstanceDescriptor instance_desc = {};
+    DECLARE_ZERO(CGPUInstanceDescriptor, instance_desc);
     instance_desc.backend = pApp->backend;
     instance_desc.enable_debug_layer = false;
     instance_desc.enable_gpu_based_validation = false;
@@ -45,10 +45,10 @@ inline int app_create_gfx_objects(render_application_t* pApp)
     pApp->adapter = adapters[0];
 
     // Create device
-    CGPUQueueGroupDescriptor queue_group_desc = {};
+    DECLARE_ZERO(CGPUQueueGroupDescriptor, queue_group_desc);
     queue_group_desc.queue_type = CGPU_QUEUE_TYPE_GRAPHICS;
     queue_group_desc.queue_count = 1;
-    CGPUDeviceDescriptor device_desc = {};
+    DECLARE_ZERO(CGPUDeviceDescriptor, device_desc);
     device_desc.queue_groups = &queue_group_desc;
     device_desc.queue_group_count = 1;
     pApp->device = cgpu_create_device(pApp->adapter, &device_desc);
@@ -62,7 +62,7 @@ inline int app_create_gfx_objects(render_application_t* pApp)
     struct CGPUNSView* ns_view = (struct CGPUNSView*)nswindow_get_content_view(pApp->wmInfo.info.cocoa.window);
     pApp->surface = cgpu_surface_from_ns_view(pApp->device, ns_view);
 #endif
-    CGPUSwapChainDescriptor chain_desc = {};
+    DECLARE_ZERO(CGPUSwapChainDescriptor, chain_desc);
     chain_desc.present_queues = &pApp->gfx_queue;
     chain_desc.present_queues_count = 1;
     chain_desc.width = pApp->window_width;
@@ -97,7 +97,7 @@ inline int app_resize_window(render_application_t* pApp, uint32_t w, uint32_t h)
     cgpu_wait_queue_idle(pApp->gfx_queue);
     cgpu_free_swapchain(pApp->swapchain);
 
-    CGPUSwapChainDescriptor chain_desc = {};
+    DECLARE_ZERO(CGPUSwapChainDescriptor, chain_desc);
     chain_desc.present_queues = &pApp->gfx_queue;
     chain_desc.present_queues_count = 1;
     chain_desc.width = w;
