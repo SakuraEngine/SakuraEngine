@@ -1,5 +1,6 @@
-#include "../../../../common/render_application.h"
 #include "gdi_application.h"
+#include "gui_render_graph.hpp"
+
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "utils/make_zeroed.hpp"
 #include "SkrGui/interface/gdi_renderer.hpp"
@@ -100,13 +101,8 @@ struct gdi_example_application : public gdi_application_t
         if (!initialize_gdi_application(this)) return false;
 
         // initialize render graph
-        namespace render_graph = skr::render_graph;
-        graph = render_graph::RenderGraph::create(
-        [=](render_graph::RenderGraphBuilder& builder) {
-            builder.with_device(gfx.device)
-            .with_gfx_queue(gfx.gfx_queue);
-        });
-       
+        graph.initialize(gfx);
+        
         // create GDI objects
         gdi_viewport = device->create_viewport();
         gdi_canvas = device->create_canvas();
@@ -137,84 +133,6 @@ struct gdi_example_application : public gdi_application_t
         return true;
     }
 
-    ECGPUSampleCount sample_count = CGPU_SAMPLE_COUNT_1;
-    void declare_render_resources()
-    {
-        namespace render_graph = skr::render_graph;
-        // acquire frame
-        cgpu_wait_fences(&gfx.present_fence, 1);
-        CGPUAcquireNextDescriptor acquire_desc = {};
-        acquire_desc.fence = gfx.present_fence;
-        gfx.backbuffer_index = cgpu_acquire_next_image(gfx.swapchain, &acquire_desc);
-
-        // declare resources
-        CGPUTextureId imported_backbuffer = gfx.swapchain->back_buffers[gfx.backbuffer_index];
-        if (sample_count != CGPU_SAMPLE_COUNT_1)
-        {
-            back_buffer = graph->create_texture(
-                [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-                    builder.set_name("presentbuffer")
-                    .import(imported_backbuffer, CGPU_RESOURCE_STATE_PRESENT)
-                    .allow_render_target();
-                });
-            const auto back_desc = graph->resolve_descriptor(back_buffer);
-            auto msaaTarget = graph->create_texture(
-            [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
-                builder.set_name("backbuffer")
-                    .extent(back_desc->width, back_desc->height)
-                    .format(back_desc->format)
-                    .owns_memory()
-                    .sample_count(sample_count)
-                    .allow_render_target();
-            });(void)msaaTarget;
-        }
-        else
-        {
-            back_buffer = graph->create_texture(
-                [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-                    builder.set_name("backbuffer")
-                    .import(imported_backbuffer, CGPU_RESOURCE_STATE_PRESENT)
-                    .allow_render_target();
-                });
-        }
-        depth_buffer = graph->create_texture(
-            [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
-                builder.set_name("depth")
-                    .extent(gfx.swapchain->back_buffers[0]->width, gfx.swapchain->back_buffers[0]->height)
-                    .format(CGPU_FORMAT_D32_SFLOAT)
-                    .owns_memory()
-                    .sample_count(sample_count)
-                    .allow_depth_stencil();
-            });
-    }
-
-    void submit_render_graph()
-    {
-        namespace render_graph = skr::render_graph;
-        // do present
-        graph->add_present_pass(
-            [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
-                builder.set_name("present")
-                .swapchain(gfx.swapchain, gfx.backbuffer_index)
-                .texture(back_buffer, true);
-            });
-
-        // render graph setup & compile & exec
-        graph->compile();
-        if (frame_index == 0)
-        {
-            render_graph::RenderGraphViz::write_graphviz(*graph, "gdi_renderer.gv");
-        }
-        frame_index = graph->execute();
-
-        // present
-        cgpu_wait_queue_idle(gfx.gfx_queue);
-        CGPUQueuePresentDescriptor present_desc = {};
-        present_desc.index = gfx.backbuffer_index;
-        present_desc.swapchain = gfx.swapchain;
-        cgpu_queue_present(gfx.gfx_queue, &present_desc);
-    }
-
     void render()
     {
         // GDI
@@ -242,23 +160,23 @@ struct gdi_example_application : public gdi_application_t
         }
 
         // declare render resources
-        declare_render_resources();
+        graph.declare_render_resources(gfx);
 
         // render GDI canvas group
         skr::gdi::ViewportRenderParams render_params = {};
         skr::gdi::ViewportRenderParams_RenderGraph gdir_params2 = {};
-        gdir_params2.render_graph = graph;
+        gdir_params2.render_graph = graph.graph;
         render_params.usr_data = &gdir_params2;
         renderer->render(gdi_viewport, &render_params);
-        submit_render_graph();
+        graph.submit_render_graph(gfx);
     }
 
     void finalize()
     {
-        namespace render_graph = skr::render_graph;
-        render_graph::RenderGraph::destroy(graph);
         // clean up
         app_wait_gpu_idle(&gfx);
+        graph.finalize();
+
         // free GDI objects
         if (test_texture) renderer->free_texture(test_texture);
         if (test_element) device->free_element(test_element);
@@ -272,10 +190,7 @@ struct gdi_example_application : public gdi_application_t
         finalize_gdi_application(this);
     }
 
-    skr::render_graph::RenderGraph* graph;
-    skr::render_graph::TextureHandle back_buffer;
-    skr::render_graph::TextureHandle depth_buffer;
-    uint64_t frame_index = 0;
+    gui_render_graph_t graph;
 
     skr::gdi::GDICanvas* gdi_canvas = nullptr;
     skr::gdi::GDIViewport* gdi_viewport = nullptr;
