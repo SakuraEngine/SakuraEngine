@@ -124,8 +124,11 @@ struct SKR_GUI_API GDICanvas
     virtual void disable_hardware_z() SKR_NOEXCEPT = 0;
     virtual bool is_hardware_z_enabled() const SKR_NOEXCEPT = 0;
 
-    skr_float2_t pivot = { 0.f, 0.f };
-    skr_float2_t size = { 0.f, 0.0f };
+    virtual void set_pivot(float x, float y) SKR_NOEXCEPT = 0;
+    virtual void get_pivot(float* out_x, float* out_y) SKR_NOEXCEPT = 0;
+
+    virtual void set_size(float w, float h) SKR_NOEXCEPT = 0;
+    virtual void get_size(float* out_w, float* out_h) SKR_NOEXCEPT = 0;
 };
 
 struct SKR_GUI_API GDIViewport
