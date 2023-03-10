@@ -70,6 +70,8 @@ struct elements_example_application : public elements_application_t
     gui_render_graph_t graph;
 };
 
+#include "tracy/Tracy.hpp"
+
 int main(int argc, char* argv[])
 {
     auto App = make_zeroed<elements_example_application>();
@@ -77,28 +79,38 @@ int main(int argc, char* argv[])
     bool quit = false;
     while (!quit)
     {
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
+        FrameMark;
         {
-            auto sdl_window = (SDL_Window*)App.gdi.gfx.window_handle;
-            if (SDL_GetWindowID(sdl_window) == event.window.windowID)
+            ZoneScopedN("SystemEvents");
+            SDL_Event event;
+            while (SDL_PollEvent(&event))
             {
-                if (!SDLEventHandler(&event, sdl_window))
+                auto sdl_window = (SDL_Window*)App.gdi.gfx.window_handle;
+                if (SDL_GetWindowID(sdl_window) == event.window.windowID)
                 {
-                    quit = true;
+                    if (!SDLEventHandler(&event, sdl_window))
+                    {
+                        quit = true;
+                    }
                 }
-            }
-            if (event.type == SDL_WINDOWEVENT)
-            {
-                uint8_t window_event = event.window.event;
-                if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
+                if (event.type == SDL_WINDOWEVENT)
                 {
-                    app_resize_window(&App.gdi.gfx, event.window.data1, event.window.data2);
+                    uint8_t window_event = event.window.event;
+                    if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
+                    {
+                        app_resize_window(&App.gdi.gfx, event.window.data1, event.window.data2);
+                    }
                 }
             }
         }
-        App.draw();
-        App.render();
+        {
+            ZoneScopedN("DrawGUI");
+            App.draw();
+        }
+        {
+            ZoneScopedN("RenderGUI");
+            App.render();
+        }
     }
     App.finalize();
     return 0;

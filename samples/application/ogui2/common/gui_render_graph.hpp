@@ -3,6 +3,8 @@
 #include "../../../common/render_application.h"
 #include "utils/make_zeroed.hpp"
 
+#include "tracy/Tracy.hpp"
+
 struct gui_render_graph_t {
     bool initialize(render_application_t& render_app)
     {
@@ -20,11 +22,16 @@ struct gui_render_graph_t {
     {
         namespace render_graph = skr::render_graph;
         // acquire frame
-        cgpu_wait_fences(&render_app.present_fence, 1);
-        auto acquire_desc = make_zeroed<CGPUAcquireNextDescriptor>();
-        acquire_desc.fence = render_app.present_fence;
-        render_app.backbuffer_index = cgpu_acquire_next_image(render_app.swapchain, &acquire_desc);
-
+        {
+            ZoneScopedN("WaitPresent");
+            cgpu_wait_fences(&render_app.present_fence, 1);
+        }
+        {
+            ZoneScopedN("AcquireFrame");
+            auto acquire_desc = make_zeroed<CGPUAcquireNextDescriptor>();
+            acquire_desc.fence = render_app.present_fence;
+            render_app.backbuffer_index = cgpu_acquire_next_image(render_app.swapchain, &acquire_desc);
+        }
         // declare resources
         CGPUTextureId imported_backbuffer = render_app.swapchain->back_buffers[render_app.backbuffer_index];
         if (sample_count != CGPU_SAMPLE_COUNT_1)
@@ -82,7 +89,10 @@ struct gui_render_graph_t {
         frame_index = graph->execute();
 
         // present
-        cgpu_wait_queue_idle(render_app.gfx_queue);
+        {
+            ZoneScopedN("WaitRenderThisFrame");
+            cgpu_wait_queue_idle(render_app.gfx_queue);
+        }
         CGPUQueuePresentDescriptor present_desc = {};
         present_desc.index = render_app.backbuffer_index;
         present_desc.swapchain = render_app.swapchain;

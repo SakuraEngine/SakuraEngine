@@ -3,6 +3,8 @@
 #include "SkrGui/window_context.hpp"
 #include "SkrGui/interface/window.hpp"
 
+#include "tracy/Tracy.hpp"
+
 namespace skr {
 namespace gui {
 
@@ -108,6 +110,8 @@ void RenderGridPaper::layout(Constraints* constraints, bool needSize)
 
 void RenderGridPaper::draw(const DrawParams* params)
 {
+    ZoneScopedN("DrawGridPaper");
+
     // TODO: virtual size?
     auto platform_window = params->window_context->get_platform_window();
     uint32_t w, h;
