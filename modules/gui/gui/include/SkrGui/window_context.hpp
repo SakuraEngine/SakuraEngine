@@ -8,6 +8,12 @@ SKR_DECLARE_TYPE_ID_FWD(skr::gui, IPlatformWindow, skr_gui_platform_window);
 SKR_DECLARE_TYPE_ID_FWD(skr::gui, RenderWindow, skr_gui_render_window);
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIViewport, skr_gdi_viewport)
 
+typedef struct skr_gui_window_context_descriptor_t {
+    skr_gui_platform_window_id platform_window = nullptr;
+    skr_gdi_device_id gdi_device = nullptr;
+    skr_gui_render_window_id root_window = nullptr;
+} skr_gui_window_context_descriptor_t;
+
 typedef struct skr_gui_window_context_draw_params_t {
     void* usr_data SKR_IF_CPP(= nullptr);
 } skr_gui_window_context_draw_params_t;
@@ -19,22 +25,16 @@ typedef struct skr_gui_window_context_render_params_t {
 
 namespace skr {
 namespace gui {
-    
-struct WindowContextDescriptor
-{
-    skr_gui_platform_window_id platform_window = nullptr;
-    skr_gdi_device_id gdi_device = nullptr;
-    skr_gui_render_window_id root_window = nullptr;
-};
 
 struct SKR_GUI_API WindowContext
 {
+    using Descriptor = skr_gui_window_context_descriptor_t;
     using DrawParams = skr_gui_window_context_draw_params_t;
     using RenderParams = skr_gui_window_context_render_params_t;
 
     virtual ~WindowContext() SKR_NOEXCEPT = default;
 
-    [[nodiscard]] static WindowContext* Create(const WindowContextDescriptor* desc) SKR_NOEXCEPT;
+    [[nodiscard]] static WindowContext* Create(const Descriptor* desc) SKR_NOEXCEPT;
     static void Free(WindowContext* context) SKR_NOEXCEPT;
 
     virtual skr_gui_platform_window_id get_platform_window() const SKR_NOEXCEPT = 0;

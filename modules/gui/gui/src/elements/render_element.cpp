@@ -71,13 +71,13 @@ void RenderElement::markLayoutDirty()
     layoutDirty = true;
 }
 
-void RenderElement::draw(skr_gdi_viewport_id viewport, skr_gdi_canvas_id canvas) 
+void RenderElement::draw(const DrawParams* params) 
 {
     if (!active) { return; }
     auto& _children = this->children.get();
     for (auto& child : _children)
     {
-        child->draw(viewport, canvas);
+        child->draw(params);
     }
 }
 

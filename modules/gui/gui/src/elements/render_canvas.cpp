@@ -1,5 +1,7 @@
 #include "SkrGui/render_elements/render_canvas.hpp"
 #include "SkrGui/gdi/gdi.hpp"
+#include "SkrGui/window_context.hpp"
+#include "SkrGui/interface/window.hpp"
 
 namespace skr {
 namespace gui {
@@ -20,15 +22,22 @@ void RenderCanvas::layout(Constraints* constraints, bool needSize)
 
 }
 
-void RenderCanvas::draw(skr_gdi_viewport_id viewport, skr_gdi_canvas_id canvas)
+void RenderCanvas::draw(const DrawParams* params)
 {
-    // use this canvas for rendering (input canvas should be nullptr normally)
-    canvas = gdi_canvas;
-    canvas->clear_elements();
-    canvas->size = { 900.f, 900.f };
+    // TODO: virtual size?
+    auto platform_window = params->window_context->get_platform_window();
+    uint32_t w, h;
+    platform_window->get_extent(&w, &h);
+    const float window_width = (float)w, window_height = (float)h;
 
-    viewport->add_canvas(canvas);
-    RenderElement::draw(viewport, canvas);
+    // use this canvas for rendering (input canvas should be nullptr normally)
+    DrawParams draw_params = *params;
+    draw_params.canvas = gdi_canvas;
+    draw_params.canvas->clear_elements();
+    draw_params.canvas->size = { window_width, window_height };
+
+    draw_params.viewport->add_canvas(draw_params.canvas);
+    RenderElement::draw(&draw_params);
 }
 
 skr_float2_t RenderCanvas::get_size() const

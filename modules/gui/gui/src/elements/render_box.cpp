@@ -18,10 +18,9 @@ void RenderBox::layout(Constraints* constraints, bool needSize)
 
 }
 
-void RenderBox::draw(skr_gdi_viewport_id viewport, skr_gdi_canvas_id canvas)
+void RenderBox::draw(const DrawParams* params)
 {
-    RenderElement::draw(viewport, canvas);
-
+    RenderElement::draw(params);
 }
 
 skr_float2_t RenderBox::get_size() const

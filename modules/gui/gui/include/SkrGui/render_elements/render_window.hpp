@@ -13,7 +13,7 @@ public:
     virtual ~RenderWindow();
 
     virtual void layout(struct Constraints* constraints, bool needSize = false) override;
-    virtual void draw(skr_gdi_viewport_id viewport, skr_gdi_canvas_id canvas) override;
+    virtual void draw(const DrawParams* params) override;
 
     virtual skr_float2_t get_size() const;
     virtual void set_size(const skr_float2_t& size);

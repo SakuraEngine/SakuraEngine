@@ -1,5 +1,7 @@
 #include "SkrGui/render_elements/render_grid_paper.hpp"
 #include "SkrGui/gdi/gdi.hpp"
+#include "SkrGui/window_context.hpp"
+#include "SkrGui/interface/window.hpp"
 
 namespace skr {
 namespace gui {
@@ -104,12 +106,17 @@ void RenderGridPaper::layout(Constraints* constraints, bool needSize)
 
 }
 
-void RenderGridPaper::draw(skr_gdi_viewport_id viewport, skr_gdi_canvas_id canvas)
+void RenderGridPaper::draw(const DrawParams* params)
 {
-    canvas->add_element(gdi_element);
-    draw_background_canvas(gdi_element, 900, 900);
+    // TODO: virtual size?
+    auto platform_window = params->window_context->get_platform_window();
+    uint32_t w, h;
+    platform_window->get_extent(&w, &h);
+    const float window_width = (float)w, window_height = (float)h;
+    params->canvas->add_element(gdi_element);
+    draw_background_canvas(gdi_element, window_width, window_height);
 
-    RenderElement::draw(viewport, canvas);
+    RenderElement::draw(params);
 }
 
 skr_float2_t RenderGridPaper::get_size() const

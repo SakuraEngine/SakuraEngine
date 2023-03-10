@@ -13,7 +13,7 @@ bool initialize_elem_application(elements_application_t* app)
     app->root_window = SkrNew<skr::gui::RenderWindow>(app->gdi.device);
 
     // create window context
-    skr::gui::WindowContextDescriptor ctx_desc;
+    skr::gui::WindowContext::Descriptor ctx_desc;
     ctx_desc.platform_window = app->platform_window;
     ctx_desc.gdi_device = app->gdi.device;
     ctx_desc.root_window = app->root_window;
