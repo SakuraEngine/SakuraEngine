@@ -6,14 +6,14 @@ namespace skr {
 namespace gdi {
 
 using index_t = uint16_t;
-struct SGDIImage;
-struct SGDITexture;
+struct IGDIImage;
+struct IGDITexture;
 struct SGDIMaterial;
-struct SGDIRenderer;
-typedef struct SGDIImage* SGDIImageId;
-typedef struct SGDITexture* SGDITextureId;
+struct IGDIRenderer;
+typedef struct IGDIImage* SGDIImageId;
+typedef struct IGDITexture* SGDITextureId;
 typedef struct SGDIMaterial* SGDIMaterialId;
-typedef struct SGDIRenderer* SGDIRendererId;
+typedef struct IGDIRenderer* SGDIRendererId;
 
 // gdi
 
@@ -80,7 +80,7 @@ struct SKR_GUI_API SGDIPaint
 
 struct SKR_GUI_API SGDIElement
 {
-    friend struct SGDIRenderer;
+    friend struct IGDIRenderer;
     virtual ~SGDIElement() SKR_NOEXCEPT = default;
     
     virtual void begin_frame(float devicePixelRatio) = 0;
@@ -154,3 +154,5 @@ struct SKR_GUI_API SGDIDevice
 };
 
 } }
+
+SKR_DECLARE_TYPE_ID(skr::gdi::SGDIDevice, skr_gdi_device);

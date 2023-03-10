@@ -1,9 +1,8 @@
 #pragma once
 #include "../../../common/render_application.h"
 
-#ifdef __cplusplus
-namespace skr { namespace gdi { struct SGDIRenderer; struct SGDIDevice; } }
-#endif
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIRenderer, skr_gdi_renderer)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, SGDIDevice, skr_gdi_device)
 
 struct gdi_application_t
 {
@@ -12,13 +11,8 @@ struct gdi_application_t
     struct skr_io_ram_service_t* ram_service SKR_IF_CPP(= nullptr);
     struct skr_io_vram_service_t* vram_service SKR_IF_CPP(= nullptr);
     struct skr_threaded_service_t* aux_service SKR_IF_CPP(= nullptr);
-#ifdef __cplusplus
-    skr::gdi::SGDIRenderer* renderer = nullptr;
-    skr::gdi::SGDIDevice* device = nullptr;
-#else
-    void* render;
-    void* device;
-#endif
+    skr_gdi_renderer_id renderer = nullptr;
+    skr_gdi_device_id device = nullptr;
 };
 
 bool initialize_gdi_application(gdi_application_t* app);

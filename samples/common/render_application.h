@@ -1,5 +1,6 @@
 #pragma once
 #include "./utils.h"
+#include "platform/window.h"
 
 #if _WIN32
 static const ECGPUBackend platform_default_backend = CGPU_BACKEND_D3D12;
@@ -10,7 +11,7 @@ static const ECGPUBackend platform_default_backend = CGPU_BACKEND_VULKAN;
 typedef struct render_application_t 
 {
     const char* window_title;
-    SDL_Window* sdl_window;
+    SWindowHandle window_handle;
     SDL_SysWMinfo wmInfo;
     uint32_t window_width;
     uint32_t window_height;
@@ -77,16 +78,17 @@ inline int app_create_gfx_objects(render_application_t* pApp)
 inline int app_create_window(render_application_t* pApp, uint32_t width, uint32_t height)
 {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
-    pApp->sdl_window = SDL_CreateWindow(pApp->window_title ? pApp->window_title :gCGPUBackendNames[pApp->backend],
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        width, height,
-        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
-        SDL_VERSION(&pApp->wmInfo.version);
-    SDL_GetWindowWMInfo(pApp->sdl_window, &pApp->wmInfo);
-    int w, h;
-    SDL_GetWindowSize(pApp->sdl_window, &w, &h);
-    pApp->window_width = w;
-    pApp->window_height = h;
+    const char* window_title = pApp->window_title ? pApp->window_title :gCGPUBackendNames[pApp->backend];
+    DECLARE_ZERO(SWindowDescroptor, window_desc);
+    window_desc.width = width;
+    window_desc.height = height;
+    window_desc.flags |= SKR_WINDOW_CENTERED;
+    window_desc.flags |= SKR_WINDOW_RESIZABLE;
+    pApp->window_handle = skr_create_window(window_title, &window_desc);
+    int32_t window_width = 0, window_height = 0;
+    skr_window_get_extent(pApp->window_handle, &window_width, &window_height);
+    pApp->window_width = window_width;
+    pApp->window_height = window_height;
     return 0;
 }
 
@@ -128,7 +130,7 @@ inline int app_finalize(render_application_t* pApp)
     if (pApp->device) cgpu_free_device(pApp->device);
     if (pApp->instance) cgpu_free_instance(pApp->instance);
 
-    if (pApp->sdl_window) SDL_DestroyWindow(pApp->sdl_window);
+    if (pApp->window_handle) skr_free_window(pApp->window_handle);
     SDL_Quit();
     return 0;
 }

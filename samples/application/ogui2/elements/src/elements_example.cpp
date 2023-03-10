@@ -296,9 +296,10 @@ int main(int argc, char* argv[])
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            if (SDL_GetWindowID(App.gfx.sdl_window) == event.window.windowID)
+            auto sdl_window = (SDL_Window*)App.gfx.window_handle;
+            if (SDL_GetWindowID(sdl_window) == event.window.windowID)
             {
-                if (!SDLEventHandler(&event, App.gfx.sdl_window))
+                if (!SDLEventHandler(&event, sdl_window))
                 {
                     quit = true;
                 }
