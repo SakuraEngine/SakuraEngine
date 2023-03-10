@@ -2,6 +2,10 @@
 #include "SkrGui/gdi/gdi.hpp"
 #include "SkrGui/interface/gdi_renderer.hpp"
 
+typedef struct skr_gdi_viewport_render_params_t {
+    void* usr_data SKR_IF_CPP(= nullptr);
+} skr_gdi_viewport_render_params_t;
+
 namespace skr {
 namespace gdi {
 
@@ -10,10 +14,7 @@ struct SGDIRendererDescriptor
     void* usr_data = nullptr;
 };
 
-struct SGDIRenderParams
-{
-    void* usr_data = nullptr;
-};
+using ViewportRenderParams = skr_gdi_viewport_render_params_t;
 
 enum class EGDIImageFormat
 {
@@ -134,7 +135,7 @@ struct SKR_GUI_API IGDIRenderer
     [[nodiscard]] virtual SGDITextureId create_texture(const SGDITextureDescriptor* descriptor) SKR_NOEXCEPT = 0;
     virtual void free_image(SGDIImageId image) SKR_NOEXCEPT = 0;
     virtual void free_texture(SGDITextureId texture) SKR_NOEXCEPT = 0;
-    virtual void render(SGDIViewport* render_group, SGDIRenderParams* params) SKR_NOEXCEPT = 0;
+    virtual void render(SGDIViewport* render_group, const ViewportRenderParams* params) SKR_NOEXCEPT = 0;
 
     // Tier 2
     virtual bool support_hardware_z(float* out_min, float* max) const SKR_NOEXCEPT = 0;

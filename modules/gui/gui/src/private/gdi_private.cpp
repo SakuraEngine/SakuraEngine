@@ -22,6 +22,11 @@ void SGDICanvasPrivate::remove_element(SGDIElement* element) SKR_NOEXCEPT
     }
 }
 
+void SGDICanvasPrivate::clear_elements() SKR_NOEXCEPT
+{
+    all_elements_.clear();
+}
+
 LiteSpan<SGDIElement*> SGDICanvasPrivate::all_elements() SKR_NOEXCEPT
 {
     return { all_elements_.data(), all_elements_.size() };
@@ -39,6 +44,11 @@ void SGDIViewportPrivate::remove_canvas(SGDICanvas* canvas) SKR_NOEXCEPT
     {
         all_canvas_.erase(it);
     }
+}
+
+void SGDIViewportPrivate::clear_canvas() SKR_NOEXCEPT
+{
+    all_canvas_.clear();
 }
 
 LiteSpan<SGDICanvas*> SGDIViewportPrivate::all_canvas() SKR_NOEXCEPT

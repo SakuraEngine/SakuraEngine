@@ -108,7 +108,6 @@ struct gdi_example_application : public gdi_application_t
         });
        
         // create GDI objects
-        device = skr::gdi::SGDIDevice::Create(skr::gdi::EGDIBackend::NANOVG);
         gdi_viewport = device->create_viewport();
         gdi_canvas = device->create_canvas();
         background_render_group = device->create_canvas();
@@ -246,8 +245,8 @@ struct gdi_example_application : public gdi_application_t
         declare_render_resources();
 
         // render GDI canvas group
-        skr::gdi::SGDIRenderParams render_params = {};
-        skr::gdi::SGDIRenderParams_RenderGraph gdir_params2 = {};
+        skr::gdi::ViewportRenderParams render_params = {};
+        skr::gdi::ViewportRenderParams_RenderGraph gdir_params2 = {};
         gdir_params2.render_graph = graph;
         render_params.usr_data = &gdir_params2;
         renderer->render(gdi_viewport, &render_params);

@@ -20,9 +20,19 @@ struct SKR_GUI_RENDERER_API SPlatformWindow : public IPlatformWindow
 {
     virtual ~SPlatformWindow() SKR_NOEXCEPT = default;
 
-    [[nodiscard]] SPlatformWindow* Create(const SPlatformWindowDescriptor* desc) SKR_NOEXCEPT;
-    [[nodiscard]] SPlatformWindow* Import(SWindow* window) SKR_NOEXCEPT;
-    void Free(SPlatformWindow* window) SKR_NOEXCEPT;
+    [[nodiscard]] static SPlatformWindow* Create(const SPlatformWindowDescriptor* desc) SKR_NOEXCEPT;
+    [[nodiscard]] static SPlatformWindow* Import(SWindow* window) SKR_NOEXCEPT;
+    static void Free(IPlatformWindow* window) SKR_NOEXCEPT;
+
+    void get_extent(uint32_t* width, uint32_t* height) const SKR_NOEXCEPT final;
+    void* get_native_handle() const SKR_NOEXCEPT final;
+
+    // helpers
+    bool initialize(const SPlatformWindowDescriptor* desc) SKR_NOEXCEPT;
+    bool finalize();
+
+    SWindow* handle = nullptr;
+    bool imported = false;
 };
 
 } }

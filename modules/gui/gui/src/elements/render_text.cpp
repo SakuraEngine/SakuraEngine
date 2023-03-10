@@ -18,9 +18,10 @@ void RenderText::layout(Constraints* constraints, bool needSize)
 
 }
 
-void RenderText::draw(gdi::SGDICanvas* canvas)
+void RenderText::draw(skr_gdi_viewport_id viewport, skr_gdi_canvas_id canvas)
 {
-
+    RenderElement::draw(viewport, canvas);
+    
 }
 
 skr_float2_t RenderText::get_size() const

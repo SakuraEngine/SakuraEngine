@@ -71,5 +71,15 @@ void RenderElement::markLayoutDirty()
     layoutDirty = true;
 }
 
+void RenderElement::draw(skr_gdi_viewport_id viewport, skr_gdi_canvas_id canvas) 
+{
+    if (!active) { return; }
+    auto& _children = this->children.get();
+    for (auto& child : _children)
+    {
+        child->draw(viewport, canvas);
+    }
+}
+
 } // namespace gui
 } // namespace skr

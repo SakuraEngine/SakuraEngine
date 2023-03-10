@@ -34,6 +34,7 @@ struct SKR_GUI_API SGDICanvasPrivate : public SGDICanvas
     virtual void add_element(SGDIElement* element) SKR_NOEXCEPT;
     virtual void remove_element(SGDIElement* element) SKR_NOEXCEPT;
     virtual LiteSpan<SGDIElement*> all_elements() SKR_NOEXCEPT;
+    virtual void clear_elements() SKR_NOEXCEPT;
     
     virtual void set_zrange(int32_t min, int32_t max) SKR_NOEXCEPT
     {
@@ -69,6 +70,7 @@ struct SKR_GUI_API SGDIViewportPrivate : public SGDIViewport
 {
     virtual void add_canvas(SGDICanvas* canvas) SKR_NOEXCEPT;
     virtual void remove_canvas(SGDICanvas* canvas) SKR_NOEXCEPT;
+    virtual void clear_canvas() SKR_NOEXCEPT;
     virtual LiteSpan<SGDICanvas*> all_canvas() SKR_NOEXCEPT;
 
     skr::vector<SGDICanvas*> all_canvas_;

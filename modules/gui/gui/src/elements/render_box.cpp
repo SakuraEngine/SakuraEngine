@@ -18,8 +18,9 @@ void RenderBox::layout(Constraints* constraints, bool needSize)
 
 }
 
-void RenderBox::draw(gdi::SGDICanvas* canvas)
+void RenderBox::draw(skr_gdi_viewport_id viewport, skr_gdi_canvas_id canvas)
 {
+    RenderElement::draw(viewport, canvas);
 
 }
 

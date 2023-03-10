@@ -66,7 +66,7 @@ struct SGDIRendererDescriptor_RenderGraph
     skr_threaded_service_t* aux_service = nullptr;
 };
 
-struct SGDIRenderParams_RenderGraph
+struct ViewportRenderParams_RenderGraph
 {
     skr::render_graph::RenderGraph* render_graph = nullptr;
 };
@@ -196,7 +196,7 @@ struct SKR_GUI_RENDERER_API SGDIRenderer_RenderGraph : public IGDIRenderer
     SGDITextureId create_texture(const SGDITextureDescriptor* descriptor) SKR_NOEXCEPT final;
     void free_image(SGDIImageId image) SKR_NOEXCEPT final;
     void free_texture(SGDITextureId texture) SKR_NOEXCEPT final;
-    void render(SGDIViewport* viewport, SGDIRenderParams* params) SKR_NOEXCEPT final;
+    void render(SGDIViewport* viewport, const ViewportRenderParams* params) SKR_NOEXCEPT final;
 
     // Tier 2
     bool support_hardware_z(float* out_min, float* out_max) const SKR_NOEXCEPT final
