@@ -109,16 +109,16 @@ struct gdi_example_application : public gdi_application_t
        
         // create GDI objects
         device = skr::gdi::SGDIDevice::Create(skr::gdi::EGDIBackend::NANOVG);
-        gdi_render_group = device->create_canvas();
-        gdi_canvas = device->create_render_group();
-        background_canvas = device->create_render_group();
-        gdi_render_group->add_render_group(background_canvas);
-        gdi_render_group->add_render_group(gdi_canvas);
+        gdi_viewport = device->create_viewport();
+        gdi_canvas = device->create_canvas();
+        background_render_group = device->create_canvas();
+        gdi_viewport->add_canvas(background_render_group);
+        gdi_viewport->add_canvas(gdi_canvas);
         gdi_canvas->size = { (float)gfx.window_width, (float)gfx.window_height };
-        background_canvas->size = { (float)gfx.window_width, (float)gfx.window_height };
+        background_render_group->size = { (float)gfx.window_width, (float)gfx.window_height };
         
         background_element = device->create_element();
-        background_canvas->add_element(background_element);
+        background_render_group->add_element(background_element);
 
         test_element = device->create_element();
         debug_element = device->create_element();
@@ -246,7 +246,7 @@ struct gdi_example_application : public gdi_application_t
         skr::gdi::SGDIRenderParams_RenderGraph gdir_params2 = {};
         gdir_params2.render_graph = graph;
         render_params.usr_data = &gdir_params2;
-        renderer->render(gdi_render_group, &render_params);
+        renderer->render(gdi_viewport, &render_params);
         submit_render_graph();
     }
 
@@ -262,9 +262,9 @@ struct gdi_example_application : public gdi_application_t
         if (debug_element) device->free_element(debug_element);
         if (test_paint) device->free_paint(test_paint);
         if (background_element) device->free_element(background_element);
-        device->free_render_group(background_canvas);
-        device->free_render_group(gdi_canvas);
-        device->free_canvas(gdi_render_group);
+        device->free_canvas(background_render_group);
+        device->free_canvas(gdi_canvas);
+        device->free_viewport(gdi_viewport);
         // free base app
         finalize_gdi_application(this);
     }
@@ -274,10 +274,10 @@ struct gdi_example_application : public gdi_application_t
     skr::render_graph::TextureHandle depth_buffer;
     uint64_t frame_index = 0;
 
-    skr::gdi::SGDIRenderGroup* gdi_canvas = nullptr;
-    skr::gdi::SGDICanvas* gdi_render_group = nullptr;
+    skr::gdi::SGDICanvas* gdi_canvas = nullptr;
+    skr::gdi::SGDIViewport* gdi_viewport = nullptr;
 
-    skr::gdi::SGDIRenderGroup* background_canvas = nullptr;
+    skr::gdi::SGDICanvas* background_render_group = nullptr;
     skr::gdi::SGDIElement* background_element = nullptr;
 
     skr::gdi::SGDITextureId test_texture = nullptr;
@@ -311,7 +311,7 @@ int main(int argc, char* argv[])
                 {
                     app_resize_window(&App.gfx, event.window.data1, event.window.data2);
                     App.gdi_canvas->size = { (float)App.gfx.window_width, (float)App.gfx.window_height };
-                    App.background_canvas->size = { (float)App.gfx.window_width, (float)App.gfx.window_height };
+                    App.background_render_group->size = { (float)App.gfx.window_width, (float)App.gfx.window_height };
                 }
             }
         }

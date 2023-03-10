@@ -8,12 +8,12 @@
 namespace skr {
 namespace gdi {
 
-void SGDIRenderGroupPrivate::add_element(SGDIElement* element) SKR_NOEXCEPT
+void SGDICanvasPrivate::add_element(SGDIElement* element) SKR_NOEXCEPT
 {
     all_elements_.emplace_back(element);
 }
 
-void SGDIRenderGroupPrivate::remove_element(SGDIElement* element) SKR_NOEXCEPT
+void SGDICanvasPrivate::remove_element(SGDIElement* element) SKR_NOEXCEPT
 {
     auto it = eastl::find(all_elements_.begin(), all_elements_.end(), element);
     if (it != all_elements_.end()) 
@@ -22,28 +22,28 @@ void SGDIRenderGroupPrivate::remove_element(SGDIElement* element) SKR_NOEXCEPT
     }
 }
 
-LiteSpan<SGDIElement*> SGDIRenderGroupPrivate::all_elements() SKR_NOEXCEPT
+LiteSpan<SGDIElement*> SGDICanvasPrivate::all_elements() SKR_NOEXCEPT
 {
     return { all_elements_.data(), all_elements_.size() };
 }
 
-void SGDICanvasPrivate::add_render_group(SGDIRenderGroup* group) SKR_NOEXCEPT
+void SGDIViewportPrivate::add_canvas(SGDICanvas* canvas) SKR_NOEXCEPT
 {
-    all_render_groups_.emplace_back(group);
+    all_canvas_.emplace_back(canvas);
 }
 
-void SGDICanvasPrivate::remove_render_group(SGDIRenderGroup* group) SKR_NOEXCEPT
+void SGDIViewportPrivate::remove_canvas(SGDICanvas* canvas) SKR_NOEXCEPT
 {
-    auto it = eastl::find(all_render_groups_.begin(), all_render_groups_.end(), group);
-    if (it != all_render_groups_.end()) 
+    auto it = eastl::find(all_canvas_.begin(), all_canvas_.end(), canvas);
+    if (it != all_canvas_.end()) 
     {
-        all_render_groups_.erase(it);
+        all_canvas_.erase(it);
     }
 }
 
-LiteSpan<SGDIRenderGroup*> SGDICanvasPrivate::all_render_groups() SKR_NOEXCEPT
+LiteSpan<SGDICanvas*> SGDIViewportPrivate::all_canvas() SKR_NOEXCEPT
 {
-    return { all_render_groups_.data(), all_render_groups_.size() };
+    return { all_canvas_.data(), all_canvas_.size() };
 }
 
 SGDIDevice* SGDIDevice::Create(EGDIBackend backend)
@@ -66,22 +66,22 @@ void SGDIDevice::Free(SGDIDevice* device)
     SkrDelete(device);
 }
 
+SGDIViewport* SGDIDevice::create_viewport()
+{
+    return SkrNew<SGDIViewportPrivate>();
+}
+
+void SGDIDevice::free_viewport(SGDIViewport* canvas)
+{
+    SkrDelete(canvas);
+}
+
 SGDICanvas* SGDIDevice::create_canvas()
 {
     return SkrNew<SGDICanvasPrivate>();
 }
 
-void SGDIDevice::free_canvas(SGDICanvas* canvas)
-{
-    SkrDelete(canvas);
-}
-
-SGDIRenderGroup* SGDIDevice::create_render_group()
-{
-    return SkrNew<SGDIRenderGroupPrivate>();
-}
-
-void SGDIDevice::free_render_group(SGDIRenderGroup* render_group)
+void SGDIDevice::free_canvas(SGDICanvas* render_group)
 {
     SkrDelete(render_group);
 }

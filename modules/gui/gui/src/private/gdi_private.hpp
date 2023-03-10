@@ -29,7 +29,7 @@ struct SKR_GUI_API SGDIPaintPrivate : public SGDIPaint
     
 };
 
-struct SKR_GUI_API SGDIRenderGroupPrivate : public SGDIRenderGroup
+struct SKR_GUI_API SGDICanvasPrivate : public SGDICanvas
 {
     virtual void add_element(SGDIElement* element) SKR_NOEXCEPT;
     virtual void remove_element(SGDIElement* element) SKR_NOEXCEPT;
@@ -65,13 +65,13 @@ struct SKR_GUI_API SGDIRenderGroupPrivate : public SGDIRenderGroup
     skr::vector<SGDIElement*> all_elements_;
 };
 
-struct SKR_GUI_API SGDICanvasPrivate : public SGDICanvas
+struct SKR_GUI_API SGDIViewportPrivate : public SGDIViewport
 {
-    virtual void add_render_group(SGDIRenderGroup* canvas) SKR_NOEXCEPT;
-    virtual void remove_render_group(SGDIRenderGroup* canvas) SKR_NOEXCEPT;
-    virtual LiteSpan<SGDIRenderGroup*> all_render_groups() SKR_NOEXCEPT;
+    virtual void add_canvas(SGDICanvas* canvas) SKR_NOEXCEPT;
+    virtual void remove_canvas(SGDICanvas* canvas) SKR_NOEXCEPT;
+    virtual LiteSpan<SGDICanvas*> all_canvas() SKR_NOEXCEPT;
 
-    skr::vector<SGDIRenderGroup*> all_render_groups_;
+    skr::vector<SGDICanvas*> all_canvas_;
 };
 
 struct SKR_GUI_API SGDIDevicePrivate : public SGDIDevice

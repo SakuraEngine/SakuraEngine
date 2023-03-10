@@ -26,7 +26,7 @@ public:
     virtual void layout(struct Constraints* constraints, bool needSize = false) = 0;
     virtual void markLayoutDirty();
 
-    virtual void draw(gdi::SGDICanvas* canvas) = 0;
+    virtual void draw(gdi::SGDIViewport* canvas) = 0;
 
 protected:
     bool active = true;
