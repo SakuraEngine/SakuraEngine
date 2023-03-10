@@ -130,8 +130,8 @@ struct SKR_GUI_API IGDIRenderer
     // Tier 1
     virtual int initialize(const SGDIRendererDescriptor* desc) SKR_NOEXCEPT = 0;
     virtual int finalize() SKR_NOEXCEPT = 0;
-    virtual SGDIImageId create_image(const SGDIImageDescriptor* descriptor) SKR_NOEXCEPT = 0;
-    virtual SGDITextureId create_texture(const SGDITextureDescriptor* descriptor) SKR_NOEXCEPT = 0;
+    [[nodiscard]] virtual SGDIImageId create_image(const SGDIImageDescriptor* descriptor) SKR_NOEXCEPT = 0;
+    [[nodiscard]] virtual SGDITextureId create_texture(const SGDITextureDescriptor* descriptor) SKR_NOEXCEPT = 0;
     virtual void free_image(SGDIImageId image) SKR_NOEXCEPT = 0;
     virtual void free_texture(SGDITextureId texture) SKR_NOEXCEPT = 0;
     virtual void render(SGDICanvasGroup* canvas_group, SGDIRenderParams* params) SKR_NOEXCEPT = 0;

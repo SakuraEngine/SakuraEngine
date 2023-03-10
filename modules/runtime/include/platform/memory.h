@@ -140,6 +140,7 @@ FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line)
 
 #if defined(__cplusplus)
 #include "platform/debug.h"
+#include <new>         // 'operator new' function for non-allocating placement new expression
 #include "string.h"    // memset
 #include <cstddef>     // std::size_t
 #include <cstdint>     // PTRDIFF_MAX
