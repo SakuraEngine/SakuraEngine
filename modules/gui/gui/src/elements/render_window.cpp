@@ -20,12 +20,13 @@ void RenderWindow::layout(Constraints* constraints, bool needSize)
 
 }
 
-void RenderWindow::draw(skr_gdi_viewport_id viewport, skr_gdi_canvas_id canvas)
+void RenderWindow::draw(const DrawParams* params)
 {
-    viewport = gdi_viewport;
-    viewport->clear_canvas();
+    DrawParams draw_params = *params;
+    draw_params.viewport = gdi_viewport;
+    draw_params.viewport->clear_canvas();
 
-    RenderElement::draw(viewport, canvas);
+    RenderElement::draw(&draw_params);
 }
 
 skr_float2_t RenderWindow::get_size() const

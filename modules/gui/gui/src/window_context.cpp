@@ -34,7 +34,7 @@ struct WindowContextImpl : public WindowContext
 
     // impl helpers
 
-    bool initialize(const WindowContextDescriptor* desc) SKR_NOEXCEPT
+    bool initialize(const Descriptor* desc) SKR_NOEXCEPT
     {
         platform_window = desc->platform_window;
         root_element = desc->root_window;
@@ -55,9 +55,13 @@ protected:
 
 void WindowContextImpl::draw(const DrawParams* params) SKR_NOEXCEPT
 {
+    RenderElement::DrawParams init_param = {};
+    init_param.canvas = nullptr;
+    init_param.viewport = nullptr;
+    init_param.window_context = this;
     if (root_element && root_element->get_gdi_viewport())
     {
-        root_element->draw(nullptr, nullptr);
+        root_element->draw(&init_param);
     }
 }
 
@@ -69,7 +73,7 @@ void WindowContextImpl::render(skr_gdi_renderer_id renderer, const RenderParams*
     }
 }
 
-WindowContext* WindowContext::Create(const WindowContextDescriptor* desc) SKR_NOEXCEPT
+WindowContext* WindowContext::Create(const Descriptor* desc) SKR_NOEXCEPT
 {
     WindowContextImpl* context = SkrNew<WindowContextImpl>();
     if (context->initialize(desc))

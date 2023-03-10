@@ -2,20 +2,31 @@
 #include "SkrGui/module.configure.h"
 #include "utils/types.h"
 
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIImage, skr_gdi_image)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDITexture, skr_gdi_texture)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIRenderer, skr_gdi_renderer)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIMaterial, skr_gdi_material)
+
+typedef struct skr_gdi_element_draw_command_t
+{
+    skr_gdi_texture_id texture SKR_IF_CPP(= nullptr);
+    skr_gdi_material_id material SKR_IF_CPP(= nullptr);
+    uint32_t first_index SKR_IF_CPP(= 0);
+    uint32_t index_count SKR_IF_CPP(= 0);
+} skr_gdi_element_draw_command_t;
+typedef uint16_t skr_gdi_index_t;
+
 namespace skr {
 namespace gdi {
 
-using index_t = uint16_t;
-struct IGDIImage;
-struct IGDITexture;
-struct GDIMaterial;
-struct IGDIRenderer;
+using index_t = skr_gdi_index_t;
 typedef struct IGDIImage* GDIImageId;
 typedef struct IGDITexture* GDITextureId;
-typedef struct GDIMaterial* GDIMaterialId;
+typedef struct IGDIMaterial* GDIMaterialId;
 typedef struct IGDIRenderer* GDIRendererId;
 
 // gdi
+using GDIElementDrawCommand = skr_gdi_element_draw_command_t;
 
 template<typename T>
 struct LiteSpan
@@ -60,14 +71,6 @@ struct SKR_GUI_API GDIResource
 {
     virtual ~GDIResource() SKR_NOEXCEPT = default;
     virtual EGDIResourceState get_state() const SKR_NOEXCEPT = 0;
-};
-
-struct GDIElementDrawCommand
-{
-    GDITextureId texture = nullptr;
-    GDIMaterialId material = nullptr;
-    uint32_t first_index = 0;
-    uint32_t index_count = 0;
 };
 
 struct SKR_GUI_API GDIPaint

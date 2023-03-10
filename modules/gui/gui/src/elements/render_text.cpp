@@ -18,9 +18,9 @@ void RenderText::layout(Constraints* constraints, bool needSize)
 
 }
 
-void RenderText::draw(skr_gdi_viewport_id viewport, skr_gdi_canvas_id canvas)
+void RenderText::draw(const DrawParams* params)
 {
-    RenderElement::draw(viewport, canvas);
+    RenderElement::draw(params);
     
 }
 

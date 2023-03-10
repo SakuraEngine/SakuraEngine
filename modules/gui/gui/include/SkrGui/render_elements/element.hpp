@@ -5,12 +5,21 @@
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDICanvas, skr_gdi_canvas)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIViewport, skr_gdi_viewport)
+SKR_DECLARE_TYPE_ID_FWD(skr::gui, WindowContext, skr_gui_window_context)
+
+typedef struct skr_gui_render_element_draw_params_t
+{
+    skr_gdi_viewport_id viewport SKR_IF_CPP(= nullptr);
+    skr_gdi_canvas_id canvas SKR_IF_CPP(= nullptr);
+    skr_gui_window_context_id window_context SKR_IF_CPP(= nullptr);
+} skr_gui_render_element_draw_params_t;
 
 namespace skr {
 namespace gui {
 
 struct SKR_GUI_API RenderElement
 {
+    using DrawParams = skr_gui_render_element_draw_params_t;
 public:
     RenderElement();
     virtual ~RenderElement();
@@ -27,7 +36,7 @@ public:
     virtual void layout(struct Constraints* constraints, bool needSize = false) = 0;
     virtual void markLayoutDirty();
 
-    virtual void draw(skr_gdi_viewport_id viewport, skr_gdi_canvas_id canvas);
+    virtual void draw(const DrawParams* params);
 
 protected:
     bool active = true;
