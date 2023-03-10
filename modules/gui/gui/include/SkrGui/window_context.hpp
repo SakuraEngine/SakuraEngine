@@ -5,6 +5,7 @@ SKR_DECLARE_TYPE_ID_FWD(skr::gdi, SGDIDevice, skr_gdi_device)
 
 namespace skr {
 namespace gui {
+    
 struct SWindowContextDescriptor
 {
     IPlatformWindow* platform_window = nullptr;
