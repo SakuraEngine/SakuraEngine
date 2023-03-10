@@ -25,6 +25,7 @@ rule("skr.module")
         target:add("values", "skr.module.version", version)
         if(has_config("shipping_one_archive")) then
             target:add("defines","SHIPPING_ONE_ARCHIVE")
+            target:add("defines", api.."_IMPL")
         else
             target:add("defines", api.."_SHARED", {public=true})
             target:add("defines", api.."_IMPL")
