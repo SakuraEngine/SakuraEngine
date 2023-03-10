@@ -102,18 +102,18 @@ struct gdi_example_application : public gdi_application_t
 
         // initialize render graph
         graph.initialize(gfx);
-        
+
         // create GDI objects
         gdi_viewport = device->create_viewport();
         gdi_canvas = device->create_canvas();
-        background_render_group = device->create_canvas();
-        gdi_viewport->add_canvas(background_render_group);
+        backgroud_canvas = device->create_canvas();
+        gdi_viewport->add_canvas(backgroud_canvas);
         gdi_viewport->add_canvas(gdi_canvas);
-        gdi_canvas->size = { (float)gfx.window_width, (float)gfx.window_height };
-        background_render_group->size = { (float)gfx.window_width, (float)gfx.window_height };
+        gdi_canvas->set_size((float)gfx.window_width, (float)gfx.window_height);
+        backgroud_canvas->set_size((float)gfx.window_width, (float)gfx.window_height);
         
         background_element = device->create_element();
-        background_render_group->add_element(background_element);
+        backgroud_canvas->add_element(background_element);
 
         test_element = device->create_element();
         debug_element = device->create_element();
@@ -183,7 +183,7 @@ struct gdi_example_application : public gdi_application_t
         if (debug_element) device->free_element(debug_element);
         if (test_paint) device->free_paint(test_paint);
         if (background_element) device->free_element(background_element);
-        device->free_canvas(background_render_group);
+        device->free_canvas(backgroud_canvas);
         device->free_canvas(gdi_canvas);
         device->free_viewport(gdi_viewport);
         // free base app
@@ -195,7 +195,7 @@ struct gdi_example_application : public gdi_application_t
     skr::gdi::GDICanvas* gdi_canvas = nullptr;
     skr::gdi::GDIViewport* gdi_viewport = nullptr;
 
-    skr::gdi::GDICanvas* background_render_group = nullptr;
+    skr::gdi::GDICanvas* backgroud_canvas = nullptr;
     skr::gdi::GDIElement* background_element = nullptr;
 
     skr::gdi::GDITextureId test_texture = nullptr;
@@ -228,8 +228,8 @@ int main(int argc, char* argv[])
                 if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
                 {
                     app_resize_window(&App.gfx, event.window.data1, event.window.data2);
-                    App.gdi_canvas->size = { (float)App.gfx.window_width, (float)App.gfx.window_height };
-                    App.background_render_group->size = { (float)App.gfx.window_width, (float)App.gfx.window_height };
+                    App.gdi_canvas->set_size((float)App.gfx.window_width, (float)App.gfx.window_height);
+                    App.backgroud_canvas->set_size((float)App.gfx.window_width, (float)App.gfx.window_height);
                 }
             }
         }

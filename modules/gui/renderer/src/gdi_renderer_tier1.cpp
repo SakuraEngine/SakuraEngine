@@ -344,8 +344,10 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
         
         // projection
         auto& projection = viewport_data->render_projections.emplace_back();
-        const skr_float2_t canvas_size = canvas->size;
-        const skr_float2_t canvas_pivot = canvas->pivot;
+        skr_float2_t canvas_size;
+        canvas->get_size(&canvas_size.x, &canvas_size.y);
+        skr_float2_t canvas_pivot;
+        canvas->get_pivot(&canvas_pivot.x, &canvas_pivot.y);
         const skr_float2_t abs_canvas_pivot = { canvas_pivot.x * canvas_size.x, canvas_pivot.y * canvas_size.y };
         const skr_float2_t zero_point =  { canvas_size.x * 0.5f, canvas_size.y * 0.5f };
         const skr_float2_t eye_position = { zero_point.x - abs_canvas_pivot.x, zero_point.y - abs_canvas_pivot.y };

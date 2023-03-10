@@ -60,6 +60,31 @@ struct SKR_GUI_API GDICanvasPrivate : public GDICanvas
         return hardware_z_enabled;
     }
 
+    virtual void set_pivot(float x, float y) SKR_NOEXCEPT
+    {
+        pivot.x = x;
+        pivot.y = y;
+    }
+    virtual void get_pivot(float* out_x, float* out_y) SKR_NOEXCEPT
+    {
+        if (out_x) *out_x = pivot.x;
+        if (out_y) *out_y = pivot.y;
+    }
+
+    virtual void set_size(float w, float h) SKR_NOEXCEPT
+    {
+        size.x = w;
+        size.y = h;
+    }
+    virtual void get_size(float* out_w, float* out_h) SKR_NOEXCEPT
+    {
+        if (out_w) *out_w = size.x;
+        if (out_h) *out_h = size.y;
+    }
+
+    skr_float2_t pivot = { 0.f, 0.f };
+    skr_float2_t size = { 0.f, 0.0f };
+
     bool hardware_z_enabled = true;
     int32_t z_min = 0;
     int32_t z_max = 100;

@@ -34,7 +34,7 @@ void RenderCanvas::draw(const DrawParams* params)
     DrawParams draw_params = *params;
     draw_params.canvas = gdi_canvas;
     draw_params.canvas->clear_elements();
-    draw_params.canvas->size = { window_width, window_height };
+    draw_params.canvas->set_size(window_width, window_height);
 
     draw_params.viewport->add_canvas(draw_params.canvas);
     RenderElement::draw(&draw_params);
