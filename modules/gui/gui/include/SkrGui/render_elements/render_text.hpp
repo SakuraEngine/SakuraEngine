@@ -4,14 +4,14 @@
 namespace skr {
 namespace gui {
     
-struct RenderText : public RenderElement
+struct SKR_GUI_API RenderText : public RenderElement
 {
 public:
     RenderText();
     virtual ~RenderText();
 
     virtual void layout(struct Constraints* constraints, bool needSize = false) override;
-    virtual void draw(gdi::SGDICanvas* canvas) override;
+    virtual void draw(skr_gdi_viewport_id viewport, skr_gdi_canvas_id canvas) override;
 
     virtual skr_float2_t get_size() const;
     virtual void set_size(const skr_float2_t& size);

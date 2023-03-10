@@ -1,140 +1,35 @@
-#include "../../../../common/render_application.h"
-#include "gdi_application.h"
+#include "elem_application.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "utils/make_zeroed.hpp"
 #include "SkrGui/interface/gdi_renderer.hpp"
+#include "SkrGui/window_context.hpp"
+
+#include "SkrGui/render_elements/render_window.hpp"
+#include "SkrGui/render_elements/render_canvas.hpp"
+#include "SkrGui/render_elements/render_grid_paper.hpp"
 
 #include "SkrGuiRenderer/gdi_renderer.hpp"
 
-struct gdi_example_application : public gdi_application_t
+struct elements_example_application : public elements_application_t
 {
-    void draw_background_canvas()
-    {
-        const bool bDrawRelativeXMesh = false;
-        const bool bDrawRelativeYMesh = false;
-        const float window_width = static_cast<float>(gfx.window_width);
-        const float window_height = static_cast<float>(gfx.window_height);
-
-        background_element->begin_frame(1.f);
-        // draw background
-        {            
-            background_element->begin_path();
-            background_element->rect(0, 0, window_width, window_height);
-            background_element->fill_color(235u, 235u, 235u, 255u);
-            background_element->fill();
-        }
-        const auto epsillon = 3.f;
-        const auto absUnitX = 10.f;
-        const auto absUnitY = absUnitX;
-        const auto unitX = gfx.window_width / 100.f;
-        const auto unitY = gfx.window_height / 100.f;
-
-        // draw relative main-meshes
-        if (bDrawRelativeXMesh)
-        {
-            background_element->begin_path();
-            background_element->stroke_width(2.f);
-            background_element->stroke_color(0u, 200u, 64u, 200u);
-            for (uint32_t i = 0; i < 10; ++i)
-            {
-                const auto pos = eastl::max(i * unitY * 10.f, epsillon);
-                background_element->move_to(0.f, pos);
-                background_element->line_to(window_width, pos);
-            }
-            background_element->stroke();
-        }
-        if (bDrawRelativeYMesh)
-        {
-            background_element->begin_path();
-            background_element->stroke_width(2.f);
-            background_element->stroke_color(200u, 0u, 64u, 200u);
-            for (uint32_t i = 0; i < 10; ++i)
-            {
-                const auto pos = eastl::max(i * unitX * 10.f, epsillon);
-                background_element->move_to(pos, 0.f);
-                background_element->line_to(pos, window_height);
-            }
-            background_element->stroke();
-        }
-
-        // draw absolute main-meshes
-        background_element->begin_path();
-        background_element->stroke_width(2.f);
-        background_element->stroke_color(125u, 125u, 255u, 200u);
-        for (uint32_t i = 0; i < gfx.window_height / absUnitY / 10; ++i)
-        {
-            const auto pos = eastl::max(i * absUnitY * 10.f, epsillon);
-            background_element->move_to(0.f, pos);
-            background_element->line_to(window_width, pos);
-        }
-        for (uint32_t i = 0; i < gfx.window_width / absUnitX / 10; ++i)
-        {
-            const auto pos = eastl::max(i * absUnitX * 10.f, epsillon);
-            background_element->move_to(pos, 0.f);
-            background_element->line_to(pos, window_height);
-        }
-        background_element->stroke();
-        
-        // draw absolute sub-meshes
-        background_element->begin_path();
-        background_element->stroke_width(1.f);
-        background_element->stroke_color(88u, 88u, 222u, 180u);
-        for (uint32_t i = 0; i < gfx.window_height / absUnitY; ++i)
-        {
-            const auto pos = eastl::max(i * absUnitY, epsillon);
-            background_element->move_to(0.f, pos);
-            background_element->line_to(window_width, pos);
-        }
-        for (uint32_t i = 0; i < gfx.window_width / absUnitX; ++i)
-        {
-            const auto pos = eastl::max(i * absUnitX, epsillon);
-            background_element->move_to(pos, 0.f);
-            background_element->line_to(pos, window_height);
-        }
-        background_element->stroke();
-    }
-
     bool initialize()
     {
         // initialize base app
-        if (!initialize_gdi_application(this)) return false;
+        if (!initialize_elem_application(this)) return false;
+
+        // add elements
+        canvas = SkrNew<skr::gui::RenderCanvas>(gdi.device);
+        grid_paper = SkrNew<skr::gui::RenderGridPaper>(gdi.device);
+        root_window->add_child(canvas);
+        canvas->add_child(grid_paper);
 
         // initialize render graph
         namespace render_graph = skr::render_graph;
         graph = render_graph::RenderGraph::create(
         [=](render_graph::RenderGraphBuilder& builder) {
-            builder.with_device(gfx.device)
-            .with_gfx_queue(gfx.gfx_queue);
+            builder.with_device(gdi.gfx.device)
+            .with_gfx_queue(gdi.gfx.gfx_queue);
         });
-       
-        // create GDI objects
-        device = skr::gdi::SGDIDevice::Create(skr::gdi::EGDIBackend::NANOVG);
-        gdi_viewport = device->create_viewport();
-        gdi_canvas = device->create_canvas();
-        background_render_group = device->create_canvas();
-        gdi_viewport->add_canvas(background_render_group);
-        gdi_viewport->add_canvas(gdi_canvas);
-        gdi_canvas->size = { (float)gfx.window_width, (float)gfx.window_height };
-        background_render_group->size = { (float)gfx.window_width, (float)gfx.window_height };
-        
-        background_element = device->create_element();
-        background_render_group->add_element(background_element);
-
-        test_element = device->create_element();
-        debug_element = device->create_element();
-        test_paint = device->create_paint();
-        gdi_canvas->add_element(debug_element);
-        gdi_canvas->add_element(test_element);
-        {
-            skr::gdi::SGDITextureDescriptor tex_desc = {};
-            skr::gdi::SGDITextureDescriptor_RenderGraph tex_desc2 = {};
-            tex_desc.source = skr::gdi::EGDITextureSource::File;
-            tex_desc.from_file.u8Uri = "OpenGUI/rubduck.png";
-            tex_desc2.useImageCoder = true;
-            tex_desc.usr_data = &tex_desc2;
-            test_texture = renderer->create_texture(&tex_desc);
-        }
-
         return true;
     }
 
@@ -143,13 +38,13 @@ struct gdi_example_application : public gdi_application_t
     {
         namespace render_graph = skr::render_graph;
         // acquire frame
-        cgpu_wait_fences(&gfx.present_fence, 1);
+        cgpu_wait_fences(&gdi.gfx.present_fence, 1);
         CGPUAcquireNextDescriptor acquire_desc = {};
-        acquire_desc.fence = gfx.present_fence;
-        gfx.backbuffer_index = cgpu_acquire_next_image(gfx.swapchain, &acquire_desc);
+        acquire_desc.fence = gdi.gfx.present_fence;
+        gdi.gfx.backbuffer_index = cgpu_acquire_next_image(gdi.gfx.swapchain, &acquire_desc);
 
         // declare resources
-        CGPUTextureId imported_backbuffer = gfx.swapchain->back_buffers[gfx.backbuffer_index];
+        CGPUTextureId imported_backbuffer = gdi.gfx.swapchain->back_buffers[gdi.gfx.backbuffer_index];
         if (sample_count != CGPU_SAMPLE_COUNT_1)
         {
             back_buffer = graph->create_texture(
@@ -181,7 +76,7 @@ struct gdi_example_application : public gdi_application_t
         depth_buffer = graph->create_texture(
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
                 builder.set_name("depth")
-                    .extent(gfx.swapchain->back_buffers[0]->width, gfx.swapchain->back_buffers[0]->height)
+                    .extent(gdi.gfx.swapchain->back_buffers[0]->width, gdi.gfx.swapchain->back_buffers[0]->height)
                     .format(CGPU_FORMAT_D32_SFLOAT)
                     .owns_memory()
                     .sample_count(sample_count)
@@ -196,7 +91,7 @@ struct gdi_example_application : public gdi_application_t
         graph->add_present_pass(
             [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
                 builder.set_name("present")
-                .swapchain(gfx.swapchain, gfx.backbuffer_index)
+                .swapchain(gdi.gfx.swapchain, gdi.gfx.backbuffer_index)
                 .texture(back_buffer, true);
             });
 
@@ -205,48 +100,34 @@ struct gdi_example_application : public gdi_application_t
         frame_index = graph->execute();
 
         // present
-        cgpu_wait_queue_idle(gfx.gfx_queue);
+        cgpu_wait_queue_idle(gdi.gfx.gfx_queue);
         CGPUQueuePresentDescriptor present_desc = {};
-        present_desc.index = gfx.backbuffer_index;
-        present_desc.swapchain = gfx.swapchain;
-        cgpu_queue_present(gfx.gfx_queue, &present_desc);
+        present_desc.index = gdi.gfx.backbuffer_index;
+        present_desc.swapchain = gdi.gfx.swapchain;
+        cgpu_queue_present(gdi.gfx.gfx_queue, &present_desc);
+    }
+
+    void draw()
+    {
+        skr::gui::WindowContext::DrawParams draw_params = {};
+        window_context->draw(&draw_params);
     }
 
     void render()
     {
-        // GDI
-        draw_background_canvas();
-        {
-            debug_element->begin_frame(1.f);
-            debug_element->begin_path();
-            debug_element->rect(120, 120, 300, 300);
-            debug_element->fill_color(128u, 0u, 0u, 128u);
-            debug_element->set_z(5);
-            debug_element->fill();
-
-            test_element->begin_frame(1.f);
-            test_element->begin_path();
-            test_element->rect(120, 120, 300, 300);
-            skr_float4_t color = {1.f, 1.f, 1.f, 1.f};
-            if (test_texture->get_state() != skr::gdi::EGDIResourceState::Okay)
-            {
-                color.w = 0.f; // set transparent if texture is not ready
-            }
-            test_paint->set_pattern(120, 120, 300, 300, 0, test_texture, color);
-            test_element->fill_paint(test_paint);
-            test_element->set_z(10);
-            test_element->fill();
-        }
-
         // declare render resources
         declare_render_resources();
 
-        // render GDI canvas group
-        skr::gdi::SGDIRenderParams render_params = {};
-        skr::gdi::SGDIRenderParams_RenderGraph gdir_params2 = {};
-        gdir_params2.render_graph = graph;
-        render_params.usr_data = &gdir_params2;
-        renderer->render(gdi_viewport, &render_params);
+        // render
+        skr::gui::WindowContext::RenderParams render_params = {};
+        skr::gdi::ViewportRenderParams vp_render_params = {};
+        skr::gdi::ViewportRenderParams_RenderGraph vp_render_params2 = {};
+        vp_render_params2.render_graph = graph;
+        vp_render_params.usr_data = &vp_render_params2;
+        render_params.gdi_params = &vp_render_params;
+        window_context->render(gdi.renderer, &render_params);
+
+        // submit graph
         submit_render_graph();
     }
 
@@ -255,40 +136,26 @@ struct gdi_example_application : public gdi_application_t
         namespace render_graph = skr::render_graph;
         render_graph::RenderGraph::destroy(graph);
         // clean up
-        app_wait_gpu_idle(&gfx);
+        app_wait_gpu_idle(&gdi.gfx);
         // free GDI objects
-        if (test_texture) renderer->free_texture(test_texture);
-        if (test_element) device->free_element(test_element);
-        if (debug_element) device->free_element(debug_element);
-        if (test_paint) device->free_paint(test_paint);
-        if (background_element) device->free_element(background_element);
-        device->free_canvas(background_render_group);
-        device->free_canvas(gdi_canvas);
-        device->free_viewport(gdi_viewport);
+        SkrDelete(grid_paper);
+        SkrDelete(canvas);
         // free base app
-        finalize_gdi_application(this);
+        finalize_elem_application(this);
     }
+
+    skr::gui::RenderCanvas* canvas = nullptr;
+    skr::gui::RenderGridPaper* grid_paper = nullptr;
 
     skr::render_graph::RenderGraph* graph;
     skr::render_graph::TextureHandle back_buffer;
     skr::render_graph::TextureHandle depth_buffer;
     uint64_t frame_index = 0;
-
-    skr::gdi::SGDICanvas* gdi_canvas = nullptr;
-    skr::gdi::SGDIViewport* gdi_viewport = nullptr;
-
-    skr::gdi::SGDICanvas* background_render_group = nullptr;
-    skr::gdi::SGDIElement* background_element = nullptr;
-
-    skr::gdi::SGDITextureId test_texture = nullptr;
-    skr::gdi::SGDIPaint* test_paint = nullptr;
-    skr::gdi::SGDIElement* test_element = nullptr;
-    skr::gdi::SGDIElement* debug_element = nullptr;
 };
 
 int main(int argc, char* argv[])
 {
-    auto App = make_zeroed<gdi_example_application>();
+    auto App = make_zeroed<elements_example_application>();
     App.initialize();
     bool quit = false;
     while (!quit)
@@ -296,7 +163,7 @@ int main(int argc, char* argv[])
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            auto sdl_window = (SDL_Window*)App.gfx.window_handle;
+            auto sdl_window = (SDL_Window*)App.gdi.gfx.window_handle;
             if (SDL_GetWindowID(sdl_window) == event.window.windowID)
             {
                 if (!SDLEventHandler(&event, sdl_window))
@@ -309,12 +176,11 @@ int main(int argc, char* argv[])
                 uint8_t window_event = event.window.event;
                 if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
                 {
-                    app_resize_window(&App.gfx, event.window.data1, event.window.data2);
-                    App.gdi_canvas->size = { (float)App.gfx.window_width, (float)App.gfx.window_height };
-                    App.background_render_group->size = { (float)App.gfx.window_width, (float)App.gfx.window_height };
+                    app_resize_window(&App.gdi.gfx, event.window.data1, event.window.data2);
                 }
             }
         }
+        App.draw();
         App.render();
     }
     App.finalize();

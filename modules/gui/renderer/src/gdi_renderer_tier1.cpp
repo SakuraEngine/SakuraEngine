@@ -244,9 +244,9 @@ int SGDIRenderer_RenderGraph::finalize() SKR_NOEXCEPT
     return 0;
 }
 
-void SGDIRenderer_RenderGraph::render(SGDIViewport* viewport, SGDIRenderParams* params) SKR_NOEXCEPT
+void SGDIRenderer_RenderGraph::render(SGDIViewport* viewport, const ViewportRenderParams* params) SKR_NOEXCEPT
 {
-    const auto pParams = reinterpret_cast<SGDIRenderParams_RenderGraph*>(params->usr_data);
+    const auto pParams = reinterpret_cast<ViewportRenderParams_RenderGraph*>(params->usr_data);
     auto rg = pParams->render_graph;
     auto viewport_data = SkrNew<SGDIViewportData_RenderGraph>(viewport);
     const auto all_canvas = viewport->all_canvas();
@@ -272,6 +272,9 @@ void SGDIRenderer_RenderGraph::render(SGDIViewport* viewport, SGDIRenderParams* 
         command_count += element_commands.size();
     }
     }
+    
+    if (!vertex_count) return;
+
     viewport_data->render_vertices.reserve(vertex_count);
     viewport_data->render_indices.reserve(index_count);
     viewport_data->render_transforms.reserve(transform_count);

@@ -4,6 +4,7 @@
 #include "utils/types.h"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, SGDICanvas, skr_gdi_canvas)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, SGDIViewport, skr_gdi_viewport)
 
 namespace skr {
 namespace gui {
@@ -26,7 +27,7 @@ public:
     virtual void layout(struct Constraints* constraints, bool needSize = false) = 0;
     virtual void markLayoutDirty();
 
-    virtual void draw(skr_gdi_canvas_id canvas) = 0;
+    virtual void draw(skr_gdi_viewport_id viewport, skr_gdi_canvas_id canvas);
 
 protected:
     bool active = true;
