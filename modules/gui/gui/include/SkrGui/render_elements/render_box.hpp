@@ -1,11 +1,10 @@
 #pragma once
 #include "SkrGui/render_elements/element.hpp"
 
-namespace skr
-{
-namespace gui
-{
-class RenderBox : public RenderElement
+namespace skr {
+namespace gui {
+
+struct RenderBox : public RenderElement
 {
 public:
     RenderBox();
@@ -17,5 +16,7 @@ public:
     virtual skr_float2_t get_size() const;
     virtual void set_size(const skr_float2_t& size);
 };
-}
-}
+
+} }
+
+SKR_DECLARE_TYPE_ID(skr::gui::RenderBox, skr_gui_render_box);

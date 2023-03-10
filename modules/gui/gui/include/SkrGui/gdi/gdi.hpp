@@ -155,4 +155,9 @@ struct SKR_GUI_API SGDIDevice
 
 } }
 
+SKR_DECLARE_TYPE_ID(skr::gdi::SGDIResource, skr_gdi_resource)
+SKR_DECLARE_TYPE_ID(skr::gdi::SGDIPaint, skr_gdi_paint)
+SKR_DECLARE_TYPE_ID(skr::gdi::SGDIElement, skr_gdi_elements)
+SKR_DECLARE_TYPE_ID(skr::gdi::SGDICanvas, skr_gdi_canvas)
+SKR_DECLARE_TYPE_ID(skr::gdi::SGDIViewport, skr_gdi_viewport)
 SKR_DECLARE_TYPE_ID(skr::gdi::SGDIDevice, skr_gdi_device);
