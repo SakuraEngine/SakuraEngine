@@ -4,9 +4,9 @@
 
 namespace skr {
 namespace gdi {
-struct SKR_GUI_API SGDIElementPrivate : public SGDIElement
+struct SKR_GUI_API GDIElementPrivate : public GDIElement
 {
-    virtual ~SGDIElementPrivate() SKR_NOEXCEPT = default;
+    virtual ~GDIElementPrivate() SKR_NOEXCEPT = default;
     
     void set_z(int32_t _z) final
     {
@@ -19,21 +19,21 @@ struct SKR_GUI_API SGDIElementPrivate : public SGDIElement
     }
 
     int32_t z = 0.f;
-    skr::vector<SGDIVertex> vertices;
+    skr::vector<GDIVertex> vertices;
     skr::vector<index_t> indices;
-    skr::vector<SGDIElementDrawCommand> commands;
+    skr::vector<GDIElementDrawCommand> commands;
 };
 
-struct SKR_GUI_API SGDIPaintPrivate : public SGDIPaint
+struct SKR_GUI_API GDIPaintPrivate : public GDIPaint
 {
     
 };
 
-struct SKR_GUI_API SGDICanvasPrivate : public SGDICanvas
+struct SKR_GUI_API GDICanvasPrivate : public GDICanvas
 {
-    virtual void add_element(SGDIElement* element) SKR_NOEXCEPT;
-    virtual void remove_element(SGDIElement* element) SKR_NOEXCEPT;
-    virtual LiteSpan<SGDIElement*> all_elements() SKR_NOEXCEPT;
+    virtual void add_element(GDIElement* element) SKR_NOEXCEPT;
+    virtual void remove_element(GDIElement* element) SKR_NOEXCEPT;
+    virtual LiteSpan<GDIElement*> all_elements() SKR_NOEXCEPT;
     virtual void clear_elements() SKR_NOEXCEPT;
     
     virtual void set_zrange(int32_t min, int32_t max) SKR_NOEXCEPT
@@ -63,20 +63,20 @@ struct SKR_GUI_API SGDICanvasPrivate : public SGDICanvas
     bool hardware_z_enabled = true;
     int32_t z_min = 0;
     int32_t z_max = 100;
-    skr::vector<SGDIElement*> all_elements_;
+    skr::vector<GDIElement*> all_elements_;
 };
 
-struct SKR_GUI_API SGDIViewportPrivate : public SGDIViewport
+struct SKR_GUI_API GDIViewportPrivate : public GDIViewport
 {
-    virtual void add_canvas(SGDICanvas* canvas) SKR_NOEXCEPT;
-    virtual void remove_canvas(SGDICanvas* canvas) SKR_NOEXCEPT;
+    virtual void add_canvas(GDICanvas* canvas) SKR_NOEXCEPT;
+    virtual void remove_canvas(GDICanvas* canvas) SKR_NOEXCEPT;
     virtual void clear_canvas() SKR_NOEXCEPT;
-    virtual LiteSpan<SGDICanvas*> all_canvas() SKR_NOEXCEPT;
+    virtual LiteSpan<GDICanvas*> all_canvas() SKR_NOEXCEPT;
 
-    skr::vector<SGDICanvas*> all_canvas_;
+    skr::vector<GDICanvas*> all_canvas_;
 };
 
-struct SKR_GUI_API SGDIDevicePrivate : public SGDIDevice
+struct SKR_GUI_API GDIDevicePrivate : public GDIDevice
 {
 
 };

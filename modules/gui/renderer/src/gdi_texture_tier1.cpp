@@ -56,7 +56,7 @@ skr_blob_t image_coder_decode_image(const uint8_t* bytes, uint64_t size, uint32_
 }
 #endif
 
-void SGDITexture_RenderGraph::intializeBindTable() SKR_NOEXCEPT
+void GDITexture_RenderGraph::intializeBindTable() SKR_NOEXCEPT
 {
     CGPUTextureViewDescriptor view_desc = {};
     view_desc.texture = texture;
@@ -97,33 +97,33 @@ inline static void function_append(eastl::function<void()>& func1, const eastl::
 }
 // end helpers
 
-EGDIResourceState SGDIImage_RenderGraph::get_state() const SKR_NOEXCEPT
+EGDIResourceState GDIImage_RenderGraph::get_state() const SKR_NOEXCEPT
 {
     const auto result = skr_atomic32_load_relaxed(&state);
     return static_cast<EGDIResourceState>(result);
 }
 
-SGDIRendererId SGDIImage_RenderGraph::get_renderer() const SKR_NOEXCEPT
+GDIRendererId GDIImage_RenderGraph::get_renderer() const SKR_NOEXCEPT
 {
     return renderer;
 }
 
-uint32_t SGDIImage_RenderGraph::get_width() const SKR_NOEXCEPT
+uint32_t GDIImage_RenderGraph::get_width() const SKR_NOEXCEPT
 {
     return image_width;
 }
 
-uint32_t SGDIImage_RenderGraph::get_height() const SKR_NOEXCEPT
+uint32_t GDIImage_RenderGraph::get_height() const SKR_NOEXCEPT
 {
     return image_height;
 }
 
-LiteSpan<const uint8_t> SGDIImage_RenderGraph::get_data() const SKR_NOEXCEPT
+LiteSpan<const uint8_t> GDIImage_RenderGraph::get_data() const SKR_NOEXCEPT
 {
     return { pixel_data.bytes, pixel_data.size };
 }
 
-EGDIImageFormat SGDIImage_RenderGraph::get_format() const SKR_NOEXCEPT
+EGDIImageFormat GDIImage_RenderGraph::get_format() const SKR_NOEXCEPT
 {
     switch (format)
     {
@@ -151,35 +151,35 @@ EGDIImageFormat SGDIImage_RenderGraph::get_format() const SKR_NOEXCEPT
     return EGDIImageFormat::None;
 }
 
-EGDIResourceState SGDITexture_RenderGraph::get_state() const SKR_NOEXCEPT
+EGDIResourceState GDITexture_RenderGraph::get_state() const SKR_NOEXCEPT
 {
     const auto result = skr_atomic32_load_relaxed(&state);
     return static_cast<EGDIResourceState>(result);
 }
 
-SGDIRendererId SGDITexture_RenderGraph::get_renderer() const SKR_NOEXCEPT
+GDIRendererId GDITexture_RenderGraph::get_renderer() const SKR_NOEXCEPT
 {
     return renderer;
 }
 
-uint32_t SGDITexture_RenderGraph::get_width() const SKR_NOEXCEPT
+uint32_t GDITexture_RenderGraph::get_width() const SKR_NOEXCEPT
 {
     return texture->width;
 }
 
-uint32_t SGDITexture_RenderGraph::get_height() const SKR_NOEXCEPT
+uint32_t GDITexture_RenderGraph::get_height() const SKR_NOEXCEPT
 {
     return texture->height;
 }
 
-EGDITextureType SGDITexture_RenderGraph::get_type() const SKR_NOEXCEPT
+EGDITextureType GDITexture_RenderGraph::get_type() const SKR_NOEXCEPT
 {
     return EGDITextureType::Texture2D;
 }
 
-void SGDIRenderer_RenderGraph::free_image(SGDIImageId img) SKR_NOEXCEPT
+void GDIRenderer_RenderGraph::free_image(GDIImageId img) SKR_NOEXCEPT
 {
-    auto image = static_cast<SGDIImage_RenderGraph*>(img);
+    auto image = static_cast<GDIImage_RenderGraph*>(img);
     // TODO: cancellation
     while (image->get_state() != EGDIResourceState::Okay) 
     {
@@ -188,9 +188,9 @@ void SGDIRenderer_RenderGraph::free_image(SGDIImageId img) SKR_NOEXCEPT
     skr_atomic32_store_release(&image->state, static_cast<uint32_t>(EGDIResourceState::Finalizing));
 }
 
-void SGDIRenderer_RenderGraph::free_texture(SGDITextureId tex) SKR_NOEXCEPT
+void GDIRenderer_RenderGraph::free_texture(GDITextureId tex) SKR_NOEXCEPT
 {
-    auto texture = static_cast<SGDITexture_RenderGraph*>(tex);
+    auto texture = static_cast<GDITexture_RenderGraph*>(tex);
     // TODO: cancellation
     while (texture->get_state() != EGDIResourceState::Okay) 
     {
@@ -202,7 +202,7 @@ void SGDIRenderer_RenderGraph::free_texture(SGDITextureId tex) SKR_NOEXCEPT
     if (texture->bind_table) cgpux_free_bind_table(texture->bind_table);
 }
 
-SGDIImageId SGDIImageAsyncData_RenderGraph::DoAsync(struct SGDIImage_RenderGraph* owner, skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT
+GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* owner, skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT
 {
     // image data must have an owner
     SKR_ASSERT(owner);
@@ -223,14 +223,14 @@ SGDIImageId SGDIImageAsyncData_RenderGraph::DoAsync(struct SGDIImage_RenderGraph
         ram_texture_io.path = from_file.uri.c_str();
         ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* usrdata)
         {
-            auto owner = static_cast<SGDIImage_RenderGraph*>(usrdata);
+            auto owner = static_cast<GDIImage_RenderGraph*>(usrdata);
             owner->async_data.ram_io_finished_callback();
     #ifdef SKR_GUI_RENDERER_USE_IMAGE_CODER
             if (owner->async_data.useImageCoder)
             {
                 auto aux_task = make_zeroed<skr_service_task_t>();
                 aux_task.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* usrdata){
-                    auto owner = static_cast<SGDIImage_RenderGraph*>(usrdata);
+                    auto owner = static_cast<GDIImage_RenderGraph*>(usrdata);
                     auto pAsyncData = &owner->async_data;
                     owner->pixel_data = image_coder_decode_image(owner->raw_data.bytes, 
                         owner->raw_data.size, owner->image_height, 
@@ -250,7 +250,7 @@ SGDIImageId SGDIImageAsyncData_RenderGraph::DoAsync(struct SGDIImage_RenderGraph
         ram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = owner;
         ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_ENQUEUED] = +[](skr_async_request_t* request, void* usrdata)
         {
-            auto pAsyncData = static_cast<SGDIImageAsyncData_RenderGraph*>(usrdata);
+            auto pAsyncData = static_cast<GDIImageAsyncData_RenderGraph*>(usrdata);
             pAsyncData->ram_io_enqueued_callback();
         };
         ram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_ENQUEUED] = this;
@@ -285,7 +285,7 @@ SGDIImageId SGDIImageAsyncData_RenderGraph::DoAsync(struct SGDIImage_RenderGraph
     return owner;
 }
 
-SGDITextureId SGDITextureAsyncData_RenderGraph::DoAsync(struct SGDITexture_RenderGraph* owner, skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT
+GDITextureId GDITextureAsyncData_RenderGraph::DoAsync(struct GDITexture_RenderGraph* owner, skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT
 {
     // texture data must have an owner
     SKR_ASSERT(owner);
@@ -310,7 +310,7 @@ SGDITextureId SGDITextureAsyncData_RenderGraph::DoAsync(struct SGDITexture_Rende
 
             vram_io_info.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* usrdata)
             {
-                auto texture = static_cast<SGDITexture_RenderGraph*>(usrdata);
+                auto texture = static_cast<GDITexture_RenderGraph*>(usrdata);
                 auto& intermediate_image = texture->intermediate_image;
                 texture->texture = texture->async_data.vram_destination.texture;
                 texture->intializeBindTable();
@@ -353,7 +353,7 @@ SGDITextureId SGDITextureAsyncData_RenderGraph::DoAsync(struct SGDITexture_Rende
     return owner;
 }
 
-void SGDIImage_RenderGraph::preInit(const SGDIImageDescriptor* desc)
+void GDIImage_RenderGraph::preInit(const GDIImageDescriptor* desc)
 {
     if (source == EGDIImageSource::File)
     {
@@ -372,12 +372,12 @@ void SGDIImage_RenderGraph::preInit(const SGDIImageDescriptor* desc)
     }
 }
 
-SGDIImageId SGDIRenderer_RenderGraph::create_image(const SGDIImageDescriptor* desc) SKR_NOEXCEPT
+GDIImageId GDIRenderer_RenderGraph::create_image(const GDIImageDescriptor* desc) SKR_NOEXCEPT
 {
-    auto desc2 = static_cast<const SGDIImageDescriptor_RenderGraph*>(desc->usr_data);
+    auto desc2 = static_cast<const GDIImageDescriptor_RenderGraph*>(desc->usr_data);
     const bool useImageCoder = desc2->useImageCoder;
 
-    auto image = SkrNew<SGDIImage_RenderGraph>(this);
+    auto image = SkrNew<GDIImage_RenderGraph>(this);
     image->async_data.aux_service = aux_service;
     image->async_data.useImageCoder = useImageCoder;
 
@@ -398,12 +398,12 @@ SGDIImageId SGDIRenderer_RenderGraph::create_image(const SGDIImageDescriptor* de
     return image->async_data.DoAsync(image, vfs, ram_service);
 }
 
-SGDITextureId SGDIRenderer_RenderGraph::create_texture(const SGDITextureDescriptor* desc) SKR_NOEXCEPT
+GDITextureId GDIRenderer_RenderGraph::create_texture(const GDITextureDescriptor* desc) SKR_NOEXCEPT
 {
-    auto desc2 = static_cast<const SGDITextureDescriptor_RenderGraph*>(desc->usr_data);
+    auto desc2 = static_cast<const GDITextureDescriptor_RenderGraph*>(desc->usr_data);
     const bool useImageCoder = desc2->useImageCoder;
 
-    auto texture = SkrNew<SGDITexture_RenderGraph>(this);
+    auto texture = SkrNew<GDITexture_RenderGraph>(this);
     texture->intermediate_image.async_data.aux_service = aux_service;
     texture->intermediate_image.async_data.useImageCoder = useImageCoder;
 
@@ -417,7 +417,7 @@ SGDITextureId SGDIRenderer_RenderGraph::create_texture(const SGDITextureDescript
 
     if (texture->source == EGDITextureSource::Image)
     {
-        texture->intermediate_image = *static_cast<SGDIImage_RenderGraph*>(desc->from_image.image);
+        texture->intermediate_image = *static_cast<GDIImage_RenderGraph*>(desc->from_image.image);
     }
     else if (texture->source == EGDITextureSource::File)
     {

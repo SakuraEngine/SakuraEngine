@@ -39,7 +39,7 @@ inline static void read_shader_bytes(const char* virtual_path, uint32_t** bytes,
     read_bytes(shader_file, (char8_t**)bytes, length);
 }
 
-CGPURenderPipelineId SGDIRenderer_RenderGraph::createRenderPipeline(
+CGPURenderPipelineId GDIRenderer_RenderGraph::createRenderPipeline(
     GDIRendererPipelineAttributes attributes, ECGPUSampleCount sample_count)
 {
     const bool use_texture = attributes & GDI_RENDERER_PIPELINE_ATTRIBUTE_TEXTURED;
@@ -138,7 +138,7 @@ CGPURenderPipelineId SGDIRenderer_RenderGraph::createRenderPipeline(
     return pipeline;
 }
 
-CGPURenderPipelineId SGDIRenderer_RenderGraph::findOrCreateRenderPipeline(GDIRendererPipelineAttributes attributes, ECGPUSampleCount sample_count)
+CGPURenderPipelineId GDIRenderer_RenderGraph::findOrCreateRenderPipeline(GDIRendererPipelineAttributes attributes, ECGPUSampleCount sample_count)
 {
     PipelineKey key = {attributes, sample_count};
     auto it = pipelines.find(key);
@@ -156,7 +156,7 @@ bool validateAttributes(GDIRendererPipelineAttributes attributes)
     return true;
 }
 
-void SGDIRenderer_RenderGraph::createRenderPipelines()
+void GDIRenderer_RenderGraph::createRenderPipelines()
 {
     eastl::vector<eastl::vector<bool>> option_selections(GDI_RENDERER_PIPELINE_ATTRIBUTE_COUNT, {true, false});
     skr::cartesian_product<bool> cartesian(option_selections);
@@ -177,15 +177,15 @@ void SGDIRenderer_RenderGraph::createRenderPipelines()
 }
 // HACK
 
-int SGDIRenderer_RenderGraph::initialize(const SGDIRendererDescriptor* desc) SKR_NOEXCEPT
+int GDIRenderer_RenderGraph::initialize(const GDIRendererDescriptor* desc) SKR_NOEXCEPT
 {
-    const auto pDesc = reinterpret_cast<SGDIRendererDescriptor_RenderGraph*>(desc->usr_data);
-    const uint32_t pos_offset = static_cast<uint32_t>(offsetof(SGDIVertex, position));
-    const uint32_t texcoord_offset = static_cast<uint32_t>(offsetof(SGDIVertex, texcoord));
-    const uint32_t aa_offset = static_cast<uint32_t>(offsetof(SGDIVertex, aa));
-    const uint32_t uv_offset = static_cast<uint32_t>(offsetof(SGDIVertex, clipUV));
-    const uint32_t uv2_offset = static_cast<uint32_t>(offsetof(SGDIVertex, clipUV2));
-    const uint32_t color_offset = static_cast<uint32_t>(offsetof(SGDIVertex, color));
+    const auto pDesc = reinterpret_cast<GDIRendererDescriptor_RenderGraph*>(desc->usr_data);
+    const uint32_t pos_offset = static_cast<uint32_t>(offsetof(GDIVertex, position));
+    const uint32_t texcoord_offset = static_cast<uint32_t>(offsetof(GDIVertex, texcoord));
+    const uint32_t aa_offset = static_cast<uint32_t>(offsetof(GDIVertex, aa));
+    const uint32_t uv_offset = static_cast<uint32_t>(offsetof(GDIVertex, clipUV));
+    const uint32_t uv2_offset = static_cast<uint32_t>(offsetof(GDIVertex, clipUV2));
+    const uint32_t color_offset = static_cast<uint32_t>(offsetof(GDIVertex, color));
     vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 0, pos_offset, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, texcoord_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attributes[2] = { "AA", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, aa_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
@@ -223,7 +223,7 @@ int SGDIRenderer_RenderGraph::initialize(const SGDIRendererDescriptor* desc) SKR
     return 0;
 }
 
-int SGDIRenderer_RenderGraph::finalize() SKR_NOEXCEPT
+int GDIRenderer_RenderGraph::finalize() SKR_NOEXCEPT
 {
     aux_service = nullptr;
 
@@ -244,11 +244,11 @@ int SGDIRenderer_RenderGraph::finalize() SKR_NOEXCEPT
     return 0;
 }
 
-void SGDIRenderer_RenderGraph::render(SGDIViewport* viewport, const ViewportRenderParams* params) SKR_NOEXCEPT
+void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRenderParams* params) SKR_NOEXCEPT
 {
     const auto pParams = reinterpret_cast<ViewportRenderParams_RenderGraph*>(params->usr_data);
     auto rg = pParams->render_graph;
-    auto viewport_data = SkrNew<SGDIViewportData_RenderGraph>(viewport);
+    auto viewport_data = SkrNew<GDIViewportData_RenderGraph>(viewport);
     const auto all_canvas = viewport->all_canvas();
     if (all_canvas.empty()) return;
     uint64_t vertex_count = 0u;
@@ -359,13 +359,13 @@ void SGDIRenderer_RenderGraph::render(SGDIViewport* viewport, const ViewportRend
 
         for (const auto& command : element_commands)
         {
-            SGDIElementDrawCommand_RenderGraph command2 = {};
+            GDIElementDrawCommand_RenderGraph command2 = {};
             command2.texture = command.texture;
             command2.material = command.material;
             command2.first_index = command.first_index;
             command2.index_count = command.index_count;
             command2.ib_offset = static_cast<uint32_t>(ib_cursor * sizeof(index_t));
-            command2.vb_offset = static_cast<uint32_t>(vb_cursor * sizeof(SGDIVertex));
+            command2.vb_offset = static_cast<uint32_t>(vb_cursor * sizeof(GDIVertex));
             command2.tb_offset = static_cast<uint32_t>(tb_cursor * sizeof(rtm::matrix4x4f));
             command2.pb_offset = static_cast<uint32_t>(pb_cursor * sizeof(rtm::matrix4x4f));
 
@@ -379,7 +379,7 @@ void SGDIRenderer_RenderGraph::render(SGDIViewport* viewport, const ViewportRend
     }
 
     // 2. prepare render resource
-    const uint64_t vertices_size = vertex_count * sizeof(SGDIVertex);
+    const uint64_t vertices_size = vertex_count * sizeof(GDIVertex);
     const uint64_t indices_size = index_count * sizeof(index_t);
     const uint64_t transform_size = transform_count * sizeof(rtm::matrix4x4f);
     const uint64_t projection_size = projection_count * sizeof(rtm::matrix4x4f);
@@ -456,17 +456,17 @@ void SGDIRenderer_RenderGraph::render(SGDIViewport* viewport, const ViewportRend
                 const uint64_t transforms_count = viewport_data->render_transforms.size();
                 const uint64_t projections_count = viewport_data->render_projections.size();
 
-                SGDIVertex* vtx_dst = (SGDIVertex*)upload_buffer->cpu_mapped_address;
+                GDIVertex* vtx_dst = (GDIVertex*)upload_buffer->cpu_mapped_address;
                 index_t* idx_dst = (index_t*)(vtx_dst + vertices_count);
                 rtm::matrix4x4f* transform_dst = (rtm::matrix4x4f*)(idx_dst + indices_count);
                 rtm::matrix4x4f* projection_dst = (rtm::matrix4x4f*)(transform_dst + transforms_count);
 
-                const skr::span<SGDIVertex> render_vertices = viewport_data->render_vertices;
+                const skr::span<GDIVertex> render_vertices = viewport_data->render_vertices;
                 const skr::span<index_t> render_indices = viewport_data->render_indices;
                 const skr::span<rtm::matrix4x4f> render_transforms = viewport_data->render_transforms;
                 const skr::span<rtm::matrix4x4f> render_projections = viewport_data->render_projections;
 
-                memcpy(vtx_dst, render_vertices.data(), vertices_count * sizeof(SGDIVertex));
+                memcpy(vtx_dst, render_vertices.data(), vertices_count * sizeof(GDIVertex));
                 memcpy(idx_dst, render_indices.data(), indices_count * sizeof(index_t));
                 memcpy(transform_dst, render_transforms.data(), transforms_count * sizeof(rtm::matrix4x4f));
                 memcpy(projection_dst, render_projections.data(), projections_count * sizeof(rtm::matrix4x4f));
@@ -476,7 +476,7 @@ void SGDIRenderer_RenderGraph::render(SGDIViewport* viewport, const ViewportRend
     // 4. loop & record render commands
     skr::render_graph::TextureRTVHandle target = rg->get_texture("backbuffer");
     skr::render_graph::TextureDSVHandle depth = rg->get_texture("depth");
-    // skr::vector<SGDIViewport*> canvas_copy(canvas_span.begin(), canvas_span.end());
+    // skr::vector<GDIViewport*> canvas_copy(canvas_span.begin(), canvas_span.end());
     rg->add_render_pass([&](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
         ZoneScopedN("ConstructRenderPass");
         const auto back_desc = g.resolve_descriptor(target);
@@ -502,7 +502,7 @@ void SGDIRenderer_RenderGraph::render(SGDIViewport* viewport, const ViewportRend
         auto resolved_tb = ctx.resolve(transform_buffer);
         auto resolved_pb = ctx.resolve(projection_buffer);
         CGPUBufferId vertex_streams[3] = { resolved_vb, resolved_tb, resolved_pb };
-        const uint32_t vertex_stream_strides[3] = { sizeof(SGDIVertex), sizeof(rtm::matrix4x4f), sizeof(rtm::matrix4x4f) };
+        const uint32_t vertex_stream_strides[3] = { sizeof(GDIVertex), sizeof(rtm::matrix4x4f), sizeof(rtm::matrix4x4f) };
 
         cgpu_render_encoder_set_viewport(ctx.encoder,
             0.0f, 0.0f,
@@ -513,7 +513,7 @@ void SGDIRenderer_RenderGraph::render(SGDIViewport* viewport, const ViewportRend
             0, 0, 
             target_desc->width, target_desc->height);
 
-        const skr::span<SGDIElementDrawCommand_RenderGraph> render_commands = viewport_data->render_commands;
+        const skr::span<GDIElementDrawCommand_RenderGraph> render_commands = viewport_data->render_commands;
         PipelineKey pipeline_key_cache = { UINT32_MAX, CGPU_SAMPLE_COUNT_1 };
 
         for (const auto& command : render_commands)
@@ -529,7 +529,7 @@ void SGDIRenderer_RenderGraph::render(SGDIViewport* viewport, const ViewportRend
 
             if (use_texture)
             {
-                const auto gui_texture = static_cast<SGDITexture_RenderGraph*>(command.texture);
+                const auto gui_texture = static_cast<GDITexture_RenderGraph*>(command.texture);
                 cgpux_render_encoder_bind_bind_table(ctx.encoder, gui_texture->bind_table);
             }
 

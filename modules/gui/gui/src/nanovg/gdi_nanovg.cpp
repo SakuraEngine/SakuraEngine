@@ -172,14 +172,14 @@ static skr_float4x4_t nvg__getMatrix(NVGpaint* paint)
     }};
 }
 
-static void nvg__renderPath(SGDIElementNVG* element, const NVGpath& path, NVGpaint* paint, const skr_float4x4_t& transform, float fringe)
+static void nvg__renderPath(GDIElementNVG* element, const NVGpath& path, NVGpaint* paint, const skr_float4x4_t& transform, float fringe)
 {
     skr_float2_t extend{paint->extent[0], paint->extent[1]};
     auto& vertices = element->vertices;
     auto& indices = element->indices;
     auto push_vertex = [&](const NVGvertex& nv)
     {
-        SGDIVertex v;
+        GDIVertex v;
         v.position = { nv.x, nv.y, 0.f, 1.f };
         v.aa = {nv.u, fringe};
         const rtm::vector4f pos = rtm::vector_load((const uint8_t*)&v.position);
@@ -234,7 +234,7 @@ static void nvg__renderPath(SGDIElementNVG* element, const NVGpath& path, NVGpai
 static void nvg__renderFill(void* uptr, NVGpaint* paint, NVGcompositeOperationState compositeOperation, float fringe,
 							  const float* bounds, const NVGpath* paths, int npaths)
 {
-    auto element = (SGDIElementNVG*)uptr;
+    auto element = (GDIElementNVG*)uptr;
     /*
     PrimDrawResource resource;
     resource.compositeOperation = compositeOperation;
@@ -252,9 +252,9 @@ static void nvg__renderFill(void* uptr, NVGpaint* paint, NVGcompositeOperationSt
         }
         command.index_count = static_cast<uint32_t>(element->indices.size() - begin);
         command.first_index = static_cast<uint32_t>(begin);
-        command.material = static_cast<SGDIMaterialId>(paint->material);
-        command.texture = static_cast<SGDITextureId>(paint->image);
-        if (command.texture && ((SGDIResource*)command.texture)->get_state() != EGDIResourceState::Okay)
+        command.material = static_cast<GDIMaterialId>(paint->material);
+        command.texture = static_cast<GDITextureId>(paint->image);
+        if (command.texture && ((GDIResource*)command.texture)->get_state() != EGDIResourceState::Okay)
         {
             command.texture = nullptr;
         }
@@ -268,7 +268,7 @@ static void nvg__renderFill(void* uptr, NVGpaint* paint, NVGcompositeOperationSt
 static void nvg__renderStroke(void* uptr, NVGpaint* paint, NVGcompositeOperationState compositeOperation, float fringe,
 								float strokeWidth, const NVGpath* paths, int npaths)
 {
-    auto element = (SGDIElementNVG*)uptr;
+    auto element = (GDIElementNVG*)uptr;
     /*
     PrimDrawResource resource;
     resource.compositeOperation = compositeOperation;
@@ -285,31 +285,31 @@ static void nvg__renderStroke(void* uptr, NVGpaint* paint, NVGcompositeOperation
     }
     command.index_count = static_cast<uint32_t>(element->indices.size() - begin);
     command.first_index = static_cast<uint32_t>(begin);
-    command.material = static_cast<SGDIMaterialId>(paint->material);
-    command.texture = static_cast<SGDITextureId>(paint->image);
-    if (command.texture && ((SGDIResource*)command.texture)->get_state() != EGDIResourceState::Okay)
+    command.material = static_cast<GDIMaterialId>(paint->material);
+    command.texture = static_cast<GDITextureId>(paint->image);
+    if (command.texture && ((GDIResource*)command.texture)->get_state() != EGDIResourceState::Okay)
     {
         command.texture = nullptr;
     }
 }
 
 //
-int SGDIDeviceNVG::initialize() SKR_NOEXCEPT
+int GDIDeviceNVG::initialize() SKR_NOEXCEPT
 {
     return 0;
 }
 
-int SGDIDeviceNVG::finalize() SKR_NOEXCEPT
+int GDIDeviceNVG::finalize() SKR_NOEXCEPT
 {
     return 0;
 }
 
-SGDIDeviceNVG::~SGDIDeviceNVG()
+GDIDeviceNVG::~GDIDeviceNVG()
 {
     finalize();
 }
 
-void SGDIElementNVG::begin_frame(float devicePixelRatio)
+void GDIElementNVG::begin_frame(float devicePixelRatio)
 {
     nvgBeginFrame(nvg, devicePixelRatio);
     // TODO: retainer box
@@ -322,112 +322,112 @@ void SGDIElementNVG::begin_frame(float devicePixelRatio)
     }
 }
 
-void SGDIElementNVG::begin_path()
+void GDIElementNVG::begin_path()
 {
     nvgBeginPath(nvg);
 }
 
-void SGDIElementNVG::rect(float x, float y, float w, float h)
+void GDIElementNVG::rect(float x, float y, float w, float h)
 {
     nvgRect(nvg, x, y, w, h);
 }
 
-void SGDIElementNVG::rounded_rect_varying(float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft)
+void GDIElementNVG::rounded_rect_varying(float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft)
 {
     nvgRoundedRectVarying(nvg, x, y, w, h, radTopLeft, radTopRight, radBottomRight, radBottomLeft);
 }
 
-void SGDIElementNVG::move_to(float x, float y)
+void GDIElementNVG::move_to(float x, float y)
 {
     nvgMoveTo(nvg, x, y);
 }
 
-void SGDIElementNVG::line_to(float x, float y)
+void GDIElementNVG::line_to(float x, float y)
 {
     nvgLineTo(nvg, x, y);
 }
 
-void SGDIElementNVG::stroke_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a)
+void GDIElementNVG::stroke_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a)
 {
     nvgStrokeColor(nvg, nvgRGBA(r, g, b, a));
 }
 
-void SGDIElementNVG::stroke_color(float r, float g, float b, float a)
+void GDIElementNVG::stroke_color(float r, float g, float b, float a)
 {
     nvgStrokeColor(nvg, nvgRGBAf(r, g, b, a));
 }
 
-void SGDIElementNVG::stroke_width(float size)
+void GDIElementNVG::stroke_width(float size)
 {
     nvgStrokeWidth(nvg, size);
 }
 
-void SGDIElementNVG::stroke()
+void GDIElementNVG::stroke()
 {
     nvgStroke(nvg);
 }
 
-void SGDIElementNVG::fill_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a)
+void GDIElementNVG::fill_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a)
 {
     nvgFillColor(nvg, nvgRGBA(r, g, b, a));
 }
 
-void SGDIElementNVG::fill_color(float r, float g, float b, float a)
+void GDIElementNVG::fill_color(float r, float g, float b, float a)
 {
     nvgFillColor(nvg, nvgRGBAf(r, g, b, a));
 }
 
-void SGDIElementNVG::fill_paint(SGDIPaint* paint)
+void GDIElementNVG::fill_paint(GDIPaint* paint)
 {
-    auto nvg_paint = static_cast<SGDIPaintNVG*>(paint);
+    auto nvg_paint = static_cast<GDIPaintNVG*>(paint);
     nvgFillPaint(nvg, nvg_paint->nvg_paint);
 }
 
-void SGDIElementNVG::fill()
+void GDIElementNVG::fill()
 {
     nvgFill(nvg);
 }
 
-void SGDIPaintNVG::set_pattern(float cx, float cy, float w, float h, float angle, SGDITextureId texture, skr_float4_t ocol) SKR_NOEXCEPT
+void GDIPaintNVG::set_pattern(float cx, float cy, float w, float h, float angle, GDITextureId texture, skr_float4_t ocol) SKR_NOEXCEPT
 {
     NVGcolor color = nvgRGBAf(ocol.x, ocol.y, ocol.z, ocol.w);
     nvg_paint = nvgImagePattern(nullptr, cx, cy, w, h, angle, texture, color);
 }
 
-void SGDIPaintNVG::set_pattern(float cx, float cy, float w, float h, float angle, SGDIMaterialId material, skr_float4_t ocol) SKR_NOEXCEPT
+void GDIPaintNVG::set_pattern(float cx, float cy, float w, float h, float angle, GDIMaterialId material, skr_float4_t ocol) SKR_NOEXCEPT
 {
     NVGcolor color = nvgRGBAf(ocol.x, ocol.y, ocol.z, ocol.w);
     nvg_paint = nvgMaterialPattern(nullptr, cx, cy, w, h, angle, material, color);
 } 
 
-void SGDICanvasNVG::add_element(SGDIElement* element) SKR_NOEXCEPT
+void GDICanvasNVG::add_element(GDIElement* element) SKR_NOEXCEPT
 {
-    SGDICanvasPrivate::add_element(element);
+    GDICanvasPrivate::add_element(element);
 }
 
-SGDIViewport* SGDIDeviceNVG::create_viewport()
+GDIViewport* GDIDeviceNVG::create_viewport()
 {
-    return SkrNew<SGDIViewportNVG>();
+    return SkrNew<GDIViewportNVG>();
 }
 
-void SGDIDeviceNVG::free_viewport(SGDIViewport* canvas)
+void GDIDeviceNVG::free_viewport(GDIViewport* canvas)
 {
     SkrDelete(canvas);
 }
 
-SGDICanvas* SGDIDeviceNVG::create_canvas()
+GDICanvas* GDIDeviceNVG::create_canvas()
 {
-    return SkrNew<SGDICanvasNVG>();
+    return SkrNew<GDICanvasNVG>();
 }
 
-void SGDIDeviceNVG::free_canvas(SGDICanvas* group)
+void GDIDeviceNVG::free_canvas(GDICanvas* group)
 {
     SkrDelete(group);
 }
 
-SGDIElement* SGDIDeviceNVG::create_element()
+GDIElement* GDIDeviceNVG::create_element()
 {
-    auto element = SkrNew<SGDIElementNVG>();
+    auto element = SkrNew<GDIElementNVG>();
     auto params = make_zeroed<NVGparams>();
     params.renderFill = nvg__renderFill;
     params.renderStroke = nvg__renderStroke;
@@ -437,17 +437,17 @@ SGDIElement* SGDIDeviceNVG::create_element()
     return element;
 }
 
-void SGDIDeviceNVG::free_element(SGDIElement* element)
+void GDIDeviceNVG::free_element(GDIElement* element)
 {
     SkrDelete(element);
 }
 
-SGDIPaint* SGDIDeviceNVG::create_paint()
+GDIPaint* GDIDeviceNVG::create_paint()
 {
-    return SkrNew<SGDIPaintNVG>();
+    return SkrNew<GDIPaintNVG>();
 }
 
-void SGDIDeviceNVG::free_paint(SGDIPaint* paint)
+void GDIDeviceNVG::free_paint(GDIPaint* paint)
 {
     SkrDelete(paint);
 }

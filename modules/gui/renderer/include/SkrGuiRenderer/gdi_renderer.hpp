@@ -24,11 +24,11 @@ enum EGDIRendererPipelineAttribute
 };
 using GDIRendererPipelineAttributes = uint32_t;
 
-struct SGDIElementDrawCommand_RenderGraph
+struct GDIElementDrawCommand_RenderGraph
 {
     GDIRendererPipelineAttributes attributes = 0;
-    SGDITextureId texture = nullptr;
-    SGDIMaterialId material = nullptr;
+    GDITextureId texture = nullptr;
+    GDIMaterialId material = nullptr;
     uint32_t first_index = 0;
     uint32_t index_count = 0;
     uint32_t ib_offset = 0;
@@ -37,25 +37,25 @@ struct SGDIElementDrawCommand_RenderGraph
     uint32_t pb_offset = 0;
 };
 
-struct SKR_GUI_RENDERER_API SGDIViewportData_RenderGraph
+struct SKR_GUI_RENDERER_API GDIViewportData_RenderGraph
 {
-    inline SGDIViewportData_RenderGraph(SGDIViewport* viewport) SKR_NOEXCEPT : viewport(viewport) { }
+    inline GDIViewportData_RenderGraph(GDIViewport* viewport) SKR_NOEXCEPT : viewport(viewport) { }
 
-    SGDIViewport* viewport = nullptr;
+    GDIViewport* viewport = nullptr;
 
     skr::vector<skr::render_graph::BufferHandle> vertex_buffers;
     skr::vector<skr::render_graph::BufferHandle> transform_buffers;
     skr::vector<skr::render_graph::BufferHandle> projection_buffers;
     skr::vector<skr::render_graph::BufferHandle> index_buffers;
 
-    skr::vector<SGDIElementDrawCommand_RenderGraph> render_commands;
-    skr::vector<SGDIVertex> render_vertices;
+    skr::vector<GDIElementDrawCommand_RenderGraph> render_commands;
+    skr::vector<GDIVertex> render_vertices;
     skr::vector<rtm::matrix4x4f> render_transforms;
     skr::vector<rtm::matrix4x4f> render_projections;
     skr::vector<index_t> render_indices;
 };
 
-struct SGDIRendererDescriptor_RenderGraph
+struct GDIRendererDescriptor_RenderGraph
 {
     ECGPUFormat target_format;
     CGPUDeviceId device = nullptr;
@@ -71,21 +71,21 @@ struct ViewportRenderParams_RenderGraph
     skr::render_graph::RenderGraph* render_graph = nullptr;
 };
 
-struct SGDIImageDescriptor_RenderGraph
+struct GDIImageDescriptor_RenderGraph
 {
     bool useImageCoder = false;
     skr_guid_t guid;
 };
 
-struct SGDITextureDescriptor_RenderGraph
+struct GDITextureDescriptor_RenderGraph
 {
     bool useImageCoder = false;
     skr_guid_t guid;
 };
 
-struct SKR_GUI_RENDERER_API SGDIImageAsyncData_RenderGraph
+struct SKR_GUI_RENDERER_API GDIImageAsyncData_RenderGraph
 {
-    friend struct SGDITextureAsyncData_RenderGraph;
+    friend struct GDITextureAsyncData_RenderGraph;
 
     struct 
     {
@@ -106,7 +106,7 @@ struct SKR_GUI_RENDERER_API SGDIImageAsyncData_RenderGraph
     skr_async_request_t aux_request = {};
     skr_threaded_service_t* aux_service = nullptr; 
     
-    SGDIImageId DoAsync(struct SGDIImage_RenderGraph* owner, skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT;
+    GDIImageId DoAsync(struct GDIImage_RenderGraph* owner, skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT;
 
 protected:
     eastl::function<void()> ram_io_enqueued_callback = {};
@@ -114,7 +114,7 @@ protected:
     eastl::function<void()> ram_data_finsihed_callback = {};
 };
 
-struct SKR_GUI_RENDERER_API SGDITextureAsyncData_RenderGraph
+struct SKR_GUI_RENDERER_API GDITextureAsyncData_RenderGraph
 {
     skr_async_request_t vram_request = {};
     skr_async_vtexture_destination_t vram_destination = {};
@@ -124,26 +124,26 @@ struct SKR_GUI_RENDERER_API SGDITextureAsyncData_RenderGraph
     CGPURootSignatureId root_signature = nullptr;
     skr_io_vram_service_t* vram_service = nullptr; 
 
-    SGDITextureId DoAsync(struct SGDITexture_RenderGraph* texture, skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT;
+    GDITextureId DoAsync(struct GDITexture_RenderGraph* texture, skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT;
 
 protected:
     eastl::function<void()> vram_enqueued_callback = {};
     eastl::function<void()> vram_finsihed_callback = {};
 };
 
-struct SKR_GUI_RENDERER_API SGDIImage_RenderGraph : public IGDIImage
+struct SKR_GUI_RENDERER_API GDIImage_RenderGraph : public IGDIImage
 {
-    SGDIImage_RenderGraph(struct SGDIRenderer_RenderGraph* renderer) SKR_NOEXCEPT
+    GDIImage_RenderGraph(struct GDIRenderer_RenderGraph* renderer) SKR_NOEXCEPT
         : renderer(renderer) { }
 
     EGDIResourceState get_state() const SKR_NOEXCEPT final;
-    SGDIRendererId get_renderer() const SKR_NOEXCEPT final;
+    GDIRendererId get_renderer() const SKR_NOEXCEPT final;
     uint32_t get_width() const SKR_NOEXCEPT final;
     uint32_t get_height() const SKR_NOEXCEPT final;
     LiteSpan<const uint8_t> get_data() const SKR_NOEXCEPT final;
     EGDIImageFormat get_format() const SKR_NOEXCEPT final;
 
-    void preInit(const SGDIImageDescriptor* desc);
+    void preInit(const GDIImageDescriptor* desc);
 
     uint32_t image_width = 0;
     uint32_t image_height = 0;
@@ -156,17 +156,17 @@ struct SKR_GUI_RENDERER_API SGDIImage_RenderGraph : public IGDIImage
     skr_blob_t pixel_data;
     skr_async_ram_destination_t raw_data = {};
 
-    SGDIImageAsyncData_RenderGraph async_data;
-    struct SGDIRenderer_RenderGraph* renderer = nullptr;
+    GDIImageAsyncData_RenderGraph async_data;
+    struct GDIRenderer_RenderGraph* renderer = nullptr;
 };
 
-struct SKR_GUI_RENDERER_API SGDITexture_RenderGraph : public IGDITexture
+struct SKR_GUI_RENDERER_API GDITexture_RenderGraph : public IGDITexture
 {
-    SGDITexture_RenderGraph(struct SGDIRenderer_RenderGraph* renderer) SKR_NOEXCEPT
+    GDITexture_RenderGraph(struct GDIRenderer_RenderGraph* renderer) SKR_NOEXCEPT
         : intermediate_image(renderer), renderer(renderer) { }
 
     EGDIResourceState get_state() const SKR_NOEXCEPT final;
-    SGDIRendererId get_renderer() const SKR_NOEXCEPT final;
+    GDIRendererId get_renderer() const SKR_NOEXCEPT final;
     uint32_t get_width() const SKR_NOEXCEPT final;
     uint32_t get_height() const SKR_NOEXCEPT final;
 
@@ -176,27 +176,27 @@ struct SKR_GUI_RENDERER_API SGDITexture_RenderGraph : public IGDITexture
     
     SAtomic32 state = static_cast<uint32_t>(EGDIResourceState::Requsted);
     EGDITextureSource source = EGDITextureSource::Count;
-    SGDITextureAsyncData_RenderGraph async_data;
+    GDITextureAsyncData_RenderGraph async_data;
 
-    SGDIImage_RenderGraph intermediate_image;
+    GDIImage_RenderGraph intermediate_image;
 
     CGPUTextureId texture = nullptr;
     CGPUTextureViewId texture_view = nullptr;
     CGPUSamplerId sampler = nullptr;
     CGPUXBindTableId bind_table = nullptr;
-    struct SGDIRenderer_RenderGraph* renderer = nullptr;
+    struct GDIRenderer_RenderGraph* renderer = nullptr;
 };
 
-struct SKR_GUI_RENDERER_API SGDIRenderer_RenderGraph : public IGDIRenderer
+struct SKR_GUI_RENDERER_API GDIRenderer_RenderGraph : public IGDIRenderer
 {
     // Tier 1
-    int initialize(const SGDIRendererDescriptor* desc) SKR_NOEXCEPT final;
+    int initialize(const GDIRendererDescriptor* desc) SKR_NOEXCEPT final;
     int finalize() SKR_NOEXCEPT final;
-    SGDIImageId create_image(const SGDIImageDescriptor* descriptor) SKR_NOEXCEPT final;
-    SGDITextureId create_texture(const SGDITextureDescriptor* descriptor) SKR_NOEXCEPT final;
-    void free_image(SGDIImageId image) SKR_NOEXCEPT final;
-    void free_texture(SGDITextureId texture) SKR_NOEXCEPT final;
-    void render(SGDIViewport* viewport, const ViewportRenderParams* params) SKR_NOEXCEPT final;
+    GDIImageId create_image(const GDIImageDescriptor* descriptor) SKR_NOEXCEPT final;
+    GDITextureId create_texture(const GDITextureDescriptor* descriptor) SKR_NOEXCEPT final;
+    void free_image(GDIImageId image) SKR_NOEXCEPT final;
+    void free_texture(GDITextureId texture) SKR_NOEXCEPT final;
+    void render(GDIViewport* viewport, const ViewportRenderParams* params) SKR_NOEXCEPT final;
 
     // Tier 2
     bool support_hardware_z(float* out_min, float* out_max) const SKR_NOEXCEPT final
