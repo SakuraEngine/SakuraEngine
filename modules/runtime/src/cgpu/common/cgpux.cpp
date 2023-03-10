@@ -148,7 +148,7 @@ void CGPUXBindTable::updateDescSetsIfDirty() const SKR_NOEXCEPT
             const auto& location = name_locations[i];
             if (!location.value.binded && location.tbl_idx == setIdx)
             {
-                const auto& set = sets[location.tbl_idx];
+                // const auto& set = sets[location.tbl_idx];
                 // TODO: batch update for better performance
                 // this update is kinda dangerous during draw-call because update-after-bind may happen
                 // TODO: fix this

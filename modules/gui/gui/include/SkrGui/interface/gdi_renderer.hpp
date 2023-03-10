@@ -134,7 +134,7 @@ struct SKR_GUI_API IGDIRenderer
     [[nodiscard]] virtual SGDITextureId create_texture(const SGDITextureDescriptor* descriptor) SKR_NOEXCEPT = 0;
     virtual void free_image(SGDIImageId image) SKR_NOEXCEPT = 0;
     virtual void free_texture(SGDITextureId texture) SKR_NOEXCEPT = 0;
-    virtual void render(SGDICanvasGroup* canvas_group, SGDIRenderParams* params) SKR_NOEXCEPT = 0;
+    virtual void render(SGDICanvas* render_group, SGDIRenderParams* params) SKR_NOEXCEPT = 0;
 
     // Tier 2
     virtual bool support_hardware_z(float* out_min, float* max) const SKR_NOEXCEPT = 0;

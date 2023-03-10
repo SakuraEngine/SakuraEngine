@@ -12,7 +12,6 @@ typedef struct render_application_t
 {
     const char* window_title;
     SWindowHandle window_handle;
-    SDL_SysWMinfo wmInfo;
     uint32_t window_width;
     uint32_t window_height;
     ECGPUBackend backend;
@@ -57,9 +56,9 @@ inline int app_create_gfx_objects(render_application_t* pApp)
 
     // Create swapchain
 #if defined(_WIN32) || defined(_WIN64)
-    pApp->surface = cgpu_surface_from_hwnd(pApp->device, pApp->wmInfo.info.win.window);
+    pApp->surface = cgpu_surface_from_hwnd(pApp->device, (HWND)skr_window_get_native_handle(pApp->window_handle));
 #elif defined(__APPLE__)
-    struct CGPUNSView* ns_view = (struct CGPUNSView*)nswindow_get_content_view(pApp->wmInfo.info.cocoa.window);
+    struct CGPUNSView* ns_view = (struct CGPUNSView*)nswindow_get_content_view(skr_window_get_native_handle(pApp->window_handle));
     pApp->surface = cgpu_surface_from_ns_view(pApp->device, ns_view);
 #endif
     DECLARE_ZERO(CGPUSwapChainDescriptor, chain_desc);
@@ -75,7 +74,7 @@ inline int app_create_gfx_objects(render_application_t* pApp)
     return 0;
 }
 
-inline int app_create_window(render_application_t* pApp, uint32_t width, uint32_t height)
+inline static int app_create_window(render_application_t* pApp, uint32_t width, uint32_t height)
 {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
     const char* window_title = pApp->window_title ? pApp->window_title :gCGPUBackendNames[pApp->backend];

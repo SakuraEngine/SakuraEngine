@@ -37,11 +37,11 @@ struct SGDIElementDrawCommand_RenderGraph
     uint32_t pb_offset = 0;
 };
 
-struct SKR_GUI_RENDERER_API SGDICanvasGroupData_RenderGraph
+struct SKR_GUI_RENDERER_API SGDIRenderGroupData_RenderGraph
 {
-    inline SGDICanvasGroupData_RenderGraph(SGDICanvasGroup* group) SKR_NOEXCEPT : canvas_group(group) { }
+    inline SGDIRenderGroupData_RenderGraph(SGDICanvas* group) SKR_NOEXCEPT : render_group(group) { }
 
-    SGDICanvasGroup* canvas_group = nullptr;
+    SGDICanvas* render_group = nullptr;
 
     skr::vector<skr::render_graph::BufferHandle> vertex_buffers;
     skr::vector<skr::render_graph::BufferHandle> transform_buffers;
@@ -196,7 +196,7 @@ struct SKR_GUI_RENDERER_API SGDIRenderer_RenderGraph : public IGDIRenderer
     SGDITextureId create_texture(const SGDITextureDescriptor* descriptor) SKR_NOEXCEPT final;
     void free_image(SGDIImageId image) SKR_NOEXCEPT final;
     void free_texture(SGDITextureId texture) SKR_NOEXCEPT final;
-    void render(SGDICanvasGroup* canvas_group, SGDIRenderParams* params) SKR_NOEXCEPT final;
+    void render(SGDICanvas* render_group, SGDIRenderParams* params) SKR_NOEXCEPT final;
 
     // Tier 2
     bool support_hardware_z(float* out_min, float* out_max) const SKR_NOEXCEPT final

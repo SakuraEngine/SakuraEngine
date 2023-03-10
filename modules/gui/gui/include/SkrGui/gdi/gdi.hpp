@@ -105,9 +105,9 @@ struct SKR_GUI_API SGDIElement
     virtual int32_t get_z() const = 0;
 };
 
-struct SKR_GUI_API SGDICanvas
+struct SKR_GUI_API SGDIRenderGroup
 {
-    virtual ~SGDICanvas() SKR_NOEXCEPT = default;
+    virtual ~SGDIRenderGroup() SKR_NOEXCEPT = default;
 
     virtual void add_element(SGDIElement* element) SKR_NOEXCEPT = 0;
     virtual void remove_element(SGDIElement* element) SKR_NOEXCEPT = 0;
@@ -124,13 +124,13 @@ struct SKR_GUI_API SGDICanvas
     skr_float2_t size = { 0.f, 0.0f };
 };
 
-struct SKR_GUI_API SGDICanvasGroup
+struct SKR_GUI_API SGDICanvas
 {
-    virtual ~SGDICanvasGroup() SKR_NOEXCEPT = default;
+    virtual ~SGDICanvas() SKR_NOEXCEPT = default;
 
-    virtual void add_canvas(SGDICanvas* canvas) SKR_NOEXCEPT = 0;
-    virtual void remove_canvas(SGDICanvas* canvas) SKR_NOEXCEPT = 0;
-    virtual LiteSpan<SGDICanvas*> all_canvas() SKR_NOEXCEPT = 0;
+    virtual void add_render_group(SGDIRenderGroup* group) SKR_NOEXCEPT = 0;
+    virtual void remove_render_group(SGDIRenderGroup* group) SKR_NOEXCEPT = 0;
+    virtual LiteSpan<SGDIRenderGroup*> all_render_groups() SKR_NOEXCEPT = 0;
 };
 
 struct SKR_GUI_API SGDIDevice
@@ -140,11 +140,11 @@ struct SKR_GUI_API SGDIDevice
     [[nodiscard]] static SGDIDevice* Create(EGDIBackend backend);
     static void Free(SGDIDevice* device);
 
-    [[nodiscard]] virtual SGDICanvas* create_canvas();
-    virtual void free_canvas(SGDICanvas* canvas);
+    [[nodiscard]] virtual SGDIRenderGroup* create_render_group();
+    virtual void free_render_group(SGDIRenderGroup* canvas);
 
-    [[nodiscard]] virtual SGDICanvasGroup* create_canvas_group();
-    virtual void free_canvas_group(SGDICanvasGroup* canvas_group);
+    [[nodiscard]] virtual SGDICanvas* create_canvas();
+    virtual void free_canvas(SGDICanvas* render_group);
 
     [[nodiscard]] virtual SGDIElement* create_element() = 0;
     virtual void free_element(SGDIElement* element) = 0;
