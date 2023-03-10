@@ -5,7 +5,8 @@
 
 #include "tracy/Tracy.hpp"
 
-struct gui_render_graph_t {
+struct gui_render_graph_t 
+{
     bool initialize(render_application_t& render_app)
     {
         // initialize render graph
@@ -89,10 +90,6 @@ struct gui_render_graph_t {
         frame_index = graph->execute();
 
         // present
-        {
-            ZoneScopedN("WaitRenderThisFrame");
-            cgpu_wait_queue_idle(render_app.gfx_queue);
-        }
         CGPUQueuePresentDescriptor present_desc = {};
         present_desc.index = render_app.backbuffer_index;
         present_desc.swapchain = render_app.swapchain;
