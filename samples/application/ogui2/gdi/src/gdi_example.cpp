@@ -204,6 +204,8 @@ struct gdi_example_application : public gdi_application_t
     skr::gdi::GDIElement* debug_element = nullptr;
 };
 
+#include "tracy/Tracy.hpp"
+
 int main(int argc, char* argv[])
 {
     auto App = make_zeroed<gdi_example_application>();
@@ -211,29 +213,36 @@ int main(int argc, char* argv[])
     bool quit = false;
     while (!quit)
     {
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
+        FrameMark;
         {
-            auto sdl_window = (SDL_Window*)App.gfx.window_handle;
-            if (SDL_GetWindowID(sdl_window) == event.window.windowID)
+            ZoneScopedN("SystemEvents");
+            SDL_Event event;
+            while (SDL_PollEvent(&event))
             {
-                if (!SDLEventHandler(&event, sdl_window))
+                auto sdl_window = (SDL_Window*)App.gfx.window_handle;
+                if (SDL_GetWindowID(sdl_window) == event.window.windowID)
                 {
-                    quit = true;
+                    if (!SDLEventHandler(&event, sdl_window))
+                    {
+                        quit = true;
+                    }
                 }
-            }
-            if (event.type == SDL_WINDOWEVENT)
-            {
-                uint8_t window_event = event.window.event;
-                if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
+                if (event.type == SDL_WINDOWEVENT)
                 {
-                    app_resize_window(&App.gfx, event.window.data1, event.window.data2);
-                    App.gdi_canvas->set_size((float)App.gfx.window_width, (float)App.gfx.window_height);
-                    App.backgroud_canvas->set_size((float)App.gfx.window_width, (float)App.gfx.window_height);
+                    uint8_t window_event = event.window.event;
+                    if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
+                    {
+                        app_resize_window(&App.gfx, event.window.data1, event.window.data2);
+                        App.gdi_canvas->set_size((float)App.gfx.window_width, (float)App.gfx.window_height);
+                        App.backgroud_canvas->set_size((float)App.gfx.window_width, (float)App.gfx.window_height);
+                    }
                 }
             }
         }
-        App.render();
+        {
+            ZoneScopedN("GDI Draw & Render");
+            App.render();
+        }
     }
     App.finalize();
     return 0;
