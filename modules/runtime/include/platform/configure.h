@@ -217,7 +217,7 @@ typedef char char8_t;
 #ifdef __cplusplus
 #define SKR_DECLARE_TYPE_ID_FWD(ns, type, ctype) namespace ns { struct type; } using ctype##_id = ns::type*;
 #else
-#define SKR_DECLARE_TYPE_ID_FWD(ns, type, ctype) typedef struct ctype* ctype##_id;
+#define SKR_DECLARE_TYPE_ID_FWD(ns, type, ctype) typedef struct ctype##_t ctype##_t; typedef struct ctype* ctype##_id;
 #endif
 
 #ifdef __cplusplus

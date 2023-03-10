@@ -8,12 +8,12 @@
 namespace skr {
 namespace gdi {
 
-void SGDICanvasPrivate::add_element(SGDIElement* element) SKR_NOEXCEPT
+void SGDIRenderGroupPrivate::add_element(SGDIElement* element) SKR_NOEXCEPT
 {
     all_elements_.emplace_back(element);
 }
 
-void SGDICanvasPrivate::remove_element(SGDIElement* element) SKR_NOEXCEPT
+void SGDIRenderGroupPrivate::remove_element(SGDIElement* element) SKR_NOEXCEPT
 {
     auto it = eastl::find(all_elements_.begin(), all_elements_.end(), element);
     if (it != all_elements_.end()) 
@@ -22,28 +22,28 @@ void SGDICanvasPrivate::remove_element(SGDIElement* element) SKR_NOEXCEPT
     }
 }
 
-LiteSpan<SGDIElement*> SGDICanvasPrivate::all_elements() SKR_NOEXCEPT
+LiteSpan<SGDIElement*> SGDIRenderGroupPrivate::all_elements() SKR_NOEXCEPT
 {
     return { all_elements_.data(), all_elements_.size() };
 }
 
-void SGDICanvasGroupPrivate::add_canvas(SGDICanvas* canvas) SKR_NOEXCEPT
+void SGDICanvasPrivate::add_render_group(SGDIRenderGroup* group) SKR_NOEXCEPT
 {
-    all_canvas_.emplace_back(canvas);
+    all_render_groups_.emplace_back(group);
 }
 
-void SGDICanvasGroupPrivate::remove_canvas(SGDICanvas* canvas) SKR_NOEXCEPT
+void SGDICanvasPrivate::remove_render_group(SGDIRenderGroup* group) SKR_NOEXCEPT
 {
-    auto it = eastl::find(all_canvas_.begin(), all_canvas_.end(), canvas);
-    if (it != all_canvas_.end()) 
+    auto it = eastl::find(all_render_groups_.begin(), all_render_groups_.end(), group);
+    if (it != all_render_groups_.end()) 
     {
-        all_canvas_.erase(it);
+        all_render_groups_.erase(it);
     }
 }
 
-LiteSpan<SGDICanvas*> SGDICanvasGroupPrivate::all_canvas() SKR_NOEXCEPT
+LiteSpan<SGDIRenderGroup*> SGDICanvasPrivate::all_render_groups() SKR_NOEXCEPT
 {
-    return { all_canvas_.data(), all_canvas_.size() };
+    return { all_render_groups_.data(), all_render_groups_.size() };
 }
 
 SGDIDevice* SGDIDevice::Create(EGDIBackend backend)
@@ -76,14 +76,14 @@ void SGDIDevice::free_canvas(SGDICanvas* canvas)
     SkrDelete(canvas);
 }
 
-SGDICanvasGroup* SGDIDevice::create_canvas_group()
+SGDIRenderGroup* SGDIDevice::create_render_group()
 {
-    return SkrNew<SGDICanvasGroupPrivate>();
+    return SkrNew<SGDIRenderGroupPrivate>();
 }
 
-void SGDIDevice::free_canvas_group(SGDICanvasGroup* canvas_group)
+void SGDIDevice::free_render_group(SGDIRenderGroup* render_group)
 {
-    SkrDelete(canvas_group);
+    SkrDelete(render_group);
 }
 
 LiteSpan<SGDIVertex> IGDIRenderer::fetch_element_vertices(SGDIElement* element) SKR_NOEXCEPT

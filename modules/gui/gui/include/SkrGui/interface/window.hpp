@@ -14,3 +14,5 @@ struct SKR_GUI_API IPlatformWindow
 };
 
 } }
+
+SKR_DECLARE_TYPE_ID(skr::gui::IPlatformWindow, skr_gui_platform_window);

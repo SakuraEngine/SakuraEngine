@@ -39,14 +39,20 @@ target("Example-CGPUIndexedInstance")
 target("Example-CGPUTexture")
     set_group("04.examples/cgpu")
     set_exceptions("no-cxx")
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/cgpu-texture",
         dxil_outdir = "/../resources/shaders/cgpu-texture"})
     set_kind("binary")
     public_dependency("SkrRT", engine_version)
-    add_files("cgpu-texture/*.c")
+    add_files("cgpu-texture/texture.c")
     add_files("cgpu-texture/**.hlsl")
+
+target("Example-CGPUTexture2")
+    set_group("04.examples/cgpu")
+    set_exceptions("no-cxx")
+    set_kind("binary")
+    public_dependency("SkrRT", engine_version)
+    add_files("cgpu-texture/texture_2.c")
     
 -- close this demo until we fix exception rule issue
 if (os.host() == "windows" and false) then

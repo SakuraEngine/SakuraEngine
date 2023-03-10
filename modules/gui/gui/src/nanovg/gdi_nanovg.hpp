@@ -38,13 +38,13 @@ struct SGDIPaintNVG : public SGDIPaintPrivate
     NVGpaint nvg_paint;
 };
 
-struct SGDICanvasGroupNVG : public SGDICanvasGroupPrivate
+struct SGDICanvasNVG : public SGDICanvasPrivate
 {
-    // void add_canvas(SGDICanvas* canvas) final;
-    // void remove_canvas(SGDICanvas* canvas) final;
+    // void add_render_group(SGDICanvas* canvas) final;
+    // void remove_render_group(SGDICanvas* canvas) final;
 };
 
-struct SGDICanvasNVG : public SGDICanvasPrivate
+struct SGDIRenderGroupNVG : public SGDIRenderGroupPrivate
 {
     void add_element(SGDIElement* element) SKR_NOEXCEPT final;
 };
@@ -55,11 +55,11 @@ struct SGDIDeviceNVG : public SGDIDevicePrivate
     int initialize() SKR_NOEXCEPT;
     int finalize() SKR_NOEXCEPT;
 
-    SGDICanvas* create_canvas() final;
-    void free_canvas(SGDICanvas* canvas) final;
+    SGDIRenderGroup* create_render_group() final;
+    void free_render_group(SGDIRenderGroup* canvas) final;
 
-    SGDICanvasGroup* create_canvas_group() final;
-    void free_canvas_group(SGDICanvasGroup* group) final;
+    SGDICanvas* create_canvas() final;
+    void free_canvas(SGDICanvas* group) final;
 
     SGDIElement* create_element() final;
     void free_element(SGDIElement* element) final;
