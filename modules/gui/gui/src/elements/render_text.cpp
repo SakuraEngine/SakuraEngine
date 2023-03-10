@@ -18,7 +18,7 @@ void RenderText::layout(Constraints* constraints, bool needSize)
 
 }
 
-void RenderText::draw(gdi::SGDIViewport* canvas)
+void RenderText::draw(gdi::SGDICanvas* canvas)
 {
 
 }
