@@ -1,6 +1,5 @@
 #pragma once
-#include "SkrGui/module.configure.h"
-#include "utils/types.h"
+#include "SkrGui/framework/fwd_containers.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIImage, skr_gdi_image)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDITexture, skr_gdi_texture)
@@ -19,6 +18,9 @@ typedef uint16_t skr_gdi_index_t;
 namespace skr {
 namespace gdi {
 
+template<typename T>
+using LiteSpan = skr::gui::LiteSpan<T>;
+
 using index_t = skr_gdi_index_t;
 typedef struct IGDIImage* GDIImageId;
 typedef struct IGDITexture* GDITextureId;
@@ -27,19 +29,6 @@ typedef struct IGDIRenderer* GDIRendererId;
 
 // gdi
 using GDIElementDrawCommand = skr_gdi_element_draw_command_t;
-
-template<typename T>
-struct LiteSpan
-{
-    inline constexpr uint64_t size() const SKR_NOEXCEPT { return size_; }
-    inline SKR_CONSTEXPR T* data() const SKR_NOEXCEPT { return data_; }
-    inline SKR_CONSTEXPR T& operator[](uint64_t index) const SKR_NOEXCEPT { return data_[index]; }
-    inline SKR_CONSTEXPR T* begin() const SKR_NOEXCEPT { return data_; }
-    inline SKR_CONSTEXPR T* end() const SKR_NOEXCEPT { return data_ + size_; }
-    inline SKR_CONSTEXPR bool empty() const SKR_NOEXCEPT { return size_ == 0; }
-    T* data_ = nullptr;
-    uint64_t size_ = 0;
-};
 
 enum class EGDIBackend
 {

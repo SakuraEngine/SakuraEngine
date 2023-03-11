@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrGui/framework/fwd_containers.hpp"
+#include "SkrGui/framework/diagnostics.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDICanvas, skr_gdi_canvas)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIViewport, skr_gdi_viewport)
@@ -15,7 +15,7 @@ typedef struct skr_gui_render_element_draw_params_t
 namespace skr {
 namespace gui {
 
-struct SKR_GUI_API RenderElement
+struct SKR_GUI_API RenderElement : public DiagnosticableTreeNode
 {
     using DrawParams = skr_gui_render_element_draw_params_t;
 public:
@@ -35,6 +35,8 @@ public:
     virtual void markLayoutDirty();
 
     virtual void draw(const DrawParams* params);
+
+    virtual LiteSpan<DiagnosticableTreeNode* const> get_diagnostics_children() const override;
 
 protected:
     bool active = true;

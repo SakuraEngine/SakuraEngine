@@ -1,25 +1,17 @@
-#include "../../../../common/utils.h"
+#include "../../../common/utils.h"
 #include "platform/memory.h"
 #include "platform/window.h"
 #include "utils/make_zeroed.hpp"
 #include "utils/log.h"
-
-#include "ecs/dual.h"
-#include "ecs/type_builder.hpp"
-#include "ecs/callback.hpp"
-#include "ecs/array.hpp"
-
 #include "SkrRenderGraph/frontend/render_graph.hpp"
-#include "SkrScene/scene.h"
-#include "SkrRenderer/render_effect.h"
-#include "SkrRenderer/skr_renderer.h"
+#include "platform/vfs.h"
+
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
-#include "GameRuntime/gamert.h"
 
 SKR_IMPORT_API bool skr_runtime_is_dpi_aware();
 
-void create_imgui_resources(skr_vfs_t* resource_vfs, SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph)
+void create_imgui_resources(ECGPUFormat format, CGPUSamplerId sampler, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs)
 {
     const auto device = renderGraph->get_backend_device();
     const auto backend = device->adapter->instance->backend;
@@ -28,7 +20,7 @@ void create_imgui_resources(skr_vfs_t* resource_vfs, SRenderDeviceId render_devi
     ImGuiIO& io = ImGui::GetIO(); 
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+    // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
     ImGui::StyleColorsDark();
     {
         auto& style = ImGui::GetStyle();
@@ -71,13 +63,12 @@ void create_imgui_resources(skr_vfs_t* resource_vfs, SRenderDeviceId render_devi
     skr::string fsname = u8"shaders/imgui_fragment";
     vsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
     fsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
-
-    auto vsfile = skr_vfs_fopen(resource_vfs, vsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    auto vsfile = skr_vfs_fopen(vfs, vsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     uint32_t im_vs_length = (uint32_t)skr_vfs_fsize(vsfile);
     uint32_t* im_vs_bytes = (uint32_t*)sakura_malloc(im_vs_length);
     skr_vfs_fread(vsfile, im_vs_bytes, 0, im_vs_length);
     skr_vfs_fclose(vsfile);
-    auto fsfile = skr_vfs_fopen(resource_vfs, fsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    auto fsfile = skr_vfs_fopen(vfs, fsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     uint32_t im_fs_length = (uint32_t)skr_vfs_fsize(fsfile);
     uint32_t* im_fs_bytes = (uint32_t*)sakura_malloc(im_fs_length);
     skr_vfs_fread(fsfile, im_fs_bytes, 0, im_fs_length);
@@ -98,7 +89,7 @@ void create_imgui_resources(skr_vfs_t* resource_vfs, SRenderDeviceId render_devi
     sakura_free(im_fs_bytes);
     RenderGraphImGuiDescriptor imgui_graph_desc = {};
     imgui_graph_desc.render_graph = renderGraph;
-    imgui_graph_desc.backbuffer_format = render_device->get_swapchain_format();
+    imgui_graph_desc.backbuffer_format = format;
     imgui_graph_desc.vs.library = imgui_vs;
     imgui_graph_desc.vs.stage = CGPU_SHADER_STAGE_VERT;
     imgui_graph_desc.vs.entry = "main";
@@ -106,7 +97,7 @@ void create_imgui_resources(skr_vfs_t* resource_vfs, SRenderDeviceId render_devi
     imgui_graph_desc.ps.stage = CGPU_SHADER_STAGE_FRAG;
     imgui_graph_desc.ps.entry = "main";
     imgui_graph_desc.queue = gfx_queue;
-    imgui_graph_desc.static_sampler = render_device->get_linear_sampler();
+    imgui_graph_desc.static_sampler = sampler;
     render_graph_imgui_initialize(&imgui_graph_desc);
     cgpu_free_shader_library(imgui_vs);
     cgpu_free_shader_library(imgui_fs);

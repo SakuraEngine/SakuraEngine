@@ -41,7 +41,7 @@ void create_imgui_resources(SRenderDeviceId render_device, skr::render_graph::Re
             dpi_scaling = ddpi / OS_DPI;
             // scale back
             style.ScaleAllSizes(1.f / dpi_scaling);
-            ImGui::GetIO().FontGlobalScale = 0.5f;
+            ImGui::GetIO().FontGlobalScale = 1.f / dpi_scaling;
         }
         else
         {

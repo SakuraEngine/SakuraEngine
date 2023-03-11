@@ -191,7 +191,7 @@ int InitializeImgui(Renderer& renderer, skr_vfs_t* vfs)
             dpi_scaling = ddpi / OS_DPI;
             // scale back
             style.ScaleAllSizes(1.f / dpi_scaling);
-            ImGui::GetIO().FontGlobalScale = 0.5f;
+            ImGui::GetIO().FontGlobalScale = 1.f / dpi_scaling;
         }
         else
         {

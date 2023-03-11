@@ -208,9 +208,9 @@ int GDIRenderer_RenderGraph::initialize(const GDIRendererDescriptor* desc) SKR_N
     sampler_desc.address_u = CGPU_ADDRESS_MODE_REPEAT;
     sampler_desc.address_v = CGPU_ADDRESS_MODE_REPEAT;
     sampler_desc.address_w = CGPU_ADDRESS_MODE_REPEAT;
-    sampler_desc.mipmap_mode = CGPU_MIPMAP_MODE_LINEAR;
-    sampler_desc.min_filter = CGPU_FILTER_TYPE_LINEAR;
-    sampler_desc.mag_filter = CGPU_FILTER_TYPE_LINEAR;
+    sampler_desc.mipmap_mode = CGPU_MIPMAP_MODE_NEAREST;
+    sampler_desc.min_filter = CGPU_FILTER_TYPE_NEAREST;
+    sampler_desc.mag_filter = CGPU_FILTER_TYPE_NEAREST;
     sampler_desc.compare_func = CGPU_CMP_NEVER;
     static_color_sampler = cgpu_create_sampler(device, &sampler_desc);
 
