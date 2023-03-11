@@ -2,7 +2,7 @@
 #include "gui_render_graph.hpp"
 
 #include "SkrGui/interface/gdi_renderer.hpp"
-#include "SkrGui/window_context.hpp"
+#include "SkrGui/framework/window_context.hpp"
 
 #include "SkrGui/render_elements/render_window.hpp"
 #include "SkrGui/render_elements/render_canvas.hpp"

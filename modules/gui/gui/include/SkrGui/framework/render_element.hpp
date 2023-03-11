@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrGui/fwd_containers.hpp"
+#include "SkrGui/framework/fwd_containers.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDICanvas, skr_gdi_canvas)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIViewport, skr_gdi_viewport)
