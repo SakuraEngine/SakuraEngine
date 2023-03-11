@@ -1,5 +1,5 @@
 #include "SkrGui/interface/window.hpp"
-#include "SkrGui/window_context.hpp"
+#include "SkrGui/framework/window_context.hpp"
 #include "SkrGui/interface/gdi_renderer.hpp"
 #include "SkrGui/render_elements/render_window.hpp"
 #include "platform/memory.h"

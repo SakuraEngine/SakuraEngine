@@ -1,6 +1,6 @@
 #include "SkrGui/render_elements/render_grid_paper.hpp"
 #include "SkrGui/gdi/gdi.hpp"
-#include "SkrGui/window_context.hpp"
+#include "SkrGui/framework/window_context.hpp"
 #include "SkrGui/interface/window.hpp"
 
 #include "tracy/Tracy.hpp"

@@ -1,6 +1,6 @@
 #include "SkrGui/render_elements/render_canvas.hpp"
 #include "SkrGui/gdi/gdi.hpp"
-#include "SkrGui/window_context.hpp"
+#include "SkrGui/framework/window_context.hpp"
 #include "SkrGui/interface/window.hpp"
 
 namespace skr {
@@ -19,7 +19,7 @@ RenderCanvas::~RenderCanvas()
 
 void RenderCanvas::layout(Constraints* constraints, bool needSize)
 {
-    
+
 }
 
 void RenderCanvas::draw(const DrawParams* params)
