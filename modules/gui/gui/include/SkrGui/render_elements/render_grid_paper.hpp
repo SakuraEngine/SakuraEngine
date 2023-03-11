@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrGui/render_elements/element.hpp"
+#include "SkrGui/render_elements/render_element.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIDevice, skr_gdi_device)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIElement, skr_gdi_element)
