@@ -1,11 +1,13 @@
 #pragma once
 #include <type_traits>
-#include "platform/configure.h"
 #ifdef SKR_GUI_IMPL
 #include <containers/vector.hpp>
 #include <containers/hashmap.hpp>
 #include <new> // placement new operator
 #endif
+
+#include "utils/types.h"
+#include "SkrGui/module.configure.h"
 
 namespace skr {
 namespace gui {

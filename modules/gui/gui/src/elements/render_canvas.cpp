@@ -19,7 +19,7 @@ RenderCanvas::~RenderCanvas()
 
 void RenderCanvas::layout(Constraints* constraints, bool needSize)
 {
-
+    
 }
 
 void RenderCanvas::draw(const DrawParams* params)
@@ -40,12 +40,12 @@ void RenderCanvas::draw(const DrawParams* params)
     RenderElement::draw(&draw_params);
 }
 
-skr_float2_t RenderCanvas::get_size() const
+skr_float2_t RenderCanvas::get_size(ECanvasSpace space) const
 {
     return skr_float2_t();
 }
 
-void RenderCanvas::set_size(const skr_float2_t& size)
+void RenderCanvas::set_size(const skr_float2_t& size, ECanvasSpace space)
 {
     
 }

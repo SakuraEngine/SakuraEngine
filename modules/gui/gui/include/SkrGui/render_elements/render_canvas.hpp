@@ -1,11 +1,18 @@
 #pragma once
-#include "SkrGui/render_elements/element.hpp"
+#include "SkrGui/render_elements/render_element.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIDevice, skr_gdi_device)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDICanvas, skr_gdi_canvas)
 
 namespace skr {
 namespace gui {
+
+enum class ECanvasSpace : uint32_t 
+{
+    Standard,
+    ScreenAbsolute,
+    Count
+};
 
 struct SKR_GUI_API RenderCanvas : public RenderElement
 {
@@ -16,11 +23,10 @@ public:
     virtual void layout(struct Constraints* constraints, bool needSize = false) override;
     virtual void draw(const DrawParams* params) override;
 
-    virtual skr_float2_t get_size() const;
-    virtual void set_size(const skr_float2_t& size);
+    virtual skr_float2_t get_size(ECanvasSpace space = ECanvasSpace::Standard) const;
+    virtual void set_size(const skr_float2_t& size, ECanvasSpace space = ECanvasSpace::Standard);
 
     skr_gdi_canvas_id get_gdi_canvas() { return gdi_canvas; }
-
 protected:
     skr_gdi_device_id gdi_device = nullptr;
     skr_gdi_canvas_id gdi_canvas = nullptr;
