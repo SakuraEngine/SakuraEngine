@@ -8,6 +8,10 @@ RenderWindow::RenderWindow(skr_gdi_device_id gdi_device)
     : gdi_device(gdi_device), gdi_viewport(nullptr)
 {
     gdi_viewport = gdi_device->create_viewport();
+
+    diagnostic_builder.add_properties(
+        SkrNew<TextDiagnosticProperty>("type", "window", "a virtual window to place canvas")
+    );
 }
 
 RenderWindow::~RenderWindow()

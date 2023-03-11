@@ -10,6 +10,10 @@ RenderCanvas::RenderCanvas(skr_gdi_device_id gdi_device)
     : gdi_device(gdi_device), gdi_canvas(nullptr)
 {
     gdi_canvas = gdi_device->create_canvas();
+
+    diagnostic_builder.add_properties(
+        SkrNew<TextDiagnosticProperty>("type", "canvas", "")
+    );
 }
 
 RenderCanvas::~RenderCanvas()

@@ -1,2 +1,0 @@
-#include <EASTL/vector.h>
-

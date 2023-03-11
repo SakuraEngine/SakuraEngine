@@ -96,6 +96,10 @@ RenderGridPaper::RenderGridPaper(skr_gdi_device_id gdi_device)
     : gdi_device(gdi_device), gdi_element(nullptr)
 {
     gdi_element = gdi_device->create_element();
+
+    diagnostic_builder.add_properties(
+        SkrNew<TextDiagnosticProperty>("type", "grid_paper", "draws grid paper")
+    );
 }
 
 RenderGridPaper::~RenderGridPaper()

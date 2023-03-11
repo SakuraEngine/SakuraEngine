@@ -63,7 +63,7 @@ void imguir_render_draw_data(ImDrawData* draw_data,
     ZoneScopedN("RenderIMGUI");
     using graph_name_string = eastl::fixed_string<char, 32>;
 
-    bool useCVV = false;
+    bool useCVV = true;
 #ifdef SKR_OS_MACOSX
     useCVV = false;
 #endif

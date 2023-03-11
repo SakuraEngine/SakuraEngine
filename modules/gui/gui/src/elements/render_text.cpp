@@ -5,7 +5,9 @@ namespace gui {
 
 RenderText::RenderText()
 {
-
+    diagnostic_builder.add_properties(
+        SkrNew<TextDiagnosticProperty>("type", "text", "draws text paragraph")
+    );
 }
 
 RenderText::~RenderText()

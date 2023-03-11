@@ -5,7 +5,9 @@ namespace gui {
 
 RenderBox::RenderBox()
 {
-
+    diagnostic_builder.add_properties(
+        SkrNew<TextDiagnosticProperty>("type", "render_box", "")
+    );
 }
 
 RenderBox::~RenderBox()
