@@ -108,6 +108,7 @@ struct SKR_GUI_API GDIElement
     
     virtual void stroke_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a) = 0;
     virtual void stroke_color(float r, float g, float b, float a) = 0;
+    virtual void stroke_paint(GDIPaint* paint) = 0;
     virtual void stroke_width(float size) = 0;
     virtual void stroke() = 0;
 

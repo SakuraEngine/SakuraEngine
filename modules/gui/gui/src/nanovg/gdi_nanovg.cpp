@@ -385,6 +385,12 @@ void GDIElementNVG::stroke_color(float r, float g, float b, float a)
     nvgStrokeColor(nvg, nvgRGBAf(r, g, b, a));
 }
 
+void GDIElementNVG::stroke_paint(GDIPaint* paint)
+{
+    auto nvg_paint = static_cast<GDIPaintNVG*>(paint);
+    nvgStrokePaint(nvg, nvg_paint->nvg_paint);
+}
+
 void GDIElementNVG::stroke_width(float size)
 {
     nvgStrokeWidth(nvg, size);
