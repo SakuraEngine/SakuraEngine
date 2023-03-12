@@ -8,7 +8,7 @@
 namespace skr {
 namespace gui {
 
-void draw_background_canvas(gdi::GDIElement* element, float window_width, float window_height)
+inline static void draw_grid_paper(gdi::GDIElement* element, float window_width, float window_height)
 {
     const bool bDrawRelativeXMesh = false;
     const bool bDrawRelativeYMesh = false;
@@ -122,7 +122,7 @@ void RenderGridPaper::draw(const DrawParams* params)
     platform_window->get_extent(&w, &h);
     const float window_width = (float)w, window_height = (float)h;
     params->canvas->add_element(gdi_element);
-    draw_background_canvas(gdi_element, window_width, window_height);
+    draw_grid_paper(gdi_element, window_width, window_height);
 
     RenderElement::draw(params);
 }
