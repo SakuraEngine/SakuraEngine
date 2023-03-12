@@ -262,6 +262,7 @@ static void nvg__renderFill(void* uptr, NVGpaint* paint, NVGcompositeOperationSt
     //slow path
     else 
     {
+        SKR_ASSERT(0);
     }
 }
 
@@ -327,14 +328,41 @@ void GDIElementNVG::begin_path()
     nvgBeginPath(nvg);
 }
 
+void GDIElementNVG::arc(float cx, float cy, float r, float a0, float a1, EGDIWinding dir)
+{
+    const uint32_t dirIndex = static_cast<uint32_t>(dir) - 1;
+    const int32_t WindingLUT[] = { NVG_CW, NVG_CCW };
+    nvgArc(nvg, cx, cy, r, a0, a1, WindingLUT[dirIndex]);
+}
+
+void GDIElementNVG::close_path()
+{
+    nvgClosePath(nvg);
+}
+
 void GDIElementNVG::rect(float x, float y, float w, float h)
 {
     nvgRect(nvg, x, y, w, h);
 }
 
+void GDIElementNVG::circle(float cx, float cy, float r)
+{
+    nvgCircle(nvg, cx, cy, r);
+}
+
 void GDIElementNVG::rounded_rect_varying(float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft)
 {
     nvgRoundedRectVarying(nvg, x, y, w, h, radTopLeft, radTopRight, radBottomRight, radBottomLeft);
+}
+
+void GDIElementNVG::translate(float x, float y)
+{
+    nvgTranslate(nvg, x, y);
+}
+
+void GDIElementNVG::rotate(float r)
+{
+    nvgRotate(nvg, r);
 }
 
 void GDIElementNVG::move_to(float x, float y)
@@ -367,6 +395,13 @@ void GDIElementNVG::stroke()
     nvgStroke(nvg);
 }
 
+void GDIElementNVG::path_winding(EGDISolidity dir)
+{
+    const uint32_t dirIndex = static_cast<uint32_t>(dir) - 1;
+    const int32_t SolidityLUT[] = { NVG_SOLID, NVG_HOLE };
+    nvgPathWinding(nvg, SolidityLUT[dirIndex]);
+}
+
 void GDIElementNVG::fill_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a)
 {
     nvgFillColor(nvg, nvgRGBA(r, g, b, a));
@@ -386,6 +421,35 @@ void GDIElementNVG::fill_paint(GDIPaint* paint)
 void GDIElementNVG::fill()
 {
     nvgFill(nvg);
+}
+
+void GDIElementNVG::restore()
+{
+    nvgRestore(nvg);
+}
+
+void GDIElementNVG::save()
+{
+    nvgSave(nvg);
+}
+
+void GDIPaintNVG::radial_gradient(float cx, float cy, float inr, float outr, skr_float4_t icol, skr_float4_t ocol) SKR_NOEXCEPT
+{
+    nvgRadialGradient(nullptr, cx, cy, inr, outr, nvgRGBAf(icol.x, icol.y, icol.z, icol.w), nvgRGBAf(ocol.x, ocol.y, ocol.z, ocol.w));
+}
+
+void GDIPaintNVG::box_gradient(float x, float y, float w, float h, float r, float f, skr_float4_t icol, skr_float4_t ocol) SKR_NOEXCEPT
+{
+    NVGcolor icolor = nvgRGBAf(icol.x, icol.y, icol.z, icol.w);
+    NVGcolor ocolor = nvgRGBAf(ocol.x, ocol.y, ocol.z, ocol.w);
+    nvgBoxGradient(nullptr, x, y, w, h, r, f, icolor, ocolor);
+}
+
+void GDIPaintNVG::linear_gradient(float sx, float sy, float ex, float ey, skr_float4_t icol, skr_float4_t ocol) SKR_NOEXCEPT
+{
+    NVGcolor icolor = nvgRGBAf(icol.x, icol.y, icol.z, icol.w);
+    NVGcolor ocolor = nvgRGBAf(ocol.x, ocol.y, ocol.z, ocol.w);
+    nvgLinearGradient(nullptr, sx, sy, ex, ey, icolor, ocolor);
 }
 
 void GDIPaintNVG::set_pattern(float cx, float cy, float w, float h, float angle, GDITextureId texture, skr_float4_t ocol) SKR_NOEXCEPT

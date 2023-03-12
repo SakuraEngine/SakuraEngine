@@ -9,6 +9,7 @@
 #include "SkrGui/render_elements/render_window.hpp"
 #include "SkrGui/render_elements/render_canvas.hpp"
 #include "SkrGui/render_elements/render_grid_paper.hpp"
+#include "SkrGui/render_elements/render_color_picker.hpp"
 
 #include "SkrGuiRenderer/gdi_renderer.hpp"
 
@@ -40,8 +41,10 @@ struct elements_example_application : public elements_application_t
         // add elements
         canvas = SkrNew<skr::gui::RenderCanvas>(gdi.device);
         grid_paper = SkrNew<skr::gui::RenderGridPaper>(gdi.device);
+        color_picker = SkrNew<skr::gui::RenderColorPicker>(gdi.device);
         root_window->add_child(canvas);
         canvas->add_child(grid_paper);
+        canvas->add_child(color_picker);
 
         // initialize render graph
         if (graph.initialize(gdi.gfx))
@@ -162,6 +165,7 @@ struct elements_example_application : public elements_application_t
         render_graph_imgui_finalize();
         
         // free render elements
+        SkrDelete(color_picker);
         SkrDelete(grid_paper);
         SkrDelete(canvas);
         
@@ -171,6 +175,7 @@ struct elements_example_application : public elements_application_t
 
     skr::gui::RenderCanvas* canvas = nullptr;
     skr::gui::RenderGridPaper* grid_paper = nullptr;
+    skr::gui::RenderColorPicker* color_picker = nullptr;
     gui_render_graph_t graph;
 };
 
