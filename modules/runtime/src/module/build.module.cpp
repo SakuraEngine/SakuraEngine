@@ -65,7 +65,7 @@ RUNTIME_EXTERN_C RUNTIME_API bool skr_runtime_is_dpi_aware()
 {
     if (!SkrRuntimeModule::Get()) 
     {
-#ifdef TRACY_ENABLE
+#ifdef SKR_OS_WINDOWS
         PROCESS_DPI_AWARENESS awareness;
         GetProcessDpiAwareness(NULL, &awareness);
         return (awareness == PROCESS_PER_MONITOR_DPI_AWARE);
