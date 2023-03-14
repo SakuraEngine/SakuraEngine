@@ -39,18 +39,27 @@ struct GDIElementNVG : public GDIElementPrivate
     void save() final;
 
     NVGcontext* nvg = nullptr;
+    struct GDIPaintNVG* gdi_paint = nullptr;
 };
 
 struct GDIPaintNVG : public GDIPaintPrivate
 {
-    void radial_gradient(float cx, float cy, float inr, float outr, skr_float4_t icol, skr_float4_t ocol) SKR_NOEXCEPT final;
-    void box_gradient(float x, float y, float w, float h, float r, float f, skr_float4_t icol, skr_float4_t ocol) SKR_NOEXCEPT final;
-    void linear_gradient(float sx, float sy, float ex, float ey, skr_float4_t icol, skr_float4_t ocol) SKR_NOEXCEPT final;
-    
     void set_pattern(float cx, float cy, float w, float h, float angle, GDITextureId texture, skr_float4_t ocol) SKR_NOEXCEPT final;
     void set_pattern(float cx, float cy, float w, float h, float angle, GDIMaterialId texture, skr_float4_t ocol) SKR_NOEXCEPT final;
 
+    void enable_imagespace_coordinate(bool enable) SKR_NOEXCEPT final;
+    void custom_vertex_color(skr_gdi_custom_vertex_painter_t painter, void* usrdata) SKR_NOEXCEPT final;
+
     NVGpaint nvg_paint = {};
+    skr_float4_t ocol = {};
+    skr_gdi_custom_vertex_painter_t custom_painter = nullptr;
+    void* custom_painter_data = nullptr;
+    enum CoordinateMethod
+    {
+        None,
+        NVG,
+        ImageSpace,
+    } coordinate_method_override = None;
 };
 
 struct GDIViewportNVG : public GDIViewportPrivate

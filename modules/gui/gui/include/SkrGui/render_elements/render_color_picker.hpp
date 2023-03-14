@@ -20,6 +20,12 @@ public:
     virtual skr_float2_t get_size() const;
     virtual void set_size(const skr_float2_t& size);
 
+    void draw_color_picker(gdi::GDIElement* element, gdi::GDIPaint* paint, float x, float y, float w, float h);
+
+    float get_current_hue_by_degree() const { return current_degree; }
+
+protected:
+    float current_degree = 0.0f;
     skr_gdi_device_id gdi_device = nullptr;
     skr_gdi_element_id gdi_element = nullptr;
     skr_gdi_paint_id gdi_paint = nullptr;

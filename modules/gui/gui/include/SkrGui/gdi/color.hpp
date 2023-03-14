@@ -43,4 +43,77 @@ inline static skr_float4_t hsl_to_rgbaf(float h, float s, float l)
 	return hsla_to_rgbaf(h, s, l, 255);
 }
 
+uint32_t hsv_to_abgr(double H, double S, double V) {
+	double r = 0, g = 0, b = 0;
+	if (S == 0)
+	{
+		r = V;
+		g = V;
+		b = V;
+	}
+	else
+	{
+		int i;
+		double f, p, q, t;
+
+		if (H == 360)
+			H = 0;
+		else
+			H = H / 60;
+
+		i = (int)trunc(H);
+		f = H - i;
+
+		p = V * (1.0 - S);
+		q = V * (1.0 - (S * f));
+		t = V * (1.0 - (S * (1.0 - f)));
+
+		switch (i)
+		{
+		case 0:
+			r = V;
+			g = t;
+			b = p;
+			break;
+
+		case 1:
+			r = q;
+			g = V;
+			b = p;
+			break;
+
+		case 2:
+			r = p;
+			g = V;
+			b = t;
+			break;
+
+		case 3:
+			r = p;
+			g = q;
+			b = V;
+			break;
+
+		case 4:
+			r = t;
+			g = p;
+			b = V;
+			break;
+
+		default:
+			r = V;
+			g = p;
+			b = q;
+			break;
+		}
+
+	}
+	const uint32_t R = (uint32_t)(r * 255.0);
+	const uint32_t G = (uint32_t)(g * 255.0);
+	const uint32_t B = (uint32_t)(b * 255.0);
+	const uint32_t A = 255u;
+	return (A << 24) | (B << 16) | (G << 8) | R;
+}
+
+
 } }
