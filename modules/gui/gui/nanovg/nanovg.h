@@ -54,6 +54,7 @@ struct NVGbox {
 };
 typedef struct NVGbox NVGbox;
 
+typedef void(*NVGVertexPainter)(struct NVGpaint* paint, const struct NVGvertex* nvertex, struct skr_gdi_vertex_t* vertex);
 struct NVGpaint {
 	float xform[6];
 	float extent[2];
@@ -65,6 +66,8 @@ struct NVGpaint {
 	void* image;
 	void* material;
 	int noGamma;
+	
+	NVGVertexPainter vertexPainter;
 };
 typedef struct NVGpaint NVGpaint;
 

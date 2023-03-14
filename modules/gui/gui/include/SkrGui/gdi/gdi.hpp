@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrGui/framework/fwd_containers.hpp"
 
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIPaint, skr_gdi_paint)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIImage, skr_gdi_image)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDITexture, skr_gdi_texture)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIRenderer, skr_gdi_renderer)
@@ -13,7 +14,20 @@ typedef struct skr_gdi_element_draw_command_t
     uint32_t first_index SKR_IF_CPP(= 0);
     uint32_t index_count SKR_IF_CPP(= 0);
 } skr_gdi_element_draw_command_t;
+
+typedef struct skr_gdi_vertex_t
+{
+    skr_float4_t position;
+    skr_float2_t texcoord;
+    skr_float2_t aa;
+    skr_float2_t clipUV; //uv in clipspace
+    skr_float2_t clipUV2;
+    uint32_t     color; 
+} skr_gdi_vertex_t;
+
 typedef uint16_t skr_gdi_index_t;
+
+typedef void(*skr_gdi_custom_vertex_painter_t)(struct skr_gdi_vertex_t* pVertex, void* usrdata);
 
 namespace skr {
 namespace gdi {
@@ -29,21 +43,12 @@ typedef struct IGDIRenderer* GDIRendererId;
 
 // gdi
 using GDIElementDrawCommand = skr_gdi_element_draw_command_t;
+using GDIVertex = skr_gdi_vertex_t;
 
 enum class EGDIBackend
 {
     NANOVG,
     Count
-};
-    
-struct GDIVertex
-{
-    skr_float4_t position;
-    skr_float2_t texcoord;
-    skr_float2_t aa;
-    skr_float2_t clipUV; //uv in clipspace
-    skr_float2_t clipUV2;
-    uint32_t     color; 
 };
 
 enum class EGDIResourceState : uint32_t
@@ -66,9 +71,13 @@ struct SKR_GUI_API GDIPaint
 {
     virtual ~GDIPaint() SKR_NOEXCEPT = default;
 
+    /*
     virtual void radial_gradient(float cx, float cy, float inr, float outr, skr_float4_t icol, skr_float4_t ocol) SKR_NOEXCEPT = 0;
     virtual void box_gradient(float x, float y, float w, float h, float r, float f, skr_float4_t icol, skr_float4_t ocol) SKR_NOEXCEPT = 0;
     virtual void linear_gradient(float sx, float sy, float ex, float ey, skr_float4_t icol, skr_float4_t ocol) SKR_NOEXCEPT = 0;
+    */
+    virtual void enable_imagespace_coordinate(bool enable) SKR_NOEXCEPT = 0;
+    virtual void custom_vertex_color(skr_gdi_custom_vertex_painter_t painter, void* usrdata) SKR_NOEXCEPT = 0;
 
     virtual void set_pattern(float cx, float cy, float w, float h, float angle, GDITextureId texture, skr_float4_t ocol) SKR_NOEXCEPT = 0;
     virtual void set_pattern(float cx, float cy, float w, float h, float angle, GDIMaterialId material, skr_float4_t ocol) SKR_NOEXCEPT = 0;

@@ -177,8 +177,9 @@ static void nvg__renderPath(GDIElementNVG* element, const NVGpath& path, NVGpain
     skr_float2_t extend{paint->extent[0], paint->extent[1]};
     auto& vertices = element->vertices;
     auto& indices = element->indices;
-    auto push_vertex = [&](const NVGvertex& nv)
+    auto push_vertex = [&](const NVGvertex& nv, uint32_t i, uint32_t nfill)
     {
+        auto gdi_paint = element->gdi_paint;
         GDIVertex v;
         v.position = { nv.x, nv.y, 0.f, 1.f };
         v.aa = {nv.u, fringe};
@@ -188,11 +189,27 @@ static void nvg__renderPath(GDIElementNVG* element, const NVGpath& path, NVGpain
         const auto col2 = rtm::vector_set(transform.M[2][0], transform.M[2][1], transform.M[2][2], transform.M[2][3]);
         const auto col3 = rtm::vector_set(transform.M[3][0], transform.M[3][1], transform.M[3][2], transform.M[3][3]);
         const auto trans = rtm::matrix_set(col0, col1, col2, col3);
-        auto imgSpace = rtm::matrix_mul_vector(pos, trans);
-        const float imgSpaceX = rtm::vector_get_x(imgSpace);
-        const float imgSpaceY = rtm::vector_get_y(imgSpace);
-        v.texcoord = nvg__remapUV({ imgSpaceX, imgSpaceY }, extend, paint->box);
         v.color = ToColor32ABGR(paint->innerColor);
+
+        const bool override_image_space = gdi_paint && (GDIPaintNVG::CoordinateMethod::ImageSpace & gdi_paint->coordinate_method_override);
+        const bool override_nvg =  gdi_paint && (GDIPaintNVG::CoordinateMethod::NVG & gdi_paint->coordinate_method_override);
+        const bool default_image_space = path.nfill;
+        if (!override_nvg && (override_image_space || default_image_space))
+        {
+            auto imgSpace = rtm::matrix_mul_vector(pos, trans);
+            const float imgSpaceX = rtm::vector_get_x(imgSpace);
+            const float imgSpaceY = rtm::vector_get_y(imgSpace);
+            v.texcoord = nvg__remapUV({ imgSpaceX, imgSpaceY }, extend, paint->box);
+        }
+        else
+        {
+            v.texcoord = { (float)i / (float)nfill , nv.u};
+        }
+        
+        if (gdi_paint && gdi_paint->custom_painter)
+        {
+            gdi_paint->custom_painter(&v, gdi_paint->custom_painter_data);
+        }
         vertices.push_back(v);
     };
     //auto& path = paths[i];
@@ -201,9 +218,9 @@ static void nvg__renderPath(GDIElementNVG* element, const NVGpath& path, NVGpain
         vertices.reserve(vertices.size() + path.nfill);
         indices.reserve(indices.size() + path.nfill * 3);
         const auto start = static_cast<index_t>(vertices.size());
-        for(int j=0; j<path.nfill; ++j)
+        for(int j=0; j < path.nfill; ++j)
         {
-            push_vertex(path.fill[j]);
+            push_vertex(path.fill[j], j, path.nfill);
             if(j<path.nfill-2)
             {
                 const auto id = static_cast<index_t>(vertices.size());
@@ -219,7 +236,7 @@ static void nvg__renderPath(GDIElementNVG* element, const NVGpath& path, NVGpain
         indices.reserve(indices.size() + path.nstroke * 3);
         for(int j=0; j<path.nstroke; ++j)
         {
-            push_vertex(path.stroke[j]);
+            push_vertex(path.stroke[j], j, path.nstroke);
             if(j<path.nstroke-2)
             {
                 const auto id = static_cast<index_t>(vertices.size() - 1);
@@ -377,16 +394,19 @@ void GDIElementNVG::line_to(float x, float y)
 
 void GDIElementNVG::stroke_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a)
 {
+    gdi_paint = nullptr;
     nvgStrokeColor(nvg, nvgRGBA(r, g, b, a));
 }
 
 void GDIElementNVG::stroke_color(float r, float g, float b, float a)
 {
+    gdi_paint = nullptr;
     nvgStrokeColor(nvg, nvgRGBAf(r, g, b, a));
 }
 
 void GDIElementNVG::stroke_paint(GDIPaint* paint)
 {
+    gdi_paint = static_cast<GDIPaintNVG*>(paint);
     auto nvg_paint = static_cast<GDIPaintNVG*>(paint);
     nvgStrokePaint(nvg, nvg_paint->nvg_paint);
 }
@@ -420,6 +440,7 @@ void GDIElementNVG::fill_color(float r, float g, float b, float a)
 
 void GDIElementNVG::fill_paint(GDIPaint* paint)
 {
+    gdi_paint = static_cast<GDIPaintNVG*>(paint);
     auto nvg_paint = static_cast<GDIPaintNVG*>(paint);
     nvgFillPaint(nvg, nvg_paint->nvg_paint);
 }
@@ -439,25 +460,6 @@ void GDIElementNVG::save()
     nvgSave(nvg);
 }
 
-void GDIPaintNVG::radial_gradient(float cx, float cy, float inr, float outr, skr_float4_t icol, skr_float4_t ocol) SKR_NOEXCEPT
-{
-    nvgRadialGradient(nullptr, cx, cy, inr, outr, nvgRGBAf(icol.x, icol.y, icol.z, icol.w), nvgRGBAf(ocol.x, ocol.y, ocol.z, ocol.w));
-}
-
-void GDIPaintNVG::box_gradient(float x, float y, float w, float h, float r, float f, skr_float4_t icol, skr_float4_t ocol) SKR_NOEXCEPT
-{
-    NVGcolor icolor = nvgRGBAf(icol.x, icol.y, icol.z, icol.w);
-    NVGcolor ocolor = nvgRGBAf(ocol.x, ocol.y, ocol.z, ocol.w);
-    nvgBoxGradient(nullptr, x, y, w, h, r, f, icolor, ocolor);
-}
-
-void GDIPaintNVG::linear_gradient(float sx, float sy, float ex, float ey, skr_float4_t icol, skr_float4_t ocol) SKR_NOEXCEPT
-{
-    NVGcolor icolor = nvgRGBAf(icol.x, icol.y, icol.z, icol.w);
-    NVGcolor ocolor = nvgRGBAf(ocol.x, ocol.y, ocol.z, ocol.w);
-    nvgLinearGradient(nullptr, sx, sy, ex, ey, icolor, ocolor);
-}
-
 void GDIPaintNVG::set_pattern(float cx, float cy, float w, float h, float angle, GDITextureId texture, skr_float4_t ocol) SKR_NOEXCEPT
 {
     NVGcolor color = nvgRGBAf(ocol.x, ocol.y, ocol.z, ocol.w);
@@ -469,6 +471,17 @@ void GDIPaintNVG::set_pattern(float cx, float cy, float w, float h, float angle,
     NVGcolor color = nvgRGBAf(ocol.x, ocol.y, ocol.z, ocol.w);
     nvg_paint = nvgMaterialPattern(nullptr, cx, cy, w, h, angle, material, color);
 } 
+
+void GDIPaintNVG::enable_imagespace_coordinate(bool enable) SKR_NOEXCEPT
+{
+    coordinate_method_override = enable ? NVG : ImageSpace;
+}
+
+void GDIPaintNVG::custom_vertex_color(skr_gdi_custom_vertex_painter_t painter, void* usrdata) SKR_NOEXCEPT
+{
+    custom_painter = painter;
+    custom_painter_data = usrdata;
+}
 
 void GDICanvasNVG::add_element(GDIElement* element) SKR_NOEXCEPT
 {
