@@ -238,6 +238,19 @@ int main(int argc, char* argv[])
                     }
                 }
 
+                if (event.type == SDL_MOUSEBUTTONUP || event.type == SDL_MOUSEBUTTONDOWN)
+                {
+                    int mouse_button = -1;
+                    if (event.button.button == SDL_BUTTON_LEFT) { mouse_button = 0; }
+                    if (event.button.button == SDL_BUTTON_RIGHT) { mouse_button = 1; }
+                    if (event.button.button == SDL_BUTTON_MIDDLE) { mouse_button = 2; }
+                    if (event.button.button == SDL_BUTTON_X1) { mouse_button = 3; }
+                    if (event.button.button == SDL_BUTTON_X2) { mouse_button = 4; }
+
+                    ImGuiIO& io = ImGui::GetIO();
+                    io.AddMouseButtonEvent(mouse_button, (event.type == SDL_MOUSEBUTTONDOWN));
+                }
+
                 if (event.type == SDL_WINDOWEVENT)
                 {
                     uint8_t window_event = event.window.event;
