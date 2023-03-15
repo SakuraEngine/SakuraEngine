@@ -65,8 +65,8 @@ struct elements_example_application : public elements_application_t
         return false;
     }
 
-    const skr::gui::DiagnosticableTreeNode* selected_diagnostic = nullptr;
-    void diagnostics_inspect_recursively(const skr::gui::DiagnosticableTreeNode* diagnostic)
+    skr::gui::DiagnosticableTreeNode* selected_diagnostic = nullptr;
+    void diagnostics_inspect_recursively(skr::gui::DiagnosticableTreeNode* diagnostic)
     {
         ImGui::PushID(diagnostic);
         auto type_property = static_cast<skr::gui::TextDiagnosticProperty*>(diagnostic->find_property("type"));
@@ -124,9 +124,29 @@ struct elements_example_application : public elements_application_t
 
     void draw()
     {
-        // VG
+        auto diagnostic_as_render_box = [&](){
+            if (selected_diagnostic)
+            {
+                if (auto prop = selected_diagnostic->find_property("render_box"))
+                {
+                    auto& bProp = prop->as<skr::gui::BoolDiagnosticProperty>();
+                    if (bProp.value && bProp.value.get())
+                    {
+                        auto render_box = static_cast<skr::gui::RenderBox*>(selected_diagnostic);
+                        return render_box;
+                    }
+                }
+            }
+            return (skr::gui::RenderBox*)nullptr;
+        };
+
+        auto render_box = diagnostic_as_render_box();
+        if(render_box) render_box->enable_debug_draw(true);
+
         skr::gui::WindowContext::DrawParams draw_params = {};
         window_context->draw(&draw_params);
+        
+        if(render_box) render_box->enable_debug_draw(false);
     }
 
     void render()

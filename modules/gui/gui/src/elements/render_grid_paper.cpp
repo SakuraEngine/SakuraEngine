@@ -93,13 +93,17 @@ inline static void draw_grid_paper(gdi::GDIElement* element, float window_width,
 }
 
 RenderGridPaper::RenderGridPaper(skr_gdi_device_id gdi_device)
-    : gdi_device(gdi_device), gdi_element(nullptr)
+    : RenderBox(gdi_device), gdi_element(nullptr)
 {
     gdi_element = gdi_device->create_element();
 
     diagnostic_builder.add_properties(
         SkrNew<TextDiagnosticProperty>("type", "grid_paper", "draws grid paper")
     );
+
+    // TEST
+    size.x = 900.f;
+    size.y = 900.f;
 }
 
 RenderGridPaper::~RenderGridPaper()
@@ -116,26 +120,18 @@ void RenderGridPaper::draw(const DrawParams* params)
 {
     ZoneScopedN("DrawGridPaper");
 
-    // TODO: virtual size?
+    // TEST
     auto platform_window = params->window_context->get_platform_window();
     uint32_t w, h;
     platform_window->get_extent(&w, &h);
     const float window_width = (float)w, window_height = (float)h;
-    params->canvas->add_element(gdi_element);
+    // END TEST
+    
     draw_grid_paper(gdi_element, window_width, window_height);
 
-    RenderElement::draw(params);
+    addElementToCanvas(params, gdi_element);
+
+    RenderBox::draw(params);
 }
-
-skr_float2_t RenderGridPaper::get_size() const
-{
-    return skr_float2_t();
-}
-
-void RenderGridPaper::set_size(const skr_float2_t& size)
-{
-
-}
-
 
 } }

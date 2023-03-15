@@ -63,6 +63,14 @@ RUNTIME_EXTERN_C RUNTIME_API void skr_make_md5(const char* str, uint32_t str_siz
 
 extern const skr_guid_t $guid;
 
+typedef struct skr_uint32x2_t {
+    struct
+    {
+        uint32_t x SKR_IF_CPP( = 0u);
+        uint32_t y SKR_IF_CPP( = 0u);
+    };
+} skr_uint32x2_t;
+
 typedef struct skr_float2_t {
     struct
     {
@@ -131,6 +139,22 @@ typedef struct skr_blob_t {
 } skr_blob_t;
 
 #ifdef __cplusplus
+inline static SKR_CONSTEXPR bool operator==(skr_uint32x2_t l, uint32_t r)
+{
+    return (l.x == r) && (l.y == r);
+} 
+inline static SKR_CONSTEXPR bool operator!=(skr_uint32x2_t l, uint32_t r)
+{
+    return (l.x != r) || (l.y != r);
+}
+inline static SKR_CONSTEXPR bool operator==(uint32_t l, skr_uint32x2_t r)
+{
+    return (l == r.x) && (l == r.y);
+} 
+inline static SKR_CONSTEXPR bool operator!=(uint32_t l, skr_uint32x2_t r)
+{
+    return (l != r.x) || (l != r.y);
+}
 inline static SKR_CONSTEXPR bool operator==(skr_float2_t l, skr_float2_t r) 
 {
     return (l.x == r.x) && (l.y == r.y);
