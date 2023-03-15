@@ -24,6 +24,8 @@
 #pragma comment(lib, "Shcore.lib")
 #endif
 
+#include "SkrInput/input.h"
+
 extern void create_imgui_resources(ECGPUFormat format, CGPUSamplerId sampler, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs);
 
 struct elements_example_application : public elements_application_t
@@ -34,6 +36,8 @@ struct elements_example_application : public elements_application_t
 #ifdef SKR_OS_WINDOWS
         ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 #endif
+
+        skr::input::Input::Initialize();
 
         // initialize base app
         if (!initialize_elem_application(this)) return false;
@@ -74,6 +78,11 @@ struct elements_example_application : public elements_application_t
         skr::text::text show_name = skr::text::format("{}{}{}", "[", type, "]");
         ImGuiTreeNodeFlags node_flags = (selected_diagnostic == diagnostic) ? ImGuiTreeNodeFlags_Selected : 0;
         node_flags |= ImGuiTreeNodeFlags_SpanFullWidth;
+        node_flags |= ImGuiTreeNodeFlags_OpenOnArrow;
+        if (diagnostic->get_diagnostics_children().empty())
+        {
+            node_flags |= ImGuiTreeNodeFlags_Leaf;
+        }
         if (ImGui::TreeNodeEx(show_name.c_str(), node_flags))
 		{
             if (ImGui::IsItemClicked()) 
@@ -191,6 +200,8 @@ struct elements_example_application : public elements_application_t
         
         // free base app
         finalize_elem_application(this);
+
+        skr::input::Input::Finalize();
     }
 
     skr::gui::RenderCanvas* canvas = nullptr;

@@ -20,7 +20,7 @@ struct CGPUUtil_DXCLoader
 {
     static void Load()
     {
-        dxcLibrary= LoadLibrary(L"dxcompiler.dll");
+        dxcLibrary = LoadLibrary(L"dxcompiler.dll");
         pDxcCreateInstance = (void*)::GetProcAddress((HMODULE)dxcLibrary, "DxcCreateInstance");
     }
     static void Unload()
