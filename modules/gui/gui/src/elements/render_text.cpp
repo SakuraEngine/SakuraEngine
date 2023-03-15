@@ -3,7 +3,8 @@
 namespace skr {
 namespace gui {
 
-RenderText::RenderText()
+RenderText::RenderText(skr_gdi_device_id gdi_device)
+    : RenderBox(gdi_device)
 {
     diagnostic_builder.add_properties(
         SkrNew<TextDiagnosticProperty>("type", "text", "draws text paragraph")
@@ -22,19 +23,8 @@ void RenderText::layout(Constraints* constraints, bool needSize)
 
 void RenderText::draw(const DrawParams* params)
 {
-    RenderElement::draw(params);
+    RenderBox::draw(params);
     
 }
-
-skr_float2_t RenderText::get_size() const
-{
-    return skr_float2_t();
-}
-
-void RenderText::set_size(const skr_float2_t& size)
-{
-
-}
-
 
 } }

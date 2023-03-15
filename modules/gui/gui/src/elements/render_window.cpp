@@ -5,7 +5,7 @@ namespace skr {
 namespace gui {
 
 RenderWindow::RenderWindow(skr_gdi_device_id gdi_device)
-    : gdi_device(gdi_device), gdi_viewport(nullptr)
+    : RenderBox(gdi_device), gdi_viewport(nullptr)
 {
     gdi_viewport = gdi_device->create_viewport();
 
@@ -30,18 +30,7 @@ void RenderWindow::draw(const DrawParams* params)
     draw_params.viewport = gdi_viewport;
     draw_params.viewport->clear_canvas();
 
-    RenderElement::draw(&draw_params);
+    RenderBox::draw(&draw_params);
 }
-
-skr_float2_t RenderWindow::get_size() const
-{
-    return skr_float2_t();
-}
-
-void RenderWindow::set_size(const skr_float2_t& size)
-{
-
-}
-
 
 } }

@@ -115,7 +115,7 @@ void RenderColorPicker::draw_color_picker(gdi::GDIElement* element, gdi::GDIPain
 }
 
 RenderColorPicker::RenderColorPicker(skr_gdi_device_id gdi_device)
-    : gdi_device(gdi_device), gdi_element(nullptr)
+    : RenderBox(gdi_device), gdi_element(nullptr)
 {
     gdi_element = gdi_device->create_element();
     gdi_paint = gdi_device->create_paint();
@@ -140,31 +140,25 @@ void RenderColorPicker::draw(const DrawParams* params)
 {
     ZoneScopedN("DrawGridPaper");
 
-    current_degree += .75f; // test
-
-    // TODO: virtual size?
+    // TEST
     auto platform_window = params->window_context->get_platform_window();
     uint32_t w, h;
     platform_window->get_extent(&w, &h);
     const float window_width = (float)w, window_height = (float)h;
-    params->canvas->add_element(gdi_element);
+    pos.x = window_width / 2;
+    pos.y = window_height / 2;
+    size.x = window_width / 3;
+    size.y = window_height / 3;
+    current_degree += .75f;
+    // END TEST
+
     current_degree = fmod(current_degree, 360.f);
     draw_color_picker(gdi_element, gdi_paint, 
-        window_width / 2, window_height / 2, 
-        window_width / 3, window_height / 3);
+        pos.x, pos.y, size.x, size.y);
+        
+    addElementToCanvas(params, gdi_element);
 
-    RenderElement::draw(params);
+    RenderBox::draw(params);
 }
-
-skr_float2_t RenderColorPicker::get_size() const
-{
-    return skr_float2_t();
-}
-
-void RenderColorPicker::set_size(const skr_float2_t& size)
-{
-
-}
-
 
 } }

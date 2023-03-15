@@ -1,20 +1,17 @@
 #pragma once
-#include "SkrGui/framework/render_element.hpp"
+#include "SkrGui/framework/render_box.hpp"
 
 namespace skr {
 namespace gui {
     
-struct SKR_GUI_API RenderText : public RenderElement
+struct SKR_GUI_API RenderText : public RenderBox
 {
 public:
-    RenderText();
+    RenderText(skr_gdi_device_id gdi_device);
     virtual ~RenderText();
 
     virtual void layout(struct Constraints* constraints, bool needSize = false) override;
     virtual void draw(const DrawParams* params) override;
-
-    virtual skr_float2_t get_size() const;
-    virtual void set_size(const skr_float2_t& size);
 };
 
 } }

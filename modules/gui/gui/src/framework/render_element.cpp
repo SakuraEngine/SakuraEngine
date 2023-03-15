@@ -1,4 +1,5 @@
 #include "SkrGui/framework/render_element.hpp"
+#include "SkrGui/gdi/gdi.hpp"
 
 namespace skr {
 namespace gui {
@@ -83,13 +84,42 @@ void RenderElement::markLayoutDirty()
     layoutDirty = true;
 }
 
+void RenderElement::before_draw(const DrawParams* params) 
+{
+
+}
+
 void RenderElement::draw(const DrawParams* params) 
 {
     if (!active) { return; }
     auto& _children = this->children.get();
     for (auto& child : _children)
     {
+        child->before_draw(params);
         child->draw(params);
+        child->after_draw(params);
+    }
+}
+
+void RenderElement::after_draw(const DrawParams* params) 
+{
+
+}
+
+void RenderElement::addElementToCanvas(const DrawParams* params, gdi::GDIElement* element)
+{
+    if (auto canvas = params->canvas)
+    {
+        const bool renderer_z_enabled = canvas->is_hardware_z_enabled();
+        if (renderer_z_enabled)
+        {
+            const int32_t ui_z = params->ui_z;
+            int32_t z_min, z_max;
+            canvas->get_zrange(&z_min, &z_max);
+            const int32_t canvas_z = std::clamp(ui_z, z_min, z_max);
+            element->set_z(canvas_z);
+        }
+        canvas->add_element(element);
     }
 }
 
