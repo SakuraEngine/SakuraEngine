@@ -3,6 +3,7 @@
 #include "platform/atomic.h"
 #include "platform/debug.h"
 #include "utils/log.h"
+#include "utils/defer.hpp"
 #include "GameInput/GameInput.h"
 #include "platform/shared_library.hpp"
 
@@ -130,12 +131,18 @@ struct Input_GameInput : public InputLayer
 
     bool Initialize() SKR_NOEXCEPT
     {
+        game_input->SetFocusPolicy(GameInputDisableBackgroundInput);
         return this->Initialized;
     }
     
     bool Finalize() SKR_NOEXCEPT
     {
         return true;
+    }
+
+    void Tick() SKR_NOEXCEPT final
+    {
+
     }
 
     bool SetEnabled(bool _enabled) SKR_NOEXCEPT final
@@ -148,6 +155,128 @@ struct Input_GameInput : public InputLayer
     {
         auto enabled_val = skr_atomic32_load_acquire(&enabled);
         return enabled_val;
+    }
+
+    uint64_t GetCurrentTimestampUSec() SKR_NOEXCEPT final
+    {
+        return game_input ? game_input->GetCurrentTimestamp() : 0;
+    }
+
+    EInputResult GetCurrentReading(EInputKind kind, InputDevice* device, InputReading** out_reading) SKR_NOEXCEPT final
+    {
+        if (game_input)
+        {
+            IGameInputReading* reading = nullptr;
+            auto hr = game_input->GetCurrentReading((GameInputKind)kind, (IGameInputDevice*)device, &reading);
+            if (SUCCEEDED(hr))
+            {
+                *out_reading = (InputReading*)reading;
+                return INPUT_RESULT_OK;
+            }
+        }
+        return INPUT_RESULT_NOT_FOUND;
+    }
+
+    EInputResult GetNextReading(InputReading* reference, EInputKind kind, InputDevice* device, InputReading** out_reading) SKR_NOEXCEPT final
+    {
+        if (game_input)
+        {
+            IGameInputReading* reading = nullptr;
+            auto hr = game_input->GetNextReading((IGameInputReading*)reference, (GameInputKind)kind, (IGameInputDevice*)device, &reading);
+            if (SUCCEEDED(hr))
+            {
+                *out_reading = (InputReading*)reading;
+                return INPUT_RESULT_OK;
+            }
+        }
+        return INPUT_RESULT_NOT_FOUND;
+    }
+
+    EInputResult GetPreviousReading(InputReading* reference, EInputKind kind, InputDevice* device, InputReading** out_reading) SKR_NOEXCEPT final
+    {
+        if (game_input)
+        {
+            IGameInputReading* reading = nullptr;
+            auto hr = game_input->GetPreviousReading((IGameInputReading*)reference, (GameInputKind)kind, (IGameInputDevice*)device, &reading);
+            if (SUCCEEDED(hr))
+            {
+                *out_reading = (InputReading*)reading;
+                return INPUT_RESULT_OK;
+            }
+        }
+        return INPUT_RESULT_NOT_FOUND;
+    }
+
+    void GetDevice(InputReading* in_reading, InputDevice** out_device) SKR_NOEXCEPT final
+    {
+        if (auto reading = (IGameInputReading*)in_reading)
+        {
+            IGameInputDevice* device = nullptr;
+            reading->GetDevice(&device);
+            *out_device = (InputDevice*)device;
+        }
+    }
+
+    uint32_t GetKeyState(InputReading* in_reading, uint32_t stateArrayCount, InputKeyState* stateArray) SKR_NOEXCEPT final
+    {
+        if (auto reading = (IGameInputReading*)in_reading)
+        {
+            GameInputKeyState states[16];
+            uint32_t readCount = reading->GetKeyState(stateArrayCount, states);
+            for (uint32_t i = 0; i < readCount; i++)
+            {
+                stateArray[i].scan_code = states[i].scanCode;
+                stateArray[i].code_point = states[i].codePoint;
+                stateArray[i].virtual_key = states[i].virtualKey;
+                stateArray[i].is_dead_key = states[i].isDeadKey;
+            }
+            return readCount;
+        }
+        return 0;
+    }
+
+    uint32_t GetMouseState(InputReading* in_reading, InputMouseState* out_state) SKR_NOEXCEPT final
+    {
+        if (auto reading = (IGameInputReading*)in_reading)
+        {
+            GameInputMouseState state;
+            reading->GetMouseState(&state);
+            if (out_state)
+            {
+                out_state->buttons = (InputMouseButtons)state.buttons;
+                out_state->positionX = state.positionX;
+                out_state->positionY = state.positionY;
+                out_state->wheelX = state.wheelX;
+                out_state->wheelY = state.wheelY;
+            }
+            return 1;
+        }
+        return 0;
+    }
+
+    virtual uint64_t GetTimestampUSec(InputReading* in_reading) SKR_NOEXCEPT final
+    {
+        if (auto reading = (IGameInputReading*)in_reading)
+        {
+            return reading->GetTimestamp();
+        }
+        return 0;
+    }
+
+    void Release(InputReading* in_reading) SKR_NOEXCEPT final
+    {
+        if (auto reading = (IGameInputReading*)in_reading)
+        {
+            reading->Release();
+        }
+    }
+
+    void Release(InputDevice* in_device) SKR_NOEXCEPT final
+    {
+        if (auto device = (IGameInputDevice*)in_device)
+        {
+            device->Release();
+        }
     }
 
     using ProcType = decltype(GameInputCreate);

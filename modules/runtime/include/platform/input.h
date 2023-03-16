@@ -130,6 +130,7 @@ typedef enum EKeyCode
     KEY_CODE_RBranket = 0xDD,  // ]} key on US standard keyboard
     KEY_CODE_Quote = 0xDE,     // '" key on US standard keyboard
 } EKeyCode;
+typedef uint8_t SInputKeyCode;
 
 typedef enum EMouseKey
 {

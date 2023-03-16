@@ -48,6 +48,63 @@ struct Input_Common : public InputLayer
         return enabled_val;
     }
 
+    uint64_t GetCurrentTimestampUSec() SKR_NOEXCEPT final
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+        return 0;
+    }
+
+    EInputResult GetCurrentReading(EInputKind kind, InputDevice* device, InputReading** out_reading) SKR_NOEXCEPT final
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+        return INPUT_RESULT_NOT_FOUND;
+    }
+
+    EInputResult GetNextReading(InputReading* reference, EInputKind kind, InputDevice* device, InputReading** out_reading) SKR_NOEXCEPT final
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+        return INPUT_RESULT_NOT_FOUND;
+    }
+
+    EInputResult GetPreviousReading(InputReading* reference, EInputKind kind, InputDevice* device, InputReading** out_reading) SKR_NOEXCEPT final
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+        return INPUT_RESULT_NOT_FOUND;
+    }
+
+    void GetDevice(InputReading* in_reading, InputDevice** out_device) SKR_NOEXCEPT final
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+    }
+
+    uint32_t GetKeyState(InputReading* in_reading, uint32_t stateArrayCount, InputKeyState* stateArray) SKR_NOEXCEPT final
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+        return 0;
+    }
+
+    uint32_t GetMouseState(InputReading* in_reading, InputMouseState* state) SKR_NOEXCEPT final
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+        return 0;
+    }
+
+    virtual uint64_t GetTimestampUSec(InputReading* in_reading) SKR_NOEXCEPT final
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+        return 0;
+    }
+
+    void Release(InputReading* in_reading) SKR_NOEXCEPT final
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+    }
+
+    void Release(InputDevice* in_device) SKR_NOEXCEPT final
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+    }
+
     SAtomic32 enabled = true;
 };
 
