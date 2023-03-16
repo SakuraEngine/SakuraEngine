@@ -184,29 +184,29 @@ void RenderFlex::layout(BoxConstraint constraints, bool needSize)
 void RenderFlex::add_child(RenderElement *child)
 {
     RenderElement::add_child(child);
-    flexables.emplace_back();
+    flexables.get().emplace_back();
 }
 
 void RenderFlex::insert_child(RenderElement *child, int index)
 {
     RenderElement::insert_child(child, index);
-    flexables.insert(flexables.begin() + index, Flexable{});
+    flexables.get().insert(flexables.get().begin() + index, Flexable{});
 }
 
 void RenderFlex::remove_child(RenderElement *child)
 {
     RenderElement::remove_child(child);
-    flexables.pop_back();
+    flexables.get().pop_back();
 }
 
 void RenderFlex::set_flexable(int index, Flexable flexable)
 {
-    flexables[index] = flexable;
+    flexables.get()[index] = flexable;
 }
 
 Flexable RenderFlex::get_flex(int index)
 {
-    return flexables[index];
+    return flexables.get()[index];
 }
 
 void RenderFlex::set_flex_direction(FlexDirection direction)

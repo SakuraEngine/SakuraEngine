@@ -4,11 +4,6 @@ namespace skr
 {
 namespace gui
 {
-struct FlexChild {
-    std::unique_ptr<RenderElement> element;
-    BoxConstraint constraints;
-    float flex;
-};
 
 // Defines the direction in which the flex container's children are laid out.
 enum class FlexDirection
@@ -74,7 +69,7 @@ private:
     JustifyContent justify_content = JustifyContent::FlexStart;
     FlexDirection flex_direction = FlexDirection::Row;
     AlignItems align_items = AlignItems::FlexStart;
-    std::vector<Flexable> flexables;
+    VectorStorage<Flexable> flexables;
 };
 
 
