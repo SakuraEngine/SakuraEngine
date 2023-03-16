@@ -11,104 +11,64 @@ namespace skr {
 namespace input {
 // GameInput implementation
 
+void CALLBACK OnDeviceEnumerated(
+    _In_ GameInputCallbackToken callbackToken,
+    _In_ void* context,
+    _In_ IGameInputDevice* device,
+    _In_ uint64_t timestamp,
+    _In_ GameInputDeviceStatus currentStatus,
+    _In_ GameInputDeviceStatus previousStatus)
+{
+    auto displayName = device->GetDeviceInfo()->displayName;
+    const char* displayNameStr = displayName ? displayName->data : "Unknown";
+    SKR_LOG_INFO("GameInput: Device %s Enumerated!", displayNameStr);
+}
+
 struct Input_GameInput : public InputLayer
 {
+    skr::SharedLibrary GameInputLibrary;
     bool DoCreate() SKR_NOEXCEPT
     {
-        if (pGameInputCreate)
+        if (auto GameInputLoaded = GameInputLibrary.load("GameInput.dll"); GameInputLoaded)
         {
-            const uint32_t bUsingRedist = (pGameInputCreate != &GameInputCreate) ? 1 : 0;
-            auto CreateResult = pGameInputCreate(&game_input);
-            if (!SUCCEEDED(CreateResult))
+            using FuncType = decltype(GameInputCreate);
+            auto pCreateFunc = (FuncType*)GameInputLibrary.getRawAddress("GameInputCreate");
+            if (pCreateFunc)
             {
-                if (pGameInputCreate == &GameInputCreate) // Proc from redist
+                auto CreateResult = pCreateFunc(&game_input);
+                if (SUCCEEDED(CreateResult)) 
                 {
-                    SKR_LOG_ERROR("GameInput: XCurl is loaded, but GameInputCreated failed to create! HRESULT: 0x%08X", HRESULT_FROM_WIN32(GetLastError()));
-                    
-                    if (GameInputRedist.isLoaded()) GameInputRedist.unload();
-                    if (GameInput.isLoaded()) GameInput.unload();
-                }
-                else
-                {
-                    SKR_LOG_ERROR("GameInput: GameInputRedist is loaded, but GameInputCreated failed to create! HRESULT: 0x%08X", HRESULT_FROM_WIN32(GetLastError()));
-
-                    if (GDKThunks.isLoaded()) GDKThunks.unload();
-                    if (XCurl.isLoaded()) XCurl.unload();
+                    return true;
                 }
             }
-            else
-            {
-                const char* names[] = { "XCurl", "GameInputRedist" };
-                SKR_LOG_INFO("GameInput: initialized with %s successfully!", names[bUsingRedist]);
-                return true;
-            }
         }
-        return false;
-    }
-
-    bool CreateWithGameInputRedist() SKR_NOEXCEPT
-    {
-        auto GameInputRedistLoaded = GameInputRedist.load("gameinputredist.dll");
-        auto GameInputLoaded = GameInput.load("gameinput.dll");
-        if (GameInputRedistLoaded && GameInputLoaded)
-        {
-            SKR_LOG_INFO("GameInput: GameInputRedist Loaded!");
-            pGameInputCreate = (ProcType*)GameInput.getRawAddress("GameInputCreate");
-        }
-        else
-        {
-            if (GameInputRedistLoaded && !GameInputLoaded)
-            {
-                SKR_LOG_ERROR("GameInput: GameInputRedist is loaded, but GameInput is not!");
-                GameInputRedist.unload();
-            }
-            if (!GameInputRedistLoaded && GameInputLoaded)
-            {
-                SKR_LOG_ERROR("GameInput: GameInput is loaded, but GameInputRedist is not!");
-                GameInput.unload();
-            }
-            return false;
-        }
-        return DoCreate();
-    }
-
-    bool CreateWithXCurl() SKR_NOEXCEPT
-    {
-        auto GDKThunksLoaded = GDKThunks.load("Microsoft.Xbox.Services.141.GDK.C.Thunks.dll");
-        auto XCurlLoaded = XCurl.load("XCurl.dll");
-        if (GDKThunksLoaded && XCurlLoaded)
-        {
-            SKR_LOG_INFO("GameInput: GDKThunks & XCurl Loaded!");
-            pGameInputCreate = &GameInputCreate;
-        }
-        else
-        {
-            if (GDKThunksLoaded && !XCurlLoaded)
-            {
-                SKR_LOG_ERROR("GameInput: GDKThunks is loaded, but XCurl is not!");
-                GDKThunks.unload();
-            }
-            if (!GDKThunksLoaded && XCurlLoaded)
-            {
-                SKR_LOG_ERROR("GameInput: XCurl is loaded, but GDKThunks is not!");
-                XCurl.unload();
-            }
-            return false;
-        }
-        return DoCreate();
+        auto CreateResult = GameInputCreate(&game_input);
+        return SUCCEEDED(CreateResult);
     }
 
     Input_GameInput() SKR_NOEXCEPT
         : InputLayer()
     {
-        if (!CreateWithXCurl())
+        if (DoCreate())
         {
-            SKR_LOG_INFO("GameInput: Retry initialization using GameInputRedist");
-            if (!CreateWithGameInputRedist())
+            // Find connected devices
+            GameInputCallbackToken token;
+            if (SUCCEEDED(game_input->RegisterDeviceCallback(
+                nullptr,
+                GameInputKindKeyboard,
+                GameInputDeviceAnyStatus,
+                GameInputBlockingEnumeration,
+                nullptr,
+                OnDeviceEnumerated,
+                &token)))
             {
-                SKR_LOG_ERROR("GameInput: Failed to create with both XCurl and GameInputRedist");
-                Initialized = false;
+                game_input->UnregisterCallback(token, 5000);
             }
+        }
+        else
+        {
+            SKR_LOG_ERROR("GameInput: Failed to create with both XCurl and GameInputRedist");
+            Initialized = false;
         }
     }
 
@@ -118,10 +78,10 @@ struct Input_GameInput : public InputLayer
         {
             game_input->Release();
         }
-        if (GameInputRedist.isLoaded()) GameInputRedist.unload();
-        if (GameInput.isLoaded()) GameInput.unload();
-        if (GDKThunks.isLoaded()) GDKThunks.unload();
-        if (XCurl.isLoaded()) XCurl.unload();
+        if (GameInputLibrary.isLoaded())
+        {
+            GameInputLibrary.unload();
+        } 
     }
 
     void GetLayerId(LayerId* out_id) const SKR_NOEXCEPT final
@@ -162,12 +122,13 @@ struct Input_GameInput : public InputLayer
         return game_input ? game_input->GetCurrentTimestamp() : 0;
     }
 
-    EInputResult GetCurrentReading(EInputKind kind, InputDevice* device, InputReading** out_reading) SKR_NOEXCEPT final
+    EInputResult GetCurrentReading(EInputKind in_kind, InputDevice* device, InputReading** out_reading) SKR_NOEXCEPT final
     {
         if (game_input)
         {
             IGameInputReading* reading = nullptr;
-            auto hr = game_input->GetCurrentReading((GameInputKind)kind, (IGameInputDevice*)device, &reading);
+            GameInputKind kind = (GameInputKind)in_kind;
+            auto hr = game_input->GetCurrentReading(kind, (IGameInputDevice*)device, &reading);
             if (SUCCEEDED(hr))
             {
                 *out_reading = (InputReading*)reading;
@@ -281,11 +242,6 @@ struct Input_GameInput : public InputLayer
 
     using ProcType = decltype(GameInputCreate);
     SAtomic32 enabled = 1;
-    ProcType* pGameInputCreate = nullptr;
-    skr::SharedLibrary GDKThunks;
-    skr::SharedLibrary XCurl;
-    skr::SharedLibrary GameInputRedist;
-    skr::SharedLibrary GameInput;
     IGameInput* game_input = nullptr;
     bool Initialized = true;
 };

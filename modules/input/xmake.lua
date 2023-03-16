@@ -12,7 +12,7 @@ shared_module("SkrInput", "SKR_INPUT", engine_version)
         else
             add_linkdirs("lib/x64/Debug", {public=true})
         end
-        add_links("GameInput","Microsoft.Xbox.Services.141.GDK.C.Thunks", {public=false})
+        add_links("GameInput", "xgameruntime", "Microsoft.Xbox.Services.141.GDK.C.Thunks", {public=false})
     end
     add_files("src/*.cpp")
     add_files("src/common/**.cpp")
