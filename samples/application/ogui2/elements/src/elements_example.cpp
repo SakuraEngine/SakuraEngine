@@ -272,7 +272,7 @@ struct ClickListener
         InputReading* current = nullptr; 
         if (auto input = skr::input::Input::GetInstance())
         {
-            if (input->GetCurrentReading(InputKindMouse, Mouse, &pLayer, &current) == S_OK) 
+            if (input->GetCurrentReading(InputKindMouse, Mouse, &pLayer, &current) == INPUT_RESULT_OK) 
             { 
                 InputMouseState mouseState = {};
                 if (pLayer->GetMouseState(current, &mouseState)) 
@@ -296,6 +296,7 @@ struct ClickListener
                         return Counter;
                     }
                 }
+                pLayer->Release(current);
             } 
         }
         return 0;
@@ -318,7 +319,7 @@ int main(int argc, char* argv[])
     auto App = make_zeroed<elements_example_application>();
     App.initialize();
     bool quit = false;
-    // KeyboardTest keyboard_test;
+    KeyboardTest keyboard_test;
     ClickListener doubleClickListener = ClickListener(500);
     while (!quit)
     {
@@ -377,7 +378,7 @@ int main(int argc, char* argv[])
         }
         {
             skr::input::Input::GetInstance()->Tick();
-            // keyboard_test.PollKeyboardInput();
+            keyboard_test.PollKeyboardInput();
             doubleClickListener.PollMouseInput();
         }
         {
