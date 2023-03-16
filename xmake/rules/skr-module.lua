@@ -120,6 +120,9 @@ function shared_module(name, api, version, opt)
     on_load(function (target, opt)
         if(has_config("shipping_one_archive")) then
             target:set("kind", "object")
+            for _, dep in pairs(target:get("links")) do
+                target:add("links", dep, {public = true})
+            end
         else
             target:set("kind", "shared")
         end
