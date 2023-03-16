@@ -14,7 +14,7 @@ public:
     RenderColorPicker(skr_gdi_device_id gdi_device);
     virtual ~RenderColorPicker();
 
-    virtual void layout(struct Constraints* constraints, bool needSize = false) override;
+    virtual void layout(BoxConstraint constraints, bool needSize = false) override;
     virtual void draw(const DrawParams* params) override;
 
     void draw_color_picker(gdi::GDIElement* element, gdi::GDIPaint* paint, float x, float y, float w, float h);

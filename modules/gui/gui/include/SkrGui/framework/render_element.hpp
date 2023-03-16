@@ -29,11 +29,11 @@ public:
     virtual void insert_child(RenderElement* child, int index);
     virtual int get_child_index(RenderElement* child);
     virtual void remove_child(RenderElement* child);
+    virtual int get_child_count() const;
+    virtual RenderElement* get_child(int index) const;
     virtual void set_render_matrix(const skr_float4x4_t& matrix);
 
     virtual void set_active(bool active);
-
-    virtual void layout(struct Constraints* constraints, bool needSize = false) = 0;
     virtual void markLayoutDirty();
 
     virtual void before_draw(const DrawParams* params);

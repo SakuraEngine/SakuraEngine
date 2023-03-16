@@ -65,6 +65,16 @@ void RenderElement::remove_child(RenderElement* child)
     }
 }
 
+int RenderElement::get_child_count() const
+{
+    return children.get().size();
+}
+
+RenderElement* RenderElement::get_child(int index) const
+{
+    return children.get()[index];
+}
+
 void RenderElement::set_render_matrix(const skr_float4x4_t& matrix)
 {
     render_matrix = matrix;

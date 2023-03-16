@@ -131,7 +131,7 @@ RenderColorPicker::~RenderColorPicker()
     gdi_device->free_element(gdi_element);
 }
 
-void RenderColorPicker::layout(Constraints* constraints, bool needSize)
+void RenderColorPicker::layout(BoxConstraint constraints, bool needSize)
 {
 
 }

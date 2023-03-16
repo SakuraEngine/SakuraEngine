@@ -16,7 +16,7 @@ RenderText::~RenderText()
 
 }
 
-void RenderText::layout(Constraints* constraints, bool needSize)
+void RenderText::layout(BoxConstraint constraints, bool needSize)
 {
 
 }
