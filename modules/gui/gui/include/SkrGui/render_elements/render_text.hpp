@@ -10,7 +10,7 @@ public:
     RenderText(skr_gdi_device_id gdi_device);
     virtual ~RenderText();
 
-    virtual void layout(struct Constraints* constraints, bool needSize = false) override;
+    virtual void layout(BoxConstraint constraints, bool needSize = false) override;
     virtual void draw(const DrawParams* params) override;
 };
 

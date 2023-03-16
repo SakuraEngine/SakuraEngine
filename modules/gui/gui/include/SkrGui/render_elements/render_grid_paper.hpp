@@ -13,7 +13,7 @@ public:
     RenderGridPaper(skr_gdi_device_id gdi_device);
     virtual ~RenderGridPaper();
 
-    virtual void layout(struct Constraints* constraints, bool needSize = false) override;
+    virtual void layout(BoxConstraint constraints, bool needSize = false) override;
     virtual void draw(const DrawParams* params) override;
 
     skr_gdi_element_id gdi_element = nullptr;

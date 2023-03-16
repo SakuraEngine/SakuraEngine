@@ -19,11 +19,6 @@ RenderBox::~RenderBox()
     gdi_device->free_element(debug_element);
 }
 
-void RenderBox::layout(Constraints* constraints, bool needSize)
-{
-
-}
-
 void RenderBox::before_draw(const DrawParams* params)
 {
     RenderElement::before_draw(params);
@@ -54,6 +49,11 @@ RenderBoxSizeType RenderBox::get_size() const
 void RenderBox::set_size(const RenderBoxSizeType& in_size)
 {
     size = in_size;
+}
+
+void RenderBox::set_position(const RenderBoxSizeType& in_pos)
+{
+    pos = in_pos;
 }
 
 void RenderBox::enable_debug_draw(bool enable)

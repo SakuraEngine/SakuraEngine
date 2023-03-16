@@ -10,6 +10,8 @@
 #include "SkrGui/render_elements/render_canvas.hpp"
 #include "SkrGui/render_elements/render_grid_paper.hpp"
 #include "SkrGui/render_elements/render_color_picker.hpp"
+#include "SkrGui/render_elements/render_flex.hpp"
+#include "SkrGui/render_elements/render_image.hpp"
 
 #include "SkrGuiRenderer/gdi_renderer.hpp"
 
@@ -46,9 +48,28 @@ struct elements_example_application : public elements_application_t
         canvas = SkrNew<skr::gui::RenderCanvas>(gdi.device);
         grid_paper = SkrNew<skr::gui::RenderGridPaper>(gdi.device);
         color_picker = SkrNew<skr::gui::RenderColorPicker>(gdi.device);
+        flex = SkrNew<skr::gui::RenderFlex>(gdi.device);
+        flex->set_align_items(skr::gui::AlignItems::Center);
+        flex->set_justify_content(skr::gui::JustifyContent::SpaceAround);
+        image1 = SkrNew<skr::gui::RenderImage>(gdi.device);
+        image1->set_color({ 1, 0, 0, 1 });
+        image2 = SkrNew<skr::gui::RenderImage>(gdi.device);
+        image2->set_color({ 0, 1, 0, 1 });
+        image3 = SkrNew<skr::gui::RenderImage>(gdi.device);
+        image3->set_color({ 0, 0, 1, 1 });
+        
         root_window->add_child(canvas);
         canvas->add_child(grid_paper);
         canvas->add_child(color_picker);
+        flex->add_child(image1);
+        image1->set_size({ 100, 300 });
+        flex->add_child(image2);
+        image2->set_size({ 100, 200 });
+        flex->add_child(image3);
+        image3->set_size({ 100, 400 });
+        canvas->add_child(flex);
+
+        flex->layout(skr::gui::BoxConstraint{{400, 400}, {0, 0}}, true);
 
         // initialize render graph
         if (graph.initialize(gdi.gfx))
@@ -194,6 +215,10 @@ struct elements_example_application : public elements_application_t
         render_graph_imgui_finalize();
         
         // free render elements
+        SkrDelete(image1);
+        SkrDelete(image2);
+        SkrDelete(image3);
+        SkrDelete(flex);
         SkrDelete(color_picker);
         SkrDelete(grid_paper);
         SkrDelete(canvas);
@@ -207,6 +232,10 @@ struct elements_example_application : public elements_application_t
     skr::gui::RenderCanvas* canvas = nullptr;
     skr::gui::RenderGridPaper* grid_paper = nullptr;
     skr::gui::RenderColorPicker* color_picker = nullptr;
+    skr::gui::RenderFlex* flex = nullptr;
+    skr::gui::RenderImage* image1 = nullptr;
+    skr::gui::RenderImage* image2 = nullptr;
+    skr::gui::RenderImage* image3 = nullptr;
     gui_render_graph_t graph;
 };
 

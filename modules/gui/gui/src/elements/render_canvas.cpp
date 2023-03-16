@@ -21,7 +21,7 @@ RenderCanvas::~RenderCanvas()
     gdi_device->free_canvas(gdi_canvas);
 }
 
-void RenderCanvas::layout(Constraints* constraints, bool needSize)
+void RenderCanvas::layout(BoxConstraint constraints, bool needSize)
 {
 
 }

@@ -111,7 +111,7 @@ RenderGridPaper::~RenderGridPaper()
     gdi_device->free_element(gdi_element);
 }
 
-void RenderGridPaper::layout(Constraints* constraints, bool needSize)
+void RenderGridPaper::layout(BoxConstraint constraints, bool needSize)
 {
 
 }

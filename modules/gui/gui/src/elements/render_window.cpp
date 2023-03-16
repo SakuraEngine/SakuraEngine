@@ -19,7 +19,7 @@ RenderWindow::~RenderWindow()
     gdi_device->free_viewport(gdi_viewport);
 }
 
-void RenderWindow::layout(Constraints* constraints, bool needSize)
+void RenderWindow::layout(BoxConstraint constraints, bool needSize)
 {
 
 }

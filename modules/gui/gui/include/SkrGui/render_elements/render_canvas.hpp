@@ -13,7 +13,7 @@ public:
     RenderCanvas(skr_gdi_device_id gdi_device);
     virtual ~RenderCanvas();
 
-    virtual void layout(struct Constraints* constraints, bool needSize = false) override;
+    virtual void layout(BoxConstraint constraints, bool needSize = false) override;
     virtual void draw(const DrawParams* params) override;
 
     skr_gdi_canvas_id get_gdi_canvas() { return gdi_canvas; }
