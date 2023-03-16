@@ -24,6 +24,7 @@ links_list = {}
 generator_list = {}
 
 if (is_os("windows")) then 
+    add_defines("_GAMING_DESKTOP")
     add_defines("_WINDOWS")
     add_defines("UNICODE")
     add_defines("_UNICODE")

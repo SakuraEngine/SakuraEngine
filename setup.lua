@@ -33,7 +33,6 @@ if (os.host() == "windows") then
     find_sdk.sdk_lib_from_github("ISPCTextureCompressor", "ISPCTextureCompressor-windows-x64.zip")
 
     -- gfx
-    find_sdk.lib_from_github("GameInput", "GameInput-windows-x64.zip")
     find_sdk.lib_from_github("WinPixEventRuntime", "WinPixEventRuntime-windows-x64.zip")
     find_sdk.lib_from_github("amdags", "amdags-windows-x64.zip")
     find_sdk.lib_from_github("nvapi", "nvapi-windows-x64.zip")
