@@ -1,7 +1,8 @@
-#include "containers.hpp"
+#define CONTAINER_LITE_IMPL
+#include "containers/lite.hpp"
 
 namespace skr {
-namespace gui {
+namespace lite {
 
 TextStorage::TextStorage(const char* str) SKR_NOEXCEPT
 {
