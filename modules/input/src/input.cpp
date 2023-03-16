@@ -9,6 +9,8 @@ namespace input {
 
 struct InputImplementation : public Input
 {
+    friend struct Input;
+
     void initialize() SKR_NOEXCEPT;
     void finalize() SKR_NOEXCEPT;
 
@@ -33,16 +35,16 @@ void InputImplementation::initialize() SKR_NOEXCEPT
     else
     {
         SkrDelete(game_input);
-    }
-
-    auto common_input = Input_Common_Create();
-    if (common_input->Initialize()) 
-    {
-        layers_.emplace_back(common_input);
-    }
-    else
-    {
-        SkrDelete(common_input);
+        
+        auto common_input = Input_Common_Create();
+        if (common_input->Initialize()) 
+        {
+            layers_.emplace_back(common_input);
+        }
+        else
+        {
+            SkrDelete(common_input);
+        }
     }
 }
 
@@ -70,6 +72,12 @@ Input::~Input() SKR_NOEXCEPT
 
 }
 
+lite::LiteSpan<InputLayer*> Input::GetLayers() SKR_NOEXCEPT
+{
+    auto instance = static_cast<InputImplementation*>(Input::GetInstance());
+    return { instance->layers_.data(), instance->layers_.size() };
+}
+
 Input* Input::GetInstance() SKR_NOEXCEPT
 {
     SKR_ASSERT(instance_ && "Input: instance is null, maybe not initialized!");
@@ -87,6 +95,48 @@ void Input::Finalize() SKR_NOEXCEPT
 {
     SkrDelete(Input::instance_);
     Input::instance_ = nullptr;
+}
+
+EInputResult Input::GetCurrentReading(EInputKind kind, InputDevice* device, InputLayer** out_layer, InputReading** out_reading)
+{
+    auto layers = GetLayers();
+    for (auto layer : layers)
+    {
+        if (layer->GetCurrentReading(kind, device, out_reading) == INPUT_RESULT_OK)
+        {
+            if (out_layer) *out_layer = layer;
+            return INPUT_RESULT_OK;
+        }
+    }
+    return INPUT_RESULT_NOT_FOUND;
+}
+
+EInputResult Input::GetNextReading(InputReading* reference, EInputKind kind, InputDevice* device, InputLayer** out_layer, InputReading** out_reading)
+{
+    auto layers = GetLayers();
+    for (auto layer : layers)
+    {
+        if (layer->GetNextReading(reference, kind, device, out_reading) == INPUT_RESULT_OK)
+        {
+            if (out_layer) *out_layer = layer;
+            return INPUT_RESULT_OK;
+        }
+    }
+    return INPUT_RESULT_NOT_FOUND;
+}
+
+EInputResult Input::GetPreviousReading(InputReading* reference, EInputKind kind, InputDevice* device, InputLayer** out_layer, InputReading** out_reading)
+{
+    auto layers = GetLayers();
+    for (auto layer : layers)
+    {
+        if (layer->GetPreviousReading(reference, kind, device, out_reading) == INPUT_RESULT_OK)
+        {
+            if (out_layer) *out_layer = layer;
+            return INPUT_RESULT_OK;
+        }
+    }
+    return INPUT_RESULT_NOT_FOUND;
 }
 
 } }

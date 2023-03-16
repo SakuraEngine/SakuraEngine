@@ -211,12 +211,115 @@ struct elements_example_application : public elements_application_t
 };
 
 #include "tracy/Tracy.hpp"
+#include "utils/log.h"
+#include "utils/defer.hpp"
+
+struct KeyboardTest
+{
+    skr::input::InputLayer* pLayer = nullptr;
+    skr::input::InputDevice* Keyboard = nullptr;
+    void PollKeyboardInput() noexcept 
+    {
+        using namespace skr::input;
+        if (auto input = skr::input::Input::GetInstance())
+        {
+            InputReading* pReading = nullptr;
+            InputReading* pLastReading = nullptr;
+            if (INPUT_RESULT_OK == input->GetCurrentReading(InputKindKeyboard, Keyboard, &pLayer, &pReading))
+            {
+                input->GetPreviousReading(pReading, InputKindKeyboard, Keyboard, &pLayer, &pLastReading);
+
+                if (!Keyboard) pLayer->GetDevice(pReading, &Keyboard);
+                const auto currentTimestamp = pLayer->GetCurrentTimestampUSec();
+
+                InputKeyState keystates[16];
+                uint32_t readCount = pLayer->GetKeyState(pReading, 16, keystates);
+                const auto timestamp = pLayer->GetTimestampUSec(pReading);
+                const auto last_timestamp = pLastReading ? pLayer->GetTimestampUSec(pLastReading) : 0u;
+                const auto elapsed_us = currentTimestamp - timestamp;
+                for (uint32_t j = 0; j < readCount; j++)
+                {
+                    auto k = keystates[j];
+                    SKR_LOG_INFO("GameInput: ScanCode:0x%02X, CodePoint:0x%02X, Key:0x%02X, Timestamp: %ld, Prev: %ld, Elapsed: %d us(%d ms), Dead:%d",
+                        k.scan_code, k.code_point, keystates[j].virtual_key, timestamp, last_timestamp, elapsed_us, elapsed_us / 1000, k.is_dead_key);
+                }
+                if (pReading) pLayer->Release(pReading);
+                if (pLastReading) pLayer->Release(pLastReading);
+            }
+        }
+    }
+    ~KeyboardTest()
+    {
+        if (Keyboard) pLayer->Release(Keyboard);
+    }
+};
+
+struct ClickListener
+{
+    ClickListener(uint32_t threshold_in_ms = 500) : ThresholdInMs(threshold_in_ms) {}
+    // ~ClickListener() { if (Mouse) Mouse->Release(); if (previous) previous->Release(); }
+    skr::input::InputLayer* pLayer = nullptr;
+    skr::input::InputDevice* Mouse = nullptr; 
+    skr::input::InputReading* previous = nullptr; 
+    bool WasUp = false;
+    uint32_t Counter = 0;
+    uint32_t ThresholdInMs = 0;
+    bool isDown(const skr::input::InputMouseState& state) { return (state.buttons & skr::input::InputMouseLeftButton); }
+
+    uint32_t Trigger()
+    {
+        using namespace skr::input;
+        InputReading* current = nullptr; 
+        if (auto input = skr::input::Input::GetInstance())
+        {
+            if (input->GetCurrentReading(InputKindMouse, Mouse, &pLayer, &current) == S_OK) 
+            { 
+                InputMouseState mouseState = {};
+                if (pLayer->GetMouseState(current, &mouseState)) 
+                { 
+                    if (isDown(mouseState))
+                    {
+                        SKR_LOG_INFO("Basic mouse down");
+                    }
+                    SKR_DEFER({WasUp = !isDown(mouseState);});
+                    if (isDown(mouseState) && previous != current && WasUp)
+                    {
+                        SKR_DEFER({ if (previous) pLayer->Release(previous); previous = current; });
+                        if (previous && pLayer->GetTimestampUSec(previous) + ThresholdInMs * 1000.f >= pLayer->GetTimestampUSec(current))
+                        {
+                            Counter++;
+                        } else /* new click */ {
+                            if (Mouse) pLayer->Release(Mouse);
+                            pLayer->GetDevice(current, &Mouse); 
+                            Counter = 1;
+                        }
+                        return Counter;
+                    }
+                }
+            } 
+        }
+        return 0;
+    }
+
+    void PollMouseInput() noexcept 
+    { 
+        if (uint32_t trigger_count = Trigger())
+        {
+            if (trigger_count)
+            {
+                SKR_LOG_INFO("Clicked %d times", trigger_count);
+            }
+        }
+    }
+};
 
 int main(int argc, char* argv[])
 {
     auto App = make_zeroed<elements_example_application>();
     App.initialize();
     bool quit = false;
+    // KeyboardTest keyboard_test;
+    ClickListener doubleClickListener = ClickListener(500);
     while (!quit)
     {
         FrameMark;
@@ -271,6 +374,11 @@ int main(int argc, char* argv[])
                     }
                 }
             }
+        }
+        {
+            skr::input::Input::GetInstance()->Tick();
+            // keyboard_test.PollKeyboardInput();
+            doubleClickListener.PollMouseInput();
         }
         {
             ZoneScopedN("DiagnosticsInspect");
