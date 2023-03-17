@@ -28,8 +28,21 @@ void RenderBox::before_draw(const DrawParams* params)
         debug_element->begin_frame(1.f);
         {            
             debug_element->begin_path();
-            debug_element->rect(pos.x, pos.y, size.x, size.y);
+            // actual region
             debug_element->fill_color(128u, 0u, 0u, 128u);
+            debug_element->rect(pos.x, pos.y, size.x, size.y);
+            debug_element->fill();
+            
+            // padding region
+            debug_element->begin_path();
+            debug_element->fill_color(128u, 0u, 0u, 64u);
+            const float Rate = 0.01f;
+            float CanvasW, CanvasH; canvas->get_size(&CanvasW, &CanvasH);
+            const auto DistX = Rate * std::min(CanvasW, CanvasH);
+            const auto DistY = Rate * std::min(CanvasW, CanvasH);
+            auto X = pos.x - DistX; const auto W = size.x + 2 * DistX;
+            auto Y = pos.y - DistY; const auto H = size.y + 2 * DistY;
+            debug_element->rect(X, Y, W, H);
             debug_element->fill();
         }
         addElementToCanvas(params, debug_element);

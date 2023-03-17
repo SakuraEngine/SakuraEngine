@@ -306,10 +306,6 @@ struct ClickListener
                 InputMouseState mouseState = {};
                 if (pLayer->GetMouseState(current, &mouseState)) 
                 { 
-                    if (isDown(mouseState))
-                    {
-                        SKR_LOG_INFO("Basic mouse down");
-                    }
                     SKR_DEFER({WasUp = !isDown(mouseState);});
                     if (isDown(mouseState) && previous != current && WasUp)
                     {
