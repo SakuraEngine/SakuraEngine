@@ -18,29 +18,19 @@ struct SKR_INPUT_API CommonInputReadingPoolBase : public CommonInputReadingProxy
 
     void cleanup(uint64_t Now, uint64_t LifetimeUSec) SKR_NOEXCEPT
     {
-        CommonInputReading* ptr = nullptr;
-        while (m_pool.try_dequeue(ptr))
-        {
-            if (ptr->GetTimestamp() + LifetimeUSec < Now)
-            {
-                ptr->release();
-            }
-            else
-            {
-                m_pool.enqueue(ptr);
-            }
-        }
+
     }
 
     void ReportLeaking()
     {
-        SKR_LOG_INFO("CommonInputReadingPool::~CommonInputReadingPool() - %llu objects leaked", count);
+        // SKR_LOG_INFO("CommonInputReadingPool::~CommonInputReadingPool() - %llu objects leaked", count);
     }
 protected:
 
     void release(CommonInputReading* ptr) SKR_NOEXCEPT final
     {
-        SKR_LOG_INFO("CommonInputReadingPool::release() - releasing object");
+        // SKR_LOG_INFO("CommonInputReadingPool::release() - releasing object");
+        ptr->~CommonInputReading();
         m_pool.enqueue(ptr);
         count--;
     }
@@ -63,10 +53,14 @@ struct CommonInputReadingPool : public CommonInputReadingPoolBase
         CommonInputReading* ptr = nullptr;
         if (!m_pool.try_dequeue(ptr))
         {
-            SKR_LOG_INFO("CommonInputReadingPool::acquire() - creating new object");
+            // SKR_LOG_INFO("CommonInputReadingPool::acquire() - creating new object");
             ptr = SkrNew<T>(pPool, pDevice, std::forward<Args>(args)...);
-            count++;
         }
+        else
+        {
+            // SKR_LOG_INFO("CommonInputReadingPool::acquire() - reallocating object");
+        }
+        count++;
         new (ptr) T (pPool, pDevice, std::forward<Args>(args)...);
         ptr->add_ref();
         return static_cast<T*>(ptr);
