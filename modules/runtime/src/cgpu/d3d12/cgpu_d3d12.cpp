@@ -1916,7 +1916,7 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12_impl(CGPUDeviceId device, const CGPU
                                     sizeof(CGPUTextureId) * buffer_count);
         S = cgpu_new_placed<CGPUSwapChain_D3D12>(Memory);
     }
-    S->mDxSyncInterval = desc->enable_vsync ? 1 : 0;
+    S->mDxSyncInterval = 0;
     DECLARE_ZERO(DXGI_SWAP_CHAIN_DESC1, chain_desc1)
     chain_desc1.Width = desc->width;
     chain_desc1.Height = desc->height;

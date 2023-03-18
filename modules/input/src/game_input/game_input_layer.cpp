@@ -240,6 +240,11 @@ struct Input_GameInput : public InputLayer
         }
     }
 
+    uint64_t GetReadingHistoryLifetimeUSec() const SKR_NOEXCEPT final
+    {
+        return 500 * 1000;
+    }
+
     using ProcType = decltype(GameInputCreate);
     SAtomic32 enabled = 1;
     IGameInput* game_input = nullptr;
