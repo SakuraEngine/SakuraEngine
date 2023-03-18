@@ -246,7 +246,6 @@ struct elements_example_application : public elements_application_t
 struct KeyboardTest
 {
     skr::input::InputLayer* pLayer = nullptr;
-    skr::input::InputDevice* Keyboard = nullptr;
     void PollKeyboardInput() noexcept 
     {
         using namespace skr::input;
@@ -254,11 +253,10 @@ struct KeyboardTest
         {
             InputReading* pReading = nullptr;
             InputReading* pLastReading = nullptr;
-            if (INPUT_RESULT_OK == input->GetCurrentReading(InputKindKeyboard, Keyboard, &pLayer, &pReading))
+            if (INPUT_RESULT_OK == input->GetCurrentReading(InputKindKeyboard, nullptr, &pLayer, &pReading))
             {
-                input->GetPreviousReading(pReading, InputKindKeyboard, Keyboard, &pLayer, &pLastReading);
+                input->GetPreviousReading(pReading, InputKindKeyboard, nullptr, &pLayer, &pLastReading);
 
-                if (!Keyboard) pLayer->GetDevice(pReading, &Keyboard);
                 const auto currentTimestamp = pLayer->GetCurrentTimestampUSec();
 
                 InputKeyState keystates[16];
@@ -279,7 +277,7 @@ struct KeyboardTest
     }
     ~KeyboardTest()
     {
-        if (Keyboard) pLayer->Release(Keyboard);
+
     }
 };
 
@@ -338,6 +336,18 @@ struct ClickListener
         }
     }
 };
+
+#include <iostream>
+void UpdateScan(skr::span<uint8_t> write_span)
+{
+    int numkeys;
+    const uint8_t* state = SDL_GetKeyboardState(&numkeys);
+    for (int scancode = 0, i = 0; scancode < numkeys && i < write_span.size(); ++scancode)
+    {
+        if (state[scancode])
+            write_span[i++] = scancode;
+    }
+}
 
 int main(int argc, char* argv[])
 {
@@ -398,6 +408,15 @@ int main(int argc, char* argv[])
                     {
                         app_resize_window(&App.gdi.gfx, event.window.data1, event.window.data2);
                     }
+                }
+            }
+        }
+        {
+            skr::vector<uint8_t> scan_codes(16);
+            UpdateScan(scan_codes);
+            for (auto code : scan_codes) {
+                if (code != 0) {
+                    std::cout << "Scan code: " << static_cast<int>(code) << std::endl;
                 }
             }
         }

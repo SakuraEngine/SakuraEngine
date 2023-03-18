@@ -11,6 +11,11 @@ struct InputImplementation : public Input
 {
     friend struct Input;
 
+    ~InputImplementation() SKR_NOEXCEPT
+    {
+        finalize();
+    }
+
     void initialize() SKR_NOEXCEPT;
     void finalize() SKR_NOEXCEPT;
 
@@ -27,15 +32,21 @@ extern InputLayer* Input_Common_Create() SKR_NOEXCEPT;
 
 void InputImplementation::initialize() SKR_NOEXCEPT
 {
-    auto game_input = Input_GameInput_Create();
-    if (game_input->Initialize()) 
+    const bool bUseGDK = false;
+    if (bUseGDK)
     {
-        layers_.emplace_back(game_input);
+        auto game_input = Input_GameInput_Create();
+        if (game_input->Initialize()) 
+        {
+            layers_.emplace_back(game_input);
+        }
+        else
+        {
+            SkrDelete(game_input);
+        }
     }
     else
     {
-        SkrDelete(game_input);
-        
         auto common_input = Input_Common_Create();
         if (common_input->Initialize()) 
         {
@@ -50,7 +61,12 @@ void InputImplementation::initialize() SKR_NOEXCEPT
 
 void InputImplementation::finalize() SKR_NOEXCEPT
 {
-
+    for (auto layer : layers_)
+    {
+        layer->Finalize();
+        SkrDelete(layer);
+    }
+    layers_.clear();
 }
 
 

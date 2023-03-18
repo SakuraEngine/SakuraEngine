@@ -77,6 +77,7 @@ struct SKR_INPUT_API InputLayer
     virtual bool SetEnabled(bool enabled) SKR_NOEXCEPT = 0;
     virtual bool IsEnabled() const SKR_NOEXCEPT = 0;
     virtual void Tick() SKR_NOEXCEPT {}
+    virtual uint64_t GetReadingHistoryLifetimeUSec() const SKR_NOEXCEPT = 0;
 
     virtual uint64_t GetCurrentTimestampUSec() SKR_NOEXCEPT = 0;
     virtual EInputResult GetCurrentReading(EInputKind kind, InputDevice* device, InputReading** out_reading) SKR_NOEXCEPT = 0;
