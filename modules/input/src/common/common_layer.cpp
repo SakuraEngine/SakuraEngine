@@ -136,20 +136,13 @@ struct Input_Common : public CommonInputLayer
         {
             CommonInputReading* reference = (CommonInputReading*)in_reference;
             uint64_t InTimestamp = reference->GetTimestamp();
-            CommonInputReading* ptr = nullptr;
-            const auto total = skr_atomic32_load_acquire(&GlobalReadingQueueCount);
-            size_t cycles = 0u;
-            while (GlobalReadingQueue.try_dequeue(ptr) && cycles++ < total)
+            for (size_t i = 0; i < GlobalReadingQueue.size(); i++)
             {
+                auto ptr = GlobalReadingQueue[i];
                 if (InTimestamp < ptr->GetTimestamp() && ptr->GetInputKind() == kind)
                 {
-                    skr_atomic32_add_relaxed(&GlobalReadingQueueCount, -1);
                     ptr->Fill(out_reading);
                     return INPUT_RESULT_OK;
-                }
-                else
-                {
-                    GlobalReadingQueue.enqueue(ptr);
                 }
             }
         }
@@ -167,20 +160,16 @@ struct Input_Common : public CommonInputLayer
         {
             CommonInputReading* ref = (CommonInputReading*)reference;
             uint64_t InTimestamp = ref->GetTimestamp();
-            CommonInputReading* ptr = nullptr;
-            const auto total = skr_atomic32_load_acquire(&GlobalReadingQueueCount);
-            size_t cycles = 0u;
-            while (GlobalReadingQueue.try_dequeue(ptr) && cycles++ < total)
+            if (GlobalReadingQueue.size())
             {
-                if (InTimestamp > ptr->GetTimestamp() && ptr->GetInputKind() == kind)
+                for (size_t i = GlobalReadingQueue.size() - 1; i > 0; i--)
                 {
-                    skr_atomic32_add_relaxed(&GlobalReadingQueueCount, -1);
-                    ptr->Fill(out_reading);
-                    return INPUT_RESULT_OK;
-                }
-                else
-                {
-                    GlobalReadingQueue.enqueue(ptr);
+                    auto ptr = GlobalReadingQueue[i];
+                    if (InTimestamp > ptr->GetTimestamp() && ptr->GetInputKind() == kind)
+                    {
+                        ptr->Fill(out_reading);
+                        return INPUT_RESULT_OK;
+                    }
                 }
             }
         }
@@ -239,8 +228,7 @@ struct Input_Common : public CommonInputLayer
                 {
                     if (reading->GetTimestamp() >= TimeStamp) // Generated at this Tick
                     {
-                        GlobalReadingQueue.enqueue((CommonInputReading*)reading);
-                        skr_atomic32_add_relaxed(&GlobalReadingQueueCount, 1);
+                        GlobalReadingQueue.emplace_back((CommonInputReading*)reading);
                     }
                     else
                     {
@@ -251,21 +239,15 @@ struct Input_Common : public CommonInputLayer
         }
         // Clear old readings
         {
-            CommonInputReading* ptr = nullptr;
-            const auto total = GlobalReadingQueue.size_approx();
-            size_t cycles = 0u;
-            while (GlobalReadingQueue.try_dequeue(ptr) && cycles++ < total)
+            for (auto& ptr : GlobalReadingQueue)
             {
                 if (ptr->GetTimestamp() < TimeStamp - GetReadingHistoryLifetimeUSec())
                 {
                     ptr->release();
-                    skr_atomic32_add_relaxed(&GlobalReadingQueueCount, -1);
-                }
-                else
-                {
-                    GlobalReadingQueue.enqueue(ptr);
+                    ptr = nullptr;
                 }
             }
+            GlobalReadingQueue.erase(eastl::remove(GlobalReadingQueue.begin(), GlobalReadingQueue.end(), nullptr), GlobalReadingQueue.end());
         }
     }
 
@@ -274,8 +256,7 @@ struct Input_Common : public CommonInputLayer
         return 500 * 1000;
     }
 
-    SAtomic32 GlobalReadingQueueCount = 0;
-    moodycamel::ConcurrentQueue<CommonInputReading*> GlobalReadingQueue;
+    skr::vector<CommonInputReading*> GlobalReadingQueue;
     skr::vector<CommonInputDevice*> devices;
     SAtomic32 enabled = true;
 };

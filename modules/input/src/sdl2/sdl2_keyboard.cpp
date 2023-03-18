@@ -71,32 +71,26 @@ struct InputDevice_SDL2Keyboard : public CommonInputDevice
     {
         eastl::fixed_vector<uint8_t, 16> ScanCodes;
         updateScan(ScanCodes, (uint32_t)ScanCodes.capacity());
-        if (!CurrentReading || !CurrentReading->Equal(ScanCodes))
+        if (!ReadingQueue.size() || !ReadingQueue.back()->Equal(ScanCodes))
         {
-            CurrentReading = ReadingPool.acquire(&ReadingPool, this, std::move(ScanCodes), layer->GetCurrentTimestampUSec());
-            ReadingQueue.enqueue(CurrentReading);
-            skr_atomic32_add_relaxed(&ReadingQueueCount, 1);
+            ReadingQueue.emplace_back(
+                ReadingPool.acquire(&ReadingPool, this, std::move(ScanCodes), layer->GetCurrentTimestampUSec())
+            );
         }
         // Clear old readings
         const auto Now = layer->GetCurrentTimestampUSec();
         const auto LifetimeUSec = layer->GetReadingHistoryLifetimeUSec();
         ReadingPool.cleanup(Now, LifetimeUSec);
         {
-            CommonInputReading* ptr = nullptr;
-            const auto total = skr_atomic32_load_relaxed(&ReadingQueueCount);
-            size_t cycles = 0u;
-            while (ReadingQueue.try_dequeue(ptr) && cycles++ < total)
+            for (auto& ptr : ReadingQueue)
             {
                 if (ptr->GetTimestamp() < Now - LifetimeUSec)
                 {
                     ptr->release();
-                    skr_atomic32_add_relaxed(&ReadingQueueCount, -1);
-                }
-                else
-                {
-                    ReadingQueue.enqueue(ptr);
+                    ptr = nullptr;
                 }
             }
+            ReadingQueue.erase(eastl::remove(ReadingQueue.begin(), ReadingQueue.end(), nullptr), ReadingQueue.end());
         }
     } 
 
@@ -118,11 +112,11 @@ struct InputDevice_SDL2Keyboard : public CommonInputDevice
         {
             return INPUT_RESULT_NOT_FOUND;
         }
-        if (CurrentReading == nullptr)
+        if (!ReadingQueue.size() || ReadingQueue.back() == nullptr)
         {
             return INPUT_RESULT_NOT_FOUND;
         }
-        CurrentReading->Fill(out_reading);
+        ReadingQueue.back()->Fill(out_reading);
         return INPUT_RESULT_OK;
     }
 
@@ -131,29 +125,24 @@ struct InputDevice_SDL2Keyboard : public CommonInputDevice
         if (kind != InputKindKeyboard) return INPUT_RESULT_NOT_FOUND;
         if (!out_reading) return INPUT_RESULT_FAIL;
 
-        if (kind != EInputKind::InputKindKeyboard)
+        if (!ReadingQueue.size() || kind != EInputKind::InputKindKeyboard)
         {
             return INPUT_RESULT_NOT_FOUND;
         }
         if (reference == nullptr)
         {
-            CurrentReading->Fill(out_reading);
+            ReadingQueue.back()->Fill(out_reading);
             return INPUT_RESULT_OK;
         }
 
-        CommonInputReading* ptr = nullptr;
         auto timestamp = ((CommonInputReading*)reference)->GetTimestamp();
-        const auto total = ReadingQueue.size_approx();
-        size_t cycles = 0u;
-        while (ReadingQueue.try_dequeue(ptr) && cycles++ < total)
+        for (size_t i = 0; i < ReadingQueue.size(); ++i)
         {
-            if (ptr->GetTimestamp() > timestamp)
+            if (ReadingQueue[i]->GetTimestamp() > timestamp)
             {
-                skr_atomic32_add_relaxed(&ReadingQueueCount, -1);
-                ptr->Fill(out_reading);
+                ReadingQueue[i]->Fill(out_reading);
                 return INPUT_RESULT_OK;
             }
-            ReadingQueue.enqueue(ptr);
         }
         return INPUT_RESULT_NOT_FOUND;
     }
@@ -172,28 +161,24 @@ struct InputDevice_SDL2Keyboard : public CommonInputDevice
             return INPUT_RESULT_NOT_FOUND;
         }
     
-        CommonInputReading* ptr = nullptr;
-        const auto total = skr_atomic32_load_relaxed(&ReadingQueueCount);
-        size_t cycles = 0u;
         auto timestamp = ((CommonInputReading*)reference)->GetTimestamp();
-        while (ReadingQueue.try_dequeue(ptr) && cycles++ < total)
+        if (ReadingQueue.size())
         {
-            if (ptr->GetTimestamp() < timestamp)
+            for (size_t i = ReadingQueue.size() - 1; i > 0; i--)
             {
-                skr_atomic32_add_relaxed(&ReadingQueueCount, -1);
-                ptr->Fill(out_reading);
-                return INPUT_RESULT_OK;
+                if (ReadingQueue[i]->GetTimestamp() < timestamp)
+                {
+                    ReadingQueue[i]->Fill(out_reading);
+                    return INPUT_RESULT_OK;
+                }
             }
-            ReadingQueue.enqueue(ptr);
         }
         return INPUT_RESULT_NOT_FOUND;
     }
 
     static void updateScan(ScanCodeBuffer& write_span, uint32_t max_count);
 
-    moodycamel::ConcurrentQueue<CommonInputReading*> ReadingQueue;
-    SAtomic32 ReadingQueueCount = 0;
-    InputReading_SDL2Keyboard* CurrentReading = nullptr;
+    skr::vector<InputReading_SDL2Keyboard*> ReadingQueue;
     CommonInputReadingPool<InputReading_SDL2Keyboard> ReadingPool;
 };
 

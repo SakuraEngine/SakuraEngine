@@ -252,26 +252,21 @@ struct KeyboardTest
         if (auto input = skr::input::Input::GetInstance())
         {
             InputReading* pReading = nullptr;
-            InputReading* pLastReading = nullptr;
             if (INPUT_RESULT_OK == input->GetCurrentReading(InputKindKeyboard, nullptr, &pLayer, &pReading))
             {
-                input->GetPreviousReading(pReading, InputKindKeyboard, nullptr, &pLayer, &pLastReading);
-
                 const auto currentTimestamp = pLayer->GetCurrentTimestampUSec();
 
                 InputKeyState keystates[16];
                 uint32_t readCount = pLayer->GetKeyState(pReading, 16, keystates);
                 const auto timestamp = pLayer->GetTimestampUSec(pReading);
-                const auto last_timestamp = pLastReading ? pLayer->GetTimestampUSec(pLastReading) : 0u;
                 const auto elapsed_us = currentTimestamp - timestamp;
                 for (uint32_t j = 0; j < readCount; j++)
                 {
                     auto k = keystates[j];
-                    SKR_LOG_INFO("GameInput: ScanCode:0x%02X, CodePoint:0x%02X, Key:0x%02X, Timestamp: %ld, Prev: %ld, Elapsed: %d us(%d ms), Dead:%d",
-                        k.scan_code, k.code_point, keystates[j].virtual_key, timestamp, last_timestamp, elapsed_us, elapsed_us / 1000, k.is_dead_key);
+                    SKR_LOG_INFO("GameInput: ScanCode:0x%02X, CodePoint:0x%02X, Key:0x%02X, Timestamp: %ld, Elapsed: %d us(%d ms), Dead:%d",
+                        k.scan_code, k.code_point, keystates[j].virtual_key, timestamp, elapsed_us, elapsed_us / 1000, k.is_dead_key);
                 }
                 if (pReading) pLayer->Release(pReading);
-                if (pLastReading) pLayer->Release(pLastReading);
             }
         }
     }
