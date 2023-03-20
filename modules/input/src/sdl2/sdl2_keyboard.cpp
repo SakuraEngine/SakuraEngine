@@ -1,8 +1,8 @@
 #include "../common/common_layer.hpp"
 #include "../common/reading_pool.hpp"
+#include "../common/reading_ring.hpp"
 #include <SDL2/SDL_keyboard.h>
 #include "containers/span.hpp"
-#include "containers/vector.hpp"
 #include <EASTL/fixed_vector.h>
 #include <algorithm>
 
@@ -71,26 +71,15 @@ struct InputDevice_SDL2Keyboard : public CommonInputDevice
     {
         eastl::fixed_vector<uint8_t, 16> ScanCodes;
         updateScan(ScanCodes, (uint32_t)ScanCodes.capacity());
-        if (!ReadingQueue.size() || !ReadingQueue.back()->Equal(ScanCodes))
+        const auto LastReading = ReadingQueue.get();
+        if (!LastReading || !LastReading->Equal(ScanCodes))
         {
-            ReadingQueue.emplace_back(
+            if (auto old = ReadingQueue.add(
                 ReadingPool.acquire(&ReadingPool, this, std::move(ScanCodes), layer->GetCurrentTimestampUSec())
-            );
-        }
-        // Clear old readings
-        const auto Now = layer->GetCurrentTimestampUSec();
-        const auto LifetimeUSec = layer->GetReadingHistoryLifetimeUSec();
-        ReadingPool.cleanup(Now, LifetimeUSec);
-        {
-            for (auto& ptr : ReadingQueue)
+            ))
             {
-                if (ptr->GetTimestamp() < Now - LifetimeUSec)
-                {
-                    ptr->release();
-                    ptr = nullptr;
-                }
+                old->release();
             }
-            ReadingQueue.erase(eastl::remove(ReadingQueue.begin(), ReadingQueue.end(), nullptr), ReadingQueue.end());
         }
     } 
 
@@ -112,11 +101,13 @@ struct InputDevice_SDL2Keyboard : public CommonInputDevice
         {
             return INPUT_RESULT_NOT_FOUND;
         }
-        if (!ReadingQueue.size() || ReadingQueue.back() == nullptr)
+
+        const auto LastReading = ReadingQueue.get();
+        if (!LastReading || LastReading == nullptr)
         {
             return INPUT_RESULT_NOT_FOUND;
         }
-        ReadingQueue.back()->Fill(out_reading);
+        LastReading->Fill(out_reading);
         return INPUT_RESULT_OK;
     }
 
@@ -125,23 +116,28 @@ struct InputDevice_SDL2Keyboard : public CommonInputDevice
         if (kind != InputKindKeyboard) return INPUT_RESULT_NOT_FOUND;
         if (!out_reading) return INPUT_RESULT_FAIL;
 
-        if (!ReadingQueue.size() || kind != EInputKind::InputKindKeyboard)
+        const auto LastReading = ReadingQueue.get();
+        if (!LastReading || kind != EInputKind::InputKindKeyboard)
         {
             return INPUT_RESULT_NOT_FOUND;
         }
         if (reference == nullptr)
         {
-            ReadingQueue.back()->Fill(out_reading);
+            ReadingQueue.get()->Fill(out_reading);
             return INPUT_RESULT_OK;
         }
 
         auto timestamp = ((CommonInputReading*)reference)->GetTimestamp();
-        for (size_t i = 0; i < ReadingQueue.size(); ++i)
+        if (uint64_t count = ReadingQueue.get_size())
         {
-            if (ReadingQueue[i]->GetTimestamp() > timestamp)
+            for (uint64_t i = 0; i < count; ++i)
             {
-                ReadingQueue[i]->Fill(out_reading);
-                return INPUT_RESULT_OK;
+                auto Reading = ReadingQueue.get(i);
+                if (Reading && Reading->GetTimestamp() > timestamp)
+                {
+                    Reading->Fill(out_reading);
+                    return INPUT_RESULT_OK;
+                }
             }
         }
         return INPUT_RESULT_NOT_FOUND;
@@ -162,13 +158,14 @@ struct InputDevice_SDL2Keyboard : public CommonInputDevice
         }
     
         auto timestamp = ((CommonInputReading*)reference)->GetTimestamp();
-        if (ReadingQueue.size())
+        if (uint64_t count = ReadingQueue.get_size())
         {
-            for (size_t i = ReadingQueue.size() - 1; i > 0; i--)
+            for (uint64_t i = count - 1; i > 0; i--)
             {
-                if (ReadingQueue[i]->GetTimestamp() < timestamp)
+                auto Reading = ReadingQueue.get(i);
+                if (Reading->GetTimestamp() < timestamp)
                 {
-                    ReadingQueue[i]->Fill(out_reading);
+                    Reading->Fill(out_reading);
                     return INPUT_RESULT_OK;
                 }
             }
@@ -178,7 +175,7 @@ struct InputDevice_SDL2Keyboard : public CommonInputDevice
 
     static void updateScan(ScanCodeBuffer& write_span, uint32_t max_count);
 
-    skr::vector<InputReading_SDL2Keyboard*> ReadingQueue;
+    ReadingRing<InputReading_SDL2Keyboard*> ReadingQueue;
     CommonInputReadingPool<InputReading_SDL2Keyboard> ReadingPool;
 };
 

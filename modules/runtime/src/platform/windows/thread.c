@@ -105,10 +105,28 @@ void skr_acquire_mutex_srw(SMutex* mutex)
 #endif
 }
 
+void skr_acquire_mutex_srw_shared(SMutex* mutex)
+{
+#if (_WIN32_WINNT >= 0x0600)
+    AcquireSRWLockShared((PSRWLOCK)mutex->muStorage_);
+#else
+    skr_acquire_mutex_cs(mutex);
+#endif
+}
+
 bool skr_try_acquire_mutex_srw(SMutex* mutex)
 {
 #if (_WIN32_WINNT >= 0x0600)
     return TryAcquireSRWLockExclusive((PSRWLOCK)mutex->muStorage_);
+#else
+    return skr_try_acquire_mutex_cs(mutex);
+#endif
+}
+
+bool skr_try_acquire_mutex_srw_shared(SMutex* mutex)
+{
+#if (_WIN32_WINNT >= 0x0600)
+    return TryAcquireSRWLockShared((PSRWLOCK)mutex->muStorage_);
 #else
     return skr_try_acquire_mutex_cs(mutex);
 #endif
@@ -163,6 +181,42 @@ void skr_release_mutex(SMutex* mutex)
         skr_release_mutex_srw(mutex);
     else
         skr_release_mutex_cs(mutex);
+}
+
+/// implementation of rw mutex
+
+bool skr_init_mutex_rw(SRWMutex* pMutex)
+{
+    return skr_init_mutex_srw(&pMutex->m);
+}
+
+void skr_destroy_rw_mutex(SRWMutex* pMutex) 
+{ 
+    skr_destroy_mutex(&pMutex->m);
+}
+
+void skr_acquire_mutex_r(SRWMutex* pMutex)
+{
+    if (pMutex->m.isSRW)
+        skr_acquire_mutex_srw_shared(&pMutex->m);
+    else
+        skr_acquire_mutex_cs(&pMutex->m);
+}
+
+void skr_acquire_mutex_w(SRWMutex* pMutex)
+{
+    if (pMutex->m.isSRW)
+        skr_acquire_mutex_srw(&pMutex->m);
+    else
+        skr_acquire_mutex_cs(&pMutex->m);
+}
+
+void skr_release_rw_mutex(SRWMutex* pMutex)
+{
+    if (pMutex->m.isSRW)
+        skr_release_mutex_srw(&pMutex->m);
+    else
+        skr_release_mutex_cs(&pMutex->m);
 }
 
 /// implementation of cv

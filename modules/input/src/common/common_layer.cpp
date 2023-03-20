@@ -1,12 +1,11 @@
 #include "common_layer.hpp"
 #include "reading_pool.hpp"
+#include "../common/reading_ring.hpp"
 #include "platform/memory.h"
 #include "platform/atomic.h"
 #include "platform/debug.h"
 #include "utils/log.h"
-#include "containers/vector.hpp"
-#include <EASTL/fixed_vector.h>
-#include "platform/shared_library.hpp"
+#include "containers/resizable_ring_buffer.hpp"
 #include "SDL2/SDL_timer.h"
 
 namespace skr {
@@ -104,10 +103,10 @@ struct Input_Common : public CommonInputLayer
 
     uint64_t GetCurrentTimestampUSec() SKR_NOEXCEPT final
     {
-        uint64_t now = SDL_GetPerformanceCounter();
-        uint64_t freq = SDL_GetPerformanceFrequency();
-        uint64_t value = now / freq * 1000 * 1000;
-        return value;
+        double now = (double)SDL_GetPerformanceCounter();
+        double freq = (double)SDL_GetPerformanceFrequency();
+        double value = now / freq * 1000.0 * 1000.0;
+        return (uint64_t)value;
     }
 
     EInputResult GetCurrentReading(EInputKind kind, InputDevice* device, InputReading** out_reading) SKR_NOEXCEPT final
@@ -136,13 +135,16 @@ struct Input_Common : public CommonInputLayer
         {
             CommonInputReading* reference = (CommonInputReading*)in_reference;
             uint64_t InTimestamp = reference->GetTimestamp();
-            for (size_t i = 0; i < GlobalReadingQueue.size(); i++)
+            if (uint64_t count = GlobalReadingQueue.get_size())
             {
-                auto ptr = GlobalReadingQueue[i];
-                if (InTimestamp < ptr->GetTimestamp() && ptr->GetInputKind() == kind)
+                for (size_t i = 0; i < count; i++)
                 {
-                    ptr->Fill(out_reading);
-                    return INPUT_RESULT_OK;
+                    auto ptr = GlobalReadingQueue.get(i);
+                    if (ptr && InTimestamp < ptr->GetTimestamp() && ptr->GetInputKind() == kind)
+                    {
+                        ptr->Fill(out_reading);
+                        return INPUT_RESULT_OK;
+                    }
                 }
             }
         }
@@ -160,11 +162,11 @@ struct Input_Common : public CommonInputLayer
         {
             CommonInputReading* ref = (CommonInputReading*)reference;
             uint64_t InTimestamp = ref->GetTimestamp();
-            if (GlobalReadingQueue.size())
+            if (auto count = GlobalReadingQueue.get_size())
             {
-                for (size_t i = GlobalReadingQueue.size() - 1; i > 0; i--)
+                for (size_t i = count - 1; i > 0; i--)
                 {
-                    auto ptr = GlobalReadingQueue[i];
+                    auto ptr = GlobalReadingQueue.get(i);
                     if (InTimestamp > ptr->GetTimestamp() && ptr->GetInputKind() == kind)
                     {
                         ptr->Fill(out_reading);
@@ -228,7 +230,12 @@ struct Input_Common : public CommonInputLayer
                 {
                     if (reading->GetTimestamp() >= TimeStamp) // Generated at this Tick
                     {
-                        GlobalReadingQueue.emplace_back((CommonInputReading*)reading);
+                        if (
+                            auto old = GlobalReadingQueue.add((CommonInputReading*)reading)
+                        )
+                        {
+                            old->release();
+                        }
                     }
                     else
                     {
@@ -237,18 +244,6 @@ struct Input_Common : public CommonInputLayer
                 }
             }
         }
-        // Clear old readings
-        {
-            for (auto& ptr : GlobalReadingQueue)
-            {
-                if (ptr->GetTimestamp() < TimeStamp - GetReadingHistoryLifetimeUSec())
-                {
-                    ptr->release();
-                    ptr = nullptr;
-                }
-            }
-            GlobalReadingQueue.erase(eastl::remove(GlobalReadingQueue.begin(), GlobalReadingQueue.end(), nullptr), GlobalReadingQueue.end());
-        }
     }
 
     uint64_t GetReadingHistoryLifetimeUSec() const SKR_NOEXCEPT final
@@ -256,7 +251,7 @@ struct Input_Common : public CommonInputLayer
         return 500 * 1000;
     }
 
-    skr::vector<CommonInputReading*> GlobalReadingQueue;
+    ReadingRing<CommonInputReading*> GlobalReadingQueue;
     skr::vector<CommonInputDevice*> devices;
     SAtomic32 enabled = true;
 };

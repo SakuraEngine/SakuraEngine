@@ -49,14 +49,15 @@ typedef struct SMutex {
 #if defined(_WIN32) || defined(XBOX)
     unsigned char muStorage_[sizeof(void*)];
     uint32_t isSRW;
-#elif defined(NX64)
-    MutexTypeNX mMutexPlatformNX;
-    uint32_t mSpinCount;
 #else
     pthread_mutex_t pHandle;
     uint32_t mSpinCount;
 #endif
 } SMutex;
+
+typedef struct SRWMutex {
+    SMutex m;
+} SRWMutex;
 
 typedef struct SConditionVariable {
 #if defined(_WIN32) || defined(XBOX)
@@ -120,6 +121,13 @@ THREADS_API void skr_destroy_mutex(SMutex* pMutex);
 THREADS_API void skr_acquire_mutex(SMutex* pMutex);
 THREADS_API bool skr_try_acquire_mutex(SMutex* pMutex);
 THREADS_API void skr_release_mutex(SMutex* pMutex);
+
+// rw mutex
+THREADS_API bool skr_init_mutex_rw(SRWMutex* pMutex);
+THREADS_API void skr_destroy_rw_mutex(SRWMutex* pMutex);
+THREADS_API void skr_acquire_mutex_r(SRWMutex* pMutex);
+THREADS_API void skr_acquire_mutex_w(SRWMutex* pMutex);
+THREADS_API void skr_release_rw_mutex(SRWMutex* pMutex);
 
 /// cv
 THREADS_API bool skr_init_condition_var(SConditionVariable* cv);
