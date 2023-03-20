@@ -3037,7 +3037,8 @@ void TextServerAdvanced::_font_render_glyph(const RID &p_font_rid, const Vector2
 #endif
 }
 
-void TextServerAdvanced::_font_draw_glyph(const RID &p_font_rid, const RID &p_canvas, int64_t p_size, const Vector2 &p_pos, int64_t p_index, const Color &p_color) const {
+void TextServerAdvanced::_font_draw_glyph(const RID &p_font_rid, const RID &p_canvas, int64_t p_size, const Vector2 &p_pos, int64_t p_index, const Color &p_color) const 
+{
 	FontAdvanced *fd = font_owner.get_or_null(p_font_rid);
 	ERR_FAIL_COND(!fd);
 
@@ -3700,7 +3701,9 @@ void TextServerAdvanced::_shaped_set_span_update_font(const RID &p_shaped, int64
 	invalidate(sd, false);
 }
 
-bool TextServerAdvanced::_shaped_text_add_string(const RID &p_shaped, const String &p_text, const TypedArray<RID> &p_fonts, int64_t p_size, const TextServerFeatures &p_opentype_features, const String &p_language, const Variant &p_meta) {
+bool TextServerAdvanced::_shaped_text_add_string(const RID &p_shaped, const String &p_text, const TypedArray<RID> &p_fonts,
+	int64_t p_size, const TextServerFeatures &p_opentype_features, const String &p_language, const Variant &p_meta) 
+{
 	ShapedTextDataAdvanced *sd = shaped_owner.get_or_null(p_shaped);
 	ERR_FAIL_COND_V(!sd, false);
 	ERR_FAIL_COND_V(p_size <= 0, false);
@@ -3735,7 +3738,8 @@ bool TextServerAdvanced::_shaped_text_add_string(const RID &p_shaped, const Stri
 	return true;
 }
 
-bool TextServerAdvanced::_shaped_text_add_object(const RID &p_shaped, const Variant &p_key, const Size2 &p_size, InlineAlignment p_inline_align, int64_t p_length, double p_baseline) {
+bool TextServerAdvanced::_shaped_text_add_object(const RID &p_shaped, const Variant &p_key, 
+	const Size2 &p_size, InlineAlignment p_inline_align, int64_t p_length, double p_baseline) {
 	_THREAD_SAFE_METHOD_
 	ShapedTextDataAdvanced *sd = shaped_owner.get_or_null(p_shaped);
 	ERR_FAIL_COND_V(!sd, false);
@@ -3766,7 +3770,8 @@ bool TextServerAdvanced::_shaped_text_add_object(const RID &p_shaped, const Vari
 	return true;
 }
 
-bool TextServerAdvanced::_shaped_text_resize_object(const RID &p_shaped, const Variant &p_key, const Size2 &p_size, InlineAlignment p_inline_align, double p_baseline) {
+bool TextServerAdvanced::_shaped_text_resize_object(const RID &p_shaped, const Variant &p_key, 
+	const Size2 &p_size, InlineAlignment p_inline_align, double p_baseline) {
 	ShapedTextDataAdvanced *sd = shaped_owner.get_or_null(p_shaped);
 	ERR_FAIL_COND_V(!sd, false);
 
@@ -3775,6 +3780,7 @@ bool TextServerAdvanced::_shaped_text_resize_object(const RID &p_shaped, const V
 	sd->objects[p_key].rect.size = p_size;
 	sd->objects[p_key].inline_align = p_inline_align;
 	sd->objects[p_key].baseline = p_baseline;
+	
 	if (sd->valid) {
 		// Recalc string metrics.
 		sd->ascent = 0;
@@ -4939,7 +4945,6 @@ Glyph TextServerAdvanced::_shape_single_glyph(ShapedTextDataAdvanced *p_sd, char
 }
 
 _FORCE_INLINE_ void TextServerAdvanced::_add_featuers(const TextServerFeatures &p_source, Vector<hb_feature_t> &r_ftrs) {
-    SKR_UNIMPLEMENTED_FUNCTION();
     /*
 	auto& keys = p_source.key();
 	auto& values = p_source.values();
@@ -4968,7 +4973,9 @@ void TextServerAdvanced::_shape_run(ShapedTextDataAdvanced *p_sd, int64_t p_star
 	if (p_fb_index >= 0 && p_fb_index < p_fonts.size()) {
 		// Try font from list.
 		f = p_fonts[p_fb_index];
-	} else if (kHasSystemFont() && p_fonts.size() > 0 && ((p_fb_index == p_fonts.size()) || (p_fb_index > p_fonts.size() && p_start != p_prev_start))) {
+	} 
+	else if (kHasSystemFont() && p_fonts.size() > 0 && ((p_fb_index == p_fonts.size()) || (p_fb_index > p_fonts.size() && p_start != p_prev_start))) 
+	{
 		// Try system fallback.
         SKR_UNIMPLEMENTED_FUNCTION(); (void)fs;
         /*
@@ -5130,6 +5137,7 @@ void TextServerAdvanced::_shape_run(ShapedTextDataAdvanced *p_sd, int64_t p_star
 				break;
 			}
 		}
+		*/
 	}
 
 	if (!f.is_valid()) {
@@ -5152,9 +5160,9 @@ void TextServerAdvanced::_shape_run(ShapedTextDataAdvanced *p_sd, int64_t p_star
 				} else {
 					gl.advance = get_hex_code_box_size(fs, gl.index).y;
 					gl.y_off = get_hex_code_box_size(fs, gl.index).y;
-					gl.x_off = -Math::round(get_hex_code_box_size(fs, gl.index).x * 0.5);
-					p_sd->ascent = MAX(p_sd->ascent, Math::round(get_hex_code_box_size(fs, gl.index).x * 0.5));
-					p_sd->descent = MAX(p_sd->descent, Math::round(get_hex_code_box_size(fs, gl.index).x * 0.5));
+					gl.x_off = -::round(get_hex_code_box_size(fs, gl.index).x * 0.5);
+					p_sd->ascent = MAX(p_sd->ascent, ::round(get_hex_code_box_size(fs, gl.index).x * 0.5));
+					p_sd->descent = MAX(p_sd->descent, ::round(get_hex_code_box_size(fs, gl.index).x * 0.5));
 				}
 				p_sd->width += gl.advance;
 
@@ -5193,8 +5201,13 @@ void TextServerAdvanced::_shape_run(ShapedTextDataAdvanced *p_sd, int64_t p_star
 	hb_buffer_set_script(p_sd->hb_buffer, p_script);
 
 	if (p_sd->spans[p_span].language.is_empty()) {
+		auto default_lang = hb_language_get_default();
+		hb_buffer_set_language(p_sd->hb_buffer, default_lang);
+		/*
+		TODO: translation
 		hb_language_t lang = hb_language_from_string(TranslationServer::get_singleton()->get_tool_locale().ascii().get_data(), -1);
 		hb_buffer_set_language(p_sd->hb_buffer, lang);
+		*/
 	} else {
 		hb_language_t lang = hb_language_from_string(p_sd->spans[p_span].language.ascii().get_data(), -1);
 		hb_buffer_set_language(p_sd->hb_buffer, lang);
@@ -5214,10 +5227,13 @@ void TextServerAdvanced::_shape_run(ShapedTextDataAdvanced *p_sd, int64_t p_star
 
 	int mod = 0;
 	if (fd->antialiasing == FONT_ANTIALIASING_LCD) {
+		SKR_UNIMPLEMENTED_FUNCTION();
+		/*
 		TextServer::FontLCDSubpixelLayout layout = (TextServer::FontLCDSubpixelLayout)(int)GLOBAL_GET("gui/theme/lcd_subpixel_layout");
 		if (layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
 			mod = (layout << 24);
 		}
+		*/
 	}
 
 	// Process glyphs.
@@ -5278,17 +5294,17 @@ void TextServerAdvanced::_shape_run(ShapedTextDataAdvanced *p_sd, int64_t p_star
 					if (subpos) {
 						gl.advance = (double)glyph_pos[i].x_advance / (64.0 / scale) + ea;
 					} else {
-						gl.advance = Math::round((double)glyph_pos[i].x_advance / (64.0 / scale) + ea);
+						gl.advance = ::round((double)glyph_pos[i].x_advance / (64.0 / scale) + ea);
 					}
 				} else {
-					gl.advance = -Math::round((double)glyph_pos[i].y_advance / (64.0 / scale));
+					gl.advance = -::round((double)glyph_pos[i].y_advance / (64.0 / scale));
 				}
 				if (subpos) {
 					gl.x_off = (double)glyph_pos[i].x_offset / (64.0 / scale);
 				} else {
-					gl.x_off = Math::round((double)glyph_pos[i].x_offset / (64.0 / scale));
+					gl.x_off = ::round((double)glyph_pos[i].x_offset / (64.0 / scale));
 				}
-				gl.y_off = -Math::round((double)glyph_pos[i].y_offset / (64.0 / scale));
+				gl.y_off = -::round((double)glyph_pos[i].y_offset / (64.0 / scale));
 			}
 			if (!last_run || i < glyph_count - 1) {
 				// Do not add extra spacing to the last glyph of the string.
@@ -5334,7 +5350,7 @@ void TextServerAdvanced::_shape_run(ShapedTextDataAdvanced *p_sd, int64_t p_star
 						p_sd->ascent = MAX(p_sd->ascent, -w[i + j].y_off);
 						p_sd->descent = MAX(p_sd->descent, w[i + j].y_off);
 					} else {
-						double gla = Math::round(_font_get_glyph_advance(f, fs, w[i + j].index).x * 0.5);
+						double gla = ::round(_font_get_glyph_advance(f, fs, w[i + j].index).x * 0.5);
 						p_sd->ascent = MAX(p_sd->ascent, gla);
 						p_sd->descent = MAX(p_sd->descent, gla);
 					}
@@ -5361,11 +5377,11 @@ void TextServerAdvanced::_shape_run(ShapedTextDataAdvanced *p_sd, int64_t p_star
 		p_sd->descent = MAX(p_sd->descent, _font_get_descent(f, fs));
 		p_sd->upos = MAX(p_sd->upos, _font_get_underline_position(f, fs));
 		p_sd->uthk = MAX(p_sd->uthk, _font_get_underline_thickness(f, fs));
-        */
 	}
 }
 
-bool TextServerAdvanced::_shaped_text_shape(const RID &p_shaped) {
+bool TextServerAdvanced::_shaped_text_shape(const RID &p_shaped) 
+{
 	_THREAD_SAFE_METHOD_
 	ShapedTextDataAdvanced *sd = shaped_owner.get_or_null(p_shaped);
 	ERR_FAIL_COND_V(!sd, false);
