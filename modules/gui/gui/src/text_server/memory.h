@@ -1,5 +1,6 @@
 #pragma once
 #include "text_server/safe_refcount.h"
+#include "platform/memory.h"
 #include <new>
 
 namespace godot
@@ -24,7 +25,7 @@ public:
 template <class T>
 void memdelete(T *p_class)
 {
-	delete p_class;
+	SkrDelete(p_class);
 }
 
 void memfree(void* p_ptr);
@@ -34,6 +35,6 @@ void* memalloc(size_t size);
 void* memrealloc(void* p_ptr, size_t size);
 
 #define memnew_placement(ptr, T) new(ptr) T
-#define memnew(T) new T
+#define memnew(T, ...) SkrNew<T>(__VA_ARGS__)
 
 }

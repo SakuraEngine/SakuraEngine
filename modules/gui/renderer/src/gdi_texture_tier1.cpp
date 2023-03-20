@@ -8,6 +8,20 @@
 namespace skr {
 namespace gdi {
 // start helpers
+ECGPUFormat TranslateFormat(EGDIImageFormat format)
+{
+    switch (format)
+    {
+    case EGDIImageFormat::RGB8: return CGPU_FORMAT_R8G8B8_UNORM;
+    case EGDIImageFormat::RGBA8: return CGPU_FORMAT_R8G8B8A8_UNORM;
+    case EGDIImageFormat::LA8: return CGPU_FORMAT_R8G8_UNORM;
+    case EGDIImageFormat::R8: return CGPU_FORMAT_R8_UNORM;
+    default: break;
+    }
+    SKR_UNREACHABLE_CODE();
+    return CGPU_FORMAT_UNDEFINED;
+}
+
 #ifdef SKR_GUI_RENDERER_USE_IMAGE_CODER
 ECGPUFormat cgpu_format_from_image_coder_format(EImageCoderFormat format,EImageCoderColorFormat cformat, uint32_t bit_depth) SKR_NOEXCEPT
 {
@@ -145,6 +159,12 @@ EGDIImageFormat GDIImage_RenderGraph::get_format() const SKR_NOEXCEPT
     case CGPU_FORMAT_R8_SINT: return EGDIImageFormat::R8;
     case CGPU_FORMAT_R8_SRGB: return EGDIImageFormat::R8;
 
+    case CGPU_FORMAT_R8G8_UNORM: return EGDIImageFormat::LA8;
+    case CGPU_FORMAT_R8G8_SNORM: return EGDIImageFormat::LA8;
+    case CGPU_FORMAT_R8G8_UINT: return EGDIImageFormat::LA8;
+    case CGPU_FORMAT_R8G8_SINT: return EGDIImageFormat::LA8;
+    case CGPU_FORMAT_R8G8_SRGB: return EGDIImageFormat::LA8;
+
     default:
         break;
     }
@@ -245,6 +265,7 @@ GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* o
             {
                 owner->pixel_data = { owner->raw_data.bytes, owner->raw_data.size };
                 owner->async_data.ram_data_finsihed_callback();
+                // owner->format
             }
         };
         ram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = owner;
@@ -275,6 +296,7 @@ GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* o
             owner->image_height = from_data.height;
             owner->image_depth = 1u;
             owner->pixel_data.bytes = owner->raw_data.bytes;
+            owner->format = TranslateFormat(from_data.gdi_format);
         }
         owner->async_data.ram_data_finsihed_callback();
     }
@@ -365,7 +387,7 @@ void GDIImage_RenderGraph::preInit(const GDIImageDescriptor* desc)
         source = EGDIImageSource::Data;
         async_data.from_data.width = desc->from_data.w;
         async_data.from_data.height = desc->from_data.h;
-        async_data.from_data.format = desc->format;
+        async_data.from_data.gdi_format = desc->format;
         auto dst = raw_data.bytes = (uint8_t*)sakura_malloc(desc->from_data.size);
         memcpy(dst, desc->from_data.data, desc->from_data.size);
         raw_data.size = desc->from_data.size;
@@ -375,7 +397,7 @@ void GDIImage_RenderGraph::preInit(const GDIImageDescriptor* desc)
 GDIImageId GDIRenderer_RenderGraph::create_image(const GDIImageDescriptor* desc) SKR_NOEXCEPT
 {
     auto desc2 = static_cast<const GDIImageDescriptor_RenderGraph*>(desc->usr_data);
-    const bool useImageCoder = desc2->useImageCoder;
+    const bool useImageCoder = desc2 ? desc2->useImageCoder : false;
 
     auto image = SkrNew<GDIImage_RenderGraph>(this);
     image->async_data.aux_service = aux_service;
@@ -388,7 +410,7 @@ GDIImageId GDIRenderer_RenderGraph::create_image(const GDIImageDescriptor* desc)
     }
     else if (image->source == EGDIImageSource::Data)
     {
-        image->async_data.from_data.format = desc->format;
+        image->async_data.from_data.gdi_format = desc->format;
         image->async_data.from_data.width = desc->from_data.w;
         image->async_data.from_data.height = desc->from_data.h;
         auto dst = image->raw_data.bytes = (uint8_t*)sakura_malloc(desc->from_data.size);
@@ -401,7 +423,7 @@ GDIImageId GDIRenderer_RenderGraph::create_image(const GDIImageDescriptor* desc)
 GDITextureId GDIRenderer_RenderGraph::create_texture(const GDITextureDescriptor* desc) SKR_NOEXCEPT
 {
     auto desc2 = static_cast<const GDITextureDescriptor_RenderGraph*>(desc->usr_data);
-    const bool useImageCoder = desc2->useImageCoder;
+    const bool useImageCoder = desc2 ? desc2->useImageCoder : false;
 
     auto texture = SkrNew<GDITexture_RenderGraph>(this);
     texture->intermediate_image.async_data.aux_service = aux_service;
@@ -429,7 +451,7 @@ GDITextureId GDIRenderer_RenderGraph::create_texture(const GDITextureDescriptor*
         texture->intermediate_image.source = EGDIImageSource::Data;
         texture->intermediate_image.async_data.from_data.width = desc->from_data.w;
         texture->intermediate_image.async_data.from_data.height = desc->from_data.h;
-        texture->intermediate_image.async_data.from_data.format = desc->format;
+        texture->intermediate_image.async_data.from_data.gdi_format = desc->format;
         auto dst = texture->intermediate_image.raw_data.bytes = (uint8_t*)sakura_malloc(desc->from_data.size);
         memcpy(dst, desc->from_data.data, desc->from_data.size);
         texture->intermediate_image.raw_data.size = desc->from_data.size;
