@@ -15,6 +15,7 @@ skr::gdi::EGDIImageFormat translate_format(ImageFormat format)
     SKR_UNREACHABLE_CODE();
     return skr::gdi::EGDIImageFormat::None;
 }
+
 ImageFormat translate_format(skr::gdi::EGDIImageFormat format)
 {
     switch (format)
@@ -95,6 +96,10 @@ ImageTexture::~ImageTexture()
 
 Ref<ImageTexture> ImageTexture::create_from_image(skr::gdi::IGDIRenderer* renderer, Ref<Image> image)
 {
+    while (image.get()->underlying->get_state() != skr::gdi::EGDIResourceState::Okay)
+    {
+
+    }
     Ref<ImageTexture> texture;
     texture.instantiate();
     skr::gdi::GDITextureDescriptor desc = {};

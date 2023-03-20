@@ -96,7 +96,7 @@ struct SKR_GUI_RENDERER_API GDIImageAsyncData_RenderGraph
     {
         uint32_t width;
         uint32_t height;
-        EGDIImageFormat format;
+        EGDIImageFormat gdi_format;
         // TODO: mip_count
         // uint32_t mip_count = 0;
     } from_data;
