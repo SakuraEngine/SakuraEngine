@@ -3848,9 +3848,9 @@ void TextServerAdvanced::_realign(ShapedTextDataAdvanced *p_sd) const {
 	double full_ascent = p_sd->ascent;
 	double full_descent = p_sd->descent;
     // TODO: objects
-    SKR_UNIMPLEMENTED_FUNCTION();
     /*
 	for (auto& E : p_sd->objects) {
+	    // SKR_UNIMPLEMENTED_FUNCTION();
 		if ((E.value.pos >= p_sd->start) && (E.value.pos < p_sd->end)) {
 			if (p_sd->orientation == ORIENTATION_HORIZONTAL) {
 				switch (E.value.inline_align & INLINE_ALIGNMENT_TEXT_MASK) {
@@ -4522,10 +4522,10 @@ bool TextServerAdvanced::_shaped_text_update_breaks(const RID &p_shaped) {
 				i++;
 			}
 			int r_end = sd->spans[i].end;
-            SKR_UNIMPLEMENTED_FUNCTION();
-            /*
+			/*
 			UBreakIterator *bi = ubrk_open(UBRK_LINE, (language.is_empty()) ? TranslationServer::get_singleton()->get_tool_locale().ascii().get_data() : language.ascii().get_data(), data + _convert_pos_inv(sd, r_start), _convert_pos_inv(sd, r_end - r_start), &err);
 			if (U_FAILURE(err)) {
+			*/
 				// No data loaded - use fallback.
 				for (int j = r_start; j < r_end; j++) {
 					char32_t c = sd->text[j - sd->start];
@@ -4536,7 +4536,9 @@ bool TextServerAdvanced::_shaped_text_update_breaks(const RID &p_shaped) {
 						sd->breaks[j + 1] = true;
 					}
 				}
+			/* TODO
 			} else {
+	            SKR_UNIMPLEMENTED_FUNCTION();
 				while (ubrk_next(bi) != UBRK_DONE) {
 					int pos = _convert_pos(sd, ubrk_current(bi)) + r_start;
 					if ((ubrk_getRuleStatus(bi) >= UBRK_LINE_HARD) && (ubrk_getRuleStatus(bi) < UBRK_LINE_HARD_LIMIT)) {

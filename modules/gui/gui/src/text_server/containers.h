@@ -12,6 +12,8 @@
 #include <containers/hashmap.hpp>
 #include <EASTL/shared_ptr.h>
 
+#include "containers/sptr.hpp"
+
 #ifdef DEBUG_ENABLED
 #define SORT_ARRAY_VALIDATE_ENABLED true
 #else
@@ -210,12 +212,32 @@ using List = eastl::list<T>;
 using Variant = void*;
 
 template<class T>
-struct Ref : public eastl::shared_ptr<T>
+struct Ref : public skr::SPtr<T>
 {
 	Ref() = default;
 	Ref(T* p_ptr)
 	{
 		this->reset(p_ptr);
+	}
+	Ref(const Ref<T>& p_other) = default;
+	Ref(Ref<T>&& p_other) = default;
+	Ref<T>& operator=(const Ref<T>& p_other) = default;
+	Ref<T>& operator=(Ref<T>&& p_other) = default;
+	Ref(const skr::SPtr<T>& p_other) : skr::SPtr<T>(p_other)
+	{
+		
+	}
+	Ref(skr::SPtr<T>&& p_other) : skr::SPtr<T>(p_other)
+	{
+		
+	}
+	Ref<T>& operator=(const skr::SPtr<T>& p_other)
+	{
+		skr::SPtr<T>::operator=(p_other);
+	}
+	Ref<T>& operator=(skr::SPtr<T>&& p_other)
+	{
+		skr::SPtr<T>::operator=(p_other);
 	}
 
 	void instantiate() {
