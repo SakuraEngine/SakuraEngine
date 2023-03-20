@@ -36,6 +36,8 @@
 #include "text_server/transform_2d.h"
 #include "text_server/image_texture.h"
 
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIRenderer, skr_gdi_renderer)
+
 namespace godot{
 using TextServerVariants = HashMap<uint32_t, Vector3i>;
 using TextServerFeatures = HashMap<uint32_t, uint32_t>;
@@ -525,6 +527,10 @@ public:
 	TypedArray<Vector3i> parse_structured_text(StructuredTextParser p_parser_type, const Vector<String> &p_args, const String &p_text) const;
 
 	virtual void cleanup() {}
+
+	// ++ SKR
+	virtual skr_gdi_renderer_id get_gdi_renderer() = 0;
+	// -- SKR
 
 	TextServer();
 	~TextServer();

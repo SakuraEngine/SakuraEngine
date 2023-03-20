@@ -62,6 +62,14 @@ void Image::generate_mipmaps()
     }
 }
 
+Image::~Image()
+{
+    if (underlying)
+    {
+        underlying->get_renderer()->free_image(underlying);
+    }
+}
+
 Span<const uint8_t> Image::get_data() 
 { 
     const auto data = underlying->get_data();
@@ -77,6 +85,14 @@ ImageFormat Image::get_format() const
 }
 
 RID_PtrOwner<ImageTexture> ImageTexture::texture_owner = {};
+ImageTexture::~ImageTexture()
+{
+    if (underlying)
+    {
+        underlying->get_renderer()->free_texture(underlying);
+    }
+}
+
 Ref<ImageTexture> ImageTexture::create_from_image(skr::gdi::IGDIRenderer* renderer, Ref<Image> image)
 {
     Ref<ImageTexture> texture;

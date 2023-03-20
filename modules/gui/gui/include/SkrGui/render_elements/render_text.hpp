@@ -8,7 +8,7 @@ namespace skr {
 namespace gui {
 
 struct Paragraph;
-struct Font;
+struct FontFile;
 struct InlineType;
 
 enum class EInlineAlignment : uint32_t
@@ -50,7 +50,7 @@ private:
 
     VectorStorage<struct InlineType> inlines_;
     Paragraph* paragraph_ = nullptr;
-    skr::SPtr<Font> font_ = nullptr;
+    skr::SPtr<FontFile> font_ = nullptr;
 
     bool paragraph_dirty_ = true;
     void* draw_policy_ = nullptr;

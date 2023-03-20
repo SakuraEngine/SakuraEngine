@@ -433,8 +433,7 @@ class TextServerAdvanced : public TextServer {
 			Rect2 rect;
 			double baseline = 0;
 		};
-		// TODO: Variant
-		// HashMap<Variant, EmbeddedObject, VariantHasher, VariantComparator> objects;
+		HashMap<Variant, EmbeddedObject> objects;
 
 		/* Shaped data */
 		TextServer::Direction para_direction = DIRECTION_LTR; // Detected text direction.
@@ -903,6 +902,12 @@ public: // MODBINDs
 
 	TextServerAdvanced(const SkrGuiData& gui_data);
 	~TextServerAdvanced();
+
+	skr_gdi_renderer_id get_gdi_renderer() override
+	{
+		return gui_data.gdi_renderer;
+	}
+
 	SkrGuiData gui_data = {};
 };
 

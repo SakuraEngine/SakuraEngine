@@ -14,6 +14,7 @@ struct Image
 		FORMAT_None,
 		FORMAT_RGB8,
 		FORMAT_RGBA8,
+		FORMAT_L8,
 		FORMAT_LA8,
 		FORMAT_R8,
 		FORMAT_COUNT
@@ -22,6 +23,7 @@ struct Image
 	[[nodiscard]] static Ref<Image> create_from_data(skr::gdi::IGDIRenderer* renderer, uint32_t w, uint32_t h,
 		bool p_use_mipmaps, Format format, const Span<const uint8_t> &p_data);
 
+	~Image();
 	void generate_mipmaps();
 	Span<const uint8_t> get_data();
 	uint32_t get_width() const;
@@ -36,6 +38,7 @@ struct ImageTexture
 {
 	[[nodiscard]] static Ref<ImageTexture> create_from_image(skr::gdi::IGDIRenderer* renderer, Ref<Image> image);
 
+	~ImageTexture();
 	Size2 get_size() const;
 	void update(const Ref<Image> image);
 	RID get_rid() const;
