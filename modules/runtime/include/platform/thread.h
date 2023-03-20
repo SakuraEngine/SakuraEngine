@@ -56,7 +56,12 @@ typedef struct SMutex {
 } SMutex;
 
 typedef struct SRWMutex {
+#if defined(_WIN32) || defined(XBOX)
     SMutex m;
+#else
+    pthread_rwlock_t pHandle;
+    uint32_t mSpinCount;
+#endif
 } SRWMutex;
 
 typedef struct SConditionVariable {
