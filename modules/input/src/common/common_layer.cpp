@@ -12,6 +12,7 @@ namespace skr {
 namespace input {
 
 extern CommonInputDevice* CreateInputDevice_SDL2Keyboard(CommonInputLayer* pLayer) SKR_NOEXCEPT;
+extern CommonInputDevice* CreateInputDevice_SDL2Mouse(CommonInputLayer* pLayer) SKR_NOEXCEPT;
 
 CommonInputReading::CommonInputReading(CommonInputReadingProxy* pPool, struct CommonInputDevice* pDevice) SKR_NOEXCEPT
     : ref_count(0), pool(pPool), device(pDevice)
@@ -76,6 +77,7 @@ struct Input_Common : public CommonInputLayer
     {
         // Add SDL2 keyboard device
         devices.emplace_back(CreateInputDevice_SDL2Keyboard(this));
+        devices.emplace_back(CreateInputDevice_SDL2Mouse(this));
 
         return true;
     }
@@ -192,7 +194,8 @@ struct Input_Common : public CommonInputLayer
 
     uint32_t GetMouseState(InputReading* in_reading, InputMouseState* state) SKR_NOEXCEPT final
     {
-        return 0;
+        CommonInputReading* reading = (CommonInputReading*)in_reading;
+        return reading->GetMouseState(state);
     }
 
     virtual uint64_t GetTimestampUSec(InputReading* in_reading) SKR_NOEXCEPT final

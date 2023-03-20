@@ -186,8 +186,8 @@ struct Input_GameInput : public InputLayer
             uint32_t readCount = reading->GetKeyState(stateArrayCount, states);
             for (uint32_t i = 0; i < readCount; i++)
             {
-                stateArray[i].scan_code = states[i].scanCode;
-                stateArray[i].code_point = states[i].codePoint;
+                // stateArray[i].scan_code = states[i].scanCode;
+                // stateArray[i].code_point = states[i].codePoint;
                 stateArray[i].virtual_key = states[i].virtualKey;
                 stateArray[i].is_dead_key = states[i].isDeadKey;
             }

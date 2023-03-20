@@ -28,7 +28,7 @@ typedef enum EInputKind
     InputKindUiNavigation     = 0x01000000
 } InputKind;
 
-typedef enum InputMouseButtons
+typedef enum InputMouseButtonFlags
 {
     InputMouseNone           = 0x00000000,
     InputMouseLeftButton     = 0x00000001,
@@ -38,12 +38,13 @@ typedef enum InputMouseButtons
     InputMouseButton5        = 0x00000010,
     InputMouseWheelTiltLeft  = 0x00000020,
     InputMouseWheelTiltRight = 0x00000040
-} InputMouseButtons;
+} InputMouseButtonFlags;
+typedef uint32_t InputMouseButtons;
 
 struct InputKeyState
 {
-    uint32_t scan_code;  
-    uint32_t code_point;  
+    // uint32_t scan_code;  
+    // uint32_t code_point;  
     SInputKeyCode virtual_key;  
     bool is_dead_key;  
 };
