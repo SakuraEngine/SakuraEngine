@@ -5513,8 +5513,9 @@ bool TextServerAdvanced::_shaped_text_shape(const RID &p_shaped) {
 						if (span.embedded_key != Variant()) {
 							// Embedded object.
 							if (sd->orientation == ORIENTATION_HORIZONTAL) {
-								sd->objects[span.embedded_key].rect.position.x = sd->width;
-								sd->width += sd->objects[span.embedded_key].rect.size.x;
+								auto& rect = sd->objects[span.embedded_key].rect;
+								rect.position.x = sd->width;
+								sd->width += rect.size.x;
 							} else {
 								sd->objects[span.embedded_key].rect.position.y = sd->width;
 								sd->width += sd->objects[span.embedded_key].rect.size.y;

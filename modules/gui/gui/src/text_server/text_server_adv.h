@@ -419,7 +419,7 @@ class TextServerAdvanced : public TextServer {
 			Vector<RID> fonts;
 			int font_size = 0;
 
-			Variant embedded_key;
+			Variant embedded_key = Variant();
 
 			String language;
 			TextServerFeatures features;
