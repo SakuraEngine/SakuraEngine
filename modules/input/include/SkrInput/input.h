@@ -87,7 +87,7 @@ struct SKR_INPUT_API InputLayer
 
     virtual void GetDevice(InputReading* reading, InputDevice** out_device) SKR_NOEXCEPT = 0;
     virtual uint32_t GetKeyState(InputReading* reading, uint32_t stateArrayCount, InputKeyState* stateArray) SKR_NOEXCEPT = 0;
-    virtual uint32_t GetMouseState(InputReading* reading, InputMouseState* state) SKR_NOEXCEPT = 0;
+    virtual bool GetMouseState(InputReading* reading, InputMouseState* state) SKR_NOEXCEPT = 0;
     virtual uint64_t GetTimestampUSec(InputReading* reading) SKR_NOEXCEPT = 0;
 
     virtual void Release(InputReading* reading) SKR_NOEXCEPT = 0;

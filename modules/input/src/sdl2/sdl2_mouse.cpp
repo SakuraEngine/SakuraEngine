@@ -36,21 +36,21 @@ struct InputReading_SDL2Mouse : public CommonInputReading
         return 0;
     }
 
-    uint32_t GetMouseState(InputMouseState* state) SKR_NOEXCEPT final
+    bool GetMouseState(InputMouseState* state) SKR_NOEXCEPT final
     {
         state->buttons = 0;
         state->buttons |= (State.ButtonFlags & SDL_BUTTON(SDL_BUTTON_LEFT)) ? InputMouseLeftButton : 0;
         state->buttons |= (State.ButtonFlags & SDL_BUTTON(SDL_BUTTON_RIGHT)) ? InputMouseRightButton : 0;
         state->buttons |= (State.ButtonFlags & SDL_BUTTON(SDL_BUTTON_MIDDLE)) ? InputMouseMiddleButton : 0;
         state->buttons |= (State.ButtonFlags & SDL_BUTTON(SDL_BUTTON_X1)) ? InputMouseButton4 : 0;
-        state->buttons |= (State.ButtonFlags & SDL_BUTTON(SDL_BUTTON_X2)) ? InputMouseButton4 : 0;
+        state->buttons |= (State.ButtonFlags & SDL_BUTTON(SDL_BUTTON_X2)) ? InputMouseButton5 : 0;
 
         state->positionX = State.x;
         state->positionY = State.y;
         state->wheelX = 0;
         state->wheelY = 0;
 
-        return 1;
+        return true;
     }
 
     bool Equal(const MouseState& state)

@@ -49,7 +49,7 @@ struct InputReading_SDL2Keyboard : public CommonInputReading
         return n;
     }
 
-    uint32_t GetMouseState(InputMouseState* state) SKR_NOEXCEPT final
+    bool GetMouseState(InputMouseState* state) SKR_NOEXCEPT final
     {
         return 0;
     }

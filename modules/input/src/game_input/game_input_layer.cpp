@@ -196,7 +196,7 @@ struct Input_GameInput : public InputLayer
         return 0;
     }
 
-    uint32_t GetMouseState(InputReading* in_reading, InputMouseState* out_state) SKR_NOEXCEPT final
+    bool GetMouseState(InputReading* in_reading, InputMouseState* out_state) SKR_NOEXCEPT final
     {
         if (auto reading = (IGameInputReading*)in_reading)
         {
@@ -210,9 +210,9 @@ struct Input_GameInput : public InputLayer
                 out_state->wheelX = state.wheelX;
                 out_state->wheelY = state.wheelY;
             }
-            return 1;
+            return true;
         }
-        return 0;
+        return false;
     }
 
     virtual uint64_t GetTimestampUSec(InputReading* in_reading) SKR_NOEXCEPT final

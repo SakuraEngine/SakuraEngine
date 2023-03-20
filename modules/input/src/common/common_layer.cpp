@@ -192,7 +192,7 @@ struct Input_Common : public CommonInputLayer
         return reading->GetKeyState(stateArrayCount, stateArray);
     }
 
-    uint32_t GetMouseState(InputReading* in_reading, InputMouseState* state) SKR_NOEXCEPT final
+    bool GetMouseState(InputReading* in_reading, InputMouseState* state) SKR_NOEXCEPT final
     {
         CommonInputReading* reading = (CommonInputReading*)in_reading;
         return reading->GetMouseState(state);

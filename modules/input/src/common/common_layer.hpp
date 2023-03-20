@@ -33,7 +33,7 @@ struct SKR_INPUT_API CommonInputReading
     }
 
     virtual uint32_t GetKeyState(uint32_t stateArrayCount, InputKeyState* stateArray) SKR_NOEXCEPT = 0;
-    virtual uint32_t GetMouseState(InputMouseState* state) SKR_NOEXCEPT = 0;
+    virtual bool GetMouseState(InputMouseState* state) SKR_NOEXCEPT = 0;
     virtual uint64_t GetTimestamp() const SKR_NOEXCEPT = 0;
     virtual EInputKind GetInputKind() const SKR_NOEXCEPT = 0;
 
