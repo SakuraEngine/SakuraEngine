@@ -5,7 +5,7 @@
     case (k):                   \
         return (sdlk);
 
-SDL_Scancode KeyCodeTranslator(EKeyCode keycode)
+inline static SDL_Scancode KeyCodeTranslator(EKeyCode keycode)
 {
     switch (keycode)
     {

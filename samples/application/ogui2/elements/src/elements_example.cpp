@@ -263,8 +263,8 @@ struct KeyboardTest
                 for (uint32_t j = 0; j < readCount; j++)
                 {
                     auto k = keystates[j];
-                    SKR_LOG_INFO("GameInput: ScanCode:0x%02X, CodePoint:0x%02X, Key:0x%02X, Timestamp: %ld, Elapsed: %d us(%d ms), Dead:%d",
-                        k.scan_code, k.code_point, keystates[j].virtual_key, timestamp, elapsed_us, elapsed_us / 1000, k.is_dead_key);
+                    SKR_LOG_INFO("GameInput: Key:0x%02X, Timestamp: %lld, Elapsed: %d us(%d ms), Dead:%d",
+                        keystates[j].virtual_key, timestamp, elapsed_us, elapsed_us / 1000, k.is_dead_key);
                 }
                 if (pReading) pLayer->Release(pReading);
             }
@@ -286,7 +286,10 @@ struct ClickListener
     bool WasUp = false;
     uint32_t Counter = 0;
     uint32_t ThresholdInMs = 0;
-    bool isDown(const skr::input::InputMouseState& state) { return (state.buttons & skr::input::InputMouseLeftButton); }
+    bool isDown(const skr::input::InputMouseState& state) 
+    { 
+        return (state.buttons & skr::input::InputMouseLeftButton) && (state.buttons & skr::input::InputMouseRightButton); 
+    }
 
     uint32_t Trigger()
     {
@@ -306,7 +309,8 @@ struct ClickListener
                         if (previous && pLayer->GetTimestampUSec(previous) + ThresholdInMs * 1000.f >= pLayer->GetTimestampUSec(current))
                         {
                             Counter++;
-                        } else /* new click */ {
+                        } 
+                        else /* new click */ {
                             if (Mouse) pLayer->Release(Mouse);
                             pLayer->GetDevice(current, &Mouse); 
                             Counter = 1;
