@@ -40,7 +40,10 @@ FORCEINLINE static bool skr_init_mutex_recursive(SMutex* pMutex)
     return status == 0;
 }
 
-FORCEINLINE static void skr_destroy_mutex(SMutex* pMutex) { pthread_mutex_destroy(&pMutex->pHandle); }
+FORCEINLINE static void skr_destroy_mutex(SMutex* pMutex) 
+{ 
+    pthread_mutex_destroy(&pMutex->pHandle); 
+}
 
 FORCEINLINE static void skr_acquire_mutex(SMutex* pMutex)
 {
@@ -57,9 +60,68 @@ FORCEINLINE static void skr_acquire_mutex(SMutex* pMutex)
     }
 }
 
-FORCEINLINE static bool skr_try_acquire_mutex(SMutex* pMutex) { return pthread_mutex_trylock(&pMutex->pHandle) == 0; }
+FORCEINLINE static bool skr_try_acquire_mutex(SMutex* pMutex) 
+{ 
+    return pthread_mutex_trylock(&pMutex->pHandle) == 0; 
+}
 
-FORCEINLINE static void skr_release_mutex(SMutex* pMutex) { pthread_mutex_unlock(&pMutex->pHandle); }
+FORCEINLINE static void skr_release_mutex(SMutex* pMutex) 
+{ 
+    pthread_mutex_unlock(&pMutex->pHandle); 
+}
+
+/// implementation of rw mutex
+
+FORCEINLINE static bool skr_init_mutex_rw(SRWMutex* pMutex)
+{
+    pMutex->mSpinCount = MUTEX_DEFAULT_SPIN_COUNT;
+    pMutex->pHandle = (pthread_rwlock_t)PTHREAD_RWLOCK_INITIALIZER;
+    pthread_mutexattr_t attr;
+    int status = 0;
+    return status == 0;
+}
+
+FORCEINLINE static void skr_destroy_rw_mutex(SRWMutex* pMutex) 
+{ 
+    pthread_rwlock_destroy(&pMutex->pHandle); 
+}
+
+FORCEINLINE static void skr_acquire_mutex_r(SRWMutex* pMutex)
+{
+    uint32_t count = 0;
+
+    while (count < pMutex->mSpinCount && pthread_rwlock_tryrdlock(&pMutex->pHandle) != 0)
+        ++count;
+
+    if (count == pMutex->mSpinCount)
+    {
+        int r = pthread_rwlock_rdlock(&pMutex->pHandle);
+        (void)r;
+        assert(r == 0 && "RWMutex::Acquire failed to take the read lock");
+    }
+}
+
+FORCEINLINE static void skr_acquire_mutex_w(SRWMutex* pMutex)
+{
+    uint32_t count = 0;
+
+    while (count < pMutex->mSpinCount && pthread_rwlock_trywrlock(&pMutex->pHandle) != 0)
+        ++count;
+
+    if (count == pMutex->mSpinCount)
+    {
+        int r = pthread_rwlock_wrlock(&pMutex->pHandle);
+        (void)r;
+        assert(r == 0 && "RWMutex::Acquire failed to take the write lock");
+    }
+}
+
+FORCEINLINE static void skr_release_rw_mutex(SRWMutex* pMutex)
+{
+    pthread_rwlock_unlock(&pMutex->pHandle); 
+}
+
+/// implementation of cv
 
 FORCEINLINE static bool skr_init_condition_var(SConditionVariable* pCv)
 {
