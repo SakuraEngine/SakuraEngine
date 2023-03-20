@@ -19,7 +19,7 @@ typedef struct skr_live2d_render_model_request_t {
     CGPUDStorageQueueId memory_dstorage_queue_override;
     ECGPUDStorageSource dstorage_source;
     skr_live2d_render_model_id render_model;
-    SAtomic32 io_status;
+    SAtomicU32 io_status;
     bool use_dynamic_buffer;
 #ifdef __cplusplus
     SKR_LIVE2D_API bool is_ready() const SKR_NOEXCEPT;

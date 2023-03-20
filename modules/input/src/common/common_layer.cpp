@@ -93,13 +93,13 @@ struct Input_Common : public CommonInputLayer
 
     bool SetEnabled(bool _enabled) SKR_NOEXCEPT final
     {
-        skr_atomic32_store_release(&enabled, _enabled ? 1 : 0);
+        skr_atomicu32_store_release(&enabled, _enabled ? 1 : 0);
         return true;
     }
     
     bool IsEnabled() const SKR_NOEXCEPT final
     {
-        auto enabled_val = skr_atomic32_load_acquire(&enabled);
+        auto enabled_val = skr_atomicu32_load_acquire(&enabled);
         return enabled_val;
     }
 
@@ -256,7 +256,7 @@ struct Input_Common : public CommonInputLayer
 
     ReadingRing<CommonInputReading*> GlobalReadingQueue;
     skr::vector<CommonInputDevice*> devices;
-    SAtomic32 enabled = true;
+    SAtomicU32 enabled = true;
 };
 
 InputLayer* Input_Common_Create() SKR_NOEXCEPT

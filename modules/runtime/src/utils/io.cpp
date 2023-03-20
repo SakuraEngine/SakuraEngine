@@ -23,5 +23,5 @@ bool skr_async_request_t::is_vram_loading() const SKR_NOEXCEPT
 
 SkrAsyncIOStatus skr_async_request_t::get_status() const SKR_NOEXCEPT
 {
-    return (SkrAsyncIOStatus)skr_atomic32_load_acquire(&status);
+    return (SkrAsyncIOStatus)skr_atomicu32_load_acquire(&status);
 }

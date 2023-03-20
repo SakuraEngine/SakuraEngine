@@ -37,12 +37,12 @@ struct L2DRequestCallbackData
     uint32_t phys_count;
     uint32_t pose_count;
     uint32_t usr_data_count;
-    SAtomic32 finished_expressions;
-    SAtomic32 finished_motions;
-    SAtomic32 finished_models;
-    SAtomic32 finished_physics;
-    SAtomic32 finished_poses;
-    SAtomic32 finished_usr_data;
+    SAtomicU32 finished_expressions;
+    SAtomicU32 finished_motions;
+    SAtomicU32 finished_models;
+    SAtomicU32 finished_physics;
+    SAtomicU32 finished_poses;
+    SAtomicU32 finished_usr_data;
 
     void partial_finished() SKR_NOEXCEPT;
 };

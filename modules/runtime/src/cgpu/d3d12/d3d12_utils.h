@@ -92,7 +92,7 @@ typedef struct D3D12Util_DescriptorHeap {
     /// Lock for multi-threaded descriptor allocations
     struct SMutex* pMutex;
     /// Used
-    SAtomic32 mUsedDescriptors;
+    SAtomicU32 mUsedDescriptors;
 #else
     /// Used
     uint32_t mUsedDescriptors;

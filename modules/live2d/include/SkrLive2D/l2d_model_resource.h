@@ -60,7 +60,7 @@ typedef void (*skr_async_live2d_io_callback_t)(struct skr_live2d_ram_io_request_
 typedef struct skr_live2d_ram_io_request_t {
     struct skr_vfs_t* vfs_override;
     skr_async_request_t settingsRequest;
-    SAtomic32 liv2d_status;
+    SAtomicU32 liv2d_status;
     skr_live2d_model_resource_id model_resource;
     skr_async_live2d_io_callback_t finish_callback;
     void* callback_data;
@@ -71,7 +71,7 @@ typedef struct skr_live2d_ram_io_request_t {
     }
     SkrAsyncIOStatus get_status() const SKR_NOEXCEPT
     {
-        return (SkrAsyncIOStatus)skr_atomic32_load_acquire(&liv2d_status);
+        return (SkrAsyncIOStatus)skr_atomicu32_load_acquire(&liv2d_status);
     }
 #endif
 } skr_live2d_ram_io_request_t;

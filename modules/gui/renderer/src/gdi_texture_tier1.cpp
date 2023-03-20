@@ -99,7 +99,7 @@ inline static void function_append(eastl::function<void()>& func1, const eastl::
 
 EGDIResourceState GDIImage_RenderGraph::get_state() const SKR_NOEXCEPT
 {
-    const auto result = skr_atomic32_load_relaxed(&state);
+    const auto result = skr_atomicu32_load_relaxed(&state);
     return static_cast<EGDIResourceState>(result);
 }
 
@@ -153,7 +153,7 @@ EGDIImageFormat GDIImage_RenderGraph::get_format() const SKR_NOEXCEPT
 
 EGDIResourceState GDITexture_RenderGraph::get_state() const SKR_NOEXCEPT
 {
-    const auto result = skr_atomic32_load_relaxed(&state);
+    const auto result = skr_atomicu32_load_relaxed(&state);
     return static_cast<EGDIResourceState>(result);
 }
 
@@ -185,7 +185,7 @@ void GDIRenderer_RenderGraph::free_image(GDIImageId img) SKR_NOEXCEPT
     {
         // wait creation...
     }
-    skr_atomic32_store_release(&image->state, static_cast<uint32_t>(EGDIResourceState::Finalizing));
+    skr_atomicu32_store_release(&image->state, static_cast<uint32_t>(EGDIResourceState::Finalizing));
 }
 
 void GDIRenderer_RenderGraph::free_texture(GDITextureId tex) SKR_NOEXCEPT
@@ -196,7 +196,7 @@ void GDIRenderer_RenderGraph::free_texture(GDITextureId tex) SKR_NOEXCEPT
     {
         // wait creation...
     }
-    skr_atomic32_store_release(&texture->state, static_cast<uint32_t>(EGDIResourceState::Finalizing));
+    skr_atomicu32_store_release(&texture->state, static_cast<uint32_t>(EGDIResourceState::Finalizing));
     if (texture->texture_view) cgpu_free_texture_view(texture->texture_view);
     if (texture->texture) cgpu_free_texture(texture->texture);
     if (texture->bind_table) cgpux_free_bind_table(texture->bind_table);
@@ -208,13 +208,13 @@ GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* o
     SKR_ASSERT(owner);
 
     function_append(this->ram_io_enqueued_callback, [image = owner](){
-        skr_atomic32_store_release(&image->state, static_cast<uint32_t>(EGDIResourceState::Loading));
+        skr_atomicu32_store_release(&image->state, static_cast<uint32_t>(EGDIResourceState::Loading));
     });
     function_append(this->ram_io_finished_callback, [image = owner](){
-        skr_atomic32_store_release(&image->state, static_cast<uint32_t>(EGDIResourceState::Initializing));
+        skr_atomicu32_store_release(&image->state, static_cast<uint32_t>(EGDIResourceState::Initializing));
     });
     function_append(this->ram_data_finsihed_callback, [image = owner](){
-        skr_atomic32_store_release(&image->state, static_cast<uint32_t>(EGDIResourceState::Okay));
+        skr_atomicu32_store_release(&image->state, static_cast<uint32_t>(EGDIResourceState::Okay));
     });
     
     if (owner->source == EGDIImageSource::File)
@@ -315,7 +315,7 @@ GDITextureId GDITextureAsyncData_RenderGraph::DoAsync(struct GDITexture_RenderGr
                 texture->texture = texture->async_data.vram_destination.texture;
                 texture->intializeBindTable();
 
-                skr_atomic32_store_release(&texture->state, static_cast<uint32_t>(EGDIResourceState::Okay));
+                skr_atomicu32_store_release(&texture->state, static_cast<uint32_t>(EGDIResourceState::Okay));
                 if (intermediate_image.pixel_data.bytes != intermediate_image.raw_data.bytes)
                 {
                     sakura_free(intermediate_image.pixel_data.bytes); // free image_coder decoded data
@@ -334,10 +334,10 @@ GDITextureId GDITextureAsyncData_RenderGraph::DoAsync(struct GDITexture_RenderGr
     {
         auto& image_async_data = owner->intermediate_image.async_data;
         function_append(image_async_data.ram_io_enqueued_callback, [texture = owner](){
-            skr_atomic32_store_release(&texture->state, static_cast<uint32_t>(EGDIResourceState::Loading));
+            skr_atomicu32_store_release(&texture->state, static_cast<uint32_t>(EGDIResourceState::Loading));
         });
         function_append(image_async_data.ram_io_finished_callback, [texture = owner](){
-            skr_atomic32_store_release(&texture->state, static_cast<uint32_t>(EGDIResourceState::Initializing));
+            skr_atomicu32_store_release(&texture->state, static_cast<uint32_t>(EGDIResourceState::Initializing));
         });
         function_append(image_async_data.ram_data_finsihed_callback,  vram_request_from_image);
         // ram + vram
@@ -346,9 +346,9 @@ GDITextureId GDITextureAsyncData_RenderGraph::DoAsync(struct GDITexture_RenderGr
     }
     else if (owner->source == EGDITextureSource::Image)
     {
-        skr_atomic32_store_release(&owner->state, static_cast<uint32_t>(EGDIResourceState::Initializing));
+        skr_atomicu32_store_release(&owner->state, static_cast<uint32_t>(EGDIResourceState::Initializing));
         vram_request_from_image();
-        skr_atomic32_store_release(&owner->state, static_cast<uint32_t>(EGDIResourceState::Okay));
+        skr_atomicu32_store_release(&owner->state, static_cast<uint32_t>(EGDIResourceState::Okay));
     }
     return owner;
 }

@@ -99,7 +99,7 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
         {
             if (coder) skr_image_coder_free_image(coder);
         }
-        skr_atomic32_store_relaxed(&request->io_status, SKR_ASYNC_IO_STATUS_OK);
+        skr_atomicu32_store_relaxed(&request->io_status, SKR_ASYNC_IO_STATUS_OK);
         request = nullptr;
     }
     void try_finish()
@@ -125,7 +125,7 @@ bool skr_live2d_render_model_request_t::is_ready() const SKR_NOEXCEPT
 
 SkrAsyncIOStatus skr_live2d_render_model_request_t::get_status() const SKR_NOEXCEPT
 {
-    return (SkrAsyncIOStatus)skr_atomic32_load_acquire(&io_status);
+    return (SkrAsyncIOStatus)skr_atomicu32_load_acquire(&io_status);
 }
 
 #ifndef SKR_SERIALIZE_GURAD

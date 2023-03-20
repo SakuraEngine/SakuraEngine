@@ -44,11 +44,11 @@ public:
     // running status
     void setServiceStatus(SkrAsyncServiceStatus status)
     {
-        skr_atomic32_store_relaxed(&_running_status, status);
+        skr_atomicu32_store_relaxed(&_running_status, status);
     }
     SkrAsyncServiceStatus getServiceStatus() const
     {
-        return (SkrAsyncServiceStatus)skr_atomic32_load_acquire(&_running_status);
+        return (SkrAsyncServiceStatus)skr_atomicu32_load_acquire(&_running_status);
     }
 
     // util methods
@@ -96,7 +96,7 @@ public:
 
     void set_sleep_time_(uint32_t ms) SKR_NOEXCEPT
     {
-        skr_atomic32_store_relaxed(&_sleepTime, ms);
+        skr_atomicu32_store_relaxed(&_sleepTime, ms);
     }
 
     // running modes
@@ -105,9 +105,9 @@ public:
     // for condvar mode sleep
     SMutex sleepMutex;
     SConditionVariable sleepCv;
-    SAtomic32 _sleepTime = 30 /*ms*/;
+    SAtomicU32 _sleepTime = 30 /*ms*/;
     // service settings & states
-    SAtomic32 _running_status /*SkrAsyncServiceStatus*/;
+    SAtomicU32 _running_status /*SkrAsyncServiceStatus*/;
     // can be simply exchanged by atomic vars to support runtime mode modify
     SkrAsyncServiceSortMethod sortMethod = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
     SkrAsyncServiceSleepMode sleepMode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
@@ -130,14 +130,14 @@ struct TaskBase
 
     SkrAsyncIOStatus getTaskStatus() const
     {
-        return (SkrAsyncIOStatus)skr_atomic32_load_acquire(&request->status);
+        return (SkrAsyncIOStatus)skr_atomicu32_load_acquire(&request->status);
     }
     
     void setTaskStatus(SkrAsyncIOStatus value)
     {
         if (callbacks[value] != nullptr)
             callbacks[value](request, callback_datas[value]);
-        skr_atomic32_store_relaxed(&request->status, value);
+        skr_atomicu32_store_relaxed(&request->status, value);
     }
 };
 
@@ -191,7 +191,7 @@ struct TaskContainer
             tasks.erase(
                 eastl::remove_if(tasks.begin(), tasks.end(),
                     [](Task& t) {
-                        bool cancelled = skr_atomic32_load_relaxed(&t.request->request_cancel);
+                        bool cancelled = skr_atomicu32_load_relaxed(&t.request->request_cancel);
                         cancelled &= t.request->is_cancelled() || t.request->is_enqueued();
                         if (cancelled)
                             t.setTaskStatus(SKR_ASYNC_IO_STATUS_CANCELLED);
@@ -275,7 +275,7 @@ struct TaskContainer
             }
             back.setTaskStatus(SKR_ASYNC_IO_STATUS_ENQUEUED);
             tasks.emplace_back(back);
-            skr_atomic32_store_release(&back.request->request_cancel, 0);
+            skr_atomicu32_store_release(&back.request->request_cancel, 0);
             TracyCZoneEnd(requestZone);
         }
         else
@@ -287,7 +287,7 @@ struct TaskContainer
                 ZoneScopedN("EnqueueLockless");
                 task_requests.enqueue(back);
             }
-            skr_atomic32_store_release(&back.request->request_cancel, 0);
+            skr_atomicu32_store_release(&back.request->request_cancel, 0);
             TracyCZoneEnd(requestZone);
         }
     }
@@ -316,7 +316,7 @@ struct TaskContainer
 
     void defer_cancel_(skr_async_request_t* request) 
     {
-        skr_atomic32_store_release(&request->request_cancel, 1);
+        skr_atomicu32_store_release(&request->request_cancel, 1);
     }
 
     const bool isLockless = false;
@@ -352,7 +352,7 @@ public:
     {
         auto service = this;
         AsyncServiceBase::sleep_();
-        const auto sleepTimeVal = skr_atomic32_load_acquire(&service->_sleepTime);
+        const auto sleepTimeVal = skr_atomicu32_load_acquire(&service->_sleepTime);
         {
             service->setServiceStatus(SKR_ASYNC_SERVICE_STATUS_SLEEPING);
             if (service->sleepMode == SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP && sleepTimeVal != 0)
@@ -392,7 +392,7 @@ public:
     virtual void request_() SKR_NOEXCEPT override
     {
         // unlock cv
-        const auto sleepTimeVal = skr_atomic32_load_acquire(&_sleepTime);
+        const auto sleepTimeVal = skr_atomicu32_load_acquire(&_sleepTime);
         if (sleepTimeVal == SKR_ASYNC_SERVICE_SLEEP_TIME_MAX && sleepMode == SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR)
         {
             SMutexLock sleepLock(sleepMutex);
@@ -435,18 +435,18 @@ public:
     // thread status
     void setThreadStatus(_SkrIOThreadStatus status)
     {   
-        skr_atomic32_store_relaxed(&_thread_status, status);
+        skr_atomicu32_store_relaxed(&_thread_status, status);
     }
 
     _SkrIOThreadStatus getThreadStatus() const
     {
-        return (_SkrIOThreadStatus)skr_atomic32_load_acquire(&_thread_status);
+        return (_SkrIOThreadStatus)skr_atomicu32_load_acquire(&_thread_status);
     }
 
     // thread items
     SThreadDesc threadItem = {};
     SThreadHandle serviceThread;
-    SAtomic32 _thread_status = _SKR_IO_THREAD_STATUS_RUNNING /*IOThreadStatus*/;
+    SAtomicU32 _thread_status = _SKR_IO_THREAD_STATUS_RUNNING /*IOThreadStatus*/;
 };
 
 }

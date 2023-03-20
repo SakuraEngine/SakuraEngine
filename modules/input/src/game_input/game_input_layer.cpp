@@ -107,13 +107,13 @@ struct Input_GameInput : public InputLayer
 
     bool SetEnabled(bool _enabled) SKR_NOEXCEPT final
     {
-        skr_atomic32_store_release(&enabled, _enabled ? 1 : 0);
+        skr_atomicu32_store_release(&enabled, _enabled ? 1 : 0);
         return true;
     }
     
     bool IsEnabled() const SKR_NOEXCEPT final
     {
-        auto enabled_val = skr_atomic32_load_acquire(&enabled);
+        auto enabled_val = skr_atomicu32_load_acquire(&enabled);
         return enabled_val;
     }
 
@@ -246,7 +246,7 @@ struct Input_GameInput : public InputLayer
     }
 
     using ProcType = decltype(GameInputCreate);
-    SAtomic32 enabled = 1;
+    SAtomicU32 enabled = 1;
     IGameInput* game_input = nullptr;
     bool Initialized = true;
 };

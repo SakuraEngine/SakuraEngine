@@ -64,8 +64,8 @@ typedef enum SkrAsyncServiceSortMethod
 } SkrAsyncServiceSortMethod;
 
 typedef struct skr_async_request_t {
-    SAtomic32 status;
-    SAtomic32 request_cancel;
+    SAtomicU32 status;
+    SAtomicU32 request_cancel;
 #ifdef __cplusplus
     RUNTIME_API bool is_ready() const SKR_NOEXCEPT;
     RUNTIME_API bool is_enqueued() const SKR_NOEXCEPT;

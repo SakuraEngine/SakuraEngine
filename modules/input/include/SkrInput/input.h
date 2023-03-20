@@ -36,8 +36,8 @@ typedef enum InputMouseButtonFlags
     InputMouseMiddleButton   = 0x00000004,
     InputMouseButton4        = 0x00000008,
     InputMouseButton5        = 0x00000010,
-    InputMouseWheelTiltLeft  = 0x00000020,
-    InputMouseWheelTiltRight = 0x00000040
+    // InputMouseWheelTiltLeft  = 0x00000020,
+    // InputMouseWheelTiltRight = 0x00000040
 } InputMouseButtonFlags;
 typedef uint32_t InputMouseButtons;
 
