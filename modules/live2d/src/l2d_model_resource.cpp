@@ -13,18 +13,18 @@
 
 void L2DRequestCallbackData::partial_finished() SKR_NOEXCEPT
 {
-    auto _e = skr_atomic32_load_acquire(&finished_expressions);
-    auto _m = skr_atomic32_load_acquire(&finished_models);
-    auto _ph = skr_atomic32_load_acquire(&finished_physics);
-    auto _po = skr_atomic32_load_acquire(&finished_poses);
-    auto _ud = skr_atomic32_load_acquire(&finished_usr_data);
-    auto _mo = skr_atomic32_load_acquire(&finished_motions);
+    auto _e = skr_atomicu32_load_acquire(&finished_expressions);
+    auto _m = skr_atomicu32_load_acquire(&finished_models);
+    auto _ph = skr_atomicu32_load_acquire(&finished_physics);
+    auto _po = skr_atomicu32_load_acquire(&finished_poses);
+    auto _ud = skr_atomicu32_load_acquire(&finished_usr_data);
+    auto _mo = skr_atomicu32_load_acquire(&finished_motions);
     if (_e == expression_count && _m == model_count && _ph == phys_count &&
             _po == pose_count && _ud == usr_data_count && _mo == motion_count)
     {
         model_resource->on_finished();
         motions_resource->on_finished();
-        skr_atomic32_store_relaxed(&live2dRequest->liv2d_status, SKR_ASYNC_IO_STATUS_OK);
+        skr_atomicu32_store_relaxed(&live2dRequest->liv2d_status, SKR_ASYNC_IO_STATUS_OK);
         live2dRequest->finish_callback(live2dRequest, live2dRequest->callback_data);
         SkrDelete(this);
     }
@@ -74,7 +74,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             _this->LoadModel(_this->modelDestination.bytes, (L2DF::csmSizeInt)_this->modelDestination.size);
             sakura_free(_this->modelDestination.bytes);
             
-            skr_atomic32_add_relaxed(&_this->cbData->finished_models, 1);
+            skr_atomicu32_add_relaxed(&_this->cbData->finished_models, 1);
             _this->cbData->partial_finished();
         };
         ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)this;
@@ -96,7 +96,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             _this->LoadPhysics(_this->physicsDestination.bytes, (L2DF::csmSizeInt)_this->physicsDestination.size);
             sakura_free(_this->physicsDestination.bytes);
             
-            skr_atomic32_add_relaxed(&_this->cbData->finished_physics, 1);
+            skr_atomicu32_add_relaxed(&_this->cbData->finished_physics, 1);
             _this->cbData->partial_finished();
         };
         ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)this;
@@ -118,7 +118,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             _this->LoadPose(_this->poseDestination.bytes, (L2DF::csmSizeInt)_this->poseDestination.size);
             sakura_free(_this->poseDestination.bytes);
             
-            skr_atomic32_add_relaxed(&_this->cbData->finished_poses, 1);
+            skr_atomicu32_add_relaxed(&_this->cbData->finished_poses, 1);
             _this->cbData->partial_finished();
         };
         ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)this;
@@ -140,7 +140,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             _this->LoadUserData(_this->usrDataDestination.bytes, (L2DF::csmSizeInt)_this->usrDataDestination.size);
             sakura_free(_this->usrDataDestination.bytes);
             
-            skr_atomic32_add_relaxed(&_this->cbData->finished_usr_data, 1);
+            skr_atomicu32_add_relaxed(&_this->cbData->finished_usr_data, 1);
             _this->cbData->partial_finished();
         };
         ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)this;
@@ -400,7 +400,7 @@ void csmExpressionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallba
             map[name.c_str()] = CubismExpressionMotion::Create(destination.bytes, (L2DF::csmSizeInt)destination.size);
             sakura_free(destination.bytes);
             
-            skr_atomic32_add_relaxed(&_this->cbData->finished_expressions, 1);
+            skr_atomicu32_add_relaxed(&_this->cbData->finished_expressions, 1);
             _this->cbData->partial_finished();
         };
         ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)this;
@@ -480,7 +480,7 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             map[entry.first.c_str()][entry.second] = L2DF::CubismMotion::Create(destination.bytes, (L2DF::csmSizeInt)destination.size);
             sakura_free(destination.bytes);
             
-            skr_atomic32_add_relaxed(&_this->cbData->finished_motions, 1);
+            skr_atomicu32_add_relaxed(&_this->cbData->finished_motions, 1);
             _this->cbData->partial_finished();
         };
         ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)this;

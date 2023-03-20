@@ -1376,7 +1376,7 @@ D3D12Util_DescriptorHandle D3D12Util_ConsumeDescriptorHandles(D3D12Util_Descript
 
             uint32_t* rangeSizes = (uint32_t*)alloca(pHeap->mUsedDescriptors * sizeof(uint32_t));
 #ifdef CGPU_THREAD_SAFETY
-            uint32_t usedDescriptors = skr_atomic32_load_relaxed(&pHeap->mUsedDescriptors);
+            uint32_t usedDescriptors = skr_atomicu32_load_relaxed(&pHeap->mUsedDescriptors);
 #else
             uint32_t usedDescriptors = pHeap->mUsedDescriptors;
 #endif
@@ -1419,7 +1419,7 @@ D3D12Util_DescriptorHandle D3D12Util_ConsumeDescriptorHandles(D3D12Util_Descript
         }
     }
 #ifdef CGPU_THREAD_SAFETY
-    uint32_t usedDescriptors = skr_atomic32_add_relaxed(&pHeap->mUsedDescriptors, descriptorCount);
+    uint32_t usedDescriptors = skr_atomicu32_add_relaxed(&pHeap->mUsedDescriptors, descriptorCount);
 #else
     uint32_t usedDescriptors = pHeap->mUsedDescriptors = pHeap->mUsedDescriptors + descriptorCount;
 #endif

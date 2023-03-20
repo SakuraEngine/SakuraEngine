@@ -1,5 +1,6 @@
 #include "../common/common_device_base.hpp"
 #include <SDL2/SDL_mouse.h>
+#include <SDL2/SDL_events.h>
 #include <EASTL/fixed_vector.h>
 #include <algorithm>
 
@@ -11,6 +12,8 @@ struct MouseState
     uint32_t ButtonFlags;
     int x = 0;
     int y = 0;
+    int64_t wheelX = 0;
+    int64_t wheelY = 0;
 };
 
 struct InputReading_SDL2Mouse : public CommonInputReading
@@ -47,8 +50,8 @@ struct InputReading_SDL2Mouse : public CommonInputReading
 
         state->positionX = State.x;
         state->positionY = State.y;
-        state->wheelX = 0;
-        state->wheelY = 0;
+        state->wheelX = State.wheelX;
+        state->wheelY = State.wheelY;
 
         return true;
     }
@@ -97,10 +100,26 @@ struct InputDevice_SDL2Mouse : public CommonInputDeviceBase<InputReading_SDL2Mou
         return kind == EInputKind::InputKindMouse;
     }
 
-    static void updateScan(MouseState& outState)
+    void updateScan(MouseState& outState)
     {
         outState.ButtonFlags = SDL_GetMouseState(&outState.x, &outState.y);
+        SDL_PumpEvents();
+        SDL_Event events[8];		
+        if (auto count = SDL_PeepEvents(events, 8, SDL_GETEVENT, SDL_MOUSEWHEEL, SDL_MOUSEWHEEL))
+        {
+            for (int i = 0; i < count; i++)
+            {
+                SDL_MouseWheelEvent const& e = events[i].wheel;
+                skr_atomic64_add_relaxed(&wheelXAccum, e.x * 120);
+                skr_atomic64_add_relaxed(&wheelYAccum, e.y * 120);
+            }
+        }
+        outState.wheelX = skr_atomic64_load_relaxed(&wheelXAccum);
+        outState.wheelY = skr_atomic64_load_relaxed(&wheelYAccum);
     }
+
+    SAtomic64 wheelXAccum = 0;
+    SAtomic64 wheelYAccum = 0;
 };
 
 CommonInputDevice* CreateInputDevice_SDL2Mouse(CommonInputLayer* pLayer) SKR_NOEXCEPT

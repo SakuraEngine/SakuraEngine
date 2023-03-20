@@ -18,13 +18,13 @@ struct SKR_INPUT_API CommonInputReading
 
     void add_ref()
     {
-        skr_atomic32_add_relaxed(&ref_count, 1);
+        skr_atomicu32_add_relaxed(&ref_count, 1);
     }
 
     int release()
     {
-        skr_atomic32_add_relaxed(&ref_count, -1);
-        const auto rc = skr_atomic32_load_acquire(&ref_count);
+        skr_atomicu32_add_relaxed(&ref_count, -1);
+        const auto rc = skr_atomicu32_load_acquire(&ref_count);
         if (rc == 0)
         {
             pool->release(this);
@@ -46,7 +46,7 @@ struct SKR_INPUT_API CommonInputReading
         }
     }
 
-    SAtomic32 ref_count = 0;
+    SAtomicU32 ref_count = 0;
     CommonInputReadingProxy* pool = nullptr;
     struct CommonInputDevice* device = nullptr;
 };

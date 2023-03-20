@@ -31,8 +31,8 @@ struct RUNTIME_API SRCBlock
 
     SRCBlock* lock() SKR_NOEXCEPT;
 
-    SAtomic32 refcount = 1;
-    SAtomic32 weak_refcount = 1;
+    SAtomicU32 refcount = 1;
+    SAtomicU32 weak_refcount = 1;
 };
 
 template<typename T, typename Deleter>

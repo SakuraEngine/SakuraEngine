@@ -25,7 +25,7 @@ struct CGPUDStorageQueueD3D12 : public CGPUDStorageQueue {
         HANDLE fence_event;
         uint64_t submit_index;
         uint32_t fence_value = 0;
-        SAtomic32 finished;
+        SAtomicU32 finished;
     };
     eastl::vector<ProfileTracer*> profile_tracers;
 #endif
@@ -34,7 +34,7 @@ struct CGPUDStorageQueueD3D12 : public CGPUDStorageQueue {
 #ifdef TRACY_PROFILE_DIRECT_STORAGE
         for (auto&& tracer : profile_tracers)
         {
-            if (!skr_atomic32_load_acquire(&tracer->finished))
+            if (!skr_atomicu32_load_acquire(&tracer->finished))
             {
                 skr_join_thread(tracer->thread_handle);
             }
@@ -288,7 +288,7 @@ void cgpu_dstorage_queue_submit_d3d12(CGPUDStorageQueueId queue, CGPUFenceId fen
             SMutexLock profile_lock(Q->profile_mutex);
             for (auto&& _tracer : Q->profile_tracers)
             {
-                if (skr_atomic32_load_acquire(&_tracer->finished))
+                if (skr_atomicu32_load_acquire(&_tracer->finished))
                 {
                     tracer = _tracer;
                     skr_destroy_thread(tracer->thread_handle);
@@ -337,7 +337,7 @@ void cgpu_dstorage_queue_submit_d3d12(CGPUDStorageQueueId queue, CGPUFenceId fen
             }
             TracyFiberLeave;
             CloseHandle(event_handle);
-            skr_atomic32_store_release(&tracer->finished, 1);
+            skr_atomicu32_store_release(&tracer->finished, 1);
         };
         skr_init_thread(&tracer->desc, &tracer->thread_handle);
         submit_index++;
@@ -397,7 +397,7 @@ struct skr_win_dstorage_decompress_service_t
     skr_win_dstorage_decompress_service_t(IDStorageCustomDecompressionQueue* queue)
         : decompress_queue(queue)
     {
-        skr_atomic32_store_release(&thread_running, 1);
+        skr_atomicu32_store_release(&thread_running, 1);
         event_handle = queue->GetEvent();
         if (use_thread_pool)
         {
@@ -413,7 +413,7 @@ struct skr_win_dstorage_decompress_service_t
     }
     ~skr_win_dstorage_decompress_service_t  () SKR_NOEXCEPT
     {
-        skr_atomic32_store_release(&thread_running, 0);
+        skr_atomicu32_store_release(&thread_running, 0);
         if (use_thread_pool)
         {
             CloseThreadpoolWait(thread_pool_wait);
@@ -441,12 +441,12 @@ struct skr_win_dstorage_decompress_service_t
     // thread items
     SThreadDesc thread_desc;
     SThreadHandle thread_handle = nullptr;
-    SAtomic32 thread_running;
+    SAtomicU32 thread_running;
 };
 
 static void __decompressTask_DirectStorage(skr_win_dstorage_decompress_service_id service)
 {
-    auto running = skr_atomic32_load_acquire(&service->thread_running);
+    auto running = skr_atomicu32_load_acquire(&service->thread_running);
     while (running)
     {
         DSTORAGE_CUSTOM_DECOMPRESSION_REQUEST requests[64];
@@ -531,7 +531,7 @@ static void CALLBACK __decompressThreadTask_DirectStorage(void* data)
     tracy::SetThreadName("DirectStorageDecompressThread");
 #endif
     auto service = (skr_win_dstorage_decompress_service_id)data;
-    while (skr_atomic32_load_acquire(&service->thread_running))
+    while (skr_atomicu32_load_acquire(&service->thread_running))
     {
         {
             ZoneScopedNC("DirectStorageDecompressWait", tracy::Color::Gray43);

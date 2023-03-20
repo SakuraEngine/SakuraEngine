@@ -38,7 +38,7 @@ protected:
 template <typename T>
 void resizable_ring_buffer<T>::resize(int newSize) 
 {
-    const auto currentSize = skr_atomic64_load_acquire(&ring.size);
+    const auto currentSize = skr_atomicu64_load_acquire(&ring.size);
     if (newSize == currentSize) return;
 
     skr_acquire_mutex_w(&rw_mutex);
@@ -52,7 +52,7 @@ void resizable_ring_buffer<T>::resize(int newSize)
         {
             ring.buffer[i] = ring.buffer[i + offset];
         }
-        skr_atomic32_store_release(&ring.head, newSize);
+        skr_atomicu32_store_release(&ring.head, newSize);
     } 
     else 
     {
@@ -64,9 +64,9 @@ void resizable_ring_buffer<T>::resize(int newSize)
         {
             ring.buffer[i] = ring.buffer[i - currentSize];
         }
-        skr_atomic32_store_release(&ring.head, currentSize);
+        skr_atomicu32_store_release(&ring.head, currentSize);
     }
-    skr_atomic32_store_release(&ring.size, newSize);
+    skr_atomicu32_store_release(&ring.size, newSize);
     skr_release_rw_mutex(&rw_mutex);
 }
 

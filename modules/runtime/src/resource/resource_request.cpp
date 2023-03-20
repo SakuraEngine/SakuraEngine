@@ -450,7 +450,7 @@ void SResourceRequestImpl::Update()
             if (!ioRequest.is_ready())
             {
                 // request cancle
-                if (!skr_atomic32_load_acquire(&ioRequest.request_cancel))
+                if (!skr_atomicu32_load_acquire(&ioRequest.request_cancel))
                 {
                     ioService->defer_cancel(&ioRequest);
                 }

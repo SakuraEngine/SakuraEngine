@@ -18,7 +18,7 @@ static void initThreadIDKey()
 
 SThreadID skrGetCurrentPthreadID() 
 {
-	static SAtomic32 counter = 1;
+	static SAtomicU32 counter = 1;
 	if (counter == 1)
 	{
 		skr_init_call_once_guard(&gKeyInitGuard);
@@ -32,7 +32,7 @@ SThreadID skrGetCurrentPthreadID()
 	// thread id wasn't set
 	if (id == 0) 
 	{
-		id = (SThreadID)skr_atomic32_add_relaxed(&counter, 1);
+		id = (SThreadID)skr_atomicu32_add_relaxed(&counter, 1);
 		// we store plain integers instead of pointers to data
 		ptr_id = (uintptr_t)id;
 		ptr = (void*)ptr_id;

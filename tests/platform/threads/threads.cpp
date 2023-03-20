@@ -88,9 +88,9 @@ TEST(Threads, RecursiveCondVar)
 
 TEST(Threads, Atomic)
 {
-    SAtomic32 a32 = 0;
+    SAtomicU32 a32 = 0;
     auto addF = [&]() {
-        skr_atomic32_add_relaxed(&a32, 1);
+        skr_atomicu32_add_relaxed(&a32, 1);
     };
     std::thread st1(addF);
     std::thread st2(addF);
