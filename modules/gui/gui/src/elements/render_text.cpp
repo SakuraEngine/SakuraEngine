@@ -3,6 +3,7 @@
 #include "text_server/font.h"
 #include <containers/sptr.hpp>
 #include <variant>
+#include <fstream>
 
 namespace skr {
 namespace gui {
@@ -113,7 +114,7 @@ struct Paragraph : public godot::TextParagraph
     }
 };
 
-struct Font : public godot::Font
+struct FontFile : public godot::FontFile
 {
     
 };
@@ -146,7 +147,20 @@ RenderText::RenderText(skr_gdi_device_id gdi_device)
     );
 
     paragraph_ = SkrNew<Paragraph>();
-    font_ = SPtr<Font>::Create();
+    font_ = SPtr<FontFile>::Create();
+    godot::PackedByteArray data = {};
+
+    std::fstream file("./../resources/font/SourceSansPro-Regular.ttf", std::ios::in | std::ios::binary);
+    if (file.is_open())
+    {
+        file.seekg(0, std::ios::end);
+        size_t size = file.tellg();
+        file.seekg(0, std::ios::beg);
+        data.resize(size);
+        file.read((char*)data.ptrw(), size);
+        file.close();
+    }
+    font_->set_data(data);
 }
 
 RenderText::~RenderText()
