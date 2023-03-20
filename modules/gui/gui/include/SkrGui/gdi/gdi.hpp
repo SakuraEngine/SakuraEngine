@@ -188,6 +188,12 @@ struct SKR_GUI_API GDIDevice
     virtual void free_paint(GDIPaint* paint) = 0;
 };
 
+struct SKR_GUI_API GDIText
+{
+    static bool Initialize(skr_gdi_renderer_id renderer);
+    static bool Finalize();
+    static GDIText* Get();
+};
 } }
 
 SKR_DECLARE_TYPE_ID(skr::gdi::GDIResource, skr_gdi_resource)

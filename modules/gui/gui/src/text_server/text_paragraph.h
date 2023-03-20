@@ -40,7 +40,7 @@ class Font;
 class TextParagraph {
 	_THREAD_SAFE_CLASS_
 
-private:
+protected:
 	RID dropcap_rid;
 	int dropcap_lines = 0;
 	Rect2 dropcap_margins;
