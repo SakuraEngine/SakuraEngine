@@ -6,7 +6,7 @@
 
 namespace skr {
 namespace input {
-EKeyCode KeyCodeTranslator(SDL_Scancode keycode);
+static EKeyCode KeyCodeTranslator(SDL_Scancode keycode);
 
 using ScanCodeBuffer = eastl::fixed_vector<uint8_t, 16>;
 struct InputReading_SDL2Keyboard : public CommonInputReading
