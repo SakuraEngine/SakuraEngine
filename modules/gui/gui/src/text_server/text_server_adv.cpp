@@ -3471,14 +3471,11 @@ void TextServerAdvanced::invalidate(TextServerAdvanced::ShapedTextDataAdvanced *
 
 void TextServerAdvanced::full_copy(ShapedTextDataAdvanced *p_shaped) {
 	ShapedTextDataAdvanced *parent = shaped_owner.get_or_null(p_shaped->parent);
-	// TODO: objects
-    /*
 	for (const auto&E : parent->objects) {
-		if (E.value.pos >= p_shaped->start && E.value.pos < p_shaped->end) {
-			p_shaped->objects[E.key] = E.value;
+		if (E.second.pos >= p_shaped->start && E.second.pos < p_shaped->end) {
+			p_shaped->objects[E.first] = E.second;
 		}
 	}
-    */
 
 	for (int i = 0; i < parent->spans.size(); i++) {
 		ShapedTextDataAdvanced::Span span = parent->spans[i];
