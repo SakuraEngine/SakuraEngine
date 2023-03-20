@@ -195,8 +195,8 @@ void RenderFlex::insert_child(RenderElement *child, int index)
 
 void RenderFlex::remove_child(RenderElement *child)
 {
+    flexables.get().erase(flexables.get().begin() + get_child_index(child));
     RenderElement::remove_child(child);
-    flexables.get().pop_back();
 }
 
 void RenderFlex::set_flexable(int index, Flexable flexable)
