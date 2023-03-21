@@ -112,6 +112,11 @@ Ref<ImageTexture> ImageTexture::create_from_image(skr::gdi::IGDIRenderer* render
 }
 
 Size2 ImageTexture::get_size() const { return { (float)underlying->get_width(), (float)underlying->get_height() }; }
-void ImageTexture::update(const Ref<Image> image) { SKR_UNIMPLEMENTED_FUNCTION(); }
+
+void ImageTexture::update(const Ref<Image> image) 
+{
+
+}
+
 RID ImageTexture::get_rid() const { return rid; }
 }
