@@ -39,9 +39,9 @@ struct Paragraph : public godot::TextParagraph
             godot::Vector2 dc_off = { ofs.x, ofs.y };
             if (godot::TS->shaped_text_get_direction(dropcap_rid) == godot::TextServer::DIRECTION_RTL) {
                 if (godot::TS->shaped_text_get_orientation(dropcap_rid) == godot::TextServer::ORIENTATION_HORIZONTAL) {
-                    dc_off.x += (float)max_width - h_offset;
+                    dc_off.x += (float)width - h_offset;
                 } else {
-                    dc_off.y += (float)max_width - h_offset;
+                    dc_off.y += (float)width - h_offset;
                 }
             }
             godot::Vector2 p_pos = { dc_off.x, dc_off.y };
@@ -52,7 +52,7 @@ struct Paragraph : public godot::TextParagraph
         int lines_visible = (max_lines_visible >= 0) ? MIN(max_lines_visible, lines_rid.size()) : lines_rid.size();
 
         for (int i = 0; i < lines_visible; i++) {
-            float l_width = (float)max_width;
+            float l_width = (float)width;
             if (godot::TS->shaped_text_get_orientation(lines_rid[i]) == godot::TextServer::ORIENTATION_HORIZONTAL) {
                 ofs.x = p_pos.x;
                 ofs.y += godot::TS->shaped_text_get_ascent(lines_rid[i]) * line_height_scale + spacing_top;
@@ -76,7 +76,7 @@ struct Paragraph : public godot::TextParagraph
                 }
             }
             float line_width = godot::TS->shaped_text_get_width(lines_rid[i]);
-            if (max_width > 0) {
+            if (width > 0) {
                 float offset = 0.f;
                 switch (alignment) {
                     case godot::HORIZONTAL_ALIGNMENT_FILL:
@@ -112,8 +112,10 @@ struct Paragraph : public godot::TextParagraph
             }
         }
     }
-
-    uint32_t max_width = UINT32_MAX;
+    void layout()
+    {
+        _shape_lines();
+    }
 };
 
 struct FontFile : public godot::FontFile
@@ -177,9 +179,12 @@ RenderText::~RenderText()
 
 void RenderText::layout(BoxConstraint constraints, bool needSize)
 {
-    size.x = eastl::clamp(size.x, constraints.min_size.x, constraints.max_size.x);
-    size.y = eastl::clamp(size.y, constraints.min_size.y, constraints.max_size.y);
-    paragraph_->max_width = size.x;
+    BuildParagraph();
+    paragraph_->set_width(constraints.max_size.x);
+    auto textSize = paragraph_->get_size();
+    size.x = textSize.x;
+    size.y = textSize.y;
+    size = constraints.apply(size);
 }
 
 void RenderText::draw(const DrawParams* params)
