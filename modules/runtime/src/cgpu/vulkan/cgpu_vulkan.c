@@ -926,7 +926,7 @@ CGPURenderPipelineId cgpu_create_render_pipeline_vulkan(CGPUDeviceId device, con
     uint32_t input_binding_count = 0;
 	DECLARE_ZERO(VkVertexInputBindingDescription, input_bindings[CGPU_MAX_VERTEX_BINDINGS]) 
 	uint32_t  input_attribute_count = 0;
-	DECLARE_ZERO(VkVertexInputAttributeDescription, input_attributes[CGPU_MAX_VERTEX_BINDINGS]) 
+	DECLARE_ZERO(VkVertexInputAttributeDescription, input_attributes[CGPU_MAX_VERTEX_BINDINGS * 4]) 
     // Make sure there's attributes
     if (desc->vertex_layout != NULL)
     {

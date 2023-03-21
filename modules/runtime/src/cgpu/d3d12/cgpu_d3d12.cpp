@@ -912,7 +912,7 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
     CGPURenderPipeline_D3D12* PPL = cgpu_new<CGPURenderPipeline_D3D12>();
     CGPURootSignature_D3D12* RS = (CGPURootSignature_D3D12*)desc->root_signature;
     // Vertex input state
-    DECLARE_ZERO(D3D12_INPUT_ELEMENT_DESC, input_elements[CGPU_MAX_VERTEX_ATTRIBS]);
+    DECLARE_ZERO(D3D12_INPUT_ELEMENT_DESC, input_elements[4 * CGPU_MAX_VERTEX_ATTRIBS]);
     uint32_t elem_count = 0;
     if (desc->vertex_layout != nullptr)
     {
