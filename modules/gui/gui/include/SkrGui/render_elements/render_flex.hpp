@@ -1,3 +1,4 @@
+#pragma once
 #include "SkrGui/framework/render_box.hpp"
 
 namespace skr

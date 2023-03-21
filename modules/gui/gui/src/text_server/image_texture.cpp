@@ -96,26 +96,39 @@ ImageTexture::~ImageTexture()
 
 Ref<ImageTexture> ImageTexture::create_from_image(skr::gdi::IGDIRenderer* renderer, Ref<Image> image)
 {
-    while (image.get()->underlying->get_state() != skr::gdi::EGDIResourceState::Okay)
+    if (auto gdi_image = image.get()->underlying)
     {
+        while (gdi_image->get_state() != skr::gdi::EGDIResourceState::Okay)
+        {
 
+        }
+        Ref<ImageTexture> texture;
+        texture.instantiate();
+        skr::gdi::GDITextureDescriptor desc = {};
+        desc.format = translate_format(image->get_format());
+        desc.source = skr::gdi::EGDITextureSource::Image;
+        desc.from_image.image = gdi_image;
+        texture->underlying = renderer->create_texture(&desc);
+        texture->rid = texture_owner.make_rid(texture.get());
+        return texture;
     }
-    Ref<ImageTexture> texture;
-    texture.instantiate();
-    skr::gdi::GDITextureDescriptor desc = {};
-    desc.format = translate_format(image->get_format());
-    desc.source = skr::gdi::EGDITextureSource::Image;
-    desc.from_image.image = image->underlying;
-    texture->underlying = renderer->create_texture(&desc);
-    texture->rid = texture_owner.make_rid(texture.get());
-    return texture;
+    SKR_ASSERT(0 && "Image is not ready!");
+    return nullptr;
 }
 
 Size2 ImageTexture::get_size() const { return { (float)underlying->get_width(), (float)underlying->get_height() }; }
 
 void ImageTexture::update(const Ref<Image> image) 
 {
-
+    if (auto texture = underlying)
+    {
+        auto renderer = texture->get_renderer();
+        skr::gdi::GDITextureUpdateDescriptor update_desc = {};
+        update_desc.texture = texture;
+        update_desc.image = image->underlying;
+        auto update_handle = renderer->update_texture(&update_desc);
+        updates.emplace_back( image, update_handle );
+    }
 }
 
 RID ImageTexture::get_rid() const { return rid; }

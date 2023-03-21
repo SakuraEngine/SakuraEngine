@@ -224,6 +224,23 @@ void GDIRenderer_RenderGraph::free_texture(GDITextureId tex) SKR_NOEXCEPT
     SkrDelete(tex);
 }
 
+EGDIResourceState GDITextureUpdate_RenderGraph::get_state() const SKR_NOEXCEPT
+{
+    const auto result = skr_atomicu32_load_relaxed(&state);
+    return static_cast<EGDIResourceState>(result);
+}
+
+void GDIRenderer_RenderGraph::free_texture_update(IGDITextureUpdate* tex) SKR_NOEXCEPT
+{
+    auto update = static_cast<GDITextureUpdate_RenderGraph*>(tex);
+    // TODO: cancellation
+    while (update->get_state() != EGDIResourceState::Okay) 
+    {
+        // wait creation...
+    }
+    skr_atomicu32_store_release(&update->state, static_cast<uint32_t>(EGDIResourceState::Finalizing));
+}
+
 GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* owner, skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT
 {
     // image data must have an owner

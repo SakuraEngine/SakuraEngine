@@ -10,6 +10,7 @@
 #include "rtm/rtmx.h"
 #include "platform/atomic.h"
 #include "utils/threaded_service.h"
+#include "utils/concurrent_queue.h"
 
 namespace skr {
 namespace gdi {
@@ -187,15 +188,32 @@ struct SKR_GUI_RENDERER_API GDITexture_RenderGraph : public IGDITexture
     struct GDIRenderer_RenderGraph* renderer = nullptr;
 };
 
+struct SKR_GUI_RENDERER_API GDITextureUpdate_RenderGraph : public IGDITextureUpdate
+{
+    EGDIResourceState get_state() const SKR_NOEXCEPT final;
+
+    GDITextureId texture = nullptr;
+    GDIImageId image = nullptr;
+    skr::render_graph::BufferHandle upload_buffer;
+    skr::render_graph::TextureHandle texture_handle;
+
+    uint64_t execute_frame_index = 0;
+    SAtomicU32 state = static_cast<uint32_t>(EGDIResourceState::Requsted);
+};
+
 struct SKR_GUI_RENDERER_API GDIRenderer_RenderGraph : public IGDIRenderer
 {
+    friend struct GDITexture_RenderGraph;
+
     // Tier 1
     int initialize(const GDIRendererDescriptor* desc) SKR_NOEXCEPT final;
     int finalize() SKR_NOEXCEPT final;
     GDIImageId create_image(const GDIImageDescriptor* descriptor) SKR_NOEXCEPT final;
     GDITextureId create_texture(const GDITextureDescriptor* descriptor) SKR_NOEXCEPT final;
+    GDITextureUpdateId update_texture(const GDITextureUpdateDescriptor* descriptor) SKR_NOEXCEPT final;
     void free_image(GDIImageId image) SKR_NOEXCEPT final;
     void free_texture(GDITextureId texture) SKR_NOEXCEPT final;
+    void free_texture_update(GDITextureUpdateId texture) SKR_NOEXCEPT final;
     void render(GDIViewport* viewport, const ViewportRenderParams* params) SKR_NOEXCEPT final;
 
     // Tier 2
@@ -206,6 +224,11 @@ struct SKR_GUI_RENDERER_API GDIRenderer_RenderGraph : public IGDIRenderer
         return true;
     }
     bool support_mipmap_generation() const SKR_NOEXCEPT final;
+
+protected:
+    void updatePendingTextures(skr::render_graph::RenderGraph* graph) SKR_NOEXCEPT;
+    moodycamel::ConcurrentQueue<GDITextureUpdate_RenderGraph*> request_updates;
+    moodycamel::ConcurrentQueue<GDITextureUpdate_RenderGraph*> pending_updates;
 
 protected:
     CGPURenderPipelineId findOrCreateRenderPipeline(GDIRendererPipelineAttributes attributes, ECGPUSampleCount sample_count = CGPU_SAMPLE_COUNT_1);

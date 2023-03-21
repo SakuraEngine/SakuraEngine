@@ -4,7 +4,7 @@
 #include "text_server/rid_owner.h"
 #include "text_server/containers.h"
 
-namespace skr { namespace gdi { struct IGDIRenderer; struct IGDIImage; struct IGDITexture;  }  }
+namespace skr { namespace gdi { struct IGDIRenderer; struct IGDIImage; struct IGDITexture; struct IGDITextureUpdate; }  }
 
 namespace godot {
 struct Image 
@@ -45,6 +45,7 @@ struct ImageTexture
 
 	RID rid = {};
 	skr::gdi::IGDITexture* underlying = nullptr;
+	eastl::vector<eastl::pair<Ref<Image>, skr::gdi::IGDITextureUpdate*>> updates;
 
 	static RID_PtrOwner<ImageTexture> texture_owner;
 };

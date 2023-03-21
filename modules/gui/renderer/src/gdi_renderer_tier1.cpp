@@ -1,6 +1,7 @@
 #include "SkrGuiRenderer/gdi_renderer.hpp"
 #include "utils/cartesian_product.hpp"
 
+#include <EASTL/fixed_vector.h>
 #include "rtm/qvvf.h"
 #include <cmath>
 
@@ -138,6 +139,15 @@ CGPURenderPipelineId GDIRenderer_RenderGraph::createRenderPipeline(
     return pipeline;
 }
 
+GDITextureUpdateId GDIRenderer_RenderGraph::update_texture(const GDITextureUpdateDescriptor* descriptor) SKR_NOEXCEPT
+{
+    GDITextureUpdate_RenderGraph* update = SkrNew<GDITextureUpdate_RenderGraph>();
+    update->texture = descriptor->texture;
+    update->image = descriptor->image;
+    request_updates.enqueue(update);
+    return update;
+}
+
 CGPURenderPipelineId GDIRenderer_RenderGraph::findOrCreateRenderPipeline(GDIRendererPipelineAttributes attributes, ECGPUSampleCount sample_count)
 {
     PipelineKey key = {attributes, sample_count};
@@ -221,6 +231,86 @@ int GDIRenderer_RenderGraph::initialize(const GDIRendererDescriptor* desc) SKR_N
     createRenderPipelines();
 
     return 0;
+}
+
+void GDIRenderer_RenderGraph::updatePendingTextures(skr::render_graph::RenderGraph* graph) SKR_NOEXCEPT
+{
+    const auto frame_index = graph->get_frame_index();
+    GDITextureUpdate_RenderGraph* update = nullptr;
+    // 1. filter request_updates to pending_updates
+    eastl::vector_map<GDITextureId, GDITextureUpdate_RenderGraph*> filter_map;
+    while (request_updates.try_dequeue(update))
+    {
+        auto iter = filter_map.find(update->texture);
+        if (iter != filter_map.end())
+        {
+            skr_atomicu32_store_relaxed(&iter->second->state, (uint32_t)EGDIResourceState::Okay);
+        }
+        filter_map[update->texture] = update;
+    }
+    for (auto& [id, update] : filter_map)
+    {
+        pending_updates.enqueue(update);
+    }
+    // 2. filter pending_updates to copies
+    eastl::fixed_vector<GDITextureUpdate_RenderGraph*, 8> copies;
+    eastl::fixed_vector<GDITextureUpdate_RenderGraph*, 8> pending;
+    while (pending_updates.try_dequeue(update))
+    {
+        if (update->texture->get_state() == EGDIResourceState::Okay)
+        {
+            if (update->get_state() == EGDIResourceState::Requsted)
+            {
+                update->upload_buffer = graph->create_buffer(
+                    [update](auto& g, auto& builder){
+                        builder.size(update->image->get_data().size())
+                            .with_tags(kRenderGraphDynamicResourceTag)
+                            .as_upload_buffer();
+                    });
+                update->texture_handle = graph->create_texture(
+                    [update](auto& g, auto& builder){
+                        GDITexture_RenderGraph* T = (GDITexture_RenderGraph*)update->texture;
+                        builder.import(T->texture, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
+                    });
+                copies.emplace_back(update);
+                continue;
+            }
+            else if (update->get_state() == EGDIResourceState::Loading)
+            {
+                if (frame_index > update->execute_frame_index + RG_MAX_FRAME_IN_FLIGHT)
+                {
+                    skr_atomicu32_store_relaxed(&update->state, (uint32_t)EGDIResourceState::Okay);
+                }
+            }
+        }
+        if (update->get_state() != EGDIResourceState::Okay)
+        {
+            pending.emplace_back(update);
+        }
+    }
+    for (auto update : pending)
+    {
+        pending_updates.enqueue(update);
+    }
+    
+    graph->add_copy_pass(
+    [&](render_graph::RenderGraph& g, render_graph::CopyPassBuilder& builder) {
+        ZoneScopedN("UpdateTextures");
+        builder.set_name("gdi_texture_update_pass")
+            .can_be_lone();
+        for (auto copy : copies)
+        {
+            builder.buffer_to_texture(copy->upload_buffer.range(0, 0), copy->texture_handle, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
+        }
+    },
+    [=](render_graph::RenderGraph& g, render_graph::CopyPassContext& context){
+        for (auto copy : copies)
+        {
+            auto buffer = context.resolve(copy->upload_buffer);
+            const auto data = copy->image->get_data();
+            ::memcpy(buffer->cpu_mapped_address, data.data(), data.size());
+        }
+    });
 }
 
 int GDIRenderer_RenderGraph::finalize() SKR_NOEXCEPT
@@ -439,7 +529,7 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
             ZoneScopedN("ConstructUploadPass");
             builder.set_name("gdi_upload_buffer")
                     .size(indices_size + vertices_size + transform_size + projection_size)
-                    .with_tags(kRenderGraphDefaultResourceTag)
+                    .with_tags(kRenderGraphDynamicResourceTag)
                     .as_upload_buffer();
             });
         rg->add_copy_pass(
@@ -474,6 +564,7 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
                 memcpy(projection_dst, render_projections.data(), projections_count * sizeof(rtm::matrix4x4f));
             });
     }
+    updatePendingTextures(rg);
 
     // 4. loop & record render commands
     skr::render_graph::TextureRTVHandle target = rg->get_texture("backbuffer");

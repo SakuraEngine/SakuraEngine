@@ -100,6 +100,12 @@ typedef struct GDITextureDescriptor
     void* usr_data = nullptr;
 } GDITextureDescriptor;
 
+typedef struct GDITextureUpdateDescriptor
+{
+    IGDITexture* texture = nullptr;
+    IGDIImage* image = nullptr;
+} GDITextureUpdateDescriptor;
+
 struct SKR_GUI_API IGDIImage : public GDIResource
 {
     virtual ~IGDIImage() SKR_NOEXCEPT = default;
@@ -110,13 +116,18 @@ struct SKR_GUI_API IGDIImage : public GDIResource
     virtual EGDIImageFormat get_format() const SKR_NOEXCEPT = 0;
 };
 
+struct SKR_GUI_API IGDITextureUpdate : public GDIResource
+{
+    virtual ~IGDITextureUpdate() SKR_NOEXCEPT = default;
+};
+
 struct SKR_GUI_API IGDITexture : public GDIResource
 {
     virtual ~IGDITexture() SKR_NOEXCEPT = default;
     virtual GDIRendererId get_renderer() const SKR_NOEXCEPT = 0;
     virtual uint32_t get_width() const SKR_NOEXCEPT = 0;
     virtual uint32_t get_height() const SKR_NOEXCEPT = 0;
-    
+
     virtual EGDITextureType get_type() const SKR_NOEXCEPT = 0;
 };
 
@@ -133,8 +144,10 @@ struct SKR_GUI_API IGDIRenderer
     virtual int finalize() SKR_NOEXCEPT = 0;
     [[nodiscard]] virtual GDIImageId create_image(const GDIImageDescriptor* descriptor) SKR_NOEXCEPT = 0;
     [[nodiscard]] virtual GDITextureId create_texture(const GDITextureDescriptor* descriptor) SKR_NOEXCEPT = 0;
+    [[nodiscard]] virtual GDITextureUpdateId update_texture(const GDITextureUpdateDescriptor* descriptor) SKR_NOEXCEPT = 0;
     virtual void free_image(GDIImageId image) SKR_NOEXCEPT = 0;
     virtual void free_texture(GDITextureId texture) SKR_NOEXCEPT = 0;
+    virtual void free_texture_update(IGDITextureUpdate* update) SKR_NOEXCEPT = 0;
     virtual void render(GDIViewport* render_group, const ViewportRenderParams* params) SKR_NOEXCEPT = 0;
 
     // Tier 2
