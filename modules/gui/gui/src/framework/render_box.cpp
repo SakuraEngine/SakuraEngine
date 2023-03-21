@@ -5,6 +5,15 @@
 namespace skr {
 namespace gui {
 
+    
+RenderBoxSizeType BoxConstraint::apply(const RenderBoxSizeType& size) const
+{
+    RenderBoxSizeType result = size;
+    result.x = std::max(min_size.x, std::min(max_size.x, result.x));
+    result.y = std::max(min_size.y, std::min(max_size.y, result.y));
+    return result;
+}
+
 RenderBox::RenderBox(skr_gdi_device_id gdi_device)
     : gdi_device(gdi_device), debug_element(nullptr)
 {

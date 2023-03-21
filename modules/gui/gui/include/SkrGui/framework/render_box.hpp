@@ -11,6 +11,7 @@ using RenderBoxSizeType = skr_float2_t;
 struct BoxConstraint {
     RenderBoxSizeType max_size;
     RenderBoxSizeType min_size;
+    SKR_GUI_API RenderBoxSizeType apply(const RenderBoxSizeType& size) const;
 };
 
 struct SKR_GUI_API RenderBox : public RenderElement
