@@ -34,6 +34,7 @@ struct GDIElementNVG : public GDIElementPrivate
     void fill_color(float r, float g, float b, float a) final;
     void fill_paint(GDIPaint* paint) final;
     void fill() final;
+    void fill_no_aa() final;
 
     void restore() final;
     void save() final;
