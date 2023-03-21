@@ -450,6 +450,14 @@ void GDIElementNVG::fill()
     nvgFill(nvg);
 }
 
+void GDIElementNVG::fill_no_aa()
+{
+    auto params = nvgInternalParams(nvg);
+    params->edgeAntiAlias = false;
+    nvgFill(nvg);
+    params->edgeAntiAlias = true;
+}
+
 void GDIElementNVG::restore()
 {
     nvgRestore(nvg);

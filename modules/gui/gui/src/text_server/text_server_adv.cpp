@@ -3180,7 +3180,7 @@ void TextServerAdvanced::_font_draw_glyph(const RID &p_font_rid, const RID &p_ca
 						proxy->gdi_element->begin_path();
 						proxy->gdi_element->rect(cpos.x, cpos.y, csize.x, csize.y);
 						proxy->gdi_element->fill_paint(proxy->gdi_paint);
-						proxy->gdi_element->fill();
+						proxy->gdi_element->fill_no_aa();
 					}
 				}
 			}

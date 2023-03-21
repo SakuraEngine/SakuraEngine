@@ -127,6 +127,7 @@ struct SKR_GUI_API GDIElement
     virtual void fill_color(float r, float g, float b, float a) = 0;
     virtual void fill_paint(GDIPaint* paint) = 0;
     virtual void fill() = 0;
+    virtual void fill_no_aa() = 0;
 
     virtual void save() = 0;
     virtual void restore() = 0;
