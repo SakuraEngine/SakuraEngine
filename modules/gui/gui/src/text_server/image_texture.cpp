@@ -116,13 +116,25 @@ Ref<ImageTexture> ImageTexture::create_from_image(skr::gdi::IGDIRenderer* render
     return nullptr;
 }
 
-Size2 ImageTexture::get_size() const { return { (float)underlying->get_width(), (float)underlying->get_height() }; }
+Size2 ImageTexture::get_size() const 
+{ 
+    return { (float)underlying->get_width(), (float)underlying->get_height() }; 
+}
 
 void ImageTexture::update(const Ref<Image> image) 
 {
     if (auto texture = underlying)
     {
         auto renderer = texture->get_renderer();
+        for (auto [image, update] : updates)
+        {
+            if (update->get_state() == skr::gdi::EGDIResourceState::Okay)
+            {
+                renderer->free_texture_update(update);
+                image.reset();
+            }
+        }
+        updates.erase(std::remove_if(updates.begin(), updates.end(), [](auto& pair) { return !pair.first; }), updates.end());
         skr::gdi::GDITextureUpdateDescriptor update_desc = {};
         update_desc.texture = texture;
         update_desc.image = image->underlying;
