@@ -14,6 +14,7 @@ typedef struct skr_gdi_element_draw_command_t
     skr_gdi_material_id material SKR_IF_CPP(= nullptr);
     uint32_t first_index SKR_IF_CPP(= 0);
     uint32_t index_count SKR_IF_CPP(= 0);
+    skr_float4_t texture_swizzle SKR_IF_CPP(= {0.0f, 0.0f, 0.0f, 0.0f});
 } skr_gdi_element_draw_command_t;
 
 typedef struct skr_gdi_vertex_t
@@ -134,8 +135,19 @@ struct SKR_GUI_API GDIElement
     virtual void save() = 0;
     virtual void restore() = 0;
 
+    // None-VG APIs
+
     virtual void set_z(int32_t z) = 0;
     virtual int32_t get_z() const = 0;
+
+    static const uint32_t kSwizzleChanelNone = 0;
+    static const uint32_t kSwizzleChanelR = 1;
+    static const uint32_t kSwizzleChanelG = 2;
+    static const uint32_t kSwizzleChanelB = 3;
+    static const uint32_t kSwizzleChanelA = 4;
+    static const uint32_t kSwizzleOverride0 = 5;
+    static const uint32_t kSwizzleOverride1 = 6;
+    virtual void set_texture_swizzle(uint32_t X, uint32_t Y, uint32_t Z, uint32_t W) = 0;
 };
 
 struct SKR_GUI_API GDICanvas

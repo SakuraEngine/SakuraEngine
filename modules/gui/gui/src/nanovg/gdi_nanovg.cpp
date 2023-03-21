@@ -267,6 +267,12 @@ static void nvg__renderFill(void* uptr, NVGpaint* paint, NVGcompositeOperationSt
         {
             nvg__renderPath(element, paths[i], paint, invTransform, 1.f);
         }
+        
+        command.texture_swizzle.x = (float)element->texture_swizzle[0];
+        command.texture_swizzle.y = (float)element->texture_swizzle[1];
+        command.texture_swizzle.z = (float)element->texture_swizzle[2];
+        command.texture_swizzle.w = (float)element->texture_swizzle[3];
+
         command.index_count = static_cast<uint32_t>(element->indices.size() - begin);
         command.first_index = static_cast<uint32_t>(begin);
         command.material = static_cast<GDIMaterialId>(paint->material);

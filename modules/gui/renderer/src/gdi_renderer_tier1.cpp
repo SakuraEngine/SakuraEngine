@@ -204,7 +204,8 @@ int GDIRenderer_RenderGraph::initialize(const GDIRendererDescriptor* desc) SKR_N
     vertex_layout.attributes[5] = { "COLOR", 1, CGPU_FORMAT_R8G8B8A8_UNORM, 0, color_offset, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attributes[6] = { "TRANSFORM", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 1, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
     vertex_layout.attributes[7] = { "PROJECTION", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 2, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
-    vertex_layout.attribute_count = 8;
+    vertex_layout.attributes[8] = { "DRAW_DATA", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
+    vertex_layout.attribute_count = 9;
     
     target_format = pDesc->target_format;
     aux_service = pDesc->aux_service;
@@ -341,11 +342,8 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
     auto viewport_data = SkrNew<GDIViewportData_RenderGraph>(viewport);
     const auto all_canvas = viewport->all_canvas();
     if (all_canvas.empty()) return;
-    uint64_t vertex_count = 0u;
-    uint64_t index_count = 0u;
-    uint64_t transform_count = 0u;
-    uint64_t projection_count = 0u;
-    uint64_t command_count = 0u;
+    uint64_t vertex_count = 0u, index_count = 0u;
+    uint64_t element_count = 0u, command_count = 0u;
     // 1. loop prepare counters & render data
     for (auto canvas : all_canvas)
     {
@@ -357,8 +355,7 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
         
         vertex_count += element_vertices.size();
         index_count += element_indices.size();
-        transform_count += 1;
-        projection_count += 1;
+        element_count += 1;
         command_count += element_commands.size();
     }
     }
@@ -367,10 +364,11 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
 
     viewport_data->render_vertices.reserve(vertex_count);
     viewport_data->render_indices.reserve(index_count);
-    viewport_data->render_transforms.reserve(transform_count);
-    viewport_data->render_projections.reserve(projection_count);
+    viewport_data->render_transforms.reserve(element_count);
+    viewport_data->render_projections.reserve(element_count);
+    viewport_data->render_data.reserve(command_count);
     viewport_data->render_commands.reserve(command_count);
-    uint64_t vb_cursor = 0u, ib_cursor = 0u, tb_cursor = 0u, pb_cursor = 0u;
+    uint64_t vb_cursor = 0u, ib_cursor = 0u, tb_cursor = 0u, pb_cursor = 0u, rb_cursor = 0u;
     for (auto canvas : all_canvas)
     {
     for (auto element : canvas->all_elements())
@@ -451,6 +449,11 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
 
         for (const auto& command : element_commands)
         {
+            rb_cursor = viewport_data->render_data.size();
+            auto& render_data = viewport_data->render_data.emplace_back();
+            render_data.M[0][0] = command.texture_swizzle.x; render_data.M[0][1] = command.texture_swizzle.y;
+            render_data.M[0][2] = command.texture_swizzle.z; render_data.M[0][3] = command.texture_swizzle.w;
+            
             GDIElementDrawCommand_RenderGraph command2 = {};
             command2.texture = command.texture;
             command2.material = command.material;
@@ -460,6 +463,7 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
             command2.vb_offset = static_cast<uint32_t>(vb_cursor * sizeof(GDIVertex));
             command2.tb_offset = static_cast<uint32_t>(tb_cursor * sizeof(rtm::matrix4x4f));
             command2.pb_offset = static_cast<uint32_t>(pb_cursor * sizeof(rtm::matrix4x4f));
+            command2.rb_offset = static_cast<uint32_t>(rb_cursor * sizeof(skr_float4x4_t));
 
             command2.attributes |= command2.texture ? GDI_RENDERER_PIPELINE_ATTRIBUTE_TEXTURED : 0;
             command2.attributes |= use_hardware_z ? GDI_RENDERER_PIPELINE_ATTRIBUTE_TEST_Z : 0;
@@ -473,8 +477,9 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
     // 2. prepare render resource
     const uint64_t vertices_size = vertex_count * sizeof(GDIVertex);
     const uint64_t indices_size = index_count * sizeof(index_t);
-    const uint64_t transform_size = transform_count * sizeof(rtm::matrix4x4f);
-    const uint64_t projection_size = projection_count * sizeof(rtm::matrix4x4f);
+    const uint64_t transform_size = element_count * sizeof(rtm::matrix4x4f);
+    const uint64_t projection_size = element_count * sizeof(rtm::matrix4x4f);
+    const uint64_t rdata_size = command_count * sizeof(skr_float4x4_t);
     const bool useCVV = false;
     auto vertex_buffer = rg->create_buffer(
         [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
@@ -506,6 +511,16 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
                 .prefer_on_device()
                 .as_vertex_buffer();
         });
+    auto rdata_buffer = rg->create_buffer(
+        [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
+            builder.set_name("gdi_rdata_buffer")
+                .size(rdata_size)
+                .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
+                .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
+                .with_tags(useCVV ? kRenderGraphDynamicResourceTag : kRenderGraphDefaultResourceTag)
+                .prefer_on_device()
+                .as_vertex_buffer();
+        });
     auto index_buffer = rg->create_buffer(
         [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
             builder.set_name("gdi_index_buffer")
@@ -519,6 +534,7 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
     viewport_data->vertex_buffers.emplace_back(vertex_buffer);
     viewport_data->transform_buffers.emplace_back(transform_buffer);
     viewport_data->projection_buffers.emplace_back(projection_buffer);
+    viewport_data->rdata_buffers.emplace_back(rdata_buffer);
     viewport_data->index_buffers.emplace_back(index_buffer);
 
     // 3. copy/upload geometry data to GPU
@@ -528,18 +544,24 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
             [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
             ZoneScopedN("ConstructUploadPass");
             builder.set_name("gdi_upload_buffer")
-                    .size(indices_size + vertices_size + transform_size + projection_size)
+                    .size(indices_size + vertices_size + transform_size + projection_size + rdata_size)
                     .with_tags(kRenderGraphDynamicResourceTag)
                     .as_upload_buffer();
             });
         rg->add_copy_pass(
             [=](render_graph::RenderGraph& g, render_graph::CopyPassBuilder& builder) {
-            ZoneScopedN("ConstructCopyPass");
-            builder.set_name("gdi_copy_pass")
-                .buffer_to_buffer(upload_buffer_handle.range(0, vertices_size), vertex_buffer.range(0, vertices_size))
-                .buffer_to_buffer(upload_buffer_handle.range(vertices_size, vertices_size + indices_size), index_buffer.range(0, indices_size))
-                .buffer_to_buffer(upload_buffer_handle.range(vertices_size + indices_size, vertices_size + indices_size + transform_size), transform_buffer.range(0, transform_size))
-                .buffer_to_buffer(upload_buffer_handle.range(vertices_size + indices_size + transform_size, vertices_size + indices_size + transform_size + projection_size), projection_buffer.range(0, projection_size));
+                ZoneScopedN("ConstructCopyPass");
+                builder.set_name("gdi_copy_pass");
+                uint64_t cursor = 0;
+                builder.buffer_to_buffer(upload_buffer_handle.range(cursor, vertices_size), vertex_buffer.range(0, vertices_size));
+                cursor += vertices_size;
+                builder.buffer_to_buffer(upload_buffer_handle.range(cursor, cursor + indices_size), index_buffer.range(0, indices_size));
+                cursor += indices_size;
+                builder.buffer_to_buffer(upload_buffer_handle.range(cursor, cursor + transform_size), transform_buffer.range(0, transform_size));
+                cursor += transform_size;
+                builder.buffer_to_buffer(upload_buffer_handle.range(cursor, cursor + projection_size), projection_buffer.range(0, projection_size));
+                cursor += projection_size;
+                builder.buffer_to_buffer(upload_buffer_handle.range(cursor, cursor + rdata_size), rdata_buffer.range(0, rdata_size));
             },
             [upload_buffer_handle, viewport_data](render_graph::RenderGraph& g, render_graph::CopyPassContext& context){
                 auto upload_buffer = context.resolve(upload_buffer_handle);
@@ -547,21 +569,25 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
                 const uint64_t indices_count = viewport_data->render_indices.size();
                 const uint64_t transforms_count = viewport_data->render_transforms.size();
                 const uint64_t projections_count = viewport_data->render_projections.size();
+                const uint64_t rdata_count = viewport_data->render_data.size();
 
                 GDIVertex* vtx_dst = (GDIVertex*)upload_buffer->cpu_mapped_address;
                 index_t* idx_dst = (index_t*)(vtx_dst + vertices_count);
                 rtm::matrix4x4f* transform_dst = (rtm::matrix4x4f*)(idx_dst + indices_count);
                 rtm::matrix4x4f* projection_dst = (rtm::matrix4x4f*)(transform_dst + transforms_count);
+                skr_float4x4_t* rdata_dst = (skr_float4x4_t*)(projection_dst + projections_count);
 
                 const skr::span<GDIVertex> render_vertices = viewport_data->render_vertices;
                 const skr::span<index_t> render_indices = viewport_data->render_indices;
                 const skr::span<rtm::matrix4x4f> render_transforms = viewport_data->render_transforms;
                 const skr::span<rtm::matrix4x4f> render_projections = viewport_data->render_projections;
+                const skr::span<skr_float4x4_t> render_data = viewport_data->render_data;
 
                 memcpy(vtx_dst, render_vertices.data(), vertices_count * sizeof(GDIVertex));
                 memcpy(idx_dst, render_indices.data(), indices_count * sizeof(index_t));
                 memcpy(transform_dst, render_transforms.data(), transforms_count * sizeof(rtm::matrix4x4f));
                 memcpy(projection_dst, render_projections.data(), projections_count * sizeof(rtm::matrix4x4f));
+                memcpy(rdata_dst, render_data.data(), rdata_count * sizeof(skr_float4x4_t));
             });
     }
     updatePendingTextures(rg);
@@ -577,6 +603,7 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
             .use_buffer(vertex_buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
             .use_buffer(transform_buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
             .use_buffer(projection_buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
+            .use_buffer(rdata_buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
             .use_buffer(index_buffer, CGPU_RESOURCE_STATE_INDEX_BUFFER)
             .set_depth_stencil(depth.clear_depth(1.f))
             .write(0, target, CGPU_LOAD_ACTION_CLEAR);
@@ -586,7 +613,7 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
             builder.resolve_msaa(0, real_target);
         }
     },
-    [this, target, viewport_data, useCVV, index_buffer, vertex_buffer, transform_buffer, projection_buffer]
+    [this, target, viewport_data, useCVV, index_buffer, vertex_buffer, transform_buffer, projection_buffer, rdata_buffer]
     (render_graph::RenderGraph& g, render_graph::RenderPassContext& ctx) {
         ZoneScopedN("GDI-RenderPass");
         const auto target_desc = g.resolve_descriptor(target);
@@ -594,8 +621,9 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
         auto resolved_vb = ctx.resolve(vertex_buffer);
         auto resolved_tb = ctx.resolve(transform_buffer);
         auto resolved_pb = ctx.resolve(projection_buffer);
-        CGPUBufferId vertex_streams[3] = { resolved_vb, resolved_tb, resolved_pb };
-        const uint32_t vertex_stream_strides[3] = { sizeof(GDIVertex), sizeof(rtm::matrix4x4f), sizeof(rtm::matrix4x4f) };
+        auto resolved_rdata = ctx.resolve(rdata_buffer);
+        CGPUBufferId vertex_streams[4] = { resolved_vb, resolved_tb, resolved_pb, resolved_rdata };
+        const uint32_t vertex_stream_strides[4] = { sizeof(GDIVertex), sizeof(rtm::matrix4x4f), sizeof(rtm::matrix4x4f), sizeof(skr_float4x4_t) };
 
         cgpu_render_encoder_set_viewport(ctx.encoder,
             0.0f, 0.0f,
@@ -626,10 +654,10 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
                 cgpux_render_encoder_bind_bind_table(ctx.encoder, gui_texture->bind_table);
             }
 
-            const uint32_t vertex_stream_offsets[3] = { command.vb_offset, command.tb_offset, command.pb_offset };
+            const uint32_t vertex_stream_offsets[4] = { command.vb_offset, command.tb_offset, command.pb_offset, command.rb_offset };
             cgpu_render_encoder_bind_index_buffer(ctx.encoder, resolved_ib, sizeof(index_t), command.ib_offset);
             cgpu_render_encoder_bind_vertex_buffers(ctx.encoder,
-                3, vertex_streams, vertex_stream_strides, vertex_stream_offsets);
+                4, vertex_streams, vertex_stream_strides, vertex_stream_offsets);
             cgpu_render_encoder_draw_indexed_instanced(ctx.encoder,
                 command.index_count,command.first_index,
                 1, 0, 0);

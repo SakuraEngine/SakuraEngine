@@ -8,6 +8,7 @@ struct VSOut
     float2 clip_uv : UV;
     float2 clip_uv2 : UV_Two;
     float4 color : COLOR;
+    float4 texture_swizzle : SWIZZLE;
 };
 
 void main(VSOut input,     

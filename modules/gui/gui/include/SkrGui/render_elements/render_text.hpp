@@ -58,6 +58,7 @@ private:
     skr_gdi_device_id gdi_device = nullptr;
     skr_gdi_element_id gdi_element = nullptr;
     skr_gdi_paint_id gdi_paint = nullptr;
+    skr_float4_t font_color = { 1.f, 0.f, 1.f, 1.f };
 };
 
 } }

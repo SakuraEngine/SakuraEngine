@@ -789,10 +789,10 @@ _FORCE_INLINE_ TextServerAdvanced::FontTexturePosition TextServerAdvanced::find_
 			ERR_FAIL_COND_V(texsize * texsize * p_color_size > tex.imgdata.size(), ret);
 			// Initialize the texture to all-white pixels to prevent artifacts when the
 			// font is displayed at a non-default scale with filtering enabled.
-			if (p_color_size == 2) {
-				for (int i = 0; i < texsize * texsize * p_color_size; i += 2) { // FORMAT_LA8, BW font.
-					w[i + 0] = 255;
-					w[i + 1] = 0;
+			if (p_color_size == 1) {
+				for (int i = 0; i < texsize * texsize * p_color_size; i += 1) { // FORMAT_LA8, BW font.
+					// w[i + 0] = 255;
+					w[i + 0] = 0;
 				}
 			} else if (p_color_size == 4) {
 				for (int i = 0; i < texsize * texsize * p_color_size; i += 4) { // FORMAT_RGBA8, Color font, Multichannel(+True) SDF.
@@ -822,12 +822,12 @@ _FORCE_INLINE_ TextServerAdvanced::FontTexturePosition TextServerAdvanced::find_
 _FORCE_INLINE_ TextServerAdvanced::FontGlyph TextServerAdvanced::rasterize_bitmap(FontForSizeAdvanced *p_data, int p_rect_margin, FT_Bitmap bitmap, int yofs, int xofs, const Vector2 &advance, bool p_bgra) const {
 	int w = bitmap.width;
 	int h = bitmap.rows;
-	int color_size = 2;
+	int color_size = 1;
 
 	switch (bitmap.pixel_mode) {
 		case FT_PIXEL_MODE_MONO:
 		case FT_PIXEL_MODE_GRAY: {
-			color_size = 2;
+			color_size = 1;
 		} break;
 		case FT_PIXEL_MODE_BGRA: {
 			color_size = 4;
@@ -848,7 +848,7 @@ _FORCE_INLINE_ TextServerAdvanced::FontGlyph TextServerAdvanced::rasterize_bitma
 	ERR_FAIL_COND_V(mw > 4096, FontGlyph());
 	ERR_FAIL_COND_V(mh > 4096, FontGlyph());
 
-	Image::Format require_format = color_size == 4 ? Image::FORMAT_RGBA8 : Image::FORMAT_LA8;
+	Image::Format require_format = color_size == 4 ? Image::FORMAT_RGBA8 : Image::FORMAT_R8;
 
 	FontTexturePosition tex_pos = find_texture_pos_for_glyph(p_data, color_size, require_format, mw, mh, false);
 	ERR_FAIL_COND_V(tex_pos.index < 0, FontGlyph());
@@ -867,12 +867,12 @@ _FORCE_INLINE_ TextServerAdvanced::FontGlyph TextServerAdvanced::rasterize_bitma
 					case FT_PIXEL_MODE_MONO: {
 						int byte = i * bitmap.pitch + (j >> 3);
 						int bit = 1 << (7 - (j % 8));
-						wr[ofs + 0] = 255; // grayscale as 1
-						wr[ofs + 1] = (bitmap.buffer[byte] & bit) ? 255 : 0;
+						// wr[ofs + 0] = 255; // grayscale as 1
+						wr[ofs + 0] = (bitmap.buffer[byte] & bit) ? 255 : 0;
 					} break;
 					case FT_PIXEL_MODE_GRAY:
-						wr[ofs + 0] = 255; // grayscale as 1
-						wr[ofs + 1] = bitmap.buffer[i * bitmap.pitch + j];
+						// wr[ofs + 0] = 255; // grayscale as 1
+						wr[ofs + 0] = bitmap.buffer[i * bitmap.pitch + j];
 						break;
 					case FT_PIXEL_MODE_BGRA: {
 						int ofs_color = i * bitmap.pitch + (j << 2);
@@ -3175,7 +3175,6 @@ void TextServerAdvanced::_font_draw_glyph(const RID &p_font_rid, const RID &p_ca
 							const auto v_ = v + (v2 - v) * (y - y_v) / (y_V - y_v);
 							vertex->texcoord.x = u_;
 							vertex->texcoord.y = v_;
-							vertex->color = skr::gdi::encode_rgba(0.f, 1.f, 0.f, 1.f);
 						}, &rect);
 						proxy->gdi_element->begin_path();
 						proxy->gdi_element->rect(cpos.x, cpos.y, csize.x, csize.y);
