@@ -36,6 +36,7 @@ struct GDIElementDrawCommand_RenderGraph
     uint32_t vb_offset = 0;
     uint32_t tb_offset = 0;
     uint32_t pb_offset = 0;
+    uint32_t rb_offset = 0;
 };
 
 struct SKR_GUI_RENDERER_API GDIViewportData_RenderGraph
@@ -47,12 +48,18 @@ struct SKR_GUI_RENDERER_API GDIViewportData_RenderGraph
     skr::vector<skr::render_graph::BufferHandle> vertex_buffers;
     skr::vector<skr::render_graph::BufferHandle> transform_buffers;
     skr::vector<skr::render_graph::BufferHandle> projection_buffers;
+    skr::vector<skr::render_graph::BufferHandle> rdata_buffers;
     skr::vector<skr::render_graph::BufferHandle> index_buffers;
 
     skr::vector<GDIElementDrawCommand_RenderGraph> render_commands;
     skr::vector<GDIVertex> render_vertices;
     skr::vector<rtm::matrix4x4f> render_transforms;
     skr::vector<rtm::matrix4x4f> render_projections;
+    // texture_swizzle:[_, _, _, _] None-0, R-1, G-2, B-3, A-4
+    // placeholder0:   [_, _, _, _] 
+    // placeholder1:   [_, _, _, _] 
+    // placeholder2:   [_, _, _, _] 
+    skr::vector<skr_float4x4_t> render_data;
     skr::vector<index_t> render_indices;
 };
 

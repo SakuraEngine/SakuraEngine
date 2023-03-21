@@ -139,9 +139,8 @@ godot::InlineAlignment GetInlineAlignment(EInlineAlignment o)
 
 StyleText TODO_StyleText = {
     42.0f,
-    {1.0f, 1.0f, 1.0f, 1.0f}
+    {1.0f, 0.0f, 1.0f, 1.0f}
 };
-
 
 RenderText::RenderText(skr_gdi_device_id gdi_device)
     : RenderBox(gdi_device), gdi_device(gdi_device)
@@ -152,6 +151,9 @@ RenderText::RenderText(skr_gdi_device_id gdi_device)
 
     gdi_paint = gdi_device->create_paint();
     gdi_element = gdi_device->create_element();
+    gdi_element->set_texture_swizzle(
+        gdi::GDIElement::kSwizzleOverride1, gdi::GDIElement::kSwizzleOverride1, 
+        gdi::GDIElement::kSwizzleOverride1, gdi::GDIElement::kSwizzleChanelR);
 
     paragraph_ = SkrNew<Paragraph>();
     font_ = SPtr<FontFile>::Create();
@@ -208,8 +210,8 @@ void RenderText::add_text(const char* u8_text)
 
 void RenderText::DrawParagraph()
 {
-    godot::Color p_color = { 1.f, 1.f, 1.f} ;
-    godot::Color p_dc_color = { 1.f, 1.f, 1.f} ;
+    godot::Color p_color = { font_color.x, font_color.y, font_color.z };
+    godot::Color p_dc_color = { 1.f, 1.f, 1.f};
     godot::TextServer::TextDrawProxy proxy = {};
     proxy.gdi_device = gdi_device;
     proxy.gdi_element = gdi_element;

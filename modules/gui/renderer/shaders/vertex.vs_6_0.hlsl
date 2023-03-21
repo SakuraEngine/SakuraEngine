@@ -10,6 +10,7 @@ struct VSIn
     float4 color : COLOR;
     nointerpolation float4x4 model : TRANSFORM;
     nointerpolation float4x4 projection : PROJECTION;
+    nointerpolation float4x4 draw_data: DRAW_DATA;
 };
 
 struct VSOut
@@ -20,6 +21,7 @@ struct VSOut
     float2 clip_uv : UV;
     float2 clip_uv2 : UV_Two;
     float4 color : COLOR;
+    float4 texture_swizzle : SWIZZLE;
 };
 
 VSOut main(const VSIn input)
@@ -33,6 +35,8 @@ VSOut main(const VSIn input)
     output.clip_uv = input.clip_uv;
     output.clip_uv2 = input.clip_uv2;
     output.color = input.color;
+    output.texture_swizzle = input.draw_data[0];
+    // texture_swizzle: none-0 X-1 Y-2 Z-3 W-4
     return output;
 }
 
