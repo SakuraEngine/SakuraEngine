@@ -812,6 +812,19 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
         b2b.size = pass->b2bs[i].first.to - b2b.src_offset;
         cgpu_cmd_transfer_buffer_to_buffer(executor.gfx_cmd_buf, &b2b);
     }
+    for (uint32_t i = 0; i < pass->b2ts.size(); i++)
+    {
+        auto src_node = RenderGraph::resolve(pass->b2ts[i].first);
+        auto dst_node = RenderGraph::resolve(pass->b2ts[i].second);
+        CGPUBufferToTextureTransfer b2t = {};
+        b2t.src = resolve(executor, *src_node);
+        b2t.src_offset = pass->b2ts[i].first.from;
+        b2t.dst = resolve(executor, *dst_node);
+        b2t.dst_subresource.mip_level = pass->b2ts[i].second.mip_level;
+        b2t.dst_subresource.base_array_layer = pass->b2ts[i].second.array_base;
+        b2t.dst_subresource.layer_count = pass->b2ts[i].second.array_count;
+        cgpu_cmd_transfer_buffer_to_texture(executor.gfx_cmd_buf, &b2t);
+    }
     cgpu_cmd_end_event(executor.gfx_cmd_buf);
     deallocate_resources(pass);
 }

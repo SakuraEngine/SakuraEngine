@@ -262,6 +262,21 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_buffer(Buf
     return *this;
 }
 
+RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_texture(BufferRangeHandle src, TextureSubresourceHandle dst) SKR_NOEXCEPT
+{
+    ZoneScopedN("CopyPassBuilder::buffer_to_texture");
+
+    auto allocated_in = graph.object_factory->Allocate<BufferReadEdge>("CopySrc", src, CGPU_RESOURCE_STATE_COPY_SOURCE);
+    auto allocated_out = graph.object_factory->Allocate<TextureRenderEdge>(0u, dst._this, fastclear_0000, CGPU_RESOURCE_STATE_COPY_DEST);
+    auto&& in_edge = node.in_buffer_edges.emplace_back(allocated_in);
+    auto&& out_edge = node.out_texture_edges.emplace_back(allocated_out);
+    graph.graph->link(graph.graph->access_node(src._this), &node, in_edge);
+    graph.graph->link(&node, graph.graph->access_node(dst._this), out_edge);
+    node.b2ts.emplace_back(src, dst);
+    return *this;
+}
+
+
 RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::from_buffer(BufferRangeHandle src) SKR_NOEXCEPT
 {
     ZoneScopedN("CopyPassBuilder::from_buffer");

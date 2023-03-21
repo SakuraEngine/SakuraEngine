@@ -206,6 +206,7 @@ void GDIRenderer_RenderGraph::free_image(GDIImageId img) SKR_NOEXCEPT
         // wait creation...
     }
     skr_atomicu32_store_release(&image->state, static_cast<uint32_t>(EGDIResourceState::Finalizing));
+    SkrDelete(img);
 }
 
 void GDIRenderer_RenderGraph::free_texture(GDITextureId tex) SKR_NOEXCEPT
@@ -220,6 +221,7 @@ void GDIRenderer_RenderGraph::free_texture(GDITextureId tex) SKR_NOEXCEPT
     if (texture->texture_view) cgpu_free_texture_view(texture->texture_view);
     if (texture->texture) cgpu_free_texture(texture->texture);
     if (texture->bind_table) cgpux_free_bind_table(texture->bind_table);
+    SkrDelete(tex);
 }
 
 GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* owner, skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT
