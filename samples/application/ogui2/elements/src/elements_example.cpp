@@ -59,8 +59,8 @@ struct elements_example_application : public elements_application_t
         image3 = SkrNew<skr::gui::RenderImage>(gdi.device);
         image3->set_color({ 0, 0, 1, 1 });
         text_on_image3 = SkrNew<skr::gui::RenderText>(gdi.device);
-        text_on_image3->add_text("Hello World!");
-        
+        text_on_image3->add_text(u8"Hello World!");
+
         root_window->add_child(canvas);
         canvas->add_child(grid_paper);
         canvas->add_child(color_picker);

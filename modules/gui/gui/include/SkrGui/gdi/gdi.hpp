@@ -4,6 +4,7 @@
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIPaint, skr_gdi_paint)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIImage, skr_gdi_image)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDITexture, skr_gdi_texture)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDITextureUpdate, skr_gdi_texture_update)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIRenderer, skr_gdi_renderer)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIMaterial, skr_gdi_material)
 
@@ -38,6 +39,7 @@ using LiteSpan = skr::gui::LiteSpan<T>;
 using index_t = skr_gdi_index_t;
 typedef struct IGDIImage* GDIImageId;
 typedef struct IGDITexture* GDITextureId;
+typedef struct IGDITextureUpdate* GDITextureUpdateId;
 typedef struct IGDIMaterial* GDIMaterialId;
 typedef struct IGDIRenderer* GDIRendererId;
 

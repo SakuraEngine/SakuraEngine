@@ -112,6 +112,8 @@ protected:
     graph_edges_vector<eastl::pair<TextureSubresourceHandle, TextureSubresourceHandle>, 2> t2ts;
     graph_edges_vector<eastl::pair<BufferRangeHandle, BufferRangeHandle>, 2> b2bs;
     graph_edges_vector<eastl::pair<BufferRangeHandle, TextureSubresourceHandle>, 2> b2ts;
+    graph_edges_vector<eastl::pair<BufferHandle, ECGPUResourceState>, 2> bbarriers;
+    graph_edges_vector<eastl::pair<TextureHandle, ECGPUResourceState>, 2> tbarriers;
 };
 
 class PresentPassNode : public PassNode

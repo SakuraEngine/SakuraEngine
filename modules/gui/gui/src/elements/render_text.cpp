@@ -20,7 +20,6 @@ struct Paragraph : public godot::TextParagraph
 {
     void draw(godot::TextServer::TextDrawProxy* proxy, const skr_float2_t& p_pos, const godot::Color &p_color, const godot::Color& p_dc_color)
     {
-        const uint32_t max_width = UINT32_MAX;
         const float line_height_scale = 1.f;
 	    const int spacing_top = 0;
 	    const int spacing_bottom = 0;
@@ -113,6 +112,8 @@ struct Paragraph : public godot::TextParagraph
             }
         }
     }
+
+    uint32_t max_width = UINT32_MAX;
 };
 
 struct FontFile : public godot::FontFile
@@ -135,7 +136,7 @@ godot::InlineAlignment GetInlineAlignment(EInlineAlignment o)
 }
 
 StyleText TODO_StyleText = {
-    24.0f,
+    42.0f,
     {1.0f, 1.0f, 1.0f, 1.0f}
 };
 
@@ -178,6 +179,7 @@ void RenderText::layout(BoxConstraint constraints, bool needSize)
 {
     size.x = eastl::clamp(size.x, constraints.min_size.x, constraints.max_size.x);
     size.y = eastl::clamp(size.y, constraints.min_size.y, constraints.max_size.y);
+    paragraph_->max_width = size.x;
 }
 
 void RenderText::draw(const DrawParams* params)
@@ -195,7 +197,7 @@ void RenderText::draw(const DrawParams* params)
 
 void RenderText::add_text(const char* u8_text)
 {
-    inlines_.get().emplace_back(InlineType{ skr::text::text(u8_text) });
+    inlines_.get().emplace_back(InlineType{ skr::text::text::from_utf8(u8_text) });
     paragraph_dirty_ = true;
 }
 
@@ -246,7 +248,7 @@ void RenderText::buildParagraphRec(Paragraph* p, const StyleText& txt)
                 */
                 auto font = static_pointer_cast<godot::Font>(font_);
                 auto ft = godot::Ref<godot::Font>(font);
-                p->add_string(text.c_str(), ft, txt.font_size, "", {}); 
+                p->add_string(godot::String::utf8(text.c_str()), ft, txt.font_size, "", {}); 
             },
             [&](RenderElement*& child) 
             { 

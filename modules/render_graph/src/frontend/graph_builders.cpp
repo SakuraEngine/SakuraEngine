@@ -248,7 +248,7 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::can_be_lone() SKR_NO
     return *this;
 }
 
-RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_buffer(BufferRangeHandle src, BufferRangeHandle dst) SKR_NOEXCEPT
+RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_buffer(BufferRangeHandle src, BufferRangeHandle dst, ECGPUResourceState out_state) SKR_NOEXCEPT
 {
     ZoneScopedN("CopyPassBuilder::buffer_to_buffer");
 
@@ -259,10 +259,14 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_buffer(Buf
     graph.graph->link(graph.graph->access_node(src._this), &node, in_edge);
     graph.graph->link(&node, graph.graph->access_node(dst._this), out_edge);
     node.b2bs.emplace_back(src, dst);
+    if (out_state != CGPU_RESOURCE_STATE_COPY_DEST)
+    {
+        node.bbarriers.emplace_back(dst, out_state);
+    }
     return *this;
 }
 
-RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_texture(BufferRangeHandle src, TextureSubresourceHandle dst) SKR_NOEXCEPT
+RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_texture(BufferRangeHandle src, TextureSubresourceHandle dst, ECGPUResourceState out_state) SKR_NOEXCEPT
 {
     ZoneScopedN("CopyPassBuilder::buffer_to_texture");
 
@@ -273,21 +277,14 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_texture(Bu
     graph.graph->link(graph.graph->access_node(src._this), &node, in_edge);
     graph.graph->link(&node, graph.graph->access_node(dst._this), out_edge);
     node.b2ts.emplace_back(src, dst);
+    if (out_state != CGPU_RESOURCE_STATE_COPY_DEST)
+    {
+        node.tbarriers.emplace_back(dst, out_state);
+    }
     return *this;
 }
 
-
-RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::from_buffer(BufferRangeHandle src) SKR_NOEXCEPT
-{
-    ZoneScopedN("CopyPassBuilder::from_buffer");
-
-    auto allocated_in = graph.object_factory->Allocate<BufferReadEdge>("CopySrc", src, CGPU_RESOURCE_STATE_COPY_SOURCE);
-    auto&& in_edge = node.in_buffer_edges.emplace_back(allocated_in);
-    graph.graph->link(graph.graph->access_node(src._this), &node, in_edge);
-    return *this;
-}
-
-RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::texture_to_texture(TextureSubresourceHandle src, TextureSubresourceHandle dst) SKR_NOEXCEPT
+RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::texture_to_texture(TextureSubresourceHandle src, TextureSubresourceHandle dst, ECGPUResourceState out_state) SKR_NOEXCEPT
 {
     ZoneScopedN("CopyPassBuilder::texture_to_texture");
 
@@ -298,6 +295,20 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::texture_to_texture(T
     graph.graph->link(graph.graph->access_node(src._this), &node, in_edge);
     graph.graph->link(&node, graph.graph->access_node(dst._this), out_edge);
     node.t2ts.emplace_back(src, dst);
+    if (out_state != CGPU_RESOURCE_STATE_COPY_DEST)
+    {
+        node.tbarriers.emplace_back(dst, out_state);
+    }
+    return *this;
+}
+
+RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::from_buffer(BufferRangeHandle src) SKR_NOEXCEPT
+{
+    ZoneScopedN("CopyPassBuilder::from_buffer");
+
+    auto allocated_in = graph.object_factory->Allocate<BufferReadEdge>("CopySrc", src, CGPU_RESOURCE_STATE_COPY_SOURCE);
+    auto&& in_edge = node.in_buffer_edges.emplace_back(allocated_in);
+    graph.graph->link(graph.graph->access_node(src._this), &node, in_edge);
     return *this;
 }
 

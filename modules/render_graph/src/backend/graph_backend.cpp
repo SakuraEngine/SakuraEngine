@@ -231,6 +231,8 @@ CGPUTextureId RenderGraphBackend::try_aliasing_allocate(RenderGraphFrameExecutor
 
 uint64_t RenderGraphBackend::get_latest_finished_frame() SKR_NOEXCEPT
 {
+    if (frame_index < RG_MAX_FRAME_IN_FLIGHT) return 0;
+
     uint64_t result = frame_index - RG_MAX_FRAME_IN_FLIGHT;
     for (auto&& executor : executors)
     {
@@ -761,8 +763,12 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
     calculate_barriers(executor, pass,
         tex_barriers, resolved_textures,
         buffer_barriers, resolved_buffers);
+    // late barriers
+    stack_vector<CGPUTextureBarrier> late_tex_barriers = {};
+    stack_vector<CGPUBufferBarrier> late_buf_barriers = {};
     // call cgpu apis
     CGPUResourceBarrierDescriptor barriers = {};
+    CGPUResourceBarrierDescriptor late_barriers = {};
     if (!tex_barriers.empty())
     {
         barriers.texture_barriers = tex_barriers.data();
@@ -781,6 +787,32 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
         stack.resolved_buffers = resolved_buffers;
         stack.resolved_textures = resolved_textures;
         pass->executor(*this, stack);
+        for (auto [buffer_handle, state] : pass->bbarriers)
+        {
+            auto buffer = stack.resolve(buffer_handle);
+            auto& barrier = late_buf_barriers.emplace_back();
+            barrier.buffer = buffer;
+            barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
+            barrier.dst_state = state;
+        }
+        for (auto [texture_handle, state] : pass->tbarriers)
+        {
+            auto texture = stack.resolve(texture_handle);
+            auto& barrier = late_tex_barriers.emplace_back();
+            barrier.texture = texture;
+            barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
+            barrier.dst_state = state;
+        }
+        if (!late_tex_barriers.empty())
+        {
+            late_barriers.texture_barriers = late_tex_barriers.data();
+            late_barriers.texture_barriers_count = (uint32_t)late_tex_barriers.size();
+        }
+        if (!late_buf_barriers.empty())
+        {
+            late_barriers.buffer_barriers = late_buf_barriers.data();
+            late_barriers.buffer_barriers_count = (uint32_t)late_buf_barriers.size();
+        }
     }
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
     for (uint32_t i = 0; i < pass->t2ts.size(); i++)
@@ -825,6 +857,7 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
         b2t.dst_subresource.layer_count = pass->b2ts[i].second.array_count;
         cgpu_cmd_transfer_buffer_to_texture(executor.gfx_cmd_buf, &b2t);
     }
+    cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &late_barriers);
     cgpu_cmd_end_event(executor.gfx_cmd_buf);
     deallocate_resources(pass);
 }
