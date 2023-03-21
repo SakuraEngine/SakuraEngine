@@ -184,12 +184,12 @@ GDIRendererId GDITexture_RenderGraph::get_renderer() const SKR_NOEXCEPT
 
 uint32_t GDITexture_RenderGraph::get_width() const SKR_NOEXCEPT
 {
-    return texture->width;
+    return texture ? texture->width : 1;
 }
 
 uint32_t GDITexture_RenderGraph::get_height() const SKR_NOEXCEPT
 {
-    return texture->height;
+    return texture ? texture->height : 1;
 }
 
 EGDITextureType GDITexture_RenderGraph::get_type() const SKR_NOEXCEPT
@@ -370,7 +370,6 @@ GDITextureId GDITextureAsyncData_RenderGraph::DoAsync(struct GDITexture_RenderGr
     {
         skr_atomicu32_store_release(&owner->state, static_cast<uint32_t>(EGDIResourceState::Initializing));
         vram_request_from_image();
-        skr_atomicu32_store_release(&owner->state, static_cast<uint32_t>(EGDIResourceState::Okay));
     }
     return owner;
 }

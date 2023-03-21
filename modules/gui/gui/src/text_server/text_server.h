@@ -37,6 +37,9 @@
 #include "text_server/image_texture.h"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIRenderer, skr_gdi_renderer)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIPaint, skr_gdi_paint);
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIDevice, skr_gdi_device);
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIElement, skr_gdi_element);
 
 namespace godot{
 using TextServerVariants = HashMap<uint32_t, Vector3i>;
@@ -59,6 +62,14 @@ struct CaretInfo;
 class TextServer {
 
 public:
+	// ++ SKR
+	struct TextDrawProxy
+	{
+		skr_gdi_device_id gdi_device = nullptr;
+		skr_gdi_element_id gdi_element = nullptr;
+		skr_gdi_paint_id gdi_paint = nullptr;
+	};
+	// --SKR
 	enum FontAntialiasing {
 		FONT_ANTIALIASING_NONE,
 		FONT_ANTIALIASING_GRAY,

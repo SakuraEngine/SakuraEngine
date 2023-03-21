@@ -1,3 +1,8 @@
+#include "SkrGui/gdi/gdi.hpp"
+#include "SkrGui/gdi/color.hpp"
+#include "SkrGui/interface/gdi_renderer.hpp"
+#include "image_texture.h"
+
 #include "text_server/text_server_adv.h"
 #include "text_server/char_utils.h"
 #include <new>
@@ -3042,6 +3047,8 @@ void TextServerAdvanced::_font_draw_glyph(const RID &p_font_rid, const RID &p_ca
 	FontAdvanced *fd = font_owner.get_or_null(p_font_rid);
 	ERR_FAIL_COND(!fd);
 
+	auto proxy = (TextDrawProxy*)p_canvas.get_id();
+
 	MutexLock lock(fd->mutex);
 	Vector2i size = _get_size(fd, p_size);
 	ERR_FAIL_COND(!_ensure_cache_for_size(fd, size));
@@ -3127,8 +3134,53 @@ void TextServerAdvanced::_font_draw_glyph(const RID &p_font_rid, const RID &p_ca
     					SKR_UNIMPLEMENTED_FUNCTION();
 						// RenderingServer::get_singleton()->canvas_item_add_lcd_texture_rect_region(p_canvas, Rect2(cpos, csize), texture, gl.uv_rect, modulate);
 					} else {
-    					SKR_UNIMPLEMENTED_FUNCTION();
-						// RenderingServer::get_singleton()->canvas_item_add_texture_rect_region(p_canvas, Rect2(cpos, csize), texture, gl.uv_rect, modulate, false, false);
+						struct float8 {
+							float x, y, w, h, u, v, u2, v2;
+						};
+						skr_float4_t color = { p_color.r, p_color.g, p_color.b, p_color.a };
+						
+						auto image_texture = ImageTexture::texture_owner.get_or_null(texture);
+						auto gdi_texture = image_texture->underlying ? image_texture->underlying : nullptr;
+						if (gdi_texture->get_state() != skr::gdi::EGDIResourceState::Okay)
+						{
+							gdi_texture = nullptr;
+						}
+
+						// resolve UV
+						auto tex_size = image_texture->get_size();
+						const auto resolve_uv_pos = gl.uv_rect.position / tex_size; 
+						const auto resolve_uv_size = gl.uv_rect.size / tex_size;
+						
+						float8 rect = { 
+							cpos.x, cpos.y, csize.x, csize.y, resolve_uv_pos.x, resolve_uv_pos.y,
+							resolve_uv_pos.x + resolve_uv_size.x, resolve_uv_pos.y + resolve_uv_size.y 
+						};
+
+						proxy->gdi_paint->enable_imagespace_coordinate(false);
+						proxy->gdi_paint->set_pattern(cpos.x, cpos.y, csize.x, csize.y, 0, gdi_texture, color);
+						proxy->gdi_paint->custom_vertex_color(
+						+[](skr::gdi::GDIVertex* vertex, void *data){
+							const auto& rect = *(float8*)data;
+							const auto x_u = rect.x;
+							const auto x_U = rect.x + rect.w;
+							const auto y_v = rect.y;
+							const auto y_V = rect.y + rect.h;
+							const auto u = rect.u;
+							const auto v = rect.v;
+							const auto u2 = rect.u2;
+							const auto v2 = rect.v2;
+							const auto x = vertex->position.x;
+							const auto y = vertex->position.y;
+							const auto u_ = u + (u2 - u) * (x - x_u) / (x_U - x_u);
+							const auto v_ = v + (v2 - v) * (y - y_v) / (y_V - y_v);
+							vertex->texcoord.x = u_;
+							vertex->texcoord.y = v_;
+							vertex->color = skr::gdi::encode_rgba(0.f, 1.f, 0.f, 1.f);
+						}, &rect);
+						proxy->gdi_element->begin_path();
+						proxy->gdi_element->rect(cpos.x, cpos.y, csize.x, csize.y);
+						proxy->gdi_element->fill_paint(proxy->gdi_paint);
+						proxy->gdi_element->fill();
 					}
 				}
 			}

@@ -58,8 +58,8 @@ struct elements_example_application : public elements_application_t
         image2->set_color({ 0, 1, 0, 1 });
         image3 = SkrNew<skr::gui::RenderImage>(gdi.device);
         image3->set_color({ 0, 0, 1, 1 });
-        // text_on_image3 = SkrNew<skr::gui::RenderText>(gdi.device);
-        // text_on_image3->add_text("Hello World!");
+        text_on_image3 = SkrNew<skr::gui::RenderText>(gdi.device);
+        text_on_image3->add_text("Hello World!");
         
         root_window->add_child(canvas);
         canvas->add_child(grid_paper);
@@ -71,8 +71,8 @@ struct elements_example_application : public elements_application_t
         flex->add_child(image3);
         image3->set_size({ 100, 400 });
         canvas->add_child(flex);
-        // text_on_image3->set_size({ 50, 200 });
-        // flex->add_child(text_on_image3);
+        text_on_image3->set_size({ 50, 200 });
+        flex->add_child(text_on_image3);
 
         flex->layout(skr::gui::BoxConstraint{{400, 400}, {0, 0}}, true);
 
@@ -147,9 +147,9 @@ struct elements_example_application : public elements_application_t
             {
                 for (const auto property : selected_diagnostic->get_diagnostics_properties())
                 {
-                    ImGui::Text(property->get_name());
+                    ImGui::Text("%s", property->get_name());
                     ImGui::SameLine();
-                    ImGui::Text(property->get_value_as_string());
+                    ImGui::Text("%s", property->get_value_as_string());
                 }
             }
             ImGui::EndChild();
@@ -220,7 +220,7 @@ struct elements_example_application : public elements_application_t
         render_graph_imgui_finalize();
         
         // free render elements
-        // SkrDelete(text_on_image3);
+        SkrDelete(text_on_image3);
         SkrDelete(image1);
         SkrDelete(image2);
         SkrDelete(image3);
@@ -242,7 +242,7 @@ struct elements_example_application : public elements_application_t
     skr::gui::RenderImage* image1 = nullptr;
     skr::gui::RenderImage* image2 = nullptr;
     skr::gui::RenderImage* image3 = nullptr;
-    // skr::gui::RenderText* text_on_image3 = nullptr;
+    skr::gui::RenderText* text_on_image3 = nullptr;
     gui_render_graph_t graph;
 };
 

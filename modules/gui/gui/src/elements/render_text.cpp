@@ -1,3 +1,4 @@
+#include "SkrGui/gdi/gdi.hpp"
 #include "SkrGui/render_elements/render_text.hpp"
 #include "text_server/text_paragraph.h"
 #include "text_server/font.h"
@@ -17,13 +18,13 @@ struct InlineType : public std::variant<skr::text::text, RenderElement*, RenderT
 
 struct Paragraph : public godot::TextParagraph
 {
-    void draw(const skr_float2_t& p_pos, const godot::Color &p_color, const godot::Color& p_dc_color)
+    void draw(godot::TextServer::TextDrawProxy* proxy, const skr_float2_t& p_pos, const godot::Color &p_color, const godot::Color& p_dc_color)
     {
         const uint32_t max_width = UINT32_MAX;
         const float line_height_scale = 1.f;
 	    const int spacing_top = 0;
 	    const int spacing_bottom = 0;
-        godot::RID p_canvas = {};
+        godot::RID p_canvas = godot::RID::from_uint64((uint64_t)proxy);
 
         _shape_lines();
         godot::Vector2 ofs = { p_pos.x, p_pos.y };
@@ -134,17 +135,20 @@ godot::InlineAlignment GetInlineAlignment(EInlineAlignment o)
 }
 
 StyleText TODO_StyleText = {
-    12.0f,
+    24.0f,
     {1.0f, 1.0f, 1.0f, 1.0f}
 };
 
 
 RenderText::RenderText(skr_gdi_device_id gdi_device)
-    : RenderBox(gdi_device)
+    : RenderBox(gdi_device), gdi_device(gdi_device)
 {
     diagnostic_builder.add_properties(
         SkrNew<TextDiagnosticProperty>("type", "text", "draws text paragraph")
     );
+
+    gdi_paint = gdi_device->create_paint();
+    gdi_element = gdi_device->create_element();
 
     paragraph_ = SkrNew<Paragraph>();
     font_ = SPtr<FontFile>::Create();
@@ -165,6 +169,8 @@ RenderText::RenderText(skr_gdi_device_id gdi_device)
 
 RenderText::~RenderText()
 {
+    gdi_device->free_paint(gdi_paint);
+    gdi_device->free_element(gdi_element);
     SkrDelete(paragraph_);
 }
 
@@ -176,10 +182,15 @@ void RenderText::layout(BoxConstraint constraints, bool needSize)
 
 void RenderText::draw(const DrawParams* params)
 {
-    RenderBox::draw(params);
-
     BuildParagraph();
     DrawParagraph();
+
+    if (auto canvas = params->canvas)
+    {
+        canvas->add_element(gdi_element);
+    }
+
+    RenderBox::draw(params);
 }
 
 void RenderText::add_text(const char* u8_text)
@@ -192,7 +203,12 @@ void RenderText::DrawParagraph()
 {
     godot::Color p_color = { 1.f, 1.f, 1.f} ;
     godot::Color p_dc_color = { 1.f, 1.f, 1.f} ;
-    paragraph_->draw(pos, p_color, p_dc_color);
+    godot::TextServer::TextDrawProxy proxy = {};
+    proxy.gdi_device = gdi_device;
+    proxy.gdi_element = gdi_element;
+    proxy.gdi_paint = gdi_paint;
+    proxy.gdi_element->begin_frame(1.f);
+    paragraph_->draw(&proxy, pos, p_color, p_dc_color);
 }
 
 void RenderText::BuildParagraph()
@@ -259,7 +275,7 @@ void RenderText::buildParagraphRec(Paragraph* p, const StyleText& txt)
                 */
                 auto font = static_pointer_cast<godot::Font>(font_);
                 auto ft = godot::Ref<godot::Font>(font);
-                paragraph_->add_string((wchar_t*)Bind->text.get().c_str(), ft, txt.font_size, "", draw_policy_);
+                paragraph_->add_string((wchar_t*)Bind->text.get().c_str(), ft, txt.font_size, "", {});
             }
         }, inl);
     }

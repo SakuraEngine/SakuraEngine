@@ -43,7 +43,7 @@ inline static skr_float4_t hsl_to_rgbaf(float h, float s, float l)
 	return hsla_to_rgbaf(h, s, l, 255);
 }
 
-uint32_t hsv_to_abgr(double H, double S, double V) {
+inline static uint32_t hsv_to_abgr(double H, double S, double V) {
 	double r = 0, g = 0, b = 0;
 	if (S == 0)
 	{
@@ -115,5 +115,13 @@ uint32_t hsv_to_abgr(double H, double S, double V) {
 	return (A << 24) | (B << 16) | (G << 8) | R;
 }
 
+inline static uint32_t encode_rgba(float r, float g, float b, float a)
+{
+	const uint32_t R = (uint32_t)(r * 255.0);
+	const uint32_t G = (uint32_t)(g * 255.0);
+	const uint32_t B = (uint32_t)(b * 255.0);
+	const uint32_t A = (uint32_t)(a * 255.0);
+	return (A << 24) | (B << 16) | (G << 8) | R;
+}
 
 } }

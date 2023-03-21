@@ -198,7 +198,7 @@ struct SKR_GUI_API GDIText
 
 SKR_DECLARE_TYPE_ID(skr::gdi::GDIResource, skr_gdi_resource)
 SKR_DECLARE_TYPE_ID(skr::gdi::GDIPaint, skr_gdi_paint)
-SKR_DECLARE_TYPE_ID(skr::gdi::GDIElement, skr_gdi_elements)
+SKR_DECLARE_TYPE_ID(skr::gdi::GDIElement, skr_gdi_element)
 SKR_DECLARE_TYPE_ID(skr::gdi::GDICanvas, skr_gdi_canvas)
 SKR_DECLARE_TYPE_ID(skr::gdi::GDIViewport, skr_gdi_viewport)
 SKR_DECLARE_TYPE_ID(skr::gdi::GDIDevice, skr_gdi_device);

@@ -4,6 +4,8 @@
 // #include "containers/sptr.hpp"
 #include "containers/detail/sptr.hpp"
 
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIPaint, skr_gdi_paint);
+
 namespace skr {
 namespace gui {
 
@@ -53,7 +55,9 @@ private:
     skr::SPtr<FontFile> font_ = nullptr;
 
     bool paragraph_dirty_ = true;
-    void* draw_policy_ = nullptr;
+    skr_gdi_device_id gdi_device = nullptr;
+    skr_gdi_element_id gdi_element = nullptr;
+    skr_gdi_paint_id gdi_paint = nullptr;
 };
 
 } }
