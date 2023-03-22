@@ -7,12 +7,17 @@ namespace gui
 
 RenderStack::RenderStack(skr_gdi_device_id gdi_device)
     : RenderBox(gdi_device)
-{
+{  
+    diagnostic_builder.add_properties(
+        SkrNew<TextDiagnosticProperty>("type", "stack", "place children in stack")
+    );
 }
 
 void RenderStack::layout(BoxConstraint constraints, bool needSize)
 {
     set_size(constraints.max_size);
+    float width = get_size().x;
+    float height = get_size().y;
     for (int i = 0; i < get_child_count(); i++)
     {
         RenderBox* child = get_child_as_box(i);
@@ -23,20 +28,20 @@ void RenderStack::layout(BoxConstraint constraints, bool needSize)
         if (positional.left && positional.right)
         {
             childConstraints.min_size.x = childConstraints.max_size.x =
-            get_size().x - *positional.left - *positional.right;
+            width - positional.left.get_value(width) - positional.right.get_value(width);
         }
         else if(positional.width)
         {
-            childConstraints.min_size.x = childConstraints.max_size.x = *positional.width;
+            childConstraints.min_size.x = childConstraints.max_size.x = positional.width.get_value(width);
         }
         if (positional.top && positional.bottom)
         {
             childConstraints.min_size.y = childConstraints.max_size.y =
-            get_size().y - *positional.top - *positional.bottom;
+            height - positional.top.get_value(height) - positional.bottom.get_value(height);
         }
         else if (positional.height)
         {
-            childConstraints.min_size.y = childConstraints.max_size.y = *positional.height;
+            childConstraints.min_size.y = childConstraints.max_size.y = positional.height.get_value(height);
         }
 
         child->layout(childConstraints, true);
@@ -44,12 +49,12 @@ void RenderStack::layout(BoxConstraint constraints, bool needSize)
         if(positional.left)
         {
             float pivotX = positional.right ? 0 : positional.pivot.x;
-            childPosition.x = *positional.left - child->get_size().x * pivotX;
+            childPosition.x = positional.left.get_value(width) - child->get_size().x * pivotX;
         }
         else if(positional.right)
         {
             float pivotY = positional.pivot.y;
-            childPosition.x = get_size().x - *positional.right - child->get_size().x * (1 - pivotY);
+            childPosition.x = width - positional.right.get_value(width) - child->get_size().x * (1 - pivotY);
         }
         else
         {
@@ -58,12 +63,12 @@ void RenderStack::layout(BoxConstraint constraints, bool needSize)
         if (positional.top)
         {
             float pivotY = positional.bottom ? 0 : positional.pivot.y;
-            childPosition.y = *positional.top - child->get_size().y * pivotY;
+            childPosition.y = positional.top.get_value(height) - child->get_size().y * pivotY;
         }
         else if (positional.bottom)
         {
             float pivotY = positional.pivot.y;
-            childPosition.y = get_size().y - *positional.bottom - child->get_size().y * (1 - pivotY);
+            childPosition.y = height - positional.bottom.get_value(height) - child->get_size().y * (1 - pivotY);
         }
         else
         {

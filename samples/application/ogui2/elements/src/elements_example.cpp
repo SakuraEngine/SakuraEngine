@@ -11,6 +11,7 @@
 #include "SkrGui/render_elements/render_grid_paper.hpp"
 #include "SkrGui/render_elements/render_color_picker.hpp"
 #include "SkrGui/render_elements/render_flex.hpp"
+#include "SkrGui/render_elements/render_stack.hpp"
 #include "SkrGui/render_elements/render_image.hpp"
 #include "SkrGui/render_elements/render_text.hpp"
 
@@ -50,16 +51,18 @@ struct elements_example_application : public elements_application_t
         grid_paper = SkrNew<skr::gui::RenderGridPaper>(gdi.device);
         color_picker = SkrNew<skr::gui::RenderColorPicker>(gdi.device);
         flex = SkrNew<skr::gui::RenderFlex>(gdi.device);
-        flex->set_align_items(skr::gui::AlignItems::Center);
-        flex->set_justify_content(skr::gui::JustifyContent::SpaceAround);
+        flex->set_align_items(skr::gui::AlignItems::FlexStart);
+        flex->set_justify_content(skr::gui::JustifyContent::Center);
         image1 = SkrNew<skr::gui::RenderImage>(gdi.device);
         image1->set_color({ 1, 0, 0, 1 });
         image2 = SkrNew<skr::gui::RenderImage>(gdi.device);
         image2->set_color({ 0, 1, 0, 1 });
         image3 = SkrNew<skr::gui::RenderImage>(gdi.device);
         image3->set_color({ 0, 0, 1, 1 });
-        text_on_image3 = SkrNew<skr::gui::RenderText>(gdi.device);
-        text_on_image3->add_text(u8"Hello World!");
+        text = SkrNew<skr::gui::RenderText>(gdi.device);
+        text->add_text(u8"Hello World!");
+        stack = SkrNew<skr::gui::RenderStack>(gdi.device);
+
 
         root_window->add_child(canvas);
         canvas->add_child(grid_paper);
@@ -70,11 +73,13 @@ struct elements_example_application : public elements_application_t
         image2->set_size({ 100, 200 });
         flex->add_child(image3);
         image3->set_size({ 100, 400 });
-        canvas->add_child(flex);
-        text_on_image3->set_size({ 50, 200 });
-        flex->add_child(text_on_image3);
+        stack->add_child(flex);
+        stack->set_positional(0, skr::gui::Positional{}.set_left(0).set_right(0).set_top(0).set_height(400));
+        stack->add_child(text);
+        stack->set_positional(1, skr::gui::Positional{}.set_left_percent(0.5).set_width(200).set_bottom(0).set_height(100).set_pivot(0.5, 0));
+        canvas->add_child(stack);
 
-        flex->layout(skr::gui::BoxConstraint{{400, 400}, {0, 0}}, true);
+        stack->layout(skr::gui::BoxConstraint{{(float)gdi.gfx.window_width, (float)gdi.gfx.window_height}, {0, 0}}, true);
 
         // initialize render graph
         if (graph.initialize(gdi.gfx))
@@ -220,7 +225,7 @@ struct elements_example_application : public elements_application_t
         render_graph_imgui_finalize();
         
         // free render elements
-        SkrDelete(text_on_image3);
+        SkrDelete(text);
         SkrDelete(image1);
         SkrDelete(image2);
         SkrDelete(image3);
@@ -242,7 +247,8 @@ struct elements_example_application : public elements_application_t
     skr::gui::RenderImage* image1 = nullptr;
     skr::gui::RenderImage* image2 = nullptr;
     skr::gui::RenderImage* image3 = nullptr;
-    skr::gui::RenderText* text_on_image3 = nullptr;
+    skr::gui::RenderStack* stack = nullptr;
+    skr::gui::RenderText* text = nullptr;
     gui_render_graph_t graph;
 };
 
