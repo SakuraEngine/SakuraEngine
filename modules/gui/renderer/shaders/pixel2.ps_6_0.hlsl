@@ -26,13 +26,13 @@ void main(VSOut input,
         0.f, 1.f
     };
     float4 swizzled_color = lerp(texture_color, 0.f, saturate(input.texture_swizzle));
-    swizzled_color.x += swizzle_values[input.texture_swizzle.x];
-    swizzled_color.y += swizzle_values[input.texture_swizzle.y];
-    swizzled_color.z += swizzle_values[input.texture_swizzle.z];
-    swizzled_color.w += swizzle_values[input.texture_swizzle.w];
+    swizzled_color.x += swizzle_values[(int)input.texture_swizzle.x];
+    swizzled_color.y += swizzle_values[(int)input.texture_swizzle.y];
+    swizzled_color.z += swizzle_values[(int)input.texture_swizzle.z];
+    swizzled_color.w += swizzle_values[(int)input.texture_swizzle.w];
 
-    const float visible = all(input.clip_uv == clamp(input.clip_uv, float2(-1.f, -1.f), float2(1.f, 1.f)));
-	const float visible2 = all(input.clip_uv2 == clamp(input.clip_uv2, float2(-1.f, -1.f), float2(1.f, 1.f)));
+    const float visible = (float)all(input.clip_uv == clamp(input.clip_uv, float2(-1.f, -1.f), float2(1.f, 1.f)));
+	const float visible2 = (float)all(input.clip_uv2 == clamp(input.clip_uv2, float2(-1.f, -1.f), float2(1.f, 1.f)));
 	const float edge = min(1.0, (1.0-abs((input.aa.x * 2.0) - 1.0)) * input.aa.y);
 	o_color = input.color * swizzled_color;
 	o_color.a = o_color.a * visible * visible2 * edge;
