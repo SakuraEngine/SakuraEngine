@@ -26,9 +26,6 @@
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRenderer/render_effect.h"
 
-#include "SkrInputSystem/input_system.hpp"
-#include "SkrInputSystem/interactions.hpp"
-#include "SkrInputSystem/interaction_type.hpp"
 #include "gainput/GainputInputDevicePad.h"
 #include "gainput/GainputInputDeviceKeyboard.h"
 #include "task/task.hpp"
@@ -65,7 +62,6 @@ extern void game_finalize_render_effects(SRendererId renderer, skr::render_graph
 #define lerp(a, b, t) (a) + (t) * ((b) - (a))
 
 const bool bUseJob = true;
-const bool bUseInputSystem = false;
 
 class SGameModule : public skr::IDynamicModule
 {
@@ -506,73 +502,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
     game_initialize_render_effects(game_renderer, renderGraph, resource_vfs);
     create_test_scene(game_renderer);
     create_imgui_resources(resource_vfs, render_device, renderGraph);
-    // Initialize Input
-    skr::input::InputSystem inputSystem;
-    if (bUseInputSystem)
-    {
-        SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
-        using namespace skr::input;
-        using namespace gainput;
-        inputSystem.Init(window);
-        inputSystem.SetDisplaySize(BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT);
-        // InputAction
-        {
-            auto action = eastl::make_shared<InputAction<float>>();
-            auto controls1 = eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeySpace);
-            controls1->AddInteraction(eastl::make_shared<InteractionTap<float>>());
-            action->AddControl(controls1);
-            action->ListenEvent([](float value, ControlsBase<float>* _c, Interaction* i, Interaction::EvendId eventId) {
-                SKR_LOG_DEBUG("Tap_Float %f", value);
-            });
-            inputSystem.AddInputAction(action);
-        }
-        {
-            auto action = eastl::make_shared<InputAction<float>>();
-            auto controls1 = eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyP);
-            auto interactionPress = eastl::make_shared<InteractionPress<float>>(PressBehavior::PressAndRelease, 0.5f);
-            controls1->AddInteraction(interactionPress);
-            action->AddControl(controls1);
-            action->ListenEvent([interactionPress](float value, ControlsBase<float>* _c, Interaction* i, Interaction::EvendId eventId) {
-                if (interactionPress.get() == i)
-                {
-                    // if(((InteractionPress<float>*)i)->GetPressEventType(eventId) == PressEventType::Press)
-                    //     SKR_LOG_DEBUG("Press_Float Press %f", value);
-                    // else
-                    //     SKR_LOG_DEBUG("Press_Float Release %f", value);
-                }
-            });
-            inputSystem.AddInputAction(action);
-        }
-        {
-            auto action = eastl::make_shared<InputAction<skr_float2_t>>();
-            auto controls1 = eastl::make_shared<Vector2Control>();
-            controls1->Bind(
-            Vector2Control::ButtonDirection{
-            eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyW),
-            eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyS),
-            eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyA),
-            eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_KEYBOARD, KeyD),
-            });
-            controls1->Bind(
-            Vector2Control::StickDirection{
-            eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_PAD, PadButtonLeftStickX),
-            eastl::make_shared<ControlsFloat>(InputDevice::DeviceType::DT_PAD, PadButtonLeftStickY),
-            });
-            auto interactionPress = eastl::make_shared<InteractionPress<skr_float2_t>>(PressBehavior::PressAndRelease, 0.5f);
-            controls1->AddInteraction(interactionPress);
-            action->AddControl(controls1);
-            action->ListenEvent([interactionPress](skr_float2_t value, ControlsBase<skr_float2_t>* _c, Interaction* i, Interaction::EvendId eventId) {
-                if (interactionPress.get() == i)
-                {
-                    // if(((InteractionPress<skr::math::Vector2f>*)i)->GetPressEventType(eventId) == PressEventType::Press)
-                    //     SKR_LOG_DEBUG("Press_Float Press    x:%f,y:%f", value.X, value.Y);
-                    // else
-                    //     SKR_LOG_DEBUG("Press_Float Release  x:%f,y:%f", value.X, value.Y);
-                }
-            });
-            inputSystem.AddInputAction(action);
-        }
-    }
     // Lua
     auto L = skr_lua_newstate(resource_vfs);
     skr_lua_bind_imgui(L);
@@ -670,18 +599,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
                     }
             }
 
-            if (event.type == SDL_SYSWMEVENT)
-            {
-                SDL_SysWMmsg* msg = event.syswm.msg;
-                if (bUseInputSystem)
-                {
-#if defined(GAINPUT_PLATFORM_WIN)
-                    inputSystem.GetHardwareManager().HandleMessage((MSG&)msg->msg);
-#elif defined(GAINPUT_PLATFORM_LINUX)
-                    inputSystem.GetHardwareManager().HandleMessage((XEvent&)msg->msg);
-#endif
-                }
-            }
             if (event.type == SDL_QUIT)
             {
                 quit = true;
@@ -721,12 +638,6 @@ int SGameModule::main_module_exec(int argc, char** argv)
         dualQ_get_views(cameraQuery, DUAL_LAMBDA(cameraUpdate));
 
         // Input
-        if (bUseInputSystem)
-        {
-            ZoneScopedN("Input");
-
-            inputSystem.Update(deltaTime);
-        }
         if (auto scene = scene_handle.get_resolved())
         {
             ZoneScopedN("MergeScene");

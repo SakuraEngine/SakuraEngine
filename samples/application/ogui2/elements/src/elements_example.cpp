@@ -303,7 +303,6 @@ struct ClickListener
     { 
         return (state.buttons & skr::input::InputMouseLeftButton) && (state.buttons & skr::input::InputMouseRightButton); 
     }
-
     uint32_t Trigger()
     {
         using namespace skr::input;
@@ -336,7 +335,6 @@ struct ClickListener
         }
         return 0;
     }
-
     void PollMouseInput() noexcept 
     { 
         if (uint32_t trigger_count = Trigger())
