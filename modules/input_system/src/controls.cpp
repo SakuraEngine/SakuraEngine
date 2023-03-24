@@ -1,4 +1,4 @@
-#include "SkrInputSystem/controls.h"
+#include "SkrInputSystem/controls.hpp"
 #include <stdlib.h>
 #include "EASTL/algorithm.h"
 #include "EASTL/internal/copy_help.h"

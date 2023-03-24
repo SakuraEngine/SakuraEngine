@@ -1,4 +1,4 @@
-﻿#include "SkrInputSystem/inputSystem.h"
+﻿#include "SkrInputSystem/input_system.hpp"
 
 #include "tracy/Tracy.hpp"
 
