@@ -3,7 +3,7 @@
 #include "gainput/gainput.h"
 #include "platform/window.h"
 #include <EASTL/vector.h>
-#include "SkrInputSystem/inputAction.h"
+#include "SkrInputSystem/input_action.hpp"
 
 namespace skr 
 {

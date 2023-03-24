@@ -1,8 +1,8 @@
 #pragma once
 #include "EASTL/map.h"
 #include "SkrInputSystem/module.configure.h"
-#include "SkrInputSystem/Interactions.h"
-#include "SkrInputSystem/controls.h"
+#include "SkrInputSystem/interactions.hpp"
+#include "SkrInputSystem/controls.hpp"
 
 namespace skr::input
 {

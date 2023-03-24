@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "SkrInputSystem/module.configure.h"
-#include "SkrInputSystem/controls.h"
+#include "SkrInputSystem/controls.hpp"
 
 namespace skr::input
 {
