@@ -1,6 +1,8 @@
 #pragma once
 #include "SkrInputSystem/module.configure.h"
 #include "SkrInput/input.h"
+#include "platform/atomic.h"
+#include "containers/detail/sptr.hpp"
 
 namespace skr {
 namespace input {
@@ -18,6 +20,10 @@ enum class EValueType
 
 struct SKR_INPUTSYSTEM_API InputValueStorage
 {
+    InputValueStorage() SKR_NOEXCEPT
+    {
+        
+    }
     InputValueStorage(float v) SKR_NOEXCEPT;
     InputValueStorage(skr_float2_t v) SKR_NOEXCEPT;
     InputValueStorage(skr_float3_t v) SKR_NOEXCEPT;
@@ -26,6 +32,8 @@ struct SKR_INPUTSYSTEM_API InputValueStorage
     InputValueStorage(const InputValueStorage& rhs) SKR_NOEXCEPT;
     
     ~InputValueStorage() SKR_NOEXCEPT;
+
+    void reset() SKR_NOEXCEPT;
 
     EValueType get_type() const SKR_NOEXCEPT;
 
@@ -44,6 +52,17 @@ protected:
         InputReading* reading = nullptr;
         InputLayer* layer = nullptr;
     } lowlevel;
+};
+
+struct SKR_INPUTSYSTEM_API RC : public skr::SInterface
+{
+    virtual ~RC() SKR_NOEXCEPT;
+
+    uint32_t add_refcount() SKR_NOEXCEPT;
+    uint32_t release() SKR_NOEXCEPT;
+    uint32_t use_count() const SKR_NOEXCEPT;
+    
+    SAtomicU32 rc = 0;
 };
 
 } }

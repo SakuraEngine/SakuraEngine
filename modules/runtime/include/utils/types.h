@@ -191,7 +191,7 @@ BLOB_POD(skr_md5_t);
 
 namespace skr
 {
-struct SInterface
+struct RUNTIME_API SInterface
 {
     virtual ~SInterface() = default;
     virtual uint32_t add_refcount() = 0;
