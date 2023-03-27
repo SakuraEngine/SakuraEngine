@@ -45,6 +45,7 @@ typedef struct skr_guid_t {
     uint32_t Storage3 SKR_IF_CPP( = 0);
 } skr_guid_t;
 
+RUNTIME_EXTERN_C RUNTIME_API void skr_make_guid(skr_guid_t* out_guid);
 
 #define SKR_MD5_DIGEST_LENGTH 128 / sizeof(uint8_t)
 typedef struct skr_md5_t {

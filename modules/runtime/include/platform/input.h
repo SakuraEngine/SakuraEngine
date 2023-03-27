@@ -142,15 +142,15 @@ typedef enum EMouseKey
     MOUSE_KEY_X2B = 0x10,
 } EMouseKey;
 
-typedef enum EControllerAxis
+typedef enum EMouseAxis
 {
-    MOUSE_KEY_LX = 0, // Left thumb pad X axis.
-    MOUSE_KEY_LY = 1, // Left thumb pad Y axis.
-    MOUSE_KEY_RX = 2, // Right thumb pad X axis.
-    MOUSE_KEY_RY = 3, // Right thumb pad Y axis.
-    MOUSE_KEY_LT = 4, // Left trigger.
-    MOUSE_KEY_RT = 5, // Right trigger.
-} EControllerAxis;
+    MOUSE_AXIS_X = 0x01,
+    MOUSE_AXIS_Y = 0x02,
+    MOUSE_AXIS_XY = MOUSE_AXIS_X | MOUSE_AXIS_Y,
+    MOUSE_AXIS_WHEEL_X = 0x04,
+    MOUSE_AXIS_WHEEL_Y = 0x08,
+    MOUSE_AXIS_WHEEL_XY = MOUSE_AXIS_WHEEL_X | MOUSE_AXIS_WHEEL_Y
+} EMouseAxis;
 
 typedef enum EControllerButton
 {
