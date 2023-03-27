@@ -61,6 +61,16 @@ struct elements_example_application : public elements_application_t
         mapping->action = action;
         mapping_ctx->add_mapping(mapping);
 
+        auto mapping2 = input_system->create_mapping<skr::input::InputMapping_MouseAxis>(EMouseAxis::MOUSE_AXIS_XY);
+        auto action2 = input_system->create_input_action(skr::input::EValueType::kFloat2);
+        auto trigger2 = input_system->create_trigger<skr::input::InputTriggerDown>();
+        action2->add_trigger(trigger2);
+        action2->bind_event<skr_float2_t>([](const skr_float2_t& f2){
+            SKR_LOG_INFO("Mouse Axis: X[%f] Y[%f]", f2.x, f2.y);
+        });
+        mapping2->action = action2;
+        mapping_ctx->add_mapping(mapping2);
+
         // initialize base app
         if (!initialize_elem_application(this)) return false;
 
