@@ -4,6 +4,11 @@
 namespace skr {
 namespace input {
 
+InputTrigger::~InputTrigger() SKR_NOEXCEPT
+{
+
+}
+
 ETriggerState InputTriggerDown::update_state(const InputValueStorage& value, float delta) SKR_NOEXCEPT
 {
     return value.get_magnitude_val() ? ETriggerState::Triggered : ETriggerState::None;

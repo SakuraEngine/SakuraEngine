@@ -54,33 +54,25 @@ void InputMapping::process_actions(float delta) SKR_NOEXCEPT
 
 InputMappingContext::~InputMappingContext() SKR_NOEXCEPT
 {
-
 }
 
-lite::LiteSpan<InputMapping* const> InputMappingContext::get_mappings() const SKR_NOEXCEPT
+lite::LiteSpan<SObjectPtr<InputMapping> const> InputMappingContext::get_mappings() const SKR_NOEXCEPT
 {
     auto& mappings = mappings_.get();
     return { mappings.data(), mappings.size() };
 }
 
-InputMapping& InputMappingContext::add_mapping(InputMapping& mapping) SKR_NOEXCEPT
+SObjectPtr<InputMapping> InputMappingContext::add_mapping(SObjectPtr<InputMapping> mapping) SKR_NOEXCEPT
 {
-    auto& result = mappings_.get().emplace_back();
-    result = &mapping;
-    return *result;
+    return mappings_.get().emplace_back(mapping);
 }
 
-void InputMappingContext::free_mapping(InputMapping& mapping) SKR_NOEXCEPT
-{
-    SkrDelete(&mapping);
-}
-
-void InputMappingContext::remove_mapping(InputMapping& mapping) SKR_NOEXCEPT
+void InputMappingContext::remove_mapping(SObjectPtr<InputMapping> mapping) SKR_NOEXCEPT
 {
     auto& mappings = mappings_.get();
     for (auto it = mappings.begin(); it != mappings.end(); ++it)
     {
-        if (*it == &mapping)
+        if (*it == mapping)
         {
             mappings.erase(it);
             break;
@@ -90,21 +82,24 @@ void InputMappingContext::remove_mapping(InputMapping& mapping) SKR_NOEXCEPT
 
 void InputMappingContext::unmap_all() SKR_NOEXCEPT
 {
-    for (auto mapping : get_mappings())
-    {
-        SkrDelete(mapping);
-    }
     mappings_.get().clear();
 }
 
 
-InputTypeId InputMapping_Keyboard::get_type() const SKR_NOEXCEPT
+InputTypeId InputMapping_Keyboard::get_input_type() const SKR_NOEXCEPT
 {
     return kInputTypeId_Keyboard;
 }
 
+void InputMapping::process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT
+{
+    raw_value.reset();
+}
+
 void InputMapping_Keyboard::process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT
 {
+    InputMapping::process_input_reading(layer, reading, kind);
+    
     InputKeyState key_states[16];
     const auto count = layer->GetKeyState(reading, 16, key_states);
     for (uint32_t i = 0; i < count; i++)
@@ -131,13 +126,15 @@ void InputMapping_Keyboard::process_input_reading(InputLayer* layer, InputReadin
     }
 }
 
-InputTypeId InputMapping_MouseButton::get_type() const SKR_NOEXCEPT
+InputTypeId InputMapping_MouseButton::get_input_type() const SKR_NOEXCEPT
 {
     return kInputTypeId_MouseButton;
 }
 
 void InputMapping_MouseButton::process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT
 {
+    InputMapping::process_input_reading(layer, reading, kind);
+
     InputMouseState state = {};
     if (auto okay = layer->GetMouseState(reading, &state))
     {
@@ -162,23 +159,25 @@ void InputMapping_MouseButton::process_input_reading(InputLayer* layer, InputRea
     }
 }
 
-InputTypeId InputMapping_MouseAxis::get_type() const SKR_NOEXCEPT
+InputTypeId InputMapping_MouseAxis::get_input_type() const SKR_NOEXCEPT
 {
     return kInputTypeId_MouseAxis;
 }
 
 void InputMapping_MouseAxis::process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT
 {
+    InputMapping::process_input_reading(layer, reading, kind);
+
     InputMouseState state = {};
     if (auto okay = layer->GetMouseState(reading, &state))
     {
         skr_float2_t pos_raw = { 0.f, 0.f };
-        pos_raw.x = state.positionX;
-        pos_raw.y = state.positionY;
+        pos_raw.x = (float)state.positionX;
+        pos_raw.y = (float)state.positionY;
 
         skr_float2_t wheel_raw = { 0.f, 0.f };
-        wheel_raw.x = state.wheelX;
-        wheel_raw.y = state.wheelY;
+        wheel_raw.x = (float)state.wheelX;
+        wheel_raw.y = (float)state.wheelY;
         
         skr_float2_t processed = { 0.f, 0.f };
         if (axis & MOUSE_AXIS_X) processed.x = pos_raw.x - old_pos.x;

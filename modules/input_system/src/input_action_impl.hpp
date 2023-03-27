@@ -27,7 +27,7 @@ struct SKR_INPUTSYSTEM_API InputActionImpl : public InputAction
     }
     virtual ~InputActionImpl() SKR_NOEXCEPT;
 
-    ActionEventId bind_event(const ActionEvent<InputValueStorage>& event, ActionEventId id = kEventId_Invalid) SKR_NOEXCEPT final
+    ActionEventId bind_event_impl(const ActionEventImpl<InputValueStorage>& event, ActionEventId id = kEventId_Invalid) SKR_NOEXCEPT
     {
         ActionEventStorage storage;
         storage.event_id = id;
@@ -35,11 +35,15 @@ struct SKR_INPUTSYSTEM_API InputActionImpl : public InputAction
         {
             skr_make_guid(&storage.event_id);
         }
-        ActionEventImpl<InputValueStorage> event_impl = event;
-        storage.callback = [event_impl, this](){
-            event_impl(current_value);
+        storage.callback = [event, this](){
+            event(current_value);
         };
         return events.get().emplace_back(storage).event_id;
+    }
+
+    ActionEventId bind_event(const ActionEvent<InputValueStorage>& event, ActionEventId id = kEventId_Invalid) SKR_NOEXCEPT final
+    {
+        return bind_event_impl(event);
     }
 
     const InputValueStorage& get_value() const SKR_NOEXCEPT final
@@ -60,16 +64,16 @@ struct SKR_INPUTSYSTEM_API InputActionImpl : public InputAction
         return false;
     }
 
-    void add_trigger(InputTrigger& trigger) SKR_NOEXCEPT
+    void add_trigger(SObjectPtr<InputTrigger> trigger) SKR_NOEXCEPT
     {
-        triggers.get().emplace_back(&trigger);
+        triggers.get().emplace_back(trigger);
     }
 
-    void remove_trigger(InputTrigger& trigger) SKR_NOEXCEPT
+    void remove_trigger(SObjectPtr<InputTrigger> trigger) SKR_NOEXCEPT
     {
         for (auto it = triggers.get().begin(); it != triggers.get().end(); ++it)
         {
-            if (*it == &trigger)
+            if (*it == trigger)
             {
                 triggers.get().erase(it);
                 break;
@@ -77,16 +81,16 @@ struct SKR_INPUTSYSTEM_API InputActionImpl : public InputAction
         }
     }
 
-    void add_modifier(InputModifier& modifier) SKR_NOEXCEPT final
+    void add_modifier(SObjectPtr<InputModifier> modifier) SKR_NOEXCEPT final
     {
-        modifiers.get().emplace_back(&modifier);
+        modifiers.get().emplace_back(modifier);
     }
 
-    void remove_modifier(InputModifier& modifier) SKR_NOEXCEPT final
+    void remove_modifier(SObjectPtr<InputModifier> modifier) SKR_NOEXCEPT final
     {
         for (auto it = modifiers.get().begin(); it != modifiers.get().end(); ++it)
         {
-            if (*it == &modifier)
+            if (*it == modifier)
             {
                 modifiers.get().erase(it);
                 break;
@@ -112,6 +116,13 @@ struct SKR_INPUTSYSTEM_API InputActionImpl : public InputAction
         for (auto& trigger : triggers.get())
         {
             auto state = trigger->update_state(current_value, delta);
+            if (state == ETriggerState::Triggered)
+            {
+                for (auto& event : events.get())
+                {
+                    event.callback();
+                }
+            }
         }
     }
 
@@ -119,8 +130,8 @@ protected:
     EValueType type;
     InputValueStorage current_value;
     lite::VectorStorage<ActionEventStorage> events;
-    lite::VectorStorage<InputTrigger*> triggers;
-    lite::VectorStorage<InputModifier*> modifiers;
+    lite::VectorStorage<SObjectPtr<InputTrigger>> triggers;
+    lite::VectorStorage<SObjectPtr<InputModifier>> modifiers;
 };
 
 } }

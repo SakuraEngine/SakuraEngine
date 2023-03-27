@@ -25,8 +25,10 @@ enum class ETriggerEvent
 };
 */
 
-struct SKR_INPUTSYSTEM_API InputTrigger
+struct SKR_INPUTSYSTEM_API InputTrigger : public RC
 {
+    virtual ~InputTrigger() SKR_NOEXCEPT;
+    
     virtual ETriggerState update_state(const InputValueStorage& value, float delta) SKR_NOEXCEPT = 0;
 };
 
