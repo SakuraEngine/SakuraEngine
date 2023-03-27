@@ -26,8 +26,6 @@
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRenderer/render_effect.h"
 
-#include "gainput/GainputInputDevicePad.h"
-#include "gainput/GainputInputDeviceKeyboard.h"
 #include "task/task.hpp"
 
 #include "resource/local_resource_registry.hpp"
