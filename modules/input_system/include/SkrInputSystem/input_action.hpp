@@ -17,6 +17,12 @@ static const ActionEventId kEventId_Invalid = {0xbbd09231, 0xa76b, 0x4c0f, {0x83
 
 struct SKR_INPUTSYSTEM_API InputAction : public RC
 {
+    inline InputAction(EValueType type) SKR_NOEXCEPT
+        : value_type(type)
+    {
+        
+    }
+
     virtual ~InputAction() SKR_NOEXCEPT;
 
     template<typename ValueType>
@@ -36,7 +42,7 @@ struct SKR_INPUTSYSTEM_API InputAction : public RC
 
     virtual void remove_modifier(SObjectPtr<InputModifier> modifier) SKR_NOEXCEPT = 0;
 
-    EValueType value_type = EValueType::kBool;
+    const EValueType value_type = EValueType::kBool;
 
 protected:
     friend struct InputMapping;

@@ -21,7 +21,7 @@ struct ActionEventStorage
 struct SKR_INPUTSYSTEM_API InputActionImpl : public InputAction
 {
     InputActionImpl(EValueType type) SKR_NOEXCEPT
-        : type(type), current_value(type, skr_float4_t{ 0.f, 0.f, 0.f, 0.f })
+        : InputAction(type), current_value(type, skr_float4_t{ 0.f, 0.f, 0.f, 0.f })
     {
         
     }
@@ -127,7 +127,6 @@ struct SKR_INPUTSYSTEM_API InputActionImpl : public InputAction
     }
 
 protected:
-    EValueType type;
     InputValueStorage current_value;
     lite::VectorStorage<ActionEventStorage> events;
     lite::VectorStorage<SObjectPtr<InputTrigger>> triggers;
