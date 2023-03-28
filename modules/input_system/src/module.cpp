@@ -1,3 +1,4 @@
+#define CONTAINER_LITE_IMPL
 #include "module/module.hpp"
 #include "utils/log.h"
 

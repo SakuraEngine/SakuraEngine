@@ -26,7 +26,7 @@ typedef enum EInputKind
     InputKindGamepad          = 0x00040000,
     InputKindRacingWheel      = 0x00080000,
     InputKindUiNavigation     = 0x01000000
-} InputKind;
+} EInputKind;
 
 typedef enum InputMouseButtonFlags
 {
