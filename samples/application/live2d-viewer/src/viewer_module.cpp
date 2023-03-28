@@ -6,6 +6,7 @@
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 
+#include "platform/system.h"
 #include "platform/vfs.h"
 #include "platform/thread.h"
 #include "platform/time.h"
@@ -50,7 +51,9 @@ public:
     bool bUseCVV = false;
     DemoUploadMethod upload_method;
 
-    SWindowHandle window;
+    CGPUSwapChainId swapchain = nullptr;
+    CGPUFenceId present_fence = nullptr;
+    SWindowHandle main_window = nullptr;
     uint32_t backbuffer_index;
 
     struct dual_storage_t* l2d_world = nullptr;
@@ -211,15 +214,15 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     // TODO: Resizable swapchain
     window_desc.height = 1500;
     window_desc.width = 1500;
-    window = skr_create_window(
+    main_window = skr_create_window(
         skr::format("Live2D Viewer Inner [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).c_str(),
         &window_desc);
 
     auto ram_service = SLive2DViewerModule::Get()->ram_service;
     auto vram_service = render_device->get_vram_service();
     // Initialize renderer
-    auto swapchain = skr_render_device_register_window(render_device, window);
-    auto present_fence = cgpu_create_fence(cgpu_device);
+    swapchain = skr_render_device_register_window(render_device, main_window);
+    present_fence = cgpu_create_fence(cgpu_device);
     namespace render_graph = skr::render_graph;
     auto renderGraph = render_graph::RenderGraph::create(
     [=](skr::render_graph::RenderGraphBuilder& builder) {
@@ -238,45 +241,28 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     skr_init_hires_timer(&tick_timer);
 
     bool quit = false;
+    auto handler = skr_system_get_default_handler();
+    handler->add_window_close_handler(
+        +[](SWindowHandle window, void* pQuit) {
+            bool& quit = *(bool*)pQuit;
+            quit = true;
+        }, &quit);
+    handler->add_window_resize_handler(
+        +[](SWindowHandle window, int32_t w, int32_t h, void* usr_data) {
+            auto _this = (SLive2DViewerModule*)usr_data;
+            if (window != _this->main_window) return;
+
+            auto rdevice = _this->l2d_renderer->get_render_device();
+            cgpu_wait_queue_idle(rdevice->get_gfx_queue());
+            cgpu_wait_fences(&_this->present_fence, 1);
+            _this->swapchain = skr_render_device_recreate_window_swapchain(rdevice, window);
+        }, this);
+    skr_imgui_initialize(handler);
+
     while (!quit)
     {
         FrameMark;
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            if (SDL_GetWindowID((SDL_Window*)window) == event.window.windowID)
-            {
-                if (event.type == SDL_WINDOWEVENT)
-                {
-                    Uint8 window_event = event.window.event;
-                    if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
-                    {
-                        cgpu_wait_queue_idle(gfx_queue);
-                        cgpu_wait_fences(&present_fence, 1);
-                        swapchain = skr_render_device_recreate_window_swapchain(render_device, window);
-                    }
-                }
-            }
-            if (event.type == SDL_WINDOWEVENT)
-            {
-                Uint8 window_event = event.window.event;
-                if (window_event == SDL_WINDOWEVENT_CLOSE || window_event == SDL_WINDOWEVENT_MOVED || window_event == SDL_WINDOWEVENT_RESIZED)
-                if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)SDL_GetWindowFromID(event.window.windowID)))
-                {
-                    if (window_event == SDL_WINDOWEVENT_CLOSE)
-                        viewport->PlatformRequestClose = true;
-                    if (window_event == SDL_WINDOWEVENT_MOVED)
-                        viewport->PlatformRequestMove = true;
-                    if (window_event == SDL_WINDOWEVENT_RESIZED)
-                        viewport->PlatformRequestResize = true;
-                }
-            }
-            if (event.type == SDL_QUIT)
-            {
-                quit = true;
-                break;
-            }
-        }
+        
         // LoopBody
         ZoneScopedN("LoopBody");
         int64_t us = skr_hires_timer_get_usec(&tick_timer, true);
@@ -288,6 +274,12 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
             elapsed_frame = 0;
             elapsed_us = 0;
         }
+        float delta = 1.f / (float)fps;
+        {
+            ZoneScopedN("PollEvent");
+            handler->pump_messages(delta);
+            handler->process_messages(delta);
+        }
         {
             ZoneScopedN("ImGUINewFrame");
 
@@ -295,7 +287,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
             io.DisplaySize = ImVec2(
             (float)swapchain->back_buffers[0]->width,
             (float)swapchain->back_buffers[0]->height);
-            skr_imgui_new_frame(window, 1.f / 60.f);
+            skr_imgui_new_frame(main_window, 1.f / 60.f);
         }
         static uint32_t sample_count = 0;
         bool bPrevUseCVV = bUseCVV;
@@ -308,7 +300,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
 #endif
             ImGui::Text("Graphics: %s", adapter_detail->vendor_preset.gpu_name);
             int32_t wind_width = 0, wind_height = 0;
-            skr_window_get_extent(window, &wind_width, &wind_height);
+            skr_window_get_extent(main_window, &wind_width, &wind_height);
             ImGui::Text("Resolution: %dx%d", wind_width, wind_height);
             ImGui::Text("MotionEvalFPS(Fixed): %d", 240);
             ImGui::Text("PhysicsEvalFPS(Fixed): %d", 240);

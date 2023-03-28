@@ -1,5 +1,6 @@
 #include "gdi_application.h"
 #include "gui_render_graph.hpp"
+#include "platform/system.h"
 
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "utils/make_zeroed.hpp"
@@ -211,33 +212,28 @@ int main(int argc, char* argv[])
     auto App = make_zeroed<gdi_example_application>();
     App.initialize();
     bool quit = false;
+    auto handler = skr_system_get_default_handler();
+    handler->add_window_close_handler(
+        +[](SWindowHandle window, void* pQuit) {
+            bool& quit = *(bool*)pQuit;
+            quit = true;
+        }, &quit);
+    handler->add_window_resize_handler(
+        +[](SWindowHandle window, int32_t w, int32_t h, void* usr_data) {
+            gdi_example_application* pApp = (gdi_example_application*)usr_data;
+            app_resize_window(&pApp->gfx, w, h);
+            pApp->gdi_canvas->set_size((float)pApp->gfx.window_width, (float)pApp->gfx.window_height);
+            pApp->backgroud_canvas->set_size((float)pApp->gfx.window_width, (float)pApp->gfx.window_height);
+        }, &App);
+    
     while (!quit)
     {
         FrameMark;
+        float delta = 1.f / 60.f;
         {
             ZoneScopedN("SystemEvents");
-            SDL_Event event;
-            while (SDL_PollEvent(&event))
-            {
-                auto sdl_window = (SDL_Window*)App.gfx.window_handle;
-                if (SDL_GetWindowID(sdl_window) == event.window.windowID)
-                {
-                    if (!SDLEventHandler(&event, sdl_window))
-                    {
-                        quit = true;
-                    }
-                }
-                if (event.type == SDL_WINDOWEVENT)
-                {
-                    uint8_t window_event = event.window.event;
-                    if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
-                    {
-                        app_resize_window(&App.gfx, event.window.data1, event.window.data2);
-                        App.gdi_canvas->set_size((float)App.gfx.window_width, (float)App.gfx.window_height);
-                        App.backgroud_canvas->set_size((float)App.gfx.window_width, (float)App.gfx.window_height);
-                    }
-                }
-            }
+            handler->pump_messages(delta);
+            handler->process_messages(delta);
         }
         {
             ZoneScopedN("GDI Draw & Render");

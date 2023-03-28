@@ -4,6 +4,7 @@
 #include <containers/string.hpp>
 #include "utils/log.h"
 #include "platform/input.h"
+#include "platform/system.h"
 #include "SkrImGui/skr_imgui.h"
 #ifdef _WIN32
     #ifndef WIN32_LEAN_AND_MEAN
@@ -99,6 +100,62 @@ static void imgui_update_mouse_and_buttons(SWindowHandle window)
         io.MouseHoveredViewport = mouse_viewport_id;
     }
 #endif
+}
+
+void skr_imgui_initialize(skr_system_handler_id handler)
+{
+     auto rid = handler->add_window_close_handler(
+        +[](SWindowHandle window, void*) {
+            if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)window))
+            {
+                viewport->PlatformRequestClose = true;
+            }
+        }, nullptr);
+    rid = handler->add_window_move_handler(
+        +[](SWindowHandle window, void*) {
+            if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)window))
+            {
+                viewport->PlatformRequestMove = true;
+            }
+        }, nullptr);
+    rid = handler->add_window_resize_handler(
+        +[](SWindowHandle window, int32_t w, int32_t h, void*) {
+            if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)window))
+            {
+                viewport->PlatformRequestResize = true;
+            }
+        }, nullptr);
+    rid = handler->add_mouse_wheel_handler(
+        +[](int32_t X, int32_t Y, void* usr_data) {
+            ImGuiIO& io = ImGui::GetIO();
+            io.AddMouseWheelEvent((float)X, (float)Y);
+        }, nullptr);
+    rid = handler->add_mouse_button_down_handler(
+        +[](EMouseKey key, int32_t X, int32_t Y, void* usr_data) {
+            int mouse_button = -1;
+            if (key == EMouseKey::MOUSE_KEY_LB) { mouse_button = 0; }
+            if (key == EMouseKey::MOUSE_KEY_RB) { mouse_button = 1; }
+            if (key == EMouseKey::MOUSE_KEY_MB) { mouse_button = 2; }
+            if (key == EMouseKey::MOUSE_KEY_X1B) { mouse_button = 3; }
+            if (key == EMouseKey::MOUSE_KEY_X2B) { mouse_button = 4; }
+
+            ImGuiIO& io = ImGui::GetIO();
+            io.AddMouseButtonEvent(mouse_button, true);
+        }, nullptr);
+    rid = handler->add_mouse_button_up_handler(
+        +[](EMouseKey key, int32_t X, int32_t Y, void* usr_data) {
+            int mouse_button = -1;
+            if (key == EMouseKey::MOUSE_KEY_LB) { mouse_button = 0; }
+            if (key == EMouseKey::MOUSE_KEY_RB) { mouse_button = 1; }
+            if (key == EMouseKey::MOUSE_KEY_MB) { mouse_button = 2; }
+            if (key == EMouseKey::MOUSE_KEY_X1B) { mouse_button = 3; }
+            if (key == EMouseKey::MOUSE_KEY_X2B) { mouse_button = 4; }
+
+            ImGuiIO& io = ImGui::GetIO();
+            io.AddMouseButtonEvent(mouse_button, false);
+        }, nullptr);
+    
+    (void)rid;
 }
 
 void skr_imgui_new_frame(SWindowHandle window, float delta_time)
