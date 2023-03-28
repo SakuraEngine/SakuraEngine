@@ -21,6 +21,8 @@
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_effect.h"
 
+#include "SkrInput/input.h"
+
 #include "SkrLive2D/l2d_model_resource.h"
 #include "SkrLive2D/l2d_render_model.h"
 #include "SkrLive2D/l2d_render_effect.h"
@@ -241,6 +243,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     skr_init_hires_timer(&tick_timer);
 
     bool quit = false;
+    skr::input::Input::Initialize();
     auto handler = skr_system_get_default_handler();
     handler->add_window_close_handler(
         +[](SWindowHandle window, void* pQuit) {
@@ -279,6 +282,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
             ZoneScopedN("PollEvent");
             handler->pump_messages(delta);
             handler->process_messages(delta);
+            skr::input::Input::GetInstance()->Tick();
         }
         {
             ZoneScopedN("ImGUINewFrame");
@@ -425,5 +429,8 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     skr_live2d_finalize_render_effects(l2d_renderer, renderGraph, resource_vfs);
     render_graph_imgui_finalize();
     skr_free_renderer(l2d_renderer);
+
+    skr::input::Input::Finalize();
+
     return 0;
 }
