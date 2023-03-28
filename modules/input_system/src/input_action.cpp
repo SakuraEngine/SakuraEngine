@@ -100,13 +100,13 @@ float InputValueStorage::get_magnitude_val() const SKR_NOEXCEPT
     switch (type)
     {
     case EValueType::kFloat:
-        return v.x;
+        return v.x * v.x;
     case EValueType::kFloat2:
         return v.x * v.x + v.y * v.y;
     case EValueType::kFloat3:
         return v.x * v.x + v.y * v.y + v.z * v.z;
     case EValueType::kBool:
-        return v.x;
+        return v.x * v.x;
     default:
         return 0.0f;
     }
@@ -114,10 +114,12 @@ float InputValueStorage::get_magnitude_val() const SKR_NOEXCEPT
 
 InputValueStorage::~InputValueStorage() SKR_NOEXCEPT
 {
+    /*
     if (lowlevel.layer && lowlevel.reading)
     {
         lowlevel.layer->Release(lowlevel.reading);
     }
+    */
 }
 
 InputAction::~InputAction() SKR_NOEXCEPT

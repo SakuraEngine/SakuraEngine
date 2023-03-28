@@ -47,6 +47,9 @@ struct elements_example_application : public elements_application_t
 #ifdef SKR_OS_WINDOWS
         ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 #endif
+        // initialize base app
+        if (!initialize_elem_application(this)) return false;
+
         skr::input::Input::Initialize();
         input_system = skr::input::InputSystem::Create();
         auto mapping_ctx = input_system->create_mapping_context();
@@ -61,18 +64,17 @@ struct elements_example_application : public elements_application_t
         mapping->action = action;
         mapping_ctx->add_mapping(mapping);
 
-        auto mapping2 = input_system->create_mapping<skr::input::InputMapping_MouseAxis>(EMouseAxis::MOUSE_AXIS_XY);
-        auto action2 = input_system->create_input_action(skr::input::EValueType::kFloat2);
-        auto trigger2 = input_system->create_trigger<skr::input::InputTriggerDown>();
+        auto mapping2 = input_system->create_mapping<skr::input::InputMapping_MouseButton>(EMouseKey::MOUSE_KEY_LB);
+        auto action2 = input_system->create_input_action(skr::input::EValueType::kBool);
+        auto trigger2 = input_system->create_trigger<skr::input::InputTriggerPressed>();
         action2->add_trigger(trigger2);
-        action2->bind_event<skr_float2_t>([](const skr_float2_t& f2){
-            SKR_LOG_INFO("Mouse Axis: X[%f] Y[%f]", f2.x, f2.y);
+        action2->bind_event<bool>([](const bool& f2){
+            int x, y;
+            skr_cursor_pos(&x, &y, ECursorCoordinate::CURSOR_COORDINATE_WINDOW);
+            SKR_LOG_INFO("Mouse Clicked at: X[%d] Y[%d]", x, y);
         });
         mapping2->action = action2;
         mapping_ctx->add_mapping(mapping2);
-
-        // initialize base app
-        if (!initialize_elem_application(this)) return false;
 
         // add elements
         canvas = SkrNew<skr::gui::RenderCanvas>(gdi.device);

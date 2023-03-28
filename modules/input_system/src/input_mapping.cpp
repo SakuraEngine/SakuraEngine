@@ -91,16 +91,18 @@ InputTypeId InputMapping_Keyboard::get_input_type() const SKR_NOEXCEPT
     return kInputTypeId_Keyboard;
 }
 
-void InputMapping::process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT
+bool InputMapping::process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT
 {
     raw_value.reset();
+    return true;
 }
 
-void InputMapping_Keyboard::process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT
+bool InputMapping_Keyboard::process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT
 {
     InputMapping::process_input_reading(layer, reading, kind);
     
     InputKeyState key_states[16];
+    bool dirty = false;
     const auto count = layer->GetKeyState(reading, 16, key_states);
     for (uint32_t i = 0; i < count; i++)
     {
@@ -111,19 +113,24 @@ void InputMapping_Keyboard::process_input_reading(InputLayer* layer, InputReadin
             {
             case EValueType::kBool:
                 raw_value = InputValueStorage(true);
+                dirty = true;
                 break;
             case EValueType::kFloat:
                 raw_value = InputValueStorage(1.f);
+                dirty = true;
                 break;
             case EValueType::kFloat2:
                 raw_value = InputValueStorage(skr_float2_t{1.f, 0.f});
+                dirty = true;
                 break;
             case EValueType::kFloat3:
                 raw_value = InputValueStorage(skr_float3_t{1.f, 0.f, 0.f});
+                dirty = true;
                 break;
             }
         }
     }
+    return dirty;
 }
 
 InputTypeId InputMapping_MouseButton::get_input_type() const SKR_NOEXCEPT
@@ -131,7 +138,7 @@ InputTypeId InputMapping_MouseButton::get_input_type() const SKR_NOEXCEPT
     return kInputTypeId_MouseButton;
 }
 
-void InputMapping_MouseButton::process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT
+bool InputMapping_MouseButton::process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT
 {
     InputMapping::process_input_reading(layer, reading, kind);
 
@@ -156,7 +163,9 @@ void InputMapping_MouseButton::process_input_reading(InputLayer* layer, InputRea
                 break;
             }
         }
+        return true;
     }
+    return false;
 }
 
 InputTypeId InputMapping_MouseAxis::get_input_type() const SKR_NOEXCEPT
@@ -164,7 +173,7 @@ InputTypeId InputMapping_MouseAxis::get_input_type() const SKR_NOEXCEPT
     return kInputTypeId_MouseAxis;
 }
 
-void InputMapping_MouseAxis::process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT
+bool InputMapping_MouseAxis::process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT
 {
     InputMapping::process_input_reading(layer, reading, kind);
 
@@ -203,7 +212,10 @@ void InputMapping_MouseAxis::process_input_reading(InputLayer* layer, InputReadi
 
         old_pos = pos_raw;
         old_wheel = wheel_raw;
+
+        return true;
     }
+    return false;
 }
 
 } }

@@ -114,13 +114,24 @@ void InputSystemImpl::update(float delta) SKR_NOEXCEPT
                 for (auto mapping : mappings)
                 {
                     // 2.1 update processing
-                    mapping->process_input_reading(raw_input.layer, raw_input.reading, kind);
+                    bool dirty = mapping->process_input_reading(raw_input.layer, raw_input.reading, kind);
+                    if (!dirty) continue;
+                    
                     // 2.2 update modifiers
                     mapping->process_modifiers(delta);
                     // 2.3 update actions
                     mapping->process_actions(delta);
                 }
             }
+        }
+    }
+
+    // 3. free raw inputs
+    for (auto& [kind, raw_inputs] : inputs)
+    {
+        for (auto& raw_input : raw_inputs)
+        {
+            raw_input.layer->Release(raw_input.reading);
         }
     }
 }
