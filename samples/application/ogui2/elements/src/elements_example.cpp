@@ -3,6 +3,11 @@
 
 #include "containers/text.hpp"
 
+#include "utils/log.h"
+#include "utils/defer.hpp"
+
+#include "SkrInputSystem/input_system.hpp"
+
 #include "SkrGui/interface/gdi_renderer.hpp"
 #include "SkrGui/framework/window_context.hpp"
 
@@ -30,6 +35,8 @@
 
 #include "SkrInput/input.h"
 
+#include "tracy/Tracy.hpp"
+
 extern void create_imgui_resources(ECGPUFormat format, CGPUSamplerId sampler, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs);
 
 struct elements_example_application : public elements_application_t
@@ -40,11 +47,34 @@ struct elements_example_application : public elements_application_t
 #ifdef SKR_OS_WINDOWS
         ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 #endif
-
-        skr::input::Input::Initialize();
-
         // initialize base app
         if (!initialize_elem_application(this)) return false;
+
+        skr::input::Input::Initialize();
+        input_system = skr::input::InputSystem::Create();
+        auto mapping_ctx = input_system->create_mapping_context();
+        input_system->add_mapping_context(mapping_ctx, 0, {});
+        auto mapping = input_system->create_mapping<skr::input::InputMapping_Keyboard>(EKeyCode::KEY_CODE_F);
+        auto action = input_system->create_input_action(skr::input::EValueType::kBool);
+        auto trigger = input_system->create_trigger<skr::input::InputTriggerDown>();
+        action->add_trigger(trigger);
+        action->bind_event<bool>([](const bool& down){
+            SKR_LOG_INFO("Key F pressed: %d", down);
+        });
+        mapping->action = action;
+        mapping_ctx->add_mapping(mapping);
+
+        auto mapping2 = input_system->create_mapping<skr::input::InputMapping_MouseButton>(EMouseKey::MOUSE_KEY_LB);
+        auto action2 = input_system->create_input_action(skr::input::EValueType::kBool);
+        auto trigger2 = input_system->create_trigger<skr::input::InputTriggerPressed>();
+        action2->add_trigger(trigger2);
+        action2->bind_event<bool>([](const bool& f2){
+            int x, y;
+            skr_cursor_pos(&x, &y, ECursorCoordinate::CURSOR_COORDINATE_WINDOW);
+            SKR_LOG_INFO("Mouse Clicked at: X[%d] Y[%d]", x, y);
+        });
+        mapping2->action = action2;
+        mapping_ctx->add_mapping(mapping2);
 
         // add elements
         canvas = SkrNew<skr::gui::RenderCanvas>(gdi.device);
@@ -162,6 +192,12 @@ struct elements_example_application : public elements_application_t
         ImGui::End();
     }
 
+    void tick(float delta)
+    {
+        skr::input::Input::GetInstance()->Tick();
+        input_system->update(delta);
+    }
+
     void draw()
     {
         auto diagnostic_as_render_box = [&](){
@@ -237,6 +273,7 @@ struct elements_example_application : public elements_application_t
         // free base app
         finalize_elem_application(this);
 
+        skr::input::InputSystem::Destroy(input_system);
         skr::input::Input::Finalize();
     }
 
@@ -250,11 +287,9 @@ struct elements_example_application : public elements_application_t
     skr::gui::RenderStack* stack = nullptr;
     skr::gui::RenderText* text = nullptr;
     gui_render_graph_t graph;
-};
 
-#include "tracy/Tracy.hpp"
-#include "utils/log.h"
-#include "utils/defer.hpp"
+    skr::input::InputSystem* input_system = nullptr;
+};
 
 struct KeyboardTest
 {
@@ -303,7 +338,6 @@ struct ClickListener
     { 
         return (state.buttons & skr::input::InputMouseLeftButton) && (state.buttons & skr::input::InputMouseRightButton); 
     }
-
     uint32_t Trigger()
     {
         using namespace skr::input;
@@ -336,7 +370,6 @@ struct ClickListener
         }
         return 0;
     }
-
     void PollMouseInput() noexcept 
     { 
         if (uint32_t trigger_count = Trigger())
@@ -424,16 +457,10 @@ int main(int argc, char* argv[])
             }
         }
         {
-            skr::vector<uint8_t> scan_codes(16);
-            UpdateScan(scan_codes);
-            for (auto code : scan_codes) {
-                if (code != 0) {
-                    std::cout << "Scan code: " << static_cast<int>(code) << std::endl;
-                }
-            }
+            float delta = 1.f / 60.f;
+            App.tick(delta);
         }
         {
-            skr::input::Input::GetInstance()->Tick();
             keyboard_test.PollKeyboardInput();
             doubleClickListener.PollMouseInput();
         }
