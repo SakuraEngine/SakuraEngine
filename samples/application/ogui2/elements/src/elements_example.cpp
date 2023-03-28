@@ -3,6 +3,7 @@
 
 #include "containers/text.hpp"
 
+#include "platform/system.h"
 #include "utils/log.h"
 #include "utils/defer.hpp"
 
@@ -401,63 +402,28 @@ int main(int argc, char* argv[])
     bool quit = false;
     KeyboardTest keyboard_test;
     ClickListener doubleClickListener = ClickListener(500);
+    auto handler = skr_system_get_default_handler();
+    handler->add_window_close_handler(
+        +[](SWindowHandle window, void* pQuit) {
+            bool& quit = *(bool*)pQuit;
+            quit = true;
+        }, &quit);
+    handler->add_window_resize_handler(
+        +[](SWindowHandle window, int32_t w, int32_t h, void* usr_data) {
+            elements_example_application* pApp = (elements_example_application*)usr_data;
+            app_resize_window(&pApp->gdi.gfx, w, h);
+        }, &App);
+    skr_imgui_initialize(handler);
     while (!quit)
     {
         FrameMark;
+        float delta = 1.f / 60.f;
         {
             ZoneScopedN("SystemEvents");
-            SDL_Event event;
-            while (SDL_PollEvent(&event))
-            {
-                auto sdl_window = (SDL_Window*)App.gdi.gfx.window_handle;
-                if (SDL_GetWindowID(sdl_window) == event.window.windowID)
-                {
-                    if (!SDLEventHandler(&event, sdl_window))
-                    {
-                        quit = true;
-                    }
-                }
-
-                if (event.type == SDL_WINDOWEVENT)
-                {
-                    Uint8 window_event = event.window.event;
-                    if (window_event == SDL_WINDOWEVENT_CLOSE || window_event == SDL_WINDOWEVENT_MOVED || window_event == SDL_WINDOWEVENT_RESIZED)
-                    if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)SDL_GetWindowFromID(event.window.windowID)))
-                    {
-                        if (window_event == SDL_WINDOWEVENT_CLOSE)
-                            viewport->PlatformRequestClose = true;
-                        if (window_event == SDL_WINDOWEVENT_MOVED)
-                            viewport->PlatformRequestMove = true;
-                        if (window_event == SDL_WINDOWEVENT_RESIZED)
-                            viewport->PlatformRequestResize = true;
-                    }
-                }
-
-                if (event.type == SDL_MOUSEBUTTONUP || event.type == SDL_MOUSEBUTTONDOWN)
-                {
-                    int mouse_button = -1;
-                    if (event.button.button == SDL_BUTTON_LEFT) { mouse_button = 0; }
-                    if (event.button.button == SDL_BUTTON_RIGHT) { mouse_button = 1; }
-                    if (event.button.button == SDL_BUTTON_MIDDLE) { mouse_button = 2; }
-                    if (event.button.button == SDL_BUTTON_X1) { mouse_button = 3; }
-                    if (event.button.button == SDL_BUTTON_X2) { mouse_button = 4; }
-
-                    ImGuiIO& io = ImGui::GetIO();
-                    io.AddMouseButtonEvent(mouse_button, (event.type == SDL_MOUSEBUTTONDOWN));
-                }
-
-                if (event.type == SDL_WINDOWEVENT)
-                {
-                    uint8_t window_event = event.window.event;
-                    if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
-                    {
-                        app_resize_window(&App.gdi.gfx, event.window.data1, event.window.data2);
-                    }
-                }
-            }
+            handler->pump_messages(delta);
+            handler->process_messages(delta);
         }
         {
-            float delta = 1.f / 60.f;
             App.tick(delta);
         }
         {
