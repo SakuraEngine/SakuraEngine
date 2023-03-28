@@ -32,7 +32,7 @@ struct SKR_INPUTSYSTEM_API InputMapping : public RC
 protected:
     friend struct InputSystem;
     friend struct InputSystemImpl;
-    virtual void process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT;
+    virtual bool process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT;
     virtual lite::LiteSpan<InputModifierId> get_modifiers() SKR_NOEXCEPT;
 
     virtual void process_modifiers(float delta) SKR_NOEXCEPT;
@@ -73,7 +73,7 @@ struct SKR_INPUTSYSTEM_API InputMapping_Keyboard : public InputMapping
 
     InputTypeId get_input_type() const SKR_NOEXCEPT override;
 
-    void process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT final;
+    bool process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT final;
     
     const EKeyCode key;
 };
@@ -87,7 +87,7 @@ struct SKR_INPUTSYSTEM_API InputMapping_MouseButton : public InputMapping
 
     InputTypeId get_input_type() const SKR_NOEXCEPT override;
     
-    void process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT final;
+    bool process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT final;
 
     const EMouseKey mouse_key;
 };
@@ -101,7 +101,7 @@ struct SKR_INPUTSYSTEM_API InputMapping_MouseAxis : public InputMapping
 
     InputTypeId get_input_type() const SKR_NOEXCEPT override;
     
-    void process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT final;
+    bool process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT final;
 
     const EMouseAxis axis;
     skr_float2_t old_pos = {0.f, 0.f};

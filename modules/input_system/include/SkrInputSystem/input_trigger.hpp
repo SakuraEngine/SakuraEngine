@@ -42,6 +42,7 @@ struct SKR_INPUTSYSTEM_API InputTriggerPressed : public InputTrigger
     ETriggerState update_state(const InputValueStorage& value, float delta) SKR_NOEXCEPT final;
 
     InputValueStorage last_value;
+    bool last_triggered = false;
 };
 
 } }

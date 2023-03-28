@@ -47,11 +47,13 @@ struct SKR_INPUTSYSTEM_API InputValueStorage
 protected:
     EValueType type;
     skr_float4_t v;
+    /*
     struct
     {
         InputReading* reading = nullptr;
         InputLayer* layer = nullptr;
     } lowlevel;
+    */
 };
 
 struct SKR_INPUTSYSTEM_API RC : public skr::SInterface
