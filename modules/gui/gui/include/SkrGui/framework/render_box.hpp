@@ -6,7 +6,7 @@ SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIElement, skr_gdi_element)
 
 namespace skr {
 namespace gui {
-using RenderBoxSizeType = skr_float2_t;
+using RenderBoxSizeType = BoxSizeType;
 
 struct BoxConstraint {
     RenderBoxSizeType max_size;
