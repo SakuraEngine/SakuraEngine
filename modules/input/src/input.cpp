@@ -96,7 +96,7 @@ lite::LiteSpan<InputLayer*> Input::GetLayers() SKR_NOEXCEPT
 
 Input* Input::GetInstance() SKR_NOEXCEPT
 {
-    SKR_ASSERT(instance_ && "Input: instance is null, maybe not initialized!");
+    // SKR_ASSERT(instance_ && "Input: instance is null, maybe not initialized!");
     return instance_;
 }
 

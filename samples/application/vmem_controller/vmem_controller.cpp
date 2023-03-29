@@ -1,5 +1,6 @@
 #include "../../common/utils.h"
 #include "platform/thread.h"
+#include "platform/system.h"
 #include "utils/log.h"
 #include "utils/make_zeroed.hpp"
 #include "module/module.hpp"
@@ -191,49 +192,28 @@ int SVMemCCModule::main_module_exec(int argc, char** argv)
     // initialize imgui
     initialize_imgui();
     bool quit = false;
+    auto handler = skr_system_get_default_handler();
+    handler->add_window_close_handler(
+        +[](SWindowHandle window, void* pQuit) {
+            bool& quit = *(bool*)pQuit;
+            quit = true;
+        }, &quit);
+    handler->add_window_resize_handler(
+        +[](SWindowHandle window, int32_t w, int32_t h, void* usr_data) {
+            auto _this = (SVMemCCModule*)usr_data;
+            cgpu_wait_fences(&_this->present_fence, 1);
+            _this->create_swapchain();
+        }, this);
+    skr_imgui_initialize(handler);
+
     while (!quit)
     {
-        SDL_Event event;
-        auto sdl_window = (SDL_Window*)window;
-        while (SDL_PollEvent(&event))
+        FrameMark;
+        float delta = 1.f / 60.f;
         {
-            if (SDL_GetWindowID(sdl_window) == event.window.windowID)
-            {
-                if (event.type == SDL_WINDOWEVENT)
-                {
-                    Uint8 window_event = event.window.event;
-                    if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
-                    {
-                        cgpu_wait_fences(&present_fence, 1);
-                        create_swapchain();
-                    }
-                }
-                if (!SDLEventHandler(&event, sdl_window))
-                {
-                    quit = true;
-                }
-            }
-            
-            if (event.type == SDL_WINDOWEVENT)
-            {
-                Uint8 window_event = event.window.event;
-                if (window_event == SDL_WINDOWEVENT_CLOSE || window_event == SDL_WINDOWEVENT_MOVED || window_event == SDL_WINDOWEVENT_RESIZED)
-                if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)SDL_GetWindowFromID(event.window.windowID)))
-                {
-                    if (window_event == SDL_WINDOWEVENT_CLOSE)
-                        viewport->PlatformRequestClose = true;
-                    if (window_event == SDL_WINDOWEVENT_MOVED)
-                        viewport->PlatformRequestMove = true;
-                    if (window_event == SDL_WINDOWEVENT_RESIZED)
-                        viewport->PlatformRequestResize = true;
-                }
-            }
-
-            if (event.type == SDL_QUIT)
-            {
-                quit = true;
-                break;
-            }
+            ZoneScopedN("SystemEvents");
+            handler->pump_messages(delta);
+            handler->process_messages(delta);
         }
         static uint64_t frame_index = 0;
         auto& io = ImGui::GetIO();

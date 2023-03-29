@@ -27,6 +27,7 @@ typedef struct SWindowDescroptor {
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 RUNTIME_API void skr_get_all_monitors(uint32_t* count, SMonitorHandle* monitors);
 RUNTIME_API void skr_monitor_get_extent(SMonitorHandle monitor, int32_t* width, int32_t* height);
 RUNTIME_API void skr_monitor_get_position(SMonitorHandle monitor, int32_t* x, int32_t* y);
@@ -46,6 +47,7 @@ RUNTIME_API SWindowHandle skr_get_mouse_focused_window();
 RUNTIME_API void* skr_window_get_native_handle(SWindowHandle window);
 RUNTIME_API void* skr_window_get_native_view(SWindowHandle window);
 RUNTIME_API void skr_free_window(SWindowHandle window);
+
 #ifdef __cplusplus
 }
 #endif
