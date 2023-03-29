@@ -47,6 +47,7 @@ auto GetMoveCtor();
 struct RUNTIME_API skr_type_t {
     skr_type_category_t type SKR_IF_CPP(= SKR_TYPE_CATEGORY_INVALID);
 #ifdef __cplusplus
+    virtual ~skr_type_t() = default;
     skr_type_t(skr_type_category_t type);
     size_t Size() const;
     size_t Align() const;
@@ -154,8 +155,7 @@ struct RUNTIME_API skr_value_ref_t {
 #ifdef __cplusplus
     skr_value_ref_t() = default;
     ~skr_value_ref_t();
-    template <class T>
-    skr_value_ref_t(T& t);
+    template <class T> skr_value_ref_t(T& t);
     skr_value_ref_t(void* address, const skr_type_t* type);
     skr_value_ref_t(skr_value_t& v);
     skr_value_ref_t(skr_value_ref_t&& other) = default;
@@ -392,6 +392,7 @@ struct RecordType : skr_type_t {
     {
     }
 };
+
 // enum T
 struct EnumType : skr_type_t {
     const skr_type_t* underlyingType;
@@ -606,7 +607,7 @@ template <class T>
 skr_value_ref_t::skr_value_ref_t(T& t)
 {
     ptr = &t;
-    type = skr::type::type_of<T>::get();
+    type = skr::type::type_of<std::decay<T>>::get();
 }
 
 template <class T>
@@ -648,4 +649,5 @@ T skr_value_ref_t::Convert()
     else
         return *std::launder(reinterpret_cast<T*>(&storage));
 }
+
 #endif
