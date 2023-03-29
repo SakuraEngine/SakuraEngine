@@ -11,6 +11,8 @@ struct skr_resource_handle_t;
 struct skr_binary_writer_t;
 struct skr_binary_reader_t;
 
+SKR_DECLARE_TYPE_ID_FWD(skr::type, DynamicRecordType, skr_dynamic_record_type)
+
 enum skr_type_category_t
 {
     SKR_TYPE_CATEGORY_INVALID,
@@ -78,3 +80,42 @@ const char* skr_get_field_name(const skr_field_t* field);
 extern const skr_type_t* $type;
 extern const skr_field_t* $field;
 extern const skr_method_t* $method;
+
+RUNTIME_EXTERN_C RUNTIME_API 
+skr_dynamic_record_type_id skr_create_record_type(const skr_guid_t* type_id, uint64_t size, uint64_t align, const skr_guid_t* parent);
+
+RUNTIME_EXTERN_C RUNTIME_API 
+void skr_record_type_set_name(skr_dynamic_record_type_id type, const char* name);
+
+RUNTIME_EXTERN_C RUNTIME_API 
+void skr_record_type_set_hasher(skr_dynamic_record_type_id type, size_t (*hasher)(const void* self, size_t base));
+
+// RUNTIME_EXTERN_C RUNTIME_API
+// void skr_free_record_type(const skr_guid_t* type_id);
+
+#ifdef __cplusplus
+namespace skr {
+namespace type {
+
+template <class T> struct type_id;
+template <class T> struct type_of;
+
+} // namespace type
+} // namespace skr
+
+#define SKR_RTTI_DECLARE_TYPE(__NS, __T, __API) \
+namespace skr::type \
+{ \
+    template<> \
+    struct type_of<__NS::__T> \
+    { \
+        __API static const skr_type_t* get(); \
+    }; \
+    template<> \
+    struct type_id<__NS::__T> \
+    { \
+        __API static const skr_guid_t get();\
+    }; \
+}
+
+#endif
