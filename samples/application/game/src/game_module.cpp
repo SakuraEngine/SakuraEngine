@@ -4,6 +4,7 @@
 #include "utils/format.hpp"
 #include "utils/make_zeroed.hpp"
 #include "platform/filesystem.hpp"
+#include "platform/system.h"
 #include "platform/configure.h"
 #include "platform/memory.h"
 #include "platform/time.h"
@@ -51,7 +52,6 @@
 
 #include "lua/skr_lua.h"
 
-SWindowHandle window;
 uint32_t backbuffer_index;
 extern void create_imgui_resources(skr_vfs_t* resource_vfs, SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph);
 extern void game_initialize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* resource_vfs);
@@ -93,6 +93,9 @@ class SGameModule : public skr::IDynamicModule
     struct dual_storage_t* game_world = nullptr;
     SRenderDeviceId game_render_device = nullptr;
     SRendererId game_renderer = nullptr;
+    CGPUSwapChainId swapchain = nullptr;
+    CGPUFenceId present_fence = nullptr;
+    SWindowHandle main_window = nullptr;
 
     skr::task::scheduler_t scheduler;
 };
@@ -484,12 +487,13 @@ int SGameModule::main_module_exec(int argc, char** argv)
     window_desc.flags = SKR_WINDOW_CENTERED | SKR_WINDOW_RESIZABLE; // | SKR_WINDOW_BOARDLESS;
     window_desc.height = BACK_BUFFER_HEIGHT;
     window_desc.width = BACK_BUFFER_WIDTH;
-    window = skr_create_window(
-    skr::format("Game [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).c_str(),
-    &window_desc);
+    main_window = skr_create_window(
+        skr::format("Game [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).c_str(),
+        &window_desc);
     // Initialize renderer
-    auto swapchain = skr_render_device_register_window(render_device, window);
-    auto present_fence = cgpu_create_fence(cgpu_device);
+    swapchain = skr_render_device_register_window(render_device, main_window);
+    present_fence = cgpu_create_fence(cgpu_device);
+    
     namespace render_graph = skr::render_graph;
     auto renderGraph = render_graph::RenderGraph::create(
     [=](skr::render_graph::RenderGraphBuilder& builder) {
@@ -555,6 +559,23 @@ int SGameModule::main_module_exec(int argc, char** argv)
     skinQuery = dualQ_from_literal(game_world, 
         "[in]skr_render_anim_comp_t, [inout]skr_render_skin_comp_t, [in]skr_render_mesh_comp_t, [in]skr_render_skel_comp_t");
 
+    auto handler = skr_system_get_default_handler();
+    handler->add_window_close_handler(
+        +[](SWindowHandle window, void* pQuit) {
+            bool& quit = *(bool*)pQuit;
+            quit = true;
+        }, &quit);
+    handler->add_window_resize_handler(
+        +[](SWindowHandle window, int32_t w, int32_t h, void* usr_data) {
+            auto _this = (SGameModule*)usr_data;
+            if (window != _this->main_window) return;
+
+            cgpu_wait_queue_idle(_this->game_render_device->get_gfx_queue());
+            cgpu_wait_fences(&_this->present_fence, 1);
+            _this->swapchain = skr_render_device_recreate_window_swapchain(_this->game_render_device, window);
+        }, this);
+    skr_imgui_initialize(handler);
+
     while (!quit)
     {
         FrameMark;
@@ -563,46 +584,13 @@ int SGameModule::main_module_exec(int argc, char** argv)
         auto current_thread_id = skr_current_thread_id();
         SKR_ASSERT(main_thread_id == current_thread_id && "This is not the main thread");
 
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
+        float delta = 1.f / 60.f;
         {
             ZoneScopedN("PollEvent");
-            if (event.type == SDL_WINDOWEVENT)
-            {
-                Uint8 window_event = event.window.event;
-                if (SDL_GetWindowID((SDL_Window*)window) == event.window.windowID)
-                {
-                    if (window_event == SDL_WINDOWEVENT_SIZE_CHANGED)
-                    {
-                        cgpu_wait_queue_idle(gfx_queue);
-                        cgpu_wait_fences(&present_fence, 1);
-                        swapchain = skr_render_device_recreate_window_swapchain(render_device, window);
-                    }
-                    if (window_event == SDL_WINDOWEVENT_CLOSE)
-                    {
-                        quit = true;
-                        break;
-                    }
-                }
-
-                if (window_event == SDL_WINDOWEVENT_CLOSE || window_event == SDL_WINDOWEVENT_MOVED || window_event == SDL_WINDOWEVENT_RESIZED)
-                    if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)SDL_GetWindowFromID(event.window.windowID)))
-                    {
-                        if (window_event == SDL_WINDOWEVENT_CLOSE)
-                            viewport->PlatformRequestClose = true;
-                        if (window_event == SDL_WINDOWEVENT_MOVED)
-                            viewport->PlatformRequestMove = true;
-                        if (window_event == SDL_WINDOWEVENT_RESIZED)
-                            viewport->PlatformRequestResize = true;
-                    }
-            }
-
-            if (event.type == SDL_QUIT)
-            {
-                quit = true;
-                break;
-            }
+            handler->pump_messages(delta);
+            handler->process_messages(delta);
         }
+
         {
             ZoneScopedN("dualJ GC");
             dualJ_gc();
@@ -645,7 +633,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         {
             ZoneScopedN("ImGUI");
 
-            skr_imgui_new_frame(window, (float)deltaTime);
+            skr_imgui_new_frame(main_window, (float)deltaTime);
             {
                 ImGui::Begin(u8"Information");
                 ImGui::Text("RenderFPS: %d", (uint32_t)fps);
@@ -941,7 +929,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
     render_graph::RenderGraph::destroy(renderGraph);
     game_finalize_render_effects(game_renderer, renderGraph);
     render_graph_imgui_finalize();
-    skr_free_window(window);
+    skr_free_window(main_window);
     SDL_Quit();
     return 0;
 }
