@@ -1,22 +1,22 @@
-#include "SkrGui/framework/render_element.hpp"
+#include "SkrGui/framework/render_object.hpp"
 #include "SkrGui/gdi/gdi.hpp"
 
 namespace skr {
 namespace gui {
 
-RenderElement::RenderElement()
+RenderObject::RenderObject()
 {
     diagnostic_builder.add_properties(
         SkrNew<BoolDiagnosticProperty>("active", active, "")
     );
 }
 
-RenderElement::~RenderElement()
+RenderObject::~RenderObject()
 {
 
 }
 
-void RenderElement::set_parent(RenderElement* new_parent)
+void RenderObject::set_parent(RenderObject* new_parent)
 {
     if (parent)
     {
@@ -26,20 +26,20 @@ void RenderElement::set_parent(RenderElement* new_parent)
     new_parent->add_child(this);
 }
 
-void RenderElement::add_child(RenderElement* child)
+void RenderObject::add_child(RenderObject* child)
 {
     auto& _children = this->children.get();
     _children.push_back(child);
     child->parent = parent;
 }
 
-void RenderElement::insert_child(RenderElement* child, int index)
+void RenderObject::insert_child(RenderObject* child, int index)
 {
     auto& _children = this->children.get();
     _children.insert(_children.begin() + index, child);
 }
 
-int RenderElement::get_child_index(RenderElement* child)
+int RenderObject::get_child_index(RenderObject* child)
 {
     auto& _children = this->children.get();
     for (int i = 0; i < _children.size(); ++i)
@@ -52,7 +52,7 @@ int RenderElement::get_child_index(RenderElement* child)
     return -1;
 }
 
-void RenderElement::remove_child(RenderElement* child)
+void RenderObject::remove_child(RenderObject* child)
 {
     auto& _children = this->children.get();
     for (auto it = _children.begin(); it != _children.end(); ++it)
@@ -65,22 +65,22 @@ void RenderElement::remove_child(RenderElement* child)
     }
 }
 
-int RenderElement::get_child_count() const
+int RenderObject::get_child_count() const
 {
     return children.get().size();
 }
 
-RenderElement* RenderElement::get_child(int index) const
+RenderObject* RenderObject::get_child(int index) const
 {
     return children.get()[index];
 }
 
-void RenderElement::set_render_matrix(const skr_float4x4_t& matrix)
+void RenderObject::set_render_matrix(const skr_float4x4_t& matrix)
 {
     render_matrix = matrix;
 }
 
-void RenderElement::set_active(bool active)
+void RenderObject::set_active(bool active)
 {
     if (auto property = diagnostic_builder.find_property("active"))
     {
@@ -89,17 +89,17 @@ void RenderElement::set_active(bool active)
     this->active = active;
 }
 
-void RenderElement::markLayoutDirty()
+void RenderObject::markLayoutDirty()
 {
     layoutDirty = true;
 }
 
-void RenderElement::before_draw(const DrawParams* params) 
+void RenderObject::before_draw(const DrawParams* params) 
 {
 
 }
 
-void RenderElement::draw(const DrawParams* params) 
+void RenderObject::draw(const DrawParams* params) 
 {
     if (!active) { return; }
     auto& _children = this->children.get();
@@ -111,12 +111,12 @@ void RenderElement::draw(const DrawParams* params)
     }
 }
 
-void RenderElement::after_draw(const DrawParams* params) 
+void RenderObject::after_draw(const DrawParams* params) 
 {
 
 }
 
-void RenderElement::addElementToCanvas(const DrawParams* params, gdi::GDIElement* element)
+void RenderObject::addElementToCanvas(const DrawParams* params, gdi::GDIElement* element)
 {
     if (auto canvas = params->canvas)
     {
@@ -133,9 +133,9 @@ void RenderElement::addElementToCanvas(const DrawParams* params, gdi::GDIElement
     }
 }
 
-LiteSpan<DiagnosticableTreeNode* const> RenderElement::get_diagnostics_children() const
+LiteSpan<DiagnosticableTreeNode* const> RenderObject::get_diagnostics_children() const
 {
-    const eastl::vector<RenderElement*>& children_ = children.get();
+    const eastl::vector<RenderObject*>& children_ = children.get();
     return { (DiagnosticableTreeNode* const*)children_.data(), children_.size() };
 }
 

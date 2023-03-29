@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrGui/framework/render_element.hpp"
+#include "SkrGui/framework/render_object.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIDevice, skr_gdi_device)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIElement, skr_gdi_element)
@@ -14,7 +14,7 @@ struct BoxConstraint {
     SKR_GUI_API RenderBoxSizeType apply(const RenderBoxSizeType& size) const;
 };
 
-struct SKR_GUI_API RenderBox : public RenderElement
+struct SKR_GUI_API RenderBox : public RenderObject
 {
 public:
     RenderBox(skr_gdi_device_id gdi_device);

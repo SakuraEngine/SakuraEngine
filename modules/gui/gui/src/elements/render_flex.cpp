@@ -1,4 +1,4 @@
-#include "SkrGui/render_elements/render_flex.hpp"
+#include "SkrGui/render_objects/render_flex.hpp"
 
 namespace skr
 {
@@ -181,22 +181,22 @@ void RenderFlex::layout(BoxConstraint constraints, bool needSize)
     }
 }
 
-void RenderFlex::add_child(RenderElement *child)
+void RenderFlex::add_child(RenderObject *child)
 {
-    RenderElement::add_child(child);
+    RenderObject::add_child(child);
     flexables.get().emplace_back();
 }
 
-void RenderFlex::insert_child(RenderElement *child, int index)
+void RenderFlex::insert_child(RenderObject *child, int index)
 {
-    RenderElement::insert_child(child, index);
+    RenderObject::insert_child(child, index);
     flexables.get().insert(flexables.get().begin() + index, Flexable{});
 }
 
-void RenderFlex::remove_child(RenderElement *child)
+void RenderFlex::remove_child(RenderObject *child)
 {
     flexables.get().erase(flexables.get().begin() + get_child_index(child));
-    RenderElement::remove_child(child);
+    RenderObject::remove_child(child);
 }
 
 void RenderFlex::set_flexable(int index, Flexable flexable)

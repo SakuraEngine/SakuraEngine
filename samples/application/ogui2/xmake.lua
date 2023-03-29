@@ -12,4 +12,4 @@ target("OpenGUI_DemoResources")
     public_dependency("SkrGuiRenderer", "0.1.0")
     
 includes("gdi/xmake.lua")
-includes("elements/xmake.lua")
+includes("robjects/xmake.lua")

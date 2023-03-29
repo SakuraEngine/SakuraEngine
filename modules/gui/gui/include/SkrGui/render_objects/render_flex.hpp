@@ -54,9 +54,9 @@ public:
 
     virtual void layout(BoxConstraint constraints, bool needSize = false) override;
     Flexable get_flex(int index); //each child's corresponding flexable property
-    virtual void add_child(RenderElement* child) override;
-    virtual void insert_child(RenderElement* child, int index) override;
-    virtual void remove_child(RenderElement* child) override;
+    virtual void add_child(RenderObject* child) override;
+    virtual void insert_child(RenderObject* child, int index) override;
+    virtual void remove_child(RenderObject* child) override;
     void set_flexable(int index, Flexable flexable);
 
     void set_justify_content(JustifyContent justify_content);

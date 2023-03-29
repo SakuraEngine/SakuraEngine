@@ -1,4 +1,4 @@
-#include "SkrGui/render_elements/render_canvas.hpp"
+#include "SkrGui/render_objects/render_canvas.hpp"
 #include "SkrGui/gdi/gdi.hpp"
 #include "SkrGui/framework/window_context.hpp"
 #include "SkrGui/interface/window.hpp"

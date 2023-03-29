@@ -1,7 +1,7 @@
 #include "SkrGui/interface/window.hpp"
 #include "SkrGui/framework/window_context.hpp"
 #include "SkrGui/interface/gdi_renderer.hpp"
-#include "SkrGui/render_elements/render_window.hpp"
+#include "SkrGui/render_objects/render_window.hpp"
 #include "platform/memory.h"
 
 namespace skr {
@@ -55,7 +55,7 @@ protected:
 
 void WindowContextImpl::draw(const DrawParams* params) SKR_NOEXCEPT
 {
-    RenderElement::DrawParams init_param = {};
+    RenderObject::DrawParams init_param = {};
     init_param.canvas = nullptr;
     init_param.viewport = nullptr;
     init_param.window_context = this;

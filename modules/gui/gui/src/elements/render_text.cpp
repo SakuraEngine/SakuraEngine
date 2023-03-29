@@ -1,5 +1,5 @@
 #include "SkrGui/gdi/gdi.hpp"
-#include "SkrGui/render_elements/render_text.hpp"
+#include "SkrGui/render_objects/render_text.hpp"
 #include "text_server/text_paragraph.h"
 #include "text_server/font.h"
 #include <containers/sptr.hpp>
@@ -14,7 +14,7 @@ template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 // explicit deduction guide (not needed as of C++20)
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
-struct InlineType : public std::variant<skr::text::text, RenderElement*, RenderText*, skr::SPtr<BindText>> {};
+struct InlineType : public std::variant<skr::text::text, RenderObject*, RenderText*, skr::SPtr<BindText>> {};
 
 struct Paragraph : public godot::TextParagraph
 {
@@ -257,7 +257,7 @@ void RenderText::buildParagraphRec(Paragraph* p, const StyleText& txt)
                 auto ft = godot::Ref<godot::Font>(font);
                 p->add_string(godot::String::utf8(text.c_str()), ft, txt.font_size, "", {}); 
             },
-            [&](RenderElement*& child) 
+            [&](RenderObject*& child) 
             { 
                 // if(!child->Visible()) return;
                 // auto& pos = StylePosition::Get(child->_style);

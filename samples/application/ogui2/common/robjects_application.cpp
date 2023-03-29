@@ -1,10 +1,10 @@
-#include "./elem_application.h"
+#include "./robjects_application.h"
 #include "SkrGui/framework/window_context.hpp"
 #include "SkrGuiRenderer/gui_window.hpp"
-#include "SkrGui/render_elements/render_window.hpp"
+#include "SkrGui/render_objects/render_window.hpp"
 #include "platform/memory.h"
 
-bool initialize_elem_application(elements_application_t* app)
+bool initialize_robjects_application(robjects_application_t* app)
 {
     if (!initialize_gdi_application(&app->gdi)) return false;
     app->platform_window = skr::gui::SPlatformWindow::Import(app->gdi.gfx.window_handle);
@@ -22,7 +22,7 @@ bool initialize_elem_application(elements_application_t* app)
     return true;
 }
 
-bool finalize_elem_application(elements_application_t* app)
+bool finalize_robjects_application(robjects_application_t* app)
 {
     skr::gui::WindowContext::Free(app->window_context);
     SkrDelete(app->root_window);
