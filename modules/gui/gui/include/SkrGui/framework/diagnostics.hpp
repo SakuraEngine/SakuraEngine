@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrGui/framework/fwd_containers.hpp"
+#include "platform/atomic.h"
 
 namespace skr {
 namespace gui {
@@ -16,7 +17,7 @@ struct SKR_GUI_API IDiagnosticsProperty
     virtual const char* get_name() const SKR_NOEXCEPT;
     virtual const char* get_description() const SKR_NOEXCEPT;
     virtual const char* get_value_as_string() const SKR_NOEXCEPT = 0;
-   
+
     template<typename T> const T& as() const { return static_cast<const T&>(*this); }
     template<typename T> T& as() { return static_cast<T&>(*this); }
 
@@ -71,12 +72,18 @@ protected:
     VectorStorage<IDiagnosticsProperty*> diagnostic_properties;
 };
 
-struct SKR_GUI_API Diagnosticable 
+struct SKR_GUI_API Diagnosticable : public SInterface
 {
     virtual ~Diagnosticable() SKR_NOEXCEPT;
     IDiagnosticsProperty* find_property(const char* name) const SKR_NOEXCEPT;
     LiteSpan<IDiagnosticsProperty* const> get_diagnostics_properties() const SKR_NOEXCEPT;
+
+    virtual uint32_t add_refcount() override;
+    virtual uint32_t release() override;
+    virtual skr_guid_t get_type() override;
+
 protected:
+    SAtomicU32 rc = 0;
     DiagnosticsBuilder diagnostic_builder;
 };
 
