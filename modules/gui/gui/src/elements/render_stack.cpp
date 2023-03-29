@@ -1,4 +1,4 @@
-#include "SkrGui/render_elements/render_stack.hpp"
+#include "SkrGui/render_objects/render_stack.hpp"
 
 namespace skr
 {
@@ -84,19 +84,19 @@ Positional RenderStack::get_position(int index)
     return positionals.get()[index];
 }
 
-void RenderStack::add_child(RenderElement* child)
+void RenderStack::add_child(RenderObject* child)
 {
     RenderBox::add_child(child);
     positionals.get().emplace_back(Positional{});
 }
 
-void RenderStack::insert_child(RenderElement* child, int index)
+void RenderStack::insert_child(RenderObject* child, int index)
 {
     RenderBox::insert_child(child, index);
     positionals.get().insert(positionals.get().begin() + index, Positional{});
 }
 
-void RenderStack::remove_child(RenderElement* child)
+void RenderStack::remove_child(RenderObject* child)
 {
     positionals.get().erase(positionals.get().begin() + get_child_index(child));
     RenderBox::remove_child(child);

@@ -1,4 +1,4 @@
-#include "elem_application.h"
+#include "robjects_application.h"
 #include "gui_render_graph.hpp"
 
 #include "containers/text.hpp"
@@ -12,14 +12,14 @@
 #include "SkrGui/interface/gdi_renderer.hpp"
 #include "SkrGui/framework/window_context.hpp"
 
-#include "SkrGui/render_elements/render_window.hpp"
-#include "SkrGui/render_elements/render_canvas.hpp"
-#include "SkrGui/render_elements/render_grid_paper.hpp"
-#include "SkrGui/render_elements/render_color_picker.hpp"
-#include "SkrGui/render_elements/render_flex.hpp"
-#include "SkrGui/render_elements/render_stack.hpp"
-#include "SkrGui/render_elements/render_image.hpp"
-#include "SkrGui/render_elements/render_text.hpp"
+#include "SkrGui/render_objects/render_window.hpp"
+#include "SkrGui/render_objects/render_canvas.hpp"
+#include "SkrGui/render_objects/render_grid_paper.hpp"
+#include "SkrGui/render_objects/render_color_picker.hpp"
+#include "SkrGui/render_objects/render_flex.hpp"
+#include "SkrGui/render_objects/render_stack.hpp"
+#include "SkrGui/render_objects/render_image.hpp"
+#include "SkrGui/render_objects/render_text.hpp"
 
 #include "SkrGuiRenderer/gdi_renderer.hpp"
 
@@ -40,7 +40,7 @@
 
 extern void create_imgui_resources(ECGPUFormat format, CGPUSamplerId sampler, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs);
 
-struct elements_example_application : public elements_application_t
+struct robjects_example_application : public robjects_application_t
 {
     CGPUSamplerId imgui_sampler = nullptr;
     bool initialize()
@@ -49,7 +49,7 @@ struct elements_example_application : public elements_application_t
         ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 #endif
         // initialize base app
-        if (!initialize_elem_application(this)) return false;
+        if (!initialize_robjects_application(this)) return false;
 
         skr::input::Input::Initialize();
         input_system = skr::input::InputSystem::Create();
@@ -77,7 +77,7 @@ struct elements_example_application : public elements_application_t
         mapping2->action = action2;
         mapping_ctx->add_mapping(mapping2);
 
-        // add elements
+        // add objects
         canvas = SkrNew<skr::gui::RenderCanvas>(gdi.device);
         grid_paper = SkrNew<skr::gui::RenderGridPaper>(gdi.device);
         color_picker = SkrNew<skr::gui::RenderColorPicker>(gdi.device);
@@ -136,7 +136,7 @@ struct elements_example_application : public elements_application_t
     {
         ImGui::PushID(diagnostic);
         auto type_property = static_cast<skr::gui::TextDiagnosticProperty*>(diagnostic->find_property("type"));
-        auto type = type_property ? type_property->get_value() : "element";
+        auto type = type_property ? type_property->get_value() : "object";
         skr::text::text show_name = skr::text::format("{}{}{}", "[", type, "]");
         ImGuiTreeNodeFlags node_flags = (selected_diagnostic == diagnostic) ? ImGuiTreeNodeFlags_Selected : 0;
         node_flags |= ImGuiTreeNodeFlags_SpanFullWidth;
@@ -168,7 +168,7 @@ struct elements_example_application : public elements_application_t
         io.DisplaySize = ImVec2((float)gdi.gfx.swapchain->back_buffers[0]->width, (float)gdi.gfx.swapchain->back_buffers[0]->height);
         skr_imgui_new_frame(gdi.gfx.window_handle, 1.f / 60.f);
 
-        ImGui::Begin("GUI RenderElements Example");
+        ImGui::Begin("GUI RenderObjects Example");
         ImGui::Columns(2, "DockSpace");
         {
             ImGui::BeginChild("TreeView");
@@ -261,7 +261,7 @@ struct elements_example_application : public elements_application_t
         if (imgui_sampler) cgpu_free_sampler(imgui_sampler);
         render_graph_imgui_finalize();
         
-        // free render elements
+        // free render objects
         SkrDelete(text);
         SkrDelete(image1);
         SkrDelete(image2);
@@ -272,7 +272,7 @@ struct elements_example_application : public elements_application_t
         SkrDelete(canvas);
         
         // free base app
-        finalize_elem_application(this);
+        finalize_robjects_application(this);
 
         skr::input::InputSystem::Destroy(input_system);
         skr::input::Input::Finalize();
@@ -397,7 +397,7 @@ void UpdateScan(skr::span<uint8_t> write_span)
 
 int main(int argc, char* argv[])
 {
-    auto App = make_zeroed<elements_example_application>();
+    auto App = make_zeroed<robjects_example_application>();
     App.initialize();
     bool quit = false;
     KeyboardTest keyboard_test;
@@ -410,7 +410,7 @@ int main(int argc, char* argv[])
         }, &quit);
     handler->add_window_resize_handler(
         +[](SWindowHandle window, int32_t w, int32_t h, void* usr_data) {
-            elements_example_application* pApp = (elements_example_application*)usr_data;
+            robjects_example_application* pApp = (robjects_example_application*)usr_data;
             app_resize_window(&pApp->gdi.gfx, w, h);
         }, &App);
     skr_imgui_initialize(handler);

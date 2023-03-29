@@ -1,4 +1,4 @@
-target("OpenGUI_ElementsDemo")
+target("OpenGUI_RObjectsDemo")
     set_group("04.examples/application")
     set_kind("binary")
     add_files("src/*.cpp") 

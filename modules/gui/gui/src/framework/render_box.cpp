@@ -30,7 +30,7 @@ RenderBox::~RenderBox()
 
 void RenderBox::before_draw(const DrawParams* params)
 {
-    RenderElement::before_draw(params);
+    RenderObject::before_draw(params);
 
     if (auto canvas = draw_debug_rect ? params->canvas : nullptr)
     {
@@ -60,7 +60,7 @@ void RenderBox::before_draw(const DrawParams* params)
 
 void RenderBox::draw(const DrawParams* params)
 {
-    RenderElement::draw(params);
+    RenderObject::draw(params);
 }
 
 RenderBoxSizeType RenderBox::get_size() const
