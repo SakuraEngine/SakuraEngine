@@ -10,5 +10,6 @@ namespace skr {
 namespace gui {
 
 using namespace skr::lite;
+using BoxSizeType = skr_float2_t;
 
 } }
