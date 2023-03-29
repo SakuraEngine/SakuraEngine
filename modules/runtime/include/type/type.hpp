@@ -48,6 +48,7 @@ struct RUNTIME_API skr_type_t {
     skr_type_category_t type SKR_IF_CPP(= SKR_TYPE_CATEGORY_INVALID);
 #ifdef __cplusplus
     virtual ~skr_type_t() = default;
+    skr_type_t() = default;
     skr_type_t(skr_type_category_t type);
     size_t Size() const;
     size_t Align() const;
@@ -365,18 +366,19 @@ struct ArrayViewType : skr_type_t {
 };
 // struct/class T
 struct RecordType : skr_type_t {
-    size_t size;
-    size_t align;
-    skr_guid_t guid;
-    bool object;
-    const skr::string_view name;
-    const RecordType* base;
-    ObjectMethodTable nativeMethods;
-    const skr::span<struct skr_field_t> fields;
-    const skr::span<struct skr_method_t> methods;
+    size_t size = 0;
+    size_t align = 0;
+    skr_guid_t guid = {};
+    bool object = false;
+    const skr::string_view name = "";
+    const RecordType* base = nullptr;
+    ObjectMethodTable nativeMethods = {};
+    const skr::span<struct skr_field_t> fields = {};
+    const skr::span<struct skr_method_t> methods = {};
     bool IsBaseOf(const RecordType& other) const;
     static const RecordType* FromName(skr::string_view name);
     static void Register(const RecordType* type);
+    RecordType() = default;
     RecordType(size_t size, size_t align, skr::string_view name, skr_guid_t guid, bool object, const RecordType* base, ObjectMethodTable nativeMethods,
     const skr::span<struct skr_field_t> fields, const skr::span<struct skr_method_t> methods)
         : skr_type_t{ SKR_TYPE_CATEGORY_OBJ }

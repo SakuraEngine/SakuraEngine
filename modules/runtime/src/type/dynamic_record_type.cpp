@@ -7,8 +7,8 @@ namespace type {
 struct DynamicRecordType : public RecordType
 {
     skr::string _name;
-    const skr::vector<skr_field_t> _fields;
-    const skr::vector<skr_method_t> _methods;
+    skr::vector<skr_field_t> _fields;
+    skr::vector<skr_method_t> _methods;
 };
 
 } // namespace type
