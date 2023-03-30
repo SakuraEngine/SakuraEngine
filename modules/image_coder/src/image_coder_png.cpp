@@ -25,8 +25,6 @@ bool PNGImageCoder::valid_data() const SKR_NOEXCEPT
 
 namespace
 {
-static const char* kPNGImageCoderMemoryPool = "image_coder::png";
-
 struct PNGImageCoderHelper 
 {
     inline static void user_read_compressed(png_structp png_ptr, png_bytep data, png_size_t length)
@@ -47,7 +45,7 @@ struct PNGImageCoderHelper
     {
         PNGImageCoder* coder = (PNGImageCoder*)png_get_io_ptr(png_ptr);
         auto oldView = coder->get_encoded_data_view();
-        auto newMemory = (uint8_t*)sakura_mallocN(oldView.size() + length, kPNGImageCoderMemoryPool);
+        auto newMemory = (uint8_t*)sakura_malloc(oldView.size() + length);
         memcpy(newMemory, oldView.data(), oldView.size());
         auto offsetPtr = newMemory + oldView.size();
         memcpy(offsetPtr, data, length);
@@ -73,13 +71,13 @@ struct PNGImageCoderHelper
     inline static void* user_malloc(png_structp png_ptr, png_size_t size)
     {
         SKR_UNREF_PARAM(png_ptr);
-        return sakura_mallocN(size, kPNGImageCoderMemoryPool);
+        return sakura_malloc(size);
     }
 
     inline static void user_free(png_structp png_ptr, png_voidp struct_ptr)
     {
         SKR_UNREF_PARAM(png_ptr);
-        sakura_freeN(struct_ptr, kPNGImageCoderMemoryPool);
+        sakura_free(struct_ptr);
     }
 };
 } // namespace
@@ -206,7 +204,7 @@ bool PNGImageCoder::decode(EImageCoderColorFormat in_format, uint32_t in_bit_dep
     const uint64_t bytes_per_row = width * bytes_per_pixel;
     // reallocate raw data
     uint64_t size = bytes_per_row * height;
-    uint8_t* data = (uint8_t*)sakura_mallocN(size, kPNGImageCoderMemoryPool); 
+    uint8_t* data = (uint8_t*)sakura_malloc(size); 
     move_raw(data, size, width, height, in_format, bit_depth, (uint32_t)bytes_per_row);
     // read png data
     png_set_read_fn(png_ptr, this, PNGImageCoderHelper::user_read_compressed);
