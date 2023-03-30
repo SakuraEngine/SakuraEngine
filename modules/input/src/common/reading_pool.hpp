@@ -9,6 +9,7 @@ namespace input {
 
 struct SKR_INPUT_API CommonInputReadingPoolBase : public CommonInputReadingProxy
 {
+    static const char* kInputReadingMemoryPoolName;
     CommonInputReadingPoolBase() SKR_NOEXCEPT {}
     virtual ~CommonInputReadingPoolBase() SKR_NOEXCEPT;
     CommonInputReadingPoolBase(const CommonInputReadingPoolBase&) = delete;
@@ -26,7 +27,6 @@ struct SKR_INPUT_API CommonInputReadingPoolBase : public CommonInputReadingProxy
         // SKR_LOG_INFO("CommonInputReadingPool::~CommonInputReadingPool() - %llu objects leaked", count);
     }
 protected:
-
     void release(CommonInputReading* ptr) SKR_NOEXCEPT final
     {
         // SKR_LOG_INFO("CommonInputReadingPool::release() - releasing object");
@@ -35,6 +35,7 @@ protected:
         count--;
     }
     moodycamel::ConcurrentQueue<CommonInputReading*> m_pool;
+    moodycamel::ConcurrentQueue<CommonInputReading*> m_all;
     uint64_t count = 0;
 };
 
@@ -54,7 +55,8 @@ struct CommonInputReadingPool : public CommonInputReadingPoolBase
         if (!m_pool.try_dequeue(ptr))
         {
             // SKR_LOG_INFO("CommonInputReadingPool::acquire() - creating new object");
-            ptr = SkrNew<T>(pPool, pDevice, std::forward<Args>(args)...);
+            ptr = SkrNewN(kInputReadingMemoryPoolName)<T>(pPool, pDevice, std::forward<Args>(args)...);
+            m_all.enqueue(ptr);
         }
         else
         {

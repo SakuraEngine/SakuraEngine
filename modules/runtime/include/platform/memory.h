@@ -1,17 +1,19 @@
 #pragma once
 #include "platform/configure.h"
 
+RUNTIME_EXTERN_C RUNTIME_API const char* kTracedNewDefaultPoolName;
 RUNTIME_EXTERN_C RUNTIME_API void* _sakura_malloc(size_t size, const char* pool_name);
 RUNTIME_EXTERN_C RUNTIME_API void* _sakura_calloc(size_t count, size_t size, const char* pool_name);
 RUNTIME_EXTERN_C RUNTIME_API void* _sakura_malloc_aligned(size_t size, size_t alignment, const char* pool_name);
 RUNTIME_EXTERN_C RUNTIME_API void* _sakura_calloc_aligned(size_t count, size_t size, size_t alignment, const char* pool_name);
 RUNTIME_EXTERN_C RUNTIME_API void* _sakura_new_n(size_t count, size_t size, const char* pool_name);
 RUNTIME_EXTERN_C RUNTIME_API void* _sakura_new_aligned(size_t size, size_t alignment, const char* pool_name);
-RUNTIME_EXTERN_C RUNTIME_API void _sakura_free(void* p) SKR_NOEXCEPT;
-RUNTIME_EXTERN_C RUNTIME_API void _sakura_free_aligned(void* p, size_t alignment);
+RUNTIME_EXTERN_C RUNTIME_API void _sakura_free(void* p, const char* pool_name) SKR_NOEXCEPT;
+RUNTIME_EXTERN_C RUNTIME_API void _sakura_free_aligned(void* p, size_t alignment, const char* pool_name);
 RUNTIME_EXTERN_C RUNTIME_API void* _sakura_realloc(void* p, size_t newsize, const char* pool_name);
 
 #if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
+
 #include "string.h"  // memset
 #include "tracy/TracyC.h"
 
@@ -77,21 +79,21 @@ FORCEINLINE void* SkrNewAlignedWithCZone(size_t size, size_t alignment, const ch
     return ptr;
 }
 
-FORCEINLINE void SkrFreeWithCZone(void* p, const char* line)
+FORCEINLINE void SkrFreeWithCZone(void* p, const char* line, const char* pool_name)
 {
     TracyCZoneC(z, SKR_DEALLOC_TRACY_MARKER_COLOR, 1);
     TracyCZoneText(z, line, strlen(line));
     TracyCZoneName(z, line, strlen(line));
-    _sakura_free(p);
+    _sakura_free(p, pool_name);
     TracyCZoneEnd(z);
 }
 
-FORCEINLINE void SkrFreeAlignedWithCZone(void* p, size_t alignment, const char* line)
+FORCEINLINE void SkrFreeAlignedWithCZone(void* p, size_t alignment, const char* line, const char* pool_name)
 {
     TracyCZoneC(z, SKR_DEALLOC_TRACY_MARKER_COLOR, 1);
     TracyCZoneText(z, line, strlen(line));
     TracyCZoneName(z, line, strlen(line));
-    _sakura_free_aligned(p, alignment);
+    _sakura_free_aligned(p, alignment, pool_name);
     TracyCZoneEnd(z);
 }
 
@@ -117,6 +119,8 @@ FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line,
 #define sakura_new_n(count, size, ...) SkrNewNWithCZone((count), (size), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
 #define sakura_new_aligned(size, alignment, ...) SkrNewAlignedWithCZone((size), (alignment), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
 #define sakura_realloc(p, newsize, ...) SkrReallocWithCZone((p), (newsize), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
+#define sakura_free(p, ...) SkrFreeWithCZone((p), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
+#define sakura_free_aligned(p, alignment, ...) SkrFreeAlignedWithCZone((p), (alignment), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
 
 #define sakura_mallocN(size, ...) SkrMallocWithCZone((size), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), __VA_ARGS__ )
 #define sakura_callocN(count, size, ...) SkrCallocWithCZone((count), (size), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), __VA_ARGS__ )
@@ -125,11 +129,11 @@ FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line,
 #define sakura_new_nN(count, size, ...) SkrNewNWithCZone((count), (size), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), __VA_ARGS__ )
 #define sakura_new_alignedN(size, alignment, ...) SkrNewAlignedWithCZone((size), (alignment), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), __VA_ARGS__ )
 #define sakura_reallocN(p, newsize, ...) SkrReallocWithCZone((p), (newsize), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), __VA_ARGS__ )
-
-#define sakura_free(p) SkrFreeWithCZone((p), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) )
-#define sakura_free_aligned(p, alignment) SkrFreeAlignedWithCZone((p), (alignment), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) )
+#define sakura_freeN(p, ...) SkrFreeWithCZone((p), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), __VA_ARGS__ )
+#define sakura_free_alignedN(p, alignment, ...) SkrFreeAlignedWithCZone((p), (alignment), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), __VA_ARGS__ )
 
 #else
+
 #define sakura_malloc(size, ...) _sakura_malloc((size), NULL)
 #define sakura_calloc(count, size, ...) _sakura_calloc((count), (size), NULL)
 #define sakura_malloc_aligned(size, alignment, ...) _sakura_malloc_aligned((size), (alignment), NULL)
@@ -137,6 +141,8 @@ FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line,
 #define sakura_new_n(count, size, ...) _sakura_new_n((count), (size), NULL)
 #define sakura_new_aligned(size, alignment, ...) _sakura_new_aligned((size), (alignment), NULL)
 #define sakura_realloc(p, newsize, ...) _sakura_realloc((p), (newsize), NULL)
+#define sakura_free(p, ...) _sakura_free((p), NULL)
+#define sakura_free_aligned(p, alignment, ...) _sakura_free_aligned((p), (alignment), NULL)
 
 #define sakura_mallocN(size, ...) _sakura_malloc((size), __VA_ARGS__)
 #define sakura_callocN(count, size, ...) _sakura_calloc((count), (size), __VA_ARGS__)
@@ -145,9 +151,9 @@ FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line,
 #define sakura_new_nN(count, size, ...) _sakura_new_n((count), (size), __VA_ARGS__)
 #define sakura_new_alignedN(size, alignment, ...) _sakura_new_aligned((size), (alignment), __VA_ARGS__)
 #define sakura_reallocN(p, newsize, ...) _sakura_realloc((p), (newsize), __VA_ARGS__)
+#define sakura_free(p, ...) _sakura_free((p), __VA_ARGS__)
+#define sakura_free_aligned(p, alignment, ...) _sakura_free_aligned((p), (alignment), __VA_ARGS__)
 
-#define sakura_free(p) _sakura_free(p)
-#define sakura_free_aligned(p, alignment) _sakura_free_aligned((p), (alignment))
 #endif
 
 #ifdef _CRTDBG_MAP_ALLOC
@@ -172,79 +178,83 @@ FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line,
 #if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
 #include <string_view>
 #include "utils/demangle.hpp"
+
 struct SkrTracedNew
 {
     const std::string_view sourcelocation;
-    constexpr SkrTracedNew(std::string_view sourcelocation) noexcept : sourcelocation(sourcelocation) {}
-    template<class T, const char* N = nullptr, class... TArgs>
-    [[nodiscard]] FORCEINLINE T* New(TArgs&&... params)
-    {
-        const std::string_view name = skr::demangle<T>();
-        TracyMessage(name.data(), name.size());
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), N);
-        SKR_ASSERT(pMemory != nullptr);
-        return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
-    }
+    const std::string_view poolname;
+    SkrTracedNew(std::string_view sourcelocation) noexcept : sourcelocation(sourcelocation), poolname(kTracedNewDefaultPoolName) {}
+    SkrTracedNew(std::string_view sourcelocation, std::string_view poolname) noexcept : sourcelocation(sourcelocation), poolname(poolname) {}
 
-    template<class T, const char* N = nullptr>
+    template<class T>
     [[nodiscard]] FORCEINLINE T* New()
     {
         const std::string_view name = skr::demangle<T>();
         TracyMessage(name.data(), name.size());
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), N);
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
     }
 
-    template<class T, const char* N = nullptr, class... TArgs>
+    template<class T, class... TArgs>
+    [[nodiscard]] FORCEINLINE T* New(TArgs&&... params)
+    {
+        const std::string_view name = skr::demangle<T>();
+        TracyMessage(name.data(), name.size());
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
+        SKR_ASSERT(pMemory != nullptr);
+        return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
+    }
+
+    template<class T, class... TArgs>
     [[nodiscard]] FORCEINLINE T* NewZeroed(TArgs&&... params)
     {
         const std::string_view name = skr::demangle<T>();
         TracyMessage(name.data(), name.size());
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), N);
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
         memset(pMemory, 0, sizeof(T));
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
     }
 
-    template<class T, const char* N = nullptr>
+    template<class T>
     [[nodiscard]] FORCEINLINE T* NewZeroed()
     {
         const std::string_view name = skr::demangle<T>();
         TracyMessage(name.data(), name.size());
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), N);
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
         memset(pMemory, 0, sizeof(T));
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
     }
 
-    template<class T, const char* N = nullptr, class... TArgs>
+    template<class T, class... TArgs>
     [[nodiscard]] FORCEINLINE T* NewSized(size_t size, TArgs&&... params)
     {
         const std::string_view name = skr::demangle<T>();
         TracyMessage(name.data(), name.size());
         SKR_ASSERT(size >= sizeof(T));
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), N);
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
     }
 
-    template<class T, const char* N = nullptr>
+    template<class T>
     [[nodiscard]] FORCEINLINE T* NewSized(size_t size)
     {
         const std::string_view name = skr::demangle<T>();
         TracyMessage(name.data(), name.size());
         SKR_ASSERT(size >= sizeof(T));
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), N);
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
     }
 
-    template<class F, const char* N = nullptr>
+    template<class F>
     [[nodiscard]] FORCEINLINE F* NewLambda(F&& lambda)
     {
         using ValueType = std::remove_reference_t<F>;
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(F), alignof(F), sourcelocation.data(), N);
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(F), alignof(F), sourcelocation.data(), poolname.data());
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE auto(std::forward<F>(lambda));
     }
@@ -257,17 +267,24 @@ struct SkrTracedNew
             const std::string_view name = skr::demangle<T>();
             TracyMessage(name.data(), name.size());
             pType->~T();
-            SkrFreeAlignedWithCZone((void*)pType, alignof(T), sourcelocation.data());
+            SkrFreeAlignedWithCZone((void*)pType, alignof(T), sourcelocation.data(), poolname.data());
         }
     }
 };
-#define SkrNew SkrTracedNew{ SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) }.New
-#define SkrNewZeroed SkrTracedNew{ SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) }.NewZeroed
-#define SkrNewSized SkrTracedNew{ SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) }.NewSized
-#define SkrNewLambda SkrTracedNew{ SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) }.NewLambda
-#define SkrDelete SkrTracedNew{ SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) }.Delete
+#define SkrNew SkrTracedNew( SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) ).New
+#define SkrNewZeroed SkrTracedNew( SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) ).NewZeroed
+#define SkrNewSized SkrTracedNew( SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) ).NewSized
+#define SkrNewLambda SkrTracedNew( SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) ).NewLambda
+#define SkrDelete SkrTracedNew( SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)) ).Delete
+
+#define SkrNewN(__N) SkrTracedNew( SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), (__N) ).New
+#define SkrNewZeroedN(__N) SkrTracedNew( SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), (__N) ).NewZeroed
+#define SkrNewSizedN(__N) SkrTracedNew( SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), (__N) ).NewSized
+#define SkrNewLambdaN(__N) SkrTracedNew( SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), (__N) ).NewLambda
+#define SkrDeleteN(__N) SkrTracedNew( SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), (__N) ).Delete
+
 #else
-template <typename T, const char* N = nullptr, typename... TArgs>
+template <typename T, typename... TArgs>
 [[nodiscard]] FORCEINLINE T* SkrNew(TArgs&&... params)
 {
     ZoneScopedN("SkrNew");
@@ -277,7 +294,7 @@ template <typename T, const char* N = nullptr, typename... TArgs>
     return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
 }
 
-template <typename T, const char* N = nullptr>
+template <typename T>
 [[nodiscard]] FORCEINLINE T* SkrNew()
 {
     ZoneScopedN("SkrNew");
@@ -287,7 +304,7 @@ template <typename T, const char* N = nullptr>
     return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
 }
 
-template <typename T, const char* N = nullptr, typename... TArgs>
+template <typename T, typename... TArgs>
 [[nodiscard]] FORCEINLINE T* SkrNewZeroed(TArgs&&... params)
 {
     ZoneScopedN("SkrNew");
@@ -298,7 +315,7 @@ template <typename T, const char* N = nullptr, typename... TArgs>
     return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
 }
 
-template <typename T, const char* N = nullptr>
+template <typename T>
 [[nodiscard]] FORCEINLINE T* SkrNewZeroed()
 {
     ZoneScopedN("SkrNew");
@@ -309,7 +326,7 @@ template <typename T, const char* N = nullptr>
     return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
 }
 
-template <typename T, const char* N = nullptr, typename... TArgs>
+template <typename T, typename... TArgs>
 [[nodiscard]] FORCEINLINE T* SkrNewSized(size_t size, TArgs&&... params)
 {
     ZoneScopedN("SkrNewSized");
@@ -320,7 +337,7 @@ template <typename T, const char* N = nullptr, typename... TArgs>
     return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
 }
 
-template <typename T, const char* N = nullptr>
+template <typename T>
 [[nodiscard]] FORCEINLINE T* SkrNewSized(size_t size)
 {
     ZoneScopedN("SkrNewSized");
@@ -331,7 +348,7 @@ template <typename T, const char* N = nullptr>
     return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
 }
 
-template <typename F, const char* N = nullptr>
+template <typename F>
 [[nodiscard]] FORCEINLINE F* SkrNewLambda(F&& lambda)
 {
     ZoneScopedN("SkrNewLambda");
@@ -351,6 +368,13 @@ void SkrDelete(T* pType)
         sakura_free_aligned((void*)pType, alignof(T));
     }
 }
+
+#define SkrNewN(__N) SkrNew
+#define SkrNewZeroedN(__N) SkrNewZeroed
+#define SkrNewSizedN(__N) SkrNewSized
+#define SkrNewLambdaN(__N) SkrNewLambda
+#define SkrDeleteN(__N) SkrDelete
+
 #endif
 
 template<class T> 

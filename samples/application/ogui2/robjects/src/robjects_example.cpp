@@ -266,11 +266,11 @@ struct robjects_example_application : public robjects_application_t
         SkrDelete(grid_paper);
         SkrDelete(canvas);
         
-        // free base app
-        finalize_robjects_application(this);
-
         skr::input::InputSystem::Destroy(input_system);
         skr::input::Input::Finalize();
+
+        // free base app
+        finalize_robjects_application(this);
     }
 
     skr::gui::RenderCanvas* canvas = nullptr;

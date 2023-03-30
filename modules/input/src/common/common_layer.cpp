@@ -27,14 +27,15 @@ CommonInputReading::~CommonInputReading() SKR_NOEXCEPT
 
 CommonInputReadingPoolBase::~CommonInputReadingPoolBase() SKR_NOEXCEPT
 {
-    uint64_t count = 0;
+    uint64_t dcount = 0;
     CommonInputReading* ptr = nullptr;
-    while (m_pool.try_dequeue(ptr))
+    while (m_all.try_dequeue(ptr))
     {
-        SkrDelete(ptr);
-        ++count;
+        SkrDeleteN(kInputReadingMemoryPoolName)(ptr);
+        ++dcount;
     }
-    SKR_LOG_INFO("CommonInputReadingPoolBase::~CommonInputReadingPoolBase() - %llu objects deleted", count);
+    SKR_LOG_INFO("CommonInputReadingPoolBase::~CommonInputReadingPoolBase()"
+        " - %llu objects deleted, %llu objects leaked", dcount, (count > dcount) ? (count - dcount) : 0);
     ReportLeaking();
 }
 

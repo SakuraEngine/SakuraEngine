@@ -1,6 +1,8 @@
 #include "platform/memory.h"
 #include "tracy/TracyC.h"
 
+static const char* kTracedNewDefaultPoolName = "sakura::default";
+
 #if defined(_WIN32)
 
 #ifdef SKR_RUNTIME_USE_MIMALLOC
@@ -125,21 +127,42 @@ RUNTIME_API void* _sakura_new_aligned(size_t size, size_t alignment, const char*
     return p;
 }
 
-RUNTIME_API void _sakura_free(void* p) 
+RUNTIME_API void _sakura_free(void* p, const char* pool_name) 
 {
-    TracyCFree(p);
+    if (pool_name)
+    {
+        TracyCFreeN(p, pool_name);
+    }
+    else
+    {
+        TracyCFree(p);
+    }
     mi_free(p);
 }
 
-RUNTIME_API void _sakura_free_aligned(void* p, size_t alignment) 
+RUNTIME_API void _sakura_free_aligned(void* p, size_t alignment, const char* pool_name) 
 {
-    TracyCFree(p);
+    if (pool_name)
+    {
+        TracyCFreeN(p, pool_name);
+    }
+    else
+    {
+        TracyCFree(p);
+    }
     mi_free_aligned(p, alignment);
 }
 
 RUNTIME_API void* _sakura_realloc(void* p, size_t newsize, const char* pool_name) 
 {
-    TracyCFree(p);
+    if (pool_name)
+    {
+        TracyCFreeN(p, pool_name);
+    }
+    else
+    {
+        TracyCFree(p);
+    }
     void* np = mi_realloc(p, newsize);
     if (pool_name)
     {
