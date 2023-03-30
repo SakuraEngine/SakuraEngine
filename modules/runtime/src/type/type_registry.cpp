@@ -74,6 +74,10 @@ skr_type_t::skr_type_t(skr_type_category_t type)
 {
 }
 
+skr_type_t::~skr_type_t() SKR_NOEXCEPT
+{
+}
+
 #define SKR_TYPE_TRIVAL(fun)                             \
     fun(SKR_TYPE_CATEGORY_BOOL, bool)                    \
     fun(SKR_TYPE_CATEGORY_I32, int32_t)                  \
