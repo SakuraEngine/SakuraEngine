@@ -146,10 +146,12 @@ Widget* Element::get_widget() SKR_NOEXCEPT
 BoxSizeType Element::get_size() SKR_NOEXCEPT
 {
     auto render_object = find_render_object();
-    if (render_object)
+    if (auto robject = render_object.get())
     {
-        return {}; // we need Is<>/Cast<>
-        // return render_object.get()->get_size();;
+        if (auto rbox = robject->Cast<RenderBox>())
+        {
+            return rbox->get_size();;
+        }
     }
     return { 0, 0 };
 }

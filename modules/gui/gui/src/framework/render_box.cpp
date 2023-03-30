@@ -83,4 +83,6 @@ void RenderBox::enable_debug_draw(bool enable)
     draw_debug_rect = enable;
 }
 
+SKR_GUI_TYPE_IMPLMENTATION(RenderBox);
+
 } }

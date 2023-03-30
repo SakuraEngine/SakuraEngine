@@ -18,7 +18,7 @@ enum class ElementLifecycle : uint32_t
     defunct,
 };
 
-struct BuildContext : public DiagnosticableTreeNode
+struct SKR_GUI_API BuildContext : public DiagnosticableTreeNode
 {
     virtual bool mounted() SKR_NOEXCEPT = 0;
     virtual Widget* get_widget() SKR_NOEXCEPT = 0;

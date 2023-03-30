@@ -20,6 +20,7 @@ skr_dynamic_record_type_id skr_create_record_type(const skr_guid_t* type_id, uin
     record->size = size;
     record->guid = *type_id;
     record->align = align;
+    record->type = SKR_TYPE_CATEGORY_OBJ;
     if (parent)
     {
         auto parent_type = skr_get_type(parent);
@@ -28,6 +29,7 @@ skr_dynamic_record_type_id skr_create_record_type(const skr_guid_t* type_id, uin
             record->base = (skr::type::RecordType*)parent_type;
         }
     }
+    skr::type::GetTypeRegistry()->register_type(*type_id, record);
     return record;
 }
 

@@ -9,6 +9,7 @@ namespace gui {
 struct SKR_GUI_API RenderWindow : public RenderBox
 {
 public:
+    SKR_GUI_TYPE(RenderWindow, RenderBox, "bf44681e-380e-4c21-9d3b-def143c20df1");
     RenderWindow(skr_gdi_device_id gdi_device);
     virtual ~RenderWindow();
 

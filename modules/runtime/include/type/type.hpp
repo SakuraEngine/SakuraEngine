@@ -305,7 +305,7 @@ struct MD5Type : skr_type_t {
     }
 };
 // handle
-struct HandleType : skr_type_t {
+struct RUNTIME_API HandleType : skr_type_t {
     const struct skr_type_t* pointee;
     HandleType(const skr_type_t* pointee)
         : skr_type_t{ SKR_TYPE_CATEGORY_HANDLE }
@@ -314,21 +314,21 @@ struct HandleType : skr_type_t {
     }
 };
 // skr::string
-struct StringType : skr_type_t {
+struct RUNTIME_API StringType : skr_type_t {
     StringType()
         : skr_type_t{ SKR_TYPE_CATEGORY_STR }
     {
     }
 };
 // skr::string_view
-struct StringViewType : skr_type_t {
+struct RUNTIME_API StringViewType : skr_type_t {
     StringViewType()
         : skr_type_t{ SKR_TYPE_CATEGORY_STRV }
     {
     }
 };
 // T[]
-struct ArrayType : skr_type_t {
+struct RUNTIME_API ArrayType : skr_type_t {
     const struct skr_type_t* elementType;
     size_t num;
     size_t size;
@@ -355,7 +355,7 @@ struct ObjectMethodTable {
     json::error_code (*DeserializeText)(void* self, json::value_t&& reader);
 };
 // skr::span<T>
-struct ArrayViewType : skr_type_t {
+struct RUNTIME_API ArrayViewType : skr_type_t {
     const struct skr_type_t* elementType;
     skr::string name;
     ArrayViewType(const skr_type_t* elementType)
@@ -365,7 +365,7 @@ struct ArrayViewType : skr_type_t {
     }
 };
 // struct/class T
-struct RecordType : skr_type_t {
+struct RUNTIME_API RecordType : skr_type_t {
     size_t size = 0;
     size_t align = 0;
     skr_guid_t guid = {};
@@ -396,7 +396,7 @@ struct RecordType : skr_type_t {
 };
 
 // enum T
-struct EnumType : skr_type_t {
+struct RUNTIME_API EnumType : skr_type_t {
     const skr_type_t* underlyingType;
     const skr::string_view name;
     skr_guid_t guid;
@@ -423,7 +423,7 @@ struct EnumType : skr_type_t {
     }
 };
 // T*, T&, skr::SPtr<T>
-struct ReferenceType : skr_type_t {
+struct RUNTIME_API ReferenceType : skr_type_t {
     enum Ownership
     {
         Observed,

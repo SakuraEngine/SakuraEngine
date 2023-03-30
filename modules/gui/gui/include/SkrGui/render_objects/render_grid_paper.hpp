@@ -10,6 +10,7 @@ namespace gui {
 struct SKR_GUI_API RenderGridPaper : public RenderBox
 {
 public:
+    SKR_GUI_TYPE(RenderGridPaper, RenderBox, "13dd33c9-5d56-4b06-94ce-d1c526fe75d0");
     RenderGridPaper(skr_gdi_device_id gdi_device);
     virtual ~RenderGridPaper();
 
