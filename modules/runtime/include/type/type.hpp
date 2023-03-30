@@ -1,83 +1,17 @@
 #pragma once
+#include "type/type.h"
 #include "type_id.hpp"
 #include <containers/span.hpp>
 #include "containers/string.hpp"
 #include "type/type_helper.hpp"
-
-enum skr_type_category_t
-{
-    SKR_TYPE_CATEGORY_INVALID,
-    SKR_TYPE_CATEGORY_BOOL,
-    SKR_TYPE_CATEGORY_I32,
-    SKR_TYPE_CATEGORY_I64,
-    SKR_TYPE_CATEGORY_U32,
-    SKR_TYPE_CATEGORY_U64,
-    SKR_TYPE_CATEGORY_F32,
-    SKR_TYPE_CATEGORY_F64,
-    SKR_TYPE_CATEGORY_F32_2,
-    SKR_TYPE_CATEGORY_F32_3,
-    SKR_TYPE_CATEGORY_F32_4,
-    SKR_TYPE_CATEGORY_F32_4x4,
-    SKR_TYPE_CATEGORY_ROT,
-    SKR_TYPE_CATEGORY_QUAT,
-    SKR_TYPE_CATEGORY_GUID,
-    SKR_TYPE_CATEGORY_MD5,
-    SKR_TYPE_CATEGORY_HANDLE,
-    SKR_TYPE_CATEGORY_STR,
-    SKR_TYPE_CATEGORY_STRV,
-    SKR_TYPE_CATEGORY_ARR,
-    SKR_TYPE_CATEGORY_DYNARR,
-    SKR_TYPE_CATEGORY_ARRV,
-    SKR_TYPE_CATEGORY_OBJ,
-    SKR_TYPE_CATEGORY_ENUM,
-    SKR_TYPE_CATEGORY_REF,
-    SKR_TYPE_CATEGORY_VARIANT
-};
-typedef enum skr_type_category_t skr_type_category_t;
-
-RUNTIME_EXTERN_C RUNTIME_API 
-const char* skr_get_type_name(const skr_guid_t* type);
-
-RUNTIME_EXTERN_C RUNTIME_API 
-const struct skr_type_t* skr_get_type(const skr_type_id_t* id);
-
-RUNTIME_EXTERN_C RUNTIME_API 
-void skr_register_type_name(const skr_guid_t* type, const char* name);
-
-RUNTIME_EXTERN_C RUNTIME_API 
-void skr_get_derived_types(const struct skr_type_t* type, void (*callback)(void* u, struct skr_type_t* type), void* u);
-
-RUNTIME_EXTERN_C RUNTIME_API 
-void skr_get_type_id(const struct skr_type_t* type, skr_type_id_t* id);
-
-RUNTIME_EXTERN_C RUNTIME_API
-uint32_t skr_get_type_size(const struct skr_type_t* type);
-
-RUNTIME_EXTERN_C RUNTIME_API 
-void skr_get_fields(const struct skr_type_t* type, void (*callback)(void* u, skr_field_t* field), void* u);
-
-RUNTIME_EXTERN_C RUNTIME_API 
-skr_field_t* skr_get_field(const struct skr_type_t* type, const char* name);
-
-RUNTIME_EXTERN_C RUNTIME_API 
-skr_method_t* skr_get_method(const struct skr_type_t* type, const char* name);
-
-RUNTIME_EXTERN_C RUNTIME_API 
-struct skr_type_t* skr_get_field_type(const skr_field_t* field);
-
-RUNTIME_EXTERN_C RUNTIME_API 
-const char* skr_get_field_name(const skr_field_t* field);
-
-extern const skr_type_t* $type;
-extern const skr_field_t* $field;
-extern const skr_method_t* $method;
 
 #if defined(__cplusplus)
 namespace skr
 {
 namespace type
 {
-struct STypeRegistry {
+struct STypeRegistry 
+{
     virtual const skr_type_t* get_type(skr_guid_t guid) = 0;
     virtual const void register_type(skr_guid_t tid, const skr_type_t* type) = 0;
 };
@@ -113,6 +47,8 @@ auto GetMoveCtor();
 struct RUNTIME_API skr_type_t {
     skr_type_category_t type SKR_IF_CPP(= SKR_TYPE_CATEGORY_INVALID);
 #ifdef __cplusplus
+    virtual ~skr_type_t() = default;
+    skr_type_t() = default;
     skr_type_t(skr_type_category_t type);
     size_t Size() const;
     size_t Align() const;
@@ -220,8 +156,7 @@ struct RUNTIME_API skr_value_ref_t {
 #ifdef __cplusplus
     skr_value_ref_t() = default;
     ~skr_value_ref_t();
-    template <class T>
-    skr_value_ref_t(T& t);
+    template <class T> skr_value_ref_t(T& t);
     skr_value_ref_t(void* address, const skr_type_t* type);
     skr_value_ref_t(skr_value_t& v);
     skr_value_ref_t(skr_value_ref_t&& other) = default;
@@ -370,7 +305,7 @@ struct MD5Type : skr_type_t {
     }
 };
 // handle
-struct HandleType : skr_type_t {
+struct RUNTIME_API HandleType : skr_type_t {
     const struct skr_type_t* pointee;
     HandleType(const skr_type_t* pointee)
         : skr_type_t{ SKR_TYPE_CATEGORY_HANDLE }
@@ -379,21 +314,21 @@ struct HandleType : skr_type_t {
     }
 };
 // skr::string
-struct StringType : skr_type_t {
+struct RUNTIME_API StringType : skr_type_t {
     StringType()
         : skr_type_t{ SKR_TYPE_CATEGORY_STR }
     {
     }
 };
 // skr::string_view
-struct StringViewType : skr_type_t {
+struct RUNTIME_API StringViewType : skr_type_t {
     StringViewType()
         : skr_type_t{ SKR_TYPE_CATEGORY_STRV }
     {
     }
 };
 // T[]
-struct ArrayType : skr_type_t {
+struct RUNTIME_API ArrayType : skr_type_t {
     const struct skr_type_t* elementType;
     size_t num;
     size_t size;
@@ -420,7 +355,7 @@ struct ObjectMethodTable {
     json::error_code (*DeserializeText)(void* self, json::value_t&& reader);
 };
 // skr::span<T>
-struct ArrayViewType : skr_type_t {
+struct RUNTIME_API ArrayViewType : skr_type_t {
     const struct skr_type_t* elementType;
     skr::string name;
     ArrayViewType(const skr_type_t* elementType)
@@ -430,19 +365,20 @@ struct ArrayViewType : skr_type_t {
     }
 };
 // struct/class T
-struct RecordType : skr_type_t {
-    size_t size;
-    size_t align;
-    skr_guid_t guid;
-    bool object;
-    const skr::string_view name;
-    const RecordType* base;
-    ObjectMethodTable nativeMethods;
-    const skr::span<struct skr_field_t> fields;
-    const skr::span<struct skr_method_t> methods;
+struct RUNTIME_API RecordType : skr_type_t {
+    size_t size = 0;
+    size_t align = 0;
+    skr_guid_t guid = {};
+    bool object = false;
+    const skr::string_view name = "";
+    const RecordType* base = nullptr;
+    ObjectMethodTable nativeMethods = {};
+    const skr::span<struct skr_field_t> fields = {};
+    const skr::span<struct skr_method_t> methods = {};
     bool IsBaseOf(const RecordType& other) const;
     static const RecordType* FromName(skr::string_view name);
     static void Register(const RecordType* type);
+    RecordType() = default;
     RecordType(size_t size, size_t align, skr::string_view name, skr_guid_t guid, bool object, const RecordType* base, ObjectMethodTable nativeMethods,
     const skr::span<struct skr_field_t> fields, const skr::span<struct skr_method_t> methods)
         : skr_type_t{ SKR_TYPE_CATEGORY_OBJ }
@@ -458,8 +394,9 @@ struct RecordType : skr_type_t {
     {
     }
 };
+
 // enum T
-struct EnumType : skr_type_t {
+struct RUNTIME_API EnumType : skr_type_t {
     const skr_type_t* underlyingType;
     const skr::string_view name;
     skr_guid_t guid;
@@ -486,7 +423,7 @@ struct EnumType : skr_type_t {
     }
 };
 // T*, T&, skr::SPtr<T>
-struct ReferenceType : skr_type_t {
+struct RUNTIME_API ReferenceType : skr_type_t {
     enum Ownership
     {
         Observed,
@@ -672,7 +609,7 @@ template <class T>
 skr_value_ref_t::skr_value_ref_t(T& t)
 {
     ptr = &t;
-    type = skr::type::type_of<T>::get();
+    type = skr::type::type_of<std::decay<T>>::get();
 }
 
 template <class T>
@@ -714,4 +651,5 @@ T skr_value_ref_t::Convert()
     else
         return *std::launder(reinterpret_cast<T*>(&storage));
 }
+
 #endif

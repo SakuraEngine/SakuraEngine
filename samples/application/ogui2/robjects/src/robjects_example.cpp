@@ -204,14 +204,9 @@ struct robjects_example_application : public robjects_application_t
         auto diagnostic_as_render_box = [&](){
             if (selected_diagnostic)
             {
-                if (auto prop = selected_diagnostic->find_property("render_box"))
+                if (auto render_box = selected_diagnostic->Cast<skr::gui::RenderBox>())
                 {
-                    auto& bProp = prop->as<skr::gui::BoolDiagnosticProperty>();
-                    if (bProp.value && bProp.value.get())
-                    {
-                        auto render_box = static_cast<skr::gui::RenderBox*>(selected_diagnostic);
-                        return render_box;
-                    }
+                    return render_box;
                 }
             }
             return (skr::gui::RenderBox*)nullptr;

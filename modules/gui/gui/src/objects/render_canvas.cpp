@@ -9,6 +9,8 @@ namespace gui {
 RenderCanvas::RenderCanvas(skr_gdi_device_id gdi_device)
     : RenderBox(gdi_device), gdi_canvas(nullptr)
 {
+    SKR_ASSERT(this->IsA<RenderBox>() && "RenderCanvas should be a RenderBox");
+
     gdi_canvas = gdi_device->create_canvas();
 
     diagnostic_builder.add_properties(
@@ -48,5 +50,6 @@ void RenderCanvas::draw(const DrawParams* params)
     RenderBox::draw(&draw_params);
 }
 
+SKR_GUI_TYPE_IMPLMENTATION(RenderCanvas);
 
 } }
