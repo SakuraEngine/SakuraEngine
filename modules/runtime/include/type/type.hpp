@@ -47,9 +47,10 @@ auto GetMoveCtor();
 struct RUNTIME_API skr_type_t {
     skr_type_category_t type SKR_IF_CPP(= SKR_TYPE_CATEGORY_INVALID);
 #ifdef __cplusplus
-    virtual ~skr_type_t() = default;
     skr_type_t() = default;
     skr_type_t(skr_type_category_t type);
+    virtual ~skr_type_t() SKR_NOEXCEPT;
+
     size_t Size() const;
     size_t Align() const;
     skr_guid_t Id() const;
