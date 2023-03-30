@@ -74,7 +74,6 @@ constexpr skr_guid_t make_guid_helper(const char* begin)
 template <size_t N>
 constexpr skr_guid_t make_guid_unsafe(const char (&str)[N])
 {
-    using namespace skr::string_literals;
     static_assert(N == (long_guid_form_length + 1) || N == (short_guid_form_length + 1), "String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected");
 
     if constexpr (N == (long_guid_form_length + 1))

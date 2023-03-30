@@ -290,4 +290,6 @@ void RenderText::buildParagraphRec(Paragraph* p, const StyleText& txt)
     }
 }
 
+SKR_GUI_TYPE_IMPLMENTATION(RenderText);
+
 } }

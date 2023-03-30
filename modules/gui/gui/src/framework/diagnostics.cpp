@@ -1,4 +1,5 @@
 #include "SkrGui/framework/diagnostics.hpp"
+#include "platform/guid.hpp"
 
 namespace skr {
 namespace gui {
@@ -85,6 +86,18 @@ LiteSpan<IDiagnosticsProperty* const> Diagnosticable::get_diagnostics_properties
     return diagnostic_builder.get_diagnostics_properties();
 }
 
+uint32_t Diagnosticable::add_refcount()
+{
+    auto last = skr_atomicu32_add_relaxed(&rc, 1);
+    return last + 1;
+}
+
+uint32_t Diagnosticable::release()
+{
+    skr_atomicu32_add_relaxed(&rc, -1);
+    return skr_atomicu32_load_acquire(&rc);
+}
+
 DiagnosticableTree::~DiagnosticableTree() SKR_NOEXCEPT
 {
 
@@ -94,5 +107,9 @@ DiagnosticableTreeNode::~DiagnosticableTreeNode() SKR_NOEXCEPT
 {
 
 }
+
+SKR_GUI_TYPE_IMPLMENTATION(Diagnosticable);
+SKR_GUI_TYPE_IMPLMENTATION(DiagnosticableTree);
+SKR_GUI_TYPE_IMPLMENTATION(DiagnosticableTreeNode);
 
 } }

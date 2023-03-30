@@ -33,4 +33,6 @@ void RenderWindow::draw(const DrawParams* params)
     RenderBox::draw(&draw_params);
 }
 
+SKR_GUI_TYPE_IMPLMENTATION(RenderWindow);
+
 } }
