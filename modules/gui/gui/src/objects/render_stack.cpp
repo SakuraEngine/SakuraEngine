@@ -107,5 +107,8 @@ void RenderStack::set_positional(int index, Positional positional)
     SKR_ASSERT(index >= 0 && index < positionals.get().size());
     this->positionals.get()[index] = positional;
 }
+
+SKR_GUI_TYPE_IMPLMENTATION(RenderStack);
+
 } // namespace gui
 } // namespace skr

@@ -16,6 +16,8 @@ struct BoxConstraint {
 
 struct SKR_GUI_API RenderBox : public RenderObject
 {
+    SKR_GUI_TYPE(RenderBox, RenderObject, "01a2eb19-1299-4069-962f-88db0c719134");
+
 public:
     RenderBox(skr_gdi_device_id gdi_device);
     virtual ~RenderBox();

@@ -1,4 +1,5 @@
 #include "SkrGui/framework/diagnostics.hpp"
+#include "platform/guid.hpp"
 
 namespace skr {
 namespace gui {
@@ -97,11 +98,6 @@ uint32_t Diagnosticable::release()
     return skr_atomicu32_load_acquire(&rc);
 }
 
-skr_guid_t Diagnosticable::get_type()
-{
-    return {};
-}
-
 DiagnosticableTree::~DiagnosticableTree() SKR_NOEXCEPT
 {
 
@@ -111,5 +107,9 @@ DiagnosticableTreeNode::~DiagnosticableTreeNode() SKR_NOEXCEPT
 {
 
 }
+
+SKR_GUI_TYPE_IMPLMENTATION(Diagnosticable);
+SKR_GUI_TYPE_IMPLMENTATION(DiagnosticableTree);
+SKR_GUI_TYPE_IMPLMENTATION(DiagnosticableTreeNode);
 
 } }

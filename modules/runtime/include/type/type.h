@@ -11,6 +11,7 @@ struct skr_resource_handle_t;
 struct skr_binary_writer_t;
 struct skr_binary_reader_t;
 
+SKR_DECLARE_TYPE_ID_FWD(skr::type, RecordType, skr_record_type)
 SKR_DECLARE_TYPE_ID_FWD(skr::type, DynamicRecordType, skr_dynamic_record_type)
 
 enum skr_type_category_t
@@ -60,7 +61,7 @@ RUNTIME_EXTERN_C RUNTIME_API
 void skr_get_type_id(const struct skr_type_t* type, skr_type_id_t* id);
 
 RUNTIME_EXTERN_C RUNTIME_API
-uint32_t skr_get_type_size(const struct skr_type_t* type);
+uint64_t skr_get_type_size(const struct skr_type_t* type);
 
 RUNTIME_EXTERN_C RUNTIME_API 
 void skr_get_fields(const struct skr_type_t* type, void (*callback)(void* u, skr_field_t* field), void* u);
@@ -102,20 +103,5 @@ template <class T> struct type_of;
 
 } // namespace type
 } // namespace skr
-
-#define SKR_RTTI_DECLARE_TYPE(__NS, __T, __API) \
-namespace skr::type \
-{ \
-    template<> \
-    struct type_of<__NS::__T> \
-    { \
-        __API static const skr_type_t* get(); \
-    }; \
-    template<> \
-    struct type_id<__NS::__T> \
-    { \
-        __API static const skr_guid_t get();\
-    }; \
-}
 
 #endif

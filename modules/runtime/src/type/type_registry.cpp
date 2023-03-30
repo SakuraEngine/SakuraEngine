@@ -1769,3 +1769,18 @@ const skr_type_t* skr_get_type(const skr_type_id_t* id)
     auto registry = skr::type::GetTypeRegistry();
     return registry->get_type(*id);
 }
+
+void skr_get_derived_types(const struct skr_type_t* type, void (*callback)(void* u, struct skr_type_t* type), void* u)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+void skr_get_type_id(const struct skr_type_t* type, skr_type_id_t* id)
+{
+    *id = type->Id();
+}
+
+uint64_t skr_get_type_size(const struct skr_type_t* type)
+{
+    return type->Size();
+}

@@ -34,6 +34,7 @@ struct SKR_GUI_API BindText
 struct SKR_GUI_API RenderText : public RenderBox
 {
 public:
+    SKR_GUI_TYPE(RenderText, RenderBox, "72e8d4de-c288-4675-a22f-4c7a6487cabd");
     RenderText(skr_gdi_device_id gdi_device);
     virtual ~RenderText();
 
