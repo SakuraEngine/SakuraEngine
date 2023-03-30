@@ -41,45 +41,87 @@
 #endif
 
 #if defined(_WIN32)
-RUNTIME_API void* _sakura_malloc(size_t size) 
+RUNTIME_API void* _sakura_malloc(size_t size, const char* pool_name) 
 {
     void* p = mi_malloc(size);
-    TracyCAlloc(p, size);
+    if (pool_name)
+    {
+        TracyCAllocN(p, size, pool_name);
+    }
+    else
+    {
+        TracyCAlloc(p, size);
+    }
     return p;
 }
 
-RUNTIME_API void* _sakura_calloc(size_t count, size_t size) 
+RUNTIME_API void* _sakura_calloc(size_t count, size_t size, const char* pool_name) 
 {
     void* p = mi_calloc(count, size);
-    TracyCAlloc(p, size);
+    if (pool_name)
+    {
+        TracyCAllocN(p, size, pool_name);
+    }
+    else
+    {
+        TracyCAlloc(p, size);
+    }
     return p;
 }
 
-RUNTIME_API void* _sakura_calloc_aligned(size_t count, size_t size, size_t alignment) 
+RUNTIME_API void* _sakura_calloc_aligned(size_t count, size_t size, size_t alignment, const char* pool_name) 
 {
     void* p = mi_calloc_aligned(count, size, alignment);
-    TracyCAlloc(p, size);
+    if (pool_name)
+    {
+        TracyCAllocN(p, size, pool_name);
+    }
+    else
+    {
+        TracyCAlloc(p, size);
+    }
     return p;
 }
 
-RUNTIME_API void* _sakura_malloc_aligned(size_t size, size_t alignment) 
+RUNTIME_API void* _sakura_malloc_aligned(size_t size, size_t alignment, const char* pool_name) 
 {
     void* p = mi_malloc_aligned(size, alignment);
-    TracyCAlloc(p, size);
+    if (pool_name)
+    {
+        TracyCAllocN(p, size, pool_name);
+    }
+    else
+    {
+        TracyCAlloc(p, size);
+    }
     return p;
 }
 
-RUNTIME_EXTERN_C RUNTIME_API void* _sakura_new_n(size_t count, size_t size) 
+RUNTIME_EXTERN_C RUNTIME_API void* _sakura_new_n(size_t count, size_t size, const char* pool_name) 
 {
     void* p = mi_new_n(count, size);
-    TracyCAlloc(p, size * count);
+    if (pool_name)
+    {
+        TracyCAllocN(p, size, pool_name);
+    }
+    else
+    {
+        TracyCAlloc(p, size);
+    }
     return p;
 }
 
-RUNTIME_API void* _sakura_new_aligned(size_t size, size_t alignment) 
+RUNTIME_API void* _sakura_new_aligned(size_t size, size_t alignment, const char* pool_name) 
 {
     void* p = mi_new_aligned(size, alignment);
-    TracyCAlloc(p, size);
+    if (pool_name)
+    {
+        TracyCAllocN(p, size, pool_name);
+    }
+    else
+    {
+        TracyCAlloc(p, size);
+    }
     return p;
 }
 
@@ -95,11 +137,18 @@ RUNTIME_API void _sakura_free_aligned(void* p, size_t alignment)
     mi_free_aligned(p, alignment);
 }
 
-RUNTIME_API void* _sakura_realloc(void* p, size_t newsize) 
+RUNTIME_API void* _sakura_realloc(void* p, size_t newsize, const char* pool_name) 
 {
     TracyCFree(p);
     void* np = mi_realloc(p, newsize);
-    TracyCAlloc(np, newsize);
+    if (pool_name)
+    {
+        TracyCAllocN(np, newsize, pool_name);
+    }
+    else
+    {
+        TracyCAlloc(np, newsize);
+    }
     return np;
 }
 
@@ -124,28 +173,28 @@ FORCEINLINE static void* calloc_aligned(size_t count, size_t size, size_t alignm
     return ptr;
 }
 
-RUNTIME_API void* _sakura_malloc(size_t size) 
+RUNTIME_API void* _sakura_malloc(size_t size, const char* pool_name) 
 {
     return malloc(size);
 }
 
-RUNTIME_API void* _sakura_calloc(size_t count, size_t size) 
+RUNTIME_API void* _sakura_calloc(size_t count, size_t size, const char* pool_name) 
 {
     return calloc(count, size);
 }
 
-RUNTIME_EXTERN_C RUNTIME_API void* _sakura_new_n(size_t count, size_t size)
+RUNTIME_EXTERN_C RUNTIME_API void* _sakura_new_n(size_t count, size_t size, const char* pool_name)
 {
     void* p = malloc(count * size);
     return p;
 }
 
-RUNTIME_API void* _sakura_calloc_aligned(size_t count, size_t size, size_t alignment) 
+RUNTIME_API void* _sakura_calloc_aligned(size_t count, size_t size, size_t alignment, const char* pool_name) 
 {
     return calloc_aligned(count, size, alignment);
 }
 
-RUNTIME_API void* _sakura_malloc_aligned(size_t size, size_t alignment) 
+RUNTIME_API void* _sakura_malloc_aligned(size_t size, size_t alignment, const char* pool_name) 
 {
 #if !defined(_WIN32)
     void* ptr = (alignment == 1) ? malloc(size) : aligned_alloc(size, alignment);
@@ -159,7 +208,7 @@ RUNTIME_API void* _sakura_malloc_aligned(size_t size, size_t alignment)
     return ptr;
 }
 
-RUNTIME_API void* _sakura_new_aligned(size_t size, size_t alignment)
+RUNTIME_API void* _sakura_new_aligned(size_t size, size_t alignment, const char* pool_name)
 {
 #if !defined(_WIN32)
     void* ptr = (alignment == 1) ? malloc(size) : aligned_alloc(size, alignment);
@@ -185,7 +234,7 @@ RUNTIME_API void _sakura_free_aligned(void* p, size_t alignment)
     free_aligned(p, alignment);
 }
 
-RUNTIME_API void* _sakura_realloc(void* p, size_t newsize) 
+RUNTIME_API void* _sakura_realloc(void* p, size_t newsize, const char* pool_name) 
 {
     return realloc(p, newsize);
 }
