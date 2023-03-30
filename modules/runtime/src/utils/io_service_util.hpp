@@ -113,6 +113,7 @@ public:
     SkrAsyncServiceSleepMode sleepMode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
 };
 
+RUNTIME_API extern const char* kIOTaskQueueName;
 struct TaskBase
 {
     SkrAsyncServicePriority priority;
@@ -321,11 +322,11 @@ struct TaskContainer
 
     const bool isLockless = false;
     SMutex taskMutex;
-    struct IOTaskConcurrentQueueTraits : public moodycamel::ConcurrentQueueDefaultTraits
+    struct RUNTIME_API IOTaskConcurrentQueueTraits : public moodycamel::ConcurrentQueueDefaultTraits
     {
         static const bool RECYCLE_ALLOCATED_BLOCKS = true;
-        static inline void* malloc(size_t size) { return sakura_malloc(size); }
-    	static inline void free(void* ptr) { return sakura_free(ptr); }
+        static inline void* malloc(size_t size) { return sakura_mallocN(size, kIOTaskQueueName); }
+        static inline void free(void* ptr) { return sakura_freeN(ptr, kIOTaskQueueName); }
     };
     moodycamel::ConcurrentQueue<Task, IOTaskConcurrentQueueTraits> task_requests;
     eastl::deque<Task> tasks;

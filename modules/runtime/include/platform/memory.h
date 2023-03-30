@@ -112,15 +112,15 @@ FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line,
 #define SKR_ALLOC_CAT_IMPL(X,Y) X  Y
 #define SKR_ALLOC_CAT(X,Y) SKR_ALLOC_CAT_IMPL(X,Y)
 
-#define sakura_malloc(size, ...) SkrMallocWithCZone((size), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
-#define sakura_calloc(count, size, ...) SkrCallocWithCZone((count), (size), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
-#define sakura_malloc_aligned(size, alignment, ...) SkrMallocAlignedWithCZone((size), (alignment), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
-#define sakura_calloc_aligned(count, size, alignment, ...) SkrCallocAlignedWithCZone((count), (size), (alignment), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
-#define sakura_new_n(count, size, ...) SkrNewNWithCZone((count), (size), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
-#define sakura_new_aligned(size, alignment, ...) SkrNewAlignedWithCZone((size), (alignment), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
-#define sakura_realloc(p, newsize, ...) SkrReallocWithCZone((p), (newsize), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
-#define sakura_free(p, ...) SkrFreeWithCZone((p), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
-#define sakura_free_aligned(p, alignment, ...) SkrFreeAlignedWithCZone((p), (alignment), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
+#define sakura_malloc(size) SkrMallocWithCZone((size), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
+#define sakura_calloc(count, size) SkrCallocWithCZone((count), (size), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
+#define sakura_malloc_aligned(size, alignment) SkrMallocAlignedWithCZone((size), (alignment), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
+#define sakura_calloc_aligned(count, size, alignment) SkrCallocAlignedWithCZone((count), (size), (alignment), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
+#define sakura_new_n(count, size) SkrNewNWithCZone((count), (size), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
+#define sakura_new_aligned(size, alignment) SkrNewAlignedWithCZone((size), (alignment), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
+#define sakura_realloc(p, newsize) SkrReallocWithCZone((p), (newsize), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
+#define sakura_free(p) SkrFreeWithCZone((p), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
+#define sakura_free_aligned(p, alignment) SkrFreeAlignedWithCZone((p), (alignment), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), NULL )
 
 #define sakura_mallocN(size, ...) SkrMallocWithCZone((size), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), __VA_ARGS__ )
 #define sakura_callocN(count, size, ...) SkrCallocWithCZone((count), (size), SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__),SKR_ALLOC_STRINGFY(__LINE__)), __VA_ARGS__ )
@@ -134,15 +134,15 @@ FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line,
 
 #else
 
-#define sakura_malloc(size, ...) _sakura_malloc((size), NULL)
-#define sakura_calloc(count, size, ...) _sakura_calloc((count), (size), NULL)
-#define sakura_malloc_aligned(size, alignment, ...) _sakura_malloc_aligned((size), (alignment), NULL)
-#define sakura_calloc_aligned(count, size, alignment, ...) _sakura_calloc_aligned((count), (size), (alignment), NULL)
-#define sakura_new_n(count, size, ...) _sakura_new_n((count), (size), NULL)
-#define sakura_new_aligned(size, alignment, ...) _sakura_new_aligned((size), (alignment), NULL)
-#define sakura_realloc(p, newsize, ...) _sakura_realloc((p), (newsize), NULL)
-#define sakura_free(p, ...) _sakura_free((p), NULL)
-#define sakura_free_aligned(p, alignment, ...) _sakura_free_aligned((p), (alignment), NULL)
+#define sakura_malloc(size) _sakura_malloc((size), NULL)
+#define sakura_calloc(count, size) _sakura_calloc((count), (size), NULL)
+#define sakura_malloc_aligned(size, alignment) _sakura_malloc_aligned((size), (alignment), NULL)
+#define sakura_calloc_aligned(count, size, alignment) _sakura_calloc_aligned((count), (size), (alignment), NULL)
+#define sakura_new_n(count, size) _sakura_new_n((count), (size), NULL)
+#define sakura_new_aligned(size, alignment) _sakura_new_aligned((size), (alignment), NULL)
+#define sakura_realloc(p, newsize) _sakura_realloc((p), (newsize), NULL)
+#define sakura_free(p) _sakura_free((p), NULL)
+#define sakura_free_aligned(p, alignment) _sakura_free_aligned((p), (alignment), NULL)
 
 #define sakura_mallocN(size, ...) _sakura_malloc((size), __VA_ARGS__)
 #define sakura_callocN(count, size, ...) _sakura_calloc((count), (size), __VA_ARGS__)
@@ -151,8 +151,8 @@ FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line,
 #define sakura_new_nN(count, size, ...) _sakura_new_n((count), (size), __VA_ARGS__)
 #define sakura_new_alignedN(size, alignment, ...) _sakura_new_aligned((size), (alignment), __VA_ARGS__)
 #define sakura_reallocN(p, newsize, ...) _sakura_realloc((p), (newsize), __VA_ARGS__)
-#define sakura_free(p, ...) _sakura_free((p), __VA_ARGS__)
-#define sakura_free_aligned(p, alignment, ...) _sakura_free_aligned((p), (alignment), __VA_ARGS__)
+#define sakura_freeN(p, ...) _sakura_free((p), __VA_ARGS__)
+#define sakura_free_alignedN(p, alignment, ...) _sakura_free_aligned((p), (alignment), __VA_ARGS__)
 
 #endif
 

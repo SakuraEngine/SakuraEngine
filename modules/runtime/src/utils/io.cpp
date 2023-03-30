@@ -1,4 +1,7 @@
 #include "utils/io.h"
+#include "io_service_util.hpp"
+
+const char* skr::io::kIOTaskQueueName = "io::task_queue";
 
 bool skr_async_request_t::is_ready() const SKR_NOEXCEPT
 {
