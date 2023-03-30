@@ -203,29 +203,7 @@ HRESULT skr_image_coder_win_dstorage_decompressor(skr_win_dstorage_decompress_re
             (uint8_t*)request->dst_buffer, &actualSize, 
             raw_format, coder->get_bit_depth()))
         {
-            /*
-            {
-                auto jcoder = skr_image_coder_create_image(IMAGE_CODER_FORMAT_JPEG);
-                const auto jbit_depth = skr_image_coder_get_bit_depth(coder);
-                const auto jwidth = skr_image_coder_get_width(coder);
-                const auto jheight = skr_image_coder_get_height(coder);
-                SKR_DEFER({ ZoneScopedN("DirectStorageJTestDecompressorFree"); skr_image_coder_free_image(jcoder); });
-                bool jview = skr_image_coder_view_raw(jcoder, (const uint8_t*)request->dst_buffer, actualSize, 
-                    jwidth, jheight,
-                    raw_format, jbit_depth, 4 * jwidth * jbit_depth / 8);
-                SKR_ASSERT(jview);
-                
-                uint8_t* encoded = nullptr;
-                uint64_t encoded_size = 0;
-                bool jencode = skr_image_coder_get_encoded_data_view(jcoder, &encoded, &encoded_size);
-                SKR_ASSERT(jencode);
-                
-                bool jraw = skr_image_coder_get_raw_data(jcoder, 
-                    (uint8_t*)request->dst_buffer, &actualSize, 
-                    raw_format, coder->get_bit_depth());
-                SKR_ASSERT(jraw);
-            }
-            */
+
             return 0L; // S_OK
         }
     }
