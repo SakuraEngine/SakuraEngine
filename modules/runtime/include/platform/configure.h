@@ -125,7 +125,7 @@ extern const char* $name;
 #ifdef __cplusplus
     #define RUNTIME_EXTERN_C extern "C"
 #else
-    #define RUNTIME_EXTERN_C
+    #define RUNTIME_EXTERN_C extern
 #endif
 
 #if defined(__cplusplus)
