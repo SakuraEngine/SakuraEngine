@@ -199,14 +199,16 @@ size_t SystemPageSize()
     return 0;
 }
 
+static const char* kFiberMemoryPoolName = "ftl::fibers";
+
 void* AlignedAlloc(size_t size, size_t /*alignment*/)
 {
-    return sakura_malloc(size);
+    return sakura_mallocN(size, kFiberMemoryPoolName);
 }
 
 void AlignedFree(void* block)
 {
-    sakura_free(block);
+    sakura_freeN(block, kFiberMemoryPoolName);
 }
 #endif
 
