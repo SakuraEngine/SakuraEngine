@@ -245,14 +245,14 @@ RUNTIME_API void* _sakura_new_aligned(size_t size, size_t alignment, const char*
     return ptr;
 }
 
-RUNTIME_API void _sakura_free(void* p) 
+RUNTIME_API void _sakura_free(void* p, const char* pool_name) 
 {
     free(p);
 }
 
 #define free_aligned(p, alignment) free((p))
 
-RUNTIME_API void _sakura_free_aligned(void* p, size_t alignment) 
+RUNTIME_API void _sakura_free_aligned(void* p, size_t alignment, const char* pool_name) 
 {
     free_aligned(p, alignment);
 }
