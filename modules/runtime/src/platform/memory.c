@@ -1,7 +1,7 @@
 #include "platform/memory.h"
 #include "tracy/TracyC.h"
 
-static const char* kTracedNewDefaultPoolName = "sakura::default";
+const char* kTracedNewDefaultPoolName = "sakura::default";
 
 #if defined(_WIN32)
 
