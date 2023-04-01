@@ -156,6 +156,9 @@ static const char* cgpu_wanted_instance_exts[] = {
 #if VK_EXT_extended_dynamic_state3
     VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME,
 #endif
+#if VK_EXT_shader_object
+    VK_EXT_SHADER_OBJECT_EXTENSION_NAME,
+#endif
 
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
     VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
