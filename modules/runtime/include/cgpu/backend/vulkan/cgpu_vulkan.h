@@ -190,7 +190,7 @@ typedef struct CGPUAdapter_Vulkan {
 #if VK_EXT_extended_dynamic_state2
     VkPhysicalDeviceExtendedDynamicState2FeaturesEXT mPhysicalDeviceExtendedDynamicState2Features;
 #endif
-#if VK_EXT_extended_dynamic_state3
+#if VK_EXT_extended_dynamic_state3 // NVIDIA: driver version >= 531.54
     VkPhysicalDeviceExtendedDynamicState3PropertiesEXT mPhysicalDeviceExtendedDynamicState3Properties;
     VkPhysicalDeviceExtendedDynamicState3FeaturesEXT mPhysicalDeviceExtendedDynamicState3Features;
 #endif
