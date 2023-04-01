@@ -1,11 +1,6 @@
 #pragma once
 #include "cgpu/api.h"
 
-#if defined(_MACOS)
-#define VK_MVK_macos_surface 1
-#include "vulkan/vulkan_macos.h"
-#endif
-
 #if defined(_WIN32) || defined(_WIN64)
     #define VK_USE_PLATFORM_WIN32_KHR
 #endif
@@ -200,6 +195,10 @@ typedef struct CGPUAdapter_Vulkan {
 #if VK_EXT_extended_dynamic_state3 // NVIDIA: driver version >= 531.54
     VkPhysicalDeviceExtendedDynamicState3PropertiesEXT mPhysicalDeviceExtendedDynamicState3Properties;
     VkPhysicalDeviceExtendedDynamicState3FeaturesEXT mPhysicalDeviceExtendedDynamicState3Features;
+#endif
+#if VK_EXT_shader_object // NVIDIA: driver version >= 531.54
+    VkPhysicalDeviceShaderObjectFeaturesEXT mPhysicalDeviceShaderObjectFeatures;
+    VkPhysicalDeviceShaderObjectPropertiesEXT mPhysicalDeviceShaderObjectProperties;
 #endif
     VkPhysicalDeviceFeatures2 mPhysicalDeviceFeatures;
     VkPhysicalDeviceSubgroupProperties mSubgroupProperties;

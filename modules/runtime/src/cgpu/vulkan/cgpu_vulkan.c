@@ -559,10 +559,9 @@ const struct CGPURootSignatureDescriptor* desc)
                 .bindingCount = i_binding
             };
             CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorSetLayout(D->pVkDevice,
-            &set_info, GLOBAL_VkAllocationCallbacks,
-            &RS->pSetLayouts[set_index].layout));
-            VkUtil_ConsumeDescriptorSets(D->pDescriptorPool,
-            &RS->pSetLayouts[set_index].layout, &RS->pSetLayouts[set_index].pEmptyDescSet, 1);
+                &set_info, GLOBAL_VkAllocationCallbacks, &RS->pSetLayouts[set_index].layout));
+            VkUtil_ConsumeDescriptorSets(D->pDescriptorPool, &RS->pSetLayouts[set_index].layout,
+                &RS->pSetLayouts[set_index].pEmptyDescSet, 1);
 
             if (bindings_count) cgpu_free(vkbindings);
         }
