@@ -99,8 +99,7 @@ const VkDebugReportCallbackCreateInfoEXT* report_info_ptr)
         }
     }
 }
-#ifdef __clang__
-#endif
+
 void VkUtil_QueryAllAdapters(CGPUInstance_Vulkan* I,
 const char* const* device_layers, uint32_t device_layers_count,
 const char* const* device_extensions, uint32_t device_extension_count)
@@ -149,6 +148,16 @@ const char* const* device_extensions, uint32_t device_extension_count)
                 VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_FEATURES_KHR;
                 *ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures;
                 ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.pNext;
+#endif
+#if VK_EXT_extended_dynamic_state
+                VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT;
+                *ppNext = &VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures;
+                ppNext = &VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures.pNext;
+#endif
+#if VK_EXT_extended_dynamic_state2
+                VkAdapter->mPhysicalDeviceExtendedDynamicState2Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_2_FEATURES_EXT;
+                *ppNext = &VkAdapter->mPhysicalDeviceExtendedDynamicState2Features;
+                ppNext = &VkAdapter->mPhysicalDeviceExtendedDynamicState2Features.pNext;
 #endif
             }
 #ifndef NX64
@@ -640,6 +649,24 @@ void VkUtil_RecordAdapterDetail(CGPUAdapter_Vulkan* VkAdapter)
     adapter_detail->support_shading_rate = VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.pipelineFragmentShadingRate;
     adapter_detail->support_shading_rate_mask = VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.attachmentFragmentShadingRate;
     adapter_detail->support_shading_rate_sv = VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.primitiveFragmentShadingRate;
+#endif
+#if VK_EXT_extended_dynamic_state
+    adapter_detail->support_dynamic_cull_mode = VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures.extendedDynamicState;
+    adapter_detail->support_dynamic_front_face = VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures.extendedDynamicState;
+    adapter_detail->support_dynamic_primitive_topology = VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures.extendedDynamicState;
+    adapter_detail->support_dynamic_depth_test_enable = VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures.extendedDynamicState;
+    adapter_detail->support_dynamic_depth_write_enable = VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures.extendedDynamicState;
+    adapter_detail->support_dynamic_depth_compare = VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures.extendedDynamicState;
+    adapter_detail->support_dynamic_depth_bounds_test = VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures.extendedDynamicState;
+    adapter_detail->support_dynamic_stencil_test = VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures.extendedDynamicState;
+    adapter_detail->support_dynamic_stencil_op = VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures.extendedDynamicState;
+#endif
+#if VK_EXT_extended_dynamic_state2
+    adapter_detail->support_dynamic_raster_discard = VkAdapter->mPhysicalDeviceExtendedDynamicState2Features.extendedDynamicState2;
+    adapter_detail->support_dynamic_depth_bias = VkAdapter->mPhysicalDeviceExtendedDynamicState2Features.extendedDynamicState2;
+    adapter_detail->support_dynamic_primitive_restart = VkAdapter->mPhysicalDeviceExtendedDynamicState2Features.extendedDynamicState2;
+    adapter_detail->support_dynamic_logic_op = VkAdapter->mPhysicalDeviceExtendedDynamicState2Features.extendedDynamicState2LogicOp;
+    adapter_detail->support_dynamic_patch_control_points = VkAdapter->mPhysicalDeviceExtendedDynamicState2Features.extendedDynamicState2PatchControlPoints;
 #endif
     // memory features
     VkUtil_QueryHostVisbleVramInfo(VkAdapter);
