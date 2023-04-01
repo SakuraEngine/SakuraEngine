@@ -1,8 +1,15 @@
 #pragma once
 #include "cgpu/api.h"
+
+#if defined(_MACOS)
+#define VK_MVK_macos_surface 1
+#include "vulkan/vulkan_macos.h"
+#endif
+
 #if defined(_WIN32) || defined(_WIN64)
     #define VK_USE_PLATFORM_WIN32_KHR
 #endif
+
 #include "cgpu/backend/vulkan/volk.h"
 
 #ifdef __cplusplus

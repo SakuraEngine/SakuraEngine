@@ -2,11 +2,6 @@
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "cgpu/extensions/cgpu_vulkan_exts.h"
 
-#if defined(_MACOS)
-#define VK_MVK_macos_surface 1
-#include "vulkan/vulkan_macos.h"
-#endif
-
 const CGPUSurfacesProcTable s_tbl_vk = {
     //
     .free_surface = cgpu_free_surface_vulkan,
