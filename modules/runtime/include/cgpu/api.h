@@ -624,6 +624,22 @@ typedef struct CGPUAdapterDetail {
     bool is_uma : 1;
     bool is_virtual : 1;
     bool is_cpu : 1;
+    // DYNAMIC STATES Tier1
+    bool support_dynamic_cull_mode : 1;
+    bool support_dynamic_front_face : 1;
+    bool support_dynamic_primitive_topology : 1;
+    bool support_dynamic_depth_test_enable : 1;
+    bool support_dynamic_depth_write_enable : 1;
+    bool support_dynamic_depth_compare : 1;
+    bool support_dynamic_depth_bounds_test : 1;
+    bool support_dynamic_stencil_test : 1;
+    bool support_dynamic_stencil_op : 1;
+    // DYNAMIC STATES Tier2
+    bool support_dynamic_raster_discard : 1;
+    bool support_dynamic_depth_bias : 1;
+    bool support_dynamic_primitive_restart : 1;
+    bool support_dynamic_logic_op : 1;
+    bool support_dynamic_patch_control_points : 1;
     // RDNA2 
     bool support_shading_rate : 1;
     bool support_shading_rate_mask : 1;

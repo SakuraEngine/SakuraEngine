@@ -142,6 +142,15 @@ typedef struct VkUtil_FramebufferDesc {
 static const char* validation_layer_name = "VK_LAYER_KHRONOS_validation";
 static const char* cgpu_wanted_instance_exts[] = {
     VK_KHR_SURFACE_EXTENSION_NAME,
+
+#if VK_EXT_extended_dynamic_state
+    VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
+#endif
+
+#if VK_EXT_extended_dynamic_state2
+    VK_EXT_EXTENDED_DYNAMIC_STATE_2_EXTENSION_NAME,
+#endif
+
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
     VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #elif defined(_MACOS)
