@@ -610,6 +610,33 @@ typedef struct CGPUVendorPreset {
     char gpu_name[MAX_GPU_VENDOR_STRING_LENGTH]; // If GPU Name is missing then value will be empty string
 } CGPUVendorPreset;
 
+typedef enum ECGPUDynamicStateFeatures
+{
+    CGPU_DYNAMIC_STATE_CULL_MODE = 1 << 0,
+    CGPU_DYNAMIC_STATE_FRONT_FACE = 1 << 1,
+    CGPU_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY = 1 << 2,
+    CGPU_DYNAMIC_STATE_DEPTH_TEST = 1 << 3,
+    CGPU_DYNAMIC_STATE_DEPTH_WRITE = 1 << 4,
+    CGPU_DYNAMIC_STATE_DEPTH_COMPARE = 1 << 5,
+    CGPU_DYNAMIC_STATE_DEPTH_BOUNDS_TEST = 1 << 6,
+    CGPU_DYNAMIC_STATE_STENCIL_TEST = 1 << 7,
+    CGPU_DYNAMIC_STATE_STENCIL_OP = 1 << 8,
+    CGPU_DYNAMIC_STATE_STENCIL_TIER1 = 
+        CGPU_DYNAMIC_STATE_CULL_MODE | CGPU_DYNAMIC_STATE_FRONT_FACE | CGPU_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY |
+        CGPU_DYNAMIC_STATE_DEPTH_TEST | CGPU_DYNAMIC_STATE_DEPTH_WRITE | CGPU_DYNAMIC_STATE_DEPTH_COMPARE |
+        CGPU_DYNAMIC_STATE_DEPTH_BOUNDS_TEST | CGPU_DYNAMIC_STATE_STENCIL_TEST | CGPU_DYNAMIC_STATE_STENCIL_OP,
+    CGPU_DYNAMIC_STATE_RASTER_DISCARD = 1 << 9,
+    CGPU_DYNAMIC_STATE_DEPTH_BIAS = 1 << 10,
+    CGPU_DYNAMIC_STATE_PRIMITIVE_RESTART = 1 << 11,
+    CGPU_DYNAMIC_STATE_LOGIC_OP = 1 << 12,
+    CGPU_DYNAMIC_STATE_PATCH_CONTROL_POINTS = 1 << 13,
+    CGPU_DYNAMIC_STATE_STENCIL_TIER2 = 
+        CGPU_DYNAMIC_STATE_STENCIL_TIER1 |
+        CGPU_DYNAMIC_STATE_RASTER_DISCARD | CGPU_DYNAMIC_STATE_DEPTH_BIAS | CGPU_DYNAMIC_STATE_PRIMITIVE_RESTART |
+        CGPU_DYNAMIC_STATE_LOGIC_OP | CGPU_DYNAMIC_STATE_PATCH_CONTROL_POINTS,
+} ECGPUDynamicStateFeatures;
+typedef uint64_t CGPUDynamicStateFeatures;
+
 typedef struct CGPUAdapterDetail {
     uint32_t uniform_buffer_alignment;
     uint32_t upload_buffer_texture_alignment;
@@ -624,24 +651,7 @@ typedef struct CGPUAdapterDetail {
     bool is_uma : 1;
     bool is_virtual : 1;
     bool is_cpu : 1;
-    // DYNAMIC STATES Tier1
-    bool support_dynamic_cull_mode : 1;
-    bool support_dynamic_front_face : 1;
-    bool support_dynamic_primitive_topology : 1;
-    bool support_dynamic_depth_test_enable : 1;
-    bool support_dynamic_depth_write_enable : 1;
-    bool support_dynamic_depth_compare : 1;
-    bool support_dynamic_depth_bounds_test : 1;
-    bool support_dynamic_stencil_test : 1;
-    bool support_dynamic_stencil_op : 1;
-    // DYNAMIC STATES Tier2
-    bool support_dynamic_raster_discard : 1;
-    bool support_dynamic_depth_bias : 1;
-    bool support_dynamic_primitive_restart : 1;
-    bool support_dynamic_logic_op : 1;
-    bool support_dynamic_patch_control_points : 1;
-    // DYNAMIC STATES Tier3
-
+    CGPUDynamicStateFeatures dynamic_state_features;
     // RDNA2 
     bool support_shading_rate : 1;
     bool support_shading_rate_mask : 1;

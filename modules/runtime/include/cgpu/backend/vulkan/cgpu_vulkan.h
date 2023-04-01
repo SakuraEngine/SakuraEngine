@@ -190,6 +190,10 @@ typedef struct CGPUAdapter_Vulkan {
 #if VK_EXT_extended_dynamic_state2
     VkPhysicalDeviceExtendedDynamicState2FeaturesEXT mPhysicalDeviceExtendedDynamicState2Features;
 #endif
+#if VK_EXT_extended_dynamic_state3
+    VkPhysicalDeviceExtendedDynamicState3PropertiesEXT mPhysicalDeviceExtendedDynamicState3Properties;
+    VkPhysicalDeviceExtendedDynamicState3FeaturesEXT mPhysicalDeviceExtendedDynamicState3Features;
+#endif
     VkPhysicalDeviceFeatures2 mPhysicalDeviceFeatures;
     VkPhysicalDeviceSubgroupProperties mSubgroupProperties;
     /// Queue Families

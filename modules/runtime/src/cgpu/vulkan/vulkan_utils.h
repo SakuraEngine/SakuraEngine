@@ -11,6 +11,10 @@
 #include "../common/common_utils.h"
 #include "cgpu/flags.h"
 
+#if defined(_MACOS)
+#include "vulkan/vulkan_macos.h"
+#endif
+
 #define CGPU_INNER_TCF_IMPORT_SHARED_HANDLE (CGPU_TCF_USABLE_MAX << 1)
 #define USE_EXTERNAL_MEMORY_EXTENSIONS
 
@@ -146,9 +150,11 @@ static const char* cgpu_wanted_instance_exts[] = {
 #if VK_EXT_extended_dynamic_state
     VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
 #endif
-
 #if VK_EXT_extended_dynamic_state2
     VK_EXT_EXTENDED_DYNAMIC_STATE_2_EXTENSION_NAME,
+#endif
+#if VK_EXT_extended_dynamic_state3
+    VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME,
 #endif
 
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
