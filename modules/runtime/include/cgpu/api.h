@@ -640,6 +640,8 @@ typedef struct CGPUAdapterDetail {
     bool support_dynamic_primitive_restart : 1;
     bool support_dynamic_logic_op : 1;
     bool support_dynamic_patch_control_points : 1;
+    // DYNAMIC STATES Tier3
+
     // RDNA2 
     bool support_shading_rate : 1;
     bool support_shading_rate_mask : 1;
