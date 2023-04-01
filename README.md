@@ -227,7 +227,7 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - Qt-Advanced-Docking-System 3cd6d76 LGPL-2.1 
 
 ## 接入的扩展API以及版本
-- vulkan headers & volk 1.3.243.0
+- [vulkan headers](https://github.com/KhronosGroup/Vulkan-Headers) & volk 1.3.243.0
 - nvapi R510
 - amd_ags 6.0.1
 
