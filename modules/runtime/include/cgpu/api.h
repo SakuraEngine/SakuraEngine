@@ -33,6 +33,7 @@ DEFINE_CGPU_OBJECT(CGPUSwapChain)
 DEFINE_CGPU_OBJECT(CGPUShaderLibrary)
 DEFINE_CGPU_OBJECT(CGPURootSignature)
 DEFINE_CGPU_OBJECT(CGPURootSignaturePool)
+DEFINE_CGPU_OBJECT(CGPULinkedShader)
 DEFINE_CGPU_OBJECT(CGPUDescriptorSet)
 DEFINE_CGPU_OBJECT(CGPUMemoryPool)
 DEFINE_CGPU_OBJECT(CGPUBuffer)
@@ -65,6 +66,13 @@ struct CGPUComputePassDescriptor;
 struct CGPUQueueSubmitDescriptor;
 struct CGPUQueuePresentDescriptor;
 struct CGPUAcquireNextDescriptor;
+
+
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-const-variable"
+#pragma clang diagnostic ignored "-Wunused-variable"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -199,6 +207,14 @@ RUNTIME_API CGPUQueryPoolId cgpu_create_query_pool(CGPUDeviceId, const struct CG
 typedef CGPUQueryPoolId (*CGPUProcCreateQueryPool)(CGPUDeviceId, const struct CGPUQueryPoolDescriptor* desc);
 RUNTIME_API void cgpu_free_query_pool(CGPUQueryPoolId);
 typedef void (*CGPUProcFreeQueryPool)(CGPUQueryPoolId);
+
+// EXPERIMENTAL Linked ISA APIs
+RUNTIME_API CGPURootSignatureId cgpu_create_root_signature_and_isa(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc, CGPULinkedShaderId* out_isas);
+typedef CGPURootSignatureId (*CGPUProcCreateRootSignatureAndISA)(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc, CGPULinkedShaderId* out_isas);
+RUNTIME_API CGPULinkedShaderId cgpu_link_shader(CGPUDeviceId device, const struct CGPULinkedShaderDescriptor* desc);
+typedef CGPULinkedShaderId (*CGPUProcLinkShader)(CGPUDeviceId device, const struct CGPULinkedShaderDescriptor* desc);
+RUNTIME_API void cgpu_free_linked_shader(CGPULinkedShaderId shader);
+typedef void (*CGPUProcFreeLinkedShader)(CGPULinkedShaderId shader);
 
 // Queue APIs
 // Warn: If you get a queue at an index with a specific type, you must hold the handle and reuses it.
@@ -477,6 +493,11 @@ typedef struct CGPUProcTable {
     const CGPUProcCreateQueryPool create_query_pool;
     const CGPUProcFreeQueryPool free_query_pool;
 
+    // EXPERIMENTAL Linked ISA APIs
+    const CGPUProcCreateRootSignatureAndISA create_root_signature_and_isa;
+    const CGPUProcLinkShader link_shader;
+    const CGPUProcFreeLinkedShader free_linked_shader;
+
     // Queue APIs
     const CGPUProcGetQueue get_queue;
     const CGPUProcSubmitQueue submit_queue;
@@ -610,31 +631,57 @@ typedef struct CGPUVendorPreset {
     char gpu_name[MAX_GPU_VENDOR_STRING_LENGTH]; // If GPU Name is missing then value will be empty string
 } CGPUVendorPreset;
 
-typedef enum ECGPUDynamicStateFeatures
-{
-    CGPU_DYNAMIC_STATE_CULL_MODE = 1 << 0,
-    CGPU_DYNAMIC_STATE_FRONT_FACE = 1 << 1,
-    CGPU_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY = 1 << 2,
-    CGPU_DYNAMIC_STATE_DEPTH_TEST = 1 << 3,
-    CGPU_DYNAMIC_STATE_DEPTH_WRITE = 1 << 4,
-    CGPU_DYNAMIC_STATE_DEPTH_COMPARE = 1 << 5,
-    CGPU_DYNAMIC_STATE_DEPTH_BOUNDS_TEST = 1 << 6,
-    CGPU_DYNAMIC_STATE_STENCIL_TEST = 1 << 7,
-    CGPU_DYNAMIC_STATE_STENCIL_OP = 1 << 8,
-    CGPU_DYNAMIC_STATE_STENCIL_TIER1 = 
-        CGPU_DYNAMIC_STATE_CULL_MODE | CGPU_DYNAMIC_STATE_FRONT_FACE | CGPU_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY |
-        CGPU_DYNAMIC_STATE_DEPTH_TEST | CGPU_DYNAMIC_STATE_DEPTH_WRITE | CGPU_DYNAMIC_STATE_DEPTH_COMPARE |
-        CGPU_DYNAMIC_STATE_DEPTH_BOUNDS_TEST | CGPU_DYNAMIC_STATE_STENCIL_TEST | CGPU_DYNAMIC_STATE_STENCIL_OP,
-    CGPU_DYNAMIC_STATE_RASTER_DISCARD = 1 << 9,
-    CGPU_DYNAMIC_STATE_DEPTH_BIAS = 1 << 10,
-    CGPU_DYNAMIC_STATE_PRIMITIVE_RESTART = 1 << 11,
-    CGPU_DYNAMIC_STATE_LOGIC_OP = 1 << 12,
-    CGPU_DYNAMIC_STATE_PATCH_CONTROL_POINTS = 1 << 13,
-    CGPU_DYNAMIC_STATE_STENCIL_TIER2 = 
-        CGPU_DYNAMIC_STATE_STENCIL_TIER1 |
-        CGPU_DYNAMIC_STATE_RASTER_DISCARD | CGPU_DYNAMIC_STATE_DEPTH_BIAS | CGPU_DYNAMIC_STATE_PRIMITIVE_RESTART |
-        CGPU_DYNAMIC_STATE_LOGIC_OP | CGPU_DYNAMIC_STATE_PATCH_CONTROL_POINTS,
-} ECGPUDynamicStateFeatures;
+static const uint64_t CGPU_DYNAMIC_STATE_CullMode = 1ull << 0;
+static const uint64_t CGPU_DYNAMIC_STATE_FrontFace = 1ull << 1;
+static const uint64_t CGPU_DYNAMIC_STATE_PrimitiveTopology = 1ull << 2;
+static const uint64_t CGPU_DYNAMIC_STATE_DepthTest = 1ull << 3;
+static const uint64_t CGPU_DYNAMIC_STATE_DepthWrite = 1ull << 4;
+static const uint64_t CGPU_DYNAMIC_STATE_DepthCompare = 1ull << 5;
+static const uint64_t CGPU_DYNAMIC_STATE_DepthBoundsTest = 1ull << 6;
+static const uint64_t CGPU_DYNAMIC_STATE_StencilTest = 1ull << 7;
+static const uint64_t CGPU_DYNAMIC_STATE_StencilOp = 1ull << 8;
+static const uint64_t CGPU_DYNAMIC_STATE_Tier1 = (1ull << 9) - 1;
+
+static const uint64_t CGPU_DYNAMIC_STATE_RasterDiscard = 1ull << 9;
+static const uint64_t CGPU_DYNAMIC_STATE_DepthBias = 1ull << 10;
+static const uint64_t CGPU_DYNAMIC_STATE_PrimitiveRestart = 1ull << 11;
+static const uint64_t CGPU_DYNAMIC_STATE_LogicOp = 1ull << 12;
+static const uint64_t CGPU_DYNAMIC_STATE_PatchControlPoints = 1ull << 13;
+static const uint64_t CGPU_DYNAMIC_STATE_Tier2 = (1ull << 14) - 1;
+
+static const uint64_t CGPU_DYNAMIC_STATE_TessellationDomainOrigin = 1ull << 14;
+static const uint64_t CGPU_DYNAMIC_STATE_DepthClampEnable = 1ull << 15;
+static const uint64_t CGPU_DYNAMIC_STATE_PolygonMode = 1ull << 16;
+static const uint64_t CGPU_DYNAMIC_STATE_SampleCount = 1ull << 17;
+static const uint64_t CGPU_DYNAMIC_STATE_SampleMask = 1ull << 18;
+static const uint64_t CGPU_DYNAMIC_STATE_AlphaToCoverageEnable = 1ull << 19;
+static const uint64_t CGPU_DYNAMIC_STATE_AlphaToOneEnable = 1ull << 20;
+static const uint64_t CGPU_DYNAMIC_STATE_LogicOpEnable = 1ull << 21;
+static const uint64_t CGPU_DYNAMIC_STATE_ColorBlendEnable = 1ull << 22;
+static const uint64_t CGPU_DYNAMIC_STATE_ColorBlendEquation = 1ull << 23;
+static const uint64_t CGPU_DYNAMIC_STATE_ColorWriteMask = 1ull << 24;
+static const uint64_t CGPU_DYNAMIC_STATE_RasterStream = 1ull << 25;
+static const uint64_t CGPU_DYNAMIC_STATE_ConservativeRasterMode = 1ull << 26;
+static const uint64_t CGPU_DYNAMIC_STATE_ExtraPrimitiveOverestimationSize = 1ull << 27;
+static const uint64_t CGPU_DYNAMIC_STATE_DepthClipEnable = 1ull << 28;
+static const uint64_t CGPU_DYNAMIC_STATE_SampleLocationsEnable = 1ull << 29;
+static const uint64_t CGPU_DYNAMIC_STATE_ColorBlendAdvanced = 1ull << 30;
+static const uint64_t CGPU_DYNAMIC_STATE_ProvokingVertexMode = 1ull << 31;
+static const uint64_t CGPU_DYNAMIC_STATE_LineRasterizationMode = 1ull << 32;
+static const uint64_t CGPU_DYNAMIC_STATE_LineStippleEnable = 1ull << 33;
+static const uint64_t CGPU_DYNAMIC_STATE_DepthClipNegativeOneToOne = 1ull << 34;
+static const uint64_t CGPU_DYNAMIC_STATE_ViewportWScalingEnable = 1ull << 35;
+static const uint64_t CGPU_DYNAMIC_STATE_ViewportSwizzle = 1ull << 36;
+static const uint64_t CGPU_DYNAMIC_STATE_CoverageToColorEnable = 1ull << 37;
+static const uint64_t CGPU_DYNAMIC_STATE_CoverageToColorLocation = 1ull << 38;
+static const uint64_t CGPU_DYNAMIC_STATE_CoverageModulationMode = 1ull << 39;
+static const uint64_t CGPU_DYNAMIC_STATE_CoverageModulationTableEnable = 1ull << 40;
+static const uint64_t CGPU_DYNAMIC_STATE_CoverageModulationTable = 1ull << 41;
+static const uint64_t CGPU_DYNAMIC_STATE_CoverageReductionMode = 1ull << 42;
+static const uint64_t CGPU_DYNAMIC_STATE_RepresentativeFragmentTestEnable = 1ull << 43;
+static const uint64_t CGPU_DYNAMIC_STATE_ShadingRateImageEnable = 1ull << 44;
+static const uint64_t CGPU_DYNAMIC_STATE_Tier3 = (1ull << 45) - 1;
+
 typedef uint64_t CGPUDynamicStateFeatures;
 
 typedef struct CGPUAdapterDetail {
@@ -1423,4 +1470,8 @@ typedef struct CGPUSampler {
 
 #ifdef __cplusplus
 } // end extern "C"
+#endif
+
+#ifdef __clang__
+#pragma clang diagnostic pop
 #endif

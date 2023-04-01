@@ -136,10 +136,15 @@ const char* const* device_extensions, uint32_t device_extension_count)
                 *ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateProps;
                 ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateProps.pNext;
 #endif
-#if VK_KHR_fragment_shading_rate
+#if VK_EXT_extended_dynamic_state3
                 VkAdapter->mPhysicalDeviceExtendedDynamicState3Properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_PROPERTIES_EXT;
                 *ppNext = &VkAdapter->mPhysicalDeviceExtendedDynamicState3Properties;
                 ppNext = &VkAdapter->mPhysicalDeviceExtendedDynamicState3Properties.pNext;
+#endif
+#if VK_EXT_shader_object
+                VkAdapter->mPhysicalDeviceShaderObjectProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_PROPERTIES_EXT;
+                *ppNext = &VkAdapter->mPhysicalDeviceShaderObjectProperties;
+                ppNext = &VkAdapter->mPhysicalDeviceShaderObjectProperties.pNext;
 #endif
             }
             vkGetPhysicalDeviceProperties2KHR(pysicalDevices[i], &VkAdapter->mPhysicalDeviceProps);
@@ -167,6 +172,11 @@ const char* const* device_extensions, uint32_t device_extension_count)
                 VkAdapter->mPhysicalDeviceExtendedDynamicState3Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT;
                 *ppNext = &VkAdapter->mPhysicalDeviceExtendedDynamicState3Features;
                 ppNext = &VkAdapter->mPhysicalDeviceExtendedDynamicState3Features.pNext;
+#endif
+#if VK_EXT_shader_object
+                VkAdapter->mPhysicalDeviceShaderObjectFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_FEATURES_EXT;
+                *ppNext = &VkAdapter->mPhysicalDeviceShaderObjectFeatures;
+                ppNext = &VkAdapter->mPhysicalDeviceShaderObjectFeatures.pNext;
 #endif
             }
 #ifndef NX64
