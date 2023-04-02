@@ -148,6 +148,7 @@ RUNTIME_EXTERN_C RUNTIME_API void* traced_os_realloc_aligned(void* p, size_t new
         traced_os_free(new_allocation, pool_name);
         new_allocation = new_new;
     }
+    return new_allocation;
 }
 
 // _sakura_alloc
