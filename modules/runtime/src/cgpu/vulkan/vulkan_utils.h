@@ -4,12 +4,21 @@
         #define WIN32_LEAN_AND_MEAN
     #endif
 #endif
+#include "cgpu/flags.h"
 #include "cgpu/api.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "cgpu/extensions/cgpu_vulkan_exts.h"
 #include "internal/vk_mem_alloc.h"
 #include "../common/common_utils.h"
 #include "cgpu/flags.h"
+
+#include "platform/debug.h"
+#include "utils/log.h"
+#include "vulkan/vulkan_core.h"
+
+#ifdef CGPU_THREAD_SAFETY
+    #include "platform/thread.h"
+#endif
 
 #if defined(_MACOS)
 #include "vulkan/vulkan_macos.h"
@@ -224,6 +233,10 @@ static const char* cgpu_wanted_device_exts[] = {
     VK_KHR_EXTERNAL_SEMAPHORE_WIN32_EXTENSION_NAME,
     VK_KHR_EXTERNAL_FENCE_WIN32_EXTENSION_NAME,
     #endif
+#endif
+
+#if VK_EXT_shader_object
+    VK_EXT_SHADER_OBJECT_EXTENSION_NAME,
 #endif
 
 // Debug marker extension in case debug utils is not supported

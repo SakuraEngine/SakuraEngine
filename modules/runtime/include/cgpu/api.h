@@ -33,6 +33,7 @@ DEFINE_CGPU_OBJECT(CGPUSwapChain)
 DEFINE_CGPU_OBJECT(CGPUShaderLibrary)
 DEFINE_CGPU_OBJECT(CGPURootSignature)
 DEFINE_CGPU_OBJECT(CGPURootSignaturePool)
+DEFINE_CGPU_OBJECT(CGPUCompiledShader)
 DEFINE_CGPU_OBJECT(CGPULinkedShader)
 DEFINE_CGPU_OBJECT(CGPUDescriptorSet)
 DEFINE_CGPU_OBJECT(CGPUMemoryPool)
@@ -66,7 +67,6 @@ struct CGPUComputePassDescriptor;
 struct CGPUQueueSubmitDescriptor;
 struct CGPUQueuePresentDescriptor;
 struct CGPUAcquireNextDescriptor;
-
 
 #ifdef __clang__
 #pragma clang diagnostic push
@@ -209,10 +209,12 @@ RUNTIME_API void cgpu_free_query_pool(CGPUQueryPoolId);
 typedef void (*CGPUProcFreeQueryPool)(CGPUQueryPoolId);
 
 // EXPERIMENTAL Linked ISA APIs
-RUNTIME_API CGPURootSignatureId cgpu_create_root_signature_and_isa(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc, CGPULinkedShaderId* out_isas);
-typedef CGPURootSignatureId (*CGPUProcCreateRootSignatureAndISA)(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc, CGPULinkedShaderId* out_isas);
-RUNTIME_API CGPULinkedShaderId cgpu_link_shader(CGPUDeviceId device, const struct CGPULinkedShaderDescriptor* desc);
-typedef CGPULinkedShaderId (*CGPUProcLinkShader)(CGPUDeviceId device, const struct CGPULinkedShaderDescriptor* desc);
+RUNTIME_API CGPULinkedShaderId cgpu_compile_and_link_shaders(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* descs, uint32_t count);
+typedef CGPULinkedShaderId (*CGPUProcCompileAndLinkShaders)(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* desc, uint32_t count);
+RUNTIME_API void cgpu_compile_shaders(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* descs, uint32_t count, CGPUCompiledShaderId* out_isas);
+typedef void (*CGPUProcCompileShaders)(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* desc, uint32_t count, CGPUCompiledShaderId* out_isas);
+RUNTIME_API void cgpu_free_compiled_shader(CGPUCompiledShaderId shader);
+typedef void (*CGPUProcFreeCompiledShader)(CGPUCompiledShaderId shader);
 RUNTIME_API void cgpu_free_linked_shader(CGPULinkedShaderId shader);
 typedef void (*CGPUProcFreeLinkedShader)(CGPULinkedShaderId shader);
 
@@ -494,8 +496,9 @@ typedef struct CGPUProcTable {
     const CGPUProcFreeQueryPool free_query_pool;
 
     // EXPERIMENTAL Linked ISA APIs
-    const CGPUProcCreateRootSignatureAndISA create_root_signature_and_isa;
-    const CGPUProcLinkShader link_shader;
+    const CGPUProcCompileAndLinkShaders compile_and_link_shaders;
+    const CGPUProcCompileShaders compile_shaders;
+    const CGPUProcFreeCompiledShader free_compiled_shader;
     const CGPUProcFreeLinkedShader free_linked_shader;
 
     // Queue APIs
@@ -1150,6 +1153,14 @@ typedef struct CGPURootSignatureDescriptor {
     CGPURootSignaturePoolId pool;
 } CGPURootSignatureDescriptor;
 
+typedef struct CGPUCompiledShaderDescriptor {
+    ECGPUShaderStage stage;
+    CGPUShaderLibraryId library;
+    void* shader_code;
+    uint64_t code_size;
+    const char* entry;
+} CGPUCompiledShaderDescriptor;
+
 typedef struct CGPUDescriptorSetDescriptor {
     CGPURootSignatureId root_signature;
     uint32_t set_index;
@@ -1286,6 +1297,16 @@ typedef struct CGPURootSignature {
     CGPURootSignaturePoolId pool;
     CGPURootSignatureId pool_sig;
 } CGPURootSignature;
+
+typedef struct CGPUCompiledShader {
+    CGPUDeviceId device;
+    CGPURootSignatureId root_signature;
+} CGPUCompiledShader;
+
+typedef struct CGPULinkedShader {
+    CGPUDeviceId device;
+    CGPURootSignatureId root_signature;
+} CGPULinkedShader;
 
 typedef struct CGPUDescriptorSet {
     CGPURootSignatureId root_signature;

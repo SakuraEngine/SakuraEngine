@@ -12,6 +12,15 @@ RUNTIME_EXTERN_C RUNTIME_API void _sakura_free(void* p, const char* pool_name) S
 RUNTIME_EXTERN_C RUNTIME_API void _sakura_free_aligned(void* p, size_t alignment, const char* pool_name);
 RUNTIME_EXTERN_C RUNTIME_API void* _sakura_realloc(void* p, size_t newsize, const char* pool_name);
 
+RUNTIME_EXTERN_C RUNTIME_API void* traced_os_malloc(size_t size, const char* pool_name);
+RUNTIME_EXTERN_C RUNTIME_API void* traced_os_calloc(size_t count, size_t size, const char* pool_name);
+RUNTIME_EXTERN_C RUNTIME_API void* traced_os_malloc_aligned(size_t size, size_t alignment, const char* pool_name);
+RUNTIME_EXTERN_C RUNTIME_API void* traced_os_calloc_aligned(size_t count, size_t size, size_t alignment, const char* pool_name);
+RUNTIME_EXTERN_C RUNTIME_API void traced_os_free(void* p, const char* pool_name) SKR_NOEXCEPT;
+RUNTIME_EXTERN_C RUNTIME_API void traced_os_free_aligned(void* p, size_t alignment, const char* pool_name);
+RUNTIME_EXTERN_C RUNTIME_API void* traced_os_realloc(void* p, size_t newsize, const char* pool_name);
+RUNTIME_EXTERN_C RUNTIME_API void* traced_os_realloc_aligned(void* p, size_t newsize, size_t alignment, const char* pool_name);
+
 #if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
 
 #include "string.h"  // memset
