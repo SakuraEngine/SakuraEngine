@@ -359,7 +359,7 @@ void cgpu_free_instance_vulkan(CGPUInstanceId instance)
         vkDestroyDebugUtilsMessengerEXT(to_destroy->pVkInstance, to_destroy->pVkDebugUtilsMessenger, nullptr);
     }
 
-    vkDestroyInstance(to_destroy->pVkInstance, VK_NULL_HANDLE);
+    vkDestroyInstance(to_destroy->pVkInstance, GLOBAL_VkAllocationCallbacks);
     for (uint32_t i = 0; i < to_destroy->mPhysicalDeviceCount; i++)
     {
         auto& Adapter = to_destroy->pVulkanAdapters[i];
@@ -427,7 +427,8 @@ CGPUDeviceId cgpu_create_device_vulkan(CGPUAdapterId adapter, const CGPUDeviceDe
     createInfo.enabledLayerCount = A->mLayersCount;
     createInfo.ppEnabledLayerNames = A->pLayerNames;
 
-    if (vkCreateDevice(A->pPhysicalDevice, &createInfo, CGPU_NULLPTR, &D->pVkDevice) != VK_SUCCESS)
+    VkResult result = vkCreateDevice(A->pPhysicalDevice, &createInfo, GLOBAL_VkAllocationCallbacks, &D->pVkDevice);
+    if (result != VK_SUCCESS)
     {
         cgpu_assert(0 && "failed to create logical device!");
     }
