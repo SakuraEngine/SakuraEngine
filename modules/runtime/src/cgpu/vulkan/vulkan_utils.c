@@ -785,13 +785,14 @@ const char* const* instance_layers, uint32_t instance_layers_count)
         DECLARE_ZERO_VLA(VkLayerProperties, layer_props, count)
         vkEnumerateInstanceLayerProperties(&count, layer_props);
         uint32_t filled_exts = 0;
-        for (uint32_t i = 0; i < count; i++)
+        for (uint32_t j = 0; j < instance_layers_count; j++)
         {
-            for (uint32_t j = 0; j < instance_layers_count; j++)
+            for (uint32_t i = 0; i < count; i++)
             {
                 if (strcmp(layer_props[i].layerName, instance_layers[j]) == 0)
                 {
-                    vkInstance->pLayerProperties[filled_exts] = layer_props[i];
+                    VkLayerProperties* pLayer = &layer_props[i];
+                    vkInstance->pLayerProperties[filled_exts] = *pLayer;
                     vkInstance->pLayerNames[filled_exts] = vkInstance->pLayerProperties[filled_exts].layerName;
                     filled_exts++;
                     break;
@@ -817,9 +818,9 @@ const char* const* instance_extensions, uint32_t instance_extension_count)
         DECLARE_ZERO_VLA(VkExtensionProperties, ext_props, count)
         vkEnumerateInstanceExtensionProperties(layer_name, &count, ext_props);
         uint32_t filled_exts = 0;
-        for (uint32_t i = 0; i < count; i++)
+        for (uint32_t j = 0; j < instance_extension_count; j++)
         {
-            for (uint32_t j = 0; j < instance_extension_count; j++)
+            for (uint32_t i = 0; i < count; i++)
             {
                 if (strcmp(ext_props[i].extensionName, instance_extensions[j]) == 0)
                 {
@@ -830,7 +831,7 @@ const char* const* instance_extensions, uint32_t instance_extension_count)
                 }
             }
         }
-         VkInstance->mExtensionsCount = filled_exts;
+        VkInstance->mExtensionsCount = filled_exts;
     }
     return;
 }
@@ -848,9 +849,9 @@ const char* const* device_layers, uint32_t device_layers_count)
         DECLARE_ZERO_VLA(VkLayerProperties, layer_props, count)
         vkEnumerateDeviceLayerProperties(VkAdapter->pPhysicalDevice, &count, layer_props);
         uint32_t filled_exts = 0;
-        for (uint32_t i = 0; i < count; i++)
+        for (uint32_t j = 0; j < device_layers_count; j++)
         {
-            for (uint32_t j = 0; j < device_layers_count; j++)
+            for (uint32_t i = 0; i < count; i++)
             {
                 if (strcmp(layer_props[i].layerName, device_layers[j]) == 0)
                 {
@@ -880,9 +881,9 @@ const char* const* device_extensions, uint32_t device_extension_count)
         DECLARE_ZERO_VLA(VkExtensionProperties, ext_props, count)
         vkEnumerateDeviceExtensionProperties(VkAdapter->pPhysicalDevice, layer_name, &count, ext_props);
         uint32_t filled_exts = 0;
-        for (uint32_t i = 0; i < count; i++)
+        for (uint32_t j = 0; j < device_extension_count; j++)
         {
-            for (uint32_t j = 0; j < device_extension_count; j++)
+            for (uint32_t i = 0; i < count; i++)
             {
                 if (strcmp(ext_props[i].extensionName, device_extensions[j]) == 0)
                 {
