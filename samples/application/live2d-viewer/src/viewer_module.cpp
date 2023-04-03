@@ -1,7 +1,7 @@
 #include "math.h"
 #include <EASTL/algorithm.h>
 
-#include "../../../common/utils.h"
+#include "common/utils.h"
 
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"

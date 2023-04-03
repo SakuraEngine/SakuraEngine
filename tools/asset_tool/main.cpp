@@ -1,6 +1,6 @@
 #include <EASTL/algorithm.h>
 
-#include "../../../../samples/common/utils.h"
+#include "../../../../samples/common/common/utils.h"
 
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"

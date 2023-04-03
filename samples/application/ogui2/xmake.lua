@@ -6,6 +6,8 @@ target("OpenGUI_DemoResources")
         extensions = {".png"},
         outdir = "/../resources/OpenGUI", 
         rootdir = os.curdir().."/common"})
+    add_includedirs("./../../common", {public = true})
+    add_includedirs("common", {public = true})
     add_files("common/**.png")
     add_files("common/**.cpp")
     public_dependency("SkrInput", "0.1.0")

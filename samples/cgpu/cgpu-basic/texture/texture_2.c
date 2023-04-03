@@ -1,5 +1,5 @@
-#include "../../common/render_application.h"
-#include "../common/texture.h"
+#include "common/render_application.h"
+#include "common/texture.h"
 #include "math.h"
 #include "platform/thread.h"
 

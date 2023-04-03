@@ -33,8 +33,6 @@ DEFINE_CGPU_OBJECT(CGPUSwapChain)
 DEFINE_CGPU_OBJECT(CGPUShaderLibrary)
 DEFINE_CGPU_OBJECT(CGPURootSignature)
 DEFINE_CGPU_OBJECT(CGPURootSignaturePool)
-DEFINE_CGPU_OBJECT(CGPUCompiledShader)
-DEFINE_CGPU_OBJECT(CGPULinkedShader)
 DEFINE_CGPU_OBJECT(CGPUDescriptorSet)
 DEFINE_CGPU_OBJECT(CGPUMemoryPool)
 DEFINE_CGPU_OBJECT(CGPUBuffer)
@@ -51,6 +49,14 @@ DEFINE_CGPU_OBJECT(CGPUPipelineReflection)
 DEFINE_CGPU_OBJECT(CGPUDStorageQueue)
 DEFINE_CGPU_OBJECT(CGPUDStorageFile)
 typedef CGPUDStorageFileId CGPUDStorageFileHandle;
+
+DEFINE_CGPU_OBJECT(CGPUCompiledShader)
+DEFINE_CGPU_OBJECT(CGPULinkedShader)
+DEFINE_CGPU_OBJECT(CGPUStateStream)
+DEFINE_CGPU_OBJECT(CGPUShaderStateEncoder)
+// compute dispatches never use these state
+DEFINE_CGPU_OBJECT(CGPURasterStateEncoder)
+DEFINE_CGPU_OBJECT(CGPUUserStateEncoder)
 
 struct CGPUExportTextureDescriptor;
 struct CGPUImportTextureDescriptor;

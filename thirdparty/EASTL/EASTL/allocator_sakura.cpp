@@ -25,11 +25,11 @@
 													// aligned on e.g. 64 also is aligned at an offset of 64 by definition.
 			{
 				ZoneScopedNS("EASTL::allocate(aligned)", 16);
-			    void* p = core_memalign(n, alignment);
+				void* p = core_memalign(n, alignment);
 				return p;
 			}
 
-		    return NULL;
+			return NULL;
 		}
 
 		void allocator_sakura::deallocate(void* p, size_t /*n*/)

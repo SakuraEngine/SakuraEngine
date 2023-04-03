@@ -217,7 +217,7 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 ## 嵌入源码的开源库和版本
 - LMDB v0.9.29 (BSD)
 - log.c f9ea349 (MIT)
-- mimalloc v2.0.7 (MIT)
+- mimalloc acdd352 (MIT)
 - xxhash 0.8.1 (BSD)
 - concurrentqueue d49fa2b Simplified BSD
 - VulkanMemoryAllocator 3.0.1, release
