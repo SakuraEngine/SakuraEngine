@@ -1,11 +1,6 @@
-#include "triangle_module.wa.c"
-#include "../common/utils.h"
+#include "common/utils.h"
 #include "platform/thread.h"
-#include "utils.h"
 #include "math.h"
-
-// WA Engine
-THREAD_LOCAL void* wa_watcher;
 
 // Render objects
 THREAD_LOCAL SDL_Window* sdl_window;
@@ -28,8 +23,8 @@ void create_render_pipeline()
 {
     uint32_t *vs_bytes, vs_length;
     uint32_t *fs_bytes, fs_length;
-    read_shader_bytes("hot-triangle/vertex_shader", &vs_bytes, &vs_length, backend);
-    read_shader_bytes("hot-triangle/fragment_shader", &fs_bytes, &fs_length, backend);
+    read_shader_bytes("statestream-triangle/vertex_shader", &vs_bytes, &vs_length, backend);
+    read_shader_bytes("statestream-triangle/fragment_shader", &fs_bytes, &fs_length, backend);
     CGPUShaderLibraryDescriptor vs_desc = {
         .stage = CGPU_SHADER_STAGE_VERT,
         .name = "VertexShaderLibrary",
@@ -75,8 +70,6 @@ void create_render_pipeline()
 
 void initialize(void* usrdata)
 {
-    // WASM
-    wa_watcher = watch_wasm();
     // Create window
     SDL_SysWMinfo wmInfo;
     backend = *(ECGPUBackend*)usrdata;
@@ -184,33 +177,15 @@ void raster_redraw()
     CGPUResourceBarrierDescriptor barrier_desc0 = { .texture_barriers = &draw_barrier, .texture_barriers_count = 1 };
     cgpu_cmd_resource_barrier(cmd, &barrier_desc0);
     CGPURenderPassEncoderId rp_encoder = cgpu_cmd_begin_render_pass(cmd, &rp_desc);
-    // get hot-reloadable wasm
-    SWAModuleId wa_module = get_available_wasm(wa_watcher);
-    if (wa_module != NULL)
-    {
-        SWAValue params[5];
-        params[0].I = (int64_t)cmd;
-        params[0].type = SWA_VAL_I64;
-        params[1].I = (int64_t)pipeline;
-        params[1].type = SWA_VAL_I64;
-        params[2].I = (int64_t)rp_encoder;
-        params[3].i = back_buffer->width;
-        params[3].type = SWA_VAL_I32;
-        params[4].i = back_buffer->height;
-        params[4].type = SWA_VAL_I32;
-        SWAExecDescriptor exec_desc = {
-            5, params,
-            0, NULL
-        };
-        const char* res = swa_exec(wa_module, "raster_cmd_record", &exec_desc);
-        if (res) printf("[fatal]: %s", res);
-    }
-    else
-    {
-        raster_cmd_record(cmd, pipeline,
-        rp_encoder,
-        back_buffer->width, back_buffer->height);
-    }
+
+    cgpu_render_encoder_set_viewport(rp_encoder,
+        0.0f, 0.0f,
+        (float)back_buffer->width, (float)back_buffer->height,
+        0.f, 1.f);
+    cgpu_render_encoder_set_scissor(rp_encoder, 0, 0, (float)back_buffer->width, (float)back_buffer->height);
+    cgpu_render_encoder_bind_pipeline(rp_encoder, pipeline);
+    cgpu_render_encoder_draw(rp_encoder, 3, 0);
+
     CGPUTextureBarrier present_barrier = {
         .texture = back_buffer,
         .src_state = CGPU_RESOURCE_STATE_RENDER_TARGET,
@@ -265,8 +240,6 @@ void raster_program()
 void finalize()
 {
     SDL_DestroyWindow(sdl_window);
-    // Free wasm engine
-    unwatch_wasm(wa_watcher);
     // Free cgpu objects
     cgpu_wait_queue_idle(gfx_queue);
     cgpu_wait_fences(&present_fence, 1);
@@ -304,7 +277,6 @@ int main(int argc, char* argv[])
         CGPU_BACKEND_D3D12
 #endif
     };
-    void* watcher = watch_source();
 #if defined(__APPLE__) || defined(__EMSCRIPTEN__) || defined(__wasi__)
     ProgramMain(backends);
 #else
@@ -323,7 +295,6 @@ int main(int argc, char* argv[])
         skr_destroy_thread(hdls[i]);
     }
 #endif
-    unwatch_source(watcher);
     SDL_Quit();
 
     return 0;

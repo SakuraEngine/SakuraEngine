@@ -1,5 +1,5 @@
 #pragma once
-#include "../../common/utils.h"
+#include "common/utils.h"
 
 CGPURenderPipelineId create_blit_render_pipeline(CGPUDeviceId device, CGPUSamplerId static_sampler, ECGPUFormat output_format)
 {

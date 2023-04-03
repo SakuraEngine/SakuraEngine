@@ -1,6 +1,7 @@
 target("OpenGUI_RObjectsDemo")
     set_group("04.examples/application")
     set_kind("binary")
+    add_includedirs("./../common", {public = false})
     add_files("src/*.cpp") 
     add_deps("OpenGUI_DemoResources")
     public_dependency("SkrInputSystem", "0.1.0")
