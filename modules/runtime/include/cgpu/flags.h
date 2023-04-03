@@ -420,6 +420,15 @@ typedef enum ECGPUCompareMode
     CGPU_CMP_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGPUCompareMode;
 
+typedef enum ECGPUStencilFaceFlags
+{
+    CGPU_STENCIL_FACE_FRONT = 0x00000001,
+    CGPU_STENCIL_FACE_BACK = 0x00000002,
+    CGPU_STENCIL_FACE_FRONT_AND_BACK = 0x00000003,
+    CGPU_STENCIL_FACE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
+} ECGPUStencilFaceFlags;
+typedef uint32_t CGPUStencilFaces;
+
 typedef enum ECGPUStencilOp
 {
     CGPU_STENCIL_OP_KEEP,
