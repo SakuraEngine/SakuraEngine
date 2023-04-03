@@ -57,18 +57,24 @@ FORCEINLINE static void* _aligned_calloc(size_t nelem, size_t elsize, size_t ali
     #define cgpu_malloc malloc
     #define cgpu_malloc_aligned _aligned_malloc
     #define cgpu_calloc calloc
+    #define cgpu_callocN(count, size, ...) calloc((count), (size))
     #define cgpu_calloc_aligned _aligned_calloc
     #define cgpu_memalign _aligned_malloc
     #define cgpu_free free
+    #define cgpu_freeN(ptr, ...) free(ptr)
     #define cgpu_free_aligned _aligned_free
+    #define cgpu_free_alignedN(ptr, alignment, ...) _aligned_free((ptr), (alignment))
 #else
     #define cgpu_malloc sakura_malloc
     #define cgpu_malloc_aligned sakura_malloc_aligned
     #define cgpu_calloc sakura_calloc
+    #define cgpu_callocN sakura_callocN
     #define cgpu_calloc_aligned sakura_calloc_aligned
     #define cgpu_memalign sakura_malloc_aligned
     #define cgpu_free sakura_free
-    #define cgpu_free_aligned(ptr, size) sakura_free_aligned((ptr), (size))
+    #define cgpu_freeN sakura_freeN
+    #define cgpu_free_aligned(ptr, alignment) sakura_free_aligned((ptr), (alignment))
+    #define cgpu_free_alignedN(ptr, alignment, ...) sakura_free_alignedN((ptr), (alignment), __VA_ARGS__)
 #endif
 
 #ifdef __cplusplus

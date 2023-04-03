@@ -221,7 +221,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
                 }
             }
         }
-        table_desc.names_count = slot_names.size();
+        table_desc.names_count = (uint32_t)slot_names.size();
         table_desc.names = slot_names.data();
         const auto bind_table = cgpux_create_bind_table(root.device, &table_desc);
 
@@ -249,7 +249,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
             update.textures = &hdl.get_resolved()->texture_view;
             update.binding_type = CGPU_RESOURCE_TYPE_TEXTURE;
         }
-        cgpux_bind_table_update(bind_table, updates.data(), updates.size());
+        cgpux_bind_table_update(bind_table, updates.data(), (uint32_t)updates.size());
         return bind_table;
     }
 

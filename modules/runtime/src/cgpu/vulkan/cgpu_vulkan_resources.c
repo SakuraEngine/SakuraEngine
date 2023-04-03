@@ -959,8 +959,7 @@ void cgpu_free_sampler_vulkan(CGPUSamplerId sampler)
 }
 
 // Shader APIs
-CGPUShaderLibraryId cgpu_create_shader_library_vulkan(
-CGPUDeviceId device, const struct CGPUShaderLibraryDescriptor* desc)
+CGPUShaderLibraryId cgpu_create_shader_library_vulkan(CGPUDeviceId device, const struct CGPUShaderLibraryDescriptor* desc)
 {
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)device;
     VkShaderModuleCreateInfo info = {

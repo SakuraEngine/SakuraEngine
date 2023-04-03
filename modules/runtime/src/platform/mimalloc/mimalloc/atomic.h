@@ -1,5 +1,5 @@
 /* ----------------------------------------------------------------------------
-Copyright (c) 2018-2021 Microsoft Research, Daan Leijen
+Copyright (c) 2018-2023 Microsoft Research, Daan Leijen
 This is free software; you can redistribute it and/or modify it under the
 terms of the MIT license. A copy of the license can be found in the file
 "LICENSE" at the root of this distribution.
@@ -11,9 +11,9 @@ terms of the MIT license. A copy of the license can be found in the file
 // --------------------------------------------------------------------------------------------
 // Atomics
 // We need to be portable between C, C++, and MSVC.
-// We base the primitives on the C/C++ atomics and create a mimimal wrapper for MSVC in C compilation mode. 
-// This is why we try to use only `uintptr_t` and `<type>*` as atomic types. 
-// To gain better insight in the range of used atomics, we use explicitly named memory order operations 
+// We base the primitives on the C/C++ atomics and create a mimimal wrapper for MSVC in C compilation mode.
+// This is why we try to use only `uintptr_t` and `<type>*` as atomic types.
+// To gain better insight in the range of used atomics, we use explicitly named memory order operations
 // instead of passing the memory order as a parameter.
 // -----------------------------------------------------------------------------------------------
 
@@ -30,7 +30,7 @@ terms of the MIT license. A copy of the license can be found in the file
 #endif
 #elif defined(_MSC_VER)
 // Use MSVC C wrapper for C11 atomics
-#define  _Atomic(tp)            tp 
+#define  _Atomic(tp)            tp
 #define  MI_ATOMIC_VAR_INIT(x)  x
 #define  mi_atomic(name)        mi_atomic_##name
 #define  mi_memory_order(name)  mi_memory_order_##name
@@ -275,7 +275,16 @@ static inline intptr_t mi_atomic_subi(_Atomic(intptr_t)*p, intptr_t sub) {
   return (intptr_t)mi_atomic_addi(p, -sub);
 }
 
-// Yield 
+typedef _Atomic(uintptr_t) mi_atomic_once_t;
+
+// Returns true only on the first invocation
+static inline bool mi_atomic_once( mi_atomic_once_t* once ) {
+  if (mi_atomic_load_relaxed(once) != 0) return false;     // quick test 
+  uintptr_t expected = 0;
+  return mi_atomic_cas_strong_acq_rel(once, &expected, 1); // try to set to 1
+}
+
+// Yield
 #if defined(__cplusplus)
 #include <thread>
 static inline void mi_atomic_yield(void) {

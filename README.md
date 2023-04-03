@@ -106,7 +106,26 @@ https://user-images.githubusercontent.com/39457738/192722537-6ab035a5-2789-43d0-
 
 
 ## 示例 (从上到下逐渐贴近底层)
-### [MVU GUI]
+### [Next Generation Graphics]()
+使用 StateStream 的次世代 CGPU 图形接口。摒弃 PSO 的概念，使用 StateStream 作为图形管线的状态描述。传统的图形管线 API 往往使用 PSO，其中打包了所有的管线状态以及着色器 ISA，并整体上传到 GPU 上：
+
+<div align=center>
+
+![PSO](https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/showcase/PSO.png)
+
+</div>
+
+StateStream 由一系列的 StateChunk 组成，每个 StateChunk 描述了一种图形管线状态，StateStream 通过 StateChunk 的组合来描述图形管线的完整状态。比起 PSO 的全量 Flush，StateStream 可以在绘制现场准备 StatePacket，在 DrawCall 产生时把状态切换推送到 GPU 的状态寄存器组中。
+
+<div align=center>
+
+![StateStream](https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/showcase/StateStream.png)
+
+</div>
+
+StateStream 可以大幅缓解管线和着色器组合爆炸引起的内存膨胀问题，而 PSO 反而会加剧此问题。
+
+### [MVU GUI]()
 
 TODO...
 
@@ -198,7 +217,7 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 ## 嵌入源码的开源库和版本
 - LMDB v0.9.29 (BSD)
 - log.c f9ea349 (MIT)
-- mimalloc v2.0.7 (MIT)
+- mimalloc acdd352 (MIT)
 - xxhash 0.8.1 (BSD)
 - concurrentqueue d49fa2b Simplified BSD
 - VulkanMemoryAllocator 3.0.1, release
@@ -227,6 +246,7 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - Qt-Advanced-Docking-System 3cd6d76 LGPL-2.1 
 
 ## 接入的扩展API以及版本
+- [vulkan headers](https://github.com/KhronosGroup/Vulkan-Headers) & volk 1.3.243.0
 - nvapi R510
 - amd_ags 6.0.1
 

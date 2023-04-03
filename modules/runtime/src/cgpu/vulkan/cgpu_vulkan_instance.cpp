@@ -131,7 +131,7 @@ void VkUtil_RenderPassTableAdd(struct CGPUVkPassTable* table, const struct VkUti
     table->cached_renderpasses[hash] = new_pass;
 }
 
-struct CGPUVkExtensionsTable : public skr::flat_hash_map<skr::string, bool, skr::hash<skr::string>> //
+struct CGPUVkExtensionsTable : public skr::parallel_flat_hash_map<skr::string, bool, skr::hash<skr::string>> //
 {
     static void ConstructForAllAdapters(struct CGPUInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
     {
@@ -142,7 +142,7 @@ struct CGPUVkExtensionsTable : public skr::flat_hash_map<skr::string, bool, skr:
         for (uint32_t i = 0; i < I->mPhysicalDeviceCount; i++)
         {
             auto& Adapter = I->pVulkanAdapters[i];
-            Adapter.pExtensionsTable = new CGPUVkExtensionsTable();
+            Adapter.pExtensionsTable = cgpu_new<CGPUVkExtensionsTable>();
             auto& Table = *Adapter.pExtensionsTable;
             for (uint32_t j = 0; j < wanted_device_extensions_count; j++)
             {
@@ -180,15 +180,15 @@ struct CGPUVkExtensionsTable : public skr::flat_hash_map<skr::string, bool, skr:
         auto wanted_instance_extensions = blackboard.instance_extensions.data();
         const auto wanted_instance_extensions_count = (uint32_t)blackboard.instance_extensions.size();
         // construct extensions table
-        I->pExtensionsTable = new CGPUVkExtensionsTable();
+        I->pExtensionsTable = cgpu_new<CGPUVkExtensionsTable>();
         auto& Table = *I->pExtensionsTable;
         for (uint32_t j = 0; j < wanted_instance_extensions_count; j++)
         {
-            Table[wanted_instance_extensions[j]] = false;
+            Table.insert({ wanted_instance_extensions[j], false });
         }
         for (uint32_t j = 0; j < I->mExtensionsCount; j++)
         {
-            Table[I->pExtensionNames[j]] = true;
+            Table.insert({ I->pExtensionNames[j], true });
         }
         // Cache
         {
@@ -199,7 +199,7 @@ struct CGPUVkExtensionsTable : public skr::flat_hash_map<skr::string, bool, skr:
     }
 };
 
-struct CGPUVkLayersTable : public skr::flat_hash_map<skr::string, bool, skr::hash<skr::string>> //
+struct CGPUVkLayersTable : public skr::parallel_flat_hash_map<skr::string, bool, skr::hash<skr::string>> //
 {
     static void ConstructForAllAdapters(struct CGPUInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
     {
@@ -210,7 +210,7 @@ struct CGPUVkLayersTable : public skr::flat_hash_map<skr::string, bool, skr::has
         for (uint32_t i = 0; i < I->mPhysicalDeviceCount; i++)
         {
             auto& Adapter = I->pVulkanAdapters[i];
-            Adapter.pLayersTable = new CGPUVkLayersTable();
+            Adapter.pLayersTable = cgpu_new<CGPUVkLayersTable>();
             auto& Table = *Adapter.pLayersTable;
             for (uint32_t j = 0; j < wanted_device_layers_count; j++)
             {
@@ -228,7 +228,7 @@ struct CGPUVkLayersTable : public skr::flat_hash_map<skr::string, bool, skr::has
         auto wanted_instance_layers = blackboard.instance_layers.data();
         const auto wanted_instance_layers_count = (uint32_t)blackboard.instance_layers.size();
         // construct layers table
-        I->pLayersTable = new CGPUVkLayersTable();
+        I->pLayersTable = cgpu_new<CGPUVkLayersTable>();
         auto& Table = *I->pLayersTable;
         for (uint32_t j = 0; j < wanted_instance_layers_count; j++)
         {
@@ -356,30 +356,30 @@ void cgpu_free_instance_vulkan(CGPUInstanceId instance)
     if (to_destroy->pVkDebugUtilsMessenger)
     {
         cgpu_assert(vkDestroyDebugUtilsMessengerEXT && "Load vkDestroyDebugUtilsMessengerEXT failed!");
-        vkDestroyDebugUtilsMessengerEXT(to_destroy->pVkInstance, to_destroy->pVkDebugUtilsMessenger, nullptr);
+        vkDestroyDebugUtilsMessengerEXT(to_destroy->pVkInstance, to_destroy->pVkDebugUtilsMessenger, GLOBAL_VkAllocationCallbacks);
     }
 
-    vkDestroyInstance(to_destroy->pVkInstance, VK_NULL_HANDLE);
+    vkDestroyInstance(to_destroy->pVkInstance, GLOBAL_VkAllocationCallbacks);
     for (uint32_t i = 0; i < to_destroy->mPhysicalDeviceCount; i++)
     {
         auto& Adapter = to_destroy->pVulkanAdapters[i];
         cgpu_free(Adapter.pQueueFamilyProperties);
         // free extensions cache
-        delete Adapter.pExtensionsTable;
+        cgpu_delete(Adapter.pExtensionsTable);
         cgpu_free(Adapter.pExtensionNames);
         cgpu_free(Adapter.pExtensionProperties);
 
         // free layers cache
-        delete Adapter.pLayersTable;
+        cgpu_delete(Adapter.pLayersTable);
         cgpu_free(Adapter.pLayerNames);
         cgpu_free(Adapter.pLayerProperties);
     }
     // free extensions cache
-    delete to_destroy->pExtensionsTable;
+    cgpu_delete(to_destroy->pExtensionsTable);
     cgpu_free(to_destroy->pExtensionNames);
     cgpu_free(to_destroy->pExtensionProperties);
     // free layers cache
-    delete to_destroy->pLayersTable;
+    cgpu_delete(to_destroy->pLayersTable);
     cgpu_free(to_destroy->pLayerNames);
     cgpu_free(to_destroy->pLayerProperties);
 
@@ -427,7 +427,8 @@ CGPUDeviceId cgpu_create_device_vulkan(CGPUAdapterId adapter, const CGPUDeviceDe
     createInfo.enabledLayerCount = A->mLayersCount;
     createInfo.ppEnabledLayerNames = A->pLayerNames;
 
-    if (vkCreateDevice(A->pPhysicalDevice, &createInfo, CGPU_NULLPTR, &D->pVkDevice) != VK_SUCCESS)
+    VkResult result = vkCreateDevice(A->pPhysicalDevice, &createInfo, GLOBAL_VkAllocationCallbacks, &D->pVkDevice);
+    if (result != VK_SUCCESS)
     {
         cgpu_assert(0 && "failed to create logical device!");
     }
