@@ -2,7 +2,7 @@
 #include "platform/process.h"
 #include "mdb_utils.h"
 #include <platform/filesystem.hpp>
-#include "../../common/utils.h"
+#include "common/utils.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 
 struct ProviderRenderer

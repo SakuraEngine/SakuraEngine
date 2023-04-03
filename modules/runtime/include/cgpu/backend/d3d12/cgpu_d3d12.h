@@ -304,6 +304,7 @@ typedef struct CGPURenderPipeline_D3D12 {
     ID3D12PipelineState* pDxPipelineState;
     ID3D12RootSignature* pRootSignature;
     D3D_PRIMITIVE_TOPOLOGY mDxPrimitiveTopology;
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC mDxGfxPipelineStateDesc SKR_IF_CPP(= {});
 } CGPURenderPipeline_D3D12;
 
 typedef struct CGPUBuffer_D3D12 {

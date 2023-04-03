@@ -4,12 +4,25 @@
         #define WIN32_LEAN_AND_MEAN
     #endif
 #endif
+#include "cgpu/flags.h"
 #include "cgpu/api.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "cgpu/extensions/cgpu_vulkan_exts.h"
 #include "internal/vk_mem_alloc.h"
 #include "../common/common_utils.h"
 #include "cgpu/flags.h"
+
+#include "platform/debug.h"
+#include "utils/log.h"
+#include "vulkan/vulkan_core.h"
+
+#ifdef CGPU_THREAD_SAFETY
+    #include "platform/thread.h"
+#endif
+
+#if defined(_MACOS)
+#include "vulkan/vulkan_macos.h"
+#endif
 
 #define CGPU_INNER_TCF_IMPORT_SHARED_HANDLE (CGPU_TCF_USABLE_MAX << 1)
 #define USE_EXTERNAL_MEMORY_EXTENSIONS
@@ -142,6 +155,20 @@ typedef struct VkUtil_FramebufferDesc {
 static const char* validation_layer_name = "VK_LAYER_KHRONOS_validation";
 static const char* cgpu_wanted_instance_exts[] = {
     VK_KHR_SURFACE_EXTENSION_NAME,
+
+#if VK_EXT_extended_dynamic_state
+    VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
+#endif
+#if VK_EXT_extended_dynamic_state2
+    VK_EXT_EXTENDED_DYNAMIC_STATE_2_EXTENSION_NAME,
+#endif
+#if VK_EXT_extended_dynamic_state3
+    VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME,
+#endif
+#if VK_EXT_shader_object
+    VK_EXT_SHADER_OBJECT_EXTENSION_NAME,
+#endif
+
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
     VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #elif defined(_MACOS)
@@ -206,6 +233,10 @@ static const char* cgpu_wanted_device_exts[] = {
     VK_KHR_EXTERNAL_SEMAPHORE_WIN32_EXTENSION_NAME,
     VK_KHR_EXTERNAL_FENCE_WIN32_EXTENSION_NAME,
     #endif
+#endif
+
+#if VK_EXT_shader_object
+    VK_EXT_SHADER_OBJECT_EXTENSION_NAME,
 #endif
 
 // Debug marker extension in case debug utils is not supported

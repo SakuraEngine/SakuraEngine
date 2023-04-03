@@ -1,5 +1,5 @@
 #pragma once
-#include "../../common/utils.h"
+#include "common/utils.h"
 
 const ECGPUFormat lighting_buffer_format = CGPU_FORMAT_R16G16B16A16_SFLOAT;
 

@@ -236,6 +236,43 @@ void cgpu_free_root_signature(CGPURootSignatureId signature)
     device->proc_table_cache->free_root_signature(signature);
 }
 
+CGPULinkedShaderId cgpu_compile_and_link_shaders(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* descs, uint32_t count)
+{
+    cgpu_assert(signature != CGPU_NULLPTR && "fatal: call on NULL signature!");
+    cgpu_assert(signature->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(signature->device->proc_table_cache->create_root_signature && "compile_and_link_shaders Proc Missing!");
+    CGPULinkedShader* linked = (CGPULinkedShader*)signature->device->proc_table_cache->compile_and_link_shaders(signature, descs, count);
+    linked->device = signature->device;
+    linked->root_signature = signature;
+    return linked;
+}
+
+RUNTIME_API void cgpu_compile_shaders(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* descs, uint32_t count, CGPUCompiledShaderId* out_isas)
+{
+    cgpu_assert(signature != CGPU_NULLPTR && "fatal: call on NULL signature!");
+    cgpu_assert(signature->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(signature->device->proc_table_cache->compile_shaders && "compile_shaders Proc Missing!");
+    signature->device->proc_table_cache->compile_shaders(signature, descs, count, out_isas);
+}
+
+void cgpu_free_compiled_shader(CGPUCompiledShaderId shader)
+{
+    cgpu_assert(shader != CGPU_NULLPTR && "fatal: call on NULL shader!");
+    const CGPUDeviceId device = shader->device;
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(device->proc_table_cache->free_compiled_shader && "free_compiled_shader Proc Missing!");
+    device->proc_table_cache->free_compiled_shader(shader);
+}
+
+void cgpu_free_linked_shader(CGPULinkedShaderId shader)
+{
+    cgpu_assert(shader != CGPU_NULLPTR && "fatal: call on NULL shader!");
+    const CGPUDeviceId device = shader->device;
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(device->proc_table_cache->free_linked_shader && "free_linked_shader Proc Missing!");
+    device->proc_table_cache->free_linked_shader(shader);
+}
+
 CGPURootSignaturePoolId cgpu_create_root_signature_pool(CGPUDeviceId device, const struct CGPURootSignaturePoolDescriptor* desc)
 {
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
