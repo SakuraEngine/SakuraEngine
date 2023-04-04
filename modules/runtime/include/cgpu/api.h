@@ -401,6 +401,7 @@ typedef struct CGPUDStorageBufferIODescriptor {
     CGPUFenceId fence;
     const char* name;
 } CGPUDStorageBufferIODescriptor;
+
 typedef struct CGPUDStorageTextureIODescriptor {
     CGPUDStorageCompression compression;
     ECGPUDStorageSource source_type;
@@ -466,7 +467,6 @@ typedef void (*CGPUProcFreeStateStream)(CGPUStateStreamId stream);
 // raster state encoder APIs
 RUNTIME_API CGPURasterStateEncoderId cgpu_open_raster_state_encoder(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder);
 typedef CGPURasterStateEncoderId (*CGPUProcOpenRasterStateEncoder)(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder);
-
 RUNTIME_API void cgpu_raster_state_encoder_set_viewport(CGPURasterStateEncoderId, float x, float y, float width, float height, float min_depth, float max_depth);
 typedef void (*CGPUProcRasterStateEncoderSetViewport)(CGPURasterStateEncoderId, float x, float y, float width, float height, float min_depth, float max_depth);
 RUNTIME_API void cgpu_raster_state_encoder_set_scissor(CGPURasterStateEncoderId, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
@@ -487,12 +487,10 @@ RUNTIME_API void cgpu_raster_state_encoder_set_stencil_test_enabled(CGPURasterSt
 typedef void (*CGPUProcRasterStateEncoderSetStencilTestEnabled)(CGPURasterStateEncoderId, bool enabled);
 RUNTIME_API void cgpu_raster_state_encoder_set_stencil_compare_op(CGPURasterStateEncoderId, CGPUStencilFaces faces, ECGPUStencilOp failOp, ECGPUStencilOp passOp, ECGPUStencilOp depthFailOp, ECGPUCompareMode compareOp);
 typedef void (*CGPUProcRasterStateEncoderSetStencilCompareOp)(CGPURasterStateEncoderId, CGPUStencilFaces faces, ECGPUStencilOp failOp, ECGPUStencilOp passOp, ECGPUStencilOp depthFailOp, ECGPUCompareMode compareOp);
-
 RUNTIME_API void cgpu_raster_state_encoder_set_fill_mode(CGPURasterStateEncoderId, ECGPUFillMode fill_mode);
 typedef void (*CGPUProcRasterStateEncoderSetFillMode)(CGPURasterStateEncoderId, ECGPUFillMode fill_mode);
 RUNTIME_API void cgpu_raster_state_encoder_set_sample_count(CGPURasterStateEncoderId, ECGPUSampleCount sample_count);
 typedef void (*CGPUProcRasterStateEncoderSetSampleCount)(CGPURasterStateEncoderId, ECGPUSampleCount sample_count);
-
 RUNTIME_API void cgpu_close_raster_state_encoder(CGPURasterStateEncoderId encoder);
 typedef void (*CGPUProcCloseRasterStateEncoder)(CGPURasterStateEncoderId encoder);
 
@@ -1451,21 +1449,14 @@ typedef struct CGPUStateStream {
 
 typedef struct CGPURasterStateEncoder {
     CGPUDeviceId device;
-    CGPUStateStreamId stream;
-    CGPURenderPassEncoderId encoder_r;
 } CGPURasterStateEncoder;
 
 typedef struct CGPUShaderStateEncoder {
     CGPUDeviceId device;
-    CGPUStateStreamId stream;
-    CGPURenderPassEncoderId encoder_r;
-    CGPUComputePassEncoderId encoder_c;
 } CGPUShaderStateEncoder;
 
 typedef struct CGPUUserStateEncoder {
     CGPUDeviceId device;
-    CGPUStateStreamId stream;
-    CGPURenderPassEncoderId encoder_r;
 } CGPUUserStateEncoder;
 
 typedef struct CGPUBinder {

@@ -66,12 +66,6 @@ RUNTIME_API void cgpu_free_render_pipeline_vulkan(CGPURenderPipelineId pipeline)
 RUNTIME_API CGPUQueryPoolId cgpu_create_query_pool_vulkan(CGPUDeviceId device, const struct CGPUQueryPoolDescriptor* desc);
 RUNTIME_API void cgpu_free_query_pool_vulkan(CGPUQueryPoolId pool);
 
-// EXPERIMENTAL Linked ISA APIs
-RUNTIME_API CGPULinkedShaderId cgpu_compile_and_link_shaders_vulkan(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* descs, uint32_t count);
-RUNTIME_API void cgpu_compile_shaders_vulkan(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* descs, uint32_t count, CGPUCompiledShaderId* out_isas);
-RUNTIME_API void cgpu_free_compiled_shader_vulkan(CGPUCompiledShaderId shader);
-RUNTIME_API void cgpu_free_linked_shader_vulkan(CGPULinkedShaderId shader);
-
 // Queue APIs
 RUNTIME_API CGPUQueueId cgpu_get_queue_vulkan(CGPUDeviceId device, ECGPUQueueType type, uint32_t index);
 RUNTIME_API void cgpu_submit_queue_vulkan(CGPUQueueId queue, const struct CGPUQueueSubmitDescriptor* desc);
