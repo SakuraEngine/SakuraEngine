@@ -289,11 +289,14 @@ CGPUInstanceId cgpu_create_instance_vulkan(CGPUInstanceDescriptor const* desc)
     validationFeaturesExt.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
     VkValidationFeatureEnableEXT enabledValidationFeatures[] = {
         VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT,
+        VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT,
     };
     if (desc->enable_gpu_based_validation)
     {
         if (!desc->enable_debug_layer)
+        {
             cgpu_warn("Vulkan GpuBasedValidation enabled while ValidationLayer is closed, there'll be no effect.");
+        }
 #if VK_HEADER_VERSION >= 108
         validationFeaturesExt.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
         validationFeaturesExt.enabledValidationFeatureCount = sizeof(enabledValidationFeatures) / sizeof(VkValidationFeatureEnableEXT);

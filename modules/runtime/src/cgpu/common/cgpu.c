@@ -1349,7 +1349,6 @@ CGPURasterStateEncoderId cgpu_open_raster_state_encoder(CGPUStateStreamId stream
     cgpu_assert(stream->device->proc_table_cache->open_raster_state_encoder && "open_raster_state_encoder Proc Missing!");
     CGPURasterStateEncoder* encoder = (CGPURasterStateEncoder*)stream->device->proc_table_cache->open_raster_state_encoder(stream, rencoder);
     encoder->device = stream->device;
-    encoder->stream = stream;
     return encoder;
 }
 

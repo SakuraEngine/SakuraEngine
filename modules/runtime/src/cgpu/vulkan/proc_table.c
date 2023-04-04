@@ -1,4 +1,5 @@
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
+#include "cgpu/backend/vulkan/cgpu_vulkan2.h"
 #include "vulkan_utils.h"
 
 const CGPUProcTable tbl_vk = {
@@ -38,12 +39,6 @@ const CGPUProcTable tbl_vk = {
     .free_render_pipeline = &cgpu_free_render_pipeline_vulkan,
     .create_query_pool = &cgpu_create_query_pool_vulkan,
     .free_query_pool = &cgpu_free_query_pool_vulkan,
-
-    // EXPERIMENTAL Linked ISA APIs
-    .compile_and_link_shaders = &cgpu_compile_and_link_shaders_vulkan,
-    .compile_shaders = &cgpu_compile_shaders_vulkan,
-    .free_compiled_shader = &cgpu_free_compiled_shader_vulkan,
-    .free_linked_shader = &cgpu_free_linked_shader_vulkan,
 
     // Queue APIs
     .get_queue = &cgpu_get_queue_vulkan,
@@ -129,7 +124,50 @@ const CGPUProcTable tbl_vk = {
     .render_encoder_draw_instanced = &cgpu_render_encoder_draw_instanced_vulkan,
     .render_encoder_draw_indexed = &cgpu_render_encoder_draw_indexed_vulkan,
     .render_encoder_draw_indexed_instanced = &cgpu_render_encoder_draw_indexed_instanced_vulkan,
-    .cmd_end_render_pass = &cgpu_cmd_end_render_pass_vulkan
+    .cmd_end_render_pass = &cgpu_cmd_end_render_pass_vulkan,
+
+    // Compiled/Linked ISA APIs
+    .compile_and_link_shaders = &cgpu_compile_and_link_shaders_vulkan,
+    .compile_shaders = &cgpu_compile_shaders_vulkan,
+    .free_compiled_shader = &cgpu_free_compiled_shader_vulkan,
+    .free_linked_shader = &cgpu_free_linked_shader_vulkan,
+
+    // StateStream APIs
+    .create_state_stream = &cgpu_create_state_stream_vulkan,
+    .render_encoder_bind_state_stream = &cgpu_render_encoder_bind_state_stream_vulkan,
+    .compute_encoder_bind_state_stream = &cgpu_compute_encoder_bind_state_stream_vulkan,
+    .free_state_stream = &cgpu_free_state_stream_vulkan,
+
+    // raster state encoder APIs
+    .open_raster_state_encoder = &cgpu_open_raster_state_encoder_vulkan,
+    .raster_state_encoder_set_viewport = &cgpu_raster_state_encoder_set_viewport_vulkan,
+    .raster_state_encoder_set_scissor = &cgpu_raster_state_encoder_set_scissor_vulkan,
+    .raster_state_encoder_set_cull_mode = &cgpu_raster_state_encoder_set_cull_mode_vulkan,
+    .raster_state_encoder_set_front_face = &cgpu_raster_state_encoder_set_front_face_vulkan,
+    .raster_state_encoder_set_primitive_topology = &cgpu_raster_state_encoder_set_primitive_topology_vulkan,
+    .raster_state_encoder_set_depth_test_enabled = &cgpu_raster_state_encoder_set_depth_test_enabled_vulkan,
+    .raster_state_encoder_set_depth_write_enabled = &cgpu_raster_state_encoder_set_depth_write_enabled_vulkan,
+    .raster_state_encoder_set_stencil_compare_op = &cgpu_raster_state_encoder_set_stencil_compare_op_vulkan,
+    .raster_state_encoder_set_fill_mode = &cgpu_raster_state_encoder_set_fill_mode_vulkan,
+    .raster_state_encoder_set_sample_count = &cgpu_raster_state_encoder_set_sample_count_vulkan,
+    .close_raster_state_encoder = &cgpu_close_raster_state_encoder_vulkan,
+
+    // shader state encoder APIs
+    .open_shader_state_encoder_r = &cgpu_open_shader_state_encoder_r_vulkan,
+    .open_shader_state_encoder_c = &cgpu_open_shader_state_encoder_c_vulkan,
+    .shader_state_encoder_bind_shaders = &cgpu_shader_state_encoder_bind_shaders_vulkan,
+    .shader_state_encoder_bind_linked_shader = &cgpu_shader_state_encoder_bind_linked_shader_vulkan,
+    .close_shader_state_encoder = &cgpu_close_shader_state_encoder_vulkan,
+
+    // user ctx encoder APIs
+    .open_user_state_encoder = &cgpu_open_user_state_encoder_vulkan,
+    .close_user_state_encoder = &cgpu_close_user_state_encoder_vulkan,
+
+    // binder APIs
+    .create_binder = &cgpu_create_binder_vulkan,
+    .binder_bind_vertex_layout = &cgpu_binder_bind_vertex_layout_vulkan,
+    .binder_bind_vertex_buffer = &cgpu_binder_bind_vertex_buffer_vulkan,
+    .free_binder = &cgpu_free_binder_vulkan
 };
 const CGPUProcTable* CGPU_VulkanProcTable() { return &tbl_vk; }
 

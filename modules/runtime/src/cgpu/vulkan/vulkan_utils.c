@@ -44,9 +44,9 @@ void VkUtil_DeInitializeEnvironment(struct CGPUInstance* Inst)
 
 // Instance APIs
 void VkUtil_EnableValidationLayer(
-CGPUInstance_Vulkan* I,
-const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr,
-const VkDebugReportCallbackCreateInfoEXT* report_info_ptr)
+    CGPUInstance_Vulkan* I,
+    const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr,
+    const VkDebugReportCallbackCreateInfoEXT* report_info_ptr)
 {
     if (I->debug_utils)
     {
@@ -64,12 +64,12 @@ const VkDebugReportCallbackCreateInfoEXT* report_info_ptr)
             .pUserData = NULL
         };
         const VkDebugUtilsMessengerCreateInfoEXT* messengerInfoPtr =
-        (messenger_info_ptr != CGPU_NULLPTR) ? messenger_info_ptr : &messengerInfo;
+            (messenger_info_ptr != CGPU_NULLPTR) ? messenger_info_ptr : &messengerInfo;
 
         cgpu_assert(vkCreateDebugUtilsMessengerEXT && "Load vkCreateDebugUtilsMessengerEXT failed!");
         VkResult res = vkCreateDebugUtilsMessengerEXT(I->pVkInstance,
-        messengerInfoPtr, GLOBAL_VkAllocationCallbacks,
-        &(I->pVkDebugUtilsMessenger));
+            messengerInfoPtr, GLOBAL_VkAllocationCallbacks,
+            &(I->pVkDebugUtilsMessenger));
         if (VK_SUCCESS != res)
         {
             cgpu_assert(0 && "vkCreateDebugUtilsMessengerEXT failed - disabling Vulkan debug callbacks");

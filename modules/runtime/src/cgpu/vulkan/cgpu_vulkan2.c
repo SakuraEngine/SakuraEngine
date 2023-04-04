@@ -1,9 +1,11 @@
-#include "cgpu/backend/vulkan/cgpu_vulkan.h"
+#include "cgpu/backend/vulkan/cgpu_vulkan2.h"
 #include "vulkan_utils.h"
 #include "../common/common_utils.h"
 
-static const char* kVkShaderISAMemoryPoolName = "vk::shader_isa";
 
+// Compiled/Linked ISA APIs
+
+static const char* kVkShaderISAMemoryPoolName = "vk::shader_isa";
 void cgpu_create_shader_objs_vulkan_impl(CGPURootSignatureId signature, 
     const struct CGPUCompiledShaderDescriptor* descs, uint32_t count, VkShaderEXT* outShaders)
 {
@@ -147,4 +149,171 @@ void cgpu_free_linked_shader_vulkan(CGPULinkedShaderId shader)
         
         cgpu_free((void*)S);
     }
+}
+
+// StateStream APIs
+
+CGPUStateStreamId cgpu_create_state_stream_vulkan(CGPUDeviceId device, const struct CGPUStateStreamDescriptor* desc)
+{
+    CGPUStateStream_Vulkan* stream = cgpu_calloc(1, sizeof(CGPUStateStream_Vulkan));
+    stream->super.device = device;
+    return &stream->super;
+}
+
+void cgpu_render_encoder_bind_state_stream_vulkan(CGPURenderPassEncoderId encoder, CGPUStateStreamId stream)
+{
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)stream;
+    cgpu_free(S);
+}
+
+void cgpu_compute_encoder_bind_state_stream_vulkan(CGPUComputePassEncoderId encoder, CGPUStateStreamId stream)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+void cgpu_free_state_stream_vulkan(CGPUStateStreamId stream)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+// raster state encoder APIs
+
+CGPURasterStateEncoderId cgpu_open_raster_state_encoder_vulkan(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+    return CGPU_NULLPTR;
+}
+
+void cgpu_close_raster_state_encoder_vulkan(CGPURasterStateEncoderId encoder)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+// dynamic_state
+void cgpu_raster_state_encoder_set_viewport_vulkan(CGPURasterStateEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+void cgpu_raster_state_encoder_set_scissor_vulkan(CGPURasterStateEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+void cgpu_raster_state_encoder_set_cull_mode_vulkan(CGPURasterStateEncoderId encoder, ECGPUCullMode cull_mode)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+void cgpu_raster_state_encoder_set_front_face_vulkan(CGPURasterStateEncoderId encoder, ECGPUFrontFace front_face)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+void cgpu_raster_state_encoder_set_primitive_topology_vulkan(CGPURasterStateEncoderId encoder, ECGPUPrimitiveTopology topology)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+void cgpu_raster_state_encoder_set_depth_test_enabled_vulkan(CGPURasterStateEncoderId encoder, bool enabled)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+void cgpu_raster_state_encoder_set_depth_write_enabled_vulkan(CGPURasterStateEncoderId encoder, bool enabled)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+void cgpu_raster_state_encoder_set_depth_compare_op_vulkan(CGPURasterStateEncoderId encoder, ECGPUCompareMode compare_op)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+void cgpu_raster_state_encoder_set_stencil_test_enabled_vulkan(CGPURasterStateEncoderId encoder, bool enabled)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+void cgpu_raster_state_encoder_set_stencil_compare_op_vulkan(CGPURasterStateEncoderId encoder, CGPUStencilFaces faces, ECGPUStencilOp failOp, ECGPUStencilOp passOp, ECGPUStencilOp depthFailOp, ECGPUCompareMode compareOp)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+// dynamic_state2
+
+// dynamic_state3
+
+void cgpu_raster_state_encoder_set_fill_mode_vulkan(CGPURasterStateEncoderId encoder, ECGPUFillMode fill_mode)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+void cgpu_raster_state_encoder_set_sample_count_vulkan(CGPURasterStateEncoderId encoder, ECGPUSampleCount sample_count)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+// shader state encoder APIs
+
+CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_r_vulkan(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+    return CGPU_NULLPTR;
+}
+
+CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_c_vulkan(CGPUStateStreamId stream, CGPUComputePassEncoderId encoder)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+    return CGPU_NULLPTR;
+}
+
+void cgpu_shader_state_encoder_bind_shaders_vulkan(CGPUShaderStateEncoderId encoder, uint32_t stage_count, const ECGPUShaderStage* stages, const CGPUCompiledShaderId* shaders)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+void cgpu_shader_state_encoder_bind_linked_shader_vulkan(CGPUShaderStateEncoderId encoder, CGPULinkedShaderId linked)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+void cgpu_close_shader_state_encoder_vulkan(CGPUShaderStateEncoderId encoder)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+// user state encoder APIs
+
+CGPUUserStateEncoderId cgpu_open_user_state_encoder_vulkan(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+    return CGPU_NULLPTR;
+}
+
+void cgpu_close_user_state_encoder_vulkan(CGPUUserStateEncoderId encoder)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+// EXPERIMENTAL binder APIs
+
+CGPUBinderId cgpu_create_binder_vulkan(CGPURootSignatureId root_signature)
+{    
+    SKR_UNIMPLEMENTED_FUNCTION();
+    return CGPU_NULLPTR;
+}
+
+void cgpu_binder_bind_vertex_layout_vulkan(CGPUBinderId binder, const struct CGPUVertexLayout* layout)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+void cgpu_binder_bind_vertex_buffer_vulkan(CGPUBinderId binder, uint32_t first_binding, uint32_t binding_count, const CGPUBufferId* buffers, const uint64_t* offsets, const uint64_t* sizes, const uint64_t* strides)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+void cgpu_free_binder_vulkan(CGPUBinderId binder)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
 }
