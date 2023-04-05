@@ -53,7 +53,7 @@ typedef CGPUDStorageFileId CGPUDStorageFileHandle;
 DEFINE_CGPU_OBJECT(CGPUCompiledShader)
 DEFINE_CGPU_OBJECT(CGPULinkedShader)
 DEFINE_CGPU_OBJECT(CGPUBinder)
-DEFINE_CGPU_OBJECT(CGPUStateStream)
+DEFINE_CGPU_OBJECT(CGPUStateBuffer)
 DEFINE_CGPU_OBJECT(CGPUShaderStateEncoder)
 // compute dispatches never use these state
 DEFINE_CGPU_OBJECT(CGPURasterStateEncoder)
@@ -454,19 +454,19 @@ typedef void (*CGPUProcFreeCompiledShader)(CGPUCompiledShaderId shader);
 RUNTIME_API void cgpu_free_linked_shader(CGPULinkedShaderId shader);
 typedef void (*CGPUProcFreeLinkedShader)(CGPULinkedShaderId shader);
 
-// EXPERIMENTAL StateStream APIs
-RUNTIME_API CGPUStateStreamId cgpu_create_state_stream(CGPUCommandBufferId cmd, const struct CGPUStateStreamDescriptor* desc);
-typedef CGPUStateStreamId (*CGPUProcCreateStateStream)(CGPUCommandBufferId cmd, const struct CGPUStateStreamDescriptor* desc);
-RUNTIME_API void cgpu_render_encoder_bind_state_stream(CGPURenderPassEncoderId encoder, CGPUStateStreamId stream);
-typedef void (*CGPUProcRenderEncoderBindStateStream)(CGPURenderPassEncoderId encoder, CGPUStateStreamId stream);
-RUNTIME_API void cgpu_compute_encoder_bind_state_stream(CGPUComputePassEncoderId encoder, CGPUStateStreamId stream);
-typedef void (*CGPUProcComputeEncoderBindStateStream)(CGPUComputePassEncoderId encoder, CGPUStateStreamId stream);
-RUNTIME_API void cgpu_free_state_stream(CGPUStateStreamId stream);
-typedef void (*CGPUProcFreeStateStream)(CGPUStateStreamId stream);
+// EXPERIMENTAL StateBuffer APIs
+RUNTIME_API CGPUStateBufferId cgpu_create_state_buffer(CGPUCommandBufferId cmd, const struct CGPUStateBufferDescriptor* desc);
+typedef CGPUStateBufferId (*CGPUProcCreateStateBuffer)(CGPUCommandBufferId cmd, const struct CGPUStateBufferDescriptor* desc);
+RUNTIME_API void cgpu_render_encoder_bind_state_buffer(CGPURenderPassEncoderId encoder, CGPUStateBufferId stream);
+typedef void (*CGPUProcRenderEncoderBindStateBuffer)(CGPURenderPassEncoderId encoder, CGPUStateBufferId stream);
+RUNTIME_API void cgpu_compute_encoder_bind_state_buffer(CGPUComputePassEncoderId encoder, CGPUStateBufferId stream);
+typedef void (*CGPUProcComputeEncoderBindStateBuffer)(CGPUComputePassEncoderId encoder, CGPUStateBufferId stream);
+RUNTIME_API void cgpu_free_state_buffer(CGPUStateBufferId stream);
+typedef void (*CGPUProcFreeStateBuffer)(CGPUStateBufferId stream);
 
 // raster state encoder APIs
-RUNTIME_API CGPURasterStateEncoderId cgpu_open_raster_state_encoder(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder);
-typedef CGPURasterStateEncoderId (*CGPUProcOpenRasterStateEncoder)(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder);
+RUNTIME_API CGPURasterStateEncoderId cgpu_open_raster_state_encoder(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
+typedef CGPURasterStateEncoderId (*CGPUProcOpenRasterStateEncoder)(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
 RUNTIME_API void cgpu_raster_state_encoder_set_viewport(CGPURasterStateEncoderId, float x, float y, float width, float height, float min_depth, float max_depth);
 typedef void (*CGPUProcRasterStateEncoderSetViewport)(CGPURasterStateEncoderId, float x, float y, float width, float height, float min_depth, float max_depth);
 RUNTIME_API void cgpu_raster_state_encoder_set_scissor(CGPURasterStateEncoderId, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
@@ -495,10 +495,10 @@ RUNTIME_API void cgpu_close_raster_state_encoder(CGPURasterStateEncoderId encode
 typedef void (*CGPUProcCloseRasterStateEncoder)(CGPURasterStateEncoderId encoder);
 
 // shader state encoder APIs
-RUNTIME_API CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_r(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder);
-typedef CGPUShaderStateEncoderId (*CGPUProcOpenShaderStateEncoderR)(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder);
-RUNTIME_API CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_c(CGPUStateStreamId stream, CGPUComputePassEncoderId encoder);
-typedef CGPUShaderStateEncoderId (*CGPUProcOpenShaderStateEncoderC)(CGPUStateStreamId stream, CGPUComputePassEncoderId encoder);
+RUNTIME_API CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_r(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
+typedef CGPUShaderStateEncoderId (*CGPUProcOpenShaderStateEncoderR)(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
+RUNTIME_API CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_c(CGPUStateBufferId stream, CGPUComputePassEncoderId encoder);
+typedef CGPUShaderStateEncoderId (*CGPUProcOpenShaderStateEncoderC)(CGPUStateBufferId stream, CGPUComputePassEncoderId encoder);
 RUNTIME_API void cgpu_shader_state_encoder_bind_shaders(CGPUShaderStateEncoderId, uint32_t stage_count, const ECGPUShaderStage* stages, const CGPUCompiledShaderId* shaders);
 typedef void (*CGPUProcShaderStateEncoderBindShaders)(CGPUShaderStateEncoderId, uint32_t stage_count, const ECGPUShaderStage* stages, const CGPUCompiledShaderId* shaders);
 RUNTIME_API void cgpu_shader_state_encoder_bind_linked_shader(CGPUShaderStateEncoderId, CGPULinkedShaderId linked);
@@ -507,8 +507,8 @@ RUNTIME_API void cgpu_close_shader_state_encoder(CGPUShaderStateEncoderId encode
 typedef void (*CGPUProcCloseShaderStateEncoder)(CGPUShaderStateEncoderId encoder);
 
 // user state encoder APIs
-RUNTIME_API CGPUUserStateEncoderId cgpu_open_user_state_encoder(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder);
-typedef CGPUUserStateEncoderId (*CGPUProcOpenUserStateEncoder)(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder);
+RUNTIME_API CGPUUserStateEncoderId cgpu_open_user_state_encoder(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
+typedef CGPUUserStateEncoderId (*CGPUProcOpenUserStateEncoder)(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
 RUNTIME_API void cgpu_close_user_state_encoder(CGPUUserStateEncoderId encoder);
 typedef void (*CGPUProcCloseUserStateEncoder)(CGPUUserStateEncoderId encoder);
 
@@ -675,11 +675,11 @@ typedef struct CGPUProcTable {
     const CGPUProcFreeCompiledShader free_compiled_shader;
     const CGPUProcFreeLinkedShader free_linked_shader;
 
-    // StateStream APIs
-    const CGPUProcCreateStateStream create_state_stream;
-    const CGPUProcRenderEncoderBindStateStream render_encoder_bind_state_stream;
-    const CGPUProcComputeEncoderBindStateStream compute_encoder_bind_state_stream;
-    const CGPUProcFreeStateStream free_state_stream;
+    // StateBuffer APIs
+    const CGPUProcCreateStateBuffer create_state_buffer;
+    const CGPUProcRenderEncoderBindStateBuffer render_encoder_bind_state_buffer;
+    const CGPUProcComputeEncoderBindStateBuffer compute_encoder_bind_state_buffer;
+    const CGPUProcFreeStateBuffer free_state_buffer;
 
     // raster state encoder APIs
     const CGPUProcOpenRasterStateEncoder open_raster_state_encoder;
@@ -1443,10 +1443,10 @@ typedef struct CGPULinkedShader {
     CGPURootSignatureId root_signature;
 } CGPULinkedShader;
 
-typedef struct CGPUStateStream {
+typedef struct CGPUStateBuffer {
     CGPUDeviceId device;
     CGPUCommandBufferId cmd;
-} CGPUStateStream;
+} CGPUStateBuffer;
 
 typedef struct CGPURasterStateEncoder {
     CGPUDeviceId device;

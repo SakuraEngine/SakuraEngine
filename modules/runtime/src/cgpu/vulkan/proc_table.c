@@ -132,11 +132,11 @@ const CGPUProcTable tbl_vk = {
     .free_compiled_shader = &cgpu_free_compiled_shader_vulkan,
     .free_linked_shader = &cgpu_free_linked_shader_vulkan,
 
-    // StateStream APIs
-    .create_state_stream = &cgpu_create_state_stream_vulkan,
-    .render_encoder_bind_state_stream = &cgpu_render_encoder_bind_state_stream_vulkan,
-    .compute_encoder_bind_state_stream = &cgpu_compute_encoder_bind_state_stream_vulkan,
-    .free_state_stream = &cgpu_free_state_stream_vulkan,
+    // StateBuffer APIs
+    .create_state_buffer = &cgpu_create_state_buffer_vulkan,
+    .render_encoder_bind_state_buffer = &cgpu_render_encoder_bind_state_buffer_vulkan,
+    .compute_encoder_bind_state_buffer = &cgpu_compute_encoder_bind_state_buffer_vulkan,
+    .free_state_buffer = &cgpu_free_state_buffer_vulkan,
 
     // raster state encoder APIs
     .open_raster_state_encoder = &cgpu_open_raster_state_encoder_vulkan,

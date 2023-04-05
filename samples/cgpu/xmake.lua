@@ -1,2 +1,2 @@
 includes("cgpu-basic/xmake.lua")
-includes("cgpu-statestream/xmake.lua")
+includes("cgpu-statebuffer/xmake.lua")

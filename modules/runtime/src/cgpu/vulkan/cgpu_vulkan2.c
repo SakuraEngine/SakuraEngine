@@ -152,40 +152,40 @@ void cgpu_free_linked_shader_vulkan(CGPULinkedShaderId shader)
     }
 }
 
-// StateStream APIs
+// StateBuffer APIs
 
-CGPUStateStreamId cgpu_create_state_stream_vulkan(CGPUCommandBufferId cmd, const struct CGPUStateStreamDescriptor* desc)
+CGPUStateBufferId cgpu_create_state_buffer_vulkan(CGPUCommandBufferId cmd, const struct CGPUStateBufferDescriptor* desc)
 {
     CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)cmd;
-    CGPUStateStream_Vulkan* stream = cgpu_calloc(1, sizeof(CGPUStateStream_Vulkan));
-    stream->super.device = CB->super.device;
-    stream->super.cmd = cmd;
-    return &stream->super;
+    CGPUStateBuffer_Vulkan* sb = cgpu_calloc(1, sizeof(CGPUStateBuffer_Vulkan));
+    sb->super.device = CB->super.device;
+    sb->super.cmd = cmd;
+    return &sb->super;
 }
 
-void cgpu_render_encoder_bind_state_stream_vulkan(CGPURenderPassEncoderId encoder, CGPUStateStreamId stream)
+void cgpu_render_encoder_bind_state_buffer_vulkan(CGPURenderPassEncoderId encoder, CGPUStateBufferId sb)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)stream;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)sb;
     S->pREncoder = encoder;
 }
 
-void cgpu_compute_encoder_bind_state_stream_vulkan(CGPUComputePassEncoderId encoder, CGPUStateStreamId stream)
+void cgpu_compute_encoder_bind_state_buffer_vulkan(CGPUComputePassEncoderId encoder, CGPUStateBufferId sb)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)stream;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)sb;
     S->pCEncoder = encoder;
 }
 
-void cgpu_free_state_stream_vulkan(CGPUStateStreamId stream)
+void cgpu_free_state_buffer_vulkan(CGPUStateBufferId sb)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)stream;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)sb;
     cgpu_free(S);
 }
 
 // raster state encoder APIs
 
-CGPURasterStateEncoderId cgpu_open_raster_state_encoder_vulkan(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder)
+CGPURasterStateEncoderId cgpu_open_raster_state_encoder_vulkan(CGPUStateBufferId sb, CGPURenderPassEncoderId encoder)
 {
-    return (CGPURasterStateEncoderId)stream;
+    return (CGPURasterStateEncoderId)sb;
 }
 
 void cgpu_close_raster_state_encoder_vulkan(CGPURasterStateEncoderId encoder)
@@ -196,7 +196,7 @@ void cgpu_close_raster_state_encoder_vulkan(CGPURasterStateEncoderId encoder)
 // dynamic_state
 void cgpu_raster_state_encoder_set_viewport_vulkan(CGPURasterStateEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)encoder;
     CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
 
@@ -208,13 +208,13 @@ void cgpu_raster_state_encoder_set_viewport_vulkan(CGPURasterStateEncoderId enco
         .minDepth = min_depth,
         .maxDepth = max_depth
     };
-    
+
     D->mVkDeviceTable.vkCmdSetViewport(CB->pVkCmdBuf, 0, 1, &viewport);
 }
 
 void cgpu_raster_state_encoder_set_scissor_vulkan(CGPURasterStateEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)encoder;
     CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
 
@@ -225,7 +225,7 @@ void cgpu_raster_state_encoder_set_scissor_vulkan(CGPURasterStateEncoderId encod
 
 void cgpu_raster_state_encoder_set_cull_mode_vulkan(CGPURasterStateEncoderId encoder, ECGPUCullMode cull_mode)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)encoder;
     CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
 
@@ -236,7 +236,7 @@ void cgpu_raster_state_encoder_set_cull_mode_vulkan(CGPURasterStateEncoderId enc
 
 void cgpu_raster_state_encoder_set_front_face_vulkan(CGPURasterStateEncoderId encoder, ECGPUFrontFace front_face)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)encoder;
     CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
 
@@ -247,7 +247,7 @@ void cgpu_raster_state_encoder_set_front_face_vulkan(CGPURasterStateEncoderId en
 
 void cgpu_raster_state_encoder_set_primitive_topology_vulkan(CGPURasterStateEncoderId encoder, ECGPUPrimitiveTopology topology)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)encoder;
     CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
 
@@ -258,7 +258,7 @@ void cgpu_raster_state_encoder_set_primitive_topology_vulkan(CGPURasterStateEnco
 
 void cgpu_raster_state_encoder_set_depth_test_enabled_vulkan(CGPURasterStateEncoderId encoder, bool enabled)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)encoder;
     CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
 
@@ -267,7 +267,7 @@ void cgpu_raster_state_encoder_set_depth_test_enabled_vulkan(CGPURasterStateEnco
 
 void cgpu_raster_state_encoder_set_depth_write_enabled_vulkan(CGPURasterStateEncoderId encoder, bool enabled)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)encoder;
     CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
 
@@ -276,7 +276,7 @@ void cgpu_raster_state_encoder_set_depth_write_enabled_vulkan(CGPURasterStateEnc
 
 void cgpu_raster_state_encoder_set_depth_compare_op_vulkan(CGPURasterStateEncoderId encoder, ECGPUCompareMode compare_op)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)encoder;
     CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
 
@@ -285,7 +285,7 @@ void cgpu_raster_state_encoder_set_depth_compare_op_vulkan(CGPURasterStateEncode
 
 void cgpu_raster_state_encoder_set_stencil_test_enabled_vulkan(CGPURasterStateEncoderId encoder, bool enabled)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)encoder;
     CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
 
@@ -294,7 +294,7 @@ void cgpu_raster_state_encoder_set_stencil_test_enabled_vulkan(CGPURasterStateEn
 
 void cgpu_raster_state_encoder_set_stencil_compare_op_vulkan(CGPURasterStateEncoderId encoder, CGPUStencilFaces faces, ECGPUStencilOp failOp, ECGPUStencilOp passOp, ECGPUStencilOp depthFailOp, ECGPUCompareMode compareOp)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)encoder;
     CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
 
@@ -313,7 +313,7 @@ void cgpu_raster_state_encoder_set_stencil_compare_op_vulkan(CGPURasterStateEnco
 
 void cgpu_raster_state_encoder_set_fill_mode_vulkan(CGPURasterStateEncoderId encoder, ECGPUFillMode fill_mode)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)encoder;
     CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
 
@@ -322,7 +322,7 @@ void cgpu_raster_state_encoder_set_fill_mode_vulkan(CGPURasterStateEncoderId enc
 
 void cgpu_raster_state_encoder_set_sample_count_vulkan(CGPURasterStateEncoderId encoder, ECGPUSampleCount sample_count)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)encoder;
     CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
 
@@ -331,23 +331,23 @@ void cgpu_raster_state_encoder_set_sample_count_vulkan(CGPURasterStateEncoderId 
 
 // shader state encoder APIs
 
-CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_r_vulkan(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder)
+CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_r_vulkan(CGPUStateBufferId sb, CGPURenderPassEncoderId encoder)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)stream;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)sb;
     S->pREncoder = encoder;
-    return (CGPUShaderStateEncoderId)stream;
+    return (CGPUShaderStateEncoderId)sb;
 }
 
-CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_c_vulkan(CGPUStateStreamId stream, CGPUComputePassEncoderId encoder)
+CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_c_vulkan(CGPUStateBufferId sb, CGPUComputePassEncoderId encoder)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)stream;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)sb;
     S->pCEncoder = encoder;
-    return (CGPUShaderStateEncoderId)stream;
+    return (CGPUShaderStateEncoderId)sb;
 }
 
 void cgpu_shader_state_encoder_bind_shaders_vulkan(CGPUShaderStateEncoderId encoder, uint32_t stage_count, const ECGPUShaderStage* stages, const CGPUCompiledShaderId* shaders)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)encoder;
     CGPUCommandBuffer_Vulkan* CB = S->pCEncoder ? (CGPUCommandBuffer_Vulkan*)S->pCEncoder : (CGPUCommandBuffer_Vulkan*)S->pREncoder;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
 
@@ -364,7 +364,7 @@ void cgpu_shader_state_encoder_bind_shaders_vulkan(CGPUShaderStateEncoderId enco
 
 void cgpu_shader_state_encoder_bind_linked_shader_vulkan(CGPUShaderStateEncoderId encoder, CGPULinkedShaderId linked)
 {
-    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUStateBuffer_Vulkan* S = (CGPUStateBuffer_Vulkan*)encoder;
     CGPUCommandBuffer_Vulkan* CB = S->pCEncoder ? (CGPUCommandBuffer_Vulkan*)S->pCEncoder : (CGPUCommandBuffer_Vulkan*)S->pREncoder;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
     CGPULinkedShader_Vulkan* L = (CGPULinkedShader_Vulkan*)linked;
@@ -392,9 +392,9 @@ void cgpu_close_shader_state_encoder_vulkan(CGPUShaderStateEncoderId encoder)
 
 // user state encoder APIs
 
-CGPUUserStateEncoderId cgpu_open_user_state_encoder_vulkan(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder)
+CGPUUserStateEncoderId cgpu_open_user_state_encoder_vulkan(CGPUStateBufferId sb, CGPURenderPassEncoderId encoder)
 {
-    return (CGPUUserStateEncoderId)stream;
+    return (CGPUUserStateEncoderId)sb;
 }
 
 void cgpu_close_user_state_encoder_vulkan(CGPUUserStateEncoderId encoder)

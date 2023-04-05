@@ -17,15 +17,15 @@ THREAD_LOCAL CGPURootSignatureId root_sig;
 THREAD_LOCAL CGPULinkedShaderId linked_shader;
 THREAD_LOCAL CGPUCommandPoolId pool;
 THREAD_LOCAL CGPUCommandBufferId cmd;
-THREAD_LOCAL CGPUStateStreamId sb;
+THREAD_LOCAL CGPUStateBufferId sb;
 THREAD_LOCAL CGPUTextureViewId views[3];
 
 void create_shaders()
 {
     uint32_t *vs_bytes, vs_length;
     uint32_t *fs_bytes, fs_length;
-    read_shader_bytes("statestream-triangle/vertex_shader", &vs_bytes, &vs_length, backend);
-    read_shader_bytes("statestream-triangle/fragment_shader", &fs_bytes, &fs_length, backend);
+    read_shader_bytes("statebuffer-triangle/vertex_shader", &vs_bytes, &vs_length, backend);
+    read_shader_bytes("statebuffer-triangle/fragment_shader", &fs_bytes, &fs_length, backend);
     CGPUShaderLibraryDescriptor vs_desc = {
         .stage = CGPU_SHADER_STAGE_VERT,
         .name = "VertexShaderLibrary",
@@ -168,7 +168,7 @@ void triangle_pass(uint32_t w, uint32_t h)
     };
     CGPURenderPassEncoderId rp_encoder = cgpu_cmd_begin_render_pass(cmd, &rp_desc);
     {
-        cgpu_render_encoder_bind_state_stream(rp_encoder, sb);
+        cgpu_render_encoder_bind_state_buffer(rp_encoder, sb);
         {
             CGPURasterStateEncoderId cx = cgpu_open_raster_state_encoder(sb, rp_encoder);
             cgpu_raster_state_encoder_set_primitive_topology(cx, CGPU_PRIM_TOPO_TRI_LIST);
@@ -241,7 +241,7 @@ void raster_program()
     pool = cgpu_create_command_pool(gfx_queue, CGPU_NULLPTR);
     CGPUCommandBufferDescriptor cmd_desc = { .is_secondary = false };
     cmd = cgpu_create_command_buffer(pool, &cmd_desc);
-    sb = cgpu_create_state_stream(cmd, NULL);
+    sb = cgpu_create_state_buffer(cmd, NULL);
 
     bool quit = false;
     while (!quit)
