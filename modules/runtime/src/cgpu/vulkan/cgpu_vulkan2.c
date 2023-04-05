@@ -67,7 +67,8 @@ CGPULinkedShaderId cgpu_compile_and_link_shaders_vulkan(CGPURootSignatureId sign
         cgpu_create_shader_objs_vulkan_impl(signature, descs, count, outShaders);
         for (uint32_t i = 0; i < count; i++)
         {
-            linked->pVkShaders[descs[i].stage] = outShaders[i];
+            linked->pVkShaders[i] = outShaders[i];
+            linked->pStages[i] = descs[i].stage;
         }
         linked->super.device = signature->device;
         linked->super.root_signature = signature;
@@ -153,91 +154,158 @@ void cgpu_free_linked_shader_vulkan(CGPULinkedShaderId shader)
 
 // StateStream APIs
 
-CGPUStateStreamId cgpu_create_state_stream_vulkan(CGPUDeviceId device, const struct CGPUStateStreamDescriptor* desc)
+CGPUStateStreamId cgpu_create_state_stream_vulkan(CGPUCommandBufferId cmd, const struct CGPUStateStreamDescriptor* desc)
 {
+    CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)cmd;
     CGPUStateStream_Vulkan* stream = cgpu_calloc(1, sizeof(CGPUStateStream_Vulkan));
-    stream->super.device = device;
+    stream->super.device = CB->super.device;
+    stream->super.cmd = cmd;
     return &stream->super;
 }
 
 void cgpu_render_encoder_bind_state_stream_vulkan(CGPURenderPassEncoderId encoder, CGPUStateStreamId stream)
 {
     CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)stream;
-    cgpu_free(S);
+    S->pREncoder = encoder;
 }
 
 void cgpu_compute_encoder_bind_state_stream_vulkan(CGPUComputePassEncoderId encoder, CGPUStateStreamId stream)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)stream;
+    S->pCEncoder = encoder;
 }
 
 void cgpu_free_state_stream_vulkan(CGPUStateStreamId stream)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)stream;
+    cgpu_free(S);
 }
 
 // raster state encoder APIs
 
 CGPURasterStateEncoderId cgpu_open_raster_state_encoder_vulkan(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return CGPU_NULLPTR;
+    return (CGPURasterStateEncoderId)stream;
 }
 
 void cgpu_close_raster_state_encoder_vulkan(CGPURasterStateEncoderId encoder)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    return;
 }
 
 // dynamic_state
 void cgpu_raster_state_encoder_set_viewport_vulkan(CGPURasterStateEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
+
+    VkViewport viewport = {
+        .x = x,
+        .y = y + height,
+        .width = width,
+        .height = -height,
+        .minDepth = min_depth,
+        .maxDepth = max_depth
+    };
+    
+    D->mVkDeviceTable.vkCmdSetViewport(CB->pVkCmdBuf, 0, 1, &viewport);
 }
 
 void cgpu_raster_state_encoder_set_scissor_vulkan(CGPURasterStateEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
+
+    VkRect2D scissor = { .offset = { x, y }, .extent = { width, height } };
+
+    D->mVkDeviceTable.vkCmdSetScissor(CB->pVkCmdBuf, 0, 1, &scissor);
 }
 
 void cgpu_raster_state_encoder_set_cull_mode_vulkan(CGPURasterStateEncoderId encoder, ECGPUCullMode cull_mode)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
+
+    VkCullModeFlags vkcull_mode = gVkCullModeTranslator[cull_mode];
+
+    D->mVkDeviceTable.vkCmdSetCullModeEXT(CB->pVkCmdBuf, vkcull_mode);
 }
 
 void cgpu_raster_state_encoder_set_front_face_vulkan(CGPURasterStateEncoderId encoder, ECGPUFrontFace front_face)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
+
+    VkFrontFace vkfront_face = gVkFrontFaceTranslator[front_face];
+
+    D->mVkDeviceTable.vkCmdSetFrontFaceEXT(CB->pVkCmdBuf, vkfront_face);
 }
 
 void cgpu_raster_state_encoder_set_primitive_topology_vulkan(CGPURasterStateEncoderId encoder, ECGPUPrimitiveTopology topology)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
+
+    VkPrimitiveTopology vktopology = VkUtil_TranslateTopology(topology);
+
+    D->mVkDeviceTable.vkCmdSetPrimitiveTopologyEXT(CB->pVkCmdBuf, vktopology);
 }
 
 void cgpu_raster_state_encoder_set_depth_test_enabled_vulkan(CGPURasterStateEncoderId encoder, bool enabled)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
+
+    D->mVkDeviceTable.vkCmdSetDepthTestEnableEXT(CB->pVkCmdBuf, enabled);
 }
 
 void cgpu_raster_state_encoder_set_depth_write_enabled_vulkan(CGPURasterStateEncoderId encoder, bool enabled)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
+
+    D->mVkDeviceTable.vkCmdSetDepthWriteEnableEXT(CB->pVkCmdBuf, enabled);
 }
 
 void cgpu_raster_state_encoder_set_depth_compare_op_vulkan(CGPURasterStateEncoderId encoder, ECGPUCompareMode compare_op)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
+
+    D->mVkDeviceTable.vkCmdSetDepthCompareOpEXT(CB->pVkCmdBuf, (VkCompareOp)compare_op);
 }
 
 void cgpu_raster_state_encoder_set_stencil_test_enabled_vulkan(CGPURasterStateEncoderId encoder, bool enabled)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
+
+    D->mVkDeviceTable.vkCmdSetStencilTestEnableEXT(CB->pVkCmdBuf, enabled);
 }
 
 void cgpu_raster_state_encoder_set_stencil_compare_op_vulkan(CGPURasterStateEncoderId encoder, CGPUStencilFaces faces, ECGPUStencilOp failOp, ECGPUStencilOp passOp, ECGPUStencilOp depthFailOp, ECGPUCompareMode compareOp)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
+
+    VkStencilFaceFlags vkFaces = 0;
+    vkFaces |= (faces & CGPU_STENCIL_FACE_FRONT) ? VK_STENCIL_FACE_FRONT_BIT : 0;
+    vkFaces |= (faces & CGPU_STENCIL_FACE_BACK) ? VK_STENCIL_FACE_BACK_BIT : 0;
+
+    D->mVkDeviceTable.vkCmdSetStencilOp(CB->pVkCmdBuf,
+        vkFaces, 
+        gVkStencilOpTranslator[failOp], gVkStencilOpTranslator[passOp], 
+        gVkStencilOpTranslator[depthFailOp], gVkComparisonFuncTranslator[compareOp]);
 }
 // dynamic_state2
 
@@ -245,75 +313,181 @@ void cgpu_raster_state_encoder_set_stencil_compare_op_vulkan(CGPURasterStateEnco
 
 void cgpu_raster_state_encoder_set_fill_mode_vulkan(CGPURasterStateEncoderId encoder, ECGPUFillMode fill_mode)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
+
+    D->mVkDeviceTable.vkCmdSetPolygonModeEXT(CB->pVkCmdBuf, gVkFillModeTranslator[fill_mode]);
 }
 
 void cgpu_raster_state_encoder_set_sample_count_vulkan(CGPURasterStateEncoderId encoder, ECGPUSampleCount sample_count)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)S->pREncoder;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
+
+    D->mVkDeviceTable.vkCmdSetRasterizationSamplesEXT(CB->pVkCmdBuf, VkUtil_SampleCountTranslateToVk(sample_count));
 }
 
 // shader state encoder APIs
 
 CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_r_vulkan(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return CGPU_NULLPTR;
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)stream;
+    S->pREncoder = encoder;
+    return (CGPUShaderStateEncoderId)stream;
 }
 
 CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_c_vulkan(CGPUStateStreamId stream, CGPUComputePassEncoderId encoder)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return CGPU_NULLPTR;
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)stream;
+    S->pCEncoder = encoder;
+    return (CGPUShaderStateEncoderId)stream;
 }
 
 void cgpu_shader_state_encoder_bind_shaders_vulkan(CGPUShaderStateEncoderId encoder, uint32_t stage_count, const ECGPUShaderStage* stages, const CGPUCompiledShaderId* shaders)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUCommandBuffer_Vulkan* CB = S->pCEncoder ? (CGPUCommandBuffer_Vulkan*)S->pCEncoder : (CGPUCommandBuffer_Vulkan*)S->pREncoder;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
+
+    VkShaderStageFlagBits vkStages[CGPU_SHADER_STAGE_COUNT];
+    VkShaderEXT vkShaders[CGPU_SHADER_STAGE_COUNT];
+    for (uint32_t i = 0; i < stage_count; i++)
+    {
+        vkStages[i] = VkUtil_TranslateShaderUsages(stages[i]);
+        vkShaders[i] = ((CGPUCompiledShader_Vulkan*)shaders[i])->pVkShader;
+    }
+
+    D->mVkDeviceTable.vkCmdBindShadersEXT(CB->pVkCmdBuf, stage_count, vkStages, vkShaders);
 }
 
 void cgpu_shader_state_encoder_bind_linked_shader_vulkan(CGPUShaderStateEncoderId encoder, CGPULinkedShaderId linked)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUStateStream_Vulkan* S = (CGPUStateStream_Vulkan*)encoder;
+    CGPUCommandBuffer_Vulkan* CB = S->pCEncoder ? (CGPUCommandBuffer_Vulkan*)S->pCEncoder : (CGPUCommandBuffer_Vulkan*)S->pREncoder;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
+    CGPULinkedShader_Vulkan* L = (CGPULinkedShader_Vulkan*)linked;
+
+    uint32_t stage_count = 0;
+    VkShaderStageFlagBits vkStages[CGPU_SHADER_STAGE_COUNT];
+    VkShaderEXT vkShaders[CGPU_SHADER_STAGE_COUNT];
+    for (uint32_t i = 0; i < CGPU_SHADER_STAGE_COUNT; i++)
+    {
+        if (L->pVkShaders[i])
+        {
+            vkStages[stage_count] = VkUtil_TranslateShaderUsages(L->pStages[i]);
+            vkShaders[stage_count] = L->pVkShaders[i];
+            stage_count++;
+        }
+    }
+
+    D->mVkDeviceTable.vkCmdBindShadersEXT(CB->pVkCmdBuf, stage_count, vkStages, vkShaders);
 }
 
 void cgpu_close_shader_state_encoder_vulkan(CGPUShaderStateEncoderId encoder)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    return;
 }
 
 // user state encoder APIs
 
 CGPUUserStateEncoderId cgpu_open_user_state_encoder_vulkan(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return CGPU_NULLPTR;
+    return (CGPUUserStateEncoderId)stream;
 }
 
 void cgpu_close_user_state_encoder_vulkan(CGPUUserStateEncoderId encoder)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    return;
 }
 
 // EXPERIMENTAL binder APIs
 
-CGPUBinderId cgpu_create_binder_vulkan(CGPURootSignatureId root_signature)
+CGPUBinderId cgpu_create_binder_vulkan(CGPUCommandBufferId cmd)
 {    
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return CGPU_NULLPTR;
+    CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)cmd;
+    CGPUBinder_Vulkan* bdr = cgpu_calloc(1, sizeof(CGPUBinder_Vulkan));
+    bdr->super.device = CB->super.device;
+    bdr->super.cmd = cmd;
+    return &bdr->super;
 }
 
 void cgpu_binder_bind_vertex_layout_vulkan(CGPUBinderId binder, const struct CGPUVertexLayout* layout)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUBinder_Vulkan* bdr = (CGPUBinder_Vulkan*)binder;
+    CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)bdr->super.cmd;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
+
+    uint32_t input_binding_count = 0;
+	uint32_t input_attribute_count = 0;
+    VkUtil_GetVertexInputBindingAttrCount(layout, &input_binding_count, &input_attribute_count);
+    
+    uint64_t dsize = 0u;
+    dsize += (sizeof(VkVertexInputBindingDescription2EXT) * input_binding_count);
+    const uint64_t input_attrs_offset = dsize;
+    dsize += (sizeof(VkVertexInputAttributeDescription2EXT) * input_attribute_count);
+    
+    uint8_t* data = cgpu_calloc(1, dsize);
+    VkVertexInputBindingDescription2EXT* input_bindings = (VkVertexInputBindingDescription2EXT*)data;
+    VkVertexInputAttributeDescription2EXT* input_attributes = (VkVertexInputAttributeDescription2EXT*)(data + input_attrs_offset);
+    {
+        // Ignore everything that's beyond CGPU_MAX_VERTEX_ATTRIBS
+        uint32_t attrib_count = layout->attribute_count > CGPU_MAX_VERTEX_ATTRIBS ? CGPU_MAX_VERTEX_ATTRIBS : layout->attribute_count;
+        uint32_t attr_slot = 0;
+        // Initial values
+        for (uint32_t i = 0; i < attrib_count; ++i)
+        {
+            const CGPUVertexAttribute* attrib = &(layout->attributes[i]);
+            const uint32_t array_size = attrib->array_size ? attrib->array_size : 1;
+
+            VkVertexInputBindingDescription2EXT* current_binding = &input_bindings[attrib->binding];
+            current_binding->binding = attrib->binding;
+            if (attrib->rate == CGPU_INPUT_RATE_INSTANCE)
+                current_binding->inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+            else
+                current_binding->inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+            current_binding->stride += attrib->elem_stride;
+            
+            for(uint32_t j = 0; j < array_size; j++)
+            {
+                input_attributes[attr_slot].location = attr_slot;
+                input_attributes[attr_slot].binding = attrib->binding;
+                input_attributes[attr_slot].format = VkUtil_FormatTranslateToVk(attrib->format);
+                input_attributes[attr_slot].offset = attrib->offset + (j * FormatUtil_BitSizeOfBlock(attrib->format) / 8);
+                ++attr_slot;
+            }
+        }
+    }
+
+    D->mVkDeviceTable.vkCmdSetVertexInputEXT(CB->pVkCmdBuf, input_binding_count, input_bindings, input_attribute_count, input_attributes);
+
+    cgpu_free(data);
 }
 
 void cgpu_binder_bind_vertex_buffer_vulkan(CGPUBinderId binder, uint32_t first_binding, uint32_t binding_count, const CGPUBufferId* buffers, const uint64_t* offsets, const uint64_t* sizes, const uint64_t* strides)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUBinder_Vulkan* bdr = (CGPUBinder_Vulkan*)binder;
+    CGPUCommandBuffer_Vulkan* CB = (CGPUCommandBuffer_Vulkan*)bdr->super.cmd;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)CB->super.device;
+    CGPUAdapter_Vulkan* A = (CGPUAdapter_Vulkan*)D->super.adapter;
+    const CGPUBuffer_Vulkan** Buffers = (const CGPUBuffer_Vulkan**)buffers;
+    const uint32_t final_buffer_count = cgpu_min(binding_count, A->mPhysicalDeviceProps.properties.limits.maxVertexInputBindings);
+
+    DECLARE_ZERO(VkBuffer, vkBuffers[64]);
+    DECLARE_ZERO(VkDeviceSize, vkOffsets[64]);
+
+    for (uint32_t i = 0; i < final_buffer_count; ++i)
+    {
+        vkBuffers[i] = Buffers[i]->pVkBuffer;
+        vkOffsets[i] = (offsets ? offsets[i] : 0);
+    }
+
+    D->mVkDeviceTable.vkCmdBindVertexBuffers2EXT(CB->pVkCmdBuf, first_binding, binding_count, vkBuffers, vkOffsets, sizes, strides);
 }
 
 void cgpu_free_binder_vulkan(CGPUBinderId binder)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUBinder_Vulkan* Bdr = (CGPUBinder_Vulkan*)binder;
+    cgpu_free(Bdr);
 }

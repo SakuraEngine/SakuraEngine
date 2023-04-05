@@ -1309,12 +1309,14 @@ void cgpu_free_linked_shader(CGPULinkedShaderId shader)
     device->proc_table_cache->free_linked_shader(shader);
 }
 
-CGPUStateStreamId cgpu_create_state_stream(CGPUDeviceId device, const struct CGPUStateStreamDescriptor* desc)
+CGPUStateStreamId cgpu_create_state_stream(CGPUCommandBufferId cmd, const struct CGPUStateStreamDescriptor* desc)
 {
-    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    cgpu_assert(device->proc_table_cache->create_state_stream && "create_state_stream Proc Missing!");
-    CGPUStateStream* stream = (CGPUStateStream*)device->proc_table_cache->create_state_stream(device, desc);
-    stream->device = device;
+    cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(cmd->device->proc_table_cache->create_state_stream && "create_state_stream Proc Missing!");
+    CGPUStateStream* stream = (CGPUStateStream*)cmd->device->proc_table_cache->create_state_stream(cmd, desc);
+    stream->device = cmd->device;
+    stream->cmd = cmd;
     return stream;
 }
 
@@ -1512,14 +1514,14 @@ void cgpu_close_user_state_encoder(CGPUUserStateEncoderId encoder)
     encoder->device->proc_table_cache->close_user_state_encoder(encoder);
 }
 
-CGPUBinderId cgpu_create_binder(CGPURootSignatureId root_signature)
+CGPUBinderId cgpu_create_binder(CGPUCommandBufferId cmd)
 {
-    cgpu_assert(root_signature != CGPU_NULLPTR && "fatal: call on NULL root_signature!");
-    cgpu_assert(root_signature->device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    cgpu_assert(root_signature->device->proc_table_cache->create_binder && "create_binder Proc Missing!");
-    CGPUBinder* binder = (CGPUBinder*)root_signature->device->proc_table_cache->create_binder(root_signature);
-    binder->device = root_signature->device;
-    binder->root_signature = root_signature;
+    cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmd!");
+    cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(cmd->device->proc_table_cache->create_binder && "create_binder Proc Missing!");
+    CGPUBinder* binder = (CGPUBinder*)cmd->device->proc_table_cache->create_binder(cmd);
+    binder->device = cmd->device;
+    binder->cmd = cmd;
     return binder;
 }
 

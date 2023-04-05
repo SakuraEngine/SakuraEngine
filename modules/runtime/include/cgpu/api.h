@@ -455,8 +455,8 @@ RUNTIME_API void cgpu_free_linked_shader(CGPULinkedShaderId shader);
 typedef void (*CGPUProcFreeLinkedShader)(CGPULinkedShaderId shader);
 
 // EXPERIMENTAL StateStream APIs
-RUNTIME_API CGPUStateStreamId cgpu_create_state_stream(CGPUDeviceId device, const struct CGPUStateStreamDescriptor* desc);
-typedef CGPUStateStreamId (*CGPUProcCreateStateStream)(CGPUDeviceId device, const struct CGPUStateStreamDescriptor* desc);
+RUNTIME_API CGPUStateStreamId cgpu_create_state_stream(CGPUCommandBufferId cmd, const struct CGPUStateStreamDescriptor* desc);
+typedef CGPUStateStreamId (*CGPUProcCreateStateStream)(CGPUCommandBufferId cmd, const struct CGPUStateStreamDescriptor* desc);
 RUNTIME_API void cgpu_render_encoder_bind_state_stream(CGPURenderPassEncoderId encoder, CGPUStateStreamId stream);
 typedef void (*CGPUProcRenderEncoderBindStateStream)(CGPURenderPassEncoderId encoder, CGPUStateStreamId stream);
 RUNTIME_API void cgpu_compute_encoder_bind_state_stream(CGPUComputePassEncoderId encoder, CGPUStateStreamId stream);
@@ -513,8 +513,8 @@ RUNTIME_API void cgpu_close_user_state_encoder(CGPUUserStateEncoderId encoder);
 typedef void (*CGPUProcCloseUserStateEncoder)(CGPUUserStateEncoderId encoder);
 
 // EXPERIMENTAL binder APIs
-RUNTIME_API CGPUBinderId cgpu_create_binder(CGPURootSignatureId root_signature);
-typedef CGPUBinderId (*CGPUProcCreateBinder)(CGPURootSignatureId root_signature);
+RUNTIME_API CGPUBinderId cgpu_create_binder(CGPUCommandBufferId cmd);
+typedef CGPUBinderId (*CGPUProcCreateBinder)(CGPUCommandBufferId cmd);
 RUNTIME_API void cgpu_binder_bind_vertex_layout(CGPUBinderId, const struct CGPUVertexLayout* layout);
 typedef void (*CGPUProcBinderBindVertexLayout)(CGPUBinderId, const struct CGPUVertexLayout* layout);
 RUNTIME_API void cgpu_binder_bind_vertex_buffer(CGPUBinderId, uint32_t first_binding, uint32_t binding_count, const CGPUBufferId* buffers, const uint64_t* offsets, const uint64_t* sizes, const uint64_t* strides);
@@ -1445,6 +1445,7 @@ typedef struct CGPULinkedShader {
 
 typedef struct CGPUStateStream {
     CGPUDeviceId device;
+    CGPUCommandBufferId cmd;
 } CGPUStateStream;
 
 typedef struct CGPURasterStateEncoder {
@@ -1461,7 +1462,7 @@ typedef struct CGPUUserStateEncoder {
 
 typedef struct CGPUBinder {
     CGPUDeviceId device;
-    CGPURootSignatureId root_signature;
+    CGPUCommandBufferId cmd;
 } CGPUBinder;
 
 // Resources

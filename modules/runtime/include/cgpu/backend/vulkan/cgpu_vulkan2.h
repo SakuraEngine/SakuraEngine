@@ -8,7 +8,7 @@ RUNTIME_API void cgpu_free_compiled_shader_vulkan(CGPUCompiledShaderId shader);
 RUNTIME_API void cgpu_free_linked_shader_vulkan(CGPULinkedShaderId shader);
 
 // StateStream APIs
-RUNTIME_API CGPUStateStreamId cgpu_create_state_stream_vulkan(CGPUDeviceId device, const struct CGPUStateStreamDescriptor* desc);
+RUNTIME_API CGPUStateStreamId cgpu_create_state_stream_vulkan(CGPUCommandBufferId cmd, const struct CGPUStateStreamDescriptor* desc);
 RUNTIME_API void cgpu_render_encoder_bind_state_stream_vulkan(CGPURenderPassEncoderId encoder, CGPUStateStreamId stream);
 RUNTIME_API void cgpu_compute_encoder_bind_state_stream_vulkan(CGPUComputePassEncoderId encoder, CGPUStateStreamId stream);
 RUNTIME_API void cgpu_free_state_stream_vulkan(CGPUStateStreamId stream);
@@ -44,12 +44,18 @@ RUNTIME_API CGPUUserStateEncoderId cgpu_open_user_state_encoder_vulkan(CGPUState
 RUNTIME_API void cgpu_close_user_state_encoder_vulkan(CGPUUserStateEncoderId encoder);
 
 // EXPERIMENTAL binder APIs
-RUNTIME_API CGPUBinderId cgpu_create_binder_vulkan(CGPURootSignatureId root_signature);
+RUNTIME_API CGPUBinderId cgpu_create_binder_vulkan(CGPUCommandBufferId cmd);
 RUNTIME_API void cgpu_binder_bind_vertex_layout_vulkan(CGPUBinderId, const struct CGPUVertexLayout* layout);
 RUNTIME_API void cgpu_binder_bind_vertex_buffer_vulkan(CGPUBinderId, uint32_t first_binding, uint32_t binding_count, const CGPUBufferId* buffers, const uint64_t* offsets, const uint64_t* sizes, const uint64_t* strides);
 RUNTIME_API void cgpu_free_binder_vulkan(CGPUBinderId binder);
 
 typedef struct CGPUStateStream_Vulkan {
     CGPUStateStream super;
-    
+    CGPURenderPassEncoderId pREncoder;
+    CGPUComputePassEncoderId pCEncoder;
 } CGPUStateStream_Vulkan;
+
+typedef struct CGPUBinder_Vulkan {
+    CGPUBinder super;
+
+} CGPUBinder_Vulkan;
