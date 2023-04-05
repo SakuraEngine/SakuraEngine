@@ -1309,42 +1309,42 @@ void cgpu_free_linked_shader(CGPULinkedShaderId shader)
     device->proc_table_cache->free_linked_shader(shader);
 }
 
-CGPUStateStreamId cgpu_create_state_stream(CGPUCommandBufferId cmd, const struct CGPUStateStreamDescriptor* desc)
+CGPUStateBufferId cgpu_create_state_buffer(CGPUCommandBufferId cmd, const struct CGPUStateBufferDescriptor* desc)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    cgpu_assert(cmd->device->proc_table_cache->create_state_stream && "create_state_stream Proc Missing!");
-    CGPUStateStream* stream = (CGPUStateStream*)cmd->device->proc_table_cache->create_state_stream(cmd, desc);
+    cgpu_assert(cmd->device->proc_table_cache->create_state_buffer && "create_state_buffer Proc Missing!");
+    CGPUStateBuffer* stream = (CGPUStateBuffer*)cmd->device->proc_table_cache->create_state_buffer(cmd, desc);
     stream->device = cmd->device;
     stream->cmd = cmd;
     return stream;
 }
 
-void cgpu_render_encoder_bind_state_stream(CGPURenderPassEncoderId encoder, CGPUStateStreamId stream)
+void cgpu_render_encoder_bind_state_buffer(CGPURenderPassEncoderId encoder, CGPUStateBufferId stream)
 {
     cgpu_assert(encoder != CGPU_NULLPTR && "fatal: call on NULL encoder!");
     cgpu_assert(encoder->device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    cgpu_assert(encoder->device->proc_table_cache->render_encoder_bind_state_stream && "render_encoder_bind_state_stream Proc Missing!");
-    encoder->device->proc_table_cache->render_encoder_bind_state_stream(encoder, stream);
+    cgpu_assert(encoder->device->proc_table_cache->render_encoder_bind_state_buffer && "render_encoder_bind_state_buffer Proc Missing!");
+    encoder->device->proc_table_cache->render_encoder_bind_state_buffer(encoder, stream);
 }
 
-void cgpu_compute_encoder_bind_state_stream(CGPUComputePassEncoderId encoder, CGPUStateStreamId stream)
+void cgpu_compute_encoder_bind_state_buffer(CGPUComputePassEncoderId encoder, CGPUStateBufferId stream)
 {
     cgpu_assert(encoder != CGPU_NULLPTR && "fatal: call on NULL encoder!");
     cgpu_assert(encoder->device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    cgpu_assert(encoder->device->proc_table_cache->compute_encoder_bind_state_stream && "compute_encoder_bind_state_stream Proc Missing!");
-    encoder->device->proc_table_cache->compute_encoder_bind_state_stream(encoder, stream);
+    cgpu_assert(encoder->device->proc_table_cache->compute_encoder_bind_state_buffer && "compute_encoder_bind_state_buffer Proc Missing!");
+    encoder->device->proc_table_cache->compute_encoder_bind_state_buffer(encoder, stream);
 }
 
-void cgpu_free_state_stream(CGPUStateStreamId stream)
+void cgpu_free_state_buffer(CGPUStateBufferId stream)
 {
     cgpu_assert(stream != CGPU_NULLPTR && "fatal: call on NULL stream!");
     cgpu_assert(stream->device != CGPU_NULLPTR && "fatal: call on NULL device!");
-    cgpu_assert(stream->device->proc_table_cache->free_state_stream && "free_state_stream Proc Missing!");
-    stream->device->proc_table_cache->free_state_stream(stream);
+    cgpu_assert(stream->device->proc_table_cache->free_state_buffer && "free_state_buffer Proc Missing!");
+    stream->device->proc_table_cache->free_state_buffer(stream);
 }
 
-CGPURasterStateEncoderId cgpu_open_raster_state_encoder(CGPUStateStreamId stream, CGPURenderPassEncoderId rencoder)
+CGPURasterStateEncoderId cgpu_open_raster_state_encoder(CGPUStateBufferId stream, CGPURenderPassEncoderId rencoder)
 {
     cgpu_assert(stream != CGPU_NULLPTR && "fatal: call on NULL stream!");
     cgpu_assert(stream->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -1458,7 +1458,7 @@ void cgpu_close_raster_state_encoder(CGPURasterStateEncoderId encoder)
     encoder->device->proc_table_cache->close_raster_state_encoder(encoder);
 }
 
-CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_r(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder)
+CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_r(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder)
 {
     cgpu_assert(stream != CGPU_NULLPTR && "fatal: call on NULL stream!");
     cgpu_assert(stream->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -1466,7 +1466,7 @@ CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_r(CGPUStateStreamId stre
     return stream->device->proc_table_cache->open_shader_state_encoder_r(stream, encoder);
 }
 
-CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_c(CGPUStateStreamId stream, CGPUComputePassEncoderId encoder)
+CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_c(CGPUStateBufferId stream, CGPUComputePassEncoderId encoder)
 {
     cgpu_assert(stream != CGPU_NULLPTR && "fatal: call on NULL stream!");
     cgpu_assert(stream->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -1498,7 +1498,7 @@ void cgpu_close_shader_state_encoder(CGPUShaderStateEncoderId encoder)
     encoder->device->proc_table_cache->close_shader_state_encoder(encoder);
 }
 
-CGPUUserStateEncoderId cgpu_open_user_state_encoder(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder)
+CGPUUserStateEncoderId cgpu_open_user_state_encoder(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder)
 {
     cgpu_assert(stream != CGPU_NULLPTR && "fatal: call on NULL stream!");
     cgpu_assert(stream->device != CGPU_NULLPTR && "fatal: call on NULL device!");

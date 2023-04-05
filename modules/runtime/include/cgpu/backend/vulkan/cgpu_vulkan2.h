@@ -7,14 +7,14 @@ RUNTIME_API void cgpu_compile_shaders_vulkan(CGPURootSignatureId signature, cons
 RUNTIME_API void cgpu_free_compiled_shader_vulkan(CGPUCompiledShaderId shader);
 RUNTIME_API void cgpu_free_linked_shader_vulkan(CGPULinkedShaderId shader);
 
-// StateStream APIs
-RUNTIME_API CGPUStateStreamId cgpu_create_state_stream_vulkan(CGPUCommandBufferId cmd, const struct CGPUStateStreamDescriptor* desc);
-RUNTIME_API void cgpu_render_encoder_bind_state_stream_vulkan(CGPURenderPassEncoderId encoder, CGPUStateStreamId stream);
-RUNTIME_API void cgpu_compute_encoder_bind_state_stream_vulkan(CGPUComputePassEncoderId encoder, CGPUStateStreamId stream);
-RUNTIME_API void cgpu_free_state_stream_vulkan(CGPUStateStreamId stream);
+// StateBuffer APIs
+RUNTIME_API CGPUStateBufferId cgpu_create_state_buffer_vulkan(CGPUCommandBufferId cmd, const struct CGPUStateBufferDescriptor* desc);
+RUNTIME_API void cgpu_render_encoder_bind_state_buffer_vulkan(CGPURenderPassEncoderId encoder, CGPUStateBufferId stream);
+RUNTIME_API void cgpu_compute_encoder_bind_state_buffer_vulkan(CGPUComputePassEncoderId encoder, CGPUStateBufferId stream);
+RUNTIME_API void cgpu_free_state_buffer_vulkan(CGPUStateBufferId stream);
 
 // raster state encoder APIs
-RUNTIME_API CGPURasterStateEncoderId cgpu_open_raster_state_encoder_vulkan(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder);
+RUNTIME_API CGPURasterStateEncoderId cgpu_open_raster_state_encoder_vulkan(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
 RUNTIME_API void cgpu_close_raster_state_encoder_vulkan(CGPURasterStateEncoderId encoder);
 // dynamic_state
 RUNTIME_API void cgpu_raster_state_encoder_set_viewport_vulkan(CGPURasterStateEncoderId, float x, float y, float width, float height, float min_depth, float max_depth);
@@ -33,14 +33,14 @@ RUNTIME_API void cgpu_raster_state_encoder_set_fill_mode_vulkan(CGPURasterStateE
 RUNTIME_API void cgpu_raster_state_encoder_set_sample_count_vulkan(CGPURasterStateEncoderId, ECGPUSampleCount sample_count);
 
 // shader state encoder APIs
-RUNTIME_API CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_r_vulkan(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder);
-RUNTIME_API CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_c_vulkan(CGPUStateStreamId stream, CGPUComputePassEncoderId encoder);
+RUNTIME_API CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_r_vulkan(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
+RUNTIME_API CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_c_vulkan(CGPUStateBufferId stream, CGPUComputePassEncoderId encoder);
 RUNTIME_API void cgpu_shader_state_encoder_bind_shaders_vulkan(CGPUShaderStateEncoderId, uint32_t stage_count, const ECGPUShaderStage* stages, const CGPUCompiledShaderId* shaders);
 RUNTIME_API void cgpu_shader_state_encoder_bind_linked_shader_vulkan(CGPUShaderStateEncoderId, CGPULinkedShaderId linked);
 RUNTIME_API void cgpu_close_shader_state_encoder_vulkan(CGPUShaderStateEncoderId encoder);
 
 // user state encoder APIs
-RUNTIME_API CGPUUserStateEncoderId cgpu_open_user_state_encoder_vulkan(CGPUStateStreamId stream, CGPURenderPassEncoderId encoder);
+RUNTIME_API CGPUUserStateEncoderId cgpu_open_user_state_encoder_vulkan(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
 RUNTIME_API void cgpu_close_user_state_encoder_vulkan(CGPUUserStateEncoderId encoder);
 
 // EXPERIMENTAL binder APIs
@@ -49,11 +49,11 @@ RUNTIME_API void cgpu_binder_bind_vertex_layout_vulkan(CGPUBinderId, const struc
 RUNTIME_API void cgpu_binder_bind_vertex_buffer_vulkan(CGPUBinderId, uint32_t first_binding, uint32_t binding_count, const CGPUBufferId* buffers, const uint64_t* offsets, const uint64_t* sizes, const uint64_t* strides);
 RUNTIME_API void cgpu_free_binder_vulkan(CGPUBinderId binder);
 
-typedef struct CGPUStateStream_Vulkan {
-    CGPUStateStream super;
+typedef struct CGPUStateBuffer_Vulkan {
+    CGPUStateBuffer super;
     CGPURenderPassEncoderId pREncoder;
     CGPUComputePassEncoderId pCEncoder;
-} CGPUStateStream_Vulkan;
+} CGPUStateBuffer_Vulkan;
 
 typedef struct CGPUBinder_Vulkan {
     CGPUBinder super;
