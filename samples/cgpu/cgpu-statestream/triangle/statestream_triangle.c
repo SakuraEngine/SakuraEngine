@@ -14,12 +14,13 @@ THREAD_LOCAL CGPUDeviceId device;
 THREAD_LOCAL CGPUFenceId present_fence;
 THREAD_LOCAL CGPUQueueId gfx_queue;
 THREAD_LOCAL CGPURootSignatureId root_sig;
-THREAD_LOCAL CGPURenderPipelineId pipeline;
+THREAD_LOCAL CGPULinkedShaderId linked_shader;
 THREAD_LOCAL CGPUCommandPoolId pool;
 THREAD_LOCAL CGPUCommandBufferId cmd;
+THREAD_LOCAL CGPUStateStreamId sb;
 THREAD_LOCAL CGPUTextureViewId views[3];
 
-void create_render_pipeline()
+void create_shaders()
 {
     uint32_t *vs_bytes, vs_length;
     uint32_t *fs_bytes, fs_length;
@@ -39,8 +40,6 @@ void create_render_pipeline()
     };
     CGPUShaderLibraryId vertex_shader = cgpu_create_shader_library(device, &vs_desc);
     CGPUShaderLibraryId fragment_shader = cgpu_create_shader_library(device, &ps_desc);
-    free(vs_bytes);
-    free(fs_bytes);
     CGPUPipelineShaderDescriptor ppl_shaders[2];
     ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
     ppl_shaders[0].entry = "main";
@@ -53,17 +52,25 @@ void create_render_pipeline()
         .shader_count = 2
     };
     root_sig = cgpu_create_root_signature(device, &rs_desc);
-    CGPUVertexLayout vertex_layout = { .attribute_count = 0 };
-    CGPURenderPipelineDescriptor rp_desc = {
-        .root_signature = root_sig,
-        .prim_topology = CGPU_PRIM_TOPO_TRI_LIST,
-        .vertex_layout = &vertex_layout,
-        .vertex_shader = &ppl_shaders[0],
-        .fragment_shader = &ppl_shaders[1],
-        .render_target_count = 1,
-        .color_formats = &views[0]->info.format
-    };
-    pipeline = cgpu_create_render_pipeline(device, &rp_desc);
+    CGPUCompiledShaderDescriptor compile_shaders[2];
+    {
+        compile_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
+        compile_shaders[0].library = vertex_shader;
+        compile_shaders[0].entry = "main";
+        compile_shaders[0].shader_code = vs_bytes;
+        compile_shaders[0].code_size = vs_length;
+    }
+    {
+        compile_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
+        compile_shaders[1].library = fragment_shader;
+        compile_shaders[1].entry = "main";
+        compile_shaders[1].shader_code = fs_bytes;
+        compile_shaders[1].code_size = fs_length;
+    }
+    linked_shader = cgpu_compile_and_link_shaders(root_sig, compile_shaders, 2);
+
+    free(vs_bytes);
+    free(fs_bytes);
     cgpu_free_shader_library(vertex_shader);
     cgpu_free_shader_library(fragment_shader);
 }
@@ -84,8 +91,8 @@ void initialize(void* usrdata)
     // Create instance
     CGPUInstanceDescriptor instance_desc = {
         .backend = backend,
-        .enable_debug_layer = true,
-        .enable_gpu_based_validation = true,
+        .enable_debug_layer = false,
+        .enable_gpu_based_validation = false,
         .enable_set_name = true
     };
     instance = cgpu_create_instance(&instance_desc);
@@ -141,22 +148,12 @@ void initialize(void* usrdata)
         };
         views[i] = cgpu_create_texture_view(device, &view_desc);
     }
-    create_render_pipeline();
+    create_shaders();
 }
 
-void raster_redraw()
+void triangle_pass(uint32_t w, uint32_t h)
 {
-    // sync & reset
-    cgpu_wait_fences(&present_fence, 1);
-    CGPUAcquireNextDescriptor acquire_desc = {
-        .fence = present_fence
-    };
-    backbuffer_index = cgpu_acquire_next_image(swapchain, &acquire_desc);
-    const CGPUTextureId back_buffer = swapchain->back_buffers[backbuffer_index];
     const CGPUTextureViewId back_buffer_view = views[backbuffer_index];
-    cgpu_reset_command_pool(pool);
-    // record
-    cgpu_cmd_begin(cmd);
     CGPUColorAttachment screen_attachment = {
         .view = back_buffer_view,
         .load_action = CGPU_LOAD_ACTION_CLEAR,
@@ -169,6 +166,39 @@ void raster_redraw()
         .color_attachments = &screen_attachment,
         .depth_stencil = CGPU_NULLPTR
     };
+    CGPURenderPassEncoderId rp_encoder = cgpu_cmd_begin_render_pass(cmd, &rp_desc);
+    {
+        cgpu_render_encoder_bind_state_stream(rp_encoder, sb);
+        {
+            CGPURasterStateEncoderId cx = cgpu_open_raster_state_encoder(sb, rp_encoder);
+            cgpu_raster_state_encoder_set_primitive_topology(cx, CGPU_PRIM_TOPO_TRI_LIST);
+            cgpu_raster_state_encoder_set_fill_mode(cx, CGPU_FILL_MODE_SOLID);
+            cgpu_raster_state_encoder_set_front_face(cx, CGPU_FRONT_FACE_CCW);
+            cgpu_raster_state_encoder_set_scissor(cx, 0, 0, w, h);
+            cgpu_raster_state_encoder_set_viewport(cx, 0.0f, 0.0f, (float)w, (float)h, 0.f, 1.f);
+            cgpu_close_raster_state_encoder(cx);
+        }
+        {
+            CGPUShaderStateEncoderId sh = cgpu_open_shader_state_encoder_r(sb, rp_encoder);
+            cgpu_shader_state_encoder_bind_linked_shader(sh, linked_shader);
+            cgpu_close_shader_state_encoder(sh);
+        }
+        cgpu_render_encoder_draw(rp_encoder, 3, 0);
+    }
+    cgpu_cmd_end_render_pass(cmd, rp_encoder);
+}
+
+void raster_redraw()
+{
+    // sync & reset
+    cgpu_wait_fences(&present_fence, 1);
+    CGPUAcquireNextDescriptor acquire_desc = { .fence = present_fence };
+    backbuffer_index = cgpu_acquire_next_image(swapchain, &acquire_desc);
+    const CGPUTextureId back_buffer = swapchain->back_buffers[backbuffer_index];
+    cgpu_reset_command_pool(pool);
+    cgpu_cmd_begin(cmd);
+    
+    // barrier swapchain to drawable
     CGPUTextureBarrier draw_barrier = {
         .texture = back_buffer,
         .src_state = CGPU_RESOURCE_STATE_UNDEFINED,
@@ -176,32 +206,25 @@ void raster_redraw()
     };
     CGPUResourceBarrierDescriptor barrier_desc0 = { .texture_barriers = &draw_barrier, .texture_barriers_count = 1 };
     cgpu_cmd_resource_barrier(cmd, &barrier_desc0);
-    CGPURenderPassEncoderId rp_encoder = cgpu_cmd_begin_render_pass(cmd, &rp_desc);
 
-    cgpu_render_encoder_set_viewport(rp_encoder,
-        0.0f, 0.0f,
-        (float)back_buffer->width, (float)back_buffer->height,
-        0.f, 1.f);
-    cgpu_render_encoder_set_scissor(rp_encoder, 0, 0, (float)back_buffer->width, (float)back_buffer->height);
-    cgpu_render_encoder_bind_pipeline(rp_encoder, pipeline);
-    cgpu_render_encoder_draw(rp_encoder, 3, 0);
+    // record pass & draws
+    triangle_pass(back_buffer->width, back_buffer->height);
 
+    // barrier swapchain to present
     CGPUTextureBarrier present_barrier = {
         .texture = back_buffer,
         .src_state = CGPU_RESOURCE_STATE_RENDER_TARGET,
         .dst_state = CGPU_RESOURCE_STATE_PRESENT
     };
-    cgpu_cmd_end_render_pass(cmd, rp_encoder);
     CGPUResourceBarrierDescriptor barrier_desc1 = { .texture_barriers = &present_barrier, .texture_barriers_count = 1 };
     cgpu_cmd_resource_barrier(cmd, &barrier_desc1);
+
+    // end & submit cmd
     cgpu_cmd_end(cmd);
-    // submit
-    CGPUQueueSubmitDescriptor submit_desc = {
-        .cmds = &cmd,
-        .cmds_count = 1,
-    };
+    CGPUQueueSubmitDescriptor submit_desc = { .cmds = &cmd, .cmds_count = 1, };
     cgpu_submit_queue(gfx_queue, &submit_desc);
-    // present
+    
+    // present swapchain
     cgpu_wait_queue_idle(gfx_queue);
     CGPUQueuePresentDescriptor present_desc = {
         .index = backbuffer_index,
@@ -218,6 +241,7 @@ void raster_program()
     pool = cgpu_create_command_pool(gfx_queue, CGPU_NULLPTR);
     CGPUCommandBufferDescriptor cmd_desc = { .is_secondary = false };
     cmd = cgpu_create_command_buffer(pool, &cmd_desc);
+    sb = cgpu_create_state_stream(cmd, NULL);
 
     bool quit = false;
     while (!quit)
@@ -252,7 +276,6 @@ void finalize()
     cgpu_free_surface(device, surface);
     cgpu_free_command_buffer(cmd);
     cgpu_free_command_pool(pool);
-    cgpu_free_render_pipeline(pipeline);
     cgpu_free_root_signature(root_sig);
     cgpu_free_queue(gfx_queue);
     cgpu_free_device(device);
@@ -273,28 +296,12 @@ int main(int argc, char* argv[])
     ECGPUBackend backends[] = {
         CGPU_BACKEND_VULKAN
 #ifdef CGPU_USE_D3D12
-        ,
-        CGPU_BACKEND_D3D12
+        , CGPU_BACKEND_D3D12
 #endif
     };
-#if defined(__APPLE__) || defined(__EMSCRIPTEN__) || defined(__wasi__)
+
     ProgramMain(backends);
-#else
-    const uint32_t TEST_BACKEND_COUNT = sizeof(backends) / sizeof(ECGPUBackend);
-    DECLARE_ZERO_VLA(SThreadHandle, hdls, TEST_BACKEND_COUNT)
-    DECLARE_ZERO_VLA(SThreadDesc, thread_descs, TEST_BACKEND_COUNT)
-    for (uint32_t i = 0; i < TEST_BACKEND_COUNT; i++)
-    {
-        thread_descs[i].pFunc = &ProgramMain;
-        thread_descs[i].pData = &backends[i];
-        skr_init_thread(&thread_descs[i], &hdls[i]);
-    }
-    for (uint32_t i = 0; i < TEST_BACKEND_COUNT; i++)
-    {
-        skr_join_thread(hdls[i]);
-        skr_destroy_thread(hdls[i]);
-    }
-#endif
+
     SDL_Quit();
 
     return 0;

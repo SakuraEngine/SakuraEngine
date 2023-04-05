@@ -370,6 +370,7 @@ typedef struct CGPUCompiledShader_Vulkan {
 typedef struct CGPULinkedShader_Vulkan {
     CGPULinkedShader super;
     VkShaderEXT pVkShaders[CGPU_SHADER_STAGE_COUNT];
+    ECGPUShaderStage pStages[CGPU_SHADER_STAGE_COUNT];
 } CGPULinkedShader_Vulkan;
 
 typedef union VkDescriptorUpdateData
