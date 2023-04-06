@@ -705,12 +705,12 @@ void RenderEffectLive2D::prepare_pipeline(SRendererId renderer)
     CGPUShaderLibraryId vs = create_shader_library(renderer, "shaders/live2d_vs", CGPU_SHADER_STAGE_VERT);
     CGPUShaderLibraryId ps = create_shader_library(renderer, "shaders/live2d_ps", CGPU_SHADER_STAGE_FRAG);
 
-    CGPUPipelineShaderDescriptor ppl_shaders[2];
-    CGPUPipelineShaderDescriptor& ppl_vs = ppl_shaders[0];
+    CGPUShaderEntryDescriptor ppl_shaders[2];
+    CGPUShaderEntryDescriptor& ppl_vs = ppl_shaders[0];
     ppl_vs.library = vs;
     ppl_vs.stage = CGPU_SHADER_STAGE_VERT;
     ppl_vs.entry = "main";
-    CGPUPipelineShaderDescriptor& ppl_ps = ppl_shaders[1];
+    CGPUShaderEntryDescriptor& ppl_ps = ppl_shaders[1];
     ppl_ps.library = ps;
     ppl_ps.stage = CGPU_SHADER_STAGE_FRAG;
     ppl_ps.entry = "main";
@@ -789,12 +789,12 @@ void RenderEffectLive2D::prepare_mask_pipeline(SRendererId renderer)
     CGPUShaderLibraryId vs = create_shader_library(renderer, "shaders/live2d_mask_vs", CGPU_SHADER_STAGE_VERT);
     CGPUShaderLibraryId ps = create_shader_library(renderer, "shaders/live2d_mask_ps", CGPU_SHADER_STAGE_FRAG);
 
-    CGPUPipelineShaderDescriptor ppl_shaders[2];
-    CGPUPipelineShaderDescriptor& ppl_vs = ppl_shaders[0];
+    CGPUShaderEntryDescriptor ppl_shaders[2];
+    CGPUShaderEntryDescriptor& ppl_vs = ppl_shaders[0];
     ppl_vs.library = vs;
     ppl_vs.stage = CGPU_SHADER_STAGE_VERT;
     ppl_vs.entry = "main";
-    CGPUPipelineShaderDescriptor& ppl_ps = ppl_shaders[1];
+    CGPUShaderEntryDescriptor& ppl_ps = ppl_shaders[1];
     ppl_ps.library = ps;
     ppl_ps.stage = CGPU_SHADER_STAGE_FRAG;
     ppl_ps.entry = "main";

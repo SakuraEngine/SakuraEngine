@@ -27,12 +27,12 @@ void cgpu_create_shader_objs_vulkan_impl(CGPURootSignatureId signature,
         for (uint32_t i = 0; i < count; i++)
         {
             isaInfos[i] = isaInfoCommon;
-            isaInfos[i].stage = VkUtil_TranslateShaderUsages(descs[i].stage);
+            isaInfos[i].stage = VkUtil_TranslateShaderUsages(descs[i].entry.stage);
             if (i >= 1) // HACK
             {
                 isaInfos[i - 1].nextStage = isaInfos[i].stage;
             }
-            isaInfos[i].pName = descs[i].entry;
+            isaInfos[i].pName = descs[i].entry.entry;
             isaInfos[i].pCode = descs[i].shader_code;
             isaInfos[i].codeSize = descs[i].code_size;
         }
@@ -68,7 +68,7 @@ CGPULinkedShaderId cgpu_compile_and_link_shaders_vulkan(CGPURootSignatureId sign
         for (uint32_t i = 0; i < count; i++)
         {
             linked->pVkShaders[i] = outShaders[i];
-            linked->pStages[i] = descs[i].stage;
+            linked->pStages[i] = descs[i].entry.stage;
         }
         linked->super.device = signature->device;
         linked->super.root_signature = signature;

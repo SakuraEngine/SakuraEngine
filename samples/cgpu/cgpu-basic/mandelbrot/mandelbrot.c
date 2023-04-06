@@ -108,7 +108,7 @@ void ComputeFunc(void* usrdata)
     free(shader_bytes);
 
     // Create root signature
-    CGPUPipelineShaderDescriptor compute_shader_entry = {
+    CGPUShaderEntryDescriptor compute_shader_entry = {
         .entry = "main",
         .stage = CGPU_SHADER_STAGE_COMPUTE,
         .library = compute_shader

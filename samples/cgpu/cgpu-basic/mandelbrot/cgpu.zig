@@ -1184,7 +1184,7 @@ pub const struct_CGPUConstantSpecialization = extern struct {
     unnamed_0: union_unnamed_1,
 };
 pub const CGPUConstantSpecialization = struct_CGPUConstantSpecialization;
-pub const struct_CGPUPipelineShaderDescriptor = extern struct {
+pub const struct_CGPUShaderEntryDescriptor = extern struct {
     library: CGPUShaderLibraryId,
     entry: [*c]const char8_t,
     stage: ECGPUShaderStage,
@@ -1196,7 +1196,7 @@ pub const struct_CGPUSampler = extern struct {
 };
 pub const CGPUSamplerId = [*c]const struct_CGPUSampler;
 pub const struct_CGPURootSignatureDescriptor = extern struct {
-    shaders: [*c]struct_CGPUPipelineShaderDescriptor,
+    shaders: [*c]struct_CGPUShaderEntryDescriptor,
     shader_count: u32,
     static_samplers: [*c]const CGPUSamplerId,
     static_sampler_names: [*c]const [*c]const char8_t,
@@ -1289,10 +1289,10 @@ pub const struct_CGPUDescriptorData = extern struct {
     count: u32,
 };
 pub const CGPUProcUpdateDescriptorSet = ?fn (CGPUDescriptorSetId, [*c]const struct_CGPUDescriptorData, u32) callconv(.C) void;
-pub const CGPUPipelineShaderDescriptor = struct_CGPUPipelineShaderDescriptor;
+pub const CGPUShaderEntryDescriptor = struct_CGPUShaderEntryDescriptor;
 pub const struct_CGPUComputePipelineDescriptor = extern struct {
     root_signature: CGPURootSignatureId,
-    compute_shader: [*c]CGPUPipelineShaderDescriptor,
+    compute_shader: [*c]CGPUShaderEntryDescriptor,
 };
 pub const CGPUProcCreateComputePipeline = ?fn (CGPUDeviceId, [*c]const struct_CGPUComputePipelineDescriptor) callconv(.C) CGPUComputePipelineId;
 pub const CGPUProcFreeComputePipeline = ?fn (CGPUComputePipelineId) callconv(.C) void;
@@ -1353,11 +1353,11 @@ pub const struct_CGPURasterizerStateDescriptor = extern struct {
 pub const CGPURasterizerStateDescriptor = struct_CGPURasterizerStateDescriptor;
 pub const struct_CGPURenderPipelineDescriptor = extern struct {
     root_signature: CGPURootSignatureId,
-    vertex_shader: [*c]const CGPUPipelineShaderDescriptor,
-    tesc_shader: [*c]const CGPUPipelineShaderDescriptor,
-    tese_shader: [*c]const CGPUPipelineShaderDescriptor,
-    geom_shader: [*c]const CGPUPipelineShaderDescriptor,
-    fragment_shader: [*c]const CGPUPipelineShaderDescriptor,
+    vertex_shader: [*c]const CGPUShaderEntryDescriptor,
+    tesc_shader: [*c]const CGPUShaderEntryDescriptor,
+    tese_shader: [*c]const CGPUShaderEntryDescriptor,
+    geom_shader: [*c]const CGPUShaderEntryDescriptor,
+    fragment_shader: [*c]const CGPUShaderEntryDescriptor,
     vertex_layout: [*c]const CGPUVertexLayout,
     blend_state: [*c]const CGPUBlendStateDescriptor,
     depth_state: [*c]const CGPUDepthStateDescriptor,

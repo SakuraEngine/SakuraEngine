@@ -494,12 +494,12 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     sakura_free(_vs_bytes);
     sakura_free(_fs_bytes);
 
-    CGPUPipelineShaderDescriptor ppl_shaders[2];
-    CGPUPipelineShaderDescriptor& vs = ppl_shaders[0];
+    CGPUShaderEntryDescriptor ppl_shaders[2];
+    CGPUShaderEntryDescriptor& vs = ppl_shaders[0];
     vs.library = _vs;
     vs.stage = CGPU_SHADER_STAGE_VERT;
     vs.entry = "main";
-    CGPUPipelineShaderDescriptor& ps = ppl_shaders[1];
+    CGPUShaderEntryDescriptor& ps = ppl_shaders[1];
     ps.library = _fs;
     ps.stage = CGPU_SHADER_STAGE_FRAG;
     ps.entry = "main";

@@ -449,9 +449,9 @@ size_t equal_to<CGPUDescriptorData>::operator()(const CGPUDescriptorData& a, con
     return true;
 }
 
-size_t equal_to<CGPUPipelineShaderDescriptor>::operator()(const CGPUPipelineShaderDescriptor& a, const CGPUPipelineShaderDescriptor& b) const
+size_t equal_to<CGPUShaderEntryDescriptor>::operator()(const CGPUShaderEntryDescriptor& a, const CGPUShaderEntryDescriptor& b) const
 {
-    ZoneScopedN("equal_to<CGPUPipelineShaderDescriptor>");
+    ZoneScopedN("equal_to<CGPUShaderEntryDescriptor>");
 
     if (a.library != b.library) return false;
     if (a.stage != b.stage) return false;
@@ -467,9 +467,9 @@ size_t equal_to<CGPUPipelineShaderDescriptor>::operator()(const CGPUPipelineShad
     return true;
 }
 
-size_t hash<CGPUPipelineShaderDescriptor>::operator()(const CGPUPipelineShaderDescriptor& val) const 
+size_t hash<CGPUShaderEntryDescriptor>::operator()(const CGPUShaderEntryDescriptor& val) const 
 {
-    ZoneScopedN("hash<CGPUPipelineShaderDescriptor>");
+    ZoneScopedN("hash<CGPUShaderEntryDescriptor>");
 
     size_t result = val.stage;
     const auto entry_hash = val.entry ? skr_hash(val.entry, strlen(val.entry), CGPU_NAME_HASH_SEED) : 0; 
@@ -587,23 +587,23 @@ size_t equal_to<CGPURenderPipelineDescriptor>::operator()(const CGPURenderPipeli
     // equal shaders
     if (a.vertex_shader && !b.vertex_shader) return false;
     if (!a.vertex_shader && b.vertex_shader) return false;
-    if (a.vertex_shader && !equal_to<CGPUPipelineShaderDescriptor>()(*a.vertex_shader, *b.vertex_shader)) return false;
+    if (a.vertex_shader && !equal_to<CGPUShaderEntryDescriptor>()(*a.vertex_shader, *b.vertex_shader)) return false;
 
     if (a.tesc_shader && !b.tesc_shader) return false;
     if (!a.tesc_shader && b.tesc_shader) return false;
-    if (a.tesc_shader && !equal_to<CGPUPipelineShaderDescriptor>()(*a.tesc_shader, *b.tesc_shader)) return false;
+    if (a.tesc_shader && !equal_to<CGPUShaderEntryDescriptor>()(*a.tesc_shader, *b.tesc_shader)) return false;
 
     if (a.tese_shader && !b.tese_shader) return false;
     if (!a.tese_shader && b.tese_shader) return false;
-    if (a.tese_shader && !equal_to<CGPUPipelineShaderDescriptor>()(*a.tese_shader, *b.tese_shader)) return false;
+    if (a.tese_shader && !equal_to<CGPUShaderEntryDescriptor>()(*a.tese_shader, *b.tese_shader)) return false;
 
     if (a.geom_shader && !b.geom_shader) return false;
     if (!a.geom_shader && b.geom_shader) return false;
-    if (a.geom_shader && !equal_to<CGPUPipelineShaderDescriptor>()(*a.geom_shader, *b.geom_shader)) return false;
+    if (a.geom_shader && !equal_to<CGPUShaderEntryDescriptor>()(*a.geom_shader, *b.geom_shader)) return false;
 
     if (a.fragment_shader && !b.fragment_shader) return false;
     if (!a.fragment_shader && b.fragment_shader) return false;
-    if (a.fragment_shader && !equal_to<CGPUPipelineShaderDescriptor>()(*a.fragment_shader, *b.fragment_shader)) return false;
+    if (a.fragment_shader && !equal_to<CGPUShaderEntryDescriptor>()(*a.fragment_shader, *b.fragment_shader)) return false;
     
     // equal vertex layout
     if (a.vertex_layout && !b.vertex_layout) return false;
@@ -651,11 +651,11 @@ size_t hash<CGPURenderPipelineDescriptor>::operator()(const CGPURenderPipelineDe
     size_t result = 0;
     const auto block = make_zeroed<ParameterBlock>(a);
     const void* rs_a = a.root_signature->pool_sig ? a.root_signature->pool_sig : a.root_signature;
-    const auto& vertex_shader = a.vertex_shader ? *a.vertex_shader : kZeroCGPUPipelineShaderDescriptor;
-    const auto& tesc_shader = a.tesc_shader ? *a.tesc_shader : kZeroCGPUPipelineShaderDescriptor;
-    const auto& tese_shader = a.tese_shader ? *a.tese_shader : kZeroCGPUPipelineShaderDescriptor;
-    const auto& geom_shader = a.geom_shader ? *a.geom_shader : kZeroCGPUPipelineShaderDescriptor;
-    const auto& fragment_shader = a.fragment_shader ? *a.fragment_shader : kZeroCGPUPipelineShaderDescriptor;
+    const auto& vertex_shader = a.vertex_shader ? *a.vertex_shader : kZeroCGPUShaderEntryDescriptor;
+    const auto& tesc_shader = a.tesc_shader ? *a.tesc_shader : kZeroCGPUShaderEntryDescriptor;
+    const auto& tese_shader = a.tese_shader ? *a.tese_shader : kZeroCGPUShaderEntryDescriptor;
+    const auto& geom_shader = a.geom_shader ? *a.geom_shader : kZeroCGPUShaderEntryDescriptor;
+    const auto& fragment_shader = a.fragment_shader ? *a.fragment_shader : kZeroCGPUShaderEntryDescriptor;
     const auto& vertex_layout = a.vertex_layout ? *a.vertex_layout : kZeroCGPUVertexLayout;
     const auto& blend_state = a.blend_state ? *a.blend_state : kZeroCGPUBlendStateDescriptor;
     const auto& depth_state = a.depth_state ? *a.depth_state : kZeroCGPUDepthStateDesc;

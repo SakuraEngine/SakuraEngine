@@ -338,7 +338,7 @@ void D3D12Util_SignalFence(CGPUQueue_D3D12* Q, ID3D12Fence* DxF, uint64_t fenceV
 }
 
 // Shader Reflection
-const char8_t* D3DShaderEntryName = "FuckD3D";
+const char8_t* D3DShaderEntryName = CGPU_NULLPTR;
 static ECGPUResourceType gD3D12_TO_DESCRIPTOR[] = {
     CGPU_RESOURCE_TYPE_UNIFORM_BUFFER, // D3D_SIT_CBUFFER
     CGPU_RESOURCE_TYPE_BUFFER,         // D3D_SIT_TBUFFER

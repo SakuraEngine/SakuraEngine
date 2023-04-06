@@ -132,15 +132,15 @@ struct equal_to<CGPUDescriptorData> {
 };
 
 template <>
-struct equal_to<CGPUPipelineShaderDescriptor> {
-    RUNTIME_API size_t operator()(const CGPUPipelineShaderDescriptor& a, const CGPUPipelineShaderDescriptor& b) const;
+struct equal_to<CGPUShaderEntryDescriptor> {
+    RUNTIME_API size_t operator()(const CGPUShaderEntryDescriptor& a, const CGPUShaderEntryDescriptor& b) const;
 };
 
 template <>
-struct hash<CGPUPipelineShaderDescriptor> {
-    RUNTIME_API size_t operator()(const CGPUPipelineShaderDescriptor& val) const;
+struct hash<CGPUShaderEntryDescriptor> {
+    RUNTIME_API size_t operator()(const CGPUShaderEntryDescriptor& val) const;
 };
-static const CGPUPipelineShaderDescriptor kZeroCGPUPipelineShaderDescriptor = make_zeroed<CGPUPipelineShaderDescriptor>();
+static const CGPUShaderEntryDescriptor kZeroCGPUShaderEntryDescriptor = make_zeroed<CGPUShaderEntryDescriptor>();
 
 template <>
 struct equal_to<CGPUBlendStateDescriptor> {

@@ -433,7 +433,7 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
     CGPUShaderStages shaderStages = 0;
     for (uint32_t i = 0; i < desc->shader_count; i++)
     {
-        CGPUPipelineShaderDescriptor* shader_desc = desc->shaders + i;
+        CGPUShaderEntryDescriptor* shader_desc = desc->shaders + i;
         shaderStages |= shader_desc->stage;
     }
     // Pick shader reflection data

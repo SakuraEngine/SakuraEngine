@@ -391,7 +391,7 @@ void imgui_create_fonts(CGPUQueueId queue)
 
 void imgui_create_pipeline(const RenderGraphImGuiDescriptor* desc)
 {
-    CGPUPipelineShaderDescriptor ppl_shaders[2];
+    CGPUShaderEntryDescriptor ppl_shaders[2];
     ppl_shaders[0] = desc->vs;
     ppl_shaders[1] = desc->ps;
     const char8_t* push_constant_name = "push_constants";

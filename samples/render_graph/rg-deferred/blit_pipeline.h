@@ -23,7 +23,7 @@ CGPURenderPipelineId create_blit_render_pipeline(CGPUDeviceId device, CGPUSample
     auto blit_fs = cgpu_create_shader_library(device, &ps_desc);
     free(vs_bytes);
     free(fs_bytes);
-    CGPUPipelineShaderDescriptor ppl_shaders[2];
+    CGPUShaderEntryDescriptor ppl_shaders[2];
     ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
     ppl_shaders[0].entry = "main";
     ppl_shaders[0].library = screen_vs;
