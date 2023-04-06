@@ -26,47 +26,53 @@ void create_shaders()
     uint32_t *fs_bytes, fs_length;
     read_shader_bytes("statebuffer-triangle/vertex_shader", &vs_bytes, &vs_length, backend);
     read_shader_bytes("statebuffer-triangle/fragment_shader", &fs_bytes, &fs_length, backend);
-    CGPUShaderLibraryDescriptor vs_desc = {
-        .stage = CGPU_SHADER_STAGE_VERT,
-        .name = "VertexShaderLibrary",
-        .code = vs_bytes,
-        .code_size = vs_length
+    CGPUShaderLibraryDescriptor shader_libs[2] = {
+        {
+            .stage = CGPU_SHADER_STAGE_VERT,
+            .name = "VertexShaderLibrary",
+            .code = vs_bytes,
+            .code_size = vs_length,
+            .reflection_only = true
+        },
+        {
+            .name = "FragmentShaderLibrary",
+            .stage = CGPU_SHADER_STAGE_FRAG,
+            .code = fs_bytes,
+            .code_size = fs_length,
+            .reflection_only = true
+        } 
     };
-    CGPUShaderLibraryDescriptor ps_desc = {
-        .name = "FragmentShaderLibrary",
-        .stage = CGPU_SHADER_STAGE_FRAG,
-        .code = fs_bytes,
-        .code_size = fs_length
+    CGPUShaderLibraryId vertex_shader = cgpu_create_shader_library(device, &shader_libs[0]);
+    CGPUShaderLibraryId fragment_shader = cgpu_create_shader_library(device, &shader_libs[1]);
+    CGPUShaderEntryDescriptor ppl_shaders[2] = {
+        {
+            .stage = CGPU_SHADER_STAGE_VERT,
+            .entry = "main",
+            .library = vertex_shader,
+        },
+        {
+            .stage = CGPU_SHADER_STAGE_FRAG,
+            .entry = "main",
+            .library = fragment_shader,
+        }
     };
-    CGPUShaderLibraryId vertex_shader = cgpu_create_shader_library(device, &vs_desc);
-    CGPUShaderLibraryId fragment_shader = cgpu_create_shader_library(device, &ps_desc);
-    CGPUPipelineShaderDescriptor ppl_shaders[2];
-    ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
-    ppl_shaders[0].entry = "main";
-    ppl_shaders[0].library = vertex_shader;
-    ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
-    ppl_shaders[1].entry = "main";
-    ppl_shaders[1].library = fragment_shader;
     CGPURootSignatureDescriptor rs_desc = {
         .shaders = ppl_shaders,
         .shader_count = 2
     };
     root_sig = cgpu_create_root_signature(device, &rs_desc);
-    CGPUCompiledShaderDescriptor compile_shaders[2];
-    {
-        compile_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
-        compile_shaders[0].library = vertex_shader;
-        compile_shaders[0].entry = "main";
-        compile_shaders[0].shader_code = vs_bytes;
-        compile_shaders[0].code_size = vs_length;
-    }
-    {
-        compile_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
-        compile_shaders[1].library = fragment_shader;
-        compile_shaders[1].entry = "main";
-        compile_shaders[1].shader_code = fs_bytes;
-        compile_shaders[1].code_size = fs_length;
-    }
+    CGPUCompiledShaderDescriptor compile_shaders[2]  = {
+        {
+            .entry = ppl_shaders[0],
+            .shader_code = vs_bytes,
+            .code_size = vs_length
+        },
+        {
+            .entry = ppl_shaders[1],
+            .shader_code = fs_bytes,
+            .code_size = fs_length
+        }
+    };
     linked_shader = cgpu_compile_and_link_shaders(root_sig, compile_shaders, 2);
 
     free(vs_bytes);
