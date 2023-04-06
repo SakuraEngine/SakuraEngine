@@ -18,7 +18,7 @@ RenderBox::RenderBox(skr_gdi_device_id gdi_device)
     : gdi_device(gdi_device), debug_element(nullptr)
 {
     diagnostic_builder.add_properties(
-        SkrNew<BoolDiagnosticProperty>("render_box", true, "")
+        SkrNew<BoolDiagnosticProperty>(u8"render_box", true, u8"")
     );
     debug_element = gdi_device->create_element();
 }

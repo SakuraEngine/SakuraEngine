@@ -273,13 +273,13 @@ void SResourceRequestImpl::Update()
             {
                 skr_ram_io_t ramIO = {};
                 ramIO.offset = 0;
-                ramIO.path = resourceUrl.c_str();
+                ramIO.path = (const char8_t*)resourceUrl.c_str();
                 ioService->request(vfs, &ramIO, &ioRequest, &ioDestination);
 #ifdef SKR_RESOURCE_DEV_MODE
                 if (!artifactsUrl.empty())
                 {
                     ramIO.offset = 0;
-                    ramIO.path = artifactsUrl.c_str();
+                    ramIO.path = (const char8_t*)artifactsUrl.c_str();
                     ioService->request(vfs, &ramIO, &artifactsIoRequest, &artifactsIoDestination);
                 }
 #endif
@@ -288,7 +288,7 @@ void SResourceRequestImpl::Update()
             else
             {
                 {
-                    auto file = skr_vfs_fopen(vfs, resourceUrl.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+                    auto file = skr_vfs_fopen(vfs, (const char8_t*)resourceUrl.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
                     SKR_DEFER({ skr_vfs_fclose(file); });
                     auto fsize = skr_vfs_fsize(file);
                     data = (uint8_t*)sakura_malloc(fsize);
@@ -298,7 +298,7 @@ void SResourceRequestImpl::Update()
 #ifdef SKR_RESOURCE_DEV_MODE
                 if (!artifactsUrl.empty())
                 {
-                    auto file = skr_vfs_fopen(vfs, artifactsUrl.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+                    auto file = skr_vfs_fopen(vfs, (const char8_t*)artifactsUrl.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
                     SKR_DEFER({ skr_vfs_fclose(file); });
                     auto fsize = skr_vfs_fsize(file);
                     artifactsData = (uint8_t*)sakura_malloc(fsize);

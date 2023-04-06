@@ -151,7 +151,7 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const skr::string& name)
                 .append(name)
                 .append(skr::SharedLibrary::GetPlatformFileExtensionName());
         auto finalPath = (skr::filesystem::path(moduleDir.c_str()) / filename.c_str()).u8string();
-        if (!sharedLib->load(finalPath.c_str()))
+        if (!sharedLib->load((const char*)finalPath.c_str()))
         {
             SKR_LOG_DEBUG("%s\nLoad Shared Lib Error:%s", filename.c_str(), sharedLib->errorString().c_str());
         }
@@ -346,7 +346,7 @@ bool ModuleManagerImpl::patch_module_graph(const skr::string& entry, bool shared
 
 void ModuleManagerImpl::mount(const char8_t* rootdir)
 {
-    moduleDir = rootdir;
+    moduleDir = (const char*)rootdir;
 }
 
 skr::string_view ModuleManagerImpl::get_root(void)

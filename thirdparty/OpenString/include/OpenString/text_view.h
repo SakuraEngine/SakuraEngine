@@ -24,13 +24,13 @@ public:
 	constexpr text_view& operator=(text_view&&) noexcept = default;
 	~text_view() noexcept = default;
 
-	constexpr text_view(const char* data, const i32 count) noexcept
+	constexpr text_view(const ochar8_t* data, const i32 count) noexcept
 		: view_(data, count)
 	{ }
-	constexpr text_view(const char* data, const size_t count) noexcept
+	constexpr text_view(const ochar8_t* data, const size_t count) noexcept
 		: view_(data, count)
 	{ }
-	constexpr text_view(const char* str) noexcept
+	constexpr text_view(const ochar8_t* str) noexcept
 		: view_(str)
 	{ }
 	constexpr text_view(const codeunit_sequence_view& view) noexcept
@@ -40,7 +40,7 @@ public:
 		: view_(cp.raw(), cp.size())
 	{ }
 
-	constexpr text_view& operator=(const char* str) noexcept
+	constexpr text_view& operator=(const ochar8_t* str) noexcept
 	{
 		*this = text_view(str);
 		return *this;
@@ -55,7 +55,7 @@ public:
 		constexpr const_iterator() noexcept
 			: value()
 		{ }
-		explicit constexpr const_iterator(const char* v) noexcept
+		explicit constexpr const_iterator(const ochar8_t* v) noexcept
 			: value(v)
 		{ }
 
@@ -179,17 +179,17 @@ public:
 	        return !(*this < rhs);
 	   }
 		
-		const char* value;
+		const ochar8_t* value;
 	};
 	
 	[[nodiscard]] constexpr const_iterator begin() const noexcept
 	{
-		return const_iterator{ this->view_.c_str() };
+		return const_iterator{ this->view_.u8_str() };
 	}
 
 	[[nodiscard]] constexpr const_iterator end() const noexcept
 	{
-		return const_iterator{ this->view_.c_str() + this->view_.size() };
+		return const_iterator{ this->view_.u8_str() + this->view_.size() };
 	}
 
 	[[nodiscard]] constexpr const_iterator cbegin() const noexcept
@@ -214,12 +214,12 @@ public:
 		return !this->operator==(rhs);
 	}
 	
-	[[nodiscard]] constexpr bool operator==(const char* rhs) const noexcept
+	[[nodiscard]] constexpr bool operator==(const ochar8_t* rhs) const noexcept
 	{
 		return this->view_ == rhs;
 	}
 	
-	[[nodiscard]] constexpr bool operator!=(const char* rhs) const noexcept
+	[[nodiscard]] constexpr bool operator!=(const ochar8_t* rhs) const noexcept
 	{
 		return this->view_ != rhs;
 	}
@@ -234,9 +234,14 @@ public:
 		return this->view_;
 	}
 
-	[[nodiscard]] constexpr const char* c_str() const noexcept
+	[[nodiscard]] constexpr const ochar_t* c_str() const noexcept
 	{
 		return this->raw().c_str();
+	}
+
+	[[nodiscard]] constexpr const ochar8_t* u8_str() const noexcept
+	{
+		return this->raw().u8_str();
 	}
 
 	/// @return Is this an empty string
@@ -260,7 +265,7 @@ public:
 
 	[[nodiscard]] constexpr codepoint read_at(const i32 index) const noexcept
 	{
-		const char* data = &this->view_[ this->get_codeunit_index(index) ];
+		const ochar8_t* data = &this->view_[ this->get_codeunit_index(index) ];
 		return codepoint{ data };
 	}
 
@@ -337,7 +342,7 @@ public:
 		return text_view{ this->view_.remove_suffix(suffix.view_) };
 	}
 
-	[[nodiscard]] constexpr text_view trim_start(const text_view& text_set = text_view(" \t")) const noexcept
+	[[nodiscard]] constexpr text_view trim_start(const text_view& text_set = text_view(OSTR_UTF8(" \t"))) const noexcept
 	{
 		if(this->is_empty())
 			return { };
@@ -354,7 +359,7 @@ public:
 		return { };
 	}
 
-	[[nodiscard]] constexpr text_view trim_end(const text_view& text_set = text_view(" \t")) const noexcept
+	[[nodiscard]] constexpr text_view trim_end(const text_view& text_set = text_view(OSTR_UTF8(" \t"))) const noexcept
 	{
 		if(this->is_empty())
 			return { };
@@ -371,7 +376,7 @@ public:
 		return { };
 	}
 
-	[[nodiscard]] constexpr text_view trim(const text_view& text_set = text_view(" \t")) const noexcept
+	[[nodiscard]] constexpr text_view trim(const text_view& text_set = text_view(OSTR_UTF8(" \t"))) const noexcept
 	{
 		return this->trim_start(text_set).trim_end(text_set);
 	}
@@ -388,7 +393,7 @@ public:
 		i32 offset = 0;
 		while(offset < codeunit_index && offset < view_size)
 		{
-			const i32 sequence_length = unicode::parse_utf8_length(this->c_str()[offset]);
+			const i32 sequence_length = unicode::parse_utf8_length(this->u8_str()[offset]);
 			const i32 offset_delta = sequence_length == 0 ? 1 : sequence_length;
 			offset += offset_delta;
 			++index;
@@ -403,7 +408,7 @@ public:
 		i32 offset = 0;
 		while(index < codepoint_index && offset < view_size)
 		{
-			const i32 sequence_length = unicode::parse_utf8_length(this->c_str()[offset]);
+			const i32 sequence_length = unicode::parse_utf8_length(this->u8_str()[offset]);
 			offset += sequence_length;
 			++index;
 		}
@@ -439,7 +444,7 @@ OPEN_STRING_NS_END
 
 inline namespace literal
 {
-	[[nodiscard]] constexpr OPEN_STRING_NS::text_view operator""_txtv(const char* str, const size_t len) noexcept
+	[[nodiscard]] constexpr OPEN_STRING_NS::text_view operator""_txtv(const ochar8_t* str, const size_t len) noexcept
 	{
 		return { str, len };
 	}

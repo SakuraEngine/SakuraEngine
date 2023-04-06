@@ -1,5 +1,6 @@
 #include "math.h"
 #include <EASTL/algorithm.h>
+#include <containers/text.hpp>
 
 #include "common/utils.h"
 
@@ -92,7 +93,7 @@ void SLive2DViewerModule::on_load(int argc, char** argv)
     l2d_renderer = skr_create_renderer(render_device, l2d_world);
 
     auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
-    ioServiceDesc.name = "Live2DViewerRAMIOService";
+    ioServiceDesc.name = u8"Live2DViewerRAMIOService";
     ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
     ioServiceDesc.sleep_time = 1000 / 60;
     ioServiceDesc.lockless = true;
@@ -217,7 +218,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     window_desc.height = 1500;
     window_desc.width = 1500;
     main_window = skr_create_window(
-        skr::format("Live2D Viewer Inner [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).c_str(),
+        skr::text::format(u8"Live2D Viewer Inner [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).c_str(),
         &window_desc);
 
     auto ram_service = SLive2DViewerModule::Get()->ram_service;
@@ -379,7 +380,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
         CGPUTextureId native_backbuffer = swapchain->back_buffers[backbuffer_index];
         auto back_buffer = renderGraph->create_texture(
         [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-            builder.set_name("backbuffer")
+            builder.set_name(u8"backbuffer")
             .import(native_backbuffer, CGPU_RESOURCE_STATE_UNDEFINED)
             .allow_render_target();
         });
@@ -393,7 +394,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
         }
         renderGraph->add_present_pass(
         [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
-            builder.set_name("present_pass")
+            builder.set_name(u8"present_pass")
             .swapchain(swapchain, backbuffer_index)
             .texture(back_buffer, true);
         });

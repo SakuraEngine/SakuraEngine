@@ -34,38 +34,36 @@ inline static bool SDLEventHandler(const SDL_Event* event, SDL_Window* window)
     return true;
 }
 
-inline static void read_bytes(const char* file_name, char8_t** bytes, uint32_t* length)
+inline static void read_bytes(const char8_t* file_name, uint32_t** bytes, uint32_t* length)
 {
-    FILE* f = fopen(file_name, "rb");
+    FILE* f = fopen((const char*)file_name, "rb");
     fseek(f, 0, SEEK_END);
     *length = ftell(f);
     fseek(f, 0, SEEK_SET);
-    *bytes = (char8_t*)malloc(*length);
+    *bytes = (uint32_t*)malloc(*length);
     fread(*bytes, *length, 1, f);
     fclose(f);
 }
 
-inline static void read_shader_bytes(
-const char* virtual_path, uint32_t** bytes, uint32_t* length,
-ECGPUBackend backend)
+inline static void read_shader_bytes(const char8_t* virtual_path, uint32_t** bytes, uint32_t* length, ECGPUBackend backend)
 {
-    char shader_file[256];
-    const char* shader_path = "./../resources/shaders/";
-    strcpy(shader_file, shader_path);
-    strcat(shader_file, virtual_path);
+    char8_t shader_file[256];
+    const char8_t* shader_path = SKR_UTF8("./../resources/shaders/");
+    strcpy((char*)shader_file, (const char*)shader_path);
+    strcat((char*)shader_file, (const char*)virtual_path);
     switch (backend)
     {
         case CGPU_BACKEND_VULKAN:
-            strcat(shader_file, ".spv");
+            strcat((char*)shader_file, (const char*)SKR_UTF8(".spv"));
             break;
         case CGPU_BACKEND_D3D12:
         case CGPU_BACKEND_XBOX_D3D12:
-            strcat(shader_file, ".dxil");
+            strcat((char*)shader_file, (const char*)SKR_UTF8(".dxil"));
             break;
         default:
             break;
     }
-    read_bytes(shader_file, (char8_t**)bytes, length);
+    read_bytes(shader_file, bytes, length);
 }
 
 #ifdef __cplusplus

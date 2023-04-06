@@ -17,7 +17,7 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
             double sample_level = 1.0;
             g.get_blackboard().value("l2d_msaa", sample_level);
 
-            builder.set_name("live2d_mask_msaa")
+            builder.set_name(u8"live2d_mask_msaa")
                 .extent(Csm::kMaskResolution, Csm::kMaskResolution)
                 .format(live2d_mask_format)
                 .owns_memory()
@@ -27,7 +27,7 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
 
         auto mask = renderGraph->create_texture(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
-            builder.set_name("live2d_mask")
+            builder.set_name(u8"live2d_mask")
                 .extent(Csm::kMaskResolution, Csm::kMaskResolution)
                 .format(live2d_mask_format)
                 .owns_memory()
@@ -39,7 +39,7 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
             double sample_level = 1.0;
             g.get_blackboard().value("l2d_msaa", sample_level);
 
-            builder.set_name("mask_depth")
+            builder.set_name(u8"mask_depth")
                 .extent(Csm::kMaskResolution, Csm::kMaskResolution)
                 .format(live2d_depth_format)
                 .owns_memory()
@@ -72,10 +72,10 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
             double sample_level = 1.0;
             bool useMSAA = g.get_blackboard().value("l2d_msaa", sample_level); useMSAA &= (sample_level > 1.0);
             
-            const auto mask = renderGraph->get_texture("live2d_mask");
-            const auto mask_msaa = renderGraph->get_texture("live2d_mask_msaa");
-            const auto depth_buffer = renderGraph->get_texture("mask_depth");
-            builder.set_name("live2d_mask_pass")
+            const auto mask = renderGraph->get_texture(u8"live2d_mask");
+            const auto mask_msaa = renderGraph->get_texture(u8"live2d_mask_msaa");
+            const auto depth_buffer = renderGraph->get_texture(u8"mask_depth");
+            builder.set_name(u8"live2d_mask_pass")
                 // we know that the drawcalls always have a same pipeline
                 .set_pipeline(pipeline)
                 .write(0, useMSAA ? mask_msaa : mask, CGPU_LOAD_ACTION_CLEAR, fastclear_1111)

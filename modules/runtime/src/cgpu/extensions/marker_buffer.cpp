@@ -22,7 +22,7 @@ CGPUMarkerBufferId cgpu_create_marker_buffer(CGPUDeviceId device, CGPUMarkerBuff
 {   
     CGPUMarkerBuffer* buffer = SkrNew<CGPUMarkerBuffer>();
     CGPUBufferDescriptor buf_desc = {};
-    buf_desc.name = "MarkerBuffer";
+    buf_desc.name = u8"MarkerBuffer";
     buf_desc.flags = CGPU_BCF_PERSISTENT_MAP_BIT;
     buf_desc.memory_usage = CGPU_MEM_USAGE_GPU_TO_CPU;
     buf_desc.size = (descriptor->marker_count + 3) / 4 * 4 * sizeof(uint32_t);

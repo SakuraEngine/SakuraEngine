@@ -4,7 +4,7 @@
 namespace skr {
 namespace gui {
 
-IDiagnosticsProperty::IDiagnosticsProperty(const char* name, const char* description) SKR_NOEXCEPT
+IDiagnosticsProperty::IDiagnosticsProperty(const char8_t* name, const char8_t* description) SKR_NOEXCEPT
     : name(name), description(description)
 {
     
@@ -15,29 +15,29 @@ IDiagnosticsProperty::~IDiagnosticsProperty() SKR_NOEXCEPT
     
 }
 
-const char* IDiagnosticsProperty::get_name() const SKR_NOEXCEPT
+const char8_t* IDiagnosticsProperty::get_name() const SKR_NOEXCEPT
 {
-    return name.get().c_str();
+    return name.get().u8_str();
 }
 
-const char* IDiagnosticsProperty::get_description() const SKR_NOEXCEPT
+const char8_t* IDiagnosticsProperty::get_description() const SKR_NOEXCEPT
 {
-    return description.get().c_str();
+    return description.get().u8_str();
 }
 
-const char* TextDiagnosticProperty::get_value() const SKR_NOEXCEPT
+const char8_t* TextDiagnosticProperty::get_value() const SKR_NOEXCEPT
 {
-    return value.get().get().c_str();
+    return value.get().get().u8_str();
 }
 
-const char* BoolDiagnosticProperty::get_value_as_string() const SKR_NOEXCEPT
+const char8_t* BoolDiagnosticProperty::get_value_as_string() const SKR_NOEXCEPT
 {
-    return value.get() ? "true" : "false";
+    return value.get() ? u8"true" : u8"false";
 }
 
-const char* TextDiagnosticProperty::get_value_as_string() const SKR_NOEXCEPT
+const char8_t* TextDiagnosticProperty::get_value_as_string() const SKR_NOEXCEPT
 {
-    return value.get().get().c_str();
+    return value.get().get().u8_str();
 }
 
 IDiagnosticsProperty* DiagnosticsBuilder::add_property(IDiagnosticsProperty* property) SKR_NOEXCEPT
@@ -45,11 +45,11 @@ IDiagnosticsProperty* DiagnosticsBuilder::add_property(IDiagnosticsProperty* pro
     return diagnostic_properties.get().emplace_back(property);
 }
 
-IDiagnosticsProperty* DiagnosticsBuilder::find_property(const char* name) const SKR_NOEXCEPT
+IDiagnosticsProperty* DiagnosticsBuilder::find_property(const char8_t* name) const SKR_NOEXCEPT
 {
     for (const auto& property : diagnostic_properties.get())
     {
-        if (strcmp(property->get_name(), name) == 0)
+        if (strcmp((const char*)property->get_name(), (const char*)name) == 0)
         {
             return property;
         }
@@ -76,7 +76,7 @@ Diagnosticable::~Diagnosticable() SKR_NOEXCEPT
     
 }
 
-IDiagnosticsProperty* Diagnosticable::find_property(const char* name) const SKR_NOEXCEPT
+IDiagnosticsProperty* Diagnosticable::find_property(const char8_t* name) const SKR_NOEXCEPT
 {
     return diagnostic_builder.find_property(name);
 }

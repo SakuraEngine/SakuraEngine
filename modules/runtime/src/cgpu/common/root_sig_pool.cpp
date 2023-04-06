@@ -50,7 +50,7 @@ class CGPURootSignaturePoolImpl : public CGPURootSignaturePool
 {
 public:
     CGPURootSignaturePoolImpl(const char8_t* name)
-        :name(name)
+        :name((const char*)name)
     {
 
     }
@@ -95,7 +95,7 @@ public:
         {
             for (uint32_t j = 0; j < desc->static_sampler_count; j++)
             {
-                if(strcmp(desc->static_sampler_names[j], RSTables->static_samplers[i].name) == 0)
+                if(strcmp((const char*)desc->static_sampler_names[j], (const char*)RSTables->static_samplers[i].name) == 0)
                 {
                     RSCharacteristic::StaticSampler s = {};
                     s.set = RSTables->static_samplers[i].set;

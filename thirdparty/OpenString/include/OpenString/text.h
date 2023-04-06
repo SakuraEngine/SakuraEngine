@@ -4,7 +4,6 @@
 // All rights reserved.
 
 #pragma once
-
 #include "text_view.h"
 #include "codeunit_sequence.h"
 
@@ -22,12 +21,12 @@ public:
 
 	~text();
 
-	text(const char* str) noexcept;
+	text(const ochar8_t* str) noexcept;
 	text(text_view view) noexcept;
 	text(codeunit_sequence sequence) noexcept;
 	text(codeunit_sequence_view sequence) noexcept;
 
-	static text from_utf8(const char* str) noexcept;
+	static text from_utf8(const ochar8_t* str) noexcept;
 	static text from_utf16(const char16_t* str) noexcept;
 	static text from_utf32(const char32_t* str) noexcept;
 	
@@ -49,7 +48,7 @@ public:
 		{
 			explicit codepoint_accessor(iterator& iter) noexcept;
 			
-			codepoint_accessor& operator=(char c) noexcept;
+			codepoint_accessor& operator=(ochar8_t c) noexcept;
 			codepoint_accessor& operator=(char32_t cp) noexcept;
 			codepoint_accessor& operator=(const codepoint& cp) noexcept;
 			codepoint_accessor& operator=(const text_view& tv) noexcept;
@@ -99,22 +98,22 @@ public:
 
 	[[nodiscard]] bool operator==(const text_view& rhs) const noexcept;
 	[[nodiscard]] bool operator==(const text& rhs) const noexcept;
-	[[nodiscard]] bool operator==(const char* rhs) const noexcept;
+	[[nodiscard]] bool operator==(const ochar8_t* rhs) const noexcept;
 	[[nodiscard]] bool operator!=(const text_view& rhs) const noexcept;
 	[[nodiscard]] bool operator!=(const text& rhs) const noexcept;
-	[[nodiscard]] bool operator!=(const char* rhs) const noexcept;
+	[[nodiscard]] bool operator!=(const ochar8_t* rhs) const noexcept;
 
 	text& append(const text_view& rhs) noexcept;
 	text& append(const text& rhs) noexcept;
 	text& append(const codepoint& cp) noexcept;
-	text& append(const char* rhs) noexcept;
-	text& append(char codeunit, i32 count = 1) noexcept;
+	text& append(const ochar8_t* rhs) noexcept;
+	text& append(ochar8_t codeunit, i32 count = 1) noexcept;
 
 	text& operator+=(const text_view& rhs) noexcept;
 	text& operator+=(const text& rhs) noexcept;
 	text& operator+=(const codepoint& cp) noexcept;
-	text& operator+=(const char* rhs) noexcept;
-	text& operator+=(char codeunit) noexcept;
+	text& operator+=(const ochar8_t* rhs) noexcept;
+	text& operator+=(ochar8_t codeunit) noexcept;
 	
 	[[nodiscard]] text_view subview(const index_interval& range) const noexcept;
 
@@ -153,22 +152,21 @@ public:
 	[[nodiscard]] text_view view_remove_prefix(const text_view& prefix) const noexcept;
 	[[nodiscard]] text_view view_remove_suffix(const text_view& suffix) const noexcept;
 
-	text& self_trim_start(const text_view& characters = text_view(" \t")) noexcept;
-	text& self_trim_end(const text_view& characters = text_view(" \t")) noexcept;
-	text& self_trim(const text_view& characters = text_view(" \t")) noexcept;
+	text& self_trim_start(const text_view& characters = text_view(OSTR_UTF8(" \t"))) noexcept;
+	text& self_trim_end(const text_view& characters = text_view(OSTR_UTF8(" \t"))) noexcept;
+	text& self_trim(const text_view& characters = text_view(OSTR_UTF8(" \t"))) noexcept;
 
-	[[nodiscard]] text_view view_trim_start(const text_view& characters = text_view(" \t")) const noexcept;
-	[[nodiscard]] text_view view_trim_end(const text_view& characters = text_view(" \t")) const noexcept;
-	[[nodiscard]] text_view view_trim(const text_view& characters = text_view(" \t")) const noexcept;
+	[[nodiscard]] text_view view_trim_start(const text_view& characters = text_view(OSTR_UTF8(" \t"))) const noexcept;
+	[[nodiscard]] text_view view_trim_end(const text_view& characters = text_view(OSTR_UTF8(" \t"))) const noexcept;
+	[[nodiscard]] text_view view_trim(const text_view& characters = text_view(OSTR_UTF8(" \t"))) const noexcept;
 
 	[[nodiscard]] u32 get_hash() const noexcept;
 
-	[[nodiscard]] const char* c_str() const noexcept;
+	[[nodiscard]] const ochar_t* c_str() const noexcept;
+	[[nodiscard]] const ochar8_t* u8_str() const noexcept;
 
 private:
-
 	codeunit_sequence sequence_;
-	
 };
 
 namespace details

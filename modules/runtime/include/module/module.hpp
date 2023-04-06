@@ -127,4 +127,4 @@ struct IStaticModule : public IModule {
     }
 #endif // #ifdef __cplusplus
 
-#define SKR_MODULE_METADATA(stringdec, ModuleName) RUNTIME_EXTERN_C RUNTIME_EXPORT const char* __skr_module_meta__##ModuleName = stringdec;
+#define SKR_MODULE_METADATA(stringdec, ModuleName) RUNTIME_EXTERN_C RUNTIME_EXPORT const char8_t* __skr_module_meta__##ModuleName = stringdec;

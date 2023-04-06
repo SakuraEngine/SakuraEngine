@@ -6,10 +6,10 @@ const ECGPUFormat lighting_buffer_format = CGPU_FORMAT_R16G16B16A16_SFLOAT;
 CGPUComputePipelineId create_lighting_compute_pipeline(CGPUDeviceId device)
 {
     uint32_t *cs_bytes, cs_length;
-    read_shader_bytes("rg-deferred/lighting_cs", &cs_bytes, &cs_length,
+    read_shader_bytes(SKR_UTF8("rg-deferred/lighting_cs"), &cs_bytes, &cs_length,
     device->adapter->instance->backend);
     CGPUShaderLibraryDescriptor cs_desc = {};
-    cs_desc.name = "LightingComputeShader";
+    cs_desc.name = SKR_UTF8("LightingComputeShader");
     cs_desc.stage = CGPU_SHADER_STAGE_COMPUTE;
     cs_desc.code = cs_bytes;
     cs_desc.code_size = cs_length;
@@ -17,9 +17,9 @@ CGPUComputePipelineId create_lighting_compute_pipeline(CGPUDeviceId device)
     free(cs_bytes);
     CGPUShaderEntryDescriptor pipeline_cs = {};
     pipeline_cs.stage = CGPU_SHADER_STAGE_COMPUTE;
-    pipeline_cs.entry = "main";
+    pipeline_cs.entry = SKR_UTF8("main");
     pipeline_cs.library = lighting_cs;
-    const char8_t* push_constant_name = "push_constants";
+    const char8_t* push_constant_name = SKR_UTF8("push_constants");
     CGPURootSignatureDescriptor rs_desc = {};
     rs_desc.shaders = &pipeline_cs;
     rs_desc.shader_count = 1;
@@ -40,17 +40,17 @@ CGPURenderPipelineId create_lighting_render_pipeline(CGPUDeviceId device, CGPUSa
 {
     uint32_t *vs_bytes, vs_length;
     uint32_t *fs_bytes, fs_length;
-    read_shader_bytes("rg-deferred/screen_vs", &vs_bytes, &vs_length,
+    read_shader_bytes(SKR_UTF8("rg-deferred/screen_vs"), &vs_bytes, &vs_length,
     device->adapter->instance->backend);
-    read_shader_bytes("rg-deferred/lighting_fs", &fs_bytes, &fs_length,
+    read_shader_bytes(SKR_UTF8("rg-deferred/lighting_fs"), &fs_bytes, &fs_length,
     device->adapter->instance->backend);
     CGPUShaderLibraryDescriptor vs_desc = {};
     vs_desc.stage = CGPU_SHADER_STAGE_VERT;
-    vs_desc.name = "ScreenVertexShader";
+    vs_desc.name = SKR_UTF8("ScreenVertexShader");
     vs_desc.code = vs_bytes;
     vs_desc.code_size = vs_length;
     CGPUShaderLibraryDescriptor ps_desc = {};
-    ps_desc.name = "LightingFragmentShader";
+    ps_desc.name = SKR_UTF8("LightingFragmentShader");
     ps_desc.stage = CGPU_SHADER_STAGE_FRAG;
     ps_desc.code = fs_bytes;
     ps_desc.code_size = fs_length;
@@ -60,13 +60,13 @@ CGPURenderPipelineId create_lighting_render_pipeline(CGPUDeviceId device, CGPUSa
     free(fs_bytes);
     CGPUShaderEntryDescriptor ppl_shaders[2];
     ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
-    ppl_shaders[0].entry = "main";
+    ppl_shaders[0].entry = SKR_UTF8("main");
     ppl_shaders[0].library = screen_vs;
     ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
-    ppl_shaders[1].entry = "main";
+    ppl_shaders[1].entry = SKR_UTF8("main");
     ppl_shaders[1].library = lighting_fs;
-    const char8_t* push_constant_name = "push_constants";
-    const char8_t* static_sampler_name = "texture_sampler";
+    const char8_t* push_constant_name = SKR_UTF8("push_constants");
+    const char8_t* static_sampler_name = SKR_UTF8("texture_sampler");
     CGPURootSignatureDescriptor rs_desc = {};
     rs_desc.shaders = ppl_shaders;
     rs_desc.shader_count = 2;

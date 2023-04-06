@@ -126,7 +126,7 @@ void ThreadedServiceImpl::run() SKR_NOEXCEPT
 skr_threaded_service_t* skr_threaded_service_t::create(const skr_threaded_service_desc_t* desc) SKR_NOEXCEPT
 {
     using namespace skr;
-    auto service = SkrNew<ThreadedServiceImpl>(desc->sleep_time, desc->lockless, desc->name);
+    auto service = SkrNew<ThreadedServiceImpl>(desc->sleep_time, desc->lockless, (const char*)desc->name);
     service->threaded_service.create_(desc->sleep_mode);
     service->threaded_service.sortMethod = desc->sort_method;
     service->threaded_service.threadItem.pData = service;

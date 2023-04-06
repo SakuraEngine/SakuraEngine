@@ -20,3 +20,16 @@
 #ifndef OPEN_STRING_API
 #define OPEN_STRING_API
 #endif
+
+#if __cplusplus >= 201100L
+#define OSTR_UTF8(str) u8##str
+#else
+#define OSTR_UTF8(str) str
+#endif
+
+using ochar_t = char;
+#if __cplusplus >= 202000L
+using ochar8_t = char8_t;
+#else 
+using ochar8_t = char; 
+#endif

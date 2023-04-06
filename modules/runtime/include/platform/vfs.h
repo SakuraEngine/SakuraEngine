@@ -121,32 +121,32 @@ RUNTIME_API bool skr_vfs_fclose(skr_vfile_t* file) SKR_NOEXCEPT;
 
 RUNTIME_API void skr_vfs_get_native_procs(struct skr_vfs_proctable_t* procs) SKR_NOEXCEPT;
 
-static FORCEINLINE const char* skr_vfs_filemode_to_string(ESkrFileMode mode)
+static FORCEINLINE const char8_t* skr_vfs_filemode_to_string(ESkrFileMode mode)
 {
     mode = (ESkrFileMode)(mode & ~SKR_FM_ALLOW_READ);
     switch (mode)
     {
-        case SKR_FM_READ: return "r";
-        case SKR_FM_WRITE: return "w";
-        case SKR_FM_APPEND: return "a";
-        case SKR_FM_READ_BINARY: return "rb";
-        case SKR_FM_WRITE_BINARY: return "wb";
-        case SKR_FM_APPEND_BINARY: return "ab";
-        case SKR_FM_READ_WRITE: return "r+";
-        case SKR_FM_READ_APPEND: return "a+";
-        case SKR_FM_READ_WRITE_BINARY: return "rb+";
-        case SKR_FM_READ_APPEND_BINARY: return "ab+";
-        default: return "r";
+        case SKR_FM_READ: return u8"r";
+        case SKR_FM_WRITE: return u8"w";
+        case SKR_FM_APPEND: return u8"a";
+        case SKR_FM_READ_BINARY: return u8"rb";
+        case SKR_FM_WRITE_BINARY: return u8"wb";
+        case SKR_FM_APPEND_BINARY: return u8"ab";
+        case SKR_FM_READ_WRITE: return u8"r+";
+        case SKR_FM_READ_APPEND: return u8"a+";
+        case SKR_FM_READ_WRITE_BINARY: return u8"rb+";
+        case SKR_FM_READ_APPEND_BINARY: return u8"ab+";
+        default: return u8"r";
     }
 }
-static FORCEINLINE const char* skr_vfs_overwirte_filemode_to_string(ESkrFileMode mode)
+static FORCEINLINE const char8_t* skr_vfs_overwirte_filemode_to_string(ESkrFileMode mode)
 {
     switch (mode)
     {
         case SKR_FM_READ_WRITE:
-            return "w+";
+            return u8"w+";
         case SKR_FM_READ_WRITE_BINARY:
-            return "wb+";
+            return u8"wb+";
         default:
             return skr_vfs_filemode_to_string(mode);
     }

@@ -121,7 +121,7 @@ RenderColorPicker::RenderColorPicker(skr_gdi_device_id gdi_device)
     gdi_paint = gdi_device->create_paint();
 
     diagnostic_builder.add_properties(
-        SkrNew<TextDiagnosticProperty>("type", "color_picker", "draws color picker")
+        SkrNew<TextDiagnosticProperty>(u8"type", u8"color_picker", u8"draws color picker")
     );
 }
 

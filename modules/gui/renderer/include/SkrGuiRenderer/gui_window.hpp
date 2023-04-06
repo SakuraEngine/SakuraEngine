@@ -12,7 +12,7 @@ struct SPlatformWindowDescriptor
     uint32_t posy = 0;
     uint32_t width = 0;
     uint32_t height = 0;
-    const char* title = nullptr;
+    const char8_t* title = nullptr;
     bool centered = false;
 };
 

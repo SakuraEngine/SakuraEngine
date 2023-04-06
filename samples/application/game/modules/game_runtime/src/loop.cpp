@@ -9,7 +9,7 @@ namespace skg
 {
 bool GameLoop(GameContext& ctx, dual_storage_t* world)
 {
-    ImGui::Begin(u8"Game");
+    ImGui::Begin("Game");
     dual_filter_t filter;
     ::memset(&filter, 0, sizeof(dual_filter_t));
     auto type_name = dual_id_of<skr_name_comp_t>::get();

@@ -78,7 +78,7 @@ using TextStorageBase = AlignedStorage<16, 1>;
 struct TextStorage : public TextStorageBase
 {
     RUNTIME_API TextStorage() SKR_NOEXCEPT;
-    RUNTIME_API TextStorage(const char* str) SKR_NOEXCEPT;
+    RUNTIME_API TextStorage(const char8_t* str) SKR_NOEXCEPT;
     RUNTIME_API ~TextStorage() SKR_NOEXCEPT;
 #ifdef CONTAINER_LITE_IMPL
     using type = skr::text::text;
@@ -91,7 +91,7 @@ struct TextStorage : public TextStorageBase
         return *std::launder(reinterpret_cast<const type*>(this));
     }
 private:
-    inline void ctor(const char* str = nullptr) { new (&get()) type(str); }
+    inline void ctor(const char8_t* str = nullptr) { new (&get()) type(str); }
     inline void dtor() { get().~type(); }
     static_assert(sizeof(TextStorageBase) == sizeof(type), "Vector storage size mismatch!");
     static_assert(alignof(TextStorageBase) == alignof(type), "Vector storage alignment mismatch!"); 

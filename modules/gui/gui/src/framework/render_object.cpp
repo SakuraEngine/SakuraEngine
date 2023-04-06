@@ -7,7 +7,7 @@ namespace gui {
 RenderObject::RenderObject()
 {
     diagnostic_builder.add_properties(
-        SkrNew<BoolDiagnosticProperty>("active", active, "")
+        SkrNew<BoolDiagnosticProperty>(u8"active", active, u8"")
     );
 }
 
@@ -82,7 +82,7 @@ void RenderObject::set_render_matrix(const skr_float4x4_t& matrix)
 
 void RenderObject::set_active(bool active)
 {
-    if (auto property = diagnostic_builder.find_property("active"))
+    if (auto property = diagnostic_builder.find_property(u8"active"))
     {
         property->as<BoolDiagnosticProperty>().value = active;
     }

@@ -11,7 +11,7 @@ OPEN_STRING_NS_BEGIN
 
 namespace details
 {
-	[[nodiscard]] constexpr i32 get_sequence_size(const char* str) noexcept
+	[[nodiscard]] constexpr i32 get_sequence_size(const ochar8_t* str) noexcept
 	{
 		if(!str)
 			return 0;
@@ -21,7 +21,7 @@ namespace details
 		return count;
 	}
 
-	[[nodiscard]] constexpr u32 hash_crc32(const char* data, const u32 length) noexcept
+	[[nodiscard]] constexpr u32 hash_crc32(const ochar8_t* data, const u32 length) noexcept
 	{
 		// CRC32 Table
 		constexpr u32 crc_table[256] = 
@@ -93,26 +93,26 @@ public:
 	constexpr codeunit_sequence_view& operator=(codeunit_sequence_view&& other) noexcept = default;
 	~codeunit_sequence_view() noexcept = default;
 
-	constexpr codeunit_sequence_view(const char* data, const i32 count) noexcept
+	constexpr codeunit_sequence_view(const ochar8_t* data, const i32 count) noexcept
 		: size_(count)
 		, data_(data)
 	{ }
 
-	constexpr codeunit_sequence_view(const char* data, const size_t count) noexcept
+	constexpr codeunit_sequence_view(const ochar8_t* data, const size_t count) noexcept
 		: size_(static_cast<i32>(count))
 		, data_(data)
 	{ }
 
-	constexpr codeunit_sequence_view(const char* data, const char* last) noexcept
+	constexpr codeunit_sequence_view(const ochar8_t* data, const ochar8_t* last) noexcept
 		: size_(static_cast<i32>(last - data))
 		, data_(data)
 	{ }
 
-	explicit constexpr codeunit_sequence_view(const char* str) noexcept
+	explicit constexpr codeunit_sequence_view(const ochar8_t* str) noexcept
 		: codeunit_sequence_view(str, details::get_sequence_size(str))
 	{ }
 
-	explicit constexpr codeunit_sequence_view(const char& c) noexcept
+	explicit constexpr codeunit_sequence_view(const ochar8_t& c) noexcept
 		: codeunit_sequence_view(&c, 1)
 	{ }
 
@@ -128,11 +128,11 @@ public:
 	{
 		constexpr const_iterator() noexcept = default;
 		
-		explicit constexpr const_iterator(const char* v) noexcept
+		explicit constexpr const_iterator(const ochar8_t* v) noexcept
 			: value(v)
 		{ }
 
-		[[nodiscard]] constexpr const char& operator*() const noexcept
+		[[nodiscard]] constexpr const ochar8_t& operator*() const noexcept
 		{
 			return *this->value;
 		}
@@ -223,7 +223,7 @@ public:
 	        return !(*this < rhs);
 	   }
 		
-		const char* value = nullptr;
+		const ochar8_t* value = nullptr;
 	};
 	
 	[[nodiscard]] constexpr const_iterator begin() const noexcept
@@ -258,7 +258,7 @@ public:
 		return true;
 	}
 	
-	[[nodiscard]] constexpr bool operator==(const char* rhs) const noexcept
+	[[nodiscard]] constexpr bool operator==(const ochar8_t* rhs) const noexcept
 	{
 		return this->operator==(codeunit_sequence_view(rhs));
 	}
@@ -268,7 +268,7 @@ public:
 		return !this->operator==(rhs);
 	}
 	
-	[[nodiscard]] constexpr bool operator!=(const char* rhs) const noexcept
+	[[nodiscard]] constexpr bool operator!=(const ochar8_t* rhs) const noexcept
 	{
 		return !this->operator==(rhs);
 	}
@@ -278,12 +278,17 @@ public:
 		return this->size_;
 	}
 
-	[[nodiscard]] constexpr const char* c_str() const noexcept
+	[[nodiscard]] constexpr const ochar_t* c_str() const noexcept
 	{
-		return this->data_;
+		return (const ochar_t*)this->data_;
 	}
 
-	[[nodiscard]] constexpr const char* last() const noexcept
+	[[nodiscard]] constexpr const ochar8_t* u8_str() const noexcept
+	{
+		return (const ochar8_t*)this->data_;
+	}
+
+	[[nodiscard]] constexpr const ochar8_t* last() const noexcept
 	{
 		return this->data_ + this->size_;
 	}
@@ -301,16 +306,16 @@ public:
 		if(selection.is_empty())
 			return { };
 		const i32 size = selection.size();
-		const char* first_data = this->data_ + selection.get_inclusive_min();
+		const ochar8_t* first_data = this->data_ + selection.get_inclusive_min();
 		return { first_data, size };
 	}
 	
-	[[nodiscard]] constexpr const char& read_at(const i32 index) const noexcept
+	[[nodiscard]] constexpr const ochar8_t& read_at(const i32 index) const noexcept
 	{
 		return this->data_[index + (index >= 0 ? 0 : this->size_)];
 	}
 
-	[[nodiscard]] constexpr const char& operator[](const i32 index) const noexcept
+	[[nodiscard]] constexpr const ochar8_t& operator[](const i32 index) const noexcept
 	{
 		return this->read_at(index);
 	}
@@ -338,7 +343,7 @@ public:
 		if(view.size() < pattern.size())
 			return index_invalid;
 
-		const char pattern_last = pattern.data_[pattern.size_ - 1];
+		const ochar8_t pattern_last = pattern.data_[pattern.size_ - 1];
 		i32 skip = 1;
 		while(pattern.size_ > skip && pattern.data_[pattern.size_ - 1 - skip] != pattern_last)
 			++skip;
@@ -362,7 +367,7 @@ public:
 		return index_invalid;
 	}
 
-	[[nodiscard]] constexpr i32 index_of(const char codeunit, const index_interval& range = index_interval::all()) const noexcept
+	[[nodiscard]] constexpr i32 index_of(const ochar8_t codeunit, const index_interval& range = index_interval::all()) const noexcept
 	{
 		if(codeunit == 0)
 			return index_invalid;
@@ -385,7 +390,7 @@ public:
 		if(view.size_ < pattern.size_)
 			return index_invalid;
 
-		const char pattern_first = pattern.data_[0];
+		const ochar8_t pattern_first = pattern.data_[0];
 		i32 skip = 1;
 		while(pattern.size_ > skip && pattern.data_[skip] != pattern_first)
 			++skip;
@@ -414,7 +419,7 @@ public:
 		const index_interval selection = range.select(this->size());
 		for(const i32 i : selection)
 		{
-			const char& unit = this->data_[i];
+			const ochar8_t& unit = this->data_[i];
 			if(units.contains(unit))
 				return i;
 		}
@@ -426,7 +431,7 @@ public:
 		return this->index_of(pattern) != index_invalid;
 	}
 
-	[[nodiscard]] constexpr bool contains(const char codeunit) const noexcept
+	[[nodiscard]] constexpr bool contains(const ochar8_t codeunit) const noexcept
 	{
 		return this->index_of(codeunit) != index_invalid;
 	}
@@ -482,28 +487,28 @@ public:
 		return this->ends_with(suffix) ? this->subview({ '[', 0, -suffix.size_, ')' }) : *this;
 	}
 
-	[[nodiscard]] constexpr codeunit_sequence_view trim_start(const codeunit_sequence_view& units = codeunit_sequence_view(" \t")) const noexcept
+	[[nodiscard]] constexpr codeunit_sequence_view trim_start(const codeunit_sequence_view& units = codeunit_sequence_view(OSTR_UTF8(" \t"))) const noexcept
 	{
 		if(this->is_empty())
 			return { };
 		for(i32 i = 0; i < this->size_; ++i)
-			if(const char codeunit = this->data_[i]; !units.contains(codeunit))
+			if(const ochar8_t codeunit = this->data_[i]; !units.contains(codeunit))
 				return this->subview({ '[', i, '~' });
 		return { };
 	}
 
-	[[nodiscard]] constexpr codeunit_sequence_view trim_end(const codeunit_sequence_view& units = codeunit_sequence_view(" \t")) const noexcept
+	[[nodiscard]] constexpr codeunit_sequence_view trim_end(const codeunit_sequence_view& units = codeunit_sequence_view(OSTR_UTF8(" \t"))) const noexcept
 	{
 		if(this->is_empty())
 			return { };
 
 		for(i32 i = this->size_ - 1; i >= 0; --i)
-			if(const char codeunit = this->data_[i]; !units.contains(codeunit))
+			if(const ochar8_t codeunit = this->data_[i]; !units.contains(codeunit))
 				return this->subview({ '[', 0, i, ']' });
 		return { };
 	}
 
-	[[nodiscard]] constexpr codeunit_sequence_view trim(const codeunit_sequence_view& units = codeunit_sequence_view(" \t")) const noexcept
+	[[nodiscard]] constexpr codeunit_sequence_view trim(const codeunit_sequence_view& units = codeunit_sequence_view(OSTR_UTF8(" \t"))) const noexcept
 	{
 		return this->trim_start(units).trim_end(units);
 	}
@@ -516,7 +521,7 @@ public:
 private:
 
 	i32 size_ = 0;
-	const char* data_ = nullptr;
+	const ochar8_t* data_ = nullptr;
 
 };
 
@@ -524,7 +529,7 @@ OPEN_STRING_NS_END
 
 inline namespace literal
 {
-	[[nodiscard]] constexpr OPEN_STRING_NS::codeunit_sequence_view operator""_cuqv(const char* str, const size_t len) noexcept
+	[[nodiscard]] constexpr OPEN_STRING_NS::codeunit_sequence_view operator""_cuqv(const ochar8_t* str, const size_t len) noexcept
 	{
 		return { str, len };
 	}

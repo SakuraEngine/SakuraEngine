@@ -7,6 +7,7 @@
 #include "utils/hash.h"
 #include "utils/log.h"
 #include <EASTL/set.h>
+#include <containers/text.hpp>
 
 #include "tracy/Tracy.hpp"
 
@@ -348,10 +349,10 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
     {
         executor.bind_table_pools.emplace(root_sig, SkrNew<BindTablePool>(root_sig));
     }
-    eastl::string bind_table_keys = "";
+    skr::text::text bind_table_keys = u8"";
     // Bind resources
     stack_vector<CGPUDescriptorData> desc_set_updates;
-    stack_vector<const char*> bindTableValueNames = {};
+    stack_vector<const char8_t*> bindTableValueNames = {};
     // CBV Buffers
     stack_vector<CGPUBufferId> cbvs(buf_read_edges.size());
     stack_vector<CGPUTextureViewId> srvs(tex_read_edges.size());
@@ -366,8 +367,8 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
 
             ECGPUResourceType resource_type = resource.type;
             {
-                bind_table_keys += read_edge->name.empty() ? resource.name : read_edge->name.c_str();
-                bind_table_keys += ";";
+                bind_table_keys += read_edge->name.empty() ? resource.name : (const char8_t*)read_edge->name.c_str();
+                bind_table_keys += u8";";
                 bindTableValueNames.emplace_back(resource.name);
 
                 auto buffer_readed = read_edge->get_buffer_node();
@@ -389,8 +390,8 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
             const auto& resource = *find_shader_resource(read_edge->name_hash, root_sig);
 
             {
-                bind_table_keys += read_edge->name.empty() ? resource.name : read_edge->name.c_str();
-                bind_table_keys += ";";
+                bind_table_keys += read_edge->name.empty() ? resource.name : (const char8_t*)read_edge->name.c_str();
+                bind_table_keys += u8";";
                 bindTableValueNames.emplace_back(resource.name);
 
                 auto texture_readed = read_edge->get_texture_node();
@@ -427,8 +428,8 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
             const auto& resource = *find_shader_resource(rw_edge->name_hash, root_sig);
 
             {
-                bind_table_keys += rw_edge->name.empty() ? resource.name : rw_edge->name.c_str();
-                bind_table_keys += ";";
+                bind_table_keys += rw_edge->name.empty() ? resource.name : (const char8_t*)rw_edge->name.c_str();
+                bind_table_keys += u8";";
                 bindTableValueNames.emplace_back(resource.name);
 
                 auto texture_readwrite = rw_edge->get_texture_node();
@@ -537,7 +538,7 @@ void RenderGraphBackend::execute_compute_pass(RenderGraphFrameExecutor& executor
         barriers.buffer_barriers = buffer_barriers.data();
         barriers.buffer_barriers_count = (uint32_t)buffer_barriers.size();
     }
-    CGPUEventInfo event = { pass->name.c_str(), { 1.f, 1.f, 0.f, 1.f } };
+    CGPUEventInfo event = { (const char8_t*)pass->name.c_str(), { 1.f, 1.f, 0.f, 1.f } };
     cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
     // dispatch
@@ -593,13 +594,13 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
         barriers.buffer_barriers = buffer_barriers.data();
         barriers.buffer_barriers_count = (uint32_t)buffer_barriers.size();
     }
-    CGPUEventInfo event = { pass->name.c_str(), { 1.f, 0.5f, 0.5f, 1.f } };
+    CGPUEventInfo event = { (const char8_t*)pass->name.c_str(), { 1.f, 0.5f, 0.5f, 1.f } };
     cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
     {
         ZoneScopedN("WriteBarrierMarker");
         graph_big_object_string message = "Pass-";
-        message += pass->get_name();
+        message += (const char*)pass->get_name();
         message += "-BeginBarrier";
         executor.write_marker(message.c_str());
     }
@@ -718,7 +719,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     {
         ZoneScopedN("WriteBeginPassMarker");
         graph_big_object_string message = "Pass-";
-        message += pass->get_name();
+        message += (const char*)pass->get_name();
         message += "-BeginPass";
         executor.write_marker(message.c_str());
     }
@@ -742,7 +743,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     {
         ZoneScopedN("WriteEndPassMarker");
         graph_big_object_string message = "Pass-";
-        message += pass->get_name();
+        message += (const char*)pass->get_name();
         message += "-EndRenderPass";
         executor.write_marker(message.c_str());
     }
@@ -779,7 +780,7 @@ void RenderGraphBackend::execute_copy_pass(RenderGraphFrameExecutor& executor, C
         barriers.buffer_barriers = buffer_barriers.data();
         barriers.buffer_barriers_count = (uint32_t)buffer_barriers.size();
     }
-    CGPUEventInfo event = { pass->name.c_str(), { 0.f, .5f, 1.f, 1.f } };
+    CGPUEventInfo event = { (const char8_t*)pass->name.c_str(), { 0.f, .5f, 1.f, 1.f } };
     cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
     {
         CopyPassContext stack = {};
@@ -904,7 +905,7 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
 
             skr::string frameLabel = "Frame";
             frameLabel.append(skr::to_string(frame_index));
-            CGPUEventInfo event = { frameLabel.c_str(), { 0.8f, 0.8f, 0.8f, 1.f } };
+            CGPUEventInfo event = { (const char8_t*)frameLabel.c_str(), { 0.8f, 0.8f, 0.8f, 1.f } };
             cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
         }
         for (auto& pass : passes)

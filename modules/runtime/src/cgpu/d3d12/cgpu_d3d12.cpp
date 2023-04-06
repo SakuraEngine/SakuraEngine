@@ -524,7 +524,7 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
             for (uint32_t j = 0; j < desc->static_sampler_count; j++)
             {
                 auto input_slot = (CGPUSampler_D3D12*)desc->static_samplers[j];
-                if (strcmp(RST_slot.name, desc->static_sampler_names[j]) == 0)
+                if (strcmp((const char*)RST_slot.name, (const char*)desc->static_sampler_names[j]) == 0)
                 {
                     D3D12_SAMPLER_DESC& dxSamplerDesc = input_slot->mDxDesc;
                     staticSamplerDescs[i].Filter = dxSamplerDesc.Filter;
@@ -735,7 +735,7 @@ void cgpu_update_descriptor_set_d3d12(CGPUDescriptorSetId set, const struct CGPU
         uint32_t HeapOffset = 0;
         if (pParam->name != CGPU_NULLPTR)
         {
-            size_t argNameHash = cgpu_name_hash(pParam->name, strlen(pParam->name));
+            size_t argNameHash = cgpu_name_hash(pParam->name, strlen((const char*)pParam->name));
             for (uint32_t j = 0; j < ParamTable->resources_count; j++)
             {
                 if (ParamTable->resources[j].name_hash == argNameHash)
@@ -942,16 +942,16 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
             const CGPUVertexAttribute* attrib = &(desc->vertex_layout->attributes[attrib_index]);
             for (uint32_t arr_index = 0; arr_index < attrib->array_size; arr_index++)
             {
-                input_elements[fill_index].SemanticName = attrib->semantic_name;
-                if (semanticIndexMap.find(attrib->semantic_name) != semanticIndexMap.end())
+                input_elements[fill_index].SemanticName = (const char*)attrib->semantic_name;
+                if (semanticIndexMap.find((const char*)attrib->semantic_name) != semanticIndexMap.end())
                 {
-                    semanticIndexMap[attrib->semantic_name]++;
+                    semanticIndexMap[(const char*)attrib->semantic_name]++;
                 }
                 else
                 {
-                    semanticIndexMap[attrib->semantic_name] = 0;
+                    semanticIndexMap[(const char*)attrib->semantic_name] = 0;
                 }
-                input_elements[fill_index].SemanticIndex = semanticIndexMap[attrib->semantic_name];
+                input_elements[fill_index].SemanticIndex = semanticIndexMap[(const char*)attrib->semantic_name];
                 input_elements[fill_index].Format = DXGIUtil_TranslatePixelFormat(attrib->format);
                 input_elements[fill_index].InputSlot = attrib->binding;
                 input_elements[fill_index].AlignedByteOffset = attrib->offset + arr_index * FormatUtil_BitSizeOfBlock(attrib->format) / 8;

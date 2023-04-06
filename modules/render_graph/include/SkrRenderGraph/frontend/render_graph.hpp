@@ -54,7 +54,7 @@ public:
     {
     public:
         friend class RenderGraph;
-        RenderPassBuilder& set_name(const char* name) SKR_NOEXCEPT;
+        RenderPassBuilder& set_name(const char8_t* name) SKR_NOEXCEPT;
         // textures
         RenderPassBuilder& read(uint32_t set, uint32_t binding, TextureSRVHandle handle) SKR_NOEXCEPT;
         RenderPassBuilder& read(const char8_t* name, TextureSRVHandle handle) SKR_NOEXCEPT;
@@ -91,7 +91,7 @@ public:
     {
     public:
         friend class RenderGraph;
-        ComputePassBuilder& set_name(const char* name) SKR_NOEXCEPT;
+        ComputePassBuilder& set_name(const char8_t* name) SKR_NOEXCEPT;
         ComputePassBuilder& read(uint32_t set, uint32_t binding, TextureSRVHandle handle) SKR_NOEXCEPT;
         ComputePassBuilder& read(const char8_t* name, TextureSRVHandle handle) SKR_NOEXCEPT;
         ComputePassBuilder& readwrite(uint32_t set, uint32_t binding, TextureUAVHandle handle) SKR_NOEXCEPT;
@@ -115,7 +115,7 @@ public:
     {
     public:
         friend class RenderGraph;
-        CopyPassBuilder& set_name(const char* name) SKR_NOEXCEPT;
+        CopyPassBuilder& set_name(const char8_t* name) SKR_NOEXCEPT;
         CopyPassBuilder& can_be_lone() SKR_NOEXCEPT;
         CopyPassBuilder& texture_to_texture(TextureSubresourceHandle src, TextureSubresourceHandle dst, ECGPUResourceState out_state = CGPU_RESOURCE_STATE_COPY_DEST) SKR_NOEXCEPT;
         CopyPassBuilder& buffer_to_buffer(BufferRangeHandle src, BufferRangeHandle dst, ECGPUResourceState out_state = CGPU_RESOURCE_STATE_COPY_DEST) SKR_NOEXCEPT;
@@ -135,7 +135,7 @@ public:
     public:
         friend class RenderGraph;
 
-        PresentPassBuilder& set_name(const char* name) SKR_NOEXCEPT;
+        PresentPassBuilder& set_name(const char8_t* name) SKR_NOEXCEPT;
         PresentPassBuilder& swapchain(CGPUSwapChainId chain, uint32_t index) SKR_NOEXCEPT;
         PresentPassBuilder& texture(TextureHandle texture, bool is_backbuffer = true) SKR_NOEXCEPT;
 
@@ -151,7 +151,7 @@ public:
     {
     public:
         friend class RenderGraph;
-        BufferBuilder& set_name(const char* name) SKR_NOEXCEPT;
+        BufferBuilder& set_name(const char8_t* name) SKR_NOEXCEPT;
         BufferBuilder& with_tags(uint32_t tags) SKR_NOEXCEPT;
         BufferBuilder& import(CGPUBufferId buffer, ECGPUResourceState init_state) SKR_NOEXCEPT;
         BufferBuilder& owns_memory() SKR_NOEXCEPT;
@@ -175,14 +175,14 @@ public:
     };
     using BufferSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::BufferBuilder&)>;
     BufferHandle create_buffer(const BufferSetupFunction& setup) SKR_NOEXCEPT;
-    inline BufferHandle get_buffer(const char* name) SKR_NOEXCEPT;
+    inline BufferHandle get_buffer(const char8_t* name) SKR_NOEXCEPT;
     const ECGPUResourceState get_lastest_state(const BufferNode* buffer, const PassNode* pending_pass) const SKR_NOEXCEPT;
 
     class SKR_RENDER_GRAPH_API TextureBuilder
     {
     public:
         friend class RenderGraph;
-        TextureBuilder& set_name(const char* name) SKR_NOEXCEPT;
+        TextureBuilder& set_name(const char8_t* name) SKR_NOEXCEPT;
         TextureBuilder& with_flags(CGPUTextureCreationFlags tags) SKR_NOEXCEPT;
         TextureBuilder& with_tags(uint32_t tags) SKR_NOEXCEPT;
         TextureBuilder& import(CGPUTextureId texture, ECGPUResourceState init_state) SKR_NOEXCEPT;
@@ -204,7 +204,7 @@ public:
     };
     using TextureSetupFunction = eastl::function<void(RenderGraph&, class RenderGraph::TextureBuilder&)>;
     TextureHandle create_texture(const TextureSetupFunction& setup) SKR_NOEXCEPT;
-    TextureHandle get_texture(const char* name) SKR_NOEXCEPT;
+    TextureHandle get_texture(const char8_t* name) SKR_NOEXCEPT;
     const ECGPUResourceState get_lastest_state(const TextureNode* texture, const PassNode* pending_pass) const SKR_NOEXCEPT;
 
     bool compile() SKR_NOEXCEPT;    

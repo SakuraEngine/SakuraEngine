@@ -13,11 +13,11 @@ struct DiagnosticableTreeNode;
 
 struct SKR_GUI_API IDiagnosticsProperty
 {
-    IDiagnosticsProperty(const char* name, const char* description) SKR_NOEXCEPT;
+    IDiagnosticsProperty(const char8_t* name, const char8_t* description) SKR_NOEXCEPT;
     virtual ~IDiagnosticsProperty() SKR_NOEXCEPT;
-    virtual const char* get_name() const SKR_NOEXCEPT;
-    virtual const char* get_description() const SKR_NOEXCEPT;
-    virtual const char* get_value_as_string() const SKR_NOEXCEPT = 0;
+    virtual const char8_t* get_name() const SKR_NOEXCEPT;
+    virtual const char8_t* get_description() const SKR_NOEXCEPT;
+    virtual const char8_t* get_value_as_string() const SKR_NOEXCEPT = 0;
 
     template<typename T> const T& as() const { return static_cast<const T&>(*this); }
     template<typename T> T& as() { return static_cast<T&>(*this); }
@@ -29,12 +29,12 @@ struct SKR_GUI_API IDiagnosticsProperty
 template<typename T>
 struct SKR_GUI_API DiagnosticsProperty : public IDiagnosticsProperty
 {
-    DiagnosticsProperty(const char* name, const T& value, const char* description = nullptr)
+    DiagnosticsProperty(const char8_t* name, const T& value, const char8_t* description = nullptr)
         : IDiagnosticsProperty(name, description), value(value) {}
 
-    virtual const char* get_value_as_string() const SKR_NOEXCEPT
+    virtual const char8_t* get_value_as_string() const SKR_NOEXCEPT
     {
-        return "undefined";
+        return u8"undefined";
     }
 
     LiteOptional<T> value;
@@ -42,19 +42,19 @@ struct SKR_GUI_API DiagnosticsProperty : public IDiagnosticsProperty
 
 struct SKR_GUI_API BoolDiagnosticProperty : public DiagnosticsProperty<bool>
 {
-    BoolDiagnosticProperty(const char* name, bool value, const char* description = nullptr)
+    BoolDiagnosticProperty(const char8_t* name, bool value, const char8_t* description = nullptr)
         : DiagnosticsProperty(name, value, description) {}
 
-    const char* get_value_as_string() const SKR_NOEXCEPT override;
+    const char8_t* get_value_as_string() const SKR_NOEXCEPT override;
 };
 
 struct SKR_GUI_API TextDiagnosticProperty : public DiagnosticsProperty<TextStorage>
 {
-    TextDiagnosticProperty(const char* name, const char* value, const char* description = nullptr)
+    TextDiagnosticProperty(const char8_t* name, const char8_t* value, const char8_t* description = nullptr)
         : DiagnosticsProperty(name, value, description) {}
     
-    const char* get_value() const SKR_NOEXCEPT;
-    const char* get_value_as_string() const SKR_NOEXCEPT override;
+    const char8_t* get_value() const SKR_NOEXCEPT;
+    const char8_t* get_value_as_string() const SKR_NOEXCEPT override;
 };
 
 struct SKR_GUI_API DiagnosticsBuilder
@@ -66,7 +66,7 @@ struct SKR_GUI_API DiagnosticsBuilder
     {
         (add_property(properties), ...);
     }
-    IDiagnosticsProperty* find_property(const char* name) const SKR_NOEXCEPT;
+    IDiagnosticsProperty* find_property(const char8_t* name) const SKR_NOEXCEPT;
     LiteSpan<IDiagnosticsProperty* const> get_diagnostics_properties() const SKR_NOEXCEPT;
 
 protected:
@@ -78,7 +78,7 @@ struct SKR_GUI_API Diagnosticable : public SInterface
     SKR_GUI_BASE_TYPE(Diagnosticable, "4e81165e-b13e-41ae-a84f-672429ea969e");
     virtual ~Diagnosticable() SKR_NOEXCEPT;
 
-    IDiagnosticsProperty* find_property(const char* name) const SKR_NOEXCEPT;
+    IDiagnosticsProperty* find_property(const char8_t* name) const SKR_NOEXCEPT;
     LiteSpan<IDiagnosticsProperty* const> get_diagnostics_properties() const SKR_NOEXCEPT;
 
     template <typename T>

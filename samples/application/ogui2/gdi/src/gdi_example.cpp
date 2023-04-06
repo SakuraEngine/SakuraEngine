@@ -125,7 +125,7 @@ struct gdi_example_application : public gdi_application_t
             skr::gdi::GDITextureDescriptor tex_desc = {};
             skr::gdi::GDITextureDescriptor_RenderGraph tex_desc2 = {};
             tex_desc.source = skr::gdi::EGDITextureSource::File;
-            tex_desc.from_file.u8Uri = "OpenGUI/rubduck.png";
+            tex_desc.from_file.u8Uri = u8"OpenGUI/rubduck.png";
             tex_desc2.useImageCoder = true;
             tex_desc.usr_data = &tex_desc2;
             test_texture = renderer->create_texture(&tex_desc);

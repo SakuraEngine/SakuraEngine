@@ -1,31 +1,29 @@
 #include "platform/vfs.h"
 #include <platform/filesystem.hpp>
-#include <containers/string.hpp>
-
-using u8string = skr::string;
+#include <containers/text.hpp>
 
 void skr_vfs_get_parent_path(const char8_t* path, char8_t* output)
 {
     const skr::filesystem::path p(path);
-    std::strcpy(output, p.parent_path().u8string().c_str());
+    std::strcpy((char*)output, (const char*)p.parent_path().u8string().c_str());
 }
 
 void skr_vfs_append_path_component(const char8_t* path, const char8_t* component, char8_t* output)
 {
     const skr::filesystem::path p(path);
     const auto appended = p / component;
-    std::strcpy(output, appended.u8string().c_str());
+    std::strcpy((char*)output, (const char*)appended.u8string().c_str());
 }
 
 void skr_vfs_append_path_extension(const char8_t* path, const char8_t* extension, char8_t* output)
 {
-    u8string p(path);
-    if (extension[0] != '.')
+    skr::text::text p(path);
+    if (extension[0] != u8'.')
     {
-        p.append(".");
+        p.append(u8".");
     }
     const auto appended = p.append(extension);
-    std::strcpy(output, appended.c_str());
+    std::strcpy((char*)output, appended.c_str());
 }
 
 skr_vfile_t* skr_vfs_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mode, ESkrFileCreation creation) SKR_NOEXCEPT

@@ -12,14 +12,14 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
     {
         auto renderGraph = context->render_graph;
 
-        auto backbuffer = renderGraph->get_texture("backbuffer");
+        auto backbuffer = renderGraph->get_texture(u8"backbuffer");
         const auto back_desc = renderGraph->resolve_descriptor(backbuffer);
         auto msaaTarget = renderGraph->create_texture(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
             double sample_level = 1.0;
             g.get_blackboard().value("l2d_msaa", sample_level);
 
-            builder.set_name("live2d_msaa")
+            builder.set_name(u8"live2d_msaa")
                 .extent(back_desc->width, back_desc->height)
                 .format(back_desc->format)
                 .owns_memory()
@@ -32,7 +32,7 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
             double sample_level = 1.0;
             g.get_blackboard().value("l2d_msaa", sample_level);
 
-            builder.set_name("depth")
+            builder.set_name(u8"depth")
                 .extent(back_desc->width, back_desc->height)
                 .format(live2d_depth_format)
                 .owns_memory()
@@ -49,7 +49,7 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
     void execute(const skr_primitive_pass_context_t* context, skr::span<const skr_primitive_draw_packet_t> drawcalls) override
     {
         auto renderGraph = context->render_graph;
-        auto backbuffer = renderGraph->get_texture("backbuffer");
+        auto backbuffer = renderGraph->get_texture(u8"backbuffer");
         const auto back_desc = renderGraph->resolve_descriptor(backbuffer);
         if (!drawcalls.size()) return;
 
@@ -64,13 +64,13 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
             double sample_level = 1.0;
             bool useMSAA = g.get_blackboard().value("l2d_msaa", sample_level); useMSAA &= (sample_level > 1.0);
-            const auto depth_buffer = renderGraph->get_texture("depth");
-            const auto mask_buffer = renderGraph->get_texture("live2d_mask");
-            const auto live2d_msaa = renderGraph->get_texture("live2d_msaa");
-            const auto backbuffer = renderGraph->get_texture("backbuffer");
-            builder.set_name("live2d_forward_pass")
+            const auto depth_buffer = renderGraph->get_texture(u8"depth");
+            const auto mask_buffer = renderGraph->get_texture(u8"live2d_mask");
+            const auto live2d_msaa = renderGraph->get_texture(u8"live2d_msaa");
+            const auto backbuffer = renderGraph->get_texture(u8"backbuffer");
+            builder.set_name(u8"live2d_forward_pass")
                 .set_root_signature(root_signature)
-                .read("mask_texture", mask_buffer)
+                .read(u8"mask_texture", mask_buffer)
                 .set_depth_stencil(depth_buffer.clear_depth(1.f))
                 .write(0, useMSAA ? live2d_msaa : backbuffer, CGPU_LOAD_ACTION_CLEAR);
             if (useMSAA)

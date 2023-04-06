@@ -61,7 +61,7 @@ CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXB
     for (uint32_t i = 0; i < desc->names_count; i++)
     {
         const auto name = desc->names[i];
-        pHashes[i] = cgpu_name_hash(name, strlen(name));
+        pHashes[i] = cgpu_name_hash(name, strlen((const char*)name));
     }
     // calculate active sets
     for (uint32_t setIdx = 0; setIdx < rs->table_count; setIdx++)
@@ -69,7 +69,7 @@ CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXB
         for (uint32_t bindIdx = 0; bindIdx < rs->tables[setIdx].resources_count; bindIdx++)
         {
             const auto res = rs->tables[setIdx].resources[bindIdx];
-            const auto hash = cgpu_name_hash(res.name, strlen(res.name));
+            const auto hash = cgpu_name_hash(res.name, strlen((const char*)res.name));
             for (uint32_t k = 0; k < desc->names_count; k++)
             {
                 if (hash == pHashes[k])
@@ -102,7 +102,7 @@ void CGPUXBindTable::Update(const struct CGPUDescriptorData* datas, uint32_t cou
         const auto& data = datas[i];
         if (data.name)
         {
-            const auto name_hash = cgpu_name_hash(data.name, strlen(data.name));
+            const auto name_hash = cgpu_name_hash(data.name, strlen((const char*)data.name));
             for (uint32_t j = 0; j < names_count; j++)
             {
                 if (name_hash == name_hashes[j])
@@ -404,7 +404,7 @@ size_t equal_to<CGPUVertexLayout>::operator()(const CGPUVertexLayout& a, const C
                             (a.attributes[i].offset == b.attributes[i].offset) &&
                             (a.attributes[i].elem_stride == b.attributes[i].elem_stride) &&
                             (a.attributes[i].rate == b.attributes[i].rate) &&
-                            (0 == strcmp(a.attributes[i].semantic_name, b.attributes[i].semantic_name));
+                            (0 == strcmp((const char*)a.attributes[i].semantic_name, (const char*)b.attributes[i].semantic_name));
         if (!vequal) return false;
     }
     return true;
@@ -458,7 +458,7 @@ size_t equal_to<CGPUShaderEntryDescriptor>::operator()(const CGPUShaderEntryDesc
     if (a.num_constants != b.num_constants) return false;
     if (a.entry && !b.entry) return false;
     if (!a.entry && b.entry) return false;
-    if (a.entry && ::strcmp(a.entry, b.entry) != 0) return false;
+    if (a.entry && ::strcmp((const char*)a.entry, (const char*)b.entry) != 0) return false;
     for (uint32_t i = 0; i < a.num_constants; i++)
     {
         if (a.constants[i].constantID != b.constants[i].constantID) return false;
@@ -472,7 +472,7 @@ size_t hash<CGPUShaderEntryDescriptor>::operator()(const CGPUShaderEntryDescript
     ZoneScopedN("hash<CGPUShaderEntryDescriptor>");
 
     size_t result = val.stage;
-    const auto entry_hash = val.entry ? skr_hash(val.entry, strlen(val.entry), CGPU_NAME_HASH_SEED) : 0; 
+    const auto entry_hash = val.entry ? skr_hash((const char*)val.entry, strlen((const char*)val.entry), CGPU_NAME_HASH_SEED) : 0; 
     const auto constants_hash = val.constants ? skr_hash(val.constants, sizeof(CGPUConstantSpecialization) * val.num_constants, CGPU_NAME_HASH_SEED) : 0;
     const auto pLibrary = static_cast<const void*>(val.library);
     hash_combine(result, entry_hash, constants_hash, pLibrary);    

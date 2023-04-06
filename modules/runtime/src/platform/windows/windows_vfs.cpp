@@ -13,10 +13,10 @@ inline static char8_t* duplicate_string(const char8_t* src_string) SKR_NOEXCEPT
 {
     if (src_string != nullptr)
     {
-        const size_t source_len = strlen(src_string);
+        const size_t source_len = strlen((const char*)src_string);
         char8_t* result = (char8_t*)sakura_malloc(sizeof(char8_t) * (1 + source_len));
 #ifdef _WIN32
-        strcpy_s((char8_t*)result, source_len + 1, src_string);
+        strcpy_s((char*)result, source_len + 1, (const char*)src_string);
 #else
         strcpy((char8_t*)result, src_string);
 #endif
@@ -55,19 +55,19 @@ skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc) SKR_NOEXCEPT
     }
     else if (desc->mount_type == SKR_MOUNT_TYPE_DOCUMENTS)
     {
-        char8_t documentPath[WIN_FS_MAX_PATH] = {};
+        char documentPath[WIN_FS_MAX_PATH] = {};
         PWSTR userDocuments = NULL;
         SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &userDocuments);
         WideCharToMultiByte(CP_UTF8, 0, userDocuments, -1, documentPath, WIN_FS_MAX_PATH, NULL, NULL);
         CoTaskMemFree(userDocuments);
-        fs->mount_dir = duplicate_string(documentPath);
+        fs->mount_dir = duplicate_string((const char8_t*)documentPath);
     }
     else
     {
         // Get application directory
         wchar_t utf16Path[WIN_FS_MAX_PATH];
         GetModuleFileNameW(0, utf16Path, WIN_FS_MAX_PATH);
-        char8_t applicationFilePath[WIN_FS_MAX_PATH] = {};
+        char applicationFilePath[WIN_FS_MAX_PATH] = {};
         WideCharToMultiByte(CP_UTF8, 0, utf16Path, -1, applicationFilePath, WIN_FS_MAX_PATH, NULL, NULL);
         const skr::filesystem::path p(applicationFilePath);
         const auto parentPath = p.parent_path().u8string();
