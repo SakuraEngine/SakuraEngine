@@ -96,7 +96,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
             else 
                 asm = "gas.S"
             end
-        elseif is_os("linux") then 
+        elseif is_os("linux") or is_plat("prospero") then 
             if os == nil then
                 os = "sysv"
             end 

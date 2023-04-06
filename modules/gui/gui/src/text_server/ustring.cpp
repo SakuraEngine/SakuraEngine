@@ -39,7 +39,9 @@
 namespace godot
 {
 #ifdef _MSC_VER
+#ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS // to disable build-time warning which suggested to use strcpy_s instead strcpy
+#endif
 #endif
 
 #if defined(MINGW_ENABLED) || defined(_MSC_VER)
