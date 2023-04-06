@@ -31,7 +31,6 @@ inline int app_create_gfx_objects(render_application_t* pApp)
     // Create instance
     DECLARE_ZERO(CGPUInstanceDescriptor, instance_desc);
     instance_desc.backend = pApp->backend;
-    instance_desc.backend = CGPU_BACKEND_VULKAN;
     instance_desc.enable_debug_layer = false;
     instance_desc.enable_gpu_based_validation = false;
     instance_desc.enable_set_name = true;
