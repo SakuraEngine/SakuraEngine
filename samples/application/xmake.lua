@@ -1,30 +1,32 @@
 includes("game/xmake.lua")
 
-if(not has_config("shipping_one_archive")) then
+if(has_config("build_tools")) then
+    if(not has_config("shipping_one_archive")) then
 
-shared_module("GameTool", "GAMETOOL", engine_version)
-    set_group("04.examples/application")
-    public_dependency("SkrToolCore", "0.1.0")
-    public_dependency("GameRuntime", "0.1.0")
-    add_rules("c++.codegen", {
-        files = {"gametool/**.h", "gametool/**.hpp"},
-        rootdir = "gametool/"
-    })
-    add_includedirs("gametool/include", {public=true})
-    add_includedirs("./../common", {public = false})
-    add_files("gametool/src/**.cpp")
-    on_config(function (target, opt)
-        local dep = target:dep("GameRuntime");
-        local toolgendir = path.join(dep:autogendir({root = true}), dep:plat(), "codegen", dep:name(), "tool")
-        if os.exists(toolgendir) then
-            target:add("includedirs", toolgendir)
-            local cppfiles = os.files(path.join(toolgendir, "/*.cpp"))
-            for _, file in ipairs(cppfiles) do
-                target:add("files", file)
+    shared_module("GameTool", "GAMETOOL", engine_version)
+        set_group("04.examples/application")
+        public_dependency("SkrToolCore", "0.1.0")
+        public_dependency("GameRuntime", "0.1.0")
+        add_rules("c++.codegen", {
+            files = {"gametool/**.h", "gametool/**.hpp"},
+            rootdir = "gametool/"
+        })
+        add_includedirs("gametool/include", {public=true})
+        add_includedirs("./../common", {public = false})
+        add_files("gametool/src/**.cpp")
+        on_config(function (target, opt)
+            local dep = target:dep("GameRuntime");
+            local toolgendir = path.join(dep:autogendir({root = true}), dep:plat(), "codegen", dep:name(), "tool")
+            if os.exists(toolgendir) then
+                target:add("includedirs", toolgendir)
+                local cppfiles = os.files(path.join(toolgendir, "/*.cpp"))
+                for _, file in ipairs(cppfiles) do
+                    target:add("files", file)
+                end
             end
-        end
-    end)
+        end)
 
+    end
 end
 
 executable_module("VMemController", "VMEM_CONTROLLER", engine_version)
