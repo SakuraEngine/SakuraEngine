@@ -31,12 +31,12 @@ public:
 			, value(v)
 		{ }
 
-		constexpr bound(const char t, const i32 v) noexcept
+		constexpr bound(const ochar8_t t, const i32 v) noexcept
 			: type(parse_symbol(t))
 			, value(v)
 		{ }
 		
-		static constexpr enum inclusion parse_symbol(const char t) noexcept
+		static constexpr enum inclusion parse_symbol(const ochar8_t t) noexcept
 		{
 			if(t == '[' || t == ']')
 				return inclusion::inclusive;
@@ -74,12 +74,12 @@ public:
 		, upper_(upper_bound)
 	{ }
 	
-	constexpr index_interval(const char lower_symbol, const i32 lower_value, const i32 upper_value, const char upper_symbol) noexcept
+	constexpr index_interval(const ochar8_t lower_symbol, const i32 lower_value, const i32 upper_value, const ochar8_t upper_symbol) noexcept
 		: lower_(lower_symbol, lower_value)
 		, upper_(upper_symbol, upper_value)
 	{ }
 	
-	constexpr index_interval(const char lower_symbol, const i32 value, const char upper_symbol) noexcept
+	constexpr index_interval(const ochar8_t lower_symbol, const i32 value, const ochar8_t upper_symbol) noexcept
 		: lower_(lower_symbol, value)
 		, upper_(upper_symbol, value)
 	{ }

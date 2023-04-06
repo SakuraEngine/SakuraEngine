@@ -34,7 +34,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
 
         // 2.create root signature pool
         CGPURootSignaturePoolDescriptor rs_pool_desc = {};
-        rs_pool_desc.name = "MaterialRootSignaturePool";
+        rs_pool_desc.name = u8"MaterialRootSignaturePool";
         rs_pool = cgpu_create_root_signature_pool(root.device, &rs_pool_desc);
 
         // 3.create pso map
@@ -161,7 +161,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         for (size_t i = 0; i < installed_pass.shaders.size(); i++)
         {
             ppl_shaders[i].library = shaders[i];
-            ppl_shaders[i].entry = installed_pass.shaders[i].entry.data();
+            ppl_shaders[i].entry = (const char8_t*)installed_pass.shaders[i].entry.data();
             ppl_shaders[i].stage = installed_pass.shaders[i].stage;
         }
         CGPURootSignatureDescriptor rs_desc = {};
@@ -170,7 +170,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         rs_desc.shaders = ppl_shaders; 
         // TODO: static samplers & push constants
         rs_desc.push_constant_count = 1;
-        const char* push_const_name = "push_constants";
+        const char8_t* push_const_name = u8"push_constants";
         rs_desc.push_constant_names = &push_const_name;
         rs_desc.static_sampler_count = 0;
         rs_desc.static_samplers = nullptr;
@@ -186,7 +186,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         // TODO: multi bind table
         CGPUXBindTableDescriptor table_desc = {};
         table_desc.root_signature = root_signature;
-        eastl::fixed_vector<const char*, 16> slot_names;
+        eastl::fixed_vector<const char8_t*, 16> slot_names;
         for (uint32_t i = 0; i < root_signature->table_count; i++)
         {
             const auto& table = root_signature->tables[i];
@@ -197,8 +197,8 @@ struct SMaterialFactoryImpl : public SMaterialFactory
                 {
                     for (const auto& override : material->overrides.samplers)
                     {
-                        if (override.slot_name.starts_with(resource.name) 
-                        && strlen(resource.name) == override.slot_name.size()) // slot name matches
+                        if (override.slot_name.starts_with((const char*)resource.name) 
+                        && strlen((const char*)resource.name) == override.slot_name.size()) // slot name matches
                         {
                             slot_names.emplace_back(resource.name);
                         }
@@ -208,8 +208,8 @@ struct SMaterialFactoryImpl : public SMaterialFactory
                 {
                     for (const auto& override : material->overrides.textures)
                     {
-                        if (override.slot_name.starts_with(resource.name) 
-                        && strlen(resource.name) == override.slot_name.size()) // slot name matches
+                        if (override.slot_name.starts_with((const char*)resource.name) 
+                        && strlen((const char*)resource.name) == override.slot_name.size()) // slot name matches
                         {
                             slot_names.emplace_back(resource.name);
                         }
@@ -233,7 +233,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
             hdl.resolve(true, nullptr);
 
             auto& update = updates.emplace_back();
-            update.name = override.slot_name.data();
+            update.name = (const char8_t*)override.slot_name.data();
             update.count = 1;
             update.samplers = &hdl.get_resolved()->sampler;
             update.binding_type = CGPU_RESOURCE_TYPE_SAMPLER;
@@ -244,7 +244,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
             hdl.resolve(true, nullptr);
 
             auto& update = updates.emplace_back();
-            update.name = override.slot_name.data();
+            update.name = (const char8_t*)override.slot_name.data();
             update.count = 1; // TODO: Tex array parameter
             update.textures = &hdl.get_resolved()->texture_view;
             update.binding_type = CGPU_RESOURCE_TYPE_TEXTURE;
@@ -343,7 +343,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
                 break;
             }
             ref->library = shaders[i];
-            ref->entry = installed_pass.shaders[i].entry.data();
+            ref->entry = (const char8_t*)installed_pass.shaders[i].entry.data();
             ref->stage = installed_pass.shaders[i].stage;
             // TODO: const spec
             ref->constants = nullptr;

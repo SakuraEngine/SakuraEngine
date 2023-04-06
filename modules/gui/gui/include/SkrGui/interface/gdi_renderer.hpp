@@ -65,7 +65,7 @@ typedef struct GDIImageDescriptor
         } from_data;
         struct
         {
-            const char* u8Uri = nullptr;
+            const char8_t* u8Uri = nullptr;
         } from_file;
     };
     void* usr_data = nullptr;
@@ -91,7 +91,7 @@ typedef struct GDITextureDescriptor
         } from_data;
         struct
         {
-            const char* u8Uri = nullptr;
+            const char8_t* u8Uri = nullptr;
             uint32_t w = 0;
             uint32_t h = 0;
             uint32_t mip_count = 0;

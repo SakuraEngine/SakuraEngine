@@ -97,28 +97,28 @@ void create_resources()
 {
     // upload
     CGPUBufferDescriptor upload_buffer_desc = {};
-    upload_buffer_desc.name = "UploadBuffer";
+    upload_buffer_desc.name = u8"UploadBuffer";
     upload_buffer_desc.flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT;
     upload_buffer_desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
     upload_buffer_desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
     upload_buffer_desc.size = sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices) + sizeof(CubeGeometry::InstanceData);
     auto upload_buffer = cgpu_create_buffer(device, &upload_buffer_desc);
     CGPUBufferDescriptor vb_desc = {};
-    vb_desc.name = "VertexBuffer";
+    vb_desc.name = u8"VertexBuffer";
     vb_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
     vb_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
     vb_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     vb_desc.size = sizeof(CubeGeometry);
     vertex_buffer = cgpu_create_buffer(device, &vb_desc);
     CGPUBufferDescriptor ib_desc = {};
-    ib_desc.name = "IndexBuffer";
+    ib_desc.name = u8"IndexBuffer";
     ib_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
     ib_desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER;
     ib_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     ib_desc.size = sizeof(CubeGeometry::g_Indices);
     index_buffer = cgpu_create_buffer(device, &ib_desc);
     CGPUBufferDescriptor inb_desc = {};
-    inb_desc.name = "InstanceBuffer";
+    inb_desc.name = u8"InstanceBuffer";
     inb_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
     inb_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
     inb_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
@@ -285,9 +285,9 @@ int main(int argc, char* argv[])
             style.WindowRounding = 0.0f;
             style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         }
-        const char* font_path = "./../resources/font/SourceSansPro-Regular.ttf";
+        const char8_t* font_path = u8"./../resources/font/SourceSansPro-Regular.ttf";
         uint32_t *font_bytes, font_length;
-        read_bytes(font_path, (char**)&font_bytes, &font_length);
+        read_bytes(font_path, &font_bytes, &font_length);
         float dpi_scaling = 1.f;
         if (!DPIAware)
         {
@@ -316,18 +316,18 @@ int main(int argc, char* argv[])
         free(font_bytes);
     }
     uint32_t *im_vs_bytes, im_vs_length;
-    read_shader_bytes("imgui_vertex", &im_vs_bytes, &im_vs_length,
+    read_shader_bytes(u8"imgui_vertex", &im_vs_bytes, &im_vs_length,
     device->adapter->instance->backend);
     uint32_t *im_fs_bytes, im_fs_length;
-    read_shader_bytes("imgui_fragment", &im_fs_bytes, &im_fs_length,
+    read_shader_bytes(u8"imgui_fragment", &im_fs_bytes, &im_fs_length,
     device->adapter->instance->backend);
     CGPUShaderLibraryDescriptor vs_desc = {};
-    vs_desc.name = "imgui_vertex_shader";
+    vs_desc.name = u8"imgui_vertex_shader";
     vs_desc.stage = CGPU_SHADER_STAGE_VERT;
     vs_desc.code = im_vs_bytes;
     vs_desc.code_size = im_vs_length;
     CGPUShaderLibraryDescriptor fs_desc = {};
-    fs_desc.name = "imgui_fragment_shader";
+    fs_desc.name = u8"imgui_fragment_shader";
     fs_desc.stage = CGPU_SHADER_STAGE_FRAG;
     fs_desc.code = im_fs_bytes;
     fs_desc.code_size = im_fs_length;
@@ -340,10 +340,10 @@ int main(int argc, char* argv[])
     imgui_graph_desc.backbuffer_format = (ECGPUFormat)swapchain->back_buffers[backbuffer_index]->format;
     imgui_graph_desc.vs.library = imgui_vs;
     imgui_graph_desc.vs.stage = CGPU_SHADER_STAGE_VERT;
-    imgui_graph_desc.vs.entry = "main";
+    imgui_graph_desc.vs.entry = u8"main";
     imgui_graph_desc.ps.library = imgui_fs;
     imgui_graph_desc.ps.stage = CGPU_SHADER_STAGE_FRAG;
-    imgui_graph_desc.ps.entry = "main";
+    imgui_graph_desc.ps.entry = u8"main";
     imgui_graph_desc.queue = gfx_queue;
     imgui_graph_desc.static_sampler = static_sampler;
     render_graph_imgui_initialize(&imgui_graph_desc);
@@ -389,7 +389,7 @@ int main(int argc, char* argv[])
                 (float)swapchain->back_buffers[0]->width,
                 (float)swapchain->back_buffers[0]->height);
             skr_imgui_new_frame(window, 1.f / 60.f);
-            ImGui::Begin(u8"RenderGraphProfile");
+            ImGui::Begin("RenderGraphProfile");
             if (ImGui::Button(fragmentLightingPass ? "SwitchToComputeLightingPass" : "SwitchToFragmentLightingPass"))
             {
                 fragmentLightingPass = !fragmentLightingPass;
@@ -412,7 +412,7 @@ int main(int argc, char* argv[])
                     for (uint32_t i = 1; i < profiler.times_ms.size(); i++)
                     {
                         auto text = profiler.query_names[i];
-                        text = text.append(": %.4f ms");
+                        text = text.append(u8": %.4f ms");
                         ImGui::Text(text.c_str(), profiler.times_ms[i]);
                         total_ms += profiler.times_ms[i];
                     }
@@ -445,13 +445,13 @@ int main(int argc, char* argv[])
             // render graph setup & compile & exec
             auto back_buffer = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-                builder.set_name("backbuffer")
+                builder.set_name(u8"backbuffer")
                 .import(native_backbuffer, CGPU_RESOURCE_STATE_UNDEFINED)
                 .allow_render_target();
             });
             render_graph::TextureHandle composite_buffer = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-                builder.set_name("composite_buffer")
+                builder.set_name(u8"composite_buffer")
                 .extent(native_backbuffer->width, native_backbuffer->height)
                 .format((ECGPUFormat)native_backbuffer->format)
                 .owns_memory()
@@ -459,7 +459,7 @@ int main(int argc, char* argv[])
             });
             auto gbuffer_color = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-                builder.set_name("gbuffer_color")
+                builder.set_name(u8"gbuffer_color")
                 .extent(native_backbuffer->width, native_backbuffer->height)
                 .format(gbuffer_formats[0])
                 .owns_memory()
@@ -467,7 +467,7 @@ int main(int argc, char* argv[])
             });
             auto gbuffer_depth = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-                builder.set_name("gbuffer_depth")
+                builder.set_name(u8"gbuffer_depth")
                 .extent(native_backbuffer->width, native_backbuffer->height)
                 .format(gbuffer_depth_format)
                 .owns_memory()
@@ -475,7 +475,7 @@ int main(int argc, char* argv[])
             });
             auto gbuffer_normal = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-                builder.set_name("gbuffer_normal")
+                builder.set_name(u8"gbuffer_normal")
                 .extent(native_backbuffer->width, native_backbuffer->height)
                 .format(gbuffer_formats[1])
                 .owns_memory()
@@ -483,7 +483,7 @@ int main(int argc, char* argv[])
             });
             auto lighting_buffer = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-                builder.set_name("lighting_buffer")
+                builder.set_name(u8"lighting_buffer")
                 .extent(native_backbuffer->width, native_backbuffer->height)
                 .format(lighting_buffer_format)
                 .owns_memory()
@@ -501,7 +501,7 @@ int main(int argc, char* argv[])
             auto view_proj = rtm::matrix_mul(view, proj);
             graph->add_render_pass(
             [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
-                builder.set_name("gbuffer_pass")
+                builder.set_name(u8"gbuffer_pass")
                 .set_pipeline(gbuffer_pipeline)
                 .write(0, gbuffer_color, CGPU_LOAD_ACTION_CLEAR)
                 .write(1, gbuffer_normal, CGPU_LOAD_ACTION_CLEAR)
@@ -529,18 +529,18 @@ int main(int argc, char* argv[])
                 };
                 cgpu_render_encoder_bind_index_buffer(stack.encoder, index_buffer, sizeof(uint32_t), 0);
                 cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 5, vertex_buffers, strides, offsets);
-                cgpu_render_encoder_push_constants(stack.encoder, gbuffer_pipeline->root_signature, "push_constants", &view_proj);
+                cgpu_render_encoder_push_constants(stack.encoder, gbuffer_pipeline->root_signature, u8"push_constants", &view_proj);
                 cgpu_render_encoder_draw_indexed_instanced(stack.encoder, 36, 0, 1, 0, 0);
             });
             if (fragmentLightingPass)
             {
                 graph->add_render_pass(
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
-                    builder.set_name("light_pass_fs")
+                    builder.set_name(u8"light_pass_fs")
                         .set_pipeline(lighting_pipeline)
-                        .read("gbuffer_color", gbuffer_color.read_mip(0, 1))
-                        .read("gbuffer_normal", gbuffer_normal)
-                        .read("gbuffer_depth", gbuffer_depth)
+                        .read(u8"gbuffer_color", gbuffer_color.read_mip(0, 1))
+                        .read(u8"gbuffer_normal", gbuffer_normal)
+                        .read(u8"gbuffer_depth", gbuffer_depth)
                         .write(0, composite_buffer, CGPU_LOAD_ACTION_CLEAR);
                 },
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
@@ -549,7 +549,7 @@ int main(int argc, char* argv[])
                     (float)native_backbuffer->width, (float)native_backbuffer->height,
                     0.f, 1.f);
                     cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->width, native_backbuffer->height);
-                    cgpu_render_encoder_push_constants(stack.encoder, lighting_pipeline->root_signature, "push_constants", &lighting_data);
+                    cgpu_render_encoder_push_constants(stack.encoder, lighting_pipeline->root_signature, u8"push_constants", &lighting_data);
                     cgpu_render_encoder_draw(stack.encoder, 6, 0);
                 });
             }
@@ -557,16 +557,16 @@ int main(int argc, char* argv[])
             {
                 graph->add_compute_pass(
                     [=](render_graph::RenderGraph& g, render_graph::ComputePassBuilder& builder) {
-                        builder.set_name("light_pass_cs")
+                        builder.set_name(u8"light_pass_cs")
                         .set_pipeline(lighting_cs_pipeline)
-                        .read("gbuffer_color", gbuffer_color)
-                        .read("gbuffer_normal", gbuffer_normal)
-                        .read("gbuffer_depth", gbuffer_depth)
-                        .readwrite("lighting_output", lighting_buffer);
+                        .read(u8"gbuffer_color", gbuffer_color)
+                        .read(u8"gbuffer_normal", gbuffer_normal)
+                        .read(u8"gbuffer_depth", gbuffer_depth)
+                        .readwrite(u8"lighting_output", lighting_buffer);
                     },
                     [=](render_graph::RenderGraph& g, render_graph::ComputePassContext& stack) {
                         cgpu_compute_encoder_push_constants(stack.encoder,
-                            lighting_cs_pipeline->root_signature, "push_constants", &lighting_cs_data);
+                            lighting_cs_pipeline->root_signature, u8"push_constants", &lighting_cs_data);
                         cgpu_compute_encoder_dispatch(stack.encoder,
                             (uint32_t)ceil(BACK_BUFFER_WIDTH / (float)16),
                             (uint32_t)ceil(BACK_BUFFER_HEIGHT / (float)16),
@@ -574,9 +574,9 @@ int main(int argc, char* argv[])
                     });
                 graph->add_render_pass(
                     [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
-                        builder.set_name("lighting_buffer_blit")
+                        builder.set_name(u8"lighting_buffer_blit")
                             .set_pipeline(blit_pipeline)
-                            .read("input_color", lighting_buffer)
+                            .read(u8"input_color", lighting_buffer)
                             .write(0, composite_buffer, CGPU_LOAD_ACTION_CLEAR);
                     },
                     [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
@@ -591,9 +591,9 @@ int main(int argc, char* argv[])
             render_graph_imgui_add_render_pass(graph, composite_buffer, CGPU_LOAD_ACTION_LOAD);
             graph->add_render_pass(
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
-                    builder.set_name("final_blit")
+                    builder.set_name(u8"final_blit")
                         .set_pipeline(blit_pipeline)
-                        .read("input_color", composite_buffer)
+                        .read(u8"input_color", composite_buffer)
                         .write(0, back_buffer, CGPU_LOAD_ACTION_CLEAR);
                 },
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
@@ -606,7 +606,7 @@ int main(int argc, char* argv[])
                 });
             graph->add_present_pass(
                 [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
-                    builder.set_name("present_pass")
+                    builder.set_name(u8"present_pass")
                     .swapchain(swapchain, backbuffer_index)
                     .texture(back_buffer, true);
                 });

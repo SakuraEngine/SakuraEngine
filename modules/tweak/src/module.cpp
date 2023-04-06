@@ -60,7 +60,7 @@ public:
         }
 
         size_t current_line_num = 1;
-        auto& tweak_file = _tweak_files[path.u8string().c_str()];
+        auto& tweak_file = _tweak_files[(const char*)path.u8string().c_str()];
         size_t tweak_line_index = 0;
         while ( file.good() && tweak_line_index < tweak_file.size() ) {
             std::string line;
@@ -107,12 +107,12 @@ public:
         static skr::filesystem::path root = SKR_SOURCE_ROOT;
         skr::filesystem::path path = (root / fileName).lexically_normal();
         auto directory = path.parent_path().lexically_normal().u8string();
-        if(!_watched_directories.contains(directory.c_str()))
+        if(!_watched_directories.contains((const char*)directory.c_str()))
         {
-            _watcher.addWatch(directory.c_str(), this, false);
-            _watched_directories.insert(directory.c_str());
+            _watcher.addWatch((const char*)directory.c_str(), this, false);
+            _watched_directories.insert((const char*)directory.c_str());
         }
-        auto& file = _tweak_files[path.u8string().c_str()];
+        auto& file = _tweak_files[(const char*)path.u8string().c_str()];
         TweakLine* line = nullptr;
         for(auto& lines : file)
         {

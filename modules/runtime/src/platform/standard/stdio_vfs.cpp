@@ -34,7 +34,7 @@ skr_vfile_t* skr_llfio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mo
     FILE* cfile = nullptr;
     {
         ZoneScopedN("stdio::fopen");
-        cfile = fopen(filePathStr, modeStr);
+        cfile = fopen((const char*)filePathStr, (const char*)modeStr);
     }
     std::error_code ec = {};
     // SKR_LOG_TRACE("CurrentPath: %s", skr::filesystem::current_path(ec).u8string().c_str());
@@ -46,7 +46,7 @@ skr_vfile_t* skr_llfio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mo
             ZoneScopedN("RetryOpenRW");
 
             modeStr = skr_vfs_overwirte_filemode_to_string(mode);
-            cfile = fopen(filePath.c_str(), modeStr);
+            cfile = fopen((const char*)filePath.c_str(), (const char*)modeStr);
         }
     }
     if (!cfile)

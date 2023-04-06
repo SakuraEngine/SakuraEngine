@@ -22,9 +22,9 @@ public:
 
 	~codeunit_sequence() noexcept;
 
-	explicit codeunit_sequence(const char* data) noexcept;
-	codeunit_sequence(const char* from, const char* last) noexcept;
-	codeunit_sequence(const char* data, i32 count) noexcept;
+	explicit codeunit_sequence(const ochar8_t* data) noexcept;
+	codeunit_sequence(const ochar8_t* from, const ochar8_t* last) noexcept;
+	codeunit_sequence(const ochar8_t* data, i32 count) noexcept;
 
 	explicit codeunit_sequence(codeunit_sequence_view sv) noexcept;
 
@@ -42,8 +42,8 @@ public:
 	struct iterator
 	{
 		iterator() noexcept;
-		explicit iterator(char* v) noexcept;
-		[[nodiscard]] char& operator*() const noexcept;
+		explicit iterator(ochar8_t* v) noexcept;
+		[[nodiscard]] ochar8_t& operator*() const noexcept;
 		[[nodiscard]] std::ptrdiff_t operator-(const iterator& rhs) const noexcept;
 		iterator& operator+=(std::ptrdiff_t diff) noexcept;
 		iterator& operator-=(std::ptrdiff_t diff) noexcept;
@@ -60,7 +60,7 @@ public:
 	    [[nodiscard]] bool operator<=(const iterator& rhs) const noexcept;
 	    [[nodiscard]] bool operator>=(const iterator& rhs) const noexcept;
 		
-		char* value;
+		ochar8_t* value;
 	};
 	
 	[[nodiscard]] iterator begin() noexcept;
@@ -94,7 +94,7 @@ public:
 	 */
 	[[nodiscard]] bool operator==(codeunit_sequence_view rhs) const noexcept;
 	[[nodiscard]] bool operator==(const codeunit_sequence& rhs) const noexcept;
-	[[nodiscard]] bool operator==(const char* rhs) const noexcept;
+	[[nodiscard]] bool operator==(const ochar8_t* rhs) const noexcept;
 
 	/**
 	 * @param rhs Another codeunit sequence
@@ -102,7 +102,7 @@ public:
 	 */
 	[[nodiscard]] bool operator!=(codeunit_sequence_view rhs) const noexcept;
 	[[nodiscard]] bool operator!=(const codeunit_sequence& rhs) const noexcept;
-	[[nodiscard]] bool operator!=(const char* rhs) const noexcept;
+	[[nodiscard]] bool operator!=(const ochar8_t* rhs) const noexcept;
 
 	/**
 	 * Append a codeunit sequence back.
@@ -111,14 +111,14 @@ public:
 	codeunit_sequence& append(const codeunit_sequence_view& rhs) noexcept;
 	codeunit_sequence& append(const codeunit_sequence& rhs) noexcept;
 	codeunit_sequence& append(const codepoint& cp) noexcept;
-	codeunit_sequence& append(const char* rhs) noexcept;
-	codeunit_sequence& append(char codeunit, i32 count = 1) noexcept;
+	codeunit_sequence& append(const ochar8_t* rhs) noexcept;
+	codeunit_sequence& append(ochar8_t codeunit, i32 count = 1) noexcept;
 
 	codeunit_sequence& operator+=(const codeunit_sequence_view& rhs) noexcept;
 	codeunit_sequence& operator+=(const codeunit_sequence& rhs) noexcept;
 	codeunit_sequence& operator+=(const codepoint& cp) noexcept;
-	codeunit_sequence& operator+=(const char* rhs) noexcept;
-	codeunit_sequence& operator+=(char codeunit) noexcept;
+	codeunit_sequence& operator+=(const ochar8_t* rhs) noexcept;
+	codeunit_sequence& operator+=(ochar8_t codeunit) noexcept;
 
 	[[nodiscard]] codeunit_sequence_view subview(const index_interval& range) const noexcept;
 
@@ -161,11 +161,11 @@ public:
 	
 	void reserve(i32 size);
 
-	codeunit_sequence& write_at(i32 index, char codeunit) noexcept;
-	[[nodiscard]] const char& read_at(i32 index) const noexcept;
+	codeunit_sequence& write_at(i32 index, ochar8_t codeunit) noexcept;
+	[[nodiscard]] const ochar8_t& read_at(i32 index) const noexcept;
 
-	[[nodiscard]] char& operator[](i32 index) noexcept;
-	[[nodiscard]] const char& operator[](i32 index) const noexcept;
+	[[nodiscard]] ochar8_t& operator[](i32 index) noexcept;
+	[[nodiscard]] const ochar8_t& operator[](i32 index) const noexcept;
 
 	codeunit_sequence& reverse(const index_interval& range = index_interval::all()) noexcept;
 
@@ -180,16 +180,17 @@ public:
 	[[nodiscard]] codeunit_sequence_view view_remove_prefix(const codeunit_sequence_view& prefix) const noexcept;
 	[[nodiscard]] codeunit_sequence_view view_remove_suffix(const codeunit_sequence_view& suffix) const noexcept;
 
-	codeunit_sequence& self_trim_start(const codeunit_sequence_view& characters = codeunit_sequence_view(" \t")) noexcept;
-	codeunit_sequence& self_trim_end(const codeunit_sequence_view& characters = codeunit_sequence_view(" \t")) noexcept;
-	codeunit_sequence& self_trim(const codeunit_sequence_view& characters = codeunit_sequence_view(" \t")) noexcept;
-	[[nodiscard]] codeunit_sequence_view view_trim_start(const codeunit_sequence_view& characters = codeunit_sequence_view(" \t")) const noexcept;
-	[[nodiscard]] codeunit_sequence_view view_trim_end(const codeunit_sequence_view& characters = codeunit_sequence_view(" \t")) const noexcept;
-	[[nodiscard]] codeunit_sequence_view view_trim(const codeunit_sequence_view& characters = codeunit_sequence_view(" \t")) const noexcept;
+	codeunit_sequence& self_trim_start(const codeunit_sequence_view& characters = codeunit_sequence_view(OSTR_UTF8(" \t"))) noexcept;
+	codeunit_sequence& self_trim_end(const codeunit_sequence_view& characters = codeunit_sequence_view(OSTR_UTF8(" \t"))) noexcept;
+	codeunit_sequence& self_trim(const codeunit_sequence_view& characters = codeunit_sequence_view(OSTR_UTF8(" \t"))) noexcept;
+	[[nodiscard]] codeunit_sequence_view view_trim_start(const codeunit_sequence_view& characters = codeunit_sequence_view(OSTR_UTF8(" \t"))) const noexcept;
+	[[nodiscard]] codeunit_sequence_view view_trim_end(const codeunit_sequence_view& characters = codeunit_sequence_view(OSTR_UTF8(" \t"))) const noexcept;
+	[[nodiscard]] codeunit_sequence_view view_trim(const codeunit_sequence_view& characters = codeunit_sequence_view(OSTR_UTF8(" \t"))) const noexcept;
 
 	[[nodiscard]] u32 get_hash() const noexcept;
 
-	[[nodiscard]] const char* c_str() const noexcept;
+	[[nodiscard]] const ochar8_t* u8_str() const noexcept;
+	[[nodiscard]] const ochar8_t* c_str() const noexcept;
 
 private:
 
@@ -200,7 +201,7 @@ private:
 	{
 		u8 alloc : 1;
 		u8 size : 7;
-		std::array<char, SSO_SIZE_MAX + 1> data;
+		std::array<ochar8_t, SSO_SIZE_MAX + 1> data;
 	};
 
 	struct norm
@@ -208,7 +209,7 @@ private:
 		u32 alloc : 1;
 		i32 size : 15;
 		i32 capacity;	// character capacity, which is 1 less than memory capacity
-		char* data;
+		ochar8_t* data;
 	};
 
 	[[nodiscard]] sso& as_sso();
@@ -222,13 +223,13 @@ private:
 
 	[[nodiscard]] i32 get_capacity() const;
 
-	[[nodiscard]] char* data();
+	[[nodiscard]] ochar8_t* data();
 
-	[[nodiscard]] const char* data() const;
+	[[nodiscard]] const ochar8_t* data() const;
 
-	[[nodiscard]] char* last();
+	[[nodiscard]] ochar8_t* last();
 
-	[[nodiscard]] const char* last() const;
+	[[nodiscard]] const ochar8_t* last() const;
 
 	void deallocate();
 

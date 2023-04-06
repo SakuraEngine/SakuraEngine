@@ -131,7 +131,7 @@ void EmplaceRawMeshVerticesWithRange(skr::span<const ESkrVertexAttribute> range,
                 for (auto type : range)
                 {
                     const eastl::string semantic = kRawAttributeTypeNameLUT[type];
-                    if (semantic == shuffle_attrib.semantic_name)
+                    if (semantic == (const char*)shuffle_attrib.semantic_name)
                     {
                         within = true;
                         break;
@@ -139,7 +139,7 @@ void EmplaceRawMeshVerticesWithRange(skr::span<const ESkrVertexAttribute> range,
                 }
                 if (within) 
                 {
-                    EmplaceRawPrimitiveVertexBufferAttribute(&raw_primitive, shuffle_attrib.semantic_name, k, buffer, prim.vertex_buffers[i]);
+                    EmplaceRawPrimitiveVertexBufferAttribute(&raw_primitive, (const char*)shuffle_attrib.semantic_name, k, buffer, prim.vertex_buffers[i]);
                     prim.vertex_buffers[i].buffer_index = buffer_idx;
                 }
             }

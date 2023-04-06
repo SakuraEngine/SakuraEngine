@@ -146,7 +146,7 @@ RenderText::RenderText(skr_gdi_device_id gdi_device)
     : RenderBox(gdi_device), gdi_device(gdi_device)
 {
     diagnostic_builder.add_properties(
-        SkrNew<TextDiagnosticProperty>("type", "text", "draws text paragraph")
+        SkrNew<TextDiagnosticProperty>(u8"type", u8"text", u8"draws text paragraph")
     );
 
     gdi_paint = gdi_device->create_paint();
@@ -202,7 +202,7 @@ void RenderText::draw(const DrawParams* params)
     RenderBox::draw(params);
 }
 
-void RenderText::add_text(const char* u8_text)
+void RenderText::add_text(const char8_t* u8_text)
 {
     inlines_.get().emplace_back(InlineType{ skr::text::text::from_utf8(u8_text) });
     paragraph_dirty_ = true;

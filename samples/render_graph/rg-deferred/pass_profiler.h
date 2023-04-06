@@ -1,5 +1,6 @@
 #include "SkrRenderGraph/backend/graph_backend.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
+#include <containers/text.hpp>
 
 class PassProfiler : public skr::render_graph::RenderGraphProfiler
 {
@@ -11,7 +12,7 @@ public:
         desc.type = CGPU_QUERY_TYPE_TIMESTAMP;
         query_pool = cgpu_create_query_pool(device, &desc);
         CGPUBufferDescriptor buf_desc = {};
-        buf_desc.name = "RenderGraphQueryBuffer";
+        buf_desc.name = u8"RenderGraphQueryBuffer";
         buf_desc.flags = CGPU_BCF_PERSISTENT_MAP_BIT;
         buf_desc.memory_usage = CGPU_MEM_USAGE_GPU_TO_CPU;
         buf_desc.size = sizeof(uint64_t) * 512;
@@ -47,7 +48,7 @@ public:
         CGPUQueryDescriptor query_desc = {};
         query_desc.index = query_cursor++;
         query_desc.stage = CGPU_SHADER_STAGE_NONE;
-        query_names.emplace_back("cmd_begin");
+        query_names.emplace_back(u8"cmd_begin");
         cgpu_cmd_begin_query(executor.gfx_cmd_buf, query_pool, &query_desc);
     }
     virtual void on_cmd_end(class skr::render_graph::RenderGraph&, class skr::render_graph::RenderGraphFrameExecutor& executor)
@@ -73,6 +74,6 @@ public:
     CGPUBufferId query_buffer = nullptr;
     uint32_t query_cursor = 0;
     eastl::vector<float> times_ms;
-    eastl::vector<skr::string> query_names;
+    eastl::vector<skr::text::text> query_names;
     uint64_t frame_index;
 };

@@ -101,11 +101,11 @@ typedef enum ECGPUBackend
 } ECGPUBackend;
 
 static const char8_t* gCGPUBackendNames[CGPU_BACKEND_COUNT] = {
-    "vulkan",
-    "d3d12",
-    "d3d12(xbox)",
-    "agc",
-    "metal"
+    SKR_UTF8("vulkan"),
+    SKR_UTF8("d3d12"),
+    SKR_UTF8("d3d12(xbox)"),
+    SKR_UTF8("agc"),
+    SKR_UTF8("metal")
 };
 
 typedef enum ECGPUQueueType
@@ -399,7 +399,7 @@ typedef struct CGPUDStorageBufferIODescriptor {
     uint64_t offset;
     uint64_t uncompressed_size;
     CGPUFenceId fence;
-    const char* name;
+    const char8_t* name;
 } CGPUDStorageBufferIODescriptor;
 
 typedef struct CGPUDStorageTextureIODescriptor {
@@ -422,7 +422,7 @@ typedef struct CGPUDStorageTextureIODescriptor {
     uint32_t depth;
     uint64_t uncompressed_size;
     CGPUFenceId fence;
-    const char* name;
+    const char8_t* name;
 } CGPUDStorageTextureIODescriptor;
 
 RUNTIME_API ECGPUDStorageAvailability cgpu_query_dstorage_availability(CGPUDeviceId device);
