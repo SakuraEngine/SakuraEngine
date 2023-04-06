@@ -14,6 +14,13 @@ struct BoxConstraint {
     SKR_GUI_API RenderBoxSizeType apply(const RenderBoxSizeType& size) const;
 };
 
+struct Ray {
+    skr_float3_t origin;
+    skr_float3_t direction;
+};
+
+struct HitTestRecord {};
+
 struct SKR_GUI_API RenderBox : public RenderObject
 {
     SKR_GUI_TYPE(RenderBox, RenderObject, "01a2eb19-1299-4069-962f-88db0c719134");
@@ -25,6 +32,7 @@ public:
     virtual void layout(BoxConstraint constraints, bool needSize = false) = 0;
     virtual void before_draw(const DrawParams* params) override;
     virtual void draw(const DrawParams* params) override;
+    virtual bool hit_test(const Ray& point, HitTestRecord* record) const;
 
     virtual RenderBoxSizeType get_size() const;
     virtual void set_size(const RenderBoxSizeType& size);
