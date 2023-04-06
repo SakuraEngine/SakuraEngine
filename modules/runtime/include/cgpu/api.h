@@ -964,7 +964,7 @@ typedef struct CGPUDescriptorData {
         // TODO: Support descriptor buffer extraction
         //struct
         //{
-        //    struct CGPUPipelineShaderDescriptor* shader;
+        //    struct CGPUShaderEntryDescriptor* shader;
         //    uint32_t buffer_index;
         //    ECGPUShaderStage shader_stage;
         //} extraction_params;
@@ -1190,7 +1190,7 @@ typedef struct CGPUCommandBufferDescriptor {
     bool is_secondary : 1;
 } CGPUCommandBufferDescriptor;
 
-typedef struct CGPUPipelineShaderDescriptor {
+typedef struct CGPUShaderEntryDescriptor {
     CGPUShaderLibraryId library;
     const char8_t* entry;
     ECGPUShaderStage stage;
@@ -1198,7 +1198,7 @@ typedef struct CGPUPipelineShaderDescriptor {
     const CGPUConstantSpecialization* constants;
     uint32_t num_constants;
     // -- constant_specialization
-} CGPUPipelineShaderDescriptor;
+} CGPUShaderEntryDescriptor;
 
 typedef struct CGPUSwapChainDescriptor {
     /// Present Queues
@@ -1263,7 +1263,7 @@ typedef struct CGPURootSignaturePoolDescriptor {
 } CGPURootSignaturePoolDescriptor;
 
 typedef struct CGPURootSignatureDescriptor {
-    struct CGPUPipelineShaderDescriptor* shaders;
+    struct CGPUShaderEntryDescriptor* shaders;
     uint32_t shader_count;
     const CGPUSamplerId* static_samplers;
     const char8_t* const* static_sampler_names;
@@ -1274,11 +1274,9 @@ typedef struct CGPURootSignatureDescriptor {
 } CGPURootSignatureDescriptor;
 
 typedef struct CGPUCompiledShaderDescriptor {
-    ECGPUShaderStage stage;
-    CGPUShaderLibraryId library;
+    CGPUShaderEntryDescriptor entry;
     void* shader_code;
     uint64_t code_size;
-    const char* entry;
 } CGPUCompiledShaderDescriptor;
 
 typedef struct CGPUDescriptorSetDescriptor {
@@ -1288,7 +1286,7 @@ typedef struct CGPUDescriptorSetDescriptor {
 
 typedef struct CGPUComputePipelineDescriptor {
     CGPURootSignatureId root_signature;
-    CGPUPipelineShaderDescriptor* compute_shader;
+    CGPUShaderEntryDescriptor* compute_shader;
 } CGPUComputePipelineDescriptor;
 
 // caution: this must be a restrict flatten-POD struct (no array pointer, no c-str, ...) cause we directly hash it in cgpux.hpp
@@ -1363,11 +1361,11 @@ typedef struct CGPUVertexLayout {
 
 typedef struct CGPURenderPipelineDescriptor {
     CGPURootSignatureId root_signature;
-    const CGPUPipelineShaderDescriptor* vertex_shader;
-    const CGPUPipelineShaderDescriptor* tesc_shader;
-    const CGPUPipelineShaderDescriptor* tese_shader;
-    const CGPUPipelineShaderDescriptor* geom_shader;
-    const CGPUPipelineShaderDescriptor* fragment_shader;
+    const CGPUShaderEntryDescriptor* vertex_shader;
+    const CGPUShaderEntryDescriptor* tesc_shader;
+    const CGPUShaderEntryDescriptor* tese_shader;
+    const CGPUShaderEntryDescriptor* geom_shader;
+    const CGPUShaderEntryDescriptor* fragment_shader;
     const CGPUVertexLayout* vertex_layout;
     const CGPUBlendStateDescriptor* blend_state;
     const CGPUDepthStateDescriptor* depth_state;
@@ -1471,6 +1469,7 @@ typedef struct CGPUShaderLibraryDescriptor {
     const uint32_t* code;
     uint32_t code_size;
     ECGPUShaderStage stage;
+    bool reflection_only;
 } CGPUShaderLibraryDescriptor;
 
 typedef struct CGPUBufferDescriptor {

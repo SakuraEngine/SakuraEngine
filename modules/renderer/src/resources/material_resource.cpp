@@ -157,7 +157,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
     
     CGPURootSignatureId createMaterialRS( skr_material_resource_t::installed_pass& installed_pass, skr::span<CGPUShaderLibraryId> shaders) const
     {
-        CGPUPipelineShaderDescriptor ppl_shaders[CGPU_SHADER_STAGE_COUNT];
+        CGPUShaderEntryDescriptor ppl_shaders[CGPU_SHADER_STAGE_COUNT];
         for (size_t i = 0; i < installed_pass.shaders.size(); i++)
         {
             ppl_shaders[i].library = shaders[i];
@@ -308,14 +308,14 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         auto desc = make_zeroed<CGPURenderPipelineDescriptor>();
         desc.root_signature = installed_pass.root_signature;
         // 1.fill pipeline shaders
-        auto vertex_shader = make_zeroed<CGPUPipelineShaderDescriptor>();
-        auto tesc_shader = make_zeroed<CGPUPipelineShaderDescriptor>();
-        auto tese_shader = make_zeroed<CGPUPipelineShaderDescriptor>();
-        auto geom_shader = make_zeroed<CGPUPipelineShaderDescriptor>();
-        auto fragment_shader = make_zeroed<CGPUPipelineShaderDescriptor>();
+        auto vertex_shader = make_zeroed<CGPUShaderEntryDescriptor>();
+        auto tesc_shader = make_zeroed<CGPUShaderEntryDescriptor>();
+        auto tese_shader = make_zeroed<CGPUShaderEntryDescriptor>();
+        auto geom_shader = make_zeroed<CGPUShaderEntryDescriptor>();
+        auto fragment_shader = make_zeroed<CGPUShaderEntryDescriptor>();
         for (uint32_t i = 0; i < shaders.size(); i++)
         {
-            CGPUPipelineShaderDescriptor* ref = &vertex_shader;
+            CGPUShaderEntryDescriptor* ref = &vertex_shader;
             switch (installed_pass.shaders[i].stage)
             {
             case CGPU_SHADER_STAGE_VERT:

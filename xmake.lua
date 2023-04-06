@@ -43,7 +43,7 @@ if (is_os("windows")) then
     else
         set_runtimes("MDd")
     end
-elseif (is_os("macos") or is_os("linux")) then
+elseif (is_os("macosx") or is_os("linux")) then
     add_requires("python")
     add_requires("libsdl")
     add_requires("gtest")

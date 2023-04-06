@@ -59,15 +59,18 @@ void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSign
     // Pick shader reflection data
     for (uint32_t i = 0; i < desc->shader_count; i++)
     {
-        const CGPUPipelineShaderDescriptor* shader_desc = &desc->shaders[i];
+        const CGPUShaderEntryDescriptor* shader_desc = &desc->shaders[i];
         // Find shader reflection
         for (uint32_t j = 0; j < shader_desc->library->entrys_count; j++)
         {
             CGPUShaderReflection* temp_entry_reflcetion = &shader_desc->library->entry_reflections[j];
-            if (strcmp(shader_desc->entry, temp_entry_reflcetion->entry_name) == 0)
+            if (temp_entry_reflcetion->entry_name)
             {
-                entry_reflections[i] = temp_entry_reflcetion;
-                break;
+                if (strcmp(shader_desc->entry, temp_entry_reflcetion->entry_name) == 0)
+                {
+                    entry_reflections[i] = temp_entry_reflcetion;
+                    break;
+                }
             }
         }
         if (entry_reflections[i] == CGPU_NULLPTR)

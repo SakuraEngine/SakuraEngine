@@ -244,7 +244,7 @@ void create_render_pipeline()
     free(vs_bytes);
     free(fs_bytes);
     // Create RS
-    CGPUPipelineShaderDescriptor ppl_shaders[2];
+    CGPUShaderEntryDescriptor ppl_shaders[2];
     ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
     ppl_shaders[0].entry = "main";
     ppl_shaders[0].library = vertex_shader;

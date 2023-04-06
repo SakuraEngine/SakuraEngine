@@ -18,15 +18,15 @@ struct skr_pso_map_key_t
     ~skr_pso_map_key_t() SKR_NOEXCEPT;
 
     CGPURootSignatureId root_signature;
-    CGPUPipelineShaderDescriptor vertex_shader;
+    CGPUShaderEntryDescriptor vertex_shader;
     skr::vector<CGPUConstantSpecialization> vertex_specializations;
-    CGPUPipelineShaderDescriptor tesc_shader;
+    CGPUShaderEntryDescriptor tesc_shader;
     skr::vector<CGPUConstantSpecialization> tesc_specializations;
-    CGPUPipelineShaderDescriptor tese_shader;
+    CGPUShaderEntryDescriptor tese_shader;
     skr::vector<CGPUConstantSpecialization> tese_specializations;
-    CGPUPipelineShaderDescriptor geom_shader;
+    CGPUShaderEntryDescriptor geom_shader;
     skr::vector<CGPUConstantSpecialization> geom_specializations;
-    CGPUPipelineShaderDescriptor fragment_shader;
+    CGPUShaderEntryDescriptor fragment_shader;
     skr::vector<CGPUConstantSpecialization> fragment_specializations;
     CGPUVertexLayout vertex_layout;
     CGPUBlendStateDescriptor blend_state;

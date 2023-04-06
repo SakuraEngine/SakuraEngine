@@ -15,7 +15,7 @@ CGPUComputePipelineId create_lighting_compute_pipeline(CGPUDeviceId device)
     cs_desc.code_size = cs_length;
     CGPUShaderLibraryId lighting_cs = cgpu_create_shader_library(device, &cs_desc);
     free(cs_bytes);
-    CGPUPipelineShaderDescriptor pipeline_cs = {};
+    CGPUShaderEntryDescriptor pipeline_cs = {};
     pipeline_cs.stage = CGPU_SHADER_STAGE_COMPUTE;
     pipeline_cs.entry = "main";
     pipeline_cs.library = lighting_cs;
@@ -58,7 +58,7 @@ CGPURenderPipelineId create_lighting_render_pipeline(CGPUDeviceId device, CGPUSa
     auto lighting_fs = cgpu_create_shader_library(device, &ps_desc);
     free(vs_bytes);
     free(fs_bytes);
-    CGPUPipelineShaderDescriptor ppl_shaders[2];
+    CGPUShaderEntryDescriptor ppl_shaders[2];
     ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
     ppl_shaders[0].entry = "main";
     ppl_shaders[0].library = screen_vs;
