@@ -31,7 +31,6 @@
 #include "utils/parallel_for.hpp"
 
 #include "resource/resource_system.h"
-#include "GameRuntime/game_animation.h"
 
 #include "tracy/Tracy.hpp"
 

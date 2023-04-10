@@ -58,7 +58,7 @@
                 ccapture = ""
                 if param.isFunctor:
                     ccapture = "L"
-                chas_return = callback.retType != "void"
+                chas_return = callback.retType != "void" and callback.retType
             %>
             if(!lua_isfunction(L, ${i + 1 - out_params_count}))
                 luaL_error(L, "expected function for parameter ${name}");
