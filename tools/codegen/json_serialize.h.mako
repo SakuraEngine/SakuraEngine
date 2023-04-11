@@ -6,12 +6,13 @@
 namespace skr::json
 {
 %for record in generator.filter_types(db.records):
+%if not generator.filter_debug_type(record):
     template <>
     struct ${api} ReadTrait<${record.name}>
     {
         static error_code Read(value_t&& json, ${record.name}& v);
     };
-
+%endif
     template <>
     struct ${api} WriteTrait<const ${record.name}&>
     {

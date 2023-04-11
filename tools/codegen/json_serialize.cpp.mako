@@ -56,6 +56,7 @@ void WriteTrait<const ${enum.name}&>::Write(skr_json_writer_t* writer, ${enum.na
 %endfor
 
 %for record in generator.filter_types(db.records):
+%if not generator.filter_debug_type(record):
 error_code ReadTrait<${record.name}>::Read(value_t&& json, ${record.name}& record)
 {
     %for base in record.bases:
@@ -130,6 +131,7 @@ error_code ReadTrait<${record.name}>::Read(value_t&& json, ${record.name}& recor
     %endfor
     return error_code::SUCCESS;
 } 
+%endif
 void WriteTrait<const ${record.name}&>::WriteFields(skr_json_writer_t* writer, const ${record.name}& record)
 {
     %for base in record.bases:
