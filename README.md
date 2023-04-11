@@ -119,7 +119,7 @@ StateBuffer 由一系列的 StateChunk 组成，每个 StateChunk 描述了一�
 
 <div align=center>
 
-![StateBuffer](https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/showcase/StateBuffer.png)
+![StateBuffer](https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/showcase/StateStream.png)
 
 </div>
 
