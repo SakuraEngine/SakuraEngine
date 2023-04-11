@@ -95,6 +95,11 @@ bool InputValueStorage::get_bool(bool& out_b) const SKR_NOEXCEPT
     return false;
 }
 
+skr_float4_t InputValueStorage::get_raw() const SKR_NOEXCEPT
+{
+    return v;
+}
+
 float InputValueStorage::get_magnitude_val() const SKR_NOEXCEPT
 {
     switch (type)
@@ -133,11 +138,10 @@ InputActionImpl::~InputActionImpl() SKR_NOEXCEPT
 }
 
 template<>
-ActionEventId InputAction::bind_event<float>(const ActionEvent<float>& event, ActionEventId id) SKR_NOEXCEPT
+ActionEventId InputAction::bind_event<float>(const ActionEvent<float>& func, ActionEventId id) SKR_NOEXCEPT
 {
     auto _this = (InputActionImpl*)this;
-    ActionEventImpl<float> func(event);
-    return _this->bind_event_impl([func](const InputValueStorage& ev){
+    return _this->bind_event([func](const InputValueStorage& ev){
         float v;
         if (ev.get_type() == EValueType::kFloat && ev.get_float(v))
         {
@@ -147,11 +151,10 @@ ActionEventId InputAction::bind_event<float>(const ActionEvent<float>& event, Ac
 }
 
 template<>
-ActionEventId InputAction::bind_event<skr_float2_t>(const ActionEvent<skr_float2_t>& event, ActionEventId id) SKR_NOEXCEPT
+ActionEventId InputAction::bind_event<skr_float2_t>(const ActionEvent<skr_float2_t>& func, ActionEventId id) SKR_NOEXCEPT
 {
     auto _this = (InputActionImpl*)this;
-    ActionEventImpl<skr_float2_t> func(event);
-    return _this->bind_event_impl([func](const InputValueStorage& ev){
+    return _this->bind_event([func](const InputValueStorage& ev){
         skr_float2_t v;
         if (ev.get_type() == EValueType::kFloat2 && ev.get_float2(v))
         {
@@ -161,11 +164,10 @@ ActionEventId InputAction::bind_event<skr_float2_t>(const ActionEvent<skr_float2
 }
 
 template<>
-ActionEventId InputAction::bind_event<skr_float3_t>(const ActionEvent<skr_float3_t>& event, ActionEventId id) SKR_NOEXCEPT
+ActionEventId InputAction::bind_event<skr_float3_t>(const ActionEvent<skr_float3_t>& func, ActionEventId id) SKR_NOEXCEPT
 {
     auto _this = (InputActionImpl*)this;
-    ActionEventImpl<skr_float3_t> func(event);
-    return _this->bind_event_impl([func](const InputValueStorage& ev){
+    return _this->bind_event([func](const InputValueStorage& ev){
         skr_float3_t v;
         if (ev.get_type() == EValueType::kFloat3 && ev.get_float3(v))
         {
@@ -175,11 +177,10 @@ ActionEventId InputAction::bind_event<skr_float3_t>(const ActionEvent<skr_float3
 }
 
 template<>
-ActionEventId InputAction::bind_event<bool>(const ActionEvent<bool>& event, ActionEventId id) SKR_NOEXCEPT
+ActionEventId InputAction::bind_event<bool>(const ActionEvent<bool>& func, ActionEventId id) SKR_NOEXCEPT
 {
     auto _this = (InputActionImpl*)this;
-    ActionEventImpl<bool> func(event);
-    return _this->bind_event_impl([func](const InputValueStorage& ev){
+    return _this->bind_event([func](const InputValueStorage& ev){
         bool v;
         if (ev.get_type() == EValueType::kBool && ev.get_bool(v))
         {

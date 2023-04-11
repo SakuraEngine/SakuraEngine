@@ -39,6 +39,7 @@ protected:
     virtual void process_actions(float delta) SKR_NOEXCEPT;
 
     bool runtime_mappable = false;
+    //TODO: modifier ownership?
     lite::VectorStorage<InputModifierId> modifiers;
     InputValueStorage raw_value;
 };
