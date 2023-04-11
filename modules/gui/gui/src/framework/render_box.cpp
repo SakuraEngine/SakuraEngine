@@ -79,8 +79,8 @@ bool RenderBox::hit_test(const Ray& point, HitTestRecord* record) const
     auto max = rtm::vector_add(skr::math::load(pos), skr::math::load(size));
     auto o = origin;
     auto d = direction;
-    auto tmin = (min - o) / d;
-    auto tmax = (max - o) / d;
+    auto tmin = rtm::vector_div(rtm::vector_sub(min, o), d);
+    auto tmax = rtm::vector_div(rtm::vector_sub(max, o), d);
     auto tmin_max = rtm::vector_max(tmin, tmax);
     auto tmax_min = rtm::vector_min(tmin, tmax);
     auto tmin_max_min = rtm::vector_min(tmin_max, tmax_min);
