@@ -21,4 +21,9 @@ ETriggerState InputTriggerPressed::update_state(const InputValueStorage& value, 
     return triggered ? ETriggerState::Triggered : ETriggerState::None;
 }
 
+ETriggerState InputTriggerAlways::update_state(const InputValueStorage& value, float delta) SKR_NOEXCEPT
+{
+    return ETriggerState::Triggered;
+}
+
 } }
