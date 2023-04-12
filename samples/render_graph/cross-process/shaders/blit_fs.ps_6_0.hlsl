@@ -7,7 +7,8 @@ SamplerState texture_sampler : register(s0, space1);
 
 struct VSOut
 {
-    float4 position : SV_POSITION;
+    // ignore SV_POSITION in pixel shader if we dont use it
+    // float4 position : SV_POSITION;
     float2 uv : TEXCOORD0;
 };
 

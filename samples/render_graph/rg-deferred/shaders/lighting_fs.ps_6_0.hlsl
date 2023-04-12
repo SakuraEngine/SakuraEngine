@@ -17,7 +17,8 @@ ConstantBuffer<RootConstants> push_constants : register(b0);
 
 struct VSOut
 {
-    float4 position : SV_POSITION;
+    // ignore SV_POSITION in pixel shader if we dont use it
+    // float4 position : SV_POSITION;
     float2 uv : TEXCOORD0;
 };
 
