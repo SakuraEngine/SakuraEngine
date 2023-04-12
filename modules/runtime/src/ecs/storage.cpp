@@ -941,6 +941,11 @@ void dualQ_get(dual_query_t* query, dual_filter_t* filter, dual_parameters_t* pa
     *params = query->parameters;
 }
 
+dual_storage_t* dualQ_get_storage(dual_query_t* query)
+{
+    return query->storage;
+}
+
 void dualS_all(dual_storage_t *storage, bool includeDisabled, bool includeDead, dual_view_callback_t callback, void *u)
 {
     for(auto& pair : storage->groups)
