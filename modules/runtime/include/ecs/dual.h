@@ -270,6 +270,21 @@ RUNTIME_API dual_storage_t* dualS_create();
  */
 RUNTIME_API void dualS_release(dual_storage_t* storage);
 /**
+* @brief set userdata for storage
+*
+* @param storage
+* @param u
+* @return void
+*/
+RUNTIME_API void dualS_set_userdata(dual_storage_t* storage, void* u);
+/**
+ * @brief get userdata of storage
+ *
+ * @param storage
+ * @return void*
+ */
+RUNTIME_API void* dualS_get_userdata(dual_storage_t* storage);
+/**
  * @brief allocate entities
  * batch allocate numbers of entities with entity type
  * @param storage

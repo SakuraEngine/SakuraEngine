@@ -729,6 +729,16 @@ void dualS_release(dual_storage_t* storage)
     delete storage;
 }
 
+void dualS_set_userdata(dual_storage_t* storage, void* u)
+{
+    storage->userdata = u;
+}
+
+void* dualS_get_userdata(dual_storage_t* storage)
+{
+    return storage->userdata;
+}
+
 void dualS_allocate_type(dual_storage_t* storage, const dual_entity_type_t* type, EIndex count, dual_view_callback_t callback, void* u)
 {
     assert(dual::ordered(*type));
