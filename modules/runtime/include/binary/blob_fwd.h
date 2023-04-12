@@ -83,7 +83,7 @@ using binary::make_blob_builder;
 #define CONBINE_GEMERATED_NAME(file, type) CONBINE_GEMERATED_NAME_IMPL(file, type)
 #define CONBINE_GEMERATED_NAME_IMPL(file, type) GENERATED_BLOB_BUILDER_##file##_##type
 #ifdef __meta__
-#define GENERATED_BLOB_BUILDER(type)
+#define GENERATED_BLOB_BUILDER(type) struct type##Builder;
 #else
 #define GENERATED_BLOB_BUILDER(type) CONBINE_GEMERATED_NAME(SKR_FILE_ID, type)
 #endif
