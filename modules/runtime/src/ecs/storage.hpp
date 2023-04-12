@@ -115,6 +115,7 @@ struct dual_storage_t {
     mutable dual::scheduler_t* scheduler;
     mutable void* currentFiber;
     skr::task::counter_t counter;
+    void* userdata;
 
     dual_storage_t();
     ~dual_storage_t();
