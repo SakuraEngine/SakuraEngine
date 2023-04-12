@@ -165,8 +165,8 @@ typedef struct dual_operation_t {
  *
  */
 typedef struct dual_parameters_t {
-    dual_type_index_t* types;
-    dual_operation_t* accesses;
+    const dual_type_index_t* types;
+    const dual_operation_t* accesses;
     TIndex length;
 } dual_parameters_t;
 
@@ -543,6 +543,7 @@ RUNTIME_API void dualQ_set_meta(dual_query_t* query, const dual_meta_filter_t* m
 RUNTIME_API void dualQ_get_views(dual_query_t* query, dual_view_callback_t callback, void* u);
 RUNTIME_API void dualQ_get_groups(dual_query_t* query, dual_group_callback_t callback, void* u);
 RUNTIME_API void dualQ_get_views_group(dual_query_t* query, dual_group_t* group, dual_view_callback_t callback, void* u);
+RUNTIME_API dual_storage_t* dualQ_get_storage(dual_query_t* query);
 
 /**
  * @brief test if group contains components, whether owned or shared
