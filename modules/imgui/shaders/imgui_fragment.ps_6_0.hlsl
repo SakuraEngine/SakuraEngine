@@ -1,6 +1,7 @@
 struct PSIn
 {
-    float4 pos : SV_POSITION;
+    // ignore SV_POSITION in pixel shader if we dont use it
+    // float4 position : SV_POSITION;
     float4 col : COLOR0;
     float2 uv  : TEXCOORD0;
 };

@@ -13,20 +13,18 @@ struct VSIn
 
 struct VSOut
 {
-    float4 out_pos : SV_POSITION;
     float4 out_col : COLOR0;
     float2 out_uv  : TEXCOORD0;
 };
 
-VSOut main(VSIn input)
+VSOut main(VSIn input, out float4 position : SV_POSITION)
 {
     VSOut output;
     // output.out_pos.xy = 
     //    input.pos.xy * push_constants.invDisplaySize *
     //    float2(2.0, -2.0) + float2(-1.0, 1.0);
     // output.out_pos.zw = float2(0, 1);
-
-    output.out_pos = mul( ProjectionMatrix, float4(input.pos.xy, 0.f, 1.f) );
+    position = mul( ProjectionMatrix, float4(input.pos.xy, 0.f, 1.f) );
     output.out_col = input.col;
     output.out_uv = input.uv;
     return output;
