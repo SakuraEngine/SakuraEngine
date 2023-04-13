@@ -117,6 +117,7 @@ static void move_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uint32_t
                 else                          // memory is in chunk
                 {
                     new_array(arrayDst, size, elemSize, align);
+                    arrayDst->EndX = (char*)arrayDst->BeginX + arraySrc->size_in_bytes();
                     for (char *currDst = (char*)arrayDst->BeginX, *currSrc = (char*)arraySrc->BeginX;
                          currDst != arrayDst->EndX; currDst += elemSize, currSrc += elemSize)
                         move(dstV.chunk, dstV.start + j, currDst, (dual_chunk_t*)srcC, srcStart + j, currSrc);
@@ -128,7 +129,26 @@ static void move_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uint32_t
                 move(dstV.chunk, dstV.start + j, (size_t)j * size + dst, (dual_chunk_t*)srcC, srcStart + j, (size_t)j * size + src);
     }
     else
-        memcpy(dst, src, dstV.count * (size_t)size);
+    {
+        if (type.is_buffer())
+        {
+            forloop (j, 0, dstV.count)
+            {
+                auto arrayDst = (dual_array_comp_t*)((size_t)j * size + dst);
+                auto arraySrc = (dual_array_comp_t*)((size_t)j * size + src);
+                if (!is_array_small(arraySrc)) // memory is on heap
+                    *arrayDst = *arraySrc;    // just steal it
+                else                          // memory is in chunk
+                {
+                    new_array(arrayDst, size, elemSize, align);
+                    arrayDst->EndX = (char*)arrayDst->BeginX + arraySrc->size_in_bytes();
+                    memcpy(arrayDst->BeginX, arraySrc->BeginX, arraySrc->size_in_bytes());
+                }
+            }
+        }
+        else
+            memcpy(dst, src, dstV.count * (size_t)size);
+    }
 }
 
 void memdup(void* dst, const void* src, size_t size, size_t count) noexcept
@@ -187,6 +207,7 @@ static void duplicate_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uin
                 else
                 {
                     new_array(arrayDst, size, elemSize, align);
+                    arrayDst->EndX = (char*)arrayDst->BeginX + arraySrc->size_in_bytes();
                 }
 
                 for (char *currDst = (char*)arrayDst->BeginX, *currSrc = (char*)arraySrc->BeginX;
