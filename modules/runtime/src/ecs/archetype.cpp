@@ -192,6 +192,8 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
         if (t == kDisableComponent)
             proto.disabled = true;
     }
+    if(toCleanCount == proto.type.type.length)
+        toClean[toCleanCount++] = kDeadComponent;
     // eastl::sort(&toClean[0], &toClean[toCleanCount]); dead is always smaller
     proto.archetype = archetype;
     proto.size = 0;

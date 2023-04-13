@@ -121,6 +121,6 @@ void entity_registry_t::move_entities(const dual_chunk_view_t& view, EIndex srcI
     forloop (i, 0, view.count)
         entries[e_id(toMove[i])]
         .indexInChunk = view.start + i;
-    memcpy((dual_entity_t*)view.chunk->get_entities() + view.start, toMove, view.count * sizeof(dual_entity_t));
+    std::memcpy((dual_entity_t*)view.chunk->get_entities() + view.start, toMove, view.count * sizeof(dual_entity_t));
 }
 } // namespace dual
