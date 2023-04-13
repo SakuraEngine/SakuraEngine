@@ -13,6 +13,8 @@ extern "C" {
 #define DUAL_COMPONENT_GUID 0x4
 #define DUAL_COMPONENT_DIRTY 0x5
 
+#define DUAL_IS_TAG(c) ((c & 1 << 31) != 0)
+
 /**
  * @brief guid generation function
  *

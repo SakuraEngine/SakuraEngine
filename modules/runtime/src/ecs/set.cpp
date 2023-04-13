@@ -36,11 +36,11 @@ namespace dual
 
     bool ordered(const dual_type_set_t& value)
     {
-        return std::is_sorted(value.data, value.data+value.length);
+        return value.length == 0 || std::is_sorted(value.data, value.data+value.length);
     }
     bool ordered(const dual_entity_set_t& value)
     {
-        return std::is_sorted(value.data, value.data+value.length);
+        return value.length == 0 ||std::is_sorted(value.data, value.data+value.length);
     }
     bool ordered(const dual_entity_type_t& value)
     {

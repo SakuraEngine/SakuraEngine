@@ -355,8 +355,9 @@ void dual_group_t::mark_free(dual_chunk_t* chunk)
     using namespace dual;
     SKR_ASSERT(chunk->index < firstFree);
     firstFree--;
-    eastl::swap(chunks[firstFree]->index, chunks[chunk->index]->index);
-    eastl::swap(chunks[firstFree], chunks[chunk->index]);
+    auto& slot = chunks[chunk->index];
+    eastl::swap(chunks[firstFree]->index, chunk->index);
+    eastl::swap(chunks[firstFree], slot);
 }
 
 void dual_group_t::mark_full(dual_chunk_t* chunk)
@@ -364,8 +365,9 @@ void dual_group_t::mark_full(dual_chunk_t* chunk)
     using namespace dual;
     
     SKR_ASSERT(chunk->index >= firstFree);
-    eastl::swap(chunks[firstFree]->index, chunks[chunk->index]->index);
-    eastl::swap(chunks[firstFree], chunks[chunk->index]);
+    auto& slot = chunks[chunk->index];
+    eastl::swap(chunks[firstFree]->index, chunk->index);
+    eastl::swap(chunks[firstFree], slot);
     firstFree++;
 }
 
