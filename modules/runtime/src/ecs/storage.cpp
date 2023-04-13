@@ -12,6 +12,7 @@
 #include "iterator_ref.hpp"
 #include "scheduler.hpp"
 #include "utils/parallel_for.hpp"
+#include "type_registry.hpp"
 
 dual_storage_t::dual_storage_t()
     : archetypeArena(dual::get_default_pool())
@@ -124,12 +125,18 @@ void dual_storage_t::free(const dual_chunk_view_t& view)
     using namespace dual;
     auto group = view.chunk->group;
     structural_change(group, view.chunk);
-    uint32_t toMove = std::min(view.count, view.chunk->count - view.start - view.count);
+    uint32_t toMove = std::min(view.count, view.chunk->count - (view.start + view.count));
     if (toMove > 0)
     {
-        dual_chunk_view_t moveView{ view.chunk, view.start, toMove };
-        entities.move_entities(moveView, view.chunk->count - toMove);
-        move_view(moveView, view.chunk->count - toMove);
+        dual_chunk_view_t dstView{ view.chunk, view.start, toMove };
+        EIndex srcIndex = view.chunk->count - toMove;
+        entities.move_entities(dstView, srcIndex);
+        move_view(dstView, srcIndex);
+        forloop (i, 0, dstView.count)
+        {
+            auto v = entity_view(dstView.chunk->get_entities()[dstView.start + i]);
+            SKR_ASSERT(v.chunk == dstView.chunk && v.start == dstView.start + i);
+        }
     }
     group->resize_chunk(view.chunk, view.chunk->count - view.count);
 }
@@ -532,6 +539,7 @@ void dual_storage_t::cast(const dual_chunk_view_t& view, dual_group_t* group, du
     if (!group)
     {
         entities.free_entities(view);
+        destruct_view(view);
         free(view);
         return;
     }

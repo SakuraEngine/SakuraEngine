@@ -45,6 +45,13 @@ struct SKR_INPUTSYSTEM_API InputTriggerPressed : public InputTrigger
     bool last_triggered = false;
 };
 
+struct SKR_INPUTSYSTEM_API InputTriggerChanged : public InputTrigger
+{
+    ETriggerState update_state(const InputValueStorage& value, float delta) SKR_NOEXCEPT final;
+
+    InputValueStorage last_value;
+};
+
 struct SKR_INPUTSYSTEM_API InputTriggerAlways : public InputTrigger
 {
     ETriggerState update_state(const InputValueStorage& value, float delta) SKR_NOEXCEPT final;

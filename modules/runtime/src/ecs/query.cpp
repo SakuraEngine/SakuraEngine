@@ -391,7 +391,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
                 return nullptr;
             }
             if(i > j)
-                operation.phase = j - i;
+                operation.phase = i - j;
         }
         if (shared)
         {
