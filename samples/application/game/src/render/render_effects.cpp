@@ -188,6 +188,7 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
             ZoneScopedN("BatchedEnts");
 
             //SKR_LOG_DEBUG("batch: %d -> %d", g_cv->start, g_cv->count);
+            const auto l2ws = dual::get_component_ro<skr_l2w_comp_t>(g_cv);
             const auto translations = dual::get_component_ro<skr_translation_comp_t>(g_cv);
             const auto rotations = dual::get_component_ro<skr_rotation_comp_t>(g_cv);(void)rotations;
             const auto scales = dual::get_component_ro<skr_scale_comp_t>(g_cv);
@@ -200,7 +201,7 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                 const size_t batch_size = 64u;
 #endif
                 skr::parallel_for(translations, translations + g_cv->count, batch_size, 
-                [translations, rotations, scales, this] (auto&& begin, auto&& end){
+                [translations, rotations, scales, l2ws, this] (auto&& begin, auto&& end){
                     ZoneScopedN("ModelMatrixJob");
                 
                     const auto base_cursor = begin - translations;
@@ -211,6 +212,11 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                         
                         // Model Matrix
                         skr_float4x4_t& model_matrix = model_matrices[g_idx];
+                        if(l2ws)
+                        {
+                            model_matrix = l2ws[g_idx].matrix;
+                        }
+                        else
                         {                                    
                             const auto quat = rtm::quat_from_euler_rh(
                                 rtm::scalar_deg_to_rad(-rotations[g_idx].euler.pitch),
