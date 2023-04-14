@@ -55,11 +55,15 @@ skr_blob_arena_t skr_blob_arena_builder_t::build()
 
 size_t skr_blob_arena_builder_t::allocate(size_t size, size_t align)
 {
-    if(offset + size > capacity)
+    void* ptr = (char*)buffer + offset;
+    // alignup ptr
+    ptr = (void*)(((size_t)ptr + align - 1) & ~(align - 1));
+    uint32_t retOffset = (uint32_t)((char*)ptr - (char*)buffer);
+    if(retOffset + size > capacity)
     {
         size_t new_capacity = capacity * 2;
-        if(new_capacity < offset + size)
-            new_capacity = offset + size;
+        if(new_capacity < retOffset + size)
+            new_capacity = retOffset + size;
         SKR_ASSERT(align <= bufferAlign);
         void* new_buffer = sakura_malloc_aligned(new_capacity, bufferAlign);
         if(buffer)
@@ -70,10 +74,6 @@ size_t skr_blob_arena_builder_t::allocate(size_t size, size_t align)
         buffer = new_buffer;
         capacity = new_capacity;
     }
-    void* ptr = (char*)buffer + offset;
-    // alignup ptr
-    ptr = (void*)(((size_t)ptr + align - 1) & ~(align - 1));
-    uint32_t retOffset = (uint32_t)((char*)ptr - (char*)buffer);
     offset = retOffset + size;
     return retOffset;
 }

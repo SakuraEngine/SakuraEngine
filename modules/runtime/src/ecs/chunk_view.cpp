@@ -31,6 +31,9 @@ bool is_array_small(dual_array_comp_t* ptr)
     return ptr->BeginX < ((char*)(ptr + 1) + alignof(std::max_align_t));
 }
 
+#define for_buffer(i, array, size) \
+    for (char* i = (char*)array->BeginX; i != array->EndX; i += size)
+
 static void construct_impl(dual_chunk_view_t view, type_index_t type, EIndex offset, uint32_t size, uint32_t align, uint32_t elemSize, uint32_t maskValue, void (*constructor)(dual_chunk_t* chunk, EIndex index, char* data))
 {
     char* dst = view.chunk->data() + (size_t)offset + (size_t)size * view.start;
@@ -40,7 +43,7 @@ static void construct_impl(dual_chunk_view_t view, type_index_t type, EIndex off
             char* buf = (size_t)j * size + dst;
             auto array = new_array(buf, size, elemSize, align);
             if (constructor)
-                for (char* curr = (char*)array->BeginX; curr != array->EndX; curr += elemSize)
+                for_buffer(curr, array, elemSize)
                     constructor(view.chunk, view.start + j, curr);
         }
     else if (type == kMaskComponent)
@@ -81,10 +84,10 @@ static void destruct_impl(dual_chunk_view_t view, type_index_t type, EIndex offs
         {
             auto array = (dual_array_comp_t*)((size_t)j * size + src);
             if (destructor)
-                for (char* curr = (char*)array->BeginX; curr != array->EndX; curr += elemSize)
+                for_buffer(curr, array, elemSize)
                     destructor(view.chunk, view.start + j, curr);
             else if(resourceFields.count > 0)
-                for (char* curr = (char*)array->BeginX; curr != array->EndX; curr += elemSize)
+                for_buffer(curr, array, elemSize)
                     patchResources(curr);
             if (!is_array_small(array))
                 dual_array_comp_t::free(array->BeginX);
@@ -99,11 +102,11 @@ static void destruct_impl(dual_chunk_view_t view, type_index_t type, EIndex offs
     }
 }
 
-static void move_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uint32_t srcStart, type_index_t type, EIndex offset, uint32_t size, uint32_t align, uint32_t elemSize, void (*move)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src))
+static void move_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uint32_t srcStart, type_index_t type, EIndex srcOffset, EIndex dstOffset, uint32_t size, uint32_t align, uint32_t elemSize, void (*move)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src))
 {
     SKR_ASSERT(!type.is_chunk());
-    char* dst = dstV.chunk->data() + (size_t)offset + (size_t)size * dstV.start;
-    char* src = srcC->data() + (size_t)offset + (size_t)size * srcStart;
+    char* dst = dstV.chunk->data() + (size_t)dstOffset + (size_t)size * dstV.start;
+    char* src = srcC->data() + (size_t)srcOffset + (size_t)size * srcStart;
     if (move)
     {
         if (type.is_buffer())
@@ -228,17 +231,21 @@ static void duplicate_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uin
             forloop (j, 0, dstV.count)
             {
                 auto arraySrc = (dual_array_comp_t*)src;
+                auto arrayDst = (dual_array_comp_t*)((size_t)j * size + dst);
                 if (!is_array_small(arraySrc))
                 {
-                    auto arrayDst = (dual_array_comp_t*)((size_t)j * size + dst);
                     size_t cap = (char*)arraySrc->EndX - (char*)arraySrc->BeginX;
                     arrayDst->BeginX = dual_array_comp_t::allocate(cap);
                     arrayDst->EndX = arrayDst->CapacityX = (char*)arrayDst->BeginX + cap;
                     memcpy(arrayDst->BeginX, arraySrc->BeginX, cap);
                 }
+                else
+                {
+                    new_array(arrayDst, size, elemSize, align);
+                    arrayDst->EndX = (char*)arrayDst->BeginX + arraySrc->size_in_bytes();
+                }
                 if(resourceFields.count > 0)
                 {
-                    auto arrayDst = (dual_array_comp_t*)((size_t)j * size + dst);
                     for (char* curr = (char*)arrayDst->BeginX; curr != arrayDst->EndX; curr += elemSize)
                         patchResources(curr);
                 }
@@ -339,7 +346,7 @@ void move_view(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, uint32_t
         decltype(type->callbacks[i].move) callback = nullptr;
         if((callbackFlags[i] & DCF_MOVE) != 0) DUAL_UNLIKELY
             callback = type->callbacks[i].move;
-        move_impl(dstV, srcC, srcStart, type->type.data[i], offsets[i], sizes[i], aligns[i], elemSizes[i], callback);
+        move_impl(dstV, srcC, srcStart, type->type.data[i], offsets[i], offsets[i], sizes[i], aligns[i], elemSizes[i], callback);
     }
 }
 
@@ -418,7 +425,7 @@ void cast_view(const dual_chunk_view_t& dstV, dual_chunk_t* srcC, EIndex srcStar
                 decltype(srcType->callbacks[srcI].move) callback = nullptr;
                 if((srcCallbackFlags[srcI] & DCF_MOVE) != 0) DUAL_UNLIKELY
                     callback = srcType->callbacks[srcI].move;
-                move_impl(dstV, srcC, srcStart, srcT, srcOffsets[srcI], srcSizes[srcI], srcAligns[srcI], srcElemSizes[srcI], callback);
+                move_impl(dstV, srcC, srcStart, srcT, srcOffsets[srcI], dstOffsets[dstI], srcSizes[srcI], srcAligns[srcI], srcElemSizes[srcI], callback);
             }
             if (dstMasks)
             {
@@ -568,6 +575,11 @@ void disable_components(const dual_chunk_view_t& view, const dual_type_set_t& ty
         masks[i].fetch_and(~newMask);
 }
 } // namespace dual
+
+dual_type_index_t dualV_get_local_type(const dual_chunk_view_t* view, dual_type_index_t type)
+{
+    return view->chunk->group->index(type);
+}
 
 template <bool readonly, bool local>
 auto dualV_get_owned(const dual_chunk_view_t* view, dual_type_index_t type)

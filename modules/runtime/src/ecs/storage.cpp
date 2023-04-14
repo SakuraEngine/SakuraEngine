@@ -549,8 +549,11 @@ void dual_storage_t::cast(const dual_chunk_view_t& view, dual_group_t* group, du
         group->add_chunk(view.chunk);
         return;
     }
-    if (srcGroup->archetype != group->archetype)
-        scheduler->sync_archetype(group->archetype);
+    if (scheduler)
+    {
+        if (srcGroup->archetype != group->archetype)
+            scheduler->sync_archetype(group->archetype);
+    }
     cast_impl(view, group, callback, u);
 }
 
@@ -607,7 +610,8 @@ void dual_storage_t::batch(const dual_entity_t* ents, EIndex count, dual_view_ca
         else
         {
             callback(u, &view);
-            view = v;
+            // v is not valid anymore
+            view = entity_view(ents[current]);
         }
         current++;
     }
@@ -949,6 +953,18 @@ void dualQ_get_views_group(dual_query_t* query, dual_group_t* group, dual_view_c
 const char* dualQ_get_error()
 {
     return dual::get_error().c_str();
+}
+
+EIndex dualQ_get_count(dual_query_t* query)
+{
+    EIndex result = 0;
+    auto accumulator = +[](void* u, dual_group_t* view)
+    {
+        EIndex* result = (EIndex*)u;
+        *result += view->size;
+    };
+    query->storage->query_groups(query, accumulator, &result);
+    return result;
 }
 
 void dualQ_get(dual_query_t* query, dual_filter_t* filter, dual_parameters_t* params)
