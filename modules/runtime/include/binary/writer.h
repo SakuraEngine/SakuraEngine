@@ -49,6 +49,16 @@ struct RUNTIME_API WriteTrait<const bool&> {
 };
 
 template <>
+struct RUNTIME_API WriteTrait<const uint8_t&> {
+    static int Write(skr_binary_writer_t* writer, uint8_t value);
+};
+
+template <>
+struct RUNTIME_API WriteTrait<const uint16_t&> {
+    static int Write(skr_binary_writer_t* writer, uint16_t value);
+};
+
+template <>
 struct RUNTIME_API WriteTrait<const uint32_t&> {
     static int Write(skr_binary_writer_t* writer, uint32_t value);
 };

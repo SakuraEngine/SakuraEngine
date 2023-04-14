@@ -113,18 +113,34 @@ struct WriteTrait<const int32_t&> {
 };
 
 template <>
-struct WriteTrait<const uint32_t&> {
-    static void Write(skr_json_writer_t* writer, uint32_t i)
+struct WriteTrait<const int64_t&> {
+    static void Write(skr_json_writer_t* writer, int64_t i)
+    {
+        writer->Int64(i);
+    }
+};
+
+template <>
+struct WriteTrait<const uint8_t&> {
+    static void Write(skr_json_writer_t* writer, uint8_t i)
     {
         writer->UInt(i);
     }
 };
 
 template <>
-struct WriteTrait<const int64_t&> {
-    static void Write(skr_json_writer_t* writer, int64_t i)
+struct WriteTrait<const uint16_t&> {
+    static void Write(skr_json_writer_t* writer, uint16_t i)
     {
-        writer->Int64(i);
+        writer->UInt(i);
+    }
+};
+
+template <>
+struct WriteTrait<const uint32_t&> {
+    static void Write(skr_json_writer_t* writer, uint32_t i)
+    {
+        writer->UInt(i);
     }
 };
 
