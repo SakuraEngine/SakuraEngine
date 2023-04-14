@@ -9,6 +9,16 @@ int WriteTrait<const bool&>::Write(skr_binary_writer_t* writer, bool value)
     return WriteTrait<const uint32_t&>::Write(writer, (uint32_t)value);
 }
 
+int WriteTrait<const uint8_t&>::Write(skr_binary_writer_t* writer, uint8_t value)
+{
+    return WriteValue(writer, &value, sizeof(value));
+}
+
+int WriteTrait<const uint16_t&>::Write(skr_binary_writer_t* writer, uint16_t value)
+{
+    return WriteValue(writer, &value, sizeof(value));
+}
+
 int WriteTrait<const uint32_t&>::Write(skr_binary_writer_t* writer, uint32_t value)
 {
     return WriteValue(writer, &value, sizeof(value));
@@ -133,7 +143,7 @@ int WriteTrait<const skr_blob_arena_t&>::Write(skr_binary_writer_t* writer, cons
     ret = WriteTrait<const uint32_t&>::Write(writer, (uint32_t)blob.get_align());
     if (ret != 0)
         return ret;
-    return WriteValue(writer, blob.get_buffer(), (uint32_t)blob.get_size());
+    return 0;
 }
 
 void BlobTrait<skr::string_view>::BuildArena(skr_blob_arena_builder_t& arena, skr::string_view& dst, const skr::string& src)

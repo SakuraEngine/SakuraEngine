@@ -44,6 +44,22 @@ struct RUNTIME_API ReadTrait<bool> {
 };
 
 template <>
+struct RUNTIME_API ReadTrait<uint8_t> {
+    static int Read(skr_binary_reader_t* reader, uint8_t& value)
+    {
+        return reader->read(&value, sizeof(value));
+    }
+};
+
+template <>
+struct RUNTIME_API ReadTrait<uint16_t> {
+    static int Read(skr_binary_reader_t* reader, uint16_t& value)
+    {
+        return reader->read(&value, sizeof(value));
+    }
+};
+
+template <>
 struct RUNTIME_API ReadTrait<uint32_t> {
     static int Read(skr_binary_reader_t* reader, uint32_t& value)
     {
