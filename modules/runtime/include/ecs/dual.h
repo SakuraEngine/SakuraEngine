@@ -542,6 +542,8 @@ RUNTIME_API dual_query_t* dualQ_from_literal(dual_storage_t* storage, const char
 
 RUNTIME_API const char* dualQ_get_error();
 
+RUNTIME_API EIndex dualQ_get_count(dual_query_t* query);
+
 RUNTIME_API void dualQ_get(dual_query_t* query, dual_filter_t* filter, dual_parameters_t* params);
 /**
  * @brief set meta filter for a query
@@ -638,6 +640,14 @@ RUNTIME_API const void* dualV_get_owned_ro_local(const dual_chunk_view_t* view, 
  * @return void*
  */
 RUNTIME_API void* dualV_get_owned_rw_local(const dual_chunk_view_t* view, dual_type_index_t localType);
+/**
+ * @brief get local type id of a component from chunk view
+ *
+ * @param view
+ * @param type
+ * @return dual_type_index_t
+ */
+RUNTIME_API dual_type_index_t dualV_get_local_type(const dual_chunk_view_t* view, dual_type_index_t type);
 /**
  * @brief get entity list from chunk view
  *

@@ -105,6 +105,7 @@ void entity_registry_t::free_entities(const dual_chunk_view_t& view)
 
 void entity_registry_t::move_entities(const dual_chunk_view_t& view, const dual_chunk_t* src, EIndex srcIndex)
 {
+    SKR_ASSERT(src != view.chunk || (srcIndex >= view.start + view.count));
     const dual_entity_t* toMove = src->get_entities() + srcIndex;
     forloop (i, 0, view.count)
     {
@@ -117,6 +118,7 @@ void entity_registry_t::move_entities(const dual_chunk_view_t& view, const dual_
 
 void entity_registry_t::move_entities(const dual_chunk_view_t& view, EIndex srcIndex)
 {
+    SKR_ASSERT(srcIndex >= view.start + view.count);
     const dual_entity_t* toMove = view.chunk->get_entities() + srcIndex;
     forloop (i, 0, view.count)
         entries[e_id(toMove[i])]
