@@ -39,7 +39,6 @@ if (is_os("windows")) then
         set_runtimes("MD")
     elseif (is_mode("asan")) then
         table.insert(defs_list, "_DISABLE_VECTOR_ANNOTATION")
-        set_runtimes("MDd")
     else
         set_runtimes("MDd")
     end
