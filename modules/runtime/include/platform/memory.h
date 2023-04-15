@@ -234,7 +234,7 @@ struct SkrTracedNew
         const std::string_view name = skr::demangle<T>();
         TracyMessage(name.data(), name.size());
         SKR_ASSERT(size >= sizeof(T));
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
+        void* pMemory = SkrNewAlignedWithCZone(size, alignof(T), sourcelocation.data(), poolname.data());
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
     }
@@ -245,7 +245,7 @@ struct SkrTracedNew
         const std::string_view name = skr::demangle<T>();
         TracyMessage(name.data(), name.size());
         SKR_ASSERT(size >= sizeof(T));
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
+        void* pMemory = SkrNewAlignedWithCZone(size, alignof(T), sourcelocation.data(), poolname.data());
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
     }
