@@ -4,6 +4,30 @@
 
 namespace dual
 {
+type_builder_t::type_builder_t()
+{
+}
+type_builder_t::~type_builder_t()
+{
+}
+type_builder_t::type_builder_t(const type_builder_t& other)
+{
+    indices = other.indices;
+}
+type_builder_t::type_builder_t(type_builder_t&& other)
+{
+    indices = std::move(other.indices);
+}
+type_builder_t& type_builder_t::operator=(const type_builder_t& other)
+{
+    indices = other.indices;
+    return *this;
+}
+type_builder_t& type_builder_t::operator=(type_builder_t&& other)
+{
+    indices = std::move(other.indices);
+    return *this;
+}
 type_builder_t& type_builder_t::with(const dual_type_index_t* types, uint32_t inLength)
 {
     indices.append(types, types + inLength);

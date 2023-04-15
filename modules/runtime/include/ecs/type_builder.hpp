@@ -46,8 +46,12 @@ struct static_type_set_T {
 };
 
 struct RUNTIME_API type_builder_t {
-    type_builder_t() = default;
-    ~type_builder_t() = default;
+    type_builder_t();
+    ~type_builder_t();
+    type_builder_t(const type_builder_t&);
+    type_builder_t(type_builder_t&&);
+    type_builder_t& operator=(const type_builder_t&);
+    type_builder_t& operator=(type_builder_t&&);
     type_builder_t& with(const dual_type_index_t* types, uint32_t length);
     type_builder_t& with(dual_type_index_t type)
     {
