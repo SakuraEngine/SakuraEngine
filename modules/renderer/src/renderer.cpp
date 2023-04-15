@@ -297,32 +297,30 @@ void skr_render_effect_attach(SRendererId r, dual_chunk_view_t* g_cv, skr_render
         // create render effect entities in storage
         if (entity_type.type.length != 0)
         {
-            dual_chunk_view_t* out_cv = nullptr;
+            uint32_t g_id = 0;
             auto initialize_callback = [&](dual_chunk_view_t* r_cv) {
                 // do user initialize callback
                 i_processor->second->initialize_data(renderer, world, g_cv, r_cv);
-                out_cv = r_cv;
-            };
-            dualS_allocate_type(world, &entity_type, g_cv->count, DUAL_LAMBDA(initialize_callback));
-            // attach render effect entities to game entities
-            if (out_cv)
-            {
-                auto entities = dualV_get_entities(out_cv);
-                for (uint32_t i = 0; i < g_cv->count; i++)
+                
+                // attach render effect entities to game entities
+                auto entities = dualV_get_entities(r_cv);
+                for (uint32_t i = 0; i < r_cv->count; i++)
                 {
-                    auto& features = feature_arrs[i];
-#ifdef _DEBUG
+                    auto& features = feature_arrs[g_id + i];
+    #ifdef _DEBUG
                     for (auto& _ : features)
                     {
                         SKR_ASSERT(strcmp(_.name, effect_name) != 0 && "Render effect already attached");
                     }
-#endif
+    #endif
                     features.emplace_back( skr_render_effect_t{ nullptr, DUAL_NULL_ENTITY } );
                     auto& feature = features.back();
                     feature.name = effect_name;
                     feature.effect_entity = entities[i];
                 }
-            }
+                g_id += r_cv->count;
+            };
+            dualS_allocate_type(world, &entity_type, g_cv->count, DUAL_LAMBDA(initialize_callback));
         }
         else
         {
@@ -336,23 +334,28 @@ void skr_render_effect_detach(SRendererId r, dual_chunk_view_t* cv, skr_render_e
     if (cv && cv->count)
     {
         eastl::fixed_vector<dual_entity_t, 16> render_effects;
-        render_effects.reserve(cv->count);
+        //render_effects.reserve(cv->count);
         auto feature_arrs = (render_effects_t*)dualV_get_owned_rw(cv, dual_id_of<skr_render_effect_t>::get());
+        auto entities = dualV_get_entities(cv);
         if (feature_arrs)
         {
             for (uint32_t i = 0; i < cv->count; i++)
             {
                 auto& features = feature_arrs[i];
+                bool found = false;
                 for (auto iter = features.begin(); iter != features.end(); iter++)
                 {
                     if (strcmp(iter->name, effect_name) == 0)
                     {
                         render_effects.emplace_back(iter->effect_entity);
-                        iter->name = nullptr;
-                        iter->effect_entity = DUAL_NULL_ENTITY;
                         features.erase(iter);
+                        found = true;
                         break;
                     }
+                }
+                if(!found)
+                {
+                    SKR_LOG_WARN("Render effect %s not attached to entity %d", effect_name, entities[i]);
                 }
             }
         }
