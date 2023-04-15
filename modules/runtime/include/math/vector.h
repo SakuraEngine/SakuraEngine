@@ -1,3 +1,4 @@
+#pragma once
 #include "rtm/vector4f.h"
 
 #include "type/type.h"

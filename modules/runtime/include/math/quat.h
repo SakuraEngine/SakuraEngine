@@ -1,3 +1,4 @@
+#pragma once
 #include "rtm/quatf.h"
 
 #include "type/type.h"
