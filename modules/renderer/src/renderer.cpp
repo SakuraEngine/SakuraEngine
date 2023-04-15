@@ -340,22 +340,20 @@ void skr_render_effect_detach(SRendererId r, dual_chunk_view_t* cv, skr_render_e
         auto feature_arrs = (render_effects_t*)dualV_get_owned_rw(cv, dual_id_of<skr_render_effect_t>::get());
         if (feature_arrs)
         {
-            uint32_t removed_index = 0;
             for (uint32_t i = 0; i < cv->count; i++)
             {
                 auto& features = feature_arrs[i];
-                for (auto& _ : features)
+                for (auto iter = features.begin(); iter != features.end(); iter++)
                 {
-                    if (strcmp(_.name, effect_name) == 0)
+                    if (strcmp(iter->name, effect_name) == 0)
                     {
-                        render_effects.emplace_back(_.effect_entity);
-                        _.name = nullptr;
-                        _.effect_entity = DUAL_NULL_ENTITY;
-                        removed_index = i;
+                        render_effects.emplace_back(iter->effect_entity);
+                        iter->name = nullptr;
+                        iter->effect_entity = DUAL_NULL_ENTITY;
+                        features.erase(iter);
                         break;
                     }
                 }
-                features.erase(features.begin() + removed_index);
             }
         }
         auto storage = dualC_get_storage(cv->chunk);
