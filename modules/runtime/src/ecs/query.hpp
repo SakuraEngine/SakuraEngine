@@ -8,9 +8,14 @@
 namespace dual
 {
 struct query_cache_t {
-    eastl::unique_ptr<char[]> data;
-    bool includeDisabled;
-    bool includeDead;
+    query_cache_t() = default;
+    eastl::vector<uint8_t> data;
+    query_cache_t(query_cache_t&&) = default;
+    query_cache_t& operator=(query_cache_t&&) = default;
+    query_cache_t(const query_cache_t&) = delete;
+    query_cache_t& operator=(const query_cache_t&) = delete;
+    bool includeDisabled = false;
+    bool includeDead = false;
     dual_filter_t filter;
     llvm_vecsmall::SmallVector<dual_group_t*, 32> groups;
     using iterator = eastl::vector<dual_group_t*>::iterator;
@@ -20,7 +25,7 @@ skr::string& get_error();
 } // namespace dual
 
 struct dual_query_t {
-    dual_storage_t* storage;
+    dual_storage_t* storage = nullptr;
     dual_filter_t filter;
     dual_meta_filter_t meta;
     dual_filter_t buildedFilter;
