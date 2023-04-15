@@ -127,6 +127,7 @@ namespace skr::task
             };
             ftl::Task task{t, f};
             internal->AddTask(task, ftl::TaskPriority::Normal, event ? event->internal : nullptr FTL_TASK_NAME(, name));
+            if(event) event->internal->Decrement();
         }
         
         template<class F>
