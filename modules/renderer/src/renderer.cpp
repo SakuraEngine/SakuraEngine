@@ -299,8 +299,11 @@ void skr_render_effect_attach(SRendererId r, dual_chunk_view_t* g_cv, skr_render
         {
             uint32_t g_id = 0;
             auto initialize_callback = [&](dual_chunk_view_t* r_cv) {
+                dual_chunk_view_t sub_g_cv = *g_cv;
+                sub_g_cv.start = g_cv->start + g_id;
+                sub_g_cv.count = r_cv->count;
                 // do user initialize callback
-                i_processor->second->initialize_data(renderer, world, g_cv, r_cv);
+                i_processor->second->initialize_data(renderer, world, &sub_g_cv, r_cv);
                 
                 // attach render effect entities to game entities
                 auto entities = dualV_get_entities(r_cv);
@@ -321,6 +324,7 @@ void skr_render_effect_attach(SRendererId r, dual_chunk_view_t* g_cv, skr_render
                 g_id += r_cv->count;
             };
             dualS_allocate_type(world, &entity_type, g_cv->count, DUAL_LAMBDA(initialize_callback));
+            SKR_ASSERT(g_id == g_cv->count && "Render effect entities count mismatch");
         }
         else
         {
