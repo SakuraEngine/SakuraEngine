@@ -132,11 +132,6 @@ void dual_storage_t::free(const dual_chunk_view_t& view)
         EIndex srcIndex = view.chunk->count - toMove;
         entities.move_entities(dstView, srcIndex);
         move_view(dstView, srcIndex);
-        forloop (i, 0, dstView.count)
-        {
-            auto v = entity_view(dstView.chunk->get_entities()[dstView.start + i]);
-            SKR_ASSERT(v.chunk == dstView.chunk && v.start == dstView.start + i);
-        }
     }
     group->resize_chunk(view.chunk, view.chunk->count - view.count);
 }
@@ -304,7 +299,9 @@ dual_chunk_view_t dual_storage_t::entity_view(dual_entity_t e) const
     using namespace dual;
     SKR_ASSERT(e_id(e) < entities.entries.size());
     auto& entry = entities.entries[e_id(e)];
-    return { entry.chunk, entry.indexInChunk, 1 };
+    if(entry.version == e_version(e))
+        return { entry.chunk, entry.indexInChunk, 1 };
+    return { nullptr, 0, 1 };
 }
 
 bool dual_storage_t::components_enabled(const dual_entity_t src, const dual_type_set_t& type)

@@ -135,8 +135,8 @@ const dual::query_cache_t& dual_storage_t::get_query_cache(const dual_filter_t& 
     cache.includeDead = includeDead;
     cache.includeDisabled = includeDisabled;
     auto totalSize = data_size(filter);
-    cache.data.reset(new char[totalSize]);
-    char* data = cache.data.get();
+    cache.data.resize(totalSize);
+    char* data = (char*)cache.data.data();
     cache.filter = clone(filter, data);
     return queryCaches.emplace(cache.filter, std::move(cache)).first->second;
 }
