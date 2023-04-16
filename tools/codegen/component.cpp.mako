@@ -62,7 +62,11 @@ static struct RegisterComponent${type.id}Helper
     %else:
         desc.elementSize = 0;
     %endif
+    %if hasattr(type.attrs.component, "buffer"):
+        desc.alignment = alignof(dual::array_comp_T<${type.name}, ${type.attrs.component.buffer}>);
+    %else:
         desc.alignment = alignof(${type.name});
+    %endif
 
         dual::SetLuaBindCallback<${type.name}>(desc);
     
