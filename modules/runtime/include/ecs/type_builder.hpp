@@ -65,6 +65,7 @@ struct RUNTIME_API type_builder_t {
     }
     void reserve(uint32_t size);
     dual_type_set_t build();
+    bool empty() const { return indices.empty(); }
 protected:
     llvm_vecsmall::SmallVector<dual_type_index_t, 8> indices;
 };

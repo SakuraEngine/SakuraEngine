@@ -16,6 +16,7 @@
 #include <EASTL/numeric.h>
 #include <containers/string.hpp>
 #include "utils/bits.hpp"
+#include "scheduler.hpp"
 #if __SSE2__
     #include <emmintrin.h>
 #endif
@@ -556,19 +557,45 @@ void dual_storage_t::build_queries()
             query->buildedFilter.none = clone(none, data);
         }
     }
+    // build query cache
+    for(auto& query : queries)
+    {
+        (void)get_query_cache(query->buildedFilter);
+    }
     queriesBuilt = true;
 }
 
 void dual_storage_t::query(const dual_query_t* filter, dual_view_callback_t callback, void* u)
 {
-    build_queries();
-    return query(filter->buildedFilter, filter->meta, callback, u);
+    bool mainThread = false;
+    if(scheduler)
+    {
+        mainThread = scheduler->is_main_thread(this);
+    }
+    if(mainThread)
+        build_queries();
+    else
+        SKR_ASSERT(queriesBuilt);
+    
+    auto filterChunk = [&](dual_group_t* group) {
+        query(group, filter->buildedFilter, filter->meta, callback, u);
+    };
+    query_groups(filter->buildedFilter, filter->meta, DUAL_LAMBDA(filterChunk));
 }
 
 
 void dual_storage_t::query_groups(const dual_query_t* filter, dual_group_callback_t callback, void* u)
 {
-    build_queries();
+    bool mainThread = false;
+    if(scheduler)
+    {
+        mainThread = scheduler->is_main_thread(this);
+    }
+    if(mainThread)
+        build_queries();
+    else
+        SKR_ASSERT(queriesBuilt);
+    
     return query_groups(filter->buildedFilter, filter->meta, callback, u);
 }
 

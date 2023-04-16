@@ -147,6 +147,7 @@ struct dual_storage_t {
 
     void cast_impl(const dual_chunk_view_t& view, dual_group_t* group, dual_cast_callback_t callback, void* u);
     void cast(const dual_chunk_view_t& view, dual_group_t* group, dual_cast_callback_t callback, void* u);
+    void cast(dual_group_t* srcGroup, dual_group_t* group, dual_cast_callback_t callback, void* u);
     dual_group_t* cast(dual_group_t* group, const dual_delta_type_t& diff);
 
     dual_chunk_view_t entity_view(dual_entity_t e) const;

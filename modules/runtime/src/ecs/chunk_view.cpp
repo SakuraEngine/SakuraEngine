@@ -453,6 +453,32 @@ void cast_view(const dual_chunk_view_t& dstV, dual_chunk_t* srcC, EIndex srcStar
             ++dstI;
         }
     }
+    while(srcI < srcType->firstChunkComponent)
+    {
+        type_index_t srcT = srcTypes.data[srcI];
+        decltype(srcType->callbacks[srcI].destructor) callback = nullptr;
+        if((srcCallbackFlags[srcI] & DCF_CTOR) != 0) DUAL_UNLIKELY
+            callback = srcType->callbacks[srcI].destructor;
+        destruct_impl({ srcC, srcStart, dstV.count }, srcT, srcOffsets[srcI], srcSizes[srcI], srcElemSizes[srcI], srcType->resourceFields[srcI], callback);
+        ++srcI;
+    }
+    while(dstI < dstType->firstChunkComponent)
+    {
+        type_index_t dstT = dstTypes.data[dstI];
+        decltype(dstType->callbacks[dstI].constructor) callback = nullptr;
+        if((dstCallbackFlags[dstI] & DCF_CTOR) != 0) DUAL_UNLIKELY
+            callback = dstType->callbacks[dstI].constructor;
+        construct_impl(dstV, dstT, dstOffsets[dstI], dstSizes[dstI], dstAligns[dstI], dstElemSizes[dstI], maskValue, callback);
+        if (dstMasks)
+            forloop (i, 0, dstV.count)
+                dstMasks[i]
+                .set(dstI);
+        if (dstDirtys)
+            forloop (i, 0, dstV.count)
+                dstDirtys[i]
+                .set(dstI);
+        ++dstI;
+    }
 }
 
 
