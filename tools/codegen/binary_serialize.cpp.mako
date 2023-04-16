@@ -8,7 +8,7 @@
 
 <%def name="archive_field(name, field, array)">
 %if hasattr(field.attrs, "arena"):
-    ret = Archive(archive, arena_${field.attrs.arena}, record.${name}${array});
+    ret = ArchiveBlob(archive, arena_${field.attrs.arena}, record.${name}${array});
 %else:
     ret = Archive(archive, record.${name}${array});
 %endif
@@ -26,12 +26,12 @@ int __Archive(S* archive, skr_blob_arena_t& arena, ${record.name}& record)
     %if field.arraySize > 0:
     for(int i = 0; i < ${field.arraySize}; ++i)
     {
-        ret = Archive(archive, arena, record.${name}[i]);
+        ret = ArchiveBlob(archive, arena, record.${name}[i]);
         if(ret != 0)
             return ret;
     }
     %else:
-    ret = Archive(archive, arena, record.${name});
+    ret = ArchiveBlob(archive, arena, record.${name});
     if(ret != 0)
         return ret;
     %endif

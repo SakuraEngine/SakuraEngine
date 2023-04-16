@@ -367,6 +367,14 @@ RUNTIME_API void dualS_cast_view_delta(dual_storage_t* storage, const dual_chunk
  * @param callback optional callback before casting chunk view
  */
 RUNTIME_API void dualS_cast_view_group(dual_storage_t* storage, const dual_chunk_view_t* view, const dual_group_t* group, dual_cast_callback_t callback, void* u);
+
+/**
+ * @brief change entities' type
+ * move whole group to another group, the original group will be destoryed
+ * @param group
+ * @param type
+ */
+RUNTIME_API void dualS_cast_group_delta(dual_storage_t* storage, dual_group_t* group, const dual_delta_type_t* delta, dual_cast_callback_t callback, void* u);
 /**
  * @brief get the chunk view of an entity
  * entity it self does not contain any data, get the chunk view of an entity to access it's data (all structural change apis and data access apis is based on chunk view)

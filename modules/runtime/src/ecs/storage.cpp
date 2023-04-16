@@ -108,7 +108,7 @@ void dual_storage_t::destroy(const dual_chunk_view_t& view)
         SKR_ASSERT(scheduler->is_main_thread(this));
         scheduler->sync_archetype(group->archetype);
     }
-    assert(!group->isDead);
+    SKR_ASSERT(!group->isDead);
     auto dead = group->dead;
     if (dead)
         cast(view, dead, nullptr, nullptr);
@@ -554,6 +554,41 @@ void dual_storage_t::cast(const dual_chunk_view_t& view, dual_group_t* group, du
     cast_impl(view, group, callback, u);
 }
 
+void dual_storage_t::cast(dual_group_t* srcGroup, dual_group_t* group, dual_cast_callback_t callback, void* u)
+{
+    using namespace dual;
+    if (srcGroup == group)
+        return;
+    if (scheduler)
+    {
+        SKR_ASSERT(scheduler->is_main_thread(this));
+        scheduler->sync_archetype(srcGroup->archetype);
+    }
+    if (!group)
+    {
+        group->clear();
+        return;
+    }
+    if (srcGroup->archetype == group->archetype)
+    {
+        for(auto chunk : srcGroup->chunks)
+            group->add_chunk(chunk);
+        destruct_group(srcGroup);
+        return;
+    }
+    if (scheduler)
+    {
+        scheduler->sync_archetype(group->archetype);
+    }
+    //NOTE srcGroup->chunks can be modified during cast_impl
+    auto chunks = srcGroup->chunks;
+    for (auto chunk : chunks)
+    {
+        dual_chunk_view_t view = { chunk, 0, chunk->count };
+        cast_impl(view, group, callback, u);
+    }
+}
+
 dual_group_t* dual_storage_t::cast(dual_group_t* srcGroup, const dual_delta_type_t& diff)
 {
     using namespace dual;
@@ -750,7 +785,7 @@ void* dualS_get_userdata(dual_storage_t* storage)
 
 void dualS_allocate_type(dual_storage_t* storage, const dual_entity_type_t* type, EIndex count, dual_view_callback_t callback, void* u)
 {
-    assert(dual::ordered(*type));
+    SKR_ASSERT(dual::ordered(*type));
     storage->allocate(storage->get_group(*type), count, callback, u);
 }
 
@@ -781,19 +816,25 @@ void dualS_destroy(dual_storage_t* storage, const dual_chunk_view_t* view)
 
 void dualS_destroy_all(dual_storage_t* storage, const dual_meta_filter_t* meta)
 {
-    assert(dual::ordered(*meta));
+    SKR_ASSERT(dual::ordered(*meta));
     storage->destroy(*meta);
 }
 
 void dualS_cast_view_delta(dual_storage_t* storage, const dual_chunk_view_t* view, const dual_delta_type_t* delta, dual_cast_callback_t callback, void* u)
 {
-    assert(dual::ordered(*delta));
+    SKR_ASSERT(dual::ordered(*delta));
     storage->cast(*view, storage->cast(view->chunk->group, *delta), callback, u);
 }
 
 void dualS_cast_view_group(dual_storage_t* storage, const dual_chunk_view_t* view, const dual_group_t* group, dual_cast_callback_t callback, void* u)
 {
     storage->cast(*view, (dual_group_t*)group, callback, u);
+}
+
+void dualS_cast_group_delta(dual_storage_t* storage, dual_group_t* group, const dual_delta_type_t* delta, dual_cast_callback_t callback, void* u)
+{
+    SKR_ASSERT(dual::ordered(*delta));
+    storage->cast(group, storage->cast(group, *delta), callback, u);
 }
 
 void dualS_access(dual_storage_t* storage, dual_entity_t ent, dual_chunk_view_t* view)
@@ -808,8 +849,11 @@ void dualS_batch(dual_storage_t* storage, const dual_entity_t* ents, EIndex coun
 
 void dualS_query(dual_storage_t* storage, const dual_filter_t* filter, const dual_meta_filter_t* meta, dual_view_callback_t callback, void* u)
 {
-    assert(dual::ordered(*filter));
-    assert(dual::ordered(*meta));
+    SKR_ASSERT(dual::ordered(*filter));
+    SKR_ASSERT(dual::ordered(*meta));
+    
+    if (storage->scheduler)
+        SKR_ASSERT(storage->scheduler->is_main_thread(storage));
     storage->query(*filter, *meta, callback, u);
 }
 
@@ -835,7 +879,7 @@ int dualS_exist(dual_storage_t* storage, dual_entity_t ent)
 
 int dualS_components_enabled(dual_storage_t* storage, dual_entity_t ent, const dual_type_set_t* types)
 {
-    assert(dual::ordered(*types));
+    SKR_ASSERT(dual::ordered(*types));
     return storage->components_enabled(ent, *types);
 }
 
@@ -877,7 +921,7 @@ void dualS_pack_entities(dual_storage_t* storage)
 void dualS_enable_components(const dual_chunk_view_t* view, const dual_type_set_t* types)
 {
     using namespace dual;
-    assert(dual::ordered(*types));
+    SKR_ASSERT(dual::ordered(*types));
     auto group = view->chunk->group;
     auto masks = (mask_t*)dualV_get_owned_rw(view, kMaskComponent);
     auto newMask = group->get_mask(*types);
@@ -890,7 +934,7 @@ void dualS_enable_components(const dual_chunk_view_t* view, const dual_type_set_
 void dualS_disable_components(const dual_chunk_view_t* view, const dual_type_set_t* types)
 {
     using namespace dual;
-    assert(dual::ordered(*types));
+    SKR_ASSERT(dual::ordered(*types));
     auto group = view->chunk->group;
     auto masks = (mask_t*)dualV_get_owned_rw(view, kMaskComponent);
     auto newMask = group->get_mask(*types);
@@ -908,14 +952,14 @@ void dualQ_set_meta(dual_query_t* query, const dual_meta_filter_t* meta)
     }
     else
     {
-        assert(dual::ordered(*meta));
+        SKR_ASSERT(dual::ordered(*meta));
         query->meta = *meta;
     }
 }
 
 dual_query_t* dualQ_create(dual_storage_t* storage, const dual_filter_t* filter, const dual_parameters_t* params)
 {
-    assert(dual::ordered(*filter));
+    SKR_ASSERT(dual::ordered(*filter));
     return storage->make_query(*filter, *params);
 }
 
