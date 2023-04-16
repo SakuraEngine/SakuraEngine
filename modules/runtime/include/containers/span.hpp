@@ -52,7 +52,7 @@ struct ReadTrait<skr::span<T>> {
         span = skr::span<T>((T*)((char*)arena.get_buffer() + offset), count);
         for(int i = 0; i < span.size(); ++i)
         {
-            auto ret = skr::binary::Archive(archive, arena, span[i]);
+            auto ret = skr::binary::ArchiveBlob(archive, arena, span[i]);
             if (ret != 0) {
                 return ret;
             }
@@ -114,7 +114,7 @@ struct WriteTrait<const skr::span<T>&> {
         }
         for(int i = 0; i < span.size(); ++i)
         {
-            ret = skr::binary::Archive(writer, arena, span[i]);
+            ret = skr::binary::ArchiveBlob(writer, arena, span[i]);
             if (ret != 0) {
                 return ret;
             }

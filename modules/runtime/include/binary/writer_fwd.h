@@ -18,7 +18,7 @@ int Archive(skr_binary_writer_t* writer, const T& value, Args&&... args)
 }
 
 template <class T, class ...Args>
-int Archive(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const T& value, Args&&... args)
+int ArchiveBlob(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const T& value, Args&&... args)
 {
     if constexpr (is_complete_v<BlobTrait<T>>)
     {
