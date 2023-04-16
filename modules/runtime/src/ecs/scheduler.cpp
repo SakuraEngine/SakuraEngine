@@ -542,6 +542,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
 
 eastl::vector<skr::task::event_t> dual::scheduler_t::schedule_custom_job(const dual_query_t* query, const skr::task::event_t& counter, dual_resource_operation_t* resources)
 {
+    ZoneScopedN("SchedualCustomJob");
     DependencySet dependencies;
     skr::flat_hash_set<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
     auto sync_entry = [&](const dual_group_t* group, dual_type_index_t localType, bool readonly, bool atomic) {
@@ -578,6 +579,7 @@ eastl::vector<skr::task::event_t> dual::scheduler_t::schedule_custom_job(const d
 
     if (resources)
     {
+        ZoneScopedN("UpdateResourcesEntries");
         SMutexLock resourceLock(resourceMutex.mMutex);
         forloop (i, 0, resources->count)
         {
@@ -594,33 +596,37 @@ eastl::vector<skr::task::event_t> dual::scheduler_t::schedule_custom_job(const d
     };
     auto& params = query->parameters;
     query->storage->query_groups(query->filter, query->meta, DUAL_LAMBDA(add_group));
-    forloop (i, 0, params.length)
+
     {
-        if (type_index_t(params.types[i]).is_tag())
-            continue;
-        if (params.accesses[i].randomAccess == DOS_GLOBAL)
+        ZoneScopedN("UpdateArchetypeEntries");
+        forloop (i, 0, params.length)
         {
-            sync_type(params.types[i], params.accesses[i].readonly, params.accesses[i].atomic);
-        }
-        else
-        {
-            int groupIndex = 0;(void)groupIndex;
-            for (auto group : groups)
+            if (type_index_t(params.types[i]).is_tag())
+                continue;
+            if (params.accesses[i].randomAccess == DOS_GLOBAL)
             {
-                auto localType = group->index(params.types[i]);
-                if (localType == kInvalidTypeIndex)
+                sync_type(params.types[i], params.accesses[i].readonly, params.accesses[i].atomic);
+            }
+            else
+            {
+                int groupIndex = 0;(void)groupIndex;
+                for (auto group : groups)
                 {
-                    auto g = group->get_owner(params.types[i]);
-                    if (g)
+                    auto localType = group->index(params.types[i]);
+                    if (localType == kInvalidTypeIndex)
                     {
-                        sync_entry(g, g->index(params.types[i]), params.accesses[i].readonly, params.accesses[i].atomic);
+                        auto g = group->get_owner(params.types[i]);
+                        if (g)
+                        {
+                            sync_entry(g, g->index(params.types[i]), params.accesses[i].readonly, params.accesses[i].atomic);
+                        }
                     }
+                    else
+                    {
+                        sync_entry(group, localType, params.accesses[i].readonly, params.accesses[i].atomic);
+                    }
+                    ++groupIndex;
                 }
-                else
-                {
-                    sync_entry(group, localType, params.accesses[i].readonly, params.accesses[i].atomic);
-                }
-                ++groupIndex;
             }
         }
     }
