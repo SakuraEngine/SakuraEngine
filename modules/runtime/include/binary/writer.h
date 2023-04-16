@@ -47,7 +47,7 @@ int Write(skr_binary_writer_t* writer, const T& value, Args&&... args);
 template <class T, class ...Args>
 int Archive(skr_binary_writer_t* writer, const T& value, Args&&... args);
 template <class T, class ...Args>
-int Archive(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const T& value, Args&&... args);
+int ArchiveBlob(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const T& value, Args&&... args);
 
 template <class T>
 struct WriteTrait<const T&, std::enable_if_t<std::is_enum_v<T>>> {

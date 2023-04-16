@@ -51,7 +51,7 @@ int Read(skr_binary_reader_t* reader, T&& value, Args&&... args);
 template <class T, class... Args>
 int Archive(skr_binary_reader_t* reader, T&& value, Args&&... args);
 template <class T, class... Args>
-int Archive(skr_binary_reader_t* reader, skr_blob_arena_t& arena, T&& value, Args&&... args);
+int ArchiveBlob(skr_binary_reader_t* reader, skr_blob_arena_t& arena, T&& value, Args&&... args);
 
 template <>
 struct RUNTIME_API ReadTrait<bool> {
