@@ -2,6 +2,7 @@
 #include "writer_fwd.h"
 #include "utils/types.h"
 #include "type/type_helper.hpp"
+#include <bitset>
 
 struct skr_binary_writer_t {
     template <class T>
@@ -13,10 +14,15 @@ struct skr_binary_writer_t {
         };
     }
     int (*vwrite)(void* user_data, const void* data, size_t size);
+    int (*vwrite_bits)(void* user_data, const void* data, size_t size);
     void* user_data;
     int write(const void* data, size_t size)
     {
         return vwrite(user_data, data, size);
+    }
+    int write_bits(const void* data, size_t size)
+    {
+        return vwrite_bits(user_data, data, size);
     }
 };
 

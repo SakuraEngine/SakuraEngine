@@ -14,10 +14,16 @@ struct skr_binary_reader_t {
         };
     }
     int (*vread)(void* user_data, void* data, size_t size);
+    int (*vread_bits)(void* user_data, void* data, size_t size);
     void* user_data;
     int read(void* data, size_t size)
     {
         const auto err = vread(user_data, data, size);
+        return err;
+    }
+    int read_bits(void* data, size_t size)
+    {
+        const auto err = vread_bits(user_data, data, size);
         return err;
     }
 };
