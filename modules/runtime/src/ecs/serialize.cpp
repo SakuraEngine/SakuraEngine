@@ -13,17 +13,18 @@
 #include "internal/utils.hpp"
 #include "binary/reader.h"
 #include "binary/writer.h"
+#include "type_registry.hpp"
 
 template<class T>
 static void ArchiveBuffer(skr_binary_writer_t* writer, const T* buffer, uint32_t count)
 {
-    skr::binary::WriteValue(writer, (const void*)buffer, sizeof(T) * count);
+    skr::binary::WriteBytes(writer, (const void*)buffer, sizeof(T) * count);
 }
 
 template<class T>
 static void ArchiveBuffer(skr_binary_reader_t* reader, T* buffer, uint32_t count)
 {
-    skr::binary::ReadValue(reader, (void*)buffer, sizeof(T) * count);
+    skr::binary::ReadBytes(reader, (void*)buffer, sizeof(T) * count);
 }
 
 static void serialize_impl(const dual_chunk_view_t& view, dual_type_index_t type, EIndex offset, uint32_t size, uint32_t elemSize, skr_binary_writer_t* s, skr_binary_reader_t* ds

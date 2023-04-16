@@ -1,6 +1,10 @@
 #include "resource/resource_handle.h"
 #include "binary/reader.h"
 #include "platform/memory.h"
+#include "utils/bits.hpp"
+#include "rtm/scalard.h"
+#include "rtm/scalarf.h"
+#include "utils/log.h"
 
 skr_blob_arena_t::skr_blob_arena_t()
 : buffer(nullptr), _base(0), align(0), offset(0), capacity(0)  {}
@@ -90,6 +94,132 @@ int ReadTrait<bool>::Read(skr_binary_reader_t* reader, bool& value)
     return ret;
 }
 
+template<class T>
+int ReadBitpacked(skr_binary_reader_t* reader, T& value, IntegerSerdeConfig<T> config)
+{
+    SKR_ASSERT(config.min <= config.max);
+    SKR_ASSERT(reader->vread_bits);
+    if(!reader->vread_bits)
+    {
+        SKR_LOG_ERROR("vread_bits is not implemented. falling back to vread");
+        return reader->read(&value, sizeof(T));
+    }
+    auto bits = 64 - skr::CountLeadingZeros64(config.max - config.min);
+    T compressed;
+    int ret = reader->read_bits(&compressed, bits);
+    if(ret != 0)
+        return ret;
+    value = compressed + config.min;
+    return ret;
+}
+
+int ReadTrait<uint8_t>::Read(skr_binary_reader_t* reader, uint8_t& value, IntegerSerdeConfig<uint8_t> config)
+{
+    return ReadBitpacked(reader, value, config);
+}
+
+int ReadTrait<uint16_t>::Read(skr_binary_reader_t* reader, uint16_t& value, IntegerSerdeConfig<uint16_t> config)
+{
+    return ReadBitpacked(reader, value, config);
+}
+
+int ReadTrait<uint32_t>::Read(skr_binary_reader_t* reader, uint32_t& value, IntegerSerdeConfig<uint32_t> config)
+{
+    return ReadBitpacked(reader, value, config);
+}
+
+int ReadTrait<uint64_t>::Read(skr_binary_reader_t* reader, uint64_t& value, IntegerSerdeConfig<uint64_t> config)
+{
+    return ReadBitpacked(reader, value, config);
+}
+
+int ReadTrait<int32_t>::Read(skr_binary_reader_t* reader, int32_t& value, IntegerSerdeConfig<int32_t> config)
+{
+    return ReadBitpacked(reader, value, config);
+}
+
+int ReadTrait<int64_t>::Read(skr_binary_reader_t* reader, int64_t& value, IntegerSerdeConfig<int64_t> config)
+{
+    return ReadBitpacked(reader, value, config);
+}
+
+template<class T, class ScalarType>
+int ReadBitpacked(skr_binary_reader_t* reader, T& value, VectorSerdeConfig<ScalarType> config)
+{
+    ScalarType* array = (ScalarType*)&value;
+    static constexpr size_t size = sizeof(T) / sizeof(ScalarType);
+	using IntType = std::conditional_t<sizeof(ScalarType) == 4, int32_t, int64_t>;
+
+	uint8_t ComponentBitCountAndExtraInfo = 0;
+    auto ret = reader->read(&ComponentBitCountAndExtraInfo, 1);
+	const uint32_t ComponentBitCount = ComponentBitCountAndExtraInfo & 63U;
+	const uint32_t ExtraInfo = ComponentBitCountAndExtraInfo >> 6U;
+
+	if (ComponentBitCount > 0U)
+	{
+		int64_t values[size];
+
+        for(size_t i = 0; i < size; ++i)
+        {
+            ret = reader->read_bits(&values[i], ComponentBitCount);
+            if(ret != 0)
+                return ret;
+        }
+
+		// Sign-extend the values. The most significant bit read indicates the sign.
+		const int64_t SignBit = (1ULL << (ComponentBitCount - 1U));
+        for(size_t i = 0; i < size; ++i)
+        {
+            values[i] = (values[i] ^ SignBit) - SignBit;
+        }
+
+		// Apply scaling if needed.
+		if (ExtraInfo)
+		{
+            for (size_t i = 0; i < size; ++i)
+            {
+                array[i] = T(values[i]) / config.scale;
+            }
+		}
+		else
+		{
+            for (size_t i = 0; i < size; ++i)
+            {
+                array[i] = T(values[i]);
+            }
+		}
+
+		return 0;
+	}
+	else
+	{
+        ret = reader->read(array, sizeof(T));
+        if(ret != 0)
+            return ret;
+        bool containsNan = false;
+        for(int i = 0; i < size; ++i)
+        {
+            if(std::isnan(array[i]))
+            {
+                containsNan = true;
+                break;
+            }
+        }
+        if(containsNan)
+        {
+            SKR_LOG_ERROR("ReadBitpacked: Value isn't finite. Clearing for safety.");
+            for(int i = 0; i < size; ++i)
+            {
+                array[i] = 0;
+            }
+        }
+        return 0;
+	}
+
+	// Should not get here so something is very wrong.
+	return -1;
+}
+
 int ReadTrait<skr::string>::Read(skr_binary_reader_t* reader, skr::string& str)
 {
     uint32_t size;
@@ -98,7 +228,7 @@ int ReadTrait<skr::string>::Read(skr_binary_reader_t* reader, skr::string& str)
         return ret;
     skr::string temp;
     temp.resize(size);
-    ret = ReadValue(reader, (void*)temp.data(), temp.size());
+    ret = ReadBytes(reader, (void*)temp.data(), temp.size());
     if (ret != 0)
         return ret;
     str = std::move(temp);
@@ -121,12 +251,12 @@ int ReadTrait<skr::string_view>::Read(skr_binary_reader_t* reader, skr_blob_aren
 
 int ReadTrait<skr_md5_t>::Read(skr_binary_reader_t* reader, skr_md5_t& md5)
 {
-    return ReadValue(reader, &md5, sizeof(md5));
+    return ReadBytes(reader, &md5, sizeof(md5));
 }
 
 int ReadTrait<skr_guid_t>::Read(skr_binary_reader_t* reader, skr_guid_t& guid)
 {
-    return ReadValue(reader, &guid, sizeof(guid));
+    return ReadBytes(reader, &guid, sizeof(guid));
 }
 
 int ReadTrait<skr_resource_handle_t>::Read(skr_binary_reader_t* reader, skr_resource_handle_t& handle)
@@ -147,7 +277,7 @@ int ReadTrait<skr_blob_t>::Read(skr_binary_reader_t* reader, skr_blob_t& blob)
     if (ret != 0)
         return ret;
     temp.bytes = (uint8_t*)sakura_malloc(temp.size);
-    ret = ReadValue(reader, temp.bytes, temp.size);
+    ret = ReadBytes(reader, temp.bytes, temp.size);
     if (ret != 0)
         return ret;
     blob = std::move(temp);
