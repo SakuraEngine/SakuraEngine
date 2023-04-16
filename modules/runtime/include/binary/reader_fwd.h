@@ -16,14 +16,14 @@ namespace binary
 template <class T, class = void>
 struct ReadTrait;
 
-template <class T>
-int Archive(skr_binary_reader_t* reader, T&& value)
+template <class T, class... Args>
+int Archive(skr_binary_reader_t* reader, T&& value, Args&&... args)
 {
-    return ReadTrait<std::decay_t<T>>::Read(reader, value);
+    return ReadTrait<std::decay_t<T>>::Read(reader, value, std::forward<Args>(args)...);
 }
 
-template <class T>
-int Archive(skr_binary_reader_t* reader, skr_blob_arena_t& arena, T&& value)
+template <class T, class... Args>
+int Archive(skr_binary_reader_t* reader, skr_blob_arena_t& arena, T&& value, Args&&... args)
 {
     if constexpr (is_complete_v<BlobTrait<std::decay_t<T>>>)
     {
@@ -34,10 +34,10 @@ int Archive(skr_binary_reader_t* reader, skr_blob_arena_t& arena, T&& value)
 #endif
             return 0;
         }
-        return ReadTrait<std::decay_t<T>>::Read(reader, arena, value);
+        return ReadTrait<std::decay_t<T>>::Read(reader, arena, value, std::forward<Args>(args)...);
     }
     else
-        return ReadTrait<std::decay_t<T>>::Read(reader, value);
+        return ReadTrait<std::decay_t<T>>::Read(reader, value, std::forward<Args>(args)...);
 }
 }
 }

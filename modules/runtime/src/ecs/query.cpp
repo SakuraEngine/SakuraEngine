@@ -15,6 +15,7 @@
 #include <EASTL/algorithm.h>
 #include <EASTL/numeric.h>
 #include <containers/string.hpp>
+#include "utils/bits.hpp"
 #if __SSE2__
     #include <emmintrin.h>
 #endif
@@ -655,50 +656,6 @@ bool dual_storage_t::match_group(const dual_filter_t& filter, const dual_meta_fi
     return match_group_type(group->type, filter, group->archetype->withMask);
 }
 
-namespace dual
-{
-DUAL_FORCEINLINE int CountLeadingZeros64(uint64_t n)
-{
-#if defined(_MSC_VER) && defined(_M_X64)
-    // MSVC does not have __buitin_clzll. Use _BitScanReverse64.
-    unsigned long result = 0; // NOLINT(runtime/int)
-    if (_BitScanReverse64(&result, n))
-    {
-        return (int)(63 - result);
-    }
-    return 64;
-#elif defined(_MSC_VER) && !defined(__clang__)
-    // MSVC does not have __buitin_clzll. Compose two calls to _BitScanReverse
-    unsigned long result = 0; // NOLINT(runtime/int)
-    if ((n >> 32) && _BitScanReverse(&result, (unsigned long)(n >> 32)))
-    {
-        return 31 - result;
-    }
-    if (_BitScanReverse(&result, (unsigned long)n))
-    {
-        return 63 - result;
-    }
-    return 64;
-#elif defined(__GNUC__) || defined(__clang__)
-    // Use __builtin_clzll, which uses the following instructions:
-    //  x86: bsr
-    //  ARM64: clz
-    //  PPC: cntlzd
-    static_assert(sizeof(unsigned long long) == sizeof(n), // NOLINT(runtime/int)
-    "__builtin_clzll does not take 64-bit arg");
-
-    // Handle 0 as a special case because __builtin_clzll(0) is undefined.
-    if (n == 0)
-    {
-        return 64;
-    }
-    return __builtin_clzll(n);
-#else
-    return CountLeadingZeros64Slow(n);
-#endif
-}
-} // namespace dual
-
 void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filter, const dual_meta_filter_t& meta, dual_view_callback_t callback, void* u)
 {
     using namespace dual;
@@ -752,7 +709,7 @@ void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filte
                             }
                             else
                             {
-                                unsigned long index = dual::CountLeadingZeros64(cmp);
+                                unsigned long index = skr::CountLeadingZeros64(cmp);
                                 i += index / 4;
                                 break;
                             }
@@ -779,7 +736,7 @@ void dual_storage_t::query(const dual_group_t* group, const dual_filter_t& filte
                             }
                             else
                             {
-                                unsigned long index = dual::CountLeadingZeros64((~cmp) & 0xFFFF);
+                                unsigned long index = skr::CountLeadingZeros64((~cmp) & 0xFFFF);
                                 i += index / 4;
                                 break;
                             }

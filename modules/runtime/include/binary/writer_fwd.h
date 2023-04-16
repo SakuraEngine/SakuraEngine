@@ -11,14 +11,14 @@ namespace skr::binary
 template <class T, class = void>
 struct WriteTrait;
 
-template <class T>
-int Archive(skr_binary_writer_t* writer, const T& value)
+template <class T, class ...Args>
+int Archive(skr_binary_writer_t* writer, const T& value, Args&&... args)
 {
-    return WriteTrait<const T&>::Write(writer, value);
+    return WriteTrait<const T&>::Write(writer, value, std::forward<Args>(args)...);
 }
 
-template <class T>
-int Archive(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const T& value)
+template <class T, class ...Args>
+int Archive(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const T& value, Args&&... args)
 {
     if constexpr (is_complete_v<BlobTrait<T>>)
     {
@@ -29,10 +29,10 @@ int Archive(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const T& value
 #endif
             return 0;
         }
-        return WriteTrait<const T&>::Write(writer, arena, value);
+        return WriteTrait<const T&>::Write(writer, arena, value, std::forward<Args>(args)...);
     }
     else
-        return WriteTrait<const T&>::Write(writer, value);
+        return WriteTrait<const T&>::Write(writer, value, std::forward<Args>(args)...);
 }
 }
 
