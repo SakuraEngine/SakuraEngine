@@ -12,6 +12,7 @@
 #include "platform/window.h"
 #include "ecs/callback.hpp"
 #include "ecs/type_builder.hpp"
+#include "json/writer.h"
 
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/resource_node.hpp"
@@ -318,7 +319,8 @@ void create_test_scene(SRendererId renderer)
     renderableT_builder
     .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
     .with<skr_index_comp_t, skr_movement_comp_t>()
-    .with<skr_render_effect_t>();
+    .with<skr_render_effect_t>()
+    .with(DUAL_COMPONENT_GUID);
     // allocate renderable
     auto renderableT = make_zeroed<dual_entity_type_t>();
     renderableT.type = renderableT_builder.build();
@@ -330,9 +332,11 @@ void create_test_scene(SRendererId renderer)
         auto indices = dual::get_owned_rw<skr_index_comp_t>(view);
         auto movements = dual::get_owned_rw<skr_movement_comp_t>(view);
         auto states = dual::get_owned_rw<game::anim_state_t>(view);
-        
+        auto guids = (skr_guid_t*)dualV_get_owned_ro(view, DUAL_COMPONENT_GUID);
         for (uint32_t i = 0; i < view->count; i++)
         {
+            if(guids)
+                dual_make_guid(&guids[i]);
             if (movements)
             {
                 translations[i].value = { 0.f, 0.f, 0.f };
@@ -653,6 +657,21 @@ int SGameModule::main_module_exec(int argc, char** argv)
                     }
                 }
                 ImGui::End();
+            }
+            {
+                ImGui::Begin("Scene");
+                if (ImGui::Button("Save"))
+                {
+                    skr_json_writer_t writer(5);
+                    skr_save_scene(game_renderer->get_dual_storage(), &writer);
+                    auto file = skr_vfs_fopen(resource_vfs, "scene.json", SKR_FM_WRITE, SKR_FILE_CREATION_ALWAYS_NEW);
+                    if (file)
+                    {
+                        auto str = writer.Str();
+                        skr_vfs_fwrite(file, str.data(), 0, str.length());
+                        skr_vfs_fclose(file);
+                    }
+                }
             }
             imgui_button_spawn_girl(game_renderer);
             skr::inspect::update_value_inspector();

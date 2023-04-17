@@ -412,6 +412,12 @@ RUNTIME_API void dualS_query(dual_storage_t* storage, const dual_filter_t* filte
  */
 RUNTIME_API void dualS_all(dual_storage_t* storage, bool includeDisabled, bool includeDead, dual_view_callback_t callback, void* u);
 /**
+* @brief get entity count
+* @param storage
+* @return EIndex
+*/
+RUNTIME_API EIndex dualS_count(dual_storage_t* storage, bool includeDisabled, bool includeDead);
+/**
  * @brief get all groups matching given filter
  *
  * @param storage
@@ -608,6 +614,14 @@ RUNTIME_API const void* dualG_get_shared_ro(const dual_group_t* group, dual_type
  * @param type
  */
 RUNTIME_API void dualG_get_type(const dual_group_t* group, dual_entity_type_t* type);
+/**
+ * @brief get type stable order, flag component will be ignored
+ *
+ * @param group
+ * @param order
+ * @return uint32_t
+ */
+RUNTIME_API uint32_t dualG_get_stable_order(const dual_group_t* group, dual_type_index_t localType);
 /**
  * @brief get component from chunk view readonly return null if component is not exist
  *
