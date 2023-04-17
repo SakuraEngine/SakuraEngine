@@ -9,6 +9,7 @@
 
 #include "tracy/Tracy.hpp"
 
+#include <containers/string.hpp>
 #include <containers/hashmap.hpp>
 #include <containers/btree.hpp>
 
@@ -80,7 +81,7 @@ public:
         {
             return false;
         }
-        named_passes.emplace(pass->get_name(), pass);
+        named_passes.emplace((const char*)pass->get_name(), pass);
         return true;
     }
 
@@ -91,7 +92,7 @@ public:
         {
             return false;
         }
-        named_textures.emplace(texture->get_name(), texture);
+        named_textures.emplace((const char*)texture->get_name(), texture);
         return true;
     }
 
@@ -102,7 +103,7 @@ public:
         {
             return false;
         }
-        named_buffers.emplace(buffer->get_name(), buffer);
+        named_buffers.emplace((const char*)buffer->get_name(), buffer);
         return true;
     }
 

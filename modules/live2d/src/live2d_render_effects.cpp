@@ -65,7 +65,7 @@ typedef struct live2d_effect_identity_t {
 skr_render_effect_name_t live2d_effect_name = "Live2DEffect";
 struct RenderEffectLive2D : public IRenderEffectProcessor {
     skr_vfs_t* resource_vfs = nullptr;
-    const char* push_constants_name = "push_constants";
+    const char8_t* push_constants_name = u8"push_constants";
     // this is a view object, later we will expose it to the world
     live2d_render_view_t view_;
 
@@ -423,7 +423,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     }
 
 protected:
-    const char* color_texture_name = "color_texture";
+    const char8_t* color_texture_name = u8"color_texture";
     void updateTexture(skr_live2d_render_model_id render_model)
     {
         ZoneScopedN("Live2D::updateTexture");
@@ -547,7 +547,7 @@ protected:
                             skr::string name = "live2d_vb-";
                             name.append(skr::to_string((uint64_t)render_model).c_str());
                             name.append(skr::to_string(j).c_str());
-                            builder.set_name(name.c_str())
+                            builder.set_name((const char8_t*)name.c_str())
                                     .import(view.buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
                             });
                     vb_sizes[j] = vcount * view.stride;
@@ -564,7 +564,7 @@ protected:
 
                     skr::string name = "live2d_upload-";
                     name.append(skr::to_string((uint64_t)render_model).c_str());
-                    builder.set_name(name.c_str())
+                    builder.set_name((const char8_t*)name.c_str())
                             .size(totalVertexSize)
                             .with_tags(kRenderGraphDefaultResourceTag)
                             .as_upload_buffer();
@@ -574,7 +574,7 @@ protected:
                     ZoneScopedN("ConstructCopyPass");
                     skr::string name = "live2d_copy-";
                     name.append(skr::to_string((uint64_t)render_model).c_str());
-                    builder.set_name(name.c_str());
+                    builder.set_name((const char8_t*)name.c_str());
                     uint64_t range_cursor = 0;
                     for (uint32_t j = 0; j < vb_c; j++)
                     {
@@ -611,8 +611,8 @@ protected:
     void prepare_mask_pipeline(SRendererId renderer);
     void free_pipeline(SRendererId renderer);
     void free_mask_pipeline(SRendererId renderer);
-    uint32_t* read_shader_bytes(SRendererId renderer, const char* name, uint32_t* out_length);
-    CGPUShaderLibraryId create_shader_library(SRendererId renderer, const char* name, ECGPUShaderStage stage);
+    uint32_t* read_shader_bytes(SRendererId renderer, const char8_t* name, uint32_t* out_length);
+    CGPUShaderLibraryId create_shader_library(SRendererId renderer, const char8_t* name, ECGPUShaderStage stage);
 
     struct PushConstants {
         rtm::matrix4x4f projection_matrix;
@@ -646,14 +646,14 @@ MaskPassLive2D* live2d_mask_pass = SkrNew<MaskPassLive2D>();
 RenderPassLive2D* live2d_pass = SkrNew<RenderPassLive2D>();
 RenderEffectLive2D* live2d_effect = SkrNew<RenderEffectLive2D>();
 
-uint32_t* RenderEffectLive2D::read_shader_bytes(SRendererId renderer, const char* name, uint32_t* out_length)
+uint32_t* RenderEffectLive2D::read_shader_bytes(SRendererId renderer, const char8_t* name, uint32_t* out_length)
 {
     const auto render_device = renderer->get_render_device();
     const auto cgpu_device = render_device->get_cgpu_device();
     const auto backend = cgpu_device->adapter->instance->backend;
-    skr::string shader_name = name;
-    shader_name.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
-    auto shader_file = skr_vfs_fopen(resource_vfs, shader_name.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    skr::text::text shader_name = name;
+    shader_name.append(backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv");
+    auto shader_file = skr_vfs_fopen(resource_vfs, shader_name.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     const uint32_t shader_length = (uint32_t)skr_vfs_fsize(shader_file);
     auto shader_bytes = (uint32_t*)sakura_malloc(shader_length);
     skr_vfs_fread(shader_file, shader_bytes, 0, shader_length);
@@ -662,7 +662,7 @@ uint32_t* RenderEffectLive2D::read_shader_bytes(SRendererId renderer, const char
     return shader_bytes;
 }
 
-CGPUShaderLibraryId RenderEffectLive2D::create_shader_library(SRendererId renderer, const char* name, ECGPUShaderStage stage)
+CGPUShaderLibraryId RenderEffectLive2D::create_shader_library(SRendererId renderer, const char8_t* name, ECGPUShaderStage stage)
 {
     const auto render_device = renderer->get_render_device();
     const auto cgpu_device = render_device->get_cgpu_device();
@@ -680,8 +680,8 @@ CGPUShaderLibraryId RenderEffectLive2D::create_shader_library(SRendererId render
 
 void RenderEffectLive2D::prepare_pipeline_settings()
 {
-    vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[0] = { u8"POSITION", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[1] = { u8"TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attribute_count = 2;
 
     rs_state.cull_mode = CGPU_CULL_MODE_NONE;
@@ -702,20 +702,20 @@ void RenderEffectLive2D::prepare_pipeline(SRendererId renderer)
     const auto render_device = renderer->get_render_device();
     const auto cgpu_device = render_device->get_cgpu_device();
 
-    CGPUShaderLibraryId vs = create_shader_library(renderer, "shaders/live2d_vs", CGPU_SHADER_STAGE_VERT);
-    CGPUShaderLibraryId ps = create_shader_library(renderer, "shaders/live2d_ps", CGPU_SHADER_STAGE_FRAG);
+    CGPUShaderLibraryId vs = create_shader_library(renderer, u8"shaders/live2d_vs", CGPU_SHADER_STAGE_VERT);
+    CGPUShaderLibraryId ps = create_shader_library(renderer, u8"shaders/live2d_ps", CGPU_SHADER_STAGE_FRAG);
 
-    CGPUPipelineShaderDescriptor ppl_shaders[2];
-    CGPUPipelineShaderDescriptor& ppl_vs = ppl_shaders[0];
+    CGPUShaderEntryDescriptor ppl_shaders[2];
+    CGPUShaderEntryDescriptor& ppl_vs = ppl_shaders[0];
     ppl_vs.library = vs;
     ppl_vs.stage = CGPU_SHADER_STAGE_VERT;
-    ppl_vs.entry = "main";
-    CGPUPipelineShaderDescriptor& ppl_ps = ppl_shaders[1];
+    ppl_vs.entry = u8"main";
+    CGPUShaderEntryDescriptor& ppl_ps = ppl_shaders[1];
     ppl_ps.library = ps;
     ppl_ps.stage = CGPU_SHADER_STAGE_FRAG;
-    ppl_ps.entry = "main";
+    ppl_ps.entry = u8"main";
 
-    const char* static_sampler_name = "color_sampler";
+    const char8_t* static_sampler_name = u8"color_sampler";
     auto static_sampler = render_device->get_linear_sampler();
     auto rs_desc = make_zeroed<CGPURootSignatureDescriptor>();
     rs_desc.push_constant_count = 1;
@@ -786,20 +786,20 @@ void RenderEffectLive2D::prepare_mask_pipeline(SRendererId renderer)
     const auto render_device = renderer->get_render_device();
     const auto cgpu_device = render_device->get_cgpu_device();
     
-    CGPUShaderLibraryId vs = create_shader_library(renderer, "shaders/live2d_mask_vs", CGPU_SHADER_STAGE_VERT);
-    CGPUShaderLibraryId ps = create_shader_library(renderer, "shaders/live2d_mask_ps", CGPU_SHADER_STAGE_FRAG);
+    CGPUShaderLibraryId vs = create_shader_library(renderer, u8"shaders/live2d_mask_vs", CGPU_SHADER_STAGE_VERT);
+    CGPUShaderLibraryId ps = create_shader_library(renderer, u8"shaders/live2d_mask_ps", CGPU_SHADER_STAGE_FRAG);
 
-    CGPUPipelineShaderDescriptor ppl_shaders[2];
-    CGPUPipelineShaderDescriptor& ppl_vs = ppl_shaders[0];
+    CGPUShaderEntryDescriptor ppl_shaders[2];
+    CGPUShaderEntryDescriptor& ppl_vs = ppl_shaders[0];
     ppl_vs.library = vs;
     ppl_vs.stage = CGPU_SHADER_STAGE_VERT;
-    ppl_vs.entry = "main";
-    CGPUPipelineShaderDescriptor& ppl_ps = ppl_shaders[1];
+    ppl_vs.entry = u8"main";
+    CGPUShaderEntryDescriptor& ppl_ps = ppl_shaders[1];
     ppl_ps.library = ps;
     ppl_ps.stage = CGPU_SHADER_STAGE_FRAG;
-    ppl_ps.entry = "main";
+    ppl_ps.entry = u8"main";
 
-    const char* static_sampler_name = "color_sampler";
+    const char8_t* static_sampler_name = u8"color_sampler";
     auto static_sampler = render_device->get_linear_sampler();
     auto rs_desc = make_zeroed<CGPURootSignatureDescriptor>();
     rs_desc.push_constant_count = 1;

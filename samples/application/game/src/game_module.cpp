@@ -1,4 +1,4 @@
-#include "../../../common/utils.h"
+#include "common/utils.h"
 #include <EASTL/shared_ptr.h>
 #include "GameRuntime/gamert.h"
 #include "utils/format.hpp"
@@ -27,6 +27,7 @@
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRenderer/render_effect.h"
 
+#include <containers/text.hpp>
 #include "task/task.hpp"
 
 #include "resource/local_resource_registry.hpp"
@@ -114,7 +115,7 @@ void SGameModule::installResourceFactories()
     resource_vfs = skr_create_vfs(&vfs_desc);
 
     auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
-    ioServiceDesc.name = "GameRuntimeRAMIOService";
+    ioServiceDesc.name = u8"GameRuntimeRAMIOService";
     ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
     ioServiceDesc.sleep_time = 1000 / 60;
     ioServiceDesc.lockless = true;
@@ -455,13 +456,13 @@ void imgui_button_spawn_girl(SRendererId renderer)
     static bool onceGuard = true;
     if (onceGuard)
     {
-        ImGui::Begin(u8"AsyncMesh");
-        if (ImGui::Button(u8"LoadSkinMesh(AsResource)"))
+        ImGui::Begin("AsyncMesh");
+        if (ImGui::Button("LoadSkinMesh(AsResource)"))
         {
             async_attach_skin_mesh(renderer);
             onceGuard = false;
         }
-        else if (ImGui::Button(u8"LoadMesh(AsResource)"))
+        else if (ImGui::Button("LoadMesh(AsResource)"))
         {
             async_attach_render_mesh(renderer);
             onceGuard = false;
@@ -488,7 +489,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
     window_desc.height = BACK_BUFFER_HEIGHT;
     window_desc.width = BACK_BUFFER_WIDTH;
     main_window = skr_create_window(
-        skr::format("Game [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).c_str(),
+        skr::text::format(u8"Game [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).u8_str(),
         &window_desc);
     // Initialize renderer
     swapchain = skr_render_device_register_window(render_device, main_window);
@@ -635,12 +636,12 @@ int SGameModule::main_module_exec(int argc, char** argv)
 
             skr_imgui_new_frame(main_window, (float)deltaTime);
             {
-                ImGui::Begin(u8"Information");
+                ImGui::Begin("Information");
                 ImGui::Text("RenderFPS: %d", (uint32_t)fps);
                 ImGui::End();
             }
             {
-                ImGui::Begin(u8"Lua");
+                ImGui::Begin("Lua");
                 if (ImGui::Button("Hotfix"))
                 {
                     if (luaL_dostring(L, "local module = require \"hotfix\"; module.reload({\"game\"})") != LUA_OK)
@@ -848,7 +849,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         // early render jobs. When the main timeline is doing present jobs, we can do some work in parallel
         auto back_buffer = renderGraph->create_texture(
         [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-            builder.set_name("backbuffer")
+            builder.set_name(u8"backbuffer")
                 .import(swapchain->back_buffers[backbuffer_index], CGPU_RESOURCE_STATE_UNDEFINED)
                 .allow_render_target();
         });
@@ -883,7 +884,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         // blit backbuffer & present
         auto present_pass = renderGraph->add_present_pass(
             [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
-                builder.set_name("present_pass")
+                builder.set_name(u8"present_pass")
                     .swapchain(swapchain, backbuffer_index)
                     .texture(back_buffer, true);
             });

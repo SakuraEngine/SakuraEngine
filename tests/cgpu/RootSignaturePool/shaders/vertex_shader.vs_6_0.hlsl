@@ -1,6 +1,6 @@
 struct VSOut
 {
-    float4 position : SV_POSITION;
+    // float4 position : SV_POSITION;
     float2 UV : TEXCOORD0;
 };
 
@@ -24,10 +24,12 @@ static const float2 uvs[6] = {
     float2(0.0, 0.0)
 };
 
-VSOut main(uint VertexIndex : SV_VertexID)
+VSOut main(uint VertexIndex : SV_VertexID, out float4 position : SV_POSITION)
 {
     VSOut output;
-    output.position = float4(positions[VertexIndex], 0.f, 1.f);
     output.UV = uvs[VertexIndex];
+
+    position = float4(positions[VertexIndex], 0.f, 1.f);
+
     return output;
 }

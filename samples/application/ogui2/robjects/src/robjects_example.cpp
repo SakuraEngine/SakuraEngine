@@ -91,7 +91,7 @@ struct robjects_example_application : public robjects_application_t
         image3 = SkrNew<skr::gui::RenderImage>(gdi.device);
         image3->set_color({ 0, 0, 1, 1 });
         text = SkrNew<skr::gui::RenderText>(gdi.device);
-        text->add_text(u8"Hello World!");
+        text->add_text(SKR_UTF8("Hello World!"));
         stack = SkrNew<skr::gui::RenderStack>(gdi.device);
 
 
@@ -135,9 +135,9 @@ struct robjects_example_application : public robjects_application_t
     void diagnostics_inspect_recursively(skr::gui::DiagnosticableTreeNode* diagnostic)
     {
         ImGui::PushID(diagnostic);
-        auto type_property = static_cast<skr::gui::TextDiagnosticProperty*>(diagnostic->find_property("type"));
-        auto type = type_property ? type_property->get_value() : "object";
-        skr::text::text show_name = skr::text::format("{}{}{}", "[", type, "]");
+        auto type_property = static_cast<skr::gui::TextDiagnosticProperty*>(diagnostic->find_property(u8"type"));
+        auto type = type_property ? type_property->get_value() : u8"object";
+        skr::text::text show_name = skr::text::format(SKR_UTF8("{}{}{}"), SKR_UTF8("["), type, SKR_UTF8("]"));
         ImGuiTreeNodeFlags node_flags = (selected_diagnostic == diagnostic) ? ImGuiTreeNodeFlags_Selected : 0;
         node_flags |= ImGuiTreeNodeFlags_SpanFullWidth;
         node_flags |= ImGuiTreeNodeFlags_OpenOnArrow;

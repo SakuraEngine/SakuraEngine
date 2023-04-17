@@ -79,7 +79,7 @@ void imguir_render_draw_data(ImDrawData* draw_data,
 
                 graph_name_string name = "imgui_font-";
                 name.append(skr::to_string(draw_data->OwnerViewport->ID).c_str());
-                builder.set_name(name.c_str())
+                builder.set_name((const char8_t*)name.c_str())
                     .import(font_texture, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
             });
         // vb & ib
@@ -93,7 +93,7 @@ void imguir_render_draw_data(ImDrawData* draw_data,
                     name = "imgui_vertices-";
                     name.append(skr::to_string(draw_data->OwnerViewport->ID).c_str());
                 }
-                builder.set_name(name.c_str())
+                builder.set_name((const char8_t*)name.c_str())
                     .size(vertex_size)
                     .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
                     .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
@@ -107,7 +107,7 @@ void imguir_render_draw_data(ImDrawData* draw_data,
 
                 graph_name_string name = "imgui_indices-";
                 name.append(skr::to_string(draw_data->OwnerViewport->ID).c_str());
-                builder.set_name(name.c_str())
+                builder.set_name((const char8_t*)name.c_str())
                     .size(index_size)
                     .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
                     .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
@@ -123,7 +123,7 @@ void imguir_render_draw_data(ImDrawData* draw_data,
 
                 graph_name_string name = "imgui_upload-";
                 name.append(skr::to_string(draw_data->OwnerViewport->ID).c_str());
-                builder.set_name(name.c_str())
+                builder.set_name((const char8_t*)name.c_str())
                         .size(index_size + vertex_size)
                         .with_tags(kRenderGraphDefaultResourceTag)
                         .as_upload_buffer();
@@ -134,7 +134,7 @@ void imguir_render_draw_data(ImDrawData* draw_data,
 
                 graph_name_string name = "imgui_copy-";
                 name.append(skr::to_string(draw_data->OwnerViewport->ID).c_str());
-                builder.set_name(name.c_str())
+                builder.set_name((const char8_t*)name.c_str())
                     .buffer_to_buffer(upload_buffer_handle.range(0, vertex_size), vertex_buffer_handle.range(0, vertex_size))
                     .buffer_to_buffer(upload_buffer_handle.range(vertex_size, vertex_size + index_size), index_buffer_handle.range(0, index_size));
                 },
@@ -158,7 +158,7 @@ void imguir_render_draw_data(ImDrawData* draw_data,
 
                 graph_name_string name = "imgui_cbuffer-";
                 name.append(skr::to_string(draw_data->OwnerViewport->ID).c_str());
-                builder.set_name(name.c_str())
+                builder.set_name((const char8_t*)name.c_str())
                     .size(sizeof(float) * 4 * 4)
                     .memory_usage(CGPU_MEM_USAGE_CPU_TO_GPU)
                     .with_flags(CGPU_BCF_PERSISTENT_MAP_BIT)
@@ -172,12 +172,12 @@ void imguir_render_draw_data(ImDrawData* draw_data,
 
             graph_name_string name = "imgui_render-";
             name.append(skr::to_string(draw_data->OwnerViewport->ID).c_str());
-            builder.set_name(name.c_str())
+            builder.set_name((const char8_t*)name.c_str())
                 .set_pipeline(render_pipeline)
-                .read("Constants", constant_buffer.range(0, sizeof(float) * 4 * 4))
+                .read(u8"Constants", constant_buffer.range(0, sizeof(float) * 4 * 4))
                 .use_buffer(vertex_buffer_handle, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
                 .use_buffer(index_buffer_handle, CGPU_RESOURCE_STATE_INDEX_BUFFER)
-                .read("texture0", font_handle)
+                .read(u8"texture0", font_handle)
                 .write(0, target, load_action);
         },
         [target, useCVV, draw_data, constant_buffer, index_buffer_handle, vertex_buffer_handle]
@@ -334,7 +334,7 @@ void imgui_create_fonts(CGPUQueueId queue)
     size_t upload_size = width * height * 4 * sizeof(char);
     // create texture
     CGPUTextureDescriptor tex_desc = {};
-    tex_desc.name = "imgui_font";
+    tex_desc.name = u8"imgui_font";
     tex_desc.width = static_cast<uint32_t>(width);
     tex_desc.height = static_cast<uint32_t>(height);
     tex_desc.depth = 1;
@@ -349,7 +349,7 @@ void imgui_create_fonts(CGPUQueueId queue)
     CGPUCommandPoolDescriptor cmd_pool_desc = {};
     CGPUCommandBufferDescriptor cmd_desc = {};
     CGPUBufferDescriptor upload_buffer_desc = {};
-    upload_buffer_desc.name = "IMGUI_FontUploadBuffer";
+    upload_buffer_desc.name = u8"IMGUI_FontUploadBuffer";
     upload_buffer_desc.flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT;
     upload_buffer_desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
     upload_buffer_desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
@@ -391,11 +391,11 @@ void imgui_create_fonts(CGPUQueueId queue)
 
 void imgui_create_pipeline(const RenderGraphImGuiDescriptor* desc)
 {
-    CGPUPipelineShaderDescriptor ppl_shaders[2];
+    CGPUShaderEntryDescriptor ppl_shaders[2];
     ppl_shaders[0] = desc->vs;
     ppl_shaders[1] = desc->ps;
-    const char8_t* push_constant_name = "push_constants";
-    const char8_t* sampler_name = "sampler0";
+    const char8_t* push_constant_name = u8"push_constants";
+    const char8_t* sampler_name = u8"sampler0";
     CGPURootSignatureDescriptor rs_desc = {};
     rs_desc.shaders = ppl_shaders;
     rs_desc.shader_count = 2;
@@ -407,9 +407,9 @@ void imgui_create_pipeline(const RenderGraphImGuiDescriptor* desc)
     root_sig = cgpu_create_root_signature(desc->queue->device, &rs_desc);
     CGPUVertexLayout vertex_layout = {};
     vertex_layout.attribute_count = 3;
-    vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, 0, sizeof(float) * 2, CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, sizeof(float) * 2, sizeof(float) * 2, CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[2] = { "COLOR", 1, CGPU_FORMAT_R8G8B8A8_UNORM, 0, sizeof(float) * 4, sizeof(uint32_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[0] = { u8"POSITION", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, 0, sizeof(float) * 2, CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[1] = { u8"TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, sizeof(float) * 2, sizeof(float) * 2, CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[2] = { u8"COLOR", 1, CGPU_FORMAT_R8G8B8A8_UNORM, 0, sizeof(float) * 4, sizeof(uint32_t), CGPU_INPUT_RATE_VERTEX };
     CGPURasterizerStateDescriptor rs_state = {};
     rs_state.cull_mode = CGPU_CULL_MODE_NONE;
     rs_state.fill_mode = CGPU_FILL_MODE_SOLID;
@@ -488,7 +488,7 @@ void imguir_render_window(ImGuiViewport* viewport, void* usrdata)
         [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
             skr::string buf_name = "imgui-window-";
             buf_name.append(skr::to_string(viewport->ID));
-            builder.set_name(buf_name.c_str())
+            builder.set_name((const char8_t*)buf_name.c_str())
                 .import(native_backbuffer, CGPU_RESOURCE_STATE_UNDEFINED)
                 .allow_render_target();
         });
@@ -499,7 +499,7 @@ void imguir_render_window(ImGuiViewport* viewport, void* usrdata)
         [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
             skr::string pass_name = "imgui-present-";
             pass_name.append(skr::to_string(viewport->ID));
-            builder.set_name(pass_name.c_str())
+            builder.set_name((const char8_t*)pass_name.c_str())
                 .swapchain(rdata->swapchain, backbuffer_index)
                 .texture(back_buffer, true);
         });

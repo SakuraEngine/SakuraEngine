@@ -10,7 +10,7 @@ bool CGPUUtil_ShaderResourceIsStaticSampler(CGPUShaderResource* resource, const 
 {
     for (uint32_t i = 0; i < desc->static_sampler_count; i++)
     {
-        if (strcmp(resource->name, desc->static_sampler_names[i]) == 0)
+        if (strcmp((const char*)resource->name, (const char*)desc->static_sampler_names[i]) == 0)
         {
             return resource->type == CGPU_RESOURCE_TYPE_SAMPLER;
         }
@@ -23,7 +23,7 @@ bool CGPUUtil_ShaderResourceIsRootConst(CGPUShaderResource* resource, const stru
     if (resource->type == CGPU_RESOURCE_TYPE_PUSH_CONSTANT) return true;
     for (uint32_t i = 0; i < desc->push_constant_count; i++)
     {
-        if (strcmp(resource->name, desc->push_constant_names[i]) == 0)
+        if (strcmp((const char*)resource->name, (const char*)desc->push_constant_names[i]) == 0)
             return true;
     }
     return false;
@@ -33,10 +33,10 @@ inline static char8_t* duplicate_string(const char8_t* src_string)
 {
     if (src_string != CGPU_NULLPTR)
     {
-        const size_t source_len = strlen(src_string);
+        const size_t source_len = strlen((const char*)src_string);
         char8_t* result = (char8_t*)cgpu_malloc(sizeof(char8_t) * (1 + source_len));
 #ifdef _WIN32
-        strcpy_s((char8_t*)result, source_len + 1, src_string);
+        strcpy_s((char*)result, source_len + 1, (const char*)src_string);
 #else
         strcpy((char8_t*)result, src_string);
 #endif
@@ -59,15 +59,18 @@ void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSign
     // Pick shader reflection data
     for (uint32_t i = 0; i < desc->shader_count; i++)
     {
-        const CGPUPipelineShaderDescriptor* shader_desc = &desc->shaders[i];
+        const CGPUShaderEntryDescriptor* shader_desc = &desc->shaders[i];
         // Find shader reflection
         for (uint32_t j = 0; j < shader_desc->library->entrys_count; j++)
         {
             CGPUShaderReflection* temp_entry_reflcetion = &shader_desc->library->entry_reflections[j];
-            if (strcmp(shader_desc->entry, temp_entry_reflcetion->entry_name) == 0)
+            if (temp_entry_reflcetion->entry_name)
             {
-                entry_reflections[i] = temp_entry_reflcetion;
-                break;
+                if (strcmp((const char*)shader_desc->entry, (const char*)temp_entry_reflcetion->entry_name) == 0)
+                {
+                    entry_reflections[i] = temp_entry_reflcetion;
+                    break;
+                }
             }
         }
         if (entry_reflections[i] == CGPU_NULLPTR)

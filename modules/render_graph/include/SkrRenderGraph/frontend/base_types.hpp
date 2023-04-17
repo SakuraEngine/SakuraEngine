@@ -303,8 +303,8 @@ using TextureSubresourceHandle = TextureHandle::SubresourceHandle;
 
 struct RenderGraphNode : public DependencyGraphNode {
     RenderGraphNode(EObjectType type);
-    SKR_RENDER_GRAPH_API void set_name(const char* n);
-    SKR_RENDER_GRAPH_API const char* get_name() const;
+    SKR_RENDER_GRAPH_API void set_name(const char8_t* n);
+    SKR_RENDER_GRAPH_API const char8_t* get_name() const;
     const EObjectType type;
     const uint32_t pooled_size = 0;
 protected:

@@ -30,11 +30,11 @@ codeunit_sequence::iterator::iterator() noexcept
 	: value()
 { }
 
-codeunit_sequence::iterator::iterator(char* v) noexcept
+codeunit_sequence::iterator::iterator(ochar8_t* v) noexcept
 	: value(v)
 { }
 
-char& codeunit_sequence::iterator::operator*() const noexcept
+ochar8_t& codeunit_sequence::iterator::operator*() const noexcept
 {
 	return *this->value;
 }
@@ -167,7 +167,7 @@ codeunit_sequence::codeunit_sequence(const i32 size) noexcept
 	if(size > SSO_SIZE_MAX)
 	{
 		const i32 memory_capacity = details::get_capacity(size + 1);
-		char* data = allocator<char>::allocate_array(memory_capacity);
+		ochar8_t* data = allocator<ochar8_t>::allocate_array(memory_capacity);
 		data[0] = '\0';
 		this->as_norm().alloc = true;
 		this->as_norm().size = 0;
@@ -210,22 +210,22 @@ codeunit_sequence::~codeunit_sequence() noexcept
 	this->deallocate();
 }
 
-codeunit_sequence::codeunit_sequence(const char* data) noexcept
+codeunit_sequence::codeunit_sequence(const ochar8_t* data) noexcept
 	: codeunit_sequence(codeunit_sequence_view(data))
 { }
 
-codeunit_sequence::codeunit_sequence(const char* from, const char* last) noexcept
+codeunit_sequence::codeunit_sequence(const ochar8_t* from, const ochar8_t* last) noexcept
 	: codeunit_sequence(codeunit_sequence_view(from, last))
 { }
 
-codeunit_sequence::codeunit_sequence(const char* data, const i32 count) noexcept
+codeunit_sequence::codeunit_sequence(const ochar8_t* data, const i32 count) noexcept
 	: codeunit_sequence(codeunit_sequence_view(data, count))
 { }
 
 codeunit_sequence::codeunit_sequence(const codeunit_sequence_view sv) noexcept
 	: codeunit_sequence(sv.size())
 {
-	std::copy(sv.c_str(), sv.last(), this->data());
+	std::copy(sv.u8_str(), sv.last(), this->data());
 	const i32 size = sv.size();
 	this->data()[size] = '\0';
 	this->set_size(size);
@@ -258,7 +258,7 @@ bool codeunit_sequence::operator==(const codeunit_sequence& rhs) const noexcept
 	return this->view() == rhs.view();
 }
 
-bool codeunit_sequence::operator==(const char* rhs) const noexcept
+bool codeunit_sequence::operator==(const ochar8_t* rhs) const noexcept
 {
 	return this->view() == codeunit_sequence_view(rhs);
 }
@@ -273,7 +273,7 @@ bool codeunit_sequence::operator!=(const codeunit_sequence& rhs) const noexcept
 	return this->view() != rhs.view();
 }
 
-bool codeunit_sequence::operator!=(const char* rhs) const noexcept
+bool codeunit_sequence::operator!=(const ochar8_t* rhs) const noexcept
 {
 	return this->view() != codeunit_sequence_view(rhs);
 }
@@ -298,12 +298,12 @@ codeunit_sequence& codeunit_sequence::append(const codepoint& cp) noexcept
 	return this->append(codeunit_sequence_view{ cp });
 }
 
-codeunit_sequence& codeunit_sequence::append(const char* rhs) noexcept
+codeunit_sequence& codeunit_sequence::append(const ochar8_t* rhs) noexcept
 {
 	return this->append(codeunit_sequence_view{ rhs });
 }
 
-codeunit_sequence& codeunit_sequence::append(const char codeunit, const i32 count) noexcept
+codeunit_sequence& codeunit_sequence::append(const ochar8_t codeunit, const i32 count) noexcept
 {
 	if(count <= 0)
 		return *this;
@@ -332,12 +332,12 @@ codeunit_sequence& codeunit_sequence::operator+=(const codepoint& cp) noexcept
 	return this->append(cp);
 }
 
-codeunit_sequence& codeunit_sequence::operator+=(const char* rhs) noexcept
+codeunit_sequence& codeunit_sequence::operator+=(const ochar8_t* rhs) noexcept
 {
 	return this->append(rhs);
 }
 
-codeunit_sequence& codeunit_sequence::operator+=(const char codeunit) noexcept
+codeunit_sequence& codeunit_sequence::operator+=(const ochar8_t codeunit) noexcept
 {
 	return this->append(codeunit);
 }
@@ -483,8 +483,8 @@ codeunit_sequence& codeunit_sequence::replace(const index_interval& range, const
 	{
 		codeunit_sequence result(answer_size);
 		const i32 prefix_size = selection.get_inclusive_min();
-		const char* start = this->data();
-		char* target = result.data();
+		const ochar8_t* start = this->data();
+		ochar8_t* target = result.data();
 		std::copy_n(start, prefix_size, target);
 		start += prefix_size;
 		target += prefix_size;
@@ -554,7 +554,7 @@ void codeunit_sequence::empty(const i32 size)
 		const i32 memory_capacity = details::get_capacity(size + 1);
 		this->as_norm().alloc = true;
 		this->as_norm().size = 0;
-		this->as_norm().data = allocator<char>::allocate_array(memory_capacity);
+		this->as_norm().data = allocator<ochar8_t>::allocate_array(memory_capacity);
 		this->as_norm().data[0] = '\0';
 		this->as_norm().capacity = memory_capacity - 1;
 	}
@@ -571,23 +571,23 @@ void codeunit_sequence::reserve(const i32 size)
 	this->transfer_data(result);
 }
 
-codeunit_sequence& codeunit_sequence::write_at(const i32 index, const char codeunit) noexcept
+codeunit_sequence& codeunit_sequence::write_at(const i32 index, const ochar8_t codeunit) noexcept
 {
 	this->data()[index + (index >= 0 ? 0 : this->size())] = codeunit;
 	return *this;
 }
 
-const char& codeunit_sequence::read_at(const i32 index) const noexcept
+const ochar8_t& codeunit_sequence::read_at(const i32 index) const noexcept
 {
 	return this->view().read_at(index);
 }
 
-char& codeunit_sequence::operator[](const i32 index) noexcept
+ochar8_t& codeunit_sequence::operator[](const i32 index) noexcept
 {
 	return this->data()[index + (index >= 0 ? 0 : this->size())];
 }
 
-const char& codeunit_sequence::operator[](const i32 index) const noexcept
+const ochar8_t& codeunit_sequence::operator[](const i32 index) const noexcept
 {
 	return this->read_at(index);
 }
@@ -599,9 +599,9 @@ codeunit_sequence& codeunit_sequence::reverse(const index_interval& range) noexc
 	const i32 size = selection.size();
 	for(i32 i = 0; i < size / 2; ++i)
 	{
-		char& forward = this->data()[selection.get_inclusive_min() + i];
-		char& backward = this->data()[selection.get_inclusive_max() - i];
-		const char temp = forward;
+		ochar8_t& forward = this->data()[selection.get_inclusive_min() + i];
+		ochar8_t& backward = this->data()[selection.get_inclusive_max() - i];
+		const ochar8_t temp = forward;
 		forward = backward;
 		backward = temp;
 	}
@@ -693,7 +693,12 @@ u32 codeunit_sequence::get_hash() const noexcept
 	return this->view().get_hash();
 }
 
-const char* codeunit_sequence::c_str() const noexcept
+const ochar8_t* codeunit_sequence::u8_str() const noexcept
+{
+	return this->is_short() ? this->as_sso().data.data() : this->as_norm().data;
+}
+
+const ochar8_t* codeunit_sequence::c_str() const noexcept
 {
 	return this->is_short() ? this->as_sso().data.data() : this->as_norm().data;
 }
@@ -733,22 +738,22 @@ i32 codeunit_sequence::get_capacity() const
 	return this->is_short() ? SSO_SIZE_MAX : this->as_norm().capacity;
 }
 
-char* codeunit_sequence::data()
+ochar8_t* codeunit_sequence::data()
 {
 	return this->is_short() ? this->as_sso().data.data() : this->as_norm().data;
 }
 
-const char* codeunit_sequence::data() const
+const ochar8_t* codeunit_sequence::data() const
 {
 	return this->is_short() ? this->as_sso().data.data() : this->as_norm().data;
 }
 
-char* codeunit_sequence::last()
+ochar8_t* codeunit_sequence::last()
 {
 	return this->data() + this->size();
 }
 
-const char* codeunit_sequence::last() const
+const ochar8_t* codeunit_sequence::last() const
 {
 	return this->data() + this->size();
 }
@@ -756,7 +761,7 @@ const char* codeunit_sequence::last() const
 void codeunit_sequence::deallocate()
 {
 	if(!this->is_short())
-		allocator<char>::deallocate_array( this->as_norm().data );
+		allocator<ochar8_t>::deallocate_array( this->as_norm().data );
 }
 
 void codeunit_sequence::set_size(const i32 size)

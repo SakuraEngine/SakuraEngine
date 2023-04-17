@@ -58,7 +58,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
         else
         {
             SKR_LOG_TRACE("[D3D12] Create CVV Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
-                desc->name ? desc->name : "", allocationSize, desc->format);
+                desc->name ? desc->name : u8"", allocationSize, desc->format);
         }
     }
 #endif
@@ -76,7 +76,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             CHECK_HRESULT(D->pDxDevice->CreateCommittedResource(
             &heapProps, alloc_desc.ExtraHeapFlags, &bufDesc, res_states, NULL, IID_ARGS(&B->pDxResource)));
             SKR_LOG_TRACE("[D3D12] Create Committed Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
-                desc->name ? desc->name : "", allocationSize, desc->format);
+                desc->name ? desc->name : u8"", allocationSize, desc->format);
         }
         else
         {
@@ -89,7 +89,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             {
                 ZoneScopedN("Log(Allocation)");
                 SKR_LOG_TRACE("[D3D12] Create Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
-                    desc->name ? desc->name : "", allocationSize, desc->format);
+                    desc->name ? desc->name : u8"", allocationSize, desc->format);
             }
         }
     }
@@ -103,7 +103,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
         if (!SUCCEEDED(mapResult))
         {
             cgpu_warn("[D3D12] Map Buffer Resource Failed %d! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
-                mapResult, desc->name ? desc->name : "", allocationSize, desc->format);
+                mapResult, desc->name ? desc->name : u8"", allocationSize, desc->format);
         }
     }
     B->mDxGpuAddress = B->pDxResource->GetGPUVirtualAddress();
@@ -211,7 +211,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
     if (device->adapter->instance->enable_set_name && desc->name)
     {
         wchar_t debugName[MAX_GPU_DEBUG_NAME_LENGTH] = {};
-        mbstowcs(debugName, desc->name, MAX_GPU_DEBUG_NAME_LENGTH);
+        mbstowcs(debugName, (const char*)desc->name, MAX_GPU_DEBUG_NAME_LENGTH);
         if (B->pDxAllocation)
         {
             B->pDxAllocation->SetName(debugName);
@@ -406,10 +406,10 @@ CGPUTexture_D3D12::CGPUTexture_D3D12()
 struct CGPUTextureAliasing_D3D12 : public CGPUTexture_D3D12 {
     D3D12_RESOURCE_DESC mDxDesc;
     skr::string name;
-    CGPUTextureAliasing_D3D12(const D3D12_RESOURCE_DESC& dxDesc, const char* name)
+    CGPUTextureAliasing_D3D12(const D3D12_RESOURCE_DESC& dxDesc, const char8_t* name)
         : CGPUTexture_D3D12()
         , mDxDesc(dxDesc)
-        , name(name)
+        , name((const char*)name)
     {
     }
 };
@@ -584,7 +584,7 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
                 auto fallbackHres = hres;
                 SKR_LOG_ERROR("[D3D12] Create Texture Resorce Failed With HRESULT %d! \n\t With Name: %s\n\t Size: %dx%d \n\t Format: %d \n\t Sample Count: %d", 
                     hres,
-                    desc->name ? desc->name : "", desc->width, desc->height, 
+                    desc->name ? desc->name : u8"", desc->width, desc->height, 
                     desc->format, desc->sample_count);
                 SKR_LOG_ERROR("[D3D12] Format Support For this Format: RenderTarget %d Read %d Write %d", 
                     A->adapter_detail.format_supports[desc->format].render_target_write,
@@ -619,7 +619,7 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
             else
             {
                 SKR_LOG_TRACE("[D3D12] Create Texture Resource Succeed! \n\t With Name: %s\n\t Size: %dx%d \n\t Format: %d \n\t Sample Count: %d", 
-                    desc->name ? desc->name : "", desc->width, desc->height, 
+                    desc->name ? desc->name : u8"", desc->width, desc->height, 
                     desc->format, desc->sample_count);
                 SKR_LOG_TRACE("[D3D12] Format Support For this Format: RenderTarget %d Read %d Write %d", 
                     A->adapter_detail.format_supports[desc->format].render_target_write,
@@ -678,7 +678,7 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
     {
         wchar_t debugName[MAX_GPU_DEBUG_NAME_LENGTH] = {};
         if (desc->name)
-            mbstowcs(debugName, desc->name, MAX_GPU_DEBUG_NAME_LENGTH);
+            mbstowcs(debugName, (const char*)desc->name, MAX_GPU_DEBUG_NAME_LENGTH);
         T->pDxResource->SetName(debugName);
     }
     return &T->super;

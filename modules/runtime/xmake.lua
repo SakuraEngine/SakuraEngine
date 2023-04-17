@@ -96,7 +96,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
             else 
                 asm = "gas.S"
             end
-        elseif is_os("linux") then 
+        elseif is_os("linux") or is_plat("prospero") then 
             if os == nil then
                 os = "sysv"
             end 
@@ -122,7 +122,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
         add_files("$(projectdir)/thirdparty/boost_context/asm/make_"..file)
         add_files("$(projectdir)/thirdparty/boost_context/asm/jump_"..file)
     end
-   
+    
     -- add FTL source 
     add_files("$(projectdir)/thirdparty/FiberTaskingLib/source/build.*.cpp")
     

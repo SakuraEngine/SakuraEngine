@@ -1,4 +1,5 @@
 set_xmakever("2.7.3")
+--add_platformdirs("xmake/platforms")
 set_project("SakuraEngine")
 
 set_policy("build.ccache", false)
@@ -9,6 +10,7 @@ add_rules("mode.debug", "mode.release", "mode.releasedbg", "mode.asan")
 add_moduledirs("xmake/modules")
 
 includes("xmake/options.lua")
+--includes("xmake/toolchains/prospero.lua")
 
 set_languages("c11", "cxx17")
 
@@ -22,6 +24,9 @@ packages_list = {}
 defs_list = {}
 links_list = {}
 generator_list = {}
+
+includes("xmake/options_detect.lua")
+includes("xmake/rules.lua")
 
 if (is_os("windows")) then 
     add_defines("_GAMING_DESKTOP")
@@ -37,14 +42,13 @@ if (is_os("windows")) then
     else
         set_runtimes("MDd")
     end
-else
+elseif (is_os("macosx") or is_os("linux")) then
     add_requires("python")
     add_requires("libsdl")
     add_requires("gtest")
-end
+else
 
-includes("xmake/options_detect.lua")
-includes("xmake/rules.lua")
+end
 
 target("SkrRoot")
     set_kind("headeronly")

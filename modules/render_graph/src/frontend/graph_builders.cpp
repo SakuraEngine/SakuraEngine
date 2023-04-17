@@ -61,19 +61,19 @@ PassHandle RenderGraph::add_render_pass(const RenderPassSetupFunction& setup, co
 }
 
 // render pass builder
-RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_name(const char* name) SKR_NOEXCEPT
+RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_name(const char8_t* name) SKR_NOEXCEPT
 {
     if (name)
     {
         node.set_name(name);
-        graph.blackboard->add_pass(node.get_name(), &node);
+        graph.blackboard->add_pass((const char*)node.get_name(), &node);
     }
     return *this;
 }
 
 RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(const char8_t* name, TextureSRVHandle handle) SKR_NOEXCEPT
 {
-    auto allocated = graph.object_factory->Allocate<TextureReadEdge>(name, handle);
+    auto allocated = graph.object_factory->Allocate<TextureReadEdge>((const char*)name, handle);
     auto&& edge = node.in_texture_edges.emplace_back(allocated);
     graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
@@ -121,7 +121,7 @@ RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::set_depth_stenci
 
 RenderGraph::RenderPassBuilder& RenderGraph::RenderPassBuilder::read(const char8_t* name, BufferRangeHandle handle) SKR_NOEXCEPT
 {
-    auto allocated = graph.object_factory->Allocate<BufferReadEdge>(name, handle, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+    auto allocated = graph.object_factory->Allocate<BufferReadEdge>((const char*)name, handle, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
     auto&& edge = node.in_buffer_edges.emplace_back(allocated);
     graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
@@ -161,11 +161,11 @@ RenderGraph::ComputePassBuilder::ComputePassBuilder(RenderGraph& graph, ComputeP
 {
 }
 
-RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_name(const char* name) SKR_NOEXCEPT
+RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_name(const char8_t* name) SKR_NOEXCEPT
 {
     if (name)
     {
-        graph.blackboard->add_pass(name, &node);
+        graph.blackboard->add_pass((const char*)name, &node);
         node.set_name(name);
     }
     return *this;
@@ -173,7 +173,7 @@ RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_name(const
 
 RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(const char8_t* name, TextureSRVHandle handle) SKR_NOEXCEPT
 {
-    auto allocated = graph.object_factory->Allocate<TextureReadEdge>(name, handle);
+    auto allocated = graph.object_factory->Allocate<TextureReadEdge>((const char*)name, handle);
     auto&& edge = node.in_texture_edges.emplace_back(allocated);
     graph.graph->link(graph.graph->access_node(handle._this), &node, edge);
     return *this;
@@ -181,7 +181,7 @@ RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(const cha
 
 RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::readwrite(const char8_t* name, TextureUAVHandle handle) SKR_NOEXCEPT
 {
-    auto allocated = graph.object_factory->Allocate<TextureReadWriteEdge>(name, handle);
+    auto allocated = graph.object_factory->Allocate<TextureReadWriteEdge>((const char*)name, handle);
     auto&& edge = node.inout_texture_edges.emplace_back(allocated);
     graph.graph->link(&node, graph.graph->access_node(handle._this), edge);
     return *this;
@@ -232,11 +232,11 @@ RenderGraph::CopyPassBuilder::CopyPassBuilder(RenderGraph& graph, CopyPassNode& 
 {
 }
 
-RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::set_name(const char* name) SKR_NOEXCEPT
+RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::set_name(const char8_t* name) SKR_NOEXCEPT
 {
     if (name)
     {
-        graph.blackboard->add_pass(name, &node);
+        graph.blackboard->add_pass((const char*)name, &node);
         node.set_name(name);
     }
     return *this;
@@ -332,11 +332,11 @@ RenderGraph::PresentPassBuilder::PresentPassBuilder(RenderGraph& graph, PresentP
 {
 }
 
-RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::set_name(const char* name) SKR_NOEXCEPT
+RenderGraph::PresentPassBuilder& RenderGraph::PresentPassBuilder::set_name(const char8_t* name) SKR_NOEXCEPT
 {
     if (name)
     {
-        graph.blackboard->add_pass(name, &node);
+        graph.blackboard->add_pass((const char*)name, &node);
         node.set_name(name);
     }
     return *this;
@@ -380,12 +380,12 @@ RenderGraph::BufferBuilder::BufferBuilder(RenderGraph& graph, BufferNode& node) 
     node.descriptor.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
 }
 
-RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::set_name(const char* name) SKR_NOEXCEPT
+RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::set_name(const char8_t* name) SKR_NOEXCEPT
 {
     // blackboard
     node.set_name(name);
     node.descriptor.name = node.get_name();
-    graph.blackboard->add_buffer(node.descriptor.name, &node);
+    graph.blackboard->add_buffer((const char*)node.descriptor.name, &node);
     return *this;
 }
 
@@ -507,9 +507,9 @@ BufferHandle RenderGraph::create_buffer(const BufferSetupFunction& setup) SKR_NO
     return newBuf->get_handle();
 }
 
-BufferHandle RenderGraph::get_buffer(const char* name) SKR_NOEXCEPT
+BufferHandle RenderGraph::get_buffer(const char8_t* name) SKR_NOEXCEPT
 {
-    if (auto buffer = blackboard->buffer(name))
+    if (auto buffer = blackboard->buffer((const char*)name))
     {
         return buffer->get_handle();
     }
@@ -526,12 +526,12 @@ RenderGraph::TextureBuilder::TextureBuilder(RenderGraph& graph, TextureNode& nod
     node.descriptor.is_dedicated = false;
 }
 
-RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(const char* name) SKR_NOEXCEPT
+RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(const char8_t* name) SKR_NOEXCEPT
 {
     // blackboard
     node.set_name(name);
     node.descriptor.name = node.get_name();
-    graph.blackboard->add_texture(node.descriptor.name, &node);
+    graph.blackboard->add_texture((const char*)node.descriptor.name, &node);
     return *this;
 }
 
@@ -634,9 +634,9 @@ TextureHandle RenderGraph::create_texture(const TextureSetupFunction& setup) SKR
     return newTex->get_handle();
 }
 
-TextureHandle RenderGraph::get_texture(const char* name) SKR_NOEXCEPT
+TextureHandle RenderGraph::get_texture(const char8_t* name) SKR_NOEXCEPT
 {    
-    if (auto texture = blackboard->texture(name))
+    if (auto texture = blackboard->texture((const char*)name))
     {
         return texture->get_handle();
     }

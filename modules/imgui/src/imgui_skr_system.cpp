@@ -285,7 +285,7 @@ void skr::imgui::imgui_create_window(ImGuiViewport* viewport)
     desc.posy = (uint32_t)viewport->Pos.y;
     skr::string title = "imgui-";
     title += skr::to_string(viewport->ID);
-    auto new_window = skr_create_window(title.c_str(), &desc);
+    auto new_window = skr_create_window((const char8_t*)title.c_str(), &desc);
 
     viewport->PlatformUserData = viewport;
     viewport->PlatformHandle = new_window;
@@ -351,7 +351,7 @@ void skr::imgui::imgui_set_window_size(ImGuiViewport* viewport, ImVec2 size)
 
 void skr::imgui::imgui_set_window_title(ImGuiViewport* viewport, const char* title)
 {
-    skr_window_set_title((SWindowHandle)viewport->PlatformHandle, title);
+    skr_window_set_title((SWindowHandle)viewport->PlatformHandle, (const char8_t*)title);
 }
 
 void skr::imgui::imgui_set_window_alpha(ImGuiViewport* viewport, float alpha)

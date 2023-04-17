@@ -112,13 +112,13 @@ void* SUSDSceneImporter::Import(skr_io_ram_service_t*, SCookContext* context)
 {
     dual_storage_t* world = nullptr;
     auto u8Path = context->AddFileDependency(assetPath.c_str()).u8string();
-    if (bool suppoted = skd::USDCoreSupportFile(u8Path.c_str()))
+    if (bool suppoted = skd::USDCoreSupportFile((const char*)u8Path.c_str()))
     {
         ZoneScopedN("USD Import");
         world = dualS_create();
         TranverseContext ctx;
         ctx.world = world;
-        auto _stage = skd::USDCoreOpenStage(u8Path.c_str()); (void)_stage;
+        auto _stage = skd::USDCoreOpenStage((const char*)u8Path.c_str()); (void)_stage;
         auto _root = _stage->GetPseudoRoot();
         // pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(u8Path);
         // auto root = stage->GetPseudoRoot();

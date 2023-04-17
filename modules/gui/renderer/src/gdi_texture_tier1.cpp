@@ -84,7 +84,7 @@ void GDITexture_RenderGraph::intializeBindTable() SKR_NOEXCEPT
     view_desc.usages = CGPU_TVU_SRV;
     texture_view = cgpu_create_texture_view(async_data.device, &view_desc);
 
-    const char* color_texture_name = "color_texture";
+    const char8_t* color_texture_name = u8"color_texture";
     CGPUXBindTableDescriptor bind_table_desc = {};
     bind_table_desc.root_signature = async_data.root_signature;
     bind_table_desc.names = &color_texture_name;
@@ -259,7 +259,7 @@ GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* o
     if (owner->source == EGDIImageSource::File)
     {
         auto ram_texture_io = make_zeroed<skr_ram_io_t>();
-        ram_texture_io.path = from_file.uri.c_str();
+        ram_texture_io.path = from_file.uri.u8_str();
         ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* usrdata)
         {
             auto owner = static_cast<GDIImage_RenderGraph*>(usrdata);

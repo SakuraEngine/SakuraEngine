@@ -4,7 +4,7 @@
 namespace skr {
 namespace lite {
 
-TextStorage::TextStorage(const char* str) SKR_NOEXCEPT
+TextStorage::TextStorage(const char8_t* str) SKR_NOEXCEPT
 {
     ctor(str);
 }

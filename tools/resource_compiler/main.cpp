@@ -110,7 +110,7 @@ int compile_all(int argc, char** argv)
 
     // create VFS
     skr_vfs_desc_t vfs_desc = {};
-    vfs_desc.app_name = "Project";
+    vfs_desc.app_name = u8"Project";
     vfs_desc.mount_type = SKR_MOUNT_TYPE_ABSOLUTE;
     vfs_desc.override_mount_dir = parentPath.c_str();
     project->vfs = skr_create_vfs(&vfs_desc);
@@ -119,13 +119,13 @@ int compile_all(int argc, char** argv)
     auto resourceRoot = (skr::filesystem::current_path(ec) / "../resources");
     auto u8ResourceRoot = resourceRoot.u8string();
     skr_vfs_desc_t resource_vfs_desc = {};
-    resource_vfs_desc.app_name = "Project";
+    resource_vfs_desc.app_name = u8"Project";
     resource_vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
     resource_vfs_desc.override_mount_dir = u8ResourceRoot.c_str();
 
     project->resource_vfs = skr_create_vfs(&resource_vfs_desc);
     auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
-    ioServiceDesc.name = "GameRuntimeRAMIOService";
+    ioServiceDesc.name = u8"GameRuntimeRAMIOService";
     ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
     ioServiceDesc.sleep_time = 1000 / 60;
     ioServiceDesc.lockless = true;
@@ -141,7 +141,7 @@ int compile_all(int argc, char** argv)
         if (iter->is_regular_file(ec) && IsAsset(iter->path()))
         {
             paths.push_back(*iter);
-            SKR_LOG_FMT_DEBUG("{}", iter->path().u8string());
+            SKR_LOG_FMT_DEBUG("{}", iter->path().string());
         }
         iter.increment(ec);
     }

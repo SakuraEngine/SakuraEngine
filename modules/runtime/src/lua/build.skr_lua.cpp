@@ -47,7 +47,7 @@ int skr_load_file(lua_State* L) {
     for(int i=0; i<2; ++i)
     {
         skr::string fullpath = path + exts[i].data();
-        file = skr_vfs_fopen(extra->vfs, fullpath.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+        file = skr_vfs_fopen(extra->vfs, (const char8_t*)fullpath.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
         if(file)
             break;
     }

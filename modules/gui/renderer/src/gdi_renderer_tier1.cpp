@@ -8,9 +8,9 @@
 namespace skr {
 namespace gdi {
 // HACK
-inline static void read_bytes(const char* file_name, char8_t** bytes, uint32_t* length)
+inline static void read_bytes(const char8_t* file_name, char8_t** bytes, uint32_t* length)
 {
-    FILE* f = fopen(file_name, "rb");
+    FILE* f = fopen((const char*)file_name, "rb");
     fseek(f, 0, SEEK_END);
     *length = ftell(f);
     fseek(f, 0, SEEK_SET);
@@ -19,20 +19,20 @@ inline static void read_bytes(const char* file_name, char8_t** bytes, uint32_t* 
     fclose(f);
 }
 
-inline static void read_shader_bytes(const char* virtual_path, uint32_t** bytes, uint32_t* length, ECGPUBackend backend)
+inline static void read_shader_bytes(const char8_t* virtual_path, uint32_t** bytes, uint32_t* length, ECGPUBackend backend)
 {
-    char shader_file[256];
-    const char* shader_path = "./../resources/shaders/";
-    strcpy(shader_file, shader_path);
-    strcat(shader_file, virtual_path);
+    char8_t shader_file[256];
+    const char8_t* shader_path = SKR_UTF8("./../resources/shaders/");
+    strcpy((char*)shader_file, (const char*)shader_path);
+    strcat((char*)shader_file, (const char*)virtual_path);
     switch (backend)
     {
         case CGPU_BACKEND_VULKAN:
-            strcat(shader_file, ".spv");
+            strcat((char*)shader_file, ".spv");
             break;
         case CGPU_BACKEND_D3D12:
         case CGPU_BACKEND_XBOX_D3D12:
-            strcat(shader_file, ".dxil");
+            strcat((char*)shader_file, ".dxil");
             break;
         default:
             break;
@@ -46,22 +46,22 @@ CGPURenderPipelineId GDIRenderer_RenderGraph::createRenderPipeline(
     const bool use_texture = attributes & GDI_RENDERER_PIPELINE_ATTRIBUTE_TEXTURED;
     uint32_t *vs_bytes = nullptr, vs_length = 0;
     uint32_t *fs_bytes = nullptr, fs_length = 0;
-    read_shader_bytes("GUI/vertex", &vs_bytes, &vs_length, device->adapter->instance->backend);
+    read_shader_bytes(SKR_UTF8("GUI/vertex"), &vs_bytes, &vs_length, device->adapter->instance->backend);
     if (use_texture)
     {
-        read_shader_bytes("GUI/pixel2", &fs_bytes, &fs_length, device->adapter->instance->backend);
+        read_shader_bytes(SKR_UTF8("GUI/pixel2"), &fs_bytes, &fs_length, device->adapter->instance->backend);
     }
     else
     {
-        read_shader_bytes("GUI/pixel", &fs_bytes, &fs_length, device->adapter->instance->backend);
+        read_shader_bytes(SKR_UTF8("GUI/pixel"), &fs_bytes, &fs_length, device->adapter->instance->backend);
     }
     CGPUShaderLibraryDescriptor vs_desc = {};
     vs_desc.stage = CGPU_SHADER_STAGE_VERT;
-    vs_desc.name = "VertexShaderLibrary";
+    vs_desc.name = SKR_UTF8("VertexShaderLibrary");
     vs_desc.code = vs_bytes;
     vs_desc.code_size = vs_length;
     CGPUShaderLibraryDescriptor ps_desc = {};
-    ps_desc.name = "FragmentShaderLibrary";
+    ps_desc.name = SKR_UTF8("FragmentShaderLibrary");
     ps_desc.stage = CGPU_SHADER_STAGE_FRAG;
     ps_desc.code = fs_bytes;
     ps_desc.code_size = fs_length;
@@ -69,15 +69,15 @@ CGPURenderPipelineId GDIRenderer_RenderGraph::createRenderPipeline(
     CGPUShaderLibraryId fragment_shader = cgpu_create_shader_library(device, &ps_desc);
     free(vs_bytes);
     free(fs_bytes);
-    CGPUPipelineShaderDescriptor ppl_shaders[2];
+    CGPUShaderEntryDescriptor ppl_shaders[2];
     ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
-    ppl_shaders[0].entry = "main";
+    ppl_shaders[0].entry = SKR_UTF8("main");
     ppl_shaders[0].library = vertex_shader;
     ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
-    ppl_shaders[1].entry = "main";
+    ppl_shaders[1].entry = SKR_UTF8("main");
     ppl_shaders[1].library = fragment_shader;
 
-    const char* static_sampler_name = "color_sampler";
+    const char8_t* static_sampler_name = u8"color_sampler";
     CGPURootSignatureDescriptor rs_desc = {};
     rs_desc.shaders = ppl_shaders;
     rs_desc.shader_count = 2;
@@ -196,15 +196,15 @@ int GDIRenderer_RenderGraph::initialize(const GDIRendererDescriptor* desc) SKR_N
     const uint32_t uv_offset = static_cast<uint32_t>(offsetof(GDIVertex, clipUV));
     const uint32_t uv2_offset = static_cast<uint32_t>(offsetof(GDIVertex, clipUV2));
     const uint32_t color_offset = static_cast<uint32_t>(offsetof(GDIVertex, color));
-    vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 0, pos_offset, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, texcoord_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[2] = { "AA", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, aa_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[3] = { "UV", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, uv_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[4] = { "UV_Two", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, uv2_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[5] = { "COLOR", 1, CGPU_FORMAT_R8G8B8A8_UNORM, 0, color_offset, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[6] = { "TRANSFORM", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 1, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
-    vertex_layout.attributes[7] = { "PROJECTION", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 2, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
-    vertex_layout.attributes[8] = { "DRAW_DATA", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
+    vertex_layout.attributes[0] = { u8"POSITION", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 0, pos_offset, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[1] = { u8"TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, texcoord_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[2] = { u8"AA", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, aa_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[3] = { u8"UV", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, uv_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[4] = { u8"UV_Two", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, uv2_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[5] = { u8"COLOR", 1, CGPU_FORMAT_R8G8B8A8_UNORM, 0, color_offset, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[6] = { u8"TRANSFORM", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 1, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
+    vertex_layout.attributes[7] = { u8"PROJECTION", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 2, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
+    vertex_layout.attributes[8] = { u8"DRAW_DATA", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
     vertex_layout.attribute_count = 9;
     
     target_format = pDesc->target_format;
@@ -226,7 +226,7 @@ int GDIRenderer_RenderGraph::initialize(const GDIRendererDescriptor* desc) SKR_N
     static_color_sampler = cgpu_create_sampler(device, &sampler_desc);
 
     CGPURootSignaturePoolDescriptor rs_pool_desc = {};
-    rs_pool_desc.name = "GUI_RS_POOL";
+    rs_pool_desc.name = u8"GUI_RS_POOL";
     rs_pool = cgpu_create_root_signature_pool(device, &rs_pool_desc);
 
     createRenderPipelines();
@@ -297,7 +297,7 @@ void GDIRenderer_RenderGraph::updatePendingTextures(skr::render_graph::RenderGra
     graph->add_copy_pass(
     [&](render_graph::RenderGraph& g, render_graph::CopyPassBuilder& builder) {
         ZoneScopedN("UpdateTextures");
-        builder.set_name("gdi_texture_update_pass")
+        builder.set_name(u8"gdi_texture_update_pass")
             .can_be_lone();
         for (auto copy : copies)
         {
@@ -483,7 +483,7 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
     const bool useCVV = false;
     auto vertex_buffer = rg->create_buffer(
         [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
-            builder.set_name("gdi_vertex_buffer")
+            builder.set_name(u8"gdi_vertex_buffer")
                 .size(vertices_size)
                 .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
                 .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
@@ -493,7 +493,7 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
         });
     auto transform_buffer = rg->create_buffer(
         [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
-            builder.set_name("gdi_transform_buffer")
+            builder.set_name(u8"gdi_transform_buffer")
                 .size(transform_size)
                 .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
                 .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
@@ -503,7 +503,7 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
         });
     auto projection_buffer = rg->create_buffer(
         [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
-            builder.set_name("gdi_projection_buffer")
+            builder.set_name(u8"gdi_projection_buffer")
                 .size(projection_size)
                 .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
                 .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
@@ -513,7 +513,7 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
         });
     auto rdata_buffer = rg->create_buffer(
         [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
-            builder.set_name("gdi_rdata_buffer")
+            builder.set_name(u8"gdi_rdata_buffer")
                 .size(rdata_size)
                 .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
                 .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
@@ -523,7 +523,7 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
         });
     auto index_buffer = rg->create_buffer(
         [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
-            builder.set_name("gdi_index_buffer")
+            builder.set_name(u8"gdi_index_buffer")
                 .size(indices_size)
                 .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
                 .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
@@ -543,7 +543,7 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
         auto upload_buffer_handle = rg->create_buffer(
             [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
             ZoneScopedN("ConstructUploadPass");
-            builder.set_name("gdi_upload_buffer")
+            builder.set_name(u8"gdi_upload_buffer")
                     .size(indices_size + vertices_size + transform_size + projection_size + rdata_size)
                     .with_tags(kRenderGraphDynamicResourceTag)
                     .as_upload_buffer();
@@ -551,7 +551,7 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
         rg->add_copy_pass(
             [=](render_graph::RenderGraph& g, render_graph::CopyPassBuilder& builder) {
                 ZoneScopedN("ConstructCopyPass");
-                builder.set_name("gdi_copy_pass");
+                builder.set_name(u8"gdi_copy_pass");
                 uint64_t cursor = 0;
                 builder.buffer_to_buffer(upload_buffer_handle.range(cursor, vertices_size), vertex_buffer.range(0, vertices_size));
                 cursor += vertices_size;
@@ -593,13 +593,13 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
     updatePendingTextures(rg);
 
     // 4. loop & record render commands
-    skr::render_graph::TextureRTVHandle target = rg->get_texture("backbuffer");
-    skr::render_graph::TextureDSVHandle depth = rg->get_texture("depth");
+    skr::render_graph::TextureRTVHandle target = rg->get_texture(u8"backbuffer");
+    skr::render_graph::TextureDSVHandle depth = rg->get_texture(u8"depth");
     // skr::vector<GDIViewport*> canvas_copy(canvas_span.begin(), canvas_span.end());
     rg->add_render_pass([&](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
         ZoneScopedN("ConstructRenderPass");
         const auto back_desc = g.resolve_descriptor(target);
-        builder.set_name("gdi_render_pass")
+        builder.set_name(u8"gdi_render_pass")
             .use_buffer(vertex_buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
             .use_buffer(transform_buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
             .use_buffer(projection_buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
@@ -609,7 +609,7 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
             .write(0, target, CGPU_LOAD_ACTION_CLEAR);
         if (back_desc->sample_count > 1)
         {
-            skr::render_graph::TextureHandle real_target = rg->get_texture("presentbuffer");
+            skr::render_graph::TextureHandle real_target = rg->get_texture(u8"presentbuffer");
             builder.resolve_msaa(0, real_target);
         }
     },

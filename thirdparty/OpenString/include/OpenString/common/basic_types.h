@@ -23,8 +23,8 @@ OPEN_STRING_NS_END
 
 inline namespace literal
 {
-	[[nodiscard]] constexpr char operator""_as_char(const unsigned long long value) noexcept
+	[[nodiscard]] constexpr ochar8_t operator""_as_char(const unsigned long long value) noexcept
 	{
-		return static_cast<char>(value);
+		return static_cast<ochar8_t>(value);
 	}
 }

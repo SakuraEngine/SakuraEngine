@@ -17,7 +17,7 @@ text& text::operator=(const text&) noexcept = default;
 text& text::operator=(text&&) noexcept = default;
 text::~text() = default;
 
-text::text(const char* str) noexcept
+text::text(const ochar8_t* str) noexcept
 	: sequence_(str)
 { }
 
@@ -33,9 +33,9 @@ text::text(codeunit_sequence_view sequence) noexcept
 	: sequence_(sequence)
 { }
 
-text text::from_utf8(const char* str) noexcept
+text text::from_utf8(const ochar8_t* str) noexcept
 {
-	return { codeunit_sequence_view(str) };
+	return { codeunit_sequence_view((const ochar8_t*)str) };
 }
 
 text text::from_utf32(const char32_t* str) noexcept
@@ -66,7 +66,7 @@ text::iterator::codepoint_accessor::codepoint_accessor(iterator& iter) noexcept
 	: it_(iter)
 { }
 
-text::iterator::codepoint_accessor& text::iterator::codepoint_accessor::operator=(const char c) noexcept
+text::iterator::codepoint_accessor& text::iterator::codepoint_accessor::operator=(const ochar8_t c) noexcept
 {
 	return *this = codepoint{ c };
 }
@@ -117,7 +117,7 @@ i32 text::iterator::raw_size() const noexcept
 
 codepoint text::iterator::get_codepoint() const noexcept
 {
-	return codepoint{ this->owner->sequence_.subview( this->sequence_range ).c_str(), this->sequence_range.size() };
+	return codepoint{ this->owner->sequence_.subview( this->sequence_range ).u8_str(), this->sequence_range.size() };
 }
 
 codepoint text::iterator::operator*() const noexcept
@@ -133,7 +133,7 @@ text::iterator::codepoint_accessor text::iterator::operator*() noexcept
 text::iterator& text::iterator::operator++() noexcept
 {
 	const i32 next_start = this->sequence_range.get_exclusive_max();
-	const char c = this->owner->sequence_[next_start];
+	const ochar8_t c = this->owner->sequence_[next_start];
 	const i32 size = unicode::parse_utf8_length(c);
 	this->sequence_range = { '[', next_start, next_start + size, ')' };
 	return *this;
@@ -241,7 +241,7 @@ bool text::operator==(const text& rhs) const noexcept
 	return this->view() == rhs.view();
 }
 
-bool text::operator==(const char* rhs) const noexcept
+bool text::operator==(const ochar8_t* rhs) const noexcept
 {
 	return this->view() == rhs;
 }
@@ -256,7 +256,7 @@ bool text::operator!=(const text& rhs) const noexcept
 	return this->view() != rhs.view();
 }
 
-bool text::operator!=(const char* rhs) const noexcept
+bool text::operator!=(const ochar8_t* rhs) const noexcept
 {
 	return this->view() != rhs;
 }
@@ -278,13 +278,13 @@ text& text::append(const codepoint& cp) noexcept
 	return *this;
 }
 
-text& text::append(const char* rhs) noexcept
+text& text::append(const ochar8_t* rhs) noexcept
 {
 	this->sequence_.append(rhs);
 	return *this;
 }
 
-text& text::append(const char codeunit, const i32 count) noexcept
+text& text::append(const ochar8_t codeunit, const i32 count) noexcept
 {
 	this->sequence_.append(codeunit, count);
 	return *this;
@@ -305,12 +305,12 @@ text& text::operator+=(const codepoint& cp) noexcept
 	return this->append(cp);
 }
 
-text& text::operator+=(const char* rhs) noexcept
+text& text::operator+=(const ochar8_t* rhs) noexcept
 {
 	return this->append(rhs);
 }
 
-text& text::operator+=(const char codeunit) noexcept
+text& text::operator+=(const ochar8_t codeunit) noexcept
 {
 	return this->append(codeunit);
 }
@@ -519,9 +519,14 @@ u32 text::get_hash() const noexcept
 	return this->view().get_hash();
 }
 
-const char* text::c_str() const noexcept
+const ochar_t* text::c_str() const noexcept
 {
 	return this->view().c_str();
+}
+
+const ochar8_t* text::u8_str() const noexcept
+{
+	return (const ochar8_t*)this->view().c_str();
 }
 
 bool operator==(const text_view& lhs, const text& rhs) noexcept

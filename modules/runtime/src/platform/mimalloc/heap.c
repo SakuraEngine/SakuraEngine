@@ -6,8 +6,9 @@ terms of the MIT license. A copy of the license can be found in the file
 -----------------------------------------------------------------------------*/
 
 #include "mimalloc.h"
-#include "mimalloc-internal.h"
-#include "mimalloc-atomic.h"
+#include "mimalloc/internal.h"
+#include "mimalloc/atomic.h"
+#include "mimalloc/prim.h"  // mi_prim_get_default_heap
 
 #include <string.h>  // memset, memcpy
 
@@ -30,15 +31,18 @@ static bool mi_heap_visit_pages(mi_heap_t* heap, heap_page_visitor_fun* fn, void
   // visit all pages
   #if MI_DEBUG>1
   size_t total = heap->page_count;
-  #endif
   size_t count = 0;
+  #endif  
+
   for (size_t i = 0; i <= MI_BIN_FULL; i++) {
     mi_page_queue_t* pq = &heap->pages[i];
     mi_page_t* page = pq->first;
     while(page != NULL) {
       mi_page_t* next = page->next; // save next in case the page gets removed from the queue
       mi_assert_internal(mi_page_heap(page) == heap);
+      #if MI_DEBUG>1
       count++;
+      #endif
       if (!fn(heap, pq, page, arg1, arg2)) return false;
       page = next; // and continue
     }
@@ -92,7 +96,7 @@ static bool mi_heap_page_collect(mi_heap_t* heap, mi_page_queue_t* pq, mi_page_t
   mi_collect_t collect = *((mi_collect_t*)arg_collect);
   _mi_page_free_collect(page, collect >= MI_FORCE);
   if (mi_page_all_free(page)) {
-    // no more used blocks, free the page. 
+    // no more used blocks, free the page.
     // note: this will free retired pages as well.
     _mi_page_free(page, pq, collect >= MI_FORCE);
   }
@@ -133,7 +137,7 @@ static void mi_heap_collect_ex(mi_heap_t* heap, mi_collect_t collect)
     // if all memory is freed by now, all segments should be freed.
     _mi_abandoned_reclaim_all(heap, &heap->tld->segments);
   }
-  
+
   // if abandoning, mark all pages to no longer add to delayed_free
   if (collect == MI_ABANDON) {
     mi_heap_visit_pages(heap, &mi_heap_page_never_delayed_free, NULL, NULL);
@@ -178,7 +182,7 @@ void mi_heap_collect(mi_heap_t* heap, bool force) mi_attr_noexcept {
 }
 
 void mi_collect(bool force) mi_attr_noexcept {
-  mi_heap_collect(mi_get_default_heap(), force);
+  mi_heap_collect(mi_prim_get_default_heap(), force);
 }
 
 
@@ -188,8 +192,13 @@ void mi_collect(bool force) mi_attr_noexcept {
 
 mi_heap_t* mi_heap_get_default(void) {
   mi_thread_init();
-  return mi_get_default_heap();
+  return mi_prim_get_default_heap();
 }
+
+static bool mi_heap_is_default(const mi_heap_t* heap) {
+  return (heap == mi_prim_get_default_heap());
+}
+
 
 mi_heap_t* mi_heap_get_backing(void) {
   mi_heap_t* heap = mi_heap_get_default();
@@ -237,9 +246,6 @@ static void mi_heap_reset_pages(mi_heap_t* heap) {
   mi_assert_internal(mi_heap_is_initialized(heap));
   // TODO: copy full empty heap instead?
   memset(&heap->pages_free_direct, 0, sizeof(heap->pages_free_direct));
-#ifdef MI_MEDIUM_DIRECT
-  memset(&heap->pages_free_medium, 0, sizeof(heap->pages_free_medium));
-#endif
   _mi_memcpy_aligned(&heap->pages, &_mi_heap_empty.pages, sizeof(heap->pages));
   heap->thread_delayed_free = NULL;
   heap->page_count = 0;
@@ -260,7 +266,7 @@ static void mi_heap_free(mi_heap_t* heap) {
   // remove ourselves from the thread local heaps list
   // linear search but we expect the number of heaps to be relatively small
   mi_heap_t* prev = NULL;
-  mi_heap_t* curr = heap->tld->heaps; 
+  mi_heap_t* curr = heap->tld->heaps;
   while (curr != heap && curr != NULL) {
     prev = curr;
     curr = curr->next;
@@ -330,6 +336,14 @@ void _mi_heap_destroy_pages(mi_heap_t* heap) {
   mi_heap_reset_pages(heap);
 }
 
+#if MI_TRACK_HEAP_DESTROY
+static bool mi_cdecl mi_heap_track_block_free(const mi_heap_t* heap, const mi_heap_area_t* area, void* block, size_t block_size, void* arg) {
+  MI_UNUSED(heap); MI_UNUSED(area);  MI_UNUSED(arg); MI_UNUSED(block_size);
+  mi_track_free_size(block,mi_usable_size(block));
+  return true;
+}
+#endif
+
 void mi_heap_destroy(mi_heap_t* heap) {
   mi_assert(heap != NULL);
   mi_assert(mi_heap_is_initialized(heap));
@@ -341,13 +355,30 @@ void mi_heap_destroy(mi_heap_t* heap) {
     mi_heap_delete(heap);
   }
   else {
+    // track all blocks as freed
+    #if MI_TRACK_HEAP_DESTROY
+    mi_heap_visit_blocks(heap, true, mi_heap_track_block_free, NULL);
+    #endif
     // free all pages
     _mi_heap_destroy_pages(heap);
     mi_heap_free(heap);
   }
 }
 
-
+void _mi_heap_destroy_all(void) {
+  mi_heap_t* bheap = mi_heap_get_backing();
+  mi_heap_t* curr = bheap->tld->heaps;
+  while (curr != NULL) {
+    mi_heap_t* next = curr->next;
+    if (curr->no_reclaim) {
+      mi_heap_destroy(curr);
+    }
+    else {
+      _mi_heap_destroy_pages(curr);
+    }
+    curr = next;
+  }
+}
 
 /* -----------------------------------------------------------
   Safe Heap delete
@@ -360,8 +391,8 @@ static void mi_heap_absorb(mi_heap_t* heap, mi_heap_t* from) {
 
   // reduce the size of the delayed frees
   _mi_heap_delayed_free_partial(from);
-  
-  // transfer all pages by appending the queues; this will set a new heap field 
+
+  // transfer all pages by appending the queues; this will set a new heap field
   // so threads may do delayed frees in either heap for a while.
   // note: appending waits for each page to not be in the `MI_DELAYED_FREEING` state
   // so after this only the new heap will get delayed frees
@@ -374,17 +405,17 @@ static void mi_heap_absorb(mi_heap_t* heap, mi_heap_t* from) {
   }
   mi_assert_internal(from->page_count == 0);
 
-  // and do outstanding delayed frees in the `from` heap  
+  // and do outstanding delayed frees in the `from` heap
   // note: be careful here as the `heap` field in all those pages no longer point to `from`,
-  // turns out to be ok as `_mi_heap_delayed_free` only visits the list and calls a 
+  // turns out to be ok as `_mi_heap_delayed_free` only visits the list and calls a
   // the regular `_mi_free_delayed_block` which is safe.
-  _mi_heap_delayed_free_all(from);  
+  _mi_heap_delayed_free_all(from);
   #if !defined(_MSC_VER) || (_MSC_VER > 1900) // somehow the following line gives an error in VS2015, issue #353
   mi_assert_internal(mi_atomic_load_ptr_relaxed(mi_block_t,&from->thread_delayed_free) == NULL);
   #endif
 
   // and reset the `from` heap
-  mi_heap_reset_pages(from);  
+  mi_heap_reset_pages(from);
 }
 
 // Safe delete a heap without freeing any still allocated blocks in that heap.
@@ -412,7 +443,7 @@ mi_heap_t* mi_heap_set_default(mi_heap_t* heap) {
   mi_assert(mi_heap_is_initialized(heap));
   if (heap==NULL || !mi_heap_is_initialized(heap)) return NULL;
   mi_assert_expensive(mi_heap_is_valid(heap));
-  mi_heap_t* old = mi_get_default_heap();
+  mi_heap_t* old = mi_prim_get_default_heap();
   _mi_heap_set_default_direct(heap);
   return old;
 }
@@ -462,7 +493,7 @@ bool mi_heap_check_owned(mi_heap_t* heap, const void* p) {
 }
 
 bool mi_check_owned(const void* p) {
-  return mi_heap_check_owned(mi_get_default_heap(), p);
+  return mi_heap_check_owned(mi_prim_get_default_heap(), p);
 }
 
 /* -----------------------------------------------------------
@@ -505,9 +536,13 @@ static bool mi_heap_area_visit_blocks(const mi_heap_area_ex_t* xarea, mi_block_v
   uintptr_t free_map[MI_MAX_BLOCKS / sizeof(uintptr_t)];
   memset(free_map, 0, sizeof(free_map));
 
+  #if MI_DEBUG>1
   size_t free_count = 0;
+  #endif
   for (mi_block_t* block = page->free; block != NULL; block = mi_block_next(page,block)) {
+    #if MI_DEBUG>1
     free_count++;
+    #endif
     mi_assert_internal((uint8_t*)block >= pstart && (uint8_t*)block < (pstart + psize));
     size_t offset = (uint8_t*)block - pstart;
     mi_assert_internal(offset % bsize == 0);
@@ -520,7 +555,9 @@ static bool mi_heap_area_visit_blocks(const mi_heap_area_ex_t* xarea, mi_block_v
   mi_assert_internal(page->capacity == (free_count + page->used));
 
   // walk through all blocks skipping the free ones
+  #if MI_DEBUG>1
   size_t used_count = 0;
+  #endif
   for (size_t i = 0; i < page->capacity; i++) {
     size_t bitidx = (i / sizeof(uintptr_t));
     size_t bit = i - (bitidx * sizeof(uintptr_t));
@@ -529,7 +566,9 @@ static bool mi_heap_area_visit_blocks(const mi_heap_area_ex_t* xarea, mi_block_v
       i += (sizeof(uintptr_t) - 1); // skip a run of free blocks
     }
     else if ((m & ((uintptr_t)1 << bit)) == 0) {
+      #if MI_DEBUG>1
       used_count++;
+      #endif
       uint8_t* block = pstart + (i * bsize);
       if (!visitor(mi_page_heap(page), area, block, ubsize, arg)) return false;
     }

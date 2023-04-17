@@ -107,14 +107,14 @@ namespace details
 
             [[nodiscard]] constexpr std::tuple<run_type, index_interval> parse_run(const i32 from) const
             {
-                const i32 index = this->format.index_any_of("{}"_cuqv, { '[', from, '~' });
+                const i32 index = this->format.index_any_of(OSTR_UTF8("{}"_cuqv), { '[', from, '~' });
                 if(index == index_invalid)
                     return { run_type::plain_text, { '[', from, '~' } };
                 if(from != index)
                     return { run_type::plain_text, { '[', from, index, ')' } };
                 if(format[index] == format[index+1])
                     return { run_type::escaped_brace, { '[', index, index + 1, ']' } };
-                const i32 index_next = this->format.index_any_of("{}"_cuqv, { '(', index, '~' });
+                const i32 index_next = this->format.index_any_of(OSTR_UTF8("{}"_cuqv), { '(', index, '~' });
                 /*
                 if(format[index] == '}')
                     throw format_error("Unclosed right brace is not allowed!"_cuqv);
@@ -201,7 +201,7 @@ namespace details
                 break;
             case format_view::run_type::formatter:
             {    
-                const auto [ index_run, specification ] = run.subview({ '[', 1, -2, ']' }).split(":"_cuqv);
+                const auto [ index_run, specification ] = run.subview({ '[', 1, -2, ']' }).split(OSTR_UTF8(":"_cuqv));
                 i32 current_index = next_index;
                 if (index_run.is_empty())
                 {
@@ -289,21 +289,21 @@ struct formatter<index_interval>
     static codeunit_sequence format_argument(const index_interval& value, const codeunit_sequence_view& specification)
     {
         if(value.is_empty())
-            return codeunit_sequence{ "∅"_cuqv };
+            return codeunit_sequence{ OSTR_UTF8("∅"_cuqv) };
         const index_interval::bound lower = value.get_lower_bound();
         codeunit_sequence lower_part;
         switch(lower.type)
         {
         case index_interval::bound::inclusion::inclusive:
-            lower_part = "["_cuqv;
+            lower_part = OSTR_UTF8("["_cuqv);
             lower_part += details::format_integer(lower.value, { });
             break;
         case index_interval::bound::inclusion::exclusive:
-            lower_part = "("_cuqv;
+            lower_part = OSTR_UTF8("("_cuqv);
             lower_part += details::format_integer(lower.value, { });
             break;
         case index_interval::bound::inclusion::infinity:
-            lower_part = "(-∞"_cuqv;
+            lower_part = OSTR_UTF8("(-∞"_cuqv);
             break;
         }
         const index_interval::bound upper = value.get_upper_bound();
@@ -312,33 +312,33 @@ struct formatter<index_interval>
         {
         case index_interval::bound::inclusion::inclusive:
             upper_part = details::format_integer(upper.value, { });
-            upper_part += "]"_cuqv;
+            upper_part += OSTR_UTF8("]"_cuqv);
             break;
         case index_interval::bound::inclusion::exclusive:
             upper_part = details::format_integer(upper.value, { });
-            upper_part += ")"_cuqv;
+            upper_part += OSTR_UTF8(")"_cuqv);
             break;
         case index_interval::bound::inclusion::infinity:
-            upper_part = "+∞)"_cuqv;
+            upper_part = OSTR_UTF8("+∞)"_cuqv);
             break;
         }
-        return format("{},{}"_cuqv, lower_part, upper_part);
+        return format(OSTR_UTF8("{},{}"_cuqv), lower_part, upper_part);
     }
 };
 
 template<> 
-struct formatter<const char*>
+struct formatter<const ochar8_t*>
 {
-    static codeunit_sequence format_argument(const char* value, const codeunit_sequence_view& specification)
+    static codeunit_sequence format_argument(const ochar8_t* value, const codeunit_sequence_view& specification)
     {
         return codeunit_sequence{value};
     }
 };
 
 template<size_t N> 
-struct formatter<char[N]>
+struct formatter<ochar8_t[N]>
 {
-    static codeunit_sequence format_argument(const char (&value)[N], const codeunit_sequence_view& specification)
+    static codeunit_sequence format_argument(const ochar8_t (&value)[N], const codeunit_sequence_view& specification)
     {
         return codeunit_sequence{value};
     }
@@ -367,7 +367,7 @@ struct formatter<std::nullptr_t>
 {
     static codeunit_sequence format_argument(std::nullptr_t, const codeunit_sequence_view& specification)
     {
-        return codeunit_sequence{"nullptr"_cuqv};
+        return codeunit_sequence{OSTR_UTF8("nullptr"_cuqv)};
     }
 };
 
@@ -376,7 +376,7 @@ struct formatter<T*>
 {
     static codeunit_sequence format_argument(const T* value, const codeunit_sequence_view& specification)
     {
-        return details::format_integer(reinterpret_cast<i64>(value), "#016x"_cuqv);
+        return details::format_integer(reinterpret_cast<i64>(value), OSTR_UTF8("#016x"_cuqv));
     }
 };
 
@@ -396,17 +396,18 @@ codeunit_sequence formatter<T>::format_argument(const T& value, const codeunit_s
     for(i32 i = 0; i < size; ++i)
     {
         const u8 memory = reader[i];
-        raw += " "_cuqv;
-        raw += details::format_integer(memory, "02x"_cuqv);
+        raw += OSTR_UTF8(" "_cuqv);
+        raw += details::format_integer(memory, OSTR_UTF8("02x"_cuqv));
     }
     
-    if(specification == "r"_cuqv)   // output raw memory bytes
-        return format("[Undefined type (raw:{})]"_cuqv, raw);
+    if(specification == OSTR_UTF8("r"_cuqv))   // output raw memory bytes
+        return format(OSTR_UTF8("[Undefined type (raw:{})]"_cuqv), raw);
 
-    const codeunit_sequence message = format("Undefined format with raw memory bytes:{}!"_cuqv, raw);
+    const codeunit_sequence message = format(OSTR_UTF8("Undefined format with raw memory bytes:{}!"_cuqv), raw);
     /*
     throw format_error(message.view());
     */
+    return {};
 }
 
 OPEN_STRING_NS_END

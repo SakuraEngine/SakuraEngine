@@ -206,18 +206,18 @@ ESkrInstallStatus STextureFactoryImpl::InstallWithDStorage(skr_resource_record_t
             {
                 const char* suffix = GetSuffixWithCompressionFormat((ECGPUFormat)texture_resource->format);
                 auto compressedBin = skr::format("{}{}", guid, suffix); //TODO: choose compression format
-                auto compressedPath = skr::filesystem::path(root.dstorage_root.c_str()) / compressedBin.c_str();
+                auto compressedPath = skr::filesystem::path(root.dstorage_root) / compressedBin.c_str();
                 auto dRequest = SPtr<DStorageRequest>::Create();
                 InstallType installType = {EInstallMethod::DSTORAGE, ECompressMethod::BC_OR_ASTC};
                 auto found = mDStorageRequests.find(texture_resource);
                 SKR_ASSERT(found == mDStorageRequests.end());
                 mDStorageRequests.emplace(texture_resource, dRequest);
                 mInstallTypes.emplace(texture_resource, installType);
-                dRequest->absPath = compressedPath.u8string();
+                dRequest->absPath = compressedPath.string();
 
                 auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();
                 vram_texture_io.device = render_device->get_cgpu_device();
-                vram_texture_io.dstorage.path = dRequest->absPath.c_str();
+                vram_texture_io.dstorage.path = (const char8_t*)dRequest->absPath.c_str();
                 vram_texture_io.dstorage.compression = CGPU_DSTORAGE_COMPRESSION_NONE;
                 vram_texture_io.dstorage.source_type = CGPU_DSTORAGE_SOURCE_FILE;
                 vram_texture_io.dstorage.queue = file_dstorage_queue;
@@ -266,7 +266,7 @@ ESkrInstallStatus STextureFactoryImpl::InstallWithUpload(skr_resource_record_t* 
 
             // emit ram request
             auto ram_texture_io = make_zeroed<skr_ram_io_t>();
-            ram_texture_io.path = uRequest->resource_uri.c_str();
+            ram_texture_io.path = (const char8_t*)uRequest->resource_uri.c_str();
             ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
                 ZoneScopedN("Upload Image");
                 // upload

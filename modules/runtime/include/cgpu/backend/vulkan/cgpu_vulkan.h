@@ -1,15 +1,21 @@
 #pragma once
 #include "cgpu/api.h"
+
 #if defined(_WIN32) || defined(_WIN64)
     #define VK_USE_PLATFORM_WIN32_KHR
 #endif
+
 #include "cgpu/backend/vulkan/volk.h"
+
+RUNTIME_EXTERN_C RUNTIME_API const VkAllocationCallbacks GCGPUVkAllocationCallbacks;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define GLOBAL_VkAllocationCallbacks CGPU_NULLPTR
+// #define GLOBAL_VkAllocationCallbacks CGPU_NULLPTR
+#define GLOBAL_VkAllocationCallbacks (&GCGPUVkAllocationCallbacks)
+
 #define MAX_PLANE_COUNT 3
 
 #ifndef VK_USE_VOLK_DEVICE_TABLE
@@ -184,6 +190,20 @@ typedef struct CGPUAdapter_Vulkan {
     VkPhysicalDeviceFragmentShadingRatePropertiesKHR mPhysicalDeviceFragmentShadingRateProps;
     VkPhysicalDeviceFragmentShadingRateFeaturesKHR mPhysicalDeviceFragmentShadingRateFeatures;
 #endif
+#if VK_EXT_extended_dynamic_state
+    VkPhysicalDeviceExtendedDynamicStateFeaturesEXT mPhysicalDeviceExtendedDynamicStateFeatures;
+#endif
+#if VK_EXT_extended_dynamic_state2
+    VkPhysicalDeviceExtendedDynamicState2FeaturesEXT mPhysicalDeviceExtendedDynamicState2Features;
+#endif
+#if VK_EXT_extended_dynamic_state3 // NVIDIA: driver version >= 531.54
+    VkPhysicalDeviceExtendedDynamicState3PropertiesEXT mPhysicalDeviceExtendedDynamicState3Properties;
+    VkPhysicalDeviceExtendedDynamicState3FeaturesEXT mPhysicalDeviceExtendedDynamicState3Features;
+#endif
+#if VK_EXT_shader_object // NVIDIA: driver version >= 531.54
+    VkPhysicalDeviceShaderObjectFeaturesEXT mPhysicalDeviceShaderObjectFeatures;
+    VkPhysicalDeviceShaderObjectPropertiesEXT mPhysicalDeviceShaderObjectProperties;
+#endif
     VkPhysicalDeviceFeatures2 mPhysicalDeviceFeatures;
     VkPhysicalDeviceSubgroupProperties mSubgroupProperties;
     /// Queue Families
@@ -337,9 +357,21 @@ typedef struct CGPURootSignature_Vulkan {
     CGPURootSignature super;
     VkPipelineLayout pPipelineLayout;
     SetLayout_Vulkan* pSetLayouts;
+    VkDescriptorSetLayout* pVkSetLayouts;
     uint32_t mSetLayoutCount;
     VkPushConstantRange* pPushConstRanges;
 } CGPURootSignature_Vulkan;
+
+typedef struct CGPUCompiledShader_Vulkan {
+    CGPUCompiledShader super;
+    VkShaderEXT pVkShader;
+} CGPUCompiledShader_Vulkan;
+
+typedef struct CGPULinkedShader_Vulkan {
+    CGPULinkedShader super;
+    VkShaderEXT pVkShaders[CGPU_SHADER_STAGE_COUNT];
+    ECGPUShaderStage pStages[CGPU_SHADER_STAGE_COUNT];
+} CGPULinkedShader_Vulkan;
 
 typedef union VkDescriptorUpdateData
 {

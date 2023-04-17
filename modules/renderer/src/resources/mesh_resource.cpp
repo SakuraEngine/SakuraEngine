@@ -310,17 +310,17 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithDStorage(skr_resource_record_t* r
                 {
                     auto binPath = skr::format("{}.buffer{}", guid, i);
                     // TODO: REFACTOR THIS WITH VFS PATH
-                    auto fullBinPath = skr::filesystem::path(root.dstorage_root.c_str()) / binPath.c_str();
+                    auto fullBinPath = skr::filesystem::path(root.dstorage_root) / binPath.c_str();
                     const auto& thisBin = mesh_resource->bins[i];
                     auto&& thisRequest = dRequest->dRequests[i];
                     auto&& thisDestination = dRequest->dDestinations[i];
                     auto&& thisPath = dRequest->absPaths[i];
 
-                    thisPath = fullBinPath.u8string();
+                    thisPath = (const char*)fullBinPath.u8string().c_str();
                     auto vram_buffer_io = make_zeroed<skr_vram_buffer_io_t>();
                     vram_buffer_io.device = render_device->get_cgpu_device();
 
-                    vram_buffer_io.dstorage.path = thisPath.c_str();
+                    vram_buffer_io.dstorage.path = (const char8_t*)thisPath.c_str();
                     vram_buffer_io.dstorage.queue = file_dstorage_queue;
                     vram_buffer_io.dstorage.compression = CGPU_DSTORAGE_COMPRESSION_NONE;
                     vram_buffer_io.dstorage.source_type = CGPU_DSTORAGE_SOURCE_FILE;
@@ -371,16 +371,16 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* rec
             for (auto i = 0u; i < mesh_resource->bins.size(); i++)
             {
                 auto binPath = skr::format("{}.buffer{}", guid, i);
-                auto fullBinPath = skr::filesystem::path(root.dstorage_root.c_str()) / binPath.c_str();
+                auto fullBinPath = skr::filesystem::path(root.dstorage_root) / binPath.c_str();
                 auto&& ramRequest = uRequest->ram_requests[i];
                 auto&& ramDestination = uRequest->ram_destinations[i];
                 auto&& ramPath = uRequest->resource_uris[i];
 
-                ramPath = fullBinPath.u8string();
+                ramPath = fullBinPath.string();
 
                 // emit ram requests
                 auto ram_mesh_io = make_zeroed<skr_ram_io_t>();
-                ram_mesh_io.path = binPath.c_str();
+                ram_mesh_io.path = (const char8_t*)binPath.c_str();
                 ram_mesh_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
                     ZoneScopedN("Upload Mesh");
                     // upload

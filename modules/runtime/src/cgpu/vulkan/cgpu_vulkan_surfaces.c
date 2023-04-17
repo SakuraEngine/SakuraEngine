@@ -51,7 +51,9 @@ CGPUSurfaceId cgpu_surface_from_hwnd_vulkan(CGPUDeviceId device, HWND window)
     }
     return surface;
 }
+
 #elif defined(_MACOS)
+
 CGPUSurfaceId cgpu_surface_from_ns_view_vulkan(CGPUDeviceId device, CGPUNSView* window)
 {
     cgpu_assert(window && "CGPU VULKAN ERROR: NULL NSVIEW!");
@@ -72,4 +74,5 @@ CGPUSurfaceId cgpu_surface_from_ns_view_vulkan(CGPUDeviceId device, CGPUNSView* 
     }
     return surface;
 }
+
 #endif // create views

@@ -1,10 +1,12 @@
-#include "../../../common/utils.h"
+#include "common/utils.h"
 #include "platform/memory.h"
 #include "platform/window.h"
 #include "utils/make_zeroed.hpp"
 #include "utils/log.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "platform/vfs.h"
+
+#include "containers/text.hpp"
 
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
@@ -29,9 +31,9 @@ void create_imgui_resources(ECGPUFormat format, CGPUSamplerId sampler, skr::rend
             style.WindowRounding = 0.0f;
             style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         }
-        const char* font_path = "./../resources/font/SourceSansPro-Regular.ttf";
-        uint32_t *font_bytes, font_length;
-        read_bytes(font_path, (char**)&font_bytes, &font_length);
+        const char8_t* font_path = SKR_UTF8("./../resources/font/SourceSansPro-Regular.ttf");
+        uint32_t* font_bytes, font_length;
+        read_bytes(font_path, &font_bytes, &font_length);
         float dpi_scaling = 1.f;
         if (!skr_runtime_is_dpi_aware())
         {
@@ -59,27 +61,27 @@ void create_imgui_resources(ECGPUFormat format, CGPUSamplerId sampler, skr::rend
         ImGui::GetIO().Fonts->Build();
         free(font_bytes);
     }
-    skr::string vsname = u8"shaders/imgui_vertex";
-    skr::string fsname = u8"shaders/imgui_fragment";
-    vsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
-    fsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
-    auto vsfile = skr_vfs_fopen(vfs, vsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    auto vsname = skr::text::text::from_utf8(SKR_UTF8("shaders/imgui_vertex"));
+    auto fsname = skr::text::text::from_utf8(SKR_UTF8("shaders/imgui_fragment"));
+    vsname.append(backend == ::CGPU_BACKEND_D3D12 ? SKR_UTF8(".dxil") : SKR_UTF8(".spv"));
+    fsname.append(backend == ::CGPU_BACKEND_D3D12 ? SKR_UTF8(".dxil") : SKR_UTF8(".spv"));
+    auto vsfile = skr_vfs_fopen(vfs, vsname.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     uint32_t im_vs_length = (uint32_t)skr_vfs_fsize(vsfile);
     uint32_t* im_vs_bytes = (uint32_t*)sakura_malloc(im_vs_length);
     skr_vfs_fread(vsfile, im_vs_bytes, 0, im_vs_length);
     skr_vfs_fclose(vsfile);
-    auto fsfile = skr_vfs_fopen(vfs, fsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    auto fsfile = skr_vfs_fopen(vfs, fsname.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     uint32_t im_fs_length = (uint32_t)skr_vfs_fsize(fsfile);
     uint32_t* im_fs_bytes = (uint32_t*)sakura_malloc(im_fs_length);
     skr_vfs_fread(fsfile, im_fs_bytes, 0, im_fs_length);
     skr_vfs_fclose(fsfile);
     CGPUShaderLibraryDescriptor vs_desc = {};
-    vs_desc.name = "imgui_vertex_shader";
+    vs_desc.name = SKR_UTF8("imgui_vertex_shader");
     vs_desc.stage = CGPU_SHADER_STAGE_VERT;
     vs_desc.code = im_vs_bytes;
     vs_desc.code_size = im_vs_length;
     CGPUShaderLibraryDescriptor fs_desc = {};
-    fs_desc.name = "imgui_fragment_shader";
+    fs_desc.name = SKR_UTF8("imgui_fragment_shader");
     fs_desc.stage = CGPU_SHADER_STAGE_FRAG;
     fs_desc.code = im_fs_bytes;
     fs_desc.code_size = im_fs_length;
@@ -92,10 +94,10 @@ void create_imgui_resources(ECGPUFormat format, CGPUSamplerId sampler, skr::rend
     imgui_graph_desc.backbuffer_format = format;
     imgui_graph_desc.vs.library = imgui_vs;
     imgui_graph_desc.vs.stage = CGPU_SHADER_STAGE_VERT;
-    imgui_graph_desc.vs.entry = "main";
+    imgui_graph_desc.vs.entry = SKR_UTF8("main");
     imgui_graph_desc.ps.library = imgui_fs;
     imgui_graph_desc.ps.stage = CGPU_SHADER_STAGE_FRAG;
-    imgui_graph_desc.ps.entry = "main";
+    imgui_graph_desc.ps.entry = SKR_UTF8("main");
     imgui_graph_desc.queue = gfx_queue;
     imgui_graph_desc.static_sampler = sampler;
     render_graph_imgui_initialize(&imgui_graph_desc);

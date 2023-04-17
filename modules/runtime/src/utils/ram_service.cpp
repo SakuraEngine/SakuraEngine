@@ -57,7 +57,7 @@ void __ioThreadTask_RAM_execute(skr::io::RAMServiceImpl* service)
             task->setTaskStatus(SKR_ASYNC_IO_STATUS_CREATING_RESOURCE);
             {
                 ZoneScopedNC("FOpen", tracy::Color::LightBlue);
-                vf = skr_vfs_fopen(task->vfs, task->path.c_str(),
+                vf = skr_vfs_fopen(task->vfs, (const char8_t*)task->path.c_str(),
                     ESkrFileMode::SKR_FM_READ_BINARY, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
             }
             if (task->destination->bytes == nullptr)
@@ -121,7 +121,7 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info,
     // try push back new request
     Task back = {};
     back.vfs = vfs;
-    back.path = skr::string(info->path);
+    back.path = skr::string((const char*)info->path);
     back.offset = info->offset;
     back.request = async_request;
     back.destination = dst;

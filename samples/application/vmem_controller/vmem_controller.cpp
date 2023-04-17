@@ -1,4 +1,4 @@
-#include "../../common/utils.h"
+#include "common/utils.h"
 #include "platform/thread.h"
 #include "platform/system.h"
 #include "utils/log.h"
@@ -68,7 +68,7 @@ void SVMemCCModule::on_load(int argc, char** argv)
 
 void SVMemCCModule::imgui_ui()
 {
-    ImGui::Begin(u8"VideoMemoryController");
+    ImGui::Begin("VideoMemoryController");
     const float TEXT_BASE_WIDTH = ImGui::CalcTextSize("A").x;
     const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
 
@@ -97,30 +97,30 @@ void SVMemCCModule::imgui_ui()
     ImGui::SameLine();
     ImGui::Text("Usable SVMem: %.3f MB", total_shared_mb - used_shared_mb);
 
-    ImGui::SliderFloat(u8"##vbuffer", &vbuffer_size, 0.001f, total_mb - used_mb, "%.3f MB"); // in MB
+    ImGui::SliderFloat("##vbuffer", &vbuffer_size, 0.001f, total_mb - used_mb, "%.3f MB"); // in MB
     ImGui::SameLine();
-    if (ImGui::Button(u8"AllocateVideoMemory"))
+    if (ImGui::Button("AllocateVideoMemory"))
     {
         auto buf_desc = make_zeroed<CGPUBufferDescriptor>();
         buf_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
         buf_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
         buf_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
         buf_desc.size = (uint64_t)(vbuffer_size * 1024 * 1024);
-        buf_desc.name = "VideoMemory";
+        buf_desc.name = SKR_UTF8("VideoMemory");
         auto new_buf = cgpu_create_buffer(device, &buf_desc);
         buffers.emplace_back(new_buf);
     }
 
-    ImGui::SliderFloat(u8"##sbuffer", &sbuffer_size, 0.001f, total_shared_mb - used_shared_mb, "%.3f MB"); // in MB
+    ImGui::SliderFloat("##sbuffer", &sbuffer_size, 0.001f, total_shared_mb - used_shared_mb, "%.3f MB"); // in MB
     ImGui::SameLine();
-    if (ImGui::Button(u8"AllocateSharedMemory"))
+    if (ImGui::Button("AllocateSharedMemory"))
     {
         auto buf_desc = make_zeroed<CGPUBufferDescriptor>();
         buf_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
         buf_desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
         buf_desc.memory_usage = CGPU_MEM_USAGE_CPU_TO_GPU;
         buf_desc.size = (uint64_t)(sbuffer_size * 1024 * 1024);
-        buf_desc.name = "SharedMemory";
+        buf_desc.name = SKR_UTF8("SharedMemory");
         auto new_buf = cgpu_create_buffer(device, &buf_desc);
         buffers.emplace_back(new_buf);
     }
@@ -234,14 +234,14 @@ int SVMemCCModule::main_module_exec(int argc, char** argv)
         // render graph setup & compile & exec
         auto back_buffer = graph->create_texture(
         [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-            builder.set_name("backbuffer")
+            builder.set_name(SKR_UTF8("backbuffer"))
             .import(native_backbuffer, CGPU_RESOURCE_STATE_UNDEFINED)
             .allow_render_target();
         });
         render_graph_imgui_add_render_pass(graph, back_buffer, CGPU_LOAD_ACTION_CLEAR);
         graph->add_present_pass(
             [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
-                builder.set_name("present_pass")
+                builder.set_name(SKR_UTF8("present_pass"))
                 .swapchain(swapchain, backbuffer_index)
                 .texture(back_buffer, true);
             });
@@ -355,9 +355,9 @@ void SVMemCCModule::initialize_imgui()
             style.WindowRounding = 0.0f;
             style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         }
-        const char* font_path = "./../resources/font/SourceSansPro-Regular.ttf";
+        const char8_t* font_path = SKR_UTF8("./../resources/font/SourceSansPro-Regular.ttf");
         uint32_t *font_bytes, font_length;
-        read_bytes(font_path, (char**)&font_bytes, &font_length);
+        read_bytes(font_path, &font_bytes, &font_length);
         float dpi_scaling = 1.f;
         if (!DPIAware)
         {
@@ -386,18 +386,18 @@ void SVMemCCModule::initialize_imgui()
         free(font_bytes);
     }
     uint32_t *im_vs_bytes, im_vs_length;
-    read_shader_bytes("imgui_vertex", &im_vs_bytes, &im_vs_length,
+    read_shader_bytes(SKR_UTF8("imgui_vertex"), &im_vs_bytes, &im_vs_length,
     device->adapter->instance->backend);
     uint32_t *im_fs_bytes, im_fs_length;
-    read_shader_bytes("imgui_fragment", &im_fs_bytes, &im_fs_length,
+    read_shader_bytes(SKR_UTF8("imgui_fragment"), &im_fs_bytes, &im_fs_length,
     device->adapter->instance->backend);
     CGPUShaderLibraryDescriptor vs_desc = {};
-    vs_desc.name = "imgui_vertex_shader";
+    vs_desc.name = SKR_UTF8("imgui_vertex_shader");
     vs_desc.stage = CGPU_SHADER_STAGE_VERT;
     vs_desc.code = im_vs_bytes;
     vs_desc.code_size = im_vs_length;
     CGPUShaderLibraryDescriptor fs_desc = {};
-    fs_desc.name = "imgui_fragment_shader";
+    fs_desc.name = SKR_UTF8("imgui_fragment_shader");
     fs_desc.stage = CGPU_SHADER_STAGE_FRAG;
     fs_desc.code = im_fs_bytes;
     fs_desc.code_size = im_fs_length;
@@ -410,10 +410,10 @@ void SVMemCCModule::initialize_imgui()
     imgui_graph_desc.backbuffer_format = (ECGPUFormat)swapchain->back_buffers[backbuffer_index]->format;
     imgui_graph_desc.vs.library = imgui_vs;
     imgui_graph_desc.vs.stage = CGPU_SHADER_STAGE_VERT;
-    imgui_graph_desc.vs.entry = "main";
+    imgui_graph_desc.vs.entry = SKR_UTF8("main");
     imgui_graph_desc.ps.library = imgui_fs;
     imgui_graph_desc.ps.stage = CGPU_SHADER_STAGE_FRAG;
-    imgui_graph_desc.ps.entry = "main";
+    imgui_graph_desc.ps.entry = SKR_UTF8("main");
     imgui_graph_desc.queue = gfx_queue;
     imgui_graph_desc.static_sampler = static_sampler;
     render_graph_imgui_initialize(&imgui_graph_desc);
