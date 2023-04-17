@@ -85,10 +85,10 @@ void MPServerWorld::SpawnPlayerEntity(int player, int connectionId, int localPla
             controllers[i].connectionId = connectionId;
             controllers[i].localPlayerId = localPlayerId;
             collidors[i].radius = 8.f;
-            weapons[i].fireRate = 0.3f;
+            weapons[i].fireRate = 0.1f;
             weapons[i].fireTimer = 0.f;
-            healths[i].health = 10.f;
-            healths[i].maxHealth = 10.f;
+            healths[i].health = 100.f;
+            healths[i].maxHealth = 100.f;
             skills[i].cooldown = 5.f;
             skills[i].duration = 2.f;
             skills[i].speedMultiplier = 2.f;
