@@ -7,11 +7,7 @@ target("gamenetworkingsockets")
     if (is_os("windows") and not is_mode("asan")) then 
         add_rules("utils.install-libs", { libnames = {"gns"} })
         set_kind("headeronly")
-        if (is_mode("release")) then
-            add_links("gamenetworkingsockets", {public=true} )
-        else
-            add_links("gamenetworkingsockets", {public=true} )
-        end
+        add_links("gamenetworkingsockets", {public=true} )
     else
         print("error: gamenetworkingsockets is not built on this platform!")
     end
