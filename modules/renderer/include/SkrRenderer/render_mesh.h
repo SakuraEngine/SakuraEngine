@@ -6,24 +6,26 @@
 #endif
 
 #ifdef __cplusplus
-struct skr_render_mesh_t {
+namespace skr
+{
+namespace renderer
+{
+struct RenderMesh 
+{
     skr_mesh_resource_id mesh_resource_id;
-
-    eastl::vector<CGPUBufferId> buffers;
-    eastl::vector<skr_vertex_buffer_view_t> vertex_buffer_views;
-    eastl::vector<skr_index_buffer_view_t> index_buffer_views;
-    eastl::vector<skr_render_primitive_command_t> primitive_commands;
+    skr::vector<CGPUBufferId> buffers;
+    skr::vector<skr_vertex_buffer_view_t> vertex_buffer_views;
+    skr::vector<skr_index_buffer_view_t> index_buffer_views;
+    skr::vector<PrimitiveCommand> primitive_commands;
 };
+} // namespace renderer
+} // namespace skr
 #endif
 
-typedef struct skr_render_primitive_command_t skr_render_primitive_command_t;
-typedef struct skr_render_mesh_t skr_render_mesh_t;
-typedef struct skr_render_mesh_t* skr_render_mesh_id;
-
-struct sreflect sattr(
-    "guid" : "c66ab7ef-bde9-4e0f-8023-a2d99ba5134c",
-    "component" : true
-) skr_render_mesh_comp_t {
+sreflect_struct("guid" : "c66ab7ef-bde9-4e0f-8023-a2d99ba5134c")
+sattr("component" : true)
+skr_render_mesh_comp_t 
+{
     SKR_RESOURCE_FIELD(skr_mesh_resource_t, mesh_resource);
 };
 typedef struct skr_render_mesh_comp_t skr_render_mesh_comp_t;
