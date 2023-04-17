@@ -378,11 +378,13 @@ void dual_group_t::clear()
     using namespace dual;
     for(auto chunk : chunks)
     {
+        archetype->storage->entities.free_entities({ chunk, 0, chunk->count });
         destruct_view({ chunk, 0, chunk->count });
         destruct_chunk(chunk);
         dual_chunk_t::destroy(chunk);
     }
     chunks.clear();
+    firstFree = 0;
     size = 0;
 }
 

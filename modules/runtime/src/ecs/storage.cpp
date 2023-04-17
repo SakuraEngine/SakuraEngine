@@ -566,14 +566,15 @@ void dual_storage_t::cast(dual_group_t* srcGroup, dual_group_t* group, dual_cast
     }
     if (!group)
     {
-        group->clear();
+        srcGroup->clear();
         return;
     }
     if (srcGroup->archetype == group->archetype)
     {
         for(auto chunk : srcGroup->chunks)
             group->add_chunk(chunk);
-        destruct_group(srcGroup);
+        srcGroup->chunks.clear();
+        srcGroup->clear();
         return;
     }
     if (scheduler)
