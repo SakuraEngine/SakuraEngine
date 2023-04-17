@@ -2,8 +2,8 @@
 #include "binary/writer.h"
 #include "binary/blob.h"
 #include "utils/bits.hpp"
-#include "rtm/scalard.h"
 #include "rtm/scalarf.h"
+#include "rtm/scalard.h"
 #include "utils/log.h"
 
 
