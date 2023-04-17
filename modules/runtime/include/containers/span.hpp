@@ -119,7 +119,8 @@ struct SpanReaderBitpacked
                 {
                     dstPtr[i] = data[offset] >> bitOffset;
                 }
-                bitOffset = newBitOffset;
+                SKR_ASSERT(newBitOffset <= UINT8_MAX);
+                bitOffset = (uint8_t)newBitOffset;
                 dstPtr[i] &= (1 << bitSize) - 1;
             }
         }

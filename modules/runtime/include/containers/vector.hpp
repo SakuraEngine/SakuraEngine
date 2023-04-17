@@ -188,7 +188,8 @@ struct VectorWriterBitpacked
                     newBitOffset = newBitOffset - 8;
                 }
                 buffer->back() &= (1 << newBitOffset) - 1;
-                bitOffset = newBitOffset;
+                SKR_ASSERT(newBitOffset <= UINT8_MAX);
+                bitOffset = (uint8_t)newBitOffset;
             }
         }
         return 0;

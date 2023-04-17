@@ -17,6 +17,8 @@
 #include "utils/log.h"
 #include "cgpu/io.h"
 
+#include "containers/text.hpp"
+
 #include "tracy/Tracy.hpp"
 
 static struct SkrMeshResourceUtil
@@ -175,7 +177,8 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
     SMeshFactoryImpl(const SMeshFactory::Root& root)
         : root(root)
     {
-
+        dstorage_root = skr::text::text::from_utf8(root.dstorage_root);
+        this->root.dstorage_root = dstorage_root.c_str();
     }
 
     ~SMeshFactoryImpl() noexcept = default;
@@ -238,6 +241,7 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
     ESkrInstallStatus InstallWithDStorage(skr_resource_record_t* record);
     ESkrInstallStatus InstallWithUpload(skr_resource_record_t* record);
 
+    skr::text::text dstorage_root;
     Root root;
     skr::flat_hash_map<skr_mesh_resource_id, InstallType> mInstallTypes;
     skr::flat_hash_map<skr_mesh_resource_id, SPtr<UploadRequest>> mUploadRequests;
