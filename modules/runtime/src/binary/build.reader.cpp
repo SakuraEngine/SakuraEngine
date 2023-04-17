@@ -2,14 +2,12 @@
 #include "binary/reader.h"
 #include "platform/memory.h"
 #include "utils/bits.hpp"
-#include "rtm/scalard.h"
-#include "rtm/scalarf.h"
 #include "utils/log.h"
 
 skr_blob_arena_t::skr_blob_arena_t()
-: buffer(nullptr), _base(0), align(0), offset(0), capacity(0)  {}
+    : buffer(nullptr), _base(0), align(0), offset(0), capacity(0)  {}
 skr_blob_arena_t::skr_blob_arena_t(void* buffer, uint64_t base, size_t size, size_t align)
- : buffer(buffer), _base(base), align(align), offset(size), capacity(size) {}
+    : buffer(buffer), _base(base), align(align), offset(size), capacity(size) {}
 skr_blob_arena_t::skr_blob_arena_t(skr_blob_arena_t&& other)
     : buffer(other.buffer), _base(other._base), align(other.align), offset(other.offset), capacity(other.capacity)
     { other.buffer = nullptr; other._base = 0; other.offset = 0; other.capacity = 0; }
