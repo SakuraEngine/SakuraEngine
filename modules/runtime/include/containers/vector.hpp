@@ -145,6 +145,55 @@ struct VectorWriter
         return 0;
     }
 };
+
+struct VectorWriterBitpacked
+{
+    eastl::vector<uint8_t>* buffer;
+    uint8_t bitOffset = 0;
+    int write(const void* data, size_t size)
+    {
+        return write_bits(data, size * 8);
+    }
+    int write_bits(const void* data, size_t bitSize)
+    {
+        uint8_t* dataPtr = (uint8_t*)data;
+        if(bitOffset == 0)
+        {
+            buffer->insert(buffer->end(), dataPtr, dataPtr + (bitSize + 7) / 8);
+            bitOffset = bitSize % 8;
+            if(bitOffset != 0)
+                buffer->back() &= (1 << bitOffset) - 1;
+        }
+        else
+        {
+            buffer->back() |= dataPtr[0] << bitOffset;
+            int i = 1;
+            while(bitSize > 8)
+            {
+                buffer->push_back((dataPtr[i - 1] >> (8 - bitOffset)) | (dataPtr[i] << bitOffset));
+                ++i;
+                bitSize -= 8;
+            }
+            if(bitSize > 0)
+            {
+                auto newBitOffset = bitOffset + bitSize;
+                if(newBitOffset == 8)
+                {
+                    bitOffset = 0;
+                    return 0;
+                }
+                else if(newBitOffset > 8)
+                {
+                    buffer->push_back(dataPtr[i - 1] >> (8 - bitOffset));
+                    newBitOffset = newBitOffset - 8;
+                }
+                buffer->back() &= (1 << newBitOffset) - 1;
+                bitOffset = newBitOffset;
+            }
+        }
+        return 0;
+    }
+};
 } // namespace binary
 
 template <class V, class Allocator>

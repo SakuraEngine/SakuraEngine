@@ -14,7 +14,7 @@ struct skr_binary_reader_t {
             return err;
         };
         auto SupportBitPacking = SKR_VALIDATOR((auto t), t.read_bits((void*)0, (size_t)0));
-        if constexpr(SupportBitPacking(skr::type_t<T>{}))
+        if constexpr(SupportBitPacking(SKR_TYPELIST(T)))
         {
             vread_bits = [](void* user, void* data, size_t size) {
                 const auto err = static_cast<T*>(user)->read_bits(data, size);
