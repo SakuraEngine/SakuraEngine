@@ -12,7 +12,7 @@
 #include "SkrImGui/skr_imgui.h"
 #include "utils/format.hpp"
 #include "utils/defer.hpp"
-#include "SkrImgui/imgui_utils.h"
+#include "SkrImGui/imgui_utils.h"
 
 
 namespace skr::inspect

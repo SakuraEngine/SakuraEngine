@@ -332,7 +332,7 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
         }
         if (!skr::filesystem::is_regular_file(dependencyPath, ec))
         {
-            SKR_LOG_INFO("[SCookSystemImpl::EnsureCooked] dependency file not exist! asset path: %s}", guid);
+            SKR_LOG_INFO("[SCookSystemImpl::EnsureCooked] dependency file not exist! asset path: %s}", dependencyPath.string().c_str());
             return false;
         }
         auto timestamp = skr::filesystem::last_write_time(resourcePath, ec);
