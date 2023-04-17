@@ -7,7 +7,7 @@ namespace skr
     template<class T>
     struct type_t{ using type = T; };
     // typelist via function type
-    #define SKR_TYPELIST(...) type_t<void(__VA_ARGS__)>{}
+    #define SKR_TYPELIST(...) skr::type_t<void(__VA_ARGS__)>{}
 
     template<class F> struct validator
     {

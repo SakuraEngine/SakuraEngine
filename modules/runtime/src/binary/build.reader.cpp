@@ -155,7 +155,7 @@ int ReadBitpacked(skr_binary_reader_t* reader, T& value, VectorSerdeConfig<Scala
 
 	if (ComponentBitCount > 0U)
 	{
-		int64_t values[size];
+		int64_t values[size] {0};
 
         for(size_t i = 0; i < size; ++i)
         {
@@ -176,14 +176,14 @@ int ReadBitpacked(skr_binary_reader_t* reader, T& value, VectorSerdeConfig<Scala
 		{
             for (size_t i = 0; i < size; ++i)
             {
-                array[i] = T(values[i]) / config.scale;
+                array[i] = ScalarType(values[i]) / config.scale;
             }
 		}
 		else
 		{
             for (size_t i = 0; i < size; ++i)
             {
-                array[i] = T(values[i]);
+                array[i] = ScalarType(values[i]);
             }
 		}
 
@@ -216,6 +216,36 @@ int ReadBitpacked(skr_binary_reader_t* reader, T& value, VectorSerdeConfig<Scala
 
 	// Should not get here so something is very wrong.
 	return -1;
+}
+
+int ReadTrait<skr_float2_t>::Read(skr_binary_reader_t* reader, skr_float2_t& value, VectorSerdeConfig<float> cfg)
+{
+    return ReadBitpacked(reader, value, cfg);
+}
+
+int ReadTrait<skr_float3_t>::Read(skr_binary_reader_t* reader, skr_float3_t& value, VectorSerdeConfig<float> cfg)
+{
+    return ReadBitpacked(reader, value, cfg);
+}
+
+int ReadTrait<skr_float4_t>::Read(skr_binary_reader_t* reader, skr_float4_t& value, VectorSerdeConfig<float> cfg)
+{
+    return ReadBitpacked(reader, value, cfg);
+}
+
+int ReadTrait<skr_rotator_t>::Read(skr_binary_reader_t* reader, skr_rotator_t& value, VectorSerdeConfig<float> cfg)
+{
+    return ReadBitpacked(reader, value, cfg);
+}
+
+int ReadTrait<skr_quaternion_t>::Read(skr_binary_reader_t* reader, skr_quaternion_t& value, VectorSerdeConfig<float> cfg)
+{
+    return ReadBitpacked(reader, value, cfg);
+}
+
+int ReadTrait<skr_float4x4_t>::Read(skr_binary_reader_t* reader, skr_float4x4_t& value, VectorSerdeConfig<float> cfg)
+{
+    return ReadBitpacked(reader, value, cfg);
 }
 
 int ReadTrait<skr::string>::Read(skr_binary_reader_t* reader, skr::string& str)

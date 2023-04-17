@@ -15,7 +15,7 @@ struct skr_binary_writer_t {
             return static_cast<T*>(user)->write(data, size);
         };
         auto SupportBitPacking = SKR_VALIDATOR((auto t), t.write_bits((void*)0, (size_t)0));
-        if constexpr(SupportBitPacking(skr::type_t<T>{}))
+        if constexpr(SupportBitPacking(SKR_TYPELIST(T)))
         {
             vwrite_bits = [](void* user, const void* data, size_t size) -> int {
                 return static_cast<T*>(user)->write_bits(data, size);

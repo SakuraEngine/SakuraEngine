@@ -73,6 +73,59 @@ struct SpanReader {
         return 0;
     }
 };
+
+struct SpanReaderBitpacked
+{
+    skr::span<const uint8_t> data;
+    size_t offset = 0;
+    uint8_t bitOffset = 0;
+    int read(void* dst, size_t size)
+    {
+        return read_bits(dst, size * 8);
+    }
+    int read_bits(void* dst, size_t bitSize)
+    {
+        if (offset + (bitSize + bitOffset) / 8 > data.size())
+            return -1;
+        uint8_t* dstPtr = (uint8_t*)dst;
+        if(bitOffset == 0)
+        {
+            memcpy(dst, data.data() + offset, (bitSize + 7) / 8);
+            offset += bitSize / 8;
+            bitOffset = bitSize % 8;
+            if(bitOffset != 0)
+                dstPtr[(bitSize + 7) / 8 - 1] &= (1 << bitOffset) - 1;
+        }
+        else
+        {
+            int i = 0;
+            while(bitSize >= 8)
+            {
+                dstPtr[i] = data[offset] >> bitOffset | data[offset + 1] << (8 - bitOffset);
+                ++offset;
+                ++i;
+                bitSize -= 8;
+            }
+            if(bitSize > 0)
+            {
+                auto newBitOffset = bitOffset + bitSize;
+                if(newBitOffset > 8)
+                {
+                    dstPtr[i] = data[offset] >> bitOffset | data[offset + 1] << (8 - bitOffset);
+                    ++offset;
+                    newBitOffset -= 8;
+                }
+                else
+                {
+                    dstPtr[i] = data[offset] >> bitOffset;
+                }
+                bitOffset = newBitOffset;
+                dstPtr[i] &= (1 << bitSize) - 1;
+            }
+        }
+        return 0;
+    }
+};
 } // namespace binary
 } // namespace skr
 
