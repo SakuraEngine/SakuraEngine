@@ -3,6 +3,7 @@
 #include "platform/memory.h"
 #include "utils/bits.hpp"
 #include "utils/log.h"
+#include <cmath>
 
 skr_blob_arena_t::skr_blob_arena_t()
     : buffer(nullptr), _base(0), align(0), offset(0), capacity(0)  {}
@@ -265,16 +266,21 @@ int ReadTrait<skr::string>::Read(skr_binary_reader_t* reader, skr::string& str)
 
 int ReadTrait<skr::string_view>::Read(skr_binary_reader_t* reader, skr_blob_arena_t& arena, skr::string_view& str)
 {
+    uint32_t size;
     uint32_t offset;
-    int ret = ReadTrait<uint32_t>::Read(reader, offset);
+    int ret = ReadTrait<uint32_t>::Read(reader, size);
     if (ret != 0)
         return ret;
-    uint32_t size;
-    ret = ReadTrait<uint32_t>::Read(reader, size);
+    if(size == 0)
+    {
+        str = skr::string_view();
+        return 0;
+    }
+    ret = ReadTrait<uint32_t>::Read(reader, offset);
     if (ret != 0)
         return ret;
     str = skr::string_view((const char*)arena.get_buffer() + offset, size);
-    return ret;
+    return ReadBytes(reader, (void*)str.data(), str.size());
 }
 
 int ReadTrait<skr_md5_t>::Read(skr_binary_reader_t* reader, skr_md5_t& md5)

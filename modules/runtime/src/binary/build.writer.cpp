@@ -330,11 +330,17 @@ int WriteTrait<const skr::string_view&>::Write(skr_binary_writer_t* writer, skr_
     SKR_ASSERT(ptr >= buffer);
     auto offset = (uint32_t)(ptr - buffer);
     SKR_ASSERT(offset < arena.get_size());
-    int ret = skr::binary::Write(writer, offset);
+    int ret = skr::binary::Write(writer, (uint32_t)str.length());
     if (ret != 0) {
         return ret;
     }
-    return skr::binary::Write(writer, (uint32_t)str.length());
+    if(str.length() == 0)
+        return 0;
+    ret = skr::binary::Write(writer, offset);
+    if (ret != 0) {
+        return ret;
+    }
+    return WriteBytes(writer, str.data(), str.size());
 }
 
 int WriteTrait<const skr_guid_t&>::Write(skr_binary_writer_t* writer, const skr_guid_t& guid)
