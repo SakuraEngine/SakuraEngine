@@ -163,8 +163,10 @@ const char* skr_mesh_resource_query_vertex_layout(skr_vertex_layout_id id, struc
 
 namespace skr
 {
-namespace resource
+namespace renderer
 {
+using namespace skr::resource;
+
 // 1.deserialize mesh resource
 // 2.install indices/vertices to GPU
 // 3?.update LOD information during runtime

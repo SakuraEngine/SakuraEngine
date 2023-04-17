@@ -101,8 +101,10 @@ skr_stable_shader_hash_t skr_shader_option_sequence_t::calculate_stable_hash(con
 
 namespace skr
 {
-namespace resource
+namespace renderer
 {
+using namespace skr::resource;
+
 struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFactory
 {
     SShaderResourceFactoryImpl(const SShaderResourceFactory::Root& root)

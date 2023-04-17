@@ -4,10 +4,10 @@
 #include <EASTL/sort.h>
 #include "option_utils.hpp"
 
-bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_option_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
+bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_option_template_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
 {
     eastl::set<eastl::string> keys;
-    skr::flat_hash_map<eastl::string, skr_shader_option_t, eastl::hash<eastl::string>> kvs;
+    skr::flat_hash_map<eastl::string, skr_shader_option_template_t, eastl::hash<eastl::string>> kvs;
     // collect all keys & ensure unique
     for (auto& src : srcs)
     {
@@ -30,7 +30,7 @@ bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_opt
     }
     // sort result by key
     eastl::stable_sort(dst.begin(), dst.end(), 
-        [](const skr_shader_option_t& a, const skr_shader_option_t& b) { return a.key < b.key; });
+        [](const skr_shader_option_template_t& a, const skr_shader_option_template_t& b) { return a.key < b.key; });
     return true;
 }
 
@@ -43,8 +43,10 @@ skr_stable_shader_hash_t skr_shader_option_instance_t::calculate_stable_hash(skr
 
 namespace skr
 {
-namespace resource
+namespace renderer
 {
+using namespace skr::resource;
+
 struct SKR_RENDERER_API SShaderOptionsFactoryImpl : public SShaderOptionsFactory {
     SShaderOptionsFactoryImpl(const SShaderOptionsFactoryImpl::Root& root)
         : root(root)

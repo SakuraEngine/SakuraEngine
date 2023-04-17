@@ -1,10 +1,10 @@
-set_xmakever("2.7.3")
+set_xmakever("2.7.4")
 --add_platformdirs("xmake/platforms")
 set_project("SakuraEngine")
 
 set_policy("build.ccache", false)
--- wait xmake 2.7.4 release
--- add_rules("plugin.compile_commands.autoupdate", { outputdir = ".vscode" })
+
+add_rules("plugin.compile_commands.autoupdate", { outputdir = ".vscode" }) -- xmake 2.7.4 
 
 add_rules("mode.debug", "mode.release", "mode.releasedbg", "mode.asan")
 add_moduledirs("xmake/modules")

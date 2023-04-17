@@ -49,7 +49,7 @@ namespace skr::binary
 template<>
 struct BlobBuilderType<${record.name}>
 {
-    using type = ${record.short_name}Builder;
+    using type = ${record.name}Builder;
 };
 template<>
 struct ${api} BlobTrait<${record.name}>

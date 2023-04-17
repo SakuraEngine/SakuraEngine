@@ -73,10 +73,10 @@ class SGameModule : public skr::IDynamicModule
 
     skr::resource::STextureFactory* textureFactory = nullptr;
     skr::resource::STextureSamplerFactory* textureSamplerFactory = nullptr;
-    skr::resource::SMeshFactory* meshFactory = nullptr;
-    skr::resource::SShaderResourceFactory* shaderFactory = nullptr;
-    skr::resource::SMaterialTypeFactory* matTypeFactory = nullptr;
-    skr::resource::SMaterialFactory* matFactory = nullptr;
+    skr::renderer::SMeshFactory* meshFactory = nullptr;
+    skr::renderer::SShaderResourceFactory* shaderFactory = nullptr;
+    skr::renderer::SMaterialTypeFactory* matTypeFactory = nullptr;
+    skr::renderer::SMaterialFactory* matFactory = nullptr;
 
     skr::resource::SAnimFactory* animFactory = nullptr;
     skr::resource::SSkelFactory* skeletonFactory = nullptr;
@@ -156,13 +156,13 @@ void SGameModule::installResourceFactories()
     }
     // mesh factory
     {
-        skr::resource::SMeshFactory::Root factoryRoot = {};
+        skr::renderer::SMeshFactory::Root factoryRoot = {};
         factoryRoot.dstorage_root = gameResourceRoot.u8string().c_str();
         factoryRoot.vfs = tex_resource_vfs;
         factoryRoot.ram_service = ram_service;
         factoryRoot.vram_service = game_render_device->get_vram_service();
         factoryRoot.render_device = game_render_device;
-        meshFactory = skr::resource::SMeshFactory::Create(factoryRoot);
+        meshFactory = skr::renderer::SMeshFactory::Create(factoryRoot);
         resource_system->RegisterFactory(meshFactory);
     }
     // shader factory
@@ -189,29 +189,29 @@ void SGameModule::installResourceFactories()
         shadermap = skr_shader_map_create(&shadermapRoot);
 
         // create shader resource factory
-        skr::resource::SShaderResourceFactory::Root factoryRoot = {};
+        skr::renderer::SShaderResourceFactory::Root factoryRoot = {};
         factoryRoot.render_device = game_render_device;
         factoryRoot.shadermap = shadermap;
-        shaderFactory = skr::resource::SShaderResourceFactory::Create(factoryRoot);
+        shaderFactory = skr::renderer::SShaderResourceFactory::Create(factoryRoot);
         resource_system->RegisterFactory(shaderFactory);
     }
 
     // material type factory
     {
-        skr::resource::SMaterialTypeFactory::Root factoryRoot = {};
+        skr::renderer::SMaterialTypeFactory::Root factoryRoot = {};
         factoryRoot.render_device = game_render_device;
-        matTypeFactory = skr::resource::SMaterialTypeFactory::Create(factoryRoot);
+        matTypeFactory = skr::renderer::SMaterialTypeFactory::Create(factoryRoot);
         resource_system->RegisterFactory(matTypeFactory);
     }
 
     // material factory
     {
-        skr::resource::SMaterialFactory::Root factoryRoot = {};
+        skr::renderer::SMaterialFactory::Root factoryRoot = {};
         factoryRoot.device = game_render_device->get_cgpu_device();
         factoryRoot.aux_service = game_render_device->get_aux_service(0);
         factoryRoot.ram_service = ram_service;
         factoryRoot.bytecode_vfs = shader_bytes_vfs;
-        matFactory = skr::resource::SMaterialFactory::Create(factoryRoot);
+        matFactory = skr::renderer::SMaterialFactory::Create(factoryRoot);
         resource_system->RegisterFactory(matFactory);
     }
 
@@ -268,10 +268,10 @@ void SGameModule::uninstallResourceFactories()
 
     skr::resource::STextureSamplerFactory::Destroy(textureSamplerFactory);
     skr::resource::STextureFactory::Destroy(textureFactory);
-    skr::resource::SMeshFactory::Destroy(meshFactory);
-    skr::resource::SShaderResourceFactory::Destroy(shaderFactory);
-    skr::resource::SMaterialTypeFactory::Destroy(matTypeFactory);
-    skr::resource::SMaterialFactory::Destroy(matFactory);
+    skr::renderer::SMeshFactory::Destroy(meshFactory);
+    skr::renderer::SShaderResourceFactory::Destroy(shaderFactory);
+    skr::renderer::SMaterialTypeFactory::Destroy(matTypeFactory);
+    skr::renderer::SMaterialFactory::Destroy(matFactory);
     
     SkrDelete(animFactory);
     SkrDelete(skeletonFactory);

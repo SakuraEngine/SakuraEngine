@@ -125,9 +125,11 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
     // value overrides
     for (const auto& prop : material->override_values)
     {
+        using namespace skr::renderer;
+        
         switch (prop.prop_type)
         {
-            case ESkrMaterialPropertyType::BOOL:
+            case EMaterialPropertyType::BOOL:
             {
                 auto vblob = skr::make_blob_builder<skr_material_value_bool_t>();
                 vblob.slot_name = prop.slot_name;
@@ -135,7 +137,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
                 blob.bools.emplace_back(vblob);
             }
             break;
-            case ESkrMaterialPropertyType::FLOAT:
+            case EMaterialPropertyType::FLOAT:
             {
                 auto vblob = skr::make_blob_builder<skr_material_value_float_t>();
                 vblob.slot_name = prop.slot_name;
@@ -143,7 +145,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
                 blob.floats.emplace_back(vblob);
             }
             break;
-            case ESkrMaterialPropertyType::FLOAT2:
+            case EMaterialPropertyType::FLOAT2:
             {
                 auto vblob = skr::make_blob_builder<skr_material_value_float2_t>();
                 vblob.slot_name = prop.slot_name;
@@ -151,7 +153,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
                 blob.float2s.emplace_back(vblob);
             }
             break;
-            case ESkrMaterialPropertyType::FLOAT3:
+            case EMaterialPropertyType::FLOAT3:
             {
                 auto vblob = skr::make_blob_builder<skr_material_value_float3_t>();
                 vblob.slot_name = prop.slot_name;
@@ -159,7 +161,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
                 blob.float3s.emplace_back(vblob);
             }
             break;
-            case ESkrMaterialPropertyType::FLOAT4:
+            case EMaterialPropertyType::FLOAT4:
             {
                 auto vblob = skr::make_blob_builder<skr_material_value_float4_t>();
                 vblob.slot_name = prop.slot_name;
@@ -167,7 +169,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
                 blob.float4s.emplace_back(vblob);
             }
             break;
-            case ESkrMaterialPropertyType::DOUBLE:
+            case EMaterialPropertyType::DOUBLE:
             {
                 auto vblob = skr::make_blob_builder<skr_material_value_double_t>();
                 vblob.slot_name = prop.slot_name;
@@ -175,7 +177,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
                 blob.doubles.emplace_back(vblob);
             }
             break;
-            case ESkrMaterialPropertyType::TEXTURE:
+            case EMaterialPropertyType::TEXTURE:
             {
                 auto vblob = skr::make_blob_builder<skr_material_value_texture_t>();
                 vblob.slot_name = prop.slot_name;
@@ -186,7 +188,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
                 ctx->AddRuntimeDependency(prop.resource.get_guid());
             }
             break;
-            case ESkrMaterialPropertyType::SAMPLER:
+            case EMaterialPropertyType::SAMPLER:
             {
                 auto vblob = skr::make_blob_builder<skr_material_value_sampler_t>();
                 vblob.slot_name = prop.slot_name;
@@ -197,7 +199,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
                 ctx->AddRuntimeDependency(prop.resource.get_guid());
             }
             break;
-            case ESkrMaterialPropertyType::BUFFER:
+            case EMaterialPropertyType::BUFFER:
             {
                 SKR_UNIMPLEMENTED_FUNCTION();
             }
