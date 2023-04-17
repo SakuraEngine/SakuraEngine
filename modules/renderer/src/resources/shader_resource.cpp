@@ -12,7 +12,6 @@
 #include "containers/sptr.hpp"
 #include "utils/io.h"
 #include "option_utils.hpp"
-
 #include "tracy/Tracy.hpp"
 
 skr_stable_shader_hash_t::skr_stable_shader_hash_t(uint32_t a, uint32_t b, uint32_t c, uint32_t d) SKR_NOEXCEPT
@@ -104,6 +103,11 @@ namespace skr
 namespace renderer
 {
 using namespace skr::resource;
+
+ShaderCollectionResource::~ShaderCollectionResource() SKR_NOEXCEPT
+{
+
+}
 
 struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFactory
 {

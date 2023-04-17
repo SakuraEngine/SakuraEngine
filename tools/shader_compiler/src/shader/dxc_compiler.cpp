@@ -53,11 +53,11 @@ SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderStage shader_stage, EC
     if (bytecode == nullptr)
     {
         SKR_LOG_ERROR("[DXCCompiler]Unknown Error: Failed to get bytecode!");
-        if (errors != nullptr && errors->GetStringLength() != 0)
-        {
-            SKR_LOG_ERROR("[DXCCompiler]Warnings and Errors:\n%s\n", errors->GetStringPointer());
-            goto FAIL;
-        }
+    }
+    if (errors != nullptr && errors->GetStringLength() != 0)
+    {
+        SKR_LOG_ERROR("[DXCCompiler]Warnings and Errors:\n%s\n", errors->GetStringPointer());
+        if (bytecode == nullptr) goto FAIL;
     }
     result->GetOutput(DXC_OUT_PDB, IID_PPV_ARGS(&pdb), &pdbName);
     if (auto hres = result->GetOutput(DXC_OUT_SHADER_HASH, IID_PPV_ARGS(&hash), nullptr);!SUCCEEDED(hres))
