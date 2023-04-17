@@ -861,7 +861,7 @@ void MPApplication::UpdateGame()
         ImGui::End();
 
         ImGui::Begin(u8"Game Statics");
-        ImGui::ProgressBar(world.GetPlayerHealth() / 10.f, ImVec2(-FLT_MIN, 0.f), "health");
+        ImGui::ProgressBar(world.GetPlayerHealth() / 100.f, ImVec2(-FLT_MIN, 0.f), "health");
         ImGui::End();
     }
 }
