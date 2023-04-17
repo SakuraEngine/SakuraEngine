@@ -96,9 +96,9 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
         const auto switch_hash = skr_shader_option_sequence_t::calculate_stable_hash(shader_collection->switch_sequence, variant.switch_indices);
         const auto option_hash = skr_shader_option_sequence_t::calculate_stable_hash(shader_collection->option_sequence, variant.option_indices);
     
+        variant.shader_collection = shader_resource.get_record()->header.guid;
         variant.switch_hash = switch_hash;
         variant.option_hash = option_hash;
-        variant.shader_collection = shader_resource.get_record()->header.guid;
     }
 
     // if material->overrides do not include a value, use default variant in material type

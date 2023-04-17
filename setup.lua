@@ -49,6 +49,9 @@ if (os.host() == "windows") then
     find_sdk.tool_from_github("ispc", "ispc-windows-x64.zip")
     find_sdk.tool_from_github("reflector", "reflector-windows-x64.zip")
     find_sdk.tool_from_github("tracy-gui", "tracy-gui-windows-x64.zip")
+    -- network
+    find_sdk.lib_from_github("gns", "gns-windows-x64.zip")
+    find_sdk.lib_from_github("gns_d", "gns_d-windows-x64.zip")
 end
 
 if (os.host() == "macosx") then
@@ -59,6 +62,9 @@ if (os.host() == "macosx") then
         find_sdk.tool_from_github("dxc", "dxc-macosx-x86_64.zip")
         find_sdk.tool_from_github("reflector", "reflector-macosx-x86_64.zip")
         find_sdk.tool_from_github("tracy-gui", "tracy-gui-macosx-x86_64.zip")
+        -- network
+        find_sdk.lib_from_github("gns", "gns-macosx-x86_64.zip")
+        find_sdk.lib_from_github("gns_d", "gns_d-macosx-x86_64.zip")
     else
         find_sdk.tool_from_github("dxc", "dxc-macosx-arm64.zip")
     end

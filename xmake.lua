@@ -61,7 +61,6 @@ target("SkrRoot")
         table.insert(libs_to_install, "nsight")
         table.insert(libs_to_install, "WinPixEventRuntime")
         table.insert(libs_to_install, "SDL2")
-        table.insert(libs_to_install, "tracyclient")
     end
     add_rules("utils.install-libs", { libnames = libs_to_install })
     -- core deps
