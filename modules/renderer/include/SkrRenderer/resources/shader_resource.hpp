@@ -69,6 +69,7 @@ ShaderCollectionResource
 {
     using stable_hash_t = skr_stable_shader_hash_t;
     using stable_hasher_t = skr_stable_shader_hash_t::hasher;
+    SKR_RENDERER_API ~ShaderCollectionResource() SKR_NOEXCEPT;
 
     sattr("no-rtti" : true)
     inline MultiShaderResource& GetRootStaticVariant() SKR_NOEXCEPT {
