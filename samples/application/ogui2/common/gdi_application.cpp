@@ -7,14 +7,16 @@
 #include "utils/threaded_service.h"
 #include "utils/io.h"
 
+#include "containers/text.hpp"
+
 bool initialize_gdi_application(gdi_application_t* app)
 {
     // initialize gfx
     app->gfx.backend = platform_default_backend;
-    skr::string app_name = "GDI [backend:";
+    auto app_name = skr::text::text::from_utf8(SKR_UTF8("GDI [backend:")); 
     app_name += gCGPUBackendNames[app->gfx.backend];
-    app_name += "]";
-    app->gfx.window_title = app_name.c_str();
+    app_name += SKR_UTF8("]");
+    app->gfx.window_title = app_name.u8_str();
     if (app_create_window(&app->gfx, 900, 900)) return false;
     if (app_create_gfx_objects(&app->gfx)) return false;
     
@@ -30,7 +32,7 @@ bool initialize_gdi_application(gdi_application_t* app)
     }
     {
         auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
-        ioServiceDesc.name = "GUI-RAMService";
+        ioServiceDesc.name = SKR_UTF8("GUI-RAMService");
         ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
         ioServiceDesc.sleep_time = 1000 / 60;
         ioServiceDesc.lockless = true;
@@ -39,7 +41,7 @@ bool initialize_gdi_application(gdi_application_t* app)
     }
     {
         auto ioServiceDesc = make_zeroed<skr_vram_io_service_desc_t>();
-        ioServiceDesc.name = "GUI-VRAMService";
+        ioServiceDesc.name = SKR_UTF8("GUI-VRAMService");
         ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
         ioServiceDesc.sleep_time = 1000 / 60;
         ioServiceDesc.lockless = true;
@@ -48,7 +50,7 @@ bool initialize_gdi_application(gdi_application_t* app)
     }
     {
         auto ioServiceDesc = make_zeroed<skr_threaded_service_desc_t>();
-        ioServiceDesc.name = "GUI-AuxService";
+        ioServiceDesc.name = SKR_UTF8("GUI-AuxService");
         ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
         ioServiceDesc.sleep_time = 1000 / 60;
         ioServiceDesc.lockless = true;

@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../common/render_application.h"
+#include "common/render_application.h"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIRenderer, skr_gdi_renderer)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIDevice, skr_gdi_device)

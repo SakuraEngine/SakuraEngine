@@ -61,7 +61,7 @@ CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXB
     for (uint32_t i = 0; i < desc->names_count; i++)
     {
         const auto name = desc->names[i];
-        pHashes[i] = cgpu_name_hash(name, strlen(name));
+        pHashes[i] = cgpu_name_hash(name, strlen((const char*)name));
     }
     // calculate active sets
     for (uint32_t setIdx = 0; setIdx < rs->table_count; setIdx++)
@@ -69,7 +69,7 @@ CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXB
         for (uint32_t bindIdx = 0; bindIdx < rs->tables[setIdx].resources_count; bindIdx++)
         {
             const auto res = rs->tables[setIdx].resources[bindIdx];
-            const auto hash = cgpu_name_hash(res.name, strlen(res.name));
+            const auto hash = cgpu_name_hash(res.name, strlen((const char*)res.name));
             for (uint32_t k = 0; k < desc->names_count; k++)
             {
                 if (hash == pHashes[k])
@@ -102,7 +102,7 @@ void CGPUXBindTable::Update(const struct CGPUDescriptorData* datas, uint32_t cou
         const auto& data = datas[i];
         if (data.name)
         {
-            const auto name_hash = cgpu_name_hash(data.name, strlen(data.name));
+            const auto name_hash = cgpu_name_hash(data.name, strlen((const char*)data.name));
             for (uint32_t j = 0; j < names_count; j++)
             {
                 if (name_hash == name_hashes[j])
@@ -404,7 +404,7 @@ size_t equal_to<CGPUVertexLayout>::operator()(const CGPUVertexLayout& a, const C
                             (a.attributes[i].offset == b.attributes[i].offset) &&
                             (a.attributes[i].elem_stride == b.attributes[i].elem_stride) &&
                             (a.attributes[i].rate == b.attributes[i].rate) &&
-                            (0 == strcmp(a.attributes[i].semantic_name, b.attributes[i].semantic_name));
+                            (0 == strcmp((const char*)a.attributes[i].semantic_name, (const char*)b.attributes[i].semantic_name));
         if (!vequal) return false;
     }
     return true;
@@ -449,16 +449,16 @@ size_t equal_to<CGPUDescriptorData>::operator()(const CGPUDescriptorData& a, con
     return true;
 }
 
-size_t equal_to<CGPUPipelineShaderDescriptor>::operator()(const CGPUPipelineShaderDescriptor& a, const CGPUPipelineShaderDescriptor& b) const
+size_t equal_to<CGPUShaderEntryDescriptor>::operator()(const CGPUShaderEntryDescriptor& a, const CGPUShaderEntryDescriptor& b) const
 {
-    ZoneScopedN("equal_to<CGPUPipelineShaderDescriptor>");
+    ZoneScopedN("equal_to<CGPUShaderEntryDescriptor>");
 
     if (a.library != b.library) return false;
     if (a.stage != b.stage) return false;
     if (a.num_constants != b.num_constants) return false;
     if (a.entry && !b.entry) return false;
     if (!a.entry && b.entry) return false;
-    if (a.entry && ::strcmp(a.entry, b.entry) != 0) return false;
+    if (a.entry && ::strcmp((const char*)a.entry, (const char*)b.entry) != 0) return false;
     for (uint32_t i = 0; i < a.num_constants; i++)
     {
         if (a.constants[i].constantID != b.constants[i].constantID) return false;
@@ -467,12 +467,12 @@ size_t equal_to<CGPUPipelineShaderDescriptor>::operator()(const CGPUPipelineShad
     return true;
 }
 
-size_t hash<CGPUPipelineShaderDescriptor>::operator()(const CGPUPipelineShaderDescriptor& val) const 
+size_t hash<CGPUShaderEntryDescriptor>::operator()(const CGPUShaderEntryDescriptor& val) const 
 {
-    ZoneScopedN("hash<CGPUPipelineShaderDescriptor>");
+    ZoneScopedN("hash<CGPUShaderEntryDescriptor>");
 
     size_t result = val.stage;
-    const auto entry_hash = val.entry ? skr_hash(val.entry, strlen(val.entry), CGPU_NAME_HASH_SEED) : 0; 
+    const auto entry_hash = val.entry ? skr_hash((const char*)val.entry, strlen((const char*)val.entry), CGPU_NAME_HASH_SEED) : 0; 
     const auto constants_hash = val.constants ? skr_hash(val.constants, sizeof(CGPUConstantSpecialization) * val.num_constants, CGPU_NAME_HASH_SEED) : 0;
     const auto pLibrary = static_cast<const void*>(val.library);
     hash_combine(result, entry_hash, constants_hash, pLibrary);    
@@ -587,23 +587,23 @@ size_t equal_to<CGPURenderPipelineDescriptor>::operator()(const CGPURenderPipeli
     // equal shaders
     if (a.vertex_shader && !b.vertex_shader) return false;
     if (!a.vertex_shader && b.vertex_shader) return false;
-    if (a.vertex_shader && !equal_to<CGPUPipelineShaderDescriptor>()(*a.vertex_shader, *b.vertex_shader)) return false;
+    if (a.vertex_shader && !equal_to<CGPUShaderEntryDescriptor>()(*a.vertex_shader, *b.vertex_shader)) return false;
 
     if (a.tesc_shader && !b.tesc_shader) return false;
     if (!a.tesc_shader && b.tesc_shader) return false;
-    if (a.tesc_shader && !equal_to<CGPUPipelineShaderDescriptor>()(*a.tesc_shader, *b.tesc_shader)) return false;
+    if (a.tesc_shader && !equal_to<CGPUShaderEntryDescriptor>()(*a.tesc_shader, *b.tesc_shader)) return false;
 
     if (a.tese_shader && !b.tese_shader) return false;
     if (!a.tese_shader && b.tese_shader) return false;
-    if (a.tese_shader && !equal_to<CGPUPipelineShaderDescriptor>()(*a.tese_shader, *b.tese_shader)) return false;
+    if (a.tese_shader && !equal_to<CGPUShaderEntryDescriptor>()(*a.tese_shader, *b.tese_shader)) return false;
 
     if (a.geom_shader && !b.geom_shader) return false;
     if (!a.geom_shader && b.geom_shader) return false;
-    if (a.geom_shader && !equal_to<CGPUPipelineShaderDescriptor>()(*a.geom_shader, *b.geom_shader)) return false;
+    if (a.geom_shader && !equal_to<CGPUShaderEntryDescriptor>()(*a.geom_shader, *b.geom_shader)) return false;
 
     if (a.fragment_shader && !b.fragment_shader) return false;
     if (!a.fragment_shader && b.fragment_shader) return false;
-    if (a.fragment_shader && !equal_to<CGPUPipelineShaderDescriptor>()(*a.fragment_shader, *b.fragment_shader)) return false;
+    if (a.fragment_shader && !equal_to<CGPUShaderEntryDescriptor>()(*a.fragment_shader, *b.fragment_shader)) return false;
     
     // equal vertex layout
     if (a.vertex_layout && !b.vertex_layout) return false;
@@ -651,11 +651,11 @@ size_t hash<CGPURenderPipelineDescriptor>::operator()(const CGPURenderPipelineDe
     size_t result = 0;
     const auto block = make_zeroed<ParameterBlock>(a);
     const void* rs_a = a.root_signature->pool_sig ? a.root_signature->pool_sig : a.root_signature;
-    const auto& vertex_shader = a.vertex_shader ? *a.vertex_shader : kZeroCGPUPipelineShaderDescriptor;
-    const auto& tesc_shader = a.tesc_shader ? *a.tesc_shader : kZeroCGPUPipelineShaderDescriptor;
-    const auto& tese_shader = a.tese_shader ? *a.tese_shader : kZeroCGPUPipelineShaderDescriptor;
-    const auto& geom_shader = a.geom_shader ? *a.geom_shader : kZeroCGPUPipelineShaderDescriptor;
-    const auto& fragment_shader = a.fragment_shader ? *a.fragment_shader : kZeroCGPUPipelineShaderDescriptor;
+    const auto& vertex_shader = a.vertex_shader ? *a.vertex_shader : kZeroCGPUShaderEntryDescriptor;
+    const auto& tesc_shader = a.tesc_shader ? *a.tesc_shader : kZeroCGPUShaderEntryDescriptor;
+    const auto& tese_shader = a.tese_shader ? *a.tese_shader : kZeroCGPUShaderEntryDescriptor;
+    const auto& geom_shader = a.geom_shader ? *a.geom_shader : kZeroCGPUShaderEntryDescriptor;
+    const auto& fragment_shader = a.fragment_shader ? *a.fragment_shader : kZeroCGPUShaderEntryDescriptor;
     const auto& vertex_layout = a.vertex_layout ? *a.vertex_layout : kZeroCGPUVertexLayout;
     const auto& blend_state = a.blend_state ? *a.blend_state : kZeroCGPUBlendStateDescriptor;
     const auto& depth_state = a.depth_state ? *a.depth_state : kZeroCGPUDepthStateDesc;

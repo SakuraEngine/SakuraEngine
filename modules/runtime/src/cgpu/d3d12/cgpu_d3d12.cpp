@@ -433,7 +433,7 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
     CGPUShaderStages shaderStages = 0;
     for (uint32_t i = 0; i < desc->shader_count; i++)
     {
-        CGPUPipelineShaderDescriptor* shader_desc = desc->shaders + i;
+        CGPUShaderEntryDescriptor* shader_desc = desc->shaders + i;
         shaderStages |= shader_desc->stage;
     }
     // Pick shader reflection data
@@ -524,7 +524,7 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
             for (uint32_t j = 0; j < desc->static_sampler_count; j++)
             {
                 auto input_slot = (CGPUSampler_D3D12*)desc->static_samplers[j];
-                if (strcmp(RST_slot.name, desc->static_sampler_names[j]) == 0)
+                if (strcmp((const char*)RST_slot.name, (const char*)desc->static_sampler_names[j]) == 0)
                 {
                     D3D12_SAMPLER_DESC& dxSamplerDesc = input_slot->mDxDesc;
                     staticSamplerDescs[i].Filter = dxSamplerDesc.Filter;
@@ -735,7 +735,7 @@ void cgpu_update_descriptor_set_d3d12(CGPUDescriptorSetId set, const struct CGPU
         uint32_t HeapOffset = 0;
         if (pParam->name != CGPU_NULLPTR)
         {
-            size_t argNameHash = cgpu_name_hash(pParam->name, strlen(pParam->name));
+            size_t argNameHash = cgpu_name_hash(pParam->name, strlen((const char*)pParam->name));
             for (uint32_t j = 0; j < ParamTable->resources_count; j++)
             {
                 if (ParamTable->resources[j].name_hash == argNameHash)
@@ -903,55 +903,75 @@ void cgpu_free_compute_pipeline_d3d12(CGPUComputePipelineId pipeline)
     cgpu_delete(PPL);
 }
 
+static const char* kD3D12PSOMemoryPoolName = "cgpu::d3d12_pso";
 D3D12_DEPTH_STENCIL_DESC gDefaultDepthDesc = {};
 D3D12_BLEND_DESC gDefaultBlendDesc = {};
 D3D12_RASTERIZER_DESC gDefaultRasterizerDesc = {};
 CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, const struct CGPURenderPipelineDescriptor* desc)
 {
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
-    CGPURenderPipeline_D3D12* PPL = cgpu_new<CGPURenderPipeline_D3D12>();
     CGPURootSignature_D3D12* RS = (CGPURootSignature_D3D12*)desc->root_signature;
-    // Vertex input state
-    DECLARE_ZERO(D3D12_INPUT_ELEMENT_DESC, input_elements[4 * CGPU_MAX_VERTEX_ATTRIBS]);
-    uint32_t elem_count = 0;
+
+    uint32_t input_elem_count = 0;
     if (desc->vertex_layout != nullptr)
     {
-        eastl::string_hash_map<uint32_t> semanticIndexMap = {};
         for (uint32_t attrib_index = 0; attrib_index < desc->vertex_layout->attribute_count; ++attrib_index)
         {
             const CGPUVertexAttribute* attrib = &(desc->vertex_layout->attributes[attrib_index]);
             for (uint32_t arr_index = 0; arr_index < attrib->array_size; arr_index++)
             {
-                input_elements[elem_count].SemanticName = attrib->semantic_name;
-                if (semanticIndexMap.find(attrib->semantic_name) != semanticIndexMap.end())
+                input_elem_count++;
+            }
+        }
+    }
+    uint64_t dsize = sizeof(CGPURenderPipeline_D3D12);
+    const uint64_t input_elements_offset = dsize;
+    dsize += (sizeof(D3D12_INPUT_ELEMENT_DESC) * input_elem_count);
+
+    auto ptr = (uint8_t*)cgpu_callocN(1, dsize, kD3D12PSOMemoryPoolName);
+    CGPURenderPipeline_D3D12* PPL = cgpu_new_placed<CGPURenderPipeline_D3D12>(ptr);
+    D3D12_INPUT_ELEMENT_DESC* input_elements = (D3D12_INPUT_ELEMENT_DESC*)(ptr + input_elements_offset);
+
+    // Vertex input state
+    if (desc->vertex_layout != nullptr)
+    {
+        eastl::string_hash_map<uint32_t> semanticIndexMap = {};
+        uint32_t fill_index = 0;
+        for (uint32_t attrib_index = 0; attrib_index < desc->vertex_layout->attribute_count; ++attrib_index)
+        {
+            const CGPUVertexAttribute* attrib = &(desc->vertex_layout->attributes[attrib_index]);
+            for (uint32_t arr_index = 0; arr_index < attrib->array_size; arr_index++)
+            {
+                input_elements[fill_index].SemanticName = (const char*)attrib->semantic_name;
+                if (semanticIndexMap.find((const char*)attrib->semantic_name) != semanticIndexMap.end())
                 {
-                    semanticIndexMap[attrib->semantic_name]++;
+                    semanticIndexMap[(const char*)attrib->semantic_name]++;
                 }
                 else
                 {
-                    semanticIndexMap[attrib->semantic_name] = 0;
+                    semanticIndexMap[(const char*)attrib->semantic_name] = 0;
                 }
-                input_elements[elem_count].SemanticIndex = semanticIndexMap[attrib->semantic_name];
-                input_elements[elem_count].Format = DXGIUtil_TranslatePixelFormat(attrib->format);
-                input_elements[elem_count].InputSlot = attrib->binding;
-                input_elements[elem_count].AlignedByteOffset = attrib->offset + arr_index * FormatUtil_BitSizeOfBlock(attrib->format) / 8;
+                input_elements[fill_index].SemanticIndex = semanticIndexMap[(const char*)attrib->semantic_name];
+                input_elements[fill_index].Format = DXGIUtil_TranslatePixelFormat(attrib->format);
+                input_elements[fill_index].InputSlot = attrib->binding;
+                input_elements[fill_index].AlignedByteOffset = attrib->offset + arr_index * FormatUtil_BitSizeOfBlock(attrib->format) / 8;
                 if (attrib->rate == CGPU_INPUT_RATE_INSTANCE)
                 {
-                    input_elements[elem_count].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
-                    input_elements[elem_count].InstanceDataStepRate = 1;
+                    input_elements[fill_index].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
+                    input_elements[fill_index].InstanceDataStepRate = 1;
                 }
                 else
                 {
-                    input_elements[elem_count].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-                    input_elements[elem_count].InstanceDataStepRate = 0;
+                    input_elements[fill_index].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+                    input_elements[fill_index].InstanceDataStepRate = 0;
                 }
-                elem_count++;
+                fill_index++;
             }
         }
     }
     DECLARE_ZERO(D3D12_INPUT_LAYOUT_DESC, input_layout_desc);
-    input_layout_desc.pInputElementDescs = elem_count ? input_elements : NULL;
-    input_layout_desc.NumElements = elem_count;
+    input_layout_desc.pInputElementDescs = input_elem_count ? input_elements : NULL;
+    input_layout_desc.NumElements = input_elem_count;
     // Shader stages
     DECLARE_ZERO(D3D12_SHADER_BYTECODE, VS);
     DECLARE_ZERO(D3D12_SHADER_BYTECODE, PS);
@@ -1028,32 +1048,31 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
     cached_pso_desc.pCachedBlob = NULL;
     cached_pso_desc.CachedBlobSizeInBytes = 0;
     // Fill pipeline object desc
-    DECLARE_ZERO(D3D12_GRAPHICS_PIPELINE_STATE_DESC, pipeline_state_desc);
-    pipeline_state_desc.pRootSignature = RS->pDxRootSignature;
+    PPL->mDxGfxPipelineStateDesc.pRootSignature = RS->pDxRootSignature;
     // Single GPU
-    pipeline_state_desc.NodeMask = CGPU_SINGLE_GPU_NODE_MASK;
-    pipeline_state_desc.VS = VS;
-    pipeline_state_desc.PS = PS;
-    pipeline_state_desc.DS = DS;
-    pipeline_state_desc.HS = HS;
-    pipeline_state_desc.GS = GS;
-    pipeline_state_desc.StreamOutput = stream_output_desc;
-    pipeline_state_desc.BlendState = desc->blend_state ? D3D12Util_TranslateBlendState(desc->blend_state) : gDefaultBlendDesc;
-    pipeline_state_desc.SampleMask = UINT_MAX;
-    pipeline_state_desc.RasterizerState = desc->rasterizer_state ? D3D12Util_TranslateRasterizerState(desc->rasterizer_state) : gDefaultRasterizerDesc;
+    PPL->mDxGfxPipelineStateDesc.NodeMask = CGPU_SINGLE_GPU_NODE_MASK;
+    PPL->mDxGfxPipelineStateDesc.VS = VS;
+    PPL->mDxGfxPipelineStateDesc.PS = PS;
+    PPL->mDxGfxPipelineStateDesc.DS = DS;
+    PPL->mDxGfxPipelineStateDesc.HS = HS;
+    PPL->mDxGfxPipelineStateDesc.GS = GS;
+    PPL->mDxGfxPipelineStateDesc.StreamOutput = stream_output_desc;
+    PPL->mDxGfxPipelineStateDesc.BlendState = desc->blend_state ? D3D12Util_TranslateBlendState(desc->blend_state) : gDefaultBlendDesc;
+    PPL->mDxGfxPipelineStateDesc.SampleMask = UINT_MAX;
+    PPL->mDxGfxPipelineStateDesc.RasterizerState = desc->rasterizer_state ? D3D12Util_TranslateRasterizerState(desc->rasterizer_state) : gDefaultRasterizerDesc;
     // Depth stencil
-    pipeline_state_desc.DepthStencilState = desc->depth_state ? D3D12Util_TranslateDephStencilState(desc->depth_state) : gDefaultDepthDesc;
-    pipeline_state_desc.InputLayout = input_layout_desc;
-    pipeline_state_desc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
-    pipeline_state_desc.PrimitiveTopologyType = D3D12Util_TranslatePrimitiveTopology(desc->prim_topology);
-    pipeline_state_desc.NumRenderTargets = desc->render_target_count;
-    pipeline_state_desc.DSVFormat = DXGIUtil_TranslatePixelFormat(desc->depth_stencil_format);
-    pipeline_state_desc.SampleDesc = sample_desc;
-    pipeline_state_desc.CachedPSO = cached_pso_desc;
-    pipeline_state_desc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
-    for (uint32_t i = 0; i < pipeline_state_desc.NumRenderTargets; ++i)
+    PPL->mDxGfxPipelineStateDesc.DepthStencilState = desc->depth_state ? D3D12Util_TranslateDephStencilState(desc->depth_state) : gDefaultDepthDesc;
+    PPL->mDxGfxPipelineStateDesc.InputLayout = input_layout_desc;
+    PPL->mDxGfxPipelineStateDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
+    PPL->mDxGfxPipelineStateDesc.PrimitiveTopologyType = D3D12Util_TranslatePrimitiveTopology(desc->prim_topology);
+    PPL->mDxGfxPipelineStateDesc.NumRenderTargets = desc->render_target_count;
+    PPL->mDxGfxPipelineStateDesc.DSVFormat = DXGIUtil_TranslatePixelFormat(desc->depth_stencil_format);
+    PPL->mDxGfxPipelineStateDesc.SampleDesc = sample_desc;
+    PPL->mDxGfxPipelineStateDesc.CachedPSO = cached_pso_desc;
+    PPL->mDxGfxPipelineStateDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+    for (uint32_t i = 0; i < PPL->mDxGfxPipelineStateDesc.NumRenderTargets; ++i)
     {
-        pipeline_state_desc.RTVFormats[i] = DXGIUtil_TranslatePixelFormat(desc->color_formats[i]);
+        PPL->mDxGfxPipelineStateDesc.RTVFormats[i] = DXGIUtil_TranslatePixelFormat(desc->color_formats[i]);
     }
     // Create pipeline object
     HRESULT result = E_FAIL;
@@ -1074,27 +1093,28 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
             psoShaderHash = cgpu_hash(HS.pShaderBytecode, HS.BytecodeLength, psoShaderHash);
         if (GS.BytecodeLength)
             psoShaderHash = cgpu_hash(GS.pShaderBytecode, GS.BytecodeLength, psoShaderHash);
+            
         // Calculate graphics pso desc hash
-        psoRenderHash = cgpu_hash(&pipeline_state_desc.BlendState, sizeof(D3D12_BLEND_DESC), psoRenderHash);
-        psoRenderHash = cgpu_hash(&pipeline_state_desc.RasterizerState, sizeof(D3D12_RASTERIZER_DESC), psoRenderHash);
-        psoRenderHash = cgpu_hash(&pipeline_state_desc.DepthStencilState, sizeof(D3D12_DEPTH_STENCIL_DESC), psoRenderHash);
-        psoRenderHash = cgpu_hash(&pipeline_state_desc.IBStripCutValue, sizeof(D3D12_INDEX_BUFFER_STRIP_CUT_VALUE), psoRenderHash);
-        psoRenderHash = cgpu_hash(pipeline_state_desc.RTVFormats,
-        pipeline_state_desc.NumRenderTargets * sizeof(DXGI_FORMAT), psoRenderHash);
-        psoRenderHash = cgpu_hash(&pipeline_state_desc.DSVFormat, sizeof(DXGI_FORMAT), psoRenderHash);
-        psoRenderHash = cgpu_hash(&pipeline_state_desc.SampleDesc, sizeof(DXGI_SAMPLE_DESC), psoRenderHash);
-        psoRenderHash = cgpu_hash(&pipeline_state_desc.Flags, sizeof(D3D12_PIPELINE_STATE_FLAGS), psoRenderHash);
-        for (uint32_t i = 0; i < pipeline_state_desc.InputLayout.NumElements; i++)
+        psoRenderHash = cgpu_hash(&PPL->mDxGfxPipelineStateDesc.BlendState, sizeof(D3D12_BLEND_DESC), psoRenderHash);
+        psoRenderHash = cgpu_hash(&PPL->mDxGfxPipelineStateDesc.RasterizerState, sizeof(D3D12_RASTERIZER_DESC), psoRenderHash);
+        psoRenderHash = cgpu_hash(&PPL->mDxGfxPipelineStateDesc.DepthStencilState, sizeof(D3D12_DEPTH_STENCIL_DESC), psoRenderHash);
+        psoRenderHash = cgpu_hash(&PPL->mDxGfxPipelineStateDesc.IBStripCutValue, sizeof(D3D12_INDEX_BUFFER_STRIP_CUT_VALUE), psoRenderHash);
+        psoRenderHash = cgpu_hash(PPL->mDxGfxPipelineStateDesc.RTVFormats,
+        PPL->mDxGfxPipelineStateDesc.NumRenderTargets * sizeof(DXGI_FORMAT), psoRenderHash);
+        psoRenderHash = cgpu_hash(&PPL->mDxGfxPipelineStateDesc.DSVFormat, sizeof(DXGI_FORMAT), psoRenderHash);
+        psoRenderHash = cgpu_hash(&PPL->mDxGfxPipelineStateDesc.SampleDesc, sizeof(DXGI_SAMPLE_DESC), psoRenderHash);
+        psoRenderHash = cgpu_hash(&PPL->mDxGfxPipelineStateDesc.Flags, sizeof(D3D12_PIPELINE_STATE_FLAGS), psoRenderHash);
+        for (uint32_t i = 0; i < PPL->mDxGfxPipelineStateDesc.InputLayout.NumElements; i++)
         {
-            psoRenderHash = cgpu_hash(&pipeline_state_desc.InputLayout.pInputElementDescs[i],
+            psoRenderHash = cgpu_hash(&PPL->mDxGfxPipelineStateDesc.InputLayout.pInputElementDescs[i],
             sizeof(D3D12_INPUT_ELEMENT_DESC), psoRenderHash);
         }
         swprintf(pipelineName, PSO_NAME_LENGTH, L"%S_S%zu_R%zu_RS%zu", "GRAPHICSPSO", psoShaderHash, psoRenderHash, rootSignatureNumber);
-        result = D->pPipelineLibrary->LoadGraphicsPipeline(pipelineName, &pipeline_state_desc, IID_ARGS(&PPL->pDxPipelineState));
+        result = D->pPipelineLibrary->LoadGraphicsPipeline(pipelineName, &PPL->mDxGfxPipelineStateDesc, IID_ARGS(&PPL->pDxPipelineState));
     }
     if (!SUCCEEDED(result))
     {
-        CHECK_HRESULT(D->pDxDevice->CreateGraphicsPipelineState(&pipeline_state_desc, IID_PPV_ARGS(&PPL->pDxPipelineState)));
+        CHECK_HRESULT(D->pDxDevice->CreateGraphicsPipelineState(&PPL->mDxGfxPipelineStateDesc, IID_PPV_ARGS(&PPL->pDxPipelineState)));
         // Pipeline cache
         if (D->pPipelineLibrary)
         {
@@ -1109,7 +1129,6 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
             }
         }
     }
-
     D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
     switch (desc->prim_topology)
     {
@@ -1144,7 +1163,8 @@ void cgpu_free_render_pipeline_d3d12(CGPURenderPipelineId pipeline)
 {
     CGPURenderPipeline_D3D12* PPL = (CGPURenderPipeline_D3D12*)pipeline;
     SAFE_RELEASE(PPL->pDxPipelineState);
-    cgpu_delete(PPL);
+    cgpu_delete_placed(PPL);
+    cgpu_freeN(PPL, kD3D12PSOMemoryPoolName);
 }
 
 D3D12_QUERY_TYPE D3D12Util_ToD3D12QueryType(ECGPUQueryType type)

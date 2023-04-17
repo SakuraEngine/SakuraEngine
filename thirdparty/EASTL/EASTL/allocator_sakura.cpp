@@ -5,17 +5,19 @@
 
 #include "platform/memory.h"
 
-#define core_malloc sakura_malloc
-#define core_memalign sakura_malloc_aligned
-#define core_free sakura_free
-#define core_free_aligned sakura_free_aligned
+#define core_malloc sakura_mallocN
+#define core_memalign sakura_malloc_alignedN
+#define core_free sakura_freeN
+#define core_free_aligned sakura_free_alignedN
 
 	namespace eastl
 	{
+		static const char* kEASTLMemoryPoolName = "eastl::allocator";
+
 		void* allocator_sakura::allocate(size_t n, int /*flags*/)
 		{ 
 			ZoneScopedNS("EASTL::allocate", 16);
-			void* p = core_memalign(n, 1);
+			void* p = core_memalign(n, 1, kEASTLMemoryPoolName);
 			return p;
 		}
 
@@ -25,18 +27,18 @@
 													// aligned on e.g. 64 also is aligned at an offset of 64 by definition.
 			{
 				ZoneScopedNS("EASTL::allocate(aligned)", 16);
-			    void* p = core_memalign(n, alignment);
+				void* p = core_memalign(n, alignment, kEASTLMemoryPoolName);
 				return p;
 			}
 
-		    return NULL;
+			return NULL;
 		}
 
 		void allocator_sakura::deallocate(void* p, size_t /*n*/)
 		{ 
 			ZoneScopedNS("EASTL::deallocate", 8);
 
-			core_free_aligned(p, 1);
+			core_free_aligned(p, 1, kEASTLMemoryPoolName);
 		}
 
 		/// gDefaultAllocator

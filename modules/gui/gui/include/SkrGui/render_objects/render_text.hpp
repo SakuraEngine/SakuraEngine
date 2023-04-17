@@ -41,7 +41,7 @@ public:
     virtual void layout(BoxConstraint constraints, bool needSize = false) override;
     virtual void draw(const DrawParams* params) override;
 
-    void add_text(const char* u8_text);
+    void add_text(const char8_t* u8_text);
 
 protected:
     void BuildParagraph();

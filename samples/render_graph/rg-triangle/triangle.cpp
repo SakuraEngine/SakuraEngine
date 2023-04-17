@@ -1,4 +1,4 @@
-#include "../../common/utils.h"
+#include "common/utils.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 
 thread_local SDL_Window* sdl_window;
@@ -73,15 +73,15 @@ void create_render_pipeline()
 {
     uint32_t *vs_bytes, vs_length;
     uint32_t *fs_bytes, fs_length;
-    read_shader_bytes("rg-triangle/vertex_shader", &vs_bytes, &vs_length, backend);
-    read_shader_bytes("rg-triangle/fragment_shader", &fs_bytes, &fs_length, backend);
+    read_shader_bytes(SKR_UTF8("rg-triangle/vertex_shader"), &vs_bytes, &vs_length, backend);
+    read_shader_bytes(SKR_UTF8("rg-triangle/fragment_shader"), &fs_bytes, &fs_length, backend);
     CGPUShaderLibraryDescriptor vs_desc = {};
     vs_desc.stage = CGPU_SHADER_STAGE_VERT;
-    vs_desc.name = "VertexShaderLibrary";
+    vs_desc.name = SKR_UTF8("VertexShaderLibrary");
     vs_desc.code = vs_bytes;
     vs_desc.code_size = vs_length;
     CGPUShaderLibraryDescriptor ps_desc = {};
-    ps_desc.name = "FragmentShaderLibrary";
+    ps_desc.name = SKR_UTF8("FragmentShaderLibrary");
     ps_desc.stage = CGPU_SHADER_STAGE_FRAG;
     ps_desc.code = fs_bytes;
     ps_desc.code_size = fs_length;
@@ -89,12 +89,12 @@ void create_render_pipeline()
     CGPUShaderLibraryId fragment_shader = cgpu_create_shader_library(device, &ps_desc);
     free(vs_bytes);
     free(fs_bytes);
-    CGPUPipelineShaderDescriptor ppl_shaders[2];
+    CGPUShaderEntryDescriptor ppl_shaders[2];
     ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
-    ppl_shaders[0].entry = "main";
+    ppl_shaders[0].entry = SKR_UTF8("main");
     ppl_shaders[0].library = vertex_shader;
     ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
-    ppl_shaders[1].entry = "main";
+    ppl_shaders[1].entry = SKR_UTF8("main");
     ppl_shaders[1].library = fragment_shader;
     CGPURootSignatureDescriptor rs_desc = {};
     rs_desc.shaders = ppl_shaders;
@@ -134,7 +134,7 @@ void finalize()
 int main(int argc, char* argv[])
 {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
-    sdl_window = SDL_CreateWindow(gCGPUBackendNames[backend],
+    sdl_window = SDL_CreateWindow((const char*)gCGPUBackendNames[backend],
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT,
         SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
@@ -194,13 +194,13 @@ int main(int argc, char* argv[])
         CGPUTextureId to_import = swapchain->back_buffers[backbuffer_index];
         auto back_buffer = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-                builder.set_name("backbuffer")
+                builder.set_name(SKR_UTF8("backbuffer"))
                 .import(to_import, CGPU_RESOURCE_STATE_PRESENT)
                 .allow_render_target();
             });
         graph->add_render_pass(
             [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
-                builder.set_name("color_pass")
+                builder.set_name(SKR_UTF8("color_pass"))
                 .set_pipeline(pipeline)
                 .write(0, back_buffer, CGPU_LOAD_ACTION_CLEAR);
             },
@@ -214,7 +214,7 @@ int main(int argc, char* argv[])
             });
         graph->add_render_pass(
             [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
-                builder.set_name("color_pass2")
+                builder.set_name(SKR_UTF8("color_pass2"))
                 .set_pipeline(pipeline)
                 .write(0, back_buffer, CGPU_LOAD_ACTION_LOAD);
             },
@@ -228,7 +228,7 @@ int main(int argc, char* argv[])
             });
         graph->add_present_pass(
             [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
-                builder.set_name("present")
+                builder.set_name(SKR_UTF8("present"))
                 .swapchain(swapchain, backbuffer_index)
                 .texture(back_buffer, true);
             });

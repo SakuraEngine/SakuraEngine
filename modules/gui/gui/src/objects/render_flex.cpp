@@ -9,7 +9,7 @@ RenderFlex::RenderFlex(skr_gdi_device_id gdi_device)
     : RenderBox(gdi_device)
 {
     diagnostic_builder.add_properties(
-        SkrNew<TextDiagnosticProperty>("type", "flex", "layout children")
+        SkrNew<TextDiagnosticProperty>(u8"type", u8"flex", u8"layout children")
     );
 }
 

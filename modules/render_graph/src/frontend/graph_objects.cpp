@@ -96,14 +96,14 @@ RenderGraphNode::RenderGraphNode(EObjectType type)
 {
 }
 
-void RenderGraphNode::set_name(const char* n)
+void RenderGraphNode::set_name(const char8_t* n)
 {
-    name = n;
+    name = (const char*)n;
 }
 
-const char* RenderGraphNode::get_name() const
+const char8_t* RenderGraphNode::get_name() const
 {
-    return name.c_str();
+    return (const char8_t*)name.c_str();
 }
 
 RenderGraphEdge::RenderGraphEdge(ERelationshipType type)

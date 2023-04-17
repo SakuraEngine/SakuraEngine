@@ -1,7 +1,7 @@
 #pragma once
 #include "cgpu/api.h"
 
-typedef const char* CGPUXName;
+typedef const char8_t* CGPUXName;
 DEFINE_CGPU_OBJECT(CGPUXBindTable)
 DEFINE_CGPU_OBJECT(CGPUXMergedBindTable)
 struct CGPUXBindTableDescriptor;

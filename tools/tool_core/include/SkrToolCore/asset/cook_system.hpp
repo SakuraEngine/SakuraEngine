@@ -63,11 +63,11 @@ public:
     {
         //------save resource to disk
         auto outputPath = GetOutputPath().u8string();
-        auto file = fopen(outputPath.c_str(), "wb");
+        auto file = fopen((const char*)outputPath.c_str(), "wb");
         if (!file)
         {
             SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", 
-                record->guid, record->path.u8string());
+                record->guid, (const char*)record->path.u8string().c_str());
             return false;
         }
         SKR_DEFER({ fclose(file); });
@@ -78,13 +78,13 @@ public:
         if(int result = skr::binary::Archive(&archive, resource); result != 0)
         {
             SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to serialize resource {}! path: {}", 
-                record->guid, record->path.u8string());
+                record->guid, (const char*)record->path.u8string().c_str());
             return false;
         }
         if(fwrite(buffer.data(), 1, buffer.size(), file) < buffer.size())
         {
             SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", 
-                record->guid, record->path.u8string());
+                record->guid, (const char*)record->path.u8string().c_str());
             return false;
         }
         return true;

@@ -23,7 +23,7 @@ void* SShaderOptionsImporter::Import(skr_io_ram_service_t* ioService, SCookConte
     context->AddFileDependencyAndLoad(ioService, jsonPath.c_str(), ioDestination);
     SKR_DEFER({sakura_free(ioDestination.bytes);});
 
-    auto jsonString = simdjson::padded_string((char8_t*)ioDestination.bytes, ioDestination.size);
+    auto jsonString = simdjson::padded_string((char*)ioDestination.bytes, ioDestination.size);
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(jsonString);
     if(doc.error())

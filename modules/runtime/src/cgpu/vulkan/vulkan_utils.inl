@@ -1,8 +1,95 @@
 #include "cgpu/flags.h"
+#include "cgpu/backend/vulkan/cgpu_vulkan.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+static const VkCullModeFlagBits gVkCullModeTranslator[CGPU_CULL_MODE_COUNT] = {
+    VK_CULL_MODE_NONE,
+    VK_CULL_MODE_BACK_BIT,
+    VK_CULL_MODE_FRONT_BIT
+};
+
+static const VkPolygonMode gVkFillModeTranslator[CGPU_FILL_MODE_COUNT] = {
+    VK_POLYGON_MODE_FILL,
+    VK_POLYGON_MODE_LINE
+};
+
+static const VkFrontFace gVkFrontFaceTranslator[] = {
+    VK_FRONT_FACE_COUNTER_CLOCKWISE,
+    VK_FRONT_FACE_CLOCKWISE
+};
+
+static const VkBlendFactor gVkBlendConstantTranslator[CGPU_BLEND_CONST_COUNT] = {
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_SRC_COLOR,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
+    VK_BLEND_FACTOR_DST_COLOR,
+    VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_FACTOR_DST_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA,
+    VK_BLEND_FACTOR_SRC_ALPHA_SATURATE,
+    VK_BLEND_FACTOR_CONSTANT_COLOR,
+    VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR,
+};
+
+static const VkBlendOp gVkBlendOpTranslator[CGPU_BLEND_MODE_COUNT] = {
+    VK_BLEND_OP_ADD,
+    VK_BLEND_OP_SUBTRACT,
+    VK_BLEND_OP_REVERSE_SUBTRACT,
+    VK_BLEND_OP_MIN,
+    VK_BLEND_OP_MAX,
+};
+
 // API Helpers
+FORCEINLINE static void VkUtil_GetVertexInputBindingAttrCount(const CGPUVertexLayout* pLayout, uint32_t* pBindingCount, uint32_t* pAttrCount)
+{
+    uint32_t input_binding_count = 0;
+	uint32_t input_attribute_count = 0;
+    if (pLayout != NULL)
+    {
+        // Ignore everything that's beyond CGPU_MAX_VERTEX_ATTRIBS
+        uint32_t attrib_count = pLayout->attribute_count > CGPU_MAX_VERTEX_ATTRIBS ? CGPU_MAX_VERTEX_ATTRIBS : pLayout->attribute_count;
+        uint32_t binding_value = UINT32_MAX;
+        // Initial values
+        for (uint32_t i = 0; i < attrib_count; ++i)
+        {
+            const CGPUVertexAttribute* attrib = &(pLayout->attributes[i]);
+            const uint32_t array_size = attrib->array_size ? attrib->array_size : 1;
+            if (binding_value != attrib->binding)
+            {
+                binding_value = attrib->binding;
+                input_binding_count += 1;
+            }
+            for(uint32_t j = 0; j < array_size; j++)
+            {
+                input_attribute_count += 1;
+            }
+        }
+    }
+    if (pBindingCount) *pBindingCount = input_binding_count;
+    if (pAttrCount) *pAttrCount = input_attribute_count;
+}
+
+FORCEINLINE static VkPrimitiveTopology VkUtil_TranslateTopology(ECGPUPrimitiveTopology prim_topology)
+{
+    VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    switch (prim_topology)
+    {
+        case CGPU_PRIM_TOPO_POINT_LIST: topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST; break;
+        case CGPU_PRIM_TOPO_LINE_LIST: topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST; break;
+        case CGPU_PRIM_TOPO_LINE_STRIP: topology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP; break;
+        case CGPU_PRIM_TOPO_TRI_STRIP: topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; break;
+        case CGPU_PRIM_TOPO_PATCH_LIST: topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST; break;
+        case CGPU_PRIM_TOPO_TRI_LIST: topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; break;
+        default:  cgpu_assert(false && "Primitive Topo not supported!"); break;
+    }
+    return topology;
+}
+
 FORCEINLINE static VkImageUsageFlags VkUtil_DescriptorTypesToImageUsage(CGPUResourceTypes descriptors)
 {
     VkImageUsageFlags result = 0;

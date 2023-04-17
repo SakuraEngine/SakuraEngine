@@ -130,11 +130,11 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
     // Return a string explaining the last error
     skr::string skr::SharedLibrary::getWindowsError()
     {
-        auto tchar_to_utf8 = +[](const TCHAR* str, char* str8)
+        auto tchar_to_utf8 = +[](const TCHAR* str, char8_t* str8)
         {
         #ifdef _UNICODE
             auto size = WideCharToMultiByte(CP_UTF8, 0, str, (int)wcslen(str), NULL, 0, NULL, NULL);
-            WideCharToMultiByte(CP_UTF8, 0, str, (int)wcslen(str), str8, size, NULL, NULL);
+            WideCharToMultiByte(CP_UTF8, 0, str, (int)wcslen(str), (char*)str8, size, NULL, NULL);
             str8[size] = '\0';
         #else
             return strcpy(str8, str);
@@ -153,7 +153,7 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
             256 - 1,
             nullptr);
             tchar_to_utf8(buffer, u8str);
-            return skr::string(u8str);
+            return skr::string((const char*)u8str);
         }
         return skr::string();
     }

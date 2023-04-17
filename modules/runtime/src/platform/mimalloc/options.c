@@ -5,18 +5,13 @@ terms of the MIT license. A copy of the license can be found in the file
 "LICENSE" at the root of this distribution.
 -----------------------------------------------------------------------------*/
 #include "mimalloc.h"
-#include "mimalloc-internal.h"
-#include "mimalloc-atomic.h"
+#include "mimalloc/internal.h"
+#include "mimalloc/atomic.h"
+#include "mimalloc/prim.h"  // mi_prim_out_stderr
 
-#include <stdio.h>
-#include <stdlib.h> // strtol
-#include <string.h> // strncpy, strncat, strlen, strstr
-#include <ctype.h>  // toupper
+#include <stdio.h>      // FILE
+#include <stdlib.h>     // abort
 #include <stdarg.h>
-
-#ifdef _MSC_VER
-#pragma warning(disable:4996)   // strncpy, strncat
-#endif
 
 
 static long mi_max_error_count   = 16; // stop outputting errors after this (use < 0 for no limit)
@@ -28,9 +23,6 @@ int mi_version(void) mi_attr_noexcept {
   return MI_MALLOC_VERSION;
 }
 
-#ifdef _WIN32
-#include <conio.h>
-#endif
 
 // --------------------------------------------------------
 // Options
@@ -94,7 +86,8 @@ static mi_option_desc_t options[_mi_option_last] =
   { 8,    UNINIT, MI_OPTION(max_segment_reclaim)},// max. number of segment reclaims from the abandoned segments per try.  
   { 1,    UNINIT, MI_OPTION(allow_decommit) },    // decommit slices when no longer used (after decommit_delay milli-seconds)
   { 500,  UNINIT, MI_OPTION(segment_decommit_delay) }, // decommit delay in milli-seconds for freed segments
-  { 2,    UNINIT, MI_OPTION(decommit_extend_delay) }
+  { 1,    UNINIT, MI_OPTION(decommit_extend_delay) },
+  { 0,    UNINIT, MI_OPTION(destroy_on_exit)}     // release all OS memory on process exit; careful with dangling pointer or after-exit frees!
 };
 
 static void mi_option_init(mi_option_desc_t* desc);
@@ -106,7 +99,8 @@ void _mi_options_init(void) {
   for(int i = 0; i < _mi_option_last; i++ ) {
     mi_option_t option = (mi_option_t)i;
     long l = mi_option_get(option); MI_UNUSED(l); // initialize
-    if (option != mi_option_verbose) {
+    // if (option != mi_option_verbose)
+    {
       mi_option_desc_t* desc = &options[option];
       _mi_verbose_message("option '%s': %ld\n", desc->name, desc->value);
     }
@@ -169,28 +163,11 @@ void mi_option_disable(mi_option_t option) {
   mi_option_set_enabled(option,false);
 }
 
-
 static void mi_cdecl mi_out_stderr(const char* msg, void* arg) {
   MI_UNUSED(arg);
-  if (msg == NULL) return;
-  #ifdef _WIN32
-  // on windows with redirection, the C runtime cannot handle locale dependent output
-  // after the main thread closes so we use direct console output.
-  if (!_mi_preloading()) { 
-    // _cputs(msg);  // _cputs cannot be used at is aborts if it fails to lock the console
-    static HANDLE hcon = INVALID_HANDLE_VALUE;
-    if (hcon == INVALID_HANDLE_VALUE) {
-      hcon = GetStdHandle(STD_ERROR_HANDLE);
-    }
-    const size_t len = strlen(msg);
-    if (hcon != INVALID_HANDLE_VALUE && len > 0 && len < UINT32_MAX) {
-      DWORD written = 0;
-      WriteConsoleA(hcon, msg, (DWORD)len, &written, NULL);
-    }
+  if (msg != NULL && msg[0] != 0) {
+    _mi_prim_out_stderr(msg);
   }
-  #else
-  fputs(msg, stderr);
-  #endif
 }
 
 // Since an output function can be registered earliest in the `main`
@@ -207,7 +184,7 @@ static void mi_cdecl mi_out_buf(const char* msg, void* arg) {
   MI_UNUSED(arg);
   if (msg==NULL) return;
   if (mi_atomic_load_relaxed(&out_len)>=MI_MAX_DELAY_OUTPUT) return;
-  size_t n = strlen(msg);
+  size_t n = _mi_strlen(msg);
   if (n==0) return;
   // claim space
   size_t start = mi_atomic_add_acq_rel(&out_len, n);
@@ -280,7 +257,7 @@ static _Atomic(size_t) warning_count; // = 0;  // when >= max_warning_count stop
 // inside the C runtime causes another message.
 // In some cases (like on macOS) the loader already allocates which
 // calls into mimalloc; if we then access thread locals (like `recurse`)
-// this may crash as the access may call _tlv_bootstrap that tries to 
+// this may crash as the access may call _tlv_bootstrap that tries to
 // (recursively) invoke malloc again to allocate space for the thread local
 // variables on demand. This is why we use a _mi_preloading test on such
 // platforms. However, C code generator may move the initial thread local address
@@ -299,7 +276,7 @@ static mi_decl_noinline void mi_recurse_exit_prim(void) {
 
 static bool mi_recurse_enter(void) {
   #if defined(__APPLE__) || defined(MI_TLS_RECURSE_GUARD)
-  if (_mi_preloading()) return true;
+  if (_mi_preloading()) return false;
   #endif
   return mi_recurse_enter_prim();
 }
@@ -344,9 +321,9 @@ void _mi_fprintf( mi_output_fun* out, void* arg, const char* fmt, ... ) {
 }
 
 static void mi_vfprintf_thread(mi_output_fun* out, void* arg, const char* prefix, const char* fmt, va_list args) {
-  if (prefix != NULL && strlen(prefix) <= 32 && !_mi_is_main_thread()) {
+  if (prefix != NULL && _mi_strnlen(prefix,33) <= 32 && !_mi_is_main_thread()) {
     char tprefix[64];
-    snprintf(tprefix, sizeof(tprefix), "%sthread 0x%zx: ", prefix, _mi_thread_id());
+    snprintf(tprefix, sizeof(tprefix), "%sthread 0x%llx: ", prefix, (unsigned long long)_mi_thread_id());
     mi_vfprintf(out, arg, tprefix, fmt, args);
   }
   else {
@@ -406,7 +383,7 @@ static _Atomic(void*) mi_error_arg;     // = NULL
 
 static void mi_error_default(int err) {
   MI_UNUSED(err);
-#if (MI_DEBUG>0) 
+#if (MI_DEBUG>0)
   if (err==EFAULT) {
     #ifdef _MSC_VER
     __debugbreak();
@@ -449,8 +426,20 @@ void _mi_error_message(int err, const char* fmt, ...) {
 // --------------------------------------------------------
 // Initialize options by checking the environment
 // --------------------------------------------------------
+char _mi_toupper(char c) {
+  if (c >= 'a' && c <= 'z') return (c - 'a' + 'A');
+                       else return c;
+}
 
-static void mi_strlcpy(char* dest, const char* src, size_t dest_size) {
+int _mi_strnicmp(const char* s, const char* t, size_t n) {
+  if (n == 0) return 0;
+  for (; *s != 0 && *t != 0 && n > 0; s++, t++, n--) {
+    if (_mi_toupper(*s) != _mi_toupper(*t)) break;
+  }
+  return (n == 0 ? 0 : *s - *t);
+}
+
+void _mi_strlcpy(char* dest, const char* src, size_t dest_size) {
   if (dest==NULL || src==NULL || dest_size == 0) return;
   // copy until end of src, or when dest is (almost) full
   while (*src != 0 && dest_size > 1) {
@@ -461,7 +450,7 @@ static void mi_strlcpy(char* dest, const char* src, size_t dest_size) {
   *dest = 0;
 }
 
-static void mi_strlcat(char* dest, const char* src, size_t dest_size) {
+void _mi_strlcat(char* dest, const char* src, size_t dest_size) {
   if (dest==NULL || src==NULL || dest_size == 0) return;
   // find end of string in the dest buffer
   while (*dest != 0 && dest_size > 1) {
@@ -469,7 +458,21 @@ static void mi_strlcat(char* dest, const char* src, size_t dest_size) {
     dest_size--;
   }
   // and catenate
-  mi_strlcpy(dest, src, dest_size);
+  _mi_strlcpy(dest, src, dest_size);
+}
+
+size_t _mi_strlen(const char* s) {
+  if (s==NULL) return 0;
+  size_t len = 0;
+  while(s[len] != 0) { len++; }
+  return len;
+}
+
+size_t _mi_strnlen(const char* s, size_t max_len) {
+  if (s==NULL) return 0;
+  size_t len = 0;
+  while(s[len] != 0 && len < max_len) { len++; }
+  return len;
 }
 
 #ifdef MI_NO_GETENV
@@ -480,93 +483,27 @@ static bool mi_getenv(const char* name, char* result, size_t result_size) {
   return false;
 }
 #else
-static inline int mi_strnicmp(const char* s, const char* t, size_t n) {
-  if (n==0) return 0;
-  for (; *s != 0 && *t != 0 && n > 0; s++, t++, n--) {
-    if (toupper(*s) != toupper(*t)) break;
-  }
-  return (n==0 ? 0 : *s - *t);
-}
-#if defined _WIN32
-// On Windows use GetEnvironmentVariable instead of getenv to work
-// reliably even when this is invoked before the C runtime is initialized.
-// i.e. when `_mi_preloading() == true`.
-// Note: on windows, environment names are not case sensitive.
-#include <windows.h>
 static bool mi_getenv(const char* name, char* result, size_t result_size) {
-  result[0] = 0;
-  size_t len = GetEnvironmentVariableA(name, result, (DWORD)result_size);
-  return (len > 0 && len < result_size);
-}
-#elif !defined(MI_USE_ENVIRON) || (MI_USE_ENVIRON!=0)
-// On Posix systemsr use `environ` to acces environment variables 
-// even before the C runtime is initialized.
-#if defined(__APPLE__) && defined(__has_include) && __has_include(<crt_externs.h>)
-#include <crt_externs.h>
-static char** mi_get_environ(void) {
-  return (*_NSGetEnviron());
-}
-#else 
-extern char** environ;
-static char** mi_get_environ(void) {
-  return environ;
+  if (name==NULL || result == NULL || result_size < 64) return false;
+  return _mi_prim_getenv(name,result,result_size);
 }
 #endif
-static bool mi_getenv(const char* name, char* result, size_t result_size) {
-  if (name==NULL) return false;  
-  const size_t len = strlen(name);
-  if (len == 0) return false;  
-  char** env = mi_get_environ();
-  if (env == NULL) return false;
-  // compare up to 256 entries
-  for (int i = 0; i < 256 && env[i] != NULL; i++) {
-    const char* s = env[i];
-    if (mi_strnicmp(name, s, len) == 0 && s[len] == '=') { // case insensitive
-      // found it
-      mi_strlcpy(result, s + len + 1, result_size);
-      return true;
-    }
-  }
-  return false;
-}
-#else  
-// fallback: use standard C `getenv` but this cannot be used while initializing the C runtime
-static bool mi_getenv(const char* name, char* result, size_t result_size) {
-  // cannot call getenv() when still initializing the C runtime.
-  if (_mi_preloading()) return false;
-  const char* s = getenv(name);
-  if (s == NULL) {
-    // we check the upper case name too.
-    char buf[64+1];
-    size_t len = strlen(name);
-    if (len >= sizeof(buf)) len = sizeof(buf) - 1;
-    for (size_t i = 0; i < len; i++) {
-      buf[i] = toupper(name[i]);
-    }
-    buf[len] = 0;
-    s = getenv(buf);
-  }
-  if (s != NULL && strlen(s) < result_size) {
-    mi_strlcpy(result, s, result_size);
-    return true;
-  }
-  else {
-    return false;
-  }
-}
-#endif  // !MI_USE_ENVIRON
-#endif  // !MI_NO_GETENV
 
-static void mi_option_init(mi_option_desc_t* desc) {  
+// TODO: implement ourselves to reduce dependencies on the C runtime
+#include <stdlib.h> // strtol
+#include <string.h> // strstr
+
+
+static void mi_option_init(mi_option_desc_t* desc) {
   // Read option value from the environment
   char s[64+1];
   char buf[64+1];
-  mi_strlcpy(buf, "mimalloc_", sizeof(buf));
-  mi_strlcat(buf, desc->name, sizeof(buf));
+  _mi_strlcpy(buf, "mimalloc_", sizeof(buf));
+  _mi_strlcat(buf, desc->name, sizeof(buf));
   bool found = mi_getenv(buf,s,sizeof(s));
   if (!found && desc->legacy_name != NULL) {
-    mi_strlcpy(buf, "mimalloc_", sizeof(buf));
-    mi_strlcat(buf, desc->legacy_name, sizeof(buf));
+    _mi_strlcpy(buf, "mimalloc_", sizeof(buf));
+    _mi_strlcat(buf, desc->legacy_name, sizeof(buf));
     found = mi_getenv(buf,s,sizeof(s));
     if (found) {
       _mi_warning_message("environment option \"mimalloc_%s\" is deprecated -- use \"mimalloc_%s\" instead.\n", desc->legacy_name, desc->name );
@@ -574,10 +511,9 @@ static void mi_option_init(mi_option_desc_t* desc) {
   }
 
   if (found) {
-    size_t len = strlen(s);
-    if (len >= sizeof(buf)) len = sizeof(buf) - 1;
+    size_t len = _mi_strnlen(s,sizeof(buf)-1);
     for (size_t i = 0; i < len; i++) {
-      buf[i] = (char)toupper(s[i]);
+      buf[i] = _mi_toupper(s[i]);
     }
     buf[len] = 0;
     if (buf[0]==0 || strstr("1;TRUE;YES;ON", buf) != NULL) {

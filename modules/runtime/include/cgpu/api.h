@@ -50,9 +50,19 @@ DEFINE_CGPU_OBJECT(CGPUDStorageQueue)
 DEFINE_CGPU_OBJECT(CGPUDStorageFile)
 typedef CGPUDStorageFileId CGPUDStorageFileHandle;
 
+DEFINE_CGPU_OBJECT(CGPUCompiledShader)
+DEFINE_CGPU_OBJECT(CGPULinkedShader)
+DEFINE_CGPU_OBJECT(CGPUBinder)
+DEFINE_CGPU_OBJECT(CGPUStateBuffer)
+DEFINE_CGPU_OBJECT(CGPUShaderStateEncoder)
+// compute dispatches never use these state
+DEFINE_CGPU_OBJECT(CGPURasterStateEncoder)
+DEFINE_CGPU_OBJECT(CGPUUserStateEncoder)
+
 struct CGPUExportTextureDescriptor;
 struct CGPUImportTextureDescriptor;
 
+struct CGPUVertexLayout;
 struct CGPUBufferToBufferTransfer;
 struct CGPUBufferToTextureTransfer;
 struct CGPUTextureToTextureTransfer;
@@ -65,6 +75,12 @@ struct CGPUComputePassDescriptor;
 struct CGPUQueueSubmitDescriptor;
 struct CGPUQueuePresentDescriptor;
 struct CGPUAcquireNextDescriptor;
+
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-const-variable"
+#pragma clang diagnostic ignored "-Wunused-variable"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -85,11 +101,11 @@ typedef enum ECGPUBackend
 } ECGPUBackend;
 
 static const char8_t* gCGPUBackendNames[CGPU_BACKEND_COUNT] = {
-    "vulkan",
-    "d3d12",
-    "d3d12(xbox)",
-    "agc",
-    "metal"
+    SKR_UTF8("vulkan"),
+    SKR_UTF8("d3d12"),
+    SKR_UTF8("d3d12(xbox)"),
+    SKR_UTF8("agc"),
+    SKR_UTF8("metal")
 };
 
 typedef enum ECGPUQueueType
@@ -383,8 +399,9 @@ typedef struct CGPUDStorageBufferIODescriptor {
     uint64_t offset;
     uint64_t uncompressed_size;
     CGPUFenceId fence;
-    const char* name;
+    const char8_t* name;
 } CGPUDStorageBufferIODescriptor;
+
 typedef struct CGPUDStorageTextureIODescriptor {
     CGPUDStorageCompression compression;
     ECGPUDStorageSource source_type;
@@ -405,7 +422,7 @@ typedef struct CGPUDStorageTextureIODescriptor {
     uint32_t depth;
     uint64_t uncompressed_size;
     CGPUFenceId fence;
-    const char* name;
+    const char8_t* name;
 } CGPUDStorageTextureIODescriptor;
 
 RUNTIME_API ECGPUDStorageAvailability cgpu_query_dstorage_availability(CGPUDeviceId device);
@@ -426,6 +443,84 @@ RUNTIME_API void cgpu_dstorage_close_file(CGPUDStorageQueueId queue, CGPUDStorag
 typedef void (*CGPUProcDStorageCloseFile)(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file);
 RUNTIME_API void cgpu_free_dstorage_queue(CGPUDStorageQueueId queue);
 typedef void (*CGPUProcFreeDStorageQueue)(CGPUDStorageQueueId queue);
+
+// EXPERIMENTAL Compiled/Linked ISA APIs
+RUNTIME_API CGPULinkedShaderId cgpu_compile_and_link_shaders(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* descs, uint32_t count);
+typedef CGPULinkedShaderId (*CGPUProcCompileAndLinkShaders)(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* desc, uint32_t count);
+RUNTIME_API void cgpu_compile_shaders(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* descs, uint32_t count, CGPUCompiledShaderId* out_isas);
+typedef void (*CGPUProcCompileShaders)(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* desc, uint32_t count, CGPUCompiledShaderId* out_isas);
+RUNTIME_API void cgpu_free_compiled_shader(CGPUCompiledShaderId shader);
+typedef void (*CGPUProcFreeCompiledShader)(CGPUCompiledShaderId shader);
+RUNTIME_API void cgpu_free_linked_shader(CGPULinkedShaderId shader);
+typedef void (*CGPUProcFreeLinkedShader)(CGPULinkedShaderId shader);
+
+// EXPERIMENTAL StateBuffer APIs
+RUNTIME_API CGPUStateBufferId cgpu_create_state_buffer(CGPUCommandBufferId cmd, const struct CGPUStateBufferDescriptor* desc);
+typedef CGPUStateBufferId (*CGPUProcCreateStateBuffer)(CGPUCommandBufferId cmd, const struct CGPUStateBufferDescriptor* desc);
+RUNTIME_API void cgpu_render_encoder_bind_state_buffer(CGPURenderPassEncoderId encoder, CGPUStateBufferId stream);
+typedef void (*CGPUProcRenderEncoderBindStateBuffer)(CGPURenderPassEncoderId encoder, CGPUStateBufferId stream);
+RUNTIME_API void cgpu_compute_encoder_bind_state_buffer(CGPUComputePassEncoderId encoder, CGPUStateBufferId stream);
+typedef void (*CGPUProcComputeEncoderBindStateBuffer)(CGPUComputePassEncoderId encoder, CGPUStateBufferId stream);
+RUNTIME_API void cgpu_free_state_buffer(CGPUStateBufferId stream);
+typedef void (*CGPUProcFreeStateBuffer)(CGPUStateBufferId stream);
+
+// raster state encoder APIs
+RUNTIME_API CGPURasterStateEncoderId cgpu_open_raster_state_encoder(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
+typedef CGPURasterStateEncoderId (*CGPUProcOpenRasterStateEncoder)(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
+RUNTIME_API void cgpu_raster_state_encoder_set_viewport(CGPURasterStateEncoderId, float x, float y, float width, float height, float min_depth, float max_depth);
+typedef void (*CGPUProcRasterStateEncoderSetViewport)(CGPURasterStateEncoderId, float x, float y, float width, float height, float min_depth, float max_depth);
+RUNTIME_API void cgpu_raster_state_encoder_set_scissor(CGPURasterStateEncoderId, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+typedef void (*CGPUProcRasterStateEncoderSetScissor)(CGPURasterStateEncoderId, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+RUNTIME_API void cgpu_raster_state_encoder_set_cull_mode(CGPURasterStateEncoderId, ECGPUCullMode cull_mode);
+typedef void (*CGPUProcRasterStateEncoderSetCullMode)(CGPURasterStateEncoderId, ECGPUCullMode cull_mode);
+RUNTIME_API void cgpu_raster_state_encoder_set_front_face(CGPURasterStateEncoderId, ECGPUFrontFace front_face);
+typedef void (*CGPUProcRasterStateEncoderSetFrontFace)(CGPURasterStateEncoderId, ECGPUFrontFace front_face);
+RUNTIME_API void cgpu_raster_state_encoder_set_primitive_topology(CGPURasterStateEncoderId, ECGPUPrimitiveTopology topology);
+typedef void (*CGPUProcRasterStateEncoderSetPrimitiveTopology)(CGPURasterStateEncoderId, ECGPUPrimitiveTopology topology);
+RUNTIME_API void cgpu_raster_state_encoder_set_depth_test_enabled(CGPURasterStateEncoderId, bool enabled);
+typedef void (*CGPUProcRasterStateEncoderSetDepthTestEnabled)(CGPURasterStateEncoderId, bool enabled);
+RUNTIME_API void cgpu_raster_state_encoder_set_depth_write_enabled(CGPURasterStateEncoderId, bool enabled);
+typedef void (*CGPUProcRasterStateEncoderSetDepthWriteEnabled)(CGPURasterStateEncoderId, bool enabled);
+RUNTIME_API void cgpu_raster_state_encoder_set_depth_compare_op(CGPURasterStateEncoderId, ECGPUCompareMode compare_op);
+typedef void (*CGPUProcRasterStateEncoderSetDepthCompareOp)(CGPURasterStateEncoderId, ECGPUCompareMode compare_op);
+RUNTIME_API void cgpu_raster_state_encoder_set_stencil_test_enabled(CGPURasterStateEncoderId, bool enabled);
+typedef void (*CGPUProcRasterStateEncoderSetStencilTestEnabled)(CGPURasterStateEncoderId, bool enabled);
+RUNTIME_API void cgpu_raster_state_encoder_set_stencil_compare_op(CGPURasterStateEncoderId, CGPUStencilFaces faces, ECGPUStencilOp failOp, ECGPUStencilOp passOp, ECGPUStencilOp depthFailOp, ECGPUCompareMode compareOp);
+typedef void (*CGPUProcRasterStateEncoderSetStencilCompareOp)(CGPURasterStateEncoderId, CGPUStencilFaces faces, ECGPUStencilOp failOp, ECGPUStencilOp passOp, ECGPUStencilOp depthFailOp, ECGPUCompareMode compareOp);
+RUNTIME_API void cgpu_raster_state_encoder_set_fill_mode(CGPURasterStateEncoderId, ECGPUFillMode fill_mode);
+typedef void (*CGPUProcRasterStateEncoderSetFillMode)(CGPURasterStateEncoderId, ECGPUFillMode fill_mode);
+RUNTIME_API void cgpu_raster_state_encoder_set_sample_count(CGPURasterStateEncoderId, ECGPUSampleCount sample_count);
+typedef void (*CGPUProcRasterStateEncoderSetSampleCount)(CGPURasterStateEncoderId, ECGPUSampleCount sample_count);
+RUNTIME_API void cgpu_close_raster_state_encoder(CGPURasterStateEncoderId encoder);
+typedef void (*CGPUProcCloseRasterStateEncoder)(CGPURasterStateEncoderId encoder);
+
+// shader state encoder APIs
+RUNTIME_API CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_r(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
+typedef CGPUShaderStateEncoderId (*CGPUProcOpenShaderStateEncoderR)(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
+RUNTIME_API CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_c(CGPUStateBufferId stream, CGPUComputePassEncoderId encoder);
+typedef CGPUShaderStateEncoderId (*CGPUProcOpenShaderStateEncoderC)(CGPUStateBufferId stream, CGPUComputePassEncoderId encoder);
+RUNTIME_API void cgpu_shader_state_encoder_bind_shaders(CGPUShaderStateEncoderId, uint32_t stage_count, const ECGPUShaderStage* stages, const CGPUCompiledShaderId* shaders);
+typedef void (*CGPUProcShaderStateEncoderBindShaders)(CGPUShaderStateEncoderId, uint32_t stage_count, const ECGPUShaderStage* stages, const CGPUCompiledShaderId* shaders);
+RUNTIME_API void cgpu_shader_state_encoder_bind_linked_shader(CGPUShaderStateEncoderId, CGPULinkedShaderId linked);
+typedef void (*CGPUProcShaderStateEncoderBindLinkedShader)(CGPUShaderStateEncoderId, CGPULinkedShaderId linked);
+RUNTIME_API void cgpu_close_shader_state_encoder(CGPUShaderStateEncoderId encoder);
+typedef void (*CGPUProcCloseShaderStateEncoder)(CGPUShaderStateEncoderId encoder);
+
+// user state encoder APIs
+RUNTIME_API CGPUUserStateEncoderId cgpu_open_user_state_encoder(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
+typedef CGPUUserStateEncoderId (*CGPUProcOpenUserStateEncoder)(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
+RUNTIME_API void cgpu_close_user_state_encoder(CGPUUserStateEncoderId encoder);
+typedef void (*CGPUProcCloseUserStateEncoder)(CGPUUserStateEncoderId encoder);
+
+// EXPERIMENTAL binder APIs
+RUNTIME_API CGPUBinderId cgpu_create_binder(CGPUCommandBufferId cmd);
+typedef CGPUBinderId (*CGPUProcCreateBinder)(CGPUCommandBufferId cmd);
+RUNTIME_API void cgpu_binder_bind_vertex_layout(CGPUBinderId, const struct CGPUVertexLayout* layout);
+typedef void (*CGPUProcBinderBindVertexLayout)(CGPUBinderId, const struct CGPUVertexLayout* layout);
+RUNTIME_API void cgpu_binder_bind_vertex_buffer(CGPUBinderId, uint32_t first_binding, uint32_t binding_count, const CGPUBufferId* buffers, const uint64_t* offsets, const uint64_t* sizes, const uint64_t* strides);
+typedef void (*CGPUProcBinderBindVertexBuffer)(CGPUBinderId, uint32_t first_binding, uint32_t binding_count, const CGPUBufferId* buffers, const uint64_t* offsets, const uint64_t* sizes, const uint64_t* strides);
+RUNTIME_API void cgpu_free_binder(CGPUBinderId binder);
+typedef void (*CGPUProcFreeBinder)(CGPUBinderId binder);
 
 // cgpux
 RUNTIME_API CGPUBufferId cgpux_create_mapped_constant_buffer(CGPUDeviceId device,
@@ -573,6 +668,51 @@ typedef struct CGPUProcTable {
     const CGPUProcDStorageQueueSubmit dstorage_queue_submit;
     const CGPUProcDStorageCloseFile dstorage_close_file;
     const CGPUProcFreeDStorageQueue free_dstorage_queue;
+
+    // Compiled/Linked ISA APIs
+    const CGPUProcCompileAndLinkShaders compile_and_link_shaders;
+    const CGPUProcCompileShaders compile_shaders;
+    const CGPUProcFreeCompiledShader free_compiled_shader;
+    const CGPUProcFreeLinkedShader free_linked_shader;
+
+    // StateBuffer APIs
+    const CGPUProcCreateStateBuffer create_state_buffer;
+    const CGPUProcRenderEncoderBindStateBuffer render_encoder_bind_state_buffer;
+    const CGPUProcComputeEncoderBindStateBuffer compute_encoder_bind_state_buffer;
+    const CGPUProcFreeStateBuffer free_state_buffer;
+
+    // raster state encoder APIs
+    const CGPUProcOpenRasterStateEncoder open_raster_state_encoder;
+    const CGPUProcRasterStateEncoderSetViewport raster_state_encoder_set_viewport;
+    const CGPUProcRasterStateEncoderSetScissor raster_state_encoder_set_scissor;
+    const CGPUProcRasterStateEncoderSetCullMode raster_state_encoder_set_cull_mode;
+    const CGPUProcRasterStateEncoderSetFrontFace raster_state_encoder_set_front_face;
+    const CGPUProcRasterStateEncoderSetPrimitiveTopology raster_state_encoder_set_primitive_topology;
+    const CGPUProcRasterStateEncoderSetDepthTestEnabled raster_state_encoder_set_depth_test_enabled;
+    const CGPUProcRasterStateEncoderSetDepthWriteEnabled raster_state_encoder_set_depth_write_enabled;
+    const CGPUProcRasterStateEncoderSetDepthCompareOp raster_state_encoder_set_depth_compare_op;
+    const CGPUProcRasterStateEncoderSetStencilTestEnabled raster_state_encoder_set_stencil_test_enabled;
+    const CGPUProcRasterStateEncoderSetStencilCompareOp raster_state_encoder_set_stencil_compare_op;
+    const CGPUProcRasterStateEncoderSetFillMode raster_state_encoder_set_fill_mode;
+    const CGPUProcRasterStateEncoderSetSampleCount raster_state_encoder_set_sample_count;
+    const CGPUProcCloseRasterStateEncoder close_raster_state_encoder;
+
+    // shader state encoder APIs
+    const CGPUProcOpenShaderStateEncoderR open_shader_state_encoder_r;
+    const CGPUProcOpenShaderStateEncoderC open_shader_state_encoder_c;
+    const CGPUProcShaderStateEncoderBindShaders shader_state_encoder_bind_shaders;
+    const CGPUProcShaderStateEncoderBindLinkedShader shader_state_encoder_bind_linked_shader;
+    const CGPUProcCloseShaderStateEncoder close_shader_state_encoder;
+
+    // user state encoder APIs
+    const CGPUProcOpenUserStateEncoder open_user_state_encoder;
+    const CGPUProcCloseUserStateEncoder close_user_state_encoder;
+
+    // binder APIs
+    const CGPUProcCreateBinder create_binder;
+    const CGPUProcBinderBindVertexLayout binder_bind_vertex_layout;
+    const CGPUProcBinderBindVertexBuffer binder_bind_vertex_buffer;
+    const CGPUProcFreeBinder free_binder;
 } CGPUProcTable;
 
 // surfaces
@@ -610,6 +750,59 @@ typedef struct CGPUVendorPreset {
     char gpu_name[MAX_GPU_VENDOR_STRING_LENGTH]; // If GPU Name is missing then value will be empty string
 } CGPUVendorPreset;
 
+static const uint64_t CGPU_DYNAMIC_STATE_CullMode = 1ull << 0;
+static const uint64_t CGPU_DYNAMIC_STATE_FrontFace = 1ull << 1;
+static const uint64_t CGPU_DYNAMIC_STATE_PrimitiveTopology = 1ull << 2;
+static const uint64_t CGPU_DYNAMIC_STATE_DepthTest = 1ull << 3;
+static const uint64_t CGPU_DYNAMIC_STATE_DepthWrite = 1ull << 4;
+static const uint64_t CGPU_DYNAMIC_STATE_DepthCompare = 1ull << 5;
+static const uint64_t CGPU_DYNAMIC_STATE_DepthBoundsTest = 1ull << 6;
+static const uint64_t CGPU_DYNAMIC_STATE_StencilTest = 1ull << 7;
+static const uint64_t CGPU_DYNAMIC_STATE_StencilOp = 1ull << 8;
+static const uint64_t CGPU_DYNAMIC_STATE_Tier1 = (1ull << 9) - 1;
+
+static const uint64_t CGPU_DYNAMIC_STATE_RasterDiscard = 1ull << 9;
+static const uint64_t CGPU_DYNAMIC_STATE_DepthBias = 1ull << 10;
+static const uint64_t CGPU_DYNAMIC_STATE_PrimitiveRestart = 1ull << 11;
+static const uint64_t CGPU_DYNAMIC_STATE_LogicOp = 1ull << 12;
+static const uint64_t CGPU_DYNAMIC_STATE_PatchControlPoints = 1ull << 13;
+static const uint64_t CGPU_DYNAMIC_STATE_Tier2 = (1ull << 14) - 1;
+
+static const uint64_t CGPU_DYNAMIC_STATE_TessellationDomainOrigin = 1ull << 14;
+static const uint64_t CGPU_DYNAMIC_STATE_DepthClampEnable = 1ull << 15;
+static const uint64_t CGPU_DYNAMIC_STATE_PolygonMode = 1ull << 16;
+static const uint64_t CGPU_DYNAMIC_STATE_SampleCount = 1ull << 17;
+static const uint64_t CGPU_DYNAMIC_STATE_SampleMask = 1ull << 18;
+static const uint64_t CGPU_DYNAMIC_STATE_AlphaToCoverageEnable = 1ull << 19;
+static const uint64_t CGPU_DYNAMIC_STATE_AlphaToOneEnable = 1ull << 20;
+static const uint64_t CGPU_DYNAMIC_STATE_LogicOpEnable = 1ull << 21;
+static const uint64_t CGPU_DYNAMIC_STATE_ColorBlendEnable = 1ull << 22;
+static const uint64_t CGPU_DYNAMIC_STATE_ColorBlendEquation = 1ull << 23;
+static const uint64_t CGPU_DYNAMIC_STATE_ColorWriteMask = 1ull << 24;
+static const uint64_t CGPU_DYNAMIC_STATE_RasterStream = 1ull << 25;
+static const uint64_t CGPU_DYNAMIC_STATE_ConservativeRasterMode = 1ull << 26;
+static const uint64_t CGPU_DYNAMIC_STATE_ExtraPrimitiveOverestimationSize = 1ull << 27;
+static const uint64_t CGPU_DYNAMIC_STATE_DepthClipEnable = 1ull << 28;
+static const uint64_t CGPU_DYNAMIC_STATE_SampleLocationsEnable = 1ull << 29;
+static const uint64_t CGPU_DYNAMIC_STATE_ColorBlendAdvanced = 1ull << 30;
+static const uint64_t CGPU_DYNAMIC_STATE_ProvokingVertexMode = 1ull << 31;
+static const uint64_t CGPU_DYNAMIC_STATE_LineRasterizationMode = 1ull << 32;
+static const uint64_t CGPU_DYNAMIC_STATE_LineStippleEnable = 1ull << 33;
+static const uint64_t CGPU_DYNAMIC_STATE_DepthClipNegativeOneToOne = 1ull << 34;
+static const uint64_t CGPU_DYNAMIC_STATE_ViewportWScalingEnable = 1ull << 35;
+static const uint64_t CGPU_DYNAMIC_STATE_ViewportSwizzle = 1ull << 36;
+static const uint64_t CGPU_DYNAMIC_STATE_CoverageToColorEnable = 1ull << 37;
+static const uint64_t CGPU_DYNAMIC_STATE_CoverageToColorLocation = 1ull << 38;
+static const uint64_t CGPU_DYNAMIC_STATE_CoverageModulationMode = 1ull << 39;
+static const uint64_t CGPU_DYNAMIC_STATE_CoverageModulationTableEnable = 1ull << 40;
+static const uint64_t CGPU_DYNAMIC_STATE_CoverageModulationTable = 1ull << 41;
+static const uint64_t CGPU_DYNAMIC_STATE_CoverageReductionMode = 1ull << 42;
+static const uint64_t CGPU_DYNAMIC_STATE_RepresentativeFragmentTestEnable = 1ull << 43;
+static const uint64_t CGPU_DYNAMIC_STATE_ShadingRateImageEnable = 1ull << 44;
+static const uint64_t CGPU_DYNAMIC_STATE_Tier3 = (1ull << 45) - 1;
+
+typedef uint64_t CGPUDynamicStateFeatures;
+
 typedef struct CGPUAdapterDetail {
     uint32_t uniform_buffer_alignment;
     uint32_t upload_buffer_texture_alignment;
@@ -624,6 +817,7 @@ typedef struct CGPUAdapterDetail {
     bool is_uma : 1;
     bool is_virtual : 1;
     bool is_cpu : 1;
+    CGPUDynamicStateFeatures dynamic_state_features;
     // RDNA2 
     bool support_shading_rate : 1;
     bool support_shading_rate_mask : 1;
@@ -688,6 +882,10 @@ typedef struct CGPUCommandBuffer {
     CGPUDeviceId device;
     CGPUCommandPoolId pool;
     ECGPUPipelineType current_dispatch;
+#ifdef __cplusplus
+    inline void begin() const { cgpu_cmd_begin(this); }
+    inline void end() const { cgpu_cmd_end(this); }
+#endif
 } CGPUCommandBuffer;
 
 typedef struct CGPUQueryPool {
@@ -766,7 +964,7 @@ typedef struct CGPUDescriptorData {
         // TODO: Support descriptor buffer extraction
         //struct
         //{
-        //    struct CGPUPipelineShaderDescriptor* shader;
+        //    struct CGPUShaderEntryDescriptor* shader;
         //    uint32_t buffer_index;
         //    ECGPUShaderStage shader_stage;
         //} extraction_params;
@@ -992,7 +1190,7 @@ typedef struct CGPUCommandBufferDescriptor {
     bool is_secondary : 1;
 } CGPUCommandBufferDescriptor;
 
-typedef struct CGPUPipelineShaderDescriptor {
+typedef struct CGPUShaderEntryDescriptor {
     CGPUShaderLibraryId library;
     const char8_t* entry;
     ECGPUShaderStage stage;
@@ -1000,7 +1198,7 @@ typedef struct CGPUPipelineShaderDescriptor {
     const CGPUConstantSpecialization* constants;
     uint32_t num_constants;
     // -- constant_specialization
-} CGPUPipelineShaderDescriptor;
+} CGPUShaderEntryDescriptor;
 
 typedef struct CGPUSwapChainDescriptor {
     /// Present Queues
@@ -1065,7 +1263,7 @@ typedef struct CGPURootSignaturePoolDescriptor {
 } CGPURootSignaturePoolDescriptor;
 
 typedef struct CGPURootSignatureDescriptor {
-    struct CGPUPipelineShaderDescriptor* shaders;
+    struct CGPUShaderEntryDescriptor* shaders;
     uint32_t shader_count;
     const CGPUSamplerId* static_samplers;
     const char8_t* const* static_sampler_names;
@@ -1075,6 +1273,12 @@ typedef struct CGPURootSignatureDescriptor {
     CGPURootSignaturePoolId pool;
 } CGPURootSignatureDescriptor;
 
+typedef struct CGPUCompiledShaderDescriptor {
+    CGPUShaderEntryDescriptor entry;
+    void* shader_code;
+    uint64_t code_size;
+} CGPUCompiledShaderDescriptor;
+
 typedef struct CGPUDescriptorSetDescriptor {
     CGPURootSignatureId root_signature;
     uint32_t set_index;
@@ -1082,7 +1286,7 @@ typedef struct CGPUDescriptorSetDescriptor {
 
 typedef struct CGPUComputePipelineDescriptor {
     CGPURootSignatureId root_signature;
-    CGPUPipelineShaderDescriptor* compute_shader;
+    CGPUShaderEntryDescriptor* compute_shader;
 } CGPUComputePipelineDescriptor;
 
 // caution: this must be a restrict flatten-POD struct (no array pointer, no c-str, ...) cause we directly hash it in cgpux.hpp
@@ -1157,11 +1361,11 @@ typedef struct CGPUVertexLayout {
 
 typedef struct CGPURenderPipelineDescriptor {
     CGPURootSignatureId root_signature;
-    const CGPUPipelineShaderDescriptor* vertex_shader;
-    const CGPUPipelineShaderDescriptor* tesc_shader;
-    const CGPUPipelineShaderDescriptor* tese_shader;
-    const CGPUPipelineShaderDescriptor* geom_shader;
-    const CGPUPipelineShaderDescriptor* fragment_shader;
+    const CGPUShaderEntryDescriptor* vertex_shader;
+    const CGPUShaderEntryDescriptor* tesc_shader;
+    const CGPUShaderEntryDescriptor* tese_shader;
+    const CGPUShaderEntryDescriptor* geom_shader;
+    const CGPUShaderEntryDescriptor* fragment_shader;
     const CGPUVertexLayout* vertex_layout;
     const CGPUBlendStateDescriptor* blend_state;
     const CGPUDepthStateDescriptor* depth_state;
@@ -1227,12 +1431,45 @@ typedef struct CGPURenderPipeline {
     CGPURootSignatureId root_signature;
 } CGPURenderPipeline;
 
+typedef struct CGPUCompiledShader {
+    CGPUDeviceId device;
+    CGPURootSignatureId root_signature;
+} CGPUCompiledShader;
+
+typedef struct CGPULinkedShader {
+    CGPUDeviceId device;
+    CGPURootSignatureId root_signature;
+} CGPULinkedShader;
+
+typedef struct CGPUStateBuffer {
+    CGPUDeviceId device;
+    CGPUCommandBufferId cmd;
+} CGPUStateBuffer;
+
+typedef struct CGPURasterStateEncoder {
+    CGPUDeviceId device;
+} CGPURasterStateEncoder;
+
+typedef struct CGPUShaderStateEncoder {
+    CGPUDeviceId device;
+} CGPUShaderStateEncoder;
+
+typedef struct CGPUUserStateEncoder {
+    CGPUDeviceId device;
+} CGPUUserStateEncoder;
+
+typedef struct CGPUBinder {
+    CGPUDeviceId device;
+    CGPUCommandBufferId cmd;
+} CGPUBinder;
+
 // Resources
 typedef struct CGPUShaderLibraryDescriptor {
     const char8_t* name;
     const uint32_t* code;
     uint32_t code_size;
     ECGPUShaderStage stage;
+    bool reflection_only;
 } CGPUShaderLibraryDescriptor;
 
 typedef struct CGPUBufferDescriptor {
@@ -1395,4 +1632,8 @@ typedef struct CGPUSampler {
 
 #ifdef __cplusplus
 } // end extern "C"
+#endif
+
+#ifdef __clang__
+#pragma clang diagnostic pop
 #endif

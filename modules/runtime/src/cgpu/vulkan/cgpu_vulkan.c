@@ -1,141 +1,9 @@
-#include "platform/debug.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
-#include "cgpu/flags.h"
-#include "utils/log.h"
 #include "vulkan_utils.h"
-#include "vulkan/vulkan_core.h"
 #include "cgpu/shader-reflections/spirv/spirv_reflect.h"
 #include "../common/common_utils.h"
-#ifdef CGPU_THREAD_SAFETY
-    #include "platform/thread.h"
-#endif
+
 #include <string.h>
-
-const CGPUProcTable tbl_vk = {
-    // Instance APIs
-    .create_instance = &cgpu_create_instance_vulkan,
-    .query_instance_features = &cgpu_query_instance_features_vulkan,
-    .free_instance = &cgpu_free_instance_vulkan,
-
-    // Adapter APIs
-    .enum_adapters = &cgpu_enum_adapters_vulkan,
-    .query_adapter_detail = &cgpu_query_adapter_detail_vulkan,
-    .query_queue_count = &cgpu_query_queue_count_vulkan,
-
-    // Device APIs
-    .create_device = &cgpu_create_device_vulkan,
-    .query_video_memory_info = &cgpu_query_video_memory_info_vulkan,
-    .query_shared_memory_info = &cgpu_query_shared_memory_info_vulkan,
-    .free_device = &cgpu_free_device_vulkan,
-
-    // API Object APIs
-    .create_fence = &cgpu_create_fence_vulkan,
-    .wait_fences = &cgpu_wait_fences_vulkan,
-    .query_fence_status = &cgpu_query_fence_status_vulkan,
-    .free_fence = &cgpu_free_fence_vulkan,
-    .create_semaphore = &cgpu_create_semaphore_vulkan,
-    .free_semaphore = &cgpu_free_semaphore_vulkan,
-    .create_root_signature = &cgpu_create_root_signature_vulkan,
-    .free_root_signature = &cgpu_free_root_signature_vulkan,
-    .create_root_signature_pool = &cgpu_create_root_signature_pool_vulkan,
-    .free_root_signature_pool = &cgpu_free_root_signature_pool_vulkan,
-    .create_descriptor_set = &cgpu_create_descriptor_set_vulkan,
-    .update_descriptor_set = &cgpu_update_descriptor_set_vulkan,
-    .free_descriptor_set = &cgpu_free_descriptor_set_vulkan,
-    .create_compute_pipeline = &cgpu_create_compute_pipeline_vulkan,
-    .free_compute_pipeline = &cgpu_free_compute_pipeline_vulkan,
-    .create_render_pipeline = &cgpu_create_render_pipeline_vulkan,
-    .free_render_pipeline = &cgpu_free_render_pipeline_vulkan,
-    .create_query_pool = &cgpu_create_query_pool_vulkan,
-    .free_query_pool = &cgpu_free_query_pool_vulkan,
-
-    // Queue APIs
-    .get_queue = &cgpu_get_queue_vulkan,
-    .submit_queue = &cgpu_submit_queue_vulkan,
-    .wait_queue_idle = &cgpu_wait_queue_idle_vulkan,
-    .queue_present = &cgpu_queue_present_vulkan,
-    .queue_get_timestamp_period = &cgpu_queue_get_timestamp_period_ns_vulkan,
-    .free_queue = &cgpu_free_queue_vulkan,
-
-    // Command APIs
-    .create_command_pool = &cgpu_create_command_pool_vulkan,
-    .create_command_buffer = &cgpu_create_command_buffer_vulkan,
-    .reset_command_pool = &cgpu_reset_command_pool_vulkan,
-    .free_command_buffer = &cgpu_free_command_buffer_vulkan,
-    .free_command_pool = &cgpu_free_command_pool_vulkan,
-
-    // Shader APIs
-    .create_shader_library = &cgpu_create_shader_library_vulkan,
-    .free_shader_library = &cgpu_free_shader_library_vulkan,
-
-    // Buffer APIs
-    .create_buffer = &cgpu_create_buffer_vulkan,
-    .map_buffer = &cgpu_map_buffer_vulkan,
-    .unmap_buffer = &cgpu_unmap_buffer_vulkan,
-    .free_buffer = &cgpu_free_buffer_vulkan,
-
-    // Texture/TextureView APIs
-    .create_texture = &cgpu_create_texture_vulkan,
-    .free_texture = &cgpu_free_texture_vulkan,
-    .create_texture_view = &cgpu_create_texture_view_vulkan,
-    .free_texture_view = &cgpu_free_texture_view_vulkan,
-    .try_bind_aliasing_texture = &cgpu_try_bind_aliasing_texture_vulkan,
-
-    // Shared Resource APIs
-    .export_shared_texture_handle = &cgpu_export_shared_texture_handle_vulkan,
-    .import_shared_texture_handle = &cgpu_import_shared_texture_handle_vulkan,
-
-    // Sampler APIs
-    .create_sampler = &cgpu_create_sampler_vulkan,
-    .free_sampler = &cgpu_free_sampler_vulkan,
-
-    // Swapchain APIs
-    .create_swapchain = &cgpu_create_swapchain_vulkan,
-    .acquire_next_image = &cgpu_acquire_next_image_vulkan,
-    .free_swapchain = &cgpu_free_swapchain_vulkan,
-
-    // CMDs
-    .cmd_begin = &cgpu_cmd_begin_vulkan,
-    .cmd_transfer_buffer_to_buffer = &cgpu_cmd_transfer_buffer_to_buffer_vulkan,
-    .cmd_transfer_buffer_to_texture = &cgpu_cmd_transfer_buffer_to_texture_vulkan,
-    .cmd_transfer_texture_to_texture = &cgpu_cmd_transfer_texture_to_texture_vulkan,
-    .cmd_resource_barrier = &cgpu_cmd_resource_barrier_vulkan,
-    .cmd_begin_query = &cgpu_cmd_begin_query_vulkan,
-    .cmd_end_query = &cgpu_cmd_end_query_vulkan,
-    .cmd_reset_query_pool = &cgpu_cmd_reset_query_pool_vulkan,
-    .cmd_resolve_query = &cgpu_cmd_resolve_query_vulkan,
-    .cmd_end = &cgpu_cmd_end_vulkan,
-
-    // Events
-    .cmd_begin_event = &cgpu_cmd_begin_event_vulkan,
-    .cmd_set_marker = &cgpu_cmd_set_marker_vulkan,
-    .cmd_end_event = &cgpu_cmd_end_event_vulkan,
-
-    // Compute CMDs
-    .cmd_begin_compute_pass = &cgpu_cmd_begin_compute_pass_vulkan,
-    .compute_encoder_bind_descriptor_set = &cgpu_compute_encoder_bind_descriptor_set_vulkan,
-    .compute_encoder_push_constants = &cgpu_compute_encoder_push_constants_vulkan,
-    .compute_encoder_bind_pipeline = &cgpu_compute_encoder_bind_pipeline_vulkan,
-    .compute_encoder_dispatch = &cgpu_compute_encoder_dispatch_vulkan,
-    .cmd_end_compute_pass = &cgpu_cmd_end_compute_pass_vulkan,
-
-    // Render CMDs
-    .cmd_begin_render_pass = &cgpu_cmd_begin_render_pass_vulkan,
-    .render_encoder_set_shading_rate = &cgpu_render_encoder_set_shading_rate_vulkan,
-    .render_encoder_bind_descriptor_set = cgpu_render_encoder_bind_descriptor_set_vulkan,
-    .render_encoder_set_viewport = &cgpu_render_encoder_set_viewport_vulkan,
-    .render_encoder_set_scissor = &cgpu_render_encoder_set_scissor_vulkan,
-    .render_encoder_bind_pipeline = &cgpu_render_encoder_bind_pipeline_vulkan,
-    .render_encoder_bind_vertex_buffers = &cgpu_render_encoder_bind_vertex_buffers_vulkan,
-    .render_encoder_bind_index_buffer = &cgpu_render_encoder_bind_index_buffer_vulkan,
-    .render_encoder_push_constants = &cgpu_render_encoder_push_constants_vulkan,
-    .render_encoder_draw = &cgpu_render_encoder_draw_vulkan,
-    .render_encoder_draw_instanced = &cgpu_render_encoder_draw_instanced_vulkan,
-    .render_encoder_draw_indexed = &cgpu_render_encoder_draw_indexed_vulkan,
-    .render_encoder_draw_indexed_instanced = &cgpu_render_encoder_draw_indexed_instanced_vulkan,
-    .cmd_end_render_pass = &cgpu_cmd_end_render_pass_vulkan
-};
-const CGPUProcTable* CGPU_VulkanProcTable() { return &tbl_vk; }
 
 static void VkUtil_FindOrCreateFrameBuffer(const CGPUDevice_Vulkan* D, const struct VkUtil_FramebufferDesc* pDesc, VkFramebuffer* ppFramebuffer)
 {
@@ -472,8 +340,7 @@ CGPURootSignatureId cgpu_create_root_signature_vulkan(CGPUDeviceId device,
 const struct CGPURootSignatureDescriptor* desc)
 {
     const CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)device;
-    CGPURootSignature_Vulkan* RS = (CGPURootSignature_Vulkan*)cgpu_calloc(1,
-    sizeof(CGPURootSignature_Vulkan));
+    CGPURootSignature_Vulkan* RS = (CGPURootSignature_Vulkan*)cgpu_calloc(1, sizeof(CGPURootSignature_Vulkan));
     CGPUUtil_InitRSParamTables((CGPURootSignature*)RS, desc);
     // [RS POOL] ALLOCATION
     if (desc->pool)
@@ -559,10 +426,9 @@ const struct CGPURootSignatureDescriptor* desc)
                 .bindingCount = i_binding
             };
             CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorSetLayout(D->pVkDevice,
-            &set_info, GLOBAL_VkAllocationCallbacks,
-            &RS->pSetLayouts[set_index].layout));
-            VkUtil_ConsumeDescriptorSets(D->pDescriptorPool,
-            &RS->pSetLayouts[set_index].layout, &RS->pSetLayouts[set_index].pEmptyDescSet, 1);
+                &set_info, GLOBAL_VkAllocationCallbacks, &RS->pSetLayouts[set_index].layout));
+            VkUtil_ConsumeDescriptorSets(D->pDescriptorPool, &RS->pSetLayouts[set_index].layout,
+                &RS->pSetLayouts[set_index].pEmptyDescSet, 1);
 
             if (bindings_count) cgpu_free(vkbindings);
         }
@@ -584,11 +450,11 @@ const struct CGPURootSignatureDescriptor* desc)
         }
     }
     // Record Descriptor Sets
-    VkDescriptorSetLayout* pSetLayouts = cgpu_calloc(set_count, sizeof(VkDescriptorSetLayout));
+    RS->pVkSetLayouts = cgpu_calloc(set_count, sizeof(VkDescriptorSetLayout));
     for (uint32_t i_set = 0; i_set < set_count; i_set++)
     {
         SetLayout_Vulkan* set_to_record = (SetLayout_Vulkan*)&RS->pSetLayouts[i_set];
-        pSetLayouts[i_set] = set_to_record->layout;
+        RS->pVkSetLayouts[i_set] = set_to_record->layout;
     }
     // Create Pipeline Layout
     VkPipelineLayoutCreateInfo pipeline_info = {
@@ -596,7 +462,7 @@ const struct CGPURootSignatureDescriptor* desc)
         .pNext = NULL,
         .flags = 0,
         .setLayoutCount = set_count,
-        .pSetLayouts = pSetLayouts,
+        .pSetLayouts = RS->pVkSetLayouts,
         .pushConstantRangeCount = RS->super.push_constant_count,
         .pPushConstantRanges = RS->pPushConstRanges
     };
@@ -608,7 +474,7 @@ const struct CGPURootSignatureDescriptor* desc)
         SetLayout_Vulkan* set_to_record = &RS->pSetLayouts[param_table->set_index];
         uint32_t update_entry_count = param_table->resources_count;
         VkDescriptorUpdateTemplateEntry* template_entries = (VkDescriptorUpdateTemplateEntry*)cgpu_calloc(
-        param_table->resources_count, sizeof(VkDescriptorUpdateTemplateEntry));
+            param_table->resources_count, sizeof(VkDescriptorUpdateTemplateEntry));
         for (uint32_t i_iter = 0; i_iter < param_table->resources_count; i_iter++)
         {
             uint32_t i_binding = param_table->resources[i_iter].binding;
@@ -635,12 +501,10 @@ const struct CGPURootSignatureDescriptor* desc)
             };
             set_to_record->mUpdateEntriesCount = update_entry_count;
             CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorUpdateTemplate(D->pVkDevice,
-            &template_info, GLOBAL_VkAllocationCallbacks, &set_to_record->pUpdateTemplate));
+                &template_info, GLOBAL_VkAllocationCallbacks, &set_to_record->pUpdateTemplate));
         }
         cgpu_free(template_entries);
     }
-    // Free Temporal Memory
-    cgpu_free(pSetLayouts);
     // [RS POOL] INSERTION
     if (desc->pool)
     {
@@ -673,6 +537,7 @@ void cgpu_free_root_signature_vulkan(CGPURootSignatureId signature)
         if (set_to_free->pUpdateTemplate != VK_NULL_HANDLE)
             D->mVkDeviceTable.vkDestroyDescriptorUpdateTemplate(D->pVkDevice, set_to_free->pUpdateTemplate, GLOBAL_VkAllocationCallbacks);
     }
+    cgpu_free(RS->pVkSetLayouts);
     cgpu_free(RS->pSetLayouts);
     cgpu_free(RS->pPushConstRanges);
     D->mVkDeviceTable.vkDestroyPipelineLayout(D->pVkDevice, RS->pPipelineLayout, GLOBAL_VkAllocationCallbacks);
@@ -877,75 +742,40 @@ void cgpu_free_compute_pipeline_vulkan(CGPUComputePipelineId pipeline)
     cgpu_free(PPL);
 }
 
-VkCullModeFlagBits gVkCullModeTranslator[CGPU_CULL_MODE_COUNT] = {
-    VK_CULL_MODE_NONE,
-    VK_CULL_MODE_BACK_BIT,
-    VK_CULL_MODE_FRONT_BIT
-};
-
-VkPolygonMode gVkFillModeTranslator[CGPU_FILL_MODE_COUNT] = {
-    VK_POLYGON_MODE_FILL,
-    VK_POLYGON_MODE_LINE
-};
-
-VkFrontFace gVkFrontFaceTranslator[] = {
-    VK_FRONT_FACE_COUNTER_CLOCKWISE,
-    VK_FRONT_FACE_CLOCKWISE
-};
-VkBlendFactor gVkBlendConstantTranslator[CGPU_BLEND_CONST_COUNT] = {
-    VK_BLEND_FACTOR_ZERO,
-    VK_BLEND_FACTOR_ONE,
-    VK_BLEND_FACTOR_SRC_COLOR,
-    VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
-    VK_BLEND_FACTOR_DST_COLOR,
-    VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR,
-    VK_BLEND_FACTOR_SRC_ALPHA,
-    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-    VK_BLEND_FACTOR_DST_ALPHA,
-    VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA,
-    VK_BLEND_FACTOR_SRC_ALPHA_SATURATE,
-    VK_BLEND_FACTOR_CONSTANT_COLOR,
-    VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR,
-};
-VkBlendOp gVkBlendOpTranslator[CGPU_BLEND_MODE_COUNT] = {
-    VK_BLEND_OP_ADD,
-    VK_BLEND_OP_SUBTRACT,
-    VK_BLEND_OP_REVERSE_SUBTRACT,
-    VK_BLEND_OP_MIN,
-    VK_BLEND_OP_MAX,
-};
 /* clang-format off */
+static const char* kVkPSOMemoryPoolName = "cgpu::vk_pso";
 CGPURenderPipelineId cgpu_create_render_pipeline_vulkan(CGPUDeviceId device, const struct CGPURenderPipelineDescriptor* desc)
 {
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)device;
     CGPURootSignature_Vulkan* RS = (CGPURootSignature_Vulkan*)desc->root_signature;
-    CGPURenderPipeline_Vulkan* RP = (CGPURenderPipeline_Vulkan*)cgpu_calloc(1, sizeof(CGPURenderPipeline_Vulkan));
-    // TODO: Shader spec
-    const VkSpecializationInfo* specializationInfo = VK_NULL_HANDLE;
-    // Vertex input state
+    
     uint32_t input_binding_count = 0;
-	DECLARE_ZERO(VkVertexInputBindingDescription, input_bindings[CGPU_MAX_VERTEX_BINDINGS]) 
-	uint32_t  input_attribute_count = 0;
-	DECLARE_ZERO(VkVertexInputAttributeDescription, input_attributes[CGPU_MAX_VERTEX_BINDINGS * 4]) 
-    // Make sure there's attributes
+	uint32_t input_attribute_count = 0;
+    VkUtil_GetVertexInputBindingAttrCount(desc->vertex_layout, &input_binding_count, &input_attribute_count);
+    uint64_t dsize = sizeof(CGPURenderPipeline_Vulkan);
+    const uint64_t input_elements_offset = dsize;
+    dsize += (sizeof(VkVertexInputBindingDescription) * input_binding_count);
+    const uint64_t input_attrs_offset = dsize;
+    dsize += (sizeof(VkVertexInputAttributeDescription) * input_attribute_count);
+
+    uint8_t* ptr = (uint8_t*)cgpu_callocN(1, dsize, kVkPSOMemoryPoolName);
+    CGPURenderPipeline_Vulkan* RP = (CGPURenderPipeline_Vulkan*)ptr;
+    VkVertexInputBindingDescription* input_bindings = (VkVertexInputBindingDescription*)(ptr + input_elements_offset);
+    VkVertexInputAttributeDescription* input_attributes = (VkVertexInputAttributeDescription*)(ptr + input_attrs_offset);
+    // Vertex input state
     if (desc->vertex_layout != NULL)
     {
         // Ignore everything that's beyond CGPU_MAX_VERTEX_ATTRIBS
         uint32_t attrib_count = desc->vertex_layout->attribute_count > CGPU_MAX_VERTEX_ATTRIBS ? CGPU_MAX_VERTEX_ATTRIBS : desc->vertex_layout->attribute_count;
-        uint32_t binding_value = UINT32_MAX;
+        uint32_t attr_slot = 0;
         // Initial values
         for (uint32_t i = 0; i < attrib_count; ++i)
         {
             const CGPUVertexAttribute* attrib = &(desc->vertex_layout->attributes[i]);
             const uint32_t array_size = attrib->array_size ? attrib->array_size : 1;
 
-            if (binding_value != attrib->binding)
-            {
-                binding_value = attrib->binding;
-                input_binding_count += 1;
-            }
-            VkVertexInputBindingDescription* current_binding = &input_bindings[binding_value];
-            current_binding->binding = binding_value;
+            VkVertexInputBindingDescription* current_binding = &input_bindings[attrib->binding];
+            current_binding->binding = attrib->binding;
             if (attrib->rate == CGPU_INPUT_RATE_INSTANCE)
                 current_binding->inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
             else
@@ -954,14 +784,18 @@ CGPURenderPipelineId cgpu_create_render_pipeline_vulkan(CGPUDeviceId device, con
             
             for(uint32_t j = 0; j < array_size; j++)
             {
-                input_attributes[input_attribute_count].location = input_attribute_count;
-                input_attributes[input_attribute_count].binding = attrib->binding;
-                input_attributes[input_attribute_count].format = VkUtil_FormatTranslateToVk(attrib->format);
-                input_attributes[input_attribute_count].offset = attrib->offset + (j * FormatUtil_BitSizeOfBlock(attrib->format) / 8);
-                ++input_attribute_count;
+                input_attributes[attr_slot].location = attr_slot;
+                input_attributes[attr_slot].binding = attrib->binding;
+                input_attributes[attr_slot].format = VkUtil_FormatTranslateToVk(attrib->format);
+                input_attributes[attr_slot].offset = attrib->offset + (j * FormatUtil_BitSizeOfBlock(attrib->format) / 8);
+                ++attr_slot;
             }
         }
     }
+
+    // TODO: const spec
+    const VkSpecializationInfo* specializationInfo = VK_NULL_HANDLE;
+
     VkPipelineVertexInputStateCreateInfo vi = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
 		.pNext = NULL,
@@ -1083,17 +917,7 @@ CGPURenderPipelineId cgpu_create_render_pipeline_vulkan(CGPUDeviceId device, con
 		.alphaToOneEnable = VK_FALSE
     };
     // IA stage
-    VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-    switch (desc->prim_topology)
-    {
-        case CGPU_PRIM_TOPO_POINT_LIST: topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST; break;
-        case CGPU_PRIM_TOPO_LINE_LIST: topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST; break;
-        case CGPU_PRIM_TOPO_LINE_STRIP: topology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP; break;
-        case CGPU_PRIM_TOPO_TRI_STRIP: topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; break;
-        case CGPU_PRIM_TOPO_PATCH_LIST: topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST; break;
-        case CGPU_PRIM_TOPO_TRI_LIST: topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; break;
-        default:  cgpu_assert(false && "Primitive Topo not supported!"); break;
-    }
+    VkPrimitiveTopology topology = VkUtil_TranslateTopology(desc->prim_topology);
     VkPipelineInputAssemblyStateCreateInfo ia = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
         .pNext = NULL,
@@ -1246,7 +1070,7 @@ void cgpu_free_render_pipeline_vulkan(CGPURenderPipelineId pipeline)
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)pipeline->device;
     CGPURenderPipeline_Vulkan* RP = (CGPURenderPipeline_Vulkan*)pipeline;
     D->mVkDeviceTable.vkDestroyPipeline(D->pVkDevice, RP->pVkPipeline, GLOBAL_VkAllocationCallbacks);
-    cgpu_free(RP);
+    cgpu_freeN(RP, kVkPSOMemoryPoolName);
 }
 
 VkQueryType VkUtil_ToVkQueryType(ECGPUQueryType type)

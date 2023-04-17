@@ -68,14 +68,14 @@ void cgpu_cmd_begin_event_d3d12(CGPUCommandBufferId cmd, const CGPUEventInfo* ev
 {
     CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)cmd;
     const auto eventColor = encode_color_for_pix(event->color);
-    PIXBeginEvent(Cmd->pDxCmdList, eventColor, event->name);
+    PIXBeginEvent(Cmd->pDxCmdList, eventColor, (const char*)event->name);
 }
 
 void cgpu_cmd_set_marker_d3d12(CGPUCommandBufferId cmd, const CGPUMarkerInfo* marker)
 {
     CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)cmd;
     const auto markerColor = encode_color_for_pix(marker->color);
-    PIXSetMarker(Cmd->pDxCmdList, markerColor, marker->name);
+    PIXSetMarker(Cmd->pDxCmdList, markerColor, (const char*)marker->name);
 }
 
 void cgpu_cmd_end_event_d3d12(CGPUCommandBufferId cmd)
@@ -338,7 +338,7 @@ void D3D12Util_SignalFence(CGPUQueue_D3D12* Q, ID3D12Fence* DxF, uint64_t fenceV
 }
 
 // Shader Reflection
-const char8_t* D3DShaderEntryName = "FuckD3D";
+const char8_t* D3DShaderEntryName = CGPU_NULLPTR;
 static ECGPUResourceType gD3D12_TO_DESCRIPTOR[] = {
     CGPU_RESOURCE_TYPE_UNIFORM_BUFFER, // D3D_SIT_CBUFFER
     CGPU_RESOURCE_TYPE_BUFFER,         // D3D_SIT_TBUFFER
@@ -409,7 +409,7 @@ void reflectionRecordShaderResources(ID3D12ReflectionT* d3d12reflection, ECGPUSh
         Reflection->shader_resources[i].name = (char8_t*)cgpu_malloc(sizeof(char8_t) * (source_len + 1));
         Reflection->shader_resources[i].name_hash = cgpu_name_hash(bindDesc.Name, strlen(bindDesc.Name));
         // We are very sure it's windows platform
-        strcpy_s((char8_t*)Reflection->shader_resources[i].name, source_len + 1, bindDesc.Name);
+        strcpy_s((char*)Reflection->shader_resources[i].name, source_len + 1, bindDesc.Name);
         Reflection->shader_resources[i].type = gD3D12_TO_DESCRIPTOR[bindDesc.Type];
         Reflection->shader_resources[i].set = bindDesc.Space;
         Reflection->shader_resources[i].binding = bindDesc.BindPoint;
@@ -461,9 +461,9 @@ FORCEINLINE void D3D12Util_CollectShaderReflectionData(ID3D12ShaderReflection* d
 
             Reflection->vertex_inputs[i].name = (char8_t*)cgpu_malloc(sizeof(char8_t) * (source_len + 1));
             if (hasParamIndex)
-                sprintf((char8_t*)Reflection->vertex_inputs[i].name, "%s%u", paramDesc.SemanticName, paramDesc.SemanticIndex);
+                sprintf((char*)Reflection->vertex_inputs[i].name, "%s%u", paramDesc.SemanticName, paramDesc.SemanticIndex);
             else
-                sprintf((char8_t*)Reflection->vertex_inputs[i].name, "%s", paramDesc.SemanticName);
+                sprintf((char*)Reflection->vertex_inputs[i].name, "%s", paramDesc.SemanticName);
             const uint32_t Comps = (uint32_t)log2(paramDesc.Mask);
             Reflection->vertex_inputs[i].format = gD3D12_TO_VERTEX_FORMAT[paramDesc.ComponentType + 3 * Comps];
         }

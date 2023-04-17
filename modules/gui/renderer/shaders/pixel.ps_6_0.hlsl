@@ -2,7 +2,8 @@
 
 struct VSOut
 {
-    float4 position : SV_POSITION;
+    // ignore SV_POSITION in pixel shader if we dont use it
+    //float4 position : SV_POSITION;
     float2 texcoord : TEXCOORD0;
     float2 aa : AA;
     float2 clip_uv : UV;

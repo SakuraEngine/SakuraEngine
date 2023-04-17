@@ -6,6 +6,16 @@
     #include <stdint.h>
 #endif
 
+#if __cplusplus >= 201100L
+#define SKR_UTF8(str) u8##str
+#else
+#define SKR_UTF8(str) str
+#endif
+
+#if __cplusplus >= 202000L
+#define CHAR8_T_DEFINED
+#endif
+
 #define SKR_IS_BIG_ENDIAN 0
 #define SKR_IS_LITTLE_ENDIAN 1
 
@@ -67,7 +77,6 @@
 #define simport_struct_impl_impl(idx, name) struct sreflect import_##idx { using type = ::name; } sattr("inject" : #name)
 #define simport_struct_impl(idx, name) simport_struct_impl_impl(idx, name)
 #define simport_struct(name) simport_struct_impl(__COUNTER__, name)
-
 
 typedef struct $T { uint32_t _; } $T;
 typedef struct $Super { uint32_t _; } $Super;
@@ -210,7 +219,7 @@ extern const char* $name;
     #if defined(EA_PLATFORM_APPLE)
         #define char8_t char // The Apple debugger is too stupid to realize char8_t is typedef'd to char, so we #define it.
     #else
-typedef char char8_t;
+        typedef char char8_t;
     #endif
 #endif
 

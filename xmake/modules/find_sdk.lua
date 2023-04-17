@@ -84,8 +84,8 @@ function install_lib_to(lib_name, where)
     local sdkdir = sdkdir or os.projectdir().."/SDKs"
     local zip_file = vformat(lib_name.."-$(os)-"..config.arch()..".zip")
     local zip_dir = nil
-    print("install: "..zip_file)
-    if(is_mode("debug") or is_mode("releasedbg")) then
+    print("install: "..zip_file.." to: "..where)
+    if(is_mode("asan") or is_mode("debug") or is_mode("releasedbg")) then
         local zip_file_d = vformat(lib_name.."_d-$(os)-"..config.arch()..".zip")
         zip_dir = find_file(zip_file_d, {sdkdir})
     end

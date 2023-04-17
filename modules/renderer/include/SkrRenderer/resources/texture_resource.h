@@ -104,7 +104,7 @@ struct SKR_RENDERER_API STextureFactory : public SResourceFactory {
 
     struct Root {
         skr_vfs_t* vfs = nullptr;
-        skr::string dstorage_root;
+        const char8_t* dstorage_root;
         skr_io_ram_service_t* ram_service = nullptr;
         skr_io_vram_service_t* vram_service = nullptr;
         SRenderDeviceId render_device = nullptr;

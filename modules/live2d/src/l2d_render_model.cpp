@@ -179,7 +179,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
             vram_texture_io.dstorage.queue = file_dstorage_queue;
             vram_texture_io.dstorage.uncompressed_size = resolution * resolution * 4;
 
-            vram_texture_io.vtexture.texture_name = texture_path;
+            vram_texture_io.vtexture.texture_name = (const char8_t*)texture_path;
             vram_texture_io.vtexture.resource_types = CGPU_RESOURCE_TYPE_TEXTURE;
             vram_texture_io.vtexture.width = resolution;
             vram_texture_io.vtexture.height = resolution;
@@ -274,9 +274,10 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         ZoneScopedN("CreateLive2DVertexBuffer");
 
         auto vb_desc = make_zeroed<CGPUBufferDescriptor>();
-        skr::string name = resource->model_setting->GetModelFileName();
-        auto pos_name = name + skr::string("-pos");
-        vb_desc.name = pos_name.c_str();
+        skr::text::text name = (const char8_t*)resource->model_setting->GetModelFileName();
+        auto pos_name = name;
+        pos_name += u8"-pos";
+        vb_desc.name = pos_name.u8_str();
         vb_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
         vb_desc.flags = use_dynamic_buffer ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE;
         vb_desc.memory_usage = use_dynamic_buffer ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY;
@@ -284,8 +285,9 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         vb_desc.size = total_vertex_count * sizeof(skr_live2d_vertex_pos_t);
         render_model->pos_buffer = cgpu_create_buffer(device, &vb_desc);
 
-        auto uv_name = name + skr::string("-uv");
-        vb_desc.name = uv_name.c_str();
+        auto uv_name = name;
+        uv_name += u8"-uv";
+        vb_desc.name = uv_name.u8_str();
         vb_desc.size = total_vertex_count * sizeof(skr_live2d_vertex_uv_t);
         render_model->uv_buffer = cgpu_create_buffer(device, &vb_desc);
     }
@@ -294,9 +296,10 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         ZoneScopedN("CreateLive2DIndexBuffer");
 
         auto ib_desc = make_zeroed<CGPUBufferDescriptor>();
-        skr::string name = resource->model_setting->GetModelFileName();
-        auto ind_name = name + skr::string("-i");
-        ib_desc.name = ind_name.c_str();
+        skr::text::text name = (const char8_t*)resource->model_setting->GetModelFileName();
+        auto ind_name = name;
+        ind_name += u8"-i";
+        ib_desc.name = ind_name.u8_str();
         ib_desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER;
         ib_desc.flags = CGPU_BCF_NONE;
         ib_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;

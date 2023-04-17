@@ -5,8 +5,9 @@
 
 #include <string> // TODO: replace this (std::stoi)
 #include <platform/filesystem.hpp>
+#include <containers/text.hpp>
 
-#include "../../common/utils.h"
+#include "common/utils.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "cgpu/extensions/cgpu_nsight.h"
 
@@ -43,9 +44,11 @@ struct ReceiverRenderer
 
 void ReceiverRenderer::create_window()
 {
-    skr::string title = "Cross-Process Receiver [";
-    title = title + gCGPUBackendNames[backend] + "]";
-    title = title + " PID: " + skr::to_string(skr_get_current_process_id());
+    skr::text::text title = u8"Cross-Process Receiver [";
+    title += gCGPUBackendNames[backend];
+    title += u8"]";
+    title += u8" PID: ";
+    title += skr::text::format(u8"{}", skr_get_current_process_id());
     sdl_window = SDL_CreateWindow(title.c_str(),
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT,
@@ -125,17 +128,17 @@ void ReceiverRenderer::create_blit_pipeline()
 {
     uint32_t *vs_bytes, vs_length;
     uint32_t *fs_bytes, fs_length;
-    read_shader_bytes("cross-process/screen_vs", &vs_bytes, &vs_length,
+    read_shader_bytes(u8"cross-process/screen_vs", &vs_bytes, &vs_length,
     device->adapter->instance->backend);
-    read_shader_bytes("cross-process/blit_fs", &fs_bytes, &fs_length,
+    read_shader_bytes(u8"cross-process/blit_fs", &fs_bytes, &fs_length,
     device->adapter->instance->backend);
     CGPUShaderLibraryDescriptor vs_desc = {};
     vs_desc.stage = CGPU_SHADER_STAGE_VERT;
-    vs_desc.name = "ScreenVertexShader";
+    vs_desc.name = u8"ScreenVertexShader";
     vs_desc.code = vs_bytes;
     vs_desc.code_size = vs_length;
     CGPUShaderLibraryDescriptor ps_desc = {};
-    ps_desc.name = "BlitFragmentShader";
+    ps_desc.name = u8"BlitFragmentShader";
     ps_desc.stage = CGPU_SHADER_STAGE_FRAG;
     ps_desc.code = fs_bytes;
     ps_desc.code_size = fs_length;
@@ -143,14 +146,14 @@ void ReceiverRenderer::create_blit_pipeline()
     auto blit_fs = cgpu_create_shader_library(device, &ps_desc);
     free(vs_bytes);
     free(fs_bytes);
-    CGPUPipelineShaderDescriptor ppl_shaders[2];
+    CGPUShaderEntryDescriptor ppl_shaders[2];
     ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
-    ppl_shaders[0].entry = "main";
+    ppl_shaders[0].entry = u8"main";
     ppl_shaders[0].library = screen_vs;
     ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
-    ppl_shaders[1].entry = "main";
+    ppl_shaders[1].entry = u8"main";
     ppl_shaders[1].library = blit_fs;
-    const char8_t* static_sampler_name = "texture_sampler";
+    const char8_t* static_sampler_name = u8"texture_sampler";
     CGPURootSignatureDescriptor rs_desc = {};
     rs_desc.shaders = ppl_shaders;
     rs_desc.shader_count = 2;
@@ -314,7 +317,7 @@ int receiver_main(int argc, char* argv[])
         CGPUTextureId to_import = renderer->swapchain->back_buffers[renderer->backbuffer_index];
         auto back_buffer = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-                builder.set_name("backbuffer")
+                builder.set_name(u8"backbuffer")
                 .import(to_import, CGPU_RESOURCE_STATE_UNDEFINED)
                 .allow_render_target();
             });
@@ -337,14 +340,14 @@ int receiver_main(int argc, char* argv[])
         {
             auto imported_texture = graph->create_texture(
                 [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-                    builder.set_name("imported_texture")
+                    builder.set_name(u8"imported_texture")
                         .import(cached_texture, CGPU_RESOURCE_STATE_UNDEFINED);
                 });
             graph->add_render_pass(
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
-                    builder.set_name("final_blit")
+                    builder.set_name(u8"final_blit")
                         .set_pipeline(renderer->blit_pipeline)
-                        .read("input_color", imported_texture)
+                        .read(u8"input_color", imported_texture)
                         .write(0, back_buffer, CGPU_LOAD_ACTION_CLEAR);
                 },
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
@@ -358,7 +361,7 @@ int receiver_main(int argc, char* argv[])
         }
         graph->add_present_pass(
             [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
-                builder.set_name("present")
+                builder.set_name(u8"present")
                 .swapchain(renderer->swapchain, renderer->backbuffer_index)
                 .texture(back_buffer, true);
             });

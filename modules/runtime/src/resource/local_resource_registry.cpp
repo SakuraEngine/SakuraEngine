@@ -58,7 +58,7 @@ bool SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
     auto resourcePath = headerPath;
     resourcePath.replace_extension(".bin");
     auto resourceUri = resourcePath.u8string();
-    FillRequest(request, header, vfs, resourceUri.c_str());
+    FillRequest(request, header, vfs, (const char*)resourceUri.c_str());
     request->OnRequestFileFinished();
     return true;
 }

@@ -63,10 +63,13 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
     {
         ZoneScopedN("Request Model");
 
-        modelPath = data->u8HomePath + "/" + mFile;
+        modelPath += data->u8HomePath;
+        modelPath += u8"/";
+        modelPath += (const char8_t*)mFile;
+
         SKR_LOG_TRACE("Live2D Model %s at %s", mFile, modelPath.c_str());
         skr_ram_io_t ramIO = make_zeroed<skr_ram_io_t>();
-        ramIO.path = modelPath.c_str();
+        ramIO.path = modelPath.u8_str();
         ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
             ZoneScopedN("Create Model");
             auto _this = (csmUserModel*)data;
@@ -85,10 +88,13 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
     {
         ZoneScopedN("Request Physics");
 
-        pyhsicsPath = data->u8HomePath + "/" + phFile;
+        pyhsicsPath += data->u8HomePath;
+        pyhsicsPath += u8"/";
+        pyhsicsPath += (const char8_t*)phFile;
+
         SKR_LOG_TRACE("Live2D Physics %s at %s", phFile, pyhsicsPath.c_str());
         skr_ram_io_t ramIO = make_zeroed<skr_ram_io_t>();
-        ramIO.path = pyhsicsPath.c_str();
+        ramIO.path = pyhsicsPath.u8_str();
         ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
             ZoneScopedN("Create Physics");
             auto _this = (csmUserModel*)data;
@@ -107,10 +113,13 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
     {
         ZoneScopedN("Request Pose");
 
-        posePath = data->u8HomePath + "/" + poFile;
+        posePath += data->u8HomePath;
+        posePath += u8"/";
+        posePath += (const char8_t*)poFile;
+
         SKR_LOG_TRACE("Live2D Pose %s at %s", poFile, posePath.c_str());
         skr_ram_io_t ramIO = make_zeroed<skr_ram_io_t>();
-        ramIO.path = posePath.c_str();
+        ramIO.path = posePath.u8_str();
         ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
             ZoneScopedN("Create Pose");
             auto _this = (csmUserModel*)data;
@@ -129,10 +138,13 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
     {
         ZoneScopedN("Request UsrData");
 
-        usrDataPath = data->u8HomePath + "/" + udFile;
+        usrDataPath = data->u8HomePath;
+        usrDataPath += u8"/";
+        usrDataPath += (const char8_t*)udFile;
+        
         SKR_LOG_TRACE("Live2D UsrData %s at %s", udFile, usrDataPath.c_str());
         skr_ram_io_t ramIO = make_zeroed<skr_ram_io_t>();
-        ramIO.path = usrDataPath.c_str();
+        ramIO.path = usrDataPath.u8_str();
         ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
             ZoneScopedN("Create UsrData");
             auto _this = (csmUserModel*)data;
@@ -377,16 +389,19 @@ void csmExpressionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallba
         auto&& [pRequest, path] = expressionPaths.at(i);
         auto&& [pRequest_, name] = expressionNames.at(i);
 
-        name = settings->GetExpressionName(i);
+        name = (const char8_t*)settings->GetExpressionName(i);
         auto file = settings->GetExpressionFileName(i);
         pRequest = &request;
         pRequest_ = &request;
-        path = data->u8HomePath + "/" + file;
+
+        path = data->u8HomePath;
+        path += u8"/";
+        path += (const char8_t*)file;
 
         SKR_LOG_TRACE("Request Live2D Expression %s at %s", name.c_str(), file);
 
         skr_ram_io_t ramIO = make_zeroed<skr_ram_io_t>();
-        ramIO.path = path.c_str();
+        ramIO.path = path.u8_str();
         ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
             ZoneScopedN("Create Live2D Expression");
 
@@ -445,12 +460,15 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             auto&& [pRequest, path] = motionPaths.at(slot);
             auto&& [pRequest_, entry] = motionEntries.at(slot);
 
-            entry.first = group;
+            entry.first = (const char8_t*)group;
             entry.second = j;
             auto file = settings->GetMotionFileName(group, j);
             pRequest = &request;
             pRequest_ = &request;
-            path = data->u8HomePath + "/" + file;
+
+            path = data->u8HomePath;
+            path += u8"/";
+            path += (const char8_t*)file;
 
             slot++;
         }
@@ -466,7 +484,7 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
         SKR_LOG_TRACE("Request Live2D Motion in group %s at %d", entry.first.c_str(), entry.second);
 
         skr_ram_io_t ramIO = make_zeroed<skr_ram_io_t>();
-        ramIO.path = path.c_str();
+        ramIO.path = path.u8_str();
         ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
             ZoneScopedN("Create Live2D Motion");
 
@@ -517,7 +535,7 @@ void csmMotionMap::on_finished() SKR_NOEXCEPT
 }}}
 
 #ifndef SKR_SERIALIZE_GURAD
-void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const char* path, skr_live2d_ram_io_request_t* live2dRequest)
+void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const char8_t* path, skr_live2d_ram_io_request_t* live2dRequest)
 {
     ZoneScopedN("ioRAM Live2D Request");
 
@@ -535,19 +553,19 @@ void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const ch
             = SkrNew<L2DF::CubismModelSettingJson>(cbData->settingRawData.bytes, (L2DF::csmSizeInt)cbData->settingRawData.size);
         sakura_free(cbData->settingRawData.bytes);
         // setup models & expressions count
-        if (auto _ = skr::string(model_setting->GetModelFileName()); !_.empty())
+        if (auto _ = skr::text::text((const char8_t*)model_setting->GetModelFileName()); _.size())
         {
             cbData->model_count = 1;
         }
-        if (auto _ = skr::string(model_setting->GetPhysicsFileName()); !_.empty())
+        if (auto _ = skr::text::text((const char8_t*)model_setting->GetPhysicsFileName()); _.size())
         {
             cbData->phys_count = 1;
         }
-        if (auto _ = skr::string(model_setting->GetPoseFileName()); !_.empty())
+        if (auto _ = skr::text::text((const char8_t*)model_setting->GetPoseFileName()); _.size())
         {
             cbData->pose_count = 1;
         }
-        if (auto _ = skr::string(model_setting->GetUserDataFile()); !_.empty())
+        if (auto _ = skr::text::text((const char8_t*)model_setting->GetUserDataFile()); _.size())
         {
             cbData->usr_data_count = 1;
         }
@@ -571,12 +589,12 @@ void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const ch
     callbackData->live2dRequest = live2dRequest;
     callbackData->ioService = ioService;
     // TODO: replace this with newer VFS API
-    std::string l2dHomePathStr;
+    skr::text::text l2dHomePathStr;
     {
         ZoneScopedN("ioRAM Live2D Path Calc");
         auto l2dPath = skr::filesystem::path(path);
-        l2dHomePathStr = l2dPath.parent_path().u8string();
-        callbackData->u8HomePath = l2dHomePathStr.c_str();
+        l2dHomePathStr = l2dPath.parent_path().u8string().c_str();
+        callbackData->u8HomePath = l2dHomePathStr.u8_str();
     }
     ioService->request(live2dRequest->vfs_override, &ramIO, &live2dRequest->settingsRequest, &callbackData->settingRawData);
 }

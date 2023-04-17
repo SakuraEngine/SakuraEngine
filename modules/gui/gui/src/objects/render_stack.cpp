@@ -9,7 +9,7 @@ RenderStack::RenderStack(skr_gdi_device_id gdi_device)
     : RenderBox(gdi_device)
 {  
     diagnostic_builder.add_properties(
-        SkrNew<TextDiagnosticProperty>("type", "stack", "place children in stack")
+        SkrNew<TextDiagnosticProperty>(u8"type", u8"stack", u8"place children in stack")
     );
 }
 

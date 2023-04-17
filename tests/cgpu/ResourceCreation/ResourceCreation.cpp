@@ -253,15 +253,15 @@ TEST_P(ResourceCreation, CreateRootSignature)
     fdesc.stage = ECGPUShaderStage::CGPU_SHADER_STAGE_FRAG;
     auto fragment_shader = cgpu_create_shader_library(device, &fdesc);
 
-    CGPUPipelineShaderDescriptor vertex_shader_entry = {};
+    CGPUShaderEntryDescriptor vertex_shader_entry = {};
     vertex_shader_entry.entry = "main";
     vertex_shader_entry.stage = ECGPUShaderStage::CGPU_SHADER_STAGE_TESE;
     vertex_shader_entry.library = vertex_shader;
-    CGPUPipelineShaderDescriptor fragment_shader_entry = {};
+    CGPUShaderEntryDescriptor fragment_shader_entry = {};
     fragment_shader_entry.entry = "main";
     fragment_shader_entry.stage = ECGPUShaderStage::CGPU_SHADER_STAGE_FRAG;
     fragment_shader_entry.library = fragment_shader;
-    CGPUPipelineShaderDescriptor shaders[] = { vertex_shader_entry, fragment_shader_entry };
+    CGPUShaderEntryDescriptor shaders[] = { vertex_shader_entry, fragment_shader_entry };
     CGPURootSignatureDescriptor root_desc = {};
     root_desc.shaders = shaders;
     root_desc.shader_count = 2;
@@ -287,7 +287,7 @@ TEST_P(ResourceCreation, CreateComputePipeline)
     EXPECT_NE(compute_shader, CGPU_NULLPTR);
 
     // Create root signature
-    DECLARE_ZERO(CGPUPipelineShaderDescriptor, compute_shader_entry)
+    DECLARE_ZERO(CGPUShaderEntryDescriptor, compute_shader_entry)
     compute_shader_entry.entry = "main";
     compute_shader_entry.stage = CGPU_SHADER_STAGE_COMPUTE;
     compute_shader_entry.library = compute_shader;

@@ -100,12 +100,12 @@ public:
                 const bool is_imported = tex_node->is_imported();
                 color = is_imported ? "grey35" : "grey70";
                 label = "texture: ";
-                label.append(rg_node->get_name());
+                label.append((const char*)rg_node->get_name());
                 label.append("\\nrefs: ")
                 .append(is_imported ? "imported" : skr::to_string(tex_node->outgoing_edges()));
                 if (auto aliasing_parent = tex_node->get_aliasing_parent(); aliasing_parent)
                 {
-                    label.append("\\naliasing: ").append(aliasing_parent->get_name());
+                    label.append("\\naliasing: ").append((const char*)aliasing_parent->get_name());
                 }
                 shape = "box";
             }
@@ -115,7 +115,7 @@ public:
                 const bool is_imported = buf_node->is_imported();
                 color = is_imported ? "limegreen" : "lightgreen";
                 label = "buffer: ";
-                label.append(rg_node->get_name());
+                label.append((const char*)rg_node->get_name());
                 label.append("\\nrefs: ")
                 .append(is_imported ? "imported" : skr::to_string(buf_node->outgoing_edges()));
                 shape = "box";
@@ -143,7 +143,7 @@ public:
                     default:
                         break;
                 }
-                label.append(rg_node->get_name());
+                label.append((const char*)rg_node->get_name());
             }
             break;
             default:

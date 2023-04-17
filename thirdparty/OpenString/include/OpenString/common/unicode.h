@@ -16,11 +16,11 @@ namespace unicode
 	 * @param c start of a utf8 sequence
 	 * @return length of utf8 sequence, return 0 if this is not start of a utf8 sequence
 	 */
-	[[nodiscard]] constexpr i32 parse_utf8_length(const char c) noexcept
+	[[nodiscard]] constexpr i32 parse_utf8_length(const ochar8_t c) noexcept
 	{
 		if (c == 0)
 			return 1;
-		constexpr char mask = 0b10000000_as_char;
+		constexpr ochar8_t mask = 0b10000000_as_char;
 		i32 size = 0;
 		u8 v = c;
 		while (v & mask)
@@ -39,9 +39,9 @@ namespace unicode
 	 * @param length length of a utf8 sequence
 	 * @return mask of utf8 code unit
 	 */
-	[[nodiscard]] constexpr char get_utf8_mask(const i32 length) noexcept
+	[[nodiscard]] constexpr ochar8_t get_utf8_mask(const i32 length) noexcept
 	{
-		constexpr char masks[] =
+		constexpr ochar8_t masks[] =
 		{
 			0b00111111_as_char,
 			0b01111111_as_char,
@@ -57,18 +57,18 @@ namespace unicode
 	 * @param length length of utf-8 code unit sequence
 	 * @return codepoint of input utf8 code unit sequence
 	 */
-	[[nodiscard]] constexpr char32_t utf8_to_utf32(char const* const utf8, const i32 length) noexcept
+	[[nodiscard]] constexpr char32_t utf8_to_utf32(ochar8_t const* const utf8, const i32 length) noexcept
 	{
 		if (!utf8) 
 			return 0;
-		const char c0 = utf8[0];
-		const char lead_mask = get_utf8_mask(length);
+		const ochar8_t c0 = utf8[0];
+		const ochar8_t lead_mask = get_utf8_mask(length);
 		char32_t utf32 = c0 & lead_mask;
-		constexpr char following_mask = get_utf8_mask(0);
+		constexpr ochar8_t following_mask = get_utf8_mask(0);
 		for (i32 i = 1; i < length; ++i)
 		{
 			constexpr i32 bits_following = 6;
-			const char ci = utf8[i];
+			const ochar8_t ci = utf8[i];
 			utf32 <<= bits_following;
 			utf32 |= ci & following_mask;
 		}
@@ -90,47 +90,47 @@ namespace unicode
 	 * @param utf32 input utf-32 code unit
 	 * @return decoded utf-8 code unit sequence from utf-32 code unit
 	 */
-	[[nodiscard]] constexpr std::array<char, 4> utf32_to_utf8(const char32_t utf32) noexcept
+	[[nodiscard]] constexpr std::array<ochar8_t, 4> utf32_to_utf8(const char32_t utf32) noexcept
 	{
 		if (utf32 < 0x80) return
-			{ static_cast<char>(utf32),
+			{ static_cast<ochar8_t>(utf32),
 				0, 0, 0 };
 		if (utf32 < 0x800) return
-			{ static_cast<char>((utf32 >> 6) | 0xc0), 
-				static_cast<char>((utf32 & 0x3f) | 0x80),
+			{ static_cast<ochar8_t>((utf32 >> 6) | 0xc0), 
+				static_cast<ochar8_t>((utf32 & 0x3f) | 0x80),
 				0, 0 };
 		if (utf32 < 0x10000) return
-			{ static_cast<char>((utf32 >> 12) | 0xe0),
-				static_cast<char>(((utf32 >> 6) & 0x3f) | 0x80),
-				static_cast<char>((utf32 & 0x3f) | 0x80),
+			{ static_cast<ochar8_t>((utf32 >> 12) | 0xe0),
+				static_cast<ochar8_t>(((utf32 >> 6) & 0x3f) | 0x80),
+				static_cast<ochar8_t>((utf32 & 0x3f) | 0x80),
 				0 };
 		return
-			{ static_cast<char>((utf32 >> 18) | 0xf0),
-				static_cast<char>(((utf32 >> 12) & 0x3f) | 0x80),
-				static_cast<char>(((utf32 >> 6) & 0x3f) | 0x80),
-				static_cast<char>((utf32 & 0x3f) | 0x80) };
+			{ static_cast<ochar8_t>((utf32 >> 18) | 0xf0),
+				static_cast<ochar8_t>(((utf32 >> 12) & 0x3f) | 0x80),
+				static_cast<ochar8_t>(((utf32 >> 6) & 0x3f) | 0x80),
+				static_cast<ochar8_t>((utf32 & 0x3f) | 0x80) };
 	}
 }
 
 struct codepoint
 {
 	static constexpr i32 sequence_length = 4;
-	std::array<char, sequence_length> sequence;
+	std::array<ochar8_t, sequence_length> sequence;
 
 // code-region-start: constructors
 	
-	explicit constexpr codepoint(const char v0 = 0, const char v1 = 0, const char v2 = 0, const char v3 = 0) noexcept
+	explicit constexpr codepoint(const ochar8_t v0 = 0, const ochar8_t v1 = 0, const ochar8_t v2 = 0, const ochar8_t v3 = 0) noexcept
 		: sequence({ v0, v1, v2, v3 })
 	{ }
 
-	explicit constexpr codepoint(const char* const v, const i32 length) noexcept
+	explicit constexpr codepoint(const ochar8_t* const v, const i32 length) noexcept
 		: sequence()
 	{
 		for(i32 i = 0; i < length; ++i)
 			sequence[i] = v[i];
 	}
 
-	explicit constexpr codepoint(const char* v) noexcept
+	explicit constexpr codepoint(const ochar8_t* v) noexcept
 		: codepoint(v, unicode::parse_utf8_length(v[0]))
 	{ }
 
@@ -146,16 +146,16 @@ struct codepoint
 	{
 		constexpr const_iterator() noexcept = default;
 		
-		explicit constexpr const_iterator(const char* v) noexcept
+		explicit constexpr const_iterator(const ochar8_t* v) noexcept
 			: value(v)
 		{ }
 
-		[[nodiscard]] constexpr const char& operator*() const noexcept
+		[[nodiscard]] constexpr const ochar8_t& operator*() const noexcept
 		{
 			return *this->value;
 		}
 		
-		[[nodiscard]] constexpr const char* raw() const noexcept
+		[[nodiscard]] constexpr const ochar8_t* raw() const noexcept
 		{
 			return this->value;
 		}
@@ -246,7 +246,7 @@ struct codepoint
 	        return !(*this < rhs);
 	   }
 		
-		const char* value = nullptr;
+		const ochar8_t* value = nullptr;
 	};
 	
 	[[nodiscard]] constexpr const_iterator begin() const noexcept
@@ -283,7 +283,7 @@ struct codepoint
 		return true;
 	}
 
-	[[nodiscard]] constexpr bool operator==(const char* rhs) const noexcept
+	[[nodiscard]] constexpr bool operator==(const ochar8_t* rhs) const noexcept
 	{
 		for(i32 i = 0; i < this->size(); ++i)
 			if(this->sequence[i] != rhs[i])
@@ -301,7 +301,7 @@ struct codepoint
 		return !(*this == rhs);
 	}
 
-	[[nodiscard]] constexpr const char* raw() const noexcept
+	[[nodiscard]] constexpr const ochar8_t* raw() const noexcept
 	{
 		return this->sequence.data();
 	}
@@ -325,7 +325,7 @@ struct codepoint
 	}
 };
 
-[[nodiscard]] constexpr bool operator==(const char* lhs, const codepoint& rhs) noexcept
+[[nodiscard]] constexpr bool operator==(const ochar8_t* lhs, const codepoint& rhs) noexcept
 {
 	return rhs == lhs;
 }
@@ -334,7 +334,7 @@ OPEN_STRING_NS_END
 
 inline namespace literal
 {
-	[[nodiscard]] constexpr OPEN_STRING_NS::codepoint operator""_cp(const char c) noexcept
+	[[nodiscard]] constexpr OPEN_STRING_NS::codepoint operator""_cp(const ochar8_t c) noexcept
 	{
 		return OPEN_STRING_NS::codepoint{ c };
 	}

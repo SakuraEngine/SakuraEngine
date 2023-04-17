@@ -8,8 +8,8 @@ typedef struct RenderGraphImGuiDescriptor {
     skr::render_graph::RenderGraph* render_graph;
     CGPUQueueId queue;
     CGPUSamplerId static_sampler;
-    CGPUPipelineShaderDescriptor vs;
-    CGPUPipelineShaderDescriptor ps;
+    CGPUShaderEntryDescriptor vs;
+    CGPUShaderEntryDescriptor ps;
     ECGPUFormat backbuffer_format;
 } RenderGraphImGuiDescriptor;
 

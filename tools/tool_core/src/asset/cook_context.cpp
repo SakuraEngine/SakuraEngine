@@ -160,7 +160,7 @@ const SAssetRecord* SCookContextImpl::GetAssetRecord() const
 
 skr::string SCookContextImpl::GetAssetPath() const
 {
-    return record->path.u8string().c_str();
+    return (const char*)record->path.u8string().c_str();
 }
 
 skr::filesystem::path SCookContextImpl::AddFileDependency(const skr::filesystem::path &inPath)

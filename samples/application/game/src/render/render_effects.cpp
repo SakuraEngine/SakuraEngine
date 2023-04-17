@@ -16,6 +16,8 @@
 #include "rfx_mesh.hpp"
 #include "rfx_skmesh.hpp"
 
+#include <containers/text.hpp>
+
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/resources/material_resource.hpp"
 #include "SkrRenderer/resources/texture_resource.h"
@@ -361,21 +363,21 @@ void RenderEffectForward::prepare_geometry_resources(SRendererId renderer)
     const auto gfx_queue = render_device->get_gfx_queue();
     // upload
     CGPUBufferDescriptor upload_buffer_desc = {};
-    upload_buffer_desc.name = "UploadBuffer";
+    upload_buffer_desc.name = u8"UploadBuffer";
     upload_buffer_desc.flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT;
     upload_buffer_desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
     upload_buffer_desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
     upload_buffer_desc.size = sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices);
     auto upload_buffer = cgpu_create_buffer(device, &upload_buffer_desc);
     CGPUBufferDescriptor vb_desc = {};
-    vb_desc.name = "VertexBuffer";
+    vb_desc.name = u8"VertexBuffer";
     vb_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
     vb_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
     vb_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     vb_desc.size = sizeof(CubeGeometry);
     vertex_buffer = cgpu_create_buffer(device, &vb_desc);
     CGPUBufferDescriptor ib_desc = {};
-    ib_desc.name = "IndexBuffer";
+    ib_desc.name = u8"IndexBuffer";
     ib_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
     ib_desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER;
     ib_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
@@ -467,17 +469,17 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     const auto backend = device->adapter->instance->backend;
 
     // read shaders
-    skr::string vsname = u8"shaders/Game/gbuffer_vs";
-    vsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
-    auto vsfile = skr_vfs_fopen(resource_vfs, vsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    skr::text::text vsname = u8"shaders/Game/gbuffer_vs";
+    vsname.append(backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv");
+    auto vsfile = skr_vfs_fopen(resource_vfs, vsname.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     uint32_t _vs_length = (uint32_t)skr_vfs_fsize(vsfile);
     uint32_t* _vs_bytes = (uint32_t*)sakura_malloc(_vs_length);
     skr_vfs_fread(vsfile, _vs_bytes, 0, _vs_length);
     skr_vfs_fclose(vsfile);
 
-    skr::string fsname = u8"shaders/Game/gbuffer_fs";
-    fsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
-    auto fsfile = skr_vfs_fopen(resource_vfs, fsname.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+    skr::text::text fsname = u8"shaders/Game/gbuffer_fs";
+    fsname.append(backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv");
+    auto fsfile = skr_vfs_fopen(resource_vfs, fsname.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     uint32_t _fs_length = (uint32_t)skr_vfs_fsize(fsfile);
     uint32_t* _fs_bytes = (uint32_t*)sakura_malloc(_fs_length);
     skr_vfs_fread(fsfile, _fs_bytes, 0, _fs_length);
@@ -485,12 +487,12 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
 
     // create default deferred material
     CGPUShaderLibraryDescriptor vs_desc = {};
-    vs_desc.name = "gbuffer_vertex_shader";
+    vs_desc.name = u8"gbuffer_vertex_shader";
     vs_desc.stage = CGPU_SHADER_STAGE_VERT;
     vs_desc.code = _vs_bytes;
     vs_desc.code_size = _vs_length;
     CGPUShaderLibraryDescriptor fs_desc = {};
-    fs_desc.name = "gbuffer_pixel_shader";
+    fs_desc.name = u8"gbuffer_pixel_shader";
     fs_desc.stage = CGPU_SHADER_STAGE_FRAG;
     fs_desc.code = _fs_bytes;
     fs_desc.code_size = _fs_length;
@@ -499,15 +501,15 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     sakura_free(_vs_bytes);
     sakura_free(_fs_bytes);
 
-    CGPUPipelineShaderDescriptor ppl_shaders[2];
-    CGPUPipelineShaderDescriptor& vs = ppl_shaders[0];
+    CGPUShaderEntryDescriptor ppl_shaders[2];
+    CGPUShaderEntryDescriptor& vs = ppl_shaders[0];
     vs.library = _vs;
     vs.stage = CGPU_SHADER_STAGE_VERT;
-    vs.entry = "main";
-    CGPUPipelineShaderDescriptor& ps = ppl_shaders[1];
+    vs.entry = u8"main";
+    CGPUShaderEntryDescriptor& ps = ppl_shaders[1];
     ps.library = _fs;
     ps.stage = CGPU_SHADER_STAGE_FRAG;
-    ps.entry = "main";
+    ps.entry = u8"main";
 
     auto rs_desc = make_zeroed<CGPURootSignatureDescriptor>();
     rs_desc.push_constant_count = 1;
@@ -518,11 +520,11 @@ void RenderEffectForward::prepare_pipeline(SRendererId renderer)
     auto root_sig = cgpu_create_root_signature(device, &rs_desc);
 
     CGPUVertexLayout vertex_layout = {};
-    vertex_layout.attributes[0] = { "POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[1] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[2] = { "TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 2, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[3] = { "NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 3, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[4] = { "TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 4, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[0] = { u8"POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[1] = { u8"TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[2] = { u8"TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 2, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[3] = { u8"NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 3, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[4] = { u8"TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 4, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attribute_count = 4;
 
     const auto fmt = CGPU_FORMAT_B8G8R8A8_UNORM;

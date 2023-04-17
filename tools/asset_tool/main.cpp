@@ -1,6 +1,6 @@
 #include <EASTL/algorithm.h>
 
-#include "../../../../samples/common/utils.h"
+#include "../../../../samples/common/common/utils.h"
 
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
@@ -13,6 +13,7 @@
 #include "utils/log.h"
 #include "cgpu/io.h"
 
+#include <containers/text.hpp>
 #include "utils/make_zeroed.hpp"
 
 #include "SkrRenderer/skr_renderer.h"
@@ -95,7 +96,7 @@ int SAssetImportModule::main_module_exec(int argc, char** argv)
     window_desc.height = 1000;
     window_desc.width = 1500;
     window = skr_create_window(
-        skr::format("Asset Tool [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).c_str(),
+        skr::text::format(u8"Asset Tool [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).u8_str(),
         &window_desc);
 
     // Initialize renderer
@@ -239,7 +240,7 @@ int SAssetImportModule::main_module_exec(int argc, char** argv)
         CGPUTextureId native_backbuffer = swapchain->back_buffers[backbuffer_index];
         auto back_buffer = renderGraph->create_texture(
         [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-            builder.set_name("backbuffer")
+            builder.set_name(u8"backbuffer")
             .import(native_backbuffer, CGPU_RESOURCE_STATE_UNDEFINED)
             .allow_render_target();
         });
@@ -249,7 +250,7 @@ int SAssetImportModule::main_module_exec(int argc, char** argv)
         }
         renderGraph->add_present_pass(
         [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
-            builder.set_name("present_pass")
+            builder.set_name(u8"present_pass")
             .swapchain(swapchain, backbuffer_index)
             .texture(back_buffer, true);
         });

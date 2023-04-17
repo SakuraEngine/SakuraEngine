@@ -169,9 +169,9 @@ size_t skr_type_t::Align() const
             }
         }
         case SKR_TYPE_CATEGORY_VARIANT:
-            return ((VariantType*)this)->align;
+            return ((VariantType*)this)->align ? ((VariantType*)this)->align : alignof(uint8_t);
     }
-    return 0;
+    return alignof(uint8_t);
 }
 
 skr_guid_t skr_type_t::Id() const

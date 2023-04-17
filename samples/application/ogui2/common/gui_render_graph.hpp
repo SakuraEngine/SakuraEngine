@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRenderGraph/frontend/render_graph.hpp"
-#include "../../../common/render_application.h"
+#include "common/render_application.h"
 #include "utils/make_zeroed.hpp"
 
 #include "tracy/Tracy.hpp"
@@ -39,14 +39,14 @@ struct gui_render_graph_t
         {
             back_buffer = graph->create_texture(
                 [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-                    builder.set_name("presentbuffer")
+                    builder.set_name(SKR_UTF8("presentbuffer"))
                     .import(imported_backbuffer, CGPU_RESOURCE_STATE_PRESENT)
                     .allow_render_target();
                 });
             const auto back_desc = graph->resolve_descriptor(back_buffer);
             auto msaaTarget = graph->create_texture(
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
-                builder.set_name("backbuffer")
+                builder.set_name(SKR_UTF8("backbuffer"))
                     .extent(back_desc->width, back_desc->height)
                     .format(back_desc->format)
                     .owns_memory()
@@ -58,14 +58,14 @@ struct gui_render_graph_t
         {
             back_buffer = graph->create_texture(
                 [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
-                    builder.set_name("backbuffer")
+                    builder.set_name(SKR_UTF8("backbuffer"))
                     .import(imported_backbuffer, CGPU_RESOURCE_STATE_PRESENT)
                     .allow_render_target();
                 });
         }
         depth_buffer = graph->create_texture(
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
-                builder.set_name("depth")
+                builder.set_name(SKR_UTF8("depth"))
                     .extent(render_app.swapchain->back_buffers[0]->width, render_app.swapchain->back_buffers[0]->height)
                     .format(CGPU_FORMAT_D32_SFLOAT)
                     .owns_memory()
@@ -80,7 +80,7 @@ struct gui_render_graph_t
         // do present
         graph->add_present_pass(
             [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
-                builder.set_name("present")
+                builder.set_name(SKR_UTF8("present"))
                 .swapchain(render_app.swapchain, render_app.backbuffer_index)
                 .texture(back_buffer, true);
             });
