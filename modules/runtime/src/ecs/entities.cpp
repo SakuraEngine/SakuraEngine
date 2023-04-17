@@ -1,7 +1,7 @@
 #include "ecs/entities.hpp"
 #include "chunk_view.hpp"
 #include "chunk.hpp"
-#include "entity.hpp"
+#include "ecs/entity.hpp"
 #include "internal/utils.hpp"
 
 dual_entity_debug_proxy_t dummy;

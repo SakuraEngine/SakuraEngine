@@ -2,10 +2,11 @@
 #include "chunk_view.hpp"
 #include "ecs/array.hpp"
 #include "type.hpp"
-#include "entity.hpp"
+#include "ecs/entity.hpp"
 #include "type.hpp"
 #include "chunk.hpp"
 #include "archetype.hpp"
+#include "type_registry.hpp"
 #include <type_traits>
 
 namespace dual

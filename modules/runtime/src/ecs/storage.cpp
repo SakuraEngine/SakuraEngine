@@ -2,7 +2,7 @@
 #include "chunk_view.hpp"
 
 #include "ecs/dual.h"
-#include "entity.hpp"
+#include "ecs/entity.hpp"
 #include "query.hpp"
 #include "set.hpp"
 #include "storage.hpp"

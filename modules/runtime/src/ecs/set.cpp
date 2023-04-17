@@ -1,6 +1,6 @@
 #include "set.hpp"
 #include "ecs/dual.h"
-#include "entity.hpp"
+#include "ecs/entity.hpp"
 #include "hash.hpp"
 
 namespace dual
