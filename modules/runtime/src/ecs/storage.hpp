@@ -2,7 +2,7 @@
 #include "archetype.hpp"
 #include "chunk.hpp"
 #include "chunk_view.hpp"
-#include "entity.hpp"
+#include "ecs/entity.hpp"
 #include "ecs/dual.h"
 #include "stack.hpp"
 #include "type.hpp"
