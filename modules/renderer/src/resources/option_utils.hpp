@@ -5,15 +5,15 @@
 
 namespace option_utils
 {
-using opt_signature_string = eastl::fixed_string<char, 64>;
+using opt_signature_string = eastl::fixed_string<char8_t, 64>;
 
 inline void stringfy(opt_signature_string& string, skr::span<skr_shader_option_instance_t> ordered_options)
 {
     for (auto&& option : ordered_options)
     {
-        string += option.key.c_str();
+        string.append(option.key.begin(), option.key.end());
         string += "=";
-        string += option.value.c_str();
+        string.append(option.value.begin(), option.value.end());
         string += ";";
     }
 }
@@ -23,9 +23,9 @@ inline void stringfy(opt_signature_string& string, const skr_shader_option_seque
     for (uint32_t i = 0; i < seq.keys.size(); i++)
     {
         const auto selection = indices[i];
-        string += seq.keys[i].data();
+        string.append(seq.keys[i].begin(), seq.keys[i].end());
         string += "=";
-        string += seq.values[i][selection].data();
+        string.append(seq.values[i][selection].begin(), seq.values[i][selection].end());
         string += ";";
     }
 }

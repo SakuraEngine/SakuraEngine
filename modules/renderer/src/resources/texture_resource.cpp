@@ -1,6 +1,7 @@
 #include <platform/filesystem.hpp>
 #include "SkrRenderer/resources/texture_resource.h"
 #include "cgpu/api.h"
+#include "containers/text.hpp"
 #include "containers/sptr.hpp"
 #include "containers/hashmap.hpp"
 #include "platform/configure.h"
@@ -36,7 +37,8 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
     STextureFactoryImpl(const STextureFactory::Root& root)
         : root(root)
     {
-
+        dstorage_root = skr::text::text::from_utf8(root.dstorage_root);
+        this->root.dstorage_root = dstorage_root.c_str();
     }
     ~STextureFactoryImpl() noexcept = default;
     skr_type_id_t GetResourceType() override;
@@ -140,6 +142,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
         return ".raw";
     }
 
+    skr::text::text dstorage_root;
     Root root;
     skr::flat_hash_map<skr_texture_resource_id, InstallType> mInstallTypes;
     skr::flat_hash_map<skr_texture_resource_id, SPtr<UploadRequest>> mUploadRequests;
