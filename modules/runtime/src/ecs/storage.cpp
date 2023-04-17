@@ -1038,4 +1038,19 @@ void dualS_all(dual_storage_t *storage, bool includeDisabled, bool includeDead, 
         }
     }
 }
+
+EIndex dualS_count(dual_storage_t *storage, bool includeDisabled, bool includeDead)
+{
+    EIndex result = 0;
+    for(auto& pair : storage->groups)
+    {
+        auto group = pair.second;
+        if(group->isDead && !includeDead)
+            continue;
+        if(group->disabled && !includeDisabled)
+            continue;
+        result += group->size;
+    }
+    return result;
+}
 }
