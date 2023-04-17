@@ -8,7 +8,7 @@
 
 
 
-template<class T, auto F, bool withHistory=false>
+template<class T, auto F, bool withHistory=false, bool bitpacking = false>
 skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWorldDeltaBuildContext ctx, MPWorldDeltaViewBuilder& builder)
 {
     MPComponentDeltaViewBuilder& comps = *std::find_if(builder.components.begin(),builder.components.end(), [&](const MPComponentDeltaViewBuilder& comp)
@@ -38,7 +38,8 @@ skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWor
         const T* lastComp = nullptr;
         dual::array_comp_T<T, 4>* lastHistory = nullptr;
         const CAuth* lastAuth = nullptr;
-        skr::binary::VectorWriterBitpacked writer{&comps.data};
+        using writer_t = std::conditional_t<bitpacking, skr::binary::VectorWriterBitpacked, skr::binary::VectorWriter>;
+        writer_t writer{&comps.data};
         skr_binary_writer_t archive(writer);
         comps.entities.erase(std::remove_if(comps.entities.begin(), comps.entities.end(), [&](NetEntityId ent) -> bool
         {
@@ -83,7 +84,7 @@ skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWor
     return counter;
 }
 
-template<class T, auto F>
+template<class T, auto F, bool bitpacking = false>
 skr::task::event_t ApplyDelta(dual_type_index_t type, dual_query_t* query, const MPWorldDeltaView& delta, const entity_map_t& map)
 {
     auto iter = std::find_if(delta.components.begin(), delta.components.end(), [&](const MPComponentDeltaView & comp) {
@@ -107,7 +108,8 @@ skr::task::event_t ApplyDelta(dual_type_index_t type, dual_query_t* query, const
             dep.wait(false);
         dual_chunk_view_t lastView {nullptr, 0, 0};
         const T* lastComp = nullptr;
-        skr::binary::SpanReaderBitpacked reader{comps.data};
+        using reader_t = std::conditional_t<bitpacking, skr::binary::SpanReaderBitpacked, skr::binary::SpanReader>;
+        reader_t reader{comps.data};
         skr_binary_reader_t archive(reader);
         for(int i = 0; i < comps.entities.size(); ++i)
         {

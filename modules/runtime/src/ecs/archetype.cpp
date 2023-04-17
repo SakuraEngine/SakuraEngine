@@ -64,6 +64,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
     proto.resourceFields = archetypeArena.allocate<dual::resource_fields_t>(proto.type.length);
     proto.callbacks = archetypeArena.allocate<dual_callback_v>(proto.type.length);
     ::memset(proto.callbacks, 0, sizeof(dual_callback_v) * proto.type.length);
+    proto.stableOrder = archetypeArena.allocate<SIndex>(proto.type.length);
     auto& registry = type_registry_t::get();
     forloop (i, 0, proto.type.length)
     {
@@ -84,7 +85,6 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
         proto.resourceFields[i] = { desc.resourceFields, desc.resourceFieldsCount };
     }
     auto guids = localStack.allocate<guid_t>(proto.type.length);
-    auto stableOrder = localStack.allocate<SIndex>(proto.type.length);
     proto.entitySize = sizeof(dual_entity_t);
     uint32_t padding = 0;
     forloop (i, 0, proto.type.length)
@@ -100,14 +100,14 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
         proto.elemSizes[i] = desc.elementSize;
         guids[i] = desc.guid;
         proto.aligns[i] = desc.alignment;
-        stableOrder[i] = i;
+        proto.stableOrder[i] = i;
         proto.entitySize += desc.size;
         if(!ti.is_chunk())
             padding += desc.alignment;
         if (!ti.is_chunk() && desc.entityFieldsCount != 0)
             proto.sizeToPatch += desc.size;
     }
-    eastl::sort(stableOrder, stableOrder + proto.type.length, [&](SIndex lhs, SIndex rhs) {
+    eastl::sort(proto.stableOrder, proto.stableOrder + proto.type.length, [&](SIndex lhs, SIndex rhs) {
         return guid_compare_t{}(guids[lhs], guids[rhs]);
     });
     size_t caps[] = { kSmallBinSize - sizeof(dual_chunk_t), kFastBinSize - sizeof(dual_chunk_t), kLargeBinSize - sizeof(dual_chunk_t) };
@@ -120,7 +120,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
         uint32_t ccOffset = (uint32_t)(caps[i] - versionSize);
         forloop (j, 0, proto.type.length)
         {
-            SIndex id = stableOrder[j];
+            SIndex id = proto.stableOrder[j];
             TIndex t = proto.type.data[id];
             auto ti = type_index_t(t);
             if(ti.is_chunk())
@@ -136,7 +136,8 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
         uint32_t offset = sizeof(dual_entity_t) * capacity;
         forloop (j, 0, proto.type.length)
         {
-            SIndex id = stableOrder[j];TIndex t = proto.type.data[id];
+            SIndex id = proto.stableOrder[j];
+            TIndex t = proto.type.data[id];
             auto ti = type_index_t(t);
             if(!ti.is_chunk())
             {
@@ -543,6 +544,11 @@ int dualG_share_components(const dual_group_t* group, const dual_type_set_t* typ
 void dualG_get_type(const dual_group_t* group, dual_entity_type_t* type)
 {
     *type = group->type;
+}
+
+uint32_t dualG_get_stable_order(const dual_group_t* group, dual_type_index_t localType)
+{
+    return group->archetype->stableOrder[localType];
 }
 
 const void* dualG_get_shared_ro(const dual_group_t* group, dual_type_index_t type)

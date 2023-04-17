@@ -73,7 +73,12 @@ SKR_ALIGNAS(16) skr_l2r_comp_t
     skr_float4x4_t matrix;
 };
 
-sreflect_struct("guid" : "78DD218B-87DE-4250-A7E8-A6B4553B47BF", "component" : true, "serialize" : "binary")
+sreflect_struct(
+    "guid" : "78DD218B-87DE-4250-A7E8-A6B4553B47BF", 
+    "component" : true, 
+    "serialize" : ["binary", "json"],
+    "rtti" : true
+)
 skr_rotation_comp_t
 {
     skr_rotator_t euler;
@@ -81,14 +86,20 @@ skr_rotation_comp_t
 
 struct sreflect sattr(
     "guid" : "A059A2A1-CC3B-43B0-88B6-ADA7822BA25D",
-    "component" : true, "serialize" : "binary"
+    "component" : true, 
+    "serialize" : ["binary", "json"],
+    "rtti" : true
 )
 skr_translation_comp_t
 {
     skr_float3_t value;
 };
 
-sreflect_struct("guid" : "D045D755-FBD1-44C2-8BF0-C86F2D8485FF", "component" : true, "serialize" : "binary")
+sreflect_struct(
+    "guid" : "D045D755-FBD1-44C2-8BF0-C86F2D8485FF", 
+    "component" : true, 
+    "serialize" : ["binary", "json"],
+    "rtti" : true)
 skr_scale_comp_t
 {
     skr_float3_t value;
@@ -117,6 +128,8 @@ struct skr_transform_system_t {
 
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_setup(dual_storage_t* world, skr_transform_system_t* system);
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_update(skr_transform_system_t* query);
+SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_save_scene(dual_storage_t* world, struct skr_json_writer_t* writer);
+SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_load_scene(dual_storage_t* world, struct skr_json_reader_t* reader);
 
 #ifdef __cplusplus
 #include "lua/bind.hpp"

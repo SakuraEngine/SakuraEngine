@@ -128,16 +128,17 @@ void InitializeNetworkComponents()
     }
     {
         //optimize1: serialize bitpacked value
+        static auto velocitySerdeConfig = skr::binary::VectorSerdeConfig<float>{100};
         constexpr auto builder = +[](dual_chunk_view_t view, const CMovement& comp, skr_binary_writer_t& archive)
         {
-            skr::binary::Archive(&archive, comp.velocity, skr::binary::VectorSerdeConfig<float>{});
+            skr::binary::Archive(&archive, comp.velocity, velocitySerdeConfig);
         };
-        RegisterComponentDeltaBuilder(dual_id_of<CMovement>::get(), &BuildDelta<CMovement, builder>);
+        RegisterComponentDeltaBuilder(dual_id_of<CMovement>::get(), &BuildDelta<CMovement, builder, false, true>);
         constexpr auto applier = +[](dual_chunk_view_t view, CMovement& comp, skr_binary_reader_t& archive)
         {
-            skr::binary::Archive(&archive, comp.velocity, skr::binary::VectorSerdeConfig<float>{});
+            skr::binary::Archive(&archive, comp.velocity, velocitySerdeConfig);
         };
-        RegisterComponentDeltaApplier(dual_id_of<CMovement>::get(), &ApplyDelta<CMovement, applier>);
+        RegisterComponentDeltaApplier(dual_id_of<CMovement>::get(), &ApplyDelta<CMovement, applier, true>);
     }
 }
 #pragma optimize("", on)

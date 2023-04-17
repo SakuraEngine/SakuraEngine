@@ -280,6 +280,8 @@ int ReadTrait<skr::string_view>::Read(skr_binary_reader_t* reader, skr_blob_aren
     if (ret != 0)
         return ret;
     str = skr::string_view((const char*)arena.get_buffer() + offset, size);
+    // null terminate
+    *(skr::string_view::value_type*)&str[size] = 0;
     return ReadBytes(reader, (void*)str.data(), str.size());
 }
 
