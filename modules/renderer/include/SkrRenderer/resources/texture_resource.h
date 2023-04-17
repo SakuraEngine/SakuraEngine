@@ -87,6 +87,18 @@ skr_texture_sampler_resource_t
 };
 
 #ifdef __cplusplus
+
+namespace skr {
+namespace renderer {
+    using SamplerFilterType = ESkrTextureSamplerFilterType;
+    using SamplerMipmapMode = ESkrTextureSamplerMipmapMode;
+    using SamplerAddressMode = ESkrTextureSamplerAddressMode;
+    using SamplerCompareMode = ESkrTextureSamplerCompareMode;
+    using SamplerResource = ::skr_texture_sampler_resource_t;
+    using TextureResource = ::skr_texture_resource_t;
+} // namespace renderer
+} // namespace skr
+
 #include "resource/resource_factory.h"
 
 namespace skr sreflect

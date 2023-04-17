@@ -19,11 +19,6 @@
 
 #include "tracy/Tracy.hpp"
 
-skr_mesh_resource_t::~skr_mesh_resource_t() SKR_NOEXCEPT
-{
-
-}
-
 static struct SkrMeshResourceUtil
 {
     struct RegisteredVertexLayout : public CGPUVertexLayout
@@ -166,6 +161,11 @@ namespace skr
 namespace renderer
 {
 using namespace skr::resource;
+
+MeshResource::~MeshResource() SKR_NOEXCEPT
+{
+
+}
 
 // 1.deserialize mesh resource
 // 2.install indices/vertices to GPU
