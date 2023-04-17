@@ -106,6 +106,17 @@ https://user-images.githubusercontent.com/39457738/192722537-6ab035a5-2789-43d0-
 
 
 ## 示例 (从上到下逐渐贴近底层)
+### [Multi-Player Server/Game]()
+
+基于 ECS 的多人游戏以及服务器。
+
+<div align=center>
+
+https://user-images.githubusercontent.com/39457738/232537408-1266011b-d722-4b0b-9bd3-5c3af0faf043.mp4
+
+</div>
+
+
 ### [Next Generation Graphics]()
 使用 StateBuffer 的次世代 CGPU 图形接口。摒弃 PSO 的概念，使用 StateBuffer 作为图形管线的状态描述。传统的图形管线 API 往往使用 PSO，其中打包了所有的管线状态以及着色器 ISA，并整体上传到 GPU 上：
 
