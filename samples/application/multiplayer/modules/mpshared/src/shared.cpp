@@ -13,11 +13,11 @@
 void MPGameWorld::Initialize()
 {
     storage = dualS_create();
-    controlQuery = dualQ_from_literal(storage, "[in]CController, [inout]CMovement, [inout]CSkill, [atomic]?dirty");
-    healthCheckQuery = dualQ_from_literal(storage, "[inout]CHealth, [inout]skr_translation_comp_t, [inout]skr_rotation_comp_t, [inout]CWeapon, [atomic]?dirty");
-    fireQuery = dualQ_from_literal(storage, "[in]CController, [in]skr_translation_comp_t, [in]skr_rotation_comp_t, [inout]CWeapon, [atomic]?dirty");
-    movementQuery = dualQ_from_literal(storage, "[in]CMovement, [inout]skr_translation_comp_t', [inout]skr_rotation_comp_t, [atomic]?dirty");
-    ballQuery = dualQ_from_literal(storage, "[inout]<rand>skr_translation_comp_t', [in]<rand>CSphereCollider2D, [inout]CMovement, [atomic]?dirty, [inout]CBall, [has]skr_rotation_comp_t, [inout]<rand>?CHealth");
+    controlQuery = dualQ_from_literal(storage, "[in]CController, [inout]CMovement, [inout]CSkill, [atomic]?dual::dirty_comp_t");
+    healthCheckQuery = dualQ_from_literal(storage, "[inout]CHealth, [inout]skr_translation_comp_t, [inout]skr_rotation_comp_t, [inout]CWeapon, [atomic]?dual::dirty_comp_t");
+    fireQuery = dualQ_from_literal(storage, "[in]CController, [in]skr_translation_comp_t, [in]skr_rotation_comp_t, [inout]CWeapon, [atomic]?dual::dirty_comp_t");
+    movementQuery.Initialize(storage);
+    ballQuery = dualQ_from_literal(storage, "[inout]<rand>skr_translation_comp_t', [in]<rand>CSphereCollider2D, [inout]CMovement, [atomic]?dual::dirty_comp_t, [inout]CBall, [has]skr_rotation_comp_t, [inout]<rand>?CHealth");
     ballChildQuery = dualQ_from_literal(storage, "[in]skr_translation_comp_t', [inout]CHealth, [in]CSphereCollider2D");
     killQuery = dualQ_from_literal(storage, "[inout]CBall");
     relevanceQuery = dualQ_from_literal(storage, "[inout]CRelevance, [in]<rand>skr_translation_comp_t, [in]<rand>?CController");
@@ -28,7 +28,7 @@ void MPGameWorld::Initialize()
 void MPGameWorld::Shutdown()
 {
     dualQ_release(controlQuery);
-    dualQ_release(movementQuery);
+    movementQuery.Release();
     dualS_release(storage);
 }
 
@@ -89,7 +89,7 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
         auto controllers = ctx.get_owned_ro<CController>(0);
         auto movements = ctx.get_owned_rw<CMovement>(1);
         auto skills = ctx.get_owned_rw<CSkill>(2);
-        auto dirtyMasks = ctx.get_owned_ro<dual::dirty_comp_t>(3);
+        auto dirtyMasks = ctx.get_owned_rw<dual::dirty_comp_t>(3);
         for(int i=0; i<ctx.count(); ++i)
         {
             auto& input = this->input.inputs[controllers[i].playerId];
@@ -216,43 +216,38 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
             }
         }
     }, this, nullptr, nullptr, nullptr, nullptr);
-    dualJ_schedule_ecs(movementQuery, 512, 
-    +[](void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
+    dual::schedule_task(movementQuery, 512, [](QMovement::TaskContext ctx)
     {
-        auto movements = (CMovement*)dualV_get_owned_rw_local(view, localTypes[0]);
-        auto translations = (skr_float3_t*)dualV_get_owned_rw_local(view, localTypes[1]);
-        auto rotations = (skr_rotator_t*)dualV_get_owned_rw_local(view, localTypes[2]);
-        auto dirtyMasks = (uint32_t*)dualV_get_owned_ro_local(view, localTypes[3]);
-        for(int i=0; i<view->count; ++i)
+        auto [movements, translations, rotations, dirtyMasks] = ctx.Unpack();
+        for(int i=0; i<ctx.count(); ++i)
         {
-            translations[i].x += movements[i].velocity.x * deltaTime;
-            translations[i].z += movements[i].velocity.y * deltaTime;
+            translations[i].value.x += movements[i].velocity.x * deltaTime;
+            translations[i].value.z += movements[i].velocity.y * deltaTime;
             
             if(std::abs(movements[i].velocity.x) > 0.001f || std::abs(movements[i].velocity.y) > 0.001f)
             {
                 //get yaw from velocity
                 float targetYaw = atan2(movements[i].velocity.y, movements[i].velocity.x) * 180.f / 3.14159265358979323846f;
                 //slerp angle
-                float delta = targetYaw - rotations[i].yaw;
+                float delta = targetYaw - rotations[i].euler.yaw;
                 if(delta > 180.f)
                     delta -= 360.f;
                 else if(delta < -180.f)
                     delta += 360.f;
-                rotations[i].yaw += delta * 0.4f;
-                if(rotations[i].yaw > 180.f)
-                    rotations[i].yaw -= 360.f;
-                else if(rotations[i].yaw < -180.f)
-                    rotations[i].yaw += 360.f;
+                rotations[i].euler.yaw += delta * 0.4f;
+                if(rotations[i].euler.yaw > 180.f)
+                    rotations[i].euler.yaw -= 360.f;
+                else if(rotations[i].euler.yaw < -180.f)
+                    rotations[i].euler.yaw += 360.f;
             }
 
             if(dirtyMasks)
             {
-                dual_set_bit(&dirtyMasks[i], localTypes[1]);
-                dual_set_bit(&dirtyMasks[i], localTypes[2]);
+                ctx.set_dirty(dirtyMasks[i], 1);
+                ctx.set_dirty(dirtyMasks[i], 2);
             }
         }
-        
-    }, this, nullptr, nullptr, nullptr, nullptr);
+    }, nullptr);
 
     if(authoritative)
     {

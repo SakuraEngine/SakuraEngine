@@ -64,11 +64,11 @@ struct ${api} BlobTrait<${record.name}>
     else:
         basesBuilder = ""
 %>
-#define GENERATED_BLOB_BUILDER_${db.file_id}_${record.short_name} \
-struct ${record.short_name}Builder ${basesBuilder} \
-{ \
+#define GENERATED_BLOB_BUILDER_${db.file_id}_${record.short_name} ${"\\"}
+struct ${record.short_name}Builder ${basesBuilder} ${"\\"}
+{ ${"\\"}
 %for name, field in vars(record.fields).items():
-    typename skr::binary::BlobBuilderType<${field.rawType}>::type ${name}; \
+    typename skr::binary::BlobBuilderType<${field.rawType}>::type ${name}; ${"\\"}
 %endfor
 };
 %endif
