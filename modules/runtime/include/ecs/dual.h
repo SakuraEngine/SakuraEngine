@@ -14,6 +14,7 @@ extern "C" {
 #define DUAL_COMPONENT_DIRTY 0x5
 
 #define DUAL_IS_TAG(c) ((c & 1 << 31) != 0)
+#define DUAL_IS_BUFFER(C) ((C & 1 << 29) != 0)
 
 /**
  * @brief guid generation function
@@ -998,6 +999,9 @@ namespace dual
         template<class T>
         void check_local_type(dual_type_index_t idx)
         {
+            auto localType = localTypes[idx];
+            if(localType == kInvalidTypeIndex)
+                return;
             SKR_ASSERT(dualV_get_component_type(view, localTypes[idx]) == dual_id_of<T>::get());
         }
 
