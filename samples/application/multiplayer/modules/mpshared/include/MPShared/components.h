@@ -177,6 +177,18 @@ CBall
     int playerId;
 };
 
+sreflect_struct(
+    "guid" : "CC207AB1-6D2B-46EA-AA32-CA761F775B13",
+    "component" : {
+        "buffer" : 8
+    }
+)
+skr_translation_comp_t_History
+{
+    skr_float2_t position;
+    float deltaAccumulated;
+};
+
 MP_SHARED_API dual_type_set_t GetNetworkComponents();
 MP_SHARED_API dual_type_index_t GetNetworkComponent(uint8_t index);
 MP_SHARED_API uint8_t GetNetworkComponentIndex(dual_type_index_t type);
