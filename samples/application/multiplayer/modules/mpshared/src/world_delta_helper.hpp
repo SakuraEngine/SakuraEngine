@@ -3,11 +3,11 @@
 #include "containers/vector.hpp"
 #include "utils/parallel_for.hpp"
 #include "ecs/callback.hpp"
-#include "components.h"
+#include "MPShared/components.h"
 #include "containers/string.hpp"
 #include "utils/format.hpp"
 
-template<class T, auto F, bool withHistory=false, bool bitpacking = false>
+template<class T, auto F, bool withHistory = false, bool bitpacking = false>
 skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWorldDeltaBuildContext ctx, MPWorldDeltaViewBuilder& builder)
 {
     MPComponentDeltaViewBuilder& comps = *std::find_if(builder.components.begin(),builder.components.end(), [&](const MPComponentDeltaViewBuilder& comp)

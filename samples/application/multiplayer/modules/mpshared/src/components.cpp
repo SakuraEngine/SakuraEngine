@@ -3,10 +3,11 @@
 #include "containers/vector.hpp"
 #include "MPShared/world_delta.h"
 #include "ecs/type_builder.hpp"
-#include "MPShared/world_delta_helper.h"
 #include "MPShared/shared.h"
 #include "utils/log.h"
 #include "ecs/array.hpp"
+
+#include "world_delta_helper.hpp"
 
 template<class T>
 void RegisterSimpleComponent()
