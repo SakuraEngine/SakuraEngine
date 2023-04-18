@@ -17,4 +17,4 @@ class SMPModule : public skr::IDynamicModule
         SKR_LOG_INFO("mpgame unloaded!");
     }
 };
-IMPLEMENT_DYNAMIC_MODULE(SMPModule, mpgame);
+IMPLEMENT_DYNAMIC_MODULE(SMPModule, MPGame);

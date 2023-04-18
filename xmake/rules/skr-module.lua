@@ -85,6 +85,17 @@ rule("skr.module")
         -- calculate deps
         local api = target:extraconf("rules", "skr.module", "api")
         local dep_modules = module_codegen.resolve_skr_module_dependencies(target)
+        if target:kind() == "binary" then
+            for _, dep in pairs(dep_modules) do
+                if is_plat("linux") then
+                    target:add("ldflags", "/-Wl,--whole-archive "..dep.." -Wl,--no-whole-archive", {force = true, public = false})
+                elseif is_plat("macosx") then
+                    target:add("ldflags", "/-Wl,-force_load "..dep, {force = true, public = false})
+                elseif is_plat("windows") then
+                    target:add("ldflags", "/WHOLEARCHIVE:"..dep, {force = true, public = false})
+                end
+            end
+        end
         -- need build this target?
         module_codegen.skr_module_gen_json(target, target:data("module.meta.json"), dep_modules)
         module_codegen.skr_module_gen_cpp(target, target:data("module.meta.cpp"), dep_modules)
@@ -99,10 +110,9 @@ rule_end()
 rule("skr.static_module")
     on_load(function (target, opt)
         local api = target:extraconf("rules", "skr.static_module", "api")
+        target:set("kind", "static")
         if(has_config("shipping_one_archive")) then
-            target:set("kind", "object")
         else
-            target:set("kind", "static")
             target:add("defines", api.."_STATIC", {public=true})
             target:add("defines", api.."_IMPL")
         end
@@ -117,14 +127,16 @@ end
 
 function shared_module(name, api, version, opt)
     target(name)
+    if(has_config("shipping_one_archive")) then
+        set_kind("static")
+    else
+        set_kind("shared")
+    end
     on_load(function (target, opt)
         if(has_config("shipping_one_archive")) then
-            target:set("kind", "object")
             for _, dep in pairs(target:get("links")) do
                 target:add("links", dep, {public = true})
             end
-        else
-            target:set("kind", "shared")
         end
     end)
     add_rules("skr.module", { api = api, version = engine_version }) 
