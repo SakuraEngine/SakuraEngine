@@ -13,6 +13,7 @@ namespace dual
     void move_view(const dual_chunk_view_t& dst, const dual_chunk_t* src, uint32_t srcIndex) noexcept;
     void cast_view(const dual_chunk_view_t& dst, dual_chunk_t* src, EIndex srcIndex) noexcept;
     void duplicate_view(const dual_chunk_view_t& dst, const dual_chunk_t* src, EIndex srcIndex) noexcept;
+    void clone_view(const dual_chunk_view_t& dst, const dual_chunk_t* src, EIndex srcIndex) noexcept;
     template<class F>
     void iterator_ref_view(const dual_chunk_view_t& s, F&& iter) noexcept;
     template<class F>

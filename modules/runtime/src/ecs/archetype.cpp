@@ -44,7 +44,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
     char* buffer = (char*)archetypeArena.allocate(data_size(inType), 1);
     archetype_t& proto = *archetypeArena.allocate<archetype_t>();
     proto.storage = this;
-    proto.type = clone(inType, buffer);
+    proto.type = dual::clone(inType, buffer);
     proto.withMask = false;
     proto.withDirty = false;
     proto.sizeToPatch = 0;
@@ -151,6 +151,49 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
     return archetypes.insert({ proto.type, &proto }).first->second;
 }
 
+dual::archetype_t* dual_storage_t::clone_archetype(archetype_t *src)
+{
+    using namespace dual;
+    if(auto a = try_get_archetype(src->type))
+        return a;
+    char* buffer = (char*)archetypeArena.allocate(data_size(src->type), 1);
+    archetype_t& proto = *archetypeArena.allocate<archetype_t>();
+    proto.storage = this;
+    proto.type = dual::clone(src->type, buffer);
+    proto.withMask = src->withMask;
+    proto.withDirty = src->withMask;
+    proto.sizeToPatch = src->sizeToPatch;
+    proto.firstChunkComponent = src->withMask;
+    forloop (i, 0, 3)
+    {
+        proto.offsets[i] = archetypeArena.allocate<uint32_t>(proto.type.length);
+        memcpy(proto.offsets[i], src->offsets[i], sizeof(uint32_t) * proto.type.length);
+    }
+    proto.elemSizes = archetypeArena.allocate<uint32_t>(proto.type.length);
+    memcpy(proto.elemSizes, src->elemSizes, sizeof(uint32_t) * proto.type.length);
+    proto.callbackFlags = archetypeArena.allocate<uint32_t>(proto.type.length);
+    memcpy(proto.callbackFlags, src->callbackFlags, sizeof(uint32_t) * proto.type.length);
+    proto.aligns = archetypeArena.allocate<uint32_t>(proto.type.length);
+    memcpy(proto.aligns, src->aligns, sizeof(uint32_t) * proto.type.length);
+    proto.sizes = archetypeArena.allocate<uint32_t>(proto.type.length);
+    memcpy(proto.sizes, src->sizes, sizeof(uint32_t) * proto.type.length);
+    proto.resourceFields = archetypeArena.allocate<dual::resource_fields_t>(proto.type.length);
+    memcpy(proto.resourceFields, src->resourceFields, sizeof(dual::resource_fields_t) * proto.type.length);
+    proto.callbacks = archetypeArena.allocate<dual_callback_v>(proto.type.length);
+    memcpy(proto.callbacks, src->callbacks, sizeof(dual_callback_v) * proto.type.length);
+    proto.stableOrder = archetypeArena.allocate<SIndex>(proto.type.length);
+    memcpy(proto.stableOrder, src->stableOrder, sizeof(SIndex) * proto.type.length);
+    proto.entitySize = src->entitySize;
+    proto.versionOffset[0] = src->versionOffset[0];
+    proto.versionOffset[1] = src->versionOffset[1];
+    proto.versionOffset[2] = src->versionOffset[2];
+    proto.chunkCapacity[0] = src->chunkCapacity[0];
+    proto.chunkCapacity[1] = src->chunkCapacity[1];
+    proto.chunkCapacity[2] = src->chunkCapacity[2];
+
+    return archetypes.insert({ proto.type, &proto }).first->second;
+}
+
 dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
 {
     using namespace dual;
@@ -164,12 +207,11 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
     structure.length = firstTag;
     archetype_t* archetype = get_archetype(structure);
     const auto typeSize = static_cast<uint32_t>(data_size(inType));
-    assert((sizeof(dual_group_t) + typeSize) < kGroupBlockSize);(void)typeSize;
+    SKR_ASSERT((sizeof(dual_group_t) + typeSize) < kGroupBlockSize);(void)typeSize;
     dual_group_t& proto = *new (groupPool.allocate()) dual_group_t();
     char* buffer = (char*)(&proto + 1);
     proto.firstFree = 0;
-    buffer += sizeof(dual_group_t);
-    dual_entity_type_t type = clone(inType, buffer);
+    dual_entity_type_t type = dual::clone(inType, buffer);
     proto.type = type;
     auto toClean = localStack.allocate<TIndex>(proto.type.type.length + 1);
     SIndex toCleanCount = 0;
@@ -212,6 +254,27 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
         cloneType.type = { toClone, toCloneCount };
         proto.cloned = get_group(cloneType);
     }
+    return &proto;
+}
+
+dual_group_t* dual_storage_t::clone_group(dual_group_t* srcG)
+{
+    if(auto g = try_get_group(srcG->type))
+        return g;
+    dual_group_t& proto = *new (groupPool.allocate()) dual_group_t();
+    std::memcpy(&proto, srcG, sizeof(dual_group_t));
+    char* buffer = (char*)(&proto + 1);
+    proto.type = dual::clone(srcG->type, buffer);
+    proto.archetype = clone_archetype(srcG->archetype);
+    if (srcG->dead)
+    {
+        proto.dead = clone_group(srcG->dead);
+    }
+    if (srcG->cloned)
+    {
+        proto.cloned = clone_group(srcG->cloned);
+    }
+    groups.insert({ proto.type, &proto });
     return &proto;
 }
 

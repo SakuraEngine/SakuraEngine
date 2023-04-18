@@ -30,23 +30,13 @@ dual_storage_t::~dual_storage_t()
     scheduler = nullptr;
     for(auto q : queries)
         sakura_free((void*)q);
-    for (auto iter : groups)
-        iter.second->clear();
+    reset();
 }
 
 void dual_storage_t::reset()
 {
     for (auto iter : groups)
         iter.second->clear();
-    groups.clear();
-    archetypes.clear();
-    queries.clear();
-    queryCaches.clear();
-    entities.reset();
-    archetypeArena.reset();
-    queryBuildArena.reset();
-    groupPool.reset();
-    queriesBuilt = false;
 }
 
 void dual_storage_t::allocate(dual_group_t* group, EIndex count, dual_view_callback_t callback, void* u)
@@ -764,15 +754,39 @@ void dual_storage_t::merge(dual_storage_t& src)
     src.queries.clear();
 }
 
+dual_storage_t* dual_storage_t::clone()
+{
+    dual_storage_t* dst = SkrNew<dual_storage_t>();
+    dst->entities = entities;
+    dst->userdata = userdata;
+    for(auto group : groups)
+    {
+        auto dstGroup = dst->clone_group(group.second);
+        for(auto chunk : group.second->chunks)
+        {
+            auto count = chunk->count;
+            auto view = dual_chunk_view_t{ chunk, 0, count };
+            while (count != 0)
+            {
+                dual_chunk_view_t v = dst->allocate_view(dstGroup, count);
+                dst->entities.fill_entities(v);
+                dual::clone_view(v, view.chunk, view.start + (view.count - count));
+                count -= v.count;
+            }
+        }
+    }
+    return dst;
+}
+
 extern "C" {
 dual_storage_t* dualS_create()
 {
-    return new dual_storage_t;
+    return SkrNew<dual_storage_t>();
 }
 
 void dualS_release(dual_storage_t* storage)
 {
-    delete storage;
+    SkrDelete(storage);
 }
 
 void dualS_set_userdata(dual_storage_t* storage, void* u)
@@ -988,9 +1002,9 @@ void dualQ_get_groups(dual_query_t* query, dual_group_callback_t callback, void*
 void dualQ_get_views_group(dual_query_t* query, dual_group_t* group, dual_view_callback_t callback, void* u)
 {
     query->storage->build_queries();
-    if(!query->storage->match_group(query->buildedFilter, query->meta, group))
+    if(!query->storage->match_group(query->filter, query->meta, group))
         return;
-    query->storage->query(group, query->buildedFilter, query->meta, callback, u);
+    query->storage->query(group, query->filter, query->meta, callback, u);
 }
 
 const char* dualQ_get_error()
@@ -1015,7 +1029,7 @@ void dualQ_get(dual_query_t* query, dual_filter_t* filter, dual_parameters_t* pa
     if(!query->storage->queriesBuilt)
         query->storage->build_queries();
     if(filter)
-        *filter = query->buildedFilter;
+        *filter = query->filter;
     if(params)
         *params = query->parameters;
 }

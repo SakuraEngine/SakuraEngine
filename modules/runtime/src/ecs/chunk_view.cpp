@@ -154,6 +154,91 @@ static void move_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uint32_t
     }
 }
 
+static void clone_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uint32_t srcStart, type_index_t type, EIndex srcOffset, EIndex dstOffset, uint32_t size, uint32_t align, uint32_t elemSize, resource_fields_t resourceFields, void (*copy)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src))
+{
+    SKR_ASSERT(!type.is_chunk());
+    char* dst = dstV.chunk->data() + (size_t)dstOffset + (size_t)size * dstV.start;
+    char* src = srcC->data() + (size_t)srcOffset + (size_t)size * srcStart;
+    auto storage = dstV.chunk->type->storage;
+    auto patchResources = [&](char* data)
+    {
+        forloop(k, 0, resourceFields.count)
+        {
+            auto field = ((intptr_t*)resourceFields.offsets)[k];
+            auto* resource = (skr_resource_handle_t*)(data + field);
+            if(resource->is_resolved())
+            {
+                new (resource) skr_resource_handle_t(*resource, (uint64_t)storage, SKR_REQUESTER_ENTITY);
+            }
+        }
+    };
+    if (copy)
+    {
+        if (type.is_buffer())
+        {
+            forloop (j, 0, dstV.count)
+            {
+                auto arrayDst = (dual_array_comp_t*)((size_t)j * size + dst);
+                auto arraySrc = (dual_array_comp_t*)((size_t)j * size + src);
+                if (!is_array_small(arraySrc)) // memory is on heap
+                {
+                    size_t cap = (char*)arraySrc->EndX - (char*)arraySrc->BeginX;
+                    arrayDst->BeginX = dual_array_comp_t::allocate(cap);
+                    arrayDst->EndX = arrayDst->CapacityX = (char*)arrayDst->BeginX + cap;
+                }
+                else                          // memory is in chunk
+                {
+                    new_array(arrayDst, size, elemSize, align);
+                    arrayDst->EndX = (char*)arrayDst->BeginX + arraySrc->size_in_bytes();
+                }
+                for (char *currDst = (char*)arrayDst->BeginX, *currSrc = (char*)arraySrc->BeginX;
+                        currDst != arrayDst->EndX; currDst += elemSize, currSrc += elemSize)
+                    copy(dstV.chunk, dstV.start + j, currDst, (dual_chunk_t*)srcC, srcStart + j, currSrc);
+            }
+        }
+        else
+            forloop (j, 0, dstV.count)
+                copy(dstV.chunk, dstV.start + j, (size_t)j * size + dst, (dual_chunk_t*)srcC, srcStart + j, (size_t)j * size + src);
+    }
+    else
+    {
+        if (type.is_buffer())
+        {
+            forloop (j, 0, dstV.count)
+            {
+                auto arrayDst = (dual_array_comp_t*)((size_t)j * size + dst);
+                auto arraySrc = (dual_array_comp_t*)((size_t)j * size + src);
+                if (!is_array_small(arraySrc)) // memory is on heap
+                {
+                    size_t cap = (char*)arraySrc->EndX - (char*)arraySrc->BeginX;
+                    arrayDst->BeginX = dual_array_comp_t::allocate(cap);
+                    arrayDst->EndX = arrayDst->CapacityX = (char*)arrayDst->BeginX + cap;
+                }
+                else                          // memory is in chunk
+                {
+                    new_array(arrayDst, size, elemSize, align);
+                    arrayDst->EndX = (char*)arrayDst->BeginX + arraySrc->size_in_bytes();
+                }
+                memcpy(arrayDst->BeginX, arraySrc->BeginX, arraySrc->size_in_bytes());
+                if(resourceFields.count > 0)
+                {
+                    for (char* curr = (char*)arrayDst->BeginX; curr != arrayDst->EndX; curr += elemSize)
+                        patchResources(curr);
+                }
+            }
+        }
+        else
+        {
+            memcpy(dst, src, dstV.count * (size_t)size);
+            if(resourceFields.count > 0)
+            {
+                forloop (j, 0, dstV.count)
+                    patchResources((size_t)j * size + dst);
+            }
+        }
+    }
+}
+
 void memdup(void* dst, const void* src, size_t size, size_t count) noexcept
 {
     size_t copied = 1;
@@ -224,7 +309,6 @@ static void duplicate_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uin
     }
     else
     {
-        memdup(dst, src, (size_t)size, (size_t)dstV.count);
         
         if (type.is_buffer())
         {
@@ -251,10 +335,13 @@ static void duplicate_impl(dual_chunk_view_t dstV, const dual_chunk_t* srcC, uin
                 }
             }
         }
-        else if(resourceFields.count > 0)
-        {
-            forloop (j, 0, dstV.count)
-                patchResources((size_t)j * size + dst);
+        else {
+            memdup(dst, src, (size_t)size, (size_t)dstV.count);
+            if(resourceFields.count > 0)
+            {
+                forloop (j, 0, dstV.count)
+                    patchResources((size_t)j * size + dst);
+            }
         }
     }
 }
@@ -571,6 +658,28 @@ void duplicate_view(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, EIn
             ++srcI;
             ++dstI;
         }
+    }
+}
+
+void clone_view(const dual_chunk_view_t& dstV, const dual_chunk_t* srcC, EIndex srcStart) noexcept
+{
+    archetype_t* srcType = srcC->type;
+    archetype_t* dstType = dstV.chunk->type;
+    EIndex* srcOffsets = srcType->offsets[srcC->pt];
+    EIndex* dstOffsets = dstType->offsets[dstV.chunk->pt];
+    uint32_t* srcSizes = srcType->sizes;
+    uint32_t* srcAligns = srcType->aligns;
+    uint32_t* srcElemSizes = srcType->elemSizes;
+    dual_type_set_t srcTypes = srcType->type;
+    uint32_t* srcCallbackFlags = srcType->callbackFlags;
+    
+    for(uint32_t i = 0; i < srcType->firstChunkComponent; ++i)
+    {
+        type_index_t srcT = srcTypes.data[i];
+        decltype(srcType->callbacks[i].move) callback = nullptr;
+        if((srcCallbackFlags[i] & DCF_MOVE) != 0) DUAL_UNLIKELY
+            callback = srcType->callbacks[i].move;
+        move_impl(dstV, srcC, srcStart, srcT, srcOffsets[i], dstOffsets[i], srcSizes[i], srcAligns[i], srcElemSizes[i], callback);
     }
 }
 
