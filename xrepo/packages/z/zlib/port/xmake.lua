@@ -1,6 +1,7 @@
 target("zlib")
-    set_kind("static")
+    set_kind("headeronly")
     add_includedirs("zlib/include", {public=true})
+    add_headerfiles("zlib/include/(**.h)")
     if (is_os("windows")) then 
         add_linkdirs("zlib/lib/windows/x64", {public=true})
         add_links("zlibstatic", {public=true})

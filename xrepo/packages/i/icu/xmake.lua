@@ -5,6 +5,7 @@ package("icu")
     
     add_versions("72.1.0-skr", "cd5f0085d268ebcae37eb0341987003481f32e6c0284c23398a187dbe9c836f6")
 
+    add_deps("zlib =1.2.8-skr")
     on_install(function (package)
         os.mkdir(package:installdir())
         os.cp(path.join(package:scriptdir(), "port", "icu4c"), ".")
