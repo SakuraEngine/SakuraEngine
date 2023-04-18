@@ -89,9 +89,9 @@ rule("skr.module")
             if target:kind() == "binary" then
                 for _, dep in pairs(dep_modules) do
                     if is_plat("linux") then
-                        target:add("ldflags", "-Wl,--whole-archive "..dep..".a -Wl,--no-whole-archive", {force = true, public = false})
+                        target:add("ldflags", "-Wl,--whole-archive "..dep.." -Wl,--no-whole-archive", {force = true, public = false})
                     elseif is_plat("macosx") then
-                        target:add("ldflags", "-Wl,-force_load lib"..dep..".a", {force = true, public = false})
+                        target:add("ldflags", "-Wl,-force_load "..dep, {force = true, public = false})
                     elseif is_plat("windows") then
                         target:add("ldflags", "/WHOLEARCHIVE:"..dep..".lib", {force = true, public = false})
                     end
