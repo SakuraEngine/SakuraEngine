@@ -1,3 +1,5 @@
+add_requires("simdjson =3.0.0-skr")
+
 target("SkrDependencyGraph")
     set_group("01.modules")
     add_deps("SkrRoot", {public = true})
@@ -13,6 +15,9 @@ target("SkrDependencyGraph")
 shared_module("SkrRT", "RUNTIME", engine_version)
     set_group("01.modules")
     add_deps("SkrRoot", {public = true})
+    -- internal packages
+    add_packages("simdjson", {public = true, inherit = true})
+    -- defs & flags
     add_defines(defs_list, {public = true})
     add_ldflags(project_ldflags, {public = true, force = true})
     add_cxflags(project_cxflags, {public = true, force = true})
