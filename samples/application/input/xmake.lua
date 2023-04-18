@@ -1,6 +1,0 @@
-target("InputDemo")
-    set_group("04.examples/application")
-    set_kind("binary")
-    add_includedirs("./../../common", {public = false})
-    add_files("src/*.cpp") 
-    public_dependency("SkrInput", "0.1.0")
