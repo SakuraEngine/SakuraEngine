@@ -34,7 +34,11 @@ void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
         std::iota(begin, end, begin - indices.begin());
     });
     //sort by guid to ensure deterministic order
-    std::sort(std::execution::par_unseq, indices.begin(), indices.end(), [&](dual_entity_t a, dual_entity_t b)
+    std::sort(
+#if __cpp_lib_execution >= 201603L
+    std::execution::par_unseq, 
+#endif
+    indices.begin(), indices.end(), [&](dual_entity_t a, dual_entity_t b)
     {
         return std::lexicographical_compare(&guids[a].Storage0, &guids[a].Storage3, &guids[b].Storage0, &guids[b].Storage3);
     });

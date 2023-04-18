@@ -67,5 +67,4 @@ executable_module("Live2DViewer", "LIVE2D_VIEWER", engine_version)
     end
 
 includes("ogui2/xmake.lua")
-includes("input/xmake.lua")
 includes("multiplayer/xmake.lua")
