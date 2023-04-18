@@ -1,7 +1,6 @@
 shared_module("SkrOzz", "SKR_OZZ", engine_version)
     set_group("01.modules")
     set_exceptions("no-cxx")
-    add_rules("skr.static_module", {api = "SKR_DEPENDENCY_GRAPH"})
     set_optimize("fastest")
     add_includedirs("ozz", {public=true})
     add_includedirs("ozz_src", {public=false})
