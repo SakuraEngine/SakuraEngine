@@ -128,7 +128,7 @@ end
 
 function shared_module(name, api, version, opt)
     target(name)
-    if(has_config("shipping_one_archive")) then
+    if has_config("shipping_one_archive") then
         set_kind("static")
     else
         set_kind("shared")
