@@ -607,6 +607,12 @@ dual_type_index_t dualV_get_local_type(const dual_chunk_view_t* view, dual_type_
     return view->chunk->group->index(type);
 }
 
+dual_type_index_t dualV_get_component_type(const dual_chunk_view_t* view, dual_type_index_t type)
+{
+    SKR_ASSERT(type < view->chunk->group->type.type.length);
+    return view->chunk->group->type.type.data[type];
+}
+
 template <bool readonly, bool local>
 auto dualV_get_owned(const dual_chunk_view_t* view, dual_type_index_t type)
 {

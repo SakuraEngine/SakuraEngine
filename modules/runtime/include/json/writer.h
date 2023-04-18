@@ -26,13 +26,18 @@ template <class T>
 struct TResourceHandle;
 }
 // end forward declaration for resources
+struct skr_json_format_t
+{
+    bool enable = true;
+    uint32_t indentSize = 4;
+};
 
 struct RUNTIME_API skr_json_writer_t {
 public:
     using TChar = skr_json_writer_char_t;
     using TSize = skr_json_writer_size_t;
 
-    skr_json_writer_t(size_t levelDepth);
+    skr_json_writer_t(size_t levelDepth, skr_json_format_t format = skr_json_format_t());
     inline bool IsComplete() { return _hasRoot && _levelStack.empty(); }
     skr::string Str() const;
     bool Bool(bool b);
@@ -76,9 +81,11 @@ protected:
     bool _WriteEndArray();
     bool _WriteRawValue(const TChar* str, TSize length);
     bool _Prefix(ESkrJsonType type);
+    bool _NewLine();
 
     bool _hasRoot = false;
     eastl::vector<Level> _levelStack;
+    skr_json_format_t _format;
 };
 #else
 typedef struct skr_json_writer_t skr_json_writer_t;

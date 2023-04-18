@@ -3,7 +3,7 @@
 #include "EASTL/fixed_vector.h"
 #include "utils/parallel_for.hpp"
 #include "utils/log.h"
-#include "ecs/callback.hpp"
+
 #include "ecs/type_builder.hpp"
 #include "ecs/set.hpp"
 #include "json/writer.h"

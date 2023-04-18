@@ -121,7 +121,7 @@ void SLive2DViewerModule::on_unload()
 extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs);
 
 #include "ecs/dual.h"
-#include "ecs/callback.hpp"
+
 #include "ecs/type_builder.hpp"
 
 void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service, 

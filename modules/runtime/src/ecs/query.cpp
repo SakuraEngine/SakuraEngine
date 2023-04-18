@@ -10,7 +10,7 @@
 #include "type.hpp"
 #include "set.hpp"
 #include "ecs/constants.hpp"
-#include "ecs/callback.hpp"
+
 #include <EASTL/sort.h>
 #include <EASTL/algorithm.h>
 #include <EASTL/numeric.h>

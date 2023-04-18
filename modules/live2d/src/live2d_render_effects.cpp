@@ -6,7 +6,7 @@
 #include "utils/make_zeroed.hpp"
 
 #include "ecs/type_builder.hpp"
-#include "ecs/callback.hpp"
+
 
 #include "SkrLive2D/skr_live2d.h"
 #include "SkrLive2D/l2d_render_effect.h"

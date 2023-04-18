@@ -1,6 +1,6 @@
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "ecs/SmallVector.h"
-#include "ecs/callback.hpp"
+
 #include "ecs/dual_config.h"
 #include "platform/debug.h"
 #include "ecs/dual.h"

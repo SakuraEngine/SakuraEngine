@@ -2,7 +2,7 @@
 #include "utils/make_zeroed.hpp"
 #include "ecs/dual.h"
 #include "ecs/array.hpp"
-#include "ecs/callback.hpp"
+
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 
 #include "SkrRenderer/render_viewport.h"

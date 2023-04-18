@@ -1,5 +1,5 @@
 #include "render_world.h"
-#include "ecs/callback.hpp"
+
 #include "MPShared/components.h"
 #include "SkrRenderer/render_effect.h"
 #include "ecs/type_builder.hpp"

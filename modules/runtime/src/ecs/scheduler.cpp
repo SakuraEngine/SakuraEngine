@@ -5,7 +5,7 @@
 #include "ecs/dual.h"
 #include "query.hpp"
 #include "storage.hpp"
-#include "ecs/callback.hpp"
+
 #include "type.hpp"
 #include "utils/log.h"
 
