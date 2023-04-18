@@ -1,5 +1,6 @@
 set_xmakever("2.7.4")
---add_platformdirs("xmake/platforms")
+add_repositories("skr-xrepo xrepo")
+
 set_project("SakuraEngine")
 
 set_policy("build.ccache", false)
