@@ -76,7 +76,7 @@ SKR_ALIGNAS(16) skr_l2r_comp_t
 sreflect_struct(
     "guid" : "78DD218B-87DE-4250-A7E8-A6B4553B47BF", 
     "component" : true, 
-    "serialize" : ["binary", "json"],
+    "serialize" : ["bin", "json"],
     "rtti" : true
 )
 skr_rotation_comp_t
@@ -87,7 +87,7 @@ skr_rotation_comp_t
 struct sreflect sattr(
     "guid" : "A059A2A1-CC3B-43B0-88B6-ADA7822BA25D",
     "component" : true, 
-    "serialize" : ["binary", "json"],
+    "serialize" : ["bin", "json"],
     "rtti" : true
 )
 skr_translation_comp_t
@@ -98,7 +98,7 @@ skr_translation_comp_t
 sreflect_struct(
     "guid" : "D045D755-FBD1-44C2-8BF0-C86F2D8485FF", 
     "component" : true, 
-    "serialize" : ["binary", "json"],
+    "serialize" : ["bin", "json"],
     "rtti" : true)
 skr_scale_comp_t
 {
