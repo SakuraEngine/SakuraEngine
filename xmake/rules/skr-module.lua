@@ -87,11 +87,12 @@ rule("skr.module")
         local dep_modules = module_codegen.resolve_skr_module_dependencies(target)
         if has_config("shipping_one_archive") then
             if target:kind() == "binary" then
+                local output_dir = vformat("$(buildir)/$(os)/$(arch)/$(mode)")
                 for _, dep in pairs(dep_modules) do
                     if is_plat("linux") then
-                        target:add("ldflags", "-Wl,--whole-archive "..dep.." -Wl,--no-whole-archive", {force = true, public = false})
+                        target:add("ldflags", "-Wl,--whole-archive "..output_dir.."/lib"..dep..".a -Wl,--no-whole-archive", {force = true, public = false})
                     elseif is_plat("macosx") then
-                        target:add("ldflags", "-Wl,-force_load "..dep, {force = true, public = false})
+                        target:add("ldflags", "-Wl,-force_load "..output_dir.."/lib"..dep..".a", {force = true, public = false})
                     elseif is_plat("windows") then
                         target:add("ldflags", "/WHOLEARCHIVE:"..dep..".lib", {force = true, public = false})
                     end
