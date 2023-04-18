@@ -3,7 +3,8 @@
 #include "utils/format.hpp"
 #include "platform/debug.h"
 
-skr_json_writer_t::skr_json_writer_t(size_t levelDepth)
+skr_json_writer_t::skr_json_writer_t(size_t levelDepth, skr_json_format_t format)
+    : _format(format)
 {
     _levelStack.reserve(levelDepth);
 }
@@ -205,6 +206,8 @@ bool skr_json_writer_t::_WriteStartObject()
 
 bool skr_json_writer_t::_WriteEndObject()
 {
+    if(_format.enable)
+        _NewLine();
     buffer.push_back('}');
     return true;
 }
@@ -217,6 +220,8 @@ bool skr_json_writer_t::_WriteStartArray()
 
 bool skr_json_writer_t::_WriteEndArray()
 {
+    if(_format.enable)
+        _NewLine();
     buffer.push_back(']');
     return true;
 }
@@ -241,12 +246,34 @@ bool skr_json_writer_t::_Prefix(ESkrJsonType type)
         }
         if (!level.isArray && level.valueCount % 2 == 0)
             SKR_ASSERT(type == SKR_JSONTYPE_STRING); // if it's in object, then even number should be a name
+            
+        if(_format.enable)
+        {
+            bool newLineAndIndent = level.valueCount == 0 || level.isArray || level.valueCount % 2 == 0;
+            if (newLineAndIndent)
+                _NewLine();
+        }
         level.valueCount++;
     }
     else
     {
         SKR_ASSERT(!_hasRoot); // Should only has one and only one root.
         _hasRoot = true;
+    }
+    return true;
+}
+
+
+bool skr_json_writer_t::_NewLine()
+{
+    static const char indentLiteral[] ="                                                                      ";
+    buffer.push_back('\n');
+    auto ident = _levelStack.size() * _format.indentSize;
+    while (ident > 0)
+    {
+        auto n = std::min(ident, sizeof(indentLiteral) - 1);
+        buffer.append(indentLiteral, indentLiteral + n);
+        ident -= n;
     }
     return true;
 }

@@ -671,6 +671,14 @@ RUNTIME_API void* dualV_get_owned_rw_local(const dual_chunk_view_t* view, dual_t
  */
 RUNTIME_API dual_type_index_t dualV_get_local_type(const dual_chunk_view_t* view, dual_type_index_t type);
 /**
+ * @brief get component type id of a local type from chunk view
+ *
+ * @param view
+ * @param type
+ * @return dual_type_index_t
+ */
+RUNTIME_API dual_type_index_t dualV_get_component_type(const dual_chunk_view_t* view, dual_type_index_t type);
+/**
  * @brief get entity list from chunk view
  *
  * @param view
@@ -815,6 +823,8 @@ RUNTIME_API void dualJ_bind_storage(dual_storage_t* storage);
  */
 RUNTIME_API void dualJ_unbind_storage(dual_storage_t* storage);
 
+RUNTIME_API void dual_set_bit(uint32_t* mask, int32_t bit);
+
 #if defined(__cplusplus)
 }
 #endif
@@ -830,6 +840,7 @@ struct dual_id_of {
 #include "binary/reader.h"
 #include "binary/writer.h"
 #include "type/type_helper.hpp"
+#include "ecs/callback.hpp"
 namespace dual
 {
     struct storage_scope_t
@@ -844,6 +855,21 @@ namespace dual
         {
             dualJ_unbind_storage(storage);
         }
+    };
+
+    struct guid_comp_t
+    {
+        dual_guid_t value;
+    };
+
+    struct mask_comp_t
+    {
+        dual_mask_comp_t value;
+    };
+
+    struct dirty_comp_t
+    {
+        dual_dirty_comp_t value;
     };
 
     struct query_t
@@ -958,6 +984,91 @@ namespace dual
     {
         return (V*)dualV_get_owned_ro(view, dual_id_of<T>::get());
     }
+
+    struct task_context_t
+    {
+        dual_storage_t* storage;
+        dual_chunk_view_t* view;
+        dual_type_index_t* localTypes;
+        EIndex entityIndex;
+        dual_query_t* query;
+
+        auto count() { return view->count; }
+
+        template<class T>
+        void check_local_type(dual_type_index_t idx)
+        {
+            SKR_ASSERT(dualV_get_component_type(view, localTypes[idx]) == dual_id_of<T>::get());
+        }
+
+        void check_access(dual_type_index_t idx, bool readonly)
+        {
+            dual_parameters_t params;
+            dualQ_get(query, nullptr, &params);
+            SKR_ASSERT(params.accesses[idx].readonly == readonly);
+        }
+
+        template<class T>
+        T* get_owned_rw(dual_type_index_t idx)
+        {
+            check_local_type<T>(idx);
+            check_access(idx, false);
+            return (T*)dualV_get_owned_rw_local(view, localTypes[idx]);
+        }
+
+        template<class T>
+        T* get_owned_ro(dual_type_index_t idx)
+        {
+            check_local_type<T>(idx);
+            check_access(idx, true);
+            return (T*)dualV_get_owned_ro_local(view, localTypes[idx]);
+        }
+
+        void set_dirty(dirty_comp_t& mask, dual_type_index_t idx)
+        {
+            check_access(idx, false);
+            dual_set_bit(&mask.value, localTypes[idx]);
+        }
+    };
+
+    template<class F>
+    bool schedule_task(dual_query_t* query, EIndex batchSize, F callback, dual_counter_t** counter)
+    {
+        struct payload {
+            F callback;
+            dual_query_t* query;
+        };
+        auto trampoline = +[](void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
+        {
+            payload* p = (payload*)u;
+            task_context_t ctx{ storage, view, localTypes, entityIndex, nullptr };
+            p->callback(ctx);
+        };
+        payload* p = SkrNew<payload>( std::move(callback), query );
+        auto teardown = +[](void* u, EIndex entityCount) {
+            payload* p = (payload*)u;
+            SkrDelete(p);
+        };
+        return dualJ_schedule_ecs(query, batchSize, trampoline, p, nullptr, teardown, nullptr, counter);
+    }
 }
+
+template<>
+struct RUNTIME_API dual_id_of<dual::dirty_comp_t>
+{
+    static dual_type_index_t get();
+};
+
+template<>
+struct RUNTIME_API dual_id_of<dual::mask_comp_t>
+{
+    static dual_type_index_t get();
+};
+
+template<>
+struct RUNTIME_API dual_id_of<dual::guid_comp_t>
+{
+    static dual_type_index_t get();
+};
 
 #endif

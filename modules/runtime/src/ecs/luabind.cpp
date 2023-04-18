@@ -5,7 +5,7 @@
 #include "archetype.hpp"
 #include "type_registry.hpp"
 #include "ecs/type_builder.hpp"
-#include "ecs/callback.hpp"
+
 #include "ecs/array.hpp"
 
 namespace dual

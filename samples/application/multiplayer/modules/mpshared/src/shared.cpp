@@ -6,7 +6,7 @@
 #include "ecs/type_builder.hpp"
 #include "platform/atomic.h"
 #include "utils/make_zeroed.hpp"
-#include "ecs/callback.hpp"
+
 #include "rtm/quatf.h"
 #include "rtm/rtmx.h"
 
@@ -30,38 +30,6 @@ void MPGameWorld::Shutdown()
     dualQ_release(controlQuery);
     dualQ_release(movementQuery);
     dualS_release(storage);
-}
-
-void mark_dirty_atomic(uint32_t& mask, int32_t bit)
-{
-    //CAS
-    uint32_t oldMask = mask;
-    uint32_t newMask = oldMask | (1 << bit);
-    while(!skr_atomicu32_cas_relaxed(&mask, oldMask, newMask))
-    {
-        oldMask = mask;
-        newMask = oldMask | (1 << bit);
-    }
-}
-
-void mark_dirty_atomic(uint32_t& mask, std::initializer_list<uint32_t> list)
-{
-    //CAS
-    uint32_t oldMask = mask;
-    uint32_t newMask = oldMask;
-    for(auto bit : list)
-    {
-        newMask |= (1 << bit);
-    }
-    while(!skr_atomicu32_cas_relaxed(&mask, oldMask, newMask))
-    {
-        oldMask = mask;
-        newMask = oldMask;
-        for(auto bit : list)
-        {
-            newMask |= (1 << bit);
-        }
-    }
 }
 
 bool collide(const skr_float3_t& a, const CSphereCollider2D& aBox, const skr_float3_t& b, const CSphereCollider2D& bBox, skr_float2_t& outNormal)
@@ -116,17 +84,15 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
         dualS_batch(storage, ballsToKill.data(), ballsToKill.size(), DUAL_LAMBDA(killBalls));
     }
 
-    dualJ_schedule_ecs(controlQuery, 512, 
-    +[](void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
+    dual::schedule_task(controlQuery, 512, [this](dual::task_context_t ctx)
     {
-        auto This = (MPGameWorld*)u;
-        auto controllers = (CController*)dualV_get_owned_rw_local(view, localTypes[0]);
-        auto movements = (CMovement*)dualV_get_owned_rw_local(view, localTypes[1]);
-        auto skills = (CSkill*)dualV_get_owned_rw_local(view, localTypes[2]);
-        auto dirtyMasks = (uint32_t*)dualV_get_owned_ro_local(view, localTypes[3]);
-        for(int i=0; i<view->count; ++i)
+        auto controllers = ctx.get_owned_ro<CController>(0);
+        auto movements = ctx.get_owned_rw<CMovement>(1);
+        auto skills = ctx.get_owned_rw<CSkill>(2);
+        auto dirtyMasks = ctx.get_owned_ro<dual::dirty_comp_t>(3);
+        for(int i=0; i<ctx.count(); ++i)
         {
-            auto& input = This->input.inputs[controllers[i].playerId];
+            auto& input = this->input.inputs[controllers[i].playerId];
             bool skillDirty = false;
             if(skills[i].cooldownTimer > 0)
             {
@@ -155,15 +121,14 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
             skr::math::store(rtm::vector_mul(skr::math::load(input.move), movements[i].speed), movements[i].velocity);
             if(dirtyMasks)
             {
-                mark_dirty_atomic(dirtyMasks[i], localTypes[1]);
+                ctx.set_dirty(dirtyMasks[i], 1);
                 if(skillDirty)
                 {
-                    mark_dirty_atomic(dirtyMasks[i], localTypes[2]);
+                    ctx.set_dirty(dirtyMasks[i], 2);
                 }
             }
         }
-        
-    }, this, nullptr, nullptr, nullptr, nullptr);
+    }, nullptr);
 
     //TODO: predict spawn
     if(authoritative)
@@ -244,9 +209,9 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
                 weapons[i].fireTimer = 5;
                 if(dirtyMasks)
                 {
-                    mark_dirty_atomic(dirtyMasks[i], localTypes[0]);
-                    mark_dirty_atomic(dirtyMasks[i], localTypes[1]);
-                    mark_dirty_atomic(dirtyMasks[i], localTypes[2]);
+                    dual_set_bit(&dirtyMasks[i], localTypes[0]);
+                    dual_set_bit(&dirtyMasks[i], localTypes[1]);
+                    dual_set_bit(&dirtyMasks[i], localTypes[2]);
                 }
             }
         }
@@ -282,8 +247,8 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
 
             if(dirtyMasks)
             {
-                mark_dirty_atomic(dirtyMasks[i], localTypes[1]);
-                mark_dirty_atomic(dirtyMasks[i], localTypes[2]);
+                dual_set_bit(&dirtyMasks[i], localTypes[1]);
+                dual_set_bit(&dirtyMasks[i], localTypes[2]);
             }
         }
         
@@ -305,7 +270,7 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
                 translations[i].x += movements[i].velocity.x * deltaTime;
                 translations[i].z += movements[i].velocity.y * deltaTime;
                 if(dirtyMasks)
-                    mark_dirty_atomic(dirtyMasks[i], localTypes[0]);
+                    dual_set_bit(&dirtyMasks[i], localTypes[0]);
                 auto checkAndSet = [&](dual_chunk_view_t* view)
                 {
                     auto otherTranslations = (skr_float3_t*)dualV_get_owned_ro(view, dual_id_of<skr_translation_comp_t>::get());
@@ -331,7 +296,7 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
                                 health.health -= 1;
                                 if(otherDirtyMasks)
                                 {
-                                    mark_dirty_atomic(otherDirtyMasks[j], healthId);
+                                    dual_set_bit(&otherDirtyMasks[j], healthId);
                                 }
                             }
                         }

@@ -6,7 +6,7 @@
 #include "cgpu/api.h"
 #include "cgpu/cgpux.h"
 
-#include "ecs/callback.hpp"
+
 #include "ecs/dual.h"
 
 #include "SkrRenderGraph/frontend/render_graph.hpp"

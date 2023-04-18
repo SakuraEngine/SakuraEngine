@@ -10,7 +10,7 @@
 #include "platform/time.h"
 #include "platform/guid.hpp"
 #include "platform/window.h"
-#include "ecs/callback.hpp"
+
 #include "ecs/type_builder.hpp"
 #include "json/writer.h"
 

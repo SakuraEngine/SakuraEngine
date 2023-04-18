@@ -8,7 +8,7 @@
 
 #include "ecs/dual.h"
 #include "ecs/type_builder.hpp"
-#include "ecs/callback.hpp"
+
 #include "ecs/array.hpp"
 
 #include "SkrRenderGraph/frontend/render_graph.hpp"

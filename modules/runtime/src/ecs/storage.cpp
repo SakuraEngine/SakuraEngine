@@ -13,6 +13,7 @@
 #include "scheduler.hpp"
 #include "utils/parallel_for.hpp"
 #include "type_registry.hpp"
+#include "platform/atomic.h"
 
 dual_storage_t::dual_storage_t()
     : archetypeArena(dual::get_default_pool())
@@ -1013,8 +1014,10 @@ void dualQ_get(dual_query_t* query, dual_filter_t* filter, dual_parameters_t* pa
 {
     if(!query->storage->queriesBuilt)
         query->storage->build_queries();
-    *filter = query->buildedFilter;
-    *params = query->parameters;
+    if(filter)
+        *filter = query->buildedFilter;
+    if(params)
+        *params = query->parameters;
 }
 
 dual_storage_t* dualQ_get_storage(dual_query_t* query)
@@ -1053,4 +1056,31 @@ EIndex dualS_count(dual_storage_t *storage, bool includeDisabled, bool includeDe
     }
     return result;
 }
+
+void dual_set_bit(uint32_t* mask, int32_t bit)
+{
+    //CAS
+    uint32_t oldMask = *mask;
+    uint32_t newMask = oldMask | (1 << bit);
+    while(!skr_atomicu32_cas_relaxed(mask, oldMask, newMask))
+    {
+        oldMask = *mask;
+        newMask = oldMask | (1 << bit);
+    }
+}
+}
+
+dual_type_index_t dual_id_of<dual::dirty_comp_t>::get()
+{
+    return dual::kDirtyComponent;
+}
+
+dual_type_index_t dual_id_of<dual::mask_comp_t>::get()
+{
+    return dual::kMaskComponent;
+}
+
+dual_type_index_t dual_id_of<dual::guid_comp_t>::get()
+{
+    return dual::kGuidComponent;
 }

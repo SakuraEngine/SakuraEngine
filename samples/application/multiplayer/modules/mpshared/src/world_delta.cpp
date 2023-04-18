@@ -5,7 +5,7 @@
 #include "ecs/type_builder.hpp"
 #include "containers/vector.hpp"
 #include "ecs/set.hpp"
-#include "ecs/callback.hpp"
+
 #include "ecs/array.hpp"
 #include "utils/log.hpp"
 #include "platform/time.h"

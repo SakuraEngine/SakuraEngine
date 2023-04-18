@@ -22,6 +22,7 @@ struct BlobBuilderType<skr::span<T>>
 #include "platform/debug.h"
 #include "utils/traits.hpp"
 #include "binary/reader_fwd.h"
+#include "platform/debug.h"
 
 namespace skr
 {

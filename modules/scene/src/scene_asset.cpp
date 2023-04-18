@@ -1,5 +1,5 @@
 #include "SkrScene/scene.h"
-#include "ecs/callback.hpp"
+
 #include "containers/vector.hpp"
 #include <execution>
 #include "utils/parallel_for.hpp"
@@ -84,5 +84,4 @@ void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
 
 void skr_load_scene(dual_storage_t* world, skr_json_reader_t* reader)
 {
-
 }
