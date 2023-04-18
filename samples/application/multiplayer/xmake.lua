@@ -12,7 +12,9 @@ shared_module("MPShared", "MP_SHARED", engine_version)
     public_dependency("SkrRT", engine_version)
     public_dependency("SkrScene", engine_version)
     add_files("modules/mpshared/src/**.cpp")
-    add_syslinks("Ws2_32")
+    if (is_os("windows")) then 
+        add_syslinks("Ws2_32")
+    end
     add_deps("gamenetworkingsockets")
     add_packages("lz4")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
@@ -35,7 +37,9 @@ executable_module("MPGame", "MP_GAME", engine_version)
     public_dependency("SkrRT", engine_version)
     public_dependency("SkrAnim", engine_version)
     public_dependency("MPShared", engine_version)
-    add_syslinks("Ws2_32")
+    if (is_os("windows")) then 
+        add_syslinks("Ws2_32")
+    end
     add_deps("gamenetworkingsockets")
     add_files("modules/mpgame/shaders/**.hlsl")
     add_files("modules/mpgame/src/**.cpp")
@@ -49,6 +53,8 @@ executable_module("MPServer", "MP_SERVER", engine_version)
     })
     add_includedirs("modules/mpserver/include", {public=true})
     public_dependency("MPShared", engine_version)
-    add_syslinks("Ws2_32")
+    if (is_os("windows")) then 
+        add_syslinks("Ws2_32")
+    end
     add_deps("gamenetworkingsockets")
     add_files("modules/mpserver/src/**.cpp")
