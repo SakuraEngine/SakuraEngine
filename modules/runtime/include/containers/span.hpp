@@ -19,6 +19,7 @@ struct BlobBuilderType<skr::span<T>>
 }
 
 // binary reader
+#include "platform/debug.h"
 #include "utils/traits.hpp"
 #include "binary/reader_fwd.h"
 
