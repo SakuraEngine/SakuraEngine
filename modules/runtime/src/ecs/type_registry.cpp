@@ -57,7 +57,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         SKR_ASSERT(descriptions.size() == kLinkComponent.index());
         auto desc = make_zeroed<type_description_t>();
         desc.guid = skr::guid::make_guid_unsafe("{54BD68D5-FD66-4DBE-85CF-70F535C27389}");
-        desc.name = "link";
+        desc.name = "dual::link_comp_t";
         desc.size = sizeof(dual_entity_t) * kLinkComponentSize;
         desc.elementSize = sizeof(dual_entity_t);
         desc.alignment = alignof(dual_entity_t);
@@ -73,7 +73,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         SKR_ASSERT(descriptions.size() == kMaskComponent.index());
         auto desc = make_zeroed<type_description_t>();
         desc.guid = skr::guid::make_guid_unsafe("{B68B1CAB-98FF-4298-A22E-68B404034B1B}");
-        desc.name = "mask";
+        desc.name = "dual::mask_comp_t";
         desc.size = sizeof(dual_mask_comp_t);
         desc.elementSize = 0;
         desc.alignment = DUAL_MASK_ALIGN;
@@ -87,7 +87,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         SKR_ASSERT(descriptions.size() == kGuidComponent.index());
         auto desc = make_zeroed<type_description_t>();
         desc.guid = skr::guid::make_guid_unsafe("{565FBE87-6309-4DF7-9B3F-C61B67B38BB3}");
-        desc.name = "guid";
+        desc.name = "dual::guid_comp_t";
         desc.size = sizeof(dual_guid_t);
         desc.elementSize = 0;
         desc.alignment = alignof(dual_guid_t);
@@ -101,7 +101,7 @@ type_registry_t::type_registry_t(pool_t& pool)
         SKR_ASSERT(descriptions.size() == kDirtyComponent.index());
         auto desc = make_zeroed<type_description_t>();
         desc.guid = skr::guid::make_guid_unsafe("{A55D73D3-D41C-4683-89E1-8B211C115303}");
-        desc.name = "dirty";
+        desc.name = "dual::dirty_comp_t";
         desc.size = sizeof(dual_dirty_comp_t);
         desc.elementSize = 0;
         desc.alignment = DUAL_MASK_ALIGN;

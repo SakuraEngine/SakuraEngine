@@ -1008,20 +1008,26 @@ namespace dual
             SKR_ASSERT(params.accesses[idx].readonly == readonly);
         }
 
-        template<class T>
+        template<class T, bool noCheck = false>
         T* get_owned_rw(dual_type_index_t idx)
         {
-            check_local_type<T>(idx);
-            check_access(idx, false);
+            if constexpr (!noCheck)
+            {
+                check_local_type<T>(idx);
+                check_access(idx, false);
+            }
             return (T*)dualV_get_owned_rw_local(view, localTypes[idx]);
         }
 
-        template<class T>
-        T* get_owned_ro(dual_type_index_t idx)
+        template<class T, bool noCheck = false>
+        const T* get_owned_ro(dual_type_index_t idx)
         {
-            check_local_type<T>(idx);
-            check_access(idx, true);
-            return (T*)dualV_get_owned_ro_local(view, localTypes[idx]);
+            if constexpr (!noCheck)
+            {
+                check_local_type<T>(idx);
+                check_access(idx, true);
+            }
+            return (const T*)dualV_get_owned_ro_local(view, localTypes[idx]);
         }
 
         void set_dirty(dirty_comp_t& mask, dual_type_index_t idx)
@@ -1041,7 +1047,7 @@ namespace dual
         auto trampoline = +[](void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
         {
             payload* p = (payload*)u;
-            task_context_t ctx{ storage, view, localTypes, entityIndex, nullptr };
+            task_context_t ctx{ storage, view, localTypes, entityIndex, p->query };
             p->callback(ctx);
         };
         payload* p = SkrNew<payload>( std::move(callback), query );
@@ -1050,6 +1056,27 @@ namespace dual
             SkrDelete(p);
         };
         return dualJ_schedule_ecs(query, batchSize, trampoline, p, nullptr, teardown, nullptr, counter);
+    }
+
+    template<class T, class F>
+    bool schedule_task(T& query, EIndex batchSize, F callback, dual_counter_t** counter)
+    {
+        struct payload {
+            F callback;
+            dual_query_t* query;
+        };
+        auto trampoline = +[](void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
+        {
+            payload* p = (payload*)u;
+            typename T::TaskContext ctx{ storage, view, localTypes, entityIndex, p->query };
+            p->callback(ctx);
+        };
+        payload* p = SkrNew<payload>( std::move(callback), query.query );
+        auto teardown = +[](void* u, EIndex entityCount) {
+            payload* p = (payload*)u;
+            SkrDelete(p);
+        };
+        return dualJ_schedule_ecs(query.query, batchSize, trampoline, p, nullptr, teardown, nullptr, counter);
     }
 }
 
@@ -1070,5 +1097,13 @@ struct RUNTIME_API dual_id_of<dual::guid_comp_t>
 {
     static dual_type_index_t get();
 };
+
+#define QUERY_CONBINE_GENERATED_NAME(file, type) QUERY_CONBINE_GENERATED_NAME_IMPL(file, type)
+#define QUERY_CONBINE_GENERATED_NAME_IMPL(file, type) GENERATED_QUERY_BODY_##file##_##type
+#ifdef __meta__
+#define GENERATED_QUERY_BODY(type) 
+#else
+#define GENERATED_QUERY_BODY(type) QUERY_CONBINE_GENERATED_NAME(SKR_FILE_ID, type)
+#endif
 
 #endif
