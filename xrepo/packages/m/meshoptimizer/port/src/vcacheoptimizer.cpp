@@ -52,10 +52,9 @@ static void buildTriangleAdjacency(TriangleAdjacency& adjacency, const unsigned 
 
 	for (size_t i = 0; i < index_count; ++i)
 	{
-		const auto index = indices[i];
-		assert(index < vertex_count);
+		assert(indices[i] < vertex_count);
 
-		adjacency.counts[index]++;
+		adjacency.counts[indices[i]]++;
 	}
 
 	// fill offset table
