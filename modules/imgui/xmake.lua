@@ -12,12 +12,12 @@ target("imgui")
     end)
     -- contains in imgui-$(plat)-$(arch).zip
     if (is_os("windows") and not is_mode("asan")) then 
-         set_kind("headeronly")    
-         if (is_mode("release")) then
-             add_links(sdk_libs_dir.."imgui", {public=true} )
-         else
-             add_links(sdk_libs_dir.."imguid", {public=true} )
-         end
+        set_kind("headeronly")    
+        if (is_mode("release")) then
+            add_links(sdk_libs_dir.."imgui", {public=true} )
+        else
+            add_links(sdk_libs_dir.."imguid", {public=true} )
+        end
     else
         set_kind("static")
         -- compiles very slow, so we use precompiled version for this optimization level
@@ -34,12 +34,12 @@ target("cimgui")
     add_includedirs("dear_bindings/cimgui/include", {public=true})
     -- contains in imgui-$(plat)-$(arch).zip
     if (is_os("windows") and not is_mode("asan")) then 
-         set_kind("headeronly")    
-         if (is_mode("release")) then
-             add_links(sdk_libs_dir.."cimgui", {public=true} )
-         else
-             add_links(sdk_libs_dir.."cimguid", {public=true} )
-         end
+        set_kind("headeronly")    
+        if (is_mode("release")) then
+            add_links(sdk_libs_dir.."cimgui", {public=true} )
+        else
+            add_links(sdk_libs_dir.."cimguid", {public=true} )
+        end
     else
         set_kind("static")
         -- compiles very slow, so we use precompiled version for this optimization level
