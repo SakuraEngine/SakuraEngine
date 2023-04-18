@@ -6,9 +6,12 @@
 #include "containers/string.hpp"
 #include "utils/format.hpp"
 
-template<class T, auto F, bool withHistory=false, bool bitpacking = false>
+template<class T, auto F, class H = void, bool bitpacking = false>
 skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWorldDeltaBuildContext ctx, MPWorldDeltaViewBuilder& builder)
 {
+    static constexpr bool withHistory = !std::is_same_v<H, void>;
+    using history_t = std::conditional_t<withHistory, dual::array_comp_T<H, 4>, void>;
+    using writer_t = std::conditional_t<bitpacking, skr::binary::VectorWriterBitpacked, skr::binary::VectorWriter>;
     MPComponentDeltaViewBuilder& comps = *std::find_if(builder.components.begin(),builder.components.end(), [&](const MPComponentDeltaViewBuilder& comp)
     {
         return GetNetworkComponent(comp.type) == type;
@@ -21,6 +24,7 @@ skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWor
         dualJ_release_counter(counter);
     };
     static dual_type_index_t historyComponent = ctx.historyComponent;
+    static uint32_t historyComponentSize = withHistory ? dualT_get_desc(historyComponent)->size : 0;
     dualJ_schedule_custom(query, (dual_counter_t*)&counter, DUAL_LAMBDA(callback), nullptr);
     auto storage = dualQ_get_storage(query);
     skr::task::schedule([dependencies = std::move(dependencies), storage, ctx, &comps, &builder, type]
@@ -34,17 +38,17 @@ skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWor
         
         dual_chunk_view_t lastView {nullptr, 0, 0};
         const T* lastComp = nullptr;
-        dual::array_comp_T<T, 4>* lastHistory = nullptr;
+        history_t* lastHistory = nullptr;
         const CAuth* lastAuth = nullptr;
-        using writer_t = std::conditional_t<bitpacking, skr::binary::VectorWriterBitpacked, skr::binary::VectorWriter>;
         writer_t writer{&comps.data};
         skr_binary_writer_t archive(writer);
-        comps.entities.erase(std::remove_if(comps.entities.begin(), comps.entities.end(), [&](NetEntityId ent) -> bool
+
+        auto serde = [&](NetEntityId ent) -> bool
         {
             dual_chunk_view_t view = {nullptr, 0, 0};
             dualS_access(storage, builder.entities[ent], &view);
             const T* comp = nullptr;
-            dual::array_comp_T<T, 4>* history = nullptr;
+            history_t* history = nullptr;
             const CAuth* auth = nullptr;
             if(view.chunk != lastView.chunk)
             {
@@ -52,7 +56,7 @@ skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWor
                 lastComp = comp = (const T*)dualV_get_owned_ro(&view, type);
                 if constexpr(withHistory)
                 {
-                    lastHistory = history = (dual::array_comp_T<T, 4>*)dualV_get_owned_ro(&view, historyComponent);
+                    lastHistory = history = (history_t*)dualV_get_owned_ro(&view, historyComponent);
                     lastAuth = auth = (const CAuth*)dualV_get_owned_ro(&view, dual_id_of<CAuth>::get());
                 }
             }
@@ -62,7 +66,7 @@ skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWor
                 comp = (const T*)((const char*)lastComp + sizeof(T) * offset);
                 if constexpr(withHistory)
                 {
-                    history = (dual::array_comp_T<T, 4>*)((const char*)lastHistory + sizeof(dual::array_comp_T<T, 4>) * offset);
+                    history = (history_t*)((const char*)lastHistory + historyComponentSize * offset);
                     auth = (const CAuth*)((const char*)lastAuth + sizeof(CAuth) * offset);
                 }
             }
@@ -77,7 +81,14 @@ skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWor
                 F(view, *comp, archive);
             }
             return false;
-        }), comps.entities.end());
+        };
+        if constexpr(withHistory)
+            comps.entities.erase(std::remove_if(comps.entities.begin(), comps.entities.end(), serde), comps.entities.end());
+        else
+        {
+            for(auto ent : comps.entities)
+                serde(ent);
+        }
     }, &counter);
     return counter;
 }

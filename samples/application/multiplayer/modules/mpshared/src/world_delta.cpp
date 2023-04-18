@@ -73,6 +73,7 @@ struct ComponentDeltaBuilder
     {
         if(historyComponent != dual::kInvalidTypeIndex)
         {
+            SKR_ASSERT(DUAL_IS_BUFFER(historyComponent));
             auto filter = make_zeroed<dual_filter_t>();
             dual_type_index_t types[] = { component, dual_id_of<CAuth>::get(), historyComponent };
             dual::type_builder_t all;
