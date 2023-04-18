@@ -1,6 +1,6 @@
 target("OpenGUI_DemoResources")
     set_group("04.examples/application")
-    set_kind("static")
+    add_rules("skr.static_module", {api = "OPENGUI_DEMO_RESOURCES"})
     add_includedirs("common", {public = true})
     add_rules("utils.install-resources", {
         extensions = {".png"},
