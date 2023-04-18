@@ -27,9 +27,6 @@ executable_module("MPGame", "MP_GAME", engine_version)
         rootdir = "modules/mpgame/include/MPGame",
         api = "MP_GAME"
     })
-    add_rules("utils.dxc", {
-        spv_outdir = "/../resources/shaders/Game",
-        dxil_outdir = "/../resources/shaders/Game"})
     add_includedirs("modules/mpgame/include", {public=true})
     public_dependency("SkrRenderer", engine_version)
     public_dependency("SkrImGui", engine_version)
@@ -41,7 +38,6 @@ executable_module("MPGame", "MP_GAME", engine_version)
         add_syslinks("Ws2_32")
     end
     add_deps("gamenetworkingsockets")
-    add_files("modules/mpgame/shaders/**.hlsl")
     add_files("modules/mpgame/src/**.cpp")
 
 executable_module("MPServer", "MP_SERVER", engine_version)
