@@ -23,7 +23,7 @@ jobs:
         id: env
         run: |
           xmake g -c -v
-          xmake l setup.lua
+          xmake l setup.lua -v
       - name: ConfigureDebug
         run: xmake f -m debug --toolchain=${{ matrix.toolchain }} -c -y -v --build_tests=n --build_editors=n --build_usdtool=n --policies=build.ccache:n
       - name: Debug
