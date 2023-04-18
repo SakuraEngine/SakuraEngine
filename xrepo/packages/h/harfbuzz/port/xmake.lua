@@ -1,4 +1,5 @@
-add_requires("freetype skr", "icu skr")
+add_requires("freetype skr", {system = false})
+add_requires("icu skr", {system = false})
 
 set_languages("c11", "cxx17")
 
