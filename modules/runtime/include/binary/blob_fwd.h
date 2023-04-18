@@ -80,12 +80,12 @@ skr_blob_arena_t make_arena(T& dst, const typename BlobBuilderType<T>::type& src
 using binary::make_blob_builder;
 }
 
-#define CONBINE_GEMERATED_NAME(file, type) CONBINE_GEMERATED_NAME_IMPL(file, type)
-#define CONBINE_GEMERATED_NAME_IMPL(file, type) GENERATED_BLOB_BUILDER_##file##_##type
+#define BLOB_CONBINE_GENERATED_NAME(file, type) BLOB_CONBINE_GENERATED_NAME_IMPL(file, type)
+#define BLOB_CONBINE_GENERATED_NAME_IMPL(file, type) GENERATED_BLOB_BUILDER_##file##_##type
 #ifdef __meta__
 #define GENERATED_BLOB_BUILDER(type) struct type##Builder;
 #else
-#define GENERATED_BLOB_BUILDER(type) CONBINE_GEMERATED_NAME(SKR_FILE_ID, type)
+#define GENERATED_BLOB_BUILDER(type) BLOB_CONBINE_GENERATED_NAME(SKR_FILE_ID, type)
 #endif
 
 #define BLOB_POD(t) template<> struct BlobBuilderType<t> {using type = t;};

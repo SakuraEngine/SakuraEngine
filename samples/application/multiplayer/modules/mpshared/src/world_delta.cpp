@@ -130,7 +130,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder
         if (initialized)
             return;
         storage = inStorage;
-        worldDeltaQuery = dualQ_from_literal(storage, "[in]CPrefab,[inout]CAuth,[inout]dirty,[inout]CAuthTypeData");
+        worldDeltaQuery = dualQ_from_literal(storage, "[in]CPrefab,[inout]CAuth,[inout]dual::dirty_comp_t,[inout]CAuthTypeData");
         deadQuery = dualQ_from_literal(storage, "[inout]CAuth, [has]dead");
         ComponentDeltaBuilderRegistry& registry = ComponentDeltaBuilderRegistry::Get();
         for (auto& pair : registry.builders)

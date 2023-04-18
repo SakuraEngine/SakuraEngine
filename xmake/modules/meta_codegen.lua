@@ -211,6 +211,11 @@ function mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
             os.projectdir()..vformat("/tools/codegen/luabind.cpp.mako"),
             os.projectdir()..vformat("/tools/codegen/luabind_intelli.lua.mako"),
         },
+        {
+            os.projectdir()..vformat("/tools/codegen/query.py"),
+            os.projectdir()..vformat("/tools/codegen/query.hpp.mako"),
+            os.projectdir()..vformat("/tools/codegen/query.cpp.mako"),
+        },
     }
     -- calculate if strong makos need to be rebuild
     local need_mako = target:data("reflection.need_mako")
