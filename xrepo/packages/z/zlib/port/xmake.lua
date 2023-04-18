@@ -1,3 +1,5 @@
+set_languages("c11", "cxx17")
+
 target("zlib")
     set_kind("headeronly")
     add_includedirs("zlib/include", {public=true})

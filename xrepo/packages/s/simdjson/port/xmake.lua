@@ -1,3 +1,5 @@
+set_languages("c11", "cxx17")
+
 target("simdjson")
     set_kind("static")    
     set_optimize("fastest")
