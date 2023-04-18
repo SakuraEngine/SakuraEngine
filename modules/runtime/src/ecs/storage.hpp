@@ -74,38 +74,20 @@ struct equalto {
     }
 };
 
-struct query_cache_hasher {
-    size_t operator()(const dual_filter_t& value) const
-    {
-        size_t result = hash(value.all);
-        result = hash(value.any, result);
-        result = hash(value.none, result);
-        return result;
-    }
-};
-
-struct query_cache_equal {
-    bool operator()(const dual_filter_t& a, const dual_filter_t& b) const
-    {
-        return equal(a.all, b.all) && equal(a.any, b.any) && equal(a.none, b.none);
-    }
-};
-
 struct scheduler_t;
 } // namespace dual
 
 struct dual_storage_t {
-    using query_cache_t = dual::query_cache_t;
     using archetype_t = dual::archetype_t;
-    using query_caches_t = skr::flat_hash_map<dual_filter_t, query_cache_t, dual::query_cache_hasher, dual::query_cache_equal>;
     using queries_t = eastl::vector<dual_query_t*>;
     using groups_t = skr::flat_hash_map<dual_entity_type_t, dual_group_t*, dual::hasher<dual_entity_type_t>, dual::equalto<dual_entity_type_t>>;
     using archetypes_t = skr::flat_hash_map<dual_type_set_t, archetype_t*, dual::hasher<dual_type_set_t>, dual::equalto<dual_type_set_t>>;
     archetypes_t archetypes;
     queries_t queries;
+    dual::phase_entry** phases = nullptr;
+    uint32_t phaseCount = 0;
     bool queriesBuilt = false;
     groups_t groups;
-    query_caches_t queryCaches;
     dual::block_arena_t archetypeArena;
     dual::block_arena_t queryBuildArena;
     dual::fixed_pool_t groupPool;
@@ -162,7 +144,7 @@ struct dual_storage_t {
     void query(const dual_query_t* query, dual_view_callback_t callback, void* u);
     void query_groups(const dual_query_t* query, dual_group_callback_t callback, void* u);
     void build_queries();
-    const query_cache_t& get_query_cache(const dual_filter_t& filter);
+    void build_query_cache(dual_query_t* query);
     void update_query_cache(dual_group_t* group, bool isAdd);
 
     void serialize_single(dual_entity_t e, skr_binary_writer_t* s);
@@ -177,6 +159,9 @@ struct dual_storage_t {
     void deserialize(skr_binary_reader_t* s);
 
     void merge(dual_storage_t& src);
+    archetype_t* clone_archetype(archetype_t* src);
+    dual_group_t* clone_group(dual_group_t* src);
+    dual_storage_t* clone();
     void reset();
     void validate_meta();
     void validate(dual_entity_set_t& meta);

@@ -17,6 +17,7 @@
 #include <containers/string.hpp>
 #include "utils/bits.hpp"
 #include "scheduler.hpp"
+#include "containers/span.hpp"
 #if __SSE2__
     #include <emmintrin.h>
 #endif
@@ -100,79 +101,106 @@ bool match_group_meta(const dual_entity_type_t& type, const dual_meta_filter_t& 
 {
     return match_filter_set<dual_entity_t>(type.meta, filter.all_meta, filter.any_meta, filter.none_meta, false);
 }
+
+bool match_group(dual_query_t* q, dual_group_t* g)
+{
+    bool match = true;
+    match = match && q->includeDead >= g->isDead;
+    match = match && q->includeDisabled >= g->disabled;
+    match = match && match_group_type(g->type, q->filter, g->archetype->withMask);
+    if(!match)
+        return false;
+    bool exclude = false;
+    bool conflict = false;
+    for(int j = 0; j < q->phaseCount; ++j)
+    {
+        auto phase = q->phases[j];
+        auto iter = phase->include.find(g);
+        if(iter == phase->include.end())
+        {
+            phase->include.insert({g, q});
+        }
+        else if(iter->second == nullptr)
+        {
+            exclude = true;
+        }
+        else
+        {
+            conflict = true;
+            auto conflictQuery = iter->second;
+            conflictQuery->groups.erase(std::remove(conflictQuery->groups.begin(), conflictQuery->groups.end(), g), conflictQuery->groups.end());
+            iter->second = nullptr;
+        }
+    }
+    return !(conflict || exclude);
+}
 } // namespace dual
 
-const dual::query_cache_t& dual_storage_t::get_query_cache(const dual_filter_t& filter)
+void dual_storage_t::build_query_cache(dual_query_t* query)
 {
     using namespace dual;
-    auto iter = queryCaches.find(filter);
-    if (iter != queryCaches.end())
-        return iter->second;
-    query_cache_t cache;
-    bool includeDead = false;
-    bool includeDisabled = false;
+    query->groups.clear();
+    query->includeDead = false;
+    query->includeDisabled = false;
     {
-        auto at = filter.all;
+        auto at = query->filter.all;
         forloop (i, 0, at.length)
         {
             if (at.data[i] == kDeadComponent)
-                includeDead = true;
+                query->includeDead = true;
             else if (at.data[i] == kDisableComponent)
-                includeDisabled = true;
+                query->includeDead = true;
         }
     }
-    auto matchGroup = [&](dual_group_t* g) {
-        if (includeDead < g->isDead)
-            return false;
-        if (includeDisabled < g->disabled)
-            return false;
-        return match_group_type(g->type, filter, g->archetype->withMask);
-    };
     for (auto i : groups)
     {
         auto g = i.second;
-        if (matchGroup(g))
-            cache.groups.push_back(g);
+        bool match = dual::match_group(query, g);
+        if(!match)
+            continue;
+        bool exclude = false;
+        bool conflict = false;
+        for(int j = 0; j < query->phaseCount; ++j)
+        {
+            auto phase = query->phases[j];
+            auto iter = phase->include.find(g);
+            if(iter == phase->include.end())
+            {
+                phase->include.insert({g, query});
+            }
+            else if(iter->second == nullptr)
+            {
+                exclude = true;
+            }
+            else
+            {
+                conflict = true;
+                auto conflictQuery = iter->second;
+                conflictQuery->groups.erase(std::remove(conflictQuery->groups.begin(), conflictQuery->groups.end(), g), conflictQuery->groups.end());
+                iter->second = nullptr;
+            }
+        }
+        if(conflict || exclude)
+            continue;
+        query->groups.push_back(g);
     }
-    cache.includeDead = includeDead;
-    cache.includeDisabled = includeDisabled;
-    auto totalSize = data_size(filter);
-    cache.data.resize(totalSize);
-    char* data = (char*)cache.data.data();
-    cache.filter = clone(filter, data);
-    return queryCaches.emplace(cache.filter, std::move(cache)).first->second;
 }
 
 void dual_storage_t::update_query_cache(dual_group_t* group, bool isAdd)
 {
     using namespace dual;
-    auto match_cache = [&](query_cache_t& cache) {
-        if (cache.includeDead < group->isDead)
-            return false;
-        if (cache.includeDisabled < group->disabled)
-            return false;
-        return match_group_type(group->type, cache.filter, group->archetype->withMask);
-    };
-    for (auto& i : queryCaches)
+    
+    if (!isAdd)
     {
-        auto& cache = i.second;
-        if (match_cache(cache))
+        for (auto& query : queries)
+            query->groups.erase(std::remove(query->groups.begin(), query->groups.end(), group), query->groups.end());
+    }
+    else 
+    {
+        for (auto& query : queries)
         {
-            auto& gs = cache.groups;
-            if (!isAdd)
-            {
-                int j = 0;
-                auto count = gs.size();
-                for (; j < count && gs[j] != group; ++j)
-                    ;
-                if (j == count)
-                    continue;
-                if (j != (count - 1))
-                    eastl::swap(gs[j], gs[count - 1]);
-                gs.pop_back();
-            }
-            else
-                gs.push_back({ group });
+            if (dual::match_group(query, group))
+                query->groups.push_back(group);
         }
     }
 }
@@ -184,9 +212,8 @@ dual_query_t* dual_storage_t::make_query(const dual_filter_t& filter, const dual
     dual::fixed_arena_t arena(4096);
     auto result = arena.allocate<dual_query_t>();
     auto buffer = (char*)arena.allocate(data_size(filter) + data_size(params), alignof(dual_type_index_t));
-    result->filter = clone(filter, buffer);
-    result->parameters = clone(params, buffer);
-    result->buildedFilter = filter;
+    result->filter = dual::clone(filter, buffer);
+    result->parameters = dual::clone(params, buffer);
     queriesBuilt = false;
     result->storage = this;
     arena.forget();
@@ -453,13 +480,12 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
     FILTER_PART(none_shared);
 #undef FILTER_PART
     auto buffer = (char*)arena.allocate(data_size(result->filter), alignof(dual_type_index_t));
-    result->filter = clone(result->filter, buffer);
+    result->filter = dual::clone(result->filter, buffer);
     result->parameters.types = entry.data();
     result->parameters.accesses = operations.data();
     result->parameters.length = (SIndex)entry.size();
     buffer = (char*)arena.allocate(data_size(result->parameters), alignof(dual_type_index_t));
-    result->parameters = clone(result->parameters, buffer);
-    result->buildedFilter = result->filter;
+    result->parameters = dual::clone(result->parameters, buffer);
     result->storage = this;
     queriesBuilt = false;
     ::memset(&result->meta, 0, sizeof(dual_meta_filter_t));
@@ -485,7 +511,7 @@ void dual_storage_t::build_queries()
         return;
     
     ZoneScopedN("dual_storage_t::build_queries");
-    
+    /*
     // solve phase collision (overloading)
     struct phase_entry {
         dual_type_index_t type;
@@ -554,20 +580,94 @@ void dual_storage_t::build_queries()
             auto exclude = set_utils<dual_type_index_t>::substract(super, include, localStack.allocate<dual_type_index_t>(super.length));
             auto none = set_utils<dual_type_index_t>::merge(exclude, query->buildedFilter.none, localStack.allocate<dual_type_index_t>(256));
             char* data = (char*)queryBuildArena.allocate(data_size(none), alignof(dual_type_index_t));
-            query->buildedFilter.none = clone(none, data);
+            query->buildedFilter.none = dual::clone(none, data);
+        }
+    }
+    */
+    struct phase_entry_builder {
+        dual_type_index_t type;
+        uint32_t phase;
+        llvm_vecsmall::SmallVector<dual_query_t*, 8> queries;
+    };
+    for(int i=0; i<phaseCount; ++i)
+        phases[i]->~phase_entry();
+    queryBuildArena.reset();
+    eastl::vector<phase_entry_builder> entries;
+    for (auto query : queries)
+    {
+        auto parameters = query->parameters;
+        forloop (i, 0, parameters.length)
+        {
+            if (parameters.accesses[i].phase >= 0 && !parameters.accesses[i].readonly)
+            {
+                bool found = false;
+                for (auto& entry : entries)
+                {
+                    if (entry.type == parameters.types[i] && entry.phase == parameters.accesses[i].phase)
+                    {
+                        entry.queries.push_back(query);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    phase_entry_builder entry;
+                    entry.type = parameters.types[i];
+                    entry.phase = parameters.accesses[i].phase;
+                    entry.queries.push_back(query);
+                    entries.emplace_back(std::move(entry));
+                }
+            }
+        }
+    }
+    phases = queryBuildArena.allocate<phase_entry*>(entries.size());
+    phaseCount = entries.size();
+    auto phaseEntries = phases;
+    for (auto query : queries)
+    {
+        uint32_t count = 0;
+        for (auto& entry : entries)
+        {
+            if (entry.queries.size() < 2)
+                continue;
+            if(std::find(entry.queries.begin(), entry.queries.end(), query) != entry.queries.end())
+            {
+                count++;
+            }
+        }
+        query->phaseCount = 0;
+        if(count == 0)
+            continue;
+        query->phases = queryBuildArena.allocate<phase_entry*>(count);
+    }
+    for (auto builder : entries)
+    {
+        if (builder.queries.size() < 2)
+            continue;
+        auto entry = new (queryBuildArena.allocate<phase_entry>(1)) phase_entry(); 
+        (*phaseEntries++) = entry;
+        entry->type = builder.type;
+        entry->phase = builder.phase;
+        entry->queries = {queryBuildArena.allocate<dual_query_t*>(builder.queries.size()), builder.queries.size()};
+        memcpy(entry->queries.data(), builder.queries.data(), sizeof(dual_query_t*) * builder.queries.size());
+        for(auto query : builder.queries)
+        {
+            query->phases[query->phaseCount++] = entry;
         }
     }
     // build query cache
     for(auto& query : queries)
     {
-        (void)get_query_cache(query->buildedFilter);
+        build_query_cache(query);
     }
+    
     queriesBuilt = true;
 }
 
-void dual_storage_t::query(const dual_query_t* filter, dual_view_callback_t callback, void* u)
+void dual_storage_t::query(const dual_query_t* q, dual_view_callback_t callback, void* u)
 {
-    bool mainThread = false;
+    bool mainThread = true;
     if(scheduler)
     {
         mainThread = scheduler->is_main_thread(this);
@@ -578,15 +678,16 @@ void dual_storage_t::query(const dual_query_t* filter, dual_view_callback_t call
         SKR_ASSERT(queriesBuilt);
     
     auto filterChunk = [&](dual_group_t* group) {
-        query(group, filter->buildedFilter, filter->meta, callback, u);
+        query(group, q->filter, q->meta, callback, u);
     };
-    query_groups(filter->buildedFilter, filter->meta, DUAL_LAMBDA(filterChunk));
+    query_groups(q, DUAL_LAMBDA(filterChunk));
 }
 
 
-void dual_storage_t::query_groups(const dual_query_t* filter, dual_group_callback_t callback, void* u)
+void dual_storage_t::query_groups(const dual_query_t* q, dual_group_callback_t callback, void* u)
 {
-    bool mainThread = false;
+    using namespace dual;
+    bool mainThread = true;
     if(scheduler)
     {
         mainThread = scheduler->is_main_thread(this);
@@ -596,21 +697,57 @@ void dual_storage_t::query_groups(const dual_query_t* filter, dual_group_callbac
     else
         SKR_ASSERT(queriesBuilt);
     
-    return query_groups(filter->buildedFilter, filter->meta, callback, u);
+    fixed_stack_scope_t _(localStack);
+    bool filterShared = (q->filter.all_shared.length + q->filter.any_shared.length + q->filter.none_shared.length) != 0;
+    dual_meta_filter_t* validatedMeta = nullptr;
+    if (q->meta.all_meta.length > 0 || q->meta.any_meta.length > 0 || q->meta.none_meta.length > 0)
+    {
+        validatedMeta = localStack.allocate<dual_meta_filter_t>();
+        auto data = (char*)localStack.allocate(data_size(q->meta));
+        *validatedMeta = dual::clone(q->meta, data);
+        validate(validatedMeta->all_meta);
+        validate(validatedMeta->any_meta);
+        validate(validatedMeta->none_meta);
+    }
+    else
+    {
+        validatedMeta = (dual_meta_filter_t*)&q->meta;
+    }
+    bool filterMeta = (validatedMeta->all_meta.length + validatedMeta->any_meta.length + validatedMeta->none_meta.length) != 0;
+    for (auto& group : q->groups)
+    {
+        if (filterShared)
+        {
+            fixed_stack_scope_t _(localStack);
+            dual_type_set_t shared;
+            shared.length = 0;
+            // todo: is 256 enough?
+            shared.data = localStack.allocate<dual_type_index_t>(256);
+            group->get_shared_type(shared, localStack.allocate<dual_type_index_t>(256));
+            // check(shared.length < 256);
+            if (!match_group_shared(shared, q->filter))
+                continue;
+        }
+        if (filterMeta)
+        {
+            if (!match_group_meta(group->type, *validatedMeta))
+                continue;
+        }
+        callback(u, group);
+    }
 }
 
 void dual_storage_t::query_groups(const dual_filter_t& filter, const dual_meta_filter_t& meta, dual_group_callback_t callback, void* u)
 {
     using namespace dual;
     fixed_stack_scope_t _(localStack);
-    auto& cache = get_query_cache(filter);
     bool filterShared = (filter.all_shared.length + filter.any_shared.length + filter.none_shared.length) != 0;
     dual_meta_filter_t* validatedMeta = nullptr;
     if (meta.all_meta.length > 0 || meta.any_meta.length > 0 || meta.none_meta.length > 0)
     {
         validatedMeta = localStack.allocate<dual_meta_filter_t>();
         auto data = (char*)localStack.allocate(data_size(meta));
-        *validatedMeta = clone(meta, data);
+        *validatedMeta = dual::clone(meta, data);
         validate(validatedMeta->all_meta);
         validate(validatedMeta->any_meta);
         validate(validatedMeta->none_meta);
@@ -620,8 +757,30 @@ void dual_storage_t::query_groups(const dual_filter_t& filter, const dual_meta_f
         validatedMeta = (dual_meta_filter_t*)&meta;
     }
     bool filterMeta = (validatedMeta->all_meta.length + validatedMeta->any_meta.length + validatedMeta->none_meta.length) != 0;
-    for (auto& group : cache.groups)
+    bool includeDead = false;
+    bool includeDisabled = false;
     {
+        auto at = filter.all;
+        forloop (i, 0, at.length)
+        {
+            if (at.data[i] == kDeadComponent)
+                includeDead = true;
+            else if (at.data[i] == kDisableComponent)
+                includeDisabled = true;
+        }
+    }
+    auto matchGroup = [&](dual_group_t* g) {
+        if (includeDead < g->isDead)
+            return false;
+        if (includeDisabled < g->disabled)
+            return false;
+        return match_group_type(g->type, filter, g->archetype->withMask);
+    };
+    for (auto& pair : groups)
+    {
+        auto group = pair.second;
+        if(!matchGroup(group))
+            continue;
         if (filterShared)
         {
             fixed_stack_scope_t _(localStack);
@@ -653,7 +812,7 @@ bool dual_storage_t::match_group(const dual_filter_t& filter, const dual_meta_fi
     {
         validatedMeta = localStack.allocate<dual_meta_filter_t>();
         auto data = (char*)localStack.allocate(data_size(meta));
-        *validatedMeta = clone(meta, data);
+        *validatedMeta = dual::clone(meta, data);
         validate(validatedMeta->all_meta);
         validate(validatedMeta->any_meta);
         validate(validatedMeta->none_meta);
