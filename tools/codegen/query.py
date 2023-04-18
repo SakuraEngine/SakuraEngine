@@ -1,4 +1,5 @@
 import os
+import re
 
 BASE = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
 
@@ -17,10 +18,12 @@ class Query(object):
         self.any = []
         self.none = []
         self.components = []
+        self.sequence = []
         self.accesses = []
         self.literal = literal
         #parse literal
-        literal.strip()
+        pattern = re.compile(r'\s+')
+        literal = re.sub(pattern, '', literal)
         parts = literal.split(",")
         for part in parts:
             #[access]
@@ -28,12 +31,11 @@ class Query(object):
             access = part[1:endpos]
             part = part[endpos+1:]
             #<order>
-            order = None
+            order = "seq"
             if part[0] == "<":
                 endpos = part.find(">")
                 order = part[1:endpos]
                 part = part[endpos+1:]
-            #?!|
             if part[0] == "!":
                 cat = self.none
                 part = part[1:]
@@ -60,9 +62,11 @@ class Query(object):
             #add to list
             if access == "out":
                 count = 0
-            if access != "has":
+            if access != "has" and cat is not self.none:
+                if order != "unseq":
+                    self.sequence.append(type)
                 self.components.append(type)
-                acc = Access(access == "in", access == "atomic", order == "rand", count)
+                acc = Access(access == "in", access == "atomic", order, count)
                 self.accesses.append(acc)
             if cat is not None:
                 cat.append(type)

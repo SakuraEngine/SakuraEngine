@@ -286,10 +286,10 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
             if(idx != kInvalidTypeIndex)
             {
                 job->readonly[groupIndex].set(idx, op.readonly);
-                job->randomAccess[groupIndex].set(idx, op.randomAccess == DOS_GLOBAL);
+                job->randomAccess[groupIndex].set(idx, op.randomAccess != DOS_SEQ);
                 job->atomic[groupIndex].set(idx, op.atomic);
             }
-            job->hasRandomWrite |= op.randomAccess == DOS_GLOBAL;
+            job->hasRandomWrite |= op.randomAccess != DOS_SEQ;
             job->hasWriteChunkComponent = t.is_chunk() && !op.readonly && !op.atomic;
         }
         ++groupIndex;
@@ -352,7 +352,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         {
             if (type_index_t(params.types[i]).is_tag())
                 continue;
-            if (params.accesses[i].randomAccess == DOS_GLOBAL)
+            if (params.accesses[i].randomAccess != DOS_SEQ)
             {
                 sync_type(params.types[i], params.accesses[i].readonly, params.accesses[i].atomic);
             }
@@ -603,7 +603,7 @@ eastl::vector<skr::task::event_t> dual::scheduler_t::schedule_custom_job(const d
         {
             if (type_index_t(params.types[i]).is_tag())
                 continue;
-            if (params.accesses[i].randomAccess == DOS_GLOBAL)
+            if (params.accesses[i].randomAccess != DOS_SEQ)
             {
                 sync_type(params.types[i], params.accesses[i].readonly, params.accesses[i].atomic);
             }

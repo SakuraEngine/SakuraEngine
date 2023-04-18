@@ -19,7 +19,7 @@ namespace dual
     template<class F>
     void iterator_ref_chunk(dual_chunk_t* chunk, F&& iter) noexcept;
     bool full_view(const dual_chunk_view_t& view) noexcept;
-    const dual_entity_t* get_entities(const dual_chunk_view_t& view, type_index_t type);
+    const dual_entity_t* get_entities(const dual_chunk_view_t& view);
     void enable_components(const dual_chunk_view_t& view, const dual_type_set_t&  type);
     void disable_components(const dual_chunk_view_t& view, const dual_type_set_t&  type);
 }

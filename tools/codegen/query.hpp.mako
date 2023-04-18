@@ -10,7 +10,7 @@ struct TaskContext : dual::task_context_t ${"\\"}
 { ${"\\"}
     struct View ${"\\"}
     { ${"\\"}
-    %for i, component in enumerate(query.components):
+    %for i, component in enumerate(query.sequence):
         ${"const " if query.accesses[i].readonly else ""}${component}* _${db.short_name(component)}; ${"\\"}
     %endfor
     }; ${"\\"}
