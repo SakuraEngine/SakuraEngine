@@ -1,5 +1,5 @@
 set_xmakever("2.7.4")
-add_repositories("skr-xrepo xrepo")
+add_repositories("skr-xrepo xrepo", {rootdir = os.scriptdir()})
 
 set_project("SakuraEngine")
 
