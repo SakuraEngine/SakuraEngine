@@ -759,6 +759,7 @@ dual_storage_t* dual_storage_t::clone()
     dual_storage_t* dst = SkrNew<dual_storage_t>();
     dst->entities = entities;
     dst->userdata = userdata;
+    dst->timestamp = timestamp;
     for(auto group : groups)
     {
         auto dstGroup = dst->clone_group(group.second);
@@ -769,11 +770,15 @@ dual_storage_t* dual_storage_t::clone()
             while (count != 0)
             {
                 dual_chunk_view_t v = dst->allocate_view(dstGroup, count);
-                dst->entities.fill_entities(v);
                 dual::clone_view(v, view.chunk, view.start + (view.count - count));
+                std::memcpy((dual_entity_t*)v.chunk->get_entities() + v.start, view.chunk->get_entities() + view.start + (view.count - count), v.count * sizeof(dual_entity_t));
                 count -= v.count;
             }
         }
+    }
+    for(auto query : queries)
+    {
+        dst->make_query(query->filter, query->parameters);
     }
     return dst;
 }

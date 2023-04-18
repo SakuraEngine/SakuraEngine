@@ -47,6 +47,61 @@ QMovement
     GENERATED_QUERY_BODY(QMovement);
 };
 
+
+sreflect_struct(
+    "guid" : "305FB0DC-85F6-4B70-952F-BE662150E506",
+    "query" : "[in]CController, [inout]CMovement, [inout]CSkill, [atomic]?dual::dirty_comp_t"
+)
+QControl
+{
+    GENERATED_QUERY_BODY(QControl);
+};
+
+sreflect_struct(
+    "guid" : "E4D46AA5-7D4D-4864-8241-7260F7D4837F",
+    "query" : "[inout]CHealth, [inout]skr_translation_comp_t, [inout]skr_rotation_comp_t, [inout]CWeapon, [atomic]?dual::dirty_comp_t"
+)
+QHeathCheck
+{
+    GENERATED_QUERY_BODY(QHeathCheck);
+};
+
+sreflect_struct(
+    "guid" : "ED18D917-71A4-4D51-B805-84BA73F67AD2",
+    "query" : "[in]CController, [in]skr_translation_comp_t, [in]skr_rotation_comp_t, [inout]CWeapon, [atomic]?dual::dirty_comp_t"
+)
+QFireBullet
+{
+    GENERATED_QUERY_BODY(QFireBullet);
+};
+
+sreflect_struct(
+    "guid" : "CB8DA6C6-4D7E-4066-A867-A37418EAEC1E",
+    "query" : "[inout]<seq>skr_translation_comp_t', [in]<seq>CSphereCollider2D, [inout]CMovement, [atomic]?dual::dirty_comp_t, [inout]CBall, [has]skr_rotation_comp_t, [inout]<unseq>CHealth"
+)
+QBallMovement
+{
+    GENERATED_QUERY_BODY(QBallMovement);
+};
+
+sreflect_struct(
+    "guid" : "67DB0A0E-4ACB-483F-98EE-DE3D062F1381",
+    "query" : "[inout]CRelevance, [in]<seq>skr_translation_comp_t, [in]<unseq>CController"
+)
+QUpdateRelevance
+{
+    GENERATED_QUERY_BODY(QUpdateRelevance);
+};
+
+sreflect_struct(
+    "guid" : "30537121-0322-4D9C-95E8-2C975EEDE1A4",
+    "query" : "[inout]CBall"
+)
+QKillBall
+{
+    GENERATED_QUERY_BODY(QKillBall);
+};
+
 struct MP_SHARED_API MPGameWorld
 {
     MPGameWorld() = default;
@@ -54,15 +109,15 @@ struct MP_SHARED_API MPGameWorld
     MPGameWorld& operator=(const MPGameWorld&) = delete;
     virtual ~MPGameWorld() = default;
     dual_storage_t* storage;
-    dual_query_t* controlQuery;
-    dual_query_t* healthCheckQuery;
-    dual_query_t* relevanceQuery;
-    dual_query_t* relevanceChildQuery;
-    dual_query_t* fireQuery;
+    QControl controlQuery;
+    QHeathCheck healthCheckQuery;
     QMovement movementQuery;
-    dual_query_t* ballQuery;
+    QFireBullet fireQuery;
+    QBallMovement ballQuery;
+    QUpdateRelevance relevanceQuery;
+    QKillBall killQuery;
+    dual_query_t* relevanceChildQuery;
     dual_query_t* ballChildQuery;
-    dual_query_t* killQuery;
     skr_transform_system_t transformSystem;
     MPInputFrame input;
     bool authoritative;

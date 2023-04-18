@@ -13,22 +13,29 @@
 void MPGameWorld::Initialize()
 {
     storage = dualS_create();
-    controlQuery = dualQ_from_literal(storage, "[in]CController, [inout]CMovement, [inout]CSkill, [atomic]?dual::dirty_comp_t");
-    healthCheckQuery = dualQ_from_literal(storage, "[inout]CHealth, [inout]skr_translation_comp_t, [inout]skr_rotation_comp_t, [inout]CWeapon, [atomic]?dual::dirty_comp_t");
-    fireQuery = dualQ_from_literal(storage, "[in]CController, [in]skr_translation_comp_t, [in]skr_rotation_comp_t, [inout]CWeapon, [atomic]?dual::dirty_comp_t");
+    controlQuery.Initialize(storage);
+    healthCheckQuery.Initialize(storage);
+    fireQuery.Initialize(storage);
     movementQuery.Initialize(storage);
-    ballQuery = dualQ_from_literal(storage, "[inout]<rand>skr_translation_comp_t', [in]<rand>CSphereCollider2D, [inout]CMovement, [atomic]?dual::dirty_comp_t, [inout]CBall, [has]skr_rotation_comp_t, [inout]<rand>?CHealth");
+    ballQuery.Initialize(storage);
     ballChildQuery = dualQ_from_literal(storage, "[in]skr_translation_comp_t', [inout]CHealth, [in]CSphereCollider2D");
-    killQuery = dualQ_from_literal(storage, "[inout]CBall");
-    relevanceQuery = dualQ_from_literal(storage, "[inout]CRelevance, [in]<rand>skr_translation_comp_t, [in]<rand>?CController");
+    killQuery.Initialize(storage);
+    relevanceQuery.Initialize(storage);
     relevanceChildQuery = dualQ_from_literal(storage, "[in]skr_translation_comp_t, [in]CController");
     skr_transform_setup(storage, &transformSystem);
 }
 
 void MPGameWorld::Shutdown()
 {
-    dualQ_release(controlQuery);
+    controlQuery.Release();
     movementQuery.Release();
+    fireQuery.Release();
+    healthCheckQuery.Release();
+    ballQuery.Release();
+    killQuery.Release();
+    relevanceQuery.Release();
+    dualQ_release(ballChildQuery);
+    dualQ_release(relevanceChildQuery);
     dualS_release(storage);
 }
 
@@ -62,7 +69,7 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
         ballsToKill.reserve(16);
         auto collectBallsToKill = [&](dual_chunk_view_t* view)
         {
-            auto balls = (CBall*)dualV_get_owned_ro(view, dual_id_of<CBall>::get());
+            auto balls = dual::get_owned_ro<CBall>(view);
             auto entities = (dual_entity_t*)dualV_get_entities(view);
             for(int i=0; i<view->count; ++i)
             {
@@ -76,7 +83,7 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
                 }
             }
         };
-        dualQ_get_views(killQuery, DUAL_LAMBDA(collectBallsToKill));
+        dualQ_get_views(killQuery.query, DUAL_LAMBDA(collectBallsToKill));
         auto killBalls = [&](dual_chunk_view_t* view)
         {
             dualS_destroy(storage, view);
@@ -84,12 +91,9 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
         dualS_batch(storage, ballsToKill.data(), ballsToKill.size(), DUAL_LAMBDA(killBalls));
     }
 
-    dual::schedule_task(controlQuery, 512, [this](dual::task_context_t ctx)
+    dual::schedule_task(controlQuery, 512, [this](QControl::TaskContext ctx)
     {
-        auto controllers = ctx.get_owned_ro<CController>(0);
-        auto movements = ctx.get_owned_rw<CMovement>(1);
-        auto skills = ctx.get_owned_rw<CSkill>(2);
-        auto dirtyMasks = ctx.get_owned_rw<dual::dirty_comp_t>(3);
+        auto [controllers, movements, skills, dirtyMasks] = ctx.Unpack();
         for(int i=0; i<ctx.count(); ++i)
         {
             auto& input = this->input.inputs[controllers[i].playerId];
@@ -154,12 +158,12 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
                         weapons[i].fireTimer = weapons[i].fireRate;
                         auto ballSetup = [&](dual_chunk_view_t* view)
                         {
-                            auto translations = (skr_translation_comp_t*)dualV_get_owned_rw(view, dual_id_of<skr_translation_comp_t>::get());
-                            auto scales = (skr_scale_comp_t*)dualV_get_owned_rw(view, dual_id_of<skr_scale_comp_t>::get());
-                            auto rotations = (skr_rotation_comp_t*)dualV_get_owned_rw(view, dual_id_of<skr_rotation_comp_t>::get());
-                            auto movements = (CMovement*)dualV_get_owned_rw(view, dual_id_of<CMovement>::get());
-                            auto spheres = (CSphereCollider2D*)dualV_get_owned_rw(view, dual_id_of<CSphereCollider2D>::get());
-                            auto balls = (CBall*)dualV_get_owned_rw(view, dual_id_of<CBall>::get());
+                            auto translations = dual::get_owned_rw<skr_translation_comp_t>(view);
+                            auto scales = dual::get_owned_rw<skr_scale_comp_t>(view);
+                            auto rotations = dual::get_owned_rw<skr_rotation_comp_t>(view);
+                            auto movements = dual::get_owned_rw<CMovement>(view);
+                            auto spheres = dual::get_owned_rw<CSphereCollider2D>(view);
+                            auto balls = dual::get_owned_rw<CBall>(view);
                             
                             for(int j=0; j<view->count; ++j)
                             {
@@ -185,37 +189,32 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
                 weapons[i].fireTimer -= deltaTime;
             }
         };
-        dualQ_get_views(fireQuery, DUAL_LAMBDA(fire));
+        dualQ_get_views(fireQuery.query, DUAL_LAMBDA(fire));
     }
     if(authoritative)
     {
-
-    }
-    dualJ_schedule_ecs(healthCheckQuery, 512,
-    +[](void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
-    {
-        auto healths = (CHealth*)dualV_get_owned_rw_local(view, localTypes[0]);
-        auto translations = (skr_translation_comp_t*)dualV_get_owned_rw_local(view, localTypes[1]);
-        auto rotations = (skr_rotation_comp_t*)dualV_get_owned_rw_local(view, localTypes[2]);
-        auto weapons = (CWeapon*)dualV_get_owned_rw_local(view, localTypes[3]);
-        auto dirtyMasks = (uint32_t*)dualV_get_owned_ro_local(view, localTypes[4]);
-        for(int i=0; i<view->count; ++i)
+        dual::schedule_task(healthCheckQuery, 512,
+        [this](QHeathCheck::TaskContext ctx)
         {
-            if(healths[i].health <= 0)
+            auto [healths, translations, rotations, weapons, dirtyMasks] = ctx.Unpack();
+            for(int i=0; i<ctx.count(); ++i)
             {
-                healths[i].health = healths[i].maxHealth;
-                translations[i].value = skr_float3_t{0, 0, 0};
-                rotations[i].euler = skr_rotator_t{0, 0, 0};
-                weapons[i].fireTimer = 5;
-                if(dirtyMasks)
+                if(healths[i].health <= 0)
                 {
-                    dual_set_bit(&dirtyMasks[i], localTypes[0]);
-                    dual_set_bit(&dirtyMasks[i], localTypes[1]);
-                    dual_set_bit(&dirtyMasks[i], localTypes[2]);
+                    healths[i].health = healths[i].maxHealth;
+                    translations[i].value = skr_float3_t{0, 0, 0};
+                    rotations[i].euler = skr_rotator_t{0, 0, 0};
+                    weapons[i].fireTimer = 5;
+                    if(dirtyMasks)
+                    {
+                        ctx.set_dirty(dirtyMasks[i], 0);
+                        ctx.set_dirty(dirtyMasks[i], 1);
+                        ctx.set_dirty(dirtyMasks[i], 2);
+                    }
                 }
             }
-        }
-    }, this, nullptr, nullptr, nullptr, nullptr);
+        }, nullptr);
+    }
     dual::schedule_task(movementQuery, 512, [](QMovement::TaskContext ctx)
     {
         auto [movements, translations, rotations, dirtyMasks] = ctx.Unpack();
@@ -251,81 +250,77 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
 
     if(authoritative)
     {
-        dualJ_schedule_ecs(ballQuery, 512, 
-        +[](void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
+        dual::schedule_task(ballQuery, 512, 
+        [this](QBallMovement::TaskContext ctx)
         {
-            auto This = (MPGameWorld*)u;
-            auto translations = (skr_float3_t*)dualV_get_owned_rw_local(view, localTypes[0]);
-            auto colliders = (CSphereCollider2D*)dualV_get_owned_rw_local(view, localTypes[1]);
-            auto dirtyMasks = (uint32_t*)dualV_get_owned_ro_local(view, localTypes[3]);
-            auto movements = (CMovement*)dualV_get_owned_rw_local(view, localTypes[2]);
-            auto balls = (CBall*)dualV_get_owned_rw_local(view, localTypes[4]);
-            for(int i=0; i<view->count; ++i)
+            auto [translations, colliders, movements, dirtyMasks, balls] = ctx.Unpack();
+            for(int i=0; i<ctx.count(); ++i)
             {
-                translations[i].x += movements[i].velocity.x * deltaTime;
-                translations[i].z += movements[i].velocity.y * deltaTime;
+                translations[i].value.x += movements[i].velocity.x * deltaTime;
+                translations[i].value.z += movements[i].velocity.y * deltaTime;
                 if(dirtyMasks)
-                    dual_set_bit(&dirtyMasks[i], localTypes[0]);
+                    ctx.set_dirty(dirtyMasks[i], 0);
+                auto& translation = translations[i];
+                auto& collider = colliders[i];
+                auto& ball = balls[i];
                 auto checkAndSet = [&](dual_chunk_view_t* view)
                 {
-                    auto otherTranslations = (skr_float3_t*)dualV_get_owned_ro(view, dual_id_of<skr_translation_comp_t>::get());
-                    auto otherColliders = (CSphereCollider2D*)dualV_get_owned_ro(view, dual_id_of<CSphereCollider2D>::get());
-                    auto otherHealths = (CHealth*)dualV_get_owned_ro(view, dual_id_of<CHealth>::get());
-                    auto otherControllers = (CController*)dualV_get_owned_ro(view, dual_id_of<CController>::get());
-                    auto otherDirtyMasks = (uint32_t*)dualV_get_owned_ro(view, DUAL_COMPONENT_DIRTY);
+                    auto otherTranslations = dual::get_owned_ro<skr_translation_comp_t>(view);
+                    auto otherColliders = dual::get_owned_ro<CSphereCollider2D>(view);
+                    auto otherHealths = dual::get_owned_ro<CHealth>(view);
+                    auto otherControllers = dual::get_owned_ro<CController>(view);
+                    auto otherDirtyMasks = dual::get_owned_rw<dual::dirty_comp_t>(view);
                     auto healthId = dualV_get_local_type(view, dual_id_of<CHealth>::get());
                     for(int j=0; j<view->count; ++j)
                     {
-                        auto& translation = translations[i];
-                        auto& collider = colliders[i];
                         auto& otherTranslation = otherTranslations[j];
                         auto& otherCollider = otherColliders[j];
                         skr_float2_t normal;
 
-                        if(collide(translation, collider, otherTranslation, otherCollider, normal))
+                        if(collide(translation.value, collider, otherTranslation.value, otherCollider, normal))
                         {
-                            if(!otherControllers || otherControllers[j].serverPlayerId != balls[i].playerId)
+                            if(!otherControllers || otherControllers[j].serverPlayerId != ball.playerId)
                             {
                                 auto& health = otherHealths[j];
-                                balls[i].lifeTime = 0;
+                                ball.lifeTime = 0;
                                 health.health -= 1;
                                 if(otherDirtyMasks)
                                 {
-                                    dual_set_bit(&otherDirtyMasks[j], healthId);
+                                    dual_set_bit(&otherDirtyMasks[j].value, healthId);
                                 }
                             }
                         }
                     }
                 };
-                dualQ_get_views(This->ballChildQuery, DUAL_LAMBDA(checkAndSet));
+                dualQ_get_views(ballChildQuery, DUAL_LAMBDA(checkAndSet));
             }
-        }, this, nullptr, nullptr, nullptr, nullptr);
+        }, nullptr);
     }
 
-    dualJ_schedule_ecs(relevanceQuery, 512,
-    +[] (void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
+    dual::schedule_task(relevanceQuery, 512,
+    [this](QUpdateRelevance::TaskContext ctx)
     {
-        auto This = (MPGameWorld*)u;
-        auto relevances = (CRelevance*)dualV_get_owned_rw_local(view, localTypes[0]);
-        auto translations = (skr_float3_t*)dualV_get_owned_ro_local(view, localTypes[1]);
-        for(int i=0; i<view->count; ++i)
+        auto [relevances, translations] = ctx.Unpack();
+        for(int i=0; i<ctx.count(); ++i)
         {
+            auto& relevance = relevances[i];
+            auto& translation = translations[i];
             auto checkAndSet = [&](dual_chunk_view_t* view)
             {
-                auto otherTranslations = (skr_float3_t*)dualV_get_owned_ro(view, dual_id_of<skr_translation_comp_t>::get());
-                auto otherControllers = (CController*)dualV_get_owned_ro(view, dual_id_of<CController>::get());
+                auto otherTranslations = dual::get_owned_ro<skr_translation_comp_t>(view);
+                auto otherControllers = dual::get_owned_ro<CController>(view);
                 for(int j=0; j<view->count; ++j)
                 {
-                    float distance = rtm::vector_distance3(skr::math::load(translations[i]), skr::math::load(otherTranslations[j]));
+                    float distance = rtm::vector_distance3(skr::math::load(translation.value), skr::math::load(otherTranslations[j].value));
                     if(distance < 200.f)
-                        relevances[i].mask[otherControllers[j].connectionId] = true;
+                        relevance.mask[otherControllers[j].connectionId] = true;
                     else
-                        relevances[i].mask[otherControllers[j].connectionId] = false;
+                        relevance.mask[otherControllers[j].connectionId] = false;
                 }
             };
-            dualQ_get_views(This->relevanceChildQuery, DUAL_LAMBDA(checkAndSet));
+            dualQ_get_views(relevanceChildQuery, DUAL_LAMBDA(checkAndSet));
         }
-    }, this, nullptr, nullptr, nullptr, nullptr);
+    }, nullptr);
     skr_transform_update(&transformSystem);
     dualJ_wait_all();
 }

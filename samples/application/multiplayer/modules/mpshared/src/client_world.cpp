@@ -221,7 +221,7 @@ void MPClientWorld::Snapshot()
     {
         skr::flat_hash_map<dual_chunk_t*, skr::vector<dual_chunk_view_t>> views;
         dual::type_builder_t predictedBuilder;
-        for(auto query : {movementQuery.query, controlQuery})
+        for(auto query : {movementQuery.query, controlQuery.query})
         {
             bool match = false;
             auto callback = [&](dual_chunk_view_t* view)

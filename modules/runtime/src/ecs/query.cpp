@@ -253,7 +253,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
         dual_operation_t operation;
         bool shared = false;
         bool filterOnly = false;
-        operation.randomAccess = DOS_SEQ;
+        operation.randomAccess = DOS_PAR;
         operation.readonly = true;
         operation.atomic = false;
         operation.phase = -1;
@@ -323,10 +323,15 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             }
             auto attr = part.substr(j, i - j);
             errorPos = partBegin + j;
-            if (attr.compare("rand") == 0)
-                operation.randomAccess = DOS_GLOBAL;
-            else if (attr.compare("seq") == 0)
+            if (attr.compare("seq") == 0)
                 operation.randomAccess = DOS_SEQ;
+            else if (attr.compare("par") == 0)
+                operation.randomAccess = DOS_PAR;
+            else if (attr.compare("unseq") == 0)
+            {
+                selector = OPT;
+                operation.randomAccess = DOS_UNSEQ;
+            }
             else
             {
                 error = skr::format("unknown sequence modifier, loc {}.", errorPos);
@@ -353,9 +358,16 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
                     SKR_ASSERT(false);
                     return nullptr;
                 }
-                operation.randomAccess = DOS_GLOBAL;
+                operation.randomAccess = DOS_SEQ;
                 shared = true;
                 ++i;
+            }
+            if(operation.randomAccess == DOS_UNSEQ && part[i] != '?')
+            {
+                errorPos = partBegin + i;
+                error = skr::format("unseq component must be optional, loc {}.", errorPos);
+                SKR_ASSERT(false);
+                return nullptr;
             }
             if (part[i] == '|')
                 selector = ANY;

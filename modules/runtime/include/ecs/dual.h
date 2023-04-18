@@ -147,9 +147,9 @@ typedef struct dual_filter_t {
 
 enum dual_operation_scope
 {
+    DOS_PAR,
     DOS_SEQ,
-    DOS_GROUP,
-    DOS_GLOBAL,
+    DOS_UNSEQ,
 };
 
 /**
@@ -1005,11 +1005,12 @@ namespace dual
             SKR_ASSERT(dualV_get_component_type(view, localTypes[idx]) == dual_id_of<T>::get());
         }
 
-        void check_access(dual_type_index_t idx, bool readonly)
+        void check_access(dual_type_index_t idx, bool readonly, bool random = false)
         {
             dual_parameters_t params;
             dualQ_get(query, nullptr, &params);
             SKR_ASSERT(params.accesses[idx].readonly == readonly);
+            SKR_ASSERT(params.accesses[idx].randomAccess >= random);
         }
 
         template<class T, bool noCheck = false>
@@ -1024,6 +1025,17 @@ namespace dual
         }
 
         template<class T, bool noCheck = false>
+        T* get_owned_rw(dual_chunk_view_t* view, dual_type_index_t idx)
+        {
+            if constexpr (!noCheck)
+            {
+                check_local_type<T>(idx);
+                check_access(idx, false, true);
+            }
+            return (T*)dualV_get_owned_rw(view, dual_id_of<T>::get());
+        }
+
+        template<class T, bool noCheck = false>
         const T* get_owned_ro(dual_type_index_t idx)
         {
             if constexpr (!noCheck)
@@ -1032,6 +1044,17 @@ namespace dual
                 check_access(idx, true);
             }
             return (const T*)dualV_get_owned_ro_local(view, localTypes[idx]);
+        }
+
+        template<class T, bool noCheck = false>
+        const T* get_owned_ro(dual_chunk_view_t* view, dual_type_index_t idx)
+        {
+            if constexpr (!noCheck)
+            {
+                check_local_type<T>(idx);
+                check_access(idx, true, true);
+            }
+            return (const T*)dualV_get_owned_ro(view, dual_id_of<T>::get());
         }
 
         void set_dirty(dirty_comp_t& mask, dual_type_index_t idx)
