@@ -308,7 +308,7 @@ void MPClientWorld::RollBack()
                     if(type == snapshotT)
                         continue;
                     auto dst = dualV_get_owned_rw(dview, type);
-                    dual_chunk_view_t current = {dview->chunk, dview->start + i, dview->count - i};
+                    dual_chunk_view_t current = {sview->chunk, sview->start + i, sview->count - i};
                     auto src = dualV_get_owned_ro(&current, type);
                     ApplyComponent(dst, src, type, dview->count);
                 }

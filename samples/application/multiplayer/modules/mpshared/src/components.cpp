@@ -50,47 +50,49 @@ uint8_t GetNetworkComponentIndex(dual_type_index_t type)
 void InitializeNetworkComponents()
 {
     {
-        //optimize1: only send needed value (x, z)
-        //optimize2: only send changed value
-        //TODO: codegen?
-        auto translationHistory =  RegisterHistoryComponent<skr_translation_comp_t>();
-        constexpr auto builder = +[](dual_chunk_view_t view, const skr_translation_comp_t& comp, skr_translation_comp_t& historyComp, bool initialMap, skr_binary_writer_t& archive)
+        static skr::binary::VectorSerdeConfig<float> translationSerdeConfig = { 10000 };
+        //auto translationHistory =  RegisterHistoryComponent<skr_translation_comp_t>();
+        constexpr auto builder = +[](dual_chunk_view_t view, const skr_translation_comp_t& comp, skr_translation_comp_t_History& historyComp, bool initialMap, skr_binary_writer_t& archive)
         {
-            uint8_t changed = 0;
-            if(!initialMap)
+            uint32_t full = initialMap || historyComp.deltaAccumulated > 40.f;
+            archive.write_bits(&full, 1);
+            if(full)
             {
-                if(std::abs(historyComp.value.x - comp.value.x) > 0.001f)
-                    changed |= 1;
-                if(std::abs(historyComp.value.z - comp.value.z) > 0.001f)
-                    changed |= 2;
+                skr::binary::Archive(&archive, comp.value, translationSerdeConfig);
+                historyComp.position.x = comp.value.x;
+                historyComp.position.y = comp.value.z;
+                historyComp.deltaAccumulated = 0.f;
             }
-            else 
+            else
             {
-                changed = 3;
+                skr_float2_t delta;
+                delta.x = comp.value.x - historyComp.position.x;
+                delta.y = comp.value.z - historyComp.position.y;
+                skr::binary::Archive(&archive, delta, translationSerdeConfig);
+                historyComp.position.x = comp.value.x;
+                historyComp.position.y = comp.value.z;
+                historyComp.deltaAccumulated += std::abs(delta.x) + std::abs(delta.y);
             }
-            //skip if no change
-            if(!changed)
-                return true;
-            skr::binary::Archive(&archive, changed);
-            if(changed & 1)
-                skr::binary::Archive(&archive, comp.value.x);
-            if(changed & 2)
-                skr::binary::Archive(&archive, comp.value.z);
-            historyComp = comp;
             return false;
         };
-        RegisterComponentDeltaBuilder(dual_id_of<skr_translation_comp_t>::get(), &BuildDelta<skr_translation_comp_t, builder, true>, translationHistory);
+        RegisterComponentDeltaBuilder(dual_id_of<skr_translation_comp_t>::get(), &BuildDelta<skr_translation_comp_t, builder, skr_translation_comp_t_History, true>, dual_id_of<skr_translation_comp_t_History>::get());
         constexpr auto applier = +[](dual_chunk_view_t view, skr_translation_comp_t& comp, skr_binary_reader_t& archive)
         {
-            uint8_t changed;
-            skr::binary::Archive(&archive, changed);
-            SKR_ASSERT(changed);
-            if(changed & 1)
-                skr::binary::Archive(&archive, comp.value.x);
-            if(changed & 2)
-                skr::binary::Archive(&archive, comp.value.z);
+            uint32_t full = 0;
+            archive.read_bits(&full, 1);
+            if(full)
+            {
+                skr::binary::Archive(&archive, comp.value, translationSerdeConfig);
+            }
+            else
+            {
+                skr_float2_t delta;
+                skr::binary::Archive(&archive, delta, translationSerdeConfig);
+                comp.value.x += delta.x;
+                comp.value.z += delta.y;
+            }
         };
-        RegisterComponentDeltaApplier(dual_id_of<skr_translation_comp_t>::get(), &ApplyDelta<skr_translation_comp_t, applier>);
+        RegisterComponentDeltaApplier(dual_id_of<skr_translation_comp_t>::get(), &ApplyDelta<skr_translation_comp_t, applier, true>);
     }
     RegisterSimpleComponent<skr_scale_comp_t>();
     {
@@ -134,7 +136,7 @@ void InitializeNetworkComponents()
         {
             skr::binary::Archive(&archive, comp.velocity, velocitySerdeConfig);
         };
-        RegisterComponentDeltaBuilder(dual_id_of<CMovement>::get(), &BuildDelta<CMovement, builder, false, true>);
+        RegisterComponentDeltaBuilder(dual_id_of<CMovement>::get(), &BuildDelta<CMovement, builder, void, true>);
         constexpr auto applier = +[](dual_chunk_view_t view, CMovement& comp, skr_binary_reader_t& archive)
         {
             skr::binary::Archive(&archive, comp.velocity, velocitySerdeConfig);
