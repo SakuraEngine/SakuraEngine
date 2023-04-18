@@ -10,7 +10,7 @@ struct skr_vfile_stdio_t : public skr_vfile_t {
     FILE* fh;
 };
 
-skr_vfile_t* skr_llfio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mode, ESkrFileCreation creation) SKR_NOEXCEPT
+skr_vfile_t* skr_stdio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mode, ESkrFileCreation creation) SKR_NOEXCEPT
 {
     skr::filesystem::path p;
     {
@@ -64,7 +64,7 @@ skr_vfile_t* skr_llfio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mo
     }
 }
 
-size_t skr_llfio_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_t byte_count) SKR_NOEXCEPT
+size_t skr_stdio_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_t byte_count) SKR_NOEXCEPT
 {
     if (file)
     {
@@ -94,7 +94,7 @@ size_t skr_llfio_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_
     return -1;
 }
 
-size_t skr_llfio_fwrite(skr_vfile_t* file, const void* out_buffer, size_t offset, size_t byte_count) SKR_NOEXCEPT
+size_t skr_stdio_fwrite(skr_vfile_t* file, const void* out_buffer, size_t offset, size_t byte_count) SKR_NOEXCEPT
 {
     if (file)
     {
@@ -107,7 +107,7 @@ size_t skr_llfio_fwrite(skr_vfile_t* file, const void* out_buffer, size_t offset
     return -1;
 }
 
-ssize_t skr_llfio_fsize(const skr_vfile_t* file) SKR_NOEXCEPT
+ssize_t skr_stdio_fsize(const skr_vfile_t* file) SKR_NOEXCEPT
 {
     if (file)
     {
@@ -120,11 +120,11 @@ ssize_t skr_llfio_fsize(const skr_vfile_t* file) SKR_NOEXCEPT
     return -1;
 }
 
-bool skr_llfio_fclose(skr_vfile_t* file) SKR_NOEXCEPT
+bool skr_stdio_fclose(skr_vfile_t* file) SKR_NOEXCEPT
 {
     if (file)
     {
-        SKR_ASSERT(file->fs->procs.fclose == &skr_llfio_fclose);
+        SKR_ASSERT(file->fs->procs.fclose == &skr_stdio_fclose);
         auto vfile = (skr_vfile_stdio_t*)file;
         auto code = fclose(vfile->fh);
         SkrDelete(file);
@@ -135,9 +135,9 @@ bool skr_llfio_fclose(skr_vfile_t* file) SKR_NOEXCEPT
 
 void skr_vfs_get_native_procs(struct skr_vfs_proctable_t* procs) SKR_NOEXCEPT
 {
-    procs->fopen = &skr_llfio_fopen;
-    procs->fclose = &skr_llfio_fclose;
-    procs->fread = &skr_llfio_fread;
-    procs->fwrite = &skr_llfio_fwrite;
-    procs->fsize = &skr_llfio_fsize;
+    procs->fopen = &skr_stdio_fopen;
+    procs->fclose = &skr_stdio_fclose;
+    procs->fread = &skr_stdio_fread;
+    procs->fwrite = &skr_stdio_fwrite;
+    procs->fsize = &skr_stdio_fsize;
 }
