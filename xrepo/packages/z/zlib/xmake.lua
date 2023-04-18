@@ -3,7 +3,7 @@ package("zlib")
     set_description("zlib 1.2.13 is a general purpose data compression library.")
     set_license("ZLIB License")
     
-    add_versions("skr", "e3ed8a269df53e9a8530057f4949f48885f746ae0fe9d72e5b4c616833494dc2")
+    add_versions("1.2.8-skr", "e3ed8a269df53e9a8530057f4949f48885f746ae0fe9d72e5b4c616833494dc2")
 
     add_includedirs("zlib/include", {public=true})
     if is_plat("windows")then

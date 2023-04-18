@@ -1,6 +1,6 @@
-add_requires("freetype skr", {system = false})
-add_requires("icu skr", {system = false})
-add_requires("harfbuzz skr", {system = false})
+add_requires("freetype =2.13.0-skr", {system = false})
+add_requires("icu =72.1.0-skr", {system = false})
+add_requires("harfbuzz =7.1.0-skr", {system = false})
 
 target("nanovg")
     set_group("00.thirdparty")

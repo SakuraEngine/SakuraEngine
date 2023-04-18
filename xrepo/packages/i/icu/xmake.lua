@@ -3,7 +3,7 @@ package("icu")
     set_description("International Components for Unicode.")
     set_license("ICU License. Details follow: https://github.com/unicode-org/icu/blob/main/LICENSE")
     
-    add_versions("skr", "cd5f0085d268ebcae37eb0341987003481f32e6c0284c23398a187dbe9c836f6")
+    add_versions("72.1.0-skr", "cd5f0085d268ebcae37eb0341987003481f32e6c0284c23398a187dbe9c836f6")
 
     on_install(function (package)
         os.mkdir(package:installdir())

@@ -1,4 +1,4 @@
-add_requires("zlib skr", {system = false})
+add_requires("zlib =1.2.8-skr", {system = false})
 
 set_languages("c11", "cxx17")
 

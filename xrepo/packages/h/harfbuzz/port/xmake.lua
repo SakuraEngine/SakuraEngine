@@ -1,5 +1,5 @@
-add_requires("freetype skr", {system = false})
-add_requires("icu skr", {system = false})
+add_requires("freetype =2.13.0-skr", {system = false})
+add_requires("icu =72.1.0-skr", {system = false})
 
 set_languages("c11", "cxx17")
 
