@@ -85,14 +85,16 @@ rule("skr.module")
         -- calculate deps
         local api = target:extraconf("rules", "skr.module", "api")
         local dep_modules = module_codegen.resolve_skr_module_dependencies(target)
-        if target:kind() == "binary" then
-            for _, dep in pairs(dep_modules) do
-                if is_plat("linux") then
-                    target:add("ldflags", "/-Wl,--whole-archive "..dep.." -Wl,--no-whole-archive", {force = true, public = false})
-                elseif is_plat("macosx") then
-                    target:add("ldflags", "/-Wl,-force_load "..dep, {force = true, public = false})
-                elseif is_plat("windows") then
-                    target:add("ldflags", "/WHOLEARCHIVE:"..dep, {force = true, public = false})
+        if has_config("shipping_one_archive") then
+            if target:kind() == "binary" then
+                for _, dep in pairs(dep_modules) do
+                    if is_plat("linux") then
+                        target:add("ldflags", "/-Wl,--whole-archive "..dep.." -Wl,--no-whole-archive", {force = true, public = false})
+                    elseif is_plat("macosx") then
+                        target:add("ldflags", "/-Wl,-force_load "..dep, {force = true, public = false})
+                    elseif is_plat("windows") then
+                        target:add("ldflags", "/WHOLEARCHIVE:"..dep, {force = true, public = false})
+                    end
                 end
             end
         end
@@ -111,8 +113,7 @@ rule("skr.static_module")
     on_load(function (target, opt)
         local api = target:extraconf("rules", "skr.static_module", "api")
         target:set("kind", "static")
-        if(has_config("shipping_one_archive")) then
-        else
+        if(not has_config("shipping_one_archive")) then
             target:add("defines", api.."_STATIC", {public=true})
             target:add("defines", api.."_IMPL")
         end
