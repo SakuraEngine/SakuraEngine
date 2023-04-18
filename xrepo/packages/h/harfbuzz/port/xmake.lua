@@ -1,9 +1,13 @@
+add_requires("freetype skr", "icu skr")
+
+set_languages("c11", "cxx17")
+
 target("harfbuzz")
-    set_group("00.thirdparty")
     set_kind("static")
     set_optimize("fastest")
+    add_headerfiles("harfbuzz/src/(**.h)", "harfbuzz/src/(**.hh)")
     add_includedirs("harfbuzz/src", {public=true})
-    add_deps("freetype", "icu", {public=true})
+    add_packages("freetype", "icu", {public=true})
     add_files(
         "harfbuzz/src/hb-aat-layout.cc",
         "harfbuzz/src/hb-aat-map.cc",

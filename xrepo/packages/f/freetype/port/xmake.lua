@@ -1,9 +1,13 @@
+add_requires("zlib skr")
+
+set_languages("c11", "cxx17")
+
 target("freetype")
-    set_group("00.thirdparty")
     set_kind("static")
     set_optimize("fastest")
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    add_rules("c++.unity_build", {batchsize = 32})
     add_includedirs("freetype/include", {public=true})
+    add_headerfiles("freetype/include/(**.h)")
     add_files(
         "freetype/src/autofit/autofit.c",
         "freetype/src/base/ftbase.c",
@@ -47,7 +51,7 @@ target("freetype")
         "freetype/src/winfonts/winfnt.c"
     )
     -- use skr zlib
-    add_deps("zlib", {public=true})
+    add_packages("zlib", {public=true})
     add_includedirs("ft-zlib", {public=false})
     add_defines("FT_CONFIG_OPTION_SYSTEM_ZLIB", {public=false})
 
