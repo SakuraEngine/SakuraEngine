@@ -16,6 +16,12 @@ option("build_samples")
     set_description("Toggle to build samples of SakuraRuntime")
 option_end()
 
+option("build_wasm3_samples")
+    set_default(false)
+    set_showmenu(true)
+    set_description("Toggle to build samples of wasm3")
+option_end()
+
 option("build_cgpu_samples")
     set_default(false)
     set_showmenu(true)

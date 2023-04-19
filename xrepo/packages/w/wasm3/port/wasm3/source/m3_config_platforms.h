@@ -66,20 +66,12 @@
 # if defined(M3_COMPILER_MSVC)
 #  define M3_WEAK //__declspec(selectany)
 #  define M3_NO_UBSAN
-#  define M3_NOINLINE
 # elif defined(__MINGW32__)
 #  define M3_WEAK //__attribute__((selectany))
 #  define M3_NO_UBSAN
-#  define M3_NOINLINE   __attribute__((noinline))
 # else
 #  define M3_WEAK       __attribute__((weak))
 #  define M3_NO_UBSAN   //__attribute__((no_sanitize("undefined")))
-// Workaround for Cosmopolitan noinline conflict: https://github.com/jart/cosmopolitan/issues/310
-#  if defined(noinline)
-#    define M3_NOINLINE   noinline
-#  else
-#    define M3_NOINLINE   __attribute__((noinline))
-#  endif
 # endif
 
 # ifndef M3_MIN
@@ -94,8 +86,6 @@
 #define M3_COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
 #if defined(__AVR__)
-
-#include <inttypes.h>
 
 # define PRIu64         "llu"
 # define PRIi64         "lli"
@@ -120,30 +110,30 @@ typedef int8_t          i8;
 
 # if defined (M3_COMPILER_MSVC)
 #   define vectorcall   // For MSVC, better not to specify any call convention
-# elif defined(__x86_64__)
-#   define vectorcall   __attribute__((aligned(32)))
-//# elif defined(__riscv) && (__riscv_xlen == 64)
-//#   define vectorcall   __attribute__((aligned(16)))
 # elif defined(__MINGW32__)
 #   define vectorcall
 # elif defined(WIN32)
 #   define vectorcall   __vectorcall
 # elif defined (ESP8266)
 #   include <c_types.h>
-#   define vectorcall   //ICACHE_FLASH_ATTR
+#   define op_section   //ICACHE_FLASH_ATTR
 # elif defined (ESP32)
 #   if defined(M3_IN_IRAM)  // the interpreter is in IRAM, attribute not needed
-#     define vectorcall
+#     define op_section
 #   else
 #     include "esp_system.h"
-#     define vectorcall   IRAM_ATTR
+#     define op_section   IRAM_ATTR
 #   endif
 # elif defined (FOMU)
-#   define vectorcall   __attribute__((section(".ramtext")))
+#   define op_section   __attribute__((section(".ramtext")))
 # endif
 
 #ifndef vectorcall
 #define vectorcall
+#endif
+
+#ifndef op_section
+#define op_section
 #endif
 
 
@@ -173,9 +163,6 @@ typedef int8_t          i8;
 
 # if defined(ARDUINO) || defined(PARTICLE) || defined(PLATFORMIO) || defined(__MBED__) || \
      defined(ESP8266) || defined(ESP32) || defined(BLUE_PILL) || defined(WM_W600) || defined(FOMU)
-# ifndef d_m3CascadedOpcodes
-#   define d_m3CascadedOpcodes                  0
-# endif
 #  ifndef d_m3VerboseErrorMessages
 #    define d_m3VerboseErrorMessages            0
 #  endif
@@ -193,7 +180,7 @@ typedef int8_t          i8;
 /*
  * Arch-specific defaults
  */
-#if defined(__riscv) && (__riscv_xlen == 64)
+#if defined(__riscv) && __riscv_xlen == 64
 #  ifndef d_m3Use32BitSlots
 #    define d_m3Use32BitSlots                   0
 #  endif

@@ -10,10 +10,6 @@
 
 #include "m3_core.h"
 
-#if defined(d_m3HasUVWASI)
-#include "uvwasi.h"
-#endif
-
 d_m3BeginExternC
 
 typedef struct m3_wasi_context_t
@@ -23,13 +19,7 @@ typedef struct m3_wasi_context_t
     ccstr_t *               argv;
 } m3_wasi_context_t;
 
-M3Result    m3_LinkWASI             (IM3Module io_module);
-
-#if defined(d_m3HasUVWASI)
-
-M3Result    m3_LinkWASIWithOptions  (IM3Module io_module, uvwasi_options_t uvwasiOptions);
-
-#endif
+M3Result    m3_LinkWASI     (IM3Module io_module);
 
 m3_wasi_context_t* m3_GetWasiContext();
 

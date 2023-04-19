@@ -1,4 +1,3 @@
-#include "../../thirdparty/mimalloc/include/mimalloc.h"
 #include "cgpu/api.h"
 
 void raster_cmd_record(
