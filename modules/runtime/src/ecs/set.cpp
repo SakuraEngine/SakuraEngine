@@ -48,8 +48,8 @@ namespace dual
     }
     bool ordered(const dual_filter_t& value)
     {
-        return ordered(value.all) && ordered(value.any) && ordered(value.none) &&
-            ordered(value.all_shared) && ordered(value.any_shared) && ordered(value.none_shared);
+        return ordered(value.all) && ordered(value.none) &&
+            ordered(value.all_shared) && ordered(value.none_shared);
     }
     bool ordered(const dual_meta_filter_t& value)
     {
@@ -64,10 +64,8 @@ namespace dual
     size_t hash(const dual_filter_t& value, size_t basis)
     {
         auto result = set_utils<dual_type_index_t>::hash(value.all, basis);
-        result = set_utils<dual_type_index_t>::hash(value.any, result);
         result = set_utils<dual_type_index_t>::hash(value.none, result);
         result = set_utils<dual_type_index_t>::hash(value.all_shared, result);
-        result = set_utils<dual_type_index_t>::hash(value.any_shared, result);
         result = set_utils<dual_type_index_t>::hash(value.none_shared, result);
         return result;
     }
@@ -101,8 +99,8 @@ namespace dual
 
     size_t data_size(const dual_filter_t& value)
     {
-        return data_size(value.all) + data_size(value.any) + data_size(value.none) +
-        data_size(value.all_shared) + data_size(value.any_shared) + data_size(value.none_shared);
+        return data_size(value.all) + data_size(value.none) +
+        data_size(value.all_shared) + data_size(value.none_shared);
     }
 
     size_t data_size(const dual_meta_filter_t& value)
@@ -142,10 +140,8 @@ namespace dual
     {
         return {
             clone(value.all, buffer),
-            clone(value.any, buffer),
             clone(value.none, buffer),
             clone(value.all_shared, buffer),
-            clone(value.any_shared, buffer),
             clone(value.none_shared, buffer)
         };
     }

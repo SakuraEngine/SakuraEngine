@@ -137,11 +137,9 @@ typedef struct dual_delta_type_t {
 typedef struct dual_filter_t {
     // filter owned types
     dual_type_set_t all;
-    dual_type_set_t any;
     dual_type_set_t none;
     // filter shared types
     dual_type_set_t all_shared;
-    dual_type_set_t any_shared;
     dual_type_set_t none_shared;
 } dual_filter_t;
 

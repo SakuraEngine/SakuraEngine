@@ -24,9 +24,12 @@ struct dual_query_t {
     dual_filter_t filter;
     dual_meta_filter_t meta;
     dual_parameters_t parameters;
+    eastl::vector<uint8_t> data;
+
+    //cache
     dual::phase_entry** phases = nullptr;
     uint32_t phaseCount = 0;
-    eastl::vector<uint8_t> data;
+    llvm_vecsmall::SmallVector<dual_type_set_t, 4> excludes;
     bool includeDisabled = false;
     bool includeDead = false;
     llvm_vecsmall::SmallVector<dual_group_t*, 32> groups;
