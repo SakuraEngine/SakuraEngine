@@ -65,7 +65,7 @@ target("SkrRoot")
     end
     add_rules("utils.install-libs", { libnames = libs_to_install })
     -- core deps
-    add_deps("fmt", "boost", {public = true})
+    add_deps("boost", {public = true})
     -- generate codegen fences
     after_load(function(target)
         import("meta_codegen")

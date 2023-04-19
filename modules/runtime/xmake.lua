@@ -1,3 +1,4 @@
+add_requires("fmt =9.1.0-skr")
 add_requires("lua =5.4.4-skr")
 add_requires("simdjson =3.0.0-skr")
 
@@ -17,8 +18,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     set_group("01.modules")
     add_deps("SkrRoot", {public = true})
     -- internal packages
-    add_packages("lua", {public = true, inherit = true})
-    add_packages("simdjson", {public = true, inherit = true})
+    add_packages("fmt", "lua", "simdjson", {public = true, inherit = true})
     -- defs & flags
     add_defines(defs_list, {public = true})
     add_ldflags(project_ldflags, {public = true, force = true})
