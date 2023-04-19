@@ -101,10 +101,10 @@ static void skr_relative_to_world_root(void* u, dual_storage_t* storage, dual_ch
 void skr_transform_setup(dual_storage_t* world, skr_transform_system_t* system)
 {
     // for root entities, calculate local to world
-    system->localToWorld = dualQ_from_literal(world, "[in]|skr_translation_comp_t,[in]|skr_rotation_comp_t, [in]|skr_scale_comp_t,[out]skr_l2w_comp_t,!skr_parent_comp_t");
+    system->localToWorld = dualQ_from_literal(world, "[in]?skr_translation_comp_t,[in]?skr_rotation_comp_t, [in]?skr_scale_comp_t,[out]skr_l2w_comp_t,!skr_parent_comp_t");
 
     // for node entities, calculate local to parent
-    system->localToRelative = dualQ_from_literal(world, "[in]|skr_translation_comp_t,[in]|skr_rotation_comp_t,[in]|skr_scale_comp_t,[out]skr_l2r_comp_t,[has]skr_parent_comp_t");
+    system->localToRelative = dualQ_from_literal(world, "[in]?skr_translation_comp_t,[in]?skr_rotation_comp_t,[in]?skr_scale_comp_t,[out]skr_l2r_comp_t,[has]skr_parent_comp_t");
 
     // then recursively calculate local to world for node entities
     system->relativeToWorld = dualQ_from_literal(world, "[inout]<seq>skr_l2w_comp_t,[in]<seq>skr_child_comp_t,[in]<seq>?skr_l2r_comp_t,!skr_parent_comp_t");
