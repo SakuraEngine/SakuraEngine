@@ -13,3 +13,7 @@ package("lua")
         local configs = {}
         import("package.tools.xmake").install(package, configs)
     end)
+
+    on_test(function (package)
+        assert(package:has_cfuncs("lua_getinfo", {includes = "lua/lua.h"}))
+    end)

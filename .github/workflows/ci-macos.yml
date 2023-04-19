@@ -48,9 +48,7 @@ jobs:
       # Run setup script
       - name: Set env
         id: env
-        run: |
-          xmake g -c -v
-          xmake l setup.lua -v
+        run: xmake l setup.lua -v
 
       - name: ConfigureDebug
         run: xmake f --mode=debug --yes -v --build_tests=n --build_editors=n --build_usdtool=n --policies=build.ccache:n -c
