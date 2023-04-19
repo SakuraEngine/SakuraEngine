@@ -830,8 +830,9 @@ void MPApplication::UpdateGame()
         ImGui::LabelText("in bytes per sec", "%f", status.m_flInBytesPerSec);
         ImGui::LabelText("out bandwidth", "%d", status.m_nSendRateBytesPerSecond);
         ImGui::LabelText("network entity count", "%d", dualQ_get_count(world.snapshotQuery));
-        auto worldBandwidth = world.GetBytePerSecond();
-        ImGui::LabelText("actual in bytes per sec", "%f", worldBandwidth);
+        ImGui::LabelText("actual in bytes per sec", "%lf", world.GetBytePerSecond());
+        ImGui::LabelText("actual in bytes per sec uncompressed", "%lf", world.GetBytePerSecondBeforeCompress());
+        ImGui::LabelText("compress ratio", "%lf", world.GetCompressRatio());
         ImGui::LabelText("lan mode", ((info.m_nFlags & k_nSteamNetworkConnectionInfoFlags_Fast) != 0) ? "true" : "false");
         ImGui::LabelText("relay mode", ((info.m_nFlags & k_nSteamNetworkConnectionInfoFlags_Relayed) != 0) ? "true" : "false");
         ImGui::LabelText("encrypted mode", ((info.m_nFlags & k_nSteamNetworkConnectionInfoFlags_Unencrypted) == 0) ? "true" : "false");
@@ -850,7 +851,7 @@ void MPApplication::UpdateGame()
                 totalComponentBandwidth += bandwidth;
                 ImGui::LabelText(name, "%f", bandwidth);
             }
-            ImGui::LabelText("other", "%f", worldBandwidth - totalComponentBandwidth);
+            ImGui::LabelText("other", "%f", world.GetBytePerSecondBeforeCompress() - totalComponentBandwidth);
         }
 
         bool predictionEnabled = world.predictionEnabled;
