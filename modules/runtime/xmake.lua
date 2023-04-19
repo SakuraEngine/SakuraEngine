@@ -1,3 +1,4 @@
+add_requires("lua =5.4.4-skr")
 add_requires("simdjson =3.0.0-skr")
 
 target("SkrDependencyGraph")
@@ -16,6 +17,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     set_group("01.modules")
     add_deps("SkrRoot", {public = true})
     -- internal packages
+    add_packages("lua", {public = true, inherit = true})
     add_packages("simdjson", {public = true, inherit = true})
     -- defs & flags
     add_defines(defs_list, {public = true})
@@ -31,7 +33,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     end
 
     -- add deps & links
-    add_deps("SkrDependencyGraph", "lua", {public = false})
+    add_deps("SkrDependencyGraph", {public = false})
     add_deps("vulkan", {public = true})
     add_packages(packages_list, {public = true})
 
