@@ -23,8 +23,7 @@ if (os.host() == "windows") then
     find_sdk.sdk_lib_from_github("imgui", "imgui-windows-x64.zip")
     find_sdk.sdk_lib_from_github("imgui_d", "imgui_d-windows-x64.zip")
     find_sdk.sdk_lib_from_github("ISPCTextureCompressor", "ISPCTextureCompressor-windows-x64.zip")
-
-    -- gfx
+    -- gfx sdk
     find_sdk.lib_from_github("WinPixEventRuntime", "WinPixEventRuntime-windows-x64.zip")
     find_sdk.lib_from_github("amdags", "amdags-windows-x64.zip")
     find_sdk.lib_from_github("nvapi", "nvapi-windows-x64.zip")
@@ -33,9 +32,9 @@ if (os.host() == "windows") then
     find_sdk.lib_from_github("SDL2", "SDL2-windows-x64.zip")
     find_sdk.lib_from_github("tracyclient", "tracyclient-windows-x64.zip")
     find_sdk.lib_from_github("tracyclient_d", "tracyclient_d-windows-x64.zip")
-    --
+    -- usd
     find_sdk.lib_from_github("usd", "usd-windows-x64.zip")
-    --
+    -- tools & compilers
     find_sdk.tool_from_github("dxc", "dxc-windows-x64.zip")
     find_sdk.tool_from_github("wasm-clang", "wasm-clang-windows-x64.zip")
     find_sdk.tool_from_github("ispc", "ispc-windows-x64.zip")
