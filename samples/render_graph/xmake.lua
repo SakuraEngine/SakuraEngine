@@ -1,3 +1,5 @@
+add_requires("lmdb =0.9.29-skr")
+
 target("Example-RenderGraphTriangle")
     set_group("04.examples/render_graph")
     set_kind("binary")
@@ -41,4 +43,4 @@ target("Example-RenderGraphCrossProcess")
     add_includedirs("./../common", {public = false})
     add_files("cross-process/*.cpp")
     add_files("cross-process/**.hlsl")
-    add_deps("lmdb")
+    add_packages("lmdb")
