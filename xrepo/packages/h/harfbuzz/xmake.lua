@@ -7,6 +7,7 @@ package("harfbuzz")
 
     add_deps("freetype =2.13.0-skr")
     add_deps("icu =72.1.0-skr")
+    
     on_install(function (package)
         os.mkdir(package:installdir())
         os.cp(path.join(package:scriptdir(), "port", "harfbuzz"), ".")
@@ -14,4 +15,8 @@ package("harfbuzz")
 
         local configs = {}
         import("package.tools.xmake").install(package, configs)
+    end)    
+    
+    on_test(function (package)
+        assert(package:has_cfuncs("hb_buffer_add_utf8", {includes = "hb.h"}))
     end)

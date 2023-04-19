@@ -5,6 +5,7 @@ package("freetype")
     
     add_versions("2.13.0-skr", "0986ddbdaaac65da525716e7134038edcc7d8d1ca965629717231a89f32b839f")
 
+    add_deps("zlib =1.2.8-skr")
     on_install(function (package)
         os.mkdir(package:installdir())
         os.cp(path.join(package:scriptdir(), "port", "freetype"), ".")
@@ -13,4 +14,8 @@ package("freetype")
 
         local configs = {}
         import("package.tools.xmake").install(package, configs)
+    end)
+
+    on_test(function (package)
+        assert(package:has_cfuncs("FT_Init_FreeType", {includes = {"ft2build.h", "freetype/freetype.h"}}))
     end)

@@ -13,3 +13,15 @@ package("fmt")
         local configs = {}
         import("package.tools.xmake").install(package, configs)
     end)
+
+    on_test(function (package)
+        assert(package:check_cxxsnippets({test = [[
+            #include <fmt/format.h>
+            #include <string>
+            #include <assert.h>
+            static void test() {
+                std::string s = fmt::format("{}", "hello");
+                assert(s == "hello");
+            }
+        ]]}, {configs = {languages = "c++14"}, includes = "fmt/format.h"}))
+    end)
