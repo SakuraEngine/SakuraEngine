@@ -478,6 +478,7 @@ void dual_storage_t::build_queries()
     };
     for(int i=0; i<phaseCount; ++i)
         phases[i]->~phase_entry();
+    phaseCount = 0;
     queryBuildArena.reset();
     eastl::vector<phase_entry_builder> entries;
     for (auto query : queries)
@@ -509,7 +510,6 @@ void dual_storage_t::build_queries()
         }
     }
     phases = queryBuildArena.allocate<phase_entry*>(entries.size());
-    phaseCount = entries.size();
     auto phaseEntries = phases;
     for (auto query : queries)
     {
@@ -532,6 +532,7 @@ void dual_storage_t::build_queries()
     {
         if (builder.queries.size() < 2)
             continue;
+        phaseCount ++;
         auto entry = new (queryBuildArena.allocate<phase_entry>(1)) phase_entry(); 
         (*phaseEntries++) = entry;
         entry->type = builder.type;

@@ -8,20 +8,20 @@ namespace skr::binary
 %for record in generator.filter_types(db.records):
 template<>
 struct ${api} ReadTrait<${record.name}>
-{
+{<% configParam = ", " + record.attrs.serialize_config if hasattr(record.attrs, "serialize_config") else ""%>
 %if generator.filter_blob_type(record):
-    static int Read(skr_binary_reader_t* archive, skr_blob_arena_t& arena, ${record.name}& value);
+    static int Read(skr_binary_reader_t* archive, skr_blob_arena_t& arena, ${record.name}& value${configParam});
 %else:
-    static int Read(skr_binary_reader_t* archive, ${record.name}& value);
+    static int Read(skr_binary_reader_t* archive, ${record.name}& value ${configParam});
 %endif
 };
 template<>
 struct ${api} WriteTrait<const ${record.name}&>
-{
+{<% configParam = ", " + record.attrs.serialize_config if hasattr(record.attrs, "serialize_config") else ""%>
 %if generator.filter_blob_type(record):
-    static int Write(skr_binary_writer_t* archive, skr_blob_arena_t& arena, const ${record.name}& value);
+    static int Write(skr_binary_writer_t* archive, skr_blob_arena_t& arena, const ${record.name}& value${configParam});
 %else:
-    static int Write(skr_binary_writer_t* archive, const ${record.name}& value);
+    static int Write(skr_binary_writer_t* archive, const ${record.name}& value ${configParam});
 %endif
 };
 %endfor

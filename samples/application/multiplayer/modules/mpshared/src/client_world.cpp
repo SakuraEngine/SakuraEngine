@@ -52,7 +52,7 @@ void MPClientWorld::Shutdown()
     dualQ_release(snapshotQuery);
     if (snapshotStorage)
     {
-        dualS_release(snapshotStorage);
+        dualS_release(snapshotStorage); 
     }
     dualJ_unbind_storage(storage);
     MPGameWorld::Shutdown();
@@ -76,7 +76,7 @@ void MPClientWorld::ReceiveWorldDelta(const void* data, size_t dataLength)
         SKR_ASSERT(decompressedSize == size);
         span = {(uint8_t*)decompressedData.data(), size};
     }
-    skr::binary::SpanReader reader{span, 0};
+    skr::binary::SpanReaderBitpacked reader{span, 0};
     skr_binary_reader_t archive(reader);
     skr::binary::Read(&archive, worldDelta);
     

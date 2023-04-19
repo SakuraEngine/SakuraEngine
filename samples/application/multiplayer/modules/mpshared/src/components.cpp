@@ -55,6 +55,11 @@ void InitializeNetworkComponents()
         constexpr auto builder = +[](dual_chunk_view_t view, const skr_translation_comp_t& comp, skr_translation_comp_t_History& historyComp, bool initialMap, skr_binary_writer_t& archive)
         {
             uint32_t full = initialMap || historyComp.deltaAccumulated > 40.f;
+            skr_float2_t delta;
+            delta.x = comp.value.x - historyComp.position.x;
+            delta.y = comp.value.z - historyComp.position.y;
+            if(!initialMap && (std::abs(delta.x) < 0.0001f && std::abs(delta.y) < 0.0001f))
+                return true;
             archive.write_bits(&full, 1);
             if(full)
             {
@@ -65,9 +70,6 @@ void InitializeNetworkComponents()
             }
             else
             {
-                skr_float2_t delta;
-                delta.x = comp.value.x - historyComp.position.x;
-                delta.y = comp.value.z - historyComp.position.y;
                 skr::binary::Archive(&archive, delta, translationSerdeConfig);
                 historyComp.position.x = comp.value.x;
                 historyComp.position.y = comp.value.z;

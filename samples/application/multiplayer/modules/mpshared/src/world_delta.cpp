@@ -380,6 +380,19 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder
         {
             for(auto& delta : builder)
             {
+                delta.maxEntity = 0;
+                for(auto& entity : delta.entities)
+                {
+                    EIndex maxId = std::max(DUAL_ENTITY_ID(delta.maxEntity), DUAL_ENTITY_ID(entity.entity));
+                    EIndex maxVersion = std::max(DUAL_ENTITY_VERSION(delta.maxEntity), DUAL_ENTITY_VERSION(entity.entity));
+
+                    delta.maxEntity = DUAL_ENTITY(maxId, maxVersion);
+                }
+            }
+        }
+        {
+            for(auto& delta : builder)
+            {
                 delta.components.erase(std::remove_if(delta.components.begin(), delta.components.end(), [](auto& c) { return c.data.size() == 0; }), delta.components.end());
             }
         }
@@ -585,4 +598,42 @@ void RegisterComponentDeltaBuilder(dual_type_index_t component, component_delta_
 void RegisterComponentDeltaApplier(dual_type_index_t component, component_delta_apply_callback_t inCallback)
 {
     ComponentDeltaApplierRegistry::Get().appliers[component] = ComponentDeltaApplier{component, inCallback};
+}
+int skr::binary::WriteTrait<const packed_entity_t&>::Write(skr_binary_writer_t *writer, const packed_entity_t &value, dual_entity_t maxEntity)
+{
+    uint32_t id = DUAL_ENTITY_ID(value.entity);
+    uint32_t version = DUAL_ENTITY_VERSION(value.entity);
+    uint32_t idMax = DUAL_ENTITY_ID(maxEntity);
+    uint32_t versionMax = DUAL_ENTITY_VERSION(maxEntity);
+
+    auto ret = Archive(writer, id, IntegerSerdeConfig<uint32_t>{0, idMax});
+    if (ret != 0)
+        return ret;
+    ret = Archive(writer, version, IntegerSerdeConfig<uint32_t>{0, versionMax});
+    return ret;
+}
+int skr::binary::ReadTrait<packed_entity_t>::Read(skr_binary_reader_t *reader, packed_entity_t &value, dual_entity_t maxEntity)
+{
+    uint32_t id = 0;
+    uint32_t version = 0;
+    uint32_t idMax = DUAL_ENTITY_ID(maxEntity);
+    uint32_t versionMax = DUAL_ENTITY_VERSION(maxEntity);
+    auto ret = Archive(reader, id, IntegerSerdeConfig<uint32_t>{0, idMax});
+    if (ret != 0)
+        return ret;
+    ret = Archive(reader, version, IntegerSerdeConfig<uint32_t>{0, versionMax});
+    if (ret != 0)
+        return ret;
+    value.entity = DUAL_ENTITY(id, version);
+    return 0;
+}
+#include "json/writer.h"
+void skr::json::WriteTrait<const packed_entity_t&>::Write(skr_json_writer_t *writer, const packed_entity_t &value)
+{
+    writer->StartObject();
+    writer->Key("id");
+    writer->UInt(DUAL_ENTITY_ID(value.entity));
+    writer->Key("version");
+    writer->UInt(DUAL_ENTITY_VERSION(value.entity));
+    writer->EndObject();
 }

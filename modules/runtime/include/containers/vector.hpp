@@ -92,7 +92,8 @@ namespace binary
 {
 template <class V, class Allocator>
 struct ReadTrait<skr::vector<V, Allocator>> {
-    static int Read(skr_binary_reader_t* archive, skr::vector<V, Allocator>& vec)
+    template<class... Args>
+    static int Read(skr_binary_reader_t* archive, skr::vector<V, Allocator>& vec, Args&&... args)
     {
         skr::vector<V, Allocator> temp;
         uint32_t size;
@@ -102,7 +103,7 @@ struct ReadTrait<skr::vector<V, Allocator>> {
         for (uint32_t i = 0; i < size; ++i)
         {
             V value;
-            SKR_ARCHIVE(value);
+            if(auto ret = skr::binary::Archive(archive, value, std::forward<Args>(args)...); ret != 0) return ret;
             temp.push_back(std::move(value));
         }
         vec = std::move(temp);
@@ -125,12 +126,13 @@ namespace binary
 {
 template <class V, class Allocator>
 struct WriteTrait<const skr::vector<V, Allocator>&> {
-    static int Write(skr_binary_writer_t* archive, const skr::vector<V, Allocator>& vec)
+    template<class... Args>
+    static int Write(skr_binary_writer_t* archive, const skr::vector<V, Allocator>& vec, Args&&... args)
     {
         SKR_ARCHIVE((uint32_t)vec.size());
         for (auto& value : vec)
         {
-            SKR_ARCHIVE(value);
+            if(auto ret = skr::binary::Archive(archive, value, std::forward<Args>(args)...); ret != 0) return ret;
         }
         return 0;
     }
