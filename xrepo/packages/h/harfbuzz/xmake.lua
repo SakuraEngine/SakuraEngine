@@ -7,7 +7,13 @@ package("harfbuzz")
 
     add_deps("freetype =2.13.0-skr")
     add_deps("icu =72.1.0-skr")
-    
+
+    if (is_plat("macosx")) then
+        add_frameworks("ApplicationServices", {public=truw})
+    elseif (is_plat("iphoneos")) then
+        add_frameworks("CoreGraphics", "CoreText", {public=true})
+    end
+
     on_install(function (package)
         os.mkdir(package:installdir())
         os.cp(path.join(package:scriptdir(), "port", "harfbuzz"), ".")
