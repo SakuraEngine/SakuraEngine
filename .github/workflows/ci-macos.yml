@@ -4,56 +4,102 @@ on: [push, pull_request]
 
 jobs:
   build-macos:
-    runs-on: macos-12
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-12 ]
+        arch: [ x86_64 ]
+        toolchain: [ xcode ]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
         uses: nschloe/action-cached-lfs-checkout@v1
-      - uses: xmake-io/github-action-setup-xmake@v1
+
+      # many thanks to NazaraEngine: https://github.com/NazaraEngine/NazaraEngine
+      - name: Get current date as package key
+        id: cache_key
+        run: echo "key=$(date +'%W')" >> $GITHUB_OUTPUT
+
+      # Force xmake to a specific folder (for cache)
+      - name: Set xmake env
+        run: echo "XMAKE_GLOBALDIR=${{ runner.workspace }}/xmake-global" >> $GITHUB_ENV
+
+      - name: Install xmake
+        uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: latest
-          actions-cache-folder: ".xmake-cache"
+          actions-cache-folder: .xmake-cache-W${{ steps.cache_key.outputs.key }}
+
+      # Update xmake repository (in order to have the file that will be cached)
+      - name: Update xmake repository
+        run: xmake repo --update
+
+      # Fetch xmake dephash
+      - name: Retrieve dependencies hash
+        id: dep_hash
+        run: echo "hash=$(xmake l utils.ci.packageskey)" >> $GITHUB_OUTPUT
+
+      # Cache xmake dependencies
+      - name: Retrieve cached xmake dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.XMAKE_GLOBALDIR }}/.xmake/packages
+          key: macOS-${{ matrix.arch }}-${{ matrix.toolchain }}-${{ steps.dep_hash.outputs.hash }}-W${{ steps.cache_key.outputs.key }}
+
+      # Run setup script
       - name: Set env
         id: env
         run: |
           xmake g -c -v
           xmake l setup.lua -v
+
       - name: ConfigureDebug
-        run: xmake f -m debug -y -v --build_tests=n --build_editors=n --build_usdtool=n --policies=build.ccache:n -c
-      - name: Debug
+        run: xmake f --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --mode=debug --yes -v --build_tests=n --build_editors=n --build_usdtool=n --policies=build.ccache:n -c
+
+      - name: BuildDebug
         if: success() || failure()
         run: xmake -y -v
-      - name: Release
+
+      - name: ConfigureRelease
         if: success() || failure()
-        run: |
-          xmake f -m release -y --build_tests=n --build_editors=n --use_tracy=disable -c --policies=build.ccache:n
-          xmake -y -v
+        run: xmake f --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --mode=release --yes -v --build_tests=n --build_editors=n --use_tracy=disable -c --policies=build.ccache:n
+
+      - name: BuildRelease
+        if: success() || failure()
+        run: xmake -y -v
+
       - name: UploadGeneratedFiles
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
           name: build-artifacts-macosx-clang
           path: build/.gens
+
       - name: UploadDevelopmentBuild
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
           name: build-binaries-macosx-clang
           path: build/macosx
+
       - name: RemoveBuildDir
         uses: JesseTG/rm@v1.0.3
         with:
           path: build
+
       - name: Shipping
         if: success() || failure()
         run: |
           xmake f -m release -y --build_tests=n --build_editors=n -c --shipping_one_archive=y --use_tracy=disable --policies=build.ccache:n
           xmake -y -v
+
       - name: UploadGeneratedFiles2
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
           name: shipping-artifacts-macosx-clang
           path: build/.gens
+
       - name: UploadShipping
         if: success() || failure()
         uses: actions/upload-artifact@v3
