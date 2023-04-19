@@ -1,6 +1,8 @@
 local fmt_include_dir = "fmt/include"
 local fmt_source_dir = "fmt/src"
 
+set_languages("c11", "cxx17")
+
 target("fmt")
     set_kind("static")
     set_optimize("fastest")

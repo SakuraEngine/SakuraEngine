@@ -2,6 +2,8 @@ local lmdb_include_dir = "lmdb/include"
 local lmdb_include_dir_private = "lmdb/include/lmdb"
 local lmdb_source_dir = "lmdb"
 
+set_languages("c11", "cxx17")
+
 target("lmdb")
     set_kind("static")
     set_optimize("fastest")

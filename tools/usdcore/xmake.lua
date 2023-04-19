@@ -1,3 +1,5 @@
+add_requires("cgltf =1.13.0-skr", {system = false})
+
 target("UsdCore")
     set_group("02.tools")
     add_rules("skr.shared", {api = "USDCORE"})
@@ -6,7 +8,7 @@ target("UsdCore")
         rootdir = "include/UsdCore"
     })
     public_dependency("SkrToolCore", engine_version)
-    add_deps("cgltf");
+    add_packages("cgltf", {public=true})
     add_includedirs("include",{public=true})
     add_files("src/**.cpp")
 
