@@ -8,62 +8,107 @@ jobs:
       fail-fast: false
       matrix:
         os: [ windows-latest, windows-2019 ]
+        arch: [ x64 ]
         toolchain: [ msvc, clang-cl ]
+
     name: ${{ matrix.os }} / ${{ matrix.toolchain }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
         uses: nschloe/action-cached-lfs-checkout@v1
+        
+      # many thanks to NazaraEngine: https://github.com/NazaraEngine/NazaraEngine
+      - name: Get current date as package key
+        id: cache_key
+        run: echo "key=$(date +'%W')" >> $GITHUB_OUTPUT
+        shell: bash
+
+      # Force xmake to a specific folder (for cache)
+      - name: Set xmake env
+        run: echo "XMAKE_GLOBALDIR=${{ runner.workspace }}/xmake-global" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
       - uses: ilammy/msvc-dev-cmd@v1
-      - uses: xmake-io/github-action-setup-xmake@v1
+
+      - name: Install xmake
+        uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: latest
-          actions-cache-folder: ".xmake-cache"
+          actions-cache-folder: .xmake-cache-W${{ steps.cache_key.outputs.key }}
+
+      # Update xmake repository (in order to have the file that will be cached)
+      - name: Update xmake repository
+        run: xmake repo --update
+
+      # Fetch xmake dephash
+      - name: Retrieve dependencies hash
+        id: dep_hash
+        run: echo "hash=$(xmake l utils.ci.packageskey)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      # Cache xmake dependencies
+      - name: Retrieve cached xmake dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.XMAKE_GLOBALDIR }}\.xmake\packages
+          key: MSVC-${{ matrix.arch }}-${{ matrix.toolchain }}-${{ steps.dep_hash.outputs.hash }}-W${{ steps.cache_key.outputs.key }}
+
+      # Run setup script
       - name: Set env
         id: env
         run: |
           xmake g -c -v
           xmake l setup.lua -v
+
       - name: ConfigureDebug
-        run: xmake f -m debug --toolchain=${{ matrix.toolchain }} -c -y -v --build_tests=n --build_editors=n --build_usdtool=n --policies=build.ccache:n
-      - name: Debug
+        run: xmake f -m debug --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} -c -y -v --build_tests=n --build_editors=n --build_usdtool=n --policies=build.ccache:n
+      
+      - name: BuildDebug
         if: success() || failure()
         shell: cmd
         run: xmake -y -v
-      - name: Release
+      
+      - name: ConfigureRelease
         if: success() || failure()
         shell: cmd
-        run: |
-          xmake f -m release --toolchain=${{ matrix.toolchain }} -c -y -v --build_tests=n --build_editors=n --use_tracy=disable --policies=build.ccache:n
-          xmake -y -v
+        run: xmake f -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} -c -y -v --build_tests=n --build_editors=n --use_tracy=disable --policies=build.ccache:n
+      
+      - name: BuildRelease
+        if: success() || failure()
+        shell: cmd
+        run: xmake -y -v
+      
       - name: UploadGeneratedFiles
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
           name: build-artifacts-${{ matrix.os }}-${{ matrix.toolchain }}
           path: build/.gens
+      
       - name: UploadCompileResults
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
           name: build-binaries-${{ matrix.os }}-${{ matrix.toolchain }}
           path: build/windows
+      
       - name: RemoveBuildDir
         uses: JesseTG/rm@v1.0.3
         with:
           path: build
+      
       - name: Shipping
         if: success() || failure()
         shell: cmd
         run: |
-          xmake f -m release --toolchain=${{ matrix.toolchain }} -c -y -v --build_tests=n --build_editors=n --shipping_one_archive=y --use_tracy=disable --policies=build.ccache:n
+          xmake f -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} -c -y -v --build_tests=n --build_editors=n --shipping_one_archive=y --use_tracy=disable --policies=build.ccache:n
           xmake -y -v
+      
       - name: UploadGeneratedFiles2
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
           name: shipping-artifacts-${{ matrix.os }}-${{ matrix.toolchain }}
           path: build/.gens
+      
       - name: UploadShipping
         if: success() || failure()
         uses: actions/upload-artifact@v3
