@@ -48,10 +48,12 @@ jobs:
       # Run setup script
       - name: Set env
         id: env
-        run: xmake l setup.lua -v
+        run: |
+          xmake g -c -v
+          xmake l setup.lua -v
 
       - name: ConfigureDebug
-        run: xmake f --mode=debug --yes -v --build_tests=n --build_editors=n --build_usdtool=n --policies=build.ccache:n -c
+        run: xmake f --arch=${{ matrix.arch }} --mode=debug --yes -v --build_tests=n --build_editors=n --build_usdtool=n --policies=build.ccache:n -c
 
       - name: BuildDebug
         if: success() || failure()
@@ -59,7 +61,7 @@ jobs:
 
       - name: ConfigureRelease
         if: success() || failure()
-        run: xmake f --mode=release --yes -v --build_tests=n --build_editors=n --use_tracy=disable -c --policies=build.ccache:n
+        run: xmake f --arch=${{ matrix.arch }} --mode=release --yes -v --build_tests=n --build_editors=n --use_tracy=disable -c --policies=build.ccache:n
 
       - name: BuildRelease
         if: success() || failure()
@@ -87,7 +89,7 @@ jobs:
       - name: Shipping
         if: success() || failure()
         run: |
-          xmake f -m release -y --build_tests=n --build_editors=n -c --shipping_one_archive=y --use_tracy=disable --policies=build.ccache:n
+          xmake f --arch=${{ matrix.arch }} --mode=release --yes --build_tests=n --build_editors=n -c --shipping_one_archive=y --use_tracy=disable --policies=build.ccache:n
           xmake -y -v
 
       - name: UploadGeneratedFiles2
