@@ -40,6 +40,8 @@ struct MP_SHARED_API MPClientWorld : MPGameWorld
     MPWorldDelta worldDelta;
     SHiresTimer timer;
     BandwidthCounter bandwidthCounter;
+    BandwidthCounter bandwidthBeforeCompressCounter;
+    double compressRatio;
     
     virtual void Initialize() override;
     void SendInput();
@@ -54,6 +56,8 @@ struct MP_SHARED_API MPClientWorld : MPGameWorld
     void SetPredictionEnabled(bool enabled);
     void UpdateTimeScale(double deltaTime);
     double GetBytePerSecond();
+    double GetBytePerSecondBeforeCompress();
+    double GetCompressRatio();
     double GetTickInterval() { return serverTickInterval; }
     dual_entity_t SpawnPrefab(skr_resource_handle_t prefab, dual_entity_t entity, dual_entity_type_t extension);
     void DestroyEntity(dual_entity_t entity);

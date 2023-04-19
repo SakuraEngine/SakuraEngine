@@ -67,8 +67,10 @@ void MPClientWorld::ReceiveWorldDelta(const void* data, size_t dataLength)
         ZoneScopedN("Decompress");
         bandwidthCounter.AddRecord(dataLength);
         uint64_t size = *(uint64_t*)data;
+        bandwidthBeforeCompressCounter.AddRecord(size);
         data = (uint8_t*)data + sizeof(uint64_t);
         dataLength -= sizeof(uint64_t);
+        compressRatio = (double)dataLength / size;
         decompressedData.resize(LZ4_COMPRESSBOUND(size));
         auto decompressedSize = LZ4_decompress_safe((const char*)data, (char*)decompressedData.data(), dataLength, decompressedData.size());
         SKR_ASSERT(decompressedSize == size);
@@ -366,6 +368,16 @@ void MPClientWorld::UpdateTimeScale(double deltaTime)
 double MPClientWorld::GetBytePerSecond()
 {
     return bandwidthCounter.GetBytePerSecond();
+}
+
+double MPClientWorld::GetBytePerSecondBeforeCompress()
+{
+    return bandwidthBeforeCompressCounter.GetBytePerSecond();
+}
+
+double MPClientWorld::GetCompressRatio()
+{
+    return compressRatio;
 }
 
 void MPClientWorld::RollForward()

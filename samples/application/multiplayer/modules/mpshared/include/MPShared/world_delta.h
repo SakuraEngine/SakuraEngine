@@ -115,8 +115,8 @@ void RegisterComponentDeltaApplier(dual_type_index_t component, component_delta_
 struct BandwidthCounter
 {
     BandwidthCounter();
-    eastl::fixed_ring_buffer<std::pair<double, uint64_t>, 30> dataRecord;
+    eastl::fixed_ring_buffer<std::pair<double, double>, 30> dataRecord;
     SHiresTimer timer;
-    void AddRecord(uint64_t bytes);
+    void AddRecord(double bytes);
     double GetBytePerSecond();
 };

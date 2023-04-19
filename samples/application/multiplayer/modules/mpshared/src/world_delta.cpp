@@ -17,7 +17,7 @@ BandwidthCounter::BandwidthCounter()
     skr_init_hires_timer(&timer);
 }
 
-void BandwidthCounter::AddRecord(uint64_t bytes)
+void BandwidthCounter::AddRecord(double bytes)
 {
     dataRecord.push_back({skr_hires_timer_get_seconds(&timer, false), bytes});
 }
@@ -26,7 +26,7 @@ double BandwidthCounter::GetBytePerSecond()
 {
     if(dataRecord.size() > 5)
     {
-        uint64_t totalBytes = 0;
+        double totalBytes = 0;
         for(int i=0; i<dataRecord.size(); ++i)
         {
             totalBytes += dataRecord[i].second;
