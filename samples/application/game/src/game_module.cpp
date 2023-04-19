@@ -560,7 +560,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
     cameraQuery = dualQ_from_literal(game_world,
         "[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [inout]skr_camera_comp_t");
     animQuery = dualQ_from_literal(game_world,
-        "[in]skr_render_effect_t, [in]game::anim_state_t, [out]<rand>?skr_render_anim_comp_t, [in]<rand>?skr_render_skel_comp_t");
+        "[in]skr_render_effect_t, [in]game::anim_state_t, [out]<unseq>skr_render_anim_comp_t, [in]<unseq>skr_render_skel_comp_t");
     initAnimSkinQuery = dualQ_from_literal(game_world, 
         "[inout]skr_render_anim_comp_t, [inout]skr_render_skin_comp_t, [in]skr_render_mesh_comp_t, [in]skr_render_skel_comp_t");
     skinQuery = dualQ_from_literal(game_world, 

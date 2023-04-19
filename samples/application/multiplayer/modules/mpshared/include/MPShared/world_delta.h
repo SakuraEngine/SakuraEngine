@@ -10,6 +10,49 @@
 #include "EASTL/functional.h"
 #include "EASTL/bonus/fixed_ring_buffer.h"
 #include "platform/time.h"
+#include "ecs/entity.hpp"
+
+// override the default serialization of dual_entity_t to use a packed version
+struct packed_entity_t
+{
+    dual_entity_t entity;
+    packed_entity_t() = default;
+    packed_entity_t(dual_entity_t e) : entity(e) {}
+    operator dual_entity_t() const { return entity; }
+    packed_entity_t operator=(dual_entity_t e) { entity = e; return *this; }
+    bool operator==(dual_entity_t e) const { return entity == e; }
+};
+namespace skr
+{
+namespace binary
+{
+template<>
+struct WriteTrait<const packed_entity_t&>
+{
+    static int Write(skr_binary_writer_t* writer, const packed_entity_t& value, dual_entity_t maxEntity);
+};
+template <>
+struct ReadTrait<packed_entity_t>
+{
+    static int Read(skr_binary_reader_t* reader, packed_entity_t& value, dual_entity_t maxEntity);
+};
+BLOB_POD(packed_entity_t)
+}
+}
+
+namespace skr
+{
+namespace json
+{
+template<>
+struct WriteTrait<const packed_entity_t&>
+{
+    static void Write(skr_json_writer_t* writer, const packed_entity_t& value);
+};
+}
+}
+
+
 #ifndef __meta__
     #include "MPShared/world_delta.generated.h"
 #endif
@@ -43,24 +86,33 @@ GENERATED_BLOB_BUILDER(MPEntityDeltaView)
 sreflect_struct("guid": "B2A257E7-E153-485E-A4B5-5D0B2EC65E42")  
 sattr("blob" : true)
 sattr("debug" : true)
+sattr("serialize_config" : "uint16_t entityCount")
 MPComponentDeltaView
 {
     NetComponentId type;
+    sattr("serialize_config" : "SpanSerdeConfig{entityCount}, IntegerSerdeConfig<NetEntityId>{0, entityCount}")
     skr::span<NetEntityId> entities;
     sattr("no-text" : true)
     skr::span<uint8_t> data;
 };
 GENERATED_BLOB_BUILDER(MPComponentDeltaView)
 
+
 sreflect_struct("guid": "0E7D9309-13EF-4EB8-9E8E-2DDE8D8F7BA0") 
 sattr("blob" : true)
 sattr("debug" : true)
 MPWorldDeltaView
 {
-    skr::span<dual_entity_t> entities; 
+    dual_entity_t maxEntity;
+    sattr("serialize_config" : "record.maxEntity")
+    skr::span<packed_entity_t> entities; 
+    sattr("serialize_config" : "(uint16_t)record.entities.size()")
     skr::span<MPComponentDeltaView> components;
+    sattr("serialize_config" : "SpanSerdeConfig{(uint32_t)record.entities.size()}")
     skr::span<MPEntityCreationView> created;
+    sattr("serialize_config" : "SpanSerdeConfig{(uint32_t)record.entities.size()}")
     skr::span<MPEntityDeltaView> changed;
+    sattr("serialize_config" : "SpanSerdeConfig{(uint32_t)record.entities.size()}")
     skr::span<NetEntityId> dead;
 };
 GENERATED_BLOB_BUILDER(MPWorldDeltaView)

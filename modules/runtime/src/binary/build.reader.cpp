@@ -104,7 +104,7 @@ int ReadBitpacked(skr_binary_reader_t* reader, T& value, IntegerSerdeConfig<T> c
         return reader->read(&value, sizeof(T));
     }
     auto bits = 64 - skr::CountLeadingZeros64(config.max - config.min);
-    T compressed;
+    T compressed = 0;
     int ret = reader->read_bits(&compressed, bits);
     if(ret != 0)
         return ret;
