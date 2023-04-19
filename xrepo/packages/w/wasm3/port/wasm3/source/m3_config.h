@@ -13,7 +13,7 @@
 // general --------------------------------------------------------------------
 
 # ifndef d_m3CodePageAlignSize
-#   define d_m3CodePageAlignSize                32*1024
+#   define d_m3CodePageAlignSize                4096
 # endif
 
 # ifndef d_m3EnableCodePageRefCounting
@@ -21,7 +21,7 @@
 # endif
 
 # ifndef d_m3MaxFunctionStackHeight
-#   define d_m3MaxFunctionStackHeight           2000    // max: 32768
+#   define d_m3MaxFunctionStackHeight           2000    // TODO: comment on upper limit
 # endif
 
 # ifndef d_m3MaxLinearMemoryPages
@@ -40,8 +40,8 @@
 #   define d_m3MaxDuplicateFunctionImpl         3
 # endif
 
-# ifndef d_m3CascadedOpcodes                            // Cascaded opcodes are slightly faster at the expense of some memory
-#   define d_m3CascadedOpcodes                  1       // Adds ~3Kb to operations table in m3_compile.c
+# ifndef d_m3EnableExtendedOpcodes
+#   define d_m3EnableExtendedOpcodes            1
 # endif
 
 # ifndef d_m3VerboseErrorMessages
@@ -125,13 +125,6 @@
 #   define d_m3LogNativeStack                   0       // track the memory usage of the C-stack
 # endif
 
-# ifndef d_m3LogHeapOps
-#   define d_m3LogHeapOps                       0       // track heap usage
-# endif
-
-# ifndef d_m3LogTimestamps
-#   define d_m3LogTimestamps                    0       // track timestamps on heap logs
-# endif
 
 // other ----------------------------------------------------------------------
 
