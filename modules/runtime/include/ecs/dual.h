@@ -1039,7 +1039,7 @@ namespace dual
     };
 
     template<class T, class F>
-    bool schedule_task(T& query, EIndex batchSize, F callback, skr::task::event_t* counter)
+    bool schedule_task(T query, EIndex batchSize, F callback, skr::task::event_t* counter)
     {
         static constexpr auto convertible_to_function_check = [](auto t)->decltype(+t) { return +t; };
         using TaskContext = typename T::TaskContext;
@@ -1080,7 +1080,7 @@ namespace dual
     }
 
     template<class T, class F>
-    auto schedual_custom(T& query, F callback, skr::task::event_t* counter)
+    auto schedual_custom(T query, F callback, skr::task::event_t* counter)
     {
         static constexpr auto convertible_to_function_check = [](auto t)->decltype(+t) { return +t; };
         using TaskContext = typename T::TaskContext;
@@ -1092,7 +1092,7 @@ namespace dual
                 TaskContext ctx{ dualQ_get_storage(query), nullptr, nullptr, 0, query };
                 callbackType(ctx);
             };
-            return dualJ_schedule_custom(query.query, callbackType, nullptr, nullptr, nullptr, nullptr, counter);
+            return dualJ_schedule_custom(query.query, trampoline, nullptr, nullptr, nullptr, nullptr, counter);
         }
         else
         {
@@ -1117,7 +1117,7 @@ namespace dual
     template<class F>
     auto schedual_custom(dual_query_t* query, F callback, skr::task::event_t* counter)
     {
-        return schedual_custom(dual::QWildcard{query}, std::move(callback), counter);
+        return schedual_custom<dual::QWildcard, F>(dual::QWildcard{query}, std::move(callback), counter);
     }
 }
 
