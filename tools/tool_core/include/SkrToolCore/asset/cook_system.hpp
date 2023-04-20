@@ -11,7 +11,7 @@
 #include "utils/function_ref.hpp"
 
 struct skr_io_ram_service_t;
-namespace skr {namespace task { class event_t; }}
+namespace skr {namespace task { struct event_t; }}
 namespace skd sreflect
 {
 namespace asset sreflect

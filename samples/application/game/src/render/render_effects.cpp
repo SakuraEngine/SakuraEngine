@@ -40,6 +40,7 @@
 #include "rtm/scalarf.h"
 #include "rtm/qvvf.h"
 #include "rtm/rtmx.h"
+#include "math/transform.h"
 
 void RenderEffectForward::on_register(SRendererId renderer, dual_storage_t* storage)
 {
@@ -190,7 +191,7 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
             ZoneScopedN("BatchedEnts");
 
             //SKR_LOG_DEBUG("batch: %d -> %d", g_cv->start, g_cv->count);
-            const auto l2ws = dual::get_component_ro<skr_l2w_comp_t>(g_cv);
+            const auto l2ws = dual::get_component_ro<skr_transform_comp_t>(g_cv);
             const auto translations = dual::get_component_ro<skr_translation_comp_t>(g_cv);
             const auto rotations = dual::get_component_ro<skr_rotation_comp_t>(g_cv);(void)rotations;
             const auto scales = dual::get_component_ro<skr_scale_comp_t>(g_cv);
@@ -216,21 +217,15 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
                         skr_float4x4_t& model_matrix = model_matrices[g_idx];
                         if(l2ws)
                         {
-                            model_matrix = l2ws[g_idx].matrix;
+                            const rtm::qvvf transform = skr::math::load(l2ws[g_idx].value);
+                            const rtm::matrix4x4f matrix = rtm::matrix_cast(rtm::matrix_from_qvv(transform));
+                            model_matrix = *(skr_float4x4_t*)&matrix;
                         }
                         else
                         {                                    
-                            const auto quat = rtm::quat_from_euler_rh(
-                                rtm::scalar_deg_to_rad(-rotations[g_idx].euler.pitch),
-                                rtm::scalar_deg_to_rad(rotations[g_idx].euler.yaw),
-                                rtm::scalar_deg_to_rad(rotations[g_idx].euler.roll));
-                            const rtm::vector4f translation = rtm::vector_set(
-                                translations[g_idx].value.x, translations[g_idx].value.y,
-                                translations[g_idx].value.z, 0.f);
-                            const rtm::vector4f scale = rtm::vector_set(
-                                scales[g_idx].value.x, scales[g_idx].value.y,
-                                scales[g_idx].value.z, 0.f
-                            );
+                            const auto quat = skr::math::load(rotations[g_idx].euler);
+                            const rtm::vector4f translation = skr::math::load(translations[g_idx].value);
+                            const rtm::vector4f scale = skr::math::load(scales[g_idx].value);
                             const rtm::qvvf transform = rtm::qvv_set(quat, translation, scale);
                             const rtm::matrix4x4f matrix = rtm::matrix_cast(rtm::matrix_from_qvv(transform));
                             model_matrix = *(skr_float4x4_t*)&matrix;
