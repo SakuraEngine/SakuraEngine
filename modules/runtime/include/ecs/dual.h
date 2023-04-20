@@ -929,6 +929,8 @@ namespace dual
 
         auto count() { return view->count; }
 
+        const dual_entity_t* get_entities() { return dualV_get_entities(view); }
+
         template<class T>
         void check_local_type(dual_type_index_t idx)
         {

@@ -554,7 +554,6 @@ void MPApplication::OnSteamNetConnectionStatusChanged( SteamNetConnectionStatusC
 
 void MPApplication::UpdateMenu()
 {
-    ImGui::Begin("Lobby");
     static char name[256] = "str:server";
     auto connect = [&]()
     {
@@ -607,6 +606,7 @@ void MPApplication::UpdateMenu()
         connect();
         return;
     }
+    ImGui::Begin("Lobby");
     ImGui::InputText("Server", name, 256);
     ImGui::SameLine();
     if(signaling)
