@@ -152,7 +152,9 @@ extern const char* $name;
 #endif
 
 #ifndef RUNTIME_EXPORT
-    #if defined(_MSC_VER)
+    #if defined(SHIPPING_ONE_ARCHIVE)
+        #define RUNTIME_EXPORT
+    #elif defined(_MSC_VER)
         #define RUNTIME_EXPORT __declspec(dllexport)
     #else
         #define RUNTIME_EXPORT __attribute__((visibility("default")))
