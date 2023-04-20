@@ -368,12 +368,11 @@ int WriteTrait<const skr_blob_t&>::Write(skr_binary_writer_t* writer, const skr_
 
 int WriteTrait<const skr_blob_arena_t&>::Write(skr_binary_writer_t* writer, const skr_blob_arena_t& blob)
 {
-    int ret = WriteTrait<const uint64_t&>::Write(writer, (uint64_t)blob.get_buffer());
+    int ret = WriteTrait<const uint32_t&>::Write(writer, (uint32_t)blob.get_size());
     if (ret != 0)
         return ret;
-    ret = WriteTrait<const uint32_t&>::Write(writer, (uint32_t)blob.get_size());
-    if (ret != 0)
-        return ret;
+    if(blob.get_size() == 0)
+        return 0;
     ret = WriteTrait<const uint32_t&>::Write(writer, (uint32_t)blob.get_align());
     if (ret != 0)
         return ret;

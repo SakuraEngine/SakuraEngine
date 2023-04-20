@@ -49,7 +49,6 @@ QMovement
     GENERATED_QUERY_BODY(QMovement);
 };
 
-
 sreflect_struct(
     "guid" : "305FB0DC-85F6-4B70-952F-BE662150E506",
     "query" : "[in]CController, [inout]CMovement, [inout]CSkill, [inout]CPlayer, [atomic]?dual::dirty_comp_t"
