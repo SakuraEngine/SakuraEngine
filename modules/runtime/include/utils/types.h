@@ -130,6 +130,15 @@ typedef struct SKR_ALIGNAS(16) skr_quaternion_t {
     };
 } skr_quaternion_t;
 
+typedef struct SKR_ALIGNAS(16) skr_transform_t {
+    struct 
+    {
+        skr_rotator_t rotation SKR_IF_CPP( = { 0.f, 0.f, 0.f });
+        skr_float3_t translation SKR_IF_CPP( = { 0.f, 0.f, 0.f });
+        skr_float3_t scale SKR_IF_CPP( = { 1.f, 1.f, 1.f });
+    };
+} skr_transform_t;
+
 typedef struct SKR_ALIGNAS(16) skr_float4x4_t {
     float M[4][4];
 } skr_float4x4_t;
