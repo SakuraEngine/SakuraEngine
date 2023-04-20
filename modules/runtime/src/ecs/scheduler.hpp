@@ -38,8 +38,9 @@ struct scheduler_t {
     void sync_all();
     void gc_entries();
     void sync_storage(const dual_storage_t* storage);
-    skr::task::event_t schedule_ecs_job(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u, dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources);
-    eastl::vector<skr::task::event_t> schedule_custom_job(const dual_query_t* query, const skr::task::event_t& counter, dual_resource_operation_t* resources);
+    skr::task::event_t schedule_ecs_job(dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u, dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources);
+    eastl::vector<skr::task::weak_event_t> update_dependencies(dual_query_t* query, const skr::task::event_t& counter, dual_resource_operation_t* resources);
+    skr::task::event_t schedule_job(dual_query_t* query, dual_schedule_callback_t callback, void* u, dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources);
     eastl::vector<skr::task::event_t> sync_resources(const skr::task::event_t& counter, dual_resource_operation_t* resources);
 };
 } // namespace dual

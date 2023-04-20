@@ -75,15 +75,15 @@ struct ComponentDeltaBuilder
         {
             SKR_ASSERT(DUAL_IS_BUFFER(historyComponent));
             auto filter = make_zeroed<dual_filter_t>();
-            dual_type_index_t types[] = { component, dual_id_of<CAuth>::get(), historyComponent };
+            dual_type_index_t types[] = { component, historyComponent, dual_id_of<CAuth>::get() };
             dual::type_builder_t all;
             all.with(types, 3);
             filter.all = all.build();
             dual_parameters_t params = {};
             dual_operation_t accesses[] = { 
-                dual_operation_t{-1, 1, 0, 0}, 
-                dual_operation_t{-1, 1, 0, 0},
-                dual_operation_t{-1, 0, 0, 0}
+                dual_operation_t{-1, 1, 0, 1}, 
+                dual_operation_t{-1, 0, 0, 1},
+                dual_operation_t{-1, 1, 0, 1},
             };
             params.types = types;
             params.accesses = accesses;
@@ -98,7 +98,10 @@ struct ComponentDeltaBuilder
             all.with(types, 2);
             filter.all = all.build();
             dual_parameters_t params = {};
-            dual_operation_t accesses[] = { dual_operation_t{-1, 1, 0, 0}, dual_operation_t{-1, 1, 0, 0} };
+            dual_operation_t accesses[] = { 
+                dual_operation_t{-1, 1, 0, 1}, 
+                dual_operation_t{-1, 1, 0, 1} 
+            };
             params.types = types;
             params.accesses = accesses;
             params.length = 2;
@@ -208,7 +211,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder
         }
         //find changed component and deleted component
         //prepare changed component storage, record deleted component
-        auto prepare = [&builder, &GetNetworkEntityIndex](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
+        auto prepare = [&builder, &GetNetworkEntityIndex](dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
         {
             auto prefabs = (CPrefab*)dualV_get_owned_rw_local(view, localTypes[0]);
             auto auths = (CAuth*)dualV_get_owned_rw_local(view, localTypes[1]);
@@ -348,7 +351,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder
         }
         dependencies.clear();
         dualJ_schedule_ecs(worldDeltaQuery, 0, 
-        +[](void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
+        +[](void* u, dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
         {
             auto dirties = (uint32_t*)dualV_get_owned_rw_local(view, localTypes[2]);
             for(int i=0; i<view->count; ++i)
@@ -417,8 +420,8 @@ struct ComponentDeltaApplier
         dual_parameters_t params = {};
         dual_type_index_t types[] = { component, dual_id_of<CNetwork>::get() };
         dual_operation_t accesses[] = {
-            dual_operation_t{0, 0, 0, 0},
-            dual_operation_t{-1, 1, 0, 0},
+            dual_operation_t{0, 0, 0, 1},
+            dual_operation_t{-1, 1, 0, 1},
         };
         params.types = types;
         params.accesses = accesses;

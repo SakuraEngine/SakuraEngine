@@ -221,8 +221,8 @@ void MPRenderWorld::Update()
         };
         dualQ_get_views(cameraQuery, DUAL_LAMBDA(updateCamera));
     }
-
-    auto updateTransform = +[](void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
+    //TODO: switch to new api
+    auto updateTransform = +[](void* u, dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
     {
         auto This = (MPRenderWorld*)u;
         auto rotations = (skr_rotation_comp_t*)dualV_get_owned_ro_local(view, localTypes[0]);

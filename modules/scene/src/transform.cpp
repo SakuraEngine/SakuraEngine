@@ -22,7 +22,7 @@ skr_float4x4_t make_transform(skr_float3_t t, skr_float3_t s, skr_rotator_t r)
 }
 
 template <class T>
-static void skr_local_to_x(void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
+static void skr_local_to_x(void* u, dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
 {
     static_assert(alignof(decltype(T::matrix)) == 16, "Alignment of matrix must be 16");
     static_assert(sizeof(T::matrix) == sizeof(skr_float4x4_t), "Size of matrix must equal to skr_float4x4_t");
@@ -88,14 +88,14 @@ static void skr_relative_to_world_children(skr_children_t* children, skr_l2w_com
             process(child);
 }
 
-static void skr_relative_to_world_root(void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
+static void skr_relative_to_world_root(void* u, dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
 {
     using namespace skr::math;
     auto transform = (skr_l2w_comp_t*)dualV_get_owned_ro_local(view, localTypes[0]);
     auto children = (skr_children_t*)dualV_get_owned_ro_local(view, localTypes[1]);
 
     forloop (i, 0, view->count)
-        skr_relative_to_world_children(&children[i], &transform[i], storage);
+        skr_relative_to_world_children(&children[i], &transform[i], dualQ_get_storage(query));
 }
 
 void skr_transform_setup(dual_storage_t* world, skr_transform_system_t* system)

@@ -5,11 +5,11 @@
 
 namespace skr::task
 {
-    class counter_t;
-    class event_t;
-    class weak_counter_t;
-    class weak_event_t;
-    class scheduler_t;
+    struct counter_t;
+    struct event_t;
+    struct weak_counter_t;
+    struct weak_event_t;
+    struct scheduler_t;
     struct RUNTIME_API scheudler_config_t
     {
         scheudler_config_t();
@@ -29,7 +29,7 @@ namespace skr::task
 
 namespace skr::task
 {
-    class RUNTIME_API counter_t
+    struct RUNTIME_API counter_t
     {
     public:
         using internal_t = eastl::shared_ptr<ftl::TaskCounter>;
@@ -44,13 +44,13 @@ namespace skr::task
         size_t hash() const { return std::hash<void*>{}(internal.get()); }
         explicit operator bool() const { return (bool)internal; }
     private:
-        friend class weak_counter_t;
+        friend struct weak_counter_t;
         counter_t(internal_t&& internal) : internal(std::move(internal)) {}
         internal_t internal;
         friend scheduler_t;
     };
 
-    class RUNTIME_API weak_counter_t
+    struct RUNTIME_API weak_counter_t
     {
     public:
         using internal_t = eastl::weak_ptr<ftl::TaskCounter>;
@@ -68,7 +68,7 @@ namespace skr::task
         friend scheduler_t;
     };
 
-    class RUNTIME_API event_t
+    struct RUNTIME_API event_t
     {
     public:
         using internal_t = eastl::shared_ptr<ftl::TaskCounter>;
@@ -83,13 +83,13 @@ namespace skr::task
         explicit operator bool() const { return (bool)internal; }
         
     private:
-        friend class weak_event_t;
+        friend struct weak_event_t;
         event_t(internal_t&& internal) : internal(std::move(internal)) {}
         internal_t internal;
         friend scheduler_t;
     };
 
-    class RUNTIME_API weak_event_t
+    struct RUNTIME_API weak_event_t
     {
     public:
         using internal_t = eastl::weak_ptr<ftl::TaskCounter>;
@@ -107,14 +107,14 @@ namespace skr::task
         friend scheduler_t;
     };
 
-    class RUNTIME_API scheduler_t
+    struct RUNTIME_API scheduler_t
     {
         using internal_t = ftl::TaskScheduler*;
     public:
         void initialize(const scheudler_config_t&);
         void bind();
         void unbind();
-        template<class F>
+        template<struct F>
         void schedule(F&& lambda, event_t* event, const char* name = nullptr)
         {
             auto f = SkrNewLambda(std::forward<F>(lambda));
@@ -130,7 +130,7 @@ namespace skr::task
             if(event) event->internal->Decrement();
         }
         
-        template<class F>
+        template<struct F>
         void wait(bool pin, F&& lambda)
         {
             internal->WaitForPredicate(std::forward<F>(lambda), pin);
@@ -140,11 +140,11 @@ namespace skr::task
     private:
         internal_t internal = nullptr;
         ftl::TaskSchedulerInitOptions options;
-        friend class counter_t;
-        friend class event_t;
+        friend struct counter_t;
+        friend struct event_t;
     };
 
-    template<class F>
+    template<struct F>
     void schedule(F&& lambda, event_t* event, const char* name = nullptr);
 
     void* current_fiber();
@@ -153,16 +153,16 @@ namespace skr::task
     {
         private:
         static scheduler_t* get_scheduler();
-        friend class counter_t;
-        friend class event_t;
-        template<class F>
+        friend struct counter_t;
+        friend struct event_t;
+        template<struct F>
         friend void schedule(F&& lambda, event_t* event, const char* name);
-        template<class F>
+        template<struct F>
         friend void wait(bool pin, F&& lambda);
         friend void* current_fiber();
     };
 
-    template<class F>
+    template<struct F>
     void schedule(F&& lambda, event_t* event, const char* name)
     {
         scheduler_t* scheduler = details::get_scheduler();
@@ -170,7 +170,7 @@ namespace skr::task
         scheduler->schedule(std::forward<F>(lambda), event, name);
     }
 
-    template<class F>
+    template<struct F>
     void wait(bool pin, F&& lambda)
     {
         scheduler_t* scheduler = details::get_scheduler();
@@ -184,7 +184,7 @@ namespace skr::task
 
 namespace skr::task
 {
-    class RUNTIME_API counter_t
+    struct RUNTIME_API counter_t
     {
     public:
         using internal_t = marl::WaitGroup;
@@ -199,12 +199,12 @@ namespace skr::task
         bool test() const { return internal.test(); }
         void decrement() { internal.done(); }
     private:
-        friend class weak_counter_t;
+        friend struct weak_counter_t;
         counter_t(internal_t&& other) : internal(std::move(other)) {}
         internal_t internal;
     };
 
-    class RUNTIME_API weak_counter_t
+    struct RUNTIME_API weak_counter_t
     {
     public:
         using internal_t = marl::WeakWaitGroup;
@@ -220,7 +220,7 @@ namespace skr::task
         internal_t internal;
     };
 
-    class RUNTIME_API event_t
+    struct RUNTIME_API event_t
     {
     public:
         using internal_t = marl::Event;
@@ -246,12 +246,12 @@ namespace skr::task
         size_t hash() const { return internal.hash(); }
         explicit operator bool() const { return (bool)internal; }
     private:
-        friend class weak_event_t;
+        friend struct weak_event_t;
         event_t(internal_t&& other) : internal(std::move(other)) {}
         internal_t internal;
     };
 
-    class RUNTIME_API weak_event_t
+    struct RUNTIME_API weak_event_t
     {
     public:
         using internal_t = marl::WeakEvent;
@@ -266,7 +266,7 @@ namespace skr::task
         internal_t internal;
     };
 
-    class RUNTIME_API scheduler_t
+    struct RUNTIME_API scheduler_t
     {
     public:
         using internal_t = marl::Scheduler*;

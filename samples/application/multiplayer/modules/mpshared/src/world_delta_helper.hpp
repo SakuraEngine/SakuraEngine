@@ -16,23 +16,12 @@ skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWor
     {
         return GetNetworkComponent(comp.type) == type;
     });
-    skr::vector<skr::task::event_t> dependencies;
     skr::task::event_t counter;
-    auto callback = [&](dual_counter_t* counter)
-    {
-        dependencies.push_back(*(skr::task::event_t*)counter);
-        dualJ_release_counter(counter);
-    };
     static dual_type_index_t historyComponent = ctx.historyComponent;
-    static uint32_t historyComponentSize = withHistory ? dualT_get_desc(historyComponent)->size : 0;
-    dualJ_schedule_custom(query, (dual_counter_t*)&counter, DUAL_LAMBDA(callback), nullptr);
-    auto storage = dualQ_get_storage(query);
-    skr::task::schedule([dependencies = std::move(dependencies), storage, ctx, &comps, &builder, type]
-    ()
+    static uint32_t historyComponentSize = withHistory ? dualT_get_desc(historyComponent)->size : 0;skr::task::event_t result{nullptr};
+    dual::schedual_custom(query, [ctx, &comps, &builder, type](dual::task_context_t tctx)
     {
         ZoneScopedN("BuildDelta");
-        for(auto& dep : dependencies)
-            dep.wait(false);
         if(comps.entities.empty())
             return;
         
@@ -46,18 +35,18 @@ skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWor
         auto serde = [&](NetEntityId ent) -> bool
         {
             dual_chunk_view_t view = {nullptr, 0, 0};
-            dualS_access(storage, builder.entities[ent], &view);
+            dualS_access(tctx.storage, builder.entities[ent], &view);
             const T* comp = nullptr;
             history_t* history = nullptr;
             const CAuth* auth = nullptr;
             if(view.chunk != lastView.chunk)
             {
                 lastView = view;
-                lastComp = comp = (const T*)dualV_get_owned_ro(&view, type);
+                lastComp = comp = (const T*)tctx.get_owned_ro<T>(&view, 0);
                 if constexpr(withHistory)
                 {
-                    lastHistory = history = (history_t*)dualV_get_owned_ro(&view, historyComponent);
-                    lastAuth = auth = (const CAuth*)dualV_get_owned_ro(&view, dual_id_of<CAuth>::get());
+                    lastHistory = history = (history_t*)tctx.get_owned_rw<H>(&view, 1);
+                    lastAuth = auth = (const CAuth*)tctx.get_owned_ro<CAuth>(&view, 2);
                 }
             }
             else 
@@ -102,19 +91,9 @@ skr::task::event_t ApplyDelta(dual_type_index_t type, dual_query_t* query, const
     if (iter == delta.components.end())
         return skr::task::event_t(nullptr);
     auto& comps = *iter;
-    skr::vector<skr::task::event_t> dependencies;
-    skr::task::event_t counter;
-    auto callback = [&](dual_counter_t* counter) {
-        dependencies.push_back(*(skr::task::event_t*)counter);
-        dualJ_release_counter(counter);
-    };
-    dualJ_schedule_custom(query, (dual_counter_t*)&counter, DUAL_LAMBDA(callback), nullptr);
-    auto storage = dualQ_get_storage(query);
-    skr::task::schedule(
-    [dependencies = std::move(dependencies), type, &delta, &map, &comps, storage]() {
-        ZoneScopedN("ApplyDelta");
-        for (auto& dep : dependencies)
-            dep.wait(false);
+    skr::task::event_t result{nullptr};
+    dual::schedual_custom(query, [type, &delta, &map, &comps](dual::task_context_t ctx)
+    {
         dual_chunk_view_t lastView {nullptr, 0, 0};
         const T* lastComp = nullptr;
         using reader_t = std::conditional_t<bitpacking, skr::binary::SpanReaderBitpacked, skr::binary::SpanReader>;
@@ -126,12 +105,12 @@ skr::task::event_t ApplyDelta(dual_type_index_t type, dual_query_t* query, const
             auto ei = map.find(delta.entities[comps.entities[i]]);
             SKR_ASSERT(ei != map.end());
             dual_entity_t ent = ei->second;
-            dualS_access(storage, ent, &view);
+            dualS_access(ctx.storage, ent, &view);
             T* comp = nullptr;
             if(view.chunk != lastView.chunk)
             {
                 lastView = view;
-                lastComp = comp = (T*)dualV_get_owned_rw(&view, type);
+                lastComp = comp = ctx.get_owned_rw<T>(&view, 0);
             }
             else 
             {
@@ -140,9 +119,8 @@ skr::task::event_t ApplyDelta(dual_type_index_t type, dual_query_t* query, const
             }
             F(view, *comp, archive);
         }
-    },
-    &counter);
-    return counter;
+    }, &result);
+    return result;
 }
 
 template<class T>

@@ -16,7 +16,6 @@ DUAL_DECLARE(group_t);
 DUAL_DECLARE(chunk_t);
 DUAL_DECLARE(query_t);
 DUAL_DECLARE(storage_delta_t);
-DUAL_DECLARE(counter_t);
 #undef DUAL_DECLARE
 
 typedef TIndex dual_type_index_t;

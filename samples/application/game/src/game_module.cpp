@@ -548,8 +548,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
 
     // loop
     bool quit = false;
-    dual::counter_t pSkinCounter;
-    pSkinCounter.counter = nullptr;
+    skr::task::event_t pSkinCounter(nullptr);
     dual_query_t* initAnimSkinQuery;
     dual_query_t* skinQuery;
     dual_query_t* moveQuery;
@@ -696,7 +695,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             auto total_sec = (double)timer / CLOCKS_PER_SEC;
 
             auto moveJob = SkrNewLambda(
-                [=](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+                [=](dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
                 ZoneScopedN("MoveJob");
 
                 float lerps[] = { 12.5, 20 };
@@ -731,7 +730,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         // [inout]skr_render_anim_comp_t, [in]game::anim_state_t, [in]skr_render_skel_comp_t
         {
             ZoneScopedN("AnimSystem");
-            auto animJob = SkrNewLambda([=](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+            auto animJob = SkrNewLambda([=](dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
                 ZoneScopedN("AnimJob");
                 auto states = (game::anim_state_t*)dualV_get_owned_ro_local(view, localTypes[1]);
                 uint32_t g_id = 0;
@@ -797,14 +796,12 @@ int SGameModule::main_module_exec(int argc, char** argv)
             }
 
             // wait last skin dispatch
-            if (pSkinCounter)
-                dualJ_wait_counter(*pSkinCounter, true);
-            else
-                *pSkinCounter = dualJ_create_counter(true);
+            if(pSkinCounter)
+                pSkinCounter.wait(true);
                 
             // skin dispatch for the frame
             auto cpuSkinJob = SkrNewLambda(
-                [&](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+                [&](dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
                 const auto meshes = dual::get_component_ro<skr_render_mesh_comp_t>(view);
                 const auto anims = dual::get_component_ro<skr_render_anim_comp_t>(view);
                 auto skins = dual::get_owned_rw<skr_render_skin_comp_t>(view);
@@ -822,14 +819,14 @@ int SGameModule::main_module_exec(int argc, char** argv)
                     }
                 }
             });
-            dualJ_schedule_ecs(skinQuery, 4, DUAL_LAMBDA_POINTER(cpuSkinJob), nullptr, &*pSkinCounter);
+            dualJ_schedule_ecs(skinQuery, 4, DUAL_LAMBDA_POINTER(cpuSkinJob), nullptr, &pSkinCounter);
         }
         // [has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_camera_comp_t
         if (bUseJob)
         {
             ZoneScopedN("PlayerSystem");
 
-            auto playerJob = SkrNewLambda([=](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+            auto playerJob = SkrNewLambda([=](dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
                 ZoneScopedN("PlayerJob");
 
                 auto translations = (skr_translation_comp_t*)dualV_get_owned_rw_local(view, localTypes[0]);
