@@ -26,7 +26,8 @@ void RegisterSimpleComponent()
 
 dual_type_set_t GetNetworkComponents()
 {
-    static dual::static_type_set_T<skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, CController, CMovement, CSphereCollider2D, CBall, CHealth, CSkill> set;
+    static dual::static_type_set_T<skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, 
+    CController, CMovement, CSphereCollider2D, CBall, CHealth, CSkill, CPlayer> set;
     return set.get();
 }
 
@@ -118,6 +119,7 @@ void InitializeNetworkComponents()
     RegisterSimpleComponent<CSphereCollider2D>();
     RegisterSimpleComponent<CHealth>();
     RegisterSimpleComponent<CSkill>();
+    RegisterSimpleComponent<CPlayer>();
     {
         constexpr auto builder = +[](dual_chunk_view_t view, const CController& comp, skr_binary_writer_t& archive)
         {
@@ -132,7 +134,6 @@ void InitializeNetworkComponents()
         RegisterComponentDeltaApplier(dual_id_of<CController>::get(), &ApplyDelta<CController, applier>);
     }
     {
-        //optimize1: serialize bitpacked value
         static auto velocitySerdeConfig = skr::binary::VectorSerdeConfig<float>{100};
         constexpr auto builder = +[](dual_chunk_view_t view, const CMovement& comp, skr_binary_writer_t& archive)
         {

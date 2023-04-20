@@ -56,7 +56,7 @@ void MPServerWorld::SpawnPlayerEntity(int player, int connectionId, int localPla
     auto playerT_builder = make_zeroed<dual::type_builder_t>();
     playerT_builder
         .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t, 
-        CMovement, CSphereCollider2D, CWeapon, CHealth, CSkill,
+        CMovement, CSphereCollider2D, CWeapon, CHealth, CSkill, CPlayer,
         CController, CPrefab, CAuth, CAuthTypeData, CRelevance>().with(DUAL_COMPONENT_DIRTY);
     float spawnArea = 100.f;
     // allocate renderable
@@ -66,7 +66,7 @@ void MPServerWorld::SpawnPlayerEntity(int player, int connectionId, int localPla
         auto translations = (skr_translation_comp_t*)dualV_get_owned_ro(view, dual_id_of<skr_translation_comp_t>::get());
         auto rotations = (skr_rotation_comp_t*)dualV_get_owned_ro(view, dual_id_of<skr_rotation_comp_t>::get());
         auto scales = (skr_scale_comp_t*)dualV_get_owned_ro(view, dual_id_of<skr_scale_comp_t>::get());
-        auto movements = (CMovement*)dualV_get_owned_ro(view, dual_id_of<CMovement>::get());
+        auto players = (CPlayer*)dualV_get_owned_ro(view, dual_id_of<CPlayer>::get());
         auto controllers = (CController*)dualV_get_owned_ro(view, dual_id_of<CController>::get());
         auto collidors = (CSphereCollider2D*)dualV_get_owned_ro(view, dual_id_of<CSphereCollider2D>::get());
         auto weapons = (CWeapon*)dualV_get_owned_ro(view, dual_id_of<CWeapon>::get());
@@ -79,7 +79,7 @@ void MPServerWorld::SpawnPlayerEntity(int player, int connectionId, int localPla
             translations[i].value = {rand() % (int)spawnArea - spawnArea / 2.f, 0.f, rand() % (int)spawnArea - spawnArea / 2.f };
             rotations[i].euler = { 0.f, 0.f, 0.f };
             scales[i].value = { 10.f, 1.f, 10.f };
-            movements[i].speed = movements[i].baseSpeed = 30.f;
+            players[i].speed = players[i].baseSpeed = 30.f;
             controllers[i].playerId = player;
             controllers[i].serverPlayerId = player;
             controllers[i].connectionId = connectionId;
@@ -255,21 +255,26 @@ void MPServerWorld::Update()
         lastGameTime += serverTickInterval;
         queuedInputs[0].inputs.resize(playerId);
         Tick(queuedInputs[0]);
-        GenerateWorldDelta();
-        dual::array_comp_T<dual_group_t*, 16> deadGroups;
-        auto getDeadGroups = [&](dual_group_t* group)
-        {
-            deadGroups.emplace_back(group);
-        };
-        dualQ_get_groups(deadQuery, DUAL_LAMBDA(getDeadGroups));
-        dual_delta_type_t delta = make_zeroed<dual_delta_type_t>();
-        dual_type_index_t types[] = { dual_id_of<CAuth>::get() };
-        delta.removed.type = { types, 1 };
-        for(auto& group : deadGroups)
-            dualS_cast_group_delta(storage, group, &delta, nullptr, nullptr);
-        dualJ_wait_all();
         gameFrame++;
-        SendWorldDelta();
+        if(gameFrame % syncRate == 0)
+        {
+            GenerateWorldDelta();
+            SendWorldDelta();
+            // remove dead entities after generate the delta
+            dual::array_comp_T<dual_group_t*, 16> deadGroups;
+            auto getDeadGroups = [&](dual_group_t* group)
+            {
+                deadGroups.emplace_back(group);
+            };
+            dualQ_get_groups(deadQuery, DUAL_LAMBDA(getDeadGroups));
+            dual_delta_type_t delta = make_zeroed<dual_delta_type_t>();
+            dual_type_index_t types[] = { dual_id_of<CAuth>::get() };
+            delta.removed.type = { types, 1 };
+            for(auto& group : deadGroups)
+                dualS_cast_group_delta(storage, group, &delta, nullptr, nullptr);
+        }
+        
+        dualJ_wait_all();
         std::move(queuedInputs+1, queuedInputs + 128, queuedInputs); // shift
     }
     LogNetworkStatics();

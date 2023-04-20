@@ -34,7 +34,8 @@ sreflect_struct(
 )
 CPlayer
 {
-    double sightRadius;
+    float speed;
+    float baseSpeed;
 };
 
 sreflect_struct(
@@ -104,8 +105,6 @@ sreflect_struct(
 )
 CMovement
 {
-    float speed;
-    float baseSpeed;
     skr_float2_t velocity;
 };
 
