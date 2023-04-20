@@ -122,6 +122,72 @@ void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i,
         dep.wait(true);
 }
 
+void dual::scheduler_t::sync_query(dual_query_t* query)
+{
+    SKR_ASSERT(is_main_thread(query->storage));
+    
+    ZoneScopedN("SyncQuery");
+    
+    llvm_vecsmall::SmallVector<dual_group_t*, 64> groups;
+    auto add_group = [&](dual_group_t* group) {
+        groups.push_back(group);
+    };
+    query->storage->query_groups(query->filter, query->meta, DUAL_LAMBDA(add_group));
+    skr::flat_hash_set<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
+
+    auto sync_entry_once = [&](dual::archetype_t* type, dual_type_index_t i, bool readonly, bool atomic)
+    {
+        auto entry = std::make_pair(type, i);
+        if (syncedEntry.find(entry) != syncedEntry.end())
+            return;
+        sync_entry(type, i, readonly);
+        syncedEntry.insert(entry);
+    };
+
+    auto sync_type = [&](dual_type_index_t type, bool readonly, bool atomic) {
+        for (auto& pair : query->storage->groups)
+        {
+            auto group = pair.second;
+            auto idx = group->index(type);
+            sync_entry_once(group->archetype, idx, readonly, atomic);
+        }
+    };
+
+    {
+        auto params = query->parameters;
+        forloop (i, 0, params.length)
+        {
+            if (type_index_t(params.types[i]).is_tag())
+                continue;
+            if (params.accesses[i].randomAccess != DOS_SEQ)
+            {
+                sync_type(params.types[i], params.accesses[i].readonly, params.accesses[i].atomic);
+            }
+            else
+            {
+                int groupIndex = 0;(void)groupIndex;
+                for (auto group : groups)
+                {
+                    auto localType = group->index(params.types[i]);
+                    if (localType == kInvalidTypeIndex)
+                    {
+                        auto g = group->get_owner(params.types[i]);
+                        if (g)
+                        {
+                            sync_entry_once(g->archetype, g->index(params.types[i]), params.accesses[i].readonly, params.accesses[i].atomic);
+                        }
+                    }
+                    else
+                    {
+                        sync_entry_once(group->archetype, localType, params.accesses[i].readonly, params.accesses[i].atomic);
+                    }
+                    ++groupIndex;
+                }
+            }
+        }
+    }
+}
+
 void dual::scheduler_t::sync_all()
 {
     allCounter.wait(true);
@@ -480,7 +546,28 @@ skr::task::event_t dual::scheduler_t::schedule_job(dual_query_t* query, dual_sch
 eastl::vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(dual_query_t* query, const skr::task::event_t& counter, dual_resource_operation_t* resources)
 {
     ZoneScopedN("SchedualCustomJob");
+
+    llvm_vecsmall::SmallVector<dual_group_t*, 64> groups;
+    auto add_group = [&](dual_group_t* group) {
+        groups.push_back(group);
+    };
+    auto& params = query->parameters;
+    query->storage->query_groups(query->filter, query->meta, DUAL_LAMBDA(add_group));
     DependencySet dependencies;
+
+    if (resources)
+    {
+        ZoneScopedN("UpdateResourcesEntries");
+        SMutexLock resourceLock(resourceMutex.mMutex);
+        forloop (i, 0, resources->count)
+        {
+            auto& entry = allResources[e_id(resources->resources[i])];
+            auto readonly = resources->readonly[i];
+            auto atomic = resources->atomic[i];
+            update_entry(entry, counter, readonly, atomic, dependencies);
+        }
+    }
+
     skr::flat_hash_set<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
     auto sync_entry = [&](const dual_group_t* group, dual_type_index_t localType, bool readonly, bool atomic) {
         if (localType == kInvalidTypeIndex)
@@ -513,26 +600,6 @@ eastl::vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(du
             sync_entry(group, idx, readonly, atomic);
         }
     };
-
-    if (resources)
-    {
-        ZoneScopedN("UpdateResourcesEntries");
-        SMutexLock resourceLock(resourceMutex.mMutex);
-        forloop (i, 0, resources->count)
-        {
-            auto& entry = allResources[e_id(resources->resources[i])];
-            auto readonly = resources->readonly[i];
-            auto atomic = resources->atomic[i];
-            update_entry(entry, counter, readonly, atomic, dependencies);
-        }
-    }
-
-    llvm_vecsmall::SmallVector<dual_group_t*, 64> groups;
-    auto add_group = [&](dual_group_t* group) {
-        groups.push_back(group);
-    };
-    auto& params = query->parameters;
-    query->storage->query_groups(query->filter, query->meta, DUAL_LAMBDA(add_group));
 
     {
         ZoneScopedN("UpdateArchetypeEntries");

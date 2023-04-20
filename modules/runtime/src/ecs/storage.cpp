@@ -1029,6 +1029,12 @@ EIndex dualQ_get_count(dual_query_t* query)
     return result;
 }
 
+void dualQ_sync(dual_query_t* query)
+{
+    if(query->storage->scheduler)
+        query->storage->scheduler->sync_query(query);
+}
+
 void dualQ_get(dual_query_t* query, dual_filter_t* filter, dual_parameters_t* params)
 {
     if(!query->storage->queriesBuilt)
