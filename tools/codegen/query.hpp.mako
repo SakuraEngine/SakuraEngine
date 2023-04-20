@@ -6,15 +6,28 @@
 dual_query_t* query; ${"\\"}
 void Initialize(dual_storage_t* storage); ${"\\"}
 void Release() { if(query) dualQ_release(query); } ${"\\"}
-struct TaskContext : dual::task_context_t ${"\\"}
+struct TaskContext : private dual::task_context_t ${"\\"}
 { ${"\\"}
+    using dual::task_context_t::task_context_t; ${"\\"}
+    using dual::task_context_t::set_dirty; ${"\\"}
+    using dual::task_context_t::count; ${"\\"}
     struct View ${"\\"}
     { ${"\\"}
-    %for i, component in enumerate(query.sequence):
+    %for i, component in query.sequence():
         ${"const " if query.accesses[i].readonly else ""}${component}* _${db.short_name(component)}; ${"\\"}
     %endfor
     }; ${"\\"}
-    View Unpack(); ${"\\"}
+    View unpack(); ${"\\"}
+    template<class T> ${"\\"}
+    auto get() { return get(skr::type_t<T>{}); } ${"\\"}
+    %for i, component in query.sequence():
+    auto get(skr::type_t<${component}>) { return dual::task_context_t::get_owned_${"ro" if query.accesses[i].readonly else "rw"}<${component}, true>(${i}); } ${"\\"}
+    %endfor
+    template<class T> ${"\\"}
+    auto get(dual_chunk_view_t* view) { return get(view, skr::type_t<T>{}); } ${"\\"}
+    %for i, component in query.unsequence():
+    auto get(dual_chunk_view_t* view, skr::type_t<${component}>) { return dual::task_context_t::get_owned_${"ro" if query.accesses[i].readonly else "rw"}<${component}, true>(view, ${i}); } ${"\\"}
+    %endfor
 };
 %endfor
 //END QUERY GENERATED

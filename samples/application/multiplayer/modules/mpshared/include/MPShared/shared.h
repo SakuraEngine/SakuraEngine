@@ -5,6 +5,7 @@
 #include "containers/vector.hpp"
 #include "SkrScene/scene.h"
 #include "components.h"
+#include "utils/traits.hpp"
 #ifndef __meta__
     #include "MPShared/shared.generated.h"
 #endif
