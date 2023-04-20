@@ -7,7 +7,7 @@
 
 skr_blob_arena_t::skr_blob_arena_t()
     : buffer(nullptr), _base(0), align(0), offset(0), capacity(0)  {}
-skr_blob_arena_t::skr_blob_arena_t(void* buffer, uint64_t base, size_t size, size_t align)
+skr_blob_arena_t::skr_blob_arena_t(void* buffer, uint64_t base, uint32_t size, uint32_t align)
     : buffer(buffer), _base(base), align(align), offset(size), capacity(size) {}
 skr_blob_arena_t::skr_blob_arena_t(skr_blob_arena_t&& other)
     : buffer(other.buffer), _base(other._base), align(other.align), offset(other.offset), capacity(other.capacity)
@@ -322,33 +322,26 @@ int ReadTrait<skr_blob_t>::Read(skr_binary_reader_t* reader, skr_blob_t& blob)
 
 int ReadTrait<skr_blob_arena_t>::Read(skr_binary_reader_t* reader, skr_blob_arena_t& arena)
 {
-    uint64_t base;
-    int ret = ReadTrait<uint64_t>::Read(reader, base);
-    if (ret != 0)
-        return ret;
-
     uint32_t size;
-    ret = ReadTrait<uint32_t>::Read(reader, size);
+    int ret = ReadTrait<uint32_t>::Read(reader, size);
     if (ret != 0)
         return ret;
-
+    if (size == 0)
+    {
+        arena = skr_blob_arena_t(nullptr, 0, 0, 0);
+        return ret;
+    }
     uint32_t align;
     ret = ReadTrait<uint32_t>::Read(reader, align);
     if (ret != 0)
         return ret;
-
-    if (size == 0)
-    {
-        arena = skr_blob_arena_t(nullptr, base, 0, align);
-        return ret;
-    }
     else
     {
         // FIXME: fix 0 alignment during serialization
         SKR_ASSERT(align != 0);
         align = (align == 0) ? 1u : align;
         void* buffer = sakura_malloc_aligned(size, align);
-        arena = skr_blob_arena_t(buffer, base, size, align);
+        arena = skr_blob_arena_t(buffer, 0, size, align);
         return ret;
     }
 

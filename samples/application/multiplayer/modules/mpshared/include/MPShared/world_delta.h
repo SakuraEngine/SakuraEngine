@@ -122,7 +122,6 @@ sattr("serialize" : "bin")
 MPWorldDelta
 {
     uint64_t frame;
-    double time;
     skr_blob_arena_t arena; 
     spush_attr("arena" : "arena")
     MPWorldDeltaView blob;

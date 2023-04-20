@@ -137,7 +137,6 @@ skr::vector<uint8_t> MPServerWorld::SerializeWorldDelta(const MPWorldDeltaViewBu
     MPWorldDelta delta;
     delta.arena = skr::binary::make_arena<MPWorldDeltaView>(delta.blob, deltaBuilder);
     delta.frame = gameFrame;
-    delta.time = lastGameTime;
     skr::vector<uint8_t> buffer;
     skr::binary::VectorWriterBitpacked writer{&buffer};
     skr_binary_writer_t archive(writer);

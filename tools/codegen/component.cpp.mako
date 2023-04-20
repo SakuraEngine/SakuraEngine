@@ -12,6 +12,7 @@
 #include "ecs/dual.h"
 #include "ecs/array.hpp"
 #include "ecs/luabind.hpp"
+#include "ecs/serde.hpp"
 
 %for type in generator.filter_records(db.records):
 static struct RegisterComponent${type.id}Helper
@@ -69,6 +70,7 @@ static struct RegisterComponent${type.id}Helper
     %endif
 
         dual::SetLuaBindCallback<${type.name}>(desc);
+        dual::SetSerdeCallback<${type.name}>(desc);
     
     %if hasattr(type.attrs.component, "custom"):
         ${type.attrs.component.custom}(desc, skr::type_t<${type.name}>{});

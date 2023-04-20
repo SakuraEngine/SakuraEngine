@@ -28,6 +28,7 @@ typedef struct dual_mapper_t {
 
 typedef struct skr_binary_writer_t skr_binary_writer_t;
 typedef struct skr_binary_reader_t skr_binary_reader_t;
+typedef struct skr_json_writer_t skr_json_writer_t;
 typedef struct dual_callback_v {
     void (*constructor)(dual_chunk_t* chunk, EIndex index, char* data) SKR_IF_CPP(=nullptr);
     void (*copy)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src) SKR_IF_CPP(=nullptr);
@@ -35,6 +36,8 @@ typedef struct dual_callback_v {
     void (*move)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src) SKR_IF_CPP(=nullptr);
     void (*serialize)(dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* writer) SKR_IF_CPP(=nullptr);
     void (*deserialize)(dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* reader) SKR_IF_CPP(=nullptr);
+    void (*serialize_text)(dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_json_writer_t* writer) SKR_IF_CPP(=nullptr);
+    void (*deserialize_text)(dual_chunk_t* chunk, EIndex index, char* data, EIndex count, void* reader) SKR_IF_CPP(=nullptr);
     void (*map)(dual_chunk_t* chunk, EIndex index, char* data, dual_mapper_t* v) SKR_IF_CPP(=nullptr);
     int (*lua_push)(dual_chunk_t* chunk, EIndex index, char* data, struct lua_State* L) SKR_IF_CPP(=nullptr);
     void (*lua_check)(dual_chunk_t* chunk, EIndex index, char* data, struct lua_State* L, int idx) SKR_IF_CPP(=nullptr);
@@ -52,8 +55,7 @@ enum dual_callback_flags SKR_IF_CPP(: uint32_t)
     DCF_DTOR = 0x2,
     DCF_COPY = 0x4,
     DCF_MOVE = 0x8,
-    DCF_SERDE = 0x10,
-    DCF_ALL = DCF_CTOR | DCF_DTOR | DCF_COPY | DCF_MOVE | DCF_SERDE,
+    DCF_ALL = DCF_CTOR | DCF_DTOR | DCF_COPY | DCF_MOVE,
 };
 
 /**
@@ -821,8 +823,6 @@ struct dual_id_of {
         static_assert(!sizeof(C), "dual_id_of<C> not implemented for this type, please include the appropriate generated header!");
     }
 };
-#include "binary/reader.h"
-#include "binary/writer.h"
 #include "type/type_helper.hpp"
 #include "ecs/callback.hpp"
 namespace dual
@@ -881,16 +881,6 @@ namespace dual
             if constexpr (std::is_move_constructible_v<C>)
                 desc.callback.move = +[](dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src) {
                     new (dst) C(std::move(*(C*)src));
-                };
-        }
-        if constexpr ((flags & DCF_SERDE) != 0) {
-            if constexpr(skr::is_complete_serde_v<skr::binary::WriteTrait<C>>)
-                desc.callback.serialize = +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* writer) {
-                    skr::binary::Write<const C&>(writer, *(C*)data);
-                };
-            if constexpr(skr::is_complete_serde_v<skr::binary::ReadTrait<C>>)
-                desc.callback.deserialize = +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* reader) {
-                    skr::binary::Read(reader, *(C*)data);
                 };
         }
     }

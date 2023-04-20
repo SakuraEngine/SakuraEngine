@@ -8,6 +8,7 @@
 #include "debug.cpp"
 #include "vfs.cpp"
 #include "standard/stdio_vfs.cpp"
+#include "guid.cpp"
 #ifdef SKR_OS_UNIX
     #include "unix/unix_vfs.cpp"
     #include "unix/process.cpp"

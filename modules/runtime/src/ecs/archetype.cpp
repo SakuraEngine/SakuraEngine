@@ -78,8 +78,6 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
             callbackFlag |= DCF_COPY;
         if (desc.callback.move)
             callbackFlag |= DCF_MOVE;
-        if (desc.callback.serialize || desc.callback.deserialize)
-            callbackFlag |= DCF_SERDE;
         proto.callbackFlags[i] = callbackFlag;
         proto.callbacks[i] = desc.callback;
         proto.resourceFields[i] = { desc.resourceFields, desc.resourceFieldsCount };
