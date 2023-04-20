@@ -991,6 +991,10 @@ namespace dual
         dual_type_index_t* localTypes;
         EIndex entityIndex;
         dual_query_t* query;
+        task_context_t(dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex, dual_query_t* query)
+            : storage(storage), view(view), localTypes(localTypes), entityIndex(entityIndex), query(query)
+        {
+        }
 
         auto count() { return view->count; }
 
@@ -1126,7 +1130,7 @@ struct RUNTIME_API dual_id_of<dual::guid_comp_t>
 #define QUERY_CONBINE_GENERATED_NAME(file, type) QUERY_CONBINE_GENERATED_NAME_IMPL(file, type)
 #define QUERY_CONBINE_GENERATED_NAME_IMPL(file, type) GENERATED_QUERY_BODY_##file##_##type
 #ifdef __meta__
-#define GENERATED_QUERY_BODY(type) 
+#define GENERATED_QUERY_BODY(type) dual_query_t* query;
 #else
 #define GENERATED_QUERY_BODY(type) QUERY_CONBINE_GENERATED_NAME(SKR_FILE_ID, type)
 #endif

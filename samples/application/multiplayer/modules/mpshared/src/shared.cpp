@@ -93,7 +93,7 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
 
     dual::schedule_task(controlQuery, 512, [this](QControl::TaskContext ctx)
     {
-        auto [controllers, movements, skills, players, dirtyMasks] = ctx.Unpack();
+        auto [controllers, movements, skills, players, dirtyMasks] = ctx.unpack();
         for(int i=0; i<ctx.count(); ++i)
         {
             auto& input = this->input.inputs[controllers[i].playerId];
@@ -196,7 +196,7 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
         dual::schedule_task(healthCheckQuery, 512,
         [this](QHeathCheck::TaskContext ctx)
         {
-            auto [healths, translations, rotations, weapons, dirtyMasks] = ctx.Unpack();
+            auto [healths, translations, rotations, weapons, dirtyMasks] = ctx.unpack();
             for(int i=0; i<ctx.count(); ++i)
             {
                 if(healths[i].health <= 0)
@@ -217,7 +217,7 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
     }
     dual::schedule_task(movementQuery, 512, [](QMovement::TaskContext ctx)
     {
-        auto [movements, translations, rotations, dirtyMasks] = ctx.Unpack();
+        auto [movements, translations, rotations, dirtyMasks] = ctx.unpack();
         for(int i=0; i<ctx.count(); ++i)
         {
             translations[i].value.x += movements[i].velocity.x * deltaTime;
@@ -253,7 +253,7 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
         dual::schedule_task(ballQuery, 512, 
         [this](QBallMovement::TaskContext ctx)
         {
-            auto [translations, colliders, movements, dirtyMasks, balls] = ctx.Unpack();
+            auto [translations, colliders, movements, dirtyMasks, balls] = ctx.unpack();
             for(int i=0; i<ctx.count(); ++i)
             {
                 translations[i].value.x += movements[i].velocity.x * deltaTime;
@@ -300,7 +300,7 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
     dual::schedule_task(relevanceQuery, 512,
     [this](QUpdateRelevance::TaskContext ctx)
     {
-        auto [relevances, translations] = ctx.Unpack();
+        auto [relevances, translations] = ctx.unpack();
         for(int i=0; i<ctx.count(); ++i)
         {
             auto& relevance = relevances[i];

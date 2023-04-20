@@ -4,10 +4,10 @@ import re
 BASE = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
 
 class Access(object):
-    def __init__(self, readonly, atomic, randomAccess, phase):
+    def __init__(self, readonly, atomic, order, phase):
         self.readonly = readonly
         self.atomic = atomic
-        self.randomAccess = randomAccess
+        self.order = order
         self.phase = phase
 
 # literal grammar:
@@ -18,7 +18,6 @@ class Query(object):
         self.any = []
         self.none = []
         self.components = []
-        self.sequence = []
         self.accesses = []
         self.literal = literal
         #parse literal
@@ -63,13 +62,15 @@ class Query(object):
             if access == "out":
                 count = 0
             if access != "has" and cat is not self.none:
-                if order != "unseq":
-                    self.sequence.append(type)
                 self.components.append(type)
                 acc = Access(access == "in", access == "atomic", order, count)
                 self.accesses.append(acc)
             if cat is not None:
                 cat.append(type)
+    def sequence(self):
+        return [(i, c) for i, c in enumerate(self.components) if self.accesses[i].order != "unseq"]
+    def unsequence(self):
+        return [(i, c) for i, c in enumerate(self.components) if self.accesses[i].order != "seq"]
 
 class Generator(object):
     def __init__(self):
