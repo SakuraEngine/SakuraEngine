@@ -125,6 +125,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder
     skr::vector<ComponentDeltaBuilder> components;
     skr::vector<skr::task::event_t> dependencies;
     dual_query_t* worldDeltaQuery;
+    dual_query_t* clearDirtyQuery;
     dual_query_t* deadQuery;
     dual_storage_t* storage;
     bool initialized = false;
@@ -135,7 +136,8 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder
             return;
         storage = inStorage;
         worldDeltaQuery = dualQ_from_literal(storage, "[in]CPrefab,[inout]CAuth,[inout]dual::dirty_comp_t,[inout]CAuthTypeData");
-        deadQuery = dualQ_from_literal(storage, "[inout]CAuth, [has]dead");
+        clearDirtyQuery = dualQ_from_literal(storage, "[inout]dual::dirty_comp_t,[has]CPrefab,[has]CAuth,[has]CAuthTypeData");
+        deadQuery = dualQ_from_literal(storage, "[in]CAuth, [has]dead");
         ComponentDeltaBuilderRegistry& registry = ComponentDeltaBuilderRegistry::Get();
         for (auto& pair : registry.builders)
         {
@@ -148,6 +150,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder
     ~WorldDeltaBuilder()
     {
         dualQ_release(worldDeltaQuery);
+        dualQ_release(clearDirtyQuery);
         dualQ_release(deadQuery);
         for (auto& component : components)
         {
@@ -350,25 +353,25 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder
             dependency.wait(true);
         }
         dependencies.clear();
-        dualJ_schedule_ecs(worldDeltaQuery, 0, 
+        dualJ_schedule_ecs(clearDirtyQuery, 0, 
         +[](void* u, dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
         {
-            auto dirties = (uint32_t*)dualV_get_owned_rw_local(view, localTypes[2]);
+            auto dirties = (uint32_t*)dualV_get_owned_rw_local(view, localTypes[0]);
             for(int i=0; i<view->count; ++i)
             {
                 dirties[i] = 0;
             }
             
         }, this, nullptr, nullptr, nullptr, nullptr);
-        
-        auto collectDead = [&](dual_chunk_view_t* view) 
+        skr::task::event_t completed(nullptr);
+        dual::schedule_task(deadQuery, 0, [&](dual::task_context_t ctx)
         {
-            auto auths = (CAuth*)dualV_get_owned_ro(view, dual_id_of<CAuth>::get());
-            auto entities = dualV_get_entities(view);
+            auto auths = ctx.get_owned_ro<CAuth>(0);
+            auto entities = ctx.get_entities();
             for(int j=0; j<builder.size(); ++j)
             {
                 auto& delta = builder[j];
-                for(int i=0; i<view->count; ++i)
+                for(int i=0; i<ctx.count(); ++i)
                 {
                     //if mapped, send dead message
                     if(auths[i].mappedConnection[j]) 
@@ -378,8 +381,7 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder
                     }
                 }
             }
-        };
-        dualQ_get_views(deadQuery, DUAL_LAMBDA(collectDead));
+        }, &completed);
         {
             for(auto& delta : builder)
             {
@@ -399,6 +401,8 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder
                 delta.components.erase(std::remove_if(delta.components.begin(), delta.components.end(), [](auto& c) { return c.data.size() == 0; }), delta.components.end());
             }
         }
+        if(completed)
+            completed.wait(true);
     }
 };
 
