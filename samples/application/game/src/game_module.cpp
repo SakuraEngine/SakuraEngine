@@ -672,6 +672,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
                         skr_vfs_fclose(file);
                     }
                 }
+                ImGui::End();
             }
             imgui_button_spawn_girl(game_renderer);
             skr::inspect::update_value_inspector();

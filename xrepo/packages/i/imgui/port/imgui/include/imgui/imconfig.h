@@ -126,7 +126,7 @@ namespace ImGui
 
 #ifndef IMGUI_IMPORT
 #ifdef RUNTIME_ALL_STATIC 
-    #define IMGUI_IMPORT extern
+#define IMGUI_IMPORT extern
 #else
     #if defined(_MSC_VER)
         #define IMGUI_IMPORT __declspec(dllimport) extern
