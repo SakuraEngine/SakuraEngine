@@ -555,6 +555,8 @@ RUNTIME_API dual_query_t* dualQ_from_literal(dual_storage_t* storage, const char
 
 RUNTIME_API const char* dualQ_get_error();
 
+RUNTIME_API void dualQ_sync(dual_query_t* query);
+
 RUNTIME_API EIndex dualQ_get_count(dual_query_t* query);
 
 RUNTIME_API void dualQ_get(dual_query_t* query, dual_filter_t* filter, dual_parameters_t* params);

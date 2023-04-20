@@ -35,6 +35,7 @@ struct scheduler_t {
     void remove_resource(dual_entity_t id);
     void sync_archetype(dual::archetype_t* type);
     void sync_entry(dual::archetype_t* type, dual_type_index_t entry, bool readonly);
+    void sync_query(dual_query_t* query);
     void sync_all();
     void gc_entries();
     void sync_storage(const dual_storage_t* storage);
