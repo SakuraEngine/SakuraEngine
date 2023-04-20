@@ -28,8 +28,8 @@
 <%def name="bind_function(function, record)">
         lua_pushcfunction(L, +[](lua_State* L)
         {
-            int currArg = 1;
-            int usedArg = 0;
+            int currArg = 1; (void)currArg;
+            int usedArg = 0; (void)usedArg;
         %if record:
             auto& record = **reinterpret_cast<${record.name}**>(lua_touserdata(L, 1));
         %endif
@@ -92,8 +92,8 @@
                     return;
                     %endif
                 }
-                int currRet = -1;
-                int usedRet = 0;
+                int currRet = -1; (void)currRet;
+                int usedRet = 0; (void)usedRet;
                 %for name, param in reversed(vars(callback.parameters).items()):
                 %if hasattr(param.attrs, "out") or hasattr(param.attrs, "inout"):
                 decltype(auto) _${name} = skr::lua::deref<${param.type}>(${name});
