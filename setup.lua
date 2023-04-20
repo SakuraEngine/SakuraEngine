@@ -20,8 +20,6 @@ else
 end
 
 if (os.host() == "windows") then
-    find_sdk.sdk_lib_from_github("imgui", "imgui-windows-x64.zip")
-    find_sdk.sdk_lib_from_github("imgui_d", "imgui_d-windows-x64.zip")
     find_sdk.sdk_lib_from_github("ISPCTextureCompressor", "ISPCTextureCompressor-windows-x64.zip")
     -- gfx sdk
     find_sdk.lib_from_github("WinPixEventRuntime", "WinPixEventRuntime-windows-x64.zip")
