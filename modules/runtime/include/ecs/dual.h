@@ -731,6 +731,15 @@ RUNTIME_API dual_storage_t* dualC_get_storage(const dual_chunk_t* chunk);
  */
 RUNTIME_API uint32_t dualC_get_count(const dual_chunk_t* chunk);
 
+
+RUNTIME_API void dual_set_bit(uint32_t* mask, int32_t bit);
+
+#if defined(__cplusplus)
+}
+#endif
+
+#if defined(__cplusplus)
+#include "task/task.hpp"
 /**
  * @brief register a resource to scheduler
  *
@@ -742,7 +751,7 @@ RUNTIME_API dual_entity_t dualJ_add_resource();
  */
 RUNTIME_API void dualJ_remove_resource(dual_entity_t id);
 typedef uint32_t dual_thread_index_t;
-typedef void (*dual_system_callback_t)(void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex);
+typedef void (*dual_system_callback_t)(void* u, dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex);
 typedef void (*dual_system_lifetime_callback_t)(void* u, EIndex entityCount);
 typedef struct dual_resource_operation_t {
     dual_entity_t* resources;
@@ -762,10 +771,10 @@ typedef struct dual_resource_operation_t {
  * @param counter counter used to sync jobs, if *counter is null, a new counter will be created
  * @return false if job is skipped
  */
-RUNTIME_API bool dualJ_schedule_ecs(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
-dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources, dual_counter_t** counter);
+RUNTIME_API bool dualJ_schedule_ecs(dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
+dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources, skr::task::event_t* counter);
 
-typedef void (*dual_schedule_callback_t)(void* u, dual_counter_t* counter);
+typedef void (*dual_schedule_callback_t)(void* u, dual_query_t* query);
 /**
  * @brief schedule custom job and sync with ecs context
  *
@@ -775,27 +784,8 @@ typedef void (*dual_schedule_callback_t)(void* u, dual_counter_t* counter);
  * @param u
  * @param resources
  */
-RUNTIME_API void dualJ_schedule_custom(const dual_query_t* query, dual_counter_t* counter, dual_schedule_callback_t callback, void* u, dual_resource_operation_t* resources);
-/**
- * @brief create a counter object
- * counter is used to sync jobs, counter need to be released manually
- * @param null if true, counter will be null
- * @return dual_counter_t*
- */
-RUNTIME_API dual_counter_t* dualJ_create_counter(bool null);
-/**
- * @brief wait until counter equal to zero (when job is done)
- *
- * @param counter
- * @param pin stay on current thread
- */
-RUNTIME_API void dualJ_wait_counter(dual_counter_t* counter, int pin);
-/**
- * @brief release the counter
- *
- * @param counter
- */
-RUNTIME_API void dualJ_release_counter(dual_counter_t* counter);
+RUNTIME_API void dualJ_schedule_custom(dual_query_t* query, dual_schedule_callback_t callback, void* u,
+dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources, skr::task::event_t* counter);
 /**
  * @brief wait for all jobs are done
  *
@@ -822,13 +812,6 @@ RUNTIME_API void dualJ_bind_storage(dual_storage_t* storage);
  */
 RUNTIME_API void dualJ_unbind_storage(dual_storage_t* storage);
 
-RUNTIME_API void dual_set_bit(uint32_t* mask, int32_t bit);
-
-#if defined(__cplusplus)
-}
-#endif
-
-#if defined(__cplusplus)
 template <class C>
 struct dual_id_of {
     static dual_type_index_t get()
@@ -869,50 +852,6 @@ namespace dual
     struct dirty_comp_t
     {
         dual_dirty_comp_t value;
-    };
-
-    struct query_t
-    {
-        dual_query_t* query = nullptr;
-        ~query_t()
-        {
-            if(query)
-                dualQ_release(query);
-        }
-        explicit operator bool() const
-        {
-            return query != nullptr;
-        }
-        dual_query_t*& operator*()
-        {
-            return query;
-        }
-        dual_query_t*const & operator*() const
-        {
-            return query;
-        }
-    };
-
-    struct counter_t
-    {
-        dual_counter_t* counter;
-        ~counter_t()
-        {
-            if(counter)
-                dualJ_release_counter(counter);
-        }
-        explicit operator bool() const
-        {
-            return counter != nullptr;
-        }
-        dual_counter_t*& operator*()
-        {
-            return counter;
-        }
-        dual_counter_t* const& operator*() const
-        {
-            return counter;
-        }
     };
     
     template<uint32_t flags = DCF_ALL, class C>
@@ -1001,6 +940,8 @@ namespace dual
         template<class T>
         void check_local_type(dual_type_index_t idx)
         {
+            if(localTypes == nullptr)
+                return;
             auto localType = localTypes[idx];
             if(localType == kInvalidTypeIndex)
                 return;
@@ -1065,47 +1006,118 @@ namespace dual
             dual_set_bit(&mask.value, localTypes[idx]);
         }
     };
+    struct query_t
+    {
+        dual_query_t* query = nullptr;
+        ~query_t()
+        {
+            if(query)
+                dualQ_release(query);
+        }
+        explicit operator bool() const
+        {
+            return query != nullptr;
+        }
+        dual_query_t*& operator*()
+        {
+            return query;
+        }
+        dual_query_t*const & operator*() const
+        {
+            return query;
+        }
+    };
+
+    struct QWildcard
+    {
+        using TaskContext = task_context_t;
+        QWildcard(dual_query_t* query)
+            : query(query)
+        {
+        }
+        dual_query_t* query = nullptr;
+    };
+
+    template<class T, class F>
+    bool schedule_task(T& query, EIndex batchSize, F callback, skr::task::event_t* counter)
+    {
+        static constexpr auto convertible_to_function_check = [](auto t)->decltype(+t) { return +t; };
+        using TaskContext = typename T::TaskContext;
+        if constexpr(std::is_invocable_v<decltype(convertible_to_function_check), F>)
+        {
+            static constexpr auto callbackType = +callback;
+            auto trampoline = +[](void* u, dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
+            {
+                TaskContext ctx{ dualQ_get_storage(query), view, localTypes, entityIndex, query };
+                callbackType(ctx);
+            };
+            return dualJ_schedule_ecs(query.query, batchSize, trampoline, nullptr, nullptr, nullptr, nullptr, counter);
+        }
+        else
+        {
+            struct payload {
+                F callback;
+            };
+            auto trampoline = +[](void* u, dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
+            {
+                payload* p = (payload*)u;
+                TaskContext ctx{ dualQ_get_storage(query), view, localTypes, entityIndex, query };
+                p->callback(ctx);
+            };
+            payload* p = SkrNew<payload>( std::move(callback) );
+            auto teardown = +[](void* u, EIndex entityCount) {
+                payload* p = (payload*)u;
+                SkrDelete(p);
+            };
+            return dualJ_schedule_ecs(query.query, batchSize, trampoline, p, nullptr, teardown, nullptr, counter);
+        }
+    }
 
     template<class F>
-    bool schedule_task(dual_query_t* query, EIndex batchSize, F callback, dual_counter_t** counter)
+    auto schedule_task(dual_query_t* query, EIndex batchSize, F callback, skr::task::event_t* counter)
     {
-        struct payload {
-            F callback;
-            dual_query_t* query;
-        };
-        auto trampoline = +[](void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
-        {
-            payload* p = (payload*)u;
-            task_context_t ctx{ storage, view, localTypes, entityIndex, p->query };
-            p->callback(ctx);
-        };
-        payload* p = SkrNew<payload>( std::move(callback), query );
-        auto teardown = +[](void* u, EIndex entityCount) {
-            payload* p = (payload*)u;
-            SkrDelete(p);
-        };
-        return dualJ_schedule_ecs(query, batchSize, trampoline, p, nullptr, teardown, nullptr, counter);
+        return schedule_task(dual::QWildcard{query}, batchSize, std::move(callback), counter);
     }
 
     template<class T, class F>
-    bool schedule_task(T& query, EIndex batchSize, F callback, dual_counter_t** counter)
+    auto schedual_custom(T& query, F callback, skr::task::event_t* counter)
     {
-        struct payload {
-            F callback;
-            dual_query_t* query;
-        };
-        auto trampoline = +[](void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
+        static constexpr auto convertible_to_function_check = [](auto t)->decltype(+t) { return +t; };
+        using TaskContext = typename T::TaskContext;
+        if constexpr(std::is_invocable_v<decltype(convertible_to_function_check), F>)
         {
-            payload* p = (payload*)u;
-            typename T::TaskContext ctx{ storage, view, localTypes, entityIndex, p->query };
-            p->callback(ctx);
-        };
-        payload* p = SkrNew<payload>( std::move(callback), query.query );
-        auto teardown = +[](void* u, EIndex entityCount) {
-            payload* p = (payload*)u;
-            SkrDelete(p);
-        };
-        return dualJ_schedule_ecs(query.query, batchSize, trampoline, p, nullptr, teardown, nullptr, counter);
+            static constexpr auto callbackType = +callback;
+            auto trampoline = +[](void* u, dual_query_t* query)
+            {
+                TaskContext ctx{ dualQ_get_storage(query), nullptr, nullptr, 0, query };
+                callbackType(ctx);
+            };
+            return dualJ_schedule_custom(query.query, callbackType, nullptr, nullptr, nullptr, nullptr, counter);
+        }
+        else
+        {
+            struct payload {
+                F callback;
+            };
+            auto trampoline = +[](void* u, dual_query_t* query)
+            {
+                payload* p = (payload*)u;
+                TaskContext ctx{ dualQ_get_storage(query), nullptr, nullptr, 0, query };
+                p->callback(ctx);
+            };
+            payload* p = SkrNew<payload>( std::move(callback) );
+            auto teardown = +[](void* u, EIndex entityCount) {
+                payload* p = (payload*)u;
+                SkrDelete(p);
+            };
+            return dualJ_schedule_custom(query.query, trampoline, p, nullptr, teardown, nullptr, counter);
+        }
+    }
+
+    template<class F>
+    auto schedual_custom(dual_query_t* query, F callback, skr::task::event_t* counter)
+    {
+        return schedual_custom(dual::QWildcard{query}, std::move(callback), counter);
     }
 }
 

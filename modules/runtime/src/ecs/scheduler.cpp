@@ -206,7 +206,7 @@ void update_entry(job_dependency_entry_t& entry, skr::task::event_t job, bool re
 }
 } // namespace dual
 
-skr::task::event_t dual::scheduler_t::schedule_ecs_job(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
+skr::task::event_t dual::scheduler_t::schedule_ecs_job(dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
 dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources)
 {
     query->storage->build_queries();
@@ -228,7 +228,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     };
     struct SharedData
     {
-        const dual_query_t* query;
+        dual_query_t* query;
         dual_group_t** groups;
         uint32_t groupCount;
         eastl::bitset<32>* readonly;
@@ -297,97 +297,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     if(!job->entityCount)
         return {nullptr};
 
-    DependencySet dependencySet;
-    skr::flat_hash_set<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
-    auto sync_entry = [&](const dual_group_t* group, dual_type_index_t localType, bool readonly, bool atomic) {
-        if (localType == kInvalidTypeIndex)
-            return;
-        auto at = group->archetype;
-        auto pair = std::make_pair(at, localType);
-        if (syncedEntry.find(pair) != syncedEntry.end())
-            return;
-        syncedEntry.insert(pair);
-        {
-            SMutexLock entryLock(entryMutex.mMutex);
-            auto iter = dependencyEntries.find(at);
-            if (iter == dependencyEntries.end())
-            {
-                eastl::vector<job_dependency_entry_t> entries(at->type.length);
-                iter = dependencyEntries.insert(std::make_pair(at, std::move(entries))).first;
-            }
-
-            auto entries = (*iter).second.data();
-            auto& entry = entries[localType];
-            update_entry(entry, result, readonly, atomic, dependencySet);
-        }
-    };
-
-    auto sync_type = [&](dual_type_index_t type, bool readonly, bool atomic) {
-        for (auto& pair : query->storage->groups)
-        {
-            auto group = pair.second;
-            auto idx = group->index(type);
-            sync_entry(group, idx, readonly, atomic);
-        }
-    };
-
-    if (resources)
-    {
-        ZoneScopedN("UpdateResourceEntries");
-
-        SMutexLock resourceLock(resourceMutex.mMutex);
-        forloop (i, 0, resources->count)
-        {
-            auto& entry = allResources[e_id(resources->resources[i])];
-            auto readonly = resources->readonly[i];
-            auto atomic = resources->atomic[i];
-            update_entry(entry, result, readonly, atomic, dependencySet);
-        }
-    }
-
-    {
-        ZoneScopedN("UpdateArchetypeEntries");
-
-        forloop (i, 0, query->parameters.length)
-        {
-            if (type_index_t(params.types[i]).is_tag())
-                continue;
-            if (params.accesses[i].randomAccess != DOS_SEQ)
-            {
-                sync_type(params.types[i], params.accesses[i].readonly, params.accesses[i].atomic);
-            }
-            else
-            {
-                groupIndex = 0;
-                for (auto group : groups)
-                {
-                    auto localType = job->localTypes[groupIndex * params.length + i];
-                    if (localType == kInvalidTypeIndex)
-                    {
-                        auto g = group->get_owner(params.types[i]);
-                        if (g)
-                        {
-                            sync_entry(g, g->index(params.types[i]), params.accesses[i].readonly, params.accesses[i].atomic);
-                        }
-                    }
-                    else
-                    {
-                        sync_entry(group, localType, params.accesses[i].readonly, params.accesses[i].atomic);
-                    }
-                    ++groupIndex;
-                }
-            }
-        }
-    }
-    
-    eastl::vector<skr::task::weak_event_t> dependencies;
-    {
-        ZoneScopedN("AllocateDependencyData");
-        dependencies.resize(dependencySet.size());
-        uint32_t dependencyIndex = 0;
-        for (auto& dependency : dependencySet)
-            dependencies[dependencyIndex++] = dependency;
-    }
+    auto dependencies = update_dependencies(query, result, resources);
     
     {
         ZoneScopedN("AllocateCounter");
@@ -432,7 +342,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
             forloop (i, 0, sharedData->groupCount)
             {
                 auto processView = [&](dual_chunk_view_t* view) {
-                    sharedData->callback(sharedData->userdata, query->storage, view, sharedData->localTypes + i * query->parameters.length, startIndex);
+                    sharedData->callback(sharedData->userdata, query, view, sharedData->localTypes + i * query->parameters.length, startIndex);
                     startIndex += view->count;
                 };
                 auto group = sharedData->groups[i];
@@ -524,7 +434,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
                     forloop (i, batch.startTask, batch.endTask)
                     {
                         auto task = sharedData->tasks[i];
-                        sharedData->callback(sharedData->userdata, sharedData->query->storage, &task.view, sharedData->localTypes + task.groupIndex * sharedData->query->parameters.length, task.startIndex);
+                        sharedData->callback(sharedData->userdata, sharedData->query, &task.view, sharedData->localTypes + task.groupIndex * sharedData->query->parameters.length, task.startIndex);
                     }
                 }, nullptr);
             }
@@ -540,7 +450,34 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
     return result;
 }
 
-eastl::vector<skr::task::event_t> dual::scheduler_t::schedule_custom_job(const dual_query_t* query, const skr::task::event_t& counter, dual_resource_operation_t* resources)
+skr::task::event_t dual::scheduler_t::schedule_job(dual_query_t* query, dual_schedule_callback_t callback, void* u, dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources)
+{
+    skr::task::event_t result;
+    auto deps = dual::scheduler_t::get().update_dependencies(query, result, resources);
+    {
+        ZoneScopedN("AllocateCounter");
+        allCounter.add(1);
+        query->storage->counter.add(1);
+    }
+    skr::task::schedule([deps = std::move(deps), this, query, callback, u, init, teardown]()
+    {
+        for(auto dep : deps)
+            if(auto d = dep.lock())
+                d.wait(false);
+        SKR_DEFER({ 
+            allCounter.decrement();
+            query->storage->counter.decrement();
+        });
+        if(init)
+            init(u, 0);
+        callback(u, query);
+        if(teardown)
+            teardown(u, 0);
+    }, &result);
+    return result;
+}
+
+eastl::vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(dual_query_t* query, const skr::task::event_t& counter, dual_resource_operation_t* resources)
 {
     ZoneScopedN("SchedualCustomJob");
     DependencySet dependencies;
@@ -631,10 +568,9 @@ eastl::vector<skr::task::event_t> dual::scheduler_t::schedule_custom_job(const d
         }
     }
 
-    eastl::vector<skr::task::event_t> result;
+    eastl::vector<skr::task::weak_event_t> result;
     for(auto& counter : dependencies)
-        if(auto ptr = counter)
-            result.push_back(ptr);
+        result.push_back(counter);
     return result;
 }
 
@@ -662,7 +598,6 @@ eastl::vector<skr::task::event_t> dual::scheduler_t::sync_resources(const skr::t
     return result;
 }
 
-extern "C" {
 dual_entity_t dualJ_add_resource()
 {
     return dual::scheduler_t::get().add_resource();
@@ -673,58 +608,28 @@ void dualJ_remove_resource(dual_entity_t id)
     dual::scheduler_t::get().remove_resource(id);
 }
 
-struct dual_counter_t {
-    dual_counter_t() = default;
-    dual_counter_t(const skr::task::event_t& event)
-        : counter(event)
-    {
-        
-    }
-    dual_counter_t(nullptr_t) : counter(nullptr) {}
-    skr::task::event_t counter;
-};
-
-bool dualJ_schedule_ecs(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
-dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources, dual_counter_t** counter)
+bool dualJ_schedule_ecs(dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
+dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources, skr::task::event_t* counter)
 {
     ZoneScopedN("dualJ::schedule_ecs");
     
     auto c = dual::scheduler_t::get().schedule_ecs_job(query, batchSize, callback, u, init, teardown, resources);
     if (counter)
     {
-        if(!*counter)
-            *counter = SkrNew<dual_counter_t>(c);
-        else
-            (*counter)->counter = c;
+        *counter = c;
     }
     return !!c;
 }
 
-void dualJ_schedule_custom(const dual_query_t* query, dual_counter_t* counter, dual_schedule_callback_t callback, void* u, dual_resource_operation_t* resources)
+void dualJ_schedule_custom(dual_query_t* query, dual_schedule_callback_t callback, void* u,
+dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources, skr::task::event_t* counter)
 {
-    auto results = dual::scheduler_t::get().schedule_custom_job(query, counter->counter, resources);
-    for(auto& result : results)
+    ZoneScopedN("dualJ::schedule_custom");
+    auto c = dual::scheduler_t::get().schedule_job(query, callback, u, init, teardown, resources);
+    if (counter)
     {
-        callback(u, SkrNew<dual_counter_t>(std::move(result)));
+        *counter = c;
     }
-}
-
-dual_counter_t* dualJ_create_counter(bool null)
-{
-    if(null)
-        return SkrNew<dual_counter_t>(nullptr);
-    return SkrNew<dual_counter_t>();
-}
-
-void dualJ_wait_counter(dual_counter_t* counter, int pin)
-{
-    if(counter->counter)
-        counter->counter.wait(pin);
-}
-
-void dualJ_release_counter(dual_counter_t* counter)
-{
-    SkrDelete(counter);
 }
 
 void dualJ_wait_all()
@@ -750,5 +655,4 @@ void dualJ_bind_storage(dual_storage_t* storage)
 void dualJ_unbind_storage(dual_storage_t* storage)
 {
     dual::scheduler_t::get().remove_storage(storage);
-}
 }
