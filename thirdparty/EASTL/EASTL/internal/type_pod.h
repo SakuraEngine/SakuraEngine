@@ -87,7 +87,7 @@ namespace eastl
 
 		EA_DISABLE_VC_WARNING(4647)
 		template <typename T> // We check for has_trivial_constructor only because the VC++ is_pod does. Is it due to some compiler bug?
-		struct is_pod : public eastl::integral_constant<bool, (__is_trivially_constructible(T, const T&) && __is_pod(T) && !eastl::is_hat_type<T>::value) || eastl::is_void<T>::value || eastl::is_scalar<T>::value>{};
+		struct is_pod : public eastl::integral_constant<bool, (__has_trivial_constructor(T) && __is_pod(T) && !eastl::is_hat_type<T>::value) || eastl::is_void<T>::value || eastl::is_scalar<T>::value>{};
 		EA_RESTORE_VC_WARNING()
 	
 	#elif EASTL_COMPILER_INTRINSIC_TYPE_TRAITS_AVAILABLE && (defined(EA_COMPILER_GNUC) || (defined(__clang__) && EA_COMPILER_HAS_FEATURE(is_pod)))
@@ -186,12 +186,12 @@ namespace eastl
 		#define EASTL_TYPE_TRAIT_has_trivial_constructor_CONFORMANCE 1    // has_trivial_constructor is conforming.
 
 		template <typename T> 
-		struct has_trivial_constructor : public eastl::integral_constant<bool, (__is_trivially_constructible(T, const T&) || eastl::is_pod<T>::value) && !eastl::is_hat_type<T>::value>{};
+		struct has_trivial_constructor : public eastl::integral_constant<bool, (__has_trivial_constructor(T) || eastl::is_pod<T>::value) && !eastl::is_hat_type<T>::value>{};
 	#elif EASTL_COMPILER_INTRINSIC_TYPE_TRAITS_AVAILABLE && (defined(_MSC_VER) || defined(EA_COMPILER_GNUC) || defined(__clang__))
 		#define EASTL_TYPE_TRAIT_has_trivial_constructor_CONFORMANCE 1    // has_trivial_constructor is conforming.
 
 		template <typename T> 
-		struct has_trivial_constructor : public eastl::integral_constant<bool, __is_trivially_constructible(T, const T&) || eastl::is_pod<T>::value>{};
+		struct has_trivial_constructor : public eastl::integral_constant<bool, __has_trivial_constructor(T) || eastl::is_pod<T>::value>{};
 	#else
 		#define EASTL_TYPE_TRAIT_has_trivial_constructor_CONFORMANCE 0    // has_trivial_constructor is not fully conforming. Can return false negatives.
 
@@ -693,7 +693,7 @@ namespace eastl
 		//
 
 		template <typename T>
-		struct is_trivially_copyable { static const bool value = __is_trivially_copyable(T); };
+		struct is_trivially_copyable : public bool_constant<__is_trivially_copyable(T)> {};
 
 	#elif EASTL_COMPILER_INTRINSIC_TYPE_TRAITS_AVAILABLE && (defined(EA_COMPILER_MSVC) || defined(EA_COMPILER_GNUC))
 		#define EASTL_TYPE_TRAIT_is_trivially_copyable_CONFORMANCE 1
@@ -850,7 +850,7 @@ namespace eastl
 		// whether the __is_trivially_constructible compiler intrinsic is available.
 
 		// If the compiler has this trait built-in (which ideally all compilers would have since it's necessary for full conformance) use it.
-		#if EASTL_COMPILER_INTRINSIC_TYPE_TRAITS_AVAILABLE && (defined(__clang__) && EA_COMPILER_HAS_FEATURE(is_trivially_constructible))
+		#if EASTL_COMPILER_INTRINSIC_TYPE_TRAITS_AVAILABLE && ((defined(__clang__) && EA_COMPILER_HAS_FEATURE(is_trivially_constructible)) || defined(EA_COMPILER_MSVC))
 
 			template <typename T, typename Arg0 = eastl::unused>
 			struct is_trivially_constructible 
@@ -915,7 +915,7 @@ namespace eastl
 	#else
 
 		// If the compiler has this trait built-in (which ideally all compilers would have since it's necessary for full conformance) use it.
-		#if EASTL_COMPILER_INTRINSIC_TYPE_TRAITS_AVAILABLE && (defined(__clang__) && EA_COMPILER_HAS_FEATURE(is_trivially_constructible))
+		#if EASTL_COMPILER_INTRINSIC_TYPE_TRAITS_AVAILABLE && ((defined(__clang__) && EA_COMPILER_HAS_FEATURE(is_trivially_constructible)) || defined(EA_COMPILER_MSVC))
 			#define EASTL_TYPE_TRAIT_is_trivially_constructible_CONFORMANCE 1
 
 			// We have a problem with clang here as of clang 3.4: __is_trivially_constructible(int[]) is false, yet I believe it should be true.
