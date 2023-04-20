@@ -10,6 +10,7 @@
 #endif
 
 static constexpr double serverTickInterval = 1.0 / 30;
+static constexpr uint32_t syncRate = 3;
 
 enum class MPEventType : uint32_t
 {
@@ -50,7 +51,7 @@ QMovement
 
 sreflect_struct(
     "guid" : "305FB0DC-85F6-4B70-952F-BE662150E506",
-    "query" : "[in]CController, [inout]CMovement, [inout]CSkill, [atomic]?dual::dirty_comp_t"
+    "query" : "[in]CController, [inout]CMovement, [inout]CSkill, [inout]CPlayer, [atomic]?dual::dirty_comp_t"
 )
 QControl
 {

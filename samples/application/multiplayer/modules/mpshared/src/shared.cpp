@@ -9,6 +9,7 @@
 
 #include "rtm/quatf.h"
 #include "rtm/rtmx.h"
+#include "utils/log.h"
 
 void MPGameWorld::Initialize()
 {
@@ -62,7 +63,6 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
     ZoneScopedN("MP Tick");
     static constexpr float deltaTime = (float)serverTickInterval;
     input = inInput;
-
     if(authoritative)
     {
         skr::vector<dual_entity_t> ballsToKill;
@@ -93,7 +93,7 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
 
     dual::schedule_task(controlQuery, 512, [this](QControl::TaskContext ctx)
     {
-        auto [controllers, movements, skills, dirtyMasks] = ctx.Unpack();
+        auto [controllers, movements, skills, players, dirtyMasks] = ctx.Unpack();
         for(int i=0; i<ctx.count(); ++i)
         {
             auto& input = this->input.inputs[controllers[i].playerId];
@@ -110,7 +110,7 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
             {
                 skills[i].cooldownTimer = skills[i].cooldown;
                 skills[i].durationTimer = skills[i].duration;
-                movements[i].speed = skills[i].speedMultiplier * movements[i].baseSpeed;
+                players[i].speed = skills[i].speedMultiplier * players[i].baseSpeed;
                 skillDirty = true;
             }
             if(skills[i].durationTimer > 0)
@@ -119,10 +119,10 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
                 if(skills[i].durationTimer <= 0)
                 {
                     skillDirty = true;
-                    movements[i].speed = movements[i].baseSpeed;
+                    players[i].speed = players[i].baseSpeed;
                 }
             }
-            skr::math::store(rtm::vector_mul(skr::math::load(input.move), movements[i].speed), movements[i].velocity);
+            skr::math::store(rtm::vector_mul(skr::math::load(input.move), players[i].speed), movements[i].velocity);
             if(dirtyMasks)
             {
                 ctx.set_dirty(dirtyMasks[i], 1);
@@ -175,8 +175,8 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
                                 rotations[j].euler = orotations[i].euler;
                                 //random direction
                                 //TODO: use seeded random in shared code
-                                movements[j].speed = 40;
-                                movements[j].velocity = skr_float2_t{rtm::vector_get_x(dir) * movements[j].speed, rtm::vector_get_z(dir) * movements[j].speed};
+                                float speed = 40;
+                                movements[j].velocity = skr_float2_t{rtm::vector_get_x(dir) * speed, rtm::vector_get_z(dir) * speed};
                                 spheres[j].radius = 1;
                                 balls[j].lifeTime = 10;
                                 balls[j].playerId = controllers[i].serverPlayerId;
