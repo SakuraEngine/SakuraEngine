@@ -60,7 +60,7 @@ void dual::scheduler_t::remove_storage(const dual_storage_t* storage)
     storages.erase(std::remove(storages.begin(), storages.end(), storage), storages.end());
 }
 
-void dual::scheduler_t::sync_archetype(dual::archetype_t* type)
+bool dual::scheduler_t::sync_archetype(dual::archetype_t* type)
 {
     SKR_ASSERT(is_main_thread(type->storage));
     // TODO: performance optimization
@@ -70,7 +70,7 @@ void dual::scheduler_t::sync_archetype(dual::archetype_t* type)
         auto pair = dependencyEntries.find(type);
         if (pair == dependencyEntries.end())
         {
-            return;
+            return false;
         }
         auto entries = pair->second.data();
         auto count = type->type.length;
@@ -91,9 +91,10 @@ void dual::scheduler_t::sync_archetype(dual::archetype_t* type)
     }
     for (auto dep : deps)
         dep.wait(true);
+    return !deps.empty();
 }
 
-void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i, bool readonly)
+bool dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i, bool readonly)
 {
     SKR_ASSERT(is_main_thread(type->storage));
     // TODO: performance optimization
@@ -103,7 +104,7 @@ void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i,
         SMutexLock entryLock(entryMutex.mMutex);
         auto pair = dependencyEntries.find(type);
         if (pair == dependencyEntries.end()) 
-            return;
+            return false;
         auto entries = pair->second.data();
         for (auto dep : entries[i].owned)
             if(auto ptr = dep.lock())
@@ -120,9 +121,10 @@ void dual::scheduler_t::sync_entry(dual::archetype_t* type, dual_type_index_t i,
             
     for (auto dep : deps)
         dep.wait(true);
+    return !deps.empty();
 }
 
-void dual::scheduler_t::sync_query(dual_query_t* query)
+bool dual::scheduler_t::sync_query(dual_query_t* query)
 {
     SKR_ASSERT(is_main_thread(query->storage));
     
@@ -135,24 +137,28 @@ void dual::scheduler_t::sync_query(dual_query_t* query)
     query->storage->query_groups(query->filter, query->meta, DUAL_LAMBDA(add_group));
     skr::flat_hash_set<std::pair<dual::archetype_t*, dual_type_index_t>> syncedEntry;
 
-    auto sync_entry_once = [&](dual::archetype_t* type, dual_type_index_t i, bool readonly, bool atomic)
+    auto sync_entry_once = [&](dual::archetype_t* type, dual_type_index_t i, bool readonly, bool atomic) -> bool
     {
         auto entry = std::make_pair(type, i);
         if (syncedEntry.find(entry) != syncedEntry.end())
-            return;
-        sync_entry(type, i, readonly);
+            return false;
+        auto result = sync_entry(type, i, readonly);
         syncedEntry.insert(entry);
+        return result;
     };
 
     auto sync_type = [&](dual_type_index_t type, bool readonly, bool atomic) {
+        bool result = false;
         for (auto& pair : query->storage->groups)
         {
             auto group = pair.second;
             auto idx = group->index(type);
-            sync_entry_once(group->archetype, idx, readonly, atomic);
+            result = sync_entry_once(group->archetype, idx, readonly, atomic) || result;
         }
+        return result;
     };
 
+    bool result = false;
     {
         auto params = query->parameters;
         forloop (i, 0, params.length)
@@ -161,7 +167,7 @@ void dual::scheduler_t::sync_query(dual_query_t* query)
                 continue;
             if (params.accesses[i].randomAccess != DOS_SEQ)
             {
-                sync_type(params.types[i], params.accesses[i].readonly, params.accesses[i].atomic);
+                result = sync_type(params.types[i], params.accesses[i].readonly, params.accesses[i].atomic) || result;
             }
             else
             {
@@ -174,18 +180,19 @@ void dual::scheduler_t::sync_query(dual_query_t* query)
                         auto g = group->get_owner(params.types[i]);
                         if (g)
                         {
-                            sync_entry_once(g->archetype, g->index(params.types[i]), params.accesses[i].readonly, params.accesses[i].atomic);
+                            result = sync_entry_once(g->archetype, g->index(params.types[i]), params.accesses[i].readonly, params.accesses[i].atomic) || result;
                         }
                     }
                     else
                     {
-                        sync_entry_once(group->archetype, localType, params.accesses[i].readonly, params.accesses[i].atomic);
+                        result = sync_entry_once(group->archetype, localType, params.accesses[i].readonly, params.accesses[i].atomic) || result;
                     }
                     ++groupIndex;
                 }
             }
         }
     }
+    return result;
 }
 
 void dual::scheduler_t::sync_all()
