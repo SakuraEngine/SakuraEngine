@@ -345,12 +345,12 @@ namespace eastl
 		#define EASTL_TYPE_TRAIT_has_trivial_destructor_CONFORMANCE 1    // has_trivial_destructor is conforming.
 
 		template <typename T> 
-		struct has_trivial_destructor : public eastl::integral_constant<bool, (__has_trivial_destructor(T) || eastl::is_pod<T>::value) && !eastl::is_hat_type<T>::value>{};
+		struct has_trivial_destructor : public eastl::integral_constant<bool, (__is_trivially_destructible(T) || eastl::is_pod<T>::value) && !eastl::is_hat_type<T>::value>{};
 	#elif EASTL_COMPILER_INTRINSIC_TYPE_TRAITS_AVAILABLE && (defined(_MSC_VER) || defined(EA_COMPILER_GNUC) || defined(__clang__))
 		#define EASTL_TYPE_TRAIT_has_trivial_destructor_CONFORMANCE 1    // has_trivial_destructor is conforming.
 
 		template <typename T> 
-		struct has_trivial_destructor : public eastl::integral_constant<bool, __has_trivial_destructor(T) || eastl::is_pod<T>::value>{};
+		struct has_trivial_destructor : public eastl::integral_constant<bool, __is_trivially_destructible(T) || eastl::is_pod<T>::value>{};
 	#else
 		#define EASTL_TYPE_TRAIT_has_trivial_destructor_CONFORMANCE 0  // is_pod is not fully conforming. Can return false negatives.
 
@@ -1785,8 +1785,8 @@ namespace eastl
 		#define EASTL_TYPE_TRAIT_is_trivially_destructible_CONFORMANCE EASTL_TYPE_TRAIT_is_destructible_CONFORMANCE
 
 		template <typename T>
-		struct is_trivially_destructible // Can't use just __has_trivial_destructor(T) because some compilers give it slightly different meaning, and are just plain broken, such as VC++'s __has_trivial_destructor, which says false for fundamental types.
-			: public integral_constant<bool, eastl::is_destructible<T>::value && ((__has_trivial_destructor(T) && !eastl::is_hat_type<T>::value)|| eastl::is_scalar<typename eastl::remove_all_extents<T>::type>::value)> {};
+		struct is_trivially_destructible // Can't use just __has_trivial_destructor(T) because some compilers give it slightly different meaning, and are just plain broken, such as VC++'s __is_trivially_destructible, which says false for fundamental types.
+			: public integral_constant<bool, eastl::is_destructible<T>::value && ((__is_trivially_destructible(T) && !eastl::is_hat_type<T>::value)|| eastl::is_scalar<typename eastl::remove_all_extents<T>::type>::value)> {};
 
 	#else
 		#define EASTL_TYPE_TRAIT_is_trivially_destructible_CONFORMANCE 0

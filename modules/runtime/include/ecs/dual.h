@@ -946,8 +946,8 @@ namespace dual
         {
             dual_parameters_t params;
             dualQ_get(query, nullptr, &params);
-            SKR_ASSERT(params.accesses[idx].readonly == readonly);
-            SKR_ASSERT(params.accesses[idx].randomAccess >= random);
+            SKR_ASSERT(params.accesses[idx].readonly == static_cast<int>(readonly));
+            SKR_ASSERT(params.accesses[idx].randomAccess >= static_cast<int>(random));
         }
 
         template<class T, bool noCheck = false>
