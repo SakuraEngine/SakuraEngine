@@ -7,7 +7,7 @@ target("eastl")
     add_headerfiles("EASTL/(**.h)")
     add_headerfiles("EASTL/(**.hpp)")
     add_includedirs("EASTL", {public = true})
-    add_files("EASTL/eastl.cpp")
+    add_files("EASTL/EASTL/eastl.cpp")
     if not has_config("runtime_shared") then
         add_defines("RUNTIME_ALL_STATIC")
     end
