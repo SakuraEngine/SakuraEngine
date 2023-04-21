@@ -7,7 +7,6 @@ package("imgui")
     set_description("c-api for imgui")
     set_license("MIT")
 ]]--
-    
     add_versions("1.89.0-skr", "395f9d71cc5fb76cd6d8ab2f354de6d37466386e84e2abce2feabee2c4e562e4")
     add_configs("runtime_shared", {description = "Import gctx from dll.", default = false, type = "boolean"})
 

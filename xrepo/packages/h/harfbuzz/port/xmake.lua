@@ -2,6 +2,7 @@ add_requires("freetype =2.13.0-skr", {system = false})
 add_requires("icu =72.1.0-skr", {system = false})
 
 set_languages("c11", "cxx17")
+add_rules("mode.debug", "mode.release", "mode.releasedbg", "mode.asan")
 
 target("harfbuzz")
     set_kind("static")
