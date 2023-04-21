@@ -93,7 +93,7 @@
 #   define BOOST_MOVE_IS_EMPTY(T)                  __is_empty(T)
 #   define BOOST_MOVE_HAS_TRIVIAL_CONSTRUCTOR(T)   __is_trivially_constructible(T)
 #   define BOOST_MOVE_HAS_TRIVIAL_COPY(T)          (__is_trivially_copyable(T)|| ::boost::move_detail::is_pod<T>::value)
-#   define BOOST_MOVE_HAS_TRIVIAL_ASSIGN(T)        (__has_trivial_assign(T) || ::boost::move_detail::is_pod<T>::value)
+#   define BOOST_MOVE_HAS_TRIVIAL_ASSIGN(T)        (__is_trivially_assignable(T, T) || ::boost::move_detail::is_pod<T>::value)
 #   define BOOST_MOVE_HAS_TRIVIAL_DESTRUCTOR(T)    (__is_trivially_destructible(T) || ::boost::move_detail::is_pod<T>::value)
 #   define BOOST_MOVE_HAS_NOTHROW_CONSTRUCTOR(T)   (__has_nothrow_constructor(T) || ::boost::move_detail::is_trivially_default_constructible<T>::value)
 #   define BOOST_MOVE_HAS_NOTHROW_COPY(T)          (__is_nothrow_constructible(T) || ::boost::move_detail::is_trivially_copy_constructible<T>::value)
@@ -158,7 +158,7 @@
 #   if BOOST_MOVE_HAS_TRAIT(is_assignable) && BOOST_MOVE_HAS_TRAIT(is_trivially_assignable)
 #     define BOOST_MOVE_HAS_TRIVIAL_ASSIGN(T) (__is_assignable(T, const T &) && __is_trivially_assignable(T, const T &))
 #   elif BOOST_MOVE_HAS_TRAIT(has_trivial_copy)
-#     define BOOST_MOVE_HAS_TRIVIAL_ASSIGN(T) __has_trivial_assign(T)
+#     define BOOST_MOVE_HAS_TRIVIAL_ASSIGN(T) __is_trivially_assignable(T, T)
 #   endif
 
 //    BOOST_MOVE_HAS_TRIVIAL_DESTRUCTOR
@@ -240,7 +240,7 @@
 #     define BOOST_MOVE_HAS_TRIVIAL_ASSIGN(T) (__is_trivially_assignable(T, const T &))
 #   else
 #     define BOOST_MOVE_HAS_TRIVIAL_COPY(T) ((__is_trivially_copyable(T) BOOST_MOVE_INTEL_TT_OPTS))
-#     define BOOST_MOVE_HAS_TRIVIAL_ASSIGN(T) ((__has_trivial_assign(T) BOOST_MOVE_INTEL_TT_OPTS) )
+#     define BOOST_MOVE_HAS_TRIVIAL_ASSIGN(T) ((__is_trivially_assignable(T, T) BOOST_MOVE_INTEL_TT_OPTS) )
 #   endif
 
 #   define BOOST_MOVE_HAS_TRIVIAL_DESTRUCTOR(T) (__is_trivially_destructible(T) BOOST_MOVE_INTEL_TT_OPTS)
@@ -349,7 +349,7 @@
 #   define BOOST_MOVE_IS_EMPTY(T) __is_empty(T)
 #   define BOOST_MOVE_HAS_TRIVIAL_CONSTRUCTOR(T) __is_trivially_constructible(T)
 #   define BOOST_MOVE_HAS_TRIVIAL_COPY(T) (__is_trivially_copyable(T))
-#   define BOOST_MOVE_HAS_TRIVIAL_ASSIGN(T) (__has_trivial_assign(T))
+#   define BOOST_MOVE_HAS_TRIVIAL_ASSIGN(T) (__is_trivially_assignable(T, T))
 #   define BOOST_MOVE_HAS_TRIVIAL_DESTRUCTOR(T) __is_trivially_destructible(T)
 #   define BOOST_MOVE_HAS_NOTHROW_CONSTRUCTOR(T) __has_nothrow_constructor(T)
 #   define BOOST_MOVE_HAS_NOTHROW_COPY(T) (__is_nothrow_constructible(T))
@@ -365,7 +365,7 @@
 #   define BOOST_MOVE_IS_EMPTY(T) __is_empty(T)
 #   define BOOST_MOVE_HAS_TRIVIAL_CONSTRUCTOR(T) (__has_trivial_default_constructor(T))
 #   define BOOST_MOVE_HAS_TRIVIAL_COPY(T) (__is_trivially_copyable_constructor(T))
-#   define BOOST_MOVE_HAS_TRIVIAL_ASSIGN(T) (__has_trivial_assign(T))
+#   define BOOST_MOVE_HAS_TRIVIAL_ASSIGN(T) (__is_trivially_assignable(T, T))
 #   define BOOST_MOVE_HAS_TRIVIAL_DESTRUCTOR(T) (__is_trivially_destructible(T))
 #   define BOOST_MOVE_HAS_NOTHROW_CONSTRUCTOR(T) (__has_nothrow_default_constructor(T))
 #   define BOOST_MOVE_HAS_NOTHROW_COPY(T) (__is_nothrow_constructible_constructor(T))
