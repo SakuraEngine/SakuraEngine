@@ -1,6 +1,7 @@
 add_requires("zlib =1.2.8-skr", {system = false})
 
 set_languages("c11", "cxx17")
+add_rules("mode.debug", "mode.release", "mode.releasedbg", "mode.asan")
 
 target("freetype")
     set_kind("static")

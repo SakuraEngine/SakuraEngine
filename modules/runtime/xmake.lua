@@ -1,3 +1,9 @@
+if(has_config("shipping_one_archive")) then
+    add_requires("eastl =3.20.2-skr", { configs = { runtime_shared = false } })
+else
+    add_requires("eastl =3.20.2-skr", { configs = { runtime_shared = true } })
+end
+
 add_requires("fmt =9.1.0-skr")
 add_requires("lua =5.4.4-skr")
 add_requires("simdjson =3.0.0-skr")
@@ -5,6 +11,7 @@ add_requires("simdjson =3.0.0-skr")
 target("SkrDependencyGraph")
     set_group("01.modules")
     add_deps("SkrRoot", {public = true})
+    add_packages("eastl", {public = true, inherit = true})
     set_exceptions("no-cxx")
     add_rules("skr.static_module", {api = "SKR_DEPENDENCY_GRAPH"})
     set_optimize("fastest")
@@ -41,11 +48,8 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     after_load(function (target,  opt)
         if (target:get("kind") == "shared") then
             import("core.project.project")
-            local depgraph_lib = project.target("SkrDependencyGraph")
-            depgraph_lib:add("defines", "EA_DLL", {public = true})
-
-            target:add("defines", "EA_DLL", "MARL_DLL", {public = true})
-            target:add("defines", "EASTL_API=EA_EXPORT", "EASTL_EASTDC_API=EA_EXPORT", "MARL_BUILDING_DLL")
+            target:add("defines", "MARL_DLL", {public = true})
+            target:add("defines", "MARL_BUILDING_DLL")
         end
     end)
 

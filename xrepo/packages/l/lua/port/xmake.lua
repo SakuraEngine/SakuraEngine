@@ -2,6 +2,8 @@ local lua_include_dir = "lua/include"
 local lua_include_dir_private = "lua/include/lua"
 local lua_source_dir = "lua/src"
 
+add_rules("mode.debug", "mode.release", "mode.releasedbg", "mode.asan")
+
 target("lua")
     set_kind("static")
     set_optimize("fastest")

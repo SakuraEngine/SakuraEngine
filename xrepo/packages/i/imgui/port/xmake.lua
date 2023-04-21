@@ -1,4 +1,6 @@
 set_languages("c11", "cxx17")
+add_rules("mode.debug", "mode.release", "mode.releasedbg", "mode.asan")
+
 option("runtime_shared", { default = true, showmenu = true })
 
 target("imgui")

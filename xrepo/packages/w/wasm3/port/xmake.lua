@@ -1,5 +1,7 @@
 local wasm3_include_dir = "wasm3/source"
 local wasm3_source_dir = "wasm3/source"
+set_languages("c11", "cxx17")
+add_rules("mode.debug", "mode.release", "mode.releasedbg", "mode.asan")
 
 target("wasm3")
     set_kind("static")

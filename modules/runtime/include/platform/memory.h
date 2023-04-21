@@ -21,6 +21,9 @@ RUNTIME_EXTERN_C RUNTIME_API void traced_os_free_aligned(void* p, size_t alignme
 RUNTIME_EXTERN_C RUNTIME_API void* traced_os_realloc(void* p, size_t newsize, const char* pool_name);
 RUNTIME_EXTERN_C RUNTIME_API void* traced_os_realloc_aligned(void* p, size_t newsize, size_t alignment, const char* pool_name);
 
+RUNTIME_EXTERN_C RUNTIME_API void* containers_malloc_aligned(size_t size, size_t alignment);
+RUNTIME_EXTERN_C RUNTIME_API void containers_free_aligned(void* p, size_t alignment);
+
 #if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
 
 #include <string.h>  // memset

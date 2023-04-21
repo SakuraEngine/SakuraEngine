@@ -346,3 +346,20 @@ RUNTIME_API void* _sakura_realloc(void* p, size_t newsize, const char* pool_name
 }
 
 #endif
+
+const char* kContainersDefaultPoolName = "sakura::containers";
+
+void* containers_malloc_aligned(size_t size, size_t alignment)
+{
+    TracyCZoneNCS(z, "containers::allocate", SKR_ALLOC_TRACY_MARKER_COLOR, 16, 1);
+    void* p = _sakura_malloc_aligned(size, alignment, kContainersDefaultPoolName);
+    TracyCZoneEnd(z);
+    return p;
+}
+
+void containers_free_aligned(void* p, size_t alignment)
+{
+    TracyCZoneNCS(z, "containers::free", SKR_DEALLOC_TRACY_MARKER_COLOR, 16, 1);
+    _sakura_free_aligned(p, alignment, kContainersDefaultPoolName);
+    TracyCZoneEnd(z);
+}
