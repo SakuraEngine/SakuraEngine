@@ -91,7 +91,7 @@ struct SkrGuiData
 class TextServerAdvanced : public TextServer {
 
 	_THREAD_SAFE_CLASS_
-
+	
 	struct NumSystemData {
 		HashSet<StringName> lang;
 		String digits;
@@ -901,7 +901,7 @@ public: // MODBINDs
 	MODBIND0(cleanup);
 
 	TextServerAdvanced(const SkrGuiData& gui_data);
-	~TextServerAdvanced();
+	virtual ~TextServerAdvanced();
 
 	skr_gdi_renderer_id get_gdi_renderer() override
 	{
