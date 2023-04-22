@@ -69,4 +69,34 @@ struct RUNTIME_API type_builder_t {
 protected:
     llvm_vecsmall::SmallVector<dual_type_index_t, 8> indices;
 };
+
+template<class... T>
+struct entity_spawner_T
+{
+    type_builder_t builder;
+    dual_entity_type_t type;
+    entity_spawner_T()
+    {
+        type.type = builder.with<T...>().build();
+    }
+    struct View
+    {
+        dual_chunk_view_t* view;
+        std::tuple<T*...> components;
+        std::tuple<T*...> unpack() { return components; }
+        uint32_t count() const { return view->count; }
+    };
+    template<class F>
+    void operator()(dual_storage_t* storage, uint32_t count, F&& f)
+    {
+        auto trampoline = +[](void* u, dual_chunk_view_t* v)
+        {
+            auto& f = *(F*)u;
+            View view = {v, std::make_tuple(((T*)dualV_get_owned_ro(v, dual_id_of<T>::get()))...)};
+            f(view);
+        };
+        dualS_allocate_type(storage, &type, count, trampoline, &f);
+    }
+};
+
 } // namespace dual

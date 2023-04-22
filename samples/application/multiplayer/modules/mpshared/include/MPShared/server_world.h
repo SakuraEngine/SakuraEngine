@@ -27,6 +27,7 @@ struct MP_SHARED_API MPServerWorld : MPGameWorld
     void AddConnection(HSteamNetConnection connection);
     void RemoveConnection(HSteamNetConnection connection);
     int GetPlayerConnection(int player, int* localId = nullptr);
+    void SpawnGameModeEntity();
     void SpawnPlayerEntity(int player, int connectionId, int localPlayerId);
     void Initialize() override;
     void InitializeScene();

@@ -6,6 +6,7 @@
 #include "SkrScene/scene.h"
 #include "components.h"
 #include "utils/traits.hpp"
+#include "platform/guid.hpp"
 #ifndef __meta__
     #include "MPShared/shared.generated.h"
 #endif
@@ -103,6 +104,40 @@ QKillBall
     GENERATED_QUERY_BODY(QKillBall);
 };
 
+sreflect_struct(
+    "guid" : "A4A25B43-7C4C-4A60-9BA6-0E6E5C8793A0",
+    "query" : "[inout]CZombie, [inout]CHealth"
+)
+QKillZombie
+{
+    GENERATED_QUERY_BODY(QKillZombie);
+};
+
+sreflect_struct(
+    "guid" : "A4A25B43-7C4C-4A60-9BA6-0E6E5C8793A0",
+    "query" : "[in]<seq>skr_translation_comp_t, [in]<unseq>CSphereCollider2D, [inout]CMovement, [atomic]?dual::dirty_comp_t, [inout]CZombie, [has]skr_rotation_comp_t, [inout]<unseq>CHealth"
+)
+QZombieAI
+{
+    GENERATED_QUERY_BODY(QZombieAI);
+};
+
+
+inline constexpr skr_guid_t GetPlayerPrefab()
+{
+    return skr::guid::make_guid_unsafe("AC4BA94B-B2A8-484C-9AC5-BDEA9070DFEE");
+}
+
+inline constexpr skr_guid_t GetZombiePrefab()
+{
+    return skr::guid::make_guid_unsafe("9DFEBC41-4731-4AAE-9618-8BA4CC0EF86C");
+}
+
+inline constexpr skr_guid_t GetBulletPrefab()
+{
+    return skr::guid::make_guid_unsafe("8698AA92-F3E3-4DDA-B0B9-59D004538988");
+}
+
 struct MP_SHARED_API MPGameWorld
 {
     MPGameWorld() = default;
@@ -116,13 +151,28 @@ struct MP_SHARED_API MPGameWorld
     QFireBullet fireQuery;
     QBallMovement ballQuery;
     QUpdateRelevance relevanceQuery;
-    QKillBall killQuery;
+    QKillBall killBallQuery;
+    QKillZombie killZombieQuery;
+    QZombieAI zombieAIQuery;
     dual_query_t* relevanceChildQuery;
     dual_query_t* ballChildQuery;
+    dual_query_t* zombieAIChildQuery;
+    dual_query_t* gameStateQuery;
     skr_transform_system_t transformSystem;
     MPInputFrame input;
+    MPGameModeConfig config;
     bool authoritative;
     virtual void Initialize();
     virtual void Shutdown();
     void Tick(const MPInputFrame& input);
+    void ClearDeadBall();
+    void ClearDeadZombie();
+    void SpawnZombie();
+    void PlayerControl();
+    void ZombieAI();
+    void PlayerShoot();
+    void PlayerHealthCheck();
+    void PlayerMovement();
+    void BulletMovement();
+    void RelevenceUpdate();
 };

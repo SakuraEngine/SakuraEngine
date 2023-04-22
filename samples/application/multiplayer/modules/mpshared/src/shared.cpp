@@ -10,6 +10,7 @@
 #include "rtm/quatf.h"
 #include "rtm/rtmx.h"
 #include "utils/log.h"
+#include "platform/guid.hpp"
 
 void MPGameWorld::Initialize()
 {
@@ -20,10 +21,28 @@ void MPGameWorld::Initialize()
     movementQuery.Initialize(storage);
     ballQuery.Initialize(storage);
     ballChildQuery = dualQ_from_literal(storage, "[in]skr_translation_comp_t', [inout]CHealth, [in]CSphereCollider2D");
-    killQuery.Initialize(storage);
+    killBallQuery.Initialize(storage);
+    killZombieQuery.Initialize(storage);
     relevanceQuery.Initialize(storage);
+    zombieAIQuery.Initialize(storage);
     relevanceChildQuery = dualQ_from_literal(storage, "[in]skr_translation_comp_t, [in]CController");
+    zombieAIChildQuery = dualQ_from_literal(storage, "[has]CPlayer, [in]skr_translation_comp_t");
+    gameStateQuery = dualQ_from_literal(storage, "[inout]CMPGameModeState");
     skr_transform_setup(storage, &transformSystem);
+    config = 
+    {
+        0.05f,
+        100,
+        15,
+        30,
+        10,
+        1,
+        5,
+        10,
+        20,
+        10,
+        {}
+    };
 }
 
 void MPGameWorld::Shutdown()
@@ -33,8 +52,10 @@ void MPGameWorld::Shutdown()
     fireQuery.Release();
     healthCheckQuery.Release();
     ballQuery.Release();
-    killQuery.Release();
+    killBallQuery.Release();
+    killZombieQuery.Release();
     relevanceQuery.Release();
+    zombieAIQuery.Release();
     dualQ_release(ballChildQuery);
     dualQ_release(relevanceChildQuery);
     dualS_release(storage);
@@ -58,11 +79,10 @@ bool collide(const skr_float3_t& a, const CSphereCollider2D& aBox, const skr_flo
     return false;
 }
 
-void MPGameWorld::Tick(const MPInputFrame &inInput)
+static constexpr float deltaTime = (float)serverTickInterval;
+
+void MPGameWorld::ClearDeadBall()
 {
-    ZoneScopedN("MP Tick");
-    static constexpr float deltaTime = (float)serverTickInterval;
-    input = inInput;
     if(authoritative)
     {
         skr::vector<dual_entity_t> ballsToKill;
@@ -75,7 +95,6 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
             {
                 dual_chunk_view_t v;
                 dualS_access(storage, entities[i], &v);
-                SKR_ASSERT(v.chunk == view->chunk && v.start == i + view->start);
                 balls[i].lifeTime -= deltaTime;
                 if(balls[i].lifeTime <= 0)
                 {
@@ -83,14 +102,152 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
                 }
             }
         };
-        dualQ_get_views(killQuery.query, DUAL_LAMBDA(collectBallsToKill));
+        dualQ_get_views(killBallQuery.query, DUAL_LAMBDA(collectBallsToKill));
         auto killBalls = [&](dual_chunk_view_t* view)
         {
             dualS_destroy(storage, view);
         };
         dualS_batch(storage, ballsToKill.data(), ballsToKill.size(), DUAL_LAMBDA(killBalls));
     }
+}
 
+void MPGameWorld::ClearDeadZombie()
+{
+    if(authoritative)
+    {
+        skr::vector<dual_entity_t> zombiesToKill;
+        zombiesToKill.reserve(16);
+        auto collectBallsToKill = [&](dual_chunk_view_t* view)
+        {
+            auto health = dual::get_owned_rw<CHealth>(view);
+            auto entities = (dual_entity_t*)dualV_get_entities(view);
+            for(int i=0; i<view->count; ++i)
+            {
+                dual_chunk_view_t v;
+                dualS_access(storage, entities[i], &v);
+                SKR_ASSERT(v.chunk == view->chunk && v.start == i + view->start);
+                if(health[i].health <= 0)
+                {
+                    zombiesToKill.push_back(entities[i]);
+                }
+            }
+        };
+        dualQ_get_views(killZombieQuery.query, DUAL_LAMBDA(collectBallsToKill));
+        auto killBalls = [&](dual_chunk_view_t* view)
+        {
+            dualS_destroy(storage, view);
+        };
+        dualS_batch(storage, zombiesToKill.data(), zombiesToKill.size(), DUAL_LAMBDA(killBalls));
+    }
+}
+
+void MPGameWorld::SpawnZombie()
+{
+    if(authoritative)
+    {
+        using spawner_t = dual::entity_spawner_T<CZombie, CMovement, skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, CSphereCollider2D, 
+        CPrefab, CAuth, CAuthTypeData, CRelevance>;
+        static spawner_t spawner;
+        auto state= dual::get_singleton<CMPGameModeState>(gameStateQuery);
+        state->zombieSpawnTimer += deltaTime;
+        
+        while(state->zombieSpawnTimer > config.ZombieWaveInterval)
+        {
+            state->zombieSpawnTimer -= config.ZombieWaveInterval;
+            state->zombiesToSpawn += config.ZombieCountPerWave + state->currentZombieWave * config.AdditionalZombieCountPerWave;
+            state->zombieSpawnInterval = config.ZombieSpawnTime / state->zombiesToSpawn;
+            state->currentZombieWave++;
+        }
+        uint32_t zombiesToSpawn = 0;
+        state->zombieWaveTimer += deltaTime;
+        while(state->zombiesToSpawn > 0 && state->zombieSpawnTimer > state->zombieSpawnInterval)
+        {
+            state->zombieSpawnTimer -= state->zombieSpawnInterval;
+            ++zombiesToSpawn;
+            --state->zombiesToSpawn;
+        }
+        if(zombiesToSpawn > 0)
+        {
+            spawner(storage, zombiesToSpawn, [&](spawner_t::View view)
+            {
+                auto [zombies, movements, translations, scales, rotations, 
+                    colliders, prefabs, auths, authTypeDatas, relevances] = view.unpack();
+                for(int i=0; i<view.count(); ++i)
+                {
+                    float angle = (float)rand() / RAND_MAX * 2 * 3.1415926f;
+                    float radius = config.ZombieSpawnRadiusMin + (config.ZombieSpawnRadiusMax - config.ZombieSpawnRadiusMin) * (float)rand() / RAND_MAX;
+                    translations[i] = {radius * cosf(angle), 0, radius * sinf(angle)};
+                    rotations[i] = {0, 0, 0};
+                    scales[i] = {2, 2, 2};
+                    colliders[i] = {2};
+                    prefabs[i].prefab = GetZombiePrefab();
+                    relevances[i].mask.flip();
+
+                }
+            });
+        }
+    }
+}
+
+void MPGameWorld::ZombieAI()
+{
+    dual::schedule_task(zombieAIQuery, 32, [this](QZombieAI::TaskContext ctx)
+    {
+        auto [translations, movements, dirtyMasks, zombies] = ctx.unpack();
+        for(int i=0; i<ctx.count(); ++i)
+        {
+            if(zombies[i].knockBack > 0)
+            {
+                zombies[i].knockBack -= deltaTime;
+                if(zombies[i].knockBack <= 0)
+                {
+                    ctx.set_dirty<CZombie>(dirtyMasks[i]);
+                }
+                continue;
+            }
+            auto translation = skr::math::load(skr_float2_t{translations[i].value.x, translations[i].value.z});
+            float minDistance = 1000000;
+            rtm::vector4f minDistancePlayerPos;
+            auto findNearestPlayer = [&](dual_chunk_view_t* view)
+            {
+                auto ptranslations = dual::get_owned_ro<skr_translation_comp_t>(view);
+                auto phealths = dual::get_owned_ro<CHealth>(view);
+                auto entities = (dual_entity_t*)dualV_get_entities(view);
+                for(int j=0; j<view->count; ++j)
+                {
+                    auto ptranslation = skr::math::load(skr_float2_t{ptranslations[j].value.x, ptranslations[j].value.z});
+                    float distance = rtm::vector_distance3(translation, ptranslation);
+                    if(distance < minDistance)
+                    {
+                        minDistance = distance;
+                        minDistancePlayerPos = ptranslation;
+                    }
+                    if(distance < config.ZombieAttackRadius)
+                    {
+                        phealths[j].health -= config.ZombieDamage * deltaTime;
+                    }
+                }
+            };
+            dualQ_get_views(zombieAIChildQuery, DUAL_LAMBDA(findNearestPlayer));
+            
+            if(minDistance < 100)
+            {
+                auto dir = rtm::vector_sub(minDistancePlayerPos, translation);
+                dir = rtm::vector_normalize3(dir);
+                movements[i].velocity = {rtm::vector_get_x(dir) * zombies[i].speed, rtm::vector_get_y(dir) * zombies[i].speed};
+                ctx.set_dirty<CMovement>(dirtyMasks[i]);
+            }
+            else
+            {
+                movements[i].velocity = {0, 0};
+                ctx.set_dirty<CMovement>(dirtyMasks[i]);
+            }
+        }
+    }, nullptr);
+}
+
+void MPGameWorld::PlayerControl()
+{
     dual::schedule_task(controlQuery, 512, [this](QControl::TaskContext ctx)
     {
         auto [controllers, movements, skills, players, dirtyMasks] = ctx.unpack();
@@ -133,15 +290,16 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
             }
         }
     }, nullptr);
+}
 
+void MPGameWorld::PlayerShoot()
+{
     //TODO: predict spawn
     if(authoritative)
     {
-        dual::type_builder_t builder;
-        builder.with<CBall, CMovement, skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, CSphereCollider2D, 
-        CPrefab, CAuth, CAuthTypeData, CRelevance>().with(DUAL_COMPONENT_DIRTY);
-        dual_entity_type_t ballType = make_zeroed<dual_entity_type_t>();
-        ballType.type = builder.build();
+        using spawner_t = dual::entity_spawner_T<CBall, CMovement, skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, CSphereCollider2D, 
+        CPrefab, CAuth, CAuthTypeData, CRelevance>;
+        static spawner_t spawner;
         auto fire = [&](dual_chunk_view_t* view)
         {
             auto weapons = (CWeapon*)dual::get_owned_rw<CWeapon>(view);
@@ -156,16 +314,12 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
                     if(weapons[i].fireTimer < 0)
                     {
                         weapons[i].fireTimer = weapons[i].fireRate;
-                        auto ballSetup = [&](dual_chunk_view_t* view)
+                        spawner(storage, 1, [&](spawner_t::View view)
                         {
-                            auto translations = dual::get_owned_rw<skr_translation_comp_t>(view);
-                            auto scales = dual::get_owned_rw<skr_scale_comp_t>(view);
-                            auto rotations = dual::get_owned_rw<skr_rotation_comp_t>(view);
-                            auto movements = dual::get_owned_rw<CMovement>(view);
-                            auto spheres = dual::get_owned_rw<CSphereCollider2D>(view);
-                            auto balls = dual::get_owned_rw<CBall>(view);
-                            
-                            for(int j=0; j<view->count; ++j)
+                            auto [balls, movements, translations, scales, 
+                                rotations, spheres, prefabs, 
+                                auths, authTypes, relevances] = view.unpack();
+                            for(int j=0; j<view.count(); ++j)
                             {
                                 auto rot = skr::math::load(orotations[i].euler);
                                 auto dir = skr::math::load(skr_float3_t{1, 0, 0});
@@ -180,10 +334,9 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
                                 spheres[j].radius = 1;
                                 balls[j].lifeTime = 10;
                                 balls[j].playerId = controllers[i].serverPlayerId;
+                                prefabs[i].prefab = GetBulletPrefab();
                             }
-                        };
-
-                        dualS_allocate_type(storage, &ballType, 1, DUAL_LAMBDA(ballSetup));
+                        });
                     }
                 }
                 weapons[i].fireTimer -= deltaTime;
@@ -191,6 +344,9 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
         };
         dualQ_get_views(fireQuery.query, DUAL_LAMBDA(fire));
     }
+}
+void MPGameWorld::PlayerHealthCheck()
+{
     if(authoritative)
     {
         dual::schedule_task(healthCheckQuery, 512,
@@ -215,6 +371,9 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
             }
         }, nullptr);
     }
+}
+void MPGameWorld::PlayerMovement()
+{
     dual::schedule_task(movementQuery, 512, [](QMovement::TaskContext ctx)
     {
         auto [movements, translations, rotations, dirtyMasks] = ctx.unpack();
@@ -247,9 +406,9 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
             }
         }
     }, nullptr);
-
-    if(authoritative)
-    {
+}
+void MPGameWorld::BulletMovement()
+{
         dual::schedule_task(ballQuery, 512, 
         [this](QBallMovement::TaskContext ctx)
         {
@@ -258,45 +417,49 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
             {
                 translations[i].value.x += movements[i].velocity.x * deltaTime;
                 translations[i].value.z += movements[i].velocity.y * deltaTime;
-                if(dirtyMasks)
-                    ctx.set_dirty(dirtyMasks[i], 0);
-                auto& translation = translations[i];
-                auto& collider = colliders[i];
-                auto& ball = balls[i];
-                auto checkAndSet = [&](dual_chunk_view_t* view)
+                if(authoritative)
                 {
-                    auto otherTranslations = dual::get_owned_ro<skr_translation_comp_t>(view);
-                    auto otherColliders = dual::get_owned_ro<CSphereCollider2D>(view);
-                    auto otherHealths = dual::get_owned_ro<CHealth>(view);
-                    auto otherControllers = dual::get_owned_ro<CController>(view);
-                    auto otherDirtyMasks = dual::get_owned_rw<dual::dirty_comp_t>(view);
-                    auto healthId = dualV_get_local_type(view, dual_id_of<CHealth>::get());
-                    for(int j=0; j<view->count; ++j)
+                    if(dirtyMasks)
+                        ctx.set_dirty(dirtyMasks[i], 0);
+                    auto& translation = translations[i];
+                    auto& collider = colliders[i];
+                    auto& ball = balls[i];
+                    auto checkAndSet = [&](dual_chunk_view_t* view)
                     {
-                        auto& otherTranslation = otherTranslations[j];
-                        auto& otherCollider = otherColliders[j];
-                        skr_float2_t normal;
-
-                        if(collide(translation.value, collider, otherTranslation.value, otherCollider, normal))
+                        auto otherTranslations = dual::get_owned_ro<skr_translation_comp_t>(view);
+                        auto otherColliders = dual::get_owned_ro<CSphereCollider2D>(view);
+                        auto otherHealths = dual::get_owned_ro<CHealth>(view);
+                        auto otherControllers = dual::get_owned_ro<CController>(view);
+                        auto otherDirtyMasks = dual::get_owned_rw<dual::dirty_comp_t>(view);
+                        auto healthId = dualV_get_local_type(view, dual_id_of<CHealth>::get());
+                        for(int j=0; j<view->count; ++j)
                         {
-                            if(!otherControllers || otherControllers[j].serverPlayerId != ball.playerId)
+                            auto& otherTranslation = otherTranslations[j];
+                            auto& otherCollider = otherColliders[j];
+                            skr_float2_t normal;
+
+                            if(collide(translation.value, collider, otherTranslation.value, otherCollider, normal))
                             {
-                                auto& health = otherHealths[j];
-                                ball.lifeTime = 0;
-                                health.health -= 1;
-                                if(otherDirtyMasks)
+                                if(!otherControllers || otherControllers[j].serverPlayerId != ball.playerId)
                                 {
-                                    dual_set_bit(&otherDirtyMasks[j].value, healthId);
+                                    auto& health = otherHealths[j];
+                                    ball.lifeTime = 0;
+                                    health.health -= 1;
+                                    if(otherDirtyMasks)
+                                    {
+                                        dual_set_bit(&otherDirtyMasks[j].value, healthId);
+                                    }
                                 }
                             }
                         }
-                    }
-                };
-                dualQ_get_views(ballChildQuery, DUAL_LAMBDA(checkAndSet));
+                    };
+                    dualQ_get_views(ballChildQuery, DUAL_LAMBDA(checkAndSet));
+                }
             }
         }, nullptr);
-    }
-
+}
+void MPGameWorld::RelevenceUpdate()
+{
     dual::schedule_task(relevanceQuery, 512,
     [this](QUpdateRelevance::TaskContext ctx)
     {
@@ -321,6 +484,21 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
             dualQ_get_views(relevanceChildQuery, DUAL_LAMBDA(checkAndSet));
         }
     }, nullptr);
+}
+
+void MPGameWorld::Tick(const MPInputFrame &inInput)
+{
+    ZoneScopedN("MP Tick");
+    input = inInput;
+    ClearDeadBall();
+    ClearDeadZombie();
+    ZombieAI();
+    PlayerControl();
+    PlayerShoot();
+    PlayerHealthCheck();
+    PlayerMovement();
+    BulletMovement();
+    RelevenceUpdate();
     skr_transform_update(&transformSystem);
     dualJ_wait_all();
 }

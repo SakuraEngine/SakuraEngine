@@ -2,10 +2,47 @@
 #include "MPShared/module.configure.h"
 #include "ecs/dual.h"
 #include "containers/bitset.h"
+#include "containers/vector.hpp"
 #include "resource/resource_handle.h"
 #ifndef __meta__
 #include "MPShared/components.generated.h"
 #endif
+
+sreflect_struct(
+    "guid" : "17E7D6CE-AE08-46E9-B60E-4E1C6011A545",
+    "serialize" : "json"
+)
+MPWeaponConfig
+{
+    float fireRate;
+    float projectileSpeed;
+    float projectileLifeTime;
+    float projectileDamage;
+    float projectileRadius;
+    int burstCount;
+    skr::vector<float> spreadAngles;
+    float randomSpreadAngle;
+    //skr_resource_handle_t projectilePrefab;
+};
+sreflect_struct(
+    "guid" : "5C4796E1-9621-446E-9AF2-97A287993F0F",
+    "serialize" : "json"
+)
+MPGameModeConfig
+{   
+    float ZombieSpawnTime;
+    float ZombieSpawnRadiusMax;
+    float ZombieSpawnRadiusMin;
+    float ZombieSpeed;
+    float ZombieHealth;
+    float ZombieDamage;
+    float ZombieAttackInterval;
+    float ZombieAttackRadius;
+    int ZombieCountPerWave;
+    float ZombieWaveInterval;
+    int AdditionalZombieCountPerWave;
+    skr::vector<MPWeaponConfig> Weapons;
+};
 
 sreflect_struct(
     "guid" : "611902BB-0918-48F4-AE50-A4376C8F9A56",
@@ -36,6 +73,17 @@ CPlayer
 {
     float speed;
     float baseSpeed;
+};
+
+sreflect_struct(
+    "guid" : "ACA8D906-ADCE-4662-8693-B2A7CEF0E0A2",
+    "serialize" : "bin",
+    "component": true
+)
+CZombie
+{
+    float knockBack;
+    float speed;
 };
 
 sreflect_struct(
@@ -108,6 +156,7 @@ CMovement
     skr_float2_t velocity;
 };
 
+
 sreflect_struct(
     "guid" : "8A148CAD-46BD-4895-9115-2CF05D2CD64B",
     "serialize" : "bin",
@@ -115,10 +164,18 @@ sreflect_struct(
 )
 CWeapon
 {
+    //skr::resource::TResourceHandle<MPWeaponConfig> cfg;
     float fireRate;
     float fireTimer;
     //skr_resource_handle_t projectilePrefab;
 };
+
+sreflect_struct(
+    "guid" : "1521E0AC-88B2-49C7-A9ED-F8BF1D5583F6",
+    "component" : true
+)
+CLoot
+{};
 
 sreflect_struct(
     "guid" : "C3A2C8CB-E1C7-405D-B6F9-006D8D2B46EC",
@@ -186,6 +243,20 @@ skr_translation_comp_t_History
 {
     skr_float2_t position;
     float deltaAccumulated;
+};
+
+sreflect_struct(
+    "guid" : "1AC80991-63CD-4949-B2AE-62E152306D81",
+    "serialize" : "bin",
+    "component" : true
+)
+CMPGameModeState
+{
+    float zombieSpawnTimer;
+    float zombieWaveTimer;
+    int zombiesToSpawn;
+    int currentZombieWave;
+    float zombieSpawnInterval;
 };
 
 MP_SHARED_API dual_type_set_t GetNetworkComponents();
