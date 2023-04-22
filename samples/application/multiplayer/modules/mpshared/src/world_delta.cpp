@@ -339,6 +339,25 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder
             }
         };
         dualJ_schedule_ecs(worldDeltaQuery, 0, DUAL_LAMBDA(prepare), nullptr, nullptr, nullptr, nullptr);  
+        skr::task::event_t completed(nullptr);
+        dual::schedule_task(deadQuery, 0, [&](dual::task_context_t ctx)
+        {
+            auto auths = ctx.get_owned_ro<CAuth>(0);
+            auto entities = ctx.get_entities();
+            for(int j=0; j<builder.size(); ++j)
+            {
+                auto& delta = builder[j];
+                for(int i=0; i<ctx.count(); ++i)
+                {
+                    //if mapped, send dead message
+                    if(auths[i].mappedConnection[j]) 
+                    {
+                        auto netEntity = GetNetworkEntityIndex(entities[i], j);
+                        delta.dead.push_back(netEntity);
+                    }
+                }
+            }
+        }, &completed);
         for (auto& component : components)
         {
             uint32_t i = 0;
@@ -363,25 +382,8 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder
             }
             
         }, this, nullptr, nullptr, nullptr, nullptr);
-        skr::task::event_t completed(nullptr);
-        dual::schedule_task(deadQuery, 0, [&](dual::task_context_t ctx)
-        {
-            auto auths = ctx.get_owned_ro<CAuth>(0);
-            auto entities = ctx.get_entities();
-            for(int j=0; j<builder.size(); ++j)
-            {
-                auto& delta = builder[j];
-                for(int i=0; i<ctx.count(); ++i)
-                {
-                    //if mapped, send dead message
-                    if(auths[i].mappedConnection[j]) 
-                    {
-                        auto netEntity = GetNetworkEntityIndex(entities[i], j);
-                        delta.dead.push_back(netEntity);
-                    }
-                }
-            }
-        }, &completed);
+        if(completed)
+            completed.wait(true);
         {
             for(auto& delta : builder)
             {
@@ -401,8 +403,6 @@ struct WorldDeltaBuilder : IWorldDeltaBuilder
                 delta.components.erase(std::remove_if(delta.components.begin(), delta.components.end(), [](auto& c) { return c.data.size() == 0; }), delta.components.end());
             }
         }
-        if(completed)
-            completed.wait(true);
     }
 };
 

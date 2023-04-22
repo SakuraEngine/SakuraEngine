@@ -825,6 +825,8 @@ struct dual_id_of {
 };
 #include "type/type_helper.hpp"
 #include "ecs/callback.hpp"
+#include "ecs/type_builder.hpp"
+
 namespace dual
 {
     struct storage_scope_t
@@ -1112,6 +1114,49 @@ namespace dual
     auto schedual_custom(dual_query_t* query, F callback, skr::task::event_t* counter)
     {
         return schedual_custom<dual::QWildcard, F>(dual::QWildcard{query}, std::move(callback), counter);
+    }
+
+    template<class T>
+    T* get_owned(dual_chunk_view_t* view)
+    {
+        if constexpr(std::is_const_v<T>)
+        {
+            return get_owned_ro<std::remove_const_t<T>>(view);
+        }
+        else
+        {
+            return get_owned_rw<T>(view);
+        }
+    }
+
+    template<class T1, class T2, class... T>
+    std::tuple<T1, T2, T*...> get_singleton(dual_query_t* query)
+    {
+        std::tuple<T1, T2, T*...> result;
+        bool singleton = true;
+        auto callback = [&](dual_chunk_view_t* view)
+        {
+            SKR_ASSERT(singleton);
+            SKR_ASSERT(view->count == 1);
+            result = std::make_tuple(get_owned<T1>(view), get_owned<T2>(view), get_owned<T>(view)...);
+        };
+        dualQ_get_views(query, DUAL_LAMBDA(callback));
+        return result;
+    }
+
+    template<class T>
+    T* get_singleton(dual_query_t* query)
+    {
+        T* result;
+        bool singleton = true;
+        auto callback = [&](dual_chunk_view_t* view)
+        {
+            SKR_ASSERT(singleton);
+            SKR_ASSERT(view->count == 1);
+            result = get_owned<T>(view);
+        };
+        dualQ_get_views(query, DUAL_LAMBDA(callback));
+        return result;
     }
 }
 

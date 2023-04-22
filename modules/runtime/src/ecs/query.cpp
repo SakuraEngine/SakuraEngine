@@ -588,7 +588,11 @@ void dual_storage_t::query(const dual_query_t* q, dual_view_callback_t callback,
         mainThread = scheduler->is_main_thread(this);
     }
     if(mainThread)
+    {
         build_queries();
+        if(scheduler)
+            scheduler->sync_query((dual_query_t*)q);
+    }
     else
         SKR_ASSERT(queriesBuilt);
     
@@ -608,7 +612,11 @@ void dual_storage_t::query_groups(const dual_query_t* q, dual_group_callback_t c
         mainThread = scheduler->is_main_thread(this);
     }
     if(mainThread)
+    {
         build_queries();
+        if(scheduler)
+            scheduler->sync_query((dual_query_t*)q);
+    }
     else
         SKR_ASSERT(queriesBuilt);
     

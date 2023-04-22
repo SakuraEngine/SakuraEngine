@@ -14,6 +14,19 @@
 #include "steam/steamnetworkingsockets.h"
 #include "lz4.h"
 
+//TODO: move this to a config file
+static MPWeaponConfig weaponConfig 
+{
+    0.1f,
+    30.f,
+    5.f,
+    5.f,
+    1.f,
+    1,
+    {0},
+    0,
+};
+
 MPServerWorld::MPServerWorld()
 {
 }
@@ -50,30 +63,36 @@ void MPServerWorld::AddConnection(HSteamNetConnection connection)
     playerId++;
 }
 
+void MPServerWorld::SpawnGameModeEntity()
+{
+    using spawner_t = dual::entity_spawner_T<CMPGameModeState, CAuth, CAuthTypeData, dual::dirty_comp_t>;
+    spawner_t spawner;
+    spawner(storage, 1, [&](spawner_t::View view)
+    {
+        auto [gameModeStates, auths, authTypeDatas, dirties] = view.unpack();
+        for (uint32_t i = 0; i < view.count(); i++)
+        {
+        }
+    });
+}
+
 void MPServerWorld::SpawnPlayerEntity(int player, int connectionId, int localPlayerId)
 {
     // allocate 1 movable cubes
-    auto playerT_builder = make_zeroed<dual::type_builder_t>();
-    playerT_builder
-        .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t, 
+    using spawner_t = dual::entity_spawner_T<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t, 
         CMovement, CSphereCollider2D, CWeapon, CHealth, CSkill, CPlayer,
-        CController, CPrefab, CAuth, CAuthTypeData, CRelevance>().with(DUAL_COMPONENT_DIRTY);
+        CController, CPrefab, CAuth, CAuthTypeData, CRelevance, dual::dirty_comp_t>;
+    spawner_t spawner;
+    
     float spawnArea = 100.f;
     // allocate renderable
-    auto playerT = make_zeroed<dual_entity_type_t>();
-    playerT.type = playerT_builder.build();
-    auto primSetup = [&](dual_chunk_view_t* view) {
-        auto translations = (skr_translation_comp_t*)dualV_get_owned_ro(view, dual_id_of<skr_translation_comp_t>::get());
-        auto rotations = (skr_rotation_comp_t*)dualV_get_owned_ro(view, dual_id_of<skr_rotation_comp_t>::get());
-        auto scales = (skr_scale_comp_t*)dualV_get_owned_ro(view, dual_id_of<skr_scale_comp_t>::get());
-        auto players = (CPlayer*)dualV_get_owned_ro(view, dual_id_of<CPlayer>::get());
-        auto controllers = (CController*)dualV_get_owned_ro(view, dual_id_of<CController>::get());
-        auto collidors = (CSphereCollider2D*)dualV_get_owned_ro(view, dual_id_of<CSphereCollider2D>::get());
-        auto weapons = (CWeapon*)dualV_get_owned_ro(view, dual_id_of<CWeapon>::get());
-        auto healths = (CHealth*)dualV_get_owned_ro(view, dual_id_of<CHealth>::get());
-        auto skills = (CSkill*)dualV_get_owned_ro(view, dual_id_of<CSkill>::get());
-        auto relevances = (CRelevance*)dualV_get_owned_ro(view, dual_id_of<CRelevance>::get());
-        for (uint32_t i = 0; i < view->count; i++)
+    spawner(storage, 1, [&](spawner_t::View view)
+    {
+        auto [translations, rotations, scales, movements, 
+            collidors, weapons, healths, skills, players, 
+            controllers, prefabs, auths, authTypeDatas, relevances, 
+            dirties] = view.unpack();
+        for (uint32_t i = 0; i < view.count(); i++)
         {
             //randomize spawn position
             translations[i].value = {rand() % (int)spawnArea - spawnArea / 2.f, 0.f, rand() % (int)spawnArea - spawnArea / 2.f };
@@ -85,7 +104,7 @@ void MPServerWorld::SpawnPlayerEntity(int player, int connectionId, int localPla
             controllers[i].connectionId = connectionId;
             controllers[i].localPlayerId = localPlayerId;
             collidors[i].radius = 8.f;
-            weapons[i].fireRate = 0.1f;
+            weapons[i].fireRate = 0.3;
             weapons[i].fireTimer = 0.f;
             healths[i].health = 100.f;
             healths[i].maxHealth = 100.f;
@@ -94,9 +113,9 @@ void MPServerWorld::SpawnPlayerEntity(int player, int connectionId, int localPla
             skills[i].speedMultiplier = 2.f;
             relevances[i].mask.reset();
             relevances[i].mask.flip();
+            prefabs[i].prefab = GetPlayerPrefab();
         }
-    };
-    dualS_allocate_type(storage, &playerT, 1, DUAL_LAMBDA(primSetup));
+    });
 }
 
 void MPServerWorld::InitializeScene()
@@ -116,6 +135,7 @@ void MPServerWorld::Initialize()
     gameFrame = 0;
     dualJ_bind_storage(storage);
     authoritative = true;
+    SpawnGameModeEntity();
 }
 
 void MPServerWorld::Shutdown()

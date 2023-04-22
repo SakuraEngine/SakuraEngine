@@ -52,7 +52,6 @@ void InitializeNetworkComponents()
 {
     {
         static skr::binary::VectorSerdeConfig<float> translationSerdeConfig = { 10000 };
-        //auto translationHistory =  RegisterHistoryComponent<skr_translation_comp_t>();
         constexpr auto builder = +[](dual_chunk_view_t view, const skr_translation_comp_t& comp, skr_translation_comp_t_History& historyComp, bool initialMap, skr_binary_writer_t& archive)
         {
             uint32_t full = initialMap || historyComp.deltaAccumulated > 40.f;
@@ -120,6 +119,7 @@ void InitializeNetworkComponents()
     RegisterSimpleComponent<CHealth>();
     RegisterSimpleComponent<CSkill>();
     RegisterSimpleComponent<CPlayer>();
+    //RegisterSimpleComponent<CMPGameModeState>();
     {
         constexpr auto builder = +[](dual_chunk_view_t view, const CController& comp, skr_binary_writer_t& archive)
         {
