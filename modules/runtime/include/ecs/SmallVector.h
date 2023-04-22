@@ -14,6 +14,7 @@
 #ifndef LLVM_VECSMALL_ADT_SMALLVECTOR_H
 #define LLVM_VECSMALL_ADT_SMALLVECTOR_H
 
+#include <memory>
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
