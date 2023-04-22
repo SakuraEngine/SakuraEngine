@@ -8,12 +8,12 @@ inline static char8_t* duplicate_string(const char8_t* src_string) SKR_NOEXCEPT
 {
     if (src_string != nullptr)
     {
-        const size_t source_len = strlen(src_string);
+        const size_t source_len = strlen((const char*)src_string);
         char8_t* result = (char8_t*)sakura_malloc(sizeof(char8_t) * (1 + source_len));
 #ifdef _WIN32
-        strcpy_s((char8_t*)result, source_len + 1, src_string);
+        strcpy_s((char*)result, source_len + 1, src_string);
 #else
-        strcpy((char8_t*)result, src_string);
+        strcpy((char*)result, src_string);
 #endif
         return result;
     }
@@ -38,8 +38,7 @@ skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc) SKR_NOEXCEPT
     // get application directory
     else if (desc->mount_type == SKR_MOUNT_TYPE_CONTENT)
     {
-        fs->mount_dir = duplicate_string(
-        [[[[[NSBundle mainBundle] resourceURL] absoluteURL] path] UTF8String]);
+        fs->mount_dir = duplicate_string((const char8_t*)[[[[[NSBundle mainBundle] resourceURL] absoluteURL] path] UTF8String]);
         if (!fs->mount_dir)
             [fileManager changeCurrentDirectoryPath:[[NSBundle mainBundle] bundlePath]];
     }
@@ -74,16 +73,17 @@ skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc) SKR_NOEXCEPT
             SKR_LOG_ERROR("Error retrieving application support directory: %s", [[error description] UTF8String]);
         }
 #else
-        const char8_t* path = [[[NSBundle mainBundle] bundlePath] UTF8String];
+        const char8_t* path = (const char8_t*)[[[NSBundle mainBundle] bundlePath] UTF8String];
         const skr::filesystem::path p(path);
         fs->mount_dir = duplicate_string(p.parent_path().c_str());
 #endif
     }
     else if (desc->mount_type == SKR_MOUNT_TYPE_ABSOLUTE)
     {
-        const char8_t* path = [[[NSBundle mainBundle] bundlePath] UTF8String];
+        const char8_t* path = (const char8_t*)[[[NSBundle mainBundle] bundlePath] UTF8String];
         const skr::filesystem::path p(path);
-        fs->mount_dir = duplicate_string(p.c_str());
+        const auto pstr = p.u8string();
+        fs->mount_dir = duplicate_string(pstr.c_str());
     }
 
     success &= fs->mount_dir or desc->mount_type == SKR_MOUNT_TYPE_ABSOLUTE;
