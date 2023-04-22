@@ -165,24 +165,6 @@ Live2D 模型复合了多种源数据类型，所有数据类型异步地加载�
 
 Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubism 官方示例基准的十数倍。
 
-### [Cross-Process Qt Editor](samples/render_graph/cross-process)
-这个 demo 展示了如何从 CGPU/RenderGraph Application 中导出纹理到 Qt 中进行使用。[Viewport](editors/ed-core) 使用 OGL Widget 配合 Import Memory EXT 进行实现。
-
-<div align=center>
-
-![QtCrossProcess](https://user-images.githubusercontent.com/39457738/192107303-d10e2dc5-8132-4ed4-b028-e0ead030f507.png)
-
-</div>
-
-### [Cross-Process Presentation](samples/editor/qt-viewport)
-这个 demo 展示了引擎将会采用的跨进程技术雏形，即使用 LMDB 和 GRPC 的数据共享以及跨进程 CGPU 资源的视图呈现。
-
-<div align=center>
-
-[cross-processs](https://user-images.githubusercontent.com/39457738/191159690-638f9bf4-3120-49ca-8435-835f25121b89.mp4)
-
-</div>
-
 ### [RenderGraph Deferred](samples/render_graph/rg-deferred)
 这个 demo 展示了如何使用 RenderGraph 进行 Deferred 渲染，其中光照计算的部分有 ComputeShdaer 和 PixelShader 两种实现。实际的光照着色效果尚未在 demo 中完成，重点在于验证延迟流程的可行性。这个 demo 同样展示了如何使用自定义 Profiler 对 RenderGraph 的执行细节进行 Profile。
 
@@ -252,9 +234,6 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - freetype 2.13.0 (GNU)
 - icu 72.1 ([LICENSE](https://github.com/unicode-org/icu/blob/main/icu4c/LICENSE))
 - harfbuzz 7.1.0 ([LICENSE](https://github.com/harfbuzz/harfbuzz/blob/main/COPYING))
-
-## 作为动态库引入的开源库和版本
-- Qt-Advanced-Docking-System 3cd6d76 LGPL-2.1 
 
 ## 接入的扩展API以及版本
 - [vulkan headers](https://github.com/KhronosGroup/Vulkan-Headers) & volk 1.3.243.0

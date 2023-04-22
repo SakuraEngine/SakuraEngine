@@ -104,7 +104,6 @@ if(has_config("build_tools")) then
     includes("tools/xmake.lua")
 end
 if(has_config("build_editors")) then
-    includes("xmake/thirdparty-ed.lua")
     includes("editors/xmake.lua")
 end
 if(has_config("build_tests")) then
