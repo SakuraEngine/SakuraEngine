@@ -15,11 +15,7 @@ inline static char8_t* duplicate_string(const char8_t* src_string) SKR_NOEXCEPT
     {
         const size_t source_len = strlen((const char*)src_string);
         char8_t* result = (char8_t*)sakura_malloc(sizeof(char8_t) * (1 + source_len));
-#ifdef _WIN32
         strcpy_s((char*)result, source_len + 1, (const char*)src_string);
-#else
-        strcpy((char*)result, src_string);
-#endif
         return result;
     }
     return nullptr;
