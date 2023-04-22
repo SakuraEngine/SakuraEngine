@@ -3,6 +3,7 @@
 #include "platform/atomic.h"
 #include "SkrRenderer/shader_hash.h"
 #include "containers/hashmap.hpp"
+#include "containers/text.hpp"
 #include "containers/sptr.hpp"
 #include "utils/defer.hpp"
 #include "utils/format.hpp"
@@ -51,7 +52,7 @@ struct ShaderMapImpl : public skr_shader_map_t
 
     struct ShaderRequest
     {
-        ShaderRequest(ShaderMapImpl* factory, const char* uri, const skr_platform_shader_identifier_t& identifier)
+        ShaderRequest(ShaderMapImpl* factory, const char8_t* uri, const skr_platform_shader_identifier_t& identifier)
             : factory(factory), bytes_uri(uri), identifier(identifier)
         {
 
@@ -70,7 +71,7 @@ struct ShaderMapImpl : public skr_shader_map_t
             auto desc = make_zeroed<CGPUShaderLibraryDescriptor>();
             desc.code = (const uint32_t*)shader_destination.bytes;
             desc.code_size = (uint32_t)shader_destination.size;
-            desc.name = bytes_uri.c_str();
+            desc.name = bytes_uri.u8_str();
             desc.stage = identifier.shader_stage;
             const auto created_shader = cgpu_create_shader_library(device, &desc);
             if (!created_shader)
@@ -89,7 +90,7 @@ struct ShaderMapImpl : public skr_shader_map_t
         }
 
         ShaderMapImpl* factory = nullptr;
-        skr::string bytes_uri;
+        skr::text::text bytes_uri;
         skr_async_request_t bytes_request;
         skr_async_ram_destination_t bytes_destination;
         skr_async_request_t aux_request;
@@ -172,15 +173,15 @@ ESkrShaderMapShaderStatus ShaderMapImpl::install_shader_from_vfs(const skr_platf
     auto bytes_vfs = root.bytecode_vfs;
     SKR_ASSERT(bytes_vfs);
     const auto hash = identifier.hash;
-    const auto uri = skr::format("{}#{}-{}-{}-{}.bytes", hash.flags, 
+    const auto uri = skr::text::format(u8"{}#{}-{}-{}-{}.bytes", hash.flags, 
         hash.encoded_digits[0], hash.encoded_digits[1], hash.encoded_digits[2], hash.encoded_digits[3]);
-    auto sRequest = SPtr<ShaderRequest>::Create(this, uri.c_str(), identifier);
+    auto sRequest = SPtr<ShaderRequest>::Create(this, uri.u8_str(), identifier);
     auto found = mShaderRequests.find(identifier);
     SKR_ASSERT(found == mShaderRequests.end());
     mShaderRequests.emplace(identifier, sRequest);
     
     auto ram_texture_io = make_zeroed<skr_ram_io_t>();
-    ram_texture_io.path = sRequest->bytes_uri.c_str();
+    ram_texture_io.path = sRequest->bytes_uri.u8_str();
     ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
         ZoneScopedN("CreateShaderFromBytes");
         

@@ -16,6 +16,7 @@ struct formatter<skr::basic_string<Char>, Char> : formatter<basic_string_view<Ch
         return formatter<basic_string_view<Char>, Char>::format(basic_string_view<Char>(val.data(), val.size()), ctx);
     }
 };
+
 template <typename Char>
 struct formatter<skr::basic_string_view<Char>, Char> : formatter<basic_string_view<Char>, Char> {
     template <typename FormatContext>
@@ -37,11 +38,13 @@ struct formatter<skr_guid_t> {
     auto format(skr_guid_t const& g, FormatContext& ctx) const
     -> decltype(ctx.out())
     {
-        return format_to(ctx.out(), "{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}"
+        return fmt::format_to(ctx.out(), "{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}"
         , g.Data1(), g.Data2(), g.Data3()
-        , g.Data4(0), g.Data4(1), g.Data4(2), g.Data4(3), g.Data4(4), g.Data4(5), g.Data4(6), g.Data4(7));
+        , g.Data4(0), g.Data4(1), g.Data4(2), g.Data4(3)
+        , g.Data4(4), g.Data4(5), g.Data4(6), g.Data4(7));
     }
 };
+
 template <>
 struct formatter<skr_md5_t> {
     constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin())
@@ -52,7 +55,7 @@ struct formatter<skr_md5_t> {
     auto format(skr_md5_t const& md5, FormatContext& ctx) const
     -> decltype(ctx.out())
     {
-        return format_to(ctx.out(), 
+        return fmt::format_to(ctx.out(), 
             "{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}", 
             md5.digest[0], md5.digest[1], md5.digest[2], md5.digest[3],
             md5.digest[4], md5.digest[5], md5.digest[6], md5.digest[7],

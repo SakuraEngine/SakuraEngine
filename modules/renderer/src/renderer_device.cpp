@@ -130,7 +130,7 @@ void RendererDeviceImpl::initialize(const Builder& builder)
 
     auto vram_service_desc = make_zeroed<skr_vram_io_service_desc_t>();
     vram_service_desc.lockless = true;
-    vram_service_desc.name = "vram_service";
+    vram_service_desc.name = u8"vram_service";
     vram_service_desc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
     vram_service_desc.sleep_time = 1000 / 60;
     vram_service_desc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
@@ -142,7 +142,7 @@ void RendererDeviceImpl::initialize(const Builder& builder)
         auto name = "RenderAuxService-" + eastl::to_string(i);
         auto desc = make_zeroed<skr_threaded_service_desc_t>();
         desc.lockless = true;
-        desc.name = name.c_str();
+        desc.name = (const char8_t*)name.c_str();
         desc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
         aux_services[i] = skr_threaded_service_t::create(&desc);
     }

@@ -663,7 +663,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 {
                     skr_json_writer_t writer(5);
                     skr_save_scene(game_renderer->get_dual_storage(), &writer);
-                    auto file = skr_vfs_fopen(resource_vfs, "scene.json", SKR_FM_WRITE, SKR_FILE_CREATION_ALWAYS_NEW);
+                    auto file = skr_vfs_fopen(resource_vfs, u8"scene.json", SKR_FM_WRITE, SKR_FILE_CREATION_ALWAYS_NEW);
                     if (file)
                     {
                         auto str = writer.Str();

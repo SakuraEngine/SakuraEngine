@@ -13,7 +13,7 @@ add_moduledirs("xmake/modules")
 includes("xmake/options.lua")
 --includes("xmake/toolchains/prospero.lua")
 
-set_languages("c11", "cxx17")
+set_languages(get_config("cxx_version"), get_config("c_version"))
 
 engine_version = "0.1.0"
 default_unity_batch_size = 8

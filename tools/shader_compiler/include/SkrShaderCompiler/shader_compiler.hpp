@@ -4,6 +4,7 @@
 #include "cgpu/flags.h"
 #include "containers/span.hpp"
 #include "containers/string.hpp"
+#include "containers/text.hpp"
 #include <EASTL/functional.h>
 #ifndef __meta__
 #include "SkrShaderCompiler/shader_compiler.generated.h"
@@ -30,13 +31,13 @@ EShaderSourceType : uint32_t
 
 struct ShaderSourceCode
 {
-    inline ShaderSourceCode(uint8_t* bytes, uint64_t size, const char* name, EShaderSourceType type) SKR_NOEXCEPT
+    inline ShaderSourceCode(uint8_t* bytes, uint64_t size, const char8_t* name, EShaderSourceType type) SKR_NOEXCEPT
         : bytes(bytes), size(size), source_name(name), source_type(type) {}
     ~ShaderSourceCode() SKR_NOEXCEPT;
 
     uint8_t* bytes = nullptr;
     uint64_t size = 0;
-    skr::string source_name;
+    skr::text::text source_name;
     const EShaderSourceType source_type = EShaderSourceType::INVALID;
 };
 
@@ -65,6 +66,6 @@ struct SKR_SHADER_COMPILER_API IShaderCompiler
 IShaderCompiler* SkrShaderCompiler_CreateByType(EShaderSourceType type) SKR_NOEXCEPT;
 void SkrShaderCompiler_Destroy(IShaderCompiler* compiler) SKR_NOEXCEPT;
 void Util_ShaderCompilerRegister(EShaderSourceType type, IShaderCompiler*(*ctor)(), void(*dtor)(IShaderCompiler*)) SKR_NOEXCEPT;
-EShaderSourceType Util_GetShaderSourceTypeWithExtensionString(const char* ext) SKR_NOEXCEPT;
+EShaderSourceType Util_GetShaderSourceTypeWithExtensionString(const char8_t* ext) SKR_NOEXCEPT;
 } // namespace asset
 } // namespace skd

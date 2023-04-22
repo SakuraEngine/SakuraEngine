@@ -86,8 +86,9 @@ bool STextureCooker::Cook(SCookContext *ctx)
     {
         auto extension = Util_CompressedTypeString(compressed_format);
         auto compressed_path = outputPath;
+        auto compressed_pathstr = compressed_path.string();
         compressed_path.replace_extension(extension.c_str());
-        auto compressed_file = fopen(compressed_path.u8string().c_str(), "wb");
+        auto compressed_file = fopen(compressed_pathstr.c_str(), "wb");
         SKR_DEFER({ fclose(compressed_file); });
         fwrite(compressed_data.data(), compressed_data.size(), 1, compressed_file);
     }

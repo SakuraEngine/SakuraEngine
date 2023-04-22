@@ -178,7 +178,7 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
         : root(root)
     {
         dstorage_root = skr::text::text::from_utf8(root.dstorage_root);
-        this->root.dstorage_root = dstorage_root.c_str();
+        this->root.dstorage_root = dstorage_root.u8_str();
     }
 
     ~SMeshFactoryImpl() noexcept = default;

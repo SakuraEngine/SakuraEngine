@@ -18,7 +18,7 @@ void* SMaterialImporter::Import(skr_io_ram_service_t* ioService, SCookContext *c
     context->AddFileDependencyAndLoad(ioService, jsonPath.c_str(), destination);
     SKR_DEFER({sakura_free(destination.bytes);});
 
-    auto jsonString = simdjson::padded_string((char8_t*)destination.bytes, destination.size);
+    auto jsonString = simdjson::padded_string((char*)destination.bytes, destination.size);
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(jsonString);
     if(doc.error())

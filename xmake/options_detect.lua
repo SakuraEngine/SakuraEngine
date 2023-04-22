@@ -46,6 +46,7 @@ if(has_config("is_clang")) then
 end
 
 if(has_config("is_msvc")) then
+    table.insert(project_cxflags, "/Zc:__cplusplus")
     table.insert(project_cxflags, "/FC")
     table.insert(project_cxflags, "/GR-")
     table.insert(project_cxflags, "/wd4251")

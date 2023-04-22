@@ -5,7 +5,7 @@
 
 namespace option_utils
 {
-using opt_signature_string = eastl::fixed_string<char8_t, 64>;
+using opt_signature_string = eastl::fixed_string<char, 64>;
 
 inline void stringfy(opt_signature_string& string, skr::span<skr_shader_option_instance_t> ordered_options)
 {
