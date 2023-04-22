@@ -203,7 +203,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
                         {
                             auto bytesPath = basePath / (fname + ".bytes").c_str();
                             {
-                                auto file = fopen(bytesPath.u8string().c_str(), "wb");
+                                auto file = fopen(bytesPath.string().c_str(), "wb");
                                 SKR_DEFER({ fclose(file); });
                                 if (!file) SKR_UNREACHABLE_CODE();
                                 fwrite(bytes.data(), bytes.size(), 1, file);
@@ -214,7 +214,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
                         {
                             auto pdbPath = basePath / (fname + ".pdb").c_str();
                             {
-                                auto pdb_file = fopen(pdbPath.u8string().c_str(), "wb");
+                                auto pdb_file = fopen(pdbPath.string().c_str(), "wb");
                                 SKR_DEFER({ fclose(pdb_file); });
                                 if (!pdb_file) SKR_UNREACHABLE_CODE();
                                 fwrite(pdb.data(), pdb.size(), 1, pdb_file);
@@ -315,13 +315,13 @@ bool SShaderCooker::Cook(SCookContext* ctx)
         // make archive
         skr_json_writer_t writer(2);
         skr::json::Write(&writer, json_resource);
-        auto jPath = outputPath.u8string() + ".json";
+        auto jPath = outputPath.string() + ".json";
         // write to file
         auto file = fopen(jPath.c_str(), "wb");
         if (!file)
         {
             SKR_LOG_FMT_ERROR("[SShaderCooker::Cook] failed to write cooked file for json_resource {}! path: {}",
-            assetRecord->guid, assetRecord->path.u8string());
+            assetRecord->guid, assetRecord->path.string());
             return false;
         }
         SKR_DEFER({ fclose(file); });

@@ -9,9 +9,10 @@ jobs:
       matrix:
         os: [ windows-latest, windows-2019 ]
         arch: [ x64 ]
+        cxx: [ cxx17, cxx20 ]
         toolchain: [ msvc, clang-cl ]
 
-    name: ${{ matrix.os }} / ${{ matrix.toolchain }}
+    name: ${{ matrix.os }} + ${{ matrix.arch }} + ${{ matrix.toolchain }} + ${{ matrix.cxx }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
@@ -49,7 +50,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ env.XMAKE_GLOBALDIR }}\.xmake\packages
-          key: MSVC-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}-${{ steps.dep_hash.outputs.hash }}-W${{ steps.cache_key.outputs.key }}
+          key: MSVC-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}}-${{ matrix.cxx }}-${{ steps.dep_hash.outputs.hash }}-W${{ steps.cache_key.outputs.key }}
 
       # Run setup script
       - name: Set env
@@ -59,7 +60,7 @@ jobs:
           xmake l setup.lua -v
 
       - name: ConfigureDebug
-        run: xmake f -m debug --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} -c -y -v --build_tests=n --build_editors=n --build_usdtool=n --policies=build.ccache:n
+        run: xmake f -m debug --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --build_tests=n --build_editors=n --build_usdtool=n --policies=build.ccache:n
       
       - name: BuildDebug
         if: success() || failure()
@@ -69,7 +70,7 @@ jobs:
       - name: ConfigureRelease
         if: success() || failure()
         shell: cmd
-        run: xmake f -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} -c -y -v --build_tests=n --build_editors=n --use_tracy=disable --policies=build.ccache:n
+        run: xmake f -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --build_tests=n --build_editors=n --use_tracy=disable --policies=build.ccache:n
       
       - name: BuildRelease
         if: success() || failure()
@@ -99,7 +100,7 @@ jobs:
         if: success() || failure()
         shell: cmd
         run: |
-          xmake f -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} -c -y -v --build_tests=n --build_editors=n --shipping_one_archive=y --use_tracy=disable --policies=build.ccache:n
+          xmake f -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --build_tests=n --build_editors=n --shipping_one_archive=y --use_tracy=disable --policies=build.ccache:n
           xmake -y -v
       
       - name: UploadGeneratedFiles2

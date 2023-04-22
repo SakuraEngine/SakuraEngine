@@ -1,5 +1,6 @@
 #pragma once
 #include "platform/configure.h"
+#include "platform/debug.h"
 
 RUNTIME_EXTERN_C RUNTIME_API const char* kTracedNewDefaultPoolName;
 RUNTIME_EXTERN_C RUNTIME_API void* _sakura_malloc(size_t size, const char* pool_name);

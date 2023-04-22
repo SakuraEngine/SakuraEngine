@@ -38,7 +38,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
         : root(root)
     {
         dstorage_root = skr::text::text::from_utf8(root.dstorage_root);
-        this->root.dstorage_root = dstorage_root.c_str();
+        this->root.dstorage_root = dstorage_root.u8_str();
     }
     ~STextureFactoryImpl() noexcept = default;
     skr_type_id_t GetResourceType() override;

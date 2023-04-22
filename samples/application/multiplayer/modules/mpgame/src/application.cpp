@@ -23,6 +23,7 @@
 #include "simdjson.h"
 #include "utils/make_zeroed.hpp"
 #include "platform/guid.hpp"
+#include "containers/text.hpp"
 
 #include "math/vector.h"
 #include "EASTL/shared_ptr.h"
@@ -38,8 +39,10 @@
     #include <shellscalingapi.h>
 #endif
 #include "MPShared/signal_client.h"
+
 #define BACK_BUFFER_WIDTH 1920
 #define BACK_BUFFER_HEIGHT 1080
+
 extern void initialize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs);
 extern void register_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph);
 extern void finalize_render_effects(SRendererId renderer, skr::render_graph::RenderGraph* renderGraph);
@@ -74,7 +77,7 @@ int MPApplication::CreateMainWindow()
     window_desc.flags = SKR_WINDOW_CENTERED | SKR_WINDOW_RESIZABLE;
     window_desc.height = BACK_BUFFER_HEIGHT;
     window_desc.width = BACK_BUFFER_WIDTH;
-    mainWindow = skr_create_window("MP", &window_desc);
+    mainWindow = skr_create_window(u8"MP", &window_desc);
     inputSystem = skr::input::InputSystem::Create();
     SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
     if (!mainWindow)
@@ -108,7 +111,7 @@ int MPApplication::CreateVFS()
     return 0;
 }
 
-static void read_bytes(skr_vfs_t* vfs, const char* file_name, uint8_t** bytes, uint32_t* length)
+static void read_bytes(skr_vfs_t* vfs, const char8_t* file_name, uint8_t** bytes, uint32_t* length)
 {
     auto vsfile = skr_vfs_fopen(vfs, file_name, SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     *length = skr_vfs_fsize(vsfile);
@@ -133,7 +136,7 @@ int MPApplication::InitializeImgui(Renderer& renderer, skr_vfs_t* vfs)
             style.WindowRounding = 0.0f;
             style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         }
-        const char* font_path = "./../resources/font/SourceSansPro-Regular.ttf";
+        const char8_t* font_path = u8"./../resources/font/SourceSansPro-Regular.ttf";
         uint8_t* font_bytes;
         uint32_t font_length;
         read_bytes(vfs, font_path, &font_bytes, &font_length);
@@ -164,24 +167,24 @@ int MPApplication::InitializeImgui(Renderer& renderer, skr_vfs_t* vfs)
         ImGui::GetIO().Fonts->Build();
         sakura_free(font_bytes);
     }
-    eastl::string vsname = u8"shaders/imgui_vertex";
-    eastl::string fsname = u8"shaders/imgui_fragment";
-    vsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
-    fsname.append(backend == ::CGPU_BACKEND_D3D12 ? ".dxil" : ".spv");
+    skr::text::text vsname = u8"shaders/imgui_vertex";
+    skr::text::text fsname = u8"shaders/imgui_fragment";
+    vsname += backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv";
+    fsname += backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv";
 
     uint32_t im_vs_length;
     uint8_t* im_vs_bytes;
-    read_bytes(vfs, vsname.c_str(), &im_vs_bytes, &im_vs_length);
+    read_bytes(vfs, vsname.u8_str(), &im_vs_bytes, &im_vs_length);
     uint32_t im_fs_length;
     uint8_t* im_fs_bytes;
-    read_bytes(vfs, fsname.c_str(), &im_fs_bytes, &im_fs_length);
+    read_bytes(vfs, fsname.u8_str(), &im_fs_bytes, &im_fs_length);
     CGPUShaderLibraryDescriptor vs_desc = {};
-    vs_desc.name = "imgui_vertex_shader";
+    vs_desc.name = u8"imgui_vertex_shader";
     vs_desc.stage = CGPU_SHADER_STAGE_VERT;
     vs_desc.code = (uint32_t*)im_vs_bytes;
     vs_desc.code_size = im_vs_length;
     CGPUShaderLibraryDescriptor fs_desc = {};
-    fs_desc.name = "imgui_fragment_shader";
+    fs_desc.name = u8"imgui_fragment_shader";
     fs_desc.stage = CGPU_SHADER_STAGE_FRAG;
     fs_desc.code = (uint32_t*)im_fs_bytes;
     fs_desc.code_size = im_fs_length;
@@ -194,10 +197,10 @@ int MPApplication::InitializeImgui(Renderer& renderer, skr_vfs_t* vfs)
     imgui_graph_desc.backbuffer_format = render_device->get_swapchain_format();
     imgui_graph_desc.vs.library = imgui_vs;
     imgui_graph_desc.vs.stage = CGPU_SHADER_STAGE_VERT;
-    imgui_graph_desc.vs.entry = "main";
+    imgui_graph_desc.vs.entry = u8"main";
     imgui_graph_desc.ps.library = imgui_fs;
     imgui_graph_desc.ps.stage = CGPU_SHADER_STAGE_FRAG;
-    imgui_graph_desc.ps.entry = "main";
+    imgui_graph_desc.ps.entry = u8"main";
     imgui_graph_desc.queue = gfx_queue;
     imgui_graph_desc.static_sampler = render_device->get_linear_sampler();
     render_graph_imgui_initialize(&imgui_graph_desc);
@@ -340,14 +343,14 @@ void MPApplication::Render()
     CGPUTextureId native_backbuffer = renderer.swapChain->back_buffers[backbuffer_index];
     auto back_buffer = renderer.renderGraph->create_texture(
     [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
-        builder.set_name("backbuffer")
+        builder.set_name(u8"backbuffer")
         .import(native_backbuffer, CGPU_RESOURCE_STATE_UNDEFINED)
         .allow_render_target();
     });
     renderer.renderGraph->add_render_pass(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
-            eastl::string name = "clear";
-            builder.set_name(name.c_str())
+            skr::text::text name = u8"clear";
+            builder.set_name(name.u8_str())
                 .write(0, back_buffer, CGPU_LOAD_ACTION_CLEAR);
         },
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& context) {
@@ -379,7 +382,7 @@ void MPApplication::Render()
     render_graph_imgui_add_render_pass(renderer.renderGraph, back_buffer, CGPU_LOAD_ACTION_LOAD);
     renderer.renderGraph->add_present_pass(
     [=](skr::render_graph::RenderGraph& g, skr::render_graph::PresentPassBuilder& builder) {
-        builder.set_name("present_pass")
+        builder.set_name(u8"present_pass")
         .swapchain(renderer.swapChain, backbuffer_index)
         .texture(back_buffer, true);
     });
@@ -811,7 +814,7 @@ void MPApplication::UpdateGame()
 
     {
         ZoneScopedN("ImGui");
-        ImGui::Begin(u8"Networking Statics");
+        ImGui::Begin("Networking Statics");
         SteamNetConnectionRealTimeStatus_t status;
         SteamNetworkingSockets()->GetConnectionRealTimeStatus(world.serverConnection, &status, 0, nullptr);
         SteamNetConnectionInfo_t info;
@@ -861,7 +864,7 @@ void MPApplication::UpdateGame()
         }
         ImGui::End();
 
-        ImGui::Begin(u8"Game Statics");
+        ImGui::Begin("Game Statics");
         ImGui::ProgressBar(world.GetPlayerHealth() / 100.f, ImVec2(-FLT_MIN, 0.f), "health");
         ImGui::End();
     }

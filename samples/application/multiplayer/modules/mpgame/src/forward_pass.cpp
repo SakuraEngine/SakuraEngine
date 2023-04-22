@@ -61,7 +61,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
 
         auto upload_buffer_handle = render_graph->create_buffer(
             [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-                builder.set_name("SkinMeshUploadBuffer")
+                builder.set_name(u8"SkinMeshUploadBuffer")
                     .size(skinVerticesSize)
                     .with_tags(kRenderGraphDefaultResourceTag)
                     .as_upload_buffer();
@@ -69,7 +69,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
 
         render_graph->add_copy_pass(
         [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
-            builder.set_name("CopySkinMesh")
+            builder.set_name(u8"CopySkinMesh")
                 .from_buffer(upload_buffer_handle.range(0, skinVerticesSize))
                 .can_be_lone();
         },
@@ -160,7 +160,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
 
     auto depth = renderGraph->create_texture(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
-            builder.set_name("depth")
+            builder.set_name(u8"depth")
                 .extent(viewport->viewport_width, viewport->viewport_height)
                 .format(depth_format)
                 .owns_memory()
@@ -173,7 +173,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
         "1x1", "2x2", "4x4", "1x2", "2x1", "2x4", "4x2"
     };
     eastl::fixed_string<char, 64> ButtonText = "SwitchShadingRate-";
-    ImGui::Begin(u8"ShadingRate");
+    ImGui::Begin("ShadingRate");
     ButtonText += shadingRateNames[shading_rate];
     if (ImGui::Button(ButtonText.c_str()))
     {
@@ -187,7 +187,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
     // 2.add a render graph buffer for forward cbuffer
     auto cbuffer = renderGraph->create_buffer(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
-            builder.set_name("forward_cbuffer")
+            builder.set_name(u8"forward_cbuffer")
                 .size(sizeof(skr_float4x4_t))
                 .memory_usage(CGPU_MEM_USAGE_CPU_TO_GPU)
                 .with_flags(CGPU_BCF_PERSISTENT_MAP_BIT)
@@ -199,7 +199,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
     // 3.barrier skin vbs
     renderGraph->add_copy_pass(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassBuilder& builder) {
-            builder.set_name("BarrierSkinVertexBuffers")
+            builder.set_name(u8"BarrierSkinVertexBuffers")
                 .can_be_lone();
         },
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassContext& context){
@@ -250,11 +250,11 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
 
     renderGraph->add_render_pass(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
-            const auto out_color = renderGraph->get_texture("backbuffer");
-            const auto depth_buffer = renderGraph->get_texture("depth");
-            builder.set_name("forward_pass")
+            const auto out_color = renderGraph->get_texture(u8"backbuffer");
+            const auto depth_buffer = renderGraph->get_texture(u8"depth");
+            builder.set_name(u8"forward_pass")
                 // we know that the drawcalls always have a same pipeline
-                .read("pass_cb", cbuffer.range(0, sizeof(skr_float4x4_t)))
+                .read(u8"pass_cb", cbuffer.range(0, sizeof(skr_float4x4_t)))
                 .write(0, out_color, need_clear ? CGPU_LOAD_ACTION_CLEAR : CGPU_LOAD_ACTION_LOAD);
             if (need_clear)
             {

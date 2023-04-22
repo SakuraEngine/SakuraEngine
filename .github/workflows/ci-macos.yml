@@ -9,6 +9,9 @@ jobs:
       matrix:
         os: [ macos-12 ]
         arch: [ x86_64 ]
+        cxx: [ cxx17, cxx20 ]
+
+    name: ${{ matrix.os }} + ${{ matrix.arch }} + ${{ matrix.cxx }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
@@ -43,7 +46,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ env.XMAKE_GLOBALDIR }}/.xmake/packages
-          key: macOS-${{ matrix.arch }}-${{ matrix.os }}-${{ steps.dep_hash.outputs.hash }}-W${{ steps.cache_key.outputs.key }}
+          key: macOS-${{ matrix.arch }}-${{ matrix.os }}}-${{ matrix.cxx }}-${{ steps.dep_hash.outputs.hash }}-W${{ steps.cache_key.outputs.key }}
 
       # Run setup script
       - name: Set env
@@ -53,7 +56,7 @@ jobs:
           xmake l setup.lua -v
 
       - name: ConfigureDebug
-        run: xmake f --arch=${{ matrix.arch }} --mode=debug --yes -v --build_tests=n --build_editors=n --build_usdtool=n --policies=build.ccache:n -c
+        run: xmake f --arch=${{ matrix.arch }} --cxx_version=${{ matrix.cxx }} --mode=debug --yes -v --build_tests=n --build_editors=n --build_usdtool=n --policies=build.ccache:n -c
 
       - name: BuildDebug
         if: success() || failure()
@@ -61,7 +64,7 @@ jobs:
 
       - name: ConfigureRelease
         if: success() || failure()
-        run: xmake f --arch=${{ matrix.arch }} --mode=release --yes -v --build_tests=n --build_editors=n --use_tracy=disable -c --policies=build.ccache:n
+        run: xmake f --arch=${{ matrix.arch }} --cxx_version=${{ matrix.cxx }} --mode=release --yes -v --build_tests=n --build_editors=n --use_tracy=disable -c --policies=build.ccache:n
 
       - name: BuildRelease
         if: success() || failure()
@@ -89,7 +92,7 @@ jobs:
       - name: Shipping
         if: success() || failure()
         run: |
-          xmake f --arch=${{ matrix.arch }} --mode=release --yes --build_tests=n --build_editors=n -c --shipping_one_archive=y --use_tracy=disable --policies=build.ccache:n
+          xmake f --arch=${{ matrix.arch }} --cxx_version=${{ matrix.cxx }} --mode=release --yes --build_tests=n --build_editors=n -c --shipping_one_archive=y --use_tracy=disable --policies=build.ccache:n
           xmake -y -v
 
       - name: UploadGeneratedFiles2

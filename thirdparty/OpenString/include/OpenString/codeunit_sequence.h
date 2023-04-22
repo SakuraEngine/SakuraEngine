@@ -190,7 +190,7 @@ public:
 	[[nodiscard]] u32 get_hash() const noexcept;
 
 	[[nodiscard]] const ochar8_t* u8_str() const noexcept;
-	[[nodiscard]] const ochar8_t* c_str() const noexcept;
+	[[nodiscard]] const ochar_t* c_str() const noexcept;
 
 private:
 
