@@ -10,11 +10,7 @@ inline static char8_t* duplicate_string(const char8_t* src_string) SKR_NOEXCEPT
     {
         const size_t source_len = strlen((const char*)src_string);
         char8_t* result = (char8_t*)sakura_malloc(sizeof(char8_t) * (1 + source_len));
-#ifdef _WIN32
-        strcpy_s((char*)result, source_len + 1, src_string);
-#else
-        strcpy((char*)result, src_string);
-#endif
+        strcpy((char*)result, (const char*)src_string);
         return result;
     }
     return nullptr;
@@ -48,8 +44,7 @@ skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc) SKR_NOEXCEPT
         auto documentUrl = [fileManager URLForDirectory:NSDocumentDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:true error:&error];
         if (!error)
         {
-            fs->mount_dir = duplicate_string(
-            [[[documentUrl absoluteURL] path] UTF8String]);
+            fs->mount_dir = duplicate_string((const char8_t*)[[[documentUrl absoluteURL] path] UTF8String]);
         }
         else
         {
@@ -75,7 +70,8 @@ skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc) SKR_NOEXCEPT
 #else
         const char8_t* path = (const char8_t*)[[[NSBundle mainBundle] bundlePath] UTF8String];
         const skr::filesystem::path p(path);
-        fs->mount_dir = duplicate_string(p.parent_path().c_str());
+        const auto ppstr = p.parent_path().u8string();
+        fs->mount_dir = duplicate_string((const char8_t*)ppstr.c_str());
 #endif
     }
     else if (desc->mount_type == SKR_MOUNT_TYPE_ABSOLUTE)
@@ -83,7 +79,7 @@ skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc) SKR_NOEXCEPT
         const char8_t* path = (const char8_t*)[[[NSBundle mainBundle] bundlePath] UTF8String];
         const skr::filesystem::path p(path);
         const auto pstr = p.u8string();
-        fs->mount_dir = duplicate_string(pstr.c_str());
+        fs->mount_dir = duplicate_string((const char8_t*)pstr.c_str());
     }
 
     success &= fs->mount_dir or desc->mount_type == SKR_MOUNT_TYPE_ABSOLUTE;
