@@ -8,7 +8,7 @@ package("eastl")
 
     on_install(function (package)
         os.mkdir(package:installdir())
-        os.cp(path.join(package:scriptdir(), "port", "eastl"), ".")
+        os.cp(path.join(package:scriptdir(), "port", "EASTL"), ".")
         os.cp(path.join(package:scriptdir(), "port", "xmake.lua"), "xmake.lua")
 
         local configs = {}        
