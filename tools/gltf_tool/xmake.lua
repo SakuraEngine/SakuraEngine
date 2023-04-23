@@ -1,4 +1,4 @@
-add_requires("cgltf =1.13.0-skr", {system = false})
+add_requires("cgltf >=1.13.0-skr", {system = false})
 
 shared_module("SkrGLTFTool", "GLTFTOOL", engine_version)
     set_group("02.tools")

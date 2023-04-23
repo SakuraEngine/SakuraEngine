@@ -1,8 +1,8 @@
-add_requires("freetype =2.13.0-skr", {system = false})
-add_requires("icu =72.1.0-skr", {system = false})
-add_requires("harfbuzz =7.1.0-skr", {system = false})
+add_requires("freetype >=2.13.0-skr", {system = false})
+add_requires("icu >=72.1.0-skr", {system = false})
+add_requires("harfbuzz >=7.1.0-skr", {system = false})
 
-add_requires("nanovg =0.1.0-skr", {system = false})
+add_requires("nanovg >=0.1.0-skr", {system = false})
 
 shared_module("SkrGui", "SKR_GUI", engine_version)
     set_group("01.modules")

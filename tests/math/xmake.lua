@@ -1,4 +1,4 @@
-add_requires("lua =5.4.4-skr")
+add_requires("lua >=5.4.4-skr")
 
 target("BaseTest")
     set_group("05.tests")
