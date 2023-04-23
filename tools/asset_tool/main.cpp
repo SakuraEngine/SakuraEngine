@@ -24,7 +24,7 @@
 
 #include "tracy/Tracy.hpp"
 
-#include "SkrAssetTool/usd_factory.h"
+#include "SkrAssetTool/gltf_factory.h"
 #include "imgui_impl_sdl.h"
 #include "SkrImGui/imgui_utils.h"
 #include "nfd.h"
@@ -81,9 +81,6 @@ int SAssetImportModule::main_module_exec(int argc, char** argv)
 {
     skr::string filePath;
     eastl::vector<skd::asset::SImporterFactory*> factories;
-    #ifdef WITH_USDTOOL
-    factories.push_back(skd::asset::GetUsdImporterFactory());
-    #endif
     eastl::vector<skd::asset::SImporterFactory*> availableFactories;
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) 

@@ -60,7 +60,7 @@ jobs:
           xmake l setup.lua -v
 
       - name: ConfigureDebug
-        run: xmake f -m debug --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --build_tests=n --build_editors=n --build_usdtool=n --policies=build.ccache:n
+        run: xmake f -m debug --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --build_tests=n --build_editors=n --policies=build.ccache:n
       
       - name: BuildDebug
         if: success() || failure()
