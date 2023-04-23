@@ -9,12 +9,14 @@ namespace dual
 {
 void entity_registry_t::reset()
 {
+    SMutexLock lock(mutex.mMutex);
     entries.clear();
     freeEntries.clear();
 }
 
 void entity_registry_t::shrink()
 {
+    SMutexLock lock(mutex.mMutex);
     if (entries.size() == 0)
         return;
     EIndex lastValid = (EIndex)(entries.size() - 1);
@@ -35,6 +37,7 @@ void entity_registry_t::shrink()
 
 void entity_registry_t::new_entities(dual_entity_t* dst, EIndex count)
 {
+    SMutexLock lock(mutex.mMutex);
     EIndex i = 0;
     // recycle entities
 
@@ -62,6 +65,7 @@ void entity_registry_t::new_entities(dual_entity_t* dst, EIndex count)
 
 void entity_registry_t::free_entities(const dual_entity_t* dst, EIndex count)
 {
+    SMutexLock lock(mutex.mMutex);
     // build freelist in input order
     freeEntries.reserve(freeEntries.size() + count);
 
