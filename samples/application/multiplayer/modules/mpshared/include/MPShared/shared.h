@@ -79,7 +79,7 @@ QFireBullet
 
 sreflect_struct(
     "guid" : "CB8DA6C6-4D7E-4066-A867-A37418EAEC1E",
-    "query" : "[inout]<seq>skr_translation_comp_t', [in]<seq>CSphereCollider2D, [inout]CMovement, [atomic]?dual::dirty_comp_t, [inout]CBall, [has]skr_rotation_comp_t, [inout]<unseq>CHealth"
+    "query" : "[inout]skr_translation_comp_t', [in]CSphereCollider2D, [inout]CMovement, [atomic]?dual::dirty_comp_t, [inout]CBall, [has]skr_rotation_comp_t"
 )
 QBallMovement
 {
@@ -88,7 +88,7 @@ QBallMovement
 
 sreflect_struct(
     "guid" : "67DB0A0E-4ACB-483F-98EE-DE3D062F1381",
-    "query" : "[inout]CRelevance, [in]<seq>skr_translation_comp_t, [in]<unseq>CController"
+    "query" : "[inout]CRelevance, [in]skr_translation_comp_t"
 )
 QUpdateRelevance
 {
@@ -115,7 +115,7 @@ QKillZombie
 
 sreflect_struct(
     "guid" : "A4A25B43-7C4C-4A60-9BA6-0E6E5C8793A0",
-    "query" : "[in]<seq>skr_translation_comp_t, [in]<unseq>CSphereCollider2D, [inout]CMovement, [atomic]?dual::dirty_comp_t, [inout]CZombie, [has]skr_rotation_comp_t, [inout]<unseq>CHealth"
+    "query" : "[in]skr_translation_comp_t, [inout]CMovement, [atomic]?dual::dirty_comp_t, [inout]CZombie, [has]skr_rotation_comp_t"
 )
 QZombieAI
 {

@@ -192,6 +192,11 @@ bool dual::scheduler_t::sync_query(dual_query_t* query)
             }
         }
     }
+    
+    for(auto subquery : query->subqueries)
+    {
+        result = sync_query(subquery) || result;
+    }
     return result;
 }
 
@@ -335,7 +340,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
         job->randomAccess = arena.get(&SharedData::randomAccess, groupCount);
     }
     job->groupCount = groupCount;
-    job->hasRandomWrite = false;
+    job->hasRandomWrite = !query->subqueries.empty();
     job->hasWriteChunkComponent = false;
     job->entityCount = 0;
     job->callback = callback;
@@ -526,7 +531,7 @@ dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, 
 skr::task::event_t dual::scheduler_t::schedule_job(dual_query_t* query, dual_schedule_callback_t callback, void* u, dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources)
 {
     skr::task::event_t result;
-    auto deps = dual::scheduler_t::get().update_dependencies(query, result, resources);
+    auto deps = update_dependencies(query, result, resources);
     {
         ZoneScopedN("AllocateCounter");
         allCounter.add(1);
@@ -558,8 +563,8 @@ eastl::vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(du
     auto add_group = [&](dual_group_t* group) {
         groups.push_back(group);
     };
-    auto& params = query->parameters;
     query->storage->query_groups(query->filter, query->meta, DUAL_LAMBDA(add_group));
+    auto& params = query->parameters;
     DependencySet dependencies;
 
     if (resources)
@@ -637,6 +642,44 @@ eastl::vector<skr::task::weak_event_t> dual::scheduler_t::update_dependencies(du
                         sync_entry(group, localType, params.accesses[i].readonly, params.accesses[i].atomic);
                     }
                     ++groupIndex;
+                }
+            }
+        }
+        for(auto subquery : query->subqueries)
+        {
+            llvm_vecsmall::SmallVector<dual_group_t*, 64> subgroups;
+            auto add_subgroup = [&](dual_group_t* group) {
+                subgroups.push_back(group);
+            };
+            query->storage->query_groups(query->filter, query->meta, DUAL_LAMBDA(add_subgroup));
+            forloop (i, 0, subquery->parameters.length)
+            {
+                if (type_index_t(subquery->parameters.types[i]).is_tag())
+                    continue;
+                if (subquery->parameters.accesses[i].randomAccess != DOS_SEQ)
+                {
+                    sync_type(subquery->parameters.types[i], subquery->parameters.accesses[i].readonly, subquery->parameters.accesses[i].atomic);
+                }
+                else
+                {
+                    int subgroupIndex = 0;(void)subgroupIndex;
+                    for (auto subgroup : subgroups)
+                    {
+                        auto localType = subgroup->index(subquery->parameters.types[i]);
+                        if (localType == kInvalidTypeIndex)
+                        {
+                            auto g = subgroup->get_owner(subquery->parameters.types[i]);
+                            if (g)
+                            {
+                                sync_entry(g, g->index(subquery->parameters.types[i]), subquery->parameters.accesses[i].readonly, subquery->parameters.accesses[i].atomic);
+                            }
+                        }
+                        else
+                        {
+                            sync_entry(subgroup, localType, subquery->parameters.accesses[i].readonly, subquery->parameters.accesses[i].atomic);
+                        }
+                        ++subgroupIndex;
+                    }
                 }
             }
         }

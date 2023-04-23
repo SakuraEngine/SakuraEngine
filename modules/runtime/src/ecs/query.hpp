@@ -25,6 +25,7 @@ struct dual_query_t {
     dual_meta_filter_t meta;
     dual_parameters_t parameters;
     eastl::vector<uint8_t> data;
+    llvm_vecsmall::SmallVector<dual_query_t*, 2> subqueries;
 
     //cache
     dual::phase_entry** phases = nullptr;
