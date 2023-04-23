@@ -72,8 +72,8 @@ option_end()
 
 option("cxx_version")
     -- "auto", "enable", "disable"
-    set_default("c++17")
-    set_values("c++17", "c++20", "c++23")
+    set_default("cxx20")
+    set_values("cxx17", "cxx20", "cxx23")
     set_showmenu(true)
     set_description("c++ version of project")
 option_end()
