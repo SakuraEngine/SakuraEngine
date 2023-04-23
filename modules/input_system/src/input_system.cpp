@@ -46,6 +46,7 @@ struct InputSystemImpl : public InputSystem
         InputReading* reading = nullptr;
     };
     eastl::vector_map<EInputKind, eastl::vector<RawInput>> inputs;
+    skr::vector<SObjectPtr<InputAction>> actions;
 };
 
 InputSystem::~InputSystem() SKR_NOEXCEPT
@@ -104,6 +105,11 @@ void InputSystemImpl::update(float delta) SKR_NOEXCEPT
     }
 
     // 2. update contexts
+    for(auto& action : actions)
+    {
+        action->clear_value();
+    }
+
     for (auto& [priority, context] : contexts)
     {
         auto mappings = context->get_mappings();
@@ -124,6 +130,13 @@ void InputSystemImpl::update(float delta) SKR_NOEXCEPT
                 }
             }
         }
+    }
+
+    // 3. update actions
+    for(auto& action : actions)
+    {
+        action->process_modifiers(delta);
+        action->process_triggers(delta);
     }
 
     // 3. free raw inputs
@@ -174,7 +187,9 @@ void InputSystemImpl::remove_all_contexts() SKR_NOEXCEPT
 #pragma region InputActions
 SObjectPtr<InputAction> InputSystemImpl::create_input_action(EValueType type) SKR_NOEXCEPT 
 {
-    return SObjectPtr<InputActionImpl>::Create(type);
+    auto result = SObjectPtr<InputActionImpl>::Create(type);
+    actions.push_back(result);
+    return result;
 }
 #pragma endregion
 } }

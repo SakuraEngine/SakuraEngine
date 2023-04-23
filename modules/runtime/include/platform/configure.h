@@ -152,7 +152,9 @@ extern const char* $name;
 #endif
 
 #ifndef RUNTIME_EXPORT
-    #if defined(_MSC_VER)
+    #if defined(SHIPPING_ONE_ARCHIVE)
+        #define RUNTIME_EXPORT
+    #elif defined(_MSC_VER)
         #define RUNTIME_EXPORT __declspec(dllexport)
     #else
         #define RUNTIME_EXPORT __attribute__((visibility("default")))
@@ -224,7 +226,7 @@ extern const char* $name;
 #endif
 
 #ifdef __cplusplus
-#define SKR_DECLARE_TYPE_ID_FWD(ns, type, ctype) namespace ns { struct type; } using ctype##_id = ns::type*;
+#define SKR_DECLARE_TYPE_ID_FWD(ns, type, ctype) namespace ns { struct type; }  using ctype##_t = ns::type; using ctype##_id = ns::type*;
 #else
 #define SKR_DECLARE_TYPE_ID_FWD(ns, type, ctype) typedef struct ctype##_t ctype##_t; typedef struct ctype* ctype##_id;
 #endif

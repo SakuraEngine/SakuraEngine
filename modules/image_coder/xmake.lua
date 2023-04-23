@@ -1,10 +1,12 @@
+add_requires("zlib =1.2.8-skr", {system = false})
+
 shared_module("SkrImageCoder", "SKR_IMAGE_CODER", engine_version)
     set_group("01.modules")
     public_dependency("SkrRT", engine_version)
     add_includedirs("include", {public=true})
     add_files("src/**.cpp")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
-    add_deps("zlib")
+    add_packages("zlib")
     -- jpeg
     add_includedirs("include", "turbojpeg", {public=true})
     if (is_os("windows")) then 

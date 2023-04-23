@@ -49,31 +49,6 @@ skr_index_buffer_entry_t
 };
 typedef struct skr_index_buffer_entry_t skr_index_buffer_entry_t;
 
-#ifdef __cplusplus
-#include "resource/resource_factory.h"
-
-sreflect_struct("guid" : "b0b69898-166f-49de-a675-7b04405b98b1")
-sattr("rtti" : true, "serialize" : "bin")
-skr_mesh_primitive_t 
-{
-    skr_vertex_layout_id vertex_layout_id;
-    uint32_t material_index;
-    skr::vector<skr_vertex_buffer_entry_t> vertex_buffers;
-    struct skr_index_buffer_entry_t index_buffer;
-    uint32_t vertex_count;
-};
-
-sreflect_struct("guid" : "d3b04ea5-415d-44d5-995a-5c77c64fe1de")
-sattr("rtti" : true, "serialize" : "bin")
-skr_mesh_section_t 
-{
-    int32_t parent_index;
-    skr_float3_t translation;
-    skr_float3_t scale;
-    skr_float4_t rotation;
-    skr::vector<uint32_t> primive_indices;
-};
-
 sreflect_struct("guid" : "03104e51-c998-410b-9d3c-d76535933440")
 sattr("rtti" : true, "serialize" : "bin")
 skr_mesh_buffer_t
@@ -82,21 +57,54 @@ skr_mesh_buffer_t
     uint64_t byte_length;
     bool used_with_index;
     bool used_with_vertex;
-    // TODO: keep this?
     sattr("transient": true, "no-rtti" : true)
     skr_blob_t bin;
 };
 
+#ifdef __cplusplus
+#include "resource/resource_factory.h"
+
+namespace skr sreflect
+{
+namespace renderer sreflect
+{
+using EVertexAttribute = ESkrVertexAttribute;
+using VertexBufferEntry = skr_vertex_buffer_entry_t;
+using IndexBufferEntry = skr_index_buffer_entry_t;
+using MeshBuffer = skr_mesh_buffer_t;
+
+sreflect_struct("guid" : "b0b69898-166f-49de-a675-7b04405b98b1")
+sattr("rtti" : true, "serialize" : "bin")
+MeshPrimitive 
+{
+    skr_vertex_layout_id vertex_layout_id;
+    uint32_t material_index;
+    skr::vector<VertexBufferEntry> vertex_buffers;
+    IndexBufferEntry index_buffer;
+    uint32_t vertex_count;
+};
+
+sreflect_struct("guid" : "d3b04ea5-415d-44d5-995a-5c77c64fe1de")
+sattr("rtti" : true, "serialize" : "bin")
+MeshSection 
+{
+    int32_t parent_index;
+    skr_float3_t translation;
+    skr_float3_t scale;
+    skr_float4_t rotation;
+    skr::vector<uint32_t> primive_indices;
+};
+
 sreflect_struct("guid" : "3b8ca511-33d1-4db4-b805-00eea6a8d5e1") 
 sattr("rtti" : true, "serialize" : "bin")
-skr_mesh_resource_t
+MeshResource
 {
-    SKR_RENDERER_API ~skr_mesh_resource_t() SKR_NOEXCEPT;
+    SKR_RENDERER_API ~MeshResource() SKR_NOEXCEPT;
     
     skr::string name;
-    skr::vector<skr_mesh_section_t> sections;
-    skr::vector<skr_mesh_primitive_t> primitives;
-    skr::vector<skr_mesh_buffer_t> bins;
+    skr::vector<MeshSection> sections;
+    skr::vector<MeshPrimitive> primitives;
+    skr::vector<MeshBuffer> bins;
 
     using material_handle_t = skr::resource::TResourceHandle<skr_material_resource_t>;
     skr::vector<material_handle_t> materials;
@@ -104,15 +112,11 @@ skr_mesh_resource_t
     bool install_to_vram SKR_IF_CPP(= true);
     bool install_to_ram SKR_IF_CPP(= true); // TODO: configure this in asset
 
-    sattr("transient": true)
-    struct skr_render_mesh_t* render_mesh SKR_IF_CPP(= nullptr);
+    sattr("no-rtti": true,"transient": true)
+    skr_render_mesh_id render_mesh SKR_IF_CPP(= nullptr);
 };
 
-namespace skr sreflect
-{
-namespace resource sreflect
-{
-struct SKR_RENDERER_API SMeshFactory : public SResourceFactory {
+struct SKR_RENDERER_API SMeshFactory : public resource::SResourceFactory {
     virtual ~SMeshFactory() = default;
 
     struct Root {
@@ -127,7 +131,7 @@ struct SKR_RENDERER_API SMeshFactory : public SResourceFactory {
     [[nodiscard]] static SMeshFactory* Create(const Root& root);
     static void Destroy(SMeshFactory* factory); 
 };
-} // namespace resource
+} // namespace renderer
 } // namespace skr
 #endif
 

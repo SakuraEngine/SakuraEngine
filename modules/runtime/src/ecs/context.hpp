@@ -3,6 +3,7 @@
 #include "type.hpp"
 #include "pool.hpp"
 #include "scheduler.hpp"
+#include "type_registry.hpp"
 
 struct dual_context_t {
     dual_context_t();

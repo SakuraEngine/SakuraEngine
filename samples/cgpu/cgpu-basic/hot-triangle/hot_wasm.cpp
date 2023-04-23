@@ -44,10 +44,10 @@ struct WasmWatcher {
 
             SWAInstanceDescriptor inst_desc = { ESWA_BACKEND_WASM3 };
             wa_instance = swa_create_instance(&inst_desc);
-            SWARuntimeDescriptor runtime_desc = { "wa_runtime", 64 * 1024 };
+            SWARuntimeDescriptor runtime_desc = { u8"wa_runtime", 64 * 1024 };
             wa_runtime = swa_create_runtime(wa_instance, &runtime_desc);
             SWAModuleDescriptor module_desc;
-            module_desc.name = "raster_cmd";
+            module_desc.name = u8"raster_cmd";
             module_desc.wasm = (const uint8_t*)content.c_str();
             module_desc.wasm_size = (uint32_t)content.size();
             module_desc.bytes_pinned_outside = true;

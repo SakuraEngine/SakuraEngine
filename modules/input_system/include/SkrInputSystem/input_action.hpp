@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrInputSystem/input_value.hpp"
-#include "utils/function_ref.hpp"
+#include "EASTL/functional.h"
 
 namespace skr {
 namespace input {
@@ -9,7 +9,7 @@ struct InputModifier;
 struct InputTrigger;
 
 template<typename ValueType>
-using ActionEvent = skr::function_ref<void(const ValueType&)>;
+using ActionEvent = eastl::function<void(const ValueType&)>;
 
 using ActionEventId = skr_guid_t;
 
@@ -48,7 +48,9 @@ protected:
     friend struct InputMapping;
     friend struct InputSystem;
     friend struct InputSystemImpl;
-    virtual void set_current_value(InputValueStorage value) SKR_NOEXCEPT = 0;
+    virtual void set_value(InputValueStorage value) SKR_NOEXCEPT = 0;
+    virtual void clear_value() SKR_NOEXCEPT = 0;
+    virtual void accumulate_value(InputValueStorage value) SKR_NOEXCEPT = 0;
     virtual void process_modifiers(float delta) SKR_NOEXCEPT = 0;
     virtual void process_triggers(float delta) SKR_NOEXCEPT = 0;
 };

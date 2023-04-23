@@ -11,7 +11,7 @@
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 
-SKR_IMPORT_API bool skr_runtime_is_dpi_aware();
+RUNTIME_EXTERN_C RUNTIME_API bool skr_runtime_is_dpi_aware();
 
 void create_imgui_resources(ECGPUFormat format, CGPUSamplerId sampler, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs)
 {

@@ -53,11 +53,11 @@ SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderStage shader_stage, EC
     if (bytecode == nullptr)
     {
         SKR_LOG_ERROR("[DXCCompiler]Unknown Error: Failed to get bytecode!");
-        if (errors != nullptr && errors->GetStringLength() != 0)
-        {
-            SKR_LOG_ERROR("[DXCCompiler]Warnings and Errors:\n%s\n", errors->GetStringPointer());
-            goto FAIL;
-        }
+    }
+    if (errors != nullptr && errors->GetStringLength() != 0)
+    {
+        SKR_LOG_ERROR("[DXCCompiler]Warnings and Errors:\n%s\n", errors->GetStringPointer());
+        if (bytecode == nullptr) goto FAIL;
     }
     result->GetOutput(DXC_OUT_PDB, IID_PPV_ARGS(&pdb), &pdbName);
     if (auto hres = result->GetOutput(DXC_OUT_SHADER_HASH, IID_PPV_ARGS(&hash), nullptr);!SUCCEEDED(hres))
@@ -224,24 +224,25 @@ inline static ECGPUShaderStage getShaderStageFromTargetString(const char* target
     return CGPU_SHADER_STAGE_NONE;
 }
 
-void SDXCCompiler::SetShaderOptions(skr::span<skr_shader_option_t> opt_defs, skr::span<skr_shader_option_instance_t> options_view, const skr_stable_shader_hash_t& option_hash) SKR_NOEXCEPT
+void SDXCCompiler::SetShaderOptions(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options_view, const skr_stable_shader_hash_t& option_hash) SKR_NOEXCEPT
 {
-    option_defs = eastl::vector<skr_shader_option_t>(opt_defs.data(), opt_defs.data() + opt_defs.size());
+    option_defs = eastl::vector<skr_shader_option_template_t>(opt_defs.data(), opt_defs.data() + opt_defs.size());
     options = eastl::vector<skr_shader_option_instance_t>(options_view.data(), options_view.data() + options_view.size());
     options_hash = option_hash;
 }
 
-void SDXCCompiler::SetShaderSwitches(skr::span<skr_shader_option_t> opt_defs, skr::span<skr_shader_option_instance_t> options_view, const skr_stable_shader_hash_t& option_hash) SKR_NOEXCEPT
+void SDXCCompiler::SetShaderSwitches(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options_view, const skr_stable_shader_hash_t& option_hash) SKR_NOEXCEPT
 {
-    switch_defs = eastl::vector<skr_shader_option_t>(opt_defs.data(), opt_defs.data() + opt_defs.size());
+    switch_defs = eastl::vector<skr_shader_option_template_t>(opt_defs.data(), opt_defs.data() + opt_defs.size());
     switches = eastl::vector<skr_shader_option_instance_t>(options_view.data(), options_view.data() + options_view.size());
     switches_hash = option_hash;
 }
 
-void SDXCCompiler::createDefArgsFromOptions(skr::span<skr_shader_option_t> opt_defs, skr::span<skr_shader_option_instance_t> options, eastl::vector<skr::wstring>& outArgs) SKR_NOEXCEPT
+void SDXCCompiler::createDefArgsFromOptions(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options, eastl::vector<skr::wstring>& outArgs) SKR_NOEXCEPT
 {
+    using namespace skr::renderer;
     using utf8_to_utf16 = fmt::detail::utf8_to_utf16;
-    skr_shader_option_t* optdef = nullptr;
+    skr_shader_option_template_t* optdef = nullptr;
     for (auto&& option : options)
     {
         for (auto& opt_def : opt_defs)
@@ -259,7 +260,7 @@ void SDXCCompiler::createDefArgsFromOptions(skr::span<skr_shader_option_t> opt_d
         }
 
         const auto opt_type = optdef->type;
-        if (opt_type == ESkrShaderOptionType::VALUE)
+        if (opt_type == EShaderOptionType::VALUE)
         {
             auto prefix = eastl::wstring(L"-D") + utf8_to_utf16(option.key.c_str()).c_str();
             if (option.value == "on") outArgs.emplace_back(prefix);
@@ -271,12 +272,12 @@ void SDXCCompiler::createDefArgsFromOptions(skr::span<skr_shader_option_t> opt_d
                 outArgs.emplace_back(defination);  
             }
         }
-        else if (opt_type == ESkrShaderOptionType::SELECT)
+        else if (opt_type == EShaderOptionType::SELECT)
         {
             auto defination = eastl::wstring(L"-D") + utf8_to_utf16(option.value.c_str()).c_str();
             outArgs.emplace_back(defination);
         }
-        else if (opt_type == ESkrShaderOptionType::LEVEL)
+        else if (opt_type == EShaderOptionType::LEVEL)
         {
             size_t lv = 0;
             for (size_t level = 0u; level < optdef->value_selections.size(); ++level)

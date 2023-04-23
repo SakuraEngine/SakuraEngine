@@ -4,13 +4,14 @@
 #include "cgpu/flags.h"
 #include "containers/span.hpp"
 #include "containers/string.hpp"
+#include "containers/text.hpp"
 #include <EASTL/functional.h>
 #ifndef __meta__
 #include "SkrShaderCompiler/shader_compiler.generated.h"
 #endif
 
-struct skr_shader_option_t;
-struct skr_shader_option_instance_t;
+SKR_DECLARE_TYPE_ID_FWD(skr::renderer, ShaderOptionInstance, skr_shader_option_instance);
+SKR_DECLARE_TYPE_ID_FWD(skr::renderer, ShaderOptionTemplate, skr_shader_option_template);
 struct skr_stable_shader_hash_t;
 
 namespace skd sreflect
@@ -30,13 +31,13 @@ EShaderSourceType : uint32_t
 
 struct ShaderSourceCode
 {
-    inline ShaderSourceCode(uint8_t* bytes, uint64_t size, const char* name, EShaderSourceType type) SKR_NOEXCEPT
+    inline ShaderSourceCode(uint8_t* bytes, uint64_t size, const char8_t* name, EShaderSourceType type) SKR_NOEXCEPT
         : bytes(bytes), size(size), source_name(name), source_type(type) {}
     ~ShaderSourceCode() SKR_NOEXCEPT;
 
     uint8_t* bytes = nullptr;
     uint64_t size = 0;
-    skr::string source_name;
+    skr::text::text source_name;
     const EShaderSourceType source_type = EShaderSourceType::INVALID;
 };
 
@@ -56,8 +57,8 @@ struct SKR_SHADER_COMPILER_API IShaderCompiler
 
     virtual EShaderSourceType GetSourceType() const SKR_NOEXCEPT = 0;
     virtual bool IsSupportedTargetFormat(ECGPUShaderBytecodeType format) const SKR_NOEXCEPT = 0;
-    virtual void SetShaderSwitches(skr::span<skr_shader_option_t> opt_defs, skr::span<skr_shader_option_instance_t> options, const skr_stable_shader_hash_t& hash) SKR_NOEXCEPT = 0;
-    virtual void SetShaderOptions(skr::span<skr_shader_option_t> opt_defs, skr::span<skr_shader_option_instance_t> options, const skr_stable_shader_hash_t& hash) SKR_NOEXCEPT = 0;
+    virtual void SetShaderSwitches(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options, const skr_stable_shader_hash_t& hash) SKR_NOEXCEPT = 0;
+    virtual void SetShaderOptions(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options, const skr_stable_shader_hash_t& hash) SKR_NOEXCEPT = 0;
     virtual ICompiledShader* Compile(ECGPUShaderBytecodeType format, const ShaderSourceCode& source, const SShaderImporter& importer) SKR_NOEXCEPT = 0;
     virtual void FreeCompileResult(ICompiledShader* compiled) SKR_NOEXCEPT = 0;
 };
@@ -65,6 +66,6 @@ struct SKR_SHADER_COMPILER_API IShaderCompiler
 IShaderCompiler* SkrShaderCompiler_CreateByType(EShaderSourceType type) SKR_NOEXCEPT;
 void SkrShaderCompiler_Destroy(IShaderCompiler* compiler) SKR_NOEXCEPT;
 void Util_ShaderCompilerRegister(EShaderSourceType type, IShaderCompiler*(*ctor)(), void(*dtor)(IShaderCompiler*)) SKR_NOEXCEPT;
-EShaderSourceType Util_GetShaderSourceTypeWithExtensionString(const char* ext) SKR_NOEXCEPT;
+EShaderSourceType Util_GetShaderSourceTypeWithExtensionString(const char8_t* ext) SKR_NOEXCEPT;
 } // namespace asset
 } // namespace skd

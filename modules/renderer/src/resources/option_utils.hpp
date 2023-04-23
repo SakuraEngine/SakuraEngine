@@ -11,9 +11,9 @@ inline void stringfy(opt_signature_string& string, skr::span<skr_shader_option_i
 {
     for (auto&& option : ordered_options)
     {
-        string += option.key.c_str();
+        string.append(option.key.begin(), option.key.end());
         string += "=";
-        string += option.value.c_str();
+        string.append(option.value.begin(), option.value.end());
         string += ";";
     }
 }
@@ -23,9 +23,9 @@ inline void stringfy(opt_signature_string& string, const skr_shader_option_seque
     for (uint32_t i = 0; i < seq.keys.size(); i++)
     {
         const auto selection = indices[i];
-        string += seq.keys[i].data();
+        string.append(seq.keys[i].begin(), seq.keys[i].end());
         string += "=";
-        string += seq.values[i][selection].data();
+        string.append(seq.values[i][selection].begin(), seq.values[i][selection].end());
         string += ";";
     }
 }

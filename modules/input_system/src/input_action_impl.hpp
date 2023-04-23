@@ -9,9 +9,6 @@
 namespace skr {
 namespace input {
 
-template<typename ValueType>
-using ActionEventImpl = eastl::function<void(const ValueType&)>;
-
 struct ActionEventStorage
 {
     eastl::function<void()> callback;
@@ -27,7 +24,7 @@ struct SKR_INPUTSYSTEM_API InputActionImpl : public InputAction
     }
     virtual ~InputActionImpl() SKR_NOEXCEPT;
 
-    ActionEventId bind_event_impl(const ActionEventImpl<InputValueStorage>& event, ActionEventId id = kEventId_Invalid) SKR_NOEXCEPT
+    ActionEventId bind_event(const ActionEvent<InputValueStorage>& event, ActionEventId id = kEventId_Invalid) SKR_NOEXCEPT final
     {
         ActionEventStorage storage;
         storage.event_id = id;
@@ -39,11 +36,6 @@ struct SKR_INPUTSYSTEM_API InputActionImpl : public InputAction
             event(current_value);
         };
         return events.get().emplace_back(storage).event_id;
-    }
-
-    ActionEventId bind_event(const ActionEvent<InputValueStorage>& event, ActionEventId id = kEventId_Invalid) SKR_NOEXCEPT final
-    {
-        return bind_event_impl(event);
     }
 
     const InputValueStorage& get_value() const SKR_NOEXCEPT final
@@ -98,9 +90,25 @@ struct SKR_INPUTSYSTEM_API InputActionImpl : public InputAction
         }
     }
 
-    void set_current_value(InputValueStorage value) SKR_NOEXCEPT final
+    void set_value(InputValueStorage value) SKR_NOEXCEPT final
     {
         current_value = value;
+    }
+
+    void clear_value() SKR_NOEXCEPT final
+    {
+        current_value = InputValueStorage(current_value.get_type(), skr_float4_t{ 0.f, 0.f, 0.f, 0.f });
+    }
+
+    void accumulate_value(InputValueStorage value) SKR_NOEXCEPT final
+    {
+        skr_float4_t v = current_value.get_raw();
+        skr_float4_t v2 = value.get_raw();
+        v.x += v2.x;
+        v.y += v2.y;
+        v.z += v2.z;
+        v.w += v2.w;
+        current_value = InputValueStorage(current_value.get_type(), v);
     }
 
     void process_modifiers(float delta) SKR_NOEXCEPT final

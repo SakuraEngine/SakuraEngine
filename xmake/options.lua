@@ -16,6 +16,12 @@ option("build_samples")
     set_description("Toggle to build samples of SakuraRuntime")
 option_end()
 
+option("build_wasm3_samples")
+    set_default(false)
+    set_showmenu(true)
+    set_description("Toggle to build samples of wasm3")
+option_end()
+
 option("build_cgpu_samples")
     set_default(false)
     set_showmenu(true)
@@ -62,4 +68,20 @@ option("use_tracy")
     set_values("auto", "enable", "disable")
     set_showmenu(true)
     set_description("Toggle to use tracy profile")
+option_end()
+
+option("cxx_version")
+    -- "auto", "enable", "disable"
+    set_default("cxx20")
+    set_values("cxx17", "cxx20", "cxx23")
+    set_showmenu(true)
+    set_description("c++ version of project")
+option_end()
+
+option("c_version")
+    -- "auto", "enable", "disable"
+    set_default("c11")
+    set_values("c11")
+    set_showmenu(true)
+    set_description("c version of project")
 option_end()

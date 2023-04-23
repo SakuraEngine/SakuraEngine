@@ -62,18 +62,17 @@ sreflect_struct(
     "guid" : "AE2C7477-8A44-4339-BE5D-64D05D7E05B1",
     "component" : true //, "serialize" : "USD"
 )
-SKR_ALIGNAS(16) skr_l2w_comp_t
+SKR_ALIGNAS(16) skr_transform_comp_t
 {
-    skr_float4x4_t matrix;
+    skr_transform_t value;
 };
 
-sreflect_struct("guid" : "869F46D3-992A-4C18-9538-BDC48F4BED1D", "component" : true)
-SKR_ALIGNAS(16) skr_l2r_comp_t
-{
-    skr_float4x4_t matrix;
-};
-
-sreflect_struct("guid" : "78DD218B-87DE-4250-A7E8-A6B4553B47BF", "component" : true)
+sreflect_struct(
+    "guid" : "78DD218B-87DE-4250-A7E8-A6B4553B47BF", 
+    "component" : true, 
+    "serialize" : ["bin", "json"],
+    "rtti" : true
+)
 skr_rotation_comp_t
 {
     skr_rotator_t euler;
@@ -81,14 +80,20 @@ skr_rotation_comp_t
 
 struct sreflect sattr(
     "guid" : "A059A2A1-CC3B-43B0-88B6-ADA7822BA25D",
-    "component" : true
+    "component" : true, 
+    "serialize" : ["bin", "json"],
+    "rtti" : true
 )
 skr_translation_comp_t
 {
     skr_float3_t value;
 };
 
-sreflect_struct("guid" : "D045D755-FBD1-44C2-8BF0-C86F2D8485FF", "component" : true)
+sreflect_struct(
+    "guid" : "D045D755-FBD1-44C2-8BF0-C86F2D8485FF", 
+    "component" : true, 
+    "serialize" : ["bin", "json"],
+    "rtti" : true)
 skr_scale_comp_t
 {
     skr_float3_t value;
@@ -110,13 +115,14 @@ skr_camera_comp_t
 };
 
 struct skr_transform_system_t {
-    dual_query_t* localToWorld;
-    dual_query_t* localToRelative;
     dual_query_t* relativeToWorld;
 };
 
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_setup(dual_storage_t* world, skr_transform_system_t* system);
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_transform_update(skr_transform_system_t* query);
+SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_propagate_transform(dual_storage_t* world, dual_entity_t* entities, uint32_t count);
+SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_save_scene(dual_storage_t* world, struct skr_json_writer_t* writer);
+SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_load_scene(dual_storage_t* world, struct skr_json_reader_t* reader);
 
 #ifdef __cplusplus
 #include "lua/bind.hpp"

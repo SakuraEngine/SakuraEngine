@@ -1,0 +1,6 @@
+target("BitpackTest")
+    set_group("05.tests")
+    set_kind("binary")
+    public_dependency("SkrRT", engine_version)
+    add_packages("gtest")
+    add_files("bitpack.cpp")

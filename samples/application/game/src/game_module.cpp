@@ -10,8 +10,9 @@
 #include "platform/time.h"
 #include "platform/guid.hpp"
 #include "platform/window.h"
-#include "ecs/callback.hpp"
+
 #include "ecs/type_builder.hpp"
+#include "json/writer.h"
 
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/resource_node.hpp"
@@ -73,10 +74,10 @@ class SGameModule : public skr::IDynamicModule
 
     skr::resource::STextureFactory* textureFactory = nullptr;
     skr::resource::STextureSamplerFactory* textureSamplerFactory = nullptr;
-    skr::resource::SMeshFactory* meshFactory = nullptr;
-    skr::resource::SShaderResourceFactory* shaderFactory = nullptr;
-    skr::resource::SMaterialTypeFactory* matTypeFactory = nullptr;
-    skr::resource::SMaterialFactory* matFactory = nullptr;
+    skr::renderer::SMeshFactory* meshFactory = nullptr;
+    skr::renderer::SShaderResourceFactory* shaderFactory = nullptr;
+    skr::renderer::SMaterialTypeFactory* matTypeFactory = nullptr;
+    skr::renderer::SMaterialFactory* matFactory = nullptr;
 
     skr::resource::SAnimFactory* animFactory = nullptr;
     skr::resource::SSkelFactory* skeletonFactory = nullptr;
@@ -146,7 +147,8 @@ void SGameModule::installResourceFactories()
         tex_resource_vfs = skr_create_vfs(&tex_vfs_desc);
 
         skr::resource::STextureFactory::Root factoryRoot = {};
-        factoryRoot.dstorage_root = gameResourceRoot.u8string().c_str();
+        auto RootStr = gameResourceRoot.u8string();
+        factoryRoot.dstorage_root = RootStr.c_str();
         factoryRoot.vfs = tex_resource_vfs;
         factoryRoot.ram_service = ram_service;
         factoryRoot.vram_service = game_render_device->get_vram_service();
@@ -156,13 +158,14 @@ void SGameModule::installResourceFactories()
     }
     // mesh factory
     {
-        skr::resource::SMeshFactory::Root factoryRoot = {};
-        factoryRoot.dstorage_root = gameResourceRoot.u8string().c_str();
+        skr::renderer::SMeshFactory::Root factoryRoot = {};
+        auto RootStr = gameResourceRoot.u8string();
+        factoryRoot.dstorage_root = RootStr.c_str();
         factoryRoot.vfs = tex_resource_vfs;
         factoryRoot.ram_service = ram_service;
         factoryRoot.vram_service = game_render_device->get_vram_service();
         factoryRoot.render_device = game_render_device;
-        meshFactory = skr::resource::SMeshFactory::Create(factoryRoot);
+        meshFactory = skr::renderer::SMeshFactory::Create(factoryRoot);
         resource_system->RegisterFactory(meshFactory);
     }
     // shader factory
@@ -189,29 +192,29 @@ void SGameModule::installResourceFactories()
         shadermap = skr_shader_map_create(&shadermapRoot);
 
         // create shader resource factory
-        skr::resource::SShaderResourceFactory::Root factoryRoot = {};
+        skr::renderer::SShaderResourceFactory::Root factoryRoot = {};
         factoryRoot.render_device = game_render_device;
         factoryRoot.shadermap = shadermap;
-        shaderFactory = skr::resource::SShaderResourceFactory::Create(factoryRoot);
+        shaderFactory = skr::renderer::SShaderResourceFactory::Create(factoryRoot);
         resource_system->RegisterFactory(shaderFactory);
     }
 
     // material type factory
     {
-        skr::resource::SMaterialTypeFactory::Root factoryRoot = {};
+        skr::renderer::SMaterialTypeFactory::Root factoryRoot = {};
         factoryRoot.render_device = game_render_device;
-        matTypeFactory = skr::resource::SMaterialTypeFactory::Create(factoryRoot);
+        matTypeFactory = skr::renderer::SMaterialTypeFactory::Create(factoryRoot);
         resource_system->RegisterFactory(matTypeFactory);
     }
 
     // material factory
     {
-        skr::resource::SMaterialFactory::Root factoryRoot = {};
+        skr::renderer::SMaterialFactory::Root factoryRoot = {};
         factoryRoot.device = game_render_device->get_cgpu_device();
         factoryRoot.aux_service = game_render_device->get_aux_service(0);
         factoryRoot.ram_service = ram_service;
         factoryRoot.bytecode_vfs = shader_bytes_vfs;
-        matFactory = skr::resource::SMaterialFactory::Create(factoryRoot);
+        matFactory = skr::renderer::SMaterialFactory::Create(factoryRoot);
         resource_system->RegisterFactory(matFactory);
     }
 
@@ -268,10 +271,10 @@ void SGameModule::uninstallResourceFactories()
 
     skr::resource::STextureSamplerFactory::Destroy(textureSamplerFactory);
     skr::resource::STextureFactory::Destroy(textureFactory);
-    skr::resource::SMeshFactory::Destroy(meshFactory);
-    skr::resource::SShaderResourceFactory::Destroy(shaderFactory);
-    skr::resource::SMaterialTypeFactory::Destroy(matTypeFactory);
-    skr::resource::SMaterialFactory::Destroy(matFactory);
+    skr::renderer::SMeshFactory::Destroy(meshFactory);
+    skr::renderer::SShaderResourceFactory::Destroy(shaderFactory);
+    skr::renderer::SMaterialTypeFactory::Destroy(matTypeFactory);
+    skr::renderer::SMaterialFactory::Destroy(matFactory);
     
     SkrDelete(animFactory);
     SkrDelete(skeletonFactory);
@@ -316,7 +319,8 @@ void create_test_scene(SRendererId renderer)
     renderableT_builder
     .with<skr_translation_comp_t, skr_rotation_comp_t, skr_scale_comp_t>()
     .with<skr_index_comp_t, skr_movement_comp_t>()
-    .with<skr_render_effect_t>();
+    .with<skr_render_effect_t>()
+    .with(DUAL_COMPONENT_GUID);
     // allocate renderable
     auto renderableT = make_zeroed<dual_entity_type_t>();
     renderableT.type = renderableT_builder.build();
@@ -328,9 +332,11 @@ void create_test_scene(SRendererId renderer)
         auto indices = dual::get_owned_rw<skr_index_comp_t>(view);
         auto movements = dual::get_owned_rw<skr_movement_comp_t>(view);
         auto states = dual::get_owned_rw<game::anim_state_t>(view);
-        
+        auto guids = (skr_guid_t*)dualV_get_owned_ro(view, DUAL_COMPONENT_GUID);
         for (uint32_t i = 0; i < view->count; i++)
         {
+            if(guids)
+                dual_make_guid(&guids[i]);
             if (movements)
             {
                 translations[i].value = { 0.f, 0.f, 0.f };
@@ -542,8 +548,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
 
     // loop
     bool quit = false;
-    dual::counter_t pSkinCounter;
-    pSkinCounter.counter = nullptr;
+    skr::task::event_t pSkinCounter(nullptr);
     dual_query_t* initAnimSkinQuery;
     dual_query_t* skinQuery;
     dual_query_t* moveQuery;
@@ -554,7 +559,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
     cameraQuery = dualQ_from_literal(game_world,
         "[has]skr_movement_comp_t, [inout]skr_translation_comp_t, [inout]skr_camera_comp_t");
     animQuery = dualQ_from_literal(game_world,
-        "[in]skr_render_effect_t, [in]game::anim_state_t, [out]<rand>?skr_render_anim_comp_t, [in]<rand>?skr_render_skel_comp_t");
+        "[in]skr_render_effect_t, [in]game::anim_state_t, [out]<unseq>skr_render_anim_comp_t, [in]<unseq>skr_render_skel_comp_t");
     initAnimSkinQuery = dualQ_from_literal(game_world, 
         "[inout]skr_render_anim_comp_t, [inout]skr_render_skin_comp_t, [in]skr_render_mesh_comp_t, [in]skr_render_skel_comp_t");
     skinQuery = dualQ_from_literal(game_world, 
@@ -652,6 +657,22 @@ int SGameModule::main_module_exec(int argc, char** argv)
                 }
                 ImGui::End();
             }
+            {
+                ImGui::Begin("Scene");
+                if (ImGui::Button("Save"))
+                {
+                    skr_json_writer_t writer(5);
+                    skr_save_scene(game_renderer->get_dual_storage(), &writer);
+                    auto file = skr_vfs_fopen(resource_vfs, u8"scene.json", SKR_FM_WRITE, SKR_FILE_CREATION_ALWAYS_NEW);
+                    if (file)
+                    {
+                        auto str = writer.Str();
+                        skr_vfs_fwrite(file, str.data(), 0, str.length());
+                        skr_vfs_fclose(file);
+                    }
+                }
+                ImGui::End();
+            }
             imgui_button_spawn_girl(game_renderer);
             skr::inspect::update_value_inspector();
             // quit |= skg::GameLoop(ctx);
@@ -674,7 +695,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             auto total_sec = (double)timer / CLOCKS_PER_SEC;
 
             auto moveJob = SkrNewLambda(
-                [=](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+                [=](dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
                 ZoneScopedN("MoveJob");
 
                 float lerps[] = { 12.5, 20 };
@@ -709,7 +730,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
         // [inout]skr_render_anim_comp_t, [in]game::anim_state_t, [in]skr_render_skel_comp_t
         {
             ZoneScopedN("AnimSystem");
-            auto animJob = SkrNewLambda([=](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+            auto animJob = SkrNewLambda([=](dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
                 ZoneScopedN("AnimJob");
                 auto states = (game::anim_state_t*)dualV_get_owned_ro_local(view, localTypes[1]);
                 uint32_t g_id = 0;
@@ -775,14 +796,12 @@ int SGameModule::main_module_exec(int argc, char** argv)
             }
 
             // wait last skin dispatch
-            if (pSkinCounter)
-                dualJ_wait_counter(*pSkinCounter, true);
-            else
-                *pSkinCounter = dualJ_create_counter(true);
+            if(pSkinCounter)
+                pSkinCounter.wait(true);
                 
             // skin dispatch for the frame
             auto cpuSkinJob = SkrNewLambda(
-                [&](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+                [&](dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
                 const auto meshes = dual::get_component_ro<skr_render_mesh_comp_t>(view);
                 const auto anims = dual::get_component_ro<skr_render_anim_comp_t>(view);
                 auto skins = dual::get_owned_rw<skr_render_skin_comp_t>(view);
@@ -800,14 +819,14 @@ int SGameModule::main_module_exec(int argc, char** argv)
                     }
                 }
             });
-            dualJ_schedule_ecs(skinQuery, 4, DUAL_LAMBDA_POINTER(cpuSkinJob), nullptr, &*pSkinCounter);
+            dualJ_schedule_ecs(skinQuery, 4, DUAL_LAMBDA_POINTER(cpuSkinJob), nullptr, &pSkinCounter);
         }
         // [has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_camera_comp_t
         if (bUseJob)
         {
             ZoneScopedN("PlayerSystem");
 
-            auto playerJob = SkrNewLambda([=](dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
+            auto playerJob = SkrNewLambda([=](dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
                 ZoneScopedN("PlayerJob");
 
                 auto translations = (skr_translation_comp_t*)dualV_get_owned_rw_local(view, localTypes[0]);

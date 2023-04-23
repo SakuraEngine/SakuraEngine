@@ -26,13 +26,18 @@ template <class T>
 struct TResourceHandle;
 }
 // end forward declaration for resources
+struct skr_json_format_t
+{
+    bool enable = true;
+    uint32_t indentSize = 4;
+};
 
 struct RUNTIME_API skr_json_writer_t {
 public:
     using TChar = skr_json_writer_char_t;
     using TSize = skr_json_writer_size_t;
 
-    skr_json_writer_t(size_t levelDepth);
+    skr_json_writer_t(size_t levelDepth, skr_json_format_t format = skr_json_format_t());
     inline bool IsComplete() { return _hasRoot && _levelStack.empty(); }
     skr::string Str() const;
     bool Bool(bool b);
@@ -76,9 +81,11 @@ protected:
     bool _WriteEndArray();
     bool _WriteRawValue(const TChar* str, TSize length);
     bool _Prefix(ESkrJsonType type);
+    bool _NewLine();
 
     bool _hasRoot = false;
     eastl::vector<Level> _levelStack;
+    skr_json_format_t _format;
 };
 #else
 typedef struct skr_json_writer_t skr_json_writer_t;
@@ -113,18 +120,34 @@ struct WriteTrait<const int32_t&> {
 };
 
 template <>
-struct WriteTrait<const uint32_t&> {
-    static void Write(skr_json_writer_t* writer, uint32_t i)
+struct WriteTrait<const int64_t&> {
+    static void Write(skr_json_writer_t* writer, int64_t i)
+    {
+        writer->Int64(i);
+    }
+};
+
+template <>
+struct WriteTrait<const uint8_t&> {
+    static void Write(skr_json_writer_t* writer, uint8_t i)
     {
         writer->UInt(i);
     }
 };
 
 template <>
-struct WriteTrait<const int64_t&> {
-    static void Write(skr_json_writer_t* writer, int64_t i)
+struct WriteTrait<const uint16_t&> {
+    static void Write(skr_json_writer_t* writer, uint16_t i)
     {
-        writer->Int64(i);
+        writer->UInt(i);
+    }
+};
+
+template <>
+struct WriteTrait<const uint32_t&> {
+    static void Write(skr_json_writer_t* writer, uint32_t i)
+    {
+        writer->UInt(i);
     }
 };
 
@@ -253,6 +276,19 @@ struct WriteTrait<const skr::resource::TResourceHandle<T>&> {
 template <class V, class Allocator>
 struct WriteTrait<const eastl::vector<V, Allocator>&> {
     static void Write(skr_json_writer_t* json, const eastl::vector<V, Allocator>& vec)
+    {
+        json->StartArray();
+        for (auto& v : vec)
+        {
+            skr::json::Write<const V&>(json, v);
+        }
+        json->EndArray();
+    }
+};
+
+template <class V>
+struct WriteTrait<const eastl::span<V>&> {
+    static void Write(skr_json_writer_t* json, const eastl::span<V>& vec)
     {
         json->StartArray();
         for (auto& v : vec)

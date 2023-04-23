@@ -78,7 +78,7 @@ cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr_io_ram_service_t*
     // prepare io
     skr_ram_io_t ramIO = {};
     ramIO.offset = 0;
-    ramIO.path = u8Path.c_str();
+    ramIO.path = (const char8_t*)u8Path.c_str();
     ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
         auto cbData = (CallbackData*)data;
         cbData->pCounter->signal();

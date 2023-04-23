@@ -464,7 +464,7 @@ struct VkUtil_DescriptorPool* VkUtil_CreateDescriptorPool(CGPUDevice_Vulkan* D)
         .maxSets = 8192
     };
     CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorPool(
-    D->pVkDevice, &poolCreateInfo, GLOBAL_VkAllocationCallbacks, &Pool->pVkDescPool));
+        D->pVkDevice, &poolCreateInfo, GLOBAL_VkAllocationCallbacks, &Pool->pVkDescPool));
     return Pool;
 }
 

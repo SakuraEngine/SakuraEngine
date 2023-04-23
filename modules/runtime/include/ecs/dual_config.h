@@ -32,6 +32,10 @@ typedef struct dual_entity_debug_proxy_t {
 #define DUAL_NULL_ENTITY 0xFFFFFFFF
 #define DUAL_NULL_TYPE 0xFFFFFFFF
 
+#define DUAL_ENTITY_ID(e) ((e) & DUAL_ENTITY_ID_MASK)
+#define DUAL_ENTITY_VERSION(e) (((e) >> DUAL_ENTITY_VERSION_OFFSET) & DUAL_ENTITY_VERSION_MASK)
+#define DUAL_ENTITY(id, version) (((version & DUAL_ENTITY_VERSION_MASK) << DUAL_ENTITY_VERSION_OFFSET) | (id & DUAL_ENTITY_ID_MASK))
+
 #ifndef forloop
     #define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
 #endif

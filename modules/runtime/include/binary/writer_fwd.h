@@ -1,8 +1,11 @@
 #pragma once
 #include <type_traits>
-#include "platform/configure.h"
 #include "binary/blob_fwd.h"
 #include "utils/traits.hpp"
+#include "platform/debug.h"
+
+// FUCK MSVC COMPILER
+RUNTIME_EXTERN_C RUNTIME_API void skr_debug_output(const char* msg);
 
 struct skr_binary_writer_t;
 
@@ -11,28 +14,26 @@ namespace skr::binary
 template <class T, class = void>
 struct WriteTrait;
 
-template <class T>
-int Archive(skr_binary_writer_t* writer, const T& value)
+template <class T, class ...Args>
+int Archive(skr_binary_writer_t* writer, const T& value, Args&&... args)
 {
-    return WriteTrait<const T&>::Write(writer, value);
+    return WriteTrait<const T&>::Write(writer, value, std::forward<Args>(args)...);
 }
 
-template <class T>
-int Archive(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const T& value)
+template <class T, class ...Args>
+int ArchiveBlob(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const T& value, Args&&... args)
 {
     if constexpr (is_complete_v<BlobTrait<T>>)
     {
         if (arena.get_buffer() == nullptr)
         {
-#ifdef _DEBUG
             SKR_ASSERT(!arena.get_size());
-#endif
             return 0;
         }
-        return WriteTrait<const T&>::Write(writer, arena, value);
+        return WriteTrait<const T&>::Write(writer, arena, value, std::forward<Args>(args)...);
     }
     else
-        return WriteTrait<const T&>::Write(writer, value);
+        return WriteTrait<const T&>::Write(writer, value, std::forward<Args>(args)...);
 }
 }
 

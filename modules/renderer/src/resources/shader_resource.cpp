@@ -12,7 +12,6 @@
 #include "containers/sptr.hpp"
 #include "utils/io.h"
 #include "option_utils.hpp"
-
 #include "tracy/Tracy.hpp"
 
 skr_stable_shader_hash_t::skr_stable_shader_hash_t(uint32_t a, uint32_t b, uint32_t c, uint32_t d) SKR_NOEXCEPT
@@ -41,10 +40,10 @@ skr_stable_shader_hash_t skr_stable_shader_hash_t::hash_string(const char* str, 
 skr_stable_shader_hash_t skr_stable_shader_hash_t::from_string(const char* str) SKR_NOEXCEPT
 {
     skr_stable_shader_hash_t result;
-    result.valuea = std::stoul(str);
-    result.valueb = std::stoul(str + 8);
-    result.valuec = std::stoul(str + 16);
-    result.valued = std::stoul(str + 24);
+    result.valuea = std::stoul((const char*)str);
+    result.valueb = std::stoul((const char*)str + 8);
+    result.valuec = std::stoul((const char*)str + 16);
+    result.valued = std::stoul((const char*)str + 24);
     return result;
 }
 
@@ -101,8 +100,15 @@ skr_stable_shader_hash_t skr_shader_option_sequence_t::calculate_stable_hash(con
 
 namespace skr
 {
-namespace resource
+namespace renderer
 {
+using namespace skr::resource;
+
+ShaderCollectionResource::~ShaderCollectionResource() SKR_NOEXCEPT
+{
+
+}
+
 struct SKR_RENDERER_API SShaderResourceFactoryImpl : public SShaderResourceFactory
 {
     SShaderResourceFactoryImpl(const SShaderResourceFactory::Root& root)

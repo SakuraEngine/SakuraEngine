@@ -1,11 +1,11 @@
 #pragma once
 #include <type_traits>
-#include "platform/configure.h"
 #include "binary/blob_fwd.h"
 #include "utils/traits.hpp"
-#ifdef _DEBUG
 #include "platform/debug.h"
-#endif
+
+// FUCK MSVC COMPILER
+RUNTIME_EXTERN_C RUNTIME_API void skr_debug_output(const char* msg);
 
 struct skr_binary_reader_t;
 
@@ -16,28 +16,26 @@ namespace binary
 template <class T, class = void>
 struct ReadTrait;
 
-template <class T>
-int Archive(skr_binary_reader_t* reader, T&& value)
+template <class T, class... Args>
+int Archive(skr_binary_reader_t* reader, T&& value, Args&&... args)
 {
-    return ReadTrait<std::decay_t<T>>::Read(reader, value);
+    return ReadTrait<std::decay_t<T>>::Read(reader, value, std::forward<Args>(args)...);
 }
 
-template <class T>
-int Archive(skr_binary_reader_t* reader, skr_blob_arena_t& arena, T&& value)
+template <class T, class... Args>
+int ArchiveBlob(skr_binary_reader_t* reader, skr_blob_arena_t& arena, T&& value, Args&&... args)
 {
     if constexpr (is_complete_v<BlobTrait<std::decay_t<T>>>)
     {
         if (arena.get_buffer() == nullptr)
         {
-#ifdef _DEBUG
             SKR_ASSERT(!arena.get_size());
-#endif
             return 0;
         }
-        return ReadTrait<std::decay_t<T>>::Read(reader, arena, value);
+        return ReadTrait<std::decay_t<T>>::Read(reader, arena, value, std::forward<Args>(args)...);
     }
     else
-        return ReadTrait<std::decay_t<T>>::Read(reader, value);
+        return ReadTrait<std::decay_t<T>>::Read(reader, value, std::forward<Args>(args)...);
 }
 }
 }

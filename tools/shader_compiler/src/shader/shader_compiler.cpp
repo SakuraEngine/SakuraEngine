@@ -67,11 +67,11 @@ void Util_ShaderCompilerRegister(asset::EShaderSourceType type, IShaderCompiler*
     SShaderCompilerModule::dtors.emplace(type, dtor);
 }
 
-asset::EShaderSourceType Util_GetShaderSourceTypeWithExtensionString(const char* ext) SKR_NOEXCEPT
+asset::EShaderSourceType Util_GetShaderSourceTypeWithExtensionString(const char8_t* ext) SKR_NOEXCEPT
 {
-    if ((strcmp(ext, "hlsl") == 0) || (strcmp(ext, ".hlsl") == 0))
+    if ((strcmp((const char*)ext, "hlsl") == 0) || (strcmp((const char*)ext, ".hlsl") == 0))
         return asset::EShaderSourceType::HLSL;
-    else if ((strcmp(ext, "sksl") == 0) || (strcmp(ext, ".sksl") == 0))
+    else if ((strcmp((const char*)ext, "sksl") == 0) || (strcmp((const char*)ext, ".sksl") == 0))
         return asset::EShaderSourceType::SKSL;
     else
         return asset::EShaderSourceType::INVALID;

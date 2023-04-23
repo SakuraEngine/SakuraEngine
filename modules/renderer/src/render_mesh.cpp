@@ -8,7 +8,7 @@
 #include "SkrRenderer/render_mesh.h"
 #include <platform/filesystem.hpp>
 
-#include "ecs/callback.hpp"
+
 
 #include "tracy/Tracy.hpp"
 

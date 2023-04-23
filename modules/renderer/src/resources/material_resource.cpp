@@ -16,8 +16,9 @@
 
 namespace skr
 {
-namespace resource
+namespace renderer
 {
+using namespace skr::resource;
 
 struct SMaterialFactoryImpl : public SMaterialFactory
 {

@@ -101,7 +101,7 @@
 #   define BOOST_IS_POD(T) (__is_pod(T) && __is_trivially_constructible(T))
 #   define BOOST_IS_EMPTY(T) __is_empty(T)
 #   define BOOST_HAS_TRIVIAL_CONSTRUCTOR(T) __is_trivially_constructible(T)
-#   define BOOST_HAS_TRIVIAL_ASSIGN(T) (__has_trivial_assign(T) || ( ::boost::is_pod<T>::value && ! ::boost::is_const<T>::value && !::boost::is_volatile<T>::value))
+#   define BOOST_HAS_TRIVIAL_ASSIGN(T) (__is_trivially_assignable(T, T) || ( ::boost::is_pod<T>::value && ! ::boost::is_const<T>::value && !::boost::is_volatile<T>::value))
 #   define BOOST_HAS_TRIVIAL_DESTRUCTOR(T) (__is_trivially_destructible(T) || ::boost::is_pod<T>::value)
 #   define BOOST_HAS_NOTHROW_CONSTRUCTOR(T) (__has_nothrow_constructor(T) || ::boost::has_trivial_constructor<T>::value)
 #if !defined(BOOST_INTEL)
@@ -111,7 +111,7 @@
 #   define BOOST_HAS_NOTHROW_COPY(T) ((__is_nothrow_constructible(T, typename add_lvalue_reference<typename add_const<T>::type>::type)) && !is_array<T>::value)
 #   define BOOST_HAS_TRIVIAL_COPY(T) (__is_trivially_constructible(T, typename add_lvalue_reference<typename add_const<T>::type>::type))
 #endif
-#   define BOOST_HAS_NOTHROW_ASSIGN(T) (__has_nothrow_assign(T) || ::boost::has_trivial_assign<T>::value)
+#   define BOOST_HAS_NOTHROW_ASSIGN(T) (__is_nothrow_assignable(T, T) || ::boost::has_trivial_assign<T>::value)
 #   define BOOST_HAS_VIRTUAL_DESTRUCTOR(T) __has_virtual_destructor(T)
 
 #   define BOOST_IS_ABSTRACT(T) __is_abstract(T)
@@ -190,7 +190,7 @@
 #     define BOOST_HAS_TRIVIAL_COPY(T) (__is_trivially_copyable(T) && !is_reference<T>::value)
 #   endif
 #   if __has_feature(has_trivial_assign)
-#     define BOOST_HAS_TRIVIAL_ASSIGN(T) (__has_trivial_assign(T) && !is_volatile<T>::value && is_assignable<T&, const T&>::value)
+#     define BOOST_HAS_TRIVIAL_ASSIGN(T) (__is_trivially_assignable(T, T) && !is_volatile<T>::value && is_assignable<T&, const T&>::value)
 #   endif
 #   if __has_feature(has_trivial_destructor)
 #     define BOOST_HAS_TRIVIAL_DESTRUCTOR(T) (__is_trivially_destructible(T)  && is_destructible<T>::value)
@@ -202,7 +202,7 @@
 #     define BOOST_HAS_NOTHROW_COPY(T) (__is_nothrow_constructible(T) && !is_volatile<T>::value && !is_reference<T>::value && is_copy_constructible<T>::value)
 #   endif
 #   if __has_feature(has_nothrow_assign)
-#     define BOOST_HAS_NOTHROW_ASSIGN(T) (__has_nothrow_assign(T) && !is_volatile<T>::value && is_assignable<T&, const T&>::value)
+#     define BOOST_HAS_NOTHROW_ASSIGN(T) (__is_nothrow_assignable(T, T) && !is_volatile<T>::value && is_assignable<T&, const T&>::value)
 #   endif
 #   if __has_feature(has_virtual_destructor)
 #     define BOOST_HAS_VIRTUAL_DESTRUCTOR(T) __has_virtual_destructor(T)
@@ -265,19 +265,19 @@
 #   define BOOST_HAS_TRIVIAL_CONSTRUCTOR(T) ((__is_trivially_constructible(T) BOOST_INTEL_TT_OPTS) && ! ::boost::is_volatile<T>::value)
 #   define BOOST_HAS_TRIVIAL_COPY(T) ((__is_trivially_copyable(T) BOOST_INTEL_TT_OPTS) && !is_reference<T>::value)
 #if (__GNUC__ * 100 + __GNUC_MINOR__) >= 409
-#   define BOOST_HAS_TRIVIAL_ASSIGN(T) ((__has_trivial_assign(T) BOOST_INTEL_TT_OPTS) && ! ::boost::is_volatile<T>::value && ! ::boost::is_const<T>::value && is_assignable<T&, const T&>::value)
+#   define BOOST_HAS_TRIVIAL_ASSIGN(T) ((__is_trivially_assignable(T, T) BOOST_INTEL_TT_OPTS) && ! ::boost::is_volatile<T>::value && ! ::boost::is_const<T>::value && is_assignable<T&, const T&>::value)
 #   define BOOST_HAS_TRIVIAL_DESTRUCTOR(T) (__is_trivially_destructible(T) BOOST_INTEL_TT_OPTS && is_destructible<T>::value)
 #   define BOOST_HAS_NOTHROW_CONSTRUCTOR(T) (__has_nothrow_constructor(T) && is_default_constructible<T>::value BOOST_INTEL_TT_OPTS)
 #   define BOOST_HAS_NOTHROW_COPY(T) ((__is_nothrow_constructible(T) BOOST_INTEL_TT_OPTS) && !is_volatile<T>::value && !is_reference<T>::value && is_copy_constructible<T>::value)
-#   define BOOST_HAS_NOTHROW_ASSIGN(T) ((__has_nothrow_assign(T) BOOST_INTEL_TT_OPTS) && !is_volatile<T>::value && !is_const<T>::value && is_assignable<T&, const T&>::value)
+#   define BOOST_HAS_NOTHROW_ASSIGN(T) ((__is_nothrow_assignable(T, T) BOOST_INTEL_TT_OPTS) && !is_volatile<T>::value && !is_const<T>::value && is_assignable<T&, const T&>::value)
 #else
-#   define BOOST_HAS_TRIVIAL_ASSIGN(T) ((__has_trivial_assign(T) BOOST_INTEL_TT_OPTS) && ! ::boost::is_volatile<T>::value && ! ::boost::is_const<T>::value)
+#   define BOOST_HAS_TRIVIAL_ASSIGN(T) ((__is_trivially_assignable(T, T) BOOST_INTEL_TT_OPTS) && ! ::boost::is_volatile<T>::value && ! ::boost::is_const<T>::value)
 #   define BOOST_HAS_TRIVIAL_DESTRUCTOR(T) (__is_trivially_destructible(T) BOOST_INTEL_TT_OPTS)
 #   define BOOST_HAS_NOTHROW_CONSTRUCTOR(T) (__has_nothrow_constructor(T) BOOST_INTEL_TT_OPTS)
 #if ((__GNUC__ * 100 + __GNUC_MINOR__) != 407) && ((__GNUC__ * 100 + __GNUC_MINOR__) != 408)
 #   define BOOST_HAS_NOTHROW_COPY(T) ((__is_nothrow_constructible(T) BOOST_INTEL_TT_OPTS) && !is_volatile<T>::value && !is_reference<T>::value && !is_array<T>::value)
 #endif
-#   define BOOST_HAS_NOTHROW_ASSIGN(T) ((__has_nothrow_assign(T) BOOST_INTEL_TT_OPTS) && !is_volatile<T>::value && !is_const<T>::value && !is_array<T>::value)
+#   define BOOST_HAS_NOTHROW_ASSIGN(T) ((__is_nothrow_assignable(T, T) BOOST_INTEL_TT_OPTS) && !is_volatile<T>::value && !is_const<T>::value && !is_array<T>::value)
 #endif
 #   define BOOST_HAS_VIRTUAL_DESTRUCTOR(T) __has_virtual_destructor(T)
 
@@ -340,11 +340,11 @@
 #   define BOOST_IS_EMPTY(T) __is_empty(T)
 #   define BOOST_HAS_TRIVIAL_CONSTRUCTOR(T) __is_trivially_constructible(T)
 #   define BOOST_HAS_TRIVIAL_COPY(T) (__is_trivially_copyable(T) && !is_reference<T>::value)
-#   define BOOST_HAS_TRIVIAL_ASSIGN(T) (__has_trivial_assign(T) && !is_volatile<T>::value)
+#   define BOOST_HAS_TRIVIAL_ASSIGN(T) (__is_trivially_assignable(T, T) && !is_volatile<T>::value)
 #   define BOOST_HAS_TRIVIAL_DESTRUCTOR(T) __is_trivially_destructible(T)
 #   define BOOST_HAS_NOTHROW_CONSTRUCTOR(T) __has_nothrow_constructor(T)
 #   define BOOST_HAS_NOTHROW_COPY(T) (__is_nothrow_constructible(T) && !is_volatile<T>::value && !is_reference<T>::value)
-#   define BOOST_HAS_NOTHROW_ASSIGN(T) (__has_nothrow_assign(T) && !is_volatile<T>::value)
+#   define BOOST_HAS_NOTHROW_ASSIGN(T) (__is_nothrow_assignable(T, T) && !is_volatile<T>::value)
 #   define BOOST_HAS_VIRTUAL_DESTRUCTOR(T) __has_virtual_destructor(T)
 
 #   define BOOST_IS_ABSTRACT(T) __is_abstract(T)
@@ -367,11 +367,11 @@
 #   define BOOST_IS_EMPTY(T) __is_empty(T)
 #   define BOOST_HAS_TRIVIAL_CONSTRUCTOR(T) (__has_trivial_default_constructor(T))
 #   define BOOST_HAS_TRIVIAL_COPY(T) (__is_trivially_copyable_constructor(T) && !is_reference<T>::value)
-#   define BOOST_HAS_TRIVIAL_ASSIGN(T) (__has_trivial_assign(T) && !is_volatile<T>::value)
+#   define BOOST_HAS_TRIVIAL_ASSIGN(T) (__is_trivially_assignable(T, T) && !is_volatile<T>::value)
 #   define BOOST_HAS_TRIVIAL_DESTRUCTOR(T) (__is_trivially_destructible(T))
 #   define BOOST_HAS_NOTHROW_CONSTRUCTOR(T) (__has_nothrow_default_constructor(T))
 #   define BOOST_HAS_NOTHROW_COPY(T) (__is_nothrow_constructible_constructor(T) && !is_volatile<T>::value && !is_reference<T>::value)
-#   define BOOST_HAS_NOTHROW_ASSIGN(T) (__has_nothrow_assign(T) && !is_volatile<T>::value)
+#   define BOOST_HAS_NOTHROW_ASSIGN(T) (__is_nothrow_assignable(T, T) && !is_volatile<T>::value)
 #   define BOOST_HAS_VIRTUAL_DESTRUCTOR(T) __has_virtual_destructor(T)
 
 #   define BOOST_IS_ABSTRACT(T) __is_abstract(T)

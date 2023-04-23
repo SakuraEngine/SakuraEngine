@@ -1,5 +1,5 @@
 #include "type_registry.hpp"
-#include "entity.hpp"
+#include "ecs/entity.hpp"
 #include "ecs/dual.h"
 #include "mask.hpp"
 #include "storage.hpp"
@@ -44,7 +44,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
     char* buffer = (char*)archetypeArena.allocate(data_size(inType), 1);
     archetype_t& proto = *archetypeArena.allocate<archetype_t>();
     proto.storage = this;
-    proto.type = clone(inType, buffer);
+    proto.type = dual::clone(inType, buffer);
     proto.withMask = false;
     proto.withDirty = false;
     proto.sizeToPatch = 0;
@@ -64,6 +64,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
     proto.resourceFields = archetypeArena.allocate<dual::resource_fields_t>(proto.type.length);
     proto.callbacks = archetypeArena.allocate<dual_callback_v>(proto.type.length);
     ::memset(proto.callbacks, 0, sizeof(dual_callback_v) * proto.type.length);
+    proto.stableOrder = archetypeArena.allocate<SIndex>(proto.type.length);
     auto& registry = type_registry_t::get();
     forloop (i, 0, proto.type.length)
     {
@@ -77,14 +78,11 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
             callbackFlag |= DCF_COPY;
         if (desc.callback.move)
             callbackFlag |= DCF_MOVE;
-        if (desc.callback.serialize || desc.callback.deserialize)
-            callbackFlag |= DCF_SERDE;
         proto.callbackFlags[i] = callbackFlag;
         proto.callbacks[i] = desc.callback;
         proto.resourceFields[i] = { desc.resourceFields, desc.resourceFieldsCount };
     }
     auto guids = localStack.allocate<guid_t>(proto.type.length);
-    auto stableOrder = localStack.allocate<SIndex>(proto.type.length);
     proto.entitySize = sizeof(dual_entity_t);
     uint32_t padding = 0;
     forloop (i, 0, proto.type.length)
@@ -100,14 +98,14 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
         proto.elemSizes[i] = desc.elementSize;
         guids[i] = desc.guid;
         proto.aligns[i] = desc.alignment;
-        stableOrder[i] = i;
+        proto.stableOrder[i] = i;
         proto.entitySize += desc.size;
         if(!ti.is_chunk())
             padding += desc.alignment;
         if (!ti.is_chunk() && desc.entityFieldsCount != 0)
             proto.sizeToPatch += desc.size;
     }
-    eastl::sort(stableOrder, stableOrder + proto.type.length, [&](SIndex lhs, SIndex rhs) {
+    eastl::sort(proto.stableOrder, proto.stableOrder + proto.type.length, [&](SIndex lhs, SIndex rhs) {
         return guid_compare_t{}(guids[lhs], guids[rhs]);
     });
     size_t caps[] = { kSmallBinSize - sizeof(dual_chunk_t), kFastBinSize - sizeof(dual_chunk_t), kLargeBinSize - sizeof(dual_chunk_t) };
@@ -120,7 +118,7 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
         uint32_t ccOffset = (uint32_t)(caps[i] - versionSize);
         forloop (j, 0, proto.type.length)
         {
-            SIndex id = stableOrder[j];
+            SIndex id = proto.stableOrder[j];
             TIndex t = proto.type.data[id];
             auto ti = type_index_t(t);
             if(ti.is_chunk())
@@ -136,7 +134,8 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
         uint32_t offset = sizeof(dual_entity_t) * capacity;
         forloop (j, 0, proto.type.length)
         {
-            SIndex id = stableOrder[j];TIndex t = proto.type.data[id];
+            SIndex id = proto.stableOrder[j];
+            TIndex t = proto.type.data[id];
             auto ti = type_index_t(t);
             if(!ti.is_chunk())
             {
@@ -146,6 +145,49 @@ dual::archetype_t* dual_storage_t::construct_archetype(const dual_type_set_t& in
             }
         }
     }
+
+    return archetypes.insert({ proto.type, &proto }).first->second;
+}
+
+dual::archetype_t* dual_storage_t::clone_archetype(archetype_t *src)
+{
+    using namespace dual;
+    if(auto a = try_get_archetype(src->type))
+        return a;
+    char* buffer = (char*)archetypeArena.allocate(data_size(src->type), 1);
+    archetype_t& proto = *archetypeArena.allocate<archetype_t>();
+    proto.storage = this;
+    proto.type = dual::clone(src->type, buffer);
+    proto.withMask = src->withMask;
+    proto.withDirty = src->withMask;
+    proto.sizeToPatch = src->sizeToPatch;
+    proto.firstChunkComponent = src->withMask;
+    forloop (i, 0, 3)
+    {
+        proto.offsets[i] = archetypeArena.allocate<uint32_t>(proto.type.length);
+        memcpy(proto.offsets[i], src->offsets[i], sizeof(uint32_t) * proto.type.length);
+    }
+    proto.elemSizes = archetypeArena.allocate<uint32_t>(proto.type.length);
+    memcpy(proto.elemSizes, src->elemSizes, sizeof(uint32_t) * proto.type.length);
+    proto.callbackFlags = archetypeArena.allocate<uint32_t>(proto.type.length);
+    memcpy(proto.callbackFlags, src->callbackFlags, sizeof(uint32_t) * proto.type.length);
+    proto.aligns = archetypeArena.allocate<uint32_t>(proto.type.length);
+    memcpy(proto.aligns, src->aligns, sizeof(uint32_t) * proto.type.length);
+    proto.sizes = archetypeArena.allocate<uint32_t>(proto.type.length);
+    memcpy(proto.sizes, src->sizes, sizeof(uint32_t) * proto.type.length);
+    proto.resourceFields = archetypeArena.allocate<dual::resource_fields_t>(proto.type.length);
+    memcpy(proto.resourceFields, src->resourceFields, sizeof(dual::resource_fields_t) * proto.type.length);
+    proto.callbacks = archetypeArena.allocate<dual_callback_v>(proto.type.length);
+    memcpy(proto.callbacks, src->callbacks, sizeof(dual_callback_v) * proto.type.length);
+    proto.stableOrder = archetypeArena.allocate<SIndex>(proto.type.length);
+    memcpy(proto.stableOrder, src->stableOrder, sizeof(SIndex) * proto.type.length);
+    proto.entitySize = src->entitySize;
+    proto.versionOffset[0] = src->versionOffset[0];
+    proto.versionOffset[1] = src->versionOffset[1];
+    proto.versionOffset[2] = src->versionOffset[2];
+    proto.chunkCapacity[0] = src->chunkCapacity[0];
+    proto.chunkCapacity[1] = src->chunkCapacity[1];
+    proto.chunkCapacity[2] = src->chunkCapacity[2];
 
     return archetypes.insert({ proto.type, &proto }).first->second;
 }
@@ -163,12 +205,11 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
     structure.length = firstTag;
     archetype_t* archetype = get_archetype(structure);
     const auto typeSize = static_cast<uint32_t>(data_size(inType));
-    assert((sizeof(dual_group_t) + typeSize) < kGroupBlockSize);(void)typeSize;
+    SKR_ASSERT((sizeof(dual_group_t) + typeSize) < kGroupBlockSize);(void)typeSize;
     dual_group_t& proto = *new (groupPool.allocate()) dual_group_t();
     char* buffer = (char*)(&proto + 1);
     proto.firstFree = 0;
-    buffer += sizeof(dual_group_t);
-    dual_entity_type_t type = clone(inType, buffer);
+    dual_entity_type_t type = dual::clone(inType, buffer);
     proto.type = type;
     auto toClean = localStack.allocate<TIndex>(proto.type.type.length + 1);
     SIndex toCleanCount = 0;
@@ -192,6 +233,8 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
         if (t == kDisableComponent)
             proto.disabled = true;
     }
+    if(toCleanCount == proto.type.type.length)
+        toClean[toCleanCount++] = kDeadComponent;
     // eastl::sort(&toClean[0], &toClean[toCleanCount]); dead is always smaller
     proto.archetype = archetype;
     proto.size = 0;
@@ -209,6 +252,27 @@ dual_group_t* dual_storage_t::construct_group(const dual_entity_type_t& inType)
         cloneType.type = { toClone, toCloneCount };
         proto.cloned = get_group(cloneType);
     }
+    return &proto;
+}
+
+dual_group_t* dual_storage_t::clone_group(dual_group_t* srcG)
+{
+    if(auto g = try_get_group(srcG->type))
+        return g;
+    dual_group_t& proto = *new (groupPool.allocate()) dual_group_t();
+    std::memcpy(&proto, srcG, sizeof(dual_group_t));
+    char* buffer = (char*)(&proto + 1);
+    proto.type = dual::clone(srcG->type, buffer);
+    proto.archetype = clone_archetype(srcG->archetype);
+    if (srcG->dead)
+    {
+        proto.dead = clone_group(srcG->dead);
+    }
+    if (srcG->cloned)
+    {
+        proto.cloned = clone_group(srcG->cloned);
+    }
+    groups.insert({ proto.type, &proto });
     return &proto;
 }
 
@@ -355,8 +419,9 @@ void dual_group_t::mark_free(dual_chunk_t* chunk)
     using namespace dual;
     SKR_ASSERT(chunk->index < firstFree);
     firstFree--;
-    eastl::swap(chunks[firstFree]->index, chunks[chunk->index]->index);
-    eastl::swap(chunks[firstFree], chunks[chunk->index]);
+    auto& slot = chunks[chunk->index];
+    eastl::swap(chunks[firstFree]->index, chunk->index);
+    eastl::swap(chunks[firstFree], slot);
 }
 
 void dual_group_t::mark_full(dual_chunk_t* chunk)
@@ -364,8 +429,9 @@ void dual_group_t::mark_full(dual_chunk_t* chunk)
     using namespace dual;
     
     SKR_ASSERT(chunk->index >= firstFree);
-    eastl::swap(chunks[firstFree]->index, chunks[chunk->index]->index);
-    eastl::swap(chunks[firstFree], chunks[chunk->index]);
+    auto& slot = chunks[chunk->index];
+    eastl::swap(chunks[firstFree]->index, chunk->index);
+    eastl::swap(chunks[firstFree], slot);
     firstFree++;
 }
 
@@ -374,11 +440,13 @@ void dual_group_t::clear()
     using namespace dual;
     for(auto chunk : chunks)
     {
+        archetype->storage->entities.free_entities({ chunk, 0, chunk->count });
         destruct_view({ chunk, 0, chunk->count });
         destruct_chunk(chunk);
         dual_chunk_t::destroy(chunk);
     }
     chunks.clear();
+    firstFree = 0;
     size = 0;
 }
 
@@ -537,6 +605,11 @@ int dualG_share_components(const dual_group_t* group, const dual_type_set_t* typ
 void dualG_get_type(const dual_group_t* group, dual_entity_type_t* type)
 {
     *type = group->type;
+}
+
+uint32_t dualG_get_stable_order(const dual_group_t* group, dual_type_index_t localType)
+{
+    return group->archetype->stableOrder[localType];
 }
 
 const void* dualG_get_shared_ro(const dual_group_t* group, dual_type_index_t type)

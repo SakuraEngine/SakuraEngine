@@ -17,12 +17,9 @@
 #include "utils/log.h"
 #include "cgpu/io.h"
 
+#include "containers/text.hpp"
+
 #include "tracy/Tracy.hpp"
-
-skr_mesh_resource_t::~skr_mesh_resource_t() SKR_NOEXCEPT
-{
-
-}
 
 static struct SkrMeshResourceUtil
 {
@@ -163,8 +160,15 @@ const char* skr_mesh_resource_query_vertex_layout(skr_vertex_layout_id id, struc
 
 namespace skr
 {
-namespace resource
+namespace renderer
 {
+using namespace skr::resource;
+
+MeshResource::~MeshResource() SKR_NOEXCEPT
+{
+
+}
+
 // 1.deserialize mesh resource
 // 2.install indices/vertices to GPU
 // 3?.update LOD information during runtime
@@ -173,7 +177,8 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
     SMeshFactoryImpl(const SMeshFactory::Root& root)
         : root(root)
     {
-
+        dstorage_root = skr::text::text::from_utf8(root.dstorage_root);
+        this->root.dstorage_root = dstorage_root.u8_str();
     }
 
     ~SMeshFactoryImpl() noexcept = default;
@@ -236,6 +241,7 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
     ESkrInstallStatus InstallWithDStorage(skr_resource_record_t* record);
     ESkrInstallStatus InstallWithUpload(skr_resource_record_t* record);
 
+    skr::text::text dstorage_root;
     Root root;
     skr::flat_hash_map<skr_mesh_resource_id, InstallType> mInstallTypes;
     skr::flat_hash_map<skr_mesh_resource_id, SPtr<UploadRequest>> mUploadRequests;
