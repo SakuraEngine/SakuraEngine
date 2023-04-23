@@ -46,9 +46,7 @@ void InputMapping::process_actions(float delta) SKR_NOEXCEPT
 {
     if (action)
     {
-        action->set_current_value(raw_value);
-        action->process_modifiers(delta);
-        action->process_triggers(delta);
+        action->accumulate_value(raw_value);
     }
 }
 

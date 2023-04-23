@@ -2,7 +2,7 @@
 #include <memory>
 #include "ecs/dual.h"
 #include "guid.hpp" //for guid
-#include "ecs/callback.hpp"
+#include "utils/make_zeroed.hpp"
 
 using test = int;
 dual_type_index_t type_test;
@@ -227,7 +227,7 @@ void register_test_component()
 {
     using namespace guid_parse::literals;
     {
-        dual_type_description_t desc;
+        dual_type_description_t desc = make_zeroed<dual_type_description_t>();
         desc.name = "test";
         desc.size = sizeof(test);
         desc.entityFieldsCount = 0;
@@ -246,7 +246,7 @@ void register_test_component()
 
     {
 
-        dual_type_description_t desc;
+        dual_type_description_t desc = make_zeroed<dual_type_description_t>();
         desc.name = "test2";
         desc.size = sizeof(test);
         desc.entityFieldsCount = 0;
@@ -266,7 +266,7 @@ void register_test_component()
 auto register_ref_component()
 {
     using namespace guid_parse::literals;
-    dual_type_description_t desc;
+    dual_type_description_t desc = make_zeroed<dual_type_description_t>();
     desc.name = "ref";
     desc.size = sizeof(ref);
     desc.entityFieldsCount = 1;
@@ -286,7 +286,7 @@ auto register_ref_component()
 auto register_managed_component()
 {
     using namespace guid_parse::literals;
-    dual_type_description_t desc;
+    dual_type_description_t desc = make_zeroed<dual_type_description_t>();
     desc.name = "managed";
     desc.size = sizeof(managed);
     desc.entityFieldsCount = 0;
@@ -317,7 +317,7 @@ auto register_managed_component()
 auto register_pinned_component()
 {
     using namespace guid_parse::literals;
-    dual_type_description_t desc;
+    dual_type_description_t desc = make_zeroed<dual_type_description_t>();
     desc.name = "pinned";
     desc.size = sizeof(pinned);
     desc.entityFieldsCount = 0;

@@ -1,6 +1,6 @@
 #pragma once
 #include "platform/memory.h"
-#include "phmap.h"
+#include "parallel_hashmap/phmap.h"
 
 namespace skr
 {
@@ -44,7 +44,7 @@ struct ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>> {
         uint32_t size;
         SKR_ARCHIVE(size);
 
-        for (int i = 0; i < size; ++i)
+        for (uint32_t i = 0; i < size; ++i)
         {
             K key;
             SKR_ARCHIVE(key);

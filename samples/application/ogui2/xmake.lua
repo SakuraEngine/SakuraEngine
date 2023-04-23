@@ -1,6 +1,6 @@
 target("OpenGUI_DemoResources")
     set_group("04.examples/application")
-    set_kind("static")
+    add_rules("skr.static_module", {api = "OPENGUI_DEMO_RESOURCES"})
     add_includedirs("common", {public = true})
     add_rules("utils.install-resources", {
         extensions = {".png"},
@@ -10,9 +10,9 @@ target("OpenGUI_DemoResources")
     add_includedirs("common", {public = true})
     add_files("common/**.png")
     add_files("common/**.cpp")
-    public_dependency("SkrInput", "0.1.0")
-    public_dependency("SkrGui", "0.1.0")
-    public_dependency("SkrGuiRenderer", "0.1.0")
+    public_dependency("SkrInput", engine_version)
+    public_dependency("SkrGui", engine_version)
+    public_dependency("SkrGuiRenderer", engine_version)
     
 includes("gdi/xmake.lua")
 includes("robjects/xmake.lua")

@@ -240,7 +240,7 @@ i32 codeunit_sequence::size() const noexcept
 
 codeunit_sequence_view codeunit_sequence::view() const& noexcept
 {
-	return { this->c_str(), this->size() };
+	return { this->u8_str(), this->size() };
 }
 
 bool codeunit_sequence::is_empty() const noexcept
@@ -698,9 +698,9 @@ const ochar8_t* codeunit_sequence::u8_str() const noexcept
 	return this->is_short() ? this->as_sso().data.data() : this->as_norm().data;
 }
 
-const ochar8_t* codeunit_sequence::c_str() const noexcept
+const ochar_t* codeunit_sequence::c_str() const noexcept
 {
-	return this->is_short() ? this->as_sso().data.data() : this->as_norm().data;
+	return (const ochar_t*)u8_str();
 }
 
 bool codeunit_sequence::is_short_size(const i32 size) noexcept

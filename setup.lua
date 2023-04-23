@@ -20,19 +20,8 @@ else
 end
 
 if (os.host() == "windows") then
-    find_sdk.sdk_lib_from_github("lmdb", "lmdb-windows-x64.zip")
-    find_sdk.sdk_lib_from_github("cgltf", "cgltf-windows-x64.zip")
-    find_sdk.sdk_lib_from_github("fmt", "fmt-windows-x64.zip")
-    find_sdk.sdk_lib_from_github("fmt_d", "fmt_d-windows-x64.zip")
-    find_sdk.sdk_lib_from_github("lua", "lua-windows-x64.zip")
-    find_sdk.sdk_lib_from_github("lua_d", "lua_d-windows-x64.zip")
-    find_sdk.sdk_lib_from_github("imgui", "imgui-windows-x64.zip")
-    find_sdk.sdk_lib_from_github("imgui_d", "imgui_d-windows-x64.zip")
-    find_sdk.sdk_lib_from_github("simdjson", "simdjson-windows-x64.zip")
-    find_sdk.sdk_lib_from_github("simdjson_d", "simdjson_d-windows-x64.zip")
     find_sdk.sdk_lib_from_github("ISPCTextureCompressor", "ISPCTextureCompressor-windows-x64.zip")
-
-    -- gfx
+    -- gfx sdk
     find_sdk.lib_from_github("WinPixEventRuntime", "WinPixEventRuntime-windows-x64.zip")
     find_sdk.lib_from_github("amdags", "amdags-windows-x64.zip")
     find_sdk.lib_from_github("nvapi", "nvapi-windows-x64.zip")
@@ -41,14 +30,17 @@ if (os.host() == "windows") then
     find_sdk.lib_from_github("SDL2", "SDL2-windows-x64.zip")
     find_sdk.lib_from_github("tracyclient", "tracyclient-windows-x64.zip")
     find_sdk.lib_from_github("tracyclient_d", "tracyclient_d-windows-x64.zip")
-    --
+    -- usd
     find_sdk.lib_from_github("usd", "usd-windows-x64.zip")
-    --
+    -- tools & compilers
     find_sdk.tool_from_github("dxc", "dxc-windows-x64.zip")
     find_sdk.tool_from_github("wasm-clang", "wasm-clang-windows-x64.zip")
     find_sdk.tool_from_github("ispc", "ispc-windows-x64.zip")
     find_sdk.tool_from_github("reflector", "reflector-windows-x64.zip")
     find_sdk.tool_from_github("tracy-gui", "tracy-gui-windows-x64.zip")
+    -- network
+    find_sdk.lib_from_github("gns", "gns-windows-x64.zip")
+    find_sdk.lib_from_github("gns_d", "gns_d-windows-x64.zip")
 end
 
 if (os.host() == "macosx") then
@@ -59,6 +51,9 @@ if (os.host() == "macosx") then
         find_sdk.tool_from_github("dxc", "dxc-macosx-x86_64.zip")
         find_sdk.tool_from_github("reflector", "reflector-macosx-x86_64.zip")
         find_sdk.tool_from_github("tracy-gui", "tracy-gui-macosx-x86_64.zip")
+        -- network
+        find_sdk.lib_from_github("gns", "gns-macosx-x86_64.zip")
+        find_sdk.lib_from_github("gns_d", "gns_d-macosx-x86_64.zip")
     else
         find_sdk.tool_from_github("dxc", "dxc-macosx-arm64.zip")
     end
@@ -71,6 +66,8 @@ for _, setup in ipairs(setups) do
     import(path.join(dir, basename))
 end
 
+--[[
 if (os.host() == "windows") then
     os.exec("xmake project -k vsxmake -m \"debug,release\" -a x64 -y")
 end
+]]--

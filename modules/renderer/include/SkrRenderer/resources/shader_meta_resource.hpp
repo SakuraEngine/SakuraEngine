@@ -5,9 +5,14 @@
     #include "SkrRenderer/resources/shader_meta_resource.generated.h"
 #endif
 
+namespace skr sreflect
+{
+namespace renderer sreflect
+{
+
 sreflect_enum_class("guid": "c289eaaf-ace9-4a86-8072-b173377f7d19")
 sattr("serialize" : ["json", "bin"], "rtti" : true)
-ESkrShaderOptionType : uint32_t
+EShaderOptionType : uint32_t
 {
     LEVEL = 0,  // [ "SM_5_0", "SM_6_3", "SM_6_6" ]
     VALUE = 1, // "ATOMIC_BOOL": ["on", "off"]
@@ -17,7 +22,7 @@ ESkrShaderOptionType : uint32_t
 
 sreflect_struct("guid" : "00d4c2b3-50e7-499b-9cf3-fb6b2ba70e79")
 sattr("serialize" : ["json", "bin"], "rtti" : true)
-skr_shader_option_instance_t
+ShaderOptionInstance
 {
     skr::string key;
     // if value.empty() then it's automatically set to option.value_selections[0] as the default value
@@ -31,9 +36,9 @@ skr_shader_option_instance_t
 
 sreflect_struct("guid" : "f497b62d-e63e-4ec3-b923-2a01a90f9966")
 sattr("serialize" : ["json", "bin"], "rtti" : true)
-skr_shader_option_t
+ShaderOptionTemplate
 {
-    ESkrShaderOptionType type;
+    EShaderOptionType type;
     skr::string key;
     skr::vector<skr::string> value_selections; // { "on", "off" } or { "1", "2", "3" }
     // TODO: target platforms filter
@@ -41,21 +46,17 @@ skr_shader_option_t
 
 sreflect_struct("guid" : "fc9b4a8e-06c7-41e2-a159-f4cf6930ccfc")
 sattr("serialize" : ["json", "bin"], "rtti" : true)
-skr_shader_options_resource_t
+ShaderOptionsResource
 {
-    using shader_options_handle_t = skr::resource::TResourceHandle<skr_shader_options_resource_t>;
+    using shader_options_handle_t = skr::resource::TResourceHandle<ShaderOptionsResource>;
 
     sattr("no-rtti" : true) SKR_RENDERER_API
-    static bool flatten_options(skr::vector<skr_shader_option_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT;
+    static bool flatten_options(skr::vector<ShaderOptionTemplate>& dst, skr::span<ShaderOptionsResource*> srcs) SKR_NOEXCEPT;
 
-    skr::vector<skr_shader_option_t> options;
+    skr::vector<ShaderOptionTemplate> options;
 };
 
-namespace skr sreflect
-{
-namespace resource sreflect
-{
-struct SKR_RENDERER_API SShaderOptionsFactory : public SResourceFactory {
+struct SKR_RENDERER_API SShaderOptionsFactory : public resource::SResourceFactory {
     virtual ~SShaderOptionsFactory() = default;
 
     struct Root {

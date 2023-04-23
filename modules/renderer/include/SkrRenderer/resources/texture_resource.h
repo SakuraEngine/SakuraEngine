@@ -2,6 +2,7 @@
 #include "SkrRenderer/fwd_types.h"
 #include "utils/io.h"
 #include "cgpu/io.h"
+
 #ifndef __meta__
 #include "SkrRenderer/resources/texture_resource.generated.h"
 #endif
@@ -84,10 +85,20 @@ skr_texture_sampler_resource_t
     spush_attr("no-rtti" : true, "transient": true)
     CGPUSamplerId sampler;
 };
-typedef struct skr_texture_resource_t skr_texture_resource_t;
-typedef struct skr_texture_resource_t* skr_texture_resource_id;
 
 #ifdef __cplusplus
+
+namespace skr {
+namespace renderer {
+    using SamplerFilterType = ESkrTextureSamplerFilterType;
+    using SamplerMipmapMode = ESkrTextureSamplerMipmapMode;
+    using SamplerAddressMode = ESkrTextureSamplerAddressMode;
+    using SamplerCompareMode = ESkrTextureSamplerCompareMode;
+    using SamplerResource = ::skr_texture_sampler_resource_t;
+    using TextureResource = ::skr_texture_resource_t;
+} // namespace renderer
+} // namespace skr
+
 #include "resource/resource_factory.h"
 
 namespace skr sreflect

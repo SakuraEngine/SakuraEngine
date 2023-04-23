@@ -73,7 +73,7 @@ struct SKR_RENDER_GRAPH_API NodeAndEdgeFactoryImpl final : public NodeAndEdgeFac
         auto pool = pools.find(size);
         if (pool == pools.end())
         {
-            pool = pools.emplace(size, SkrNew<factory_pool_t>(size, 256u)).first;
+            pool = pools.emplace(size, SkrNew<factory_pool_t>(size, 2048u)).first;
         }
         return pool->second->allocate();
     }

@@ -4,6 +4,7 @@
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "platform/guid.hpp"
+#include "containers/text.hpp"
 #include "utils/defer.hpp"
 #include "utils/io.h"
 
@@ -182,10 +183,10 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
         const auto rtti_type = type::GetTypeRegistry()->get_type(metaAsset->type);
         const auto type_name = skr_get_type_name(&metaAsset->type);
         const auto cookerTypeName = rtti_type ? rtti_type->Name() : type_name ? type_name : "UnknownResource";
-        const auto guidString = skr::format("Guid: {}", metaAsset->guid);
-        const auto assetTypeGuidString = skr::format("TypeGuid: {}", metaAsset->type);
-        const auto scopeName = skr::format("Cook.[{}]", cookerTypeName);
-        const auto assetString = skr::format("Asset: {}", metaAsset->path.u8string().c_str());
+        const auto guidString = skr::text::format(u8"Guid: {}", metaAsset->guid);
+        const auto assetTypeGuidString = skr::text::format(u8"TypeGuid: {}", metaAsset->type);
+        const auto scopeName = skr::text::format(u8"Cook.[{}]", cookerTypeName);
+        const auto assetString = skr::text::format(u8"Asset: {}", metaAsset->path.u8string().c_str());
         ZoneName(scopeName.c_str(), scopeName.size());
         TracyMessage(guidString.c_str(), guidString.size());
         TracyMessage(assetTypeGuidString.c_str(), assetTypeGuidString.size());
@@ -225,7 +226,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
                 skr::binary::VectorWriter writer{&buffer};
                 skr_binary_writer_t archive(writer);
                 jobContext->WriteHeader(archive, cooker);
-                auto file = fopen(headerPath.u8string().c_str(), "wb");
+                auto file = fopen(headerPath.string().c_str(), "wb");
                 if (!file)
                 {
                     SKR_LOG_ERROR("[CookTask] failed to write header file for resource %s!", metaAsset->path.u8string().c_str());
@@ -250,7 +251,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
                 writer.StartArray();
                 for (auto& dep : jobContext->GetFileDependencies())
                 {
-                    auto str = dep.u8string();
+                    auto str = dep.string();
                     skr::json::Write<const skr::string_view&>(&writer, {str.data(), str.size()});
                 }
                 writer.EndArray();
@@ -260,7 +261,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
                     skr::json::Write<const skr_resource_handle_t&>(&writer, dep);
                 writer.EndArray();
                 writer.EndObject();
-                auto file = fopen(dependencyPath.u8string().c_str(), "w");
+                auto file = fopen(dependencyPath.string().c_str(), "w");
                 if (!file)
                 {
                     SKR_LOG_ERROR("[CookTask] failed to write dependency file for resource %s!", metaAsset->path.u8string().c_str());
@@ -332,7 +333,7 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
         }
         if (!skr::filesystem::is_regular_file(dependencyPath, ec))
         {
-            SKR_LOG_INFO("[SCookSystemImpl::EnsureCooked] dependency file not exist! asset path: %s}", guid);
+            SKR_LOG_INFO("[SCookSystemImpl::EnsureCooked] dependency file not exist! asset path: %s}", dependencyPath.string().c_str());
             return false;
         }
         auto timestamp = skr::filesystem::last_write_time(resourcePath, ec);
@@ -342,7 +343,7 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
             return false;
         }
         simdjson::ondemand::parser parser;
-        auto json = simdjson::padded_string::load(dependencyPath.u8string());
+        auto json = simdjson::padded_string::load(dependencyPath.string());
         auto doc = parser.iterate(json);
         if (doc.error() != simdjson::SUCCESS)
         {
@@ -382,7 +383,7 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
                 SKR_LOG_INFO("[SCookSystemImpl::EnsureCooked] dev cooker version (UINT32_MAX)! asset path: %s", metaAsset->path.u8string().c_str());
                 return false;
             }
-            auto resourceFile = fopen(resourcePath.u8string().c_str(), "rb");
+            auto resourceFile = fopen(resourcePath.string().c_str(), "rb");
             SKR_DEFER({ fclose(resourceFile); });
             uint8_t buffer[sizeof(skr_resource_header_t)];
             fread(buffer, 0, sizeof(skr_resource_header_t), resourceFile);
@@ -469,7 +470,7 @@ SAssetRecord* SCookSystemImpl::ImportAsset(SProject* project, skr::filesystem::p
         path = project->assetPath / path;
     auto record = SkrNew<SAssetRecord>();
     // TODO: replace file load with skr api
-    record->meta = simdjson::padded_string::load(path.u8string()).value_unsafe();
+    record->meta = simdjson::padded_string::load(path.string()).value_unsafe();
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(record->meta);
     skr::json::Read(doc["guid"].value_unsafe(), record->guid);

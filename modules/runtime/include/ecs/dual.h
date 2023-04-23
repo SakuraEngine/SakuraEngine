@@ -13,6 +13,9 @@ extern "C" {
 #define DUAL_COMPONENT_GUID 0x4
 #define DUAL_COMPONENT_DIRTY 0x5
 
+#define DUAL_IS_TAG(c) ((c & 1 << 31) != 0)
+#define DUAL_IS_BUFFER(C) ((C & 1 << 29) != 0)
+
 /**
  * @brief guid generation function
  *
@@ -25,6 +28,7 @@ typedef struct dual_mapper_t {
 
 typedef struct skr_binary_writer_t skr_binary_writer_t;
 typedef struct skr_binary_reader_t skr_binary_reader_t;
+typedef struct skr_json_writer_t skr_json_writer_t;
 typedef struct dual_callback_v {
     void (*constructor)(dual_chunk_t* chunk, EIndex index, char* data) SKR_IF_CPP(=nullptr);
     void (*copy)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src) SKR_IF_CPP(=nullptr);
@@ -32,6 +36,8 @@ typedef struct dual_callback_v {
     void (*move)(dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src) SKR_IF_CPP(=nullptr);
     void (*serialize)(dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* writer) SKR_IF_CPP(=nullptr);
     void (*deserialize)(dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* reader) SKR_IF_CPP(=nullptr);
+    void (*serialize_text)(dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_json_writer_t* writer) SKR_IF_CPP(=nullptr);
+    void (*deserialize_text)(dual_chunk_t* chunk, EIndex index, char* data, EIndex count, void* reader) SKR_IF_CPP(=nullptr);
     void (*map)(dual_chunk_t* chunk, EIndex index, char* data, dual_mapper_t* v) SKR_IF_CPP(=nullptr);
     int (*lua_push)(dual_chunk_t* chunk, EIndex index, char* data, struct lua_State* L) SKR_IF_CPP(=nullptr);
     void (*lua_check)(dual_chunk_t* chunk, EIndex index, char* data, struct lua_State* L, int idx) SKR_IF_CPP(=nullptr);
@@ -49,8 +55,7 @@ enum dual_callback_flags SKR_IF_CPP(: uint32_t)
     DCF_DTOR = 0x2,
     DCF_COPY = 0x4,
     DCF_MOVE = 0x8,
-    DCF_SERDE = 0x10,
-    DCF_ALL = DCF_CTOR | DCF_DTOR | DCF_COPY | DCF_MOVE | DCF_SERDE,
+    DCF_ALL = DCF_CTOR | DCF_DTOR | DCF_COPY | DCF_MOVE,
 };
 
 /**
@@ -134,19 +139,17 @@ typedef struct dual_delta_type_t {
 typedef struct dual_filter_t {
     // filter owned types
     dual_type_set_t all;
-    dual_type_set_t any;
     dual_type_set_t none;
     // filter shared types
     dual_type_set_t all_shared;
-    dual_type_set_t any_shared;
     dual_type_set_t none_shared;
 } dual_filter_t;
 
 enum dual_operation_scope
 {
+    DOS_PAR,
     DOS_SEQ,
-    DOS_GROUP,
-    DOS_GLOBAL,
+    DOS_UNSEQ,
 };
 
 /**
@@ -165,8 +168,8 @@ typedef struct dual_operation_t {
  *
  */
 typedef struct dual_parameters_t {
-    dual_type_index_t* types;
-    dual_operation_t* accesses;
+    const dual_type_index_t* types;
+    const dual_operation_t* accesses;
     TIndex length;
 } dual_parameters_t;
 
@@ -270,6 +273,21 @@ RUNTIME_API dual_storage_t* dualS_create();
  */
 RUNTIME_API void dualS_release(dual_storage_t* storage);
 /**
+* @brief set userdata for storage
+*
+* @param storage
+* @param u
+* @return void
+*/
+RUNTIME_API void dualS_set_userdata(dual_storage_t* storage, void* u);
+/**
+ * @brief get userdata of storage
+ *
+ * @param storage
+ * @return void*
+ */
+RUNTIME_API void* dualS_get_userdata(dual_storage_t* storage);
+/**
  * @brief allocate entities
  * batch allocate numbers of entities with entity type
  * @param storage
@@ -350,6 +368,14 @@ RUNTIME_API void dualS_cast_view_delta(dual_storage_t* storage, const dual_chunk
  * @param callback optional callback before casting chunk view
  */
 RUNTIME_API void dualS_cast_view_group(dual_storage_t* storage, const dual_chunk_view_t* view, const dual_group_t* group, dual_cast_callback_t callback, void* u);
+
+/**
+ * @brief change entities' type
+ * move whole group to another group, the original group will be destoryed
+ * @param group
+ * @param type
+ */
+RUNTIME_API void dualS_cast_group_delta(dual_storage_t* storage, dual_group_t* group, const dual_delta_type_t* delta, dual_cast_callback_t callback, void* u);
 /**
  * @brief get the chunk view of an entity
  * entity it self does not contain any data, get the chunk view of an entity to access it's data (all structural change apis and data access apis is based on chunk view)
@@ -386,6 +412,12 @@ RUNTIME_API void dualS_query(dual_storage_t* storage, const dual_filter_t* filte
  * @param callback callback for filtered chunk view
  */
 RUNTIME_API void dualS_all(dual_storage_t* storage, bool includeDisabled, bool includeDead, dual_view_callback_t callback, void* u);
+/**
+* @brief get entity count
+* @param storage
+* @return EIndex
+*/
+RUNTIME_API EIndex dualS_count(dual_storage_t* storage, bool includeDisabled, bool includeDead);
 /**
  * @brief get all groups matching given filter
  *
@@ -523,7 +555,13 @@ RUNTIME_API void dualQ_release(dual_query_t* query);
  */
 RUNTIME_API dual_query_t* dualQ_from_literal(dual_storage_t* storage, const char* desc);
 
+RUNTIME_API void dualQ_add_child(dual_query_t* query, dual_query_t* child);
+
 RUNTIME_API const char* dualQ_get_error();
+
+RUNTIME_API void dualQ_sync(dual_query_t* query);
+
+RUNTIME_API EIndex dualQ_get_count(dual_query_t* query);
 
 RUNTIME_API void dualQ_get(dual_query_t* query, dual_filter_t* filter, dual_parameters_t* params);
 /**
@@ -543,6 +581,7 @@ RUNTIME_API void dualQ_set_meta(dual_query_t* query, const dual_meta_filter_t* m
 RUNTIME_API void dualQ_get_views(dual_query_t* query, dual_view_callback_t callback, void* u);
 RUNTIME_API void dualQ_get_groups(dual_query_t* query, dual_group_callback_t callback, void* u);
 RUNTIME_API void dualQ_get_views_group(dual_query_t* query, dual_group_t* group, dual_view_callback_t callback, void* u);
+RUNTIME_API dual_storage_t* dualQ_get_storage(dual_query_t* query);
 
 /**
  * @brief test if group contains components, whether owned or shared
@@ -580,6 +619,14 @@ RUNTIME_API const void* dualG_get_shared_ro(const dual_group_t* group, dual_type
  * @param type
  */
 RUNTIME_API void dualG_get_type(const dual_group_t* group, dual_entity_type_t* type);
+/**
+ * @brief get type stable order, flag component will be ignored
+ *
+ * @param group
+ * @param order
+ * @return uint32_t
+ */
+RUNTIME_API uint32_t dualG_get_stable_order(const dual_group_t* group, dual_type_index_t localType);
 /**
  * @brief get component from chunk view readonly return null if component is not exist
  *
@@ -620,6 +667,22 @@ RUNTIME_API const void* dualV_get_owned_ro_local(const dual_chunk_view_t* view, 
  * @return void*
  */
 RUNTIME_API void* dualV_get_owned_rw_local(const dual_chunk_view_t* view, dual_type_index_t localType);
+/**
+ * @brief get local type id of a component from chunk view
+ *
+ * @param view
+ * @param type
+ * @return dual_type_index_t
+ */
+RUNTIME_API dual_type_index_t dualV_get_local_type(const dual_chunk_view_t* view, dual_type_index_t type);
+/**
+ * @brief get component type id of a local type from chunk view
+ *
+ * @param view
+ * @param type
+ * @return dual_type_index_t
+ */
+RUNTIME_API dual_type_index_t dualV_get_component_type(const dual_chunk_view_t* view, dual_type_index_t type);
 /**
  * @brief get entity list from chunk view
  *
@@ -674,6 +737,15 @@ RUNTIME_API dual_storage_t* dualC_get_storage(const dual_chunk_t* chunk);
  */
 RUNTIME_API uint32_t dualC_get_count(const dual_chunk_t* chunk);
 
+
+RUNTIME_API void dual_set_bit(uint32_t* mask, int32_t bit);
+
+#if defined(__cplusplus)
+}
+#endif
+
+#if defined(__cplusplus)
+#include "task/task.hpp"
 /**
  * @brief register a resource to scheduler
  *
@@ -685,7 +757,7 @@ RUNTIME_API dual_entity_t dualJ_add_resource();
  */
 RUNTIME_API void dualJ_remove_resource(dual_entity_t id);
 typedef uint32_t dual_thread_index_t;
-typedef void (*dual_system_callback_t)(void* u, dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex);
+typedef void (*dual_system_callback_t)(void* u, dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex);
 typedef void (*dual_system_lifetime_callback_t)(void* u, EIndex entityCount);
 typedef struct dual_resource_operation_t {
     dual_entity_t* resources;
@@ -705,10 +777,10 @@ typedef struct dual_resource_operation_t {
  * @param counter counter used to sync jobs, if *counter is null, a new counter will be created
  * @return false if job is skipped
  */
-RUNTIME_API bool dualJ_schedule_ecs(const dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
-dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources, dual_counter_t** counter);
+RUNTIME_API bool dualJ_schedule_ecs(dual_query_t* query, EIndex batchSize, dual_system_callback_t callback, void* u,
+dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources, skr::task::event_t* counter);
 
-typedef void (*dual_schedule_callback_t)(void* u, dual_counter_t* counter);
+typedef void (*dual_schedule_callback_t)(void* u, dual_query_t* query);
 /**
  * @brief schedule custom job and sync with ecs context
  *
@@ -718,27 +790,8 @@ typedef void (*dual_schedule_callback_t)(void* u, dual_counter_t* counter);
  * @param u
  * @param resources
  */
-RUNTIME_API void dualJ_schedule_custom(const dual_query_t* query, dual_counter_t* counter, dual_schedule_callback_t callback, void* u, dual_resource_operation_t* resources);
-/**
- * @brief create a counter object
- * counter is used to sync jobs, counter need to be released manually
- * @param null if true, counter will be null
- * @return dual_counter_t*
- */
-RUNTIME_API dual_counter_t* dualJ_create_counter(bool null);
-/**
- * @brief wait until counter equal to zero (when job is done)
- *
- * @param counter
- * @param pin stay on current thread
- */
-RUNTIME_API void dualJ_wait_counter(dual_counter_t* counter, int pin);
-/**
- * @brief release the counter
- *
- * @param counter
- */
-RUNTIME_API void dualJ_release_counter(dual_counter_t* counter);
+RUNTIME_API void dualJ_schedule_custom(dual_query_t* query, dual_schedule_callback_t callback, void* u,
+dual_system_lifetime_callback_t init, dual_system_lifetime_callback_t teardown, dual_resource_operation_t* resources, skr::task::event_t* counter);
 /**
  * @brief wait for all jobs are done
  *
@@ -765,11 +818,6 @@ RUNTIME_API void dualJ_bind_storage(dual_storage_t* storage);
  */
 RUNTIME_API void dualJ_unbind_storage(dual_storage_t* storage);
 
-#if defined(__cplusplus)
-}
-#endif
-
-#if defined(__cplusplus)
 template <class C>
 struct dual_id_of {
     static dual_type_index_t get()
@@ -777,9 +825,10 @@ struct dual_id_of {
         static_assert(!sizeof(C), "dual_id_of<C> not implemented for this type, please include the appropriate generated header!");
     }
 };
-#include "binary/reader.h"
-#include "binary/writer.h"
 #include "type/type_helper.hpp"
+#include "ecs/callback.hpp"
+#include "ecs/type_builder.hpp"
+
 namespace dual
 {
     struct storage_scope_t
@@ -796,48 +845,19 @@ namespace dual
         }
     };
 
-    struct query_t
+    struct guid_comp_t
     {
-        dual_query_t* query = nullptr;
-        ~query_t()
-        {
-            if(query)
-                dualQ_release(query);
-        }
-        explicit operator bool() const
-        {
-            return query != nullptr;
-        }
-        dual_query_t*& operator*()
-        {
-            return query;
-        }
-        dual_query_t*const & operator*() const
-        {
-            return query;
-        }
+        dual_guid_t value;
     };
 
-    struct counter_t
+    struct mask_comp_t
     {
-        dual_counter_t* counter;
-        ~counter_t()
-        {
-            if(counter)
-                dualJ_release_counter(counter);
-        }
-        explicit operator bool() const
-        {
-            return counter != nullptr;
-        }
-        dual_counter_t*& operator*()
-        {
-            return counter;
-        }
-        dual_counter_t* const& operator*() const
-        {
-            return counter;
-        }
+        dual_mask_comp_t value;
+    };
+
+    struct dirty_comp_t
+    {
+        dual_dirty_comp_t value;
     };
     
     template<uint32_t flags = DCF_ALL, class C>
@@ -867,16 +887,6 @@ namespace dual
                     new (dst) C(std::move(*(C*)src));
                 };
         }
-        if constexpr ((flags & DCF_SERDE) != 0) {
-            if constexpr(skr::is_complete_serde_v<skr::binary::WriteTrait<C>>)
-                desc.callback.serialize = +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* writer) {
-                    skr::binary::Write<const C&>(writer, *(C*)data);
-                };
-            if constexpr(skr::is_complete_serde_v<skr::binary::ReadTrait<C>>)
-                desc.callback.deserialize = +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* reader) {
-                    skr::binary::Read(reader, *(C*)data);
-                };
-        }
     }
 
     template<class T>
@@ -896,6 +906,286 @@ namespace dual
     {
         return (V*)dualV_get_owned_rw(view, dual_id_of<T>::get());
     }
+
+    template<class T>
+    T* get_owned_ro(dual_chunk_view_t* view)
+    {
+        return (T*)dualV_get_owned_ro(view, dual_id_of<T>::get());
+    }
+    
+    template<class T, class V>
+    V* get_owned_ro(dual_chunk_view_t* view)
+    {
+        return (V*)dualV_get_owned_ro(view, dual_id_of<T>::get());
+    }
+
+    struct task_context_t
+    {
+        dual_storage_t* storage;
+        dual_chunk_view_t* view;
+        dual_type_index_t* localTypes;
+        EIndex entityIndex;
+        dual_query_t* query;
+        task_context_t(dual_storage_t* storage, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex, dual_query_t* query)
+            : storage(storage), view(view), localTypes(localTypes), entityIndex(entityIndex), query(query)
+        {
+        }
+
+        auto count() { return view->count; }
+
+        const dual_entity_t* get_entities() { return dualV_get_entities(view); }
+
+        template<class T>
+        void check_local_type(dual_type_index_t idx)
+        {
+            if(localTypes == nullptr)
+                return;
+            auto localType = localTypes[idx];
+            if(localType == kInvalidTypeIndex)
+                return;
+            SKR_ASSERT(dualV_get_component_type(view, localTypes[idx]) == dual_id_of<T>::get());
+        }
+
+        void check_access(dual_type_index_t idx, bool readonly, bool random = false)
+        {
+            dual_parameters_t params;
+            dualQ_get(query, nullptr, &params);
+            SKR_ASSERT(params.accesses[idx].readonly == static_cast<int>(readonly));
+            SKR_ASSERT(params.accesses[idx].randomAccess >= static_cast<int>(random));
+        }
+
+        template<class T, bool noCheck = false>
+        T* get_owned_rw(dual_type_index_t idx)
+        {
+            if constexpr (!noCheck)
+            {
+                check_local_type<T>(idx);
+                check_access(idx, false);
+            }
+            return (T*)dualV_get_owned_rw_local(view, localTypes[idx]);
+        }
+
+        template<class T, bool noCheck = false>
+        T* get_owned_rw(dual_chunk_view_t* view, dual_type_index_t idx)
+        {
+            if constexpr (!noCheck)
+            {
+                check_local_type<T>(idx);
+                check_access(idx, false, true);
+            }
+            return (T*)dualV_get_owned_rw(view, dual_id_of<T>::get());
+        }
+
+        template<class T, bool noCheck = false>
+        const T* get_owned_ro(dual_type_index_t idx)
+        {
+            if constexpr (!noCheck)
+            {
+                check_local_type<T>(idx);
+                check_access(idx, true);
+            }
+            return (const T*)dualV_get_owned_ro_local(view, localTypes[idx]);
+        }
+
+        template<class T, bool noCheck = false>
+        const T* get_owned_ro(dual_chunk_view_t* view, dual_type_index_t idx)
+        {
+            if constexpr (!noCheck)
+            {
+                check_local_type<T>(idx);
+                check_access(idx, true, true);
+            }
+            return (const T*)dualV_get_owned_ro(view, dual_id_of<T>::get());
+        }
+
+        void set_dirty(dirty_comp_t& mask, dual_type_index_t idx)
+        {
+            check_access(idx, false);
+            dual_set_bit(&mask.value, localTypes[idx]);
+        }
+    };
+    struct query_t
+    {
+        dual_query_t* query = nullptr;
+        ~query_t()
+        {
+            if(query)
+                dualQ_release(query);
+        }
+        explicit operator bool() const
+        {
+            return query != nullptr;
+        }
+        dual_query_t*& operator*()
+        {
+            return query;
+        }
+        dual_query_t*const & operator*() const
+        {
+            return query;
+        }
+    };
+
+    struct QWildcard
+    {
+        using TaskContext = task_context_t;
+        QWildcard(dual_query_t* query)
+            : query(query)
+        {
+        }
+        dual_query_t* query = nullptr;
+    };
+
+    template<class T, class F>
+    bool schedule_task(T query, EIndex batchSize, F callback, skr::task::event_t* counter)
+    {
+        static constexpr auto convertible_to_function_check = [](auto t)->decltype(+t) { return +t; };
+        using TaskContext = typename T::TaskContext;
+        if constexpr(std::is_invocable_v<decltype(convertible_to_function_check), F>)
+        {
+            static constexpr auto callbackType = +callback;
+            auto trampoline = +[](void* u, dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
+            {
+                TaskContext ctx{ dualQ_get_storage(query), view, localTypes, entityIndex, query };
+                callbackType(ctx);
+            };
+            return dualJ_schedule_ecs(query.query, batchSize, trampoline, nullptr, nullptr, nullptr, nullptr, counter);
+        }
+        else
+        {
+            struct payload {
+                F callback;
+            };
+            auto trampoline = +[](void* u, dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex)
+            {
+                payload* p = (payload*)u;
+                TaskContext ctx{ dualQ_get_storage(query), view, localTypes, entityIndex, query };
+                p->callback(ctx);
+            };
+            payload* p = SkrNew<payload>( std::move(callback) );
+            auto teardown = +[](void* u, EIndex entityCount) {
+                payload* p = (payload*)u;
+                SkrDelete(p);
+            };
+            return dualJ_schedule_ecs(query.query, batchSize, trampoline, p, nullptr, teardown, nullptr, counter);
+        }
+    }
+
+    template<class F>
+    auto schedule_task(dual_query_t* query, EIndex batchSize, F callback, skr::task::event_t* counter)
+    {
+        return schedule_task(dual::QWildcard{query}, batchSize, std::move(callback), counter);
+    }
+
+    template<class T, class F>
+    auto schedual_custom(T query, F callback, skr::task::event_t* counter)
+    {
+        static constexpr auto convertible_to_function_check = [](auto t)->decltype(+t) { return +t; };
+        using TaskContext = typename T::TaskContext;
+        if constexpr(std::is_invocable_v<decltype(convertible_to_function_check), F>)
+        {
+            static constexpr auto callbackType = +callback;
+            auto trampoline = +[](void* u, dual_query_t* query)
+            {
+                TaskContext ctx{ dualQ_get_storage(query), nullptr, nullptr, 0, query };
+                callbackType(ctx);
+            };
+            return dualJ_schedule_custom(query.query, trampoline, nullptr, nullptr, nullptr, nullptr, counter);
+        }
+        else
+        {
+            struct payload {
+                F callback;
+            };
+            auto trampoline = +[](void* u, dual_query_t* query)
+            {
+                payload* p = (payload*)u;
+                TaskContext ctx{ dualQ_get_storage(query), nullptr, nullptr, 0, query };
+                p->callback(ctx);
+            };
+            payload* p = SkrNew<payload>( std::move(callback) );
+            auto teardown = +[](void* u, EIndex entityCount) {
+                payload* p = (payload*)u;
+                SkrDelete(p);
+            };
+            return dualJ_schedule_custom(query.query, trampoline, p, nullptr, teardown, nullptr, counter);
+        }
+    }
+
+    template<class F>
+    auto schedual_custom(dual_query_t* query, F callback, skr::task::event_t* counter)
+    {
+        return schedual_custom<dual::QWildcard, F>(dual::QWildcard{query}, std::move(callback), counter);
+    }
+
+    template<class T>
+    T* get_owned(dual_chunk_view_t* view)
+    {
+        if constexpr(std::is_const_v<T>)
+        {
+            return get_owned_ro<std::remove_const_t<T>>(view);
+        }
+        else
+        {
+            return get_owned_rw<T>(view);
+        }
+    }
+
+    template<class T1, class T2, class... T>
+    std::tuple<T1, T2, T*...> get_singleton(dual_query_t* query)
+    {
+        std::tuple<T1, T2, T*...> result;
+        bool singleton = true;
+        auto callback = [&](dual_chunk_view_t* view)
+        {
+            SKR_ASSERT(singleton);
+            SKR_ASSERT(view->count == 1);
+            result = std::make_tuple(get_owned<T1>(view), get_owned<T2>(view), get_owned<T>(view)...);
+        };
+        dualQ_get_views(query, DUAL_LAMBDA(callback));
+        return result;
+    }
+
+    template<class T>
+    T* get_singleton(dual_query_t* query)
+    {
+        T* result;
+        bool singleton = true;
+        auto callback = [&](dual_chunk_view_t* view)
+        {
+            SKR_ASSERT(singleton);
+            SKR_ASSERT(view->count == 1);
+            result = get_owned<T>(view);
+        };
+        dualQ_get_views(query, DUAL_LAMBDA(callback));
+        return result;
+    }
 }
+
+template<>
+struct RUNTIME_API dual_id_of<dual::dirty_comp_t>
+{
+    static dual_type_index_t get();
+};
+
+template<>
+struct RUNTIME_API dual_id_of<dual::mask_comp_t>
+{
+    static dual_type_index_t get();
+};
+
+template<>
+struct RUNTIME_API dual_id_of<dual::guid_comp_t>
+{
+    static dual_type_index_t get();
+};
+
+#define QUERY_CONBINE_GENERATED_NAME(file, type) QUERY_CONBINE_GENERATED_NAME_IMPL(file, type)
+#define QUERY_CONBINE_GENERATED_NAME_IMPL(file, type) GENERATED_QUERY_BODY_##file##_##type
+#ifdef __meta__
+#define GENERATED_QUERY_BODY(type) dual_query_t* query;
+#else
+#define GENERATED_QUERY_BODY(type) QUERY_CONBINE_GENERATED_NAME(SKR_FILE_ID, type)
+#endif
 
 #endif

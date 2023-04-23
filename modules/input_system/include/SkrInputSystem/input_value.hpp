@@ -41,6 +41,7 @@ struct SKR_INPUTSYSTEM_API InputValueStorage
     bool get_float2(skr_float2_t& out_f2) const SKR_NOEXCEPT;
     bool get_float3(skr_float3_t& out_f3) const SKR_NOEXCEPT;
     bool get_bool(bool& out_bool) const SKR_NOEXCEPT;
+    skr_float4_t get_raw() const SKR_NOEXCEPT;
 
     float get_magnitude_val() const SKR_NOEXCEPT;
     

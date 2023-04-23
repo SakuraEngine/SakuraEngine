@@ -1,5 +1,6 @@
 #pragma once
-#include "SkrRenderer/module.configure.h"
+#include "fwd_types.h"
+
 #include "cgpu/api.h"
 #include "cgpu/cgpux.h"
 
@@ -53,12 +54,20 @@ typedef struct skr_primitive_draw_packet_t {
 } skr_primitive_draw_packet_t;
 
 #ifdef __cplusplus
+} // extern "C"
 
-struct skr_render_primitive_command_t {
+namespace skr {
+namespace renderer {
+using VertexBufferView = skr_vertex_buffer_view_t;
+using IndexBufferView = skr_index_buffer_view_t;
+
+struct PrimitiveCommand {
     skr::span<const skr_vertex_buffer_view_t> vbvs;
     const skr_index_buffer_view_t* ibv;
     uint32_t primitive_index;
     uint32_t material_index;
 };
-}
+
+} // namespace renderer
+} // namespace skr
 #endif

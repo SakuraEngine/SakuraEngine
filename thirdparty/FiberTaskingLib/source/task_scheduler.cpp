@@ -275,7 +275,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
         // If we have a ready waiting fiber, prevent sleep
         else if(!readyWaitingFibers)
             {
-                EmptyQueueBehavior const behavior = taskScheduler->m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
+                EmptyQueueBehavior const behavior = taskScheduler->m_emptyQueueBehavior.load(std::memory_order_relaxed);
                 // We failed to find a Task from any of the queues
                 // What we do now depends on m_emptyQueueBehavior, which we loaded above
                 switch (behavior)
@@ -714,7 +714,7 @@ cleanup:
         // If we're using Sleep mode, we need to wake up the other threads
         // They may have looked for tasks while we had them all in our temp buffer and thus not
         // found anything and gone to sleep.
-        EmptyQueueBehavior const behavior = m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
+        EmptyQueueBehavior const behavior = m_emptyQueueBehavior.load(std::memory_order_relaxed);
         if (behavior == EmptyQueueBehavior::Sleep)
         {
             // Wake all the threads
@@ -886,7 +886,7 @@ void TaskScheduler::AddReadyFiber(unsigned const pinnedThreadIndex, ReadyFiberBu
         //
         // However, if we're using EmptyQueueBehavior::Sleep, the other thread could be sleeping
         // Therefore, we need to kick all the threads so that the pinned-to thread can take it
-        const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order::memory_order_relaxed);
+        const EmptyQueueBehavior behavior = m_emptyQueueBehavior.load(std::memory_order_relaxed);
         if (behavior == EmptyQueueBehavior::Sleep)
         {
             if (GetCurrentThreadIndex() != pinnedThreadIndex)

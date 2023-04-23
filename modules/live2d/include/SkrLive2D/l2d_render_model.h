@@ -61,9 +61,9 @@ struct skr_live2d_render_model_t {
     // pos-uv-pos-uv...
     eastl::vector<CGPUTextureId> textures;
     eastl::vector<CGPUTextureViewId> texture_views;
-    eastl::vector<skr_vertex_buffer_view_t> vertex_buffer_views;
-    eastl::vector<skr_index_buffer_view_t> index_buffer_views;
-    eastl::vector<skr_render_primitive_command_t> primitive_commands;
+    eastl::vector<skr::renderer::VertexBufferView> vertex_buffer_views;
+    eastl::vector<skr::renderer::IndexBufferView> index_buffer_views;
+    eastl::vector<skr::renderer::PrimitiveCommand> primitive_commands;
     // bind table cache
     eastl::vector_map<CGPUTextureViewId, CGPUXBindTableId> bind_tables;
     eastl::vector_map<CGPUTextureViewId, CGPUXBindTableId> mask_bind_tables;

@@ -79,14 +79,44 @@ struct CGPUCachedFramebuffer {
 
 struct CGPUVkPassTable //
 {
-    skr::flat_hash_map<size_t, CGPUCachedRenderPass> cached_renderpasses;
-    skr::flat_hash_map<size_t, CGPUCachedFramebuffer> cached_framebuffers;
+    struct rpdesc_hash {
+        size_t operator()(const VkUtil_RenderPassDesc& a) const
+        {
+            return cgpu_hash(&a, sizeof(VkUtil_RenderPassDesc), CGPU_NAME_HASH_SEED);
+        }  
+    };
+    struct rpdesc_eq
+    {
+        inline bool operator()(const VkUtil_RenderPassDesc& a, const VkUtil_RenderPassDesc& b) const
+        {
+            if (a.mColorAttachmentCount != b.mColorAttachmentCount) return false;
+            return std::memcmp(&a, &b, sizeof(VkUtil_RenderPassDesc)) == 0;
+        }
+    };
+
+    struct fbdesc_hash {
+        size_t operator()(const VkUtil_FramebufferDesc& a) const
+        {
+            return cgpu_hash(&a, sizeof(VkUtil_FramebufferDesc), CGPU_NAME_HASH_SEED);
+        }
+    };
+    struct fbdesc_eq
+    {
+        inline bool operator()(const VkUtil_FramebufferDesc& a, const VkUtil_FramebufferDesc& b) const
+        {
+            if (a.pRenderPass != b.pRenderPass) return false;
+            if (a.mAttachmentCount != b.mAttachmentCount) return false;
+            return std::memcmp(&a, &b, sizeof(VkUtil_RenderPassDesc)) == 0;
+        }
+    };
+
+    skr::flat_hash_map<VkUtil_RenderPassDesc, CGPUCachedRenderPass, rpdesc_hash, rpdesc_eq> cached_renderpasses;
+    skr::flat_hash_map<VkUtil_FramebufferDesc, CGPUCachedFramebuffer, fbdesc_hash, fbdesc_eq> cached_framebuffers;
 };
 
 VkFramebuffer VkUtil_FramebufferTableTryFind(struct CGPUVkPassTable* table, const VkUtil_FramebufferDesc* desc)
 {
-    size_t hash = cgpu_hash(desc, sizeof(*desc), *(size_t*)&table);
-    const auto& iter = table->cached_framebuffers.find(hash);
+    const auto& iter = table->cached_framebuffers.find(*desc);
     if (iter != table->cached_framebuffers.end())
     {
         return iter->second.framebuffer;
@@ -96,21 +126,19 @@ VkFramebuffer VkUtil_FramebufferTableTryFind(struct CGPUVkPassTable* table, cons
 
 void VkUtil_FramebufferTableAdd(struct CGPUVkPassTable* table, const struct VkUtil_FramebufferDesc* desc, VkFramebuffer framebuffer)
 {
-    size_t hash = cgpu_hash(desc, sizeof(*desc), *(size_t*)&table);
-    const auto& iter = table->cached_framebuffers.find(hash);
+    const auto& iter = table->cached_framebuffers.find(*desc);
     if (iter != table->cached_framebuffers.end())
     {
         cgpu_warn("Vulkan Framebuffer with this desc already exists!");
     }
     // TODO: Add timestamp
     CGPUCachedFramebuffer new_fb = { framebuffer, 0 };
-    table->cached_framebuffers[hash] = new_fb;
+    table->cached_framebuffers[*desc] = new_fb;
 }
 
 VkRenderPass VkUtil_RenderPassTableTryFind(struct CGPUVkPassTable* table, const struct VkUtil_RenderPassDesc* desc)
 {
-    size_t hash = cgpu_hash(desc, sizeof(*desc), *(size_t*)&table);
-    const auto& iter = table->cached_renderpasses.find(hash);
+    const auto& iter = table->cached_renderpasses.find(*desc);
     if (iter != table->cached_renderpasses.end())
     {
         return iter->second.pass;
@@ -120,15 +148,14 @@ VkRenderPass VkUtil_RenderPassTableTryFind(struct CGPUVkPassTable* table, const 
 
 void VkUtil_RenderPassTableAdd(struct CGPUVkPassTable* table, const struct VkUtil_RenderPassDesc* desc, VkRenderPass pass)
 {
-    size_t hash = cgpu_hash(desc, sizeof(*desc), *(size_t*)&table);
-    const auto& iter = table->cached_renderpasses.find(hash);
+    const auto& iter = table->cached_renderpasses.find(*desc);
     if (iter != table->cached_renderpasses.end())
     {
         cgpu_warn("Vulkan Pass with this desc already exists!");
     }
     // TODO: Add timestamp
     CGPUCachedRenderPass new_pass = { pass, 0 };
-    table->cached_renderpasses[hash] = new_pass;
+    table->cached_renderpasses[*desc] = new_pass;
 }
 
 struct CGPUVkExtensionsTable : public skr::parallel_flat_hash_map<skr::string, bool, skr::hash<skr::string>> //

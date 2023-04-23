@@ -7,9 +7,15 @@
 #include "SkrRenderer/resources/material_type_resource.generated.h"
 #endif
 
+namespace skr sreflect
+{
+namespace renderer sreflect
+{
+using MaterialPropertyName = skr::string;
+
 sreflect_enum_class("guid" : "4003703a-dde4-4f11-93a6-6c460bac6357")
 sattr("rtti": true, "serialize": ["json", "bin"])
-ESkrMaterialPropertyType : uint32_t
+EMaterialPropertyType : uint32_t
 {
     BOOL,
     FLOAT,
@@ -24,17 +30,25 @@ ESkrMaterialPropertyType : uint32_t
     COUNT
 };
 
-using skr_material_property_name_t = skr::string;
+sreflect_enum("guid" : "575331c4-785f-4a4d-b320-4490bb7a6180")
+sattr("rtti": true, "serialize" : ["json", "bin"])
+EMaterialBlendMode : uint32_t
+{
+    Opaque,
+    Blend,
+    Mask,
+    Count
+};
 
 sreflect_struct("guid": "6cdbf15e-67c1-45c1-a4e9-417c81299dae")
 sattr("rtti": true, "serialize": ["json", "bin"])
-skr_material_property_t
+MaterialProperty
 {
     using resource_handle = skr_resource_handle_t;
 
-    skr_material_property_name_t name;
+    MaterialPropertyName name;
     skr::string display_name;
-    ESkrMaterialPropertyType prop_type;
+    EMaterialPropertyType prop_type;
     skr::string description;
 
     double default_value = 0.0;
@@ -52,31 +66,21 @@ skr_material_property_t
 // at runtime we use skr_material_value_$(type)_t
 sreflect_struct("guid": "46de11b4-6beb-4ab9-b9f8-f5c07ceeb8a5")
 sattr("rtti": true, "serialize": ["json", "bin"])
-skr_material_value_t
+MaterialValue
 {
     using resource_handle = skr_resource_handle_t;
 
-    ESkrMaterialPropertyType prop_type;
-    skr_material_property_name_t slot_name;
+    EMaterialPropertyType prop_type;
+    MaterialPropertyName slot_name;
 
     double value = 0.0;
     skr_float4_t vec = { 0.0f, 0.0f, 0.0f, 0.0f };
     resource_handle resource;
 };
 
-sreflect_enum("guid" : "575331c4-785f-4a4d-b320-4490bb7a6180")
-sattr("rtti": true, "serialize" : ["json", "bin"])
-EMaterialBlendMode : uint32_t
-{
-    Opaque,
-    Blend,
-    Mask,
-    Count
-};
-
 sreflect_struct("guid" : "ed2e3476-90a3-4f2f-ac97-808f63d1eb11")
 sattr("rtti": true, "serialize" : ["json", "bin"])
-skr_material_pass_t
+MaterialPass
 {
     skr::string pass;
     skr::vector<skr_shader_collection_handle_t> shader_resources;
@@ -86,22 +90,18 @@ skr_material_pass_t
 
 sreflect_struct("guid" : "83264b35-3fde-4fff-8ee1-89abce2e445b")
 sattr("rtti": true, "serialize" : ["json", "bin"])
-skr_material_type_resource_t
+MaterialTypeResource
 {
     uint32_t version;
     
-    skr::vector<skr_material_pass_t> passes;
-    skr::vector<skr_material_value_t> default_values;
+    skr::vector<MaterialPass> passes;
+    skr::vector<MaterialValue> default_values;
     skr::vector<skr_shader_option_instance_t> switch_defaults;
     skr::vector<skr_shader_option_instance_t> option_defaults;
     skr_vertex_layout_id vertex_type;
 };
 
-namespace skr sreflect
-{
-namespace resource sreflect
-{
-struct SKR_RENDERER_API SMaterialTypeFactory : public SResourceFactory {
+struct SKR_RENDERER_API SMaterialTypeFactory : public resource::SResourceFactory {
     virtual ~SMaterialTypeFactory() = default;
 
     struct Root {

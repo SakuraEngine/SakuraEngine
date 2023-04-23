@@ -10,9 +10,14 @@
     #include "SkrRenderer/resources/shader_resource.generated.h"
 #endif
 
+namespace skr sreflect
+{
+namespace renderer sreflect
+{
+
 sreflect_struct("guid" : "6c07aa34-249f-45b8-8080-dd2462ad5312")
 sattr("serialize" : ["json", "bin"], "rtti" : true)
-skr_multi_shader_resource_t
+MultiShaderResource
 {
     using stable_hash_t = skr_stable_shader_hash_t;
     using stable_hasher_t = skr_stable_shader_hash_t::hasher;
@@ -38,9 +43,9 @@ skr_multi_shader_resource_t
 
 sreflect_struct("guid": "8372f075-b4ce-400d-929f-fb0e57c1c887")
 sattr("blob" : true)
-skr_shader_option_sequence_t
+ShaderOptionSequence
 {
-    skr::span<ESkrShaderOptionType> types;
+    skr::span<EShaderOptionType> types;
     skr::span<skr::string_view> keys;
     skr::span<skr::span<skr::string_view>> values;
 
@@ -54,24 +59,25 @@ skr_shader_option_sequence_t
     uint32_t find_value_index(uint32_t key_index, skr::string_view value) const SKR_NOEXCEPT;
 
     sattr("no-rtti" : true) SKR_RENDERER_API
-    static skr_stable_shader_hash_t calculate_stable_hash(const skr_shader_option_sequence_t& seq, skr::span<uint32_t> indices);
+    static skr_stable_shader_hash_t calculate_stable_hash(const ShaderOptionSequence& seq, skr::span<uint32_t> indices);
 };
-GENERATED_BLOB_BUILDER(skr_shader_option_sequence_t)
+GENERATED_BLOB_BUILDER(ShaderOptionSequence)
 
 sreflect_struct("guid" : "1c7d845a-fde8-4487-b1c9-e9c48d6a9867")
 sattr("serialize" : "bin", "rtti" : true)
-skr_shader_collection_resource_t
+ShaderCollectionResource
 {
     using stable_hash_t = skr_stable_shader_hash_t;
     using stable_hasher_t = skr_stable_shader_hash_t::hasher;
+    SKR_RENDERER_API ~ShaderCollectionResource() SKR_NOEXCEPT;
 
     sattr("no-rtti" : true)
-    inline skr_multi_shader_resource_t& GetRootStaticVariant() SKR_NOEXCEPT {
+    inline MultiShaderResource& GetRootStaticVariant() SKR_NOEXCEPT {
         return GetStaticVariant(kZeroStableShaderHash);
     }
 
     sattr("no-rtti" : true)
-    inline skr_multi_shader_resource_t& GetStaticVariant(const skr_stable_shader_hash_t& hash) SKR_NOEXCEPT {
+    inline MultiShaderResource& GetStaticVariant(const skr_stable_shader_hash_t& hash) SKR_NOEXCEPT {
         auto found = switch_variants.find(hash);
         SKR_ASSERT(found != switch_variants.end());
         return found->second;
@@ -80,7 +86,7 @@ skr_shader_collection_resource_t
     skr_guid_t root_guid;
     // hash=0 -> root_variant;
     spush_attr("no-rtti" : true)
-    skr::flat_hash_map<stable_hash_t, skr_multi_shader_resource_t, stable_hasher_t> switch_variants;
+    skr::flat_hash_map<stable_hash_t, MultiShaderResource, stable_hasher_t> switch_variants;
 
     skr_blob_arena_t switch_arena;
     skr_blob_arena_t option_arena;
@@ -93,18 +99,18 @@ skr_shader_collection_resource_t
 
 sreflect_struct("guid" : "a633ea13-53d8-4202-b6f1-ec882ac409ec")
 sattr("serialize" : ["json", "bin"], "rtti" : true)
-skr_platform_shader_collection_json_t
+ShaderCollectionJSON
 {
     using stable_hash_t = skr_stable_shader_hash_t;
     using stable_hasher_t = skr_stable_shader_hash_t::hasher;
 
     sattr("no-rtti" : true)
-    inline skr_multi_shader_resource_t& GetRootStaticVariant() SKR_NOEXCEPT {
+    inline MultiShaderResource& GetRootStaticVariant() SKR_NOEXCEPT {
         return GetStaticVariant(kZeroStableShaderHash);
     }
 
     sattr("no-rtti" : true)
-    inline skr_multi_shader_resource_t& GetStaticVariant(const skr_stable_shader_hash_t& hash) SKR_NOEXCEPT {
+    inline MultiShaderResource& GetStaticVariant(const skr_stable_shader_hash_t& hash) SKR_NOEXCEPT {
         auto found = switch_variants.find(hash);
         SKR_ASSERT(found != switch_variants.end());
         return found->second;
@@ -113,22 +119,17 @@ skr_platform_shader_collection_json_t
     skr_guid_t root_guid;
     // hash=0 -> root_variant;
     sattr("no-rtti" : true)
-    skr::flat_hash_map<stable_hash_t, skr_multi_shader_resource_t, stable_hasher_t> switch_variants;
+    skr::flat_hash_map<stable_hash_t, MultiShaderResource, stable_hasher_t> switch_variants;
     
     skr::vector<skr::string> switch_key_sequence;
-    skr::vector<ESkrShaderOptionType> switch_type_sequence;
+    skr::vector<EShaderOptionType> switch_type_sequence;
     skr::vector<skr::vector<skr::string>> switch_values_sequence;
     skr::vector<skr::string> option_key_sequence;
-    skr::vector<ESkrShaderOptionType> option_type_sequence;
+    skr::vector<EShaderOptionType> option_type_sequence;
     skr::vector<skr::vector<skr::string>> option_values_sequence;
 };
 
-struct skr_shader_map_t;
-namespace skr sreflect
-{
-namespace resource sreflect
-{
-struct SKR_RENDERER_API SShaderResourceFactory : public SResourceFactory {
+struct SKR_RENDERER_API SShaderResourceFactory : public resource::SResourceFactory {
     virtual ~SShaderResourceFactory() = default;
 
     struct Root {

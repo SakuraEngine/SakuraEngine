@@ -1,6 +1,6 @@
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "ecs/SmallVector.h"
-#include "ecs/callback.hpp"
+
 #include "ecs/dual_config.h"
 #include "platform/debug.h"
 #include "ecs/dual.h"
@@ -48,11 +48,7 @@ void ImportTraversal(skd::SUSDPrimId prim, TranverseContext& ctx, children_t* ch
         {
             ZoneScopedN("CreateEntity");
             dual::type_builder_t builder;
-            dual_type_index_t transformType;
-            if(!children)
-                transformType = dual_id_of<skr_l2w_comp_t>::get();
-            else
-                transformType = dual_id_of<skr_l2r_comp_t>::get();
+            dual_type_index_t transformType = dual_id_of<skr_transform_comp_t>::get();
             builder.with(transformType);
             builder.with<skr_name_comp_t>();
             if(children)

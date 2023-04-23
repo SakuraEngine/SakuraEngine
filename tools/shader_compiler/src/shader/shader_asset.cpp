@@ -50,7 +50,7 @@ using unique_option_variant_t = eastl::vector<skr_shader_option_instance_t>;
 // [ [z: "on", y: "a", z: "1"], [x: "on", y: "a", z: "2"] ...]
 using option_variant_seq_t = eastl::vector<unique_option_variant_t>;
 using variant_seq_hashe_seq_t = eastl::vector<skr_stable_shader_hash_t>;
-void cartesian_variants(skr::span<skr_shader_options_resource_t*> options, eastl::vector<skr_shader_option_t>& out_flatten_options,
+void cartesian_variants(skr::span<skr_shader_options_resource_t*> options, eastl::vector<skr_shader_option_template_t>& out_flatten_options,
 option_variant_seq_t& out_variants, variant_seq_hashe_seq_t& out_stable_hahses)
 {
     // flat and well sorted
@@ -128,12 +128,12 @@ bool SShaderCooker::Cook(SCookContext* ctx)
         option_assets.emplace_back(opts_resource);
     }
 
-    eastl::vector<skr_shader_option_t> flat_static_options = {};
+    eastl::vector<skr_shader_option_template_t> flat_static_options = {};
     option_variant_seq_t static_variants = {};
     variant_seq_hashe_seq_t static_stable_hashes = {};
     cartesian_variants(switch_assets, flat_static_options, static_variants, static_stable_hashes);
 
-    eastl::vector<skr_shader_option_t> flat_dynamic_options = {};
+    eastl::vector<skr_shader_option_template_t> flat_dynamic_options = {};
     option_variant_seq_t dynamic_variants = {};
     variant_seq_hashe_seq_t dynamic_stable_hashes = {};
     cartesian_variants(option_assets, flat_dynamic_options, dynamic_variants, dynamic_stable_hashes);
@@ -203,7 +203,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
                         {
                             auto bytesPath = basePath / (fname + ".bytes").c_str();
                             {
-                                auto file = fopen(bytesPath.u8string().c_str(), "wb");
+                                auto file = fopen(bytesPath.string().c_str(), "wb");
                                 SKR_DEFER({ fclose(file); });
                                 if (!file) SKR_UNREACHABLE_CODE();
                                 fwrite(bytes.data(), bytes.size(), 1, file);
@@ -214,7 +214,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
                         {
                             auto pdbPath = basePath / (fname + ".pdb").c_str();
                             {
-                                auto pdb_file = fopen(pdbPath.u8string().c_str(), "wb");
+                                auto pdb_file = fopen(pdbPath.string().c_str(), "wb");
                                 SKR_DEFER({ fclose(pdb_file); });
                                 if (!pdb_file) SKR_UNREACHABLE_CODE();
                                 fwrite(pdb.data(), pdb.size(), 1, pdb_file);
@@ -300,7 +300,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
     }
     // serialize a json file for visual debugging
     {
-        skr_platform_shader_collection_json_t json_resource = {};
+        skr_shader_collection_json_t json_resource = {};
         json_resource.root_guid = resource.root_guid;
         json_resource.switch_variants = resource.switch_variants;
 
@@ -315,13 +315,13 @@ bool SShaderCooker::Cook(SCookContext* ctx)
         // make archive
         skr_json_writer_t writer(2);
         skr::json::Write(&writer, json_resource);
-        auto jPath = outputPath.u8string() + ".json";
+        auto jPath = outputPath.string() + ".json";
         // write to file
         auto file = fopen(jPath.c_str(), "wb");
         if (!file)
         {
             SKR_LOG_FMT_ERROR("[SShaderCooker::Cook] failed to write cooked file for json_resource {}! path: {}",
-            assetRecord->guid, assetRecord->path.u8string());
+            assetRecord->guid, assetRecord->path.string());
             return false;
         }
         SKR_DEFER({ fclose(file); });

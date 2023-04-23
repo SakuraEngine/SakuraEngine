@@ -119,8 +119,11 @@ class MetaDatabase(object):
     def generate_forward(self, args):
         template = os.path.join(BASE, "forward.h.mako")
         return self.render(template, db=self, config = args.config)
-    def generate_impl(self):
-        template = os.path.join(BASE, "impl.cpp.mako")
+    def generate_impl_begin(self):
+        template = os.path.join(BASE, "impl_begin.cpp.mako")
+        return self.render(template, db=self)
+    def generate_impl_end(self):
+        template = os.path.join(BASE, "impl_begin.cpp.mako")
         return self.render(template, db=self)
     def guid_constant(self, type):
         guid = type.attrs.guid
@@ -193,10 +196,11 @@ if __name__ == '__main__':
         generated_header = re.sub(r"(.*?)\.(.*?)\.meta", r"\g<1>.generated.\g<2>", header_db.relative_path)
         db.write(os.path.join(args.outdir, generated_header), forward_content)
 
-    impl_content : str = db.generate_impl()
+    impl_content : str = db.generate_impl_begin()
     for generator in generators:
         if hasattr(generator, "generate_impl"):
             impl_content = impl_content + generator.generate_impl(db, args)
+    impl_content = impl_content + db.generate_impl_end()
 
     db.write(os.path.join(args.outdir, "generated.cpp"), impl_content)
 

@@ -1,10 +1,11 @@
-set_xmakever("2.7.3")
---add_platformdirs("xmake/platforms")
+set_xmakever("2.7.4")
+add_repositories("skr-xrepo xrepo", {rootdir = os.scriptdir()})
+
 set_project("SakuraEngine")
 
 set_policy("build.ccache", false)
--- wait xmake 2.7.4 release
--- add_rules("plugin.compile_commands.autoupdate", { outputdir = ".vscode" })
+
+add_rules("plugin.compile_commands.autoupdate", { outputdir = ".vscode" }) -- xmake 2.7.4 
 
 add_rules("mode.debug", "mode.release", "mode.releasedbg", "mode.asan")
 add_moduledirs("xmake/modules")
@@ -12,7 +13,7 @@ add_moduledirs("xmake/modules")
 includes("xmake/options.lua")
 --includes("xmake/toolchains/prospero.lua")
 
-set_languages("c11", "cxx17")
+set_languages(get_config("cxx_version"), get_config("c_version"))
 
 engine_version = "0.1.0"
 default_unity_batch_size = 8
@@ -61,11 +62,10 @@ target("SkrRoot")
         table.insert(libs_to_install, "nsight")
         table.insert(libs_to_install, "WinPixEventRuntime")
         table.insert(libs_to_install, "SDL2")
-        table.insert(libs_to_install, "tracyclient")
     end
     add_rules("utils.install-libs", { libnames = libs_to_install })
     -- core deps
-    add_deps("simdjson", "fmt", "boost", {public = true})
+    add_deps("boost", {public = true})
     -- generate codegen fences
     after_load(function(target)
         import("meta_codegen")
@@ -104,7 +104,6 @@ if(has_config("build_tools")) then
     includes("tools/xmake.lua")
 end
 if(has_config("build_editors")) then
-    includes("xmake/thirdparty-ed.lua")
     includes("editors/xmake.lua")
 end
 if(has_config("build_tests")) then

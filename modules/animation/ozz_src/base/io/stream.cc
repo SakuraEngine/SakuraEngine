@@ -228,7 +228,7 @@ bool SkrStream::opened() const { return reader_ != nullptr || writer_ != nullptr
 
 size_t SkrStream::Read(void* _buffer, size_t _size) {
   SKR_ASSERT(reader_);
-  if(auto ret = skr::binary::ReadValue(reader_, _buffer, _size); ret != 0) {
+  if(auto ret = skr::binary::ReadBytes(reader_, _buffer, _size); ret != 0) {
     return 0;
   }
   return _size;
@@ -236,7 +236,7 @@ size_t SkrStream::Read(void* _buffer, size_t _size) {
 
 size_t SkrStream::Write(const void* _buffer, size_t _size) {
   SKR_ASSERT(writer_);
-  if(auto ret = skr::binary::WriteValue(writer_, _buffer, _size); ret != 0) {
+  if(auto ret = skr::binary::WriteBytes(writer_, _buffer, _size); ret != 0) {
     return 0;
   }
   return _size;

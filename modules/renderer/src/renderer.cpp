@@ -2,7 +2,7 @@
 #include "utils/make_zeroed.hpp"
 #include "ecs/dual.h"
 #include "ecs/array.hpp"
-#include "ecs/callback.hpp"
+
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 
 #include "SkrRenderer/render_viewport.h"
@@ -297,32 +297,34 @@ void skr_render_effect_attach(SRendererId r, dual_chunk_view_t* g_cv, skr_render
         // create render effect entities in storage
         if (entity_type.type.length != 0)
         {
-            dual_chunk_view_t* out_cv = nullptr;
+            uint32_t g_id = 0;
             auto initialize_callback = [&](dual_chunk_view_t* r_cv) {
+                dual_chunk_view_t sub_g_cv = *g_cv;
+                sub_g_cv.start = g_cv->start + g_id;
+                sub_g_cv.count = r_cv->count;
                 // do user initialize callback
-                i_processor->second->initialize_data(renderer, world, g_cv, r_cv);
-                out_cv = r_cv;
-            };
-            dualS_allocate_type(world, &entity_type, g_cv->count, DUAL_LAMBDA(initialize_callback));
-            // attach render effect entities to game entities
-            if (out_cv)
-            {
-                auto entities = dualV_get_entities(out_cv);
-                for (uint32_t i = 0; i < g_cv->count; i++)
+                i_processor->second->initialize_data(renderer, world, &sub_g_cv, r_cv);
+                
+                // attach render effect entities to game entities
+                auto entities = dualV_get_entities(r_cv);
+                for (uint32_t i = 0; i < r_cv->count; i++)
                 {
-                    auto& features = feature_arrs[i];
-#ifdef _DEBUG
+                    auto& features = feature_arrs[g_id + i];
+    #ifdef _DEBUG
                     for (auto& _ : features)
                     {
                         SKR_ASSERT(strcmp(_.name, effect_name) != 0 && "Render effect already attached");
                     }
-#endif
+    #endif
                     features.emplace_back( skr_render_effect_t{ nullptr, DUAL_NULL_ENTITY } );
                     auto& feature = features.back();
                     feature.name = effect_name;
                     feature.effect_entity = entities[i];
                 }
-            }
+                g_id += r_cv->count;
+            };
+            dualS_allocate_type(world, &entity_type, g_cv->count, DUAL_LAMBDA(initialize_callback));
+            SKR_ASSERT(g_id == g_cv->count && "Render effect entities count mismatch");
         }
         else
         {
@@ -336,26 +338,29 @@ void skr_render_effect_detach(SRendererId r, dual_chunk_view_t* cv, skr_render_e
     if (cv && cv->count)
     {
         eastl::fixed_vector<dual_entity_t, 16> render_effects;
-        render_effects.reserve(cv->count);
+        //render_effects.reserve(cv->count);
         auto feature_arrs = (render_effects_t*)dualV_get_owned_rw(cv, dual_id_of<skr_render_effect_t>::get());
+        auto entities = dualV_get_entities(cv);
         if (feature_arrs)
         {
-            uint32_t removed_index = 0;
             for (uint32_t i = 0; i < cv->count; i++)
             {
                 auto& features = feature_arrs[i];
-                for (auto& _ : features)
+                bool found = false;
+                for (auto iter = features.begin(); iter != features.end(); iter++)
                 {
-                    if (strcmp(_.name, effect_name) == 0)
+                    if (strcmp(iter->name, effect_name) == 0)
                     {
-                        render_effects.emplace_back(_.effect_entity);
-                        _.name = nullptr;
-                        _.effect_entity = DUAL_NULL_ENTITY;
-                        removed_index = i;
+                        render_effects.emplace_back(iter->effect_entity);
+                        features.erase(iter);
+                        found = true;
                         break;
                     }
                 }
-                features.erase(features.begin() + removed_index);
+                if(!found)
+                {
+                    SKR_LOG_WARN("Render effect %s not attached to entity %d", effect_name, entities[i]);
+                }
             }
         }
         auto storage = dualC_get_storage(cv->chunk);

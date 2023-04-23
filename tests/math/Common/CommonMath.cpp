@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "utils/types.h"
 #include "utils/format.hpp"
+#include "math/quat.h"
 
 class CommonMath : public ::testing::Test
 {
@@ -14,20 +15,15 @@ protected:
     }
 };
 
-TEST(CommonMath, CommonMath0)
+TEST(CommonMath, QuatEuler)
 {
-    uint32_t value = 15;
-    uint32_t alignment = 4;
-    //auto uvalue = smath_round_up(value, alignment);
-    ///auto dvalue = smath_round_down(value, alignment);
-    //EXPECT_TRUE(uvalue == 16);
-    //EXPECT_TRUE(dvalue == 12);
-}
-
-TEST(CommonMath, Cast)
-{
-    skr_float3_t f3 = { 1, 2, 3 };
-
+    skr_rotator_t euler{0, 80.f, 15.f};
+    auto quat = skr::math::load(euler);
+    skr_rotator_t loaded;
+    skr::math::store(quat, loaded);
+    EXPECT_NEAR(euler.pitch, loaded.pitch, 0.001);
+    EXPECT_NEAR(euler.yaw, loaded.yaw, 0.001);
+    EXPECT_NEAR(euler.roll, loaded.roll, 0.001);
 }
 
 TEST(CommonMath, MD5)

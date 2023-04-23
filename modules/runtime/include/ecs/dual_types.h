@@ -16,7 +16,6 @@ DUAL_DECLARE(group_t);
 DUAL_DECLARE(chunk_t);
 DUAL_DECLARE(query_t);
 DUAL_DECLARE(storage_delta_t);
-DUAL_DECLARE(counter_t);
 #undef DUAL_DECLARE
 
 typedef TIndex dual_type_index_t;
@@ -42,7 +41,7 @@ static constexpr size_t kLargeBinCapacity = 80;
 static constexpr SIndex kInvalidSIndex = eastl::numeric_limits<SIndex>::max();
 static constexpr TIndex kInvalidTypeIndex = eastl::numeric_limits<TIndex>::max();
 
-static constexpr size_t kGroupBlockSize = 128 * 2;
+static constexpr size_t kGroupBlockSize = 128 * 4;
 static constexpr size_t kGroupBlockCount = 256;
 static constexpr size_t kStorageArenaSize = 128 * 128;
 static constexpr size_t kLinkComponentSize = 8;
