@@ -42,8 +42,7 @@ struct Input_GameInput : public InputLayer
                 }
             }
         }
-        auto CreateResult = GameInputCreate(&game_input);
-        return SUCCEEDED(CreateResult);
+        return false;
     }
 
     Input_GameInput() SKR_NOEXCEPT
