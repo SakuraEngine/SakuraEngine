@@ -1,4 +1,4 @@
-add_requires("meshoptimizer =0.1.0-skr")
+add_requires("meshoptimizer >=0.1.0-skr")
 
 shared_module("SkrMeshCore", "MESH_CORE", engine_version)
     set_group("02.tools")

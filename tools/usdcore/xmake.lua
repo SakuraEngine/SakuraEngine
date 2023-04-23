@@ -1,4 +1,4 @@
-add_requires("cgltf =1.13.0-skr", {system = false})
+add_requires("cgltf >=1.13.0-skr", {system = false})
 
 target("UsdCore")
     set_group("02.tools")
