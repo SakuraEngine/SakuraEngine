@@ -119,13 +119,14 @@ int SUsdImporterFactoryImpl::Update()
             else
             {
                 skr::filesystem::path assetPath(_assetPath.c_str());
+                const auto assetPathStr = assetPath.string();
                 if(!skr::filesystem::exists(assetPath))
                 {
                     SKR_LOG_ERROR("asset path not exist");
                     return -1;
                 }
                 simdjson::padded_string json;
-                if(simdjson::padded_string::load(assetPath.u8string().c_str()).get(json) != simdjson::SUCCESS)
+                if(simdjson::padded_string::load(assetPathStr.c_str()).get(json) != simdjson::SUCCESS)
                 {
                     SKR_LOG_ERROR("load asset json failed");
                     return -1;
@@ -162,7 +163,8 @@ int SUsdImporterFactoryImpl::Update()
                     SKR_LOG_ERROR("read importer failed %s", skr::json::error_message(error));
                     return -1;
                 }
-                _assetFolder = assetPath.parent_path().u8string().c_str();
+                const auto assetPathParentStr = assetPath.parent_path().string();
+                _assetFolder = assetPathParentStr.c_str();
             }
             
             auto root = _stage->GetPseudoRoot();
@@ -248,7 +250,7 @@ int SUsdImporterFactoryImpl::Update()
                     assetPath /= skr::filesystem::path(path.c_str());
                     assetPath.replace_extension(".mesh.meta");
                     skr::filesystem::create_directories(assetPath.parent_path());
-                    std::ofstream file(assetPath.u8string());
+                    std::ofstream file(assetPath.string());
                     file << writer.Str().c_str();
                 }
             }
