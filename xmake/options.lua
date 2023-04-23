@@ -4,12 +4,6 @@ option("build_tools")
     set_description("Toggle to build tools of SakuraRuntime")
 option_end()
 
-option("build_usdtool")
-    set_default(false)
-    set_showmenu(true)
-    set_description("Toggle to build usdtool of SakuraRuntime")
-option_end()
-
 option("build_samples")
     set_default(true)
     set_showmenu(true)

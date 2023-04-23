@@ -30,8 +30,6 @@ if (os.host() == "windows") then
     find_sdk.lib_from_github("SDL2", "SDL2-windows-x64.zip")
     find_sdk.lib_from_github("tracyclient", "tracyclient-windows-x64.zip")
     find_sdk.lib_from_github("tracyclient_d", "tracyclient_d-windows-x64.zip")
-    -- usd
-    find_sdk.lib_from_github("usd", "usd-windows-x64.zip")
     -- tools & compilers
     find_sdk.tool_from_github("dxc", "dxc-windows-x64.zip")
     find_sdk.tool_from_github("wasm-clang", "wasm-clang-windows-x64.zip")

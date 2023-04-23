@@ -30,7 +30,6 @@ _deps
 /SDKs/*.zip
 /SDKs/*.ttf
 stressTest
-/thirdparty/USD
 /thirdparty/*.zip
 scenes
 /vcpkg_installed
