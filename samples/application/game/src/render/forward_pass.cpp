@@ -211,7 +211,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                 {
                     ZoneScopedN("FetchAnims");
                     // duel to dependency, anims fetch here may block a bit, waiting CPU skinning job done
-                    anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
+                    anims = dual::get_owned_ro<skr_render_anim_comp_t>(r_cv);
                 }
                 for (uint32_t i = 0; i < r_cv->count; i++)
                 {
@@ -235,6 +235,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                     cgpu_cmd_resource_barrier(context.cmd, &barrier_desc);
                 }
             };
+            dualQ_sync(*anim_query);
             dualQ_get_views(*anim_query, DUAL_LAMBDA(barrierVertices));
         });
     
