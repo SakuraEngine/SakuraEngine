@@ -398,7 +398,7 @@ void async_attach_skin_mesh(SRendererId renderer)
     auto filter = make_zeroed<dual_filter_t>();
     auto meta = make_zeroed<dual_meta_filter_t>();
     auto renderable_type = make_zeroed<dual::type_builder_t>();
-    renderable_type.with<skr_render_effect_t, skr_translation_comp_t>();
+    renderable_type.with<skr_render_effect_t, skr_render_mesh_comp_t, skr_render_skin_comp_t, skr_render_skel_comp_t>();
     auto static_type = make_zeroed<dual::type_builder_t>();
     static_type.with<skr_movement_comp_t>();
     filter.all = renderable_type.build();

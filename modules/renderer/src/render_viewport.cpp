@@ -10,7 +10,7 @@ struct SViewportManagerImpl : public SViewportManager
 {
     SViewportManagerImpl(dual_storage_t* storage)
     {
-        camera_query = dualQ_from_literal(storage, "[in]skr_camera_comp_t");
+        camera_query = dualQ_from_literal(storage, "[in]skr_camera_comp_t, [in]skr_translation_comp_t");
     }
 
     ~SViewportManagerImpl()
