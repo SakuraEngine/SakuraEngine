@@ -1017,6 +1017,11 @@ const char* dualQ_get_error()
     return dual::get_error().c_str();
 }
 
+void dualQ_add_child(dual_query_t* query, dual_query_t* child)
+{
+    query->subqueries.push_back(child);
+}
+
 EIndex dualQ_get_count(dual_query_t* query)
 {
     EIndex result = 0;

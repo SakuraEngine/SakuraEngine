@@ -21,12 +21,15 @@ void MPGameWorld::Initialize()
     movementQuery.Initialize(storage);
     ballQuery.Initialize(storage);
     ballChildQuery = dualQ_from_literal(storage, "[in]skr_translation_comp_t', [inout]CHealth, [in]CSphereCollider2D");
+    dualQ_add_child(ballQuery.query, ballChildQuery);
     killBallQuery.Initialize(storage);
     killZombieQuery.Initialize(storage);
     relevanceQuery.Initialize(storage);
-    zombieAIQuery.Initialize(storage);
     relevanceChildQuery = dualQ_from_literal(storage, "[in]skr_translation_comp_t, [in]CController");
+    dualQ_add_child(relevanceQuery.query, relevanceChildQuery);
+    zombieAIQuery.Initialize(storage);
     zombieAIChildQuery = dualQ_from_literal(storage, "[has]CPlayer, [in]skr_translation_comp_t");
+    dualQ_add_child(zombieAIQuery.query, zombieAIChildQuery);
     gameStateQuery = dualQ_from_literal(storage, "[inout]CMPGameModeState");
     skr_transform_setup(storage, &transformSystem);
     config = 
