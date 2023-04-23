@@ -78,6 +78,7 @@ struct entity_spawner_T
     entity_spawner_T()
     {
         type.type = builder.with<T...>().build();
+        type.meta = {nullptr, 0};
     }
     struct View
     {

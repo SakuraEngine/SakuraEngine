@@ -39,12 +39,12 @@ void MPGameWorld::Initialize()
         50,
         15,
         3,
-        1,
+        5,
         5,
         10,
         20,
         30,
-        {}
+        10
     };
 }
 
