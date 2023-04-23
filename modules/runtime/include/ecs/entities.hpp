@@ -1,6 +1,7 @@
 #pragma once
 #include <EASTL/vector.h>
 #include "dual.h"
+#include "platform/thread.h"
 
 namespace dual
 {
@@ -12,6 +13,7 @@ struct entity_registry_t {
     };
     eastl::vector<entry_t> entries;
     eastl::vector<EIndex> freeEntries;
+    SMutexObject mutex;
 
     void reset();
     void shrink();
