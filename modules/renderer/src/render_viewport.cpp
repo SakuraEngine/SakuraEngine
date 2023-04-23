@@ -126,5 +126,6 @@ void skr_resolve_cameras_to_viewport(struct SViewportManager* viewport_manager, 
             skr_resolve_camera_to_viewport(cameras + i, camera_transforms + i, viewportManager->find_viewport(viewport_index));
         }
     };
+    dualQ_sync(camera_query);
     dualQ_get_views(camera_query, DUAL_LAMBDA(cameraSetup));
 }

@@ -792,6 +792,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
             };
             {
                 // prepare skin mesh resources for rendering
+                dualQ_sync(initAnimSkinQuery);
                 dualQ_get_views(initAnimSkinQuery, DUAL_LAMBDA(initAnimSkinComps));
             }
 
