@@ -116,8 +116,8 @@ void skr_resolve_cameras_to_viewport(struct SViewportManager* viewport_manager, 
     auto cameraSetup = [&](dual_chunk_view_t* g_cv) {
         ZoneScopedN("CameraResolve");
 
-        auto cameras = dual::get_owned_rw<skr_camera_comp_t>(g_cv);
-        auto camera_transforms = dual::get_owned_rw<skr_translation_comp_t>(g_cv);
+        auto cameras = dual::get_owned_ro<skr_camera_comp_t>(g_cv);
+        auto camera_transforms = dual::get_owned_ro<skr_translation_comp_t>(g_cv);
         for (uint32_t i = 0; i < g_cv->count; i++)
         {
             const auto viewport_index = cameras[i].viewport_id;
