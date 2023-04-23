@@ -34,16 +34,16 @@ void MPGameWorld::Initialize()
     skr_transform_setup(storage, &transformSystem);
     config = 
     {
-        0.05f,
+        0.5f,
         100,
+        50,
         15,
-        30,
-        10,
+        3,
         1,
         5,
         10,
         20,
-        10,
+        30,
         {}
     };
 }
@@ -148,8 +148,8 @@ void MPGameWorld::SpawnZombie()
 {
     if(authoritative)
     {
-        using spawner_t = dual::entity_spawner_T<CZombie, CMovement, skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, CSphereCollider2D, 
-        CPrefab, CAuth, CAuthTypeData, CRelevance>;
+        using spawner_t = dual::entity_spawner_T<CZombie, CMovement, CHealth, skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, CSphereCollider2D, 
+        CPrefab, CAuth, CAuthTypeData, CRelevance, dual::dirty_comp_t>;
         static spawner_t spawner;
         auto state= dual::get_singleton<CMPGameModeState>(gameStateQuery);
         state->zombieSpawnTimer += deltaTime;
@@ -173,19 +173,21 @@ void MPGameWorld::SpawnZombie()
         {
             spawner(storage, zombiesToSpawn, [&](spawner_t::View view)
             {
-                auto [zombies, movements, translations, scales, rotations, 
-                    colliders, prefabs, auths, authTypeDatas, relevances] = view.unpack();
+                auto [zombies, movements, healths, translations, scales, rotations, 
+                    colliders, prefabs, auths, authTypeDatas, relevances, dirties] = view.unpack();
                 for(int i=0; i<view.count(); ++i)
                 {
                     float angle = (float)rand() / RAND_MAX * 2 * 3.1415926f;
                     float radius = config.ZombieSpawnRadiusMin + (config.ZombieSpawnRadiusMax - config.ZombieSpawnRadiusMin) * (float)rand() / RAND_MAX;
                     translations[i] = {radius * cosf(angle), 0, radius * sinf(angle)};
                     rotations[i] = {0, 0, 0};
-                    scales[i] = {2, 2, 2};
-                    colliders[i] = {2};
+                    scales[i] = {4, 4, 4};
+                    colliders[i] = {4};
                     prefabs[i].prefab = GetZombiePrefab();
                     relevances[i].mask.flip();
-
+                    zombies[i].speed = config.ZombieSpeed;
+                    zombies[i].knockBack = 0;
+                    healths[i].maxHealth = healths[i].health = config.ZombieHealth;
                 }
             });
         }
@@ -215,6 +217,8 @@ void MPGameWorld::ZombieAI()
             {
                 auto ptranslations = dual::get_owned_ro<skr_translation_comp_t>(view);
                 auto phealths = dual::get_owned_ro<CHealth>(view);
+                auto healthId = dualV_get_local_type(view, dual_id_of<CHealth>::get());
+                auto pdirties = dual::get_owned_ro<dual::dirty_comp_t>(view);
                 auto entities = (dual_entity_t*)dualV_get_entities(view);
                 for(int j=0; j<view->count; ++j)
                 {
@@ -228,12 +232,13 @@ void MPGameWorld::ZombieAI()
                     if(distance < config.ZombieAttackRadius)
                     {
                         phealths[j].health -= config.ZombieDamage * deltaTime;
+                        dual_set_bit(&pdirties[j].value, healthId);
                     }
                 }
             };
             dualQ_get_views(zombieAIChildQuery, DUAL_LAMBDA(findNearestPlayer));
             
-            if(minDistance < 100)
+            if(minDistance < 1000)
             {
                 auto dir = rtm::vector_sub(minDistancePlayerPos, translation);
                 dir = rtm::vector_normalize3(dir);
@@ -301,7 +306,7 @@ void MPGameWorld::PlayerShoot()
     if(authoritative)
     {
         using spawner_t = dual::entity_spawner_T<CBall, CMovement, skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, CSphereCollider2D, 
-        CPrefab, CAuth, CAuthTypeData, CRelevance>;
+        CPrefab, CAuth, CAuthTypeData, CRelevance, dual::dirty_comp_t>;
         static spawner_t spawner;
         auto fire = [&](dual_chunk_view_t* view)
         {
@@ -321,7 +326,7 @@ void MPGameWorld::PlayerShoot()
                         {
                             auto [balls, movements, translations, scales, 
                                 rotations, spheres, prefabs, 
-                                auths, authTypes, relevances] = view.unpack();
+                                auths, authTypes, relevances, dirties] = view.unpack();
                             for(int j=0; j<view.count(); ++j)
                             {
                                 auto rot = skr::math::load(orotations[i].euler);
@@ -493,6 +498,7 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
 {
     ZoneScopedN("MP Tick");
     input = inInput;
+    SpawnZombie();
     ClearDeadBall();
     ClearDeadZombie();
     ZombieAI();

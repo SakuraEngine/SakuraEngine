@@ -21,16 +21,16 @@ struct TaskContext : private dual::task_context_t ${"\\"}
     template<class T> ${"\\"}
     auto get() { return get(skr::type_t<T>{}); } ${"\\"}
     %for i, component in query.sequence():
-    auto get(skr::type_t<${component}>) { return dual::task_context_t::get_owned_${"ro" if query.accesses[i].readonly else "rw"}<${component}, true>(${i-1}); } ${"\\"}
+    auto get(skr::type_t<${component}>) { return dual::task_context_t::get_owned_${"ro" if query.accesses[i].readonly else "rw"}<${component}, true>(${i}); } ${"\\"}
     %endfor
     template<class T> void set_dirty(dual::dirty_comp_t& dirty) { set_dirty(dirty, skr::type_t<T>{}); } ${"\\"}
     %for i, component in query.sequence():
-    void set_dirty(dual::dirty_comp_t& dirty, skr::type_t<${component}>) { dual::task_context_t::set_dirty(dirty, ${i-1}); } ${"\\"}
+    void set_dirty(dual::dirty_comp_t& dirty, skr::type_t<${component}>) { dual::task_context_t::set_dirty(dirty, ${i}); } ${"\\"}
     %endfor
     template<class T> ${"\\"}
     auto get(dual_chunk_view_t* view) { return get(view, skr::type_t<T>{}); } ${"\\"}
     %for i, component in query.unsequence():
-    auto get(dual_chunk_view_t* view, skr::type_t<${component}>) { return dual::task_context_t::get_owned_${"ro" if query.accesses[i].readonly else "rw"}<${component}, true>(view, ${i-1}); } ${"\\"}
+    auto get(dual_chunk_view_t* view, skr::type_t<${component}>) { return dual::task_context_t::get_owned_${"ro" if query.accesses[i].readonly else "rw"}<${component}, true>(view, ${i}); } ${"\\"}
     %endfor
 };
 %endfor
