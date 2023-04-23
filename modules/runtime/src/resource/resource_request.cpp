@@ -442,7 +442,7 @@ void SResourceRequestImpl::Update()
         break;
         case SKR_LOADING_PHASE_FINISHED: {
             // special case when we are installing a resource that is already loaded
-            SKR_ASSERT(isLoading && requestInstall > !(resourceRecord->loadingStatus == SKR_LOADING_STATUS_LOADED));
+            SKR_ASSERT(isLoading && requestInstall >= (resourceRecord->loadingStatus != SKR_LOADING_STATUS_LOADED));
             _LoadFinished();
         }
         break;
