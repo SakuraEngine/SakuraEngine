@@ -44,9 +44,9 @@ codeunit_sequence details::format_integer(const i64& value, const codeunit_seque
             const i32 zero_index = parsing.index_of('0');
             if(zero_index != index_invalid)
             {
+                /*
                 const codeunit_sequence_view holding_view = parsing.subview({ '(', zero_index, '~' });
                 const auto [ last, error ] = std::from_chars(holding_view.c_str(), (const char*)holding_view.last(), holding);
-                /*
                 if(last != holding_view.last())
                     throw format_error("Invalid format specification [{}]!"_cuqv, specification);
                 */
@@ -131,9 +131,9 @@ codeunit_sequence details::format_float(const float& value, const codeunit_seque
             const i32 dot_index = parsing.index_of('.');
             if(dot_index != index_invalid)
             {
+                /*
                 const codeunit_sequence_view precision_view = parsing.subview({ '(', dot_index, '~' });
                 const auto [ last, error ] = std::from_chars(precision_view.c_str(), (const char*)precision_view.last(), precision);
-                /*
                 if(last != precision_view.last())
                     throw format_error("Invalid format specification [{}]!"_cuqv, specification);
                 */

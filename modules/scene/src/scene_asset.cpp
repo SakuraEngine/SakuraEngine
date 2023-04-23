@@ -61,12 +61,12 @@ void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
         auto group = dualC_get_group(view->chunk);
         dual_entity_type_t type;
         dualG_get_type(group, &type);
-        for(int i=0; i<view->count; ++i)
+        for(EIndex i = 0; i < view->count; ++i)
         {
             auto guidStr = skr::format("{}", cguids[i]);
             writer->Key(guidStr.c_str(), guidStr.size());
             writer->StartObject();
-            for(int j=0; j<type.type.length; ++j)
+            for(EIndex j = 0; j < type.type.length; ++j)
             {
                 auto index = dualG_get_stable_order(group, j);
                 auto component = type.type.data[index];
@@ -81,7 +81,7 @@ void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
             writer->EndObject();
         }
     };
-    dualS_batch(world, sortedEntities.data(), sortedEntities.size(), DUAL_LAMBDA(saveEntity));
+    dualS_batch(world, sortedEntities.data(), (EIndex)sortedEntities.size(), DUAL_LAMBDA(saveEntity));
     writer->EndObject();
 }
 
