@@ -1,4 +1,4 @@
-add_requires("zlib =1.2.8-skr", {system = false})
+add_requires("zlib >=1.2.8-skr", {system = false})
 
 shared_module("SkrImageCoder", "SKR_IMAGE_CODER", engine_version)
     set_group("01.modules")

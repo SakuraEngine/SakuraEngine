@@ -1,4 +1,4 @@
-add_requires("lmdb =0.9.29-skr")
+add_requires("lmdb >=0.9.29-skr")
 
 target("Example-RenderGraphTriangle")
     set_group("04.examples/render_graph")
