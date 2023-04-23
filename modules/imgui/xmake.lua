@@ -1,7 +1,7 @@
 if(has_config("shipping_one_archive")) then
-    add_requires("imgui =1.89.0-skr", { configs = { runtime_shared = false } })
+    add_requires("imgui >=1.89.0-skr", { configs = { runtime_shared = false } })
 else
-    add_requires("imgui =1.89.0-skr", { configs = { runtime_shared = true } })
+    add_requires("imgui >=1.89.0-skr", { configs = { runtime_shared = true } })
 end
 
 shared_module("SkrImGui", "SKR_IMGUI", engine_version)
