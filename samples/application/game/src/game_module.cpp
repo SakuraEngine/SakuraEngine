@@ -427,7 +427,6 @@ void async_attach_skin_mesh(SRendererId renderer)
         };
         skr_render_effect_access(renderer, view, "ForwardEffectSkin", DUAL_LAMBDA(requestSetup));
     };
-    dualJ_wait_all();
     dualS_query(renderer->get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
 }
 
@@ -455,7 +454,6 @@ void async_attach_render_mesh(SRendererId renderer)
         };
         skr_render_effect_access(renderer, view, "ForwardEffectSkin", DUAL_LAMBDA(requestSetup));
     };
-    dualJ_wait_all();
     dualS_query(renderer->get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
 }
 
