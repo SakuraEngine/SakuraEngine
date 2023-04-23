@@ -883,10 +883,16 @@ void dualS_query(dual_storage_t* storage, const dual_filter_t* filter, const dua
                 if(idx != dual::kInvalidTypeIndex)
                     storage->scheduler->sync_entry(group->archetype, idx, false);
             }
+            if(callback)
+                storage->query(group, *filter, *meta, callback, u);
         };
         storage->query_groups(*filter, *meta, DUAL_LAMBDA(filterChunk));
     }
-    storage->query(*filter, *meta, callback, u);
+    else
+    {
+        if(callback)
+            storage->query(*filter, *meta, callback, u);
+    }
 }
 
 void dualS_merge(dual_storage_t* storage, dual_storage_t* source)
