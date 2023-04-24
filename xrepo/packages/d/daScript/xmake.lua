@@ -2,7 +2,7 @@ package("daScript")
     set_homepage("https://dascript.org/")
     set_description("daScript - high-performance statically strong typed scripting language")
 
-    add_versions("2023.4.24-skr.4", "2e4e949435ecc56669445bcce76d25823b915e2564ccf5b4f26514a561d82261")
+    add_versions("2023.4.24-skr.5", "2e4e949435ecc56669445bcce76d25823b915e2564ccf5b4f26514a561d82261")
 
     add_defines("URI_STATIC_BUILD")
     add_defines("URIPARSER_BUILD_CHAR")
