@@ -1,4 +1,4 @@
-add_requires("daScript 2023.4.24-skr.19")
+add_requires("daScript 2023.4.24-skr.30")
 
 target("daSTest0")
     set_kind("binary")

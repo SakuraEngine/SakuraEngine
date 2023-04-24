@@ -2,13 +2,11 @@ package("daScriptCore")
     set_homepage("https://dascript.org/")
     set_description("daScript - high-performance statically strong typed scripting language")
 
-    add_versions("2023.4.24-skr.19", "2e4e949435ecc56669445bcce76d25823b915e2564ccf5b4f26514a561d82261")
+    add_versions("2023.4.24-skr.30", "2e4e949435ecc56669445bcce76d25823b915e2564ccf5b4f26514a561d82261")
 
     add_defines("URI_STATIC_BUILD")
     add_defines("URIPARSER_BUILD_CHAR")
     on_load(function (package)
-        package:addenv("PATH", "bin")
-        
         if package:is_debug() then
             package:add("defines", "DAS_SMART_PTR_TRACKER=1")
             package:add("defines", "DAS_SMART_PTR_MAGIC=1")
@@ -26,15 +24,11 @@ package("daScriptCore")
         os.cp(path.join(package:scriptdir(), "port", "daScript", "include"), ".")
         os.cp(path.join(package:scriptdir(), "port", "daScript", "src"), ".")
         os.cp(path.join(package:scriptdir(), "port", "daScript", "test"), ".")
-        os.cp(path.join(package:scriptdir(), "port", "daScript", "utils"), ".")
         os.cp(path.join(package:scriptdir(), "port", "daScript", "3rdparty"), ".")
         os.cp(path.join(package:scriptdir(), "port", "xmake.lua"), "xmake.lua")
-        os.cp(path.join(package:scriptdir(), "port", "da.daS"), package:installdir())
 
         local configs = {}
         import("package.tools.xmake").install(package, configs)
-
-        package:addenv("PATH", "bin")
     end)
 
     on_test(function (package)
@@ -73,7 +67,6 @@ package("daScriptCore")
                 return 0;
             }
         ]]}, {configs = {languages = "c++17"}}))
-        os.vrun("daScript "..package:installdir().."/da.daS")
     end)
 
 
