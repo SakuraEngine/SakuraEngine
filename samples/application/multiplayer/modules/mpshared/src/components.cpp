@@ -27,7 +27,7 @@ void RegisterSimpleComponent()
 dual_type_set_t GetNetworkComponents()
 {
     static dual::static_type_set_T<skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, 
-    CController, CMovement, CSphereCollider2D, CBall, CHealth, CSkill, CPlayer> set;
+    CController, CMovement, CSphereCollider2D, CBall, CHealth, CSkill, CPlayer, CZombie> set;
     return set.get();
 }
 
@@ -119,7 +119,7 @@ void InitializeNetworkComponents()
     RegisterSimpleComponent<CHealth>();
     RegisterSimpleComponent<CSkill>();
     RegisterSimpleComponent<CPlayer>();
-    //RegisterSimpleComponent<CMPGameModeState>();
+    RegisterSimpleComponent<CZombie>();
     {
         constexpr auto builder = +[](dual_chunk_view_t view, const CController& comp, skr_binary_writer_t& archive)
         {
