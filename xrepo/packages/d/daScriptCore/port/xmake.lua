@@ -208,12 +208,3 @@ target("libdaScript")
         "test/test_handles.cpp",
         "test/test_enum.cpp"
     )
-
-if is_host("windows") or is_host("macosx") or is_host("linux") then
-    target("daScript")
-        set_kind("binary")
-        add_deps("libdaScript")
-        add_files("utils/daScript/main.cpp")
-else
-    print("daScript compiler need to be installed on host plat when using cross compile.")
-end
