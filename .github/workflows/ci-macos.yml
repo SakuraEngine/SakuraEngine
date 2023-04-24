@@ -74,14 +74,14 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: build-artifacts-macosx-clang
+          name: build-artifacts-macosx-clang-${{ matrix.cxx }}
           path: build/.gens
 
       - name: UploadDevelopmentBuild
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: build-binaries-macosx-clang
+          name: build-binaries-macosx-clang-${{ matrix.cxx }}
           path: build/macosx
 
       - name: RemoveBuildDir
@@ -99,12 +99,12 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: shipping-artifacts-macosx-clang
+          name: shipping-artifacts-macosx-clang-${{ matrix.cxx }}
           path: build/.gens
 
       - name: UploadShipping
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: shipping-binaries-macosx-clang
+          name: shipping-binaries-macosx-clang-${{ matrix.cxx }}
           path: build/macosx
