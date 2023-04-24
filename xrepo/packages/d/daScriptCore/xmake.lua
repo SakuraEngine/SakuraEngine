@@ -7,6 +7,8 @@ package("daScriptCore")
     add_defines("URI_STATIC_BUILD")
     add_defines("URIPARSER_BUILD_CHAR")
     on_load(function (package)
+        package:addenv("PATH", "bin")
+        
         if package:is_debug() then
             package:add("defines", "DAS_SMART_PTR_TRACKER=1")
             package:add("defines", "DAS_SMART_PTR_MAGIC=1")
