@@ -81,14 +81,14 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: build-artifacts-${{ matrix.os }}-${{ matrix.toolchain }}
+          name: build-artifacts-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}
           path: build/.gens
       
       - name: UploadCompileResults
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: build-binaries-${{ matrix.os }}-${{ matrix.toolchain }}
+          name: build-binaries-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}
           path: build/windows
       
       - name: RemoveBuildDir
@@ -107,12 +107,12 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: shipping-artifacts-${{ matrix.os }}-${{ matrix.toolchain }}
+          name: shipping-artifacts-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}
           path: build/.gens
       
       - name: UploadShipping
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: shipping-binaries-${{ matrix.os }}-${{ matrix.toolchain }}
+          name: shipping-binaries-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}
           path: build/windows
