@@ -9,7 +9,6 @@ void Release() { if(query) dualQ_release(query); } ${"\\"}
 struct TaskContext : private dual::task_context_t ${"\\"}
 { ${"\\"}
     using dual::task_context_t::task_context_t; ${"\\"}
-    using dual::task_context_t::set_dirty; ${"\\"}
     using dual::task_context_t::count; ${"\\"}
     struct View ${"\\"}
     { ${"\\"}
