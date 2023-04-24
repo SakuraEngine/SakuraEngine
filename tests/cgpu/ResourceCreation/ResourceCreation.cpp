@@ -99,7 +99,7 @@ TEST_P(ResourceCreation, CreateIndexBuffer)
     desc.element_stride = sizeof(uint16_t);
     desc.elemet_count = 3;
     desc.size = sizeof(uint16_t) * 3;
-    desc.name = "IndexBuffer";
+    desc.name = u8"IndexBuffer";
     auto buffer = cgpu_create_buffer(device, &desc);
     EXPECT_NE(buffer, CGPU_NULLPTR);
     EXPECT_EQ(buffer->cpu_mapped_address, CGPU_NULLPTR);
@@ -109,7 +109,7 @@ TEST_P(ResourceCreation, CreateIndexBuffer)
 TEST_P(ResourceCreation, CreateTexture)
 {
     DECLARE_ZERO(CGPUTextureDescriptor, desc)
-    desc.name = "Texture";
+    desc.name = u8"Texture";
     desc.flags = CGPU_TCF_OWN_MEMORY_BIT;
     desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
     desc.start_state = CGPU_RESOURCE_STATE_COMMON;
@@ -131,7 +131,7 @@ TEST_P(ResourceCreation, CreateUploadBuffer)
     desc.element_stride = sizeof(uint16_t);
     desc.elemet_count = 3;
     desc.size = sizeof(uint16_t) * 3;
-    desc.name = "UploadBuffer";
+    desc.name = u8"UploadBuffer";
     auto buffer = cgpu_create_buffer(device, &desc);
     EXPECT_NE(buffer, CGPU_NULLPTR);
     DECLARE_ZERO(CGPUBufferRange, range);
@@ -165,7 +165,7 @@ TEST_P(ResourceCreation, CreateUploadBufferPersistent)
     desc.element_stride = sizeof(uint16_t);
     desc.elemet_count = 3;
     desc.size = sizeof(uint16_t) * 3;
-    desc.name = "UploadBuffer";
+    desc.name = u8"UploadBuffer";
     auto buffer = cgpu_create_buffer(device, &desc);
     EXPECT_NE(buffer, CGPU_NULLPTR);
     EXPECT_NE(buffer->cpu_mapped_address, CGPU_NULLPTR);
@@ -181,7 +181,7 @@ TEST_P(ResourceCreation, CreateHostVisibleDeviceMemory)
     desc.element_stride = sizeof(uint16_t);
     desc.elemet_count = 3;
     desc.size = sizeof(uint16_t) * 3;
-    desc.name = "UploadBuffer";
+    desc.name = u8"UploadBuffer";
     auto buffer = cgpu_create_buffer(device, &desc);
     auto detail = cgpu_query_adapter_detail(device->adapter);
     if (detail->support_host_visible_vram)
@@ -202,8 +202,7 @@ TEST_P(ResourceCreation, CreateHostVisibleDeviceMemory)
 TEST_P(ResourceCreation, CreateConstantBufferX)
 {
     auto buffer = cgpux_create_mapped_constant_buffer(device,
-    sizeof(uint16_t) * 3,
-    "ConstantBuffer", true);
+        sizeof(uint16_t) * 3, u8"ConstantBuffer", true);
     EXPECT_NE(buffer, CGPU_NULLPTR);
     EXPECT_NE(buffer->cpu_mapped_address, CGPU_NULLPTR);
     cgpu_free_buffer(buffer);
@@ -215,18 +214,18 @@ TEST_P(ResourceCreation, CreateModules)
     DECLARE_ZERO(CGPUShaderLibraryDescriptor, vdesc)
     vdesc.code = vertex_shaders[backend];
     vdesc.code_size = vertex_shader_sizes[backend];
-    vdesc.name = "VertexShaderLibrary";
+    vdesc.name = u8"VertexShaderLibrary";
     vdesc.stage = ECGPUShaderStage::CGPU_SHADER_STAGE_VERT;
     auto vertex_shader = cgpu_create_shader_library(device, &vdesc);
 
     DECLARE_ZERO(CGPUShaderLibraryDescriptor, fdesc)
     fdesc.code = frag_shaders[backend];
     fdesc.code_size = frag_shader_sizes[backend];
-    fdesc.name = "FragmentShaderLibrary";
+    fdesc.name = u8"FragmentShaderLibrary";
     fdesc.stage = ECGPUShaderStage::CGPU_SHADER_STAGE_FRAG;
     auto fragment_shader = cgpu_create_shader_library(device, &fdesc);
 
-    skr::string cbName = fragment_shader->entry_reflections[0].shader_resources[0].name;
+    skr::string cbName = (const char*)fragment_shader->entry_reflections[0].shader_resources[0].name;
     EXPECT_EQ(cbName, "perDrawCBuffer");
 
     EXPECT_NE(vertex_shader, CGPU_NULLPTR);
@@ -242,23 +241,23 @@ TEST_P(ResourceCreation, CreateRootSignature)
     DECLARE_ZERO(CGPUShaderLibraryDescriptor, vdesc)
     vdesc.code = vertex_shaders[backend];
     vdesc.code_size = vertex_shader_sizes[backend];
-    vdesc.name = "VertexShaderLibrary";
+    vdesc.name = u8"VertexShaderLibrary";
     vdesc.stage = ECGPUShaderStage::CGPU_SHADER_STAGE_VERT;
     auto vertex_shader = cgpu_create_shader_library(device, &vdesc);
 
     DECLARE_ZERO(CGPUShaderLibraryDescriptor, fdesc)
     fdesc.code = frag_shaders[backend];
     fdesc.code_size = frag_shader_sizes[backend];
-    fdesc.name = "FragmentShaderLibrary";
+    fdesc.name = u8"FragmentShaderLibrary";
     fdesc.stage = ECGPUShaderStage::CGPU_SHADER_STAGE_FRAG;
     auto fragment_shader = cgpu_create_shader_library(device, &fdesc);
 
     CGPUShaderEntryDescriptor vertex_shader_entry = {};
-    vertex_shader_entry.entry = "main";
+    vertex_shader_entry.entry = u8"main";
     vertex_shader_entry.stage = ECGPUShaderStage::CGPU_SHADER_STAGE_TESE;
     vertex_shader_entry.library = vertex_shader;
     CGPUShaderEntryDescriptor fragment_shader_entry = {};
-    fragment_shader_entry.entry = "main";
+    fragment_shader_entry.entry = u8"main";
     fragment_shader_entry.stage = ECGPUShaderStage::CGPU_SHADER_STAGE_FRAG;
     fragment_shader_entry.library = fragment_shader;
     CGPUShaderEntryDescriptor shaders[] = { vertex_shader_entry, fragment_shader_entry };
@@ -281,14 +280,14 @@ TEST_P(ResourceCreation, CreateComputePipeline)
     DECLARE_ZERO(CGPUShaderLibraryDescriptor, csdesc)
     csdesc.code = compute_shaders[backend];
     csdesc.code_size = compute_shader_sizes[backend];
-    csdesc.name = "ComputeShaderLibrary";
+    csdesc.name = u8"ComputeShaderLibrary";
     csdesc.stage = ECGPUShaderStage::CGPU_SHADER_STAGE_COMPUTE;
     auto compute_shader = cgpu_create_shader_library(device, &csdesc);
     EXPECT_NE(compute_shader, CGPU_NULLPTR);
 
     // Create root signature
     DECLARE_ZERO(CGPUShaderEntryDescriptor, compute_shader_entry)
-    compute_shader_entry.entry = "main";
+    compute_shader_entry.entry = u8"main";
     compute_shader_entry.stage = CGPU_SHADER_STAGE_COMPUTE;
     compute_shader_entry.library = compute_shader;
     DECLARE_ZERO(CGPURootSignatureDescriptor, root_desc)
