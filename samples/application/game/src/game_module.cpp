@@ -398,14 +398,18 @@ void async_attach_skin_mesh(SRendererId renderer)
     auto filter = make_zeroed<dual_filter_t>();
     auto meta = make_zeroed<dual_meta_filter_t>();
     auto renderable_type = make_zeroed<dual::type_builder_t>();
-    renderable_type.with<skr_render_effect_t, skr_render_mesh_comp_t, skr_render_skin_comp_t, skr_render_skel_comp_t>();
+    renderable_type.with<skr_render_effect_t, skr_translation_comp_t>();
     auto static_type = make_zeroed<dual::type_builder_t>();
     static_type.with<skr_movement_comp_t>();
     filter.all = renderable_type.build();
     filter.none = static_type.build();
+    auto skin_type = make_zeroed<dual::type_builder_t>();
+    auto filter2 = make_zeroed<dual_filter_t>();
+    filter2.all = skin_type.with<skr_render_mesh_comp_t, skr_render_skin_comp_t, skr_render_skel_comp_t>().build();
     auto attchFunc = [=](dual_chunk_view_t* view) {
         auto requestSetup = [=](dual_chunk_view_t* view) {
             using namespace skr::guid::literals;
+
             auto mesh_comps = dual::get_owned_rw<skr_render_mesh_comp_t>(view);
             auto skin_comps = dual::get_owned_rw<skr_render_skin_comp_t>(view);
             auto skel_comps = dual::get_owned_rw<skr_render_skel_comp_t>(view);
@@ -427,6 +431,8 @@ void async_attach_skin_mesh(SRendererId renderer)
         };
         skr_render_effect_access(renderer, view, "ForwardEffectSkin", DUAL_LAMBDA(requestSetup));
     };
+    //手动 sync skin mesh
+    dualS_query(renderer->get_dual_storage(), &filter2, &meta, nullptr, nullptr);
     dualS_query(renderer->get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
 }
 
@@ -440,6 +446,9 @@ void async_attach_render_mesh(SRendererId renderer)
     static_type.with<skr_movement_comp_t>();
     filter.all = renderable_type.build();
     filter.none = static_type.build();
+    auto skin_type = make_zeroed<dual::type_builder_t>();
+    auto filter2 = make_zeroed<dual_filter_t>();
+    filter2.all = skin_type.with<skr_render_mesh_comp_t>().build();
     auto attchFunc = [=](dual_chunk_view_t* view) {
         auto requestSetup = [=](dual_chunk_view_t* view) {
             using namespace skr::guid::literals;
@@ -454,6 +463,8 @@ void async_attach_render_mesh(SRendererId renderer)
         };
         skr_render_effect_access(renderer, view, "ForwardEffectSkin", DUAL_LAMBDA(requestSetup));
     };
+    //手动 sync mesh
+    dualS_query(renderer->get_dual_storage(), &filter2, &meta, nullptr, nullptr);
     dualS_query(renderer->get_dual_storage(), &filter, &meta, DUAL_LAMBDA(attchFunc));
 }
 
