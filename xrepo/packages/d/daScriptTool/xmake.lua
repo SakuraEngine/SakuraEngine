@@ -3,10 +3,11 @@ package("daScriptTool")
     set_homepage("https://dascript.org/")
     set_description("daScript - high-performance statically strong typed scripting language")
 
-    add_versions("2023.4.25-skr", "233e949435ecc56669445bcce76d25823b915e2564ccf5b4f26514a561d82666")
+    add_versions("2023.4.25-skr.1", "a86efedd01d456a0cab4c7819d9bae83356c2c94c221826e205893a53c49a594")
 
     on_install(function (package)
         os.mkdir(package:installdir())
+        os.mkdir(package:installdir("bin"))
         os.cp(path.join(package:scriptdir(), "..", "daScriptCore", "port", "daScript", "include"), ".")
         os.cp(path.join(package:scriptdir(), "..", "daScriptCore", "port", "daScript", "src"), ".")
         os.cp(path.join(package:scriptdir(), "..", "daScriptCore", "port", "daScript", "test"), ".")
@@ -21,9 +22,12 @@ package("daScriptTool")
         configs.plat = os.host()
         configs.arch = os.arch()
         import("package.tools.xmake").install(package, configs)
-        
-        os.cp("**/daScript", path.join(package:installdir(), "bin/daScript"))
-        os.cp("**/daScript.*", path.join(package:installdir(), "bin"))
+
+        if is_host("windows") then
+            os.cp("bin/daScript.exe", path.join(package:installdir(), "bin"))
+        else
+            os.cp("bin/daScript", path.join(package:installdir(), "bin"))
+        end
     end)
 
     on_test(function (package)

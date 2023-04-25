@@ -46,7 +46,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ env.XMAKE_GLOBALDIR }}/.xmake/packages
-          key: macOS-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.cxx }}-${{ steps.dep_hash.outputs.hash }}-W${{ steps.cache_key.outputs.key }}-1
+          key: macOS-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.cxx }}-${{ steps.dep_hash.outputs.hash }}-W${{ steps.cache_key.outputs.key }}-2
 
       # Run setup script
       - name: Set env
