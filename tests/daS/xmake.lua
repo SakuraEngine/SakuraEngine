@@ -1,4 +1,4 @@
-add_requires("daScript 2023.4.25-skr.3")
+add_requires("daScript 2023.4.25-skr.9")
 
 -- simple interpret
 target("daSTest0")

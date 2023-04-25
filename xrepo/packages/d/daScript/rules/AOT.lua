@@ -2,7 +2,7 @@ rule("AOT")
     add_deps("c++")
     set_extensions(".das")
     on_buildcmd_file(function (target, batchcmds, sourcefile_daS, opt)
-        local binpath = path.join(target:pkg("daScriptTool"):installdir(), "bin")
+        local binpath = path.join(os.scriptdir(), "..", "bin")
         local cc = ""
         if is_plat("windows") then
             cc = path.join(binpath, "daScript.exe")
