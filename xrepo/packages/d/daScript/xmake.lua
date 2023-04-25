@@ -2,10 +2,10 @@ package("daScript")
     set_homepage("https://dascript.org/")
     set_description("daScript - high-performance statically strong typed scripting language")
 
-    add_versions("2023.4.25-skr.1", "78b4c890839abadc3c8db801dbf2d57ca642a7f55edc9b654eafb633ffefad65")
+    add_versions("2023.4.25-skr.3", "78b4c890839abadc3c8db801dbf2d57ca642a7f55edc9b654eafb633ffefad65")
 
-    add_deps("daScriptCore 2023.4.25-skr.1")
-    add_deps("daScriptTool 2023.4.25-skr.1")
+    add_deps("daScriptCore 2023.4.25-skr.3")
+    add_deps("daScriptTool 2023.4.25-skr.3")
     on_install(function (package)
         os.mkdir(package:installdir())
         os.mkdir(package:installdir("rules"))

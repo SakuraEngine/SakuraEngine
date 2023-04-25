@@ -2,7 +2,18 @@ rule("AOT")
     add_deps("c++")
     set_extensions(".das")
     on_buildcmd_file(function (target, batchcmds, sourcefile_daS, opt)
-        local daC = { program = "daScript" }
+        local binpath = path.join(target:pkg("daScriptTool"):installdir(), "bin")
+        local cc = ""
+        if is_plat("windows") then
+            cc = path.join(binpath, "daScript.exe")
+        else
+            cc = path.join(binpath, "daScript")
+        end
+        if not os.exists(cc) then
+            cc = "daScript"
+            print("...")
+        end
+        local daC = { program = cc }
         -- get c/c++ source file for daScript
         local extension = path.extension(sourcefile_daS)
         local sourcefile_cx = path.join(target:autogendir(), "rules", "daS_aot", path.basename(sourcefile_daS) .. ".cpp")

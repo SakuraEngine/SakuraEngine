@@ -1,4 +1,5 @@
-add_requires("daScriptCore 2023.4.25-skr.1")
+add_requires("daScriptCore 2023.4.25-skr.3")
+add_requires("daScriptTool 2023.4.25-skr.3")
 
 includes("rules/AOT.lua")
 
@@ -6,6 +7,7 @@ target("daStandard")
     set_kind("shared")
     set_languages("c++17")
     add_packages("daScriptCore")
+    add_packages("daScriptTool")
     add_rules("AOT")
     add_files("daslib/**.cpp")
     add_files(
