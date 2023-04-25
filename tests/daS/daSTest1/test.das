@@ -74,4 +74,3 @@ def test
     for ch in base64(sample)
         print(to_char(ch))
     return true
-
