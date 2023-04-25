@@ -18,9 +18,11 @@ package("daScriptTool")
         os.cp(path.join(package:scriptdir(), "port", "da.daS"), package:installdir())
 
         local configs = {}
+        configs.plat = os.host()
+        configs.arch = os.arch()
         import("package.tools.xmake").install(package, configs)
-
-        os.cp("**/daScript", path.join(package:installdir(), "bin"))
+        
+        os.cp("**/daScript", path.join(package:installdir(), "bin/daScript"))
         os.cp("**/daScript.*", path.join(package:installdir(), "bin"))
     end)
 
