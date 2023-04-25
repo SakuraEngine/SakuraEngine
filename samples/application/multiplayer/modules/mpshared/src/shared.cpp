@@ -34,17 +34,17 @@ void MPGameWorld::Initialize()
     skr_transform_setup(storage, &transformSystem);
     config = 
     {
-        0.05f,
+        0.5f,
         100,
+        50,
         15,
-        30,
-        10,
-        1,
+        3,
         5,
-        10,
+        5,
         20,
-        10,
-        {}
+        20,
+        30,
+        10
     };
 }
 
@@ -148,8 +148,8 @@ void MPGameWorld::SpawnZombie()
 {
     if(authoritative)
     {
-        using spawner_t = dual::entity_spawner_T<CZombie, CMovement, skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, CSphereCollider2D, 
-        CPrefab, CAuth, CAuthTypeData, CRelevance>;
+        using spawner_t = dual::entity_spawner_T<CZombie, CMovement, CHealth, skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, CSphereCollider2D, 
+        CPrefab, CAuth, CAuthTypeData, CRelevance, dual::dirty_comp_t>;
         static spawner_t spawner;
         auto state= dual::get_singleton<CMPGameModeState>(gameStateQuery);
         state->zombieSpawnTimer += deltaTime;
@@ -173,19 +173,21 @@ void MPGameWorld::SpawnZombie()
         {
             spawner(storage, zombiesToSpawn, [&](spawner_t::View view)
             {
-                auto [zombies, movements, translations, scales, rotations, 
-                    colliders, prefabs, auths, authTypeDatas, relevances] = view.unpack();
+                auto [zombies, movements, healths, translations, scales, rotations, 
+                    colliders, prefabs, auths, authTypeDatas, relevances, dirties] = view.unpack();
                 for(int i=0; i<view.count(); ++i)
                 {
                     float angle = (float)rand() / RAND_MAX * 2 * 3.1415926f;
                     float radius = config.ZombieSpawnRadiusMin + (config.ZombieSpawnRadiusMax - config.ZombieSpawnRadiusMin) * (float)rand() / RAND_MAX;
                     translations[i] = {radius * cosf(angle), 0, radius * sinf(angle)};
                     rotations[i] = {0, 0, 0};
-                    scales[i] = {2, 2, 2};
-                    colliders[i] = {2};
+                    scales[i] = {4, 4, 4};
+                    colliders[i] = {4};
                     prefabs[i].prefab = GetZombiePrefab();
                     relevances[i].mask.flip();
-
+                    zombies[i].speed = config.ZombieSpeed;
+                    zombies[i].knockBack = 0;
+                    healths[i].maxHealth = healths[i].health = config.ZombieHealth;
                 }
             });
         }
@@ -204,7 +206,8 @@ void MPGameWorld::ZombieAI()
                 zombies[i].knockBack -= deltaTime;
                 if(zombies[i].knockBack <= 0)
                 {
-                    ctx.set_dirty<CZombie>(dirtyMasks[i]);
+                    if(dirtyMasks)
+                        ctx.set_dirty<CZombie>(dirtyMasks[i]);
                 }
                 continue;
             }
@@ -215,6 +218,8 @@ void MPGameWorld::ZombieAI()
             {
                 auto ptranslations = dual::get_owned_ro<skr_translation_comp_t>(view);
                 auto phealths = dual::get_owned_ro<CHealth>(view);
+                auto healthId = dualV_get_local_type(view, dual_id_of<CHealth>::get());
+                auto pdirties = dual::get_owned_ro<dual::dirty_comp_t>(view);
                 auto entities = (dual_entity_t*)dualV_get_entities(view);
                 for(int j=0; j<view->count; ++j)
                 {
@@ -228,22 +233,26 @@ void MPGameWorld::ZombieAI()
                     if(distance < config.ZombieAttackRadius)
                     {
                         phealths[j].health -= config.ZombieDamage * deltaTime;
+                        if(pdirties)
+                            dual_set_bit(&pdirties[j].value, healthId);
                     }
                 }
             };
             dualQ_get_views(zombieAIChildQuery, DUAL_LAMBDA(findNearestPlayer));
             
-            if(minDistance < 100)
+            if(minDistance < 1000 && minDistance > 0.001)
             {
                 auto dir = rtm::vector_sub(minDistancePlayerPos, translation);
                 dir = rtm::vector_normalize3(dir);
                 movements[i].velocity = {rtm::vector_get_x(dir) * zombies[i].speed, rtm::vector_get_y(dir) * zombies[i].speed};
-                ctx.set_dirty<CMovement>(dirtyMasks[i]);
+                if(dirtyMasks)
+                    ctx.set_dirty<CMovement>(dirtyMasks[i]);
             }
             else
             {
                 movements[i].velocity = {0, 0};
-                ctx.set_dirty<CMovement>(dirtyMasks[i]);
+                if(dirtyMasks)
+                    ctx.set_dirty<CMovement>(dirtyMasks[i]);
             }
         }
     }, nullptr);
@@ -285,10 +294,10 @@ void MPGameWorld::PlayerControl()
             skr::math::store(rtm::vector_mul(skr::math::load(input.move), players[i].speed), movements[i].velocity);
             if(dirtyMasks)
             {
-                ctx.set_dirty(dirtyMasks[i], 1);
+                ctx.set_dirty<CMovement>(dirtyMasks[i]);
                 if(skillDirty)
                 {
-                    ctx.set_dirty(dirtyMasks[i], 2);
+                    ctx.set_dirty<CSkill>(dirtyMasks[i]);
                 }
             }
         }
@@ -301,7 +310,7 @@ void MPGameWorld::PlayerShoot()
     if(authoritative)
     {
         using spawner_t = dual::entity_spawner_T<CBall, CMovement, skr_translation_comp_t, skr_scale_comp_t, skr_rotation_comp_t, CSphereCollider2D, 
-        CPrefab, CAuth, CAuthTypeData, CRelevance>;
+        CPrefab, CAuth, CAuthTypeData, CRelevance, dual::dirty_comp_t>;
         static spawner_t spawner;
         auto fire = [&](dual_chunk_view_t* view)
         {
@@ -321,7 +330,7 @@ void MPGameWorld::PlayerShoot()
                         {
                             auto [balls, movements, translations, scales, 
                                 rotations, spheres, prefabs, 
-                                auths, authTypes, relevances] = view.unpack();
+                                auths, authTypes, relevances, dirties] = view.unpack();
                             for(int j=0; j<view.count(); ++j)
                             {
                                 auto rot = skr::math::load(orotations[i].euler);
@@ -366,9 +375,9 @@ void MPGameWorld::PlayerHealthCheck()
                     weapons[i].fireTimer = 5;
                     if(dirtyMasks)
                     {
-                        ctx.set_dirty(dirtyMasks[i], 0);
-                        ctx.set_dirty(dirtyMasks[i], 1);
-                        ctx.set_dirty(dirtyMasks[i], 2);
+                        ctx.set_dirty<CHealth>(dirtyMasks[i]);
+                        ctx.set_dirty<skr_translation_comp_t>(dirtyMasks[i]);
+                        ctx.set_dirty<skr_rotation_comp_t>(dirtyMasks[i]);
                     }
                 }
             }
@@ -404,8 +413,8 @@ void MPGameWorld::PlayerMovement()
 
             if(dirtyMasks)
             {
-                ctx.set_dirty(dirtyMasks[i], 1);
-                ctx.set_dirty(dirtyMasks[i], 2);
+                ctx.set_dirty<skr_translation_comp_t>(dirtyMasks[i]);
+                ctx.set_dirty<skr_rotation_comp_t>(dirtyMasks[i]);
             }
         }
     }, nullptr);
@@ -423,7 +432,7 @@ void MPGameWorld::BulletMovement()
                 if(authoritative)
                 {
                     if(dirtyMasks)
-                        ctx.set_dirty(dirtyMasks[i], 0);
+                        ctx.set_dirty<skr_translation_comp_t>(dirtyMasks[i]);
                     auto& translation = translations[i];
                     auto& collider = colliders[i];
                     auto& ball = balls[i];
@@ -478,7 +487,7 @@ void MPGameWorld::RelevenceUpdate()
                 for(int j=0; j<view->count; ++j)
                 {
                     float distance = rtm::vector_distance3(skr::math::load(translation.value), skr::math::load(otherTranslations[j].value));
-                    if(distance < 200.f)
+                    if(distance < 250.f)
                         relevance.mask[otherControllers[j].connectionId] = true;
                     else
                         relevance.mask[otherControllers[j].connectionId] = false;
@@ -493,6 +502,7 @@ void MPGameWorld::Tick(const MPInputFrame &inInput)
 {
     ZoneScopedN("MP Tick");
     input = inInput;
+    SpawnZombie();
     ClearDeadBall();
     ClearDeadZombie();
     ZombieAI();

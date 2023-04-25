@@ -50,7 +50,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ env.XMAKE_GLOBALDIR }}\.xmake\packages
-          key: MSVC-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}-${{ steps.dep_hash.outputs.hash }}-W${{ steps.cache_key.outputs.key }}
+          key: Windows-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}-${{ steps.dep_hash.outputs.hash }}-W${{ steps.cache_key.outputs.key }}-1
 
       # Run setup script
       - name: Set env
@@ -60,7 +60,7 @@ jobs:
           xmake l setup.lua -v
 
       - name: ConfigureDebug
-        run: xmake f -m debug --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --build_tests=n --build_editors=n --build_usdtool=n --policies=build.ccache:n
+        run: xmake f -m debug --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --build_tests=y --build_editors=n --policies=build.ccache:n
       
       - name: BuildDebug
         if: success() || failure()
@@ -70,7 +70,7 @@ jobs:
       - name: ConfigureRelease
         if: success() || failure()
         shell: cmd
-        run: xmake f -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --build_tests=n --build_editors=n --use_tracy=disable --policies=build.ccache:n
+        run: xmake f -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --build_tests=y --build_editors=n --use_tracy=disable --policies=build.ccache:n
       
       - name: BuildRelease
         if: success() || failure()
@@ -81,14 +81,14 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: build-artifacts-${{ matrix.os }}-${{ matrix.toolchain }}
+          name: build-artifacts-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}
           path: build/.gens
       
       - name: UploadCompileResults
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: build-binaries-${{ matrix.os }}-${{ matrix.toolchain }}
+          name: build-binaries-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}
           path: build/windows
       
       - name: RemoveBuildDir
@@ -100,19 +100,19 @@ jobs:
         if: success() || failure()
         shell: cmd
         run: |
-          xmake f -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --build_tests=n --build_editors=n --shipping_one_archive=y --use_tracy=disable --policies=build.ccache:n
+          xmake f -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --build_tests=y --build_editors=n --shipping_one_archive=y --use_tracy=disable --policies=build.ccache:n
           xmake -y -v
       
       - name: UploadGeneratedFiles2
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: shipping-artifacts-${{ matrix.os }}-${{ matrix.toolchain }}
+          name: shipping-artifacts-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}
           path: build/.gens
       
       - name: UploadShipping
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: shipping-binaries-${{ matrix.os }}-${{ matrix.toolchain }}
+          name: shipping-binaries-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}
           path: build/windows

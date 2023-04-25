@@ -42,7 +42,7 @@ static void skr_relative_to_world_children(skr_children_t* children, rtm::qvvf p
         auto rotations = (skr_rotator_t*)dualV_get_owned_ro(view, dual_id_of<skr_rotation_comp_t>::get());
         auto scales = (skr_float3_t*)dualV_get_owned_ro(view, dual_id_of<skr_scale_comp_t>::get());
         auto childrens = (skr_children_t*)dualV_get_owned_ro(view, dual_id_of<skr_child_comp_t>::get());
-        for(int i = 0; i < view->count; ++i)
+        for(EIndex i = 0; i < view->count; ++i)
         {
             auto relative = make_qvv(rotations ? &rotations[i] : nullptr, translations ? &translations[i] : nullptr, scales ? &scales[i] : nullptr);
             auto transform = rtm::qvv_mul(relative, parent);
@@ -59,12 +59,12 @@ static void skr_relative_to_world_children(skr_children_t* children, rtm::qvvf p
         using iter_t = typename skr_children_t::iterator;
         skr::parallel_for(children->begin(), children->end(), 128,
         [&](iter_t begin, iter_t end) {
-            dualS_batch(storage, (dual_entity_t*)&*begin, end-begin, DUAL_LAMBDA(process));
+            dualS_batch(storage, (dual_entity_t*)&*begin, (EIndex)(end-begin), DUAL_LAMBDA(process));
         });
     }
     else
     {
-        dualS_batch(storage, (dual_entity_t*)children->data(), children->size(), DUAL_LAMBDA(process));
+        dualS_batch(storage, (dual_entity_t*)children->data(), (EIndex)children->size(), DUAL_LAMBDA(process));
     }
 }
 
@@ -76,7 +76,7 @@ static void skr_relative_to_world_root(void* u, dual_query_t* query, dual_chunk_
     auto translations = (skr_float3_t*)dualV_get_owned_ro_local(view, localTypes[2]);
     auto rotations = (skr_rotator_t*)dualV_get_owned_ro_local(view, localTypes[3]);
     auto scales = (skr_float3_t*)dualV_get_owned_ro_local(view, localTypes[4]);
-    for(int i=0; i<view->count; ++i)
+    for(EIndex i = 0; i < view->count; ++i)
     {
         transforms[i].translation = translations ? translations[i] : skr_float3_t{0,0,0};
         transforms[i].rotation = rotations ? rotations[i] : skr_rotator_t{0,0,0};

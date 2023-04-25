@@ -60,7 +60,7 @@ typedef struct skr_index_comp_t skr_index_comp_t;
 
 sreflect_struct(
     "guid" : "AE2C7477-8A44-4339-BE5D-64D05D7E05B1",
-    "component" : true //, "serialize" : "USD"
+    "component" : true
 )
 SKR_ALIGNAS(16) skr_transform_comp_t
 {

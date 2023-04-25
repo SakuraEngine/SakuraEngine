@@ -476,7 +476,7 @@ void dual_storage_t::build_queries()
         uint32_t phase;
         llvm_vecsmall::SmallVector<dual_query_t*, 8> queries;
     };
-    for(int i=0; i<phaseCount; ++i)
+    for(EIndex i = 0; i < phaseCount; ++i)
         phases[i]->~phase_entry();
     phaseCount = 0;
     queryBuildArena.reset();

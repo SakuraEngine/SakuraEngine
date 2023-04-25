@@ -874,8 +874,25 @@ void dualS_query(dual_storage_t* storage, const dual_filter_t* filter, const dua
     SKR_ASSERT(dual::ordered(*meta));
     
     if (storage->scheduler)
+    {
         SKR_ASSERT(storage->scheduler->is_main_thread(storage));
-    storage->query(*filter, *meta, callback, u);
+        auto filterChunk = [&](dual_group_t* group) {
+            for(EIndex i = 0; i < filter->all.length; ++i)
+            {
+                int idx = group->index(filter->all.data[i]);
+                if(idx != dual::kInvalidTypeIndex)
+                    storage->scheduler->sync_entry(group->archetype, idx, false);
+            }
+            if(callback)
+                storage->query(group, *filter, *meta, callback, u);
+        };
+        storage->query_groups(*filter, *meta, DUAL_LAMBDA(filterChunk));
+    }
+    else
+    {
+        if(callback)
+            storage->query(*filter, *meta, callback, u);
+    }
 }
 
 void dualS_merge(dual_storage_t* storage, dual_storage_t* source)

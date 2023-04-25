@@ -64,7 +64,6 @@ https://user-images.githubusercontent.com/39457738/192722537-6ab035a5-2789-43d0-
 | `SkrTextureCompiler` | [ISPCTextureCompressor] | 导入并烘焙贴图 |
 | `SkrShaderCompiler` | - | 导入并烘焙材质相关资源 |
 | `codegen` | [libtooling], [mako-template] | 提供代码生成 |
-| `UsdTool` | [usd] | USD相关资源的导入与烘焙 |
 
 [RealtimeMath]: https://github.com/nfrechette/rtm
 [imgui]: https://github.com/ocornut/imgui
@@ -75,7 +74,6 @@ https://user-images.githubusercontent.com/39457738/192722537-6ab035a5-2789-43d0-
 [ISPCTextureCompressor]: https://github.com/GameTechDev/ISPCTextureCompressor
 [libtooling]: https://clang.llvm.org/docs/LibTooling.html
 [mako-template]: https://www.makotemplates.org/
-[usd]: https://github.com/PixarAnimationStudios/USD
 [FiberTaskingLib]: https://github.com/RichieSams/FiberTaskingLib
 [marl]: https://github.com/google/marl
 [lua]: https://github.com/lua/lua
@@ -247,7 +245,6 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 ## 构建
 ### 前置
 - xmake
-- vcpkg（可选，当前 grpc 和 usd 通过 vcpkg 安装）
 - python，并安装 mako `pip install mako`
 
 ### 编译
@@ -255,7 +252,7 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 
 ```
 > xmake l setup.lua
-> xmake f -m debug --build_usdtool=n -c
+> xmake f -m debug -c
 > xmake project -k compile_commands
 > xmake 
 ```
