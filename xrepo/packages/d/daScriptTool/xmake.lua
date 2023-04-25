@@ -18,9 +18,10 @@ package("daScriptTool")
         os.cp(path.join(package:scriptdir(), "port", "xmake.lua"), "xmake.lua")
         os.cp(path.join(package:scriptdir(), "port", "da.daS"), package:installdir())
 
+        os.mkdir("bin")
         local configs = {}
         configs.plat = os.host()
-        -- configs.arch = os.arch()
+        configs.arch = os.arch()
         import("package.tools.xmake").install(package, configs)
 
         if is_host("windows") then
