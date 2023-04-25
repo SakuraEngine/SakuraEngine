@@ -1,4 +1,4 @@
-add_requires("daScriptCore 2023.4.24-skr.31")
+add_requires("daScriptCore 2023.4.25-skr")
 
 includes("rules/AOT.lua")
 

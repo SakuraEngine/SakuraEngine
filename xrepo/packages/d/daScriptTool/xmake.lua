@@ -3,11 +3,7 @@ package("daScriptTool")
     set_homepage("https://dascript.org/")
     set_description("daScript - high-performance statically strong typed scripting language")
 
-    add_versions("2023.4.24-skr.31", "233e949435ecc56669445bcce76d25823b915e2564ccf5b4f26514a561d82666")
-
-    on_load(function (package)
-        package:addenv("PATH", path.join(package:installdir(), "bin"))
-    end)
+    add_versions("2023.4.25-skr", "233e949435ecc56669445bcce76d25823b915e2564ccf5b4f26514a561d82666")
 
     on_install(function (package)
         os.mkdir(package:installdir())
@@ -24,7 +20,8 @@ package("daScriptTool")
         local configs = {}
         import("package.tools.xmake").install(package, configs)
 
-        package:addenv("PATH", path.join(package:installdir(), "bin"))
+        os.cp("**/daScript", path.join(package:installdir(), "bin"))
+        os.cp("**/daScript.*", path.join(package:installdir(), "bin"))
     end)
 
     on_test(function (package)
