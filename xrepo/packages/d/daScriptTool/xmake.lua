@@ -20,7 +20,7 @@ package("daScriptTool")
 
         local configs = {}
         configs.plat = os.host()
-        configs.arch = os.arch()
+        -- configs.arch = os.arch()
         import("package.tools.xmake").install(package, configs)
 
         if is_host("windows") then
