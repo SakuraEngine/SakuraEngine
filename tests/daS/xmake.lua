@@ -1,5 +1,6 @@
-add_requires("daScript 2023.4.25-skr.1")
+add_requires("daScript 2023.4.25-skr.3")
 
+-- simple interpret
 target("daSTest0")
     set_kind("binary")
     set_group("05.tests/daS")
@@ -7,6 +8,7 @@ target("daSTest0")
     add_packages("gtest", "daScript")
     add_files("daSTest0/**.cpp")
 
+-- AOT
 target("daSTest1")
     set_kind("binary")
     set_group("05.tests/daS")
