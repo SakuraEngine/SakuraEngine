@@ -4,7 +4,7 @@ add_requires("daScriptTool 2023.4.25-skr.10")
 includes("rules/AOT.lua")
 
 target("daStandard")
-    set_kind("shared")
+    set_kind("static")
     set_languages("c++17")
     add_packages("daScriptCore")
     add_packages("daScriptTool")
