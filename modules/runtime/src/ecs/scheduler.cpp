@@ -139,6 +139,8 @@ bool dual::scheduler_t::sync_query(dual_query_t* query)
 
     auto sync_entry_once = [&](dual::archetype_t* type, dual_type_index_t i, bool readonly, bool atomic) -> bool
     {
+        if(i == kInvalidTypeIndex)
+            return false;
         auto entry = std::make_pair(type, i);
         if (syncedEntry.find(entry) != syncedEntry.end())
             return false;
@@ -152,7 +154,7 @@ bool dual::scheduler_t::sync_query(dual_query_t* query)
         for (auto& pair : query->storage->groups)
         {
             auto group = pair.second;
-            auto idx = group->index(type);
+            auto idx = group->archetype->index(type);
             result = sync_entry_once(group->archetype, idx, readonly, atomic) || result;
         }
         return result;
@@ -174,13 +176,13 @@ bool dual::scheduler_t::sync_query(dual_query_t* query)
                 int groupIndex = 0;(void)groupIndex;
                 for (auto group : groups)
                 {
-                    auto localType = group->index(params.types[i]);
+                    auto localType = group->archetype->index(params.types[i]);
                     if (localType == kInvalidTypeIndex)
                     {
                         auto g = group->get_owner(params.types[i]);
                         if (g)
                         {
-                            result = sync_entry_once(g->archetype, g->index(params.types[i]), params.accesses[i].readonly, params.accesses[i].atomic) || result;
+                            result = sync_entry_once(g->archetype, g->archetype->index(params.types[i]), params.accesses[i].readonly, params.accesses[i].atomic) || result;
                         }
                     }
                     else

@@ -1,0 +1,3 @@
+NEED_MODULE(Module_StbImage);
+NEED_MODULE(Module_StbTrueType);
+NEED_MODULE(Module_StdDlg);

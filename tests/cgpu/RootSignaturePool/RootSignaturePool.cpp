@@ -73,13 +73,13 @@ inline static void read_bytes(const char* file_name, char8_t** bytes, uint32_t* 
 }
 
 inline static void read_shader_bytes(
-const char* virtual_path, uint32_t** bytes, uint32_t* length,
-ECGPUBackend backend)
+    const char8_t* virtual_path, uint32_t** bytes, uint32_t* length,
+    ECGPUBackend backend)
 {
     char shader_file[256];
     const char* shader_path = "./../resources/shaders/";
     strcpy(shader_file, shader_path);
-    strcat(shader_file, virtual_path);
+    strcat(shader_file, (const char*)virtual_path);
     switch (backend)
     {
         case CGPU_BACKEND_VULKAN:
@@ -96,8 +96,8 @@ ECGPUBackend backend)
 }
 
 CGPURootSignatureId create_root_sig_with_shaders(CGPUDeviceId device,
-CGPURootSignaturePoolId pool, ECGPUBackend backend,
-const char8_t* vs, const char8_t* ps)
+    CGPURootSignaturePoolId pool, ECGPUBackend backend,
+    const char8_t* vs, const char8_t* ps)
 {
     uint32_t *vs_bytes, vs_length;
     uint32_t *fs_bytes, fs_length;
@@ -105,11 +105,11 @@ const char8_t* vs, const char8_t* ps)
     read_shader_bytes(ps, &fs_bytes, &fs_length, backend);
     auto vs_desc = make_zeroed<CGPUShaderLibraryDescriptor>();
     vs_desc.stage = CGPU_SHADER_STAGE_VERT;
-    vs_desc.name = "VertexShaderLibrary";
+    vs_desc.name = u8"VertexShaderLibrary";
     vs_desc.code = vs_bytes;
     vs_desc.code_size = vs_length;
     auto ps_desc = make_zeroed<CGPUShaderLibraryDescriptor>();
-    ps_desc.name = "FragmentShaderLibrary";
+    ps_desc.name = u8"FragmentShaderLibrary";
     ps_desc.stage = CGPU_SHADER_STAGE_FRAG;
     ps_desc.code = fs_bytes;
     ps_desc.code_size = fs_length;
@@ -119,10 +119,10 @@ const char8_t* vs, const char8_t* ps)
     free(fs_bytes);
     CGPUShaderEntryDescriptor ppl_shaders[2];
     ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
-    ppl_shaders[0].entry = "main";
+    ppl_shaders[0].entry = u8"main";
     ppl_shaders[0].library = vertex_shader;
     ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
-    ppl_shaders[1].entry = "main";
+    ppl_shaders[1].entry = u8"main";
     ppl_shaders[1].library = fragment_shader;
     const char8_t* push_const_name = u8"push_constants";
     auto rs_desc = make_zeroed<CGPURootSignatureDescriptor>();
@@ -141,7 +141,7 @@ const char8_t* vs, const char8_t* ps)
 TEST_P(RootSignaturePool, PS00)
 {
     CGPURootSignaturePoolDescriptor pool_desc = {};
-    pool_desc.name = "RSPool";
+    pool_desc.name = u8"RSPool";
     auto pool = cgpu_create_root_signature_pool(device, &pool_desc);
     auto rs0 = create_root_sig_with_shaders(device, pool, backend,
     u8"cgpu-rspool-test/vertex_shader",
@@ -156,7 +156,7 @@ TEST_P(RootSignaturePool, PS00)
 TEST_P(RootSignaturePool, RC)
 {
     CGPURootSignaturePoolDescriptor pool_desc = {};
-    pool_desc.name = "RSPool";
+    pool_desc.name = u8"RSPool";
     auto pool = cgpu_create_root_signature_pool(device, &pool_desc);
     auto rs0 = create_root_sig_with_shaders(device, pool, backend,
     u8"cgpu-rspool-test/vertex_shader",
@@ -183,7 +183,7 @@ TEST_P(RootSignaturePool, RC)
 TEST_P(RootSignaturePool, PS01)
 {
     CGPURootSignaturePoolDescriptor pool_desc = {};
-    pool_desc.name = "RSPool";
+    pool_desc.name = u8"RSPool";
     auto pool = cgpu_create_root_signature_pool(device, &pool_desc);
     auto rs0 = create_root_sig_with_shaders(device, pool, backend,
     u8"cgpu-rspool-test/vertex_shader",
@@ -199,7 +199,7 @@ TEST_P(RootSignaturePool, PS01)
 TEST_P(RootSignaturePool, PS02)
 {
     CGPURootSignaturePoolDescriptor pool_desc = {};
-    pool_desc.name = "RSPool";
+    pool_desc.name = u8"RSPool";
     auto pool = cgpu_create_root_signature_pool(device, &pool_desc);
     auto rs0 = create_root_sig_with_shaders(device, pool, backend,
     u8"cgpu-rspool-test/vertex_shader",
@@ -216,7 +216,7 @@ TEST_P(RootSignaturePool, PS02)
 TEST_P(RootSignaturePool, PS03)
 {
     CGPURootSignaturePoolDescriptor pool_desc = {};
-    pool_desc.name = "RSPool";
+    pool_desc.name = u8"RSPool";
     auto pool = cgpu_create_root_signature_pool(device, &pool_desc);
     auto rs0 = create_root_sig_with_shaders(device, pool, backend,
     u8"cgpu-rspool-test/vertex_shader",

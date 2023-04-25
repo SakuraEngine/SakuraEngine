@@ -49,7 +49,7 @@ skr_blob_arena_builder_t::~skr_blob_arena_builder_t()
 
 skr_blob_arena_t skr_blob_arena_builder_t::build()
 {
-    skr_blob_arena_t arena(buffer, 0, offset, bufferAlign);
+    skr_blob_arena_t arena(buffer, 0, (uint32_t)offset, (uint32_t)bufferAlign);
     buffer = nullptr;
     offset = 0;
     capacity = 0;
