@@ -99,7 +99,7 @@ typedef struct skr_vram_io_service_desc_t {
 
 
 #ifdef __cplusplus
-struct RUNTIME_API skr_io_vram_service_t
+struct CGPU_API skr_io_vram_service_t
 {
 public:
     [[nodiscard]] static skr_io_vram_service_t* create(const skr_vram_io_service_desc_t* desc) SKR_NOEXCEPT;

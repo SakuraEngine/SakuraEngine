@@ -1,6 +1,6 @@
 #pragma once
-#include "cgpu_config.h"
-#include "flags.h"
+#include "cgpu/cgpu_config.h"
+#include "cgpu/flags.h"
 
 #define CGPU_ARRAY_LEN(array) ((sizeof(array) / sizeof(array[0])))
 #define CGPU_MAX_MRT_COUNT 8u
@@ -83,7 +83,7 @@ struct CGPUAcquireNextDescriptor;
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+CGPU_EXTERN_C_BEGIN
 #endif
 
 static const CGPUBufferId CGPU_BUFFER_OUT_OF_HOST_MEMORY = (CGPUBufferId)1;
@@ -143,222 +143,222 @@ typedef struct CGPUConstantSpecialization {
 } CGPUConstantSpecialization;
 
 // Above APIs
-RUNTIME_API ECGPUBackend cgpu_instance_get_backend(CGPUInstanceId instance);
+CGPU_API ECGPUBackend cgpu_instance_get_backend(CGPUInstanceId instance);
 
 // Instance APIs
-RUNTIME_API CGPUInstanceId cgpu_create_instance(const struct CGPUInstanceDescriptor* desc);
+CGPU_API CGPUInstanceId cgpu_create_instance(const struct CGPUInstanceDescriptor* desc);
 typedef CGPUInstanceId (*CGPUProcCreateInstance)(const struct CGPUInstanceDescriptor* descriptor);
-RUNTIME_API void cgpu_query_instance_features(CGPUInstanceId instance, struct CGPUInstanceFeatures* features);
+CGPU_API void cgpu_query_instance_features(CGPUInstanceId instance, struct CGPUInstanceFeatures* features);
 typedef void (*CGPUProcQueryInstanceFeatures)(CGPUInstanceId instance, struct CGPUInstanceFeatures* features);
-RUNTIME_API void cgpu_free_instance(CGPUInstanceId instance);
+CGPU_API void cgpu_free_instance(CGPUInstanceId instance);
 typedef void (*CGPUProcFreeInstance)(CGPUInstanceId instance);
 
 // Adapter APIs
-RUNTIME_API void cgpu_enum_adapters(CGPUInstanceId instance, CGPUAdapterId* const adapters, uint32_t* adapters_num);
+CGPU_API void cgpu_enum_adapters(CGPUInstanceId instance, CGPUAdapterId* const adapters, uint32_t* adapters_num);
 typedef void (*CGPUProcEnumAdapters)(CGPUInstanceId instance, CGPUAdapterId* const adapters, uint32_t* adapters_num);
 
-RUNTIME_API const struct CGPUAdapterDetail* cgpu_query_adapter_detail(const CGPUAdapterId adapter);
+CGPU_API const struct CGPUAdapterDetail* cgpu_query_adapter_detail(const CGPUAdapterId adapter);
 typedef const struct CGPUAdapterDetail* (*CGPUProcQueryAdapterDetail)(const CGPUAdapterId adapter);
-RUNTIME_API uint32_t cgpu_query_queue_count(const CGPUAdapterId adapter, const ECGPUQueueType type);
+CGPU_API uint32_t cgpu_query_queue_count(const CGPUAdapterId adapter, const ECGPUQueueType type);
 typedef uint32_t (*CGPUProcQueryQueueCount)(const CGPUAdapterId adapter, const ECGPUQueueType type);
 
 // Device APIs
-RUNTIME_API CGPUDeviceId cgpu_create_device(CGPUAdapterId adapter, const struct CGPUDeviceDescriptor* desc);
+CGPU_API CGPUDeviceId cgpu_create_device(CGPUAdapterId adapter, const struct CGPUDeviceDescriptor* desc);
 typedef CGPUDeviceId (*CGPUProcCreateDevice)(CGPUAdapterId adapter, const struct CGPUDeviceDescriptor* desc);
-RUNTIME_API void cgpu_query_video_memory_info(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
+CGPU_API void cgpu_query_video_memory_info(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
 typedef void (*CGPUProcQueryVideoMemoryInfo)(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
-RUNTIME_API void cgpu_query_shared_memory_info(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
+CGPU_API void cgpu_query_shared_memory_info(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
 typedef void (*CGPUProcQuerySharedMemoryInfo)(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
-RUNTIME_API void cgpu_free_device(CGPUDeviceId device);
+CGPU_API void cgpu_free_device(CGPUDeviceId device);
 typedef void (*CGPUProcFreeDevice)(CGPUDeviceId device);
 
 // API Objects APIs
-RUNTIME_API CGPUFenceId cgpu_create_fence(CGPUDeviceId device);
+CGPU_API CGPUFenceId cgpu_create_fence(CGPUDeviceId device);
 typedef CGPUFenceId (*CGPUProcCreateFence)(CGPUDeviceId device);
-RUNTIME_API void cgpu_wait_fences(const CGPUFenceId* fences, uint32_t fence_count);
+CGPU_API void cgpu_wait_fences(const CGPUFenceId* fences, uint32_t fence_count);
 typedef void (*CGPUProcWaitFences)(const CGPUFenceId* fences, uint32_t fence_count);
-RUNTIME_API ECGPUFenceStatus cgpu_query_fence_status(CGPUFenceId fence);
+CGPU_API ECGPUFenceStatus cgpu_query_fence_status(CGPUFenceId fence);
 typedef ECGPUFenceStatus (*CGPUProcQueryFenceStatus)(CGPUFenceId fence);
-RUNTIME_API void cgpu_free_fence(CGPUFenceId fence);
+CGPU_API void cgpu_free_fence(CGPUFenceId fence);
 typedef void (*CGPUProcFreeFence)(CGPUFenceId fence);
-RUNTIME_API CGPUSemaphoreId cgpu_create_semaphore(CGPUDeviceId device);
+CGPU_API CGPUSemaphoreId cgpu_create_semaphore(CGPUDeviceId device);
 typedef CGPUSemaphoreId (*CGPUProcCreateSemaphore)(CGPUDeviceId device);
-RUNTIME_API void cgpu_free_semaphore(CGPUSemaphoreId semaphore);
+CGPU_API void cgpu_free_semaphore(CGPUSemaphoreId semaphore);
 typedef void (*CGPUProcFreeSemaphore)(CGPUSemaphoreId semaphore);
-RUNTIME_API CGPURootSignaturePoolId cgpu_create_root_signature_pool(CGPUDeviceId device, const struct CGPURootSignaturePoolDescriptor* desc);
+CGPU_API CGPURootSignaturePoolId cgpu_create_root_signature_pool(CGPUDeviceId device, const struct CGPURootSignaturePoolDescriptor* desc);
 typedef CGPURootSignaturePoolId (*CGPUProcCreateRootSignaturePool)(CGPUDeviceId device, const struct CGPURootSignaturePoolDescriptor* desc);
-RUNTIME_API void cgpu_free_root_signature_pool(CGPURootSignaturePoolId pool);
+CGPU_API void cgpu_free_root_signature_pool(CGPURootSignaturePoolId pool);
 typedef void (*CGPUProcFreeRootSignaturePool)(CGPURootSignaturePoolId pool);
-RUNTIME_API CGPURootSignatureId cgpu_create_root_signature(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc);
+CGPU_API CGPURootSignatureId cgpu_create_root_signature(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc);
 typedef CGPURootSignatureId (*CGPUProcCreateRootSignature)(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc);
-RUNTIME_API void cgpu_free_root_signature(CGPURootSignatureId signature);
+CGPU_API void cgpu_free_root_signature(CGPURootSignatureId signature);
 typedef void (*CGPUProcFreeRootSignature)(CGPURootSignatureId signature);
-RUNTIME_API CGPUDescriptorSetId cgpu_create_descriptor_set(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc);
+CGPU_API CGPUDescriptorSetId cgpu_create_descriptor_set(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc);
 typedef CGPUDescriptorSetId (*CGPUProcCreateDescriptorSet)(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc);
-RUNTIME_API void cgpu_update_descriptor_set(CGPUDescriptorSetId set, const struct CGPUDescriptorData* datas, uint32_t count);
+CGPU_API void cgpu_update_descriptor_set(CGPUDescriptorSetId set, const struct CGPUDescriptorData* datas, uint32_t count);
 typedef void (*CGPUProcUpdateDescriptorSet)(CGPUDescriptorSetId set, const struct CGPUDescriptorData* datas, uint32_t count);
-RUNTIME_API void cgpu_free_descriptor_set(CGPUDescriptorSetId set);
+CGPU_API void cgpu_free_descriptor_set(CGPUDescriptorSetId set);
 typedef void (*CGPUProcFreeDescriptorSet)(CGPUDescriptorSetId set);
-RUNTIME_API CGPUComputePipelineId cgpu_create_compute_pipeline(CGPUDeviceId device, const struct CGPUComputePipelineDescriptor* desc);
+CGPU_API CGPUComputePipelineId cgpu_create_compute_pipeline(CGPUDeviceId device, const struct CGPUComputePipelineDescriptor* desc);
 typedef CGPUComputePipelineId (*CGPUProcCreateComputePipeline)(CGPUDeviceId device, const struct CGPUComputePipelineDescriptor* desc);
-RUNTIME_API void cgpu_free_compute_pipeline(CGPUComputePipelineId pipeline);
+CGPU_API void cgpu_free_compute_pipeline(CGPUComputePipelineId pipeline);
 typedef void (*CGPUProcFreeComputePipeline)(CGPUComputePipelineId pipeline);
-RUNTIME_API CGPURenderPipelineId cgpu_create_render_pipeline(CGPUDeviceId device, const struct CGPURenderPipelineDescriptor* desc);
+CGPU_API CGPURenderPipelineId cgpu_create_render_pipeline(CGPUDeviceId device, const struct CGPURenderPipelineDescriptor* desc);
 typedef CGPURenderPipelineId (*CGPUProcCreateRenderPipeline)(CGPUDeviceId device, const struct CGPURenderPipelineDescriptor* desc);
-RUNTIME_API void cgpu_free_render_pipeline(CGPURenderPipelineId pipeline);
+CGPU_API void cgpu_free_render_pipeline(CGPURenderPipelineId pipeline);
 typedef void (*CGPUProcFreeRenderPipeline)(CGPURenderPipelineId pipeline);
-RUNTIME_API CGPUMemoryPoolId cgpu_create_memory_pool(CGPUDeviceId, const struct CGPUMemoryPoolDescriptor* desc);
+CGPU_API CGPUMemoryPoolId cgpu_create_memory_pool(CGPUDeviceId, const struct CGPUMemoryPoolDescriptor* desc);
 typedef CGPUMemoryPoolId (*CGPUProcCreateMemoryPool)(CGPUDeviceId, const struct CGPUMemoryPoolDescriptor* desc);
-RUNTIME_API void cgpu_free_memory_pool(CGPUMemoryPoolId pool);
+CGPU_API void cgpu_free_memory_pool(CGPUMemoryPoolId pool);
 typedef void (*CGPUProcFreeMemoryPool)(CGPUMemoryPoolId pool);
-RUNTIME_API CGPUQueryPoolId cgpu_create_query_pool(CGPUDeviceId, const struct CGPUQueryPoolDescriptor* desc);
+CGPU_API CGPUQueryPoolId cgpu_create_query_pool(CGPUDeviceId, const struct CGPUQueryPoolDescriptor* desc);
 typedef CGPUQueryPoolId (*CGPUProcCreateQueryPool)(CGPUDeviceId, const struct CGPUQueryPoolDescriptor* desc);
-RUNTIME_API void cgpu_free_query_pool(CGPUQueryPoolId);
+CGPU_API void cgpu_free_query_pool(CGPUQueryPoolId);
 typedef void (*CGPUProcFreeQueryPool)(CGPUQueryPoolId);
 
 // Queue APIs
 // Warn: If you get a queue at an index with a specific type, you must hold the handle and reuses it.
-RUNTIME_API CGPUQueueId cgpu_get_queue(CGPUDeviceId device, ECGPUQueueType type, uint32_t index);
+CGPU_API CGPUQueueId cgpu_get_queue(CGPUDeviceId device, ECGPUQueueType type, uint32_t index);
 typedef CGPUQueueId (*CGPUProcGetQueue)(CGPUDeviceId device, ECGPUQueueType type, uint32_t index);
-RUNTIME_API void cgpu_submit_queue(CGPUQueueId queue, const struct CGPUQueueSubmitDescriptor* desc);
+CGPU_API void cgpu_submit_queue(CGPUQueueId queue, const struct CGPUQueueSubmitDescriptor* desc);
 typedef void (*CGPUProcSubmitQueue)(CGPUQueueId queue, const struct CGPUQueueSubmitDescriptor* desc);
-RUNTIME_API void cgpu_queue_present(CGPUQueueId queue, const struct CGPUQueuePresentDescriptor* desc);
+CGPU_API void cgpu_queue_present(CGPUQueueId queue, const struct CGPUQueuePresentDescriptor* desc);
 typedef void (*CGPUProcQueuePresent)(CGPUQueueId queue, const struct CGPUQueuePresentDescriptor* desc);
-RUNTIME_API void cgpu_wait_queue_idle(CGPUQueueId queue);
+CGPU_API void cgpu_wait_queue_idle(CGPUQueueId queue);
 typedef void (*CGPUProcWaitQueueIdle)(CGPUQueueId queue);
-RUNTIME_API float cgpu_queue_get_timestamp_period_ns(CGPUQueueId queue);
+CGPU_API float cgpu_queue_get_timestamp_period_ns(CGPUQueueId queue);
 typedef float (*CGPUProcQueueGetTimestampPeriodNS)(CGPUQueueId queue);
-RUNTIME_API void cgpu_free_queue(CGPUQueueId queue);
+CGPU_API void cgpu_free_queue(CGPUQueueId queue);
 typedef void (*CGPUProcFreeQueue)(CGPUQueueId queue);
 
 // Command APIs
-RUNTIME_API CGPUCommandPoolId cgpu_create_command_pool(CGPUQueueId queue, const struct CGPUCommandPoolDescriptor* desc);
+CGPU_API CGPUCommandPoolId cgpu_create_command_pool(CGPUQueueId queue, const struct CGPUCommandPoolDescriptor* desc);
 typedef CGPUCommandPoolId (*CGPUProcCreateCommandPool)(CGPUQueueId queue, const struct CGPUCommandPoolDescriptor* desc);
-RUNTIME_API CGPUCommandBufferId cgpu_create_command_buffer(CGPUCommandPoolId pool, const struct CGPUCommandBufferDescriptor* desc);
+CGPU_API CGPUCommandBufferId cgpu_create_command_buffer(CGPUCommandPoolId pool, const struct CGPUCommandBufferDescriptor* desc);
 typedef CGPUCommandBufferId (*CGPUProcCreateCommandBuffer)(CGPUCommandPoolId pool, const struct CGPUCommandBufferDescriptor* desc);
-RUNTIME_API void cgpu_reset_command_pool(CGPUCommandPoolId pool);
+CGPU_API void cgpu_reset_command_pool(CGPUCommandPoolId pool);
 typedef void (*CGPUProcResetCommandPool)(CGPUCommandPoolId pool);
-RUNTIME_API void cgpu_free_command_buffer(CGPUCommandBufferId cmd);
+CGPU_API void cgpu_free_command_buffer(CGPUCommandBufferId cmd);
 typedef void (*CGPUProcFreeCommandBuffer)(CGPUCommandBufferId cmd);
-RUNTIME_API void cgpu_free_command_pool(CGPUCommandPoolId pool);
+CGPU_API void cgpu_free_command_pool(CGPUCommandPoolId pool);
 typedef void (*CGPUProcFreeCommandPool)(CGPUCommandPoolId pool);
 
 // Shader APIs
-RUNTIME_API CGPUShaderLibraryId cgpu_create_shader_library(CGPUDeviceId device, const struct CGPUShaderLibraryDescriptor* desc);
+CGPU_API CGPUShaderLibraryId cgpu_create_shader_library(CGPUDeviceId device, const struct CGPUShaderLibraryDescriptor* desc);
 typedef CGPUShaderLibraryId (*CGPUProcCreateShaderLibrary)(CGPUDeviceId device, const struct CGPUShaderLibraryDescriptor* desc);
-RUNTIME_API void cgpu_free_shader_library(CGPUShaderLibraryId library);
+CGPU_API void cgpu_free_shader_library(CGPUShaderLibraryId library);
 typedef void (*CGPUProcFreeShaderLibrary)(CGPUShaderLibraryId library);
 
 // Buffer APIs
-RUNTIME_API CGPUBufferId cgpu_create_buffer(CGPUDeviceId device, const struct CGPUBufferDescriptor* desc);
+CGPU_API CGPUBufferId cgpu_create_buffer(CGPUDeviceId device, const struct CGPUBufferDescriptor* desc);
 typedef CGPUBufferId (*CGPUProcCreateBuffer)(CGPUDeviceId device, const struct CGPUBufferDescriptor* desc);
-RUNTIME_API void cgpu_map_buffer(CGPUBufferId buffer, const struct CGPUBufferRange* range);
+CGPU_API void cgpu_map_buffer(CGPUBufferId buffer, const struct CGPUBufferRange* range);
 typedef void (*CGPUProcMapBuffer)(CGPUBufferId buffer, const struct CGPUBufferRange* range);
-RUNTIME_API void cgpu_unmap_buffer(CGPUBufferId buffer);
+CGPU_API void cgpu_unmap_buffer(CGPUBufferId buffer);
 typedef void (*CGPUProcUnmapBuffer)(CGPUBufferId buffer);
-RUNTIME_API void cgpu_free_buffer(CGPUBufferId buffer);
+CGPU_API void cgpu_free_buffer(CGPUBufferId buffer);
 typedef void (*CGPUProcFreeBuffer)(CGPUBufferId buffer);
 
 // Sampler APIs
-RUNTIME_API CGPUSamplerId cgpu_create_sampler(CGPUDeviceId device, const struct CGPUSamplerDescriptor* desc);
+CGPU_API CGPUSamplerId cgpu_create_sampler(CGPUDeviceId device, const struct CGPUSamplerDescriptor* desc);
 typedef CGPUSamplerId (*CGPUProcCreateSampler)(CGPUDeviceId device, const struct CGPUSamplerDescriptor* desc);
-RUNTIME_API void cgpu_free_sampler(CGPUSamplerId sampler);
+CGPU_API void cgpu_free_sampler(CGPUSamplerId sampler);
 typedef void (*CGPUProcFreeSampler)(CGPUSamplerId sampler);
 
 // Texture/TextureView APIs
-RUNTIME_API CGPUTextureId cgpu_create_texture(CGPUDeviceId device, const struct CGPUTextureDescriptor* desc);
+CGPU_API CGPUTextureId cgpu_create_texture(CGPUDeviceId device, const struct CGPUTextureDescriptor* desc);
 typedef CGPUTextureId (*CGPUProcCreateTexture)(CGPUDeviceId device, const struct CGPUTextureDescriptor* desc);
-RUNTIME_API void cgpu_free_texture(CGPUTextureId texture);
+CGPU_API void cgpu_free_texture(CGPUTextureId texture);
 typedef void (*CGPUProcFreeTexture)(CGPUTextureId texture);
-RUNTIME_API CGPUTextureViewId cgpu_create_texture_view(CGPUDeviceId device, const struct CGPUTextureViewDescriptor* desc);
+CGPU_API CGPUTextureViewId cgpu_create_texture_view(CGPUDeviceId device, const struct CGPUTextureViewDescriptor* desc);
 typedef CGPUTextureViewId (*CGPUProcCreateTextureView)(CGPUDeviceId device, const struct CGPUTextureViewDescriptor* desc);
-RUNTIME_API void cgpu_free_texture_view(CGPUTextureViewId render_target);
+CGPU_API void cgpu_free_texture_view(CGPUTextureViewId render_target);
 typedef void (*CGPUProcFreeTextureView)(CGPUTextureViewId render_target);
-RUNTIME_API bool cgpu_try_bind_aliasing_texture(CGPUDeviceId device, const struct CGPUTextureAliasingBindDescriptor* desc);
+CGPU_API bool cgpu_try_bind_aliasing_texture(CGPUDeviceId device, const struct CGPUTextureAliasingBindDescriptor* desc);
 typedef bool (*CGPUProcTryBindAliasingTexture)(CGPUDeviceId device, const struct CGPUTextureAliasingBindDescriptor* desc);
 
 // Shared Resource APIs
-RUNTIME_API uint64_t cgpu_export_shared_texture_handle(CGPUDeviceId device, const struct CGPUExportTextureDescriptor* desc);
+CGPU_API uint64_t cgpu_export_shared_texture_handle(CGPUDeviceId device, const struct CGPUExportTextureDescriptor* desc);
 typedef uint64_t (*CGPUProcExportSharedTextureHandle)(CGPUDeviceId device, const struct CGPUExportTextureDescriptor* desc);
-RUNTIME_API CGPUTextureId cgpu_import_shared_texture_handle(CGPUDeviceId device, const struct CGPUImportTextureDescriptor* desc);
+CGPU_API CGPUTextureId cgpu_import_shared_texture_handle(CGPUDeviceId device, const struct CGPUImportTextureDescriptor* desc);
 typedef CGPUTextureId (*CGPUProcImportSharedTextureHandle)(CGPUDeviceId device, const struct CGPUImportTextureDescriptor* desc);
 
 // Swapchain APIs
-RUNTIME_API CGPUSwapChainId cgpu_create_swapchain(CGPUDeviceId device, const struct CGPUSwapChainDescriptor* desc);
+CGPU_API CGPUSwapChainId cgpu_create_swapchain(CGPUDeviceId device, const struct CGPUSwapChainDescriptor* desc);
 typedef CGPUSwapChainId (*CGPUProcCreateSwapChain)(CGPUDeviceId device, const struct CGPUSwapChainDescriptor* desc);
-RUNTIME_API uint32_t cgpu_acquire_next_image(CGPUSwapChainId swapchain, const struct CGPUAcquireNextDescriptor* desc);
+CGPU_API uint32_t cgpu_acquire_next_image(CGPUSwapChainId swapchain, const struct CGPUAcquireNextDescriptor* desc);
 typedef uint32_t (*CGPUProcAcquireNext)(CGPUSwapChainId swapchain, const struct CGPUAcquireNextDescriptor* desc);
-RUNTIME_API void cgpu_free_swapchain(CGPUSwapChainId swapchain);
+CGPU_API void cgpu_free_swapchain(CGPUSwapChainId swapchain);
 typedef void (*CGPUProcFreeSwapChain)(CGPUSwapChainId swapchain);
 
 // CMDs
-RUNTIME_API void cgpu_cmd_begin(CGPUCommandBufferId cmd);
+CGPU_API void cgpu_cmd_begin(CGPUCommandBufferId cmd);
 typedef void (*CGPUProcCmdBegin)(CGPUCommandBufferId cmd);
-RUNTIME_API void cgpu_cmd_transfer_buffer_to_buffer(CGPUCommandBufferId cmd, const struct CGPUBufferToBufferTransfer* desc);
+CGPU_API void cgpu_cmd_transfer_buffer_to_buffer(CGPUCommandBufferId cmd, const struct CGPUBufferToBufferTransfer* desc);
 typedef void (*CGPUProcCmdTransferBufferToBuffer)(CGPUCommandBufferId cmd, const struct CGPUBufferToBufferTransfer* desc);
-RUNTIME_API void cgpu_cmd_transfer_texture_to_texture(CGPUCommandBufferId cmd, const struct CGPUTextureToTextureTransfer* desc);
+CGPU_API void cgpu_cmd_transfer_texture_to_texture(CGPUCommandBufferId cmd, const struct CGPUTextureToTextureTransfer* desc);
 typedef void (*CGPUProcCmdTransferTextureToTexture)(CGPUCommandBufferId cmd, const struct CGPUTextureToTextureTransfer* desc);
-RUNTIME_API void cgpu_cmd_transfer_buffer_to_texture(CGPUCommandBufferId cmd, const struct CGPUBufferToTextureTransfer* desc);
+CGPU_API void cgpu_cmd_transfer_buffer_to_texture(CGPUCommandBufferId cmd, const struct CGPUBufferToTextureTransfer* desc);
 typedef void (*CGPUProcCmdTransferBufferToTexture)(CGPUCommandBufferId cmd, const struct CGPUBufferToTextureTransfer* desc);
-RUNTIME_API void cgpu_cmd_resource_barrier(CGPUCommandBufferId cmd, const struct CGPUResourceBarrierDescriptor* desc);
+CGPU_API void cgpu_cmd_resource_barrier(CGPUCommandBufferId cmd, const struct CGPUResourceBarrierDescriptor* desc);
 typedef void (*CGPUProcCmdResourceBarrier)(CGPUCommandBufferId cmd, const struct CGPUResourceBarrierDescriptor* desc);
-RUNTIME_API void cgpu_cmd_begin_query(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
+CGPU_API void cgpu_cmd_begin_query(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
 typedef void (*CGPUProcCmdBeginQuery)(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
-RUNTIME_API void cgpu_cmd_end_query(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
+CGPU_API void cgpu_cmd_end_query(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
 typedef void (*CGPUProcCmdEndQuery)(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
-RUNTIME_API void cgpu_cmd_reset_query_pool(CGPUCommandBufferId cmd, CGPUQueryPoolId, uint32_t start_query, uint32_t query_count);
+CGPU_API void cgpu_cmd_reset_query_pool(CGPUCommandBufferId cmd, CGPUQueryPoolId, uint32_t start_query, uint32_t query_count);
 typedef void (*CGPUProcCmdResetQueryPool)(CGPUCommandBufferId cmd, CGPUQueryPoolId, uint32_t start_query, uint32_t query_count);
-RUNTIME_API void cgpu_cmd_resolve_query(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, CGPUBufferId readback, uint32_t start_query, uint32_t query_count);
+CGPU_API void cgpu_cmd_resolve_query(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, CGPUBufferId readback, uint32_t start_query, uint32_t query_count);
 typedef void (*CGPUProcCmdResolveQuery)(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, CGPUBufferId readback, uint32_t start_query, uint32_t query_count);
-RUNTIME_API void cgpu_cmd_end(CGPUCommandBufferId cmd);
+CGPU_API void cgpu_cmd_end(CGPUCommandBufferId cmd);
 typedef void (*CGPUProcCmdEnd)(CGPUCommandBufferId cmd);
 
 // Compute Pass
-RUNTIME_API CGPUComputePassEncoderId cgpu_cmd_begin_compute_pass(CGPUCommandBufferId cmd, const struct CGPUComputePassDescriptor* desc);
+CGPU_API CGPUComputePassEncoderId cgpu_cmd_begin_compute_pass(CGPUCommandBufferId cmd, const struct CGPUComputePassDescriptor* desc);
 typedef CGPUComputePassEncoderId (*CGPUProcCmdBeginComputePass)(CGPUCommandBufferId cmd, const struct CGPUComputePassDescriptor* desc);
-RUNTIME_API void cgpu_compute_encoder_bind_descriptor_set(CGPUComputePassEncoderId encoder, CGPUDescriptorSetId set);
+CGPU_API void cgpu_compute_encoder_bind_descriptor_set(CGPUComputePassEncoderId encoder, CGPUDescriptorSetId set);
 typedef void (*CGPUProcComputeEncoderBindDescriptorSet)(CGPUComputePassEncoderId encoder, CGPUDescriptorSetId set);
-RUNTIME_API void cgpu_compute_encoder_bind_pipeline(CGPUComputePassEncoderId encoder, CGPUComputePipelineId pipeline);
+CGPU_API void cgpu_compute_encoder_bind_pipeline(CGPUComputePassEncoderId encoder, CGPUComputePipelineId pipeline);
 typedef void (*CGPUProcComputeEncoderBindPipeline)(CGPUComputePassEncoderId encoder, CGPUComputePipelineId pipeline);
-RUNTIME_API void cgpu_compute_encoder_dispatch(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
+CGPU_API void cgpu_compute_encoder_dispatch(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
 typedef void (*CGPUProcComputeEncoderDispatch)(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
-RUNTIME_API void cgpu_cmd_end_compute_pass(CGPUCommandBufferId cmd, CGPUComputePassEncoderId encoder);
+CGPU_API void cgpu_cmd_end_compute_pass(CGPUCommandBufferId cmd, CGPUComputePassEncoderId encoder);
 typedef void (*CGPUProcCmdEndComputePass)(CGPUCommandBufferId cmd, CGPUComputePassEncoderId encoder);
 
 // Render Pass
-RUNTIME_API CGPURenderPassEncoderId cgpu_cmd_begin_render_pass(CGPUCommandBufferId cmd, const struct CGPURenderPassDescriptor* desc);
+CGPU_API CGPURenderPassEncoderId cgpu_cmd_begin_render_pass(CGPUCommandBufferId cmd, const struct CGPURenderPassDescriptor* desc);
 typedef CGPURenderPassEncoderId (*CGPUProcCmdBeginRenderPass)(CGPUCommandBufferId cmd, const struct CGPURenderPassDescriptor* desc);
-RUNTIME_API void cgpu_render_encoder_set_shading_rate(CGPURenderPassEncoderId encoder, ECGPUShadingRate shading_rate, ECGPUShadingRateCombiner post_rasterizer_rate, ECGPUShadingRateCombiner final_rate);
+CGPU_API void cgpu_render_encoder_set_shading_rate(CGPURenderPassEncoderId encoder, ECGPUShadingRate shading_rate, ECGPUShadingRateCombiner post_rasterizer_rate, ECGPUShadingRateCombiner final_rate);
 typedef void (*CGPUProcRenderEncoderSetShadingRate)(CGPURenderPassEncoderId encoder, ECGPUShadingRate shading_rate, ECGPUShadingRateCombiner post_rasterizer_rate, ECGPUShadingRateCombiner final_rate);
-RUNTIME_API void cgpu_render_encoder_bind_descriptor_set(CGPURenderPassEncoderId encoder, CGPUDescriptorSetId set);
+CGPU_API void cgpu_render_encoder_bind_descriptor_set(CGPURenderPassEncoderId encoder, CGPUDescriptorSetId set);
 typedef void (*CGPUProcRenderEncoderBindDescriptorSet)(CGPURenderPassEncoderId encoder, CGPUDescriptorSetId set);
-RUNTIME_API void cgpu_render_encoder_set_viewport(CGPURenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth);
+CGPU_API void cgpu_render_encoder_set_viewport(CGPURenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth);
 typedef void (*CGPUProcRenderEncoderSetViewport)(CGPURenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth);
-RUNTIME_API void cgpu_render_encoder_set_scissor(CGPURenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+CGPU_API void cgpu_render_encoder_set_scissor(CGPURenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 typedef void (*CGPUProcRenderEncoderSetScissor)(CGPURenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
-RUNTIME_API void cgpu_render_encoder_bind_pipeline(CGPURenderPassEncoderId encoder, CGPURenderPipelineId pipeline);
+CGPU_API void cgpu_render_encoder_bind_pipeline(CGPURenderPassEncoderId encoder, CGPURenderPipelineId pipeline);
 typedef void (*CGPUProcRenderEncoderBindPipeline)(CGPURenderPassEncoderId encoder, CGPURenderPipelineId pipeline);
-RUNTIME_API void cgpu_render_encoder_bind_vertex_buffers(CGPURenderPassEncoderId encoder, uint32_t buffer_count,
+CGPU_API void cgpu_render_encoder_bind_vertex_buffers(CGPURenderPassEncoderId encoder, uint32_t buffer_count,
 const CGPUBufferId* buffers, const uint32_t* strides, const uint32_t* offsets);
 typedef void (*CGPUProcRendeEncoderBindVertexBuffers)(CGPURenderPassEncoderId encoder, uint32_t buffer_count,
 const CGPUBufferId* buffers, const uint32_t* strides, const uint32_t* offsets);
-RUNTIME_API void cgpu_render_encoder_bind_index_buffer(CGPURenderPassEncoderId encoder, CGPUBufferId buffer,
+CGPU_API void cgpu_render_encoder_bind_index_buffer(CGPURenderPassEncoderId encoder, CGPUBufferId buffer,
 uint32_t index_stride, uint64_t offset);
 typedef void (*CGPUProcRendeEncoderBindIndexBuffer)(CGPURenderPassEncoderId encoder, CGPUBufferId buffer,
 uint32_t index_stride, uint64_t offset);
-RUNTIME_API void cgpu_render_encoder_push_constants(CGPURenderPassEncoderId encoder, CGPURootSignatureId rs, const char8_t* name, const void* data);
+CGPU_API void cgpu_render_encoder_push_constants(CGPURenderPassEncoderId encoder, CGPURootSignatureId rs, const char8_t* name, const void* data);
 typedef void (*CGPUProcRenderEncoderPushConstants)(CGPURenderPassEncoderId encoder, CGPURootSignatureId rs, const char8_t* name, const void* data);
-RUNTIME_API void cgpu_compute_encoder_push_constants(CGPUComputePassEncoderId encoder, CGPURootSignatureId rs, const char8_t* name, const void* data);
+CGPU_API void cgpu_compute_encoder_push_constants(CGPUComputePassEncoderId encoder, CGPURootSignatureId rs, const char8_t* name, const void* data);
 typedef void (*CGPUProcComputeEncoderPushConstants)(CGPUComputePassEncoderId encoder, CGPURootSignatureId rs, const char8_t* name, const void* data);
-RUNTIME_API void cgpu_render_encoder_draw(CGPURenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex);
+CGPU_API void cgpu_render_encoder_draw(CGPURenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex);
 typedef void (*CGPUProcRenderEncoderDraw)(CGPURenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex);
-RUNTIME_API void cgpu_render_encoder_draw_instanced(CGPURenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex, uint32_t instance_count, uint32_t first_instance);
+CGPU_API void cgpu_render_encoder_draw_instanced(CGPURenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex, uint32_t instance_count, uint32_t first_instance);
 typedef void (*CGPUProcRenderEncoderDrawInstanced)(CGPURenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex, uint32_t instance_count, uint32_t first_instance);
-RUNTIME_API void cgpu_render_encoder_draw_indexed(CGPURenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t first_vertex);
+CGPU_API void cgpu_render_encoder_draw_indexed(CGPURenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t first_vertex);
 typedef void (*CGPUProcRenderEncoderDrawIndexed)(CGPURenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t first_vertex);
-RUNTIME_API void cgpu_render_encoder_draw_indexed_instanced(CGPURenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t instance_count, uint32_t first_instance, uint32_t first_vertex);
+CGPU_API void cgpu_render_encoder_draw_indexed_instanced(CGPURenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t instance_count, uint32_t first_instance, uint32_t first_vertex);
 typedef void (*CGPUProcRenderEncoderDrawIndexedInstanced)(CGPURenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t instance_count, uint32_t first_instance, uint32_t first_vertex);
-RUNTIME_API void cgpu_cmd_end_render_pass(CGPUCommandBufferId cmd, CGPURenderPassEncoderId encoder);
+CGPU_API void cgpu_cmd_end_render_pass(CGPUCommandBufferId cmd, CGPURenderPassEncoderId encoder);
 typedef void (*CGPUProcCmdEndRenderPass)(CGPUCommandBufferId cmd, CGPURenderPassEncoderId encoder);
 
 // Event & Markers
@@ -370,31 +370,35 @@ typedef struct CGPUMarkerInfo {
     const char8_t* name;
     float color[4];
 } CGPUMarkerInfo;
-RUNTIME_API void cgpu_cmd_begin_event(CGPUCommandBufferId cmd, const CGPUEventInfo* event);
+CGPU_API void cgpu_cmd_begin_event(CGPUCommandBufferId cmd, const CGPUEventInfo* event);
 typedef void (*CGPUProcCmdBeginEvent)(CGPUCommandBufferId cmd, const CGPUEventInfo* event);
-RUNTIME_API void cgpu_cmd_set_marker(CGPUCommandBufferId cmd, const CGPUMarkerInfo* marker);
+CGPU_API void cgpu_cmd_set_marker(CGPUCommandBufferId cmd, const CGPUMarkerInfo* marker);
 typedef void (*CGPUProcCmdSetMarker)(CGPUCommandBufferId cmd, const CGPUMarkerInfo* marker);
-RUNTIME_API void cgpu_cmd_end_event(CGPUCommandBufferId cmd);
+CGPU_API void cgpu_cmd_end_event(CGPUCommandBufferId cmd);
 typedef void (*CGPUProcCmdEndEvent)(CGPUCommandBufferId cmd);
 
 // dstorage
+typedef struct CGPUMemoryRange
+{
+    const uint8_t* bytes;
+    uint64_t bytes_size;
+} CGPUMemoryRange;
+
+typedef struct CGPUDStorageFileRange
+{
+    CGPUDStorageFileHandle file;
+    uint64_t offset;
+    uint64_t size;
+} CGPUDStorageFileRange;
+
 typedef struct CGPUDStorageFileInfo {
     uint64_t file_size;
 } CGPUDStorageFileInfo;
 typedef struct CGPUDStorageBufferIODescriptor {
     CGPUDStorageCompression compression;
     ECGPUDStorageSource source_type;
-    struct
-    {
-        uint8_t* bytes;
-        uint64_t bytes_size;
-    } source_memory;
-    struct
-    {
-        CGPUDStorageFileHandle file;
-        uint64_t offset;
-        uint64_t size;
-    } source_file;
+    CGPUMemoryRange source_memory;
+    CGPUDStorageFileRange source_file;
     CGPUBufferId buffer;
     uint64_t offset;
     uint64_t uncompressed_size;
@@ -405,17 +409,8 @@ typedef struct CGPUDStorageBufferIODescriptor {
 typedef struct CGPUDStorageTextureIODescriptor {
     CGPUDStorageCompression compression;
     ECGPUDStorageSource source_type;
-    struct
-    {
-        const uint8_t* bytes;
-        uint64_t bytes_size;
-    } source_memory;
-    struct
-    {
-        CGPUDStorageFileHandle file;
-        uint64_t offset;
-        uint64_t size;
-    } source_file;
+    CGPUMemoryRange source_memory;
+    CGPUDStorageFileRange source_file;
     CGPUTextureId texture;
     uint32_t width;
     uint32_t height;
@@ -425,111 +420,111 @@ typedef struct CGPUDStorageTextureIODescriptor {
     const char8_t* name;
 } CGPUDStorageTextureIODescriptor;
 
-RUNTIME_API ECGPUDStorageAvailability cgpu_query_dstorage_availability(CGPUDeviceId device);
+CGPU_API ECGPUDStorageAvailability cgpu_query_dstorage_availability(CGPUDeviceId device);
 typedef ECGPUDStorageAvailability (*CGPUProcQueryDStorageAvailability)(CGPUDeviceId device);
-RUNTIME_API CGPUDStorageQueueId cgpu_create_dstorage_queue(CGPUDeviceId device, const struct CGPUDStorageQueueDescriptor* desc);
+CGPU_API CGPUDStorageQueueId cgpu_create_dstorage_queue(CGPUDeviceId device, const struct CGPUDStorageQueueDescriptor* desc);
 typedef CGPUDStorageQueueId (*CGPUProcCreateDStorageQueue)(CGPUDeviceId device, const struct CGPUDStorageQueueDescriptor* desc);
-RUNTIME_API CGPUDStorageFileHandle cgpu_dstorage_open_file(CGPUDStorageQueueId queue, const char* abs_path);
+CGPU_API CGPUDStorageFileHandle cgpu_dstorage_open_file(CGPUDStorageQueueId queue, const char* abs_path);
 typedef CGPUDStorageFileHandle (*CGPUProcDStorageOpenFile)(CGPUDStorageQueueId queue, const char* abs_path);
-RUNTIME_API void cgpu_dstorage_query_file_info(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info);
+CGPU_API void cgpu_dstorage_query_file_info(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info);
 typedef void (*CGPUProcDStorageQueryFileInfo)(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info);
-RUNTIME_API void cgpu_dstorage_enqueue_buffer_request(CGPUDStorageQueueId queue, const CGPUDStorageBufferIODescriptor* desc);
+CGPU_API void cgpu_dstorage_enqueue_buffer_request(CGPUDStorageQueueId queue, const CGPUDStorageBufferIODescriptor* desc);
 typedef void (*CGPUProcDStorageEnqueueBufferRequest)(CGPUDStorageQueueId queue, const CGPUDStorageBufferIODescriptor* desc);
-RUNTIME_API void cgpu_dstorage_enqueue_texture_request(CGPUDStorageQueueId queue, const CGPUDStorageTextureIODescriptor* desc);
+CGPU_API void cgpu_dstorage_enqueue_texture_request(CGPUDStorageQueueId queue, const CGPUDStorageTextureIODescriptor* desc);
 typedef void (*CGPUProcDStorageEnqueueTextureRequest)(CGPUDStorageQueueId queue, const CGPUDStorageTextureIODescriptor* desc);
-RUNTIME_API void cgpu_dstorage_queue_submit(CGPUDStorageQueueId queue, CGPUFenceId fence);
+CGPU_API void cgpu_dstorage_queue_submit(CGPUDStorageQueueId queue, CGPUFenceId fence);
 typedef void (*CGPUProcDStorageQueueSubmit)(CGPUDStorageQueueId queue, CGPUFenceId fence);
-RUNTIME_API void cgpu_dstorage_close_file(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file);
+CGPU_API void cgpu_dstorage_close_file(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file);
 typedef void (*CGPUProcDStorageCloseFile)(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file);
-RUNTIME_API void cgpu_free_dstorage_queue(CGPUDStorageQueueId queue);
+CGPU_API void cgpu_free_dstorage_queue(CGPUDStorageQueueId queue);
 typedef void (*CGPUProcFreeDStorageQueue)(CGPUDStorageQueueId queue);
 
 // EXPERIMENTAL Compiled/Linked ISA APIs
-RUNTIME_API CGPULinkedShaderId cgpu_compile_and_link_shaders(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* descs, uint32_t count);
+CGPU_API CGPULinkedShaderId cgpu_compile_and_link_shaders(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* descs, uint32_t count);
 typedef CGPULinkedShaderId (*CGPUProcCompileAndLinkShaders)(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* desc, uint32_t count);
-RUNTIME_API void cgpu_compile_shaders(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* descs, uint32_t count, CGPUCompiledShaderId* out_isas);
+CGPU_API void cgpu_compile_shaders(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* descs, uint32_t count, CGPUCompiledShaderId* out_isas);
 typedef void (*CGPUProcCompileShaders)(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* desc, uint32_t count, CGPUCompiledShaderId* out_isas);
-RUNTIME_API void cgpu_free_compiled_shader(CGPUCompiledShaderId shader);
+CGPU_API void cgpu_free_compiled_shader(CGPUCompiledShaderId shader);
 typedef void (*CGPUProcFreeCompiledShader)(CGPUCompiledShaderId shader);
-RUNTIME_API void cgpu_free_linked_shader(CGPULinkedShaderId shader);
+CGPU_API void cgpu_free_linked_shader(CGPULinkedShaderId shader);
 typedef void (*CGPUProcFreeLinkedShader)(CGPULinkedShaderId shader);
 
 // EXPERIMENTAL StateBuffer APIs
-RUNTIME_API CGPUStateBufferId cgpu_create_state_buffer(CGPUCommandBufferId cmd, const struct CGPUStateBufferDescriptor* desc);
+CGPU_API CGPUStateBufferId cgpu_create_state_buffer(CGPUCommandBufferId cmd, const struct CGPUStateBufferDescriptor* desc);
 typedef CGPUStateBufferId (*CGPUProcCreateStateBuffer)(CGPUCommandBufferId cmd, const struct CGPUStateBufferDescriptor* desc);
-RUNTIME_API void cgpu_render_encoder_bind_state_buffer(CGPURenderPassEncoderId encoder, CGPUStateBufferId stream);
+CGPU_API void cgpu_render_encoder_bind_state_buffer(CGPURenderPassEncoderId encoder, CGPUStateBufferId stream);
 typedef void (*CGPUProcRenderEncoderBindStateBuffer)(CGPURenderPassEncoderId encoder, CGPUStateBufferId stream);
-RUNTIME_API void cgpu_compute_encoder_bind_state_buffer(CGPUComputePassEncoderId encoder, CGPUStateBufferId stream);
+CGPU_API void cgpu_compute_encoder_bind_state_buffer(CGPUComputePassEncoderId encoder, CGPUStateBufferId stream);
 typedef void (*CGPUProcComputeEncoderBindStateBuffer)(CGPUComputePassEncoderId encoder, CGPUStateBufferId stream);
-RUNTIME_API void cgpu_free_state_buffer(CGPUStateBufferId stream);
+CGPU_API void cgpu_free_state_buffer(CGPUStateBufferId stream);
 typedef void (*CGPUProcFreeStateBuffer)(CGPUStateBufferId stream);
 
 // raster state encoder APIs
-RUNTIME_API CGPURasterStateEncoderId cgpu_open_raster_state_encoder(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
+CGPU_API CGPURasterStateEncoderId cgpu_open_raster_state_encoder(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
 typedef CGPURasterStateEncoderId (*CGPUProcOpenRasterStateEncoder)(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
-RUNTIME_API void cgpu_raster_state_encoder_set_viewport(CGPURasterStateEncoderId, float x, float y, float width, float height, float min_depth, float max_depth);
+CGPU_API void cgpu_raster_state_encoder_set_viewport(CGPURasterStateEncoderId, float x, float y, float width, float height, float min_depth, float max_depth);
 typedef void (*CGPUProcRasterStateEncoderSetViewport)(CGPURasterStateEncoderId, float x, float y, float width, float height, float min_depth, float max_depth);
-RUNTIME_API void cgpu_raster_state_encoder_set_scissor(CGPURasterStateEncoderId, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+CGPU_API void cgpu_raster_state_encoder_set_scissor(CGPURasterStateEncoderId, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 typedef void (*CGPUProcRasterStateEncoderSetScissor)(CGPURasterStateEncoderId, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
-RUNTIME_API void cgpu_raster_state_encoder_set_cull_mode(CGPURasterStateEncoderId, ECGPUCullMode cull_mode);
+CGPU_API void cgpu_raster_state_encoder_set_cull_mode(CGPURasterStateEncoderId, ECGPUCullMode cull_mode);
 typedef void (*CGPUProcRasterStateEncoderSetCullMode)(CGPURasterStateEncoderId, ECGPUCullMode cull_mode);
-RUNTIME_API void cgpu_raster_state_encoder_set_front_face(CGPURasterStateEncoderId, ECGPUFrontFace front_face);
+CGPU_API void cgpu_raster_state_encoder_set_front_face(CGPURasterStateEncoderId, ECGPUFrontFace front_face);
 typedef void (*CGPUProcRasterStateEncoderSetFrontFace)(CGPURasterStateEncoderId, ECGPUFrontFace front_face);
-RUNTIME_API void cgpu_raster_state_encoder_set_primitive_topology(CGPURasterStateEncoderId, ECGPUPrimitiveTopology topology);
+CGPU_API void cgpu_raster_state_encoder_set_primitive_topology(CGPURasterStateEncoderId, ECGPUPrimitiveTopology topology);
 typedef void (*CGPUProcRasterStateEncoderSetPrimitiveTopology)(CGPURasterStateEncoderId, ECGPUPrimitiveTopology topology);
-RUNTIME_API void cgpu_raster_state_encoder_set_depth_test_enabled(CGPURasterStateEncoderId, bool enabled);
+CGPU_API void cgpu_raster_state_encoder_set_depth_test_enabled(CGPURasterStateEncoderId, bool enabled);
 typedef void (*CGPUProcRasterStateEncoderSetDepthTestEnabled)(CGPURasterStateEncoderId, bool enabled);
-RUNTIME_API void cgpu_raster_state_encoder_set_depth_write_enabled(CGPURasterStateEncoderId, bool enabled);
+CGPU_API void cgpu_raster_state_encoder_set_depth_write_enabled(CGPURasterStateEncoderId, bool enabled);
 typedef void (*CGPUProcRasterStateEncoderSetDepthWriteEnabled)(CGPURasterStateEncoderId, bool enabled);
-RUNTIME_API void cgpu_raster_state_encoder_set_depth_compare_op(CGPURasterStateEncoderId, ECGPUCompareMode compare_op);
+CGPU_API void cgpu_raster_state_encoder_set_depth_compare_op(CGPURasterStateEncoderId, ECGPUCompareMode compare_op);
 typedef void (*CGPUProcRasterStateEncoderSetDepthCompareOp)(CGPURasterStateEncoderId, ECGPUCompareMode compare_op);
-RUNTIME_API void cgpu_raster_state_encoder_set_stencil_test_enabled(CGPURasterStateEncoderId, bool enabled);
+CGPU_API void cgpu_raster_state_encoder_set_stencil_test_enabled(CGPURasterStateEncoderId, bool enabled);
 typedef void (*CGPUProcRasterStateEncoderSetStencilTestEnabled)(CGPURasterStateEncoderId, bool enabled);
-RUNTIME_API void cgpu_raster_state_encoder_set_stencil_compare_op(CGPURasterStateEncoderId, CGPUStencilFaces faces, ECGPUStencilOp failOp, ECGPUStencilOp passOp, ECGPUStencilOp depthFailOp, ECGPUCompareMode compareOp);
+CGPU_API void cgpu_raster_state_encoder_set_stencil_compare_op(CGPURasterStateEncoderId, CGPUStencilFaces faces, ECGPUStencilOp failOp, ECGPUStencilOp passOp, ECGPUStencilOp depthFailOp, ECGPUCompareMode compareOp);
 typedef void (*CGPUProcRasterStateEncoderSetStencilCompareOp)(CGPURasterStateEncoderId, CGPUStencilFaces faces, ECGPUStencilOp failOp, ECGPUStencilOp passOp, ECGPUStencilOp depthFailOp, ECGPUCompareMode compareOp);
-RUNTIME_API void cgpu_raster_state_encoder_set_fill_mode(CGPURasterStateEncoderId, ECGPUFillMode fill_mode);
+CGPU_API void cgpu_raster_state_encoder_set_fill_mode(CGPURasterStateEncoderId, ECGPUFillMode fill_mode);
 typedef void (*CGPUProcRasterStateEncoderSetFillMode)(CGPURasterStateEncoderId, ECGPUFillMode fill_mode);
-RUNTIME_API void cgpu_raster_state_encoder_set_sample_count(CGPURasterStateEncoderId, ECGPUSampleCount sample_count);
+CGPU_API void cgpu_raster_state_encoder_set_sample_count(CGPURasterStateEncoderId, ECGPUSampleCount sample_count);
 typedef void (*CGPUProcRasterStateEncoderSetSampleCount)(CGPURasterStateEncoderId, ECGPUSampleCount sample_count);
-RUNTIME_API void cgpu_close_raster_state_encoder(CGPURasterStateEncoderId encoder);
+CGPU_API void cgpu_close_raster_state_encoder(CGPURasterStateEncoderId encoder);
 typedef void (*CGPUProcCloseRasterStateEncoder)(CGPURasterStateEncoderId encoder);
 
 // shader state encoder APIs
-RUNTIME_API CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_r(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
+CGPU_API CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_r(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
 typedef CGPUShaderStateEncoderId (*CGPUProcOpenShaderStateEncoderR)(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
-RUNTIME_API CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_c(CGPUStateBufferId stream, CGPUComputePassEncoderId encoder);
+CGPU_API CGPUShaderStateEncoderId cgpu_open_shader_state_encoder_c(CGPUStateBufferId stream, CGPUComputePassEncoderId encoder);
 typedef CGPUShaderStateEncoderId (*CGPUProcOpenShaderStateEncoderC)(CGPUStateBufferId stream, CGPUComputePassEncoderId encoder);
-RUNTIME_API void cgpu_shader_state_encoder_bind_shaders(CGPUShaderStateEncoderId, uint32_t stage_count, const ECGPUShaderStage* stages, const CGPUCompiledShaderId* shaders);
+CGPU_API void cgpu_shader_state_encoder_bind_shaders(CGPUShaderStateEncoderId, uint32_t stage_count, const ECGPUShaderStage* stages, const CGPUCompiledShaderId* shaders);
 typedef void (*CGPUProcShaderStateEncoderBindShaders)(CGPUShaderStateEncoderId, uint32_t stage_count, const ECGPUShaderStage* stages, const CGPUCompiledShaderId* shaders);
-RUNTIME_API void cgpu_shader_state_encoder_bind_linked_shader(CGPUShaderStateEncoderId, CGPULinkedShaderId linked);
+CGPU_API void cgpu_shader_state_encoder_bind_linked_shader(CGPUShaderStateEncoderId, CGPULinkedShaderId linked);
 typedef void (*CGPUProcShaderStateEncoderBindLinkedShader)(CGPUShaderStateEncoderId, CGPULinkedShaderId linked);
-RUNTIME_API void cgpu_close_shader_state_encoder(CGPUShaderStateEncoderId encoder);
+CGPU_API void cgpu_close_shader_state_encoder(CGPUShaderStateEncoderId encoder);
 typedef void (*CGPUProcCloseShaderStateEncoder)(CGPUShaderStateEncoderId encoder);
 
 // user state encoder APIs
-RUNTIME_API CGPUUserStateEncoderId cgpu_open_user_state_encoder(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
+CGPU_API CGPUUserStateEncoderId cgpu_open_user_state_encoder(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
 typedef CGPUUserStateEncoderId (*CGPUProcOpenUserStateEncoder)(CGPUStateBufferId stream, CGPURenderPassEncoderId encoder);
-RUNTIME_API void cgpu_close_user_state_encoder(CGPUUserStateEncoderId encoder);
+CGPU_API void cgpu_close_user_state_encoder(CGPUUserStateEncoderId encoder);
 typedef void (*CGPUProcCloseUserStateEncoder)(CGPUUserStateEncoderId encoder);
 
 // EXPERIMENTAL binder APIs
-RUNTIME_API CGPUBinderId cgpu_create_binder(CGPUCommandBufferId cmd);
+CGPU_API CGPUBinderId cgpu_create_binder(CGPUCommandBufferId cmd);
 typedef CGPUBinderId (*CGPUProcCreateBinder)(CGPUCommandBufferId cmd);
-RUNTIME_API void cgpu_binder_bind_vertex_layout(CGPUBinderId, const struct CGPUVertexLayout* layout);
+CGPU_API void cgpu_binder_bind_vertex_layout(CGPUBinderId, const struct CGPUVertexLayout* layout);
 typedef void (*CGPUProcBinderBindVertexLayout)(CGPUBinderId, const struct CGPUVertexLayout* layout);
-RUNTIME_API void cgpu_binder_bind_vertex_buffer(CGPUBinderId, uint32_t first_binding, uint32_t binding_count, const CGPUBufferId* buffers, const uint64_t* offsets, const uint64_t* sizes, const uint64_t* strides);
+CGPU_API void cgpu_binder_bind_vertex_buffer(CGPUBinderId, uint32_t first_binding, uint32_t binding_count, const CGPUBufferId* buffers, const uint64_t* offsets, const uint64_t* sizes, const uint64_t* strides);
 typedef void (*CGPUProcBinderBindVertexBuffer)(CGPUBinderId, uint32_t first_binding, uint32_t binding_count, const CGPUBufferId* buffers, const uint64_t* offsets, const uint64_t* sizes, const uint64_t* strides);
-RUNTIME_API void cgpu_free_binder(CGPUBinderId binder);
+CGPU_API void cgpu_free_binder(CGPUBinderId binder);
 typedef void (*CGPUProcFreeBinder)(CGPUBinderId binder);
 
 // cgpux
-RUNTIME_API CGPUBufferId cgpux_create_mapped_constant_buffer(CGPUDeviceId device,
+CGPU_API CGPUBufferId cgpux_create_mapped_constant_buffer(CGPUDeviceId device,
     uint64_t size, const char8_t* name, bool device_local_preferred);
-RUNTIME_API CGPUBufferId cgpux_create_mapped_upload_buffer(CGPUDeviceId device,
+CGPU_API CGPUBufferId cgpux_create_mapped_upload_buffer(CGPUDeviceId device,
     uint64_t size, const char8_t* name);
-RUNTIME_API bool cgpux_adapter_is_nvidia(CGPUAdapterId adapter);
-RUNTIME_API bool cgpux_adapter_is_amd(CGPUAdapterId adapter);
-RUNTIME_API bool cgpux_adapter_is_intel(CGPUAdapterId adapter);
+CGPU_API bool cgpux_adapter_is_nvidia(CGPUAdapterId adapter);
+CGPU_API bool cgpux_adapter_is_amd(CGPUAdapterId adapter);
+CGPU_API bool cgpux_adapter_is_intel(CGPUAdapterId adapter);
 
 // Types
 typedef struct CGPUProcTable {
@@ -716,22 +711,21 @@ typedef struct CGPUProcTable {
 } CGPUProcTable;
 
 // surfaces
-RUNTIME_API void cgpu_free_surface(CGPUDeviceId device, CGPUSurfaceId surface);
-typedef void (*CGPUSurfaceProc_Free)(CGPUDeviceId device, CGPUSurfaceId surface);
-
-RUNTIME_API CGPUSurfaceId cgpu_surface_from_native_view(CGPUDeviceId device, void* view);
+CGPU_API CGPUSurfaceId cgpu_surface_from_native_view(CGPUDeviceId device, void* view);
 #if defined(_WIN32) || defined(_WIN64)
 typedef struct HWND__* HWND;
-RUNTIME_API CGPUSurfaceId cgpu_surface_from_hwnd(CGPUDeviceId device, HWND window);
+CGPU_API CGPUSurfaceId cgpu_surface_from_hwnd(CGPUDeviceId device, HWND window);
 typedef CGPUSurfaceId (*CGPUSurfaceProc_CreateFromHWND)(CGPUDeviceId device, HWND window);
 #endif
 #ifdef __APPLE__
-// RUNTIME_API CGPUSurfaceId cgpu_surface_from_ui_view(CGPUDeviceId device, UIView* window);
+// CGPU_API CGPUSurfaceId cgpu_surface_from_ui_view(CGPUDeviceId device, UIView* window);
 // typedef CGPUSurfaceId (*CGPUSurfaceProc_CreateFromUIView)(CGPUDeviceId device, UIView* window);
 typedef struct CGPUNSView CGPUNSView;
-RUNTIME_API CGPUSurfaceId cgpu_surface_from_ns_view(CGPUDeviceId device, CGPUNSView* window);
+CGPU_API CGPUSurfaceId cgpu_surface_from_ns_view(CGPUDeviceId device, CGPUNSView* window);
 typedef CGPUSurfaceId (*CGPUSurfaceProc_CreateFromNSView)(CGPUDeviceId device, CGPUNSView* window);
 #endif
+CGPU_API void cgpu_free_surface(CGPUDeviceId device, CGPUSurfaceId surface);
+typedef void (*CGPUSurfaceProc_Free)(CGPUDeviceId device, CGPUSurfaceId surface);
 typedef struct CGPUSurfacesProcTable {
 #if defined(_WIN32) || defined(_WIN64)
     const CGPUSurfaceProc_CreateFromHWND from_hwnd;
@@ -1139,31 +1133,27 @@ typedef struct CGPUBufferBarrier {
     CGPUBufferId buffer;
     ECGPUResourceState src_state;
     ECGPUResourceState dst_state;
-    uint8_t queue_acquire : 1;
-    uint8_t queue_release : 1;
-    ECGPUQueueType queue_type : 5;
-    struct {
-        uint8_t begin_ony : 1;
-        uint8_t end_only : 1;
-    } d3d12;
+    uint8_t queue_acquire;
+    uint8_t queue_release;
+    ECGPUQueueType queue_type;
+    uint8_t d3d12_begin_only;
+    uint8_t d3d12_end_only;
 } CGPUBufferBarrier;
 
 typedef struct CGPUTextureBarrier {
     CGPUTextureId texture;
     ECGPUResourceState src_state;
     ECGPUResourceState dst_state;
-    uint8_t queue_acquire : 1;
-    uint8_t queue_release : 1;
-    ECGPUQueueType queue_type : 5;
+    uint8_t queue_acquire;
+    uint8_t queue_release;
+    ECGPUQueueType queue_type;
     /// Specifiy whether following barrier targets particular subresource
-    uint8_t subresource_barrier : 1;
+    uint8_t subresource_barrier;
     /// Following values are ignored if subresource_barrier is false
-    uint8_t mip_level : 7;
+    uint8_t mip_level;
     uint16_t array_layer;
-    struct {
-        uint8_t begin_ony : 1;
-        uint8_t end_only : 1;
-    } d3d12;
+    uint8_t d3d12_begin_only;
+    uint8_t d3d12_end_only;
 } CGPUTextureBarrier;
 
 typedef struct CGPUResourceBarrierDescriptor {
@@ -1631,7 +1621,7 @@ typedef struct CGPUSampler {
 #define CGPU_SINGLE_GPU_NODE_INDEX 0
 
 #ifdef __cplusplus
-} // end extern "C"
+CGPU_EXTERN_C_END
 #endif
 
 #ifdef __clang__
