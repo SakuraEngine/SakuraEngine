@@ -46,6 +46,8 @@ void MPGameWorld::Initialize()
         30,
         10
     };
+    dual::entity_spawner_T<CCollisionScene> sceneSpawner;
+    sceneSpawner(storage, 1, [](auto){});
 }
 
 void MPGameWorld::Shutdown()
@@ -80,6 +82,11 @@ bool collide(const skr_float3_t& a, const CSphereCollider2D& aBox, const skr_flo
     }
 
     return false;
+}
+
+void MPGameWorld::SetupCollsionWorld()
+{
+    
 }
 
 static constexpr float deltaTime = (float)serverTickInterval;

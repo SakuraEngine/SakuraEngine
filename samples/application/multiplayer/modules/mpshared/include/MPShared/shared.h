@@ -7,6 +7,8 @@
 #include "components.h"
 #include "utils/traits.hpp"
 #include "platform/guid.hpp"
+#include "containers/hashmap.hpp"
+#include "EASTL/fixed_vector.h"
 #ifndef __meta__
     #include "MPShared/shared.generated.h"
 #endif
@@ -122,6 +124,13 @@ QZombieAI
     GENERATED_QUERY_BODY(QZombieAI);
 };
 
+sreflect_struct("guid" : "8B5C7563-EA37-4FA9-BF73-9E353EC99A03")
+QCollision
+{
+    GENERATED_QUERY_BODY(QCollision);
+} 
+sattr("query" : "[in]skr_translation_comp_t, [in]CSphereCollider2D, [inout]CCollisionScene");
+
 
 inline constexpr skr_guid_t GetPlayerPrefab()
 {
@@ -137,6 +146,24 @@ inline constexpr skr_guid_t GetBulletPrefab()
 {
     return skr::guid::make_guid_unsafe("8698AA92-F3E3-4DDA-B0B9-59D004538988");
 }
+
+
+sreflect_struct(
+    "guid" : "E8B8B447-4BBE-4A1E-A29E-FD28F046864E",
+    "component" :
+    {
+        "custom" : "::dual::managed_component"
+    }
+)
+CCollisionScene
+{
+    struct CollisionEntity
+    {  
+        dual_entity_t entity;
+        CSphereCollider2D collider;
+    };
+    skr::parallel_flat_hash_map<int, eastl::fixed_vector<CollisionEntity, 4>> cells;
+};
 
 struct MP_SHARED_API MPGameWorld
 {
@@ -165,6 +192,7 @@ struct MP_SHARED_API MPGameWorld
     virtual void Initialize();
     virtual void Shutdown();
     void Tick(const MPInputFrame& input);
+    void SetupCollsionWorld();
     void ClearDeadBall();
     void ClearDeadZombie();
     void SpawnZombie();
