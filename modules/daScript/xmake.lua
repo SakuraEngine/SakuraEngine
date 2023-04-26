@@ -1,4 +1,6 @@
-add_requires("daScript 2023.4.26-skr")
+add_requires("daScript 2023.4.26-skr.1")
+
+includes("rules/AOT.lua")
 
 target("daScriptVSCode")
     set_group("06.devs")
