@@ -1,15 +1,27 @@
-add_requires("daScript 2023.4.25-skr.10")
+add_requires("daScript 2023.4.26-skr")
+
+target("daScriptVSCode")
+    set_kind("phony")
+    add_rules("@daScript/Standard", { 
+        outdir = path.absolute(os.projectdir().."/.vscode") 
+    })
+
+target("SkrDAScript")
+    set_kind("phony")
+    add_deps("daScriptVSCode")
+    add_rules("@daScript/Standard", { outdir = "." })
 
 -- simple interpret
-target("daSTest0")
+target("daSTestInterpret")
     set_kind("binary")
     set_group("05.tests/daS")
+    add_deps("SkrDAScript")
     public_dependency("SkrRT", engine_version)
     add_packages("gtest", "daScript")
-    add_files("daSTest0/**.cpp")
+    add_files("daSTestInterpret/**.cpp")
 
 -- AOT
-target("daSTest1")
+target("daSTestAOT")
     set_kind("binary")
     set_group("05.tests/daS")
     add_rules("@daScript/AOT", {
@@ -17,11 +29,11 @@ target("daSTest1")
     })
     public_dependency("SkrRT", engine_version)
     add_packages("gtest", "daScript")
-    add_files("daSTest1/**.das")
-    add_files("daSTest1/**.cpp")
+    add_files("daSTestAOT/**.das")
+    add_files("daSTestAOT/**.cpp")
 
 -- AOT
-target("daSTest2")
+target("daSTestHybrid")
     set_kind("binary")
     set_group("05.tests/daS")
     add_rules("@daScript/Hybrid", {
@@ -29,5 +41,6 @@ target("daSTest2")
     })
     public_dependency("SkrRT", engine_version)
     add_packages("gtest", "daScript")
-    add_files("daSTest1/**.das", {aot = true})
-    add_files("daSTest1/**.cpp")
+    add_files("daSTestHybrid/aot/**.das", {aot = true})
+    add_files("daSTestHybrid/script/**.das", {aot = false})
+    add_files("daSTestHybrid/**.cpp")
