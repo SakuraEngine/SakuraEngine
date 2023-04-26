@@ -10,20 +10,20 @@ target("daSTestInterpret")
 target("daSTestAOT")
     set_kind("binary")
     set_group("05.tests/daS")
-    add_rules("daScriptAOT", {
+    add_rules("daScript", {
         outdir = "./scripts",
         rootdir = os.curdir()
     })
     public_dependency("SkrDAScript", engine_version)
     add_packages("gtest")
-    add_files("daSTestAOT/**.das")
+    add_files("daSTestAOT/**.das", {aot = true})
     add_files("daSTestAOT/**.cpp")
     
 -- Annotation
 target("daSTestAnnotation")
     set_kind("binary")
     set_group("05.tests/daS")
-    add_rules("@daScript/Script", {
+    add_rules("daScript", {
         outdir = "./scripts",
         rootdir = os.curdir()
     })
@@ -36,7 +36,7 @@ target("daSTestAnnotation")
 target("dasCo")
     set_kind("binary")
     set_group("05.tests/daS")
-    add_rules("@daScript/Script", {
+    add_rules("daScript", {
         outdir = "./scripts",
         rootdir = os.curdir()
     })
@@ -48,21 +48,21 @@ target("dasCo")
 target("dasCoAOT")
     set_kind("binary")
     set_group("05.tests/daS")
-    add_rules("daScriptAOT", {
+    add_rules("daScript", {
         outdir = "./scripts",
         rootdir = os.curdir()
     })
     public_dependency("SkrDAScript", engine_version)
     add_packages("gtest")
     add_defines("AOT")
-    add_files("dasCo/**.das")
+    add_files("dasCo/**.das", {aot = true})
     add_files("dasCo/**.cpp")
 
 -- Hybrid
 target("daSTestHybrid")
     set_kind("binary")
     set_group("05.tests/daS")
-    add_rules("@daScript/Hybrid", {
+    add_rules("daScript", {
         outdir = "./scripts",
         rootdir = os.curdir()
     })
