@@ -1,16 +1,5 @@
 add_requires("daScript 2023.4.26-skr")
 
-target("daScriptVSCode")
-    set_kind("phony")
-    add_rules("@daScript/Standard", { 
-        outdir = path.absolute(os.projectdir().."/.vscode") 
-    })
-
-target("SkrDAScript")
-    set_kind("phony")
-    add_deps("daScriptVSCode")
-    add_rules("@daScript/Standard", { outdir = "." })
-
 -- simple interpret
 target("daSTestInterpret")
     set_kind("binary")
@@ -38,7 +27,8 @@ target("daSTestHybrid")
     set_kind("binary")
     set_group("05.tests/daS")
     add_rules("@daScript/Hybrid", {
-        outdir = "./scripts"
+        outdir = "./scripts",
+        rootdir = os.curdir()
     })
     public_dependency("SkrRT", engine_version)
     add_packages("gtest", "daScript")

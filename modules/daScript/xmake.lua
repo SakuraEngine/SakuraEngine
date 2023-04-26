@@ -1,0 +1,16 @@
+target("daScriptVSCode")
+    set_group("06.devs")
+    set_kind("phony")
+    add_rules("@daScript/Standard", { 
+        outdir = path.absolute(os.projectdir().."/.vscode") 
+    })
+
+shared_module("SkrDAScript", "SKR_DASCRIPT", engine_version)
+    set_group("01.modules")
+    set_exceptions("no-cxx")
+    set_optimize("fastest")
+    add_deps("daScriptVSCode")
+    add_rules("@daScript/Standard", { outdir = "." })
+    add_files("daScript/src/**.cpp")
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    public_dependency("SkrRT", engine_version)
