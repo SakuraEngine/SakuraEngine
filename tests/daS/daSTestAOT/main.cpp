@@ -2,7 +2,7 @@
 
 using namespace das;
 
-#define TUTORIAL_NAME   "/../../../../tests/daS/dasTest1/test.das"
+#define TUTORIAL_NAME   "/scripts/daSTestAOT/test.das"
 
 void tutorial () {
     TextPrinter tout;                               // output stream for all compiler messages (stdout. for stringstream use TextWriter)
