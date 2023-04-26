@@ -1,0 +1,4 @@
+{
+    "dascript.experimental": true,
+    "dascript.server.connectTimeout": 10
+}
