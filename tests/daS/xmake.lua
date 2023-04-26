@@ -25,7 +25,8 @@ target("daSTestAOT")
     set_kind("binary")
     set_group("05.tests/daS")
     add_rules("@daScript/AOT", {
-        outdir = "./scripts"
+        outdir = "./scripts",
+        rootdir = os.curdir()
     })
     public_dependency("SkrRT", engine_version)
     add_packages("gtest", "daScript")

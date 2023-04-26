@@ -23,9 +23,11 @@ rule("Standard")
             os.vcp(dastestdir, outdir)
         end, {dependfile = target:dependfile(dastestdir), files = {dastestdir, dastestoutdir, target:targetfile()}})
         
-        depend.on_changed(function ()
-            os.vcp(dasTool, outdir)
-        end, {dependfile = target:dependfile(dasTool), files = {dasTool, dasToolOut, target:targetfile()}})
-
+        if not os.exists(dasToolOut) then
+            depend.on_changed(function ()
+                os.vcp(dasTool, outdir)
+            end, {dependfile = target:dependfile(dasTool), files = {dasTool, dasToolOut, target:targetfile()}})
+        end
+        
         print("daslib and dastest updated to ./"..path.relative(outdir, os.projectdir()).."!")
     end)
