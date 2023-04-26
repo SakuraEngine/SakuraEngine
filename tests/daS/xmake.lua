@@ -10,7 +10,7 @@ target("daSTestInterpret")
 target("daSTestAOT")
     set_kind("binary")
     set_group("05.tests/daS")
-    add_rules("@daScript/AOT", {
+    add_rules("daScriptAOT", {
         outdir = "./scripts",
         rootdir = os.curdir()
     })
@@ -48,7 +48,7 @@ target("dasCo")
 target("dasCoAOT")
     set_kind("binary")
     set_group("05.tests/daS")
-    add_rules("@daScript/AOT", {
+    add_rules("daScriptAOT", {
         outdir = "./scripts",
         rootdir = os.curdir()
     })
