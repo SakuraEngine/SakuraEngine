@@ -2,7 +2,7 @@
 #include "cgpu_config.h"
 
 #ifdef __cplusplus
-extern "C" {
+CGPU_EXTERN_C_BEGIN
 #endif
 
 // enums
@@ -1113,5 +1113,5 @@ static FORCEINLINE uint32_t FormatUtil_HeightOfBlock(ECGPUFormat const fmt) {
 /* clang-format on */
 
 #ifdef __cplusplus
-} // end extern "C"
+CGPU_EXTERN_C_END
 #endif
