@@ -1,12 +1,9 @@
-add_requires("daScript 2023.4.26-skr")
-
 -- simple interpret
 target("daSTestInterpret")
     set_kind("binary")
     set_group("05.tests/daS")
-    add_deps("SkrDAScript")
-    public_dependency("SkrRT", engine_version)
-    add_packages("gtest", "daScript")
+    public_dependency("SkrDAScript", engine_version)
+    add_packages("gtest")
     add_files("daSTestInterpret/**.cpp")
 
 -- AOT
@@ -17,12 +14,51 @@ target("daSTestAOT")
         outdir = "./scripts",
         rootdir = os.curdir()
     })
-    public_dependency("SkrRT", engine_version)
-    add_packages("gtest", "daScript")
+    public_dependency("SkrDAScript", engine_version)
+    add_packages("gtest")
     add_files("daSTestAOT/**.das")
     add_files("daSTestAOT/**.cpp")
+    
+-- Annotation
+target("daSTestAnnotation")
+    set_kind("binary")
+    set_group("05.tests/daS")
+    add_rules("@daScript/Script", {
+        outdir = "./scripts",
+        rootdir = os.curdir()
+    })
+    public_dependency("SkrDAScript", engine_version)
+    add_packages("gtest")
+    add_files("daSTestAnnotation/**.das")
+    add_files("daSTestAnnotation/**.cpp")
 
--- AOT
+-- Coroutine
+target("dasCo")
+    set_kind("binary")
+    set_group("05.tests/daS")
+    add_rules("@daScript/Script", {
+        outdir = "./scripts",
+        rootdir = os.curdir()
+    })
+    public_dependency("SkrDAScript", engine_version)
+    add_packages("gtest")
+    add_files("dasCo/**.das")
+    add_files("dasCo/**.cpp")
+
+target("dasCoAOT")
+    set_kind("binary")
+    set_group("05.tests/daS")
+    add_rules("@daScript/AOT", {
+        outdir = "./scripts",
+        rootdir = os.curdir()
+    })
+    public_dependency("SkrDAScript", engine_version)
+    add_packages("gtest")
+    add_defines("AOT")
+    add_files("dasCo/**.das")
+    add_files("dasCo/**.cpp")
+
+-- Hybrid
 target("daSTestHybrid")
     set_kind("binary")
     set_group("05.tests/daS")
@@ -30,8 +66,8 @@ target("daSTestHybrid")
         outdir = "./scripts",
         rootdir = os.curdir()
     })
-    public_dependency("SkrRT", engine_version)
-    add_packages("gtest", "daScript")
+    public_dependency("SkrDAScript", engine_version)
+    add_packages("gtest")
     add_files("daSTestHybrid/aot/**.das", {aot = true})
     add_files("daSTestHybrid/script/**.das", {aot = false})
     add_files("daSTestHybrid/**.cpp")
