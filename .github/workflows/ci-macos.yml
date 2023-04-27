@@ -92,7 +92,7 @@ jobs:
       - name: Shipping
         if: success() || failure()
         run: |
-          xmake f --arch=${{ matrix.arch }} --cxx_version=${{ matrix.cxx }} --mode=release --yes --build_tests=y --build_editors=n -c --shipping_one_archive=y --use_tracy=disable --policies=build.ccache:n
+          xmake f --arch=${{ matrix.arch }} --cxx_version=${{ matrix.cxx }} --mode=one_archive --yes --build_tests=y --build_editors=n -c --use_tracy=disable --policies=build.ccache:n
           xmake -y -v
 
       - name: UploadGeneratedFiles2
