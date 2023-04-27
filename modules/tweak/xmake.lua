@@ -1,5 +1,5 @@
 if is_os("windows") or is_os("macosx") or is_os("linux") then
-    if(not has_config("shipping_one_archive")) then
+    if not is_mode("one_archive") then
         add_requires("efsw")
         efsw_pak = true
     end

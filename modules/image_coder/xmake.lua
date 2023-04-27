@@ -16,7 +16,7 @@ shared_module("SkrImageCoder", "SKR_IMAGE_CODER", engine_version)
         add_includedirs("libpng/1.5.2", {public=true})
         if (is_mode("asan")) then
             add_links("libpng15_static", {public=true})
-        elseif (is_mode("release")) then
+        elseif is_mode("release") or is_mode("one_archive") then
             add_links("libpng15_static", {public=true})
         else
             add_links("libpng15_staticd", {public=true})

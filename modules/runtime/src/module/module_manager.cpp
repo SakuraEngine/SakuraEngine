@@ -171,7 +171,8 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const skr::string& name)
     }
     else
     {
-        SKR_LOG_TRACE("no user defined symbol: %s", initName.c_str());
+        SKR_LOG_TRACE("no user defined symbol: %s, is_proc_mode: %d, proc mod loaded: %d",
+            initName.c_str(), (int)is_proc_mod, (int)processSymbolTable.isLoaded());
         modulesMap[name] = eastl::make_unique<SDefaultDynamicModule>(name.c_str());
     }
     IDynamicModule* module = (IDynamicModule*)modulesMap[name].get();

@@ -1,4 +1,4 @@
-if(has_config("shipping_one_archive")) then
+if is_mode("one_archive") then
     add_requires("eastl >=3.20.2-skr", { configs = { runtime_shared = false } })
 else
     add_requires("eastl >=3.20.2-skr", { configs = { runtime_shared = true } })

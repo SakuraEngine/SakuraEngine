@@ -1,7 +1,7 @@
 includes("game/xmake.lua")
 
 if(has_config("build_tools")) then
-    if(not has_config("shipping_one_archive")) then
+    if not is_mode("one_archive") then
 
     shared_module("GameTool", "GAMETOOL", engine_version)
         set_group("04.examples/application")

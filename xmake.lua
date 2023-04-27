@@ -7,7 +7,9 @@ set_policy("build.ccache", false)
 
 add_rules("plugin.compile_commands.autoupdate", { outputdir = ".vscode" }) -- xmake 2.7.4 
 
-add_rules("mode.debug", "mode.release", "mode.releasedbg", "mode.asan")
+includes("xmake/one_archive.lua")
+
+add_rules("mode.debug", "mode.release", "mode.one_archive", "mode.releasedbg", "mode.asan")
 add_moduledirs("xmake/modules")
 
 includes("xmake/options.lua")
@@ -36,7 +38,7 @@ if (is_os("windows")) then
     add_defines("_UNICODE")
     add_defines("NOMINMAX")
     add_defines("_CRT_SECURE_NO_WARNINGS")
-    if (is_mode("release")) then
+    if is_mode("release") or is_mode("one_archive") then
         set_runtimes("MD")
     elseif (is_mode("asan")) then
         table.insert(defs_list, "_DISABLE_VECTOR_ANNOTATION")
