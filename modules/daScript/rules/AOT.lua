@@ -50,12 +50,13 @@ rule("daScript")
         else
             aot:add("deps", target:name())        
             for _, other in pairs(project.targets()) do
-                if other:dep(target:name()) ~= nil then 
+                if other:kind() == "binary" and other:dep(target:name()) ~= nil then 
                     wholearchive(other, aot)
                     other:add("deps", aot:name())
                 end
             end
         end
+        
         -- add to project
         project.target_add(aot)
     end)
