@@ -32,14 +32,14 @@ rule("daScript")
         for _, source in ipairs(aot_files) do
             table.insert(aot:sourcefiles(), source)
         end
-        local wholearchive = function(target, aot)
+        local wholearchive = function(t, aot)
             local output_dir = vformat("$(buildir)/$(os)/$(arch)/$(mode)")
             if is_plat("linux") then
-                target:add("ldflags", "-Wl,--whole-archive "..output_dir.."/lib"..aot:name()..".a -Wl,--no-whole-archive", {force = true, public = false})
+                t:add("ldflags", "-Wl,--whole-archive "..output_dir.."/lib"..aot:name()..".a -Wl,--no-whole-archive", {force = true, public = false})
             elseif is_plat("macosx") then
-                target:add("ldflags", "-Wl,-force_load "..output_dir.."/lib"..aot:name()..".a", {force = true, public = false})
+                t:add("ldflags", "-Wl,-force_load "..output_dir.."/lib"..aot:name()..".a", {force = true, public = false})
             elseif is_plat("windows") then
-                target:add("ldflags", "/WHOLEARCHIVE:"..aot:name()..".lib", {force = true, public = false})
+                t:add("ldflags", "/WHOLEARCHIVE:"..aot:name()..".lib", {force = true, public = false})
             end
         end
 
@@ -56,7 +56,7 @@ rule("daScript")
                 end
             end
         end
-        
+
         -- add to project
         project.target_add(aot)
     end)
