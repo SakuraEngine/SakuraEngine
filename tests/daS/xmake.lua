@@ -20,6 +20,12 @@ target("daSTestAOT")
     add_files("daSTestAOT/**.cpp")
     
 -- Annotation
+target("daSTestAnnotationCompiler")
+    set_kind("binary")
+    set_group("05.tests/daS")
+    public_dependency("SkrDAScript", engine_version)
+    add_files("daSTestAnnotation/annotation_compiler.cpp")
+
 target("daSTestAnnotation")
     set_kind("binary")
     set_group("05.tests/daS")
@@ -30,7 +36,7 @@ target("daSTestAnnotation")
     public_dependency("SkrDAScript", engine_version)
     add_packages("gtest")
     add_files("daSTestAnnotation/**.das")
-    add_files("daSTestAnnotation/**.cpp")
+    add_files("daSTestAnnotation/test_annotation.cpp")
 
 -- Coroutine
 target("dasCo")
