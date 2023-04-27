@@ -12,7 +12,7 @@ shared_module("SkrLive2D", "SKR_LIVE2D", engine_version)
         if (is_mode("asan")) then
             set_runtimes("MD") -- csmiPlatformDependentLogPrint uses freopen
         end
-        if (is_mode("release")) then
+        if is_mode("release") or is_mode("one_archive") then
             add_links("Live2DCubismCore_MD", {public=true})
         else
             add_links("Live2DCubismCore_MDd", {public=true})
