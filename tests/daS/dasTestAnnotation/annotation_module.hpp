@@ -1,3 +1,4 @@
+#pragma once
 #include "daScript/daScript.h"
 
 using namespace das;
@@ -24,8 +25,11 @@ struct ColorAnnotation : public ManagedStructureAnnotation<Color,true,true> {
     virtual bool canMove() const override { return true; }  // this ref-value can be moved
 };
 
+// create type factory, so that type can be bound
+MAKE_TYPE_FACTORY(Color, Color);
+
 // custom function, which takes type as an input, as well as returns it
-Color makeGray ( const Color & c ) {
+inline Color makeGray ( const Color & c ) {
     uint8_t lum = uint8_t ( min ( c.luminance(), 255.0f ) );
     return  { lum, lum, lum, c.a };
 }

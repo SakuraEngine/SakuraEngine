@@ -1,8 +1,5 @@
 #include "annotation_module.hpp"
 
-// create type factory, so that type can be bound
-MAKE_TYPE_FACTORY(Color, Color);
-
 // registering module, so that its available via 'NEED_MODULE' macro
 REGISTER_MODULE(Module_Tutorial03);
 
