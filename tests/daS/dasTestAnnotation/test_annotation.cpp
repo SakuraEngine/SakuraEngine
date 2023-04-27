@@ -56,11 +56,14 @@ REGISTER_MODULE(Module_Tutorial03);
 
 #include "tutorial.inc"
 
-int main( int, char * [] ) {
+int main( int argc, char **argv ) {
     // request all da-script built in modules
     NEED_ALL_DEFAULT_MODULES;
+    NEED_MODULE(Module_UriParser)
+    NEED_MODULE(Module_JobQue)
     // request our custom module
     NEED_MODULE(Module_Tutorial03);
+    das::setCommandLineArguments(argc, argv);
     // Initialize modules
     Module::Initialize();
     // run the tutorial

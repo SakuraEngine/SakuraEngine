@@ -52,9 +52,10 @@ void tutorial () {
     }
 }
 
-int main( int, char * [] ) {
+int main( int argc, char **argv ) {
     // request all da-script built in modules
     NEED_ALL_DEFAULT_MODULES;
+    das::setCommandLineArguments(argc, argv);
     // Initialize modules
     Module::Initialize();
     // run the tutorial
