@@ -58,6 +58,34 @@ target("dasCoAOT")
     add_files("dasCo/**.das", {aot = true})
     add_files("dasCo/**.cpp")
 
+-- Stackwalk
+target("dasStackwalk")
+    set_kind("binary")
+    set_group("05.tests/daS")
+    add_rules("daScript", {
+        outdir = "./scripts",
+        rootdir = os.curdir()
+    })
+    public_dependency("SkrDAScript", engine_version)
+    add_packages("gtest")
+    add_files("dasStackwalk/**.das")
+    add_files("dasStackwalk/**.cpp")
+
+--[[
+target("dasStackwalkAOT")
+    set_kind("binary")
+    set_group("05.tests/daS")
+    add_rules("daScript", {
+        outdir = "./scripts",
+        rootdir = os.curdir()
+    })
+    public_dependency("SkrDAScript", engine_version)
+    add_packages("gtest")
+    add_defines("AOT")
+    add_files("dasStackwalk/**.das", {aot = true})
+    add_files("dasStackwalk/**.cpp")
+]]--
+
 -- Hybrid
 target("daSTestHybrid")
     set_kind("binary")
