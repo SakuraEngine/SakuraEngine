@@ -100,7 +100,7 @@ jobs:
         if: success() || failure()
         shell: cmd
         run: |
-          xmake f -m release --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --build_tests=y --build_editors=n --shipping_one_archive=y --use_tracy=disable --policies=build.ccache:n
+          xmake f -m one_archive --arch=${{ matrix.arch }} --toolchain=${{ matrix.toolchain }} --cxx_version=${{ matrix.cxx }} -c -y -v --build_tests=y --build_editors=n --use_tracy=disable --policies=build.ccache:n
           xmake -y -v
       
       - name: UploadGeneratedFiles2
