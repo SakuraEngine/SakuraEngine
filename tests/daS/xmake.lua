@@ -55,7 +55,7 @@ target("dasCoAOT")
     public_dependency("SkrDAScript", engine_version)
     add_packages("gtest")
     add_defines("AOT")
-    add_files("dasCo/**.das")
+    add_files("dasCo/**.das", {aot = true})
     add_files("dasCo/**.cpp")
 
 -- Hybrid
