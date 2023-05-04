@@ -1,3 +1,13 @@
+option("shipping_one_archive")
+    set_default(false)
+    set_showmenu(true)
+    set_description("Toggle to build modules in one executable file.")
+option_end()
+
+if(has_config("shipping_one_archive")) then
+    add_defines("SHIPPING_ONE_ARCHIVE")
+end
+
 rule("skr.shared")
     on_load(function (target, opt)
         local api = target:extraconf("rules", "skr.shared", "api")
@@ -13,8 +23,8 @@ rule("skr.module")
         local api = target:extraconf("rules", "skr.module", "api")
         local version = target:extraconf("rules", "skr.module", "version")
         target:add("values", "skr.module.version", version)
-        if is_mode("one_archive") then
-            target:add("defines","SHIPPING_ONE_ARCHIVE", {public = true})
+        if(has_config("shipping_one_archive")) then
+            target:add("defines","SHIPPING_ONE_ARCHIVE")
             target:add("defines", api.."_IMPL")
         else
             target:add("defines", api.."_SHARED", {public=true})
@@ -75,7 +85,7 @@ rule("skr.module")
         -- calculate deps
         local api = target:extraconf("rules", "skr.module", "api")
         local dep_modules = module_codegen.resolve_skr_module_dependencies(target)
-        if is_mode("one_archive") then
+        if has_config("shipping_one_archive") then
             if target:kind() == "binary" then
                 local output_dir = vformat("$(buildir)/$(os)/$(arch)/$(mode)")
                 for _, dep in pairs(dep_modules) do
@@ -104,7 +114,7 @@ rule("skr.static_module")
     on_load(function (target, opt)
         local api = target:extraconf("rules", "skr.static_module", "api")
         target:set("kind", "static")
-        if not is_mode("one_archive") then
+        if(not has_config("shipping_one_archive")) then
             target:add("defines", api.."_STATIC", {public=true})
             target:add("defines", api.."_IMPL")
         end
@@ -119,13 +129,13 @@ end
 
 function shared_module(name, api, version, opt)
     target(name)
-    if is_mode("one_archive") then
+    if has_config("shipping_one_archive") then
         set_kind("static")
     else
         set_kind("shared")
     end
     on_load(function (target, opt)
-        if is_mode("one_archive") then
+        if(has_config("shipping_one_archive")) then
             for _, dep in pairs(target:get("links")) do
                 target:add("links", dep, {public = true})
             end
