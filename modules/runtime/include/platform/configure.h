@@ -152,9 +152,10 @@ extern const char* $name;
 #endif
 
 #ifndef RUNTIME_EXPORT
-    #if defined(SHIPPING_ONE_ARCHIVE)
-        #define RUNTIME_EXPORT
-    #elif defined(_MSC_VER)
+    #if defined(_MSC_VER)
+        // MSVC linker trims symbols, the 'dllexport' attribute prevents this.
+        // But we are not archiving DLL files with SHIPPING_ONE_ARCHIVE mode.
+        // TODO: do something with this workaround
         #define RUNTIME_EXPORT __declspec(dllexport)
     #else
         #define RUNTIME_EXPORT __attribute__((visibility("default")))
