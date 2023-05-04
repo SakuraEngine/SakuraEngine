@@ -82,7 +82,7 @@ class MetaDatabase(object):
 
     def load_meta_file(self, file, add):
         try:
-            meta = json.load(open(file), object_hook=lambda d: SimpleNamespace(**d))
+            meta = json.load(open(file, encoding='utf-8'), object_hook=lambda d: SimpleNamespace(**d))
         except json.decoder.JSONDecodeError as e:
             print(e)
             abort(file)
