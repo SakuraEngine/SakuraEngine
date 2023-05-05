@@ -1,5 +1,5 @@
 #include "SkrDAScript/file.hpp"
-#include "daScript/daScriptC.h"
+#include "daScript/daScript.h"
 
 namespace skr {
 namespace das {
