@@ -9,6 +9,8 @@ namespace skr {
 struct RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
 {
     template <typename T>
+    using Handler = eastl::pair<T, void*>;
+    template <typename T>
     using RIDMap = eastl::vector_map<int64_t, T>;
 
     void on_window_resized(SWindowHandle window, int32_t w, int32_t h) SKR_NOEXCEPT
@@ -67,6 +69,42 @@ struct RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
         for (auto& handler : mouse_button_up_handlers)
         {
             handler.second.first(button, x, y, handler.second.second);
+        }
+    }
+
+    void on_key_down(EKeyCode key)
+    {
+        for (auto& handler : message_handlers)
+        {
+            handler->on_key_down(key);
+        }
+        for (auto& handler : key_down_handlers)
+        {
+            handler.second.first(key, handler.second.second);
+        }
+    }
+
+    void on_key_up(EKeyCode key)
+    {
+        for (auto& handler : message_handlers)
+        {
+            handler->on_key_up(key);
+        }
+        for (auto& handler : key_up_handlers)
+        {
+            handler.second.first(key, handler.second.second);
+        }
+    }
+
+    void on_text_input(const char8_t* text)
+    {
+        for (auto& handler : message_handlers)
+        {
+            handler->on_text_input(text);
+        }
+        for (auto& handler : text_input_handlers)
+        {
+            handler.second.first(text, handler.second.second);
         }
     }
 
@@ -154,13 +192,52 @@ struct RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
         mouse_button_up_handlers.erase(rid);
     }
 
+    int64_t add_key_down_handler(SKeyDownHandlerProc proc, void* usr_data) SKR_NOEXCEPT
+    {
+        auto rid = next_handler_id++;
+        key_down_handlers[rid] = { proc, usr_data };
+        return rid;
+    }
+
+    void remove_key_down_handler(int64_t rid) SKR_NOEXCEPT
+    {
+        key_down_handlers.erase(rid);
+    }
+
+    int64_t add_key_up_handler(SKeyUpHandlerProc proc, void* usr_data) SKR_NOEXCEPT
+    {
+        auto rid = next_handler_id++;
+        key_up_handlers[rid] = { proc, usr_data };
+        return rid;
+    }
+
+    void remove_key_up_handler(int64_t rid) SKR_NOEXCEPT
+    {
+        key_up_handlers.erase(rid);
+    }
+
+    int64_t add_text_input_handler(STextInputHandlerProc proc, void* usr_data) SKR_NOEXCEPT
+    {
+        auto rid = next_handler_id++;
+        text_input_handlers[rid] = { proc, usr_data };
+        return rid;
+    }
+
+    void remove_text_input_handler(int64_t rid) SKR_NOEXCEPT
+    {
+        text_input_handlers.erase(rid);
+    }
+
     skr::vector<ISystemMessageHandler*> message_handlers;
-    RIDMap<eastl::pair<SWindowResizeHandlerProc, void*>> window_resize_handlers;
-    RIDMap<eastl::pair<SWindowCloseHandlerProc, void*>> window_close_handlers;
-    RIDMap<eastl::pair<SWindowMoveHandlerProc, void*>> window_move_handlers;
-    RIDMap<eastl::pair<SMouseWheelHandlerProc, void*>> mouse_wheel_handlers;
-    RIDMap<eastl::pair<SMouseButtonDownHandlerProc, void*>> mouse_button_down_handlers;
-    RIDMap<eastl::pair<SMouseButtonUpHandlerProc, void*>> mouse_button_up_handlers;
+    RIDMap<Handler<SWindowResizeHandlerProc>> window_resize_handlers;
+    RIDMap<Handler<SWindowCloseHandlerProc>> window_close_handlers;
+    RIDMap<Handler<SWindowMoveHandlerProc>> window_move_handlers;
+    RIDMap<Handler<SMouseWheelHandlerProc>> mouse_wheel_handlers;
+    RIDMap<Handler<SMouseButtonDownHandlerProc>> mouse_button_down_handlers;
+    RIDMap<Handler<SMouseButtonUpHandlerProc>> mouse_button_up_handlers;
+    RIDMap<Handler<SKeyDownHandlerProc>> key_down_handlers;
+    RIDMap<Handler<SKeyUpHandlerProc>> key_up_handlers;
+    RIDMap<Handler<STextInputHandlerProc>> text_input_handlers;
     int64_t next_handler_id = 0;
 };
 
@@ -227,6 +304,36 @@ struct SystemHandlerBase : public ISystemHandler
     virtual void remove_mouse_button_up_handler(int64_t rid) SKR_NOEXCEPT final
     {
         message_handler_proxy.remove_mouse_button_up_handler(rid);
+    }
+
+    virtual int64_t add_key_down_handler(SKeyDownHandlerProc proc, void* usr_data) SKR_NOEXCEPT final
+    {
+        return message_handler_proxy.add_key_down_handler(proc, usr_data);
+    }
+
+    virtual void remove_key_down_handler(int64_t rid) SKR_NOEXCEPT final
+    {
+        message_handler_proxy.remove_key_down_handler(rid);
+    }
+
+    virtual int64_t add_key_up_handler(SKeyUpHandlerProc proc, void* usr_data) SKR_NOEXCEPT final
+    {
+        return message_handler_proxy.add_key_up_handler(proc, usr_data);
+    }
+
+    virtual void remove_key_up_handler(int64_t rid) SKR_NOEXCEPT final
+    {
+        message_handler_proxy.remove_key_up_handler(rid);
+    }
+
+    virtual int64_t add_text_input_handler(STextInputHandlerProc proc, void* usr_data) SKR_NOEXCEPT final
+    {
+        return message_handler_proxy.add_text_input_handler(proc, usr_data);
+    }
+
+    virtual void remove_text_input_handler(int64_t rid) SKR_NOEXCEPT final
+    {
+        message_handler_proxy.remove_text_input_handler(rid);
     }
 
     SystemMessageHandlerProxy message_handler_proxy;
