@@ -38,7 +38,7 @@ bool imgui_get_window_minimized(ImGuiViewport* viewport);
 void imgui_render_window(ImGuiViewport* viewport, void*);
 void imgui_swap_buffers(ImGuiViewport* viewport, void*);
 
-int32_t KeyCodeTranslator(EKeyCode keycode);
+static int32_t KeyCodeTranslator(EKeyCode keycode);
 } // namespace skr::imgui
 
 static void imgui_update_mouse_and_buttons(SWindowHandle window)
