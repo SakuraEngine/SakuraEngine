@@ -1,13 +1,19 @@
 #include "SkrDAScript/env.hpp"
 #include "daScript/daScript.h"
 
+inline static void __das_initialize() { NEED_ALL_DEFAULT_MODULES; }
+
 namespace skr {
 namespace das {
-using namespace ::das;
+
+Environment::~Environment() SKR_NOEXCEPT
+{
+    
+}
 
 void Environment::Initialize(const EnvironmentDescriptor &desc) SKR_NOEXCEPT
 {
-    NEED_ALL_DEFAULT_MODULES;
+    ::__das_initialize();
     ::das::Module::Initialize(); 
 }
 
