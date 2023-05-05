@@ -40,7 +40,8 @@ package("daScriptCore")
             def test
                 print("this is nano tutorial\n")
             )"""";
-            int main( int, char * [] ) {
+            static void test() 
+            {
                 // request all da-script built in modules
                 NEED_ALL_DEFAULT_MODULES;
                 // Initialize modules
@@ -53,18 +54,17 @@ package("daScriptCore")
                 TextPrinter tout;
                 ModuleGroup dummyLibGroup;
                 auto program = compileDaScript("dummy.das", fAccess, tout, dummyLibGroup);
-                if ( program->failed() ) return -1;
+                if ( program->failed() ) return;
                 // create context
                 Context ctx(program->getContextStackSize());
-                if ( !program->simulate(ctx, tout) ) return -2;
+                if ( !program->simulate(ctx, tout) ) return;
                 // find function. its up to application to check, if function is not null
                 auto function = ctx.findFunction("test");
-                if ( !function ) return -3;
+                if ( !function ) return;
                 // call context function
                 ctx.evalWithCatch(function, nullptr);
                 // shut-down daScript, free all memory
                 Module::Shutdown();
-                return 0;
             }
         ]]}, {configs = {languages = "c++17"}}))
     end)
