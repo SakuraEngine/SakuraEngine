@@ -40,7 +40,7 @@ def write(path, content):
 BASE = os.path.dirname(os.path.realpath(__file__).replace("\\", "/"))
 
 if __name__ == '__main__':
-    meta = json.load(open(os.path.join(BASE, "../../thirdparty/dear_bindings/cimgui.json")), object_hook=lambda d: SimpleNamespace(**d))
+    meta = json.load(open(os.path.join(BASE, "../../thirdparty/dear_bindings/cimgui.json"), encoding='utf-8'), object_hook=lambda d: SimpleNamespace(**d))
     binding = render(os.path.join(BASE, "luabind_imgui.cpp.mako"), meta=meta)
     write(os.path.join(BASE, "../../modules/imgui/src/build.luabind.cpp"), binding)
     intelligence = render(os.path.join(BASE, "luabind_imgui_intelli.lua.mako"), meta=meta)

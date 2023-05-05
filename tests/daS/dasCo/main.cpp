@@ -2,14 +2,16 @@
 
 using namespace das;
 
-#define TUTORIAL_NAME   "/../../../../tests/daS/dasTest1/test.das"
+#define TUTORIAL_NAME   "/scripts/daSCo/co.das"
 
 void tutorial () {
     TextPrinter tout;                               // output stream for all compiler messages (stdout. for stringstream use TextWriter)
     ModuleGroup dummyLibGroup;                      // module group for compiled program
     CodeOfPolicies policies;                        // compiler setup
     auto fAccess = make_smart<FsFileAccess>();      // default file access
+#ifdef AOT
     policies.aot = true;
+#endif
     // compile program
     auto program = compileDaScript(getDasRoot() + TUTORIAL_NAME, fAccess, tout, dummyLibGroup, false, policies);
     if ( program->failed() ) {
@@ -36,23 +38,25 @@ void tutorial () {
         tout << "function 'test' not found\n";
         return;
     }
-    // verify if 'test' is a function, with the correct signature
-    // note, this operation is slow, so don't do it every time for every call
-    if ( !verifyCall<bool>(fnTest->debugInfo, dummyLibGroup) ) {
-        tout << "function 'test', call arguments do not match. expecting def test : void\n";
-        return;
-    }
     // evaluate 'test' function in the context
-    ctx.evalWithCatch(fnTest, nullptr);
+    Sequence it;
+    vec4f res = ctx.evalWithCatch(fnTest, nullptr, &it);
     if ( auto ex = ctx.getException() ) {       // if function cased panic, report it
         tout << "exception: " << ex << "\n";
         return;
     }
+    // call coroutine until its done
+    bool dummy = false;
+    while ( builtin_iterator_iterate(it, &dummy, &ctx) ) {
+        printf("...\n");
+    }
 }
 
-int main(int argc, char * argv[])
-{
+int main( int argc, char **argv ) {
+    // request all da-script built in modules
     NEED_ALL_DEFAULT_MODULES;
+    das::setCommandLineArguments(argc, argv);
+    // Initialize modules
     Module::Initialize();
     // run the tutorial
     tutorial();

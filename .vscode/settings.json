@@ -1,0 +1,7 @@
+{
+    "dascript.experimental": true,
+    "dascript.server.connectTimeout": 10,
+    "xmake.additionalConfigArguments": [
+        "--build_tests=y"
+    ]
+}
