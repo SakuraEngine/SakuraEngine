@@ -12,6 +12,9 @@ typedef void(*SWindowMoveHandlerProc)(SWindowHandle, void* usr_data);
 typedef void(*SMouseWheelHandlerProc)(int32_t wheelX, int32_t wheelY, void* usr_data);
 typedef void(*SMouseButtonDownHandlerProc)(EMouseKey button, int32_t x, int32_t y, void* usr_data);
 typedef void(*SMouseButtonUpHandlerProc)(EMouseKey button, int32_t x, int32_t y, void* usr_data);
+typedef void(*SKeyDownHandlerProc)(EKeyCode button, void* usr_data);
+typedef void(*SKeyUpHandlerProc)(EKeyCode button, void* usr_data);
+typedef void(*STextInputHandlerProc)(const char8_t* text, void* usr_data);
 
 #ifdef __cplusplus
 namespace skr 
@@ -27,6 +30,9 @@ struct RUNTIME_API ISystemMessageHandler
     virtual void on_mouse_wheel(int32_t wheelX, int32_t wheelY) {};
     virtual void on_mouse_button_down(EMouseKey button, int32_t x, int32_t y) {};
     virtual void on_mouse_button_up(EMouseKey button, int32_t x, int32_t y) {};
+    virtual void on_key_down(EKeyCode) {};
+    virtual void on_key_up(EKeyCode) {};
+    virtual void on_text_input(const char8_t* text) {};
 };
 
 struct RUNTIME_API ISystemHandler
@@ -53,6 +59,12 @@ struct RUNTIME_API ISystemHandler
     virtual void remove_mouse_button_down_handler(int64_t rid) SKR_NOEXCEPT = 0;
     virtual int64_t add_mouse_button_up_handler(SMouseButtonUpHandlerProc, void*) SKR_NOEXCEPT = 0;
     virtual void remove_mouse_button_up_handler(int64_t rid) SKR_NOEXCEPT = 0;
+    virtual int64_t add_key_down_handler(SKeyDownHandlerProc, void*) SKR_NOEXCEPT = 0;
+    virtual void remove_key_down_handler(int64_t rid) SKR_NOEXCEPT = 0;
+    virtual int64_t add_key_up_handler(SKeyUpHandlerProc, void*) SKR_NOEXCEPT = 0;
+    virtual void remove_key_up_handler(int64_t rid) SKR_NOEXCEPT = 0;
+    virtual int64_t add_text_input_handler(STextInputHandlerProc, void*) SKR_NOEXCEPT = 0;
+    virtual void remove_text_input_handler(int64_t rid) SKR_NOEXCEPT = 0;
 };
 
 }
@@ -114,3 +126,21 @@ int64_t skr_system_add_mouse_button_up_handler(skr_system_handler_id handler, SM
 
 RUNTIME_EXTERN_C RUNTIME_API
 void skr_system_remove_mouse_button_up_handler(skr_system_handler_id handler, int64_t rid);
+
+RUNTIME_EXTERN_C RUNTIME_API
+int64_t skr_system_add_key_down_handler(skr_system_handler_id handler, SKeyDownHandlerProc proc, void* usr_data);
+
+RUNTIME_EXTERN_C RUNTIME_API
+void skr_system_remove_key_down_handler(skr_system_handler_id handler, int64_t rid);
+
+RUNTIME_EXTERN_C RUNTIME_API
+int64_t skr_system_add_key_up_handler(skr_system_handler_id handler, SKeyUpHandlerProc proc, void* usr_data);
+
+RUNTIME_EXTERN_C RUNTIME_API
+void skr_system_remove_key_up_handler(skr_system_handler_id handler, int64_t rid);
+
+RUNTIME_EXTERN_C RUNTIME_API
+int64_t skr_system_add_text_input_handler(skr_system_handler_id handler, STextInputHandlerProc proc, void* usr_data);
+
+RUNTIME_EXTERN_C RUNTIME_API
+void skr_system_remove_text_input_handler(skr_system_handler_id handler, int64_t rid);
