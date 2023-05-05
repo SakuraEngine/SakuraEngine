@@ -1,5 +1,5 @@
 target("daScriptAOTTemplate")
-    set_group("01.modules")
+    set_group("0x.dasAOT")
     set_kind("static")
     set_optimize("fastest")
     add_rules("@daScript/AOT", { noinstall = true })
