@@ -127,6 +127,36 @@ void skr_system_remove_mouse_button_up_handler(skr_system_handler_id handler, in
     handler->remove_mouse_button_up_handler(rid);
 }
 
+int64_t skr_system_add_key_down_handler(skr_system_handler_id handler, SKeyDownHandlerProc proc, void* usr_data)
+{
+    return handler->add_key_down_handler(proc, usr_data);
+}
+
+void skr_system_remove_key_down_handler(skr_system_handler_id handler, int64_t rid)
+{
+    handler->remove_key_down_handler(rid);
+}
+
+int64_t skr_system_add_key_up_handler(skr_system_handler_id handler, SKeyUpHandlerProc proc, void* usr_data)
+{
+    return handler->add_key_up_handler(proc, usr_data);
+}
+
+void skr_system_remove_key_up_handler(skr_system_handler_id handler, int64_t rid)
+{
+    handler->remove_key_up_handler(rid);
+}
+
+int64_t skr_system_add_text_input_handler(skr_system_handler_id handler, STextInputHandlerProc proc, void* usr_data)
+{
+    return handler->add_text_input_handler(proc, usr_data);
+}
+
+void skr_system_remove_text_input_handler(skr_system_handler_id handler, int64_t rid)
+{
+    handler->remove_text_input_handler(rid);
+}
+
 }
 #endif
 

@@ -125,9 +125,9 @@ typedef enum EKeyCode
     KEY_CODE_Dot = 0xBE,       // .> key
     KEY_CODE_Slash = 0xBF,     // /? key on US standard keyboard
     KEY_CODE_Wave = 0xC0,      // ~` key on US standard keyboard
-    KEY_CODE_LBranket = 0xDB,  // [{ key on US standard keyboard
+    KEY_CODE_LBracket = 0xDB,  // [{ key on US standard keyboard
     KEY_CODE_Backslash = 0xDC, // \| key on US standard keyboard
-    KEY_CODE_RBranket = 0xDD,  // ]} key on US standard keyboard
+    KEY_CODE_RBracket = 0xDD,  // ]} key on US standard keyboard
     KEY_CODE_Quote = 0xDE,     // '" key on US standard keyboard
 } EKeyCode;
 typedef uint8_t SInputKeyCode;
