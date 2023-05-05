@@ -5,6 +5,12 @@
 namespace skr {
 namespace das {
 
+struct FileAccess;
+struct TextPrinter;
+struct Library;
+struct Program;
+struct Context;
+
 struct EnvironmentDescriptor
 {
     uint32_t _nothing_ = 0;
@@ -16,7 +22,7 @@ struct SKR_DASCRIPT_API Environment
     static void Finalize() SKR_NOEXCEPT;
 
     virtual ~Environment() SKR_NOEXCEPT;
-    // virtual class ::das::Context* get_context() SKR_NOEXCEPT = 0;
+    static Program* compile_dascript(const char8_t* name, FileAccess* faccess, TextPrinter* tout, Library* lib);
 };
 
 } // namespace das

@@ -5,6 +5,8 @@
 
 #include "SkrDAScript/text_printer.hpp"
 #include "SkrDAScript/file.hpp"
+#include "SkrDAScript/library.hpp"
+#include "SkrDAScript/program.hpp"
 #include "SkrDAScript/ctx.hpp"
 
 namespace skr {
@@ -17,7 +19,7 @@ struct TextPrinterImpl : public TextPrinter
 
     }
 
-    TextPrinter printer;
+    ::das::TextPrinter printer;
 };
 
 struct FileAccessImpl : public FileAccess
@@ -38,6 +40,21 @@ struct FileAccessImpl : public FileAccess
     ::das::FileAccessPtr fAccess;
 };
 
+struct LibraryImpl : public Library
+{
+    ::das::ModuleGroup libGroup;
+};
+
+struct ProgramImpl : public Program
+{
+    ProgramImpl(::das::ProgramPtr&& program) : program(::das::move(program)) {}
+
+    uint32_t get_ctx_stack_size() SKR_NOEXCEPT;
+    bool simulate(Context* ctx, TextPrinter* tout) SKR_NOEXCEPT;
+
+    ::das::ProgramPtr program;
+};
+
 struct ScriptContext final : public ::das::Context
 {
     using Super = ::das::Context;
@@ -50,8 +67,12 @@ struct ScriptContext final : public ::das::Context
 
 struct ContextImpl : public Context
 {
+    ContextImpl(uint32_t stackSize) : ctx(stackSize) {}
     ~ContextImpl() SKR_NOEXCEPT {}
-    class ::das::Context* get_context() SKR_NOEXCEPT override { return &ctx; }
+    // class ::das::Context* get_context() SKR_NOEXCEPT override { return &ctx; }
+
+    Function find_function(const char8_t* name) SKR_NOEXCEPT;
+    void eval(Function func) SKR_NOEXCEPT;
 
     ScriptContext ctx;
 };

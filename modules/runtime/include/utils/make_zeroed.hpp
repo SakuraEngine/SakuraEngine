@@ -2,6 +2,7 @@
 #include "platform/configure.h"
 #include <EASTL/internal/move_help.h>
 #include <EASTL/type_traits.h>
+#include <new> // operator new
 #include <cstring>
 
 template <typename T, typename... Args>
