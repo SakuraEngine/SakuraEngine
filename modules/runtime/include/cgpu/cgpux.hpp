@@ -44,12 +44,12 @@ struct CGPUXBindTable
 {
     friend struct CGPUXMergedBindTable;
 public:
-    RUNTIME_API static CGPUXBindTableId Create(CGPUDeviceId device, const struct CGPUXBindTableDescriptor* desc) SKR_NOEXCEPT;
-    RUNTIME_API static void Free(CGPUXBindTableId table) SKR_NOEXCEPT;
+    CGPU_API static CGPUXBindTableId Create(CGPUDeviceId device, const struct CGPUXBindTableDescriptor* desc) SKR_NOEXCEPT;
+    CGPU_API static void Free(CGPUXBindTableId table) SKR_NOEXCEPT;
 
-    RUNTIME_API void Update(const struct CGPUDescriptorData* datas, uint32_t count) SKR_NOEXCEPT;
-    RUNTIME_API void Bind(CGPURenderPassEncoderId encoder) const SKR_NOEXCEPT;
-    RUNTIME_API void Bind(CGPUComputePassEncoderId encoder) const SKR_NOEXCEPT;
+    CGPU_API void Update(const struct CGPUDescriptorData* datas, uint32_t count) SKR_NOEXCEPT;
+    CGPU_API void Bind(CGPURenderPassEncoderId encoder) const SKR_NOEXCEPT;
+    CGPU_API void Bind(CGPUComputePassEncoderId encoder) const SKR_NOEXCEPT;
 
     inline CGPURootSignatureId GetRootSignature() const SKR_NOEXCEPT
     {
@@ -78,12 +78,12 @@ struct CGPUXMergedBindTable
     // 1. detect overlap sets, for example, multiple tables update set-1, then we'll create a new set-1 and update it with these tables
     // 2. for no-overlap sets, we'll just copy them to the merged table
 public:
-    RUNTIME_API static CGPUXMergedBindTableId Create(CGPUDeviceId device, const struct CGPUXMergedBindTableDescriptor* desc) SKR_NOEXCEPT;
-    RUNTIME_API static void Free(CGPUXMergedBindTableId table) SKR_NOEXCEPT;
+    CGPU_API static CGPUXMergedBindTableId Create(CGPUDeviceId device, const struct CGPUXMergedBindTableDescriptor* desc) SKR_NOEXCEPT;
+    CGPU_API static void Free(CGPUXMergedBindTableId table) SKR_NOEXCEPT;
 
-    RUNTIME_API void Merge(const CGPUXBindTableId* tables, uint32_t count) SKR_NOEXCEPT;
-    RUNTIME_API void Bind(CGPURenderPassEncoderId encoder) const SKR_NOEXCEPT;
-    RUNTIME_API void Bind(CGPUComputePassEncoderId encoder) const SKR_NOEXCEPT;
+    CGPU_API void Merge(const CGPUXBindTableId* tables, uint32_t count) SKR_NOEXCEPT;
+    CGPU_API void Bind(CGPURenderPassEncoderId encoder) const SKR_NOEXCEPT;
+    CGPU_API void Bind(CGPUComputePassEncoderId encoder) const SKR_NOEXCEPT;
 
 protected:
     void mergeUpdateForTable(const CGPUXBindTableId* bind_tables, uint32_t count, uint32_t tbl_idx) SKR_NOEXCEPT;
@@ -117,76 +117,76 @@ struct hash<const void*> {
 };
 template <>
 struct hash<CGPUVertexLayout> {
-    RUNTIME_API size_t operator()(const CGPUVertexLayout& val) const;
+    CGPU_API size_t operator()(const CGPUVertexLayout& val) const;
 };
 static const CGPUVertexLayout kZeroCGPUVertexLayout = make_zeroed<CGPUVertexLayout>();
 
 template <>
 struct equal_to<CGPUVertexLayout> {
-    RUNTIME_API size_t operator()(const CGPUVertexLayout& a, const CGPUVertexLayout& b) const;
+    CGPU_API size_t operator()(const CGPUVertexLayout& a, const CGPUVertexLayout& b) const;
 };
 
 template <>
 struct equal_to<CGPUDescriptorData> {
-    RUNTIME_API size_t operator()(const CGPUDescriptorData& a, const CGPUDescriptorData& b) const;
+    CGPU_API size_t operator()(const CGPUDescriptorData& a, const CGPUDescriptorData& b) const;
 };
 
 template <>
 struct equal_to<CGPUShaderEntryDescriptor> {
-    RUNTIME_API size_t operator()(const CGPUShaderEntryDescriptor& a, const CGPUShaderEntryDescriptor& b) const;
+    CGPU_API size_t operator()(const CGPUShaderEntryDescriptor& a, const CGPUShaderEntryDescriptor& b) const;
 };
 
 template <>
 struct hash<CGPUShaderEntryDescriptor> {
-    RUNTIME_API size_t operator()(const CGPUShaderEntryDescriptor& val) const;
+    CGPU_API size_t operator()(const CGPUShaderEntryDescriptor& val) const;
 };
 static const CGPUShaderEntryDescriptor kZeroCGPUShaderEntryDescriptor = make_zeroed<CGPUShaderEntryDescriptor>();
 
 template <>
 struct equal_to<CGPUBlendStateDescriptor> {
-    RUNTIME_API size_t operator()(const CGPUBlendStateDescriptor& a, const CGPUBlendStateDescriptor& b) const;
+    CGPU_API size_t operator()(const CGPUBlendStateDescriptor& a, const CGPUBlendStateDescriptor& b) const;
 
     uint32_t count = CGPU_MAX_MRT_COUNT;
 };
 
 template <>
 struct hash<CGPUBlendStateDescriptor> {
-    RUNTIME_API size_t operator()(const CGPUBlendStateDescriptor& val) const;
+    CGPU_API size_t operator()(const CGPUBlendStateDescriptor& val) const;
 };
 static const CGPUBlendStateDescriptor kZeroCGPUBlendStateDescriptor = make_zeroed<CGPUBlendStateDescriptor>();
 
 template <>
 struct equal_to<CGPUDepthStateDesc> {
-    RUNTIME_API size_t operator()(const CGPUDepthStateDesc& a, const CGPUDepthStateDesc& b) const;
+    CGPU_API size_t operator()(const CGPUDepthStateDesc& a, const CGPUDepthStateDesc& b) const;
 };
 
 template <>
 struct hash<CGPUDepthStateDesc> {
-    RUNTIME_API size_t operator()(const CGPUDepthStateDesc& val) const;
+    CGPU_API size_t operator()(const CGPUDepthStateDesc& val) const;
 };
 static const CGPUDepthStateDesc kZeroCGPUDepthStateDesc = make_zeroed<CGPUDepthStateDesc>();
 
 template <>
 struct equal_to<CGPURasterizerStateDescriptor> {
-    RUNTIME_API size_t operator()(const CGPURasterizerStateDescriptor& a, const CGPURasterizerStateDescriptor& b) const;
+    CGPU_API size_t operator()(const CGPURasterizerStateDescriptor& a, const CGPURasterizerStateDescriptor& b) const;
 };
 
 template <>
 struct hash<CGPURasterizerStateDescriptor> {
-    RUNTIME_API size_t operator()(const CGPURasterizerStateDescriptor& val) const;
+    CGPU_API size_t operator()(const CGPURasterizerStateDescriptor& val) const;
 };
 static const CGPURasterizerStateDescriptor kZeroCGPURasterizerStateDescriptor = make_zeroed<CGPURasterizerStateDescriptor>();
 
 template <>
 struct equal_to<CGPURenderPipelineDescriptor> {
-    RUNTIME_API size_t operator()(const CGPURenderPipelineDescriptor& a, const CGPURenderPipelineDescriptor& b) const;
+    CGPU_API size_t operator()(const CGPURenderPipelineDescriptor& a, const CGPURenderPipelineDescriptor& b) const;
 };
 
 template <>
 struct hash<CGPURenderPipelineDescriptor> {
     struct ParameterBlock
     {
-        RUNTIME_API ParameterBlock(const CGPURenderPipelineDescriptor& desc);
+        CGPU_API ParameterBlock(const CGPURenderPipelineDescriptor& desc);
 
         ECGPUFormat color_formats[CGPU_MAX_MRT_COUNT];
         const uint32_t render_target_count;
@@ -198,11 +198,11 @@ struct hash<CGPURenderPipelineDescriptor> {
         const bool enable_indirect_command;
     };
 
-    RUNTIME_API size_t operator()(const CGPURenderPipelineDescriptor& a) const;
+    CGPU_API size_t operator()(const CGPURenderPipelineDescriptor& a) const;
 };
 
 template <>
 struct hash<hash<CGPURenderPipelineDescriptor>::ParameterBlock> {
-    RUNTIME_API size_t operator()(const hash<CGPURenderPipelineDescriptor>::ParameterBlock& val) const;
+    CGPU_API size_t operator()(const hash<CGPURenderPipelineDescriptor>::ParameterBlock& val) const;
 };
 } // namespace cgpux

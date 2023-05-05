@@ -17,10 +17,8 @@
 #endif
 
 #ifdef __cplusplus
-    #define CGPU_EXTERN_C extern "C"
     #define CGPU_NULL nullptr
 #else
-    #define CGPU_EXTERN_C
     #define CGPU_NULL 0
 #endif
 
@@ -67,4 +65,32 @@
 
 #if !defined(ENABLE_NSIGHT_AFTERMATH) && defined(_WIN32)
     #define ENABLE_NSIGHT_AFTERMATH
+#endif
+
+#ifndef CGPU_API
+#define CGPU_API RUNTIME_API
+#endif
+
+#ifndef CGPU_EXTERN_C
+#ifdef __cplusplus
+    #define CGPU_EXTERN_C extern "C"
+#else
+    #define CGPU_EXTERN_C
+#endif
+#endif
+
+#ifndef CGPU_EXTERN_C_BEGIN
+#ifdef __cplusplus
+    #define CGPU_EXTERN_C_BEGIN extern "C" {
+#else
+    #define CGPU_EXTERN_C_BEGIN
+#endif
+#endif
+
+#ifndef CGPU_EXTERN_C_END
+#ifdef __cplusplus
+    #define CGPU_EXTERN_C_END }
+#else
+    #define CGPU_EXTERN_C_END
+#endif
 #endif

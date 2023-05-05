@@ -1451,11 +1451,11 @@ void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUR
                 cgpu_assert((pTransBarrier->src_state != pTransBarrier->dst_state) && "D3D12 ERROR: Buffer Barrier with same src and dst state!");
 
                 pBarrier->Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-                if (pTransBarrier->d3d12.begin_ony)
+                if (pTransBarrier->d3d12_begin_only)
                 {
                     pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY;
                 }
-                else if (pTransBarrier->d3d12.end_only)
+                else if (pTransBarrier->d3d12_end_only)
                 {
                     pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
                 }
@@ -1499,11 +1499,11 @@ void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUR
 
             pBarrier->Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
             pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-            if (pTransBarrier->d3d12.begin_ony)
+            if (pTransBarrier->d3d12_begin_only)
             {
                 pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY;
             }
-            else if (pTransBarrier->d3d12.end_only)
+            else if (pTransBarrier->d3d12_end_only)
             {
                 pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
             }

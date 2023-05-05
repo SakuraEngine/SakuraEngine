@@ -16,7 +16,10 @@ _deps
 /build-wasm
 /build-wasi
 /.vs
-/.vscode
+!/.vscode
+/.vscode/*
+!/.vscode/settings.json
+!/.vscode/extensions.json
 /.xmake
 /.cache
 /out

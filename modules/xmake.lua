@@ -1,4 +1,5 @@
 includes("runtime/xmake.lua")
+includes("runtime_exporter/xmake.lua")
 includes("lightning_storage/xmake.lua")
 includes("image_coder/xmake.lua")
 includes("scene/xmake.lua")
@@ -15,6 +16,8 @@ includes("tweak/xmake.lua")
 includes("physics/xmake.lua")
 includes("gui/xmake.lua") 
 includes("netcode/xmake.lua")
+includes("daScript/xmake.lua")
+
 if has_config("build_cgpu_samples") then 
     includes("wasm/xmake.lua")
 end
