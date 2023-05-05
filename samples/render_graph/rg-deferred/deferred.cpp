@@ -550,7 +550,7 @@ int main(int argc, char* argv[])
                     0.f, 1.f);
                     cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->width, native_backbuffer->height);
                     cgpu_render_encoder_push_constants(stack.encoder, lighting_pipeline->root_signature, u8"push_constants", &lighting_data);
-                    cgpu_render_encoder_draw(stack.encoder, 6, 0);
+                    cgpu_render_encoder_draw(stack.encoder, 3, 0);
                 });
             }
             else
@@ -585,7 +585,7 @@ int main(int argc, char* argv[])
                             (float)native_backbuffer->width, (float)native_backbuffer->height,
                             0.f, 1.f);
                         cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->width, native_backbuffer->height);
-                        cgpu_render_encoder_draw(stack.encoder, 6, 0);
+                        cgpu_render_encoder_draw(stack.encoder, 3, 0);
                     });
             }
             render_graph_imgui_add_render_pass(graph, composite_buffer, CGPU_LOAD_ACTION_LOAD);
@@ -602,7 +602,7 @@ int main(int argc, char* argv[])
                         (float)native_backbuffer->width, (float)native_backbuffer->height,
                         0.f, 1.f);
                     cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->width, native_backbuffer->height);
-                    cgpu_render_encoder_draw(stack.encoder, 6, 0);
+                    cgpu_render_encoder_draw(stack.encoder, 3, 0);
                 });
             graph->add_present_pass(
                 [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
