@@ -5,7 +5,7 @@ namespace das {
 
 TextPrinter::~TextPrinter() SKR_NOEXCEPT
 {
-    
+
 }
 
 TextPrinter* TextPrinter::Create(const TextPrinterDescriptor& desc) SKR_NOEXCEPT
