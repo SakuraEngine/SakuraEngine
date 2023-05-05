@@ -1,9 +1,12 @@
 #include "SkrDAScript/ctx.hpp"
 #include "utils/log.h"
+
+#include "daScript/misc/platform.h"
 #include "daScript/simulate/simulate.h"
 
 namespace skr {
 namespace das {
+using namespace ::das;
 
 struct ScriptContext final : public ::das::Context
 {
