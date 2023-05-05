@@ -1,6 +1,18 @@
 #pragma once
-#include "SkrDAScript/module.configure.h"
-#include "platform/configure.h"
-#include "daScript/daScript.h"
+#include "SkrDAScript/env.hpp"
 
-namespace das { class Context; }
+namespace skr {
+namespace das {
+
+struct SKR_DASCRIPT_API FileAccess
+{
+    
+};
+
+struct SKR_DASCRIPT_API File
+{
+
+};
+
+} // namespace das
+} // namespace skr

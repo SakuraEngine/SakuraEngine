@@ -1,4 +1,6 @@
 #include "daScript/daScript.h"
+#include "SkrDAScript/env.hpp"
+#include "utils/make_zeroed.hpp"
 
 using namespace das;
 
@@ -9,10 +11,8 @@ def test
 )"""";
 
 int main( int, char * [] ) {
-    // request all da-script built in modules
-    NEED_ALL_DEFAULT_MODULES;
-    // Initialize modules
-    Module::Initialize();
+    auto env_desc = make_zeroed<skr::das::EnvironmentDescriptor>();
+    skr::das::Environment::Initialize(env_desc);
     // make file access, introduce string as if it was a file
     auto fAccess = make_smart<FsFileAccess>();
     auto fileInfo = make_unique<TextFileInfo>(tutorial_text, uint32_t(strlen(tutorial_text)), false);
@@ -30,7 +30,6 @@ int main( int, char * [] ) {
     if ( !function ) return -3;
     // call context function
     ctx.evalWithCatch(function, nullptr);
-    // shut-down daScript, free all memory
-    Module::Shutdown();
+    skr::das::Environment::Finalize();
     return 0;
 }

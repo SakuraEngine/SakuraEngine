@@ -183,9 +183,9 @@ struct robjects_example_application : public robjects_application_t
             {
                 for (const auto property : selected_diagnostic->get_diagnostics_properties())
                 {
-                    ImGui::Text("%s", property->get_name());
+                    ImGui::Text("%s", (const char*)property->get_name());
                     ImGui::SameLine();
-                    ImGui::Text("%s", property->get_value_as_string());
+                    ImGui::Text("%s", (const char*)property->get_value_as_string());
                 }
             }
             ImGui::EndChild();
