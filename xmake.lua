@@ -11,6 +11,7 @@ add_rules("mode.debug", "mode.release", "mode.releasedbg", "mode.asan")
 add_moduledirs("xmake/modules")
 
 includes("xmake/options.lua")
+
 --includes("xmake/toolchains/prospero.lua")
 
 set_languages(get_config("cxx_version"), get_config("c_version"))
@@ -54,7 +55,7 @@ end
 target("SkrRoot")
     set_kind("headeronly")
     -- install sdks for windows platform
-    libs_to_install = { "tracyclient" }
+    libs_to_install = {}
     if(os.host() == "windows") then
         table.insert(libs_to_install, "dstorage")
         table.insert(libs_to_install, "amdags")
@@ -65,7 +66,7 @@ target("SkrRoot")
     end
     add_rules("utils.install-libs", { libnames = libs_to_install })
     -- core deps
-    add_deps("boost", {public = true})
+    add_deps("boost", "tracyclient", {public = true})
     -- generate codegen fences
     after_load(function(target)
         import("meta_codegen")

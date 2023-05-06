@@ -27,9 +27,6 @@ auto log_locker = +[](bool isLocked, void* pMutex){
 
 void SkrRuntimeModule::on_load(int argc, char** argv)
 {
-#ifdef TRACY_ENABLE
-    tracyLibrary.load("TracyClient");
-#endif
     // set lock for log
     skr_init_mutex_recursive(&log_mutex);
     log_set_lock(log_locker, &log_mutex);

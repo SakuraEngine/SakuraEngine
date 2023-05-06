@@ -4,6 +4,8 @@
 #include "utils/io.h"
 #include "utils/log.hpp"
 
+#include "tracy/Tracy.hpp"
+
 namespace skd
 {
 namespace asset
@@ -25,21 +27,28 @@ struct skr_uncompressed_render_texture_t
 void* STextureImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context)
 {
     skr_async_ram_destination_t ioDestination = {};
-    context->AddFileDependencyAndLoad(ioService, assetPath.c_str(), ioDestination);
-
-    // try decode texture
-    const auto uncompressed_data = ioDestination.bytes;
-    const auto uncompressed_size = ioDestination.size;
-    EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)uncompressed_data, uncompressed_size);
-    if (auto coder = skr_image_coder_create_image(format))
     {
-        bool success = skr_image_coder_move_encoded(coder, uncompressed_data, uncompressed_size);
-        if (success)
-        {
-            return SkrNew<skr_uncompressed_render_texture_t>(coder);
-        }
+        ZoneScopedN("LoadFileDependencies");
+        context->AddFileDependencyAndLoad(ioService, assetPath.c_str(), ioDestination);
     }
-    sakura_free(ioDestination.bytes);
+
+    {
+        ZoneScopedN("TryDecodeTexture");
+        // try decode texture
+        const auto uncompressed_data = ioDestination.bytes;
+        const auto uncompressed_size = ioDestination.size;
+        EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)uncompressed_data, uncompressed_size);
+        if (auto coder = skr_image_coder_create_image(format))
+        {
+            bool success = skr_image_coder_move_encoded(coder, uncompressed_data, uncompressed_size);
+            if (success)
+            {
+                return SkrNew<skr_uncompressed_render_texture_t>(coder);
+            }
+        }
+        sakura_free(ioDestination.bytes);
+    }
+
     return nullptr;
 }
 
@@ -70,7 +79,11 @@ bool STextureCooker::Cook(SCookContext *ctx)
             break;
     }
     // DXT
-    const auto compressed_data = Util_DXTCompressWithImageCoder(image_coder, compressed_format);
+    skr::vector<uint8_t> compressed_data;
+    {
+        ZoneScopedN("DXTCompress");
+        compressed_data = Util_DXTCompressWithImageCoder(image_coder, compressed_format);
+    }
     // TODO: ASTC
     // write texture resource
     skr_texture_resource_t resource;
@@ -80,10 +93,15 @@ bool STextureCooker::Cook(SCookContext *ctx)
     resource.height = skr_image_coder_get_height(image_coder);
     resource.width = skr_image_coder_get_width(image_coder);
     resource.depth = 1;
-    if(!ctx->Save(resource))
-        return false;
+    {
+        ZoneScopedN("SaveToCtx");
+        if(!ctx->Save(resource))
+            return false;
+    }
     // write compressed files
     {
+        ZoneScopedN("SaveToDisk");
+
         auto extension = Util_CompressedTypeString(compressed_format);
         auto compressed_path = outputPath;
         auto compressed_pathstr = compressed_path.string();
