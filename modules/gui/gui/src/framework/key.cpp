@@ -1,4 +1,5 @@
 #include "SkrGui/framework/key.hpp"
+#include "containers/lite.hpp"
 
 namespace skr
 {
@@ -8,15 +9,7 @@ Key::Key() SKR_NOEXCEPT : _type(EKeyType::None) {}
 
 Key::~Key() SKR_NOEXCEPT
 {
-    switch (_type)
-    {
-        case EKeyType::Name:
-        case EKeyType::NameStorage:
-            _name.~TextStorage();
-            break;
-        default:
-            break;
-    }
+   clear();
 }
 
 Key::Key(const Key& other) SKR_NOEXCEPT
@@ -113,7 +106,7 @@ Key& Key::operator=(Key&& other) SKR_NOEXCEPT
             break;
         case EKeyType::Name:
         case EKeyType::NameStorage:
-            new (&_name) TextStorage(std::move(other._name));
+            _name.get() = std::move(other._name.get());
             break;
         default:
             break;
@@ -148,6 +141,33 @@ bool Key::operator==(const Key& other) const SKR_NOEXCEPT
 bool Key::operator!=(const Key& other) const SKR_NOEXCEPT
 {
     return !(*this == other);
+}
+
+void Key::clear() SKR_NOEXCEPT
+{
+     switch (_type)
+    {
+        case EKeyType::Name:
+        case EKeyType::NameStorage:
+            _name.~TextStorage();
+            break;
+        default:
+            break;
+    }
+    _type = EKeyType::None;
+}
+
+void Key::set_value(const TextStorage& value) SKR_NOEXCEPT
+{
+    clear();
+    _type = EKeyType::NameStorage;
+    _name.get() = value.get();
+}
+void Key::set_storage(const TextStorage& value) SKR_NOEXCEPT
+{
+    clear();
+    _type = EKeyType::NameStorage;
+    _name.get() = value.get();
 }
 
 } // namespace gui
