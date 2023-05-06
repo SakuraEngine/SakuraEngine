@@ -160,7 +160,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
     {
         skr::task::event_t result{nullptr};
         cooking.lazy_emplace_l(guid,
-         [&](SCookContext* ctx) { result = ctx->GetCounter(); },
+        [&](SCookContext* ctx) { result = ctx->GetCounter(); },
         [&](const CookingMap::constructor& ctor) {
             jobContext = SCookContext::Create(getIOService());
             ctor(guid, jobContext);
