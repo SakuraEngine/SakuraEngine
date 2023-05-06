@@ -10,6 +10,7 @@
 #include "tracy_concurrentqueue.h"
 #include "tracy_SPSCQueue.h"
 #include "TracyCallstack.hpp"
+#include "TracySysPower.hpp"
 #include "TracySysTime.hpp"
 #include "TracyFastVector.hpp"
 #include "../common/TracyQueue.hpp"
@@ -414,9 +415,9 @@ public:
         TracyQueuePrepare( callstack == 0 ? QueueType::MessageColor : QueueType::MessageColorCallstack );
         MemWrite( &item->messageColorFat.time, GetTime() );
         MemWrite( &item->messageColorFat.text, (uint64_t)ptr );
-        MemWrite( &item->messageColorFat.r, uint8_t( ( color       ) & 0xFF ) );
+        MemWrite( &item->messageColorFat.b, uint8_t( ( color       ) & 0xFF ) );
         MemWrite( &item->messageColorFat.g, uint8_t( ( color >> 8  ) & 0xFF ) );
-        MemWrite( &item->messageColorFat.b, uint8_t( ( color >> 16 ) & 0xFF ) );
+        MemWrite( &item->messageColorFat.r, uint8_t( ( color >> 16 ) & 0xFF ) );
         MemWrite( &item->messageColorFat.size, (uint16_t)size );
         TracyQueueCommit( messageColorFatThread );
     }
@@ -434,9 +435,9 @@ public:
         TracyQueuePrepare( callstack == 0 ? QueueType::MessageLiteralColor : QueueType::MessageLiteralColorCallstack );
         MemWrite( &item->messageColorLiteral.time, GetTime() );
         MemWrite( &item->messageColorLiteral.text, (uint64_t)txt );
-        MemWrite( &item->messageColorLiteral.r, uint8_t( ( color       ) & 0xFF ) );
+        MemWrite( &item->messageColorLiteral.b, uint8_t( ( color       ) & 0xFF ) );
         MemWrite( &item->messageColorLiteral.g, uint8_t( ( color >> 8  ) & 0xFF ) );
-        MemWrite( &item->messageColorLiteral.b, uint8_t( ( color >> 16 ) & 0xFF ) );
+        MemWrite( &item->messageColorLiteral.r, uint8_t( ( color >> 16 ) & 0xFF ) );
         TracyQueueCommit( messageColorLiteralThread );
     }
 
@@ -674,6 +675,13 @@ public:
     tracy_force_inline bool IsConnected() const
     {
         return m_isConnected.load( std::memory_order_acquire );
+    }
+
+    tracy_force_inline void SetProgramName( const char* name )
+    {
+        m_programNameLock.lock();
+        m_programName = name;
+        m_programNameLock.unlock();
     }
 
 #ifdef TRACY_ON_DEMAND
@@ -941,6 +949,10 @@ private:
     void ProcessSysTime() {}
 #endif
 
+#ifdef TRACY_HAS_SYSPOWER
+    SysPower m_sysPower;
+#endif
+
     ParameterCallback m_paramCallback;
     void* m_paramCallbackData;
     SourceContentsCallback m_sourceCallback;
@@ -959,6 +971,9 @@ private:
     } m_prevSignal;
 #endif
     bool m_crashHandlerInstalled;
+
+    const char* m_programName;
+    TracyMutex m_programNameLock;
 };
 
 }
