@@ -28,12 +28,14 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     add_deps("SkrRoot", {public = true})
     -- internal packages
     add_packages("boost-context", "parallel-hashmap", "fmt", "lua", "simdjson", {public = true, inherit = true})
+    
     -- defs & flags
     add_defines(defs_list, {public = true})
     add_ldflags(project_ldflags, {public = true, force = true})
     add_cxflags(project_cxflags, {public = true, force = true})
     add_includedirs(include_dir_list, {public = true})
     add_includedirs(private_include_dir_list, {public = false})
+
     -- add source files
     add_files(source_list)
     add_files("src/**/build.*.c", "src/**/build.*.cpp")

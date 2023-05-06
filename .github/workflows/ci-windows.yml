@@ -11,6 +11,9 @@ jobs:
         arch: [ x64 ]
         cxx: [ cxx17, cxx20 ]
         toolchain: [ msvc, clang-cl ]
+        exclude:
+          - os: windows-2019
+            cxx: cxx20
 
     name: ${{ matrix.os }} + ${{ matrix.arch }} + ${{ matrix.toolchain }} + ${{ matrix.cxx }}
     runs-on: ${{ matrix.os }}
