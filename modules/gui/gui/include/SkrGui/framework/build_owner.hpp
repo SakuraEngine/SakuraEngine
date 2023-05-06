@@ -2,18 +2,18 @@
 #include "SkrGui/framework/element.hpp"
 #include "SkrGui/framework/type_tree.hpp"
 #include "fwd_containers.hpp"
+#include "platform/configure.h"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gui, Element, skr_gui_element)
-
+SKR_DECLARE_TYPE_ID_FWD(skr::gui, GlobalKey, skr_gui_global_key)
+SKR_DECLARE_TYPE_ID_FWD(skr::gui, FocusManager, skr_gui_focus_manager)
 
 namespace skr
 {
 namespace gui
 {
-struct SKR_GUI_API BuildOwner : public SInterface
+struct SKR_GUI_API BuildOwner
 {
-    SKR_GUI_BASE_TYPE(BuildOwner, "50fd6eab-2463-4c84-8832-822b72d7ff6c")
-
     BuildOwner();
     ~BuildOwner();
 
@@ -30,7 +30,7 @@ struct SKR_GUI_API BuildOwner : public SInterface
 private:
     VectorStorage<Element*> _dirty_elements;
     bool _dirty_elememts_needs_resorting;
-    // FocusManager* _focus_manager;
+    FocusManager* _focus_manager;
     // HashMapStorage<GlobalKey*, Element*> _global_key_registry;
 };
 }
