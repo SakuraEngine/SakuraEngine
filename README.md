@@ -134,9 +134,16 @@ StateBuffer 由一系列的 StateChunk 组成，每个 StateChunk 描述了一�
 
 StateBuffer 可以大幅缓解管线和着色器组合爆炸引起的内存膨胀问题，而 PSO 反而会加剧此问题。
 
-### [MVU GUI]()
+### [MVU GUI](samples/application/ogui2/robjects)
 
 WIP...
+
+### [GUI Canvas]()
+
+GUI 的渲染树 (RenderTree) 层，有排版和渲染 Render Object 的功能。支持基本图元、纹理、颜色刷和文本段落等。
+
+![RObjects](https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/showcase/RObjects.gif)
+
 
 ### [Live2D Viewer](samples/application/live2d-viewer)
 
