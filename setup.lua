@@ -28,14 +28,12 @@ if (os.host() == "windows") then
     find_sdk.lib_from_github("nsight", "nsight-windows-x64.zip")
     find_sdk.lib_from_github("dstorage", "dstorage-windows-x64.zip")
     find_sdk.lib_from_github("SDL2", "SDL2-windows-x64.zip")
-    find_sdk.lib_from_github("tracyclient", "tracyclient-windows-x64.zip")
-    find_sdk.lib_from_github("tracyclient_d", "tracyclient_d-windows-x64.zip")
     -- tools & compilers
     find_sdk.tool_from_github("dxc", "dxc-windows-x64.zip")
     find_sdk.tool_from_github("wasm-clang", "wasm-clang-windows-x64.zip")
     find_sdk.tool_from_github("ispc", "ispc-windows-x64.zip")
     find_sdk.tool_from_github("reflector", "reflector-windows-x64.zip")
-    find_sdk.tool_from_github("tracy-gui", "tracy-gui-windows-x64.zip")
+    find_sdk.tool_from_github("tracy-gui-0.9.2", "tracy-gui-0.9.2a-windows-x64.zip")
     -- network
     find_sdk.lib_from_github("gns", "gns-windows-x64.zip")
     find_sdk.lib_from_github("gns_d", "gns_d-windows-x64.zip")
@@ -43,12 +41,10 @@ end
 
 if (os.host() == "macosx") then
     if (os.arch() == "x86_64") then
-        -- 
-        find_sdk.lib_from_github("tracyclient", "tracyclient-macosx-x86_64.zip")
         --
         find_sdk.tool_from_github("dxc", "dxc-macosx-x86_64.zip")
         find_sdk.tool_from_github("reflector", "reflector-macosx-x86_64.zip")
-        find_sdk.tool_from_github("tracy-gui", "tracy-gui-macosx-x86_64.zip")
+        find_sdk.tool_from_github("tracy-gui-0.9.2", "tracy-gui-0.9.2a-macosx-x86_64.zip")
         -- network
         find_sdk.lib_from_github("gns", "gns-macosx-x86_64.zip")
         find_sdk.lib_from_github("gns_d", "gns_d-macosx-x86_64.zip")
