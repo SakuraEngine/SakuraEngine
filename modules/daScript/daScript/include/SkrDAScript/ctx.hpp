@@ -12,6 +12,13 @@ struct ContextDescriptor
     uint32_t stack_size = 0;
 };
 
+struct SKR_DASCRIPT_API Sequence
+{
+    bool dispatch(Context* ctx) SKR_NOEXCEPT;
+
+    mutable void* iterator;
+};
+
 struct SKR_DASCRIPT_API Context
 {
     static Context* Create(const ContextDescriptor& desc) SKR_NOEXCEPT;
@@ -20,8 +27,10 @@ struct SKR_DASCRIPT_API Context
     virtual ~Context() SKR_NOEXCEPT;
 
     virtual Function find_function(const char8_t* name) SKR_NOEXCEPT = 0;
-    virtual Register eval(Function func, Register* args = nullptr) SKR_NOEXCEPT = 0;
-    virtual Register eval_with_catch(Function func, Register* args = nullptr) SKR_NOEXCEPT = 0;
+
+    virtual Register eval(Function func, Register* args = nullptr, Sequence* generated = nullptr) SKR_NOEXCEPT = 0;
+    virtual Register eval_with_catch(Function func, Register* args = nullptr, Sequence* generated = nullptr) SKR_NOEXCEPT = 0;
+
     // virtual class ::das::Context* get_context() SKR_NOEXCEPT = 0;
 };
 

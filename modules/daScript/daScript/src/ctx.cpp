@@ -22,28 +22,45 @@ void Context::Free(Context *ctx) SKR_NOEXCEPT
     SkrDelete(ctx);
 }
 
+bool Sequence::dispatch(Context* ctx) SKR_NOEXCEPT
+{
+    auto Ctx = static_cast<ContextImpl*>(ctx);
+    bool dummy = false;
+    auto& seq = *(::das::Sequence*)this;
+    return ::das::builtin_iterator_iterate(seq, &dummy, &Ctx->ctx);
+}
+
+void ScriptContext::to_out(const char* message) { SKR_LOG_INFO(message); }
+void ScriptContext::to_err(const char* message) { SKR_LOG_ERROR(message); }
+
 Function ContextImpl::find_function(const char8_t* name) SKR_NOEXCEPT
 {
     void* ptr = ctx.findFunction((const char*)name);
     return Function(ptr);
 }
 
-Register ContextImpl::eval(Function func, Register* args) SKR_NOEXCEPT
+Register ContextImpl::eval(Function func, Register* args, Sequence* generated) SKR_NOEXCEPT
 {
     static_assert(sizeof(skr_float4_t) == sizeof(vec4f), "size not match");
     static_assert(alignof(skr_float4_t) == alignof(vec4f), "align not match");
 
-    auto res = ctx.eval((const SimFunction*)func.ptr, (vec4f*)args, nullptr);
+    static_assert(sizeof(::das::Sequence) == sizeof(Sequence), "size not match");
+    static_assert(alignof(::das::Sequence) == alignof(Sequence), "align not match");
+
+    auto res = ctx.eval((const SimFunction*)func.ptr, (vec4f*)args, generated);
     auto result = *(Register*)&res;
     return result;
 }
 
-Register ContextImpl::eval_with_catch(Function func, Register* args) SKR_NOEXCEPT
+Register ContextImpl::eval_with_catch(Function func, Register* args, Sequence* generated) SKR_NOEXCEPT
 {
     static_assert(sizeof(skr_float4_t) == sizeof(vec4f), "size not match");
     static_assert(alignof(skr_float4_t) == alignof(vec4f), "align not match");
 
-    auto res = ctx.evalWithCatch((SimFunction*)func.ptr, (vec4f*)args, nullptr);
+    static_assert(sizeof(::das::Sequence) == sizeof(Sequence), "size not match");
+    static_assert(alignof(::das::Sequence) == alignof(Sequence), "align not match");
+
+    auto res = ctx.evalWithCatch((SimFunction*)func.ptr, (vec4f*)args, generated);
     return *(Register*)&res;
 }
 
