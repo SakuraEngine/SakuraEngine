@@ -19,6 +19,8 @@ struct TextPrinterImpl : public TextPrinter
 
     }
 
+    void print(const char8_t* text) SKR_NOEXCEPT;
+
     ::das::TextPrinter printer;
 };
 
@@ -72,7 +74,8 @@ struct ContextImpl : public Context
     // class ::das::Context* get_context() SKR_NOEXCEPT override { return &ctx; }
 
     Function find_function(const char8_t* name) SKR_NOEXCEPT;
-    void eval(Function func) SKR_NOEXCEPT;
+    Register eval(Function func, Register* args = nullptr) SKR_NOEXCEPT;
+    Register eval_with_catch(Function func, Register* args = nullptr) SKR_NOEXCEPT;
 
     ScriptContext ctx;
 };

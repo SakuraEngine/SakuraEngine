@@ -1,5 +1,6 @@
 #include "SkrDAScript/daScript.hpp"
 #include "utils/make_zeroed.hpp"
+#include "containers/text.hpp"
 
 using namespace das;
 
@@ -7,6 +8,7 @@ const char8_t* tutorial_text = u8R""""(
 [export]
 def test
     print("this is nano tutorial\n")
+    return 12
 )"""";
 
 int main( int, char * [] ) {
@@ -16,11 +18,16 @@ int main( int, char * [] ) {
     auto faccess_desc = make_zeroed<skr::das::FileAccessDescriptor>();
     auto faccess = skr::das::FileAccess::Create(faccess_desc);
     faccess->set_text_file(u8"dummy.das", tutorial_text, uint32_t(strlen((const char*)tutorial_text)));
-    // compile script
+    
+    // output stream for all compiler messages (stdout. for stringstream use TextWriter)
     auto tout_desc = make_zeroed<skr::das::TextPrinterDescriptor>();
     auto tout = skr::das::TextPrinter::Create(tout_desc);
+
+    // module group for compiled program
     auto lib_desc = make_zeroed<skr::das::LibraryDescriptor>();
     auto library = skr::das::Library::Create(lib_desc);
+
+    // compile script
     auto program = skr::das::Environment::compile_dascript(u8"dummy.das", faccess, tout, library);
     if (!program) return -1;
     
@@ -35,7 +42,9 @@ int main( int, char * [] ) {
     if ( !function ) return -3;
 
     // call context function
-    ctx->eval(function);
+    const auto res = ctx->eval(function);
+    const auto message = skr::text::format(u8"{}\n", res.load<int32_t>());
+    tout->print(message.u8_str());
 
     skr::das::Context::Free(ctx);
     skr::das::Program::Free(program);

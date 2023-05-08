@@ -1,6 +1,5 @@
 #pragma once
-#include "SkrDAScript/module.configure.h"
-#include "platform/configure.h"
+#include "SkrDAScript/reg.hpp"
 
 namespace skr {
 namespace das {
@@ -20,6 +19,7 @@ struct SKR_DASCRIPT_API Environment
 {
     static void Initialize(const EnvironmentDescriptor& desc) SKR_NOEXCEPT;
     static void Finalize() SKR_NOEXCEPT;
+    static const char8_t* GetRootDir() SKR_NOEXCEPT;
 
     virtual ~Environment() SKR_NOEXCEPT;
     static Program* compile_dascript(const char8_t* name, FileAccess* faccess, TextPrinter* tout, Library* lib);
