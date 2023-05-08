@@ -21,15 +21,23 @@ void Environment::Finalize() SKR_NOEXCEPT
     ::das::Module::Shutdown();
 }
 
-Program* Environment::compile_dascript(const char8_t* name, FileAccess* faccess, TextPrinter* tout, Library* lib)
+Program* Environment::compile_dascript(const char8_t* name, FileAccess* faccess, TextPrinter* tout, Library* lib, const CompileDescriptor* desc)
 {
+    const bool export_all = false;
+    auto CodeOfPolicies = ::das::CodeOfPolicies();
+    if (desc)
+    {
+        CodeOfPolicies.aot = desc->aot;
+    }
     auto fAcess = static_cast<FileAccessImpl*>(faccess);
     auto tOut = static_cast<TextPrinterImpl*>(tout);
     auto Lib = static_cast<LibraryImpl*>(lib);
+    
     auto program = compileDaScript(
         (const char*)name, 
         fAcess->fAccess, tOut->printer,
-        Lib->libGroup);
+        Lib->libGroup,
+        export_all, CodeOfPolicies);
     if ( program->failed() ) {
         // if compilation failed, report errors
         tOut->printer << "failed to compile\n";
@@ -39,6 +47,12 @@ Program* Environment::compile_dascript(const char8_t* name, FileAccess* faccess,
         return nullptr;
     }
     return SkrNew<ProgramImpl>(::das::move(program));
+}
+
+const skr::text::text Environment::GetRootDir() SKR_NOEXCEPT
+{
+    const auto r = ::das::getDasRoot();
+    return skr::text::text((const char8_t*)r.c_str());
 }
 
 } // namespace das

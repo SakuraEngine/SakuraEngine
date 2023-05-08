@@ -63,8 +63,8 @@ struct ScriptContext final : public ::das::Context
     ScriptContext(uint32_t stackSize) : Super(stackSize) {}
     ScriptContext(Super& ctx, uint32_t category) : Super(ctx, category) {}
 
-    void to_out(const char* message) { SKR_LOG_INFO(message); }
-    void to_err(const char* message) { SKR_LOG_ERROR(message); }
+    void to_out(const char* message);
+    void to_err(const char* message); 
 };
 
 struct ContextImpl : public Context
@@ -74,8 +74,8 @@ struct ContextImpl : public Context
     // class ::das::Context* get_context() SKR_NOEXCEPT override { return &ctx; }
 
     Function find_function(const char8_t* name) SKR_NOEXCEPT;
-    Register eval(Function func, Register* args = nullptr) SKR_NOEXCEPT;
-    Register eval_with_catch(Function func, Register* args = nullptr) SKR_NOEXCEPT;
+    Register eval(Function func, Register* args = nullptr, Sequence* generated = nullptr) SKR_NOEXCEPT;
+    Register eval_with_catch(Function func, Register* args = nullptr, Sequence* generated = nullptr) SKR_NOEXCEPT;
 
     ScriptContext ctx;
 };

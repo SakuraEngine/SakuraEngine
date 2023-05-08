@@ -22,7 +22,17 @@ bool ProgramImpl::simulate(Context* ctx, TextPrinter* tout) SKR_NOEXCEPT
 {
     auto Ctx = static_cast<ContextImpl*>(ctx);
     auto TOut = static_cast<TextPrinterImpl*>(tout);
-    return program->simulate(Ctx->ctx, TOut->printer);
+    if (!program->simulate(Ctx->ctx, TOut->printer))
+    {
+        Ctx->ctx.to_err("Failed to simulate\n");        
+        for ( auto & err : program->errors ) {
+            Ctx->ctx.to_err(
+                reportError(err.at, err.what, err.extra, err.fixme, err.cerr).c_str()
+            );
+        }
+        return false;
+    }
+    return true;
 }
 
 } // namespace das
