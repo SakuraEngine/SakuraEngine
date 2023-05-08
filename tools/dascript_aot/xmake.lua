@@ -4,6 +4,8 @@ shared_module("SkrDAScriptAOTPlugin", "SKR_DASCRIPT_AOT_PLUGIN", engine_version)
     add_includedirs("aot_plugin/src", {public=false})
     public_dependency("SkrToolCore", engine_version)
     add_files("aot_plugin/src/**.cpp")
+    -- TODO: remove this dependency
+    add_packages("daScript", { public = false })
 
 
 executable_module("SkrDAScriptAOTCompiler", "SKR_RESOURCE_COMPILER", engine_version)
@@ -12,3 +14,5 @@ executable_module("SkrDAScriptAOTCompiler", "SKR_RESOURCE_COMPILER", engine_vers
     public_dependency("SkrDAScript", engine_version)
     public_dependency("SkrDAScriptAOTPlugin", engine_version)
     add_files("aot_cc/src/**.cpp")
+    -- TODO: remove this dependency
+    add_packages("daScript", { public = false })

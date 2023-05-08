@@ -5,14 +5,14 @@ namespace skr {
 namespace das {
 
 struct ContextImpl;
-struct SKR_DASCRIPT_API Function
+struct SKR_DASCRIPT_API FunctionId
 {
     friend struct skr::das::Context;
     friend struct skr::das::ContextImpl;
-    ~Function() SKR_NOEXCEPT;
+    ~FunctionId() SKR_NOEXCEPT;
     operator bool() const { return ptr; }
 protected:
-    Function(void* ptr) SKR_NOEXCEPT;
+    FunctionId(void* ptr) SKR_NOEXCEPT;
     void* ptr = nullptr;
 };
 
