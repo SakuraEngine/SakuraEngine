@@ -8,18 +8,18 @@ namespace das {
 
 struct SKR_DASCRIPT_API Register 
 {
-    template<typename T> static Register store(T i32);
-    template<typename T> static T load(Register r);
+    template<typename T> static Register Store(T v);
+    template<typename T> static T Load(Register r);
 
-    template<typename T> T load() const { return Register::load<T>(*this); }
-    template<typename T> void store(T v) { *this = Register::store<T>(v); }
+    template<typename T> T load() const { return Register::Load<T>(*this); }
+    template<typename T> void store(T v) { *this = Register::Store<T>(v); }
 
 protected:
     skr_float4_t _v;
 };
 
 #define DECL_REG_LS(type) \
-template<> SKR_DASCRIPT_API type Register::load<type>(Register r); template<> SKR_DASCRIPT_API Register Register::store<type>(type v)
+template<> SKR_DASCRIPT_API type Register::Load<type>(Register r); template<> SKR_DASCRIPT_API Register Register::Store<type>(type v)
 
 DECL_REG_LS(float);
 DECL_REG_LS(double);
