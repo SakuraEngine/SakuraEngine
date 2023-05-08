@@ -20,11 +20,14 @@ target("daSTestAOT")
     add_files("daSTestAOT/**.cpp")
     
 -- Annotation
+--[[
 target("daSTestAnnotationCompiler")
     set_kind("binary")
     set_group("05.tests/daS")
     public_dependency("SkrDAScript", engine_version)
     add_files("daSTestAnnotation/annotation_compiler.cpp")
+    add_packages("daScript", { public = false })
+]]--
 
 target("daSTestAnnotation")
     set_kind("binary")

@@ -8,6 +8,8 @@
 #include "SkrDAScript/library.hpp"
 #include "SkrDAScript/program.hpp"
 #include "SkrDAScript/ctx.hpp"
+#include "SkrDAScript/annotation.hpp"
+#include "SkrDAScript/module.hpp"
 
 namespace skr {
 namespace das {
@@ -44,6 +46,11 @@ struct FileAccessImpl : public FileAccess
 
 struct LibraryImpl : public Library
 {
+    LibraryImpl(const LibraryDescriptor& desc) SKR_NOEXCEPT;
+    
+    void add_module(Module* mod) SKR_NOEXCEPT;
+    void add_builtin_module() SKR_NOEXCEPT;
+
     ::das::ModuleGroup libGroup;
 };
 
@@ -73,11 +80,83 @@ struct ContextImpl : public Context
     ~ContextImpl() SKR_NOEXCEPT {}
     // class ::das::Context* get_context() SKR_NOEXCEPT override { return &ctx; }
 
-    Function find_function(const char8_t* name) SKR_NOEXCEPT;
-    Register eval(Function func, Register* args = nullptr, Sequence* generated = nullptr) SKR_NOEXCEPT;
-    Register eval_with_catch(Function func, Register* args = nullptr, Sequence* generated = nullptr) SKR_NOEXCEPT;
+    FunctionId find_function(const char8_t* name) SKR_NOEXCEPT;
+    Register eval(FunctionId func, Register* args = nullptr, Sequence* generated = nullptr) SKR_NOEXCEPT;
+    Register eval_with_catch(FunctionId func, Register* args = nullptr, Sequence* generated = nullptr) SKR_NOEXCEPT;
 
     ScriptContext ctx;
+};
+
+struct StructureAnnotationImpl : public StructureAnnotation
+{
+    StructureAnnotationImpl(const char8_t* name, const char8_t* cppname, Library* library) SKR_NOEXCEPT;
+    void* get_ptrptr() SKR_NOEXCEPT { return &annotation; }
+
+    void add_field(const char8_t* na, const char8_t* cppna, uint32_t offset, TypeDecl* typedecl) SKR_NOEXCEPT;
+    void add_field(const char8_t* na, const char8_t* cppna, uint32_t offset, EBuiltinType type) SKR_NOEXCEPT;
+
+    struct Structure : public ::das::BasicStructureAnnotation
+    {
+        Structure(const char* n, const char* cpn, ::das::ModuleLibrary* l) : BasicStructureAnnotation(n, cpn, l) {}
+    
+        // TODO: REMOVE THESE HACKS
+        virtual size_t getSizeOf() const override { return sizeof(uint32_t); }
+        virtual size_t getAlignOf() const override { return alignof(uint32_t); }
+        virtual bool isSmart() const override { return false; }
+        virtual bool hasNonTrivialCtor() const override 
+        {
+            return !::das::is_trivially_constructible<uint32_t>::value;
+        }
+        virtual bool hasNonTrivialDtor() const override 
+        {
+            return !::das::is_trivially_destructible<uint32_t>::value;
+        }
+        virtual bool hasNonTrivialCopy() const override 
+        {
+            return  !::das::is_trivially_copyable<uint32_t>::value ||
+                    !::das::is_trivially_copy_constructible<uint32_t>::value;
+        }
+
+        virtual bool isPod() const override { return true; }
+        virtual bool canClone() const override { return true; }
+        virtual bool isRawPod() const override { return false; }
+        
+        virtual bool canNew() const override { return true; }
+        virtual bool canDeletePtr() const override { return true; }
+        virtual ::das::SimNode * simulateGetNew ( ::das::Context & context, const ::das::LineInfo & at ) const override 
+        {
+            return context.code->makeNode<::das::SimNode_NewHandle<uint32_t, false>>(at);
+        }
+        virtual ::das::SimNode * simulateDeletePtr ( ::das::Context & context, const ::das::LineInfo & at, ::das::SimNode * sube, uint32_t count ) const override 
+        {
+            return context.code->makeNode<::das::SimNode_DeleteHandlePtr<uint32_t, false>>(at,sube,count);
+        }
+        // END HACKS
+    };
+
+    LibraryImpl* Lib;
+    ::das::smart_ptr<Structure> annotation;
+};
+
+struct TypeDeclImpl : public TypeDecl
+{
+    TypeDeclImpl(Library* lib, const char8_t* name) SKR_NOEXCEPT;
+
+    ::das::smart_ptr<::das::TypeDecl> decl;
+};
+
+struct ModuleImpl : public Module
+{
+    ModuleImpl(const char8_t* name);
+    void add_annotation(Annotation* annotation) SKR_NOEXCEPT;
+
+    class ModuleSkr : public ::das::Module {
+    public:
+        ModuleSkr(const char8_t* n = u8"") : ::das::Module((const char*)n) {}
+        virtual ::das::ModuleAotType aotRequire ( ::das::TextWriter & ) const { return ::das::ModuleAotType::cpp; }
+    };
+
+    ModuleSkr* mod;
 };
 
 } // namespace das

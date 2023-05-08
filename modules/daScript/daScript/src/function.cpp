@@ -4,13 +4,13 @@
 namespace skr {
 namespace das {
 
-Function::Function(void* ptr) SKR_NOEXCEPT
+FunctionId::FunctionId(void* ptr) SKR_NOEXCEPT
     : ptr(ptr)
 {
 
 }
 
-Function::~Function() SKR_NOEXCEPT
+FunctionId::~FunctionId() SKR_NOEXCEPT
 {
     
 }

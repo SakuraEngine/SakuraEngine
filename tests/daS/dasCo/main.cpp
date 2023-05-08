@@ -61,6 +61,8 @@ int tutorial () {
 int main( int argc, char **argv ) {
     // Initialize modules
     auto env_desc = make_zeroed<skr::das::EnvironmentDescriptor>();
+    env_desc.argc = argc;
+    env_desc.argv = argv;
     skr::das::Environment::Initialize(env_desc);
     // run the tutorial
     auto ret = tutorial();

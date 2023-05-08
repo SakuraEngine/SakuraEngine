@@ -1,6 +1,11 @@
 #include "types.hpp"
 
-inline static void __das_initialize() { NEED_ALL_DEFAULT_MODULES; }
+inline static void __das_initialize() 
+{ 
+    NEED_ALL_DEFAULT_MODULES; 
+    NEED_MODULE(Module_UriParser)
+    NEED_MODULE(Module_JobQue)
+}
 
 namespace skr {
 namespace das {
@@ -13,6 +18,10 @@ Environment::~Environment() SKR_NOEXCEPT
 void Environment::Initialize(const EnvironmentDescriptor &desc) SKR_NOEXCEPT
 {
     ::__das_initialize();
+    if (desc.argc && desc.argv)
+    {
+        ::das::setCommandLineArguments(desc.argc, desc.argv);
+    }
     ::das::Module::Initialize(); 
 }
 

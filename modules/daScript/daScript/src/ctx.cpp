@@ -30,16 +30,16 @@ bool Sequence::dispatch(Context* ctx) SKR_NOEXCEPT
     return ::das::builtin_iterator_iterate(seq, &dummy, &Ctx->ctx);
 }
 
-void ScriptContext::to_out(const char* message) { SKR_LOG_INFO(message); }
-void ScriptContext::to_err(const char* message) { SKR_LOG_ERROR(message); }
+void ScriptContext::to_out(const char* message) { log_log(SKR_LOG_LEVEL_INFO, this->name.c_str(), 0, message); }
+void ScriptContext::to_err(const char* message) { log_log(SKR_LOG_LEVEL_ERROR, this->name.c_str(), 0, message); }
 
-Function ContextImpl::find_function(const char8_t* name) SKR_NOEXCEPT
+FunctionId ContextImpl::find_function(const char8_t* name) SKR_NOEXCEPT
 {
-    void* ptr = ctx.findFunction((const char*)name);
-    return Function(ptr);
+    ::das::SimFunction* ptr = ctx.findFunction((const char*)name);
+    return FunctionId(ptr);
 }
 
-Register ContextImpl::eval(Function func, Register* args, Sequence* generated) SKR_NOEXCEPT
+Register ContextImpl::eval(FunctionId func, Register* args, Sequence* generated) SKR_NOEXCEPT
 {
     static_assert(sizeof(skr_float4_t) == sizeof(vec4f), "size not match");
     static_assert(alignof(skr_float4_t) == alignof(vec4f), "align not match");
@@ -52,7 +52,7 @@ Register ContextImpl::eval(Function func, Register* args, Sequence* generated) S
     return result;
 }
 
-Register ContextImpl::eval_with_catch(Function func, Register* args, Sequence* generated) SKR_NOEXCEPT
+Register ContextImpl::eval_with_catch(FunctionId func, Register* args, Sequence* generated) SKR_NOEXCEPT
 {
     static_assert(sizeof(skr_float4_t) == sizeof(vec4f), "size not match");
     static_assert(alignof(skr_float4_t) == alignof(vec4f), "align not match");

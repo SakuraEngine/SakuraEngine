@@ -11,8 +11,10 @@ def test
     return 12
 )"""";
 
-int main( int, char * [] ) {
+int main(int argc, char** argv) {
     auto env_desc = make_zeroed<skr::das::EnvironmentDescriptor>();
+    env_desc.argc = argc;
+    env_desc.argv = argv;
     skr::das::Environment::Initialize(env_desc);
     // make file access, introduce string as if it was a file
     auto faccess_desc = make_zeroed<skr::das::FileAccessDescriptor>();
