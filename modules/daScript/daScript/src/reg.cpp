@@ -4,8 +4,8 @@ namespace skr {
 namespace das {
 
 #define IMPL_REG_LS(type) \
-template<> type Register::load<type>(Register r) { const vec4f& v = *(vec4f*)&r._v; return ::das::cast<type>::to(v); } \
-template<> Register Register::store<type>(type v) { const auto r = ::das::cast<type>::from(v); return *(const Register*)&r; }
+template<> type Register::Load<type>(Register r) { const vec4f& v = *(vec4f*)&r._v; return ::das::cast<type>::to(v); } \
+template<> Register Register::Store<type>(type v) { const auto r = ::das::cast<type>::from(v); return *(const Register*)&r; }
 
 IMPL_REG_LS(float);
 IMPL_REG_LS(double);
@@ -24,14 +24,14 @@ IMPL_REG_LS(uint16_t);
 IMPL_REG_LS(uint32_t);
 IMPL_REG_LS(uint64_t);
 
-template<> skr_float4_t Register::load<skr_float4_t>(Register r) 
+template<> skr_float4_t Register::Load<skr_float4_t>(Register r) 
 { 
     const vec4f& v = *(vec4f*)&r._v; 
     const auto loaded = ::das::cast<vec4f>::to(v); 
     return *(skr_float4_t*)&loaded;
 } 
 
-template<> Register Register::store<skr_float4_t>(skr_float4_t v) 
+template<> Register Register::Store<skr_float4_t>(skr_float4_t v) 
 { 
     const auto& value = *(const vec4f*)&v;
     const auto r = ::das::cast<vec4f>::from(value);
