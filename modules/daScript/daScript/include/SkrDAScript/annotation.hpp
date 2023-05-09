@@ -18,9 +18,44 @@ struct SKR_DASCRIPT_API TypeAnnotation : public Annotation
 
 enum class EBuiltinType : uint32_t
 {
+    BITFIELD,
     UINT8,
+    INT8,
     UINT16,
+    INT16,
     UINT32,
+    INT32,
+    UINT64,
+    INT64,
+    FLOAT,
+    DOUBLE,
+    VOID,
+    PTR,
+    ENUMERATION,
+    ENUMERATION8,
+    ENUMERATION16,
+    FLOAT2,
+    FLOAT3,
+    FLOAT4,
+    UINT2,
+    INT2,
+    UINT3,
+    INT3,
+    UINT4,
+    INT4,
+
+    URANGE,
+    RANGE,
+    URANGE64,
+    RANGE64,
+
+    ARRAY,
+    TABLE,
+    BLOCK,
+    FUNCTION,
+    LAMBDA,
+    TUPLE,
+    VARIANT
 };
 
 struct SKR_DASCRIPT_API StructureAnnotation : public TypeAnnotation

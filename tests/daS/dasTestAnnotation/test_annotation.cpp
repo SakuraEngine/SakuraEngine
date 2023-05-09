@@ -60,10 +60,13 @@ int main( int argc, char **argv )
     env_desc.argc = argc;
     env_desc.argv = argv;
     skr::das::Environment::Initialize(env_desc);
-    // add custom annotation
-    ModuleRegister_TestAnnotation regMod = {}; (void)regMod;
-    // run the tutorial
-    auto ret = tutorial();
+    int ret = 0;
+    {
+        // add custom annotation
+        ModuleRegister_TestAnnotation regMod = {}; (void)regMod;
+        // run the tutorial
+        ret = tutorial();
+    }
     // shut-down daScript, free all memory
     skr::das::Environment::Finalize();
     return ret;
