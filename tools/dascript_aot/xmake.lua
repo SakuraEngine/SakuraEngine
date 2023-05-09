@@ -1,6 +1,6 @@
 shared_module("SkrDAScriptAOTPlugin", "SKR_DASCRIPT_AOT_PLUGIN", engine_version)
     set_group("02.tools")
-    add_includedirs("aot_plugin/include", {public=true})
+    -- add_includedirs("aot_plugin/include", {public=true})
     add_includedirs("aot_plugin/src", {public=false})
     public_dependency("SkrToolCore", engine_version)
     add_files("aot_plugin/src/**.cpp")

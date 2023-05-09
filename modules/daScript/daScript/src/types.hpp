@@ -116,22 +116,15 @@ struct StructureAnnotationImpl : public StructureAnnotation
             return  !::das::is_trivially_copyable<uint32_t>::value ||
                     !::das::is_trivially_copy_constructible<uint32_t>::value;
         }
-
         virtual bool isPod() const override { return true; }
         virtual bool canClone() const override { return true; }
         virtual bool isRawPod() const override { return false; }
-        
         virtual bool canNew() const override { return true; }
         virtual bool canDeletePtr() const override { return true; }
-        virtual ::das::SimNode * simulateGetNew ( ::das::Context & context, const ::das::LineInfo & at ) const override 
-        {
-            return context.code->makeNode<::das::SimNode_NewHandle<uint32_t, false>>(at);
-        }
-        virtual ::das::SimNode * simulateDeletePtr ( ::das::Context & context, const ::das::LineInfo & at, ::das::SimNode * sube, uint32_t count ) const override 
-        {
-            return context.code->makeNode<::das::SimNode_DeleteHandlePtr<uint32_t, false>>(at,sube,count);
-        }
         // END HACKS
+
+        virtual ::das::SimNode* simulateGetNew(::das::Context& context, const ::das::LineInfo& at ) const override;
+        virtual ::das::SimNode* simulateDeletePtr(::das::Context& context, const ::das::LineInfo& at, ::das::SimNode* sube, uint32_t count) const override;
     };
 
     LibraryImpl* Lib;
