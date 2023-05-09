@@ -8,12 +8,19 @@ namespace
 using namespace ::das;
 
 struct SimNode_Allocate : ::das::SimNode {
+    using SType = skr::das::StructureAnnotationImpl::Structure;
     DAS_PTR_NODE;
-    SimNode_Allocate(const ::das::LineInfo& a, uint64_t sz) : SimNode(a), sz(sz) {}
+    SimNode_Allocate(const ::das::LineInfo& a, const SType* t) 
+        : SimNode(a), type(t) {}
+
     __forceinline char* compute (::das::Context & context) 
     {
         DAS_PROFILE_NODE
-        auto res = sakura_malloc(sz);
+        const auto alignment = type->getAlignOf();
+        auto res = sakura_malloc_aligned(
+            type->getSizeOf(), alignment ? alignment : 1
+        );
+        type->initializer(res);
 #if DAS_ENABLE_SMART_PTR_TRACKING
         Context::sptrAllocations.push_back(res);
 #endif
@@ -23,22 +30,28 @@ struct SimNode_Allocate : ::das::SimNode {
     virtual ::das::SimNode* visit(::das::SimVisitor& vis) override
     {
         V_BEGIN();
-        vis.op("NewHandle", sizeof(uint32_t), ::das::typeName<uint32_t>::name());
+        vis.op("NewHandle", type->getSizeOf(), type->name);
         V_END();
     }
 
-    uint64_t sz;
+    const SType* type;
 };
 
 struct SimNode_Deallocate : ::das::SimNode_Delete {
-    SimNode_Deallocate (const LineInfo& a, SimNode* s, uint32_t t) : SimNode_Delete(a,s,t) {}
+    using SType = skr::das::StructureAnnotationImpl::Structure;
+    SimNode_Deallocate (const LineInfo& a, SimNode* s, uint32_t t, const SType* type) 
+        : SimNode_Delete(a,s,t), type(type) {}
+        
     virtual vec4f DAS_EVAL_ABI eval ( Context & context ) override {
         DAS_PROFILE_NODE
         auto pH = (void**)subexpr->evalPtr(context);
-        for ( uint32_t i=0, is=total; i!=is; ++i, pH++ ) {
+        for (uint32_t i=0, is=total; i!=is; ++i, pH++) 
+        {
             if (*pH) 
             {
-                sakura_free(*pH);
+                const auto alignment = type->getAlignOf();
+                type->finalizer(*pH);
+                sakura_free_aligned(*pH, alignment ? alignment : 1);
                 *pH = nullptr;
             }
         }
@@ -48,13 +61,13 @@ struct SimNode_Deallocate : ::das::SimNode_Delete {
     virtual ::das::SimNode* visit(::das::SimVisitor& vis) override
     {
         V_BEGIN();
-        vis.op("DeleteHandlePtr", sizeof(uint32_t), ::das::typeName<uint32_t>::name());
+        vis.op("DeleteHandlePtr", type->getSizeOf(), type->name);
         V_SUB(subexpr);
         V_ARG(total);
         V_END();
     }
 
-    uint64_t sz;
+    const SType* type;
 };
 }
 
@@ -66,9 +79,9 @@ namespace das {
 Annotation::~Annotation() SKR_NOEXCEPT {}
 TypeAnnotation::~TypeAnnotation() SKR_NOEXCEPT {}
 
-StructureAnnotation* StructureAnnotation::Create(const char8_t* name, const char8_t* cppname, Library* library) SKR_NOEXCEPT
+StructureAnnotation* StructureAnnotation::Create(Library* library, const StructureAnnotationDescriptor& desc) SKR_NOEXCEPT
 {
-    return SkrNew<StructureAnnotationImpl>(name, cppname, library);
+    return SkrNew<StructureAnnotationImpl>(library, desc);
 }
 
 void StructureAnnotation::Free(StructureAnnotation* annotation) SKR_NOEXCEPT
@@ -79,25 +92,23 @@ void StructureAnnotation::Free(StructureAnnotation* annotation) SKR_NOEXCEPT
 StructureAnnotation::~StructureAnnotation() SKR_NOEXCEPT { }
 
 
-StructureAnnotationImpl::StructureAnnotationImpl(
-    const char8_t* name, const char8_t* cppname, Library* library) SKR_NOEXCEPT
+StructureAnnotationImpl::StructureAnnotationImpl(Library* library, const StructureAnnotationDescriptor& desc) SKR_NOEXCEPT
     : Lib(static_cast<LibraryImpl*>(library)), 
-      annotation(::das::make_smart<Structure>(
-        (const char*)name, (const char*)cppname, 
-        &static_cast<LibraryImpl*>(library)->libGroup)
-    )
+      annotation(::das::make_smart<Structure>(&static_cast<LibraryImpl*>(library)->libGroup, desc))
 {
 
 }
 
-void StructureAnnotationImpl::add_field(const char8_t* na, const char8_t* cppna, uint32_t offset, TypeDecl* typedecl) SKR_NOEXCEPT
+void StructureAnnotationImpl::add_field(uint32_t offset, TypeDecl* typedecl, const char8_t* na, const char8_t* cppna) SKR_NOEXCEPT
 {
+    cppna = cppna ? cppna : na;
     auto Decl = static_cast<TypeDeclImpl*>(typedecl);
     annotation->addFieldEx((const char*)na, (const char*)cppna, offset, Decl->decl);
 }
 
-void StructureAnnotationImpl::add_field(const char8_t* na, const char8_t* cppna, uint32_t offset, EBuiltinType type) SKR_NOEXCEPT
+void StructureAnnotationImpl::add_field(uint32_t offset, EBuiltinType type, const char8_t* na, const char8_t* cppna) SKR_NOEXCEPT
 {
+    cppna = cppna ? cppna : na;
     ::das::TypeDeclPtr t = nullptr;
     switch (type)
     {
@@ -145,28 +156,14 @@ void StructureAnnotationImpl::add_field(const char8_t* na, const char8_t* cppna,
 ::das::SimNode * StructureAnnotationImpl::Structure::simulateGetNew(
     ::das::Context& context, const ::das::LineInfo& at) const
 {
-    return context.code->makeNode<::das::SimNode_NewHandle<uint32_t, false>>(at);
+    return context.code->makeNode<::SimNode_Allocate>(at, this);
 }
 
 ::das::SimNode* StructureAnnotationImpl::Structure::simulateDeletePtr(
     ::das::Context& context, const ::das::LineInfo& at, ::das::SimNode* sube, uint32_t count) const
 {
-    return context.code->makeNode<::das::SimNode_DeleteHandlePtr<uint32_t, false>>(at,sube,count);
+    return context.code->makeNode<::SimNode_Deallocate>(at, sube, count, this);
 }
-
-/*
-::das::SimNode * StructureAnnotationImpl::Structure::simulateGetNew(
-    ::das::Context& context, const ::das::LineInfo& at) const
-{
-    return context.code->makeNode<::SimNode_Allocate>(at, sizeof(uint32_t));
-}
-
-::das::SimNode* StructureAnnotationImpl::Structure::simulateDeletePtr(
-    ::das::Context& context, const ::das::LineInfo& at, ::das::SimNode* sube, uint32_t count) const
-{
-    return context.code->makeNode<::SimNode_Deallocate>(at,sube,count);
-}
-*/
 
 } // namespace das
 } // namespace skr

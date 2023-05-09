@@ -1,8 +1,10 @@
 #pragma once
 #include "SkrDAScript/daScript.hpp"
+#include "utils/log.h"
 
 // example type, which we are going to expose to das
-struct Color {
+struct Color 
+{
     uint8_t r, g, b, a;
     float luminance() const { return 0.2126f*r + 0.7152f*g + 0.0722f*b; }
 };
@@ -11,24 +13,24 @@ struct AnnotationRegister_Color
 {
     AnnotationRegister_Color(skr::das::Library* lib)
     {
-        annotation = skr::das::StructureAnnotation::Create(u8"Color", u8"Color", lib);
-        colorType = skr::das::TypeDecl::Create<Color>(lib, u8"Color");
-        annotation->add_field(u8"r", u8"r", offsetof(Color, r), skr::das::EBuiltinType::UINT8);
-        annotation->add_field(u8"g", u8"g", offsetof(Color, g), skr::das::EBuiltinType::UINT8);
-        annotation->add_field(u8"b", u8"b", offsetof(Color, b), skr::das::EBuiltinType::UINT8);
-        annotation->add_field(u8"a", u8"a", offsetof(Color, a), skr::das::EBuiltinType::UINT8);
+        using namespace skr::das;
+
+        colorAnnotation = StructureAnnotation::Create<Color>(lib, u8"Color");
+        colorAnnotation->add_field(offsetof(Color, r), EBuiltinType::UINT8, u8"r");
+        colorAnnotation->add_field(offsetof(Color, g), EBuiltinType::UINT8, u8"g");
+        colorAnnotation->add_field(offsetof(Color, b), EBuiltinType::UINT8, u8"b");
+        colorAnnotation->add_field(offsetof(Color, a), EBuiltinType::UINT8, u8"a");
+        // colorType = skr::das::TypeDecl::Create<Color>(lib, u8"Color");
     }
 
     ~AnnotationRegister_Color()
     {
-        skr::das::TypeDecl::Free(colorType);
-        skr::das::TypeDecl::Free(u8Type);
-        skr::das::StructureAnnotation::Free(annotation);
+        //skr::das::TypeDecl::Free(colorType);
+        skr::das::StructureAnnotation::Free(colorAnnotation);
     }
 
-    skr::das::StructureAnnotation* annotation = nullptr;
-    skr::das::TypeDecl* u8Type = nullptr;
-    skr::das::TypeDecl* colorType = nullptr;
+    skr::das::StructureAnnotation* colorAnnotation = nullptr;
+   //  skr::das::TypeDecl* colorType = nullptr;
 };
 
 // custom function, which takes type as an input, as well as returns it
@@ -44,7 +46,7 @@ struct ModuleRegister_TestAnnotation
           mod_lib(skr::das::Library::Create({1, &mod, true})),
           cReg(mod_lib)
     {
-        mod->add_annotation(cReg.annotation);
+        mod->add_annotation(cReg.colorAnnotation);
         // addExtern<DAS_BIND_FUN(makeGray),SimNode_ExtFuncCallAndCopyOrMove>(*this, lib, "make_gray",
         //    SideEffects::none, "makeGray");
     }

@@ -89,42 +89,43 @@ struct ContextImpl : public Context
 
 struct StructureAnnotationImpl : public StructureAnnotation
 {
-    StructureAnnotationImpl(const char8_t* name, const char8_t* cppname, Library* library) SKR_NOEXCEPT;
+    StructureAnnotationImpl(Library* library, const StructureAnnotationDescriptor& desc) SKR_NOEXCEPT;
     void* get_ptrptr() SKR_NOEXCEPT { return &annotation; }
 
-    void add_field(const char8_t* na, const char8_t* cppna, uint32_t offset, TypeDecl* typedecl) SKR_NOEXCEPT;
-    void add_field(const char8_t* na, const char8_t* cppna, uint32_t offset, EBuiltinType type) SKR_NOEXCEPT;
+    void add_field(uint32_t offset, EBuiltinType type, const char8_t* na, const char8_t* cppna = nullptr) SKR_NOEXCEPT;
+    void add_field(uint32_t offset, TypeDecl* typedecl, const char8_t* na, const char8_t* cppna = nullptr) SKR_NOEXCEPT;
 
     struct Structure : public ::das::BasicStructureAnnotation
     {
-        Structure(const char* n, const char* cpn, ::das::ModuleLibrary* l) : BasicStructureAnnotation(n, cpn, l) {}
+        Structure(::das::ModuleLibrary* l, const StructureAnnotationDescriptor& desc) 
+            : BasicStructureAnnotation((const char*)desc.name, (const char*)desc.cppname, l),
+              size(desc.size), alignment(desc.alignment), flags(desc.flags),
+              initializer(desc.initializer), finalizer(desc.finalizer) 
+        {
+
+        }
     
-        // TODO: REMOVE THESE HACKS
-        virtual size_t getSizeOf() const override { return sizeof(uint32_t); }
-        virtual size_t getAlignOf() const override { return alignof(uint32_t); }
         virtual bool isSmart() const override { return false; }
-        virtual bool hasNonTrivialCtor() const override 
-        {
-            return !::das::is_trivially_constructible<uint32_t>::value;
-        }
-        virtual bool hasNonTrivialDtor() const override 
-        {
-            return !::das::is_trivially_destructible<uint32_t>::value;
-        }
-        virtual bool hasNonTrivialCopy() const override 
-        {
-            return  !::das::is_trivially_copyable<uint32_t>::value ||
-                    !::das::is_trivially_copy_constructible<uint32_t>::value;
-        }
-        virtual bool isPod() const override { return true; }
-        virtual bool canClone() const override { return true; }
         virtual bool isRawPod() const override { return false; }
-        virtual bool canNew() const override { return true; }
-        virtual bool canDeletePtr() const override { return true; }
-        // END HACKS
+
+        virtual size_t getSizeOf() const override { return size ? size : 1; }
+        virtual size_t getAlignOf() const override { return alignment ? alignment : 1; }
+        virtual bool hasNonTrivialCtor() const override { return flags & EStructureAnnotationFlag::HasNonTrivalCtor; }
+        virtual bool hasNonTrivialDtor() const override { return flags & EStructureAnnotationFlag::HasNonTrivalDtor; }
+        virtual bool hasNonTrivialCopy() const override { return flags & EStructureAnnotationFlag::HasNonTrivalCopy; }
+        virtual bool isPod() const override { return flags & EStructureAnnotationFlag::IsPOD; }
+        virtual bool canClone() const override { return flags & EStructureAnnotationFlag::CanClone; }
+        virtual bool canNew() const override { return flags & EStructureAnnotationFlag::CanNew; }
+        virtual bool canDeletePtr() const override { return flags & EStructureAnnotationFlag::CanDeletePtr; }
 
         virtual ::das::SimNode* simulateGetNew(::das::Context& context, const ::das::LineInfo& at ) const override;
         virtual ::das::SimNode* simulateDeletePtr(::das::Context& context, const ::das::LineInfo& at, ::das::SimNode* sube, uint32_t count) const override;
+    
+        uint64_t size = 0;
+        uint64_t alignment = 0;
+        StructureAnnotationFlags flags = EStructureAnnotationFlag::None;
+        void (*initializer)(void* ptr) = nullptr;
+        void (*finalizer)(void* ptr) = nullptr;
     };
 
     LibraryImpl* Lib;
