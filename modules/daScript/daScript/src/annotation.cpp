@@ -99,6 +99,11 @@ StructureAnnotationImpl::StructureAnnotationImpl(Library* library, const Structu
 
 }
 
+Library* StructureAnnotationImpl::get_library() const SKR_NOEXCEPT
+{
+    return Lib;
+}
+
 void StructureAnnotationImpl::add_field(uint32_t offset, TypeDecl* typedecl, const char8_t* na, const char8_t* cppna) SKR_NOEXCEPT
 {
     cppna = cppna ? cppna : na;

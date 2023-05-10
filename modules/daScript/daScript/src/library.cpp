@@ -18,6 +18,18 @@ void Library::Free(Library* library) SKR_NOEXCEPT
     SkrDelete(library);
 }
 
+struct InnerModuleImpl : public Module
+{
+    InnerModuleImpl(::das::Module* mod) : mod(mod) {}
+    void add_annotation(Annotation* annotation) SKR_NOEXCEPT
+    {
+        mod->addAnnotation(
+        *static_cast<::das::smart_ptr<::das::Annotation>*>(annotation->get_ptrptr())
+        );
+    }
+    ::das::Module* mod;
+};
+
 LibraryImpl::LibraryImpl(const LibraryDescriptor& desc) SKR_NOEXCEPT
 {
     for (uint32_t i = 0; i < desc.init_mod_counts; i++)
@@ -26,6 +38,17 @@ LibraryImpl::LibraryImpl(const LibraryDescriptor& desc) SKR_NOEXCEPT
         libGroup.addModule(Mod->mod);
     }
     libGroup.addBuiltInModule();
+    thisModule = SkrNew<InnerModuleImpl>(libGroup.getThisModule());
+}
+
+LibraryImpl::~LibraryImpl() SKR_NOEXCEPT
+{
+    SkrDelete(thisModule);
+}
+
+Module* LibraryImpl::get_this_module() const SKR_NOEXCEPT
+{
+    return thisModule;
 }
 
 void LibraryImpl::add_module(Module* mod) SKR_NOEXCEPT

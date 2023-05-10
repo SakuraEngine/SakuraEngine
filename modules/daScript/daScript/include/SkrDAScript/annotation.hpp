@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrDAScript/type.hpp"
+#include "SkrDAScript/library.hpp"
 
 namespace skr {
 namespace das {
@@ -138,9 +139,63 @@ struct SKR_DASCRIPT_API StructureAnnotation : public TypeAnnotation
     static void Free(StructureAnnotation* annotation) SKR_NOEXCEPT;
 
     virtual ~StructureAnnotation() SKR_NOEXCEPT;
+
+    virtual Library* get_library() const SKR_NOEXCEPT = 0;
     virtual void add_field(uint32_t offset, EBuiltinType type, const char8_t* na, const char8_t* cppna = nullptr) SKR_NOEXCEPT = 0;
     virtual void add_field(uint32_t offset, TypeDecl* typedecl, const char8_t* na, const char8_t* cppna = nullptr) SKR_NOEXCEPT = 0;
+
+    template <typename FunT, FunT PROP>
+    void add_property(const char8_t* na, const char8_t* cppNa = u8"");
 };
 
 } // namespace das
 } // namespace skr
+
+#pragma region add_property
+
+namespace skr {
+namespace das {
+
+template <typename FuncT, FuncT fn> struct call_property;
+
+template <typename RetT, typename ThisT, RetT(ThisT::*fn)()>
+struct call_property<RetT(ThisT::*)(),fn> {
+    using RetType = RetT;
+    enum { ref = std::is_reference<RetT>::value, isConst = false, };
+    static RetT static_call ( ThisT & this_ ) {
+        return (this_.*fn)();
+    };
+};
+
+template <typename RetT, typename ThisT, RetT(ThisT::*fn)() const>
+struct call_property<RetT(ThisT::*)() const,fn> {
+    using RetType = RetT;
+    enum { ref = std::is_reference<RetT>::value, isConst = true, };
+    static RetT static_call ( const ThisT & this_ ) {
+        return (this_.*fn)();
+    };
+};
+
+template <typename RetT, typename ThisT, RetT(ThisT::*fn)() const noexcept>
+struct call_property<RetT(ThisT::*)() const noexcept,fn> {
+    using RetType = RetT;
+    enum { ref = std::is_reference<RetT>::value, isConst = true, };
+    static RetT static_call ( const ThisT & this_ ) {
+        return (this_.*fn)();
+    };
+};
+
+template <typename FunT, FunT PROP>
+void StructureAnnotation::add_property(const char8_t* na, const char8_t* cppNa) 
+{
+    skr::text::text dotName = u8".`";
+    dotName += na;
+    skr::text::text cppPropName = cppNa ? cppNa : na;
+    using callT = call_property<FunT,PROP>;
+    register_property<callT::ref,callT>::reg(get_library(), dotName.u8_str(), cppPropName.u8_str());
+}
+
+} // namespace das
+} // namespace skr
+
+#pragma endregion

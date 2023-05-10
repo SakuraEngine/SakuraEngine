@@ -20,6 +20,7 @@ struct AnnotationRegister_Color
         colorAnnotation->add_field(offsetof(Color, g), EBuiltinType::UINT8, u8"g");
         colorAnnotation->add_field(offsetof(Color, b), EBuiltinType::UINT8, u8"b");
         colorAnnotation->add_field(offsetof(Color, a), EBuiltinType::UINT8, u8"a");
+        colorAnnotation->add_property<decltype(&Color::luminance), &Color::luminance>(u8"luminance");
         // colorType = skr::das::TypeDecl::Create<Color>(lib, u8"Color");
     }
 

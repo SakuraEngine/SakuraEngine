@@ -7,6 +7,7 @@ namespace das {
 
 struct FileAccess;
 struct TextPrinter;
+struct Annotation;
 struct Module;
 struct Library;
 struct Program;

@@ -26,10 +26,10 @@ struct SKR_DASCRIPT_API Context
 
     virtual ~Context() SKR_NOEXCEPT;
 
-    virtual FunctionId find_function(const char8_t* name) SKR_NOEXCEPT = 0;
+    virtual SimFunctionId find_function(const char8_t* name) SKR_NOEXCEPT = 0;
 
-    virtual Register eval(FunctionId func, Register* args = nullptr, Sequence* generated = nullptr) SKR_NOEXCEPT = 0;
-    virtual Register eval_with_catch(FunctionId func, Register* args = nullptr, Sequence* generated = nullptr) SKR_NOEXCEPT = 0;
+    virtual Register eval(SimFunctionId func, Register* args = nullptr, Sequence* generated = nullptr) SKR_NOEXCEPT = 0;
+    virtual Register eval_with_catch(SimFunctionId func, Register* args = nullptr, Sequence* generated = nullptr) SKR_NOEXCEPT = 0;
 
     // template <typename ReturnType, typename ...Args>
     // bool verifyCall(Function* func, const Library* lib); 

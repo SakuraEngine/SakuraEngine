@@ -47,11 +47,15 @@ struct FileAccessImpl : public FileAccess
 struct LibraryImpl : public Library
 {
     LibraryImpl(const LibraryDescriptor& desc) SKR_NOEXCEPT;
+    ~LibraryImpl() SKR_NOEXCEPT;
     
+    Module* get_this_module() const SKR_NOEXCEPT;
+
     void add_module(Module* mod) SKR_NOEXCEPT;
     void add_builtin_module() SKR_NOEXCEPT;
 
     ::das::ModuleGroup libGroup;
+    Module* thisModule;
 };
 
 struct ProgramImpl : public Program
@@ -80,9 +84,9 @@ struct ContextImpl : public Context
     ~ContextImpl() SKR_NOEXCEPT {}
     // class ::das::Context* get_context() SKR_NOEXCEPT override { return &ctx; }
 
-    FunctionId find_function(const char8_t* name) SKR_NOEXCEPT;
-    Register eval(FunctionId func, Register* args = nullptr, Sequence* generated = nullptr) SKR_NOEXCEPT;
-    Register eval_with_catch(FunctionId func, Register* args = nullptr, Sequence* generated = nullptr) SKR_NOEXCEPT;
+    SimFunctionId find_function(const char8_t* name) SKR_NOEXCEPT;
+    Register eval(SimFunctionId func, Register* args = nullptr, Sequence* generated = nullptr) SKR_NOEXCEPT;
+    Register eval_with_catch(SimFunctionId func, Register* args = nullptr, Sequence* generated = nullptr) SKR_NOEXCEPT;
 
     ScriptContext ctx;
 };
@@ -92,6 +96,7 @@ struct StructureAnnotationImpl : public StructureAnnotation
     StructureAnnotationImpl(Library* library, const StructureAnnotationDescriptor& desc) SKR_NOEXCEPT;
     void* get_ptrptr() SKR_NOEXCEPT { return &annotation; }
 
+    Library* get_library() const SKR_NOEXCEPT;
     void add_field(uint32_t offset, EBuiltinType type, const char8_t* na, const char8_t* cppna = nullptr) SKR_NOEXCEPT;
     void add_field(uint32_t offset, TypeDecl* typedecl, const char8_t* na, const char8_t* cppna = nullptr) SKR_NOEXCEPT;
 
