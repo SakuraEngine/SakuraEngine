@@ -144,7 +144,7 @@ struct SKR_DASCRIPT_API StructureAnnotation : public TypeAnnotation
     virtual void add_field(uint32_t offset, EBuiltinType type, const char8_t* na, const char8_t* cppna = nullptr) SKR_NOEXCEPT = 0;
     virtual void add_field(uint32_t offset, TypeDecl typedecl, const char8_t* na, const char8_t* cppna = nullptr) SKR_NOEXCEPT = 0;
 
-    template <typename FunT, FunT PROP>
+    template <typename FunT, FunT PROP, bool IS_CMRES = false>
     void add_property(const char8_t* na, const char8_t* cppNa = u8"");
 };
 
@@ -185,7 +185,7 @@ struct call_property<RetT(ThisT::*)() const noexcept,fn> {
     };
 };
 
-template <typename FunT, FunT PROP>
+template <typename FunT, FunT PROP, bool IS_CMRES>
 void StructureAnnotation::add_property(const char8_t* na, const char8_t* cppNa) 
 {
     auto library = get_library();
@@ -193,7 +193,7 @@ void StructureAnnotation::add_property(const char8_t* na, const char8_t* cppNa)
     dotNa += na;
     skr::text::text cppPropNa = cppNa ? cppNa : na;
     using callT = call_property<FunT, PROP>;
-    library->register_property<callT::ref, callT>(dotNa.u8_str(), cppPropNa.u8_str());
+    library->register_property<callT::ref, IS_CMRES, callT>(dotNa.u8_str(), cppPropNa.u8_str());
 }
 
 } // namespace das
