@@ -1,11 +1,15 @@
 #pragma once
 #include "SkrDAScript/module.hpp"
+#include "SkrDAScript/function.hpp"
 
 namespace skr {
 namespace das {
 
+template<int isRef, typename callT> 
+struct register_property;
+
 template <typename FuncT, FuncT fn, bool CallRef = false>
-inline auto add_extern_property(Module& mod, const Library& lib, const char8_t* name, const char8_t * cppName = nullptr);
+inline void* add_extern_property(Module& mod, const Library& lib, const char8_t* name, const char8_t * cppName = nullptr);
 
 struct LibraryDescriptor
 {
@@ -24,6 +28,9 @@ struct SKR_DASCRIPT_API Library
 
     virtual void add_module(Module* mod) SKR_NOEXCEPT = 0;
     virtual void add_builtin_module() SKR_NOEXCEPT = 0;
+
+    template<int isRef, typename callT> 
+    void register_property(const char8_t* dotName, const char8_t* cppPropName);
 };
 
 } // namespace das
@@ -33,7 +40,7 @@ namespace skr {
 namespace das {
 
 template <typename FuncT, FuncT fn, bool CallRef>
-inline auto add_extern_property(Module& mod, const Library& lib, const char8_t* name, const char8_t * cppName)
+FORCEINLINE void* add_extern_property(Module& mod, const Library& lib, const char8_t* name, const char8_t* cppName)
 {
     /*
     using SimNodeType = SimNodeT<FuncT, fn>;
@@ -48,8 +55,6 @@ inline auto add_extern_property(Module& mod, const Library& lib, const char8_t* 
     */
     return nullptr;
 }
-
-template<int isRef, typename callT> struct register_property;
 
 template<typename callT> 
 struct register_property<true, callT> 
@@ -73,6 +78,12 @@ struct register_property<false, callT> {
         );//->args({"this"});
     }
 };
+
+template<int isRef, typename callT> 
+void Library::register_property(const char8_t* dotName, const char8_t* cppPropName)
+{
+    skr::das::register_property<callT::ref, callT>::reg(this, dotName, cppPropName);
+}
 
 } // namespace das
 } // namespace skr

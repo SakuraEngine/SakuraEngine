@@ -1,7 +1,5 @@
 #pragma once
-#include "SkrDAScript/module.configure.h"
-#include "platform/configure.h"
-#include "utils/types.h"
+#include "SkrDAScript/traits.hpp"
 
 namespace skr {
 namespace das {

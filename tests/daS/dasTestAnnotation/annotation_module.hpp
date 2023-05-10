@@ -8,30 +8,30 @@ struct Color
     uint8_t r, g, b, a;
     float luminance() const { return 0.2126f*r + 0.7152f*g + 0.0722f*b; }
 };
+SKR_DASCRIPT_INLINE_TYPE_FACTORY(Color, Color);
 
 struct AnnotationRegister_Color
 {
     AnnotationRegister_Color(skr::das::Library* lib)
     {
         using namespace skr::das;
-
         colorAnnotation = StructureAnnotation::Create<Color>(lib, u8"Color");
-        colorAnnotation->add_field(offsetof(Color, r), EBuiltinType::UINT8, u8"r");
-        colorAnnotation->add_field(offsetof(Color, g), EBuiltinType::UINT8, u8"g");
-        colorAnnotation->add_field(offsetof(Color, b), EBuiltinType::UINT8, u8"b");
-        colorAnnotation->add_field(offsetof(Color, a), EBuiltinType::UINT8, u8"a");
-        colorAnnotation->add_property<decltype(&Color::luminance), &Color::luminance>(u8"luminance");
-        // colorType = skr::das::TypeDecl::Create<Color>(lib, u8"Color");
+        auto cA = colorAnnotation;
+        cA->add_field(offsetof(Color, r), EBuiltinType::UINT8, u8"r");
+        cA->add_field(offsetof(Color, g), EBuiltinType::UINT8, u8"g");
+        cA->add_field(offsetof(Color, b), EBuiltinType::UINT8, u8"b");
+        cA->add_field(offsetof(Color, a), EBuiltinType::UINT8, u8"a");
+        cA->add_property<decltype(&Color::luminance), &Color::luminance>(u8"luminance");
+        colorType = skr::das::TypeDecl::MakeType<Color>(lib);
     }
 
     ~AnnotationRegister_Color()
     {
-        //skr::das::TypeDecl::Free(colorType);
         skr::das::StructureAnnotation::Free(colorAnnotation);
     }
 
     skr::das::StructureAnnotation* colorAnnotation = nullptr;
-   //  skr::das::TypeDecl* colorType = nullptr;
+    skr::das::TypeDecl colorType = nullptr;
 };
 
 // custom function, which takes type as an input, as well as returns it
