@@ -104,11 +104,10 @@ Library* StructureAnnotationImpl::get_library() const SKR_NOEXCEPT
     return Lib;
 }
 
-void StructureAnnotationImpl::add_field(uint32_t offset, TypeDecl* typedecl, const char8_t* na, const char8_t* cppna) SKR_NOEXCEPT
+void StructureAnnotationImpl::add_field(uint32_t offset, TypeDecl typedecl, const char8_t* na, const char8_t* cppna) SKR_NOEXCEPT
 {
     cppna = cppna ? cppna : na;
-    auto Decl = static_cast<TypeDeclImpl*>(typedecl);
-    annotation->addFieldEx((const char*)na, (const char*)cppna, offset, Decl->decl);
+    annotation->addFieldEx((const char*)na, (const char*)cppna, offset, typedecl._get());
 }
 
 void StructureAnnotationImpl::add_field(uint32_t offset, EBuiltinType type, const char8_t* na, const char8_t* cppna) SKR_NOEXCEPT

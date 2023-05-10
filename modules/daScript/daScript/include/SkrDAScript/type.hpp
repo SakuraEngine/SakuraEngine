@@ -1,23 +1,198 @@
 #pragma once
 #include "SkrDAScript/env.hpp"
 
+namespace das { struct TypeDecl; }
+
 namespace skr {
 namespace das {
 
-struct SKR_DASCRIPT_API TypeDecl
+struct TypeDecl
 {
-    virtual ~TypeDecl() SKR_NOEXCEPT;
+    SKR_DASCRIPT_API ~TypeDecl() SKR_NOEXCEPT;
 
-    template<typename T>
-    static TypeDecl* Create(Library* lib, const char8_t* name) SKR_NOEXCEPT
-    {
-        return CreateHandle(lib, name);
-    }
-    static void Free(TypeDecl* decl) SKR_NOEXCEPT;    
+    SKR_DASCRIPT_API static TypeDecl MakeHandleType(const Library* lib, const char8_t* name) SKR_NOEXCEPT;
 
-protected:
-    static TypeDecl* CreateHandle(Library* lib, const char8_t* name) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API static TypeDecl GetFirstType(TypeDecl _this) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API static void SetFirstType(TypeDecl _this, TypeDecl decl) SKR_NOEXCEPT;
+    
+    SKR_DASCRIPT_API static bool IsSmartPtr(TypeDecl _this) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API static void SetIsSmartPtr(TypeDecl _this, bool) SKR_NOEXCEPT;
+    
+    SKR_DASCRIPT_API static bool IsConstant(TypeDecl _this) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API static void SetIsConstant(TypeDecl _this, bool) SKR_NOEXCEPT;
+    
+    SKR_DASCRIPT_API static bool IsRef(TypeDecl _this) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API static void SetIsRef(TypeDecl _this, bool) SKR_NOEXCEPT;
+
+    SKR_DASCRIPT_API static bool IsRefType(TypeDecl _this) SKR_NOEXCEPT;
+
+    template <typename T>
+    static TypeDecl MakeType(const Library* lib);
+    template <typename T>
+    static TypeDecl MakeArgumentType(const Library* lib);
+
+    static TypeDecl _make(::das::TypeDecl* ptr);
+    ::das::TypeDecl* _get() const;
+
+    TypeDecl() = default;
+    TypeDecl(std::nullptr_t) {}
+private:
+    TypeDecl(::das::TypeDecl* ptr) : ptr(ptr) {}
+    ::das::TypeDecl* ptr = nullptr;
 };
 
 } // namespace das
 } // namespace skr
+
+#define SKR_DASCRIPT_DECLARE_TYPE_FACTORY(API,TYPE,CTYPE) \
+namespace skr { \
+namespace das { \
+    struct Library; \
+    struct TypeDecl; \
+    template <typename TT> struct TypeFactory; \
+    template <> \
+    struct TypeFactory<CTYPE> { \
+        API static TypeDecl make(const Library* library); \
+    }; \
+    template <typename TT> struct TypeName; \
+    template <> \
+    struct TypeName<CTYPE> { \
+        constexpr static const char* name() { return #TYPE; } \
+    }; \
+};\
+};
+
+#define SKR_DASCRIPT_IMPLEMENT_TYPE_FACTORY(TYPE,CTYPE) \
+namespace skr { \
+namespace das { \
+    TypeDecl TypeFactory<CTYPE>::make(const Library* library) { \
+        return TypeDecl::MakeHandleType(library, (const char8_t*)#TYPE); \
+    } \
+};\
+};
+
+#define SKR_DASCRIPT_INLINE_TYPE_FACTORY(TYPE,CTYPE) \
+SKR_DASCRIPT_DECLARE_TYPE_FACTORY(,TYPE,CTYPE) \
+namespace skr { \
+namespace das { \
+    inline TypeDecl TypeFactory<CTYPE>::make(const Library* library) { \
+        return TypeDecl::MakeHandleType(library, (const char8_t*)#TYPE); \
+    } \
+};\
+};
+
+SKR_DASCRIPT_DECLARE_TYPE_FACTORY(SKR_DASCRIPT_API, uint8_t, uint8_t);
+SKR_DASCRIPT_DECLARE_TYPE_FACTORY(SKR_DASCRIPT_API, int8_t, int8_t);
+SKR_DASCRIPT_DECLARE_TYPE_FACTORY(SKR_DASCRIPT_API, uint16_t, uint16_t);
+SKR_DASCRIPT_DECLARE_TYPE_FACTORY(SKR_DASCRIPT_API, int16_t, int16_t);
+SKR_DASCRIPT_DECLARE_TYPE_FACTORY(SKR_DASCRIPT_API, uint32_t, uint32_t);
+SKR_DASCRIPT_DECLARE_TYPE_FACTORY(SKR_DASCRIPT_API, int32_t, int32_t);
+SKR_DASCRIPT_DECLARE_TYPE_FACTORY(SKR_DASCRIPT_API, uint64_t, uint64_t);
+SKR_DASCRIPT_DECLARE_TYPE_FACTORY(SKR_DASCRIPT_API, int64_t, int64_t);
+SKR_DASCRIPT_DECLARE_TYPE_FACTORY(SKR_DASCRIPT_API, char*, char*);
+SKR_DASCRIPT_DECLARE_TYPE_FACTORY(SKR_DASCRIPT_API, const char*, const char*);
+SKR_DASCRIPT_DECLARE_TYPE_FACTORY(SKR_DASCRIPT_API, float, float);
+SKR_DASCRIPT_DECLARE_TYPE_FACTORY(SKR_DASCRIPT_API, double, double);
+SKR_DASCRIPT_DECLARE_TYPE_FACTORY(SKR_DASCRIPT_API, void, void);
+SKR_DASCRIPT_DECLARE_TYPE_FACTORY(SKR_DASCRIPT_API, void*, void*);
+SKR_DASCRIPT_DECLARE_TYPE_FACTORY(SKR_DASCRIPT_API, skr_float2_t, skr_float2_t);
+SKR_DASCRIPT_DECLARE_TYPE_FACTORY(SKR_DASCRIPT_API, skr_float3_t, skr_float3_t);
+SKR_DASCRIPT_DECLARE_TYPE_FACTORY(SKR_DASCRIPT_API, skr_float4_t, skr_float4_t);
+
+namespace skr { 
+namespace das { 
+
+template <typename TT>
+struct TypeFactory<TT*>  
+{
+    static FORCEINLINE TypeDecl make(const Library* library) 
+    {
+        auto pt = TypeFactory<void*>::make(library);
+        if ( !std::is_void<TT>::value ) {
+            TypeDecl::SetFirstType(pt, TypeFactory<TT>::make(library));
+        }
+        return pt;
+    }
+};
+
+template <typename TT>
+struct TypeFactory<const TT*>  
+{
+    static FORCEINLINE TypeDecl make(const Library* library) 
+    {
+        auto pt = TypeFactory<void*>::make(library);
+        if ( !std::is_void<TT>::value ) {
+            auto ft = TypeFactory<TT>::make(library);
+            TypeDecl::SetIsConstant(ft, true);
+            TypeDecl::SetFirstType(pt, ft);
+        }
+        TypeDecl::SetIsConstant(pt, true);
+        return pt;
+    }
+};
+
+template <typename TT>
+struct TypeFactory<TT&>  
+{
+    static FORCEINLINE TypeDecl make(const Library* library) 
+    {
+        auto pt = TypeFactory<TT>::make(library);
+        TypeDecl::SetIsRef(pt, true);
+        return pt;
+    }
+};
+
+template <typename TT>
+struct TypeFactory<const TT&>  
+{
+    static FORCEINLINE TypeDecl make(const Library* library) 
+    {
+        auto pt = TypeFactory<TT>::make(library);
+        TypeDecl::SetIsRef(pt, true);
+        TypeDecl::SetIsConstant(pt, true);
+        return pt;
+    }
+};
+
+template <typename TT>
+struct TypeFactory<const TT>  
+{
+    static FORCEINLINE TypeDecl make(const Library* library) 
+    {
+        auto pt = TypeFactory<TT>::make(library);
+        TypeDecl::SetIsConstant(pt, true);
+        return pt;
+    }
+};
+
+};
+};
+
+namespace skr { 
+namespace das { 
+
+template <typename T>
+TypeDecl TypeDecl::MakeType(const Library* lib)
+{
+    return TypeFactory<T>::make(lib);
+}
+
+template <typename T>
+TypeDecl TypeDecl::MakeArgumentType(const Library* lib)
+{
+    auto tt = TypeFactory<T>::make(lib);
+    if (TypeDecl::IsRefType(tt))
+    {
+        TypeDecl::SetIsRef(tt, false);
+    } 
+    else if (!TypeDecl::IsRef(tt)) {
+        // note:
+        //  C ++ does not differenciate between void foo ( Foo ); and void foo ( const Foo );
+        //  DAS differenciates for pointers
+        TypeDecl::SetIsConstant(tt, true);
+    }
+    return tt; 
+}
+
+};
+};

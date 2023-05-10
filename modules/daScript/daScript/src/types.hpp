@@ -98,7 +98,7 @@ struct StructureAnnotationImpl : public StructureAnnotation
 
     Library* get_library() const SKR_NOEXCEPT;
     void add_field(uint32_t offset, EBuiltinType type, const char8_t* na, const char8_t* cppna = nullptr) SKR_NOEXCEPT;
-    void add_field(uint32_t offset, TypeDecl* typedecl, const char8_t* na, const char8_t* cppna = nullptr) SKR_NOEXCEPT;
+    void add_field(uint32_t offset, TypeDecl typedecl, const char8_t* na, const char8_t* cppna = nullptr) SKR_NOEXCEPT;
 
     struct Structure : public ::das::BasicStructureAnnotation
     {
@@ -135,13 +135,6 @@ struct StructureAnnotationImpl : public StructureAnnotation
 
     LibraryImpl* Lib;
     ::das::smart_ptr<Structure> annotation;
-};
-
-struct TypeDeclImpl : public TypeDecl
-{
-    TypeDeclImpl(Library* lib, const char8_t* name) SKR_NOEXCEPT;
-
-    ::das::smart_ptr<::das::TypeDecl> decl;
 };
 
 struct ModuleImpl : public Module
