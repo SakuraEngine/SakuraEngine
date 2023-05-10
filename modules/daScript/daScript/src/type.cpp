@@ -94,7 +94,9 @@ namespace das { \
     TypeDecl TypeFactory<CTYPE>::make(const Library* library) { \
         if constexpr (!std::is_void_v<DAS_TYPE> && !std::is_void_v<CTYPE>) \
             static_assert(sizeof(NoneVoidType<DAS_TYPE>::Type) == sizeof(NoneVoidType<CTYPE>::Type), \
-            "Type mismatching!");\
+            "Type size mismatching!");\
+            static_assert(alignof(NoneVoidType<DAS_TYPE>::Type) == alignof(NoneVoidType<CTYPE>::Type), \
+            "Type alignment mismatching!");\
         auto Lib = (const LibraryImpl*)library; \
         auto Ptr = ::das::typeFactory<DAS_TYPE>::make(Lib->libGroup).orphan(); \
         return TypeDecl::_make(Ptr); \
@@ -116,4 +118,4 @@ SKR_DASCRIPT_IMPLEMENT_BASE_TYPE_FACTORY(void, void);
 SKR_DASCRIPT_IMPLEMENT_BASE_TYPE_FACTORY(void*, void*);
 SKR_DASCRIPT_IMPLEMENT_BASE_TYPE_FACTORY(::das::float2, skr_float2_t);
 SKR_DASCRIPT_IMPLEMENT_BASE_TYPE_FACTORY(::das::float3, skr_float3_t);
-SKR_DASCRIPT_IMPLEMENT_BASE_TYPE_FACTORY(::das::float4, skr_float4_t);
+// SKR_DASCRIPT_IMPLEMENT_BASE_TYPE_FACTORY(::das::float4, skr_float4_t);
