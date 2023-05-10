@@ -1,30 +1,24 @@
 #pragma once
 #include "SkrDAScript/env.hpp"
 
-namespace das { struct TypeDecl; }
+namespace das { struct TypeDecl; class BuiltInFunction; }
 
 namespace skr {
 namespace das {
 
 struct TypeDecl
 {
-    SKR_DASCRIPT_API ~TypeDecl() SKR_NOEXCEPT;
-
     SKR_DASCRIPT_API static TypeDecl MakeHandleType(const Library* lib, const char8_t* name) SKR_NOEXCEPT;
 
-    SKR_DASCRIPT_API static TypeDecl GetFirstType(TypeDecl _this) SKR_NOEXCEPT;
-    SKR_DASCRIPT_API static void SetFirstType(TypeDecl _this, TypeDecl decl) SKR_NOEXCEPT;
-    
-    SKR_DASCRIPT_API static bool IsSmartPtr(TypeDecl _this) SKR_NOEXCEPT;
-    SKR_DASCRIPT_API static void SetIsSmartPtr(TypeDecl _this, bool) SKR_NOEXCEPT;
-    
-    SKR_DASCRIPT_API static bool IsConstant(TypeDecl _this) SKR_NOEXCEPT;
-    SKR_DASCRIPT_API static void SetIsConstant(TypeDecl _this, bool) SKR_NOEXCEPT;
-    
-    SKR_DASCRIPT_API static bool IsRef(TypeDecl _this) SKR_NOEXCEPT;
-    SKR_DASCRIPT_API static void SetIsRef(TypeDecl _this, bool) SKR_NOEXCEPT;
-
-    SKR_DASCRIPT_API static bool IsRefType(TypeDecl _this) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API TypeDecl get_first_type() SKR_NOEXCEPT;
+    SKR_DASCRIPT_API void set_first_type(TypeDecl decl) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API bool is_smartptr() SKR_NOEXCEPT;
+    SKR_DASCRIPT_API void set_is_smartptr(bool) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API bool is_constant() SKR_NOEXCEPT;
+    SKR_DASCRIPT_API void set_is_constant(bool) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API bool is_ref() SKR_NOEXCEPT;
+    SKR_DASCRIPT_API void set_is_ref(bool) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API bool is_ref_type() SKR_NOEXCEPT;
 
     template <typename T>
     static TypeDecl MakeType(const Library* lib);
@@ -33,6 +27,7 @@ struct TypeDecl
 
     SKR_DASCRIPT_API TypeDecl() SKR_NOEXCEPT;
     SKR_DASCRIPT_API TypeDecl(std::nullptr_t) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API ~TypeDecl() SKR_NOEXCEPT;
 
 public: // none-export methods
     static TypeDecl _make(::das::TypeDecl* ptr);
@@ -111,7 +106,7 @@ struct TypeFactory<TT*>
     {
         auto pt = TypeFactory<void*>::make(library);
         if ( !std::is_void<TT>::value ) {
-            TypeDecl::SetFirstType(pt, TypeFactory<TT>::make(library));
+            pt.set_first_type(TypeFactory<TT>::make(library));
         }
         return pt;
     }
@@ -125,10 +120,10 @@ struct TypeFactory<const TT*>
         auto pt = TypeFactory<void*>::make(library);
         if ( !std::is_void<TT>::value ) {
             auto ft = TypeFactory<TT>::make(library);
-            TypeDecl::SetIsConstant(ft, true);
-            TypeDecl::SetFirstType(pt, ft);
+            ft.set_is_constant(true);
+            pt.set_first_type(ft);
         }
-        TypeDecl::SetIsConstant(pt, true);
+        pt.set_is_constant(true);
         return pt;
     }
 };
@@ -139,7 +134,7 @@ struct TypeFactory<TT&>
     static FORCEINLINE TypeDecl make(const Library* library) 
     {
         auto pt = TypeFactory<TT>::make(library);
-        TypeDecl::SetIsRef(pt, true);
+        pt.set_is_ref(true);
         return pt;
     }
 };
@@ -150,8 +145,8 @@ struct TypeFactory<const TT&>
     static FORCEINLINE TypeDecl make(const Library* library) 
     {
         auto pt = TypeFactory<TT>::make(library);
-        TypeDecl::SetIsRef(pt, true);
-        TypeDecl::SetIsConstant(pt, true);
+        pt.set_is_ref(true);
+        pt.set_is_constant(true);
         return pt;
     }
 };
@@ -162,7 +157,7 @@ struct TypeFactory<const TT>
     static FORCEINLINE TypeDecl make(const Library* library) 
     {
         auto pt = TypeFactory<TT>::make(library);
-        TypeDecl::SetIsConstant(pt, true);
+        pt.set_is_constant(true);
         return pt;
     }
 };
@@ -183,15 +178,15 @@ template <typename T>
 TypeDecl TypeDecl::MakeArgumentType(const Library* lib)
 {
     auto tt = TypeFactory<T>::make(lib);
-    if (TypeDecl::IsRefType(tt))
+    if (tt.is_ref_type())
     {
-        TypeDecl::SetIsRef(tt, false);
+        tt.set_is_ref(false);
     } 
-    else if (!TypeDecl::IsRef(tt)) {
+    else if (!tt.is_ref()) {
         // note:
         //  C ++ does not differenciate between void foo ( Foo ); and void foo ( const Foo );
         //  DAS differenciates for pointers
-        TypeDecl::SetIsConstant(tt, true);
+        tt.set_is_constant(true);
     }
     return tt; 
 }

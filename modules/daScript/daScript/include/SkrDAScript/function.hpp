@@ -1,5 +1,6 @@
 #pragma once
-#include "SkrDAScript/env.hpp"
+#include "SkrDAScript/type.hpp"
+#include <EASTL/fixed_vector.h>
 
 namespace skr {
 namespace das {
@@ -21,71 +22,89 @@ protected:
     void* ptr = nullptr;
 };
 
-/*
-struct SKR_DASCRIPT_API FunctionId
+using BuiltInSimProc = void(*)();
+struct BuiltInFunction
 {
-    friend struct skr::das::Context;
-    friend struct skr::das::ContextImpl;
-    ~FunctionId() SKR_NOEXCEPT;
-    skr::text::text get_mangled_name() const SKR_NOEXCEPT;
-    skr::text::text get_aot_name() const SKR_NOEXCEPT;
-    skr::text::text describe_name() const SKR_NOEXCEPT;
-    skr::text::text describe() const SKR_NOEXCEPT;
-    bool is_generic() const SKR_NOEXCEPT;
-    Function* get_origin() const SKR_NOEXCEPT;
+    SKR_DASCRIPT_API static BuiltInFunction MakeExternFunction(const Library* lib, 
+        BuiltInSimProc call, bool IS_CMRES, const char8_t* name, const char8_t* cppName = nullptr) SKR_NOEXCEPT;
 
-protected:
-    FunctionId(void* ptr) SKR_NOEXCEPT;
-    void* ptr = nullptr;
+    template <typename FuncT, FuncT fn, bool IS_CMRES = false, typename FuncArgT = FuncT>
+    static BuiltInFunction MakeExternFunction(const Library* lib, const char8_t* name, const char8_t* cppName = nullptr) SKR_NOEXCEPT;
+
+    SKR_DASCRIPT_API void set_is_call_based(bool) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API bool is_call_based() const SKR_NOEXCEPT;
+    SKR_DASCRIPT_API void set_is_property(bool) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API bool is_property() const SKR_NOEXCEPT;
+
+    SKR_DASCRIPT_API void construct(const TypeDecl* args, const uint64_t N) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API void construct_external(const TypeDecl* args, const uint64_t N) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API void construct_interop(const TypeDecl* args, const uint64_t N) SKR_NOEXCEPT;
+
+    SKR_DASCRIPT_API BuiltInFunction& arg(const char8_t* argName) SKR_NOEXCEPT;
+    inline BuiltInFunction& args(std::initializer_list<const char8_t*> argList) SKR_NOEXCEPT
+    {
+        for (auto argName : argList)
+            arg(argName);
+        return *this;
+    }
+public:
+    SKR_DASCRIPT_API BuiltInFunction() SKR_NOEXCEPT;
+    SKR_DASCRIPT_API BuiltInFunction(std::nullptr_t) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API ~BuiltInFunction() SKR_NOEXCEPT;
+
+public: // none-export methods
+    static BuiltInFunction _make(::das::BuiltInFunction* ptr);
+    ::das::BuiltInFunction* _get() const;
+
+private:
+    BuiltInFunction(::das::BuiltInFunction* ptr) : ptr(ptr) {}
+    ::das::BuiltInFunction* ptr = nullptr;
 };
 
-struct BuiltinFunctionDescriptor
+template <typename RetT, typename ...Args>
+FORCEINLINE std::initializer_list<TypeDecl> make_builtin_args(const Library* lib) 
 {
-    bool call_based = false;
-    bool interop_fn = false;
-};
+    return { TypeDecl::MakeType<RetT>(lib), TypeDecl::MakeArgumentType<Args>(lib)... };
+}
 
-struct SKR_DASCRIPT_API BuiltinFunction
-{
-    BuiltinFunction* Create() SKR_NOEXCEPT;
-    void Free(BuiltinFunction* fn) SKR_NOEXCEPT;
+template<typename F> struct make_func_args;
+template<typename R, typename ...Args> 
+struct make_func_args<R(*)(Args...)> : make_func_args<R (Args...)> {};
 
-    virtual ~BuiltinFunction() SKR_NOEXCEPT;
-    virtual skr::text::text get_mangled_name() const SKR_NOEXCEPT = 0;
-    virtual skr::text::text get_aot_name() const SKR_NOEXCEPT = 0;
-    virtual skr::text::text describe_name() const SKR_NOEXCEPT = 0;
-    virtual skr::text::text describe() const SKR_NOEXCEPT = 0;
-    virtual bool is_generic() const SKR_NOEXCEPT = 0;
-    virtual Function* get_origin() const SKR_NOEXCEPT = 0;
-    BuiltinFunction* arg(const char8_t* argName) SKR_NOEXCEPT;
-    BuiltinFunction* args(std::initializer_list<const char8_t*> argList) SKR_NOEXCEPT;
-};
-*/
 } // namespace das
 } // namespace skr
 
 namespace skr {
 namespace das {
 
-template  <typename FuncT, FuncT fn, typename SimNodeT, typename FuncArgT>
-class ExternalFn
+template<typename R, typename ...Args>
+struct make_func_args<R(Args...)> 
 {
-public:
-    FORCEINLINE ExternalFn(const char8_t* name, const Library& lib, const char8_t* cppName = nullptr)
-    // : ExternalFnBase(name,cppName) 
+    static FORCEINLINE std::initializer_list<TypeDecl> make(const Library* lib) 
     {
-        // constructExternal(makeFuncArgs<FuncArgT>::make(lib));
-    }
-    FORCEINLINE ExternalFn(const char8_t* name, const char8_t* cppName = nullptr)
-    // : ExternalFnBase(name,cppName)
-    {
-    }
-protected:
-    void* getBuiltinAddress() const 
-    {
-        return ImplWrapCall<SimNodeT::IS_CMRES, NeedVectorWrap<FuncT>::value, FuncT, fn>::get_builtin_address();
+        return make_builtin_args<R, Args...>(lib);
     }
 };
+
+template <typename FuncT, FuncT fn, bool IS_CMRES, typename FuncArgT>
+BuiltInFunction BuiltInFunction::MakeExternFunction(const Library* lib, const char8_t* name, const char8_t* cppName) SKR_NOEXCEPT
+{
+    eastl::fixed_vector<skr::das::TypeDecl, 8> args = make_func_args<FuncArgT>::make(lib);
+    BuiltInSimProc call = +[]() {
+        auto addr = ImplWrapCall<IS_CMRES, NeedVectorWrap<FuncT>::value, FuncT, fn>::get_builtin_address();
+        if constexpr (IS_CMRES)
+        {
+
+        }
+        else
+        {
+
+        }
+    };
+    auto builtin = BuiltInFunction::MakeExternFunction(lib, call, IS_CMRES, name, cppName);
+    builtin.construct_external(args.data(), args.size());
+    return builtin;
+}
 
 } // namespace das
 } // namespace skr

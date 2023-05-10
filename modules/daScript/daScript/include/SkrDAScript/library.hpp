@@ -5,11 +5,11 @@
 namespace skr {
 namespace das {
 
-template<int isRef, typename callT> 
+template<bool IS_REF, bool IS_CMRES, typename callT> 
 struct register_property;
 
-template <typename FuncT, FuncT fn, bool CallRef = false>
-inline void* add_extern_property(Module& mod, const Library& lib, const char8_t* name, const char8_t * cppName = nullptr);
+template <typename FuncT, FuncT fn, bool IS_REF = false, bool IS_CMRES = false>
+inline BuiltInFunction add_extern_property(Module* mod, const Library* lib, const char8_t* name, const char8_t * cppName = nullptr);
 
 struct LibraryDescriptor
 {
@@ -29,7 +29,7 @@ struct SKR_DASCRIPT_API Library
     virtual void add_module(Module* mod) SKR_NOEXCEPT = 0;
     virtual void add_builtin_module() SKR_NOEXCEPT = 0;
 
-    template<int isRef, typename callT> 
+    template<bool IS_REF, bool IS_CMRES, typename callT> 
     void register_property(const char8_t* dotName, const char8_t* cppPropName);
 };
 
@@ -39,50 +39,48 @@ struct SKR_DASCRIPT_API Library
 namespace skr {
 namespace das {
 
-template <typename FuncT, FuncT fn, bool CallRef>
-FORCEINLINE void* add_extern_property(Module& mod, const Library& lib, const char8_t* name, const char8_t* cppName)
+template <typename FuncT, FuncT fn, bool IS_REF, bool IS_CMRES>
+FORCEINLINE BuiltInFunction add_extern_property(Module* mod, const Library* lib, const char8_t* name, const char8_t* cppName)
 {
     /*
-    using SimNodeType = SimNodeT<FuncT, fn>;
-    auto fnX = make_smart<ExternalFn<FuncT, fn, SimNodeType, FuncT>>(name, lib, cppName);
-    defaultTempFn tempFn;
-    tempFn(fnX.get());
     fnX->arguments[0]->type->explicitConst = false;
     fnX->setSideEffects(SideEffects::none);
-    fnX->propertyFunction = true;
     mod.addFunction(fnX,true);  // yes, this one can fail. same C++ bound property can be in multiple classes before or after refactor
     return fnX;
     */
-    return nullptr;
+    auto f = BuiltInFunction::MakeExternFunction<FuncT, fn>(lib, name, cppName);
+    f.set_is_property(true);
+    return f;
 }
 
-template<typename callT> 
-struct register_property<true, callT> 
+template<bool IS_CMRES, typename callT> 
+struct register_property<true, IS_CMRES, callT> 
 {
     FORCEINLINE static void reg(Library* lib, const char8_t* dotName, const char8_t* cppPropName)
     // , bool explicitConst=false, SideEffects sideEffects = SideEffects::none ) 
     {
         add_extern_property<decltype(&callT::static_call), callT::static_call, true>(
-            *(lib->get_this_module()), *lib, dotName, cppPropName
-        );//->args({"this"});
+            lib->get_this_module(), lib, dotName, cppPropName
+        ).args({u8"this"});
     }
 };
 
-template<typename callT> 
-struct register_property<false, callT> {
+template<bool IS_CMRES, typename callT> 
+struct register_property<false, IS_CMRES, callT> 
+{
     FORCEINLINE static void reg(Library* lib, const char8_t* dotName, const char8_t* cppPropName)
     // , bool explicitConst=false, SideEffects sideEffects = SideEffects::none ) 
     {
         add_extern_property<decltype(&callT::static_call), callT::static_call>(
-            *(lib->get_this_module()), *lib, dotName, cppPropName
-        );//->args({"this"});
+            lib->get_this_module(), lib, dotName, cppPropName
+        ).args({u8"this"});
     }
 };
 
-template<int isRef, typename callT> 
+template<bool IS_REF, bool IS_CMRES, typename callT> 
 void Library::register_property(const char8_t* dotName, const char8_t* cppPropName)
 {
-    skr::das::register_property<callT::ref, callT>::reg(this, dotName, cppPropName);
+    skr::das::register_property<callT::ref, IS_CMRES, callT>::reg(this, dotName, cppPropName);
 }
 
 } // namespace das

@@ -3,12 +3,6 @@
 namespace skr {
 namespace das {
 
-TypeDecl TypeDecl::MakeHandleType(const Library* lib, const char8_t* name) SKR_NOEXCEPT
-{
-    auto t = ::das::makeHandleType(static_cast<const LibraryImpl*>(lib)->libGroup, (const char*)name);
-    return TypeDecl::_make(t.orphan());
-}
-
 TypeDecl TypeDecl::_make(::das::TypeDecl* ptr)
 {
     return TypeDecl(ptr);
@@ -28,57 +22,63 @@ TypeDecl::~TypeDecl() SKR_NOEXCEPT
     ptr->delRef();
 }
 
-TypeDecl TypeDecl::GetFirstType(TypeDecl _this) SKR_NOEXCEPT
+TypeDecl TypeDecl::MakeHandleType(const Library* lib, const char8_t* name) SKR_NOEXCEPT
 {
-    auto This = (::das::TypeDecl*)_this.ptr;
+    auto t = ::das::makeHandleType(static_cast<const LibraryImpl*>(lib)->libGroup, (const char*)name);
+    return TypeDecl::_make(t.orphan());
+}
+
+TypeDecl TypeDecl::get_first_type() SKR_NOEXCEPT
+{
+    auto This = (::das::TypeDecl*)ptr;
     return TypeDecl::_make(This->firstType.orphan());
 }
 
-void TypeDecl::SetFirstType(TypeDecl _this, TypeDecl decl) SKR_NOEXCEPT
+void TypeDecl::set_first_type(TypeDecl decl) SKR_NOEXCEPT
 {
-    auto This = (::das::TypeDecl*)_this.ptr;
+    auto This = (::das::TypeDecl*)ptr;
     This->firstType = (::das::TypeDecl*)decl.ptr;;
 }
 
-bool TypeDecl::IsSmartPtr(TypeDecl _this) SKR_NOEXCEPT
+bool TypeDecl::is_smartptr() SKR_NOEXCEPT
 {
-    auto This = (::das::TypeDecl*)_this.ptr;
+    auto This = (::das::TypeDecl*)ptr;
     return This->smartPtr;
 }
 
-void TypeDecl::SetIsSmartPtr(TypeDecl _this, bool o) SKR_NOEXCEPT
+void TypeDecl::set_is_smartptr(bool o) SKR_NOEXCEPT
 {
-    auto This = (::das::TypeDecl*)_this.ptr;
+    auto This = (::das::TypeDecl*)ptr;
     This->smartPtr = o;
 }
 
-bool TypeDecl::IsConstant(TypeDecl _this) SKR_NOEXCEPT
+bool TypeDecl::is_constant() SKR_NOEXCEPT
 {
-    auto This = (::das::TypeDecl*)_this.ptr;
+    auto This = (::das::TypeDecl*)ptr;
     return This->constant;
 }
 
-void TypeDecl::SetIsConstant(TypeDecl _this, bool o) SKR_NOEXCEPT
+void TypeDecl::set_is_constant(bool o) SKR_NOEXCEPT
 {
-    auto This = (::das::TypeDecl*)_this.ptr;
+    auto This = (::das::TypeDecl*)ptr;
     This->constant = o;
 }
 
-bool TypeDecl::IsRef(TypeDecl _this) SKR_NOEXCEPT
+bool TypeDecl::is_ref() SKR_NOEXCEPT
 {
-    auto This = (::das::TypeDecl*)_this.ptr;
+    auto This = (::das::TypeDecl*)ptr;
     return This->ref;
 }
 
-void TypeDecl::SetIsRef(TypeDecl _this, bool o) SKR_NOEXCEPT
+void TypeDecl::set_is_ref(bool o) SKR_NOEXCEPT
 {
-    auto This = (::das::TypeDecl*)_this.ptr;
+    auto This = (::das::TypeDecl*)ptr;
     This->ref = o;
 }
 
-bool TypeDecl::IsRefType(TypeDecl _this) SKR_NOEXCEPT
+bool TypeDecl::is_ref_type() SKR_NOEXCEPT
 {
-    auto This = (::das::TypeDecl*)_this.ptr;
+    auto This = (::das::TypeDecl*)ptr;
     return This->isRefType();
 }
 
