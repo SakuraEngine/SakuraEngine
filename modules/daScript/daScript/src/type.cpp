@@ -19,6 +19,9 @@ TypeDecl TypeDecl::_make(::das::TypeDecl* ptr)
     return ptr;
 }
 
+TypeDecl::TypeDecl() SKR_NOEXCEPT {}
+TypeDecl::TypeDecl(std::nullptr_t) SKR_NOEXCEPT {}
+
 TypeDecl::~TypeDecl() SKR_NOEXCEPT
 {
     SKR_ASSERT(ptr->use_count());
@@ -28,7 +31,7 @@ TypeDecl::~TypeDecl() SKR_NOEXCEPT
 TypeDecl TypeDecl::GetFirstType(TypeDecl _this) SKR_NOEXCEPT
 {
     auto This = (::das::TypeDecl*)_this.ptr;
-    return (TypeDecl)This->firstType.get();
+    return TypeDecl::_make(This->firstType.orphan());
 }
 
 void TypeDecl::SetFirstType(TypeDecl _this, TypeDecl decl) SKR_NOEXCEPT
@@ -37,16 +40,34 @@ void TypeDecl::SetFirstType(TypeDecl _this, TypeDecl decl) SKR_NOEXCEPT
     This->firstType = (::das::TypeDecl*)decl.ptr;;
 }
 
+bool TypeDecl::IsSmartPtr(TypeDecl _this) SKR_NOEXCEPT
+{
+    auto This = (::das::TypeDecl*)_this.ptr;
+    return This->smartPtr;
+}
+
 void TypeDecl::SetIsSmartPtr(TypeDecl _this, bool o) SKR_NOEXCEPT
 {
     auto This = (::das::TypeDecl*)_this.ptr;
     This->smartPtr = o;
 }
 
+bool TypeDecl::IsConstant(TypeDecl _this) SKR_NOEXCEPT
+{
+    auto This = (::das::TypeDecl*)_this.ptr;
+    return This->constant;
+}
+
 void TypeDecl::SetIsConstant(TypeDecl _this, bool o) SKR_NOEXCEPT
 {
     auto This = (::das::TypeDecl*)_this.ptr;
     This->constant = o;
+}
+
+bool TypeDecl::IsRef(TypeDecl _this) SKR_NOEXCEPT
+{
+    auto This = (::das::TypeDecl*)_this.ptr;
+    return This->ref;
 }
 
 void TypeDecl::SetIsRef(TypeDecl _this, bool o) SKR_NOEXCEPT

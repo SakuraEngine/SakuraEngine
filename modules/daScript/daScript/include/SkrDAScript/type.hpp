@@ -31,11 +31,13 @@ struct TypeDecl
     template <typename T>
     static TypeDecl MakeArgumentType(const Library* lib);
 
+    SKR_DASCRIPT_API TypeDecl() SKR_NOEXCEPT;
+    SKR_DASCRIPT_API TypeDecl(std::nullptr_t) SKR_NOEXCEPT;
+
+public: // none-export methods
     static TypeDecl _make(::das::TypeDecl* ptr);
     ::das::TypeDecl* _get() const;
 
-    TypeDecl() = default;
-    TypeDecl(std::nullptr_t) {}
 private:
     TypeDecl(::das::TypeDecl* ptr) : ptr(ptr) {}
     ::das::TypeDecl* ptr = nullptr;
