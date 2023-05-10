@@ -21,6 +21,7 @@ protected:
     void* ptr = nullptr;
 };
 
+/*
 struct SKR_DASCRIPT_API FunctionId
 {
     friend struct skr::das::Context;
@@ -59,7 +60,7 @@ struct SKR_DASCRIPT_API BuiltinFunction
     BuiltinFunction* arg(const char8_t* argName) SKR_NOEXCEPT;
     BuiltinFunction* args(std::initializer_list<const char8_t*> argList) SKR_NOEXCEPT;
 };
-
+*/
 } // namespace das
 } // namespace skr
 
