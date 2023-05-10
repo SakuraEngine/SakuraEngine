@@ -6,6 +6,8 @@
 struct Color 
 {
     uint8_t r, g, b, a;
+    float f;
+    float f1;
     float luminance() const { return 0.2126f*r + 0.7152f*g + 0.0722f*b; }
 };
 SKR_DASCRIPT_INLINE_TYPE_FACTORY(Color, Color);
@@ -21,6 +23,7 @@ struct AnnotationRegister_Color
         cA->add_field(offsetof(Color, g), EBuiltinType::UINT8, u8"g");
         cA->add_field(offsetof(Color, b), EBuiltinType::UINT8, u8"b");
         cA->add_field(offsetof(Color, a), EBuiltinType::UINT8, u8"a");
+        cA->add_field(offsetof(Color, f), EBuiltinType::FLOAT2, u8"f2");
         cA->add_property<decltype(&Color::luminance), &Color::luminance>(u8"luminance");
         colorType = skr::das::TypeDecl::MakeType<Color>(lib);
     }

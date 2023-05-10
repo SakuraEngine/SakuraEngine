@@ -73,11 +73,8 @@ typedef struct skr_uint32x2_t {
 } skr_uint32x2_t;
 
 typedef struct skr_float2_t {
-    struct
-    {
-        float x SKR_IF_CPP( = 0.f);
-        float y SKR_IF_CPP( = 0.f);
-    };
+    float x SKR_IF_CPP( = 0.f);
+    float y SKR_IF_CPP( = 0.f);
 } skr_float2_t;
 
 typedef struct skr_float3_t {
