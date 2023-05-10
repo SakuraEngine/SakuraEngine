@@ -41,7 +41,7 @@ struct ExternalFn : public ::das::ExternalFnBase
         return context.code->makeNode<::SimNode_ExternCall>(call, at, fnName);
     }
 
-    virtual void* getBuiltinAddress() const override { return call; }
+    virtual void* getBuiltinAddress() const override { return (void*)call; }
     skr::das::BuiltInSimProc call = nullptr;
 };
 }
