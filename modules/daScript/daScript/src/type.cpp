@@ -19,10 +19,23 @@ TypeDecl::TypeDecl(const TypeDecl& t) SKR_NOEXCEPT
     ptr->addRef();
 }
 
+TypeDecl::TypeDecl(TypeDecl&& t) SKR_NOEXCEPT
+{
+    ptr = t.ptr;
+    t.ptr = nullptr;
+}
+
 TypeDecl& TypeDecl::operator=(const TypeDecl& t) SKR_NOEXCEPT
 {
     ptr = t.ptr;
     ptr->addRef();
+    return *this;
+}
+
+TypeDecl& TypeDecl::operator=(TypeDecl&& t) SKR_NOEXCEPT
+{
+    ptr = t.ptr;
+    t.ptr = nullptr;
     return *this;
 }
 
@@ -31,8 +44,11 @@ TypeDecl::TypeDecl(std::nullptr_t) SKR_NOEXCEPT {}
 
 TypeDecl::~TypeDecl() SKR_NOEXCEPT
 {
-    SKR_ASSERT(ptr->use_count());
-    ptr->delRef();
+    if (ptr)
+    {
+        SKR_ASSERT(ptr->use_count());
+        ptr->delRef();
+    }
 }
 
 TypeDecl TypeDecl::MakeHandleType(const Library* lib, const char8_t* name) SKR_NOEXCEPT

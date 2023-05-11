@@ -26,7 +26,9 @@ struct TypeDecl
     static TypeDecl MakeArgumentType(const Library* lib);
 
     SKR_DASCRIPT_API TypeDecl(const TypeDecl& t) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API TypeDecl(TypeDecl&& t) SKR_NOEXCEPT;
     SKR_DASCRIPT_API TypeDecl& operator=(const TypeDecl& t) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API TypeDecl& operator=(TypeDecl&& t) SKR_NOEXCEPT;
 
     SKR_DASCRIPT_API TypeDecl() SKR_NOEXCEPT;
     SKR_DASCRIPT_API TypeDecl(std::nullptr_t) SKR_NOEXCEPT;
