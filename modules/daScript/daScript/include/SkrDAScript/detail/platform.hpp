@@ -3,6 +3,9 @@
 #include "platform/configure.h"
 #include <type_traits>
 #include "utils/types.h"
+#ifndef VECMATH_FINLINE
+#define VECMATH_FINLINE FORCEINLINE
+#endif
 #include <vecmath/dag_vecMath.h>
 
 namespace skr {

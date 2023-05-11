@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrDAScript/type.hpp"
-#include <EASTL/vector.h>
+#include <EASTL/array.h>
 
 namespace skr {
 namespace das {
@@ -66,10 +66,11 @@ private:
     ::das::BuiltInFunction* ptr = nullptr;
 };
 
-template <typename RetT, typename ...Args>
-FORCEINLINE eastl::vector<TypeDecl> make_builtin_args(const Library* lib)
+template <typename RetT, size_t N, typename ...Args>
+FORCEINLINE eastl::array<TypeDecl, N> make_builtin_args(const Library* lib)
 {
-    return { TypeDecl::MakeType<RetT>(lib), TypeDecl::MakeArgumentType<Args>(lib)... };
+    eastl::array<TypeDecl, N> args = { TypeDecl::MakeType<RetT>(lib), TypeDecl::MakeArgumentType<Args>(lib)... };
+    return std::move(args);
 }
 
 template<typename F> struct make_func_args;
@@ -85,16 +86,16 @@ namespace das {
 template<typename R, typename ...Args>
 struct make_func_args<R(Args...)> 
 {
-    static FORCEINLINE eastl::vector<TypeDecl> make(const Library* lib) 
+    static FORCEINLINE eastl::array<TypeDecl, 1 + sizeof...(Args)> make(const Library* lib) 
     {
-        return make_builtin_args<R, Args...>(lib);
+        return std::move(make_builtin_args<R, 1 + sizeof...(Args), Args...>(lib));
     }
 };
 
 template <typename FuncT, FuncT fn, bool IS_REF, bool IS_CMRES, typename FuncArgT>
 inline BuiltInFunction BuiltInFunction::MakeExternFunction(const Library* lib, const char8_t* name, const char8_t* cppName) SKR_NOEXCEPT
 {
-    auto args = make_func_args<FuncArgT>::make(lib);
+    const auto args = make_func_args<FuncArgT>::make(lib);
     BuiltInSimProc call = +[](::das::SimNode** args, ::das::Context& context, void* res) -> skr::das::reg4f 
     {
         // auto addr = ImplWrapCall<IS_CMRES, NeedVectorWrap<FuncT>::value, FuncT, fn>::get_builtin_address();
