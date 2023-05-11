@@ -13,6 +13,19 @@ TypeDecl TypeDecl::_make(::das::TypeDecl* ptr)
     return ptr;
 }
 
+TypeDecl::TypeDecl(const TypeDecl& t) SKR_NOEXCEPT
+{
+    ptr = t.ptr;
+    ptr->addRef();
+}
+
+TypeDecl& TypeDecl::operator=(const TypeDecl& t) SKR_NOEXCEPT
+{
+    ptr = t.ptr;
+    ptr->addRef();
+    return *this;
+}
+
 TypeDecl::TypeDecl() SKR_NOEXCEPT {}
 TypeDecl::TypeDecl(std::nullptr_t) SKR_NOEXCEPT {}
 

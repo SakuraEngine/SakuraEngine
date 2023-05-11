@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrDAScript/env.hpp"
+#include "SkrDAScript/function.hpp"
 
 namespace skr {
 namespace das {
@@ -11,6 +11,7 @@ struct SKR_DASCRIPT_API Module
 
     virtual ~Module() SKR_NOEXCEPT;
     virtual void add_annotation(Annotation* annotation) SKR_NOEXCEPT = 0;
+    virtual void add_function(BuiltInFunction func) SKR_NOEXCEPT = 0;
 };
 
 } // namespace das

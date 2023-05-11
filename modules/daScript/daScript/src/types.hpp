@@ -141,6 +141,7 @@ struct ModuleImpl : public Module
 {
     ModuleImpl(const char8_t* name);
     void add_annotation(Annotation* annotation) SKR_NOEXCEPT;
+    void add_function(BuiltInFunction func) SKR_NOEXCEPT;
 
     class ModuleSkr : public ::das::Module {
     public:

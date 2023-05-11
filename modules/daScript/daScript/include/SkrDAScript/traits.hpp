@@ -1,7 +1,6 @@
 #pragma once
-#include "SkrDAScript/module.configure.h"
-#include "platform/configure.h"
-#include "utils/types.h"
+#include "SkrDAScript/detail/das_traits.hpp"
+#include "SkrDAScript/detail/das_call.hpp"
 
 namespace skr {
 namespace das {
@@ -18,20 +17,20 @@ template <typename TT> struct WrapType { enum { value = false }; typedef TT type
 template <typename TT> struct WrapArgType { typedef TT type; };
 template <typename TT> struct WrapRetType { typedef TT type; };
 
-template <> struct WrapType<skr_float2_t> { enum { value = true }; typedef skr_float4_t type; };
-template <> struct WrapType<skr_float3_t> { enum { value = true }; typedef skr_float4_t type; };
-template <> struct WrapType<skr_float4_t> { enum { value = true }; typedef skr_float4_t type; };
+template <> struct WrapType<skr_float2_t> { enum { value = true }; typedef reg4f type; };
+template <> struct WrapType<skr_float3_t> { enum { value = true }; typedef reg4f type; };
+template <> struct WrapType<skr_float4_t> { enum { value = true }; typedef reg4f type; };
 /*
-template <> struct WrapType<int2> { enum { value = true }; typedef vec4f type; };
-template <> struct WrapType<int3> { enum { value = true }; typedef vec4f type; };
-template <> struct WrapType<int4> { enum { value = true }; typedef vec4f type; };
-template <> struct WrapType<uint2> { enum { value = true }; typedef vec4f type; };
-template <> struct WrapType<uint3> { enum { value = true }; typedef vec4f type; };
-template <> struct WrapType<uint4> { enum { value = true }; typedef vec4f type; };
-template <> struct WrapType<range> { enum { value = true }; typedef vec4f type; };
-template <> struct WrapType<urange> { enum { value = true }; typedef vec4f type; };
-template <> struct WrapType<range64> { enum { value = true }; typedef vec4f type; };
-template <> struct WrapType<urange64> { enum { value = true }; typedef vec4f type; };
+template <> struct WrapType<int2> { enum { value = true }; typedef reg4f type; };
+template <> struct WrapType<int3> { enum { value = true }; typedef reg4f type; };
+template <> struct WrapType<int4> { enum { value = true }; typedef reg4f type; };
+template <> struct WrapType<uint2> { enum { value = true }; typedef reg4f type; };
+template <> struct WrapType<uint3> { enum { value = true }; typedef reg4f type; };
+template <> struct WrapType<uint4> { enum { value = true }; typedef reg4f type; };
+template <> struct WrapType<range> { enum { value = true }; typedef reg4f type; };
+template <> struct WrapType<urange> { enum { value = true }; typedef reg4f type; };
+template <> struct WrapType<range64> { enum { value = true }; typedef reg4f type; };
+template <> struct WrapType<urange64> { enum { value = true }; typedef reg4f type; };
 */
 
 template <typename... Ts> struct AnyVectorType;
@@ -48,8 +47,6 @@ template <typename Ret, typename ... Args> struct NeedVectorWrap< Ret(*)(Args...
         value = result || arguments
     };
 };
-
-template <int CMRES, int wrap, typename FuncT, FuncT fn> struct ImplWrapCall;
 
 template <typename FuncT, FuncT fn>     // no cmres, no wrap
 struct ImplWrapCall<false,false,FuncT,fn> {

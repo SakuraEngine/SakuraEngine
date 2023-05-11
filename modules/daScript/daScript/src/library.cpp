@@ -27,6 +27,10 @@ struct InnerModuleImpl : public Module
         *static_cast<::das::smart_ptr<::das::Annotation>*>(annotation->get_ptrptr())
         );
     }
+    void add_function(BuiltInFunction func) SKR_NOEXCEPT
+    {
+        mod->addFunction(func._get());
+    }
     ::das::Module* mod;
 };
 

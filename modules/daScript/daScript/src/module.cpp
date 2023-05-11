@@ -32,5 +32,10 @@ void ModuleImpl::add_annotation(Annotation* annotation) SKR_NOEXCEPT
     );
 }
 
+void ModuleImpl::add_function(BuiltInFunction func) SKR_NOEXCEPT
+{
+    mod->addFunction(func._get());
+}
+
 } // namespace das
 } // namespace skr

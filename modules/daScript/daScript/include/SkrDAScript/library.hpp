@@ -8,7 +8,7 @@ namespace das {
 template<bool IS_REF, bool IS_CMRES, typename callT> 
 struct register_property;
 
-template <typename FuncT, FuncT fn, bool IS_REF = false, bool IS_CMRES = false>
+template <typename FuncT, FuncT fn, bool IS_REF = false>
 inline BuiltInFunction add_extern_property(Module* mod, const Library* lib, const char8_t* name, const char8_t * cppName = nullptr);
 
 struct LibraryDescriptor
@@ -39,7 +39,7 @@ struct SKR_DASCRIPT_API Library
 namespace skr {
 namespace das {
 
-template <typename FuncT, FuncT fn, bool IS_REF, bool IS_CMRES>
+template <typename FuncT, FuncT fn, bool IS_REF>
 FORCEINLINE BuiltInFunction add_extern_property(Module* mod, const Library* lib, const char8_t* name, const char8_t* cppName)
 {
     /*
@@ -48,8 +48,9 @@ FORCEINLINE BuiltInFunction add_extern_property(Module* mod, const Library* lib,
     mod.addFunction(fnX,true);  // yes, this one can fail. same C++ bound property can be in multiple classes before or after refactor
     return fnX;
     */
-    auto f = BuiltInFunction::MakeExternFunction<FuncT, fn>(lib, name, cppName);
+    auto f = BuiltInFunction::MakeExternFunction<FuncT, fn, IS_REF>(lib, name, cppName);
     f.set_is_property(true);
+    mod->add_function(f);
     return f;
 }
 
