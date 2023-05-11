@@ -15,9 +15,9 @@ struct SimNode_ExternCall : public ::das::SimNode_ExtFuncCallBase
         if (cmresEval)
         {
             void * cmres = cmresEval->evalPtr(context);
-            return call(arguments, context, cmres);
+            return call(arguments, &context, cmres);
         }
-        return call(arguments, context, nullptr);
+        return call(arguments, &context, nullptr);
     }
     skr::das::BuiltInSimProc call = nullptr;
     /*

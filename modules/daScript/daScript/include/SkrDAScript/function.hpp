@@ -22,7 +22,7 @@ protected:
     void* ptr = nullptr;
 };
 
-using BuiltInSimProc = skr::das::reg4f(*)(::das::SimNode**, ::das::Context&, void*);
+typedef skr::das::reg4f (*BuiltInSimProc)(::das::SimNode**, ::das::Context*, void*);
 struct SKR_DASCRIPT_API BuiltInFunction
 {
     static BuiltInFunction MakeExternFunction(const Library* lib, 
@@ -96,20 +96,20 @@ template <typename FuncT, FuncT fn, bool IS_REF, bool IS_CMRES, typename FuncArg
 inline BuiltInFunction BuiltInFunction::MakeExternFunction(const Library* lib, const char8_t* name, const char8_t* cppName) SKR_NOEXCEPT
 {
     const auto args = make_func_args<FuncArgT>::make(lib);
-    BuiltInSimProc call = +[](::das::SimNode** args, ::das::Context& context, void* res) -> skr::das::reg4f 
+    BuiltInSimProc call = +[](::das::SimNode** args, ::das::Context* context, void* res) -> skr::das::reg4f 
     {
         // auto addr = ImplWrapCall<IS_CMRES, NeedVectorWrap<FuncT>::value, FuncT, fn>::get_builtin_address();
         if constexpr (IS_CMRES)
         {
-            return ImplCallStaticFunctionAndCopy<FuncT>::call(*fn, context, res, args);
+            return ImplCallStaticFunctionAndCopy<FuncT>::call(*fn, *context, res, args);
         }
         else if constexpr (IS_REF)
         {
-            return ImplCallStaticFunctionRef<FuncT>::call(*fn, context, args);
+            return ImplCallStaticFunctionRef<FuncT>::call(*fn, *context, args);
         }
         else
         {
-            return ImplCallStaticFunction<FuncT>::call(*fn, context, args);
+            return ImplCallStaticFunction<FuncT>::call(*fn, *context, args);
         }
     };
     auto builtin = BuiltInFunction::MakeExternFunction(lib, call, IS_CMRES, name, cppName);
