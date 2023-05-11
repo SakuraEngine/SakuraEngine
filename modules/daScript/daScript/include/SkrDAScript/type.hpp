@@ -25,6 +25,9 @@ struct TypeDecl
     template <typename T>
     static TypeDecl MakeArgumentType(const Library* lib);
 
+    SKR_DASCRIPT_API TypeDecl(const TypeDecl& t) SKR_NOEXCEPT;
+    SKR_DASCRIPT_API TypeDecl& operator=(const TypeDecl& t) SKR_NOEXCEPT;
+
     SKR_DASCRIPT_API TypeDecl() SKR_NOEXCEPT;
     SKR_DASCRIPT_API TypeDecl(std::nullptr_t) SKR_NOEXCEPT;
     SKR_DASCRIPT_API ~TypeDecl() SKR_NOEXCEPT;
@@ -171,7 +174,8 @@ namespace das {
 template <typename T>
 TypeDecl TypeDecl::MakeType(const Library* lib)
 {
-    return TypeFactory<T>::make(lib);
+    auto type = TypeFactory<T>::make(lib);
+    return type;
 }
 
 template <typename T>

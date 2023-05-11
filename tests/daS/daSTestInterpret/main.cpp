@@ -4,12 +4,14 @@
 
 using namespace das;
 
-const char8_t* tutorial_text = u8R""""(
+const char8_t* tutorial_text = u8R"(
+var p : int = 12
 [export]
 def test
     print("this is nano tutorial\n")
-    return 12
-)"""";
+    p = p + 1
+    return p
+)";
 
 int main(int argc, char** argv) {
     auto env_desc = make_zeroed<skr::das::EnvironmentDescriptor>();

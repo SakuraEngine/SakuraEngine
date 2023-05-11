@@ -12,8 +12,12 @@ struct SimNode_ExternCall : public ::das::SimNode_ExtFuncCallBase
     virtual vec4f DAS_EVAL_ABI eval(::das::Context& context) override 
     {
         DAS_PROFILE_NODE
-        return {};
-        // return ImplCallStaticFunction<FuncT>::call(*fn, context, arguments);
+        if (cmresEval)
+        {
+            void * cmres = cmresEval->evalPtr(context);
+            return call(arguments, context, cmres);
+        }
+        return call(arguments, context, nullptr);
     }
     skr::das::BuiltInSimProc call = nullptr;
     /*
@@ -94,6 +98,19 @@ BuiltInFunction BuiltInFunction::_make(::das::BuiltInFunction* ptr)
     return ptr;
 }
 
+BuiltInFunction::BuiltInFunction(const BuiltInFunction& t) SKR_NOEXCEPT
+{
+    ptr = t.ptr;
+    ptr->addRef();
+}
+
+BuiltInFunction& BuiltInFunction::operator=(const BuiltInFunction& t) SKR_NOEXCEPT
+{
+    ptr = t.ptr;
+    ptr->addRef();
+    return *this;
+}
+
 BuiltInFunction::BuiltInFunction() SKR_NOEXCEPT {}
 BuiltInFunction::BuiltInFunction(std::nullptr_t) SKR_NOEXCEPT {}
 
@@ -104,7 +121,7 @@ BuiltInFunction::~BuiltInFunction() SKR_NOEXCEPT
 }
 
 BuiltInFunction BuiltInFunction::MakeExternFunction(const Library* lib, 
-    void(*call)(), bool IS_CMRES, const char8_t* name, const char8_t* cppName) SKR_NOEXCEPT
+    BuiltInSimProc call, bool IS_CMRES, const char8_t* name, const char8_t* cppName) SKR_NOEXCEPT
 {
     auto fnX = ::das::make_smart<::ExternalFn>(
         call, (const char*)name, (const char*)(cppName ? cppName : name));
