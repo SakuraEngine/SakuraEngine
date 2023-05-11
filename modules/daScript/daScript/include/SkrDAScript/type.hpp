@@ -6,33 +6,33 @@ namespace das { struct TypeDecl; class BuiltInFunction; }
 namespace skr {
 namespace das {
 
-struct TypeDecl
+struct SKR_DASCRIPT_API TypeDecl
 {
-    SKR_DASCRIPT_API static TypeDecl MakeHandleType(const Library* lib, const char8_t* name) SKR_NOEXCEPT;
+    static TypeDecl MakeHandleType(const Library* lib, const char8_t* name) SKR_NOEXCEPT;
 
-    SKR_DASCRIPT_API TypeDecl get_first_type() SKR_NOEXCEPT;
-    SKR_DASCRIPT_API void set_first_type(TypeDecl decl) SKR_NOEXCEPT;
-    SKR_DASCRIPT_API bool is_smartptr() SKR_NOEXCEPT;
-    SKR_DASCRIPT_API void set_is_smartptr(bool) SKR_NOEXCEPT;
-    SKR_DASCRIPT_API bool is_constant() SKR_NOEXCEPT;
-    SKR_DASCRIPT_API void set_is_constant(bool) SKR_NOEXCEPT;
-    SKR_DASCRIPT_API bool is_ref() SKR_NOEXCEPT;
-    SKR_DASCRIPT_API void set_is_ref(bool) SKR_NOEXCEPT;
-    SKR_DASCRIPT_API bool is_ref_type() SKR_NOEXCEPT;
+    TypeDecl get_first_type() SKR_NOEXCEPT;
+    void set_first_type(TypeDecl decl) SKR_NOEXCEPT;
+    bool is_smartptr() SKR_NOEXCEPT;
+    void set_is_smartptr(bool) SKR_NOEXCEPT;
+    bool is_constant() SKR_NOEXCEPT;
+    void set_is_constant(bool) SKR_NOEXCEPT;
+    bool is_ref() SKR_NOEXCEPT;
+    void set_is_ref(bool) SKR_NOEXCEPT;
+    bool is_ref_type() SKR_NOEXCEPT;
 
     template <typename T>
     static TypeDecl MakeType(const Library* lib);
     template <typename T>
     static TypeDecl MakeArgumentType(const Library* lib);
 
-    SKR_DASCRIPT_API TypeDecl(const TypeDecl& t) SKR_NOEXCEPT;
-    SKR_DASCRIPT_API TypeDecl(TypeDecl&& t) SKR_NOEXCEPT;
-    SKR_DASCRIPT_API TypeDecl& operator=(const TypeDecl& t) SKR_NOEXCEPT;
-    SKR_DASCRIPT_API TypeDecl& operator=(TypeDecl&& t) SKR_NOEXCEPT;
+    TypeDecl(const TypeDecl& t) SKR_NOEXCEPT;
+    TypeDecl(TypeDecl&& t) SKR_NOEXCEPT;
+    TypeDecl& operator=(const TypeDecl& t) SKR_NOEXCEPT;
+    TypeDecl& operator=(TypeDecl&& t) SKR_NOEXCEPT;
 
-    SKR_DASCRIPT_API TypeDecl() SKR_NOEXCEPT;
-    SKR_DASCRIPT_API TypeDecl(std::nullptr_t) SKR_NOEXCEPT;
-    SKR_DASCRIPT_API ~TypeDecl() SKR_NOEXCEPT;
+    TypeDecl() SKR_NOEXCEPT;
+    TypeDecl(std::nullptr_t) SKR_NOEXCEPT;
+    ~TypeDecl() SKR_NOEXCEPT;
 
 public: // none-export methods
     static TypeDecl _make(::das::TypeDecl* ptr);

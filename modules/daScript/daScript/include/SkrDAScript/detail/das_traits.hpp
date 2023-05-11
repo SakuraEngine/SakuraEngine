@@ -3,7 +3,7 @@
 
 namespace das
 {
-class Context; class SimNode; struct LineInfoArg;
+class Context; struct SimNode; struct LineInfoArg;
 
 RUNTIME_EXTERN_C SKR_DASCRIPT_API void ThrowCtxError(::das::Context& context, const char8_t* msg);
 RUNTIME_EXTERN_C SKR_DASCRIPT_API skr::das::reg4f EvalNode(::das::Context& context, ::das::SimNode* node);
