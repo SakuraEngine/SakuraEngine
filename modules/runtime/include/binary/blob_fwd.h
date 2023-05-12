@@ -3,7 +3,7 @@
 #include "platform/configure.h"
 #include <type_traits>
 
-struct RUNTIME_API skr_blob_arena_t
+struct RUNTIME_STATIC_API skr_blob_arena_t
 {
     skr_blob_arena_t();
     skr_blob_arena_t(void* buffer, uint64_t base, uint32_t size, uint32_t align);
@@ -26,7 +26,7 @@ private:
     uint32_t capacity;
 };
 
-struct RUNTIME_API skr_blob_arena_builder_t
+struct RUNTIME_STATIC_API skr_blob_arena_builder_t
 {
     skr_blob_arena_builder_t(size_t align);
     ~skr_blob_arena_builder_t();

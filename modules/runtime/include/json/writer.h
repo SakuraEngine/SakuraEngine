@@ -32,7 +32,7 @@ struct skr_json_format_t
     uint32_t indentSize = 4;
 };
 
-struct RUNTIME_API skr_json_writer_t {
+struct RUNTIME_STATIC_API skr_json_writer_t {
 public:
     using TChar = skr_json_writer_char_t;
     using TSize = skr_json_writer_size_t;
@@ -192,47 +192,47 @@ struct WriteTrait<const skr::string&> {
 };
 
 template <>
-struct RUNTIME_API WriteTrait<const skr_guid_t&> {
+struct RUNTIME_STATIC_API WriteTrait<const skr_guid_t&> {
     static void Write(skr_json_writer_t* writer, const skr_guid_t& guid);
 };
 
 template <>
-struct RUNTIME_API WriteTrait<const skr_md5_t&> {
+struct RUNTIME_STATIC_API WriteTrait<const skr_md5_t&> {
     static void Write(skr_json_writer_t* writer, const skr_md5_t& md5);
 };
 
 template <>
-struct RUNTIME_API WriteTrait<const skr_float2_t&> {
+struct RUNTIME_STATIC_API WriteTrait<const skr_float2_t&> {
     static void Write(skr_json_writer_t* writer, const skr_float2_t& v);
 };
 
 template <>
-struct RUNTIME_API WriteTrait<const skr_float3_t&> {
+struct RUNTIME_STATIC_API WriteTrait<const skr_float3_t&> {
     static void Write(skr_json_writer_t* writer, const skr_float3_t& v);
 };
 
 template <>
-struct RUNTIME_API WriteTrait<const skr_float4_t&> {
+struct RUNTIME_STATIC_API WriteTrait<const skr_float4_t&> {
     static void Write(skr_json_writer_t* writer, const skr_float4_t& v);
 };
 
 template <>
-struct RUNTIME_API WriteTrait<const skr_rotator_t&> {
+struct RUNTIME_STATIC_API WriteTrait<const skr_rotator_t&> {
     static void Write(skr_json_writer_t* writer, const skr_rotator_t& v);
 };
 
 template <>
-struct RUNTIME_API WriteTrait<const skr_float4x4_t&> {
+struct RUNTIME_STATIC_API WriteTrait<const skr_float4x4_t&> {
     static void Write(skr_json_writer_t* writer, const skr_float4x4_t& v);
 };
 
 template <>
-struct RUNTIME_API WriteTrait<const skr_quaternion_t&> {
+struct RUNTIME_STATIC_API WriteTrait<const skr_quaternion_t&> {
     static void Write(skr_json_writer_t* writer, const skr_quaternion_t& v);
 };
 
 template <>
-struct RUNTIME_API WriteTrait<const skr_resource_handle_t&> {
+struct RUNTIME_STATIC_API WriteTrait<const skr_resource_handle_t&> {
     static void Write(skr_json_writer_t* writer, const skr_resource_handle_t& handle);
 };
 
