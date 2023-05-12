@@ -1982,22 +1982,6 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12_impl(CGPUDeviceId device, const CGPU
 
     SAFE_RELEASE(swapchain);
 
-	// Allowing multiple command queues to present for applications like Alternate Frame Rendering
-	if (desc->present_queues_count > 1)
-	{
-		IUnknown** ppQueues = (IUnknown**)alloca(desc->present_queues_count * sizeof(IUnknown*));
-		UINT*      pCreationMasks = (UINT*)alloca(desc->present_queues_count * sizeof(UINT));
-		for (uint32_t i = 0; i < desc->present_queues_count; ++i)
-		{
-            CGPUQueue_D3D12* QI = (CGPUQueue_D3D12*)desc->present_queues[0];
-			ppQueues[i] = QI->pCommandQueue;
-			pCreationMasks[i] = CGPU_SINGLE_GPU_NODE_MASK;
-		}
-
-		S->pDxSwapChain->ResizeBuffers1(desc->image_count, desc->width, desc->height, 
-            chain_desc1.Format, chain_desc1.Flags, pCreationMasks, ppQueues);
-	}
-
     // Get swapchain images
     ID3D12Resource** backbuffers = (ID3D12Resource**)alloca(desc->image_count * sizeof(ID3D12Resource*));
     for (uint32_t i = 0; i < desc->image_count; ++i)
