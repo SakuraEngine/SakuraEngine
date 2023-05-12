@@ -32,8 +32,10 @@ constexpr static auto is_complete = SKR_VALIDATOR((auto t), sizeof(t));
 template<class T>
 constexpr bool is_complete_v = is_complete(SKR_TYPELIST(T));
 
-#if __cplusplus >= 202002L
+#if __cpp_lib_assume_aligned
+
 using std::assume_aligned;
+
 #else
 
 template<std::size_t N, class T>
