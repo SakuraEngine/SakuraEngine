@@ -96,6 +96,42 @@ struct StructureAnnotationDescriptor
     StructureAnnotationFlags flags = EStructureAnnotationFlag::None;
 };
 
+template <typename T>
+struct annotation_flags
+{
+    static constexpr uint64_t get() 
+    {
+        uint64_t flags = 0;
+        if constexpr (!std::is_trivially_constructible_v<T>) 
+        {
+            flags |= skr::das::EStructureAnnotationFlag::HasNonTrivalCtor;
+        }
+        if constexpr (!std::is_trivially_destructible_v<T>) 
+        {
+            flags |= skr::das::EStructureAnnotationFlag::HasNonTrivalDtor;
+        }
+        if constexpr (!std::is_trivially_copyable_v<T> || !std::is_trivially_copy_constructible_v<T>) 
+        {
+            flags |= skr::das::EStructureAnnotationFlag::HasNonTrivalCopy;
+        }
+        if constexpr (std::is_standard_layout_v<T>) 
+        {
+            flags |= skr::das::EStructureAnnotationFlag::IsPOD;
+        }
+        if constexpr (skr::das::is_cloneable<T>::value) 
+        {
+            flags |= skr::das::EStructureAnnotationFlag::CanClone;
+        }
+        flags |= skr::das::EStructureAnnotationFlag::CanNew;
+        flags |= skr::das::EStructureAnnotationFlag::CanDeletePtr;
+        return flags;
+    }
+    static constexpr uint64_t value = get();
+};
+
+template <typename T>
+constexpr uint64_t annotation_flags_v = annotation_flags<T>::value;
+
 struct SKR_DASCRIPT_API StructureAnnotation : public TypeAnnotation
 {
     static StructureAnnotation* Create(Library* library, const StructureAnnotationDescriptor& desc) SKR_NOEXCEPT;
@@ -110,29 +146,7 @@ struct SKR_DASCRIPT_API StructureAnnotation : public TypeAnnotation
         AnnotationDesc.alignment = alignof(T);
         AnnotationDesc.initializer = +[](void* ptr) { new (ptr) T; };
         AnnotationDesc.finalizer = +[](void* ptr) { delete (T*)ptr; };
-        if constexpr (!std::is_trivially_constructible<T>::value) 
-        {
-            AnnotationDesc.flags |= skr::das::EStructureAnnotationFlag::HasNonTrivalCtor;
-        }
-        if constexpr (!std::is_trivially_destructible<T>::value) 
-        {
-            AnnotationDesc.flags |= skr::das::EStructureAnnotationFlag::HasNonTrivalDtor;
-        }
-        if constexpr (!std::is_trivially_copyable_v<T> || !std::is_trivially_copy_constructible_v<T>) 
-        {
-            AnnotationDesc.flags |= skr::das::EStructureAnnotationFlag::HasNonTrivalCopy;
-        }
-        if constexpr (std::is_pod<T>::value) 
-        {
-            AnnotationDesc.flags |= skr::das::EStructureAnnotationFlag::IsPOD;
-        }
-        if constexpr (skr::das::is_cloneable<T>::value) 
-        {
-            AnnotationDesc.flags |= skr::das::EStructureAnnotationFlag::CanClone;
-        }
-        AnnotationDesc.flags |= skr::das::EStructureAnnotationFlag::CanNew;
-        AnnotationDesc.flags |= skr::das::EStructureAnnotationFlag::CanDeletePtr;
-
+        AnnotationDesc.flags = annotation_flags_v<T>;
         return Create(library, AnnotationDesc);
     }
     
