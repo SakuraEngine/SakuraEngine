@@ -1,6 +1,7 @@
 #pragma once
 #include "platform/configure.h"
 #include <type_traits>
+#include <functional>  // std::hash
 #include <cassert>
 
 #ifndef DAS_SMART_PTR_ID
