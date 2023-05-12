@@ -186,6 +186,10 @@ extern const char* $name;
     #endif
 #endif
 
+#ifndef RUNTIME_STATIC_API
+    #define RUNTIME_STATIC_API
+#endif
+
 #ifdef RUNTIME_IMPL
     #ifndef RUNTIME_API
         #define RUNTIME_API RUNTIME_EXPORT

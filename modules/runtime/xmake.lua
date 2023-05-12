@@ -23,18 +23,32 @@ target("SkrDependencyGraph")
     add_includedirs(include_dir_list, {public = true})
     add_includedirs(private_include_dir_list, {public = false})
 
-shared_module("SkrRT", "RUNTIME", engine_version)
+target("SkrRTStatic")
     set_group("01.modules")
+    set_optimize("fastest")
+    set_exceptions("no-cxx")
     add_deps("SkrRoot", {public = true})
-    -- internal packages
-    add_packages("boost-context", "parallel-hashmap", "fmt", "lua", "simdjson", {public = true, inherit = true})
-    
-    -- defs & flags
+    add_defines("RUNTIME_API=RUNTIME_IMPORT", "RUNTIME_LOCAL=error")
+    add_packages("eastl", {public = true, inherit = true})
+    add_packages("parallel-hashmap", "fmt", "simdjson", {public = true, inherit = true})
+    add_rules("skr.static_module", {api = "SKR_RUNTIME_STATIC"})
     add_defines(defs_list, {public = true})
-    add_ldflags(project_ldflags, {public = true, force = true})
-    add_cxflags(project_cxflags, {public = true, force = true})
     add_includedirs(include_dir_list, {public = true})
     add_includedirs(private_include_dir_list, {public = false})
+    add_files("src_static/**/build.*.cpp")
+    -- add_files("src_static/**/build.*.c")
+
+shared_module("SkrRT", "RUNTIME", engine_version)
+    set_group("01.modules")
+    add_deps("SkrRTStatic", {public = true, inherit = true})
+    add_includedirs(private_include_dir_list, {public = false})
+
+    -- internal packages
+    add_packages("boost-context", "lua", {public = true, inherit = true})
+    
+    -- defs & flags
+    add_ldflags(project_ldflags, {public = true, force = true})
+    add_cxflags(project_cxflags, {public = true, force = true})
 
     -- add source files
     add_files(source_list)
