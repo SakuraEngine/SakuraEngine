@@ -3,6 +3,10 @@
 #include "utils/io.h"
 #include "io_service_util.hpp"
 
+// TODO: implement with new async_task
+#include "utils/async_task.hpp"
+skr::FutureStatus s;
+
 // RAM Service
 namespace skr
 {
