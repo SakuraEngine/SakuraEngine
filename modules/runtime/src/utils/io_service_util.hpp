@@ -88,9 +88,17 @@ public:
     virtual void drain_() SKR_NOEXCEPT
     {
         // wait for sleep
+        const auto timeout = 10u;
+        uint32_t ms = 0;
         for (; getServiceStatus() != SKR_ASYNC_SERVICE_STATUS_SLEEPING;)
         {
-            //...
+            skr_thread_sleep(1);
+            ms++;
+            if (ms > timeout * 1000u)
+            {
+                SKR_LOG_ERROR("drain timeout, force quit");
+                break;
+            }
         }
     }
 

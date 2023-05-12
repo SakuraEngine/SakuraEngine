@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "platform/vfs.h"
+#include "platform/thread.h"
 #include <string>
 #include <iostream>
 #include <platform/filesystem.hpp>
@@ -80,6 +81,23 @@ TEST_F(FSTest, seqread)
     EXPECT_EQ(skr_vfs_fclose(f), true);
 }
 
+template<typename F>
+void wait_timeout(F f, uint32_t seconds_timeout = 3)
+{
+    uint32_t seconds = 0;
+    while (!f())
+    {
+        skr_thread_sleep(1);
+        seconds++;
+        if (seconds > seconds_timeout * 1000)
+        {
+            SKR_LOG_ERROR("drain timeout, force quit");
+            EXPECT_TRUE(0);
+            break;
+        }
+    }
+}
+
 TEST_F(FSTest, asyncread)
 {
     skr_ram_io_service_desc_t ioServiceDesc = {};
@@ -99,9 +117,12 @@ TEST_F(FSTest, asyncread)
     skr_async_request_t request = {};
     skr_async_ram_destination_t destination = {};
     ioService->request(abs_fs, &ramIO, &request, &destination);
-    while (!request.is_ready()) 
+
+    wait_timeout([&request]()->bool
     {
-    }
+        return request.is_ready();
+    });
+    
     // ioService->drain();
     std::cout << (const char*)destination.bytes << std::endl;
     skr_io_ram_service_t::destroy(ioService);
@@ -142,7 +163,12 @@ TEST_F(FSTest, cancel)
         else
         {
             EXPECT_TRUE(anotherRequest.is_enqueued() || anotherRequest.is_ram_loading() || anotherRequest.is_ready());
-            while (!anotherRequest.is_ready()) {}
+
+            wait_timeout([&anotherRequest]()->bool
+            {
+                return anotherRequest.is_ready();
+            });
+
             EXPECT_EQ(std::string((const char*)anotherDestination.bytes, anotherDestination.size), std::string("Hello, World!"));
         }
         // while (!request.is_ready()) {}
@@ -188,7 +214,12 @@ TEST_F(FSTest, defer_cancel)
         else
         {
             EXPECT_TRUE(anotherRequest.is_enqueued() || anotherRequest.is_ram_loading() || anotherRequest.is_ready());
-            while (!anotherRequest.is_ready()) {}
+
+            wait_timeout([&anotherRequest]()->bool
+            {
+                return anotherRequest.is_ready();
+            });
+
             EXPECT_EQ(std::string((const char*)anotherDestination.bytes, anotherDestination.size), std::string("Hello, World!"));
         }
         EXPECT_EQ(std::string((const char*)destination.bytes, destination.size), std::string("Hello, World2!"));
@@ -228,10 +259,10 @@ TEST_F(FSTest, sort)
         skr_async_ram_destination_t anotherDestination = {};
         ioService->request(abs_fs, &anotherRamIO, &anotherRequest, &anotherDestination);
         ioService->run();
-        while (!anotherRequest.is_ready())
+        wait_timeout([&anotherRequest]()->bool
         {
-
-        }
+            return anotherRequest.is_ready();
+        });
         // while (!cancelled && !anotherRequest.is_ready()) {}
         ioService->drain();
         EXPECT_EQ(std::string((const char*)anotherDestination.bytes, anotherDestination.size), std::string("Hello, World!"));
