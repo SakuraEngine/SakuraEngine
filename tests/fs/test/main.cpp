@@ -208,23 +208,29 @@ TEST_F(FSTest, sort)
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
         ioService->stop(true);
         skr_ram_io_t ramIO = {};
+        skr_async_request_t request;
         ramIO.offset = 0;
         ramIO.priority = ::SKR_ASYNC_SERVICE_PRIORITY_NORMAL;
         ramIO.path = u8"testfile2";
         skr_ram_io_t anotherRamIO = {};
+        skr_async_request_t anotherRequest;
         anotherRamIO.offset = 0;
         anotherRamIO.priority = ::SKR_ASYNC_SERVICE_PRIORITY_URGENT;
         anotherRamIO.path = u8"testfile";
-        skr_async_request_t request;
+        anotherRamIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = &request;
+        anotherRamIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = 
+        +[](skr_async_request_t* r, void* data) {
+            skr_async_request_t& request = *(skr_async_request_t*)data;
+            EXPECT_TRUE(!request.is_ready());
+        };
         skr_async_ram_destination_t destination = {};
         ioService->request(abs_fs, &ramIO, &request, &destination);
-        skr_async_request_t anotherRequest;
-        skr_async_ram_destination_t anotherDestination;
+        skr_async_ram_destination_t anotherDestination = {};
         ioService->request(abs_fs, &anotherRamIO, &anotherRequest, &anotherDestination);
         ioService->run();
         while (!anotherRequest.is_ready())
         {
-            EXPECT_TRUE(!request.is_ready());
+
         }
         // while (!cancelled && !anotherRequest.is_ready()) {}
         ioService->drain();
