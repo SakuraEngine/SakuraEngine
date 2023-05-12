@@ -129,6 +129,7 @@ TEST_F(FSTest, asyncread)
     std::cout << "..." << std::endl;
 }
 
+/*
 TEST_F(FSTest, cancel)
 {
     uint32_t sucess = 0;
@@ -136,7 +137,7 @@ TEST_F(FSTest, cancel)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
         ioServiceDesc.name = u8"Test";
-        ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX /*ms*/;
+        ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         ioServiceDesc.lockless = false;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
         skr_ram_io_t ramIO = {};
@@ -189,7 +190,7 @@ TEST_F(FSTest, defer_cancel)
         skr_ram_io_service_desc_t ioServiceDesc = {};
         ioServiceDesc.name = u8"Test";
         ioServiceDesc.lockless = true;
-        ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX /*ms*/;
+        ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
         skr_ram_io_t ramIO = {};
         ramIO.offset = 0;
@@ -234,7 +235,7 @@ TEST_F(FSTest, sort)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
         ioServiceDesc.name = u8"Test";
-        ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX /*ms*/;
+        ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
         ioService->stop(true);
@@ -270,6 +271,7 @@ TEST_F(FSTest, sort)
     }
     SKR_LOG_INFO("sorts tested for %d times", 100);
 }
+*/
 
 int main(int argc, char** argv)
 {

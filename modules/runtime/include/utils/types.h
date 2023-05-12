@@ -64,26 +64,39 @@ RUNTIME_EXTERN_C RUNTIME_API void skr_make_md5(const char* str, uint32_t str_siz
 
 extern const skr_guid_t $guid;
 
+#ifdef __cplusplus
+#define SKR_DECLARE_VEC2_BODY(TT, NAME) \
+    TT x, y;\
+    FORCEINLINE bool operator == ( const NAME& vec ) const { return x==vec.x && y==vec.y; }\
+    FORCEINLINE bool operator != ( const NAME& vec ) const { return x!=vec.x || y!=vec.y; }\
+    FORCEINLINE NAME() = default;\
+    FORCEINLINE NAME(const NAME&) = default;\
+    FORCEINLINE NAME(TT X, TT Y) : x(X), y(Y) {} \
+    FORCEINLINE NAME(TT t) : x(t), y(t) {}
+#else
+#define SKR_DECLARE_VEC2_BODY(TT, NAME) TT x, y;
+#endif
+
+typedef struct skr_uint64x2_t {
+    SKR_DECLARE_VEC2_BODY(uint64_t, skr_uint64x2_t)
+} skr_uint64x2_t;
+
 typedef struct skr_uint32x2_t {
-    struct
-    {
-        uint32_t x SKR_IF_CPP( = 0u);
-        uint32_t y SKR_IF_CPP( = 0u);
-    };
+    SKR_DECLARE_VEC2_BODY(uint32_t, skr_uint32x2_t)
 } skr_uint32x2_t;
 
 typedef struct skr_float2_t {
-    float x SKR_IF_CPP( = 0.f);
-    float y SKR_IF_CPP( = 0.f);
+    SKR_DECLARE_VEC2_BODY(float, skr_float2_t)
 } skr_float2_t;
 
+typedef struct skr_double2_t {
+    SKR_DECLARE_VEC2_BODY(double, skr_double2_t)
+} skr_double2_t;
+
 typedef struct skr_float3_t {
-    struct
-    {
-        float x SKR_IF_CPP( = 0.f);
-        float y SKR_IF_CPP( = 0.f);
-        float z SKR_IF_CPP( = 0.f);
-    };
+    float x SKR_IF_CPP( = 0.f);
+    float y SKR_IF_CPP( = 0.f);
+    float z SKR_IF_CPP( = 0.f);
 } skr_float3_t;
 
 #ifdef __cplusplus
