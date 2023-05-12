@@ -12,7 +12,7 @@
 #define SKR_UTF8(str) str
 #endif
 
-#if __cplusplus >= 202000L
+#if __cpp_char8_t
 #define CHAR8_T_DEFINED
 #endif
 
