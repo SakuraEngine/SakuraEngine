@@ -65,6 +65,8 @@ jobs:
       - name: TestDebug
         if: success()
         shell: cmd
+        env:
+          TRACY_NO_INVARIANT_CHECK: 1
         run: xmake run -g 05.tests/*
 
       - name: ConfigureRelease
@@ -78,6 +80,8 @@ jobs:
       - name: TestRelease
         if: success()
         shell: cmd
+        env:
+          TRACY_NO_INVARIANT_CHECK: 1
         run: xmake run -g 05.tests/*
 
       - name: UploadGeneratedFiles
