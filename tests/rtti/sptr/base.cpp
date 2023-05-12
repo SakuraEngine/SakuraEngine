@@ -1,6 +1,18 @@
 #include "test.hpp"
 
-TEST(SPTR, Base)
+class SPTRCommon : public SPTRBase
+{
+protected:
+    void SetUp() override
+    {
+    }
+
+    void TearDown() override
+    {
+    }
+};
+
+TEST(SPTRCommon, Base)
 {
     {
         skr::SPtr<int> pT1 = {};
@@ -69,7 +81,7 @@ struct B : public A
 
 #include <memory>
 
-TEST(SPTR, Ctors)
+TEST(SPTRCommon, Ctors)
 {
     EXPECT_TRUE(A::mCount == 0);
 
@@ -153,7 +165,7 @@ TEST(SPTR, Ctors)
     EXPECT_TRUE(A::mCount == 2);
 }
 
-TEST(SPTR, Move)
+TEST(SPTRCommon, Move)
 {
     {
         skr::SPtr<A> rT1(SkrNew<A>(42));
@@ -170,7 +182,7 @@ TEST(SPTR, Move)
     }
 }
 
-TEST(SPTR, StdWeak)
+TEST(SPTRCommon, StdWeak)
 {
     std::shared_ptr<B> pC(new B (88));
     std::weak_ptr<B> wpC(pC);
@@ -185,7 +197,7 @@ TEST(SPTR, StdWeak)
     EXPECT_EQ(pC2.use_count(), 2);
 }
 
-TEST(SPTR, Weak)
+TEST(SPTRCommon, Weak)
 {
     skr::SPtr<B> pC(SkrNew<B>(88));
     skr::SWeakPtr<B> wpC(pC);
