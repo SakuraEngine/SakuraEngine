@@ -116,13 +116,13 @@ TEST_F(BINARY_BITPACK, VectorPack)
     skr_float3_t readValue = { 0.0f, 0.0f, 0.0f };
     skr_float3_t readValue2 = { 0.0f, 0.0f, 0.0f };
     skr::binary::Archive(&archiveRead, readValue, skr::binary::VectorSerdeConfig<float>{});
-    EXPECT_EQ(value.x, readValue.x);
-    EXPECT_EQ(value.y, readValue.y);
-    EXPECT_EQ(value.z, readValue.z);
+    EXPECT_FLOAT_EQ(value.x, readValue.x);
+    EXPECT_FLOAT_EQ(value.y, readValue.y);
+    EXPECT_FLOAT_EQ(value.z, readValue.z);
     skr::binary::Archive(&archiveRead, readValue2, skr::binary::VectorSerdeConfig<float>{100000});
-    EXPECT_EQ(value2.x, readValue2.x);
-    EXPECT_EQ(value2.y, readValue2.y);
-    EXPECT_EQ(value2.z, readValue2.z);
+    EXPECT_FLOAT_EQ(value2.x, readValue2.x);
+    EXPECT_FLOAT_EQ(value2.y, readValue2.y);
+    EXPECT_FLOAT_EQ(value2.z, readValue2.z);
 }
 
 int main(int argc, char** argv)
