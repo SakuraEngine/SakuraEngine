@@ -136,7 +136,7 @@ void initialize(void* usrdata)
         .width = BACK_BUFFER_WIDTH,
         .height = BACK_BUFFER_HEIGHT,
         .surface = surface,
-        .imageCount = 3,
+        .image_count = 3,
         .format = CGPU_FORMAT_R8G8B8A8_UNORM,
         .enable_vsync = true
     };

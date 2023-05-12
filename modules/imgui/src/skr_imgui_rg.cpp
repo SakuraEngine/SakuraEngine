@@ -463,7 +463,7 @@ void imgui_recreate_swapchain(ImGuiViewport* viewport, CGPUDeviceId device, CGPU
     chain_desc.present_queues_count = 1;
     chain_desc.width = width;
     chain_desc.height = height;
-    chain_desc.imageCount = 2;
+    chain_desc.image_count = 2;
     chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM; // TODO: use correct screen buffer format
     chain_desc.enable_vsync = false;
     rdata->swapchain = cgpu_create_swapchain(device, &chain_desc);
