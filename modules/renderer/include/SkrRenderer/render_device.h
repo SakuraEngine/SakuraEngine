@@ -38,6 +38,7 @@ struct SKR_RENDERER_API RendererDevice
     virtual ECGPUBackend get_backend() const = 0;
     virtual CGPUQueueId get_gfx_queue() const = 0;
     virtual CGPUQueueId get_cpy_queue(uint32_t idx = 0) const = 0;
+    virtual CGPUQueueId get_compute_queue(uint32_t idx = 0) const = 0;
     virtual CGPUDStorageQueueId get_file_dstorage_queue() const = 0;
     virtual CGPUDStorageQueueId get_memory_dstorage_queue() const = 0;
     virtual ECGPUFormat get_swapchain_format() const = 0;
@@ -84,6 +85,12 @@ CGPUQueueId skr_render_device_get_cpy_queue(SRenderDeviceId device);
 
 RUNTIME_EXTERN_C SKR_RENDERER_API 
 CGPUQueueId skr_render_device_get_nth_cpy_queue(SRenderDeviceId device, uint32_t n);
+
+RUNTIME_EXTERN_C SKR_RENDERER_API 
+CGPUQueueId skr_render_device_get_compute_queue(SRenderDeviceId device);
+
+RUNTIME_EXTERN_C SKR_RENDERER_API 
+CGPUQueueId skr_render_device_get_nth_compute_queue(SRenderDeviceId device, uint32_t n);
 
 RUNTIME_EXTERN_C SKR_RENDERER_API 
 CGPUDeviceId skr_render_device_get_cgpu_device(SRenderDeviceId device);
