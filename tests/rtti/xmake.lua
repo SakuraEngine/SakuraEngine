@@ -21,15 +21,26 @@ target("RTTITest")
         api = "RTTI_TEST"
     })
 
-target("SPtrTest")
+target("SPtrTestCommon")
     set_group("05.tests/rtti")
     set_kind("binary")
     public_dependency("SkrRT", engine_version)
     public_dependency("RTTITestTypes", engine_version)
-    add_files("sptr/**.cpp")
+    add_files("sptr/common.cpp")
     add_packages("gtest")
-    add_rules("c++.codegen", {
-        files = {"sptr/**.h", "sptr/**.hpp"},
-        rootdir = "sptr/",
-        api = "SPTR_TEST"
-    })
+
+target("SPtrTestNonIntrusive")
+    set_group("05.tests/rtti")
+    set_kind("binary")
+    public_dependency("SkrRT", engine_version)
+    public_dependency("RTTITestTypes", engine_version)
+    add_files("sptr/non-intrusive.cpp")
+    add_packages("gtest")
+
+target("SPtrTestIntrusive")
+    set_group("05.tests/rtti")
+    set_kind("binary")
+    public_dependency("SkrRT", engine_version)
+    public_dependency("RTTITestTypes", engine_version)
+    add_files("sptr/intrusive.cpp")
+    add_packages("gtest")

@@ -213,3 +213,10 @@ TEST(SPTRCommon, Weak)
     EXPECT_EQ(pC, pC2);
     EXPECT_EQ(pC2.use_count(), 2);
 }
+
+int main(int argc, char** argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    auto result = RUN_ALL_TESTS();
+    return result;
+}

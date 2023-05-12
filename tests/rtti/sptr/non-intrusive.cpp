@@ -187,3 +187,10 @@ TEST(SPTRNonIntrusive, VoidPtrReset)
     }
     EXPECT_EQ(status, TestStruct::Status::Destroyed);
 }
+
+int main(int argc, char** argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    auto result = RUN_ALL_TESTS();
+    return result;
+}

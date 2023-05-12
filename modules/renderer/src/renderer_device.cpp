@@ -313,7 +313,7 @@ CGPUSwapChainId RendererDeviceImpl::register_window(SWindowHandle window)
     chain_desc.width = width;
     chain_desc.height = height;
     chain_desc.surface = surface;
-    chain_desc.imageCount = 2;
+    chain_desc.image_count = 2;
     chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
     chain_desc.enable_vsync = false;
     auto swapchain = cgpu_create_swapchain(device, &chain_desc);
@@ -353,7 +353,7 @@ CGPUSwapChainId RendererDeviceImpl::recreate_window_swapchain(SWindowHandle wind
     chain_desc.width = width;
     chain_desc.height = height;
     chain_desc.surface = surface;
-    chain_desc.imageCount = 2;
+    chain_desc.image_count = 2;
     chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
     chain_desc.enable_vsync = false;
     auto swapchain = cgpu_create_swapchain(gfx_queue->device, &chain_desc);

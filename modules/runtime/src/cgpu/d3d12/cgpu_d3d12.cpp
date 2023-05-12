@@ -1928,7 +1928,7 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12_impl(CGPUDeviceId device, const CGPU
     CGPUInstance_D3D12* I = (CGPUInstance_D3D12*)device->adapter->instance;
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
     CGPUSwapChain_D3D12* S = (CGPUSwapChain_D3D12*)old;
-    const uint32_t buffer_count = desc->imageCount;
+    const uint32_t buffer_count = desc->image_count;
     if (!old)
     {
         void* Memory = cgpu_calloc(1, sizeof(CGPUSwapChain_D3D12) +
@@ -1945,7 +1945,7 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12_impl(CGPUDeviceId device, const CGPU
     chain_desc1.SampleDesc.Count = 1; // If multisampling is needed, we'll resolve it later
     chain_desc1.SampleDesc.Quality = 0;
     chain_desc1.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    chain_desc1.BufferCount = desc->imageCount;
+    chain_desc1.BufferCount = desc->image_count;
     chain_desc1.Scaling = DXGI_SCALING_STRETCH;
     chain_desc1.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // for better performance.
     chain_desc1.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
@@ -1981,9 +1981,26 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12_impl(CGPUDeviceId device, const CGPU
     cgpu_assert(bQueryChain3 && "Failed to Query IDXGISwapChain3 from Created SwapChain!");
 
     SAFE_RELEASE(swapchain);
+
+	// Allowing multiple command queues to present for applications like Alternate Frame Rendering
+	if (desc->present_queues_count > 1)
+	{
+		IUnknown** ppQueues = (IUnknown**)alloca(desc->present_queues_count * sizeof(IUnknown*));
+		UINT*      pCreationMasks = (UINT*)alloca(desc->present_queues_count * sizeof(UINT));
+		for (uint32_t i = 0; i < desc->present_queues_count; ++i)
+		{
+            CGPUQueue_D3D12* QI = (CGPUQueue_D3D12*)desc->present_queues[0];
+			ppQueues[i] = QI->pCommandQueue;
+			pCreationMasks[i] = CGPU_SINGLE_GPU_NODE_MASK;
+		}
+
+		S->pDxSwapChain->ResizeBuffers1(desc->image_count, desc->width, desc->height, 
+            chain_desc1.Format, chain_desc1.Flags, pCreationMasks, ppQueues);
+	}
+
     // Get swapchain images
-    ID3D12Resource** backbuffers = (ID3D12Resource**)alloca(desc->imageCount * sizeof(ID3D12Resource*));
-    for (uint32_t i = 0; i < desc->imageCount; ++i)
+    ID3D12Resource** backbuffers = (ID3D12Resource**)alloca(desc->image_count * sizeof(ID3D12Resource*));
+    for (uint32_t i = 0; i < desc->image_count; ++i)
     {
         CHECK_HRESULT(S->pDxSwapChain->GetBuffer(i, IID_ARGS(&backbuffers[i])));
     }

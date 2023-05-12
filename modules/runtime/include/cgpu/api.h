@@ -1198,7 +1198,7 @@ typedef struct CGPUSwapChainDescriptor {
     /// Surface to Create SwapChain on
     CGPUSurfaceId surface;
     /// Number of backbuffers in this swapchain
-    uint32_t imageCount;
+    uint32_t image_count;
     /// Width of the swapchain
     uint32_t width;
     /// Height of the swapchain

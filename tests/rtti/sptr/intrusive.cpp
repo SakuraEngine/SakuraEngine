@@ -182,3 +182,10 @@ TEST(SPTRIntrusive, VoidPtrCastIntrusive)
     }
     EXPECT_EQ(status, TestObject::Status::Destroyed);
 }
+
+int main(int argc, char** argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    auto result = RUN_ALL_TESTS();
+    return result;
+}
