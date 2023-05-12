@@ -1,4 +1,5 @@
 #pragma once
+#include "platform/configure.h"
 #include <type_traits>
 #include <cassert>
 
@@ -26,28 +27,28 @@ namespace das {
         smart_ptr_raw () : ptr(nullptr) {}
         smart_ptr_raw ( T * p ) : ptr(p) {}
         template <typename Y>
-        __forceinline smart_ptr_raw ( const smart_ptr_raw<Y> & p ) {
+        FORCEINLINE smart_ptr_raw ( const smart_ptr_raw<Y> & p ) {
             static_assert( std::is_base_of<T,Y>::value || std::is_base_of<Y,T>::value, "can only cast if inherited" );
             ptr = (T *) p.get();
         }
-        __forceinline T * get() const {
+        FORCEINLINE T * get() const {
             return ptr;
         }
-        __forceinline T * operator -> () const {
+        FORCEINLINE T * operator -> () const {
             assert(ptr && "null pointer dereference");
             return ptr;
         }
-        __forceinline T & operator * () const {
+        FORCEINLINE T & operator * () const {
             assert(ptr && "null pointer dereference");
             return *ptr;
         }
-        __forceinline operator smart_ptr_raw<void> & () const {
+        FORCEINLINE operator smart_ptr_raw<void> & () const {
             return *((smart_ptr_raw<void> *)this);
         }
-        __forceinline operator bool() const {
+        FORCEINLINE operator bool() const {
             return ptr != nullptr;
         }
-        __forceinline smart_ptr<T, smart_ptr_policy<T>> marshal() const {
+        FORCEINLINE smart_ptr<T, smart_ptr_policy<T>> marshal() const {
             if ( ptr ) {
                 smart_ptr<T, smart_ptr_policy<T>> res = ptr;
                 DAS_VERIFY ( !smart_ptr_policy<T>::delRef(ptr) );
@@ -56,7 +57,7 @@ namespace das {
                 return ptr;
             }
         }
-        __forceinline smart_ptr<T, smart_ptr_policy<T>> marshal( const smart_ptr<T, smart_ptr_policy<T>> & expr ) const {
+        FORCEINLINE smart_ptr<T, smart_ptr_policy<T>> marshal( const smart_ptr<T, smart_ptr_policy<T>> & expr ) const {
             if ( !ptr  ) {
                 return nullptr;
             } else if ( ptr!=expr.get() ) {
@@ -67,11 +68,11 @@ namespace das {
                 return expr;
             }
         }
-        __forceinline operator smart_ptr<T, smart_ptr_policy<T>> & () {
+        FORCEINLINE operator smart_ptr<T, smart_ptr_policy<T>> & () {
             using SPT = smart_ptr<T, smart_ptr_policy<T>>;
             return *(SPT *)this;
         }
-        __forceinline operator const smart_ptr<T, smart_ptr_policy<T>> & () const {
+        FORCEINLINE operator const smart_ptr<T, smart_ptr_policy<T>> & () const {
             using SPT = smart_ptr<T, smart_ptr_policy<T>>;
             return *(const SPT *)this;
         }
@@ -82,17 +83,17 @@ namespace das {
     struct smart_ptr_raw<void> {
         smart_ptr_raw () : ptr(nullptr) {}
         smart_ptr_raw ( void * p ) : ptr(p) {}
-        __forceinline void * get() const { return ptr; }
-        __forceinline void * operator -> () const { return ptr; }
+        FORCEINLINE void * get() const { return ptr; }
+        FORCEINLINE void * operator -> () const { return ptr; }
         void * ptr;
     };
 
     template <typename T>
     struct smart_ptr_policy {
-        __forceinline static void addRef ( T * p ) { p->addRef(); }
-        __forceinline static bool delRef ( T * p ) { return p->delRef(); }
-        __forceinline static unsigned int use_count ( T * p ) { return p->use_count(); }
-        __forceinline static T & get_value ( T * p ) {
+        FORCEINLINE static void addRef ( T * p ) { p->addRef(); }
+        FORCEINLINE static bool delRef ( T * p ) { return p->delRef(); }
+        FORCEINLINE static unsigned int use_count ( T * p ) { return p->use_count(); }
+        FORCEINLINE static T & get_value ( T * p ) {
             assert(p && "null pointer dereference");
             return *p;
         }
@@ -100,10 +101,10 @@ namespace das {
 
     template <>
     struct smart_ptr_policy<void> {
-        __forceinline static void addRef ( void * ) { }
-        __forceinline static bool delRef ( void * ) { return false; }
-        __forceinline static unsigned int use_count ( void * ) { return 0; }
-        __forceinline static void * get_value ( void * p ) {
+        FORCEINLINE static void addRef ( void * ) { }
+        FORCEINLINE static bool delRef ( void * ) { return false; }
+        FORCEINLINE static unsigned int use_count ( void * ) { return 0; }
+        FORCEINLINE static void * get_value ( void * p ) {
             assert(p && "null pointer dereference");
             return p;
         }
@@ -114,142 +115,142 @@ namespace das {
     public:
         using element_type = T;
         using element_type_ptr = T *;
-        __forceinline smart_ptr ( ) {
+        FORCEINLINE smart_ptr ( ) {
             ptr = nullptr;
         }
-        __forceinline smart_ptr ( const smart_ptr & p ) {
+        FORCEINLINE smart_ptr ( const smart_ptr & p ) {
             init(p.ptr);
         }
         template <typename Y>
-        __forceinline smart_ptr ( const smart_ptr<Y> & p ) {
+        FORCEINLINE smart_ptr ( const smart_ptr<Y> & p ) {
             static_assert( std::is_base_of<T,Y>::value, "can only cast if inherited" );
             init(p.get());
         }
         template <typename Y>
-        __forceinline smart_ptr ( const smart_ptr_raw<Y> & p ) {
+        FORCEINLINE smart_ptr ( const smart_ptr_raw<Y> & p ) {
             static_assert( std::is_base_of<T,Y>::value, "can only cast if inherited" );
             init(p.get());
         }
-        __forceinline operator smart_ptr_raw<void> & () const {
+        FORCEINLINE operator smart_ptr_raw<void> & () const {
             return *((smart_ptr_raw<void> *)this);
         }
-        __forceinline operator smart_ptr_raw<T> & () const {
+        FORCEINLINE operator smart_ptr_raw<T> & () const {
             return *((smart_ptr_raw<T> *)this);
         }
-        __forceinline smart_ptr ( smart_ptr && p ) {
+        FORCEINLINE smart_ptr ( smart_ptr && p ) {
             ptr = p.ptr;
             p.ptr = nullptr;
         }
-        __forceinline smart_ptr ( T * p ) {
+        FORCEINLINE smart_ptr ( T * p ) {
             init(p);
         }
-        __forceinline ~smart_ptr() {
+        FORCEINLINE ~smart_ptr() {
             reset();
         }
-        __forceinline smart_ptr & operator = ( const smart_ptr & p ) {
+        FORCEINLINE smart_ptr & operator = ( const smart_ptr & p ) {
             return set(p.ptr);
         }
         template <typename Y>
-        __forceinline smart_ptr & operator = ( const smart_ptr<Y> & p ) {
+        FORCEINLINE smart_ptr & operator = ( const smart_ptr<Y> & p ) {
             return set(p.get());
         }
-        __forceinline smart_ptr & operator = ( smart_ptr && p ) {
+        FORCEINLINE smart_ptr & operator = ( smart_ptr && p ) {
             set(p.get());
             p.set(nullptr);
             return *this;
         }
-        __forceinline smart_ptr & operator = ( T * p ) {
+        FORCEINLINE smart_ptr & operator = ( T * p ) {
             return set(p);
         }
-        __forceinline void reset() {
+        FORCEINLINE void reset() {
             T * t = ptr;
             ptr = nullptr;
             if ( t ) TP::delRef(t);
         }
-        __forceinline void swap ( smart_ptr & p ) {
+        FORCEINLINE void swap ( smart_ptr & p ) {
             T * t = ptr;
             ptr = p.ptr;
             p.ptr = t;
         }
-        __forceinline void reset ( T * p ) {
+        FORCEINLINE void reset ( T * p ) {
             set(p);
         }
-        __forceinline decltype(TP::get_value(element_type_ptr())) operator * () const {
+        FORCEINLINE decltype(TP::get_value(element_type_ptr())) operator * () const {
             return TP::get_value(ptr);
         }
-        __forceinline T * operator -> () const {
+        FORCEINLINE T * operator -> () const {
             assert(ptr && "null pointer dereference");
             return ptr;
         }
-        __forceinline T * get() const {
+        FORCEINLINE T * get() const {
             return ptr;
         }
-        __forceinline T * orphan() {
+        FORCEINLINE T * orphan() {
             T * t = ptr;
             ptr = nullptr;
             return t;
         }
-        __forceinline operator bool() const {
+        FORCEINLINE operator bool() const {
             return ptr != nullptr;
         }
-        __forceinline bool operator == ( T * p ) const {
+        FORCEINLINE bool operator == ( T * p ) const {
             return ptr == p;
         }
         template <typename Y>
-        __forceinline bool operator == ( const smart_ptr<Y> & p ) const {
+        FORCEINLINE bool operator == ( const smart_ptr<Y> & p ) const {
             return ptr == p.get();
         }
-        __forceinline bool operator != ( T * p ) const {
+        FORCEINLINE bool operator != ( T * p ) const {
             return ptr != p;
         }
         template <typename Y>
-        __forceinline bool operator != ( const smart_ptr<Y> & p ) const {
+        FORCEINLINE bool operator != ( const smart_ptr<Y> & p ) const {
             return ptr != p.get();
         }
-        __forceinline bool operator >= ( T * p ) const {
+        FORCEINLINE bool operator >= ( T * p ) const {
             return ptr >= p;
         }
         template <typename Y>
-        __forceinline bool operator >= ( const smart_ptr<Y> & p ) const {
+        FORCEINLINE bool operator >= ( const smart_ptr<Y> & p ) const {
             return ptr >= p.get();
         }
-        __forceinline bool operator <= ( T * p ) const {
+        FORCEINLINE bool operator <= ( T * p ) const {
             return ptr <= p;
         }
         template <typename Y>
-        __forceinline bool operator <= ( const smart_ptr<Y> & p ) const {
+        FORCEINLINE bool operator <= ( const smart_ptr<Y> & p ) const {
             return ptr <= p.get();
         }
-        __forceinline bool operator > ( T * p ) const {
+        FORCEINLINE bool operator > ( T * p ) const {
             return ptr > p;
         }
         template <typename Y>
-        __forceinline bool operator > ( const smart_ptr<Y> & p ) const {
+        FORCEINLINE bool operator > ( const smart_ptr<Y> & p ) const {
             return ptr > p.get();
         }
-        __forceinline bool operator < ( T * p ) const {
+        FORCEINLINE bool operator < ( T * p ) const {
             return ptr < p;
         }
         template <typename Y>
-        __forceinline bool operator < ( const smart_ptr<Y> & p ) const {
+        FORCEINLINE bool operator < ( const smart_ptr<Y> & p ) const {
             return ptr < p.get();
         }
     protected:
-        __forceinline smart_ptr & set ( T * p )  {
+        FORCEINLINE smart_ptr & set ( T * p )  {
             T * t = ptr;
             ptr = p;
             addRef();
             if ( t ) TP::delRef(t);
             return *this;
         }
-        __forceinline void init ( T * p = nullptr )  {
+        FORCEINLINE void init ( T * p = nullptr )  {
             ptr = p;
             addRef();
         }
-        __forceinline void addRef() {
+        FORCEINLINE void addRef() {
             if ( ptr ) TP::addRef(ptr);
         }
-        __forceinline void delRef() {
+        FORCEINLINE void delRef() {
             if ( ptr && TP::delRef(ptr) ) ptr = nullptr;
         }
     protected:
@@ -261,52 +262,52 @@ namespace das {
     template <typename T>   struct is_smart_ptr < smart_ptr_raw<T> > { enum { value = true }; };
 
     template <class T, class U>
-    __forceinline bool operator == (T * l, const smart_ptr<U> & r) {
+    FORCEINLINE bool operator == (T * l, const smart_ptr<U> & r) {
         return l == r.get();
     }
     template <class T, class U>
-    __forceinline bool operator != (T * l, const smart_ptr<U> & r) {
+    FORCEINLINE bool operator != (T * l, const smart_ptr<U> & r) {
         return l != r.get();
     }
     template <class T, class U>
-    __forceinline bool operator >= (T * l, const smart_ptr<U> & r) {
+    FORCEINLINE bool operator >= (T * l, const smart_ptr<U> & r) {
         return l >= r.get();
     }
     template <class T, class U>
-    __forceinline bool operator <= (T * l, const smart_ptr<U> & r) {
+    FORCEINLINE bool operator <= (T * l, const smart_ptr<U> & r) {
         return l <= r.get();
     }
     template <class T, class U>
-    __forceinline bool operator > (T * l, const smart_ptr<U> & r) {
+    FORCEINLINE bool operator > (T * l, const smart_ptr<U> & r) {
         return l > r.get();
     }
     template <class T, class U>
-    __forceinline bool operator < (T * l, const smart_ptr<U> & r) {
+    FORCEINLINE bool operator < (T * l, const smart_ptr<U> & r) {
         return l < r.get();
     }
 
     template< class T, class... Args >
-    __forceinline smart_ptr<T> make_smart ( Args&&... args ) {
+    FORCEINLINE smart_ptr<T> make_smart ( Args&&... args ) {
         return new T(args...);
     }
 
     template< class T, class U >
-    __forceinline smart_ptr<T> static_pointer_cast(const smart_ptr<U> & r) {
+    FORCEINLINE smart_ptr<T> static_pointer_cast(const smart_ptr<U> & r) {
         return static_cast<T *>(r.get());
     }
 
     template< class T, class U >
-    __forceinline smart_ptr<T> dynamic_pointer_cast(const smart_ptr<U> & r) {
+    FORCEINLINE smart_ptr<T> dynamic_pointer_cast(const smart_ptr<U> & r) {
         return dynamic_cast<T *>(r.get());
     }
 
     template< class T, class U >
-    __forceinline smart_ptr<T> const_pointer_cast(const smart_ptr<U> & r) {
+    FORCEINLINE smart_ptr<T> const_pointer_cast(const smart_ptr<U> & r) {
         return const_cast<T *>(r.get());
     }
 
     template< class T, class U >
-    __forceinline smart_ptr<T> reinterpret_pointer_cast(const smart_ptr<U> & r) {
+    FORCEINLINE smart_ptr<T> reinterpret_pointer_cast(const smart_ptr<U> & r) {
         return reinterpret_cast<T *>(r.get());
     }
 
@@ -348,20 +349,20 @@ namespace das {
         static mutex                ref_count_mutex;
 #endif
     public:
-        __forceinline ptr_ref_count () {
+        FORCEINLINE ptr_ref_count () {
             DAS_NEW_SMART_PTR_ID
             DAS_SMART_PTR_NEW
         }
-        __forceinline ptr_ref_count ( const ptr_ref_count &  ) {
+        FORCEINLINE ptr_ref_count ( const ptr_ref_count &  ) {
             DAS_NEW_SMART_PTR_ID
             DAS_SMART_PTR_NEW
         }
-        __forceinline ptr_ref_count ( const ptr_ref_count && ) {
+        FORCEINLINE ptr_ref_count ( const ptr_ref_count && ) {
             DAS_NEW_SMART_PTR_ID
             DAS_SMART_PTR_NEW
         }
-        __forceinline ptr_ref_count & operator = ( const ptr_ref_count & ) { return *this;}
-        __forceinline ptr_ref_count & operator = ( ptr_ref_count && ) { return *this; }
+        FORCEINLINE ptr_ref_count & operator = ( const ptr_ref_count & ) { return *this;}
+        FORCEINLINE ptr_ref_count & operator = ( ptr_ref_count && ) { return *this; }
         virtual ~ptr_ref_count() {
 #if DAS_SMART_PTR_MAGIC
             if ( ref_count!=0 ) DAS_FATAL_ERROR("%p ref_count=%i, can't delete", (void *)this, ref_count);
@@ -373,7 +374,7 @@ namespace das {
             DAS_DELETE_SMART_PTR_ID
             DAS_SMART_PTR_DELETE
         }
-        __forceinline void addRef() {
+        FORCEINLINE void addRef() {
             DAS_TRACK_SMART_PTR_ID
             ref_count ++;
 #if DAS_SMART_PTR_MAGIC
@@ -384,7 +385,7 @@ namespace das {
             assert(ref_count && "ref_count overflow");
 #endif
         }
-        __forceinline bool delRef() {
+        FORCEINLINE bool delRef() {
             DAS_TRACK_SMART_PTR_ID
 #if DAS_SMART_PTR_MAGIC
             if ( ref_count==0 || magic!=0x1ee7c0de ) {
@@ -400,10 +401,10 @@ namespace das {
                 return false;
             }
         }
-        __forceinline unsigned int use_count() const {
+        FORCEINLINE unsigned int use_count() const {
             return ref_count;
         }
-        __forceinline bool is_valid() const {
+        FORCEINLINE bool is_valid() const {
 #if DAS_SMART_PTR_MAGIC
             return magic==0x1ee7c0de && ref_count!=0;
 #else
