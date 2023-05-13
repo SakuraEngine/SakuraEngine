@@ -10,7 +10,7 @@
 #endif
 
 #ifndef OPEN_STRING_NS_BEGIN
-#define OPEN_STRING_NS_BEGIN	namespace OPEN_STRING_NS{
+#define OPEN_STRING_NS_BEGIN	namespace OPEN_STRING_NS {
 #endif
 
 #ifndef OPEN_STRING_NS_END
@@ -28,8 +28,4 @@
 #endif
 
 using ochar_t = char;
-#if __cplusplus >= 202000L
-using ochar8_t = char8_t;
-#else 
-using ochar8_t = char; 
-#endif
+using ochar8_t = char8_t; // already defined in platform/configure.h
