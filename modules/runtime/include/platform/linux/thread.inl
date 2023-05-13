@@ -104,6 +104,20 @@ FORCEINLINE static void* ThreadFunctionStatic(void* data)
     return 0;
 }
 
+FORCEINLINE static skr_set_thread_affinity(SThreadHandle handle, uint64_t affinityMask)
+{
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    for (uint32_t i = 0; i < 64; ++i)
+    {
+        if (affinityMask & (1 << i))
+        {
+            CPU_SET(i, &cpuset);
+        }
+    }
+    pthread_setaffinity_np(handle, sizeof(cpu_set_t), &cpuset);
+}
+
 FORCEINLINE static void skr_init_thread(SThreadDesc* pData, SThreadHandle* pHandle)
 {
     int res = pthread_create(pHandle, NULL, ThreadFunctionStatic, pData);
