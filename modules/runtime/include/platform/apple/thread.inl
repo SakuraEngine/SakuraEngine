@@ -3,6 +3,7 @@
 #include <mach/clock.h>
 #include <mach/mach.h>
 #include <unistd.h>
+#include <errno.h>
 
 FORCEINLINE static void skr_call_once(SCallOnceGuard* pGuard, SCallOnceFn pFn)
 {
