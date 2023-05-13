@@ -133,13 +133,13 @@ FORCEINLINE static bool skr_init_condition_var(SConditionVariable* pCv)
 
 FORCEINLINE static void skr_destroy_condition_var(SConditionVariable* pCv) { pthread_cond_destroy(&pCv->pHandle); }
 
-FORCEINLINE static void skr_wait_condition_vars(SConditionVariable* pCv, const SMutex* mutex, uint32_t ms)
+FORCEINLINE static ThreadResult skr_wait_condition_vars(SConditionVariable* pCv, const SMutex* mutex, uint32_t ms)
 {
     pthread_mutex_t* mutexHandle = (pthread_mutex_t*)&mutex->pHandle;
-
+    int ret = 0;
     if (ms == TIMEOUT_INFINITE)
     {
-        pthread_cond_wait(&pCv->pHandle, mutexHandle);
+        ret = pthread_cond_wait(&pCv->pHandle, mutexHandle);
     }
     else
     {
@@ -152,8 +152,11 @@ FORCEINLINE static void skr_wait_condition_vars(SConditionVariable* pCv, const S
         time.tv_sec = mts.tv_sec + ms / 1000;
         time.tv_nsec = mts.tv_nsec + (ms % 1000) * 1000;
 
-        pthread_cond_timedwait(&pCv->pHandle, mutexHandle, &time);
+        ret = pthread_cond_timedwait(&pCv->pHandle, mutexHandle, &time);
+        if (ret == ETIMEDOUT) return THREAD_RESULT_TIMEOUT;
     }
+    if (ret == 0) return THREAD_RESULT_OK;
+    return THREAD_RESULT_FAILED;
 }
 
 FORCEINLINE static void skr_wake_condition_var(SConditionVariable* pCv) { pthread_cond_signal(&pCv->pHandle); }
@@ -183,12 +186,12 @@ static const uint32_t priorities[SKR_THREAD_PRIORITY_COUNT] = {
     0, 1, 25, 50, 75, 75, 99
 };
 
-FORCEINLINE static void skr_set_thread_priority(SThreadHandle handle, SThreadPriority priority)
+FORCEINLINE static SThreadPriority skr_set_thread_priority(SThreadHandle handle, SThreadPriority priority)
 {
     struct sched_param param = {};
     param.sched_priority = priorities[priority];
     if (priority == SKR_THREAD_DEFAULT)
-        return;
+        return priority;
     else if (priority > SKR_THREAD_ABOVE_NORMAL)
     {
         pthread_setschedparam(handle, SCHED_FIFO, &param);
@@ -197,6 +200,7 @@ FORCEINLINE static void skr_set_thread_priority(SThreadHandle handle, SThreadPri
     {
         pthread_setschedparam(handle, SCHED_RR, &param);
     }
+    return priority;
 }
 
 FORCEINLINE static void skr_init_thread(SThreadDesc* pData, SThreadHandle* pHandle)

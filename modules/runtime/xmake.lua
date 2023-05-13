@@ -45,10 +45,6 @@ shared_module("SkrRT", "RUNTIME", engine_version)
 
     -- internal packages
     add_packages("boost-context", "lua", {public = true, inherit = true})
-    
-    -- defs & flags
-    add_ldflags(project_ldflags, {public = true, force = true})
-    add_cxflags(project_cxflags, {public = true, force = true})
 
     -- add source files
     add_files(source_list)

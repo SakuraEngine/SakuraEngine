@@ -62,21 +62,24 @@ FORCEINLINE static bool skr_init_condition_var(SConditionVariable* pCv)
 
 FORCEINLINE static void skr_destroy_condition_var(SConditionVariable* pCv) { pthread_cond_destroy(&pCv->pHandle); }
 
-FORCEINLINE static void skr_wait_condition_vars(SConditionVariable* pCv, const SMutex* mutex, uint32_t ms)
+FORCEINLINE static ThreadResult skr_wait_condition_vars(SConditionVariable* pCv, const SMutex* mutex, uint32_t ms)
 {
     pthread_mutex_t* mutexHandle = (pthread_mutex_t*)&mutex->pHandle;
-
+    int ret = 0;
     if (ms == TIMEOUT_INFINITE)
     {
-        pthread_cond_wait(&pCv->pHandle, mutexHandle);
+        ret = pthread_cond_wait(&pCv->pHandle, mutexHandle);
     }
     else
     {
         struct timespec ts;
         ts.tv_sec = ms / 1000;
         ts.tv_nsec = (ms % 1000) * 1000;
-        pthread_cond_timedwait(&pCv->pHandle, mutexHandle, &ts);
+        ret = pthread_cond_timedwait(&pCv->pHandle, mutexHandle, &ts);
+        if (ret == ETIMEDOUT) return THREAD_RESULT_TIMEOUT;
     }
+    if (ret == 0) return THREAD_RESULT_OK;
+    return THREAD_RESULT_FAILED;
 }
 
 FORCEINLINE static void skr_wake_condition_var(SConditionVariable* pCv) { pthread_cond_signal(&pCv->pHandle); }

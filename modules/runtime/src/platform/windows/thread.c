@@ -232,19 +232,23 @@ void skr_destroy_condition_var(SConditionVariable* cv)
 {
 }
 
-void skr_wait_condition_vars(SConditionVariable* cv, const SMutex* pMutex, uint32_t ms)
+ThreadResult skr_wait_condition_vars(SConditionVariable* cv, const SMutex* pMutex, uint32_t ms)
 {
     CONDITION_VARIABLE* cv_ = (CONDITION_VARIABLE*)(cv->cvStorage_);
+    BOOL R = FALSE;
     if (pMutex->isSRW)
     {
         PSRWLOCK pSrwlock = (PSRWLOCK)(pMutex->muStorage_);
-        SleepConditionVariableSRW((PCONDITION_VARIABLE)cv_, pSrwlock, ms, 0);
+        R = SleepConditionVariableSRW((PCONDITION_VARIABLE)cv_, pSrwlock, ms, 0);
     }
     else
     {
         PCRITICAL_SECTION* ppCS = (PCRITICAL_SECTION*)(pMutex->muStorage_);
-        SleepConditionVariableCS((PCONDITION_VARIABLE)cv_, *ppCS, ms);
+        R = SleepConditionVariableCS((PCONDITION_VARIABLE)cv_, *ppCS, ms);
     }
+    if (R) return THREAD_RESULT_OK;
+    if (GetLastError() == ERROR_TIMEOUT) return THREAD_RESULT_TIMEOUT;
+    return THREAD_RESULT_FAILED;
 }
 
 void skr_wake_condition_var(SConditionVariable* cv)
@@ -294,9 +298,11 @@ static const int priorities[SKR_THREAD_PRIORITY_COUNT] = {
     THREAD_PRIORITY_TIME_CRITICAL
 };
 
-void skr_set_thread_priority(SThreadHandle handle, SThreadPriority priority)
+SThreadPriority skr_set_thread_priority(SThreadHandle handle, SThreadPriority priority)
 {
-    SetThreadPriority((HANDLE)handle, priorities[priority]);
+    BOOL ok = SetThreadPriority((HANDLE)handle, priorities[priority]);
+    if (ok) return priority;
+    return GetThreadPriority((HANDLE)handle);
 }
 
 void skr_destroy_thread(SThreadHandle handle)

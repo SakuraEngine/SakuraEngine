@@ -100,6 +100,11 @@ typedef struct SThreadDesc {
     void* pData;
 } SThreadDesc;
 
+typedef int32_t ThreadResult;
+#define THREAD_RESULT_OK 1
+#define THREAD_RESULT_FAILED 0
+#define THREAD_RESULT_TIMEOUT -1
+
 #if defined(_WIN32) || defined(XBOX)
 typedef void* SThreadHandle;
 #elif !defined(NX64)
@@ -137,13 +142,13 @@ THREADS_API void skr_release_rw_mutex(SRWMutex* pMutex);
 /// cv
 THREADS_API bool skr_init_condition_var(SConditionVariable* cv);
 THREADS_API void skr_destroy_condition_var(SConditionVariable* cv);
-THREADS_API void skr_wait_condition_vars(SConditionVariable* cv, const SMutex* pMutex, uint32_t timeout);
+THREADS_API ThreadResult skr_wait_condition_vars(SConditionVariable* cv, const SMutex* pMutex, uint32_t timeout);
 THREADS_API void skr_wake_all_condition_vars(SConditionVariable* cv);
 THREADS_API void skr_wake_condition_var(SConditionVariable* cv);
 
 /// thread
 THREADS_API void skr_init_thread(SThreadDesc* pItem, SThreadHandle* pHandle);
-THREADS_API void skr_set_thread_priority(SThreadHandle, SThreadPriority);
+THREADS_API SThreadPriority skr_set_thread_priority(SThreadHandle, SThreadPriority);
 THREADS_API void skr_destroy_thread(SThreadHandle handle);
 THREADS_API void skr_join_thread(SThreadHandle handle);
 THREADS_API SThreadID skr_current_thread_id(void);

@@ -34,7 +34,6 @@ enum class FutureStatus : uint32_t
 template<typename Result>
 struct IFuture
 {
-
     virtual bool valid() const = 0;
     virtual void wait() = 0;
     virtual void wait_for(uint32_t ms) = 0;
