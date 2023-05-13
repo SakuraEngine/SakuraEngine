@@ -305,6 +305,11 @@ SThreadPriority skr_set_thread_priority(SThreadHandle handle, SThreadPriority pr
     return GetThreadPriority((HANDLE)handle);
 }
 
+void skr_set_thread_affinity(SThreadHandle handle, uint64_t affinityMask)
+{
+    SetThreadAffinityMask((HANDLE)handle, (DWORD_PTR)affinityMask);
+}
+
 void skr_destroy_thread(SThreadHandle handle)
 {
     assert(handle != NULL);

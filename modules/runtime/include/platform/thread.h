@@ -149,6 +149,7 @@ THREADS_API void skr_wake_condition_var(SConditionVariable* cv);
 /// thread
 THREADS_API void skr_init_thread(SThreadDesc* pItem, SThreadHandle* pHandle);
 THREADS_API SThreadPriority skr_set_thread_priority(SThreadHandle, SThreadPriority);
+THREADS_API void skr_set_thread_affinity(SThreadHandle, uint64_t affinityMask);
 THREADS_API void skr_destroy_thread(SThreadHandle handle);
 THREADS_API void skr_join_thread(SThreadHandle handle);
 THREADS_API SThreadID skr_current_thread_id(void);
