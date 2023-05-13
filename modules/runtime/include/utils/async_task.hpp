@@ -119,14 +119,15 @@ public:
                 if (is_cancelled())
                     return {}; // Protect against undefined behavoiur, if Dtor is invoked before the - pure virtual function represented - task would be started
 
-                try
+                //try
                 {
                     return this->post_result(this->do_in_background(params...));
-                } catch (...)
+                } 
+                //catch (...)
                 {
-                    cancel();
+                    // cancel();
                 }
-                return {};
+                // return {};
             },
             params...);
 
