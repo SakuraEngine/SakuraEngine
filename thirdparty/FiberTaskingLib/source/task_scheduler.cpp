@@ -454,9 +454,19 @@ int TaskScheduler::Init(TaskSchedulerInitOptions options)
         char threadName[256];
         snprintf(threadName, sizeof(threadName), "FTL Worker Thread %u", i);
 
-        if (!CreateThread(524288, ThreadStartFunc, threadArgs, threadName, &m_threads[i]))
+        if(options.SetAffinity)
         {
-            return kInitErrorFailedToCreateWorkerThread;
+            if (!CreateThread(524288, ThreadStartFunc, threadArgs, threadName, i % GetNumHardwareThreads(), &m_threads[i]))
+            {
+                return kInitErrorFailedToCreateWorkerThread;
+            }
+        }
+        else
+        {
+            if (!CreateThread(524288, ThreadStartFunc, threadArgs, threadName, &m_threads[i]))
+            {
+                return kInitErrorFailedToCreateWorkerThread;
+            }
         }
     }
 

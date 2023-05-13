@@ -230,15 +230,16 @@ namespace skr::task
         bool operator==(const event_t& other) const { return internal == other.internal; }
         void wait(bool pin) const 
         {
-            if (pin)
-            {
-                bool finished = false;
-                while (!finished) finished = internal.test();
-            }
-            else
-            {
-                internal.wait();
-            }
+            internal.wait();
+            //if (pin)
+            //{
+            //    bool finished = false;
+            //    while (!finished) finished = internal.test();
+            //}
+            //else
+            //{
+            //    internal.wait();
+            //}
         }
         void signal() { internal.signal(); }
         void clear() { internal.clear(); }
