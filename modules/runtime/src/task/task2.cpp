@@ -54,31 +54,20 @@ namespace task2
 
     void task_t::promise_type::unhandled_exception()
     {
-        auto exception = std::current_exception();
-        if (exception)
-        {
-            try
-            {
-                std::rethrow_exception(exception);
-            }
-            catch (const std::exception& e)
-            {
-                SKR_LOG_ERROR("Unhandled exception in task: %s", e.what());
-            }
-        }
+        exception = std::current_exception();
     }
 
     struct Task
     {
         eastl::function<void()> func;
-        std::coroutine_handle<> coro;
+        std::coroutine_handle<task_t::promise_type> coro;
 
         Task(eastl::function<void()>&& func)
             : func(std::move(func))
         {
         }
 
-        Task(std::coroutine_handle<>&& coro)
+        Task(std::coroutine_handle<task_t::promise_type>&& coro)
             : coro(std::move(coro))
         {
         }
@@ -94,6 +83,8 @@ namespace task2
             else
             {
                 coro.resume();
+                if(auto exception = coro.promise().exception)
+                    std::rethrow_exception(exception);
             }
         }
 
@@ -386,7 +377,7 @@ namespace task2
 
     void scheduler_t::schedule(task_t&& task)
     {
-        std::coroutine_handle<> coroutine = task.coroutine;
+        std::coroutine_handle<task_t::promise_type> coroutine = task.coroutine;
         task.coroutine = nullptr;
         enqueue(Task(std::move(coroutine)), -1);
     }
@@ -396,7 +387,7 @@ namespace task2
         return event.done();
     }
 
-    void scheduler_t::Awaitable::await_suspend(std::coroutine_handle<> handle)
+    void scheduler_t::Awaitable::await_suspend(std::coroutine_handle<task_t::promise_type> handle)
     {   
         SMutexLock guard(event.state->mutex);
         event.state->numWaiting++;

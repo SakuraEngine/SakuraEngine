@@ -18,13 +18,36 @@ namespace task2
         bool setAffinity = true;
         uint32_t numThreads = 0;
     };
+    struct task_t
+    {
+        struct promise_type
+        {
+            RUNTIME_API task_t get_return_object();
+            std::suspend_always initial_suspend() { return {}; }
+            std::suspend_never final_suspend() noexcept { return {}; }
+            void return_void() {}
+            RUNTIME_API void unhandled_exception();
+            void* operator new(size_t size) { return sakura_malloc(size); }
+            void operator delete(void* ptr, size_t size) { sakura_free(ptr); }
+            std::exception_ptr exception;
+        };
+        task_t(std::coroutine_handle<promise_type> coroutine) : coroutine(coroutine) {}
+        task_t(task_t&& other) : coroutine(other.coroutine) { other.coroutine = nullptr; }
+        task_t() = default;
+        task_t& operator=(task_t&& other) { coroutine = other.coroutine; other.coroutine = nullptr; return *this; }
+        ~task_t() { if(coroutine) coroutine.destroy(); }
+        void resume() const { coroutine.resume(); }
+        bool done() const { return coroutine.done(); }
+        explicit operator bool() const { return (bool)coroutine; }
+        std::coroutine_handle<promise_type> coroutine;
+    };
     struct event_t
     {
         struct State
         {
             SMutex mutex;
             SConditionVariable cv;
-            skr::vector<std::coroutine_handle<>> waiters;
+            skr::vector<std::coroutine_handle<task_t::promise_type>> waiters;
             skr::vector<int> workerIndices;
             std::atomic<int> numWaiting = {0};
             std::atomic<int> numWaitingOnCondition = {0};
@@ -79,28 +102,6 @@ namespace task2
 
         SWeakPtr<event_t::State> state;
     };
-    struct task_t
-    {
-        struct promise_type
-        {
-            RUNTIME_API task_t get_return_object();
-            std::suspend_always initial_suspend() { return {}; }
-            std::suspend_never final_suspend() noexcept { return {}; }
-            void return_void() {}
-            RUNTIME_API void unhandled_exception();
-            void* operator new(size_t size) { return sakura_malloc(size); }
-            void operator delete(void* ptr, size_t size) { sakura_free(ptr); }
-        };
-        task_t(std::coroutine_handle<promise_type> coroutine) : coroutine(coroutine) {}
-        task_t(task_t&& other) : coroutine(other.coroutine) { other.coroutine = nullptr; }
-        task_t() = default;
-        task_t& operator=(task_t&& other) { coroutine = other.coroutine; other.coroutine = nullptr; return *this; }
-        ~task_t() { if(coroutine) coroutine.destroy(); }
-        void resume() const { coroutine.resume(); }
-        bool done() const { return coroutine.done(); }
-        explicit operator bool() const { return (bool)coroutine; }
-        std::coroutine_handle<promise_type> coroutine;
-    };
 
     struct RUNTIME_API scheduler_t
     {
@@ -115,7 +116,7 @@ namespace task2
         {
             Awaitable(scheduler_t& s, event_t event, int workerIdx = -1);
             bool await_ready() const;
-            void await_suspend(std::coroutine_handle<>);
+            void await_suspend(std::coroutine_handle<task_t::promise_type>);
             void await_resume() const {}
             scheduler_t& scheduler;
             event_t event;
