@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "task/task2.hpp"
-
+#include "platform/filesystem.hpp"
+#include "module/module_manager.hpp"
 
 
 class Task2 : public ::testing::Test
@@ -89,6 +90,7 @@ TEST_F(Task2, NestedJob)
     event_t event;
     schedule([&]() -> task_t
     {
+        TracyTask("Task1")
         a = 10;
         event_t event2;
         schedule([&]()
@@ -107,6 +109,12 @@ TEST_F(Task2, NestedJob)
 
 int main(int argc, char** argv)
 {
+    auto moduleManager = skr_get_module_manager();
+    std::error_code ec = {};
+    auto root = skr::filesystem::current_path(ec);
+    moduleManager->mount(root.u8string().c_str());
+    moduleManager->make_module_graph("Task2Test", true);
+    moduleManager->init_module_graph(argc, argv);
     ::testing::InitGoogleTest(&argc, argv);
     auto result = RUN_ALL_TESTS();
     return result;
