@@ -2,6 +2,7 @@
 #include <time.h>
 #include <mach/clock.h>
 #include <mach/mach.h>
+#include <mach/thread_policy.h>
 #include <unistd.h>
 #include <errno.h>
 #include <sched.h>
@@ -207,16 +208,8 @@ FORCEINLINE static SThreadPriority skr_set_thread_priority(SThreadHandle handle,
 
 FORCEINLINE static void skr_set_thread_affinity(SThreadHandle handle, uint64_t affinityMask)
 {
-    cpu_set_t cpuset;
-    CPU_ZERO(&cpuset);
-    for (uint32_t i = 0; i < 64; ++i)
-    {
-        if (affinityMask & (1 << i))
-        {
-            CPU_SET(i, &cpuset);
-        }
-    }
-    pthread_setaffinity_np(handle, sizeof(cpu_set_t), &cpuset);
+    thread_affinity_policy_data_t policy = { affinityMask };
+    thread_policy_set(pthread_mach_thread_np(handle), THREAD_AFFINITY_POLICY, (thread_policy_t)&policy, 1);
 }
 
 FORCEINLINE static void skr_init_thread(SThreadDesc* pData, SThreadHandle* pHandle)
