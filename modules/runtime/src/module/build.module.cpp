@@ -47,6 +47,9 @@ void SkrRuntimeModule::on_unload()
     skr_destroy_mutex(&log_mutex);
 
 #ifdef TRACY_ENABLE
+    //std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
+    //tracy::GetProfiler().RequestShutdown();
+    //while( !tracy::GetProfiler().HasShutdownFinished() ) { std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) ); };
     tracyLibrary.unload();
 #endif
 }

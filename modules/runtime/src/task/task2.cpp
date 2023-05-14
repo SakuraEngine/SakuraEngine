@@ -48,12 +48,12 @@ namespace task2
         numThreads = skr_cpu_cores_count();
     }
 
-    task_t task_t::promise_type::get_return_object()
+    skr_task_t skr_task_t::promise_type::get_return_object()
     {
-        return task_t{std::coroutine_handle<promise_type>::from_promise(*this)};
+        return skr_task_t{std::coroutine_handle<promise_type>::from_promise(*this)};
     }
 
-    void task_t::promise_type::unhandled_exception()
+    void skr_task_t::promise_type::unhandled_exception()
     {
         exception = std::current_exception();
     }
@@ -61,14 +61,29 @@ namespace task2
     struct Task
     {
         eastl::function<void()> func;
-        std::coroutine_handle<task_t::promise_type> coro;
+        std::coroutine_handle<skr_task_t::promise_type> coro;
 
         Task(eastl::function<void()>&& func)
             : func(std::move(func))
         {
         }
 
-        Task(std::coroutine_handle<task_t::promise_type>&& coro)
+        Task(Task&& other)
+            : func(std::move(other.func))
+            , coro(std::move(other.coro))
+        {
+            other.coro = nullptr;
+        }
+
+        Task& operator=(Task&& other)
+        {
+            func = std::move(other.func);
+            coro = std::move(other.coro);
+            other.coro = nullptr;
+            return *this;
+        }
+
+        Task(std::coroutine_handle<skr_task_t::promise_type>&& coro)
             : coro(std::move(coro))
         {
         }
@@ -136,11 +151,22 @@ namespace task2
             }
         }
 
-        void stop()
+        void signalStop()
         {
             if(!isMainThread)
             {
                 enqueue(Task{[this]{shutdown = true;}}, true);
+            }
+            else 
+            {
+                //do nothing
+            }
+        }
+
+        void stop()
+        {
+            if(!isMainThread)
+            {
                 skr_join_thread(handle);
                 skr_destroy_thread(handle);
             }
@@ -150,15 +176,37 @@ namespace task2
             }
         }
 
-        void stealFrom(Worker& other)
+        bool stealWork()
         {
+            Task stolen(nullptr);
+            auto numThreads = scheduler->config.numThreads;
+            if(numThreads > 1)
+            {
+                ZoneScopedN("Worker::StealWork");
+                // Try to steal from other workers
+                for (int i = 0; i < 1; ++i)
+                {
+                    int rand = i;
+                    while(rand == i)
+                        rand = rnd() % numThreads;
+                    auto& worker = *(Worker*)scheduler->workers[rand];
+                    if(worker.steal(stolen))
+                    {
+                        SMutexLock lock(work.mutex);
+                        work.tasks.push_back(std::move(stolen));
+                        work.num++;
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         void spinForWork()
         {
+            ZoneScopedN("Worker::SpinForWork");
             constexpr auto duration = std::chrono::milliseconds(1);
             auto start = std::chrono::high_resolution_clock::now();
-            Task stolen(nullptr);
             while (std::chrono::high_resolution_clock::now() - start < duration) 
             {
                 for (int i = 0; i < 256; i++)  // Empirically picked magic number!
@@ -173,27 +221,8 @@ namespace task2
                         return;
                     }
                 }
-                
-                auto numThreads = scheduler->config.numThreads;
-                if(numThreads > 1)
-                {
-                    // Try to steal from other workers
-                    for (int i = 0; i < 3; ++i)
-                    {
-                        int rand = i;
-                        while(rand == i)
-                            rand = rnd() % numThreads;
-                        auto& worker = *(Worker*)scheduler->workers[rand];
-                        if(worker.steal(stolen))
-                        {
-                            SMutexLock lock(work.mutex);
-                            work.tasks.push_back(std::move(stolen));
-                            work.num++;
-                            return;
-                        }
-                    }
-                }
-
+                if(stealWork())
+                    return;
                 std::this_thread::yield();
             }
         }
@@ -205,7 +234,7 @@ namespace task2
             if(!isMainThread)
             {
                 //report to scheduler that we are spinning
-                scheduler->spinningWorkers[scheduler->nextEnqueueIndex++ % scheduler->spinningWorkers.size()] = id;
+                scheduler->spinningWorkers[scheduler->nextSpinningWorkerIdx++ % scheduler->spinningWorkers.size()] = id;
                 skr_release_mutex(&work.mutex);
                 spinForWork();
                 skr_acquire_mutex(&work.mutex);
@@ -217,6 +246,7 @@ namespace task2
 
         void runUntilIdle() 
         {
+            ZoneScopedN("Worker::RunUntilIdle");
             while(!work.tasks.empty() || !work.pinnedTask.empty())
             {
                 if(!work.pinnedTask.empty())
@@ -267,6 +297,7 @@ namespace task2
 
         void enqueueAndUnlock(Task&& task, bool pinned)
         {
+            ZoneScopedN("EnqueueTaskWorker");
             auto notify = work.notifyAdded;
             if(pinned)
             {
@@ -321,8 +352,8 @@ namespace task2
             std::atomic<uint64_t> num = 0;
             std::atomic<uint64_t> numNoPin = 0;
             uint64_t numBlockedFibers = 0;
-            eastl::deque<Task> pinnedTask;
-            eastl::deque<Task> tasks;
+            eastl::deque<Task, eastl::allocator_sakura, 128> pinnedTask;
+            eastl::deque<Task, eastl::allocator_sakura, 128> tasks;
             bool notifyAdded = true;
             SConditionVariable added;
             SMutex mutex;
@@ -350,7 +381,10 @@ namespace task2
 
     void enqueue(Task&& task, int workerIdx)
     {
+        ZoneScopedN("EnqueueTask");
         scheduler_t* scheduler = scheduler_t::instance();
+        SKR_ASSERT(scheduler != nullptr);
+        size_t workerCount = scheduler->config.numThreads;
         while(true)
         {
             int idx = 0;
@@ -359,11 +393,11 @@ namespace task2
                 auto i = --scheduler->nextSpinningWorkerIdx % scheduler->spinningWorkers.size();
                 idx = scheduler->spinningWorkers[i].exchange(-1);
                 if(idx < 0)
-                    idx = scheduler->nextEnqueueIndex++ % (scheduler->workers.size() - 1) + 1;
+                    idx = scheduler->nextEnqueueIndex++ % (workerCount - 1) + 1;
             }
             else 
             {
-                SKR_ASSERT((uint32_t)workerIdx < scheduler->workers.size());
+                SKR_ASSERT((uint32_t)workerIdx < workerCount);
                 idx = workerIdx;
             }
             auto& worker = *(Worker*)scheduler->workers[idx];
@@ -375,52 +409,101 @@ namespace task2
         }
     }
 
-
-    scheduler_t::Awaitable::Awaitable(scheduler_t& scheduler, event_t event, int workerIdx)
-        : scheduler(scheduler), event(std::move(event)), workerIdx(workerIdx)
-    {
-    }
-
     void scheduler_t::schedule(eastl::function<void ()> function)
     {
         enqueue(Task(std::move(function)), -1);
     }
 
-    void scheduler_t::schedule(task_t&& task)
+    void scheduler_t::schedule(skr_task_t&& task)
     {
-        std::coroutine_handle<task_t::promise_type> coroutine = task.coroutine;
+        std::coroutine_handle<skr_task_t::promise_type> coroutine = task.coroutine;
         task.coroutine = nullptr;
         enqueue(Task(std::move(coroutine)), -1);
     }
 
-    bool scheduler_t::Awaitable::await_ready() const
+    scheduler_t::EventAwaitable::EventAwaitable(scheduler_t& scheduler, event_t event, int workerIdx)
+        : scheduler(scheduler), event(std::move(event)), workerIdx(workerIdx)
+    {
+    }
+
+    bool scheduler_t::EventAwaitable::await_ready() const
     {
         return event.done();
     }
 
-    void scheduler_t::Awaitable::await_suspend(std::coroutine_handle<task_t::promise_type> handle)
+    void scheduler_t::EventAwaitable::await_suspend(std::coroutine_handle<skr_task_t::promise_type> handle)
     {   
         SMutexLock guard(event.state->mutex);
-        event.state->numWaiting++;
         if(event.state->signalled)
         {
             handle.resume();
-            event.state->numWaiting--;
             return;
         }
-        event.state->waiters.push_back(handle);
-        event.state->workerIndices.push_back(workerIdx);
+        event.state->cv.add_waiter(handle, workerIdx);
     }
 
-    scheduler_t::Awaitable scheduler_t::wait(event_t event, bool pinned)
+    scheduler_t::EventAwaitable co_wait(event_t event, bool pinned)
     {
+        auto scheduler = scheduler_t::instance();
+        SKR_ASSERT(scheduler != nullptr);
         auto worker = currentWorker;
         //SKR_ASSERT(worker != nullptr);
-        return {*this, event, pinned && worker ? (int)worker->id : -1};
+        return {*scheduler, event, pinned && worker ? (int)worker->id : -1};
+    }
+
+    void wait(event_t event)
+    {
+        auto scheduler = scheduler_t::instance();
+        SKR_ASSERT(scheduler == nullptr); //must use outside of scheduler
+        while(!event.done())
+        {
+            event.state->cv.wait(event.state->mutex);
+        }
+    }
+
+    scheduler_t::CounterAwaitable::CounterAwaitable(scheduler_t& scheduler, counter_t counter, int workerIdx)
+        : scheduler(scheduler), counter(std::move(counter)), workerIdx(workerIdx)
+    {
+    }
+
+    bool scheduler_t::CounterAwaitable::await_ready() const
+    {
+        return counter.done();
+    }
+
+    void scheduler_t::CounterAwaitable::await_suspend(std::coroutine_handle<skr_task_t::promise_type> handle)
+    {   
+        SMutexLock guard(counter.state->mutex);
+        if(counter.state->count == 0)
+        {
+            handle.resume();
+            return;
+        }
+        counter.state->cv.add_waiter(handle, workerIdx);
+    }
+
+    scheduler_t::CounterAwaitable co_wait(counter_t counter, bool pinned)
+    {
+        auto scheduler = scheduler_t::instance();
+        SKR_ASSERT(scheduler != nullptr);
+        auto worker = currentWorker;
+        //SKR_ASSERT(worker != nullptr);
+        return {*scheduler, counter, pinned && worker ? (int)worker->id : -1};
+    }
+
+    void wait(counter_t counter)
+    {
+        auto scheduler = scheduler_t::instance();
+        SKR_ASSERT(scheduler == nullptr); //must use outside of scheduler
+        while(!counter.done())
+        {
+            counter.state->cv.wait(counter.state->mutex);
+        }
     }
 
     void scheduler_t::sync(event_t event)
     {
+        ZoneScopedN("SyncEvent");
         auto worker = currentWorker;
         SKR_ASSERT(worker == nullptr);
         worker = (Worker*)mainWorker;
@@ -428,10 +511,52 @@ namespace task2
         while(!event.done())
         {
             skr_release_mutex(&worker->work.mutex);
-            worker->spinForWork();
+            (void)worker->stealWork();
             skr_acquire_mutex(&worker->work.mutex);
             worker->runUntilIdle();
         }
+    }
+
+    void scheduler_t::sync(counter_t counter)
+    {
+        ZoneScopedN("SyncEvent");
+        auto worker = currentWorker;
+        SKR_ASSERT(worker == nullptr);
+        worker = (Worker*)mainWorker;
+        SMutexLock guard(worker->work.mutex);
+        while(!counter.done())
+        {
+            skr_release_mutex(&worker->work.mutex);
+            (void)worker->stealWork();
+            skr_acquire_mutex(&worker->work.mutex);
+            worker->runUntilIdle();
+        }
+    }
+
+    void condvar_t::add_waiter(std::coroutine_handle<skr_task_t::promise_type> handle, int workerIdx)
+    {
+        ++numWaiting;
+        waiters.push_back(handle);
+        workerIndices.push_back(workerIdx);
+    }
+
+    void condvar_t::wait(SMutex& mutex)
+    {
+        ++numWaitingOnCondition;
+        skr_wait_condition_vars(&cv, &mutex, TIMEOUT_INFINITE);
+        --numWaitingOnCondition;
+    }
+
+    void condvar_t::notify()
+    {
+        skr_wake_all_condition_vars(&cv);
+        for(uint32_t i=0; i<waiters.size(); ++i)
+        {
+            enqueue(Task{std::move(waiters[i])}, workerIndices[i]);
+        }
+        waiters.clear();
+        workerIndices.clear();
+        numWaiting = 0;
     }
 
     void event_t::notify()
@@ -440,15 +565,7 @@ namespace task2
             return;
         SMutexLock guard(state->mutex);
         state->signalled = true;
-        skr_wake_all_condition_vars(&state->cv);
-        for(uint32_t i=0; i<state->waiters.size(); ++i)
-        {
-            enqueue(Task{state->waiters[i]}, state->workerIndices[i]);
-        }
-        state->waiters.clear();
-        state->workerIndices.clear();
-        state->numWaiting = 0;
-        state->numWaitingOnCondition = 0;
+        state->cv.notify();
     }
 
     void event_t::reset()
@@ -459,8 +576,36 @@ namespace task2
         state->signalled = false;
     }
 
+    void counter_t::add(uint32_t count)
+    {
+        if(!state)
+            return;
+        state->count += count;
+        if(state->inverse)
+        {
+            SMutexLock guard(state->mutex);
+            state->cv.notify();
+        }
+    }
+
+    bool counter_t::decrease()
+    { 
+        SKR_ASSERT(state->count > 0);
+        auto count = --state->count;
+        if(state->inverse)
+            return false;
+        if(count == 0)
+        {
+            SMutexLock guard(state->mutex);
+            state->cv.notify();
+            return true;
+        }
+        return false;
+    }
+
     void scheduler_t::initialize(const scheudler_config_t & cfg)
     {
+        ZoneScopedN("Scheduler::Initialize");
         config = cfg;
         for(size_t i = 0; i < spinningWorkers.size(); ++i)
             spinningWorkers[i] = -1;
@@ -481,7 +626,10 @@ namespace task2
 
     void scheduler_t::shutdown()
     {
+        ZoneScopedN("Scheduler::Shutdown");
         SKR_ASSERT(initialized);
+        for(size_t i = 0; i < config.numThreads; ++i)
+            ((Worker*)workers[i])->signalStop();
         for(size_t i = 0; i < config.numThreads; ++i)
             ((Worker*)workers[i])->stop();
         for(size_t i = 0; i < config.numThreads; ++i)

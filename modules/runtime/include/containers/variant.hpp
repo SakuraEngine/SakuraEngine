@@ -6,6 +6,10 @@ namespace skr
 {
     template<class ...Ts>
     using variant = std::variant<Ts...>;
+    template<class ...Ts>
+    struct overload : Ts... { using Ts::operator()...; };
+    template<class ...Ts>
+    overload(Ts...) -> overload<Ts...>;
 
     using std::get_if;
     using std::get;
