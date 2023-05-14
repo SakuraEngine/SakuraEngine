@@ -18,18 +18,32 @@ namespace task2
         bool setAffinity = true;
         uint32_t numThreads = 0;
     };
+#ifdef TRACY_ENABLE
+    struct task_name_t
+    {
+        const char* name;
+    };
+    #define TracyTask(name) ZoneScopedN(name); TracyFiberEnter(name); co_yield task_name_t{name};
+#else
+    #define TracyTask(name)
+#endif
     struct task_t
     {
         struct promise_type
         {
             RUNTIME_API task_t get_return_object();
             std::suspend_always initial_suspend() { return {}; }
-            std::suspend_never final_suspend() noexcept { return {}; }
+            std::suspend_always final_suspend() noexcept { return {}; }
             void return_void() {}
             RUNTIME_API void unhandled_exception();
+            std::suspend_never yield_value(task_name_t tn) { name = tn.name; return {}; }
+
             void* operator new(size_t size) { return sakura_malloc(size); }
             void operator delete(void* ptr, size_t size) { sakura_free(ptr); }
-            std::exception_ptr exception;
+            std::exception_ptr exception = nullptr;
+#ifdef TRACY_ENABLE
+            const char* name = nullptr;
+#endif
         };
         task_t(std::coroutine_handle<promise_type> coroutine) : coroutine(coroutine) {}
         task_t(task_t&& other) : coroutine(other.coroutine) { other.coroutine = nullptr; }

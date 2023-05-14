@@ -12,7 +12,7 @@ target("MarlTest")
     add_packages("gtest")
     add_files("marl-test/**.cpp")
 
-target("Task2Test")
+executable_module("Task2Test", "TASK2_TEST", engine_version)
     set_kind("binary")
     set_group("05.tests/platform")
     public_dependency("SkrRT", engine_version)

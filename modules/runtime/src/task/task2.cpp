@@ -3,6 +3,7 @@
 #include "utils/log.h"
 #include "utils/make_zeroed.hpp"
 #include "utils/function_ref.hpp"
+#include "utils/defer.hpp"
 
 inline void nop() {
 #if defined(_WIN32)
@@ -82,7 +83,17 @@ namespace task2
                 func();
             else
             {
+#ifdef TRACY_ENABLE
+                // the first fiber enter is in coroutine body
+                if(coro.promise().name != nullptr)
+                    TracyFiberEnter(coro.promise().name);
+#endif
                 coro.resume();
+                SKR_DEFER({if(coro.done()) coro.destroy();});
+#ifdef TRACY_ENABLE
+                if(coro.promise().name != nullptr)
+                    TracyFiberLeave;
+#endif
                 if(auto exception = coro.promise().exception)
                     std::rethrow_exception(exception);
             }
