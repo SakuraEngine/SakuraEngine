@@ -67,7 +67,7 @@ namespace task2
         skr_task_t() = default;
         skr_task_t& operator=(skr_task_t&& other) { coroutine = other.coroutine; other.coroutine = nullptr; return *this; }
         ~skr_task_t() { if(coroutine) coroutine.destroy(); }
-        void resume() const { coroutine.resume(); }
+        void resume() { coroutine.resume(); }
         bool done() const { return coroutine.done(); }
         explicit operator bool() const { return (bool)coroutine; }
         std::coroutine_handle<promise_type> coroutine;
