@@ -4,6 +4,7 @@
 #include <mach/mach.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sched.h>
 
 FORCEINLINE static void skr_call_once(SCallOnceGuard* pGuard, SCallOnceFn pFn)
 {
@@ -204,7 +205,7 @@ FORCEINLINE static SThreadPriority skr_set_thread_priority(SThreadHandle handle,
     return priority;
 }
 
-FORCEINLINE static skr_set_thread_affinity(SThreadHandle handle, uint64_t affinityMask)
+FORCEINLINE static void skr_set_thread_affinity(SThreadHandle handle, uint64_t affinityMask)
 {
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);

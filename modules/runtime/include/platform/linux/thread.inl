@@ -1,6 +1,7 @@
 #include <sys/sysctl.h>
 #include <time.h>
 #include <unistd.h>
+#include <sched.h>
 
 FORCEINLINE static void callOnce(SCallOnceGuard* pGuard, SCallOnceFn pFn)
 {
@@ -104,7 +105,7 @@ FORCEINLINE static void* ThreadFunctionStatic(void* data)
     return 0;
 }
 
-FORCEINLINE static skr_set_thread_affinity(SThreadHandle handle, uint64_t affinityMask)
+FORCEINLINE static void skr_set_thread_affinity(SThreadHandle handle, uint64_t affinityMask)
 {
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
