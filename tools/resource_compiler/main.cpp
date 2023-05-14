@@ -86,24 +86,12 @@ void DestroyResourceSystem(skd::SProject& proj)
     SkrDelete(registry);
 }
 
-int compile_all(int argc, char** argv)
+skd::SProject* open_project(int argc, char** argv)
 {
-    log_set_level(SKR_LOG_LEVEL_INFO);
-
     std::error_code ec = {};
     auto root = skr::filesystem::current_path(ec);
-    
-    skr::task::scheduler_t scheduler;
-    scheduler.initialize(skr::task::scheudler_config_t());
-    scheduler.bind();
-    auto& system = *skd::asset::GetCookSystem();
-    system.Initialize();
-    //----- register project
-    // TODO: project discover?
-    auto project = SkrNew<skd::SProject>();
-    SKR_DEFER({ SkrDelete(project); });
     auto parentPath = root.parent_path().u8string();
-
+    auto project = SkrNew<skd::SProject>();
     project->assetPath = (root.parent_path() / "../../../samples/application/game/assets").lexically_normal();
     project->outputPath = (root.parent_path() / "resources/game").lexically_normal();
     project->dependencyPath = (root.parent_path() / "deps/game").lexically_normal();
@@ -125,14 +113,32 @@ int compile_all(int argc, char** argv)
 
     project->resource_vfs = skr_create_vfs(&resource_vfs_desc);
     auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
-    ioServiceDesc.name = u8"GameRuntimeRAMIOService";
+    ioServiceDesc.name = u8"CompilerRAMIOService";
     ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
     ioServiceDesc.sleep_time = 1000 / 60;
     ioServiceDesc.lockless = true;
     ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
     project->ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
+    return project;
+}
+
+int compile_all(int argc, char** argv)
+{
+    log_set_level(SKR_LOG_LEVEL_INFO);
+    
+    skr::task::scheduler_t scheduler;
+    scheduler.initialize(skr::task::scheudler_config_t());
+    scheduler.bind();
+    auto& system = *skd::asset::GetCookSystem();
+    system.Initialize();
+    //----- register project
+    // TODO: project discover?
+    auto project = open_project(argc, argv);
+    SKR_DEFER({ SkrDelete(project); });
+    
     InitializeResourceSystem(*project);
 
+    std::error_code ec = {};
     skr::filesystem::recursive_directory_iterator iter(project->assetPath, ec);
     //----- scan project directory
     eastl::vector<skr::filesystem::path> paths;
