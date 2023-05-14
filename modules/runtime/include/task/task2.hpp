@@ -6,7 +6,21 @@
 #include "platform/thread.h"
 #include "containers/sptr.hpp"
 #include "containers/vector.hpp"
-#include <coroutine>
+#ifdef __has_include
+#if __has_include(<coroutine>)
+    #include <coroutine>
+#else
+    #include <experimental/coroutine>
+    //UB
+    namespace std
+    {
+        template<class T>
+        using coroutine_handle = experimental::coroutine_handle<T>;
+        using suspend_always = experimental::suspend_always;
+        using suspend_never = experimental::suspend_never;
+    }
+#endif
+#endif
 
 namespace skr
 {
