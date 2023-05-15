@@ -20,8 +20,14 @@ TEST(SPTRCommon, Base)
         EXPECT_EQ(pT1.get(), nullptr);
     }
     {
-        // skr::SPtr<int> pT1(SkrNew<int>(5));
-        // EXPECT_EQ(*pT1, 5);
+        auto ptr = SkrNew<int>(5);
+        EXPECT_NE(ptr, nullptr);
+        skr::SPtr<int> pT1(ptr);
+        EXPECT_EQ(*pT1, 5);
+    }
+    {
+        skr::SPtr<int> pT1(SkrNew<int>(5));
+        EXPECT_EQ(*pT1, 5);
         // EXPECT_EQ(pT1.use_count(), 1);
         // EXPECT_TRUE(pT1.unique());
 

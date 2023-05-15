@@ -7,7 +7,7 @@
 #include "platform/thread.h"
 #include "containers/sptr.hpp"
 #include "containers/vector.hpp"
-#include <array>
+#include <EASTL/array.h>
 #if __cpp_lib_coroutine
     #include <coroutine>
 #else
@@ -247,10 +247,10 @@ namespace task2
         };
         void sync(event_t event);
         void sync(counter_t counter);
-        std::array<std::atomic<int>, 8> spinningWorkers;
+        eastl::array<std::atomic<int>, 8> spinningWorkers;
         std::atomic<unsigned int> nextSpinningWorkerIdx = {0x8000000};
         std::atomic<unsigned int> nextEnqueueIndex = {0};
-        std::array<void*, 256> workers;
+        eastl::array<void*, 256> workers;
         void* mainWorker = nullptr;
         scheudler_config_t config;
         bool initialized = false;
