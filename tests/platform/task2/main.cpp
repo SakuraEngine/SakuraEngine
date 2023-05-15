@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#if __cpp_coroutines
+#if __cpp_impl_coroutine
 
 #include "task/task2.hpp"
 #include "platform/filesystem.hpp"
