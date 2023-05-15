@@ -342,15 +342,23 @@ const char* kContainersDefaultPoolName = "sakura::containers";
 
 void* containers_malloc_aligned(size_t size, size_t alignment)
 {
+#if defined(TRACY_TRACE_ALLOCATION)
     TracyCZoneNCS(z, "containers::allocate", SKR_ALLOC_TRACY_MARKER_COLOR, 16, 1);
     void* p = _sakura_malloc_aligned(size, alignment, kContainersDefaultPoolName);
     TracyCZoneEnd(z);
     return p;
+#else
+    return sakura_malloc_aligned(size, alignment);
+#endif
 }
 
 void containers_free_aligned(void* p, size_t alignment)
 {
+#if defined(TRACY_TRACE_ALLOCATION)
     TracyCZoneNCS(z, "containers::free", SKR_DEALLOC_TRACY_MARKER_COLOR, 16, 1);
     _sakura_free_aligned(p, alignment, kContainersDefaultPoolName);
     TracyCZoneEnd(z);
+#else
+    sakura_free_aligned(p, alignment);
+#endif
 }

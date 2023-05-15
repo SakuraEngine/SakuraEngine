@@ -51,7 +51,16 @@ namespace task2
         {
             RUNTIME_API skr_task_t get_return_object();
             std::suspend_always initial_suspend() { return {}; }
-            std::suspend_always final_suspend() noexcept { return {}; }
+#ifdef TRACY_ENABLE
+            std::suspend_never final_suspend() noexcept
+            {
+                if(name != nullptr)
+                    TracyFiberLeave;
+                return {};
+            }
+#else
+            std::suspend_never final_suspend() noexcept { return {}; }
+#endif
             void return_void() {}
             RUNTIME_API void unhandled_exception();
 #ifdef TRACY_ENABLE
@@ -60,7 +69,6 @@ namespace task2
 
             void* operator new(size_t size) { return sakura_malloc(size); }
             void operator delete(void* ptr, size_t size) { sakura_free(ptr); }
-            std::exception_ptr exception = nullptr;
 #ifdef TRACY_ENABLE
             const char* name = nullptr;
 #endif
