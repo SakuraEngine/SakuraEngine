@@ -4,6 +4,7 @@
 #include "utils/make_zeroed.hpp"
 #include "utils/function_ref.hpp"
 #include "utils/defer.hpp"
+#include "containers/atomic_queue/atomic_queue.h"
 
 inline void nop() {
 #if defined(_WIN32)
@@ -176,7 +177,7 @@ namespace task2
             }
         }
 
-        bool stealWork()
+        int stealWork(int rand)
         {
             Task stolen(nullptr);
             auto numThreads = scheduler->config.numThreads;
@@ -184,22 +185,20 @@ namespace task2
             {
                 ZoneScopedN("Worker::StealWork");
                 // Try to steal from other workers
-                for (int i = 0; i < 1; ++i)
+                while(rand == id)
+                    rand = rnd() % numThreads;
+                auto& worker = *(Worker*)scheduler->workers[rand];
+                if(worker.steal(stolen))
                 {
-                    int rand = i;
-                    while(rand == i)
-                        rand = rnd() % numThreads;
-                    auto& worker = *(Worker*)scheduler->workers[rand];
-                    if(worker.steal(stolen))
-                    {
-                        SMutexLock lock(work.mutex);
-                        work.tasks.push_back(std::move(stolen));
-                        work.num++;
-                        return true;
-                    }
+                    stolen();
+                    return rand;
+                }
+                else 
+                {
+                    return id;
                 }
             }
-            return false;
+            return id;
         }
 
         void spinForWork()
@@ -207,22 +206,30 @@ namespace task2
             ZoneScopedN("Worker::SpinForWork");
             constexpr auto duration = std::chrono::milliseconds(1);
             auto start = std::chrono::high_resolution_clock::now();
+            int lastStolen = id;
             while (std::chrono::high_resolution_clock::now() - start < duration) 
             {
-                for (int i = 0; i < 256; i++)  // Empirically picked magic number!
+                if (work.num > 0) {
+                    return;
+                }
+                if(lastStolen == id)
                 {
-                    // clang-format off
-                    nop(); nop(); nop(); nop(); nop(); nop(); nop(); nop();
-                    nop(); nop(); nop(); nop(); nop(); nop(); nop(); nop();
-                    nop(); nop(); nop(); nop(); nop(); nop(); nop(); nop();
-                    nop(); nop(); nop(); nop(); nop(); nop(); nop(); nop();
-                    // clang-format on
-                    if (work.num > 0) {
-                        return;
+                    //spin
+                    for (int i = 0; i < 256; i++)  // Empirically picked magic number!
+                    {
+                        // atomic_queue::spin_loop_pause();
+                        // clang-format off
+                        nop(); nop(); nop(); nop(); nop(); nop(); nop(); nop();
+                        nop(); nop(); nop(); nop(); nop(); nop(); nop(); nop();
+                        nop(); nop(); nop(); nop(); nop(); nop(); nop(); nop();
+                        nop(); nop(); nop(); nop(); nop(); nop(); nop(); nop();
+                        // clang-format on
+                        if (work.num > 0) {
+                            return;
+                        }
                     }
                 }
-                if(stealWork())
-                    return;
+                lastStolen = stealWork(lastStolen);
                 std::this_thread::yield();
             }
         }
@@ -247,30 +254,25 @@ namespace task2
         void runUntilIdle() 
         {
             ZoneScopedN("Worker::RunUntilIdle");
-            while(!work.tasks.empty() || !work.pinnedTask.empty())
+            while(!work.pinnedTask.empty())
             {
-                if(!work.pinnedTask.empty())
-                {
-                    auto task = std::move(work.pinnedTask.front());
-                    work.pinnedTask.pop_front();
-                    work.num--;
-                    skr_release_mutex(&work.mutex);
-                    task();
-                    task = Task(nullptr); // destruct before acquiring mutex
-                    skr_acquire_mutex(&work.mutex);
-                }
-                else 
-                {
-                    auto task = std::move(work.tasks.front());
-                    work.tasks.pop_front();
-                    work.num--;
-                    work.numNoPin--;
-                    skr_release_mutex(&work.mutex);
-                    task();
-                    task = Task(nullptr); // destruct before acquiring mutex
-                    skr_acquire_mutex(&work.mutex);
-                }
+                auto task = std::move(work.pinnedTask.front());
+                work.pinnedTask.pop_front();
+                work.num--;
+                skr_release_mutex(&work.mutex);
+                task();
+                task = Task(nullptr); // destruct before acquiring mutex
+                skr_acquire_mutex(&work.mutex);
             }
+            skr_release_mutex(&work.mutex);
+            Task task(nullptr);
+            while(work.tasks.try_pop(task))
+            {
+                work.num--;
+                task();
+                task = Task(nullptr); // destruct before acquiring mutex
+            }
+            skr_acquire_mutex(&work.mutex);
         }
 
         void run()
@@ -291,23 +293,29 @@ namespace task2
 
         void enqueue(Task&& task, bool pinned)
         {
-            skr_acquire_mutex(&work.mutex);
-            enqueueAndUnlock(std::move(task), pinned);
-        }
-
-        void enqueueAndUnlock(Task&& task, bool pinned)
-        {
-            ZoneScopedN("EnqueueTaskWorker");
-            auto notify = work.notifyAdded;
-            if(pinned)
+            if(!pinned)
             {
-                work.pinnedTask.push_back(std::move(task));
+                work.num++;
+                auto notify = work.notifyAdded;
+                work.tasks.push(std::move(task));
+                if (notify)
+                {
+                    skr_wake_condition_var(&work.added);
+                }
+                return;
             }
             else 
             {
-                work.tasks.push_back(std::move(task));
-                work.numNoPin++;
+                skr_acquire_mutex(&work.mutex);
+                enqueuePinnedAndUnlock(std::move(task));
             }
+        }
+
+        void enqueuePinnedAndUnlock(Task&& task)
+        {
+            ZoneScopedN("EnqueueTaskWorker");
+            auto notify = work.notifyAdded;
+            work.pinnedTask.push_back(std::move(task));
             work.num++;
             skr_release_mutex(&work.mutex);
             if (notify)
@@ -318,45 +326,42 @@ namespace task2
 
         bool steal(Task& out) 
         {
-            if(work.numNoPin.load() == 0)
-                return false;
-            if(!skr_try_acquire_mutex(&work.mutex))
-                return false;
-            if(!work.tasks.empty())
+            bool result = work.tasks.try_pop(out);
+            if (result) 
             {
-                work.numNoPin--;
                 work.num--;
-                out = std::move(work.tasks.front());
-                work.tasks.pop_front();
-                skr_release_mutex(&work.mutex);
-                return true;
             }
-            skr_release_mutex(&work.mutex);
-            return false;
+            return result;
         }
 
         Worker()
+            
         {
-            skr_init_mutex(&work.mutex);
-            skr_init_condition_var(&work.added);
         }
 
         ~Worker()
         {
-            skr_destroy_mutex(&work.mutex);
-            skr_destroy_condition_var(&work.added);
         }
 
         struct Work 
         {
             std::atomic<uint64_t> num = 0;
-            std::atomic<uint64_t> numNoPin = 0;
-            uint64_t numBlockedFibers = 0;
             eastl::deque<Task, eastl::allocator_sakura, 128> pinnedTask;
-            eastl::deque<Task, eastl::allocator_sakura, 128> tasks;
+            atomic_queue::AtomicQueueB2<Task> tasks;
             bool notifyAdded = true;
             SConditionVariable added;
             SMutex mutex;
+            Work()
+                : tasks{1024}
+            {
+                skr_init_mutex(&mutex);
+                skr_init_condition_var(&added);
+            }
+            ~Work()
+            {
+                skr_destroy_mutex(&mutex);
+                skr_destroy_condition_var(&added);
+            }
 
             template<class F>
             void wait(F&& f)
@@ -381,7 +386,7 @@ namespace task2
 
     void enqueue(Task&& task, int workerIdx)
     {
-        ZoneScopedN("EnqueueTask");
+        //ZoneScopedN("EnqueueTask");
         scheduler_t* scheduler = scheduler_t::instance();
         SKR_ASSERT(scheduler != nullptr);
         size_t workerCount = scheduler->config.numThreads;
@@ -401,15 +406,20 @@ namespace task2
                 idx = workerIdx;
             }
             auto& worker = *(Worker*)scheduler->workers[idx];
-            if(skr_try_acquire_mutex(&worker.work.mutex))
+            if(workerIdx < 0)
             {
-                worker.enqueueAndUnlock(std::move(task), workerIdx >= 0);
+                worker.enqueue(std::move(task), false);
+                return;
+            }
+            else if(skr_try_acquire_mutex(&worker.work.mutex))
+            {
+                worker.enqueuePinnedAndUnlock(std::move(task));
                 return;
             }
         }
     }
 
-    void scheduler_t::schedule(eastl::function<void ()> function)
+    void scheduler_t::schedule(eastl::function<void ()>&& function)
     {
         enqueue(Task(std::move(function)), -1);
     }
@@ -508,10 +518,11 @@ namespace task2
         SKR_ASSERT(worker == nullptr);
         worker = (Worker*)mainWorker;
         SMutexLock guard(worker->work.mutex);
+        int i = 0;
         while(!event.done())
         {
             skr_release_mutex(&worker->work.mutex);
-            (void)worker->stealWork();
+            i = worker->stealWork(i);
             skr_acquire_mutex(&worker->work.mutex);
             worker->runUntilIdle();
         }
@@ -524,10 +535,11 @@ namespace task2
         SKR_ASSERT(worker == nullptr);
         worker = (Worker*)mainWorker;
         SMutexLock guard(worker->work.mutex);
+        int i = 0;
         while(!counter.done())
         {
             skr_release_mutex(&worker->work.mutex);
-            (void)worker->stealWork();
+            i = worker->stealWork(i);
             skr_acquire_mutex(&worker->work.mutex);
             worker->runUntilIdle();
         }

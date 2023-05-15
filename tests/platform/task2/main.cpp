@@ -174,7 +174,6 @@ TEST_F(Task2, ParallelForMassive)
             {
                 schedule([=, &a]() mutable
                 {
-                    ZoneScopedN("LoopBody");
                     a += 10;
                     counter.decrease();
                 });
