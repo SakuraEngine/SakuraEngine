@@ -112,11 +112,7 @@ typedef pthread_t SThreadHandle;
 #endif
 
 #define MUTEX_DEFAULT_SPIN_COUNT 1500
-#if defined(_WIN32)
-    #include "win/thread.inl"
-#elif defined(__APPLE__)
-    #include "apple/thread.inl"
-#elif defined(__EMSCRIPTEN__) || defined(__wasi__)
+#if defined(__EMSCRIPTEN__) || defined(__wasi__)
     #include "linux/thread.inl"
 #endif
 
