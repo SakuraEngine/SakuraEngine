@@ -5,6 +5,13 @@ target("ThreadsTest")
     add_packages("gtest")
     add_files("threads/threads.cpp")
 
+target("JobTest")
+    set_kind("binary")
+    set_group("05.tests/platform")
+    public_dependency("SkrRT", engine_version)
+    add_packages("gtest")
+    add_files("threads/job.cpp")
+
 target("MarlTest")
     set_kind("binary")
     set_group("05.tests/platform")

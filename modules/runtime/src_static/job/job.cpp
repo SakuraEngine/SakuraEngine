@@ -1,6 +1,7 @@
 #include "job/thread_job.hpp"
 #include "job_thread.hpp"
 #include "containers/vector.hpp"
+#include "utils/defer.hpp"
 
 namespace skr
 {
@@ -199,42 +200,47 @@ int JobItem::get_result() SKR_NOEXCEPT
     return result;
 }
 
-class JobFinalizeItem : public JobItem 
+class JobFinalizeItem final : public JobItem 
 {
 public:
-    JobFinalizeItem() : JobItem(u8"SampleUtilDummyJob"){}
+    JobFinalizeItem() : JobItem(u8"JobFinalizeItem"){}
 protected:
     // this job is used to notify the end of the job
     JobResult run() SKR_NOEXCEPT override
     {
         return JOB_RESULT_OK;
     }
+    void finish(JobResult res) SKR_NOEXCEPT override
+    {
+        // do nothing
+    }  
 };
 
-
 JobQueue::JobQueue() SKR_NOEXCEPT
-    : name(u8"")
+    : name(u8"JobQueue")
 {
-    itemList = SkrNew<JobItemQueue>(u8"SampleUtilJobItemQueue");
+    skr_init_mutex_rw(&pending_queue_mutex);
+    itemList = SkrNew<JobItemQueue>(name.u8_str());
     SKR_ASSERT(itemList);
 }
 
 JobQueue::JobQueue(const JobQueueDesc* pDesc) SKR_NOEXCEPT
-    : name(u8"")
+    : name(u8"JobQueue")
 {
-    itemList = SkrNew<JobItemQueue>(u8"SampleUtilJobItemQueue");
+    itemList = SkrNew<JobItemQueue>(name.u8_str());
     SKR_ASSERT(itemList);
 
-    initialize(u8"SampleUtilJobQueue", pDesc);
+    initialize(name.u8_str(), pDesc);
 }
 
 JobQueue::~JobQueue() SKR_NOEXCEPT
 {
     finalize();
     SkrDelete(itemList);
+    skr_destroy_rw_mutex(&pending_queue_mutex);
 }
 
-JobResult JobQueue::initialize(const char8_t *name, const JobQueueDesc* pDesc) SKR_NOEXCEPT
+JobResult JobQueue::initialize(const char8_t *n, const JobQueueDesc* pDesc) SKR_NOEXCEPT
 {
     JobResult ret;
     if (pDesc != nullptr)
@@ -249,8 +255,7 @@ JobResult JobQueue::initialize(const char8_t *name, const JobQueueDesc* pDesc) S
         {
             return JOB_RESULT_ERROR_OUT_OF_MEMORY;
         }
-
-        auto *t = SkrNew<JobQueueThread>(name, desc.priority, desc.stack_size);
+        auto *t = SkrNew<JobQueueThread>(n, desc.priority, desc.stack_size);
         SKR_ASSERT(t != nullptr);
         if (t == nullptr)
         {
@@ -277,7 +282,7 @@ int JobQueue::finalize() SKR_NOEXCEPT
     // Queue as many JobFinalizeItems as the number of worker threads to finish the worker threads.
     // Since the worker thread that received JobFinalizeItem will always end without taking the next Job,
     // This will terminate all worker threads.
-    std::vector<JobFinalizeItem> finalJobs;
+    skr::vector<JobFinalizeItem> finalJobs;
     finalJobs.reserve(thread_list.size());
     for (int i = 0; i < thread_list.size(); ++i)
     {
@@ -298,14 +303,69 @@ int JobQueue::finalize() SKR_NOEXCEPT
     return JOB_RESULT_OK;
 }
 
-int JobQueue::enqueue(JobItem	*jobItem) SKR_NOEXCEPT
+int JobQueue::enqueue(JobItem* jobItem) SKR_NOEXCEPT
 {
-    // You can't add end Jobs from the outside.
-    return enqueueCore(jobItem, /*isEndJob=*/false);
+    // Add to pending queue
+    skr_acquire_mutex_w(&pending_queue_mutex);
+    SKR_DEFER({skr_release_rw_mutex(&pending_queue_mutex);});
+    JobResult ret;
+    {
+        ret = enqueueCore(jobItem, /*isEndJob=*/false);
+    }
+    if (ret == JOB_RESULT_OK)
+    {
+        pending_queue.emplace_back(jobItem);
+    }
+    return ret;
 }
 
-void JobQueue::check() SKR_NOEXCEPT
+bool JobQueue::is_empty() SKR_NOEXCEPT
 {
+    skr_acquire_mutex_r(&pending_queue_mutex);
+    SKR_DEFER({skr_release_rw_mutex(&pending_queue_mutex);});
+    return (items_count() == 0 && (pending_queue.size() == 0)) ? true : false;
+}
+
+JobResult JobQueue::check() SKR_NOEXCEPT
+{
+    skr_acquire_mutex_w(&pending_queue_mutex);
+    SKR_DEFER({skr_release_rw_mutex(&pending_queue_mutex);});
+
+    auto need_cancel = false;
+    need_cancel = skr_atomic32_load_acquire(&cancel_requested);
+    if (need_cancel)
+    {
+        eastl::for_each(pending_queue.begin(), pending_queue.end(), 
+        [](auto ptr) {
+            if (ptr->is_none() == false) 
+            {
+                ptr->cancel();
+            }
+        });
+        skr_atomic32_store_release(&cancel_requested, false);
+    }
+
+    auto it = pending_queue.begin();
+    while (it != pending_queue.end()) {
+        // call finish() when finished
+        if ((*it)->is_none()) {
+            auto jobItemPtr = *it;
+            // finish is called while the lock is released
+            skr_release_rw_mutex(&pending_queue_mutex);
+            jobItemPtr->finish(jobItemPtr->get_result());
+            skr_acquire_mutex_w(&pending_queue_mutex);
+
+            // Since enqueue may be done while unlocking, it cannot be used
+            // so re-search the list
+            it = eastl::find(pending_queue.begin(), pending_queue.end(), jobItemPtr);
+            it = pending_queue.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+
+    return JOB_RESULT_OK;
 }
 
 void JobQueue::get_descriptor(JobQueueDesc* pDesc) SKR_NOEXCEPT
@@ -354,6 +414,14 @@ void JobQueue::change_priority(JobQueuePriority priority) SKR_NOEXCEPT
     {
         pWorkerThread->change_priority(priority);
     }
+}
+
+JobResult JobQueue::cancel_all_items() SKR_NOEXCEPT
+{
+    skr_acquire_mutex_w(&pending_queue_mutex);
+    SKR_DEFER({skr_release_rw_mutex(&pending_queue_mutex);});
+    skr_atomic32_store_release(&cancel_requested, true);
+    return JOB_RESULT_OK;
 }
 
 }
