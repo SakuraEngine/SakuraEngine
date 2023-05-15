@@ -442,15 +442,13 @@ namespace task2
         return event.done();
     }
 
-    void scheduler_t::EventAwaitable::await_suspend(std::coroutine_handle<skr_task_t::promise_type> handle)
+    bool scheduler_t::EventAwaitable::await_suspend(std::coroutine_handle<skr_task_t::promise_type> handle)
     {   
         SMutexLock guard(event.state->mutex);
         if(event.state->signalled)
-        {
-            handle.resume();
-            return;
-        }
+            return false;
         event.state->cv.add_waiter(handle, workerIdx);
+        return true;
     }
 
     scheduler_t::EventAwaitable co_wait(event_t event, bool pinned)
@@ -482,15 +480,13 @@ namespace task2
         return counter.done();
     }
 
-    void scheduler_t::CounterAwaitable::await_suspend(std::coroutine_handle<skr_task_t::promise_type> handle)
+    bool scheduler_t::CounterAwaitable::await_suspend(std::coroutine_handle<skr_task_t::promise_type> handle)
     {   
         SMutexLock guard(counter.state->mutex);
         if(counter.state->count == 0)
-        {
-            handle.resume();
-            return;
-        }
+            return false;
         counter.state->cv.add_waiter(handle, workerIdx);
+        return true;
     }
 
     scheduler_t::CounterAwaitable co_wait(counter_t counter, bool pinned)

@@ -26,6 +26,10 @@ namespace skr
 {
 namespace task2
 {
+    template<class T>
+    using state_ptr_t = SPtr<T>;
+    template<class T>
+    using state_weak_ptr_t = SWeakPtr<T>;
     struct RUNTIME_API scheudler_config_t
     {
         scheudler_config_t();
@@ -136,8 +140,8 @@ namespace task2
         explicit operator bool() const { return (bool)state; }
         bool operator==(const event_t& other) const { return state == other.state; }
 
-        event_t(SPtr<State> state) : state(std::move(state)) {}
-        SPtr<State> state;
+        event_t(state_ptr_t<State> state) : state(std::move(state)) {}
+        state_ptr_t<State> state;
     };
     struct weak_event_t
     {
@@ -148,7 +152,7 @@ namespace task2
         event_t lock() const { return event_t{ state.lock() }; }
         bool expired() const { return state.expired(); }
 
-        SWeakPtr<event_t::State> state;
+        state_weak_ptr_t<event_t::State> state;
     };
     struct counter_t
     {
@@ -200,8 +204,8 @@ namespace task2
         explicit operator bool() const { return (bool)state; }
         bool operator==(const counter_t& other) const { return state == other.state; }
 
-        counter_t(SPtr<State> state) : state(std::move(state)) {}
-        SPtr<State> state;
+        counter_t(state_ptr_t<State> state) : state(std::move(state)) {}
+        state_ptr_t<State> state;
     };
 
     struct weak_counter_t
@@ -213,7 +217,7 @@ namespace task2
         counter_t lock() const { return counter_t{ state.lock() }; }
         bool expired() const { return state.expired(); }
 
-        SWeakPtr<counter_t::State> state;
+        state_weak_ptr_t<counter_t::State> state;
     };
 
     struct RUNTIME_API scheduler_t
@@ -229,7 +233,7 @@ namespace task2
         {
             EventAwaitable(scheduler_t& s, event_t event, int workerIdx = -1);
             bool await_ready() const;
-            void await_suspend(std::coroutine_handle<skr_task_t::promise_type>);
+            bool await_suspend(std::coroutine_handle<skr_task_t::promise_type>);
             void await_resume() const {}
             scheduler_t& scheduler;
             event_t event;
@@ -239,7 +243,7 @@ namespace task2
         {
             CounterAwaitable(scheduler_t& s, counter_t counter, int workerIdx = -1);
             bool await_ready() const;
-            void await_suspend(std::coroutine_handle<skr_task_t::promise_type>);
+            bool await_suspend(std::coroutine_handle<skr_task_t::promise_type>);
             void await_resume() const {}
             scheduler_t& scheduler;
             counter_t counter;
