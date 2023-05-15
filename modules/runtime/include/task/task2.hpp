@@ -1,6 +1,6 @@
 #pragma once
 #include "platform/configure.h"
-#if __cpp_coroutines
+#if __cpp_impl_coroutine
 #include "utils/defer.hpp"
 #include "platform/debug.h"
 #include "EASTL/functional.h"
@@ -8,8 +8,7 @@
 #include "containers/sptr.hpp"
 #include "containers/vector.hpp"
 #include <array>
-#ifdef __has_include
-#if __has_include(<coroutine>)
+#if __cpp_lib_coroutine
     #include <coroutine>
 #else
     #include <experimental/coroutine>
@@ -21,7 +20,6 @@
         using suspend_always = experimental::suspend_always;
         using suspend_never = experimental::suspend_never;
     }
-#endif
 #endif
 
 namespace skr
