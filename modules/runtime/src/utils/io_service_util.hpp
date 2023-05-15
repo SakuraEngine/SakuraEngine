@@ -4,7 +4,7 @@
 #include "utils/log.h"
 #include "utils/io.h"
 #include "utils/defer.hpp"
-#include "utils/concurrent_queue.h"
+#include "containers/concurrent_queue.h"
 #include <EASTL/unique_ptr.h>
 #include <EASTL/vector.h>
 #include <EASTL/deque.h>
@@ -330,13 +330,13 @@ struct TaskContainer
 
     const bool isLockless = false;
     SMutex taskMutex;
-    struct RUNTIME_API IOTaskConcurrentQueueTraits : public moodycamel::ConcurrentQueueDefaultTraits
+    struct RUNTIME_API IOTaskConcurrentQueueTraits : public skr::ConcurrentQueueDefaultTraits
     {
         static const bool RECYCLE_ALLOCATED_BLOCKS = true;
         static inline void* malloc(size_t size) { return sakura_mallocN(size, kIOTaskQueueName); }
         static inline void free(void* ptr) { return sakura_freeN(ptr, kIOTaskQueueName); }
     };
-    moodycamel::ConcurrentQueue<Task, IOTaskConcurrentQueueTraits> task_requests;
+    skr::ConcurrentQueue<Task, IOTaskConcurrentQueueTraits> task_requests;
     eastl::deque<Task> tasks;
 };
 

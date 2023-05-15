@@ -196,19 +196,20 @@ TEST_F(Task2, ParallelForMassive)
 
 TEST_F(Task2, MassiveCoroutine)
 {
-    ZoneScopedN("ParallelForMassive");
+    ZoneScopedN("MassiveCoroutine");
     using namespace skr::task2;
     std::atomic<int> a = 0;
     counter_t event;
-    event.add(10000);
+    event.add(1000);
     auto coro = [](std::atomic<int>& a, counter_t event) -> skr_task_t
     {
+        //ZoneScopedN("Coroutine");
         counter_t counter;
         SKR_ASSERT(counter);
-        counter.add(10);
+        counter.add(100);
         {
             ZoneScopedN("ScheduleLoop");
-            for(int i=0; i<10; ++i)
+            for(int i=0; i<100; ++i)
             {
                 schedule([=, &a]() mutable
                 {
@@ -222,12 +223,12 @@ TEST_F(Task2, MassiveCoroutine)
         a += 10;
         event.decrease();
     };
-    for(int i=0; i<10000; ++i)
+    for(int i=0; i<1000; ++i)
     {
         schedule(coro(a, event));
     }
     sync(event);
-    EXPECT_EQ(a, 1100000);
+    EXPECT_EQ(a, 1010000);
 }
 
 int main(int argc, char** argv)
