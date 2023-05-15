@@ -66,6 +66,9 @@ namespace task2
         eastl::function<void()> func;
         std::coroutine_handle<skr_task_t::promise_type> coro;
 
+        Task() {}
+        Task(nullptr_t) {}
+
         Task(eastl::function<void()>&& func)
             : func(std::move(func))
         {
@@ -88,10 +91,6 @@ namespace task2
 
         Task(std::coroutine_handle<skr_task_t::promise_type>&& coro)
             : coro(std::move(coro))
-        {
-        }
-
-        Task(nullptr_t)
         {
         }
 
