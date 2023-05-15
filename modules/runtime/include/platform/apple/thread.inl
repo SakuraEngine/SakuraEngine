@@ -208,7 +208,7 @@ FORCEINLINE static SThreadPriority skr_set_thread_priority(SThreadHandle handle,
 
 FORCEINLINE static void skr_set_thread_affinity(SThreadHandle handle, uint64_t affinityMask)
 {
-    thread_affinity_policy_data_t policy = { static_cast<int32_t>(affinityMask) };
+    thread_affinity_policy_data_t policy = { (int32_t)affinityMask };
     thread_policy_set(pthread_mach_thread_np(handle), THREAD_AFFINITY_POLICY, (thread_policy_t)&policy, 1);
 }
 
