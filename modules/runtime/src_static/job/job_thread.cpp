@@ -13,6 +13,15 @@ JobQueueThread::JobQueueThread() SKR_NOEXCEPT
 
 }
 
+JobQueueThread::~JobQueueThread() SKR_NOEXCEPT
+{
+    if (skr_atomic32_load_acquire(&started)) 
+    {
+        skr_destroy_thread(tHandle);
+        skr_atomic32_store_release(&started, false);
+    }
+}
+
 JobQueueThread::JobQueueThread(const char8_t *name, JobQueuePriority priority, uint32_t stack_size, const JobQueueThreadDesc *desc) SKR_NOEXCEPT
     : started(false), alive(false), func(nullptr)
 {
@@ -30,7 +39,6 @@ void JobQueueThread::jobThreadFunc(void* args)
     pSelf->func->run();
     
     skr_atomic32_store_release(&pSelf->alive, false);
-    skr_destroy_thread(pSelf->tHandle);
 }
 
 
@@ -80,7 +88,10 @@ JobThreadFunction* JobQueueThread::get_function() const SKR_NOEXCEPT
 JobResult JobQueueThread::initialize(const char8_t *n, int32_t p, uint32_t stackSize, const JobQueueThreadDesc *pdesc) SKR_NOEXCEPT
 {
     name = skr::text::text::from_utf8(n);
-    desc = *pdesc;
+    if (pdesc)
+    {
+        desc = *pdesc;
+    }
     return JOB_RESULT_OK;
 }
 
