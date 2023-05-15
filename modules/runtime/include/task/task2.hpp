@@ -225,7 +225,7 @@ namespace task2
         void shutdown();
         static scheduler_t* instance();
         void schedule(skr_task_t&& task);
-        void schedule(eastl::function<void()> function);
+        void schedule(eastl::function<void()>&& function);
         struct RUNTIME_API EventAwaitable
         {
             EventAwaitable(scheduler_t& s, event_t event, int workerIdx = -1);
@@ -262,7 +262,7 @@ namespace task2
     {
         scheduler_t::instance()->schedule(std::move(task));
     }
-    inline void schedule(eastl::function<void()> function)
+    inline void schedule(eastl::function<void()>&& function)
     {
         scheduler_t::instance()->schedule(std::move(function));
     }
