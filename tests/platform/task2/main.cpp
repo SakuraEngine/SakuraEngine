@@ -1,8 +1,10 @@
 #include "gtest/gtest.h"
+
+#if __cpp_coroutines
+
 #include "task/task2.hpp"
 #include "platform/filesystem.hpp"
 #include "module/module_manager.hpp"
-
 
 class Task2 : public ::testing::Test
 {
@@ -207,3 +209,12 @@ int main(int argc, char** argv)
     moduleManager->destroy_module_graph();
     return result;
 }
+
+#else
+
+int main(int argc, char** argv)
+{
+    return 0;
+}
+
+#endif

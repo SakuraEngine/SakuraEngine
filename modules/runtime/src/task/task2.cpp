@@ -1,3 +1,5 @@
+#if __cpp_coroutines
+
 #include "task/task2.hpp"
 #include "EASTL/deque.h"
 #include "utils/log.h"
@@ -666,3 +668,5 @@ namespace task2
     }
 }
 }
+
+#endif
