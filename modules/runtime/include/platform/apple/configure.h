@@ -95,5 +95,7 @@ extern "C" {
 }
     #endif //  __cplusplus
 
+    #define SKR_RUNTIME_USE_MIMALLOC
     #define OS_DPI 72
+    
 #endif

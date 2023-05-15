@@ -88,7 +88,7 @@ RUNTIME_API void* traced_os_calloc_aligned(size_t count, size_t size, size_t ali
 RUNTIME_API void* traced_os_malloc_aligned(size_t size, size_t alignment, const char* pool_name) 
 {
 #if !defined(_WIN32)
-    void* ptr = (alignment == 1) ? malloc(size) : aligned_alloc(size, alignment);
+    void* ptr = (alignment == 1) ? malloc(size) : aligned_alloc(alignment, size);
     if (!ptr)
     {
         posix_memalign(&ptr, alignment, size);
@@ -318,16 +318,7 @@ RUNTIME_API void* _sakura_malloc_aligned(size_t size, size_t alignment, const ch
 
 RUNTIME_API void* _sakura_new_aligned(size_t size, size_t alignment, const char* pool_name)
 {
-#if !defined(_WIN32)
-    void* ptr = (alignment == 1) ? malloc(size) : aligned_alloc(size, alignment);
-    if (!ptr)
-    {
-        posix_memalign(&ptr, alignment, size);
-    }
-#else
-    void* ptr = _aligned_malloc(size, alignment);
-#endif
-    return ptr;
+    return traced_os_malloc_aligned(size, alignment, pool_name);
 }
 
 RUNTIME_API void _sakura_free(void* p, const char* pool_name) 
