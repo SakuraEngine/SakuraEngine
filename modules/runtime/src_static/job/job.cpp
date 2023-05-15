@@ -227,6 +227,7 @@ JobQueue::JobQueue() SKR_NOEXCEPT
 JobQueue::JobQueue(const JobQueueDesc* pDesc) SKR_NOEXCEPT
     : name(u8"JobQueue")
 {
+    skr_init_mutex_rw(&pending_queue_mutex);
     itemList = SkrNew<JobItemQueue>(name.u8_str());
     SKR_ASSERT(itemList);
 
