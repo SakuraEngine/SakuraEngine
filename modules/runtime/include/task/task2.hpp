@@ -1,5 +1,6 @@
 #pragma once
 #include "platform/configure.h"
+#if __cpp_coroutines
 #include "utils/defer.hpp"
 #include "platform/debug.h"
 #include "EASTL/functional.h"
@@ -280,3 +281,4 @@ namespace task2
     }
 }
 }
+#endif
