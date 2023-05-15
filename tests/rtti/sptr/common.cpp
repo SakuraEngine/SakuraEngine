@@ -20,18 +20,21 @@ TEST(SPTRCommon, Base)
         EXPECT_EQ(pT1.get(), nullptr);
     }
     {
+        SKR_LOG_DEBUG("I wonder ");
         auto ptr = SkrNew<int>(5);
         EXPECT_NE(ptr, nullptr);
         skr::SPtr<int> pT1(ptr);
         EXPECT_EQ(*pT1, 5);
+        SKR_LOG_DEBUG("HOW?");
     }
     {
+        SKR_LOG_DEBUG("I wonder ");
         skr::SPtr<int> pT1(SkrNew<int>(5));
         EXPECT_EQ(*pT1, 5);
-        // EXPECT_EQ(pT1.use_count(), 1);
-        // EXPECT_TRUE(pT1.unique());
+        EXPECT_EQ(pT1.use_count(), 1);
+        EXPECT_TRUE(pT1.unique());
+        SKR_LOG_DEBUG("WHY?");
 
-        /*
         skr::SPtr<int> pT2 = {};
         EXPECT_NE(pT1, pT2);
         EXPECT_EQ(pT2.use_count(), 0);
@@ -55,7 +58,6 @@ TEST(SPTRCommon, Base)
 		EXPECT_TRUE(pT1.unique());
 		EXPECT_EQ(pT1.use_count(), 1);
 		EXPECT_NE(pT1, pT2);
-        */
     }
 }
 
@@ -77,7 +79,9 @@ struct A
         { mc = x.mc; return *this; }
 
     virtual ~A() // Virtual because we subclass A below.
-        { --mCount; }
+    { 
+        --mCount;
+    }
 };
 int A::mCount = 0;
 
@@ -92,85 +96,87 @@ struct B : public A
 TEST(SPTRCommon, Ctors)
 {
     EXPECT_TRUE(A::mCount == 0);
+    {
+        skr::SPtr<A> pT2(SkrNew<A>(0));
+        EXPECT_TRUE(A::mCount == 1);
+        EXPECT_TRUE(pT2->mc == 0);
+        EXPECT_TRUE(pT2.use_count() == 1);
+        EXPECT_TRUE(pT2.unique());
 
-    skr::SPtr<A> pT2(SkrNew<A>(0));
-    EXPECT_TRUE(A::mCount == 1);
-    EXPECT_TRUE(pT2->mc == 0);
-    EXPECT_TRUE(pT2.use_count() == 1);
-    EXPECT_TRUE(pT2.unique());
+        pT2.reset(SkrNew<A>(1));
+        EXPECT_TRUE(pT2->mc == 1);
+        EXPECT_TRUE(A::mCount == 1);
+        EXPECT_TRUE(pT2.use_count() == 1);
+        EXPECT_TRUE(pT2.unique());
 
-    pT2.reset(SkrNew<A>(1));
-    EXPECT_TRUE(pT2->mc == 1);
-    EXPECT_TRUE(A::mCount == 1);
-    EXPECT_TRUE(pT2.use_count() == 1);
-    EXPECT_TRUE(pT2.unique());
+        skr::SPtr<A> pT3(SkrNew<A>(2));
+        EXPECT_TRUE(A::mCount == 2);
 
-    skr::SPtr<A> pT3(SkrNew<A>(2));
-    EXPECT_TRUE(A::mCount == 2);
+        pT2.swap(pT3);
+        EXPECT_TRUE(pT2->mc == 2);
+        EXPECT_TRUE(pT3->mc == 1);
+        EXPECT_TRUE(A::mCount == 2);
 
-    pT2.swap(pT3);
-    EXPECT_TRUE(pT2->mc == 2);
-    EXPECT_TRUE(pT3->mc == 1);
-    EXPECT_TRUE(A::mCount == 2);
+        pT2.swap(pT3);
+        EXPECT_TRUE(pT2->mc == 1);
+        EXPECT_TRUE(pT3->mc == 2);
+        EXPECT_TRUE(A::mCount == 2);
+        if(!pT2)
+            EXPECT_TRUE(!pT2.get()); // Will fail
 
-    pT2.swap(pT3);
-    EXPECT_TRUE(pT2->mc == 1);
-    EXPECT_TRUE(pT3->mc == 2);
-    EXPECT_TRUE(A::mCount == 2);
-    if(!pT2)
-        EXPECT_TRUE(!pT2.get()); // Will fail
+        skr::SPtr<A> pT4;
+        EXPECT_TRUE(pT2.use_count() == 1);
+        EXPECT_TRUE(pT2.unique());
+        EXPECT_TRUE(A::mCount == 2);
+        if(pT4)
+            EXPECT_TRUE(pT4.get()); // Will fail
+        if(!(!pT4))
+            EXPECT_TRUE(pT4.get()); // Will fail
 
-    skr::SPtr<A> pT4;
-    EXPECT_TRUE(pT2.use_count() == 1);
-    EXPECT_TRUE(pT2.unique());
-    EXPECT_TRUE(A::mCount == 2);
-    if(pT4)
-        EXPECT_TRUE(pT4.get()); // Will fail
-    if(!(!pT4))
-        EXPECT_TRUE(pT4.get()); // Will fail
+        pT4 = pT2;
+        EXPECT_TRUE(pT2.use_count() == 2);
+        EXPECT_TRUE(pT4.use_count() == 2);
+        EXPECT_TRUE(!pT2.unique());
+        EXPECT_TRUE(!pT4.unique());
+        EXPECT_TRUE(A::mCount == 2);
+        EXPECT_TRUE(pT2 == pT4);
+        EXPECT_TRUE(pT2 != pT3);
+        EXPECT_TRUE(!(pT2 < pT4)); // They should be equal
+        EXPECT_TRUE(!(pT2 > pT4)); // They should be equal
 
-    pT4 = pT2;
-    EXPECT_TRUE(pT2.use_count() == 2);
-    EXPECT_TRUE(pT4.use_count() == 2);
-    EXPECT_TRUE(!pT2.unique());
-    EXPECT_TRUE(!pT4.unique());
-    EXPECT_TRUE(A::mCount == 2);
-    EXPECT_TRUE(pT2 == pT4);
-    EXPECT_TRUE(pT2 != pT3);
-    EXPECT_TRUE(!(pT2 < pT4)); // They should be equal
-    EXPECT_TRUE(!(pT2 > pT4)); // They should be equal
+        skr::SPtr<A> pT5(pT4);
+        EXPECT_TRUE(pT4 == pT5);
+        EXPECT_TRUE(pT2.use_count() == 3);
+        EXPECT_TRUE(pT4.use_count() == 3);
+        EXPECT_TRUE(pT5.use_count() == 3);
+        EXPECT_TRUE(!pT5.unique());
 
-    skr::SPtr<A> pT5(pT4);
-    EXPECT_TRUE(pT4 == pT5);
-    EXPECT_TRUE(pT2.use_count() == 3);
-    EXPECT_TRUE(pT4.use_count() == 3);
-    EXPECT_TRUE(pT5.use_count() == 3);
-    EXPECT_TRUE(!pT5.unique());
+        // STL
+        std::shared_ptr<A> pTT4 = std::shared_ptr<A>(nullptr);
+        EXPECT_NE(pTT4.use_count(), 1);
+        EXPECT_EQ(pTT4.use_count(), 0);
 
-    // STL
-    std::shared_ptr<A> pTT4 = std::shared_ptr<A>(nullptr);
-    EXPECT_NE(pTT4.use_count(), 1);
-    EXPECT_EQ(pTT4.use_count(), 0);
+        pTT4 = std::shared_ptr<A>((A*)nullptr);
+        EXPECT_EQ(pTT4.use_count(), 1); // 1.1
+        EXPECT_EQ(pTT4.use_count(), 1); // 1.2
 
-    pTT4 = std::shared_ptr<A>((A*)nullptr);
-    EXPECT_EQ(pTT4.use_count(), 1); // 1.1
-    EXPECT_EQ(pTT4.use_count(), 1); // 1.2
+        // SPtr
+        pT4 = skr::SPtr<A>(nullptr);
+        EXPECT_TRUE(!pT4.unique());
+        EXPECT_EQ(pT4.use_count(), 0);
 
-    // SPtr
-    pT4 = skr::SPtr<A>(nullptr);
-    EXPECT_TRUE(!pT4.unique());
-    EXPECT_EQ(pT4.use_count(), 0);
+        pT4 = skr::SPtr<A>((A*)nullptr);
+        EXPECT_TRUE(!pT4.unique()); // 2.1
+        EXPECT_EQ(pT4.use_count(), 0); // 2.2
 
-    pT4 = skr::SPtr<A>((A*)nullptr);
-    EXPECT_TRUE(!pT4.unique()); // 2.1
-    EXPECT_EQ(pT4.use_count(), 0); // 2.2
+        // CAUTION: Look at 1.1/2 & 2.1/2
+        // We do not support the same behavior as std::shared_ptr to initialize pRC with [T* = null] because it is stupid.
 
-    // CAUTION: Look at 1.1/2 & 2.1/2
-    // We do not support the same behavior as std::shared_ptr to initialize pRC with [T* = null] because it is stupid.
+        EXPECT_EQ(pT2.use_count(), 2);
 
-    EXPECT_EQ(pT2.use_count(), 2);
-
-    EXPECT_TRUE(A::mCount == 2);
+        EXPECT_TRUE(A::mCount == 2);
+    }
+    EXPECT_TRUE(A::mCount == 0);
 }
 
 TEST(SPTRCommon, Move)
