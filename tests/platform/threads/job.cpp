@@ -181,6 +181,7 @@ TEST(Job, AsyncTask)
 {
     EmptyTaskWithProgressFeedback<0> asynctask;
     asynctask.execute(1, 5);
+    auto txt = skr::text::format(u8"{}", 1);
     for (int nRender = 0; !asynctask.on_callback_loop(); ++nRender) // if doInBackground() is finished it will stop the loop
     {
         skr_thread_sleep(120);

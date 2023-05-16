@@ -80,10 +80,17 @@ OPEN_STRING_NS_END
     {	\
         [](auto debug_format, auto message_format, auto&&...args)	\
         {	\
-            const OPEN_STRING_NS::codeunit_sequence message = OPEN_STRING_NS::format(message_format, args...);	\
-            PlatformReportError(OPEN_STRING_NS::format(debug_format, message).c_str());	\
+            if constexpr (sizeof...(args)) \
+            {\
+                const OPEN_STRING_NS::codeunit_sequence message = OPEN_STRING_NS::format(message_format, args...);	\
+                PlatformReportError(OPEN_STRING_NS::format(debug_format, message).c_str());	\
+            } \
+            else \
+            {\
+                PlatformReportError(OPEN_STRING_NS::format(debug_format, message_format).c_str());	\
+            }\
         }(__VA_ARGS__);	\
-    }	\
+    }
 
     // Visual Studio will not trigger the breakpoint during single-step debugging without __nop()
     #include <intrin.h>
