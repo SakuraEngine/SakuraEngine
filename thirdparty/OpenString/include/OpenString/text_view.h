@@ -432,9 +432,9 @@ private:
 };
 
 template<> 
-struct formatter<text_view>
+struct argument_formatter<text_view>
 {
-    static codeunit_sequence format_argument(const text_view& value, const codeunit_sequence_view& specification)
+    static codeunit_sequence produce(const text_view& value, const codeunit_sequence_view& specification)
     {
         return codeunit_sequence{ value.raw() };
     }

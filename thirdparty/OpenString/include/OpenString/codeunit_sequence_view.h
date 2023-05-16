@@ -285,7 +285,7 @@ public:
 
 	[[nodiscard]] constexpr const ochar8_t* u8_str() const noexcept
 	{
-		return (const ochar8_t*)this->data_;
+		return this->data_;
 	}
 
 	[[nodiscard]] constexpr const ochar8_t* last() const noexcept
