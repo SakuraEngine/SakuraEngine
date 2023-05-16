@@ -234,7 +234,7 @@ public:
 		return this->view_;
 	}
 
-	[[nodiscard]] constexpr const ochar_t* c_str() const noexcept
+	[[nodiscard]] const ochar_t* c_str() const noexcept
 	{
 		return this->raw().c_str();
 	}
