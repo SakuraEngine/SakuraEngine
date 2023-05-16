@@ -35,7 +35,7 @@ text::text(codeunit_sequence_view sequence) noexcept
 
 text text::from_utf8(const ochar8_t* str) noexcept
 {
-	return { codeunit_sequence_view((const ochar8_t*)str) };
+	return { codeunit_sequence_view(str) };
 }
 
 text text::from_utf32(const char32_t* str) noexcept
@@ -526,7 +526,7 @@ const ochar_t* text::c_str() const noexcept
 
 const ochar8_t* text::u8_str() const noexcept
 {
-	return (const ochar8_t*)this->view().c_str();
+	return this->view().u8_str();
 }
 
 bool operator==(const text_view& lhs, const text& rhs) noexcept

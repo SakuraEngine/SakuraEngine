@@ -250,8 +250,9 @@ JobResult JobQueue::initialize(const JobQueueDesc* pDesc) SKR_NOEXCEPT
             return JOB_RESULT_ERROR_OUT_OF_MEMORY;
         }
         skr::text::text tname = n ? n : u8"UnknownJobQueue";
-        auto taftfix = skr::text::format(u8"_{}", (uint64_t)i);
+        auto taftfix = skr::text::format(u8"_{}"_cuqv, (uint32_t)i);
         tname.append(taftfix);
+        SKR_LOG_DEBUG(taftfix.c_str());
         auto *t = SkrNew<JobQueueThread>(tname.u8_str(), desc.priority, desc.stack_size);
         SKR_ASSERT(t != nullptr);
         if (t == nullptr)

@@ -338,7 +338,7 @@ inline namespace literal
 	{
 		return OPEN_STRING_NS::codepoint{ c };
 	}
-	
+
 	[[nodiscard]] constexpr OPEN_STRING_NS::codepoint operator""_cp(const char32_t c) noexcept
 	{
 		return OPEN_STRING_NS::codepoint{ c };

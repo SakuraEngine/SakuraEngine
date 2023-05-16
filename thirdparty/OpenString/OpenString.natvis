@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
 
-    <Type Name="easy::index_interval">
+    <Type Name="OPEN_STRING_NS::index_interval">
         <DisplayString Condition="lower_.type == 2 &amp; upper_.type == 2">
             (-∞,+∞)
         </DisplayString>
@@ -34,20 +34,20 @@
         </DisplayString>
     </Type>
 
-    <Type Name="easy::codeunit_sequence_view">
+    <Type Name="OPEN_STRING_NS::codeunit_sequence_view">
         <DisplayString>{data_,[size_]}</DisplayString>
         <Expand HideRawView="true">
             <Item Name="size">size_</Item>
         </Expand>
     </Type>
 
-    <Type Name="easy::codeunit_sequence">
-        <DisplayString>{((easy::codeunit_sequence::sso*)this)->alloc ? ((easy::codeunit_sequence::norm*)this)->data : ((easy::codeunit_sequence::sso*)this)->data._Elems}</DisplayString>
+    <Type Name="OPEN_STRING_NS::codeunit_sequence">
+        <DisplayString>{((OPEN_STRING_NS::codeunit_sequence::sso*)this)->alloc ? ((OPEN_STRING_NS::codeunit_sequence::norm*)this)->data : ((OPEN_STRING_NS::codeunit_sequence::sso*)this)->data._Elems}</DisplayString>
         <Expand HideRawView="true">
-            <Item Name="allocated">(bool)(((easy::codeunit_sequence::sso*)this)->alloc)</Item>
-            <Item Name="size">((easy::codeunit_sequence::sso*)this)->alloc ? ((easy::codeunit_sequence::norm*)this)->size : (easy::u32)((easy::codeunit_sequence::sso*)this)->size</Item>
-            <Item Name="capacity">((easy::codeunit_sequence::sso*)this)->alloc ? ((easy::codeunit_sequence::norm*)this)->capacity : easy::codeunit_sequence::SSO_SIZE_MAX</Item>
-            <Item Name="data">((easy::codeunit_sequence::sso*)this)->alloc ? ((easy::codeunit_sequence::norm*)this)->data : (easy::u32)((easy::codeunit_sequence::sso*)this)->data._Elems</Item>
+            <Item Name="allocated">(bool)(((OPEN_STRING_NS::codeunit_sequence::sso*)this)->alloc)</Item>
+            <Item Name="size">((OPEN_STRING_NS::codeunit_sequence::sso*)this)->alloc ? ((OPEN_STRING_NS::codeunit_sequence::norm*)this)->size : (OPEN_STRING_NS::u32)((OPEN_STRING_NS::codeunit_sequence::sso*)this)->size</Item>
+            <Item Name="capacity">((OPEN_STRING_NS::codeunit_sequence::sso*)this)->alloc ? ((OPEN_STRING_NS::codeunit_sequence::norm*)this)->capacity : OPEN_STRING_NS::codeunit_sequence::SSO_SIZE_MAX</Item>
+            <Item Name="data">((OPEN_STRING_NS::codeunit_sequence::sso*)this)->alloc ? ((OPEN_STRING_NS::codeunit_sequence::norm*)this)->data : (OPEN_STRING_NS::u32)((OPEN_STRING_NS::codeunit_sequence::sso*)this)->data._Elems</Item>
         </Expand>
     </Type>
 
