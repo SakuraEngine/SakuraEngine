@@ -38,10 +38,10 @@ template <typename Result>
 struct IFuture 
 {
     virtual ~IFuture() SKR_NOEXCEPT = default;
-    virtual bool valid() const = 0;
-    virtual void wait() = 0;
-    virtual FutureStatus wait_for(uint32_t ms) = 0;
-    virtual Result get() = 0;
+    virtual bool valid() const SKR_NOEXCEPT = 0;
+    virtual void wait() SKR_NOEXCEPT = 0;
+    virtual FutureStatus wait_for(uint32_t ms) SKR_NOEXCEPT = 0;
+    virtual Result get() SKR_NOEXCEPT = 0;
 };
 
 // AsyncTask
