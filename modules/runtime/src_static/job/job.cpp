@@ -219,7 +219,7 @@ protected:
 JobQueue::JobQueue() SKR_NOEXCEPT
     : name(u8"JobQueue")
 {
-    skr_init_mutex_rw(&pending_queue_mutex);
+    skr_init_rw_mutex(&pending_queue_mutex);
     itemList = SkrNew<JobItemQueue>(name.u8_str());
     SKR_ASSERT(itemList);
 }
@@ -227,7 +227,7 @@ JobQueue::JobQueue() SKR_NOEXCEPT
 JobQueue::JobQueue(const JobQueueDesc* pDesc) SKR_NOEXCEPT
     : name(u8"JobQueue")
 {
-    skr_init_mutex_rw(&pending_queue_mutex);
+    skr_init_rw_mutex(&pending_queue_mutex);
     itemList = SkrNew<JobItemQueue>(name.u8_str());
     SKR_ASSERT(itemList);
 
@@ -307,8 +307,8 @@ int JobQueue::finalize() SKR_NOEXCEPT
 int JobQueue::enqueue(JobItem* jobItem) SKR_NOEXCEPT
 {
     // Add to pending queue
-    skr_acquire_mutex_w(&pending_queue_mutex);
-    SKR_DEFER({skr_release_rw_mutex(&pending_queue_mutex);});
+    skr_rw_mutex_acuire_w(&pending_queue_mutex);
+    SKR_DEFER({skr_rw_mutex_release(&pending_queue_mutex);});
     JobResult ret;
     {
         ret = enqueueCore(jobItem, /*isEndJob=*/false);
@@ -322,15 +322,15 @@ int JobQueue::enqueue(JobItem* jobItem) SKR_NOEXCEPT
 
 bool JobQueue::is_empty() SKR_NOEXCEPT
 {
-    skr_acquire_mutex_r(&pending_queue_mutex);
-    SKR_DEFER({skr_release_rw_mutex(&pending_queue_mutex);});
+    skr_rw_mutex_acuire_r(&pending_queue_mutex);
+    SKR_DEFER({skr_rw_mutex_release(&pending_queue_mutex);});
     return (items_count() == 0 && (pending_queue.size() == 0)) ? true : false;
 }
 
 JobResult JobQueue::check() SKR_NOEXCEPT
 {
-    skr_acquire_mutex_w(&pending_queue_mutex);
-    SKR_DEFER({skr_release_rw_mutex(&pending_queue_mutex);});
+    skr_rw_mutex_acuire_w(&pending_queue_mutex);
+    SKR_DEFER({skr_rw_mutex_release(&pending_queue_mutex);});
 
     auto need_cancel = false;
     need_cancel = skr_atomic32_load_acquire(&cancel_requested);
@@ -352,9 +352,9 @@ JobResult JobQueue::check() SKR_NOEXCEPT
         if ((*it)->is_none()) {
             auto jobItemPtr = *it;
             // finish is called while the lock is released
-            skr_release_rw_mutex(&pending_queue_mutex);
+            skr_rw_mutex_release(&pending_queue_mutex);
             jobItemPtr->finish(jobItemPtr->get_result());
-            skr_acquire_mutex_w(&pending_queue_mutex);
+            skr_rw_mutex_acuire_w(&pending_queue_mutex);
 
             // Since enqueue may be done while unlocking, it cannot be used
             // so re-search the list
@@ -419,8 +419,8 @@ void JobQueue::change_priority(JobQueuePriority priority) SKR_NOEXCEPT
 
 JobResult JobQueue::cancel_all_items() SKR_NOEXCEPT
 {
-    skr_acquire_mutex_w(&pending_queue_mutex);
-    SKR_DEFER({skr_release_rw_mutex(&pending_queue_mutex);});
+    skr_rw_mutex_acuire_w(&pending_queue_mutex);
+    SKR_DEFER({skr_rw_mutex_release(&pending_queue_mutex);});
     skr_atomic32_store_release(&cancel_requested, true);
     return JOB_RESULT_OK;
 }

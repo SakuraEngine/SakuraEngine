@@ -17,11 +17,11 @@ extern "C" void dualX_register_types();
 auto log_locker = +[](bool isLocked, void* pMutex){
     if (isLocked)
     {
-        skr_acquire_mutex((SMutex*)pMutex);
+        skr_mutex_acquire((SMutex*)pMutex);
     }
     else
     {
-        skr_release_mutex((SMutex*)pMutex);
+        skr_mutex_release((SMutex*)pMutex);
     }
 };
 

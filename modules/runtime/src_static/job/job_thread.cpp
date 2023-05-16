@@ -164,13 +164,13 @@ JobResult JobQueueCond::wait(uint32_t milliseconds) SKR_NOEXCEPT
 
 JobResult JobQueueCond::lock() SKR_NOEXCEPT
 {
-    skr_acquire_mutex(&mutex);
+    skr_mutex_acquire(&mutex);
     return JOB_RESULT_OK;
 }
 
 JobResult JobQueueCond::unlock() SKR_NOEXCEPT
 {
-    skr_release_mutex(&mutex);
+    skr_mutex_release(&mutex);
     return JOB_RESULT_OK;
 }
 

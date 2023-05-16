@@ -34,7 +34,7 @@ FORCEINLINE static bool skr_init_mutex_recursive(SMutex* pMutex)
 
 FORCEINLINE static void skr_destroy_mutex(SMutex* pMutex) { pthread_mutex_destroy(&pMutex->pHandle); }
 
-FORCEINLINE static void skr_acquire_mutex(SMutex* pMutex)
+FORCEINLINE static void skr_mutex_acquire(SMutex* pMutex)
 {
     uint32_t count = 0;
 
@@ -49,9 +49,9 @@ FORCEINLINE static void skr_acquire_mutex(SMutex* pMutex)
     }
 }
 
-FORCEINLINE static bool skr_try_acquire_mutex(SMutex* pMutex) { return pthread_mutex_trylock(&pMutex->pHandle) == 0; }
+FORCEINLINE static bool skr_mutex_try_acquire(SMutex* pMutex) { return pthread_mutex_trylock(&pMutex->pHandle) == 0; }
 
-FORCEINLINE static void skr_release_mutex(SMutex* pMutex) { pthread_mutex_unlock(&pMutex->pHandle); }
+FORCEINLINE static void skr_mutex_release(SMutex* pMutex) { pthread_mutex_unlock(&pMutex->pHandle); }
 
 FORCEINLINE static bool skr_init_condition_var(SConditionVariable* pCv)
 {

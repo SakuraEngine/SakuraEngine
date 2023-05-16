@@ -170,13 +170,13 @@ struct TaskContainer
     void optionalLockTasks() SKR_NOEXCEPT
     {
         if (!isLockless)
-            skr_acquire_mutex(&taskMutex);
+            skr_mutex_acquire(&taskMutex);
     }
 
     void optionalUnlockTasks() SKR_NOEXCEPT
     {
         if (!isLockless)
-            skr_release_mutex(&taskMutex);
+            skr_mutex_release(&taskMutex);
     }
 
     void update_(AsyncServiceBase* service) SKR_NOEXCEPT

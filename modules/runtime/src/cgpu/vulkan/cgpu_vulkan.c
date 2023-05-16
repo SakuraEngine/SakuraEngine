@@ -1227,7 +1227,7 @@ void cgpu_submit_queue_vulkan(CGPUQueueId queue, const struct CGPUQueueSubmitDes
         .pSignalSemaphores = wait_semaphores,
     };
 #ifdef CGPU_THREAD_SAFETY
-    if (Q->pMutex) skr_acquire_mutex(Q->pMutex);
+    if (Q->pMutex) skr_mutex_acquire(Q->pMutex);
 #endif
     VkResult res = D->mVkDeviceTable.vkQueueSubmit(Q->pVkQueue, 1, &submit_info, F ? F->pVkFence : VK_NULL_HANDLE);
     if(res != VK_SUCCESS)
@@ -1244,7 +1244,7 @@ void cgpu_submit_queue_vulkan(CGPUQueueId queue, const struct CGPUQueueSubmitDes
     };
     if (F) F->mSubmitted = true;
 #ifdef CGPU_THREAD_SAFETY
-    if (Q->pMutex) skr_release_mutex(Q->pMutex);
+    if (Q->pMutex) skr_mutex_release(Q->pMutex);
 #endif
 }
 
@@ -1288,11 +1288,11 @@ void cgpu_queue_present_vulkan(CGPUQueueId queue, const struct CGPUQueuePresentD
             .pResults = VK_NULL_HANDLE
         };
 #ifdef CGPU_THREAD_SAFETY
-        if (Q->pMutex) skr_acquire_mutex(Q->pMutex);
+        if (Q->pMutex) skr_mutex_acquire(Q->pMutex);
 #endif
         VkResult vk_res = D->mVkDeviceTable.vkQueuePresentKHR(Q->pVkQueue, &present_info);
 #ifdef CGPU_THREAD_SAFETY
-        if (Q->pMutex) skr_release_mutex(Q->pMutex);
+        if (Q->pMutex) skr_mutex_release(Q->pMutex);
 #endif
         if (vk_res != VK_SUCCESS && vk_res != VK_SUBOPTIMAL_KHR &&
             vk_res != VK_ERROR_OUT_OF_DATE_KHR)
