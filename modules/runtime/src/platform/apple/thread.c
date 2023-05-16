@@ -215,7 +215,8 @@ void skr_thread_set_affinity(SThreadHandle handle, uint64_t affinityMask)
 
 void skr_thread_set_name(SThreadHandle handle, const char8_t* pName)
 {
-    pthread_setname_np(handle, pName);
+    // no-standard method for this shit
+    // pthread_setname_np(handle, pName);
 }
 
 void skr_init_thread(SThreadDesc* pData, SThreadHandle* pHandle)
