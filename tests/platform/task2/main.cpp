@@ -241,9 +241,8 @@ int main(int argc, char** argv)
     moduleManager->init_module_graph(argc, argv);
     //while(!TracyIsConnected);
     ZoneScopedN("Main");
-    char* fake_argv[] = {argv[0], (char*)"--gtest_repeat=1000"};
-    int fake_argc = 2;
-    ::testing::InitGoogleTest(&fake_argc, fake_argv);
+    ::testing::InitGoogleTest(&argc, argv);
+    testing::FLAGS_gtest_repeat = 10;
     auto result = RUN_ALL_TESTS();
     moduleManager->destroy_module_graph();
     return result;
