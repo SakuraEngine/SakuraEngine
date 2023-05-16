@@ -2,13 +2,16 @@
 #include "platform/configure.h"
 #include <type_traits>
 #include "platform/atomic.h"
+#include "platform/thread.h"
 #include "platform/memory.h"
+
+#include <EASTL/atomic.h>
+#include <EASTL/queue.h>
 
 namespace skr
 {
 
-struct AsyncTaskException 
-{
+struct AsyncTaskException {
     enum class eEx : uint32_t
     {
         TaskIsAlreadyRunning,
@@ -31,12 +34,13 @@ enum class FutureStatus : uint32_t
     Deferred
 };
 
-template<typename Result>
-struct IFuture
+template <typename Result>
+struct IFuture 
 {
+    virtual ~IFuture() SKR_NOEXCEPT = default;
     virtual bool valid() const = 0;
     virtual void wait() = 0;
-    virtual void wait_for(uint32_t ms) = 0;
+    virtual FutureStatus wait_for(uint32_t ms) = 0;
     virtual void catch_and_free_exception(AsyncTaskException* e) = 0;
     virtual Result get() = 0;
 };
@@ -44,7 +48,7 @@ struct IFuture
 // AsyncTask
 // Asynchronous task progress handler class
 //  - Asynchronous worker task should be defined into the do_in_background(),
-//  - Feedback system elements should be handled by the on_pre_execute()/onProgressUpdate()/on_post_execute()/on_cancelled()
+//  - Feedback system elements should be handled by the on_pre_execute()/on_progress_update()/on_post_execute()/on_cancelled()
 //  - execute() start the do_in_background()
 //  - Refresh the feedback by the on_callback_loop()
 // Nocopy object. on_callback_loop() and get() could rethrow the do_in_background() thrown exceptions.
@@ -75,7 +79,7 @@ protected:
     AsyncTaskBase(AsyncTaskBase&&) = delete;
     AsyncTaskBase& operator=(AsyncTaskBase const&) = delete;
     AsyncTaskBase& operator=(AsyncTaskBase&&) = delete;
-    virtual ~AsyncTaskBase() noexcept
+    virtual ~AsyncTaskBase() SKR_NOEXCEPT
     {
         auto const status = get_status();
         if (status != Status::RUNNING)
@@ -88,13 +92,16 @@ protected:
             return;
 
         this->future->wait();
+        // TODO: recycler
+        SkrDelete(future);
     };
 
 public:
     // Initiate the asynchronous task
     // If the task is already began, AsyncTaskIllegalStateException will be thrown
     // @MainThread
-    AsyncTaskBase<Progress, Result, Params...>& execute(Params const&... params) noexcept(false)
+    // AsyncTaskBase<Launcher, Progress, Result, Params...>&
+    auto& execute(Params const&... params) SKR_NOEXCEPT
     {
         AsyncTaskException* exception = nullptr;
         switch (status)
@@ -115,27 +122,21 @@ public:
         this->status = Status::RUNNING;
         this->on_pre_execute();
         this->future = Launcher::async(
-            [this](Params const&... params) -> Result {
+            [this](Params const&... params) -> Result 
+            {
                 if (is_cancelled())
+                {
                     return {}; // Protect against undefined behavoiur, if Dtor is invoked before the - pure virtual function represented - task would be started
-
-                //try
-                {
-                    return this->post_result(this->do_in_background(params...));
-                } 
-                //catch (...)
-                {
-                    // cancel();
                 }
-                // return {};
+                return this->post_result(this->do_in_background(params...));
             },
-            params...);
+        params...);
 
         return *this;
     }
 
     // @MainThread
-    Status get_status() const noexcept { return status; }
+    Status get_status() const SKR_NOEXCEPT { return status; }
 
 protected:
     // Background worker task
@@ -189,11 +190,11 @@ public:
     // Returns true if the task is canceled by the cancel()
     // It is usable to break process inside the do_in_background()
     // @MainThread and @Workerthread
-    bool is_cancelled() const noexcept { return skr_atomic32_load_relaxed(&cancelled); }
+    bool is_cancelled() const SKR_NOEXCEPT { return skr_atomic32_load_relaxed(&cancelled); }
 
     // Cancel the task
     // @MainThread
-    void cancel() noexcept { skr_atomic32_store_relaxed(&cancelled, 1); }
+    void cancel() SKR_NOEXCEPT { skr_atomic32_store_relaxed(&cancelled, 1); }
 
     // Get the result.
     // It could freeze the mainthread if it invoked before the task is finished. Exception from the do_in_background can be rethrown.
@@ -210,7 +211,7 @@ public:
     // Callback loop to refresh progress in the feedback system
     // Return true if the task is finished. Exception from the do_in_background can be rethrown.
     // @MainThread
-    bool on_callback_loop()
+    virtual bool on_callback_loop()
     {
         if (status == Status::FINISHED)
             return true;
@@ -244,12 +245,163 @@ private:
     {
         result = r;
         if (is_cancelled())
+        {
             on_cancelled(result);
+        }
         else
+        {
             on_post_execute(result);
-
+        }
         status = Status::FINISHED;
     }
+};
+
+// General AsyncTask
+template <typename Launcher, typename Progress, typename Result, typename... Params>
+class AsyncTask : public AsyncTaskBase<Launcher, Progress, Result, Params...>
+{
+private:
+    // Progress handling
+    template <typename Data>
+    struct ThreadSafeContainer {
+    private:
+        Data mData{};
+        mutable SRWMutex mMutex{};
+
+    public:
+        ThreadSafeContainer()
+        {
+            skr_init_mutex_rw(&mMutex);
+        }
+        ~ThreadSafeContainer()
+        {
+            skr_destroy_mutex_rw(&mMutex);
+        }
+        ThreadSafeContainer(ThreadSafeContainer const&) = delete;
+        ThreadSafeContainer(ThreadSafeContainer&&) = delete;
+        ThreadSafeContainer& operator=(ThreadSafeContainer const&) = delete;
+        ThreadSafeContainer& operator=(ThreadSafeContainer&&) = delete;
+
+        void store(Data const& data)
+        {
+            skr_acquire_mutex_w(&mMutex);
+            mData = data;
+            skr_release_mutex(&mMutex);
+        }
+
+        Data load() const
+        {
+            skr_acquire_mutex_r(&mMutex);
+            const auto data = mData;
+            skr_release_mutex(&mMutex);
+            return data;
+        }
+    };
+
+    static bool constexpr isProgressAtomicCompatible =
+    std::is_trivially_copyable_v<Progress> && std::is_copy_constructible_v<Progress> && std::is_move_constructible_v<Progress> && std::is_copy_assignable_v<Progress> && std::is_move_assignable_v<Progress>;
+
+    using ProgressContainer = typename std::conditional<
+    isProgressAtomicCompatible, eastl::atomic<Progress>, ThreadSafeContainer<Progress>>::type;
+
+    ProgressContainer mProgress;
+
+protected:
+    // Store the current state of the progress inside the class
+    // @WorkerThread
+    void store_progress(Progress const& progress) override
+    {
+        this->mProgress.store(progress);
+    }
+
+    // Show progress in the feedback system
+    // @MainThread
+    virtual void on_progress_update(Progress const&) {}
+
+protected:
+    virtual void handle_progress() override final
+    {
+        this->on_progress_update(mProgress.load());
+    }
+
+public:
+    using AsyncTaskBase<Launcher, Progress, Result, Params...>::AsyncTaskBase;
+};
+
+template <typename Launcher, typename Progress, typename Result, typename... Params>
+class AsyncTaskPQ : public AsyncTaskBase<Launcher, Progress, Result, Params...>
+{
+private:
+    // Progress handling
+    template <typename Data>
+    struct ThreadSafeQueue {
+    private:
+        eastl::queue<Data> mData{};
+        mutable SRWMutex mMutex{};
+
+    public:
+        ThreadSafeQueue() = default;
+        ThreadSafeQueue(ThreadSafeQueue const&) = delete;
+        ThreadSafeQueue(ThreadSafeQueue&&) = delete;
+        ThreadSafeQueue& operator=(ThreadSafeQueue const&) = delete;
+        ThreadSafeQueue& operator=(ThreadSafeQueue&&) = delete;
+
+        template <typename BinaryOp>
+        void store(Data const& data, BinaryOp fnLastShouldBeOverride)
+        {
+            skr_acquire_mutex_w(&mMutex);
+
+            if (mData.empty() || !fnLastShouldBeOverride(mData.back(), data))
+            {
+                mData.push(data);
+            }
+            else
+            {
+                mData.back() = data;
+            }
+
+            skr_release_mutex(&mMutex);
+        }
+
+        eastl::queue<Data> move()
+        {
+            skr_acquire_mutex_w(&mMutex);
+            auto const mDataMoved = std::move(mData);
+            skr_release_mutex(&mMutex);
+            return mDataMoved;
+        }
+    };
+
+    ThreadSafeQueue<Progress> mProgressQueue;
+
+protected:
+    // To define condition when not all progress item wanted to be stored.
+    // @WorkerThread
+    virtual bool isLastProgressShouldBeOverride(Progress const& progressOld, Progress const& progressNew) const { return false; }
+
+    // Store the current state of the progress inside the class
+    // @WorkerThread
+    void store_progress(Progress const& progress) override
+    {
+        // or use overrideLast() in special cases.
+        this->mProgressQueue.store(progress, [this](Progress const& progressOld, Progress const& progressNew) {
+            return this->isLastProgressShouldBeOverride(progressOld, progressNew);
+        });
+    }
+
+    // Show progress in the feedback system
+    // @MainThread
+    virtual void on_progress_update(Progress const&) {}
+
+protected:
+    virtual void handle_progress() override final
+    {
+        for (auto progressQueue = mProgressQueue.move(); !progressQueue.empty(); progressQueue.pop())
+            this->on_progress_update(progressQueue.front());
+    }
+
+public:
+    using AsyncTaskBase<Launcher, Progress, Result, Params...>::AsyncTaskBase;
 };
 
 } // namespace skr
