@@ -5,7 +5,7 @@
 #include <containers/hashmap.hpp>
 #include "utils/log.h"
 #include "utils/hash.h"
-#include "utils/concurrent_queue.h"
+#include "containers/concurrent_queue.h"
 
 namespace skr
 {
@@ -28,7 +28,7 @@ struct SKR_RENDER_GRAPH_API NodeAndEdgeFactoryImpl final : public NodeAndEdgeFac
     struct factory_pool_t 
     {
         size_t blockSize;
-        moodycamel::ConcurrentQueue<void*> blocks;
+        skr::ConcurrentQueue<void*> blocks;
 
         factory_pool_t(size_t blockSize, size_t blockCount) SKR_NOEXCEPT
             : blockSize(blockSize)
