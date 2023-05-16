@@ -270,9 +270,9 @@ namespace task2
             {
                 //report to scheduler that we are spinning
                 scheduler->spinningWorkers[scheduler->nextSpinningWorkerIdx++ % scheduler->spinningWorkers.size()] = id;
-                skr_release_mutex(&work.mutex);
+                skr_mutex_release(&work.mutex);
                 spinForWork();
-                skr_acquire_mutex(&work.mutex);
+                skr_mutex_acquire(&work.mutex);
             }
             work.wait([this]() {
                 return work.num > 0 || shutdown;
@@ -287,18 +287,18 @@ namespace task2
                 auto task = std::move(work.pinnedTask.front());
                 work.pinnedTask.pop_front();
                 work.num--;
-                skr_release_mutex(&work.mutex);
+                skr_mutex_release(&work.mutex);
                 task();
-                skr_acquire_mutex(&work.mutex);
+                skr_mutex_acquire(&work.mutex);
             }
-            skr_release_mutex(&work.mutex);
+            skr_mutex_release(&work.mutex);
             Task task(nullptr);
             while(work.tasks.pop(task))
             {
                 work.num--;
                 task();
             }
-            skr_acquire_mutex(&work.mutex);
+            skr_mutex_acquire(&work.mutex);
         }
 
         void run()
@@ -332,7 +332,7 @@ namespace task2
             }
             else 
             {
-                skr_acquire_mutex(&work.mutex);
+                skr_mutex_acquire(&work.mutex);
                 enqueuePinnedAndUnlock(std::move(task));
             }
         }
@@ -343,7 +343,7 @@ namespace task2
             auto notify = work.notifyAdded;
             work.pinnedTask.push_back(std::move(task));
             work.num++;
-            skr_release_mutex(&work.mutex);
+            skr_mutex_release(&work.mutex);
             if (notify)
             {
                 skr_wake_condition_var(&work.added);
@@ -436,7 +436,7 @@ namespace task2
                 worker.enqueue(std::move(task), false);
                 return;
             }
-            else if(skr_try_acquire_mutex(&worker.work.mutex))
+            else if(skr_mutex_try_acquire(&worker.work.mutex))
             {
                 worker.enqueuePinnedAndUnlock(std::move(task));
                 return;
@@ -550,9 +550,9 @@ namespace task2
         int i = 0;
         while(!event.done())
         {
-            skr_release_mutex(&worker->work.mutex);
+            skr_mutex_release(&worker->work.mutex);
             i = worker->stealWork(i);
-            skr_acquire_mutex(&worker->work.mutex);
+            skr_mutex_acquire(&worker->work.mutex);
             worker->runUntilIdle();
         }
     }
@@ -567,9 +567,9 @@ namespace task2
         int i = 0;
         while(!counter.done())
         {
-            skr_release_mutex(&worker->work.mutex);
+            skr_mutex_release(&worker->work.mutex);
             i = worker->stealWork(i);
-            skr_acquire_mutex(&worker->work.mutex);
+            skr_mutex_acquire(&worker->work.mutex);
             worker->runUntilIdle();
         }
     }

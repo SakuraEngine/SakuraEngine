@@ -124,16 +124,16 @@ THREADS_API void skr_call_once(SCallOnceGuard* pGuard, SCallOnceFn pFn);
 THREADS_API bool skr_init_mutex(SMutex* pMutex);
 THREADS_API bool skr_init_mutex_recursive(SMutex* pMutex);
 THREADS_API void skr_destroy_mutex(SMutex* pMutex);
-THREADS_API void skr_acquire_mutex(SMutex* pMutex);
-THREADS_API bool skr_try_acquire_mutex(SMutex* pMutex);
-THREADS_API void skr_release_mutex(SMutex* pMutex);
+THREADS_API void skr_mutex_acquire(SMutex* pMutex);
+THREADS_API bool skr_mutex_try_acquire(SMutex* pMutex);
+THREADS_API void skr_mutex_release(SMutex* pMutex);
 
 // rw mutex
-THREADS_API bool skr_init_mutex_rw(SRWMutex* pMutex);
+THREADS_API bool skr_init_rw_mutex(SRWMutex* pMutex);
 THREADS_API void skr_destroy_rw_mutex(SRWMutex* pMutex);
-THREADS_API void skr_acquire_mutex_r(SRWMutex* pMutex);
-THREADS_API void skr_acquire_mutex_w(SRWMutex* pMutex);
-THREADS_API void skr_release_rw_mutex(SRWMutex* pMutex);
+THREADS_API void skr_rw_mutex_acuire_r(SRWMutex* pMutex);
+THREADS_API void skr_rw_mutex_acuire_w(SRWMutex* pMutex);
+THREADS_API void skr_rw_mutex_release(SRWMutex* pMutex);
 
 /// cv
 THREADS_API bool skr_init_condition_var(SConditionVariable* cv);
@@ -158,9 +158,9 @@ struct SMutexLock {
     SMutexLock(SMutex& rhs)
         : mMutex(rhs)
     {
-        skr_acquire_mutex(&rhs);
+        skr_mutex_acquire(&rhs);
     }
-    ~SMutexLock() { skr_release_mutex(&mMutex); }
+    ~SMutexLock() { skr_mutex_release(&mMutex); }
 
     /// Prevent copy construction.
     SMutexLock(const SMutexLock& rhs) = delete;

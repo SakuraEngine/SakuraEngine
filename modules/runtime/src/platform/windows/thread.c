@@ -59,17 +59,17 @@ void skr_destroy_mutex_cs(SMutex* mutex)
     sakura_free(cs);
 }
 
-void skr_acquire_mutex_cs(SMutex* mutex)
+void skr_mutex_acquire_cs(SMutex* mutex)
 {
     EnterCriticalSection(*(CRITICAL_SECTION**)mutex->muStorage_);
 }
 
-bool skr_try_acquire_mutex_cs(SMutex* mutex)
+bool skr_mutex_try_acquire_cs(SMutex* mutex)
 {
     return TryEnterCriticalSection(*(CRITICAL_SECTION**)mutex->muStorage_);
 }
 
-void skr_release_mutex_cs(SMutex* mutex)
+void skr_mutex_release_cs(SMutex* mutex)
 {
     LeaveCriticalSection(*(CRITICAL_SECTION**)mutex->muStorage_);
 }
@@ -96,48 +96,48 @@ void skr_destroy_mutex_srw(SMutex* mutex)
 #endif
 }
 
-void skr_acquire_mutex_srw(SMutex* mutex)
+void skr_mutex_acquire_srw(SMutex* mutex)
 {
 #if (_WIN32_WINNT >= 0x0600)
     AcquireSRWLockExclusive((PSRWLOCK)mutex->muStorage_);
 #else
-    skr_acquire_mutex_cs(mutex);
+    skr_mutex_acquire_cs(mutex);
 #endif
 }
 
-void skr_acquire_mutex_srw_shared(SMutex* mutex)
+void skr_mutex_acquire_srw_shared(SMutex* mutex)
 {
 #if (_WIN32_WINNT >= 0x0600)
     AcquireSRWLockShared((PSRWLOCK)mutex->muStorage_);
 #else
-    skr_acquire_mutex_cs(mutex);
+    skr_mutex_acquire_cs(mutex);
 #endif
 }
 
-bool skr_try_acquire_mutex_srw(SMutex* mutex)
+bool skr_mutex_try_acquire_srw(SMutex* mutex)
 {
 #if (_WIN32_WINNT >= 0x0600)
     return TryAcquireSRWLockExclusive((PSRWLOCK)mutex->muStorage_);
 #else
-    return skr_try_acquire_mutex_cs(mutex);
+    return skr_mutex_try_acquire_cs(mutex);
 #endif
 }
 
-bool skr_try_acquire_mutex_srw_shared(SMutex* mutex)
+bool skr_mutex_try_acquire_srw_shared(SMutex* mutex)
 {
 #if (_WIN32_WINNT >= 0x0600)
     return TryAcquireSRWLockShared((PSRWLOCK)mutex->muStorage_);
 #else
-    return skr_try_acquire_mutex_cs(mutex);
+    return skr_mutex_try_acquire_cs(mutex);
 #endif
 }
 
-void skr_release_mutex_srw(SMutex* mutex)
+void skr_mutex_release_srw(SMutex* mutex)
 {
 #if (_WIN32_WINNT >= 0x0600)
     ReleaseSRWLockExclusive((PSRWLOCK)mutex->muStorage_);
 #else
-    skr_release_mutex_cs(mutex);
+    skr_mutex_release_cs(mutex);
 #endif
 }
 
@@ -159,33 +159,33 @@ void skr_destroy_mutex(SMutex* mutex)
         skr_destroy_mutex_cs(mutex);
 }
 
-void skr_acquire_mutex(SMutex* mutex)
+void skr_mutex_acquire(SMutex* mutex)
 {
     if (mutex->isSRW)
-        skr_acquire_mutex_srw(mutex);
+        skr_mutex_acquire_srw(mutex);
     else
-        skr_acquire_mutex_cs(mutex);
+        skr_mutex_acquire_cs(mutex);
 }
 
-bool skr_try_acquire_mutex(SMutex* mutex)
+bool skr_mutex_try_acquire(SMutex* mutex)
 {
     if (mutex->isSRW)
-        return skr_try_acquire_mutex_srw(mutex);
+        return skr_mutex_try_acquire_srw(mutex);
     else
-        return skr_try_acquire_mutex_cs(mutex);
+        return skr_mutex_try_acquire_cs(mutex);
 }
 
-void skr_release_mutex(SMutex* mutex)
+void skr_mutex_release(SMutex* mutex)
 {
     if (mutex->isSRW)
-        skr_release_mutex_srw(mutex);
+        skr_mutex_release_srw(mutex);
     else
-        skr_release_mutex_cs(mutex);
+        skr_mutex_release_cs(mutex);
 }
 
 /// implementation of rw mutex
 
-bool skr_init_mutex_rw(SRWMutex* pMutex)
+bool skr_init_rw_mutex(SRWMutex* pMutex)
 {
     return skr_init_mutex_srw(&pMutex->m);
 }
@@ -195,28 +195,28 @@ void skr_destroy_rw_mutex(SRWMutex* pMutex)
     skr_destroy_mutex(&pMutex->m);
 }
 
-void skr_acquire_mutex_r(SRWMutex* pMutex)
+void skr_rw_mutex_acuire_r(SRWMutex* pMutex)
 {
     if (pMutex->m.isSRW)
-        skr_acquire_mutex_srw_shared(&pMutex->m);
+        skr_mutex_acquire_srw_shared(&pMutex->m);
     else
-        skr_acquire_mutex_cs(&pMutex->m);
+        skr_mutex_acquire_cs(&pMutex->m);
 }
 
-void skr_acquire_mutex_w(SRWMutex* pMutex)
+void skr_rw_mutex_acuire_w(SRWMutex* pMutex)
 {
     if (pMutex->m.isSRW)
-        skr_acquire_mutex_srw(&pMutex->m);
+        skr_mutex_acquire_srw(&pMutex->m);
     else
-        skr_acquire_mutex_cs(&pMutex->m);
+        skr_mutex_acquire_cs(&pMutex->m);
 }
 
-void skr_release_rw_mutex(SRWMutex* pMutex)
+void skr_rw_mutex_release(SRWMutex* pMutex)
 {
     if (pMutex->m.isSRW)
-        skr_release_mutex_srw(&pMutex->m);
+        skr_mutex_release_srw(&pMutex->m);
     else
-        skr_release_mutex_cs(&pMutex->m);
+        skr_mutex_release_cs(&pMutex->m);
 }
 
 /// implementation of cv

@@ -271,11 +271,11 @@ private:
     public:
         ThreadSafeContainer()
         {
-            skr_init_mutex_rw(&mMutex);
+            skr_init_rw_mutex(&mMutex);
         }
         ~ThreadSafeContainer()
         {
-            skr_destroy_mutex_rw(&mMutex);
+            skr_destroy_rw_mutex(&mMutex);
         }
         ThreadSafeContainer(ThreadSafeContainer const&) = delete;
         ThreadSafeContainer(ThreadSafeContainer&&) = delete;
@@ -284,16 +284,16 @@ private:
 
         void store(Data const& data)
         {
-            skr_acquire_mutex_w(&mMutex);
+            skr_rw_mutex_acuire_w(&mMutex);
             mData = data;
-            skr_release_mutex(&mMutex);
+            skr_mutex_release(&mMutex);
         }
 
         Data load() const
         {
-            skr_acquire_mutex_r(&mMutex);
+            skr_rw_mutex_acuire_r(&mMutex);
             const auto data = mData;
-            skr_release_mutex(&mMutex);
+            skr_mutex_release(&mMutex);
             return data;
         }
     };
@@ -349,7 +349,7 @@ private:
         template <typename BinaryOp>
         void store(Data const& data, BinaryOp fnLastShouldBeOverride)
         {
-            skr_acquire_mutex_w(&mMutex);
+            skr_rw_mutex_acuire_w(&mMutex);
 
             if (mData.empty() || !fnLastShouldBeOverride(mData.back(), data))
             {
@@ -360,14 +360,14 @@ private:
                 mData.back() = data;
             }
 
-            skr_release_mutex(&mMutex);
+            skr_mutex_release(&mMutex);
         }
 
         eastl::queue<Data> move()
         {
-            skr_acquire_mutex_w(&mMutex);
+            skr_rw_mutex_acuire_w(&mMutex);
             auto const mDataMoved = std::move(mData);
-            skr_release_mutex(&mMutex);
+            skr_mutex_release(&mMutex);
             return mDataMoved;
         }
     };

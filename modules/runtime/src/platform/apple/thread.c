@@ -49,7 +49,7 @@ void skr_destroy_mutex(SMutex* pMutex)
     pthread_mutex_destroy(&pMutex->pHandle); 
 }
 
-void skr_acquire_mutex(SMutex* pMutex)
+void skr_mutex_acquire(SMutex* pMutex)
 {
     uint32_t count = 0;
 
@@ -64,19 +64,19 @@ void skr_acquire_mutex(SMutex* pMutex)
     }
 }
 
-bool skr_try_acquire_mutex(SMutex* pMutex) 
+bool skr_mutex_try_acquire(SMutex* pMutex) 
 { 
     return pthread_mutex_trylock(&pMutex->pHandle) == 0; 
 }
 
-void skr_release_mutex(SMutex* pMutex) 
+void skr_mutex_release(SMutex* pMutex) 
 { 
     pthread_mutex_unlock(&pMutex->pHandle); 
 }
 
 /// implementation of rw mutex
 
-bool skr_init_mutex_rw(SRWMutex* pMutex)
+bool skr_init_rw_mutex(SRWMutex* pMutex)
 {
     pMutex->mSpinCount = MUTEX_DEFAULT_SPIN_COUNT;
     pMutex->pHandle = (pthread_rwlock_t)PTHREAD_RWLOCK_INITIALIZER;
@@ -90,7 +90,7 @@ void skr_destroy_rw_mutex(SRWMutex* pMutex)
     pthread_rwlock_destroy(&pMutex->pHandle); 
 }
 
-void skr_acquire_mutex_r(SRWMutex* pMutex)
+void skr_rw_mutex_acuire_r(SRWMutex* pMutex)
 {
     uint32_t count = 0;
 
@@ -105,7 +105,7 @@ void skr_acquire_mutex_r(SRWMutex* pMutex)
     }
 }
 
-void skr_acquire_mutex_w(SRWMutex* pMutex)
+void skr_rw_mutex_acuire_w(SRWMutex* pMutex)
 {
     uint32_t count = 0;
 
@@ -120,7 +120,7 @@ void skr_acquire_mutex_w(SRWMutex* pMutex)
     }
 }
 
-void skr_release_rw_mutex(SRWMutex* pMutex)
+void skr_rw_mutex_release(SRWMutex* pMutex)
 {
     pthread_rwlock_unlock(&pMutex->pHandle); 
 }
