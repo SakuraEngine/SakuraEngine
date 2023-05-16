@@ -6,7 +6,8 @@ target("daSTestInterpret")
     add_packages("gtest")
     add_files("daSTestInterpret/**.cpp")
 
--- AOT
+-- AOT (WIP)
+--[[
 target("daSTestAOT")
     set_kind("binary")
     set_group("05.tests/daS")
@@ -18,13 +19,17 @@ target("daSTestAOT")
     add_packages("gtest")
     add_files("daSTestAOT/**.das", {aot = true})
     add_files("daSTestAOT/**.cpp")
+]]--
     
 -- Annotation
+--[[
 target("daSTestAnnotationCompiler")
     set_kind("binary")
     set_group("05.tests/daS")
     public_dependency("SkrDAScript", engine_version)
     add_files("daSTestAnnotation/annotation_compiler.cpp")
+    add_packages("daScript", { public = false })
+]]--
 
 target("daSTestAnnotation")
     set_kind("binary")
@@ -51,6 +56,8 @@ target("dasCo")
     add_files("dasCo/**.das")
     add_files("dasCo/**.cpp")
 
+-- AOT (WIP)
+--[[
 target("dasCoAOT")
     set_kind("binary")
     set_group("05.tests/daS")
@@ -63,6 +70,7 @@ target("dasCoAOT")
     add_defines("AOT")
     add_files("dasCo/**.das", {aot = true})
     add_files("dasCo/**.cpp")
+]]--
 
 -- Stackwalk
 target("dasStackwalk")
@@ -90,7 +98,6 @@ target("dasStackwalkAOT")
     add_defines("AOT")
     add_files("dasStackwalk/**.das", {aot = true})
     add_files("dasStackwalk/**.cpp")
-]]--
 
 -- Hybrid
 target("daSTestHybrid")
@@ -105,3 +112,4 @@ target("daSTestHybrid")
     add_files("daSTestHybrid/aot/**.das", {aot = true})
     add_files("daSTestHybrid/script/**.das", {aot = false})
     add_files("daSTestHybrid/**.cpp")
+]]--

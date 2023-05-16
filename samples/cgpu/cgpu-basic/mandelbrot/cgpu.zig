@@ -1556,7 +1556,7 @@ pub const struct_CGPUSwapChainDescriptor = extern struct {
     present_queues: [*c]CGPUQueueId,
     present_queues_count: u32,
     surface: CGPUSurfaceId,
-    imageCount: u32,
+    image_count: u32,
     width: u32,
     height: u32,
     enable_vsync: bool,

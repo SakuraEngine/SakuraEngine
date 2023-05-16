@@ -73,6 +73,7 @@ template <> struct SRCInst<true>
 
     inline uint32_t use_count() const { return block ? block->refcount : 0; }
     inline bool unique() const { return block ? (block->weak_refcount == 1) : false; }
+    inline bool expired() const { return block ? (block->refcount == 0) : true; }
     inline bool equivalent_rc_ownership(const SRCInst<true>& lp) const
     {
         return block == lp.block;

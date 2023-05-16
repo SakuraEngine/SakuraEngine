@@ -329,7 +329,7 @@ void raster_program()
                             .width = width,
                             .height = height,
                             .surface = App.surface,
-                            .imageCount = BACK_BUFFER_COUNT,
+                            .image_count = BACK_BUFFER_COUNT,
                             .format = CGPU_FORMAT_R8G8B8A8_UNORM,
                             .enable_vsync = true
                         };

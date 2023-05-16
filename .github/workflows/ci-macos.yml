@@ -62,6 +62,12 @@ jobs:
         if: success() || failure()
         run: xmake -y -v
 
+      - name: TestDebug
+        if: success()
+        env:
+          TRACY_NO_INVARIANT_CHECK: 1
+        run: xmake run -g 05.tests/*
+
       - name: ConfigureRelease
         if: success() || failure()
         run: xmake f --arch=${{ matrix.arch }} --cxx_version=${{ matrix.cxx }} --mode=release --yes -v --build_tests=y --build_editors=n --use_tracy=disable -c --policies=build.ccache:n
@@ -69,6 +75,12 @@ jobs:
       - name: BuildRelease
         if: success() || failure()
         run: xmake -y -v
+
+      - name: TestRelease
+        if: success()
+        env:
+          TRACY_NO_INVARIANT_CHECK: 1
+        run: xmake run -g 05.tests/*
 
       - name: UploadGeneratedFiles
         if: success() || failure()

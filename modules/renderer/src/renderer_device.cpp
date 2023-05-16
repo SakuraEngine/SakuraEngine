@@ -5,6 +5,7 @@
 #include "cgpu/io.h"
 #include <EASTL/vector_map.h>
 #include <EASTL/string.h>
+#include <EASTL/fixed_vector.h>
 #ifdef _WIN32
 #include "cgpu/extensions/dstorage_windows.h"
 #endif
@@ -42,6 +43,13 @@ struct SKR_RENDERER_API RendererDeviceImpl : public RendererDevice
         if (idx < cpy_queues.size())
             return cpy_queues[idx];
         return cpy_queues[0];
+    }
+
+    CGPUQueueId get_compute_queue(uint32_t idx = 0) const override
+    {
+        if (idx < cmpt_queues.size())
+            return cmpt_queues[idx];
+        return cmpt_queues[0];
     }
 
     CGPUDStorageQueueId get_file_dstorage_queue() const override
@@ -102,6 +110,7 @@ protected:
     CGPUDeviceId device = nullptr;
     CGPUQueueId gfx_queue = nullptr;
     eastl::vector<CGPUQueueId> cpy_queues;
+    eastl::vector<CGPUQueueId> cmpt_queues;
     CGPUSamplerId linear_sampler = nullptr;
     skr_io_vram_service_t* vram_service = nullptr;
     CGPUDStorageQueueId file_dstorage_queue = nullptr;
@@ -189,6 +198,7 @@ void RendererDeviceImpl::finalize()
 }
 
 #define MAX_CPY_QUEUE_COUNT 2
+#define MAX_CMPT_QUEUE_COUNT 2
 void RendererDeviceImpl::create_api_objects(const Builder& builder)
 {
     // create instance
@@ -214,20 +224,34 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
     }
 
     // create device
-    const auto cpy_queue_count_ = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_TRANSFER);
-    CGPUQueueGroupDescriptor Gs[2];
-    Gs[0].queue_type = CGPU_QUEUE_TYPE_GRAPHICS;
-    Gs[0].queue_count = 1;
-    Gs[1].queue_type = CGPU_QUEUE_TYPE_TRANSFER;
-    Gs[1].queue_count = cgpu_min(cpy_queue_count_, MAX_CPY_QUEUE_COUNT);
-    if (Gs[1].queue_count) // request at least one copy queue by default
+    const auto cpy_queue_count_ =  cgpu_min(cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_TRANSFER), MAX_CPY_QUEUE_COUNT);
+    const auto cmpt_queue_count_ = cgpu_min(cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_COMPUTE), MAX_CMPT_QUEUE_COUNT);
+    eastl::fixed_vector<CGPUQueueGroupDescriptor, 3> Gs;
+    auto& GfxDesc = Gs.emplace_back();
+    GfxDesc.queue_type = CGPU_QUEUE_TYPE_GRAPHICS;
+    GfxDesc.queue_count = 1;
+    if (cpy_queue_count_)
     {
-        CGPUDeviceDescriptor device_desc = {};
-        device_desc.queue_groups = Gs;
-        device_desc.queue_group_count = 2;
-        device = cgpu_create_device(adapter, &device_desc);
-        gfx_queue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
-        cpy_queues.resize(Gs[1].queue_count);
+        auto& CpyDesc = Gs.emplace_back();
+        CpyDesc.queue_type = CGPU_QUEUE_TYPE_TRANSFER;
+        CpyDesc.queue_count = cpy_queue_count_;
+    }
+    if (cmpt_queue_count_)
+    {
+        auto& CmptDesc = Gs.emplace_back();
+        CmptDesc.queue_type = CGPU_QUEUE_TYPE_COMPUTE;
+        CmptDesc.queue_count = cmpt_queue_count_;
+    }
+
+    CGPUDeviceDescriptor device_desc = {};
+    device_desc.queue_groups = Gs.data();
+    device_desc.queue_group_count = Gs.size();
+    device = cgpu_create_device(adapter, &device_desc);
+    gfx_queue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
+
+    if (cpy_queue_count_) // request at least one copy queue by default
+    {
+        cpy_queues.resize(cpy_queue_count_);
         for (uint32_t i = 0; i < cpy_queues.size(); i++)
         {
             cpy_queues[i] = cgpu_get_queue(device, CGPU_QUEUE_TYPE_TRANSFER, i);
@@ -235,12 +259,20 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
     }
     else // fallback: request only one graphics queue
     {
-        CGPUDeviceDescriptor device_desc = {};
-        device_desc.queue_groups = Gs;
-        device_desc.queue_group_count = 1;
-        device = cgpu_create_device(adapter, &device_desc);
-        gfx_queue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
         cpy_queues.emplace_back(gfx_queue);
+    }
+
+    if (cmpt_queue_count_) // request at least one copy queue by default
+    {
+        cmpt_queues.resize(cmpt_queue_count_);
+        for (uint32_t i = 0; i < cmpt_queues.size(); i++)
+        {
+            cmpt_queues[i] = cgpu_get_queue(device, CGPU_QUEUE_TYPE_COMPUTE, i);
+        }
+    }
+    else // fallback: request only one graphics queue
+    {
+        cmpt_queues.emplace_back(gfx_queue);
     }
 
     // dstorage queue
@@ -313,7 +345,7 @@ CGPUSwapChainId RendererDeviceImpl::register_window(SWindowHandle window)
     chain_desc.width = width;
     chain_desc.height = height;
     chain_desc.surface = surface;
-    chain_desc.imageCount = 2;
+    chain_desc.image_count = 2;
     chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
     chain_desc.enable_vsync = false;
     auto swapchain = cgpu_create_swapchain(device, &chain_desc);
@@ -353,7 +385,7 @@ CGPUSwapChainId RendererDeviceImpl::recreate_window_swapchain(SWindowHandle wind
     chain_desc.width = width;
     chain_desc.height = height;
     chain_desc.surface = surface;
-    chain_desc.imageCount = 2;
+    chain_desc.image_count = 2;
     chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM;
     chain_desc.enable_vsync = false;
     auto swapchain = cgpu_create_swapchain(gfx_queue->device, &chain_desc);

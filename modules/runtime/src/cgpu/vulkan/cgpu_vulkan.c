@@ -1227,7 +1227,7 @@ void cgpu_submit_queue_vulkan(CGPUQueueId queue, const struct CGPUQueueSubmitDes
         .pSignalSemaphores = wait_semaphores,
     };
 #ifdef CGPU_THREAD_SAFETY
-    if (Q->pMutex) skr_acquire_mutex(Q->pMutex);
+    if (Q->pMutex) skr_mutex_acquire(Q->pMutex);
 #endif
     VkResult res = D->mVkDeviceTable.vkQueueSubmit(Q->pVkQueue, 1, &submit_info, F ? F->pVkFence : VK_NULL_HANDLE);
     if(res != VK_SUCCESS)
@@ -1244,7 +1244,7 @@ void cgpu_submit_queue_vulkan(CGPUQueueId queue, const struct CGPUQueueSubmitDes
     };
     if (F) F->mSubmitted = true;
 #ifdef CGPU_THREAD_SAFETY
-    if (Q->pMutex) skr_release_mutex(Q->pMutex);
+    if (Q->pMutex) skr_mutex_release(Q->pMutex);
 #endif
 }
 
@@ -1288,11 +1288,11 @@ void cgpu_queue_present_vulkan(CGPUQueueId queue, const struct CGPUQueuePresentD
             .pResults = VK_NULL_HANDLE
         };
 #ifdef CGPU_THREAD_SAFETY
-        if (Q->pMutex) skr_acquire_mutex(Q->pMutex);
+        if (Q->pMutex) skr_mutex_acquire(Q->pMutex);
 #endif
         VkResult vk_res = D->mVkDeviceTable.vkQueuePresentKHR(Q->pVkQueue, &present_info);
 #ifdef CGPU_THREAD_SAFETY
-        if (Q->pMutex) skr_release_mutex(Q->pMutex);
+        if (Q->pMutex) skr_mutex_release(Q->pMutex);
 #endif
         if (vk_res != VK_SUCCESS && vk_res != VK_SUBOPTIMAL_KHR &&
             vk_res != VK_ERROR_OUT_OF_DATE_KHR)
@@ -2053,19 +2053,18 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan_impl(CGPUDeviceId device, const CGP
     // CGPUInstance_Vulkan* I = (CGPUInstance_Vulkan*)device->adapter->instance;
     CGPUAdapter_Vulkan* A = (CGPUAdapter_Vulkan*)device->adapter;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)device;
-    CGPUQueue_Vulkan* Q = (CGPUQueue_Vulkan*)desc->present_queues[0];
 
     VkSurfaceKHR vkSurface = (VkSurfaceKHR)desc->surface;
 
     VkSurfaceCapabilitiesKHR caps = { 0 };
     CHECK_VKRESULT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(A->pPhysicalDevice, vkSurface, &caps));
-    if ((caps.maxImageCount > 0) && (desc->imageCount > caps.maxImageCount))
+    if ((caps.maxImageCount > 0) && (desc->image_count > caps.maxImageCount))
     {
-        ((CGPUSwapChainDescriptor*)desc)->imageCount = caps.maxImageCount;
+        ((CGPUSwapChainDescriptor*)desc)->image_count = caps.maxImageCount;
     }
-    else if (desc->imageCount < caps.minImageCount)
+    else if (desc->image_count < caps.minImageCount)
     {
-        ((CGPUSwapChainDescriptor*)desc)->imageCount = caps.minImageCount;
+        ((CGPUSwapChainDescriptor*)desc)->image_count = caps.minImageCount;
     }
 
     // Surface format
@@ -2153,12 +2152,14 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan_impl(CGPUDeviceId device, const CGP
     extent.height = clamp(desc->height, caps.minImageExtent.height, caps.maxImageExtent.height);
 
     VkSharingMode sharing_mode = VK_SHARING_MODE_EXCLUSIVE;
+    /*
     uint32_t presentQueueFamilyIndex = -1;
     // Check Queue Present Support.
+    for (uint32_t i = 0; i < desc->present_queues_count; i++)
     {
+        // CGPUQueue_Vulkan* Q = (CGPUQueue_Vulkan*)desc->present_queues[i];
         VkBool32 sup = VK_FALSE;
-        VkResult res =
-        vkGetPhysicalDeviceSurfaceSupportKHR(A->pPhysicalDevice, Q->mVkQueueFamilyIndex, vkSurface, &sup);
+        VkResult res = vkGetPhysicalDeviceSurfaceSupportKHR(A->pPhysicalDevice, Q->mVkQueueFamilyIndex, vkSurface, &sup);
         if ((VK_SUCCESS == res) && (VK_TRUE == sup))
         {
             presentQueueFamilyIndex = Q->mVkQueueFamilyIndex;
@@ -2170,7 +2171,6 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan_impl(CGPUDeviceId device, const CGP
             vkGetPhysicalDeviceQueueFamilyProperties(A->pPhysicalDevice, &queueFamilyPropertyCount, NULL);
             DECLARE_ZERO_VLA(VkQueueFamilyProperties, queueFamilyProperties, queueFamilyPropertyCount)
             vkGetPhysicalDeviceQueueFamilyProperties(A->pPhysicalDevice, &queueFamilyPropertyCount, queueFamilyProperties);
-
             // Check if hardware provides dedicated present queue
             if (queueFamilyPropertyCount)
             {
@@ -2209,7 +2209,8 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan_impl(CGPUDeviceId device, const CGP
             }
         }
     }
-
+    */
+    
     VkSurfaceTransformFlagBitsKHR pre_transform;
     // #TODO: Add more if necessary but identity should be enough for now
     if (caps.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
@@ -2239,15 +2240,15 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan_impl(CGPUDeviceId device, const CGP
         .pNext = NULL,
         .flags = 0,
         .surface = vkSurface,
-        .minImageCount = desc->imageCount,
+        .minImageCount = desc->image_count,
         .imageFormat = surface_format.format,
         .imageColorSpace = surface_format.colorSpace,
         .imageExtent = extent,
         .imageArrayLayers = 1,
         .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
         .imageSharingMode = sharing_mode,
-        .queueFamilyIndexCount = 1,
-        .pQueueFamilyIndices = &presentQueueFamilyIndex,
+        .queueFamilyIndexCount = 0,
+        .pQueueFamilyIndices = CGPU_NULLPTR,
         .preTransform = pre_transform,
         .compositeAlpha = composite_alpha,
         .presentMode = present_mode,

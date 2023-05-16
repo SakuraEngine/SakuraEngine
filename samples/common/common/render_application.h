@@ -67,7 +67,7 @@ inline int app_create_gfx_objects(render_application_t* pApp)
     chain_desc.width = pApp->window_width;
     chain_desc.height = pApp->window_height;
     chain_desc.surface = pApp->surface;
-    chain_desc.imageCount = 3;
+    chain_desc.image_count = 3;
     chain_desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
     chain_desc.enable_vsync = true;
     pApp->swapchain = cgpu_create_swapchain(pApp->device, &chain_desc);
@@ -102,7 +102,7 @@ inline int app_resize_window(render_application_t* pApp, uint32_t w, uint32_t h)
     chain_desc.width = w;
     chain_desc.height = h;
     chain_desc.surface = pApp->surface;
-    chain_desc.imageCount = 3;
+    chain_desc.image_count = 3;
     chain_desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
     chain_desc.enable_vsync = true;
     pApp->swapchain = cgpu_create_swapchain(pApp->device, &chain_desc);

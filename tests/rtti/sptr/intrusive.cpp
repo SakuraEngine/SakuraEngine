@@ -1,5 +1,17 @@
 #include "test.hpp"
 
+class SPTRIntrusive : public SPTRBase
+{
+protected:
+    void SetUp() override
+    {
+    }
+
+    void TearDown() override
+    {
+    }
+};
+
 struct TestObject : public skr::SInterface
 {
     enum Status
@@ -42,7 +54,7 @@ struct TestSon : public TestObject
     TestSon(Status& code) : TestObject(code) { }
 };
 
-TEST(SPTR, CopyIntrusive)
+TEST(SPTRIntrusive, CopyIntrusive)
 {
     TestObject::Status status = TestObject::Status::Uninitialized;
     {
@@ -56,7 +68,7 @@ TEST(SPTR, CopyIntrusive)
     EXPECT_EQ(status, TestObject::Status::Destroyed);
 }
 
-TEST(SPTR, CopyIntrusive2)
+TEST(SPTRIntrusive, CopyIntrusive2)
 {
     TestObject::Status status = TestObject::Status::Uninitialized;
     {
@@ -70,7 +82,7 @@ TEST(SPTR, CopyIntrusive2)
     EXPECT_EQ(status, TestObject::Status::Destroyed);
 }
 
-TEST(SPTR, SwapIntrusive)
+TEST(SPTRIntrusive, SwapIntrusive)
 {
     auto one_status = TestObject::Status::Uninitialized;
     auto another_status = TestObject::Status::Uninitialized;
@@ -83,7 +95,7 @@ TEST(SPTR, SwapIntrusive)
     EXPECT_EQ(another_status, TestObject::Status::Hosted);
 }
 
-TEST(SPTR, SwapIntrusive2)
+TEST(SPTRIntrusive, SwapIntrusive2)
 {
     auto one_status = TestObject::Status::Uninitialized;
     auto another_status = TestObject::Status::Uninitialized;
@@ -96,7 +108,7 @@ TEST(SPTR, SwapIntrusive2)
     EXPECT_EQ(another_status, TestObject::Status::Hosted);
 }
 
-TEST(SPTR, MoveIntrusive)
+TEST(SPTRIntrusive, MoveIntrusive)
 {
     auto one_status = TestObject::Status::Uninitialized;
     auto another_status = TestObject::Status::Uninitialized;
@@ -111,7 +123,7 @@ TEST(SPTR, MoveIntrusive)
     EXPECT_EQ(one_status, TestObject::Status::Destroyed);
 }
 
-TEST(SPTR, MoveIntrusive2)
+TEST(SPTRIntrusive, MoveIntrusive2)
 {
     auto one_status = TestObject::Status::Uninitialized;
     auto another_status = TestObject::Status::Uninitialized;
@@ -126,7 +138,7 @@ TEST(SPTR, MoveIntrusive2)
     EXPECT_EQ(one_status, TestObject::Status::Destroyed);
 }
 
-TEST(SPTR, CastIntrusive)
+TEST(SPTRIntrusive, CastIntrusive)
 {
     TestObject::Status status = TestObject::Status::Uninitialized;
     skr::SObjectPtr<TestSon> pC(SkrNew<TestSon>(status));
@@ -141,7 +153,7 @@ TEST(SPTR, CastIntrusive)
     EXPECT_EQ(pCC3->use_count(), 4);
 }
 
-TEST(SPTR, CastIntrusive2)
+TEST(SPTRIntrusive, CastIntrusive2)
 {
     TestObject::Status status = TestObject::Status::Uninitialized;
     skr::SObjectPtr<TestSon> pC(SkrNew<TestSon>(status));
@@ -156,7 +168,7 @@ TEST(SPTR, CastIntrusive2)
     EXPECT_EQ(pCC3->use_count(), 4);
 }
 
-TEST(SPTR, VoidPtrCastIntrusive)
+TEST(SPTRIntrusive, VoidPtrCastIntrusive)
 {
     TestObject::Status status = TestObject::Status::Uninitialized;
     {
@@ -169,4 +181,11 @@ TEST(SPTR, VoidPtrCastIntrusive)
         EXPECT_EQ(status, TestObject::Status::Hosted);
     }
     EXPECT_EQ(status, TestObject::Status::Destroyed);
+}
+
+int main(int argc, char** argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    auto result = RUN_ALL_TESTS();
+    return result;
 }

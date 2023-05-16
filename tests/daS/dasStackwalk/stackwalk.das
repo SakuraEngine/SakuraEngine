@@ -79,9 +79,11 @@ def main
 	breakpoint()
 	x = 6
 	for t in range(10)
-		print("x={x} t={t}\n")
+		print("x={x} t={t}")
 		x ++
         foo(x)
     var z = 13
     z ++
+    print("z={z}")
+
 
