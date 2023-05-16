@@ -391,7 +391,7 @@ codeunit_sequence argument_formatter<T>::produce(const T& value, const codeunit_
     if(specification == OSTR_UTF8("r"_cuqv))   // output raw memory bytes
         return format(OSTR_UTF8("[Undefined type (raw:{})]"_cuqv), raw);
 
-    OPEN_STRING_CHECK(false, OSTR_UTF8("Undefined format with raw memory bytes:{}!"_cuqv), raw)
+    OPEN_STRING_CHECK(false, OSTR_UTF8("Undefined format with raw memory bytes:{}!"), raw)
     return { };
 }
 

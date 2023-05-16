@@ -2,9 +2,12 @@
 #include "platform/configure.h"
 #include "platform/thread.h"
 #include "platform/atomic.h"
+
 #include "containers/text.hpp"
 #include "containers/vector.hpp"
 #include <EASTL/list.h>
+
+#include "utils/async_task.hpp"
 
 enum ESkrJobItemStatus
 {
@@ -165,4 +168,55 @@ private:
     SRWMutex pending_queue_mutex;
     SAtomic32 cancel_requested = 0;
 };
+
+struct RUNTIME_STATIC_API ThreadedJobQueueFutureJob : public skr::JobItem
+{
+    ThreadedJobQueueFutureJob(JobQueue* Q) SKR_NOEXCEPT;
+    void finish(skr::JobResult result) SKR_NOEXCEPT override;
+
+    // implementations for future<> to call.
+    
+    bool valid() const SKR_NOEXCEPT;
+    void wait() SKR_NOEXCEPT;
+    skr::FutureStatus wait_for(uint32_t ms) SKR_NOEXCEPT;
+
+    // end implementations for future<> to call.
+
+    SAtomic32 finished = false;
+    skr::JobQueue* Q = nullptr;
+};
+
+template<typename Artifact, typename JobBaseType = ThreadedJobQueueFutureJob>
+struct RUNTIME_STATIC_API ThreadedJobQueueFuture : public skr::IFuture<Artifact>
+{
+    template<typename F, typename... Args>
+    ThreadedJobQueueFuture(skr::JobQueue* Q, F&& _f, Args&&... args)
+        : job(Q)
+    {
+        job.runner = [=, This = this]() { 
+            This->result = _f(args...); 
+            return skr::JOB_RESULT_OK; 
+        };
+        Q->enqueue(&job);
+    }
+
+    Artifact get() SKR_NOEXCEPT override { return artifact; }
+    bool valid() const SKR_NOEXCEPT override { return job.valid(); }
+    void wait() SKR_NOEXCEPT override { job.wait(); }
+    skr::FutureStatus wait_for(uint32_t ms) SKR_NOEXCEPT override { return job.wait_for(ms); }
+
+    struct JobType : public JobBaseType
+    {
+        JobType(JobQueue* Q) : ThreadedJobQueueFutureJob(Q) {}
+        skr::JobResult run() SKR_NOEXCEPT override 
+        { 
+            // BaseType::run is not called currently.
+            auto ret = runner();
+            return ret; 
+        }
+        eastl::function<skr::JobResult()> runner;
+    } job;
+    Artifact artifact;
+};
+
 }

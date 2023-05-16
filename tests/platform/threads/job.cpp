@@ -73,15 +73,15 @@ struct AsyncFuture_ThreadJobQueue : public skr::IFuture<Result>
         Q->enqueue(jobItem);
     }
 
-    virtual bool valid() const { return true; }
-    virtual void wait() 
+    virtual bool valid() const SKR_NOEXCEPT { return true; }
+    virtual void wait() SKR_NOEXCEPT
     {
         while (skr_atomic32_load_relaxed(&jobItem->finished) == false)
         {
             skr_thread_sleep(1);
         }
     }
-    virtual skr::FutureStatus wait_for(uint32_t ms)
+    virtual skr::FutureStatus wait_for(uint32_t ms) SKR_NOEXCEPT
     {
         skr_thread_sleep(ms);
         const auto f = skr_atomic32_load_relaxed(&jobItem->finished);
@@ -89,7 +89,7 @@ struct AsyncFuture_ThreadJobQueue : public skr::IFuture<Result>
         return skr::FutureStatus::Timeout;
     }
 
-    virtual Result get() { return jobItem->result; }
+    virtual Result get() SKR_NOEXCEPT { return jobItem->result; }
 };
 
 template<int TestIdx>
