@@ -24,7 +24,6 @@
 
 #pragma once
 
-#include "utils/concurrent_queue.h"
 #include "ftl/callbacks.h"
 #include "ftl/fiber.h"
 #include "ftl/task.h"

@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#if __cpp_coroutines
+#if __cpp_impl_coroutine
 
 #include "task/task2.hpp"
 #include "platform/filesystem.hpp"
@@ -194,6 +194,43 @@ TEST_F(Task2, ParallelForMassive)
     EXPECT_EQ(a, 100100);
 }
 
+TEST_F(Task2, MassiveCoroutine)
+{
+    ZoneScopedN("MassiveCoroutine");
+    using namespace skr::task2;
+    std::atomic<int> a = 0;
+    counter_t event;
+    event.add(1000);
+    auto coro = [](std::atomic<int>& a, counter_t event) -> skr_task_t
+    {
+        //ZoneScopedN("Coroutine");
+        counter_t counter;
+        SKR_ASSERT(counter);
+        counter.add(100);
+        {
+            ZoneScopedN("ScheduleLoop");
+            for(int i=0; i<100; ++i)
+            {
+                schedule([=, &a]() mutable
+                {
+                    a += 10;
+                    counter.decrease();
+                });
+            }
+        }
+        SKR_ASSERT(counter);
+        co_await co_wait(counter);
+        a += 10;
+        event.decrease();
+    };
+    for(int i=0; i<1000; ++i)
+    {
+        schedule(coro(a, event));
+    }
+    sync(event);
+    EXPECT_EQ(a, 1010000);
+}
+
 int main(int argc, char** argv)
 {
     auto moduleManager = skr_get_module_manager();
@@ -204,7 +241,9 @@ int main(int argc, char** argv)
     moduleManager->init_module_graph(argc, argv);
     //while(!TracyIsConnected);
     ZoneScopedN("Main");
-    ::testing::InitGoogleTest(&argc, argv);
+    char* fake_argv[] = {argv[0], (char*)"--gtest_repeat=1000"};
+    int fake_argc = 2;
+    ::testing::InitGoogleTest(&fake_argc, fake_argv);
     auto result = RUN_ALL_TESTS();
     moduleManager->destroy_module_graph();
     return result;

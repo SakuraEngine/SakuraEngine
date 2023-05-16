@@ -25,13 +25,13 @@ RUNTIME_EXTERN_C RUNTIME_API void* traced_os_realloc_aligned(void* p, size_t new
 RUNTIME_EXTERN_C RUNTIME_API void* containers_malloc_aligned(size_t size, size_t alignment);
 RUNTIME_EXTERN_C RUNTIME_API void containers_free_aligned(void* p, size_t alignment);
 
+#define SKR_ALLOC_TRACY_MARKER_COLOR 0xff0000
+#define SKR_DEALLOC_TRACY_MARKER_COLOR 0x0000ff
 #if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
 
 #include <string.h>  // memset
 #include "tracy/TracyC.h"
 
-#define SKR_ALLOC_TRACY_MARKER_COLOR 0xff0000
-#define SKR_DEALLOC_TRACY_MARKER_COLOR 0x0000ff
 FORCEINLINE void* SkrMallocWithCZone(size_t size, const char* line, const char* pool_name)
 {
     TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
