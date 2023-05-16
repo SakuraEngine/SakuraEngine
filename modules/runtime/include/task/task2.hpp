@@ -1,15 +1,14 @@
 #pragma once
 #include "platform/configure.h"
-#if __cpp_coroutines
+#if __cpp_impl_coroutine
 #include "utils/defer.hpp"
 #include "platform/debug.h"
 #include "EASTL/functional.h"
 #include "platform/thread.h"
 #include "containers/sptr.hpp"
 #include "containers/vector.hpp"
-#include <array>
-#ifdef __has_include
-#if __has_include(<coroutine>)
+#include <EASTL/array.h>
+#if __cpp_lib_coroutine
     #include <coroutine>
 #else
     #include <experimental/coroutine>
@@ -22,12 +21,15 @@
         using suspend_never = experimental::suspend_never;
     }
 #endif
-#endif
 
 namespace skr
 {
 namespace task2
 {
+    template<class T>
+    using state_ptr_t = SPtr<T>;
+    template<class T>
+    using state_weak_ptr_t = SWeakPtr<T>;
     struct RUNTIME_API scheudler_config_t
     {
         scheudler_config_t();
@@ -49,7 +51,16 @@ namespace task2
         {
             RUNTIME_API skr_task_t get_return_object();
             std::suspend_always initial_suspend() { return {}; }
-            std::suspend_always final_suspend() noexcept { return {}; }
+#ifdef TRACY_ENABLE
+            std::suspend_never final_suspend() noexcept
+            {
+                if(name != nullptr)
+                    TracyFiberLeave;
+                return {};
+            }
+#else
+            std::suspend_never final_suspend() noexcept { return {}; }
+#endif
             void return_void() {}
             RUNTIME_API void unhandled_exception();
 #ifdef TRACY_ENABLE
@@ -58,7 +69,6 @@ namespace task2
 
             void* operator new(size_t size) { return sakura_malloc(size); }
             void operator delete(void* ptr, size_t size) { sakura_free(ptr); }
-            std::exception_ptr exception = nullptr;
 #ifdef TRACY_ENABLE
             const char* name = nullptr;
 #endif
@@ -138,8 +148,8 @@ namespace task2
         explicit operator bool() const { return (bool)state; }
         bool operator==(const event_t& other) const { return state == other.state; }
 
-        event_t(SPtr<State> state) : state(std::move(state)) {}
-        SPtr<State> state;
+        event_t(state_ptr_t<State> state) : state(std::move(state)) {}
+        state_ptr_t<State> state;
     };
     struct weak_event_t
     {
@@ -150,7 +160,7 @@ namespace task2
         event_t lock() const { return event_t{ state.lock() }; }
         bool expired() const { return state.expired(); }
 
-        SWeakPtr<event_t::State> state;
+        state_weak_ptr_t<event_t::State> state;
     };
     struct counter_t
     {
@@ -202,8 +212,8 @@ namespace task2
         explicit operator bool() const { return (bool)state; }
         bool operator==(const counter_t& other) const { return state == other.state; }
 
-        counter_t(SPtr<State> state) : state(std::move(state)) {}
-        SPtr<State> state;
+        counter_t(state_ptr_t<State> state) : state(std::move(state)) {}
+        state_ptr_t<State> state;
     };
 
     struct weak_counter_t
@@ -215,7 +225,7 @@ namespace task2
         counter_t lock() const { return counter_t{ state.lock() }; }
         bool expired() const { return state.expired(); }
 
-        SWeakPtr<counter_t::State> state;
+        state_weak_ptr_t<counter_t::State> state;
     };
 
     struct RUNTIME_API scheduler_t
@@ -231,7 +241,7 @@ namespace task2
         {
             EventAwaitable(scheduler_t& s, event_t event, int workerIdx = -1);
             bool await_ready() const;
-            void await_suspend(std::coroutine_handle<skr_task_t::promise_type>);
+            bool await_suspend(std::coroutine_handle<skr_task_t::promise_type>);
             void await_resume() const {}
             scheduler_t& scheduler;
             event_t event;
@@ -241,7 +251,7 @@ namespace task2
         {
             CounterAwaitable(scheduler_t& s, counter_t counter, int workerIdx = -1);
             bool await_ready() const;
-            void await_suspend(std::coroutine_handle<skr_task_t::promise_type>);
+            bool await_suspend(std::coroutine_handle<skr_task_t::promise_type>);
             void await_resume() const {}
             scheduler_t& scheduler;
             counter_t counter;
@@ -249,10 +259,10 @@ namespace task2
         };
         void sync(event_t event);
         void sync(counter_t counter);
-        std::array<std::atomic<int>, 8> spinningWorkers;
+        eastl::array<std::atomic<int>, 8> spinningWorkers;
         std::atomic<unsigned int> nextSpinningWorkerIdx = {0x8000000};
         std::atomic<unsigned int> nextEnqueueIndex = {0};
-        std::array<void*, 256> workers;
+        eastl::array<void*, 256> workers;
         void* mainWorker = nullptr;
         scheudler_config_t config;
         bool initialized = false;

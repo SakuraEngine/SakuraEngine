@@ -1,11 +1,19 @@
 #pragma once
-#include "utils/concurrent_queue.h"
+#include "containers/concurrent_queue.h"
 
 namespace dual
 {
+    
+struct ECSPoolConcurrentQueueTraits : public skr::ConcurrentQueueDefaultTraits
+{
+    static constexpr const char* kECSPoolQueueName = "ECSPool";
+    static const bool RECYCLE_ALLOCATED_BLOCKS = true;
+    static inline void* malloc(size_t size) { return sakura_mallocN(size, kECSPoolQueueName); }
+    static inline void free(void* ptr) { return sakura_freeN(ptr, kECSPoolQueueName); }
+};
 struct pool_t {
     size_t blockSize;
-    moodycamel::ConcurrentQueue<void*> blocks;
+    skr::ConcurrentQueue<void*, ECSPoolConcurrentQueueTraits> blocks;
     pool_t(size_t blockSize, size_t blockCount);
     ~pool_t();
     void* allocate();
@@ -20,7 +28,7 @@ struct fixed_pool_t {
     char* buffer;
     size_t blockSize;
     size_t blockCount;
-    moodycamel::ConcurrentQueue<size_t> blocks;
+    skr::ConcurrentQueue<size_t, ECSPoolConcurrentQueueTraits> blocks;
     fixed_pool_t(size_t blockSize, size_t blockCount);
     ~fixed_pool_t();
     void* allocate();

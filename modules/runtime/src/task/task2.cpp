@@ -1,4 +1,4 @@
-#if __cpp_coroutines
+#if __cpp_impl_coroutine
 
 #include "task/task2.hpp"
 #include "EASTL/deque.h"
@@ -7,6 +7,7 @@
 #include "utils/function_ref.hpp"
 #include "utils/defer.hpp"
 #include "containers/atomic_queue/atomic_queue.h"
+#include "containers/concurrent_queue.h"
 
 inline void nop() {
 #if defined(_WIN32)
@@ -58,7 +59,8 @@ namespace task2
 
     void skr_task_t::promise_type::unhandled_exception()
     {
-        exception = std::current_exception();
+        SKR_ASSERT(false);
+        auto exception = std::current_exception();
     }
 
     struct Task
@@ -74,10 +76,18 @@ namespace task2
         {
         }
 
+        Task(std::coroutine_handle<skr_task_t::promise_type>&& coro)
+            : coro(std::move(coro))
+        {
+            SKR_ASSERT(!this->coro.done());
+            coro = nullptr;
+        }
+
         Task(Task&& other)
             : func(std::move(other.func))
             , coro(std::move(other.coro))
         {
+            SKR_ASSERT(func || !this->coro.done());
             other.coro = nullptr;
         }
 
@@ -85,19 +95,19 @@ namespace task2
         {
             func = std::move(other.func);
             coro = std::move(other.coro);
+            SKR_ASSERT(func || !this->coro.done());
             other.coro = nullptr;
             return *this;
         }
 
-        Task(std::coroutine_handle<skr_task_t::promise_type>&& coro)
-            : coro(std::move(coro))
-        {
-        }
-
         void operator()()
         {
+            SKR_ASSERT(*this);
             if (func)
+            {
                 func();
+                func = {};
+            }
             else
             {
 #ifdef TRACY_ENABLE
@@ -105,14 +115,8 @@ namespace task2
                 if(coro.promise().name != nullptr)
                     TracyFiberEnter(coro.promise().name);
 #endif
+                SKR_ASSERT(!coro.done());
                 coro.resume();
-                SKR_DEFER({if(coro.done()) coro.destroy();});
-#ifdef TRACY_ENABLE
-                if(coro.promise().name != nullptr)
-                    TracyFiberLeave;
-#endif
-                if(auto exception = coro.promise().exception)
-                    std::rethrow_exception(exception);
             }
         }
 
@@ -120,6 +124,29 @@ namespace task2
         {
             return func || coro;
         }
+    };
+
+    struct Task2ConcurrentQueueTraits : public skr::ConcurrentQueueDefaultTraits
+    {
+        static constexpr const char* kTask2QueueName = "";
+        static const bool RECYCLE_ALLOCATED_BLOCKS = true;
+        static inline void* malloc(size_t size) { return sakura_mallocN(size, kTask2QueueName); }
+        static inline void free(void* ptr) { return sakura_freeN(ptr, kTask2QueueName); }
+    };
+
+    struct WorkQueue
+    {
+#ifdef USE_ATOMIC_QUEUE
+        atomic_queue::AtomicQueue2<Task, 1024> queue;
+        bool pop(Task& task) { return queue.try_pop(task); }
+        bool steal(Task& task) { return queue.try_pop(task); }
+        void push(Task&& task) { queue.push(std::move(task)); }
+#else
+        skr::ConcurrentQueue<Task, Task2ConcurrentQueueTraits> queue;
+        bool pop(Task& task) { return queue.try_dequeue(task); }
+        bool steal(Task& task) { return queue.try_dequeue(task); }
+        void push(Task&& task) { queue.enqueue(std::move(task)); }
+#endif
     };
 
     void enqueue(Task&& task, int workerIdx);
@@ -161,7 +188,7 @@ namespace task2
             }
             else 
             {
-                //do nothing
+                shutdown = true;
             }
         }
 
@@ -174,7 +201,7 @@ namespace task2
             }
             else 
             {
-                shutdown = true;
+                //do nothing
             }
         }
 
@@ -262,16 +289,14 @@ namespace task2
                 work.num--;
                 skr_release_mutex(&work.mutex);
                 task();
-                task = Task(nullptr); // destruct before acquiring mutex
                 skr_acquire_mutex(&work.mutex);
             }
             skr_release_mutex(&work.mutex);
             Task task(nullptr);
-            while(work.tasks.try_pop(task))
+            while(work.tasks.pop(task))
             {
                 work.num--;
                 task();
-                task = Task(nullptr); // destruct before acquiring mutex
             }
             skr_acquire_mutex(&work.mutex);
         }
@@ -327,7 +352,7 @@ namespace task2
 
         bool steal(Task& out) 
         {
-            bool result = work.tasks.try_pop(out);
+            bool result = work.tasks.steal(out);
             if (result) 
             {
                 work.num--;
@@ -348,12 +373,11 @@ namespace task2
         {
             std::atomic<uint64_t> num = 0;
             eastl::deque<Task, eastl::allocator_sakura, 128> pinnedTask;
-            atomic_queue::AtomicQueueB2<Task> tasks;
+            WorkQueue tasks;
             bool notifyAdded = true;
             SConditionVariable added;
             SMutex mutex;
             Work()
-                : tasks{1024}
             {
                 skr_init_mutex(&mutex);
                 skr_init_condition_var(&added);
@@ -442,15 +466,17 @@ namespace task2
         return event.done();
     }
 
-    void scheduler_t::EventAwaitable::await_suspend(std::coroutine_handle<skr_task_t::promise_type> handle)
+    bool scheduler_t::EventAwaitable::await_suspend(std::coroutine_handle<skr_task_t::promise_type> handle)
     {   
         SMutexLock guard(event.state->mutex);
         if(event.state->signalled)
-        {
-            handle.resume();
-            return;
-        }
+            return false;
+#ifdef TRACY_ENABLE
+        if(handle.promise().name != nullptr)
+            TracyFiberLeave;
+#endif
         event.state->cv.add_waiter(handle, workerIdx);
+        return true;
     }
 
     scheduler_t::EventAwaitable co_wait(event_t event, bool pinned)
@@ -482,15 +508,17 @@ namespace task2
         return counter.done();
     }
 
-    void scheduler_t::CounterAwaitable::await_suspend(std::coroutine_handle<skr_task_t::promise_type> handle)
+    bool scheduler_t::CounterAwaitable::await_suspend(std::coroutine_handle<skr_task_t::promise_type> handle)
     {   
         SMutexLock guard(counter.state->mutex);
         if(counter.state->count == 0)
-        {
-            handle.resume();
-            return;
-        }
+            return false;
+#ifdef TRACY_ENABLE
+        if(handle.promise().name != nullptr)
+            TracyFiberLeave;
+#endif
         counter.state->cv.add_waiter(handle, workerIdx);
+        return true;
     }
 
     scheduler_t::CounterAwaitable co_wait(counter_t counter, bool pinned)
