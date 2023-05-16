@@ -182,7 +182,7 @@ skr_io_ram_service_t* skr_io_ram_service_t::create(const skr_ram_io_service_desc
     service->threaded_service.threadItem.pData = service;
     service->threaded_service.threadItem.pFunc = &skr::io::__ioThreadTask_RAM;
     skr_init_thread(&service->threaded_service.threadItem, &service->threaded_service.serviceThread);
-    skr_set_thread_priority(service->threaded_service.serviceThread, SKR_THREAD_ABOVE_NORMAL);
+    skr_thread_set_priority(service->threaded_service.serviceThread, SKR_THREAD_ABOVE_NORMAL);
     return service;
 }
 

@@ -105,7 +105,7 @@ FORCEINLINE static void* ThreadFunctionStatic(void* data)
     return 0;
 }
 
-FORCEINLINE static void skr_set_thread_affinity(SThreadHandle handle, uint64_t affinityMask)
+FORCEINLINE static void skr_thread_set_affinity(SThreadHandle handle, uint64_t affinityMask)
 {
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);

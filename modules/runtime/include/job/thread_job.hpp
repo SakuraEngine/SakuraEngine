@@ -39,6 +39,7 @@ static constexpr JobResult JOB_RESULT_ERROR_UNKNOWN = -999;
 
 struct JobQueueDesc
 {
+    const char8_t* name = nullptr;
     JobQueuePriority priority = SKR_THREAD_NORMAL;
     uint32_t stack_size = 16 * 1024;
     uint32_t thread_count = 1;
@@ -110,13 +111,12 @@ using JobQueueThreadList = eastl::list<JobQueueThread*>;
 struct RUNTIME_STATIC_API JobQueue
 {
 public:
-    JobQueue() SKR_NOEXCEPT;
     JobQueue(const JobQueueDesc*) SKR_NOEXCEPT;
 	~JobQueue() SKR_NOEXCEPT;
 
     // initialize JobQueue
     // @retval JOB_RESULT_OK if success
-	JobResult initialize(const char8_t* name, const JobQueueDesc* desc = nullptr) SKR_NOEXCEPT;
+	JobResult initialize(const JobQueueDesc* desc = nullptr) SKR_NOEXCEPT;
 
     // finalize JobQueue.
     // @retval JOB_RESULT_OK if success
@@ -156,7 +156,7 @@ private:
     friend struct JobThreadFunction;
     int enqueueCore(JobItem* jobItem, bool isEndJob) SKR_NOEXCEPT;
 
-    skr::text::text name = u8"JobQueue";
+    skr::text::text queue_name;
     JobQueueThreadList thread_list;
     JobItemQueue* itemList;
     JobQueueDesc desc;

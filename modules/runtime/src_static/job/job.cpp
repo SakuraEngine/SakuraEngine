@@ -2,6 +2,7 @@
 #include "job_thread.hpp"
 #include "containers/vector.hpp"
 #include "utils/defer.hpp"
+#include "utils/log.h"
 
 namespace skr
 {
@@ -216,22 +217,13 @@ protected:
     }  
 };
 
-JobQueue::JobQueue() SKR_NOEXCEPT
-    : name(u8"JobQueue")
-{
-    skr_init_rw_mutex(&pending_queue_mutex);
-    itemList = SkrNew<JobItemQueue>(name.u8_str());
-    SKR_ASSERT(itemList);
-}
-
 JobQueue::JobQueue(const JobQueueDesc* pDesc) SKR_NOEXCEPT
-    : name(u8"JobQueue")
 {
+    queue_name = pDesc ? pDesc->name ? pDesc->name : u8"UnknownJobQueue" : u8"UnknownJobQueue";
     skr_init_rw_mutex(&pending_queue_mutex);
-    itemList = SkrNew<JobItemQueue>(name.u8_str());
+    itemList = SkrNew<JobItemQueue>(queue_name.u8_str());
     SKR_ASSERT(itemList);
-
-    initialize(name.u8_str(), pDesc);
+    initialize(pDesc);
 }
 
 JobQueue::~JobQueue() SKR_NOEXCEPT
@@ -241,9 +233,10 @@ JobQueue::~JobQueue() SKR_NOEXCEPT
     skr_destroy_rw_mutex(&pending_queue_mutex);
 }
 
-JobResult JobQueue::initialize(const char8_t *n, const JobQueueDesc* pDesc) SKR_NOEXCEPT
+JobResult JobQueue::initialize(const JobQueueDesc* pDesc) SKR_NOEXCEPT
 {
     JobResult ret;
+    const char8_t* n = pDesc ? pDesc->name : nullptr;
     if (pDesc != nullptr)
     {
         desc = *pDesc;
@@ -256,7 +249,10 @@ JobResult JobQueue::initialize(const char8_t *n, const JobQueueDesc* pDesc) SKR_
         {
             return JOB_RESULT_ERROR_OUT_OF_MEMORY;
         }
-        auto *t = SkrNew<JobQueueThread>(n, desc.priority, desc.stack_size);
+        skr::text::text tname = n ? n : u8"UnknownJobQueue";
+        auto taftfix = skr::text::format(u8"_{}", (uint64_t)i);
+        tname.append(taftfix);
+        auto *t = SkrNew<JobQueueThread>(tname.u8_str(), desc.priority, desc.stack_size);
         SKR_ASSERT(t != nullptr);
         if (t == nullptr)
         {

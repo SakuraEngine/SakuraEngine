@@ -132,7 +132,7 @@ skr_threaded_service_t* skr_threaded_service_t::create(const skr_threaded_servic
     service->threaded_service.threadItem.pData = service;
     service->threaded_service.threadItem.pFunc = &__ioThreadTask_SERIVE;
     skr_init_thread(&service->threaded_service.threadItem, &service->threaded_service.serviceThread);
-    skr_set_thread_priority(service->threaded_service.serviceThread, SKR_THREAD_ABOVE_NORMAL);
+    skr_thread_set_priority(service->threaded_service.serviceThread, SKR_THREAD_ABOVE_NORMAL);
     return service;
 }
 
