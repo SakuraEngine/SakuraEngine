@@ -278,7 +278,7 @@ public:
 		return this->size_;
 	}
 
-	[[nodiscard]] constexpr const ochar_t* c_str() const noexcept
+	[[nodiscard]] const ochar_t* c_str() const noexcept
 	{
 		return (const ochar_t*)this->data_;
 	}
