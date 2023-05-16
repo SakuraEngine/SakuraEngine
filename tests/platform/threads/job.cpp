@@ -88,17 +88,11 @@ struct AsyncFuture_ThreadJobQueue : public skr::IFuture<Result>
         if (f) return skr::FutureStatus::Ready;
         return skr::FutureStatus::Timeout;
     }
-    virtual void catch_and_free_exception(skr::AsyncTaskException* e)
-    {
-        if (e)
-        {
-            SKR_LOG_DEBUG("AsyncTaskException: %d", (uint32_t)e->e);
-        }
-        SkrDelete(e);
-    }
+
     virtual Result get() { return jobItem->result; }
 };
 
+template<int TestIdx>
 struct Launcher_ThreadJobQueue
 {
     static skr::JobQueue* GetQueue()
@@ -106,9 +100,11 @@ struct Launcher_ThreadJobQueue
         static skr::SPtr<skr::JobQueue> jq = nullptr;
         if (!jq)
         {
+            auto qn = skr::text::format(u8"Launcher{}_JobQueue", TestIdx);
             auto jqDesc = make_zeroed<skr::JobQueueDesc>();
             jqDesc.thread_count = 2;
             jqDesc.priority = SKR_THREAD_NORMAL;
+            jqDesc.name = qn.u8_str();
             jq = skr::SPtr<skr::JobQueue>::Create(&jqDesc);
         }
         SKR_ASSERT(jq);
@@ -128,8 +124,12 @@ struct Launcher_ThreadJobQueue
     }
 };
 
+static const char* kCancelledResultString = "Empty, unfinished object";
+static const char* kCompleteResultString = "Finished result object";
+
+template<int TestIdx>
 struct EmptyTaskWithProgressFeedback 
-    : public skr::AsyncTask<Launcher_ThreadJobQueue, Progress, Result, InputParam1, InputParam2>
+    : public skr::AsyncTask<Launcher_ThreadJobQueue<TestIdx>, Progress, Result, InputParam1, InputParam2>
 {
     Result do_in_background(InputParam1 const& p1, InputParam2 const& p2) override
     {
@@ -138,17 +138,17 @@ struct EmptyTaskWithProgressFeedback
         {
             skr_thread_sleep(50);
 
-            publish_progress(i);
+            this->publish_progress(i);
 
-            if (is_cancelled()) return "Empty, unfinished object";
+            if (this->is_cancelled()) return kCancelledResultString;
         }
-        return "Finished result object";
+        return kCompleteResultString;
     }
 
     bool on_callback_loop() override
     {
-        using Super = skr::AsyncTask<Launcher_ThreadJobQueue, Progress, Result, InputParam1, InputParam2>;
-        Launcher_ThreadJobQueue::queue_update();
+        using Super = skr::AsyncTask<Launcher_ThreadJobQueue<TestIdx>, Progress, Result, InputParam1, InputParam2>;
+        Launcher_ThreadJobQueue<TestIdx>::queue_update();
         return Super::on_callback_loop();
     }
 
@@ -168,11 +168,18 @@ struct EmptyTaskWithProgressFeedback
     {
         SKR_LOG_DEBUG("Progress is canceled.");
     }
+    void on_exception(skr::AsyncTaskException* e) override
+    {
+        if (e)
+        {
+            SKR_LOG_DEBUG("AsyncTaskException: %d", (uint32_t)e->e);
+        }
+    }
 };
 
 TEST(Job, AsyncTask)
 {
-    EmptyTaskWithProgressFeedback asynctask;
+    EmptyTaskWithProgressFeedback<0> asynctask;
     asynctask.execute(1, 5);
     for (int nRender = 0; !asynctask.on_callback_loop(); ++nRender) // if doInBackground() is finished it will stop the loop
     {
@@ -181,19 +188,24 @@ TEST(Job, AsyncTask)
         if (nRender > 100) // -> Reduce this number to check Cancellation
             asynctask.cancel();
     }
+    auto result = asynctask.get();
+    SKR_LOG_DEBUG("Result: %s", result.c_str());
+    EXPECT_EQ(result, kCompleteResultString);
 }
 
 TEST(Job, AsyncTaskCancel)
 {
-    EmptyTaskWithProgressFeedback asynctask;
+    EmptyTaskWithProgressFeedback<1> asynctask;
     asynctask.execute(100, 50);
     for (int nRender = 0; !asynctask.on_callback_loop(); ++nRender) // if doInBackground() is finished it will stop the loop
     {
         skr_thread_sleep(1);
-
-        if (nRender > 100) // -> Reduce this number to check Cancellation
+        if (nRender > 20) // -> Reduce this number to check Cancellation
             asynctask.cancel();
     }
+    auto result = asynctask.get();
+    SKR_LOG_DEBUG("Result: %s", result.c_str());
+    EXPECT_EQ(result, kCancelledResultString);
 }
 
 int main(int argc, char** argv)

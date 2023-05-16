@@ -190,7 +190,7 @@ static const uint32_t priorities[SKR_THREAD_PRIORITY_COUNT] = {
     0, 1, 25, 50, 75, 75, 99
 };
 
-SThreadPriority skr_set_thread_priority(SThreadHandle handle, SThreadPriority priority)
+SThreadPriority skr_thread_set_priority(SThreadHandle handle, SThreadPriority priority)
 {
     struct sched_param param = {};
     param.sched_priority = priorities[priority];
@@ -207,16 +207,21 @@ SThreadPriority skr_set_thread_priority(SThreadHandle handle, SThreadPriority pr
     return priority;
 }
 
-void skr_set_thread_affinity(SThreadHandle handle, uint64_t affinityMask)
+void skr_thread_set_affinity(SThreadHandle handle, uint64_t affinityMask)
 {
     thread_affinity_policy_data_t policy = { (int32_t)affinityMask };
     thread_policy_set(pthread_mach_thread_np(handle), THREAD_AFFINITY_POLICY, (thread_policy_t)&policy, 1);
 }
 
+void skr_thread_set_name(SThreadHandle handle, const char8_t* pName)
+{
+    pthread_setname_np(handle, pName);
+}
+
 void skr_init_thread(SThreadDesc* pData, SThreadHandle* pHandle)
 {
     int res = pthread_create(pHandle, NULL, ThreadFunctionStatic, pData);
-    skr_set_thread_priority(*pHandle, SKR_THREAD_NORMAL);
+    skr_thread_set_priority(*pHandle, SKR_THREAD_NORMAL);
     SKR_UNREF_PARAM(res);
     assert(res == 0);
 }

@@ -41,7 +41,6 @@ struct IFuture
     virtual bool valid() const = 0;
     virtual void wait() = 0;
     virtual FutureStatus wait_for(uint32_t ms) = 0;
-    virtual void catch_and_free_exception(AsyncTaskException* e) = 0;
     virtual Result get() = 0;
 };
 
@@ -116,7 +115,7 @@ public:
         if (exception)
         {
             this->on_exception(exception);
-            future->catch_and_free_exception(exception);
+            SkrDelete(exception);
         }
 
         this->status = Status::RUNNING;
@@ -359,7 +358,7 @@ private:
             {
                 mData.back() = data;
             }
-            
+
             skr_rw_mutex_release(&mMutex);
         }
 

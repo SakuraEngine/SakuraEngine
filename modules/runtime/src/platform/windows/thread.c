@@ -298,16 +298,29 @@ static const int priorities[SKR_THREAD_PRIORITY_COUNT] = {
     THREAD_PRIORITY_TIME_CRITICAL
 };
 
-SThreadPriority skr_set_thread_priority(SThreadHandle handle, SThreadPriority priority)
+SThreadPriority skr_thread_set_priority(SThreadHandle handle, SThreadPriority priority)
 {
     BOOL ok = SetThreadPriority((HANDLE)handle, priorities[priority]);
     if (ok) return priority;
     return GetThreadPriority((HANDLE)handle);
 }
 
-void skr_set_thread_affinity(SThreadHandle handle, uint64_t affinityMask)
+void skr_thread_set_affinity(SThreadHandle handle, uint64_t affinityMask)
 {
     SetThreadAffinityMask((HANDLE)handle, (DWORD_PTR)affinityMask);
+}
+
+void skr_thread_set_name(SThreadHandle handle, const char8_t* pName)
+{
+    size_t len = strlen(pName);
+    wchar_t* buffer = (wchar_t*)sakura_malloc((len + 1) * sizeof(wchar_t));
+
+    size_t resultLength = MultiByteToWideChar(CP_UTF8, 0, pName, (int)len, buffer, (int)len);
+    buffer[resultLength] = 0;
+
+    SetThreadDescription((HANDLE)handle, buffer);
+
+    sakura_free(buffer);
 }
 
 void skr_destroy_thread(SThreadHandle handle)

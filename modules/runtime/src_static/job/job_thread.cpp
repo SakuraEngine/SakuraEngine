@@ -52,6 +52,7 @@ JobResult JobQueueThread::start(JobThreadFunction* pFunc) SKR_NOEXCEPT
     tDesc.pFunc = &jobThreadFunc;
     tDesc.pData = this;
     skr_init_thread(&tDesc, &tHandle);
+    skr_thread_set_name(tHandle, tname.u8_str());
     
     // wait started
     while (!skr_atomic32_load_acquire(&started)) {}
@@ -77,7 +78,7 @@ SThreadID JobQueueThread::get_id() const SKR_NOEXCEPT
 
 SThreadPriority JobQueueThread::change_priority(SThreadPriority priority) SKR_NOEXCEPT
 {
-    return skr_set_thread_priority(tHandle, priority);
+    return skr_thread_set_priority(tHandle, priority);
 }
 
 JobThreadFunction* JobQueueThread::get_function() const SKR_NOEXCEPT
@@ -87,7 +88,7 @@ JobThreadFunction* JobQueueThread::get_function() const SKR_NOEXCEPT
 
 JobResult JobQueueThread::initialize(const char8_t *n, int32_t p, uint32_t stackSize, const JobQueueThreadDesc *pdesc) SKR_NOEXCEPT
 {
-    name = skr::text::text::from_utf8(n);
+    tname = skr::text::text::from_utf8(n);
     if (pdesc)
     {
         desc = *pdesc;
