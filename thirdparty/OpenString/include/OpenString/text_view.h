@@ -234,7 +234,7 @@ public:
 		return this->view_;
 	}
 
-	[[nodiscard]] constexpr const ochar_t* c_str() const noexcept
+	[[nodiscard]] const ochar_t* c_str() const noexcept
 	{
 		return this->raw().c_str();
 	}
@@ -432,9 +432,9 @@ private:
 };
 
 template<> 
-struct formatter<text_view>
+struct argument_formatter<text_view>
 {
-    static codeunit_sequence format_argument(const text_view& value, const codeunit_sequence_view& specification)
+    static codeunit_sequence produce(const text_view& value, const codeunit_sequence_view& specification)
     {
         return codeunit_sequence{ value.raw() };
     }

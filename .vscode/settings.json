@@ -2,6 +2,7 @@
     "dascript.experimental": true,
     "dascript.server.connectTimeout": 10,
     "xmake.additionalConfigArguments": [
+        "--use_tracy=enable",
         "--build_tests=y"
     ]
 }

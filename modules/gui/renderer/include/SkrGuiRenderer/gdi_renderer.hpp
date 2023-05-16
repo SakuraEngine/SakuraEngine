@@ -11,7 +11,7 @@
 #include "rtm/rtmx.h"
 #include "platform/atomic.h"
 #include "utils/threaded_service.h"
-#include "utils/concurrent_queue.h"
+#include "containers/concurrent_queue.h"
 
 namespace skr {
 namespace gdi {
@@ -235,8 +235,8 @@ struct SKR_GUI_RENDERER_API GDIRenderer_RenderGraph : public IGDIRenderer
 
 protected:
     void updatePendingTextures(skr::render_graph::RenderGraph* graph) SKR_NOEXCEPT;
-    moodycamel::ConcurrentQueue<GDITextureUpdate_RenderGraph*> request_updates;
-    moodycamel::ConcurrentQueue<GDITextureUpdate_RenderGraph*> pending_updates;
+    skr::ConcurrentQueue<GDITextureUpdate_RenderGraph*> request_updates;
+    skr::ConcurrentQueue<GDITextureUpdate_RenderGraph*> pending_updates;
 
 protected:
     CGPURenderPipelineId findOrCreateRenderPipeline(GDIRendererPipelineAttributes attributes, ECGPUSampleCount sample_count = CGPU_SAMPLE_COUNT_1);

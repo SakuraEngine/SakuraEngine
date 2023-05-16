@@ -1,5 +1,17 @@
 #include "test.hpp"
 
+class SPTRNonIntrusive : public SPTRBase
+{
+protected:
+    void SetUp() override
+    {
+    }
+
+    void TearDown() override
+    {
+    }
+};
+
 struct TestStruct
 {
     enum Status
@@ -31,7 +43,7 @@ struct TestDerived : public TestStruct
     virtual ~TestDerived() = default;
 };
 
-TEST(SPTR, CopyNonIntrusive)
+TEST(SPTRNonIntrusive, CopyNonIntrusive)
 {
     TestStruct::Status status;
     {
@@ -46,7 +58,7 @@ TEST(SPTR, CopyNonIntrusive)
     EXPECT_EQ(status, TestStruct::Status::Destroyed);
 }
 
-TEST(SPTR, SwapNonIntrusive)
+TEST(SPTRNonIntrusive, SwapNonIntrusive)
 {
     auto one_status = TestStruct::Status::Uninitialized;
     auto another_status = TestStruct::Status::Uninitialized;
@@ -59,7 +71,7 @@ TEST(SPTR, SwapNonIntrusive)
     EXPECT_EQ(another_status, TestStruct::Status::Created);
 }
 
-TEST(SPTR, MoveNonIntrusive)
+TEST(SPTRNonIntrusive, MoveNonIntrusive)
 {
     auto one_status = TestStruct::Status::Uninitialized;
     auto another_status = TestStruct::Status::Uninitialized;
@@ -74,7 +86,7 @@ TEST(SPTR, MoveNonIntrusive)
     EXPECT_EQ(one_status, TestStruct::Status::Destroyed);
 }
 
-TEST(SPTR, CastNonIntrusive)
+TEST(SPTRNonIntrusive, CastNonIntrusive)
 {
     TestStruct::Status status;
     skr::SPtr<TestDerived> pC(SkrNew<TestDerived>(status));
@@ -89,7 +101,7 @@ TEST(SPTR, CastNonIntrusive)
     EXPECT_EQ(pCC3.use_count(), 4);
 }
 
-TEST(SPTR, WeakNonIntrusive)
+TEST(SPTRNonIntrusive, WeakNonIntrusive)
 {
     TestStruct::Status status;
     skr::SWeakPtr<TestStruct> mWeak = {};
@@ -102,7 +114,7 @@ TEST(SPTR, WeakNonIntrusive)
     EXPECT_EQ(status, TestStruct::Status::Destroyed);
 }
 
-TEST(SPTR, VoidPtrCastNonIntrusive)
+TEST(SPTRNonIntrusive, VoidPtrCastNonIntrusive)
 {
     TestStruct::Status status = TestStruct::Status::Uninitialized;
     {
@@ -117,7 +129,7 @@ TEST(SPTR, VoidPtrCastNonIntrusive)
     EXPECT_EQ(status, TestStruct::Status::Destroyed);
 }
 
-TEST(SPTR, VoidPtrCastNonIntrusive2)
+TEST(SPTRNonIntrusive, VoidPtrCastNonIntrusive2)
 {
     TestStruct::Status status = TestStruct::Status::Uninitialized;
     {
@@ -146,7 +158,7 @@ TEST(SPTR, VoidPtrCastNonIntrusive2)
     EXPECT_EQ(status, TestStruct::Status::Destroyed);
 }
 
-TEST(SPTR, VoidPtrReset)
+TEST(SPTRNonIntrusive, VoidPtrReset)
 {
     TestStruct::Status status = TestStruct::Status::Uninitialized;
     {
@@ -174,4 +186,11 @@ TEST(SPTR, VoidPtrReset)
         }
     }
     EXPECT_EQ(status, TestStruct::Status::Destroyed);
+}
+
+int main(int argc, char** argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    auto result = RUN_ALL_TESTS();
+    return result;
 }

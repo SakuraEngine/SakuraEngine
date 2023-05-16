@@ -10,7 +10,7 @@ namespace skr
     namespace binary
     {
         template <>
-        struct RUNTIME_API BlobTrait<skr::string_view> {
+        struct RUNTIME_STATIC_API BlobTrait<skr::string_view> {
             static void BuildArena(skr_blob_arena_builder_t& arena, skr::string_view& dst, const skr::string& src);
             static void Remap(skr_blob_arena_t& arena, skr::string_view& dst);
         };

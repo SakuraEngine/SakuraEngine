@@ -142,6 +142,16 @@ CGPUQueueId skr_render_device_get_nth_cpy_queue(SRenderDeviceId device, uint32_t
     return device->get_cpy_queue(n);
 }
 
+CGPUQueueId skr_render_device_get_compute_queue(SRenderDeviceId device)
+{
+    return device->get_compute_queue();
+}
+
+CGPUQueueId skr_render_device_get_nth_compute_queue(SRenderDeviceId device, uint32_t n)
+{
+    return device->get_compute_queue(n);
+}
+
 CGPUDeviceId skr_render_device_get_cgpu_device(SRenderDeviceId device)
 {
     return device->get_cgpu_device();

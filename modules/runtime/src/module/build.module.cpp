@@ -17,11 +17,11 @@ extern "C" void dualX_register_types();
 auto log_locker = +[](bool isLocked, void* pMutex){
     if (isLocked)
     {
-        skr_acquire_mutex((SMutex*)pMutex);
+        skr_mutex_acquire((SMutex*)pMutex);
     }
     else
     {
-        skr_release_mutex((SMutex*)pMutex);
+        skr_mutex_release((SMutex*)pMutex);
     }
 };
 
@@ -47,6 +47,9 @@ void SkrRuntimeModule::on_unload()
     skr_destroy_mutex(&log_mutex);
 
 #ifdef TRACY_ENABLE
+    //std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
+    //tracy::GetProfiler().RequestShutdown();
+    //while( !tracy::GetProfiler().HasShutdownFinished() ) { std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) ); };
     tracyLibrary.unload();
 #endif
 }

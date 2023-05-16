@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "utils/types.h"
+#include "utils/traits.hpp"
 #include "utils/format.hpp"
 #include "math/quat.h"
 
@@ -14,6 +15,13 @@ protected:
     {
     }
 };
+
+TEST(CommonMath, AssumeAligned)
+{
+    alignas(16) float a[4] = {1, 2, 3, 4};
+    auto ptr = skr::assume_aligned<16>(a);
+    EXPECT_EQ(ptr, a);
+}
 
 TEST(CommonMath, QuatEuler)
 {

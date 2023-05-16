@@ -147,7 +147,7 @@ struct ReadTrait<skr::resource::TResourceHandle<T>> {
 };
 
 template <>
-struct RUNTIME_API ReadTrait<skr_resource_handle_t> {
+struct RUNTIME_STATIC_API ReadTrait<skr_resource_handle_t> {
     static int Read(skr_binary_reader_t* reader, skr_resource_handle_t& handle);
 };
 }
@@ -170,7 +170,7 @@ struct WriteTrait<const skr::resource::TResourceHandle<T>&> {
 };
 
 template <>
-struct RUNTIME_API WriteTrait<const skr_resource_handle_t&> {
+struct RUNTIME_STATIC_API WriteTrait<const skr_resource_handle_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_resource_handle_t& handle);
 };
 

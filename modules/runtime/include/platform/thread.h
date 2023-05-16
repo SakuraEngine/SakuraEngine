@@ -100,6 +100,11 @@ typedef struct SThreadDesc {
     void* pData;
 } SThreadDesc;
 
+typedef int32_t ThreadResult;
+#define THREAD_RESULT_OK 1
+#define THREAD_RESULT_FAILED 0
+#define THREAD_RESULT_TIMEOUT -1
+
 #if defined(_WIN32) || defined(XBOX)
 typedef void* SThreadHandle;
 #elif !defined(NX64)
@@ -107,11 +112,7 @@ typedef pthread_t SThreadHandle;
 #endif
 
 #define MUTEX_DEFAULT_SPIN_COUNT 1500
-#if defined(_WIN32)
-    #include "win/thread.inl"
-#elif defined(__APPLE__)
-    #include "apple/thread.inl"
-#elif defined(__EMSCRIPTEN__) || defined(__wasi__)
+#if defined(__EMSCRIPTEN__) || defined(__wasi__)
     #include "linux/thread.inl"
 #endif
 
@@ -123,27 +124,29 @@ THREADS_API void skr_call_once(SCallOnceGuard* pGuard, SCallOnceFn pFn);
 THREADS_API bool skr_init_mutex(SMutex* pMutex);
 THREADS_API bool skr_init_mutex_recursive(SMutex* pMutex);
 THREADS_API void skr_destroy_mutex(SMutex* pMutex);
-THREADS_API void skr_acquire_mutex(SMutex* pMutex);
-THREADS_API bool skr_try_acquire_mutex(SMutex* pMutex);
-THREADS_API void skr_release_mutex(SMutex* pMutex);
+THREADS_API void skr_mutex_acquire(SMutex* pMutex);
+THREADS_API bool skr_mutex_try_acquire(SMutex* pMutex);
+THREADS_API void skr_mutex_release(SMutex* pMutex);
 
 // rw mutex
-THREADS_API bool skr_init_mutex_rw(SRWMutex* pMutex);
+THREADS_API bool skr_init_rw_mutex(SRWMutex* pMutex);
 THREADS_API void skr_destroy_rw_mutex(SRWMutex* pMutex);
-THREADS_API void skr_acquire_mutex_r(SRWMutex* pMutex);
-THREADS_API void skr_acquire_mutex_w(SRWMutex* pMutex);
-THREADS_API void skr_release_rw_mutex(SRWMutex* pMutex);
+THREADS_API void skr_rw_mutex_acuire_r(SRWMutex* pMutex);
+THREADS_API void skr_rw_mutex_acuire_w(SRWMutex* pMutex);
+THREADS_API void skr_rw_mutex_release(SRWMutex* pMutex);
 
 /// cv
 THREADS_API bool skr_init_condition_var(SConditionVariable* cv);
 THREADS_API void skr_destroy_condition_var(SConditionVariable* cv);
-THREADS_API void skr_wait_condition_vars(SConditionVariable* cv, const SMutex* pMutex, uint32_t timeout);
+THREADS_API ThreadResult skr_wait_condition_vars(SConditionVariable* cv, const SMutex* pMutex, uint32_t timeout);
 THREADS_API void skr_wake_all_condition_vars(SConditionVariable* cv);
 THREADS_API void skr_wake_condition_var(SConditionVariable* cv);
 
 /// thread
 THREADS_API void skr_init_thread(SThreadDesc* pItem, SThreadHandle* pHandle);
-THREADS_API void skr_set_thread_priority(SThreadHandle, SThreadPriority);
+THREADS_API SThreadPriority skr_thread_set_priority(SThreadHandle, SThreadPriority);
+THREADS_API void skr_thread_set_affinity(SThreadHandle, uint64_t affinityMask);
+THREADS_API void skr_thread_set_name(SThreadHandle, const char8_t* pName);
 THREADS_API void skr_destroy_thread(SThreadHandle handle);
 THREADS_API void skr_join_thread(SThreadHandle handle);
 THREADS_API SThreadID skr_current_thread_id(void);
@@ -156,9 +159,9 @@ struct SMutexLock {
     SMutexLock(SMutex& rhs)
         : mMutex(rhs)
     {
-        skr_acquire_mutex(&rhs);
+        skr_mutex_acquire(&rhs);
     }
-    ~SMutexLock() { skr_release_mutex(&mMutex); }
+    ~SMutexLock() { skr_mutex_release(&mMutex); }
 
     /// Prevent copy construction.
     SMutexLock(const SMutexLock& rhs) = delete;

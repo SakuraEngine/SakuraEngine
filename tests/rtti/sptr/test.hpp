@@ -4,7 +4,7 @@
 #include "utils/log.hpp"
 #include "platform/guid.hpp"
 
-class SPTR : public ::testing::Test
+class SPTRBase : public ::testing::Test
 {
 protected:
     void SetUp() override

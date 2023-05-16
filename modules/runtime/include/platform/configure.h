@@ -12,7 +12,7 @@
 #define SKR_UTF8(str) str
 #endif
 
-#if __cplusplus >= 202000L
+#if __cpp_char8_t
 #define CHAR8_T_DEFINED
 #endif
 
@@ -184,6 +184,10 @@ extern const char* $name;
     #else
         #error Unrecognized CPU was used.
     #endif
+#endif
+
+#ifndef RUNTIME_STATIC_API
+    #define RUNTIME_STATIC_API
 #endif
 
 #ifdef RUNTIME_IMPL
