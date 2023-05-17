@@ -5,7 +5,10 @@
 #include "resource/resource_handle.h"
 #include "misc/traits.hpp"
 #include "misc/join.hpp"
-#include "lua/lua.hpp"
+extern "C" {
+#include "lua.h"
+#include "lualib.h"
+}
 
 namespace skr::lua
 {

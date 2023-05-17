@@ -145,7 +145,7 @@
             nRet += skr::lua::push<${name}_t>(L, ${name});
         %endfor
             return nRet;
-        });
+        }, "${db.short_name(function.name)}");
 </%def>
 <%def name="bind_category(cat)">
     <% 
@@ -209,7 +209,8 @@ void skr_lua_open_${module}(lua_State* L)
                 }
             %endfor
                 default:
-                    return luaL_error(L, "invalid field name : %s", key);
+                    luaL_error(L, "invalid field name : %s", key);
+                    return 0;
             }
             SKR_UNREACHABLE_CODE();
             return 0;
@@ -230,7 +231,8 @@ void skr_lua_open_${module}(lua_State* L)
                 }
             %endfor
                 default:
-                    return luaL_error(L, "invalid field name %s", key);
+                    luaL_error(L, "invalid field name %s", key);
+                    return 0;
             }
             SKR_UNREACHABLE_CODE();
             return 0;
@@ -245,7 +247,7 @@ void skr_lua_open_${module}(lua_State* L)
         {nullptr, nullptr} // sentinel
     };
     luaL_newmetatable(L, "${record.attrs.guid}");
-    luaL_setfuncs(L, basemetamethods, 0);
+    luaL_register(L, nullptr, basemetamethods);
     lua_pop(L, 1);
     luaL_Reg sharedmetamedhods[] = {
         {"__gc", +[](lua_State* L)
@@ -261,7 +263,7 @@ void skr_lua_open_${module}(lua_State* L)
         {nullptr, nullptr} // sentinel
     };
     luaL_newmetatable(L, "[shared]${record.attrs.guid}");
-    luaL_setfuncs(L, sharedmetamedhods, 0);
+    luaL_register(L, nullptr, sharedmetamedhods);
     lua_pop(L, 1);
     luaL_Reg uniquemetamedhods[] = {
         {"__gc", +[](lua_State* L)
@@ -277,7 +279,7 @@ void skr_lua_open_${module}(lua_State* L)
         {nullptr, nullptr} // sentinel
     };
     luaL_newmetatable(L, "[unique]${record.attrs.guid}");
-    luaL_setfuncs(L, uniquemetamedhods, 0);
+    luaL_register(L, nullptr, uniquemetamedhods);
     lua_pop(L, 1);
     }
 %endfor

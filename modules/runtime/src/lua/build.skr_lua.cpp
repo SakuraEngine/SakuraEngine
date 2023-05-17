@@ -1,3 +1,4 @@
+#include "containers/hashmap.hpp"
 #include "lua/skr_lua.h"
 #include "platform/memory.h"
 #include "misc/defer.hpp"
@@ -8,6 +9,10 @@
 #include "misc/log.h"
 #include "platform/vfs.h"
 #include "ecs/dual.h"
+extern "C"
+{
+#include "luacode.h"
+}
 
 #include "containers/string.hpp"
 #include <EASTL/string.h>
@@ -26,9 +31,6 @@ struct skr_lua_state_extra_t
 {
     skr_vfs_t* vfs;
 };
-RUNTIME_EXTERN_C RUNTIME_API void skr_lua_setroot(lua_State* L, const char* directory);
-RUNTIME_EXTERN_C int
-luaopen_clonefunc(lua_State *L);
 
 void replaceAll(eastl::u8string& str, const eastl::u8string_view& from, const eastl::u8string_view& to) {
     if(from.empty())
@@ -38,6 +40,12 @@ void replaceAll(eastl::u8string& str, const eastl::u8string_view& from, const ea
         str.replace(start_pos, from.length(), to.data(), to.length());
         start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
     }
+}
+
+static skr::flat_hash_map<lua_State*, void*> ExtraSpace;
+void* lua_getextraspace(lua_State* L)
+{
+    return ExtraSpace[L];
 }
 
 int skr_load_file(lua_State* L) {
@@ -64,7 +72,9 @@ int skr_load_file(lua_State* L) {
     eastl::vector<char> buffer(size);
     skr_vfs_fread(file, buffer.data(), 0, size);
     auto name = eastl::u8string(u8"@") + fn;
-    if(luaL_loadbuffer(L,buffer.data(), size, (const char*)name.c_str())==0) {
+    size_t bytecodeSize = 0;
+    char* bytecode = luau_compile(buffer.data(), size, NULL, &bytecodeSize);
+    if(luau_load(L, (char*)name.c_str(), bytecode, bytecodeSize, 0)==0) {
         return 1;
     }
     else {
@@ -102,7 +112,7 @@ lua_State* skr_lua_newstate(skr_vfs_t* vfs)
     luaL_openlibs(L);
 
     // insert loader
-    lua_pushcfunction(L,skr_load_file);
+    lua_pushcfunction(L,skr_load_file,"skr_load_file");
     int loaderFunc = lua_gettop(L);
 
     lua_getglobal(L,"package");
@@ -110,7 +120,7 @@ lua_State* skr_lua_newstate(skr_vfs_t* vfs)
 
     int loaderTable = lua_gettop(L);
 
-    for(auto i = lua_rawlen(L,loaderTable) + 1; i > 2u; i--) 
+    for(auto i = lua_objlen(L,loaderTable) + 1; i > 2u; i--) 
     {
         lua_rawgeti(L,loaderTable,i-1);
         lua_rawseti(L,loaderTable,i);
@@ -131,14 +141,8 @@ lua_State* skr_lua_newstate(skr_vfs_t* vfs)
         auto nsize = luaL_checkinteger(L, 2);
         lua_createtable(L, (int)asize, (int)nsize);
         return 1;
-    });
+    }, "newtable");
     lua_setglobal(L, "newtable");
-
-    // bind clone
-    lua_getglobal(L, "skr");
-    luaopen_clonefunc(L);
-    lua_setfield(L, -2, "clonefunc");
-    lua_pop(L, 1);
 
     // bind skr types
     skr::lua::bind_unknown(L);
@@ -151,6 +155,12 @@ lua_State* skr_lua_newstate(skr_vfs_t* vfs)
 
 
     return L;
+}
+
+void skr_lua_close(lua_State* L)
+{
+    lua_close(L);
+    ExtraSpace.erase(L);
 }
 
 namespace skr::lua
@@ -167,7 +177,7 @@ void bind_unknown(lua_State* L)
         { nullptr, nullptr }
     };
     luaL_newmetatable(L, "skr_opaque_t");
-    luaL_setfuncs(L, metamethods, 0);
+    luaL_register(L, nullptr, metamethods);
     lua_pop(L, 1);
     luaL_Reg uniquemetamethods[] = {
         { "_gc", [](lua_State* L) -> int {
@@ -180,7 +190,7 @@ void bind_unknown(lua_State* L)
         { nullptr, nullptr }
     };
     luaL_newmetatable(L, "[unique]skr_opaque_t");
-    luaL_setfuncs(L, uniquemetamethods, 0);
+    luaL_register(L, nullptr, uniquemetamethods);
     lua_pop(L, 1);
     luaL_Reg sharedmetamethods[] = {
         { "_gc", [](lua_State* L) -> int {
@@ -193,7 +203,7 @@ void bind_unknown(lua_State* L)
         { nullptr, nullptr }
     };
     luaL_newmetatable(L, "[shared]skr_opaque_t");
-    luaL_setfuncs(L, sharedmetamethods, 0);
+    luaL_register(L, nullptr, sharedmetamethods);
     lua_pop(L, 1);
     luaL_Reg objectmetamethods[] = {
         { "_gc", [](lua_State* L) -> int {
@@ -206,7 +216,7 @@ void bind_unknown(lua_State* L)
         { nullptr, nullptr }
     };
     luaL_newmetatable(L, "[object]skr_opaque_t");
-    luaL_setfuncs(L, objectmetamethods, 0);
+    luaL_register(L, nullptr, objectmetamethods);
     lua_pop(L, 1);
 }
 
@@ -235,8 +245,30 @@ void bind_skr_guid(lua_State* L)
         { nullptr, nullptr }
     };
     luaL_newmetatable(L, "skr_guid_t");
-    luaL_setfuncs(L, metamethods, 0);
+    luaL_register(L, nullptr, metamethods);
     lua_pop(L, 1);
+}
+
+void *luaL_testudata (lua_State *L, int i, const char *tname) {
+  void *p = lua_touserdata(L, i);
+  luaL_checkstack(L, 2, "not enough stack slots");
+  if (p == NULL || !lua_getmetatable(L, i))
+    return NULL;
+  else {
+    int res = 0;
+    luaL_getmetatable(L, tname);
+    res = lua_rawequal(L, -1, -2);
+    lua_pop(L, 2);
+    if (!res)
+      p = NULL;
+  }
+  return p;
+}
+
+void luaL_setmetatable (lua_State *L, const char *tname) {
+  luaL_checkstack(L, 1, "not enough stack slots");
+  luaL_getmetatable(L, tname);
+  lua_setmetatable(L, -2);
 }
 
 void bind_skr_resource_handle(lua_State* L)
@@ -263,21 +295,16 @@ void bind_skr_resource_handle(lua_State* L)
         }
         else
         {
-            return luaL_error(L, "invalid arguments for skr_resource_handle_t constructor");
+            luaL_error(L, "invalid arguments for skr_resource_handle_t constructor");
+            return 0;
         }
-    });
+    }, "resource_handle");
     lua_setfield(L, -2, "resource_handle");
     lua_pop(L, 1);
 
     luaL_newmetatable(L, "skr_resource_handle_t");
 
     luaL_Reg metamethods[] = {
-        { "__gc", +[](lua_State* L) -> int {
-            auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
-            if (resource->is_resolved())
-                resource->unload();
-            return 0;
-        } },
         { "__tostring", +[](lua_State* L) -> int {
             auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
             lua_pushstring(L, skr::format(u8"resource {}", resource->get_serialized()).c_str());
@@ -304,7 +331,7 @@ void bind_skr_resource_handle(lua_State* L)
                         if (!resource->is_resolved())
                             resource->resolve(requireInstall, (uint64_t)L, SKR_REQUESTER_SCRIPT);
                         return 0;
-                    });
+                    }, "resolve");
                     return 1;
                 }
                 casestr("is_resolved")
@@ -314,7 +341,7 @@ void bind_skr_resource_handle(lua_State* L)
                         auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
                         lua_pushboolean(L, resource->is_resolved());
                         return 1;
-                    });
+                    }, "is_resolved");
                     return 1;
                 }
                 casestr("get_resolved")
@@ -337,7 +364,7 @@ void bind_skr_resource_handle(lua_State* L)
                         luaL_getmetatable(L, (const char*)type->Name());
                         lua_setmetatable(L, -2);
                         return 1;
-                    });
+                    }, "get_resolved");
                     return 1;
                 }
                 casestr("unload")
@@ -350,11 +377,12 @@ void bind_skr_resource_handle(lua_State* L)
                         else
                             SKR_LOG_DEBUG("skr_resource_handle_t::unload called on unresolved resource.");
                         return 0;
-                    });
+                    }, "unload");
                     return 1;
                 }
                 default: {
-                    return luaL_error(L, "skr_resource_handle_t does not have a member named '%s'", key);
+                    luaL_error(L, "skr_resource_handle_t does not have a member named '%s'", key);
+                    return 0;
                 }
             }
             SKR_UNREACHABLE_CODE()
@@ -362,7 +390,7 @@ void bind_skr_resource_handle(lua_State* L)
         } },
         { nullptr, nullptr }
     };
-    luaL_setfuncs(L, metamethods, 0);
+    luaL_register(L, nullptr, metamethods);
     lua_pop(L, 1);
 }
 
@@ -397,9 +425,8 @@ template<int level>
 int skr_lua_log(lua_State* L)
 {
     lua_Debug ar;
-    lua_getstack(L, 1, &ar);
-    lua_getinfo(L, "nSl", &ar);
-    auto str = skr::format(u8"[{} : {}]:\t", (const char8_t*)ar.namewhat, (const char8_t*)ar.name);
+    lua_getinfo(L, 1, "nSl", &ar);
+    auto str = skr::format(u8"[{} : {}]:\t", (const char8_t*)ar.what, (const char8_t*)ar.name);
     int top = lua_gettop(L);
     for(int n=1;n<=top;n++) {
         size_t len;
@@ -432,22 +459,22 @@ int skr_lua_log(lua_State* L)
 
 void bind_skr_log(lua_State* L)
 {
-    lua_atpanic(L, +[](lua_State* L) -> int {
-        SKR_LOG_FATAL("Lua panic: %s", lua_tostring(L, -1));
-        return 0;
-    });
+    //lua_atpanic(L, +[](lua_State* L) -> int {
+    //    SKR_LOG_FATAL("Lua panic: %s", lua_tostring(L, -1));
+    //    return 0;
+    //});
     lua_getglobal(L, "skr");
-    lua_pushcfunction(L, &skr_lua_log<SKR_LOG_LEVEL_INFO>);
+    lua_pushcfunction(L, &skr_lua_log<SKR_LOG_LEVEL_INFO>, "print");
     lua_setfield(L, -2, "print");
-    lua_pushcfunction(L, &skr_lua_log<SKR_LOG_LEVEL_DEBUG>);
+    lua_pushcfunction(L, &skr_lua_log<SKR_LOG_LEVEL_DEBUG>, "log_debug");
     lua_setfield(L, -2, "log_debug");
-    lua_pushcfunction(L, &skr_lua_log<SKR_LOG_LEVEL_INFO>);
+    lua_pushcfunction(L, &skr_lua_log<SKR_LOG_LEVEL_INFO>, "log_info");
     lua_setfield(L, -2, "log_info");
-    lua_pushcfunction(L, &skr_lua_log<SKR_LOG_LEVEL_WARN>);
+    lua_pushcfunction(L, &skr_lua_log<SKR_LOG_LEVEL_WARN>, "log_warn");
     lua_setfield(L, -2, "log_warn");
-    lua_pushcfunction(L, &skr_lua_log<SKR_LOG_LEVEL_ERROR>);
+    lua_pushcfunction(L, &skr_lua_log<SKR_LOG_LEVEL_ERROR>, "log_error");
     lua_setfield(L, -2, "log_error");
-    lua_pushcfunction(L, &skr_lua_log<SKR_LOG_LEVEL_FATAL>);
+    lua_pushcfunction(L, &skr_lua_log<SKR_LOG_LEVEL_FATAL>, "log_fatal");
     lua_setfield(L, -2, "log_fatal");
     lua_pop(L, 1);
 }
@@ -666,60 +693,3 @@ skr::SObjectPtr<SInterface> check_sobjectptr(lua_State *L, int index, std::strin
 }
 
 }// namespace skr::lua
-
-// from https://github.com/cloudwu/luareload/blob/proto/clonefunc.c
-extern "C"
-{
-#include <lua/lstate.h>
-#include <lua/lobject.h>
-#include <lua/lfunc.h>
-#include <lua/lgc.h>
-}
-
-static int
-lclone(lua_State *L) {
-	if (!lua_isfunction(L, 1) || lua_iscfunction(L,1))
-		return luaL_error(L, "Need lua function");
-	const LClosure *c = (const LClosure *)lua_topointer(L,1);
-	int n = (int)luaL_optinteger(L, 2, 0);
-	if (n < 0 || n > c->p->sizep)
-		return 0;
-	luaL_checkstack(L, 1, NULL);
-	Proto *p;
-	if (n==0) {
-		p = c->p;
-	} else {
-		p = c->p->p[n-1];
-	}
-
-	lua_lock(L);
-	LClosure *cl = luaF_newLclosure(L, p->sizeupvalues);
-	luaF_initupvals(L, cl);
-	cl->p = p;
-	setclLvalue2s(L, L->top++, cl);
-	lua_unlock(L);
-
-	return 1;
-}
-
-static int
-lproto(lua_State *L) {
-	if (!lua_isfunction(L, 1) || lua_iscfunction(L,1))
-		return 0;
-	const LClosure *c = (const LClosure *)lua_topointer(L,1);
-	lua_pushlightuserdata(L, c->p);
-	lua_pushinteger(L, c->p->sizep);
-	return 2;
-}
-
-int
-luaopen_clonefunc(lua_State *L) {
-	luaL_checkversion(L);
-	luaL_Reg l[] = {
-		{ "clone", lclone },
-		{ "proto", lproto },
-		{ NULL, NULL },
-	};
-	luaL_newlib(L, l);
-	return 1;
-}
