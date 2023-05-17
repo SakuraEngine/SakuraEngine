@@ -1,4 +1,7 @@
-#include "lua/lua.hpp"
+extern "C" {
+#include "lua.h"
+#include "lualib.h"
+}
 #include "stack.hpp"
 #include "query.hpp"
 #include "chunk.hpp"
@@ -159,7 +162,7 @@ namespace skr::lua
                 lua_pushinteger(L, type);
                 return 1;
             };
-            lua_pushcfunction(L, trampoline);
+            lua_pushcfunction(L, trampoline, "component");
             lua_setfield(L, -2, "component");
         }
 
@@ -175,7 +178,7 @@ namespace skr::lua
                 auto size = luaL_checkinteger(L, 3);
                 luaL_argexpected(L, lua_isfunction(L, 4), 4, "function");
                 //iterate array
-                auto count = lua_rawlen(L, 2);
+                auto count = lua_objlen(L, 2);
                 dual::type_builder_t builder;
                 builder.reserve((uint32_t)count);
                 for(auto i = 1; i <= count; ++i)
@@ -206,7 +209,7 @@ namespace skr::lua
                 dualS_allocate_type(storage, &type, (EIndex)size, DUAL_LAMBDA(callback));
                 return 0;
             };
-            lua_pushcfunction(L, trampoline);
+            lua_pushcfunction(L, trampoline, "allocate_entities");
             lua_setfield(L, -2, "allocate_entities");
         }
 
@@ -216,7 +219,7 @@ namespace skr::lua
                 dual_storage_t* storage = (dual_storage_t*)lua_touserdata(L, 1);
                 luaL_argexpected(L, lua_istable(L, 2), 2, "table");
                 //iterate array
-                auto count = lua_rawlen(L, 2);
+                auto count = lua_objlen(L, 2);
                 eastl::vector<dual_entity_t> entities;
                 entities.reserve(count);
                 for(auto i = 1; i <= count; ++i)
@@ -232,7 +235,7 @@ namespace skr::lua
                 dualS_batch(storage, entities.data(), (uint32_t)entities.size(), callback, storage);
                 return 0;
             };
-            lua_pushcfunction(L, trampoline);
+            lua_pushcfunction(L, trampoline, "destroy_entities");
             lua_setfield(L, -2, "destroy_entities");
         }
 
@@ -245,7 +248,7 @@ namespace skr::lua
                 bool withRemove = lua_toboolean(L, 4);
                 luaL_argexpected(L, lua_isfunction(L, 4 + withRemove), 4 + withRemove, "table");
                 //iterate array
-                auto count = lua_rawlen(L, 2);
+                auto count = lua_objlen(L, 2);
                 eastl::vector<dual_entity_t> entities;
                 dual::type_builder_t addBuilder;
                 dual::type_builder_t removeBuilder;
@@ -257,7 +260,7 @@ namespace skr::lua
                     entities.push_back(dual_entity_t(ent));
                     lua_pop(L, 1);
                 }
-                    auto addCount = lua_rawlen(L, 3);
+                    auto addCount = lua_objlen(L, 3);
                     addBuilder.reserve((uint32_t)addCount);
                     for(auto i = 1; i <= addCount; ++i)
                     {
@@ -269,7 +272,7 @@ namespace skr::lua
                 uint32_t param = 4;
                 if(lua_istable(L, 4))
                 {
-                    auto removeCount = lua_rawlen(L, 4);
+                    auto removeCount = lua_objlen(L, 4);
                     removeBuilder.reserve((uint32_t)removeCount);
                     for(auto i = 1; i <= removeCount; ++i)
                     {
@@ -306,7 +309,7 @@ namespace skr::lua
                 dualS_batch(storage, entities.data(), (uint32_t)entities.size(), DUAL_LAMBDA(callback));
                 return 0;
             };
-            lua_pushcfunction(L, trampoline);
+            lua_pushcfunction(L, trampoline, "cast_entities");
             lua_setfield(L, -2, "cast_entities");
         }
 
@@ -322,7 +325,7 @@ namespace skr::lua
                 {NULL, NULL}
             };
             luaL_newmetatable(L, "dual_query_t");
-            luaL_setfuncs(L, metamethods, 0);
+            luaL_register(L, nullptr, metamethods);
             lua_pop(L, 1);
         }
 
@@ -337,7 +340,7 @@ namespace skr::lua
                 lua_setmetatable(L, -2);
                 return 1;
             };
-            lua_pushcfunction(L, trampoline);
+            lua_pushcfunction(L, trampoline, "create_query");
             lua_setfield(L, -2, "create_query");
         }
         
@@ -372,7 +375,7 @@ namespace skr::lua
                 dualQ_get_views(query, callback, u);
                 return 0;
             };
-            lua_pushcfunction(L, trampoline);
+            lua_pushcfunction(L, trampoline, "iterate_query");
             lua_setfield(L, -2, "iterate_query");
         }
         lua_pop(L, 1);
@@ -383,7 +386,10 @@ namespace skr::lua
                 { "__index", +[](lua_State* L) -> int {
                     lua_chunk_view_t* view = *(lua_chunk_view_t**)luaL_checkudata(L, 1, "lua_chunk_view_t");
                     if(!view) 
-                        return luaL_error(L, "chunk view cannot be accessed after query iteration");
+                    {
+                        luaL_error(L, "chunk view cannot be accessed after query iteration");
+                        return 0;
+                    }
                     auto field = luaL_checkstring(L, 2);
                     
                     if(strcmp(field, "length") == 0)
@@ -398,14 +404,14 @@ namespace skr::lua
                             lua_chunk_view_t* view = (lua_chunk_view_t*)luaL_checkudata(L, 1, "lua_chunk_view_t");
                             int index = (int)luaL_checkinteger(L, 2);
                             int compId = 0;
-                            luaL_argexpected(L, lua_isstring(L, 3) || lua_isinteger(L, 3), 3, "expected name or localindex");
+                            luaL_argexpected(L, lua_isstring(L, 3) || lua_isnumber(L, 3), 3, "expected name or localindex");
                             if(lua_isstring(L, 3))
                             {
                                 auto str = (const char8_t*)lua_tostring(L, 3);
                                 auto id = dualT_get_type_by_name(str);
                                 compId = view->view.chunk->type->index(id);
                             }
-                            else if(lua_isinteger(L, 3))
+                            else if(lua_isnumber(L, 3))
                             {
                                 compId = (int)luaL_checkinteger(L, 3);
                             }
@@ -413,18 +419,20 @@ namespace skr::lua
                             luaL_argexpected(L, index < (int)view->count, 3, "index out of bounds");
                             if(view->elementSizes[compId] != 0)
                             {
-                                return (int)luaL_error(L, "array component is not direct writable %s", view->guidStrs[compId]);
+                                luaL_error(L, "array component is not direct writable %s", view->guidStrs[compId]);
+                                return 0;
                             }
                             auto check = view->lua_checks[compId];
                             if(!check)
                             {
-                                return (int)luaL_error(L, "component is not direct writable %s", view->guidStrs[compId]);
+                                luaL_error(L, "component is not direct writable %s", view->guidStrs[compId]);
+                                return 0;
                             }
                             auto data = view->datas[compId];
                             data = (uint8_t*)data + index * view->strides[compId];
                             check(view->view.chunk, view->view.start + index, (char*)data, L, 4);
                             return 1;
-                        });
+                        }, "set");
                         return 1;
                     }
                     else if(strcmp(field, "entity") == 0)
@@ -438,7 +446,7 @@ namespace skr::lua
                             auto entity = view->entities[index];
                             lua_pushinteger(L, entity);
                             return 1;
-                        });
+                        }, "entity");
                         return 1;
                     }
                     else if(strcmp(field, "get") == 0)
@@ -448,19 +456,19 @@ namespace skr::lua
                             lua_chunk_view_t* view = (lua_chunk_view_t*)luaL_checkudata(L, 1, "lua_chunk_view_t");
                             int index = (int)luaL_checkinteger(L, 2);
                             int compId = 0;
-                            luaL_argexpected(L, lua_isstring(L, 3) || lua_isinteger(L, 3), 3, "expected name or localindex");
+                            luaL_argexpected(L, lua_isstring(L, 3) || lua_isnumber(L, 3), 3, "expected name or localindex");
                             if(lua_isstring(L, 3))
                             {
                                 auto str = (const char8_t*)lua_tostring(L, 3);
                                 auto id = dualT_get_type_by_name(str);
                                 compId = view->view.chunk->type->index(id);
                             }
-                            else if(lua_isinteger(L, 3))
+                            else if(lua_isnumber(L, 3))
                             {
                                 compId = (int)luaL_checkinteger(L, 3);
                             }
                             return view->pushComponent(L, compId, index);
-                        });
+                        }, "get");
                         return 1;
                     }
                     else if(strcmp(field, "with") == 0)
@@ -470,7 +478,7 @@ namespace skr::lua
                             luaL_argexpected(L, lua_istable(L, 2), 2, "table");
                             luaL_argexpected(L, lua_isfunction(L, 3), 3, "function");
                             //iterate array
-                            auto count = lua_rawlen(L, 2);
+                            auto count = lua_objlen(L, 2);
                             eastl::vector<dual_entity_t> entities;
                             entities.reserve(count);
                             for(auto i = 1; i <= count; ++i)
@@ -501,19 +509,23 @@ namespace skr::lua
                             dualS_batch(parent->storage, entities.data(), (uint32_t)entities.size(), DUAL_LAMBDA(callback));
                             return 0;
                         };
-                        lua_pushcfunction(L, trampoline);
+                        lua_pushcfunction(L, trampoline, "with");
                         return 1;
                     }
                     else 
                     {
-                        return luaL_error(L, "invalid chunk view field '%s'", field);
+                        luaL_error(L, "invalid chunk view field '%s'", field);
+                        return 0;
                     }
                     return 0;
                 } },
                 {"__call", +[](lua_State* L) -> int {
                     lua_chunk_view_t* view = *(lua_chunk_view_t**)luaL_checkudata(L, 1, "lua_chunk_view_t");
                     if(!view) 
-                        return luaL_error(L, "chunk view cannot be accessed after query iteration");
+                    {
+                        luaL_error(L, "chunk view cannot be accessed after query iteration");
+                        return 0;
+                    }
                     uint32_t index = (uint32_t)luaL_checkinteger(L, 2);
                     luaL_argexpected(L, index < view->view.count, 2, "index out of bounds");
                     lua_pushinteger(L, view->entities[index]);
@@ -525,7 +537,7 @@ namespace skr::lua
                 { NULL, NULL }
             };
             luaL_newmetatable(L, "lua_chunk_view_t");
-            luaL_setfuncs(L, metamethods, 0);
+            luaL_register(L, nullptr, metamethods);
             lua_pop(L, 1);
         }
 
@@ -544,7 +556,8 @@ namespace skr::lua
                     }
                     else 
                     {
-                        return luaL_error(L, "invalid array view field '%s'", field);
+                        luaL_error(L, "invalid array view field '%s'", field);
+                        return 0;
                     }
                     return 0;
                 }},
@@ -571,7 +584,7 @@ namespace skr::lua
                 { NULL, NULL }
             };
             luaL_newmetatable(L, "lua_array_view_t");
-            luaL_setfuncs(L, metamethods, 0);
+            luaL_register(L, nullptr, metamethods);
             lua_pop(L, 1);
         }
     }

@@ -1,6 +1,9 @@
 #pragma once
 #include "platform/configure.h"
-#include "lua/lua.hpp"
+extern "C" {
+#include "lua.h"
+#include "lualib.h"
+}
 #include "misc/types.h"
 
 RUNTIME_EXTERN_C RUNTIME_API lua_State *skr_lua_newstate(struct skr_vfs_t* vfs);
