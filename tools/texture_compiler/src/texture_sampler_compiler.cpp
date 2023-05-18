@@ -1,7 +1,7 @@
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "utils/io.h"
 #include "SkrToolCore/project/project.hpp"
-#include "json/reader.h"
+#include "serde/json/reader.h"
 #include "SkrRenderer/resources/texture_resource.h"
 #include "SkrTextureCompiler/texture_sampler_asset.hpp"
 

@@ -1,9 +1,9 @@
 #include "resource/resource_handle.h"
-#include "binary/writer.h"
-#include "binary/blob.h"
+#include "serde/binary/writer.h"
+#include "serde/binary/blob.h"
 #include "utils/bits.hpp"
-#include "rtm/scalarf.h"
-#include "rtm/scalard.h"
+#include "math/rtm/scalarf.h"
+#include "math/rtm/scalard.h"
 #include "utils/log.h"
 
 

@@ -7,8 +7,8 @@
 #include "platform/atomic.h"
 #include "utils/make_zeroed.hpp"
 
-#include "rtm/quatf.h"
-#include "rtm/rtmx.h"
+#include "math/rtm/quatf.h"
+#include "math/rtm/rtmx.h"
 #include "utils/log.h"
 #include "platform/guid.hpp"
 

@@ -84,7 +84,7 @@ struct type_of<skr::vector<T, Allocator>> : type_of_vector<skr::vector<T, Alloca
 
 // binary reader
 #include "utils/traits.hpp"
-#include "binary/reader_fwd.h"
+#include "serde/binary/reader_fwd.h"
 
 namespace skr
 {
@@ -118,7 +118,7 @@ struct SerdeCompleteChecker<binary::ReadTrait<skr::vector<V, Allocator>>>
 }
 
 // binary writer
-#include "binary/reader_fwd.h"
+#include "serde/binary/reader_fwd.h"
 
 namespace skr
 {

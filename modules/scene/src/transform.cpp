@@ -7,7 +7,7 @@
 #include "math/matrix4x4f.h"
 #include "math/vector.h"
 #include "math/quat.h"
-#include "rtm/qvvf.h"
+#include "math/rtm/qvvf.h"
 
 rtm::qvvf make_qvv(skr_rotator_t* r, skr_float3_t* t, skr_float3_t* s)
 {

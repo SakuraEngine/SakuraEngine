@@ -9,8 +9,8 @@ typedef struct skr_anim_resource_t skr_anim_resource_t;
 
 #ifdef __cplusplus
     #include "SkrAnim/ozz/animation.h"
-    #include "binary/reader_fwd.h"
-    #include "binary/writer_fwd.h"
+    #include "serde/binary/reader_fwd.h"
+    #include "serde/binary/writer_fwd.h"
     #include "platform/debug.h"
 
 sreflect_struct("guid": "5D6DC46B-8696-4DD8-ADE4-C27D07CEDCCD")

@@ -745,7 +745,7 @@ RUNTIME_API void dual_set_bit(uint32_t* mask, int32_t bit);
 #endif
 
 #if defined(__cplusplus)
-#include "task/task.hpp"
+#include "async/fib_task.hpp"
 /**
  * @brief register a resource to scheduler
  *

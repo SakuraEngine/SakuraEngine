@@ -4,7 +4,7 @@
 #include "platform/shared_library.hpp"
 #include "utils/log.h"
 #include "containers/hashmap.hpp"
-#include "json/reader.h"
+#include "serde/json/reader.h"
 #include "platform/filesystem.hpp"
 
 namespace skr

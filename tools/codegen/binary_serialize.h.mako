@@ -1,7 +1,7 @@
 //BEGIN BINARY GENERATED
-#include "binary/reader_fwd.h"
-#include "binary/writer_fwd.h"
-#include "binary/blob_fwd.h"
+#include "serde/binary/reader_fwd.h"
+#include "serde/binary/writer_fwd.h"
+#include "serde/binary/blob_fwd.h"
 #if defined(__cplusplus)
 namespace skr::binary
 {

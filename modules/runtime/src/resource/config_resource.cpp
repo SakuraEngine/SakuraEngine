@@ -10,8 +10,8 @@
 #include "type/type.hpp"
 #include "utils/defer.hpp"
 #include "resource/resource_system.h"
-#include "binary/reader.h"
-#include "binary/writer.h"
+#include "serde/binary/reader.h"
+#include "serde/binary/writer.h"
 
 skr_config_resource_t::~skr_config_resource_t()
 {

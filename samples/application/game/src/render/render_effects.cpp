@@ -36,10 +36,10 @@
 
 #include "tracy/Tracy.hpp"
 
-#include "rtm/quatf.h"
-#include "rtm/scalarf.h"
-#include "rtm/qvvf.h"
-#include "rtm/rtmx.h"
+#include "math/rtm/quatf.h"
+#include "math/rtm/scalarf.h"
+#include "math/rtm/qvvf.h"
+#include "math/rtm/rtmx.h"
 #include "math/transform.h"
 
 void RenderEffectForward::on_register(SRendererId renderer, dual_storage_t* storage)

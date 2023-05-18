@@ -11,7 +11,7 @@
 #include "platform/window.h"
 
 #include "ecs/type_builder.hpp"
-#include "json/writer.h"
+#include "serde/json/writer.h"
 
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/resource_node.hpp"
@@ -28,7 +28,7 @@
 #include "SkrRenderer/render_effect.h"
 
 #include <containers/string.hpp>
-#include "task/task.hpp"
+#include "async/fib_task.hpp"
 
 #include "resource/local_resource_registry.hpp"
 #include "SkrRenderer/shader_map.h"

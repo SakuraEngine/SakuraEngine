@@ -1,8 +1,6 @@
 #pragma once
-#include "rtm/vector4f.h"
-
-#include "type/type.h"
-
+#include "math/rtm/vector4f.h"
+#include "utils/types.h"
 
 namespace skr
 {

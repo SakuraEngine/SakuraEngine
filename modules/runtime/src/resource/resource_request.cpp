@@ -5,7 +5,7 @@
 #include "utils/log.hpp"
 #include "platform/vfs.h"
 #include "resource/resource_factory.h"
-#include "binary/reader.h"
+#include "serde/binary/reader.h"
 
 namespace skr
 {

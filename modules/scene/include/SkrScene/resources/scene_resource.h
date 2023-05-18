@@ -2,8 +2,8 @@
 #include "SkrScene/module.configure.h"
 #include "ecs/dual.h"
 #include "resource/resource_factory.h"
-#include "binary/reader_fwd.h"
-#include "binary/writer_fwd.h"
+#include "serde/binary/reader_fwd.h"
+#include "serde/binary/writer_fwd.h"
 #include "platform/configure.h"
 #ifndef __meta__
     #include "SkrScene/resources/scene_resource.generated.h"

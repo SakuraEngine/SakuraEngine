@@ -27,7 +27,7 @@
 
 #include <EASTL/fixed_vector.h>
 
-#include "rtm/matrix4x4f.h"
+#include "math/rtm/matrix4x4f.h"
 
 #include "tracy/Tracy.hpp"
 
