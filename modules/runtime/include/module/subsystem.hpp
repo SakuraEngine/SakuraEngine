@@ -25,4 +25,4 @@ struct RUNTIME_API ModuleSubsystem : public ModuleSubsystemBase
 };
 }
 
-#define SKR_MODULE_SUBSYSTEM(Subsystem, ModuleName) static skr::ModuleSubsystem::Registerer<Subsystem> subMod##__FILE__##__LINE__((const char8_t*)STRINGIFY(__FILE__)STRINGIFY(__LINE__), (const char8_t*)#ModuleName);
+#define SKR_MODULE_SUBSYSTEM(Subsystem, ModuleName) static skr::ModuleSubsystem::Registerer<Subsystem> subMod##__FILE__##__LINE__((const char8_t*)SKR_MAKE_STRING(__FILE__)SKR_MAKE_STRING(__LINE__), (const char8_t*)#ModuleName);
