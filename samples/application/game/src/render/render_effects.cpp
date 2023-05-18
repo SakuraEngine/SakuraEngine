@@ -82,7 +82,7 @@ void RenderEffectForward::on_unregister(SRendererId renderer, dual_storage_t* st
 {
     auto sweepFunction = [&](dual_chunk_view_t* r_cv) {
         auto resource_system = skr::resource::GetResourceSystem();
-        auto meshes = dual::get_owned_rw<skr_render_mesh_comp_t>(r_cv);
+        const auto meshes = dual::get_owned_ro<skr_render_mesh_comp_t>(r_cv);
         for (uint32_t i = 0; i < r_cv->count; i++)
         {
             auto status = meshes[i].mesh_resource.get_status();

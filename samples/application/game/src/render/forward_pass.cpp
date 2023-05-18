@@ -77,12 +77,12 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
             ZoneScopedN("CopySkinMesh");
 
             auto uploadVertices = [&](dual_chunk_view_t* r_cv) {
-                skr_render_anim_comp_t* anims = nullptr;
+                const skr_render_anim_comp_t* anims = nullptr;
                 {
                     ZoneScopedN("FetchAnims");
 
                     // duel to dependency, anims fetch here may block a bit, waiting CPU skinning job done
-                    anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
+                    anims = dual::get_owned_ro<skr_render_anim_comp_t>(r_cv);
                 }
 
                 auto upload_buffer = context.resolve(upload_buffer_handle);
