@@ -160,4 +160,7 @@ function executable_module(name, api, version, opt)
     else
         set_exceptions("no-cxx")
     end
+    if (is_os("windows")) then 
+        add_files(path.join(os.projectdir(), "resources/windows", "sakura.rc"))
+    end
 end

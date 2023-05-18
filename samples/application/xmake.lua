@@ -36,9 +36,6 @@ executable_module("VMemController", "VMEM_CONTROLLER", engine_version)
     set_exceptions("no-cxx")
     add_includedirs("./../common", {public = false})
     add_files("vmem_controller/**.cpp")
-    if (is_os("windows")) then 
-        add_files("/../../resources/windows/sakura.rc")
-    end
 
 if (os.host() == "windows" and has_config("build_chat")) then
     includes("chat/xmake.lua")
@@ -62,9 +59,6 @@ executable_module("Live2DViewer", "LIVE2D_VIEWER", engine_version)
     add_files("live2d-viewer/src/main.cpp", "live2d-viewer/src/viewer_module.cpp", "live2d-viewer/src/imgui.cpp")
     -- add_files("live2d-viewer/shaders/**.hlsl")
     add_files("live2d-viewer/**.json", "live2d-viewer/**.moc3", "live2d-viewer/**.png")
-    if (is_os("windows")) then 
-        add_files("/../../resources/windows/sakura.rc")
-    end
 
 includes("ogui2/xmake.lua")
 includes("multiplayer/xmake.lua")
