@@ -776,7 +776,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                 case SKR_TYPE_CATEGORY_STR:
                 {
                     const auto& txt = *(skr::text::text*)src;
-                    dstV = { txt.u8_str(), txt.size() };
+                    dstV = skr::text::text_view(txt.u8_str(), txt.size());
                     break;
                 }
                 default:
@@ -875,7 +875,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             if (srcType->type == SKR_TYPE_CATEGORY_STR)
             {
                 const auto& txt = *(skr::text::text*)src;
-                enm.FromString(dst, { txt.u8_str(), txt.size() });
+                enm.FromString(dst, skr::text::text_view(txt.u8_str(), txt.size()));
             }
             else if (srcType->type == SKR_TYPE_CATEGORY_STRV)
                 enm.FromString(dst, *(skr::text::text_view*)src);
