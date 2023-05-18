@@ -86,9 +86,9 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
         const auto index_offset = prim.index_buffer.index_offset;
         const auto index_count = prim.index_buffer.index_count;
         const auto vertex_count = prim.vertex_count;
-        eastl::vector<unsigned int> optimized_indices;
+        eastl::vector<uint64_t> optimized_indices;
         optimized_indices.resize(index_count);
-        unsigned int* indices_ptr = optimized_indices.data();
+        uint64_t* indices_ptr = optimized_indices.data();
         for (size_t i = 0; i < index_count; i++)
         {
             if (index_stride == sizeof(uint8_t))

@@ -100,7 +100,7 @@ void skr_load_scene(dual_storage_t* world, skr_json_reader_t* reader)
             continue;
         skr_guid_t guid;
         auto keyStr = key.value_unsafe();
-        if(!skr::guid::make_guid(skr::string_view((const char8_t*)keyStr.data(), keyStr.length()), guid))
+        if(!skr::guid::make_guid(skr::string_view((const char8_t*)keyStr.data(), (int32_t)keyStr.length()), guid))
             continue;
         auto entity = field.value().get_object();
         if(entity.error() != simdjson::error_code::SUCCESS)
