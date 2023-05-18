@@ -3,7 +3,7 @@
 #include "platform/configure.h"
 #include <type_traits>
 #include <utility>
-#include "utils/types.h"
+#include "misc/types.h"
 
 #ifndef VECMATH_FINLINE
 #define VECMATH_FINLINE FORCEINLINE

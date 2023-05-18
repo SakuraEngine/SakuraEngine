@@ -1,8 +1,8 @@
 #include "containers/string.hpp"
-#include "utils/types.h"
-#include "utils/log.h"
+#include "misc/types.h"
+#include "misc/log.h"
 
-constexpr int parse_hex_digit(const char c)
+constexpr int parse_hex_digit(const char8_t c)
 {
     using namespace skr::string_literals;
     if ('0' <= c && c <= '9')
@@ -17,7 +17,7 @@ constexpr int parse_hex_digit(const char c)
 }
 
 template <class T>
-bool parse_hex(const char* ptr, T& value)
+bool parse_hex(const char8_t* ptr, T& value)
 {
     constexpr size_t digits = sizeof(T) * 2;
     value = 0;
@@ -38,11 +38,11 @@ bool make_md5(const skr::string_view& str, skr_md5_t& value)
 
     if (str.size() != md5_form_length)
     {
-        skr::string str2(str.data(), str.size());
+        skr::string str2(skr::string_view(str.u8_str(), (size_t)str.size()));
         SKR_LOG_ERROR("String MD5 of the form XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX is expected, got %s", str2.c_str());
         return false;
     }
-    const auto begin = str.data();
+    const auto begin = str.u8_str();
     if (!parse_hex(begin, value.digest[0])) return false;
     if (!parse_hex(begin + 2, value.digest[1])) return false;
     if (!parse_hex(begin + 4, value.digest[2])) return false;
@@ -65,14 +65,14 @@ bool make_md5(const skr::string_view& str, skr_md5_t& value)
 // exports
 #include "./../crypt/md5.h"
 
-bool skr_parse_md5(const char* str32, skr_md5_t* out_md5)
+bool skr_parse_md5(const char8_t* str32, skr_md5_t* out_md5)
 {
     skr::string_view sv(str32, 32);
     if (!out_md5) return false;
     return make_md5(sv, *out_md5);
 }
 
-void skr_make_md5(const char* str, uint32_t str_size, skr_md5_t* out_md5)
+void skr_make_md5(const char8_t* str, uint32_t str_size, skr_md5_t* out_md5)
 {
     return skr_crypt_make_md5(str, str_size, out_md5);
 }

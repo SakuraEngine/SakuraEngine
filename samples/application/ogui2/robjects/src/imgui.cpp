@@ -1,12 +1,12 @@
 #include "common/utils.h"
 #include "platform/memory.h"
 #include "platform/window.h"
-#include "utils/make_zeroed.hpp"
-#include "utils/log.h"
+#include "misc/make_zeroed.hpp"
+#include "misc/log.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "platform/vfs.h"
 
-#include "containers/text.hpp"
+#include "containers/string.hpp"
 
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
@@ -61,8 +61,8 @@ void create_imgui_resources(ECGPUFormat format, CGPUSamplerId sampler, skr::rend
         ImGui::GetIO().Fonts->Build();
         free(font_bytes);
     }
-    auto vsname = skr::text::text::from_utf8(SKR_UTF8("shaders/imgui_vertex"));
-    auto fsname = skr::text::text::from_utf8(SKR_UTF8("shaders/imgui_fragment"));
+    auto vsname = skr::string::from_utf8(SKR_UTF8("shaders/imgui_vertex"));
+    auto fsname = skr::string::from_utf8(SKR_UTF8("shaders/imgui_fragment"));
     vsname.append(backend == ::CGPU_BACKEND_D3D12 ? SKR_UTF8(".dxil") : SKR_UTF8(".spv"));
     fsname.append(backend == ::CGPU_BACKEND_D3D12 ? SKR_UTF8(".dxil") : SKR_UTF8(".spv"));
     auto vsfile = skr_vfs_fopen(vfs, vsname.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);

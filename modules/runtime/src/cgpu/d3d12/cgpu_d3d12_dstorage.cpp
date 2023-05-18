@@ -46,7 +46,7 @@ struct CGPUDStorageQueueD3D12 : public CGPUDStorageQueue {
     }
 };
 
-#define CGPU_DSTORAGE_SINGLETON_NAME "CGPUDStorageSingleton"
+#define CGPU_DSTORAGE_SINGLETON_NAME u8"CGPUDStorageSingleton"
 
 struct CGPUDStorageSingleton
 {
@@ -57,8 +57,8 @@ struct CGPUDStorageSingleton
         {
             _this = SkrNew<CGPUDStorageSingleton>();
             {
-                _this->dstorage_core.load("dstoragecore.dll");
-                _this->dstorage_library.load("dstorage.dll");
+                _this->dstorage_core.load(u8"dstoragecore.dll");
+                _this->dstorage_library.load(u8"dstorage.dll");
                 if (!_this->dstorage_core.isLoaded() || !_this->dstorage_library.isLoaded())
                 {
                     if (!_this->dstorage_core.isLoaded()) SKR_LOG_TRACE("dstoragecore.dll not found, direct storage is disabled");
@@ -318,8 +318,7 @@ void cgpu_dstorage_queue_submit_d3d12(CGPUDStorageQueueId queue, CGPUFenceId fen
             auto tracer = (CGPUDStorageQueueD3D12::ProfileTracer*)arg;
             auto Q = tracer->Q;
             const auto event_handle = tracer->fence_event;
-            skr::string name = "DirectStorageQueueSubmit-";
-            name += skr::to_string(tracer->submit_index);
+            const auto name = skr::format(u8"DirectStorageQueueSubmit-{}", tracer->submit_index);
             TracyFiberEnter(name.c_str());
             if (Q->source_type == DSTORAGE_REQUEST_SOURCE_FILE)
             {
@@ -376,8 +375,8 @@ void cgpu_free_dstorage_queue_d3d12(CGPUDStorageQueueId queue)
 
 #include <EASTL/string.h>
 #include <EASTL/vector_map.h>
-#include "utils/log.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/log.h"
+#include "misc/make_zeroed.hpp"
 #include "platform/memory.h"
 #include "platform/thread.h"
 #include "cgpu/extensions/dstorage_windows.h"
@@ -500,8 +499,7 @@ static void CALLBACK __decompressThreadPoolTask_DirectStorage(
 {
 #ifdef TRACY_ENABLE
     auto thread_id = skr_current_thread_id();
-    const skr::string name = "DirectStorageDecompressThread(Pooled)-";
-    auto indexed_name = name + skr::to_string(thread_id);
+    const auto indexed_name = skr::format(u8"DirectStorageDecompressThread(Pooled)-{}", thread_id);
     tracy::SetThreadName(indexed_name.c_str());
 #endif
 

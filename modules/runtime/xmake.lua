@@ -1,12 +1,11 @@
 if(has_config("shipping_one_archive")) then
-    add_requires("eastl >=3.20.2-skr", { configs = { runtime_shared = false } })
+    add_requires("eastl >=2023.5.18-skr", { configs = { runtime_shared = false } })
 else
-    add_requires("eastl >=3.20.2-skr", { configs = { runtime_shared = true } })
+    add_requires("eastl >=2023.5.18-skr", { configs = { runtime_shared = true } })
 end
 
 add_requires("parallel-hashmap >=1.3.4-skr")
 add_requires("boost-context >=0.1.0-skr")
-add_requires("fmt >=9.1.0-skr")
 add_requires("lua >=5.4.4-skr")
 add_requires("simdjson >=3.0.0-skr")
 
@@ -25,12 +24,12 @@ target("SkrDependencyGraph")
 
 target("SkrRTStatic")
     set_group("01.modules")
-    set_optimize("fastest")
+    -- set_optimize("fastest")
     set_exceptions("no-cxx")
     add_deps("SkrRoot", {public = true})
     add_defines("RUNTIME_API=RUNTIME_IMPORT", "RUNTIME_LOCAL=error")
     add_packages("eastl", {public = true, inherit = true})
-    add_packages("parallel-hashmap", "fmt", "simdjson", {public = true, inherit = true})
+    add_packages("parallel-hashmap", "simdjson", {public = true, inherit = true})
     add_rules("skr.static_module", {api = "SKR_RUNTIME_STATIC"})
     add_defines(defs_list, {public = true})
     add_includedirs(include_dir_list, {public = true})

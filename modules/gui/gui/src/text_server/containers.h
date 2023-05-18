@@ -3,7 +3,7 @@
 #include "text_server/memory.h"
 #include "text_server/sort_array.h"
 
-#include "utils/hash.h"
+#include "misc/hash.h"
 
 #include <containers/vector.hpp>
 #include <EASTL/set.h>

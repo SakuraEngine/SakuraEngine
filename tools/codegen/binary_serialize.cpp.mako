@@ -1,10 +1,10 @@
 // BEGIN BINARY GENERATED
-#include "utils/hash.h"
+#include "misc/hash.h"
 #include "platform/debug.h"
-#include "utils/log.h"
-#include "binary/reader.h"
-#include "binary/writer.h"
-#include "binary/blob.h"
+#include "misc/log.h"
+#include "serde/binary/reader.h"
+#include "serde/binary/writer.h"
+#include "serde/binary/blob.h"
 
 <%def name="archive_field(name, field, array, cfg)">
 %if hasattr(field.attrs, "arena"):
@@ -31,12 +31,18 @@ int __Archive(S* archive, skr_blob_arena_t& arena, ${record.name}& record${confi
     {
         ret = ArchiveBlob(archive, arena, record.${name}[i]${fieldConfigArg});
         if(ret != 0)
+        {
+            SKR_LOG_ERROR("Archive ${record.name}.${name}[%d] with arena failed: %d", i, ret);
             return ret;
+        }
     }
     %else:
     ret = ArchiveBlob(archive, arena, record.${name}${fieldConfigArg});
     if(ret != 0)
+    {
+        SKR_LOG_ERROR("Archive ${record.name}.${name} with arena failed: %d", ret);
         return ret;
+    }
     %endif
     %endfor
     return ret;
@@ -52,18 +58,27 @@ int __Archive(S* archive, ${record.name}& record${configParam})
     auto& arena_${name} = record.${name};
     ret = Archive(archive, arena_${name});
     if(ret != 0)
+    {
+        SKR_LOG_ERROR("Archive ${record.name}.${name} failed: %d", ret);
         return ret;
+    }
     %elif field.arraySize > 0:
     for(int i = 0; i < ${field.arraySize}; ++i)
     {
         ${archive_field(name, field, "[i]", fieldConfigArg)}
         if(ret != 0)
+        {
+            SKR_LOG_ERROR("Archive ${record.name}.${name}[%d] failed: %d", i, ret);
             return ret;
+        }
     }
     %else:
     ${archive_field(name, field, "", fieldConfigArg)}
     if(ret != 0)
+    {
+        SKR_LOG_ERROR("Archive ${record.name}.${name} failed: %d", ret);
         return ret;
+    }
     %endif
     %endfor
     return ret;
@@ -108,7 +123,10 @@ int ReadTrait<${record.name}>::Read(skr_binary_reader_t* archive, skr_blob_arena
 %for base in record.bases:
     int ret = ReadTrait<const ${base}&>::Read(archive, arena, (${base}&)record);
     if(ret != 0)
+    {
+        SKR_LOG_ERROR("Read ${record.name} base ${base} failed: %d", ret);
         return ret;
+    }
 %endfor
     return __Archive(archive, arena, record${configArg});
 }
@@ -117,7 +135,10 @@ int WriteTrait<const ${record.name}&>::Write(skr_binary_writer_t* archive, skr_b
 %for base in record.bases:
     int ret = WriteTrait<const ${base}&>::Write(archive, arena, (${base}&)record);
     if(ret != 0)
+    {
+        SKR_LOG_ERROR("Write ${record.name} base ${base} with arena failed: %d", ret);
         return ret;
+    }
 %endfor
     return __Archive(archive, arena, (${record.name}&)record${configArg});
 } 
@@ -127,7 +148,10 @@ int ReadTrait<${record.name}>::Read(skr_binary_reader_t* archive, ${record.name}
 %for base in record.bases:
     int ret = skr::binary::Read(archive, (${base}&)record);
     if(ret != 0)
+    {
+        SKR_LOG_ERROR("Read ${record.name} base ${base} failed: %d", ret);
         return ret;
+    }
 %endfor
     return __Archive(archive, record${configArg});
 }
@@ -136,7 +160,10 @@ int WriteTrait<const ${record.name}&>::Write(skr_binary_writer_t* archive, const
 %for base in record.bases:
     int ret = skr::binary::Write<const ${base}&>(archive, record);
     if(ret != 0)
+    {
+        SKR_LOG_ERROR("Write ${record.name} base ${base} failed: %d", ret);
         return ret;
+    }
 %endfor
     return __Archive(archive, (${record.name}&)record${configArg});
 } 

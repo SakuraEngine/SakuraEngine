@@ -1,20 +1,19 @@
 #include <platform/filesystem.hpp>
 #include "SkrRenderer/resources/texture_resource.h"
+#include "platform/debug.h"
+#include "misc/io.h"
 #include "cgpu/api.h"
-#include "containers/text.hpp"
-#include "containers/sptr.hpp"
-#include "containers/hashmap.hpp"
-#include "platform/configure.h"
+#include "type/type_id.hpp"
 #include "resource/resource_factory.h"
 #include "resource/resource_system.h"
-#include "type/type_id.hpp"
-#include "utils/format.hpp"
 #include "SkrRenderer/render_device.h"
-#include "utils/io.h"
 #include "cgpu/io.h"
-#include "utils/log.h"
-#include "utils/make_zeroed.hpp"
-#include "platform/debug.h"
+#include "misc/log.h"
+#include "misc/make_zeroed.hpp"
+
+#include "containers/string.hpp"
+#include "containers/sptr.hpp"
+#include "containers/hashmap.hpp"
 
 #ifdef _WIN32
 //#include "cgpu/extensions/dstorage_windows.h"
@@ -37,7 +36,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
     STextureFactoryImpl(const STextureFactory::Root& root)
         : root(root)
     {
-        dstorage_root = skr::text::text::from_utf8(root.dstorage_root);
+        dstorage_root = skr::string::from_utf8(root.dstorage_root);
         this->root.dstorage_root = dstorage_root.u8_str();
     }
     ~STextureFactoryImpl() noexcept = default;
@@ -142,7 +141,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
         return ".raw";
     }
 
-    skr::text::text dstorage_root;
+    skr::string dstorage_root;
     Root root;
     skr::flat_hash_map<skr_texture_resource_id, InstallType> mInstallTypes;
     skr::flat_hash_map<skr_texture_resource_id, SPtr<UploadRequest>> mUploadRequests;
@@ -208,7 +207,7 @@ ESkrInstallStatus STextureFactoryImpl::InstallWithDStorage(skr_resource_record_t
             if (gpuCompressOnly)
             {
                 const char* suffix = GetSuffixWithCompressionFormat((ECGPUFormat)texture_resource->format);
-                auto compressedBin = skr::format("{}{}", guid, suffix); //TODO: choose compression format
+                auto compressedBin = skr::format(u8"{}{}", guid, suffix); //TODO: choose compression format
                 auto compressedPath = skr::filesystem::path(root.dstorage_root) / compressedBin.c_str();
                 auto dRequest = SPtr<DStorageRequest>::Create();
                 InstallType installType = {EInstallMethod::DSTORAGE, ECompressMethod::BC_OR_ASTC};
@@ -260,7 +259,7 @@ ESkrInstallStatus STextureFactoryImpl::InstallWithUpload(skr_resource_record_t* 
         {
             const char* suffix = GetSuffixWithCompressionFormat((ECGPUFormat)texture_resource->format);
             auto uRequest = SPtr<UploadRequest>::Create(
-                this, fmt::format("{}{}", guid, suffix).c_str(), texture_resource);
+                this, skr::format(u8"{}{}", guid, suffix).c_str(), texture_resource);
             InstallType installType = {EInstallMethod::UPLOAD, ECompressMethod::BC_OR_ASTC};
             auto found = mUploadRequests.find(texture_resource);
             SKR_ASSERT(found == mUploadRequests.end());

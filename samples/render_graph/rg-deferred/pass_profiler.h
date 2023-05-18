@@ -1,6 +1,6 @@
 #include "SkrRenderGraph/backend/graph_backend.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
-#include <containers/text.hpp>
+#include "containers/string.hpp"
 
 class PassProfiler : public skr::render_graph::RenderGraphProfiler
 {
@@ -74,6 +74,6 @@ public:
     CGPUBufferId query_buffer = nullptr;
     uint32_t query_cursor = 0;
     eastl::vector<float> times_ms;
-    eastl::vector<skr::text::text> query_names;
+    eastl::vector<skr::string> query_names;
     uint64_t frame_index;
 };

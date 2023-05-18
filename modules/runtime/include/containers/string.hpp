@@ -1,102 +1,79 @@
 #pragma once
 #include "platform/configure.h"
-// #define SKR_USE_STL_STRING 
-
-#if !defined(SKR_USE_STL_STRING)
-#include <EASTL/string.h>
-
-namespace skr
-{
-    using eastl::string;
-    using eastl::string_view;
-    using eastl::wstring;
-    using eastl::wstring_view;
-    using eastl::to_string;
-    using eastl::to_wstring;
-    using eastl::basic_string;
-    using eastl::basic_string_view;
-    #if EASTL_USER_LITERALS_ENABLED && EASTL_INLINE_NAMESPACES_ENABLED
-		EA_DISABLE_VC_WARNING(4455) // disable warning C4455: literal suffix identifiers that do not start with an underscore are reserved
-        inline namespace literals
-	    {
-		    inline namespace string_literals
-		    {
-    	        using namespace eastl::literals::string_literals;
-		    }
-	    }
-		EA_RESTORE_VC_WARNING()  // warning: 4455
-	#endif
-
-	template <>
-	struct hash<string>
-	{
-		inline size_t operator()(const string& x) const { return eastl::hash<string>()(x); }
-	};
-
-	template <>
-	struct hash<wstring>
-	{
-		inline size_t operator()(const wstring& x) const { return eastl::hash<wstring>()(x); }
-	};
-
-	template <>
-	struct hash<string_view>
-	{
-		inline size_t operator()(const string_view& x) const { return eastl::hash<string_view>()(x); }
-	};
-
-	template <>
-	struct hash<wstring_view>
-	{
-		inline size_t operator()(const wstring_view& x) const { return eastl::hash<wstring_view>()(x); }
-	};
-}
-#else
-#include <string>
+#include "OpenString/text.h"
+#include "OpenString/format.h"
+#include "misc/types.h"
 
 namespace skr
 {
-    using std::string;
-    using std::string_view;
-    using std::wstring;
-    using std::wstring_view;
-    using std::to_string;
-    using std::to_wstring;
-    using std::basic_string;
-    using std::basic_string_view;
-	inline namespace literals
-	{
-		inline namespace string_literals
-		{
-			using namespace std::literals::string_literals;
-		}
-	}
+using string = skr::text::text;
+using string_view = skr::text::text_view;
+using skr::text::format;
 
-	template <>
-	struct hash<string>
-	{
-		inline size_t operator()(const string& x) const { return std::hash<string>()(x); }
-	};
-
-	template <>
-	struct hash<wstring>
-	{
-		inline size_t operator()(const wstring& x) const { return std::hash<wstring>()(x); }
-	};
-
-	template <>
-	struct hash<string_view>
-	{
-		inline size_t operator()(const string_view& x) const { return std::hash<string_view>()(x); }
-	};
-
-	template <>
-	struct hash<wstring_view>
-	{
-		inline size_t operator()(const wstring_view& x) const { return std::hash<wstring_view>()(x); }
-	};
+namespace string_literals
+{
+	
 }
+
+template <>
+struct hash<string>
+{
+	inline size_t operator()(const string& x) const { return x.get_hash(); }
+};
+
+template <>
+struct hash<string_view>
+{
+	inline size_t operator()(const string_view& x) const { return x.get_hash(); }
+};
+
+namespace text {
+
+#if __cpp_char8_t
+
+template<> 
+struct argument_formatter<const char*>
+{
+    static codeunit_sequence produce(const char* raw, const codeunit_sequence_view& specification)
+    {
+        // we cast directly to c8* because we use source encoding as utf8 
+        return skr::format(u8"{}", (const ochar8_t*)raw);
+    }
+};
+
 #endif
+
+template<> 
+struct argument_formatter<skr_md5_t>
+{
+    static codeunit_sequence produce(const skr_md5_t& md5, const codeunit_sequence_view& specification)
+    {
+        return skr::format(
+            u8"{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}", 
+            md5.digest[0], md5.digest[1], md5.digest[2], md5.digest[3],
+            md5.digest[4], md5.digest[5], md5.digest[6], md5.digest[7],
+            md5.digest[8], md5.digest[9], md5.digest[10], md5.digest[11],
+            md5.digest[12], md5.digest[13], md5.digest[14], md5.digest[15]
+        );
+    }
+};
+
+template<> 
+struct argument_formatter<skr_guid_t>
+{
+    static codeunit_sequence produce(const skr_guid_t& g, const codeunit_sequence_view& specification)
+    {
+        return skr::format(
+            u8"{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}"
+            , g.Data1(), g.Data2(), g.Data3()
+            , g.Data4(0), g.Data4(1), g.Data4(2), g.Data4(3)
+            , g.Data4(4), g.Data4(5), g.Data4(6), g.Data4(7)
+        );
+    }
+};
+
+}
+}
 
 #include "type/type_id.hpp"
 
@@ -109,7 +86,7 @@ SKR_RTTI_INLINE_REGISTER_BASE_TYPE(skr::string_view, 0xb799ba81, 0x6009, 0x405d,
 } // namespace type
 } // namespace skr
 
-#include "binary/blob_fwd.h"
+#include "serde/binary/blob_fwd.h"
 namespace skr::binary
 {
 template<>
@@ -120,7 +97,7 @@ struct BlobBuilderType<skr::string_view>
 }
 
 // binary reader
-#include "binary/reader_fwd.h"
+#include "serde/binary/reader_fwd.h"
 
 namespace skr
 {
@@ -139,7 +116,7 @@ struct RUNTIME_STATIC_API ReadTrait<skr::string_view> {
 } // namespace skr
 
 // binary writer
-#include "binary/writer_fwd.h"
+#include "serde/binary/writer_fwd.h"
 
 namespace skr
 {

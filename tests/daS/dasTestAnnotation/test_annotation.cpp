@@ -1,6 +1,6 @@
 #include "annotation_module.hpp"
-#include "utils/make_zeroed.hpp"
-#include "containers/text.hpp"
+#include "misc/make_zeroed.hpp"
+#include "containers/string.hpp"
 
 #define TUTORIAL_NAME   u8"/scripts/daSTestAnnotation/annotation.das"
 
@@ -22,7 +22,7 @@ int tutorial () {
     // policies.aot = true;
 #endif
     // compile program
-    skr::text::text script_path = skr::das::Environment::GetRootDir();
+    skr::string script_path = skr::das::Environment::GetRootDir();
     script_path += TUTORIAL_NAME;
     auto program = skr::das::Environment::compile_dascript(
         script_path.u8_str(), faccess, tout, library, &policies);

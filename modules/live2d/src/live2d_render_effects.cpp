@@ -3,7 +3,7 @@
 #include "platform/time.h"
 #include "platform/guid.hpp"
 #include "platform/thread.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 
 #include "ecs/type_builder.hpp"
 
@@ -27,7 +27,7 @@
 
 #include <EASTL/fixed_vector.h>
 
-#include "rtm/matrix4x4f.h"
+#include "math/rtm/matrix4x4f.h"
 
 #include "tracy/Tracy.hpp"
 
@@ -38,13 +38,13 @@ static struct RegisterComponentskr_live2d_render_model_comp_tHelper
         using namespace skr::guid::literals;
 
         dual_type_description_t desc = make_zeroed<dual_type_description_t>();
-        desc.name = "skr_live2d_render_model_comp_t";
+        desc.name = u8"skr_live2d_render_model_comp_t";
         
         desc.size = sizeof(skr_live2d_render_model_comp_t);
         desc.entityFieldsCount = 1;
         static intptr_t entityFields[] = {0};
         desc.entityFields = (intptr_t)entityFields;
-        desc.guid = "63524b75-b86d-4b34-ba59-b600eb4b415b"_guid;
+        desc.guid = u8"63524b75-b86d-4b34-ba59-b600eb4b415b"_guid;
         desc.callback = {};
         desc.flags = 0;
         desc.elementSize = 0;
@@ -62,7 +62,7 @@ SKR_LIVE2D_API dual_type_index_t dual_id_of<skr_live2d_render_model_comp_t>::get
 typedef struct live2d_effect_identity_t {
     dual_entity_t game_entity;
 } live2d_effect_identity_t;
-skr_render_effect_name_t live2d_effect_name = "Live2DEffect";
+skr_render_effect_name_t live2d_effect_name = u8"Live2DEffect";
 struct RenderEffectLive2D : public IRenderEffectProcessor {
     skr_vfs_t* resource_vfs = nullptr;
     const char8_t* push_constants_name = u8"push_constants";
@@ -80,7 +80,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
             auto guid = make_zeroed<skr_guid_t>();
             dual_make_guid(&guid);
             auto desc = make_zeroed<dual_type_description_t>();
-            desc.name = "live2d_identity";
+            desc.name = u8"live2d_identity";
             desc.size = sizeof(live2d_effect_identity_t);
             desc.guid = guid;
             desc.alignment = alignof(live2d_effect_identity_t);
@@ -399,7 +399,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         async_slot_index = frame_count % RG_MAX_FRAME_IN_FLIGHT;
 
         skr_primitive_draw_packet_t packet = {};
-        if (strcmp(pass->identity(), live2d_mask_pass_name) == 0)
+        if (strcmp((const char*)pass->identity(), (const char*)live2d_mask_pass_name) == 0)
         {
             ZoneScopedN("ProduceMaskDrawPackets");
 
@@ -409,7 +409,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
             packet.count = 1;
             packet.lists = &mask_draw_list;
         }
-        if (strcmp(pass->identity(), live2d_pass_name) == 0)
+        if (strcmp((const char*)pass->identity(), (const char*)live2d_pass_name) == 0)
         {
             ZoneScopedN("ProduceModelDrawPackets");
 
@@ -544,9 +544,7 @@ protected:
                     const void* pSrc = getVBData(render_model, j, vcount); (void)pSrc;
                     imported_vbs[j] = render_graph->create_buffer(
                             [=](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
-                            skr::string name = "live2d_vb-";
-                            name.append(skr::to_string((uint64_t)render_model).c_str());
-                            name.append(skr::to_string(j).c_str());
+                            skr::string name = skr::format(u8"live2d_vb-{}{}", (uint64_t)render_model, j);
                             builder.set_name((const char8_t*)name.c_str())
                                     .import(view.buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
                             });
@@ -562,8 +560,7 @@ protected:
                     [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
                     ZoneScopedN("ConstructUploadPass");
 
-                    skr::string name = "live2d_upload-";
-                    name.append(skr::to_string((uint64_t)render_model).c_str());
+                    skr::string name = skr::format(u8"live2d_upload-{}", (uint64_t)render_model);
                     builder.set_name((const char8_t*)name.c_str())
                             .size(totalVertexSize)
                             .with_tags(kRenderGraphDefaultResourceTag)
@@ -572,8 +569,7 @@ protected:
                 render_graph->add_copy_pass(
                 [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
                     ZoneScopedN("ConstructCopyPass");
-                    skr::string name = "live2d_copy-";
-                    name.append(skr::to_string((uint64_t)render_model).c_str());
+                    skr::string name = skr::format(u8"live2d_copy-{}", (uint64_t)render_model);
                     builder.set_name((const char8_t*)name.c_str());
                     uint64_t range_cursor = 0;
                     for (uint32_t j = 0; j < vb_c; j++)
@@ -651,7 +647,7 @@ uint32_t* RenderEffectLive2D::read_shader_bytes(SRendererId renderer, const char
     const auto render_device = renderer->get_render_device();
     const auto cgpu_device = render_device->get_cgpu_device();
     const auto backend = cgpu_device->adapter->instance->backend;
-    skr::text::text shader_name = name;
+    skr::string shader_name = name;
     shader_name.append(backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv");
     auto shader_file = skr_vfs_fopen(resource_vfs, shader_name.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     const uint32_t shader_length = (uint32_t)skr_vfs_fsize(shader_file);
@@ -877,7 +873,7 @@ void skr_live2d_register_render_effects(live2d_renderer_t* renderer, live2d_rend
 {
     live2d_effect->sample_count = (double)sample_count;
     auto& blackboard = render_graph->get_blackboard();
-    blackboard.set_value("l2d_msaa", live2d_effect->sample_count);
+    blackboard.set_value(u8"l2d_msaa", live2d_effect->sample_count);
     skr_renderer_register_render_pass(renderer, live2d_mask_pass_name, live2d_mask_pass);
     skr_renderer_register_render_pass(renderer, live2d_pass_name, live2d_pass);
 }

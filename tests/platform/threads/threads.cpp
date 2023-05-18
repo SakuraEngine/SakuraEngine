@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "platform/thread.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include <thread>
 #include <future>
 

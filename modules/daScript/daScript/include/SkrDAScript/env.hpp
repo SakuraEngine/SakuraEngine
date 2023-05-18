@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrDAScript/reg.hpp"
-#include "containers/text.hpp"
+#include "containers/string.hpp"
 
 namespace skr {
 namespace das {
@@ -31,7 +31,7 @@ struct SKR_DASCRIPT_API Environment
 {
     static void Initialize(const EnvironmentDescriptor& desc) SKR_NOEXCEPT;
     static void Finalize() SKR_NOEXCEPT;
-    static const skr::text::text GetRootDir() SKR_NOEXCEPT;
+    static const skr::string GetRootDir() SKR_NOEXCEPT;
 
     // TODO
     // static void addExtern(ExternalFunction* annotation) SKR_NOEXCEPT;

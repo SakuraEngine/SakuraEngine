@@ -11,7 +11,7 @@
 #include <steam/isteamnetworkingsockets.h>
 #include <steam/isteamnetworkingutils.h>
 #include <steam/steamnetworkingcustomsignaling.h>
-#include "utils/log.h"
+#include "misc/log.h"
 
 #ifdef VALVE_POSIX
 	#include <unistd.h>

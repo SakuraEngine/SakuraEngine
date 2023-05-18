@@ -5,10 +5,10 @@
 #include "resource/resource_header.hpp"
 #include "platform/filesystem.hpp"
 #include "simdjson/padded_string.h"
-#include "utils/log.hpp"
-#include "utils/defer.hpp"
-#include "binary/writer.h"
-#include "utils/function_ref.hpp"
+#include "misc/log.hpp"
+#include "misc/defer.hpp"
+#include "serde/binary/writer.h"
+#include "misc/function_ref.hpp"
 
 struct skr_io_ram_service_t;
 namespace skr {namespace task { struct event_t; }}
@@ -66,7 +66,7 @@ public:
         auto file = fopen((const char*)outputPath.c_str(), "wb");
         if (!file)
         {
-            SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", 
+            SKR_LOG_FMT_ERROR(u8"[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", 
                 record->guid, (const char*)record->path.u8string().c_str());
             return false;
         }
@@ -77,13 +77,13 @@ public:
         skr_binary_writer_t archive(writer);
         if(int result = skr::binary::Archive(&archive, resource); result != 0)
         {
-            SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to serialize resource {}! path: {}", 
+            SKR_LOG_FMT_ERROR(u8"[SConfigCooker::Cook] failed to serialize resource {}! path: {}", 
                 record->guid, (const char*)record->path.u8string().c_str());
             return false;
         }
         if(fwrite(buffer.data(), 1, buffer.size(), file) < buffer.size())
         {
-            SKR_LOG_FMT_ERROR("[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", 
+            SKR_LOG_FMT_ERROR(u8"[SConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", 
                 record->guid, (const char*)record->path.u8string().c_str());
             return false;
         }

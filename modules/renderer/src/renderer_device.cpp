@@ -1,6 +1,6 @@
 #include "SkrRenderer/render_device.h"
-#include "utils/make_zeroed.hpp"
-#include "utils/threaded_service.h"
+#include "misc/make_zeroed.hpp"
+#include "misc/threaded_service.h"
 #include "platform/memory.h"
 #include "cgpu/io.h"
 #include <EASTL/vector_map.h>

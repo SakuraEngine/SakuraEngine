@@ -2,7 +2,7 @@
 #include "SkrToolCore/fwd_types.hpp"
 #include "resource/resource_header.hpp"
 #include "SkrToolCore/asset/cooker.hpp"
-#include "json/reader_fwd.h"
+#include "serde/json/reader_fwd.h"
 #ifndef __meta__
     #include "SkrToolCore/asset/importer.generated.h"
 #endif

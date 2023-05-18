@@ -72,9 +72,9 @@ void swa_delete(T* object)
     #define swa_min(a, b) (((a) < (b)) ? (a) : (b))
 #endif
 
-#include "utils/hash.h"
+#include "misc/hash.h"
 #define swa_hash(buffer, size, seed) skr_hash((buffer), (size), (seed))
-#include "utils/log.h"
+#include "misc/log.h"
 #define swa_trace(...) log_log(SKR_LOG_LEVEL_TRACE, __FILE__, __LINE__, __VA_ARGS__)
 #define swa_debug(...) log_log(SKR_LOG_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
 #define swa_info(...) log_log(SKR_LOG_LEVEL_INFO, __FILE__, __LINE__, __VA_ARGS__)

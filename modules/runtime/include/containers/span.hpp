@@ -7,8 +7,8 @@ using eastl::span;
 }
 
 #include "EASTL/vector.h"
-#include "binary/blob_fwd.h"
-#include "binary/serde.h"
+#include "serde/binary/blob_fwd.h"
+#include "serde/binary/serde.h"
 
 namespace skr::binary
 {
@@ -25,8 +25,8 @@ struct SpanSerdeConfig
 
 // binary reader
 #include "platform/debug.h"
-#include "utils/traits.hpp"
-#include "binary/reader_fwd.h"
+#include "misc/traits.hpp"
+#include "serde/binary/reader_fwd.h"
 #include "platform/debug.h"
 
 namespace skr
@@ -74,7 +74,7 @@ struct ReadTrait<skr::span<T>> {
     {
         //static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
         uint32_t count = 0;
-        int ret = skr::binary::Archive(archive, count, IntegerSerdeConfig<uint32_t>{0, cfg.maxSize});
+        int ret = skr::binary::Archive(archive, count, IntegerPackConfig<uint32_t>{0, cfg.maxSize});
         if (ret != 0) 
             return ret;
         if(count == 0)
@@ -166,7 +166,7 @@ struct SpanReaderBitpacked
 } // namespace skr
 
 // binary writer
-#include "binary/writer_fwd.h"
+#include "serde/binary/writer_fwd.h"
 #include "platform/debug.h"
 
 namespace skr
@@ -220,7 +220,7 @@ struct WriteTrait<const skr::span<T>&> {
         SKR_ASSERT(ptr >= buffer);
         uint32_t offset = (uint32_t)(ptr - buffer);
         SKR_ASSERT(!arena.get_size() || (offset < arena.get_size()) || span.empty());
-        int ret = skr::binary::Archive(writer, (uint32_t)span.size(), IntegerSerdeConfig<uint32_t>{0, cfg.maxSize});
+        int ret = skr::binary::Archive(writer, (uint32_t)span.size(), IntegerPackConfig<uint32_t>{0, cfg.maxSize});
         if (ret != 0) {
             return ret;
         }

@@ -190,19 +190,19 @@ FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line,
 
 #if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
 #include <string_view>
-#include "utils/demangle.hpp"
+#include "misc/demangle.hpp"
 
 struct SkrTracedNew
 {
-    const std::string_view sourcelocation;
-    const std::string_view poolname;
-    SkrTracedNew(std::string_view sourcelocation) noexcept : sourcelocation(sourcelocation), poolname(kTracedNewDefaultPoolName) {}
-    SkrTracedNew(std::string_view sourcelocation, std::string_view poolname) noexcept : sourcelocation(sourcelocation), poolname(poolname) {}
+    const eastl::string_view sourcelocation;
+    const eastl::string_view poolname;
+    SkrTracedNew(eastl::string_view sourcelocation) noexcept : sourcelocation(sourcelocation), poolname(kTracedNewDefaultPoolName) {}
+    SkrTracedNew(eastl::string_view sourcelocation, eastl::string_view poolname) noexcept : sourcelocation(sourcelocation), poolname(poolname) {}
 
     template<class T>
     [[nodiscard]] FORCEINLINE T* New()
     {
-        const std::string_view name = skr::demangle<T>();
+        const eastl::string_view name = skr::demangle<T>();
         TracyMessage(name.data(), name.size());
         void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
         SKR_ASSERT(pMemory != nullptr);
@@ -212,7 +212,7 @@ struct SkrTracedNew
     template<class T, class... TArgs>
     [[nodiscard]] FORCEINLINE T* New(TArgs&&... params)
     {
-        const std::string_view name = skr::demangle<T>();
+        const eastl::string_view name = skr::demangle<T>();
         TracyMessage(name.data(), name.size());
         void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
         SKR_ASSERT(pMemory != nullptr);
@@ -222,7 +222,7 @@ struct SkrTracedNew
     template<class T, class... TArgs>
     [[nodiscard]] FORCEINLINE T* NewZeroed(TArgs&&... params)
     {
-        const std::string_view name = skr::demangle<T>();
+        const eastl::string_view name = skr::demangle<T>();
         TracyMessage(name.data(), name.size());
         void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
         memset(pMemory, 0, sizeof(T));
@@ -233,7 +233,7 @@ struct SkrTracedNew
     template<class T>
     [[nodiscard]] FORCEINLINE T* NewZeroed()
     {
-        const std::string_view name = skr::demangle<T>();
+        const eastl::string_view name = skr::demangle<T>();
         TracyMessage(name.data(), name.size());
         void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
         memset(pMemory, 0, sizeof(T));
@@ -244,7 +244,7 @@ struct SkrTracedNew
     template<class T, class... TArgs>
     [[nodiscard]] FORCEINLINE T* NewSized(size_t size, TArgs&&... params)
     {
-        const std::string_view name = skr::demangle<T>();
+        const eastl::string_view name = skr::demangle<T>();
         TracyMessage(name.data(), name.size());
         SKR_ASSERT(size >= sizeof(T));
         void* pMemory = SkrNewAlignedWithCZone(size, alignof(T), sourcelocation.data(), poolname.data());
@@ -255,7 +255,7 @@ struct SkrTracedNew
     template<class T>
     [[nodiscard]] FORCEINLINE T* NewSized(size_t size)
     {
-        const std::string_view name = skr::demangle<T>();
+        const eastl::string_view name = skr::demangle<T>();
         TracyMessage(name.data(), name.size());
         SKR_ASSERT(size >= sizeof(T));
         void* pMemory = SkrNewAlignedWithCZone(size, alignof(T), sourcelocation.data(), poolname.data());
@@ -277,7 +277,7 @@ struct SkrTracedNew
     {
         if (pType != nullptr)
         {
-            const std::string_view name = skr::demangle<T>();
+            const eastl::string_view name = skr::demangle<T>();
             TracyMessage(name.data(), name.size());
             pType->~T();
             SkrFreeAlignedWithCZone((void*)pType, alignof(T), sourcelocation.data(), poolname.data());

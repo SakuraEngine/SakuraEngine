@@ -5,7 +5,7 @@
 
 #include "tracy/Tracy.hpp"
 
-const skr_render_pass_name_t live2d_pass_name = "Live2DPass";
+const skr_render_pass_name_t live2d_pass_name = u8"Live2DPass";
 
 struct RenderPassLive2D : public IPrimitiveRenderPass {
     void on_update(const skr_primitive_pass_context_t* context) override
@@ -17,7 +17,7 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
         auto msaaTarget = renderGraph->create_texture(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
             double sample_level = 1.0;
-            g.get_blackboard().value("l2d_msaa", sample_level);
+            g.get_blackboard().value(u8"l2d_msaa", sample_level);
 
             builder.set_name(u8"live2d_msaa")
                 .extent(back_desc->width, back_desc->height)
@@ -30,7 +30,7 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
         auto depth = renderGraph->create_texture(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
             double sample_level = 1.0;
-            g.get_blackboard().value("l2d_msaa", sample_level);
+            g.get_blackboard().value(u8"l2d_msaa", sample_level);
 
             builder.set_name(u8"depth")
                 .extent(back_desc->width, back_desc->height)
@@ -63,7 +63,7 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
         renderGraph->add_render_pass(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
             double sample_level = 1.0;
-            bool useMSAA = g.get_blackboard().value("l2d_msaa", sample_level); useMSAA &= (sample_level > 1.0);
+            bool useMSAA = g.get_blackboard().value(u8"l2d_msaa", sample_level); useMSAA &= (sample_level > 1.0);
             const auto depth_buffer = renderGraph->get_texture(u8"depth");
             const auto mask_buffer = renderGraph->get_texture(u8"live2d_mask");
             const auto live2d_msaa = renderGraph->get_texture(u8"live2d_msaa");

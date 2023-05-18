@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrLightningStorage/module.configure.h"
-#include "utils/types.h"
+#include "misc/types.h"
 
 #define DECLARE_LIGHTNING_OBJECT(object) typedef struct object object; typedef struct object* object##Id;
 

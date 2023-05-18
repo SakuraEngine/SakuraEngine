@@ -43,6 +43,6 @@ SKR_ANIMTOOL_API SSkelCooker final : public SCooker
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override { return kDevelopmentVersion; }
 }
-sregister_default_cooker("1876BF35-E4DC-450B-B9D4-09259397F4BA");
+sregister_default_cooker(u8"1876BF35-E4DC-450B-B9D4-09259397F4BA");
 } // namespace asset sreflect
 } // namespace skd sreflect

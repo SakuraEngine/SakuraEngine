@@ -1,8 +1,10 @@
 #include "vulkan_utils.h"
 #include <EASTL/vector.h>
+#include <EASTL/sort.h>
+#include <EASTL/string.h>
+
 #include <containers/string.hpp>
 #include <containers/hashmap.hpp>
-#include <EASTL/sort.h>
 
 class VkUtil_Blackboard
 {
@@ -158,7 +160,7 @@ void VkUtil_RenderPassTableAdd(struct CGPUVkPassTable* table, const struct VkUti
     table->cached_renderpasses[*desc] = new_pass;
 }
 
-struct CGPUVkExtensionsTable : public skr::parallel_flat_hash_map<skr::string, bool, skr::hash<skr::string>> //
+struct CGPUVkExtensionsTable : public skr::parallel_flat_hash_map<eastl::string, bool, eastl::hash<eastl::string>> //
 {
     static void ConstructForAllAdapters(struct CGPUInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
     {
@@ -226,7 +228,7 @@ struct CGPUVkExtensionsTable : public skr::parallel_flat_hash_map<skr::string, b
     }
 };
 
-struct CGPUVkLayersTable : public skr::parallel_flat_hash_map<skr::string, bool, skr::hash<skr::string>> //
+struct CGPUVkLayersTable : public skr::parallel_flat_hash_map<eastl::string, bool, eastl::hash<eastl::string>> //
 {
     static void ConstructForAllAdapters(struct CGPUInstance_Vulkan* I, const VkUtil_Blackboard& blackboard)
     {

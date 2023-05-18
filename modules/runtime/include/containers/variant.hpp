@@ -131,7 +131,7 @@ struct type_of<skr::variant<Ts...>> {
 } // namespace skr
 
 // binary reader
-#include "binary/reader_fwd.h"
+#include "serde/binary/reader_fwd.h"
 
 namespace skr
 {
@@ -180,7 +180,7 @@ struct SerdeCompleteChecker<binary::ReadTrait<skr::variant<Ts...>>>
 } // namespace skr
 
 // binary writer
-#include "binary/writer_fwd.h"
+#include "serde/binary/writer_fwd.h"
 
 namespace skr
 {

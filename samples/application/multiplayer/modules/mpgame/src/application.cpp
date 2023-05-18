@@ -21,16 +21,17 @@
 #include "tracy/Tracy.hpp"
 #include "imgui_impl_sdl.h"
 #include "simdjson.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include "platform/guid.hpp"
-#include "containers/text.hpp"
+
+#include "containers/string.hpp"
 
 #include "math/vector.h"
 #include "EASTL/shared_ptr.h"
 #include "SkrScene/scene.h"
-#include "utils/parallel_for.hpp"
+#include "misc/parallel_for.hpp"
 #include "EASTL/fixed_vector.h"
-#include "json/writer.h"
+#include "serde/json/writer.h"
 #include "ecs/set.hpp"
 #include "SkrRenderer/render_viewport.h"
 #include "SkrInputSystem/input_modifier.hpp"
@@ -167,8 +168,8 @@ int MPApplication::InitializeImgui(Renderer& renderer, skr_vfs_t* vfs)
         ImGui::GetIO().Fonts->Build();
         sakura_free(font_bytes);
     }
-    skr::text::text vsname = u8"shaders/imgui_vertex";
-    skr::text::text fsname = u8"shaders/imgui_fragment";
+    skr::string vsname = u8"shaders/imgui_vertex";
+    skr::string fsname = u8"shaders/imgui_fragment";
     vsname += backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv";
     fsname += backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv";
 
@@ -349,7 +350,7 @@ void MPApplication::Render()
     });
     renderer.renderGraph->add_render_pass(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
-            skr::text::text name = u8"clear";
+            skr::string name = u8"clear";
             builder.set_name(name.u8_str())
                 .write(0, back_buffer, CGPU_LOAD_ACTION_CLEAR);
         },
@@ -692,7 +693,7 @@ void MPApplication::UpdateEnteringGame()
                     renderWorld.renderer = renderer.renderer;
                     // Viewport
                     auto viewport_manager = renderer.renderer->get_viewport_manager();
-                    viewport_manager->register_viewport("main_viewport");
+                    viewport_manager->register_viewport(u8"main_viewport");
                     initialize_render_effects(renderer.renderer, renderer.renderGraph, resource_vfs);
                     renderWorld.LoadScene();
                     world.ReceiveWorldDelta(data, size);
@@ -852,7 +853,7 @@ void MPApplication::UpdateGame()
                 auto name = dualT_get_desc(type.data[i])->name;
                 auto bandwidth = world.worldDeltaApplier->GetBandwidthOf(type.data[i]);
                 totalComponentBandwidth += bandwidth;
-                ImGui::LabelText(name, "%f", bandwidth);
+                ImGui::LabelText((const char*)name, "%f", bandwidth);
             }
             ImGui::LabelText("other", "%f", world.GetBytePerSecondBeforeCompress() - totalComponentBandwidth);
         }

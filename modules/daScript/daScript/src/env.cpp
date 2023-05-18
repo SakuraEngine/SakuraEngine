@@ -58,10 +58,10 @@ Program* Environment::compile_dascript(const char8_t* name, FileAccess* faccess,
     return SkrNew<ProgramImpl>(::das::move(program));
 }
 
-const skr::text::text Environment::GetRootDir() SKR_NOEXCEPT
+const skr::string Environment::GetRootDir() SKR_NOEXCEPT
 {
     const auto r = ::das::getDasRoot();
-    return skr::text::text((const char8_t*)r.c_str());
+    return skr::string((const char8_t*)r.c_str());
 }
 
 } // namespace das

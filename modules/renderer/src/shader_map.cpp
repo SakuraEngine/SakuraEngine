@@ -3,12 +3,11 @@
 #include "platform/atomic.h"
 #include "SkrRenderer/shader_hash.h"
 #include "containers/hashmap.hpp"
-#include "containers/text.hpp"
+#include "containers/string.hpp"
 #include "containers/sptr.hpp"
-#include "utils/defer.hpp"
-#include "utils/format.hpp"
-#include "utils/make_zeroed.hpp"
-#include "utils/threaded_service.h"
+#include "misc/defer.hpp"
+#include "misc/make_zeroed.hpp"
+#include "misc/threaded_service.h"
 
 namespace skr
 {
@@ -90,7 +89,7 @@ struct ShaderMapImpl : public skr_shader_map_t
         }
 
         ShaderMapImpl* factory = nullptr;
-        skr::text::text bytes_uri;
+        skr::string bytes_uri;
         skr_async_request_t bytes_request;
         skr_async_ram_destination_t bytes_destination;
         skr_async_request_t aux_request;
@@ -173,7 +172,7 @@ ESkrShaderMapShaderStatus ShaderMapImpl::install_shader_from_vfs(const skr_platf
     auto bytes_vfs = root.bytecode_vfs;
     SKR_ASSERT(bytes_vfs);
     const auto hash = identifier.hash;
-    const auto uri = skr::text::format(u8"{}#{}-{}-{}-{}.bytes", hash.flags, 
+    const auto uri = skr::format(u8"{}#{}-{}-{}-{}.bytes", hash.flags, 
         hash.encoded_digits[0], hash.encoded_digits[1], hash.encoded_digits[2], hash.encoded_digits[3]);
     auto sRequest = SPtr<ShaderRequest>::Create(this, uri.u8_str(), identifier);
     auto found = mShaderRequests.find(identifier);

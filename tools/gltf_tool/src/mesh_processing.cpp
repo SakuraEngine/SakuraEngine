@@ -1,7 +1,7 @@
-#include "task/task.hpp"
+#include "async/fib_task.hpp"
 #include "SkrGLTFTool/mesh_processing.hpp"
 #include "SkrMeshCore/mesh_processing.hpp"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "cgpu/api.h"
 
@@ -69,7 +69,7 @@ cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr_io_ram_service_t*
     // prepare callback
     skr::task::event_t counter;
     skr_async_ram_destination_t destination;
-    skr::string u8Path = assetPath.data();
+    skr::string u8Path = assetPath.u8_str();
     struct CallbackData
     {
         skr::task::event_t* pCounter;   
@@ -138,8 +138,8 @@ void CookGLTFMeshData(const cgltf_data* gltf_data, SMeshCookConfig* cfg, skr_mes
     }
     
     //FIXME: select mesh to cook
-    out_resource.name = gltf_data->meshes[0].name ? gltf_data->meshes[0].name : "";
-    if (out_resource.name.empty()) out_resource.name = "gltfMesh";
+    out_resource.name = gltf_data->meshes[0].name ? (const char8_t*)gltf_data->meshes[0].name : u8"";
+    if (out_resource.name.is_empty()) out_resource.name = u8"gltfMesh";
     // record primitvies
     for (uint32_t i = 0; i < gltf_data->nodes_count; i++)
     {
@@ -192,8 +192,8 @@ void CookGLTFMeshData_SplitSkin(const cgltf_data* gltf_data, SMeshCookConfig* cf
     }
 
     //FIXME: select mesh to cook
-    out_resource.name = gltf_data->meshes[0].name;
-    if (out_resource.name.empty()) out_resource.name = "gltfMesh";
+    out_resource.name = (const char8_t*)gltf_data->meshes[0].name;
+    if (out_resource.name.is_empty()) out_resource.name = u8"gltfMesh";
     // record primitvies
     for (uint32_t i = 0; i < gltf_data->nodes_count; i++)
     {

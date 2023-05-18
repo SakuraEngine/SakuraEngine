@@ -2,7 +2,7 @@
 
 #if __cpp_impl_coroutine
 
-#include "task/task2.hpp"
+#include "async/co_task.hpp"
 #include "platform/filesystem.hpp"
 #include "module/module_manager.hpp"
 
@@ -237,7 +237,7 @@ int main(int argc, char** argv)
     std::error_code ec = {};
     auto root = skr::filesystem::current_path(ec);
     moduleManager->mount(root.u8string().c_str());
-    moduleManager->make_module_graph("Task2Test", true);
+    moduleManager->make_module_graph(u8"Task2Test", true);
     moduleManager->init_module_graph(argc, argv);
     //while(!TracyIsConnected);
     ZoneScopedN("Main");

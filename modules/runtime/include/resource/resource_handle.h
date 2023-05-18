@@ -1,5 +1,5 @@
 #pragma once
-#include "utils/types.h"
+#include "misc/types.h"
 
 enum ESkrLoadingStatus : uint32_t;
 struct skr_resource_record_t;
@@ -129,7 +129,7 @@ struct type_of<resource::TResourceHandle<T>> {
 
 
 // binary reader
-#include "binary/reader_fwd.h"
+#include "serde/binary/reader_fwd.h"
 
 namespace skr
 {
@@ -154,7 +154,7 @@ struct RUNTIME_STATIC_API ReadTrait<skr_resource_handle_t> {
 }
 
 // binary writer
-#include "binary/writer_fwd.h"
+#include "serde/binary/writer_fwd.h"
 
 namespace skr
 {

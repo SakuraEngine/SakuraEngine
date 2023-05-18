@@ -1,16 +1,15 @@
 #include "SkrRenderer/shader_map.h"
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "SkrRenderer/render_device.h"
-#include "utils/format.hpp"
-#include "utils/hash.h"
-#include "utils/make_zeroed.hpp"
-#include "utils/threaded_service.h"
+#include "misc/hash.h"
+#include "misc/make_zeroed.hpp"
+#include "misc/threaded_service.h"
 #include "platform/memory.h"
 #include "resource/resource_factory.h"
 #include "resource/resource_system.h"
 #include "containers/hashmap.hpp"
 #include "containers/sptr.hpp"
-#include "utils/io.h"
+#include "misc/io.h"
 #include "option_utils.hpp"
 #include "tracy/Tracy.hpp"
 
@@ -49,7 +48,7 @@ skr_stable_shader_hash_t skr_stable_shader_hash_t::from_string(const char* str) 
 
 skr_stable_shader_hash_t::operator skr::string() const SKR_NOEXCEPT
 {
-    return skr::format("{}{}{}{}", valuea, valueb, valuec, valued);
+    return skr::format(u8"{}{}{}{}", valuea, valueb, valuec, valued);
 }
 
 size_t skr_platform_shader_hash_t::hasher::operator()(const skr_platform_shader_hash_t& hash) const
@@ -93,7 +92,7 @@ uint32_t skr_shader_option_sequence_t::find_value_index(skr::string_view in_key,
 
 skr_stable_shader_hash_t skr_shader_option_sequence_t::calculate_stable_hash(const skr_shader_option_sequence_t& seq, skr::span<uint32_t> indices)
 {
-    option_utils::opt_signature_string signatureString;
+    skr::string signatureString;
     option_utils::stringfy(signatureString, seq, indices);
     return skr_stable_shader_hash_t::hash_string(signatureString.c_str(), (uint32_t)signatureString.size());
 }
