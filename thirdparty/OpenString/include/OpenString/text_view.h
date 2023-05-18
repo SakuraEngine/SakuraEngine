@@ -24,7 +24,7 @@ public:
 	constexpr text_view& operator=(text_view&&) noexcept = default;
 	~text_view() noexcept = default;
 
-	constexpr text_view(const ochar8_t* data, const i32 count) noexcept
+	explicit constexpr text_view(const ochar8_t* data, const i32 count) noexcept
 		: view_(data, count)
 	{ }
 	constexpr text_view(const ochar8_t* data, const size_t count) noexcept
