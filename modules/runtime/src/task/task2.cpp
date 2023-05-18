@@ -1,6 +1,6 @@
 #if __cpp_impl_coroutine
 
-#include "task/task2.hpp"
+#include "async/co_task.hpp"
 #include "EASTL/deque.h"
 #include "misc/log.h"
 #include "misc/make_zeroed.hpp"
