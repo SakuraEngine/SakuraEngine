@@ -90,7 +90,7 @@ sattr("serialize_config" : "uint16_t entityCount")
 MPComponentDeltaView
 {
     NetComponentId type;
-    sattr("serialize_config" : "SpanSerdeConfig{entityCount}, IntegerSerdeConfig<NetEntityId>{0, entityCount}")
+    sattr("serialize_config" : "SpanSerdeConfig{entityCount}, IntegerPackConfig<NetEntityId>{0, entityCount}")
     skr::span<NetEntityId> entities;
     sattr("no-text" : true)
     skr::span<uint8_t> data;

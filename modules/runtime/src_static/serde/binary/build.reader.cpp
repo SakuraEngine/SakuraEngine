@@ -101,7 +101,7 @@ int ReadTrait<bool>::Read(skr_binary_reader_t* reader, bool& value)
 }
 
 template<class T>
-int ReadBitpacked(skr_binary_reader_t* reader, T& value, IntegerSerdeConfig<T> config)
+int ReadBitpacked(skr_binary_reader_t* reader, T& value, IntegerPackConfig<T> config)
 {
     SKR_ASSERT(config.min <= config.max);
     SKR_ASSERT(reader->vread_bits);
@@ -119,38 +119,38 @@ int ReadBitpacked(skr_binary_reader_t* reader, T& value, IntegerSerdeConfig<T> c
     return ret;
 }
 
-int ReadTrait<uint8_t>::Read(skr_binary_reader_t* reader, uint8_t& value, IntegerSerdeConfig<uint8_t> config)
+int ReadTrait<uint8_t>::Read(skr_binary_reader_t* reader, uint8_t& value, IntegerPackConfig<uint8_t> config)
 {
     return ReadBitpacked(reader, value, config);
 }
 
-int ReadTrait<uint16_t>::Read(skr_binary_reader_t* reader, uint16_t& value, IntegerSerdeConfig<uint16_t> config)
+int ReadTrait<uint16_t>::Read(skr_binary_reader_t* reader, uint16_t& value, IntegerPackConfig<uint16_t> config)
 {
     return ReadBitpacked(reader, value, config);
 }
 
-int ReadTrait<uint32_t>::Read(skr_binary_reader_t* reader, uint32_t& value, IntegerSerdeConfig<uint32_t> config)
+int ReadTrait<uint32_t>::Read(skr_binary_reader_t* reader, uint32_t& value, IntegerPackConfig<uint32_t> config)
 {
     return ReadBitpacked(reader, value, config);
 }
 
-int ReadTrait<uint64_t>::Read(skr_binary_reader_t* reader, uint64_t& value, IntegerSerdeConfig<uint64_t> config)
+int ReadTrait<uint64_t>::Read(skr_binary_reader_t* reader, uint64_t& value, IntegerPackConfig<uint64_t> config)
 {
     return ReadBitpacked(reader, value, config);
 }
 
-int ReadTrait<int32_t>::Read(skr_binary_reader_t* reader, int32_t& value, IntegerSerdeConfig<int32_t> config)
+int ReadTrait<int32_t>::Read(skr_binary_reader_t* reader, int32_t& value, IntegerPackConfig<int32_t> config)
 {
     return ReadBitpacked(reader, value, config);
 }
 
-int ReadTrait<int64_t>::Read(skr_binary_reader_t* reader, int64_t& value, IntegerSerdeConfig<int64_t> config)
+int ReadTrait<int64_t>::Read(skr_binary_reader_t* reader, int64_t& value, IntegerPackConfig<int64_t> config)
 {
     return ReadBitpacked(reader, value, config);
 }
 
 template<class T, class ScalarType>
-int ReadBitpacked(skr_binary_reader_t* reader, T& value, VectorSerdeConfig<ScalarType> config)
+int ReadBitpacked(skr_binary_reader_t* reader, T& value, VectorPackConfig<ScalarType> config)
 {
     ScalarType* array = (ScalarType*)&value;
     static constexpr size_t size = sizeof(T) / sizeof(ScalarType);
@@ -230,32 +230,32 @@ int ReadBitpacked(skr_binary_reader_t* reader, T& value, VectorSerdeConfig<Scala
 	return -1;
 }
 
-int ReadTrait<skr_float2_t>::Read(skr_binary_reader_t* reader, skr_float2_t& value, VectorSerdeConfig<float> cfg)
+int ReadTrait<skr_float2_t>::Read(skr_binary_reader_t* reader, skr_float2_t& value, VectorPackConfig<float> cfg)
 {
     return ReadBitpacked(reader, value, cfg);
 }
 
-int ReadTrait<skr_float3_t>::Read(skr_binary_reader_t* reader, skr_float3_t& value, VectorSerdeConfig<float> cfg)
+int ReadTrait<skr_float3_t>::Read(skr_binary_reader_t* reader, skr_float3_t& value, VectorPackConfig<float> cfg)
 {
     return ReadBitpacked(reader, value, cfg);
 }
 
-int ReadTrait<skr_float4_t>::Read(skr_binary_reader_t* reader, skr_float4_t& value, VectorSerdeConfig<float> cfg)
+int ReadTrait<skr_float4_t>::Read(skr_binary_reader_t* reader, skr_float4_t& value, VectorPackConfig<float> cfg)
 {
     return ReadBitpacked(reader, value, cfg);
 }
 
-int ReadTrait<skr_rotator_t>::Read(skr_binary_reader_t* reader, skr_rotator_t& value, VectorSerdeConfig<float> cfg)
+int ReadTrait<skr_rotator_t>::Read(skr_binary_reader_t* reader, skr_rotator_t& value, VectorPackConfig<float> cfg)
 {
     return ReadBitpacked(reader, value, cfg);
 }
 
-int ReadTrait<skr_quaternion_t>::Read(skr_binary_reader_t* reader, skr_quaternion_t& value, VectorSerdeConfig<float> cfg)
+int ReadTrait<skr_quaternion_t>::Read(skr_binary_reader_t* reader, skr_quaternion_t& value, VectorPackConfig<float> cfg)
 {
     return ReadBitpacked(reader, value, cfg);
 }
 
-int ReadTrait<skr_float4x4_t>::Read(skr_binary_reader_t* reader, skr_float4x4_t& value, VectorSerdeConfig<float> cfg)
+int ReadTrait<skr_float4x4_t>::Read(skr_binary_reader_t* reader, skr_float4x4_t& value, VectorPackConfig<float> cfg)
 {
     return ReadBitpacked(reader, value, cfg);
 }
