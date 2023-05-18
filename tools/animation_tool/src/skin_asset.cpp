@@ -18,7 +18,7 @@ bool SSkinCooker::Cook(SCookContext* ctx)
     cgltf_skin* rawSkin = &rawMesh->skins[0];
     skr_skin_resource_t resource;
     auto blob = skr::make_blob_builder<skr_skin_blob_view_t>();
-    blob.name = rawSkin->name ? (const char8_t*)rawSkin->name : u8"";
+    blob.name = rawSkin->name ? (const char8_t*)rawSkin->name : u8"UnnamedSkin";
     blob.joint_remaps.reserve(rawSkin->joints_count);
     for (auto i = 0; i < rawSkin->joints_count; ++i)
         blob.joint_remaps.push_back((const char8_t*)rawSkin->joints[i]->name);
