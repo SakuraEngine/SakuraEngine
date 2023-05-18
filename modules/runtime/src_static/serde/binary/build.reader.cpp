@@ -46,7 +46,9 @@ skr_blob_arena_builder_t::skr_blob_arena_builder_t(size_t align)
 skr_blob_arena_builder_t::~skr_blob_arena_builder_t()
 {
     if(buffer)
+    {
         sakura_free_aligned(buffer, bufferAlign);
+    }
 }
 
 skr_blob_arena_t skr_blob_arena_builder_t::build()
@@ -90,7 +92,10 @@ int ReadTrait<bool>::Read(skr_binary_reader_t* reader, bool& value)
     uint32_t v;
     int ret = ReadTrait<uint32_t>::Read(reader, v);
     if (ret != 0)
+    {
+        SKR_LOG_FATAL("failed to read boolean value! ret code: %d", ret);
         return ret;
+    }
     value = v != 0;
     return ret;
 }
@@ -164,7 +169,11 @@ int ReadBitpacked(skr_binary_reader_t* reader, T& value, VectorSerdeConfig<Scala
         {
             ret = reader->read_bits(&values[i], ComponentBitCount);
             if(ret != 0)
+            {
+                auto type = skr::demangle<T>();
+                SKR_LOG_FATAL("failed to read packed bits of type %s! ret code: %d", type.c_str(), ret);
                 return ret;
+            }
         }
 
 		// Sign-extend the values. The most significant bit read indicates the sign.
@@ -256,12 +265,19 @@ int ReadTrait<skr::string>::Read(skr_binary_reader_t* reader, skr::string& str)
     uint32_t size;
     int ret = ReadTrait<uint32_t>::Read(reader, size);
     if (ret != 0)
+    {
+        SKR_LOG_FATAL("failed to read string buffer size! ret code: %d", ret);
         return ret;
+    }
     eastl::fixed_string<char8_t, 64> temp;
     temp.resize(size);
     ret = ReadBytes(reader, (void*)temp.c_str(), temp.size());
     if (ret != 0)
+    {
+        SKR_LOG_FATAL("failed to read string buffer size! ret code: %d", ret);
         return ret;
+    }
+
     str = skr::string(skr::string_view((const char8_t*)temp.c_str(), (int32_t)temp.size()));
     return ret;
 }
@@ -280,12 +296,18 @@ int ReadTrait<skr::string_view>::Read(skr_binary_reader_t* reader, skr_blob_aren
     }
     ret = ReadTrait<uint32_t>::Read(reader, offset);
     if (ret != 0)
+    {
+        SKR_LOG_FATAL("failed to read string buffer size (inside arena)! ret code: %d", ret);
         return ret;
+    }
 
     auto strbuf_start = (char8_t*)arena.get_buffer() + offset;
     ret = ReadBytes(reader, strbuf_start, size);
     if (ret != 0)
+    {
+        SKR_LOG_FATAL("failed to read string buffer content (inside arena)! ret code: %d", ret);
         return ret;
+    }
 
     auto ptr = const_cast<char8_t*>(strbuf_start + size);
     *ptr = u8'\0';
@@ -308,7 +330,10 @@ int ReadTrait<skr_resource_handle_t>::Read(skr_binary_reader_t* reader, skr_reso
     skr_guid_t guid;
     int ret = ReadTrait<skr_guid_t>::Read(reader, guid);
     if (ret != 0)
+    {
+        SKR_LOG_FATAL("failed to read resource handle guid! ret code: %d", ret);
         return ret;
+    }
     handle.set_guid(guid);
     return ret;
 }
@@ -319,11 +344,17 @@ int ReadTrait<skr_blob_t>::Read(skr_binary_reader_t* reader, skr_blob_t& blob)
     skr_blob_t temp;
     int ret = skr::binary::Read(reader, temp.size);
     if (ret != 0)
+    {
+        SKR_LOG_FATAL("failed to read blob size! ret code: %d", ret);
         return ret;
+    }
     temp.bytes = (uint8_t*)sakura_malloc(temp.size);
     ret = ReadBytes(reader, temp.bytes, temp.size);
     if (ret != 0)
+    {
+        SKR_LOG_FATAL("failed to read blob content! ret code: %d", ret);
         return ret;
+    }
     blob = std::move(temp);
     return ret;
 }
@@ -333,7 +364,10 @@ int ReadTrait<skr_blob_arena_t>::Read(skr_binary_reader_t* reader, skr_blob_aren
     uint32_t size;
     int ret = ReadTrait<uint32_t>::Read(reader, size);
     if (ret != 0)
+    {
+        SKR_LOG_FATAL("failed to read blob arena size! ret code: %d", ret);
         return ret;
+    }
     if (size == 0)
     {
         arena = skr_blob_arena_t(nullptr, 0, 0, 0);
@@ -342,7 +376,10 @@ int ReadTrait<skr_blob_arena_t>::Read(skr_binary_reader_t* reader, skr_blob_aren
     uint32_t align;
     ret = ReadTrait<uint32_t>::Read(reader, align);
     if (ret != 0)
+    {
+        SKR_LOG_FATAL("failed to read blob arena alignment! ret code: %d", ret);
         return ret;
+    }
     else
     {
         // FIXME: fix 0 alignment during serialization
