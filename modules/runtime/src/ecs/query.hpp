@@ -3,7 +3,8 @@
 #include "ecs/SmallVector.h"
 #include <EASTL/vector.h>
 #include <EASTL/unique_ptr.h>
-#include "containers/string.hpp"
+
+#include "containers/text.hpp"
 #include "containers/span.hpp"
 #include "containers/hashmap.hpp"
 
@@ -15,7 +16,7 @@ struct phase_entry {
     skr::span<dual_query_t*> queries;
     skr::flat_hash_map<dual_group_t*, dual_query_t*> include;
 };
-skr::string& get_error();
+skr::text::text& get_error();
 } // namespace dual
 
 

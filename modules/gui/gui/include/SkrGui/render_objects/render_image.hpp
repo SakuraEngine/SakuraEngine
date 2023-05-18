@@ -7,7 +7,7 @@ namespace gui {
 class SKR_GUI_API RenderImage : public RenderBox
 {
 public:
-    SKR_GUI_TYPE(RenderImage, RenderBox, "ad732810-9b4e-4903-b371-42aa23d75c0a");
+    SKR_GUI_TYPE(RenderImage, RenderBox, u8"ad732810-9b4e-4903-b371-42aa23d75c0a");
     RenderImage(skr_gdi_device_id gdi_device);
     virtual ~RenderImage();
 

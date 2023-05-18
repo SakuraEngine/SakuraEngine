@@ -32,7 +32,7 @@ scheduler_t& scheduler_t::get()
 {
     return dual_get_context()->scheduler;
 }
-skr::string& get_error()
+skr::text::text& get_error()
 {
     return dual_get_context()->error;
 }

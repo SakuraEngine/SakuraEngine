@@ -29,10 +29,10 @@ struct Input_GameInput : public InputLayer
     skr::SharedLibrary GameInputLibrary;
     bool DoCreate() SKR_NOEXCEPT
     {
-        if (auto GameInputLoaded = GameInputLibrary.load("GameInput.dll"); GameInputLoaded)
+        if (auto GameInputLoaded = GameInputLibrary.load(u8"GameInput.dll"); GameInputLoaded)
         {
             using FuncType = decltype(GameInputCreate);
-            auto pCreateFunc = (FuncType*)GameInputLibrary.getRawAddress("GameInputCreate");
+            auto pCreateFunc = (FuncType*)GameInputLibrary.getRawAddress(u8"GameInputCreate");
             if (pCreateFunc)
             {
                 auto CreateResult = pCreateFunc(&game_input);

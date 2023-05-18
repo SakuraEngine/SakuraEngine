@@ -91,6 +91,7 @@ public:
 
 	[[nodiscard]] codeunit_sequence raw() && noexcept;
 	[[nodiscard]] const codeunit_sequence& raw() const& noexcept;
+	[[nodiscard]] codeunit_sequence& raw() & noexcept;
 	
 	[[nodiscard]] text_view view() const noexcept;
 

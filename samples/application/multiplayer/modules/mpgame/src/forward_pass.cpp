@@ -17,6 +17,7 @@
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 
+#include <EASTL/fixed_string.h>
 #include <EASTL/vector_map.h>
 
 #include "tracy/Tracy.hpp"

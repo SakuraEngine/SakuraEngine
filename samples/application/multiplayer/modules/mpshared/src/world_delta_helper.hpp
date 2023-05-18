@@ -128,7 +128,7 @@ dual_type_index_t RegisterHistoryComponent()
 {
     dual_type_description_t desc;
     auto originDesc = dualT_get_desc(dual_id_of<T>::get());
-    skr::string name = skr::format("{}_History", originDesc->name);
+    skr::string name = skr::format(u8"{}_History", originDesc->name);
     skr::string* persistentName = new skr::string(name);
     desc.name = persistentName->c_str();
     using array_t = dual::array_comp_T<T, 4>;

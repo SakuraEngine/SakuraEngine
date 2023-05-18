@@ -21,7 +21,7 @@ class SkrTweakModule : public skr::IDynamicModule, public efsw::FileWatchListene
 {
 public:
     static SkrTweakModule* instance;
-    virtual void on_load(int argc, char** argv) override
+    virtual void on_load(int argc, char8_t** argv) override
     {
         instance = this;
         _watcher.watch();
@@ -60,7 +60,7 @@ public:
         }
 
         size_t current_line_num = 1;
-        auto& tweak_file = _tweak_files[(const char*)path.u8string().c_str()];
+        auto& tweak_file = _tweak_files[path.u8string().c_str()];
         size_t tweak_line_index = 0;
         while ( file.good() && tweak_line_index < tweak_file.size() ) {
             std::string line;
@@ -77,14 +77,15 @@ public:
             if(file.good() && current_line_num == tweak_file[tweak_line_index].line_number)
             {
                 size_t tweak_index = 0;
-                eastl::string_view sv = {line.c_str(), line.size()};
+                std::string_view sv = {line.c_str(), line.size()};
                 
                 auto pos = sv.find("TWEAK");
-                while(pos != eastl::string_view::npos && tweak_index < tweak_file[tweak_line_index].tweaks.size())
+                while(pos != std::string_view::npos && tweak_index < tweak_file[tweak_line_index].tweaks.size())
                 {
                     auto end = sv.find(')', pos);
-                    SKR_ASSERT(end != eastl::string_view::npos);
-                    auto valueStr = sv.substr(pos + 6, end - pos - 6);
+                    SKR_ASSERT(end != std::string_view::npos);
+                    auto stdValueStr = sv.substr(pos + 6, end - pos - 6);
+                    auto valueStr = skr::string_view((const char8_t*)stdValueStr.data(), stdValueStr.size());
                     auto tweak = tweak_file[tweak_line_index].tweaks[tweak_index];
                     
                     std::visit([&](auto& value)
@@ -107,12 +108,12 @@ public:
         static skr::filesystem::path root = SKR_SOURCE_ROOT;
         skr::filesystem::path path = (root / fileName).lexically_normal();
         auto directory = path.parent_path().lexically_normal().u8string();
-        if(!_watched_directories.contains((const char*)directory.c_str()))
+        if(!_watched_directories.contains(directory.c_str()))
         {
             _watcher.addWatch((const char*)directory.c_str(), this, false);
-            _watched_directories.insert((const char*)directory.c_str());
+            _watched_directories.insert(directory.c_str());
         }
-        auto& file = _tweak_files[(const char*)path.u8string().c_str()];
+        auto& file = _tweak_files[path.u8string().c_str()];
         TweakLine* line = nullptr;
         for(auto& lines : file)
         {
@@ -135,28 +136,28 @@ public:
 
     void ParseTweak(int& value, skr::string_view str)
     {
-        value = std::stoi({str.data(), str.size()});
+        value = std::stoi({str.c_str(), (size_t)str.size()});
     }
 
     void ParseTweak(float& value, skr::string_view str)
     {
-        value = std::stof({str.data(), str.size()});
+        value = std::stof({str.c_str(), (size_t)str.size()});
     }
 
     void ParseTweak(bool& value, skr::string_view str)
     {
-        value = str == skr::string_view("true");
+        value = str == skr::string_view(u8"true");
     }
 
-    void ParseTweak(eastl::string& value, skr::string_view str)
+    void ParseTweak(skr::string& value, skr::string_view str)
     {
         value = str;
     }
 
     SMutexObject _mutex;
     efsw::FileWatcher _watcher;
-    skr::flat_hash_set<eastl::string, eastl::hash<eastl::string>> _watched_directories;
-    skr::flat_hash_map<eastl::string, eastl::vector<TweakLine>, eastl::hash<eastl::string>> _tweak_files;
+    skr::flat_hash_set<skr::string, skr::hash<skr::string>> _watched_directories;
+    skr::flat_hash_map<skr::string, eastl::vector<TweakLine>, skr::hash<skr::string>> _tweak_files;
 };
 SkrTweakModule* SkrTweakModule::instance = nullptr;
 
@@ -186,13 +187,13 @@ bool skr_get_tweak(skr_tweak_bool_t* tweak)
 {
     return std::get<bool>(((skr_tweak_value_t*)tweak)->value);
 }
-skr_tweak_string_t* skr_tweak_value(const char* value, const char* str, const char* fileName, int lineNumber)
+skr_tweak_string_t* skr_tweak_value(const char8_t* value, const char* str, const char* fileName, int lineNumber)
 {
-    return (skr_tweak_string_t*)SkrTweakModule::instance->TweakValue(eastl::string(value), str, fileName, lineNumber);
+    return (skr_tweak_string_t*)SkrTweakModule::instance->TweakValue(skr::string(value), str, fileName, lineNumber);
 }
 const char* skr_get_tweak(skr_tweak_string_t* tweak)
 {
-    return std::get<eastl::string>(((skr_tweak_value_t*)tweak)->value).c_str();
+    return std::get<skr::string>(((skr_tweak_value_t*)tweak)->value).c_str();
 }
 #else
 SKR_TWEAK_API skr_tweak_int_t* skr_tweak_value(int value, const char* str, const char* fileName, int lineNumber)

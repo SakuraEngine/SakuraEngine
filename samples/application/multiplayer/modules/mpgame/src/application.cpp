@@ -692,7 +692,7 @@ void MPApplication::UpdateEnteringGame()
                     renderWorld.renderer = renderer.renderer;
                     // Viewport
                     auto viewport_manager = renderer.renderer->get_viewport_manager();
-                    viewport_manager->register_viewport("main_viewport");
+                    viewport_manager->register_viewport(u8"main_viewport");
                     initialize_render_effects(renderer.renderer, renderer.renderGraph, resource_vfs);
                     renderWorld.LoadScene();
                     world.ReceiveWorldDelta(data, size);
@@ -852,7 +852,7 @@ void MPApplication::UpdateGame()
                 auto name = dualT_get_desc(type.data[i])->name;
                 auto bandwidth = world.worldDeltaApplier->GetBandwidthOf(type.data[i]);
                 totalComponentBandwidth += bandwidth;
-                ImGui::LabelText(name, "%f", bandwidth);
+                ImGui::LabelText((const char*)name, "%f", bandwidth);
             }
             ImGui::LabelText("other", "%f", world.GetBytePerSecondBeforeCompress() - totalComponentBandwidth);
         }

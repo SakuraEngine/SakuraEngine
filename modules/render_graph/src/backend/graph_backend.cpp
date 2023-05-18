@@ -82,10 +82,10 @@ void RenderGraphFrameExecutor::reset_begin(TextureViewPool& texture_view_pool)
     }
 
     cgpu_cmd_begin(gfx_cmd_buf);
-    write_marker("Frame Begin");
+    write_marker(u8"Frame Begin");
 }
 
-void RenderGraphFrameExecutor::write_marker(const char* message)
+void RenderGraphFrameExecutor::write_marker(const char8_t* message)
 {
     cgpu_marker_buffer_write(gfx_cmd_buf, marker_buffer, marker_idx++, valid_marker_val);
     marker_messages.push_back(message);
@@ -361,13 +361,13 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
         for (uint32_t e_idx = 0; e_idx < buf_read_edges.size(); e_idx++)
         {
             auto& read_edge = buf_read_edges[e_idx];
-            SKR_ASSERT(!read_edge->name.empty());
+            SKR_ASSERT(!read_edge->name.is_empty());
             // TODO: refactor this
             const auto& resource = *find_shader_resource(read_edge->name_hash, root_sig);
 
             ECGPUResourceType resource_type = resource.type;
             {
-                bind_table_keys += read_edge->name.empty() ? resource.name : (const char8_t*)read_edge->name.c_str();
+                bind_table_keys += read_edge->name.is_empty() ? resource.name : (const char8_t*)read_edge->name.c_str();
                 bind_table_keys += u8";";
                 bindTableValueNames.emplace_back(resource.name);
 
@@ -386,11 +386,11 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
         for (uint32_t e_idx = 0; e_idx < tex_read_edges.size(); e_idx++)
         {
             auto& read_edge = tex_read_edges[e_idx];
-            SKR_ASSERT(!read_edge->name.empty());
+            SKR_ASSERT(!read_edge->name.is_empty());
             const auto& resource = *find_shader_resource(read_edge->name_hash, root_sig);
 
             {
-                bind_table_keys += read_edge->name.empty() ? resource.name : (const char8_t*)read_edge->name.c_str();
+                bind_table_keys += read_edge->name.is_empty() ? resource.name : (const char8_t*)read_edge->name.c_str();
                 bind_table_keys += u8";";
                 bindTableValueNames.emplace_back(resource.name);
 
@@ -424,11 +424,11 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
         for (uint32_t e_idx = 0; e_idx < tex_rw_edges.size(); e_idx++)
         {
             auto& rw_edge = tex_rw_edges[e_idx];
-            SKR_ASSERT(!rw_edge->name.empty());
+            SKR_ASSERT(!rw_edge->name.is_empty());
             const auto& resource = *find_shader_resource(rw_edge->name_hash, root_sig);
 
             {
-                bind_table_keys += rw_edge->name.empty() ? resource.name : (const char8_t*)rw_edge->name.c_str();
+                bind_table_keys += rw_edge->name.is_empty() ? resource.name : (const char8_t*)rw_edge->name.c_str();
                 bind_table_keys += u8";";
                 bindTableValueNames.emplace_back(resource.name);
 
@@ -454,7 +454,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
             }
         }
     }
-    auto bind_table = executor.bind_table_pools[root_sig]->pop(bind_table_keys.c_str(), bindTableValueNames.data(), (uint32_t)bindTableValueNames.size());
+    auto bind_table = executor.bind_table_pools[root_sig]->pop(bind_table_keys.u8_str(), bindTableValueNames.data(), (uint32_t)bindTableValueNames.size());
     cgpux_bind_table_update(bind_table, desc_set_updates.data(), (uint32_t)desc_set_updates.size());
     return bind_table;
 }
@@ -599,10 +599,10 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     cgpu_cmd_resource_barrier(executor.gfx_cmd_buf, &barriers);
     {
         ZoneScopedN("WriteBarrierMarker");
-        graph_big_object_string message = "Pass-";
-        message += (const char*)pass->get_name();
-        message += "-BeginBarrier";
-        executor.write_marker(message.c_str());
+        graph_big_object_string message = u8"Pass-";
+        message += pass->get_name();
+        message += u8"-BeginBarrier";
+        executor.write_marker(message.u8_str());
     }
     // color attachments
     stack_vector<CGPUColorAttachment> color_attachments = {};
@@ -718,10 +718,10 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     pass_context.cmd = executor.gfx_cmd_buf;
     {
         ZoneScopedN("WriteBeginPassMarker");
-        graph_big_object_string message = "Pass-";
-        message += (const char*)pass->get_name();
-        message += "-BeginPass";
-        executor.write_marker(message.c_str());
+        graph_big_object_string message = u8"Pass-";
+        message += pass->get_name();
+        message += u8"-BeginPass";
+        executor.write_marker(message.u8_str());
     }
     {
         ZoneScopedN("BeginRenderPass");
@@ -742,10 +742,10 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
     cgpu_cmd_end_render_pass(executor.gfx_cmd_buf, pass_context.encoder);
     {
         ZoneScopedN("WriteEndPassMarker");
-        graph_big_object_string message = "Pass-";
-        message += (const char*)pass->get_name();
-        message += "-EndRenderPass";
-        executor.write_marker(message.c_str());
+        graph_big_object_string message = u8"Pass-";
+        message += pass->get_name();
+        message += u8"-EndRenderPass";
+        executor.write_marker(message.u8_str());
     }
     cgpu_cmd_end_event(executor.gfx_cmd_buf);
     // deallocate
@@ -903,8 +903,7 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
         {
             ZoneScopedN("GraphExecutorBeginEvent");
 
-            skr::string frameLabel = "Frame";
-            frameLabel.append(skr::to_string(frame_index));
+            skr::string frameLabel = skr::format(u8"Frame-{}", frame_index);
             CGPUEventInfo event = { (const char8_t*)frameLabel.c_str(), { 0.8f, 0.8f, 0.8f, 1.f } };
             cgpu_cmd_begin_event(executor.gfx_cmd_buf, &event);
         }

@@ -63,8 +63,8 @@ void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
         dualG_get_type(group, &type);
         for(EIndex i = 0; i < view->count; ++i)
         {
-            auto guidStr = skr::format("{}", cguids[i]);
-            writer->Key(guidStr.c_str(), guidStr.size());
+            auto guidStr = skr::format(u8"{}", cguids[i]);
+            writer->Key(guidStr.u8_str(), guidStr.size());
             writer->StartObject();
             for(EIndex j = 0; j < type.type.length; ++j)
             {
@@ -99,7 +99,7 @@ void skr_load_scene(dual_storage_t* world, skr_json_reader_t* reader)
             continue;
         skr_guid_t guid;
         auto keyStr = key.value_unsafe();
-        if(!skr::guid::make_guid({keyStr.data(), keyStr.length()}, guid))
+        if(!skr::guid::make_guid(skr::string_view((const char8_t*)keyStr.data(), keyStr.length()), guid))
             continue;
         auto entity = field.value().get_object();
         if(entity.error() != simdjson::error_code::SUCCESS)
@@ -112,7 +112,7 @@ void skr_load_scene(dual_storage_t* world, skr_json_reader_t* reader)
             if(ERR(key))
                 continue;
             auto keyStr = key.value_unsafe();
-            auto typeId = dualT_get_type_by_name(keyStr.data());
+            auto typeId = dualT_get_type_by_name((const char8_t*)keyStr.data());
             if(typeId == dual::kInvalidTypeIndex)
                 continue;
             auto desc = dualT_get_desc(typeId);
@@ -131,7 +131,7 @@ void skr_load_scene(dual_storage_t* world, skr_json_reader_t* reader)
                 auto componentValue = component.value();
                 if(ERR(componentValue))
                     continue;
-                auto type = dualT_get_type_by_name(component.unescaped_key().value_unsafe().data());
+                auto type = dualT_get_type_by_name((const char8_t*)component.unescaped_key().value_unsafe().data());
                 auto desc = dualT_get_desc(type);
                 auto serde = desc->callback.deserialize_text;
                 if(!serde)

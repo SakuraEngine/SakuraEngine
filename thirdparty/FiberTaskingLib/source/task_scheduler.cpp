@@ -95,8 +95,7 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void* const arg)
     // Switch
 #ifdef TRACY_ENABLE
     {
-        ::skr::string threadId = "worker";
-        threadId += ::skr::to_string(index);
+        ::skr::string threadId = ::skr::format(u8"worker-{}", index);
         TracyFiberEnter(threadId.c_str());
         taskScheduler->m_tls[index].ThreadFiber.SwitchToFiber(freeFiber);
         TracyFiberLeave;

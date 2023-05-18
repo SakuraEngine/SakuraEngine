@@ -31,7 +31,7 @@ static struct inspect_system* _system = nullptr;
 struct inspect_system : public skr::ModuleSubsystem
 {
     using tweak_value_map_t = skr::btree_multimap<uint32_t, tweak_value_t>;
-    skr::flat_hash_map<eastl::string, tweak_value_map_t, eastl::hash<eastl::string>> _tweak_files;
+    skr::flat_hash_map<skr::string, tweak_value_map_t, skr::hash<skr::string>> _tweak_files;
     uint32_t counter = 0;
 
     void Initialize() override
@@ -49,7 +49,7 @@ struct inspect_system : public skr::ModuleSubsystem
     {
         SMutexLock lock(_mutex.mMutex);
         skr::filesystem::path path = skr::filesystem::path(fileName).lexically_normal();
-        auto& tweak_file = _tweak_files[(const char*)path.u8string().c_str()]; 
+        auto& tweak_file = _tweak_files[path.u8string().c_str()]; 
         auto result = &tweak_file.emplace(lineNumber, tweak_value_t{})->second;
         result->value = value;
         result->ident = counter++;
@@ -265,7 +265,7 @@ void inspect_system::DrawPropertyPannel(const skr_value_ref_t &object)
         ImGui::TableSetupColumn("Value");
         ImGui::TableSetupScrollFreeze(0, 1);
         ImGui::TableHeadersRow();
-        DrawObject(object, "Root");
+        DrawObject(object, u8"Root");
         ImGui::EndTable();
     }
     ImGui::PopStyleVar();

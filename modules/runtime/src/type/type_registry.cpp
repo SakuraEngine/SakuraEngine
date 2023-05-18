@@ -1,4 +1,3 @@
-#include "fmt/core.h"
 #include "containers/sptr.hpp"
 #include "containers/vector.hpp"
 #include "utils/format.hpp"
@@ -15,11 +14,11 @@
 
 static auto& skr_get_type_name_map()
 {
-    static skr::flat_hash_map<skr_guid_t, const char*, skr::guid::hash> type_name_map;
+    static skr::flat_hash_map<skr_guid_t, const char8_t*, skr::guid::hash> type_name_map;
     return type_name_map;
 }
 
-const char* skr_get_type_name(const skr_guid_t* typeId)
+const char8_t* skr_get_type_name(const skr_guid_t* typeId)
 {
     auto& type_name_map = skr_get_type_name_map();
     auto it = type_name_map.find(*typeId);
@@ -35,7 +34,7 @@ const char* skr_get_type_name(const skr_guid_t* typeId)
     return nullptr;
 }
 
-void skr_register_type_name(const skr_guid_t* type, const char* name)
+void skr_register_type_name(const skr_guid_t* type, const char8_t* name)
 {
     auto& type_name_map = skr_get_type_name_map();
     type_name_map[*type] = name;
@@ -95,8 +94,8 @@ skr_type_t::~skr_type_t() SKR_NOEXCEPT
     fun(SKR_TYPE_CATEGORY_GUID, skr_guid_t)              \
     fun(SKR_TYPE_CATEGORY_MD5, skr_md5_t)              \
     fun(SKR_TYPE_CATEGORY_HANDLE, skr_resource_handle_t) \
-    fun(SKR_TYPE_CATEGORY_STR, skr::string)              \
-    fun(SKR_TYPE_CATEGORY_STRV, skr::string_view)
+    fun(SKR_TYPE_CATEGORY_STR, skr::text::text)              \
+    fun(SKR_TYPE_CATEGORY_STRV, skr::text::text_view)
 
 size_t skr_type_t::Size() const
 {
@@ -111,9 +110,9 @@ size_t skr_type_t::Size() const
         case SKR_TYPE_CATEGORY_ARR:
             return ((ArrayType*)this)->size;
         case SKR_TYPE_CATEGORY_DYNARR:
-            return sizeof(eastl::vector<char>);
+            return sizeof(eastl::vector<char8_t>);
         case SKR_TYPE_CATEGORY_ARRV:
-            return sizeof(skr::span<char>);
+            return sizeof(skr::span<char8_t>);
         case SKR_TYPE_CATEGORY_OBJ:
             return ((RecordType*)this)->size;
         case SKR_TYPE_CATEGORY_ENUM:
@@ -149,9 +148,9 @@ size_t skr_type_t::Align() const
         case SKR_TYPE_CATEGORY_ARR:
             return ((ArrayType*)this)->elementType->Align();
         case SKR_TYPE_CATEGORY_DYNARR:
-            return alignof(eastl::vector<char>);
+            return alignof(eastl::vector<char8_t>);
         case SKR_TYPE_CATEGORY_ARRV:
-            return alignof(skr::span<char>);
+            return alignof(skr::span<char8_t>);
         case SKR_TYPE_CATEGORY_OBJ:
             return ((RecordType*)this)->align;
         case SKR_TYPE_CATEGORY_ENUM:
@@ -193,74 +192,84 @@ skr_guid_t skr_type_t::Id() const
     return {};
 }
 
-const char* skr_type_t::Name() const
+const char8_t* skr_type_t::Name() const
 {
     using namespace skr::type;
 #define TRIVAL_TYPE_IMPL(name, type) \
     case name:                       \
-        return #type;
+        return OSTR_UTF8(#type);
     switch (type)
     {
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
         case SKR_TYPE_CATEGORY_ARR: {
             auto& arr = (ArrayType&)(*this);
-            if (arr.name.empty())
-                arr.name = skr::string(arr.elementType->Name()) + "[" + skr::to_string(arr.size) + "]";
-            return arr.name.c_str();
+            if (arr.name.is_empty())
+            {
+                arr.name = skr::format(u8"{}[{}]", arr.elementType->Name(), arr.size);
+
+            }
+            return arr.name.u8_str();
         }
         case SKR_TYPE_CATEGORY_DYNARR: {
             auto& arr = (DynArrayType&)(*this);
-            if (arr.name.empty())
-                arr.name = skr::format("eastl::vector<{}>", arr.elementType->Name());
-            return arr.name.c_str();
+            if (arr.name.is_empty())
+                arr.name = skr::format(u8"eastl::vector<{}>", arr.elementType->Name());
+            return arr.name.u8_str();
         }
         case SKR_TYPE_CATEGORY_ARRV: {
             auto& arr = (ArrayViewType&)(*this);
-            if (arr.name.empty())
-                arr.name = skr::format("skr::span<{}>", arr.elementType->Name());
-            return arr.name.c_str();
+            if (arr.name.is_empty())
+                arr.name = skr::format(u8"skr::span<{}>", arr.elementType->Name());
+            return arr.name.u8_str();
         }
         case SKR_TYPE_CATEGORY_OBJ:
-            return ((RecordType*)this)->name.data();
+            return ((RecordType*)this)->name.u8_str();
         case SKR_TYPE_CATEGORY_ENUM:
-            return ((EnumType*)this)->name.data();
+            return ((EnumType*)this)->name.u8_str();
         case SKR_TYPE_CATEGORY_REF: {
             auto& ref = (ReferenceType&)(*this);
-            if (!ref.name.empty())
-                return ref.name.c_str();
+            if (!ref.name.is_empty())
+                return ref.name.u8_str();
             switch (ref.ownership)
             {
                 case ReferenceType::Shared:
                     if (ref.object)
-                        ref.name = skr::format("skr::SObjectPtr<{}>", ref.pointee ? ref.pointee->Name() : "skr::SInterface");
+                        ref.name = skr::format(u8"skr::SObjectPtr<{}>", ref.pointee ? ref.pointee->Name() : u8"skr::SInterface");
                     else
-                        ref.name = skr::format("skr::SPtr<{}>", ref.pointee ? ref.pointee->Name() : "void");
+                        ref.name = skr::format(u8"skr::SPtr<{}>", ref.pointee ? ref.pointee->Name() : u8"void");
                     break;
                 case ReferenceType::Observed:
-                    ref.name = ref.pointee ? (skr::string(ref.pointee->Name()) + " *") : "void*";
+                    if (ref.pointee)
+                    {
+                        ref.name = skr::format(u8"{} *", ref.pointee->Name());
+                    }
+                    else
+                    {
+                        ref.name = u8"void *";
+                    }
                     break;
             }
-            return ref.name.c_str();
+            return ref.name.u8_str();
         }
         case SKR_TYPE_CATEGORY_VARIANT: {
             auto& variant = (VariantType&)(*this);
-            if (!variant.name.empty())
-                return variant.name.c_str();
-            variant.name = "skr::variant<";
+            if (!variant.name.is_empty())
+                return variant.name.u8_str();
+            variant.name = u8"skr::variant<";
             bool first = true;
             for (auto& type : variant.types)
             {
                 if (!first)
-                    variant.name += ", ";
+                    variant.name += u8", ";
                 first = false;
                 variant.name += type->Name();
             }
-            variant.name += ">";
-            return variant.name.c_str();
+            variant.name += u8">";
+            return variant.name.u8_str();
         }
     }
-    return "";
+    return u8"";
 }
 
 bool skr_type_t::Same(const skr_type_t* srcType) const
@@ -583,9 +592,10 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
         break;
 #define STR_CONVERT                                                    \
     case SKR_TYPE_CATEGORY_STR:                                        \
-        FromString(dst, skr::string_view(*(skr::string*)src), policy); \
+        { const auto& txt = *(skr::text::text*)src; FromString(dst, skr::text::text_view(txt.u8_str()), policy); } break;\
     case SKR_TYPE_CATEGORY_STRV:                                       \
-        FromString(dst, skr::string_view(*(skr::string_view*)src), policy);
+        { const auto& txt = *(skr::text::text_view*)src; FromString(dst, skr::text::text_view(txt.u8_str()), policy); } break;
+        
 #define ENUM_CONVERT                                   \
     case SKR_TYPE_CATEGORY_ENUM: {                     \
         auto& enm = (const EnumType&)(*srcType);       \
@@ -601,9 +611,12 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             {
                 BASE_CONVERT
                 case SKR_TYPE_CATEGORY_STR:
-                    policy->parse(policy, skr::string_view(*(skr::string*)src), dst, this);
+                {
+                    const auto& txt = *(skr::text::text*)src;
+                    policy->parse(policy, skr::text::text_view(txt.u8_str()), dst, this);
+                }
                 case SKR_TYPE_CATEGORY_STRV:
-                    policy->parse(policy, *(skr::string_view*)src, dst, this);
+                    policy->parse(policy, *(skr::text::text_view*)src, dst, this);
                 case SKR_TYPE_CATEGORY_REF: {
                     auto& ref = (const ReferenceType&)(*srcType);
                     switch (ref.ownership)
@@ -744,11 +757,11 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             }
         }
         case SKR_TYPE_CATEGORY_STR: {
-            auto& dstV = *(skr::string*)dst;
+            auto& dstV = *(skr::text::text*)dst;
             switch (srcType->type)
             {
                 case SKR_TYPE_CATEGORY_STRV:
-                    dstV = *(skr::string_view*)src;
+                    dstV = *(skr::text::text_view*)src;
                     break;
                 default:
                     dstV = srcType->ToString(src);
@@ -757,12 +770,15 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
             break;
         }
         case SKR_TYPE_CATEGORY_STRV: {
-            auto& dstV = *(skr::string_view*)dst;
+            auto& dstV = *(skr::text::text_view*)dst;
             switch (srcType->type)
             {
                 case SKR_TYPE_CATEGORY_STR:
-                    dstV = *(skr::string*)src;
+                {
+                    const auto& txt = *(skr::text::text*)src;
+                    dstV = { txt.u8_str(), txt.size() };
                     break;
+                }
                 default:
                     break;
             }
@@ -857,9 +873,12 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
         case SKR_TYPE_CATEGORY_ENUM: {
             auto& enm = (const EnumType&)(*this);
             if (srcType->type == SKR_TYPE_CATEGORY_STR)
-                enm.FromString(dst, *(skr::string*)src);
+            {
+                const auto& txt = *(skr::text::text*)src;
+                enm.FromString(dst, { txt.u8_str(), txt.size() });
+            }
             else if (srcType->type == SKR_TYPE_CATEGORY_STRV)
-                enm.FromString(dst, *(skr::string_view*)src);
+                enm.FromString(dst, *(skr::text::text_view*)src);
             else
                 enm.underlyingType->Convert(dst, src, srcType);
             break;
@@ -945,19 +964,19 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
 }
 
 template <class T>
-skr::string ToStringImpl(const void* dst)
+skr::text::text ToStringImpl(const void* dst)
 {
-    return skr::format("{}", *(T*)dst);
+    return skr::format(u8"{}", *(T*)dst);
 }
 
 template <>
-skr::string ToStringImpl<skr_resource_handle_t>(const void* dst)
+skr::text::text ToStringImpl<skr_resource_handle_t>(const void* dst)
 {
     auto guid = (*(skr_resource_handle_t*)dst).get_serialized();
     return ToStringImpl<skr_guid_t>(&guid);
 }
 
-skr::string skr_type_t::ToString(const void* dst, skr::type::ValueSerializePolicy* policy) const
+skr::text::text skr_type_t::ToString(const void* dst, skr::type::ValueSerializePolicy* policy) const
 {
     using namespace skr::type;
     if (policy)
@@ -965,7 +984,7 @@ skr::string skr_type_t::ToString(const void* dst, skr::type::ValueSerializePolic
     else
     {
         SKR_UNIMPLEMENTED_FUNCTION();
-        return "";
+        return u8"";
         // #define TRIVAL_TYPE_IMPL(name, type) \
 //     case name:                       \
 //         return ToStringImpl<type>(dst);
@@ -1027,7 +1046,7 @@ void skr_type_t::Construct(void* dst, skr::type::Value* args, size_t nargs) cons
     switch (type)
     {
         case SKR_TYPE_CATEGORY_STR:
-            new (dst) skr::string();
+            new (dst) skr::text::text();
             break;
         case SKR_TYPE_CATEGORY_ARR: {
             auto& arr = (const ArrayType&)(*this);
@@ -1153,7 +1172,7 @@ void skr_type_t::Destruct(void* address) const
             break;
         }
         case SKR_TYPE_CATEGORY_STR: {
-            ((skr::string*)address)->~basic_string();
+            ((skr::text::text*)address)->~text();
             break;
         }
         case SKR_TYPE_CATEGORY_DYNARR: {
@@ -1566,7 +1585,7 @@ int DeserializeImpl(void* dst, skr_binary_reader_t* reader)
 }
 
 template <>
-int DeserializeImpl<skr::string_view>(void* dst, skr_binary_reader_t* reader)
+int DeserializeImpl<skr::text::text_view>(void* dst, skr_binary_reader_t* reader)
 {
     SKR_UNREACHABLE_CODE();
     return 1;
@@ -1660,7 +1679,7 @@ skr::json::error_code DeserializeTextImpl(void* dst, skr::json::value_t&& reader
 }
 
 template <>
-skr::json::error_code DeserializeTextImpl<skr::string_view>(void* dst, skr::json::value_t&& reader)
+skr::json::error_code DeserializeTextImpl<skr::text::text_view>(void* dst, skr::json::value_t&& reader)
 {
     SKR_UNREACHABLE_CODE();
     return skr::json::error_code::INCORRECT_TYPE;

@@ -270,7 +270,7 @@ int initialize(int argc, const char** argv)
     std::error_code ec = {};
     auto root = skr::filesystem::current_path(ec);
     moduleManager->mount(root.u8string().c_str());
-    moduleManager->make_module_graph("SkrRenderer", true);
+    moduleManager->make_module_graph(u8"SkrRenderer", true);
     moduleManager->init_module_graph(argc, argv);
 
     if (auto result = CreateMainWindow(); result != 0)

@@ -29,6 +29,6 @@ SKR_TEXTURE_COMPILER_API STextureSamplerCooker final : public SCooker
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override { return 1u; }
 }
-sregister_default_cooker("ab483a53-5024-48f2-87a7-9502063c97f3");
+sregister_default_cooker(u8"ab483a53-5024-48f2-87a7-9502063c97f3");
 } // namespace asset
 } // namespace skd

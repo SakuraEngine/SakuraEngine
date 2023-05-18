@@ -44,8 +44,8 @@ enum DemoUploadMethod
 
 class SLive2DViewerModule : public skr::IDynamicModule
 {
-    virtual void on_load(int argc, char** argv) override;
-    virtual int main_module_exec(int argc, char** argv) override;
+    virtual void on_load(int argc, char8_t** argv) override;
+    virtual int main_module_exec(int argc, char8_t** argv) override;
     virtual void on_unload() override;
 
 public:
@@ -72,11 +72,11 @@ IMPLEMENT_DYNAMIC_MODULE(SLive2DViewerModule, Live2DViewer);
 SLive2DViewerModule* SLive2DViewerModule::Get()
 {
     auto mm = skr_get_module_manager();
-    static auto rm = static_cast<SLive2DViewerModule*>(mm->get_module("Live2DViewer"));
+    static auto rm = static_cast<SLive2DViewerModule*>(mm->get_module(u8"Live2DViewer"));
     return rm;
 }
 
-void SLive2DViewerModule::on_load(int argc, char** argv)
+void SLive2DViewerModule::on_load(int argc, char8_t** argv)
 {
     SKR_LOG_INFO("live2d viewer loaded!");
 
@@ -151,8 +151,8 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
                     skr_live2d_model_free(mesh_comps[i].ram_request.model_resource);
                 }
             };
-            skr_render_effect_access(renderer, view, "Live2DEffect", DUAL_LAMBDA(modelFree));
-            skr_render_effect_detach(renderer, view, "Live2DEffect");
+            skr_render_effect_access(renderer, view, u8"Live2DEffect", DUAL_LAMBDA(modelFree));
+            skr_render_effect_detach(renderer, view, u8"Live2DEffect");
             dualS_destroy(storage, view);
         };
         dualS_query(storage, &filter, &meta, DUAL_LAMBDA(freeFunc));
@@ -160,7 +160,7 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
 
     // allocate new
     auto live2dEntSetup = [&](dual_chunk_view_t* view) {
-        skr_render_effect_attach(renderer, view, "Live2DEffect");
+        skr_render_effect_attach(renderer, view, u8"Live2DEffect");
         
         auto modelSetup = [=](dual_chunk_view_t* view) {
             auto render_device = renderer->get_render_device();
@@ -198,12 +198,12 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
                 skr_live2d_model_create_from_json(ram_service, u8"Live2DViewer/Hiyori/Hiyori.model3.json", &ram_request);
             }
         };
-        skr_render_effect_access(renderer, view, "Live2DEffect", DUAL_LAMBDA(modelSetup));
+        skr_render_effect_access(renderer, view, u8"Live2DEffect", DUAL_LAMBDA(modelSetup));
     };
     dualS_allocate_type(storage, &renderableT, 1, DUAL_LAMBDA(live2dEntSetup));
 }
 
-int SLive2DViewerModule::main_module_exec(int argc, char** argv)
+int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
 {
     SKR_LOG_INFO("live2d viewer executed!");
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) 
@@ -218,7 +218,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char** argv)
     window_desc.height = 1500;
     window_desc.width = 1500;
     main_window = skr_create_window(
-        skr::text::format(u8"Live2D Viewer Inner [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).u8_str(),
+        skr::format(u8"Live2D Viewer Inner [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).u8_str(),
         &window_desc);
 
     auto ram_service = SLive2DViewerModule::Get()->ram_service;

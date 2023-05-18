@@ -15,7 +15,7 @@ TypeTreeNode::~TypeTreeNode() SKR_NOEXCEPT
 
 }
 
-void TypeTreeNode::create_dynamic_type(skr_guid_t id, skr_dynamic_record_type_id parent_type, const char* name) SKR_NOEXCEPT
+void TypeTreeNode::create_dynamic_type(skr_guid_t id, skr_dynamic_record_type_id parent_type, const char8_t* name) SKR_NOEXCEPT
 {
     if (parent_type)
     {

@@ -208,7 +208,7 @@ ESkrInstallStatus STextureFactoryImpl::InstallWithDStorage(skr_resource_record_t
             if (gpuCompressOnly)
             {
                 const char* suffix = GetSuffixWithCompressionFormat((ECGPUFormat)texture_resource->format);
-                auto compressedBin = skr::format("{}{}", guid, suffix); //TODO: choose compression format
+                auto compressedBin = skr::format(u8"{}{}", guid, suffix); //TODO: choose compression format
                 auto compressedPath = skr::filesystem::path(root.dstorage_root) / compressedBin.c_str();
                 auto dRequest = SPtr<DStorageRequest>::Create();
                 InstallType installType = {EInstallMethod::DSTORAGE, ECompressMethod::BC_OR_ASTC};
@@ -260,7 +260,7 @@ ESkrInstallStatus STextureFactoryImpl::InstallWithUpload(skr_resource_record_t* 
         {
             const char* suffix = GetSuffixWithCompressionFormat((ECGPUFormat)texture_resource->format);
             auto uRequest = SPtr<UploadRequest>::Create(
-                this, fmt::format("{}{}", guid, suffix).c_str(), texture_resource);
+                this, skr::format(u8"{}{}", guid, suffix).c_str(), texture_resource);
             InstallType installType = {EInstallMethod::UPLOAD, ECompressMethod::BC_OR_ASTC};
             auto found = mUploadRequests.find(texture_resource);
             SKR_ASSERT(found == mUploadRequests.end());

@@ -25,7 +25,7 @@ auto log_locker = +[](bool isLocked, void* pMutex){
     }
 };
 
-void SkrRuntimeModule::on_load(int argc, char** argv)
+void SkrRuntimeModule::on_load(int argc, char8_t** argv)
 {
     // set lock for log
     skr_init_mutex_recursive(&log_mutex);
@@ -57,7 +57,7 @@ void SkrRuntimeModule::on_unload()
 SkrRuntimeModule* SkrRuntimeModule::Get()
 {
     auto mm = skr_get_module_manager();
-    static auto rm = static_cast<SkrRuntimeModule*>(mm->get_module("SkrRT"));
+    static auto rm = static_cast<SkrRuntimeModule*>(mm->get_module(u8"SkrRT"));
     return rm;
 }
 

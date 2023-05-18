@@ -147,7 +147,7 @@ int compile_all(int argc, char** argv)
         if (iter->is_regular_file(ec) && IsAsset(iter->path()))
         {
             paths.push_back(*iter);
-            SKR_LOG_FMT_DEBUG("{}", iter->path().string());
+            SKR_LOG_FMT_DEBUG(u8"{}", iter->path().u8string().c_str());
         }
         iter.increment(ec);
     }
@@ -204,7 +204,7 @@ int main(int argc, char** argv)
         FrameMark;
         ZoneScopedN("Initialize");
         moduleManager->mount(root.u8string().c_str());
-        moduleManager->make_module_graph("SkrResourceCompiler", true);
+        moduleManager->make_module_graph(u8"SkrResourceCompiler", true);
         moduleManager->init_module_graph(argc, argv);
     }
     {

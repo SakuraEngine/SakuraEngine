@@ -15,9 +15,9 @@ inline skr::string AftermathErrorMessage(GFSDK_Aftermath_Result result)
     switch (result)
     {
     case GFSDK_Aftermath_Result_FAIL_DriverVersionNotSupported:
-        return "Unsupported driver version - requires an NVIDIA R495 display driver or newer.";
+        return u8"Unsupported driver version - requires an NVIDIA R495 display driver or newer.";
     default:
-        return skr::string("Aftermath Error 0x") + skr::to_string(result - GFSDK_Aftermath_Result_Fail);
+        return skr::format(u8"Aftermath Error 0x{}", result - GFSDK_Aftermath_Result_Fail);
     }
 }
 
@@ -58,7 +58,8 @@ void CGPUNSightSingleton::remove_tracker(CGPUNSightTrackerId tracker) SKR_NOEXCE
     CGPUNSightSingleton::rc = (uint32_t)all_trackers.size();
     if (!CGPUNSightSingleton::rc)
     {
-        auto _this = (CGPUNSightSingleton*)cgpu_runtime_table_try_get_custom_data(tracker->instance->runtime_table, CGPU_NSIGNT_SINGLETON_NAME);
+        auto _this = (CGPUNSightSingleton*)cgpu_runtime_table_try_get_custom_data(
+            tracker->instance->runtime_table, (const char8_t*)CGPU_NSIGNT_SINGLETON_NAME);
         cgpu_delete(_this);
     }
 }
@@ -91,14 +92,14 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
             GFSDK_Aftermath_GpuCrashDumpDescriptionKey_ApplicationName,
             &applicationNameLength));
 
-        eastl::vector<char> applicationName(applicationNameLength, '\0');
+        eastl::vector<char8_t> applicationName(applicationNameLength, '\0');
         if (applicationNameLength)
         {
             AFTERMATH_CHECK_ERROR(aftermath_GpuCrashDump_GetDescription(
                 decoder,
                 GFSDK_Aftermath_GpuCrashDumpDescriptionKey_ApplicationName,
                 uint32_t(applicationName.size()),
-                applicationName.data()));
+                (char*)applicationName.data()));
         }
 
         // Create a unique file name for writing the crash dump data to a file.
@@ -106,16 +107,13 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
         // driver release) we may see redundant crash dumps. As a workaround,
         // attach a unique count to each generated file name.
         static int count = 0;
-        const skr::string baseFileName =
-            applicationNameLength ? skr::string(applicationName.data()) : skr::string("CGPUApplication")
-            + "-"
-            + skr::to_string(baseInfo.pid)
-            + "-"
-            + skr::to_string(++count);
+        const skr::string baseFileNameFmt = applicationNameLength ? skr::string(applicationName.data()) : skr::string(u8"CGPUApplication-{}-{}");
+        const auto baseFileName = skr::format(baseFileNameFmt, baseInfo.pid, ++count);
 
         // Write the crash dump data to a file using the .nv-gpudmp extension
         // registered with Nsight Graphics.
-        const skr::string crashDumpFileName = baseFileName + ".nv-gpudmp";
+        skr::string crashDumpFileName = baseFileName;
+        crashDumpFileName += u8".nv-gpudmp";
         std::ofstream dumpFile(crashDumpFileName.c_str(), std::ios::out | std::ios::binary);
         if (dumpFile)
         {
@@ -201,8 +199,8 @@ struct CGPUNSightSingletonImpl : public CGPUNSightSingleton
 
 CGPUNSightSingletonImpl::CGPUNSightSingletonImpl() SKR_NOEXCEPT
 {
-    bool llvm = llvm_library.load("llvm_7_0_1.dll");
-    bool nsight = nsight_library.load("GFSDK_Aftermath_Lib.dll") && llvm;
+    bool llvm = llvm_library.load(u8"llvm_7_0_1.dll");
+    bool nsight = nsight_library.load(u8"GFSDK_Aftermath_Lib.dll") && llvm;
     if (nsight)
     {
         SKR_LOG_TRACE("NSIGHT loaded");
@@ -243,11 +241,11 @@ CGPUNSightSingletonImpl::~CGPUNSightSingletonImpl() SKR_NOEXCEPT
 
 CGPUNSightSingleton* CGPUNSightSingleton::Get(CGPUInstanceId instance) SKR_NOEXCEPT
 {
-    auto _this = (CGPUNSightSingleton*)cgpu_runtime_table_try_get_custom_data(instance->runtime_table, CGPU_NSIGNT_SINGLETON_NAME);
+    auto _this = (CGPUNSightSingleton*)cgpu_runtime_table_try_get_custom_data(instance->runtime_table, (const char8_t*)CGPU_NSIGNT_SINGLETON_NAME);
     if (_this == nullptr)
     {
         _this = cgpu_new<CGPUNSightSingletonImpl>();
-        cgpu_runtime_table_add_custom_data(instance->runtime_table, CGPU_NSIGNT_SINGLETON_NAME, _this);
+        cgpu_runtime_table_add_custom_data(instance->runtime_table, (const char8_t*)CGPU_NSIGNT_SINGLETON_NAME, _this);
     }
     return _this;
 }

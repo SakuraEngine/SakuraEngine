@@ -37,7 +37,7 @@ struct PNGImageCoderHelper
         }
         else
         {
-            coder->error = "Invalid read position for CompressedData.";
+            coder->error = u8"Invalid read position for CompressedData.";
         }
     }
 
@@ -59,7 +59,7 @@ struct PNGImageCoderHelper
     inline static void user_error_fn(png_structp png_ptr, png_const_charp error_msg)
     {
         PNGImageCoder* coder = (PNGImageCoder*)png_get_error_ptr(png_ptr);
-        coder->error = error_msg;
+        coder->error = (const char8_t*)error_msg;
         SKR_LOG_ERROR("[libPNG] PNGImageCoder: %s", error_msg);
     }
 

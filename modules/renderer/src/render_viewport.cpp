@@ -18,7 +18,7 @@ struct SViewportManagerImpl : public SViewportManager
         dualQ_release(camera_query);
     }
 
-    uint32_t register_viewport(const char* viewport_name) SKR_NOEXCEPT final override
+    uint32_t register_viewport(const char8_t* viewport_name) SKR_NOEXCEPT final override
     {
         auto found = idMap.find(viewport_name);
         if (found != idMap.end())
@@ -31,7 +31,7 @@ struct SViewportManagerImpl : public SViewportManager
         return idx;
     }
 
-    skr_render_viewport_t* find_viewport(const char* viewport_name) SKR_NOEXCEPT final override
+    skr_render_viewport_t* find_viewport(const char8_t* viewport_name) SKR_NOEXCEPT final override
     {
         auto found = idMap.find(viewport_name);
         if (found != idMap.end())
@@ -53,7 +53,7 @@ struct SViewportManagerImpl : public SViewportManager
         return result;
     }
 
-    void remove_viewport(const char* viewport_name) SKR_NOEXCEPT final override 
+    void remove_viewport(const char8_t* viewport_name) SKR_NOEXCEPT final override 
     {
         // TODO: verify all cameras to indicate that this viewport is safe to remove
         auto found = idMap.find(viewport_name);

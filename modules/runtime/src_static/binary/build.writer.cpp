@@ -312,7 +312,7 @@ int WriteTrait<const skr::string&>::Write(skr_binary_writer_t* writer, const skr
     int ret = WriteTrait<const uint32_t&>::Write(writer, (uint32_t)str.size());
     if (ret != 0)
         return ret;
-    return WriteBytes(writer, str.data(), str.size());
+    return WriteBytes(writer, str.u8_str(), str.size());
 }
 
 int WriteTrait<const skr::string_view&>::Write(skr_binary_writer_t* writer, const skr::string_view& str)
@@ -320,27 +320,27 @@ int WriteTrait<const skr::string_view&>::Write(skr_binary_writer_t* writer, cons
     int ret = WriteTrait<const uint32_t&>::Write(writer, (uint32_t)str.size());
     if (ret != 0)
         return ret;
-    return WriteBytes(writer, str.data(), str.size());
+    return WriteBytes(writer, str.u8_str(), str.size());
 }
 
 int WriteTrait<const skr::string_view&>::Write(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const skr::string_view& str)
 {
-    auto ptr = (char*)str.data();
-    auto buffer = (char*)arena.get_buffer();
+    auto ptr = (ochar8_t*)str.u8_str();
+    auto buffer = (ochar8_t*)arena.get_buffer();
     SKR_ASSERT(ptr >= buffer);
     auto offset = (uint32_t)(ptr - buffer);
     SKR_ASSERT(offset < arena.get_size());
-    int ret = skr::binary::Write(writer, (uint32_t)str.length());
+    int ret = skr::binary::Write(writer, (uint32_t)str.size());
     if (ret != 0) {
         return ret;
     }
-    if(str.length() == 0)
+    if(str.size() == 0)
         return 0;
     ret = skr::binary::Write(writer, offset);
     if (ret != 0) {
         return ret;
     }
-    return WriteBytes(writer, str.data(), str.size());
+    return WriteBytes(writer, str.u8_str(), str.size());
 }
 
 int WriteTrait<const skr_guid_t&>::Write(skr_binary_writer_t* writer, const skr_guid_t& guid)
@@ -381,15 +381,15 @@ int WriteTrait<const skr_blob_arena_t&>::Write(skr_binary_writer_t* writer, cons
 
 void BlobTrait<skr::string_view>::BuildArena(skr_blob_arena_builder_t& arena, skr::string_view& dst, const skr::string& src)
 {
-    auto offset = arena.allocate((src.size() + 1) * sizeof(skr::string::value_type), alignof(skr::string::value_type));
+    auto offset = arena.allocate((src.size() + 1) * sizeof(ochar8_t), alignof(ochar8_t));
     auto buffer = (char*)arena.get_buffer() + offset;
-    memcpy(buffer, src.data(), (src.size() + 1) * sizeof(skr::string::value_type));
-    memset(buffer + src.size(), 0, sizeof(skr::string::value_type)); //tailing zero
-    dst = skr::string_view((const skr::string::value_type*)offset, src.size());
+    memcpy(buffer, src.u8_str(), (src.size() + 1) * sizeof(ochar8_t));
+    memset(buffer + src.size(), 0, sizeof(ochar8_t)); //tailing zero
+    dst = skr::string_view((const ochar8_t*)offset, src.size());
 }
 
 void BlobTrait<skr::string_view>::Remap(skr_blob_arena_t& arena, skr::string_view& dst)
 {
-    dst = skr::string_view((const skr::string::value_type*)((char*)arena.get_buffer() + ((size_t)dst.data() - arena.base())), dst.size());
+    dst = skr::string_view((const ochar8_t*)((char*)arena.get_buffer() + ((size_t)dst.u8_str() - arena.base())), dst.size());
 }
 } // namespace skr::binary

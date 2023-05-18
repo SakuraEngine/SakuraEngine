@@ -19,8 +19,8 @@ struct SShaderResourceFactory;
 }
 class GAME_RUNTIME_API SGameRTModule : public skr::IDynamicModule
 {
-    virtual void on_load(int argc, char** argv) override;
-    virtual int main_module_exec(int argc, char** argv) override;
+    virtual void on_load(int argc, char8_t** argv) override;
+    virtual int main_module_exec(int argc, char8_t** argv) override;
     virtual void on_unload() override;
 
 public:

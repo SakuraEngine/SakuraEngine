@@ -6,6 +6,8 @@
 #include <containers/string.hpp>
 #include <dxcapi.h>
 
+#include <EASTL/string.h>
+
 #include "tracy/Tracy.hpp"
 
 // Inline Utils
@@ -409,7 +411,7 @@ struct CGPUTextureAliasing_D3D12 : public CGPUTexture_D3D12 {
     CGPUTextureAliasing_D3D12(const D3D12_RESOURCE_DESC& dxDesc, const char8_t* name)
         : CGPUTexture_D3D12()
         , mDxDesc(dxDesc)
-        , name((const char*)name)
+        , name(name)
     {
     }
 };
@@ -712,8 +714,8 @@ bool cgpu_try_bind_aliasing_texture_d3d12(CGPUDeviceId device, const struct CGPU
                 if (device->adapter->instance->enable_set_name)
                 {
                     wchar_t debugName[MAX_GPU_DEBUG_NAME_LENGTH] = {};
-                    auto alisingName = Aliasing->name.append("[aliasing]");
-                    if (!Aliasing->name.empty())
+                    auto alisingName = Aliasing->name.append(u8"[aliasing]");
+                    if (!Aliasing->name.is_empty())
                         mbstowcs(debugName, alisingName.c_str(), MAX_GPU_DEBUG_NAME_LENGTH);
                     Aliasing->pDxResource->SetName(debugName);
                 }

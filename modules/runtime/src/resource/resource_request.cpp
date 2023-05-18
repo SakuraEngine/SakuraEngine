@@ -153,9 +153,9 @@ void SResourceRequestImpl::UpdateUnload()
 
 void SResourceRequestImpl::OnRequestFileFinished()
 {
-    if (resourceUrl.empty() || vfs == nullptr)
+    if (resourceUrl.is_empty() || vfs == nullptr)
     {
-        SKR_LOG_FMT_ERROR("Resource {} failed to load, file not found.", resourceRecord->header.guid);
+        SKR_LOG_FMT_ERROR(u8"Resource {} failed to load, file not found.", resourceRecord->header.guid);
         currentPhase = SKR_LOADING_PHASE_FINISHED;
         resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
         return;
@@ -166,7 +166,7 @@ void SResourceRequestImpl::OnRequestFileFinished()
         factory = system->FindFactory(resourceRecord->header.type);
         if (factory == nullptr)
         {
-            SKR_LOG_FMT_ERROR("Resource {} failed to load, factory of type {} not found.",
+            SKR_LOG_FMT_ERROR(u8"Resource {} failed to load, factory of type {} not found.",
             resourceRecord->header.guid, resourceRecord->header.type);
             currentPhase = SKR_LOADING_PHASE_FINISHED;
             resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
@@ -276,7 +276,7 @@ void SResourceRequestImpl::Update()
                 ramIO.path = (const char8_t*)resourceUrl.c_str();
                 ioService->request(vfs, &ramIO, &ioRequest, &ioDestination);
 #ifdef SKR_RESOURCE_DEV_MODE
-                if (!artifactsUrl.empty())
+                if (!artifactsUrl.is_empty())
                 {
                     ramIO.offset = 0;
                     ramIO.path = (const char8_t*)artifactsUrl.c_str();
@@ -296,7 +296,7 @@ void SResourceRequestImpl::Update()
                     skr_vfs_fread(file, data, 0, fsize);
                 }
 #ifdef SKR_RESOURCE_DEV_MODE
-                if (!artifactsUrl.empty())
+                if (!artifactsUrl.is_empty())
                 {
                     auto file = skr_vfs_fopen(vfs, (const char8_t*)artifactsUrl.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
                     SKR_DEFER({ skr_vfs_fclose(file); });
@@ -316,7 +316,7 @@ void SResourceRequestImpl::Update()
                 size = ioDestination.size;
             }
 #ifdef SKR_RESOURCE_DEV_MODE
-            if (!artifactsUrl.empty())
+            if (!artifactsUrl.is_empty())
             {
                 if (artifactsIoRequest.is_ready())
                 {
@@ -324,7 +324,7 @@ void SResourceRequestImpl::Update()
                     artifactsSize = artifactsIoDestination.size;
                 }
             }
-            if (data && (artifactsUrl.empty() || artifactsData))
+            if (data && (artifactsUrl.is_empty() || artifactsData))
                 currentPhase = SKR_LOADING_PHASE_DESER_RESOURCE;
 #else
             if (data)
@@ -345,7 +345,7 @@ void SResourceRequestImpl::Update()
                 LoadTask();
                 if (serdeResult != 0)
                 {
-                    SKR_LOG_FMT_ERROR("Resource {} failed to load, serde failed with error code {}.",
+                    SKR_LOG_FMT_ERROR(u8"Resource {} failed to load, serde failed with error code {}.",
                     resourceRecord->header.guid, serdeResult);
                     currentPhase = SKR_LOADING_PHASE_FINISHED;
                     resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
@@ -361,7 +361,7 @@ void SResourceRequestImpl::Update()
                 serdeEvent.clear();
                 if (serdeResult != 0)
                 {
-                    SKR_LOG_FMT_ERROR("Resource {} failed to load, serde failed with error code {}.",
+                    SKR_LOG_FMT_ERROR(u8"Resource {} failed to load, serde failed with error code {}.",
                     resourceRecord->header.guid, serdeResult);
                     currentPhase = SKR_LOADING_PHASE_FINISHED;
                     resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
@@ -378,7 +378,7 @@ void SResourceRequestImpl::Update()
             {
                 if (dep.get_status() == ESkrLoadingStatus::SKR_LOADING_STATUS_ERROR)
                 {
-                    SKR_LOG_FMT_ERROR("Resource {} failed to load dependency resource {}.", resourceRecord->header.guid, dep.get_serialized());
+                    SKR_LOG_FMT_ERROR(u8"Resource {} failed to load dependency resource {}.", resourceRecord->header.guid, dep.get_serialized());
                     failed = true;
                     break;
                 }
@@ -412,7 +412,7 @@ void SResourceRequestImpl::Update()
             auto status = factory->Install(resourceRecord);
             if (status == SKR_INSTALL_STATUS_FAILED)
             {
-                SKR_LOG_FMT_ERROR("Resource {} failed to install.", resourceRecord->header.guid);
+                SKR_LOG_FMT_ERROR(u8"Resource {} failed to install.", resourceRecord->header.guid);
                 currentPhase = SKR_LOADING_PHASE_FINISHED;
                 resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
             }
@@ -430,7 +430,7 @@ void SResourceRequestImpl::Update()
             auto status = factory->UpdateInstall(resourceRecord);
             if (status == SKR_INSTALL_STATUS_FAILED)
             {
-                SKR_LOG_FMT_ERROR("Resource {} failed to install.", resourceRecord->header.guid);
+                SKR_LOG_FMT_ERROR(u8"Resource {} failed to install.", resourceRecord->header.guid);
                 currentPhase = SKR_LOADING_PHASE_FINISHED;
                 resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
             }
@@ -541,7 +541,7 @@ bool SResourceRequestImpl::Yielded()
     }
 }
 
-void SResourceRegistry::FillRequest(SResourceRequest* r, skr_resource_header_t header, skr_vfs_t* vfs, const char* uri)
+void SResourceRegistry::FillRequest(SResourceRequest* r, skr_resource_header_t header, skr_vfs_t* vfs, const char8_t* uri)
 {
     auto request = static_cast<SResourceRequestImpl*>(r);
     if (request)

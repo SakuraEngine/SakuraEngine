@@ -29,6 +29,6 @@ TOOL_CORE_API SConfigCooker final : public SCooker
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override;
 }
-sregister_default_cooker("8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74");
+sregister_default_cooker(u8"8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74");
 } // namespace asset
 } // namespace skd

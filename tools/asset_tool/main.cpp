@@ -31,8 +31,8 @@
 
 class SAssetImportModule : public skr::IDynamicModule
 {
-    virtual void on_load(int argc, char** argv) override;
-    virtual int main_module_exec(int argc, char** argv) override;
+    virtual void on_load(int argc, char8_t** argv) override;
+    virtual int main_module_exec(int argc, char8_t** argv) override;
     virtual void on_unload() override;
 
 public:
@@ -52,11 +52,11 @@ IMPLEMENT_DYNAMIC_MODULE(SAssetImportModule, SkrAssetImport);
 SAssetImportModule* SAssetImportModule::Get()
 {
     auto mm = skr_get_module_manager();
-    static auto rm = static_cast<SAssetImportModule*>(mm->get_module("SkrAssetTool"));
+    static auto rm = static_cast<SAssetImportModule*>(mm->get_module(u8"SkrAssetTool"));
     return rm;
 }
 
-void SAssetImportModule::on_load(int argc, char** argv)
+void SAssetImportModule::on_load(int argc, char8_t** argv)
 {
     SKR_LOG_INFO("live2d viewer loaded!");
 
@@ -77,7 +77,7 @@ void SAssetImportModule::on_unload()
 
 extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs);
 
-int SAssetImportModule::main_module_exec(int argc, char** argv)
+int SAssetImportModule::main_module_exec(int argc, char8_t** argv)
 {
     skr::string filePath;
     eastl::vector<skd::asset::SImporterFactory*> factories;
@@ -93,7 +93,7 @@ int SAssetImportModule::main_module_exec(int argc, char** argv)
     window_desc.height = 1000;
     window_desc.width = 1500;
     window = skr_create_window(
-        skr::text::format(u8"Asset Tool [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).u8_str(),
+        skr::format(u8"Asset Tool [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).u8_str(),
         &window_desc);
 
     // Initialize renderer
@@ -176,7 +176,7 @@ int SAssetImportModule::main_module_exec(int argc, char** argv)
                     nfdresult_t result = NFD_OpenDialog("*", nullptr, &outPath);
                     if(result == NFD_OKAY)
                     {
-                        filePath = outPath;
+                        filePath = (const char8_t*)outPath;
                         free(outPath);
                     }
                 }
@@ -291,7 +291,7 @@ int main(int argc, char** argv)
     std::error_code ec = {};
     auto root = skr::filesystem::current_path(ec);
     moduleManager->mount(root.u8string().c_str());
-    moduleManager->make_module_graph("SkrAssetImport", true);
+    moduleManager->make_module_graph(u8"SkrAssetImport", true);
     auto result = moduleManager->init_module_graph(argc, argv);
     if (result != 0) {
         SKR_LOG_ERROR("module graph init failed!");

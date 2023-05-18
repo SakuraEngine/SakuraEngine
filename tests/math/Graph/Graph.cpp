@@ -78,15 +78,15 @@ TEST(GraphTest, GraphTest0)
     Graph g(5);
 
     auto E20 = boost::add_edge(2, 0, g).first;
-    g[E20] = { "E20" };
+    g[E20] = { u8"E20" };
     auto E10 = boost::add_edge(1, 0, g).first;
-    g[E10] = { "E10" };
+    g[E10] = { u8"E10" };
     auto E21 = boost::add_edge(2, 1, g).first;
-    g[E21] = { "E21" };
+    g[E21] = { u8"E21" };
     auto E12 = boost::add_edge(1, 2, g).first;
-    g[E12] = { "E12" };
+    g[E12] = { u8"E12" };
     auto E42 = boost::add_edge(4, 2, g).first;
-    g[E42] = { "E42" };
+    g[E42] = { u8"E42" };
     std::cout << "num vertices: " << boost::num_vertices(g) << std::endl;
 
     GraphVertex from(2);
@@ -162,7 +162,7 @@ TEST(GraphTest, GraphTest0)
 class TestRDGNode : public skr::DependencyGraphNode
 {
 public:
-    TestRDGNode(const char* n)
+    TestRDGNode(const char8_t* n)
         : DependencyGraphNode()
         , name(n)
     {
@@ -174,9 +174,9 @@ public:
 TEST(GraphTest, DependencyGraph)
 {
     skr::DependencyGraphEdge edge;
-    TestRDGNode node0("node0");
-    TestRDGNode node1("node1");
-    TestRDGNode node2("node2");
+    TestRDGNode node0(u8"node0");
+    TestRDGNode node1(u8"node1");
+    TestRDGNode node2(u8"node2");
     auto rdg = skr::DependencyGraph::Create();
     rdg->insert(&node0);
     rdg->insert(&node1);

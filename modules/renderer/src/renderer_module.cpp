@@ -16,12 +16,12 @@ IMPLEMENT_DYNAMIC_MODULE(SkrRendererModule, SkrRenderer);
 namespace 
 {
 using namespace skr::guid::literals;
-const auto kGLTFVertexLayoutWithoutTangentId = "1b357a40-83ff-471c-8903-23e99d95b273"_guid;
-const auto kGLTFVertexLayoutWithTangentId = "1b11e007-7cc2-4941-bc91-82d992c4b489"_guid;
-const auto kGLTFVertexLayoutWithJointId = "C35BD99A-B0A8-4602-AFCC-6BBEACC90321"_guid;
+const auto kGLTFVertexLayoutWithoutTangentId = u8"1b357a40-83ff-471c-8903-23e99d95b273"_guid;
+const auto kGLTFVertexLayoutWithTangentId = u8"1b11e007-7cc2-4941-bc91-82d992c4b489"_guid;
+const auto kGLTFVertexLayoutWithJointId = u8"C35BD99A-B0A8-4602-AFCC-6BBEACC90321"_guid;
 }
 
-void SkrRendererModule::on_load(int argc, char** argv)
+void SkrRendererModule::on_load(int argc, char8_t** argv)
 {
     SKR_LOG_TRACE("skr renderer loaded!");
 #ifdef _WIN32
@@ -36,11 +36,11 @@ void SkrRendererModule::on_load(int argc, char** argv)
     builder.aux_thread_count = 1;
     for (auto i = 0; i < argc; i++)
     {
-        if (::strcmp(argv[i], "--vulkan") == 0)
+        if (::strcmp((const char*)argv[i], "--vulkan") == 0)
         {
             builder.backend = CGPU_BACKEND_VULKAN;
         }
-        else if (::strcmp(argv[i], "--d3d12") == 0)
+        else if (::strcmp((const char*)argv[i], "--d3d12") == 0)
         {
             builder.backend = CGPU_BACKEND_D3D12;
         }
@@ -52,9 +52,9 @@ void SkrRendererModule::on_load(int argc, char** argv)
             builder.backend = CGPU_BACKEND_VULKAN;
 #endif
         }
-        builder.enable_debug_layer |= (0 == ::strcmp(argv[i], "--debug_layer"));
-        builder.enable_gpu_based_validation |= (0 == ::strcmp(argv[i], "--gpu_based_validation"));
-        builder.enable_set_name |= (0 == ::strcmp(argv[i], "--gpu_obj_name"));
+        builder.enable_debug_layer |= (0 == ::strcmp((const char*)argv[i], "--debug_layer"));
+        builder.enable_gpu_based_validation |= (0 == ::strcmp((const char*)argv[i], "--gpu_based_validation"));
+        builder.enable_set_name |= (0 == ::strcmp((const char*)argv[i], "--gpu_obj_name"));
     }
     render_device->initialize(builder);
 
@@ -69,11 +69,11 @@ void SkrRendererModule::on_load(int argc, char** argv)
         vertex_layout.attributes[5] = { u8"JOINTS", 1, CGPU_FORMAT_R32G32B32A32_UINT, 5, 0, sizeof(uint32_t) * 4, CGPU_INPUT_RATE_VERTEX };
         vertex_layout.attributes[6] = { u8"WEIGHTS", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 6, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
         vertex_layout.attribute_count = 7;
-        skr_mesh_resource_register_vertex_layout(::kGLTFVertexLayoutWithJointId, "SkinnedMesh", &vertex_layout);
+        skr_mesh_resource_register_vertex_layout(::kGLTFVertexLayoutWithJointId, u8"SkinnedMesh", &vertex_layout);
         vertex_layout.attribute_count = 4;
-        skr_mesh_resource_register_vertex_layout(::kGLTFVertexLayoutWithoutTangentId, "StaticMeshWithoutTangent", &vertex_layout);
+        skr_mesh_resource_register_vertex_layout(::kGLTFVertexLayoutWithoutTangentId, u8"StaticMeshWithoutTangent", &vertex_layout);
         vertex_layout.attribute_count = 5;
-        skr_mesh_resource_register_vertex_layout(::kGLTFVertexLayoutWithTangentId, "StaticMeshWithTangent", &vertex_layout);
+        skr_mesh_resource_register_vertex_layout(::kGLTFVertexLayoutWithTangentId, u8"StaticMeshWithTangent", &vertex_layout);
     }
 }
 
@@ -88,7 +88,7 @@ void SkrRendererModule::on_unload()
 SkrRendererModule* SkrRendererModule::Get()
 {
     auto mm = skr_get_module_manager();
-    static auto rm = static_cast<SkrRendererModule*>(mm->get_module("SkrRenderer"));
+    static auto rm = static_cast<SkrRendererModule*>(mm->get_module(u8"SkrRenderer"));
     return rm;
 }
 

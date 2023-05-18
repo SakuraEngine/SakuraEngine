@@ -20,7 +20,7 @@ static struct RegisterComponent${type.id}Helper
     RegisterComponent${type.id}Helper()
     {
         dual_type_description_t desc;
-        desc.name = "${type.name}";
+        desc.name = u8"${type.name}";
         
     %if hasattr(type.attrs.component, "buffer"):
         desc.size = sizeof(dual::array_comp_T<${type.name}, ${type.attrs.component.buffer}>);
@@ -50,7 +50,7 @@ static struct RegisterComponent${type.id}Helper
         desc.resourceFields = 0;
     %endif
         desc.guid = {${db.guid_constant(type)}};
-        desc.guidStr = "${type.attrs.guid}";
+        desc.guidStr = u8"${type.attrs.guid}";
         desc.flags = 0;
     %if hasattr(type.attrs.component, "pin"):
         desc.flags |= DTF_PIN;

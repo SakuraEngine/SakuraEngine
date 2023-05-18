@@ -5,6 +5,8 @@
 #include "scheduler.hpp"
 #include "type_registry.hpp"
 
+#include <containers/text.hpp>
+
 struct dual_context_t {
     dual_context_t();
     dual::pool_t normalPool;
@@ -12,5 +14,5 @@ struct dual_context_t {
     dual::pool_t smallPool;
     dual::type_registry_t typeRegistry;
     dual::scheduler_t scheduler;
-    skr::string error;
+    skr::text::text error;
 };

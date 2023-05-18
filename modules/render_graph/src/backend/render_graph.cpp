@@ -3,7 +3,7 @@
 
 IMPLEMENT_DYNAMIC_MODULE(SkrRenderGraphModule, SkrRenderGraph);
 
-void SkrRenderGraphModule::on_load(int argc, char** argv)
+void SkrRenderGraphModule::on_load(int argc, char8_t** argv)
 {
     SKR_LOG_TRACE("skr render graph loaded!");
 }

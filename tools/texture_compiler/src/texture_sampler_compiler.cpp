@@ -22,7 +22,7 @@ void* STextureSamplerImporter::Import(skr_io_ram_service_t* ioService, SCookCont
     auto doc = parser.iterate(jsonString);
     if(doc.error())
     {
-        SKR_LOG_FMT_ERROR("Import shader options asset {} from {} failed, json parse error {}", assetRecord->guid, jsonPath, simdjson::error_message(doc.error()));
+        SKR_LOG_FMT_ERROR(u8"Import shader options asset {} from {} failed, json parse error {}", assetRecord->guid, jsonPath, simdjson::error_message(doc.error()));
         return nullptr;
     }
     auto json_value = doc.get_value().value_unsafe();
