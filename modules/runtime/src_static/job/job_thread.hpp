@@ -46,7 +46,7 @@ public:
     JobResult finalize() SKR_NOEXCEPT;
 
 private:
-    skr::text::text tname;
+    skr::string tname;
     JobQueueThreadDesc desc = {};
 
     static void jobThreadFunc(void* args);

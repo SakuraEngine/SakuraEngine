@@ -81,7 +81,7 @@ struct TextStorage : public TextStorageBase
     RUNTIME_API TextStorage(const char8_t* str) SKR_NOEXCEPT;
     RUNTIME_API ~TextStorage() SKR_NOEXCEPT;
 #ifdef CONTAINER_LITE_IMPL
-    using type = skr::text::text;
+    using type = skr::string;
     inline type& get() 
     {
         return *std::launder(reinterpret_cast<type*>(this));

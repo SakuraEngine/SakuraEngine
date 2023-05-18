@@ -351,7 +351,7 @@ void ModuleManagerImpl::mount(const char8_t* rootdir)
 
 skr::string_view ModuleManagerImpl::get_root(void)
 {
-    return skr::string_view(skr::text::text_view(moduleDir.u8_str(), (size_t)moduleDir.size()));
+    return skr::string_view(skr::string_view(moduleDir.u8_str(), (size_t)moduleDir.size()));
 }
 
 } // namespace skr

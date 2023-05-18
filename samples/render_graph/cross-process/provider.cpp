@@ -42,7 +42,7 @@ struct ProviderRenderer
 
 void ProviderRenderer::create_window()
 {
-    auto title = skr::text::text::from_utf8(SKR_UTF8("Cross-Process Provider ["));
+    auto title = skr::string::from_utf8(SKR_UTF8("Cross-Process Provider ["));
     title += gCGPUBackendNames[backend];
     title += SKR_UTF8("]");
     title += SKR_UTF8(" PID: ");

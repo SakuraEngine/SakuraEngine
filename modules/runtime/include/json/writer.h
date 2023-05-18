@@ -59,7 +59,7 @@ public:
     bool RawValue(const TChar* str, TSize length, ESkrJsonType type);
     bool RawValue(skr::string_view view, ESkrJsonType type);
 
-    skr::text::text buffer;
+    skr::string buffer;
 
 protected:
     struct Level {
