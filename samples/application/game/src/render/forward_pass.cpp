@@ -206,7 +206,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
             CGPUResourceBarrierDescriptor barrier_desc = {};
             eastl::vector<CGPUBufferBarrier> barriers;
             auto barrierVertices = [&](dual_chunk_view_t* r_cv) {
-                skr_render_anim_comp_t* anims = nullptr;
+                const skr_render_anim_comp_t* anims = nullptr;
                 {
                     ZoneScopedN("FetchAnims");
                     // duel to dependency, anims fetch here may block a bit, waiting CPU skinning job done
