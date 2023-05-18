@@ -381,11 +381,12 @@ int WriteTrait<const skr_blob_arena_t&>::Write(skr_binary_writer_t* writer, cons
 
 void BlobTrait<skr::string_view>::BuildArena(skr_blob_arena_builder_t& arena, skr::string_view& dst, const skr::string& src)
 {
-    auto offset = arena.allocate((src.size() + 1) * sizeof(ochar8_t), alignof(ochar8_t));
+    auto raw = src.raw();
+    auto offset = arena.allocate((raw.size() + 1) * sizeof(ochar8_t), alignof(ochar8_t));
     auto buffer = (ochar8_t*)arena.get_buffer() + offset;
-    memcpy(buffer, src.u8_str(), (src.size() + 1) * sizeof(ochar8_t));
-    memset(buffer + src.size(), 0, sizeof(ochar8_t)); //tailing zero
-    dst = skr::string_view((const ochar8_t*)offset, src.size());
+    memcpy(buffer, raw.c_str(), (raw.size() + 1) * sizeof(ochar8_t));
+    memset(buffer + raw.size(), 0, sizeof(ochar8_t)); //tailing zero
+    dst = skr::string_view((const ochar8_t*)offset, raw.size());
 }
 
 void BlobTrait<skr::string_view>::Remap(skr_blob_arena_t& arena, skr::string_view& dst)

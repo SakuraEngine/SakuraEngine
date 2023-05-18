@@ -255,12 +255,12 @@ int ReadTrait<skr::string>::Read(skr_binary_reader_t* reader, skr::string& str)
     int ret = ReadTrait<uint32_t>::Read(reader, size);
     if (ret != 0)
         return ret;
-    skr::string temp;
-    // temp.resize(size);
+    static thread_local std::string temp;
+    temp.resize(size);
     ret = ReadBytes(reader, (void*)temp.c_str(), temp.size());
     if (ret != 0)
         return ret;
-    str = std::move(temp);
+    str = skr::string(skr::string_view((const char8_t*)temp.c_str(), temp.size()));
     return ret;
 }
 
