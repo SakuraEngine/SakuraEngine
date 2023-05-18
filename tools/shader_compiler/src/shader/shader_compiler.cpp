@@ -11,7 +11,7 @@ namespace asset
 {
 struct SKR_SHADER_COMPILER_API SShaderCompilerModule : public skr::IDynamicModule
 {
-    virtual void on_load(int argc, char** argv) override
+    virtual void on_load(int argc, char8_t** argv) override
     {
         for (auto&& [name, load_event] : on_load_events)
         {

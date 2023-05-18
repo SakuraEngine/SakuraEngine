@@ -67,7 +67,7 @@ SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderStage shader_stage, EC
             auto md5 = skr_md5_t{};
             auto bytes = bytecode->GetBufferPointer();
             auto byte_size = (uint32_t)bytecode->GetBufferSize();
-            skr_make_md5((const char*)bytes, byte_size, &md5);
+            skr_make_md5((const char8_t*)bytes, byte_size, &md5);
             spv_hash[0] = (uint32_t)md5.digest[0] | ((uint32_t)md5.digest[1] << 8) | ((uint32_t)md5.digest[2] << 16) | ((uint32_t)md5.digest[3] << 24);
             spv_hash[1] = (uint32_t)md5.digest[4] | ((uint32_t)md5.digest[5] << 8) | ((uint32_t)md5.digest[6] << 16) | ((uint32_t)md5.digest[7] << 24);
             spv_hash[2] = (uint32_t)md5.digest[8] | ((uint32_t)md5.digest[9] << 8) | ((uint32_t)md5.digest[10] << 16) | ((uint32_t)md5.digest[11] << 24);
@@ -238,10 +238,81 @@ void SDXCCompiler::SetShaderSwitches(skr::span<skr_shader_option_template_t> opt
     switches_hash = option_hash;
 }
 
-void SDXCCompiler::createDefArgsFromOptions(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options, eastl::vector<skr::wstring>& outArgs) SKR_NOEXCEPT
+eastl::wstring utf8_to_utf16(const skr::string& utf8)
+{
+    std::vector<unsigned long> unicode;
+    size_t i = 0;
+    while (i < utf8.size())
+    {
+        unsigned long uni;
+        size_t todo;
+        bool error = false;
+        unsigned char ch = utf8.c_str()[i++];
+        if (ch <= 0x7F)
+        {
+            uni = ch;
+            todo = 0;
+        }
+        else if (ch <= 0xBF)
+        {
+            throw std::logic_error("not a UTF-8 string");
+        }
+        else if (ch <= 0xDF)
+        {
+            uni = ch&0x1F;
+            todo = 1;
+        }
+        else if (ch <= 0xEF)
+        {
+            uni = ch&0x0F;
+            todo = 2;
+        }
+        else if (ch <= 0xF7)
+        {
+            uni = ch&0x07;
+            todo = 3;
+        }
+        else
+        {
+            throw std::logic_error("not a UTF-8 string");
+        }
+        for (size_t j = 0; j < todo; ++j)
+        {
+            if (i == utf8.size())
+                throw std::logic_error("not a UTF-8 string");
+            unsigned char ch = utf8.c_str()[i++];
+            if (ch < 0x80 || ch > 0xBF)
+                throw std::logic_error("not a UTF-8 string");
+            uni <<= 6;
+            uni += ch & 0x3F;
+        }
+        if (uni >= 0xD800 && uni <= 0xDFFF)
+            throw std::logic_error("not a UTF-8 string");
+        if (uni > 0x10FFFF)
+            throw std::logic_error("not a UTF-8 string");
+        unicode.push_back(uni);
+    }
+    eastl::wstring utf16;
+    for (size_t i = 0; i < unicode.size(); ++i)
+    {
+        unsigned long uni = unicode[i];
+        if (uni <= 0xFFFF)
+        {
+            utf16 += (wchar_t)uni;
+        }
+        else
+        {
+            uni -= 0x10000;
+            utf16 += (wchar_t)((uni >> 10) + 0xD800);
+            utf16 += (wchar_t)((uni & 0x3FF) + 0xDC00);
+        }
+    }
+    return utf16;
+}
+
+void SDXCCompiler::createDefArgsFromOptions(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options, eastl::vector<eastl::wstring>& outArgs) SKR_NOEXCEPT
 {
     using namespace skr::renderer;
-    using utf8_to_utf16 = fmt::detail::utf8_to_utf16;
     skr_shader_option_template_t* optdef = nullptr;
     for (auto&& option : options)
     {
@@ -262,19 +333,19 @@ void SDXCCompiler::createDefArgsFromOptions(skr::span<skr_shader_option_template
         const auto opt_type = optdef->type;
         if (opt_type == EShaderOptionType::VALUE)
         {
-            auto prefix = eastl::wstring(L"-D") + utf8_to_utf16(option.key.c_str()).c_str();
-            if (option.value == "on") outArgs.emplace_back(prefix);
-            else if (option.value == "off") continue;//allArgs.emplace_back(prefix);
+            auto prefix = eastl::wstring(L"-D") + utf8_to_utf16(option.key).c_str();
+            if (option.value == u8"on") outArgs.emplace_back(prefix);
+            else if (option.value == u8"off") continue;//allArgs.emplace_back(prefix);
             else
             {
-                auto wvalue =  eastl::wstring(utf8_to_utf16(option.value.c_str()).c_str());
+                auto wvalue =  eastl::wstring(utf8_to_utf16(option.value).c_str());
                 auto defination = prefix + L"=" + wvalue; 
                 outArgs.emplace_back(defination);  
             }
         }
         else if (opt_type == EShaderOptionType::SELECT)
         {
-            auto defination = eastl::wstring(L"-D") + utf8_to_utf16(option.value.c_str()).c_str();
+            auto defination = eastl::wstring(L"-D") + utf8_to_utf16(option.value).c_str();
             outArgs.emplace_back(defination);
         }
         else if (opt_type == EShaderOptionType::LEVEL)
@@ -290,7 +361,7 @@ void SDXCCompiler::createDefArgsFromOptions(skr::span<skr_shader_option_template
             }
             for (size_t i = 0u; i <= lv; ++i)
             {
-                auto defination = eastl::wstring(L"-D") + utf8_to_utf16(optdef->value_selections[i].c_str()).c_str();
+                auto defination = eastl::wstring(L"-D") + utf8_to_utf16(optdef->value_selections[i]).c_str();
                 outArgs.emplace_back(defination);
             }
         }
@@ -315,10 +386,9 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
     SourceBuffer.Encoding = DXC_CP_ACP; // Assume BOM says UTF8 or UTF16 or this is ANSI text.
     
     // calculate compile arguments
-    using utf8_to_utf16 = fmt::detail::utf8_to_utf16;
-    const auto wTargetString = utf8_to_utf16(importer.target.c_str());
-    const auto wEntryString = utf8_to_utf16(importer.entry.c_str());
-    const auto wNameString = utf8_to_utf16(source.source_name.c_str());
+    const auto wTargetString = utf8_to_utf16(importer.target);
+    const auto wEntryString = utf8_to_utf16(importer.entry);
+    const auto wNameString = utf8_to_utf16(source.source_name);
     const auto shader_stage = getShaderStageFromTargetString(importer.target.c_str());
     eastl::vector<eastl::wstring> allArgs;
     allArgs.emplace_back(wNameString.c_str());
@@ -407,13 +477,13 @@ SDXCLibrary* SDXCLibrary::Get() SKR_NOEXCEPT
 
 void SDXCLibrary::LoadDXCLibrary() SKR_NOEXCEPT
 {
-    skr::string filename;
+    skr::string filename = u8"";
     auto dxcInstance = SDXCLibrary::Get();
     auto& dxc_library = dxcInstance->dxc_library;
     filename.append(skr::SharedLibrary::GetPlatformFilePrefixName())
-            .append("dxcompiler")
+            .append(u8"dxcompiler")
             .append(skr::SharedLibrary::GetPlatformFileExtensionName());
-    if (auto result = dxc_library.load(filename.c_str()));
+    if (auto result = dxc_library.load(filename.u8_str()));
     else
     {
         SKR_LOG_ERROR("failed to load dxc library!");
@@ -443,9 +513,9 @@ void SDXCLibrary::LoadDXILLibrary() SKR_NOEXCEPT
     skr::string filename;
     auto dxcInstance = SDXCLibrary::Get();
     filename.append(skr::SharedLibrary::GetPlatformFilePrefixName())
-            .append("dxil")
+            .append(u8"dxil")
             .append(skr::SharedLibrary::GetPlatformFileExtensionName());
-    if (auto result = dxcInstance->dxil_library.load(filename.c_str()));
+    if (auto result = dxcInstance->dxil_library.load(filename.u8_str()));
     else
     {
         SKR_LOG_ERROR("failed to load dxil library!"

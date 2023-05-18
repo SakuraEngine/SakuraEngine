@@ -49,7 +49,7 @@ void RenderEffectForward::on_register(SRendererId renderer, dual_storage_t* stor
         auto guid = make_zeroed<skr_guid_t>();
         dual_make_guid(&guid);
         auto desc = make_zeroed<dual_type_description_t>();
-        desc.name = "forward_render_identity";
+        desc.name = u8"forward_render_identity";
         desc.size = sizeof(forward_effect_identity_t);
         desc.guid = guid;
         desc.alignment = alignof(forward_effect_identity_t);
@@ -132,7 +132,7 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
 
     skr_primitive_draw_packet_t packet = {};
     // 0. only produce for forward pass
-    if (strcmp(pass->identity(), forward_pass_name) != 0) return {};
+    if (strcmp((const char*)pass->identity(), (const char*)forward_pass_name) != 0) return {};
     
     // 1. calculate primitive count
     uint32_t primitiveCount = 0;
@@ -569,7 +569,7 @@ void RenderEffectForwardSkin::on_register(SRendererId renderer, dual_storage_t* 
         auto guid = make_zeroed<skr_guid_t>();
         dual_make_guid(&guid);
         auto desc = make_zeroed<dual_type_description_t>();
-        desc.name = "forward_skin_render_identity";
+        desc.name = u8"forward_skin_render_identity";
         desc.size = sizeof(forward_effect_identity_t);
         desc.guid = guid;
         desc.alignment = alignof(forward_effect_identity_t);

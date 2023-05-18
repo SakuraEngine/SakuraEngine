@@ -36,7 +36,7 @@ struct DynArrayMethodTable {
 struct DynArrayType : skr_type_t {
     const struct skr_type_t* elementType;
     DynArrayMethodTable operations;
-    skr::string name;
+    skr::text::text name;
     DynArrayType(const skr_type_t* elementType, DynArrayMethodTable operations)
         : skr_type_t{ SKR_TYPE_CATEGORY_DYNARR }
         , elementType(elementType)

@@ -5,7 +5,7 @@
 
 // AGS
 #if defined(AMDAGS)
-#define CGPU_AMD_AGS_SINGLETON_NAME "CGPUAMDAGSSingleton"
+#define CGPU_AMD_AGS_SINGLETON_NAME u8"CGPUAMDAGSSingleton"
 struct CGPUAMDAGSSingleton
 {
     static CGPUAMDAGSSingleton* Get(CGPUInstanceId instance)
@@ -16,9 +16,9 @@ struct CGPUAMDAGSSingleton
             _this = SkrNew<CGPUAMDAGSSingleton>();
             {
                 #if defined(_WIN64)
-                    const char* dllname = "amd_ags_x64.dll";
+                    auto  dllname = u8"amd_ags_x64.dll";
                 #elif defined(_WIN32)
-                    const char* dllname = "amd_ags_x86.dll";
+                    auto  dllname = u8"amd_ags_x86.dll";
                 #endif
                 _this->ags_library.load(dllname);
                 if (!_this->ags_library.isLoaded())

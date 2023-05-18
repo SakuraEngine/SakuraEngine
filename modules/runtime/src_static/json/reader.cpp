@@ -86,7 +86,7 @@ error_code ReadTrait<skr::string>::Read(simdjson::ondemand::value&& json, skr::s
     if (result.error() == simdjson::SUCCESS)
     {
         std::string_view view = result.value_unsafe();
-        value = skr::string(view.data(), view.length());
+        value = skr::string(skr::string_view((const char8_t*)view.data(), view.length()));
     }
     return (error_code)result.error();
 }
@@ -97,7 +97,7 @@ error_code ReadTrait<skr_md5_t>::Read(simdjson::ondemand::value&& json, skr_md5_
     if (result.error() == simdjson::SUCCESS)
     {
         std::string_view view = result.value_unsafe();
-        if (!skr_parse_md5(view.data(), &value))
+        if (!skr_parse_md5((const char8_t*)view.data(), &value))
         {
             return error_code::MD5_ERROR;
         }
@@ -323,7 +323,7 @@ error_code ReadTrait<skr_guid_t>::Read(simdjson::ondemand::value&& json, skr_gui
     if (result.error() == simdjson::SUCCESS)
     {
         std::string_view view = result.value_unsafe();
-        if (!skr::guid::make_guid({ view.data(), view.length() }, value))
+        if (!skr::guid::make_guid({ (const char8_t*)view.data(), view.length() }, value))
         {
             return error_code::GUID_ERROR;
         }
@@ -338,7 +338,7 @@ error_code ReadTrait<skr_resource_handle_t>::Read(simdjson::ondemand::value&& js
     {
         std::string_view view = result.value_unsafe();
         skr_guid_t guid;
-        if (!skr::guid::make_guid({ view.data(), view.length() }, guid))
+        if (!skr::guid::make_guid({ (const char8_t*)view.data(), view.length() }, guid))
         {
             return error_code::GUID_ERROR;
         }

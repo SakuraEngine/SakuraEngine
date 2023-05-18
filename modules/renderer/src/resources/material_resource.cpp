@@ -130,7 +130,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
                                 {
                                     auto& installed_shader = installed_pass.shaders.emplace_back();
                                     installed_shader.identifier = platform_id;
-                                    installed_shader.entry = multiShader.entry;
+                                    installed_shader.entry = multiShader.entry.u8_str();
                                     installed_shader.stage = multiShader.shader_stage;
 
                                     installed = true;
@@ -162,7 +162,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         for (size_t i = 0; i < installed_pass.shaders.size(); i++)
         {
             ppl_shaders[i].library = shaders[i];
-            ppl_shaders[i].entry = (const char8_t*)installed_pass.shaders[i].entry.data();
+            ppl_shaders[i].entry = (const char8_t*)installed_pass.shaders[i].entry.u8_str();
             ppl_shaders[i].stage = installed_pass.shaders[i].stage;
         }
         CGPURootSignatureDescriptor rs_desc = {};
@@ -198,7 +198,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
                 {
                     for (const auto& override : material->overrides.samplers)
                     {
-                        if (override.slot_name.starts_with((const char*)resource.name) 
+                        if (override.slot_name.starts_with(resource.name) 
                         && strlen((const char*)resource.name) == override.slot_name.size()) // slot name matches
                         {
                             slot_names.emplace_back(resource.name);
@@ -209,7 +209,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
                 {
                     for (const auto& override : material->overrides.textures)
                     {
-                        if (override.slot_name.starts_with((const char*)resource.name) 
+                        if (override.slot_name.starts_with(resource.name) 
                         && strlen((const char*)resource.name) == override.slot_name.size()) // slot name matches
                         {
                             slot_names.emplace_back(resource.name);
@@ -234,7 +234,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
             hdl.resolve(true, nullptr);
 
             auto& update = updates.emplace_back();
-            update.name = (const char8_t*)override.slot_name.data();
+            update.name = override.slot_name.u8_str();
             update.count = 1;
             update.samplers = &hdl.get_resolved()->sampler;
             update.binding_type = CGPU_RESOURCE_TYPE_SAMPLER;
@@ -245,7 +245,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
             hdl.resolve(true, nullptr);
 
             auto& update = updates.emplace_back();
-            update.name = (const char8_t*)override.slot_name.data();
+            update.name = override.slot_name.u8_str();
             update.count = 1; // TODO: Tex array parameter
             update.textures = &hdl.get_resolved()->texture_view;
             update.binding_type = CGPU_RESOURCE_TYPE_TEXTURE;
@@ -344,7 +344,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
                 break;
             }
             ref->library = shaders[i];
-            ref->entry = (const char8_t*)installed_pass.shaders[i].entry.data();
+            ref->entry = installed_pass.shaders[i].entry.u8_str();
             ref->stage = installed_pass.shaders[i].stage;
             // TODO: const spec
             ref->constants = nullptr;

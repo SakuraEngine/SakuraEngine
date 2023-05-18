@@ -1,4 +1,2 @@
 #pragma once
-#include "OpenString/text.h"
-#include "OpenString/format.h"
-
+#include "containers/string.hpp"

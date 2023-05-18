@@ -5,7 +5,7 @@
 
 #include "tracy/Tracy.hpp"
 
-const skr_render_pass_name_t live2d_mask_pass_name = "Live2DMaskPass";
+const skr_render_pass_name_t live2d_mask_pass_name = u8"Live2DMaskPass";
 
 struct MaskPassLive2D : public IPrimitiveRenderPass {
     void on_update(const skr_primitive_pass_context_t* context) override
@@ -15,7 +15,7 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
         auto live2d_mask_msaa = renderGraph->create_texture(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
             double sample_level = 1.0;
-            g.get_blackboard().value("l2d_msaa", sample_level);
+            g.get_blackboard().value(u8"l2d_msaa", sample_level);
 
             builder.set_name(u8"live2d_mask_msaa")
                 .extent(Csm::kMaskResolution, Csm::kMaskResolution)
@@ -37,7 +37,7 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
         auto depth = renderGraph->create_texture(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
             double sample_level = 1.0;
-            g.get_blackboard().value("l2d_msaa", sample_level);
+            g.get_blackboard().value(u8"l2d_msaa", sample_level);
 
             builder.set_name(u8"mask_depth")
                 .extent(Csm::kMaskResolution, Csm::kMaskResolution)
@@ -70,7 +70,7 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
         renderGraph->add_render_pass(
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
             double sample_level = 1.0;
-            bool useMSAA = g.get_blackboard().value("l2d_msaa", sample_level); useMSAA &= (sample_level > 1.0);
+            bool useMSAA = g.get_blackboard().value(u8"l2d_msaa", sample_level); useMSAA &= (sample_level > 1.0);
             
             const auto mask = renderGraph->get_texture(u8"live2d_mask");
             const auto mask_msaa = renderGraph->get_texture(u8"live2d_mask_msaa");

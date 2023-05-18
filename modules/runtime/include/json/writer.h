@@ -12,8 +12,8 @@ typedef enum ESkrJsonType
 
 #if defined(__cplusplus)
     #include <EASTL/vector.h>
-    #include "fmt/format.h"
     #include "containers/variant.hpp"
+    #include "containers/text.hpp"
     #include "containers/string.hpp"
     #include "containers/hashmap.hpp"
     #include "type/type_helper.hpp"
@@ -48,19 +48,19 @@ public:
     bool Float(float f);
     bool Double(double d);
     bool RawNumber(const TChar* str, TSize length);
-    bool RawNumber(std::basic_string_view<TChar> view);
+    bool RawNumber(skr::string_view view);
     bool String(const TChar* str, TSize length);
-    bool String(std::basic_string_view<TChar> view);
+    bool String(skr::string_view view);
     bool StartObject();
     bool Key(const TChar* str, TSize length) { return String(str, length); }
-    bool Key(std::basic_string_view<TChar> view) { return String(view.data(), view.size()); }
+    bool Key(skr::string_view view) { return String(view.u8_str(), view.size()); }
     bool EndObject();
     bool StartArray();
     bool EndArray();
     bool RawValue(const TChar* str, TSize length, ESkrJsonType type);
-    bool RawValue(std::basic_string_view<TChar> view, ESkrJsonType type);
+    bool RawValue(skr::string_view view, ESkrJsonType type);
 
-    fmt::memory_buffer buffer;
+    skr::text::text buffer;
 
 protected:
     struct Level {
@@ -92,7 +92,6 @@ typedef struct skr_json_writer_t skr_json_writer_t;
 #endif
 
 #if defined(__cplusplus)
-    #include "EASTL/string.h"
     #include "type/type_id.hpp"
     #include "platform/guid.hpp"
 // utils for codegen
@@ -179,7 +178,7 @@ template <>
 struct WriteTrait<const skr::string_view&> {
     static void Write(skr_json_writer_t* writer, const skr::string_view& str)
     {
-        writer->String(str.data(), str.size());
+        writer->String(str.u8_str(), str.size());
     }
 };
 
@@ -187,7 +186,7 @@ template <>
 struct WriteTrait<const skr::string&> {
     static void Write(skr_json_writer_t* writer, const skr::string& str)
     {
-        writer->String(str.data(), str.size());
+        writer->String(str.u8_str(), str.size());
     }
 };
 
@@ -306,9 +305,9 @@ struct WriteTrait<const skr::variant<Ts...>&> {
         std::visit([&](auto&& value) {
             using raw = std::remove_const_t<std::remove_reference_t<decltype(value)>>;
             json->StartObject();
-            json->Key("type");
+            json->Key(u8"type");
             skr::json::Write<const skr_guid_t&>(json, skr::type::type_id<raw>::get());
-            json->Key("value");
+            json->Key(u8"value");
             skr::json::Write<decltype(value)>(json, value);
             json->EndObject();
         },

@@ -40,8 +40,8 @@ namespace skr::type
     template <>
     struct ${api} EnumToStringTrait<${enum.name}>
     {
-        static std::string_view ToString(${enum.name} v);
-        static bool FromString(std::string_view str, ${enum.name}& v);
+        static skr::string_view ToString(${enum.name} v);
+        static bool FromString(skr::string_view str, ${enum.name}& v);
     };
 %endfor
 }

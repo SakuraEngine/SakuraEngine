@@ -50,7 +50,7 @@ class CGPURootSignaturePoolImpl : public CGPURootSignaturePool
 {
 public:
     CGPURootSignaturePoolImpl(const char8_t* name)
-        :name((const char*)name)
+        :name(name)
     {
 
     }

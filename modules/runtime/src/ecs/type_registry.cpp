@@ -28,8 +28,8 @@ type_registry_t::type_registry_t(pool_t& pool)
     {
         SKR_ASSERT(descriptions.size() == kDisableComponent.index());
         auto desc = make_zeroed<type_description_t>();
-        desc.guid = skr::guid::make_guid_unsafe("{B68B1CAB-98FF-4298-A22E-68B404034B1B}");
-        desc.name = "disable";
+        desc.guid = skr::guid::make_guid_unsafe(u8"{B68B1CAB-98FF-4298-A22E-68B404034B1B}");
+        desc.name = u8"disable";
         desc.size = 0;
         desc.elementSize = 0;
         desc.alignment = 0;
@@ -42,8 +42,8 @@ type_registry_t::type_registry_t(pool_t& pool)
     {
         SKR_ASSERT(descriptions.size() == kDeadComponent.index());
         auto desc = make_zeroed<type_description_t>();
-        desc.guid = skr::guid::make_guid_unsafe("{C0471B12-5462-48BB-B8C4-9983036ECC6C}");
-        desc.name = "dead";
+        desc.guid = skr::guid::make_guid_unsafe(u8"{C0471B12-5462-48BB-B8C4-9983036ECC6C}");
+        desc.name = u8"dead";
         desc.size = 0;
         desc.elementSize = 0;
         desc.alignment = 0;
@@ -56,8 +56,8 @@ type_registry_t::type_registry_t(pool_t& pool)
     {
         SKR_ASSERT(descriptions.size() == kLinkComponent.index());
         auto desc = make_zeroed<type_description_t>();
-        desc.guid = skr::guid::make_guid_unsafe("{54BD68D5-FD66-4DBE-85CF-70F535C27389}");
-        desc.name = "dual::link_comp_t";
+        desc.guid = skr::guid::make_guid_unsafe(u8"{54BD68D5-FD66-4DBE-85CF-70F535C27389}");
+        desc.name = u8"dual::link_comp_t";
         desc.size = sizeof(dual_entity_t) * kLinkComponentSize;
         desc.elementSize = sizeof(dual_entity_t);
         desc.alignment = alignof(dual_entity_t);
@@ -72,8 +72,8 @@ type_registry_t::type_registry_t(pool_t& pool)
     {
         SKR_ASSERT(descriptions.size() == kMaskComponent.index());
         auto desc = make_zeroed<type_description_t>();
-        desc.guid = skr::guid::make_guid_unsafe("{B68B1CAB-98FF-4298-A22E-68B404034B1B}");
-        desc.name = "dual::mask_comp_t";
+        desc.guid = skr::guid::make_guid_unsafe(u8"{B68B1CAB-98FF-4298-A22E-68B404034B1B}");
+        desc.name = u8"dual::mask_comp_t";
         desc.size = sizeof(dual_mask_comp_t);
         desc.elementSize = 0;
         desc.alignment = DUAL_MASK_ALIGN;
@@ -86,8 +86,8 @@ type_registry_t::type_registry_t(pool_t& pool)
     {
         SKR_ASSERT(descriptions.size() == kGuidComponent.index());
         auto desc = make_zeroed<type_description_t>();
-        desc.guid = skr::guid::make_guid_unsafe("{565FBE87-6309-4DF7-9B3F-C61B67B38BB3}");
-        desc.name = "dual::guid_comp_t";
+        desc.guid = skr::guid::make_guid_unsafe(u8"{565FBE87-6309-4DF7-9B3F-C61B67B38BB3}");
+        desc.name = u8"dual::guid_comp_t";
         desc.size = sizeof(dual_guid_t);
         desc.elementSize = 0;
         desc.alignment = alignof(dual_guid_t);
@@ -100,8 +100,8 @@ type_registry_t::type_registry_t(pool_t& pool)
     {
         SKR_ASSERT(descriptions.size() == kDirtyComponent.index());
         auto desc = make_zeroed<type_description_t>();
-        desc.guid = skr::guid::make_guid_unsafe("{A55D73D3-D41C-4683-89E1-8B211C115303}");
-        desc.name = "dual::dirty_comp_t";
+        desc.guid = skr::guid::make_guid_unsafe(u8"{A55D73D3-D41C-4683-89E1-8B211C115303}");
+        desc.name = u8"dual::dirty_comp_t";
         desc.size = sizeof(dual_dirty_comp_t);
         desc.elementSize = 0;
         desc.alignment = DUAL_MASK_ALIGN;
@@ -126,8 +126,8 @@ type_index_t type_registry_t::register_type(const type_description_t& inDesc)
     {
         if (name2type.count(desc.name))
             return kInvalidTypeIndex;
-        auto len = strlen(desc.name);
-        auto name = (char*)nameArena.allocate(len + 1, 1);
+        auto len = strlen((const char*)desc.name);
+        auto name = (char8_t*)nameArena.allocate(len + 1, 1);
         memcpy(name, desc.name, len + 1);
         desc.name = name;
     }
@@ -207,7 +207,7 @@ dual_type_index_t dualT_get_type(const dual_guid_t* guid)
     return dual::type_registry_t::get().get_type(*guid);
 }
 
-dual_type_index_t dualT_get_type_by_name(const char* name)
+dual_type_index_t dualT_get_type_by_name(const char8_t* name)
 {
     return dual::type_registry_t::get().get_type(name);
 }

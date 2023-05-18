@@ -4,6 +4,7 @@
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "cgpu/api.h"
 
+#include <EASTL/string.h>
 #include "tracy/Tracy.hpp"
 
 namespace skd

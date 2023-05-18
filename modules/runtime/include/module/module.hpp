@@ -88,10 +88,10 @@ public:
     IModule(const IModule& rhs) = delete;
     IModule& operator=(const IModule& rhs) = delete;
     virtual ~IModule(){};
-    virtual void on_load(int argc, char** argv) = 0;
+    virtual void on_load(int argc, char8_t** argv) = 0;
     virtual void on_unload() = 0;
-    virtual int main_module_exec(int argc, char** argv) { return 0; }
-    virtual const char* get_meta_data(void) = 0;
+    virtual int main_module_exec(int argc, char8_t** argv) { return 0; }
+    virtual const char8_t* get_meta_data(void) = 0;
     virtual const ModuleInfo* get_module_info()
     {
         return &information;
@@ -104,12 +104,12 @@ protected:
 
 struct RUNTIME_API IDynamicModule : public IModule {
     eastl::unique_ptr<SharedLibrary> sharedLib;
-    virtual const char* get_meta_data(void) override
+    virtual const char8_t* get_meta_data(void) override
     {
-        skr::string symbolname = "__skr_module_meta__";
+        skr::string symbolname = u8"__skr_module_meta__";
         symbolname.append(information.name);
-        const char* symbol_str = symbolname.c_str();
-        return sharedLib->get<const char*>(symbol_str);
+        const char8_t* symbol_str = symbolname.u8_str();
+        return sharedLib->get<const char8_t*>(symbol_str);
     }
 };
 struct IStaticModule : public IModule {

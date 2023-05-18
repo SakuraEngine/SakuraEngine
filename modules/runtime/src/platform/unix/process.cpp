@@ -3,7 +3,7 @@
 #include <EASTL/string.h>
 #include <unistd.h> 
 
-SProcessHandle skr_run_process(const char* command, const char** arguments, uint32_t arg_count, const char* stdout_file)
+SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments, uint32_t arg_count, const char8_t* stdout_file)
 {
     SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;

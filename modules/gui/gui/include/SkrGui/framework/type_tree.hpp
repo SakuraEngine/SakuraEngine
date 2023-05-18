@@ -17,7 +17,7 @@ struct SKR_GUI_API TypeTreeNode
 
 protected:
     friend struct TypeTreeImpl;
-    virtual void create_dynamic_type(skr_guid_t id, skr_dynamic_record_type_id parent_type, const char* name) SKR_NOEXCEPT;
+    virtual void create_dynamic_type(skr_guid_t id, skr_dynamic_record_type_id parent_type, const char8_t* name) SKR_NOEXCEPT;
 
     uint64_t size = 0;
     uint64_t align = 0;
@@ -47,14 +47,14 @@ struct TypeTreeNodeBase : public TypeTreeNode
         return _this;
     }
 
-    void create_dynamic_type(skr_guid_t id, skr_dynamic_record_type_id parent_type, const char* name) SKR_NOEXCEPT final
+    void create_dynamic_type(skr_guid_t id, skr_dynamic_record_type_id parent_type, const char8_t* name) SKR_NOEXCEPT final
     {
         size = sizeof(T);
         align = alignof(T);
 
         TypeTreeNode::create_dynamic_type(id, parent_type, name);
     }
-    static const char* _name;
+    static const char8_t* _name;
     static TypeTreeNodeBase* _this;
     static TypeTreeNode* _parent;
 };
@@ -71,7 +71,7 @@ namespace literals
 constexpr const size_t short_guid_form_length = 36; // XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 constexpr const size_t long_guid_form_length = 38;  // {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}
 
-constexpr int parse_hex_digit(const char c)
+constexpr int parse_hex_digit(const char8_t c)
 {
     if ('0' <= c && c <= '9')
         return c - '0';
@@ -84,7 +84,7 @@ constexpr int parse_hex_digit(const char c)
 }
 
 template <class T>
-constexpr T parse_hex(const char* ptr)
+constexpr T parse_hex(const char8_t* ptr)
 {
     constexpr size_t digits = sizeof(T) * 2;
     T result{};
@@ -93,7 +93,7 @@ constexpr T parse_hex(const char* ptr)
     return result;
 }
 
-constexpr skr_guid_t make_guid_helper(const char* begin)
+constexpr skr_guid_t make_guid_helper(const char8_t* begin)
 {
     auto Data1 = parse_hex<uint32_t>(begin);
     begin += 8 + 1;
@@ -111,7 +111,7 @@ constexpr skr_guid_t make_guid_helper(const char* begin)
     return skr_guid_t(Data1, Data2, Data3, Data4);
 }
 
-constexpr skr_guid_t operator""_guid(const char* str, size_t N)
+constexpr skr_guid_t operator""_guid(const char8_t* str, size_t N)
 {
     if (!(N == long_guid_form_length || N == short_guid_form_length))
     {
@@ -132,9 +132,9 @@ namespace skr::type
     template<>
     struct type_id<struct skr::gui::Diagnosticable>
     {
-        inline static SKR_CONSTEXPR const char* str()
+        inline static SKR_CONSTEXPR const char8_t* str()
         {
-            return "ae91b91e-e45b-4aa9-b574-bccd5e8119cb";
+            return u8"ae91b91e-e45b-4aa9-b574-bccd5e8119cb";
         }
         inline static SKR_CONSTEXPR skr_guid_t get()
         {
@@ -162,7 +162,7 @@ inline static SKR_CONSTEXPR bool hasBaseType() { return true; }
 
 #define SKR_GUI_TYPE_COMMON_BODY(__T, __GUID) \
 static const skr_record_type_id getStaticType(); \
-inline static SKR_CONSTEXPR const char* getStaticTypeIdStr() \
+inline static SKR_CONSTEXPR const char8_t* getStaticTypeIdStr() \
 { \
     return __GUID; \
 } \
@@ -189,7 +189,7 @@ virtual const skr_record_type_id getType() override { return getStaticType(); } 
 skr::gui::TypeTreeNodeBase<__T> __Type_##__T##_Instance__; \
 template<> skr::gui::TypeTreeNodeBase<__T>* skr::gui::TypeTreeNodeBase<__T>::_this = &__Type_##__T##_Instance__; \
 template<> skr::gui::TypeTreeNode* skr::gui::TypeTreeNodeBase<__T>::_parent = nullptr; \
-template<> const char* skr::gui::TypeTreeNodeBase<__T>::_name = #__T; \
+template<> const char8_t* skr::gui::TypeTreeNodeBase<__T>::_name = OSTR_UTF8(#__T); \
 const skr_record_type_id __T::getStaticType() \
 { \
     return (skr_record_type_id)__Type_##__T##_Instance__.get_type(); \

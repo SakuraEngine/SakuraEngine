@@ -11,7 +11,7 @@ struct RUNTIME_API ModuleSubsystem : public ModuleSubsystemBase
     template<typename this_type>
     struct Registerer
     {
-        inline Registerer(const char* id, const char* module_name)
+        inline Registerer(const char8_t* id, const char8_t* module_name)
         {
             auto module_manager = ::skr_get_module_manager();
             module_manager->register_subsystem(module_name, id, &Registerer::Creater);
@@ -25,4 +25,4 @@ struct RUNTIME_API ModuleSubsystem : public ModuleSubsystemBase
 };
 }
 
-#define SKR_MODULE_SUBSYSTEM(Subsystem, ModuleName) static skr::ModuleSubsystem::Registerer<Subsystem> subMod##__FILE__##__LINE__(STRINGIFY(__FILE__)STRINGIFY(__LINE__), #ModuleName);
+#define SKR_MODULE_SUBSYSTEM(Subsystem, ModuleName) static skr::ModuleSubsystem::Registerer<Subsystem> subMod##__FILE__##__LINE__((const char8_t*)STRINGIFY(__FILE__)STRINGIFY(__LINE__), (const char8_t*)#ModuleName);

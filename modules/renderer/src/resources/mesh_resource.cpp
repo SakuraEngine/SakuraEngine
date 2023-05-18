@@ -25,7 +25,7 @@ static struct SkrMeshResourceUtil
 {
     struct RegisteredVertexLayout : public CGPUVertexLayout
     {
-        RegisteredVertexLayout(const CGPUVertexLayout& layout, skr_vertex_layout_id id, const char* name)
+        RegisteredVertexLayout(const CGPUVertexLayout& layout, skr_vertex_layout_id id, const char8_t* name)
             : CGPUVertexLayout(layout), id(id), name(name)
         {
             hash = cgpux::hash<CGPUVertexLayout>()(layout);
@@ -48,7 +48,7 @@ static struct SkrMeshResourceUtil
         skr_destroy_mutex(&vertex_layouts_mutex_);
     }
 
-    inline static skr_vertex_layout_id AddVertexLayout(skr_vertex_layout_id id, const char* name, const CGPUVertexLayout& layout)
+    inline static skr_vertex_layout_id AddVertexLayout(skr_vertex_layout_id id, const char8_t* name, const CGPUVertexLayout& layout)
     {
         SMutexLock lock(vertex_layouts_mutex_);
 
@@ -129,7 +129,7 @@ void skr_mesh_resource_free(skr_mesh_resource_id mesh_resource)
     SkrDelete(mesh_resource);
 }
 
-void skr_mesh_resource_register_vertex_layout(skr_vertex_layout_id id, const char* name, const struct CGPUVertexLayout* in_vertex_layout)
+void skr_mesh_resource_register_vertex_layout(skr_vertex_layout_id id, const char8_t* name, const struct CGPUVertexLayout* in_vertex_layout)
 {
     if (auto layout = mesh_resource_util.GetVertexLayout(id))
     {
@@ -314,7 +314,7 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithDStorage(skr_resource_record_t* r
                 InstallType installType = {EInstallMethod::DSTORAGE, ECompressMethod::NONE};
                 for (auto i = 0u; i < mesh_resource->bins.size(); i++)
                 {
-                    auto binPath = skr::format("{}.buffer{}", guid, i);
+                    auto binPath = skr::format(u8"{}.buffer{}", guid, i);
                     // TODO: REFACTOR THIS WITH VFS PATH
                     auto fullBinPath = skr::filesystem::path(root.dstorage_root) / binPath.c_str();
                     const auto& thisBin = mesh_resource->bins[i];
@@ -376,7 +376,7 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* rec
 
             for (auto i = 0u; i < mesh_resource->bins.size(); i++)
             {
-                auto binPath = skr::format("{}.buffer{}", guid, i);
+                auto binPath = skr::format(u8"{}.buffer{}", guid, i);
                 auto fullBinPath = skr::filesystem::path(root.dstorage_root) / binPath.c_str();
                 auto&& ramRequest = uRequest->ram_requests[i];
                 auto&& ramDestination = uRequest->ram_destinations[i];

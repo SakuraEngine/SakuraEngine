@@ -14,14 +14,14 @@
 
 void* skd::asset::SGltfMeshImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context) 
 {
-    skr::filesystem::path relPath = assetPath.data();
+    skr::filesystem::path relPath = assetPath.u8_str();
     auto ext = relPath.extension();
     if (ext != ".gltf")
     {
         return nullptr;
     }
     const auto assetRecord = context->GetAssetRecord();
-    auto path = context->AddFileDependency(relPath).string();
+    auto path = context->AddFileDependency(relPath).u8string();
     auto vfs = assetRecord->project->vfs;
     return ImportGLTFWithData(path.c_str(), ioService, vfs);
 }
@@ -165,7 +165,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
         SKR_DEFER({ fclose(buffer_file); });
         if (!buffer_file)
         {
-            SKR_LOG_FMT_ERROR("[SMeshCooker::Cook] failed to write cooked file for resource {}! path: {}", 
+            SKR_LOG_FMT_ERROR(u8"[SMeshCooker::Cook] failed to write cooked file for resource {}! path: {}", 
                 assetRecord->guid, assetRecord->path.string());
             return false;
         }

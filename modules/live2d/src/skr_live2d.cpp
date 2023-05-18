@@ -34,7 +34,7 @@ class CubismFrameWorkAllocator : public Csm::ICubismAllocator
 
 CubismFrameWorkAllocator ls_Allocator;
 
-void SkrLive2DModule::on_load(int argc, char** argv)
+void SkrLive2DModule::on_load(int argc, char8_t** argv)
 {
     using namespace Live2D::Cubism::Core;
 

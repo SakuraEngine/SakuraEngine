@@ -65,8 +65,8 @@ const bool bUseJob = true;
 
 class SGameModule : public skr::IDynamicModule
 {
-    virtual void on_load(int argc, char** argv) override;
-    virtual int main_module_exec(int argc, char** argv) override;
+    virtual void on_load(int argc, char8_t** argv) override;
+    virtual int main_module_exec(int argc, char8_t** argv) override;
     virtual void on_unload() override;
 
     void installResourceFactories();
@@ -247,7 +247,7 @@ void SGameModule::installResourceFactories()
             skr_scene_resource_t* scene = (skr_scene_resource_t*)record->resource;
             auto callback = [&](dual_chunk_view_t* view) {
                 auto callback2 = [&](dual_chunk_view_t* view, dual_chunk_view_t* oldView) {
-                    skr_render_effect_attach(renderer, view, "ForwardEffect");
+                    skr_render_effect_attach(renderer, view, u8"ForwardEffect");
                 };
                 dualS_cast_view_delta(scene->storage, view, &detlaT, DUAL_LAMBDA(callback2));
             };
@@ -295,7 +295,7 @@ void SGameModule::uninstallResourceFactories()
     SKR_LOG_INFO("game runtime unloaded!");
 }
 
-void SGameModule::on_load(int argc, char** argv)
+void SGameModule::on_load(int argc, char8_t** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
 
@@ -353,16 +353,16 @@ void create_test_scene(SRendererId renderer)
             if (states)
             {
                 using namespace skr::guid::literals;
-                states[i].animation_resource = "83c0db0b-08cd-4951-b1c3-65c2008d0113"_guid;
+                states[i].animation_resource = u8"83c0db0b-08cd-4951-b1c3-65c2008d0113"_guid;
                 states[i].animation_resource.resolve(true, renderer->get_dual_storage());
             }
         }
         if (auto feature_arrs = dualV_get_owned_rw(view, dual_id_of<skr_render_effect_t>::get()))
         {
             if (movements)
-                skr_render_effect_attach(renderer, view, "ForwardEffect");
+                skr_render_effect_attach(renderer, view, u8"ForwardEffect");
             else
-                skr_render_effect_attach(renderer, view, "ForwardEffectSkin");
+                skr_render_effect_attach(renderer, view, u8"ForwardEffectSkin");
         }
     };
     dualS_allocate_type(renderer->get_dual_storage(), &renderableT, 512, DUAL_LAMBDA(primSetup));
@@ -421,15 +421,15 @@ void async_attach_skin_mesh(SRendererId renderer)
                 auto& skin_comp = skin_comps[i];
                 auto& skel_comp = skel_comps[i];
                 // auto& anim_comp = anim_comps[i];
-                mesh_comp.mesh_resource = "18db1369-ba32-4e91-aa52-b2ed1556f576"_guid;
+                mesh_comp.mesh_resource = u8"18db1369-ba32-4e91-aa52-b2ed1556f576"_guid;
                 mesh_comp.mesh_resource.resolve(true, renderer->get_dual_storage());
-                skin_comp.skin_resource = "40ce668a-d6bb-4134-b244-b0a7ac552245"_guid;
+                skin_comp.skin_resource = u8"40ce668a-d6bb-4134-b244-b0a7ac552245"_guid;
                 skin_comp.skin_resource.resolve(true, renderer->get_dual_storage());
-                skel_comp.skeleton = "d1acf969-91d6-4233-8d2b-33fca7c98a1c"_guid;
+                skel_comp.skeleton = u8"d1acf969-91d6-4233-8d2b-33fca7c98a1c"_guid;
                 skel_comp.skeleton.resolve(true, renderer->get_dual_storage());
             }
         };
-        skr_render_effect_access(renderer, view, "ForwardEffectSkin", DUAL_LAMBDA(requestSetup));
+        skr_render_effect_access(renderer, view, u8"ForwardEffectSkin", DUAL_LAMBDA(requestSetup));
     };
     //手动 sync skin mesh
     dualS_query(renderer->get_dual_storage(), &filter2, &meta, nullptr, nullptr);
@@ -457,11 +457,11 @@ void async_attach_render_mesh(SRendererId renderer)
             for (uint32_t i = 0; i < view->count; i++)
             {
                 auto& mesh_comp = mesh_comps[i];
-                mesh_comp.mesh_resource = "79bb81eb-4e9f-4301-bf0c-a15b10a1cc3b"_guid;
+                mesh_comp.mesh_resource = u8"79bb81eb-4e9f-4301-bf0c-a15b10a1cc3b"_guid;
                 mesh_comp.mesh_resource.resolve(true, renderer->get_dual_storage());
             }
         };
-        skr_render_effect_access(renderer, view, "ForwardEffectSkin", DUAL_LAMBDA(requestSetup));
+        skr_render_effect_access(renderer, view, u8"ForwardEffectSkin", DUAL_LAMBDA(requestSetup));
     };
     //手动 sync mesh
     dualS_query(renderer->get_dual_storage(), &filter2, &meta, nullptr, nullptr);
@@ -489,7 +489,7 @@ void imgui_button_spawn_girl(SRendererId renderer)
 }
 
 RUNTIME_EXTERN_C int luaopen_clonefunc(lua_State* L);
-int SGameModule::main_module_exec(int argc, char** argv)
+int SGameModule::main_module_exec(int argc, char8_t** argv)
 {
     ZoneScopedN("GameExecution");
     // auto moduleManager = skr_get_module_manager();
@@ -506,7 +506,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
     window_desc.height = BACK_BUFFER_HEIGHT;
     window_desc.width = BACK_BUFFER_WIDTH;
     main_window = skr_create_window(
-        skr::text::format(u8"Game [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).u8_str(),
+        skr::format(u8"Game [{}]", gCGPUBackendNames[cgpu_device->adapter->instance->backend]).u8_str(),
         &window_desc);
     // Initialize renderer
     swapchain = skr_render_device_register_window(render_device, main_window);
@@ -541,13 +541,13 @@ int SGameModule::main_module_exec(int argc, char** argv)
         SKR_LOG_ERROR("luaL_dostring error: {}", lua_tostring(L, -1));
     }
     namespace res = skr::resource;
-    res::TResourceHandle<skr_scene_resource_t> scene_handle = skr::guid::make_guid_unsafe("FB84A5BD-2FD2-46A2-ABF4-2D2610CFDAD9");
+    res::TResourceHandle<skr_scene_resource_t> scene_handle = skr::guid::make_guid_unsafe(u8"FB84A5BD-2FD2-46A2-ABF4-2D2610CFDAD9");
     scene_handle.resolve(true, 0, SKR_REQUESTER_SYSTEM);
 
     // Viewport
     {
         auto viewport_manager = game_renderer->get_viewport_manager();
-        viewport_manager->register_viewport("main_viewport");
+        viewport_manager->register_viewport(u8"main_viewport");
     }
     
     // Time
@@ -678,7 +678,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
                     if (file)
                     {
                         auto str = writer.Str();
-                        skr_vfs_fwrite(file, str.data(), 0, str.length());
+                        skr_vfs_fwrite(file, str.u8_str(), 0, str.size());
                         skr_vfs_fclose(file);
                     }
                 }
@@ -769,7 +769,7 @@ int SGameModule::main_module_exec(int argc, char** argv)
                         }
                     }
                 };
-                skr_render_effect_access(game_renderer, view, "ForwardEffectSkin", DUAL_LAMBDA(syncEffect));
+                skr_render_effect_access(game_renderer, view, u8"ForwardEffectSkin", DUAL_LAMBDA(syncEffect));
             });
             dualJ_schedule_ecs(animQuery, 128, DUAL_LAMBDA_POINTER(animJob), nullptr, nullptr);
         }

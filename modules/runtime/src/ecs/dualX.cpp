@@ -118,7 +118,7 @@ extern "C" void dualX_register_types()
 {
     {
         auto desc = make_zeroed<dual_type_description_t>();
-        desc.name = "dualX_hashed_set";
+        desc.name = u8"dualX_hashed_set";
         desc.size = sizeof(dualX_hashed_set_t);
         desc.guid = dualX_hashed_set_t::_guid;
         desc.alignment = alignof(dualX_hashed_set_t);

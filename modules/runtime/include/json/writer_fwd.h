@@ -3,7 +3,7 @@
 #include <type_traits>
 
 struct skr_json_writer_t;
-typedef char skr_json_writer_char_t;
+typedef char8_t skr_json_writer_char_t;
 typedef size_t skr_json_writer_size_t;
 
 #if defined(__cplusplus)

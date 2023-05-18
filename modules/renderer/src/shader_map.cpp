@@ -173,7 +173,7 @@ ESkrShaderMapShaderStatus ShaderMapImpl::install_shader_from_vfs(const skr_platf
     auto bytes_vfs = root.bytecode_vfs;
     SKR_ASSERT(bytes_vfs);
     const auto hash = identifier.hash;
-    const auto uri = skr::text::format(u8"{}#{}-{}-{}-{}.bytes", hash.flags, 
+    const auto uri = skr::format(u8"{}#{}-{}-{}-{}.bytes", hash.flags, 
         hash.encoded_digits[0], hash.encoded_digits[1], hash.encoded_digits[2], hash.encoded_digits[3]);
     auto sRequest = SPtr<ShaderRequest>::Create(this, uri.u8_str(), identifier);
     auto found = mShaderRequests.find(identifier);

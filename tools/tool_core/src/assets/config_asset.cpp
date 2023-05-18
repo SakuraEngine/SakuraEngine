@@ -35,7 +35,7 @@ void* SJsonConfigImporter::Import(skr_io_ram_service_t* ioService, SCookContext*
     auto doc = parser.iterate(jsonString);
     if(doc.error())
     {
-        SKR_LOG_FMT_ERROR("Import config asset {} from {} failed, json parse error {}", assetRecord->guid, assetPath, simdjson::error_message(doc.error()));
+        SKR_LOG_FMT_ERROR(u8"Import config asset {} from {} failed, json parse error {}", assetRecord->guid, assetPath, simdjson::error_message(doc.error()));
         return nullptr;
     }
     

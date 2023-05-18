@@ -53,7 +53,7 @@ struct AsyncFuture_ThreadJobQueue : public skr::IFuture<Result>
                 skr_atomic32_store_relaxed(&finished, true);
             }
         }
-        skr::string result = "";
+        skr::string result = u8"";
         SAtomic32 finished = false;
     };
     JBase* jobItem = nullptr;
@@ -100,7 +100,7 @@ struct Launcher_ThreadJobQueue
         static skr::SPtr<skr::JobQueue> jq = nullptr;
         if (!jq)
         {
-            auto qn = skr::text::format(u8"Launcher{}_JobQueue", TestIdx);
+            auto qn = skr::format(u8"Launcher{}_JobQueue", TestIdx);
             auto jqDesc = make_zeroed<skr::JobQueueDesc>();
             jqDesc.thread_count = 2;
             jqDesc.priority = SKR_THREAD_NORMAL;
@@ -124,8 +124,8 @@ struct Launcher_ThreadJobQueue
     }
 };
 
-static const char* kCancelledResultString = "Empty, unfinished object";
-static const char* kCompleteResultString = "Finished result object";
+static const char8_t* kCancelledResultString = u8"Empty, unfinished object";
+static const char8_t* kCompleteResultString = u8"Finished result object";
 
 template<int TestIdx>
 struct EmptyTaskWithProgressFeedback 
@@ -181,7 +181,7 @@ TEST(Job, AsyncTask)
 {
     EmptyTaskWithProgressFeedback<0> asynctask;
     asynctask.execute(1, 5);
-    auto txt = skr::text::format(u8"{}", 1);
+    auto txt = skr::format(u8"{}", 1);
     for (int nRender = 0; !asynctask.on_callback_loop(); ++nRender) // if doInBackground() is finished it will stop the loop
     {
         skr_thread_sleep(120);

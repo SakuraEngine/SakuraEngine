@@ -10,36 +10,36 @@
 #endif
 
 #if defined(SKR_OS_MACOSX)
-    static const char* ___dl_prefix_name___ = "lib";
+    static const char8_t* ___dl_prefix_name___ = u8"lib";
 #elif defined(SKR_OS_PROSPERO)
-    static const char* ___dl_prefix_name___ = "";
+    static const char8_t* ___dl_prefix_name___ = u8"";
 #elif defined(SKR_OS_UNIX)
-    const char* ___dl_prefix_name___ = "lib";
+    const char8_t* ___dl_prefix_name___ = u8"lib";
 #elif defined(SKR_OS_WINDOWS)
-    static const char* ___dl_prefix_name___ = "";
+    static const char8_t* ___dl_prefix_name___ = u8"";
 #endif    
 
-const char* skr::SharedLibrary::GetPlatformFilePrefixName()
+const char8_t* skr::SharedLibrary::GetPlatformFilePrefixName()
 {
     return ___dl_prefix_name___;
 }
 
 #if defined(SKR_OS_MACOSX)
-    static const char* ___dl_ext_name___ = ".dylib";
+    static const char8_t* ___dl_ext_name___ = u8".dylib";
 #elif defined(SKR_OS_PROSPERO)
-    static const char* ___dl_ext_name___ = ".elf";
+    static const char8_t* ___dl_ext_name___ = u8".elf";
 #elif defined(SKR_OS_UNIX)
-    static const char* ___dl_ext_name___ = ".so";
+    static const char8_t* ___dl_ext_name___ = u8".so";
 #elif defined(SKR_OS_WINDOWS)
-    static const char* ___dl_ext_name___ = ".dll";
+    static const char8_t* ___dl_ext_name___ = u8".dll";
 #endif    
 
-const char* skr::SharedLibrary::GetPlatformFileExtensionName()
+const char8_t* skr::SharedLibrary::GetPlatformFileExtensionName()
 {
     return ___dl_ext_name___;
 }
 
-bool skr::SharedLibrary::load(const char* path)
+bool skr::SharedLibrary::load(const char8_t* path)
 {
     if (isLoaded() && !unload())
         return false;
@@ -56,23 +56,23 @@ bool skr::SharedLibrary::unload()
     return isLoaded() && unloadImpl();
 }
 
-bool skr::SharedLibrary::hasSymbol(const char* symbolName)
+bool skr::SharedLibrary::hasSymbol(const char8_t* symbolName)
 {
     skr::string error = _lastError;
     getImpl(symbolName);
-    bool has = _lastError.empty();
+    bool has = _lastError.is_empty();
     _lastError = error;
     return has;
 }
 
-void* skr::SharedLibrary::getRawAddress(const char* symbolName)
+void* skr::SharedLibrary::getRawAddress(const char8_t* symbolName)
 {
     return getImpl(symbolName);
 }
 
 bool skr::SharedLibrary::hasError() const
 {
-    return !_lastError.empty();
+    return !_lastError.is_empty();
 }
 
 skr::string skr::SharedLibrary::errorString() const
@@ -86,13 +86,13 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
 }
 
 #if defined(SKR_OS_UNIX)
-    bool skr::SharedLibrary::loadImpl(const char* path)
+    bool skr::SharedLibrary::loadImpl(const char8_t* path)
     {
-        _lastError.clear();
-        _handle = dlopen(path, RTLD_LAZY | RTLD_LOCAL);
+        _lastError.empty();
+        _handle = dlopen((const char*)path, RTLD_LAZY | RTLD_LOCAL);
         if (!_handle)
         {
-            _lastError = dlerror();
+            _lastError =(const char8_t*) dlerror();
             return false;
         }
         return true;
@@ -100,24 +100,24 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
 
     bool skr::SharedLibrary::unloadImpl()
     {
-        _lastError.clear();
+        _lastError.empty();
         // dlclose returns 0 on success
         if (_handle != nullptr && dlclose(_handle) != 0)
         {
-            _lastError = dlerror();
+            _lastError = (const char8_t*)dlerror();
             return false;
         }
         _handle = nullptr;
         return true;
     }
 
-    void* skr::SharedLibrary::getImpl(const char* symbolName)
+    void* skr::SharedLibrary::getImpl(const char8_t* symbolName)
     {
-        _lastError.clear();
+        _lastError.empty();
         dlerror();
         if (!_handle) _handle = dlopen(NULL, RTLD_LAZY | RTLD_LOCAL);
-        void* symbol = dlsym(_handle, symbolName);
-        const char* error = dlerror();
+        void* symbol = dlsym(_handle, (const char*)symbolName);
+        const char8_t* error = (const char8_t*)dlerror();
         if (error)
         {
             // An error occured
@@ -153,14 +153,14 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
             256 - 1,
             nullptr);
             tchar_to_utf8(buffer, u8str);
-            return skr::string((const char*)u8str);
+            return skr::string(u8str);
         }
         return skr::string();
     }
 
-    bool skr::SharedLibrary::loadImpl(const char* path)
+    bool skr::SharedLibrary::loadImpl(const char8_t* path)
     {
-        _lastError.clear();
+        _lastError.empty();
         if (path == nullptr)
         {
             _handle = GetModuleHandle(nullptr);
@@ -184,7 +184,7 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
 
     bool skr::SharedLibrary::unloadImpl()
     {
-        _lastError.clear();
+        _lastError.empty();
         if (!FreeLibrary((HMODULE)_handle))
         {
             _lastError = getWindowsError();
@@ -194,10 +194,10 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
         return true;
     }
 
-    void* skr::SharedLibrary::getImpl(const char* symbolName)
+    void* skr::SharedLibrary::getImpl(const char8_t* symbolName)
     {
-        _lastError.clear();
-        void* addr = (void*)GetProcAddress((HMODULE)_handle, symbolName);
+        _lastError.empty();
+        void* addr = (void*)GetProcAddress((HMODULE)_handle, (const char*)symbolName);
         if (!addr)
         {
             _lastError = getWindowsError();

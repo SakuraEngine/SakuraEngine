@@ -1,42 +1,46 @@
 #include <containers/hashmap.hpp>
 #include "utils/make_zeroed.hpp"
+#include "option_utils.hpp"
+
 #include <EASTL/set.h>
 #include <EASTL/sort.h>
-#include "option_utils.hpp"
+#include <EASTL/string.h>
 
 bool skr_shader_options_resource_t::flatten_options(eastl::vector<skr_shader_option_template_t>& dst, skr::span<skr_shader_options_resource_t*> srcs) SKR_NOEXCEPT
 {
-    eastl::set<eastl::string> keys;
-    skr::flat_hash_map<eastl::string, skr_shader_option_template_t, eastl::hash<eastl::string>> kvs;
+    eastl::set<eastl::u8string> keys;
+    skr::flat_hash_map<skr::string, skr_shader_option_template_t, skr::hash<skr::string>> kvs;
     // collect all keys & ensure unique
     for (auto& src : srcs)
     {
         for (auto& opt : src->options)
         {
-            auto&& found = keys.find(opt.key);
+            auto&& found = keys.find(opt.key.u8_str());
             if (found != keys.end())
             {
                 dst.empty();
                 return false;
             }
-            keys.insert(opt.key);
+            keys.insert(opt.key.u8_str());
             kvs.insert({ opt.key, opt });
         }
     }
     dst.reserve(keys.size());
     for (auto& key : keys)
     {
-        dst.push_back(kvs[key]);
+        dst.push_back(kvs[key.c_str()]);
     }
     // sort result by key
     eastl::stable_sort(dst.begin(), dst.end(), 
-        [](const skr_shader_option_template_t& a, const skr_shader_option_template_t& b) { return a.key < b.key; });
+        [](const skr_shader_option_template_t& a, const skr_shader_option_template_t& b) {
+            return eastl::u8string(a.key.c_str()) < eastl::u8string(b.key.c_str()); 
+        });
     return true;
 }
 
 skr_stable_shader_hash_t skr_shader_option_instance_t::calculate_stable_hash(skr::span<skr_shader_option_instance_t> ordered_options)
 {
-    option_utils::opt_signature_string signatureString;
+    skr::string signatureString;
     option_utils::stringfy(signatureString, ordered_options);
     return skr_stable_shader_hash_t::hash_string(signatureString.c_str(), (uint32_t)signatureString.size());
 }

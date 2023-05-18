@@ -48,7 +48,7 @@ void ReceiverRenderer::create_window()
     title += gCGPUBackendNames[backend];
     title += u8"]";
     title += u8" PID: ";
-    title += skr::text::format(u8"{}", skr_get_current_process_id());
+    title += skr::format(u8"{}", skr_get_current_process_id());
     sdl_window = SDL_CreateWindow(title.c_str(),
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT,
@@ -211,8 +211,8 @@ CGPUImportTextureDescriptor receiver_get_shared_handle(MDB_env* env, MDB_dbi dbi
     }
 
     //Initialize the key with the key we're looking for
-    skr::string keyString = skr::to_string(provider_id);
-    MDB_val key = { (size_t)keyString.size(), (void*)keyString.data() };
+    const auto keyString = skr::format(u8"{}", provider_id);
+    MDB_val key = { (size_t)keyString.size(), (void*)keyString.u8_str() };
     MDB_val data;
 
     //Position the cursor, key and data are available in key

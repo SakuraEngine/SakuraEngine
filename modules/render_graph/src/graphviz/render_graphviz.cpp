@@ -32,12 +32,12 @@ public:
                 auto SRV = (TextureReadEdge*)rg_edge;
                 if (auto name = SRV->get_name())
                 {
-                    label = "SRV: ";
+                    label = u8"SRV: ";
                     label.append(name);
                 }
                 else
                 {
-                    label = "SRV";
+                    label = u8"SRV";
                     //label = "SRV:s";
                     //label.append(skr::to_string(SRV->set))
                     //.append("b")
@@ -49,12 +49,12 @@ public:
                 auto UAV = (TextureReadWriteEdge*)rg_edge;
                 if (auto name = UAV->get_name())
                 {
-                    label = "UAV: ";
+                    label = u8"UAV: ";
                     label.append(name);
                 }
                 else
                 {
-                    label = "UAV";
+                    label = u8"UAV";
                     //label = "UAV:s";
                     //label.append(skr::to_string(UAV->set))
                     //.append("b")
@@ -64,8 +64,8 @@ public:
             break;
             case ERelationshipType::TextureWrite: {
                 auto RTV = (TextureRenderEdge*)rg_edge;
-                label = "RTV:";
-                label.append(skr::to_string(RTV->mrt_index));
+                label = u8"RTV:";
+                label.append(skr::format(u8"{}", RTV->mrt_index));
             }
             break;
             default:
@@ -91,59 +91,59 @@ public:
     {
         RenderGraphNode* rg_node = (RenderGraphNode*)prop[v];
         skr::string label;
-        skr::string color = "lavenderblush";
-        skr::string shape = "none";
+        skr::string color = u8"lavenderblush";
+        skr::string shape = u8"none";
         switch (rg_node->type)
         {
             case EObjectType::Texture: {
                 TextureNode* tex_node = (TextureNode*)rg_node;
                 const bool is_imported = tex_node->is_imported();
-                color = is_imported ? "grey35" : "grey70";
-                label = "texture: ";
-                label.append((const char*)rg_node->get_name());
-                label.append("\\nrefs: ")
-                .append(is_imported ? "imported" : skr::to_string(tex_node->outgoing_edges()));
+                color = is_imported ? u8"grey35" : u8"grey70";
+                label = u8"texture: ";
+                label.append(rg_node->get_name());
+                label.append(u8"\\nrefs: ")
+                    .append(is_imported ? u8"imported" : skr::format(u8"{}", tex_node->outgoing_edges()).u8_str());
                 if (auto aliasing_parent = tex_node->get_aliasing_parent(); aliasing_parent)
                 {
-                    label.append("\\naliasing: ").append((const char*)aliasing_parent->get_name());
+                    label.append(u8"\\naliasing: ").append(aliasing_parent->get_name());
                 }
-                shape = "box";
+                shape = u8"box";
             }
             break;
             case EObjectType::Buffer: {
                 BufferNode* buf_node = (BufferNode*)rg_node;
                 const bool is_imported = buf_node->is_imported();
-                color = is_imported ? "limegreen" : "lightgreen";
-                label = "buffer: ";
-                label.append((const char*)rg_node->get_name());
-                label.append("\\nrefs: ")
-                .append(is_imported ? "imported" : skr::to_string(buf_node->outgoing_edges()));
-                shape = "box";
+                color = is_imported ? u8"limegreen" : u8"lightgreen";
+                label = u8"buffer: ";
+                label.append(rg_node->get_name());
+                label.append(u8"\\nrefs: ")
+                    .append(is_imported ? u8"imported" : skr::format(u8"{}", buf_node->outgoing_edges()).u8_str());
+                shape = u8"box";
             }
             break;
             case EObjectType::Pass: {
                 PassNode* pass_node = (PassNode*)rg_node;
-                shape = "ellipse";
+                shape = u8"ellipse";
                 switch (pass_node->pass_type)
                 {
                     case EPassType::Compute: {
-                        label = "compute: ";
-                        color = "lemonchiffon";
+                        label = u8"compute: ";
+                        color = u8"lemonchiffon";
                     }
                     break;
                     case EPassType::Copy: {
-                        label = "copy: ";
-                        color = "lightblue1";
+                        label = u8"copy: ";
+                        color = u8"lightblue1";
                     }
                     break;
                     case EPassType::Render: {
-                        label = "render(geom): ";
+                        label = u8"render(geom): ";
                     }
                     break;
                     default:
                         break;
                 }
-                label.append((const char*)rg_node->get_name());
+                label.append(rg_node->get_name());
             }
             break;
             default:

@@ -8,23 +8,24 @@
 namespace skr::type
 {
 %for enum in generator.filter_types(db.enums):
-std::string_view EnumToStringTrait<${enum.name}>::ToString(${enum.name} value)
+skr::string_view EnumToStringTrait<${enum.name}>::ToString(${enum.name} value)
 {
     switch (value)
     {
     %for name, value in vars(enum.values).items():
-    case ${enum.name}::${db.short_name(name)}: return "${db.short_name(name)}";
+    case ${enum.name}::${db.short_name(name)}: return u8"${db.short_name(name)}";
     %endfor
-    default: SKR_UNREACHABLE_CODE(); return "${enum.name}::INVALID_ENUMERATOR";
+    default: SKR_UNREACHABLE_CODE(); return u8"${enum.name}::INVALID_ENUMERATOR";
     }
 }
-bool EnumToStringTrait<${enum.name}>::FromString(std::string_view enumStr, ${enum.name}& e)
+bool EnumToStringTrait<${enum.name}>::FromString(skr::string_view enumStr, ${enum.name}& e)
 {
-    auto hash = hash_crc32(enumStr);
+    const std::string_view enumStrV = {(const char*)enumStr.u8_str(), (size_t)enumStr.size()};
+    const auto hash = hash_crc32(enumStrV);
     switch(hash)
     {
     %for name, value in vars(enum.values).items():
-        case hash_crc32<char>("${db.short_name(name)}"): if(enumStr == "${db.short_name(name)}") e = ${name}; return true;
+        case hash_crc32<char>("${db.short_name(name)}"): if(enumStr == u8"${db.short_name(name)}") e = ${name}; return true;
     %endfor
         default:
             return false;
@@ -40,7 +41,8 @@ error_code ReadTrait<${enum.name}>::Read(value_t&& json, ${enum.name}& e)
     auto value = json.get_string();
     if (value.error() != simdjson::SUCCESS)
         return (error_code)value.error();
-    std::string_view enumStr = value.value_unsafe();
+    const auto rawView = value.value_unsafe();
+    const auto enumStr = skr::string_view((const char8_t*)rawView.data(), rawView.size());
     if(!skr::type::enum_from_string(enumStr, e))
     {
         SKR_LOG_ERROR("Unknown enumerator while reading enum ${enum.name}: %s", enumStr);
@@ -138,7 +140,7 @@ void WriteTrait<const ${record.name}&>::WriteFields(skr_json_writer_t* writer, c
     WriteTrait<const ${base}&>::WriteFields(writer, record);
     %endfor
     %for name, field in generator.filter_fields(record.fields):
-    writer->Key("${name}", ${len(name)});
+    writer->Key(u8"${name}", ${len(name)});
     %if field.arraySize > 0:
     writer->StartArray();
     for(int i = 0; i < ${field.arraySize}; ++i)

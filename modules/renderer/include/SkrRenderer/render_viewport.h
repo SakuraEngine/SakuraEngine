@@ -21,10 +21,10 @@ typedef struct skr_render_viewport_t skr_render_viewport_t;
 
 struct SKR_RENDERER_API SViewportManager {
 #ifdef __cplusplus
-    virtual uint32_t register_viewport(const char* viewport_name) SKR_NOEXCEPT = 0;
-    virtual skr_render_viewport_t* find_viewport(const char* viewport_name) SKR_NOEXCEPT = 0;
+    virtual uint32_t register_viewport(const char8_t* viewport_name) SKR_NOEXCEPT = 0;
+    virtual skr_render_viewport_t* find_viewport(const char8_t* viewport_name) SKR_NOEXCEPT = 0;
     virtual skr_render_viewport_t* find_viewport(uint32_t idx) SKR_NOEXCEPT = 0;
-    virtual void remove_viewport(const char* viewport_name) SKR_NOEXCEPT = 0;
+    virtual void remove_viewport(const char8_t* viewport_name) SKR_NOEXCEPT = 0;
     virtual void remove_viewport(uint32_t idx) SKR_NOEXCEPT = 0;
 
     static SViewportManager* Create(dual_storage_t* storage);

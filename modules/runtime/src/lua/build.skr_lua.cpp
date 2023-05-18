@@ -10,6 +10,9 @@
 #include "platform/vfs.h"
 #include "ecs/dual.h"
 
+#include <EASTL/string.h>
+#include <EASTL/string_view.h>
+
 namespace skr::lua
 {
 void bind_skr_guid(lua_State* L);
@@ -27,11 +30,11 @@ RUNTIME_EXTERN_C RUNTIME_API void skr_lua_setroot(lua_State* L, const char* dire
 RUNTIME_EXTERN_C int
 luaopen_clonefunc(lua_State *L);
 
-void replaceAll(skr::string& str, const skr::string_view& from, const skr::string_view& to) {
+void replaceAll(eastl::u8string& str, const eastl::u8string_view& from, const eastl::u8string_view& to) {
     if(from.empty())
         return;
     size_t start_pos = 0;
-    while((start_pos = skr::string_view(str).find(from, start_pos)) != std::string::npos) {
+    while((start_pos = eastl::u8string_view(str).find(from, start_pos)) != eastl::string::npos) {
         str.replace(start_pos, from.length(), to.data(), to.length());
         start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
     }
@@ -39,14 +42,14 @@ void replaceAll(skr::string& str, const skr::string_view& from, const skr::strin
 
 int skr_load_file(lua_State* L) {
     skr_lua_state_extra_t* extra = (skr_lua_state_extra_t*)*(void**)lua_getextraspace(L);
-    const char* fn = luaL_checkstring(L, 1);
-    skr::string path = fn;
-    replaceAll(path, ".", "/");
-    skr::string_view exts[] = { ".lua", ".luac" };
+    auto fn = (const char8_t*)luaL_checkstring(L, 1);
+    eastl::u8string path = fn;
+    replaceAll(path, u8".", u8"/");
+    eastl::u8string_view exts[] = { u8".lua", u8".luac" };
     skr_vfile_t* file = nullptr;
     for(int i=0; i<2; ++i)
     {
-        skr::string fullpath = path + exts[i].data();
+        eastl::u8string fullpath = path + exts[i].data();
         file = skr_vfs_fopen(extra->vfs, (const char8_t*)fullpath.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
         if(file)
             break;
@@ -60,8 +63,8 @@ int skr_load_file(lua_State* L) {
     auto size = skr_vfs_fsize(file);
     eastl::vector<char> buffer(size);
     skr_vfs_fread(file, buffer.data(), 0, size);
-    skr::string name = skr::string("@") + fn;
-    if(luaL_loadbuffer(L,buffer.data(), size, name.c_str())==0) {
+    auto name = eastl::u8string(u8"@") + fn;
+    if(luaL_loadbuffer(L,buffer.data(), size, (const char*)name.c_str())==0) {
         return 1;
     }
     else {
@@ -219,16 +222,16 @@ void bind_skr_guid(lua_State* L)
 {
     luaL_Reg metamethods[] = {
         { "__tostring", +[](lua_State* L) -> int {
-             auto guid = (skr_guid_t*)luaL_checkudata(L, 1, "skr_guid_t");
-             lua_pushstring(L, skr::format("{}", *guid).c_str());
-             return 1;
-         } },
+            auto guid = (skr_guid_t*)luaL_checkudata(L, 1, "skr_guid_t");
+            lua_pushstring(L, skr::format(u8"{}", *guid).c_str());
+            return 1;
+        } },
         { "__eq", +[](lua_State* L) -> int {
-             auto guid1 = (skr_guid_t*)luaL_checkudata(L, 1, "skr_guid_t");
-             auto guid2 = (skr_guid_t*)luaL_checkudata(L, 2, "skr_guid_t");
-             lua_pushboolean(L, *guid1 == *guid2);
-             return 1;
-         } },
+            auto guid1 = (skr_guid_t*)luaL_checkudata(L, 1, "skr_guid_t");
+            auto guid2 = (skr_guid_t*)luaL_checkudata(L, 2, "skr_guid_t");
+            lua_pushboolean(L, *guid1 == *guid2);
+            return 1;
+        } },
         { nullptr, nullptr }
     };
     luaL_newmetatable(L, "skr_guid_t");
@@ -252,9 +255,9 @@ void bind_skr_resource_handle(lua_State* L)
         }
         else if (lua_isstring(L, 1))
         {
-            const char* str = lua_tostring(L, 1);
+            auto str = (const char8_t*)lua_tostring(L, 1);
             skr_resource_handle_t* resource = (skr_resource_handle_t*)lua_newuserdata(L, sizeof(skr_resource_handle_t));
-            new (resource) skr_resource_handle_t(skr::guid::make_guid_unsafe(skr::string_view{ str }));
+            new (resource) skr_resource_handle_t(skr::guid::make_guid_unsafe(str));
             luaL_setmetatable(L, "skr_resource_handle_t");
             return 1;
         }
@@ -270,93 +273,93 @@ void bind_skr_resource_handle(lua_State* L)
 
     luaL_Reg metamethods[] = {
         { "__gc", +[](lua_State* L) -> int {
-             auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
-             if (resource->is_resolved())
-                 resource->unload();
-             return 0;
-         } },
+            auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+            if (resource->is_resolved())
+                resource->unload();
+            return 0;
+        } },
         { "__tostring", +[](lua_State* L) -> int {
-             auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
-             lua_pushstring(L, skr::format("resource {}", resource->get_serialized()).c_str());
-             return 1;
-         } },
+            auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+            lua_pushstring(L, skr::format(u8"resource {}", resource->get_serialized()).c_str());
+            return 1;
+        } },
         { "__eq", +[](lua_State* L) -> int {
-             auto resource1 = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
-             auto resource2 = (skr_resource_handle_t*)luaL_checkudata(L, 2, "skr_resource_handle_t");
-             lua_pushboolean(L, resource1->get_serialized() == resource2->get_serialized());
-             return 1;
-         } },
+            auto resource1 = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+            auto resource2 = (skr_resource_handle_t*)luaL_checkudata(L, 2, "skr_resource_handle_t");
+            lua_pushboolean(L, resource1->get_serialized() == resource2->get_serialized());
+            return 1;
+        } },
         { "__index", +[](lua_State* L) -> int {
-             auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
-             (void)resource;
-             const char* key = luaL_checkstring(L, 2);
-             switchname(key)
-             {
-                 casestr("resolve")
-                 {
-                     lua_pushcfunction(
-                     L, +[](lua_State* L) -> int {
-                         auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
-                         bool requireInstall = lua_toboolean(L, 2);
-                         if (!resource->is_resolved())
-                             resource->resolve(requireInstall, (uint64_t)L, SKR_REQUESTER_SCRIPT);
-                         return 0;
-                     });
-                     return 1;
-                 }
-                 casestr("is_resolved")
-                 {
-                     lua_pushcfunction(
-                     L, +[](lua_State* L) -> int {
-                         auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
-                         lua_pushboolean(L, resource->is_resolved());
-                         return 1;
-                     });
-                     return 1;
-                 }
-                 casestr("get_resolved")
-                 {
-                     lua_pushcfunction(
-                     L, +[](lua_State* L) -> int {
-                         auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
-                         if (!resource->is_resolved())
-                         {
-                             return 0;
-                         }
-                         auto ptr = resource->get_resolved();
-                         if (!ptr)
-                         {
-                             return 0;
-                         }
-                         auto tid = resource->get_type();
-                         auto type = skr_get_type(&tid);
-                         lua_pushlightuserdata(L, ptr);
-                         luaL_getmetatable(L, type->Name());
-                         lua_setmetatable(L, -2);
-                         return 1;
-                     });
-                     return 1;
-                 }
-                 casestr("unload")
-                 {
-                     lua_pushcfunction(
-                     L, +[](lua_State* L) -> int {
-                         auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
-                         if (resource->is_resolved())
-                             resource->unload();
-                         else
-                             SKR_LOG_DEBUG("skr_resource_handle_t::unload called on unresolved resource.");
-                         return 0;
-                     });
-                     return 1;
-                 }
-                 default: {
-                     return luaL_error(L, "skr_resource_handle_t does not have a member named '%s'", key);
-                 }
-             }
-             SKR_UNREACHABLE_CODE()
-             return 0;
-         } },
+            auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+            (void)resource;
+            const char* key = luaL_checkstring(L, 2);
+            switchname(key)
+            {
+                casestr("resolve")
+                {
+                    lua_pushcfunction(
+                    L, +[](lua_State* L) -> int {
+                        auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+                        bool requireInstall = lua_toboolean(L, 2);
+                        if (!resource->is_resolved())
+                            resource->resolve(requireInstall, (uint64_t)L, SKR_REQUESTER_SCRIPT);
+                        return 0;
+                    });
+                    return 1;
+                }
+                casestr("is_resolved")
+                {
+                    lua_pushcfunction(
+                    L, +[](lua_State* L) -> int {
+                        auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+                        lua_pushboolean(L, resource->is_resolved());
+                        return 1;
+                    });
+                    return 1;
+                }
+                casestr("get_resolved")
+                {
+                    lua_pushcfunction(
+                    L, +[](lua_State* L) -> int {
+                        auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+                        if (!resource->is_resolved())
+                        {
+                            return 0;
+                        }
+                        auto ptr = resource->get_resolved();
+                        if (!ptr)
+                        {
+                            return 0;
+                        }
+                        auto tid = resource->get_type();
+                        auto type = skr_get_type(&tid);
+                        lua_pushlightuserdata(L, ptr);
+                        luaL_getmetatable(L, (const char*)type->Name());
+                        lua_setmetatable(L, -2);
+                        return 1;
+                    });
+                    return 1;
+                }
+                casestr("unload")
+                {
+                    lua_pushcfunction(
+                    L, +[](lua_State* L) -> int {
+                        auto resource = (skr_resource_handle_t*)luaL_checkudata(L, 1, "skr_resource_handle_t");
+                        if (resource->is_resolved())
+                            resource->unload();
+                        else
+                            SKR_LOG_DEBUG("skr_resource_handle_t::unload called on unresolved resource.");
+                        return 0;
+                    });
+                    return 1;
+                }
+                default: {
+                    return luaL_error(L, "skr_resource_handle_t does not have a member named '%s'", key);
+                }
+            }
+            SKR_UNREACHABLE_CODE()
+            return 0;
+        } },
         { nullptr, nullptr }
     };
     luaL_setfuncs(L, metamethods, 0);
@@ -364,12 +367,12 @@ void bind_skr_resource_handle(lua_State* L)
 }
 
 
-inline void split(const skr::string_view& s, eastl::vector<skr::string_view>& tokens, const skr::string_view& delimiters = " ")
+inline void split(const eastl::u8string_view& s, eastl::vector<eastl::u8string_view>& tokens, const eastl::u8string_view& delimiters = u8" ")
 {
     using namespace::skr;
-    string::size_type lastPos = s.find_first_not_of(delimiters, 0);
-    string::size_type pos = s.find_first_of(delimiters, lastPos);
-    while (string::npos != pos || string::npos != lastPos)
+    eastl::u8string::size_type lastPos = s.find_first_not_of(delimiters, 0);
+    eastl::u8string::size_type pos = s.find_first_of(delimiters, lastPos);
+    while (eastl::u8string::npos != pos || eastl::u8string::npos != lastPos)
     {
         auto substr = s.substr(lastPos, pos - lastPos);
         tokens.push_back(substr); // use emplace_back after C++11
@@ -378,10 +381,9 @@ inline void split(const skr::string_view& s, eastl::vector<skr::string_view>& to
     }
 }
 
-inline skr::string join(const eastl::vector<skr::string_view>& tokens, const skr::string_view& delimiters = " ")
+inline eastl::u8string join(const eastl::vector<eastl::u8string_view>& tokens, const eastl::u8string_view& delimiters = u8" ")
 {
-    using namespace::skr;
-    string s;
+    eastl::u8string s;
     for (auto& token : tokens)
     {
         if (!s.empty())
@@ -397,29 +399,29 @@ int skr_lua_log(lua_State* L)
     lua_Debug ar;
     lua_getstack(L, 1, &ar);
     lua_getinfo(L, "nSl", &ar);
-    skr::string str = skr::format("[{} : {}]:\t", ar.namewhat, ar.name);
+    auto str = skr::format(u8"[{} : {}]:\t", (const char8_t*)ar.namewhat, (const char8_t*)ar.name);
     int top = lua_gettop(L);
     for(int n=1;n<=top;n++) {
         size_t len;
-        const char* s = luaL_tolstring(L, n, &len);
-        str+="\t";
+        const char8_t* s = (const char8_t*)luaL_tolstring(L, n, &len);
+        str += u8"\t";
         //TODO: use string builder?
-        if(s) str+=s;
+        if(s) str += s;
     }
     const int line = ar.currentline;
-    const char* src = ar.source;
+    auto src = (const char8_t*)ar.source;
     if(line != -1)
     {
-        skr::string_view Source(src);
-        if (Source.ends_with(".lua"))
+        eastl::u8string_view Source(src);
+        if (Source.ends_with(u8".lua"))
             Source = Source.substr(0, Source.size() - 4);
-        if (Source.starts_with("@"))
+        if (Source.starts_with(u8"@"))
             Source = Source.substr(1);
-        eastl::vector<skr::string_view> tokens;
-        split(Source, tokens, "/");
+        eastl::vector<eastl::u8string_view> tokens;
+        split(Source, tokens, u8"/");
         
-        const auto modulename = join(tokens, ".");
-        log_log(level, modulename.c_str(), line, str.c_str());
+        const auto modulename = join(tokens, u8".");
+        log_log(level, (const char*)modulename.c_str(), line, str.c_str());
     }
     else 
     {
@@ -496,20 +498,20 @@ int push_string(lua_State* L, const skr::string& str)
     return 1;
 }
 
-int push_string(lua_State* L, skr::string_view str)
+int push_string(lua_State* L, eastl::u8string_view str)
 {
-    lua_pushlstring(L, str.data(), str.size());
+    lua_pushlstring(L, (const char*)str.data(), str.size());
     return 1;
 }
 
 skr::string check_string(lua_State* L, int index)
 {
-    return lua_tostring(L, index);
+    return (const char8_t*)lua_tostring(L, index);
 }
 
 skr::string opt_string(lua_State* L, int index, const skr::string& def)
 {
-    return luaL_optstring(L, index, def.c_str());
+    return { (const char8_t*)luaL_optstring(L, index, def.c_str()) };
 }
 
 int push_resource(lua_State* L, const skr_resource_handle_t* resource)

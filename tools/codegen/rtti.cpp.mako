@@ -29,7 +29,7 @@ namespace skr::type
             initialized = true;
             size_t size = sizeof(${record.name});
             size_t align = alignof(${record.name});
-            skr::string_view name = "${record.name}";
+            skr::string_view name = u8"${record.name}";
         %if record.bases:
             auto base = (const RecordType*)type_of<${record.bases[0]}>::get();
         %else:
@@ -58,7 +58,7 @@ namespace skr::type
         %if fields:
             static skr_field_t fields[] = {
             %for name, field in fields:
-                {"${name}", type_of<${field.type}>::get(), ${field.offset}},
+                {u8"${name}", type_of<${field.type}>::get(), ${field.offset}},
             %endfor
             };
         %else:
@@ -68,7 +68,7 @@ namespace skr::type
             %if vars(method.parameters):
                 static skr_field_t _params${i}[] = {
                 %for name, field in vars(method.parameters).items():
-                    { "${name}", type_of<${field.type}>::get(), ${field.offset}},
+                    { u8"${name}", type_of<${field.type}>::get(), ${field.offset}},
                 %endfor
                 };
                 static skr::span<skr_field_t> params${i} = _params${i};
@@ -145,22 +145,21 @@ namespace skr::type
         static EnumType::Enumerator enumerators[] = 
         {
         %for name, enumerator in vars(enum.values).items():
-            {"${db.short_name(name)}", ${enumerator.value}},
+            {u8"${db.short_name(name)}", ${enumerator.value}},
         %endfor
         };
         constexpr skr_guid_t guid = {${db.guid_constant(enum)}};
         static EnumType type{
             type_of<std::underlying_type_t<${enum.name}>>::get(),
-            "${enum.name}", guid,
+            u8"${enum.name}", guid,
             +[](void* self, skr::string_view enumStr)
             {
                 auto& This = *((${enum.name}*)self);
-
-                auto hash = hash_crc32<char>({enumStr.data(), enumStr.size()});
+                auto hash = hash_crc32<char>({enumStr.c_str(), (size_t)enumStr.size()});
                 switch(hash)
                 {
                 %for name, enumerator in vars(enum.values).items():
-                    case hash_crc32<char>("${db.short_name(name)}"): if( enumStr.compare("${db.short_name(name)}") == 0) This = ${name}; return;
+                    case hash_crc32<char>("${db.short_name(name)}"): if(enumStr == u8"${db.short_name(name)}") This = ${name}; return;
                 %endfor
                 }
                 SKR_UNREACHABLE_CODE();
@@ -171,11 +170,11 @@ namespace skr::type
                 switch(This)
                 {
                 %for name, enumerator in vars(enum.values).items():
-                    case ${name}: return skr::string("${db.short_name(name)}");
+                    case ${name}: return skr::string(u8"${db.short_name(name)}");
                 %endfor
                 }
                 SKR_UNREACHABLE_CODE();
-                return skr::string("${enum.name}::INVALID_ENUMERATOR");
+                return skr::string(u8"${enum.name}::INVALID_ENUMERATOR");
             },
             enumerators
         };

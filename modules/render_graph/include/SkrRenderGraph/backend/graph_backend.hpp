@@ -25,7 +25,7 @@ public:
     void commit(CGPUQueueId gfx_queue, uint64_t frame_index);
     void reset_begin(TextureViewPool& texture_view_pool);
 
-    void write_marker(const char* message);
+    void write_marker(const char8_t* message);
     void print_error_trace(uint64_t frame_index);
 
     CGPUCommandPoolId gfx_cmd_pool = nullptr;

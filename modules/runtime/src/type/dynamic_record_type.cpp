@@ -33,11 +33,11 @@ skr_dynamic_record_type_id skr_create_record_type(const skr_guid_t* type_id, uin
     return record;
 }
 
-void skr_record_type_set_name(skr_dynamic_record_type_id type, const char* name)
+void skr_record_type_set_name(skr_dynamic_record_type_id type, const char8_t* name)
 {
     type->_name = name;
     auto pNameView = (skr::string_view*)&type->name;
-    *pNameView = type->_name.c_str();
+    *pNameView = type->_name.u8_str();
 }
 
 void skr_record_type_set_hasher(skr_dynamic_record_type_id type, size_t (*hasher)(const void* self, size_t base))

@@ -137,7 +137,7 @@ struct robjects_example_application : public robjects_application_t
         ImGui::PushID(diagnostic);
         auto type_property = static_cast<skr::gui::TextDiagnosticProperty*>(diagnostic->find_property(u8"type"));
         auto type = type_property ? type_property->get_value() : u8"object";
-        skr::text::text show_name = skr::text::format(SKR_UTF8("{}{}{}"), SKR_UTF8("["), type, SKR_UTF8("]"));
+        skr::text::text show_name = skr::format(SKR_UTF8("{}{}{}"), SKR_UTF8("["), type, SKR_UTF8("]"));
         ImGuiTreeNodeFlags node_flags = (selected_diagnostic == diagnostic) ? ImGuiTreeNodeFlags_Selected : 0;
         node_flags |= ImGuiTreeNodeFlags_SpanFullWidth;
         node_flags |= ImGuiTreeNodeFlags_OpenOnArrow;

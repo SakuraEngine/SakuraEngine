@@ -9,6 +9,7 @@
 #include <cmath>
 #include <charconv>
 #include "codeunit_sequence.h"
+#include "utils/demangle.hpp"
 
 OPEN_STRING_NS_BEGIN
 
@@ -232,9 +233,36 @@ namespace details
 }
 
 template<> 
-struct argument_formatter<u32>
+struct argument_formatter<i8>
 {
-    static codeunit_sequence produce(const u32& value, const codeunit_sequence_view& specification)
+    static codeunit_sequence produce(const i8& value, const codeunit_sequence_view& specification)
+    {
+        return details::format_integer(value, specification);
+    }
+};
+
+template<> 
+struct argument_formatter<u8>
+{
+    static codeunit_sequence produce(const u8& value, const codeunit_sequence_view& specification)
+    {
+        return details::format_integer(value, specification);
+    }
+};
+
+template<> 
+struct argument_formatter<i16>
+{
+    static codeunit_sequence produce(const i16& value, const codeunit_sequence_view& specification)
+    {
+        return details::format_integer(value, specification);
+    }
+};
+
+template<> 
+struct argument_formatter<u16>
+{
+    static codeunit_sequence produce(const u16& value, const codeunit_sequence_view& specification)
     {
         return details::format_integer(value, specification);
     }
@@ -244,6 +272,15 @@ template<>
 struct argument_formatter<i32>
 {
     static codeunit_sequence produce(const i32& value, const codeunit_sequence_view& specification)
+    {
+        return details::format_integer(value, specification);
+    }
+};
+
+template<> 
+struct argument_formatter<u32>
+{
+    static codeunit_sequence produce(const u32& value, const codeunit_sequence_view& specification)
     {
         return details::format_integer(value, specification);
     }
@@ -391,7 +428,8 @@ codeunit_sequence argument_formatter<T>::produce(const T& value, const codeunit_
     if(specification == OSTR_UTF8("r"_cuqv))   // output raw memory bytes
         return format(OSTR_UTF8("[Undefined type (raw:{})]"_cuqv), raw);
 
-    OPEN_STRING_CHECK(false, OSTR_UTF8("Undefined format with raw memory bytes:{}!"), raw)
+    const auto t = skr::demangle<T>();
+    OPEN_STRING_CHECK(false, OSTR_UTF8("Undefined format with raw memory bytes:{}, with cplusplus type {}!"), raw, (const ochar8_t*)t.c_str());
     return { };
 }
 

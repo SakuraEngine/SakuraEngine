@@ -535,7 +535,7 @@ struct WorldDeltaApplier : IWorldDeltaApplier
             for(auto& eid : delta.dead)
             {
                 auto entity = delta.entities[eid];
-                SKR_LOG_FMT_DEBUG("Entity dead recived {}:{}", dual::e_id(entity), dual::e_version(entity));
+                SKR_LOG_FMT_DEBUG(u8"Entity dead recived {}:{}", dual::e_id(entity), dual::e_version(entity));
 
                 auto iter = map.find(entity);
                 SKR_ASSERT(iter != map.end());
@@ -545,7 +545,7 @@ struct WorldDeltaApplier : IWorldDeltaApplier
             for (auto& pair : delta.created)
             {
                 auto entity = delta.entities[pair.entity];
-                SKR_LOG_FMT_DEBUG("New entity recived {}:{}", dual::e_id(entity), dual::e_version(entity));
+                SKR_LOG_FMT_DEBUG(u8"New entity recived {}:{}", dual::e_id(entity), dual::e_version(entity));
                 skr::vector<dual_type_index_t> added;
                 added.reserve(pair.components.size());
                 for (auto& comp : pair.components)
@@ -638,9 +638,9 @@ int skr::binary::ReadTrait<packed_entity_t>::Read(skr_binary_reader_t *reader, p
 void skr::json::WriteTrait<const packed_entity_t&>::Write(skr_json_writer_t *writer, const packed_entity_t &value)
 {
     writer->StartObject();
-    writer->Key("id");
+    writer->Key(u8"id");
     writer->UInt(DUAL_ENTITY_ID(value.entity));
-    writer->Key("version");
+    writer->Key(u8"version");
     writer->UInt(DUAL_ENTITY_VERSION(value.entity));
     writer->EndObject();
 }

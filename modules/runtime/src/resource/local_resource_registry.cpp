@@ -19,7 +19,7 @@ bool SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
 {
     //简单实现，直接在 resource 路径下按 guid 找到文件读信息，没有单独的数据库
     auto guid = request->GetGuid();
-    skr::filesystem::path headerPath = fmt::format("game/{}.rh", guid);
+    skr::filesystem::path headerPath = skr::format(u8"game/{}.rh", guid).c_str();
     auto headerUri = headerPath.u8string();
     // TODO: 检查文件存在？
     auto file = skr_vfs_fopen(vfs, headerUri.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
@@ -32,7 +32,7 @@ bool SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
         uint8_t buffer[sizeof(skr_resource_header_t)];
         if(skr_vfs_fread(file, buffer, 0, _fs_length) != _fs_length)
         {
-            SKR_LOG_FMT_ERROR("[SLocalResourceRegistry::RequestResourceFile] failed to read resource header! guid: {}", guid);
+            SKR_LOG_FMT_ERROR(u8"[SLocalResourceRegistry::RequestResourceFile] failed to read resource header! guid: {}", guid);
             return false;
         }
         skr::binary::SpanReader reader = { buffer, 0 };
@@ -46,7 +46,7 @@ bool SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
         SKR_DEFER({ sakura_free(buffer); });
         if(skr_vfs_fread(file, buffer, 0, _fs_length) != _fs_length)
         {
-            SKR_LOG_FMT_ERROR("[SLocalResourceRegistry::RequestResourceFile] failed to read resource header! guid: {}", guid);
+            SKR_LOG_FMT_ERROR(u8"[SLocalResourceRegistry::RequestResourceFile] failed to read resource header! guid: {}", guid);
             return false;
         }
         skr::binary::SpanReader reader = { {buffer, _fs_length}, 0 };
@@ -58,7 +58,7 @@ bool SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
     auto resourcePath = headerPath;
     resourcePath.replace_extension(".bin");
     auto resourceUri = resourcePath.u8string();
-    FillRequest(request, header, vfs, (const char*)resourceUri.c_str());
+    FillRequest(request, header, vfs, resourceUri.c_str());
     request->OnRequestFileFinished();
     return true;
 }

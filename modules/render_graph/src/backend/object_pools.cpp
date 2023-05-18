@@ -98,7 +98,7 @@ void MergedBindTablePool::destroy()
 
 // Bind Table Pool
 
-void BindTablePool::expand(const char* keys, const CGPUXName* names, uint32_t names_count, size_t set_count)
+void BindTablePool::expand(const char8_t* keys, const CGPUXName* names, uint32_t names_count, size_t set_count)
 {
     auto existed_block = pool.find(keys);
     if (existed_block == pool.end())
@@ -118,7 +118,7 @@ void BindTablePool::expand(const char* keys, const CGPUXName* names, uint32_t na
     }
 }
 
-CGPUXBindTableId BindTablePool::pop(const char* keys, const CGPUXName* names, uint32_t names_count)
+CGPUXBindTableId BindTablePool::pop(const char8_t* keys, const CGPUXName* names, uint32_t names_count)
 {
     auto existed_block = pool.find(keys);
     if (existed_block == pool.end())

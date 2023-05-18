@@ -12,7 +12,7 @@ skr_json_writer_t::skr_json_writer_t(size_t levelDepth, skr_json_format_t format
 skr::string skr_json_writer_t::Str() const
 {
     SKR_ASSERT(_levelStack.size() == 0);
-    return { buffer.data(), buffer.size() };
+    return skr::string(skr::string_view(buffer.u8_str(), buffer.size()));
 }
 
 bool skr_json_writer_t::Bool(bool b)
@@ -63,7 +63,7 @@ bool skr_json_writer_t::RawNumber(const TChar* str, TSize length)
     return _WriteRawValue(str, length);
 }
 
-bool skr_json_writer_t::RawNumber(std::basic_string_view<TChar> view) { return RawNumber(view.data(), view.size()); }
+bool skr_json_writer_t::RawNumber(skr::text::text_view view) { return RawNumber(view.u8_str(), view.size()); }
 
 bool skr_json_writer_t::String(const TChar* str, TSize length)
 {
@@ -71,7 +71,7 @@ bool skr_json_writer_t::String(const TChar* str, TSize length)
     return _WriteString(str, length);
 }
 
-bool skr_json_writer_t::String(std::basic_string_view<TChar> view) { return String(view.data(), view.size()); }
+bool skr_json_writer_t::String(skr::text::text_view view) { return String(view.u8_str(), view.size()); }
 
 bool skr_json_writer_t::StartObject()
 {
@@ -110,53 +110,53 @@ bool skr_json_writer_t::RawValue(const TChar* str, TSize length, ESkrJsonType ty
     return _WriteRawValue(str, length);
 }
 
-bool skr_json_writer_t::RawValue(std::basic_string_view<TChar> view, ESkrJsonType type)
+bool skr_json_writer_t::RawValue(skr::text::text_view view, ESkrJsonType type)
 {
-    return RawValue(view.data(), view.size(), type);
+    return RawValue(view.u8_str(), view.size(), type);
 }
 
 bool skr_json_writer_t::_WriteBool(bool b)
 {
     if (b)
-        buffer.append(std::string_view("true"));
+        buffer.append(u8"true");
     else
-        buffer.append(std::string_view("false"));
+        buffer.append(u8"false");
     return true;
 }
 
 bool skr_json_writer_t::_WriteInt(int32_t i)
 {
-    fmt::format_to(std::back_inserter(buffer), "{}", i);
+    buffer += skr::format(u8"{}", i);
     return true;
 }
 
 bool skr_json_writer_t::_WriteUInt(uint32_t i)
 {
-    fmt::format_to(std::back_inserter(buffer), "{}", i);
+    buffer += skr::format(u8"{}", i);
     return true;
 }
 
 bool skr_json_writer_t::_WriteInt64(int64_t i)
 {
-    fmt::format_to(std::back_inserter(buffer), "{}", i);
+    buffer += skr::format(u8"{}", i);
     return true;
 }
 
 bool skr_json_writer_t::_WriteUInt64(uint64_t i)
 {
-    fmt::format_to(std::back_inserter(buffer), "{}", i);
+    buffer += skr::format(u8"{}", i);
     return true;
 }
 
 bool skr_json_writer_t::_WriteFloat(float f)
 {
-    fmt::format_to(std::back_inserter(buffer), "{}", static_cast<double>(f));
+    buffer += skr::format(u8"{}", static_cast<double>(f));
     return true;
 }
 
 bool skr_json_writer_t::_WriteDouble(double d)
 {
-    fmt::format_to(std::back_inserter(buffer), "{}", d);
+    buffer += skr::format(u8"{}", d);
     return true;
 }
 
@@ -174,33 +174,33 @@ bool skr_json_writer_t::_WriteString(const TChar* str, TSize length)
         Z16, Z16, Z16, Z16, Z16, Z16, Z16, Z16, Z16, Z16                                // 60~FF
 #undef Z16
     };
-    buffer.reserve(buffer.size() + 2 + length * 6);
-    buffer.push_back('\"');
+    // buffer.reserve(buffer.size() + 2 + length * 6);
+    buffer += u8'\"';
     for (TSize i = 0; i < length; ++i)
     {
         const char c = str[i];
         if (escape[static_cast<unsigned char>(c)])
         {
-            buffer.push_back('\\');
-            buffer.push_back(escape[static_cast<unsigned char>(c)]);
+            buffer += u8'\\';
+            buffer += escape[static_cast<unsigned char>(c)];
             if (escape[static_cast<unsigned char>(c)] == 'u')
             {
-                buffer.push_back('0');
-                buffer.push_back('0');
-                buffer.push_back(hexDigits[static_cast<unsigned char>(c) >> 4]);
-                buffer.push_back(hexDigits[static_cast<unsigned char>(c) & 0xF]);
+                buffer += u8'0';
+                buffer += u8'0';
+                buffer += hexDigits[static_cast<unsigned char>(c) >> 4];
+                buffer += hexDigits[static_cast<unsigned char>(c) & 0xF];
             }
         }
         else
-            buffer.push_back(c);
+            buffer += c;
     }
-    buffer.push_back('\"');
+    buffer += u8'\"';
     return true;
 }
 
 bool skr_json_writer_t::_WriteStartObject()
 {
-    buffer.push_back('{');
+    buffer += u8'{';
     return true;
 }
 
@@ -208,13 +208,13 @@ bool skr_json_writer_t::_WriteEndObject()
 {
     if(_format.enable)
         _NewLine();
-    buffer.push_back('}');
+    buffer += u8'}';
     return true;
 }
 
 bool skr_json_writer_t::_WriteStartArray()
 {
-    buffer.push_back('[');
+    buffer += u8'[';
     return true;
 }
 
@@ -222,13 +222,13 @@ bool skr_json_writer_t::_WriteEndArray()
 {
     if(_format.enable)
         _NewLine();
-    buffer.push_back(']');
+    buffer += u8']';
     return true;
 }
 
 bool skr_json_writer_t::_WriteRawValue(const TChar* str, TSize length)
 {
-    buffer.append(str, str + length);
+    buffer.append(skr::text::text_view(str, length));
     return true;
 }
 
@@ -240,9 +240,9 @@ bool skr_json_writer_t::_Prefix(ESkrJsonType type)
         if (level.valueCount > 0)
         {
             if (level.isArray)
-                buffer.push_back(','); // add comma if it is not the first element in array
+                buffer += u8','; // add comma if it is not the first element in array
             else                       // in object
-                buffer.push_back((level.valueCount % 2 == 0) ? ',' : ':');
+                buffer += (level.valueCount % 2 == 0) ? ',' : ':';
         }
         if (!level.isArray && level.valueCount % 2 == 0)
             SKR_ASSERT(type == SKR_JSONTYPE_STRING); // if it's in object, then even number should be a name
@@ -266,13 +266,13 @@ bool skr_json_writer_t::_Prefix(ESkrJsonType type)
 
 bool skr_json_writer_t::_NewLine()
 {
-    static const char indentLiteral[] ="                                                                      ";
-    buffer.push_back('\n');
+    static const char8_t indentLiteral[] = u8"                                                                      ";
+    buffer += u8'\n';
     auto ident = _levelStack.size() * _format.indentSize;
     while (ident > 0)
     {
         auto n = std::min(ident, sizeof(indentLiteral) - 1);
-        buffer.append(indentLiteral, indentLiteral + n);
+        buffer.append(skr::text::text_view(indentLiteral, n));
         ident -= n;
     }
     return true;
@@ -282,14 +282,14 @@ namespace skr::json
 {
 void WriteTrait<const skr_guid_t&>::Write(skr_json_writer_t* writer, const skr_guid_t& guid)
 {
-    auto str = skr::format("{}", guid);
-    writer->String(str.data(), (skr_json_writer_size_t)str.size());
+    auto str = skr::format(u8"{}", guid);
+    writer->String(str.u8_str(), (skr_json_writer_size_t)str.size());
 }
 
 void WriteTrait<const skr_md5_t&>::Write(skr_json_writer_t* writer, const skr_md5_t& md5)
 {
-    auto str = skr::format("{}", md5);
-    writer->String(str.data(), (skr_json_writer_size_t)str.size());
+    auto str = skr::format(u8"{}", md5);
+    writer->String(str.u8_str(), (skr_json_writer_size_t)str.size());
 }
 
 void WriteTrait<const skr_resource_handle_t&>::Write(skr_json_writer_t* writer, const skr_resource_handle_t& handle)

@@ -4,14 +4,8 @@
 #include "containers/span.hpp"
 #include "containers/string.hpp"
 
-#ifdef RG_USE_FIXED_STRING
-#include <EASTL/fixed_string.h>
-using graph_object_string = eastl::fixed_string<char, 32>;
-using graph_big_object_string = eastl::fixed_string<char, 64>;
-#else
 using graph_object_string = skr::string;
 using graph_big_object_string = skr::string;
-#endif
 
 enum
 {
@@ -308,7 +302,7 @@ struct RenderGraphNode : public DependencyGraphNode {
     const EObjectType type;
     const uint32_t pooled_size = 0;
 protected:
-    graph_object_string name = "";
+    graph_object_string name = u8"";
 };
 
 struct RenderGraphEdge : public DependencyGraphEdge {
@@ -338,7 +332,7 @@ struct SKR_RENDER_GRAPH_API BindablePassContext : public PassContext {
 protected:
     class RenderGraphFrameExecutor* executor;
 };
- 
+
 struct SKR_RENDER_GRAPH_API RenderPassContext : public BindablePassContext {
     friend class RenderGraphBackend;
 
