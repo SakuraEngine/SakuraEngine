@@ -86,7 +86,7 @@ SKR_RTTI_INLINE_REGISTER_BASE_TYPE(skr::string_view, 0xb799ba81, 0x6009, 0x405d,
 } // namespace type
 } // namespace skr
 
-#include "binary/blob_fwd.h"
+#include "serde/binary/blob_fwd.h"
 namespace skr::binary
 {
 template<>
@@ -97,7 +97,7 @@ struct BlobBuilderType<skr::string_view>
 }
 
 // binary reader
-#include "binary/reader_fwd.h"
+#include "serde/binary/reader_fwd.h"
 
 namespace skr
 {
@@ -116,7 +116,7 @@ struct RUNTIME_STATIC_API ReadTrait<skr::string_view> {
 } // namespace skr
 
 // binary writer
-#include "binary/writer_fwd.h"
+#include "serde/binary/writer_fwd.h"
 
 namespace skr
 {

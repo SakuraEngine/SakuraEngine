@@ -1,6 +1,6 @@
 #pragma once
 #include "utils/types.h"
-#include "rtm/rtmx.h"
+#include "math/rtm/rtmx.h"
 
 struct CubeGeometry {
     struct InstanceData {

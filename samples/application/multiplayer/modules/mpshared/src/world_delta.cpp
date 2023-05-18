@@ -634,7 +634,7 @@ int skr::binary::ReadTrait<packed_entity_t>::Read(skr_binary_reader_t *reader, p
     value.entity = DUAL_ENTITY(id, version);
     return 0;
 }
-#include "json/writer.h"
+#include "serde/json/writer.h"
 void skr::json::WriteTrait<const packed_entity_t&>::Write(skr_json_writer_t *writer, const packed_entity_t &value)
 {
     writer->StartObject();

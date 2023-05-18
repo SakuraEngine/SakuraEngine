@@ -2,9 +2,9 @@
 #include "utils/hash.h"
 #include "platform/debug.h"
 #include "utils/log.h"
-#include "binary/reader.h"
-#include "binary/writer.h"
-#include "binary/blob.h"
+#include "serde/binary/reader.h"
+#include "serde/binary/writer.h"
+#include "serde/binary/blob.h"
 
 <%def name="archive_field(name, field, array, cfg)">
 %if hasattr(field.attrs, "arena"):

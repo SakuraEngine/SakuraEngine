@@ -3,7 +3,7 @@
 #include "utils/log.hpp"
 #include "utils/make_zeroed.hpp"
 
-#include "json/writer.h"
+#include "serde/json/writer.h"
 
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/project/project.hpp"

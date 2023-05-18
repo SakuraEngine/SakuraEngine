@@ -1,7 +1,7 @@
 // BEGIN JSON GENERATED
 #ifdef __cplusplus
-#include "json/reader_fwd.h"
-#include "json/writer_fwd.h"
+#include "serde/json/reader_fwd.h"
+#include "serde/json/writer_fwd.h"
 #include "type/enum_to_string.hpp"
 namespace skr::json
 {

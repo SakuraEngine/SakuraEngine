@@ -1,9 +1,9 @@
 #pragma once
 #include "ecs/dual.h"
-#include "binary/reader.h"
-#include "binary/writer.h"
-#include "json/reader.h"
-#include "json/writer.h"
+#include "serde/binary/reader.h"
+#include "serde/binary/writer.h"
+#include "serde/json/reader.h"
+#include "serde/json/writer.h"
 namespace dual
 {
     template<class C>

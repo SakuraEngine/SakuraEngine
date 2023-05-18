@@ -2,7 +2,7 @@
 #include "SkrToolCore/asset/importer.hpp"
 #include "utils/types.h"
 #include "platform/guid.hpp"
-#include "json/reader.h"
+#include "serde/json/reader.h"
 
 namespace skd::asset
 {

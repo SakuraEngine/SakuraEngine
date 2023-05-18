@@ -4,7 +4,7 @@
 #include "utils/types.h"
 #include "ecs/dual.h"
 #include "platform/guid.hpp"
-#include "task/task.hpp"
+#include "async/fib_task.hpp"
 #include "containers/hashmap.hpp"
 #include "containers/vector.hpp"
 #include "EASTL/functional.h"

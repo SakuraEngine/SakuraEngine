@@ -1,5 +1,5 @@
 #include "resource_request_impl.hpp"
-#include "task/task.hpp"
+#include "async/fib_task.hpp"
 #include "platform/guid.hpp"
 #include "ecs/entities.hpp"
 #include "platform/debug.h"

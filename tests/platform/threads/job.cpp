@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "utils/make_zeroed.hpp"
-#include "job/thread_job.hpp"
+#include "async/thread_job.hpp"
 
 TEST(Job, JobQueue)
 {
@@ -30,7 +30,7 @@ TEST(Job, JobQueue)
 }
 
 #include "utils/log.h"
-#include "utils/async_task.hpp"
+#include "async/async_progress.hpp"
 #include <containers/string.hpp>
 #include <containers/sptr.hpp>
 

@@ -7,8 +7,8 @@ using eastl::span;
 }
 
 #include "EASTL/vector.h"
-#include "binary/blob_fwd.h"
-#include "binary/serde.h"
+#include "serde/binary/blob_fwd.h"
+#include "serde/binary/serde.h"
 
 namespace skr::binary
 {
@@ -26,7 +26,7 @@ struct SpanSerdeConfig
 // binary reader
 #include "platform/debug.h"
 #include "utils/traits.hpp"
-#include "binary/reader_fwd.h"
+#include "serde/binary/reader_fwd.h"
 #include "platform/debug.h"
 
 namespace skr
@@ -166,7 +166,7 @@ struct SpanReaderBitpacked
 } // namespace skr
 
 // binary writer
-#include "binary/writer_fwd.h"
+#include "serde/binary/writer_fwd.h"
 #include "platform/debug.h"
 
 namespace skr

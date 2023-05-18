@@ -4,7 +4,7 @@
 #include "utils/io.h"
 #include "platform/debug.h"
 #include "SkrToolCore/project/project.hpp"
-#include "json/reader.h"
+#include "serde/json/reader.h"
 
 namespace skd
 {

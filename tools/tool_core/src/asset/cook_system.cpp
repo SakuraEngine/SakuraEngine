@@ -8,9 +8,9 @@
 #include "utils/defer.hpp"
 #include "utils/io.h"
 
-#include "json/reader.h"
-#include "json/writer.h"
-#include "binary/writer.h"
+#include "serde/json/reader.h"
+#include "serde/json/writer.h"
+#include "serde/binary/writer.h"
 #include <atomic>
 
 #include "tracy/Tracy.hpp"

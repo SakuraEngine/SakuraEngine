@@ -7,7 +7,7 @@
 #include "simdjson/padded_string.h"
 #include "utils/log.hpp"
 #include "utils/defer.hpp"
-#include "binary/writer.h"
+#include "serde/binary/writer.h"
 #include "utils/function_ref.hpp"
 
 struct skr_io_ram_service_t;

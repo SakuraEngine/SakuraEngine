@@ -195,7 +195,7 @@ inline bool operator==(skr_md5_t a, skr_md5_t b)
     return result;
 }
 
-#include "binary/blob_fwd.h"
+#include "serde/binary/blob_fwd.h"
 namespace skr::binary
 {
 BLOB_POD(skr_float2_t);

@@ -4,7 +4,7 @@
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "cgpu/cgpux.h"
 #include "cgpu/io.h"
-#include "rtm/rtmx.h"
+#include "math/rtm/rtmx.h"
 #include "platform/atomic.h"
 #include "utils/threaded_service.h"
 
