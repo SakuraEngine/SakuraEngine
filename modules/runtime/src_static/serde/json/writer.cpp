@@ -174,7 +174,8 @@ bool skr_json_writer_t::_WriteString(const TChar* str, TSize length)
         Z16, Z16, Z16, Z16, Z16, Z16, Z16, Z16, Z16, Z16                                // 60~FF
 #undef Z16
     };
-    buffer.raw().reserve(buffer.size() + 2 + length * 6);
+    const auto n = buffer.size() + 2 + length * 6;
+    buffer.raw().reserve((int32_t)n);
     buffer += u8'\"';
     for (TSize i = 0; i < length; ++i)
     {
@@ -228,7 +229,7 @@ bool skr_json_writer_t::_WriteEndArray()
 
 bool skr_json_writer_t::_WriteRawValue(const TChar* str, TSize length)
 {
-    buffer.append(skr::string_view(str, length));
+    buffer.append(skr::string_view(str, (int32_t)length));
     return true;
 }
 
@@ -272,7 +273,7 @@ bool skr_json_writer_t::_NewLine()
     while (ident > 0)
     {
         auto n = std::min(ident, sizeof(indentLiteral) - 1);
-        buffer.append(skr::string_view(indentLiteral, n));
+        buffer.append(skr::string_view(indentLiteral, (int32_t)n));
         ident -= n;
     }
     return true;

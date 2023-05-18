@@ -86,7 +86,7 @@ error_code ReadTrait<skr::string>::Read(simdjson::ondemand::value&& json, skr::s
     if (result.error() == simdjson::SUCCESS)
     {
         std::string_view view = result.value_unsafe();
-        value = skr::string(skr::string_view((const char8_t*)view.data(), view.length()));
+        value = skr::string(skr::string_view((const char8_t*)view.data(), (int32_t)view.length()));
     }
     return (error_code)result.error();
 }

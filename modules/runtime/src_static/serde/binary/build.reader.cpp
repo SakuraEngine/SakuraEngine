@@ -260,7 +260,7 @@ int ReadTrait<skr::string>::Read(skr_binary_reader_t* reader, skr::string& str)
     ret = ReadBytes(reader, (void*)temp.c_str(), temp.size());
     if (ret != 0)
         return ret;
-    str = skr::string(skr::string_view((const char8_t*)temp.c_str(), temp.size()));
+    str = skr::string(skr::string_view((const char8_t*)temp.c_str(), (int32_t)temp.size()));
     return ret;
 }
 
