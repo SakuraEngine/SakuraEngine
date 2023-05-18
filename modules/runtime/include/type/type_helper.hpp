@@ -1,5 +1,5 @@
 #pragma once
-#include "utils/traits.hpp"
+#include "misc/traits.hpp"
 #include "platform/memory.h"
 #include "serde/binary/writer_fwd.h"
 #include "serde/binary/reader_fwd.h"

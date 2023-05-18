@@ -1,6 +1,6 @@
 #include "containers/string.hpp"
-#include "utils/types.h"
-#include "utils/log.h"
+#include "misc/types.h"
+#include "misc/log.h"
 
 constexpr int parse_hex_digit(const char8_t c)
 {

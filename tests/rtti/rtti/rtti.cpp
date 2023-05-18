@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "utils/log.hpp"
+#include "misc/log.hpp"
 #include "platform/guid.hpp"
 #include "../types/types.hpp"
 

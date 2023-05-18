@@ -9,7 +9,7 @@
 #include <cmath>
 #include <charconv>
 #include "codeunit_sequence.h"
-#include "utils/demangle.hpp"
+#include "misc/demangle.hpp"
 
 OPEN_STRING_NS_BEGIN
 

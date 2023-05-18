@@ -1,6 +1,6 @@
 #include "SkrGuiRenderer/gdi_renderer.hpp"
-#include "utils/make_zeroed.hpp"
-#include "utils/defer.hpp"
+#include "misc/make_zeroed.hpp"
+#include "misc/defer.hpp"
 #ifdef SKR_GUI_RENDERER_USE_IMAGE_CODER
 #include "SkrImageCoder/skr_image_coder.h"
 #endif

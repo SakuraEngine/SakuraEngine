@@ -1,7 +1,7 @@
-#include "utils/parallel_for.hpp"
-#include "utils/io.h"
-#include "utils/log.hpp"
-#include "utils/make_zeroed.hpp"
+#include "misc/parallel_for.hpp"
+#include "misc/io.h"
+#include "misc/log.hpp"
+#include "misc/make_zeroed.hpp"
 
 #include "serde/json/writer.h"
 
@@ -13,7 +13,7 @@
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 #include "SkrRenderer/resources/shader_resource.hpp"
 
-#include "utils/cartesian_product.hpp"
+#include "misc/cartesian_product.hpp"
 
 #include <EASTL/array.h>
 

@@ -5,7 +5,7 @@
     #pragma clang diagnostic ignored "-Wuninitialized-const-reference"
 #endif
 
-#include "utils/DAG.boost.hpp"
+#include "misc/DAG.boost.hpp"
 #include <boost/graph/graphviz.hpp>
 #include "gtest/gtest.h"
 #include <containers/string.hpp>
@@ -157,7 +157,7 @@ TEST(GraphTest, GraphTest0)
     boost::write_graphviz(outf, g, boost::default_writer(), w);
 }
 
-#include "utils/dependency_graph.hpp"
+#include "misc/dependency_graph.hpp"
 
 class TestRDGNode : public skr::DependencyGraphNode
 {

@@ -1,5 +1,5 @@
-#include "utils/log.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/log.h"
+#include "misc/make_zeroed.hpp"
 #include "ecs/dual.h"
 #include "ecs/array.hpp"
 

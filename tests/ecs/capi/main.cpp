@@ -2,7 +2,7 @@
 #include <memory>
 #include "ecs/dual.h"
 #include "guid.hpp" //for guid
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 
 using test = int;
 dual_type_index_t type_test;

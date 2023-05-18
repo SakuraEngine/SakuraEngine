@@ -1,7 +1,7 @@
 // BEGIN JSON IMPLEMENTATION
-#include "utils/hash.h"
+#include "misc/hash.h"
 #include "platform/debug.h"
-#include "utils/log.h"
+#include "misc/log.h"
 #include "serde/json/reader.h"
 #include "serde/json/writer.h"
 

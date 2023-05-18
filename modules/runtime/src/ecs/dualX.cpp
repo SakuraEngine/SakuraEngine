@@ -1,9 +1,9 @@
 #include "platform/configure.h"
 #include "ecs/dualX.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include "stack.hpp"
 
-#include "utils/hash.h"
+#include "misc/hash.h"
 
 namespace dual
 {

@@ -1,6 +1,6 @@
 #include "platform/vfs.h"
 #include "platform/memory.h"
-#include "utils/log.h"
+#include "misc/log.h"
 #include "platform/filesystem.hpp"
 #import <Foundation/Foundation.h>
 

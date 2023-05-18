@@ -1,13 +1,13 @@
 #include "MPShared/world_delta.h"
 #include "MPShared/components.h"
 #include "containers/hashmap.hpp"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include "ecs/type_builder.hpp"
 #include "containers/vector.hpp"
 #include "ecs/set.hpp"
 
 #include "ecs/array.hpp"
-#include "utils/log.hpp"
+#include "misc/log.hpp"
 #include "platform/time.h"
 #include "ecs/entity.hpp"
 

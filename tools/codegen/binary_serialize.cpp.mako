@@ -1,7 +1,7 @@
 // BEGIN BINARY GENERATED
-#include "utils/hash.h"
+#include "misc/hash.h"
 #include "platform/debug.h"
-#include "utils/log.h"
+#include "misc/log.h"
 #include "serde/binary/reader.h"
 #include "serde/binary/writer.h"
 #include "serde/binary/blob.h"

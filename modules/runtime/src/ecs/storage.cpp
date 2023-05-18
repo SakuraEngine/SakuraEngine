@@ -11,7 +11,7 @@
 #include "mask.hpp"
 #include "iterator_ref.hpp"
 #include "scheduler.hpp"
-#include "utils/parallel_for.hpp"
+#include "misc/parallel_for.hpp"
 #include "type_registry.hpp"
 #include "platform/atomic.h"
 

@@ -3,15 +3,15 @@
 #include "platform/vfs.h"
 #include "platform/guid.hpp"
 #include "cgpu/cgpux.hpp"
-#include "utils/io.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/io.h"
+#include "misc/make_zeroed.hpp"
 #include "platform/thread.h"
 #include <platform/filesystem.hpp>
 #include "SkrRenderer/render_mesh.h"
 #include "resource/resource_factory.h"
 #include "resource/resource_system.h"
 #include "SkrRenderer/render_device.h"
-#include "utils/log.h"
+#include "misc/log.h"
 #include "cgpu/io.h"
 
 #include "containers/sptr.hpp"

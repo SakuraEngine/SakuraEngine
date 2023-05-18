@@ -5,8 +5,8 @@
 #include "efsw/efsw.hpp"
 #include "platform/filesystem.hpp"
 #include "platform/thread.h"
-#include "utils/hash.h"
-#include "utils/log.h"
+#include "misc/hash.h"
+#include "misc/log.h"
 #include <containers/hashmap.hpp>
 #include <EASTL/vector.h>
 #include <containers/variant.hpp>

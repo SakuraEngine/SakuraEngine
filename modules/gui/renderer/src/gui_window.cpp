@@ -1,7 +1,7 @@
 #include "SkrGuiRenderer/gui_window.hpp"
 #include "platform/window.h"
 #include "platform/memory.h"
-#include "utils/log.h"
+#include "misc/log.h"
 
 namespace skr {
 namespace gui {

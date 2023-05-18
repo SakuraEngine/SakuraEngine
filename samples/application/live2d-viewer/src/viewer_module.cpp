@@ -12,10 +12,10 @@
 #include "platform/thread.h"
 #include "platform/time.h"
 
-#include "utils/log.h"
+#include "misc/log.h"
 #include "cgpu/io.h"
 
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 
 #include "module/module_manager.hpp"
 #include "SkrRenderer/skr_renderer.h"

@@ -1,7 +1,7 @@
 #include <EASTL/array.h>
-#include "utils/io.h"
-#include "utils/log.hpp"
-#include "utils/make_zeroed.hpp"
+#include "misc/io.h"
+#include "misc/log.hpp"
+#include "misc/make_zeroed.hpp"
 
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/project/project.hpp"

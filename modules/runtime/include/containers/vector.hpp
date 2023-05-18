@@ -83,7 +83,7 @@ struct type_of<skr::vector<T, Allocator>> : type_of_vector<skr::vector<T, Alloca
 }
 
 // binary reader
-#include "utils/traits.hpp"
+#include "misc/traits.hpp"
 #include "serde/binary/reader_fwd.h"
 
 namespace skr

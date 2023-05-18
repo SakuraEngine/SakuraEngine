@@ -9,11 +9,11 @@
 #include "platform/thread.h"
 #include "platform/time.h"
 
-#include "utils/log.h"
+#include "misc/log.h"
 #include "cgpu/io.h"
 
 #include <containers/string.hpp>
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"

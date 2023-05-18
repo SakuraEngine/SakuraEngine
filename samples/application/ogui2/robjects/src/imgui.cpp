@@ -1,8 +1,8 @@
 #include "common/utils.h"
 #include "platform/memory.h"
 #include "platform/window.h"
-#include "utils/make_zeroed.hpp"
-#include "utils/log.h"
+#include "misc/make_zeroed.hpp"
+#include "misc/log.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "platform/vfs.h"
 

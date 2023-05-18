@@ -1,9 +1,9 @@
 #pragma once
 #include "platform/memory.h"
 #include "platform/thread.h"
-#include "utils/log.h"
-#include "utils/io.h"
-#include "utils/defer.hpp"
+#include "misc/log.h"
+#include "misc/io.h"
+#include "misc/defer.hpp"
 #include "containers/concurrent_queue.h"
 #include <EASTL/unique_ptr.h>
 #include <EASTL/vector.h>

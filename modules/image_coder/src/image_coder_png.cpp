@@ -1,6 +1,6 @@
 #include "platform/memory.h"
-#include "utils/log.h"
-#include "utils/defer.hpp"
+#include "misc/log.h"
+#include "misc/defer.hpp"
 #include "image_coder_png.hpp"
 #include "libpng/png.h"
 #include "libpng/pnginfo.h"

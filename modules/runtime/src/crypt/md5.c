@@ -1,5 +1,5 @@
-#include "utils/types.h"
-#include "utils/hash.h"
+#include "misc/types.h"
+#include "misc/hash.h"
 #if defined(__x86_64__) || defined(__i386__)
 #include "platform/cpu/cpuinfo_x86.h"
 #endif

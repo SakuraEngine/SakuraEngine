@@ -7,7 +7,7 @@
 #include "storage.hpp"
 
 #include "type.hpp"
-#include "utils/log.h"
+#include "misc/log.h"
 
 #include "tracy/Tracy.hpp"
 

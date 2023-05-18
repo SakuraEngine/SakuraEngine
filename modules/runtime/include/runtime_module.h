@@ -1,7 +1,7 @@
 #pragma once
 #include "module/module_manager.hpp"
 #include "platform/thread.h"
-#include "utils/log.h"
+#include "misc/log.h"
 #include "platform/shared_library.hpp"
 
 class RUNTIME_API SkrRuntimeModule : public skr::IDynamicModule

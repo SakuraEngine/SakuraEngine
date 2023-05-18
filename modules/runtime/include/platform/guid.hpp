@@ -1,7 +1,7 @@
 #pragma once
 #include <containers/string.hpp>
-#include "utils/types.h"
-#include "utils/hash.h"
+#include "misc/types.h"
+#include "misc/hash.h"
 #include "platform/debug.h"
 
 inline SKR_CONSTEXPR bool operator==(skr_guid_t a, skr_guid_t b)

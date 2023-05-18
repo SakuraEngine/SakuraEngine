@@ -4,8 +4,8 @@
 #include "containers/string.hpp"
 
 #include "platform/system.h"
-#include "utils/log.h"
-#include "utils/defer.hpp"
+#include "misc/log.h"
+#include "misc/defer.hpp"
 
 #include "SkrInputSystem/input_system.hpp"
 

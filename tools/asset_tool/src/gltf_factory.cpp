@@ -1,6 +1,6 @@
 #include "SkrAssetTool/gltf_factory.h"
 #include "cgltf/cgltf.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include "SkrImGui/skr_imgui.h"
 
 #include <EASTL/string_view.h>

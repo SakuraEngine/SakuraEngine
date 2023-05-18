@@ -2,9 +2,9 @@
 
 #include "platform/debug.h"
 #include "platform/memory.h"
-#include "utils/make_zeroed.hpp"
-#include "utils/log.h"
-#include "utils/io.h"
+#include "misc/make_zeroed.hpp"
+#include "misc/log.h"
+#include "misc/io.h"
 #include "platform/vfs.h"
 
 #include "live2d_helpers.hpp"
