@@ -1,6 +1,6 @@
-#include "utils/log.h"
-#include "utils/make_zeroed.hpp"
-#include "utils/log.hpp"
+#include "misc/log.h"
+#include "misc/make_zeroed.hpp"
+#include "misc/log.hpp"
 #include "platform/memory.h"
 
 #include "cgpu/api.h"
@@ -30,7 +30,7 @@
 #include "platform/vfs.h"
 #include <platform/filesystem.hpp>
 
-#include "utils/parallel_for.hpp"
+#include "misc/parallel_for.hpp"
 
 #include "resource/resource_system.h"
 

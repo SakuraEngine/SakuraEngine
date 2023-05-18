@@ -3,7 +3,7 @@
 #include "platform/time.h"
 #include "platform/guid.hpp"
 #include "platform/thread.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 
 #include "ecs/type_builder.hpp"
 

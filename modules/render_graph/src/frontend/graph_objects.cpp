@@ -3,8 +3,8 @@
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include <containers/hashmap.hpp>
-#include "utils/log.h"
-#include "utils/hash.h"
+#include "misc/log.h"
+#include "misc/hash.h"
 #include "containers/concurrent_queue.h"
 
 namespace skr

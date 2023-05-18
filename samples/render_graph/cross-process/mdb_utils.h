@@ -1,5 +1,5 @@
 #pragma once
-#include "utils/log.h"
+#include "misc/log.h"
 #include "lmdb/lmdb.h"
 
 inline static void env_create(MDB_env** penv)

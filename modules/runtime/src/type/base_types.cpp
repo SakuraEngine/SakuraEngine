@@ -1,4 +1,4 @@
-#include "utils/hash.h"
+#include "misc/hash.h"
 #include "type/type.hpp"
 
 namespace skr {

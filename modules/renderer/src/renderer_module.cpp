@@ -2,8 +2,8 @@
 #include "SkrRenderer/render_mesh.h"
 #include "cgpu/api.h"
 #include "module/module_manager.hpp"
-#include "utils/log.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/log.h"
+#include "misc/make_zeroed.hpp"
 #include "SkrImGui/skr_imgui.h"
 #include "platform/guid.hpp"
 #include <string.h>

@@ -1,5 +1,5 @@
 #pragma once
-#include "utils/types.h"
+#include "misc/types.h"
 #include "resource_system.h"
 
 struct skr_vfs_t;

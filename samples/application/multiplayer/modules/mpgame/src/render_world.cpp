@@ -3,7 +3,7 @@
 #include "MPShared/components.h"
 #include "SkrRenderer/render_effect.h"
 #include "ecs/type_builder.hpp"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include "ecs/set.hpp"
 #include "math/vector.h"
 #include "math/quat.h"

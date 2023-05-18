@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrScene/module.configure.h"
-#include "utils/types.h"
+#include "misc/types.h"
 #include "ecs/dual_types.h"
 #ifndef __meta__
     #include "SkrScene/scene.generated.h"

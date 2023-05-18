@@ -25,7 +25,7 @@
  * @LastEditTime: 2020-04-15 18:17:34
  */
 #pragma once
-#include "utils/types.h"
+#include "misc/types.h"
 #include "platform/configure.h"
 #ifdef __cplusplus
 #include "platform/shared_library.hpp"

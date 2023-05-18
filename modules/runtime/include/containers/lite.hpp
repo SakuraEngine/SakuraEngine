@@ -5,7 +5,7 @@
 #include "containers/hashmap.hpp"
 #include <new> // placement new operator
 #endif
-#include "utils/types.h"
+#include "misc/types.h"
 
 namespace skr {
 namespace lite {

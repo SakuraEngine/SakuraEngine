@@ -1,6 +1,6 @@
 #pragma once
 #include "dual_config.h"
-#include "utils/types.h"
+#include "misc/types.h"
 
 #if defined(__cplusplus)
 extern "C" {

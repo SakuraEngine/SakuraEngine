@@ -1,11 +1,11 @@
 #include "./gdi_application.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include "SkrGuiRenderer/gdi_renderer.hpp"
 #include "SkrGui/interface/gdi_renderer.hpp"
 #include "platform/filesystem.hpp"
 #include "platform/vfs.h"
-#include "utils/threaded_service.h"
-#include "utils/io.h"
+#include "misc/threaded_service.h"
+#include "misc/io.h"
 
 #include "containers/string.hpp"
 

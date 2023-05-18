@@ -3,7 +3,7 @@
 #include <EASTL/vector.h>
 #include <EASTL/fixed_vector.h>
 #include <containers/string.hpp>
-#include "utils/log.h"
+#include "misc/log.h"
 #include "platform/input.h"
 #include "platform/system.h"
 

@@ -4,7 +4,7 @@
 #include "MPShared/world_delta.h"
 #include "ecs/type_builder.hpp"
 #include "MPShared/shared.h"
-#include "utils/log.h"
+#include "misc/log.h"
 #include "ecs/array.hpp"
 
 #include "world_delta_helper.hpp"

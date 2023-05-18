@@ -8,7 +8,7 @@
 #include "resource/resource_factory.h"
 #include "resource/resource_header.hpp"
 #include "type/type.hpp"
-#include "utils/defer.hpp"
+#include "misc/defer.hpp"
 #include "resource/resource_system.h"
 #include "serde/binary/reader.h"
 #include "serde/binary/writer.h"

@@ -2,8 +2,8 @@
 #include "platform/memory.h"
 #include "platform/atomic.h"
 #include "platform/debug.h"
-#include "utils/log.h"
-#include "utils/defer.hpp"
+#include "misc/log.h"
+#include "misc/defer.hpp"
 #include "GameInput/GameInput.h"
 #include "platform/shared_library.hpp"
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "utils/types.h"
+#include "misc/types.h"
 
 typedef struct SLightningMessageId {
     skr_guid_t source_instance;

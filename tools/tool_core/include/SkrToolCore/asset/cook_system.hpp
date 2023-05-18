@@ -5,10 +5,10 @@
 #include "resource/resource_header.hpp"
 #include "platform/filesystem.hpp"
 #include "simdjson/padded_string.h"
-#include "utils/log.hpp"
-#include "utils/defer.hpp"
+#include "misc/log.hpp"
+#include "misc/defer.hpp"
 #include "serde/binary/writer.h"
-#include "utils/function_ref.hpp"
+#include "misc/function_ref.hpp"
 
 struct skr_io_ram_service_t;
 namespace skr {namespace task { struct event_t; }}

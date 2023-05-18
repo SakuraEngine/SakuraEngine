@@ -1,7 +1,7 @@
 #pragma once
 #include "containers/vector.hpp"
 #include <algorithm>
-#include "utils/bits.hpp"
+#include "misc/bits.hpp"
 
 namespace hbv
 {

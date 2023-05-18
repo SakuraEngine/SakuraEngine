@@ -1,9 +1,9 @@
 #include "MPShared/server_world.h"
 #include "MPShared/components.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include "EASTL/fixed_vector.h"
-#include "utils/parallel_for.hpp"
-#include "utils/log.h"
+#include "misc/parallel_for.hpp"
+#include "misc/log.h"
 
 #include "ecs/type_builder.hpp"
 #include "ecs/set.hpp"

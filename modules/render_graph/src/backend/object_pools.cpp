@@ -1,7 +1,7 @@
 #include "platform/debug.h"
-#include "utils/hash.h"
-#include "utils/log.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/hash.h"
+#include "misc/log.h"
+#include "misc/make_zeroed.hpp"
 #include <EASTL/set.h>
 
 #include "SkrRenderGraph/backend/bind_table_pool.hpp"

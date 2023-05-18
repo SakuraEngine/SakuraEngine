@@ -1,6 +1,6 @@
-#include "utils/make_zeroed.hpp"
-#include "utils/log.h"
-#include "utils/io.h"
+#include "misc/make_zeroed.hpp"
+#include "misc/log.h"
+#include "misc/io.h"
 #include "cgpu/io.h"
 
 #include "platform/memory.h"

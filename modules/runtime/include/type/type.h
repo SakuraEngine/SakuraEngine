@@ -1,5 +1,5 @@
 #pragma once
-#include "utils/types.h"
+#include "misc/types.h"
 
 typedef struct skr_type_t skr_type_t;
 typedef struct skr_value_t skr_value_t;

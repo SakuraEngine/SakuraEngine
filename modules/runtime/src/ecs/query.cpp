@@ -15,7 +15,7 @@
 #include <EASTL/algorithm.h>
 #include <EASTL/numeric.h>
 #include <containers/string.hpp>
-#include "utils/bits.hpp"
+#include "misc/bits.hpp"
 #include "scheduler.hpp"
 #include "containers/span.hpp"
 #if __SSE2__

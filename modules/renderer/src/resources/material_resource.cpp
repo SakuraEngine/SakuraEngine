@@ -1,8 +1,8 @@
 #include <EASTL/fixed_vector.h>
 #include "platform/guid.hpp"
 #include "containers/sptr.hpp"
-#include "utils/make_zeroed.hpp"
-#include "utils/threaded_service.h"
+#include "misc/make_zeroed.hpp"
+#include "misc/threaded_service.h"
 #include "SkrRenderer/render_device.h"
 
 #include "SkrRenderer/resources/mesh_resource.h"

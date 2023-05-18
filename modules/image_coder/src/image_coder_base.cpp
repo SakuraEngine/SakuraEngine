@@ -1,5 +1,5 @@
 #include "platform/memory.h"
-#include "utils/log.h"
+#include "misc/log.h"
 #include "image_coder_base.hpp"
 
 namespace skr

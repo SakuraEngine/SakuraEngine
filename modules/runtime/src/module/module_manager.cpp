@@ -2,7 +2,7 @@
 #include "module/subsystem.hpp"
 #include "platform/memory.h"
 #include "platform/shared_library.hpp"
-#include "utils/log.h"
+#include "misc/log.h"
 #include "containers/hashmap.hpp"
 #include "serde/json/reader.h"
 #include "platform/filesystem.hpp"

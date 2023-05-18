@@ -7,7 +7,7 @@
 #include "SkrAnim/ozz/base/memory/unique_ptr.h"
 #include "SkrAnim/ozz/base/io/stream.h"
 #include "SkrAnim/ozz/base/io/archive.h"
-#include "utils/log.hpp"
+#include "misc/log.hpp"
 #include "serde/json/reader.h"
 #include "SkrAnim/resources/skeleton_resource.h"
 

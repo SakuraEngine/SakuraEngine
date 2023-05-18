@@ -4,8 +4,8 @@
 #include "platform/debug.h"
 #include "platform/memory.h"
 #include "platform/thread.h"
-#include "utils/hash.h"
-#include "utils/log.h"
+#include "misc/hash.h"
+#include "misc/log.h"
 
 #include <EASTL/set.h>
 #include "containers/string.hpp"

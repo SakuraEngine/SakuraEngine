@@ -1,6 +1,6 @@
 #pragma once
-#include "utils/traits.hpp"
-#include "utils/function_ref.hpp"
+#include "misc/traits.hpp"
+#include "misc/function_ref.hpp"
 
 namespace dual
 {

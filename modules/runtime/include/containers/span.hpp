@@ -25,7 +25,7 @@ struct SpanSerdeConfig
 
 // binary reader
 #include "platform/debug.h"
-#include "utils/traits.hpp"
+#include "misc/traits.hpp"
 #include "serde/binary/reader_fwd.h"
 #include "platform/debug.h"
 

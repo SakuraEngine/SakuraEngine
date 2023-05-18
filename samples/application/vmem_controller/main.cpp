@@ -1,6 +1,6 @@
 #include "module/module_manager.hpp"
 #include "platform/filesystem.hpp"
-#include "utils/log.h"
+#include "misc/log.h"
 
 int main(int argc, char** argv)
 {

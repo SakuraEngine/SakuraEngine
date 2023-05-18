@@ -375,8 +375,8 @@ void cgpu_free_dstorage_queue_d3d12(CGPUDStorageQueueId queue)
 
 #include <EASTL/string.h>
 #include <EASTL/vector_map.h>
-#include "utils/log.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/log.h"
+#include "misc/make_zeroed.hpp"
 #include "platform/memory.h"
 #include "platform/thread.h"
 #include "cgpu/extensions/dstorage_windows.h"

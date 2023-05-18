@@ -4,7 +4,7 @@
     #endif
 #endif
 #include "platform/memory.h"
-#include "utils/log.h"
+#include "misc/log.h"
 #include "SkrShaderCompiler/dxc_compiler.hpp"
 #include "SkrShaderCompiler/assets/shader_asset.hpp"
 #ifdef _WIN32

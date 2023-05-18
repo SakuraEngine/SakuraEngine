@@ -1,9 +1,9 @@
-#include "utils/io.h"
-#include "utils/log.h"
+#include "misc/io.h"
+#include "misc/log.h"
 #include "platform/debug.h"
 #include "cgpu/io.h"
 #include "platform/vfs.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_mesh.h"
 #include <platform/filesystem.hpp>

@@ -5,9 +5,9 @@
 #include "containers/hashmap.hpp"
 #include "containers/string.hpp"
 #include "containers/sptr.hpp"
-#include "utils/defer.hpp"
-#include "utils/make_zeroed.hpp"
-#include "utils/threaded_service.h"
+#include "misc/defer.hpp"
+#include "misc/make_zeroed.hpp"
+#include "misc/threaded_service.h"
 
 namespace skr
 {

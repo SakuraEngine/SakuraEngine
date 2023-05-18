@@ -1,6 +1,6 @@
 #pragma once
 #include "math/rtm/quatf.h"
-#include "utils/types.h"
+#include "misc/types.h"
 
 namespace skr
 {

@@ -21,7 +21,7 @@
 #include "tracy/Tracy.hpp"
 #include "imgui_impl_sdl.h"
 #include "simdjson.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include "platform/guid.hpp"
 
 #include "containers/string.hpp"
@@ -29,7 +29,7 @@
 #include "math/vector.h"
 #include "EASTL/shared_ptr.h"
 #include "SkrScene/scene.h"
-#include "utils/parallel_for.hpp"
+#include "misc/parallel_for.hpp"
 #include "EASTL/fixed_vector.h"
 #include "serde/json/writer.h"
 #include "ecs/set.hpp"

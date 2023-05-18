@@ -1,4 +1,4 @@
-#include "utils/log.h"
+#include "misc/log.h"
 #include "containers/hashmap.hpp"
 #include "module/module.hpp"
 

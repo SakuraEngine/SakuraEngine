@@ -1,6 +1,6 @@
 #include "platform/guid.hpp"
 #include "type/type_serde.h"
-#include "utils/fast_float.h"
+#include "misc/fast_float.h"
 #include <charconv>
 
 void skr_type_t::FromString(void* dst, skr::string_view str, skr::type::ValueSerializePolicy* policy) const

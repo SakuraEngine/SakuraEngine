@@ -1,4 +1,4 @@
-#include "utils/hash.h"
+#include "misc/hash.h"
 #include <EASTL/fixed_string.h>
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 #include "SkrRenderer/resources/shader_resource.hpp"

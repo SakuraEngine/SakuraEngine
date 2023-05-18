@@ -1,8 +1,8 @@
 #include "resource/resource_handle.h"
 #include "serde/binary/reader.h"
 #include "platform/memory.h"
-#include "utils/bits.hpp"
-#include "utils/log.h"
+#include "misc/bits.hpp"
+#include "misc/log.h"
 #include <cmath>
 
 skr_blob_arena_t::skr_blob_arena_t()

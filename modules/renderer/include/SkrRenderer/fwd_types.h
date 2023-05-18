@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
-#include "utils/types.h"
+#include "misc/types.h"
 
 struct skr_io_ram_service_t;
 struct skr_io_vram_service_t;

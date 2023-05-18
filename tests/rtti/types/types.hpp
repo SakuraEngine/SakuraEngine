@@ -1,6 +1,6 @@
 #pragma once
 #include "platform/configure.h"
-#include "utils/log.hpp"
+#include "misc/log.hpp"
 #include "type/type.hpp"
 #include <containers/string.hpp>
 #include <EASTL/unique_ptr.h>

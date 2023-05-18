@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include "async/thread_job.hpp"
 
 TEST(Job, JobQueue)
@@ -29,7 +29,7 @@ TEST(Job, JobQueue)
     jq.wait_empty();
 }
 
-#include "utils/log.h"
+#include "misc/log.h"
 #include "async/async_progress.hpp"
 #include <containers/string.hpp>
 #include <containers/sptr.hpp>

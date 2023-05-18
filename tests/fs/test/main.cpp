@@ -4,8 +4,8 @@
 #include <string>
 #include <iostream>
 #include <platform/filesystem.hpp>
-#include "utils/io.h"
-#include "utils/log.h"
+#include "misc/io.h"
+#include "misc/log.h"
 
 class FSTest : public ::testing::Test
 {

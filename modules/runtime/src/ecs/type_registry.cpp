@@ -4,7 +4,7 @@
 #include "type.hpp"
 #include "ecs/constants.hpp"
 #include "type_registry.hpp"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 
 #ifdef SKR_OS_WINDOWS
     #ifndef WIN32_LEAN_AND_MEAN

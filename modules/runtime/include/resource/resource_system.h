@@ -2,7 +2,7 @@
 #include "platform/vfs.h"
 #include "resource/resource_handle.h"
 #include "resource/resource_header.hpp"
-#include "utils/types.h"
+#include "misc/types.h"
 
 struct skr_io_ram_service_t;
 
