@@ -29,7 +29,7 @@ struct hash<string_view>
 
 namespace text {
 
-#ifdef __cpp_char8_t
+#if __cpp_char8_t
 
 template<> 
 struct argument_formatter<const char*>

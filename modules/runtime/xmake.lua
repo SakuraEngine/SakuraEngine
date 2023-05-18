@@ -1,7 +1,7 @@
 if(has_config("shipping_one_archive")) then
-    add_requires("eastl >=3.20.2-skr", { configs = { runtime_shared = false } })
+    add_requires("eastl >=2023.5.18-skr", { configs = { runtime_shared = false } })
 else
-    add_requires("eastl >=3.20.2-skr", { configs = { runtime_shared = true } })
+    add_requires("eastl >=2023.5.18-skr", { configs = { runtime_shared = true } })
 end
 
 add_requires("parallel-hashmap >=1.3.4-skr")
