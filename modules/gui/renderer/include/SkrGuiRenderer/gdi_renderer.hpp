@@ -2,16 +2,16 @@
 #include "SkrGuiRenderer/module.configure.h"
 #include "SkrGui/interface/gdi_renderer.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
-#include <containers/vector.hpp>
-#include <containers/text.hpp>
-#include <EASTL/vector_map.h>
-
 #include "cgpu/cgpux.h"
 #include "cgpu/io.h"
 #include "rtm/rtmx.h"
 #include "platform/atomic.h"
 #include "utils/threaded_service.h"
+
+#include <EASTL/vector_map.h>
 #include "containers/concurrent_queue.h"
+#include "containers/string.hpp"
+#include "containers/vector.hpp"
 
 namespace skr {
 namespace gdi {

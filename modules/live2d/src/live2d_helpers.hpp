@@ -12,8 +12,8 @@
 #include "CubismDefaultParameterId.hpp"
 #include "Utils/CubismString.hpp"
 
-#include <containers/text.hpp>
 #include <EASTL/vector_map.h>
+#include "containers/string.hpp"
 
 namespace L2DF = Live2D::Cubism::Framework;
 

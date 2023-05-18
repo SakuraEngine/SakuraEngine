@@ -4,7 +4,7 @@
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "platform/guid.hpp"
-#include "containers/text.hpp"
+#include "containers/string.hpp"
 #include "utils/defer.hpp"
 #include "utils/io.h"
 

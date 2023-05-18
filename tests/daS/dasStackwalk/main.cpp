@@ -1,6 +1,6 @@
 #include "SkrDAScript/daScript.hpp"
 #include "utils/make_zeroed.hpp"
-#include "containers/text.hpp"
+#include "containers/string.hpp"
 
 #define TUTORIAL_NAME   u8"/scripts/dasStackWalk/stackwalk.das"
 

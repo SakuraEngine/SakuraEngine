@@ -1,20 +1,19 @@
 #include <platform/filesystem.hpp>
 #include "SkrRenderer/resources/texture_resource.h"
+#include "platform/debug.h"
+#include "utils/io.h"
 #include "cgpu/api.h"
-#include "containers/text.hpp"
-#include "containers/sptr.hpp"
-#include "containers/hashmap.hpp"
-#include "platform/configure.h"
+#include "type/type_id.hpp"
 #include "resource/resource_factory.h"
 #include "resource/resource_system.h"
-#include "type/type_id.hpp"
-#include "utils/format.hpp"
 #include "SkrRenderer/render_device.h"
-#include "utils/io.h"
 #include "cgpu/io.h"
 #include "utils/log.h"
 #include "utils/make_zeroed.hpp"
-#include "platform/debug.h"
+
+#include "containers/string.hpp"
+#include "containers/sptr.hpp"
+#include "containers/hashmap.hpp"
 
 #ifdef _WIN32
 //#include "cgpu/extensions/dstorage_windows.h"

@@ -3,7 +3,7 @@
 #include "platform/thread.h"
 #include "platform/atomic.h"
 
-#include "containers/text.hpp"
+#include "containers/string.hpp"
 #include "containers/vector.hpp"
 #include <EASTL/list.h>
 

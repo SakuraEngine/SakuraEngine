@@ -5,7 +5,7 @@
 #include "scheduler.hpp"
 #include "type_registry.hpp"
 
-#include <containers/text.hpp>
+#include "containers/string.hpp"
 
 struct dual_context_t {
     dual_context_t();

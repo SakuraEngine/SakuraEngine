@@ -1,6 +1,6 @@
 #include "math.h"
 #include <EASTL/algorithm.h>
-#include <containers/text.hpp>
+#include <containers/string.hpp>
 
 #include "common/utils.h"
 
@@ -12,7 +12,6 @@
 #include "platform/thread.h"
 #include "platform/time.h"
 
-#include "utils/format.hpp"
 #include "utils/log.h"
 #include "cgpu/io.h"
 

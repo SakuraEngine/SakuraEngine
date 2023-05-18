@@ -3,17 +3,18 @@
 	#define WIN32_LEAN_AND_MEAN
     #endif
 #endif
-#include <EASTL/string.h> //sv::starts_with
-#include <EASTL/unique_ptr.h>
 #include "platform/memory.h"
 #include "utils/log.h"
-#include "utils/format.hpp"
 #include "SkrShaderCompiler/dxc_compiler.hpp"
 #include "SkrShaderCompiler/assets/shader_asset.hpp"
 #ifdef _WIN32
 #include <atlbase.h>
 #endif
 #include "dxc/dxcapi.h"
+
+#include <EASTL/string.h> //sv::starts_with
+#include <EASTL/unique_ptr.h>
+#include "containers/string.hpp"
 
 #include "tracy/Tracy.hpp"
 

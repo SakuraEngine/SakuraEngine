@@ -2,7 +2,7 @@
 #include "log.h"
 
 #ifdef __cplusplus
-    #include "utils/format.hpp"
+    #include "containers/string.hpp"
 
     #define SKR_LOG_FMT_TRACE(...) log_log(SKR_LOG_LEVEL_TRACE, __FILE__, __LINE__, "%s", skr::format(__VA_ARGS__).c_str())
     #define SKR_LOG_FMT_DEBUG(...) log_log(SKR_LOG_LEVEL_DEBUG, __FILE__, __LINE__, "%s", skr::format(__VA_ARGS__).c_str())

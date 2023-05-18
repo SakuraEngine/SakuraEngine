@@ -6,7 +6,6 @@
 #include "containers/vector.hpp"
 #include "containers/sptr.hpp"
 #include "utils/defer.hpp"
-#include "utils/format.hpp"
 #include "utils/make_zeroed.hpp"
 #include "utils/threaded_service.h"
 

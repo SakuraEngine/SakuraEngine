@@ -5,7 +5,6 @@
 
 #include "containers/span.hpp"
 #include "containers/string.hpp"
-#include "containers/text.hpp"
 
 #if defined(__cplusplus)
 namespace skr

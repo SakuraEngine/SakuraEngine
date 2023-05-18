@@ -11,7 +11,6 @@
 #include "type/type.hpp"
 #include "utils/defer.hpp"
 #include "resource/resource_header.hpp"
-#include "utils/format.hpp"
 #include "module/module_manager.hpp"
 #include "platform/vfs.h"
 #include "utils/log.h"
@@ -28,6 +27,8 @@
 #include "utils/make_zeroed.hpp"
 #include "SkrAnim/resources/skeleton_resource.h"
 #include "SkrAnim/resources/animation_resource.h"
+
+#include "containers/string.hpp"
 
 #include "tracy/Tracy.hpp"
 

@@ -23,7 +23,8 @@
 #include "simdjson.h"
 #include "utils/make_zeroed.hpp"
 #include "platform/guid.hpp"
-#include "containers/text.hpp"
+
+#include "containers/string.hpp"
 
 #include "math/vector.h"
 #include "EASTL/shared_ptr.h"

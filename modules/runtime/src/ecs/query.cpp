@@ -1,5 +1,4 @@
 #include "type_registry.hpp"
-#include "utils/format.hpp"
 #include "ecs/SmallVector.h"
 #include "archetype.hpp"
 #include "arena.hpp"

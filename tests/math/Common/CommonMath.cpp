@@ -1,8 +1,9 @@
 #include "gtest/gtest.h"
 #include "utils/types.h"
 #include "utils/traits.hpp"
-#include "utils/format.hpp"
 #include "math/quat.h"
+
+#include "containers/string.hpp"
 
 class CommonMath : public ::testing::Test
 {
