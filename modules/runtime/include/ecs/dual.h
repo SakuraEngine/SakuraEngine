@@ -892,30 +892,35 @@ namespace dual
     template<class T>
     auto get_component_ro(dual_chunk_view_t* view)
     {
+        static_assert(!std::is_pointer_v<T> && !std::is_reference_v<T>, "T must be a type declare!");
         return (std::add_const_t<std::decay_t<T>>*)dualV_get_component_ro(view, dual_id_of<T>::get());
     }
 
     template<class T>
     T* get_owned_rw(dual_chunk_view_t* view)
     {
+        static_assert(!std::is_pointer_v<T> && !std::is_reference_v<T>, "T must be a type declare!");
         return (T*)dualV_get_owned_rw(view, dual_id_of<T>::get());
     }
     
     template<class T, class V>
     V* get_owned_rw(dual_chunk_view_t* view)
     {
+        static_assert(!std::is_pointer_v<T> && !std::is_reference_v<T>, "T must be a type declare!");
         return (V*)dualV_get_owned_rw(view, dual_id_of<T>::get());
     }
 
     template<class T>
     auto get_owned_ro(dual_chunk_view_t* view)
     {
+        static_assert(!std::is_pointer_v<T> && !std::is_reference_v<T>, "T must be a type declare!");
         return (std::add_const_t<std::decay_t<T>>*)dualV_get_owned_ro(view, dual_id_of<T>::get());
     }
     
     template<class T, class V>
     auto get_owned_ro(dual_chunk_view_t* view)
     {
+        static_assert(!std::is_pointer_v<T> && !std::is_reference_v<T>, "T must be a type declare!");
         return (std::add_const_t<std::decay_t<V>>*)dualV_get_owned_ro(view, dual_id_of<T>::get());
     }
 
