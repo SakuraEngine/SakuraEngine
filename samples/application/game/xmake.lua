@@ -31,6 +31,3 @@ executable_module("Game", "GAME", engine_version)
     add_files("src/**.cpp")
     add_files("shaders/**.hlsl")
     add_files("script/**.lua")
-    if (is_os("windows")) then 
-        add_files("/../../../resources/windows/sakura.rc")
-    end
