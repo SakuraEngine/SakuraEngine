@@ -5,7 +5,7 @@
 
 #include <string> // TODO: replace this (std::stoi)
 #include <platform/filesystem.hpp>
-#include <containers/text.hpp>
+#include "containers/string.hpp"
 
 #include "common/utils.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"

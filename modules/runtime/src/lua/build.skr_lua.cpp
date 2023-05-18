@@ -2,7 +2,6 @@
 #include "platform/memory.h"
 #include "utils/defer.hpp"
 #include "utils/types.h"
-#include "utils/format.hpp"
 #include "platform/guid.hpp"
 #include "resource/resource_handle.h"
 #include "lua/bind.hpp"
@@ -10,6 +9,7 @@
 #include "platform/vfs.h"
 #include "ecs/dual.h"
 
+#include "containers/string.hpp"
 #include <EASTL/string.h>
 #include <EASTL/string_view.h>
 

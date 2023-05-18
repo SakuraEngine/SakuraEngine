@@ -6,8 +6,9 @@
 #include "platform/thread.h"
 #include "utils/hash.h"
 #include "utils/log.h"
+
 #include <EASTL/set.h>
-#include <containers/text.hpp>
+#include "containers/string.hpp"
 
 #include "tracy/Tracy.hpp"
 

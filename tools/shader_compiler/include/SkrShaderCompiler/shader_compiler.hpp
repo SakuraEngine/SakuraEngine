@@ -4,7 +4,6 @@
 #include "cgpu/flags.h"
 #include "containers/span.hpp"
 #include "containers/string.hpp"
-#include "containers/text.hpp"
 #include <EASTL/functional.h>
 #ifndef __meta__
 #include "SkrShaderCompiler/shader_compiler.generated.h"

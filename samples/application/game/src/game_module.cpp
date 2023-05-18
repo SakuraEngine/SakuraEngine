@@ -1,7 +1,6 @@
 #include "common/utils.h"
 #include <EASTL/shared_ptr.h>
 #include "GameRuntime/gamert.h"
-#include "utils/format.hpp"
 #include "utils/make_zeroed.hpp"
 #include "platform/filesystem.hpp"
 #include "platform/system.h"
@@ -28,7 +27,7 @@
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRenderer/render_effect.h"
 
-#include <containers/text.hpp>
+#include <containers/string.hpp>
 #include "task/task.hpp"
 
 #include "resource/local_resource_registry.hpp"

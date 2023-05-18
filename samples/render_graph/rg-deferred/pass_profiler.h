@@ -1,6 +1,6 @@
 #include "SkrRenderGraph/backend/graph_backend.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
-#include <containers/text.hpp>
+#include "containers/string.hpp"
 
 class PassProfiler : public skr::render_graph::RenderGraphProfiler
 {

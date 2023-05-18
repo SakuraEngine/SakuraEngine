@@ -1,15 +1,12 @@
 #include "SkrRenderer/resources/mesh_resource.h"
-#include "containers/sptr.hpp"
 #include "platform/memory.h"
 #include "platform/vfs.h"
 #include "platform/guid.hpp"
 #include "cgpu/cgpux.hpp"
 #include "utils/io.h"
-#include "utils/format.hpp"
 #include "utils/make_zeroed.hpp"
 #include "platform/thread.h"
 #include <platform/filesystem.hpp>
-#include "containers/hashmap.hpp"
 #include "SkrRenderer/render_mesh.h"
 #include "resource/resource_factory.h"
 #include "resource/resource_system.h"
@@ -17,7 +14,9 @@
 #include "utils/log.h"
 #include "cgpu/io.h"
 
-#include "containers/text.hpp"
+#include "containers/sptr.hpp"
+#include "containers/string.hpp"
+#include "containers/hashmap.hpp"
 
 #include "tracy/Tracy.hpp"
 

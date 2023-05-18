@@ -13,7 +13,6 @@ typedef enum ESkrJsonType
 #if defined(__cplusplus)
     #include <EASTL/vector.h>
     #include "containers/variant.hpp"
-    #include "containers/text.hpp"
     #include "containers/string.hpp"
     #include "containers/hashmap.hpp"
     #include "type/type_helper.hpp"

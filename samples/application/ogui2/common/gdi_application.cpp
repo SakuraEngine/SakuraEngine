@@ -7,7 +7,7 @@
 #include "utils/threaded_service.h"
 #include "utils/io.h"
 
-#include "containers/text.hpp"
+#include "containers/string.hpp"
 
 bool initialize_gdi_application(gdi_application_t* app)
 {

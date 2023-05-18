@@ -3,10 +3,9 @@
 #include "platform/atomic.h"
 #include "SkrRenderer/shader_hash.h"
 #include "containers/hashmap.hpp"
-#include "containers/text.hpp"
+#include "containers/string.hpp"
 #include "containers/sptr.hpp"
 #include "utils/defer.hpp"
-#include "utils/format.hpp"
 #include "utils/make_zeroed.hpp"
 #include "utils/threaded_service.h"
 

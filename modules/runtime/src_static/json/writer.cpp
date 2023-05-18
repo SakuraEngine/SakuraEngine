@@ -1,7 +1,7 @@
 #include "resource/resource_handle.h"
 #include "json/writer.h"
-#include "utils/format.hpp"
 #include "platform/debug.h"
+#include "containers/string.hpp"
 
 skr_json_writer_t::skr_json_writer_t(size_t levelDepth, skr_json_format_t format)
     : _format(format)

@@ -10,7 +10,6 @@
 #include <containers/string.hpp>
 #include <chrono>
 #include "SkrImGui/skr_imgui.h"
-#include "utils/format.hpp"
 #include "utils/defer.hpp"
 #include "SkrImGui/imgui_utils.h"
 

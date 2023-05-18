@@ -1,7 +1,7 @@
 #include "robjects_application.h"
 #include "gui_render_graph.hpp"
 
-#include "containers/text.hpp"
+#include "containers/string.hpp"
 
 #include "platform/system.h"
 #include "utils/log.h"

@@ -4,7 +4,7 @@
 #include "utils/make_zeroed.hpp"
 #include "utils/log.h"
 
-#include <containers/text.hpp>
+#include "containers/string.hpp"
 
 #include "ecs/dual.h"
 #include "ecs/type_builder.hpp"
