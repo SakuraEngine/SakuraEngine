@@ -399,8 +399,8 @@ namespace eastl
 		template <> struct make_unsigned<char>                 { typedef unsigned char          type; };
 	#endif
 
-	#if defined(EA_CHAR8_UNIQUE) && EA_CHAR8_UNIQUE
-	template <> struct make_unsigned<char8_t>                 { typedef unsigned char           type; };
+	#if __cpp_char8_t
+	template <> struct make_unsigned<char8_t>                 { typedef char8_t type; };
 	#endif
 
 	template <typename T>
