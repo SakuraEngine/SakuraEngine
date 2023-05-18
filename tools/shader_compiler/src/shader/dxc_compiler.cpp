@@ -247,7 +247,6 @@ eastl::wstring utf8_to_utf16(const skr::string& utf8)
     {
         unsigned long uni;
         size_t todo;
-        bool error = false;
         unsigned char ch = utf8.c_str()[i++];
         if (ch <= 0x7F)
         {
@@ -256,7 +255,8 @@ eastl::wstring utf8_to_utf16(const skr::string& utf8)
         }
         else if (ch <= 0xBF)
         {
-            throw std::logic_error("not a UTF-8 string");
+            SKR_LOG_FATAL("not a UTF-8 string");
+            return L"";
         }
         else if (ch <= 0xDF)
         {
@@ -275,22 +275,35 @@ eastl::wstring utf8_to_utf16(const skr::string& utf8)
         }
         else
         {
-            throw std::logic_error("not a UTF-8 string");
+            SKR_LOG_FATAL("not a UTF-8 string");
+            return L"";
         }
         for (size_t j = 0; j < todo; ++j)
         {
             if (i == utf8.size())
-                throw std::logic_error("not a UTF-8 string");
+            {
+                SKR_LOG_FATAL("not a UTF-8 string");
+                return L"";
+            }
             unsigned char ch = utf8.c_str()[i++];
             if (ch < 0x80 || ch > 0xBF)
-                throw std::logic_error("not a UTF-8 string");
+            {
+                SKR_LOG_FATAL("not a UTF-8 string");
+                return L"";
+            }
             uni <<= 6;
             uni += ch & 0x3F;
         }
         if (uni >= 0xD800 && uni <= 0xDFFF)
-            throw std::logic_error("not a UTF-8 string");
+        {
+            SKR_LOG_FATAL("not a UTF-8 string");
+            return L"";
+        }
         if (uni > 0x10FFFF)
-            throw std::logic_error("not a UTF-8 string");
+        {
+            SKR_LOG_FATAL("not a UTF-8 string");
+            return L"";
+        }
         unicode.push_back(uni);
     }
     eastl::wstring utf16;
