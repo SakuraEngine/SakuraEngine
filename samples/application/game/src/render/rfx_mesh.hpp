@@ -53,6 +53,7 @@ protected:
     // effect processor data
     const char8_t* push_constants_name = u8"push_constants";
     dual_query_t* mesh_query = nullptr;
+    dual_query_t* mesh_write_query = nullptr;
     dual_query_t* draw_mesh_query = nullptr;
     dual_query_t* draw_skin_query = nullptr;
     dual_type_index_t identity_type = {};

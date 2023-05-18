@@ -69,12 +69,14 @@ void RenderEffectForward::initialize_queries(dual_storage_t* storage)
 {
     // initialize queries
     mesh_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr_render_mesh_comp_t");
+    mesh_write_query = dualQ_from_literal(storage, "[inout]forward_skin_render_identity, [inout]skr_render_mesh_comp_t");
     draw_mesh_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr_render_mesh_comp_t, [out]skr_render_group_t");
 }
 
 void RenderEffectForward::release_queries()
 {
     dualQ_release(mesh_query);
+    dualQ_release(mesh_write_query);
     dualQ_release(draw_mesh_query);
 }
 
@@ -82,7 +84,7 @@ void RenderEffectForward::on_unregister(SRendererId renderer, dual_storage_t* st
 {
     auto sweepFunction = [&](dual_chunk_view_t* r_cv) {
         auto resource_system = skr::resource::GetResourceSystem();
-        const auto meshes = dual::get_owned_ro<skr_render_mesh_comp_t>(r_cv);
+        auto meshes = dual::get_owned_rw<skr_render_mesh_comp_t>(r_cv);
         for (uint32_t i = 0; i < r_cv->count; i++)
         {
             auto status = meshes[i].mesh_resource.get_status();
@@ -99,7 +101,7 @@ void RenderEffectForward::on_unregister(SRendererId renderer, dual_storage_t* st
             }
         }
     };
-    dualQ_get_views(mesh_query, DUAL_LAMBDA(sweepFunction));
+    dualQ_get_views(mesh_write_query, DUAL_LAMBDA(sweepFunction));
     release_queries();
     free_pipeline(renderer);
     free_geometry_resources(renderer);
@@ -591,6 +593,7 @@ void RenderEffectForwardSkin::on_register(SRendererId renderer, dual_storage_t* 
 void RenderEffectForwardSkin::initialize_queries(dual_storage_t* storage)
 {
     mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr_render_mesh_comp_t");
+    mesh_write_query = dualQ_from_literal(storage, "[inout]forward_skin_render_identity, [inout]skr_render_mesh_comp_t");
     draw_mesh_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr_render_mesh_comp_t, [out]skr_render_group_t");
     install_query = dualQ_from_literal(storage, "[in]forward_skin_render_identity, [in]skr_render_anim_comp_t, [in]skr_render_skel_comp_t, [in]skr_render_skin_comp_t");
 }
@@ -598,6 +601,7 @@ void RenderEffectForwardSkin::initialize_queries(dual_storage_t* storage)
 void RenderEffectForwardSkin::release_queries()
 {
     dualQ_release(mesh_query);
+    dualQ_release(mesh_write_query);
     dualQ_release(draw_mesh_query);
     dualQ_release(install_query);
 }
