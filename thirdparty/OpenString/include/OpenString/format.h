@@ -241,6 +241,59 @@ struct argument_formatter<i8>
     }
 };
 
+#if defined(_MSC_VER)
+
+template<> 
+struct argument_formatter<long>
+{
+    static codeunit_sequence produce(const long& value, const codeunit_sequence_view& specification)
+    {
+        return details::format_integer(value, specification);
+    }
+};
+
+template<> 
+struct argument_formatter<unsigned long>
+{
+    static codeunit_sequence produce(const unsigned long& value, const codeunit_sequence_view& specification)
+    {
+        return details::format_integer(value, specification);
+    }
+};
+
+template<> 
+struct argument_formatter<long double>
+{
+    static codeunit_sequence produce(const long double& value, const codeunit_sequence_view& specification)
+    {
+        return details::format_integer(value, specification);
+    }
+};
+
+#endif
+
+#if defined(__linux__)
+
+template<> 
+struct argument_formatter<long long int>
+{
+    static codeunit_sequence produce(const long long int& value, const codeunit_sequence_view& specification)
+    {
+        return details::format_integer(value, specification);
+    }
+};
+
+template<> 
+struct argument_formatter<<unsigned long long int>
+{
+    static codeunit_sequence produce(const <unsigned long long int& value, const codeunit_sequence_view& specification)
+    {
+        return details::format_integer(value, specification);
+    }
+};
+
+#endif
+
 template<> 
 struct argument_formatter<u8>
 {
