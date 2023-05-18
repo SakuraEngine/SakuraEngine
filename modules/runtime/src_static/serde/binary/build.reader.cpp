@@ -5,6 +5,8 @@
 #include "misc/log.h"
 #include <cmath>
 
+#include <EASTL/fixed_string.h>
+
 skr_blob_arena_t::skr_blob_arena_t()
     : buffer(nullptr), _base(0), align(0), offset(0), capacity(0)  {}
 skr_blob_arena_t::skr_blob_arena_t(void* buffer, uint64_t base, uint32_t size, uint32_t align)
@@ -255,7 +257,7 @@ int ReadTrait<skr::string>::Read(skr_binary_reader_t* reader, skr::string& str)
     int ret = ReadTrait<uint32_t>::Read(reader, size);
     if (ret != 0)
         return ret;
-    static thread_local std::string temp;
+    eastl::fixed_string<char8_t, 64> temp;
     temp.resize(size);
     ret = ReadBytes(reader, (void*)temp.c_str(), temp.size());
     if (ret != 0)
