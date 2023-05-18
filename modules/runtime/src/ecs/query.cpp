@@ -361,7 +361,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             while (i < part.size() && validNameChar(part[i]))
                 ++i;
             auto name = part.substr(j, i - j);
-            type = reg.get_type({(const char8_t*)name.data(), name.size()});
+            type = reg.get_type({(const char8_t*)name.data(), static_cast<int32_t>(name.size())});
             if (type == kInvalidTypeIndex)
             {
                 errorPos = partBegin + i;

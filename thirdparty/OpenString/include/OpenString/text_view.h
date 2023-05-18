@@ -24,10 +24,7 @@ public:
 	constexpr text_view& operator=(text_view&&) noexcept = default;
 	~text_view() noexcept = default;
 
-	explicit constexpr text_view(const ochar8_t* data, const i32 count) noexcept
-		: view_(data, count)
-	{ }
-	constexpr text_view(const ochar8_t* data, const size_t count) noexcept
+	constexpr text_view(const ochar8_t* data, const i32 count) noexcept
 		: view_(data, count)
 	{ }
 	constexpr text_view(const ochar8_t* str) noexcept
@@ -446,6 +443,6 @@ inline namespace literal
 {
 	[[nodiscard]] constexpr OPEN_STRING_NS::text_view operator""_txtv(const ochar8_t* str, const size_t len) noexcept
 	{
-		return { str, len };
+		return { str, static_cast<int32_t>(len) };
 	}
 }

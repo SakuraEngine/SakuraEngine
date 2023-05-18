@@ -252,7 +252,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
                 for (auto& dep : jobContext->GetFileDependencies())
                 {
                     auto str = dep.string();
-                    skr::json::Write<const skr::string_view&>(&writer, {(const char8_t*)str.data(), str.size()});
+                    skr::json::Write<const skr::string_view&>(&writer, {(const char8_t*)str.data(), static_cast<int32_t>(str.size()) });
                 }
                 writer.EndArray();
                 writer.Key(u8"dependencies");
