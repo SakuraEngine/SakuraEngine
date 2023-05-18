@@ -1,10 +1,10 @@
 #include "SkrScene/skr_scene.h"
 #include "module/module_manager.hpp"
-#include "utils/log.h"
+#include "misc/log.h"
 
 IMPLEMENT_DYNAMIC_MODULE(SkrSceneModule, SkrScene);
 
-void SkrSceneModule::on_load(int argc, char** argv)
+void SkrSceneModule::on_load(int argc, char8_t** argv)
 {
     SKR_LOG_TRACE("skr scene loaded!");
 }

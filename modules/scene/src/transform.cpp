@@ -2,12 +2,12 @@
 #include "ecs/dual.h"
 
 #include "ecs/dual_config.h"
-#include "utils/parallel_for.hpp"
+#include "misc/parallel_for.hpp"
 #include "SkrScene/scene.h"
 #include "math/matrix4x4f.h"
 #include "math/vector.h"
 #include "math/quat.h"
-#include "rtm/qvvf.h"
+#include "math/rtm/qvvf.h"
 
 rtm::qvvf make_qvv(skr_rotator_t* r, skr_float3_t* t, skr_float3_t* s)
 {

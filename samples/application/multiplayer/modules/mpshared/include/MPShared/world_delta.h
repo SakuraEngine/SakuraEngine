@@ -1,10 +1,10 @@
 #pragma once
 #include "MPShared/module.configure.h"
 #include "containers/span.hpp"
-#include "utils/types.h"
+#include "misc/types.h"
 #include "ecs/dual.h"
 #include "platform/guid.hpp"
-#include "task/task.hpp"
+#include "async/fib_task.hpp"
 #include "containers/hashmap.hpp"
 #include "containers/vector.hpp"
 #include "EASTL/functional.h"
@@ -90,7 +90,7 @@ sattr("serialize_config" : "uint16_t entityCount")
 MPComponentDeltaView
 {
     NetComponentId type;
-    sattr("serialize_config" : "SpanSerdeConfig{entityCount}, IntegerSerdeConfig<NetEntityId>{0, entityCount}")
+    sattr("serialize_config" : "SpanSerdeConfig{entityCount}, IntegerPackConfig<NetEntityId>{0, entityCount}")
     skr::span<NetEntityId> entities;
     sattr("no-text" : true)
     skr::span<uint8_t> data;

@@ -1,8 +1,8 @@
-#include "job/thread_job.hpp"
+#include "async/thread_job.hpp"
 #include "job_thread.hpp"
 #include "containers/vector.hpp"
-#include "utils/defer.hpp"
-#include "utils/log.h"
+#include "misc/defer.hpp"
+#include "misc/log.h"
 
 namespace skr
 {

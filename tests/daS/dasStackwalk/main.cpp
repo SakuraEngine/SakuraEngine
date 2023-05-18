@@ -1,6 +1,6 @@
 #include "SkrDAScript/daScript.hpp"
-#include "utils/make_zeroed.hpp"
-#include "containers/text.hpp"
+#include "misc/make_zeroed.hpp"
+#include "containers/string.hpp"
 
 #define TUTORIAL_NAME   u8"/scripts/dasStackWalk/stackwalk.das"
 
@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     auto library = skr::das::Library::Create(lib_desc);
 
     // compile script
-    skr::text::text script_path = skr::das::Environment::GetRootDir();
+    skr::string script_path = skr::das::Environment::GetRootDir();
     script_path += TUTORIAL_NAME;
     auto program = skr::das::Environment::compile_dascript(
         script_path.u8_str(), faccess, tout, library);

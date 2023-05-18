@@ -1,8 +1,8 @@
 #pragma once
 
 #include "EASTL/bitset.h"
-#include "binary/writer_fwd.h"
-#include "binary/reader_fwd.h"
+#include "serde/binary/writer_fwd.h"
+#include "serde/binary/reader_fwd.h"
 
 
 namespace skr

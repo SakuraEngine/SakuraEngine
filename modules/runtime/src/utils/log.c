@@ -20,7 +20,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "utils/log.h"
+#include "misc/log.h"
 
 #define MAX_CALLBACKS 32
 #define LOG_USE_COLOR

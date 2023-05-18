@@ -1,10 +1,10 @@
 #pragma once
-#include "utils/traits.hpp"
+#include "misc/traits.hpp"
 #include "platform/memory.h"
-#include "binary/writer_fwd.h"
-#include "binary/reader_fwd.h"
-#include "json/reader_fwd.h"
-#include "json/writer_fwd.h"
+#include "serde/binary/writer_fwd.h"
+#include "serde/binary/reader_fwd.h"
+#include "serde/json/reader_fwd.h"
+#include "serde/json/writer_fwd.h"
 
 struct skr_value_t;
 

@@ -216,6 +216,11 @@ const codeunit_sequence& text::raw() const& noexcept
 	return this->sequence_;
 }
 
+codeunit_sequence& text::raw() & noexcept
+{
+	return this->sequence_;
+}
+
 text_view text::view() const noexcept
 {
 	return this->sequence_.view();

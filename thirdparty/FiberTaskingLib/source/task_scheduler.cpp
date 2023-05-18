@@ -34,7 +34,7 @@
 #include <mutex>
 #include "platform/memory.h"
 #include "tracy/Tracy.hpp"
-#include "utils/log.h"
+#include "misc/log.h"
 
 #if defined(FTL_WIN32_THREADS)
     #ifndef WIN32_LEAN_AND_MEAN
@@ -95,8 +95,7 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void* const arg)
     // Switch
 #ifdef TRACY_ENABLE
     {
-        ::skr::string threadId = "worker";
-        threadId += ::skr::to_string(index);
+        ::skr::string threadId = ::skr::format(u8"worker-{}", index);
         TracyFiberEnter(threadId.c_str());
         taskScheduler->m_tls[index].ThreadFiber.SwitchToFiber(freeFiber);
         TracyFiberLeave;

@@ -1,6 +1,6 @@
 #pragma once
 #include "dual_types.h"
-#include "utils/types.h"
+#include "misc/types.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -64,8 +64,8 @@ enum dual_callback_flags SKR_IF_CPP(: uint32_t)
  */
 typedef struct dual_type_description_t {
     dual_guid_t guid;
-    const char* name;
-    const char* guidStr;
+    const char8_t* name;
+    const char8_t* guidStr;
     /**
      * a pinned component will not removed when destroying or copy when instantiating, and user should remove them manually
      * destroyed entity with pinned component will be marked by a dead component and will be erased when all pinned component is removed
@@ -239,7 +239,7 @@ RUNTIME_API dual_type_index_t dualT_get_type(const dual_guid_t* guid);
  * @param name
  * @return component type
  */
-RUNTIME_API dual_type_index_t dualT_get_type_by_name(const char* name);
+RUNTIME_API dual_type_index_t dualT_get_type_by_name(const char8_t* name);
 /**
  * @brief get description of component type
  *
@@ -745,7 +745,7 @@ RUNTIME_API void dual_set_bit(uint32_t* mask, int32_t bit);
 #endif
 
 #if defined(__cplusplus)
-#include "task/task.hpp"
+#include "async/fib_task.hpp"
 /**
  * @brief register a resource to scheduler
  *
@@ -890,33 +890,38 @@ namespace dual
     }
 
     template<class T>
-    T* get_component_ro(dual_chunk_view_t* view)
+    auto get_component_ro(dual_chunk_view_t* view)
     {
-        return (T*)dualV_get_component_ro(view, dual_id_of<T>::get());
+        static_assert(!std::is_pointer_v<T> && !std::is_reference_v<T>, "T must be a type declare!");
+        return (std::add_const_t<std::decay_t<T>>*)dualV_get_component_ro(view, dual_id_of<T>::get());
     }
 
     template<class T>
     T* get_owned_rw(dual_chunk_view_t* view)
     {
+        static_assert(!std::is_pointer_v<T> && !std::is_reference_v<T>, "T must be a type declare!");
         return (T*)dualV_get_owned_rw(view, dual_id_of<T>::get());
     }
     
     template<class T, class V>
     V* get_owned_rw(dual_chunk_view_t* view)
     {
+        static_assert(!std::is_pointer_v<T> && !std::is_reference_v<T>, "T must be a type declare!");
         return (V*)dualV_get_owned_rw(view, dual_id_of<T>::get());
     }
 
     template<class T>
-    T* get_owned_ro(dual_chunk_view_t* view)
+    auto get_owned_ro(dual_chunk_view_t* view)
     {
-        return (T*)dualV_get_owned_ro(view, dual_id_of<T>::get());
+        static_assert(!std::is_pointer_v<T> && !std::is_reference_v<T>, "T must be a type declare!");
+        return (std::add_const_t<std::decay_t<T>>*)dualV_get_owned_ro(view, dual_id_of<T>::get());
     }
     
     template<class T, class V>
-    V* get_owned_ro(dual_chunk_view_t* view)
+    auto get_owned_ro(dual_chunk_view_t* view)
     {
-        return (V*)dualV_get_owned_ro(view, dual_id_of<T>::get());
+        static_assert(!std::is_pointer_v<T> && !std::is_reference_v<T>, "T must be a type declare!");
+        return (std::add_const_t<std::decay_t<V>>*)dualV_get_owned_ro(view, dual_id_of<T>::get());
     }
 
     struct task_context_t

@@ -1,16 +1,16 @@
 #include "module/module.hpp"
-#include "utils/parallel_for.hpp"
+#include "misc/parallel_for.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "platform/guid.hpp"
-#include "containers/text.hpp"
-#include "utils/defer.hpp"
-#include "utils/io.h"
+#include "containers/string.hpp"
+#include "misc/defer.hpp"
+#include "misc/io.h"
 
-#include "json/reader.h"
-#include "json/writer.h"
-#include "binary/writer.h"
+#include "serde/json/reader.h"
+#include "serde/json/writer.h"
+#include "serde/binary/writer.h"
 #include <atomic>
 
 #include "tracy/Tracy.hpp"
@@ -87,7 +87,7 @@ protected:
 
 struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
 {
-    virtual void on_load(int argc, char** argv) override
+    virtual void on_load(int argc, char8_t** argv) override
     {
         skr_init_mutex(&cook_system.ioMutex);
         skr_init_mutex(&cook_system.assetMutex);
@@ -170,7 +170,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
     jobContext->record = GetAssetRecord(guid);
     skr::task::event_t counter;
     jobContext->SetCounter(counter);
-    auto guidName = fmt::format("Fiber{}", jobContext->record->guid);
+    auto guidName = skr::format(u8"Fiber{}", jobContext->record->guid);
     mainCounter.add(1);
     skr::task::schedule([jobContext]()
     {
@@ -182,11 +182,11 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
         ZoneScoped;
         const auto rtti_type = type::GetTypeRegistry()->get_type(metaAsset->type);
         const auto type_name = skr_get_type_name(&metaAsset->type);
-        const auto cookerTypeName = rtti_type ? rtti_type->Name() : type_name ? type_name : "UnknownResource";
-        const auto guidString = skr::text::format(u8"Guid: {}", metaAsset->guid);
-        const auto assetTypeGuidString = skr::text::format(u8"TypeGuid: {}", metaAsset->type);
-        const auto scopeName = skr::text::format(u8"Cook.[{}]", cookerTypeName);
-        const auto assetString = skr::text::format(u8"Asset: {}", metaAsset->path.u8string().c_str());
+        const auto cookerTypeName = rtti_type ? rtti_type->Name() : type_name ? type_name : u8"UnknownResource";
+        const auto guidString = skr::format(u8"Guid: {}", metaAsset->guid);
+        const auto assetTypeGuidString = skr::format(u8"TypeGuid: {}", metaAsset->type);
+        const auto scopeName = skr::format(u8"Cook.[{}]", (const ochar8_t*)cookerTypeName);
+        const auto assetString = skr::format(u8"Asset: {}", metaAsset->path.u8string().c_str());
         ZoneName(scopeName.c_str(), scopeName.size());
         TracyMessage(guidString.c_str(), guidString.size());
         TracyMessage(assetTypeGuidString.c_str(), assetTypeGuidString.size());
@@ -205,7 +205,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
         skr::filesystem::create_directories(outputPath, ec);
 
         // TODO: platform dependent directory
-        jobContext->SetOutputPath(outputPath / fmt::format("{}.bin", metaAsset->guid));
+        jobContext->SetOutputPath(outputPath / skr::format(u8"{}.bin", metaAsset->guid).c_str());
         if (!cooker)
         {
             return;
@@ -240,22 +240,22 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
             {
                 SKR_LOG_INFO("[CookTask] resource %s cook finished! updating dependencies.", metaAsset->path.u8string().c_str());
                 // write dependencies
-                auto dependencyPath = metaAsset->project->dependencyPath / fmt::format("{}.d", metaAsset->guid);
+                auto dependencyPath = metaAsset->project->dependencyPath / skr::format(u8"{}.d", metaAsset->guid).c_str();
                 skr_json_writer_t writer(2);
                 writer.StartObject();
-                writer.Key("importerVersion");
+                writer.Key(u8"importerVersion");
                 writer.UInt64(jobContext->GetImporterVersion());
-                writer.Key("cookerVersion");
+                writer.Key(u8"cookerVersion");
                 writer.UInt64(jobContext->GetCookerVersion());
-                writer.Key("files");
+                writer.Key(u8"files");
                 writer.StartArray();
                 for (auto& dep : jobContext->GetFileDependencies())
                 {
                     auto str = dep.string();
-                    skr::json::Write<const skr::string_view&>(&writer, {str.data(), str.size()});
+                    skr::json::Write<const skr::string_view&>(&writer, {(const char8_t*)str.data(), static_cast<int32_t>(str.size()) });
                 }
                 writer.EndArray();
-                writer.Key("dependencies");
+                writer.Key(u8"dependencies");
                 writer.StartArray();
                 for (auto& dep : jobContext->GetStaticDependencies())
                     skr::json::Write<const skr_resource_handle_t&>(&writer, dep);
@@ -268,7 +268,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
                     return;
                 }
                 SKR_DEFER({ fclose(file); });
-                fwrite(writer.buffer.data(), 1, writer.buffer.size(), file);
+                fwrite(writer.buffer.c_str(), 1, writer.buffer.size(), file);
             }
         }
     }, &counter, guidName.c_str());
@@ -316,8 +316,8 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
         SKR_LOG_ERROR("[SCookSystemImpl::EnsureCooked] resource not exist! asset path: %s", metaAsset->path.u8string().c_str());
         return nullptr;
     }
-    auto resourcePath = metaAsset->project->outputPath / fmt::format("{}.bin", metaAsset->guid);
-    auto dependencyPath = metaAsset->project->dependencyPath / fmt::format("{}.d", metaAsset->guid);
+    auto resourcePath = metaAsset->project->outputPath / skr::format(u8"{}.bin", metaAsset->guid).u8_str();
+    auto dependencyPath = metaAsset->project->dependencyPath / skr::format(u8"{}.d", metaAsset->guid).u8_str();
     auto checkUpToDate = [&]() -> bool {
         auto cooker = GetCooker(metaAsset);
         if(!cooker)

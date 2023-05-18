@@ -1,6 +1,6 @@
 #include "SkrDAScript/daScript.hpp"
-#include "utils/make_zeroed.hpp"
-#include "containers/text.hpp"
+#include "misc/make_zeroed.hpp"
+#include "containers/string.hpp"
 
 using namespace das;
 
@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
 
     // call context function
     const auto res = ctx->eval(function);
-    const auto message = skr::text::format(u8"{}\n", res.load<int32_t>());
+    const auto message = skr::format(u8"{}\n", res.load<int32_t>());
     tout->print(message.u8_str());
 
     skr::das::Context::Free(ctx);

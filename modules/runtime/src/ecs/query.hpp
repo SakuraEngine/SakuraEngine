@@ -1,8 +1,8 @@
 #pragma once
 #include "ecs/dual.h"
 #include "ecs/SmallVector.h"
-#include <EASTL/vector.h>
 #include <EASTL/unique_ptr.h>
+
 #include "containers/string.hpp"
 #include "containers/span.hpp"
 #include "containers/hashmap.hpp"

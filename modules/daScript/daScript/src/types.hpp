@@ -1,7 +1,7 @@
 #pragma once
 #include "daScript/daScript.h"
 #include "platform/memory.h"
-#include "utils/log.h"
+#include "misc/log.h"
 
 #include "SkrDAScript/text_printer.hpp"
 #include "SkrDAScript/file.hpp"

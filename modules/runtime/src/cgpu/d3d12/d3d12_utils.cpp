@@ -5,7 +5,7 @@
 #include <dxcapi.h>
 #include <d3d12shader.h>
 #include "D3D12MemAlloc.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include <EASTL/vector.h>
 #include <comutil.h>
 

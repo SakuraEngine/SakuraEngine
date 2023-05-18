@@ -75,7 +75,7 @@ protected:
 
 struct SKR_GUI_API Diagnosticable : public SInterface
 {
-    SKR_GUI_BASE_TYPE(Diagnosticable, "4e81165e-b13e-41ae-a84f-672429ea969e");
+    SKR_GUI_BASE_TYPE(Diagnosticable, u8"4e81165e-b13e-41ae-a84f-672429ea969e");
     virtual ~Diagnosticable() SKR_NOEXCEPT;
 
     IDiagnosticsProperty* find_property(const char8_t* name) const SKR_NOEXCEPT;
@@ -106,14 +106,14 @@ protected:
 
 struct SKR_GUI_API DiagnosticableTree : public Diagnosticable
 {
-    SKR_GUI_TYPE(DiagnosticableTree, Diagnosticable, "64b856c5-2127-46ee-9fb7-80e4d3a65163");
+    SKR_GUI_TYPE(DiagnosticableTree, Diagnosticable, u8"64b856c5-2127-46ee-9fb7-80e4d3a65163");
     virtual ~DiagnosticableTree() SKR_NOEXCEPT;
 
 };
 
 struct SKR_GUI_API DiagnosticableTreeNode : public DiagnosticableTree
 {
-    SKR_GUI_TYPE(DiagnosticableTreeNode, DiagnosticableTree, "26e5515a-7654-4943-a9fe-766db8cedf72");
+    SKR_GUI_TYPE(DiagnosticableTreeNode, DiagnosticableTree, u8"26e5515a-7654-4943-a9fe-766db8cedf72");
     virtual ~DiagnosticableTreeNode() SKR_NOEXCEPT;
 
     virtual LiteSpan<DiagnosticableTreeNode* const> get_diagnostics_children() const = 0;

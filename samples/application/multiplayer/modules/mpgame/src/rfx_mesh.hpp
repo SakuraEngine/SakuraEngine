@@ -10,7 +10,7 @@ typedef struct forward_effect_identity_t {
     dual_entity_t game_entity;
 } forward_effect_identity_t;
 
-static const skr_render_effect_name_t forward_effect_name = "ForwardEffect";
+static const skr_render_effect_name_t forward_effect_name = u8"ForwardEffect";
 
 struct RenderEffectForward : public IRenderEffectProcessor 
 {

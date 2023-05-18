@@ -18,7 +18,7 @@ void* SSkelGltfImporter::Import(skr_io_ram_service_t*, SCookContext* context)
     types.skeleton = true;
     if(!impoter.Load((const char*)context->AddFileDependency(assetPath.c_str()).u8string().c_str()))
     {
-        SKR_LOG_FMT_ERROR("Failed to load gltf file %s for asset %s.", assetPath.c_str(), context->GetAssetPath());
+        SKR_LOG_FMT_ERROR(u8"Failed to load gltf file %s for asset %s.", assetPath.c_str(), context->GetAssetPath());
         return nullptr;
     }
     RawSkeleton* rawSkeleton = SkrNew<RawSkeleton>();

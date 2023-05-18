@@ -1,8 +1,8 @@
 #include "common/utils.h"
 #include "platform/thread.h"
 #include "platform/system.h"
-#include "utils/log.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/log.h"
+#include "misc/make_zeroed.hpp"
 #include "module/module.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrImGui/skr_imgui.h"
@@ -13,8 +13,8 @@
 
 class SVMemCCModule : public skr::IDynamicModule
 {
-    virtual void on_load(int argc, char** argv) override;
-    virtual int main_module_exec(int argc, char** argv) override;
+    virtual void on_load(int argc, char8_t** argv) override;
+    virtual int main_module_exec(int argc, char8_t** argv) override;
     virtual void on_unload() override;
 
     void create_swapchain();
@@ -50,16 +50,16 @@ class SVMemCCModule : public skr::IDynamicModule
 
 IMPLEMENT_DYNAMIC_MODULE(SVMemCCModule, VMemController);
 
-void SVMemCCModule::on_load(int argc, char** argv)
+void SVMemCCModule::on_load(int argc, char8_t** argv)
 {
     SKR_LOG_INFO("vmem controller loaded!");
     for (auto i = 0; i < argc; i++)
     {
-        if (::strcmp(argv[i], "--vulkan") == 0)
+        if (::strcmp((const char*)argv[i], "--vulkan") == 0)
         {
             backend = CGPU_BACKEND_VULKAN;
         }
-        else if (::strcmp(argv[i], "--d3d12") == 0)
+        else if (::strcmp((const char*)argv[i], "--d3d12") == 0)
         {
             backend = CGPU_BACKEND_D3D12;
         }
@@ -170,7 +170,7 @@ void SVMemCCModule::imgui_ui()
 
 #include "runtime_module.h"
 
-int SVMemCCModule::main_module_exec(int argc, char** argv)
+int SVMemCCModule::main_module_exec(int argc, char8_t** argv)
 {
     DPIAware = skr_runtime_is_dpi_aware();
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) return -1;

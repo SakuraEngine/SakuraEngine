@@ -1,7 +1,7 @@
 #pragma once
 #include <containers/string.hpp>
-#include "utils/types.h"
-#include "utils/hash.h"
+#include "misc/types.h"
+#include "misc/hash.h"
 #include "platform/debug.h"
 
 inline SKR_CONSTEXPR bool operator==(skr_guid_t a, skr_guid_t b)
@@ -29,7 +29,7 @@ constexpr const size_t short_guid_form_length = 36; // XXXXXXXX-XXXX-XXXX-XXXX-X
 constexpr const size_t long_guid_form_length = 38;  // {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}
 
 //
-constexpr int parse_hex_digit(const char c)
+constexpr int parse_hex_digit(const char8_t c)
 {
     using namespace skr::string_literals;
     if ('0' <= c && c <= '9')
@@ -44,7 +44,7 @@ constexpr int parse_hex_digit(const char c)
 }
 
 template <class T>
-constexpr T parse_hex(const char* ptr)
+constexpr T parse_hex(const char8_t* ptr)
 {
     constexpr size_t digits = sizeof(T) * 2;
     T result{};
@@ -53,7 +53,7 @@ constexpr T parse_hex(const char* ptr)
     return result;
 }
 
-constexpr skr_guid_t make_guid_helper(const char* begin)
+constexpr skr_guid_t make_guid_helper(const char8_t* begin)
 {
     auto Data1 = parse_hex<uint32_t>(begin);
     begin += 8 + 1;
@@ -72,20 +72,19 @@ constexpr skr_guid_t make_guid_helper(const char* begin)
 }
 
 template <size_t N>
-constexpr skr_guid_t make_guid_unsafe(const char (&str)[N])
+constexpr skr_guid_t make_guid_unsafe(const char8_t (&str)[N])
 {
     static_assert(N == (long_guid_form_length + 1) || N == (short_guid_form_length + 1), "String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected");
 
     if constexpr (N == (long_guid_form_length + 1))
     {
-        if (str[0] != '{' || str[long_guid_form_length - 1] != '}')
+        if (str[0] != u8'{' || str[long_guid_form_length - 1] != u8'}')
             SKR_ASSERT(0 && "Missing opening or closing brace");
     }
 
     return make_guid_helper(str + (N == (long_guid_form_length + 1) ? 1 : 0));
 }
 
-#if !defined(SKR_USE_STL_STRING)
 constexpr skr_guid_t make_guid_unsafe(const skr::string_view& str)
 {
     using namespace skr::string_literals;
@@ -94,34 +93,19 @@ constexpr skr_guid_t make_guid_unsafe(const skr::string_view& str)
 
     if (str.size() == (long_guid_form_length + 1))
     {
-        if (str[0] != '{' || str[long_guid_form_length - 1] != '}')
+        if (str.u8_str()[0] != u8'{' || str.u8_str()[long_guid_form_length - 1] != u8'}')
             SKR_ASSERT(0 && "Missing opening or closing brace");
     }
 
-    return make_guid_helper(str.data() + (str.size() == (long_guid_form_length + 1) ? 1 : 0));
+    return make_guid_helper(str.u8_str() + (str.size() == (long_guid_form_length + 1) ? 1 : 0));
 }
-#endif
 
-constexpr skr_guid_t make_guid_unsafe(const std::string_view& str)
-{
-    using namespace skr::string_literals;
-    if (str.size() != long_guid_form_length && str.size() != short_guid_form_length)
-        SKR_ASSERT(0 && "String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected");
-
-    if (str.size() == (long_guid_form_length + 1))
-    {
-        if (str[0] != '{' || str[long_guid_form_length - 1] != '}')
-            SKR_ASSERT(0 && "Missing opening or closing brace");
-    }
-
-    return make_guid_helper(str.data() + (str.size() == (long_guid_form_length + 1) ? 1 : 0));
-}
 } // namespace details
 using details::make_guid_unsafe;
 
 namespace literals
 {
-constexpr skr_guid_t operator""_guid(const char* str, size_t N)
+constexpr skr_guid_t operator""_guid(const char8_t* str, size_t N)
 {
     using namespace skr::string_literals;
     using namespace details;

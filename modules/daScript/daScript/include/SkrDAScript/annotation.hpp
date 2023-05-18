@@ -203,9 +203,9 @@ template <typename FunT, FunT PROP>
 void StructureAnnotation::add_property(const char8_t* na, const char8_t* cppNa) 
 {
     auto library = get_library();
-    skr::text::text dotNa = u8".`";
+    skr::string dotNa = u8".`";
     dotNa += na;
-    skr::text::text cppPropNa = cppNa ? cppNa : na;
+    skr::string cppPropNa = cppNa ? cppNa : na;
     using callT = call_property<FunT, PROP>;
     const auto dotNaStr = dotNa.u8_str();
     const auto cppPropNaStr = cppPropNa.u8_str();

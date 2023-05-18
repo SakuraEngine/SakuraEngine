@@ -3,7 +3,7 @@ package("eastl")
     set_description("EASTL stands for Electronic Arts Standard Template Library.")
     set_license("BSD-3-Clause license")
     
-    add_versions("3.20.2-skr", "7203ac3b94460535d610125050127282fdd9653408591ae7dbbee3d5cc364636")
+    add_versions("2023.5.18-skr", "7203ac3b94460535d610125050127282fdd9653408591ae7dbbee3d5cc364636")
     add_configs("runtime_shared", {description = "Import allocator from dll.", default = false, type = "boolean"})
 
     on_install(function (package)

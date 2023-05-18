@@ -2,6 +2,9 @@
 #include "shader_compiler.hpp"
 #include "module/subsystem.hpp"
 #include "platform/shared_library.hpp"
+
+#include <EASTL/string.h>
+
 #include "SkrRenderer/resources/shader_resource.hpp"
 #ifndef __meta__
 #include "SkrShaderCompiler/dxc_compiler.generated.h"
@@ -74,7 +77,7 @@ public:
     void SetIncludeHandler(IDxcIncludeHandler* includeHandler) SKR_NOEXCEPT;
 
 protected:
-    void createDefArgsFromOptions(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options, eastl::vector<skr::wstring>& def_args) SKR_NOEXCEPT;
+    void createDefArgsFromOptions(skr::span<skr_shader_option_template_t> opt_defs, skr::span<skr_shader_option_instance_t> options, eastl::vector<eastl::wstring>& def_args) SKR_NOEXCEPT;
 
     IDxcUtils* utils = nullptr;
     IDxcCompiler3* compiler = nullptr;

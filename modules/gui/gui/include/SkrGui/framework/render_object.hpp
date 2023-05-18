@@ -19,7 +19,7 @@ namespace gui {
 
 struct SKR_GUI_API RenderObject : public DiagnosticableTreeNode
 {
-    SKR_GUI_TYPE(RenderObject, DiagnosticableTreeNode, "74844fa6-8994-4915-8f8e-ec944a1cbea4");
+    SKR_GUI_TYPE(RenderObject, DiagnosticableTreeNode, u8"74844fa6-8994-4915-8f8e-ec944a1cbea4");
 
     using DrawParams = skr_gui_render_object_draw_params_t;
 public:

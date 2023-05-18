@@ -1,5 +1,5 @@
 #pragma once
-#include "job/thread_job.hpp"
+#include "async/thread_job.hpp"
 
 namespace skr
 {
@@ -46,7 +46,7 @@ public:
     JobResult finalize() SKR_NOEXCEPT;
 
 private:
-    skr::text::text tname;
+    skr::string tname;
     JobQueueThreadDesc desc = {};
 
     static void jobThreadFunc(void* args);

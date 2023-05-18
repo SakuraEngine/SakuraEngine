@@ -1,7 +1,6 @@
 #pragma once
-#include "rtm/matrix4x4f.h"
-#include "type/type.h"
-
+#include "math/rtm/matrix4x4f.h"
+#include "misc/types.h"
 
 namespace skr
 {

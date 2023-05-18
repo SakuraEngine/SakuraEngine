@@ -4,7 +4,7 @@
 #import <Cocoa/Cocoa.h>
 
 #include "stdio.h"
-#include "utils/log.h"
+#include "misc/log.h"
 
 @interface DemoView : NSView // interface of DemoView class
 {                            // (subclass of NSView class)

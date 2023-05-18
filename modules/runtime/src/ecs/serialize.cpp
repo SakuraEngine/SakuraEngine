@@ -11,8 +11,8 @@
 #include "set.hpp"
 #include "scheduler.hpp"
 #include "internal/utils.hpp"
-#include "binary/reader.h"
-#include "binary/writer.h"
+#include "serde/binary/reader.h"
+#include "serde/binary/writer.h"
 #include "type_registry.hpp"
 
 template<class T>

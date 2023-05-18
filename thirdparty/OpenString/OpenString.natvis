@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
 
-    <Type Name="OPEN_STRING_NS::index_interval">
+    <Type Name="skr::text::index_interval">
         <DisplayString Condition="lower_.type == 2 &amp; upper_.type == 2">
             (-∞,+∞)
         </DisplayString>
@@ -34,20 +34,20 @@
         </DisplayString>
     </Type>
 
-    <Type Name="OPEN_STRING_NS::codeunit_sequence_view">
+    <Type Name="skr::text::codeunit_sequence_view">
         <DisplayString>{data_,[size_]}</DisplayString>
         <Expand HideRawView="true">
             <Item Name="size">size_</Item>
         </Expand>
     </Type>
 
-    <Type Name="OPEN_STRING_NS::codeunit_sequence">
-        <DisplayString>{((OPEN_STRING_NS::codeunit_sequence::sso*)this)->alloc ? ((OPEN_STRING_NS::codeunit_sequence::norm*)this)->data : ((OPEN_STRING_NS::codeunit_sequence::sso*)this)->data._Elems}</DisplayString>
+    <Type Name="skr::text::codeunit_sequence">
+        <DisplayString>{((skr::text::codeunit_sequence::sso*)this)->alloc ? ((skr::text::codeunit_sequence::norm*)this)->data : ((skr::text::codeunit_sequence::sso*)this)->data._Elems}</DisplayString>
         <Expand HideRawView="true">
-            <Item Name="allocated">(bool)(((OPEN_STRING_NS::codeunit_sequence::sso*)this)->alloc)</Item>
-            <Item Name="size">((OPEN_STRING_NS::codeunit_sequence::sso*)this)->alloc ? ((OPEN_STRING_NS::codeunit_sequence::norm*)this)->size : (OPEN_STRING_NS::u32)((OPEN_STRING_NS::codeunit_sequence::sso*)this)->size</Item>
-            <Item Name="capacity">((OPEN_STRING_NS::codeunit_sequence::sso*)this)->alloc ? ((OPEN_STRING_NS::codeunit_sequence::norm*)this)->capacity : OPEN_STRING_NS::codeunit_sequence::SSO_SIZE_MAX</Item>
-            <Item Name="data">((OPEN_STRING_NS::codeunit_sequence::sso*)this)->alloc ? ((OPEN_STRING_NS::codeunit_sequence::norm*)this)->data : (OPEN_STRING_NS::u32)((OPEN_STRING_NS::codeunit_sequence::sso*)this)->data._Elems</Item>
+            <Item Name="allocated">(bool)(((skr::text::codeunit_sequence::sso*)this)->alloc)</Item>
+            <Item Name="size">((skr::text::codeunit_sequence::sso*)this)->alloc ? ((skr::text::codeunit_sequence::norm*)this)->size : (skr::text::u32)((skr::text::codeunit_sequence::sso*)this)->size</Item>
+            <Item Name="capacity">((skr::text::codeunit_sequence::sso*)this)->alloc ? ((skr::text::codeunit_sequence::norm*)this)->capacity : skr::text::codeunit_sequence::SSO_SIZE_MAX</Item>
+            <Item Name="data">((skr::text::codeunit_sequence::sso*)this)->alloc ? ((skr::text::codeunit_sequence::norm*)this)->data : (skr::text::u32)((skr::text::codeunit_sequence::sso*)this)->data._Elems</Item>
         </Expand>
     </Type>
 

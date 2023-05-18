@@ -5,11 +5,11 @@
 #include "MPShared/components.h"
 #include "ecs/type_builder.hpp"
 #include "platform/atomic.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 
-#include "rtm/quatf.h"
-#include "rtm/rtmx.h"
-#include "utils/log.h"
+#include "math/rtm/quatf.h"
+#include "math/rtm/rtmx.h"
+#include "misc/log.h"
 #include "platform/guid.hpp"
 
 void MPGameWorld::Initialize()
@@ -99,7 +99,7 @@ void MPGameWorld::ClearDeadBall()
         ballsToKill.reserve(16);
         auto collectBallsToKill = [&](dual_chunk_view_t* view)
         {
-            auto balls = dual::get_owned_ro<CBall>(view);
+            auto balls = dual::get_owned_rw<CBall>(view);
             auto entities = (dual_entity_t*)dualV_get_entities(view);
             for(int i=0; i<view->count; ++i)
             {
@@ -224,9 +224,9 @@ void MPGameWorld::ZombieAI()
             auto findNearestPlayer = [&](dual_chunk_view_t* view)
             {
                 auto ptranslations = dual::get_owned_ro<skr_translation_comp_t>(view);
-                auto phealths = dual::get_owned_ro<CHealth>(view);
+                auto phealths = dual::get_owned_rw<CHealth>(view);
                 auto healthId = dualV_get_local_type(view, dual_id_of<CHealth>::get());
-                auto pdirties = dual::get_owned_ro<dual::dirty_comp_t>(view);
+                auto pdirties = dual::get_owned_rw<dual::dirty_comp_t>(view);
                 auto entities = (dual_entity_t*)dualV_get_entities(view);
                 for(int j=0; j<view->count; ++j)
                 {
@@ -447,7 +447,7 @@ void MPGameWorld::BulletMovement()
                     {
                         auto otherTranslations = dual::get_owned_ro<skr_translation_comp_t>(view);
                         auto otherColliders = dual::get_owned_ro<CSphereCollider2D>(view);
-                        auto otherHealths = dual::get_owned_ro<CHealth>(view);
+                        auto otherHealths = dual::get_owned_rw<CHealth>(view);
                         auto otherControllers = dual::get_owned_ro<CController>(view);
                         auto otherDirtyMasks = dual::get_owned_rw<dual::dirty_comp_t>(view);
                         auto healthId = dualV_get_local_type(view, dual_id_of<CHealth>::get());

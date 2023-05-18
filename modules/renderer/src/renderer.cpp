@@ -1,5 +1,5 @@
-#include "utils/log.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/log.h"
+#include "misc/make_zeroed.hpp"
 #include "ecs/dual.h"
 #include "ecs/array.hpp"
 
@@ -313,7 +313,7 @@ void skr_render_effect_attach(SRendererId r, dual_chunk_view_t* g_cv, skr_render
     #ifdef _DEBUG
                     for (auto& _ : features)
                     {
-                        SKR_ASSERT(strcmp(_.name, effect_name) != 0 && "Render effect already attached");
+                        SKR_ASSERT(strcmp((const char*)_.name, (const char*)effect_name) != 0 && "Render effect already attached");
                     }
     #endif
                     features.emplace_back( skr_render_effect_t{ nullptr, DUAL_NULL_ENTITY } );
@@ -349,7 +349,7 @@ void skr_render_effect_detach(SRendererId r, dual_chunk_view_t* cv, skr_render_e
                 bool found = false;
                 for (auto iter = features.begin(); iter != features.end(); iter++)
                 {
-                    if (strcmp(iter->name, effect_name) == 0)
+                    if (strcmp((const char*)iter->name, (const char*)effect_name) == 0)
                     {
                         render_effects.emplace_back(iter->effect_entity);
                         features.erase(iter);
@@ -390,7 +390,7 @@ void skr_render_effect_add_delta(SRendererId r, dual_chunk_view_t* cv,
                 auto& features = feature_arrs[i];
                 for (auto& _ : features)
                 {
-                    if (strcmp(_.name, effect_name) == 0)
+                    if (strcmp((const char*)_.name, (const char*)effect_name) == 0)
                     {
                         render_effects.emplace_back(_.effect_entity);
                     }
@@ -422,7 +422,7 @@ void skr_render_effect_access(SRendererId r, dual_chunk_view_t* cv, skr_render_e
                 auto& effects = effects_chunk[i];
                 for (auto& effect : effects)
                 {
-                    if (strcmp(effect.name, effect_name) == 0)
+                    if (strcmp((const char*)effect.name, (const char*)effect_name) == 0)
                     {
                         batch_render_effects.emplace_back(effect.effect_entity);
                     }

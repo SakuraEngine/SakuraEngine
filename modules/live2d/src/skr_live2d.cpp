@@ -1,4 +1,4 @@
-#include "utils/log.h"
+#include "misc/log.h"
 #include "platform/memory.h"
 #include "SkrLive2D/skr_live2d.h"
 #include "CubismFramework.hpp"
@@ -34,7 +34,7 @@ class CubismFrameWorkAllocator : public Csm::ICubismAllocator
 
 CubismFrameWorkAllocator ls_Allocator;
 
-void SkrLive2DModule::on_load(int argc, char** argv)
+void SkrLive2DModule::on_load(int argc, char8_t** argv)
 {
     using namespace Live2D::Cubism::Core;
 

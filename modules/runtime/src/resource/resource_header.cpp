@@ -1,6 +1,6 @@
 #include "resource/resource_header.hpp"
-#include "binary/writer.h"
-#include "binary/reader.h"
+#include "serde/binary/writer.h"
+#include "serde/binary/reader.h"
 
 int skr_resource_header_t::ReadWithoutDeps(skr_binary_reader_t* reader)
 {

@@ -10,7 +10,7 @@ namespace gui {
 struct SKR_GUI_API RenderCanvas : public RenderBox
 {
 public:
-    SKR_GUI_TYPE(RenderCanvas, RenderBox, "b3c8ede6-d878-472c-a1c1-6b3acdc9f1f0");
+    SKR_GUI_TYPE(RenderCanvas, RenderBox, u8"b3c8ede6-d878-472c-a1c1-6b3acdc9f1f0");
     RenderCanvas(skr_gdi_device_id gdi_device);
     virtual ~RenderCanvas();
 

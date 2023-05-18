@@ -10,7 +10,7 @@ static struct RegisterName${type.id}Helper
     RegisterName${type.id}Helper()
     {
         skr_guid_t id{${db.guid_constant(type)}};
-        skr_register_type_name(&id, "${type.name}");
+        skr_register_type_name(&id, u8"${type.name}");
     }
 } _RegisterName${type.id}Helper;
 %endfor
