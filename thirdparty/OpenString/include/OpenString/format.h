@@ -261,15 +261,6 @@ struct argument_formatter<unsigned long>
     }
 };
 
-template<> 
-struct argument_formatter<long double>
-{
-    static codeunit_sequence produce(const long double& value, const codeunit_sequence_view& specification)
-    {
-        return details::format_integer(value, specification);
-    }
-};
-
 #endif
 
 #if defined(__linux__)

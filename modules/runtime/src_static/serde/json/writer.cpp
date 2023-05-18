@@ -174,7 +174,7 @@ bool skr_json_writer_t::_WriteString(const TChar* str, TSize length)
         Z16, Z16, Z16, Z16, Z16, Z16, Z16, Z16, Z16, Z16                                // 60~FF
 #undef Z16
     };
-    // buffer.reserve(buffer.size() + 2 + length * 6);
+    buffer.raw().reserve(buffer.size() + 2 + length * 6);
     buffer += u8'\"';
     for (TSize i = 0; i < length; ++i)
     {
