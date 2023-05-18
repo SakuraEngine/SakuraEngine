@@ -75,7 +75,7 @@ bool make_guid(const skr::string_view& str, skr_guid_t& value)
 
     if (str.size() == (long_guid_form_length + 1))
     {
-        if (str[0] != '{' || str[long_guid_form_length - 1] != '}')
+        if (str.u8_str()[0] != u8'{' || str.u8_str()[long_guid_form_length - 1] != u8'}')
         {
             skr::string str2(skr::string_view(str.u8_str(), (size_t)str.size()));
             SKR_LOG_ERROR("Opening or closing brace is expected, got %s", str2.c_str());
