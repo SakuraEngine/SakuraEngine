@@ -281,12 +281,16 @@ int ReadTrait<skr::string_view>::Read(skr_binary_reader_t* reader, skr_blob_aren
     ret = ReadTrait<uint32_t>::Read(reader, offset);
     if (ret != 0)
         return ret;
-    auto pstr = (const char8_t*)arena.get_buffer() + offset;
-    str = skr::string_view(pstr, (int32_t)size);
-    // null terminate
-    auto ptr = const_cast<char8_t*>(str.u8_str() + size);
+
+    auto strbuf_start = (char8_t*)arena.get_buffer() + offset;
+    ret = ReadBytes(reader, strbuf_start, size);
+    if (ret != 0)
+        return ret;
+
+    auto ptr = const_cast<char8_t*>(strbuf_start + size);
     *ptr = u8'\0';
-    return ReadBytes(reader, (void*)str.c_str(), str.size());
+    str = skr::string_view(strbuf_start, (int32_t)size);
+    return ret;
 }
 
 int ReadTrait<skr_md5_t>::Read(skr_binary_reader_t* reader, skr_md5_t& md5)
