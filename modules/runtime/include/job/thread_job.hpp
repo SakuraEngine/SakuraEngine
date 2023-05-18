@@ -27,7 +27,7 @@ struct JobItemQueue;
 
 using JobQueuePriority = SThreadPriority;
 using JobResult = int32_t;
-using JobName = skr::text::text;
+using JobName = skr::string;
 
 static constexpr JobResult JOB_RESULT_OK = 1;
 static constexpr JobResult JOB_RESULT_ERROR_THREAD_ALREADY_STARTES = -1;
@@ -159,7 +159,7 @@ private:
     friend struct JobThreadFunction;
     int enqueueCore(JobItem* jobItem, bool isEndJob) SKR_NOEXCEPT;
 
-    skr::text::text queue_name;
+    skr::string queue_name;
     JobQueueThreadList thread_list;
     JobItemQueue* itemList;
     JobQueueDesc desc;

@@ -63,7 +63,7 @@ bool skr_json_writer_t::RawNumber(const TChar* str, TSize length)
     return _WriteRawValue(str, length);
 }
 
-bool skr_json_writer_t::RawNumber(skr::text::text_view view) { return RawNumber(view.u8_str(), view.size()); }
+bool skr_json_writer_t::RawNumber(skr::string_view view) { return RawNumber(view.u8_str(), view.size()); }
 
 bool skr_json_writer_t::String(const TChar* str, TSize length)
 {
@@ -71,7 +71,7 @@ bool skr_json_writer_t::String(const TChar* str, TSize length)
     return _WriteString(str, length);
 }
 
-bool skr_json_writer_t::String(skr::text::text_view view) { return String(view.u8_str(), view.size()); }
+bool skr_json_writer_t::String(skr::string_view view) { return String(view.u8_str(), view.size()); }
 
 bool skr_json_writer_t::StartObject()
 {
@@ -110,7 +110,7 @@ bool skr_json_writer_t::RawValue(const TChar* str, TSize length, ESkrJsonType ty
     return _WriteRawValue(str, length);
 }
 
-bool skr_json_writer_t::RawValue(skr::text::text_view view, ESkrJsonType type)
+bool skr_json_writer_t::RawValue(skr::string_view view, ESkrJsonType type)
 {
     return RawValue(view.u8_str(), view.size(), type);
 }
@@ -228,7 +228,7 @@ bool skr_json_writer_t::_WriteEndArray()
 
 bool skr_json_writer_t::_WriteRawValue(const TChar* str, TSize length)
 {
-    buffer.append(skr::text::text_view(str, length));
+    buffer.append(skr::string_view(str, length));
     return true;
 }
 
@@ -272,7 +272,7 @@ bool skr_json_writer_t::_NewLine()
     while (ident > 0)
     {
         auto n = std::min(ident, sizeof(indentLiteral) - 1);
-        buffer.append(skr::text::text_view(indentLiteral, n));
+        buffer.append(skr::string_view(indentLiteral, n));
         ident -= n;
     }
     return true;

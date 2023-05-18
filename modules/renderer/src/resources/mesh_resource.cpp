@@ -176,7 +176,7 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
     SMeshFactoryImpl(const SMeshFactory::Root& root)
         : root(root)
     {
-        dstorage_root = skr::text::text::from_utf8(root.dstorage_root);
+        dstorage_root = skr::string::from_utf8(root.dstorage_root);
         this->root.dstorage_root = dstorage_root.u8_str();
     }
 
@@ -240,7 +240,7 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
     ESkrInstallStatus InstallWithDStorage(skr_resource_record_t* record);
     ESkrInstallStatus InstallWithUpload(skr_resource_record_t* record);
 
-    skr::text::text dstorage_root;
+    skr::string dstorage_root;
     Root root;
     skr::flat_hash_map<skr_mesh_resource_id, InstallType> mInstallTypes;
     skr::flat_hash_map<skr_mesh_resource_id, SPtr<UploadRequest>> mUploadRequests;

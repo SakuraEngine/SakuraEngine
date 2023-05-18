@@ -41,7 +41,7 @@ struct VariantType : skr_type_t {
     const skr::span<const skr_type_t*> types;
     size_t size;
     size_t align;
-    skr::text::text name;
+    skr::string name;
     VariantMethodTable operations;
     VariantType(const skr::span<const skr_type_t*> types, size_t size, size_t align,
     VariantMethodTable operations)

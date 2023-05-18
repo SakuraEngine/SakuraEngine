@@ -88,7 +88,7 @@ JobThreadFunction* JobQueueThread::get_function() const SKR_NOEXCEPT
 
 JobResult JobQueueThread::initialize(const char8_t *n, int32_t p, uint32_t stackSize, const JobQueueThreadDesc *pdesc) SKR_NOEXCEPT
 {
-    tname = skr::text::text::from_utf8(n);
+    tname = skr::string::from_utf8(n);
     if (pdesc)
     {
         desc = *pdesc;

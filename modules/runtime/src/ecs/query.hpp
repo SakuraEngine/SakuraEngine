@@ -15,7 +15,7 @@ struct phase_entry {
     skr::span<dual_query_t*> queries;
     skr::flat_hash_map<dual_group_t*, dual_query_t*> include;
 };
-skr::text::text& get_error();
+skr::string& get_error();
 } // namespace dual
 
 

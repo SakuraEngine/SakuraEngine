@@ -98,7 +98,7 @@ struct SKR_GUI_RENDERER_API GDIImageAsyncData_RenderGraph
 
     struct 
     {
-        skr::text::text uri = u8"";
+        skr::string uri = u8"";
     } from_file;
     
     struct 

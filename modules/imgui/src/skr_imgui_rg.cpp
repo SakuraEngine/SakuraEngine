@@ -61,7 +61,7 @@ void imguir_render_draw_data(ImDrawData* draw_data,
     skr::render_graph::RenderGraph* render_graph, skr::render_graph::TextureRTVHandle target, ECGPULoadAction load_action)
 {
     ZoneScopedN("RenderIMGUI");
-    using graph_name_string = skr::text::text;
+    using graph_name_string = skr::string;
 
     bool useCVV = true;
 #ifdef SKR_OS_MACOSX

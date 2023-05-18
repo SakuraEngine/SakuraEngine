@@ -13,7 +13,7 @@ bool initialize_gdi_application(gdi_application_t* app)
 {
     // initialize gfx
     app->gfx.backend = platform_default_backend;
-    auto app_name = skr::text::text::from_utf8(SKR_UTF8("GDI [backend:")); 
+    auto app_name = skr::string::from_utf8(SKR_UTF8("GDI [backend:")); 
     app_name += gCGPUBackendNames[app->gfx.backend];
     app_name += SKR_UTF8("]");
     app->gfx.window_title = app_name.u8_str();

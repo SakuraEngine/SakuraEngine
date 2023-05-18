@@ -74,6 +74,6 @@ public:
     CGPUBufferId query_buffer = nullptr;
     uint32_t query_cursor = 0;
     eastl::vector<float> times_ms;
-    eastl::vector<skr::text::text> query_names;
+    eastl::vector<skr::string> query_names;
     uint64_t frame_index;
 };

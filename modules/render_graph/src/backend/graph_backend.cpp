@@ -350,7 +350,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
     {
         executor.bind_table_pools.emplace(root_sig, SkrNew<BindTablePool>(root_sig));
     }
-    skr::text::text bind_table_keys = u8"";
+    skr::string bind_table_keys = u8"";
     // Bind resources
     stack_vector<CGPUDescriptorData> desc_set_updates;
     stack_vector<const char8_t*> bindTableValueNames = {};

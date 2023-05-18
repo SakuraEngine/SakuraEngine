@@ -22,7 +22,7 @@ int tutorial () {
     // policies.aot = true;
 #endif
     // compile program
-    skr::text::text script_path = skr::das::Environment::GetRootDir();
+    skr::string script_path = skr::das::Environment::GetRootDir();
     script_path += TUTORIAL_NAME;
     auto program = skr::das::Environment::compile_dascript(
         script_path.u8_str(), faccess, tout, library, &policies);

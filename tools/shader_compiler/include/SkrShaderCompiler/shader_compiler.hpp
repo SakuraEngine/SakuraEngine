@@ -36,7 +36,7 @@ struct ShaderSourceCode
 
     uint8_t* bytes = nullptr;
     uint64_t size = 0;
-    skr::text::text source_name;
+    skr::string source_name;
     const EShaderSourceType source_type = EShaderSourceType::INVALID;
 };
 

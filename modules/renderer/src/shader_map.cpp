@@ -89,7 +89,7 @@ struct ShaderMapImpl : public skr_shader_map_t
         }
 
         ShaderMapImpl* factory = nullptr;
-        skr::text::text bytes_uri;
+        skr::string bytes_uri;
         skr_async_request_t bytes_request;
         skr_async_ram_destination_t bytes_destination;
         skr_async_request_t aux_request;

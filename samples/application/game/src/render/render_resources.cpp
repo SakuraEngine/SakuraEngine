@@ -69,8 +69,8 @@ void create_imgui_resources(skr_vfs_t* resource_vfs, SRenderDeviceId render_devi
         ImGui::GetIO().Fonts->Build();
         free(font_bytes);
     }
-    skr::text::text vsname = u8"shaders/imgui_vertex";
-    skr::text::text fsname = u8"shaders/imgui_fragment";
+    skr::string vsname = u8"shaders/imgui_vertex";
+    skr::string fsname = u8"shaders/imgui_fragment";
     vsname.append(backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv");
     fsname.append(backend == ::CGPU_BACKEND_D3D12 ? u8".dxil" : u8".spv");
 

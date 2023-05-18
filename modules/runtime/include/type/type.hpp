@@ -34,8 +34,8 @@ RUNTIME_API size_t Hash(double value, size_t base);
 RUNTIME_API size_t Hash(const skr_guid_t& value, size_t base);
 RUNTIME_API size_t Hash(const skr_md5_t& value, size_t base);
 RUNTIME_API size_t Hash(const skr_resource_handle_t& value, size_t base);
-RUNTIME_API size_t Hash(const skr::text::text& value, size_t base);
-RUNTIME_API size_t Hash(const skr::text::text_view& value, size_t base);
+RUNTIME_API size_t Hash(const skr::string& value, size_t base);
+RUNTIME_API size_t Hash(const skr::string_view& value, size_t base);
 
 template <class T>
 auto GetCopyCtor();
@@ -60,8 +60,8 @@ struct RUNTIME_API skr_type_t {
     bool Same(const skr_type_t* srcType) const;
     bool Convertible(const skr_type_t* srcType, bool format = false) const;
     void Convert(void* dst, const void* src, const skr_type_t* srcType, skr::type::ValueSerializePolicy* policy = nullptr) const;
-    skr::text::text ToString(const void* dst, skr::type::ValueSerializePolicy* policy = nullptr) const;
-    void FromString(void* dst, skr::text::text_view str, skr::type::ValueSerializePolicy* policy = nullptr) const;
+    skr::string ToString(const void* dst, skr::type::ValueSerializePolicy* policy = nullptr) const;
+    void FromString(void* dst, skr::string_view str, skr::type::ValueSerializePolicy* policy = nullptr) const;
     size_t Hash(const void* dst, size_t base) const;
     // lifetime operator
     void Destruct(void* dst) const;
@@ -131,7 +131,7 @@ struct SKR_ALIGNAS(16) RUNTIME_API skr_value_t {
     const void* Ptr() const;
 
     size_t Hash() const;
-    skr::text::text ToString() const;
+    skr::string ToString() const;
 
     void Reset();
 
@@ -183,7 +183,7 @@ struct RUNTIME_API skr_value_ref_t {
     T Convert();
 
     size_t Hash() const;
-    skr::text::text ToString() const;
+    skr::string ToString() const;
     void Reset();
 #endif
 };
@@ -315,14 +315,14 @@ struct RUNTIME_API HandleType : skr_type_t {
     {
     }
 };
-// skr::text::text
+// skr::string
 struct RUNTIME_API StringType : skr_type_t {
     StringType()
         : skr_type_t{ SKR_TYPE_CATEGORY_STR }
     {
     }
 };
-// skr::text::text_view
+// skr::string_view
 struct RUNTIME_API StringViewType : skr_type_t {
     StringViewType()
         : skr_type_t{ SKR_TYPE_CATEGORY_STRV }
@@ -334,7 +334,7 @@ struct RUNTIME_API ArrayType : skr_type_t {
     const struct skr_type_t* elementType;
     size_t num;
     size_t size;
-    skr::text::text name;
+    skr::string name;
     ArrayType(const struct skr_type_t* elementType, size_t num, size_t size)
         : skr_type_t{ SKR_TYPE_CATEGORY_ARR }
         , elementType(elementType)
@@ -359,7 +359,7 @@ struct ObjectMethodTable {
 // skr::span<T>
 struct RUNTIME_API ArrayViewType : skr_type_t {
     const struct skr_type_t* elementType;
-    skr::text::text name;
+    skr::string name;
     ArrayViewType(const skr_type_t* elementType)
         : skr_type_t{ SKR_TYPE_CATEGORY_ARRV }
         , elementType(elementType)
@@ -372,16 +372,16 @@ struct RUNTIME_API RecordType : skr_type_t {
     size_t align = 0;
     skr_guid_t guid = {};
     bool object = false;
-    const skr::text::text_view name = u8"";
+    const skr::string_view name = u8"";
     const RecordType* base = nullptr;
     ObjectMethodTable nativeMethods = {};
     const skr::span<struct skr_field_t> fields = {};
     const skr::span<struct skr_method_t> methods = {};
     bool IsBaseOf(const RecordType& other) const;
-    static const RecordType* FromName(skr::text::text_view name);
+    static const RecordType* FromName(skr::string_view name);
     static void Register(const RecordType* type);
     RecordType() = default;
-    RecordType(size_t size, size_t align, skr::text::text_view name, skr_guid_t guid, bool object, const RecordType* base, ObjectMethodTable nativeMethods,
+    RecordType(size_t size, size_t align, skr::string_view name, skr_guid_t guid, bool object, const RecordType* base, ObjectMethodTable nativeMethods,
     const skr::span<struct skr_field_t> fields, const skr::span<struct skr_method_t> methods)
         : skr_type_t{ SKR_TYPE_CATEGORY_OBJ }
         , size(size)
@@ -400,20 +400,20 @@ struct RUNTIME_API RecordType : skr_type_t {
 // enum T
 struct RUNTIME_API EnumType : skr_type_t {
     const skr_type_t* underlyingType;
-    const skr::text::text_view name;
+    const skr::string_view name;
     skr_guid_t guid;
-    void (*FromString)(void* self, skr::text::text_view str);
-    skr::text::text (*ToString)(const void* self);
+    void (*FromString)(void* self, skr::string_view str);
+    skr::string (*ToString)(const void* self);
     struct Enumerator {
-        const skr::text::text_view name;
+        const skr::string_view name;
         int64_t value;
     };
     const skr::span<Enumerator> enumerators;
-    static const EnumType* FromName(skr::text::text_view name);
+    static const EnumType* FromName(skr::string_view name);
     static void Register(const EnumType* type);
-    EnumType(const skr_type_t* underlyingType, const skr::text::text_view name,
-    skr_guid_t guid, void (*FromString)(void* self, skr::text::text_view str),
-    skr::text::text (*ToString)(const void* self), const skr::span<Enumerator> enumerators)
+    EnumType(const skr_type_t* underlyingType, const skr::string_view name,
+    skr_guid_t guid, void (*FromString)(void* self, skr::string_view str),
+    skr::string (*ToString)(const void* self), const skr::span<Enumerator> enumerators)
         : skr_type_t{ SKR_TYPE_CATEGORY_ENUM }
         , underlyingType(underlyingType)
         , name(name)
@@ -434,7 +434,7 @@ struct RUNTIME_API ReferenceType : skr_type_t {
     bool nullable;
     bool object;
     const struct skr_type_t* pointee;
-    skr::text::text name;
+    skr::string name;
     ReferenceType(Ownership ownership, bool nullable, bool object, const skr_type_t* pointee)
         : skr_type_t{ SKR_TYPE_CATEGORY_REF }
         , ownership(ownership)
