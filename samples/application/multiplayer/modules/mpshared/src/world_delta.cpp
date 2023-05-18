@@ -613,10 +613,10 @@ int skr::binary::WriteTrait<const packed_entity_t&>::Write(skr_binary_writer_t *
     uint32_t idMax = DUAL_ENTITY_ID(maxEntity);
     uint32_t versionMax = DUAL_ENTITY_VERSION(maxEntity);
 
-    auto ret = Archive(writer, id, IntegerSerdeConfig<uint32_t>{0, idMax});
+    auto ret = Archive(writer, id, IntegerPackConfig<uint32_t>{0, idMax});
     if (ret != 0)
         return ret;
-    ret = Archive(writer, version, IntegerSerdeConfig<uint32_t>{0, versionMax});
+    ret = Archive(writer, version, IntegerPackConfig<uint32_t>{0, versionMax});
     return ret;
 }
 int skr::binary::ReadTrait<packed_entity_t>::Read(skr_binary_reader_t *reader, packed_entity_t &value, dual_entity_t maxEntity)
@@ -625,10 +625,10 @@ int skr::binary::ReadTrait<packed_entity_t>::Read(skr_binary_reader_t *reader, p
     uint32_t version = 0;
     uint32_t idMax = DUAL_ENTITY_ID(maxEntity);
     uint32_t versionMax = DUAL_ENTITY_VERSION(maxEntity);
-    auto ret = Archive(reader, id, IntegerSerdeConfig<uint32_t>{0, idMax});
+    auto ret = Archive(reader, id, IntegerPackConfig<uint32_t>{0, idMax});
     if (ret != 0)
         return ret;
-    ret = Archive(reader, version, IntegerSerdeConfig<uint32_t>{0, versionMax});
+    ret = Archive(reader, version, IntegerPackConfig<uint32_t>{0, versionMax});
     if (ret != 0)
         return ret;
     value.entity = DUAL_ENTITY(id, version);

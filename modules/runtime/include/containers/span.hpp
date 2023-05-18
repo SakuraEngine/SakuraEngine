@@ -74,7 +74,7 @@ struct ReadTrait<skr::span<T>> {
     {
         //static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
         uint32_t count = 0;
-        int ret = skr::binary::Archive(archive, count, IntegerSerdeConfig<uint32_t>{0, cfg.maxSize});
+        int ret = skr::binary::Archive(archive, count, IntegerPackConfig<uint32_t>{0, cfg.maxSize});
         if (ret != 0) 
             return ret;
         if(count == 0)
@@ -220,7 +220,7 @@ struct WriteTrait<const skr::span<T>&> {
         SKR_ASSERT(ptr >= buffer);
         uint32_t offset = (uint32_t)(ptr - buffer);
         SKR_ASSERT(!arena.get_size() || (offset < arena.get_size()) || span.empty());
-        int ret = skr::binary::Archive(writer, (uint32_t)span.size(), IntegerSerdeConfig<uint32_t>{0, cfg.maxSize});
+        int ret = skr::binary::Archive(writer, (uint32_t)span.size(), IntegerPackConfig<uint32_t>{0, cfg.maxSize});
         if (ret != 0) {
             return ret;
         }

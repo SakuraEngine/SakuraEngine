@@ -64,7 +64,7 @@ struct RUNTIME_STATIC_API ReadTrait<uint8_t> {
     {
         return reader->read(&value, sizeof(value));
     }
-    static int Read(skr_binary_reader_t* reader, uint8_t& value, IntegerSerdeConfig<uint8_t>);
+    static int Read(skr_binary_reader_t* reader, uint8_t& value, IntegerPackConfig<uint8_t>);
 };
 
 template <>
@@ -73,7 +73,7 @@ struct RUNTIME_STATIC_API ReadTrait<uint16_t> {
     {
         return reader->read(&value, sizeof(value));
     }
-    static int Read(skr_binary_reader_t* reader, uint16_t& value, IntegerSerdeConfig<uint16_t>);
+    static int Read(skr_binary_reader_t* reader, uint16_t& value, IntegerPackConfig<uint16_t>);
 };
 
 template <>
@@ -82,7 +82,7 @@ struct RUNTIME_STATIC_API ReadTrait<uint32_t> {
     {
         return reader->read(&value, sizeof(value));
     }
-    static int Read(skr_binary_reader_t* reader, uint32_t& value, IntegerSerdeConfig<uint32_t>);
+    static int Read(skr_binary_reader_t* reader, uint32_t& value, IntegerPackConfig<uint32_t>);
 };
 
 template <>
@@ -91,7 +91,7 @@ struct RUNTIME_STATIC_API ReadTrait<uint64_t> {
     {
         return reader->read(&value, sizeof(value));
     }
-    static int Read(skr_binary_reader_t* reader, uint64_t& value, IntegerSerdeConfig<uint64_t>);
+    static int Read(skr_binary_reader_t* reader, uint64_t& value, IntegerPackConfig<uint64_t>);
 };
 
 template <>
@@ -100,7 +100,7 @@ struct RUNTIME_STATIC_API ReadTrait<int32_t> {
     {
         return reader->read(&value, sizeof(value));
     }
-    static int Read(skr_binary_reader_t* reader, int32_t& value, IntegerSerdeConfig<int32_t>);
+    static int Read(skr_binary_reader_t* reader, int32_t& value, IntegerPackConfig<int32_t>);
 };
 
 template <>
@@ -109,7 +109,7 @@ struct RUNTIME_STATIC_API ReadTrait<int64_t> {
     {
         return reader->read(&value, sizeof(value));
     }
-    static int Read(skr_binary_reader_t* reader, int64_t& value, IntegerSerdeConfig<int64_t>);
+    static int Read(skr_binary_reader_t* reader, int64_t& value, IntegerPackConfig<int64_t>);
 };
 
 template <>
@@ -118,7 +118,7 @@ struct RUNTIME_STATIC_API ReadTrait<float> {
     {
         return reader->read(&value, sizeof(value));
     }
-    static int Read(skr_binary_reader_t* reader, float& value, FloatingSerdeConfig<float>);
+    static int Read(skr_binary_reader_t* reader, float& value, FloatingPackConfig<float>);
 };
 
 template <>
@@ -127,7 +127,7 @@ struct RUNTIME_STATIC_API ReadTrait<double> {
     {
         return reader->read(&value, sizeof(value));
     }
-    static int Read(skr_binary_reader_t* reader, double& value, FloatingSerdeConfig<double>);
+    static int Read(skr_binary_reader_t* reader, double& value, FloatingPackConfig<double>);
 };
 
 template <>
@@ -136,7 +136,7 @@ struct RUNTIME_STATIC_API ReadTrait<skr_float2_t> {
     {
         return reader->read(&value, sizeof(value));
     }
-    static int Read(skr_binary_reader_t* reader, skr_float2_t& value, VectorSerdeConfig<float>);
+    static int Read(skr_binary_reader_t* reader, skr_float2_t& value, VectorPackConfig<float>);
 };
 
 template <>
@@ -145,7 +145,7 @@ struct RUNTIME_STATIC_API ReadTrait<skr_float3_t> {
     {
         return reader->read(&value, sizeof(value));
     }
-    static int Read(skr_binary_reader_t* reader, skr_float3_t& value, VectorSerdeConfig<float>);
+    static int Read(skr_binary_reader_t* reader, skr_float3_t& value, VectorPackConfig<float>);
 };
 
 template <>
@@ -154,7 +154,7 @@ struct RUNTIME_STATIC_API ReadTrait<skr_rotator_t> {
     {
         return reader->read(&value, sizeof(value));
     }
-    static int Read(skr_binary_reader_t* reader, skr_rotator_t& value, VectorSerdeConfig<float>);
+    static int Read(skr_binary_reader_t* reader, skr_rotator_t& value, VectorPackConfig<float>);
 };
 
 template <>
@@ -163,7 +163,7 @@ struct RUNTIME_STATIC_API ReadTrait<skr_float4_t> {
     {
         return reader->read(&value, sizeof(value));
     }
-    static int Read(skr_binary_reader_t* reader, skr_float4_t& value, VectorSerdeConfig<float>);
+    static int Read(skr_binary_reader_t* reader, skr_float4_t& value, VectorPackConfig<float>);
 };
 
 template <>
@@ -172,7 +172,7 @@ struct RUNTIME_STATIC_API ReadTrait<skr_quaternion_t> {
     {
         return reader->read(&value, sizeof(value));
     }
-    static int Read(skr_binary_reader_t* reader, skr_quaternion_t& value, VectorSerdeConfig<float>);
+    static int Read(skr_binary_reader_t* reader, skr_quaternion_t& value, VectorPackConfig<float>);
 };
 
 template <>
@@ -181,7 +181,7 @@ struct RUNTIME_STATIC_API ReadTrait<skr_float4x4_t> {
     {
         return reader->read(&value, sizeof(value));
     }
-    static int Read(skr_binary_reader_t* reader, skr_float4x4_t& value, VectorSerdeConfig<float>);
+    static int Read(skr_binary_reader_t* reader, skr_float4x4_t& value, VectorPackConfig<float>);
 };
 
 template <>

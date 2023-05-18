@@ -45,7 +45,7 @@ int WriteTrait<const int64_t&>::Write(skr_binary_writer_t* writer, int64_t value
 }
 
 template<class T>
-int WriteBitpacked(skr_binary_writer_t* writer, T value, IntegerSerdeConfig<T> config)
+int WriteBitpacked(skr_binary_writer_t* writer, T value, IntegerPackConfig<T> config)
 {
     SKR_ASSERT(config.min <= config.max);
     bool valid = value >= config.min && value <= config.max;
@@ -67,32 +67,32 @@ int WriteBitpacked(skr_binary_writer_t* writer, T value, IntegerSerdeConfig<T> c
     return writer->write_bits(&compressed, bits);
 }
 
-int WriteTrait<const uint8_t&>::Write(skr_binary_writer_t* writer, uint8_t value, IntegerSerdeConfig<uint8_t> config)
+int WriteTrait<const uint8_t&>::Write(skr_binary_writer_t* writer, uint8_t value, IntegerPackConfig<uint8_t> config)
 {
     return WriteBitpacked(writer, value, config);
 }
 
-int WriteTrait<const uint16_t&>::Write(skr_binary_writer_t* writer, uint16_t value, IntegerSerdeConfig<uint16_t> config)
+int WriteTrait<const uint16_t&>::Write(skr_binary_writer_t* writer, uint16_t value, IntegerPackConfig<uint16_t> config)
 {
     return WriteBitpacked(writer, value, config);
 }
 
-int WriteTrait<const uint32_t&>::Write(skr_binary_writer_t* writer, uint32_t value, IntegerSerdeConfig<uint32_t> config)
+int WriteTrait<const uint32_t&>::Write(skr_binary_writer_t* writer, uint32_t value, IntegerPackConfig<uint32_t> config)
 {
     return WriteBitpacked(writer, value, config);
 }
 
-int WriteTrait<const uint64_t&>::Write(skr_binary_writer_t* writer, uint64_t value, IntegerSerdeConfig<uint64_t> config)
+int WriteTrait<const uint64_t&>::Write(skr_binary_writer_t* writer, uint64_t value, IntegerPackConfig<uint64_t> config)
 {
     return WriteBitpacked(writer, value, config);
 }
 
-int WriteTrait<const int32_t&>::Write(skr_binary_writer_t* writer, int32_t value, IntegerSerdeConfig<int32_t> config)
+int WriteTrait<const int32_t&>::Write(skr_binary_writer_t* writer, int32_t value, IntegerPackConfig<int32_t> config)
 {
     return WriteBitpacked(writer, value, config);
 }
 
-int WriteTrait<const int64_t&>::Write(skr_binary_writer_t* writer, int64_t value, IntegerSerdeConfig<int64_t> config)
+int WriteTrait<const int64_t&>::Write(skr_binary_writer_t* writer, int64_t value, IntegerPackConfig<int64_t> config)
 {
     return WriteBitpacked(writer, value, config);
 }
@@ -108,7 +108,7 @@ int WriteTrait<const double&>::Write(skr_binary_writer_t* writer, double value)
 }
 
 // template<class T>
-// int WriteBitpacked(skr_binary_writer_t* writer, T value, FloatingSerdeConfig<T> config)
+// int WriteBitpacked(skr_binary_writer_t* writer, T value, FloatingPackConfig<T> config)
 // {
 //     T scaled = value * config.scale;
 //     bool valid = scaled < config.max;
@@ -125,7 +125,7 @@ int WriteTrait<const double&>::Write(skr_binary_writer_t* writer, double value)
 //         SKR_LOG_ERROR("Value %f is out of range for bitpacked serialization", value);
 //         scaled = config.max;
 //     }
-//     auto integer = (typename FloatingSerdeConfig<T>::Integer) rtm::scalar_round_bankers(scaled);
+//     auto integer = (typename FloatingPackConfig<T>::Integer) rtm::scalar_round_bankers(scaled);
 //     bool sign = integer < 0;
 //     if(sign)
 //         integer = -integer;
@@ -134,12 +134,12 @@ int WriteTrait<const double&>::Write(skr_binary_writer_t* writer, double value)
 //     return writer->write_bits(&compressed, bits);
 // }
 
-// int WriteTrait<const float&>::Write(skr_binary_writer_t* writer, float value, FloatingSerdeConfig<float> config)
+// int WriteTrait<const float&>::Write(skr_binary_writer_t* writer, float value, FloatingPackConfig<float> config)
 // {
 //     return WriteBitpacked(writer, value, config);
 // }
 
-// int WriteTrait<const double&>::Write(skr_binary_writer_t* writer, double value, FloatingSerdeConfig<double> config)
+// int WriteTrait<const double&>::Write(skr_binary_writer_t* writer, double value, FloatingPackConfig<double> config)
 // {
 //     return WriteBitpacked(writer, value, config);
 // }
@@ -175,7 +175,7 @@ int WriteTrait<const skr_float4x4_t&>::Write(skr_binary_writer_t* writer, const 
 }
 
 template<class T, class ScalarType>
-int WriteBitpacked(skr_binary_writer_t* writer, T value, VectorSerdeConfig<ScalarType> config)
+int WriteBitpacked(skr_binary_writer_t* writer, T value, VectorPackConfig<ScalarType> config)
 {
     ScalarType* array = (ScalarType*)&value;
     static constexpr size_t size = sizeof(T) / sizeof(ScalarType);
@@ -277,32 +277,32 @@ int WriteBitpacked(skr_binary_writer_t* writer, T value, VectorSerdeConfig<Scala
     return 0;  
 }
 
-int WriteTrait<const skr_float2_t&>::Write(skr_binary_writer_t* writer, const skr_float2_t& value, VectorSerdeConfig<float> config)
+int WriteTrait<const skr_float2_t&>::Write(skr_binary_writer_t* writer, const skr_float2_t& value, VectorPackConfig<float> config)
 {
     return WriteBitpacked(writer, value, config);
 }
 
-int WriteTrait<const skr_float3_t&>::Write(skr_binary_writer_t* writer, const skr_float3_t& value, VectorSerdeConfig<float> config)
+int WriteTrait<const skr_float3_t&>::Write(skr_binary_writer_t* writer, const skr_float3_t& value, VectorPackConfig<float> config)
 {
     return WriteBitpacked(writer, value, config);
 }
 
-int WriteTrait<const skr_float4_t&>::Write(skr_binary_writer_t* writer, const skr_float4_t& value, VectorSerdeConfig<float> config)
+int WriteTrait<const skr_float4_t&>::Write(skr_binary_writer_t* writer, const skr_float4_t& value, VectorPackConfig<float> config)
 {
     return WriteBitpacked(writer, value, config);
 }
 
-int WriteTrait<const skr_rotator_t&>::Write(skr_binary_writer_t* writer, const skr_rotator_t& value, VectorSerdeConfig<float> config)
+int WriteTrait<const skr_rotator_t&>::Write(skr_binary_writer_t* writer, const skr_rotator_t& value, VectorPackConfig<float> config)
 {
     return WriteBitpacked(writer, value, config);
 }
 
-int WriteTrait<const skr_quaternion_t&>::Write(skr_binary_writer_t* writer, const skr_quaternion_t& value, VectorSerdeConfig<float> config)
+int WriteTrait<const skr_quaternion_t&>::Write(skr_binary_writer_t* writer, const skr_quaternion_t& value, VectorPackConfig<float> config)
 {
     return WriteBitpacked(writer, value, config);
 }
 
-int WriteTrait<const skr_float4x4_t&>::Write(skr_binary_writer_t* writer, const skr_float4x4_t& value, VectorSerdeConfig<float> config)
+int WriteTrait<const skr_float4x4_t&>::Write(skr_binary_writer_t* writer, const skr_float4x4_t& value, VectorPackConfig<float> config)
 {
     return WriteBitpacked(writer, value, config);
 }
