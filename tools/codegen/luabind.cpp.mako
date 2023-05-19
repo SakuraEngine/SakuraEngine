@@ -253,13 +253,6 @@ void skr_lua_open_${module}(lua_State* L)
     luaL_register(L, nullptr, basemetamethods);
     lua_pop(L, 1);
     luaL_Reg sharedmetamedhods[] = {
-        {"__gc", +[](lua_State* L)
-        {
-            using sharedT = skr::lua::SharedUserdata<${record.name}>;
-            auto& record = *reinterpret_cast<sharedT*>(lua_touserdata(L, 1));
-            record.~sharedT();
-            return 0;
-        }},
         basemetamethods[0],
         basemetamethods[1],
         basemetamethods[2],
@@ -269,13 +262,6 @@ void skr_lua_open_${module}(lua_State* L)
     luaL_register(L, nullptr, sharedmetamedhods);
     lua_pop(L, 1);
     luaL_Reg uniquemetamedhods[] = {
-        {"__gc", +[](lua_State* L)
-        {
-            using T = ${record.name};
-            auto& record = **reinterpret_cast<T**>(lua_touserdata(L, 1));
-            record.~T();
-            return 0;
-        }},
         basemetamethods[0],
         basemetamethods[1],
         basemetamethods[2],
