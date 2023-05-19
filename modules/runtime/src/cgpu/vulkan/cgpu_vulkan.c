@@ -508,8 +508,9 @@ const struct CGPURootSignatureDescriptor* desc)
     // [RS POOL] INSERTION
     if (desc->pool)
     {
-        const bool result = CGPUUtil_AddSignature(desc->pool, &RS->super, desc);
+        CGPURootSignatureId result = CGPUUtil_AddSignature(desc->pool, &RS->super, desc);
         cgpu_assert(result && "Root signature pool insertion failed!");
+        return result;
     }
     // [RS POOL] END INSERTION
     return &RS->super;
