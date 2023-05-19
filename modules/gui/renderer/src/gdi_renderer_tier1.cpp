@@ -1,4 +1,5 @@
-#include "SkrGuiRenderer/gdi_renderer.hpp"
+#include "futures.hpp"
+
 #include "misc/cartesian_product.hpp"
 
 #include <EASTL/fixed_vector.h>
@@ -190,6 +191,8 @@ void GDIRenderer_RenderGraph::createRenderPipelines()
 int GDIRenderer_RenderGraph::initialize(const GDIRendererDescriptor* desc) SKR_NOEXCEPT
 {
     const auto pDesc = reinterpret_cast<GDIRendererDescriptor_RenderGraph*>(desc->usr_data);
+    future_launcher = SPtr<skr::gdi::ImageTex::FutureLauncher>::Create(pDesc->job_queue);
+
     const uint32_t pos_offset = static_cast<uint32_t>(offsetof(GDIVertex, position));
     const uint32_t texcoord_offset = static_cast<uint32_t>(offsetof(GDIVertex, texcoord));
     const uint32_t aa_offset = static_cast<uint32_t>(offsetof(GDIVertex, aa));
@@ -208,7 +211,6 @@ int GDIRenderer_RenderGraph::initialize(const GDIRendererDescriptor* desc) SKR_N
     vertex_layout.attribute_count = 9;
     
     target_format = pDesc->target_format;
-    aux_service = pDesc->aux_service;
     vfs = pDesc->vfs;
     ram_service = pDesc->ram_service;
     vram_service = pDesc->vram_service;
@@ -316,8 +318,6 @@ void GDIRenderer_RenderGraph::updatePendingTextures(skr::render_graph::RenderGra
 
 int GDIRenderer_RenderGraph::finalize() SKR_NOEXCEPT
 {
-    aux_service = nullptr;
-
     auto free_rs_and_pipeline = +[](CGPURenderPipelineId pipeline)
     {
         if (!pipeline) return;

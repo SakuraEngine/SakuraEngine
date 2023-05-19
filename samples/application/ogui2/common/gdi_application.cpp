@@ -6,6 +6,7 @@
 #include "platform/vfs.h"
 #include "misc/threaded_service.h"
 #include "misc/io.h"
+#include "async/thread_job.hpp"
 
 #include "containers/string.hpp"
 
@@ -49,13 +50,11 @@ bool initialize_gdi_application(gdi_application_t* app)
         app->vram_service = skr_io_vram_service_t::create(&ioServiceDesc);
     }
     {
-        auto ioServiceDesc = make_zeroed<skr_threaded_service_desc_t>();
-        ioServiceDesc.name = SKR_UTF8("GUI-AuxService");
-        ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
-        ioServiceDesc.sleep_time = 1000 / 60;
-        ioServiceDesc.lockless = true;
-        ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
-        app->aux_service = skr_threaded_service_t::create(&ioServiceDesc);
+        auto jqDesc = make_zeroed<skr::JobQueueDesc>();
+        jqDesc.thread_count = 2;
+        jqDesc.priority = SKR_THREAD_NORMAL;
+        jqDesc.name = u8"GDIApp-JobQueue";
+        app->job_queue = SkrNew<skr::JobQueue>(&jqDesc);
     }
 
     // initialize gdi device
@@ -70,7 +69,7 @@ bool initialize_gdi_application(gdi_application_t* app)
     gdir_desc2.vfs = app->resource_vfs;
     gdir_desc2.ram_service = app->ram_service;
     gdir_desc2.vram_service = app->vram_service;
-    gdir_desc2.aux_service = app->aux_service;
+    gdir_desc2.job_queue = app->job_queue;
     gdir_desc.usr_data = &gdir_desc2;
     app->renderer = SkrNew<skr::gdi::GDIRenderer_RenderGraph>();
     app->renderer->initialize(&gdir_desc);
@@ -91,7 +90,7 @@ bool finalize_gdi_application(gdi_application_t* app)
 
     app_finalize(&app->gfx);
 
-    if (app->aux_service) skr_threaded_service_t::destroy(app->aux_service);
+    if (app->job_queue) SkrDelete(app->job_queue);
     if (app->vram_service) skr_io_vram_service_t::destroy(app->vram_service);
     if (app->ram_service) skr_io_ram_service_t::destroy(app->ram_service);
     if (app->resource_vfs) skr_free_vfs(app->resource_vfs);
