@@ -36,7 +36,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
 
         // 3.create pso map
         skr_pso_map_root_t pso_map_root;
-        pso_map_root.aux_service = root.aux_service;
+        pso_map_root.job_queue = root.job_queue;
         pso_map_root.device = root.device;
         pso_map = skr_pso_map_create(&pso_map_root);
     }

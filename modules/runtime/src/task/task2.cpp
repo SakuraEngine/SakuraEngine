@@ -653,7 +653,7 @@ namespace task2
         for(size_t i = 0; i < cfg.numThreads; ++i)
         {
             auto worker = SkrNew<Worker>();
-            worker->id = i;
+            worker->id = (uint32_t)i;
             worker->scheduler = this;
             worker->isMainThread = i == 0;
             worker->shutdown = false;
