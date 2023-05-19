@@ -63,7 +63,7 @@ void create_api_objects()
     chain_desc.width = BACK_BUFFER_WIDTH;
     chain_desc.height = BACK_BUFFER_HEIGHT;
     chain_desc.surface = surface;
-    chain_desc.imageCount = 3;
+    chain_desc.image_count = 3;
     chain_desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
     chain_desc.enable_vsync = true;
     swapchain = cgpu_create_swapchain(device, &chain_desc);
@@ -178,7 +178,7 @@ int main(int argc, char* argv[])
                     chain_desc.width = width;
                     chain_desc.height = height;
                     chain_desc.surface = surface;
-                    chain_desc.imageCount = 3;
+                    chain_desc.image_count = 3;
                     chain_desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
                     chain_desc.enable_vsync = true;
                     swapchain = cgpu_create_swapchain(device, &chain_desc);

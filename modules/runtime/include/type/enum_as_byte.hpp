@@ -43,7 +43,7 @@ namespace skr
 }
 
 // binary reader
-#include "binary/reader_fwd.h"
+#include "serde/binary/reader_fwd.h"
 
 namespace skr
 {
@@ -62,7 +62,7 @@ struct ReadTrait<TEnumAsByte<T>>
 
 
 // binary writer
-#include "binary/writer_fwd.h"
+#include "serde/binary/writer_fwd.h"
 
 namespace skr
 {

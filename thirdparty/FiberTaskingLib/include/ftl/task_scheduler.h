@@ -24,7 +24,6 @@
 
 #pragma once
 
-#include "utils/concurrent_queue.h"
 #include "ftl/callbacks.h"
 #include "ftl/fiber.h"
 #include "ftl/task.h"
@@ -62,6 +61,7 @@ enum class EmptyQueueBehavior
 struct TaskSchedulerInitOptions {
     /* The size of the thread pool to run. 0 corresponds to NumHardwareThreads() */
     unsigned ThreadPoolSize = 0;
+    bool SetAffinity = false;
     /* The behavior of the threads after they have no work to do */
     EmptyQueueBehavior Behavior = EmptyQueueBehavior::Yield;
     /* Callbacks to run at various points to allow for e.g. hooking a profiler to fiber states */

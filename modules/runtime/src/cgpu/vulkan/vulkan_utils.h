@@ -13,7 +13,7 @@
 #include "cgpu/flags.h"
 
 #include "platform/debug.h"
-#include "utils/log.h"
+#include "misc/log.h"
 #include "vulkan/vulkan_core.h"
 
 #ifdef CGPU_THREAD_SAFETY

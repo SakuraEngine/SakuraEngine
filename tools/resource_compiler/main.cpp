@@ -1,4 +1,4 @@
-#include "utils/parallel_for.hpp"
+#include "misc/parallel_for.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
@@ -9,14 +9,13 @@
 #include "resource/resource_header.hpp"
 #include "SkrToolCore/assets/config_asset.hpp"
 #include "type/type.hpp"
-#include "utils/defer.hpp"
+#include "misc/defer.hpp"
 #include "resource/resource_header.hpp"
-#include "utils/format.hpp"
 #include "module/module_manager.hpp"
 #include "platform/vfs.h"
-#include "utils/log.h"
-#include "utils/log.hpp"
-#include "utils/io.h"
+#include "misc/log.h"
+#include "misc/log.hpp"
+#include "misc/io.h"
 #include "resource/resource_system.h"
 #include "resource/local_resource_registry.hpp"
 #include "SkrRenderer/resources/texture_resource.h"
@@ -25,9 +24,11 @@
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 #include "SkrRenderer/resources/material_type_resource.hpp"
 #include "SkrRenderer/resources/material_resource.hpp"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include "SkrAnim/resources/skeleton_resource.h"
 #include "SkrAnim/resources/animation_resource.h"
+
+#include "containers/string.hpp"
 
 #include "tracy/Tracy.hpp"
 
@@ -86,24 +87,12 @@ void DestroyResourceSystem(skd::SProject& proj)
     SkrDelete(registry);
 }
 
-int compile_all(int argc, char** argv)
+skd::SProject* open_project(int argc, char** argv)
 {
-    log_set_level(SKR_LOG_LEVEL_INFO);
-
     std::error_code ec = {};
     auto root = skr::filesystem::current_path(ec);
-    
-    skr::task::scheduler_t scheduler;
-    scheduler.initialize(skr::task::scheudler_config_t());
-    scheduler.bind();
-    auto& system = *skd::asset::GetCookSystem();
-    system.Initialize();
-    //----- register project
-    // TODO: project discover?
-    auto project = SkrNew<skd::SProject>();
-    SKR_DEFER({ SkrDelete(project); });
     auto parentPath = root.parent_path().u8string();
-
+    auto project = SkrNew<skd::SProject>();
     project->assetPath = (root.parent_path() / "../../../samples/application/game/assets").lexically_normal();
     project->outputPath = (root.parent_path() / "resources/game").lexically_normal();
     project->dependencyPath = (root.parent_path() / "deps/game").lexically_normal();
@@ -125,14 +114,32 @@ int compile_all(int argc, char** argv)
 
     project->resource_vfs = skr_create_vfs(&resource_vfs_desc);
     auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
-    ioServiceDesc.name = u8"GameRuntimeRAMIOService";
+    ioServiceDesc.name = u8"CompilerRAMIOService";
     ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
     ioServiceDesc.sleep_time = 1000 / 60;
     ioServiceDesc.lockless = true;
     ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
     project->ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
+    return project;
+}
+
+int compile_all(int argc, char** argv)
+{
+    log_set_level(SKR_LOG_LEVEL_INFO);
+    
+    skr::task::scheduler_t scheduler;
+    scheduler.initialize(skr::task::scheudler_config_t());
+    scheduler.bind();
+    auto& system = *skd::asset::GetCookSystem();
+    system.Initialize();
+    //----- register project
+    // TODO: project discover?
+    auto project = open_project(argc, argv);
+    SKR_DEFER({ SkrDelete(project); });
+    
     InitializeResourceSystem(*project);
 
+    std::error_code ec = {};
     skr::filesystem::recursive_directory_iterator iter(project->assetPath, ec);
     //----- scan project directory
     eastl::vector<skr::filesystem::path> paths;
@@ -141,7 +148,7 @@ int compile_all(int argc, char** argv)
         if (iter->is_regular_file(ec) && IsAsset(iter->path()))
         {
             paths.push_back(*iter);
-            SKR_LOG_FMT_DEBUG("{}", iter->path().string());
+            SKR_LOG_FMT_DEBUG(u8"{}", iter->path().u8string().c_str());
         }
         iter.increment(ec);
     }
@@ -198,7 +205,7 @@ int main(int argc, char** argv)
         FrameMark;
         ZoneScopedN("Initialize");
         moduleManager->mount(root.u8string().c_str());
-        moduleManager->make_module_graph("SkrResourceCompiler", true);
+        moduleManager->make_module_graph(u8"SkrResourceCompiler", true);
         moduleManager->init_module_graph(argc, argv);
     }
     {

@@ -1,11 +1,11 @@
 #pragma once
 #ifdef CONTAINER_LITE_IMPL
-#include <containers/vector.hpp>
-#include <containers/text.hpp>
-#include <containers/hashmap.hpp>
+#include "containers/vector.hpp"
+#include "containers/string.hpp"
+#include "containers/hashmap.hpp"
 #include <new> // placement new operator
 #endif
-#include "utils/types.h"
+#include "misc/types.h"
 
 namespace skr {
 namespace lite {
@@ -81,7 +81,7 @@ struct TextStorage : public TextStorageBase
     RUNTIME_API TextStorage(const char8_t* str) SKR_NOEXCEPT;
     RUNTIME_API ~TextStorage() SKR_NOEXCEPT;
 #ifdef CONTAINER_LITE_IMPL
-    using type = skr::text::text;
+    using type = skr::string;
     inline type& get() 
     {
         return *std::launder(reinterpret_cast<type*>(this));

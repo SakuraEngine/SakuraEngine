@@ -1,10 +1,10 @@
 #pragma once
 #include "gtest/gtest.h"
 #include "containers/sptr.hpp"
-#include "utils/log.hpp"
+#include "misc/log.hpp"
 #include "platform/guid.hpp"
 
-class SPTR : public ::testing::Test
+class SPTRBase : public ::testing::Test
 {
 protected:
     void SetUp() override

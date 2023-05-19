@@ -1,10 +1,10 @@
 #pragma once
 #include "platform/memory.h"
 #include "platform/thread.h"
-#include "utils/log.h"
-#include "utils/io.h"
-#include "utils/defer.hpp"
-#include "utils/concurrent_queue.h"
+#include "misc/log.h"
+#include "misc/io.h"
+#include "misc/defer.hpp"
+#include "containers/concurrent_queue.h"
 #include <EASTL/unique_ptr.h>
 #include <EASTL/vector.h>
 #include <EASTL/deque.h>
@@ -88,9 +88,17 @@ public:
     virtual void drain_() SKR_NOEXCEPT
     {
         // wait for sleep
+        const auto timeout = 10u;
+        uint32_t ms = 0;
         for (; getServiceStatus() != SKR_ASYNC_SERVICE_STATUS_SLEEPING;)
         {
-            //...
+            skr_thread_sleep(1);
+            ms++;
+            if (ms > timeout * 1000u)
+            {
+                SKR_LOG_ERROR("drain timeout, force quit");
+                break;
+            }
         }
     }
 
@@ -162,13 +170,13 @@ struct TaskContainer
     void optionalLockTasks() SKR_NOEXCEPT
     {
         if (!isLockless)
-            skr_acquire_mutex(&taskMutex);
+            skr_mutex_acquire(&taskMutex);
     }
 
     void optionalUnlockTasks() SKR_NOEXCEPT
     {
         if (!isLockless)
-            skr_release_mutex(&taskMutex);
+            skr_mutex_release(&taskMutex);
     }
 
     void update_(AsyncServiceBase* service) SKR_NOEXCEPT
@@ -322,13 +330,13 @@ struct TaskContainer
 
     const bool isLockless = false;
     SMutex taskMutex;
-    struct RUNTIME_API IOTaskConcurrentQueueTraits : public moodycamel::ConcurrentQueueDefaultTraits
+    struct RUNTIME_API IOTaskConcurrentQueueTraits : public skr::ConcurrentQueueDefaultTraits
     {
         static const bool RECYCLE_ALLOCATED_BLOCKS = true;
         static inline void* malloc(size_t size) { return sakura_mallocN(size, kIOTaskQueueName); }
         static inline void free(void* ptr) { return sakura_freeN(ptr, kIOTaskQueueName); }
     };
-    moodycamel::ConcurrentQueue<Task, IOTaskConcurrentQueueTraits> task_requests;
+    skr::ConcurrentQueue<Task, IOTaskConcurrentQueueTraits> task_requests;
     eastl::deque<Task> tasks;
 };
 

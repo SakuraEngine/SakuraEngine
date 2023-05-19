@@ -693,14 +693,14 @@ u32 codeunit_sequence::get_hash() const noexcept
 	return this->view().get_hash();
 }
 
-const ochar8_t* codeunit_sequence::u8_str() const noexcept
-{
-	return this->is_short() ? this->as_sso().data.data() : this->as_norm().data;
-}
-
 const ochar_t* codeunit_sequence::c_str() const noexcept
 {
 	return (const ochar_t*)u8_str();
+}
+
+const ochar8_t* codeunit_sequence::u8_str() const noexcept
+{
+	return this->is_short() ? this->as_sso().data.data() : this->as_norm().data;
 }
 
 bool codeunit_sequence::is_short_size(const i32 size) noexcept

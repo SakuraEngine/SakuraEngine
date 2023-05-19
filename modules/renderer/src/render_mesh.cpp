@@ -1,9 +1,9 @@
-#include "utils/io.h"
-#include "utils/log.h"
+#include "misc/io.h"
+#include "misc/log.h"
 #include "platform/debug.h"
 #include "cgpu/io.h"
 #include "platform/vfs.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_mesh.h"
 #include <platform/filesystem.hpp>
@@ -85,7 +85,7 @@ skr_primitive_draw_packet_t IMeshRenderEffect::produce_draw_packets(const skr_pr
     skr_primitive_draw_packet_t packet = {};
     // 0. only produce for forward pass
     // TODO: refactor this to support multi-pass rendering
-    if (strcmp(pass->identity(), "ForwardPass") != 0) return {};
+    if (strcmp((const char*)pass->identity(), (const char*)u8"ForwardPass") != 0) return {};
     // 1. calculate primitive count
     uint32_t primitiveCount = 0;
     auto counterF = [&](dual_chunk_view_t* r_cv) {

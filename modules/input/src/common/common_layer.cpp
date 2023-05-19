@@ -4,7 +4,7 @@
 #include "platform/memory.h"
 #include "platform/atomic.h"
 #include "platform/debug.h"
-#include "utils/log.h"
+#include "misc/log.h"
 #include "containers/resizable_ring_buffer.hpp"
 #include "SDL2/SDL_timer.h"
 

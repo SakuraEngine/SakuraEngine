@@ -3,7 +3,7 @@
 
 const ECGPUFormat depth_format = CGPU_FORMAT_D32_SFLOAT_S8_UINT;
 
-static const skr_render_pass_name_t forward_pass_name = "ForwardPass";
+static const skr_render_pass_name_t forward_pass_name = u8"ForwardPass";
 struct RenderPassForward : public IPrimitiveRenderPass 
 {
     void on_update(const skr_primitive_pass_context_t* context) override;

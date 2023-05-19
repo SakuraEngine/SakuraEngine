@@ -1,4 +1,4 @@
-#include "utils/hash.h"
+#include "misc/hash.h"
 #include "type/type.hpp"
 
 namespace skr {
@@ -176,11 +176,11 @@ size_t Hash(void* value, size_t base)
 }
 size_t Hash(const skr::string& value, size_t base)
 {
-    return skr_hash(value.data(), value.size(), base);
+    return skr_hash(value.c_str(), value.size(), base);
 }
 size_t Hash(const skr::string_view& value, size_t base)
 {
-    return skr_hash(value.data(), value.size(), base);
+    return skr_hash(value.c_str(), value.size(), base);
 }
 } // namespace type
 } // namespace skr

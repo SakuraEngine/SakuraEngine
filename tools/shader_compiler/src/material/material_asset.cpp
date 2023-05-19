@@ -1,10 +1,10 @@
 #include "SkrRenderer/resources/material_resource.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrShaderCompiler/assets/material_asset.hpp"
-#include "utils/io.h"
+#include "misc/io.h"
 #include "platform/debug.h"
 #include "SkrToolCore/project/project.hpp"
-#include "json/reader.h"
+#include "serde/json/reader.h"
 
 namespace skd
 {
@@ -23,7 +23,7 @@ void* SMaterialImporter::Import(skr_io_ram_service_t* ioService, SCookContext *c
     auto doc = parser.iterate(jsonString);
     if(doc.error())
     {
-        SKR_LOG_FMT_ERROR("Import shader options asset {} from {} failed, json parse error {}", assetRecord->guid, jsonPath, simdjson::error_message(doc.error()));
+        SKR_LOG_FMT_ERROR(u8"Import shader options asset {} from {} failed, json parse error {}", assetRecord->guid, jsonPath, simdjson::error_message(doc.error()));
         return nullptr;
     }
     auto json_value = doc.get_value().value_unsafe();
@@ -77,7 +77,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
         {
             // default value
             const auto& default_value = matType->switch_defaults[switch_i];
-            const auto default_index = shader_collection->switch_sequence.find_value_index(default_value.key, default_value.value);
+            const auto default_index = shader_collection->switch_sequence.find_value_index(default_value.key.u8_str(), default_value.value.u8_str());
             SKR_ASSERT(default_index != UINT32_MAX && "Invalid switch default value");
             variant.switch_indices[switch_i] = default_index;
             // TODO: override
@@ -87,7 +87,7 @@ bool SMaterialCooker::Cook(SCookContext *ctx)
         {
             // default value
             const auto& default_value = matType->option_defaults[option_i];
-            const auto default_index = shader_collection->option_sequence.find_value_index(default_value.key, default_value.value);
+            const auto default_index = shader_collection->option_sequence.find_value_index(default_value.key.u8_str(), default_value.value.u8_str());
             SKR_ASSERT(default_index != UINT32_MAX && "Invalid option default value");
             variant.option_indices[option_i] = default_index;
             // TODO: override

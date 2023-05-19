@@ -1,4 +1,5 @@
 #include "SkrImGui/imgui_utils.h"
+#include <string>
 
 struct InputTextCallback_UserData
 {
@@ -16,7 +17,8 @@ static int InputTextCallback(ImGuiInputTextCallbackData* data)
         // If for some reason we refuse the new length (BufTextLen) and/or capacity (BufSize) we need to set them back to what we want.
         skr::string* str = user_data->Str;
         IM_ASSERT(data->Buf == str->c_str());
-        str->resize(data->BufTextLen);
+        str->raw().reserve(data->BufTextLen);
+        
         data->Buf = (char*)str->c_str();
     }
     else if (user_data->ChainCallback)
@@ -37,7 +39,7 @@ bool ImGui::InputText(const char* label, skr::string* str, ImGuiInputTextFlags f
     cb_user_data.Str = str;
     cb_user_data.ChainCallback = callback;
     cb_user_data.ChainCallbackUserData = user_data;
-    return InputText(label, (char*)str->c_str(), str->capacity() + 1, flags, InputTextCallback, &cb_user_data);
+    return InputText(label, (char*)str->c_str(), str->raw().get_capacity() + 1, flags, InputTextCallback, &cb_user_data);
 }
 
 bool ImGui::InputTextMultiline(const char* label, skr::string* str, const ImVec2& size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
@@ -49,7 +51,7 @@ bool ImGui::InputTextMultiline(const char* label, skr::string* str, const ImVec2
     cb_user_data.Str = str;
     cb_user_data.ChainCallback = callback;
     cb_user_data.ChainCallbackUserData = user_data;
-    return InputTextMultiline(label, (char*)str->c_str(), str->capacity() + 1, size, flags, InputTextCallback, &cb_user_data);
+    return InputTextMultiline(label, (char*)str->c_str(), str->raw().get_capacity() + 1, size, flags, InputTextCallback, &cb_user_data);
 }
 
 bool ImGui::InputTextWithHint(const char* label, const char* hint, skr::string* str, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
@@ -61,5 +63,5 @@ bool ImGui::InputTextWithHint(const char* label, const char* hint, skr::string* 
     cb_user_data.Str = str;
     cb_user_data.ChainCallback = callback;
     cb_user_data.ChainCallbackUserData = user_data;
-    return InputTextWithHint(label, hint, (char*)str->c_str(), str->capacity() + 1, flags, InputTextCallback, &cb_user_data);
+    return InputTextWithHint(label, hint, (char*)str->c_str(), str->raw().get_capacity() + 1, flags, InputTextCallback, &cb_user_data);
 }

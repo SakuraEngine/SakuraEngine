@@ -28,7 +28,7 @@ namespace details
 
 codeunit_sequence details::format_integer(const i64& value, const codeunit_sequence_view& specification)
 {
-    ochar8_t type = 'd';
+    ochar8_t type = OSTR_UTF8('d');
     i32 holding = -1;
     bool with_prefix = false;
     if (!specification.is_empty())
@@ -44,12 +44,9 @@ codeunit_sequence details::format_integer(const i64& value, const codeunit_seque
             const i32 zero_index = parsing.index_of('0');
             if(zero_index != index_invalid)
             {
-                /*
                 const codeunit_sequence_view holding_view = parsing.subview({ '(', zero_index, '~' });
-                const auto [ last, error ] = std::from_chars(holding_view.c_str(), (const char*)holding_view.last(), holding);
-                if(last != holding_view.last())
-                    throw format_error("Invalid format specification [{}]!"_cuqv, specification);
-                */
+                const auto [ last, error ] = std::from_chars((const char*)holding_view.c_str(), (const char*)holding_view.last(), holding);
+                OPEN_STRING_CHECK((ochar8_t*)last == holding_view.last(), OSTR_UTF8("Invalid format specification [{}]!"), specification)
                 parsing = parsing.subview({ '[', 0, zero_index, ')' });
             }
         }
@@ -61,10 +58,7 @@ codeunit_sequence details::format_integer(const i64& value, const codeunit_seque
                 parsing = parsing.subview({ '[', 0, -1, ')' });
             }
         }
-        /*
-        if(!parsing.is_empty())
-            throw format_error("Invalid format specification [{}]!"_cuqv, specification);
-        */
+        OPEN_STRING_CHECK(parsing.is_empty(), OSTR_UTF8("Invalid format specification [{}]!"), specification)
     }
     i32 base = 10;
     codeunit_sequence_view prefix;
@@ -117,7 +111,7 @@ codeunit_sequence details::format_float(const float& value, const codeunit_seque
     if (std::isnan(value))
         return codeunit_sequence{ OSTR_UTF8("nan"_cuqv) };
     i32 precision = -1;
-    ochar8_t type = 'g';
+    ochar8_t type = OSTR_UTF8('g');
     if (!specification.is_empty())
     {
         codeunit_sequence_view parsing = specification;
@@ -131,19 +125,14 @@ codeunit_sequence details::format_float(const float& value, const codeunit_seque
             const i32 dot_index = parsing.index_of('.');
             if(dot_index != index_invalid)
             {
-                /*
                 const codeunit_sequence_view precision_view = parsing.subview({ '(', dot_index, '~' });
-                const auto [ last, error ] = std::from_chars(precision_view.c_str(), (const char*)precision_view.last(), precision);
-                if(last != precision_view.last())
-                    throw format_error("Invalid format specification [{}]!"_cuqv, specification);
-                */
+                const auto [ last, error ] = std::from_chars(
+                    precision_view.c_str(), (const char*)precision_view.last(), precision);
+                OPEN_STRING_CHECK(last == (const char*)precision_view.last(), OSTR_UTF8("Invalid format specification [{}]!"), specification)
                 parsing = parsing.subview({ '[', 0, dot_index, ')' });
             }
         }
-        /*
-        if(!parsing.is_empty())
-            throw format_error("Invalid format specification [{}]!"_cuqv, specification);
-        */
+        OPEN_STRING_CHECK(parsing.is_empty(), OSTR_UTF8("Invalid format specification [{}]!"), specification)
     }
     switch (type) 
     {
@@ -158,11 +147,8 @@ codeunit_sequence details::format_float(const float& value, const codeunit_seque
     default:
         break;
     }
-    /*
     static constexpr i32 max_precision = 9;
-    if(precision > max_precision)
-        throw format_error("Too high precision for float [{}]!"_cuqv, precision);
-    */
+    OPEN_STRING_CHECK(precision <= max_precision, OSTR_UTF8("Too high precision for float type [{}]!"), precision)
     codeunit_sequence result;
     const bool negative = value < 0;
     if(negative)
@@ -170,7 +156,7 @@ codeunit_sequence details::format_float(const float& value, const codeunit_seque
     float remaining = negative ? -value : value;
     const i32 decimal = static_cast<i32>(remaining);
     result.append(format_integer(decimal, { }));
-    remaining -= decimal;
+    remaining -= static_cast<float>(decimal);
     static constexpr float epsilon = 1e-3f;
     if(precision == -1)
     {
@@ -181,7 +167,7 @@ codeunit_sequence details::format_float(const float& value, const codeunit_seque
             floating *= 10;
             const i32 ones = static_cast<i32>(remaining);
             floating += ones;
-            remaining -= ones;
+            remaining -= static_cast<float>(ones);
             if(remaining < epsilon && remaining > -epsilon)
                 break;
         }
@@ -202,7 +188,7 @@ codeunit_sequence details::format_float(const float& value, const codeunit_seque
             floating *= 10;
             const i32 ones = static_cast<i32>(remaining);
             floating += ones;
-            remaining -= ones;
+            remaining -= static_cast<float>(ones);
         }
         const i32 dot_position = result.size();
         result

@@ -11,7 +11,7 @@
 #include <steam/steamnetworkingsockets.h>
 #include <steam/isteamnetworkingutils.h>
 #include "signal_client.h"
-#include "utils/log.h"
+#include "misc/log.h"
 #include <EASTL/vector.h>
 #include <imgui/imgui.h>
 #include <EASTL/string_hash_map.h>
@@ -28,7 +28,7 @@
 #include "SkrRenderer/skr_renderer.h"
 #include "imgui/skr_imgui_rg.h"
 #include "tracy/Tracy.hpp"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #ifdef SKR_OS_WINDOWS
     #include <shellscalingapi.h>
 #endif
@@ -270,7 +270,7 @@ int initialize(int argc, const char** argv)
     std::error_code ec = {};
     auto root = skr::filesystem::current_path(ec);
     moduleManager->mount(root.u8string().c_str());
-    moduleManager->make_module_graph("SkrRenderer", true);
+    moduleManager->make_module_graph(u8"SkrRenderer", true);
     moduleManager->init_module_graph(argc, argv);
 
     if (auto result = CreateMainWindow(); result != 0)

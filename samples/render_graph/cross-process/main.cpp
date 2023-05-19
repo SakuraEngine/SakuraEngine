@@ -1,32 +1,32 @@
 #include "platform/process.h"
-#include "utils/log.h"
+#include "misc/log.h"
 #include "lmdb/lmdb.h"
 #include <platform/filesystem.hpp>
 #include <containers/string.hpp>
 
 #include "tracy/Tracy.hpp"
 
-static const char* exec_name;
+static const char8_t* exec_name;
 
 extern int provider_main(int argc, char* argv[]);
 extern int receiver_main(int argc, char* argv[]);
 
 int main(int argc, char* argv[])
 {
-    exec_name = argv[0];
+    exec_name = (const char8_t*)argv[0];
     if (argc == 1)
     {
         SKR_LOG_DEBUG("exec_name: %s", exec_name);
     
-        const char* provider_arguments[] = { "provider", "-1"};
+        const char8_t* provider_arguments[] = { u8"provider", u8"-1"};
         auto provider = skr_run_process(exec_name, 
-            provider_arguments, 2, "provider.log");
+            provider_arguments, 2, u8"provider.log");
         const auto provider_id = skr_get_process_id(provider);
 
-        skr::string providerIdString = skr::to_string(provider_id);
-        const char* receiver_arguments[] = { "receiver", providerIdString.c_str() };
+        skr::string providerIdString = skr::format(u8"{}", provider_id);
+        const char8_t* receiver_arguments[] = { u8"receiver", providerIdString.u8_str() };
         auto receiver = skr_run_process(exec_name, 
-            receiver_arguments, 2, "receiver.log");
+            receiver_arguments, 2, u8"receiver.log");
 
         auto provider_result = skr_wait_process(provider);
         auto receriver_result = skr_wait_process(receiver);

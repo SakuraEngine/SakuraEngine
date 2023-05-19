@@ -2,7 +2,7 @@
 #include "platform/process.h"
 #include "mdb_utils.h"
 #include <platform/filesystem.hpp>
-#include <containers/text.hpp>
+#include "containers/string.hpp"
 #include "common/utils.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 
@@ -42,11 +42,11 @@ struct ProviderRenderer
 
 void ProviderRenderer::create_window()
 {
-    auto title = skr::text::text::from_utf8(SKR_UTF8("Cross-Process Provider ["));
+    auto title = skr::string::from_utf8(SKR_UTF8("Cross-Process Provider ["));
     title += gCGPUBackendNames[backend];
     title += SKR_UTF8("]");
     title += SKR_UTF8(" PID: ");
-    title += skr::text::format(SKR_UTF8("{}"), skr_get_current_process_id());
+    title += skr::format(SKR_UTF8("{}"), skr_get_current_process_id());
     sdl_window = SDL_CreateWindow(title.c_str(),
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT,
@@ -109,7 +109,7 @@ void ProviderRenderer::create_api_objects()
     chain_desc.width = BACK_BUFFER_WIDTH;
     chain_desc.height = BACK_BUFFER_HEIGHT;
     chain_desc.surface = surface;
-    chain_desc.imageCount = 3;
+    chain_desc.image_count = 3;
     chain_desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
     chain_desc.enable_vsync = true;
     swapchain = cgpu_create_swapchain(device, &chain_desc);
@@ -246,8 +246,8 @@ int provider_set_shared_handle(MDB_env* env, MDB_dbi dbi, SProcessId provider_id
         // Txn body: write db
         {
             //Initialize the key with the key we're looking for
-            skr::string keyString = skr::to_string(provider_id);
-            MDB_val key = { (size_t)keyString.size(), (void*)keyString.data() };
+            skr::string keyString = skr::format(u8"{}", provider_id);
+            MDB_val key = { (size_t)keyString.size(), (void*)keyString.c_str() };
             MDB_val data = { sizeof(info), (void*)&info };
 
             if (int rc = mdb_put(txn, dbi, &key, &data, 0))
@@ -332,7 +332,7 @@ int provider_main(int argc, char* argv[])
                     chain_desc.width = width;
                     chain_desc.height = height;
                     chain_desc.surface = renderer->surface;
-                    chain_desc.imageCount = 3;
+                    chain_desc.image_count = 3;
                     chain_desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
                     chain_desc.enable_vsync = true;
                     renderer->swapchain = cgpu_create_swapchain(renderer->device, &chain_desc);

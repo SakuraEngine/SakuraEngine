@@ -3,10 +3,10 @@
 #include "platform/vfs.h"
 #include "platform/debug.h"
 #include "resource/config_resource.h"
-#include "json/reader.h"
-#include "utils/log.hpp"
-#include "utils/defer.hpp"
-#include "utils/io.h"
+#include "serde/json/reader.h"
+#include "misc/log.hpp"
+#include "misc/defer.hpp"
+#include "misc/io.h"
 #include "SkrToolCore/assets/config_asset.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
@@ -35,7 +35,7 @@ void* SJsonConfigImporter::Import(skr_io_ram_service_t* ioService, SCookContext*
     auto doc = parser.iterate(jsonString);
     if(doc.error())
     {
-        SKR_LOG_FMT_ERROR("Import config asset {} from {} failed, json parse error {}", assetRecord->guid, assetPath, simdjson::error_message(doc.error()));
+        SKR_LOG_FMT_ERROR(u8"Import config asset {} from {} failed, json parse error {}", assetRecord->guid, assetPath, simdjson::error_message(doc.error()));
         return nullptr;
     }
     

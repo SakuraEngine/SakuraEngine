@@ -75,7 +75,7 @@ void fixed_pool_t::free(void* block)
 
 void fixed_pool_t::reset()
 {
-    moodycamel::ConcurrentQueue<size_t> temp(blockCount);
+    skr::ConcurrentQueue<size_t, ECSPoolConcurrentQueueTraits> temp(blockCount);
     blocks.swap(temp);
     eastl::vector<size_t> indicies;
     indicies.resize(blockCount);

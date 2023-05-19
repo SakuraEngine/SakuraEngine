@@ -1,9 +1,9 @@
-#include "task/task.hpp"
+#include "async/fib_task.hpp"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
-#include "utils/io.h"
-#include "json/reader.h"
+#include "misc/io.h"
+#include "serde/json/reader.h"
 
 namespace skd::asset
 {
@@ -160,7 +160,7 @@ const SAssetRecord* SCookContextImpl::GetAssetRecord() const
 
 skr::string SCookContextImpl::GetAssetPath() const
 {
-    return (const char*)record->path.u8string().c_str();
+    return record->path.u8string().c_str();
 }
 
 skr::filesystem::path SCookContextImpl::AddFileDependency(const skr::filesystem::path &inPath)

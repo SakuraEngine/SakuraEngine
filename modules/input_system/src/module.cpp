@@ -1,14 +1,14 @@
 #define CONTAINER_LITE_IMPL
 #include "module/module.hpp"
-#include "utils/log.h"
+#include "misc/log.h"
 
 class SkrInputSystemModule : public skr::IDynamicModule
 {
-    virtual void on_load(int argc, char** argv) override
+    virtual void on_load(int argc, char8_t** argv) override
     {
         SKR_LOG_INFO("input system loaded!");
     }
-    virtual int main_module_exec(int argc, char** argv) override
+    virtual int main_module_exec(int argc, char8_t** argv) override
     {
         SKR_LOG_INFO("input system executed as main module!");
         return 0;

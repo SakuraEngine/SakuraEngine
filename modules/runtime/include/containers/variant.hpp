@@ -6,6 +6,10 @@ namespace skr
 {
     template<class ...Ts>
     using variant = std::variant<Ts...>;
+    template<class ...Ts>
+    struct overload : Ts... { using Ts::operator()...; };
+    template<class ...Ts>
+    overload(Ts...) -> overload<Ts...>;
 
     using std::get_if;
     using std::get;
@@ -127,7 +131,7 @@ struct type_of<skr::variant<Ts...>> {
 } // namespace skr
 
 // binary reader
-#include "binary/reader_fwd.h"
+#include "serde/binary/reader_fwd.h"
 
 namespace skr
 {
@@ -176,7 +180,7 @@ struct SerdeCompleteChecker<binary::ReadTrait<skr::variant<Ts...>>>
 } // namespace skr
 
 // binary writer
-#include "binary/writer_fwd.h"
+#include "serde/binary/writer_fwd.h"
 
 namespace skr
 {

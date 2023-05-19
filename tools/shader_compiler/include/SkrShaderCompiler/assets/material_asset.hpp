@@ -54,7 +54,7 @@ SKR_SHADER_COMPILER_API SMaterialCooker final : public SCooker
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override { return kDevelopmentVersion; }
 }
-sregister_default_cooker("2efad635-b331-4fc6-8c52-2f8ca954823e");
+sregister_default_cooker(u8"2efad635-b331-4fc6-8c52-2f8ca954823e");
 
 } // namespace asset
 } // namespace skd

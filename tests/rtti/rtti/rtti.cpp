@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "utils/log.hpp"
+#include "misc/log.hpp"
 #include "platform/guid.hpp"
 #include "../types/types.hpp"
 
@@ -20,14 +20,14 @@ TEST_F(RTTI, TypeId)
 {
     using namespace skr::guid::literals;
 
-    auto guid0 = "1a0b91c7-6690-41d6-acfd-0c2b61f181f3"_guid;
+    auto guid0 = u8"1a0b91c7-6690-41d6-acfd-0c2b61f181f3"_guid;
     auto guid1 = skr::type::type_id<Types::TestEnum>::get();
 
-    static_assert(skr::type::type_id<Types::TestEnum>::get() == "1a0b91c7-6690-41d6-acfd-0c2b61f181f3"_guid, "");
+    static_assert(skr::type::type_id<Types::TestEnum>::get() == u8"1a0b91c7-6690-41d6-acfd-0c2b61f181f3"_guid, "");
     const bool equal = guid0 == guid1;
     EXPECT_TRUE(equal);
-    SKR_LOG_FMT_DEBUG("u8 type id: {}", skr::type::type_id<uint32_t>::get());
-    SKR_LOG_FMT_DEBUG("TestEnum type id: {}", skr::type::type_id<Types::TestEnum>::get());
+    SKR_LOG_FMT_DEBUG(u8"u8 type id: {}", skr::type::type_id<uint32_t>::get());
+    SKR_LOG_FMT_DEBUG(u8"TestEnum type id: {}", skr::type::type_id<Types::TestEnum>::get());
 }
 
 TEST_F(RTTI, TestEnumType)
@@ -40,12 +40,12 @@ TEST_F(RTTI, TestEnumType)
     EXPECT_EQ(enumType->guid, skr::type::type_id<Types::TestEnum>::get());
     for (auto&& enumerator : enumType->enumerators)
     {
-        SKR_LOG_FMT_DEBUG("enumerator: {} -> {}", enumerator.name, enumerator.value);
-        auto fieldName = skr::string("Value").append(skr::to_string(enumerator.value));
-        EXPECT_EQ(enumerator.name, skr::string_view(fieldName));
+        SKR_LOG_FMT_DEBUG(u8"enumerator: {} -> {}", enumerator.name, enumerator.value);
+        auto fieldName = skr::format(u8"Value{}", enumerator.value);
+        EXPECT_EQ(enumerator.name, skr::string_view(fieldName.u8_str()));
 
         auto str = enumType->ToString(&enumerator.value);
-        EXPECT_EQ(enumerator.name, skr::string_view(str));
+        EXPECT_EQ(enumerator.name, skr::string_view(str.u8_str()));
 
         Types::TestEnum value = Types::TestEnum::Value0;
         enumType->FromString(&value, enumerator.name);

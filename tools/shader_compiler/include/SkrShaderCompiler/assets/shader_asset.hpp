@@ -29,7 +29,7 @@ SKR_SHADER_COMPILER_API SShaderOptionsCooker final : public SCooker
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override;
 }
-sregister_default_cooker("fc9b4a8e-06c7-41e2-a159-f4cf6930ccfc");
+sregister_default_cooker(u8"fc9b4a8e-06c7-41e2-a159-f4cf6930ccfc");
 
 sreflect_struct("guid" : "a897c990-abea-4f48-8880-e1ae9a93d777")
 sattr("serialize" : "json")
@@ -38,7 +38,7 @@ SKR_SHADER_COMPILER_API SShaderImporter final : public SImporter
     using shader_options_handle_t = skr::resource::TResourceHandle<skr_shader_options_resource_t>;
 
     skr::string sourcePath;
-    skr::string entry = "main";
+    skr::string entry = u8"main";
     skr::string target;
     
     eastl::vector<shader_options_handle_t> switch_assets;
@@ -55,6 +55,6 @@ SKR_SHADER_COMPILER_API SShaderCooker final : public SCooker
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override;
 }
-sregister_default_cooker("1c7d845a-fde8-4487-b1c9-e9c48d6a9867");
+sregister_default_cooker(u8"1c7d845a-fde8-4487-b1c9-e9c48d6a9867");
 } // namespace asset
 } // namespace skd

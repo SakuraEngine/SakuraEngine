@@ -1,7 +1,7 @@
 #include "gdi_nanovg.hpp"
 #include "platform/memory.h"
-#include "utils/make_zeroed.hpp"
-#include "rtm/rtmx.h"
+#include "misc/make_zeroed.hpp"
+#include "math/rtm/rtmx.h"
 
 namespace skr {
 namespace gdi {

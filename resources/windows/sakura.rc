@@ -28,7 +28,6 @@ LANGUAGE 9, 1
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 
-IDI_TESTW       ICON         "sakura_app.ico"
 IDI_SMALL       ICON         "sakura_app.ico"
 
 /////////////////////////////////////////////////////////////////////////////

@@ -1,7 +1,7 @@
 #pragma once
 #include "GameRuntime/module.configure.h"
 #include "resource/config_resource.h"
-#include "utils/function_ref.hpp"
+#include "misc/function_ref.hpp"
 #ifndef __meta__
     #include "GameRuntime/backend_config.generated.h"
 #endif

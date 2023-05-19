@@ -1,8 +1,8 @@
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "platform/guid.hpp"
-#include "utils/defer.hpp"
-#include "utils/log.hpp"
-#include "utils/parallel_for.hpp"
+#include "misc/defer.hpp"
+#include "misc/log.hpp"
+#include "misc/parallel_for.hpp"
 #include "SkrGLTFTool/mesh_asset.hpp"
 #include "SkrGLTFTool/mesh_processing.hpp"
 #include "SkrToolCore/project/project.hpp"
@@ -14,14 +14,14 @@
 
 void* skd::asset::SGltfMeshImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context) 
 {
-    skr::filesystem::path relPath = assetPath.data();
+    skr::filesystem::path relPath = assetPath.u8_str();
     auto ext = relPath.extension();
     if (ext != ".gltf")
     {
         return nullptr;
     }
     const auto assetRecord = context->GetAssetRecord();
-    auto path = context->AddFileDependency(relPath).string();
+    auto path = context->AddFileDependency(relPath).u8string();
     auto vfs = assetRecord->project->vfs;
     return ImportGLTFWithData(path.c_str(), ioService, vfs);
 }
@@ -86,9 +86,9 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
         const auto index_offset = prim.index_buffer.index_offset;
         const auto index_count = prim.index_buffer.index_count;
         const auto vertex_count = prim.vertex_count;
-        eastl::vector<unsigned int> optimized_indices;
+        eastl::vector<uint64_t> optimized_indices;
         optimized_indices.resize(index_count);
-        unsigned int* indices_ptr = optimized_indices.data();
+        uint64_t* indices_ptr = optimized_indices.data();
         for (size_t i = 0; i < index_count; i++)
         {
             if (index_stride == sizeof(uint8_t))
@@ -165,7 +165,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
         SKR_DEFER({ fclose(buffer_file); });
         if (!buffer_file)
         {
-            SKR_LOG_FMT_ERROR("[SMeshCooker::Cook] failed to write cooked file for resource {}! path: {}", 
+            SKR_LOG_FMT_ERROR(u8"[SMeshCooker::Cook] failed to write cooked file for resource {}! path: {}", 
                 assetRecord->guid, assetRecord->path.string());
             return false;
         }

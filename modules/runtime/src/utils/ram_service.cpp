@@ -1,7 +1,11 @@
 #include <containers/string.hpp>
 #include "platform/vfs.h"
-#include "utils/io.h"
+#include "misc/io.h"
 #include "io_service_util.hpp"
+
+// TODO: implement with new async_task
+#include "async/async_progress.hpp"
+skr::FutureStatus s;
 
 // RAM Service
 namespace skr
@@ -94,8 +98,7 @@ void __ioThreadTask_RAM(void* arg)
 {
 #ifdef TRACY_ENABLE
     static uint32_t taskIndex = 0;
-    skr::string name = "ioRAMServiceThread-";
-    name.append(skr::to_string(taskIndex++));
+    const auto name = skr::format(u8"ioRAMServiceThread-{}", taskIndex++);
     tracy::SetThreadName(name.c_str());
 #endif
     auto service = reinterpret_cast<skr::io::RAMServiceImpl*>(arg);
@@ -121,7 +124,7 @@ void skr::io::RAMServiceImpl::request(skr_vfs_t* vfs, const skr_ram_io_t* info,
     // try push back new request
     Task back = {};
     back.vfs = vfs;
-    back.path = skr::string((const char*)info->path);
+    back.path = skr::string(info->path);
     back.offset = info->offset;
     back.request = async_request;
     back.destination = dst;
@@ -178,7 +181,7 @@ skr_io_ram_service_t* skr_io_ram_service_t::create(const skr_ram_io_service_desc
     service->threaded_service.threadItem.pData = service;
     service->threaded_service.threadItem.pFunc = &skr::io::__ioThreadTask_RAM;
     skr_init_thread(&service->threaded_service.threadItem, &service->threaded_service.serviceThread);
-    skr_set_thread_priority(service->threaded_service.serviceThread, SKR_THREAD_ABOVE_NORMAL);
+    skr_thread_set_priority(service->threaded_service.serviceThread, SKR_THREAD_ABOVE_NORMAL);
     return service;
 }
 

@@ -19,7 +19,7 @@ TEST_F(ModuleTest, single)
     std::error_code ec = {};
     auto path = skr::filesystem::current_path(ec);
     moduleManager->mount(path.u8string().c_str());
-    EXPECT_NE(moduleManager->make_module_graph("SkrRT", true), nullptr);
+    EXPECT_NE(moduleManager->make_module_graph(u8"SkrRT", true), nullptr);
     EXPECT_TRUE(moduleManager->init_module_graph());
     EXPECT_TRUE(moduleManager->destroy_module_graph());
 }
@@ -33,7 +33,7 @@ TEST_F(ModuleTest, dependency)
     std::error_code ec = {};
     auto path = skr::filesystem::current_path(ec);
     moduleManager->mount(path.u8string().c_str());
-    EXPECT_NE(moduleManager->make_module_graph("dynamic1", true), nullptr);
+    EXPECT_NE(moduleManager->make_module_graph(u8"dynamic1", true), nullptr);
     EXPECT_TRUE(moduleManager->init_module_graph());
     EXPECT_TRUE(moduleManager->destroy_module_graph());
 }
@@ -45,7 +45,7 @@ TEST_F(ModuleTest, dynamic_patch)
     std::error_code ec = {};
     auto path = skr::filesystem::current_path(ec);
     moduleManager->mount(path.u8string().c_str());
-    EXPECT_NE(moduleManager->make_module_graph("dynamic1", true), nullptr);
+    EXPECT_NE(moduleManager->make_module_graph(u8"dynamic1", true), nullptr);
     EXPECT_TRUE(moduleManager->init_module_graph());
     SKR_LOG_INFO("----begins dynamic patch----");
     EXPECT_TRUE(moduleManager->patch_module_graph("dynamic3"));

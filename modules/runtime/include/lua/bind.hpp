@@ -3,8 +3,8 @@
 #include "containers/string.hpp"
 #include "containers/sptr.hpp"
 #include "resource/resource_handle.h"
-#include "utils/traits.hpp"
-#include "utils/join.hpp"
+#include "misc/traits.hpp"
+#include "misc/join.hpp"
 #include "lua/lua.hpp"
 
 namespace skr::lua

@@ -31,6 +31,8 @@
 #include <atomic>
 #include <vector>
 
+#include "platform/memory.h"
+
 #if defined(FTL_FIBER_STACK_GUARD_PAGES)
     #if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_iOS)
         #include <sys/mman.h>
@@ -181,7 +183,7 @@ void AlignedFree(void* block)
         #error "Need a way to protect memory for this platform".
     #endif
 #else
-    #include "platform/memory.h"
+
 void MemoryGuard(void* memory, size_t bytes)
 {
     (void)memory;

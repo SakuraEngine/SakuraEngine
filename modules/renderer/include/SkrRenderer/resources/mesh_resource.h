@@ -1,8 +1,10 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
 #include "SkrRenderer/fwd_types.h"
+
 #include <containers/string.hpp>
 #include <containers/vector.hpp>
+
 #ifndef __meta__
     #include "SkrRenderer/resources/mesh_resource.generated.h"
 #endif
@@ -139,7 +141,7 @@ SKR_RENDERER_EXTERN_C SKR_RENDERER_API void
 skr_mesh_resource_free(skr_mesh_resource_id mesh_resource);
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API void 
-skr_mesh_resource_register_vertex_layout(skr_vertex_layout_id id, const char* name, const struct CGPUVertexLayout* in_vertex_layout);
+skr_mesh_resource_register_vertex_layout(skr_vertex_layout_id id, const char8_t* name, const struct CGPUVertexLayout* in_vertex_layout);
 
 SKR_RENDERER_EXTERN_C SKR_RENDERER_API const char* 
 skr_mesh_resource_query_vertex_layout(skr_vertex_layout_id id, struct CGPUVertexLayout* out_vertex_layout);

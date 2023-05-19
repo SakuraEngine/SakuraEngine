@@ -42,5 +42,4 @@
     #endif
 #endif
 
-#define RG_USE_FIXED_STRING
 #define RG_USE_FIXED_VECTOR

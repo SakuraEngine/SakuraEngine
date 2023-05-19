@@ -1,5 +1,5 @@
 #pragma once
-#include "utils/types.h"
+#include "misc/types.h"
 #include "cgpu/api.h"
 #include "cgpu/io.h"
 #include "SkrRenderer/primitive_draw.h"

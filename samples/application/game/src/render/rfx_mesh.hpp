@@ -9,7 +9,7 @@ typedef struct forward_effect_identity_t {
     dual_entity_t game_entity;
 } forward_effect_identity_t;
 
-static const skr_render_effect_name_t forward_effect_name = "ForwardEffect";
+static const skr_render_effect_name_t forward_effect_name = u8"ForwardEffect";
 
 struct RenderEffectForward : public IRenderEffectProcessor 
 {
@@ -53,6 +53,7 @@ protected:
     // effect processor data
     const char8_t* push_constants_name = u8"push_constants";
     dual_query_t* mesh_query = nullptr;
+    dual_query_t* mesh_write_query = nullptr;
     dual_query_t* draw_mesh_query = nullptr;
     dual_query_t* draw_skin_query = nullptr;
     dual_type_index_t identity_type = {};

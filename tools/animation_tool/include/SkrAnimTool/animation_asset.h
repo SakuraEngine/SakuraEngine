@@ -25,7 +25,7 @@ SKR_ANIMTOOL_API SAnimGltfImporter : public skd::asset::SImporter
     sattr("no-default" : true)
     skr::string assetPath;
     sattr("no-default" : true)
-    eastl::string animationName;
+    skr::string animationName;
     float samplingRate = 30.f;
     virtual ~SAnimGltfImporter() = default;
     virtual void* Import(skr_io_ram_service_t*, SCookContext * context) override;
@@ -52,7 +52,7 @@ SAnimOptimizationOverride
         "distance" : 0.1 //  The distance (from the joint) at which error is measured. This allows to emulate effect on skinning.
     }
     */
-    eastl::string name = "*";
+    skr::string name = u8"*";
     float tolerance = 0.001f;
     float distance = 0.1f;
 };
@@ -94,6 +94,6 @@ SKR_ANIMTOOL_API SAnimCooker : public skd::asset::SCooker
     bool Cook(SCookContext * ctx) override;
     uint32_t Version() override { return kDevelopmentVersion; }
 }
-sregister_default_cooker("5D6DC46B-8696-4DD8-ADE4-C27D07CEDCCD");
+sregister_default_cooker(u8"5D6DC46B-8696-4DD8-ADE4-C27D07CEDCCD");
 } // namespace asset sreflect
 } // namespace skd sreflect

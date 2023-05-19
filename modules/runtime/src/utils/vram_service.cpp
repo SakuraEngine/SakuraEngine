@@ -186,7 +186,8 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
     if (auto buffer_task = skr::get_if<skr::io::VRAMServiceImpl::BufferTask>(&task.resource_task))
     {
     #ifdef TRACY_ENABLE
-        const auto BufferUpload = "BufferUpload-" + task.path;
+        skr::string BufferUpload = u8"BufferUpload-";
+        BufferUpload += task.path;
         TracyMessage(BufferUpload.c_str(), BufferUpload.size());
     #endif
         SKR_ASSERT( task.step == kStepResourceCreated && "task.step must be kStepResourceCreated");
@@ -196,8 +197,8 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
         CGPUUploadTask* upload = allocateCGPUUploadTask(buffer_io.device, buffer_io.transfer_queue, buffer_io.opt_semaphore);
         {
             ZoneScopedN("PrepareUploadBuffer");
-            skr::string name = buffer_io.vbuffer.buffer_name ? (const char*)buffer_io.vbuffer.buffer_name : "";
-            name += "-upload";
+            skr::string name = buffer_io.vbuffer.buffer_name ?buffer_io.vbuffer.buffer_name : u8"";
+            name += u8"-upload";
             upload->upload_buffer = cgpux_create_mapped_upload_buffer(buffer_io.device, buffer_io.src_memory.size, (const char8_t*)name.c_str());
         }
 
@@ -248,7 +249,7 @@ void skr::io::VRAMServiceImpl::tryUploadTextureResource(skr::io::VRAMServiceImpl
     if (auto texture_task = skr::get_if<skr::io::VRAMServiceImpl::TextureTask>(&task.resource_task))
     {
     #ifdef TRACY_ENABLE
-        const auto TextureUpload = "TextureUpload-" + task.path;
+        const auto TextureUpload = skr::format(u8"TextureUpload-{}", task.path);
         TracyMessage(TextureUpload.c_str(), TextureUpload.size());
     #endif
         SKR_ASSERT( task.step == kStepResourceCreated && "task.step must be kStepResourceCreated");
@@ -258,8 +259,8 @@ void skr::io::VRAMServiceImpl::tryUploadTextureResource(skr::io::VRAMServiceImpl
         CGPUUploadTask* upload = allocateCGPUUploadTask(texture_io.device, texture_io.transfer_queue, texture_io.opt_semaphore);
         {
             ZoneScopedN("PrepareUploadBuffer");
-            skr::string name = texture_io.vtexture.texture_name ? (const char*)texture_io.vtexture.texture_name : "";
-            name += "-upload";
+            skr::string name = texture_io.vtexture.texture_name ? texture_io.vtexture.texture_name : u8"";
+            name += u8"-upload";
             upload->upload_buffer = cgpux_create_mapped_upload_buffer(texture_io.device, texture_io.src_memory.size, (const char8_t*)name.c_str());
         }
 
@@ -321,7 +322,8 @@ void skr::io::VRAMServiceImpl::tryDStorageBufferResource(skr::io::VRAMServiceImp
     if (auto ds_buffer_task = skr::get_if<skr::io::VRAMServiceImpl::DStorageBufferTask>(&task.resource_task))
     {
     #ifdef TRACY_ENABLE
-        const auto BufferDStorage = "BufferDStorage-" + task.path;
+        skr::string BufferDStorage = u8"BufferDStorage-";
+        BufferDStorage += task.path;
         TracyMessage(BufferDStorage.c_str(), BufferDStorage.size());
     #endif
         SKR_ASSERT( task.step == kStepResourceCreated && "task.step must be kStepResourceCreated");
@@ -361,7 +363,8 @@ void skr::io::VRAMServiceImpl::tryDStorageTextureResource(skr::io::VRAMServiceIm
     if (auto ds_texture_task = skr::get_if<skr::io::VRAMServiceImpl::DStorageTextureTask>(&task.resource_task))
     {
     #ifdef TRACY_ENABLE
-        const auto TextureDStorage = "TextureDStorage-" + task.path;
+        skr::string TextureDStorage = u8"TextureDStorage-";
+        TextureDStorage += task.path;
         TracyMessage(TextureDStorage.c_str(), TextureDStorage.size());
     #endif
         SKR_ASSERT( task.step == kStepResourceCreated && "task.step must be kStepResourceCreated");
@@ -752,8 +755,7 @@ void __ioThreadTask_VRAM(void* arg)
     using namespace skr::io;
 #ifdef TRACY_ENABLE
     static uint32_t taskIndex = 0;
-    skr::string name = "ioVRAMServiceThread-";
-    name.append(skr::to_string(taskIndex++));
+    skr::string name = skr::format(u8"ioVRAMServiceThread-{}", taskIndex++);
     tracy::SetThreadName(name.c_str());
 #endif
     auto service = reinterpret_cast<skr::io::VRAMServiceImpl*>(arg);
@@ -782,7 +784,7 @@ void skr::io::VRAMServiceImpl::request(const skr_vram_buffer_io_t* buffer_info, 
         io_task.callbacks[i] = buffer_info->callbacks[i];
         io_task.callback_datas[i] = buffer_info->callback_datas[i];
     }
-    io_task.path = buffer_info->dstorage.path ? (const char*)buffer_info->dstorage.path : "";
+    io_task.path = buffer_info->dstorage.path ? buffer_info->dstorage.path : u8"";
     if (buffer_info->dstorage.queue)
     {
         io_task.resource_task = make_zeroed<DStorageBufferTask>();
@@ -813,7 +815,7 @@ void skr::io::VRAMServiceImpl::request(const skr_vram_texture_io_t* texture_info
         io_task.callbacks[i] = texture_info->callbacks[i];
         io_task.callback_datas[i] = texture_info->callback_datas[i];
     }
-    io_task.path = texture_info->dstorage.path ? (const char*)texture_info->dstorage.path : "";
+    io_task.path = texture_info->dstorage.path ? texture_info->dstorage.path : u8"";
     if (texture_info->dstorage.queue)
     {
         io_task.resource_task = make_zeroed<DStorageTextureTask>();
@@ -841,7 +843,7 @@ skr_io_vram_service_t* skr_io_vram_service_t::create(const skr_vram_io_service_d
     service->threaded_service.threadItem.pData = service;
     service->threaded_service.threadItem.pFunc = &__ioThreadTask_VRAM;
     skr_init_thread(&service->threaded_service.threadItem, &service->threaded_service.serviceThread);
-    skr_set_thread_priority(service->threaded_service.serviceThread, SKR_THREAD_ABOVE_NORMAL);
+    skr_thread_set_priority(service->threaded_service.serviceThread, SKR_THREAD_ABOVE_NORMAL);
     return service;
 }
 

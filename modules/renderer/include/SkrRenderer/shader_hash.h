@@ -2,7 +2,7 @@
 #include "SkrRenderer/fwd_types.h"
 #include "cgpu/flags.h"
 #ifdef __cplusplus
-#include <containers/string.hpp>
+#include "containers/string.hpp"
 #endif
 
 #ifndef __meta__

@@ -1,8 +1,8 @@
 #pragma once
 #include "common_layer.hpp"
 #include "platform/memory.h"
-#include "utils/log.h"
-#include <utils/concurrent_queue.h>
+#include "misc/log.h"
+#include <containers/concurrent_queue.h>
 
 namespace skr {
 namespace input {
@@ -34,8 +34,8 @@ protected:
         m_pool.enqueue(ptr);
         count--;
     }
-    moodycamel::ConcurrentQueue<CommonInputReading*> m_pool;
-    moodycamel::ConcurrentQueue<CommonInputReading*> m_all;
+    skr::ConcurrentQueue<CommonInputReading*> m_pool;
+    skr::ConcurrentQueue<CommonInputReading*> m_all;
     uint64_t count = 0;
 };
 

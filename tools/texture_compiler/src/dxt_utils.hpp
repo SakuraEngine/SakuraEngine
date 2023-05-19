@@ -44,19 +44,19 @@ inline static skr::string Util_CompressedTypeString(ECGPUFormat format)
     case CGPU_FORMAT_DXBC1_RGB_SRGB:
     case CGPU_FORMAT_DXBC1_RGBA_UNORM:
     case CGPU_FORMAT_DXBC1_RGBA_SRGB:
-        return "bc1";
+        return u8"bc1";
     case CGPU_FORMAT_DXBC3_UNORM:
     case CGPU_FORMAT_DXBC3_SRGB:
-        return "bc3";
+        return u8"bc3";
     case CGPU_FORMAT_DXBC4_UNORM:
     case CGPU_FORMAT_DXBC4_SNORM:
-        return "bc4";
+        return u8"bc4";
     case CGPU_FORMAT_DXBC6H_UFLOAT:
     case CGPU_FORMAT_DXBC6H_SFLOAT:
-        return "bc6";
+        return u8"bc6";
     case CGPU_FORMAT_DXBC7_UNORM:
     case CGPU_FORMAT_DXBC7_SRGB:
-        return "bc7";
+        return u8"bc7";
     default:
         return {};
     }

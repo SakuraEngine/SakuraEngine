@@ -14,11 +14,14 @@ typedef struct SProcess
 	HANDLE stdOut = NULL;
 } SProcess;
 
-SProcessHandle skr_run_process(const char* command, const char** arguments, uint32_t arg_count, const char* stdout_file)
+SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments, uint32_t arg_count, const char8_t* stdout_file)
 {
-    skr::string commandLine = "\"" + skr::string(command) + "\"";
+    skr::string commandLine = skr::format(u8"\"{}\"", command); 
 	for (size_t i = 0; i < arg_count; ++i)
-		commandLine += " " + skr::string(arguments[i]);
+	{
+		commandLine += u8" ";
+		commandLine += skr::string(arguments[i]);
+	}	
 
 	HANDLE stdOut = NULL;
 	if (stdout_file)
@@ -28,9 +31,9 @@ SProcessHandle skr_run_process(const char* command, const char** arguments, uint
 		sa.lpSecurityDescriptor = NULL;
 		sa.bInheritHandle = TRUE;
 
-		size_t   pathLength = strlen(stdout_file) + 1;
+		size_t   pathLength = strlen((const char*)stdout_file) + 1;
 		wchar_t* buffer = (wchar_t*)alloca(pathLength * sizeof(wchar_t));
-		MultiByteToWideChar(CP_UTF8, 0, stdout_file, (int)pathLength, buffer, (int)pathLength);
+		MultiByteToWideChar(CP_UTF8, 0, (const char*)stdout_file, (int)pathLength, buffer, (int)pathLength);
 		
 		stdOut = CreateFileW(buffer, FILE_APPEND_DATA, 
 			FILE_SHARE_WRITE | FILE_SHARE_READ, &sa, CREATE_ALWAYS,

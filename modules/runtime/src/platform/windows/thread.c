@@ -59,17 +59,17 @@ void skr_destroy_mutex_cs(SMutex* mutex)
     sakura_free(cs);
 }
 
-void skr_acquire_mutex_cs(SMutex* mutex)
+void skr_mutex_acquire_cs(SMutex* mutex)
 {
     EnterCriticalSection(*(CRITICAL_SECTION**)mutex->muStorage_);
 }
 
-bool skr_try_acquire_mutex_cs(SMutex* mutex)
+bool skr_mutex_try_acquire_cs(SMutex* mutex)
 {
     return TryEnterCriticalSection(*(CRITICAL_SECTION**)mutex->muStorage_);
 }
 
-void skr_release_mutex_cs(SMutex* mutex)
+void skr_mutex_release_cs(SMutex* mutex)
 {
     LeaveCriticalSection(*(CRITICAL_SECTION**)mutex->muStorage_);
 }
@@ -96,48 +96,48 @@ void skr_destroy_mutex_srw(SMutex* mutex)
 #endif
 }
 
-void skr_acquire_mutex_srw(SMutex* mutex)
+void skr_mutex_acquire_srw(SMutex* mutex)
 {
 #if (_WIN32_WINNT >= 0x0600)
     AcquireSRWLockExclusive((PSRWLOCK)mutex->muStorage_);
 #else
-    skr_acquire_mutex_cs(mutex);
+    skr_mutex_acquire_cs(mutex);
 #endif
 }
 
-void skr_acquire_mutex_srw_shared(SMutex* mutex)
+void skr_mutex_acquire_srw_shared(SMutex* mutex)
 {
 #if (_WIN32_WINNT >= 0x0600)
     AcquireSRWLockShared((PSRWLOCK)mutex->muStorage_);
 #else
-    skr_acquire_mutex_cs(mutex);
+    skr_mutex_acquire_cs(mutex);
 #endif
 }
 
-bool skr_try_acquire_mutex_srw(SMutex* mutex)
+bool skr_mutex_try_acquire_srw(SMutex* mutex)
 {
 #if (_WIN32_WINNT >= 0x0600)
     return TryAcquireSRWLockExclusive((PSRWLOCK)mutex->muStorage_);
 #else
-    return skr_try_acquire_mutex_cs(mutex);
+    return skr_mutex_try_acquire_cs(mutex);
 #endif
 }
 
-bool skr_try_acquire_mutex_srw_shared(SMutex* mutex)
+bool skr_mutex_try_acquire_srw_shared(SMutex* mutex)
 {
 #if (_WIN32_WINNT >= 0x0600)
     return TryAcquireSRWLockShared((PSRWLOCK)mutex->muStorage_);
 #else
-    return skr_try_acquire_mutex_cs(mutex);
+    return skr_mutex_try_acquire_cs(mutex);
 #endif
 }
 
-void skr_release_mutex_srw(SMutex* mutex)
+void skr_mutex_release_srw(SMutex* mutex)
 {
 #if (_WIN32_WINNT >= 0x0600)
     ReleaseSRWLockExclusive((PSRWLOCK)mutex->muStorage_);
 #else
-    skr_release_mutex_cs(mutex);
+    skr_mutex_release_cs(mutex);
 #endif
 }
 
@@ -159,33 +159,33 @@ void skr_destroy_mutex(SMutex* mutex)
         skr_destroy_mutex_cs(mutex);
 }
 
-void skr_acquire_mutex(SMutex* mutex)
+void skr_mutex_acquire(SMutex* mutex)
 {
     if (mutex->isSRW)
-        skr_acquire_mutex_srw(mutex);
+        skr_mutex_acquire_srw(mutex);
     else
-        skr_acquire_mutex_cs(mutex);
+        skr_mutex_acquire_cs(mutex);
 }
 
-bool skr_try_acquire_mutex(SMutex* mutex)
+bool skr_mutex_try_acquire(SMutex* mutex)
 {
     if (mutex->isSRW)
-        return skr_try_acquire_mutex_srw(mutex);
+        return skr_mutex_try_acquire_srw(mutex);
     else
-        return skr_try_acquire_mutex_cs(mutex);
+        return skr_mutex_try_acquire_cs(mutex);
 }
 
-void skr_release_mutex(SMutex* mutex)
+void skr_mutex_release(SMutex* mutex)
 {
     if (mutex->isSRW)
-        skr_release_mutex_srw(mutex);
+        skr_mutex_release_srw(mutex);
     else
-        skr_release_mutex_cs(mutex);
+        skr_mutex_release_cs(mutex);
 }
 
 /// implementation of rw mutex
 
-bool skr_init_mutex_rw(SRWMutex* pMutex)
+bool skr_init_rw_mutex(SRWMutex* pMutex)
 {
     return skr_init_mutex_srw(&pMutex->m);
 }
@@ -195,28 +195,28 @@ void skr_destroy_rw_mutex(SRWMutex* pMutex)
     skr_destroy_mutex(&pMutex->m);
 }
 
-void skr_acquire_mutex_r(SRWMutex* pMutex)
+void skr_rw_mutex_acuire_r(SRWMutex* pMutex)
 {
     if (pMutex->m.isSRW)
-        skr_acquire_mutex_srw_shared(&pMutex->m);
+        skr_mutex_acquire_srw_shared(&pMutex->m);
     else
-        skr_acquire_mutex_cs(&pMutex->m);
+        skr_mutex_acquire_cs(&pMutex->m);
 }
 
-void skr_acquire_mutex_w(SRWMutex* pMutex)
+void skr_rw_mutex_acuire_w(SRWMutex* pMutex)
 {
     if (pMutex->m.isSRW)
-        skr_acquire_mutex_srw(&pMutex->m);
+        skr_mutex_acquire_srw(&pMutex->m);
     else
-        skr_acquire_mutex_cs(&pMutex->m);
+        skr_mutex_acquire_cs(&pMutex->m);
 }
 
-void skr_release_rw_mutex(SRWMutex* pMutex)
+void skr_rw_mutex_release(SRWMutex* pMutex)
 {
     if (pMutex->m.isSRW)
-        skr_release_mutex_srw(&pMutex->m);
+        skr_mutex_release_srw(&pMutex->m);
     else
-        skr_release_mutex_cs(&pMutex->m);
+        skr_mutex_release_cs(&pMutex->m);
 }
 
 /// implementation of cv
@@ -232,19 +232,23 @@ void skr_destroy_condition_var(SConditionVariable* cv)
 {
 }
 
-void skr_wait_condition_vars(SConditionVariable* cv, const SMutex* pMutex, uint32_t ms)
+ThreadResult skr_wait_condition_vars(SConditionVariable* cv, const SMutex* pMutex, uint32_t ms)
 {
     CONDITION_VARIABLE* cv_ = (CONDITION_VARIABLE*)(cv->cvStorage_);
+    BOOL R = FALSE;
     if (pMutex->isSRW)
     {
         PSRWLOCK pSrwlock = (PSRWLOCK)(pMutex->muStorage_);
-        SleepConditionVariableSRW((PCONDITION_VARIABLE)cv_, pSrwlock, ms, 0);
+        R = SleepConditionVariableSRW((PCONDITION_VARIABLE)cv_, pSrwlock, ms, 0);
     }
     else
     {
         PCRITICAL_SECTION* ppCS = (PCRITICAL_SECTION*)(pMutex->muStorage_);
-        SleepConditionVariableCS((PCONDITION_VARIABLE)cv_, *ppCS, ms);
+        R = SleepConditionVariableCS((PCONDITION_VARIABLE)cv_, *ppCS, ms);
     }
+    if (R) return THREAD_RESULT_OK;
+    if (GetLastError() == ERROR_TIMEOUT) return THREAD_RESULT_TIMEOUT;
+    return THREAD_RESULT_FAILED;
 }
 
 void skr_wake_condition_var(SConditionVariable* cv)
@@ -294,9 +298,29 @@ static const int priorities[SKR_THREAD_PRIORITY_COUNT] = {
     THREAD_PRIORITY_TIME_CRITICAL
 };
 
-void skr_set_thread_priority(SThreadHandle handle, SThreadPriority priority)
+SThreadPriority skr_thread_set_priority(SThreadHandle handle, SThreadPriority priority)
 {
-    SetThreadPriority((HANDLE)handle, priorities[priority]);
+    BOOL ok = SetThreadPriority((HANDLE)handle, priorities[priority]);
+    if (ok) return priority;
+    return GetThreadPriority((HANDLE)handle);
+}
+
+void skr_thread_set_affinity(SThreadHandle handle, uint64_t affinityMask)
+{
+    SetThreadAffinityMask((HANDLE)handle, (DWORD_PTR)affinityMask);
+}
+
+void skr_thread_set_name(SThreadHandle handle, const char8_t* pName)
+{
+    size_t len = strlen(pName);
+    wchar_t* buffer = (wchar_t*)sakura_malloc((len + 1) * sizeof(wchar_t));
+
+    size_t resultLength = MultiByteToWideChar(CP_UTF8, 0, pName, (int)len, buffer, (int)len);
+    buffer[resultLength] = 0;
+
+    SetThreadDescription((HANDLE)handle, buffer);
+
+    sakura_free(buffer);
 }
 
 void skr_destroy_thread(SThreadHandle handle)

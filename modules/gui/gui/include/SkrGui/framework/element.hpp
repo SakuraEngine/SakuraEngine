@@ -1,5 +1,5 @@
 #pragma once
-#include "utils/function_ref.hpp"
+#include "misc/function_ref.hpp"
 #include "SkrGui/framework/diagnostics.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gui, RenderObject, skr_gui_render_object)

@@ -5,7 +5,7 @@
 #include "steam/isteamnetworkingutils.h"
 #include "steam/isteamnetworkingsockets.h"
 #include "steam/steamnetworkingsockets.h"
-#include "utils/log.h"
+#include "misc/log.h"
 #include "MPShared/server_world.h"
 #include "MPShared/signal_client.h"
 

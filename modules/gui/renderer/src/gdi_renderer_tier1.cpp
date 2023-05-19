@@ -1,8 +1,8 @@
 #include "SkrGuiRenderer/gdi_renderer.hpp"
-#include "utils/cartesian_product.hpp"
+#include "misc/cartesian_product.hpp"
 
 #include <EASTL/fixed_vector.h>
-#include "rtm/qvvf.h"
+#include "math/rtm/qvvf.h"
 #include <cmath>
 
 namespace skr {

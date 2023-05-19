@@ -1,4 +1,4 @@
-#include "utils/threaded_service.h"
+#include "misc/threaded_service.h"
 #include <containers/string.hpp>
 #include "platform/vfs.h"
 #include "io_service_util.hpp"
@@ -12,7 +12,7 @@ public:
     struct Task : public io::TaskBase {
     };
     ~ThreadedServiceImpl() SKR_NOEXCEPT = default;
-    ThreadedServiceImpl(uint32_t sleep_time, bool lockless, const char* name) SKR_NOEXCEPT
+    ThreadedServiceImpl(uint32_t sleep_time, bool lockless, const char8_t* name) SKR_NOEXCEPT
         : tasks(lockless), threaded_service(sleep_time, lockless), name(name)
     {
     }
@@ -54,12 +54,12 @@ void __ioThreadTask_SERIVE(void* arg)
 #ifdef TRACY_ENABLE
     skr::string name;
     static uint32_t taskIndex = 0;
-    if (service->name.empty())
+    if (service->name.is_empty())
     {
-        name = "ServiceThread-" + skr::to_string(taskIndex);
+        name = skr::format(u8"ServiceThread-{}", taskIndex);
     }
     taskIndex++;
-    tracy::SetThreadName(service->name.empty() ? name.c_str() : service->name.c_str());
+    tracy::SetThreadName(service->name.is_empty() ? name.c_str() : service->name.c_str());
 #endif
     for (; service->threaded_service.getThreadStatus() != io::_SKR_IO_THREAD_STATUS_QUIT;)
     {
@@ -126,13 +126,13 @@ void ThreadedServiceImpl::run() SKR_NOEXCEPT
 skr_threaded_service_t* skr_threaded_service_t::create(const skr_threaded_service_desc_t* desc) SKR_NOEXCEPT
 {
     using namespace skr;
-    auto service = SkrNew<ThreadedServiceImpl>(desc->sleep_time, desc->lockless, (const char*)desc->name);
+    auto service = SkrNew<ThreadedServiceImpl>(desc->sleep_time, desc->lockless, desc->name);
     service->threaded_service.create_(desc->sleep_mode);
     service->threaded_service.sortMethod = desc->sort_method;
     service->threaded_service.threadItem.pData = service;
     service->threaded_service.threadItem.pFunc = &__ioThreadTask_SERIVE;
     skr_init_thread(&service->threaded_service.threadItem, &service->threaded_service.serviceThread);
-    skr_set_thread_priority(service->threaded_service.serviceThread, SKR_THREAD_ABOVE_NORMAL);
+    skr_thread_set_priority(service->threaded_service.serviceThread, SKR_THREAD_ABOVE_NORMAL);
     return service;
 }
 

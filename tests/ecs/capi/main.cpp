@@ -2,7 +2,7 @@
 #include <memory>
 #include "ecs/dual.h"
 #include "guid.hpp" //for guid
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 
 using test = int;
 dual_type_index_t type_test;
@@ -228,11 +228,11 @@ void register_test_component()
     using namespace guid_parse::literals;
     {
         dual_type_description_t desc = make_zeroed<dual_type_description_t>();
-        desc.name = "test";
+        desc.name = u8"test";
         desc.size = sizeof(test);
         desc.entityFieldsCount = 0;
         desc.entityFields = 0;
-        desc.guid = "{3A44728E-66C2-40F9-A3C1-0920A727A94A}"_guid;
+        desc.guid = u8"{3A44728E-66C2-40F9-A3C1-0920A727A94A}"_guid;
         desc.callback = {};
         desc.flags = 0;
         desc.elementSize = 0;
@@ -240,18 +240,18 @@ void register_test_component()
         type_test = dualT_register_type(&desc);
         desc.elementSize = desc.size;
         desc.size = desc.size * 10;
-        desc.name = "test_arr";
+        desc.name = u8"test_arr";
         type_test_arr = dualT_register_type(&desc);
     }
 
     {
 
         dual_type_description_t desc = make_zeroed<dual_type_description_t>();
-        desc.name = "test2";
+        desc.name = u8"test2";
         desc.size = sizeof(test);
         desc.entityFieldsCount = 0;
         desc.entityFields = 0;
-        desc.guid = "{36B139D5-0492-4EC7-AF72-B440665F2307}"_guid;
+        desc.guid = u8"{36B139D5-0492-4EC7-AF72-B440665F2307}"_guid;
         desc.callback = {};
         desc.flags = 0;
         desc.elementSize = 0;
@@ -259,7 +259,7 @@ void register_test_component()
         type_test2 = dualT_register_type(&desc);
         desc.elementSize = desc.size;
         desc.size = desc.size * 10;
-        desc.name = "test_arr";
+        desc.name = u8"test_arr";
         type_test2_arr = dualT_register_type(&desc);
     }
 }
@@ -267,12 +267,12 @@ auto register_ref_component()
 {
     using namespace guid_parse::literals;
     dual_type_description_t desc = make_zeroed<dual_type_description_t>();
-    desc.name = "ref";
+    desc.name = u8"ref";
     desc.size = sizeof(ref);
     desc.entityFieldsCount = 1;
     intptr_t fields[1] = { 0 };
     desc.entityFields = (intptr_t)fields;
-    desc.guid = "{4BEC235F-63DF-4A49-8F5E-5431890F61DD}"_guid;
+    desc.guid = u8"{4BEC235F-63DF-4A49-8F5E-5431890F61DD}"_guid;
     desc.callback = {};
     desc.flags = 0;
     desc.elementSize = 0;
@@ -280,18 +280,18 @@ auto register_ref_component()
     type_ref = dualT_register_type(&desc);
     desc.elementSize = desc.size;
     desc.size = desc.size * 10;
-    desc.name = "ref_arr";
+    desc.name = u8"ref_arr";
     type_ref_arr = dualT_register_type(&desc);
 }
 auto register_managed_component()
 {
     using namespace guid_parse::literals;
     dual_type_description_t desc = make_zeroed<dual_type_description_t>();
-    desc.name = "managed";
+    desc.name = u8"managed";
     desc.size = sizeof(managed);
     desc.entityFieldsCount = 0;
     desc.entityFields = 0;
-    desc.guid = "{BA2D8E6A-9841-474F-9A6D-3E43BF0A7A9C}"_guid;
+    desc.guid = u8"{BA2D8E6A-9841-474F-9A6D-3E43BF0A7A9C}"_guid;
     desc.flags = 0;
     desc.elementSize = 0;
     desc.alignment = alignof(managed);
@@ -311,18 +311,18 @@ auto register_managed_component()
     type_managed = dualT_register_type(&desc);
     desc.elementSize = desc.size;
     desc.size = desc.size * 10;
-    desc.name = "managed_arr";
+    desc.name = u8"managed_arr";
     type_managed_arr = dualT_register_type(&desc);
 }
 auto register_pinned_component()
 {
     using namespace guid_parse::literals;
     dual_type_description_t desc = make_zeroed<dual_type_description_t>();
-    desc.name = "pinned";
+    desc.name = u8"pinned";
     desc.size = sizeof(pinned);
     desc.entityFieldsCount = 0;
     desc.entityFields = 0;
-    desc.guid = "{E6127548-981D-46F5-BF33-8EC31CACACFD}"_guid;
+    desc.guid = u8"{E6127548-981D-46F5-BF33-8EC31CACACFD}"_guid;
     desc.callback = {};
     desc.flags = DTF_PIN;
     desc.elementSize = 0;
@@ -330,7 +330,7 @@ auto register_pinned_component()
     type_pinned = dualT_register_type(&desc);
     desc.elementSize = desc.size;
     desc.size = desc.size * 10;
-    desc.name = "pinned_arr";
+    desc.name = u8"pinned_arr";
     type_pinned_arr = dualT_register_type(&desc);
 }
 

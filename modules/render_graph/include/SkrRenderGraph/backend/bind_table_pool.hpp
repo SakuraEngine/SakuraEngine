@@ -17,8 +17,8 @@ class BindTablePool
 {
     friend class RenderGraphBackend;
 public:
-    void expand(const char* keys, const CGPUXName* names, uint32_t names_count, size_t set_count = 1);
-    CGPUXBindTableId pop(const char* keys, const CGPUXName* names, uint32_t names_count);
+    void expand(const char8_t* keys, const CGPUXName* names, uint32_t names_count, size_t set_count = 1);
+    CGPUXBindTableId pop(const char8_t* keys, const CGPUXName* names, uint32_t names_count);
     void reset();
     void destroy();
 

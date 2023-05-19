@@ -53,7 +53,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ env.XMAKE_GLOBALDIR }}\.xmake\packages
-          key: Windows-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}-${{ steps.dep_hash.outputs.hash }}-W${{ steps.cache_key.outputs.key }}-7
+          key: Windows-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}-${{ steps.dep_hash.outputs.hash }}-W${{ steps.cache_key.outputs.key }}-8
 
       # Run setup script
       - name: Set env
@@ -70,6 +70,13 @@ jobs:
         shell: cmd
         run: xmake -y -v
       
+      - name: TestDebug
+        if: success()
+        shell: cmd
+        env:
+          TRACY_NO_INVARIANT_CHECK: 1
+        run: xmake run -g 05.tests/*
+      
       - name: ConfigureRelease
         if: success() || failure()
         shell: cmd
@@ -80,6 +87,13 @@ jobs:
         shell: cmd
         run: xmake -y -v
       
+      - name: TestRelease
+        if: success()
+        shell: cmd
+        env:
+          TRACY_NO_INVARIANT_CHECK: 1
+        run: xmake run -g 05.tests/*
+
       - name: UploadGeneratedFiles
         if: success() || failure()
         uses: actions/upload-artifact@v3

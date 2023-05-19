@@ -1,6 +1,6 @@
 #pragma once
 #include "platform/configure.h"
-#include "utils/log.hpp"
+#include "misc/log.hpp"
 #include "type/type.hpp"
 #include <containers/string.hpp>
 #include <EASTL/unique_ptr.h>
@@ -21,7 +21,7 @@ void XXXInformation()
     auto registry = skr::type::GetTypeRegistry();
     const auto tid = skr::type::type_id<T>::get();
     auto type = registry->get_type(tid);
-    SKR_LOG_FMT_DEBUG("Static Ctor: {} with id {}", type->Name(), tid);
+    SKR_LOG_FMT_DEBUG(u8"Static Ctor: {} with id {}", type->Name(), tid);
 }
 
 RTTI_TEST_TYPES_API void PrintField(const char* name);

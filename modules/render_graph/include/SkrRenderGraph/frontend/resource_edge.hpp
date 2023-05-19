@@ -23,7 +23,7 @@ public:
     friend class RenderGraph;
     friend class RenderGraphBackend;
 
-    inline const char* get_name() const { return name.c_str(); }
+    inline const char8_t* get_name() const { return name.u8_str(); }
     const uint64_t name_hash = 0;
 
     TextureNode* get_texture_node() final;
@@ -36,7 +36,7 @@ public:
 
     TextureReadEdge(const skr::string_view name, TextureSRVHandle handle, ECGPUResourceState state = CGPU_RESOURCE_STATE_SHADER_RESOURCE);
 protected:
-    const graph_object_string name = "";
+    const graph_object_string name = u8"";
     const TextureSRVHandle handle;
 };
 
@@ -49,13 +49,13 @@ public:
 
     const uint64_t name_hash = 0;
 
-    inline const char* get_name() const { return name.c_str(); }
+    inline const char8_t* get_name() const { return name.u8_str(); }
     TextureNode* get_texture_node() final;
     PassNode* get_pass_node() final;
 
     TextureReadWriteEdge(const skr::string_view name, TextureUAVHandle handle, ECGPUResourceState state = CGPU_RESOURCE_STATE_UNORDERED_ACCESS);
 protected:
-    const graph_object_string name = "";
+    const graph_object_string name = u8"";
     const TextureUAVHandle handle;
 };
 
@@ -110,7 +110,7 @@ public:
 
     BufferReadEdge(const skr::string_view name, BufferRangeHandle handle, ECGPUResourceState state);
 protected:
-    const graph_object_string name = "";
+    const graph_object_string name = u8"";
     BufferRangeHandle handle;
 };
 

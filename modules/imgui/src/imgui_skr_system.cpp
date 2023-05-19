@@ -3,7 +3,7 @@
 #include <EASTL/vector.h>
 #include <EASTL/fixed_vector.h>
 #include <containers/string.hpp>
-#include "utils/log.h"
+#include "misc/log.h"
 #include "platform/input.h"
 #include "platform/system.h"
 
@@ -313,8 +313,7 @@ void skr::imgui::imgui_create_window(ImGuiViewport* viewport)
     desc.height = (uint32_t)viewport->Size.y;
     desc.posx = (uint32_t)viewport->Pos.x;
     desc.posy = (uint32_t)viewport->Pos.y;
-    skr::string title = "imgui-";
-    title += skr::to_string(viewport->ID);
+    skr::string title = skr::format(u8"imgui-{}", viewport->ID);
     auto new_window = skr_create_window((const char8_t*)title.c_str(), &desc);
 
     viewport->PlatformUserData = viewport;
