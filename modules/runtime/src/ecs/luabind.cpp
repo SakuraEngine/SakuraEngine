@@ -145,6 +145,12 @@ namespace skr::lua
         return fill_chunk_view(query->storage, view, query->parameters.types, query->parameters.length, query->parameters.accesses, true);
     }
 
+    void dtor_query(void* p)
+    {
+        auto query = (dual_query_t*)p;
+        dualQ_release(query);
+    }
+
     void bind_ecs(lua_State* L)
     {
         lua_getglobal(L, "skr");
@@ -315,17 +321,7 @@ namespace skr::lua
 
         // bind query
         {
-            luaL_Reg metamethods[] = {
-                {"__gc", +[](lua_State* L) -> int {
-                    auto query = *(dual_query_t**)lua_touserdata(L, 1);
-                    if(!query) return 0;
-                    dualQ_release(query);
-                    return 0;
-                }},
-                {NULL, NULL}
-            };
             luaL_newmetatable(L, "dual_query_t");
-            luaL_register(L, nullptr, metamethods);
             lua_pop(L, 1);
         }
 
@@ -335,7 +331,7 @@ namespace skr::lua
                 dual_storage_t* storage = (dual_storage_t*)lua_touserdata(L, 1);
                 const char* literal = luaL_checkstring(L, 2);
                 auto query = dualQ_from_literal(storage, literal);
-                *(dual_query_t**)lua_newuserdata(L, sizeof(void*)) = query;
+                *(dual_query_t**)lua_newuserdatadtor(L, sizeof(void*), dtor_query) = query;
                 luaL_getmetatable(L, "dual_query_t");
                 lua_setmetatable(L, -2);
                 return 1;
@@ -519,7 +515,7 @@ namespace skr::lua
                     }
                     return 0;
                 } },
-                {"__call", +[](lua_State* L) -> int {
+                {"get", +[](lua_State* L) -> int {
                     lua_chunk_view_t* view = *(lua_chunk_view_t**)luaL_checkudata(L, 1, "lua_chunk_view_t");
                     if(!view) 
                     {
@@ -561,7 +557,7 @@ namespace skr::lua
                     }
                     return 0;
                 }},
-                {"__call", +[](lua_State* L) -> int {
+                {"get", +[](lua_State* L) -> int {
                     lua_array_view_t* view = (lua_array_view_t*)luaL_checkudata(L, 1, "lua_array_view_t");
                     uint32_t index = (uint32_t)luaL_checkinteger(L, 2);
                     auto size = ((uint8_t*)view->arr.EndX - (uint8_t*)view->arr.BeginX) / view->stride;

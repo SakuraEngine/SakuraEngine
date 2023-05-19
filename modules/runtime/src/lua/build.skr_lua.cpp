@@ -216,6 +216,18 @@ void skr_lua_close(lua_State* L)
 
 namespace skr::lua
 {
+void dtor_unique(void* p)
+{
+    ((skr::lua::destructor_t)((char*)p + sizeof(void*)))(*(void**)p);
+}
+void dtor_shared(void* p)
+{
+    ((skr::SPtr<void>*)((char*)p + sizeof(void*)))->reset();
+}
+void dtor_object(void* p)
+{
+    ((skr::SObjectPtr<skr::SInterface>*)((char*)p + sizeof(void*)))->reset();
+}
 void bind_unknown(lua_State* L)
 {
     luaL_Reg metamethods[] = {
@@ -231,11 +243,6 @@ void bind_unknown(lua_State* L)
     luaL_register(L, nullptr, metamethods);
     lua_pop(L, 1);
     luaL_Reg uniquemetamethods[] = {
-        { "_gc", [](lua_State* L) -> int {
-            void* p = lua_touserdata(L, 1);
-            ((skr::lua::destructor_t)((char*)p + sizeof(void*)))(*(void**)p);
-            return 0;
-        }},
         metamethods[0],
         metamethods[1],
         { nullptr, nullptr }
@@ -244,11 +251,6 @@ void bind_unknown(lua_State* L)
     luaL_register(L, nullptr, uniquemetamethods);
     lua_pop(L, 1);
     luaL_Reg sharedmetamethods[] = {
-        { "_gc", [](lua_State* L) -> int {
-            void* p = lua_touserdata(L, 1);
-            ((skr::SPtr<void>*)((char*)p + sizeof(void*)))->reset();
-            return 0;
-        }},
         metamethods[0],
         metamethods[1],
         { nullptr, nullptr }
@@ -257,11 +259,6 @@ void bind_unknown(lua_State* L)
     luaL_register(L, nullptr, sharedmetamethods);
     lua_pop(L, 1);
     luaL_Reg objectmetamethods[] = {
-        { "_gc", [](lua_State* L) -> int {
-            void* p = lua_touserdata(L, 1);
-            ((skr::SObjectPtr<skr::SInterface>*)((char*)p + sizeof(void*)))->reset();
-            return 0;
-        }},
         metamethods[0],
         metamethods[1],
         { nullptr, nullptr }
@@ -322,6 +319,12 @@ void luaL_setmetatable (lua_State *L, const char *tname) {
   lua_setmetatable(L, -2);
 }
 
+void dtor_resource_handle(void* p) {
+    auto resource = (skr_resource_handle_t*)p;
+    if (resource->is_resolved())
+        resource->unload();
+}
+
 void bind_skr_resource_handle(lua_State* L)
 {
     lua_getglobal(L, "skr");
@@ -331,7 +334,7 @@ void bind_skr_resource_handle(lua_State* L)
         if (luaL_testudata(L, 1, "skr_guid_t"))
         {
             const skr_guid_t* guid = skr::lua::check_guid(L, 1);
-            skr_resource_handle_t* resource = (skr_resource_handle_t*)lua_newuserdata(L, sizeof(skr_resource_handle_t));
+            skr_resource_handle_t* resource = (skr_resource_handle_t*)lua_newuserdatadtor(L, sizeof(skr_resource_handle_t), dtor_resource_handle);
             new (resource) skr_resource_handle_t(*guid);
             luaL_setmetatable(L, "skr_resource_handle_t");
             return 1;
@@ -339,7 +342,7 @@ void bind_skr_resource_handle(lua_State* L)
         else if (lua_isstring(L, 1))
         {
             auto str = (const char8_t*)lua_tostring(L, 1);
-            skr_resource_handle_t* resource = (skr_resource_handle_t*)lua_newuserdata(L, sizeof(skr_resource_handle_t));
+            skr_resource_handle_t* resource = (skr_resource_handle_t*)lua_newuserdatadtor(L, sizeof(skr_resource_handle_t), dtor_resource_handle);
             new (resource) skr_resource_handle_t(skr::guid::make_guid_unsafe(str));
             luaL_setmetatable(L, "skr_resource_handle_t");
             return 1;
@@ -594,7 +597,7 @@ skr::string opt_string(lua_State* L, int index, const skr::string& def)
 
 int push_resource(lua_State* L, const skr_resource_handle_t* resource)
 {
-    auto ud = (skr_resource_handle_t*)lua_newuserdata(L, sizeof(skr_resource_handle_t));
+    auto ud = (skr_resource_handle_t*)lua_newuserdatadtor(L, sizeof(skr_resource_handle_t), dtor_resource_handle);
     new (ud) skr_resource_handle_t(*resource, (uint64_t)L, SKR_REQUESTER_SCRIPT);
     luaL_getmetatable(L, "skr_resource_handle_t");
     lua_setmetatable(L, -2);
@@ -665,7 +668,7 @@ void* check_unknown(lua_State *L, int index, std::string_view tid)
 
 int push_unknown_value(lua_State *L, const void *value, std::string_view tid, size_t size, copy_constructor_t copy_constructor, destructor_t destructor)
 {
-    void *p = lua_newuserdata(L, sizeof(void*) * 2+ size);
+    void *p = lua_newuserdatadtor(L, sizeof(void*) * 2+ size, dtor_unique);
     void *obj = (char*)p + sizeof(void*) * 2;
     copy_constructor(obj, value);
     *(void**)p = obj;
@@ -688,7 +691,7 @@ int push_unknown_value(lua_State *L, const void *value, std::string_view tid, si
 
 int push_sptr(lua_State *L, const skr::SPtr<void> &value, std::string_view tid)
 {
-    void* p = lua_newuserdata(L, sizeof(void*) + sizeof(skr::SPtr<void>));
+    void* p = lua_newuserdatadtor(L, sizeof(void*) + sizeof(skr::SPtr<void>), dtor_shared);
     void* obj = (char*)p + sizeof(void*);
     auto ptr = new (obj) skr::SPtr<void>(value);
     *(void**)p = ptr->get();
@@ -716,7 +719,7 @@ skr::SPtr<void> check_sptr(lua_State *L, int index, std::string_view tid)
 
 int push_sobjectptr(lua_State *L, const skr::SObjectPtr<SInterface> &value, std::string_view tid)
 {
-    void* p = lua_newuserdata(L, sizeof(void*) + sizeof(skr::SObjectPtr<SInterface>));
+    void* p = lua_newuserdatadtor(L, sizeof(void*) + sizeof(skr::SObjectPtr<SInterface>), dtor_object);
     void* obj = (char*)p + sizeof(void*);
     auto ptr = new (obj) skr::SObjectPtr<SInterface>(value);
     *(void**)p = ptr->get();
