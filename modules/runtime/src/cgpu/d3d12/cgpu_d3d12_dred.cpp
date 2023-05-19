@@ -1,7 +1,9 @@
 #include "d3d12_utils.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include "containers/string.hpp"
 #include "containers/span.hpp"
+
+#include <EASTL/string.h>
 #include <EASTL/vector_map.h>
 
 // Should match all valid values from D3D12_DRED_ALLOCATION_TYPE
@@ -179,7 +181,7 @@ void D3D12Util_LogDREDBreadcrumbsImpl(const T* breadcrumbs)
     {
         cgpu_error("DRED: Last tracked GPU operations:");
 
-        skr::wstring ContextStr;
+        eastl::wstring ContextStr;
         eastl::vector_map<int32_t, const wchar_t*> ContextStrings;
 
         uint32_t TracedCommandLists = 0;

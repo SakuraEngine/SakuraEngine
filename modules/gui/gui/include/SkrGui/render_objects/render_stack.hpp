@@ -115,7 +115,7 @@ struct Positional
 class SKR_GUI_API RenderStack : public RenderBox
 {
 public:
-    SKR_GUI_TYPE(RenderStack, RenderBox, "0c1ac8b5-d3aa-4560-a011-4b655231c8ac");
+    SKR_GUI_TYPE(RenderStack, RenderBox, u8"0c1ac8b5-d3aa-4560-a011-4b655231c8ac");
     RenderStack(skr_gdi_device_id gdi_device);
 
     virtual void layout(BoxConstraint constraints, bool needSize = false) override;

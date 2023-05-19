@@ -1,23 +1,11 @@
 #pragma once
+#include "misc/macros.h"
 #ifndef __cplusplus
     #include <stdbool.h>
 #endif
 #if __has_include("stdint.h")
     #include <stdint.h>
 #endif
-
-#if __cplusplus >= 201100L
-#define SKR_UTF8(str) u8##str
-#else
-#define SKR_UTF8(str) str
-#endif
-
-#if __cplusplus >= 202000L
-#define CHAR8_T_DEFINED
-#endif
-
-#define SKR_IS_BIG_ENDIAN 0
-#define SKR_IS_LITTLE_ENDIAN 1
 
 #ifdef __cplusplus
     #define SKR_IF_CPP(...) __VA_ARGS__
@@ -41,19 +29,14 @@
 	#endif
 #endif
 
-#ifndef STRINGIFY
-    #define STRINGIFY_IMPL(...) #__VA_ARGS__
-    #define STRINGIFY(...) STRINGIFY_IMPL(__VA_ARGS__)
-#endif
-
 #define sstatic_ctor_name_impl(index, expr) "\"StaticCtor" # index "\" : " #expr
 #define sstatic_ctor_name(index, expr) sstatic_ctor_name_impl(index, #expr)
 #ifdef __meta__
     #define sreflect __attribute__((annotate("__reflect__")))
     #define sfull_reflect __attribute__((annotate("__full_reflect__")))
     #define snoreflect __attribute__((annotate("__noreflect__")))
-    #define sattr(...) __attribute__((annotate(STRINGIFY(__VA_ARGS__))))
-    #define spush_attr(...) __attribute__((annotate("__push__" STRINGIFY(__VA_ARGS__))))
+    #define sattr(...) __attribute__((annotate(SKR_MAKE_STRING(__VA_ARGS__))))
+    #define spush_attr(...) __attribute__((annotate("__push__" SKR_MAKE_STRING(__VA_ARGS__))))
     #define spop_attr() __attribute__((annotate("__pop__")))
 
     #define sstatic_ctor(expr) __attribute__((annotate(sstatic_ctor_name(__COUNTER__, expr))))
@@ -186,6 +169,10 @@ extern const char* $name;
     #endif
 #endif
 
+#ifndef RUNTIME_STATIC_API
+    #define RUNTIME_STATIC_API
+#endif
+
 #ifdef RUNTIME_IMPL
     #ifndef RUNTIME_API
         #define RUNTIME_API RUNTIME_EXPORT
@@ -215,27 +202,6 @@ extern const char* $name;
 
 #ifndef SKR_IMPORT_API
     #define SKR_IMPORT_API RUNTIME_EXTERN_C RUNTIME_IMPORT
-#endif
-
-#ifndef CHAR8_T_DEFINED // If the user hasn't already defined these...
-    #define CHAR8_T_DEFINED
-    #if defined(EA_PLATFORM_APPLE)
-        #define char8_t char // The Apple debugger is too stupid to realize char8_t is typedef'd to char, so we #define it.
-    #else
-        typedef char char8_t;
-    #endif
-#endif
-
-#ifdef __cplusplus
-#define SKR_DECLARE_TYPE_ID_FWD(ns, type, ctype) namespace ns { struct type; }  using ctype##_t = ns::type; using ctype##_id = ns::type*;
-#else
-#define SKR_DECLARE_TYPE_ID_FWD(ns, type, ctype) typedef struct ctype##_t ctype##_t; typedef struct ctype* ctype##_id;
-#endif
-
-#ifdef __cplusplus
-#define SKR_DECLARE_TYPE_ID(type, ctype) typedef struct type ctype##_t; typedef type* ctype##_id;
-#else
-#define SKR_DECLARE_TYPE_ID(type, ctype) typedef struct ctype##_t ctype##_t; typedef ctype##_t* ctype##_id;
 #endif
 
 #if defined(__cplusplus)
@@ -497,52 +463,5 @@ typedef int64_t host_ptr_t;
     #define THRESH_VECTOR_NORMALIZED 0.01
 #endif
 
-// TODO: move this anywhere else
-#define USE_DXMATH
-
 // TODO: 
 #define SKR_RESOURCE_DEV_MODE
-
-#if !defined(TRACY_ENABLE) && !defined(TRACY_OVERRIDE_DISABLE) && !defined(TRACY_OVERRIDE_ENABLE)
-    #ifdef _DEBUG
-        #define TRACY_ENABLE
-    #else
-    #endif
-#endif
-
-#ifdef TRACY_OVERRIDE_ENABLE
-    #define TRACY_ENABLE
-#endif
-
-#if defined(TRACY_ENABLE) || defined(TRACY_OVERRIDE_ENABLE)
-    #ifndef TRACY_IMPORTS
-    #define TRACY_IMPORTS
-    #endif
-    
-    #ifndef TRACY_ON_DEMAND
-    #define TRACY_ON_DEMAND
-    #endif
-
-    #ifndef TRACY_FIBERS
-    #define TRACY_FIBERS
-    #endif
-#endif
-
-#ifdef TRACY_ENABLE
-#define TRACY_TRACE_ALLOCATION
-#endif
-
-#ifdef __cplusplus
-
-namespace skr
-{
-    template <typename T> struct hash;
-}
-
-typedef struct Dummy {
-    int dummy;
-    int dummy2();
-} Dummy;
-extern const int Dummy::* $field_ptr;
-extern int(Dummy::* $method_ptr)();
-#endif

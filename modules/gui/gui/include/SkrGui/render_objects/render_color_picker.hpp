@@ -11,7 +11,7 @@ namespace gui {
 struct SKR_GUI_API RenderColorPicker : public RenderBox
 {
 public:
-    SKR_GUI_TYPE(RenderColorPicker, RenderBox, "25a95354-b3fa-4729-b06f-1a85d0f227c4");
+    SKR_GUI_TYPE(RenderColorPicker, RenderBox, u8"25a95354-b3fa-4729-b06f-1a85d0f227c4");
     RenderColorPicker(skr_gdi_device_id gdi_device);
     virtual ~RenderColorPicker();
 

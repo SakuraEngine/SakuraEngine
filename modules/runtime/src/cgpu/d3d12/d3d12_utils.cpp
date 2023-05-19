@@ -5,7 +5,7 @@
 #include <dxcapi.h>
 #include <d3d12shader.h>
 #include "D3D12MemAlloc.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include <EASTL/vector.h>
 #include <comutil.h>
 
@@ -151,7 +151,7 @@ void D3D12Util_QueryAllAdapters(CGPUInstance_D3D12* instance, uint32_t* count, b
         _adapter->QueryInterface(IID_PPV_ARGS(&adapter));
         adapter->GetDesc3(&desc);
         // Ignore Microsoft Driver
-        if (!(desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE))
+        if (!(desc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE))
         {
             uint32_t level_c = CGPU_ARRAY_LEN(d3d_feature_levels);
             for (uint32_t level = 0; level < level_c; ++level)

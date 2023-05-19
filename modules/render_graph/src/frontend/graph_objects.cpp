@@ -3,9 +3,9 @@
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include <containers/hashmap.hpp>
-#include "utils/log.h"
-#include "utils/hash.h"
-#include "utils/concurrent_queue.h"
+#include "misc/log.h"
+#include "misc/hash.h"
+#include "containers/concurrent_queue.h"
 
 namespace skr
 {
@@ -28,7 +28,7 @@ struct SKR_RENDER_GRAPH_API NodeAndEdgeFactoryImpl final : public NodeAndEdgeFac
     struct factory_pool_t 
     {
         size_t blockSize;
-        moodycamel::ConcurrentQueue<void*> blocks;
+        skr::ConcurrentQueue<void*> blocks;
 
         factory_pool_t(size_t blockSize, size_t blockCount) SKR_NOEXCEPT
             : blockSize(blockSize)
@@ -98,7 +98,7 @@ RenderGraphNode::RenderGraphNode(EObjectType type)
 
 void RenderGraphNode::set_name(const char8_t* n)
 {
-    name = (const char*)n;
+    name = n;
 }
 
 const char8_t* RenderGraphNode::get_name() const
@@ -240,8 +240,8 @@ TextureEdge::TextureEdge(ERelationshipType type, ECGPUResourceState requested_st
 
 TextureReadEdge::TextureReadEdge(const skr::string_view name, TextureSRVHandle handle, ECGPUResourceState state)
     : TextureEdge(ERelationshipType::TextureRead, state)
-    , name_hash(cgpu_name_hash(name.data(), name.size()))
-    , name(name.data(), name.size())
+    , name_hash(cgpu_name_hash(name.c_str(), name.size()))
+    , name(name.u8_str())
     , handle(handle)
 {
 }
@@ -280,8 +280,8 @@ PassNode* TextureRenderEdge::get_pass_node()
 
 TextureReadWriteEdge::TextureReadWriteEdge(const skr::string_view name, TextureUAVHandle handle, ECGPUResourceState state)
     : TextureEdge(ERelationshipType::TextureReadWrite, state)
-    , name_hash(cgpu_name_hash(name.data(), name.size()))
-    , name(name.data(), name.size())
+    , name_hash(cgpu_name_hash(name.u8_str(), name.size()))
+    , name(name.u8_str())
     , handle(handle)
 
 {
@@ -320,8 +320,8 @@ PassNode* PipelineBufferEdge::get_pass_node()
 
 BufferReadEdge::BufferReadEdge(const skr::string_view name, BufferRangeHandle handle, ECGPUResourceState state)
     : BufferEdge(ERelationshipType::BufferRead, state)
-    , name_hash(cgpu_name_hash(name.data(), name.size()))
-    , name(name.data(), name.size())
+    , name_hash(cgpu_name_hash(name.u8_str(), name.size()))
+    , name(name.u8_str())
     , handle(handle)
 {
 }

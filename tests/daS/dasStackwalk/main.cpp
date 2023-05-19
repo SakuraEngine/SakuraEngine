@@ -1,64 +1,51 @@
-#include "daScript/daScript.h"
+#include "SkrDAScript/daScript.hpp"
+#include "misc/make_zeroed.hpp"
+#include "containers/string.hpp"
 
-using namespace das;
+#define TUTORIAL_NAME   u8"/scripts/dasStackWalk/stackwalk.das"
 
-#define TUTORIAL_NAME   "/scripts/dasStackWalk/stackwalk.das"
+int main(int argc, char** argv) {
+    auto env_desc = make_zeroed<skr::das::EnvironmentDescriptor>();
+    env_desc.argc = argc;
+    env_desc.argv = argv;
+    skr::das::Environment::Initialize(env_desc);
+    // make file access, introduce string as if it was a file
+    auto faccess_desc = make_zeroed<skr::das::FileAccessDescriptor>();
+    auto faccess = skr::das::FileAccess::Create(faccess_desc);
+    
+    // output stream for all compiler messages (stdout. for stringstream use TextWriter)
+    auto tout_desc = make_zeroed<skr::das::TextPrinterDescriptor>();
+    auto tout = skr::das::TextPrinter::Create(tout_desc);
 
-void tutorial () {
-    TextPrinter tout;                               // output stream for all compiler messages (stdout. for stringstream use TextWriter)
-    ModuleGroup dummyLibGroup;                      // module group for compiled program
-    CodeOfPolicies policies;                        // compiler setup
-    auto fAccess = make_smart<FsFileAccess>();      // default file access
-#ifdef AOT
-    policies.aot = true;
-#endif
-    // compile program
-    auto program = compileDaScript(getDasRoot() + TUTORIAL_NAME, fAccess, tout, dummyLibGroup, false, policies);
-    if ( program->failed() ) {
-        // if compilation failed, report errors
-        tout << "failed to compile\n";
-        for ( auto & err : program->errors ) {
-            tout << reportError(err.at, err.what, err.extra, err.fixme, err.cerr );
-        }
-        return;
-    }
-    // create daScript context
-    Context ctx(program->getContextStackSize());
-    if ( !program->simulate(ctx, tout) ) {
-        // if interpretation failed, report errors
-        tout << "failed to simulate\n";
-        for ( auto & err : program->errors ) {
-            tout << reportError(err.at, err.what, err.extra, err.fixme, err.cerr );
-        }
-        return;
-    }
-    // find function 'main' in the context
-    auto fnTest = ctx.findFunction("main");
-    if ( !fnTest ) {
-        tout << "function 'main' not found\n";
-        return;
-    }
-    // verify if 'main' is a function, with the correct signature
-    // note, this operation is slow, so don't do it every time for every call
-    if ( !verifyCall<void>(fnTest->debugInfo, dummyLibGroup) ) {
-        tout << "function 'main', call arguments do not match. expecting def main : void\n";
-        return;
-    }
-    // evaluate 'main' function in the context
-    ctx.evalWithCatch(fnTest, nullptr);
-    if ( auto ex = ctx.getException() ) {       // if function cased panic, report it
-        tout << "exception: " << ex << "\n";
-        return;
-    }
-}
+    // module group for compiled program
+    auto lib_desc = make_zeroed<skr::das::LibraryDescriptor>();
+    auto library = skr::das::Library::Create(lib_desc);
 
-int main(int argc, char * argv[])
-{
-    NEED_ALL_DEFAULT_MODULES;
-    Module::Initialize();
-    // run the tutorial
-    tutorial();
-    // shut-down daScript, free all memory
-    Module::Shutdown();
+    // compile script
+    skr::string script_path = skr::das::Environment::GetRootDir();
+    script_path += TUTORIAL_NAME;
+    auto program = skr::das::Environment::compile_dascript(
+        script_path.u8_str(), faccess, tout, library);
+    if (!program) return -1;
+    
+    // create context
+    auto ctx_desc = make_zeroed<skr::das::ContextDescriptor>();
+    ctx_desc.stack_size = program->get_ctx_stack_size();
+    auto ctx = skr::das::Context::Create(ctx_desc);
+    if ( !program->simulate(ctx, tout) ) return -2;
+
+    // find function. its up to application to check, if function is not null
+    auto function = ctx->find_function(u8"main");
+    if ( !function ) return -3;
+
+    // call context function
+    ctx->eval(function);
+
+    skr::das::Context::Free(ctx);
+    skr::das::Program::Free(program);
+    skr::das::Library::Free(library);
+    skr::das::TextPrinter::Free(tout);
+    skr::das::FileAccess::Free(faccess);
+    skr::das::Environment::Finalize();
     return 0;
 }

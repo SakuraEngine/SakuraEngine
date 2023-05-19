@@ -2,7 +2,7 @@
 #include "platform/vfs.h"
 #include "resource/resource_handle.h"
 #include "resource/resource_header.hpp"
-#include "utils/types.h"
+#include "misc/types.h"
 
 struct skr_io_ram_service_t;
 
@@ -81,7 +81,7 @@ public:
     virtual bool RequestResourceFile(SResourceRequest* request) = 0;
     virtual void CancelRequestFile(SResourceRequest* requst) = 0;
 
-    void FillRequest(SResourceRequest* request, skr_resource_header_t header, skr_vfs_t* vfs, const char* uri);
+    void FillRequest(SResourceRequest* request, skr_resource_header_t header, skr_vfs_t* vfs, const char8_t* uri);
 };
 
 struct RUNTIME_API SResourceSystem {

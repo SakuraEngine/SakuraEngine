@@ -123,7 +123,7 @@ class MetaDatabase(object):
         template = os.path.join(BASE, "impl_begin.cpp.mako")
         return self.render(template, db=self)
     def generate_impl_end(self):
-        template = os.path.join(BASE, "impl_begin.cpp.mako")
+        template = os.path.join(BASE, "impl_end.cpp.mako")
         return self.render(template, db=self)
     def guid_constant(self, type):
         guid = type.attrs.guid

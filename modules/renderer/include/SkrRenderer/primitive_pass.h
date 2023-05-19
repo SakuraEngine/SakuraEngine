@@ -11,7 +11,7 @@ class RenderGraph;
 } // namespace skr
 
 struct dual_storage_t;
-typedef const char* skr_render_pass_name_t;
+typedef const char8_t* skr_render_pass_name_t;
 
 typedef struct skr_primitive_pass_context_t {
     SRendererId renderer;

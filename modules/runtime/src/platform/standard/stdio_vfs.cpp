@@ -1,5 +1,5 @@
 #include "platform/vfs.h"
-#include "utils/log.h"
+#include "misc/log.h"
 #include <string.h>
 #include <platform/filesystem.hpp>
 #include "platform/memory.h"

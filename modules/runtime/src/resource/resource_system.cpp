@@ -1,13 +1,13 @@
 #include "resource_request_impl.hpp"
-#include "task/task.hpp"
+#include "async/fib_task.hpp"
 #include "platform/guid.hpp"
 #include "ecs/entities.hpp"
 #include "platform/debug.h"
 #include "containers/hashmap.hpp"
-#include "utils/io.h"
+#include "misc/io.h"
 #include "platform/vfs.h"
 #include "resource/resource_factory.h"
-#include "utils/concurrent_queue.h"
+#include "containers/concurrent_queue.h"
 
 namespace skr::resource
 {
@@ -48,7 +48,15 @@ protected:
     SResourceRegistry* resourceRegistry = nullptr;
     skr_io_ram_service_t* ioService = nullptr; 
 
-    moodycamel::ConcurrentQueue<SResourceRequest*> requests;
+    struct ResourceRequestConcurrentQueueTraits : public skr::ConcurrentQueueDefaultTraits
+    {
+        static constexpr const char* kResourceRequestQueueName = "";
+        static const bool RECYCLE_ALLOCATED_BLOCKS = true;
+        static inline void* malloc(size_t size) { return sakura_mallocN(size, kResourceRequestQueueName); }
+        static inline void free(void* ptr) { return sakura_freeN(ptr, kResourceRequestQueueName); }
+    };
+
+    skr::ConcurrentQueue<SResourceRequest*, ResourceRequestConcurrentQueueTraits> requests;
     SMutexObject recordMutex; // this mutex is used to protect the resourceRecords and resourceToRecord maps
 
     // these requests are only handled inside this system and is thread-unsafe

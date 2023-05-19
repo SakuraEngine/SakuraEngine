@@ -1,6 +1,6 @@
 #include "forward_pass.hpp"
 
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 
 
 
@@ -77,12 +77,12 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
             ZoneScopedN("CopySkinMesh");
 
             auto uploadVertices = [&](dual_chunk_view_t* r_cv) {
-                skr_render_anim_comp_t* anims = nullptr;
+                const skr_render_anim_comp_t* anims = nullptr;
                 {
                     ZoneScopedN("FetchAnims");
 
                     // duel to dependency, anims fetch here may block a bit, waiting CPU skinning job done
-                    anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
+                    anims = dual::get_owned_ro<skr_render_anim_comp_t>(r_cv);
                 }
 
                 auto upload_buffer = context.resolve(upload_buffer_handle);
@@ -169,12 +169,11 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
     if (!drawcalls.size()) return;
 
     // 1.IMGUI control shading rate
-    const char* shadingRateNames[] = {
-        "1x1", "2x2", "4x4", "1x2", "2x1", "2x4", "4x2"
+    const char8_t* shadingRateNames[] = {
+        u8"1x1", u8"2x2", u8"4x4", 
+        u8"1x2", u8"2x1", u8"2x4", u8"4x2"
     };
-    eastl::fixed_string<char, 64> ButtonText = "SwitchShadingRate-";
-    ImGui::Begin("ShadingRate");
-    ButtonText += shadingRateNames[shading_rate];
+    const auto ButtonText = skr::format(u8"SwitchShadingRate-{}", shadingRateNames[shading_rate]);
     if (ImGui::Button(ButtonText.c_str()))
     {
         if (shading_rate != CGPU_SHADING_RATE_COUNT - 1)
@@ -207,7 +206,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
             CGPUResourceBarrierDescriptor barrier_desc = {};
             eastl::vector<CGPUBufferBarrier> barriers;
             auto barrierVertices = [&](dual_chunk_view_t* r_cv) {
-                skr_render_anim_comp_t* anims = nullptr;
+                const skr_render_anim_comp_t* anims = nullptr;
                 {
                     ZoneScopedN("FetchAnims");
                     // duel to dependency, anims fetch here may block a bit, waiting CPU skinning job done

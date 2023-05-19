@@ -34,8 +34,8 @@
 #include <cstddef>
 
 #include "SkrAnim/ozz/base/platform.h"
-#include "binary/reader_fwd.h"
-#include "binary/writer_fwd.h"
+#include "serde/binary/reader_fwd.h"
+#include "serde/binary/writer_fwd.h"
 
 namespace ozz {
 namespace io {

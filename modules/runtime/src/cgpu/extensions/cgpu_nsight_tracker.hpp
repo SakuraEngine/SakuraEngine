@@ -17,7 +17,7 @@ struct CGPUNSightSingleton
     eastl::vector<CGPUNSightTrackerId> all_trackers;
 };
 
-#define CGPU_NSIGNT_SINGLETON_NAME "CGPUNSightSingleton"
+#define CGPU_NSIGNT_SINGLETON_NAME u8"CGPUNSightSingleton"
 
 struct CGPUNSightTrackerBase : public CGPUNSightTracker
 {

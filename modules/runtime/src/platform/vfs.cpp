@@ -1,6 +1,6 @@
 #include "platform/vfs.h"
 #include <platform/filesystem.hpp>
-#include <containers/text.hpp>
+#include "containers/string.hpp"
 
 void skr_vfs_get_parent_path(const char8_t* path, char8_t* output)
 {
@@ -17,7 +17,7 @@ void skr_vfs_append_path_component(const char8_t* path, const char8_t* component
 
 void skr_vfs_append_path_extension(const char8_t* path, const char8_t* extension, char8_t* output)
 {
-    skr::text::text p(path);
+    skr::string p(path);
     if (extension[0] != u8'.')
     {
         p.append(u8".");

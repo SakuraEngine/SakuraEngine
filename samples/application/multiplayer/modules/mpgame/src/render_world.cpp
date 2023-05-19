@@ -3,7 +3,7 @@
 #include "MPShared/components.h"
 #include "SkrRenderer/render_effect.h"
 #include "ecs/type_builder.hpp"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include "ecs/set.hpp"
 #include "math/vector.h"
 #include "math/quat.h"
@@ -109,8 +109,8 @@ void MPRenderWorld::UpdateStructuralChanges()
         }
         auto modelFree = [=](dual_chunk_view_t* view) {
         };
-        skr_render_effect_access(renderer, view, "ForwardEffect", DUAL_LAMBDA(modelFree));
-        skr_render_effect_detach(renderer, view, "ForwardEffect");
+        skr_render_effect_access(renderer, view, u8"ForwardEffect", DUAL_LAMBDA(modelFree));
+        skr_render_effect_detach(renderer, view, u8"ForwardEffect");
         dualS_destroy(storage, view);
     };
     dualS_batch(storage, toDeleteRenderEntities.data(), toDeleteRenderEntities.size(), DUAL_LAMBDA(deleteRenderEntity));
@@ -152,7 +152,7 @@ void MPRenderWorld::UpdateStructuralChanges()
                         renderControllers[i] = controllers[g_id + i];
                 }
                 g_id += view->count;
-                skr_render_effect_attach(renderer, view, "ForwardEffect");
+                skr_render_effect_attach(renderer, view, u8"ForwardEffect");
             };
             dualS_allocate_type(storage, &batchedType, count, DUAL_LAMBDA(initialize));
         };

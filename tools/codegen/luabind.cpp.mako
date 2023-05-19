@@ -1,7 +1,7 @@
 // BEGIN LUA GENERATED
 #include "lua/bind.hpp"
 #include "lua/lua.hpp"
-#include "utils/hash.h"
+#include "misc/hash.h"
 <%
     categories = {}
     for enum in generator.filter_types(db.enums):

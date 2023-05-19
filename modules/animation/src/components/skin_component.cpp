@@ -1,6 +1,6 @@
 #include "string.h"
 
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include "SkrRenderer/render_mesh.h"
 
 #include "SkrAnim/components/skin_component.h"
@@ -31,7 +31,7 @@ void skr_init_skin_component(skr_render_skin_comp_t* component, const skr_skelet
     {
         for (size_t j = 0; j < skeleton->skeleton.num_joints(); ++j)
         {
-            if (strcmp(skeleton->skeleton.joint_names()[j], skin->blob.joint_remaps[i].data()) == 0)
+            if (strcmp(skeleton->skeleton.joint_names()[j], skin->blob.joint_remaps[i].c_str()) == 0)
             {
                 component->joint_remaps[i] = static_cast<uint32_t>(j);
                 break;

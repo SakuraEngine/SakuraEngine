@@ -472,7 +472,7 @@ void VkUtil_ConsumeDescriptorSets(struct VkUtil_DescriptorPool* pPool,
 const VkDescriptorSetLayout* pLayouts, VkDescriptorSet* pSets, uint32_t numDescriptorSets)
 {
 #ifdef CGPU_THREAD_SAFETY
-    skr_acquire_mutex(pPool->pMutex);
+    skr_mutex_acquire(pPool->pMutex);
 #endif
     {
         CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)pPool->Device;
@@ -490,14 +490,14 @@ const VkDescriptorSetLayout* pLayouts, VkDescriptorSet* pSets, uint32_t numDescr
         }
     }
 #ifdef CGPU_THREAD_SAFETY
-    skr_release_mutex(pPool->pMutex);
+    skr_mutex_release(pPool->pMutex);
 #endif
 }
 
 void VkUtil_ReturnDescriptorSets(struct VkUtil_DescriptorPool* pPool, VkDescriptorSet* pSets, uint32_t numDescriptorSets)
 {
 #ifdef CGPU_THREAD_SAFETY
-    skr_acquire_mutex(pPool->pMutex);
+    skr_mutex_acquire(pPool->pMutex);
 #endif
     {
         // TODO: It is possible to avoid using that flag by updating descriptor sets instead of deleting them.
@@ -507,7 +507,7 @@ void VkUtil_ReturnDescriptorSets(struct VkUtil_DescriptorPool* pPool, VkDescript
         D->mVkDeviceTable.vkFreeDescriptorSets(D->pVkDevice, pPool->pVkDescPool, numDescriptorSets, pSets);
     }
 #ifdef CGPU_THREAD_SAFETY
-    skr_release_mutex(pPool->pMutex);
+    skr_mutex_release(pPool->pMutex);
 #endif
 }
 

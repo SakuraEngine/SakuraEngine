@@ -1,14 +1,14 @@
 #include <EASTL/array.h>
-#include "utils/io.h"
-#include "utils/log.hpp"
-#include "utils/make_zeroed.hpp"
+#include "misc/io.h"
+#include "misc/log.hpp"
+#include "misc/make_zeroed.hpp"
 
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrShaderCompiler/assets/shader_asset.hpp"
 #include "SkrShaderCompiler/shader_compiler.hpp"
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
-#include "json/reader.h"
+#include "serde/json/reader.h"
 
 #include "tracy/Tracy.hpp"
 
@@ -28,7 +28,7 @@ void* SShaderOptionsImporter::Import(skr_io_ram_service_t* ioService, SCookConte
     auto doc = parser.iterate(jsonString);
     if(doc.error())
     {
-        SKR_LOG_FMT_ERROR("Import shader options asset {} from {} failed, json parse error {}", assetRecord->guid, jsonPath, simdjson::error_message(doc.error()));
+        SKR_LOG_FMT_ERROR(u8"Import shader options asset {} from {} failed, json parse error {}", assetRecord->guid, jsonPath, simdjson::error_message(doc.error()));
         return nullptr;
     }
     auto json_value = doc.get_value().value_unsafe();

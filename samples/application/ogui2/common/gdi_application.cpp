@@ -1,19 +1,19 @@
 #include "./gdi_application.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 #include "SkrGuiRenderer/gdi_renderer.hpp"
 #include "SkrGui/interface/gdi_renderer.hpp"
 #include "platform/filesystem.hpp"
 #include "platform/vfs.h"
-#include "utils/threaded_service.h"
-#include "utils/io.h"
+#include "misc/threaded_service.h"
+#include "misc/io.h"
 
-#include "containers/text.hpp"
+#include "containers/string.hpp"
 
 bool initialize_gdi_application(gdi_application_t* app)
 {
     // initialize gfx
     app->gfx.backend = platform_default_backend;
-    auto app_name = skr::text::text::from_utf8(SKR_UTF8("GDI [backend:")); 
+    auto app_name = skr::string::from_utf8(SKR_UTF8("GDI [backend:")); 
     app_name += gCGPUBackendNames[app->gfx.backend];
     app_name += SKR_UTF8("]");
     app->gfx.window_title = app_name.u8_str();

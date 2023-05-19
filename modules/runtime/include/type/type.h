@@ -1,5 +1,5 @@
 #pragma once
-#include "utils/types.h"
+#include "misc/types.h"
 
 typedef struct skr_type_t skr_type_t;
 typedef struct skr_value_t skr_value_t;
@@ -46,13 +46,13 @@ enum skr_type_category_t
 typedef enum skr_type_category_t skr_type_category_t;
 
 RUNTIME_EXTERN_C RUNTIME_API 
-const char* skr_get_type_name(const skr_guid_t* type);
+const char8_t* skr_get_type_name(const skr_guid_t* type);
 
 RUNTIME_EXTERN_C RUNTIME_API 
 const struct skr_type_t* skr_get_type(const skr_type_id_t* id);
 
 RUNTIME_EXTERN_C RUNTIME_API 
-void skr_register_type_name(const skr_guid_t* type, const char* name);
+void skr_register_type_name(const skr_guid_t* type, const char8_t* name);
 
 RUNTIME_EXTERN_C RUNTIME_API 
 void skr_get_derived_types(const struct skr_type_t* type, void (*callback)(void* u, struct skr_type_t* type), void* u);
@@ -67,16 +67,16 @@ RUNTIME_EXTERN_C RUNTIME_API
 void skr_get_fields(const struct skr_type_t* type, void (*callback)(void* u, skr_field_t* field), void* u);
 
 RUNTIME_EXTERN_C RUNTIME_API 
-skr_field_t* skr_get_field(const struct skr_type_t* type, const char* name);
+skr_field_t* skr_get_field(const struct skr_type_t* type, const char8_t* name);
 
 RUNTIME_EXTERN_C RUNTIME_API 
-skr_method_t* skr_get_method(const struct skr_type_t* type, const char* name);
+skr_method_t* skr_get_method(const struct skr_type_t* type, const char8_t* name);
 
 RUNTIME_EXTERN_C RUNTIME_API 
 struct skr_type_t* skr_get_field_type(const skr_field_t* field);
 
 RUNTIME_EXTERN_C RUNTIME_API 
-const char* skr_get_field_name(const skr_field_t* field);
+const char8_t* skr_get_field_name(const skr_field_t* field);
 
 extern const skr_type_t* $type;
 extern const skr_field_t* $field;
@@ -86,7 +86,7 @@ RUNTIME_EXTERN_C RUNTIME_API
 skr_dynamic_record_type_id skr_create_record_type(const skr_guid_t* type_id, uint64_t size, uint64_t align, const skr_guid_t* parent);
 
 RUNTIME_EXTERN_C RUNTIME_API 
-void skr_record_type_set_name(skr_dynamic_record_type_id type, const char* name);
+void skr_record_type_set_name(skr_dynamic_record_type_id type, const char8_t* name);
 
 RUNTIME_EXTERN_C RUNTIME_API 
 void skr_record_type_set_hasher(skr_dynamic_record_type_id type, size_t (*hasher)(const void* self, size_t base));

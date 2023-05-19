@@ -1,10 +1,9 @@
-#include "utils/parallel_for.hpp"
-#include <EASTL/array.h>
-#include "utils/io.h"
-#include "utils/log.hpp"
-#include "utils/make_zeroed.hpp"
+#include "misc/parallel_for.hpp"
+#include "misc/io.h"
+#include "misc/log.hpp"
+#include "misc/make_zeroed.hpp"
 
-#include "json/writer.h"
+#include "serde/json/writer.h"
 
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/project/project.hpp"
@@ -14,7 +13,9 @@
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 #include "SkrRenderer/resources/shader_resource.hpp"
 
-#include "utils/cartesian_product.hpp"
+#include "misc/cartesian_product.hpp"
+
+#include <EASTL/array.h>
 
 #include "tracy/Tracy.hpp"
 
@@ -58,7 +59,7 @@ option_variant_seq_t& out_variants, variant_seq_hashe_seq_t& out_stable_hahses)
     skr_shader_options_resource_t::flatten_options(out_flatten_options, options);
 
     // [ ["on", "off"], ["a", "b", "c"], ["1", "2"] ]
-    eastl::vector<eastl::vector<eastl::string>> selection_seqs = {};
+    eastl::vector<eastl::vector<skr::string>> selection_seqs = {};
     selection_seqs.resize(out_flatten_options.size());
     for (size_t i = 0u; i < out_flatten_options.size(); ++i)
     {
@@ -71,7 +72,7 @@ option_variant_seq_t& out_variants, variant_seq_hashe_seq_t& out_stable_hahses)
     if (!selection_seqs.empty())
     {
         // [ ["on", "a", "1"], ["on", "a", "2"] ...]
-        skr::cartesian_product<eastl::string> cartesian(selection_seqs);
+        skr::cartesian_product<skr::string> cartesian(selection_seqs);
         while (cartesian.has_next())
         {
             eastl::vector<skr_shader_option_instance_t> option_seq = {};
@@ -193,7 +194,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
                         // wirte bytecode to disk
                         const auto subdir = CGPUShaderBytecodeTypeNames[format];
                         auto basePath = outputPath.parent_path() / subdir;
-                        const auto fname = skr::format("{}#{}-{}-{}-{}",
+                        const auto fname = skr::format(u8"{}#{}-{}-{}-{}",
                         identifier.hash.flags, identifier.hash.encoded_digits[0],
                         identifier.hash.encoded_digits[1], identifier.hash.encoded_digits[2], identifier.hash.encoded_digits[3]);
                         // create dir
@@ -201,7 +202,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
                         skr::filesystem::create_directories(basePath, ec);
                         // write bytes to file
                         {
-                            auto bytesPath = basePath / (fname + ".bytes").c_str();
+                            auto bytesPath = basePath / skr::format(u8"{}.bytes", fname).c_str();
                             {
                                 auto file = fopen(bytesPath.string().c_str(), "wb");
                                 SKR_DEFER({ fclose(file); });
@@ -212,7 +213,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
                         // write pdb to file
                         if (auto pdb = compiled->GetPDB(); !pdb.empty())
                         {
-                            auto pdbPath = basePath / (fname + ".pdb").c_str();
+                            auto pdbPath = basePath / skr::format(u8"{}.pdb", fname).c_str();
                             {
                                 auto pdb_file = fopen(pdbPath.string().c_str(), "wb");
                                 SKR_DEFER({ fclose(pdb_file); });
@@ -320,12 +321,12 @@ bool SShaderCooker::Cook(SCookContext* ctx)
         auto file = fopen(jPath.c_str(), "wb");
         if (!file)
         {
-            SKR_LOG_FMT_ERROR("[SShaderCooker::Cook] failed to write cooked file for json_resource {}! path: {}",
+            SKR_LOG_FMT_ERROR(u8"[SShaderCooker::Cook] failed to write cooked file for json_resource {}! path: {}",
             assetRecord->guid, assetRecord->path.string());
             return false;
         }
         SKR_DEFER({ fclose(file); });
-        fwrite(writer.buffer.data(), writer.buffer.size(), 1, file);
+        fwrite(writer.buffer.c_str(), writer.buffer.size(), 1, file);
     }
     return true;
 }

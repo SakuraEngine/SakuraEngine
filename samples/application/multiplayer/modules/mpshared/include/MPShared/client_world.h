@@ -5,7 +5,7 @@
 #include "MPShared/shared.h"
 #include "MPShared/world_delta.h"
 #include "simdjson.h"
-#include "task/task.hpp"
+#include "async/fib_task.hpp"
 #include "containers/hashmap.hpp"
 
 struct Prefab

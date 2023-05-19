@@ -27,7 +27,7 @@ public:
         named_buffers.clear();
     }
 
-    PassNode* pass(const char* name) SKR_NOEXCEPT final override
+    PassNode* pass(const char8_t* name) SKR_NOEXCEPT final override
     {
         auto it = named_passes.find(name);
         if (it != named_passes.end())
@@ -37,7 +37,7 @@ public:
         return nullptr;
     }
 
-    TextureNode* texture(const char* name) SKR_NOEXCEPT final override
+    TextureNode* texture(const char8_t* name) SKR_NOEXCEPT final override
     {
         auto it = named_textures.find(name);
         if (it != named_textures.end())
@@ -47,7 +47,7 @@ public:
         return nullptr;
     }
 
-    BufferNode* buffer(const char* name) SKR_NOEXCEPT final override
+    BufferNode* buffer(const char8_t* name) SKR_NOEXCEPT final override
     {
         auto it = named_buffers.find(name);
         if (it != named_buffers.end())
@@ -57,7 +57,7 @@ public:
         return nullptr;
     }
 
-    bool value(const char* name, double& v) SKR_NOEXCEPT final override
+    bool value(const char8_t* name, double& v) SKR_NOEXCEPT final override
     {
         auto it = named_values.find(name);
         if (it != named_values.end())
@@ -68,46 +68,46 @@ public:
         return false;
     }
 
-    bool set_value(const char* name, double v) SKR_NOEXCEPT final override
+    bool set_value(const char8_t* name, double v) SKR_NOEXCEPT final override
     {
         named_values[name] = v;
         return true;
     }
 
-    bool add_pass(const char* name, class PassNode* pass) SKR_NOEXCEPT final override
+    bool add_pass(const char8_t* name, class PassNode* pass) SKR_NOEXCEPT final override
     {
         auto it = named_passes.find(name);
         if (it != named_passes.end())
         {
             return false;
         }
-        named_passes.emplace((const char*)pass->get_name(), pass);
+        named_passes.emplace(pass->get_name(), pass);
         return true;
     }
 
-    bool add_texture(const char* name, class TextureNode* texture) SKR_NOEXCEPT final override
+    bool add_texture(const char8_t* name, class TextureNode* texture) SKR_NOEXCEPT final override
     {
         auto it = named_textures.find(name);
         if (it != named_textures.end())
         {
             return false;
         }
-        named_textures.emplace((const char*)texture->get_name(), texture);
+        named_textures.emplace(texture->get_name(), texture);
         return true;
     }
 
-    bool add_buffer(const char* name, class BufferNode* buffer) SKR_NOEXCEPT final override
+    bool add_buffer(const char8_t* name, class BufferNode* buffer) SKR_NOEXCEPT final override
     {
         auto it = named_buffers.find(name);
         if (it != named_buffers.end())
         {
             return false;
         }
-        named_buffers.emplace((const char*)buffer->get_name(), buffer);
+        named_buffers.emplace(buffer->get_name(), buffer);
         return true;
     }
 
-    void override_pass(const char* name, class PassNode* pass) SKR_NOEXCEPT final override
+    void override_pass(const char8_t* name, class PassNode* pass) SKR_NOEXCEPT final override
     {
         auto it = named_passes.find(name);
         if (it != named_passes.end())
@@ -117,7 +117,7 @@ public:
         named_passes.emplace(name, pass);
     }
 
-    void override_texture(const char* name, class TextureNode* texture) SKR_NOEXCEPT final override
+    void override_texture(const char8_t* name, class TextureNode* texture) SKR_NOEXCEPT final override
     {
         auto it = named_textures.find(name);
         if (it != named_textures.end())
@@ -127,7 +127,7 @@ public:
         named_textures.emplace(name, texture);
     }
     
-    void override_buffer(const char* name, class BufferNode* buffer) SKR_NOEXCEPT final override
+    void override_buffer(const char8_t* name, class BufferNode* buffer) SKR_NOEXCEPT final override
     {
         auto it = named_buffers.find(name);
         if (it != named_buffers.end())

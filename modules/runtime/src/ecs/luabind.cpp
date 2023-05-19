@@ -22,7 +22,7 @@ namespace skr::lua
         uint32_t index;
         dual_array_comp_t arr;
         uint32_t stride;
-        const char* guidStr;
+        const char8_t* guidStr;
         lua_push_t lua_push;
         lua_check_t lua_check;
     };
@@ -36,7 +36,7 @@ namespace skr::lua
         const dual_type_index_t* types;
         void** datas;
         uint32_t* strides;
-        const char** guidStrs;
+        const char8_t** guidStrs;
         uint32_t* elementSizes;
         lua_push_t* lua_pushs;
         lua_check_t* lua_checks;
@@ -71,7 +71,7 @@ namespace skr::lua
             {
                 data = (char *)data + strides[comp] * index;
                 *(void**)lua_newuserdata(L, sizeof(void*)) = data;
-                luaL_getmetatable(L, guidStrs[comp]);
+                luaL_getmetatable(L, (const char*)guidStrs[comp]);
                 if(lua_isnil(L, -1))
                     luaL_getmetatable(L, "skr_opaque_t");
                 lua_setmetatable(L, -2);
@@ -102,7 +102,7 @@ namespace skr::lua
         luaView.types = indices;
         luaView.datas = dual::localStack.allocate<void*>(count);
         luaView.strides = dual::localStack.allocate<uint32_t>(count);
-        luaView.guidStrs = dual::localStack.allocate<const char*>(count);
+        luaView.guidStrs = dual::localStack.allocate<const char8_t*>(count);
         luaView.elementSizes = dual::localStack.allocate<uint32_t>(count);
         luaView.lua_pushs = dual::localStack.allocate<lua_push_t>(count);
         luaView.lua_checks = dual::localStack.allocate<lua_check_t>(count);
@@ -149,7 +149,7 @@ namespace skr::lua
         //bind component
         {
             auto trampoline = +[](lua_State* L) -> int {
-                auto name = luaL_checkstring(L, 1);
+                auto name = (const char8_t*)luaL_checkstring(L, 1);
                 auto type = dual::type_registry_t::get().get_type(name);
                 if(type == dual::kInvalidSIndex)
                 {
@@ -401,7 +401,7 @@ namespace skr::lua
                             luaL_argexpected(L, lua_isstring(L, 3) || lua_isinteger(L, 3), 3, "expected name or localindex");
                             if(lua_isstring(L, 3))
                             {
-                                const char* str = lua_tostring(L, 3);
+                                auto str = (const char8_t*)lua_tostring(L, 3);
                                 auto id = dualT_get_type_by_name(str);
                                 compId = view->view.chunk->type->index(id);
                             }
@@ -451,7 +451,7 @@ namespace skr::lua
                             luaL_argexpected(L, lua_isstring(L, 3) || lua_isinteger(L, 3), 3, "expected name or localindex");
                             if(lua_isstring(L, 3))
                             {
-                                const char* str = lua_tostring(L, 3);
+                                auto str = (const char8_t*)lua_tostring(L, 3);
                                 auto id = dualT_get_type_by_name(str);
                                 compId = view->view.chunk->type->index(id);
                             }
@@ -561,7 +561,7 @@ namespace skr::lua
                     {
                         auto data = (char *)view->arr.BeginX + view->stride * index;
                         *(void**)lua_newuserdata(L, sizeof(void*)) = data;
-                        luaL_getmetatable(L, view->guidStr);
+                        luaL_getmetatable(L, (const char*)view->guidStr);
                         if(lua_isnil(L, -1))
                             luaL_getmetatable(L, "skr_opaque_t");
                         lua_setmetatable(L, -2);

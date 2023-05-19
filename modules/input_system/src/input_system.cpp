@@ -3,7 +3,7 @@
 #include "SkrInputSystem/input_modifier.hpp"
 #include "./input_action_impl.hpp"
 #include "platform/debug.h"
-#include "utils/log.h"
+#include "misc/log.h"
 
 #include <EASTL/map.h>
 #include <EASTL/vector_map.h>

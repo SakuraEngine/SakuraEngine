@@ -4,7 +4,7 @@
 #include "MPShared/world_delta.h"
 #include "ecs/type_builder.hpp"
 #include "MPShared/shared.h"
-#include "utils/log.h"
+#include "misc/log.h"
 #include "ecs/array.hpp"
 
 #include "world_delta_helper.hpp"
@@ -51,7 +51,7 @@ uint8_t GetNetworkComponentIndex(dual_type_index_t type)
 void InitializeNetworkComponents()
 {
     {
-        static skr::binary::VectorSerdeConfig<float> translationSerdeConfig = { 10000 };
+        static skr::binary::VectorPackConfig<float> translationSerdeConfig = { 10000 };
         constexpr auto builder = +[](dual_chunk_view_t view, const skr_translation_comp_t& comp, skr_translation_comp_t_History& historyComp, bool initialMap, skr_binary_writer_t& archive)
         {
             uint32_t full = initialMap || historyComp.deltaAccumulated > 40.f;
@@ -134,7 +134,7 @@ void InitializeNetworkComponents()
         RegisterComponentDeltaApplier(dual_id_of<CController>::get(), &ApplyDelta<CController, applier>);
     }
     {
-        static auto velocitySerdeConfig = skr::binary::VectorSerdeConfig<float>{100};
+        static auto velocitySerdeConfig = skr::binary::VectorPackConfig<float>{100};
         constexpr auto builder = +[](dual_chunk_view_t view, const CMovement& comp, skr_binary_writer_t& archive)
         {
             skr::binary::Archive(&archive, comp.velocity, velocitySerdeConfig);

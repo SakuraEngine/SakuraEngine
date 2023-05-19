@@ -138,6 +138,13 @@ StateBuffer 可以大幅缓解管线和着色器组合爆炸引起的内存膨�
 
 WIP...
 
+### [GUI Canvas](samples/application/ogui2/robjects)
+
+GUI 的渲染树 (RenderTree) 层，有排版和渲染 Render Object 的功能。支持基本图元、纹理、颜色刷和文本段落等。
+
+![RObjects](https://media.githubusercontent.com/media/SakuraEngine/Sakura.Resources/main/showcase/RObjects.gif)
+
+
 ### [Live2D Viewer](samples/application/live2d-viewer)
 
 集成 Cubism Native SDK 且使用 Render Graph 进行 Live2D 模型高效绘制的程序示例。

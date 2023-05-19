@@ -17,7 +17,7 @@ void* SAnimGltfImporter::Import(skr_io_ram_service_t*, SCookContext* context)
     ozz::animation::Skeleton& skeleton = *(ozz::animation::Skeleton*)skeletonResource.get_ptr();
     if(!impoter.Load((const char*)context->AddFileDependency(assetPath.c_str()).u8string().c_str()))
     {
-        SKR_LOG_FMT_ERROR("Failed to load gltf file %s for asset %s.", assetPath.c_str(), context->GetAssetPath());
+        SKR_LOG_FMT_ERROR(u8"Failed to load gltf file %s for asset %s.", assetPath.c_str(), context->GetAssetPath());
         return nullptr;
     }
     RawAnimation* rawAnimation = SkrNew<RawAnimation>();

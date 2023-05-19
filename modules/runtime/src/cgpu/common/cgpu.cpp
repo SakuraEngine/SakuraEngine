@@ -108,26 +108,26 @@ CGPUQueueId cgpu_runtime_table_try_get_queue(CGPUDeviceId device, ECGPUQueueType
     return device->adapter->instance->runtime_table->TryFindQueue(device, type, index);
 }
 
-void cgpu_runtime_table_add_custom_data(struct CGPURuntimeTable* table, const char* key, void* data)
+void cgpu_runtime_table_add_custom_data(struct CGPURuntimeTable* table, const char8_t* key, void* data)
 {
     table->custom_data_map[key] = data;
 }
 
-void cgpu_runtime_table_add_sweep_callback(struct CGPURuntimeTable* table, const char* key, void(pfn)(void*), void* usrdata)
+void cgpu_runtime_table_add_sweep_callback(struct CGPURuntimeTable* table, const char8_t* key, void(pfn)(void*), void* usrdata)
 {
     table->custom_sweep_callbacks[key] = [=](){
         pfn(usrdata);
     };
 }
 
-void cgpu_runtime_table_add_early_sweep_callback(struct CGPURuntimeTable* table, const char* key, void(pfn)(void*), void* usrdata)
+void cgpu_runtime_table_add_early_sweep_callback(struct CGPURuntimeTable* table, const char8_t* key, void(pfn)(void*), void* usrdata)
 {
     table->custom_early_sweep_callbacks[key] = [=](){
         pfn(usrdata);
     };
 }
 
-void* cgpu_runtime_table_try_get_custom_data(struct CGPURuntimeTable* table, const char* key)
+void* cgpu_runtime_table_try_get_custom_data(struct CGPURuntimeTable* table, const char8_t* key)
 {
     if (table->custom_data_map.find(key) != table->custom_data_map.end())
     {
@@ -136,7 +136,7 @@ void* cgpu_runtime_table_try_get_custom_data(struct CGPURuntimeTable* table, con
     return nullptr;
 }
 
-bool cgpu_runtime_table_remove_custom_data(struct CGPURuntimeTable* table, const char* key)
+bool cgpu_runtime_table_remove_custom_data(struct CGPURuntimeTable* table, const char8_t* key)
 {
     if (table->custom_data_map.find(key) != table->custom_data_map.end())
     {

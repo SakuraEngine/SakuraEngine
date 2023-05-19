@@ -67,6 +67,9 @@ target("SkrRoot")
     add_rules("utils.install-libs", { libnames = libs_to_install })
     -- core deps
     add_deps("boost", "tracyclient", {public = true})
+    -- defs & flags
+    add_ldflags(project_ldflags, {public = true, force = true})
+    add_cxflags(project_cxflags, {public = true, force = true})
     -- generate codegen fences
     after_load(function(target)
         import("meta_codegen")

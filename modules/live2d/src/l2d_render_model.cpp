@@ -1,6 +1,6 @@
-#include "utils/make_zeroed.hpp"
-#include "utils/log.h"
-#include "utils/io.h"
+#include "misc/make_zeroed.hpp"
+#include "misc/log.h"
+#include "misc/io.h"
 #include "cgpu/io.h"
 
 #include "platform/memory.h"
@@ -274,7 +274,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         ZoneScopedN("CreateLive2DVertexBuffer");
 
         auto vb_desc = make_zeroed<CGPUBufferDescriptor>();
-        skr::text::text name = (const char8_t*)resource->model_setting->GetModelFileName();
+        skr::string name = (const char8_t*)resource->model_setting->GetModelFileName();
         auto pos_name = name;
         pos_name += u8"-pos";
         vb_desc.name = pos_name.u8_str();
@@ -296,7 +296,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         ZoneScopedN("CreateLive2DIndexBuffer");
 
         auto ib_desc = make_zeroed<CGPUBufferDescriptor>();
-        skr::text::text name = (const char8_t*)resource->model_setting->GetModelFileName();
+        skr::string name = (const char8_t*)resource->model_setting->GetModelFileName();
         auto ind_name = name;
         ind_name += u8"-i";
         ib_desc.name = ind_name.u8_str();

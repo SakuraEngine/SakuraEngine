@@ -17,15 +17,15 @@ extern "C" void dualX_register_types();
 auto log_locker = +[](bool isLocked, void* pMutex){
     if (isLocked)
     {
-        skr_acquire_mutex((SMutex*)pMutex);
+        skr_mutex_acquire((SMutex*)pMutex);
     }
     else
     {
-        skr_release_mutex((SMutex*)pMutex);
+        skr_mutex_release((SMutex*)pMutex);
     }
 };
 
-void SkrRuntimeModule::on_load(int argc, char** argv)
+void SkrRuntimeModule::on_load(int argc, char8_t** argv)
 {
     // set lock for log
     skr_init_mutex_recursive(&log_mutex);
@@ -47,6 +47,9 @@ void SkrRuntimeModule::on_unload()
     skr_destroy_mutex(&log_mutex);
 
 #ifdef TRACY_ENABLE
+    //std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
+    //tracy::GetProfiler().RequestShutdown();
+    //while( !tracy::GetProfiler().HasShutdownFinished() ) { std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) ); };
     tracyLibrary.unload();
 #endif
 }
@@ -54,7 +57,7 @@ void SkrRuntimeModule::on_unload()
 SkrRuntimeModule* SkrRuntimeModule::Get()
 {
     auto mm = skr_get_module_manager();
-    static auto rm = static_cast<SkrRuntimeModule*>(mm->get_module("SkrRT"));
+    static auto rm = static_cast<SkrRuntimeModule*>(mm->get_module(u8"SkrRT"));
     return rm;
 }
 

@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "cgpu/api.h"
-#include "utils/make_zeroed.hpp"
+#include "misc/make_zeroed.hpp"
 
 class RootSignaturePool : public ::testing::TestWithParam<ECGPUBackend>
 {
@@ -41,7 +41,7 @@ protected:
         descriptor.present_queues = &mainQueue;
         descriptor.present_queues_count = 1;
         descriptor.surface = surface;
-        descriptor.imageCount = 3;
+        descriptor.image_count = 3;
         descriptor.format = CGPU_FORMAT_R8G8B8A8_UNORM;
         descriptor.enable_vsync = true;
 

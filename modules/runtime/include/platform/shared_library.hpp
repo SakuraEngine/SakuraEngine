@@ -28,7 +28,7 @@ public:
      * @description: Create & load a SharedLibrary on the disk.
      * @author: SaeruHikari
      */
-    SharedLibrary(const char* path)
+    SharedLibrary(const char8_t* path)
     {
         load(path);
     }
@@ -37,17 +37,17 @@ public:
     SharedLibrary(const SharedLibrary& rhs) = delete;
     const SharedLibrary& operator=(const SharedLibrary& rhs) = delete;
 
-    static const char* GetPlatformFilePrefixName();
-    static const char* GetPlatformFileExtensionName();
+    static const char8_t* GetPlatformFilePrefixName();
+    static const char8_t* GetPlatformFileExtensionName();
 
     /**
      * @description: Load a shared lib. Unload old lib if called
      * on a obj with loaded lib.
-     * @param const char* path
+     * @param const char8_t* path
      * @return: result of the operation
      * @author: SaeruHikari
      */
-    bool load(const char* path);
+    bool load(const char8_t* path);
     /**
      * @description: checks if the library is loaded.
      * @author: SaeruHikari
@@ -64,7 +64,7 @@ public:
      * @param symbolName
      * @author: SaeruHikari
      */
-    bool hasSymbol(const char* symbolName);
+    bool hasSymbol(const char8_t* symbolName);
     /**
      * @description: Returns the symbol specified by @a symbolName
      * need to ensuring the symbol type.
@@ -72,7 +72,7 @@ public:
      * @author: SaeruHikari
      */
     template <typename SymT>
-    SymT& get(const char* symbolName)
+    SymT& get(const char8_t* symbolName)
     {
         return *(reinterpret_cast<SymT*>(getImpl(symbolName)));
     }
@@ -83,7 +83,7 @@ public:
      * @return The address
      * @author: SaeruHikari
      */
-    void* getRawAddress(const char* symbolName);
+    void* getRawAddress(const char8_t* symbolName);
     /**
      * @description: Checks if the last call raise an error.
      * @author: SaeruHikari
@@ -104,19 +104,19 @@ private:
     NativeLibHandle _handle = nullptr;
     // Linux implementation
 #if defined(SKR_OS_UNIX)
-    bool loadImpl(const char* path);
+    bool loadImpl(const char8_t* path);
     bool unloadImpl();
-    void* getImpl(const char* symbolName);
+    void* getImpl(const char8_t* symbolName);
 #elif defined(SKR_OS_WINDOWS) // Windows implementation
     // Return a string explaining the last error
     skr::string getWindowsError();
-    bool loadImpl(const char* path);
+    bool loadImpl(const char8_t* path);
     bool unloadImpl();
-    void* getImpl(const char* symbolName);
+    void* getImpl(const char8_t* symbolName);
 #endif
 };
 
 } // namespace skr
 
 #define SKR_SHARED_LIB_API_PFN(api) decltype(&api)
-#define SKR_SHARED_LIB_LOAD_API(lib, api) (lib).hasSymbol(#api) ? &(lib).get<decltype(api)>(#api) : nullptr
+#define SKR_SHARED_LIB_LOAD_API(lib, api) (lib).hasSymbol(SKR_UTF8(#api)) ? &(lib).get<decltype(api)>(SKR_UTF8(#api)) : nullptr

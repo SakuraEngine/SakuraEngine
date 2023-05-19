@@ -1,9 +1,10 @@
 #pragma once
 #include "type/type.h"
 #include "type_id.hpp"
-#include <containers/span.hpp>
-#include "containers/string.hpp"
 #include "type/type_helper.hpp"
+
+#include "containers/span.hpp"
+#include "containers/string.hpp"
 
 #if defined(__cplusplus)
 namespace skr
@@ -54,7 +55,7 @@ struct RUNTIME_API skr_type_t {
     size_t Size() const;
     size_t Align() const;
     skr_guid_t Id() const;
-    const char* Name() const;
+    const char8_t* Name() const;
     void(*Deleter() const)(void*);
     bool Same(const skr_type_t* srcType) const;
     bool Convertible(const skr_type_t* srcType, bool format = false) const;
@@ -80,7 +81,7 @@ struct RUNTIME_API skr_type_t {
 };
 
 struct RUNTIME_API skr_field_t {
-    const char* name SKR_IF_CPP(= nullptr);
+    const char8_t* name SKR_IF_CPP(= nullptr);
     const skr_type_t* type SKR_IF_CPP(= nullptr);
     size_t offset SKR_IF_CPP(= 0);
 };
@@ -371,7 +372,7 @@ struct RUNTIME_API RecordType : skr_type_t {
     size_t align = 0;
     skr_guid_t guid = {};
     bool object = false;
-    const skr::string_view name = "";
+    const skr::string_view name = u8"";
     const RecordType* base = nullptr;
     ObjectMethodTable nativeMethods = {};
     const skr::span<struct skr_field_t> fields = {};

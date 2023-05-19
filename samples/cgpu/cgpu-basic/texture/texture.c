@@ -253,7 +253,7 @@ void initialize(void* usrdata)
         .width = BACK_BUFFER_WIDTH,
         .height = BACK_BUFFER_HEIGHT,
         .surface = surface,
-        .imageCount = BACK_BUFFER_COUNT,
+        .image_count = BACK_BUFFER_COUNT,
         .format = CGPU_FORMAT_R8G8B8A8_UNORM,
         .enable_vsync = true
     };
@@ -387,7 +387,7 @@ void raster_program()
                             .width = width,
                             .height = height,
                             .surface = surface,
-                            .imageCount = BACK_BUFFER_COUNT,
+                            .image_count = BACK_BUFFER_COUNT,
                             .format = CGPU_FORMAT_R8G8B8A8_UNORM,
                             .enable_vsync = true
                         };

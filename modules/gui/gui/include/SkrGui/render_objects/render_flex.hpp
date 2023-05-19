@@ -50,7 +50,7 @@ struct Flexable {
 class SKR_GUI_API RenderFlex : public RenderBox
 {
 public:
-    SKR_GUI_TYPE(RenderFlex, RenderBox, "d3987dfd-24d2-478a-910e-537f24c4bae7");
+    SKR_GUI_TYPE(RenderFlex, RenderBox, u8"d3987dfd-24d2-478a-910e-537f24c4bae7");
     RenderFlex(skr_gdi_device_id gdi_device);
 
     virtual void layout(BoxConstraint constraints, bool needSize = false) override;

@@ -189,8 +189,10 @@ public:
 
 	[[nodiscard]] u32 get_hash() const noexcept;
 
-	[[nodiscard]] const ochar8_t* u8_str() const noexcept;
 	[[nodiscard]] const ochar_t* c_str() const noexcept;
+	[[nodiscard]] const ochar8_t* u8_str() const noexcept;
+
+	[[nodiscard]] i32 get_capacity() const;
 
 private:
 
@@ -220,8 +222,6 @@ private:
 
 	/// @return is this a sequence with less than 15 chars
 	[[nodiscard]] bool is_short() const;
-
-	[[nodiscard]] i32 get_capacity() const;
 
 	[[nodiscard]] ochar8_t* data();
 

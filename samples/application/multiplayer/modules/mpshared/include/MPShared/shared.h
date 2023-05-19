@@ -5,7 +5,7 @@
 #include "containers/vector.hpp"
 #include "SkrScene/scene.h"
 #include "components.h"
-#include "utils/traits.hpp"
+#include "misc/traits.hpp"
 #include "platform/guid.hpp"
 #include "containers/hashmap.hpp"
 #include "EASTL/fixed_vector.h"
@@ -134,17 +134,17 @@ sattr("query" : "[in]skr_translation_comp_t, [in]CSphereCollider2D, [inout]CColl
 
 inline constexpr skr_guid_t GetPlayerPrefab()
 {
-    return skr::guid::make_guid_unsafe("AC4BA94B-B2A8-484C-9AC5-BDEA9070DFEE");
+    return skr::guid::make_guid_unsafe(u8"AC4BA94B-B2A8-484C-9AC5-BDEA9070DFEE");
 }
 
 inline constexpr skr_guid_t GetZombiePrefab()
 {
-    return skr::guid::make_guid_unsafe("9DFEBC41-4731-4AAE-9618-8BA4CC0EF86C");
+    return skr::guid::make_guid_unsafe(u8"9DFEBC41-4731-4AAE-9618-8BA4CC0EF86C");
 }
 
 inline constexpr skr_guid_t GetBulletPrefab()
 {
-    return skr::guid::make_guid_unsafe("8698AA92-F3E3-4DDA-B0B9-59D004538988");
+    return skr::guid::make_guid_unsafe(u8"8698AA92-F3E3-4DDA-B0B9-59D004538988");
 }
 
 

@@ -4,7 +4,7 @@
 #include "MPShared/world_delta.h"
 #include "SkrScene/scene.h"
 #include "containers/hashmap.hpp"
-#include "task/task.hpp"
+#include "async/fib_task.hpp"
 #include "platform/time.h"
 #include "containers/vector.hpp"
 #include "ecs/entities.hpp"

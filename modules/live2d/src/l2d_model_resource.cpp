@@ -2,9 +2,9 @@
 
 #include "platform/debug.h"
 #include "platform/memory.h"
-#include "utils/make_zeroed.hpp"
-#include "utils/log.h"
-#include "utils/io.h"
+#include "misc/make_zeroed.hpp"
+#include "misc/log.h"
+#include "misc/io.h"
 #include "platform/vfs.h"
 
 #include "live2d_helpers.hpp"
@@ -553,19 +553,19 @@ void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const ch
             = SkrNew<L2DF::CubismModelSettingJson>(cbData->settingRawData.bytes, (L2DF::csmSizeInt)cbData->settingRawData.size);
         sakura_free(cbData->settingRawData.bytes);
         // setup models & expressions count
-        if (auto _ = skr::text::text((const char8_t*)model_setting->GetModelFileName()); _.size())
+        if (auto _ = skr::string((const char8_t*)model_setting->GetModelFileName()); _.size())
         {
             cbData->model_count = 1;
         }
-        if (auto _ = skr::text::text((const char8_t*)model_setting->GetPhysicsFileName()); _.size())
+        if (auto _ = skr::string((const char8_t*)model_setting->GetPhysicsFileName()); _.size())
         {
             cbData->phys_count = 1;
         }
-        if (auto _ = skr::text::text((const char8_t*)model_setting->GetPoseFileName()); _.size())
+        if (auto _ = skr::string((const char8_t*)model_setting->GetPoseFileName()); _.size())
         {
             cbData->pose_count = 1;
         }
-        if (auto _ = skr::text::text((const char8_t*)model_setting->GetUserDataFile()); _.size())
+        if (auto _ = skr::string((const char8_t*)model_setting->GetUserDataFile()); _.size())
         {
             cbData->usr_data_count = 1;
         }
@@ -589,7 +589,7 @@ void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const ch
     callbackData->live2dRequest = live2dRequest;
     callbackData->ioService = ioService;
     // TODO: replace this with newer VFS API
-    skr::text::text l2dHomePathStr;
+    skr::string l2dHomePathStr;
     {
         ZoneScopedN("ioRAM Live2D Path Calc");
         auto l2dPath = skr::filesystem::path(path);

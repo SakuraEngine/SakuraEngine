@@ -27,9 +27,6 @@ public:
 	constexpr text_view(const ochar8_t* data, const i32 count) noexcept
 		: view_(data, count)
 	{ }
-	constexpr text_view(const ochar8_t* data, const size_t count) noexcept
-		: view_(data, count)
-	{ }
 	constexpr text_view(const ochar8_t* str) noexcept
 		: view_(str)
 	{ }
@@ -234,7 +231,7 @@ public:
 		return this->view_;
 	}
 
-	[[nodiscard]] constexpr const ochar_t* c_str() const noexcept
+	[[nodiscard]] const ochar_t* c_str() const noexcept
 	{
 		return this->raw().c_str();
 	}
@@ -432,9 +429,9 @@ private:
 };
 
 template<> 
-struct formatter<text_view>
+struct argument_formatter<text_view>
 {
-    static codeunit_sequence format_argument(const text_view& value, const codeunit_sequence_view& specification)
+    static codeunit_sequence produce(const text_view& value, const codeunit_sequence_view& specification)
     {
         return codeunit_sequence{ value.raw() };
     }
@@ -446,6 +443,6 @@ inline namespace literal
 {
 	[[nodiscard]] constexpr OPEN_STRING_NS::text_view operator""_txtv(const ochar8_t* str, const size_t len) noexcept
 	{
-		return { str, len };
+		return { str, static_cast<int32_t>(len) };
 	}
 }

@@ -34,8 +34,8 @@
 
 #include "SkrAnim/ozz/base/maths/math_ex.h"
 #include "SkrAnim/ozz/base/memory/allocator.h"
-#include "binary/reader.h"
-#include "binary/writer.h"
+#include "serde/binary/reader.h"
+#include "serde/binary/writer.h"
 
 namespace ozz {
 namespace io {

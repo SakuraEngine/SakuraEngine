@@ -1,10 +1,9 @@
 #include "platform/guid.hpp"
-#include "utils/log.h"
+#include "misc/log.h"
 namespace skr {
 namespace guid{
 
-
-constexpr int parse_hex_digit(const char c)
+constexpr int parse_hex_digit(const char8_t c)
 {
     using namespace skr::string_literals;
     if ('0' <= c && c <= '9')
@@ -19,7 +18,7 @@ constexpr int parse_hex_digit(const char c)
 }
 
 template <class T>
-bool parse_hex(const char* ptr, T& value)
+bool parse_hex(const char8_t* ptr, T& value)
 {
     constexpr size_t digits = sizeof(T) * 2;
     value = 0;
@@ -33,7 +32,7 @@ bool parse_hex(const char* ptr, T& value)
     return true;
 }
 
-bool make_guid_helper(const char* begin, skr_guid_t& value)
+bool make_guid_helper(const char8_t* begin, skr_guid_t& value)
 {
     uint32_t Data1 = 0;
     uint16_t Data2 = 0;
@@ -69,22 +68,22 @@ bool make_guid(const skr::string_view& str, skr_guid_t& value)
 
     if (str.size() != long_guid_form_length && str.size() != short_guid_form_length)
     {
-        skr::string str2(str.data(), str.size());
+        skr::string str2(skr::string_view(str.u8_str(), (size_t)str.size()));
         SKR_LOG_ERROR("String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected, got %s", str2.c_str());
         return false;
     }
 
     if (str.size() == (long_guid_form_length + 1))
     {
-        if (str[0] != '{' || str[long_guid_form_length - 1] != '}')
+        if (str.u8_str()[0] != u8'{' || str.u8_str()[long_guid_form_length - 1] != u8'}')
         {
-            skr::string str2(str.data(), str.size());
+            skr::string str2(skr::string_view(str.u8_str(), (size_t)str.size()));
             SKR_LOG_ERROR("Opening or closing brace is expected, got %s", str2.c_str());
             return false;
         }
     }
 
-    return make_guid_helper(str.data() + (str.size() == (long_guid_form_length + 1) ? 1 : 0), value);
+    return make_guid_helper(str.u8_str() + (str.size() == (long_guid_form_length + 1) ? 1 : 0), value);
 }
 
 }

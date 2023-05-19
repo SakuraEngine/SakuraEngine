@@ -12,7 +12,7 @@ namespace guid_parse
         constexpr const size_t long_guid_form_length = 38;	// {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}
 
         //
-        constexpr int parse_hex_digit(const char c)
+        constexpr int parse_hex_digit(const char8_t c)
         {
             using namespace std::string_literals;
             if ('0' <= c && c <= '9')
@@ -27,7 +27,7 @@ namespace guid_parse
         }
 
         template<class T>
-        constexpr T parse_hex(const char* ptr)
+        constexpr T parse_hex(const char8_t* ptr)
         {
             constexpr size_t digits = sizeof(T) * 2;
             T result{};
@@ -36,7 +36,7 @@ namespace guid_parse
             return result;
         }
 
-        constexpr guid_t make_guid_helper(const char* begin)
+        constexpr guid_t make_guid_helper(const char8_t* begin)
         {
             auto Data1 = parse_hex<uint32_t>(begin);
             begin += 8 + 1;
@@ -55,7 +55,7 @@ namespace guid_parse
         }
 
         template<size_t N>
-        constexpr guid_t make_guid(const char(&str)[N])
+        constexpr guid_t make_guid(const char8_t(&str)[N])
         {
             using namespace std::string_literals;
             static_assert(N == (long_guid_form_length + 1) || N == (short_guid_form_length + 1), "String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected");
@@ -73,7 +73,7 @@ namespace guid_parse
 
     namespace literals
     {
-        constexpr guid_t operator ""_guid(const char* str, size_t N)
+        constexpr guid_t operator ""_guid(const char8_t* str, size_t N)
         {
             using namespace std::string_literals;
             using namespace details;

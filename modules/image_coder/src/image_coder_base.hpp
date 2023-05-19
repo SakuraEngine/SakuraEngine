@@ -1,6 +1,6 @@
 #pragma once
 #include "containers/span.hpp"
-#include "utils/types.h"
+#include "misc/types.h"
 #include "SkrImageCoder/skr_image_coder.h"
 
 namespace skr

@@ -14,7 +14,7 @@ template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 // explicit deduction guide (not needed as of C++20)
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
-struct InlineType : public std::variant<skr::text::text, RenderObject*, RenderText*, skr::SPtr<BindText>> {};
+struct InlineType : public std::variant<skr::string, RenderObject*, RenderText*, skr::SPtr<BindText>> {};
 
 struct Paragraph : public godot::TextParagraph
 {
@@ -204,7 +204,7 @@ void RenderText::draw(const DrawParams* params)
 
 void RenderText::add_text(const char8_t* u8_text)
 {
-    inlines_.get().emplace_back(InlineType{ skr::text::text::from_utf8(u8_text) });
+    inlines_.get().emplace_back(InlineType{ skr::string::from_utf8(u8_text) });
     paragraph_dirty_ = true;
 }
 
@@ -241,7 +241,7 @@ void RenderText::buildParagraphRec(Paragraph* p, const StyleText& txt)
     {
         std::visit(overloaded
         {
-            [&](skr::text::text& text) 
+            [&](skr::string& text) 
             { 
                 godot::Color color(txt.color.x, txt.color.y, txt.color.z, txt.color.w);
                 /*

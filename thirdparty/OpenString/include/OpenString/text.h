@@ -4,6 +4,7 @@
 // All rights reserved.
 
 #pragma once
+
 #include "text_view.h"
 #include "codeunit_sequence.h"
 
@@ -90,6 +91,7 @@ public:
 
 	[[nodiscard]] codeunit_sequence raw() && noexcept;
 	[[nodiscard]] const codeunit_sequence& raw() const& noexcept;
+	[[nodiscard]] codeunit_sequence& raw() & noexcept;
 	
 	[[nodiscard]] text_view view() const noexcept;
 
@@ -162,11 +164,14 @@ public:
 
 	[[nodiscard]] u32 get_hash() const noexcept;
 
-	[[nodiscard]] const ochar_t* c_str() const noexcept;
 	[[nodiscard]] const ochar8_t* u8_str() const noexcept;
 
+	[[nodiscard]] const ochar_t* c_str() const noexcept;
+
 private:
+
 	codeunit_sequence sequence_;
+	
 };
 
 namespace details
@@ -198,9 +203,9 @@ text text::join(const Container& container, const text_view& separator) noexcept
 [[nodiscard]] bool operator==(const text_view& lhs, const text& rhs) noexcept;
 
 template<> 
-struct formatter<text>
+struct argument_formatter<text>
 {
-    static codeunit_sequence format_argument(const text& value, const codeunit_sequence_view& specification)
+    static codeunit_sequence produce(const text& value, const codeunit_sequence_view& specification)
     {
         return value.raw();
     }

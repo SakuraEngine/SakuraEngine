@@ -1,23 +1,22 @@
 #include "SkrRenderer/resources/mesh_resource.h"
-#include "containers/sptr.hpp"
 #include "platform/memory.h"
 #include "platform/vfs.h"
 #include "platform/guid.hpp"
 #include "cgpu/cgpux.hpp"
-#include "utils/io.h"
-#include "utils/format.hpp"
-#include "utils/make_zeroed.hpp"
+#include "misc/io.h"
+#include "misc/make_zeroed.hpp"
 #include "platform/thread.h"
 #include <platform/filesystem.hpp>
-#include "containers/hashmap.hpp"
 #include "SkrRenderer/render_mesh.h"
 #include "resource/resource_factory.h"
 #include "resource/resource_system.h"
 #include "SkrRenderer/render_device.h"
-#include "utils/log.h"
+#include "misc/log.h"
 #include "cgpu/io.h"
 
-#include "containers/text.hpp"
+#include "containers/sptr.hpp"
+#include "containers/string.hpp"
+#include "containers/hashmap.hpp"
 
 #include "tracy/Tracy.hpp"
 
@@ -25,7 +24,7 @@ static struct SkrMeshResourceUtil
 {
     struct RegisteredVertexLayout : public CGPUVertexLayout
     {
-        RegisteredVertexLayout(const CGPUVertexLayout& layout, skr_vertex_layout_id id, const char* name)
+        RegisteredVertexLayout(const CGPUVertexLayout& layout, skr_vertex_layout_id id, const char8_t* name)
             : CGPUVertexLayout(layout), id(id), name(name)
         {
             hash = cgpux::hash<CGPUVertexLayout>()(layout);
@@ -48,7 +47,7 @@ static struct SkrMeshResourceUtil
         skr_destroy_mutex(&vertex_layouts_mutex_);
     }
 
-    inline static skr_vertex_layout_id AddVertexLayout(skr_vertex_layout_id id, const char* name, const CGPUVertexLayout& layout)
+    inline static skr_vertex_layout_id AddVertexLayout(skr_vertex_layout_id id, const char8_t* name, const CGPUVertexLayout& layout)
     {
         SMutexLock lock(vertex_layouts_mutex_);
 
@@ -129,7 +128,7 @@ void skr_mesh_resource_free(skr_mesh_resource_id mesh_resource)
     SkrDelete(mesh_resource);
 }
 
-void skr_mesh_resource_register_vertex_layout(skr_vertex_layout_id id, const char* name, const struct CGPUVertexLayout* in_vertex_layout)
+void skr_mesh_resource_register_vertex_layout(skr_vertex_layout_id id, const char8_t* name, const struct CGPUVertexLayout* in_vertex_layout)
 {
     if (auto layout = mesh_resource_util.GetVertexLayout(id))
     {
@@ -177,7 +176,7 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
     SMeshFactoryImpl(const SMeshFactory::Root& root)
         : root(root)
     {
-        dstorage_root = skr::text::text::from_utf8(root.dstorage_root);
+        dstorage_root = skr::string::from_utf8(root.dstorage_root);
         this->root.dstorage_root = dstorage_root.u8_str();
     }
 
@@ -241,7 +240,7 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
     ESkrInstallStatus InstallWithDStorage(skr_resource_record_t* record);
     ESkrInstallStatus InstallWithUpload(skr_resource_record_t* record);
 
-    skr::text::text dstorage_root;
+    skr::string dstorage_root;
     Root root;
     skr::flat_hash_map<skr_mesh_resource_id, InstallType> mInstallTypes;
     skr::flat_hash_map<skr_mesh_resource_id, SPtr<UploadRequest>> mUploadRequests;
@@ -314,7 +313,7 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithDStorage(skr_resource_record_t* r
                 InstallType installType = {EInstallMethod::DSTORAGE, ECompressMethod::NONE};
                 for (auto i = 0u; i < mesh_resource->bins.size(); i++)
                 {
-                    auto binPath = skr::format("{}.buffer{}", guid, i);
+                    auto binPath = skr::format(u8"{}.buffer{}", guid, i);
                     // TODO: REFACTOR THIS WITH VFS PATH
                     auto fullBinPath = skr::filesystem::path(root.dstorage_root) / binPath.c_str();
                     const auto& thisBin = mesh_resource->bins[i];
@@ -376,7 +375,7 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* rec
 
             for (auto i = 0u; i < mesh_resource->bins.size(); i++)
             {
-                auto binPath = skr::format("{}.buffer{}", guid, i);
+                auto binPath = skr::format(u8"{}.buffer{}", guid, i);
                 auto fullBinPath = skr::filesystem::path(root.dstorage_root) / binPath.c_str();
                 auto&& ramRequest = uRequest->ram_requests[i];
                 auto&& ramDestination = uRequest->ram_destinations[i];
