@@ -6,7 +6,8 @@ end
 
 add_requires("parallel-hashmap >=1.3.4-skr")
 add_requires("boost-context >=0.1.0-skr")
-add_requires("lua >=5.4.4-skr")
+-- add_requires("lua >=5.4.4-skr")
+add_requires("luau", { configs = { extern_c = true }})
 add_requires("simdjson >=3.0.0-skr")
 
 target("SkrDependencyGraph")
@@ -43,7 +44,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     add_includedirs(private_include_dir_list, {public = false})
 
     -- internal packages
-    add_packages("boost-context", "lua", {public = true, inherit = true})
+    add_packages("boost-context", "luau", {public = true, inherit = true})
 
     -- add source files
     add_files(source_list)

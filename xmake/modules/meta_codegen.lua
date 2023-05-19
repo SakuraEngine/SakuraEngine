@@ -210,6 +210,7 @@ function mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
             os.projectdir()..vformat("/tools/codegen/luabind.h.mako"),
             os.projectdir()..vformat("/tools/codegen/luabind.cpp.mako"),
             os.projectdir()..vformat("/tools/codegen/luabind_intelli.lua.mako"),
+            os.projectdir()..vformat("/tools/codegen/luabind_intelli.luau.mako"),
         },
         {
             os.projectdir()..vformat("/tools/codegen/query.py"),
