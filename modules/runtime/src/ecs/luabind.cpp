@@ -467,6 +467,26 @@ namespace skr::lua
                         }, "get");
                         return 1;
                     }
+                    else if(strcmp(field, "unpack") == 0)
+                    {
+                        lua_pushcfunction(L, +[](lua_State* L) -> int
+                        {
+                            lua_chunk_view_t* view = *(lua_chunk_view_t**)luaL_checkudata(L, 1, "lua_chunk_view_t");
+                            if(!view) 
+                            {
+                                luaL_error(L, "chunk view cannot be accessed after query iteration");
+                                return 0;
+                            }
+                            uint32_t index = (uint32_t)luaL_checkinteger(L, 2);
+                            luaL_argexpected(L, index < view->view.count, 2, "index out of bounds");
+                            lua_pushinteger(L, view->entities[index]);
+                            uint32_t ret = 1;
+                            forloop(i, 0, view->count)
+                                ret+=view->pushComponent(L, i, index);
+                            return ret;
+                        }, "unpack");
+                        return 1;
+                    }
                     else if(strcmp(field, "with") == 0)
                     {
                         auto trampoline = +[](lua_State* L) -> int {
@@ -515,21 +535,6 @@ namespace skr::lua
                     }
                     return 0;
                 } },
-                {"get", +[](lua_State* L) -> int {
-                    lua_chunk_view_t* view = *(lua_chunk_view_t**)luaL_checkudata(L, 1, "lua_chunk_view_t");
-                    if(!view) 
-                    {
-                        luaL_error(L, "chunk view cannot be accessed after query iteration");
-                        return 0;
-                    }
-                    uint32_t index = (uint32_t)luaL_checkinteger(L, 2);
-                    luaL_argexpected(L, index < view->view.count, 2, "index out of bounds");
-                    lua_pushinteger(L, view->entities[index]);
-                    uint32_t ret = 1;
-                    forloop(i, 0, view->count)
-                        ret+=view->pushComponent(L, i, index);
-                    return ret;
-                } },
                 { NULL, NULL }
             };
             luaL_newmetatable(L, "lua_chunk_view_t");
@@ -550,32 +555,37 @@ namespace skr::lua
                         lua_pushinteger(L, size);
                         return 1;
                     }
+                    else if(strcmp(field, "get") == 0)
+                    {
+                        auto trampoline = +[](lua_State* L) -> int {
+                            lua_array_view_t* view = (lua_array_view_t*)luaL_checkudata(L, 1, "lua_array_view_t");
+                            uint32_t index = (uint32_t)luaL_checkinteger(L, 2);
+                            auto size = ((uint8_t*)view->arr.EndX - (uint8_t*)view->arr.BeginX) / view->stride;
+                            luaL_argexpected(L, index < size, 2, "index out of bounds");
+                            if(view->lua_push)
+                            {
+                                return view->lua_push(view->view.chunk, view->view.start+view->index, (char *)view->arr.BeginX + view->stride * index, L);
+                            }
+                            else
+                            {
+                                auto data = (char *)view->arr.BeginX + view->stride * index;
+                                *(void**)lua_newuserdata(L, sizeof(void*)) = data;
+                                luaL_getmetatable(L, (const char*)view->guidStr);
+                                if(lua_isnil(L, -1))
+                                    luaL_getmetatable(L, "skr_opaque_t");
+                                lua_setmetatable(L, -2);
+                                return 1;
+                            }
+                        };
+                        lua_pushcfunction(L, trampoline, "get");
+                        return 1;
+                    }
                     else 
                     {
                         luaL_error(L, "invalid array view field '%s'", field);
                         return 0;
                     }
                     return 0;
-                }},
-                {"get", +[](lua_State* L) -> int {
-                    lua_array_view_t* view = (lua_array_view_t*)luaL_checkudata(L, 1, "lua_array_view_t");
-                    uint32_t index = (uint32_t)luaL_checkinteger(L, 2);
-                    auto size = ((uint8_t*)view->arr.EndX - (uint8_t*)view->arr.BeginX) / view->stride;
-                    luaL_argexpected(L, index < size, 2, "index out of bounds");
-                    if(view->lua_push)
-                    {
-                        return view->lua_push(view->view.chunk, view->view.start+view->index, (char *)view->arr.BeginX + view->stride * index, L);
-                    }
-                    else
-                    {
-                        auto data = (char *)view->arr.BeginX + view->stride * index;
-                        *(void**)lua_newuserdata(L, sizeof(void*)) = data;
-                        luaL_getmetatable(L, (const char*)view->guidStr);
-                        if(lua_isnil(L, -1))
-                            luaL_getmetatable(L, "skr_opaque_t");
-                        lua_setmetatable(L, -2);
-                        return 1;
-                    }
                 }},
                 { NULL, NULL }
             };

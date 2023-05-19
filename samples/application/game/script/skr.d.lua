@@ -18,7 +18,7 @@ end
 export type View<T... = ...any> = {
     length : number,
     with : (self : View<T...>, entities: {number}, callback: ((view: View<T...>) -> ())) -> (),
-    get : (self : View<T...>, index: number) -> (number, T...)
+    unpack : (self : View<T...>, index: number) -> (number, T...)
 }
 
 type Imgui = {

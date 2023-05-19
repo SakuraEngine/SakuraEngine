@@ -27,7 +27,7 @@ function module:DrawEntity(entity : number, name : string, children : CompArr<En
         end
         view:with(childrenTable, function(cview)
             for i = 0, cview.length - 1 do
-                local centity, cname, cchildren = cview:get(i);
+                local centity, cname, cchildren = cview:unpack(i);
                 --skr.print("centity: " .. tostring(centity))
                 self:DrawEntity(centity, cname, cchildren, cview)
             end
@@ -39,7 +39,7 @@ end
 function module:DrawHireachy()
     skr.iterate_query(self.outlineQuery, function(view : View<string, CompArr<Entity>>)
         for i = 0, view.length - 1 do
-            local ent, name, children = view:get(i)
+            local ent, name, children = view:unpack(i)
             self:DrawEntity(ent, name, children, view)
         end
     end)
@@ -49,7 +49,7 @@ function module:DrawAnimState()
     skr.iterate_query(self.animQuery, function(view : View<any>)
         for i = 0, view.length - 1 do
             -- entity, comp1, comp2, comp3, ...
-            local ent, state = view:get(i)
+            local ent, state = view:unpack(i)
             imgui.Text("state: " .. tostring(state.currtime))
         end
     end)
