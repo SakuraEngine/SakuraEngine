@@ -6,7 +6,6 @@
 #include "cgpu/io.h"
 #include "math/rtm/rtmx.h"
 #include "platform/atomic.h"
-#include "misc/threaded_service.h"
 
 #include <EASTL/vector_map.h>
 #include "containers/concurrent_queue.h"

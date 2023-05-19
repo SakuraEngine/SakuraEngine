@@ -166,7 +166,6 @@ struct SKR_RENDERER_API SMaterialFactory : public resource::SResourceFactory {
         skr_shader_map_id shader_map = nullptr;
         skr_vfs_t* bytecode_vfs = nullptr;
         skr_io_ram_service_t* ram_service = nullptr;
-        skr_threaded_service_t* aux_service = nullptr;
         skr_job_queue_id job_queue = nullptr;
     };
     [[nodiscard]] static SMaterialFactory* Create(const Root& root);

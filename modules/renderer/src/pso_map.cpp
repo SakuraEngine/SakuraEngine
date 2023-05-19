@@ -8,7 +8,6 @@
 #include "containers/sptr.hpp"
 #include "misc/defer.hpp"
 #include "misc/make_zeroed.hpp"
-#include "misc/threaded_service.h"
 #include "async/thread_job.hpp"
 
 #include "tracy/Tracy.hpp"

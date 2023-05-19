@@ -146,7 +146,8 @@ public:
                 {
                     return {}; // Protect against undefined behavoiur, if Dtor is invoked before the - pure virtual function represented - task would be started
                 }
-                return this->post_result(this->do_in_background(params...));
+                auto&& r = this->do_in_background(params...);
+                return this->post_result(std::move(r));
             },
         params...);
         

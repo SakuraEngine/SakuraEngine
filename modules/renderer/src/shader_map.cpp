@@ -5,7 +5,6 @@
 #include "misc/log.h"
 #include "misc/defer.hpp"
 #include "misc/make_zeroed.hpp"
-#include "misc/threaded_service.h"
 #include "platform/atomic.h"
 #include "async/thread_job.hpp"
 
