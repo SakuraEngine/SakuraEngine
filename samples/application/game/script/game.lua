@@ -1,5 +1,5 @@
-local module = {}
 local imgui = require "imgui"
+local module = {}
 function module:init()
     self.animQuery = skr.create_query(game.GetStorage(), "[in]game::anim_state_t")
     -- root entities
@@ -7,7 +7,7 @@ function module:init()
 end
 
 
-function module:DrawEntity(entity, name, children, view)
+function module:DrawEntity(entity : number, name : string, children : CompArr<Entity>, view : View<string, CompArr<Entity>>)
     if name == nil then
         name = "entity" .. tostring(entity)
     end
@@ -20,14 +20,14 @@ function module:DrawEntity(entity, name, children, view)
     imgui.PopID()
     
     if opened and children~=nil then
-        local childrenTable = newtable(children.length, 0)
+        local childrenTable : {number} = newtable(children.length, 0)
         --skr.print("entity: " .. tostring(entity) .. " name: " .. tostring(name) .. " children: " .. tostring(children) .. " children.length " .. tostring(children.length));
         for i = 0, children.length - 1 do
-            table.insert(childrenTable, children(i))
+            table.insert(childrenTable, children:get(i))
         end
         view:with(childrenTable, function(cview)
             for i = 0, cview.length - 1 do
-                local centity, cname, cchildren = cview(i);
+                local centity, cname, cchildren = cview:get(i);
                 --skr.print("centity: " .. tostring(centity))
                 self:DrawEntity(centity, cname, cchildren, cview)
             end
@@ -37,19 +37,19 @@ function module:DrawEntity(entity, name, children, view)
 end
 
 function module:DrawHireachy()
-    skr.iterate_query(self.outlineQuery, function(view)
+    skr.iterate_query(self.outlineQuery, function(view : View<string, CompArr<Entity>>)
         for i = 0, view.length - 1 do
-            local ent, name, children = view(i)
+            local ent, name, children = view:get(i)
             self:DrawEntity(ent, name, children, view)
         end
     end)
 end
 
 function module:DrawAnimState()
-    skr.iterate_query(self.animQuery, function(view)
+    skr.iterate_query(self.animQuery, function(view : View<any>)
         for i = 0, view.length - 1 do
             -- entity, comp1, comp2, comp3, ...
-            local ent, state = view(i)
+            local ent, state = view:get(i)
             imgui.Text("state: " .. tostring(state.currtime))
         end
     end)

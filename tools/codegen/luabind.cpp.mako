@@ -182,7 +182,6 @@ extern "C"
 </%def>
 void skr_lua_open_${module}(lua_State* L)
 {
-    lua_getglobal(L, "skr");
     lua_newtable(L);
     // bind enums
 
@@ -290,6 +289,7 @@ void skr_lua_open_${module}(lua_State* L)
 %for function in lua_binders:
     ${function.name}(L);
 %endfor 
-    lua_setfield(L, -2, "${module}");
+
+    lua_setglobal(L, "${module}");
 }
 // END LUA GENERATED
