@@ -26,12 +26,8 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         : root(root)
     {
         // 1.create shader map
-        skr_shader_map_root_t shader_map_root;
-        shader_map_root.bytecode_vfs = root.bytecode_vfs;
-        shader_map_root.ram_service = root.ram_service;
-        shader_map_root.device = root.device;
-        shader_map_root.aux_service = root.aux_service;
-        shader_map = skr_shader_map_create(&shader_map_root);
+        shader_map = root.shader_map;
+        SKR_ASSERT(shader_map);
 
         // 2.create root signature pool
         CGPURootSignaturePoolDescriptor rs_pool_desc = {};
@@ -49,7 +45,6 @@ struct SMaterialFactoryImpl : public SMaterialFactory
     {
         skr_pso_map_free(pso_map);
         if (rs_pool) cgpu_free_root_signature_pool(rs_pool);
-        skr_shader_map_free(shader_map);
     }
 
     skr_type_id_t GetResourceType() override

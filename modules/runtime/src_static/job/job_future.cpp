@@ -13,6 +13,11 @@ ThreadedJobQueueFutureJob::ThreadedJobQueueFutureJob(JobQueue* Q) SKR_NOEXCEPT
 
 }
 
+ThreadedJobQueueFutureJob::~ThreadedJobQueueFutureJob() SKR_NOEXCEPT
+{
+    
+}
+
 bool ThreadedJobQueueFutureJob::valid() const SKR_NOEXCEPT { return true; }
 
 void ThreadedJobQueueFutureJob::wait() SKR_NOEXCEPT
