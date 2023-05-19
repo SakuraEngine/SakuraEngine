@@ -16,17 +16,17 @@
 namespace skr
 {
 struct ShaderMapImpl;
-namespace
+namespace Shader
 {
 
-using ShaderFuture = skr::IFuture<bool>;
+using Future = skr::IFuture<bool>;
 using JobQueueFuture = skr::ThreadedJobQueueFuture<bool>;
 using SerialFuture = skr::SerialFuture<bool>;
-struct ShaderFutureLauncher
+struct FutureLauncher
 {
-    ShaderFutureLauncher(skr::JobQueue* q) : job_queue(q) {}
+    FutureLauncher(skr::JobQueue* q) : job_queue(q) {}
     template<typename F, typename... Args>
-    ShaderFuture* async(F&& f, Args&&... args)
+    Future* async(F&& f, Args&&... args)
     {
         if (job_queue)
             return SkrNew<JobQueueFuture>(job_queue, std::forward<F>(f), std::forward<Args>(args)...);
@@ -38,7 +38,7 @@ struct ShaderFutureLauncher
 
 }
 
-struct ShaderProgress : public skr::AsyncProgress<ShaderFutureLauncher, int, bool>
+struct ShaderProgress : public skr::AsyncProgress<Shader::FutureLauncher, int, bool>
 {
     ShaderProgress(ShaderMapImpl* factory, const char8_t* uri, const skr_platform_shader_identifier_t& identifier)
         : factory(factory), bytes_uri(uri), identifier(identifier)
@@ -60,7 +60,7 @@ struct ShaderMapImpl : public skr_shader_map_t
     ShaderMapImpl(const skr_shader_map_root_t& root)
         : root(root)
     {
-        jq_launcher = SPtr<ShaderFutureLauncher>::Create(root.job_queue);
+        future_launcher = SPtr<Shader::FutureLauncher>::Create(root.job_queue);
     }
 
     ~ShaderMapImpl()
@@ -91,7 +91,7 @@ struct ShaderMapImpl : public skr_shader_map_t
         SAtomicU32 shader_status = 0;
     };
 
-    SPtr<ShaderFutureLauncher> jq_launcher;
+    SPtr<Shader::FutureLauncher> future_launcher;
     uint64_t frame_index = 0;
     skr_shader_map_root_t root;
 
@@ -101,6 +101,8 @@ struct ShaderMapImpl : public skr_shader_map_t
 
 bool ShaderProgress::do_in_background()
 {
+    ZoneScopedN("CreateShader");
+
     auto device = factory->root.device;
     const auto& shader_destination = bytes_destination;
     auto& shader = factory->mShaderMap[identifier];
@@ -202,7 +204,7 @@ ESkrShaderMapShaderStatus ShaderMapImpl::install_shader_from_vfs(const skr_platf
         
         auto progress = (ShaderProgress*)data;
         auto factory = progress->factory;
-        if (auto launcher = factory->jq_launcher.get()) // create shaders on aux thread
+        if (auto launcher = factory->future_launcher.get()) // create shaders on aux thread
         {
             progress->execute(*launcher);
         }

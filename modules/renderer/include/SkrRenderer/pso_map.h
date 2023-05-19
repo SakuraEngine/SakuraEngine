@@ -4,6 +4,8 @@
 #include "SkrRenderer/fwd_types.h"
 #include "cgpu/api.h"
 
+SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)
+
 typedef enum ESkrPSOMapPSOStatus
 {
     SKR_PSO_MAP_PSO_STATUS_REQUESTED = 1,
@@ -51,8 +53,8 @@ SKR_RENDERER_EXTERN_C SKR_RENDERER_API
 void skr_pso_map_free(skr_pso_map_id pso_map);
 
 typedef struct skr_pso_map_root_t {
-    CGPUDeviceId device = nullptr;
-    skr_threaded_service_t* aux_service = nullptr;
+    CGPUDeviceId device SKR_IF_CPP(= nullptr);
+    skr_job_queue_id job_queue SKR_IF_CPP(= nullptr;)
 } skr_pso_map_root_t;
 
 #ifdef __cplusplus

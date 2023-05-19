@@ -216,6 +216,7 @@ void SGameModule::installResourceFactories()
         factoryRoot.device = game_render_device->get_cgpu_device();
         factoryRoot.shader_map = shadermap;
         factoryRoot.aux_service = game_render_device->get_aux_service(0);
+        factoryRoot.job_queue = job_queue.get();
         factoryRoot.ram_service = ram_service;
         factoryRoot.bytecode_vfs = shader_bytes_vfs;
         matFactory = skr::renderer::SMaterialFactory::Create(factoryRoot);
