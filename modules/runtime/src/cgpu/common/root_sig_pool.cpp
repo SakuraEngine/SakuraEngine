@@ -147,18 +147,17 @@ public:
         }
         return false;
     }
-    bool insert(CGPURootSignature* sig, const CGPURootSignatureDescriptor* desc)
+    CGPURootSignatureId insert(CGPURootSignature* sig, const CGPURootSignatureDescriptor* desc)
     {
         const auto character = calculaeCharacteristic(sig, desc);
         const auto iter = characterMap.find(character);
         if (iter != characterMap.end())
         {
-            // TODO: MultiThread support
-            /*
+            sig->pool = nullptr;
             sig->pool_sig = nullptr;
             sig->device = device;
             cgpu_free_root_signature(sig);
-            */
+
             counterMap[iter->second]++;
             return iter->second;
         }
@@ -167,7 +166,7 @@ public:
         counterMap[sig] = 1;
         sig->pool = this;
         sig->pool_sig = nullptr;
-        return true;
+        return sig;
     }
     ~CGPURootSignaturePoolImpl()
     {
@@ -198,7 +197,7 @@ CGPURootSignatureId CGPUUtil_TryAllocateSignature(CGPURootSignaturePoolId pool, 
     return P->try_allocate(RSTables, desc);
 }
 
-bool CGPUUtil_AddSignature(CGPURootSignaturePoolId pool, CGPURootSignature* sig, const CGPURootSignatureDescriptor* desc)
+CGPURootSignatureId CGPUUtil_AddSignature(CGPURootSignaturePoolId pool, CGPURootSignature* sig, const CGPURootSignatureDescriptor* desc)
 {
     auto P = (CGPURootSignaturePoolImpl*)pool;
     return P->insert(sig, desc);

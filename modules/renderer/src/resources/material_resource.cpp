@@ -88,9 +88,17 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         }
 
         // 2.free RS
-        if (pass.bind_table) cgpux_free_bind_table(pass.bind_table);
-        if (pass.root_signature) cgpu_free_root_signature(pass.root_signature);
-
+        if (pass.bind_table) 
+        {
+            cgpux_free_bind_table(pass.bind_table);
+            pass.bind_table = nullptr;
+        }
+        if (pass.root_signature) 
+        {
+            cgpu_free_root_signature(pass.root_signature);
+            pass.root_signature = nullptr;
+        }
+        
         // 3.RC free installed shaders
         for (const auto installed_shader : pass.shaders)
         {
