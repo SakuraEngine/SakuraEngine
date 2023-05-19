@@ -45,6 +45,8 @@
 #include "SkrAnim/components/skeleton_component.h"
 #include "GameRuntime/game_animation.h"
 
+#include "async/thread_job.hpp"
+
 #include "tracy/Tracy.hpp"
 #include "misc/types.h"
 #include "SkrInspector/inspect_value.h"
@@ -97,6 +99,8 @@ class SGameModule : public skr::IDynamicModule
     CGPUSwapChainId swapchain = nullptr;
     CGPUFenceId present_fence = nullptr;
     SWindowHandle main_window = nullptr;
+
+    skr::SPtr<skr::JobQueue> job_queue = nullptr;
 
     skr::task::scheduler_t scheduler;
 };
@@ -187,7 +191,7 @@ void SGameModule::installResourceFactories()
         shadermapRoot.bytecode_vfs = shader_bytes_vfs;
         shadermapRoot.ram_service = ram_service;
         shadermapRoot.device = game_render_device->get_cgpu_device();
-        shadermapRoot.aux_service = game_render_device->get_aux_service(0);
+        shadermapRoot.job_queue = job_queue.get();
         shadermap = skr_shader_map_create(&shadermapRoot);
 
         // create shader resource factory
@@ -210,6 +214,7 @@ void SGameModule::installResourceFactories()
     {
         skr::renderer::SMaterialFactory::Root factoryRoot = {};
         factoryRoot.device = game_render_device->get_cgpu_device();
+        factoryRoot.shader_map = shadermap;
         factoryRoot.aux_service = game_render_device->get_aux_service(0);
         factoryRoot.ram_service = ram_service;
         factoryRoot.bytecode_vfs = shader_bytes_vfs;
@@ -297,6 +302,17 @@ void SGameModule::uninstallResourceFactories()
 void SGameModule::on_load(int argc, char8_t** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
+
+    if (!job_queue)
+    {
+        skr::string qn = u8"GameJobQueue";
+        auto job_queueDesc = make_zeroed<skr::JobQueueDesc>();
+        job_queueDesc.thread_count = 2;
+        job_queueDesc.priority = SKR_THREAD_NORMAL;
+        job_queueDesc.name = qn.u8_str();
+        job_queue = skr::SPtr<skr::JobQueue>::Create(&job_queueDesc);
+    }
+    SKR_ASSERT(job_queue);
 
     game_world = dualS_create();
     game_render_device = skr_get_default_render_device();
@@ -951,6 +967,11 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
                 if ((frame_index > (RG_MAX_FRAME_IN_FLIGHT * 10)) && (frame_index % (RG_MAX_FRAME_IN_FLIGHT * 10) == 0))
                     renderGraph->collect_garbage(frame_index - 10 * RG_MAX_FRAME_IN_FLIGHT);
             }
+        }
+
+        // gc
+        {
+            shadermap->garbage_collect(15);
         }
     }
     // clean up

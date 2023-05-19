@@ -1,27 +1,71 @@
 #include "SkrRenderer/shader_map.h"
 #include "SkrRenderer/render_device.h"
-#include "platform/atomic.h"
 #include "SkrRenderer/shader_hash.h"
-#include "containers/hashmap.hpp"
-#include "containers/string.hpp"
-#include "containers/sptr.hpp"
+
+#include "misc/log.h"
 #include "misc/defer.hpp"
 #include "misc/make_zeroed.hpp"
 #include "misc/threaded_service.h"
+#include "platform/atomic.h"
+#include "async/thread_job.hpp"
+
+#include "containers/hashmap.hpp"
+#include "containers/string.hpp"
+#include "containers/sptr.hpp"
 
 namespace skr
 {
+struct ShaderMapImpl;
+namespace
+{
+
+using ShaderFuture = skr::IFuture<bool>;
+using JobQueueFuture = skr::ThreadedJobQueueFuture<bool>;
+using SerialFuture = skr::SerialFuture<bool>;
+struct ShaderFutureLauncher
+{
+    ShaderFutureLauncher(skr::JobQueue* q) : job_queue(q) {}
+    template<typename F, typename... Args>
+    ShaderFuture* async(F&& f, Args&&... args)
+    {
+        if (job_queue)
+            return SkrNew<JobQueueFuture>(job_queue, std::forward<F>(f), std::forward<Args>(args)...);
+        else
+            return SkrNew<SerialFuture>(std::forward<F>(f), std::forward<Args>(args)...);
+    }
+    skr::JobQueue* job_queue = nullptr;
+};
+
+}
+
+struct ShaderProgress : public skr::AsyncProgress<ShaderFutureLauncher, int, bool>
+{
+    ShaderProgress(ShaderMapImpl* factory, const char8_t* uri, const skr_platform_shader_identifier_t& identifier)
+        : factory(factory), bytes_uri(uri), identifier(identifier)
+    {
+
+    }
+
+    bool do_in_background() override;
+
+    ShaderMapImpl* factory = nullptr;
+    skr::string bytes_uri;
+    skr_async_request_t bytes_request;
+    skr_async_ram_destination_t bytes_destination;
+    skr_platform_shader_identifier_t identifier = {};
+};
+
 struct ShaderMapImpl : public skr_shader_map_t
 {
     ShaderMapImpl(const skr_shader_map_root_t& root)
         : root(root)
     {
-
+        jq_launcher = SPtr<ShaderFutureLauncher>::Create(root.job_queue);
     }
 
     ~ShaderMapImpl()
     {
-        for (auto iter : map)
+        for (auto iter : mShaderMap)
         {
             if (skr_atomicu32_load_relaxed(&iter.second->frame) != UINT64_MAX)
             {
@@ -44,66 +88,50 @@ struct ShaderMapImpl : public skr_shader_map_t
         CGPUShaderLibraryId shader = nullptr;
         SAtomicU64 frame = UINT64_MAX;
         SAtomicU32 rc = 0;
+        SAtomicU32 shader_status = 0;
     };
 
+    SPtr<ShaderFutureLauncher> jq_launcher;
     uint64_t frame_index = 0;
     skr_shader_map_root_t root;
 
-    struct ShaderRequest
-    {
-        ShaderRequest(ShaderMapImpl* factory, const char8_t* uri, const skr_platform_shader_identifier_t& identifier)
-            : factory(factory), bytes_uri(uri), identifier(identifier)
-        {
-
-        }
-
-        bool createShader()
-        {
-            // erase request when exit this scope
-            SKR_DEFER({factory->mShaderRequests.erase(identifier);});
-
-            auto device = factory->root.device;
-            const auto& shader_destination = bytes_destination;
-    
-            skr_atomicu32_add_relaxed(&shader_status, SKR_SHADER_MAP_SHADER_STATUS_LOADED);
-    
-            auto desc = make_zeroed<CGPUShaderLibraryDescriptor>();
-            desc.code = (const uint32_t*)shader_destination.bytes;
-            desc.code_size = (uint32_t)shader_destination.size;
-            desc.name = bytes_uri.u8_str();
-            desc.stage = identifier.shader_stage;
-            const auto created_shader = cgpu_create_shader_library(device, &desc);
-            if (!created_shader)
-            {
-                skr_atomicu32_add_relaxed(&shader_status, SKR_SHADER_MAP_SHADER_STATUS_FAILED);
-                skr_atomicu64_store_relaxed(&factory->map[identifier]->frame, UINT64_MAX);
-                return false;
-            }
-            else
-            {
-                factory->map[identifier]->shader = created_shader;
-                skr_atomicu32_add_relaxed(&shader_status, SKR_SHADER_MAP_SHADER_STATUS_INSTALLED);
-                skr_atomicu64_store_relaxed(&factory->map[identifier]->frame, factory->frame_index);
-            }
-            return true;
-        }
-
-        ShaderMapImpl* factory = nullptr;
-        skr::string bytes_uri;
-        skr_async_request_t bytes_request;
-        skr_async_ram_destination_t bytes_destination;
-        skr_async_request_t aux_request;
-        skr_platform_shader_identifier_t identifier = {};
-        SAtomicU32 shader_status = 0;
-    };
-    skr::parallel_flat_hash_map<skr_platform_shader_identifier_t, SPtr<MappedShader>, skr_platform_shader_identifier_t::hasher> map;
-    skr::parallel_flat_hash_map<skr_platform_shader_identifier_t, SPtr<ShaderRequest>, skr_platform_shader_identifier_t::hasher> mShaderRequests;
+    skr::parallel_flat_hash_map<skr_platform_shader_identifier_t, SPtr<MappedShader>, skr_platform_shader_identifier_t::hasher> mShaderMap;
+    skr::parallel_flat_hash_map<skr_platform_shader_identifier_t, SPtr<ShaderProgress>, skr_platform_shader_identifier_t::hasher> mShaderTasks;
 };
+
+bool ShaderProgress::do_in_background()
+{
+    auto device = factory->root.device;
+    const auto& shader_destination = bytes_destination;
+    auto& shader = factory->mShaderMap[identifier];
+
+    skr_atomicu32_store_relaxed(&shader->shader_status, SKR_SHADER_MAP_SHADER_STATUS_LOADED);
+
+    auto desc = make_zeroed<CGPUShaderLibraryDescriptor>();
+    desc.code = (const uint32_t*)shader_destination.bytes;
+    desc.code_size = (uint32_t)shader_destination.size;
+    desc.name = bytes_uri.u8_str();
+    desc.stage = identifier.shader_stage;
+    const auto created_shader = cgpu_create_shader_library(device, &desc);
+    if (!created_shader)
+    {
+        skr_atomicu32_store_relaxed(&shader->shader_status, SKR_SHADER_MAP_SHADER_STATUS_FAILED);
+        skr_atomicu64_store_relaxed(&factory->mShaderMap[identifier]->frame, UINT64_MAX);
+        return false;
+    }
+    else
+    {
+        shader->shader = created_shader;
+        skr_atomicu32_store_relaxed(&shader->shader_status, SKR_SHADER_MAP_SHADER_STATUS_INSTALLED);
+        skr_atomicu64_store_relaxed(&factory->mShaderMap[identifier]->frame, factory->frame_index);
+    }
+    return true;
+}
 
 CGPUShaderLibraryId ShaderMapImpl::find_shader(const skr_platform_shader_identifier_t& identifier) SKR_NOEXCEPT
 {
-    auto found = map.find(identifier);
-    if (found != map.end())
+    auto found = mShaderMap.find(identifier);
+    if (found != mShaderMap.end())
     {
         if (skr_atomicu32_load_relaxed(&found->second->frame) != UINT64_MAX)
         {
@@ -115,8 +143,8 @@ CGPUShaderLibraryId ShaderMapImpl::find_shader(const skr_platform_shader_identif
 
 bool ShaderMapImpl::free_shader(const skr_platform_shader_identifier_t& identifier) SKR_NOEXCEPT
 {
-    auto found = map.find(identifier);
-    if (found != map.end())
+    auto found = mShaderMap.find(identifier);
+    if (found != mShaderMap.end())
     {
     #ifdef _DEBUG
         const auto frame = skr_atomicu32_load_relaxed(&found->second->frame);
@@ -130,29 +158,17 @@ bool ShaderMapImpl::free_shader(const skr_platform_shader_identifier_t& identifi
 
 ESkrShaderMapShaderStatus ShaderMapImpl::install_shader(const skr_platform_shader_identifier_t& identifier) SKR_NOEXCEPT
 {
-    auto found = map.find(identifier);
+    auto found = mShaderMap.find(identifier);
     // 1. found mapped shader
-    if (found != map.end())
+    if (found != mShaderMap.end())
     {
         // 1.1 found alive shader request
-        auto found_request = mShaderRequests.find(identifier);
-        if (found_request != mShaderRequests.end())
-        {
-            auto status = skr_atomicu32_load_relaxed(&found_request->second->shader_status);
-            return (ESkrShaderMapShaderStatus)status;
-        }
+        auto status = skr_atomicu32_load_relaxed(&found->second->shader_status);
 
-        // 1.2 request is done or failed
-        const auto frame = skr_atomicu32_load_relaxed(&found->second->frame);
-        if (frame == UINT64_MAX)
-        {
-            return SKR_SHADER_MAP_SHADER_STATUS_FAILED;
-        }
-        
-        // 1.3 request is done, add rc & record frame index
+        // 1.2 request is done, add rc & record frame index
         skr_atomicu32_add_relaxed(&found->second->rc, 1);
         skr_atomicu64_store_relaxed(&found->second->frame, frame_index);
-        return SKR_SHADER_MAP_SHADER_STATUS_INSTALLED;
+        return (ESkrShaderMapShaderStatus)status;
     }
     // 2. not found mapped shader
     else
@@ -161,7 +177,7 @@ ESkrShaderMapShaderStatus ShaderMapImpl::install_shader(const skr_platform_shade
         auto mapped_shader = SPtr<MappedShader>::Create();
         skr_atomicu32_add_relaxed(&mapped_shader->rc, 1);
         // keep mapped_shader::frame at UINT64_MAX until shader is loaded
-        map.emplace(identifier, mapped_shader);
+        mShaderMap.emplace(identifier, mapped_shader);
         return install_shader_from_vfs(identifier);
     }
 }
@@ -174,43 +190,28 @@ ESkrShaderMapShaderStatus ShaderMapImpl::install_shader_from_vfs(const skr_platf
     const auto hash = identifier.hash;
     const auto uri = skr::format(u8"{}#{}-{}-{}-{}.bytes", hash.flags, 
         hash.encoded_digits[0], hash.encoded_digits[1], hash.encoded_digits[2], hash.encoded_digits[3]);
-    auto sRequest = SPtr<ShaderRequest>::Create(this, uri.u8_str(), identifier);
-    auto found = mShaderRequests.find(identifier);
-    SKR_ASSERT(found == mShaderRequests.end());
-    mShaderRequests.emplace(identifier, sRequest);
+    auto sRequest = SPtr<ShaderProgress>::Create(this, uri.u8_str(), identifier);
+    auto found = mShaderTasks.find(identifier);
+    SKR_ASSERT(found == mShaderTasks.end());
+    mShaderTasks.emplace(identifier, sRequest);
     
     auto ram_texture_io = make_zeroed<skr_ram_io_t>();
     ram_texture_io.path = sRequest->bytes_uri.u8_str();
     ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
         ZoneScopedN("CreateShaderFromBytes");
         
-        auto sRequest = (ShaderRequest*)data;
-        auto factory = sRequest->factory;
-        if (auto aux_service = factory->root.aux_service) // create shaders on aux thread
+        auto progress = (ShaderProgress*)data;
+        auto factory = progress->factory;
+        if (auto launcher = factory->jq_launcher.get()) // create shaders on aux thread
         {
-            auto aux_task = make_zeroed<skr_service_task_t>();
-            aux_task.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* usrdata){
-                ZoneScopedN("CreateShader(AuxService)");
-
-                auto sRequest = (ShaderRequest*)usrdata;
-                sRequest->createShader();
-            };
-            aux_task.callback_datas[SKR_ASYNC_IO_STATUS_OK] = sRequest;
-            aux_service->request(&aux_task, &sRequest->aux_request);
+            progress->execute(*launcher);
         }
         else // create shaders inplace
         {
-            ZoneScopedN("CreateShader(InPlace)");
-
-            sRequest->createShader();
+            SKR_ASSERT("launcher is unexpected null!");
         }
     };
     ram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)sRequest.get();
-    ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_RAM_LOADING] = +[](skr_async_request_t* request, void* data) noexcept {
-        auto sRequest = (ShaderRequest*)data;
-        skr_atomicu32_add_relaxed(&sRequest->shader_status, SKR_SHADER_MAP_SHADER_STATUS_LOADING);
-    };
-    ram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_RAM_LOADING] = (void*)sRequest.get();
     root.ram_service->request(bytes_vfs, &ram_texture_io, &sRequest->bytes_request, &sRequest->bytes_destination);
     launch_success = true;
     return launch_success ? SKR_SHADER_MAP_SHADER_STATUS_REQUESTED : SKR_SHADER_MAP_SHADER_STATUS_FAILED;
@@ -225,11 +226,20 @@ void ShaderMapImpl::new_frame(uint64_t index) SKR_NOEXCEPT
 
 void ShaderMapImpl::garbage_collect(uint64_t critical_frame) SKR_NOEXCEPT
 {
-    for (auto it = map.begin(); it != map.end();)
+    // erase request when exit this scope
+    // SKR_DEFER({factory->mShaderTasks.erase(identifier);});
+    for (auto it = mShaderMap.begin(); it != mShaderMap.end();)
     {
-        if (skr_atomicu32_load_relaxed(&it->second->rc) == 0 && skr_atomicu64_load_relaxed(&it->second->frame) < critical_frame)
+        auto status = skr_atomicu32_load_relaxed(&it->second->shader_status);
+        if (status == SKR_SHADER_MAP_SHADER_STATUS_INSTALLED)
         {
-            if (mShaderRequests.find(it->first) != mShaderRequests.end())
+            mShaderTasks.erase(it->first);
+        }
+
+        if (skr_atomicu32_load_relaxed(&it->second->rc) == 0 && 
+            skr_atomicu64_load_relaxed(&it->second->frame) < critical_frame)
+        {
+            if (mShaderTasks.find(it->first) != mShaderTasks.end())
             {
                 // shader is still loading, skip & wait for it to finish
                 // TODO: cancel shader loading
@@ -237,7 +247,7 @@ void ShaderMapImpl::garbage_collect(uint64_t critical_frame) SKR_NOEXCEPT
             }
             else
             {
-                it = map.erase(it);
+                it = mShaderMap.erase(it);
             }
         }
         else

@@ -245,7 +245,7 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
 
     CGPUDeviceDescriptor device_desc = {};
     device_desc.queue_groups = Gs.data();
-    device_desc.queue_group_count = Gs.size();
+    device_desc.queue_group_count = (uint32_t)Gs.size();
     device = cgpu_create_device(adapter, &device_desc);
     gfx_queue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
 

@@ -115,7 +115,7 @@ struct RUNTIME_STATIC_API JobQueue
 {
 public:
     JobQueue(const JobQueueDesc*) SKR_NOEXCEPT;
-	~JobQueue() SKR_NOEXCEPT;
+	virtual ~JobQueue() SKR_NOEXCEPT;
 
     // initialize JobQueue
     // @retval JOB_RESULT_OK if success
@@ -172,6 +172,7 @@ private:
 struct RUNTIME_STATIC_API ThreadedJobQueueFutureJob : public skr::JobItem
 {
     ThreadedJobQueueFutureJob(JobQueue* Q) SKR_NOEXCEPT;
+    virtual ~ThreadedJobQueueFutureJob() SKR_NOEXCEPT;
     void finish(skr::JobResult result) SKR_NOEXCEPT override;
 
     // implementations for future<> to call.
@@ -194,11 +195,13 @@ struct RUNTIME_STATIC_API ThreadedJobQueueFuture : public skr::IFuture<Artifact>
         : job(Q)
     {
         job.runner = [=, This = this]() { 
-            This->result = _f(args...); 
+            This->artifact = _f(args...); 
+            This->job.finish(skr::JOB_RESULT_OK);
             return skr::JOB_RESULT_OK; 
         };
         Q->enqueue(&job);
     }
+    virtual ~ThreadedJobQueueFuture() SKR_NOEXCEPT {}
 
     Artifact get() SKR_NOEXCEPT override { return artifact; }
     bool valid() const SKR_NOEXCEPT override { return job.valid(); }
@@ -207,7 +210,7 @@ struct RUNTIME_STATIC_API ThreadedJobQueueFuture : public skr::IFuture<Artifact>
 
     struct JobType : public JobBaseType
     {
-        JobType(JobQueue* Q) : ThreadedJobQueueFutureJob(Q) {}
+        JobType(JobQueue* Q) : JobBaseType(Q) {}
         skr::JobResult run() SKR_NOEXCEPT override 
         { 
             // BaseType::run is not called currently.
@@ -215,7 +218,10 @@ struct RUNTIME_STATIC_API ThreadedJobQueueFuture : public skr::IFuture<Artifact>
             return ret; 
         }
         eastl::function<skr::JobResult()> runner;
-    } job;
+    };
+
+protected:
+    JobType job;
     Artifact artifact;
 };
 

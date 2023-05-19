@@ -13,6 +13,8 @@
 #include "containers/string.hpp"
 #include "containers/vector.hpp"
 
+namespace skr { struct JobQueue; }
+
 namespace skr {
 namespace gdi {
 
@@ -73,6 +75,7 @@ struct GDIRendererDescriptor_RenderGraph
     skr_io_ram_service_t* ram_service = nullptr;
     skr_io_vram_service_t* vram_service = nullptr;
     skr_threaded_service_t* aux_service = nullptr;
+    // skr::JobQueue* job_queue = nullptr;
 };
 
 struct ViewportRenderParams_RenderGraph
