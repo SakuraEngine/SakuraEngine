@@ -4,7 +4,6 @@
 
 struct skr_io_ram_service_t;
 struct skr_io_vram_service_t;
-struct skr_threaded_service_t;
 #ifdef __cplusplus
 namespace skr { struct RendererDevice; }
 typedef struct skr::RendererDevice SRenderDevice;

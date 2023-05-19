@@ -153,8 +153,14 @@ public:
         const auto iter = characterMap.find(character);
         if (iter != characterMap.end())
         {
-            SKR_UNREACHABLE_CODE();
-            return false;
+            // TODO: MultiThread support
+            /*
+            sig->pool_sig = nullptr;
+            sig->device = device;
+            cgpu_free_root_signature(sig);
+            */
+            counterMap[iter->second]++;
+            return iter->second;
         }
         characterMap[character] = sig;
         biCharacterMap[sig] = character;
@@ -176,34 +182,39 @@ public:
 protected:
     const skr::string name;
     // TODO: replace with skr::hash_map
-    skr::flat_hash_map<RSCharacteristic, CGPURootSignatureId, RSCharacteristic::hasher> characterMap;
-    skr::flat_hash_map<CGPURootSignatureId, RSCharacteristic> biCharacterMap;
-    skr::flat_hash_map<CGPURootSignatureId, uint32_t> counterMap;
+    skr::parallel_flat_hash_map<RSCharacteristic, CGPURootSignatureId, RSCharacteristic::hasher> characterMap;
+    skr::parallel_flat_hash_map<CGPURootSignatureId, RSCharacteristic> biCharacterMap;
+    skr::parallel_flat_hash_map<CGPURootSignatureId, uint32_t> counterMap;
 };
 
 CGPURootSignaturePoolId CGPUUtil_CreateRootSignaturePool(const CGPURootSignaturePoolDescriptor* desc)
 {
     return SkrNew<CGPURootSignaturePoolImpl>(desc->name);
 }
+
 CGPURootSignatureId CGPUUtil_TryAllocateSignature(CGPURootSignaturePoolId pool, CGPURootSignature* RSTables, const struct CGPURootSignatureDescriptor* desc)
 {
     auto P = (CGPURootSignaturePoolImpl*)pool;
     return P->try_allocate(RSTables, desc);
 }
+
 bool CGPUUtil_AddSignature(CGPURootSignaturePoolId pool, CGPURootSignature* sig, const CGPURootSignatureDescriptor* desc)
 {
     auto P = (CGPURootSignaturePoolImpl*)pool;
     return P->insert(sig, desc);
 }
+
 void CGPUUtil_AllSignatures(CGPURootSignaturePoolId pool, CGPURootSignatureId* signatures, uint32_t* count)
 {
 
 }
+
 bool CGPUUtil_PoolFreeSignature(CGPURootSignaturePoolId pool, CGPURootSignatureId sig)
 {
     auto P = (CGPURootSignaturePoolImpl*)pool;
     return P->deallocate(sig);
 }
+
 void CGPUUtil_FreeRootSignaturePool(CGPURootSignaturePoolId pool)
 {
     auto P = (CGPURootSignaturePoolImpl*)pool;

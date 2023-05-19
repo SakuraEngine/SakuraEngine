@@ -6,8 +6,6 @@
 #include "cgpu/extensions/dstorage_windows.h"
 #endif
 
-struct skr_threaded_service_t;
-
 #ifdef __cplusplus
 #include "platform/window.h"
 
@@ -45,9 +43,6 @@ struct SKR_RENDERER_API RendererDevice
     virtual CGPUSamplerId get_linear_sampler() const = 0;
     virtual CGPURootSignaturePoolId get_root_signature_pool() const = 0;
     virtual skr_io_vram_service_t* get_vram_service() const = 0;
-
-    virtual uint32_t get_aux_service_count() const = 0;
-    virtual skr_threaded_service_t* get_aux_service(uint32_t index) const = 0;
 
 #ifdef _WIN32
     virtual skr_win_dstorage_decompress_service_id get_win_dstorage_decompress_service() const = 0;
