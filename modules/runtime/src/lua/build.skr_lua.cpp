@@ -43,15 +43,15 @@ void replaceAll(eastl::u8string& str, const eastl::u8string_view& from, const ea
 }
 
 static skr::flat_hash_map<lua_State*, void*> ExtraSpace;
-void* lua_getextraspace(lua_State* L)
+void** lua_getextraspace(lua_State* L)
 {
-    return ExtraSpace[L];
+    return &ExtraSpace[L];
 }
 
-int skr_load_file(lua_State* L) {
+int skr_lua_loadfile(lua_State* L, const char* filename)
+{
     skr_lua_state_extra_t* extra = (skr_lua_state_extra_t*)*(void**)lua_getextraspace(L);
-    auto fn = (const char8_t*)luaL_checkstring(L, 1);
-    eastl::u8string path = fn;
+    eastl::u8string path = (const char8_t*)filename;
     replaceAll(path, u8".", u8"/");
     eastl::u8string_view exts[] = { u8".lua", u8".luac" };
     skr_vfile_t* file = nullptr;
@@ -64,16 +64,17 @@ int skr_load_file(lua_State* L) {
     }
     if(!file)
     {
-        SKR_LOG_ERROR("[lua] Failed to open file: %s", fn);
+        SKR_LOG_ERROR("[lua] Failed to open file: %s", filename);
         return 0;
     }
     SKR_DEFER({ skr_vfs_fclose(file); });
     auto size = skr_vfs_fsize(file);
     eastl::vector<char> buffer(size);
     skr_vfs_fread(file, buffer.data(), 0, size);
-    auto name = eastl::u8string(u8"@") + fn;
+    auto name = eastl::u8string(u8"@") + (const char8_t*)filename;
     size_t bytecodeSize = 0;
     char* bytecode = luau_compile(buffer.data(), size, NULL, &bytecodeSize);
+    SKR_DEFER({ free(bytecode); });
     if(luau_load(L, (char*)name.c_str(), bytecode, bytecodeSize, 0)==0) {
         return 1;
     }
@@ -81,8 +82,58 @@ int skr_load_file(lua_State* L) {
         const char* err = lua_tostring(L,-1);
         SKR_LOG_ERROR("[lua] Failed to load file: %s", err);
         lua_pop(L,1);
+        lua_pushnil(L);
+        return 1;
     }
-    return 0;
+}
+
+int skr_load_file(lua_State* L) {
+    const char* fn = luaL_checkstring(L, 1);
+    return skr_lua_loadfile(L, fn);
+}
+
+#define LUA_QL(x)	"'" x "'"
+#define LUA_QS		LUA_QL("%s")
+static const int sentinel_ = 0;
+#define sentinel	((void *)&sentinel_)
+static int ll_require (lua_State *L) {
+  const char *name = luaL_checkstring(L, 1);
+  lua_settop(L, 1);  /* _LOADED table will be at index 2 */
+  lua_getfield(L, LUA_REGISTRYINDEX, "_LOADED");
+  lua_getfield(L, 2, name);
+  if (lua_toboolean(L, -1)) {  /* is it there? */
+    if (lua_touserdata(L, -1) == sentinel)  /* check loops */
+      luaL_error(L, "loop or previous error loading module " LUA_QS, name);
+    return 1;  /* package is already loaded */
+  }
+  skr_load_file(L);
+  lua_pushlightuserdata(L, sentinel);
+  lua_setfield(L, 2, name);  /* _LOADED[name] = sentinel */
+  lua_pushstring(L, name);  /* pass name as argument to module */
+  lua_call(L, 1, 1);  /* run loaded module */
+  if (!lua_isnil(L, -1))  /* non-nil return? */
+    lua_setfield(L, 2, name);  /* _LOADED[name] = returned value */
+  lua_getfield(L, 2, name);
+  if (lua_touserdata(L, -1) == sentinel) {   /* module did not set a value? */
+    lua_pushboolean(L, 1);  /* use true as result */
+    lua_pushvalue(L, -1);  /* extra copy to be returned */
+    lua_setfield(L, 2, name);  /* _LOADED[name] = true */
+  }
+  return 1;
+}
+
+static const luaL_Reg ll_funcs[] = {
+  {"require", ll_require},
+  {NULL, NULL}
+};
+
+LUALIB_API int luaopen_package (lua_State *L) {
+  /* set field `loaded' */
+  luaL_findtable(L, LUA_REGISTRYINDEX, "_LOADED", 2);
+  lua_pop(L, 1);
+  lua_pushvalue(L, LUA_GLOBALSINDEX);
+  luaL_register(L, NULL, ll_funcs);  /* open lib into global table */
+  return 0;  /* return 'package' table */
 }
 
 lua_State* skr_lua_newstate(skr_vfs_t* vfs)
@@ -110,24 +161,24 @@ lua_State* skr_lua_newstate(skr_vfs_t* vfs)
 
     // open standard libraries
     luaL_openlibs(L);
+    luaopen_package(L);
+    // // insert loader
+    // lua_pushcfunction(L,skr_load_file,"skr_load_file");
+    // int loaderFunc = lua_gettop(L);
 
-    // insert loader
-    lua_pushcfunction(L,skr_load_file,"skr_load_file");
-    int loaderFunc = lua_gettop(L);
+    // lua_getglobal(L,"package");
+    // lua_getfield(L,-1,"searchers");
 
-    lua_getglobal(L,"package");
-    lua_getfield(L,-1,"searchers");
+    // int loaderTable = lua_gettop(L);
 
-    int loaderTable = lua_gettop(L);
-
-    for(auto i = lua_objlen(L,loaderTable) + 1; i > 2u; i--) 
-    {
-        lua_rawgeti(L,loaderTable,i-1);
-        lua_rawseti(L,loaderTable,i);
-    }
-    lua_pushvalue(L,loaderFunc);
-    lua_rawseti(L,loaderTable,2);
-    lua_settop(L, 0);
+    // for(auto i = lua_objlen(L,loaderTable) + 1; i > 2u; i--) 
+    // {
+    //     lua_rawgeti(L,loaderTable,i-1);
+    //     lua_rawseti(L,loaderTable,i);
+    // }
+    // lua_pushvalue(L,loaderFunc);
+    // lua_rawseti(L,loaderTable,2);
+    // lua_settop(L, 0);
 
     // create skr global table
     lua_newtable(L);
@@ -426,7 +477,7 @@ int skr_lua_log(lua_State* L)
 {
     lua_Debug ar;
     lua_getinfo(L, 1, "nSl", &ar);
-    auto str = skr::format(u8"[{} : {}]:\t", (const char8_t*)ar.what, (const char8_t*)ar.name);
+    auto str = skr::format(u8"[{} : {}]:\t", (uint64_t)ar.what, (const char8_t*)ar.name);
     int top = lua_gettop(L);
     for(int n=1;n<=top;n++) {
         size_t len;

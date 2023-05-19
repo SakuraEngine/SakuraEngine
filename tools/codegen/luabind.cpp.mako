@@ -1,6 +1,10 @@
 // BEGIN LUA GENERATED
 #include "lua/bind.hpp"
-#include "lua/lua.hpp"
+extern "C"
+{
+    #include "lua.h"
+    #include "lualib.h"
+}
 #include "misc/hash.h"
 <%
     categories = {}
