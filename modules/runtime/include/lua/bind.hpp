@@ -213,7 +213,7 @@ namespace skr::lua
     { \
         static int push(lua_State* L, type value) \
         { \
-            lua_pushinteger(L, value); \
+            lua_pushinteger(L, (type)value); \
             return 1; \
         } \
         static type check(lua_State* L, int index, int& used) \
@@ -224,7 +224,7 @@ namespace skr::lua
         static type opt(lua_State* L, int index, type def, int& used) \
         { \
             used = 1; \
-            return (type)luaL_optinteger(L, index, def); \
+            return (type)luaL_optinteger(L, index, (type)def); \
         } \
     };
     BindInt(uint32_t);

@@ -532,12 +532,23 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
         lua_pushlightuserdata(L, g_game_module->game_world);
         return 1;
     };
-    lua_pushcfunction(L, GetStorage);
+    lua_pushcfunction(L, GetStorage, "GetStorage");
     lua_setfield(L, -2, "GetStorage");
     lua_pop(L, 1);
-    if (luaL_dostring(L, "local module = require \"game\"; module:init()") != LUA_OK)
+    if(skr_lua_loadfile(L, "main") != 0)
     {
-        SKR_LOG_ERROR("luaL_dostring error: {}", lua_tostring(L, -1));
+        if(lua_pcall(L, 0, 0, 0) != LUA_OK)
+        {
+            SKR_LOG_ERROR("lua_pcall error: {}", lua_tostring(L, -1));
+            lua_pop(L, 1);
+        }
+    }
+    
+    lua_getglobal(L, "GameMain");
+    if (lua_pcall(L, 0, 0, 0) != LUA_OK)
+    {
+        SKR_LOG_ERROR("lua_pcall error: {}", lua_tostring(L, -1));
+        lua_pop(L, 1);
     }
     namespace res = skr::resource;
     res::TResourceHandle<skr_scene_resource_t> scene_handle = skr::guid::make_guid_unsafe(u8"FB84A5BD-2FD2-46A2-ABF4-2D2610CFDAD9");
@@ -656,16 +667,16 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
                 ImGui::End();
             }
             {
-                ImGui::Begin("Lua");
-                if (ImGui::Button("Hotfix"))
-                {
-                    if (luaL_dostring(L, "local module = require \"hotfix\"; module.reload({\"game\"})") != LUA_OK)
-                    {
-                        SKR_LOG_ERROR("luaL_dostring error: %s", lua_tostring(L, -1));
-                        lua_pop(L, 1);
-                    }
-                }
-                ImGui::End();
+                //ImGui::Begin("Lua");
+                //if (ImGui::Button("Hotfix"))
+                //{
+                //    if (luaL_dostring(L, "local module = require \"hotfix\"; module.reload({\"game\"})") != LUA_OK)
+                //    {
+                //        SKR_LOG_ERROR("luaL_dostring error: %s", lua_tostring(L, -1));
+                //        lua_pop(L, 1);
+                //    }
+                //}
+                //ImGui::End();
             }
             {
                 ImGui::Begin("Scene");
@@ -689,9 +700,10 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
         }
         {
             ZoneScopedN("Lua");
-            if (luaL_dostring(L, "local module = require \"game\"; module:update()") != LUA_OK)
+            lua_getglobal(L, "GameUpdate");
+            if (lua_pcall(L, 0, 0, 0) != LUA_OK)
             {
-                SKR_LOG_ERROR("luaL_dostring error: %s", lua_tostring(L, -1));
+                SKR_LOG_ERROR("lua_pcall error: %s", lua_tostring(L, -1));
                 lua_pop(L, 1);
             }
         }
