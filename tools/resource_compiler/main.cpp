@@ -27,10 +27,9 @@
 #include "misc/make_zeroed.hpp"
 #include "SkrAnim/resources/skeleton_resource.h"
 #include "SkrAnim/resources/animation_resource.h"
-
 #include "containers/string.hpp"
-
 #include "tracy/Tracy.hpp"
+#include "misc/opt.hpp"
 
 bool IsAsset(skr::filesystem::path path)
 {
@@ -87,60 +86,47 @@ void DestroyResourceSystem(skd::SProject& proj)
     SkrDelete(registry);
 }
 
-skd::SProject* open_project(int argc, char** argv)
+skr::vector<skd::SProject*> open_projects(int argc, char** argv)
 {
+    skr::cmd::parser parser(argc, argv);
+    parser.add(u8"project", u8"project path", u8"-p", false);
+    parser.add(u8"workspace", u8"workspace path", u8"-w", true);
+    if(!parser.parse())
+    {
+        SKR_LOG_ERROR("Failed to parse command line arguments.");
+        return {};
+    }
+    auto projectPath = parser.get_optional<skr::string>(u8"project");
+
     std::error_code ec = {};
-    auto root = skr::filesystem::current_path(ec);
-    auto parentPath = root.parent_path().u8string();
-    auto project = SkrNew<skd::SProject>();
-    project->assetPath = (root.parent_path() / "../../../samples/application/game/assets").lexically_normal();
-    project->outputPath = (root.parent_path() / "resources/game").lexically_normal();
-    project->dependencyPath = (root.parent_path() / "deps/game").lexically_normal();
-
-    // create VFS
-    skr_vfs_desc_t vfs_desc = {};
-    vfs_desc.app_name = u8"Project";
-    vfs_desc.mount_type = SKR_MOUNT_TYPE_ABSOLUTE;
-    vfs_desc.override_mount_dir = parentPath.c_str();
-    project->vfs = skr_create_vfs(&vfs_desc);
-
-    // create resource VFS
-    auto resourceRoot = (skr::filesystem::current_path(ec) / "../resources");
-    auto u8ResourceRoot = resourceRoot.u8string();
-    skr_vfs_desc_t resource_vfs_desc = {};
-    resource_vfs_desc.app_name = u8"Project";
-    resource_vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
-    resource_vfs_desc.override_mount_dir = u8ResourceRoot.c_str();
-
-    project->resource_vfs = skr_create_vfs(&resource_vfs_desc);
-    auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
-    ioServiceDesc.name = u8"CompilerRAMIOService";
-    ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
-    ioServiceDesc.sleep_time = 1000 / 60;
-    ioServiceDesc.lockless = true;
-    ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
-    project->ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
-    return project;
+    skr::filesystem::path workspace{parser.get<skr::string>(u8"workspace").u8_str()};
+    skd::SProject::SetWorkspace(workspace);
+    skr::filesystem::recursive_directory_iterator iter(workspace, ec);
+    eastl::vector<skr::filesystem::path> projectFiles;
+    while (iter != end(iter))
+    {
+        if(iter->is_regular_file(ec) && iter->path().extension() == ".sproject")
+        {
+            projectFiles.push_back(iter->path());
+        }
+        iter.increment(ec);
+    }
+    
+    skr::vector<skd::SProject*> result;
+    for (auto& projectFile : projectFiles)
+    {
+        if(auto proj = skd::SProject::OpenProject(projectFile))
+            result.push_back(proj);
+    }
+    return result;
 }
 
-int compile_all(int argc, char** argv)
+int compile_project(skd::SProject* project)
 {
-    log_set_level(SKR_LOG_LEVEL_INFO);
-    
-    skr::task::scheduler_t scheduler;
-    scheduler.initialize(skr::task::scheudler_config_t());
-    scheduler.bind();
     auto& system = *skd::asset::GetCookSystem();
-    system.Initialize();
-    //----- register project
-    // TODO: project discover?
-    auto project = open_project(argc, argv);
-    SKR_DEFER({ SkrDelete(project); });
-    
     InitializeResourceSystem(*project);
-
     std::error_code ec = {};
-    skr::filesystem::recursive_directory_iterator iter(project->assetPath, ec);
+    skr::filesystem::recursive_directory_iterator iter(project->GetAssetPath(), ec);
     //----- scan project directory
     eastl::vector<skr::filesystem::path> paths;
     while (iter != end(iter))
@@ -164,8 +150,8 @@ int compile_all(int argc, char** argv)
         });
     }
     SKR_LOG_INFO("Project asset import finished.");
-    skr::filesystem::create_directories(project->outputPath, ec);
-    skr::filesystem::create_directories(project->dependencyPath, ec);
+    skr::filesystem::create_directories(project->GetOutputPath(), ec);
+    skr::filesystem::create_directories(project->GetDependencyPath(), ec);
     //----- schedule cook tasks (checking dependencies)
     {
         system.ParallelForEachAsset(1,
@@ -190,9 +176,31 @@ int compile_all(int argc, char** argv)
     {
         resource_system->Update();
     }
+    DestroyResourceSystem(*project);
+    return 0;
+}
+
+int compile_all(int argc, char** argv)
+{
+    log_set_level(SKR_LOG_LEVEL_INFO);
+    
+    skr::task::scheduler_t scheduler;
+    scheduler.initialize(skr::task::scheudler_config_t());
+    scheduler.bind();
+    auto& system = *skd::asset::GetCookSystem();
+    system.Initialize();
+    //----- register project
+    auto projects = open_projects(argc, argv);
+    SKR_DEFER({ 
+        for(auto& project : projects)
+            SkrDelete(project); 
+    });
+    for(auto& project : projects)
+        compile_project(project);
+    
     scheduler.unbind();
     system.Shutdown();
-    DestroyResourceSystem(*project);
+
     return 0;
 }
 

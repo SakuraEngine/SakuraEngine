@@ -8,4 +8,7 @@ shared_module("SkrToolCore", "TOOL_CORE", engine_version)
         rootdir = "include/SkrToolCore",
         api = "TOOL_CORE"
     })
+    on_config(function (target, opt)
+        target:add("defines", "SKR_RESOURCE_PLATFORM=u8\""..target:plat().."\"")
+    end)
     -- add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
