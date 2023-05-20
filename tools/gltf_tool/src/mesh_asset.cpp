@@ -22,7 +22,7 @@ void* skd::asset::SGltfMeshImporter::Import(skr_io_ram_service_t* ioService, SCo
     }
     const auto assetRecord = context->GetAssetRecord();
     auto path = context->AddFileDependency(relPath).u8string();
-    auto vfs = assetRecord->project->vfs;
+    auto vfs = assetRecord->project->asset_vfs;
     return ImportGLTFWithData(path.c_str(), ioService, vfs);
 }
 

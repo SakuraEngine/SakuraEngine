@@ -188,7 +188,7 @@ skr::filesystem::path SCookContextImpl::AddFileDependencyAndLoad(skr_io_ram_serv
     };
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&counter;
     skr_async_request_t ioRequest = {};
-    ioService->request(assetRecord->project->vfs, &ramIO, &ioRequest, &destination);
+    ioService->request(assetRecord->project->asset_vfs, &ramIO, &ioRequest, &destination);
     counter.wait(false);
     return outPath;
 }
