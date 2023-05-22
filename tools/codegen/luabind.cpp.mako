@@ -1,6 +1,10 @@
 // BEGIN LUA GENERATED
 #include "lua/bind.hpp"
-#include "lua/lua.hpp"
+extern "C"
+{
+    #include "lua.h"
+    #include "lualib.h"
+}
 #include "misc/hash.h"
 <%
     categories = {}
@@ -145,7 +149,7 @@
             nRet += skr::lua::push<${name}_t>(L, ${name});
         %endfor
             return nRet;
-        });
+        }, "${db.short_name(function.name)}");
 </%def>
 <%def name="bind_category(cat)">
     <% 
@@ -178,7 +182,6 @@
 </%def>
 void skr_lua_open_${module}(lua_State* L)
 {
-    lua_getglobal(L, "skr");
     lua_newtable(L);
     // bind enums
 
@@ -209,7 +212,8 @@ void skr_lua_open_${module}(lua_State* L)
                 }
             %endfor
                 default:
-                    return luaL_error(L, "invalid field name : %s", key);
+                    luaL_error(L, "invalid field name : %s", key);
+                    return 0;
             }
             SKR_UNREACHABLE_CODE();
             return 0;
@@ -230,7 +234,8 @@ void skr_lua_open_${module}(lua_State* L)
                 }
             %endfor
                 default:
-                    return luaL_error(L, "invalid field name %s", key);
+                    luaL_error(L, "invalid field name %s", key);
+                    return 0;
             }
             SKR_UNREACHABLE_CODE();
             return 0;
@@ -245,45 +250,32 @@ void skr_lua_open_${module}(lua_State* L)
         {nullptr, nullptr} // sentinel
     };
     luaL_newmetatable(L, "${record.attrs.guid}");
-    luaL_setfuncs(L, basemetamethods, 0);
+    luaL_register(L, nullptr, basemetamethods);
     lua_pop(L, 1);
     luaL_Reg sharedmetamedhods[] = {
-        {"__gc", +[](lua_State* L)
-        {
-            using sharedT = skr::lua::SharedUserdata<${record.name}>;
-            auto& record = *reinterpret_cast<sharedT*>(lua_touserdata(L, 1));
-            record.~sharedT();
-            return 0;
-        }},
         basemetamethods[0],
         basemetamethods[1],
         basemetamethods[2],
         {nullptr, nullptr} // sentinel
     };
     luaL_newmetatable(L, "[shared]${record.attrs.guid}");
-    luaL_setfuncs(L, sharedmetamedhods, 0);
+    luaL_register(L, nullptr, sharedmetamedhods);
     lua_pop(L, 1);
     luaL_Reg uniquemetamedhods[] = {
-        {"__gc", +[](lua_State* L)
-        {
-            using T = ${record.name};
-            auto& record = **reinterpret_cast<T**>(lua_touserdata(L, 1));
-            record.~T();
-            return 0;
-        }},
         basemetamethods[0],
         basemetamethods[1],
         basemetamethods[2],
         {nullptr, nullptr} // sentinel
     };
     luaL_newmetatable(L, "[unique]${record.attrs.guid}");
-    luaL_setfuncs(L, uniquemetamedhods, 0);
+    luaL_register(L, nullptr, uniquemetamedhods);
     lua_pop(L, 1);
     }
 %endfor
 %for function in lua_binders:
     ${function.name}(L);
 %endfor 
-    lua_setfield(L, -2, "${module}");
+
+    lua_setglobal(L, "${module}");
 }
 // END LUA GENERATED

@@ -2,7 +2,11 @@
 #include "SkrImGui/skr_imgui.config.h"
 #include "cimgui/cimgui.h"
 #include "misc/log.h"
-#include "lua/lua.hpp"
+extern "C"
+{
+    #include "lua.h"
+    #include "lualib.h"
+}
 #include <float.h> // FLT_MIN, FLT_MAX
 
 SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
@@ -1289,7 +1293,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_NewFrame();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "NewFrame");
     }
     {
@@ -1297,7 +1301,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_EndFrame();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "EndFrame");
     }
     {
@@ -1305,7 +1309,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_Render();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "Render");
     }
     {
@@ -1322,7 +1326,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ShowDemoWindow");
     }
     {
@@ -1339,7 +1343,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ShowMetricsWindow");
     }
     {
@@ -1356,7 +1360,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ShowDebugLogWindow");
     }
     {
@@ -1373,7 +1377,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ShowStackToolWindow");
     }
     {
@@ -1390,7 +1394,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ShowAboutWindow");
     }
     {
@@ -1405,7 +1409,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ShowStyleSelector");
     }
     {
@@ -1417,7 +1421,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_ShowFontSelector(label);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ShowFontSelector");
     }
     {
@@ -1425,7 +1429,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_ShowUserGuide();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ShowUserGuide");
     }
     {
@@ -1436,7 +1440,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetVersion");
     }
     {
@@ -1463,7 +1467,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "Begin");
     }
     {
@@ -1471,7 +1475,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_End();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "End");
     }
     {
@@ -1506,7 +1510,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginChild");
     }
     {
@@ -1514,7 +1518,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_EndChild();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "EndChild");
     }
     {
@@ -1525,7 +1529,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsWindowAppearing");
     }
     {
@@ -1536,7 +1540,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsWindowCollapsed");
     }
     {
@@ -1551,7 +1555,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsWindowFocused");
     }
     {
@@ -1566,7 +1570,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsWindowHovered");
     }
     {
@@ -1577,7 +1581,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetWindowDpiScale");
     }
     {
@@ -1589,7 +1593,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetWindowPos");
     }
     {
@@ -1601,7 +1605,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetWindowSize");
     }
     {
@@ -1612,7 +1616,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetWindowWidth");
     }
     {
@@ -1623,7 +1627,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetWindowHeight");
     }
     {
@@ -1640,7 +1644,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetNextWindowPos(pos, cond);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetNextWindowPos");
     }
     {
@@ -1669,7 +1673,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetNextWindowPosEx(pos, cond, pivot);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetNextWindowPosEx");
     }
     {
@@ -1686,7 +1690,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetNextWindowSize(size, cond);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetNextWindowSize");
     }
     {
@@ -1699,7 +1703,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetNextWindowContentSize(size);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetNextWindowContentSize");
     }
     {
@@ -1715,7 +1719,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetNextWindowCollapsed(collapsed, cond);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetNextWindowCollapsed");
     }
     {
@@ -1723,7 +1727,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetNextWindowFocus();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetNextWindowFocus");
     }
     {
@@ -1735,7 +1739,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetNextWindowBgAlpha(alpha);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetNextWindowBgAlpha");
     }
     {
@@ -1752,7 +1756,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetWindowPos(pos, cond);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetWindowPos");
     }
     {
@@ -1769,7 +1773,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetWindowSize(size, cond);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetWindowSize");
     }
     {
@@ -1785,7 +1789,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetWindowCollapsed(collapsed, cond);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetWindowCollapsed");
     }
     {
@@ -1793,7 +1797,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetWindowFocus();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetWindowFocus");
     }
     {
@@ -1805,7 +1809,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetWindowFontScale(scale);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetWindowFontScale");
     }
     {
@@ -1826,7 +1830,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetWindowPosStr(name, pos, cond);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetWindowPosStr");
     }
     {
@@ -1847,7 +1851,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetWindowSizeStr(name, size, cond);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetWindowSizeStr");
     }
     {
@@ -1867,7 +1871,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetWindowCollapsedStr(name, collapsed, cond);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetWindowCollapsedStr");
     }
     {
@@ -1879,7 +1883,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetWindowFocusStr(name);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetWindowFocusStr");
     }
     {
@@ -1891,7 +1895,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetContentRegionAvail");
     }
     {
@@ -1903,7 +1907,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetContentRegionMax");
     }
     {
@@ -1915,7 +1919,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetWindowContentRegionMin");
     }
     {
@@ -1927,7 +1931,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetWindowContentRegionMax");
     }
     {
@@ -1938,7 +1942,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetScrollX");
     }
     {
@@ -1949,7 +1953,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetScrollY");
     }
     {
@@ -1961,7 +1965,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetScrollX(scroll_x);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetScrollX");
     }
     {
@@ -1973,7 +1977,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetScrollY(scroll_y);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetScrollY");
     }
     {
@@ -1984,7 +1988,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetScrollMaxX");
     }
     {
@@ -1995,7 +1999,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetScrollMaxY");
     }
     {
@@ -2007,7 +2011,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetScrollHereX(center_x_ratio);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetScrollHereX");
     }
     {
@@ -2019,7 +2023,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetScrollHereY(center_y_ratio);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetScrollHereY");
     }
     {
@@ -2035,7 +2039,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetScrollFromPosX(local_x, center_x_ratio);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetScrollFromPosX");
     }
     {
@@ -2051,7 +2055,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetScrollFromPosY(local_y, center_y_ratio);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetScrollFromPosY");
     }
     {
@@ -2059,7 +2063,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PopFont();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PopFont");
     }
     {
@@ -2078,7 +2082,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PushStyleColorImVec4(idx, col);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PushStyleColorImVec4");
     }
     {
@@ -2086,7 +2090,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PopStyleColor();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PopStyleColor");
     }
     {
@@ -2098,7 +2102,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PopStyleColorEx(count);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PopStyleColorEx");
     }
     {
@@ -2114,7 +2118,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PushStyleVar(idx, val);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PushStyleVar");
     }
     {
@@ -2131,7 +2135,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PushStyleVarImVec2(idx, val);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PushStyleVarImVec2");
     }
     {
@@ -2139,7 +2143,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PopStyleVar();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PopStyleVar");
     }
     {
@@ -2151,7 +2155,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PopStyleVarEx(count);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PopStyleVarEx");
     }
     {
@@ -2163,7 +2167,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PushAllowKeyboardFocus(allow_keyboard_focus);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PushAllowKeyboardFocus");
     }
     {
@@ -2171,7 +2175,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PopAllowKeyboardFocus();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PopAllowKeyboardFocus");
     }
     {
@@ -2183,7 +2187,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PushButtonRepeat(repeat);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PushButtonRepeat");
     }
     {
@@ -2191,7 +2195,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PopButtonRepeat();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PopButtonRepeat");
     }
     {
@@ -2203,7 +2207,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PushItemWidth(item_width);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PushItemWidth");
     }
     {
@@ -2211,7 +2215,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PopItemWidth();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PopItemWidth");
     }
     {
@@ -2223,7 +2227,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetNextItemWidth(item_width);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetNextItemWidth");
     }
     {
@@ -2234,7 +2238,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "CalcItemWidth");
     }
     {
@@ -2246,7 +2250,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PushTextWrapPos(wrap_local_pos_x);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PushTextWrapPos");
     }
     {
@@ -2254,7 +2258,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PopTextWrapPos();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PopTextWrapPos");
     }
     {
@@ -2265,7 +2269,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetFontSize");
     }
     {
@@ -2277,7 +2281,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetFontTexUvWhitePixel");
     }
     {
@@ -2285,7 +2289,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_Separator();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "Separator");
     }
     {
@@ -2293,7 +2297,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SameLine();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SameLine");
     }
     {
@@ -2309,7 +2313,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SameLineEx(offset_from_start_x, spacing);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SameLineEx");
     }
     {
@@ -2317,7 +2321,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_NewLine();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "NewLine");
     }
     {
@@ -2325,7 +2329,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_Spacing();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "Spacing");
     }
     {
@@ -2338,7 +2342,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_Dummy(size);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "Dummy");
     }
     {
@@ -2346,7 +2350,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_Indent();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "Indent");
     }
     {
@@ -2358,7 +2362,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_IndentEx(indent_w);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IndentEx");
     }
     {
@@ -2366,7 +2370,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_Unindent();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "Unindent");
     }
     {
@@ -2378,7 +2382,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_UnindentEx(indent_w);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "UnindentEx");
     }
     {
@@ -2386,7 +2390,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_BeginGroup();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginGroup");
     }
     {
@@ -2394,7 +2398,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_EndGroup();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "EndGroup");
     }
     {
@@ -2406,7 +2410,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetCursorPos");
     }
     {
@@ -2417,7 +2421,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetCursorPosX");
     }
     {
@@ -2428,7 +2432,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetCursorPosY");
     }
     {
@@ -2441,7 +2445,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetCursorPos(local_pos);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetCursorPos");
     }
     {
@@ -2453,7 +2457,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetCursorPosX(local_x);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetCursorPosX");
     }
     {
@@ -2465,7 +2469,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetCursorPosY(local_y);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetCursorPosY");
     }
     {
@@ -2477,7 +2481,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetCursorStartPos");
     }
     {
@@ -2489,7 +2493,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetCursorScreenPos");
     }
     {
@@ -2502,7 +2506,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetCursorScreenPos(pos);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetCursorScreenPos");
     }
     {
@@ -2510,7 +2514,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_AlignTextToFramePadding();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "AlignTextToFramePadding");
     }
     {
@@ -2521,7 +2525,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetTextLineHeight");
     }
     {
@@ -2532,7 +2536,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetTextLineHeightWithSpacing");
     }
     {
@@ -2543,7 +2547,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetFrameHeight");
     }
     {
@@ -2554,7 +2558,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetFrameHeightWithSpacing");
     }
     {
@@ -2566,7 +2570,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PushID(str_id);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PushID");
     }
     {
@@ -2582,7 +2586,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PushIDStr(str_id_begin, str_id_end);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PushIDStr");
     }
     {
@@ -2594,7 +2598,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PushIDInt(int_id);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PushIDInt");
     }
     {
@@ -2602,7 +2606,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PopID();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PopID");
     }
     {
@@ -2614,7 +2618,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_TextUnformatted(text);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TextUnformatted");
     }
     {
@@ -2630,7 +2634,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_TextUnformattedEx(text, text_end);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TextUnformattedEx");
     }
     {
@@ -2642,7 +2646,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_Text(fmt);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "Text");
     }
     {
@@ -2661,7 +2665,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_TextColored(col, fmt);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TextColored");
     }
     {
@@ -2673,7 +2677,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_TextDisabled(fmt);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TextDisabled");
     }
     {
@@ -2685,7 +2689,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_TextWrapped(fmt);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TextWrapped");
     }
     {
@@ -2701,7 +2705,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_LabelText(label, fmt);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "LabelText");
     }
     {
@@ -2713,7 +2717,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_BulletText(fmt);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BulletText");
     }
     {
@@ -2728,7 +2732,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "Button");
     }
     {
@@ -2755,7 +2759,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ButtonEx");
     }
     {
@@ -2770,7 +2774,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SmallButton");
     }
     {
@@ -2794,7 +2798,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "InvisibleButton");
     }
     {
@@ -2813,7 +2817,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ArrowButton");
     }
     {
@@ -2836,7 +2840,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "Checkbox");
     }
     {
@@ -2863,7 +2867,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "CheckboxFlagsIntPtr");
     }
     {
@@ -2882,7 +2886,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "RadioButton");
     }
     {
@@ -2909,7 +2913,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "RadioButtonIntPtr");
     }
     {
@@ -2937,7 +2941,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_ProgressBar(fraction, size_arg, overlay);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ProgressBar");
     }
     {
@@ -2945,7 +2949,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_Bullet();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "Bullet");
     }
     {
@@ -2968,7 +2972,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginCombo");
     }
     {
@@ -2976,7 +2980,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_EndCombo();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "EndCombo");
     }
     {
@@ -3003,7 +3007,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "Combo");
     }
     {
@@ -3034,7 +3038,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ComboEx");
     }
     {
@@ -3089,7 +3093,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ComboCallback");
     }
     {
@@ -3148,7 +3152,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ComboCallbackEx");
     }
     {
@@ -3171,7 +3175,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragFloat");
     }
     {
@@ -3214,7 +3218,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragFloatEx");
     }
     {
@@ -3239,7 +3243,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 3;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragFloat2");
     }
     {
@@ -3284,7 +3288,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 3;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragFloat2Ex");
     }
     {
@@ -3313,7 +3317,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 4;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragFloat3");
     }
     {
@@ -3362,7 +3366,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 4;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragFloat3Ex");
     }
     {
@@ -3395,7 +3399,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 5;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragFloat4");
     }
     {
@@ -3448,7 +3452,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 5;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragFloat4Ex");
     }
     {
@@ -3479,7 +3483,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 3;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragFloatRange2");
     }
     {
@@ -3534,7 +3538,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 3;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragFloatRange2Ex");
     }
     {
@@ -3557,7 +3561,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragInt");
     }
     {
@@ -3600,7 +3604,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragIntEx");
     }
     {
@@ -3625,7 +3629,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 3;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragInt2");
     }
     {
@@ -3670,7 +3674,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 3;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragInt2Ex");
     }
     {
@@ -3699,7 +3703,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 4;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragInt3");
     }
     {
@@ -3748,7 +3752,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 4;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragInt3Ex");
     }
     {
@@ -3781,7 +3785,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 5;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragInt4");
     }
     {
@@ -3834,7 +3838,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 5;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragInt4Ex");
     }
     {
@@ -3865,7 +3869,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 3;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragIntRange2");
     }
     {
@@ -3920,7 +3924,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 3;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DragIntRange2Ex");
     }
     {
@@ -3951,7 +3955,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SliderFloat");
     }
     {
@@ -3990,7 +3994,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SliderFloatEx");
     }
     {
@@ -4023,7 +4027,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 3;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SliderFloat2");
     }
     {
@@ -4064,7 +4068,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 3;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SliderFloat2Ex");
     }
     {
@@ -4101,7 +4105,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 4;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SliderFloat3");
     }
     {
@@ -4146,7 +4150,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 4;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SliderFloat3Ex");
     }
     {
@@ -4187,7 +4191,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 5;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SliderFloat4");
     }
     {
@@ -4236,7 +4240,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 5;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SliderFloat4Ex");
     }
     {
@@ -4259,7 +4263,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SliderAngle");
     }
     {
@@ -4298,7 +4302,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SliderAngleEx");
     }
     {
@@ -4329,7 +4333,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SliderInt");
     }
     {
@@ -4368,7 +4372,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SliderIntEx");
     }
     {
@@ -4401,7 +4405,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 3;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SliderInt2");
     }
     {
@@ -4442,7 +4446,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 3;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SliderInt2Ex");
     }
     {
@@ -4479,7 +4483,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 4;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SliderInt3");
     }
     {
@@ -4524,7 +4528,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 4;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SliderInt3Ex");
     }
     {
@@ -4565,7 +4569,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 5;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SliderInt4");
     }
     {
@@ -4614,7 +4618,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 5;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SliderInt4Ex");
     }
     {
@@ -4650,7 +4654,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "VSliderFloat");
     }
     {
@@ -4694,7 +4698,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "VSliderFloatEx");
     }
     {
@@ -4730,7 +4734,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "VSliderInt");
     }
     {
@@ -4774,7 +4778,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "VSliderIntEx");
     }
     {
@@ -4797,7 +4801,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "InputFloat");
     }
     {
@@ -4836,7 +4840,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "InputFloatEx");
     }
     {
@@ -4861,7 +4865,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 3;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "InputFloat2");
     }
     {
@@ -4894,7 +4898,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 3;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "InputFloat2Ex");
     }
     {
@@ -4923,7 +4927,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 4;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "InputFloat3");
     }
     {
@@ -4960,7 +4964,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 4;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "InputFloat3Ex");
     }
     {
@@ -4993,7 +4997,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 5;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "InputFloat4");
     }
     {
@@ -5034,7 +5038,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 5;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "InputFloat4Ex");
     }
     {
@@ -5057,7 +5061,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "InputInt");
     }
     {
@@ -5092,7 +5096,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "InputIntEx");
     }
     {
@@ -5121,7 +5125,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 3;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "InputInt2");
     }
     {
@@ -5154,7 +5158,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 4;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "InputInt3");
     }
     {
@@ -5191,7 +5195,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 5;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "InputInt4");
     }
     {
@@ -5214,7 +5218,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "InputDouble");
     }
     {
@@ -5253,7 +5257,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "InputDoubleEx");
     }
     {
@@ -5286,7 +5290,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 4;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ColorEdit3");
     }
     {
@@ -5323,7 +5327,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 5;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ColorEdit4");
     }
     {
@@ -5356,7 +5360,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 4;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ColorPicker3");
     }
     {
@@ -5382,7 +5386,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ColorButton");
     }
     {
@@ -5420,7 +5424,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ColorButtonEx");
     }
     {
@@ -5432,7 +5436,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetColorEditOptions(flags);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetColorEditOptions");
     }
     {
@@ -5447,7 +5451,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TreeNode");
     }
     {
@@ -5466,7 +5470,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TreeNodeStr");
     }
     {
@@ -5485,7 +5489,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TreeNodeEx");
     }
     {
@@ -5508,7 +5512,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TreeNodeExStr");
     }
     {
@@ -5520,7 +5524,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_TreePush(str_id);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TreePush");
     }
     {
@@ -5528,7 +5532,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_TreePop();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TreePop");
     }
     {
@@ -5539,7 +5543,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetTreeNodeToLabelSpacing");
     }
     {
@@ -5558,7 +5562,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "CollapsingHeader");
     }
     {
@@ -5585,7 +5589,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "CollapsingHeaderBoolPtr");
     }
     {
@@ -5601,7 +5605,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetNextItemOpen(is_open, cond);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetNextItemOpen");
     }
     {
@@ -5616,7 +5620,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "Selectable");
     }
     {
@@ -5651,7 +5655,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SelectableEx");
     }
     {
@@ -5678,7 +5682,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SelectableBoolPtr");
     }
     {
@@ -5717,7 +5721,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SelectableBoolPtrEx");
     }
     {
@@ -5744,7 +5748,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginListBox");
     }
     {
@@ -5752,7 +5756,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_EndListBox();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "EndListBox");
     }
     {
@@ -5807,7 +5811,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ListBoxCallback");
     }
     {
@@ -5866,7 +5870,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ListBoxCallbackEx");
     }
     {
@@ -5908,7 +5912,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PlotLinesCallback(label, values_getter, data, values_count);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PlotLinesCallback");
     }
     {
@@ -5978,7 +5982,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PlotLinesCallbackEx(label, values_getter, data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PlotLinesCallbackEx");
     }
     {
@@ -6020,7 +6024,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PlotHistogramCallback(label, values_getter, data, values_count);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PlotHistogramCallback");
     }
     {
@@ -6090,7 +6094,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PlotHistogramCallbackEx(label, values_getter, data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PlotHistogramCallbackEx");
     }
     {
@@ -6101,7 +6105,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginMenuBar");
     }
     {
@@ -6109,7 +6113,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_EndMenuBar();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "EndMenuBar");
     }
     {
@@ -6120,7 +6124,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginMainMenuBar");
     }
     {
@@ -6128,7 +6132,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_EndMainMenuBar();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "EndMainMenuBar");
     }
     {
@@ -6143,7 +6147,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginMenu");
     }
     {
@@ -6162,7 +6166,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginMenuEx");
     }
     {
@@ -6170,7 +6174,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_EndMenu();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "EndMenu");
     }
     {
@@ -6185,7 +6189,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "MenuItem");
     }
     {
@@ -6212,7 +6216,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "MenuItemEx");
     }
     {
@@ -6243,7 +6247,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "MenuItemBoolPtr");
     }
     {
@@ -6251,7 +6255,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_BeginTooltip();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginTooltip");
     }
     {
@@ -6259,7 +6263,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_EndTooltip();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "EndTooltip");
     }
     {
@@ -6271,7 +6275,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetTooltip(fmt);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetTooltip");
     }
     {
@@ -6290,7 +6294,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginPopup");
     }
     {
@@ -6317,7 +6321,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginPopupModal");
     }
     {
@@ -6325,7 +6329,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_EndPopup();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "EndPopup");
     }
     {
@@ -6341,7 +6345,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_OpenPopup(str_id, popup_flags);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "OpenPopup");
     }
     {
@@ -6357,7 +6361,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_OpenPopupOnItemClick(str_id, popup_flags);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "OpenPopupOnItemClick");
     }
     {
@@ -6365,7 +6369,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_CloseCurrentPopup();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "CloseCurrentPopup");
     }
     {
@@ -6376,7 +6380,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginPopupContextItem");
     }
     {
@@ -6395,7 +6399,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginPopupContextItemEx");
     }
     {
@@ -6406,7 +6410,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginPopupContextWindow");
     }
     {
@@ -6425,7 +6429,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginPopupContextWindowEx");
     }
     {
@@ -6436,7 +6440,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginPopupContextVoid");
     }
     {
@@ -6455,7 +6459,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginPopupContextVoidEx");
     }
     {
@@ -6474,7 +6478,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsPopupOpen");
     }
     {
@@ -6497,7 +6501,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginTable");
     }
     {
@@ -6536,7 +6540,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginTableEx");
     }
     {
@@ -6544,7 +6548,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_EndTable();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "EndTable");
     }
     {
@@ -6552,7 +6556,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_TableNextRow();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TableNextRow");
     }
     {
@@ -6568,7 +6572,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_TableNextRowEx(row_flags, min_row_height);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TableNextRowEx");
     }
     {
@@ -6579,7 +6583,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TableNextColumn");
     }
     {
@@ -6594,7 +6598,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TableSetColumnIndex");
     }
     {
@@ -6610,7 +6614,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_TableSetupColumn(label, flags);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TableSetupColumn");
     }
     {
@@ -6626,7 +6630,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_TableSetupScrollFreeze(cols, rows);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TableSetupScrollFreeze");
     }
     {
@@ -6634,7 +6638,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_TableHeadersRow();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TableHeadersRow");
     }
     {
@@ -6646,7 +6650,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_TableHeader(label);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TableHeader");
     }
     {
@@ -6657,7 +6661,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TableGetColumnCount");
     }
     {
@@ -6668,7 +6672,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TableGetColumnIndex");
     }
     {
@@ -6679,7 +6683,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TableGetRowIndex");
     }
     {
@@ -6694,7 +6698,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TableGetColumnName");
     }
     {
@@ -6709,7 +6713,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TableGetColumnFlags");
     }
     {
@@ -6725,7 +6729,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_TableSetColumnEnabled(column_n, v);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TableSetColumnEnabled");
     }
     {
@@ -6733,7 +6737,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_Columns();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "Columns");
     }
     {
@@ -6753,7 +6757,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_ColumnsEx(count, id, border);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ColumnsEx");
     }
     {
@@ -6761,7 +6765,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_NextColumn();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "NextColumn");
     }
     {
@@ -6772,7 +6776,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetColumnIndex");
     }
     {
@@ -6787,7 +6791,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetColumnWidth");
     }
     {
@@ -6803,7 +6807,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetColumnWidth(column_index, width);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetColumnWidth");
     }
     {
@@ -6818,7 +6822,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetColumnOffset");
     }
     {
@@ -6834,7 +6838,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetColumnOffset(column_index, offset_x);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetColumnOffset");
     }
     {
@@ -6845,7 +6849,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetColumnsCount");
     }
     {
@@ -6864,7 +6868,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginTabBar");
     }
     {
@@ -6872,7 +6876,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_EndTabBar();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "EndTabBar");
     }
     {
@@ -6899,7 +6903,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginTabItem");
     }
     {
@@ -6907,7 +6911,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_EndTabItem();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "EndTabItem");
     }
     {
@@ -6926,7 +6930,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "TabItemButton");
     }
     {
@@ -6938,7 +6942,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetTabItemClosed(tab_or_docked_window_label);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetTabItemClosed");
     }
     {
@@ -6949,7 +6953,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsWindowDocked");
     }
     {
@@ -6961,7 +6965,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_LogToTTY(auto_open_depth);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "LogToTTY");
     }
     {
@@ -6977,7 +6981,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_LogToFile(auto_open_depth, filename);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "LogToFile");
     }
     {
@@ -6989,7 +6993,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_LogToClipboard(auto_open_depth);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "LogToClipboard");
     }
     {
@@ -6997,7 +7001,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_LogFinish();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "LogFinish");
     }
     {
@@ -7005,7 +7009,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_LogButtons();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "LogButtons");
     }
     {
@@ -7017,7 +7021,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_LogText(fmt);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "LogText");
     }
     {
@@ -7032,7 +7036,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginDragDropSource");
     }
     {
@@ -7040,7 +7044,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_EndDragDropSource();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "EndDragDropSource");
     }
     {
@@ -7051,7 +7055,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginDragDropTarget");
     }
     {
@@ -7059,7 +7063,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_EndDragDropTarget();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "EndDragDropTarget");
     }
     {
@@ -7071,7 +7075,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_BeginDisabled(disabled);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "BeginDisabled");
     }
     {
@@ -7079,7 +7083,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_EndDisabled();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "EndDisabled");
     }
     {
@@ -7101,7 +7105,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PushClipRect(clip_rect_min, clip_rect_max, intersect_with_current_clip_rect);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PushClipRect");
     }
     {
@@ -7109,7 +7113,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_PopClipRect();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "PopClipRect");
     }
     {
@@ -7117,7 +7121,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetItemDefaultFocus();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetItemDefaultFocus");
     }
     {
@@ -7125,7 +7129,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetKeyboardFocusHere();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetKeyboardFocusHere");
     }
     {
@@ -7137,7 +7141,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetKeyboardFocusHereEx(offset);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetKeyboardFocusHereEx");
     }
     {
@@ -7152,7 +7156,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsItemHovered");
     }
     {
@@ -7163,7 +7167,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsItemActive");
     }
     {
@@ -7174,7 +7178,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsItemFocused");
     }
     {
@@ -7185,7 +7189,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsItemClicked");
     }
     {
@@ -7200,7 +7204,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsItemClickedEx");
     }
     {
@@ -7211,7 +7215,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsItemVisible");
     }
     {
@@ -7222,7 +7226,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsItemEdited");
     }
     {
@@ -7233,7 +7237,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsItemActivated");
     }
     {
@@ -7244,7 +7248,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsItemDeactivated");
     }
     {
@@ -7255,7 +7259,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsItemDeactivatedAfterEdit");
     }
     {
@@ -7266,7 +7270,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsItemToggledOpen");
     }
     {
@@ -7277,7 +7281,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsAnyItemHovered");
     }
     {
@@ -7288,7 +7292,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsAnyItemActive");
     }
     {
@@ -7299,7 +7303,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsAnyItemFocused");
     }
     {
@@ -7311,7 +7315,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetItemRectMin");
     }
     {
@@ -7323,7 +7327,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetItemRectMax");
     }
     {
@@ -7335,7 +7339,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetItemRectSize");
     }
     {
@@ -7343,7 +7347,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetItemAllowOverlap();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetItemAllowOverlap");
     }
     {
@@ -7359,7 +7363,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsRectVisibleBySize");
     }
     {
@@ -7380,7 +7384,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsRectVisible");
     }
     {
@@ -7391,7 +7395,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetTime");
     }
     {
@@ -7402,7 +7406,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetFrameCount");
     }
     {
@@ -7417,7 +7421,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetStyleColorName");
     }
     {
@@ -7425,7 +7429,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_EndChildFrame();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "EndChildFrame");
     }
     {
@@ -7441,7 +7445,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "CalcTextSize");
     }
     {
@@ -7469,7 +7473,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "CalcTextSizeEx");
     }
     {
@@ -7514,7 +7518,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 3;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ColorConvertRGBtoHSV");
     }
     {
@@ -7559,7 +7563,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 3;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ColorConvertHSVtoRGB");
     }
     {
@@ -7574,7 +7578,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsKeyDown");
     }
     {
@@ -7589,7 +7593,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsKeyPressed");
     }
     {
@@ -7608,7 +7612,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsKeyPressedEx");
     }
     {
@@ -7623,7 +7627,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsKeyReleased");
     }
     {
@@ -7646,7 +7650,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetKeyPressedAmount");
     }
     {
@@ -7661,7 +7665,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetKeyName");
     }
     {
@@ -7673,7 +7677,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetNextFrameWantCaptureKeyboard(want_capture_keyboard);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetNextFrameWantCaptureKeyboard");
     }
     {
@@ -7688,7 +7692,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsMouseDown");
     }
     {
@@ -7703,7 +7707,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsMouseClicked");
     }
     {
@@ -7722,7 +7726,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsMouseClickedEx");
     }
     {
@@ -7737,7 +7741,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsMouseReleased");
     }
     {
@@ -7752,7 +7756,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsMouseDoubleClicked");
     }
     {
@@ -7767,7 +7771,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetMouseClickedCount");
     }
     {
@@ -7788,7 +7792,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsMouseHoveringRect");
     }
     {
@@ -7813,7 +7817,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsMouseHoveringRectEx");
     }
     {
@@ -7824,7 +7828,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsAnyMouseDown");
     }
     {
@@ -7836,7 +7840,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetMousePos");
     }
     {
@@ -7848,7 +7852,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetMousePosOnOpeningCurrentPopup");
     }
     {
@@ -7867,7 +7871,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "IsMouseDragging");
     }
     {
@@ -7887,7 +7891,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetMouseDragDelta");
     }
     {
@@ -7895,7 +7899,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_ResetMouseDragDelta();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ResetMouseDragDelta");
     }
     {
@@ -7907,7 +7911,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_ResetMouseDragDeltaEx(button);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ResetMouseDragDeltaEx");
     }
     {
@@ -7918,7 +7922,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetMouseCursor");
     }
     {
@@ -7930,7 +7934,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetMouseCursor(cursor_type);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetMouseCursor");
     }
     {
@@ -7942,7 +7946,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetNextFrameWantCaptureMouse(want_capture_mouse);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetNextFrameWantCaptureMouse");
     }
     {
@@ -7953,7 +7957,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetClipboardText");
     }
     {
@@ -7965,7 +7969,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SetClipboardText(text);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SetClipboardText");
     }
     {
@@ -7977,7 +7981,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_LoadIniSettingsFromDisk(ini_filename);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "LoadIniSettingsFromDisk");
     }
     {
@@ -7989,7 +7993,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_SaveIniSettingsToDisk(ini_filename);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "SaveIniSettingsToDisk");
     }
     {
@@ -8001,7 +8005,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_DebugTextEncoding(text);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DebugTextEncoding");
     }
     {
@@ -8009,7 +8013,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_UpdatePlatformWindows();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "UpdatePlatformWindows");
     }
     {
@@ -8017,7 +8021,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_RenderPlatformWindowsDefault();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "RenderPlatformWindowsDefault");
     }
     {
@@ -8025,7 +8029,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_DestroyPlatformWindows();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "DestroyPlatformWindows");
     }
     {
@@ -8040,7 +8044,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetKeyIndex");
     }
     {
@@ -8055,7 +8059,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetKeyIndex");
     }
     {
@@ -8067,7 +8071,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_CaptureKeyboardFromApp(want_capture_keyboard);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "CaptureKeyboardFromApp");
     }
     {
@@ -8079,7 +8083,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_CaptureMouseFromApp(want_capture_mouse);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "CaptureMouseFromApp");
     }
     {
@@ -8112,7 +8116,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 2;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "CalcListClipping");
     }
     {
@@ -8123,7 +8127,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "GetWindowContentRegionWidth");
     }
     {
@@ -8146,7 +8150,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ListBoxHeaderInt");
     }
     {
@@ -8173,7 +8177,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
 
             return 1;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ListBoxHeader");
     }
     {
@@ -8181,7 +8185,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_ListBoxFooter();
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "ListBoxFooter");
     }
     {
@@ -8197,7 +8201,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             ImGui_OpenPopupContextItem(str_id, mb);
             return 0;
         };
-        lua_pushcfunction(L, trampoline);
+        lua_pushcfunction(L, trampoline, "IMGUI");
         lua_setfield(L, -2, "OpenPopupContextItem");
     }
     lua_setfield(L, -2, "imgui");
