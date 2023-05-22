@@ -1,5 +1,6 @@
 #pragma once
 #include "misc/function_ref.hpp"
+#include "containers/not_null.hpp"
 #include "SkrGui/framework/diagnostics.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gui, RenderObject, skr_gui_render_object)
@@ -10,6 +11,7 @@ SKR_DECLARE_TYPE_ID_FWD(skr::gui, Slot, skr_gui_slot)
 namespace skr {
 namespace gui {
 struct BuildOwner;
+struct Key;
 enum class ElementLifecycle : uint32_t
 {
     initial,
@@ -41,7 +43,7 @@ struct SKR_GUI_API Element : public BuildContext
     virtual void attach_render_object(Slot* new_slot) SKR_NOEXCEPT;
     virtual void detach_render_object() SKR_NOEXCEPT;
 
-    virtual Element* inflate_widget(Widget* widget, Slot* new_slot) SKR_NOEXCEPT;
+    virtual not_null<Element*> inflate_widget(Widget* widget, Slot* new_slot) SKR_NOEXCEPT;
 
     virtual void update(Widget* new_widget) SKR_NOEXCEPT;
     virtual void update_slot_for_child(Element* child, Slot* new_slot) SKR_NOEXCEPT;
@@ -61,6 +63,12 @@ struct SKR_GUI_API Element : public BuildContext
     virtual Widget* get_widget() SKR_NOEXCEPT override;
     virtual BoxSizeType get_size() SKR_NOEXCEPT override;
     virtual RenderObject* find_render_object() SKR_NOEXCEPT override;
+
+    Element* _retake_inactive_element(Key& key, not_null<Widget*> widget) SKR_NOEXCEPT;
+    void _active_with_parent(Element* parent, Slot* slot) SKR_NOEXCEPT;
+    static void _active_recursively(Element* element) SKR_NOEXCEPT;
+    void _update_depth(int parentDepth) SKR_NOEXCEPT;
+
 
     uint32_t _depth = 0;
     bool _dirty = true;
