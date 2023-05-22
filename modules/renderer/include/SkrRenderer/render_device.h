@@ -3,7 +3,7 @@
 #include "fwd_types.h"
 #include "cgpu/io.h"
 #ifdef _WIN32
-#include "cgpu/extensions/dstorage_windows.h"
+#include "platform/win/dstorage_windows.h"
 #endif
 
 #ifdef __cplusplus

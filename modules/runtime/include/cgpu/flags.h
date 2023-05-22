@@ -1,5 +1,6 @@
 #pragma once
 #include "cgpu_config.h"
+#include "platform/dstorage.h"
 
 #ifdef __cplusplus
 CGPU_EXTERN_C_BEGIN
@@ -739,38 +740,12 @@ typedef enum ECGPUShadingRateCombiner
 } ECGPUShadingRateCombiner;
 
 // DStorage
-typedef enum ECGPUDStorageAvailability
-{
-    CGPU_DSTORAGE_AVAILABILITY_NONE = 0,
-    CGPU_DSTORAGE_AVAILABILITY_HARDWARE = 1,
-    CGPU_DSTORAGE_AVAILABILITY_SOFTWARE = 2,
-    CGPU_DSTORAGE_AVAILABILITY_MAX_ENUM_BIT = 0x7FFFFFFF
-} ECGPUDStorageAvailability;
+typedef enum ESkrDStorageAvailability ECGPUDStorageAvailability;
+typedef enum ESkrDStorageSource ECGPUDStorageSource;
+typedef enum ESkrDStoragePriority ECGPUDStoragePriority;
+typedef enum ESkrDStorageCompression ECGPUDStorageCompression;
+typedef SkrDStorageCompression CGPUDStorageCompression;
 
-typedef enum ECGPUDStorageSource {
-    CGPU_DSTORAGE_SOURCE_FILE = 0,
-    CGPU_DSTORAGE_SOURCE_MEMORY = 1,
-    CGPU_DSTORAGE_SOURCE_MAX_ENUM_BIT = 0x7FFFFFFF
-} ECGPUDStorageSource;
-
-typedef enum ECGPUDStoragePriority {
-    CGPU_DSTORAGE_PRIORITY_LOW = -1,
-    CGPU_DSTORAGE_PRIORITY_NORMAL = 0,
-    CGPU_DSTORAGE_PRIORITY_HIGH = 1,
-    CGPU_DSTORAGE_PRIORITY_REALTIME = 2,
-
-    CGPU_DSTORAGE_PRIORITY_COUNT = 4,
-    CGPU_DSTORAGE_PRIORITY_MAX_ENUM_BIT = 0x7FFFFFFF
-} ECGPUDStoragePriority;
-
-typedef enum ECGPUDStorageCompression {
-    CGPU_DSTORAGE_COMPRESSION_NONE = 0,
-    CGPU_DSTORAGE_COMPRESSION_CUSTOM = 0x80,
-    CGPU_DSTORAGE_COMPRESSION_MAX_ENUM_BIT = 0xFF
-} ECGPUDStorageCompression;
-typedef uint8_t CGPUDStorageCompression;
-
-//
 /* clang-format off */
 static FORCEINLINE bool FormatUtil_IsDepthStencilFormat(ECGPUFormat const fmt) {
     switch(fmt) {

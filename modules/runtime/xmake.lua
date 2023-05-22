@@ -111,3 +111,4 @@ shared_module("SkrRT", "RUNTIME", engine_version)
 
     -- mimalloc private include dir
     add_includedirs("src/platform/mimalloc", {public = false})
+    add_includedirs("src", {public = false})

@@ -16,7 +16,7 @@
 #include "containers/hashmap.hpp"
 
 #ifdef _WIN32
-//#include "cgpu/extensions/dstorage_windows.h"
+//#include "platform/win/dstorage_windows.h"
 #endif
 
 #include "tracy/Tracy.hpp"
@@ -220,8 +220,8 @@ ESkrInstallStatus STextureFactoryImpl::InstallWithDStorage(skr_resource_record_t
                 auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();
                 vram_texture_io.device = render_device->get_cgpu_device();
                 vram_texture_io.dstorage.path = (const char8_t*)dRequest->absPath.c_str();
-                vram_texture_io.dstorage.compression = CGPU_DSTORAGE_COMPRESSION_NONE;
-                vram_texture_io.dstorage.source_type = CGPU_DSTORAGE_SOURCE_FILE;
+                vram_texture_io.dstorage.compression = SKR_DSTORAGE_COMPRESSION_NONE;
+                vram_texture_io.dstorage.source_type = SKR_DSTORAGE_SOURCE_FILE;
                 vram_texture_io.dstorage.queue = file_dstorage_queue;
                 vram_texture_io.dstorage.uncompressed_size = texture_resource->data_size;
                 
