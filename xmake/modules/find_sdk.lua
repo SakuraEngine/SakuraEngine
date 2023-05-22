@@ -95,7 +95,7 @@ function install_lib_to(lib_name, where)
         print("install: "..path.relative(zip_dir).." to: "..where)
         archive.extract(zip_dir, where)
     else
-        raise("failed to install "..lib_name..", file "..zip_file.." not found!")
+        print("failed to install "..lib_name..", file "..zip_file.." not found!")
     end
 end
 

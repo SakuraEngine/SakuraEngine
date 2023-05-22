@@ -1,11 +1,9 @@
-/************************************************************************
- *                                                                       *
- *   dstorageerr.h -- This module defines the error codes for Windows    *
- *                    DirectStorage APIs                                 *
- *                                                                       *
- *   Copyright (c) Microsoft Corp. All rights reserved.                  *
- *                                                                       *
- ************************************************************************/
+/*-------------------------------------------------------------------------------------
+ *
+ * Copyright (c) Microsoft Corporation
+ * Licensed under the MIT license
+ *
+ *-------------------------------------------------------------------------------------*/
 #pragma once
 
 /*++
@@ -83,6 +81,7 @@
 // MessageText:
 //
 // The specified XVD is not on a supported NVMe device.
+// This error only applies to Xbox.
 //
 #define E_DSTORAGE_XVD_DEVICE_NOT_SUPPORTED ((HRESULT)0x89240004L)
 
@@ -92,6 +91,7 @@
 // MessageText:
 //
 // The specified XVD is not on a supported volume.
+// This error only applies to Xbox.
 //
 #define E_DSTORAGE_UNSUPPORTED_VOLUME    ((HRESULT)0x89240005L)
 
@@ -129,6 +129,7 @@
 //
 // The file is not supported by DStorage. Possible reasons include the file is a
 // sparse file, or is compressed in NTFS.
+// This error only applies to Xbox.
 //
 #define E_DSTORAGE_UNSUPPORTED_FILE      ((HRESULT)0x8924000AL)
 
@@ -156,6 +157,7 @@
 // MessageText:
 //
 // The request has invalid BCPack decompression mode.
+// This error only applies to Xbox.
 //
 #define E_DSTORAGE_INVALID_BCPACK_MODE   ((HRESULT)0x8924000DL)
 
@@ -165,6 +167,7 @@
 // MessageText:
 //
 // The request has invalid swizzle mode.
+// This error only applies to Xbox.
 //
 #define E_DSTORAGE_INVALID_SWIZZLE_MODE  ((HRESULT)0x8924000EL)
 
@@ -194,6 +197,7 @@
 // MessageText:
 //
 // The volume is formatted with an unsupported cluster size.
+// This error only applies to Xbox.
 //
 #define E_DSTORAGE_INVALID_CLUSTER_SIZE  ((HRESULT)0x89240011L)
 
@@ -257,6 +261,7 @@
 // MessageText:
 //
 // This GDK preview is deprecated. Update to a supported GDK version.
+// This error only applies to Xbox.
 //
 #define E_DSTORAGE_DEPRECATED_PREVIEW_GDK ((HRESULT)0x89240018L)
 
@@ -266,6 +271,7 @@
 // MessageText:
 //
 // The specified XVD is not registered or unmounted.
+// This error only applies to Xbox.
 //
 #define E_DSTORAGE_XVD_NOT_REGISTERED    ((HRESULT)0x89240019L)
 
@@ -294,6 +300,7 @@
 // MessageText:
 //
 // The request has invalid intermediate size for the specified decompression modes.
+// This error only applies to Xbox.
 //
 #define E_DSTORAGE_INVALID_INTERMEDIATE_SIZE ((HRESULT)0x8924001CL)
 
@@ -303,6 +310,7 @@
 // MessageText:
 //
 // This console generation doesn't support DirectStorage.
+// This error only applies to Xbox.
 //
 #define E_DSTORAGE_SYSTEM_NOT_SUPPORTED  ((HRESULT)0x8924001DL)
 
@@ -377,6 +385,7 @@
 // MessageText:
 //
 // ZLIB header is corrupted.
+// This error only applies to Xbox.
 //
 #define E_DSTORAGE_ZLIB_BAD_HEADER       ((HRESULT)0x89240031L)
 
@@ -386,6 +395,7 @@
 // MessageText:
 //
 // ZLIB compressed data is corrupted/invalid.
+// This error only applies to Xbox.
 //
 #define E_DSTORAGE_ZLIB_BAD_DATA         ((HRESULT)0x89240032L)
 
@@ -395,6 +405,7 @@
 // MessageText:
 //
 // Block-level ADLER parity check failed during ZLIB decompression.
+// This error only applies to Xbox.
 //
 #define E_DSTORAGE_ZLIB_PARITY_FAIL      ((HRESULT)0x89240033L)
 
@@ -404,6 +415,7 @@
 // MessageText:
 //
 // BCPack header is corrupted.
+// This error only applies to Xbox.
 //
 #define E_DSTORAGE_BCPACK_BAD_HEADER     ((HRESULT)0x89240034L)
 
@@ -414,6 +426,7 @@
 //
 // BCPack decoder has generated more data than expected, most likely due to
 // corrupted bitstream.
+// This error only applies to Xbox.
 //
 #define E_DSTORAGE_BCPACK_BAD_DATA       ((HRESULT)0x89240035L)
 
@@ -423,6 +436,7 @@
 // MessageText:
 //
 // A generic error has happened during decryption.
+// This error only applies to Xbox.
 //
 #define E_DSTORAGE_DECRYPTION_ERROR      ((HRESULT)0x89240036L)
 
@@ -432,6 +446,7 @@
 // MessageText:
 //
 // A generic error has happened during copy operation.
+// This error only applies to Xbox.
 //
 #define E_DSTORAGE_PASSTHROUGH_ERROR     ((HRESULT)0x89240037L)
 
@@ -442,6 +457,7 @@
 //
 // The file is too fragmented to be accessed by DStorage. This error can only
 // happen with files overly fragmented on a writable volume.
+// This error only applies to Xbox.
 //
 #define E_DSTORAGE_FILE_TOO_FRAGMENTED   ((HRESULT)0x89240038L)
 
@@ -454,3 +470,23 @@
 // DirectStorage to decompress successfully on the GPU.
 //
 #define E_DSTORAGE_COMPRESSED_DATA_TOO_LARGE ((HRESULT)0x89240039L)
+
+//
+// MessageId: E_DSTORAGE_INVALID_DESTINATION_TYPE
+//
+// MessageText:
+//
+// A gpu memory destination request was enqueued into a queue that
+// was created without a D3D device or the destination type is 
+// unknown.
+//
+#define E_DSTORAGE_INVALID_DESTINATION_TYPE ((HRESULT)0x89240040L)
+
+//
+// MessageId: E_DSTORAGE_FILEBUFFERING_REQUIRES_DISABLED_BYPASSIO
+//
+// MessageText:
+//
+// ForceFileBuffering was enabled without disabling BypassIO.
+//
+#define E_DSTORAGE_FILEBUFFERING_REQUIRES_DISABLED_BYPASSIO ((HRESULT)0x89240041L)
