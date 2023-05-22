@@ -16,7 +16,7 @@ struct SKR_GUI_API RenderObjectElement : public Element
 struct SKR_GUI_API SingleChildRenderObjectElement : public RenderObjectElement
 {
 
-    LiteOptional<Element*> _child = nullptr;
+    Element* _child = nullptr;
 };
 
 struct SKR_GUI_API MultiChildRenderObjectElement : public RenderObjectElement

@@ -11,7 +11,7 @@ namespace gui {
 struct SKR_GUI_API ComponentElement : public Element
 {
 
-    LiteOptional<Element*> _child = nullptr;
+    Element* _child = nullptr;
 };
 
 struct SKR_GUI_API StatelessElement : public ComponentElement

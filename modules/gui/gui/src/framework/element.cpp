@@ -1,6 +1,8 @@
 #include "SkrGui/framework/element.hpp"
 #include "SkrGui/framework/render_object.hpp"
 #include "SkrGui/framework/render_box.hpp"
+#include "SkrGui/framework/widget.hpp"
+#include "SkrGui/framework/build_owner.hpp"
 
 namespace skr {
 namespace gui {
@@ -16,14 +18,14 @@ void Element::deactivate() SKR_NOEXCEPT
 
 }
 
-void Element::mount(LiteOptional<Element*> parent, LiteOptional<Slot*> slot) SKR_NOEXCEPT
+void Element::mount(Element* parent, Slot* slot) SKR_NOEXCEPT
 {
     SKR_ASSERT(_lifecycle_state == ElementLifecycle::initial);
     SKR_ASSERT(_parent == nullptr);
-    SKR_ASSERT(!parent || parent.get()->_lifecycle_state == ElementLifecycle::active);
+    SKR_ASSERT(!parent || parent->_lifecycle_state == ElementLifecycle::active);
     SKR_ASSERT(_slot == nullptr);
-    _parent = parent.get();
-    _slot = slot.get();
+    _parent = parent;
+    _slot = slot;
     _lifecycle_state = ElementLifecycle::active;
     _depth = _parent ? _parent->_depth + 1 : 0;
     // if (parent) _owner = parent.get()._owner;
@@ -39,14 +41,14 @@ void Element::unmount() SKR_NOEXCEPT
     _lifecycle_state = ElementLifecycle::defunct;
 }
 
-void Element::attach_render_object(LiteOptional<Slot*> new_slot) SKR_NOEXCEPT
+void Element::attach_render_object(Slot* new_slot) SKR_NOEXCEPT
 {
     SKR_ASSERT(_slot == nullptr);
 
     visit_child_elements([new_slot](Element* child) {
         child->attach_render_object(new_slot);
     });
-    _slot = new_slot.get();
+    _slot = new_slot;
 }
 
 void Element::detach_render_object() SKR_NOEXCEPT
@@ -57,10 +59,12 @@ void Element::detach_render_object() SKR_NOEXCEPT
     _slot = nullptr;
 }
 
-Element* Element::inflate_widget(Widget* widget, LiteOptional<Slot*> new_slot) SKR_NOEXCEPT
+Element* Element::inflate_widget(Widget* widget, Slot* new_slot) SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
+    //TODO: global key
+    Element* element = widget->create_element();
+    element->mount(this, new_slot);
+    return element;
 }
 
 void Element::update(Widget* new_widget) SKR_NOEXCEPT
@@ -72,7 +76,7 @@ void Element::update(Widget* new_widget) SKR_NOEXCEPT
     _widget = new_widget;
 }
 
-void Element::update_slot_for_child(Element* child, LiteOptional<Slot*> new_slot) SKR_NOEXCEPT
+void Element::update_slot_for_child(Element* child, Slot* new_slot) SKR_NOEXCEPT
 {
     SKR_ASSERT(_lifecycle_state == ElementLifecycle::active);
     SKR_ASSERT(child->_parent == this);
@@ -84,10 +88,46 @@ void Element::update_slot_for_child(Element* child, LiteOptional<Slot*> new_slot
     });
 }
 
-Element* Element::update_child(LiteOptional<Element*> child, LiteOptional<Widget*> new_widget, LiteOptional<Slot*> new_slot) SKR_NOEXCEPT
+Element* Element::update_child(Element* child, Widget* new_widget, Slot* new_slot) SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
+    if(!new_widget)
+    {
+        if(child)
+            deactivate_child(child);
+        return nullptr;
+    }
+    Element* newChild = nullptr;
+    if(child)
+    {
+        bool hasSameSuperclass = true;
+        //TODO
+        if(hasSameSuperclass && child->_widget == new_widget)
+        {
+            if(child->_slot != new_slot)
+            {
+                update_slot_for_child(child, new_slot);
+            }
+            newChild = child;
+        }
+        else if(hasSameSuperclass && Widget::CanUpdate(child->_widget, new_widget))
+        {
+            if(child->_slot != new_slot)
+            {
+                update_slot_for_child(child, new_slot);
+            }
+            child->update(new_widget);
+            SKR_ASSERT(child->_widget == new_widget);
+            newChild = child;
+        }
+        else
+        {
+            deactivate_child(child);
+            SKR_ASSERT(child->_parent == nullptr);
+            newChild = inflate_widget(new_widget, new_slot);
+        }
+    }
+    return newChild;
 }
 
 void Element::visit_children(skr::function_ref<void(Element*)> visitor) SKR_NOEXCEPT
@@ -103,6 +143,14 @@ void Element::visit_child_elements(skr::function_ref<void(Element*)> visitor) SK
 void Element::forget_child(Element* child) SKR_NOEXCEPT
 {
     //...
+}
+
+void Element::deactivate_child(Element* child) SKR_NOEXCEPT
+{
+    SKR_ASSERT(child->_parent == this);
+    child->_parent = nullptr;
+    child->detach_render_object();
+    _owner->_inactive_elements.get().push_back(child); // this eventually calls child.deactivate()
 }
 
 void Element::perform_rebuild() SKR_NOEXCEPT
@@ -121,13 +169,13 @@ void Element::rebuild(bool force) SKR_NOEXCEPT
     perform_rebuild();
 }
 
-void Element::_update_slot(LiteOptional<Slot*> new_slot) SKR_NOEXCEPT
+void Element::_update_slot(Slot* new_slot) SKR_NOEXCEPT
 {
     SKR_ASSERT(_lifecycle_state == ElementLifecycle::active);
     SKR_ASSERT(_parent != nullptr);
     SKR_ASSERT(_parent->_lifecycle_state == ElementLifecycle::active);
 
-    _slot = new_slot.get();
+    _slot = new_slot;
 }
 
 
