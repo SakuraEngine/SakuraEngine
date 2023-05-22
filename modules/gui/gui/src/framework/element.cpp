@@ -194,9 +194,9 @@ Widget* Element::get_widget() SKR_NOEXCEPT
 BoxSizeType Element::get_size() SKR_NOEXCEPT
 {
     auto render_object = find_render_object();
-    if (auto robject = render_object.get())
+    if (render_object)
     {
-        if (auto rbox = robject->Cast<RenderBox>())
+        if (auto rbox = render_object->Cast<RenderBox>())
         {
             return rbox->get_size();;
         }
@@ -204,7 +204,7 @@ BoxSizeType Element::get_size() SKR_NOEXCEPT
     return { 0, 0 };
 }
 
-LiteOptional<RenderObject*> Element::find_render_object() SKR_NOEXCEPT
+RenderObject* Element::find_render_object() SKR_NOEXCEPT
 {
     Element* current = this;
     while (current != nullptr) 

@@ -22,7 +22,7 @@ struct SKR_GUI_API BuildContext : public DiagnosticableTreeNode
 {
     virtual bool mounted() SKR_NOEXCEPT = 0;
     virtual Widget* get_widget() SKR_NOEXCEPT = 0;
-    virtual LiteOptional<RenderObject*> find_render_object() SKR_NOEXCEPT = 0;
+    virtual RenderObject* find_render_object() SKR_NOEXCEPT = 0;
     virtual BoxSizeType get_size() SKR_NOEXCEPT = 0;
 };
 
@@ -60,7 +60,7 @@ struct SKR_GUI_API Element : public BuildContext
     virtual bool mounted() SKR_NOEXCEPT override;
     virtual Widget* get_widget() SKR_NOEXCEPT override;
     virtual BoxSizeType get_size() SKR_NOEXCEPT override;
-    virtual LiteOptional<RenderObject*> find_render_object() SKR_NOEXCEPT override;
+    virtual RenderObject* find_render_object() SKR_NOEXCEPT override;
 
     uint32_t _depth = 0;
     bool _dirty = true;
