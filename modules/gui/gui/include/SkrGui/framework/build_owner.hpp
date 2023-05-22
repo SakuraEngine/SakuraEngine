@@ -27,9 +27,9 @@ struct SKR_GUI_API BuildOwner
     // void register_global_key(GlobalKey* key, Element* element) SKR_NOEXCEPT;
     // void unregister_global_key(GlobalKey* key, Element* element) SKR_NOEXCEPT;
     
-private:
     VectorStorage<Element*> _dirty_elements;
     bool _dirty_elememts_needs_resorting;
+    VectorStorage<Element*> _inactive_elements;
     FocusManager* _focus_manager;
     // HashMapStorage<GlobalKey*, Element*> _global_key_registry;
 };
