@@ -59,9 +59,21 @@ void Element::detach_render_object() SKR_NOEXCEPT
     _slot = nullptr;
 }
 
-Element* Element::inflate_widget(Widget* widget, Slot* new_slot) SKR_NOEXCEPT
+not_null<Element*> Element::inflate_widget(Widget* widget, Slot* new_slot) SKR_NOEXCEPT
 {
     //TODO: global key
+    if(widget->key.is_keep_state())
+    {
+        Element* newChild = _retake_inactive_element(widget->key, widget);
+        if(newChild)
+        {
+            SKR_ASSERT(newChild->_parent == nullptr);
+            newChild->_active_with_parent(this, new_slot);
+            Element* updatedChild = update_child(newChild, widget, new_slot);
+            SKR_ASSERT(updatedChild == newChild);
+            return newChild;
+        }
+    }
     Element* element = widget->create_element();
     element->mount(this, new_slot);
     return element;
@@ -227,5 +239,60 @@ RenderObject* Element::find_render_object() SKR_NOEXCEPT
     return nullptr;
 }
 
+Element* Element::_retake_inactive_element(Key& key, not_null<Widget*> widget) SKR_NOEXCEPT
+{
+    auto iter = _owner->_global_key_registry.get().find(key.get_state());
+    if (iter == _owner->_global_key_registry.get().end())
+    {
+        return nullptr;
+    }
+    Element* element = iter->second;
+    if(!Widget::CanUpdate(element->_widget, widget))
+    {
+        return nullptr;
+    }
+    Element* parent = element->_parent;
+    if (parent != nullptr)
+    {
+        SKR_ASSERT(parent != this);
+        parent->forget_child(element);
+        parent->deactivate_child(element);
+    }
+    SKR_ASSERT(element->_parent == nullptr);
+    auto inactiveElements = _owner->_inactive_elements.get();
+    inactiveElements.erase(std::remove(inactiveElements.begin(), inactiveElements.end(), element), inactiveElements.end());
+    return element;
+}
+
+void Element::_active_with_parent(Element* parent, Slot* slot) SKR_NOEXCEPT
+{
+    SKR_ASSERT(_lifecycle_state == ElementLifecycle::inactive);
+    _parent = parent;
+    _update_depth(_parent->_depth);
+    _active_recursively(this);
+    attach_render_object(slot);
+    SKR_ASSERT(_lifecycle_state == ElementLifecycle::active);
+}
+
+void Element::_active_recursively(Element* element) SKR_NOEXCEPT
+{
+    SKR_ASSERT(element->_lifecycle_state == ElementLifecycle::inactive);
+    element->activate();
+    SKR_ASSERT(element->_lifecycle_state == ElementLifecycle::active);
+    element->visit_child_elements(_active_recursively);
+}
+
+void Element::_update_depth(int parentDepth) SKR_NOEXCEPT
+{
+    int expectedDepth = parentDepth + 1;
+    if(_depth < expectedDepth)
+    {
+        _depth = expectedDepth;
+        visit_child_elements([expectedDepth](Element* child)
+        {
+            child->_update_depth(expectedDepth);
+        });
+    }
+}
 } // namespace gui
 } // namespace skr
