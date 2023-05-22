@@ -66,7 +66,7 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
     {
         const auto& buffer_io = ds_buffer_task->buffer_io;
         const auto& destination = ds_buffer_task->destination;
-        if (ds_buffer_task->buffer_io.dstorage.source_type == CGPU_DSTORAGE_SOURCE_FILE)
+        if (ds_buffer_task->buffer_io.dstorage.source_type == SKR_DSTORAGE_SOURCE_FILE)
         {
             SKR_ASSERT( (ds_buffer_task->buffer_io.dstorage.path) && "buffer_io.path must be set");
             auto ds_file = cgpu_dstorage_open_file(buffer_io.dstorage.queue, task.path.c_str());
@@ -129,7 +129,7 @@ void skr::io::VRAMServiceImpl::tryCreateTextureResource(skr::io::VRAMServiceImpl
     }
     if (auto ds_texture_task = skr::get_if<skr::io::VRAMServiceImpl::DStorageTextureTask>(&task.resource_task))
     {
-        if (ds_texture_task->texture_io.dstorage.source_type == CGPU_DSTORAGE_SOURCE_FILE)
+        if (ds_texture_task->texture_io.dstorage.source_type == SKR_DSTORAGE_SOURCE_FILE)
         {
             ZoneScopedN("CreateTextureResource");
 
@@ -333,7 +333,7 @@ void skr::io::VRAMServiceImpl::tryDStorageBufferResource(skr::io::VRAMServiceImp
 
         CGPUDStorageBufferIODescriptor io_desc = {};
         io_desc.source_type = buffer_io.dstorage.source_type;
-        if (io_desc.source_type == CGPU_DSTORAGE_SOURCE_FILE)
+        if (io_desc.source_type == SKR_DSTORAGE_SOURCE_FILE)
         {
             io_desc.source_file.file = ds_buffer_task->dstorage_task->ds_file;
             io_desc.source_file.offset = 0u;
@@ -374,7 +374,7 @@ void skr::io::VRAMServiceImpl::tryDStorageTextureResource(skr::io::VRAMServiceIm
 
         CGPUDStorageTextureIODescriptor io_desc = {};
         io_desc.source_type = texture_io.dstorage.source_type;
-        if (io_desc.source_type == CGPU_DSTORAGE_SOURCE_FILE)
+        if (io_desc.source_type == SKR_DSTORAGE_SOURCE_FILE)
         {
             io_desc.source_file.file = ds_texture_task->dstorage_task->ds_file;
             io_desc.source_file.offset = 0u;

@@ -292,7 +292,7 @@ public:
         }
     }
 
-protected:
+private:
     // @MainThread
     void finish(Result&& r)
     {

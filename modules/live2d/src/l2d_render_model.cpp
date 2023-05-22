@@ -175,7 +175,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         
             vram_texture_io.dstorage.path = pngPathStr.c_str();
             vram_texture_io.dstorage.compression = SKR_WIN_DSTORAGE_COMPRESSION_TYPE_IMAGE;
-            vram_texture_io.dstorage.source_type = CGPU_DSTORAGE_SOURCE_FILE;
+            vram_texture_io.dstorage.source_type = SKR_DSTORAGE_SOURCE_FILE;
             vram_texture_io.dstorage.queue = file_dstorage_queue;
             vram_texture_io.dstorage.uncompressed_size = resolution * resolution * 4;
 
@@ -375,7 +375,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                 ib_io.transfer_queue = memory_dstorage_queue ? nullptr : request->queue_override;
 
                 ib_io.dstorage.queue = memory_dstorage_queue;
-                ib_io.dstorage.source_type = CGPU_DSTORAGE_SOURCE_MEMORY;
+                ib_io.dstorage.source_type = SKR_DSTORAGE_SOURCE_MEMORY;
                 ib_io.dstorage.uncompressed_size = sizeof(Csm::csmUint16) * icount;
 
                 ib_io.vbuffer.offset = index_buffer_cursor;

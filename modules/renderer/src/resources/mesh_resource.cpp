@@ -327,8 +327,8 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithDStorage(skr_resource_record_t* r
 
                     vram_buffer_io.dstorage.path = (const char8_t*)thisPath.c_str();
                     vram_buffer_io.dstorage.queue = file_dstorage_queue;
-                    vram_buffer_io.dstorage.compression = CGPU_DSTORAGE_COMPRESSION_NONE;
-                    vram_buffer_io.dstorage.source_type = CGPU_DSTORAGE_SOURCE_FILE;
+                    vram_buffer_io.dstorage.compression = SKR_DSTORAGE_COMPRESSION_NONE;
+                    vram_buffer_io.dstorage.source_type = SKR_DSTORAGE_SOURCE_FILE;
                     vram_buffer_io.dstorage.uncompressed_size = thisBin.byte_length;
 
                     CGPUResourceTypes flags = CGPU_RESOURCE_TYPE_NONE;

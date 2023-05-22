@@ -1,6 +1,7 @@
 #pragma once
 #include "cgpu/cgpu_config.h"
 #include "cgpu/flags.h"
+#include "platform/dstorage.h"
 
 #define CGPU_ARRAY_LEN(array) ((sizeof(array) / sizeof(array[0])))
 #define CGPU_MAX_MRT_COUNT 8u
@@ -20,6 +21,7 @@
 #endif
 
 typedef uint32_t CGPUQueueIndex;
+
 DEFINE_CGPU_OBJECT(CGPUSurface)
 DEFINE_CGPU_OBJECT(CGPUInstance)
 DEFINE_CGPU_OBJECT(CGPUAdapter)
@@ -46,9 +48,16 @@ DEFINE_CGPU_OBJECT(CGPURenderPipeline)
 DEFINE_CGPU_OBJECT(CGPUComputePipeline)
 DEFINE_CGPU_OBJECT(CGPUShaderReflection)
 DEFINE_CGPU_OBJECT(CGPUPipelineReflection)
-DEFINE_CGPU_OBJECT(CGPUDStorageQueue)
-DEFINE_CGPU_OBJECT(CGPUDStorageFile)
-typedef CGPUDStorageFileId CGPUDStorageFileHandle;
+
+typedef struct SkrDStorageQueueDescriptor CGPUDStorageQueueDescriptor;
+typedef struct SkrDStorageFileInfo CGPUDStorageFileInfo;
+
+typedef SkrDStorageQueue CGPUDStorageQueue;
+typedef const CGPUDStorageQueue* CGPUDStorageQueueId;
+
+typedef SkrDStorageFile CGPUDStorageFile;
+typedef const CGPUDStorageFile* CGPUDStorageFileId;
+typedef SkrDStorageFileHandle CGPUDStorageFileHandle;
 
 DEFINE_CGPU_OBJECT(CGPUCompiledShader)
 DEFINE_CGPU_OBJECT(CGPULinkedShader)
@@ -378,12 +387,6 @@ CGPU_API void cgpu_cmd_end_event(CGPUCommandBufferId cmd);
 typedef void (*CGPUProcCmdEndEvent)(CGPUCommandBufferId cmd);
 
 // dstorage
-typedef struct CGPUMemoryRange
-{
-    const uint8_t* bytes;
-    uint64_t bytes_size;
-} CGPUMemoryRange;
-
 typedef struct CGPUDStorageFileRange
 {
     CGPUDStorageFileHandle file;
@@ -391,13 +394,11 @@ typedef struct CGPUDStorageFileRange
     uint64_t size;
 } CGPUDStorageFileRange;
 
-typedef struct CGPUDStorageFileInfo {
-    uint64_t file_size;
-} CGPUDStorageFileInfo;
+
 typedef struct CGPUDStorageBufferIODescriptor {
     CGPUDStorageCompression compression;
     ECGPUDStorageSource source_type;
-    CGPUMemoryRange source_memory;
+    SkrDStorageMemoryRange source_memory;
     CGPUDStorageFileRange source_file;
     CGPUBufferId buffer;
     uint64_t offset;
@@ -409,7 +410,7 @@ typedef struct CGPUDStorageBufferIODescriptor {
 typedef struct CGPUDStorageTextureIODescriptor {
     CGPUDStorageCompression compression;
     ECGPUDStorageSource source_type;
-    CGPUMemoryRange source_memory;
+    SkrDStorageMemoryRange source_memory;
     CGPUDStorageFileRange source_file;
     CGPUTextureId texture;
     uint32_t width;
@@ -422,8 +423,8 @@ typedef struct CGPUDStorageTextureIODescriptor {
 
 CGPU_API ECGPUDStorageAvailability cgpu_query_dstorage_availability(CGPUDeviceId device);
 typedef ECGPUDStorageAvailability (*CGPUProcQueryDStorageAvailability)(CGPUDeviceId device);
-CGPU_API CGPUDStorageQueueId cgpu_create_dstorage_queue(CGPUDeviceId device, const struct CGPUDStorageQueueDescriptor* desc);
-typedef CGPUDStorageQueueId (*CGPUProcCreateDStorageQueue)(CGPUDeviceId device, const struct CGPUDStorageQueueDescriptor* desc);
+CGPU_API CGPUDStorageQueueId cgpu_create_dstorage_queue(CGPUDeviceId device, const CGPUDStorageQueueDescriptor* desc);
+typedef CGPUDStorageQueueId (*CGPUProcCreateDStorageQueue)(CGPUDeviceId device, const CGPUDStorageQueueDescriptor* desc);
 CGPU_API CGPUDStorageFileHandle cgpu_dstorage_open_file(CGPUDStorageQueueId queue, const char* abs_path);
 typedef CGPUDStorageFileHandle (*CGPUProcDStorageOpenFile)(CGPUDStorageQueueId queue, const char* abs_path);
 CGPU_API void cgpu_dstorage_query_file_info(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info);
@@ -856,10 +857,6 @@ typedef struct CGPUQueue {
     CGPUQueueIndex index;
 } CGPUQueue;
 
-typedef struct CGPUDStorageQueue {
-    CGPUDeviceId device;
-} CGPUDStorageQueue;
-
 typedef struct CGPUFence {
     CGPUDeviceId device;
 } CGPUFence; // Empty struct so we dont need to def it
@@ -1054,14 +1051,6 @@ typedef struct CGPUInstanceDescriptor {
     bool enable_gpu_based_validation;
     bool enable_set_name;
 } CGPUInstanceDescriptor;
-
-#define CGPU_DSTORAGE_MAX_QUEUE_CAPACITY 0x2000
-typedef struct CGPUDStorageQueueDescriptor {
-    ECGPUDStorageSource source;
-    uint16_t capacity;
-    ECGPUDStoragePriority priority;
-    const char* name;
-} CGPUDStorageQueueDescriptor;
 
 typedef struct CGPUQueueGroupDescriptor {
     ECGPUQueueType queue_type;

@@ -71,6 +71,10 @@ typedef struct skr_vfile_t {
     ESkrFileMode mode;
 } skr_vfile_t;
 
+typedef struct skr_vfs_event_t {
+    uint64_t v;
+} skr_vfs_event_t;
+
 typedef skr_vfile_t* (*SkrVFSProcFOpen)(struct skr_vfs_t* fs, const char8_t* path, ESkrFileMode mode, ESkrFileCreation creation);
 typedef bool (*SkrVFSProcFClose)(skr_vfile_t* file);
 typedef size_t (*SkrVFSProcFRead)(skr_vfile_t* file, void* out_buffer, size_t offset, size_t size_in_bytes);
@@ -78,6 +82,11 @@ typedef size_t (*SkrVFSProcFWrite)(skr_vfile_t* file, const void* in_buffer, siz
 typedef ssize_t (*SkrVFSProcFSize)(const skr_vfile_t* file);
 typedef bool (*SkrVFSProcFGetPropI64)(skr_vfile_t* file, int32_t prop, int64_t* out_value);
 typedef bool (*SkrVFSProcFSetPropI64)(skr_vfile_t* file, int32_t prop, int64_t value);
+
+typedef bool (*SkrVFSProcFReadRequest)(struct skr_vfs_t* fs, skr_vfile_t* file, void* out_buffer, size_t offset, size_t size_in_bytes, void* user_data);
+typedef skr_vfs_event_t (*SkrVFSProcEventRequest)(struct skr_vfs_t* fs);
+typedef bool (*SkrVFSTestEvent)(struct skr_vfs_t* fs, skr_vfs_event_t event);
+typedef void (*SkrVFSProcSubmitRequests)(struct skr_vfs_t* fs);
 
 typedef struct skr_vfs_proctable_t {
     SkrVFSProcFOpen fopen;
@@ -87,6 +96,11 @@ typedef struct skr_vfs_proctable_t {
     SkrVFSProcFSize fsize;
     SkrVFSProcFGetPropI64 fget_prop_i64;
     SkrVFSProcFSetPropI64 fset_prop_i64;
+    
+    SkrVFSProcFReadRequest fread_request;
+    SkrVFSProcEventRequest event_request;
+    SkrVFSTestEvent test_event;
+    SkrVFSProcSubmitRequests submit_requests;
 } skr_vfs_proctable_t;
 
 typedef struct skr_vfs_async_proctable_t {
