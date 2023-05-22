@@ -26,7 +26,7 @@ if (os.host() == "windows") then
     find_sdk.lib_from_github("amdags", "amdags-windows-x64.zip")
     find_sdk.lib_from_github("nvapi", "nvapi-windows-x64.zip")
     find_sdk.lib_from_github("nsight", "nsight-windows-x64.zip")
-    find_sdk.lib_from_github("dstorage-1.2.1", "dstorage-1.2.1-windows-x64.zip")
+    find_sdk.lib_from_github("dstorage", "dstorage-windows-x64.zip")
     find_sdk.lib_from_github("SDL2", "SDL2-windows-x64.zip")
     -- tools & compilers
     find_sdk.tool_from_github("dxc", "dxc-windows-x64.zip")
