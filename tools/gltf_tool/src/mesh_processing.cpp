@@ -5,6 +5,8 @@
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "cgpu/api.h"
 
+#include "platform/vfs.h"
+#include "platform/filesystem.hpp"
 #include "tracy/Tracy.hpp"
 
 #define MAGIC_SIZE_GLTF_PARSE_READY ~0
@@ -101,8 +103,8 @@ cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr_io_ram_service_t*
             else
             {
                 ZoneScopedN("LoadGLTFBuffer");
-
-                result = cgltf_load_buffers(&options, gltf_data_, u8Path.c_str());
+                auto fullPath = skr::filesystem::path(vfs->mount_dir) / u8Path.u8_str();
+                result = cgltf_load_buffers(&options, gltf_data_, fullPath.string().c_str());
                 result = cgltf_validate(gltf_data_);
                 if (result != cgltf_result_success)
                 {
