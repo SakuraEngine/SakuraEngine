@@ -66,6 +66,12 @@ struct VectorStorage : public VectorStorageBase
     }
     inline VectorStorage() { ctor(); }
     inline ~VectorStorage() { dtor(); }
+    type* operator->() { return &get(); }
+    const type* operator->() const { return &get(); }
+    type& operator*() { return get(); }
+    const type& operator*() const { return get(); }
+    T& operator[](uint64_t index) { return get()[index]; }
+    const T& operator[](uint64_t index) const { return get()[index]; }
 private:
     void ctor() { new (&get()) type(); }
     void dtor() { get().~type(); }
@@ -90,6 +96,10 @@ struct TextStorage : public TextStorageBase
     {
         return *std::launder(reinterpret_cast<const type*>(this));
     }
+    type* operator->() { return &get(); }
+    const type* operator->() const { return &get(); }
+    type& operator*() { return get(); }
+    const type& operator*() const { return get(); }
 private:
     inline void ctor(const char8_t* str = nullptr) { new (&get()) type(str); }
     inline void dtor() { get().~type(); }
@@ -114,6 +124,10 @@ struct HashMapStorage : public HashMapStorageBase
     }
     inline HashMapStorage() { ctor(); }
     inline ~HashMapStorage() { dtor(); }
+    type* operator->() { return &get(); }
+    const type* operator->() const { return &get(); }
+    type& operator*() { return get(); }
+    const type& operator*() const { return get(); }
 private:
     void ctor() { new (&get()) type(); }
     void dtor() { get().~type(); }

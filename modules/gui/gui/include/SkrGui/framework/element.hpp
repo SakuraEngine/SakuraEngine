@@ -43,7 +43,7 @@ struct SKR_GUI_API Element : public BuildContext
     virtual void attach_render_object(Slot* new_slot) SKR_NOEXCEPT;
     virtual void detach_render_object() SKR_NOEXCEPT;
 
-    virtual not_null<Element*> inflate_widget(Widget* widget, Slot* new_slot) SKR_NOEXCEPT;
+    virtual not_null<Element*> inflate_widget(not_null<Widget*> widget, Slot* new_slot) SKR_NOEXCEPT;
 
     virtual void update(Widget* new_widget) SKR_NOEXCEPT;
     virtual void update_slot_for_child(Element* child, Slot* new_slot) SKR_NOEXCEPT;
@@ -68,10 +68,13 @@ struct SKR_GUI_API Element : public BuildContext
     void _active_with_parent(Element* parent, Slot* slot) SKR_NOEXCEPT;
     static void _active_recursively(Element* element) SKR_NOEXCEPT;
     void _update_depth(int parentDepth) SKR_NOEXCEPT;
+    static std::strong_ordering _compare_depth(Element* a, Element* b) SKR_NOEXCEPT;
+    bool _debug_is_in_scope(Element* ancestor) SKR_NOEXCEPT;
 
 
     uint32_t _depth = 0;
     bool _dirty = true;
+    bool _in_dirty_list = false;
 
     skr_gui_widget_id _widget = nullptr;
     skr_gui_element_id _parent = nullptr;
