@@ -295,15 +295,15 @@ void Element::_update_depth(int parentDepth) SKR_NOEXCEPT
     }
 }
 
-std::strong_ordering Element::_compare_depth(Element* a, Element* b) SKR_NOEXCEPT
+int Element::_compare_depth(Element* a, Element* b) SKR_NOEXCEPT
 {
     if(a->_depth < b->_depth)
     {
-        return std::strong_ordering::less;
+        return -1;
     }
     else if(a->_depth > b->_depth)
     {
-        return std::strong_ordering::greater;
+        return 1;
     }
     else
     {
@@ -311,11 +311,11 @@ std::strong_ordering Element::_compare_depth(Element* a, Element* b) SKR_NOEXCEP
         // less than dirty elements.
         if(a->_dirty != b->_dirty)
         {
-            return a->_dirty ? std::strong_ordering::greater : std::strong_ordering::less;
+            return a->_dirty ? 1 : -1;
         }
         else
         {
-            return std::strong_ordering::equal;
+            return 0;
         }
     }
 }
