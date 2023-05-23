@@ -62,7 +62,7 @@ namespace gui
 
         _scheduled_flush_dirty_elements = true;
         std::sort(_dirty_elements->begin(), _dirty_elements->end(), [](Element* a, Element* b) {
-            return Element::_compare_depth(a, b) == std::strong_ordering::less;
+            return Element::_compare_depth(a, b) < 0;
         });
         _dirty_elememts_needs_resorting = false;
         int dirty_elements_count = _dirty_elements->size();
@@ -71,7 +71,7 @@ namespace gui
             if(_dirty_elememts_needs_resorting)
             {
                 std::sort(_dirty_elements->begin(), _dirty_elements->end(), [](Element* a, Element* b) {
-                    return Element::_compare_depth(a, b) == std::strong_ordering::less;
+                    return Element::_compare_depth(a, b) < 0;
                 });
                 _dirty_elememts_needs_resorting = false;
                 dirty_elements_count = _dirty_elements->size();

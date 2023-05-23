@@ -68,7 +68,7 @@ struct SKR_GUI_API Element : public BuildContext
     void _active_with_parent(Element* parent, Slot* slot) SKR_NOEXCEPT;
     static void _active_recursively(Element* element) SKR_NOEXCEPT;
     void _update_depth(int parentDepth) SKR_NOEXCEPT;
-    static std::strong_ordering _compare_depth(Element* a, Element* b) SKR_NOEXCEPT;
+    static int _compare_depth(Element* a, Element* b) SKR_NOEXCEPT;
     bool _debug_is_in_scope(Element* ancestor) SKR_NOEXCEPT;
 
 
