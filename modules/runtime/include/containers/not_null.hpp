@@ -46,14 +46,14 @@ public:
     static_assert(details::is_comparable_to_nullptr<T>::value, "T cannot be compared to nullptr.");
 
     template <typename U, typename = std::enable_if_t<std::is_convertible<U, T>::value>>
-    constexpr not_null(U&& u)
+    explicit constexpr not_null(U&& u)
         : ptr_(std::forward<U>(u))
     {
         SKR_ASSERT(ptr_ != nullptr);
     }
 
     template <typename = std::enable_if_t<!std::is_same<std::nullptr_t, T>::value>>
-    constexpr not_null(T u)
+    explicit constexpr not_null(T u)
         : ptr_(std::move(u))
     {
         SKR_ASSERT(ptr_ != nullptr);
@@ -64,7 +64,7 @@ public:
         : not_null(other.get())
     {
     }
-    
+
     template <typename U, typename = std::enable_if_t<std::is_constructible_v<U*, T>>>
     constexpr not_null(U& u)
         : not_null(&u)

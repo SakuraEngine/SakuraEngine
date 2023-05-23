@@ -59,7 +59,7 @@ void Element::detach_render_object() SKR_NOEXCEPT
     _slot = nullptr;
 }
 
-not_null<Element*> Element::inflate_widget(Widget* widget, Slot* new_slot) SKR_NOEXCEPT
+not_null<Element*> Element::inflate_widget(not_null<Widget*> widget, Slot* new_slot) SKR_NOEXCEPT
 {
     //TODO: global key
     if(widget->key.is_keep_state())
@@ -71,10 +71,10 @@ not_null<Element*> Element::inflate_widget(Widget* widget, Slot* new_slot) SKR_N
             newChild->_active_with_parent(this, new_slot);
             Element* updatedChild = update_child(newChild, widget, new_slot);
             SKR_ASSERT(updatedChild == newChild);
-            return newChild;
+            return make_not_null(newChild);
         }
     }
-    Element* element = widget->create_element();
+    auto element = widget->create_element();
     element->mount(this, new_slot);
     return element;
 }
@@ -102,13 +102,13 @@ void Element::update_slot_for_child(Element* child, Slot* new_slot) SKR_NOEXCEPT
 
 Element* Element::update_child(Element* child, Widget* new_widget, Slot* new_slot) SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
     if(!new_widget)
     {
         if(child)
             deactivate_child(child);
         return nullptr;
     }
+    auto widget = make_not_null(new_widget);
     Element* newChild = nullptr;
     if(child)
     {
@@ -122,7 +122,7 @@ Element* Element::update_child(Element* child, Widget* new_widget, Slot* new_slo
             }
             newChild = child;
         }
-        else if(hasSameSuperclass && Widget::CanUpdate(child->_widget, new_widget))
+        else if(hasSameSuperclass && Widget::CanUpdate(make_not_null(child->_widget), widget))
         {
             if(child->_slot != new_slot)
             {
@@ -136,7 +136,7 @@ Element* Element::update_child(Element* child, Widget* new_widget, Slot* new_slo
         {
             deactivate_child(child);
             SKR_ASSERT(child->_parent == nullptr);
-            newChild = inflate_widget(new_widget, new_slot);
+            newChild = inflate_widget(widget, new_slot);
         }
     }
     return newChild;
@@ -162,7 +162,7 @@ void Element::deactivate_child(Element* child) SKR_NOEXCEPT
     SKR_ASSERT(child->_parent == this);
     child->_parent = nullptr;
     child->detach_render_object();
-    _owner->_inactive_elements.get().push_back(child); // this eventually calls child.deactivate()
+    _owner->_inactive_elements->push_back(child); // this eventually calls child.deactivate()
 }
 
 void Element::perform_rebuild() SKR_NOEXCEPT
@@ -241,13 +241,13 @@ RenderObject* Element::find_render_object() SKR_NOEXCEPT
 
 Element* Element::_retake_inactive_element(Key& key, not_null<Widget*> widget) SKR_NOEXCEPT
 {
-    auto iter = _owner->_global_key_registry.get().find(key.get_state());
-    if (iter == _owner->_global_key_registry.get().end())
+    auto iter = _owner->_global_key_registry->find(key.get_state());
+    if (iter == _owner->_global_key_registry->end())
     {
         return nullptr;
     }
     Element* element = iter->second;
-    if(!Widget::CanUpdate(element->_widget, widget))
+    if(!Widget::CanUpdate(make_not_null(element->_widget), widget))
     {
         return nullptr;
     }
@@ -259,7 +259,7 @@ Element* Element::_retake_inactive_element(Key& key, not_null<Widget*> widget) S
         parent->deactivate_child(element);
     }
     SKR_ASSERT(element->_parent == nullptr);
-    auto inactiveElements = _owner->_inactive_elements.get();
+    auto& inactiveElements = *_owner->_inactive_elements;
     inactiveElements.erase(std::remove(inactiveElements.begin(), inactiveElements.end(), element), inactiveElements.end());
     return element;
 }
@@ -293,6 +293,45 @@ void Element::_update_depth(int parentDepth) SKR_NOEXCEPT
             child->_update_depth(expectedDepth);
         });
     }
+}
+
+std::strong_ordering Element::_compare_depth(Element* a, Element* b) SKR_NOEXCEPT
+{
+    if(a->_depth < b->_depth)
+    {
+        return std::strong_ordering::less;
+    }
+    else if(a->_depth > b->_depth)
+    {
+        return std::strong_ordering::greater;
+    }
+    else
+    {
+        // If the `dirty` values are not equal, sort with non-dirty elements being
+        // less than dirty elements.
+        if(a->_dirty != b->_dirty)
+        {
+            return a->_dirty ? std::strong_ordering::greater : std::strong_ordering::less;
+        }
+        else
+        {
+            return std::strong_ordering::equal;
+        }
+    }
+}
+
+bool Element::_debug_is_in_scope(Element* ancestor) SKR_NOEXCEPT
+{
+    Element* current = this;
+    while (current != nullptr)
+    {
+        if (current == ancestor)
+        {
+            return true;
+        }
+        current = current->_parent;
+    }
+    return false;
 }
 } // namespace gui
 } // namespace skr
