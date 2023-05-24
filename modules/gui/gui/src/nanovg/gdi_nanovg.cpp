@@ -181,6 +181,8 @@ static void nvg__renderPath(GDIElementNVG* element, const NVGpath& path, NVGpain
     {
         auto gdi_paint = element->gdi_paint;
         GDIVertex v;
+        v.clipUV = { 0.f, 0.f };
+        v.clipUV2 = { 0.f, 0.f };
         v.position = { nv.x, nv.y, 0.f, 1.f };
         v.aa = {nv.u, fringe};
         const rtm::vector4f pos = rtm::vector_load((const uint8_t*)&v.position);
