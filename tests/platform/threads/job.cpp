@@ -17,7 +17,7 @@ TEST(Job, JobQueue)
         skr::JobResult run() SKR_NOEXCEPT override
         {
             std::cout << "Hello Test Job!" << std::endl;
-            return skr::JOB_RESULT_OK;
+            return skr::ASYNC_RESULT_OK;
         }
         void finish(skr::JobResult result) SKR_NOEXCEPT override
         {
@@ -49,7 +49,7 @@ struct AsyncFuture_ThreadJobQueue : public skr::IFuture<Result>
         JBase() : JobItem(u8"TestJob") {}
         void finish(skr::JobResult result) SKR_NOEXCEPT override
         {
-            if (result == skr::JOB_RESULT_OK)
+            if (result == skr::ASYNC_RESULT_OK)
             {
                 skr_atomic32_store_relaxed(&finished, true);
             }
@@ -70,7 +70,7 @@ struct AsyncFuture_ThreadJobQueue : public skr::IFuture<Result>
             eastl::function<skr::JobResult()> runner;
         };
         JI* ji = SkrNew<JI>();
-        ji->runner = [=](){ ji->result = _f(args...); return skr::JOB_RESULT_OK; };
+        ji->runner = [=](){ ji->result = _f(args...); return skr::ASYNC_RESULT_OK; };
         jobItem = ji;
         Q->enqueue(jobItem);
     }
