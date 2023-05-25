@@ -1,11 +1,12 @@
 #pragma once
 #include "misc/types.h"
+#include "platform/thread.h"
 #include "misc/io.h"
 
 typedef struct skr_io_request_t skr_io_request_t;
 typedef struct skr_io_file_t skr_io_file_t;
 typedef struct skr_io_file_t* skr_io_file_handle;
-SKR_DECLARE_TYPE_ID_FWD(skr::io, RAMService2, skr_io_ram_service2_t)
+SKR_DECLARE_TYPE_ID_FWD(skr::io, RAMService2, skr_io_ram_service2)
 
 typedef enum ESkrIOErrorCode
 {
@@ -95,19 +96,27 @@ typedef struct skr_io_request_t
     void* finish_callback_datas[SKR_IO_FINISH_POINT_COUNT];
 } skr_io_request_t;
 
-struct skr_io_batch_t
+typedef struct skr_io_batch_t
 {
     const skr_io_request_t* requests;
     uint32_t request_count;
-};
+} skr_io_batch_t;
+
+typedef struct skr_io_slice_t
+{
+    const skr_io_block_t* blocks SKR_IF_CPP(= nullptr);
+    uint32_t block_count SKR_IF_CPP(= 0);
+    const skr_io_compressed_block_t* compressed_blocks SKR_IF_CPP(= nullptr);
+    uint32_t compressed_block_count SKR_IF_CPP(= 0);
+} skr_io_slice_t;
+
 
 #ifdef __cplusplus
+#include "containers/vector.hpp"
+#include "containers/concurrent_queue.h"
 
 namespace skr {
 namespace io {
-
-using IORequest = skr_io_request_t;
-using IOBatch = skr_io_batch_t;
 
 // io flow
 // 1. enqueue requests to service
@@ -122,10 +131,47 @@ using IOBatch = skr_io_batch_t;
 //  7.2 finish callbacks are polled & executed by usr threads
 struct RAMService2;
 
+// 1~2 
+#pragma region Enqueue & Sort
+
+using IOBlock = skr_io_block_t;
+using IOCompressedBlock = skr_io_compressed_block_t;
+using IORequest = skr_io_request_t;
+using IOBatch = skr_io_batch_t;
+struct IORequestGR
+{
+    bool operator()(const IORequest& a, const IORequest& b) const
+	{ 
+        if (a.priority == b.priority)
+            return a.sub_priority > b.sub_priority;
+        return a.priority > b.priority;
+    }
+};
+
+#pragma endregion
+
+#pragma region Resolve
+
+#pragma endregion
+
+#pragma region Chunking
+
+struct IORequstChunk
+{
+    skr::vector<skr_io_block_t> blocks;
+    skr::vector<skr_io_compressed_block_t> compressed_blocks;
+};
+
+#pragma endregion
+
+#pragma region Dispatch & Uncompress
+
+#pragma endregion
+
 struct RUNTIME_API RAMService2
 {
-    [[nodiscard]] static skr_io_ram_service_t* create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
-    static void destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT;
+    [[nodiscard]] static skr_io_ram_service2_t* create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
+    static void destroy(skr_io_ram_service2_t* service) SKR_NOEXCEPT;
 
     // we do not lock an ioService to a single vfs, but for better bandwidth use and easier profiling
     // it's recommended to make a unique relevance between ioService & vfs（or vfses share a single I/O hardware)
@@ -146,6 +192,9 @@ struct RUNTIME_API RAMService2
 
     // set sleep time when io queue is detected to be idle
     virtual void set_sleep_time(uint32_t time) SKR_NOEXCEPT = 0;
+
+    // finish callbacks are polled & executed by usr threads
+    virtual void poll_finish_callbacks() SKR_NOEXCEPT = 0;
 
     // get service status (sleeping or running)
     virtual SkrAsyncServiceStatus get_service_status() const SKR_NOEXCEPT = 0;

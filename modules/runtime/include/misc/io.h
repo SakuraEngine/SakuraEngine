@@ -5,6 +5,8 @@
 #define SKR_IO_SERVICE_MAX_TASK_COUNT 32
 #define SKR_ASYNC_SERVICE_SLEEP_TIME_MAX UINT32_MAX
 
+SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)
+
 typedef enum SkrAsyncServiceStatus
 {
     SKR_ASYNC_SERVICE_STATUS_SLEEPING = 0,
@@ -87,6 +89,7 @@ typedef struct skr_ram_io_service_desc_t {
     bool lockless SKR_IF_CPP(= true);
     SkrAsyncServiceSortMethod sort_method SKR_IF_CPP(= SKR_ASYNC_SERVICE_SORT_METHOD_NEVER);
     SkrAsyncServiceSleepMode sleep_mode SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR);
+    skr_job_queue_id job_queue SKR_IF_CPP(= nullptr);
 } skr_ram_io_service_desc_t;
 
 typedef void (*skr_async_callback_t)(skr_async_request_t* request, void* data);

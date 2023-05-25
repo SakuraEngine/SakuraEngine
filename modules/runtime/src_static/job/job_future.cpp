@@ -38,7 +38,7 @@ skr::FutureStatus ThreadedJobQueueFutureJob::wait_for(uint32_t ms) SKR_NOEXCEPT
 
 void ThreadedJobQueueFutureJob::finish(skr::JobResult result) SKR_NOEXCEPT
 {
-    if (result == skr::JOB_RESULT_OK)
+    if (result == skr::ASYNC_RESULT_OK)
     {
         skr_atomic32_store_relaxed(&finished, true);
     }
