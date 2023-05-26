@@ -53,7 +53,7 @@ bool initialize_gdi_application(gdi_application_t* app)
         jqDesc.thread_count = 2;
         jqDesc.priority = SKR_THREAD_NORMAL;
         jqDesc.name = u8"GDIApp-JobQueue";
-        app->job_queue = SkrNew<skr::JobQueue>(&jqDesc);
+        app->job_queue = SkrNew<skr::JobQueue>(jqDesc);
     }
 
     // initialize gdi device

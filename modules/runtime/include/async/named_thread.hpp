@@ -11,7 +11,7 @@ namespace skr
 struct NamedThreadDesc
 {
     const char8_t *name;
-    int32_t priority;
+    int32_t priority = SKR_THREAD_NORMAL;
     uint32_t stack_size = 16 * 1024;
 };
 
@@ -29,7 +29,7 @@ public:
 	
     // start the thread.
     // @retval ASYNC_RESULT_OK if success
-    AsyncResult start(NamedThreadFunction *pFunc) SKR_NOEXCEPT;
+    AsyncResult start(NamedThreadFunction* pFunc) SKR_NOEXCEPT;
 
     // wait for thread completion.
     // @retval ASYNC_RESULT_OK if success
@@ -37,6 +37,9 @@ public:
 
     // check if thread is alive.
     bool is_alive() const SKR_NOEXCEPT;
+
+    // check if thread is alive.
+    bool has_started() const SKR_NOEXCEPT;
 
     // get thread id.
     SThreadID get_id() const SKR_NOEXCEPT;
@@ -49,7 +52,7 @@ public:
 
     // initlaize thread.
     // @retval ASYNC_RESULT_OK if success
-    AsyncResult initialize(const NamedThreadDesc *pdesc = nullptr) SKR_NOEXCEPT;
+    AsyncResult initialize(const NamedThreadDesc& desc = {}) SKR_NOEXCEPT;
     
     // finalize thread.
     // @retval ASYNC_RESULT_OK if success

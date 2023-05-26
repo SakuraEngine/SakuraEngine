@@ -25,7 +25,7 @@ target("SkrDependencyGraph")
 
 target("SkrRTStatic")
     set_group("01.modules")
-    -- set_optimize("fastest")
+    set_optimize("fastest")
     set_exceptions("no-cxx")
     add_deps("SkrRoot", {public = true})
     add_defines("RUNTIME_API=RUNTIME_IMPORT", "RUNTIME_LOCAL=error")

@@ -7,7 +7,7 @@ TEST(Job, JobQueue)
     auto jqDesc = make_zeroed<skr::JobQueueDesc>();
     jqDesc.thread_count = 2;
     jqDesc.priority = SKR_THREAD_NORMAL;
-    auto jq = skr::JobQueue(&jqDesc);
+    auto jq = skr::JobQueue(jqDesc);
     struct JI : public skr::JobItem
     {
         JI() : JobItem(u8"TestJob")
@@ -113,7 +113,7 @@ struct Launcher_ThreadJobQueue
             jqDesc.thread_count = 2;
             jqDesc.priority = SKR_THREAD_NORMAL;
             jqDesc.name = qn.u8_str();
-            jq = skr::SPtr<skr::JobQueue>::Create(&jqDesc);
+            jq = skr::SPtr<skr::JobQueue>::Create(jqDesc);
         }
         SKR_ASSERT(jq);
         return jq.get();
