@@ -254,7 +254,10 @@ JobResult JobQueue::initialize(const JobQueueDesc* pDesc) SKR_NOEXCEPT
         tname.append(taftfix);
         NamedThreadDesc tdesc = {};
         tdesc.name = tname.u8_str();
-        auto *t = SkrNew<JobQueueThread>(desc.priority, desc.stack_size, &tdesc);
+        tdesc.priority = desc.priority;
+        tdesc.stack_size = desc.stack_size;
+        auto t = SkrNew<JobQueueThread>();
+        t->initialize(&tdesc);
         SKR_ASSERT(t != nullptr);
         if (t == nullptr)
         {
