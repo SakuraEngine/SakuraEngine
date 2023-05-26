@@ -11,33 +11,29 @@ namespace skr
 struct NamedThreadDesc
 {
     const char8_t *name;
+    int32_t priority;
+    uint32_t stack_size = 16 * 1024;
 };
-using NamedThreadPriority = SThreadPriority;
-using NamedThreadResult = AsyncResult;
-
-static constexpr NamedThreadResult NAMED_THREAD_RESULT_OK = ASYNC_RESULT_OK;
-static constexpr NamedThreadResult NAMED_THREAD_RESULT_ERROR_THREAD_ALREADY_STARTES = ASYNC_RESULT_ERROR_THREAD_ALREADY_STARTES;
 
 struct NamedThreadFunction
 {
     virtual ~NamedThreadFunction() SKR_NOEXCEPT;
-    virtual NamedThreadResult run() SKR_NOEXCEPT = 0;
+    virtual AsyncResult run() SKR_NOEXCEPT = 0;
 };
 
 struct RUNTIME_STATIC_API NamedThread
 {
 public:
     NamedThread() SKR_NOEXCEPT;
-    NamedThread(NamedThreadPriority priority, uint32_t stackSize, const NamedThreadDesc *desc = nullptr) SKR_NOEXCEPT;
     virtual ~NamedThread() SKR_NOEXCEPT;
 	
     // start the thread.
     // @retval ASYNC_RESULT_OK if success
-    NamedThreadResult start(NamedThreadFunction *pFunc) SKR_NOEXCEPT;
+    AsyncResult start(NamedThreadFunction *pFunc) SKR_NOEXCEPT;
 
     // wait for thread completion.
     // @retval ASYNC_RESULT_OK if success
-    NamedThreadResult join() SKR_NOEXCEPT;
+    AsyncResult join() SKR_NOEXCEPT;
 
     // check if thread is alive.
     bool is_alive() const SKR_NOEXCEPT;
@@ -53,11 +49,11 @@ public:
 
     // initlaize thread.
     // @retval ASYNC_RESULT_OK if success
-    NamedThreadResult initialize(int32_t priority, uint32_t stack_size, const NamedThreadDesc *pdesc = nullptr) SKR_NOEXCEPT;
+    AsyncResult initialize(const NamedThreadDesc *pdesc = nullptr) SKR_NOEXCEPT;
     
     // finalize thread.
     // @retval ASYNC_RESULT_OK if success
-    NamedThreadResult finalize() SKR_NOEXCEPT;
+    AsyncResult finalize() SKR_NOEXCEPT;
 
 private:
     skr::string tname;
@@ -69,6 +65,7 @@ private:
     SThreadHandle tHandle;
     SAtomic32 started = false;
     SAtomic32 alive = false;
+    SAtomic32 priority = false;
     NamedThreadFunction* func = nullptr;
 };
 

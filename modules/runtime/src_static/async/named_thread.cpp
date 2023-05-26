@@ -8,6 +8,7 @@ NamedThreadFunction::~NamedThreadFunction() SKR_NOEXCEPT
 }
 
 NamedThread::NamedThread() SKR_NOEXCEPT
+    : started(false), alive(false), func(nullptr)
 {
 
 }
@@ -19,12 +20,6 @@ NamedThread::~NamedThread() SKR_NOEXCEPT
         skr_destroy_thread(tHandle);
         skr_atomic32_store_release(&started, false);
     }
-}
-
-NamedThread::NamedThread(NamedThreadPriority priority, uint32_t stack_size, const NamedThreadDesc *desc) SKR_NOEXCEPT
-    : started(false), alive(false), func(nullptr)
-{
-    initialize(priority, stack_size, desc);
 }
 
 void NamedThread::threadFunc(void* args)
@@ -40,10 +35,12 @@ void NamedThread::threadFunc(void* args)
     skr_atomic32_store_release(&pSelf->alive, false);
 }
 
-NamedThreadResult NamedThread::start(NamedThreadFunction* pFunc) SKR_NOEXCEPT
+AsyncResult NamedThread::start(NamedThreadFunction* pFunc) SKR_NOEXCEPT
 {
     if (skr_atomic32_load_acquire(&started)) 
-        return NAMED_THREAD_RESULT_ERROR_THREAD_ALREADY_STARTES;
+    {
+        return ASYNC_RESULT_ERROR_THREAD_ALREADY_STARTES;
+    }
     
     this->func = pFunc;
 
@@ -52,16 +49,19 @@ NamedThreadResult NamedThread::start(NamedThreadFunction* pFunc) SKR_NOEXCEPT
     skr_init_thread(&tDesc, &tHandle);
     skr_thread_set_name(tHandle, tname.u8_str());
     
+    const auto P = (SThreadPriority)skr_atomic32_load_acquire(&priority);
+    skr_thread_set_priority(tHandle, P);
+
     // wait started
     while (!skr_atomic32_load_acquire(&started)) {}
 
-    return NAMED_THREAD_RESULT_OK;
+    return ASYNC_RESULT_OK;
 }
 
-NamedThreadResult NamedThread::join() SKR_NOEXCEPT
+AsyncResult NamedThread::join() SKR_NOEXCEPT
 {
     skr_join_thread(tHandle);
-    return NAMED_THREAD_RESULT_OK;
+    return ASYNC_RESULT_OK;
 }
 
 bool NamedThread::is_alive() const SKR_NOEXCEPT
@@ -76,6 +76,7 @@ SThreadID NamedThread::get_id() const SKR_NOEXCEPT
 
 SThreadPriority NamedThread::change_priority(SThreadPriority priority) SKR_NOEXCEPT
 {
+    skr_atomic32_store_relaxed(&priority, priority);
     return skr_thread_set_priority(tHandle, priority);
 }
 
@@ -84,19 +85,20 @@ NamedThreadFunction* NamedThread::get_function() const SKR_NOEXCEPT
     return func;
 }
 
-NamedThreadResult NamedThread::initialize(int32_t p, uint32_t stackSize, const NamedThreadDesc *pdesc) SKR_NOEXCEPT
+AsyncResult NamedThread::initialize(const NamedThreadDesc *pdesc) SKR_NOEXCEPT
 {
     tname = skr::string::from_utf8(desc.name ? desc.name : u8"unnamed");
     if (pdesc)
     {
         desc = *pdesc;
     }
-    return NAMED_THREAD_RESULT_OK;
+    skr_atomic32_store_relaxed(&priority, priority);
+    return ASYNC_RESULT_OK;
 }
 
-NamedThreadResult NamedThread::finalize() SKR_NOEXCEPT
+AsyncResult NamedThread::finalize() SKR_NOEXCEPT
 {
-    return NAMED_THREAD_RESULT_OK;
+    return ASYNC_RESULT_OK;
 }
 
 }
