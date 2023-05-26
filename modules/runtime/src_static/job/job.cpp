@@ -34,7 +34,8 @@ public:
     JobItemQueue(const char8_t* name) 
         : waiting_workers_count(0) , name(name) , is_end_job_queued(false)
     {
-        cond = SkrNew<JobQueueCond>(u8"SampleUtilJobItemQueueCond");					
+        cond = SkrNew<JobQueueCond>();
+        cond->initialize(u8"SampleUtilJobItemQueueCond");					
         SKR_ASSERT(cond != nullptr);
 
     }
@@ -171,14 +172,11 @@ JobResult JobThreadFunctionImpl::run() SKR_NOEXCEPT
     return ASYNC_RESULT_OK;
 }
 
-JobItem::JobItem(const char8_t* name, const JobItemDesc* pDesc) SKR_NOEXCEPT
-    : status(kJobItemStatusNone)
-    , name(name)
-    , result(0)
+JobItem::JobItem(const char8_t* name, const JobItemDesc& desc) SKR_NOEXCEPT
+    : status(kJobItemStatusNone), name(name)
+    , result(0), desc(desc)
 {
-    if (pDesc) {
-        desc = *pDesc;
-    }
+
 }
 
 const char8_t* JobItem::get_name() SKR_NOEXCEPT
@@ -217,13 +215,14 @@ protected:
     }  
 };
 
-JobQueue::JobQueue(const JobQueueDesc* pDesc) SKR_NOEXCEPT
+JobQueue::JobQueue(const JobQueueDesc& desc) SKR_NOEXCEPT
+    : desc(desc)
 {
-    queue_name = pDesc ? pDesc->name ? pDesc->name : u8"UnknownJobQueue" : u8"UnknownJobQueue";
+    queue_name = desc.name ? desc.name : u8"UnknownJobQueue";
     skr_init_rw_mutex(&pending_queue_mutex);
     itemList = SkrNew<JobItemQueue>(queue_name.u8_str());
     SKR_ASSERT(itemList);
-    initialize(pDesc);
+    initialize();
 }
 
 JobQueue::~JobQueue() SKR_NOEXCEPT
@@ -233,14 +232,10 @@ JobQueue::~JobQueue() SKR_NOEXCEPT
     skr_destroy_rw_mutex(&pending_queue_mutex);
 }
 
-JobResult JobQueue::initialize(const JobQueueDesc* pDesc) SKR_NOEXCEPT
+JobResult JobQueue::initialize() SKR_NOEXCEPT
 {
     JobResult ret;
-    const char8_t* n = pDesc ? pDesc->name : nullptr;
-    if (pDesc != nullptr)
-    {
-        desc = *pDesc;
-    }
+    const char8_t* n = desc.name;
     for (uint32_t i = 0; i < desc.thread_count; ++i)
     {
         JobThreadFunction* jobfunc = SkrNew<JobThreadFunctionImpl>(itemList);
@@ -257,7 +252,7 @@ JobResult JobQueue::initialize(const JobQueueDesc* pDesc) SKR_NOEXCEPT
         tdesc.priority = desc.priority;
         tdesc.stack_size = desc.stack_size;
         auto t = SkrNew<JobQueueThread>();
-        t->initialize(&tdesc);
+        t->initialize(tdesc);
         SKR_ASSERT(t != nullptr);
         if (t == nullptr)
         {

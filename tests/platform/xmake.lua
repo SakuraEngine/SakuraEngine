@@ -12,6 +12,13 @@ target("JobTest")
     add_packages("gtest")
     add_files("threads/job.cpp")
 
+target("ServiceThreadTest")
+    set_kind("binary")
+    set_group("05.tests/platform")
+    public_dependency("SkrRT", engine_version)
+    add_packages("gtest")
+    add_files("threads/service_thread.cpp")
+
 target("MarlTest")
     set_kind("binary")
     set_group("05.tests/platform")

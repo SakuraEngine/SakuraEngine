@@ -14,12 +14,11 @@ struct CondLockDesc
 
 struct RUNTIME_STATIC_API CondLock
 {
-    CondLock() SKR_NOEXCEPT {}
-    CondLock(const char8_t *name, const CondLockDesc *CondLockDesc = nullptr) SKR_NOEXCEPT;
+    CondLock() SKR_NOEXCEPT;
     virtual ~CondLock() SKR_NOEXCEPT;
 
     // @retval ASYNC_RESULT_OK if success
-	CondLockResult initialize(const char8_t *name, const CondLockDesc *pDesc = nullptr) SKR_NOEXCEPT;
+	CondLockResult initialize(const char8_t *name, const CondLockDesc& pDesc = {}) SKR_NOEXCEPT;
     
     // @retval ASYNC_RESULT_OK if success
     CondLockResult finalize() SKR_NOEXCEPT;

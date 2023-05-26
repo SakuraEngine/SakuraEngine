@@ -11,22 +11,37 @@ struct ServiceThreadDesc
 struct RUNTIME_STATIC_API ServiceThread
 {
 public:
-    ServiceThread(const ServiceThreadDesc* desc) SKR_NOEXCEPT;
-
+    ServiceThread(const ServiceThreadDesc& desc) SKR_NOEXCEPT;
+    virtual ~ServiceThread() SKR_NOEXCEPT;
+    
     enum Status
     {
-        kStatusNone = 0,
-        kStatusRunning = 1,
+        kStatusRunning = 0,
+        kStatusWaking = 1,
         kStatusStopping = 2,
-        kStatusStopped = 3
+        kStatusStopped = 3,
+        kStatusExiting = 4,
+        kStatusExitted = 5
     };
+    Status get_status() const SKR_NOEXCEPT;
+    
+    void request_stop() SKR_NOEXCEPT;
+    void stop() SKR_NOEXCEPT;
+    void wait_stop() SKR_NOEXCEPT;
+
+    void request_run() SKR_NOEXCEPT;
+    void run() SKR_NOEXCEPT;
+    void wait_running() SKR_NOEXCEPT;
+
+    void request_exit() SKR_NOEXCEPT;
+    void exit() SKR_NOEXCEPT;
+    void wait_exit() SKR_NOEXCEPT;
 
     virtual AsyncResult serve() SKR_NOEXCEPT = 0;
 
-    Status get_status() const SKR_NOEXCEPT;
-    void stop() SKR_NOEXCEPT;
-    void run() SKR_NOEXCEPT;
 protected:
+    void waitJoin() SKR_NOEXCEPT;
+
     struct ServiceFunc : public NamedThreadFunction
     {
         AsyncResult run() SKR_NOEXCEPT;
@@ -35,6 +50,6 @@ protected:
     friend struct ServiceFunc;
     ServiceFunc f;
     NamedThread t;
-    SAtomicU32 status;
+    SAtomicU32 status = kStatusStopped;
 };
 }

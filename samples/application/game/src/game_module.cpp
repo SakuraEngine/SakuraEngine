@@ -310,7 +310,7 @@ void SGameModule::on_load(int argc, char8_t** argv)
         job_queueDesc.thread_count = 2;
         job_queueDesc.priority = SKR_THREAD_NORMAL;
         job_queueDesc.name = qn.u8_str();
-        job_queue = skr::SPtr<skr::JobQueue>::Create(&job_queueDesc);
+        job_queue = skr::SPtr<skr::JobQueue>::Create(job_queueDesc);
     }
     SKR_ASSERT(job_queue);
 

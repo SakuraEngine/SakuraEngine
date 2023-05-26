@@ -2,9 +2,8 @@
 
 namespace skr
 {
-CondLock::CondLock(const char8_t* name, const CondLockDesc* pDesc) SKR_NOEXCEPT
+CondLock::CondLock() SKR_NOEXCEPT
 {
-    initialize(name, pDesc);
 }
 
 CondLock::~CondLock() SKR_NOEXCEPT
@@ -12,7 +11,7 @@ CondLock::~CondLock() SKR_NOEXCEPT
     finalize();
 }
 
-CondLockResult CondLock::initialize(const char8_t* name, const CondLockDesc* pOption) SKR_NOEXCEPT
+CondLockResult CondLock::initialize(const char8_t* name, const CondLockDesc& pOption) SKR_NOEXCEPT
 {
     bool ok = skr_init_condition_var(&cond);
     if (ok)

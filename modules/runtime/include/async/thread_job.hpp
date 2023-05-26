@@ -48,7 +48,7 @@ struct RUNTIME_STATIC_API JobItem
     friend struct JobItemQueue;
 
 public:
-    JobItem(const char8_t* name, const JobItemDesc* desc = nullptr) SKR_NOEXCEPT;
+    JobItem(const char8_t* name, const JobItemDesc& desc = {}) SKR_NOEXCEPT;
     JobItem(const JobItem& src) SKR_NOEXCEPT
         : status( skr_atomic32_load_acquire(&status) )
         , name(src.name), result(src.result), desc(src.desc)
@@ -94,16 +94,8 @@ using JobQueueThreadList = eastl::list<JobQueueThread*>;
 struct RUNTIME_STATIC_API JobQueue
 {
 public:
-    JobQueue(const JobQueueDesc*) SKR_NOEXCEPT;
+    JobQueue(const JobQueueDesc& desc) SKR_NOEXCEPT;
 	virtual ~JobQueue() SKR_NOEXCEPT;
-
-    // initialize JobQueue
-    // @retval ASYNC_RESULT_OK if success
-	JobResult initialize(const JobQueueDesc* desc = nullptr) SKR_NOEXCEPT;
-
-    // finalize JobQueue.
-    // @retval ASYNC_RESULT_OK if success
-	JobResult finalize() SKR_NOEXCEPT;
 
     // enqueue JobItem object to job queue.
     // @retval ASYNC_RESULT_OK if success
@@ -138,6 +130,14 @@ public:
 private:
     friend struct JobThreadFunction;
     int enqueueCore(JobItem* jobItem, bool isEndJob) SKR_NOEXCEPT;
+
+    // initialize JobQueue
+    // @retval ASYNC_RESULT_OK if success
+	JobResult initialize() SKR_NOEXCEPT;
+
+    // finalize JobQueue.
+    // @retval ASYNC_RESULT_OK if success
+	JobResult finalize() SKR_NOEXCEPT;
 
     skr::string queue_name;
     JobQueueThreadList thread_list;
