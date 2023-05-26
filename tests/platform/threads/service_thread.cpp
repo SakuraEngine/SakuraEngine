@@ -23,10 +23,15 @@ TEST(ServiceThread, AsyncPrint)
         int32_t times = 0;
     };
     auto srv = TestServiceThread();
+    SKR_LOG_DEBUG("Request Run");
     srv.run();
+    SKR_LOG_DEBUG("Wait Stop");
     srv.wait_stop();
+    SKR_LOG_DEBUG("Stopped");
     EXPECT_EQ(srv.times, 6);
+    SKR_LOG_DEBUG("Wait Exit");
     srv.exit();
+    SKR_LOG_DEBUG("Exitted");
 }
 
 TEST(ServiceThread, AsyncPrint2)
