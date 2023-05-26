@@ -16,10 +16,10 @@ public:
     
     enum Status
     {
-        kStatusRunning = 0,
+        kStatusStopped = 0,
         kStatusWaking = 1,
-        kStatusStopping = 2,
-        kStatusStopped = 3,
+        kStatusRunning = 2,
+        kStatusStopping = 3,
         kStatusExiting = 4,
         kStatusExitted = 5
     };
@@ -29,9 +29,7 @@ public:
     void stop() SKR_NOEXCEPT;
     void wait_stop() SKR_NOEXCEPT;
 
-    void request_run() SKR_NOEXCEPT;
     void run() SKR_NOEXCEPT;
-    void wait_running() SKR_NOEXCEPT;
 
     void request_exit() SKR_NOEXCEPT;
     void exit() SKR_NOEXCEPT;

@@ -65,7 +65,7 @@ void ServiceThread::wait_stop() SKR_NOEXCEPT
     }
 }
 
-void ServiceThread::request_run() SKR_NOEXCEPT
+void ServiceThread::run() SKR_NOEXCEPT
 {
     const auto S = get_status();
     if (S != kStatusStopped)
@@ -78,20 +78,6 @@ void ServiceThread::request_run() SKR_NOEXCEPT
     if (!t.has_started())
     {
         t.start(&f);
-    }
-}
-
-void ServiceThread::run() SKR_NOEXCEPT
-{
-    request_run();
-    wait_running();
-}
-
-void ServiceThread::wait_running() SKR_NOEXCEPT
-{
-    while (get_status() != kStatusRunning)
-    {
-        // ... wait stopping
     }
 }
 
