@@ -1,26 +1,11 @@
-#include "SkrGuiRenderer/gdi_renderer.hpp"
-#include "misc/make_zeroed.hpp"
-#include "misc/defer.hpp"
+#include "futures.hpp"
+
 #ifdef SKR_GUI_RENDERER_USE_IMAGE_CODER
 #include "SkrImageCoder/skr_image_coder.h"
 #endif
 
 namespace skr {
 namespace gdi {
-// start helpers
-ECGPUFormat TranslateFormat(EGDIImageFormat format)
-{
-    switch (format)
-    {
-    case EGDIImageFormat::RGB8: return CGPU_FORMAT_R8G8B8_UNORM;
-    case EGDIImageFormat::RGBA8: return CGPU_FORMAT_R8G8B8A8_UNORM;
-    case EGDIImageFormat::LA8: return CGPU_FORMAT_R8G8_UNORM;
-    case EGDIImageFormat::R8: return CGPU_FORMAT_R8_UNORM;
-    default: break;
-    }
-    SKR_UNREACHABLE_CODE();
-    return CGPU_FORMAT_UNDEFINED;
-}
 
 #ifdef SKR_GUI_RENDERER_USE_IMAGE_CODER
 ECGPUFormat cgpu_format_from_image_coder_format(EImageCoderFormat format,EImageCoderColorFormat cformat, uint32_t bit_depth) SKR_NOEXCEPT
@@ -69,6 +54,49 @@ skr_blob_t image_coder_decode_image(const uint8_t* bytes, uint64_t size, uint32_
     return {};
 }
 #endif
+
+struct DecodingProgress : public skr::AsyncProgress<ImageTex::FutureLauncher, int, bool>
+{
+    DecodingProgress(GDIImage_RenderGraph* image)
+        : owner(image)
+    {
+
+    }
+    ~DecodingProgress()
+    {
+
+    }
+    GDIImage_RenderGraph* owner = nullptr;
+
+#ifdef SKR_GUI_RENDERER_USE_IMAGE_CODER
+    bool do_in_background() override
+    {
+        auto pAsyncData = &owner->async_data;
+        owner->pixel_data = image_coder_decode_image(owner->raw_data.bytes, 
+            owner->raw_data.size, owner->image_height, 
+            owner->image_width, owner->image_depth, owner->format);
+        pAsyncData->ram_data_finsihed_callback();
+        return true;
+    }
+#else
+    bool do_in_background() override {  SKR_ASSERT(0 && "ImageCoder not supportted or disabled at this platform!"); return true; }
+#endif
+};
+
+// start helpers
+ECGPUFormat TranslateFormat(EGDIImageFormat format)
+{
+    switch (format)
+    {
+    case EGDIImageFormat::RGB8: return CGPU_FORMAT_R8G8B8_UNORM;
+    case EGDIImageFormat::RGBA8: return CGPU_FORMAT_R8G8B8A8_UNORM;
+    case EGDIImageFormat::LA8: return CGPU_FORMAT_R8G8_UNORM;
+    case EGDIImageFormat::R8: return CGPU_FORMAT_R8_UNORM;
+    default: break;
+    }
+    SKR_UNREACHABLE_CODE();
+    return CGPU_FORMAT_UNDEFINED;
+}
 
 void GDITexture_RenderGraph::intializeBindTable() SKR_NOEXCEPT
 {
@@ -258,26 +286,20 @@ GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* o
     
     if (owner->source == EGDIImageSource::File)
     {
-        auto ram_texture_io = make_zeroed<skr_ram_io_t>();
+        auto ram_texture_io = make_zeroed<skr_io_request_t>();
         ram_texture_io.path = from_file.uri.u8_str();
-        ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* usrdata)
+        ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata)
         {
             auto owner = static_cast<GDIImage_RenderGraph*>(usrdata);
             owner->async_data.ram_io_finished_callback();
     #ifdef SKR_GUI_RENDERER_USE_IMAGE_CODER
             if (owner->async_data.useImageCoder)
             {
-                auto aux_task = make_zeroed<skr_service_task_t>();
-                aux_task.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* usrdata){
-                    auto owner = static_cast<GDIImage_RenderGraph*>(usrdata);
-                    auto pAsyncData = &owner->async_data;
-                    owner->pixel_data = image_coder_decode_image(owner->raw_data.bytes, 
-                        owner->raw_data.size, owner->image_height, 
-                        owner->image_width, owner->image_depth, owner->format);
-                    pAsyncData->ram_data_finsihed_callback();
-                };
-                aux_task.callback_datas[SKR_ASYNC_IO_STATUS_OK] = owner;
-                owner->async_data.aux_service->request(&aux_task, &owner->async_data.aux_request);
+                auto progress = owner->async_data.decoding_progress = SPtr<DecodingProgress>::Create(owner);
+                if (auto launcher = owner->renderer->get_future_launcher())
+                {
+                    progress->execute(*launcher);
+                }
             }
             else
     #endif
@@ -287,8 +309,8 @@ GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* o
                 // owner->format
             }
         };
-        ram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = owner;
-        ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_ENQUEUED] = +[](skr_async_request_t* request, void* usrdata)
+        ram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = owner;
+        ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_ENQUEUED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata)
         {
             auto pAsyncData = static_cast<GDIImageAsyncData_RenderGraph*>(usrdata);
             pAsyncData->ram_io_enqueued_callback();
@@ -349,7 +371,7 @@ GDITextureId GDITextureAsyncData_RenderGraph::DoAsync(struct GDITexture_RenderGr
             vram_io_info.vtexture.format = intermediate_image.format;
             vram_io_info.vtexture.resource_types = CGPU_RESOURCE_TYPE_TEXTURE;
 
-            vram_io_info.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* usrdata)
+            vram_io_info.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* request, void* usrdata)
             {
                 auto texture = static_cast<GDITexture_RenderGraph*>(usrdata);
                 auto& intermediate_image = texture->intermediate_image;
@@ -367,7 +389,7 @@ GDITextureId GDITextureAsyncData_RenderGraph::DoAsync(struct GDITexture_RenderGr
                 } 
                 intermediate_image.pixel_data = {};
             };
-            vram_io_info.callback_datas[SKR_ASYNC_IO_STATUS_OK] = texture;
+            vram_io_info.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = texture;
             texture->async_data.vram_service->request(&vram_io_info, &texture->async_data.vram_request, &texture->async_data.vram_destination);
         };
 
@@ -418,7 +440,6 @@ GDIImageId GDIRenderer_RenderGraph::create_image(const GDIImageDescriptor* desc)
     const bool useImageCoder = desc2 ? desc2->useImageCoder : false;
 
     auto image = SkrNew<GDIImage_RenderGraph>(this);
-    image->async_data.aux_service = aux_service;
     image->async_data.useImageCoder = useImageCoder;
 
     image->source = desc->source;
@@ -444,7 +465,6 @@ GDITextureId GDIRenderer_RenderGraph::create_texture(const GDITextureDescriptor*
     const bool useImageCoder = desc2 ? desc2->useImageCoder : false;
 
     auto texture = SkrNew<GDITexture_RenderGraph>(this);
-    texture->intermediate_image.async_data.aux_service = aux_service;
     texture->intermediate_image.async_data.useImageCoder = useImageCoder;
 
     texture->source = desc->source;

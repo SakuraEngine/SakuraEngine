@@ -54,12 +54,12 @@ typedef struct skr_live2d_vertex_uv_t {
     float v;
 } skr_live2d_vertex_uv_t;
 
-#include "misc/io.h"
+#include "io/io.h"
 
 typedef void (*skr_async_live2d_io_callback_t)(struct skr_live2d_ram_io_request_t* request, void* data);
 typedef struct skr_live2d_ram_io_request_t {
     struct skr_vfs_t* vfs_override;
-    skr_async_request_t settingsRequest;
+    skr_io_future_t settingsRequest;
     SAtomicU32 liv2d_status;
     skr_live2d_model_resource_id model_resource;
     skr_async_live2d_io_callback_t finish_callback;
@@ -67,7 +67,7 @@ typedef struct skr_live2d_ram_io_request_t {
 #ifdef __cplusplus
     bool is_ready() const SKR_NOEXCEPT
     {
-        return get_status() == SKR_ASYNC_IO_STATUS_OK;
+        return get_status() == SKR_ASYNC_IO_STATUS_READ_OK;
     }
     SkrAsyncIOStatus get_status() const SKR_NOEXCEPT
     {

@@ -1,9 +1,9 @@
 #pragma once
-#include "platform/configure.h"
 #include <type_traits>
 #include "platform/atomic.h"
 #include "platform/thread.h"
 #include "platform/memory.h"
+#include "misc/defer.hpp"
 
 #include <EASTL/atomic.h>
 #include <EASTL/queue.h>
@@ -11,15 +11,15 @@
 namespace skr
 {
 
-struct AsyncTaskException {
+struct AsyncProgressException {
     enum class eEx : uint32_t
     {
         TaskIsAlreadyRunning,
         TaskIsAlreadyFinished
     };
 
-    AsyncTaskException() = default;
-    AsyncTaskException(eEx e)
+    AsyncProgressException() = default;
+    AsyncProgressException(eEx e)
         : e(e)
     {
     }
@@ -34,17 +34,36 @@ enum class FutureStatus : uint32_t
     Deferred
 };
 
-template <typename Result>
+template <typename Artifact>
 struct IFuture 
 {
     virtual ~IFuture() SKR_NOEXCEPT = default;
     virtual bool valid() const SKR_NOEXCEPT = 0;
     virtual void wait() SKR_NOEXCEPT = 0;
     virtual FutureStatus wait_for(uint32_t ms) SKR_NOEXCEPT = 0;
-    virtual Result get() SKR_NOEXCEPT = 0;
+    virtual Artifact get() SKR_NOEXCEPT = 0;
 };
 
-// AsyncTask
+template <typename Artifact>
+struct SerialFuture : public IFuture<Artifact>
+{
+    template<typename F, typename... Args>
+    SerialFuture(F&& _f, Args&&... args)
+    {
+        const auto runner = [=, This = this]() { 
+            This->artifact = _f(args...); 
+        };
+        runner();
+    }
+    virtual ~SerialFuture() SKR_NOEXCEPT {}
+    Artifact get() SKR_NOEXCEPT override { return artifact; }
+    bool valid() const SKR_NOEXCEPT override { return true; }
+    void wait() SKR_NOEXCEPT override { }
+    skr::FutureStatus wait_for(uint32_t ms) SKR_NOEXCEPT override { return FutureStatus::Ready; }
+    Artifact artifact;
+};
+
+// AsyncProgress
 // Asynchronous task progress handler class
 //  - Asynchronous worker task should be defined into the do_in_background(),
 //  - Feedback system elements should be handled by the on_pre_execute()/on_progress_update()/on_post_execute()/on_cancelled()
@@ -52,7 +71,7 @@ struct IFuture
 //  - Refresh the feedback by the on_callback_loop()
 // Nocopy object. on_callback_loop() and get() could rethrow the do_in_background() thrown exceptions.
 template <typename Launcher, typename Progress, typename Result, typename... Params>
-class AsyncTaskBase
+class AsyncProgressBase
 {
 public:
     enum class Status : uint32_t
@@ -71,15 +90,17 @@ private:
     IFuture<Result>* future = nullptr;
 
 public:
-    AsyncTaskBase() = default;
+    AsyncProgressBase() = default;
 
 protected:
-    AsyncTaskBase(AsyncTaskBase const&) = delete;
-    AsyncTaskBase(AsyncTaskBase&&) = delete;
-    AsyncTaskBase& operator=(AsyncTaskBase const&) = delete;
-    AsyncTaskBase& operator=(AsyncTaskBase&&) = delete;
-    virtual ~AsyncTaskBase() SKR_NOEXCEPT
+    AsyncProgressBase(AsyncProgressBase const&) = delete;
+    AsyncProgressBase(AsyncProgressBase&&) = delete;
+    AsyncProgressBase& operator=(AsyncProgressBase const&) = delete;
+    AsyncProgressBase& operator=(AsyncProgressBase&&) = delete;
+    virtual ~AsyncProgressBase() SKR_NOEXCEPT
     {
+        // TODO: recycler
+        SKR_DEFER({ SkrDelete(future); });
         auto const status = get_status();
         if (status != Status::RUNNING)
             return;
@@ -91,26 +112,59 @@ protected:
             return;
 
         this->future->wait();
-        // TODO: recycler
-        SkrDelete(future);
     };
 
 public:
     // Initiate the asynchronous task
-    // If the task is already began, AsyncTaskIllegalStateException will be thrown
+    // If the task is already began, AsyncProgressIllegalStateException will be thrown
     // @MainThread
-    // AsyncTaskBase<Launcher, Progress, Result, Params...>&
-    auto& execute(Params const&... params) SKR_NOEXCEPT
+    // AsyncProgressBase<Launcher, Progress, Result, Params...>&
+    auto& execute(Launcher& launcher, Params const&... params) SKR_NOEXCEPT
     {
-        AsyncTaskException* exception = nullptr;
+        AsyncProgressException* exception = nullptr;
         switch (status)
         {
             case Status::PENDING:
                 break; // Everything is ok.
             case Status::RUNNING:
-                exception = SkrNew<AsyncTaskException>(AsyncTaskException::eEx::TaskIsAlreadyRunning);
+                exception = SkrNew<AsyncProgressException>(AsyncProgressException::eEx::TaskIsAlreadyRunning);
             case Status::FINISHED:
-                exception = SkrNew<AsyncTaskException>(AsyncTaskException::eEx::TaskIsAlreadyFinished);
+                exception = SkrNew<AsyncProgressException>(AsyncProgressException::eEx::TaskIsAlreadyFinished);
+        }
+        if (exception)
+        {
+            this->on_exception(exception);
+            SkrDelete(exception);
+        }
+
+        this->status = Status::RUNNING;
+        this->on_pre_execute();
+        this->future = launcher.async(
+            [this](Params const&... params) -> Result 
+            {
+                if (is_cancelled())
+                {
+                    return {}; // Protect against undefined behavoiur, if Dtor is invoked before the - pure virtual function represented - task would be started
+                }
+                auto&& r = this->do_in_background(params...);
+                return this->post_result(std::move(r));
+            },
+        params...);
+        
+        return *this;
+    }
+
+    auto& execute(Params const&... params) SKR_NOEXCEPT
+    {
+        AsyncProgressException* exception = nullptr;
+        switch (status)
+        {
+            case Status::PENDING:
+                break; // Everything is ok.
+            case Status::RUNNING:
+                exception = SkrNew<AsyncProgressException>(AsyncProgressException::eEx::TaskIsAlreadyRunning);
+            case Status::FINISHED:
+                exception = SkrNew<AsyncProgressException>(AsyncProgressException::eEx::TaskIsAlreadyFinished);
         }
         if (exception)
         {
@@ -168,7 +222,7 @@ public:
     // @MainThread
     virtual void on_pre_execute() {}
 
-    virtual void on_exception(AsyncTaskException* exception) {}
+    virtual void on_exception(AsyncProgressException* exception) {}
 
     // Usually to declare the finishing in the feedback system
     // @MainThread
@@ -198,7 +252,7 @@ public:
     // Get the result.
     // It could freeze the mainthread if it invoked before the task is finished. Exception from the do_in_background can be rethrown.
     //@MainThread
-    Result get()
+    Result get_result()
     {
         if (get_status() != Status::FINISHED)
         {
@@ -255,9 +309,9 @@ private:
     }
 };
 
-// General AsyncTask
+// General AsyncProgress
 template <typename Launcher, typename Progress, typename Result, typename... Params>
-class AsyncTask : public AsyncTaskBase<Launcher, Progress, Result, Params...>
+class AsyncProgress : public AsyncProgressBase<Launcher, Progress, Result, Params...>
 {
 private:
     // Progress handling
@@ -298,10 +352,10 @@ private:
     };
 
     static bool constexpr isProgressAtomicCompatible =
-    std::is_trivially_copyable_v<Progress> && std::is_copy_constructible_v<Progress> && std::is_move_constructible_v<Progress> && std::is_copy_assignable_v<Progress> && std::is_move_assignable_v<Progress>;
+        std::is_trivially_copyable_v<Progress> && std::is_copy_constructible_v<Progress> && std::is_move_constructible_v<Progress> && std::is_copy_assignable_v<Progress> && std::is_move_assignable_v<Progress>;
 
-    using ProgressContainer = typename std::conditional<
-    isProgressAtomicCompatible, eastl::atomic<Progress>, ThreadSafeContainer<Progress>>::type;
+    using ProgressContainer = 
+        typename std::conditional<isProgressAtomicCompatible, eastl::atomic<Progress>, ThreadSafeContainer<Progress>>::type;
 
     ProgressContainer mProgress;
 
@@ -324,11 +378,11 @@ protected:
     }
 
 public:
-    using AsyncTaskBase<Launcher, Progress, Result, Params...>::AsyncTaskBase;
+    using AsyncProgressBase<Launcher, Progress, Result, Params...>::AsyncProgressBase;
 };
 
 template <typename Launcher, typename Progress, typename Result, typename... Params>
-class AsyncTaskPQ : public AsyncTaskBase<Launcher, Progress, Result, Params...>
+class AsyncProgressPQ : public AsyncProgressBase<Launcher, Progress, Result, Params...>
 {
 private:
     // Progress handling
@@ -400,7 +454,7 @@ protected:
     }
 
 public:
-    using AsyncTaskBase<Launcher, Progress, Result, Params...>::AsyncTaskBase;
+    using AsyncProgressBase<Launcher, Progress, Result, Params...>::AsyncProgressBase;
 };
 
 } // namespace skr

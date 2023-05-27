@@ -1195,7 +1195,7 @@ ECGPUDStorageAvailability cgpu_query_dstorage_availability(CGPUDeviceId device)
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     if (device->proc_table_cache->query_dstorage_availability == NULL)
     {
-        return CGPU_DSTORAGE_AVAILABILITY_NONE;
+        return SKR_DSTORAGE_AVAILABILITY_NONE;
     }
     cgpu_assert(device->proc_table_cache->query_dstorage_availability && "query_dstorage_availability Proc Missing!");
     return device->proc_table_cache->query_dstorage_availability(device);

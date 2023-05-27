@@ -365,7 +365,7 @@ dual_query_t* dual_storage_t::make_query(const char* inDesc)
             if (type == kInvalidTypeIndex)
             {
                 errorPos = partBegin + i;
-                error = skr::format(u8"unknown type name '{}', loc {}.", name, errorPos);
+                error = skr::format(u8"unknown type name '{}', loc {}.", (const char8_t*)name.data(), errorPos);
                 SKR_ASSERT(false);
                 return nullptr;
             }

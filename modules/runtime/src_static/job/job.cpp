@@ -34,7 +34,8 @@ public:
     JobItemQueue(const char8_t* name) 
         : waiting_workers_count(0) , name(name) , is_end_job_queued(false)
     {
-        cond = SkrNew<JobQueueCond>(u8"SampleUtilJobItemQueueCond");					
+        cond = SkrNew<JobQueueCond>();
+        cond->initialize(u8"SampleUtilJobItemQueueCond");					
         SKR_ASSERT(cond != nullptr);
 
     }
@@ -51,7 +52,7 @@ public:
         if (endJobEnqueud && !isEndJob)
         {
             cond->unlock();
-            return JOB_RESULT_ERROR_ERROR_INVALID_STATE;
+            return ASYNC_RESULT_ERROR_INVALID_STATE;
         }
 
         // update the status of JobItem together with the state of the queue
@@ -69,7 +70,7 @@ public:
 
         cond->unlock();
 
-        return JOB_RESULT_OK;
+        return ASYNC_RESULT_OK;
     }
 
     void erase(JobItem* jobItem)
@@ -168,17 +169,14 @@ JobResult JobThreadFunctionImpl::run() SKR_NOEXCEPT
             m_item = nullptr;
         }
     }
-    return JOB_RESULT_OK;
+    return ASYNC_RESULT_OK;
 }
 
-JobItem::JobItem(const char8_t* name, const JobItemDesc* pDesc) SKR_NOEXCEPT
-    : status(kJobItemStatusNone)
-    , name(name)
-    , result(0)
+JobItem::JobItem(const char8_t* name, const JobItemDesc& desc) SKR_NOEXCEPT
+    : status(kJobItemStatusNone), name(name)
+    , result(0), desc(desc)
 {
-    if (pDesc) {
-        desc = *pDesc;
-    }
+
 }
 
 const char8_t* JobItem::get_name() SKR_NOEXCEPT
@@ -209,7 +207,7 @@ protected:
     // this job is used to notify the end of the job
     JobResult run() SKR_NOEXCEPT override
     {
-        return JOB_RESULT_OK;
+        return ASYNC_RESULT_OK;
     }
     void finish(JobResult res) SKR_NOEXCEPT override
     {
@@ -217,13 +215,14 @@ protected:
     }  
 };
 
-JobQueue::JobQueue(const JobQueueDesc* pDesc) SKR_NOEXCEPT
+JobQueue::JobQueue(const JobQueueDesc& desc) SKR_NOEXCEPT
+    : desc(desc)
 {
-    queue_name = pDesc ? pDesc->name ? pDesc->name : u8"UnknownJobQueue" : u8"UnknownJobQueue";
+    queue_name = desc.name ? desc.name : u8"UnknownJobQueue";
     skr_init_rw_mutex(&pending_queue_mutex);
     itemList = SkrNew<JobItemQueue>(queue_name.u8_str());
     SKR_ASSERT(itemList);
-    initialize(pDesc);
+    initialize();
 }
 
 JobQueue::~JobQueue() SKR_NOEXCEPT
@@ -233,36 +232,37 @@ JobQueue::~JobQueue() SKR_NOEXCEPT
     skr_destroy_rw_mutex(&pending_queue_mutex);
 }
 
-JobResult JobQueue::initialize(const JobQueueDesc* pDesc) SKR_NOEXCEPT
+JobResult JobQueue::initialize() SKR_NOEXCEPT
 {
     JobResult ret;
-    const char8_t* n = pDesc ? pDesc->name : nullptr;
-    if (pDesc != nullptr)
-    {
-        desc = *pDesc;
-    }
+    const char8_t* n = desc.name;
     for (uint32_t i = 0; i < desc.thread_count; ++i)
     {
         JobThreadFunction* jobfunc = SkrNew<JobThreadFunctionImpl>(itemList);
         SKR_ASSERT(jobfunc != nullptr);
         if (jobfunc == nullptr)
         {
-            return JOB_RESULT_ERROR_OUT_OF_MEMORY;
+            return ASYNC_RESULT_ERROR_OUT_OF_MEMORY;
         }
         skr::string tname = n ? n : u8"UnknownJobQueue";
         auto taftfix = skr::format(u8"_{}"_cuqv, (int32_t)i);
         tname.append(taftfix);
-        auto *t = SkrNew<JobQueueThread>(tname.u8_str(), desc.priority, desc.stack_size);
+        NamedThreadDesc tdesc = {};
+        tdesc.name = tname.u8_str();
+        tdesc.priority = desc.priority;
+        tdesc.stack_size = desc.stack_size;
+        auto t = SkrNew<JobQueueThread>();
+        t->initialize(tdesc);
         SKR_ASSERT(t != nullptr);
         if (t == nullptr)
         {
             SkrDelete(jobfunc);
-            return JOB_RESULT_ERROR_OUT_OF_MEMORY;
+            return ASYNC_RESULT_ERROR_OUT_OF_MEMORY;
         }
 
         ret = t->start(jobfunc);
-        SKR_ASSERT(ret == JOB_RESULT_OK);
-        if (ret != JOB_RESULT_OK)
+        SKR_ASSERT(ret == ASYNC_RESULT_OK);
+        if (ret != ASYNC_RESULT_OK)
         {
             SkrDelete(jobfunc);
             SkrDelete(t);
@@ -271,7 +271,7 @@ JobResult JobQueue::initialize(const JobQueueDesc* pDesc) SKR_NOEXCEPT
 
         thread_list.emplace_back(t);
     }
-    return JOB_RESULT_OK;
+    return ASYNC_RESULT_OK;
 }
 
 int JobQueue::finalize() SKR_NOEXCEPT
@@ -297,7 +297,7 @@ int JobQueue::finalize() SKR_NOEXCEPT
     }
     thread_list.clear();
 
-    return JOB_RESULT_OK;
+    return ASYNC_RESULT_OK;
 }
 
 int JobQueue::enqueue(JobItem* jobItem) SKR_NOEXCEPT
@@ -309,7 +309,7 @@ int JobQueue::enqueue(JobItem* jobItem) SKR_NOEXCEPT
     {
         ret = enqueueCore(jobItem, /*isEndJob=*/false);
     }
-    if (ret == JOB_RESULT_OK)
+    if (ret == ASYNC_RESULT_OK)
     {
         pending_queue.emplace_back(jobItem);
     }
@@ -362,7 +362,7 @@ JobResult JobQueue::check() SKR_NOEXCEPT
         }
     }
 
-    return JOB_RESULT_OK;
+    return ASYNC_RESULT_OK;
 }
 
 void JobQueue::get_descriptor(JobQueueDesc* pDesc) SKR_NOEXCEPT
@@ -380,13 +380,13 @@ int JobQueue::enqueueCore(JobItem* jobItem, bool isEndJob) SKR_NOEXCEPT
 
     if (skr_atomic32_load_acquire(&jobItem->status) != kJobItemStatusNone)
     {
-        return JOB_RESULT_ERROR_INVALID_PARAM;
+        return ASYNC_RESULT_ERROR_INVALID_PARAM;
     }
 
     if (thread_list.size() == 0)
     {
         SKR_ASSERT(0);
-        return JOB_RESULT_ERROR_JOB_NOTHREAD;
+        return ASYNC_RESULT_ERROR_JOB_NOTHREAD;
     }
 
     return itemList->push(jobItem, isEndJob);
@@ -418,7 +418,7 @@ JobResult JobQueue::cancel_all_items() SKR_NOEXCEPT
     skr_rw_mutex_acuire_w(&pending_queue_mutex);
     SKR_DEFER({skr_rw_mutex_release(&pending_queue_mutex);});
     skr_atomic32_store_release(&cancel_requested, true);
-    return JOB_RESULT_OK;
+    return ASYNC_RESULT_OK;
 }
 
 }

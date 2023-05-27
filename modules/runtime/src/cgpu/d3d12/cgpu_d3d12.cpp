@@ -598,8 +598,9 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
     // [RS POOL] INSERTION
     if (desc->pool)
     {
-        const bool result = CGPUUtil_AddSignature(desc->pool, &RS->super, desc);
+        CGPURootSignatureId result = CGPUUtil_AddSignature(desc->pool, &RS->super, desc);
         cgpu_assert(result && "Root signature pool insertion failed!");
+        return result;
     }
     // [RS POOL] END INSERTION
     return &RS->super;
