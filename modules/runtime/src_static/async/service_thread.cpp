@@ -73,16 +73,21 @@ void ServiceThread::run() SKR_NOEXCEPT
         SKR_LOG_FATAL("must run from a stopped service!");
         SKR_ASSERT(S == kStatusStopped);
     }
-
+    
+    // record last turn id
+    const auto orid = skr_atomicu32_load_relaxed(&rid);
+    
+    // signal waking
     skr_atomic32_store_release(&status, kStatusWaking);
     if (!t.has_started())
     {
         t.start(&f);
     }
 
-    while (get_status() != kStatusRunning)
+    // secure runned
+    while (skr_atomicu32_load_relaxed(&rid) <= orid)
     {
-        // ... wait waking
+        // ... wait run++
     }
 }
 
@@ -138,6 +143,7 @@ WAKING:
 RUNNING:
 {
     skr_atomic32_store_release(&_service->status, kStatusRunning);
+    skr_atomic32_add_relaxed(&_service->rid, 1);
     for (;;)
     {
         // 1. run service
