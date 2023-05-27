@@ -6,6 +6,7 @@ namespace skr
 struct ServiceThreadDesc
 {
     const char8_t* name = nullptr;
+    SThreadPriority priority = SKR_THREAD_NORMAL;
 };
 
 struct RUNTIME_STATIC_API ServiceThread
