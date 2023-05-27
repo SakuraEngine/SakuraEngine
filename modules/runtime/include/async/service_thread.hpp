@@ -50,5 +50,6 @@ protected:
     ServiceFunc f;
     NamedThread t;
     SAtomicU32 status = kStatusStopped;
+    SAtomicU32 rid = 0;
 };
 }
