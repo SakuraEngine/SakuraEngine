@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 #include <platform/filesystem.hpp>
-#include "misc/io.h"
+#include "io/io.h"
 #include "misc/log.h"
 
 class FSTest : public ::testing::Test
@@ -102,18 +102,28 @@ TEST_F(FSTest, asyncread)
 {
     skr_ram_io_service_desc_t ioServiceDesc = {};
     ioServiceDesc.name = u8"Test";
-    auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
+    auto ioService = skr_io_ram_service2_t::create(&ioServiceDesc);
+    ioService->run();
+    
     uint8_t bytes[1024];
     memset(bytes, 0, 1024);
-    skr_ram_io_t ramIO = {};
-    ramIO.offset = 0;
+
+    skr_io_block_t ioblock = {};
+    ioblock.offset = 0;
+    ioblock.size = 0;
+
+    skr_io_request_t ramIO = {};
     const char8_t* testfile = u8"testfile";
     ramIO.path = testfile;
-    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* arg){
-        skr_ram_io_t* pRamIO = (skr_ram_io_t*)arg;
-        SKR_LOG_INFO("async read of file %s ok", pRamIO->path);
-    };
+    ramIO.blocks = &ioblock;
+    ramIO.block_count = 1;
+    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = 
+        +[](skr_io_future_t* future, skr_io_request_t* request, void* arg){
+            skr_ram_io_t* pRamIO = (skr_ram_io_t*)arg;
+            SKR_LOG_INFO("async read of file %s ok", pRamIO->path);
+        };
     ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = &ramIO;
+
     skr_async_request_t request = {};
     skr_async_ram_destination_t destination = {};
     ioService->request(abs_fs, &ramIO, &request, &destination);
@@ -125,7 +135,7 @@ TEST_F(FSTest, asyncread)
     
     // ioService->drain();
     std::cout << (const char*)destination.bytes << std::endl;
-    skr_io_ram_service_t::destroy(ioService);
+    skr_io_ram_service2_t::destroy(ioService);
     std::cout << "..." << std::endl;
 }
 
