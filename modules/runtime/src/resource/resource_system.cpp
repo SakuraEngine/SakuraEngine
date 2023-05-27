@@ -4,7 +4,7 @@
 #include "ecs/entities.hpp"
 #include "platform/debug.h"
 #include "containers/hashmap.hpp"
-#include "misc/io.h"
+#include "io/io.h"
 #include "platform/vfs.h"
 #include "resource/resource_factory.h"
 #include "containers/concurrent_queue.h"

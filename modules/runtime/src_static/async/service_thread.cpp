@@ -38,7 +38,7 @@ void ServiceThread::request_stop() SKR_NOEXCEPT
     const auto S = get_status();
     if (S != kStatusRunning)
     {
-        SKR_LOG_FATAL("must stop from a running service!");
+        SKR_LOG_FATAL("must stop from a running service! current status: %d", S);
         SKR_ASSERT(S == kStatusRunning);
     }
     skr_atomic32_store_release(&status, kStatusStopping);
@@ -78,6 +78,11 @@ void ServiceThread::run() SKR_NOEXCEPT
     if (!t.has_started())
     {
         t.start(&f);
+    }
+
+    while (get_status() != kStatusRunning)
+    {
+        // ... wait waking
     }
 }
 

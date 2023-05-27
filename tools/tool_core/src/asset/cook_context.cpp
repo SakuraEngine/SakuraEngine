@@ -2,7 +2,7 @@
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
-#include "misc/io.h"
+#include "io/io.h"
 #include "serde/json/reader.h"
 
 namespace skd::asset
@@ -179,15 +179,14 @@ skr::filesystem::path SCookContextImpl::AddFileDependencyAndLoad(skr_io_ram_serv
     const auto assetRecord = GetAssetRecord();
     // load file
     skr::task::event_t counter;
-    skr_ram_io_t ramIO = {};
-    ramIO.offset = 0;
+    skr_io_request_t ramIO = {};
     ramIO.path = u8Path.c_str();
-    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
+    ramIO.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
         auto pCounter = (skr::task::event_t*)data;
         pCounter->signal();
     };
-    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&counter;
-    skr_async_request_t ioRequest = {};
+    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = (void*)&counter;
+    skr_io_future_t ioRequest = {};
     ioService->request(assetRecord->project->asset_vfs, &ramIO, &ioRequest, &destination);
     counter.wait(false);
     return outPath;

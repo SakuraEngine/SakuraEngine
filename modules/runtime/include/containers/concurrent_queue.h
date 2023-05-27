@@ -1,3 +1,4 @@
+#pragma once
 #include "containers/detail/concurrent_queue.h"
 #include "platform/configure.h"
 #include "platform/memory.h"

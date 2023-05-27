@@ -1,12 +1,18 @@
 #pragma once
 #include "misc/types.h"
+#include "platform/atomic.h"
 #include "platform/thread.h"
-#include "misc/io.h"
+
+#define SKR_IO_SERVICE_MAX_TASK_COUNT 32
+#define SKR_ASYNC_SERVICE_SLEEP_TIME_MAX UINT32_MAX
+
+SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)
+SKR_DECLARE_TYPE_ID_FWD(skr::io, RAMService, skr_io_ram_service)
+struct skr_vfs_t;
 
 typedef struct skr_io_request_t skr_io_request_t;
 typedef struct skr_vfile_t skr_io_file_t;
 typedef skr_io_file_t* skr_io_file_handle;
-SKR_DECLARE_TYPE_ID_FWD(skr::io, RAMService2, skr_io_ram_service2)
 
 typedef enum ESkrIOErrorCode
 {
@@ -22,6 +28,55 @@ typedef enum ESkrIOErrorCode
     SKR_IO_ERROR_DECOMPRESS_FAILED,
     SKR_IO_ERROR_CODE_MAX_ENUM = UINT32_MAX
 } ESkrIOErrorCode;
+
+typedef enum SkrAsyncServiceStatus
+{
+    SKR_ASYNC_SERVICE_STATUS_SLEEPING = 0,
+    SKR_ASYNC_SERVICE_STATUS_RUNNING = 1,
+    SKR_ASYNC_SERVICE_STATUS_QUITING = 2,
+    SKR_ASYNC_SERVICE_STATUS_COUNT,
+    SKR_ASYNC_SERVICE_STATUS_MAX_ENUM = UINT32_MAX
+} SkrAsyncServiceStatus;
+
+typedef enum SkrAsyncServiceSleepMode
+{
+    SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR = 0,
+    SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP = 1,
+    SKR_ASYNC_SERVICE_SLEEP_MODE_COUNT,
+    SKR_ASYNC_SERVICE_SLEEP_MAX_ENUM = UINT32_MAX
+} SkrAsyncServiceSleepMode;
+
+// TODO: Remove with IOStage
+typedef enum SkrAsyncIOStatus
+{
+    SKR_ASYNC_IO_STATUS_NONE = 0,
+    SKR_ASYNC_IO_STATUS_ENQUEUED = 1,
+    SKR_ASYNC_IO_STATUS_CANCELLED = 2,
+    SKR_ASYNC_IO_STATUS_CREATING_RESOURCE = 3,
+    SKR_ASYNC_IO_STATUS_RAM_LOADING = 5,
+    SKR_ASYNC_IO_STATUS_VRAM_LOADING = 6,
+    SKR_ASYNC_IO_STATUS_READ_OK = 7,
+    SKR_ASYNC_IO_STATUS_COUNT,
+    SKR_ASYNC_IO_STATUS_MAX_ENUM = UINT32_MAX
+} SkrAsyncIOStatus;
+
+typedef enum SkrAsyncServicePriority
+{
+    SKR_ASYNC_SERVICE_PRIORITY_URGENT = 0,
+    SKR_ASYNC_SERVICE_PRIORITY_NORMAL = 1,
+    SKR_ASYNC_SERVICE_PRIORITY_LOW = 2,
+    SKR_ASYNC_SERVICE_PRIORITY_COUNT = 3,
+    SKR_ASYNC_SERVICE_PRIORITY_MAX_ENUM = INT32_MAX
+} SkrAsyncServicePriority;
+
+typedef enum SkrAsyncServiceSortMethod
+{
+    SKR_ASYNC_SERVICE_SORT_METHOD_NEVER = 0,
+    SKR_ASYNC_SERVICE_SORT_METHOD_STABLE = 1,
+    SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL = 2,
+    SKR_ASYNC_SERVICE_SORT_METHOD_COUNT,
+    SKR_ASYNC_SERVICE_SORT_METHOD_MAX_ENUM = INT32_MAX
+} SkrAsyncServiceSortMethod;
 
 typedef enum ESkrIOStage
 {
@@ -56,20 +111,36 @@ typedef enum ESkrIOEndpoint
 typedef struct skr_guid_t skr_io_decompress_method_t;
 typedef struct skr_guid_t skr_io_request_resolve_pass_t;
 
-typedef struct skr_async_request_t skr_io_future_t;
+typedef struct skr_io_future_t {
+    SAtomicU32 status;
+    SAtomicU32 request_cancel;
+#ifdef __cplusplus
+    RUNTIME_API bool is_ready() const SKR_NOEXCEPT;
+    RUNTIME_API bool is_enqueued() const SKR_NOEXCEPT;
+    RUNTIME_API bool is_cancelled() const SKR_NOEXCEPT;
+    RUNTIME_API bool is_ram_loading() const SKR_NOEXCEPT;
+    RUNTIME_API bool is_vram_loading() const SKR_NOEXCEPT;
+    RUNTIME_API SkrAsyncIOStatus get_status() const SKR_NOEXCEPT;
+#endif
+} skr_io_future_t;
 typedef struct skr_async_ram_destination_t skr_io_ram_buffer_t;
+
+typedef struct skr_async_ram_destination_t {
+    uint8_t* bytes SKR_IF_CPP(= nullptr);
+    uint64_t size SKR_IF_CPP(= 0);
+} skr_async_ram_destination_t;
 
 typedef struct skr_io_block_t
 {
-    uint64_t offset;
-    uint64_t size;
+    uint64_t offset SKR_IF_CPP(= 0);
+    uint64_t size SKR_IF_CPP(= 0);
 } skr_io_block_t;
 
 typedef struct skr_io_compressed_block_t
 {
-    uint64_t offset;
-    uint64_t compressed_size;
-    uint64_t uncompressed_size;
+    uint64_t offset SKR_IF_CPP(= 0);
+    uint64_t compressed_size SKR_IF_CPP(= 0);
+    uint64_t uncompressed_size SKR_IF_CPP(= 0);
     skr_io_decompress_method_t decompress_method;
 } skr_io_compressed_block_t;
 
@@ -79,11 +150,8 @@ typedef struct skr_io_request_t
     const char8_t* path SKR_IF_CPP(= nullptr);
     const skr_io_file_handle file SKR_IF_CPP(= nullptr); 
 
-    const skr_io_block_t* blocks SKR_IF_CPP(= nullptr);
-    uint32_t block_count SKR_IF_CPP(= 0);
-
-    const skr_io_compressed_block_t* compressed_blocks SKR_IF_CPP(= nullptr);
-    uint32_t compressed_block_count SKR_IF_CPP(= 0);
+    skr_io_block_t block;
+    // skr_io_compressed_block_t compressed_block;
 
     SkrAsyncServicePriority priority SKR_IF_CPP(= SKR_ASYNC_SERVICE_PRIORITY_NORMAL);
     float sub_priority SKR_IF_CPP(= 0.f); /*0.f ~ 1.f*/
@@ -100,6 +168,15 @@ typedef struct skr_io_batch_t
     const skr_io_request_t* requests;
     uint32_t request_count;
 } skr_io_batch_t;
+
+typedef struct skr_ram_io_service_desc_t {
+    const char8_t* name SKR_IF_CPP(= nullptr);
+    uint32_t sleep_time SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_TIME_MAX);
+    bool lockless SKR_IF_CPP(= true);
+    SkrAsyncServiceSortMethod sort_method SKR_IF_CPP(= SKR_ASYNC_SERVICE_SORT_METHOD_NEVER);
+    SkrAsyncServiceSleepMode sleep_mode SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR);
+    skr_job_queue_id job_queue SKR_IF_CPP(= nullptr);
+} skr_ram_io_service_desc_t;
 
 #ifdef __cplusplus
 #include "containers/vector.hpp"
@@ -145,10 +222,6 @@ struct RUNTIME_API IORequstChunk
 
     eastl::fixed_vector<skr_io_block_t, 1> blocks;
     eastl::fixed_vector<skr_io_compressed_block_t, 1> compressed_blocks;
-    const uint64_t uid = 0;
-
-private:
-    static SAtomicU64 s_uid;
 };
 
 #pragma endregion
@@ -157,10 +230,10 @@ private:
 
 #pragma endregion
 
-struct RUNTIME_API RAMService2
+struct RUNTIME_API RAMService
 {
-    [[nodiscard]] static skr_io_ram_service2_t* create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
-    static void destroy(skr_io_ram_service2_t* service) SKR_NOEXCEPT;
+    [[nodiscard]] static skr_io_ram_service_t* create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
+    static void destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT;
 
     // we do not lock an ioService to a single vfs, but for better bandwidth use and easier profiling
     // it's recommended to make a unique relevance between ioService & vfs（or vfses share a single I/O hardware)
@@ -188,8 +261,8 @@ struct RUNTIME_API RAMService2
     // get service status (sleeping or running)
     virtual SkrAsyncServiceStatus get_service_status() const SKR_NOEXCEPT = 0;
 
-    virtual ~RAMService2() SKR_NOEXCEPT = default;
-    RAMService2() SKR_NOEXCEPT = default;
+    virtual ~RAMService() SKR_NOEXCEPT = default;
+    RAMService() SKR_NOEXCEPT = default;
 };
 } // namespace io
 } // namespace skr
