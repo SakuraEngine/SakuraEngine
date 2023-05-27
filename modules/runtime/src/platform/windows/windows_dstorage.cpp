@@ -117,7 +117,6 @@ void skr_free_dstorage_queue(SkrDStorageQueueId queue)
 
         Q->pQueue->Release();
     }
-
     SkrDelete(Q);
 }
 

@@ -78,10 +78,10 @@ public:
 
     {
     }
-    void request(const skr_vram_buffer_io_t* info, skr_async_request_t* async_request, skr_async_vbuffer_destination_t* buffer_request) SKR_NOEXCEPT final;
-    void request(const skr_vram_texture_io_t* info, skr_async_request_t* async_request, skr_async_vtexture_destination_t* texture_request) SKR_NOEXCEPT final;
-    bool try_cancel(skr_async_request_t* request) SKR_NOEXCEPT final;
-    void defer_cancel(skr_async_request_t* request) SKR_NOEXCEPT final;
+    void request(const skr_vram_buffer_io_t* info, skr_io_future_t* async_request, skr_async_vbuffer_destination_t* buffer_request) SKR_NOEXCEPT final;
+    void request(const skr_vram_texture_io_t* info, skr_io_future_t* async_request, skr_async_vtexture_destination_t* texture_request) SKR_NOEXCEPT final;
+    bool try_cancel(skr_io_future_t* request) SKR_NOEXCEPT final;
+    void defer_cancel(skr_io_future_t* request) SKR_NOEXCEPT final;
     void drain() SKR_NOEXCEPT final;
     void set_sleep_time(uint32_t time) SKR_NOEXCEPT final;
     void stop(bool wait_drain = false) SKR_NOEXCEPT final;

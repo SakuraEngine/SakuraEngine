@@ -78,15 +78,14 @@ cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr_io_ram_service_t*
     } callbackData;
     callbackData.pCounter = &counter;
     // prepare io
-    skr_ram_io_t ramIO = {};
-    ramIO.offset = 0;
+    skr_io_request_t ramIO = {};
     ramIO.path = (const char8_t*)u8Path.c_str();
-    ramIO.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
+    ramIO.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
         auto cbData = (CallbackData*)data;
         cbData->pCounter->signal();
     };
-    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)&callbackData;
-    skr_async_request_t ioRequest = {};
+    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = (void*)&callbackData;
+    skr_io_future_t ioRequest = {};
     ioService->request(vfs, &ramIO, &ioRequest, &destination);
     counter.wait(false);
     struct cgltf_data* gltf_data_ = nullptr;

@@ -3,7 +3,7 @@
 #include "platform/vfs.h"
 #include "platform/guid.hpp"
 #include "cgpu/cgpux.hpp"
-#include "misc/io.h"
+#include "io/io.h"
 #include "misc/make_zeroed.hpp"
 #include "platform/thread.h"
 #include <platform/filesystem.hpp>
@@ -214,7 +214,7 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
         ~DStorageRequest() SKR_NOEXCEPT = default;
 
         eastl::vector<std::string> absPaths;
-        eastl::vector<skr_async_request_t> dRequests;
+        eastl::vector<skr_io_future_t> dRequests;
         eastl::vector<skr_async_vbuffer_destination_t> dDestinations;
     };
 
@@ -231,9 +231,9 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
         SMeshFactoryImpl* factory = nullptr;
         skr_mesh_resource_id mesh_resource = nullptr;
         eastl::vector<std::string> resource_uris;
-        eastl::vector<skr_async_request_t> ram_requests;
+        eastl::vector<skr_io_future_t> ram_requests;
         eastl::vector<skr_async_ram_destination_t> ram_destinations;
-        eastl::vector<skr_async_request_t> vram_requests;
+        eastl::vector<skr_io_future_t> vram_requests;
         eastl::vector<skr_async_vbuffer_destination_t> buffer_destinations;
     };
 
@@ -384,13 +384,13 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* rec
                 ramPath = fullBinPath.string();
 
                 // emit ram requests
-                auto ram_mesh_io = make_zeroed<skr_ram_io_t>();
+                auto ram_mesh_io = make_zeroed<skr_io_request_t>();
                 ram_mesh_io.path = (const char8_t*)binPath.c_str();
-                ram_mesh_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
+                ram_mesh_io.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
                     ZoneScopedN("Upload Mesh");
                     // upload
                     auto uRequest = (UploadRequest*)data;
-                    const auto i = request - uRequest->ram_requests.data();
+                    const auto i = future - uRequest->ram_requests.data();
                     auto factory = uRequest->factory;
                     auto render_device = factory->root.render_device;
                     auto mesh_resource = uRequest->mesh_resource;
@@ -413,12 +413,12 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* rec
 
                     vram_buffer_io.src_memory.size = thisBin.byte_length;
                     vram_buffer_io.src_memory.bytes = thisBin.bin.bytes;
-                    vram_buffer_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data){};
-                    vram_buffer_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = nullptr;
+                    vram_buffer_io.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* request, void* data){};
+                    vram_buffer_io.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = nullptr;
 
                     factory->root.vram_service->request(&vram_buffer_io, &uRequest->vram_requests[i], &uRequest->buffer_destinations[i]);
                 };
-                ram_mesh_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)uRequest.get();
+                ram_mesh_io.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = (void*)uRequest.get();
                 root.ram_service->request(root.vfs, &ram_mesh_io, &ramRequest, &ramDestination);
             }
             mUploadRequests.emplace(mesh_resource, uRequest);

@@ -286,9 +286,9 @@ GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* o
     
     if (owner->source == EGDIImageSource::File)
     {
-        auto ram_texture_io = make_zeroed<skr_ram_io_t>();
+        auto ram_texture_io = make_zeroed<skr_io_request_t>();
         ram_texture_io.path = from_file.uri.u8_str();
-        ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* usrdata)
+        ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata)
         {
             auto owner = static_cast<GDIImage_RenderGraph*>(usrdata);
             owner->async_data.ram_io_finished_callback();
@@ -309,8 +309,8 @@ GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* o
                 // owner->format
             }
         };
-        ram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = owner;
-        ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_ENQUEUED] = +[](skr_async_request_t* request, void* usrdata)
+        ram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = owner;
+        ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_ENQUEUED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata)
         {
             auto pAsyncData = static_cast<GDIImageAsyncData_RenderGraph*>(usrdata);
             pAsyncData->ram_io_enqueued_callback();
@@ -371,7 +371,7 @@ GDITextureId GDITextureAsyncData_RenderGraph::DoAsync(struct GDITexture_RenderGr
             vram_io_info.vtexture.format = intermediate_image.format;
             vram_io_info.vtexture.resource_types = CGPU_RESOURCE_TYPE_TEXTURE;
 
-            vram_io_info.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* usrdata)
+            vram_io_info.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* request, void* usrdata)
             {
                 auto texture = static_cast<GDITexture_RenderGraph*>(usrdata);
                 auto& intermediate_image = texture->intermediate_image;
@@ -389,7 +389,7 @@ GDITextureId GDITextureAsyncData_RenderGraph::DoAsync(struct GDITexture_RenderGr
                 } 
                 intermediate_image.pixel_data = {};
             };
-            vram_io_info.callback_datas[SKR_ASYNC_IO_STATUS_OK] = texture;
+            vram_io_info.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = texture;
             texture->async_data.vram_service->request(&vram_io_info, &texture->async_data.vram_request, &texture->async_data.vram_destination);
         };
 

@@ -117,7 +117,7 @@ struct SKR_GUI_RENDERER_API GDIImageAsyncData_RenderGraph
     } from_data;
 
     bool useImageCoder = false;
-    skr_async_request_t ram_request = {};
+    skr_io_future_t ram_request = {};
 
     skr::SPtr<skr::gdi::DecodingProgress> decoding_progress = nullptr;
 
@@ -131,7 +131,7 @@ protected:
 
 struct SKR_GUI_RENDERER_API GDITextureAsyncData_RenderGraph
 {
-    skr_async_request_t vram_request = {};
+    skr_io_future_t vram_request = {};
     skr_async_vtexture_destination_t vram_destination = {};
 
     CGPUDeviceId device;
