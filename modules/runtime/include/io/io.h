@@ -4,8 +4,8 @@
 #include "misc/io.h"
 
 typedef struct skr_io_request_t skr_io_request_t;
-typedef struct skr_io_file_t skr_io_file_t;
-typedef struct skr_io_file_t* skr_io_file_handle;
+typedef struct skr_vfile_t skr_io_file_t;
+typedef skr_io_file_t* skr_io_file_handle;
 SKR_DECLARE_TYPE_ID_FWD(skr::io, RAMService2, skr_io_ram_service2)
 
 typedef enum ESkrIOErrorCode
@@ -63,7 +63,6 @@ typedef struct skr_io_block_t
 {
     uint64_t offset;
     uint64_t size;
-    uint64_t uncompressed_size;
 } skr_io_block_t;
 
 typedef struct skr_io_compressed_block_t
@@ -102,18 +101,10 @@ typedef struct skr_io_batch_t
     uint32_t request_count;
 } skr_io_batch_t;
 
-typedef struct skr_io_slice_t
-{
-    const skr_io_block_t* blocks SKR_IF_CPP(= nullptr);
-    uint32_t block_count SKR_IF_CPP(= 0);
-    const skr_io_compressed_block_t* compressed_blocks SKR_IF_CPP(= nullptr);
-    uint32_t compressed_block_count SKR_IF_CPP(= 0);
-} skr_io_slice_t;
-
-
 #ifdef __cplusplus
 #include "containers/vector.hpp"
 #include "containers/concurrent_queue.h"
+#include <EASTL/fixed_vector.h>
 
 namespace skr {
 namespace io {
@@ -138,15 +129,6 @@ using IOBlock = skr_io_block_t;
 using IOCompressedBlock = skr_io_compressed_block_t;
 using IORequest = skr_io_request_t;
 using IOBatch = skr_io_batch_t;
-struct IORequestGR
-{
-    bool operator()(const IORequest& a, const IORequest& b) const
-	{ 
-        if (a.priority == b.priority)
-            return a.sub_priority > b.sub_priority;
-        return a.priority > b.priority;
-    }
-};
 
 #pragma endregion
 
@@ -156,10 +138,17 @@ struct IORequestGR
 
 #pragma region Chunking
 
-struct IORequstChunk
+struct RUNTIME_API IORequstChunk
 {
-    skr::vector<skr_io_block_t> blocks;
-    skr::vector<skr_io_compressed_block_t> compressed_blocks;
+    IORequstChunk() SKR_NOEXCEPT;
+    ~IORequstChunk() SKR_NOEXCEPT;
+
+    eastl::fixed_vector<skr_io_block_t, 1> blocks;
+    eastl::fixed_vector<skr_io_compressed_block_t, 1> compressed_blocks;
+    const uint64_t uid = 0;
+
+private:
+    static SAtomicU64 s_uid;
 };
 
 #pragma endregion
@@ -188,10 +177,10 @@ struct RUNTIME_API RAMService2
     virtual void run() SKR_NOEXCEPT = 0;
 
     // block & finish up all requests
-    virtual void drain() SKR_NOEXCEPT = 0;
+    virtual void drain(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) SKR_NOEXCEPT = 0;
 
     // set sleep time when io queue is detected to be idle
-    virtual void set_sleep_time(uint32_t time) SKR_NOEXCEPT = 0;
+    virtual void set_sleep_time(uint32_t ms) SKR_NOEXCEPT = 0;
 
     // finish callbacks are polled & executed by usr threads
     virtual void poll_finish_callbacks() SKR_NOEXCEPT = 0;
