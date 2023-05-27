@@ -10,7 +10,7 @@
 #include "serde/binary/writer.h"
 #include "misc/function_ref.hpp"
 
-struct skr_io_ram_service_t;
+SKR_DECLARE_TYPE_ID_FWD(skr::io, RAMService, skr_io_ram_service);
 namespace skr {namespace task { struct event_t; }}
 namespace skd sreflect
 {

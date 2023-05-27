@@ -1,4 +1,4 @@
-#include "misc/io.h"
+#include "io/io.h"
 #include "misc/log.h"
 #include "platform/debug.h"
 #include "cgpu/io.h"
@@ -80,9 +80,9 @@ void skr_render_mesh_free(skr_render_mesh_id render_mesh)
 skr_primitive_draw_packet_t IMeshRenderEffect::produce_draw_packets(const skr_primitive_draw_context_t* context) SKR_NOEXCEPT
 {
     auto pass = context->pass;
-    auto storage = context->storage;
+    auto storage = context->storage; (void)storage;
 
-    skr_primitive_draw_packet_t packet = {};
+    skr_primitive_draw_packet_t packet = {}; (void)packet;
     // 0. only produce for forward pass
     // TODO: refactor this to support multi-pass rendering
     if (strcmp((const char*)pass->identity(), (const char*)u8"ForwardPass") != 0) return {};
@@ -109,7 +109,7 @@ skr_primitive_draw_packet_t IMeshRenderEffect::produce_draw_packets(const skr_pr
                 primitiveCount++;
             }
         }
-    };
-    
+    }; (void)counterF;
+
     return {};
 }

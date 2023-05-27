@@ -101,7 +101,7 @@ void SLive2DViewerModule::on_load(int argc, char8_t** argv)
 
 #ifdef _WIN32
     auto decompress_service = skr_render_device_get_win_dstorage_decompress_service(render_device);
-    cgpu_win_decompress_service_register_callback(decompress_service, 
+    skr_win_dstorage_decompress_service_register_callback(decompress_service, 
         SKR_WIN_DSTORAGE_COMPRESSION_TYPE_IMAGE, 
         &skr_image_coder_win_dstorage_decompressor, nullptr);
 #endif

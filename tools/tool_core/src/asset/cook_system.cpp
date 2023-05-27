@@ -6,7 +6,7 @@
 #include "platform/guid.hpp"
 #include "containers/string.hpp"
 #include "misc/defer.hpp"
-#include "misc/io.h"
+#include "io/io.h"
 
 #include "serde/json/reader.h"
 #include "serde/json/writer.h"
