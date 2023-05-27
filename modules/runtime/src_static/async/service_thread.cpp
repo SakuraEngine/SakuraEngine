@@ -10,7 +10,7 @@ ServiceThread::ServiceThread(const ServiceThreadDesc& desc) SKR_NOEXCEPT
 
     NamedThreadDesc tDesc = {};
     tDesc.name = desc.name;
-    tDesc.priority = SKR_THREAD_NORMAL;
+    tDesc.priority = desc.priority;
     tDesc.stack_size = 16 * 1024;
     t.initialize(tDesc);
 }
