@@ -6,7 +6,7 @@ const char* kTracedNewDefaultPoolName = "sakura::default";
 #if defined(_WIN32)
 
 #ifdef SKR_RUNTIME_USE_MIMALLOC
-    #include "mimalloc/mimalloc.h"
+    #include "mimalloc.h"
 #else
 #include <malloc.h>
 #include <string.h>

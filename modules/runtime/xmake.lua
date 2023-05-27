@@ -54,7 +54,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     end
 
     -- add deps & links
-    add_deps("SkrDependencyGraph", {public = false})
+    add_deps("SkrDependencyGraph", "mimalloc", {public = false})
     add_deps("vulkan", {public = true})
     add_packages(packages_list, {public = true})
 
@@ -110,5 +110,4 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     add_includedirs("include/platform/cpu", {public = false})
 
     -- mimalloc private include dir
-    add_includedirs("src/platform/mimalloc", {public = false})
     add_includedirs("src", {public = false})
