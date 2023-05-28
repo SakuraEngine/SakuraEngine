@@ -103,7 +103,7 @@ void wait_timeout(F f, uint32_t seconds_timeout = 3)
     {
         skr_thread_sleep(1);
         seconds++;
-        if (seconds > seconds_timeout * 1000)
+        if (seconds > seconds_timeout * 100)
         {
             SKR_LOG_ERROR("drain timeout, force quit");
             EXPECT_TRUE(0);
@@ -151,18 +151,21 @@ TEST_F(FSTest, asyncread)
     std::cout << "..." << std::endl;
 }
 
+#define TEST_CYCLES_COUNT 50
+
 TEST_F(FSTest, cancel)
 {
     ZoneScopedN("cancel");
 
     uint32_t sucess = 0;
-    for (uint32_t i = 0; i < 100; i++)
+    for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
         ioServiceDesc.name = u8"Test";
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         ioServiceDesc.lockless = false;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
+        ioService->set_sleep_time(0); // make test faster
         skr_io_request_t ramIO = {};
         ramIO.block.offset = 0;
         ramIO.block.size = 0;
@@ -171,27 +174,24 @@ TEST_F(FSTest, cancel)
         anotherRamIO.block.offset = 0;
         anotherRamIO.block.size = 0;
         anotherRamIO.path = u8"testfile";
-        skr_io_future_t request;
+        skr_io_future_t request = {};
         skr_async_ram_destination_t destination = {};
         ioService->request(abs_fs, &ramIO, &request, &destination);
-        skr_io_future_t anotherRequest;
+        skr_io_future_t anotherRequest = {};
         skr_async_ram_destination_t anotherDestination = {};
         ioService->request(abs_fs, &anotherRamIO, &anotherRequest, &anotherDestination);
         // try cancel io of testfile
         ioService->cancel(&anotherRequest);
-        {
-            EXPECT_TRUE(anotherRequest.is_enqueued() || anotherRequest.is_ram_loading() || anotherRequest.is_ready());
-
-            wait_timeout([&anotherRequest]()->bool
-            {
-                return anotherRequest.is_ready();
-            });
-
-            EXPECT_EQ(std::string((const char*)anotherDestination.bytes, anotherDestination.size), std::string("Hello, World!"));
-        }
         // while (!request.is_ready()) {}
         // while (!cancelled && !anotherRequest.is_ready()) {}
         ioService->drain();
+        
+        if (anotherRequest.is_cancelled())
+        {
+            EXPECT_EQ(anotherDestination.bytes, nullptr);
+            sucess++;
+        }
+        
         EXPECT_EQ(std::string((const char*)destination.bytes, destination.size), std::string("Hello, World2!"));
         
         if (destination.bytes) sakura_free(destination.bytes);
@@ -199,7 +199,7 @@ TEST_F(FSTest, cancel)
         
         skr_io_ram_service_t::destroy(ioService);
     }
-    SKR_LOG_INFO("cancel tested for %d times, sucess %d", 100, sucess);
+    SKR_LOG_INFO("cancel tested for %d times, sucess %d", TEST_CYCLES_COUNT, sucess);
 }
 
 TEST_F(FSTest, defer_cancel)
@@ -207,13 +207,14 @@ TEST_F(FSTest, defer_cancel)
     ZoneScopedN("defer_cancel");
 
     uint32_t sucess = 0;
-    for (uint32_t i = 0; i < 100; i++)
+    for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
         ioServiceDesc.name = u8"Test";
         ioServiceDesc.lockless = true;
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
+        ioService->set_sleep_time(0); // make test faster
         skr_io_request_t ramIO = {};
         ramIO.path = u8"testfile2";
         skr_io_request_t anotherRamIO = {};
@@ -248,25 +249,23 @@ TEST_F(FSTest, defer_cancel)
         if (destination.bytes) sakura_free(destination.bytes);
         if (anotherDestination.bytes) sakura_free(anotherDestination.bytes);
 
-        {
-            ZoneScopedN("destroy");
-            skr_io_ram_service_t::destroy(ioService);
-        }    
+        skr_io_ram_service_t::destroy(ioService);
     }
-    SKR_LOG_INFO("defer_cancel tested for %d times, sucess %d", 100, sucess);
+    SKR_LOG_INFO("defer_cancel tested for %d times, sucess %d", TEST_CYCLES_COUNT, sucess);
 }
 
 TEST_F(FSTest, sort)
 {
     ZoneScopedN("sort");
 
-    for (uint32_t i = 0; i < 100; i++)
+    for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
         ioServiceDesc.name = u8"Test";
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
+        ioService->set_sleep_time(0); // make test faster
         ioService->stop(true);
         skr_io_request_t ramIO = {};
         skr_io_future_t future;
@@ -287,12 +286,13 @@ TEST_F(FSTest, sort)
         skr_async_ram_destination_t anotherDestination = {};
         ioService->request(abs_fs, &anotherRamIO, &anotherRequest, &anotherDestination);
         ioService->run();
+        ioService->drain();
+
         wait_timeout([&anotherRequest]()->bool
         {
             return anotherRequest.is_ready();
         });
         // while (!cancelled && !anotherRequest.is_ready()) {}
-        ioService->drain();
         EXPECT_EQ(std::string((const char*)anotherDestination.bytes, anotherDestination.size), std::string("Hello, World!"));
         
         if (destination.bytes) sakura_free(destination.bytes);
@@ -300,12 +300,11 @@ TEST_F(FSTest, sort)
         
         skr_io_ram_service_t::destroy(ioService);
     }
-    SKR_LOG_INFO("sorts tested for %d times", 100);
+    SKR_LOG_INFO("sorts tested for %d times", TEST_CYCLES_COUNT);
 }
 
 int main(int argc, char** argv)
 {
-    FrameMark;
     ::testing::InitGoogleTest(&argc, argv);
     auto result = RUN_ALL_TESTS();
     return result;

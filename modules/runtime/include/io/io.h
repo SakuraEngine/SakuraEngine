@@ -112,8 +112,8 @@ typedef struct skr_guid_t skr_io_decompress_method_t;
 typedef struct skr_guid_t skr_io_request_resolve_pass_t;
 
 typedef struct skr_io_future_t {
-    SAtomicU32 status;
-    SAtomicU32 request_cancel;
+    SAtomicU32 status SKR_IF_CPP(= 0);
+    SAtomicU32 request_cancel SKR_IF_CPP(= 0);
 #ifdef __cplusplus
     RUNTIME_API bool is_ready() const SKR_NOEXCEPT;
     RUNTIME_API bool is_enqueued() const SKR_NOEXCEPT;
