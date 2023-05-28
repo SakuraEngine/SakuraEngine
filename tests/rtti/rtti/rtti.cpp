@@ -53,6 +53,58 @@ TEST_F(RTTI, TestEnumType)
     }
 }
 
+TEST_F(RTTI, TestRecordType)
+{
+    auto recordType = static_cast<const skr::type::RecordType*>(skr::type::type_of<Types::TestSon>::get());
+    EXPECT_TRUE(recordType != nullptr);
+    EXPECT_EQ(recordType->guid, skr::type::type_id<Types::TestSon>::get());
+    EXPECT_EQ(recordType->base, skr::type::type_of<Types::TestParent>::get());
+    EXPECT_EQ(recordType->size, sizeof(Types::TestSon));
+    EXPECT_EQ(recordType->align, alignof(Types::TestSon));
+    EXPECT_EQ(recordType->fields.size(), 17);
+    for(auto&& field : recordType->fields)
+    {
+        SKR_LOG_FMT_DEBUG(u8"field {}: {} -> offset {}, size {}, align {}", field.name, field.type->Name(), field.offset, field.type->Size(), field.type->Align());
+    }
+}
+
+TEST_F(RTTI, TestConvert)
+{
+
+}
+
+TEST_F(RTTI, TestSerialize)
+{
+
+}
+
+TEST_F(RTTI, TestTextSerialize)
+{
+
+}
+
+TEST_F(RTTI, Construct)
+{
+
+}
+
+TEST_F(RTTI, CopyConstruct)
+{
+
+}
+
+TEST_F(RTTI, MoveConstruct)
+{
+
+}
+
+
+TEST_F(RTTI, DynamicRecord)
+{
+    
+}
+
+
 int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);

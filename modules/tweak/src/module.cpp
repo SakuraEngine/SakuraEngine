@@ -88,7 +88,7 @@ public:
                     auto valueStr = skr::string_view((const char8_t*)stdValueStr.data(), stdValueStr.size());
                     auto tweak = tweak_file[tweak_line_index].tweaks[tweak_index];
                     
-                    std::visit([&](auto& value)
+                    skr::visit([&](auto& value)
                     {
                         ParseTweak(value, valueStr);
                     }, tweak->value);  
@@ -169,7 +169,7 @@ skr_tweak_int_t* skr_tweak_value(int value, const char* str, const char* fileNam
 }
 int skr_get_tweak(skr_tweak_int_t* tweak)
 {
-    return std::get<int>(((skr_tweak_value_t*)tweak)->value);
+    return skr::get<int>(((skr_tweak_value_t*)tweak)->value);
 }
 skr_tweak_float_t* skr_tweak_value(float value, const char* str, const char* fileName, int lineNumber)
 {
@@ -177,7 +177,7 @@ skr_tweak_float_t* skr_tweak_value(float value, const char* str, const char* fil
 }
 float skr_get_tweak(skr_tweak_float_t* tweak)
 {
-    return std::get<float>(((skr_tweak_value_t*)tweak)->value);
+    return skr::get<float>(((skr_tweak_value_t*)tweak)->value);
 }
 skr_tweak_bool_t* skr_tweak_value(bool value, const char* str, const char* fileName, int lineNumber)
 {
@@ -185,7 +185,7 @@ skr_tweak_bool_t* skr_tweak_value(bool value, const char* str, const char* fileN
 }
 bool skr_get_tweak(skr_tweak_bool_t* tweak)
 {
-    return std::get<bool>(((skr_tweak_value_t*)tweak)->value);
+    return skr::get<bool>(((skr_tweak_value_t*)tweak)->value);
 }
 skr_tweak_string_t* skr_tweak_value(const char8_t* value, const char* str, const char* fileName, int lineNumber)
 {
@@ -193,7 +193,7 @@ skr_tweak_string_t* skr_tweak_value(const char8_t* value, const char* str, const
 }
 const char* skr_get_tweak(skr_tweak_string_t* tweak)
 {
-    return std::get<skr::string>(((skr_tweak_value_t*)tweak)->value).c_str();
+    return skr::get<skr::string>(((skr_tweak_value_t*)tweak)->value).c_str();
 }
 #else
 SKR_TWEAK_API skr_tweak_int_t* skr_tweak_value(int value, const char* str, const char* fileName, int lineNumber)
