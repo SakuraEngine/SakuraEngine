@@ -1,7 +1,7 @@
 #include "resource_request_impl.hpp"
 #include "platform/debug.h"
 #include "misc/defer.hpp"
-#include "misc/io.h"
+#include "io/io.h"
 #include "misc/log.hpp"
 #include "platform/vfs.h"
 #include "resource/resource_factory.h"
@@ -271,14 +271,12 @@ void SResourceRequestImpl::Update()
             resourceRecord->SetStatus(SKR_LOADING_STATUS_LOADING);
             if (factory->AsyncIO())
             {
-                skr_ram_io_t ramIO = {};
-                ramIO.offset = 0;
+                skr_io_request_t ramIO = {};
                 ramIO.path = (const char8_t*)resourceUrl.c_str();
                 ioService->request(vfs, &ramIO, &ioRequest, &ioDestination);
 #ifdef SKR_RESOURCE_DEV_MODE
                 if (!artifactsUrl.is_empty())
                 {
-                    ramIO.offset = 0;
                     ramIO.path = (const char8_t*)artifactsUrl.c_str();
                     ioService->request(vfs, &ramIO, &artifactsIoRequest, &artifactsIoDestination);
                 }
@@ -452,7 +450,7 @@ void SResourceRequestImpl::Update()
                 // request cancle
                 if (!skr_atomicu32_load_acquire(&ioRequest.request_cancel))
                 {
-                    ioService->defer_cancel(&ioRequest);
+                    ioService->cancel(&ioRequest);
                 }
                 else if (!ioRequest.is_cancelled()) 
                 {

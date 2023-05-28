@@ -69,7 +69,7 @@ void RenderEffectForward::initialize_queries(dual_storage_t* storage)
 {
     // initialize queries
     mesh_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr_render_mesh_comp_t");
-    mesh_write_query = dualQ_from_literal(storage, "[inout]forward_skin_render_identity, [inout]skr_render_mesh_comp_t");
+    mesh_write_query = dualQ_from_literal(storage, "[inout]skr_render_mesh_comp_t");
     draw_mesh_query = dualQ_from_literal(storage, "[in]forward_render_identity, [in]skr_render_mesh_comp_t, [out]skr_render_group_t");
 }
 

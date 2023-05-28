@@ -2,9 +2,9 @@
 #include "platform/guid.hpp"
 #include "containers/sptr.hpp"
 #include "misc/make_zeroed.hpp"
-#include "misc/threaded_service.h"
-#include "SkrRenderer/render_device.h"
+#include "async/thread_job.hpp"
 
+#include "SkrRenderer/render_device.h"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRenderer/resources/material_resource.hpp"
 #include "SkrRenderer/resources/material_type_resource.hpp"
@@ -19,19 +19,39 @@ namespace skr
 namespace renderer
 {
 using namespace skr::resource;
+namespace Material
+{
+template<typename T> using Future = skr::IFuture<T>;
+template<typename T> using JobQueueFuture = skr::ThreadedJobQueueFuture<T>;
+template<typename T> using SerialFuture = skr::SerialFuture<T>;
+
+struct FutureLauncher
+{
+    FutureLauncher(skr::JobQueue* q) : job_queue(q) {}
+    template<typename F, typename... Args>
+    Future<bool>* async(F&& f, Args&&... args)
+    {
+        if (job_queue)
+            return SkrNew<JobQueueFuture<bool>>(job_queue, std::forward<F>(f), std::forward<Args>(args)...);
+        else
+            return SkrNew<SerialFuture<bool>>(std::forward<F>(f), std::forward<Args>(args)...);
+    }
+    skr::JobQueue* job_queue = nullptr;
+};
+
+}
 
 struct SMaterialFactoryImpl : public SMaterialFactory
 {
     SMaterialFactoryImpl(const SMaterialFactoryImpl::Root& root)
         : root(root)
     {
+        // 0.async launcher
+        launcher = skr::SPtr<Material::FutureLauncher>::Create(root.job_queue);
+
         // 1.create shader map
-        skr_shader_map_root_t shader_map_root;
-        shader_map_root.bytecode_vfs = root.bytecode_vfs;
-        shader_map_root.ram_service = root.ram_service;
-        shader_map_root.device = root.device;
-        shader_map_root.aux_service = root.aux_service;
-        shader_map = skr_shader_map_create(&shader_map_root);
+        shader_map = root.shader_map;
+        SKR_ASSERT(shader_map);
 
         // 2.create root signature pool
         CGPURootSignaturePoolDescriptor rs_pool_desc = {};
@@ -40,7 +60,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
 
         // 3.create pso map
         skr_pso_map_root_t pso_map_root;
-        pso_map_root.aux_service = root.aux_service;
+        pso_map_root.job_queue = root.job_queue;
         pso_map_root.device = root.device;
         pso_map = skr_pso_map_create(&pso_map_root);
     }
@@ -49,7 +69,6 @@ struct SMaterialFactoryImpl : public SMaterialFactory
     {
         skr_pso_map_free(pso_map);
         if (rs_pool) cgpu_free_root_signature_pool(rs_pool);
-        skr_shader_map_free(shader_map);
     }
 
     skr_type_id_t GetResourceType() override
@@ -69,9 +88,17 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         }
 
         // 2.free RS
-        if (pass.bind_table) cgpux_free_bind_table(pass.bind_table);
-        if (pass.root_signature) cgpu_free_root_signature(pass.root_signature);
-
+        if (pass.bind_table) 
+        {
+            cgpux_free_bind_table(pass.bind_table);
+            pass.bind_table = nullptr;
+        }
+        if (pass.root_signature) 
+        {
+            cgpu_free_root_signature(pass.root_signature);
+            pass.root_signature = nullptr;
+        }
+        
         // 3.RC free installed shaders
         for (const auto installed_shader : pass.shaders)
         {
@@ -156,7 +183,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         return true;
     }
     
-    CGPURootSignatureId createMaterialRS( skr_material_resource_t::installed_pass& installed_pass, skr::span<CGPUShaderLibraryId> shaders) const
+    CGPURootSignatureId createMaterialRS(skr_material_resource_t::installed_pass& installed_pass, skr::span<CGPUShaderLibraryId> shaders) const
     {
         CGPUShaderEntryDescriptor ppl_shaders[CGPU_SHADER_STAGE_COUNT];
         for (size_t i = 0; i < installed_pass.shaders.size(); i++)
@@ -260,48 +287,24 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         // 0.return if ready
         if (installed_pass.root_signature) return installed_pass.root_signature; // already created
 
-        // 1.sync version
-        if (root.aux_service == nullptr)
-        {
-            installed_pass.root_signature = createMaterialRS(installed_pass, shaders);
-            installed_pass.bind_table = createMaterialBindTable(material, installed_pass.root_signature);
-            return installed_pass.root_signature;
-        }
-
-        // 2.async version
         const auto materialGUID = record->header.guid;
-        if (auto iter = mRootSignatureRequests.find(materialGUID); iter != mRootSignatureRequests.end())
+        auto iter = mRootSignatureRequests.find(materialGUID);
+        if (iter == mRootSignatureRequests.end())
         {
-            // 2.1.1 assign & erase request if finished
-            const auto& rsRequest = iter->second;
-            const auto ready = rsRequest->request.is_ready();
-            if (ready)
-            {
-                installed_pass.root_signature = rsRequest->root_signature;
-                installed_pass.bind_table = rsRequest->bind_table;
-                mRootSignatureRequests.erase(materialGUID);
-            }
-            return installed_pass.root_signature;
-        }
-        else
-        {
-            // 2.2.1 fire async create task
             auto rsRequest = SPtr<RootSignatureRequest>::Create(material, this, installed_pass, shaders);
-            auto aux_service = root.aux_service;
-            auto aux_task = make_zeroed<skr_service_task_t>();
-            aux_task.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* usrdata){
-                ZoneScopedN("CreateRootSignature(AuxService)");
-                auto rsRequest = static_cast<RootSignatureRequest*>(usrdata);
-                const auto factory = rsRequest->factory;
-
-                rsRequest->root_signature = factory->createMaterialRS(rsRequest->installed_pass, rsRequest->shaders);
-                rsRequest->bind_table = factory->createMaterialBindTable(rsRequest->material, rsRequest->root_signature);
-            };
-            aux_task.callback_datas[SKR_ASYNC_IO_STATUS_OK] = rsRequest.get();
-            aux_service->request(&aux_task, &rsRequest->request);
             mRootSignatureRequests.emplace(materialGUID, rsRequest);
-            return nullptr;
+            if (auto async_launcher = launcher.get())
+            {
+                rsRequest->execute(*async_launcher);
+            }
         }
+        else if (auto drive = iter->second->on_callback_loop())
+        {
+            installed_pass.root_signature = iter->second->root_signature;
+            installed_pass.bind_table = iter->second->bind_table;
+            return iter->second->root_signature;
+        }
+        return nullptr;
     }
 
     skr_pso_map_key_id makePsoMapKey(skr_material_resource_t* material, skr_material_resource_t::installed_pass& installed_pass, skr::span<CGPUShaderLibraryId> shaders) const SKR_NOEXCEPT
@@ -483,13 +486,21 @@ struct SMaterialFactoryImpl : public SMaterialFactory
     }
 
     struct RootSignatureRequest
+        : public skr::AsyncProgress<Material::FutureLauncher, int, bool>
     {
         RootSignatureRequest(const skr_material_resource_t* material, SMaterialFactoryImpl* factory, skr_material_resource_t::installed_pass& installed_pass, skr::span<CGPUShaderLibraryId> shaders)
             : material(material), installed_pass(installed_pass), factory(factory), shaders(shaders.data(), shaders.data() + shaders.size())
         {
 
         }
-        skr_async_request_t request;
+
+        bool do_in_background() override
+        {
+            root_signature = factory->createMaterialRS(installed_pass, shaders);
+            bind_table = factory->createMaterialBindTable(material, root_signature);
+            return root_signature;
+        }
+
         const skr_material_resource_t* material = nullptr;
         skr_material_resource_t::installed_pass& installed_pass;
         SMaterialFactoryImpl* factory = nullptr;
@@ -497,7 +508,9 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         CGPUXBindTableId bind_table = nullptr;
         eastl::fixed_vector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
     };
+
     skr::flat_hash_map<skr_guid_t, SPtr<RootSignatureRequest>, skr::guid::hash> mRootSignatureRequests;
+    skr::SPtr<Material::FutureLauncher> launcher = nullptr;
 
     skr_shader_map_id shader_map = nullptr;
     skr_pso_map_id pso_map = nullptr;

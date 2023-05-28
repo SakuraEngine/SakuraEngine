@@ -1,4 +1,5 @@
 {
     "assetDirectory": "assets/",
-    "resourceDirectory": "resources/"
+    "resourceDirectory": "${workspace}/build/resources/game",
+    "artifactsDirectory": "${workspace}/build/artifacts/${platform}/game"
 }

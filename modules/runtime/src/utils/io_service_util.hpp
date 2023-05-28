@@ -2,9 +2,8 @@
 #include "platform/memory.h"
 #include "platform/thread.h"
 #include "misc/log.h"
-#include "misc/io.h"
+#include "io/io.h"
 #include "misc/defer.hpp"
-#include "containers/concurrent_queue.h"
 #include <EASTL/unique_ptr.h>
 #include <EASTL/vector.h>
 #include <EASTL/deque.h>
@@ -128,7 +127,7 @@ struct TaskBase
     float sub_priority;
     skr_async_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
     void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];
-    skr_async_request_t* request;
+    skr_io_future_t* request;
 
     bool operator<(const TaskBase& rhs) const
     {
@@ -259,7 +258,7 @@ struct TaskContainer
             eastl::remove_if(tasks.begin(), tasks.end(),
             [&](Task& t) {
                 const auto status = t.getTaskStatus();
-                return status == SKR_ASYNC_IO_STATUS_OK || status == SKR_ASYNC_IO_STATUS_CANCELLED;
+                return status == SKR_ASYNC_IO_STATUS_READ_OK || status == SKR_ASYNC_IO_STATUS_CANCELLED;
             }),
         tasks.end());
     }
@@ -301,7 +300,7 @@ struct TaskContainer
         }
     }
 
-    bool try_cancel_(skr_async_request_t* request) SKR_NOEXCEPT
+    bool try_cancel_(skr_io_future_t* request) SKR_NOEXCEPT
     {
         if (request->is_enqueued() && !isLockless)
         {
@@ -323,7 +322,7 @@ struct TaskContainer
         return false;
     }
 
-    void defer_cancel_(skr_async_request_t* request) 
+    void defer_cancel_(skr_io_future_t* request) 
     {
         skr_atomicu32_store_release(&request->request_cancel, 1);
     }

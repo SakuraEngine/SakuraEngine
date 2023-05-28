@@ -19,7 +19,7 @@ bool SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
 {
     //简单实现，直接在 resource 路径下按 guid 找到文件读信息，没有单独的数据库
     auto guid = request->GetGuid();
-    skr::filesystem::path headerPath = skr::format(u8"game/{}.rh", guid).c_str();
+    skr::filesystem::path headerPath = skr::format(u8"{}.rh", guid).c_str();
     auto headerUri = headerPath.u8string();
     // TODO: 检查文件存在？
     auto file = skr_vfs_fopen(vfs, headerUri.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);

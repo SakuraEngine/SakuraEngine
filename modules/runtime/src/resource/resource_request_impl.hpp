@@ -1,5 +1,5 @@
 #pragma once
-#include "misc/io.h"
+#include "io/io.h"
 #include <EASTL/fixed_vector.h>
 #include "resource/resource_system.h"
 #include "async/fib_task.hpp"
@@ -52,11 +52,11 @@ protected:
 
     eastl::fixed_vector<skr_guid_t, 4> dependencies;
     skr_resource_record_t* resourceRecord;
-    skr_async_request_t ioRequest;
+    skr_io_future_t ioRequest;
     skr_async_ram_destination_t ioDestination;
     skr::string resourceUrl;
 #ifdef SKR_RESOURCE_DEV_MODE
-    skr_async_request_t artifactsIoRequest;
+    skr_io_future_t artifactsIoRequest;
     skr_async_ram_destination_t artifactsIoDestination;
     skr::string artifactsUrl;
 #endif

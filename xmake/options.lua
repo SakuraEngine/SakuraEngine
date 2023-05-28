@@ -22,12 +22,6 @@ option("build_cgpu_samples")
     set_description("Toggle to build samples of CGPU")
 option_end()
 
-option("use_zig")
-    set_default(false)
-    set_showmenu(true)
-    set_description("Toggle to build samples of zig")
-option_end()
-
 option("build_rg_samples")
     set_default(false)
     set_showmenu(true)
