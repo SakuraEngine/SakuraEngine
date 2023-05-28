@@ -6,7 +6,7 @@
 
 namespace skr {
 namespace type {
-const skr_type_t* make_pointer(const skr_type_t* type)
+const skr_type_t* make_pointer_type(const skr_type_t* type)
 {
     static skr::flat_hash_map<const skr_type_t*, const skr_type_t*> cache;
     auto it = cache.find(type);
@@ -22,7 +22,7 @@ const skr_type_t* make_pointer(const skr_type_t* type)
     cache[type] = ptr_type;
     return ptr_type;
 }
-const skr_type_t* make_reference(const skr_type_t* type)
+const skr_type_t* make_reference_type(const skr_type_t* type)
 {
     static skr::flat_hash_map<const skr_type_t*, const skr_type_t*> cache;
     auto it = cache.find(type);
@@ -38,7 +38,39 @@ const skr_type_t* make_reference(const skr_type_t* type)
     cache[type] = ptr_type;
     return ptr_type;
 }
-const skr_type_t* make_array(const skr_type_t* type, size_t num, size_t size)
+const skr_type_t* make_sptr_type(const skr_type_t* type)
+{
+    static skr::flat_hash_map<const skr_type_t*, const skr_type_t*> cache;
+    auto it = cache.find(type);
+    if (it != cache.end()) {
+        return it->second;
+    }
+    auto ptr_type = new ReferenceType{
+        ReferenceType::Shared,
+        true,
+        false,
+        type
+    };
+    cache[type] = ptr_type;
+    return ptr_type;
+}
+const skr_type_t* make_sobject_ptr_type(const skr_type_t* type)
+{
+    static skr::flat_hash_map<const skr_type_t*, const skr_type_t*> cache;
+    auto it = cache.find(type);
+    if (it != cache.end()) {
+        return it->second;
+    }
+    auto ptr_type = new ReferenceType{
+        ReferenceType::Shared,
+        true,
+        true,
+        type
+    };
+    cache[type] = ptr_type;
+    return ptr_type;
+}
+const skr_type_t* make_array_type(const skr_type_t* type, size_t num, size_t size)
 {
     static skr::flat_hash_map<std::pair<const skr_type_t*, size_t>, const skr_type_t*> cache;
     auto it = cache.find({ type, size });
@@ -53,7 +85,7 @@ const skr_type_t* make_array(const skr_type_t* type, size_t num, size_t size)
     cache[{type, size}] = ptr_type;
     return ptr_type;
 }
-const skr_type_t* make_array_view(const skr_type_t* type)
+const skr_type_t* make_array_view_type(const skr_type_t* type)
 {
     static skr::flat_hash_map<const skr_type_t*, const skr_type_t*> cache;
     auto it = cache.find(type);
@@ -66,7 +98,7 @@ const skr_type_t* make_array_view(const skr_type_t* type)
     cache[type] = ptr_type;
     return ptr_type;
 }
-const skr_type_t* make_dynarray(const skr_type_t* type)
+const skr_type_t* make_dynarray_type(const skr_type_t* type)
 {
     static skr::flat_hash_map<const skr_type_t*, const skr_type_t*> cache;
     auto it = cache.find(type);
@@ -94,22 +126,22 @@ void DynArrayType::Resize(void* addr, uint64_t size) const
     auto& storage = *(DynArrayStorage*)addr;
     uint64_t capacity = (storage.capacity - storage.end) / elementType->Size();
     uint64_t old_size = Num(addr);
+    for(int i = 0; i < old_size; i++) {
+        elementType->Destruct(storage.begin + i * elementType->Size());
+    }
     if (capacity < size) {
         auto new_capacity = std::max(capacity * 2, size);
         auto new_begin = (uint8_t*)sakura_malloc_aligned(new_capacity * elementType->Size(), elementType->Align());
-        for(int i = 0; i < old_size; i++) {
-            elementType->Copy(new_begin + i * elementType->Size(), storage.begin + i * elementType->Size());
-            elementType->Destruct(storage.begin + i * elementType->Size());
-        }
-        sakura_free_aligned(storage.begin, elementType->Align());
+        if(storage.begin != nullptr)
+            sakura_free_aligned(storage.begin, elementType->Align());
         storage.begin = new_begin;
         storage.capacity = new_begin + new_capacity * elementType->Size();
-        storage.end = new_begin + old_size * elementType->Size();
     }
+    storage.end = storage.begin + size * elementType->Size();
 }
 
 
-const skr_type_t* make_variant(const skr::span<const skr_type_t*> types)
+const skr_type_t* make_variant_type(const skr::span<const skr_type_t*> types)
 {
     static skr::flat_hash_map<skr::string, const skr_type_t*, skr::hash<skr::string>> cache;
     skr::string name;

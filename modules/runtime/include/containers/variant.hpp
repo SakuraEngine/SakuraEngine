@@ -45,7 +45,7 @@ struct VariantType : skr_type_t {
     {
     }
 };
-RUNTIME_API const skr_type_t* make_variant(const skr::span<const skr_type_t*> types);
+RUNTIME_API const skr_type_t* make_variant_type(const skr::span<const skr_type_t*> types);
 template <class... Ts>
 struct type_of<skr::variant<Ts...>> {
     
@@ -57,7 +57,7 @@ struct type_of<skr::variant<Ts...>> {
     }
     static const skr_type_t* get()
     {
-        static auto type = make_variant(variants());
+        static auto type = make_variant_type(variants());
         return type;
     }
 };

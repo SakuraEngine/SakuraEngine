@@ -40,6 +40,7 @@ namespace Types sreflect
 
 sreflect_enum("guid" : "1a0b91c7-6690-41d6-acfd-0c2b61f181f3")
 sattr("rtti" : true)
+sattr("serialize" : ["json", "bin"])
 TestEnum : uint32_t
 {
     Value0 = 0, 
@@ -86,6 +87,14 @@ TestSon : public TestParent
     skr::vector<skr::span<skr::variant<skr::SPtr<TestObject>, TestParent*>>> r;
 }
 sstatic_ctor(XXXInformation<$T>());
+
+sreflect_struct("guid" : "17D3EC00-2817-4EAE-8BAF-976BF4124ABF")
+sattr("rtti" : true)
+sattr("serialize" : ["json", "bin"])
+TestSerde
+{
+    skr::vector<skr::variant<uint32_t, skr::string, TestEnum>> c;
+};
 
 }
 

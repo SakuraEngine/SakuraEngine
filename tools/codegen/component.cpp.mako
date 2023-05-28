@@ -89,7 +89,7 @@ dual_type_index_t dual_id_of<::${type.name}>::get()
 }
 %endfor
 
-skr::span<dual_type_index_t> dual_get_all_component_types()
+skr::span<dual_type_index_t> dual_get_all_component_types_${module}()
 {
     static dual_type_index_t result[${len(records)}] {
     %for type in records:

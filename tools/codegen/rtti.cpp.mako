@@ -198,7 +198,7 @@ static struct RegisterRTTI${enum.id}Helper
 } _RegisterRTTI${enum.id}Helper;
 %endfor
 
-skr::span<const skr_type_t*> skr_get_all_records()
+skr::span<const skr_type_t*> skr_get_all_records_${module}()
 {
 %if records:
     const skr_type_t* types[${len(records)}] = {
@@ -212,7 +212,7 @@ skr::span<const skr_type_t*> skr_get_all_records()
 %endif
 }
 
-skr::span<const skr_type_t*> skr_get_all_enums()
+skr::span<const skr_type_t*> skr_get_all_enums_${module}()
 {
 %if enums:
     const skr_type_t* types[${len(enums)}] = {
