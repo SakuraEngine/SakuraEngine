@@ -4,11 +4,13 @@
 #include "SkrRenderer/fwd_types.h"
 #include "cgpu/api.h"
 
+struct skr_vfs_t;
+SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)
+
 typedef enum ESkrShaderMapShaderStatus
 {
     SKR_SHADER_MAP_SHADER_STATUS_NONE,
     SKR_SHADER_MAP_SHADER_STATUS_REQUESTED,
-    SKR_SHADER_MAP_SHADER_STATUS_LOADING,
     SKR_SHADER_MAP_SHADER_STATUS_LOADED,
     SKR_SHADER_MAP_SHADER_STATUS_FAILED,
     SKR_SHADER_MAP_SHADER_STATUS_INSTALLED,
@@ -50,11 +52,10 @@ SKR_RENDERER_EXTERN_C SKR_RENDERER_API
 void skr_shader_map_free(skr_shader_map_id shader_map);
 
 typedef struct skr_shader_map_root_t {
-    struct skr_vfs_t* bytecode_vfs = nullptr;
-    struct skr_io_ram_service_t* ram_service = nullptr;
-    
-    CGPUDeviceId device = nullptr;
-    skr_threaded_service_t* aux_service = nullptr;
+    skr_vfs_t* bytecode_vfs SKR_IF_CPP(= nullptr);
+    skr_io_ram_service_t* ram_service SKR_IF_CPP(= nullptr);
+    CGPUDeviceId device SKR_IF_CPP(= nullptr);
+    skr_job_queue_id job_queue SKR_IF_CPP(= nullptr);
 } skr_shader_map_root_t;
 
 #ifdef __cplusplus

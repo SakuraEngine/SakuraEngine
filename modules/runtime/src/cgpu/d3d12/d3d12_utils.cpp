@@ -168,7 +168,7 @@ void D3D12Util_QueryAllAdapters(CGPUInstance_D3D12* instance, uint32_t* count, b
                         SAFE_RELEASE(cgpuAdapter.pDxActiveGPU);
                         instance->mAdaptersCount++;
                         // Add ref
-                        {
+                        { 
                             dxgi_adapters.push_back(adapter);
                             adapter_levels.push_back(d3d_feature_levels[level]);
                         }

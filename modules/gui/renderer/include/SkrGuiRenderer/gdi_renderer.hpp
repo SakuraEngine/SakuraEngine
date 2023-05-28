@@ -6,12 +6,17 @@
 #include "cgpu/io.h"
 #include "math/rtm/rtmx.h"
 #include "platform/atomic.h"
-#include "misc/threaded_service.h"
 
 #include <EASTL/vector_map.h>
 #include "containers/concurrent_queue.h"
 #include "containers/string.hpp"
 #include "containers/vector.hpp"
+#include "containers/sptr.hpp"
+
+SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi::ImageTex, FutureLauncher, gdi_img_tex_future_launcher)
+namespace skr { struct JobQueue; }
+namespace skr { namespace gdi { struct DecodingProgress; } }
 
 namespace skr {
 namespace gdi {
@@ -72,7 +77,7 @@ struct GDIRendererDescriptor_RenderGraph
     skr_vfs_t* vfs = nullptr;
     skr_io_ram_service_t* ram_service = nullptr;
     skr_io_vram_service_t* vram_service = nullptr;
-    skr_threaded_service_t* aux_service = nullptr;
+    skr::JobQueue* job_queue = nullptr;
 };
 
 struct ViewportRenderParams_RenderGraph
@@ -95,6 +100,7 @@ struct GDITextureDescriptor_RenderGraph
 struct SKR_GUI_RENDERER_API GDIImageAsyncData_RenderGraph
 {
     friend struct GDITextureAsyncData_RenderGraph;
+    friend struct skr::gdi::DecodingProgress;
 
     struct 
     {
@@ -111,10 +117,10 @@ struct SKR_GUI_RENDERER_API GDIImageAsyncData_RenderGraph
     } from_data;
 
     bool useImageCoder = false;
-    skr_async_request_t ram_request = {};
-    skr_async_request_t aux_request = {};
-    skr_threaded_service_t* aux_service = nullptr; 
-    
+    skr_io_future_t ram_request = {};
+
+    skr::SPtr<skr::gdi::DecodingProgress> decoding_progress = nullptr;
+
     GDIImageId DoAsync(struct GDIImage_RenderGraph* owner, skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT;
 
 protected:
@@ -125,7 +131,7 @@ protected:
 
 struct SKR_GUI_RENDERER_API GDITextureAsyncData_RenderGraph
 {
-    skr_async_request_t vram_request = {};
+    skr_io_future_t vram_request = {};
     skr_async_vtexture_destination_t vram_destination = {};
 
     CGPUDeviceId device;
@@ -232,6 +238,7 @@ struct SKR_GUI_RENDERER_API GDIRenderer_RenderGraph : public IGDIRenderer
         return true;
     }
     bool support_mipmap_generation() const SKR_NOEXCEPT final;
+    gdi_img_tex_future_launcher_t* get_future_launcher() const SKR_NOEXCEPT { return future_launcher.get(); }
 
 protected:
     void updatePendingTextures(skr::render_graph::RenderGraph* graph) SKR_NOEXCEPT;
@@ -262,7 +269,10 @@ protected:
         }
     };
     eastl::vector_map<PipelineKey, CGPURenderPipelineId> pipelines;
-    skr_threaded_service_t* aux_service = nullptr;
+    
+    skr_job_queue_id job_queue = nullptr;
+    skr::SPtr<gdi_img_tex_future_launcher_t> future_launcher = nullptr;
+
     skr_io_ram_service_t* ram_service = nullptr;
     skr_io_vram_service_t* vram_service = nullptr;
     skr_vfs_t* vfs = nullptr;

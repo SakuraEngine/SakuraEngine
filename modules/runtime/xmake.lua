@@ -6,7 +6,8 @@ end
 
 add_requires("parallel-hashmap >=1.3.4-skr")
 add_requires("boost-context >=0.1.0-skr")
-add_requires("lua >=5.4.4-skr")
+-- add_requires("lua >=5.4.4-skr")
+add_requires("luau", { configs = { extern_c = true }})
 add_requires("simdjson >=3.0.0-skr")
 
 target("SkrDependencyGraph")
@@ -24,7 +25,7 @@ target("SkrDependencyGraph")
 
 target("SkrRTStatic")
     set_group("01.modules")
-    -- set_optimize("fastest")
+    set_optimize("fastest")
     set_exceptions("no-cxx")
     add_deps("SkrRoot", {public = true})
     add_defines("RUNTIME_API=RUNTIME_IMPORT", "RUNTIME_LOCAL=error")
@@ -43,7 +44,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     add_includedirs(private_include_dir_list, {public = false})
 
     -- internal packages
-    add_packages("boost-context", "lua", {public = true, inherit = true})
+    add_packages("boost-context", "luau", {public = true, inherit = true})
 
     -- add source files
     add_files(source_list)
@@ -53,7 +54,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     end
 
     -- add deps & links
-    add_deps("SkrDependencyGraph", {public = false})
+    add_deps("SkrDependencyGraph", "mimalloc", {public = false})
     add_deps("vulkan", {public = true})
     add_packages(packages_list, {public = true})
 
@@ -109,4 +110,4 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     add_includedirs("include/platform/cpu", {public = false})
 
     -- mimalloc private include dir
-    add_includedirs("src/platform/mimalloc", {public = false})
+    add_includedirs("src", {public = false})

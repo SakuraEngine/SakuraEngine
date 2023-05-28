@@ -17,6 +17,13 @@
     #include "windows/process.cpp"
 #endif
 
+#if defined(SKR_OS_WINDOWS)
+    #include "windows/windows_dstorage.cpp"
+    #include "windows/windows_dstorage_decompress.cpp"
+#else
+    #include "null/null_dstorage.cpp"
+#endif
+
 #include "platform/system.h"
 namespace skr
 {

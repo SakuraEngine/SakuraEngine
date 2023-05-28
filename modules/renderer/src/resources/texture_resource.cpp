@@ -1,7 +1,7 @@
 #include <platform/filesystem.hpp>
 #include "SkrRenderer/resources/texture_resource.h"
 #include "platform/debug.h"
-#include "misc/io.h"
+#include "io/io.h"
 #include "cgpu/api.h"
 #include "type/type_id.hpp"
 #include "resource/resource_factory.h"
@@ -16,7 +16,7 @@
 #include "containers/hashmap.hpp"
 
 #ifdef _WIN32
-//#include "cgpu/extensions/dstorage_windows.h"
+//#include "platform/win/dstorage_windows.h"
 #endif
 
 #include "tracy/Tracy.hpp"
@@ -82,7 +82,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
             SKR_LOG_TRACE("DStorage for texture resource %s finished!", absPath.c_str());
         }
         std::string absPath;
-        skr_async_request_t vtexture_request;
+        skr_io_future_t vtexture_request;
         skr_async_vtexture_destination_t texture_destination = {};
     };
 
@@ -101,9 +101,9 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
         STextureFactoryImpl* factory = nullptr;
         std::string resource_uri;
         skr_texture_resource_id texture_resource = nullptr;
-        skr_async_request_t ram_request;
+        skr_io_future_t ram_request;
         skr_async_ram_destination_t ram_destination;
-        skr_async_request_t vram_request;
+        skr_io_future_t vram_request;
         skr_async_vtexture_destination_t texture_destination = {};
     };
 
@@ -220,8 +220,8 @@ ESkrInstallStatus STextureFactoryImpl::InstallWithDStorage(skr_resource_record_t
                 auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();
                 vram_texture_io.device = render_device->get_cgpu_device();
                 vram_texture_io.dstorage.path = (const char8_t*)dRequest->absPath.c_str();
-                vram_texture_io.dstorage.compression = CGPU_DSTORAGE_COMPRESSION_NONE;
-                vram_texture_io.dstorage.source_type = CGPU_DSTORAGE_SOURCE_FILE;
+                vram_texture_io.dstorage.compression = SKR_DSTORAGE_COMPRESSION_NONE;
+                vram_texture_io.dstorage.source_type = SKR_DSTORAGE_SOURCE_FILE;
                 vram_texture_io.dstorage.queue = file_dstorage_queue;
                 vram_texture_io.dstorage.uncompressed_size = texture_resource->data_size;
                 
@@ -232,10 +232,10 @@ ESkrInstallStatus STextureFactoryImpl::InstallWithDStorage(skr_resource_record_t
                 vram_texture_io.vtexture.depth = texture_resource->depth;
                 vram_texture_io.vtexture.format = (ECGPUFormat)texture_resource->format;
 
-                vram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data){
+                vram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* request, void* data){
 
                 };
-                vram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = nullptr;
+                vram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = nullptr;
                 
                 root.vram_service->request(&vram_texture_io, &dRequest->vtexture_request, &dRequest->texture_destination);
             }
@@ -267,9 +267,9 @@ ESkrInstallStatus STextureFactoryImpl::InstallWithUpload(skr_resource_record_t* 
             mInstallTypes.emplace(texture_resource, installType);
 
             // emit ram request
-            auto ram_texture_io = make_zeroed<skr_ram_io_t>();
+            auto ram_texture_io = make_zeroed<skr_io_request_t>();
             ram_texture_io.path = (const char8_t*)uRequest->resource_uri.c_str();
-            ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data) noexcept {
+            ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
                 ZoneScopedN("Upload Image");
                 // upload
                 auto uRequest = (UploadRequest*)data;
@@ -293,11 +293,11 @@ ESkrInstallStatus STextureFactoryImpl::InstallWithUpload(skr_resource_record_t* 
                 vram_texture_io.vtexture.format = (ECGPUFormat)texture_resource->format;
                 vram_texture_io.src_memory.size = texture_resource->data_size;
                 vram_texture_io.src_memory.bytes = uRequest->ram_destination.bytes;
-                vram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_OK] = +[](skr_async_request_t* request, void* data){};
-                vram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = nullptr;
+                vram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* request, void* data){};
+                vram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = nullptr;
                 factory->root.vram_service->request(&vram_texture_io, &texture_io_request, &texture_destination);
             };
-            ram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_OK] = (void*)uRequest.get();
+            ram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = (void*)uRequest.get();
             root.ram_service->request(root.vfs, &ram_texture_io, &uRequest->ram_request, &uRequest->ram_destination);
         }
         else

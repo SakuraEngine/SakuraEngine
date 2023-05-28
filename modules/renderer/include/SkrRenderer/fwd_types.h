@@ -2,9 +2,8 @@
 #include "SkrRenderer/module.configure.h"
 #include "misc/types.h"
 
-struct skr_io_ram_service_t;
+SKR_DECLARE_TYPE_ID_FWD(skr::io, RAMService, skr_io_ram_service);
 struct skr_io_vram_service_t;
-struct skr_threaded_service_t;
 #ifdef __cplusplus
 namespace skr { struct RendererDevice; }
 typedef struct skr::RendererDevice SRenderDevice;
@@ -59,8 +58,8 @@ typedef struct skr_shader_map_t skr_shader_map_t;
 typedef struct skr_shader_map_t* skr_shader_map_id;
 typedef struct skr_shader_map_root_t skr_shader_map_root_t;
 
-typedef struct skr_pso_map_key_t skr_pso_map_key_t;
-typedef struct skr_pso_map_key_t* skr_pso_map_key_id;
+SKR_DECLARE_TYPE_ID_FWD(skr::renderer, PSOMapKey, skr_pso_map_key);
+
 typedef struct skr_pso_map_t* skr_pso_map_id;
 typedef struct skr_pso_map_root_t skr_pso_map_root_t;
 

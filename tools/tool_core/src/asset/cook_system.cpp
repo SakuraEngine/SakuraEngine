@@ -6,7 +6,7 @@
 #include "platform/guid.hpp"
 #include "containers/string.hpp"
 #include "misc/defer.hpp"
-#include "misc/io.h"
+#include "io/io.h"
 
 #include "serde/json/reader.h"
 #include "serde/json/writer.h"
@@ -200,7 +200,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
         });
 
         // Create output dir
-        auto outputPath = metaAsset->project->outputPath;
+        auto outputPath = metaAsset->project->GetOutputPath();
         std::error_code ec = {};
         skr::filesystem::create_directories(outputPath, ec);
 
@@ -240,7 +240,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
             {
                 SKR_LOG_INFO("[CookTask] resource %s cook finished! updating dependencies.", metaAsset->path.u8string().c_str());
                 // write dependencies
-                auto dependencyPath = metaAsset->project->dependencyPath / skr::format(u8"{}.d", metaAsset->guid).c_str();
+                auto dependencyPath = metaAsset->project->GetDependencyPath() / skr::format(u8"{}.d", metaAsset->guid).c_str();
                 skr_json_writer_t writer(2);
                 writer.StartObject();
                 writer.Key(u8"importerVersion");
@@ -316,8 +316,8 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
         SKR_LOG_ERROR("[SCookSystemImpl::EnsureCooked] resource not exist! asset path: %s", metaAsset->path.u8string().c_str());
         return nullptr;
     }
-    auto resourcePath = metaAsset->project->outputPath / skr::format(u8"{}.bin", metaAsset->guid).u8_str();
-    auto dependencyPath = metaAsset->project->dependencyPath / skr::format(u8"{}.d", metaAsset->guid).u8_str();
+    auto resourcePath = metaAsset->project->GetOutputPath() / skr::format(u8"{}.bin", metaAsset->guid).u8_str();
+    auto dependencyPath = metaAsset->project->GetDependencyPath() / skr::format(u8"{}.d", metaAsset->guid).u8_str();
     auto checkUpToDate = [&]() -> bool {
         auto cooker = GetCooker(metaAsset);
         if(!cooker)
@@ -466,8 +466,6 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
 SAssetRecord* SCookSystemImpl::ImportAsset(SProject* project, skr::filesystem::path path)
 {
     std::error_code ec = {};
-    if (path.is_relative())
-        path = project->assetPath / path;
     auto record = SkrNew<SAssetRecord>();
     // TODO: replace file load with skr api
     record->meta = simdjson::padded_string::load(path.string()).value_unsafe();
@@ -484,7 +482,7 @@ SAssetRecord* SCookSystemImpl::ImportAsset(SProject* project, skr::filesystem::p
         skr::json::Read(std::move(ctype).value_unsafe(), record->cooker);
     else
         std::memset(&record->cooker, 0, sizeof(skr_guid_t));
-    record->path = path;
+    record->path = skr::filesystem::relative(path, project->GetAssetPath());
     record->project = project;
     SMutexLock lock(assetMutex);
     assets.insert(std::make_pair(record->guid, record));

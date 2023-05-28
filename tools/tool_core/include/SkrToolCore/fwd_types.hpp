@@ -4,7 +4,7 @@
 
 struct skr_vfs_t;
 struct SkrToolCoreModule;
-struct skr_io_ram_service_t;
+SKR_DECLARE_TYPE_ID_FWD(skr::io, RAMService, skr_io_ram_service);
 struct skr_io_vram_service_t;
 struct skr_async_ram_destination_t;
 

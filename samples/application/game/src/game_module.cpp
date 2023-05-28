@@ -45,6 +45,8 @@
 #include "SkrAnim/components/skeleton_component.h"
 #include "GameRuntime/game_animation.h"
 
+#include "async/thread_job.hpp"
+
 #include "tracy/Tracy.hpp"
 #include "misc/types.h"
 #include "SkrInspector/inspect_value.h"
@@ -97,6 +99,8 @@ class SGameModule : public skr::IDynamicModule
     CGPUSwapChainId swapchain = nullptr;
     CGPUFenceId present_fence = nullptr;
     SWindowHandle main_window = nullptr;
+
+    skr::SPtr<skr::JobQueue> job_queue = nullptr;
 
     skr::task::scheduler_t scheduler;
 };
@@ -187,7 +191,7 @@ void SGameModule::installResourceFactories()
         shadermapRoot.bytecode_vfs = shader_bytes_vfs;
         shadermapRoot.ram_service = ram_service;
         shadermapRoot.device = game_render_device->get_cgpu_device();
-        shadermapRoot.aux_service = game_render_device->get_aux_service(0);
+        shadermapRoot.job_queue = job_queue.get();
         shadermap = skr_shader_map_create(&shadermapRoot);
 
         // create shader resource factory
@@ -210,7 +214,8 @@ void SGameModule::installResourceFactories()
     {
         skr::renderer::SMaterialFactory::Root factoryRoot = {};
         factoryRoot.device = game_render_device->get_cgpu_device();
-        factoryRoot.aux_service = game_render_device->get_aux_service(0);
+        factoryRoot.shader_map = shadermap;
+        factoryRoot.job_queue = job_queue.get();
         factoryRoot.ram_service = ram_service;
         factoryRoot.bytecode_vfs = shader_bytes_vfs;
         matFactory = skr::renderer::SMaterialFactory::Create(factoryRoot);
@@ -297,6 +302,17 @@ void SGameModule::uninstallResourceFactories()
 void SGameModule::on_load(int argc, char8_t** argv)
 {
     SKR_LOG_INFO("game runtime loaded!");
+
+    if (!job_queue)
+    {
+        skr::string qn = u8"GameJobQueue";
+        auto job_queueDesc = make_zeroed<skr::JobQueueDesc>();
+        job_queueDesc.thread_count = 2;
+        job_queueDesc.priority = SKR_THREAD_NORMAL;
+        job_queueDesc.name = qn.u8_str();
+        job_queue = skr::SPtr<skr::JobQueue>::Create(job_queueDesc);
+    }
+    SKR_ASSERT(job_queue);
 
     game_world = dualS_create();
     game_render_device = skr_get_default_render_device();
@@ -532,12 +548,23 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
         lua_pushlightuserdata(L, g_game_module->game_world);
         return 1;
     };
-    lua_pushcfunction(L, GetStorage);
+    lua_pushcfunction(L, GetStorage, "GetStorage");
     lua_setfield(L, -2, "GetStorage");
     lua_pop(L, 1);
-    if (luaL_dostring(L, "local module = require \"game\"; module:init()") != LUA_OK)
+    if(skr_lua_loadfile(L, "main") != 0)
     {
-        SKR_LOG_ERROR("luaL_dostring error: {}", lua_tostring(L, -1));
+        if(lua_pcall(L, 0, 0, 0) != LUA_OK)
+        {
+            SKR_LOG_ERROR("lua_pcall error: {}", lua_tostring(L, -1));
+            lua_pop(L, 1);
+        }
+    }
+    
+    lua_getglobal(L, "GameMain");
+    if (lua_pcall(L, 0, 0, 0) != LUA_OK)
+    {
+        SKR_LOG_ERROR("lua_pcall error: {}", lua_tostring(L, -1));
+        lua_pop(L, 1);
     }
     namespace res = skr::resource;
     res::TResourceHandle<skr_scene_resource_t> scene_handle = skr::guid::make_guid_unsafe(u8"FB84A5BD-2FD2-46A2-ABF4-2D2610CFDAD9");
@@ -656,16 +683,16 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
                 ImGui::End();
             }
             {
-                ImGui::Begin("Lua");
-                if (ImGui::Button("Hotfix"))
-                {
-                    if (luaL_dostring(L, "local module = require \"hotfix\"; module.reload({\"game\"})") != LUA_OK)
-                    {
-                        SKR_LOG_ERROR("luaL_dostring error: %s", lua_tostring(L, -1));
-                        lua_pop(L, 1);
-                    }
-                }
-                ImGui::End();
+                //ImGui::Begin("Lua");
+                //if (ImGui::Button("Hotfix"))
+                //{
+                //    if (luaL_dostring(L, "local module = require \"hotfix\"; module.reload({\"game\"})") != LUA_OK)
+                //    {
+                //        SKR_LOG_ERROR("luaL_dostring error: %s", lua_tostring(L, -1));
+                //        lua_pop(L, 1);
+                //    }
+                //}
+                //ImGui::End();
             }
             {
                 ImGui::Begin("Scene");
@@ -689,9 +716,10 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
         }
         {
             ZoneScopedN("Lua");
-            if (luaL_dostring(L, "local module = require \"game\"; module:update()") != LUA_OK)
+            lua_getglobal(L, "GameUpdate");
+            if (lua_pcall(L, 0, 0, 0) != LUA_OK)
             {
-                SKR_LOG_ERROR("luaL_dostring error: %s", lua_tostring(L, -1));
+                SKR_LOG_ERROR("lua_pcall error: %s", lua_tostring(L, -1));
                 lua_pop(L, 1);
             }
         }
@@ -951,6 +979,11 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
                 if ((frame_index > (RG_MAX_FRAME_IN_FLIGHT * 10)) && (frame_index % (RG_MAX_FRAME_IN_FLIGHT * 10) == 0))
                     renderGraph->collect_garbage(frame_index - 10 * RG_MAX_FRAME_IN_FLIGHT);
             }
+        }
+
+        // gc
+        {
+            shadermap->garbage_collect(15);
         }
     }
     // clean up

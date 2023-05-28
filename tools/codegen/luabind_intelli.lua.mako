@@ -89,5 +89,4 @@ ${bind_record(record, "")}
 %endfor
 ${module} = {}
 ${bind_category(categories, "%s."%module)}
-skr.${module} = ${module}
 

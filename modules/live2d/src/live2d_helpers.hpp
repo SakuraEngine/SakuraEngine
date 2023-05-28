@@ -93,13 +93,13 @@ namespace Live2D { namespace Cubism { namespace Framework {
         skr::string modelPath;
         skr::string pyhsicsPath;
         skr::string usrDataPath;
-        skr_async_request_t poseRequest;
+        skr_io_future_t poseRequest;
         skr_async_ram_destination_t poseDestination;
-        skr_async_request_t modelRequest;
+        skr_io_future_t modelRequest;
         skr_async_ram_destination_t modelDestination;
-        skr_async_request_t pyhsicsRequest;
+        skr_io_future_t pyhsicsRequest;
         skr_async_ram_destination_t physicsDestination;
-        skr_async_request_t usrDataRequest;
+        skr_io_future_t usrDataRequest;
         skr_async_ram_destination_t usrDataDestination;
         L2DRequestCallbackData* cbData;
     };
@@ -109,10 +109,10 @@ namespace Live2D { namespace Cubism { namespace Framework {
         ~csmExpressionMap() SKR_NOEXCEPT;
         void request(skr_io_ram_service_t* ioService, L2DRequestCallbackData* data) SKR_NOEXCEPT;
 
-        eastl::vector<skr_async_request_t> expressionRequests;
+        eastl::vector<skr_io_future_t> expressionRequests;
         eastl::vector<skr_async_ram_destination_t> expressionDestinations;
-        eastl::vector_map<skr_async_request_t*, skr::string> expressionNames;
-        eastl::vector_map<skr_async_request_t*, skr::string> expressionPaths;
+        eastl::vector_map<skr_io_future_t*, skr::string> expressionNames;
+        eastl::vector_map<skr_io_future_t*, skr::string> expressionPaths;
         L2DRequestCallbackData* cbData;
     };
     class csmMotionMap : public csmMap<csmString, csmVector<ACubismMotion*>>, public IAsyncL2DResourceInterface
@@ -122,10 +122,10 @@ namespace Live2D { namespace Cubism { namespace Framework {
         void request(skr_io_ram_service_t* ioService, L2DRequestCallbackData* data) SKR_NOEXCEPT;
         void on_finished() SKR_NOEXCEPT final;
 
-        eastl::vector<skr_async_request_t> motionRequests;
+        eastl::vector<skr_io_future_t> motionRequests;
         eastl::vector<skr_async_ram_destination_t> motionDestinations;
-        eastl::vector_map<skr_async_request_t*, eastl::pair<skr::string, uint32_t>> motionEntries;
-        eastl::vector_map<skr_async_request_t*, skr::string> motionPaths;
+        eastl::vector_map<skr_io_future_t*, eastl::pair<skr::string, uint32_t>> motionEntries;
+        eastl::vector_map<skr_io_future_t*, skr::string> motionPaths;
         L2DRequestCallbackData* cbData;
     };
 }}}

@@ -1,13 +1,9 @@
 #pragma once
-#include "platform/configure.h"
-#include "platform/thread.h"
-#include "platform/atomic.h"
+#include "async/named_thread.hpp"
+#include "async/async_progress.hpp"
 
-#include "containers/string.hpp"
 #include "containers/vector.hpp"
 #include <EASTL/list.h>
-
-#include "async/async_progress.hpp"
 
 enum ESkrJobItemStatus
 {
@@ -26,19 +22,8 @@ struct JobQueueThread;
 struct JobItemQueue;
 
 using JobQueuePriority = SThreadPriority;
-using JobResult = int32_t;
+using JobResult = AsyncResult;
 using JobName = skr::string;
-
-static constexpr JobResult JOB_RESULT_OK = 1;
-static constexpr JobResult JOB_RESULT_ERROR_THREAD_ALREADY_STARTES = -1;
-static constexpr JobResult JOB_RESULT_ERROR_COND_CREATE_FAILED = -2;
-static constexpr JobResult JOB_RESULT_ERROR_COND_MX_CREATE_FAILED = -3;
-static constexpr JobResult JOB_RESULT_ERROR_TIMEOUT = -4;
-static constexpr JobResult JOB_RESULT_ERROR_ERROR_INVALID_STATE = -5;
-static constexpr JobResult JOB_RESULT_ERROR_OUT_OF_MEMORY = -6;
-static constexpr JobResult JOB_RESULT_ERROR_INVALID_PARAM = -7;
-static constexpr JobResult JOB_RESULT_ERROR_JOB_NOTHREAD = -8;
-static constexpr JobResult JOB_RESULT_ERROR_UNKNOWN = -999;
 
 struct JobQueueDesc
 {
@@ -46,11 +31,6 @@ struct JobQueueDesc
     JobQueuePriority priority = SKR_THREAD_NORMAL;
     uint32_t stack_size = 16 * 1024;
     uint32_t thread_count = 1;
-};
-
-struct JobQueueThreadDesc
-{
-    int32_t __nothing__;
 };
 
 struct JobItemDesc
@@ -68,7 +48,7 @@ struct RUNTIME_STATIC_API JobItem
     friend struct JobItemQueue;
 
 public:
-    JobItem(const char8_t* name, const JobItemDesc* desc = nullptr) SKR_NOEXCEPT;
+    JobItem(const char8_t* name, const JobItemDesc& desc = {}) SKR_NOEXCEPT;
     JobItem(const JobItem& src) SKR_NOEXCEPT
         : status( skr_atomic32_load_acquire(&status) )
         , name(src.name), result(src.result), desc(src.desc)
@@ -81,7 +61,7 @@ public:
     const char8_t* get_name() SKR_NOEXCEPT;
 
     // obtains JobItem's return code
-    // @retval JOB_RESULT_OK if success
+    // @retval ASYNC_RESULT_OK if success
     JobResult get_result() SKR_NOEXCEPT;
 
 	// returns if JobItem is executing
@@ -90,7 +70,7 @@ public:
 
 protected:
     // virtual function to describe Job's sub thread processing.
-    // @retval JOB_RESULT_OK if success
+    // @retval ASYNC_RESULT_OK if success
     virtual JobResult run() SKR_NOEXCEPT = 0;
 
     // vritual function to describe job's processing on termination
@@ -114,19 +94,11 @@ using JobQueueThreadList = eastl::list<JobQueueThread*>;
 struct RUNTIME_STATIC_API JobQueue
 {
 public:
-    JobQueue(const JobQueueDesc*) SKR_NOEXCEPT;
-	~JobQueue() SKR_NOEXCEPT;
-
-    // initialize JobQueue
-    // @retval JOB_RESULT_OK if success
-	JobResult initialize(const JobQueueDesc* desc = nullptr) SKR_NOEXCEPT;
-
-    // finalize JobQueue.
-    // @retval JOB_RESULT_OK if success
-	JobResult finalize() SKR_NOEXCEPT;
+    JobQueue(const JobQueueDesc& desc) SKR_NOEXCEPT;
+	virtual ~JobQueue() SKR_NOEXCEPT;
 
     // enqueue JobItem object to job queue.
-    // @retval JOB_RESULT_OK if success
+    // @retval ASYNC_RESULT_OK if success
 	JobResult enqueue(JobItem* jobItem) SKR_NOEXCEPT;
 
     // get the number of JobItem objects enqueued in queue.
@@ -145,19 +117,27 @@ public:
 
     // check JobItems queued in JobQueue
     // this function needs to be called once from main thread every frame.
-    // @retval JOB_RESULT_OK if success
+    // @retval ASYNC_RESULT_OK if success
 	JobResult check() SKR_NOEXCEPT;
 
     // returns descriptor specified to JobQueue initialize
     void get_descriptor(JobQueueDesc* desc) SKR_NOEXCEPT;
 
     // cancel all enqueued jobs. 
-    // @retval JOB_RESULT_OK if success
+    // @retval ASYNC_RESULT_OK if success
     JobResult cancel_all_items() SKR_NOEXCEPT;
 
 private:
     friend struct JobThreadFunction;
     int enqueueCore(JobItem* jobItem, bool isEndJob) SKR_NOEXCEPT;
+
+    // initialize JobQueue
+    // @retval ASYNC_RESULT_OK if success
+	JobResult initialize() SKR_NOEXCEPT;
+
+    // finalize JobQueue.
+    // @retval ASYNC_RESULT_OK if success
+	JobResult finalize() SKR_NOEXCEPT;
 
     skr::string queue_name;
     JobQueueThreadList thread_list;
@@ -172,6 +152,7 @@ private:
 struct RUNTIME_STATIC_API ThreadedJobQueueFutureJob : public skr::JobItem
 {
     ThreadedJobQueueFutureJob(JobQueue* Q) SKR_NOEXCEPT;
+    virtual ~ThreadedJobQueueFutureJob() SKR_NOEXCEPT;
     void finish(skr::JobResult result) SKR_NOEXCEPT override;
 
     // implementations for future<> to call.
@@ -194,11 +175,13 @@ struct RUNTIME_STATIC_API ThreadedJobQueueFuture : public skr::IFuture<Artifact>
         : job(Q)
     {
         job.runner = [=, This = this]() { 
-            This->result = _f(args...); 
-            return skr::JOB_RESULT_OK; 
+            This->artifact = _f(args...); 
+            This->job.finish(skr::ASYNC_RESULT_OK);
+            return skr::ASYNC_RESULT_OK; 
         };
         Q->enqueue(&job);
     }
+    virtual ~ThreadedJobQueueFuture() SKR_NOEXCEPT {}
 
     Artifact get() SKR_NOEXCEPT override { return artifact; }
     bool valid() const SKR_NOEXCEPT override { return job.valid(); }
@@ -207,7 +190,7 @@ struct RUNTIME_STATIC_API ThreadedJobQueueFuture : public skr::IFuture<Artifact>
 
     struct JobType : public JobBaseType
     {
-        JobType(JobQueue* Q) : ThreadedJobQueueFutureJob(Q) {}
+        JobType(JobQueue* Q) : JobBaseType(Q) {}
         skr::JobResult run() SKR_NOEXCEPT override 
         { 
             // BaseType::run is not called currently.
@@ -215,7 +198,10 @@ struct RUNTIME_STATIC_API ThreadedJobQueueFuture : public skr::IFuture<Artifact>
             return ret; 
         }
         eastl::function<skr::JobResult()> runner;
-    } job;
+    };
+
+protected:
+    JobType job;
     Artifact artifact;
 };
 

@@ -13,6 +13,11 @@ ThreadedJobQueueFutureJob::ThreadedJobQueueFutureJob(JobQueue* Q) SKR_NOEXCEPT
 
 }
 
+ThreadedJobQueueFutureJob::~ThreadedJobQueueFutureJob() SKR_NOEXCEPT
+{
+    
+}
+
 bool ThreadedJobQueueFutureJob::valid() const SKR_NOEXCEPT { return true; }
 
 void ThreadedJobQueueFutureJob::wait() SKR_NOEXCEPT
@@ -33,7 +38,7 @@ skr::FutureStatus ThreadedJobQueueFutureJob::wait_for(uint32_t ms) SKR_NOEXCEPT
 
 void ThreadedJobQueueFutureJob::finish(skr::JobResult result) SKR_NOEXCEPT
 {
-    if (result == skr::JOB_RESULT_OK)
+    if (result == skr::ASYNC_RESULT_OK)
     {
         skr_atomic32_store_relaxed(&finished, true);
     }

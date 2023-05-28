@@ -8,6 +8,8 @@
 #include "SkrRenderer/resources/material_resource.generated.h"
 #endif
 
+SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)
+
 namespace skr sreflect
 {
 namespace renderer sreflect
@@ -147,7 +149,7 @@ MaterialResource
         skr::vector<installed_shader> shaders;
         ESkrInstallStatus status;
         CGPURootSignatureId root_signature;
-        struct skr_pso_map_key_t* key;
+        skr_pso_map_key_id key;
         CGPURenderPipelineId pso;
         CGPUXBindTableId bind_table;
     } installed_pass;
@@ -161,9 +163,10 @@ struct SKR_RENDERER_API SMaterialFactory : public resource::SResourceFactory {
 
     struct Root {
         CGPUDeviceId device = nullptr;
+        skr_shader_map_id shader_map = nullptr;
         skr_vfs_t* bytecode_vfs = nullptr;
         skr_io_ram_service_t* ram_service = nullptr;
-        skr_threaded_service_t* aux_service = nullptr;
+        skr_job_queue_id job_queue = nullptr;
     };
     [[nodiscard]] static SMaterialFactory* Create(const Root& root);
     static void Destroy(SMaterialFactory* factory); 

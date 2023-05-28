@@ -1,6 +1,8 @@
 #pragma once
 #include "cgpu/api.h"
-#include "misc/io.h"
+#include "io/io.h"
+
+typedef void (*skr_async_callback_t)(skr_io_future_t* future, void* data);
 
 // no format & stride parameters provided now because we think it's not necessary to support async io with UAV buffers
 // we can add them if necessary in the future
@@ -108,17 +110,17 @@ public:
     // we do not lock an ioService to a single vfs, but for better bandwidth use and easier profiling
     // it's recommended to make a unique relevance between ioService & vfs（or vfses share a single I/O hardware)
 
-    virtual void request(const skr_vram_buffer_io_t* buffer_info, skr_async_request_t* async_request, skr_async_vbuffer_destination_t* destination) SKR_NOEXCEPT = 0;
-    virtual void request(const skr_vram_texture_io_t* texture_info, skr_async_request_t* async_request, skr_async_vtexture_destination_t* destination) SKR_NOEXCEPT = 0;
+    virtual void request(const skr_vram_buffer_io_t* buffer_info, skr_io_future_t* async_request, skr_async_vbuffer_destination_t* destination) SKR_NOEXCEPT = 0;
+    virtual void request(const skr_vram_texture_io_t* texture_info, skr_io_future_t* async_request, skr_async_vtexture_destination_t* destination) SKR_NOEXCEPT = 0;
 
     // try to cancel an enqueued request at **this** thread
     // not available (returns always false) under lockless mode
     // returns false if the request is under LOADING status
-    virtual bool try_cancel(skr_async_request_t* request) SKR_NOEXCEPT = 0;
+    virtual bool try_cancel(skr_io_future_t* request) SKR_NOEXCEPT = 0;
 
     // emplace a cancel **command** to ioService thread
     // it's recommended to use this under lockless mode
-    virtual void defer_cancel(skr_async_request_t* request) SKR_NOEXCEPT = 0;
+    virtual void defer_cancel(skr_io_future_t* request) SKR_NOEXCEPT = 0;
 
     // stop service and hang up underground thread
     virtual void stop(bool wait_drain = false) SKR_NOEXCEPT = 0;

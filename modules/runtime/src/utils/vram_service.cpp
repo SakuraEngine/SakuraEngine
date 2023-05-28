@@ -1,5 +1,7 @@
 #include "vram_service_impl.hpp"
 
+const char* skr::io::kIOTaskQueueName = "io::task_queue";
+
 // create resource
 void skr::io::VRAMServiceImpl::createResource(skr::io::VRAMServiceImpl::Task &task) SKR_NOEXCEPT
 {
@@ -66,7 +68,7 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
     {
         const auto& buffer_io = ds_buffer_task->buffer_io;
         const auto& destination = ds_buffer_task->destination;
-        if (ds_buffer_task->buffer_io.dstorage.source_type == CGPU_DSTORAGE_SOURCE_FILE)
+        if (ds_buffer_task->buffer_io.dstorage.source_type == SKR_DSTORAGE_SOURCE_FILE)
         {
             SKR_ASSERT( (ds_buffer_task->buffer_io.dstorage.path) && "buffer_io.path must be set");
             auto ds_file = cgpu_dstorage_open_file(buffer_io.dstorage.queue, task.path.c_str());
@@ -129,7 +131,7 @@ void skr::io::VRAMServiceImpl::tryCreateTextureResource(skr::io::VRAMServiceImpl
     }
     if (auto ds_texture_task = skr::get_if<skr::io::VRAMServiceImpl::DStorageTextureTask>(&task.resource_task))
     {
-        if (ds_texture_task->texture_io.dstorage.source_type == CGPU_DSTORAGE_SOURCE_FILE)
+        if (ds_texture_task->texture_io.dstorage.source_type == SKR_DSTORAGE_SOURCE_FILE)
         {
             ZoneScopedN("CreateTextureResource");
 
@@ -333,7 +335,7 @@ void skr::io::VRAMServiceImpl::tryDStorageBufferResource(skr::io::VRAMServiceImp
 
         CGPUDStorageBufferIODescriptor io_desc = {};
         io_desc.source_type = buffer_io.dstorage.source_type;
-        if (io_desc.source_type == CGPU_DSTORAGE_SOURCE_FILE)
+        if (io_desc.source_type == SKR_DSTORAGE_SOURCE_FILE)
         {
             io_desc.source_file.file = ds_buffer_task->dstorage_task->ds_file;
             io_desc.source_file.offset = 0u;
@@ -374,7 +376,7 @@ void skr::io::VRAMServiceImpl::tryDStorageTextureResource(skr::io::VRAMServiceIm
 
         CGPUDStorageTextureIODescriptor io_desc = {};
         io_desc.source_type = texture_io.dstorage.source_type;
-        if (io_desc.source_type == CGPU_DSTORAGE_SOURCE_FILE)
+        if (io_desc.source_type == SKR_DSTORAGE_SOURCE_FILE)
         {
             io_desc.source_file.file = ds_texture_task->dstorage_task->ds_file;
             io_desc.source_file.offset = 0u;
@@ -535,7 +537,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                 {
                     ZoneScopedN("CpyQueueSignalOK");
 
-                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
+                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_READ_OK);
                     task.step = kStepFinished;
                 }
                 else task.step = kStepUploading; // continue uploading
@@ -545,7 +547,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                 {
                     ZoneScopedN("DStorageSignalOK");
 
-                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_OK);
+                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_READ_OK);
                     task.step = kStepFinished;
                 }
                 else task.step = kStepDirectStorage; // continue uploading
@@ -772,7 +774,7 @@ void __ioThreadTask_VRAM(void* arg)
     }
 }
 
-void skr::io::VRAMServiceImpl::request(const skr_vram_buffer_io_t* buffer_info, skr_async_request_t* async_request, skr_async_vbuffer_destination_t* destination) SKR_NOEXCEPT
+void skr::io::VRAMServiceImpl::request(const skr_vram_buffer_io_t* buffer_info, skr_io_future_t* async_request, skr_async_vbuffer_destination_t* destination) SKR_NOEXCEPT
 {
     // try push back new request
     auto io_task = make_zeroed<Task>();
@@ -803,7 +805,7 @@ void skr::io::VRAMServiceImpl::request(const skr_vram_buffer_io_t* buffer_info, 
     threaded_service.request_();
 }
 
-void skr::io::VRAMServiceImpl::request(const skr_vram_texture_io_t* texture_info, skr_async_request_t* async_request, skr_async_vtexture_destination_t* destination) SKR_NOEXCEPT
+void skr::io::VRAMServiceImpl::request(const skr_vram_texture_io_t* texture_info, skr_io_future_t* async_request, skr_async_vtexture_destination_t* destination) SKR_NOEXCEPT
 {
     // try push back new request
     auto io_task = make_zeroed<Task>();
@@ -855,13 +857,13 @@ void skr_io_vram_service_t::destroy(skr_io_vram_service_t* s) SKR_NOEXCEPT
     SkrDelete(service);
 }
 
-bool skr::io::VRAMServiceImpl::try_cancel(skr_async_request_t* request) SKR_NOEXCEPT
+bool skr::io::VRAMServiceImpl::try_cancel(skr_io_future_t* request) SKR_NOEXCEPT
 {
     // TODO: Cancel on DStorage Queue
     return tasks.try_cancel_(request);
 }
 
-void skr::io::VRAMServiceImpl::defer_cancel(skr_async_request_t* request) SKR_NOEXCEPT
+void skr::io::VRAMServiceImpl::defer_cancel(skr_io_future_t* request) SKR_NOEXCEPT
 {
     // TODO: Cancel on DStorage Queue
     tasks.defer_cancel_(request);
