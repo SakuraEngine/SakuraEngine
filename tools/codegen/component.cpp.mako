@@ -7,6 +7,7 @@
             elif field.type in db.name_to_record:
                 result = result + filter_fileds(db.name_to_record[field.type].fields, pred, field.offset)
         return result
+    records = generator.filter_records(db.records)
 %>
 // BEGIN DUAL GENERATED
 #include "ecs/dual.h"
@@ -14,7 +15,7 @@
 #include "ecs/luabind.hpp"
 #include "ecs/serde.hpp"
 
-%for type in generator.filter_records(db.records):
+%for type in records:
 static struct RegisterComponent${type.id}Helper
 {
     RegisterComponent${type.id}Helper()
@@ -87,5 +88,15 @@ dual_type_index_t dual_id_of<::${type.name}>::get()
     return result;
 }
 %endfor
+
+skr::span<dual_type_index_t> dual_get_all_component_types()
+{
+    static dual_type_index_t result[${len(records)}] {
+    %for type in records:
+        dual_id_of<::${type.name}>::get(),
+    %endfor
+    };
+    return {result};
+}
 
 //END DUAL GENERATED

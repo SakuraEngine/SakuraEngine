@@ -107,12 +107,4 @@ namespace skr
             };
         return nullptr;
     }
-
-    template<class T>
-    constexpr auto GetDeleter() -> void(*)(void*)
-    {
-        if constexpr (std::is_destructible_v<T>)
-            return [](void* address) { SkrDelete((T*)address); };
-        return nullptr;
-    }
 }

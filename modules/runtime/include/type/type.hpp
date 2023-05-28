@@ -11,10 +11,15 @@ namespace skr
 {
 namespace type
 {
+    struct RecordType;
+    struct EnumType;
 struct STypeRegistry 
 {
-    virtual const skr_type_t* get_type(skr_guid_t guid) = 0;
-    virtual const void register_type(skr_guid_t tid, const skr_type_t* type) = 0;
+    virtual const skr_type_t* get_type(skr_guid_t tid) = 0;
+    virtual RecordType* register_record(skr_guid_t tid) = 0;
+    virtual EnumType* register_enum(skr_guid_t tid) = 0;
+    virtual void invalidate_type(skr_guid_t tid) = 0;
+    virtual bool is_outdated(const skr_type_t* type) = 0;
 };
 RUNTIME_API STypeRegistry* GetTypeRegistry();
 
@@ -51,12 +56,13 @@ struct RUNTIME_API skr_type_t {
     skr_type_t() = default;
     skr_type_t(skr_type_category_t type);
     virtual ~skr_type_t() SKR_NOEXCEPT;
+    // clone type self
+    skr_type_t* _Clone() const;
 
     size_t Size() const;
     size_t Align() const;
     skr_guid_t Id() const;
     const char8_t* Name() const;
-    void(*Deleter() const)(void*);
     bool Same(const skr_type_t* srcType) const;
     bool Convertible(const skr_type_t* srcType, bool format = false) const;
     void Convert(void* dst, const void* src, const skr_type_t* srcType, skr::type::ValueSerializePolicy* policy = nullptr) const;
@@ -352,7 +358,6 @@ struct ObjectMethodTable {
     size_t (*Hash)(const void* self, size_t base);
     int (*Serialize)(const void* self, skr_binary_writer_t* writer);
     int (*Deserialize)(void* self, skr_binary_reader_t* reader);
-    void (*deleter)(void* self);
     void (*SerializeText)(const void*, skr_json_writer_t* writer);
     json::error_code (*DeserializeText)(void* self, json::value_t&& reader);
 };
@@ -371,16 +376,15 @@ struct RUNTIME_API RecordType : skr_type_t {
     size_t size = 0;
     size_t align = 0;
     skr_guid_t guid = {};
-    bool object = false;
+    bool object = false; // true if inherits from SInterface
     const skr::string_view name = u8"";
     const RecordType* base = nullptr;
     ObjectMethodTable nativeMethods = {};
     const skr::span<struct skr_field_t> fields = {};
     const skr::span<struct skr_method_t> methods = {};
     bool IsBaseOf(const RecordType& other) const;
-    static const RecordType* FromName(skr::string_view name);
-    static void Register(const RecordType* type);
     RecordType() = default;
+    RecordType(RecordType&&) = default;
     RecordType(size_t size, size_t align, skr::string_view name, skr_guid_t guid, bool object, const RecordType* base, ObjectMethodTable nativeMethods,
     const skr::span<struct skr_field_t> fields, const skr::span<struct skr_method_t> methods)
         : skr_type_t{ SKR_TYPE_CATEGORY_OBJ }
@@ -396,7 +400,6 @@ struct RUNTIME_API RecordType : skr_type_t {
     {
     }
 };
-
 // enum T
 struct RUNTIME_API EnumType : skr_type_t {
     const skr_type_t* underlyingType;
@@ -409,8 +412,8 @@ struct RUNTIME_API EnumType : skr_type_t {
         int64_t value;
     };
     const skr::span<Enumerator> enumerators;
-    static const EnumType* FromName(skr::string_view name);
-    static void Register(const EnumType* type);
+    EnumType() = default;
+    EnumType(EnumType&&) = default;
     EnumType(const skr_type_t* underlyingType, const skr::string_view name,
     skr_guid_t guid, void (*FromString)(void* self, skr::string_view str),
     skr::string (*ToString)(const void* self), const skr::span<Enumerator> enumerators)
@@ -454,16 +457,12 @@ namespace type
 // void*
 template <>
 struct type_of<void*> {
-    static const skr_type_t* get()
-    {
-        static ReferenceType type{
-            ReferenceType::Observed,
-            true,
-            false,
-            nullptr
-        };
-        return &type;
-    }
+    RUNTIME_API static const skr_type_t* get();
+};
+// SInterface*
+template<>
+struct type_of<SInterface> {
+    RUNTIME_API static const skr_type_t* get();
 };
 // const wrapper
 template <class T>
@@ -482,56 +481,40 @@ struct type_of<volatile T> {
     }
 };
 // ptr wrapper
+RUNTIME_API const skr_type_t* make_pointer(const skr_type_t* type);
 template <class T>
 struct type_of<T*> {
     static const skr_type_t* get()
     {
-        static ReferenceType type{
-            ReferenceType::Observed,
-            true,
-            false,
-            type_of<T>::get()
-        };
-        return &type;
+        return make_pointer(type_of<T>::get());
     }
 };
 // ref wrapper
+RUNTIME_API const skr_type_t* make_reference(const skr_type_t* type);
 template <class T>
 struct type_of<T&> {
     static const skr_type_t* get()
     {
-        static ReferenceType type{
-            ReferenceType::Observed,
-            false,
-            false,
-            type_of<T>::get()
-        };
-        return &type;
+        return make_reference(type_of<T>::get());
     }
 };
 
+RUNTIME_API const skr_type_t* make_array(const skr_type_t* type, size_t num, size_t size);
 template <class T, size_t N>
 struct type_of<T[N]> {
     static const skr_type_t* get()
     {
-        static ArrayType type{
-            type_of<T>::get(),
-            N,
-            sizeof(T[N])
-        };
-        return &type;
+        return make_array(type_of<T>::get(), N, sizeof(T[N]));
     }
 };
 
+RUNTIME_API const skr_type_t* make_array_view(const skr_type_t* type);
 template <class T, size_t size>
 struct type_of<skr::span<T, size>> {
     static const skr_type_t* get()
     {
         static_assert(size == -1, "only dynamic extent is supported.");
-        static ArrayViewType type{
-            type_of<T>::get()
-        };
-        return &type;
+        return make_array_view(type_of<T>::get());
     }
 };
 } // namespace type

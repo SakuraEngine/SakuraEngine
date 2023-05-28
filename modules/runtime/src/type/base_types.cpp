@@ -106,6 +106,22 @@ const skr_type_t* type_of<skr::string_view>::get()
     return &type;
 }
 
+const skr_type_t* type_of<void*>::get()
+{
+    static ReferenceType type{
+        ReferenceType::Observed,
+        true,
+        false,
+        nullptr
+    };
+    return &type;
+}
+
+const skr_type_t* type_of<SInterface>::get()
+{
+    return nullptr;
+}
+
 size_t Hash(bool value, size_t base)
 {
     return skr_hash(&value, 1, base);
