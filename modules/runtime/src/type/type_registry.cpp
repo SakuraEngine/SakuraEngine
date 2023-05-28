@@ -631,9 +631,8 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
         Copy(dst, src);
         return;
     }
-    if (!Convertible(srcType, policy != nullptr))
-        return;
-
+    SKR_ASSERT(Convertible(srcType, policy != nullptr));
+    Construct(dst, nullptr, 0);
     if (srcType->type == SKR_TYPE_CATEGORY_REF)
     {
         auto& sptr = (const ReferenceType&)(*srcType);
@@ -881,8 +880,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                     auto& selement = sarr.elementType;
                     auto ssize = selement->Size();
                     auto snum = sarr.Num((void*)src);
-                    if (num != snum)
-                        arr.Resize(dst, snum);
+                    arr.Resize(dst, snum);
                     auto data = (char*)arr.Get(dst, 0);
                     auto sdata = (char*)sarr.Get((void*)src, 0);
                     for (int i = 0; i < snum; ++i)
@@ -893,8 +891,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                     auto& sarr = (const ArrayType&)(*srcType);
                     auto& selement = sarr.elementType;
                     auto ssize = selement->Size();
-                    if (num != sarr.num)
-                        arr.Resize(dst, sarr.num);
+                    arr.Resize(dst, sarr.num);
                     auto data = (char*)arr.Get(dst, 0);
                     auto sdata = (char*)src;
                     for (int i = 0; i < sarr.num; ++i)
@@ -1084,8 +1081,16 @@ void skr_type_t::Construct(void* dst, skr::type::Value* args, size_t nargs) cons
 {
     SKR_ASSERT(args == nullptr && nargs == 0);
     using namespace skr::type;
+#define TRIVAL_TYPE_IMPL(name, type) \
+    case name:                       
     switch (type)
     {
+        SKR_TYPE_TRIVAL1(TRIVAL_TYPE_IMPL)
+#undef TRIVAL_TYPE_IMPL
+        case SKR_TYPE_CATEGORY_ARRV:
+        case SKR_TYPE_CATEGORY_HANDLE:
+            memset(dst, 0, Size());
+            break;
         case SKR_TYPE_CATEGORY_STR:
             new (dst) skr::string();
             break;

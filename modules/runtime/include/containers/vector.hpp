@@ -33,12 +33,12 @@ struct DynArrayType : skr_type_t {
     {
     }
 };
-RUNTIME_API const skr_type_t* make_dynarray(const skr_type_t* type);
+RUNTIME_API const skr_type_t* make_dynarray_type(const skr_type_t* type);
 template <class V, class T>
 struct type_of_vector {
     static const skr_type_t* get()
     {
-        return make_dynarray(type_of<T>::get());
+        return make_dynarray_type(type_of<T>::get());
     }
 };
 

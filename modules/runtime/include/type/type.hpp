@@ -481,40 +481,40 @@ struct type_of<volatile T> {
     }
 };
 // ptr wrapper
-RUNTIME_API const skr_type_t* make_pointer(const skr_type_t* type);
+RUNTIME_API const skr_type_t* make_pointer_type(const skr_type_t* type);
 template <class T>
 struct type_of<T*> {
     static const skr_type_t* get()
     {
-        return make_pointer(type_of<T>::get());
+        return make_pointer_type(type_of<T>::get());
     }
 };
 // ref wrapper
-RUNTIME_API const skr_type_t* make_reference(const skr_type_t* type);
+RUNTIME_API const skr_type_t* make_reference_type(const skr_type_t* type);
 template <class T>
 struct type_of<T&> {
     static const skr_type_t* get()
     {
-        return make_reference(type_of<T>::get());
+        return make_reference_type(type_of<T>::get());
     }
 };
 
-RUNTIME_API const skr_type_t* make_array(const skr_type_t* type, size_t num, size_t size);
+RUNTIME_API const skr_type_t* make_array_type(const skr_type_t* type, size_t num, size_t size);
 template <class T, size_t N>
 struct type_of<T[N]> {
     static const skr_type_t* get()
     {
-        return make_array(type_of<T>::get(), N, sizeof(T[N]));
+        return make_array_type(type_of<T>::get(), N, sizeof(T[N]));
     }
 };
 
-RUNTIME_API const skr_type_t* make_array_view(const skr_type_t* type);
+RUNTIME_API const skr_type_t* make_array_view_type(const skr_type_t* type);
 template <class T, size_t size>
 struct type_of<skr::span<T, size>> {
     static const skr_type_t* get()
     {
         static_assert(size == -1, "only dynamic extent is supported.");
-        return make_array_view(type_of<T>::get());
+        return make_array_view_type(type_of<T>::get());
     }
 };
 } // namespace type
@@ -594,7 +594,7 @@ template <class T>
 skr_value_ref_t::skr_value_ref_t(T& t)
 {
     ptr = &t;
-    type = skr::type::type_of<std::decay<T>>::get();
+    type = skr::type::type_of<std::decay_t<T>>::get();
 }
 
 template <class T>
@@ -634,7 +634,7 @@ T skr_value_ref_t::Convert()
     if constexpr (std::is_reference_v<T>)
         return **std::launder(reinterpret_cast<Y*>(&storage));
     else
-        return *std::launder(reinterpret_cast<T*>(&storage));
+        return std::move(*std::launder(reinterpret_cast<T*>(&storage)));
 }
 
 #endif
