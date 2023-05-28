@@ -6,6 +6,7 @@ end
 
 add_requires("parallel-hashmap >=1.3.4-skr")
 add_requires("boost-context >=0.1.0-skr")
+add_requires("mimalloc >=2.1.2")
 -- add_requires("lua >=5.4.4-skr")
 add_requires("luau", { configs = { extern_c = true }})
 add_requires("simdjson >=3.0.0-skr")
@@ -54,9 +55,10 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     end
 
     -- add deps & links
-    add_deps("SkrDependencyGraph", "mimalloc", {public = false})
+    add_deps("SkrDependencyGraph", {public = false})
     add_deps("vulkan", {public = true})
     add_packages(packages_list, {public = true})
+    add_packages("mimalloc", {public = false})
 
     -- runtime compile definitions
     after_load(function (target,  opt)
@@ -109,5 +111,5 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     -- cpu info private include dir
     add_includedirs("include/platform/cpu", {public = false})
 
-    -- mimalloc private include dir
+    -- private include dir
     add_includedirs("src", {public = false})
