@@ -133,6 +133,8 @@ AsyncResult ServiceThread::ServiceFunc::run() SKR_NOEXCEPT
 {
 WAKING:    
 {
+    ZoneScopedN("WAKING");
+
     auto S = skr_atomic32_load_acquire(&_service->status);
     if (S == kStatusWaking)
     {
@@ -142,6 +144,8 @@ WAKING:
 
 RUNNING:
 {
+    ZoneScopedN("RUNNING");
+
     skr_atomic32_store_release(&_service->status, kStatusRunning);
     skr_atomic32_add_relaxed(&_service->rid, 1);
     for (;;)
@@ -175,6 +179,8 @@ RUNNING:
 
 STOP:
 {
+    ZoneScopedN("STOP");
+
     auto S = skr_atomic32_load_acquire(&_service->status);
     if (S == kStatusWaking)
     {
@@ -196,13 +202,15 @@ STOP:
     {
         SKR_ASSERT(0 && "ServiceThread::serve():STOP must not set status to kStatusRunning or kStatusExitted");
     }
-    skr_thread_sleep(1);
+    skr_thread_sleep(0);
     goto STOP;
     SKR_UNREACHABLE_CODE();
 }
 
 EXIT:
 {
+    ZoneScopedN("EXIT");
+
     skr_atomic32_store_release(&_service->status, kStatusExitted);
 }
     return ASYNC_RESULT_OK;
