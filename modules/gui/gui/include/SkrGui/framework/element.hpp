@@ -30,6 +30,8 @@ struct SKR_GUI_API BuildContext : public DiagnosticableTreeNode
 
 struct SKR_GUI_API Element : public BuildContext
 {
+    friend struct BuildOwner;
+
     Element(skr_gui_widget_id widget) SKR_NOEXCEPT;
 
     // life circle
@@ -45,13 +47,15 @@ struct SKR_GUI_API Element : public BuildContext
     virtual void detach_render_object() SKR_NOEXCEPT;
 
     // widget update
-    virtual not_null<Element*> inflate_widget(not_null<Widget*> widget, Slot* new_slot) SKR_NOEXCEPT;
-    virtual void update(Widget* new_widget) SKR_NOEXCEPT;
-    virtual void update_slot_for_child(Element* child, Slot* new_slot) SKR_NOEXCEPT;
-    virtual Element* update_child(Element* child, Widget* new_widget, Slot* new_slot) SKR_NOEXCEPT;
-    virtual void perform_rebuild() SKR_NOEXCEPT;
-    virtual void rebuild(bool force = false) SKR_NOEXCEPT;
-    void _update_slot(Slot* new_slot) SKR_NOEXCEPT;
+    // rebuild --> perform_rebuild --> update_child --> update_slot_for_child
+    //                                              --> update
+    //                                              --> inflate_widget
+    void rebuild(bool force = false) SKR_NOEXCEPT; // 控件树刷新的入口，由 BuildOwner 调用，实现固定，主要做一些 assert 工作
+    virtual void perform_rebuild() SKR_NOEXCEPT; // 实际走到的 rebuild 逻辑，由具体的 Element 实现
+    virtual Element* update_child(Element* child, Widget* new_widget, Slot* new_slot) SKR_NOEXCEPT; // perform_rebuild 中调用，在这里做 child 的 diff 工作
+    virtual void update_slot_for_child(Element* child, Slot* new_slot) SKR_NOEXCEPT; // 最低开销的更新，仅仅更新 slot
+    virtual void update(Widget* new_widget) SKR_NOEXCEPT; // 更新 child 的数据，将 widget 信息透传到 render object
+    virtual not_null<Element*> inflate_widget(not_null<Widget*> widget, Slot* new_slot) SKR_NOEXCEPT; // 刷新 widget，最耗的更新
 
     // element tree query
     virtual void visit_children(skr::function_ref<void(Element*)> visitor) SKR_NOEXCEPT;
@@ -70,6 +74,7 @@ private:
     Element* _retake_inactive_element(Key& key, not_null<Widget*> widget) SKR_NOEXCEPT;
     void _active_with_parent(Element* parent, Slot* slot) SKR_NOEXCEPT;
     static void _active_recursively(Element* element) SKR_NOEXCEPT;
+    virtual void _update_slot(Slot* new_slot) SKR_NOEXCEPT;
     void _update_depth(int parentDepth) SKR_NOEXCEPT;
     static int _compare_depth(Element* a, Element* b) SKR_NOEXCEPT;
     bool _debug_is_in_scope(Element* ancestor) SKR_NOEXCEPT;
