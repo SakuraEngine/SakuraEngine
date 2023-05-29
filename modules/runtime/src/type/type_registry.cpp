@@ -880,7 +880,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                     auto& selement = sarr.elementType;
                     auto ssize = selement->Size();
                     auto snum = sarr.Num((void*)src);
-                    arr.Resize(dst, snum);
+                    arr.Reset(dst, snum);
                     auto data = (char*)arr.Get(dst, 0);
                     auto sdata = (char*)sarr.Get((void*)src, 0);
                     for (int i = 0; i < snum; ++i)
@@ -891,7 +891,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                     auto& sarr = (const ArrayType&)(*srcType);
                     auto& selement = sarr.elementType;
                     auto ssize = selement->Size();
-                    arr.Resize(dst, sarr.num);
+                    arr.Reset(dst, sarr.num);
                     auto data = (char*)arr.Get(dst, 0);
                     auto sdata = (char*)src;
                     for (int i = 0; i < sarr.num; ++i)
@@ -905,7 +905,7 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
                     auto sv = *(skr::span<char>*)src;
                     auto snum = sv.size();
                     if (num != snum)
-                        arr.Resize(dst, snum);
+                        arr.Reset(dst, snum);
                     auto data = (char*)arr.Get(dst, 0);
                     auto sdata = sv.data();
                     for (int i = 0; i < snum; ++i)
@@ -1324,7 +1324,7 @@ void skr_type_t::Copy(void* dst, const void* src) const
             auto sdata = (char*)arr.Get((void*)src, 0);
             auto size = element->Size();
             auto num = arr.Num((void*)src);
-            arr.Resize(dst, num);
+            arr.Reset(dst, num);
             for (int i=0; i < num; ++i)
                 element->Copy(data + i * size, sdata + i * size);
             break;
@@ -1402,7 +1402,7 @@ void skr_type_t::Move(void* dst, void* src) const
             auto sdata = (char*)arr.Get((void*)src, 0);
             auto size = element->Size();
             auto num = arr.Num((void*)src);
-            arr.Resize(dst, num);
+            arr.Reset(dst, num);
             for (int i=0; i < num; ++i)
                 element->Move(data + i * size, sdata + i * size);
             break;
@@ -1602,7 +1602,7 @@ int skr_type_t::Serialize(const void* dst, skr_binary_writer_t* writer) const
 template <class T>
 void SerializeTextImpl(const void* dst, skr_json_writer_t* writer)
 {
-    if constexpr (skr::is_complete_v<skr::json::WriteTrait<T>>)
+    if constexpr (skr::is_complete_v<skr::json::WriteTrait<const T&>>)
         return skr::json::Write(writer, *(T*)dst);
     SKR_UNIMPLEMENTED_FUNCTION();
 }

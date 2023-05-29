@@ -121,7 +121,7 @@ uint64_t DynArrayType::Num(void* addr) const
     auto& storage = *(DynArrayStorage*)addr;
     return (storage.end - storage.begin) / elementType->Size();
 }
-void DynArrayType::Resize(void* addr, uint64_t size) const
+void DynArrayType::Reset(void* addr, uint64_t size) const
 {
     auto& storage = *(DynArrayStorage*)addr;
     uint64_t capacity = (storage.capacity - storage.end) / elementType->Size();
@@ -138,6 +138,96 @@ void DynArrayType::Resize(void* addr, uint64_t size) const
         storage.capacity = new_begin + new_capacity * elementType->Size();
     }
     storage.end = storage.begin + size * elementType->Size();
+}
+void DynArrayType::Grow(void* data, uint64_t size) const
+{
+    auto& storage = *(DynArrayStorage*)data;
+    uint64_t capacity = (storage.capacity - storage.end) / elementType->Size();
+    uint64_t old_size = Num(data);
+    if (capacity < size) {
+        auto new_capacity = std::max(capacity * 2, size);
+        auto new_begin = (uint8_t*)sakura_malloc_aligned(new_capacity * elementType->Size(), elementType->Align());
+        for(int i = 0; i < old_size; i++) {
+            elementType->Move(new_begin + i * elementType->Size(), storage.begin + i * elementType->Size());
+            //elementType->Destruct(storage.begin + i * elementType->Size());
+        }
+        if(storage.begin != nullptr)
+            sakura_free_aligned(storage.begin, elementType->Align());
+        storage.begin = new_begin;
+        storage.capacity = new_begin + new_capacity * elementType->Size();
+        storage.end = storage.begin + old_size * elementType->Size();
+    }
+}
+void DynArrayType::Resize(void *data, uint64_t size) const
+{
+    Grow(data, size);
+    auto& storage = *(DynArrayStorage*)data;
+    storage.end = storage.begin + size * elementType->Size();
+}
+void DynArrayType::Reserve(void *data, uint64_t size) const
+{
+    Grow(data, size);
+}
+void* DynArrayType::Insert(void* addr, uint64_t index) const
+{
+    auto& storage = *(DynArrayStorage*)addr;
+    uint64_t capacity = (storage.capacity - storage.end) / elementType->Size();
+    uint64_t old_size = Num(addr);
+    SKR_ASSERT(old_size >= index);
+    if(index == old_size) {
+        Resize(addr, old_size + 1);
+        storage.end += elementType->Size();
+        return storage.begin + index * elementType->Size();
+    }
+    else {
+        if(old_size+1 > capacity)
+        {
+            auto new_capacity = std::max(capacity * 2, old_size+1);
+            auto new_begin = (uint8_t*)sakura_malloc_aligned(new_capacity * elementType->Size(), elementType->Align());
+            for(int i = 0; i < index; i++) {
+                elementType->Move(new_begin + i * elementType->Size(), storage.begin + i * elementType->Size());
+            }
+            for(int i = index + 1; i <= old_size; i++) {
+                elementType->Move(new_begin + i * elementType->Size(), storage.begin + (i - 1) * elementType->Size());
+            }
+            if(storage.begin != nullptr)
+                sakura_free_aligned(storage.begin, elementType->Align());
+            storage.begin = new_begin;
+            storage.capacity = new_begin + new_capacity * elementType->Size();
+            storage.end = storage.begin + (old_size + 1) * elementType->Size();
+            return storage.begin + index * elementType->Size();
+        }
+        else
+        {
+            for(int i = old_size - 1; i >= index; i--) {
+                if(i != old_size - 1)
+                    elementType->Destruct(storage.begin + (i + 1) * elementType->Size());
+                elementType->Move(storage.begin + (i + 1) * elementType->Size(), storage.begin + i * elementType->Size());
+            }
+            
+            storage.end += elementType->Size();
+            return storage.begin + index * elementType->Size();
+        }
+    }
+}
+void DynArrayType::Erase(void* addr, uint64_t index, bool bKeepOrder) const
+{
+    auto& storage = *(DynArrayStorage*)addr;
+    uint64_t old_size = Num(addr);
+    SKR_ASSERT(old_size > index);
+    if(bKeepOrder) {
+        for(int i = index + 1; i < old_size; i++) {
+            elementType->Destruct(storage.begin + (i - 1) * elementType->Size());
+            elementType->Move(storage.begin + (i - 1) * elementType->Size(), storage.begin + i * elementType->Size());
+        }
+        //elementType->Destruct(storage.begin + (old_size - 1) * elementType->Size());
+    }
+    else {
+        elementType->Destruct(storage.begin + index * elementType->Size());
+        elementType->Move(storage.begin + index * elementType->Size(), storage.end - elementType->Size());
+        //elementType->Destruct(storage.end - elementType->Size());
+    }
+    storage.end -= elementType->Size();
 }
 
 

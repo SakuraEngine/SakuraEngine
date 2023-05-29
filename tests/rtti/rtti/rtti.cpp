@@ -2,6 +2,7 @@
 #include "misc/log.hpp"
 #include "platform/guid.hpp"
 #include "containers/sptr.hpp"
+#include "serde/json/writer.h"
 #include "../types/types.hpp"
 
 class RTTI : public ::testing::Test
@@ -9,7 +10,6 @@ class RTTI : public ::testing::Test
 protected:
     void SetUp() override
     {
-        PrintField("importModule\n");
     }
 
     void TearDown() override
@@ -95,29 +95,26 @@ TEST_F(RTTI, TestConvert)
     EXPECT_EQ(vec[2], 3);
 }
 
-TEST_F(RTTI, TestSerialize)
-{
-
-}
-
 TEST_F(RTTI, TestTextSerialize)
 {
-
-}
-
-TEST_F(RTTI, Construct)
-{
-
-}
-
-TEST_F(RTTI, CopyConstruct)
-{
-
-}
-
-TEST_F(RTTI, MoveConstruct)
-{
-
+    auto uint32Type = skr::type::type_of<uint32_t>::get();
+    auto dynarrType = (skr::type::DynArrayType*)skr::type::make_dynarray_type(uint32Type);
+    auto dynarr = dynarrType->Malloc();
+    dynarrType->Construct(dynarr, nullptr, 0);
+    dynarrType->Reset(dynarr, 2);
+    *(uint32_t*)dynarrType->Get(dynarr, 0) = 1;
+    *(uint32_t*)dynarrType->Get(dynarr, 1) = 2;
+    *(uint32_t*)dynarrType->Insert(dynarr, 1) = 3;
+    skr_json_writer_t writer(2, skr_json_format_t{false});
+    dynarrType->SerializeText(dynarr, &writer);
+    auto string = writer.Str();
+    SKR_LOG_FMT_DEBUG(u8"dynarr: {}", string);
+    EXPECT_EQ(string, skr::string(u8"[1,3,2]"));
+    skr::vector<uint32_t>& vec = *(skr::vector<uint32_t>*)dynarr;
+    EXPECT_EQ(vec[0], 1);
+    EXPECT_EQ(vec[1], 3);
+    EXPECT_EQ(vec[2], 2);
+    dynarrType->Destruct(dynarr);
 }
 
 

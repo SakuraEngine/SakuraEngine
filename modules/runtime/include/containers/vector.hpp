@@ -24,14 +24,18 @@ struct DynArrayType : skr_type_t {
     skr::string name;
     RUNTIME_API uint64_t Num(void* data) const;
     RUNTIME_API void* Get(void* data, uint64_t index) const;
+    RUNTIME_API void Reset(void* data, uint64_t size) const;
+    RUNTIME_API void Reserve(void* data, uint64_t size) const;
     RUNTIME_API void Resize(void* data, uint64_t size) const;
-    //RUNTIME_API void* Get(void* data, uint64_t index);
-    //RUNTIME_API void* Add(void* data);
+    RUNTIME_API void* Insert(void* data, uint64_t index) const;
+    RUNTIME_API void Erase(void* data, uint64_t index, bool bKeepOrder) const;
     DynArrayType(const skr_type_t* elementType)
         : skr_type_t{ SKR_TYPE_CATEGORY_DYNARR }
         , elementType(elementType)
     {
     }
+private:
+    void Grow(void* data, uint64_t size) const;
 };
 RUNTIME_API const skr_type_t* make_dynarray_type(const skr_type_t* type);
 template <class V, class T>
