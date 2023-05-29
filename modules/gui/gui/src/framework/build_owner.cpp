@@ -6,7 +6,7 @@ namespace skr
 namespace gui
 {
     BuildOwner::BuildOwner()
-        : _dirty_elememts_needs_resorting(false)
+        : _dirty_elements_needs_resorting(false)
     {
     }
 
@@ -21,7 +21,7 @@ namespace gui
         if(element->_in_dirty_list)
         {
             SKR_ASSERT(_debug_is_in_build_scope);
-            _dirty_elememts_needs_resorting = true;
+            _dirty_elements_needs_resorting = true;
             return;
         }
         _dirty_elements->push_back(element);
@@ -51,7 +51,7 @@ namespace gui
             }
             _dirty_elements->clear();
             _scheduled_flush_dirty_elements = false;
-            _dirty_elememts_needs_resorting = false;
+            _dirty_elements_needs_resorting = false;
             _debug_is_in_build_scope = false;
             SKR_ASSERT(_debug_building);
             _debug_building = false;
@@ -64,16 +64,16 @@ namespace gui
         std::sort(_dirty_elements->begin(), _dirty_elements->end(), [](Element* a, Element* b) {
             return Element::_compare_depth(a, b) < 0;
         });
-        _dirty_elememts_needs_resorting = false;
+        _dirty_elements_needs_resorting = false;
         int dirty_elements_count = _dirty_elements->size();
         for(int i = 0; i < dirty_elements_count; i++)
         {
-            if(_dirty_elememts_needs_resorting)
+            if(_dirty_elements_needs_resorting)
             {
                 std::sort(_dirty_elements->begin(), _dirty_elements->end(), [](Element* a, Element* b) {
                     return Element::_compare_depth(a, b) < 0;
                 });
-                _dirty_elememts_needs_resorting = false;
+                _dirty_elements_needs_resorting = false;
                 dirty_elements_count = _dirty_elements->size();
                 while(i > 0 && _dirty_elements[i]->_dirty)
                 {

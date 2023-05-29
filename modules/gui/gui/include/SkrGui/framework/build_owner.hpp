@@ -28,7 +28,7 @@ struct SKR_GUI_API BuildOwner
     void unregister_global_key(State* key, Element* element) SKR_NOEXCEPT;
     
     VectorStorage<Element*> _dirty_elements;
-    bool _dirty_elememts_needs_resorting;
+    bool _dirty_elements_needs_resorting;
     bool _debug_is_in_build_scope;
     bool _debug_building;
     bool _scheduled_flush_dirty_elements;
