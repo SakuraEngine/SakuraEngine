@@ -44,7 +44,7 @@ struct skr_live2d_render_model_impl_t : public skr_live2d_render_model_t {
 
     eastl::vector<skr_io_future_t> texture_io_requests;
     eastl::vector<skr_async_vtexture_destination_t> texture_destinations;
-    eastl::vector<skr_io_future_t> png_io_requests;
+    eastl::vector<skr_io_future_t> png_futures;
     eastl::vector<skr_async_ram_destination_t> png_destinations;
 
     eastl::vector<skr_io_future_t> buffer_io_requests;
@@ -151,7 +151,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     if (!request->file_dstorage_queue_override)
     {
         render_model->png_destinations.resize(texture_count);
-        render_model->png_io_requests.resize(texture_count);
+        render_model->png_futures.resize(texture_count);
     }
     for (uint32_t i = 0; i < texture_count; i++)
     {
@@ -199,15 +199,11 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
 #endif
         {
             auto& png_destination = render_model->png_destinations[i];
-            auto& png_io_request = render_model->png_io_requests[i];
-
-            auto ram_texture_io = make_zeroed<skr_io_request_t>();
-
-            ram_texture_io.path = pngPathStr.c_str();
-            ram_texture_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
+            auto& png_future = render_model->png_futures[i];
+            const auto on_complete = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
                 ZoneScopedN("Load PNG");
                 auto render_model = (skr_live2d_render_model_async_t*)data;
-                auto idx = future - render_model->png_io_requests.data();
+                auto idx = future - render_model->png_futures.data();
 
                 const auto& png_destination = render_model->png_destinations[idx];
                 auto vram_service = render_model->vram_service;
@@ -252,8 +248,12 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                 }
                 sakura_free(png_destination.bytes);
             };
-            ram_texture_io.callback_datas[SKR_IO_STAGE_COMPLETED] = (void*)render_model;
-            ram_service->request(request->vfs_override, &ram_texture_io, &png_io_request, &png_destination);
+            auto ramrq = ram_service->open_request();
+            ramrq->set_vfs(request->vfs_override);
+            ramrq->set_path(pngPathStr.c_str());
+            ramrq->add_block({}); // read all
+            ramrq->add_callback(SKR_IO_STAGE_COMPLETED, on_complete, render_model);
+            ram_service->request(ramrq, &png_future, &png_destination);
         }
     }
     

@@ -271,14 +271,21 @@ void SResourceRequestImpl::Update()
             resourceRecord->SetStatus(SKR_LOADING_STATUS_LOADING);
             if (factory->AsyncIO())
             {
-                skr_io_request_t ramIO = {};
-                ramIO.path = (const char8_t*)resourceUrl.c_str();
-                ioService->request(vfs, &ramIO, &ioRequest, &ioDestination);
+                {
+                    auto rq = ioService->open_request();
+                    rq->set_vfs(vfs);
+                    rq->set_path(resourceUrl.u8_str());
+                    rq->add_block({}); // read all
+                    ioService->request(rq, &dataFuture, &ioDestination);
+                }
 #ifdef SKR_RESOURCE_DEV_MODE
                 if (!artifactsUrl.is_empty())
                 {
-                    ramIO.path = (const char8_t*)artifactsUrl.c_str();
-                    ioService->request(vfs, &ramIO, &artifactsIoRequest, &artifactsIoDestination);
+                    auto rq = ioService->open_request();
+                    rq->set_vfs(vfs);
+                    rq->set_path(artifactsUrl.u8_str());
+                    rq->add_block({}); // read all
+                    ioService->request(rq, &artifactsFuture, &artifactsIoDestination);
                 }
 #endif
                 currentPhase = SKR_LOADING_PHASE_WAITFOR_IO;
@@ -308,7 +315,7 @@ void SResourceRequestImpl::Update()
             }
             break;
         case SKR_LOADING_PHASE_WAITFOR_IO:
-            if (ioRequest.is_ready())
+            if (dataFuture.is_ready())
             {
                 data = ioDestination.bytes;
                 size = ioDestination.size;
@@ -316,7 +323,7 @@ void SResourceRequestImpl::Update()
 #ifdef SKR_RESOURCE_DEV_MODE
             if (!artifactsUrl.is_empty())
             {
-                if (artifactsIoRequest.is_ready())
+                if (artifactsFuture.is_ready())
                 {
                     artifactsData = artifactsIoDestination.bytes;
                     artifactsSize = artifactsIoDestination.size;
@@ -445,14 +452,14 @@ void SResourceRequestImpl::Update()
         }
         break;
         case SKR_LOADING_PHASE_CANCLE_WAITFOR_IO: {
-            if (!ioRequest.is_ready())
+            if (!dataFuture.is_ready())
             {
                 // request cancle
-                if (!skr_atomicu32_load_acquire(&ioRequest.request_cancel))
+                if (!skr_atomicu32_load_acquire(&dataFuture.request_cancel))
                 {
-                    ioService->cancel(&ioRequest);
+                    ioService->cancel(&dataFuture);
                 }
-                else if (!ioRequest.is_cancelled()) 
+                else if (!dataFuture.is_cancelled()) 
                 {
                     break; // continue to wait for cancel
                 }

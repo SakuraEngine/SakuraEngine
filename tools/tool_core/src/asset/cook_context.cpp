@@ -179,15 +179,17 @@ skr::filesystem::path SCookContextImpl::AddFileDependencyAndLoad(skr_io_ram_serv
     const auto assetRecord = GetAssetRecord();
     // load file
     skr::task::event_t counter;
-    skr_io_request_t ramIO = {};
-    ramIO.path = u8Path.c_str();
-    ramIO.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
+    auto rq = ioService->open_request();
+    rq->set_vfs(assetRecord->project->asset_vfs);
+    rq->set_path(u8Path.c_str());
+    rq->add_block({}); // read all
+    rq->add_callback(SKR_IO_STAGE_COMPLETED,
+    +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
         auto pCounter = (skr::task::event_t*)data;
         pCounter->signal();
-    };
-    ramIO.callback_datas[SKR_IO_STAGE_COMPLETED] = (void*)&counter;
-    skr_io_future_t ioRequest = {};
-    ioService->request(assetRecord->project->asset_vfs, &ramIO, &ioRequest, &destination);
+    }, &counter);
+    skr_io_future_t future = {};
+    ioService->request(rq, &future, &destination);
     counter.wait(false);
     return outPath;
 }

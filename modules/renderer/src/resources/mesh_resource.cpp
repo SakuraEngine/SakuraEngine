@@ -376,17 +376,18 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* rec
             for (auto i = 0u; i < mesh_resource->bins.size(); i++)
             {
                 auto binPath = skr::format(u8"{}.buffer{}", guid, i);
-                auto fullBinPath = skr::filesystem::path(root.dstorage_root) / binPath.c_str();
                 auto&& ramRequest = uRequest->ram_requests[i];
                 auto&& ramDestination = uRequest->ram_destinations[i];
                 auto&& ramPath = uRequest->resource_uris[i];
-
-                ramPath = fullBinPath.string();
+                ramPath = binPath.c_str();
 
                 // emit ram requests
-                auto ram_mesh_io = make_zeroed<skr_io_request_t>();
-                ram_mesh_io.path = (const char8_t*)binPath.c_str();
-                ram_mesh_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
+                auto rq = root.ram_service->open_request();
+                rq->set_vfs(root.vfs);
+                rq->set_path((const char8_t*)ramPath.c_str());
+                rq->add_block({}); // read all
+                rq->add_callback(SKR_IO_STAGE_COMPLETED,
+                +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
                     ZoneScopedN("Upload Mesh");
                     // upload
                     auto uRequest = (UploadRequest*)data;
@@ -417,9 +418,8 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* rec
                     vram_buffer_io.callback_datas[SKR_IO_STAGE_COMPLETED] = nullptr;
 
                     factory->root.vram_service->request(&vram_buffer_io, &uRequest->vram_requests[i], &uRequest->buffer_destinations[i]);
-                };
-                ram_mesh_io.callback_datas[SKR_IO_STAGE_COMPLETED] = (void*)uRequest.get();
-                root.ram_service->request(root.vfs, &ram_mesh_io, &ramRequest, &ramDestination);
+                }, uRequest.get());
+                root.ram_service->request(rq, &ramRequest, &ramDestination);
             }
             mUploadRequests.emplace(mesh_resource, uRequest);
             mInstallTypes.emplace(mesh_resource, installType);

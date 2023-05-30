@@ -286,9 +286,7 @@ GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* o
     
     if (owner->source == EGDIImageSource::File)
     {
-        auto ram_texture_io = make_zeroed<skr_io_request_t>();
-        ram_texture_io.path = from_file.uri.u8_str();
-        ram_texture_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata)
+        const auto on_complete = +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata)
         {
             auto owner = static_cast<GDIImage_RenderGraph*>(usrdata);
             owner->async_data.ram_io_finished_callback();
@@ -309,14 +307,18 @@ GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* o
                 // owner->format
             }
         };
-        ram_texture_io.callback_datas[SKR_IO_STAGE_COMPLETED] = owner;
-        ram_texture_io.callbacks[SKR_IO_STAGE_ENQUEUED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata)
+        const auto on_enqueue = +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata)
         {
             auto pAsyncData = static_cast<GDIImageAsyncData_RenderGraph*>(usrdata);
             pAsyncData->ram_io_enqueued_callback();
         };
-        ram_texture_io.callback_datas[SKR_IO_STAGE_ENQUEUED] = this;
-        ram_service->request(vfs, &ram_texture_io, &ram_request, &owner->raw_data);
+        auto rq = ram_service->open_request();
+        rq->set_vfs(vfs);
+        rq->set_path(from_file.uri.u8_str());
+        rq->add_block({}); // read all
+        rq->add_callback(SKR_IO_STAGE_COMPLETED, on_complete, owner);
+        rq->add_callback(SKR_IO_STAGE_ENQUEUED, on_enqueue, this);
+        ram_service->request(rq, &ram_request, &owner->raw_data);
     }
     else if (owner->source == EGDIImageSource::Data)
     {

@@ -538,6 +538,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                     ZoneScopedN("CpyQueueSignalOK");
 
                     task.setTaskStatus(SKR_IO_STAGE_LOADED);
+                    task.setTaskStatus(SKR_IO_STAGE_COMPLETED);
                     task.step = kStepFinished;
                 }
                 else task.step = kStepUploading; // continue uploading
@@ -548,6 +549,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                     ZoneScopedN("DStorageSignalOK");
 
                     task.setTaskStatus(SKR_IO_STAGE_LOADED);
+                    task.setTaskStatus(SKR_IO_STAGE_COMPLETED);
                     task.step = kStepFinished;
                 }
                 else task.step = kStepDirectStorage; // continue uploading

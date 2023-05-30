@@ -93,13 +93,13 @@ namespace Live2D { namespace Cubism { namespace Framework {
         skr::string modelPath;
         skr::string pyhsicsPath;
         skr::string usrDataPath;
-        skr_io_future_t poseRequest;
+        skr_io_future_t poseFuture;
         skr_async_ram_destination_t poseDestination;
-        skr_io_future_t modelRequest;
+        skr_io_future_t modelFuture;
         skr_async_ram_destination_t modelDestination;
-        skr_io_future_t pyhsicsRequest;
+        skr_io_future_t pyhsicsFuture;
         skr_async_ram_destination_t physicsDestination;
-        skr_io_future_t usrDataRequest;
+        skr_io_future_t usrDataFuture;
         skr_async_ram_destination_t usrDataDestination;
         L2DRequestCallbackData* cbData;
     };
@@ -109,7 +109,7 @@ namespace Live2D { namespace Cubism { namespace Framework {
         ~csmExpressionMap() SKR_NOEXCEPT;
         void request(skr_io_ram_service_t* ioService, L2DRequestCallbackData* data) SKR_NOEXCEPT;
 
-        eastl::vector<skr_io_future_t> expressionRequests;
+        eastl::vector<skr_io_future_t> expressionFutures;
         eastl::vector<skr_async_ram_destination_t> expressionDestinations;
         eastl::vector_map<skr_io_future_t*, skr::string> expressionNames;
         eastl::vector_map<skr_io_future_t*, skr::string> expressionPaths;

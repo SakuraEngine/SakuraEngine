@@ -123,22 +123,20 @@ TEST_F(FSTest, asyncread)
     uint8_t bytes[1024];
     memset(bytes, 0, 1024);
 
-    skr_io_request_t ramIO = {};
-    const char8_t* testfile = u8"testfile";
-    ramIO.path = testfile;
-    ramIO.block.offset = 0;
-    ramIO.block.size = 0;
-    ramIO.callbacks[SKR_IO_STAGE_COMPLETED] = 
+    auto rq = ioService->open_request();
+    rq->set_vfs(abs_fs);
+    rq->set_path(u8"testfile2");
+    rq->add_block({}); // read all
+    rq->add_callback(SKR_IO_STAGE_COMPLETED,
         +[](skr_io_future_t* future, skr_io_request_t* request, void* arg){
             auto pRamIO = (skr_io_request_t*)arg;
-            SKR_LOG_INFO("async read of file %s ok", pRamIO->path);
-        };
-    ramIO.callback_datas[SKR_IO_STAGE_COMPLETED] = &ramIO;
+            SKR_LOG_INFO("async read of file %s ok", pRamIO->get_path());
+        }, rq.get());
 
     skr_io_future_t future = {};
-    skr_async_ram_destination_t destination = {};
-    destination.bytes = bytes;
-    ioService->request(abs_fs, &ramIO, &future, &destination);
+    skr_async_ram_destination_t dest = {};
+    dest.bytes = bytes;
+    ioService->request(rq, &future, &dest);
 
     wait_timeout([&future]()->bool
     {
@@ -146,7 +144,7 @@ TEST_F(FSTest, asyncread)
     });
     
     // ioService->drain();
-    std::cout << (const char*)destination.bytes << std::endl;
+    std::cout << (const char*)dest.bytes << std::endl;
     skr_io_ram_service_t::destroy(ioService);
     std::cout << "..." << std::endl;
 }
@@ -166,36 +164,40 @@ TEST_F(FSTest, cancel)
         ioServiceDesc.lockless = false;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
         ioService->set_sleep_time(0); // make test faster
-        skr_io_request_t ramIO = {};
-        ramIO.block.offset = 0;
-        ramIO.block.size = 0;
-        ramIO.path = u8"testfile2";
-        skr_io_request_t anotherRamIO = {};
-        anotherRamIO.block.offset = 0;
-        anotherRamIO.block.size = 0;
-        anotherRamIO.path = u8"testfile";
-        skr_io_future_t request = {};
-        skr_async_ram_destination_t destination = {};
-        ioService->request(abs_fs, &ramIO, &request, &destination);
-        skr_io_future_t anotherRequest = {};
-        skr_async_ram_destination_t anotherDestination = {};
-        ioService->request(abs_fs, &anotherRamIO, &anotherRequest, &anotherDestination);
+
+        skr_io_future_t future = {};
+        skr_io_future_t future2 = {};
+
+        auto rq = ioService->open_request();
+        rq->set_vfs(abs_fs);
+        rq->set_path(u8"testfile2");
+        rq->add_block({}); // read all
+
+        auto rq2 = ioService->open_request();
+        rq2->set_vfs(abs_fs);
+        rq2->set_path(u8"testfile");
+        rq2->add_block({}); // read all
+
+        skr_async_ram_destination_t dest = {};
+        skr_async_ram_destination_t dest2 = {};
+        ioService->request(rq, &future, &dest);
+        ioService->request(rq2, &future2, &dest2);
         // try cancel io of testfile
-        ioService->cancel(&anotherRequest);
+        ioService->cancel(&future2);
         // while (!request.is_ready()) {}
-        // while (!cancelled && !anotherRequest.is_ready()) {}
+        // while (!cancelled && !future2.is_ready()) {}
         ioService->drain();
         
-        if (anotherRequest.is_cancelled())
+        if (future2.is_cancelled())
         {
-            EXPECT_EQ(anotherDestination.bytes, nullptr);
+            EXPECT_EQ(dest2.bytes, nullptr);
             sucess++;
         }
         
-        EXPECT_EQ(std::string((const char*)destination.bytes, destination.size), std::string("Hello, World2!"));
+        EXPECT_EQ(std::string((const char*)dest.bytes, dest.size), std::string("Hello, World2!"));
         
-        if (destination.bytes) sakura_free(destination.bytes);
-        if (anotherDestination.bytes) sakura_free(anotherDestination.bytes);
+        if (dest.bytes) sakura_free(dest.bytes);
+        if (dest2.bytes) sakura_free(dest2.bytes);
         
         skr_io_ram_service_t::destroy(ioService);
     }
@@ -215,39 +217,47 @@ TEST_F(FSTest, defer_cancel)
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
         ioService->set_sleep_time(0); // make test faster
-        skr_io_request_t ramIO = {};
-        ramIO.path = u8"testfile2";
-        skr_io_request_t anotherRamIO = {};
-        anotherRamIO.path = u8"testfile";
-        skr_io_future_t request;
-        skr_async_ram_destination_t destination = {};
-        ioService->request(abs_fs, &ramIO, &request, &destination);
-        skr_io_future_t anotherRequest;
-        skr_async_ram_destination_t anotherDestination = {};
-        ioService->request(abs_fs, &anotherRamIO, &anotherRequest, &anotherDestination);
+
+        skr_io_future_t future = {};
+        skr_io_future_t future2 = {};
+
+        auto rq = ioService->open_request();
+        rq->set_vfs(abs_fs);
+        rq->set_path(u8"testfile2");
+        rq->add_block({}); // read all
+
+        auto rq2 = ioService->open_request();
+        rq2->set_vfs(abs_fs);
+        rq2->set_path(u8"testfile");
+        rq2->add_block({}); // read all
+
+        skr_async_ram_destination_t dest = {};
+        skr_async_ram_destination_t dest2 = {};
+        ioService->request(rq, &future, &dest);
+        ioService->request(rq2, &future2, &dest2);
         // try cancel io of testfile
-        ioService->cancel(&anotherRequest);
+        ioService->cancel(&future2);
         ioService->drain();
-        if (anotherRequest.is_cancelled())
+        if (future2.is_cancelled())
         {
-            EXPECT_EQ(anotherDestination.bytes, nullptr);
+            EXPECT_EQ(dest2.bytes, nullptr);
             sucess++;
         }
         else
         {
-            EXPECT_TRUE(anotherRequest.is_enqueued() || anotherRequest.is_loading() || anotherRequest.is_ready());
+            EXPECT_TRUE(future2.is_enqueued() || future2.is_loading() || future2.is_ready());
 
-            wait_timeout([&anotherRequest]()->bool
+            wait_timeout([&future2]()->bool
             {
-                return anotherRequest.is_ready();
+                return future2.is_ready();
             });
 
-            EXPECT_EQ(std::string((const char*)anotherDestination.bytes, anotherDestination.size), std::string("Hello, World!"));
+            EXPECT_EQ(std::string((const char*)dest2.bytes, dest2.size), std::string("Hello, World!"));
         }
-        EXPECT_EQ(std::string((const char*)destination.bytes, destination.size), std::string("Hello, World2!"));
+        EXPECT_EQ(std::string((const char*)dest.bytes, dest.size), std::string("Hello, World2!"));
         
-        if (destination.bytes) sakura_free(destination.bytes);
-        if (anotherDestination.bytes) sakura_free(anotherDestination.bytes);
+        if (dest.bytes) sakura_free(dest.bytes);
+        if (dest2.bytes) sakura_free(dest2.bytes);
 
         skr_io_ram_service_t::destroy(ioService);
     }
@@ -267,36 +277,43 @@ TEST_F(FSTest, sort)
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
         ioService->set_sleep_time(0); // make test faster
         ioService->stop(true);
-        skr_io_request_t ramIO = {};
-        skr_io_future_t future;
-        ramIO.priority = ::SKR_ASYNC_SERVICE_PRIORITY_NORMAL;
-        ramIO.path = u8"testfile2";
-        skr_io_request_t anotherRamIO = {};
-        skr_io_future_t anotherRequest;
-        anotherRamIO.priority = ::SKR_ASYNC_SERVICE_PRIORITY_URGENT;
-        anotherRamIO.path = u8"testfile";
-        anotherRamIO.callback_datas[SKR_IO_STAGE_COMPLETED] = &future;
-        anotherRamIO.callbacks[SKR_IO_STAGE_COMPLETED] = 
+
+        skr_io_future_t future = {};
+        skr_io_future_t future2 = {};
+
+        auto rq = ioService->open_request();
+        rq->set_vfs(abs_fs);
+        rq->set_priority(SKR_ASYNC_SERVICE_PRIORITY_NORMAL);
+        rq->set_path(u8"testfile");
+        rq->add_block({}); // read all
+
+        auto rq2 = ioService->open_request();
+        rq2->set_vfs(abs_fs);
+        rq2->set_priority(SKR_ASYNC_SERVICE_PRIORITY_URGENT);
+        rq2->set_path(u8"testfile");
+        rq2->add_block({}); // read all
+        rq2->add_callback(SKR_IO_STAGE_COMPLETED, 
         +[](skr_io_future_t* f, skr_io_request_t* request, void* data) {
             auto future = (skr_io_future_t*)data;
             EXPECT_TRUE(!future->is_ready());
-        };
-        skr_async_ram_destination_t destination = {};
-        ioService->request(abs_fs, &ramIO, &future, &destination);
-        skr_async_ram_destination_t anotherDestination = {};
-        ioService->request(abs_fs, &anotherRamIO, &anotherRequest, &anotherDestination);
+        }, &future);
+
+        skr_async_ram_destination_t dest = {};
+        skr_async_ram_destination_t dest2 = {};
+        ioService->request(rq, &future, &dest);
+        ioService->request(rq2, &future2, &dest2);
         ioService->run();
         ioService->drain();
 
-        wait_timeout([&anotherRequest]()->bool
+        wait_timeout([&future2]()->bool
         {
-            return anotherRequest.is_ready();
+            return future2.is_ready();
         });
-        // while (!cancelled && !anotherRequest.is_ready()) {}
-        EXPECT_EQ(std::string((const char*)anotherDestination.bytes, anotherDestination.size), std::string("Hello, World!"));
+        // while (!cancelled && !future2.is_ready()) {}
+        EXPECT_EQ(std::string((const char*)dest2.bytes, dest2.size), std::string("Hello, World!"));
         
-        if (destination.bytes) sakura_free(destination.bytes);
-        if (anotherDestination.bytes) sakura_free(anotherDestination.bytes);
+        if (dest.bytes) sakura_free(dest.bytes);
+        if (dest2.bytes) sakura_free(dest2.bytes);
         
         skr_io_ram_service_t::destroy(ioService);
     }

@@ -267,9 +267,12 @@ ESkrInstallStatus STextureFactoryImpl::InstallWithUpload(skr_resource_record_t* 
             mInstallTypes.emplace(texture_resource, installType);
 
             // emit ram request
-            auto ram_texture_io = make_zeroed<skr_io_request_t>();
-            ram_texture_io.path = (const char8_t*)uRequest->resource_uri.c_str();
-            ram_texture_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
+            auto rq = root.ram_service->open_request();
+            rq->set_vfs(root.vfs);
+            rq->set_path((const char8_t*)uRequest->resource_uri.c_str());
+            rq->add_block({}); // read all
+            rq->add_callback(SKR_IO_STAGE_COMPLETED,
+            +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
                 ZoneScopedN("Upload Image");
                 // upload
                 auto uRequest = (UploadRequest*)data;
@@ -296,9 +299,8 @@ ESkrInstallStatus STextureFactoryImpl::InstallWithUpload(skr_resource_record_t* 
                 vram_texture_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data){};
                 vram_texture_io.callback_datas[SKR_IO_STAGE_COMPLETED] = nullptr;
                 factory->root.vram_service->request(&vram_texture_io, &texture_io_request, &texture_destination);
-            };
-            ram_texture_io.callback_datas[SKR_IO_STAGE_COMPLETED] = (void*)uRequest.get();
-            root.ram_service->request(root.vfs, &ram_texture_io, &uRequest->ram_request, &uRequest->ram_destination);
+            }, uRequest.get());
+            root.ram_service->request(rq, &uRequest->ram_request, &uRequest->ram_destination);
         }
         else
         {
