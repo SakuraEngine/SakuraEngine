@@ -185,13 +185,13 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
                 vram_request.use_dynamic_buffer = bUseCVV;
                 ram_request.finish_callback = +[](skr_live2d_ram_io_request_t* request, void* data)
                 {
-                    auto pRenderModelRequest = (skr_live2d_render_model_request_t*)data;
+                    auto pRendermodelFuture = (skr_live2d_render_model_request_t*)data;
                     auto ram_service = SLive2DViewerModule::Get()->ram_service;
                     auto renderer = SLive2DViewerModule::Get()->l2d_renderer;
                     auto render_device = renderer->get_render_device();
                     auto vram_service = render_device->get_vram_service();
                     auto cgpu_device = render_device->get_cgpu_device();
-                    skr_live2d_render_model_create_from_raw(ram_service, vram_service, cgpu_device, request->model_resource, pRenderModelRequest);
+                    skr_live2d_render_model_create_from_raw(ram_service, vram_service, cgpu_device, request->model_resource, pRendermodelFuture);
                 };
                 // skr_live2d_model_create_from_json(ram_service, u8"Live2DViewer/Mao/mao_pro_t02.model3.json", &ram_request);
                 skr_live2d_model_create_from_json(ram_service, u8"Live2DViewer/Hiyori/Hiyori.model3.json", &ram_request);

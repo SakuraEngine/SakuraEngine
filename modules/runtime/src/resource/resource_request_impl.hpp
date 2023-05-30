@@ -52,11 +52,11 @@ protected:
 
     eastl::fixed_vector<skr_guid_t, 4> dependencies;
     skr_resource_record_t* resourceRecord;
-    skr_io_future_t ioRequest;
+    skr_io_future_t dataFuture;
     skr_async_ram_destination_t ioDestination;
     skr::string resourceUrl;
 #ifdef SKR_RESOURCE_DEV_MODE
-    skr_io_future_t artifactsIoRequest;
+    skr_io_future_t artifactsFuture;
     skr_async_ram_destination_t artifactsIoDestination;
     skr::string artifactsUrl;
 #endif

@@ -8,9 +8,9 @@
 
 SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)
 SKR_DECLARE_TYPE_ID_FWD(skr::io, RAMService, skr_io_ram_service)
+SKR_DECLARE_TYPE_ID_FWD(skr::io, IIORequest, skr_io_request)
 struct skr_vfs_t;
 
-typedef struct skr_io_request_t skr_io_request_t;
 typedef struct skr_vfile_t skr_io_file_t;
 typedef skr_io_file_t* skr_io_file_handle;
 
@@ -134,29 +134,6 @@ typedef struct skr_io_compressed_block_t
 } skr_io_compressed_block_t;
 
 typedef void (*skr_io_callback_t)(skr_io_future_t* future, skr_io_request_t* request, void* data);
-typedef struct skr_io_request_t
-{
-    const char8_t* path SKR_IF_CPP(= nullptr);
-    const skr_io_file_handle file SKR_IF_CPP(= nullptr); 
-
-    skr_io_block_t block;
-    // skr_io_compressed_block_t compressed_block;
-
-    SkrAsyncServicePriority priority SKR_IF_CPP(= SKR_ASYNC_SERVICE_PRIORITY_NORMAL);
-    float sub_priority SKR_IF_CPP(= 0.f); /*0.f ~ 1.f*/
-
-    skr_io_callback_t callbacks[SKR_IO_STAGE_COUNT];
-    void* callback_datas[SKR_IO_STAGE_COUNT];
-
-    skr_io_callback_t finish_callbacks[SKR_IO_FINISH_POINT_COUNT];
-    void* finish_callback_datas[SKR_IO_FINISH_POINT_COUNT];
-} skr_io_request_t;
-
-typedef struct skr_io_batch_t
-{
-    const skr_io_request_t* requests;
-    uint32_t request_count;
-} skr_io_batch_t;
 
 typedef struct skr_ram_io_service_desc_t {
     const char8_t* name SKR_IF_CPP(= nullptr);
@@ -169,7 +146,10 @@ typedef struct skr_ram_io_service_desc_t {
 
 #ifdef __cplusplus
 #include "containers/vector.hpp"
+#include "containers/span.hpp"
+#include "containers/sptr.hpp"
 #include "containers/concurrent_queue.h"
+
 #include <EASTL/fixed_vector.h>
 
 namespace skr {
@@ -193,15 +173,20 @@ struct RAMService2;
 
 using IOBlock = skr_io_block_t;
 using IOCompressedBlock = skr_io_compressed_block_t;
-using IORequest = skr_io_request_t;
-struct RUNTIME_API IRequest
+struct RUNTIME_API IIORequest : public skr::SInterface
 {
+    virtual void set_vfs(skr_vfs_t* vfs) SKR_NOEXCEPT = 0;
     virtual void set_path(const char8_t* path) SKR_NOEXCEPT = 0;
+    virtual const char8_t* get_path() const SKR_NOEXCEPT = 0;
+    
     virtual void open_file() SKR_NOEXCEPT = 0; 
 
     virtual uint64_t get_fsize() const SKR_NOEXCEPT = 0;
     virtual void set_priority(SkrAsyncServicePriority pri) SKR_NOEXCEPT = 0;
-    virtual void set_sub_priority(float sub_pri) SKR_NOEXCEPT = 0; /*0.f ~ 1.f*/
+    virtual SkrAsyncServicePriority get_priority() const SKR_NOEXCEPT = 0;
+
+    virtual void set_sub_priority(float sub_pri) SKR_NOEXCEPT = 0; 
+    virtual float get_sub_priority() const SKR_NOEXCEPT = 0;
 
     virtual void add_callback(ESkrIOStage stage, skr_io_callback_t callback, void* data) SKR_NOEXCEPT = 0;
     virtual void add_finish_callback(ESkrIOFinishPoint point, skr_io_callback_t callback, void* data) SKR_NOEXCEPT = 0;
@@ -214,8 +199,8 @@ struct RUNTIME_API IRequest
     virtual void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
     virtual void reset_compressed_blocks() SKR_NOEXCEPT = 0;
 };
-
-using IOBatch = skr_io_batch_t;
+using IORequest = SObjectPtr<IIORequest>;
+// using IOBatch = skr_io_batch_t;
 
 #pragma endregion
 
@@ -224,15 +209,6 @@ using IOBatch = skr_io_batch_t;
 #pragma endregion
 
 #pragma region Chunking
-
-struct RUNTIME_API IORequstChunk
-{
-    IORequstChunk() SKR_NOEXCEPT;
-    ~IORequstChunk() SKR_NOEXCEPT;
-
-    eastl::fixed_vector<skr_io_block_t, 1> blocks;
-    eastl::fixed_vector<skr_io_compressed_block_t, 1> compressed_blocks;
-};
 
 #pragma endregion
 
@@ -245,9 +221,12 @@ struct RUNTIME_API RAMService
     [[nodiscard]] static skr_io_ram_service_t* create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
     static void destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT;
 
+    // open a request for filling
+    [[nodiscard]] virtual IORequest open_request() SKR_NOEXCEPT = 0;
+
     // we do not lock an ioService to a single vfs, but for better bandwidth use and easier profiling
     // it's recommended to make a unique relevance between ioService & vfs（or vfses share a single I/O hardware)
-    virtual void request(skr_vfs_t*, const skr_io_request_t* request, skr_io_future_t* future, skr_async_ram_destination_t* dst) SKR_NOEXCEPT = 0;
+    virtual void request(IORequest request, skr_io_future_t* future, skr_async_ram_destination_t* dst) SKR_NOEXCEPT = 0;
 
     // emplace a cancel **command** to ioService thread
     // it's recommended to use this under lockless mode

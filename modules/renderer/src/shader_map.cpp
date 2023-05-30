@@ -49,7 +49,7 @@ struct ShaderProgress : public skr::AsyncProgress<Shader::FutureLauncher, int, b
 
     ShaderMapImpl* factory = nullptr;
     skr::string bytes_uri;
-    skr_io_future_t bytes_request;
+    skr_io_future_t data_future;
     skr_async_ram_destination_t bytes_destination;
     skr_platform_shader_identifier_t identifier = {};
 };
@@ -196,9 +196,12 @@ ESkrShaderMapShaderStatus ShaderMapImpl::install_shader_from_vfs(const skr_platf
     SKR_ASSERT(found == mShaderTasks.end());
     mShaderTasks.emplace(identifier, sRequest);
     
-    auto ram_texture_io = make_zeroed<skr_io_request_t>();
-    ram_texture_io.path = sRequest->bytes_uri.u8_str();
-    ram_texture_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
+    auto service = root.ram_service;
+    auto request = service->open_request();
+    request->set_vfs(bytes_vfs);
+    request->set_path(sRequest->bytes_uri.u8_str());
+    request->add_block({}); // read all
+    request->add_callback(SKR_IO_STAGE_COMPLETED, +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
         ZoneScopedN("CreateShaderFromBytes");
         
         auto progress = (ShaderProgress*)data;
@@ -211,9 +214,8 @@ ESkrShaderMapShaderStatus ShaderMapImpl::install_shader_from_vfs(const skr_platf
         {
             SKR_ASSERT("launcher is unexpected null!");
         }
-    };
-    ram_texture_io.callback_datas[SKR_IO_STAGE_COMPLETED] = (void*)sRequest.get();
-    root.ram_service->request(bytes_vfs, &ram_texture_io, &sRequest->bytes_request, &sRequest->bytes_destination);
+    }, (void*)sRequest.get());
+    root.ram_service->request(request, &sRequest->data_future, &sRequest->bytes_destination);
     launch_success = true;
     return launch_success ? SKR_SHADER_MAP_SHADER_STATUS_REQUESTED : SKR_SHADER_MAP_SHADER_STATUS_FAILED;
 }
