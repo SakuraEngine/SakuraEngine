@@ -26,8 +26,8 @@ RUNTIME_EXTERN_C RUNTIME_API void skr_debug_output(const char* msg);
             SKR_TRACE_MSG(msg);   \
             SKR_HALT();           \
         }
-    #define SKR_UNIMPLEMENTED_FUNCTION() SKR_TRACE_ASSERT("Function not implemented!\n")
-    #define SKR_UNREACHABLE_CODE() SKR_TRACE_ASSERT("Unreachable code encountered!\n")
+    #define SKR_UNIMPLEMENTED_FUNCTION() SKR_TRACE_ASSERT(__FILE__":  Function not implemented!\n")
+    #define SKR_UNREACHABLE_CODE() SKR_TRACE_ASSERT(__FILE__": Unreachable code encountered!\n")
 #endif
 
 // Platform Specific Configure

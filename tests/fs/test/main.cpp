@@ -119,7 +119,49 @@ TEST_F(FSTest, asyncread)
     skr_ram_io_service_desc_t ioServiceDesc = {};
     ioServiceDesc.name = u8"Test";
     auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
+    ioService->add_file_resolver();
+    ioService->add_iobuffer_resolver();
+
+    uint8_t bytes[1024];
+    memset(bytes, 0, 1024);
+
+    auto rq = ioService->open_request();
+    rq->set_vfs(abs_fs);
+    rq->set_path(u8"testfile2");
+    rq->add_block({}); // read all
+    rq->add_callback(SKR_IO_STAGE_COMPLETED,
+        +[](skr_io_future_t* future, skr_io_request_t* request, void* arg){
+            auto pRamIO = (skr_io_request_t*)arg;
+            SKR_LOG_INFO("async read of file %s ok", pRamIO->get_path());
+        }, rq.get());
+
+    skr_io_future_t future = {};
+    skr_async_ram_destination_t dest = {};
+    dest.bytes = bytes;
+    ioService->request(rq, &future, &dest);
+
+    wait_timeout([&future]()->bool
+    {
+        return future.is_ready();
+    });
     
+    // ioService->drain();
+    std::cout << (const char*)dest.bytes << std::endl;
+    skr_io_ram_service_t::destroy(ioService);
+    std::cout << "..." << std::endl;
+}
+
+TEST_F(FSTest, chunking)
+{
+    ZoneScopedN("chunking");
+
+    skr_ram_io_service_desc_t ioServiceDesc = {};
+    ioServiceDesc.name = u8"Test";
+    auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
+    ioService->add_file_resolver();
+    ioService->add_iobuffer_resolver();
+    ioService->add_chunking_resolver();
+
     uint8_t bytes[1024];
     memset(bytes, 0, 1024);
 
@@ -163,6 +205,8 @@ TEST_F(FSTest, cancel)
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         ioServiceDesc.lockless = false;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
+        ioService->add_file_resolver();
+        ioService->add_iobuffer_resolver();
         ioService->set_sleep_time(0); // make test faster
 
         skr_io_future_t future = {};
@@ -216,6 +260,8 @@ TEST_F(FSTest, defer_cancel)
         ioServiceDesc.lockless = true;
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
+        ioService->add_file_resolver();
+        ioService->add_iobuffer_resolver();
         ioService->set_sleep_time(0); // make test faster
 
         skr_io_future_t future = {};
@@ -275,6 +321,8 @@ TEST_F(FSTest, sort)
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
+        ioService->add_file_resolver();
+        ioService->add_iobuffer_resolver();
         ioService->set_sleep_time(0); // make test faster
         ioService->stop(true);
 

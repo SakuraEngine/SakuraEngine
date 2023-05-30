@@ -8,6 +8,7 @@
 
 struct skr_vfile_stdio_t : public skr_vfile_t {
     FILE* fh;
+    uint64_t offset;
 };
 
 skr_vfile_t* skr_stdio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mode, ESkrFileCreation creation) SKR_NOEXCEPT
@@ -68,10 +69,14 @@ size_t skr_stdio_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_
 {
     if (file)
     {
+        ZoneScopedN("vfs::fread");
+
         auto vfile = (skr_vfile_stdio_t*)file;
+        if (vfile->offset != offset)
         {
             ZoneScopedN("stdio::fseek(offset)");
             fseek(vfile->fh, (long)offset, SEEK_SET); // seek to offset of file
+            vfile->offset = offset;
         }
         size_t bytesRead = 0;
         {
@@ -84,10 +89,6 @@ size_t skr_stdio_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_
             {
                 SKR_LOG_WARN("Error reading from system FileStream: %s", strerror(errno));
             }
-        }
-        {
-            ZoneScopedN("stdio::fseek(back)");
-            fseek(vfile->fh, 0, SEEK_SET); // seek back to beginning of file
         }
         return bytesRead;
     }

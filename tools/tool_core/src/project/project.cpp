@@ -112,6 +112,9 @@ SProject* SProject::OpenProject(const skr::filesystem::path& projectFile) noexce
     ioServiceDesc.lockless = true;
     ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
     project->ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
+    project->ram_service->add_file_resolver();
+    project->ram_service->add_iobuffer_resolver();
+    project->ram_service->add_chunking_resolver();
 
     return project;
 }

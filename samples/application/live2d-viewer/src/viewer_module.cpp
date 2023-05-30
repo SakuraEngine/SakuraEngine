@@ -98,7 +98,10 @@ void SLive2DViewerModule::on_load(int argc, char8_t** argv)
     ioServiceDesc.lockless = true;
     ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
     ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
-
+    ram_service->add_file_resolver();
+    ram_service->add_iobuffer_resolver();
+    ram_service->add_chunking_resolver();
+    
 #ifdef _WIN32
     auto decompress_service = skr_render_device_get_win_dstorage_decompress_service(render_device);
     skr_win_dstorage_decompress_service_register_callback(decompress_service, 

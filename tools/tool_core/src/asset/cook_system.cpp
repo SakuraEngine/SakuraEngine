@@ -101,7 +101,10 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
                 desc.lockless = true;
                 desc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_NEVER;
                 desc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
-                ioService = skr_io_ram_service_t::create(&desc);
+                ioService = skr_io_ram_service_t::create(&desc);        
+                ioService->add_file_resolver();
+                ioService->add_iobuffer_resolver();
+                ioService->add_chunking_resolver();
             }
         }
     }
