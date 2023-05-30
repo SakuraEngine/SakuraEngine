@@ -2,8 +2,6 @@
 #include "cgpu/api.h"
 #include "io/io.h"
 
-typedef void (*skr_async_callback_t)(skr_io_future_t* future, void* data);
-
 // no format & stride parameters provided now because we think it's not necessary to support async io with UAV buffers
 // we can add them if necessary in the future
 typedef struct skr_vram_buffer_io_t {
@@ -43,8 +41,8 @@ typedef struct skr_vram_buffer_io_t {
     } src_memory;
     SkrAsyncServicePriority priority;
     float sub_priority; /*0.f ~ 1.f*/
-    skr_async_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
-    void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];
+    skr_io_callback_t callbacks[SKR_IO_STAGE_COUNT];
+    void* callback_datas[SKR_IO_STAGE_COUNT];
 } skr_vram_buffer_io_t;
 
 typedef struct skr_async_vbuffer_destination_t {
@@ -83,8 +81,8 @@ typedef struct skr_vram_texture_io_t {
     } src_memory;
     SkrAsyncServicePriority priority;
     float sub_priority; /*0.f ~ 1.f*/
-    skr_async_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
-    void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];
+    skr_io_callback_t callbacks[SKR_IO_STAGE_COUNT];
+    void* callback_datas[SKR_IO_STAGE_COUNT];
 } skr_vram_texture_io_t;
 
 typedef struct skr_async_vtexture_destination_t {

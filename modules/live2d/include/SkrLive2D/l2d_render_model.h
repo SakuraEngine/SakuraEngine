@@ -23,7 +23,7 @@ typedef struct skr_live2d_render_model_request_t {
     bool use_dynamic_buffer;
 #ifdef __cplusplus
     SKR_LIVE2D_API bool is_ready() const SKR_NOEXCEPT;
-    SKR_LIVE2D_API SkrAsyncIOStatus get_status() const SKR_NOEXCEPT;
+    SKR_LIVE2D_API ESkrIOStage get_status() const SKR_NOEXCEPT;
 #endif
 } skr_live2d_render_model_request_t;
 

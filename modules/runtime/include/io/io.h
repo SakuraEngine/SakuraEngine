@@ -46,20 +46,6 @@ typedef enum SkrAsyncServiceSleepMode
     SKR_ASYNC_SERVICE_SLEEP_MAX_ENUM = UINT32_MAX
 } SkrAsyncServiceSleepMode;
 
-// TODO: Remove with IOStage
-typedef enum SkrAsyncIOStatus
-{
-    SKR_ASYNC_IO_STATUS_NONE = 0,
-    SKR_ASYNC_IO_STATUS_ENQUEUED = 1,
-    SKR_ASYNC_IO_STATUS_CANCELLED = 2,
-    SKR_ASYNC_IO_STATUS_CREATING_RESOURCE = 3,
-    SKR_ASYNC_IO_STATUS_RAM_LOADING = 5,
-    SKR_ASYNC_IO_STATUS_VRAM_LOADING = 6,
-    SKR_ASYNC_IO_STATUS_READ_OK = 7,
-    SKR_ASYNC_IO_STATUS_COUNT,
-    SKR_ASYNC_IO_STATUS_MAX_ENUM = UINT32_MAX
-} SkrAsyncIOStatus;
-
 typedef enum SkrAsyncServicePriority
 {
     SKR_ASYNC_SERVICE_PRIORITY_URGENT = 0,
@@ -84,10 +70,13 @@ typedef enum ESkrIOStage
     SKR_IO_STAGE_ENQUEUED,
     SKR_IO_STAGE_SORTING,
     SKR_IO_STAGE_RESOLVING,
-    SKR_IO_STAGE_CHUNKING,
     SKR_IO_STAGE_LOADING,
+    SKR_IO_STAGE_LOADED,
     SKR_IO_STAGE_DECOMPRESSIONG,
     SKR_IO_STAGE_COMPLETED,
+    SKR_IO_STAGE_CANCELLED,
+
+    SKR_IO_STAGE_COUNT,
     SKR_IO_STAGE_MAX_ENUM = UINT32_MAX
 } ESkrIOStage;
 
@@ -118,9 +107,9 @@ typedef struct skr_io_future_t {
     RUNTIME_API bool is_ready() const SKR_NOEXCEPT;
     RUNTIME_API bool is_enqueued() const SKR_NOEXCEPT;
     RUNTIME_API bool is_cancelled() const SKR_NOEXCEPT;
-    RUNTIME_API bool is_ram_loading() const SKR_NOEXCEPT;
+    RUNTIME_API bool is_loading() const SKR_NOEXCEPT;
     RUNTIME_API bool is_vram_loading() const SKR_NOEXCEPT;
-    RUNTIME_API SkrAsyncIOStatus get_status() const SKR_NOEXCEPT;
+    RUNTIME_API ESkrIOStage get_status() const SKR_NOEXCEPT;
 #endif
 } skr_io_future_t;
 typedef struct skr_async_ram_destination_t skr_io_ram_buffer_t;
@@ -156,8 +145,8 @@ typedef struct skr_io_request_t
     SkrAsyncServicePriority priority SKR_IF_CPP(= SKR_ASYNC_SERVICE_PRIORITY_NORMAL);
     float sub_priority SKR_IF_CPP(= 0.f); /*0.f ~ 1.f*/
 
-    skr_io_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
-    void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];
+    skr_io_callback_t callbacks[SKR_IO_STAGE_COUNT];
+    void* callback_datas[SKR_IO_STAGE_COUNT];
 
     skr_io_callback_t finish_callbacks[SKR_IO_FINISH_POINT_COUNT];
     void* finish_callback_datas[SKR_IO_FINISH_POINT_COUNT];
@@ -205,6 +194,27 @@ struct RAMService2;
 using IOBlock = skr_io_block_t;
 using IOCompressedBlock = skr_io_compressed_block_t;
 using IORequest = skr_io_request_t;
+struct RUNTIME_API IRequest
+{
+    virtual void set_path(const char8_t* path) SKR_NOEXCEPT = 0;
+    virtual void open_file() SKR_NOEXCEPT = 0; 
+
+    virtual uint64_t get_fsize() const SKR_NOEXCEPT = 0;
+    virtual void set_priority(SkrAsyncServicePriority pri) SKR_NOEXCEPT = 0;
+    virtual void set_sub_priority(float sub_pri) SKR_NOEXCEPT = 0; /*0.f ~ 1.f*/
+
+    virtual void add_callback(ESkrIOStage stage, skr_io_callback_t callback, void* data) SKR_NOEXCEPT = 0;
+    virtual void add_finish_callback(ESkrIOFinishPoint point, skr_io_callback_t callback, void* data) SKR_NOEXCEPT = 0;
+
+    virtual skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT = 0;
+    virtual void add_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
+    virtual void reset_blocks() SKR_NOEXCEPT = 0;
+
+    virtual skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT = 0;
+    virtual void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
+    virtual void reset_compressed_blocks() SKR_NOEXCEPT = 0;
+};
+
 using IOBatch = skr_io_batch_t;
 
 #pragma endregion
@@ -254,9 +264,6 @@ struct RUNTIME_API RAMService
 
     // set sleep time when io queue is detected to be idle
     virtual void set_sleep_time(uint32_t ms) SKR_NOEXCEPT = 0;
-
-    // finish callbacks are polled & executed by usr threads
-    virtual void poll_finish_callbacks() SKR_NOEXCEPT = 0;
 
     // get service status (sleeping or running)
     virtual SkrAsyncServiceStatus get_service_status() const SKR_NOEXCEPT = 0;

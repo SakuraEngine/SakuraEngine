@@ -99,7 +99,7 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
         {
             if (coder) skr_image_coder_free_image(coder);
         }
-        skr_atomicu32_store_relaxed(&request->io_status, SKR_ASYNC_IO_STATUS_READ_OK);
+        skr_atomicu32_store_relaxed(&request->io_status, SKR_IO_STAGE_COMPLETED);
         request = nullptr;
     }
     void try_finish()
@@ -120,12 +120,12 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
 
 bool skr_live2d_render_model_request_t::is_ready() const SKR_NOEXCEPT
 {
-    return get_status() == SKR_ASYNC_IO_STATUS_READ_OK;
+    return get_status() == SKR_IO_STAGE_COMPLETED;
 }
 
-SkrAsyncIOStatus skr_live2d_render_model_request_t::get_status() const SKR_NOEXCEPT
+ESkrIOStage skr_live2d_render_model_request_t::get_status() const SKR_NOEXCEPT
 {
-    return (SkrAsyncIOStatus)skr_atomicu32_load_acquire(&io_status);
+    return (ESkrIOStage)skr_atomicu32_load_acquire(&io_status);
 }
 
 #ifndef SKR_SERIALIZE_GURAD
@@ -188,11 +188,11 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
             
             vram_texture_io.src_memory.size = resolution * resolution * 4;
 
-            vram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* request, void* data){
+            vram_texture_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data){
                 auto render_model = (skr_live2d_render_model_async_t*)data;
-                render_model->texture_finish(request);
+                render_model->texture_finish(future);
             };
-            vram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = render_model;
+            vram_texture_io.callback_datas[SKR_IO_STAGE_COMPLETED] = render_model;
             vram_service->request(&vram_texture_io, &texture_io_request, &texture_destination);
         }
         else
@@ -204,7 +204,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
             auto ram_texture_io = make_zeroed<skr_io_request_t>();
 
             ram_texture_io.path = pngPathStr.c_str();
-            ram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
+            ram_texture_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
                 ZoneScopedN("Load PNG");
                 auto render_model = (skr_live2d_render_model_async_t*)data;
                 auto idx = future - render_model->png_io_requests.data();
@@ -241,18 +241,18 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
 
                         vram_texture_io.src_memory.size = coder->get_width() * coder->get_height() * 4;
                         vram_texture_io.src_memory.bytes = raw_data.data();
-                        vram_texture_io.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* request, void* data){
+                        vram_texture_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data){
                             auto render_model = (skr_live2d_render_model_async_t*)data;
 
-                            render_model->texture_finish(request);
+                            render_model->texture_finish(future);
                         };
-                        vram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = render_model;
+                        vram_texture_io.callback_datas[SKR_IO_STAGE_COMPLETED] = render_model;
                         vram_service->request(&vram_texture_io, &texture_io_request, &texture_destination);
                     }
                 }
                 sakura_free(png_destination.bytes);
             };
-            ram_texture_io.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = (void*)render_model;
+            ram_texture_io.callback_datas[SKR_IO_STAGE_COMPLETED] = (void*)render_model;
             ram_service->request(request->vfs_override, &ram_texture_io, &png_io_request, &png_destination);
         }
     }
@@ -385,18 +385,18 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                 
                 ib_io.src_memory.bytes = (uint8_t*)indices;
                 ib_io.src_memory.size = sizeof(Csm::csmUint16) * icount;
-                ib_io.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* request, void* data){
+                ib_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data){
                     auto render_model = (skr_live2d_render_model_async_t*)data;
-                    render_model->buffer_finish(request);
+                    render_model->buffer_finish(future);
                 };
-                ib_io.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = render_model;
+                ib_io.callback_datas[SKR_IO_STAGE_COMPLETED] = render_model;
                 vram_service->request(&ib_io, &io_request, &buffer_destination);
                 index_buffer_cursor += icount * sizeof(Csm::csmUint16);
             }
             else
             {
                 auto& io_request = render_model->buffer_io_requests[i];
-                io_request.status = SKR_ASYNC_IO_STATUS_READ_OK;
+                io_request.status = SKR_IO_STAGE_COMPLETED;
                 render_model->buffer_finish(&io_request);    
             }
         }

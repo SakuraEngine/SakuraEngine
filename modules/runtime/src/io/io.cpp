@@ -13,28 +13,23 @@
 
 bool skr_io_future_t::is_ready() const SKR_NOEXCEPT
 {
-    return get_status() == SKR_ASYNC_IO_STATUS_READ_OK;
+    return get_status() == SKR_IO_STAGE_COMPLETED;
 }
 bool skr_io_future_t::is_enqueued() const SKR_NOEXCEPT
 {
-    return get_status() == SKR_ASYNC_IO_STATUS_ENQUEUED;
+    return get_status() == SKR_IO_STAGE_ENQUEUED;
 }
 bool skr_io_future_t::is_cancelled() const SKR_NOEXCEPT
 {
-    return get_status() == SKR_ASYNC_IO_STATUS_CANCELLED;
+    return get_status() == SKR_IO_STAGE_CANCELLED;
 }
-bool skr_io_future_t::is_ram_loading() const SKR_NOEXCEPT
+bool skr_io_future_t::is_loading() const SKR_NOEXCEPT
 {
-    return get_status() == SKR_ASYNC_IO_STATUS_RAM_LOADING;
+    return get_status() == SKR_IO_STAGE_LOADING;
 }
-bool skr_io_future_t::is_vram_loading() const SKR_NOEXCEPT
+ESkrIOStage skr_io_future_t::get_status() const SKR_NOEXCEPT
 {
-    return get_status() == SKR_ASYNC_IO_STATUS_VRAM_LOADING;
-}
-
-SkrAsyncIOStatus skr_io_future_t::get_status() const SKR_NOEXCEPT
-{
-    return (SkrAsyncIOStatus)skr_atomicu32_load_acquire(&status);
+    return (ESkrIOStage)skr_atomicu32_load_acquire(&status);
 }
 
 namespace skr {
@@ -59,15 +54,15 @@ struct IORequestBoxed : public skr::SInterface
     skr_io_future_t* future = nullptr;
     skr_async_ram_destination_t* destination = nullptr;
 
-    skr_io_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
-    void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];
+    skr_io_callback_t callbacks[SKR_IO_STAGE_COUNT];
+    void* callback_datas[SKR_IO_STAGE_COUNT];
 
     skr_io_callback_t finish_callbacks[SKR_IO_FINISH_POINT_COUNT];
     void* finish_callback_datas[SKR_IO_FINISH_POINT_COUNT];
 
     eastl::fixed_vector<IORequstChunk, 1> chunks;
 
-    void setStatus(SkrAsyncIOStatus status)
+    void setStatus(ESkrIOStage status)
     {
         skr_atomicu32_store_release(&future->status, status);
         if (const auto callback = callbacks[status])
@@ -76,9 +71,9 @@ struct IORequestBoxed : public skr::SInterface
         }
     }
 
-    SkrAsyncIOStatus getStatus() const
+    ESkrIOStage getStatus() const
     {
-        return static_cast<SkrAsyncIOStatus>(skr_atomicu32_load_relaxed(&future->status));
+        return static_cast<ESkrIOStage>(skr_atomicu32_load_relaxed(&future->status));
     }
 
     uint32_t add_refcount() 
@@ -254,7 +249,7 @@ void RAMServiceImpl::request(skr_vfs_t* vfs, const skr_io_request_t *request,
     rq->file = request->file;
     rq->block = request->block;
     rq->sub_priority = request->sub_priority;
-    for (int i = 0; i < SKR_ASYNC_IO_STATUS_COUNT; ++i)
+    for (int i = 0; i < SKR_IO_STAGE_COUNT; ++i)
     {
         rq->callbacks[i] = request->callbacks[i];
         rq->callback_datas[i] = request->callback_datas[i];
@@ -266,7 +261,7 @@ void RAMServiceImpl::request(skr_vfs_t* vfs, const skr_io_request_t *request,
     }
 
     runner.request_queues[request->priority].enqueue(rq);
-    rq->setStatus(SKR_ASYNC_IO_STATUS_ENQUEUED);
+    rq->setStatus(SKR_IO_STAGE_ENQUEUED);
     skr_atomicu32_add_relaxed(&runner.queued_request_counts[request->priority], 1);
 
     if (runner.condsleep)
@@ -330,7 +325,7 @@ void RAMServiceImpl::poll_finish_callbacks() SKR_NOEXCEPT
     RQPtr rq = nullptr;
     while (runner.finish_queues->try_dequeue(rq))
     {
-        if (rq->getStatus() == SKR_ASYNC_IO_STATUS_READ_OK)
+        if (rq->getStatus() == SKR_IO_STAGE_COMPLETED)
         {
             rq->finish_callbacks[SKR_IO_FINISH_POINT_COMPLETE](
                 rq->future, nullptr, rq->finish_callback_datas[SKR_IO_FINISH_POINT_COMPLETE]);
@@ -387,14 +382,14 @@ skr::AsyncResult RAMServiceImpl::Runner::serve() SKR_NOEXCEPT
 bool RAMServiceImpl::Runner::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT
 {
     const auto status = rq->getStatus();
-    if (status >= SKR_ASYNC_IO_STATUS_RAM_LOADING) return false;
+    if (status >= SKR_IO_STAGE_LOADING) return false;
 
     if (bool cancel_requested = skr_atomicu32_load_acquire(&rq->future->request_cancel))
     {
         const auto d = skr_atomicu32_load_relaxed(&rq->done);
         if (d == 0)
         {
-            rq->setStatus(SKR_ASYNC_IO_STATUS_CANCELLED);
+            rq->setStatus(SKR_IO_STAGE_CANCELLED);
             bool need_finish = false;
             for (auto f : rq->finish_callbacks)
             {
@@ -523,10 +518,10 @@ void RAMServiceImpl::Runner::resolve() SKR_NOEXCEPT
             {
                 // cancel...
             }
-            else if (rq->getStatus() == SKR_ASYNC_IO_STATUS_ENQUEUED)
+            else if (rq->getStatus() == SKR_IO_STAGE_ENQUEUED)
             {
                 // SKR_LOG_DEBUG("dispatch open request: %s", rq->path.c_str());
-                rq->setStatus(SKR_ASYNC_IO_STATUS_CREATING_RESOURCE);
+                rq->setStatus(SKR_IO_STAGE_RESOLVING);
                 
                 // open file
                 if (!rq->file)
@@ -588,9 +583,9 @@ void RAMServiceImpl::Runner::dispatch_read() SKR_NOEXCEPT
                 if (rq->file) skr_vfs_fclose(rq->file);
                 if (rq->destination->bytes) sakura_free(rq->destination->bytes);
             }
-            else if (rq->getStatus() == SKR_ASYNC_IO_STATUS_CREATING_RESOURCE)
+            else if (rq->getStatus() == SKR_IO_STAGE_RESOLVING)
             {
-                rq->setStatus(SKR_ASYNC_IO_STATUS_RAM_LOADING);
+                rq->setStatus(SKR_IO_STAGE_LOADING);
 
                 // SKR_LOG_DEBUG("dispatch read request: %s", rq->path.c_str());
                 for (const auto& chunk : rq->chunks)
@@ -600,8 +595,7 @@ void RAMServiceImpl::Runner::dispatch_read() SKR_NOEXCEPT
                         skr_vfs_fread(rq->file, rq->destination->bytes, block.offset, block.size);
                     }
                 }
-
-                rq->setStatus(SKR_ASYNC_IO_STATUS_READ_OK);
+                rq->setStatus(SKR_IO_STAGE_LOADED);
             }
             else
             {
@@ -651,6 +645,7 @@ void RAMServiceImpl::Runner::finish() SKR_NOEXCEPT
             const auto d = skr_atomicu32_load_relaxed(&rq->done);
             if (d == 0)
             {
+                rq->setStatus(SKR_IO_STAGE_COMPLETED);
                 bool need_finish = false;
                 for (auto f : rq->finish_callbacks)
                 {
