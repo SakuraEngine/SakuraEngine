@@ -151,6 +151,7 @@ typedef struct skr_ram_io_service_desc_t {
 #include "containers/concurrent_queue.h"
 
 #include <EASTL/fixed_vector.h>
+#include <EASTL/functional.h>
 
 namespace skr {
 namespace io {
@@ -200,6 +201,7 @@ struct RUNTIME_API IIORequest : public skr::SInterface
     virtual void reset_compressed_blocks() SKR_NOEXCEPT = 0;
 };
 using IORequest = SObjectPtr<IIORequest>;
+using RequestResolver = eastl::function<void(IORequest)>;
 // using IOBatch = skr_io_batch_t;
 
 #pragma endregion
@@ -224,6 +226,9 @@ struct RUNTIME_API RAMService
     // open a request for filling
     [[nodiscard]] virtual IORequest open_request() SKR_NOEXCEPT = 0;
 
+    // add a resolver to service
+    virtual uint64_t add_resolver(const char8_t* name, RequestResolver resolver) SKR_NOEXCEPT = 0;
+
     // we do not lock an ioService to a single vfs, but for better bandwidth use and easier profiling
     // it's recommended to make a unique relevance between ioService & vfs（or vfses share a single I/O hardware)
     virtual void request(IORequest request, skr_io_future_t* future, skr_async_ram_destination_t* dst) SKR_NOEXCEPT = 0;
@@ -246,6 +251,13 @@ struct RUNTIME_API RAMService
 
     // get service status (sleeping or running)
     virtual SkrAsyncServiceStatus get_service_status() const SKR_NOEXCEPT = 0;
+
+    uint64_t add_file_resolver() SKR_NOEXCEPT;
+
+    uint64_t add_iobuffer_resolver() SKR_NOEXCEPT;
+
+    // SSD reaches its best performance when block size >= 64KB
+    uint64_t add_chunking_resolver(uint64_t chunk_size = 256 * 1024) SKR_NOEXCEPT;
 
     virtual ~RAMService() SKR_NOEXCEPT = default;
     RAMService() SKR_NOEXCEPT = default;

@@ -38,6 +38,9 @@ bool initialize_gdi_application(gdi_application_t* app)
         ioServiceDesc.lockless = true;
         ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
         app->ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
+        app->ram_service->add_file_resolver();
+        app->ram_service->add_iobuffer_resolver();
+        app->ram_service->add_chunking_resolver();
     }
     {
         auto ioServiceDesc = make_zeroed<skr_vram_io_service_desc_t>();

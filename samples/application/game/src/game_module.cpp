@@ -125,6 +125,9 @@ void SGameModule::installResourceFactories()
     ioServiceDesc.lockless = true;
     ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
     ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
+    ram_service->add_file_resolver();
+    ram_service->add_iobuffer_resolver();
+    ram_service->add_chunking_resolver();
 
     registry = SkrNew<skr::resource::SLocalResourceRegistry>(resource_vfs);
     skr::resource::GetResourceSystem()->Initialize(registry, ram_service);
@@ -239,6 +242,7 @@ void SGameModule::installResourceFactories()
         skinFactory = SkrNew<skr::resource::SSkinFactory>();
         resource_system->RegisterFactory(skinFactory);
     }
+    
     struct GameSceneFactory : public skr::resource::SSceneFactory {
         virtual ESkrInstallStatus Install(skr_resource_record_t* record) override
         {
