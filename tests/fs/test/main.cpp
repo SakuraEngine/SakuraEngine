@@ -128,12 +128,12 @@ TEST_F(FSTest, asyncread)
     ramIO.path = testfile;
     ramIO.block.offset = 0;
     ramIO.block.size = 0;
-    ramIO.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = 
+    ramIO.callbacks[SKR_IO_STAGE_COMPLETED] = 
         +[](skr_io_future_t* future, skr_io_request_t* request, void* arg){
             auto pRamIO = (skr_io_request_t*)arg;
             SKR_LOG_INFO("async read of file %s ok", pRamIO->path);
         };
-    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = &ramIO;
+    ramIO.callback_datas[SKR_IO_STAGE_COMPLETED] = &ramIO;
 
     skr_io_future_t future = {};
     skr_async_ram_destination_t destination = {};
@@ -235,7 +235,7 @@ TEST_F(FSTest, defer_cancel)
         }
         else
         {
-            EXPECT_TRUE(anotherRequest.is_enqueued() || anotherRequest.is_ram_loading() || anotherRequest.is_ready());
+            EXPECT_TRUE(anotherRequest.is_enqueued() || anotherRequest.is_loading() || anotherRequest.is_ready());
 
             wait_timeout([&anotherRequest]()->bool
             {
@@ -275,8 +275,8 @@ TEST_F(FSTest, sort)
         skr_io_future_t anotherRequest;
         anotherRamIO.priority = ::SKR_ASYNC_SERVICE_PRIORITY_URGENT;
         anotherRamIO.path = u8"testfile";
-        anotherRamIO.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = &future;
-        anotherRamIO.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = 
+        anotherRamIO.callback_datas[SKR_IO_STAGE_COMPLETED] = &future;
+        anotherRamIO.callbacks[SKR_IO_STAGE_COMPLETED] = 
         +[](skr_io_future_t* f, skr_io_request_t* request, void* data) {
             auto future = (skr_io_future_t*)data;
             EXPECT_TRUE(!future->is_ready());

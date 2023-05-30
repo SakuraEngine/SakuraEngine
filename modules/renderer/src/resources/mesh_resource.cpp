@@ -386,7 +386,7 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* rec
                 // emit ram requests
                 auto ram_mesh_io = make_zeroed<skr_io_request_t>();
                 ram_mesh_io.path = (const char8_t*)binPath.c_str();
-                ram_mesh_io.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
+                ram_mesh_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
                     ZoneScopedN("Upload Mesh");
                     // upload
                     auto uRequest = (UploadRequest*)data;
@@ -413,12 +413,12 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* rec
 
                     vram_buffer_io.src_memory.size = thisBin.byte_length;
                     vram_buffer_io.src_memory.bytes = thisBin.bin.bytes;
-                    vram_buffer_io.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* request, void* data){};
-                    vram_buffer_io.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = nullptr;
+                    vram_buffer_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data){};
+                    vram_buffer_io.callback_datas[SKR_IO_STAGE_COMPLETED] = nullptr;
 
                     factory->root.vram_service->request(&vram_buffer_io, &uRequest->vram_requests[i], &uRequest->buffer_destinations[i]);
                 };
-                ram_mesh_io.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = (void*)uRequest.get();
+                ram_mesh_io.callback_datas[SKR_IO_STAGE_COMPLETED] = (void*)uRequest.get();
                 root.ram_service->request(root.vfs, &ram_mesh_io, &ramRequest, &ramDestination);
             }
             mUploadRequests.emplace(mesh_resource, uRequest);

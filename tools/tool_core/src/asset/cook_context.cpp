@@ -181,11 +181,11 @@ skr::filesystem::path SCookContextImpl::AddFileDependencyAndLoad(skr_io_ram_serv
     skr::task::event_t counter;
     skr_io_request_t ramIO = {};
     ramIO.path = u8Path.c_str();
-    ramIO.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
+    ramIO.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
         auto pCounter = (skr::task::event_t*)data;
         pCounter->signal();
     };
-    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = (void*)&counter;
+    ramIO.callback_datas[SKR_IO_STAGE_COMPLETED] = (void*)&counter;
     skr_io_future_t ioRequest = {};
     ioService->request(assetRecord->project->asset_vfs, &ramIO, &ioRequest, &destination);
     counter.wait(false);
