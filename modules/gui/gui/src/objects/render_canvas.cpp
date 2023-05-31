@@ -50,6 +50,6 @@ void RenderCanvas::draw(const DrawParams* params)
     RenderBox::draw(&draw_params);
 }
 
-SKR_GUI_TYPE_IMPLMENTATION(RenderCanvas);
+SKR_GUI_TYPE_IMPLEMENTATION(RenderCanvas);
 
 } }

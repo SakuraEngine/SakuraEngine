@@ -139,7 +139,7 @@ LiteSpan<DiagnosticableTreeNode* const> RenderObject::get_diagnostics_children()
     return { (DiagnosticableTreeNode* const*)children_.data(), children_.size() };
 }
 
-SKR_GUI_TYPE_IMPLMENTATION(RenderObject);
+SKR_GUI_TYPE_IMPLEMENTATION(RenderObject);
 
 } // namespace gui
 } // namespace skr

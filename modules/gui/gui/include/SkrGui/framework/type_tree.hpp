@@ -185,7 +185,7 @@ virtual const skr_record_type_id getType() override { return getStaticType(); } 
 
 // TYPE IMPLEMENTATION MACROS
 
-#define SKR_GUI_TYPE_IMPLMENTATION(__T) \
+#define SKR_GUI_TYPE_IMPLEMENTATION(__T) \
 skr::gui::TypeTreeNodeBase<__T> __Type_##__T##_Instance__; \
 template<> skr::gui::TypeTreeNodeBase<__T>* skr::gui::TypeTreeNodeBase<__T>::_this = &__Type_##__T##_Instance__; \
 template<> skr::gui::TypeTreeNode* skr::gui::TypeTreeNodeBase<__T>::_parent = nullptr; \

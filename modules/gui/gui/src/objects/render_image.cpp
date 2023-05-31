@@ -39,6 +39,6 @@ void RenderImage::draw(const DrawParams* params)
     RenderBox::draw(params);
 }
 
-SKR_GUI_TYPE_IMPLMENTATION(RenderImage);
+SKR_GUI_TYPE_IMPLEMENTATION(RenderImage);
 
 }}

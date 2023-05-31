@@ -134,6 +134,6 @@ void RenderGridPaper::draw(const DrawParams* params)
     RenderBox::draw(params);
 }
 
-SKR_GUI_TYPE_IMPLMENTATION(RenderGridPaper);
+SKR_GUI_TYPE_IMPLEMENTATION(RenderGridPaper);
 
 } }

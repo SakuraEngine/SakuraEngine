@@ -1,7 +1,7 @@
 #include "SkrGui/framework/element.hpp"
 #include "SkrGui/framework/render_object.hpp"
 #include "SkrGui/framework/render_box.hpp"
-#include "SkrGui/framework/widget.hpp"
+#include "SkrGui/framework/widget/widget.hpp"
 #include "SkrGui/framework/build_owner.hpp"
 
 namespace skr {
