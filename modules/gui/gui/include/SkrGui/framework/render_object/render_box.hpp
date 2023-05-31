@@ -1,11 +1,11 @@
 #pragma once
-#include "SkrGui/framework/render_object.hpp"
+#include "SkrGui/framework/render_object/render_object.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIDevice, skr_gdi_device)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIElement, skr_gdi_element)
 
-namespace skr {
-namespace gui {
+namespace skr::gui 
+{
 using RenderBoxSizeType = BoxSizeType;
 
 struct BoxConstraint {
@@ -50,6 +50,6 @@ protected:
     skr_gdi_element_id debug_element = nullptr;
 };
 
-} }
+}
 
 SKR_DECLARE_TYPE_ID(skr::gui::RenderBox, skr_gui_render_box);
