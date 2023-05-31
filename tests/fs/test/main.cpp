@@ -125,7 +125,7 @@ TEST_F(FSTest, asyncread)
     uint8_t bytes[1024];
     memset(bytes, 0, 1024);
     skr_io_future_t future = {};
-    skr_async_ram_destination_t dest = {};
+    skr_ram_io_buffer_t dest = {};
     dest.bytes = bytes;
     {
         auto rq = ioService->open_request();
@@ -163,7 +163,7 @@ TEST_F(FSTest, chunking)
     uint8_t bytes[1024];
     memset(bytes, 0, 1024);
     skr_io_future_t future = {};
-    skr_async_ram_destination_t dest = {};
+    skr_ram_io_buffer_t dest = {};
     dest.bytes = bytes;
 
     {
@@ -210,8 +210,8 @@ TEST_F(FSTest, cancel)
 
         skr_io_future_t future = {};
         skr_io_future_t future2 = {};
-        skr_async_ram_destination_t dest = {};
-        skr_async_ram_destination_t dest2 = {};
+        skr_ram_io_buffer_t dest = {};
+        skr_ram_io_buffer_t dest2 = {};
         {
             auto rq = ioService->open_request();
             rq->set_vfs(abs_fs);
@@ -240,8 +240,8 @@ TEST_F(FSTest, cancel)
         
         EXPECT_EQ(std::string((const char*)dest.bytes, dest.size), std::string("Hello, World2!"));
         
-        if (dest.bytes) sakura_free(dest.bytes);
-        if (dest2.bytes) sakura_free(dest2.bytes);
+        if (dest.bytes) ioService->free_buffer(&dest);
+        if (dest2.bytes) ioService->free_buffer(&dest2);
         
         skr_io_ram_service_t::destroy(ioService);
     }
@@ -264,8 +264,8 @@ TEST_F(FSTest, defer_cancel)
         ioService->add_iobuffer_resolver();
         ioService->set_sleep_time(0); // make test faster
 
-        skr_async_ram_destination_t dest = {};
-        skr_async_ram_destination_t dest2 = {};
+        skr_ram_io_buffer_t dest = {};
+        skr_ram_io_buffer_t dest2 = {};
         skr_io_future_t future = {};
         skr_io_future_t future2 = {};
         {
@@ -303,8 +303,8 @@ TEST_F(FSTest, defer_cancel)
         }
         EXPECT_EQ(std::string((const char*)dest.bytes, dest.size), std::string("Hello, World2!"));
         
-        if (dest.bytes) sakura_free(dest.bytes);
-        if (dest2.bytes) sakura_free(dest2.bytes);
+        if (dest.bytes) ioService->free_buffer(&dest);
+        if (dest2.bytes) ioService->free_buffer(&dest2);
 
         skr_io_ram_service_t::destroy(ioService);
     }
@@ -329,8 +329,8 @@ TEST_F(FSTest, sort)
 
         skr_io_future_t future = {};
         skr_io_future_t future2 = {};
-        skr_async_ram_destination_t dest = {};
-        skr_async_ram_destination_t dest2 = {};
+        skr_ram_io_buffer_t dest = {};
+        skr_ram_io_buffer_t dest2 = {};
         {
             auto rq = ioService->open_request();
             rq->set_vfs(abs_fs);
@@ -362,8 +362,8 @@ TEST_F(FSTest, sort)
         // while (!cancelled && !future2.is_ready()) {}
         EXPECT_EQ(std::string((const char*)dest2.bytes, dest2.size), std::string("Hello, World!"));
         
-        if (dest.bytes) sakura_free(dest.bytes);
-        if (dest2.bytes) sakura_free(dest2.bytes);
+        if (dest.bytes) ioService->free_buffer(&dest);
+        if (dest2.bytes) ioService->free_buffer(&dest2);
         
         skr_io_ram_service_t::destroy(ioService);
     }

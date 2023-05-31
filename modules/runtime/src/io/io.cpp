@@ -1,4 +1,5 @@
 #include "io_runnner.hpp"
+#include "containers/hashmap.hpp"
 
 namespace skr {
 namespace io {
@@ -6,9 +7,11 @@ namespace io {
 struct RAMServiceImpl final : public RAMService
 {
     RAMServiceImpl(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
+        : runner(this), name(skr::format(u8"RAMService-{}", global_idx++))
     {
         
     }
+    // [[nodiscard]] IOBatch open_batch(uint64_t n) SKR_NOEXCEPT;
     [[nodiscard]] IORequest open_request() SKR_NOEXCEPT;
 
     uint64_t add_resolver(const char8_t* name, RequestResolver resolver) SKR_NOEXCEPT
@@ -20,7 +23,11 @@ struct RAMServiceImpl final : public RAMService
         return id;
     }
 
-    void request(IORequest request, skr_io_future_t* future, skr_async_ram_destination_t* dst) SKR_NOEXCEPT;
+    void request(IORequest request, skr_io_future_t* future, skr_ram_io_buffer_t* dst) SKR_NOEXCEPT;
+    
+    RAMIOBuffer allocate_buffer(uint64_t n) SKR_NOEXCEPT;
+    void free_buffer(RAMIOBuffer* buffer) SKR_NOEXCEPT;
+    
     void cancel(skr_io_future_t* future) SKR_NOEXCEPT 
     { 
         skr_atomicu32_store_relaxed(&future->request_cancel, 1); 
@@ -37,12 +44,12 @@ struct RAMServiceImpl final : public RAMService
     struct Runner final : public skr::ServiceThread
     {
         const bool condsleep = false;
-        static uint32_t global_idx;
-        Runner() SKR_NOEXCEPT 
-            : skr::ServiceThread({ skr::format(u8"RAMService-{}", global_idx++).u8_str(), SKR_THREAD_ABOVE_NORMAL }) 
+        Runner(RAMServiceImpl* service) SKR_NOEXCEPT 
+            : skr::ServiceThread({ service->name.u8_str(), SKR_THREAD_ABOVE_NORMAL }),
+            service(service)
         {
             skr_init_rw_mutex(&resolvers_mutex);
-            condlock.initialize(skr::format(u8"RAMServiceCondLock-{}", global_idx++).u8_str());
+            condlock.initialize(skr::format(u8"{}-CondLock", service->name).u8_str());
             for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
             {
                 skr_atomicu64_store_relaxed(&request_counts[i], 0);
@@ -92,6 +99,7 @@ struct RAMServiceImpl final : public RAMService
         // 7. finish
         void finish() SKR_NOEXCEPT;
 
+        RAMServiceImpl* service = nullptr;
         SRWMutex resolvers_mutex;
         eastl::vector<eastl::pair<skr::string, RequestResolver>> resolvers;
 
@@ -108,12 +116,14 @@ struct RAMServiceImpl final : public RAMService
         CondLock condlock;
     };
     Runner runner;
+    const skr::string name;
     SmartPool<RAMIORequest, IIORequest> request_pool;
+protected:
     SAtomicU64 sequence_number = 0;
-
+    static uint32_t global_idx;
     SmartPool<IOBatchBase, IIOBatch> batch_pool;
 };
-uint32_t RAMServiceImpl::Runner::global_idx = 0;
+uint32_t RAMServiceImpl::global_idx = 0;
 
 skr_io_ram_service_t* RAMService::create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
 {
@@ -150,7 +160,7 @@ IORequest RAMServiceImpl::open_request() SKR_NOEXCEPT
     return skr::static_pointer_cast<IIORequest>(request_pool.allocate(seq));
 }
 
-void RAMServiceImpl::request(IORequest request, skr_io_future_t *future, skr_async_ram_destination_t *dst) SKR_NOEXCEPT
+void RAMServiceImpl::request(IORequest request, skr_io_future_t *future, RAMIOBuffer *dst) SKR_NOEXCEPT
 {
     auto rq = skr::static_pointer_cast<RAMIORequest>(request);
 
@@ -168,6 +178,19 @@ void RAMServiceImpl::request(IORequest request, skr_io_future_t *future, skr_asy
     {
         runner.condlock.signal();
     } 
+}
+
+RAMIOBuffer RAMServiceImpl::allocate_buffer(uint64_t n) SKR_NOEXCEPT
+{
+    auto result = (uint8_t*)sakura_mallocN(n, name.c_str());
+    return { result, n };
+}
+
+void RAMServiceImpl::free_buffer(RAMIOBuffer* buffer) SKR_NOEXCEPT
+{
+    sakura_freeN(buffer->bytes, name.c_str());
+    buffer->bytes = nullptr;
+    buffer->size = 0;
 }
 
 void RAMServiceImpl::stop(bool wait_drain) SKR_NOEXCEPT
@@ -413,7 +436,7 @@ uint64_t RAMService::add_file_resolver() SKR_NOEXCEPT
 
 uint64_t RAMService::add_iobuffer_resolver() SKR_NOEXCEPT
 {
-    const auto id = add_resolver(u8"iobuffer", [](IORequest request) {
+    const auto id = add_resolver(u8"iobuffer", [this](IORequest request) {
         auto rq = skr::static_pointer_cast<RAMIORequest>(request);
         // deal with 0 block size
         for (auto& block : rq->blocks)
@@ -435,7 +458,8 @@ uint64_t RAMService::add_iobuffer_resolver() SKR_NOEXCEPT
                 SKR_ASSERT(0 && "invalid destination size");
             }
             ZoneScopedNC("IOBufferAllocate", tracy::Color::BlueViolet);
-            rq->destination->bytes = (uint8_t*)sakura_malloc(rq->destination->size);
+            auto buf = allocate_buffer(rq->destination->size);
+            rq->destination->bytes = (uint8_t*)buf.bytes;
         }
     });
     // this->arrange_after(id, "file");
@@ -486,7 +510,7 @@ void RAMServiceImpl::Runner::dispatch_read() SKR_NOEXCEPT
             {
                 // cancel...
                 if (rq->file) skr_vfs_fclose(rq->file);
-                if (rq->destination->bytes) sakura_free(rq->destination->bytes);
+                if (rq->destination->bytes) service->free_buffer(rq->destination);
             }
             else if (rq->getStatus() == SKR_IO_STAGE_RESOLVING)
             {

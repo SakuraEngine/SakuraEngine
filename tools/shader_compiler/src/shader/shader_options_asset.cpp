@@ -19,9 +19,9 @@ namespace asset
 void* SShaderOptionsImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context)
 {
     const auto assetRecord = context->GetAssetRecord();
-    skr_async_ram_destination_t ioDestination = {};
+    skr_ram_io_buffer_t ioDestination = {};
     context->AddFileDependencyAndLoad(ioService, jsonPath.c_str(), ioDestination);
-    SKR_DEFER({sakura_free(ioDestination.bytes);});
+    SKR_DEFER({ioService->free_buffer(&ioDestination);});
 
     auto jsonString = simdjson::padded_string((char*)ioDestination.bytes, ioDestination.size);
     simdjson::ondemand::parser parser;

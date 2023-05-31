@@ -106,7 +106,10 @@ void SResourceRequestImpl::UpdateUnload()
         break;
         case SKR_LOADING_PHASE_IO:
         case SKR_LOADING_PHASE_DESER_RESOURCE: {
-            if (data)
+            auto ioService = system->GetRAMService();
+            if (ioDestination.bytes)
+                ioService->free_buffer(&ioDestination);
+            else
                 sakura_free(data);
             currentPhase = SKR_LOADING_PHASE_FINISHED;
             resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADED);
@@ -208,7 +211,10 @@ void SResourceRequestImpl::_UnloadDependencies()
 void SResourceRequestImpl::_LoadFinished()
 {
     resourceRecord->SetStatus(SKR_LOADING_STATUS_LOADED);
-    if (data)
+    auto ioService = system->GetRAMService();
+    if (ioDestination.bytes)
+        ioService->free_buffer(&ioDestination);
+    else
         sakura_free(data);
     data = nullptr;
     auto& dependencies = resourceRecord->header.dependencies;
@@ -479,7 +485,9 @@ void SResourceRequestImpl::Update()
         case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_RESOURCE:
         case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_DEPENDENCIES:
         case SKR_LOADING_PHASE_UNLOAD_RESOURCE: {
-            if (data)
+            if (ioDestination.bytes)
+                ioService->free_buffer(&ioDestination);
+            else
                 sakura_free(data);
             _UnloadDependencies();
             resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADING);

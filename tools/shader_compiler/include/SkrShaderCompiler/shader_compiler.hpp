@@ -11,6 +11,7 @@
 
 SKR_DECLARE_TYPE_ID_FWD(skr::renderer, ShaderOptionInstance, skr_shader_option_instance);
 SKR_DECLARE_TYPE_ID_FWD(skr::renderer, ShaderOptionTemplate, skr_shader_option_template);
+SKR_DECLARE_TYPE_ID_FWD(skr::io, RAMService, skr_ram_service);
 struct skr_stable_shader_hash_t;
 
 namespace skd sreflect
@@ -30,14 +31,15 @@ EShaderSourceType : uint32_t
 
 struct ShaderSourceCode
 {
-    inline ShaderSourceCode(uint8_t* bytes, uint64_t size, const char8_t* name, EShaderSourceType type) SKR_NOEXCEPT
-        : bytes(bytes), size(size), source_name(name), source_type(type) {}
+    inline ShaderSourceCode(uint8_t* bytes, uint64_t size, const char8_t* name, EShaderSourceType type, skr_ram_service_id ioService) SKR_NOEXCEPT
+        : bytes(bytes), size(size), source_name(name), source_type(type), ioService(ioService) {}
     ~ShaderSourceCode() SKR_NOEXCEPT;
 
     uint8_t* bytes = nullptr;
     uint64_t size = 0;
     skr::string source_name;
     const EShaderSourceType source_type = EShaderSourceType::INVALID;
+    skr_ram_service_id ioService = nullptr;
 };
 
 struct SKR_SHADER_COMPILER_API ICompiledShader
