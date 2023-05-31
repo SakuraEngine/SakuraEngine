@@ -1,5 +1,5 @@
 #pragma once
-#include "io/io.h"
+#include "pool.hpp"
 #include "platform/vfs.h"
 #include "misc/log.h"
 #include "misc/defer.hpp"
@@ -9,6 +9,8 @@
 #include "containers/sptr.hpp"
 #include <EASTL/fixed_vector.h>
 #include <EASTL/variant.h>
+
+#include <string.h> // ::strlen
 
 #include "tracy/Tracy.hpp"
 
@@ -21,9 +23,20 @@ typedef enum SkrAsyncIODoneStatus
     SKR_ASYNC_IO_DONE_STATUS_DONE = 2
 } SkrAsyncIODoneStatus;
 
+constexpr const char* callback_names[SKR_IO_STAGE_COUNT] = {
+    "IOCallback(None)",
+    "IOCallback(Enqueued)",
+    "IOCallback(Sorting)",
+    "IOCallback(Resolving)",
+    "IOCallback(Loading)",
+    "IOCallback(Loaded)",
+    "IOCallback(Decompressing)",
+    "IOCallback(Completed)",
+    "IOCallback(Cancelled)",
+};
+
 struct RAMIORequest final : public IIORequest
 {
-    const uint64_t sequence;
     skr_vfs_t* vfs = nullptr;
     skr::string path;
     skr_io_file_handle file;
@@ -48,6 +61,9 @@ struct RAMIORequest final : public IIORequest
         skr_atomicu32_store_release(&future->status, status);
         if (const auto callback = callbacks[status])
         {
+            ZoneScoped;
+            ZoneName(callback_names[status], ::strlen(callback_names[status]));
+
             callback(future, nullptr, callback_datas[status]);
         }
     }
@@ -101,51 +117,20 @@ struct RAMIORequest final : public IIORequest
     void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT {  }
     void reset_compressed_blocks() SKR_NOEXCEPT {  }
 
+public:
     uint32_t add_refcount() 
     { 
         return 1 + skr_atomicu32_add_relaxed(&rc, 1); 
     }
-
     uint32_t release() 
     {
         skr_atomicu32_add_relaxed(&rc, -1);
         return skr_atomicu32_load_acquire(&rc);
     }
+private:
+    SAtomicU32 rc = 0;
 
-    struct Pool
-    {
-        ~Pool()
-        {
-            RAMIORequest* ptr = nullptr;
-            while (blocks.try_dequeue(ptr))
-            {
-                sakura_free_aligned(ptr, alignof(RAMIORequest));
-            }
-        }
-
-        SObjectPtr<RAMIORequest> allocate(const uint64_t sequence)
-        {
-            RAMIORequest* ptr = nullptr;
-            if (!blocks.try_dequeue(ptr))
-            {
-                ptr = (RAMIORequest*)sakura_calloc_aligned(1, sizeof(RAMIORequest), alignof(RAMIORequest));
-            }
-            new (ptr) RAMIORequest(sequence, this);
-            return SObjectPtr<RAMIORequest>(ptr);
-        }
-
-        void deallocate(RAMIORequest* ptr)
-        {
-            if (ptr)
-            {
-                ptr->~RAMIORequest();
-                blocks.enqueue(ptr);
-            }
-        }
-        skr::ConcurrentQueue<RAMIORequest*> blocks;
-    };
-    friend struct Pool;
-
+public:
     SInterfaceDeleter custom_deleter() const 
     { 
         return +[](SInterface* ptr) 
@@ -154,13 +139,12 @@ struct RAMIORequest final : public IIORequest
             p->pool->deallocate(p); 
         };
     }
-
+    friend struct SmartPool<RAMIORequest, IIORequest>;
 protected:
-    RAMIORequest(const uint64_t sequence, Pool* pool) : sequence(sequence), pool(pool) {}
+    RAMIORequest(const uint64_t sequence, ISmartPool<IIORequest>* pool) : sequence(sequence), pool(pool) {}
 
-private:
-    Pool* pool = nullptr;
-    SAtomicU32 rc = 0;
+    const uint64_t sequence;
+    ISmartPool<IIORequest>* pool = nullptr;
 };
 
 using RQPtr = skr::SObjectPtr<RAMIORequest>;

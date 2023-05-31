@@ -141,7 +141,8 @@ typedef struct skr_ram_io_service_desc_t {
     bool lockless SKR_IF_CPP(= true);
     SkrAsyncServiceSortMethod sort_method SKR_IF_CPP(= SKR_ASYNC_SERVICE_SORT_METHOD_NEVER);
     SkrAsyncServiceSleepMode sleep_mode SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR);
-    skr_job_queue_id job_queue SKR_IF_CPP(= nullptr);
+    skr_job_queue_id resolve_job_queue SKR_IF_CPP(= nullptr);
+    skr_job_queue_id io_job_queue SKR_IF_CPP(= nullptr);
 } skr_ram_io_service_desc_t;
 
 #ifdef __cplusplus
@@ -200,12 +201,14 @@ struct RUNTIME_API IIORequest : public skr::SInterface
     virtual void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
     virtual void reset_compressed_blocks() SKR_NOEXCEPT = 0;
 };
+using IORequest = SObjectPtr<IIORequest>;
 
 struct RUNTIME_API IIOBatch : public skr::SInterface
 {
-
+    virtual void reserve(uint64_t size) SKR_NOEXCEPT = 0;
+    virtual void add_request(IORequest request) SKR_NOEXCEPT = 0;
 };
-using IORequest = SObjectPtr<IIORequest>;
+using IOBatch = SObjectPtr<IIOBatch>;
 using RequestResolver = eastl::function<void(IORequest)>;
 
 #pragma endregion
@@ -227,6 +230,9 @@ struct RUNTIME_API RAMService
     [[nodiscard]] static skr_io_ram_service_t* create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
     static void destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT;
 
+    // open a batch for filling
+    // [[nodiscard]] virtual IOBatch open_batch(uint64_t n) SKR_NOEXCEPT = 0;
+    
     // open a request for filling
     [[nodiscard]] virtual IORequest open_request() SKR_NOEXCEPT = 0;
 
