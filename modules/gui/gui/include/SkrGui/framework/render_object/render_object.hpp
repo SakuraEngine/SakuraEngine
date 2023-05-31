@@ -14,9 +14,8 @@ typedef struct skr_gui_render_object_draw_params_t
     int32_t ui_z SKR_IF_CPP(= 0);
 } skr_gui_render_object_draw_params_t;
 
-namespace skr {
-namespace gui {
-
+namespace skr::gui
+{
 struct SKR_GUI_API RenderObject : public DiagnosticableTreeNode
 {
     SKR_GUI_TYPE(RenderObject, DiagnosticableTreeNode, u8"74844fa6-8994-4915-8f8e-ec944a1cbea4");
@@ -55,4 +54,3 @@ protected:
 };
 
 } // namespace gui
-} // namespace skr
