@@ -1,5 +1,6 @@
 #include "SkrGui/framework/build_owner.hpp"
 #include "misc/defer.hpp"
+#include "SkrGui/framework/element/element.hpp"
 
 namespace skr
 {

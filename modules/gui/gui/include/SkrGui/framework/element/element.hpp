@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrGui/framework/type_tree.hpp"
 #include "misc/function_ref.hpp"
 #include "containers/not_null.hpp"
 #include "SkrGui/framework/diagnostics.hpp"
@@ -8,8 +9,8 @@ SKR_DECLARE_TYPE_ID_FWD(skr::gui, Widget, skr_gui_widget)
 SKR_DECLARE_TYPE_ID_FWD(skr::gui, Element, skr_gui_element)
 SKR_DECLARE_TYPE_ID_FWD(skr::gui, Slot, skr_gui_slot)
 
-namespace skr {
-namespace gui {
+namespace skr::gui
+{
 struct BuildOwner;
 struct Key;
 enum class ElementLifecycle : uint32_t
@@ -22,6 +23,7 @@ enum class ElementLifecycle : uint32_t
 
 struct SKR_GUI_API BuildContext : public DiagnosticableTreeNode
 {
+    SKR_GUI_TYPE(BuildContext, DiagnosticableTreeNode, u8"17f40d5e-cf8d-40c5-9e1e-1fd4ee7716e6")
     virtual bool mounted() SKR_NOEXCEPT = 0;
     virtual Widget* get_widget() SKR_NOEXCEPT = 0;
     virtual RenderObject* find_render_object() SKR_NOEXCEPT = 0;
@@ -30,6 +32,8 @@ struct SKR_GUI_API BuildContext : public DiagnosticableTreeNode
 
 struct SKR_GUI_API Element : public BuildContext
 {
+    SKR_GUI_TYPE(Element, BuildContext, u8"123127c7-4eed-4007-87ff-6843bd56771a")
+
     friend struct BuildOwner;
 
     Element(skr_gui_widget_id widget) SKR_NOEXCEPT;
@@ -90,6 +94,4 @@ private:
     BuildOwner* _owner = nullptr;
     ElementLifecycle _lifecycle_state = ElementLifecycle::initial;
 };
-
-} // namespace gui
-} // namespace skr
+} // namespace skr::gui
