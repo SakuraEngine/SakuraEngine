@@ -40,13 +40,16 @@
 namespace ozz {
 namespace memory {
 
+const char* ozzAllocatorName = "ozz::memory";
+
 void* Allocator::Allocate(size_t _size, size_t _alignment)
 {
-  return sakura_malloc_aligned(_size, _alignment);
+  return sakura_malloc_alignedN(_size, _alignment, ozzAllocatorName);
 }
+
 void Allocator::Deallocate(void* _block, size_t _alignment)
 {
-  sakura_free_aligned(_block, _alignment);
+  sakura_free_alignedN(_block, _alignment, ozzAllocatorName);
 }
 
 namespace {
