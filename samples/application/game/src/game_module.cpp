@@ -125,9 +125,7 @@ void SGameModule::installResourceFactories()
     ioServiceDesc.lockless = true;
     ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
     ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
-    ram_service->add_file_resolver();
-    ram_service->add_iobuffer_resolver();
-    ram_service->add_chunking_resolver();
+    ram_service->add_default_resolvers();
 
     registry = SkrNew<skr::resource::SLocalResourceRegistry>(resource_vfs);
     skr::resource::GetResourceSystem()->Initialize(registry, ram_service);

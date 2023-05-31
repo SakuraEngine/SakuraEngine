@@ -158,9 +158,7 @@ TEST_F(FSTest, chunking)
     skr_ram_io_service_desc_t ioServiceDesc = {};
     ioServiceDesc.name = u8"Test";
     auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
-    ioService->add_file_resolver();
-    ioService->add_iobuffer_resolver();
-    ioService->add_chunking_resolver();
+    ioService->add_default_resolvers();
 
     uint8_t bytes[1024];
     memset(bytes, 0, 1024);
