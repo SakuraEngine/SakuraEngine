@@ -124,21 +124,21 @@ TEST_F(FSTest, asyncread)
 
     uint8_t bytes[1024];
     memset(bytes, 0, 1024);
-
-    auto rq = ioService->open_request();
-    rq->set_vfs(abs_fs);
-    rq->set_path(u8"testfile2");
-    rq->add_block({}); // read all
-    rq->add_callback(SKR_IO_STAGE_COMPLETED,
-        +[](skr_io_future_t* future, skr_io_request_t* request, void* arg){
-            auto pRamIO = (skr_io_request_t*)arg;
-            SKR_LOG_INFO("async read of file %s ok", pRamIO->get_path());
-        }, rq.get());
-
     skr_io_future_t future = {};
     skr_async_ram_destination_t dest = {};
     dest.bytes = bytes;
-    ioService->request(rq, &future, &dest);
+    {
+        auto rq = ioService->open_request();
+        rq->set_vfs(abs_fs);
+        rq->set_path(u8"testfile2");
+        rq->add_block({}); // read all
+        rq->add_callback(SKR_IO_STAGE_COMPLETED,
+            +[](skr_io_future_t* future, skr_io_request_t* request, void* arg){
+                auto pRamIO = (skr_io_request_t*)arg;
+                SKR_LOG_INFO("async read of file %s ok", pRamIO->get_path());
+            }, rq.get());
+        ioService->request(rq, &future, &dest);
+    }
 
     wait_timeout([&future]()->bool
     {
@@ -162,21 +162,22 @@ TEST_F(FSTest, chunking)
 
     uint8_t bytes[1024];
     memset(bytes, 0, 1024);
-
-    auto rq = ioService->open_request();
-    rq->set_vfs(abs_fs);
-    rq->set_path(u8"testfile2");
-    rq->add_block({}); // read all
-    rq->add_callback(SKR_IO_STAGE_COMPLETED,
-        +[](skr_io_future_t* future, skr_io_request_t* request, void* arg){
-            auto pRamIO = (skr_io_request_t*)arg;
-            SKR_LOG_INFO("async read of file %s ok", pRamIO->get_path());
-        }, rq.get());
-
     skr_io_future_t future = {};
     skr_async_ram_destination_t dest = {};
     dest.bytes = bytes;
-    ioService->request(rq, &future, &dest);
+
+    {
+        auto rq = ioService->open_request();
+        rq->set_vfs(abs_fs);
+        rq->set_path(u8"testfile2");
+        rq->add_block({}); // read all
+        rq->add_callback(SKR_IO_STAGE_COMPLETED,
+            +[](skr_io_future_t* future, skr_io_request_t* request, void* arg){
+                auto pRamIO = (skr_io_request_t*)arg;
+                SKR_LOG_INFO("async read of file %s ok", pRamIO->get_path());
+            }, rq.get());
+        ioService->request(rq, &future, &dest);
+    }
 
     wait_timeout([&future]()->bool
     {
@@ -209,21 +210,22 @@ TEST_F(FSTest, cancel)
 
         skr_io_future_t future = {};
         skr_io_future_t future2 = {};
-
-        auto rq = ioService->open_request();
-        rq->set_vfs(abs_fs);
-        rq->set_path(u8"testfile2");
-        rq->add_block({}); // read all
-
-        auto rq2 = ioService->open_request();
-        rq2->set_vfs(abs_fs);
-        rq2->set_path(u8"testfile");
-        rq2->add_block({}); // read all
-
         skr_async_ram_destination_t dest = {};
         skr_async_ram_destination_t dest2 = {};
-        ioService->request(rq, &future, &dest);
-        ioService->request(rq2, &future2, &dest2);
+        {
+            auto rq = ioService->open_request();
+            rq->set_vfs(abs_fs);
+            rq->set_path(u8"testfile2");
+            rq->add_block({}); // read all
+            ioService->request(rq, &future, &dest);
+        }
+        {
+            auto rq2 = ioService->open_request();
+            rq2->set_vfs(abs_fs);
+            rq2->set_path(u8"testfile");
+            rq2->add_block({}); // read all
+            ioService->request(rq2, &future2, &dest2);
+        }
         // try cancel io of testfile
         ioService->cancel(&future2);
         // while (!request.is_ready()) {}
@@ -262,23 +264,24 @@ TEST_F(FSTest, defer_cancel)
         ioService->add_iobuffer_resolver();
         ioService->set_sleep_time(0); // make test faster
 
-        skr_io_future_t future = {};
-        skr_io_future_t future2 = {};
-
-        auto rq = ioService->open_request();
-        rq->set_vfs(abs_fs);
-        rq->set_path(u8"testfile2");
-        rq->add_block({}); // read all
-
-        auto rq2 = ioService->open_request();
-        rq2->set_vfs(abs_fs);
-        rq2->set_path(u8"testfile");
-        rq2->add_block({}); // read all
-
         skr_async_ram_destination_t dest = {};
         skr_async_ram_destination_t dest2 = {};
-        ioService->request(rq, &future, &dest);
-        ioService->request(rq2, &future2, &dest2);
+        skr_io_future_t future = {};
+        skr_io_future_t future2 = {};
+        {
+            auto rq = ioService->open_request();
+            rq->set_vfs(abs_fs);
+            rq->set_path(u8"testfile2");
+            rq->add_block({}); // read all
+            ioService->request(rq, &future, &dest);
+        }
+        {
+            auto rq2 = ioService->open_request();
+            rq2->set_vfs(abs_fs);
+            rq2->set_path(u8"testfile");
+            rq2->add_block({}); // read all
+            ioService->request(rq2, &future2, &dest2);
+        }
         // try cancel io of testfile
         ioService->cancel(&future2);
         ioService->drain();
@@ -326,28 +329,29 @@ TEST_F(FSTest, sort)
 
         skr_io_future_t future = {};
         skr_io_future_t future2 = {};
-
-        auto rq = ioService->open_request();
-        rq->set_vfs(abs_fs);
-        rq->set_priority(SKR_ASYNC_SERVICE_PRIORITY_NORMAL);
-        rq->set_path(u8"testfile");
-        rq->add_block({}); // read all
-
-        auto rq2 = ioService->open_request();
-        rq2->set_vfs(abs_fs);
-        rq2->set_priority(SKR_ASYNC_SERVICE_PRIORITY_URGENT);
-        rq2->set_path(u8"testfile");
-        rq2->add_block({}); // read all
-        rq2->add_callback(SKR_IO_STAGE_COMPLETED, 
-        +[](skr_io_future_t* f, skr_io_request_t* request, void* data) {
-            auto future = (skr_io_future_t*)data;
-            EXPECT_TRUE(!future->is_ready());
-        }, &future);
-
         skr_async_ram_destination_t dest = {};
         skr_async_ram_destination_t dest2 = {};
-        ioService->request(rq, &future, &dest);
-        ioService->request(rq2, &future2, &dest2);
+        {
+            auto rq = ioService->open_request();
+            rq->set_vfs(abs_fs);
+            rq->set_priority(SKR_ASYNC_SERVICE_PRIORITY_NORMAL);
+            rq->set_path(u8"testfile");
+            rq->add_block({}); // read all
+            ioService->request(rq, &future, &dest);
+        }
+        {
+            auto rq2 = ioService->open_request();
+            rq2->set_vfs(abs_fs);
+            rq2->set_priority(SKR_ASYNC_SERVICE_PRIORITY_URGENT);
+            rq2->set_path(u8"testfile");
+            rq2->add_block({}); // read all
+            rq2->add_callback(SKR_IO_STAGE_COMPLETED, 
+            +[](skr_io_future_t* f, skr_io_request_t* request, void* data) {
+                auto future = (skr_io_future_t*)data;
+                EXPECT_TRUE(!future->is_ready());
+            }, &future);
+            ioService->request(rq2, &future2, &dest2);
+        }
         ioService->run();
         ioService->drain();
 

@@ -1,25 +1,4 @@
-#include "ram_request.hpp"
-
-bool skr_io_future_t::is_ready() const SKR_NOEXCEPT
-{
-    return get_status() == SKR_IO_STAGE_COMPLETED;
-}
-bool skr_io_future_t::is_enqueued() const SKR_NOEXCEPT
-{
-    return get_status() == SKR_IO_STAGE_ENQUEUED;
-}
-bool skr_io_future_t::is_cancelled() const SKR_NOEXCEPT
-{
-    return get_status() == SKR_IO_STAGE_CANCELLED;
-}
-bool skr_io_future_t::is_loading() const SKR_NOEXCEPT
-{
-    return get_status() == SKR_IO_STAGE_LOADING;
-}
-ESkrIOStage skr_io_future_t::get_status() const SKR_NOEXCEPT
-{
-    return (ESkrIOStage)skr_atomicu32_load_acquire(&status);
-}
+#include "io_runnner.hpp"
 
 namespace skr {
 namespace io {
@@ -96,28 +75,20 @@ struct RAMServiceImpl final : public RAMService
 
         // cancel request marked as request_cancel
         bool try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT;
-
         // 0. recycle
         void recycle() SKR_NOEXCEPT;
-
         // 1. fetch requests from queue
         uint64_t fetch() SKR_NOEXCEPT;
-
         // 2. sort raw requests
         void sort() SKR_NOEXCEPT;
-
         // 3. resolve requests to pending raw request array
         void resolve() SKR_NOEXCEPT;
-
         // 5. dispatch I/O blocks to drives (+allocate & cpy to raw)
         void dispatch() SKR_NOEXCEPT;
-        void dispatch_open() SKR_NOEXCEPT;
         void dispatch_read() SKR_NOEXCEPT;
         void dispatch_close() SKR_NOEXCEPT;
-
         // 6. do uncompress works (+allocate & cpy to uncompressed)
         void uncompress() SKR_NOEXCEPT;
-
         // 7. finish
         void finish() SKR_NOEXCEPT;
 
@@ -137,8 +108,10 @@ struct RAMServiceImpl final : public RAMService
         CondLock condlock;
     };
     Runner runner;
-    RAMIORequest::Pool request_pool;
+    SmartPool<RAMIORequest, IIORequest> request_pool;
     SAtomicU64 sequence_number = 0;
+
+    SmartPool<IOBatchBase, IIOBatch> batch_pool;
 };
 uint32_t RAMServiceImpl::Runner::global_idx = 0;
 
