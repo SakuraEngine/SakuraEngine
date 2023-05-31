@@ -1,10 +1,9 @@
-#include "SkrGui/framework/widget.hpp"
+#include "SkrGui/framework/widget/widget.hpp"
 #include "platform/guid.hpp"
 
-namespace skr {
-namespace gui {
-
-SKR_GUI_TYPE_IMPLMENTATION(Widget);
+namespace skr::gui
+{
+SKR_GUI_TYPE_IMPLEMENTATION(Widget);
 
 not_null<Element*> Widget::create_element() noexcept
 {
@@ -25,4 +24,4 @@ bool Widget::CanUpdate(not_null<Widget*> old_widget, not_null<Widget*> new_widge
     return true;
 }
 
-} }
+}

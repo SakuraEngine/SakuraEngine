@@ -236,7 +236,7 @@ AlignItems RenderFlex::get_align_items()
     return align_items;
 }
 
-SKR_GUI_TYPE_IMPLMENTATION(RenderFlex);
+SKR_GUI_TYPE_IMPLEMENTATION(RenderFlex);
 
 } // namespace gui
 } // namespace skr

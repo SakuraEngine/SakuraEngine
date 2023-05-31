@@ -108,8 +108,8 @@ DiagnosticableTreeNode::~DiagnosticableTreeNode() SKR_NOEXCEPT
 
 }
 
-SKR_GUI_TYPE_IMPLMENTATION(Diagnosticable);
-SKR_GUI_TYPE_IMPLMENTATION(DiagnosticableTree);
-SKR_GUI_TYPE_IMPLMENTATION(DiagnosticableTreeNode);
+SKR_GUI_TYPE_IMPLEMENTATION(Diagnosticable);
+SKR_GUI_TYPE_IMPLEMENTATION(DiagnosticableTree);
+SKR_GUI_TYPE_IMPLEMENTATION(DiagnosticableTreeNode);
 
 } }

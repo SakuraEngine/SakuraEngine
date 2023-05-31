@@ -1,5 +1,4 @@
 #include "module/module.hpp"
-#include "SkrGui/framework/widget.hpp"
 
 class SkrGuiModule : public skr::IDynamicModule
 {
