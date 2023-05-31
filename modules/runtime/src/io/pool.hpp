@@ -9,6 +9,7 @@ namespace io {
 template<typename I>
 struct ISmartPool
 {
+    virtual ~ISmartPool() = default;
     virtual SObjectPtr<I> allocate(const uint64_t sequence) SKR_NOEXCEPT = 0;
     virtual void deallocate(I* ptr) SKR_NOEXCEPT = 0;
 };
@@ -17,6 +18,14 @@ template<typename T, typename I>
 struct SmartPool : public ISmartPool<I>
 {
     static_assert(std::is_base_of_v<I, T>, "T must be derived from I");
+
+    SmartPool(uint64_t cnt = 64)
+    {
+        for (uint64_t i = 0; i < cnt; ++i)
+        {
+            blocks.enqueue((T*)sakura_calloc_aligned(1, sizeof(T), alignof(T)));
+        }
+    }
 
     ~SmartPool()
     {
@@ -50,6 +59,7 @@ struct SmartPool : public ISmartPool<I>
         if (auto ptr = static_cast<T*>(iptr))
         {
             ptr->~T();
+            memset(ptr, 0, sizeof(T));
             skr_atomicu32_add_relaxed(&objcnt, -1);
             blocks.enqueue(ptr);
         }

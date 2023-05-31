@@ -102,7 +102,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
         std::string resource_uri;
         skr_texture_resource_id texture_resource = nullptr;
         skr_io_future_t ram_request;
-        skr_async_ram_destination_t ram_destination;
+        skr_ram_io_buffer_t ram_destination;
         skr_io_future_t vram_request;
         skr_async_vtexture_destination_t texture_destination = {};
     };
@@ -375,6 +375,10 @@ ESkrInstallStatus STextureFactoryImpl::UpdateInstall(skr_resource_record_t* reco
                 view_desc.usages = CGPU_TVU_SRV;
                 texture_resource->texture_view = cgpu_create_texture_view(root.render_device->get_cgpu_device(), &view_desc);
 
+                if (auto rq = mUploadRequests[texture_resource])
+                {
+                    root.ram_service->free_buffer(&rq->ram_destination);
+                }
                 mUploadRequests.erase(texture_resource);
                 mInstallTypes.erase(texture_resource);
             }

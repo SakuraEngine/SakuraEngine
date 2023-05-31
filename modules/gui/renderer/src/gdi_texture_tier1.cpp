@@ -72,9 +72,11 @@ struct DecodingProgress : public skr::AsyncProgress<ImageTex::FutureLauncher, in
     bool do_in_background() override
     {
         auto pAsyncData = &owner->async_data;
-        owner->pixel_data = image_coder_decode_image(owner->raw_data.bytes, 
+        const auto decoded = image_coder_decode_image(owner->raw_data.bytes, 
             owner->raw_data.size, owner->image_height, 
             owner->image_width, owner->image_depth, owner->format);
+        owner->pixel_data.bytes = decoded.bytes;
+        owner->pixel_data.size = decoded.size;
         pAsyncData->ram_data_finsihed_callback();
         return true;
     }
@@ -329,8 +331,10 @@ GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* o
 #ifdef SKR_GUI_RENDERER_USE_IMAGE_CODER
         if (owner->async_data.useImageCoder)
         {
-            owner->pixel_data = image_coder_decode_image(owner->raw_data.bytes, owner->raw_data.size,
+            auto decoded = image_coder_decode_image(owner->raw_data.bytes, owner->raw_data.size,
                 owner->image_height, owner->image_width, owner->image_depth, owner->format);
+            owner->pixel_data.bytes = decoded.bytes;
+            owner->pixel_data.size = decoded.size;
         }
         else
 #endif
@@ -381,13 +385,14 @@ GDITextureId GDITextureAsyncData_RenderGraph::DoAsync(struct GDITexture_RenderGr
                 texture->intializeBindTable();
 
                 skr_atomicu32_store_release(&texture->state, static_cast<uint32_t>(EGDIResourceState::Okay));
+                auto renderer = (GDIRenderer_RenderGraph*)texture->renderer;
                 if (intermediate_image.pixel_data.bytes != intermediate_image.raw_data.bytes)
                 {
-                    sakura_free(intermediate_image.pixel_data.bytes); // free image_coder decoded data
+                    renderer->get_ram_service()->free_buffer(&intermediate_image.pixel_data); // free image_coder decoded data
                 }
                 if (intermediate_image.raw_data.bytes)
                 {
-                    sakura_free(intermediate_image.raw_data.bytes);
+                    renderer->get_ram_service()->free_buffer(&intermediate_image.raw_data); 
                 } 
                 intermediate_image.pixel_data = {};
             };

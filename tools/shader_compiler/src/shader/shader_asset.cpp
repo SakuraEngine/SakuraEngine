@@ -25,19 +25,20 @@ namespace asset
 {
 ShaderSourceCode::~ShaderSourceCode() SKR_NOEXCEPT
 {
-    sakura_free(bytes);
+    skr_ram_io_buffer_t ioDestination = {bytes, size};
+    ioService->free_buffer(&ioDestination);
 }
 
 void* SShaderImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context)
 {
-    skr_async_ram_destination_t ioDestination = {};
+    skr_ram_io_buffer_t ioDestination = {};
     const auto path = context->AddFileDependencyAndLoad(ioService, sourcePath.c_str(), ioDestination);
 
     // create source code wrapper
     const auto extention = path.extension().u8string();
     const auto source_name = path.filename().replace_extension();
     const auto sourceType = Util_GetShaderSourceTypeWithExtensionString(extention.c_str());
-    return SkrNew<ShaderSourceCode>(ioDestination.bytes, ioDestination.size, source_name.u8string().c_str(), sourceType);
+    return SkrNew<ShaderSourceCode>(ioDestination.bytes, ioDestination.size, source_name.u8string().c_str(), sourceType, ioService);
 }
 
 void SShaderImporter::Destroy(void* resource)

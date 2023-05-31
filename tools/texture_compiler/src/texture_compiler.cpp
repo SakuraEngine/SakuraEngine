@@ -12,21 +12,30 @@ namespace asset
 {
 struct skr_uncompressed_render_texture_t
 {
-    skr_uncompressed_render_texture_t(skr_image_coder_id coder)
-        : image_coder(coder)
+    skr_uncompressed_render_texture_t(skr_image_coder_id coder, skr_io_ram_service_t* ioService, skr_ram_io_buffer_t iobuf)
+        : image_coder(coder), ioService(ioService), iobuf(iobuf)
     {
 
     }
+
     ~skr_uncompressed_render_texture_t()
     {
-        if (image_coder) skr_image_coder_free_image(image_coder);
+        if (image_coder)
+        {
+            SKR_DEFER({ skr_image_coder_free_image(image_coder); });
+            
+            ioService->free_buffer(&iobuf);
+        }
     }
+
     skr_image_coder_id image_coder = nullptr;
+    skr_io_ram_service_t* ioService = nullptr;
+    skr_ram_io_buffer_t iobuf;
 };
 
 void* STextureImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context)
 {
-    skr_async_ram_destination_t ioDestination = {};
+    skr_ram_io_buffer_t ioDestination = {};
     {
         ZoneScopedN("LoadFileDependencies");
         context->AddFileDependencyAndLoad(ioService, assetPath.c_str(), ioDestination);
@@ -40,13 +49,16 @@ void* STextureImporter::Import(skr_io_ram_service_t* ioService, SCookContext* co
         EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)uncompressed_data, uncompressed_size);
         if (auto coder = skr_image_coder_create_image(format))
         {
-            bool success = skr_image_coder_move_encoded(coder, uncompressed_data, uncompressed_size);
+            bool success = coder->view_encoded(uncompressed_data, uncompressed_size);
             if (success)
             {
-                return SkrNew<skr_uncompressed_render_texture_t>(coder);
+                return SkrNew<skr_uncompressed_render_texture_t>(coder, ioService, ioDestination);
             }
         }
-        sakura_free(ioDestination.bytes);
+        else
+        {
+            SKR_DEFER({ioService->free_buffer(&ioDestination);});
+        }
     }
 
     return nullptr;

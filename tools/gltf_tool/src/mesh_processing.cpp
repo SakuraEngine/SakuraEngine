@@ -70,7 +70,7 @@ cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr_io_ram_service_t*
 {
     // prepare callback
     skr::task::event_t counter;
-    skr_async_ram_destination_t destination;
+    skr_ram_io_buffer_t destination;
     skr::string u8Path = assetPath.u8_str();
     struct CallbackData
     {
@@ -113,7 +113,7 @@ cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr_io_ram_service_t*
                 }
             }
         }
-        sakura_free(destination.bytes);
+        ioService->free_buffer(&destination);
     }
     return gltf_data_;
 }

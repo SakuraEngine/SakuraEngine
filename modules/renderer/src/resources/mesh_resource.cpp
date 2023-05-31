@@ -232,7 +232,7 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
         skr_mesh_resource_id mesh_resource = nullptr;
         eastl::vector<std::string> resource_uris;
         eastl::vector<skr_io_future_t> ram_requests;
-        eastl::vector<skr_async_ram_destination_t> ram_destinations;
+        eastl::vector<skr_ram_io_buffer_t> ram_destinations;
         eastl::vector<skr_io_future_t> vram_requests;
         eastl::vector<skr_async_vbuffer_destination_t> buffer_destinations;
     };
@@ -497,7 +497,10 @@ ESkrInstallStatus SMeshFactoryImpl::UpdateInstall(skr_resource_record_t* record)
                 {
                     for (auto&& bin : mesh_resource->bins)
                     {
-                        sakura_free(bin.bin.bytes);
+                        skr::io::RAMIOBuffer buffer = {
+                            bin.bin.bytes, bin.bin.size
+                        };
+                        root.ram_service->free_buffer(&buffer);
                         bin.bin.bytes = nullptr;
                     }
                 }
@@ -529,7 +532,10 @@ bool SMeshFactoryImpl::Uninstall(skr_resource_record_t* record)
     {
         for (auto&& bin : mesh_resource->bins)
         {
-            sakura_free(bin.bin.bytes);
+            skr::io::RAMIOBuffer buffer = {
+                bin.bin.bytes, bin.bin.size
+            };
+            root.ram_service->free_buffer(&buffer);
             bin.bin.bytes = nullptr;
         }
     }

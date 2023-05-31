@@ -112,12 +112,12 @@ typedef struct skr_io_future_t {
     RUNTIME_API ESkrIOStage get_status() const SKR_NOEXCEPT;
 #endif
 } skr_io_future_t;
-typedef struct skr_async_ram_destination_t skr_io_ram_buffer_t;
+typedef struct skr_ram_io_buffer_t skr_io_ram_buffer_t;
 
-typedef struct skr_async_ram_destination_t {
+typedef struct skr_ram_io_buffer_t {
     uint8_t* bytes SKR_IF_CPP(= nullptr);
     uint64_t size SKR_IF_CPP(= 0);
-} skr_async_ram_destination_t;
+} skr_ram_io_buffer_t;
 
 typedef struct skr_io_block_t
 {
@@ -209,6 +209,7 @@ struct RUNTIME_API IIOBatch : public skr::SInterface
     virtual void add_request(IORequest request) SKR_NOEXCEPT = 0;
 };
 using IOBatch = SObjectPtr<IIOBatch>;
+using IOBatchId = uint64_t;
 using RequestResolver = eastl::function<void(IORequest)>;
 
 #pragma endregion
@@ -225,26 +226,24 @@ using RequestResolver = eastl::function<void(IORequest)>;
 
 #pragma endregion
 
-struct RUNTIME_API RAMService
+struct RUNTIME_API IOService
 {
-    [[nodiscard]] static skr_io_ram_service_t* create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
-    static void destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT;
-
-    // open a batch for filling
-    // [[nodiscard]] virtual IOBatch open_batch(uint64_t n) SKR_NOEXCEPT = 0;
-    
-    // open a request for filling
-    [[nodiscard]] virtual IORequest open_request() SKR_NOEXCEPT = 0;
-
     // add a resolver to service
     virtual uint64_t add_resolver(const char8_t* name, RequestResolver resolver) SKR_NOEXCEPT = 0;
 
-    // we do not lock an ioService to a single vfs, but for better bandwidth use and easier profiling
-    // it's recommended to make a unique relevance between ioService & vfs（or vfses share a single I/O hardware)
-    virtual void request(IORequest request, skr_io_future_t* future, skr_async_ram_destination_t* dst) SKR_NOEXCEPT = 0;
+    // open a request for filling
+    [[nodiscard]] virtual IORequest open_request() SKR_NOEXCEPT = 0;
 
-    // emplace a cancel **command** to ioService thread
-    // it's recommended to use this under lockless mode
+    // start a request batch
+    // virtual IOBatchId start_batch() SKR_NOEXCEPT = 0;
+
+    // open a request for filling with batch
+    // [[nodiscard]] virtual IORequest open_request(IOBatchId id) SKR_NOEXCEPT = 0;
+
+    // finish a request batch
+    // virtual IOBatchId finish_batch() SKR_NOEXCEPT = 0;
+
+    // cancel request
     virtual void cancel(skr_io_future_t* future) SKR_NOEXCEPT = 0;
 
     // stop service and hang up underground thread
@@ -261,6 +260,26 @@ struct RUNTIME_API RAMService
 
     // get service status (sleeping or running)
     virtual SkrAsyncServiceStatus get_service_status() const SKR_NOEXCEPT = 0;
+
+    virtual ~IOService() SKR_NOEXCEPT = default;
+    IOService() SKR_NOEXCEPT = default;
+};
+
+using RAMIOBuffer = skr_ram_io_buffer_t;
+struct RUNTIME_API RAMService : public IOService
+{
+    [[nodiscard]] static skr_io_ram_service_t* create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
+    static void destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT;
+
+    // we do not lock an ioService to a single vfs, but for better bandwidth use and easier profiling
+    // it's recommended to make a unique relevance between ioService & vfs（or vfses share a single I/O hardware)
+    virtual void request(IORequest request, skr_io_future_t* future, RAMIOBuffer* dst) SKR_NOEXCEPT = 0;
+
+    // allocate I/O Buffer
+    virtual RAMIOBuffer allocate_buffer(uint64_t n) SKR_NOEXCEPT = 0;
+
+    // free I/O Buffer
+    virtual void free_buffer(RAMIOBuffer* buffer) SKR_NOEXCEPT = 0;
 
     uint64_t add_file_resolver() SKR_NOEXCEPT;
     uint64_t add_iobuffer_resolver() SKR_NOEXCEPT;

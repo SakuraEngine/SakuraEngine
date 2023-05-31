@@ -26,9 +26,9 @@ void* SJsonConfigImporter::Import(skr_io_ram_service_t* ioService, SCookContext*
         return nullptr;
     }
 
-    skr_async_ram_destination_t destination = {};
+    skr_ram_io_buffer_t destination = {};
     context->AddFileDependencyAndLoad(ioService, assetPath.c_str(), destination);
-    SKR_DEFER({sakura_free(destination.bytes);});
+    SKR_DEFER({ioService->free_buffer(&destination);});
 
     auto jsonString = simdjson::padded_string((char*)destination.bytes, destination.size);
     simdjson::ondemand::parser parser;

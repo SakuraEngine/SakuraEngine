@@ -45,7 +45,7 @@ struct skr_live2d_render_model_impl_t : public skr_live2d_render_model_t {
     eastl::vector<skr_io_future_t> texture_io_requests;
     eastl::vector<skr_async_vtexture_destination_t> texture_destinations;
     eastl::vector<skr_io_future_t> png_futures;
-    eastl::vector<skr_async_ram_destination_t> png_destinations;
+    eastl::vector<skr_ram_io_buffer_t> png_destinations;
 
     eastl::vector<skr_io_future_t> buffer_io_requests;
     eastl::vector<skr_async_vbuffer_destination_t> buffer_destinations;
@@ -113,6 +113,7 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
     uint32_t finished_buffer_request = 0;
     skr_live2d_render_model_request_t* request = nullptr;
     skr_io_vram_service_t* vram_service = nullptr;
+    skr_io_ram_service_t* ram_service = nullptr;
     CGPUDeviceId device;
     CGPUQueueId transfer_queue;
     eastl::vector<skr_image_coder_id> coders;
@@ -143,6 +144,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     render_model->device = device;
     render_model->transfer_queue = request->queue_override;
     render_model->vram_service = vram_service;
+    render_model->ram_service = ram_service;
     // request load textures
     render_model->textures.resize(texture_count);
     render_model->texture_views.resize(texture_count);
@@ -205,7 +207,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                 auto render_model = (skr_live2d_render_model_async_t*)data;
                 auto idx = future - render_model->png_futures.data();
 
-                const auto& png_destination = render_model->png_destinations[idx];
+                auto& png_destination = render_model->png_destinations[idx];
                 auto vram_service = render_model->vram_service;
                 // decompress
                 EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)png_destination.bytes, png_destination.size);
@@ -246,7 +248,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                         vram_service->request(&vram_texture_io, &texture_io_request, &texture_destination);
                     }
                 }
-                sakura_free(png_destination.bytes);
+                render_model->ram_service->free_buffer(&png_destination);
             };
             auto ramrq = ram_service->open_request();
             ramrq->set_vfs(request->vfs_override);

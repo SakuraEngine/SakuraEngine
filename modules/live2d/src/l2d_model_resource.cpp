@@ -73,12 +73,12 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
         rq->set_path(modelPath.u8_str());
         rq->add_block({}); // read all
         rq->add_callback(SKR_IO_STAGE_COMPLETED,
-        +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
+        +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata) noexcept {
             ZoneScopedN("Create Model");
-            auto _this = (csmUserModel*)data;
+            auto _this = (csmUserModel*)usrdata;
 
             _this->LoadModel(_this->modelDestination.bytes, (L2DF::csmSizeInt)_this->modelDestination.size);
-            sakura_free(_this->modelDestination.bytes);
+            _this->cbData->ioService->free_buffer(&_this->modelDestination);
             
             skr_atomicu32_add_relaxed(&_this->cbData->finished_models, 1);
             _this->cbData->partial_finished();
@@ -105,7 +105,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             auto _this = (csmUserModel*)data;
             
             _this->LoadPhysics(_this->physicsDestination.bytes, (L2DF::csmSizeInt)_this->physicsDestination.size);
-            sakura_free(_this->physicsDestination.bytes);
+            _this->cbData->ioService->free_buffer(&_this->physicsDestination);
             
             skr_atomicu32_add_relaxed(&_this->cbData->finished_physics, 1);
             _this->cbData->partial_finished();
@@ -132,7 +132,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             auto _this = (csmUserModel*)data;
             
             _this->LoadPose(_this->poseDestination.bytes, (L2DF::csmSizeInt)_this->poseDestination.size);
-            sakura_free(_this->poseDestination.bytes);
+            _this->cbData->ioService->free_buffer(&_this->poseDestination);
             
             skr_atomicu32_add_relaxed(&_this->cbData->finished_poses, 1);
             _this->cbData->partial_finished();
@@ -159,7 +159,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             auto _this = (csmUserModel*)data;
             
             _this->LoadUserData(_this->usrDataDestination.bytes, (L2DF::csmSizeInt)_this->usrDataDestination.size);
-            sakura_free(_this->usrDataDestination.bytes);
+            _this->cbData->ioService->free_buffer(&_this->usrDataDestination);
             
             skr_atomicu32_add_relaxed(&_this->cbData->finished_usr_data, 1);
             _this->cbData->partial_finished();
@@ -423,7 +423,7 @@ void csmExpressionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallba
             csmMap<csmString, ACubismMotion*>& map = *_this;
             // callbacks are called from single same thread, so no need to lock 
             map[name.c_str()] = CubismExpressionMotion::Create(destination.bytes, (L2DF::csmSizeInt)destination.size);
-            sakura_free(destination.bytes);
+            _this->cbData->ioService->free_buffer(&destination);
             
             skr_atomicu32_add_relaxed(&_this->cbData->finished_expressions, 1);
             _this->cbData->partial_finished();
@@ -508,7 +508,7 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             csmMap<csmString, csmVector<ACubismMotion*>>& map = *_this;
             // callbacks are called from single same thread, so no need to lock 
             map[entry.first.c_str()][entry.second] = L2DF::CubismMotion::Create(destination.bytes, (L2DF::csmSizeInt)destination.size);
-            sakura_free(destination.bytes);
+            _this->cbData->ioService->free_buffer(&destination);
             
             skr_atomicu32_add_relaxed(&_this->cbData->finished_motions, 1);
             _this->cbData->partial_finished();
@@ -565,7 +565,7 @@ void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const ch
         auto model_resource = cbData->live2dRequest->model_resource = SkrNew<skr_live2d_model_resource_t>();
         auto model_setting = model_resource->model_setting 
             = SkrNew<L2DF::CubismModelSettingJson>(cbData->settingRawData.bytes, (L2DF::csmSizeInt)cbData->settingRawData.size);
-        sakura_free(cbData->settingRawData.bytes);
+        cbData->ioService->free_buffer(&cbData->settingRawData);
         // setup models & expressions count
         if (auto _ = skr::string((const char8_t*)model_setting->GetModelFileName()); _.size())
         {

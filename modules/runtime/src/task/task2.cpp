@@ -128,7 +128,7 @@ namespace task2
 
     struct Task2ConcurrentQueueTraits : public skr::ConcurrentQueueDefaultTraits
     {
-        static constexpr const char* kTask2QueueName = "";
+        static constexpr const char* kTask2QueueName = "Task2ConcurrentQueue";
         static const bool RECYCLE_ALLOCATED_BLOCKS = true;
         static inline void* malloc(size_t size) { return sakura_mallocN(size, kTask2QueueName); }
         static inline void free(void* ptr) { return sakura_freeN(ptr, kTask2QueueName); }

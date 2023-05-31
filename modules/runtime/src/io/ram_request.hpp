@@ -46,7 +46,7 @@ struct RAMIORequest final : public IIORequest
 
     SAtomic32 done = 0;
     skr_io_future_t* future = nullptr;
-    skr_async_ram_destination_t* destination = nullptr;
+    skr_ram_io_buffer_t* destination = nullptr;
 
     skr_io_callback_t callbacks[SKR_IO_STAGE_COUNT];
     void* callback_datas[SKR_IO_STAGE_COUNT];
