@@ -137,6 +137,7 @@ struct RAMServiceImpl final : public RAMService
         CondLock condlock;
     };
     Runner runner;
+    RAMIORequest::Pool request_pool;
     SAtomicU64 sequence_number = 0;
 };
 uint32_t RAMServiceImpl::Runner::global_idx = 0;
@@ -173,7 +174,7 @@ void RAMService::destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT
 IORequest RAMServiceImpl::open_request() SKR_NOEXCEPT
 {
     uint64_t seq = (uint64_t)skr_atomicu64_add_relaxed(&sequence_number, 1);
-    return RQPtr::CreateZeroed(seq);
+    return skr::static_pointer_cast<IIORequest>(request_pool.allocate(seq));
 }
 
 void RAMServiceImpl::request(IORequest request, skr_io_future_t *future, skr_async_ram_destination_t *dst) SKR_NOEXCEPT
