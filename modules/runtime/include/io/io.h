@@ -200,9 +200,13 @@ struct RUNTIME_API IIORequest : public skr::SInterface
     virtual void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
     virtual void reset_compressed_blocks() SKR_NOEXCEPT = 0;
 };
+
+struct RUNTIME_API IIOBatch : public skr::SInterface
+{
+
+};
 using IORequest = SObjectPtr<IIORequest>;
 using RequestResolver = eastl::function<void(IORequest)>;
-// using IOBatch = skr_io_batch_t;
 
 #pragma endregion
 
@@ -253,11 +257,10 @@ struct RUNTIME_API RAMService
     virtual SkrAsyncServiceStatus get_service_status() const SKR_NOEXCEPT = 0;
 
     uint64_t add_file_resolver() SKR_NOEXCEPT;
-
     uint64_t add_iobuffer_resolver() SKR_NOEXCEPT;
-
-    // SSD reaches its best performance when block size >= 64KB
     uint64_t add_chunking_resolver(uint64_t chunk_size = 256 * 1024) SKR_NOEXCEPT;
+
+    void add_default_resolvers() SKR_NOEXCEPT;
 
     virtual ~RAMService() SKR_NOEXCEPT = default;
     RAMService() SKR_NOEXCEPT = default;

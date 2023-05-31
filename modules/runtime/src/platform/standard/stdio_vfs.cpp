@@ -82,6 +82,7 @@ size_t skr_stdio_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_
         {
             ZoneScopedN("stdio::fread");
             bytesRead = fread(out_buffer, 1, byte_count, vfile->fh);
+            vfile->offset += bytesRead;
         }
         if (bytesRead != byte_count)
         {
