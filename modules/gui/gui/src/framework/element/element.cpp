@@ -1,12 +1,13 @@
-#include "SkrGui/framework/element.hpp"
+#include "SkrGui/framework/element/element.hpp"
 #include "SkrGui/framework/render_object.hpp"
 #include "SkrGui/framework/render_box.hpp"
 #include "SkrGui/framework/widget/widget.hpp"
 #include "SkrGui/framework/build_owner.hpp"
 
-namespace skr {
-namespace gui {
-// implement element interface
+namespace skr::gui
+{
+SKR_GUI_TYPE_IMPLEMENTATION(BuildContext)
+SKR_GUI_TYPE_IMPLEMENTATION(Element)
 
 void Element::activate() SKR_NOEXCEPT
 {
@@ -333,5 +334,4 @@ bool Element::_debug_is_in_scope(Element* ancestor) SKR_NOEXCEPT
     }
     return false;
 }
-} // namespace gui
 } // namespace skr

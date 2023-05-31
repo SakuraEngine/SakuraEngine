@@ -1,5 +1,4 @@
 #pragma once
-#include "SkrGui/framework/element.hpp"
 #include "SkrGui/framework/type_tree.hpp"
 #include "fwd_containers.hpp"
 #include "SkrGui/framework/key.hpp"
