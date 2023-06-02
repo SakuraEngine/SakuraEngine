@@ -10,7 +10,8 @@ template<typename I>
 struct ISmartPool
 {
     virtual ~ISmartPool() = default;
-    virtual SObjectPtr<I> allocate(const uint64_t sequence) SKR_NOEXCEPT = 0;
+    // template<typename...Args>
+    // virtual SObjectPtr<I> allocate(Args&&... args) SKR_NOEXCEPT = 0;
     virtual void deallocate(I* ptr) SKR_NOEXCEPT = 0;
 };
 
@@ -41,14 +42,15 @@ struct SmartPool : public ISmartPool<I>
         }
     }
 
-    SObjectPtr<I> allocate(const uint64_t sequence) SKR_NOEXCEPT
+    template<typename...Args>
+    SObjectPtr<I> allocate(Args&&... args) SKR_NOEXCEPT
     {
         T* ptr = nullptr;
         if (!blocks.try_dequeue(ptr))
         {
             ptr = (T*)sakura_calloc_aligned(1, sizeof(T), alignof(T));
         }
-        new (ptr) T(sequence, this);
+        new (ptr) T(this, std::forward<Args>(args)...);
 
         skr_atomicu32_add_relaxed(&objcnt, 1);
         return skr::static_pointer_cast<I>(SObjectPtr<T>(ptr));

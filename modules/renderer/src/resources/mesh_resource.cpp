@@ -232,7 +232,7 @@ struct SKR_RENDERER_API SMeshFactoryImpl : public SMeshFactory
         skr_mesh_resource_id mesh_resource = nullptr;
         eastl::vector<std::string> resource_uris;
         eastl::vector<skr_io_future_t> ram_requests;
-        eastl::vector<skr_ram_io_buffer_t> ram_destinations;
+        eastl::vector<skr::BlobId> blobs;
         eastl::vector<skr_io_future_t> vram_requests;
         eastl::vector<skr_async_vbuffer_destination_t> buffer_destinations;
     };
@@ -366,7 +366,7 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* rec
             auto uRequest = SPtr<UploadRequest>::Create(this, mesh_resource);
             uRequest->resource_uris.resize(mesh_resource->bins.size());
             uRequest->ram_requests.resize(mesh_resource->bins.size());
-            uRequest->ram_destinations.resize(mesh_resource->bins.size());
+            uRequest->blobs.resize(mesh_resource->bins.size());
             uRequest->vram_requests.resize(mesh_resource->bins.size());
             uRequest->buffer_destinations.resize(mesh_resource->bins.size());
             InstallType installType = {EInstallMethod::UPLOAD, ECompressMethod::NONE};
@@ -377,7 +377,6 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* rec
             {
                 auto binPath = skr::format(u8"{}.buffer{}", guid, i);
                 auto&& ramRequest = uRequest->ram_requests[i];
-                auto&& ramDestination = uRequest->ram_destinations[i];
                 auto&& ramPath = uRequest->resource_uris[i];
                 ramPath = binPath.c_str();
 
@@ -409,17 +408,18 @@ ESkrInstallStatus SMeshFactoryImpl::InstallWithUpload(skr_resource_record_t* rec
                     vram_buffer_io.vbuffer.flags = CGPU_BCF_NO_DESCRIPTOR_VIEW_CREATION;
                     vram_buffer_io.vbuffer.buffer_size = thisBin.byte_length;
                     vram_buffer_io.vbuffer.buffer_name = nullptr; // TODO: set name
-                    thisBin.bin.bytes = uRequest->ram_destinations[i].bytes;
-                    thisBin.bin.size = uRequest->ram_destinations[i].size;
+                    
+                    thisBin.blob = uRequest->blobs[i].get();
+                    thisBin.blob->add_refcount();
 
                     vram_buffer_io.src_memory.size = thisBin.byte_length;
-                    vram_buffer_io.src_memory.bytes = thisBin.bin.bytes;
+                    vram_buffer_io.src_memory.bytes = thisBin.blob->get_data();
                     vram_buffer_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data){};
                     vram_buffer_io.callback_datas[SKR_IO_STAGE_COMPLETED] = nullptr;
 
                     factory->root.vram_service->request(&vram_buffer_io, &uRequest->vram_requests[i], &uRequest->buffer_destinations[i]);
                 }, uRequest.get());
-                root.ram_service->request(rq, &ramRequest, &ramDestination);
+                uRequest->blobs[i] = root.ram_service->request(rq, &ramRequest);
             }
             mUploadRequests.emplace(mesh_resource, uRequest);
             mInstallTypes.emplace(mesh_resource, installType);
@@ -497,11 +497,7 @@ ESkrInstallStatus SMeshFactoryImpl::UpdateInstall(skr_resource_record_t* record)
                 {
                     for (auto&& bin : mesh_resource->bins)
                     {
-                        skr::io::RAMIOBuffer buffer = {
-                            bin.bin.bytes, bin.bin.size
-                        };
-                        root.ram_service->free_buffer(&buffer);
-                        bin.bin.bytes = nullptr;
+                        bin.blob->release();
                     }
                 }
                 mDStorageRequests.erase(mesh_resource);
@@ -532,11 +528,7 @@ bool SMeshFactoryImpl::Uninstall(skr_resource_record_t* record)
     {
         for (auto&& bin : mesh_resource->bins)
         {
-            skr::io::RAMIOBuffer buffer = {
-                bin.bin.bytes, bin.bin.size
-            };
-            root.ram_service->free_buffer(&buffer);
-            bin.bin.bytes = nullptr;
+            bin.blob->release();
         }
     }
     skr_render_mesh_free(mesh_resource->render_mesh);

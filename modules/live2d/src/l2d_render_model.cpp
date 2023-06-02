@@ -45,7 +45,7 @@ struct skr_live2d_render_model_impl_t : public skr_live2d_render_model_t {
     eastl::vector<skr_io_future_t> texture_io_requests;
     eastl::vector<skr_async_vtexture_destination_t> texture_destinations;
     eastl::vector<skr_io_future_t> png_futures;
-    eastl::vector<skr_ram_io_buffer_t> png_destinations;
+    eastl::vector<skr::BlobId> png_blobs;
 
     eastl::vector<skr_io_future_t> buffer_io_requests;
     eastl::vector<skr_async_vbuffer_destination_t> buffer_destinations;
@@ -152,7 +152,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     render_model->texture_io_requests.resize(texture_count);
     if (!request->file_dstorage_queue_override)
     {
-        render_model->png_destinations.resize(texture_count);
+        render_model->png_blobs.resize(texture_count);
         render_model->png_futures.resize(texture_count);
     }
     for (uint32_t i = 0; i < texture_count; i++)
@@ -200,20 +200,20 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         else
 #endif
         {
-            auto& png_destination = render_model->png_destinations[i];
+            auto& png_blob = render_model->png_blobs[i];
             auto& png_future = render_model->png_futures[i];
             const auto on_complete = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
                 ZoneScopedN("Load PNG");
                 auto render_model = (skr_live2d_render_model_async_t*)data;
                 auto idx = future - render_model->png_futures.data();
 
-                auto& png_destination = render_model->png_destinations[idx];
+                auto& png_blob = render_model->png_blobs[idx];
                 auto vram_service = render_model->vram_service;
                 // decompress
-                EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)png_destination.bytes, png_destination.size);
+                EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)png_blob->get_data(), png_blob->get_size());
                 auto coder = skr_image_coder_create_image(format);
                 render_model->coders.emplace_back(coder);
-                if (skr_image_coder_set_encoded(coder, (const uint8_t*)png_destination.bytes, png_destination.size))
+                if (skr_image_coder_set_encoded(coder, (const uint8_t*)png_blob->get_data(), png_blob->get_size()))
                 {
                     SKR_LOG_TRACE("image coder: width = %d, height = %d, encoded_size = %d, raw_size = %d", 
                         skr_image_coder_get_width(coder), skr_image_coder_get_height(coder), 
@@ -248,14 +248,14 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                         vram_service->request(&vram_texture_io, &texture_io_request, &texture_destination);
                     }
                 }
-                render_model->ram_service->free_buffer(&png_destination);
+                png_blob.reset();
             };
             auto ramrq = ram_service->open_request();
             ramrq->set_vfs(request->vfs_override);
             ramrq->set_path(pngPathStr.c_str());
             ramrq->add_block({}); // read all
             ramrq->add_callback(SKR_IO_STAGE_COMPLETED, on_complete, render_model);
-            ram_service->request(ramrq, &png_future, &png_destination);
+            png_blob = ram_service->request(ramrq, &png_future);
         }
     }
     

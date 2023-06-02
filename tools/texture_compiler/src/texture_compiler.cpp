@@ -12,8 +12,8 @@ namespace asset
 {
 struct skr_uncompressed_render_texture_t
 {
-    skr_uncompressed_render_texture_t(skr_image_coder_id coder, skr_io_ram_service_t* ioService, skr_ram_io_buffer_t iobuf)
-        : image_coder(coder), ioService(ioService), iobuf(iobuf)
+    skr_uncompressed_render_texture_t(skr_image_coder_id coder, skr_io_ram_service_t* ioService, skr::BlobId blob)
+        : image_coder(coder), ioService(ioService), blob(blob)
     {
 
     }
@@ -23,41 +23,40 @@ struct skr_uncompressed_render_texture_t
         if (image_coder)
         {
             SKR_DEFER({ skr_image_coder_free_image(image_coder); });
-            
-            ioService->free_buffer(&iobuf);
+            blob.reset();
         }
     }
 
     skr_image_coder_id image_coder = nullptr;
     skr_io_ram_service_t* ioService = nullptr;
-    skr_ram_io_buffer_t iobuf;
+    skr::BlobId blob = nullptr;
 };
 
 void* STextureImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context)
 {
-    skr_ram_io_buffer_t ioDestination = {};
+    skr::BlobId blob = nullptr;
     {
         ZoneScopedN("LoadFileDependencies");
-        context->AddFileDependencyAndLoad(ioService, assetPath.c_str(), ioDestination);
+        context->AddFileDependencyAndLoad(ioService, assetPath.c_str(), blob);
     }
 
     {
         ZoneScopedN("TryDecodeTexture");
         // try decode texture
-        const auto uncompressed_data = ioDestination.bytes;
-        const auto uncompressed_size = ioDestination.size;
+        const auto uncompressed_data = blob->get_data();
+        const auto uncompressed_size = blob->get_size();
         EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)uncompressed_data, uncompressed_size);
         if (auto coder = skr_image_coder_create_image(format))
         {
             bool success = coder->view_encoded(uncompressed_data, uncompressed_size);
             if (success)
             {
-                return SkrNew<skr_uncompressed_render_texture_t>(coder, ioService, ioDestination);
+                return SkrNew<skr_uncompressed_render_texture_t>(coder, ioService, blob);
             }
         }
         else
         {
-            SKR_DEFER({ioService->free_buffer(&ioDestination);});
+            SKR_DEFER({blob.reset();});
         }
     }
 

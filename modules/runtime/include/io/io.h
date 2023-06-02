@@ -112,12 +112,6 @@ typedef struct skr_io_future_t {
     RUNTIME_API ESkrIOStage get_status() const SKR_NOEXCEPT;
 #endif
 } skr_io_future_t;
-typedef struct skr_ram_io_buffer_t skr_io_ram_buffer_t;
-
-typedef struct skr_ram_io_buffer_t {
-    uint8_t* bytes SKR_IF_CPP(= nullptr);
-    uint64_t size SKR_IF_CPP(= 0);
-} skr_ram_io_buffer_t;
 
 typedef struct skr_io_block_t
 {
@@ -158,17 +152,17 @@ namespace skr {
 namespace io {
 
 // io flow
-// 1. enqueue requests to service
-// 2. sort raw requests
-// 3. resolve requests to pending raw request array
+// 1. Enqueue requests to service
+// 2. Sort raw requests
+// 3. Resolve requests to pending raw request array
 //  3.1 package parsing happens here.
-// 4. chunk pending raw requests to block slices
-// 5. dispatch I/O blocks to drives (+allocate & cpy to raw)
-// 6. do uncompress works (+allocate & cpy to uncompressed)
-// 7. 2 kinds of callbacks are provided
-//  7.1 inplace callbacks are executed in the I/O thread/workers
-//  7.2 finish callbacks are polled & executed by usr threads
-struct RAMService2;
+//  3.2 chunk pending raw requests to block slices
+// 4. Dispatch I/O blocks to drives (+allocate & cpy to raw)
+// 5. Do uncompress works (+allocate & cpy to uncompressed)
+// 6. Two kinds of callbacks are provided
+//  6.1 inplace callbacks are executed in the I/O thread/workers
+//  6.2 finish callbacks are polled & executed by usr threads
+struct RAMService;
 
 // 1~2 
 #pragma region Enqueue & Sort
@@ -265,7 +259,12 @@ struct RUNTIME_API IOService
     IOService() SKR_NOEXCEPT = default;
 };
 
-using RAMIOBuffer = skr_ram_io_buffer_t;
+struct RUNTIME_API IRAMIOBuffer : public skr::IBlob
+{
+    virtual ~IRAMIOBuffer() SKR_NOEXCEPT;
+};
+using RAMIOBufferId = SObjectPtr<IRAMIOBuffer>;
+
 struct RUNTIME_API RAMService : public IOService
 {
     [[nodiscard]] static skr_io_ram_service_t* create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
@@ -273,13 +272,7 @@ struct RUNTIME_API RAMService : public IOService
 
     // we do not lock an ioService to a single vfs, but for better bandwidth use and easier profiling
     // it's recommended to make a unique relevance between ioService & vfs（or vfses share a single I/O hardware)
-    virtual void request(IORequest request, skr_io_future_t* future, RAMIOBuffer* dst) SKR_NOEXCEPT = 0;
-
-    // allocate I/O Buffer
-    virtual RAMIOBuffer allocate_buffer(uint64_t n) SKR_NOEXCEPT = 0;
-
-    // free I/O Buffer
-    virtual void free_buffer(RAMIOBuffer* buffer) SKR_NOEXCEPT = 0;
+    virtual RAMIOBufferId request(IORequest request, skr_io_future_t* future) SKR_NOEXCEPT = 0;
 
     uint64_t add_file_resolver() SKR_NOEXCEPT;
     uint64_t add_iobuffer_resolver() SKR_NOEXCEPT;

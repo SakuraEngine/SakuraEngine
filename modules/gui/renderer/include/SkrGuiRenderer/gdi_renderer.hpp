@@ -168,8 +168,8 @@ struct SKR_GUI_RENDERER_API GDIImage_RenderGraph : public IGDIImage
     SAtomicU32 state = static_cast<uint32_t>(EGDIResourceState::Requsted);
     EGDIImageSource source = EGDIImageSource::Count;
 
-    skr_ram_io_buffer_t pixel_data;
-    skr_ram_io_buffer_t raw_data = {};
+    skr::BlobId pixel_data = nullptr;
+    skr::BlobId raw_data = nullptr;
 
     GDIImageAsyncData_RenderGraph async_data;
     struct GDIRenderer_RenderGraph* renderer = nullptr;

@@ -44,7 +44,7 @@ public:
     }
     friend struct SmartPool<IOBatchBase, IIOBatch>;
 protected:
-    IOBatchBase(const uint64_t sequence, ISmartPool<IIOBatch>* pool) : sequence(sequence), pool(pool) {}
+    IOBatchBase(ISmartPool<IIOBatch>* pool, const uint64_t sequence) : sequence(sequence), pool(pool) {}
     
     const uint64_t sequence;
     ISmartPool<IIOBatch>* pool = nullptr;

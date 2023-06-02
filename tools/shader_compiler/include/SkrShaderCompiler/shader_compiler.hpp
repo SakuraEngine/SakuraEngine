@@ -2,6 +2,7 @@
 #include "SkrShaderCompiler/module.configure.h"
 #include "platform/configure.h"
 #include "cgpu/flags.h"
+#include "containers/sptr.hpp"
 #include "containers/span.hpp"
 #include "containers/string.hpp"
 #include <EASTL/functional.h>
@@ -31,15 +32,13 @@ EShaderSourceType : uint32_t
 
 struct ShaderSourceCode
 {
-    inline ShaderSourceCode(uint8_t* bytes, uint64_t size, const char8_t* name, EShaderSourceType type, skr_ram_service_id ioService) SKR_NOEXCEPT
-        : bytes(bytes), size(size), source_name(name), source_type(type), ioService(ioService) {}
+    inline ShaderSourceCode(skr::BlobId blob, const char8_t* name, EShaderSourceType type) SKR_NOEXCEPT
+        : blob(blob), source_name(name), source_type(type) {}
     ~ShaderSourceCode() SKR_NOEXCEPT;
 
-    uint8_t* bytes = nullptr;
-    uint64_t size = 0;
+    skr::BlobId blob = nullptr;
     skr::string source_name;
     const EShaderSourceType source_type = EShaderSourceType::INVALID;
-    skr_ram_service_id ioService = nullptr;
 };
 
 struct SKR_SHADER_COMPILER_API ICompiledShader
