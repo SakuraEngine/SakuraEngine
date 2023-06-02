@@ -95,9 +95,9 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
             view_desc.usages = CGPU_TVU_SRV;
             texture_views[i] = cgpu_create_texture_view(textures[i]->device, &view_desc);
         }
-        for (auto&& coder : coders)
+        for (auto&& decoder : decoders)
         {
-            if (coder) skr_image_coder_free_image(coder);
+            decoder.reset();
         }
         skr_atomicu32_store_relaxed(&request->io_status, SKR_IO_STAGE_COMPLETED);
         request = nullptr;
@@ -116,7 +116,7 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
     skr_io_ram_service_t* ram_service = nullptr;
     CGPUDeviceId device;
     CGPUQueueId transfer_queue;
-    eastl::vector<skr_image_coder_id> coders;
+    eastl::vector<skr::ImageDecoderId> decoders;
 };
 
 bool skr_live2d_render_model_request_t::is_ready() const SKR_NOEXCEPT
@@ -211,17 +211,16 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                 auto vram_service = render_model->vram_service;
                 // decompress
                 EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)png_blob->get_data(), png_blob->get_size());
-                auto coder = skr_image_coder_create_image(format);
-                render_model->coders.emplace_back(coder);
-                if (skr_image_coder_set_encoded(coder, (const uint8_t*)png_blob->get_data(), png_blob->get_size()))
+                auto decoder = skr::IImageDecoder::Create(format);
+                render_model->decoders.emplace_back(decoder);
+                if (decoder->initialize((const uint8_t*)png_blob->get_data(), png_blob->get_size()))
                 {
-                    SKR_LOG_TRACE("image coder: width = %d, height = %d, encoded_size = %d, raw_size = %d", 
-                        skr_image_coder_get_width(coder), skr_image_coder_get_height(coder), 
-                        skr_image_coder_get_encoded_size(coder),
-                        skr_image_coder_get_raw_size(coder));
-                    const auto encoded_format = coder->get_color_format();
+                    const auto encoded_format = decoder->get_color_format();
                     const auto raw_format = (encoded_format == IMAGE_CODER_COLOR_FORMAT_BGRA) ? IMAGE_CODER_COLOR_FORMAT_RGBA : encoded_format;
-                    if (auto raw_data = coder->get_raw_data_view(raw_format, coder->get_bit_depth());!raw_data.empty())
+                    SKR_LOG_TRACE("image coder: width = %d, height = %d, encoded_size = %d, raw_size = %d", 
+                        decoder->get_width(), decoder->get_height(), 
+                        png_blob->get_size(), decoder->get_size());
+                    if (decoder->decode(raw_format, decoder->get_bit_depth()))
                     {
                         // upload texture
                         auto& texture_io_request = render_model->texture_io_requests[idx];
@@ -232,13 +231,13 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
 
                         vram_texture_io.vtexture.texture_name = nullptr;
                         vram_texture_io.vtexture.resource_types = CGPU_RESOURCE_TYPE_TEXTURE;
-                        vram_texture_io.vtexture.width = coder->get_width();
-                        vram_texture_io.vtexture.height = coder->get_height();
+                        vram_texture_io.vtexture.width = decoder->get_width();
+                        vram_texture_io.vtexture.height = decoder->get_height();
                         vram_texture_io.vtexture.depth = 1;
                         vram_texture_io.vtexture.format = CGPU_FORMAT_R8G8B8A8_UNORM;
 
-                        vram_texture_io.src_memory.size = coder->get_width() * coder->get_height() * 4;
-                        vram_texture_io.src_memory.bytes = raw_data.data();
+                        vram_texture_io.src_memory.size = decoder->get_width() * decoder->get_height() * 4;
+                        vram_texture_io.src_memory.bytes = decoder->get_data();
                         vram_texture_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data){
                             auto render_model = (skr_live2d_render_model_async_t*)data;
 
