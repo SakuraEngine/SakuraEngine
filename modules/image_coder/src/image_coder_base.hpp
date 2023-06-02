@@ -1,69 +1,100 @@
 #pragma once
+#include "platform/atomic.h"
 #include "containers/span.hpp"
 #include "misc/types.h"
 #include "SkrImageCoder/skr_image_coder.h"
 
 namespace skr
 {
-class SKR_IMAGE_CODER_API BaseImageCoder : public skr_image_coder_t
+
+struct ImageProps
 {
-public:
-    virtual ~BaseImageCoder() SKR_NOEXCEPT;
-
-    virtual uint64_t get_raw_size() const SKR_NOEXCEPT override;
-    virtual uint64_t get_encoded_size() const SKR_NOEXCEPT override;
-
-    virtual bool set_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT override;
-    virtual bool move_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT override;
-    virtual bool view_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT override;
-    virtual bool set_raw(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height,
-        EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT override;
-    virtual bool move_raw(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height,
-        EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT override;
-    virtual bool view_raw(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height,
-        EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT override;
-
-    virtual bool get_raw_data(uint8_t* pData, uint64_t* pSize, EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT override;
-    virtual bool get_encoded_data(uint8_t* pData, uint64_t* pSize) const SKR_NOEXCEPT override;
-    virtual void steal_encoded_data(struct skr_blob_t* pBlob) SKR_NOEXCEPT override;
-
-    virtual skr::span<const uint8_t> get_raw_data_view(EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT override;
-    virtual skr::span<const uint8_t> get_encoded_data_view() const SKR_NOEXCEPT override;
-    virtual void steal_raw_data(struct skr_blob_t* pBlob, EImageCoderColorFormat format, uint32_t bit_depth) SKR_NOEXCEPT override;
-
-    virtual EImageCoderColorFormat get_color_format() const SKR_NOEXCEPT override;
-    virtual uint32_t get_width() const SKR_NOEXCEPT override;
-    virtual uint32_t get_height() const SKR_NOEXCEPT override;
-    virtual uint32_t get_bit_depth() const SKR_NOEXCEPT override;
-
-    virtual bool decode(EImageCoderColorFormat format, uint32_t bit_depth) SKR_NOEXCEPT = 0;
-    virtual bool encode() SKR_NOEXCEPT = 0;
-
-protected:
-    bool lazy_decode(EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT;
-    bool lazy_encode() const SKR_NOEXCEPT;
-
-    skr::span<uint8_t> raw_view;
-    skr::span<uint8_t> encoded_view;
-
     uint32_t width = 0;
     uint32_t height = 0;
     EImageCoderColorFormat color_format;
     uint8_t bit_depth = 0;
-
-    uint8_t raw_bit_depth = 0;
-    uint32_t raw_bytes_per_row = 0;
-
-private:
-    void freeRaw() SKR_NOEXCEPT;
-    void freeEncoded() SKR_NOEXCEPT;
-    void setRawProps(uint32_t width, uint32_t height, EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT;
-
-    mutable uint32_t newest_version = 0;
-
-    skr_blob_t raw_data;
-    mutable uint32_t raw_data_version = 0;
-    skr_blob_t encoded_data;
-    mutable uint32_t encoded_data_version = 0;
 };
+
+struct SKR_IMAGE_CODER_API BaseImageEncoder : public skr::IImageEncoder
+{
+    virtual ~BaseImageEncoder() SKR_NOEXCEPT;
+
+    virtual uint64_t get_alignment() const SKR_NOEXCEPT { return alignof(uint8_t); }
+    static uint8_t* Allocate(uint64_t size, uint64_t alignment) SKR_NOEXCEPT;
+    static void Deallocate(uint8_t* ptr, uint64_t alignment) SKR_NOEXCEPT;
+
+    virtual bool initialize(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height, 
+        EImageCoderColorFormat format, uint32_t bit_depth) SKR_NOEXCEPT;
+
+    skr::span<const uint8_t> decoded_view;
+
+    virtual uint8_t* get_data() const SKR_NOEXCEPT { return encoded_data; }
+    virtual uint64_t get_size() const SKR_NOEXCEPT { return encoded_size; }
+    uint8_t* encoded_data = nullptr;
+    uint64_t encoded_size = 0;
+
+    virtual EImageCoderColorFormat get_color_format() const SKR_NOEXCEPT { return props.color_format; }
+    virtual uint32_t get_width() const SKR_NOEXCEPT { return props.width; }
+    virtual uint32_t get_height() const SKR_NOEXCEPT { return props.height; }
+    virtual uint32_t get_bit_depth() const SKR_NOEXCEPT { return props.bit_depth; }
+    void setRawProps(uint32_t width, uint32_t height, EImageCoderColorFormat format, uint32_t bit_depth) SKR_NOEXCEPT;
+    uint32_t bytes_per_row = 0;
+protected:
+    bool initialized = false;
+    ImageProps props;
+    
+public:
+    uint32_t add_refcount() 
+    { 
+        return 1 + skr_atomicu32_add_relaxed(&rc, 1); 
+    }
+    uint32_t release() 
+    {
+        skr_atomicu32_add_relaxed(&rc, -1);
+        return skr_atomicu32_load_acquire(&rc);
+    }
+private:
+    SAtomicU32 rc = 0;
+};
+
+struct SKR_IMAGE_CODER_API BaseImageDecoder : public skr::IImageDecoder
+{
+    virtual ~BaseImageDecoder() SKR_NOEXCEPT;
+
+    virtual uint64_t get_alignment() const SKR_NOEXCEPT { return alignof(uint8_t); }
+    static uint8_t* Allocate(uint64_t size, uint64_t alignment) SKR_NOEXCEPT;
+    static void Deallocate(uint8_t* ptr, uint64_t alignment) SKR_NOEXCEPT;
+
+    virtual bool initialize(const uint8_t* data, uint64_t size) SKR_NOEXCEPT;
+
+    skr::span<const uint8_t> encoded_view;
+
+    virtual uint8_t* get_data() const SKR_NOEXCEPT { return decoded_data; }
+    virtual uint64_t get_size() const SKR_NOEXCEPT { return decoded_size; }
+    uint8_t* decoded_data = nullptr;
+    uint64_t decoded_size = 0;
+    
+    virtual EImageCoderColorFormat get_color_format() const SKR_NOEXCEPT { return props.color_format; }
+    virtual uint32_t get_width() const SKR_NOEXCEPT { return props.width; }
+    virtual uint32_t get_height() const SKR_NOEXCEPT { return props.height; }
+    virtual uint32_t get_bit_depth() const SKR_NOEXCEPT { return props.bit_depth; }
+    void setRawProps(uint32_t width, uint32_t height, EImageCoderColorFormat format, uint32_t bit_depth) SKR_NOEXCEPT;
+protected:
+    bool initialized = false;
+    ImageProps props;
+
+public:
+    uint32_t add_refcount() 
+    { 
+        return 1 + skr_atomicu32_add_relaxed(&rc, 1); 
+    }
+    uint32_t release() 
+    {
+        skr_atomicu32_add_relaxed(&rc, -1);
+        return skr_atomicu32_load_acquire(&rc);
+    }
+private:
+    SAtomicU32 rc = 0;
+};
+
 } // namespace skr

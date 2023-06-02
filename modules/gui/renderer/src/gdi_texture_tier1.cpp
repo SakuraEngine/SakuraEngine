@@ -30,26 +30,25 @@ ECGPUFormat cgpu_format_from_image_coder_format(EImageCoderFormat format,EImageC
     return CGPU_FORMAT_UNDEFINED;
 }
 
-skr_blob_t image_coder_decode_image(const uint8_t* bytes, uint64_t size, uint32_t& out_height, uint32_t& out_width, uint32_t& out_depth, ECGPUFormat& out_format)
+skr::BlobId image_coder_decode_image(const uint8_t* bytes, uint64_t size, uint32_t& out_height, uint32_t& out_width, uint32_t& out_depth, ECGPUFormat& out_format)
 {
     ZoneScopedN("DirectStoragePNGDecompressor");
     EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)bytes, size);
-    auto coder = skr_image_coder_create_image(format);
-    if (skr_image_coder_set_encoded(coder, (const uint8_t*)bytes, size))
+    auto decoder = skr::IImageDecoder::Create(format);
+    if (decoder->initialize((const uint8_t*)bytes, size))
     {
-        skr_blob_t output = {};
-        SKR_DEFER({ skr_image_coder_free_image(coder); });
-        const auto encoded_format = coder->get_color_format();
+        SKR_DEFER({ decoder.reset(); });
+        const auto encoded_format = decoder->get_color_format();
         const auto raw_format = (encoded_format == IMAGE_CODER_COLOR_FORMAT_BGRA) ? IMAGE_CODER_COLOR_FORMAT_RGBA : encoded_format;
         {
-            const auto bit_depth = coder->get_bit_depth();
+            const auto bit_depth = decoder->get_bit_depth();
             out_depth = 1;
-            out_height = coder->get_height();
-            out_width = coder->get_width();
+            out_height = decoder->get_height();
+            out_width = decoder->get_width();
             out_format = cgpu_format_from_image_coder_format(format, raw_format, bit_depth);
         }
-        coder->steal_raw_data(&output, raw_format, coder->get_bit_depth());
-        return output;
+        decoder->decode(raw_format, decoder->get_bit_depth());
+        return decoder;
     }
     return {};
 }
@@ -75,7 +74,7 @@ struct DecodingProgress : public skr::AsyncProgress<ImageTex::FutureLauncher, in
         const auto decoded = image_coder_decode_image(owner->raw_data->get_data(), 
             owner->raw_data->get_size(), owner->image_height, 
             owner->image_width, owner->image_depth, owner->format);
-        owner->pixel_data = skr_create_blob(decoded.bytes, decoded.size, true);
+        owner->pixel_data = skr_create_blob(decoded->get_data(), decoded->get_size(), true);
         pAsyncData->ram_data_finsihed_callback();
         return true;
     }
@@ -329,9 +328,8 @@ GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* o
 #ifdef SKR_GUI_RENDERER_USE_IMAGE_CODER
         if (owner->async_data.useImageCoder)
         {
-            auto decoded = image_coder_decode_image(owner->raw_data->get_data(), owner->raw_data->get_size(),
+            owner->pixel_data = image_coder_decode_image(owner->raw_data->get_data(), owner->raw_data->get_size(),
                 owner->image_height, owner->image_width, owner->image_depth, owner->format);
-            owner->pixel_data = skr_create_blob(decoded.bytes, decoded.size, true);
         }
         else
 #endif
