@@ -199,7 +199,7 @@ void skr_cpu_skin(skr_render_skin_comp_t* skin, const skr_render_anim_comp_t* an
         auto buffer_span = [&](const skr_vertex_buffer_entry_t* buffer, auto t, uint32_t comps = 1) {
             using T = typename decltype(t)::type;
             SKR_ASSERT(buffer->stride == sizeof(T) * comps);
-            auto offset = mesh->bins[buffer->buffer_index].bin.bytes + buffer->offset;
+            auto offset = mesh->bins[buffer->buffer_index].blob->get_data() + buffer->offset;
             return ozz::span<const T>{ (T*)offset, vertex_count * comps };
         };
         skin->skin_matrices.resize(anim->joint_matrices.size());

@@ -26,11 +26,11 @@ void* SJsonConfigImporter::Import(skr_io_ram_service_t* ioService, SCookContext*
         return nullptr;
     }
 
-    skr_ram_io_buffer_t destination = {};
-    context->AddFileDependencyAndLoad(ioService, assetPath.c_str(), destination);
-    SKR_DEFER({ioService->free_buffer(&destination);});
+    skr::BlobId blob = nullptr;
+    context->AddFileDependencyAndLoad(ioService, assetPath.c_str(), blob);
+    SKR_DEFER({blob.reset();});
 
-    auto jsonString = simdjson::padded_string((char*)destination.bytes, destination.size);
+    auto jsonString = simdjson::padded_string((char*)blob->get_data(), blob->get_size());
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(jsonString);
     if(doc.error())

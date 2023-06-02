@@ -46,7 +46,7 @@ struct RAMIORequest final : public IIORequest
 
     SAtomic32 done = 0;
     skr_io_future_t* future = nullptr;
-    skr_ram_io_buffer_t* destination = nullptr;
+    RAMIOBufferId destination = nullptr;
 
     skr_io_callback_t callbacks[SKR_IO_STAGE_COUNT];
     void* callback_datas[SKR_IO_STAGE_COUNT];
@@ -141,7 +141,7 @@ public:
     }
     friend struct SmartPool<RAMIORequest, IIORequest>;
 protected:
-    RAMIORequest(const uint64_t sequence, ISmartPool<IIORequest>* pool) : sequence(sequence), pool(pool) {}
+    RAMIORequest(ISmartPool<IIORequest>* pool, const uint64_t sequence) : sequence(sequence), pool(pool) {}
 
     const uint64_t sequence;
     ISmartPool<IIORequest>* pool = nullptr;

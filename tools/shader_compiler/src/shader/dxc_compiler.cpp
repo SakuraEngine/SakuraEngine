@@ -390,7 +390,7 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
 {
     IDxcBlobEncoding* pSourceBlob = nullptr;
     IDxcResult* pDxcResult = nullptr;
-    if (auto hr = utils->CreateBlobFromPinned(source.bytes, (uint32_t)source.size, DXC_CP_ACP, &pSourceBlob);!SUCCEEDED(hr))
+    if (auto hr = utils->CreateBlobFromPinned(source.blob->get_data(), (uint32_t)source.blob->get_size(), DXC_CP_ACP, &pSourceBlob);!SUCCEEDED(hr))
     {
         SKR_LOG_ERROR("DXC Compiler: Failed to create blob from pinned memory, HRESULT: %u!", hr);
     }

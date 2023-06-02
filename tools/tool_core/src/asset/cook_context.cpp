@@ -19,7 +19,7 @@ struct SCookContextImpl : public SCookContext
     skr::string GetAssetPath() const override;
 
     skr::filesystem::path AddFileDependency(const skr::filesystem::path& path) override;
-    skr::filesystem::path AddFileDependencyAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path, skr_ram_io_buffer_t& destination) override;
+    skr::filesystem::path AddFileDependencyAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path, skr::BlobId& destination) override;
 
     void AddRuntimeDependency(skr_guid_t resource) override;
     void AddSoftRuntimeDependency(skr_guid_t resource) override;
@@ -172,7 +172,7 @@ skr::filesystem::path SCookContextImpl::AddFileDependency(const skr::filesystem:
 }
 
 skr::filesystem::path SCookContextImpl::AddFileDependencyAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path,
-    skr_ram_io_buffer_t& destination)
+    skr::BlobId& destination)
 {
     auto outPath = AddFileDependency(path.c_str());
     auto u8Path = outPath.u8string();
@@ -189,7 +189,7 @@ skr::filesystem::path SCookContextImpl::AddFileDependencyAndLoad(skr_io_ram_serv
         pCounter->signal();
     }, &counter);
     skr_io_future_t future = {};
-    ioService->request(rq, &future, &destination);
+    destination = ioService->request(rq, &future);
     counter.wait(false);
     return outPath;
 }

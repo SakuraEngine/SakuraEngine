@@ -102,7 +102,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
         std::string resource_uri;
         skr_texture_resource_id texture_resource = nullptr;
         skr_io_future_t ram_request;
-        skr_ram_io_buffer_t ram_destination;
+        skr::BlobId blob = nullptr;
         skr_io_future_t vram_request;
         skr_async_vtexture_destination_t texture_destination = {};
     };
@@ -286,7 +286,7 @@ ESkrInstallStatus STextureFactoryImpl::InstallWithUpload(skr_resource_record_t* 
                 vram_texture_io.device = render_device->get_cgpu_device();
                 vram_texture_io.transfer_queue = render_device->get_cpy_queue();
 
-                SKR_ASSERT(texture_resource->data_size == uRequest->ram_destination.size);
+                SKR_ASSERT(texture_resource->data_size == uRequest->blob->get_size());
 
                 vram_texture_io.vtexture.texture_name = nullptr; // TODO: debug name
                 vram_texture_io.vtexture.resource_types = CGPU_RESOURCE_TYPE_TEXTURE;
@@ -295,12 +295,12 @@ ESkrInstallStatus STextureFactoryImpl::InstallWithUpload(skr_resource_record_t* 
                 vram_texture_io.vtexture.depth = texture_resource->depth;
                 vram_texture_io.vtexture.format = (ECGPUFormat)texture_resource->format;
                 vram_texture_io.src_memory.size = texture_resource->data_size;
-                vram_texture_io.src_memory.bytes = uRequest->ram_destination.bytes;
+                vram_texture_io.src_memory.bytes = uRequest->blob->get_data();
                 vram_texture_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data){};
                 vram_texture_io.callback_datas[SKR_IO_STAGE_COMPLETED] = nullptr;
                 factory->root.vram_service->request(&vram_texture_io, &texture_io_request, &texture_destination);
             }, uRequest.get());
-            root.ram_service->request(rq, &uRequest->ram_request, &uRequest->ram_destination);
+            uRequest->blob = root.ram_service->request(rq, &uRequest->ram_request);
         }
         else
         {
@@ -377,7 +377,7 @@ ESkrInstallStatus STextureFactoryImpl::UpdateInstall(skr_resource_record_t* reco
 
                 if (auto rq = mUploadRequests[texture_resource])
                 {
-                    root.ram_service->free_buffer(&rq->ram_destination);
+                    rq->blob.reset();
                 }
                 mUploadRequests.erase(texture_resource);
                 mInstallTypes.erase(texture_resource);

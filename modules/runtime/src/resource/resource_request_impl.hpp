@@ -53,19 +53,14 @@ protected:
     eastl::fixed_vector<skr_guid_t, 4> dependencies;
     skr_resource_record_t* resourceRecord;
     skr_io_future_t dataFuture;
-    skr_ram_io_buffer_t ioDestination;
+    skr::BlobId dataBlob;
     skr::string resourceUrl;
 #ifdef SKR_RESOURCE_DEV_MODE
     skr_io_future_t artifactsFuture;
-    skr_ram_io_buffer_t artifactsIoDestination;
+    skr::BlobId artifactsBlob;
     skr::string artifactsUrl;
 #endif
-    uint8_t* data;
-    uint64_t size;
-#ifdef SKR_RESOURCE_DEV_MODE
-    uint8_t* artifactsData;
-    uint64_t artifactsSize;
-#endif
+
     skr::task::event_t serdeEvent;
     bool serdeScheduled;
     int serdeResult; 

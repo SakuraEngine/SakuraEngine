@@ -72,11 +72,10 @@ struct DecodingProgress : public skr::AsyncProgress<ImageTex::FutureLauncher, in
     bool do_in_background() override
     {
         auto pAsyncData = &owner->async_data;
-        const auto decoded = image_coder_decode_image(owner->raw_data.bytes, 
-            owner->raw_data.size, owner->image_height, 
+        const auto decoded = image_coder_decode_image(owner->raw_data->get_data(), 
+            owner->raw_data->get_size(), owner->image_height, 
             owner->image_width, owner->image_depth, owner->format);
-        owner->pixel_data.bytes = decoded.bytes;
-        owner->pixel_data.size = decoded.size;
+        owner->pixel_data = skr_create_blob(decoded.bytes, decoded.size, true);
         pAsyncData->ram_data_finsihed_callback();
         return true;
     }
@@ -164,7 +163,7 @@ uint32_t GDIImage_RenderGraph::get_height() const SKR_NOEXCEPT
 
 LiteSpan<const uint8_t> GDIImage_RenderGraph::get_data() const SKR_NOEXCEPT
 {
-    return { pixel_data.bytes, pixel_data.size };
+    return { pixel_data->get_data(), pixel_data->get_size() };
 }
 
 EGDIImageFormat GDIImage_RenderGraph::get_format() const SKR_NOEXCEPT
@@ -304,7 +303,7 @@ GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* o
             else
     #endif
             {
-                owner->pixel_data = { owner->raw_data.bytes, owner->raw_data.size };
+                owner->pixel_data = owner->raw_data;
                 owner->async_data.ram_data_finsihed_callback();
                 // owner->format
             }
@@ -320,21 +319,19 @@ GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* o
         rq->add_block({}); // read all
         rq->add_callback(SKR_IO_STAGE_COMPLETED, on_complete, owner);
         rq->add_callback(SKR_IO_STAGE_ENQUEUED, on_enqueue, this);
-        ram_service->request(rq, &ram_request, &owner->raw_data);
+        owner->raw_data = ram_service->request(rq, &ram_request);
     }
     else if (owner->source == EGDIImageSource::Data)
     {
         owner->async_data.ram_io_enqueued_callback();
-        owner->pixel_data.bytes = owner->raw_data.bytes;
-        owner->pixel_data.size = owner->raw_data.size;
+        owner->pixel_data = owner->raw_data;
         owner->async_data.ram_io_finished_callback();
 #ifdef SKR_GUI_RENDERER_USE_IMAGE_CODER
         if (owner->async_data.useImageCoder)
         {
-            auto decoded = image_coder_decode_image(owner->raw_data.bytes, owner->raw_data.size,
+            auto decoded = image_coder_decode_image(owner->raw_data->get_data(), owner->raw_data->get_size(),
                 owner->image_height, owner->image_width, owner->image_depth, owner->format);
-            owner->pixel_data.bytes = decoded.bytes;
-            owner->pixel_data.size = decoded.size;
+            owner->pixel_data = skr_create_blob(decoded.bytes, decoded.size, true);
         }
         else
 #endif
@@ -342,7 +339,7 @@ GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* o
             owner->image_width = from_data.width;
             owner->image_height = from_data.height;
             owner->image_depth = 1u;
-            owner->pixel_data.bytes = owner->raw_data.bytes;
+            owner->pixel_data = owner->raw_data;
             owner->format = TranslateFormat(from_data.gdi_format);
         }
         owner->async_data.ram_data_finsihed_callback();
@@ -366,8 +363,8 @@ GDITextureId GDITextureAsyncData_RenderGraph::DoAsync(struct GDITexture_RenderGr
             auto& intermediate_image = texture->intermediate_image;
 
             const auto& pixel_data = intermediate_image.pixel_data;
-            vram_io_info.src_memory.bytes = pixel_data.bytes;
-            vram_io_info.src_memory.size = pixel_data.size;
+            vram_io_info.src_memory.bytes = pixel_data->get_data();
+            vram_io_info.src_memory.size = pixel_data->get_size();
             vram_io_info.device = texture->async_data.device;
             vram_io_info.transfer_queue = texture->async_data.transfer_queue;
 
@@ -385,16 +382,9 @@ GDITextureId GDITextureAsyncData_RenderGraph::DoAsync(struct GDITexture_RenderGr
                 texture->intializeBindTable();
 
                 skr_atomicu32_store_release(&texture->state, static_cast<uint32_t>(EGDIResourceState::Okay));
-                auto renderer = (GDIRenderer_RenderGraph*)texture->renderer;
-                if (intermediate_image.pixel_data.bytes != intermediate_image.raw_data.bytes)
-                {
-                    renderer->get_ram_service()->free_buffer(&intermediate_image.pixel_data); // free image_coder decoded data
-                }
-                if (intermediate_image.raw_data.bytes)
-                {
-                    renderer->get_ram_service()->free_buffer(&intermediate_image.raw_data); 
-                } 
-                intermediate_image.pixel_data = {};
+                
+                intermediate_image.pixel_data.reset();
+                intermediate_image.raw_data.reset();
             };
             vram_io_info.callback_datas[SKR_IO_STAGE_COMPLETED] = texture;
             texture->async_data.vram_service->request(&vram_io_info, &texture->async_data.vram_request, &texture->async_data.vram_destination);
@@ -435,9 +425,7 @@ void GDIImage_RenderGraph::preInit(const GDIImageDescriptor* desc)
         async_data.from_data.width = desc->from_data.w;
         async_data.from_data.height = desc->from_data.h;
         async_data.from_data.gdi_format = desc->format;
-        auto dst = raw_data.bytes = (uint8_t*)sakura_malloc(desc->from_data.size);
-        memcpy(dst, desc->from_data.data, desc->from_data.size);
-        raw_data.size = desc->from_data.size;
+        raw_data = skr_create_blob(desc->from_data.data, desc->from_data.size, false);
     }
 }
 
@@ -459,9 +447,7 @@ GDIImageId GDIRenderer_RenderGraph::create_image(const GDIImageDescriptor* desc)
         image->async_data.from_data.gdi_format = desc->format;
         image->async_data.from_data.width = desc->from_data.w;
         image->async_data.from_data.height = desc->from_data.h;
-        auto dst = image->raw_data.bytes = (uint8_t*)sakura_malloc(desc->from_data.size);
-        memcpy(dst, desc->from_data.data, desc->from_data.size);
-        image->raw_data.size = desc->from_data.size;
+        image->raw_data = skr_create_blob(desc->from_data.data, desc->from_data.size, false);
     }
     return image->async_data.DoAsync(image, vfs, ram_service);
 }
@@ -497,9 +483,7 @@ GDITextureId GDIRenderer_RenderGraph::create_texture(const GDITextureDescriptor*
         texture->intermediate_image.async_data.from_data.width = desc->from_data.w;
         texture->intermediate_image.async_data.from_data.height = desc->from_data.h;
         texture->intermediate_image.async_data.from_data.gdi_format = desc->format;
-        auto dst = texture->intermediate_image.raw_data.bytes = (uint8_t*)sakura_malloc(desc->from_data.size);
-        memcpy(dst, desc->from_data.data, desc->from_data.size);
-        texture->intermediate_image.raw_data.size = desc->from_data.size;
+        texture->intermediate_image.raw_data = skr_create_blob(desc->from_data.data, desc->from_data.size, false);
     }
     return texture->async_data.DoAsync(texture, vfs, ram_service);
 }

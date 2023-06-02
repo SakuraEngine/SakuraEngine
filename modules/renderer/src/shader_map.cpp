@@ -50,7 +50,7 @@ struct ShaderProgress : public skr::AsyncProgress<Shader::FutureLauncher, int, b
     ShaderMapImpl* factory = nullptr;
     skr::string bytes_uri;
     skr_io_future_t data_future;
-    skr_ram_io_buffer_t bytes_destination;
+    skr::BlobId blob = nullptr;
     skr_platform_shader_identifier_t identifier = {};
 };
 
@@ -103,18 +103,17 @@ bool ShaderProgress::do_in_background()
     ZoneScopedN("CreateShader");
 
     auto device = factory->root.device;
-    const auto& shader_destination = bytes_destination;
     auto& shader = factory->mShaderMap[identifier];
 
     skr_atomicu32_store_relaxed(&shader->shader_status, SKR_SHADER_MAP_SHADER_STATUS_LOADED);
 
     auto desc = make_zeroed<CGPUShaderLibraryDescriptor>();
-    desc.code = (const uint32_t*)shader_destination.bytes;
-    desc.code_size = (uint32_t)shader_destination.size;
+    desc.code = (const uint32_t*)blob->get_data();
+    desc.code_size = (uint32_t)blob->get_size();
     desc.name = bytes_uri.u8_str();
     desc.stage = identifier.shader_stage;
     const auto created_shader = cgpu_create_shader_library(device, &desc);
-    factory->root.ram_service->free_buffer(&bytes_destination);
+    blob.reset();
     if (!created_shader)
     {
         skr_atomicu32_store_relaxed(&shader->shader_status, SKR_SHADER_MAP_SHADER_STATUS_FAILED);
@@ -216,7 +215,7 @@ ESkrShaderMapShaderStatus ShaderMapImpl::install_shader_from_vfs(const skr_platf
             SKR_ASSERT("launcher is unexpected null!");
         }
     }, (void*)sRequest.get());
-    root.ram_service->request(request, &sRequest->data_future, &sRequest->bytes_destination);
+    sRequest->blob = root.ram_service->request(request, &sRequest->data_future);
     launch_success = true;
     return launch_success ? SKR_SHADER_MAP_SHADER_STATUS_REQUESTED : SKR_SHADER_MAP_SHADER_STATUS_FAILED;
 }

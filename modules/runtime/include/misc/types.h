@@ -210,10 +210,17 @@ BLOB_POD(skr_md5_t);
 
 namespace skr
 {
+template <typename T, bool EmbedRC>
+struct SPtrHelper;
+template <typename T>
+using SPtr = SPtrHelper<T, true>;
+template <typename T>
+using SObjectPtr = SPtrHelper<T, false>;
+
 using SInterfaceDeleter = void(*)(struct SInterface*);
 struct RUNTIME_API SInterface
 {
-    virtual ~SInterface() = default;
+    virtual ~SInterface() SKR_NOEXCEPT = default;
     virtual uint32_t add_refcount() = 0;
     virtual uint32_t release() = 0;
     virtual skr_guid_t get_type() { return {}; }
@@ -221,6 +228,18 @@ struct RUNTIME_API SInterface
 };
 template <class T>
 constexpr bool is_object_v = std::is_base_of_v<skr::SInterface, T>;
+
+struct RUNTIME_API IBlob : public SInterface
+{
+    virtual ~IBlob() SKR_NOEXCEPT = default;
+    virtual uint8_t* get_data() const SKR_NOEXCEPT = 0;
+    virtual uint64_t get_size() const SKR_NOEXCEPT = 0;
+};
+using BlobId = SObjectPtr<IBlob>;
+
 }
 #define sobject_cast static_cast
+
+RUNTIME_API skr::BlobId skr_create_blob(const uint8_t* data, uint64_t size, bool move) SKR_NOEXCEPT;
+
 #endif

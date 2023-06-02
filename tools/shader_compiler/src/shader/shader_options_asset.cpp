@@ -19,11 +19,11 @@ namespace asset
 void* SShaderOptionsImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context)
 {
     const auto assetRecord = context->GetAssetRecord();
-    skr_ram_io_buffer_t ioDestination = {};
-    context->AddFileDependencyAndLoad(ioService, jsonPath.c_str(), ioDestination);
-    SKR_DEFER({ioService->free_buffer(&ioDestination);});
+    skr::BlobId ioBuffer = {};
+    context->AddFileDependencyAndLoad(ioService, jsonPath.c_str(), ioBuffer);
+    SKR_DEFER({ioBuffer.reset();});
 
-    auto jsonString = simdjson::padded_string((char*)ioDestination.bytes, ioDestination.size);
+    auto jsonString = simdjson::padded_string((char*)ioBuffer->get_data(), ioBuffer->get_size());
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(jsonString);
     if(doc.error())

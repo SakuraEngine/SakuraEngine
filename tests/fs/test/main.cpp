@@ -122,11 +122,8 @@ TEST_F(FSTest, asyncread)
     ioService->add_file_resolver();
     ioService->add_iobuffer_resolver();
 
-    uint8_t bytes[1024];
-    memset(bytes, 0, 1024);
     skr_io_future_t future = {};
-    skr_ram_io_buffer_t dest = {};
-    dest.bytes = bytes;
+    skr::BlobId blob = nullptr;
     {
         auto rq = ioService->open_request();
         rq->set_vfs(abs_fs);
@@ -137,7 +134,7 @@ TEST_F(FSTest, asyncread)
                 auto pRamIO = (skr_io_request_t*)arg;
                 SKR_LOG_INFO("async read of file %s ok", pRamIO->get_path());
             }, rq.get());
-        ioService->request(rq, &future, &dest);
+        blob = ioService->request(rq, &future);
     }
 
     wait_timeout([&future]()->bool
@@ -146,7 +143,7 @@ TEST_F(FSTest, asyncread)
     });
     
     // ioService->drain();
-    std::cout << (const char*)dest.bytes << std::endl;
+    std::cout << (const char*)blob->get_data() << std::endl;
     skr_io_ram_service_t::destroy(ioService);
     std::cout << "..." << std::endl;
 }
@@ -160,12 +157,8 @@ TEST_F(FSTest, chunking)
     auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
     ioService->add_default_resolvers();
 
-    uint8_t bytes[1024];
-    memset(bytes, 0, 1024);
     skr_io_future_t future = {};
-    skr_ram_io_buffer_t dest = {};
-    dest.bytes = bytes;
-
+    skr::BlobId blob = nullptr;
     {
         auto rq = ioService->open_request();
         rq->set_vfs(abs_fs);
@@ -176,7 +169,7 @@ TEST_F(FSTest, chunking)
                 auto pRamIO = (skr_io_request_t*)arg;
                 SKR_LOG_INFO("async read of file %s ok", pRamIO->get_path());
             }, rq.get());
-        ioService->request(rq, &future, &dest);
+        blob = ioService->request(rq, &future);
     }
 
     wait_timeout([&future]()->bool
@@ -185,7 +178,7 @@ TEST_F(FSTest, chunking)
     });
     
     // ioService->drain();
-    std::cout << (const char*)dest.bytes << std::endl;
+    std::cout << (const char*)blob->get_data() << std::endl;
     skr_io_ram_service_t::destroy(ioService);
     std::cout << "..." << std::endl;
 }
@@ -209,22 +202,22 @@ TEST_F(FSTest, cancel)
         ioService->set_sleep_time(0); // make test faster
 
         skr_io_future_t future = {};
+        skr::BlobId blob = nullptr;
         skr_io_future_t future2 = {};
-        skr_ram_io_buffer_t dest = {};
-        skr_ram_io_buffer_t dest2 = {};
+        skr::BlobId blob2 = nullptr;
         {
             auto rq = ioService->open_request();
             rq->set_vfs(abs_fs);
             rq->set_path(u8"testfile2");
             rq->add_block({}); // read all
-            ioService->request(rq, &future, &dest);
+            blob = ioService->request(rq, &future);
         }
         {
             auto rq2 = ioService->open_request();
             rq2->set_vfs(abs_fs);
             rq2->set_path(u8"testfile");
             rq2->add_block({}); // read all
-            ioService->request(rq2, &future2, &dest2);
+            blob2 = ioService->request(rq2, &future2);
         }
         // try cancel io of testfile
         ioService->cancel(&future2);
@@ -234,14 +227,14 @@ TEST_F(FSTest, cancel)
         
         if (future2.is_cancelled())
         {
-            EXPECT_EQ(dest2.bytes, nullptr);
+            EXPECT_EQ(blob2->get_data(), nullptr);
             sucess++;
         }
         
-        EXPECT_EQ(std::string((const char*)dest.bytes, dest.size), std::string("Hello, World2!"));
+        EXPECT_EQ(std::string((const char*)blob->get_data(), blob->get_size()), std::string("Hello, World2!"));
         
-        if (dest.bytes) ioService->free_buffer(&dest);
-        if (dest2.bytes) ioService->free_buffer(&dest2);
+        blob.reset();
+        blob2.reset();
         
         skr_io_ram_service_t::destroy(ioService);
     }
@@ -264,30 +257,30 @@ TEST_F(FSTest, defer_cancel)
         ioService->add_iobuffer_resolver();
         ioService->set_sleep_time(0); // make test faster
 
-        skr_ram_io_buffer_t dest = {};
-        skr_ram_io_buffer_t dest2 = {};
         skr_io_future_t future = {};
+        skr::BlobId blob = nullptr;
         skr_io_future_t future2 = {};
+        skr::BlobId blob2 = nullptr;
         {
             auto rq = ioService->open_request();
             rq->set_vfs(abs_fs);
             rq->set_path(u8"testfile2");
             rq->add_block({}); // read all
-            ioService->request(rq, &future, &dest);
+            blob = ioService->request(rq, &future);
         }
         {
             auto rq2 = ioService->open_request();
             rq2->set_vfs(abs_fs);
             rq2->set_path(u8"testfile");
             rq2->add_block({}); // read all
-            ioService->request(rq2, &future2, &dest2);
+            blob2 = ioService->request(rq2, &future2);
         }
         // try cancel io of testfile
         ioService->cancel(&future2);
         ioService->drain();
         if (future2.is_cancelled())
         {
-            EXPECT_EQ(dest2.bytes, nullptr);
+            EXPECT_EQ(blob2->get_data(), nullptr);
             sucess++;
         }
         else
@@ -299,12 +292,12 @@ TEST_F(FSTest, defer_cancel)
                 return future2.is_ready();
             });
 
-            EXPECT_EQ(std::string((const char*)dest2.bytes, dest2.size), std::string("Hello, World!"));
+            EXPECT_EQ(std::string((const char*)blob2->get_data(), blob2->get_size()), std::string("Hello, World!"));
         }
-        EXPECT_EQ(std::string((const char*)dest.bytes, dest.size), std::string("Hello, World2!"));
+        EXPECT_EQ(std::string((const char*)blob->get_data(), blob->get_size()), std::string("Hello, World2!"));
         
-        if (dest.bytes) ioService->free_buffer(&dest);
-        if (dest2.bytes) ioService->free_buffer(&dest2);
+        blob.reset();
+        blob2.reset();
 
         skr_io_ram_service_t::destroy(ioService);
     }
@@ -328,16 +321,16 @@ TEST_F(FSTest, sort)
         ioService->stop(true);
 
         skr_io_future_t future = {};
+        skr::BlobId blob = nullptr;
         skr_io_future_t future2 = {};
-        skr_ram_io_buffer_t dest = {};
-        skr_ram_io_buffer_t dest2 = {};
+        skr::BlobId blob2 = nullptr;
         {
             auto rq = ioService->open_request();
             rq->set_vfs(abs_fs);
             rq->set_priority(SKR_ASYNC_SERVICE_PRIORITY_NORMAL);
             rq->set_path(u8"testfile");
             rq->add_block({}); // read all
-            ioService->request(rq, &future, &dest);
+            blob = ioService->request(rq, &future);
         }
         {
             auto rq2 = ioService->open_request();
@@ -350,7 +343,7 @@ TEST_F(FSTest, sort)
                 auto future = (skr_io_future_t*)data;
                 EXPECT_TRUE(!future->is_ready());
             }, &future);
-            ioService->request(rq2, &future2, &dest2);
+            blob2 = ioService->request(rq2, &future2);
         }
         ioService->run();
         ioService->drain();
@@ -360,10 +353,10 @@ TEST_F(FSTest, sort)
             return future2.is_ready();
         });
         // while (!cancelled && !future2.is_ready()) {}
-        EXPECT_EQ(std::string((const char*)dest2.bytes, dest2.size), std::string("Hello, World!"));
+        EXPECT_EQ(std::string((const char*)blob2->get_data(), blob2->get_size()), std::string("Hello, World!"));
         
-        if (dest.bytes) ioService->free_buffer(&dest);
-        if (dest2.bytes) ioService->free_buffer(&dest2);
+        blob.reset();
+        blob2.reset();
         
         skr_io_ram_service_t::destroy(ioService);
     }

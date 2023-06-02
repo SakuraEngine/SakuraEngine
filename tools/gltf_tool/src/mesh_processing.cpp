@@ -70,7 +70,7 @@ cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr_io_ram_service_t*
 {
     // prepare callback
     skr::task::event_t counter;
-    skr_ram_io_buffer_t destination;
+    skr::BlobId blob = nullptr;
     skr::string u8Path = assetPath.u8_str();
     struct CallbackData
     {
@@ -88,15 +88,15 @@ cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr_io_ram_service_t*
         cbData->pCounter->signal();
     }, (void*)&callbackData);
     skr_io_future_t future = {};
-    ioService->request(request, &future, &destination);
+    blob = ioService->request(request, &future);
     counter.wait(false);
     struct cgltf_data* gltf_data_ = nullptr;
     {
         ZoneScopedN("ParseGLTF");
         cgltf_options options = {};
-        if (destination.bytes)
+        if (blob->get_data())
         {
-            cgltf_result result = cgltf_parse(&options, destination.bytes, destination.size, &gltf_data_);
+            cgltf_result result = cgltf_parse(&options, blob->get_data(), blob->get_size(), &gltf_data_);
             if (result != cgltf_result_success)
             {
                 gltf_data_ = nullptr;
@@ -113,7 +113,7 @@ cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr_io_ram_service_t*
                 }
             }
         }
-        ioService->free_buffer(&destination);
+        blob.reset();
     }
     return gltf_data_;
 }
