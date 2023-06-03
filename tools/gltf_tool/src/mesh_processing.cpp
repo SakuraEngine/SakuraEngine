@@ -70,7 +70,7 @@ cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr_io_ram_service_t*
 {
     // prepare callback
     skr::task::event_t counter;
-    skr_async_ram_destination_t destination;
+    skr::BlobId blob = nullptr;
     skr::string u8Path = assetPath.u8_str();
     struct CallbackData
     {
@@ -78,23 +78,25 @@ cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr_io_ram_service_t*
     } callbackData;
     callbackData.pCounter = &counter;
     // prepare io
-    skr_io_request_t ramIO = {};
-    ramIO.path = (const char8_t*)u8Path.c_str();
-    ramIO.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
+    auto request = ioService->open_request();
+    request->set_vfs(vfs);
+    request->set_path(u8Path.u8_str());
+    request->add_block({}); // read all
+    request->add_callback(SKR_IO_STAGE_COMPLETED, 
+    +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
         auto cbData = (CallbackData*)data;
         cbData->pCounter->signal();
-    };
-    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = (void*)&callbackData;
-    skr_io_future_t ioRequest = {};
-    ioService->request(vfs, &ramIO, &ioRequest, &destination);
+    }, (void*)&callbackData);
+    skr_io_future_t future = {};
+    blob = ioService->request(request, &future);
     counter.wait(false);
     struct cgltf_data* gltf_data_ = nullptr;
     {
         ZoneScopedN("ParseGLTF");
         cgltf_options options = {};
-        if (destination.bytes)
+        if (blob->get_data())
         {
-            cgltf_result result = cgltf_parse(&options, destination.bytes, destination.size, &gltf_data_);
+            cgltf_result result = cgltf_parse(&options, blob->get_data(), blob->get_size(), &gltf_data_);
             if (result != cgltf_result_success)
             {
                 gltf_data_ = nullptr;
@@ -111,7 +113,7 @@ cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr_io_ram_service_t*
                 }
             }
         }
-        sakura_free(destination.bytes);
+        blob.reset();
     }
     return gltf_data_;
 }

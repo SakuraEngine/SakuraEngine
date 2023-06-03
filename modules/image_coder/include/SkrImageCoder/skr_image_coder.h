@@ -1,6 +1,11 @@
 #pragma once
 #include "platform/configure.h"
+#include "misc/types.h"
 #include "SkrImageCoder/module.configure.h"
+
+SKR_DECLARE_TYPE_ID_FWD(skr, IImageInterface, skr_image_interface)
+SKR_DECLARE_TYPE_ID_FWD(skr, IImageEncoder, skr_image_encoder)
+SKR_DECLARE_TYPE_ID_FWD(skr, IImageDecoder, skr_image_decoder)
 
 typedef enum EImageCoderFormat {
     IMAGE_CODER_FORMAT_INVALID = -1,
@@ -41,87 +46,42 @@ typedef uint32_t ImageCoderCompression;
 #ifdef __cplusplus
 #include <containers/span.hpp>
 
-struct SKR_IMAGE_CODER_API skr_image_coder_t {
-    virtual ~skr_image_coder_t() = default;
-    virtual bool set_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT = 0;
-    virtual bool move_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT = 0;
-    virtual bool view_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT = 0;
-    virtual bool set_raw(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height, 
-        EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT = 0;
-    virtual bool move_raw(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height, 
-        EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT = 0;
-    virtual bool view_raw(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height, 
-        EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT = 0;
-
-    virtual bool get_raw_data(uint8_t* pData, uint64_t* pSize, EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT = 0;
-    virtual skr::span<const uint8_t> get_raw_data_view(EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT = 0;
-    virtual void steal_raw_data(struct skr_blob_t* pBlob, EImageCoderColorFormat format, uint32_t bit_depth) = 0;
-
-    virtual bool get_encoded_data(uint8_t* pData, uint64_t* pSize) const SKR_NOEXCEPT = 0;
-    virtual skr::span<const uint8_t> get_encoded_data_view() const SKR_NOEXCEPT = 0;
-    virtual void steal_encoded_data(struct skr_blob_t* pBlob) = 0;
-
+namespace skr
+{
+struct SKR_IMAGE_CODER_API IImageInterface : public skr::IBlob
+{
+    virtual ~IImageInterface() SKR_NOEXCEPT = default;
     virtual EImageCoderFormat get_image_format() const SKR_NOEXCEPT = 0;
     virtual EImageCoderColorFormat get_color_format() const SKR_NOEXCEPT = 0;
-    virtual uint64_t get_raw_size() const SKR_NOEXCEPT = 0;
-    virtual uint64_t get_encoded_size() const SKR_NOEXCEPT = 0;
     virtual uint32_t get_width() const SKR_NOEXCEPT = 0;
     virtual uint32_t get_height() const SKR_NOEXCEPT = 0;
     virtual uint32_t get_bit_depth() const SKR_NOEXCEPT = 0;
-    mutable bool encoding = false;
-    mutable bool decoding = false;
 };
+
+struct SKR_IMAGE_CODER_API IImageEncoder : public IImageInterface
+{
+    static skr::SObjectPtr<IImageEncoder> Create(EImageCoderFormat format) SKR_NOEXCEPT;
+    
+    virtual ~IImageEncoder() SKR_NOEXCEPT = default;
+
+    virtual bool initialize(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height, 
+        EImageCoderColorFormat format, uint32_t bit_depth) SKR_NOEXCEPT = 0;
+    virtual bool encode() SKR_NOEXCEPT = 0;
+};
+using ImageEncoderId = skr::SObjectPtr<IImageEncoder>;
+
+struct SKR_IMAGE_CODER_API IImageDecoder : public IImageInterface
+{
+    static skr::SObjectPtr<IImageDecoder> Create(EImageCoderFormat format) SKR_NOEXCEPT;
+
+    virtual ~IImageDecoder() SKR_NOEXCEPT = default;
+    virtual bool initialize(const uint8_t* data, uint64_t size) SKR_NOEXCEPT = 0;
+    virtual bool decode(EImageCoderColorFormat format, uint32_t bit_depth) SKR_NOEXCEPT = 0;
+};
+using ImageDecoderId = skr::SObjectPtr<IImageDecoder>;
+
+}
 #endif
-typedef struct skr_image_coder_t skr_image_coder_t;
-typedef struct skr_image_coder_t* skr_image_coder_id;
-
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-skr_image_coder_id skr_image_coder_create_image(EImageCoderFormat format);
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-void skr_image_coder_free_image(skr_image_coder_id image);
-
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-bool skr_image_coder_set_encoded(skr_image_coder_id image, const uint8_t* data, uint64_t size);
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-bool skr_image_coder_move_encoded(skr_image_coder_id image, const uint8_t* data, uint64_t size);
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-bool skr_image_coder_view_encoded(skr_image_coder_id image, const uint8_t* data, uint64_t size);
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-bool skr_image_coder_set_raw(skr_image_coder_id image, const uint8_t* data, 
-    uint64_t size, uint32_t width, uint32_t height, 
-    EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw);
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-bool skr_image_coder_move_raw(skr_image_coder_id image, const uint8_t* data, 
-    uint64_t size, uint32_t width, uint32_t height, 
-    EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw);
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-bool skr_image_coder_view_raw(skr_image_coder_id image, const uint8_t* data, 
-    uint64_t size, uint32_t width, uint32_t height, 
-    EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw);
-
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-bool skr_image_coder_get_raw_data(skr_image_coder_id image, uint8_t* pData, uint64_t* pSize, EImageCoderColorFormat format, uint32_t bit_depth);
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-bool skr_image_coder_get_raw_data_view(skr_image_coder_id image, uint8_t** ppData, uint64_t* pSize, EImageCoderColorFormat format, uint32_t bit_depth);
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-bool skr_image_coder_get_encoded_data(skr_image_coder_id image, uint8_t* pData, uint64_t* pSize);
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-bool skr_image_coder_get_encoded_data_view(skr_image_coder_id image, uint8_t** ppData, uint64_t* pSize);
-
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-EImageCoderFormat skr_image_coder_get_image_format(skr_image_coder_id image);
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-EImageCoderColorFormat skr_image_coder_get_color_format(skr_image_coder_id image);
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-uint64_t skr_image_coder_get_raw_size(skr_image_coder_id image);
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-uint64_t skr_image_coder_get_encoded_size(skr_image_coder_id image);
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-uint32_t skr_image_coder_get_width(skr_image_coder_id image);
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-uint32_t skr_image_coder_get_height(skr_image_coder_id image);
-SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
-uint32_t skr_image_coder_get_bit_depth(skr_image_coder_id image);
 
 SKR_IMAGE_CODER_EXTERN_C SKR_IMAGE_CODER_API
 EImageCoderFormat skr_image_coder_detect_format(const uint8_t* encoded_data, uint64_t size);

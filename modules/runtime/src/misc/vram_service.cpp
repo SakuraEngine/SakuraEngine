@@ -509,7 +509,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
         {
             case kStepNone: // start create resource
                 {
-                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_CREATING_RESOURCE);
+                    task.setTaskStatus(SKR_IO_STAGE_RESOLVING);
                     service->createResource(task);
                     task.step = kStepResourceCreated;
                 }
@@ -519,7 +519,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                 {
                     ZoneScopedN("PrepareDStorage");
 
-                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_VRAM_LOADING);
+                    task.setTaskStatus(SKR_IO_STAGE_LOADING);
                     service->dstorageResource(task);
                     task.step = kStepDirectStorage;
                 }
@@ -527,7 +527,7 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                 {
                     ZoneScopedN("PrepareCpyCmd");
 
-                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_VRAM_LOADING);
+                    task.setTaskStatus(SKR_IO_STAGE_LOADING);
                     service->uploadResource(task);
                     task.step = kStepUploading;
                 }
@@ -537,7 +537,8 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                 {
                     ZoneScopedN("CpyQueueSignalOK");
 
-                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_READ_OK);
+                    task.setTaskStatus(SKR_IO_STAGE_LOADED);
+                    task.setTaskStatus(SKR_IO_STAGE_COMPLETED);
                     task.step = kStepFinished;
                 }
                 else task.step = kStepUploading; // continue uploading
@@ -547,7 +548,8 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
                 {
                     ZoneScopedN("DStorageSignalOK");
 
-                    task.setTaskStatus(SKR_ASYNC_IO_STATUS_READ_OK);
+                    task.setTaskStatus(SKR_IO_STAGE_LOADED);
+                    task.setTaskStatus(SKR_IO_STAGE_COMPLETED);
                     task.step = kStepFinished;
                 }
                 else task.step = kStepDirectStorage; // continue uploading
@@ -781,7 +783,7 @@ void skr::io::VRAMServiceImpl::request(const skr_vram_buffer_io_t* buffer_info, 
     io_task.priority = buffer_info->priority;
     io_task.sub_priority = buffer_info->sub_priority;
     io_task.request = async_request;
-    for (uint32_t i = 0; i < SKR_ASYNC_IO_STATUS_COUNT; i++)
+    for (uint32_t i = 0; i < SKR_IO_STAGE_COUNT; i++)
     {
         io_task.callbacks[i] = buffer_info->callbacks[i];
         io_task.callback_datas[i] = buffer_info->callback_datas[i];
@@ -812,7 +814,7 @@ void skr::io::VRAMServiceImpl::request(const skr_vram_texture_io_t* texture_info
     io_task.priority = texture_info->priority;
     io_task.sub_priority = texture_info->sub_priority;
     io_task.request = async_request;
-    for (uint32_t i = 0; i < SKR_ASYNC_IO_STATUS_COUNT; i++)
+    for (uint32_t i = 0; i < SKR_IO_STAGE_COUNT; i++)
     {
         io_task.callbacks[i] = texture_info->callbacks[i];
         io_task.callback_datas[i] = texture_info->callback_datas[i];

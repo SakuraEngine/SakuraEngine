@@ -39,10 +39,7 @@ bool SAnimCooker::Cook(SCookContext *ctx)
     auto& skeleton = skeletonResource->skeleton;
     //-----import resource object
     RawAnimation* rawAnimation = (RawAnimation*)ctx->Import<RawAnimation>();
-    if (!rawAnimation)
-    {
-        return false;
-    }
+    if (!rawAnimation) return false;
     SKR_DEFER({ctx->Destroy(rawAnimation);});
     //-----emit dependencies
     // no static dependencies

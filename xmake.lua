@@ -69,6 +69,7 @@ target("SkrRoot")
     add_deps("boost", "tracyclient", {public = true})
     -- defs & flags
     add_ldflags(project_ldflags, {public = true, force = true})
+    add_shflags(project_ldflags, {public = true, force = true})
     add_cxflags(project_cxflags, {public = true, force = true})
     -- generate codegen fences
     after_load(function(target)

@@ -50,7 +50,7 @@ protected:
 
     struct ResourceRequestConcurrentQueueTraits : public skr::ConcurrentQueueDefaultTraits
     {
-        static constexpr const char* kResourceRequestQueueName = "";
+        static constexpr const char* kResourceRequestQueueName = "ResourceRequestQueue";
         static const bool RECYCLE_ALLOCATED_BLOCKS = true;
         static inline void* malloc(size_t size) { return sakura_mallocN(size, kResourceRequestQueueName); }
         static inline void free(void* ptr) { return sakura_freeN(ptr, kResourceRequestQueueName); }
