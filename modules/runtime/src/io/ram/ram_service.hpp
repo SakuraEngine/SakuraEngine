@@ -8,9 +8,9 @@
 namespace skr {
 namespace io {
 
-struct RAMService final : public IRAMService
+struct RAMServiceImpl final : public IRAMService
 {
-    RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
+    RAMServiceImpl(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
     
     [[nodiscard]] IOBatch open_batch(uint64_t n) SKR_NOEXCEPT;
     [[nodiscard]] IORequest open_request() SKR_NOEXCEPT;
@@ -43,15 +43,13 @@ struct RAMService final : public IRAMService
     // 7.2 finish callbacks are polled & executed by usr threads
     void poll_finish_callbacks() SKR_NOEXCEPT;
 
-    struct Runner final : public skr::ServiceThread
+    struct Runner final : public RunnerBase
     {
-        const bool condsleep = false;
-        Runner(RAMService* service) SKR_NOEXCEPT 
-            : skr::ServiceThread({ service->name.u8_str(), SKR_THREAD_ABOVE_NORMAL }),
+        Runner(RAMServiceImpl* service) SKR_NOEXCEPT 
+            : RunnerBase({ service->name.u8_str(), SKR_THREAD_ABOVE_NORMAL }),
             service(service)
         {
             skr_init_rw_mutex(&resolvers_mutex);
-            condlock.initialize(skr::format(u8"{}-CondLock", service->name).u8_str());
             for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
             {
                 skr_atomicu64_store_relaxed(&ongoing_batch_counts[i], 0);
@@ -65,22 +63,6 @@ struct RAMService final : public IRAMService
         }
 
         skr::AsyncResult serve() SKR_NOEXCEPT;
-        void sleep() SKR_NOEXCEPT
-        {
-            const auto ms = skr_atomicu64_load_relaxed(&sleep_time);
-            if (!condsleep)
-            {
-                ZoneScopedNC("ioServiceSleep(Sleep)", tracy::Color::Gray55);
-                skr_thread_sleep(ms);
-            }
-            else
-            {
-                ZoneScopedNC("ioServiceSleep(Cond)", tracy::Color::Gray55);
-                condlock.lock();
-                condlock.wait(ms);
-                condlock.unlock();
-            }
-        }
 
         // cancel request marked as request_cancel
         bool try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT;
@@ -99,7 +81,7 @@ struct RAMService final : public IRAMService
         // 7. finish
         void finish() SKR_NOEXCEPT;
 
-        RAMService* service = nullptr;
+        RAMServiceImpl* service = nullptr;
         SRWMutex resolvers_mutex;
         eastl::vector<eastl::pair<skr::string, RequestResolver>> resolvers;
 
@@ -108,10 +90,6 @@ struct RAMService final : public IRAMService
         IOBatchArray ongoing_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
         SAtomicU64 ongoing_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
         IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-        
-        SAtomicU32 sleep_time = 16u;
-        SAtomicU32 service_status = SKR_ASYNC_SERVICE_STATUS_SLEEPING;
-        CondLock condlock;
     };
     const skr::string name;
     IOReader reader = nullptr;
