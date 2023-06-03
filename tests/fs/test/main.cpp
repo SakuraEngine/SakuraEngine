@@ -119,8 +119,7 @@ TEST_F(FSTest, asyncread)
     skr_ram_io_service_desc_t ioServiceDesc = {};
     ioServiceDesc.name = u8"Test";
     auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
-    ioService->add_file_resolver();
-    ioService->add_iobuffer_resolver();
+    ioService->add_default_resolvers();
 
     skr_io_future_t future = {};
     skr::BlobId blob = nullptr;
@@ -197,8 +196,7 @@ TEST_F(FSTest, cancel)
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         ioServiceDesc.lockless = false;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
-        ioService->add_file_resolver();
-        ioService->add_iobuffer_resolver();
+        ioService->add_default_resolvers();
         ioService->set_sleep_time(0); // make test faster
 
         skr_io_future_t future = {};
@@ -253,8 +251,7 @@ TEST_F(FSTest, defer_cancel)
         ioServiceDesc.lockless = true;
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
-        ioService->add_file_resolver();
-        ioService->add_iobuffer_resolver();
+        ioService->add_default_resolvers();
         ioService->set_sleep_time(0); // make test faster
 
         skr_io_future_t future = {};
@@ -315,8 +312,7 @@ TEST_F(FSTest, sort)
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
-        ioService->add_file_resolver();
-        ioService->add_iobuffer_resolver();
+        ioService->add_default_resolvers();
         ioService->set_sleep_time(0); // make test faster
         ioService->stop(true);
 

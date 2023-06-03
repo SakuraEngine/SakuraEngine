@@ -1,4 +1,4 @@
-#include "ram/ram_request.hpp"
+#include "io_resolver.hpp"
 
 bool skr_io_future_t::is_ready() const SKR_NOEXCEPT
 {
@@ -26,9 +26,30 @@ namespace io {
 
 const char* kIOPoolObjectsMemoryName = "I/O PoolObjects";
 
+IIOBatchResolver::~IIOBatchResolver() SKR_NOEXCEPT
+{
+
+}
+
+void IIOBatchResolver::resolve(IORequestId request) SKR_NOEXCEPT
+{
+    (void)request;
+}
+
+IIOBatchResolverChain::~IIOBatchResolverChain() SKR_NOEXCEPT
+{
+
+}
+
 IIOReader::~IIOReader() SKR_NOEXCEPT
 {
     
+}
+
+SObjectPtr<IIOBatchResolverChain> IIOBatchResolverChain::Create(IOBatchResolverId resolver) SKR_NOEXCEPT
+{
+    auto chain = SObjectPtr<IOBatchResolverChain>::Create(resolver);
+    return chain;
 }
 
 } // namespace io

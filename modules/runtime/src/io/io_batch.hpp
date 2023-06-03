@@ -13,7 +13,7 @@ struct IOBatchBase : public IIOBatch
         requests.reserve(n);
     }
 
-    skr::span<IORequest> get_requests() SKR_NOEXCEPT
+    skr::span<IORequestId> get_requests() SKR_NOEXCEPT
     {
         return requests;
     }
@@ -23,7 +23,7 @@ struct IOBatchBase : public IIOBatch
 
 protected:
     SkrAsyncServicePriority priority;
-    eastl::fixed_vector<IORequest, 1> requests;
+    eastl::fixed_vector<IORequestId, 1> requests;
 
 public:
     uint32_t add_refcount() 

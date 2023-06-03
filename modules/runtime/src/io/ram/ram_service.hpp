@@ -1,5 +1,6 @@
 #pragma once
 #include "../io_runnner.hpp"
+#include "../io_resolver.hpp"
 #include "ram_readers.hpp"
 #include "ram_batch.hpp"
 #include "ram_buffer.hpp"
@@ -12,20 +13,16 @@ struct RAMServiceImpl final : public IRAMService
 {
     RAMServiceImpl(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
     
-    [[nodiscard]] IOBatch open_batch(uint64_t n) SKR_NOEXCEPT;
-    [[nodiscard]] IORequest open_request() SKR_NOEXCEPT;
+    [[nodiscard]] IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT;
+    [[nodiscard]] IORequestId open_request() SKR_NOEXCEPT;
 
-    uint64_t add_resolver(const char8_t* name, RequestResolver resolver) SKR_NOEXCEPT
+    void set_resolvers(IOBatchResolverChainId chain) SKR_NOEXCEPT
     {
-        skr_rw_mutex_acuire_w(&runner.resolvers_mutex);
-        const auto id = runner.resolvers.size();
-        runner.resolvers.emplace_back(name, resolver);
-        skr_rw_mutex_release(&runner.resolvers_mutex);
-        return id;
+        runner.resolver_chain = skr::static_pointer_cast<IOBatchResolverChain>(chain);
     }
 
-    RAMIOBufferId request(IORequest request, skr_io_future_t* future, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
-    void request(IOBatch request) SKR_NOEXCEPT;
+    RAMIOBufferId request(IORequestId request, skr_io_future_t* future, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    void request(IOBatchId request) SKR_NOEXCEPT;
 
     RAMIOBuffer allocate_buffer(uint64_t n) SKR_NOEXCEPT;
     void free_buffer(RAMIOBuffer* buffer) SKR_NOEXCEPT;
@@ -49,17 +46,11 @@ struct RAMServiceImpl final : public IRAMService
             : RunnerBase({ service->name.u8_str(), SKR_THREAD_ABOVE_NORMAL }),
             service(service)
         {
-            skr_init_rw_mutex(&resolvers_mutex);
             for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
             {
                 skr_atomicu64_store_relaxed(&ongoing_batch_counts[i], 0);
                 skr_atomicu64_store_relaxed(&queued_batch_counts[i], 0);
             }
-        }
-
-        ~Runner() SKR_NOEXCEPT
-        {
-            skr_destroy_rw_mutex(&resolvers_mutex);
         }
 
         skr::AsyncResult serve() SKR_NOEXCEPT;
@@ -82,17 +73,14 @@ struct RAMServiceImpl final : public IRAMService
         void finish() SKR_NOEXCEPT;
 
         RAMServiceImpl* service = nullptr;
-        SRWMutex resolvers_mutex;
-        eastl::vector<eastl::pair<skr::string, RequestResolver>> resolvers;
+        SObjectPtr<IOBatchResolverChain> resolver_chain = nullptr;
 
-        IOBatchQueue batch_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-        SAtomicU64 queued_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
         IOBatchArray ongoing_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
         SAtomicU64 ongoing_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
         IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     };
     const skr::string name;
-    IOReader reader = nullptr;
+    IOReaderId reader = nullptr;
     Runner runner;
 protected:
     static uint32_t global_idx;

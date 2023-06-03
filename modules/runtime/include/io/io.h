@@ -190,52 +190,60 @@ struct RUNTIME_API IIORequest : public skr::SInterface
     virtual void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
     virtual void reset_compressed_blocks() SKR_NOEXCEPT = 0;
 };
-using IORequest = SObjectPtr<IIORequest>;
+using IORequestId = SObjectPtr<IIORequest>;
 using IOResultId = SObjectPtr<skr::SInterface>;
 
 struct RUNTIME_API IIOBatch : public skr::SInterface
 {
     virtual void reserve(uint64_t size) SKR_NOEXCEPT = 0;
-    virtual IOResultId add_request(IORequest request, skr_io_future_t* future = nullptr) SKR_NOEXCEPT = 0;
-    virtual skr::span<IORequest> get_requests() SKR_NOEXCEPT = 0;
+    virtual IOResultId add_request(IORequestId request, skr_io_future_t* future = nullptr) SKR_NOEXCEPT = 0;
+    virtual skr::span<IORequestId> get_requests() SKR_NOEXCEPT = 0;
 
     virtual void set_priority(SkrAsyncServicePriority pri) SKR_NOEXCEPT = 0;
     virtual SkrAsyncServicePriority get_priority() const SKR_NOEXCEPT = 0;
 };
-using IOBatch = SObjectPtr<IIOBatch>;
-using RequestResolver = eastl::function<void(IORequest)>;
+using IOBatchId = SObjectPtr<IIOBatch>;
 
-/*
-struct RUNTIME_API IIOBatchResolver
+struct RUNTIME_API IIOBatchResolver : public skr::SInterface
 {
+    virtual void resolve(IORequestId request) SKR_NOEXCEPT;
+
     virtual ~IIOBatchResolver() SKR_NOEXCEPT;
 };
-*/
+using IOBatchResolverId = SObjectPtr<IIOBatchResolver>;
+
+struct RUNTIME_API IIOBatchResolverChain : public skr::SInterface
+{
+    static SObjectPtr<IIOBatchResolverChain> Create(IOBatchResolverId resolver = nullptr) SKR_NOEXCEPT;
+    virtual SObjectPtr<IIOBatchResolverChain> then(IOBatchResolverId resolver) SKR_NOEXCEPT = 0;
+
+    virtual ~IIOBatchResolverChain() SKR_NOEXCEPT;
+};
+using IOBatchResolverChainId = SObjectPtr<IIOBatchResolverChain>;
 
 struct RUNTIME_API IIOReader : public skr::SInterface
 {
-    virtual void fetch(SkrAsyncServicePriority priority, IOBatch batch) SKR_NOEXCEPT = 0;
+    virtual void fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT = 0;
     virtual void sort(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
-    virtual void resolve(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
     virtual void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
     virtual void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
-    virtual IORequest poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
+    virtual IORequestId poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
 
     virtual ~IIOReader() SKR_NOEXCEPT;
     IIOReader() SKR_NOEXCEPT = default;
 };
-using IOReader = SObjectPtr<IIOReader>;
+using IOReaderId = SObjectPtr<IIOReader>;
 
 struct RUNTIME_API IIOService
 {
     // add a resolver to service
-    virtual uint64_t add_resolver(const char8_t* name, RequestResolver resolver) SKR_NOEXCEPT = 0;
+    virtual void set_resolvers(IOBatchResolverChainId chain) SKR_NOEXCEPT = 0;
 
     // open a request for filling
-    [[nodiscard]] virtual IORequest open_request() SKR_NOEXCEPT = 0;
+    [[nodiscard]] virtual IORequestId open_request() SKR_NOEXCEPT = 0;
 
     // start a request batch
-    [[nodiscard]] virtual IOBatch open_batch(uint64_t n) SKR_NOEXCEPT = 0;
+    [[nodiscard]] virtual IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT = 0;
 
     // cancel request
     virtual void cancel(skr_io_future_t* future) SKR_NOEXCEPT = 0;
@@ -270,14 +278,13 @@ struct RUNTIME_API IRAMService : public IIOService
     [[nodiscard]] static skr_io_ram_service_t* create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
     static void destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT;
 
-    virtual RAMIOBufferId request(IORequest request, skr_io_future_t* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
+    virtual RAMIOBufferId request(IORequestId request, skr_io_future_t* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
     
-    virtual void request(IOBatch request) SKR_NOEXCEPT = 0;
+    virtual void request(IOBatchId request) SKR_NOEXCEPT = 0;
 
-    uint64_t add_file_resolver() SKR_NOEXCEPT;
-    uint64_t add_iobuffer_resolver() SKR_NOEXCEPT;
-    uint64_t add_chunking_resolver(uint64_t chunk_size = 256 * 1024) SKR_NOEXCEPT;
-
+    IOBatchResolverId create_file_resolver() SKR_NOEXCEPT;
+    IOBatchResolverId create_iobuffer_resolver() SKR_NOEXCEPT;
+    IOBatchResolverId create_chunking_resolver(uint64_t chunk_size = 256 * 1024) SKR_NOEXCEPT;
     void add_default_resolvers() SKR_NOEXCEPT;
 
     virtual ~IRAMService() SKR_NOEXCEPT = default;
