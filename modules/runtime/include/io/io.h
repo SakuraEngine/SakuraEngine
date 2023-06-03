@@ -152,11 +152,11 @@ namespace skr {
 namespace io {
 
 // io flow
-// 1. Enqueue requests to service
+// 1. Enqueue requests(batches) to service
 // 2. Sort raw requests
 // 3. Resolve requests to pending raw request array
 //  3.1 package parsing happens here.
-//  3.2 chunk pending raw requests to block slices
+//  3.2 you can resolve paths, open files, allocate buffers, etc.
 // 4. Dispatch I/O blocks to drives (+allocate & cpy to raw)
 // 5. Do uncompress works (+allocate & cpy to uncompressed)
 // 6. Two kinds of callbacks are provided
