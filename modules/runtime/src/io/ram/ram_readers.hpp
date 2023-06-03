@@ -9,10 +9,10 @@ namespace io {
 struct RAMReaderBase : public IIOReader
 {
 public:
-    RAMReaderBase(RAMServiceImpl* service) SKR_NOEXCEPT : service(service) {}
+    RAMReaderBase(RAMService* service) SKR_NOEXCEPT : service(service) {}
     virtual ~RAMReaderBase() SKR_NOEXCEPT {}
 protected:
-    RAMServiceImpl* service = nullptr;
+    RAMService* service = nullptr;
 
 public:
     uint32_t add_refcount() 
@@ -30,7 +30,7 @@ private:
 
 struct VFSRAMReader final : public RAMReaderBase
 {
-    VFSRAMReader(RAMServiceImpl* service) SKR_NOEXCEPT : RAMReaderBase(service) {}
+    VFSRAMReader(RAMService* service) SKR_NOEXCEPT : RAMReaderBase(service) {}
     ~VFSRAMReader() SKR_NOEXCEPT {}
 
     void fetch(SkrAsyncServicePriority priority, IOBatch batch) SKR_NOEXCEPT;
@@ -47,7 +47,7 @@ struct VFSRAMReader final : public RAMReaderBase
 /*
 struct DStorageRAMReader final : public RAMReaderBase
 {
-    DStorageRAMReader(RAMServiceImpl* service) : RAMReaderBase(service) {}
+    DStorageRAMReader(RAMService* service) : RAMReaderBase(service) {}
 
     void fetch(SkrAsyncServicePriority priority, IOBatch batch) SKR_NOEXCEPT;
     void sort(SkrAsyncServicePriority priority) SKR_NOEXCEPT;

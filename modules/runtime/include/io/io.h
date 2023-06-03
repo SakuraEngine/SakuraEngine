@@ -7,7 +7,7 @@
 #define SKR_ASYNC_SERVICE_SLEEP_TIME_MAX UINT32_MAX
 
 SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)
-SKR_DECLARE_TYPE_ID_FWD(skr::io, RAMService, skr_io_ram_service)
+SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service)
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IIORequest, skr_io_request)
 struct skr_vfs_t;
 
@@ -162,7 +162,7 @@ namespace io {
 // 6. Two kinds of callbacks are provided
 //  6.1 inplace callbacks are executed in the I/O thread/workers
 //  6.2 finish callbacks are polled & executed by usr threads
-struct RAMService;
+struct IRAMService;
 
 using IOBlock = skr_io_block_t;
 using IOCompressedBlock = skr_io_compressed_block_t;
@@ -265,7 +265,7 @@ struct RUNTIME_API IRAMIOBuffer : public skr::IBlob
 };
 using RAMIOBufferId = SObjectPtr<IRAMIOBuffer>;
 
-struct RUNTIME_API RAMService : public IIOService
+struct RUNTIME_API IRAMService : public IIOService
 {
     [[nodiscard]] static skr_io_ram_service_t* create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
     static void destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT;
@@ -280,8 +280,8 @@ struct RUNTIME_API RAMService : public IIOService
 
     void add_default_resolvers() SKR_NOEXCEPT;
 
-    virtual ~RAMService() SKR_NOEXCEPT = default;
-    RAMService() SKR_NOEXCEPT = default;
+    virtual ~IRAMService() SKR_NOEXCEPT = default;
+    IRAMService() SKR_NOEXCEPT = default;
 };
 } // namespace io
 } // namespace skr

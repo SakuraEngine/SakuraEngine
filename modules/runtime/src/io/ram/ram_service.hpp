@@ -8,9 +8,9 @@
 namespace skr {
 namespace io {
 
-struct RAMServiceImpl final : public RAMService
+struct RAMService final : public IRAMService
 {
-    RAMServiceImpl(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
+    RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
     
     [[nodiscard]] IOBatch open_batch(uint64_t n) SKR_NOEXCEPT;
     [[nodiscard]] IORequest open_request() SKR_NOEXCEPT;
@@ -46,7 +46,7 @@ struct RAMServiceImpl final : public RAMService
     struct Runner final : public skr::ServiceThread
     {
         const bool condsleep = false;
-        Runner(RAMServiceImpl* service) SKR_NOEXCEPT 
+        Runner(RAMService* service) SKR_NOEXCEPT 
             : skr::ServiceThread({ service->name.u8_str(), SKR_THREAD_ABOVE_NORMAL }),
             service(service)
         {
@@ -99,7 +99,7 @@ struct RAMServiceImpl final : public RAMService
         // 7. finish
         void finish() SKR_NOEXCEPT;
 
-        RAMServiceImpl* service = nullptr;
+        RAMService* service = nullptr;
         SRWMutex resolvers_mutex;
         eastl::vector<eastl::pair<skr::string, RequestResolver>> resolvers;
 
