@@ -242,8 +242,8 @@ const skr_type_t* make_variant_type(const skr::span<const skr_type_t*> types)
     if (it != cache.end()) {
         return it->second;
     }
-    uint64_t size = 0;
-    uint64_t align = alignof(size_t);
+    size_t size = 0;
+    size_t align = alignof(size_t);
     for(auto type : types) {
         size = std::max(size, type->Size());
         align = std::max(align, type->Align());
