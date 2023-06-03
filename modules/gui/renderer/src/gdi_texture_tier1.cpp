@@ -71,10 +71,9 @@ struct DecodingProgress : public skr::AsyncProgress<ImageTex::FutureLauncher, in
     bool do_in_background() override
     {
         auto pAsyncData = &owner->async_data;
-        const auto decoded = image_coder_decode_image(owner->raw_data->get_data(), 
+        owner->pixel_data = image_coder_decode_image(owner->raw_data->get_data(), 
             owner->raw_data->get_size(), owner->image_height, 
             owner->image_width, owner->image_depth, owner->format);
-        owner->pixel_data = skr_create_blob(decoded->get_data(), decoded->get_size(), true);
         pAsyncData->ram_data_finsihed_callback();
         return true;
     }
