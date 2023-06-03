@@ -147,7 +147,7 @@ public:
 
     virtual skr_io_ram_service_t* getIOService() = 0;
 
-    static constexpr uint32_t ioServicesMaxCount = 4;
+    static constexpr uint32_t ioServicesMaxCount = 1;
 };
 }
 }
