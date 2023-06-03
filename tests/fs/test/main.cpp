@@ -327,15 +327,13 @@ TEST_F(FSTest, sort)
         {
             auto rq = ioService->open_request();
             rq->set_vfs(abs_fs);
-            rq->set_priority(SKR_ASYNC_SERVICE_PRIORITY_NORMAL);
             rq->set_path(u8"testfile");
             rq->add_block({}); // read all
-            blob = ioService->request(rq, &future);
+            blob = ioService->request(rq, &future, SKR_ASYNC_SERVICE_PRIORITY_NORMAL);
         }
         {
             auto rq2 = ioService->open_request();
             rq2->set_vfs(abs_fs);
-            rq2->set_priority(SKR_ASYNC_SERVICE_PRIORITY_URGENT);
             rq2->set_path(u8"testfile");
             rq2->add_block({}); // read all
             rq2->add_callback(SKR_IO_STAGE_COMPLETED, 
@@ -343,7 +341,7 @@ TEST_F(FSTest, sort)
                 auto future = (skr_io_future_t*)data;
                 EXPECT_TRUE(!future->is_ready());
             }, &future);
-            blob2 = ioService->request(rq2, &future2);
+            blob2 = ioService->request(rq2, &future2, SKR_ASYNC_SERVICE_PRIORITY_URGENT);
         }
         ioService->run();
         ioService->drain();
