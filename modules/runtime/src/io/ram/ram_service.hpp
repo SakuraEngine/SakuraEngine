@@ -9,9 +9,9 @@
 namespace skr {
 namespace io {
 
-struct RAMServiceImpl final : public IRAMService
+struct RAMService final : public IRAMService
 {
-    RAMServiceImpl(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
+    RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
     
     [[nodiscard]] IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT;
     [[nodiscard]] IORequestId open_request() SKR_NOEXCEPT;
@@ -42,7 +42,7 @@ struct RAMServiceImpl final : public IRAMService
 
     struct Runner final : public RunnerBase
     {
-        Runner(RAMServiceImpl* service) SKR_NOEXCEPT 
+        Runner(RAMService* service) SKR_NOEXCEPT 
             : RunnerBase({ service->name.u8_str(), SKR_THREAD_ABOVE_NORMAL }),
             service(service)
         {
@@ -72,7 +72,7 @@ struct RAMServiceImpl final : public IRAMService
         // 7. finish
         void finish() SKR_NOEXCEPT;
 
-        RAMServiceImpl* service = nullptr;
+        RAMService* service = nullptr;
         SObjectPtr<IOBatchResolverChain> resolver_chain = nullptr;
 
         IOBatchArray ongoing_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];

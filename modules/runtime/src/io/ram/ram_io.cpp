@@ -50,16 +50,16 @@ IOResultId RAMIOBatch::add_request(IORequestId request, skr_io_future_t* future)
     return buffer;
 }
 
-RAMServiceImpl::RAMServiceImpl(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
+RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
     : name(skr::format(u8"IRAMService-{}", global_idx++)), runner(this)
 {
     reader = skr::SObjectPtr<VFSRAMReader>::Create(this);
 }
-uint32_t RAMServiceImpl::global_idx = 0;
+uint32_t RAMService::global_idx = 0;
 
 skr_io_ram_service_t* IRAMService::create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
 {
-    auto srv = SkrNew<RAMServiceImpl>(desc);
+    auto srv = SkrNew<RAMService>(desc);
     srv->run();
     return srv;
 }
@@ -68,7 +68,7 @@ void IRAMService::destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT
 {
     ZoneScopedN("destroy");
 
-    auto S = static_cast<RAMServiceImpl*>(service);
+    auto S = static_cast<RAMService*>(service);
     if (S->runner.get_status() == skr::ServiceThread::Status::kStatusRunning)
     {
         S->drain();
@@ -86,25 +86,25 @@ void IRAMService::destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT
     SkrDelete(service);
 }
 
-IOBatchId RAMServiceImpl::open_batch(uint64_t n) SKR_NOEXCEPT
+IOBatchId RAMService::open_batch(uint64_t n) SKR_NOEXCEPT
 {
     uint64_t seq = (uint64_t)skr_atomicu64_add_relaxed(&batch_sequence, 1);
     return skr::static_pointer_cast<IIOBatch>(batch_pool.allocate(seq, n));
 }
 
-IORequestId RAMServiceImpl::open_request() SKR_NOEXCEPT
+IORequestId RAMService::open_request() SKR_NOEXCEPT
 {
     uint64_t seq = (uint64_t)skr_atomicu64_add_relaxed(&request_sequence, 1);
     return skr::static_pointer_cast<IIORequest>(request_pool.allocate(seq));
 }
 
-void RAMServiceImpl::request(IOBatchId batch) SKR_NOEXCEPT
+void RAMService::request(IOBatchId batch) SKR_NOEXCEPT
 {
     runner.enqueueBatch(batch);
     runner.tryAwake();
 }
 
-RAMIOBufferId RAMServiceImpl::request(IORequestId request, skr_io_future_t* future, SkrAsyncServicePriority priority) SKR_NOEXCEPT
+RAMIOBufferId RAMService::request(IORequestId request, skr_io_future_t* future, SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     auto batch = open_batch(1);
     auto result = batch->add_request(request, future);
@@ -114,7 +114,7 @@ RAMIOBufferId RAMServiceImpl::request(IORequestId request, skr_io_future_t* futu
     return buffer;
 }
 
-void RAMServiceImpl::stop(bool wait_drain) SKR_NOEXCEPT
+void RAMService::stop(bool wait_drain) SKR_NOEXCEPT
 {
     if (wait_drain)
     {
@@ -123,12 +123,12 @@ void RAMServiceImpl::stop(bool wait_drain) SKR_NOEXCEPT
     runner.stop();
 }
 
-void RAMServiceImpl::run() SKR_NOEXCEPT
+void RAMService::run() SKR_NOEXCEPT
 {
     runner.run();
 }
 
-void RAMServiceImpl::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
+void RAMService::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     ZoneScopedN("drain");
 
@@ -153,17 +153,17 @@ void RAMServiceImpl::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     }
 }
 
-void RAMServiceImpl::set_sleep_time(uint32_t ms) SKR_NOEXCEPT
+void RAMService::set_sleep_time(uint32_t ms) SKR_NOEXCEPT
 {
     runner.setSleepTime(ms);
 }
 
-SkrAsyncServiceStatus RAMServiceImpl::get_service_status() const SKR_NOEXCEPT
+SkrAsyncServiceStatus RAMService::get_service_status() const SKR_NOEXCEPT
 {
     return runner.getServiceStatus();
 }
 
-void RAMServiceImpl::poll_finish_callbacks() SKR_NOEXCEPT
+void RAMService::poll_finish_callbacks() SKR_NOEXCEPT
 {
     RQPtr rq = nullptr;
     while (runner.finish_queues->try_dequeue(rq))
@@ -178,7 +178,7 @@ void RAMServiceImpl::poll_finish_callbacks() SKR_NOEXCEPT
 namespace skr {
 namespace io {
 
-skr::AsyncResult RAMServiceImpl::Runner::serve() SKR_NOEXCEPT
+skr::AsyncResult RAMService::Runner::serve() SKR_NOEXCEPT
 {
     SKR_DEFER( { recycle(); } );
 
@@ -211,7 +211,7 @@ skr::AsyncResult RAMServiceImpl::Runner::serve() SKR_NOEXCEPT
     return ASYNC_RESULT_OK;
 }
 
-bool RAMServiceImpl::Runner::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT
+bool RAMService::Runner::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT
 {
     const auto status = rq->getStatus();
     if (status >= SKR_IO_STAGE_LOADING) return false;
@@ -237,7 +237,7 @@ bool RAMServiceImpl::Runner::try_cancel(SkrAsyncServicePriority priority, RQPtr 
     return false;
 }
 
-void RAMServiceImpl::Runner::recycle() SKR_NOEXCEPT
+void RAMService::Runner::recycle() SKR_NOEXCEPT
 {
     ZoneScopedN("recycle");
     
@@ -266,7 +266,7 @@ void RAMServiceImpl::Runner::recycle() SKR_NOEXCEPT
     }
 }
 
-uint64_t RAMServiceImpl::Runner::fetch() SKR_NOEXCEPT
+uint64_t RAMService::Runner::fetch() SKR_NOEXCEPT
 {
     SKR_ASSERT(service->reader);
     ZoneScopedN("fetch");
@@ -283,7 +283,7 @@ uint64_t RAMServiceImpl::Runner::fetch() SKR_NOEXCEPT
     return 0;
 }
 
-void RAMServiceImpl::Runner::sort() SKR_NOEXCEPT
+void RAMService::Runner::sort() SKR_NOEXCEPT
 {
     ZoneScopedN("sort");
 
@@ -293,7 +293,7 @@ void RAMServiceImpl::Runner::sort() SKR_NOEXCEPT
     }
 }
 
-void RAMServiceImpl::Runner::dispatch() SKR_NOEXCEPT
+void RAMService::Runner::dispatch() SKR_NOEXCEPT
 {
     ZoneScopedN("dispatch");
 
@@ -303,7 +303,7 @@ void RAMServiceImpl::Runner::dispatch() SKR_NOEXCEPT
     }
 }
 
-void RAMServiceImpl::Runner::resolve() SKR_NOEXCEPT
+void RAMService::Runner::resolve() SKR_NOEXCEPT
 {
     SKR_ASSERT(service->reader);
     ZoneScopedN("resolve");
@@ -335,12 +335,12 @@ void RAMServiceImpl::Runner::resolve() SKR_NOEXCEPT
     }
 }
 
-void RAMServiceImpl::Runner::uncompress() SKR_NOEXCEPT
+void RAMService::Runner::uncompress() SKR_NOEXCEPT
 {
     // do nothing now
 }
 
-void RAMServiceImpl::Runner::finish() SKR_NOEXCEPT
+void RAMService::Runner::finish() SKR_NOEXCEPT
 {
     ZoneScopedN("finish");
 
