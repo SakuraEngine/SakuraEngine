@@ -1,7 +1,6 @@
 #pragma once
 #include "misc/types.h"
 #include "platform/atomic.h"
-#include "platform/thread.h"
 
 #define SKR_IO_SERVICE_MAX_TASK_COUNT 32
 #define SKR_ASYNC_SERVICE_SLEEP_TIME_MAX UINT32_MAX
@@ -140,13 +139,7 @@ typedef struct skr_ram_io_service_desc_t {
 } skr_ram_io_service_desc_t;
 
 #ifdef __cplusplus
-#include "containers/vector.hpp"
-#include "containers/span.hpp"
 #include "containers/sptr.hpp"
-#include "containers/concurrent_queue.h"
-
-#include <EASTL/fixed_vector.h>
-#include <EASTL/functional.h>
 
 namespace skr {
 namespace io {

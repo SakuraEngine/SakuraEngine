@@ -1,8 +1,6 @@
 #pragma once
 #include "pool.hpp"
-
-#include "containers/concurrent_queue.h"
-
+#include "containers/vector.hpp"
 #include <string.h> // ::strlen
 #include "tracy/Tracy.hpp"
 

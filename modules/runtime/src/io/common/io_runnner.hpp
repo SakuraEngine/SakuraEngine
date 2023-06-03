@@ -8,14 +8,14 @@
 namespace skr {
 namespace io {
 
-struct RunnerBase : public skr::ServiceThread
+struct SleepyService : public skr::ServiceThread
 {
-    RunnerBase(const ServiceThreadDesc& desc, SObjectPtr<IIOReader> reader) SKR_NOEXCEPT
-        : skr::ServiceThread(desc), reader(reader)
+    SleepyService(const ServiceThreadDesc& desc) SKR_NOEXCEPT
+        : skr::ServiceThread(desc)
     {
         condlock.initialize(skr::format(u8"{}-CondLock", desc.name).u8_str());
     }
-    virtual ~RunnerBase() SKR_NOEXCEPT = default;
+    virtual ~SleepyService() SKR_NOEXCEPT = default;
 
     void setServiceStatus(SkrAsyncServiceStatus status) SKR_NOEXCEPT
     {
@@ -58,6 +58,25 @@ struct RunnerBase : public skr::ServiceThread
         } 
     }
 
+private:
+    SAtomicU32 sleep_time = 16u;
+    CondLock condlock;
+    SAtomicU32 service_status = SKR_ASYNC_SERVICE_STATUS_SLEEPING;
+};
+
+struct RunnerBase : public SleepyService
+{
+    RunnerBase(const ServiceThreadDesc& desc, SObjectPtr<IIOReader> reader) SKR_NOEXCEPT
+        : SleepyService(desc), reader(reader)
+    {
+        for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
+        {
+            skr_atomicu64_store_relaxed(&executing_batch_counts[i], 0);
+            skr_atomicu64_store_relaxed(&queued_batch_counts[i], 0);
+        }
+    }
+    virtual ~RunnerBase() SKR_NOEXCEPT = default;
+
     void enqueueBatch(const IOBatchId& batch)
     {
         const auto pri = batch->get_priority();
@@ -75,6 +94,11 @@ struct RunnerBase : public skr::ServiceThread
         return skr_atomicu64_load_relaxed(&queued_batch_counts[priority]);
     }
 
+    uint64_t getExecutingBatchCount(SkrAsyncServicePriority priority) const SKR_NOEXCEPT
+    {
+        return skr_atomicu64_load_relaxed(&executing_batch_counts[priority]);
+    }
+
     void poll_finish_callbacks()
     {
         RQPtr rq = nullptr;
@@ -84,19 +108,35 @@ struct RunnerBase : public skr::ServiceThread
         }
     }
 
+    // cancel request marked as request_cancel
+    bool try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT;
+    // 0. recycletry_cancel
+    void recycle() SKR_NOEXCEPT;
+    // 1. fetch requests from queue
+    uint64_t fetch() SKR_NOEXCEPT;
+    // 2. sort raw requests
+    void sort() SKR_NOEXCEPT;
+    // 3. resolve requests to pending raw request array
+    void resolve() SKR_NOEXCEPT;
+    // 4. dispatch I/O blocks to drives (+allocate & cpy to raw)
+    void dispatch() SKR_NOEXCEPT;
+    // 5. do uncompress works (+allocate & cpy to uncompressed)
+    void uncompress() SKR_NOEXCEPT;
+    // 6. finish
+    void finish() SKR_NOEXCEPT;
+
     SObjectPtr<IIOReader> reader = nullptr;
     SObjectPtr<IOBatchResolverChain> resolver_chain = nullptr;
 
-protected:
+private:
     IOBatchQueue batch_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IOBatchQueue resolved_batch_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     SAtomicU64 queued_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
-private:
-    SAtomicU32 sleep_time = 16u;
-    CondLock condlock;
-    SAtomicU32 service_status = SKR_ASYNC_SERVICE_STATUS_SLEEPING;
+    IOBatchArray executing_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    SAtomicU64 executing_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+
+    IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 };
 
 } // namespace io

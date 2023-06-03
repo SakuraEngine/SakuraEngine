@@ -1,5 +1,6 @@
 #pragma once
 #include "io/io.h"
+#include "containers/vector.hpp"
 
 namespace skr {
 namespace io {

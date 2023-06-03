@@ -1,6 +1,7 @@
 #pragma once
 #include "pool.hpp"
-
+#include "containers/vector.hpp"
+#include <EASTL/fixed_vector.h>
 #include "tracy/Tracy.hpp"
 
 namespace skr {
