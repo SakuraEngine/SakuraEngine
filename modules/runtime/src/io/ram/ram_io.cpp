@@ -1,8 +1,8 @@
-#include "io_runnner.hpp"
+#include "../common/io_runnner.hpp"
 
-#include "ram/ram_readers.hpp"
-#include "ram/ram_batch.hpp"
-#include "ram/ram_buffer.hpp"
+#include "ram_readers.hpp"
+#include "ram_batch.hpp"
+#include "ram_buffer.hpp"
 
 #include "containers/hashmap.hpp"
 
@@ -168,17 +168,7 @@ void RAMServiceImpl::poll_finish_callbacks() SKR_NOEXCEPT
     RQPtr rq = nullptr;
     while (runner.finish_queues->try_dequeue(rq))
     {
-        if (rq->getStatus() == SKR_IO_STAGE_COMPLETED)
-        {
-            rq->finish_callbacks[SKR_IO_FINISH_POINT_COMPLETE](
-                rq->future, nullptr, rq->finish_callback_datas[SKR_IO_FINISH_POINT_COMPLETE]);
-        }
-        else
-        {
-            rq->finish_callbacks[SKR_IO_FINISH_POINT_CANCEL](
-                rq->future, nullptr, rq->finish_callback_datas[SKR_IO_FINISH_POINT_CANCEL]);
-        }
-        skr_atomicu32_store_relaxed(&rq->done, SKR_ASYNC_IO_DONE_STATUS_DONE);
+        rq->tryPollFinish();
     }
 }
 
@@ -232,15 +222,7 @@ bool RAMServiceImpl::Runner::try_cancel(SkrAsyncServicePriority priority, RQPtr 
         if (d == 0)
         {
             rq->setStatus(SKR_IO_STAGE_CANCELLED);
-            bool need_finish = false;
-            for (auto f : rq->finish_callbacks)
-            {
-                if (f)
-                {
-                    need_finish = true;
-                }
-            }
-            if (need_finish)
+            if (rq->needPollFinish())
             {
                 finish_queues[priority].enqueue(rq);
                 skr_atomicu32_store_relaxed(&rq->done, SKR_ASYNC_IO_DONE_STATUS_PENDING);
@@ -353,118 +335,6 @@ void RAMServiceImpl::Runner::resolve() SKR_NOEXCEPT
     }
 }
 
-struct IOBatchResolverBase : public IIOBatchResolver
-{
-public:
-    uint32_t add_refcount() 
-    { 
-        return 1 + skr_atomicu32_add_relaxed(&rc, 1); 
-    }
-    uint32_t release() 
-    {
-        skr_atomicu32_add_relaxed(&rc, -1);
-        return skr_atomicu32_load_acquire(&rc);
-    }
-private:
-    SAtomicU32 rc = 0;
-};
-
-struct OpenVFSFileResolver : public IOBatchResolverBase
-{
-    virtual void resolve(IORequestId request) SKR_NOEXCEPT
-    {
-        request->open_file(); 
-    }
-};
-
-IOBatchResolverId IRAMService::create_file_resolver() SKR_NOEXCEPT
-{ 
-    return SObjectPtr<OpenVFSFileResolver>::Create();
-}
-
-struct AllocateIOBufferResolver : public IOBatchResolverBase
-{
-    virtual void resolve(IORequestId request) SKR_NOEXCEPT
-    {
-        ZoneScopedNC("IOBufferAllocate", tracy::Color::BlueViolet);
-        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-        auto&& buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
-        // deal with 0 block size
-        for (auto& block : rq->blocks)
-        {
-            if (!block.size)
-            {
-                block.size = rq->get_fsize() - block.offset;
-            }
-            if (!buf->size)
-            {
-                buf->size += block.size;
-            }
-        }
-        // allocate
-        if (!buf->bytes)
-        {
-            if (!buf->size)
-            {
-                SKR_ASSERT(0 && "invalid destination size");
-            }
-            buf->allocate_buffer(buf->size);
-        }
-    }
-};
-
-IOBatchResolverId IRAMService::create_iobuffer_resolver() SKR_NOEXCEPT
-{
-    return SObjectPtr<AllocateIOBufferResolver>::Create();
-}
-
-struct ChunkingVFSReadResolver : public IOBatchResolverBase
-{
-    ChunkingVFSReadResolver(uint64_t chunk_size) : chunk_size(chunk_size) {}
-    virtual void resolve(IORequestId request) SKR_NOEXCEPT
-    {
-        ZoneScopedN("IORequestChunking");
-        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-        uint64_t total = 0;
-        for (auto& block : rq->get_blocks())
-            total += block.size;
-        uint64_t chunk_count = total / chunk_size;
-        if (chunk_count > 2)
-        {
-            auto bks = rq->blocks;
-            rq->reset_blocks();
-            rq->blocks.reserve(chunk_count);
-            for (auto& block : bks)
-            {
-                uint64_t acc_size = block.size;
-                uint64_t acc_offset = block.offset;
-                while (acc_size > chunk_size)
-                {
-                    rq->add_block({acc_offset, chunk_size});
-                    acc_offset += chunk_size;
-                    acc_size -= chunk_size;
-                }
-                rq->get_blocks().back().size += acc_size;
-            }
-        }
-    }
-    const uint64_t chunk_size = 256 * 1024;
-};
-IOBatchResolverId IRAMService::create_chunking_resolver(uint64_t chunk_size) SKR_NOEXCEPT
-{
-    return SObjectPtr<ChunkingVFSReadResolver>::Create(chunk_size);
-}
-
-void IRAMService::add_default_resolvers() SKR_NOEXCEPT
-{
-    auto openfile = create_file_resolver();
-    auto alloc_buffer = create_iobuffer_resolver();
-    auto chain = IIOBatchResolverChain::Create()
-        ->then(openfile)
-        ->then(alloc_buffer);
-    set_resolvers(chain);
-}
-
 void RAMServiceImpl::Runner::uncompress() SKR_NOEXCEPT
 {
     // do nothing now
@@ -480,13 +350,7 @@ void RAMServiceImpl::Runner::finish() SKR_NOEXCEPT
         {
             auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
             rq->setStatus(SKR_IO_STAGE_COMPLETED);
-            bool need_finish = false;
-            for (auto f : rq->finish_callbacks)
-            {
-                if (f)
-                    need_finish = true;
-            }
-            if (need_finish)
+            if (rq->needPollFinish())
             {
                 finish_queues[i].enqueue(rq);
             }
