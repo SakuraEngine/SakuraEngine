@@ -75,6 +75,15 @@ struct RunnerBase : public skr::ServiceThread
         return skr_atomicu64_load_relaxed(&queued_batch_counts[priority]);
     }
 
+    void poll_finish_callbacks()
+    {
+        RQPtr rq = nullptr;
+        while (finish_queues->try_dequeue(rq))
+        {
+            rq->tryPollFinish();
+        }
+    }
+
     SObjectPtr<IIOReader> reader = nullptr;
     SObjectPtr<IOBatchResolverChain> resolver_chain = nullptr;
 
@@ -82,6 +91,7 @@ protected:
     IOBatchQueue batch_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IOBatchQueue resolved_batch_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     SAtomicU64 queued_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
 private:
     SAtomicU32 sleep_time = 16u;

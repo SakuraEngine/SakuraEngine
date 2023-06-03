@@ -76,7 +76,6 @@ struct RAMService final : public IRAMService
 
         IOBatchArray ongoing_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
         SAtomicU64 ongoing_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-        IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     };
     const skr::string name;
     Runner runner;

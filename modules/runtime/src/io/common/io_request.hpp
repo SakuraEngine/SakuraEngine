@@ -1,18 +1,21 @@
 #pragma once
 #include "pool.hpp"
 
+#include "containers/concurrent_queue.h"
+
 #include <string.h> // ::strlen
 #include "tracy/Tracy.hpp"
 
 namespace skr {
 namespace io {
 
-typedef enum SkrAsyncIODoneStatus
+typedef enum SkrAsyncIOFinishStep
 {
-    SKR_ASYNC_IO_DONE_STATUS_NEED = 1,
-    SKR_ASYNC_IO_DONE_STATUS_PENDING = 2,
-    SKR_ASYNC_IO_DONE_STATUS_DONE = 3
-} SkrAsyncIODoneStatus;
+    SKR_ASYNC_IO_FINISH_STEP_NONE = 0,
+    SKR_ASYNC_IO_FINISH_STEP_NEED = 1,
+    SKR_ASYNC_IO_FINISH_STEP_PENDING = 2,
+    SKR_ASYNC_IO_FINISH_STEP_DONE = 3
+} SkrAsyncIOFinishStep;
 
 constexpr const char* callback_names[SKR_IO_STAGE_COUNT] = {
     "IOCallback(None)",
@@ -29,6 +32,16 @@ constexpr const char* callback_names[SKR_IO_STAGE_COUNT] = {
 struct IORequestBase : public IIORequest
 {
 public:
+    SkrAsyncIOFinishStep getFinishStep() const SKR_NOEXCEPT
+    { 
+        return (SkrAsyncIOFinishStep)skr_atomicu32_load_acquire(&finish_step); 
+    }
+
+    void setFinishStep(SkrAsyncIOFinishStep step) SKR_NOEXCEPT
+    { 
+        skr_atomicu32_store_release(&finish_step, step); 
+    }
+
     void tryPollFinish() SKR_NOEXCEPT
     {
         if (getStatus() == SKR_IO_STAGE_COMPLETED)
@@ -41,7 +54,7 @@ public:
             finish_callbacks[SKR_IO_FINISH_POINT_CANCEL](
                 future, this, finish_callback_datas[SKR_IO_FINISH_POINT_CANCEL]);
         }
-        skr_atomicu32_store_relaxed(&done, SKR_ASYNC_IO_DONE_STATUS_DONE);
+        skr_atomicu32_store_relaxed(&finish_step, SKR_ASYNC_IO_FINISH_STEP_DONE);
     }
 
     bool needPollFinish() SKR_NOEXCEPT
@@ -83,8 +96,15 @@ public:
     float get_sub_priority() const SKR_NOEXCEPT { return sub_priority; }
 
     float sub_priority;
-    SAtomic32 done = 0;
     skr_io_future_t* future = nullptr;
+
+protected:
+    SAtomic32 finish_step = 0;
+    skr_io_callback_t callbacks[SKR_IO_STAGE_COUNT];
+    void* callback_datas[SKR_IO_STAGE_COUNT];
+
+    skr_io_callback_t finish_callbacks[SKR_IO_FINISH_POINT_COUNT];
+    void* finish_callback_datas[SKR_IO_FINISH_POINT_COUNT];
 
 public:
     SInterfaceDeleter custom_deleter() const 
@@ -98,13 +118,6 @@ public:
     IORequestBase(ISmartPool<IIORequest>* pool) : pool(pool) {}
 protected:
     ISmartPool<IIORequest>* pool = nullptr;
-
-protected:
-    skr_io_callback_t callbacks[SKR_IO_STAGE_COUNT];
-    void* callback_datas[SKR_IO_STAGE_COUNT];
-
-    skr_io_callback_t finish_callbacks[SKR_IO_FINISH_POINT_COUNT];
-    void* finish_callback_datas[SKR_IO_FINISH_POINT_COUNT];
     
 public:
     uint32_t add_refcount() 
@@ -118,8 +131,11 @@ public:
     }
 private:
     SAtomicU32 rc = 0;
-
 };
+
+using RQPtr = skr::SObjectPtr<IORequestBase>;
+using IORequestQueue = moodycamel::ConcurrentQueue<RQPtr>;  
+using IORequestArray = skr::vector<RQPtr>;
 
 } // namespace io
 } // namespace skr

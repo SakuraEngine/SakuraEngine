@@ -1,5 +1,6 @@
 #include "../common/io_runnner.hpp"
 
+#include "misc/defer.hpp"
 #include "ram_readers.hpp"
 #include "ram_batch.hpp"
 #include "ram_buffer.hpp"
@@ -41,12 +42,10 @@ IOResultId RAMIOBatch::add_request(IORequestId request, skr_io_future_t* future)
 {
     auto buffer = ram_buffer_pool.allocate();
     auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-
     rq->future = future;
     rq->destination = buffer;
     SKR_ASSERT(!rq->blocks.empty());
     requests.emplace_back(request);
-
     return buffer;
 }
 
@@ -171,11 +170,7 @@ SkrAsyncServiceStatus RAMService::get_service_status() const SKR_NOEXCEPT
 
 void RAMService::poll_finish_callbacks() SKR_NOEXCEPT
 {
-    RQPtr rq = nullptr;
-    while (runner.finish_queues->try_dequeue(rq))
-    {
-        rq->tryPollFinish();
-    }
+    runner.poll_finish_callbacks();
 }
 
 } // namespace io
@@ -190,7 +185,6 @@ skr::AsyncResult RAMService::Runner::serve() SKR_NOEXCEPT
 
     resolve();
     fetch();
-    
     uint64_t cnt = 0;
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
@@ -224,18 +218,17 @@ bool RAMService::Runner::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) 
 
     if (bool cancel_requested = skr_atomicu32_load_acquire(&rq->future->request_cancel))
     {
-        const auto d = skr_atomicu32_load_relaxed(&rq->done);
-        if (d == 0)
+        if (rq->getFinishStep() == SKR_ASYNC_IO_FINISH_STEP_NONE)
         {
             rq->setStatus(SKR_IO_STAGE_CANCELLED);
             if (rq->needPollFinish())
             {
                 finish_queues[priority].enqueue(rq);
-                skr_atomicu32_store_relaxed(&rq->done, SKR_ASYNC_IO_DONE_STATUS_PENDING);
+                rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_PENDING);
             }
             else
             {
-                skr_atomicu32_store_relaxed(&rq->done, SKR_ASYNC_IO_DONE_STATUS_DONE);
+                rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
             }
         }
         return true;
@@ -256,9 +249,8 @@ void RAMService::Runner::recycle() SKR_NOEXCEPT
             [](const IOBatchId& batch) {
                 for (auto request : batch->get_requests()) 
                 {
-                    auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-                    const auto done = skr_atomicu32_load_relaxed(&rq->done);
-                    if (done != SKR_ASYNC_IO_DONE_STATUS_DONE)
+                    auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
+                    if (rq->getFinishStep() != SKR_ASYNC_IO_FINISH_STEP_DONE)
                     {
                         return false;
                     }
@@ -362,7 +354,7 @@ void RAMService::Runner::finish() SKR_NOEXCEPT
             }
             else
             {
-                skr_atomicu32_store_relaxed(&rq->done, SKR_ASYNC_IO_DONE_STATUS_DONE);
+                rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
             }
         }
     }

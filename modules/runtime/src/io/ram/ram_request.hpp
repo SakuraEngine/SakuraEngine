@@ -1,12 +1,8 @@
 #pragma once
 #include "../common/io_request.hpp"
 #include "platform/vfs.h"
-#include "misc/log.h"
-#include "misc/defer.hpp"
-#include "async/condlock.hpp"
-#include "async/service_thread.hpp"
-#include "containers/hashmap.hpp"
 #include "containers/sptr.hpp"
+
 #include <EASTL/fixed_vector.h>
 #include <EASTL/variant.h>
 
@@ -19,7 +15,6 @@ namespace io {
 struct RAMIORequest final : public IORequestBase
 {
     friend struct SmartPool<RAMIORequest, IIORequest>;
-
     skr_vfs_t* vfs = nullptr;
     skr::string path;
     skr_io_file_handle file;
@@ -59,9 +54,8 @@ protected:
     const uint64_t sequence;
 };
 
-using RQPtr = skr::SObjectPtr<RAMIORequest>;
-using IORequestQueue = moodycamel::ConcurrentQueue<RQPtr>;  
-using IORequestArray = skr::vector<RQPtr>;
+using RAMRQPtr = skr::SObjectPtr<IORequestBase>;
+
 
 } // namespace io
 } // namespace skr
