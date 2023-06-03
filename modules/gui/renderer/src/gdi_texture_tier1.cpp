@@ -422,7 +422,7 @@ void GDIImage_RenderGraph::preInit(const GDIImageDescriptor* desc)
         async_data.from_data.width = desc->from_data.w;
         async_data.from_data.height = desc->from_data.h;
         async_data.from_data.gdi_format = desc->format;
-        raw_data = skr_create_blob(desc->from_data.data, desc->from_data.size, false);
+        raw_data = skr::IBlob::Create(desc->from_data.data, desc->from_data.size, false);
     }
 }
 
@@ -444,7 +444,7 @@ GDIImageId GDIRenderer_RenderGraph::create_image(const GDIImageDescriptor* desc)
         image->async_data.from_data.gdi_format = desc->format;
         image->async_data.from_data.width = desc->from_data.w;
         image->async_data.from_data.height = desc->from_data.h;
-        image->raw_data = skr_create_blob(desc->from_data.data, desc->from_data.size, false);
+        image->raw_data = skr::IBlob::Create(desc->from_data.data, desc->from_data.size, false);
     }
     return image->async_data.DoAsync(image, vfs, ram_service);
 }
@@ -480,7 +480,7 @@ GDITextureId GDIRenderer_RenderGraph::create_texture(const GDITextureDescriptor*
         texture->intermediate_image.async_data.from_data.width = desc->from_data.w;
         texture->intermediate_image.async_data.from_data.height = desc->from_data.h;
         texture->intermediate_image.async_data.from_data.gdi_format = desc->format;
-        texture->intermediate_image.raw_data = skr_create_blob(desc->from_data.data, desc->from_data.size, false);
+        texture->intermediate_image.raw_data = skr::IBlob::Create(desc->from_data.data, desc->from_data.size, false);
     }
     return texture->async_data.DoAsync(texture, vfs, ram_service);
 }

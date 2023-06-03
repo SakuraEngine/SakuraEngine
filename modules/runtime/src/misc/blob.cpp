@@ -52,7 +52,7 @@ private:
 };
 }
 
-skr::BlobId skr_create_blob(const uint8_t* data, uint64_t size, bool move) SKR_NOEXCEPT
+skr::BlobId skr::IBlob::Create(const uint8_t* data, uint64_t size, bool move) SKR_NOEXCEPT
 {
     return skr::SObjectPtr<skr::SimpleBlob>::Create(data, size, move);
 }

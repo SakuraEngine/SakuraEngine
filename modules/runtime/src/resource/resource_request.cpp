@@ -301,7 +301,7 @@ void SResourceRequestImpl::Update()
                     auto file = skr_vfs_fopen(vfs, (const char8_t*)resourceUrl.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
                     SKR_DEFER({ skr_vfs_fclose(file); });
                     auto fsize = skr_vfs_fsize(file);
-                    dataBlob = skr_create_blob(nullptr, fsize, false);
+                    dataBlob = skr::IBlob::Create(nullptr, fsize, false);
                     skr_vfs_fread(file, dataBlob->get_data(), 0, fsize);
                 }
 #ifdef SKR_RESOURCE_DEV_MODE
@@ -310,7 +310,7 @@ void SResourceRequestImpl::Update()
                     auto file = skr_vfs_fopen(vfs, (const char8_t*)artifactsUrl.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
                     SKR_DEFER({ skr_vfs_fclose(file); });
                     auto fsize = skr_vfs_fsize(file);
-                    artifactsBlob = skr_create_blob(nullptr, fsize, false);
+                    artifactsBlob = skr::IBlob::Create(nullptr, fsize, false);
                     skr_vfs_fread(file, artifactsBlob->get_data(), 0, fsize);
                 }
 #endif

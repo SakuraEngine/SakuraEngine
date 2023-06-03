@@ -231,6 +231,8 @@ constexpr bool is_object_v = std::is_base_of_v<skr::SInterface, T>;
 
 struct RUNTIME_API IBlob : public SInterface
 {
+    static SObjectPtr<IBlob> Create(const uint8_t* data, uint64_t size, bool move) SKR_NOEXCEPT;
+    
     virtual ~IBlob() SKR_NOEXCEPT = default;
     virtual uint8_t* get_data() const SKR_NOEXCEPT = 0;
     virtual uint64_t get_size() const SKR_NOEXCEPT = 0;
@@ -239,7 +241,4 @@ using BlobId = SObjectPtr<IBlob>;
 
 }
 #define sobject_cast static_cast
-
-RUNTIME_API skr::BlobId skr_create_blob(const uint8_t* data, uint64_t size, bool move) SKR_NOEXCEPT;
-
 #endif
