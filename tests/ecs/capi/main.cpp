@@ -8,6 +8,7 @@ using test = int;
 dual_type_index_t type_test;
 dual_type_index_t type_test_arr;
 dual_type_index_t type_test2;
+dual_type_index_t type_test3;
 dual_type_index_t type_test2_arr;
 using ref = dual_entity_t;
 dual_type_index_t type_ref;
@@ -223,6 +224,63 @@ TEST_F(APITest, query)
     EXPECT_EQ(*dualV_get_entities(&view), e1);
 }
 
+TEST_F(APITest, query_overload)
+{
+    dual_entity_t e2, e3;
+    {
+        dual_chunk_view_t view;
+        dual_entity_type_t entityType;
+        dual_type_index_t type[2] = { type_test, type_test2 };
+        std::sort(type, type + 2);
+        entityType.type = { type, 2 };
+        entityType.meta = { nullptr, 0 };
+        auto callback = [&](dual_chunk_view_t* inView) {
+            view = *inView;
+            *(test*)dualV_get_owned_rw(&view, type_test) = 123;
+        };
+        dualS_allocate_type(storage, &entityType, 1, DUAL_LAMBDA(callback));
+
+        e2 = dualV_get_entities(&view)[0];
+    }
+    {
+        dual_chunk_view_t view;
+        dual_entity_type_t entityType;
+        dual_type_index_t type[3] = { type_test, type_test2, type_test3 };
+        std::sort(type, type + 3);
+        entityType.type = { type, 3 };
+        entityType.meta = { nullptr, 0 };
+        auto callback = [&](dual_chunk_view_t* inView) {
+            view = *inView;
+            *(test*)dualV_get_owned_rw(&view, type_test) = 123;
+        };
+        dualS_allocate_type(storage, &entityType, 1, DUAL_LAMBDA(callback));
+
+        e3 = dualV_get_entities(&view)[0];
+    }
+    
+    auto query1 = dualQ_from_literal(storage, "[inout]test'");
+    auto query2 = dualQ_from_literal(storage, "[inout]test',[in]test2");
+
+    {
+        dual_chunk_view_t view;
+        auto callback = [&](dual_chunk_view_t* inView) {
+            EXPECT_EQ(inView->count, 1);
+            view = *inView;
+        };
+        dualQ_get_views(query1, DUAL_LAMBDA(callback));
+        EXPECT_EQ(*dualV_get_entities(&view), e1);
+    }
+    {
+        dual_chunk_view_t view;
+        auto callback = [&](dual_chunk_view_t* inView) {
+            EXPECT_EQ(inView->count, 1);
+            view = *inView;
+        };
+        dualQ_get_views(query2, DUAL_LAMBDA(callback));
+        EXPECT_EQ(*dualV_get_entities(&view), e2);
+    }
+}
+
 void register_test_component()
 {
     using namespace guid_parse::literals;
@@ -261,6 +319,21 @@ void register_test_component()
         desc.size = desc.size * 10;
         desc.name = u8"test_arr";
         type_test2_arr = dualT_register_type(&desc);
+    }
+
+    {
+
+        dual_type_description_t desc = make_zeroed<dual_type_description_t>();
+        desc.name = u8"test3";
+        desc.size = sizeof(test);
+        desc.entityFieldsCount = 0;
+        desc.entityFields = 0;
+        desc.guid = u8"{3E5A2C5F-7FBE-486C-BCCE-8E6D8933B2C5}"_guid;
+        desc.callback = {};
+        desc.flags = 0;
+        desc.elementSize = 0;
+        desc.alignment = alignof(test);
+        type_test3 = dualT_register_type(&desc);
     }
 }
 auto register_ref_component()

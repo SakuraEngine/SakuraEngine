@@ -187,7 +187,7 @@ TEST(SPTRIntrusive, BoxedValue)
 {
     skr::SBoxedPtr<uint32_t> upValue;
     {
-        auto object = skr::SBoxedPtr<uint32_t>(SkrNew<skr::SBoxed<uint32_t>>(1));
+        auto object = skr::SBoxedPtr<uint32_t>(SkrNew<skr::SBoxed<uint32_t>>((uint32_t)1u));
         auto value = object.get()->get();
         EXPECT_EQ(object->get_type(), skr::type::type_id<uint32_t>::get());
         EXPECT_EQ(*value, 1);
