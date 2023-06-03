@@ -29,8 +29,9 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     {
         ZoneScopedN("dispatch_read");
         auto& arr = ongoing_requests[priority];
-        for (auto& rq : arr)
+        for (auto&& request : arr)
         {
+            auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
             auto&& buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
             if (service->runner.try_cancel(priority, rq))
             {
@@ -61,14 +62,15 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
         ZoneScopedN("dispatch_close");
 
         auto& arr = ongoing_requests[priority];
-        for (auto& rq : arr)
+        for (auto&& request : arr)
         {
+            auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
             if (rq->file)
             {
                 // SKR_LOG_DEBUG("dispatch close request: %s", rq->path.c_str());
                 skr_vfs_fclose(rq->file);
                 rq->file = nullptr;
-                skr_atomicu32_store_relaxed(&rq->done, SKR_ASYNC_IO_DONE_STATUS_NEED);
+                rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_NEED);
             }
         }
     }
@@ -77,12 +79,12 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 IORequestId VFSRAMReader::poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     auto& arr = ongoing_requests[priority];
-    for (auto& rq : arr)
+    for (auto&& request : arr)
     {
-        const auto d = skr_atomicu32_load_relaxed(&rq->done);
-        if (d == SKR_ASYNC_IO_DONE_STATUS_NEED)
+        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
+        if (rq->getFinishStep() == SKR_ASYNC_IO_FINISH_STEP_NEED)
         {
-            skr_atomicu32_store_relaxed(&rq->done, SKR_ASYNC_IO_DONE_STATUS_PENDING);
+            rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_PENDING);
             return rq;
         }
     }
@@ -95,8 +97,7 @@ void VFSRAMReader::recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     auto it = eastl::remove_if(arr.begin(), arr.end(), 
         [](const IORequestId& request) {
             auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-            const auto d = skr_atomicu32_load_relaxed(&rq->done);
-            return (d != 0);
+            return (rq->getFinishStep() != SKR_ASYNC_IO_FINISH_STEP_NONE);
         });
     arr.erase(it, arr.end());
 
