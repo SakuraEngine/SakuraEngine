@@ -18,7 +18,6 @@ typedef enum SkrAsyncIOFinishStep
 constexpr const char* callback_names[SKR_IO_STAGE_COUNT] = {
     "IOCallback(None)",
     "IOCallback(Enqueued)",
-    "IOCallback(Sorting)",
     "IOCallback(Resolving)",
     "IOCallback(Loading)",
     "IOCallback(Loaded)",
@@ -93,8 +92,8 @@ public:
     void set_sub_priority(float sub_pri) SKR_NOEXCEPT { sub_priority = sub_pri; }
     float get_sub_priority() const SKR_NOEXCEPT { return sub_priority; }
 
-    float sub_priority;
     skr_io_future_t* future = nullptr;
+    float sub_priority;
 
 protected:
     SAtomic32 finish_step = 0;
