@@ -137,7 +137,7 @@ void RAMService::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 
     if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
     {
-        while (runner.getQueuedBatchCount(priority) > 0 && runner.getExecutingBatchCount(priority) > 0)
+        while (runner.getQueuedBatchCount(priority) > 0 || runner.getExecutingBatchCount(priority) > 0)
         {
             // ...
         }
