@@ -9,12 +9,13 @@
 namespace skr {
 namespace io {
 
-IRAMIOBuffer::~IRAMIOBuffer() SKR_NOEXCEPT
-{
-
-}
-
 const char* kIOBufferMemoryName = "IOBuffer";
+SmartPool<RAMIOBuffer, IRAMIOBuffer> ram_buffer_pool;
+SmartPool<RAMIOBatch, IIOBatch> ram_batch_pool;
+uint32_t RAMService::global_idx = 0;
+
+IRAMIOBuffer::~IRAMIOBuffer() SKR_NOEXCEPT {}
+
 RAMIOBuffer::~RAMIOBuffer() SKR_NOEXCEPT
 {
     free_buffer();
@@ -35,11 +36,10 @@ void RAMIOBuffer::free_buffer() SKR_NOEXCEPT
     }
     size = 0;
 }
-SmartPool<RAMIOBuffer, IRAMIOBuffer> buffer_pool;
 
 IOResultId RAMIOBatch::add_request(IORequestId request, skr_io_future_t* future) SKR_NOEXCEPT
 {
-    auto buffer = buffer_pool.allocate();
+    auto buffer = ram_buffer_pool.allocate();
     auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
 
     rq->future = future;
@@ -50,12 +50,18 @@ IOResultId RAMIOBatch::add_request(IORequestId request, skr_io_future_t* future)
     return buffer;
 }
 
-RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
-    : name(skr::format(u8"IRAMService-{}", global_idx++)), runner(this)
+inline static IOReaderId CreateReader(RAMService* service, const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
 {
-    reader = skr::SObjectPtr<VFSRAMReader>::Create(this);
+    auto reader = skr::SObjectPtr<VFSRAMReader>::Create(service);
+    return std::move(reader);
 }
-uint32_t RAMService::global_idx = 0;
+
+RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
+    : name(skr::format(u8"IRAMService-{}", global_idx++)), 
+      runner(this, CreateReader(this, desc))
+{
+    
+}
 
 skr_io_ram_service_t* IRAMService::create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
 {
@@ -89,7 +95,7 @@ void IRAMService::destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT
 IOBatchId RAMService::open_batch(uint64_t n) SKR_NOEXCEPT
 {
     uint64_t seq = (uint64_t)skr_atomicu64_add_relaxed(&batch_sequence, 1);
-    return skr::static_pointer_cast<IIOBatch>(batch_pool.allocate(seq, n));
+    return skr::static_pointer_cast<IIOBatch>(ram_batch_pool.allocate(seq, n));
 }
 
 IORequestId RAMService::open_request() SKR_NOEXCEPT
@@ -243,7 +249,7 @@ void RAMService::Runner::recycle() SKR_NOEXCEPT
     
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        service->reader->recycle((SkrAsyncServicePriority)i);
+        reader->recycle((SkrAsyncServicePriority)i);
         
         auto& arr = ongoing_batches[i];
         auto it = eastl::remove_if(arr.begin(), arr.end(), 
@@ -268,7 +274,7 @@ void RAMService::Runner::recycle() SKR_NOEXCEPT
 
 uint64_t RAMService::Runner::fetch() SKR_NOEXCEPT
 {
-    SKR_ASSERT(service->reader);
+    SKR_ASSERT(reader);
     ZoneScopedN("fetch");
 
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
@@ -276,7 +282,7 @@ uint64_t RAMService::Runner::fetch() SKR_NOEXCEPT
         BatchPtr batch = nullptr;
         while (resolved_batch_queues[i].try_dequeue(batch))
         {
-            service->reader->fetch((SkrAsyncServicePriority)i, batch);
+            reader->fetch((SkrAsyncServicePriority)i, batch);
             skr_atomicu64_add_relaxed(&queued_batch_counts[i], -1);
         }
     }
@@ -289,7 +295,7 @@ void RAMService::Runner::sort() SKR_NOEXCEPT
 
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        service->reader->sort((SkrAsyncServicePriority)i);
+        reader->sort((SkrAsyncServicePriority)i);
     }
 }
 
@@ -299,13 +305,13 @@ void RAMService::Runner::dispatch() SKR_NOEXCEPT
 
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        service->reader->dispatch((SkrAsyncServicePriority)i);
+        reader->dispatch((SkrAsyncServicePriority)i);
     }
 }
 
 void RAMService::Runner::resolve() SKR_NOEXCEPT
 {
-    SKR_ASSERT(service->reader);
+    SKR_ASSERT(reader);
     ZoneScopedN("resolve");
 
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
@@ -346,7 +352,7 @@ void RAMService::Runner::finish() SKR_NOEXCEPT
 
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        while (auto request = service->reader->poll_finish((SkrAsyncServicePriority)i))
+        while (auto request = reader->poll_finish((SkrAsyncServicePriority)i))
         {
             auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
             rq->setStatus(SKR_IO_STAGE_COMPLETED);
