@@ -61,7 +61,7 @@ protected:
 };
 
 using BatchPtr = skr::SObjectPtr<IIOBatch>;
-using IOBatchQueue = moodycamel::ConcurrentQueue<BatchPtr>;  
+using IOBatchQueue = IOConcurrentQueue<BatchPtr>;  
 using IOBatchArray = skr::vector<BatchPtr>;
 } // namespace io
 } // namespace skr

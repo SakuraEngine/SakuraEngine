@@ -5,18 +5,18 @@ namespace io {
 
 void VFSRAMReader::fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
 {
-    auto& arr = ongoing_requests[priority];
+    auto& arr = dispatching_requests[priority];
     for (auto& request : batch->get_requests())
     {
         auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
         arr.emplace_back(rq);
-        skr_atomicu64_add_relaxed(&ongoing_requests_counts[priority], 1);
+        skr_atomicu64_add_relaxed(&dispatching_requests_counts[priority], 1);
     }
 }
 
 void VFSRAMReader::sort(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    auto& arr = ongoing_requests[priority];
+    auto& arr = dispatching_requests[priority];
 
     std::sort(arr.begin(), arr.end(), 
     [](const RQPtr& a, const RQPtr& b) {
@@ -28,7 +28,7 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     {
         ZoneScopedN("dispatch_read");
-        auto& arr = ongoing_requests[priority];
+        auto& arr = dispatching_requests[priority];
         for (auto&& request : arr)
         {
             auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
@@ -61,7 +61,7 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     {
         ZoneScopedN("dispatch_close");
 
-        auto& arr = ongoing_requests[priority];
+        auto& arr = dispatching_requests[priority];
         for (auto&& request : arr)
         {
             auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
@@ -78,7 +78,7 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 
 IORequestId VFSRAMReader::poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    auto& arr = ongoing_requests[priority];
+    auto& arr = dispatching_requests[priority];
     for (auto&& request : arr)
     {
         auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
@@ -93,7 +93,7 @@ IORequestId VFSRAMReader::poll_finish(SkrAsyncServicePriority priority) SKR_NOEX
 
 void VFSRAMReader::recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    auto& arr = ongoing_requests[priority];
+    auto& arr = dispatching_requests[priority];
     auto it = eastl::remove_if(arr.begin(), arr.end(), 
         [](const IORequestId& request) {
             auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
@@ -104,7 +104,7 @@ void VFSRAMReader::recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     const int64_t X = (int64_t)arr.size();
     arr.erase(it, arr.end());
     const int64_t Y = (int64_t)arr.size();
-    skr_atomicu64_add_relaxed(&ongoing_requests_counts[priority], Y - X);
+    skr_atomicu64_add_relaxed(&dispatching_requests_counts[priority], Y - X);
 }
 
 } // namespace io

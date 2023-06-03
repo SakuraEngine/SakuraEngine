@@ -132,7 +132,7 @@ private:
 };
 
 using RQPtr = skr::SObjectPtr<IORequestBase>;
-using IORequestQueue = moodycamel::ConcurrentQueue<RQPtr>;  
+using IORequestQueue = IOConcurrentQueue<RQPtr>;  
 using IORequestArray = skr::vector<RQPtr>;
 
 } // namespace io
