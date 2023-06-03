@@ -60,7 +60,7 @@ skr_mesh_buffer_t
     bool used_with_index;
     bool used_with_vertex;
     sattr("transient": true, "no-rtti" : true)
-    skr_blob_t bin;
+    struct skr::IBlob* blob SKR_IF_CPP(= nullptr);
 };
 
 #ifdef __cplusplus

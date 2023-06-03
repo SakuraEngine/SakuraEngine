@@ -52,7 +52,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
                     if (use_dynamic_buffer) continue;
                     for (size_t j = 0u; j < anim->buffers.size(); j++)
                     {
-                        skinVerticesSize += anim->buffers[j].size;
+                        skinVerticesSize += anim->buffers[j]->get_size();
                     }
                 }
             };
@@ -125,8 +125,10 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
                         if (use_dynamic_buffer) continue;
                         for (size_t j = 0u; j < anim->buffers.size(); j++)
                         {
+                            auto anim_data = anim->buffers[j]->get_data();
+                            auto anim_size = anim->buffers[j]->get_size();
                             // memcpy
-                            memcpy(mapped + cursor, anim->buffers[j].bytes, anim->buffers[j].size);
+                            memcpy(mapped + cursor, anim_data, anim_size);
 
                             // queue cpy
                             CGPUBufferToBufferTransfer b2b = {};
@@ -134,10 +136,10 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
                             b2b.src_offset = cursor;
                             b2b.dst = anim->vbs[j];
                             b2b.dst_offset = 0;
-                            b2b.size = anim->buffers[j].size;
+                            b2b.size = anim_size;
                             cgpu_cmd_transfer_buffer_to_buffer(context.cmd, &b2b);
 
-                            cursor += anim->buffers[j].size;
+                            cursor += anim_size;
                         }
                     }
                 }

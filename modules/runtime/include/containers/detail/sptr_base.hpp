@@ -94,7 +94,17 @@ void skr::SPtrBase<T, EmbedRC>::ActualDelete(T* ptr) SKR_NOEXCEPT
 {
     static_assert(!EmbedRC, "Non-Intrusive ptrs should not call this method");
     auto obj = sobject_cast<SInterface*>(ptr);
-    if (obj) SkrDelete(obj);
+    if (obj)
+    {
+        if (auto cd = obj->custom_deleter())
+        {
+            cd(obj);
+        }
+        else
+        {
+            SkrDelete(obj);
+        }
+    } 
 }
 
 template <typename T, bool EmbedRC>

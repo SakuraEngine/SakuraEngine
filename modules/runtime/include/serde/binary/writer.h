@@ -158,8 +158,13 @@ struct RUNTIME_STATIC_API WriteTrait<const skr_md5_t&> {
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const skr_blob_t&> {
-    static int Write(skr_binary_writer_t* writer, const skr_blob_t& blob);
+struct RUNTIME_STATIC_API WriteTrait<const skr::IBlob*&> {
+    static int Write(skr_binary_writer_t* writer, const skr::IBlob*& blob);
+};
+
+template <>
+struct RUNTIME_STATIC_API WriteTrait<const skr::BlobId&> {
+    static int Write(skr_binary_writer_t* writer, const skr::BlobId& blob);
 };
 
 template <>

@@ -7,12 +7,12 @@
 
 namespace skr
 {
-PNGImageCoder::~PNGImageCoder() SKR_NOEXCEPT
+PNGImageDecoder::~PNGImageDecoder() SKR_NOEXCEPT
 {
 
 }
 
-bool PNGImageCoder::valid_data() const SKR_NOEXCEPT
+bool PNGImageDecoder::valid_data() const SKR_NOEXCEPT
 {
     const int32_t pngSignatureSize = sizeof(png_size_t);
     if (encoded_view.size() > pngSignatureSize)
@@ -29,27 +29,31 @@ struct PNGImageCoderHelper
 {
     inline static void user_read_compressed(png_structp png_ptr, png_bytep data, png_size_t length)
     {
-        PNGImageCoder* coder = (PNGImageCoder*)png_get_io_ptr(png_ptr);
-        if (coder->read_offset + (int64_t)length <= coder->get_encoded_size())
+        PNGImageDecoder* decoder = (PNGImageDecoder*)png_get_io_ptr(png_ptr);
+        if (decoder->read_offset + (int64_t)length <= decoder->encoded_view.size())
         {
-            memcpy(data, coder->get_encoded_data_view().data() + coder->read_offset, length);
-            coder->read_offset += length;
+            memcpy(data, decoder->encoded_view.data() + decoder->read_offset, length);
+            decoder->read_offset += length;
         }
         else
         {
-            coder->error = u8"Invalid read position for CompressedData.";
+            decoder->error = u8"Invalid read position for CompressedData.";
         }
     }
 
     inline static void user_write_compressed(png_structp png_ptr, png_bytep data, png_size_t length)
     {
-        PNGImageCoder* coder = (PNGImageCoder*)png_get_io_ptr(png_ptr);
-        auto oldView = coder->get_encoded_data_view();
-        auto newMemory = (uint8_t*)sakura_malloc(oldView.size() + length);
+        PNGImageEncoder* encoder = (PNGImageEncoder*)png_get_io_ptr(png_ptr);
+        skr::span<uint8_t> oldView = { encoder->encoded_data, encoder->encoded_size };
+        auto newMemory = (uint8_t*)PNGImageDecoder::Allocate(oldView.size() + length, encoder->get_alignment());
         memcpy(newMemory, oldView.data(), oldView.size());
+        PNGImageDecoder::Deallocate((uint8_t*)oldView.data(), encoder->get_alignment());
+
         auto offsetPtr = newMemory + oldView.size();
         memcpy(offsetPtr, data, length);
-        coder->move_encoded(newMemory, oldView.size() + length);
+        
+        encoder->encoded_data = newMemory;
+        encoder->encoded_size = oldView.size() + length;
     }
 
     inline static void user_flush_data(png_structp png_ptr)
@@ -58,14 +62,14 @@ struct PNGImageCoderHelper
 
     inline static void user_error_fn(png_structp png_ptr, png_const_charp error_msg)
     {
-        PNGImageCoder* coder = (PNGImageCoder*)png_get_error_ptr(png_ptr);
-        coder->error = (const char8_t*)error_msg;
-        SKR_LOG_ERROR("[libPNG] PNGImageCoder: %s", error_msg);
+        PNGImageDecoder* decoder = (PNGImageDecoder*)png_get_error_ptr(png_ptr);
+        decoder->error = (const char8_t*)error_msg;
+        SKR_LOG_ERROR("[libPNG] PNGImageDecoder: %s", error_msg);
     }
 
     inline static void user_warning_fn(png_structp png_ptr, png_const_charp warning_msg)
     {
-        SKR_LOG_WARN("[libPNG] PNGImageCoder: %s", warning_msg);
+        SKR_LOG_WARN("[libPNG] PNGImageDecoder: %s", warning_msg);
     }
 
     inline static void* user_malloc(png_structp png_ptr, png_size_t size)
@@ -82,7 +86,7 @@ struct PNGImageCoderHelper
 };
 } // namespace
 
-bool PNGImageCoder::load_png_header() SKR_NOEXCEPT
+bool PNGImageDecoder::load_png_header() SKR_NOEXCEPT
 {
     if (valid_data())
     {
@@ -97,11 +101,13 @@ bool PNGImageCoder::load_png_header() SKR_NOEXCEPT
 
             png_read_info(png_ptr, info_ptr);
 
-            width = info_ptr->width;
-            height = info_ptr->height;
             png_color_type = info_ptr->color_type;
-            bit_depth = info_ptr->bit_depth;
             channels = info_ptr->channels;
+
+            const auto width = info_ptr->width;
+            const auto height = info_ptr->height;
+            const auto bit_depth = info_ptr->bit_depth;
+            EImageCoderColorFormat color_format = IMAGE_CODER_COLOR_FORMAT_RGBA;
             if (info_ptr->valid & PNG_INFO_tRNS)
             {
                 color_format = IMAGE_CODER_COLOR_FORMAT_RGBA;
@@ -116,33 +122,16 @@ bool PNGImageCoder::load_png_header() SKR_NOEXCEPT
             {
                 color_format = IMAGE_CODER_COLOR_FORMAT_BGRA;
             }
+            setRawProps(width, height, color_format, bit_depth);
         }
         return true;
     }
     return false;
 }
 
-bool PNGImageCoder::set_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT
+bool PNGImageDecoder::initialize(const uint8_t* data, uint64_t size) SKR_NOEXCEPT
 {
-    if (BaseImageCoder::set_encoded(data, size))
-    {
-        return load_png_header();
-    }
-    return false;
-}
-
-bool PNGImageCoder::move_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT
-{
-    if (BaseImageCoder::move_encoded(data, size))
-    {
-        return load_png_header();
-    }
-    return false;
-}
-
-bool PNGImageCoder::view_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT
-{
-    if (BaseImageCoder::view_encoded(data, size))
+    if (BaseImageDecoder::initialize(data, size))
     {
         return load_png_header();
     }
@@ -155,8 +144,13 @@ static int PNG_isLittleEndian(void)
     return one.c[0];
 }
 
-bool PNGImageCoder::decode(EImageCoderColorFormat in_format, uint32_t in_bit_depth) SKR_NOEXCEPT
+bool PNGImageDecoder::decode(EImageCoderColorFormat in_format, uint32_t in_bit_depth) SKR_NOEXCEPT
 {
+    SKR_ASSERT(initialized);
+    const auto width = get_width();
+    const auto height = get_height();
+    const auto bit_depth = get_bit_depth();
+
     read_offset = 0;
     // create png read struct
     png_structp png_ptr	= png_create_read_struct_2(PNG_LIBPNG_VER_STRING, this, 
@@ -203,14 +197,13 @@ bool PNGImageCoder::decode(EImageCoderColorFormat in_format, uint32_t in_bit_dep
     const uint64_t bytes_per_pixel = pixel_channels * in_bit_depth / 8;
     const uint64_t bytes_per_row = width * bytes_per_pixel;
     // reallocate raw data
-    uint64_t size = bytes_per_row * height;
-    uint8_t* data = (uint8_t*)sakura_malloc(size); 
-    move_raw(data, size, width, height, in_format, bit_depth, (uint32_t)bytes_per_row);
+    decoded_size = bytes_per_row * height;
+    decoded_data = PNGImageDecoder::Allocate(decoded_size, get_alignment()); 
     // read png data
     png_set_read_fn(png_ptr, this, PNGImageCoderHelper::user_read_compressed);
     for (uint32_t i = 0; i < height; i++)
     {
-        row_pointers[i]= &raw_view[i * bytes_per_row];
+        row_pointers[i] = &decoded_data[i * bytes_per_row];
     }
     png_set_rows(png_ptr, info_ptr, row_pointers);
     uint32_t transform = (in_format == IMAGE_CODER_COLOR_FORMAT_BGRA) ? PNG_TRANSFORM_BGR : PNG_TRANSFORM_IDENTITY;
@@ -263,10 +256,26 @@ bool PNGImageCoder::decode(EImageCoderColorFormat in_format, uint32_t in_bit_dep
     return true;
 }
 
+EImageCoderFormat PNGImageDecoder::get_image_format() const SKR_NOEXCEPT
+{
+    return EImageCoderFormat::IMAGE_CODER_FORMAT_PNG;
+}
+
 #define PNGDefaultZlibLevel 3
 
-bool PNGImageCoder::encode() SKR_NOEXCEPT
+PNGImageEncoder::~PNGImageEncoder() SKR_NOEXCEPT
 {
+
+}
+
+bool PNGImageEncoder::encode() SKR_NOEXCEPT
+{
+    SKR_ASSERT(initialized);
+    const auto width = get_width();
+    const auto height = get_height();
+    const auto color_format = get_color_format();
+    const auto raw_bit_depth = get_bit_depth();
+
     //Preserve old single thread code on some platform in relation to a type incompatibility at compile time.
     SKR_ASSERT(width > 0);
     SKR_ASSERT(height > 0);
@@ -311,7 +320,8 @@ bool PNGImageCoder::encode() SKR_NOEXCEPT
 
         for (int64_t i = 0; i < height; i++)
         {
-            row_pointers[i]= &raw_view[i * BytesPerRow];
+            auto dv = decoded_view.data();
+            row_pointers[i] = (png_bytep)&dv[i * BytesPerRow];
         }
         png_set_rows(png_ptr, info_ptr, row_pointers);
 
@@ -329,7 +339,7 @@ bool PNGImageCoder::encode() SKR_NOEXCEPT
     return true;
 }
 
-EImageCoderFormat PNGImageCoder::get_image_format() const SKR_NOEXCEPT
+EImageCoderFormat PNGImageEncoder::get_image_format() const SKR_NOEXCEPT
 {
     return EImageCoderFormat::IMAGE_CODER_FORMAT_PNG;
 }

@@ -1,124 +1,64 @@
-#include "io/io.h"
-#include "platform/vfs.h"
-#include "misc/log.h"
-#include "misc/defer.hpp"
-#include "async/condlock.hpp"
-#include "async/service_thread.hpp"
+#include "io_runnner.hpp"
+
+#include "ram_request.hpp"
+#include "ram_buffer.hpp"
+
 #include "containers/hashmap.hpp"
-#include "containers/sptr.hpp"
-#include <EASTL/fixed_vector.h>
-#include <EASTL/variant.h>
-
-#include "tracy/Tracy.hpp"
-
-bool skr_io_future_t::is_ready() const SKR_NOEXCEPT
-{
-    return get_status() == SKR_ASYNC_IO_STATUS_READ_OK;
-}
-bool skr_io_future_t::is_enqueued() const SKR_NOEXCEPT
-{
-    return get_status() == SKR_ASYNC_IO_STATUS_ENQUEUED;
-}
-bool skr_io_future_t::is_cancelled() const SKR_NOEXCEPT
-{
-    return get_status() == SKR_ASYNC_IO_STATUS_CANCELLED;
-}
-bool skr_io_future_t::is_ram_loading() const SKR_NOEXCEPT
-{
-    return get_status() == SKR_ASYNC_IO_STATUS_RAM_LOADING;
-}
-bool skr_io_future_t::is_vram_loading() const SKR_NOEXCEPT
-{
-    return get_status() == SKR_ASYNC_IO_STATUS_VRAM_LOADING;
-}
-
-SkrAsyncIOStatus skr_io_future_t::get_status() const SKR_NOEXCEPT
-{
-    return (SkrAsyncIOStatus)skr_atomicu32_load_acquire(&status);
-}
 
 namespace skr {
 namespace io {
-typedef enum SkrAsyncIODoneStatus
+
+IRAMIOBuffer::~IRAMIOBuffer() SKR_NOEXCEPT
 {
-    SKR_ASYNC_IO_DONE_STATUS_PENDING = 1,
-    SKR_ASYNC_IO_DONE_STATUS_DONE = 2
-} SkrAsyncIODoneStatus;
 
-struct IORequestBoxed : public skr::SInterface
-{
-    skr_vfs_t* vfs = nullptr;
-    skr::string path;
-    skr_io_file_handle file;
-    
-    eastl::variant<skr_io_block_t, skr_io_compressed_block_t> block;
-
-    float sub_priority;
-
-    SAtomic32 done = 0;
-    skr_io_future_t* future = nullptr;
-    skr_async_ram_destination_t* destination = nullptr;
-
-    skr_io_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
-    void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];
-
-    skr_io_callback_t finish_callbacks[SKR_IO_FINISH_POINT_COUNT];
-    void* finish_callback_datas[SKR_IO_FINISH_POINT_COUNT];
-
-    eastl::fixed_vector<IORequstChunk, 1> chunks;
-
-    void setStatus(SkrAsyncIOStatus status)
-    {
-        skr_atomicu32_store_release(&future->status, status);
-        if (const auto callback = callbacks[status])
-        {
-            callback(future, nullptr, callback_datas[status]);
-        }
-    }
-
-    SkrAsyncIOStatus getStatus() const
-    {
-        return static_cast<SkrAsyncIOStatus>(skr_atomicu32_load_relaxed(&future->status));
-    }
-
-    uint32_t add_refcount() 
-    { 
-        return 1 + skr_atomicu32_add_relaxed(&rc, 1); 
-    }
-
-    uint32_t release() 
-    {
-        skr_atomicu32_add_relaxed(&rc, -1);
-        return skr_atomicu32_load_acquire(&rc);
-    }
-private:
-    SAtomicU32 rc = 0;
-};
-
-using RQPtr = skr::SObjectPtr<IORequestBoxed>;
-using IORequestQueue = moodycamel::ConcurrentQueue<RQPtr>;  
-using IORequestArray = skr::vector<RQPtr>;
-
-// using CHKPtr = skr::SPtr<IORequstChunk>;
-// using IOChunkArray = skr::vector<CHKPtr>;
-// using IOChunkMap = skr::parallel_flat_hash_map<uint64_t, IORequstChunk*>;
-
-IORequstChunk::IORequstChunk() SKR_NOEXCEPT
-{
 }
 
-IORequstChunk::~IORequstChunk() SKR_NOEXCEPT
+const char* kIOBufferMemoryName = "IOBuffer";
+RAMIOBuffer::~RAMIOBuffer() SKR_NOEXCEPT
 {
+    free_buffer();
+}
+
+void RAMIOBuffer::allocate_buffer(uint64_t n) SKR_NOEXCEPT
+{
+    bytes = (uint8_t*)sakura_mallocN(n, kIOBufferMemoryName);
+    size = n;
+}
+
+void RAMIOBuffer::free_buffer() SKR_NOEXCEPT
+{
+    if (bytes)
+    {
+        sakura_freeN(bytes, kIOBufferMemoryName);
+        bytes = nullptr;
+    }
+    size = 0;
 }
 
 struct RAMServiceImpl final : public RAMService
 {
     RAMServiceImpl(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
+        : name(skr::format(u8"RAMService-{}", global_idx++)), runner(this)
     {
         
     }
+    // [[nodiscard]] IOBatch open_batch(uint64_t n) SKR_NOEXCEPT;
+    [[nodiscard]] IORequest open_request() SKR_NOEXCEPT;
 
-    void request(skr_vfs_t*, const skr_io_request_t* request, skr_io_future_t* future, skr_async_ram_destination_t* dst) SKR_NOEXCEPT;
+    uint64_t add_resolver(const char8_t* name, RequestResolver resolver) SKR_NOEXCEPT
+    {
+        skr_rw_mutex_acuire_w(&runner.resolvers_mutex);
+        const auto id = runner.resolvers.size();
+        runner.resolvers.emplace_back(name, resolver);
+        skr_rw_mutex_release(&runner.resolvers_mutex);
+        return id;
+    }
+
+    RAMIOBufferId request(IORequest request, skr_io_future_t* future) SKR_NOEXCEPT;
+    
+    RAMIOBuffer allocate_buffer(uint64_t n) SKR_NOEXCEPT;
+    void free_buffer(RAMIOBuffer* buffer) SKR_NOEXCEPT;
+    
     void cancel(skr_io_future_t* future) SKR_NOEXCEPT 
     { 
         skr_atomicu32_store_relaxed(&future->request_cancel, 1); 
@@ -135,16 +75,22 @@ struct RAMServiceImpl final : public RAMService
     struct Runner final : public skr::ServiceThread
     {
         const bool condsleep = false;
-        static uint32_t global_idx;
-        Runner() SKR_NOEXCEPT 
-            : skr::ServiceThread({ skr::format(u8"RAMService-{}", global_idx++).u8_str(), SKR_THREAD_ABOVE_NORMAL }) 
+        Runner(RAMServiceImpl* service) SKR_NOEXCEPT 
+            : skr::ServiceThread({ service->name.u8_str(), SKR_THREAD_ABOVE_NORMAL }),
+            service(service)
         {
-            condlock.initialize(skr::format(u8"RAMServiceCondLock-{}", global_idx++).u8_str());
+            skr_init_rw_mutex(&resolvers_mutex);
+            condlock.initialize(skr::format(u8"{}-CondLock", service->name).u8_str());
             for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
             {
-                skr_atomicu64_store_relaxed(&request_counts[i], 0);
+                skr_atomicu64_store_relaxed(&ongoing_request_counts[i], 0);
                 skr_atomicu64_store_relaxed(&queued_request_counts[i], 0);
             }
+        }
+
+        ~Runner() SKR_NOEXCEPT
+        {
+            skr_destroy_rw_mutex(&resolvers_mutex);
         }
 
         skr::AsyncResult serve() SKR_NOEXCEPT;
@@ -165,40 +111,34 @@ struct RAMServiceImpl final : public RAMService
             }
         }
 
+        // cancel request marked as request_cancel
+        bool try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT;
         // 0. recycle
         void recycle() SKR_NOEXCEPT;
-
         // 1. fetch requests from queue
         uint64_t fetch() SKR_NOEXCEPT;
-
         // 2. sort raw requests
         void sort() SKR_NOEXCEPT;
-
         // 3. resolve requests to pending raw request array
         void resolve() SKR_NOEXCEPT;
-
-        // 4. chunk pending raw requests to block slices
-        void chunk() SKR_NOEXCEPT;
-        void chunkSingleRequest(SkrAsyncServicePriority priority, RQPtr request) SKR_NOEXCEPT;
-
         // 5. dispatch I/O blocks to drives (+allocate & cpy to raw)
         void dispatch() SKR_NOEXCEPT;
-        void dispatch_open() SKR_NOEXCEPT;
         void dispatch_read() SKR_NOEXCEPT;
         void dispatch_close() SKR_NOEXCEPT;
-
         // 6. do uncompress works (+allocate & cpy to uncompressed)
         void uncompress() SKR_NOEXCEPT;
-
         // 7. finish
         void finish() SKR_NOEXCEPT;
+
+        RAMServiceImpl* service = nullptr;
+        SRWMutex resolvers_mutex;
+        eastl::vector<eastl::pair<skr::string, RequestResolver>> resolvers;
 
         IORequestQueue request_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
         SAtomicU64 queued_request_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
-        IORequestArray requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-        SAtomicU64 request_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-        // IOChunkArray chunks[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+        IORequestArray ongoing_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+        SAtomicU64 ongoing_request_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
         
         IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
         
@@ -206,9 +146,18 @@ struct RAMServiceImpl final : public RAMService
         SAtomicU32 service_status = SKR_ASYNC_SERVICE_STATUS_SLEEPING;
         CondLock condlock;
     };
+    const skr::string name;
     Runner runner;
+protected:
+    static uint32_t global_idx;
+
+    SAtomicU64 sequence_number = 0;
+    SmartPool<IOBatchBase, IIOBatch> batch_pool;
+    SmartPool<RAMIORequest, IIORequest> request_pool;
 };
-uint32_t RAMServiceImpl::Runner::global_idx = 0;
+uint32_t RAMServiceImpl::global_idx = 0;
+
+SmartPool<RAMIOBuffer, IRAMIOBuffer> buffer_pool;
 
 skr_io_ram_service_t* RAMService::create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
 {
@@ -219,49 +168,53 @@ skr_io_ram_service_t* RAMService::create(const skr_ram_io_service_desc_t* desc) 
 
 void RAMService::destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT
 {
+    ZoneScopedN("destroy");
+
     auto S = static_cast<RAMServiceImpl*>(service);
     if (S->runner.get_status() == skr::ServiceThread::Status::kStatusRunning)
     {
         S->drain();
-        skr_atomicu32_store_relaxed(&S->runner.service_status, SKR_ASYNC_SERVICE_STATUS_SLEEPING);
+        skr_atomicu32_store_relaxed(&S->runner.service_status, SKR_ASYNC_SERVICE_STATUS_QUITING);
         S->stop(false);
     }
-    S->runner.wait_stop();
-    S->runner.exit();
+    {
+        ZoneScopedN("wait_stop");
+        S->runner.wait_stop();
+    }
+    {
+        ZoneScopedN("exit");
+        S->runner.exit();
+    }
     SkrDelete(service);
 }
 
-void RAMServiceImpl::request(skr_vfs_t* vfs, const skr_io_request_t *request, 
-    skr_io_future_t *future, skr_async_ram_destination_t *dst) SKR_NOEXCEPT
+IORequest RAMServiceImpl::open_request() SKR_NOEXCEPT
 {
-    auto rq = RQPtr::CreateZeroed();
-    rq->vfs = vfs;
+    uint64_t seq = (uint64_t)skr_atomicu64_add_relaxed(&sequence_number, 1);
+    return skr::static_pointer_cast<IIORequest>(request_pool.allocate(seq));
+}
+
+RAMIOBufferId RAMServiceImpl::request(IORequest request, skr_io_future_t* future) SKR_NOEXCEPT
+{
+    auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+    auto buffer = buffer_pool.allocate();
+
+    SKR_ASSERT(!rq->blocks.empty());
+
     rq->future = future;
-    rq->destination = dst;
+    rq->destination = buffer;
 
-    rq->path = request->path;
-    rq->file = request->file;
-    rq->block = request->block;
-    rq->sub_priority = request->sub_priority;
-    for (int i = 0; i < SKR_ASYNC_IO_STATUS_COUNT; ++i)
-    {
-        rq->callbacks[i] = request->callbacks[i];
-        rq->callback_datas[i] = request->callback_datas[i];
-    }
-    for (int i = 0; i < SKR_IO_FINISH_POINT_COUNT; ++i)
-    {
-        rq->finish_callbacks[i] = request->finish_callbacks[i];
-        rq->finish_callback_datas[i] = request->finish_callback_datas[i];
-    }
-
-    runner.request_queues[request->priority].enqueue(rq);
-    rq->setStatus(SKR_ASYNC_IO_STATUS_ENQUEUED);
-    skr_atomicu32_add_relaxed(&runner.queued_request_counts, 1);
+    const auto pri = rq->get_priority();
+    runner.request_queues[pri].enqueue(rq);
+    rq->setStatus(SKR_IO_STAGE_ENQUEUED);
+    skr_atomicu32_add_relaxed(&runner.queued_request_counts[pri], 1);
 
     if (runner.condsleep)
     {
         runner.condlock.signal();
     } 
+
+    return buffer;
 }
 
 void RAMServiceImpl::stop(bool wait_drain) SKR_NOEXCEPT
@@ -280,9 +233,15 @@ void RAMServiceImpl::run() SKR_NOEXCEPT
 
 void RAMServiceImpl::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
+    ZoneScopedN("drain");
+
     if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
     {
-        while (skr_atomicu64_load_relaxed(&runner.request_counts[priority]) > 0)
+        while (skr_atomicu64_load_relaxed(&runner.queued_request_counts[priority]) > 0)
+        {
+            // ...
+        }
+        while (skr_atomicu64_load_relaxed(&runner.ongoing_request_counts[priority]) > 0)
         {
             // ...
         }
@@ -313,7 +272,7 @@ void RAMServiceImpl::poll_finish_callbacks() SKR_NOEXCEPT
     RQPtr rq = nullptr;
     while (runner.finish_queues->try_dequeue(rq))
     {
-        if (rq->getStatus() == SKR_ASYNC_IO_STATUS_READ_OK)
+        if (rq->getStatus() == SKR_IO_STAGE_COMPLETED)
         {
             rq->finish_callbacks[SKR_IO_FINISH_POINT_COMPLETE](
                 rq->future, nullptr, rq->finish_callback_datas[SKR_IO_FINISH_POINT_COMPLETE]);
@@ -342,9 +301,8 @@ skr::AsyncResult RAMServiceImpl::Runner::serve() SKR_NOEXCEPT
     uint64_t cnt = 0;
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        cnt += skr_atomicu64_load_relaxed(&request_counts[i]);
+        cnt += skr_atomicu64_load_relaxed(&ongoing_request_counts[i]);
     }
-    
     
     if (cnt)
     {
@@ -353,7 +311,6 @@ skr::AsyncResult RAMServiceImpl::Runner::serve() SKR_NOEXCEPT
         skr_atomicu32_store_relaxed(&service_status, SKR_ASYNC_SERVICE_STATUS_RUNNING);
         sort();
         resolve();
-        chunk();
         dispatch();
         uncompress();
         finish();
@@ -368,13 +325,47 @@ skr::AsyncResult RAMServiceImpl::Runner::serve() SKR_NOEXCEPT
     return ASYNC_RESULT_OK;
 }
 
+bool RAMServiceImpl::Runner::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT
+{
+    const auto status = rq->getStatus();
+    if (status >= SKR_IO_STAGE_LOADING) return false;
+
+    if (bool cancel_requested = skr_atomicu32_load_acquire(&rq->future->request_cancel))
+    {
+        const auto d = skr_atomicu32_load_relaxed(&rq->done);
+        if (d == 0)
+        {
+            rq->setStatus(SKR_IO_STAGE_CANCELLED);
+            bool need_finish = false;
+            for (auto f : rq->finish_callbacks)
+            {
+                if (f)
+                {
+                    need_finish = true;
+                }
+            }
+            if (need_finish)
+            {
+                finish_queues[priority].enqueue(rq);
+                skr_atomicu32_store_relaxed(&rq->done, SKR_ASYNC_IO_DONE_STATUS_PENDING);
+            }
+            else
+            {
+                skr_atomicu32_store_relaxed(&rq->done, SKR_ASYNC_IO_DONE_STATUS_DONE);
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
 void RAMServiceImpl::Runner::recycle() SKR_NOEXCEPT
 {
     ZoneScopedN("recycle");
 
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        auto& arr = requests[i];
+        auto& arr = ongoing_requests[i];
         auto it = eastl::remove_if(arr.begin(), arr.end(), 
             [](const RQPtr& rq) { 
                 return (skr_atomicu32_load_relaxed(&rq->done) == SKR_ASYNC_IO_DONE_STATUS_DONE); 
@@ -382,7 +373,7 @@ void RAMServiceImpl::Runner::recycle() SKR_NOEXCEPT
         const int64_t X = (int64_t)arr.size();
         arr.erase(it, arr.end());
         const int64_t Y = (int64_t)arr.size();
-        skr_atomicu64_add_relaxed(&request_counts[i], Y - X);
+        skr_atomicu64_add_relaxed(&ongoing_request_counts[i], Y - X);
     }
 }
 
@@ -392,14 +383,14 @@ uint64_t RAMServiceImpl::Runner::fetch() SKR_NOEXCEPT
 
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        RQPtr request = nullptr;
+        RQPtr rq = nullptr;
         auto& queue = request_queues[i];
-        while (queue.try_dequeue(request))
+        while (queue.try_dequeue(rq))
         {
-            auto& arr = requests[i];
-            arr.emplace_back(request);
+            auto& arr = ongoing_requests[i];
+            arr.emplace_back(rq);
 
-            skr_atomicu64_add_relaxed(&request_counts[i], 1);
+            skr_atomicu64_add_relaxed(&ongoing_request_counts[i], 1);
             skr_atomicu64_add_relaxed(&queued_request_counts[i], -1);
         }
     }
@@ -412,45 +403,11 @@ void RAMServiceImpl::Runner::sort() SKR_NOEXCEPT
 
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        auto& arr = requests[i];
+        auto& arr = ongoing_requests[i];
         std::sort(arr.begin(), arr.end(), 
         [](const RQPtr& a, const RQPtr& b) {
             return a->sub_priority > b->sub_priority;
         });
-    }
-}
-
-void RAMServiceImpl::Runner::chunk() SKR_NOEXCEPT
-{
-    ZoneScopedN("chunk");
-
-    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
-    {
-        auto& arr = requests[i];
-        for (auto& rq : arr)
-        {
-            chunkSingleRequest((SkrAsyncServicePriority)i, rq);
-        }
-    }
-}
-
-void RAMServiceImpl::Runner::chunkSingleRequest(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT
-{
-    if (rq->chunks.empty())
-    {
-        auto chk = IORequstChunk();
-
-        if (auto b = eastl::get_if<skr_io_block_t>(&rq->block))
-        {
-            chk.blocks.emplace_back(*b);
-        }
-        else if (auto cb = eastl::get_if<skr_io_compressed_block_t>(&rq->block))
-        {
-            chk.compressed_blocks.emplace_back(*cb);
-        }
-        {
-            rq->chunks.emplace_back(chk);
-        }
     }
 }
 
@@ -466,50 +423,27 @@ void RAMServiceImpl::Runner::resolve() SKR_NOEXCEPT
     
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        auto& arr = requests[i];
+        auto& arr = ongoing_requests[i];
         for (auto& rq : arr)
         {
-            if (rq->getStatus() == SKR_ASYNC_IO_STATUS_ENQUEUED)
+            if (try_cancel((SkrAsyncServicePriority)i, rq))
+            {
+                // cancel...
+            }
+            else if (rq->getStatus() == SKR_IO_STAGE_ENQUEUED)
             {
                 // SKR_LOG_DEBUG("dispatch open request: %s", rq->path.c_str());
-                rq->setStatus(SKR_ASYNC_IO_STATUS_CREATING_RESOURCE);
+                rq->setStatus(SKR_IO_STAGE_RESOLVING);
                 
-                // open file
-                if (!rq->file)
-                {
-                    rq->file = skr_vfs_fopen(rq->vfs, 
-                        rq->path.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
-                }
-                
-                // deal with 0 block size
-                eastl::visit([rq](auto&& block) {
-                    using T = std::decay_t<decltype(block)>;
-                    if constexpr (std::is_same_v<T, skr_io_block_t>)
-                    {
-                        if (!block.size)
-                            block.size = skr_vfs_fsize(rq->file) - block.offset;
-                        if (!rq->destination->size)
-                            rq->destination->size = block.size;
-                    }
-                    else if constexpr (std::is_same_v<T, skr_io_compressed_block_t>)
-                    {
-                        if (!block.compressed_size)
-                            block.compressed_size = skr_vfs_fsize(rq->file) - block.offset;
-                        if (!rq->destination->size)
-                            rq->destination->size = block.compressed_size;
-                    }
-                }, rq->block);
+                // TODO: resolver ordering
 
-                // allocate
-                if (!rq->destination->bytes)
+                // TODO: resolver jobs
+                skr_rw_mutex_acuire_r(&resolvers_mutex);
+                for (auto&& [id, resolver] : resolvers)
                 {
-                    if (!rq->destination->size)
-                    {
-                        SKR_ASSERT(0 && "invalid destination size");
-                    }
-                    ZoneScopedNC("IOBufferAllocate", tracy::Color::BlueViolet);
-                    rq->destination->bytes = (uint8_t*)sakura_malloc(rq->destination->size);
+                    resolver(rq);
                 }
+                skr_rw_mutex_release(&resolvers_mutex);
             }
             else
             {
@@ -519,29 +453,106 @@ void RAMServiceImpl::Runner::resolve() SKR_NOEXCEPT
     }
 }
 
+uint64_t RAMService::add_file_resolver() SKR_NOEXCEPT
+{ 
+    return add_resolver(u8"file", [](IORequest request) { request->open_file(); }); 
+}
+
+uint64_t RAMService::add_iobuffer_resolver() SKR_NOEXCEPT
+{
+    const auto id = add_resolver(u8"iobuffer", [](IORequest request) {
+        auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+        auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
+        // deal with 0 block size
+        for (auto& block : rq->blocks)
+        {
+            if (!block.size)
+            {
+                block.size = rq->get_fsize() - block.offset;
+            }
+            if (!buf->size)
+            {
+                buf->size += block.size;
+            }
+        }
+        // allocate
+        if (!buf->bytes)
+        {
+            if (!buf->size)
+            {
+                SKR_ASSERT(0 && "invalid destination size");
+            }
+            ZoneScopedNC("IOBufferAllocate", tracy::Color::BlueViolet);
+            buf->allocate_buffer(buf->size);
+        }
+    });
+    // this->arrange_after(id, "file");
+    return id;
+}
+
+uint64_t RAMService::add_chunking_resolver(uint64_t chunk_size) SKR_NOEXCEPT
+{
+    const auto id = add_resolver(u8"chunking", [chunk_size](IORequest request) {
+        auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+        uint64_t total = 0;
+        for (auto& block : rq->get_blocks())
+            total += block.size;
+        uint64_t chunk_count = total / chunk_size;
+        if (chunk_count > 2)
+        {
+            auto bks = rq->blocks;
+            rq->reset_blocks();
+            rq->blocks.reserve(chunk_count);
+            for (auto& block : bks)
+            {
+                uint64_t acc_size = block.size;
+                uint64_t acc_offset = block.offset;
+                while (acc_size > chunk_size)
+                {
+                    rq->add_block({acc_offset, chunk_size});
+                    acc_offset += chunk_size;
+                    acc_size -= chunk_size;
+                }
+                rq->get_blocks().back().size += acc_size;
+            }
+        }
+    });
+    // this->arrange_after(id, "iobuffer");
+    return id;
+}
+
 void RAMServiceImpl::Runner::dispatch_read() SKR_NOEXCEPT
 {
     ZoneScopedN("dispatch_read");
     
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        auto& arr = requests[i];
+        auto& arr = ongoing_requests[i];
         for (auto& rq : arr)
         {
-            if (rq->getStatus() == SKR_ASYNC_IO_STATUS_CREATING_RESOURCE)
+            auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
+            if (try_cancel((SkrAsyncServicePriority)i, rq))
             {
-                rq->setStatus(SKR_ASYNC_IO_STATUS_RAM_LOADING);
+                // cancel...
+                if (rq->file) 
+                    skr_vfs_fclose(rq->file);
+                if (buf) 
+                    buf->free_buffer();
+            }
+            else if (rq->getStatus() == SKR_IO_STAGE_RESOLVING)
+            {
+                ZoneScopedN("read_request");
 
+                rq->setStatus(SKR_IO_STAGE_LOADING);
                 // SKR_LOG_DEBUG("dispatch read request: %s", rq->path.c_str());
-                for (const auto& chunk : rq->chunks)
+                uint64_t dst_offset = 0u;
+                for (const auto& block : rq->blocks)
                 {
-                    for (auto block : chunk.blocks)
-                    {
-                        skr_vfs_fread(rq->file, rq->destination->bytes, block.offset, block.size);
-                    }
+                    const auto address = buf->bytes + dst_offset;
+                    skr_vfs_fread(rq->file, address, block.offset, block.size);
+                    dst_offset += block.size;
                 }
-
-                rq->setStatus(SKR_ASYNC_IO_STATUS_READ_OK);
+                rq->setStatus(SKR_IO_STAGE_LOADED);
             }
             else
             {
@@ -551,13 +562,20 @@ void RAMServiceImpl::Runner::dispatch_read() SKR_NOEXCEPT
     }
 }
 
+void RAMService::add_default_resolvers() SKR_NOEXCEPT
+{
+    add_file_resolver();
+    add_iobuffer_resolver();
+    // add_chunking_resolver(); // need to chunk, sort and order-by-offset on HDD platforms
+}
+
 void RAMServiceImpl::Runner::dispatch_close() SKR_NOEXCEPT
 {
     ZoneScopedN("dispatch_close");
 
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        auto& arr = requests[i];
+        auto& arr = ongoing_requests[i];
         for (auto& rq : arr)
         {
             if (rq->file)
@@ -585,12 +603,13 @@ void RAMServiceImpl::Runner::finish() SKR_NOEXCEPT
 
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        auto& arr = requests[i];
+        auto& arr = ongoing_requests[i];
         for (auto& rq : arr)
         {
             const auto d = skr_atomicu32_load_relaxed(&rq->done);
             if (d == 0)
             {
+                rq->setStatus(SKR_IO_STAGE_COMPLETED);
                 bool need_finish = false;
                 for (auto f : rq->finish_callbacks)
                 {

@@ -1,3 +1,4 @@
+#include "containers/sptr.hpp"
 #include "resource/resource_handle.h"
 #include "serde/binary/reader.h"
 #include "platform/memory.h"
@@ -338,24 +339,58 @@ int ReadTrait<skr_resource_handle_t>::Read(skr_binary_reader_t* reader, skr_reso
     return ret;
 }
 
-int ReadTrait<skr_blob_t>::Read(skr_binary_reader_t* reader, skr_blob_t& blob)
+int ReadBlob(skr_binary_reader_t* reader, skr::BlobId& out_id)
 {
     // TODO: blob 应该特别处理
-    skr_blob_t temp;
-    int ret = skr::binary::Read(reader, temp.size);
+    uint64_t size;
+    int ret = skr::binary::Read(reader, size);
     if (ret != 0)
     {
         SKR_LOG_FATAL("failed to read blob size! ret code: %d", ret);
         return ret;
     }
-    temp.bytes = (uint8_t*)sakura_malloc(temp.size);
-    ret = ReadBytes(reader, temp.bytes, temp.size);
+    auto blob = skr::IBlob::Create(nullptr, size, false);
+    if (blob == nullptr)
+    {
+        SKR_LOG_FATAL("failed to create blob! ret code: %d", ret);
+        return ret;
+    }
+
+    ret = ReadBytes(reader, blob->get_data(), blob->get_size());
     if (ret != 0)
     {
         SKR_LOG_FATAL("failed to read blob content! ret code: %d", ret);
         return ret;
     }
-    blob = std::move(temp);
+
+    out_id = blob;
+    return ret;
+}
+
+int ReadTrait<skr::IBlob*>::Read(skr_binary_reader_t* reader, skr::IBlob*& out_blob)
+{
+    skr::BlobId new_blob = nullptr;
+    auto ret = ReadBlob(reader, new_blob);
+    if (new_blob == nullptr)
+    {
+        SKR_LOG_FATAL("failed to create blob! ret code: %d", ret);
+        return ret;
+    }
+
+    out_blob = new_blob.get();
+    out_blob->add_refcount();
+
+    return ret;
+}
+
+int ReadTrait<skr::BlobId>::Read(skr_binary_reader_t* reader, skr::BlobId& out_blob)
+{
+    auto ret = ReadBlob(reader, out_blob);
+    if (out_blob == nullptr)
+    {
+        SKR_LOG_FATAL("failed to create blob! ret code: %d", ret);
+        return ret;
+    }
     return ret;
 }
 
