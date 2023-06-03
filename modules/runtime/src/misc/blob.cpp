@@ -9,8 +9,8 @@ const char* kSimpleBlobName = "SimpleBlob";
 struct SimpleBlob : public IBlob
 {
 public:
-    SimpleBlob(const uint8_t* data, uint64_t size, bool move) SKR_NOEXCEPT
-        : size(size)
+    SimpleBlob(const uint8_t* data, uint64_t size, uint64_t alignment, bool move, const char* name) SKR_NOEXCEPT
+        : size(size), alignment(alignment)
     {
         if (move)
         {
@@ -18,7 +18,7 @@ public:
         }
         else if (size)
         {
-            bytes = (uint8_t*)sakura_mallocN(size, kSimpleBlobName);
+            bytes = (uint8_t*)sakura_malloc_alignedN(size, alignment, name ? name : kSimpleBlobName);
             if (data)
                 memcpy(bytes, data, size);
         }
@@ -28,7 +28,7 @@ public:
     {
         if (bytes)
         {
-            sakura_freeN(bytes, kSimpleBlobName);
+            sakura_free_alignedN(bytes, alignment, kSimpleBlobName);
         }
         bytes = nullptr;
     }
@@ -47,12 +47,18 @@ public:
     }
 private:   
     uint64_t size = 0;
+    uint64_t alignment = 0;
     uint8_t* bytes = nullptr;
     SAtomicU32 rc = 0;
 };
 }
 
-skr::BlobId skr::IBlob::Create(const uint8_t* data, uint64_t size, bool move) SKR_NOEXCEPT
+skr::BlobId skr::IBlob::Create(const uint8_t* data, uint64_t size, bool move, const char* name) SKR_NOEXCEPT
 {
-    return skr::SObjectPtr<skr::SimpleBlob>::Create(data, size, move);
+    return skr::SObjectPtr<skr::SimpleBlob>::Create(data, size, alignof(uint8_t), move, name);
+}
+
+skr::BlobId skr::IBlob::CreateAligned(const uint8_t* data, uint64_t size, uint64_t alignment, bool move, const char* name) SKR_NOEXCEPT
+{
+    return skr::SObjectPtr<skr::SimpleBlob>::Create(data, size, alignment, move, name);
 }

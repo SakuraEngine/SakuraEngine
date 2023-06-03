@@ -7,6 +7,7 @@
 #include "SkrAnim/components/skeleton_component.h"
 #include "SkrAnim/ozz/geometry/skinning_job.h"
 #include "SkrAnim/ozz/base/span.h"
+#include "containers/sptr.hpp"
 
 skr_render_anim_comp_t::~skr_render_anim_comp_t()
 {
@@ -16,7 +17,7 @@ skr_render_anim_comp_t::~skr_render_anim_comp_t()
     }
     for(auto buffer : buffers)
     {
-        sakura_free_aligned(buffer.bytes, 16);
+        buffer->release();
     }
 }
 
@@ -101,8 +102,9 @@ void skr_init_anim_component(skr_render_anim_comp_t* component, const skr_mesh_r
             primitive.tangent.stride = tangents_buffer->stride;
         }
     }
-    component->buffers[0].bytes = (uint8_t*)sakura_malloc_aligned(buffer_size, 16);
-    component->buffers[0].size = buffer_size;
+    auto blob = skr::IBlob::CreateAligned(nullptr, buffer_size, 16, false);
+    component->buffers[0] = blob.get();
+    blob->add_refcount();
 }
 
 void skr_init_anim_buffers(CGPUDeviceId device, skr_render_anim_comp_t* anim, const skr_mesh_resource_t* mesh)
@@ -121,7 +123,7 @@ void skr_init_anim_buffers(CGPUDeviceId device, skr_render_anim_comp_t* anim, co
             vb_desc.flags = anim->use_dynamic_buffer ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE;
             vb_desc.memory_usage = anim->use_dynamic_buffer ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY;
             vb_desc.prefer_on_device = true;
-            vb_desc.size = anim->buffers[j].size;
+            vb_desc.size = anim->buffers[j]->get_size();
             SKR_ASSERT(vb_desc.size > 0);
             anim->vbs[j] = cgpu_create_buffer(device, &vb_desc);
             auto renderMesh = mesh_resource->render_mesh;
@@ -161,13 +163,13 @@ void skr_init_anim_buffers(CGPUDeviceId device, skr_render_anim_comp_t* anim, co
                 prim.views = skr::span(anim->views.data() + vbv_start, renderMesh->primitive_commands[k].vbvs.size());
             }
         }
-        const auto vertex_size = anim->buffers[j].size;
+        const auto vertex_size = anim->buffers[j]->get_size();
         if (use_dynamic_buffer)
         {                        
             ZoneScopedN("CVVUpdateVB");
 
             void* vtx_dst = anim->vbs[j]->cpu_mapped_address;
-            memcpy(vtx_dst, anim->buffers[j].bytes, vertex_size);
+            memcpy(vtx_dst, anim->buffers[j]->get_data(), vertex_size);
         }
     }
 }
@@ -224,13 +226,13 @@ void skr_cpu_skin(skr_render_skin_comp_t* skin, const skr_render_anim_comp_t* an
         job.in_positions = buffer_span(positions_buffer, skr::type_t<float>(), 3);
         job.in_positions_stride = positions_buffer->stride;
         auto& skprim = anim->primitives[i];
-        job.out_positions = { (float*)(anim->buffers[skprim.position.buffer_index].bytes + skprim.position.offset), vertex_count * 3 };
+        job.out_positions = { (float*)(anim->buffers[skprim.position.buffer_index]->get_data() + skprim.position.offset), vertex_count * 3 };
         job.out_positions_stride = skprim.position.stride;
         if (normals_buffer)
-            job.out_normals = { (float*)(anim->buffers[skprim.normal.buffer_index].bytes + skprim.normal.offset), vertex_count * 3 };
+            job.out_normals = { (float*)(anim->buffers[skprim.normal.buffer_index]->get_data() + skprim.normal.offset), vertex_count * 3 };
         job.out_normals_stride = skprim.normal.stride;
         if (tangents_buffer)
-            job.out_tangents = { (float*)(anim->buffers[skprim.tangent.buffer_index].bytes + skprim.tangent.offset), vertex_count * 4 };
+            job.out_tangents = { (float*)(anim->buffers[skprim.tangent.buffer_index]->get_data() + skprim.tangent.offset), vertex_count * 4 };
         job.out_tangents_stride = skprim.tangent.stride;
         auto result = job.Run();
         SKR_ASSERT(result);
