@@ -9,6 +9,7 @@
 #include <EASTL/deque.h>
 #include <EASTL/optional.h>
 #include <EASTL/sort.h>
+#include "containers/concurrent_queue.h"
 
 #include "tracy/Tracy.hpp"
 #include "tracy/TracyC.h"

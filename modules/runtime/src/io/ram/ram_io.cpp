@@ -5,8 +5,6 @@
 #include "ram_batch.hpp"
 #include "ram_buffer.hpp"
 
-#include "containers/hashmap.hpp"
-
 namespace skr {
 namespace io {
 
@@ -139,11 +137,7 @@ void RAMService::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 
     if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
     {
-        while (runner.getQueuedBatchCount(priority) > 0)
-        {
-            // ...
-        }
-        while (skr_atomicu64_load_relaxed(&runner.ongoing_batch_counts[priority]) > 0)
+        while (runner.getQueuedBatchCount(priority) > 0 && runner.getExecutingBatchCount(priority) > 0)
         {
             // ...
         }
@@ -188,7 +182,7 @@ skr::AsyncResult RAMService::Runner::serve() SKR_NOEXCEPT
     uint64_t cnt = 0;
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        cnt += skr_atomicu64_load_relaxed(&ongoing_batch_counts[i]);
+        cnt += getExecutingBatchCount((SkrAsyncServicePriority)i);
     }
     
     if (cnt)
@@ -209,155 +203,6 @@ skr::AsyncResult RAMService::Runner::serve() SKR_NOEXCEPT
         return ASYNC_RESULT_OK;
     }
     return ASYNC_RESULT_OK;
-}
-
-bool RAMService::Runner::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT
-{
-    const auto status = rq->getStatus();
-    if (status >= SKR_IO_STAGE_LOADING) return false;
-
-    if (bool cancel_requested = skr_atomicu32_load_acquire(&rq->future->request_cancel))
-    {
-        if (rq->getFinishStep() == SKR_ASYNC_IO_FINISH_STEP_NONE)
-        {
-            rq->setStatus(SKR_IO_STAGE_CANCELLED);
-            if (rq->needPollFinish())
-            {
-                finish_queues[priority].enqueue(rq);
-                rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_PENDING);
-            }
-            else
-            {
-                rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
-            }
-        }
-        return true;
-    }
-    return false;
-}
-
-void RAMService::Runner::recycle() SKR_NOEXCEPT
-{
-    ZoneScopedN("recycle");
-    
-    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
-    {
-        reader->recycle((SkrAsyncServicePriority)i);
-        
-        auto& arr = ongoing_batches[i];
-        auto it = eastl::remove_if(arr.begin(), arr.end(), 
-            [](const IOBatchId& batch) {
-                for (auto request : batch->get_requests()) 
-                {
-                    auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
-                    if (rq->getFinishStep() != SKR_ASYNC_IO_FINISH_STEP_DONE)
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            });
-        const int64_t X = (int64_t)arr.size();
-        arr.erase(it, arr.end());
-        const int64_t Y = (int64_t)arr.size();
-        skr_atomicu64_add_relaxed(&ongoing_batch_counts[i], Y - X);
-    }
-}
-
-uint64_t RAMService::Runner::fetch() SKR_NOEXCEPT
-{
-    SKR_ASSERT(reader);
-    ZoneScopedN("fetch");
-
-    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
-    {
-        BatchPtr batch = nullptr;
-        while (resolved_batch_queues[i].try_dequeue(batch))
-        {
-            reader->fetch((SkrAsyncServicePriority)i, batch);
-            skr_atomicu64_add_relaxed(&queued_batch_counts[i], -1);
-        }
-    }
-    return 0;
-}
-
-void RAMService::Runner::sort() SKR_NOEXCEPT
-{
-    ZoneScopedN("sort");
-
-    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
-    {
-        reader->sort((SkrAsyncServicePriority)i);
-    }
-}
-
-void RAMService::Runner::dispatch() SKR_NOEXCEPT
-{
-    ZoneScopedN("dispatch");
-
-    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
-    {
-        reader->dispatch((SkrAsyncServicePriority)i);
-    }
-}
-
-void RAMService::Runner::resolve() SKR_NOEXCEPT
-{
-    SKR_ASSERT(reader);
-    ZoneScopedN("resolve");
-
-    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
-    {
-        BatchPtr batch = nullptr;
-        while (batch_queues[i].try_dequeue(batch))
-        {
-            ongoing_batches[i].emplace_back(batch);
-            skr_atomicu64_add_relaxed(&ongoing_batch_counts[i], 1);
-
-            for (auto&& request : batch->get_requests())
-            {
-                auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-                if (try_cancel((SkrAsyncServicePriority)i, rq))
-                {
-                    // ...
-                }
-                else
-                {
-                    rq->setStatus(SKR_IO_STAGE_RESOLVING);
-                    for (auto&& resolver : resolver_chain->chain)
-                        resolver->resolve(request);
-                }
-            }
-            resolved_batch_queues[i].enqueue(batch);
-        }
-    }
-}
-
-void RAMService::Runner::uncompress() SKR_NOEXCEPT
-{
-    // do nothing now
-}
-
-void RAMService::Runner::finish() SKR_NOEXCEPT
-{
-    ZoneScopedN("finish");
-
-    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
-    {
-        while (auto request = reader->poll_finish((SkrAsyncServicePriority)i))
-        {
-            auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-            rq->setStatus(SKR_IO_STAGE_COMPLETED);
-            if (rq->needPollFinish())
-            {
-                finish_queues[i].enqueue(rq);
-            }
-            else
-            {
-                rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
-            }
-        }
-    }
 }
 
 } // namespace io

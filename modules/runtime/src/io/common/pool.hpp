@@ -2,6 +2,7 @@
 #include "io/io.h"
 #include "misc/log.h"
 #include <type_traits>
+#include "containers/concurrent_queue.h"
 
 namespace skr {
 namespace io {
