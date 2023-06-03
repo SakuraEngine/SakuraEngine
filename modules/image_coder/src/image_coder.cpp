@@ -126,18 +126,22 @@ HRESULT skr_image_coder_win_dstorage_decompressor(skr_win_dstorage_decompress_re
     SKR_LOG_TRACE("skr_image_coder_win_dstorage_decompressor: format=%d", format);
     auto decoder = skr::IImageDecoder::Create(format);
     const auto encoded_size = request->src_size;
-    if (
-        decoder->initialize((const uint8_t*)request->src_buffer, request->src_size) &&
-        decoder->decode(decoder->get_color_format(), decoder->get_bit_depth())
-    )
+    if (decoder->initialize((const uint8_t*)request->src_buffer, request->src_size))
     {
         SKR_DEFER({ ZoneScopedN("DirectStoragePNGDecompressorFree"); decoder.reset(); });
-        SKR_LOG_TRACE("image coder: width = %d, height = %d, encoded_size = %d, raw_size = %d", 
-            decoder->get_width(), decoder->get_height(), encoded_size, decoder->get_size()
-        );
-        if (auto data = decoder->get_data())
+
+        const auto encoded_format = decoder->get_color_format();
+        const auto color_format = (encoded_format == IMAGE_CODER_COLOR_FORMAT_BGRA) ? IMAGE_CODER_COLOR_FORMAT_RGBA : encoded_format;
+        if (decoder->decode(color_format, decoder->get_bit_depth()))
         {
-            return 0L; // S_OK
+            SKR_LOG_TRACE("image decoder: width = %d, height = %d, encoded_size = %d, raw_size = %d", 
+                decoder->get_width(), decoder->get_height(), encoded_size, decoder->get_size()
+            );
+            if (auto data = decoder->get_data())
+            {
+                memcpy(request->dst_buffer, data, decoder->get_size());
+                return 0L; // S_OK
+            }
         }
     }
     return 1L; // S_FALSE

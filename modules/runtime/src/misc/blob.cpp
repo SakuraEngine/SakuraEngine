@@ -27,7 +27,10 @@ public:
     ~SimpleBlob() SKR_NOEXCEPT
     {
         if (bytes)
+        {
             sakura_freeN(bytes, kSimpleBlobName);
+        }
+        bytes = nullptr;
     }
 
     uint8_t* get_data() const SKR_NOEXCEPT { return bytes; }
