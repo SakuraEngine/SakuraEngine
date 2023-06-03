@@ -40,8 +40,8 @@ struct VFSRAMReader final : public RAMReaderBase
     void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     IORequestId poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
 
-    IORequestArray ongoing_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    SAtomicU64 ongoing_requests_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    IORequestArray dispatching_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    SAtomicU64 dispatching_requests_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 };
 
 /*

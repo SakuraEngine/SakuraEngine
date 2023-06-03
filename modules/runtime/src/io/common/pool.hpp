@@ -17,6 +17,8 @@ struct ISmartPool
 };
 
 extern const char* kIOPoolObjectsMemoryName; 
+extern const char* kIOConcurrentQueueName;
+
 template<typename T, typename I>
 struct SmartPool : public ISmartPool<I>
 {
@@ -63,7 +65,7 @@ struct SmartPool : public ISmartPool<I>
         if (auto ptr = static_cast<T*>(iptr))
         {
             ptr->~T();
-            memset(ptr, 0, sizeof(T));
+            memset((void*)ptr, 0, sizeof(T));
             skr_atomicu32_add_relaxed(&objcnt, -1);
             blocks.enqueue(ptr);
         }
@@ -71,6 +73,16 @@ struct SmartPool : public ISmartPool<I>
     skr::ConcurrentQueue<T*> blocks;
     SAtomicU64 objcnt = 0;
 };
+
+struct IOConcurrentQueueTraits : public skr::ConcurrentQueueDefaultTraits
+{
+    static const bool RECYCLE_ALLOCATED_BLOCKS = true;
+    static const size_t BLOCK_SIZE = 32;
+    static inline void* malloc(size_t size) { return sakura_mallocN(size, kIOConcurrentQueueName); }
+    static inline void free(void* ptr) { return sakura_freeN(ptr, kIOConcurrentQueueName); }
+};
+template<typename T>
+using IOConcurrentQueue = moodycamel::ConcurrentQueue<T, IOConcurrentQueueTraits>;  
 
 } // namespace io
 } // namespace skr

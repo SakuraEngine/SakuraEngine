@@ -25,6 +25,7 @@ namespace skr {
 namespace io {
 
 const char* kIOPoolObjectsMemoryName = "I/O PoolObjects";
+const char* kIOConcurrentQueueName = "IOConcurrentQueue";
 
 IIOBatchResolver::~IIOBatchResolver() SKR_NOEXCEPT
 {
