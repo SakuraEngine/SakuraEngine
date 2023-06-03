@@ -15,6 +15,7 @@ struct ISmartPool
     virtual void deallocate(I* ptr) SKR_NOEXCEPT = 0;
 };
 
+extern const char* kIOPoolObjectsMemoryName; 
 template<typename T, typename I>
 struct SmartPool : public ISmartPool<I>
 {
@@ -24,7 +25,7 @@ struct SmartPool : public ISmartPool<I>
     {
         for (uint64_t i = 0; i < cnt; ++i)
         {
-            blocks.enqueue((T*)sakura_calloc_aligned(1, sizeof(T), alignof(T)));
+            blocks.enqueue((T*)sakura_calloc_alignedN(1, sizeof(T), alignof(T), kIOPoolObjectsMemoryName));
         }
     }
 
@@ -38,7 +39,7 @@ struct SmartPool : public ISmartPool<I>
         T* ptr = nullptr;
         while (blocks.try_dequeue(ptr))
         {
-            sakura_free_aligned(ptr, alignof(T));
+            sakura_free_alignedN(ptr, alignof(T), kIOPoolObjectsMemoryName);
         }
     }
 
@@ -48,7 +49,7 @@ struct SmartPool : public ISmartPool<I>
         T* ptr = nullptr;
         if (!blocks.try_dequeue(ptr))
         {
-            ptr = (T*)sakura_calloc_aligned(1, sizeof(T), alignof(T));
+            ptr = (T*)sakura_calloc_alignedN(1, sizeof(T), alignof(T), kIOPoolObjectsMemoryName);
         }
         new (ptr) T(this, std::forward<Args>(args)...);
 

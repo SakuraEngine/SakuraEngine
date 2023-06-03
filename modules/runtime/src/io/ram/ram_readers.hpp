@@ -37,6 +37,7 @@ struct VFSRAMReader final : public RAMReaderBase
     void sort(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void resolve(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     IORequest poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
 
     IORequestArray ongoing_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
@@ -52,6 +53,7 @@ struct DStorageRAMReader final : public RAMReaderBase
     void sort(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void resolve(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     IORequest poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
 };
 */

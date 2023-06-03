@@ -24,6 +24,8 @@ ESkrIOStage skr_io_future_t::get_status() const SKR_NOEXCEPT
 namespace skr {
 namespace io {
 
+const char* kIOPoolObjectsMemoryName = "I/O PoolObjects";
+
 IIOReader::~IIOReader() SKR_NOEXCEPT
 {
     

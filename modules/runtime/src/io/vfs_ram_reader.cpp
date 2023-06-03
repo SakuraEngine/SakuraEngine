@@ -8,22 +8,15 @@ void VFSRAMReader::fetch(SkrAsyncServicePriority priority, IOBatch batch) SKR_NO
     auto& arr = ongoing_requests[priority];
     for (auto& request : batch->get_requests())
     {
-        auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
         arr.emplace_back(rq);
+        skr_atomicu64_add_relaxed(&ongoing_requests_counts[priority], 1);
     }
 }
 
 void VFSRAMReader::sort(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     auto& arr = ongoing_requests[priority];
-
-    auto it = eastl::remove_if(arr.begin(), arr.end(), 
-        [](const IORequest& request) {
-            if (!request) 
-                return true;
-            return false;
-        });
-    arr.erase(it, arr.end());
 
     std::sort(arr.begin(), arr.end(), 
     [](const RQPtr& a, const RQPtr& b) {
@@ -56,10 +49,6 @@ void VFSRAMReader::resolve(SkrAsyncServicePriority priority) SKR_NOEXCEPT
             }
             skr_rw_mutex_release(&service->runner.resolvers_mutex);
         }
-        else
-        {
-            // SKR_LOG_DEBUG("dispatch open request: %s, skip", rq->path.c_str());
-        }
     }
 }
 
@@ -70,7 +59,7 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
         auto& arr = ongoing_requests[priority];
         for (auto& rq : arr)
         {
-            auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
+            auto&& buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
             if (service->runner.try_cancel(priority, rq))
             {
                 // cancel...
@@ -94,10 +83,6 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
                 }
                 rq->setStatus(SKR_IO_STAGE_LOADED);
             }
-            else
-            {
-                // SKR_LOG_DEBUG("dispatch read request: %s, skip", rq->path.c_str());
-            }
         }
     }
     {
@@ -111,10 +96,7 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
                 // SKR_LOG_DEBUG("dispatch close request: %s", rq->path.c_str());
                 skr_vfs_fclose(rq->file);
                 rq->file = nullptr;
-            }
-            else
-            {
-                // SKR_LOG_DEBUG("dispatch close request: %s, skip", rq->path.c_str());
+                skr_atomicu32_store_relaxed(&rq->done, SKR_ASYNC_IO_DONE_STATUS_NEED);
             }
         }
     }
@@ -125,18 +107,31 @@ IORequest VFSRAMReader::poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCE
     auto& arr = ongoing_requests[priority];
     for (auto& rq : arr)
     {
-        if (!rq) 
-            continue;
-
         const auto d = skr_atomicu32_load_relaxed(&rq->done);
-        if (d == 0)
+        if (d == SKR_ASYNC_IO_DONE_STATUS_NEED)
         {
-            auto polled = rq;
-            rq.reset();
-            return polled;
+            skr_atomicu32_store_relaxed(&rq->done, SKR_ASYNC_IO_DONE_STATUS_PENDING);
+            return rq;
         }
     }
     return nullptr;
+}
+
+void VFSRAMReader::recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT
+{
+    auto& arr = ongoing_requests[priority];
+    auto it = eastl::remove_if(arr.begin(), arr.end(), 
+        [](const IORequest& request) {
+            auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
+            const auto d = skr_atomicu32_load_relaxed(&rq->done);
+            return (d != 0);
+        });
+    arr.erase(it, arr.end());
+
+    const int64_t X = (int64_t)arr.size();
+    arr.erase(it, arr.end());
+    const int64_t Y = (int64_t)arr.size();
+    skr_atomicu64_add_relaxed(&ongoing_requests_counts[priority], Y - X);
 }
 
 } // namespace io
