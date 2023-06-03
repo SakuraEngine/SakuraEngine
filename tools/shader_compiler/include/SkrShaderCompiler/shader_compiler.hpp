@@ -12,7 +12,7 @@
 
 SKR_DECLARE_TYPE_ID_FWD(skr::renderer, ShaderOptionInstance, skr_shader_option_instance);
 SKR_DECLARE_TYPE_ID_FWD(skr::renderer, ShaderOptionTemplate, skr_shader_option_template);
-SKR_DECLARE_TYPE_ID_FWD(skr::io, RAMService, skr_ram_service);
+SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_ram_service);
 struct skr_stable_shader_hash_t;
 
 namespace skd sreflect

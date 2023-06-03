@@ -32,7 +32,7 @@ bool initialize_gdi_application(gdi_application_t* app)
     }
     {
         auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
-        ioServiceDesc.name = SKR_UTF8("GUI-RAMService");
+        ioServiceDesc.name = SKR_UTF8("GUI-IRAMService");
         ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
         ioServiceDesc.sleep_time = 1000 / 60;
         ioServiceDesc.lockless = true;
