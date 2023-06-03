@@ -1,5 +1,5 @@
 #pragma once
-#include "pool.hpp"
+#include "../pool.hpp"
 #include "platform/vfs.h"
 #include "misc/log.h"
 #include "misc/defer.hpp"
@@ -41,7 +41,6 @@ struct RAMIORequest final : public IIORequest
     skr::string path;
     skr_io_file_handle file;
     
-    SkrAsyncServicePriority priority;
     float sub_priority;
 
     SAtomic32 done = 0;
@@ -91,9 +90,6 @@ struct RAMIORequest final : public IIORequest
         SKR_ASSERT(file);
         return skr_vfs_fsize(file);
     }
-    
-    void set_priority(SkrAsyncServicePriority pri) SKR_NOEXCEPT { priority = pri; }
-    SkrAsyncServicePriority get_priority() const SKR_NOEXCEPT { return priority; }
 
     void set_sub_priority(float sub_pri) SKR_NOEXCEPT { sub_priority = sub_pri; }
     float get_sub_priority() const SKR_NOEXCEPT { return sub_priority; }

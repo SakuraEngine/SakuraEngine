@@ -164,9 +164,6 @@ namespace io {
 //  6.2 finish callbacks are polled & executed by usr threads
 struct RAMService;
 
-// 1~2 
-#pragma region Enqueue & Sort
-
 using IOBlock = skr_io_block_t;
 using IOCompressedBlock = skr_io_compressed_block_t;
 struct RUNTIME_API IIORequest : public skr::SInterface
@@ -178,8 +175,6 @@ struct RUNTIME_API IIORequest : public skr::SInterface
     virtual void open_file() SKR_NOEXCEPT = 0; 
 
     virtual uint64_t get_fsize() const SKR_NOEXCEPT = 0;
-    virtual void set_priority(SkrAsyncServicePriority pri) SKR_NOEXCEPT = 0;
-    virtual SkrAsyncServicePriority get_priority() const SKR_NOEXCEPT = 0;
 
     virtual void set_sub_priority(float sub_pri) SKR_NOEXCEPT = 0; 
     virtual float get_sub_priority() const SKR_NOEXCEPT = 0;
@@ -196,31 +191,41 @@ struct RUNTIME_API IIORequest : public skr::SInterface
     virtual void reset_compressed_blocks() SKR_NOEXCEPT = 0;
 };
 using IORequest = SObjectPtr<IIORequest>;
+using IOResultId = SObjectPtr<skr::SInterface>;
 
 struct RUNTIME_API IIOBatch : public skr::SInterface
 {
     virtual void reserve(uint64_t size) SKR_NOEXCEPT = 0;
-    virtual void add_request(IORequest request) SKR_NOEXCEPT = 0;
+    virtual IOResultId add_request(IORequest request, skr_io_future_t* future = nullptr) SKR_NOEXCEPT = 0;
+    virtual skr::span<IORequest> get_requests() SKR_NOEXCEPT = 0;
+
+    virtual void set_priority(SkrAsyncServicePriority pri) SKR_NOEXCEPT = 0;
+    virtual SkrAsyncServicePriority get_priority() const SKR_NOEXCEPT = 0;
 };
 using IOBatch = SObjectPtr<IIOBatch>;
-using IOBatchId = uint64_t;
 using RequestResolver = eastl::function<void(IORequest)>;
 
-#pragma endregion
+/*
+struct RUNTIME_API IIOBatchResolver
+{
+    virtual ~IIOBatchResolver() SKR_NOEXCEPT;
+};
+*/
 
-#pragma region Resolve
+struct RUNTIME_API IIOReader : public skr::SInterface
+{
+    virtual void fetch(SkrAsyncServicePriority priority, IOBatch batch) SKR_NOEXCEPT = 0;
+    virtual void sort(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
+    virtual void resolve(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
+    virtual void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
+    virtual IORequest poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
 
-#pragma endregion
+    virtual ~IIOReader() SKR_NOEXCEPT;
+    IIOReader() SKR_NOEXCEPT = default;
+};
+using IOReader = SObjectPtr<IIOReader>;
 
-#pragma region Chunking
-
-#pragma endregion
-
-#pragma region Dispatch & Uncompress
-
-#pragma endregion
-
-struct RUNTIME_API IOService
+struct RUNTIME_API IIOService
 {
     // add a resolver to service
     virtual uint64_t add_resolver(const char8_t* name, RequestResolver resolver) SKR_NOEXCEPT = 0;
@@ -229,13 +234,7 @@ struct RUNTIME_API IOService
     [[nodiscard]] virtual IORequest open_request() SKR_NOEXCEPT = 0;
 
     // start a request batch
-    // virtual IOBatchId start_batch() SKR_NOEXCEPT = 0;
-
-    // open a request for filling with batch
-    // [[nodiscard]] virtual IORequest open_request(IOBatchId id) SKR_NOEXCEPT = 0;
-
-    // finish a request batch
-    // virtual IOBatchId finish_batch() SKR_NOEXCEPT = 0;
+    [[nodiscard]] virtual IOBatch open_batch(uint64_t n) SKR_NOEXCEPT = 0;
 
     // cancel request
     virtual void cancel(skr_io_future_t* future) SKR_NOEXCEPT = 0;
@@ -255,8 +254,8 @@ struct RUNTIME_API IOService
     // get service status (sleeping or running)
     virtual SkrAsyncServiceStatus get_service_status() const SKR_NOEXCEPT = 0;
 
-    virtual ~IOService() SKR_NOEXCEPT = default;
-    IOService() SKR_NOEXCEPT = default;
+    virtual ~IIOService() SKR_NOEXCEPT = default;
+    IIOService() SKR_NOEXCEPT = default;
 };
 
 struct RUNTIME_API IRAMIOBuffer : public skr::IBlob
@@ -265,14 +264,14 @@ struct RUNTIME_API IRAMIOBuffer : public skr::IBlob
 };
 using RAMIOBufferId = SObjectPtr<IRAMIOBuffer>;
 
-struct RUNTIME_API RAMService : public IOService
+struct RUNTIME_API RAMService : public IIOService
 {
     [[nodiscard]] static skr_io_ram_service_t* create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
     static void destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT;
 
-    // we do not lock an ioService to a single vfs, but for better bandwidth use and easier profiling
-    // it's recommended to make a unique relevance between ioService & vfs（or vfses share a single I/O hardware)
-    virtual RAMIOBufferId request(IORequest request, skr_io_future_t* future) SKR_NOEXCEPT = 0;
+    virtual RAMIOBufferId request(IORequest request, skr_io_future_t* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
+    
+    virtual void request(IOBatch request) SKR_NOEXCEPT = 0;
 
     uint64_t add_file_resolver() SKR_NOEXCEPT;
     uint64_t add_iobuffer_resolver() SKR_NOEXCEPT;

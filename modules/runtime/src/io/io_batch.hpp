@@ -13,11 +13,16 @@ struct IOBatchBase : public IIOBatch
         requests.reserve(n);
     }
 
-    void add_request(IORequest request) SKR_NOEXCEPT
+    skr::span<IORequest> get_requests() SKR_NOEXCEPT
     {
-        requests.emplace_back(request);
+        return requests;
     }
 
+    void set_priority(SkrAsyncServicePriority pri) SKR_NOEXCEPT { priority = pri; }
+    SkrAsyncServicePriority get_priority() const SKR_NOEXCEPT { return priority; }
+
+protected:
+    SkrAsyncServicePriority priority;
     eastl::fixed_vector<IORequest, 1> requests;
 
 public:
@@ -44,11 +49,18 @@ public:
     }
     friend struct SmartPool<IOBatchBase, IIOBatch>;
 protected:
-    IOBatchBase(ISmartPool<IIOBatch>* pool, const uint64_t sequence) : sequence(sequence), pool(pool) {}
+    IOBatchBase(ISmartPool<IIOBatch>* pool, const uint64_t sequence) 
+        : sequence(sequence), pool(pool) 
+    {
+
+    }
     
     const uint64_t sequence;
     ISmartPool<IIOBatch>* pool = nullptr;
 };
 
+using BatchPtr = skr::SObjectPtr<IIOBatch>;
+using IOBatchQueue = moodycamel::ConcurrentQueue<BatchPtr>;  
+using IOBatchArray = skr::vector<BatchPtr>;
 } // namespace io
 } // namespace skr
