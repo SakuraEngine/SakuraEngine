@@ -19,7 +19,7 @@ struct SCookContextImpl : public SCookContext
     skr::string GetAssetPath() const override;
 
     skr::filesystem::path AddFileDependency(const skr::filesystem::path& path) override;
-    skr::filesystem::path AddFileDependencyAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path, skr_async_ram_destination_t& destination) override;
+    skr::filesystem::path AddFileDependencyAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path, skr::BlobId& destination) override;
 
     void AddRuntimeDependency(skr_guid_t resource) override;
     void AddSoftRuntimeDependency(skr_guid_t resource) override;
@@ -172,22 +172,24 @@ skr::filesystem::path SCookContextImpl::AddFileDependency(const skr::filesystem:
 }
 
 skr::filesystem::path SCookContextImpl::AddFileDependencyAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path,
-    skr_async_ram_destination_t& destination)
+    skr::BlobId& destination)
 {
     auto outPath = AddFileDependency(path.c_str());
     auto u8Path = outPath.u8string();
     const auto assetRecord = GetAssetRecord();
     // load file
     skr::task::event_t counter;
-    skr_io_request_t ramIO = {};
-    ramIO.path = u8Path.c_str();
-    ramIO.callbacks[SKR_ASYNC_IO_STATUS_READ_OK] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
+    auto rq = ioService->open_request();
+    rq->set_vfs(assetRecord->project->asset_vfs);
+    rq->set_path(u8Path.c_str());
+    rq->add_block({}); // read all
+    rq->add_callback(SKR_IO_STAGE_COMPLETED,
+    +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
         auto pCounter = (skr::task::event_t*)data;
         pCounter->signal();
-    };
-    ramIO.callback_datas[SKR_ASYNC_IO_STATUS_READ_OK] = (void*)&counter;
-    skr_io_future_t ioRequest = {};
-    ioService->request(assetRecord->project->asset_vfs, &ramIO, &ioRequest, &destination);
+    }, &counter);
+    skr_io_future_t future = {};
+    destination = ioService->request(rq, &future);
     counter.wait(false);
     return outPath;
 }

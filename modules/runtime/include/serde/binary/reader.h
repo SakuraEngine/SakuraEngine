@@ -195,8 +195,13 @@ struct RUNTIME_STATIC_API ReadTrait<skr_md5_t> {
 };
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<skr_blob_t> {
-    static int Read(skr_binary_reader_t* reader, skr_blob_t& blob);
+struct RUNTIME_STATIC_API ReadTrait<skr::IBlob*> {
+    static int Read(skr_binary_reader_t* reader, skr::IBlob*& blob);
+};
+
+template <>
+struct RUNTIME_STATIC_API ReadTrait<skr::BlobId> {
+    static int Read(skr_binary_reader_t* reader, BlobId& blob);
 };
 
 template <>
