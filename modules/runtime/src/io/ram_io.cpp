@@ -37,7 +37,7 @@ void RAMIOBuffer::free_buffer() SKR_NOEXCEPT
 }
 SmartPool<RAMIOBuffer, IRAMIOBuffer> buffer_pool;
 
-IOResultId RAMIOBatch::add_request(IORequest request, skr_io_future_t* future) SKR_NOEXCEPT
+IOResultId RAMIOBatch::add_request(IORequestId request, skr_io_future_t* future) SKR_NOEXCEPT
 {
     auto buffer = buffer_pool.allocate();
     auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
@@ -86,33 +86,25 @@ void IRAMService::destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT
     SkrDelete(service);
 }
 
-IOBatch RAMServiceImpl::open_batch(uint64_t n) SKR_NOEXCEPT
+IOBatchId RAMServiceImpl::open_batch(uint64_t n) SKR_NOEXCEPT
 {
     uint64_t seq = (uint64_t)skr_atomicu64_add_relaxed(&batch_sequence, 1);
     return skr::static_pointer_cast<IIOBatch>(batch_pool.allocate(seq, n));
 }
 
-IORequest RAMServiceImpl::open_request() SKR_NOEXCEPT
+IORequestId RAMServiceImpl::open_request() SKR_NOEXCEPT
 {
     uint64_t seq = (uint64_t)skr_atomicu64_add_relaxed(&request_sequence, 1);
     return skr::static_pointer_cast<IIORequest>(request_pool.allocate(seq));
 }
 
-void RAMServiceImpl::request(IOBatch _batch) SKR_NOEXCEPT
+void RAMServiceImpl::request(IOBatchId batch) SKR_NOEXCEPT
 {
-    auto&& batch = skr::static_pointer_cast<RAMIOBatch>(_batch);
-    const auto pri = batch->get_priority();
-    runner.batch_queues[pri].enqueue(batch);
-    for (auto request : batch->get_requests())
-    {
-        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-        rq->setStatus(SKR_IO_STAGE_ENQUEUED);
-        skr_atomicu32_add_relaxed(&runner.queued_batch_counts[pri], 1);
-    }
+    runner.enqueueBatch(batch);
     runner.tryAwake();
 }
 
-RAMIOBufferId RAMServiceImpl::request(IORequest request, skr_io_future_t* future, SkrAsyncServicePriority priority) SKR_NOEXCEPT
+RAMIOBufferId RAMServiceImpl::request(IORequestId request, skr_io_future_t* future, SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     auto batch = open_batch(1);
     auto result = batch->add_request(request, future);
@@ -142,7 +134,7 @@ void RAMServiceImpl::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 
     if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
     {
-        while (skr_atomicu64_load_relaxed(&runner.queued_batch_counts[priority]) > 0)
+        while (runner.getQueuedBatchCount(priority) > 0)
         {
             // ...
         }
@@ -200,6 +192,7 @@ skr::AsyncResult RAMServiceImpl::Runner::serve() SKR_NOEXCEPT
 {
     SKR_DEFER( { recycle(); } );
 
+    resolve();
     fetch();
     
     uint64_t cnt = 0;
@@ -214,7 +207,6 @@ skr::AsyncResult RAMServiceImpl::Runner::serve() SKR_NOEXCEPT
 
         setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
         sort();
-        resolve();
         dispatch();
         uncompress();
         finish();
@@ -273,7 +265,7 @@ void RAMServiceImpl::Runner::recycle() SKR_NOEXCEPT
         
         auto& arr = ongoing_batches[i];
         auto it = eastl::remove_if(arr.begin(), arr.end(), 
-            [](const IOBatch& batch) {
+            [](const IOBatchId& batch) {
                 for (auto request : batch->get_requests()) 
                 {
                     auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
@@ -300,13 +292,9 @@ uint64_t RAMServiceImpl::Runner::fetch() SKR_NOEXCEPT
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
         BatchPtr batch = nullptr;
-        auto& queue = batch_queues[i];
-        while (queue.try_dequeue(batch))
+        while (resolved_batch_queues[i].try_dequeue(batch))
         {
             service->reader->fetch((SkrAsyncServicePriority)i, batch);
-
-            ongoing_batches[i].emplace_back(batch);
-            skr_atomicu64_add_relaxed(&ongoing_batch_counts[i], 1);
             skr_atomicu64_add_relaxed(&queued_batch_counts[i], -1);
         }
     }
@@ -335,25 +323,69 @@ void RAMServiceImpl::Runner::dispatch() SKR_NOEXCEPT
 
 void RAMServiceImpl::Runner::resolve() SKR_NOEXCEPT
 {
+    SKR_ASSERT(service->reader);
     ZoneScopedN("resolve");
-    
+
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        service->reader->resolve((SkrAsyncServicePriority)i);
+        BatchPtr batch = nullptr;
+        while (batch_queues[i].try_dequeue(batch))
+        {
+            ongoing_batches[i].emplace_back(batch);
+            skr_atomicu64_add_relaxed(&ongoing_batch_counts[i], 1);
+
+            for (auto&& request : batch->get_requests())
+            {
+                auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
+                if (try_cancel((SkrAsyncServicePriority)i, rq))
+                {
+                    // ...
+                }
+                else
+                {
+                    rq->setStatus(SKR_IO_STAGE_RESOLVING);
+                    for (auto&& resolver : resolver_chain->chain)
+                        resolver->resolve(request);
+                }
+            }
+            resolved_batch_queues[i].enqueue(batch);
+        }
     }
 }
 
-uint64_t IRAMService::add_file_resolver() SKR_NOEXCEPT
-{ 
-    return add_resolver(u8"file", [](IORequest request) 
+struct IOBatchResolverBase : public IIOBatchResolver
+{
+public:
+    uint32_t add_refcount() 
     { 
+        return 1 + skr_atomicu32_add_relaxed(&rc, 1); 
+    }
+    uint32_t release() 
+    {
+        skr_atomicu32_add_relaxed(&rc, -1);
+        return skr_atomicu32_load_acquire(&rc);
+    }
+private:
+    SAtomicU32 rc = 0;
+};
+
+struct OpenVFSFileResolver : public IOBatchResolverBase
+{
+    virtual void resolve(IORequestId request) SKR_NOEXCEPT
+    {
         request->open_file(); 
-    }); 
+    }
+};
+
+IOBatchResolverId IRAMService::create_file_resolver() SKR_NOEXCEPT
+{ 
+    return SObjectPtr<OpenVFSFileResolver>::Create();
 }
 
-uint64_t IRAMService::add_iobuffer_resolver() SKR_NOEXCEPT
+struct AllocateIOBufferResolver : public IOBatchResolverBase
 {
-    const auto id = add_resolver(u8"iobuffer", [](IORequest request) {
+    virtual void resolve(IORequestId request) SKR_NOEXCEPT
+    {
         ZoneScopedNC("IOBufferAllocate", tracy::Color::BlueViolet);
         auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
         auto&& buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
@@ -378,14 +410,19 @@ uint64_t IRAMService::add_iobuffer_resolver() SKR_NOEXCEPT
             }
             buf->allocate_buffer(buf->size);
         }
-    });
-    // this->arrange_after(id, "file");
-    return id;
+    }
+};
+
+IOBatchResolverId IRAMService::create_iobuffer_resolver() SKR_NOEXCEPT
+{
+    return SObjectPtr<AllocateIOBufferResolver>::Create();
 }
 
-uint64_t IRAMService::add_chunking_resolver(uint64_t chunk_size) SKR_NOEXCEPT
+struct ChunkingVFSReadResolver : public IOBatchResolverBase
 {
-    const auto id = add_resolver(u8"chunking", [chunk_size](IORequest request) {
+    ChunkingVFSReadResolver(uint64_t chunk_size) : chunk_size(chunk_size) {}
+    virtual void resolve(IORequestId request) SKR_NOEXCEPT
+    {
         ZoneScopedN("IORequestChunking");
         auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
         uint64_t total = 0;
@@ -410,16 +447,22 @@ uint64_t IRAMService::add_chunking_resolver(uint64_t chunk_size) SKR_NOEXCEPT
                 rq->get_blocks().back().size += acc_size;
             }
         }
-    });
-    // this->arrange_after(id, "iobuffer");
-    return id;
+    }
+    const uint64_t chunk_size = 256 * 1024;
+};
+IOBatchResolverId IRAMService::create_chunking_resolver(uint64_t chunk_size) SKR_NOEXCEPT
+{
+    return SObjectPtr<ChunkingVFSReadResolver>::Create(chunk_size);
 }
 
 void IRAMService::add_default_resolvers() SKR_NOEXCEPT
 {
-    add_file_resolver();
-    add_iobuffer_resolver();
-    // add_chunking_resolver(); // need to chunk, sort and order-by-offset on HDD platforms
+    auto openfile = create_file_resolver();
+    auto alloc_buffer = create_iobuffer_resolver();
+    auto chain = IIOBatchResolverChain::Create()
+        ->then(openfile)
+        ->then(alloc_buffer);
+    set_resolvers(chain);
 }
 
 void RAMServiceImpl::Runner::uncompress() SKR_NOEXCEPT

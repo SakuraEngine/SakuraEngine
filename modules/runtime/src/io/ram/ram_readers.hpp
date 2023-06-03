@@ -33,12 +33,11 @@ struct VFSRAMReader final : public RAMReaderBase
     VFSRAMReader(RAMServiceImpl* service) SKR_NOEXCEPT : RAMReaderBase(service) {}
     ~VFSRAMReader() SKR_NOEXCEPT {}
 
-    void fetch(SkrAsyncServicePriority priority, IOBatch batch) SKR_NOEXCEPT;
+    void fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT;
     void sort(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
-    void resolve(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
-    IORequest poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    IORequestId poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
 
     IORequestArray ongoing_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     SAtomicU64 ongoing_requests_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
@@ -51,7 +50,6 @@ struct DStorageRAMReader final : public RAMReaderBase
 
     void fetch(SkrAsyncServicePriority priority, IOBatch batch) SKR_NOEXCEPT;
     void sort(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
-    void resolve(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     IORequest poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT;

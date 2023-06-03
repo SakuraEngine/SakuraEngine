@@ -1,6 +1,7 @@
 #pragma once
 #include "async/service_thread.hpp"
 #include "async/condlock.hpp"
+#include "io_request.hpp"
 #include "io_batch.hpp"
 
 namespace skr {
@@ -55,6 +56,28 @@ struct RunnerBase : public skr::ServiceThread
             condlock.signal();
         } 
     }
+
+    void enqueueBatch(const IOBatchId& batch)
+    {
+        const auto pri = batch->get_priority();
+        batch_queues[pri].enqueue(batch);
+        for (auto&& request : batch->get_requests())
+        {
+            auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
+            rq->setStatus(SKR_IO_STAGE_ENQUEUED);
+            skr_atomicu32_add_relaxed(&queued_batch_counts[pri], 1);
+        }
+    }
+
+    uint64_t getQueuedBatchCount(SkrAsyncServicePriority priority) const SKR_NOEXCEPT
+    {
+        return skr_atomicu64_load_relaxed(&queued_batch_counts[priority]);
+    }
+
+protected:
+    IOBatchQueue batch_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    IOBatchQueue resolved_batch_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    SAtomicU64 queued_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
 private:
     SAtomicU32 sleep_time = 16u;

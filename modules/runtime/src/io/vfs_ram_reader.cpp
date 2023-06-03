@@ -3,7 +3,7 @@
 namespace skr {
 namespace io {
 
-void VFSRAMReader::fetch(SkrAsyncServicePriority priority, IOBatch batch) SKR_NOEXCEPT
+void VFSRAMReader::fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
 {
     auto& arr = ongoing_requests[priority];
     for (auto& request : batch->get_requests())
@@ -22,34 +22,6 @@ void VFSRAMReader::sort(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     [](const RQPtr& a, const RQPtr& b) {
         return a->sub_priority > b->sub_priority;
     });
-}
-
-void VFSRAMReader::resolve(SkrAsyncServicePriority priority) SKR_NOEXCEPT
-{
-    SKR_ASSERT(service);
-    auto& arr = ongoing_requests[priority];
-    for (auto& rq : arr)
-    {
-        if (service->runner.try_cancel(priority, rq))
-        {
-            // cancel...
-        }
-        else if (rq->getStatus() == SKR_IO_STAGE_ENQUEUED)
-        {
-            // SKR_LOG_DEBUG("dispatch open request: %s", rq->path.c_str());
-            rq->setStatus(SKR_IO_STAGE_RESOLVING);
-            
-            // TODO: resolver ordering
-
-            // TODO: resolver jobs
-            skr_rw_mutex_acuire_r(&service->runner.resolvers_mutex);
-            for (auto&& [id, resolver] : service->runner.resolvers)
-            {
-                resolver(rq);
-            }
-            skr_rw_mutex_release(&service->runner.resolvers_mutex);
-        }
-    }
 }
 
 void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
@@ -102,7 +74,7 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     }
 }
 
-IORequest VFSRAMReader::poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT
+IORequestId VFSRAMReader::poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     auto& arr = ongoing_requests[priority];
     for (auto& rq : arr)
@@ -121,7 +93,7 @@ void VFSRAMReader::recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     auto& arr = ongoing_requests[priority];
     auto it = eastl::remove_if(arr.begin(), arr.end(), 
-        [](const IORequest& request) {
+        [](const IORequestId& request) {
             auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
             const auto d = skr_atomicu32_load_relaxed(&rq->done);
             return (d != 0);

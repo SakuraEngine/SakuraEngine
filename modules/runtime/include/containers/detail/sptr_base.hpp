@@ -154,7 +154,10 @@ skr::SPtrBase<T, EmbedRC>::SPtrBase(T* lp, Deleter deleter) SKR_NOEXCEPT
         }
         else
         {
-            p->add_refcount();
+            if (auto object = sobject_cast<SInterface*>(p))
+            {
+                object->add_refcount();
+            }
         }
     }
 }
@@ -172,7 +175,10 @@ skr::SPtrBase<T, EmbedRC>::SPtrBase(const this_type& lp) SKR_NOEXCEPT
     }
     else
     {
-        p->add_refcount();
+        if (auto object = sobject_cast<SInterface*>(p))
+        {
+            object->add_refcount();
+        }
     }
 }
 
