@@ -40,7 +40,7 @@ public:
     virtual skr::string GetAssetPath() const = 0;
 
     virtual skr::filesystem::path AddFileDependency(const skr::filesystem::path& path) = 0;
-    virtual skr::filesystem::path AddFileDependencyAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path, skr_async_ram_destination_t& destination) = 0;
+    virtual skr::filesystem::path AddFileDependencyAndLoad(skr_io_ram_service_t* ioService, const skr::filesystem::path& path, skr::BlobId& destination) = 0;
 
     virtual void AddRuntimeDependency(skr_guid_t resource) = 0;
     virtual void AddSoftRuntimeDependency(skr_guid_t resource) = 0;

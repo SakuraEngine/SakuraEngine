@@ -62,15 +62,15 @@ inline static skr::string Util_CompressedTypeString(ECGPUFormat format)
     }
 }
 
-inline static eastl::vector<uint8_t> Util_DXTCompressWithImageCoder(skr_image_coder_id image_coder, ECGPUFormat compressed_format)
+inline static eastl::vector<uint8_t> Util_DXTCompressWithImageCoder(skr::ImageDecoderId decoder, ECGPUFormat compressed_format)
 {
     // fetch RGBA data
-    uint8_t* rgba_data = nullptr;
-    uint64_t rgba_size = 0;
-    const auto bit_depth = image_coder->get_bit_depth();
-    const auto encoded_format = image_coder->get_color_format();
+    const auto bit_depth = decoder->get_bit_depth();
+    const auto encoded_format = decoder->get_color_format();
     const auto raw_format = (encoded_format == IMAGE_CODER_COLOR_FORMAT_BGRA) ? IMAGE_CODER_COLOR_FORMAT_RGBA : encoded_format;
-    bool sucess = skr_image_coder_get_raw_data_view(image_coder, &rgba_data, &rgba_size, raw_format, bit_depth);
+    bool sucess = decoder->decode(raw_format, bit_depth);
+    uint8_t* rgba_data = rgba_data = decoder->get_data();
+    uint64_t rgba_size = decoder->get_size(); (void)rgba_size;
     if (!sucess)
     {
         SKR_UNREACHABLE_CODE()
@@ -78,8 +78,8 @@ inline static eastl::vector<uint8_t> Util_DXTCompressWithImageCoder(skr_image_co
     }
     // compress
     rgba_surface rgba_surface = {};
-    const auto image_width = skr_image_coder_get_width(image_coder);
-    const auto image_height = skr_image_coder_get_height(image_coder);
+    const auto image_width = decoder->get_width();
+    const auto image_height = decoder->get_height();
     switch (raw_format)
     {
     case IMAGE_CODER_COLOR_FORMAT_RGBA:
@@ -89,6 +89,8 @@ inline static eastl::vector<uint8_t> Util_DXTCompressWithImageCoder(skr_image_co
     case IMAGE_CODER_COLOR_FORMAT_Gray:
     case IMAGE_CODER_COLOR_FORMAT_GrayF:
         rgba_surface.stride = image_width;
+        break;
+    default:
         break;
     }
     rgba_surface.ptr = rgba_data;

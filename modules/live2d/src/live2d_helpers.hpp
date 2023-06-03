@@ -29,7 +29,7 @@ struct L2DRequestCallbackData
     skr_live2d_ram_io_request_t* live2dRequest;   
     skr::string u8HomePath;
 
-    skr_async_ram_destination_t settingRawData;
+    skr::BlobId settingBlob;
 
     uint32_t expression_count;
     uint32_t motion_count;
@@ -93,14 +93,14 @@ namespace Live2D { namespace Cubism { namespace Framework {
         skr::string modelPath;
         skr::string pyhsicsPath;
         skr::string usrDataPath;
-        skr_io_future_t poseRequest;
-        skr_async_ram_destination_t poseDestination;
-        skr_io_future_t modelRequest;
-        skr_async_ram_destination_t modelDestination;
-        skr_io_future_t pyhsicsRequest;
-        skr_async_ram_destination_t physicsDestination;
-        skr_io_future_t usrDataRequest;
-        skr_async_ram_destination_t usrDataDestination;
+        skr_io_future_t poseFuture;
+        skr::BlobId poseBlob;
+        skr_io_future_t modelFuture;
+        skr::BlobId modelBlob;
+        skr_io_future_t pyhsicsFuture;
+        skr::BlobId physicsBlob;
+        skr_io_future_t usrDataFuture;
+        skr::BlobId usrDataBlob;
         L2DRequestCallbackData* cbData;
     };
     class csmExpressionMap : public csmMap<csmString, ACubismMotion*>
@@ -109,8 +109,8 @@ namespace Live2D { namespace Cubism { namespace Framework {
         ~csmExpressionMap() SKR_NOEXCEPT;
         void request(skr_io_ram_service_t* ioService, L2DRequestCallbackData* data) SKR_NOEXCEPT;
 
-        eastl::vector<skr_io_future_t> expressionRequests;
-        eastl::vector<skr_async_ram_destination_t> expressionDestinations;
+        eastl::vector<skr_io_future_t> expressionFutures;
+        eastl::vector<skr::BlobId> expressionBlobs;
         eastl::vector_map<skr_io_future_t*, skr::string> expressionNames;
         eastl::vector_map<skr_io_future_t*, skr::string> expressionPaths;
         L2DRequestCallbackData* cbData;
@@ -122,8 +122,8 @@ namespace Live2D { namespace Cubism { namespace Framework {
         void request(skr_io_ram_service_t* ioService, L2DRequestCallbackData* data) SKR_NOEXCEPT;
         void on_finished() SKR_NOEXCEPT final;
 
-        eastl::vector<skr_io_future_t> motionRequests;
-        eastl::vector<skr_async_ram_destination_t> motionDestinations;
+        eastl::vector<skr_io_future_t> motionFutures;
+        eastl::vector<skr::BlobId> motionBlobs;
         eastl::vector_map<skr_io_future_t*, eastl::pair<skr::string, uint32_t>> motionEntries;
         eastl::vector_map<skr_io_future_t*, skr::string> motionPaths;
         L2DRequestCallbackData* cbData;

@@ -1,3 +1,4 @@
+#include "containers/sptr.hpp"
 #include "resource/resource_handle.h"
 #include "serde/binary/writer.h"
 #include "serde/binary/blob.h"
@@ -5,7 +6,6 @@
 #include "math/rtm/scalarf.h"
 #include "math/rtm/scalard.h"
 #include "misc/log.h"
-
 
 namespace skr::binary
 {
@@ -358,12 +358,20 @@ int WriteTrait<const skr_resource_handle_t&>::Write(skr_binary_writer_t* writer,
     return WriteTrait<const skr_guid_t&>::Write(writer, handle.get_serialized());
 }
 
-int WriteTrait<const skr_blob_t&>::Write(skr_binary_writer_t* writer, const skr_blob_t& blob)
+int WriteTrait<const skr::IBlob*&>::Write(skr_binary_writer_t* writer, const skr::IBlob*& blob)
 {
-    int ret = WriteTrait<const uint32_t&>::Write(writer, (uint32_t)blob.size);
+    int ret = WriteTrait<const uint64_t&>::Write(writer, (uint64_t)blob->get_size());
     if (ret != 0)
         return ret;
-    return WriteBytes(writer, blob.bytes, (uint32_t)blob.size);
+    return WriteBytes(writer, blob->get_data(), (uint64_t)blob->get_size());
+}
+
+int WriteTrait<const skr::BlobId&>::Write(skr_binary_writer_t* writer, const skr::BlobId& blob)
+{
+    int ret = WriteTrait<const uint64_t&>::Write(writer, (uint64_t)blob->get_size());
+    if (ret != 0)
+        return ret;
+    return WriteBytes(writer, blob->get_data(), (uint64_t)blob->get_size());
 }
 
 int WriteTrait<const skr_blob_arena_t&>::Write(skr_binary_writer_t* writer, const skr_blob_arena_t& blob)

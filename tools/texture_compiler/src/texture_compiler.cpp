@@ -12,41 +12,48 @@ namespace asset
 {
 struct skr_uncompressed_render_texture_t
 {
-    skr_uncompressed_render_texture_t(skr_image_coder_id coder)
-        : image_coder(coder)
+    skr_uncompressed_render_texture_t(skr::ImageDecoderId decoder, skr_io_ram_service_t* ioService, skr::BlobId blob)
+        : decoder(decoder), ioService(ioService), blob(blob)
     {
-
+        decoder->initialize(blob->get_data(), blob->get_size());
     }
+
     ~skr_uncompressed_render_texture_t()
     {
-        if (image_coder) skr_image_coder_free_image(image_coder);
+        if (decoder)
+        {
+            blob.reset();
+            decoder.reset();
+        }
     }
-    skr_image_coder_id image_coder = nullptr;
+
+    skr::ImageDecoderId decoder = nullptr;
+    skr_io_ram_service_t* ioService = nullptr;
+    skr::BlobId blob = nullptr;
 };
 
 void* STextureImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context)
 {
-    skr_async_ram_destination_t ioDestination = {};
+    skr::BlobId blob = nullptr;
     {
         ZoneScopedN("LoadFileDependencies");
-        context->AddFileDependencyAndLoad(ioService, assetPath.c_str(), ioDestination);
+        context->AddFileDependencyAndLoad(ioService, assetPath.c_str(), blob);
     }
 
     {
         ZoneScopedN("TryDecodeTexture");
         // try decode texture
-        const auto uncompressed_data = ioDestination.bytes;
-        const auto uncompressed_size = ioDestination.size;
+        const auto uncompressed_data = blob->get_data();
+        const auto uncompressed_size = blob->get_size();
         EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)uncompressed_data, uncompressed_size);
-        if (auto coder = skr_image_coder_create_image(format))
+        if (auto decoder = skr::IImageDecoder::Create(format))
         {
-            bool success = skr_image_coder_move_encoded(coder, uncompressed_data, uncompressed_size);
-            if (success)
-            {
-                return SkrNew<skr_uncompressed_render_texture_t>(coder);
-            }
+            return SkrNew<skr_uncompressed_render_texture_t>(decoder, ioService, blob);
         }
-        sakura_free(ioDestination.bytes);
+        else
+        {
+            SKR_DEFER({blob.reset();});
+        }
     }
 
     return nullptr;
@@ -64,8 +71,8 @@ bool STextureCooker::Cook(SCookContext *ctx)
     SKR_DEFER({ ctx->Destroy(uncompressed); });
     
     // try decode texture & calculate compressed format
-    const auto image_coder = uncompressed->image_coder;
-    const auto format = skr_image_coder_get_color_format(image_coder);
+    const auto decoder = uncompressed->decoder;
+    const auto format = decoder->get_color_format();
     ECGPUFormat compressed_format = CGPU_FORMAT_UNDEFINED;
     switch (format) // TODO: format shuffle
     {
@@ -82,7 +89,7 @@ bool STextureCooker::Cook(SCookContext *ctx)
     skr::vector<uint8_t> compressed_data;
     {
         ZoneScopedN("DXTCompress");
-        compressed_data = Util_DXTCompressWithImageCoder(image_coder, compressed_format);
+        compressed_data = Util_DXTCompressWithImageCoder(decoder, compressed_format);
     }
     // TODO: ASTC
     // write texture resource
@@ -90,8 +97,8 @@ bool STextureCooker::Cook(SCookContext *ctx)
     resource.format = compressed_format;
     resource.mips_count = 1;
     resource.data_size = compressed_data.size();
-    resource.height = skr_image_coder_get_height(image_coder);
-    resource.width = skr_image_coder_get_width(image_coder);
+    resource.height = decoder->get_height();
+    resource.width = decoder->get_width();
     resource.depth = 1;
     {
         ZoneScopedN("SaveToCtx");

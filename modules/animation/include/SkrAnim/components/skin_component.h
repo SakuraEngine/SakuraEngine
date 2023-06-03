@@ -43,7 +43,7 @@ skr_render_anim_comp_t
     spush_attr("no-rtti": true, "transient": true)
     eastl::vector<ozz::math::Float4x4> joint_matrices;
     eastl::vector<skr_skin_primitive_t> primitives;
-    eastl::vector<skr_blob_t> buffers;
+    eastl::vector<skr::IBlob*> buffers;
     eastl::vector<CGPUBufferId> vbs;
     eastl::vector<skr_vertex_buffer_view_t> views;
 };

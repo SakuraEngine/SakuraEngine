@@ -22,32 +22,27 @@ namespace
 	}
 }
 
-JPEGImageCoder::JPEGImageCoder() SKR_NOEXCEPT
-    : BaseImageCoder()
-    , Compressor(tjInitCompress())
+JPEGImageDecoder::JPEGImageDecoder() SKR_NOEXCEPT
+    : BaseImageDecoder()
     , Decompressor(tjInitDecompress())
 {
 
 }
 
-JPEGImageCoder::~JPEGImageCoder() SKR_NOEXCEPT
+JPEGImageDecoder::~JPEGImageDecoder() SKR_NOEXCEPT
 {
-    if (Compressor)
-	{
-		tjDestroy(Compressor);
-	}
 	if (Decompressor)
 	{
 		tjDestroy(Decompressor);
 	}
 }
 
-EImageCoderFormat JPEGImageCoder::get_image_format() const SKR_NOEXCEPT
+EImageCoderFormat JPEGImageDecoder::get_image_format() const SKR_NOEXCEPT
 {
     return EImageCoderFormat::IMAGE_CODER_FORMAT_JPEG;
 }
 
-bool JPEGImageCoder::load_jpeg_header() SKR_NOEXCEPT
+bool JPEGImageDecoder::load_jpeg_header() SKR_NOEXCEPT
 {
 	int ImageWidth = 0;
 	int ImageHeight = 0;
@@ -61,43 +56,25 @@ bool JPEGImageCoder::load_jpeg_header() SKR_NOEXCEPT
 	}
 
 	// set after call to base SetCompressed as it will reset members
-	width = ImageWidth;
-	height = ImageHeight;
-	bit_depth = 8; // We don't support 16 bit jpegs
-	color_format = (SubSampling == TJSAMP_GRAY) ? IMAGE_CODER_COLOR_FORMAT_Gray : IMAGE_CODER_COLOR_FORMAT_RGBA;
+	const auto color_format = (SubSampling == TJSAMP_GRAY) ? IMAGE_CODER_COLOR_FORMAT_Gray : IMAGE_CODER_COLOR_FORMAT_RGBA;
+	const auto bit_depth = 8; // We don't support 16 bit jpegs
+	setRawProps(ImageWidth, ImageHeight, color_format, bit_depth);
 
     return true;
 }
 
-bool JPEGImageCoder::set_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT
+bool JPEGImageDecoder::initialize(const uint8_t* data, uint64_t size) SKR_NOEXCEPT
 {
-    if (BaseImageCoder::set_encoded(data, size))
+    if (BaseImageDecoder::initialize(data, size))
     {
         return load_jpeg_header();
     }
     return false;
 }
 
-bool JPEGImageCoder::move_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT
+bool JPEGImageDecoder::decode(EImageCoderColorFormat in_format, uint32_t in_bit_depth) SKR_NOEXCEPT
 {
-    if (BaseImageCoder::move_encoded(data, size))
-    {
-        return load_jpeg_header();
-    }
-    return false;
-}
-
-bool JPEGImageCoder::view_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT
-{
-    if (BaseImageCoder::view_encoded(data, size))
-    {
-        return load_jpeg_header();
-    }
-    return false;
-}
-
-bool JPEGImageCoder::decode(EImageCoderColorFormat in_format, uint32_t in_bit_depth) SKR_NOEXCEPT
-{
+	SKR_ASSERT(initialized);
     int pixel_channels = 0;
 	if ((in_format == IMAGE_CODER_COLOR_FORMAT_RGBA || in_format == IMAGE_CODER_COLOR_FORMAT_BGRA) && in_bit_depth == 8)
 	{
@@ -112,41 +89,60 @@ bool JPEGImageCoder::decode(EImageCoderColorFormat in_format, uint32_t in_bit_de
 		SKR_ASSERT(false);
 	}
 
-    const uint64_t bytes_per_pixel = pixel_channels * in_bit_depth / 8;
-    const auto decoded_size = width * height * pixel_channels;
-    auto newMemory = (uint8_t*)sakura_malloc(decoded_size);
+    decoded_size = get_width() * get_height() * pixel_channels;
+    decoded_data = JPEGImageDecoder::Allocate(decoded_size, get_alignment());
 	const int PixelFormat = ConvertTJpegPixelFormat(in_format);
 	const int Flags = TJFLAG_NOREALLOC | TJFLAG_FASTDCT;
 
 	int result = 0;
 	if (result = tjDecompress2(Decompressor, 
         encoded_view.data(), (unsigned long)encoded_view.size(), 
-        newMemory, width, 0, height, PixelFormat, Flags); result == 0)
+        decoded_data, get_width(), 0, get_height(), PixelFormat, Flags); result == 0)
 	{
-		return move_raw(newMemory, decoded_size, width, height, in_format, in_bit_depth, (uint32_t)bytes_per_pixel);
+		return true;
 	}
 
 	SKR_LOG_FATAL("TurboJPEG Error %d: %s", result, tjGetErrorStr2(Decompressor));
-    sakura_free(newMemory);
+    sakura_free(decoded_data);
+	decoded_data = nullptr;
     return false;
 }
 
-bool JPEGImageCoder::encode() SKR_NOEXCEPT
+JPEGImageEncoder::JPEGImageEncoder() SKR_NOEXCEPT
+    : BaseImageEncoder()
+    , Compressor(tjInitCompress())
 {
+
+}
+
+JPEGImageEncoder::~JPEGImageEncoder() SKR_NOEXCEPT
+{
+
+}
+
+EImageCoderFormat JPEGImageEncoder::get_image_format() const SKR_NOEXCEPT
+{
+    return EImageCoderFormat::IMAGE_CODER_FORMAT_JPEG;
+}
+
+bool JPEGImageEncoder::encode() SKR_NOEXCEPT
+{
+	SKR_ASSERT(initialized);
     const int32_t Quality = 5;
 
+	const auto color_format = get_color_format();
     const int PixelFormat = ConvertTJpegPixelFormat(color_format);
     const int Subsampling = TJSAMP_420;
     const int Flags = TJFLAG_NOREALLOC | TJFLAG_FASTDCT;
 
-    unsigned long OutBufferSize = tjBufSize(width, height, Subsampling);
-    auto newMemory = (uint8_t*)sakura_malloc(OutBufferSize);
+    unsigned long OutBufferSize = tjBufSize(get_width(), get_height(), Subsampling);
+    encoded_data = JPEGImageEncoder::Allocate(OutBufferSize, get_alignment());
+	encoded_size = OutBufferSize;
 
-    const bool bSuccess = tjCompress2(Compressor, raw_view.data(), 
-        width, raw_bytes_per_row, height, PixelFormat, &newMemory, 
+    const bool bSuccess = tjCompress2(Compressor, decoded_view.data(), 
+        get_width(), bytes_per_row, get_height(), PixelFormat, &encoded_data, 
         &OutBufferSize, Subsampling, Quality, Flags) == 0;
 
-    move_encoded(newMemory, OutBufferSize);
     return bSuccess;
 }
 }

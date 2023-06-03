@@ -125,8 +125,8 @@ struct TaskBase
 {
     SkrAsyncServicePriority priority;
     float sub_priority;
-    skr_async_callback_t callbacks[SKR_ASYNC_IO_STATUS_COUNT];
-    void* callback_datas[SKR_ASYNC_IO_STATUS_COUNT];
+    skr_io_callback_t callbacks[SKR_IO_STAGE_COUNT];
+    void* callback_datas[SKR_IO_STAGE_COUNT];
     skr_io_future_t* request;
 
     bool operator<(const TaskBase& rhs) const
@@ -136,15 +136,15 @@ struct TaskBase
         return sub_priority > rhs.sub_priority;
     }
 
-    SkrAsyncIOStatus getTaskStatus() const
+    ESkrIOStage getTaskStatus() const
     {
-        return (SkrAsyncIOStatus)skr_atomicu32_load_acquire(&request->status);
+        return (ESkrIOStage)skr_atomicu32_load_acquire(&request->status);
     }
     
-    void setTaskStatus(SkrAsyncIOStatus value)
+    void setTaskStatus(ESkrIOStage value)
     {
         if (callbacks[value] != nullptr)
-            callbacks[value](request, callback_datas[value]);
+            callbacks[value](request, nullptr, callback_datas[value]);
         skr_atomicu32_store_relaxed(&request->status, value);
     }
 };
@@ -202,7 +202,7 @@ struct TaskContainer
                         bool cancelled = skr_atomicu32_load_relaxed(&t.request->request_cancel);
                         cancelled &= t.request->is_cancelled() || t.request->is_enqueued();
                         if (cancelled)
-                            t.setTaskStatus(SKR_ASYNC_IO_STATUS_CANCELLED);
+                            t.setTaskStatus(SKR_IO_STAGE_CANCELLED);
                         return cancelled;
                     }), tasks.end());
         }
@@ -258,7 +258,7 @@ struct TaskContainer
             eastl::remove_if(tasks.begin(), tasks.end(),
             [&](Task& t) {
                 const auto status = t.getTaskStatus();
-                return status == SKR_ASYNC_IO_STATUS_READ_OK || status == SKR_ASYNC_IO_STATUS_CANCELLED;
+                return status == SKR_IO_STAGE_LOADED || status == SKR_IO_STAGE_CANCELLED;
             }),
         tasks.end());
     }
@@ -281,7 +281,7 @@ struct TaskContainer
                     return;
                 }
             }
-            back.setTaskStatus(SKR_ASYNC_IO_STATUS_ENQUEUED);
+            back.setTaskStatus(SKR_IO_STAGE_ENQUEUED);
             tasks.emplace_back(back);
             skr_atomicu32_store_release(&back.request->request_cancel, 0);
             TracyCZoneEnd(requestZone);
@@ -290,7 +290,7 @@ struct TaskContainer
         {
             TracyCZone(requestZone, 1);
             TracyCZoneName(requestZone, "ioRequest(Lockless)", strlen("ioRequest(Lockless)"));
-            back.setTaskStatus(SKR_ASYNC_IO_STATUS_ENQUEUED);
+            back.setTaskStatus(SKR_IO_STAGE_ENQUEUED);
             {
                 ZoneScopedN("EnqueueLockless");
                 task_requests.enqueue(back);
@@ -313,7 +313,7 @@ struct TaskContainer
                 const bool stateCancellable = request->is_enqueued() || request->is_cancelled();
                 cancelled = (t.request == request || request == nullptr) && stateCancellable;
                 if (cancelled)
-                    t.setTaskStatus(SKR_ASYNC_IO_STATUS_CANCELLED);
+                    t.setTaskStatus(SKR_IO_STAGE_CANCELLED);
                 return cancelled;
             }),
             tasks.end());

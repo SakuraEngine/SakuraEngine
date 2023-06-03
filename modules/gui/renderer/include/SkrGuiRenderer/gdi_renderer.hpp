@@ -168,8 +168,8 @@ struct SKR_GUI_RENDERER_API GDIImage_RenderGraph : public IGDIImage
     SAtomicU32 state = static_cast<uint32_t>(EGDIResourceState::Requsted);
     EGDIImageSource source = EGDIImageSource::Count;
 
-    skr_blob_t pixel_data;
-    skr_async_ram_destination_t raw_data = {};
+    skr::BlobId pixel_data = nullptr;
+    skr::BlobId raw_data = nullptr;
 
     GDIImageAsyncData_RenderGraph async_data;
     struct GDIRenderer_RenderGraph* renderer = nullptr;
@@ -239,6 +239,10 @@ struct SKR_GUI_RENDERER_API GDIRenderer_RenderGraph : public IGDIRenderer
     }
     bool support_mipmap_generation() const SKR_NOEXCEPT final;
     gdi_img_tex_future_launcher_t* get_future_launcher() const SKR_NOEXCEPT { return future_launcher.get(); }
+
+
+    skr_io_ram_service_t* get_ram_service() const SKR_NOEXCEPT { return ram_service; }
+    skr_io_vram_service_t* get_vram_service() const SKR_NOEXCEPT { return vram_service; }
 
 protected:
     void updatePendingTextures(skr::render_graph::RenderGraph* graph) SKR_NOEXCEPT;

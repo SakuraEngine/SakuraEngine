@@ -2,12 +2,15 @@
 #include "SkrAnimTool/animation_asset.h"
 #include "SkrToolCore/project/project.hpp"
 #include "gltf2ozz.h"
+#include "SkrAnim/ozz/base/memory/allocator.h"
 
 namespace skd::asset
 {
 void SAnimGltfImporter::Destroy(void* data)
 {
-    SkrDelete((RawAnimation*)data);
+    RawAnimation* raw = (RawAnimation*)data;
+    raw->~RawAnimation();
+    ozz::memory::default_allocator()->Deallocate(data, alignof(RawAnimation));
 }
 
 void* SAnimGltfImporter::Import(skr_io_ram_service_t*, SCookContext* context)

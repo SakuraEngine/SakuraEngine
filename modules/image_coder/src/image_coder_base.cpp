@@ -4,255 +4,88 @@
 
 namespace skr
 {
-void BaseImageCoder::freeRaw() SKR_NOEXCEPT
+
+BaseImageEncoder::~BaseImageEncoder() SKR_NOEXCEPT
 {
-    if (raw_data.bytes)
+    if (encoded_data)
     {
-        sakura_free(raw_data.bytes);
-        raw_data.bytes = nullptr;
-        raw_data.size = 0;
+        BaseImageEncoder::Deallocate(encoded_data, get_alignment());
     }
 }
 
-void BaseImageCoder::freeEncoded() SKR_NOEXCEPT
+void BaseImageEncoder::setRawProps(uint32_t width, uint32_t height, 
+    EImageCoderColorFormat format, uint32_t bit_depth) SKR_NOEXCEPT
 {
-    if (encoded_data.bytes)
+    props.width = width;
+    props.height = height;
+    props.color_format = format;
+    props.bit_depth = bit_depth;
+}
+
+bool BaseImageEncoder::initialize(const uint8_t* _data, uint64_t _size, uint32_t _width, uint32_t _height, 
+    EImageCoderColorFormat _format, uint32_t _bit_depth) SKR_NOEXCEPT
+{
+    if (_data == nullptr || _size == 0 || _width == 0 || _height == 0 || _format == IMAGE_CODER_COLOR_FORMAT_INVALID || _bit_depth == 0)
     {
-        sakura_free(encoded_data.bytes);
-        encoded_data.bytes = nullptr;
-        encoded_data.size = 0;
-    }
-}
-
-void BaseImageCoder::setRawProps(uint32_t _width, uint32_t _height, EImageCoderColorFormat _format, uint32_t _bit_depth, uint32_t _bytes_per_raw) SKR_NOEXCEPT
-{
-    this->width = _width;
-    this->height = _height;
-    this->color_format = _format;
-    this->raw_bit_depth = _bit_depth;
-    this->raw_bytes_per_row = _bytes_per_raw;
-    this->bit_depth = _bit_depth;
-}
-
-BaseImageCoder::~BaseImageCoder() SKR_NOEXCEPT
-{
-    freeEncoded();
-    freeRaw();
-}
-
-bool BaseImageCoder::set_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT
-{
-    freeEncoded();
-
-    encoded_data.bytes = (uint8_t*)sakura_malloc(size);
-    encoded_data.size = size;
-    memcpy(encoded_data.bytes, data, size);
-
-    encoded_view = { (uint8_t*)data, size };
-    if (!encoding)
-    {
-        newest_version++;
-        encoded_data_version = newest_version;
-    }
-    return true;
-}
-
-bool BaseImageCoder::move_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT
-{
-    freeEncoded();
-
-    encoded_data.bytes = (uint8_t*)data;
-    encoded_data.size = size;
-
-    encoded_view = { (uint8_t*)data, size };
-    if (!encoding)
-    {
-        newest_version++;
-        encoded_data_version = newest_version;
-    }
-    return true;
-}
-
-bool BaseImageCoder::view_encoded(const uint8_t* data, uint64_t size) SKR_NOEXCEPT
-{
-    freeEncoded();
-
-    encoded_view = { (uint8_t*)data, size };
-    if (!encoding)
-    {
-        newest_version++;
-        encoded_data_version = newest_version;
-    }
-    return true;
-}
-
-bool BaseImageCoder::set_raw(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height,
-EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT
-{
-    freeRaw();
-
-    raw_data.bytes = (uint8_t*)sakura_malloc(size);
-    raw_data.size = size;
-    memcpy(raw_data.bytes, data, size);
-
-    raw_view = { (uint8_t*)data, size };
-    setRawProps(width, height, format, bit_depth, bytes_per_raw);
-    if (!decoding) 
-    {
-        newest_version++;
-        raw_data_version = newest_version;
-    }
-    return true;
-}
-
-bool BaseImageCoder::move_raw(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height,
-EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT
-{
-    freeRaw();
-
-    raw_data.bytes = (uint8_t*)data;
-    raw_data.size = size;
-
-    raw_view = { (uint8_t*)data, size };
-    setRawProps(width, height, format, bit_depth, bytes_per_raw);
-    if (!decoding) 
-    {
-        newest_version++;
-        raw_data_version = newest_version;
-    }
-    return true;
-}
-
-bool BaseImageCoder::view_raw(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height,
-EImageCoderColorFormat format, uint32_t bit_depth, uint32_t bytes_per_raw) SKR_NOEXCEPT
-{
-    freeRaw();
-
-    raw_view = { (uint8_t*)data, size };
-    setRawProps(width, height, format, bit_depth, bytes_per_raw);
-    if (!decoding) 
-    {
-        newest_version++;
-        raw_data_version = newest_version;
-    }
-    return true;
-}
-
-uint64_t BaseImageCoder::get_raw_size() const SKR_NOEXCEPT
-{
-    return raw_view.size();
-}
-
-uint64_t BaseImageCoder::get_encoded_size() const SKR_NOEXCEPT
-{
-    return encoded_view.size();
-}
-
-bool BaseImageCoder::lazy_encode() const SKR_NOEXCEPT
-{
-    if ((encoded_data_version < newest_version) && !encoding)
-    {
-        auto _this = const_cast<BaseImageCoder*>(this);
-        encoding = true;
-        if (_this->encode())
-        {
-            newest_version++;
-            encoded_data_version = newest_version;
-
-            encoding = false;
-            return true;
-        }
+        SKR_LOG_ERROR("BaseImageEncoder::initialize() - Invalid parameters.");
         return false;
     }
-    return true;
+    decoded_view = { _data, _size };
+    setRawProps(_width, _height, _format, _bit_depth);
+    initialized = true;
+    return initialized;
 }
 
-bool BaseImageCoder::lazy_decode(EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT
+BaseImageDecoder::~BaseImageDecoder() SKR_NOEXCEPT
 {
-    if ((raw_data_version < newest_version) && !decoding)
+    if (decoded_data)
     {
-        auto _this = const_cast<BaseImageCoder*>(this);
-        decoding = true;
-        if (_this->decode(format, bit_depth))
-        {
-            newest_version++;
-            raw_data_version = newest_version;
-
-            decoding = false;
-            return true;
-        }
-        return false;
+        BaseImageDecoder::Deallocate(decoded_data, get_alignment());
     }
-    return true;
 }
 
-bool BaseImageCoder::get_raw_data(uint8_t* pData, uint64_t* pSize, EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT
+void BaseImageDecoder::setRawProps(uint32_t width, uint32_t height, 
+    EImageCoderColorFormat format, uint32_t bit_depth) SKR_NOEXCEPT
 {
-    lazy_decode(format, bit_depth);
-    SKR_ASSERT(*pSize >= get_raw_size());
-    memcpy(pData, raw_view.data(), raw_view.size());
-    *pSize = raw_view.size();
-    return true;
+    props.width = width;
+    props.height = height;
+    props.color_format = format;
+    props.bit_depth = bit_depth;
 }
 
-skr::span<const uint8_t> BaseImageCoder::get_raw_data_view(EImageCoderColorFormat format, uint32_t bit_depth) const SKR_NOEXCEPT
+bool BaseImageDecoder::initialize(const uint8_t* data, uint64_t size) SKR_NOEXCEPT
 {
-    lazy_decode(format, bit_depth);
-    return raw_view;
+    encoded_view = { data, size };
+    initialized = true;
+    return initialized;
 }
 
-void BaseImageCoder::steal_raw_data(struct skr_blob_t* pBlob, EImageCoderColorFormat format, uint32_t bit_depth) SKR_NOEXCEPT
+const char* kImageEncoderMemoryName = "ImageEncoder";
+uint8_t* BaseImageEncoder::Allocate(uint64_t size, uint64_t alignment) SKR_NOEXCEPT
 {
-    lazy_decode(format, bit_depth);
-    pBlob->bytes = raw_data.bytes;
-    pBlob->size = raw_data.size;
-    raw_data.bytes = nullptr;
-    raw_data.size = 0;
-    raw_view = {};
+    return (uint8_t*)sakura_malloc_alignedN(size, alignment, kImageEncoderMemoryName);
 }
 
-skr::span<const uint8_t> BaseImageCoder::get_encoded_data_view() const SKR_NOEXCEPT
+void BaseImageEncoder::Deallocate(uint8_t* ptr, uint64_t alignment) SKR_NOEXCEPT
 {
-    lazy_encode();
-    return encoded_view;
+    if (ptr)
+    {
+        sakura_free_alignedN(ptr, alignment, kImageEncoderMemoryName);
+    }
 }
 
-bool BaseImageCoder::get_encoded_data(uint8_t* pData, uint64_t* pSize) const SKR_NOEXCEPT
+const char* kImageDecoderMemoryName = "ImageDecoder";
+uint8_t* BaseImageDecoder::Allocate(uint64_t size, uint64_t alignment) SKR_NOEXCEPT
 {
-    lazy_encode();
-    SKR_ASSERT(*pSize >= get_encoded_size());
-    memcpy(pData, encoded_view.data(), encoded_view.size());
-    *pSize = encoded_view.size();
-    return true;
+    return (uint8_t*)sakura_malloc_alignedN(size, alignment, kImageDecoderMemoryName);
 }
 
-void BaseImageCoder::steal_encoded_data(struct skr_blob_t* pBlob) SKR_NOEXCEPT
+void BaseImageDecoder::Deallocate(uint8_t* ptr, uint64_t alignment) SKR_NOEXCEPT
 {
-    lazy_encode();
-    pBlob->bytes = encoded_data.bytes;
-    pBlob->size = encoded_data.size;
-    encoded_data.bytes = nullptr;
-    encoded_data.size = 0;
-    encoded_view = {};
+    if (ptr)
+    {
+        sakura_free_alignedN(ptr, alignment, kImageDecoderMemoryName);
+    }
 }
 
-EImageCoderColorFormat BaseImageCoder::get_color_format() const SKR_NOEXCEPT
-{
-    return color_format;
-}
-
-uint32_t BaseImageCoder::get_width() const SKR_NOEXCEPT
-{
-    return width;
-}
-
-uint32_t BaseImageCoder::get_height() const SKR_NOEXCEPT
-{
-    return height;
-}
-
-uint32_t BaseImageCoder::get_bit_depth() const SKR_NOEXCEPT
-{
-    return bit_depth;
-}
 } // namespace skr

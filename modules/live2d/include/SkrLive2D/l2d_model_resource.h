@@ -67,11 +67,11 @@ typedef struct skr_live2d_ram_io_request_t {
 #ifdef __cplusplus
     bool is_ready() const SKR_NOEXCEPT
     {
-        return get_status() == SKR_ASYNC_IO_STATUS_READ_OK;
+        return get_status() == SKR_IO_STAGE_COMPLETED;
     }
-    SkrAsyncIOStatus get_status() const SKR_NOEXCEPT
+    ESkrIOStage get_status() const SKR_NOEXCEPT
     {
-        return (SkrAsyncIOStatus)skr_atomicu32_load_acquire(&liv2d_status);
+        return (ESkrIOStage)skr_atomicu32_load_acquire(&liv2d_status);
     }
 #endif
 } skr_live2d_ram_io_request_t;

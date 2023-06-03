@@ -2,12 +2,15 @@
 #include "SkrAnimTool/skeleton_asset.h"
 #include "SkrToolCore/project/project.hpp"
 #include "gltf2ozz.h"
+#include "SkrAnim/ozz/base/memory/allocator.h"
 
 namespace skd::asset
 {
 void SSkelGltfImporter::Destroy(void* data)
 {
-    SkrDelete((RawSkeleton*)data);
+    RawSkeleton* raw = (RawSkeleton*)data;
+    raw->~RawSkeleton();
+    ozz::memory::default_allocator()->Deallocate(data, alignof(RawSkeleton));
 }
 
 void* SSkelGltfImporter::Import(skr_io_ram_service_t*, SCookContext* context)

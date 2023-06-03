@@ -19,7 +19,39 @@
                 }
             ],
             "console": "externalTerminal"
-        }
+        },
+        {
+            "name": "ResourceCompiler-Release",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/windows/x64/release/SkrResourceCompiler.exe",
+            "args": ["-w", "${workspaceFolder}"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/windows/x64/release",
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "${workspaceFolder}\\SDKs\\python;${env:VCPKG_ROOT}\\installed\\x64-windows\\release\\bin;${env:PATH}"
+                }
+            ],
+            "console": "externalTerminal"
+        },
+        {
+            "name": "ResourceCompiler-ReleaseDbg",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/windows/x64/releasedbg/SkrResourceCompiler.exe",
+            "args": ["-w", "${workspaceFolder}"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/windows/x64/releasedbg",
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "${workspaceFolder}\\SDKs\\python;${env:VCPKG_ROOT}\\installed\\x64-windows\\releasedbg\\bin;${env:PATH}"
+                }
+            ],
+            "console": "externalTerminal"
+        },
 
     ]
 }
