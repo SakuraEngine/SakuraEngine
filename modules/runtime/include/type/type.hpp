@@ -403,7 +403,7 @@ struct RUNTIME_API RecordType : skr_type_t {
 // enum T
 struct RUNTIME_API EnumType : skr_type_t {
     const skr_type_t* underlyingType;
-    const skr::string_view name;
+    const skr::string_view name = {};
     skr_guid_t guid;
     void (*FromString)(void* self, skr::string_view str);
     skr::string (*ToString)(const void* self);
