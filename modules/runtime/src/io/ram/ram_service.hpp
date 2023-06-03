@@ -1,6 +1,6 @@
 #pragma once
-#include "../io_runnner.hpp"
-#include "../io_resolver.hpp"
+#include "../common/io_runnner.hpp"
+#include "../common/io_resolver.hpp"
 #include "ram_readers.hpp"
 #include "ram_batch.hpp"
 #include "ram_buffer.hpp"

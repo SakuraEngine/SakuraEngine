@@ -265,6 +265,8 @@ struct RUNTIME_API IIOService
 
     virtual ~IIOService() SKR_NOEXCEPT = default;
     IIOService() SKR_NOEXCEPT = default;
+    
+    IOBatchResolverId create_file_resolver() SKR_NOEXCEPT;
 };
 
 struct RUNTIME_API IRAMIOBuffer : public skr::IBlob
@@ -282,7 +284,6 @@ struct RUNTIME_API IRAMService : public IIOService
     
     virtual void request(IOBatchId request) SKR_NOEXCEPT = 0;
 
-    IOBatchResolverId create_file_resolver() SKR_NOEXCEPT;
     IOBatchResolverId create_iobuffer_resolver() SKR_NOEXCEPT;
     IOBatchResolverId create_chunking_resolver(uint64_t chunk_size = 256 * 1024) SKR_NOEXCEPT;
     void add_default_resolvers() SKR_NOEXCEPT;
