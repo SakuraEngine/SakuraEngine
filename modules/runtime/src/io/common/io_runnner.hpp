@@ -71,7 +71,7 @@ struct RunnerBase : public SleepyService
     {
         for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
         {
-            skr_atomicu64_store_relaxed(&executing_batch_counts[i], 0);
+            skr_atomicu64_store_relaxed(&dispatching_batch_counts[i], 0);
             skr_atomicu64_store_relaxed(&queued_batch_counts[i], 0);
         }
     }
@@ -96,7 +96,7 @@ struct RunnerBase : public SleepyService
 
     uint64_t getExecutingBatchCount(SkrAsyncServicePriority priority) const SKR_NOEXCEPT
     {
-        return skr_atomicu64_load_relaxed(&executing_batch_counts[priority]);
+        return skr_atomicu64_load_relaxed(&dispatching_batch_counts[priority]);
     }
 
     void poll_finish_callbacks()
@@ -133,8 +133,8 @@ private:
     IOBatchQueue resolved_batch_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     SAtomicU64 queued_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
-    IOBatchArray executing_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    SAtomicU64 executing_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    IOBatchArray dispatching_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    SAtomicU64 dispatching_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
     IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 };
