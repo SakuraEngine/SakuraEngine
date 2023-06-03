@@ -40,7 +40,7 @@ SmartPool<RAMIOBuffer, IRAMIOBuffer> buffer_pool;
 IOResultId RAMIOBatch::add_request(IORequest request, skr_io_future_t* future) SKR_NOEXCEPT
 {
     auto buffer = buffer_pool.allocate();
-    auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+    auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
 
     rq->future = future;
     rq->destination = buffer;
@@ -100,12 +100,12 @@ IORequest RAMServiceImpl::open_request() SKR_NOEXCEPT
 
 void RAMServiceImpl::request(IOBatch _batch) SKR_NOEXCEPT
 {
-    auto batch = skr::static_pointer_cast<RAMIOBatch>(_batch);
+    auto&& batch = skr::static_pointer_cast<RAMIOBatch>(_batch);
     const auto pri = batch->get_priority();
     runner.batch_queues[pri].enqueue(batch);
     for (auto request : batch->get_requests())
     {
-        auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
         rq->setStatus(SKR_IO_STAGE_ENQUEUED);
         skr_atomicu32_add_relaxed(&runner.queued_batch_counts[pri], 1);
     }
@@ -120,7 +120,7 @@ RAMIOBufferId RAMServiceImpl::request(IORequest request, skr_io_future_t* future
 {
     auto batch = open_batch(1);
     auto result = batch->add_request(request, future);
-    auto buffer = skr::static_pointer_cast<RAMIOBuffer>(result);
+    auto&& buffer = skr::static_pointer_cast<RAMIOBuffer>(result);
     batch->set_priority(priority);
     this->request(batch);
     return buffer;
@@ -271,15 +271,17 @@ bool RAMServiceImpl::Runner::try_cancel(SkrAsyncServicePriority priority, RQPtr 
 void RAMServiceImpl::Runner::recycle() SKR_NOEXCEPT
 {
     ZoneScopedN("recycle");
-
+    
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
+        service->reader->recycle((SkrAsyncServicePriority)i);
+        
         auto& arr = ongoing_batches[i];
         auto it = eastl::remove_if(arr.begin(), arr.end(), 
             [](const IOBatch& batch) {
                 for (auto request : batch->get_requests()) 
                 {
-                    auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+                    auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
                     const auto done = skr_atomicu32_load_relaxed(&rq->done);
                     if (done != SKR_ASYNC_IO_DONE_STATUS_DONE)
                     {
@@ -358,8 +360,8 @@ uint64_t RAMService::add_iobuffer_resolver() SKR_NOEXCEPT
 {
     const auto id = add_resolver(u8"iobuffer", [](IORequest request) {
         ZoneScopedNC("IOBufferAllocate", tracy::Color::BlueViolet);
-        auto rq = skr::static_pointer_cast<RAMIORequest>(request);
-        auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
+        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
+        auto&& buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
         // deal with 0 block size
         for (auto& block : rq->blocks)
         {
@@ -390,7 +392,7 @@ uint64_t RAMService::add_chunking_resolver(uint64_t chunk_size) SKR_NOEXCEPT
 {
     const auto id = add_resolver(u8"chunking", [chunk_size](IORequest request) {
         ZoneScopedN("IORequestChunking");
-        auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
         uint64_t total = 0;
         for (auto& block : rq->get_blocks())
             total += block.size;
@@ -438,7 +440,7 @@ void RAMServiceImpl::Runner::finish() SKR_NOEXCEPT
     {
         while (auto request = service->reader->poll_finish((SkrAsyncServicePriority)i))
         {
-            auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+            auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
             rq->setStatus(SKR_IO_STAGE_COMPLETED);
             bool need_finish = false;
             for (auto f : rq->finish_callbacks)
@@ -449,7 +451,6 @@ void RAMServiceImpl::Runner::finish() SKR_NOEXCEPT
             if (need_finish)
             {
                 finish_queues[i].enqueue(rq);
-                skr_atomicu32_store_relaxed(&rq->done, SKR_ASYNC_IO_DONE_STATUS_PENDING);
             }
             else
             {

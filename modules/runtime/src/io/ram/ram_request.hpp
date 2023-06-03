@@ -19,8 +19,9 @@ namespace io {
 
 typedef enum SkrAsyncIODoneStatus
 {
-    SKR_ASYNC_IO_DONE_STATUS_PENDING = 1,
-    SKR_ASYNC_IO_DONE_STATUS_DONE = 2
+    SKR_ASYNC_IO_DONE_STATUS_NEED = 1,
+    SKR_ASYNC_IO_DONE_STATUS_PENDING = 2,
+    SKR_ASYNC_IO_DONE_STATUS_DONE = 3
 } SkrAsyncIODoneStatus;
 
 constexpr const char* callback_names[SKR_IO_STAGE_COUNT] = {
