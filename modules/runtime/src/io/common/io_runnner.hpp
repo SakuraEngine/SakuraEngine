@@ -3,14 +3,15 @@
 #include "async/condlock.hpp"
 #include "io_request.hpp"
 #include "io_batch.hpp"
+#include "io_resolver.hpp"
 
 namespace skr {
 namespace io {
 
 struct RunnerBase : public skr::ServiceThread
 {
-    RunnerBase(const ServiceThreadDesc& desc) SKR_NOEXCEPT
-        : skr::ServiceThread(desc)
+    RunnerBase(const ServiceThreadDesc& desc, SObjectPtr<IIOReader> reader) SKR_NOEXCEPT
+        : skr::ServiceThread(desc), reader(reader)
     {
         condlock.initialize(skr::format(u8"{}-CondLock", desc.name).u8_str());
     }
@@ -73,6 +74,9 @@ struct RunnerBase : public skr::ServiceThread
     {
         return skr_atomicu64_load_relaxed(&queued_batch_counts[priority]);
     }
+
+    SObjectPtr<IIOReader> reader = nullptr;
+    SObjectPtr<IOBatchResolverChain> resolver_chain = nullptr;
 
 protected:
     IOBatchQueue batch_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];

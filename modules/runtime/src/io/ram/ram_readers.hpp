@@ -5,6 +5,7 @@
 
 namespace skr {
 namespace io {
+struct RAMService;
 
 struct RAMReaderBase : public IIOReader
 {

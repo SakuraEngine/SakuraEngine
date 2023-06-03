@@ -42,8 +42,8 @@ struct RAMService final : public IRAMService
 
     struct Runner final : public RunnerBase
     {
-        Runner(RAMService* service) SKR_NOEXCEPT 
-            : RunnerBase({ service->name.u8_str(), SKR_THREAD_ABOVE_NORMAL }),
+        Runner(RAMService* service, SObjectPtr<IIOReader> reader) SKR_NOEXCEPT 
+            : RunnerBase({ service->name.u8_str(), SKR_THREAD_ABOVE_NORMAL }, reader),
             service(service)
         {
             for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
@@ -73,14 +73,12 @@ struct RAMService final : public IRAMService
         void finish() SKR_NOEXCEPT;
 
         RAMService* service = nullptr;
-        SObjectPtr<IOBatchResolverChain> resolver_chain = nullptr;
 
         IOBatchArray ongoing_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
         SAtomicU64 ongoing_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
         IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     };
     const skr::string name;
-    IOReaderId reader = nullptr;
     Runner runner;
 protected:
     static uint32_t global_idx;
@@ -88,7 +86,6 @@ protected:
     SAtomicU64 request_sequence = 0;
     SAtomicU64 batch_sequence = 0;
     SmartPool<RAMIORequest, IIORequest> request_pool;
-    SmartPool<RAMIOBatch, IIOBatch> batch_pool;
 };
 
 } // namespace io
