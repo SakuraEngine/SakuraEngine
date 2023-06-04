@@ -96,7 +96,7 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
         skr_init_mutex(&cook_system.assetMutex);
 
         auto jqDesc = make_zeroed<skr::JobQueueDesc>();
-        jqDesc.thread_count = 1;
+        jqDesc.thread_count = 2;
         jqDesc.priority = SKR_THREAD_ABOVE_NORMAL;
         jqDesc.name = u8"Tool-IOJobQueue";
         io_job_queue = SkrNew<skr::JobQueue>(jqDesc);
