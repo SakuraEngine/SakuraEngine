@@ -131,7 +131,6 @@ private:
     IOBatchQueue resolved_batch_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     SAtomicU64 queued_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
-    IOBatchArray dispatching_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     SAtomicU64 dispatching_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
     IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];

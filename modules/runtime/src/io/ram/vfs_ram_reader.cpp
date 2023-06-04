@@ -83,6 +83,7 @@ void VFSRAMReader::dispatchFunction(IOBatchId batch) SKR_NOEXCEPT
             }
         }
     }
+    finish_batches[priority].enqueue(batch);
 }
 
 void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
@@ -104,7 +105,7 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     }
 }
 
-IORequestId VFSRAMReader::poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT
+IORequestId VFSRAMReader::poll_finish_request(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     IORequestId request;
     if (finish_requests[priority].try_dequeue(request))
@@ -112,6 +113,16 @@ IORequestId VFSRAMReader::poll_finish(SkrAsyncServicePriority priority) SKR_NOEX
         auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
         rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_PENDING);
         return rq;
+    }
+    return nullptr;
+}
+
+IOBatchId VFSRAMReader::poll_finish_batch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
+{
+    IOBatchId batch;
+    if (fetched_batches[priority].try_dequeue(batch))
+    {
+        return batch;
     }
     return nullptr;
 }
