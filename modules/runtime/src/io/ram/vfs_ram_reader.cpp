@@ -14,6 +14,11 @@ void VFSRAMReader::fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_
     }
 }
 
+uint64_t VFSRAMReader::get_prefer_batch_size() const SKR_NOEXCEPT
+{
+    return 1024 * 1024 * 4;
+}
+
 void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     auto& arr = dispatching_requests[priority];

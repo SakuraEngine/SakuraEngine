@@ -34,6 +34,7 @@ struct VFSRAMReader final : public RAMReaderBase
     VFSRAMReader(RAMService* service) SKR_NOEXCEPT : RAMReaderBase(service) {}
     ~VFSRAMReader() SKR_NOEXCEPT {}
 
+    uint64_t get_prefer_batch_size() const SKR_NOEXCEPT;
     void fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT;
     void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT;

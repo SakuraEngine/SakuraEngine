@@ -205,6 +205,7 @@ using IOBatchResolverChainId = SObjectPtr<IIOBatchResolverChain>;
 
 struct RUNTIME_API IIOReader : public skr::SInterface
 {
+    virtual uint64_t get_prefer_batch_size() const SKR_NOEXCEPT = 0;
     virtual void fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT = 0;
     virtual void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
     virtual void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
