@@ -35,23 +35,6 @@ void RunnerBase::recycle() SKR_NOEXCEPT
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
         reader->recycle((SkrAsyncServicePriority)i);
-        auto& arr = dispatching_batches[i];
-        auto it = eastl::remove_if(arr.begin(), arr.end(), 
-            [](const IOBatchId& batch) {
-                for (auto request : batch->get_requests()) 
-                {
-                    auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
-                    if (rq->getFinishStep() != SKR_ASYNC_IO_FINISH_STEP_DONE)
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            });
-        const int64_t X = (int64_t)arr.size();
-        arr.erase(it, arr.end());
-        const int64_t Y = (int64_t)arr.size();
-        skr_atomicu64_add_relaxed(&dispatching_batch_counts[i], Y - X);
     }
 }
 
@@ -103,7 +86,6 @@ uint64_t RunnerBase::fetch() SKR_NOEXCEPT
         {
             reader->fetch((SkrAsyncServicePriority)i, batch);
 
-            dispatching_batches[i].emplace_back(batch);
             skr_atomicu64_add_relaxed(&dispatching_batch_counts[i], 1);
             skr_atomicu64_add_relaxed(&queued_batch_counts[i], -1);
             N++;
@@ -132,7 +114,7 @@ void RunnerBase::finish() SKR_NOEXCEPT
 
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        while (auto request = reader->poll_finish((SkrAsyncServicePriority)i))
+        while (auto request = reader->poll_finish_request((SkrAsyncServicePriority)i))
         {
             auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
             rq->setStatus(SKR_IO_STAGE_COMPLETED);
@@ -144,6 +126,10 @@ void RunnerBase::finish() SKR_NOEXCEPT
             {
                 rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
             }
+        }
+        while (auto batch = reader->poll_finish_batch((SkrAsyncServicePriority)i))
+        {
+            skr_atomicu64_add_relaxed(&dispatching_batch_counts[i], -1);
         }
     }
 }

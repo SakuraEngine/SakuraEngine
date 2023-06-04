@@ -208,7 +208,8 @@ struct RUNTIME_API IIOReader : public skr::SInterface
     virtual void fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT = 0;
     virtual void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
     virtual void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
-    virtual IORequestId poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
+    virtual IORequestId poll_finish_request(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
+    virtual IOBatchId poll_finish_batch(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
 
     virtual ~IIOReader() SKR_NOEXCEPT;
     IIOReader() SKR_NOEXCEPT = default;

@@ -39,14 +39,17 @@ struct VFSRAMReader final : public RAMReaderBase
 
     uint64_t get_prefer_batch_size() const SKR_NOEXCEPT;
     void fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT;
-    void dispatchFunction(IOBatchId batch) SKR_NOEXCEPT;
     void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
-    IORequestId poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    IORequestId poll_finish_request(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    IOBatchId poll_finish_batch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+
+    void dispatchFunction(IOBatchId batch) SKR_NOEXCEPT;
 
     skr::JobQueue* job_queue = nullptr;
     IOBatchQueue fetched_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IORequestQueue finish_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    IOBatchQueue finish_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     skr::vector<skr::IFuture<bool>*> futures[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 };
 
@@ -67,7 +70,8 @@ struct DStorageRAMReader final : public RAMReaderBase
     void sort(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
-    IORequestId poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    IORequestId poll_finish_request(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    IOBatchId poll_finish_batch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
 };
 */
 } // namespace io
