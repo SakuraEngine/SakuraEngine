@@ -376,6 +376,7 @@ TEST_F(APITest, query_overload)
     
     auto query1 = dualQ_from_literal(storage, "[inout]test'");
     auto query2 = dualQ_from_literal(storage, "[inout]test',[in]test2");
+    auto query3 = dualQ_from_literal(storage, "[inout]test',[in]test3");
 
     {
         dual_chunk_view_t view;
