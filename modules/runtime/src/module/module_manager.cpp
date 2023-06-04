@@ -427,7 +427,6 @@ void ModuleManagerImpl::__internal_MakeModuleGraph(const skr::string& entry, boo
 {
     if (nodeMap.find(entry) != nodeMap.end())
         return;
-    nullptr;
     bool hotfix = hotfixModules.contains(entry);
     IModule* _module = shared ?
             spawnDynamicModule(entry, hotfix) :
@@ -511,7 +510,7 @@ bool ModuleManagerImpl::__internal_UpdateModuleGraph(const skr::string& entry)
     auto old_lib = std::move(this_module->sharedLib);
     modulesMap[entry].reset();
     subsystemCreateMap[entry].clear();
-    old_lib->unload();
+    //old_lib->unload();
     IModule* (*func)() = nullptr;
     if(!loadHotfixModule(*sharedLib, entry))
     {

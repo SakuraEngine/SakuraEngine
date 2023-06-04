@@ -161,7 +161,7 @@ skr_type_t::~skr_type_t() SKR_NOEXCEPT
     fun(SKR_TYPE_CATEGORY_HANDLE, skr_resource_handle_t) \
     fun(SKR_TYPE_CATEGORY_STR, skr::string)              
 
-size_t skr_type_t::Size() const
+uint64_t skr_type_t::Size() const
 {
     using namespace skr::type;
 #define TRIVAL_TYPE_IMPL(name, type) \
@@ -202,7 +202,7 @@ size_t skr_type_t::Size() const
     return 0;
 }
 
-size_t skr_type_t::Align() const
+uint64_t skr_type_t::Align() const
 {
     using namespace skr::type;
 #define TRIVAL_TYPE_IMPL(name, type) \
@@ -378,7 +378,7 @@ bool skr_type_t::Same(const skr_type_t* srcType) const
             auto sptr = ((VariantType*)srcType);
             if (ptr->types.size() != sptr->types.size())
                 return false;
-            for (size_t i = 0; i < ptr->types.size(); i++)
+            for (uint64_t i = 0; i < ptr->types.size(); i++)
                 if (!ptr->types[i]->Same(sptr->types[i]))
                     return false;
             return true;
@@ -392,7 +392,7 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
 {
     using namespace skr::type;
     auto stype = srcType->type;
-    skr::span<size_t> acceptIndices;
+    skr::span<uint64_t> acceptIndices;
     if (Same(srcType))
         return true;
     if (srcType->type == SKR_TYPE_CATEGORY_REF)
@@ -408,12 +408,12 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
         case SKR_TYPE_CATEGORY_BOOL: {
             if (format)
             {
-                static size_t accept[] = { SKR_TYPE_CATEGORY_BOOL, SKR_TYPE_CATEGORY_I32, SKR_TYPE_CATEGORY_I64, SKR_TYPE_CATEGORY_U32, SKR_TYPE_CATEGORY_U64, SKR_TYPE_CATEGORY_F32, SKR_TYPE_CATEGORY_F64, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV, SKR_TYPE_CATEGORY_REF };
+                static uint64_t accept[] = { SKR_TYPE_CATEGORY_BOOL, SKR_TYPE_CATEGORY_I32, SKR_TYPE_CATEGORY_I64, SKR_TYPE_CATEGORY_U32, SKR_TYPE_CATEGORY_U64, SKR_TYPE_CATEGORY_F32, SKR_TYPE_CATEGORY_F64, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV, SKR_TYPE_CATEGORY_REF };
                 acceptIndices = accept;
             }
             else
             {
-                static size_t accept[] = { SKR_TYPE_CATEGORY_BOOL, SKR_TYPE_CATEGORY_I32, SKR_TYPE_CATEGORY_I64, SKR_TYPE_CATEGORY_U32, SKR_TYPE_CATEGORY_U64, SKR_TYPE_CATEGORY_F32, SKR_TYPE_CATEGORY_F64, SKR_TYPE_CATEGORY_REF };
+                static uint64_t accept[] = { SKR_TYPE_CATEGORY_BOOL, SKR_TYPE_CATEGORY_I32, SKR_TYPE_CATEGORY_I64, SKR_TYPE_CATEGORY_U32, SKR_TYPE_CATEGORY_U64, SKR_TYPE_CATEGORY_F32, SKR_TYPE_CATEGORY_F64, SKR_TYPE_CATEGORY_REF };
                 acceptIndices = accept;
             }
             break;
@@ -433,12 +433,12 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
         case SKR_TYPE_CATEGORY_F64:
             if (format)
             {
-                static size_t accept[] = { SKR_TYPE_CATEGORY_BOOL, SKR_TYPE_CATEGORY_I32, SKR_TYPE_CATEGORY_I64, SKR_TYPE_CATEGORY_U32, SKR_TYPE_CATEGORY_U64, SKR_TYPE_CATEGORY_F32, SKR_TYPE_CATEGORY_F64, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
+                static uint64_t accept[] = { SKR_TYPE_CATEGORY_BOOL, SKR_TYPE_CATEGORY_I32, SKR_TYPE_CATEGORY_I64, SKR_TYPE_CATEGORY_U32, SKR_TYPE_CATEGORY_U64, SKR_TYPE_CATEGORY_F32, SKR_TYPE_CATEGORY_F64, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
                 acceptIndices = accept;
             }
             else
             {
-                static size_t accept[] = { SKR_TYPE_CATEGORY_BOOL, SKR_TYPE_CATEGORY_I32, SKR_TYPE_CATEGORY_I64, SKR_TYPE_CATEGORY_U32, SKR_TYPE_CATEGORY_U64, SKR_TYPE_CATEGORY_F32, SKR_TYPE_CATEGORY_F64 };
+                static uint64_t accept[] = { SKR_TYPE_CATEGORY_BOOL, SKR_TYPE_CATEGORY_I32, SKR_TYPE_CATEGORY_I64, SKR_TYPE_CATEGORY_U32, SKR_TYPE_CATEGORY_U64, SKR_TYPE_CATEGORY_F32, SKR_TYPE_CATEGORY_F64 };
                 acceptIndices = accept;
             }
             break;
@@ -454,7 +454,7 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
         case SKR_TYPE_CATEGORY_GUID: {
             if (format)
             {
-                static size_t accept[] = { SKR_TYPE_CATEGORY_GUID, SKR_TYPE_CATEGORY_HANDLE, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
+                static uint64_t accept[] = { SKR_TYPE_CATEGORY_GUID, SKR_TYPE_CATEGORY_HANDLE, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
                 acceptIndices = accept;
                 break;
             }
@@ -464,7 +464,7 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
         case SKR_TYPE_CATEGORY_MD5: {
             if (format)
             {
-                static size_t accept[] = { SKR_TYPE_CATEGORY_MD5, SKR_TYPE_CATEGORY_HANDLE, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
+                static uint64_t accept[] = { SKR_TYPE_CATEGORY_MD5, SKR_TYPE_CATEGORY_HANDLE, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
                 acceptIndices = accept;
                 break;
             }
@@ -472,14 +472,14 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
                 return false;
         }
         case SKR_TYPE_CATEGORY_STRV: {
-            static size_t accept[] = { SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
+            static uint64_t accept[] = { SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
             acceptIndices = accept;
             break;
         }
         case SKR_TYPE_CATEGORY_STR: {
             if (format)
                 return true;
-            static size_t accept[] = { SKR_TYPE_CATEGORY_BOOL, SKR_TYPE_CATEGORY_I32, SKR_TYPE_CATEGORY_I64, SKR_TYPE_CATEGORY_U32, SKR_TYPE_CATEGORY_U64, SKR_TYPE_CATEGORY_F32, SKR_TYPE_CATEGORY_F64, SKR_TYPE_CATEGORY_ENUM, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
+            static uint64_t accept[] = { SKR_TYPE_CATEGORY_BOOL, SKR_TYPE_CATEGORY_I32, SKR_TYPE_CATEGORY_I64, SKR_TYPE_CATEGORY_U32, SKR_TYPE_CATEGORY_U64, SKR_TYPE_CATEGORY_F32, SKR_TYPE_CATEGORY_F64, SKR_TYPE_CATEGORY_ENUM, SKR_TYPE_CATEGORY_STR, SKR_TYPE_CATEGORY_STRV };
             acceptIndices = accept;
             break;
         }
@@ -520,7 +520,7 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
                 return false;
         }
         case SKR_TYPE_CATEGORY_ARRV: {
-            static size_t accept[] = { SKR_TYPE_CATEGORY_ARR, SKR_TYPE_CATEGORY_DYNARR, SKR_TYPE_CATEGORY_ARRV };
+            static uint64_t accept[] = { SKR_TYPE_CATEGORY_ARR, SKR_TYPE_CATEGORY_DYNARR, SKR_TYPE_CATEGORY_ARRV };
             acceptIndices = accept;
             break;
         }
@@ -1077,7 +1077,7 @@ skr::string skr_type_t::ToString(const void* dst, skr::type::ValueSerializePolic
     }
 }
 
-void skr_type_t::Construct(void* dst, skr::type::Value* args, size_t nargs) const
+void skr_type_t::Construct(void* dst, skr::type::Value* args, uint64_t nargs) const
 {
     SKR_ASSERT(args == nullptr && nargs == 0);
     using namespace skr::type;
@@ -1127,12 +1127,12 @@ void skr_type_t::Construct(void* dst, skr::type::Value* args, size_t nargs) cons
 }
 
 template <class T>
-size_t HashImpl(const void* dst, size_t base)
+uint64_t HashImpl(const void* dst, uint64_t base)
 {
     return skr::type::Hash(*(const T*)dst, base);
 }
 
-size_t skr_type_t::Hash(const void* dst, size_t base) const
+uint64_t skr_type_t::Hash(const void* dst, uint64_t base) const
 {
     using namespace skr::type;
 #define TRIVAL_TYPE_IMPL(name, type) \

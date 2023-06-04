@@ -61,7 +61,7 @@ struct SmartPool : public ISmartPool<I>
         if (auto ptr = static_cast<T*>(iptr))
         {
             ptr->~T();
-            memset(ptr, 0, sizeof(T));
+            memset((void*)ptr, 0, sizeof(T));
             skr_atomicu32_add_relaxed(&objcnt, -1);
             blocks.enqueue(ptr);
         }
