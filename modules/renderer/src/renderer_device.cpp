@@ -5,6 +5,7 @@
 #include <EASTL/vector_map.h>
 #include <EASTL/string.h>
 #include <EASTL/fixed_vector.h>
+#include "runtime_module.h"
 #ifdef _WIN32
 #include "platform/win/dstorage_windows.h"
 #endif
@@ -123,13 +124,6 @@ void RendererDevice::Free(RendererDevice* device) SKR_NOEXCEPT
 
 void RendererDeviceImpl::initialize(const Builder& builder)
 {
-    // TODO: move this to somewhere else
-    {
-        SkrDStorageConfig config = {};
-        skr_create_dstorage_instance(&config);
-    }
-    // END TODO
-
     create_api_objects(builder);
 
     auto vram_service_desc = make_zeroed<skr_vram_io_service_desc_t>();
@@ -137,7 +131,6 @@ void RendererDeviceImpl::initialize(const Builder& builder)
     vram_service_desc.name = u8"vram_service";
     vram_service_desc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
     vram_service_desc.sleep_time = 1000 / 60;
-    vram_service_desc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
     vram_service = skr_io_vram_service_t::create(&vram_service_desc);
 }
 
@@ -173,11 +166,6 @@ void RendererDeviceImpl::finalize()
     // free nsight tracker
     if (nsight_tracker) cgpu_free_nsight_tracker(nsight_tracker);
     cgpu_free_instance(instance);
-
-    if (auto inst = skr_get_dstorage_instnace())
-    {
-        skr_free_dstorage_instance(inst);
-    }
 }
 
 #define MAX_CPY_QUEUE_COUNT 2

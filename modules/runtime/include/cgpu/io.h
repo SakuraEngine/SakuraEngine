@@ -93,7 +93,6 @@ typedef struct skr_vram_io_service_desc_t {
     const char8_t* name;
     uint32_t sleep_time;
     bool lockless;
-    SkrAsyncServiceSortMethod sort_method;
     SkrAsyncServiceSleepMode sleep_mode;
 } skr_vram_io_service_desc_t;
 

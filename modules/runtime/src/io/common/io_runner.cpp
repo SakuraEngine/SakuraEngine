@@ -75,16 +75,6 @@ uint64_t RunnerBase::fetch() SKR_NOEXCEPT
     return 0;
 }
 
-void RunnerBase::sort() SKR_NOEXCEPT
-{
-    ZoneScopedN("sort");
-
-    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
-    {
-        reader->sort((SkrAsyncServicePriority)i);
-    }
-}
-
 void RunnerBase::dispatch() SKR_NOEXCEPT
 {
     ZoneScopedN("dispatch");

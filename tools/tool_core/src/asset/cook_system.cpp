@@ -99,7 +99,6 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
                 skr_ram_io_service_desc_t desc = {};
                 desc.sleep_time = 1;
                 desc.lockless = true;
-                desc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_NEVER;
                 desc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
                 ioService = skr_io_ram_service_t::create(&desc);        
                 ioService->add_default_resolvers();

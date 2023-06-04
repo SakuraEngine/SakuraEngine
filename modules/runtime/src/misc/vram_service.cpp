@@ -842,7 +842,6 @@ skr_io_vram_service_t* skr_io_vram_service_t::create(const skr_vram_io_service_d
 {
     auto service = SkrNew<skr::io::VRAMService>(desc->sleep_time, desc->lockless);
     service->threaded_service.create_(desc->sleep_mode);
-    service->threaded_service.sortMethod = desc->sort_method;
     service->threaded_service.sleepMode = desc->sleep_mode;
     service->threaded_service.threadItem.pData = service;
     service->threaded_service.threadItem.pFunc = &__ioThreadTask_VRAM;

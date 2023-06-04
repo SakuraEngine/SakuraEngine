@@ -54,15 +54,6 @@ typedef enum SkrAsyncServicePriority
     SKR_ASYNC_SERVICE_PRIORITY_MAX_ENUM = INT32_MAX
 } SkrAsyncServicePriority;
 
-typedef enum SkrAsyncServiceSortMethod
-{
-    SKR_ASYNC_SERVICE_SORT_METHOD_NEVER = 0,
-    SKR_ASYNC_SERVICE_SORT_METHOD_STABLE = 1,
-    SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL = 2,
-    SKR_ASYNC_SERVICE_SORT_METHOD_COUNT,
-    SKR_ASYNC_SERVICE_SORT_METHOD_MAX_ENUM = INT32_MAX
-} SkrAsyncServiceSortMethod;
-
 typedef enum ESkrIOStage
 {
     SKR_IO_STAGE_NONE,
@@ -131,7 +122,6 @@ typedef struct skr_ram_io_service_desc_t {
     const char8_t* name SKR_IF_CPP(= nullptr);
     uint32_t sleep_time SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_TIME_MAX);
     bool lockless SKR_IF_CPP(= true);
-    SkrAsyncServiceSortMethod sort_method SKR_IF_CPP(= SKR_ASYNC_SERVICE_SORT_METHOD_NEVER);
     SkrAsyncServiceSleepMode sleep_mode SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR);
     skr_job_queue_id resolve_job_queue SKR_IF_CPP(= nullptr);
     skr_job_queue_id io_job_queue SKR_IF_CPP(= nullptr);
@@ -216,7 +206,6 @@ using IOBatchResolverChainId = SObjectPtr<IIOBatchResolverChain>;
 struct RUNTIME_API IIOReader : public skr::SInterface
 {
     virtual void fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT = 0;
-    virtual void sort(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
     virtual void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
     virtual void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
     virtual IORequestId poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;

@@ -310,7 +310,6 @@ TEST_F(FSTest, sort)
         skr_ram_io_service_desc_t ioServiceDesc = {};
         ioServiceDesc.name = u8"Test";
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
-        ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
         ioService->add_default_resolvers();
         ioService->set_sleep_time(0); // make test faster

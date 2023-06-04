@@ -14,21 +14,18 @@ void VFSRAMReader::fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_
     }
 }
 
-void VFSRAMReader::sort(SkrAsyncServicePriority priority) SKR_NOEXCEPT
-{
-    auto& arr = dispatching_requests[priority];
-
-    std::sort(arr.begin(), arr.end(), 
-    [](const RQPtr& a, const RQPtr& b) {
-        return a->sub_priority > b->sub_priority;
-    });
-}
-
 void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
+    auto& arr = dispatching_requests[priority];
+    {
+        ZoneScopedN("sort");
+        std::sort(arr.begin(), arr.end(), 
+        [](const RQPtr& a, const RQPtr& b) {
+            return a->sub_priority > b->sub_priority;
+        });
+    }
     {
         ZoneScopedN("dispatch_read");
-        auto& arr = dispatching_requests[priority];
         for (auto&& request : arr)
         {
             auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
@@ -61,7 +58,6 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     {
         ZoneScopedN("dispatch_close");
 
-        auto& arr = dispatching_requests[priority];
         for (auto&& request : arr)
         {
             auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
@@ -70,7 +66,7 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
                 // SKR_LOG_DEBUG("dispatch close request: %s", rq->path.c_str());
                 skr_vfs_fclose(rq->file);
                 rq->file = nullptr;
-                rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_NEED);
+                finish_requests[priority].enqueue(rq);
             }
         }
     }
@@ -78,15 +74,12 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 
 IORequestId VFSRAMReader::poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    auto& arr = dispatching_requests[priority];
-    for (auto&& request : arr)
+    IORequestId request;
+    if (finish_requests[priority].try_dequeue(request))
     {
         auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-        if (rq->getFinishStep() == SKR_ASYNC_IO_FINISH_STEP_NEED)
-        {
-            rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_PENDING);
-            return rq;
-        }
+        rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_PENDING);
+        return rq;
     }
     return nullptr;
 }
