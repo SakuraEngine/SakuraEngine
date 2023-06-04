@@ -57,7 +57,7 @@ RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
     : name(desc->name ? skr::string(desc->name) : skr::format(u8"IRAMService-{}", global_idx++)), 
       runner(this, CreateReader(this, desc))
 {
-    // runner.setSleepTime(desc->sleep_time);
+    runner.setSleepTime(desc->sleep_time);
 }
 
 skr_io_ram_service_t* IRAMService::create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
@@ -104,8 +104,9 @@ IORequestId RAMService::open_request() SKR_NOEXCEPT
 const bool kAwakeAtRequest = false;
 void RAMService::request(IOBatchId batch) SKR_NOEXCEPT
 {
+    const auto empty = !runner.getQueuedBatchCount(batch->get_priority());
     runner.enqueueBatch(batch);
-    if (kAwakeAtRequest)
+    if (kAwakeAtRequest || empty)
     {
         runner.tryAwake();
     }
@@ -127,6 +128,7 @@ void RAMService::stop(bool wait_drain) SKR_NOEXCEPT
     {
         drain();
     }
+    runner.tryAwake();
     runner.stop();
 }
 

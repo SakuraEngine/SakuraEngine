@@ -52,7 +52,7 @@ CondLockResult CondLock::wait(uint32_t milliseconds) SKR_NOEXCEPT
             return ASYNC_RESULT_ERROR_TIMEOUT;
     }
     else {
-        R = skr_wait_condition_vars(&cond, &mutex, UINT32_MAX);
+        R = skr_wait_condition_vars(&cond, &mutex, 0);
     }
     if (R == THREAD_RESULT_OK)
         return ASYNC_RESULT_OK;
