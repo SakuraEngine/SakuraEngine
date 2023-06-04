@@ -190,7 +190,6 @@ skr::AsyncResult RAMService::Runner::serve() SKR_NOEXCEPT
         ZoneScopedN("Serve");
 
         setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
-        sort();
         dispatch();
         uncompress();
         finish();

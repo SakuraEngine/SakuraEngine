@@ -123,7 +123,6 @@ void SGameModule::installResourceFactories()
     ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
     ioServiceDesc.sleep_time = 1000 / 60;
     ioServiceDesc.lockless = true;
-    ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
     ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
     ram_service->add_default_resolvers();
 

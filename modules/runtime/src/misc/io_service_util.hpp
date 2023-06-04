@@ -25,6 +25,15 @@ typedef enum _SkrIOThreadStatus
     _SKR_IO_THREAD_STATUS_SUSPEND = 2
 } _SkrIOThreadStatus;
 
+typedef enum SkrAsyncServiceSortMethod
+{
+    SKR_ASYNC_SERVICE_SORT_METHOD_NEVER = 0,
+    SKR_ASYNC_SERVICE_SORT_METHOD_STABLE = 1,
+    SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL = 2,
+    SKR_ASYNC_SERVICE_SORT_METHOD_COUNT,
+    SKR_ASYNC_SERVICE_SORT_METHOD_MAX_ENUM = INT32_MAX
+} SkrAsyncServiceSortMethod;
+
 class AsyncServiceBase
 {
 public:

@@ -35,27 +35,35 @@ struct VFSRAMReader final : public RAMReaderBase
     ~VFSRAMReader() SKR_NOEXCEPT {}
 
     void fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT;
-    void sort(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     IORequestId poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
 
+    IORequestQueue finish_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IORequestArray dispatching_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     SAtomicU64 dispatching_requests_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 };
 
+} // namespace io
+} // namespace skr
+
+#ifdef _WIN32
+// #include "platform/dstorage.h"
+
+namespace skr {
+namespace io {
 /*
 struct DStorageRAMReader final : public RAMReaderBase
 {
     DStorageRAMReader(RAMService* service) : RAMReaderBase(service) {}
 
-    void fetch(SkrAsyncServicePriority priority, IOBatch batch) SKR_NOEXCEPT;
+    void fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT;
     void sort(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
-    IORequest poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    IORequestId poll_finish(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
 };
 */
-
 } // namespace io
 } // namespace skr
+#endif

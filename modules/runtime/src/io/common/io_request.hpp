@@ -10,9 +10,8 @@ namespace io {
 typedef enum SkrAsyncIOFinishStep
 {
     SKR_ASYNC_IO_FINISH_STEP_NONE = 0,
-    SKR_ASYNC_IO_FINISH_STEP_NEED = 1,
-    SKR_ASYNC_IO_FINISH_STEP_PENDING = 2,
-    SKR_ASYNC_IO_FINISH_STEP_DONE = 3
+    SKR_ASYNC_IO_FINISH_STEP_PENDING = 1,
+    SKR_ASYNC_IO_FINISH_STEP_DONE = 2
 } SkrAsyncIOFinishStep;
 
 constexpr const char* callback_names[SKR_IO_STAGE_COUNT] = {

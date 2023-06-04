@@ -31,6 +31,9 @@ void SkrRuntimeModule::on_load(int argc, char8_t** argv)
     skr_init_mutex_recursive(&log_mutex);
     log_set_lock(log_locker, &log_mutex);
 
+    SkrDStorageConfig config = {};
+    dstorageInstance = skr_create_dstorage_instance(&config);
+
     dualX_register_types();
 
     SKR_LOG_TRACE("SkrRuntime module loaded!");
@@ -43,6 +46,11 @@ void SkrRuntimeModule::on_load(int argc, char8_t** argv)
 void SkrRuntimeModule::on_unload()
 {
     SKR_LOG_TRACE("SkrRuntime module unloaded!");
+
+    if (auto inst = skr_runtime_get_dstorage_instance())
+    {
+        skr_free_dstorage_instance(inst);
+    }
 
     skr_destroy_mutex(&log_mutex);
 
@@ -73,6 +81,15 @@ RUNTIME_EXTERN_C RUNTIME_API bool skr_runtime_is_dpi_aware()
         return false;
     }
     return SkrRuntimeModule::Get()->DPIAware;
+}
+
+SkrDStorageInstanceId skr_runtime_get_dstorage_instance()
+{
+    if (auto rtModule = SkrRuntimeModule::Get()) 
+    {
+        return rtModule->dstorageInstance;
+    }
+    return nullptr;
 }
 
 RUNTIME_EXTERN_C RUNTIME_API skr::ModuleManager* skr_get_module_manager()

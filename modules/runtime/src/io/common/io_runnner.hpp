@@ -114,8 +114,6 @@ struct RunnerBase : public SleepyService
     void recycle() SKR_NOEXCEPT;
     // 1. fetch requests from queue
     uint64_t fetch() SKR_NOEXCEPT;
-    // 2. sort raw requests
-    void sort() SKR_NOEXCEPT;
     // 3. resolve requests to pending raw request array
     void resolve() SKR_NOEXCEPT;
     // 4. dispatch I/O blocks to drives (+allocate & cpy to raw)
