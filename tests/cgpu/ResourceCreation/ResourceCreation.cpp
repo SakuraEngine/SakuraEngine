@@ -81,6 +81,8 @@ TEST_P(ResourceCreation, CreateDStorageQueue)
 #ifdef _WIN32
     if (GetParam() == CGPU_BACKEND_D3D12)
     {
+        SkrDStorageConfig config = {};
+        auto dstorageInstance = skr_create_dstorage_instance(&config);(void)dstorageInstance;
         const auto support = cgpu_query_dstorage_availability(device);
         EXPECT_EQ(support, SKR_DSTORAGE_AVAILABILITY_HARDWARE);
         auto dstorageQueue = cgpu_create_dstorage_queue(device, &desc);
