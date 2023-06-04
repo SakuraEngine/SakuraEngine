@@ -84,6 +84,7 @@ void VFSRAMReader::dispatchFunction(IOBatchId batch) SKR_NOEXCEPT
         }
     }
     finish_batches[priority].enqueue(batch);
+    tryAwakeService();
 }
 
 void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
