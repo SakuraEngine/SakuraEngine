@@ -1,3 +1,8 @@
+<%
+records = generator.filter_rtti(db.records)
+enums = generator.filter_rtti(db.enums)
+%>
+
 // BEGIN RTTI GENERATED
 #include "type/type.hpp"
 #include "platform/debug.h"
@@ -5,7 +10,7 @@
 #include "misc/log.h"
 #include "type/type_helper.hpp"
 
-%for record in generator.filter_rtti(db.records):
+%for record in records:
 namespace skr::type
 {
 %if hasattr(record.attrs, "hashable"):
@@ -23,10 +28,12 @@ namespace skr::type
     static skr_type_t* type_of_${record.id};
     const skr_type_t* type_of<${record.name}>::get()
     {
-        static bool initialized = false;
-        if(!initialized)
+        constexpr skr_guid_t guid = {${db.guid_constant(record)}};
+        if(type_of_${record.id} == nullptr)
         {
-            initialized = true;
+            using namespace skr::type;
+            auto registry = GetTypeRegistry();
+            type_of_${record.id} = registry->register_record(guid);
             size_t size = sizeof(${record.name});
             size_t align = alignof(${record.name});
             skr::string_view name = u8"${record.name}";
@@ -47,7 +54,6 @@ namespace skr::type
         %endif
                 GetSerialize<${record.name}>(),
                 GetDeserialize<${record.name}>(),
-                GetDeleter<${record.name}>(),
                 GetTextSerialize<${record.name}>(),
                 GetTextDeserialize<${record.name}>(),
             };
@@ -116,9 +122,7 @@ namespace skr::type
         %else:
             static skr::span<skr_method_t> methods;
         %endif
-            constexpr skr_guid_t guid = {${db.guid_constant(record)}};
-            static RecordType type(size, align, name, guid, skr::is_object_v<${record.name}>, base, nativeMethods, fields, methods);
-            type_of_${record.id} = &type;
+            new (type_of_${record.id}) RecordType(size, align, name, guid, skr::is_object_v<${record.name}>, base, nativeMethods, fields, methods);
         }
         return type_of_${record.id};
     }
@@ -127,70 +131,99 @@ static struct RegisterRTTI${record.id}Helper
 {
     RegisterRTTI${record.id}Helper()
     {
-        using namespace skr::type;
-        auto registry = GetTypeRegistry();
-        constexpr skr_guid_t guid = {${db.guid_constant(record)}};
-        registry->register_type(guid, type_of<${record.name}>::get());
+        (void)skr::type::type_of<${record.name}>::get();
     }
 } _RegisterRTTI${record.id}Helper;
 
 %endfor
 
-%for enum in generator.filter_rtti(db.enums): 
+%for enum in enums: 
 
 namespace skr::type
 {
+    static skr_type_t* type_of_${enum.id};
     const skr_type_t* type_of<${enum.name}>::get()
     {
-        static EnumType::Enumerator enumerators[] = 
-        {
-        %for name, enumerator in vars(enum.values).items():
-            {u8"${db.short_name(name)}", ${enumerator.value}},
-        %endfor
-        };
         constexpr skr_guid_t guid = {${db.guid_constant(enum)}};
-        static EnumType type{
-            type_of<std::underlying_type_t<${enum.name}>>::get(),
-            u8"${enum.name}", guid,
-            +[](void* self, skr::string_view enumStr)
-            {
-                auto& This = *((${enum.name}*)self);
-                auto hash = hash_crc32<char>({enumStr.c_str(), (size_t)enumStr.size()});
-                switch(hash)
-                {
-                %for name, enumerator in vars(enum.values).items():
-                    case hash_crc32<char>("${db.short_name(name)}"): if(enumStr == u8"${db.short_name(name)}") This = ${name}; return;
-                %endfor
-                }
-                SKR_UNREACHABLE_CODE();
-            },
-            +[](const void* self)
-            {
-                auto& This = *((const ${enum.name}*)self);
-                switch(This)
-                {
-                %for name, enumerator in vars(enum.values).items():
-                    case ${name}: return skr::string(u8"${db.short_name(name)}");
-                %endfor
-                }
-                SKR_UNREACHABLE_CODE();
-                return skr::string(u8"${enum.name}::INVALID_ENUMERATOR");
-            },
-            enumerators
-        };
-        return &type;
-    }
-}
-    static struct RegisterRTTI${enum.id}Helper
-    {
-        RegisterRTTI${enum.id}Helper()
+        if(type_of_${enum.id} == nullptr)
         {
             using namespace skr::type;
             auto registry = GetTypeRegistry();
-            constexpr skr_guid_t guid = {${db.guid_constant(enum)}};
-            registry->register_type(guid, type_of<${enum.name}>::get());
+            type_of_${enum.id} = registry->register_enum(guid);
+            static EnumType::Enumerator enumerators[] = 
+            {
+            %for name, enumerator in vars(enum.values).items():
+                {u8"${db.short_name(name)}", ${enumerator.value}},
+            %endfor
+            };
+            new (type_of_${enum.id}) EnumType{
+                type_of<std::underlying_type_t<${enum.name}>>::get(),
+                u8"${enum.name}", guid,
+                +[](void* self, skr::string_view enumStr)
+                {
+                    auto& This = *((${enum.name}*)self);
+                    auto hash = hash_crc32<char>({enumStr.c_str(), (size_t)enumStr.size()});
+                    switch(hash)
+                    {
+                    %for name, enumerator in vars(enum.values).items():
+                        case hash_crc32<char>("${db.short_name(name)}"): if(enumStr == u8"${db.short_name(name)}") This = ${name}; return;
+                    %endfor
+                    }
+                    SKR_UNREACHABLE_CODE();
+                },
+                +[](const void* self)
+                {
+                    auto& This = *((const ${enum.name}*)self);
+                    switch(This)
+                    {
+                    %for name, enumerator in vars(enum.values).items():
+                        case ${name}: return skr::string(u8"${db.short_name(name)}");
+                    %endfor
+                    }
+                    SKR_UNREACHABLE_CODE();
+                    return skr::string(u8"${enum.name}::INVALID_ENUMERATOR");
+                },
+                enumerators
+            };
         }
-    } _RegisterRTTI${enum.id}Helper;
-    
+        return type_of_${enum.id};
+    }
+}
+static struct RegisterRTTI${enum.id}Helper
+{
+    RegisterRTTI${enum.id}Helper()
+    {
+        (void)skr::type::type_of<${enum.name}>::get();
+    }
+} _RegisterRTTI${enum.id}Helper;
 %endfor
+
+skr::span<const skr_type_t*> skr_get_all_records_${module}()
+{
+%if records:
+    const skr_type_t* types[${len(records)}] = {
+    %for record in records:
+        skr::type::type_of<${record.name}>::get(),
+    %endfor
+    };
+    return {types};
+%else:
+    return {};
+%endif
+}
+
+skr::span<const skr_type_t*> skr_get_all_enums_${module}()
+{
+%if enums:
+    const skr_type_t* types[${len(enums)}] = {
+    %for enum in enums:
+        skr::type::type_of<${enum.name}>::get(),
+    %endfor
+    };
+    return {types};
+%else:
+    return {};
+%endif
+}
+
 //END RTTI GENERATED

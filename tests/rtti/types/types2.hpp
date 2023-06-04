@@ -15,7 +15,6 @@ TestGrandSon : public TestSon
     skr::string job;
 }
 sstatic_ctor(XXXInformation<$T>())
-sattr("serialize" : ["json", "bin"])
 sattr("component" : true);
 
 }

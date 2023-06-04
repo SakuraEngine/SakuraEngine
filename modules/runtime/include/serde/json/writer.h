@@ -301,7 +301,7 @@ template <class... Ts>
 struct WriteTrait<const skr::variant<Ts...>&> {
     static void Write(skr_json_writer_t* json, const skr::variant<Ts...>& v)
     {
-        std::visit([&](auto&& value) {
+        eastl::visit([&](auto&& value) {
             using raw = std::remove_const_t<std::remove_reference_t<decltype(value)>>;
             json->StartObject();
             json->Key(u8"type");

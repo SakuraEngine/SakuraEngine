@@ -121,7 +121,7 @@ rule("skr.static_module")
     end)
 rule_end()
 
-function public_dependency(dep, version)
+function public_dependency(dep, version, setting)
     add_deps(dep, {public = true})
     add_values("skr.module.public_dependencies", dep)
     add_values(dep..".version", version)

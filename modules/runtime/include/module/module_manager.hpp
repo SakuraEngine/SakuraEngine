@@ -10,6 +10,7 @@ namespace skr
 struct ModuleProperty : public DependencyGraphNode 
 {
     bool bActive = false;
+    bool bShared = false;
     skr::string name;
 };
 using module_registerer = eastl::function<eastl::unique_ptr<IModule>(void)>;
@@ -30,13 +31,13 @@ public:
     virtual void mount(const char8_t* path) = 0;
     virtual skr::string_view get_root(void) = 0;
     virtual ModuleProperty& get_module_property(const skr::string& name) = 0;
+    virtual void enable_hotfix_for_module(skr::string_view name) = 0;
+    //update for hot reload
+    virtual bool update(void) = 0;
 
     virtual void register_subsystem(const char8_t* moduleName, const char8_t* id, ModuleSubsystemBase::CreatePFN pCreate) = 0;
 
     virtual void registerStaticallyLinkedModule(const char8_t* moduleName, module_registerer _register) = 0;
-protected:
-    virtual IModule* spawnStaticModule(const skr::string& moduleName) = 0;
-    virtual IModule* spawnDynamicModule(const skr::string& moduleName) = 0;
 };
 
 template <typename ModuleClass>

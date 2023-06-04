@@ -115,8 +115,6 @@ type_registry_t::type_registry_t(pool_t& pool)
 
 type_index_t type_registry_t::register_type(const type_description_t& inDesc)
 {
-    if (auto index = get_type(inDesc.guid); index != kInvalidTypeIndex)
-        return index;
     type_description_t desc = inDesc;
     if (!desc.name)
     {
@@ -151,6 +149,34 @@ type_index_t type_registry_t::register_type(const type_description_t& inDesc)
     SKR_ASSERT(!(chunk && pin));
     SKR_ASSERT(!(chunk && tag));
     type_index_t index{ (TIndex)descriptions.size(), pin, buffer, tag, chunk };
+    
+    auto i = guid2type.find(inDesc.guid);
+    if (i != guid2type.end())
+    {
+        auto& oldDesc = descriptions[i->second];
+        bool capable = true;
+        {
+            if (oldDesc.size != desc.size)
+                capable = false;
+            if (oldDesc.alignment != desc.alignment)
+                capable = false;
+            if (oldDesc.elementSize != desc.elementSize)
+                capable = false;
+            if (oldDesc.entityFieldsCount != desc.entityFieldsCount)
+                capable = false;
+            if (oldDesc.flags != desc.flags)
+                capable = false;
+            if (oldDesc.entityFieldsCount != desc.entityFieldsCount)
+                capable = false;
+            if (oldDesc.entityFields != desc.entityFields)
+                capable = false;
+        }
+        SKR_ASSERT(capable);
+        name2type.emplace(desc.name, i->second);
+        //old callback pointers maybe invalid after a reload of the dll
+        oldDesc = desc;
+        return i->second;
+    }
     descriptions.push_back(desc);
     guid2type.emplace(desc.guid, index);
     name2type.emplace(desc.name, index);
