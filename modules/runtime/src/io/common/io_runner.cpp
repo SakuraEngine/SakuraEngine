@@ -3,31 +3,6 @@
 namespace skr {
 namespace io {
 
-bool RunnerBase::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT
-{
-    const auto status = rq->getStatus();
-    if (status >= SKR_IO_STAGE_LOADING) return false;
-
-    if (bool cancel_requested = skr_atomicu32_load_acquire(&rq->future->request_cancel))
-    {
-        if (rq->getFinishStep() == SKR_ASYNC_IO_FINISH_STEP_NONE)
-        {
-            rq->setStatus(SKR_IO_STAGE_CANCELLED);
-            if (rq->needPollFinish())
-            {
-                finish_queues[priority].enqueue(rq);
-                rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_PENDING);
-            }
-            else
-            {
-                rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
-            }
-        }
-        return true;
-    }
-    return false;
-}
-
 void RunnerBase::recycle() SKR_NOEXCEPT
 {
     ZoneScopedN("recycle");
@@ -108,6 +83,32 @@ void RunnerBase::uncompress() SKR_NOEXCEPT
     // do nothing now
 }
 
+bool RunnerBase::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT
+{
+    const auto status = rq->getStatus();
+    if (status >= SKR_IO_STAGE_LOADING) return false;
+
+    if (bool cancel_requested = skr_atomicu32_load_acquire(&rq->future->request_cancel))
+    {
+        if (rq->getFinishStep() == SKR_ASYNC_IO_FINISH_STEP_NONE)
+        {
+            rq->setStatus(SKR_IO_STAGE_CANCELLED);
+            if (rq->needPollFinish())
+            {
+                finish_queues[priority].enqueue(rq);
+                rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_PENDING);
+            }
+            else
+            {
+                rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
+            }
+            skr_atomicu32_add_relaxed(&processing_request_counts[priority], -1);
+        }
+        return true;
+    }
+    return false;
+}
+
 void RunnerBase::finish() SKR_NOEXCEPT
 {
     ZoneScopedN("finish");
@@ -126,6 +127,7 @@ void RunnerBase::finish() SKR_NOEXCEPT
             {
                 rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
             }
+            skr_atomicu32_add_relaxed(&processing_request_counts[i], -1);
         }
         while (auto batch = reader->poll_finish_batch((SkrAsyncServicePriority)i))
         {
