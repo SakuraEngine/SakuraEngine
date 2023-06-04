@@ -1,10 +1,12 @@
 #include "module/module.hpp"
 #include "misc/parallel_for.hpp"
+#include "async/thread_job.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "platform/guid.hpp"
 #include "containers/string.hpp"
+#include "misc/make_zeroed.hpp"
 #include "misc/defer.hpp"
 #include "io/io.h"
 
@@ -87,10 +89,18 @@ protected:
 
 struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
 {
+    skr::JobQueue* io_job_queue = nullptr;
     virtual void on_load(int argc, char8_t** argv) override
     {
         skr_init_mutex(&cook_system.ioMutex);
         skr_init_mutex(&cook_system.assetMutex);
+
+        auto jqDesc = make_zeroed<skr::JobQueueDesc>();
+        jqDesc.thread_count = 2;
+        jqDesc.priority = SKR_THREAD_ABOVE_NORMAL;
+        jqDesc.name = u8"Tool-IOJobQueue";
+        io_job_queue = SkrNew<skr::JobQueue>(jqDesc);
+
         for (auto& ioService : cook_system.ioServices)
         {
             // all used up
@@ -99,7 +109,9 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
                 skr_ram_io_service_desc_t desc = {};
                 desc.sleep_time = 1;
                 desc.lockless = true;
+                desc.name = u8"Tool-IOService";
                 desc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
+                desc.io_job_queue = io_job_queue;
                 ioService = skr_io_ram_service_t::create(&desc);        
                 ioService->add_default_resolvers();
             }
@@ -118,6 +130,8 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
         skr_destroy_mutex(&cook_system.assetMutex);
         for (auto& pair : cook_system.assets)
             SkrDelete(pair.second);
+
+        SkrDelete(io_job_queue);
     }
     static skd::asset::SCookSystemImpl cook_system;
 };

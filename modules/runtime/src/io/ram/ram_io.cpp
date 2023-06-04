@@ -49,15 +49,15 @@ IOResultId RAMIOBatch::add_request(IORequestId request, skr_io_future_t* future)
 
 inline static IOReaderId CreateReader(RAMService* service, const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
 {
-    auto reader = skr::SObjectPtr<VFSRAMReader>::Create(service);
+    auto reader = skr::SObjectPtr<VFSRAMReader>::Create(service, desc->io_job_queue);
     return std::move(reader);
 }
 
 RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
-    : name(skr::format(u8"IRAMService-{}", global_idx++)), 
+    : name(desc->name ? skr::string(desc->name) : skr::format(u8"IRAMService-{}", global_idx++)), 
       runner(this, CreateReader(this, desc))
 {
-    
+    // runner.setSleepTime(desc->sleep_time);
 }
 
 skr_io_ram_service_t* IRAMService::create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT

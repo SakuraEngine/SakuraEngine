@@ -1,17 +1,32 @@
 #include "ram_readers.hpp"
+#include "async/thread_job.hpp"
 
 namespace skr {
 namespace io {
 
+namespace VFSReader
+{
+using Future = skr::IFuture<bool>;
+using JobQueueFuture = skr::ThreadedJobQueueFuture<bool>;
+using SerialFuture = skr::SerialFuture<bool>;
+struct FutureLauncher
+{
+    FutureLauncher(skr::JobQueue* q) : job_queue(q) {}
+    template<typename F, typename... Args>
+    Future* async(F&& f, Args&&... args)
+    {
+        if (job_queue)
+            return SkrNew<JobQueueFuture>(job_queue, std::forward<F>(f), std::forward<Args>(args)...);
+        else
+            return SkrNew<SerialFuture>(std::forward<F>(f), std::forward<Args>(args)...);
+    }
+    skr::JobQueue* job_queue = nullptr;
+};
+}
+
 void VFSRAMReader::fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
 {
-    auto& arr = dispatching_requests[priority];
-    for (auto& request : batch->get_requests())
-    {
-        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-        arr.emplace_back(rq);
-        skr_atomicu64_add_relaxed(&dispatching_requests_counts[priority], 1);
-    }
+    fetched_batches[priority].enqueue(batch);
 }
 
 uint64_t VFSRAMReader::get_prefer_batch_size() const SKR_NOEXCEPT
@@ -19,16 +34,10 @@ uint64_t VFSRAMReader::get_prefer_batch_size() const SKR_NOEXCEPT
     return 1024 * 1024 * 4;
 }
 
-void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
+void VFSRAMReader::dispatchFunction(IOBatchId batch) SKR_NOEXCEPT
 {
-    auto& arr = dispatching_requests[priority];
-    {
-        ZoneScopedN("sort");
-        std::sort(arr.begin(), arr.end(), 
-        [](const RQPtr& a, const RQPtr& b) {
-            return a->sub_priority > b->sub_priority;
-        });
-    }
+    const auto priority = batch->get_priority();
+    auto&& arr = batch->get_requests();
     {
         ZoneScopedN("dispatch_read");
         for (auto&& request : arr)
@@ -62,7 +71,6 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     }
     {
         ZoneScopedN("dispatch_close");
-
         for (auto&& request : arr)
         {
             auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
@@ -73,6 +81,25 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
                 rq->file = nullptr;
                 finish_requests[priority].enqueue(rq);
             }
+        }
+    }
+}
+
+void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
+{
+    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
+    {
+        IOBatchId batch;
+        if (fetched_batches[i].try_dequeue(batch))
+        {
+            auto launcher = VFSReader::FutureLauncher(job_queue);
+            futures[i].emplace_back(
+                launcher.async([this, batch](){
+                    ZoneScopedN("VFSReadTask");
+                    dispatchFunction(batch);
+                    return true;
+                })
+            );
         }
     }
 }
@@ -91,18 +118,23 @@ IORequestId VFSRAMReader::poll_finish(SkrAsyncServicePriority priority) SKR_NOEX
 
 void VFSRAMReader::recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    auto& arr = dispatching_requests[priority];
+    ZoneScopedN("VFSRAMReader::recycle");
+
+    auto& arr = futures[priority];
+    for (auto& future : arr)
+    {
+        auto status = future->wait_for(0);
+        if (status == skr::FutureStatus::Ready)
+        {
+            SkrDelete(future);
+            future = nullptr;
+        }
+    }
     auto it = eastl::remove_if(arr.begin(), arr.end(), 
-        [](const IORequestId& request) {
-            auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-            return (rq->getFinishStep() != SKR_ASYNC_IO_FINISH_STEP_NONE);
+        [](skr::IFuture<bool>* future) {
+            return (future == nullptr);
         });
     arr.erase(it, arr.end());
-
-    const int64_t X = (int64_t)arr.size();
-    arr.erase(it, arr.end());
-    const int64_t Y = (int64_t)arr.size();
-    skr_atomicu64_add_relaxed(&dispatching_requests_counts[priority], Y - X);
 }
 
 } // namespace io
