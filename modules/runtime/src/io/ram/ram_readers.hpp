@@ -14,6 +14,11 @@ struct RAMReaderBase : public IIOReader
 public:
     RAMReaderBase(RAMService* service) SKR_NOEXCEPT : service(service) {}
     virtual ~RAMReaderBase() SKR_NOEXCEPT {}
+
+    void tryAwakeService()
+    {
+        service->runner.tryAwake();
+    }
 protected:
     RAMService* service = nullptr;
 
