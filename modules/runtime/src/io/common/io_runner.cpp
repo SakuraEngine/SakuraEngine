@@ -95,6 +95,7 @@ uint64_t RunnerBase::fetch() SKR_NOEXCEPT
     SKR_ASSERT(reader);
     ZoneScopedN("fetch");
 
+    uint64_t N = 0;
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
         BatchPtr batch = nullptr;
@@ -105,9 +106,10 @@ uint64_t RunnerBase::fetch() SKR_NOEXCEPT
             dispatching_batches[i].emplace_back(batch);
             skr_atomicu64_add_relaxed(&dispatching_batch_counts[i], 1);
             skr_atomicu64_add_relaxed(&queued_batch_counts[i], -1);
+            N++;
         }
     }
-    return 0;
+    return N;
 }
 
 void RunnerBase::dispatch() SKR_NOEXCEPT
