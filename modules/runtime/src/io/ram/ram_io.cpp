@@ -175,6 +175,7 @@ namespace io {
 
 skr::AsyncResult RAMService::Runner::serve() SKR_NOEXCEPT
 {
+    ZoneScopedN("Serve");
     SKR_DEFER( { recycle(); } );
 
     resolve();
@@ -187,8 +188,6 @@ skr::AsyncResult RAMService::Runner::serve() SKR_NOEXCEPT
     
     if (cnt)
     {
-        ZoneScopedN("Serve");
-
         setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
         dispatch();
         uncompress();

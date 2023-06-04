@@ -31,7 +31,7 @@ void VFSRAMReader::fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_
 
 uint64_t VFSRAMReader::get_prefer_batch_size() const SKR_NOEXCEPT
 {
-    return 1024 * 1024 * 4;
+    return 0; // fread is blocking, so we don't need to batch
 }
 
 void VFSRAMReader::dispatchFunction(IOBatchId batch) SKR_NOEXCEPT
