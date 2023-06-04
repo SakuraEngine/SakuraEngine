@@ -20,7 +20,7 @@ namespace binary
     struct WriteTrait<const skr::bitset<N, WordType>&> {
         static int Write(skr_binary_writer_t* archive, const skr::bitset<N, WordType>& value)
         {
-            for(int i = 0; i < N / (sizeof(WordType) * 8); i++)
+            for(int i = 0; i <= N / (sizeof(WordType) * 8); i++)
             {
                 SKR_ARCHIVE(value.data()[i]);
             }
@@ -32,7 +32,7 @@ namespace binary
     struct ReadTrait<skr::bitset<N, WordType>> {
         static int Read(skr_binary_reader_t* archive, skr::bitset<N, WordType>& value)
         {
-            for(int i = 0; i < N / (sizeof(WordType) * 8); i++)
+            for(int i = 0; i <= N / (sizeof(WordType) * 8); i++)
             {
                 SKR_ARCHIVE(value.data()[i]);
             }

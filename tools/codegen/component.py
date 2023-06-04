@@ -15,12 +15,12 @@ class Generator(object):
     def generate_forward(self, db, args):
         template = os.path.join(BASE, "component.hpp.mako")
         if self.filter_records(db.records):
-            return db.render(template, db=db, generator = self, api=args.api+"_API")
+            return db.render(template, db=db, generator = self, api=args.api+"_API", module=args.module)
         return ""
     
     def generate_impl(self, db, args):
         template = os.path.join(BASE, "component.cpp.mako")
         if self.filter_records(db.records):
-            return db.render(template, db=db, generator = self)
+            return db.render(template, db=db, generator = self, module=args.module)
         return ""
 
