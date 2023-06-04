@@ -11,14 +11,14 @@ int main(int argc, char** argv)
     module_manager->enable_hotfix_for_module(u8"HotfixTest");
     module_manager->make_module_graph(u8"HotfixTest", true);
     module_manager->init_module_graph(argc, (char8_t**)argv);
-    while(1)
+    /*while(1)
     {
         hotfix::HotfixModule* hotfix_module = (hotfix::HotfixModule*)module_manager->get_module(u8"HotfixTest");
         if(!hotfix_module->Tick())
             break;
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         module_manager->update();
-    }
+    }*/
     module_manager->destroy_module_graph();
     return 0;
 }
