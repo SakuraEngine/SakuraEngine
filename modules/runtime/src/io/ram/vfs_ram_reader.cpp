@@ -120,7 +120,7 @@ IORequestId VFSRAMReader::poll_finish_request(SkrAsyncServicePriority priority) 
 IOBatchId VFSRAMReader::poll_finish_batch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     IOBatchId batch;
-    if (fetched_batches[priority].try_dequeue(batch))
+    if (finish_batches[priority].try_dequeue(batch))
     {
         return batch;
     }
