@@ -101,10 +101,14 @@ IORequestId RAMService::open_request() SKR_NOEXCEPT
     return skr::static_pointer_cast<IIORequest>(request_pool.allocate(seq));
 }
 
+const bool kAwakeAtRequest = false;
 void RAMService::request(IOBatchId batch) SKR_NOEXCEPT
 {
     runner.enqueueBatch(batch);
-    runner.tryAwake();
+    if (kAwakeAtRequest)
+    {
+        runner.tryAwake();
+    }
 }
 
 RAMIOBufferId RAMService::request(IORequestId request, skr_io_future_t* future, SkrAsyncServicePriority priority) SKR_NOEXCEPT
@@ -178,22 +182,17 @@ namespace io {
 skr::AsyncResult RAMService::Runner::serve() SKR_NOEXCEPT
 {
     ZoneScopedN("Serve");
-    SKR_DEFER( { recycle(); } );
+    SKR_DEFER( { finish(); recycle(); } );
 
     resolve();
-    fetch();
-    uint64_t cnt = 0;
-    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
-    {
-        cnt += getExecutingBatchCount((SkrAsyncServicePriority)i);
-    }
+    
+    uint64_t cnt = fetch();
     
     if (cnt)
     {
         setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
         dispatch();
         uncompress();
-        finish();
         return ASYNC_RESULT_OK;
     }
     else

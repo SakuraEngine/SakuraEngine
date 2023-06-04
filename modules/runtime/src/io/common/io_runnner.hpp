@@ -32,7 +32,7 @@ struct SleepyService : public skr::ServiceThread
         skr_atomicu32_store_release(&sleep_time, time);
     }
 
-    const bool condsleep = false;
+    const bool condsleep = true;
     void sleep() SKR_NOEXCEPT
     {
         const auto ms = skr_atomicu64_load_relaxed(&sleep_time);
