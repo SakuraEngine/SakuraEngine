@@ -65,7 +65,7 @@ void RunnerBase::resolve() SKR_NOEXCEPT
     {
         uint32_t bytes = 0;
         BatchPtr batch = nullptr;
-        while ((bytes < NBytes) && batch_queues[i].try_dequeue(batch))
+        while ((bytes <= NBytes) && batch_queues[i].try_dequeue(batch))
         {
             uint64_t batch_size = 0;
             for (auto&& request : batch->get_requests())

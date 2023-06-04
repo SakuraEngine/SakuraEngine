@@ -34,7 +34,8 @@ struct SmartPool : public ISmartPool<I>
 
     ~SmartPool()
     {
-        if (objcnt != 0)
+        const auto N = skr_atomic64_load_acquire(&objcnt);
+        if (N != 0)
         {
             SKR_LOG_ERROR("object leaking detected!");
             SKR_ASSERT(0 && "object leaking detected!");
@@ -56,7 +57,7 @@ struct SmartPool : public ISmartPool<I>
         }
         new (ptr) T(this, std::forward<Args>(args)...);
 
-        skr_atomicu32_add_relaxed(&objcnt, 1);
+        skr_atomic64_add_relaxed(&objcnt, 1);
         return skr::static_pointer_cast<I>(SObjectPtr<T>(ptr));
     }
 
@@ -66,12 +67,12 @@ struct SmartPool : public ISmartPool<I>
         {
             ptr->~T();
             memset((void*)ptr, 0, sizeof(T));
-            skr_atomicu32_add_relaxed(&objcnt, -1);
+            skr_atomicu64_add_relaxed(&objcnt, -1);
             blocks.enqueue(ptr);
         }
     }
     skr::ConcurrentQueue<T*> blocks;
-    SAtomicU64 objcnt = 0;
+    SAtomic64 objcnt = 0;
 };
 
 struct IOConcurrentQueueTraits : public skr::ConcurrentQueueDefaultTraits
