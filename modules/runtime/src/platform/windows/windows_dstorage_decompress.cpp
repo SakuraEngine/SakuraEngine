@@ -4,6 +4,7 @@
 #include "platform/thread.h"
 #include "misc/log.h"
 #include "misc/make_zeroed.hpp"
+#include "async/thread_job.hpp"
 
 #include <EASTL/string.h>
 #include <EASTL/vector_map.h>
@@ -19,8 +20,8 @@ static void CALLBACK __decompressThreadTask_DirectStorage(void*);
 struct skr_win_dstorage_decompress_service_t
 {
     const bool use_thread_pool = true;
-    skr_win_dstorage_decompress_service_t(IDStorageCustomDecompressionQueue* queue)
-        : decompress_queue(queue)
+    skr_win_dstorage_decompress_service_t(IDStorageCustomDecompressionQueue* queue, const skr_win_dstorage_decompress_desc_t* desc)
+        : decompress_queue(queue), job_queue(desc->job_queue)
     {
         skr_atomicu32_store_release(&thread_running, 1);
         event_handle = queue->GetEvent();
@@ -36,7 +37,7 @@ struct skr_win_dstorage_decompress_service_t
             skr_init_thread(&thread_desc, &thread_handle);
         }
     }
-    ~skr_win_dstorage_decompress_service_t  () SKR_NOEXCEPT
+    ~skr_win_dstorage_decompress_service_t() SKR_NOEXCEPT
     {
         skr_atomicu32_store_release(&thread_running, 0);
         if (use_thread_pool)
@@ -67,7 +68,30 @@ struct skr_win_dstorage_decompress_service_t
     SThreadDesc thread_desc;
     SThreadHandle thread_handle = nullptr;
     SAtomicU32 thread_running;
+
+    skr::JobQueue* job_queue = nullptr;
+    skr::vector<skr::IFuture<bool>*> decompress_futures;
 };
+
+namespace DirectStorageDecompress
+{
+using Future = skr::IFuture<bool>;
+using JobQueueFuture = skr::ThreadedJobQueueFuture<bool>;
+using SerialFuture = skr::SerialFuture<bool>;
+struct FutureLauncher
+{
+    FutureLauncher(skr::JobQueue* q) : job_queue(q) {}
+    template<typename F, typename... Args>
+    Future* async(F&& f, Args&&... args)
+    {
+        if (job_queue)
+            return SkrNew<JobQueueFuture>(job_queue, std::forward<F>(f), std::forward<Args>(args)...);
+        else
+            return SkrNew<SerialFuture>(std::forward<F>(f), std::forward<Args>(args)...);
+    }
+    skr::JobQueue* job_queue = nullptr;
+};
+}
 
 static void __decompressTask_DirectStorage(skr_win_dstorage_decompress_service_id service)
 {
@@ -87,32 +111,55 @@ static void __decompressTask_DirectStorage(skr_win_dstorage_decompress_service_i
             ZoneScopedN("DirectStorageDecompress");
             for (uint32_t i = 0; i < numRequests; ++i)
             {
-                auto resolver = service->resolvers.find(requests[i].CompressionFormat);
-                if (resolver != service->resolvers.end())
+                auto& future = service->decompress_futures.emplace_back();
+                future = DirectStorageDecompress::FutureLauncher(service->job_queue).async(
+                [service, request = requests[i]](){
+                    auto resolver = service->resolvers.find(request.CompressionFormat);
+                    if (resolver != service->resolvers.end())
+                    {
+                        auto skrRequest = make_zeroed<skr_win_dstorage_decompress_request_t>();
+                        skrRequest.id = request.Id;
+                        skrRequest.compression = request.CompressionFormat;
+                        skrRequest.flags = request.Flags;
+                        skrRequest.src_size = request.SrcSize;
+                        skrRequest.src_buffer = request.SrcBuffer;
+                        skrRequest.dst_size = request.DstSize;
+                        skrRequest.dst_buffer = request.DstBuffer;
+                        auto result = resolver->second.callback(&skrRequest, resolver->second.user_data);
+                        DSTORAGE_CUSTOM_DECOMPRESSION_RESULT failResult = {};
+                        failResult.Result = result;
+                        failResult.Id = request.Id;
+                        service->decompress_queue->SetRequestResults(1, &failResult);
+                    }
+                    else
+                    {
+                        SKR_LOG_WARN("Unable to find decompression resolver for format %d\n", request.CompressionFormat);
+                        DSTORAGE_CUSTOM_DECOMPRESSION_RESULT failResult = {};
+                        failResult.Result = S_FALSE;
+                        failResult.Id = request.Id;
+                        service->decompress_queue->SetRequestResults(1, &failResult);
+                    }
+                    return true;
+                });
+            }
+        }
+        {
+            ZoneScopedN("CleanupFutures");
+            auto& arr = service->decompress_futures;
+            for (auto& future : arr)
+            {
+                auto status = future->wait_for(0);
+                if (status == skr::FutureStatus::Ready)
                 {
-                    auto skrRequest = make_zeroed<skr_win_dstorage_decompress_request_t>();
-                    skrRequest.id = requests[i].Id;
-                    skrRequest.compression = requests[i].CompressionFormat;
-                    skrRequest.flags = requests[i].Flags;
-                    skrRequest.src_size = requests[i].SrcSize;
-                    skrRequest.src_buffer = requests[i].SrcBuffer;
-                    skrRequest.dst_size = requests[i].DstSize;
-                    skrRequest.dst_buffer = requests[i].DstBuffer;
-                    auto result = resolver->second.callback(&skrRequest, resolver->second.user_data);
-                    DSTORAGE_CUSTOM_DECOMPRESSION_RESULT failResult = {};
-                    failResult.Result = result;
-                    failResult.Id = requests[i].Id;
-                    service->decompress_queue->SetRequestResults(1, &failResult);
-                }
-                else
-                {
-                    SKR_LOG_WARN("Unable to find decompression resolver for format %d\n", requests[i].CompressionFormat);
-                    DSTORAGE_CUSTOM_DECOMPRESSION_RESULT failResult = {};
-                    failResult.Result = S_FALSE;
-                    failResult.Id = requests[i].Id;
-                    service->decompress_queue->SetRequestResults(1, &failResult);
+                    SkrDelete(future);
+                    future = nullptr;
                 }
             }
+            auto it = eastl::remove_if(arr.begin(), arr.end(), 
+                [](skr::IFuture<bool>* future) {
+                    return (future == nullptr);
+                });
+            arr.erase(it, arr.end());
         }
     }
 }
@@ -138,9 +185,6 @@ static void CALLBACK __decompressThreadPoolTask_DirectStorage(
         __decompressTask_DirectStorage(service);
     }
     
-#ifdef TRACY_ENABLE
-    tracy::SetThreadName("");
-#endif
 
     // Restore the original thread's priority back to its original setting.
     SetThreadPriority(GetCurrentThread(), oldPriority);
@@ -174,7 +218,7 @@ void skr_win_dstorage_set_staging_buffer_size(uint64_t size)
     _this->sDirectStorageStagingBufferSize = size;
 }
 
-skr_win_dstorage_decompress_service_id skr_win_dstorage_create_decompress_service()
+skr_win_dstorage_decompress_service_id skr_win_dstorage_create_decompress_service(const skr_win_dstorage_decompress_desc_t* desc)
 {
     auto _this = (SkrWindowsDStorageInstance*)skr_get_dstorage_instnace();
     if (!_this) return nullptr;
@@ -187,7 +231,7 @@ skr_win_dstorage_decompress_service_id skr_win_dstorage_create_decompress_servic
     {
         return nullptr;
     }
-    auto service = SkrNew<skr_win_dstorage_decompress_service_t>(pCompressionQueue);
+    auto service = SkrNew<skr_win_dstorage_decompress_service_t>(pCompressionQueue, desc);
     SKR_LOG_TRACE("Created decompress service");
     return service;
 }

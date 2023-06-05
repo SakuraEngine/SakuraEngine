@@ -3,6 +3,7 @@
 #if defined(_WIN32)
     #include "windows/time.c"
     #include "windows/thread.c"
+    #include "windows/misc.c"
 #elif defined(__APPLE__)
     #include "apple/time.c"
     #include "apple/thread.c"

@@ -165,6 +165,7 @@ TEST_F(FSTest, asyncread2)
     ioServiceDesc.trace_log = true;
     ioServiceDesc.name = u8"Test";
     ioServiceDesc.io_job_queue = io_job_queue;
+    ioServiceDesc.callback_job_queue = io_job_queue;
     auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
     ioService->add_default_resolvers();
 

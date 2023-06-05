@@ -1,12 +1,51 @@
 #include "../common/io_runnner.hpp"
+#include "async/thread_job.hpp"
 
 namespace skr {
 namespace io {
+
+namespace IORunner
+{
+using Future = skr::IFuture<bool>;
+using JobQueueFuture = skr::ThreadedJobQueueFuture<bool>;
+using SerialFuture = skr::SerialFuture<bool>;
+struct FutureLauncher
+{
+    FutureLauncher(skr::JobQueue* q) : job_queue(q) {}
+    template<typename F, typename... Args>
+    Future* async(F&& f, Args&&... args)
+    {
+        if (job_queue)
+            return SkrNew<JobQueueFuture>(job_queue, std::forward<F>(f), std::forward<Args>(args)...);
+        else
+            return SkrNew<SerialFuture>(std::forward<F>(f), std::forward<Args>(args)...);
+    }
+    skr::JobQueue* job_queue = nullptr;
+};
+}
 
 void RunnerBase::recycle() SKR_NOEXCEPT
 {
     ZoneScopedN("recycle");
     
+    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
+    {
+        for (auto& future : finish_futures)
+        {
+            auto status = future->wait_for(0);
+            if (status == skr::FutureStatus::Ready)
+            {
+                SkrDelete(future);
+                future = nullptr;
+            }
+        }
+        auto it = eastl::remove_if(finish_futures.begin(), finish_futures.end(), 
+            [](skr::IFuture<bool>* future) {
+                return (future == nullptr);
+            });
+        finish_futures.erase(it, finish_futures.end());
+    }
+
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
         reader->recycle((SkrAsyncServicePriority)i);
@@ -118,16 +157,20 @@ void RunnerBase::finish() SKR_NOEXCEPT
         while (auto request = reader->poll_finish_request((SkrAsyncServicePriority)i))
         {
             auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
-            rq->setStatus(SKR_IO_STAGE_COMPLETED);
-            if (rq->needPollFinish())
-            {
-                finish_queues[i].enqueue(rq);
-            }
-            else
-            {
-                rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
-            }
-            skr_atomicu32_add_relaxed(&processing_request_counts[i], -1);
+            auto& future = finish_futures.emplace_back();
+            future = IORunner::FutureLauncher(job_queue).async([this, i, rq = rq](){
+                rq->setStatus(SKR_IO_STAGE_COMPLETED);
+                if (rq->needPollFinish())
+                {
+                    finish_queues[i].enqueue(rq);
+                }
+                else
+                {
+                    rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
+                }
+                skr_atomicu32_add_relaxed(&processing_request_counts[i], -1);
+                return true;
+            });
         }
         while (auto batch = reader->poll_finish_batch((SkrAsyncServicePriority)i))
         {

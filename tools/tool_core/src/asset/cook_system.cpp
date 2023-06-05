@@ -90,6 +90,7 @@ protected:
 struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
 {
     skr::JobQueue* io_job_queue = nullptr;
+    skr::JobQueue* io_callback_job_queue = nullptr;
     virtual void on_load(int argc, char8_t** argv) override
     {
         skr_init_mutex(&cook_system.ioMutex);
@@ -101,6 +102,9 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
         jqDesc.name = u8"Tool-IOJobQueue";
         io_job_queue = SkrNew<skr::JobQueue>(jqDesc);
 
+        jqDesc.name = u8"Tool-IOCallbackJobQueue";
+        io_callback_job_queue = SkrNew<skr::JobQueue>(jqDesc);
+
         for (auto& ioService : cook_system.ioServices)
         {
             // all used up
@@ -111,6 +115,7 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
                 desc.awake_at_request = true;
                 desc.name = u8"Tool-IOService";
                 desc.io_job_queue = io_job_queue;
+                desc.callback_job_queue = io_callback_job_queue;
                 ioService = skr_io_ram_service_t::create(&desc);        
                 ioService->add_default_resolvers();
             }
@@ -130,6 +135,7 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
         for (auto& pair : cook_system.assets)
             SkrDelete(pair.second);
 
+        SkrDelete(io_callback_job_queue);
         SkrDelete(io_job_queue);
     }
     static skd::asset::SCookSystemImpl cook_system;
