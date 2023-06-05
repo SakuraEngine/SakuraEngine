@@ -227,7 +227,6 @@ skr::AsyncResult RAMService::Runner::serve() SKR_NOEXCEPT
     SKR_DEFER( { ZoneScopedNC("Finish", tracy::Color::Tan1); finish(); recycle(); } );
 
     uint64_t cnt;
-    const auto queued = getQueuedBatchCount();
     {
         ZoneScopedNC("Resolve", tracy::Color::Orchid1);
 
@@ -243,7 +242,7 @@ skr::AsyncResult RAMService::Runner::serve() SKR_NOEXCEPT
         uncompress();
         return ASYNC_RESULT_OK;
     }
-    else if (!queued)
+    else if (!getQueuedBatchCount())
     {
         setServiceStatus(SKR_ASYNC_SERVICE_STATUS_SLEEPING);
         sleep();
