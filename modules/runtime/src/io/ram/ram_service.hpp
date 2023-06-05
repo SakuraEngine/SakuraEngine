@@ -56,9 +56,9 @@ struct RAMService final : public IRAMService
     const bool awake_at_request = false;
     Runner runner;
     
-    skr::SObjectPtr<SmartPool<RAMIORequest, IIORequest>> request_pool = nullptr;
-    skr::SObjectPtr<SmartPool<RAMIOBuffer, IRAMIOBuffer>> ram_buffer_pool = nullptr;
-    skr::SObjectPtr<SmartPool<RAMIOBatch, IIOBatch>> ram_batch_pool = nullptr;
+    SmartPoolPtr<RAMIORequest, IIORequest> request_pool = nullptr;
+    SmartPoolPtr<RAMIOBuffer, IRAMIOBuffer> ram_buffer_pool = nullptr;
+    SmartPoolPtr<RAMIOBatch, IIOBatch> ram_batch_pool = nullptr;
 protected:
     static uint32_t global_idx;
     SAtomicU64 request_sequence = 0;

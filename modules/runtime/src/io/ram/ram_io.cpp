@@ -5,11 +5,31 @@
 #include "ram_batch.hpp"
 #include "ram_buffer.hpp"
 
+#include <stdlib.h> // abort
+
 namespace skr {
 namespace io {
 
 const char* kIOBufferMemoryName = "IOBuffer";
 uint32_t RAMService::global_idx = 0;
+
+template<typename F>
+bool wait_timeout(F f, uint32_t seconds_timeout = 3)
+{
+    ZoneScopedN("WaitTimeOut");
+    uint32_t milliseconds = 0;
+    while (!f())
+    {
+        if (milliseconds > seconds_timeout * 100)
+        {
+            SKR_LOG_ERROR("drain timeout, force quit");
+            return false;
+        }
+        skr_thread_sleep(1);
+        milliseconds++;
+    }
+    return true;
+}
 
 IRAMIOBuffer::~IRAMIOBuffer() SKR_NOEXCEPT {}
 
@@ -57,9 +77,9 @@ RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
       trace_log(desc->trace_log), awake_at_request(desc->awake_at_request),
       runner(this, CreateReader(this, desc), desc->callback_job_queue)
 {
-    request_pool = skr::SObjectPtr<SmartPool<RAMIORequest, IIORequest>>::Create();
-    ram_buffer_pool = skr::SObjectPtr<SmartPool<RAMIOBuffer, IRAMIOBuffer>>::Create();
-    ram_batch_pool = skr::SObjectPtr<SmartPool<RAMIOBatch, IIOBatch>>::Create();
+    request_pool = SmartPoolPtr<RAMIORequest, IIORequest>::Create();
+    ram_buffer_pool = SmartPoolPtr<RAMIOBuffer, IRAMIOBuffer>::Create();
+    ram_batch_pool = SmartPoolPtr<RAMIOBatch, IIOBatch>::Create();
 
     if (!desc->awake_at_request)
     {
@@ -102,7 +122,8 @@ void IRAMService::destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT
             SKR_LOG_TRACE("IRAMService::destroy: wait runner thread to exit...");
         S->runner.exit();
     }
-    SkrDelete(service);
+    SkrDelete(S);
+    SKR_LOG_TRACE("IRAMService::destroy: !");
 }
 
 IOBatchId RAMService::open_batch(uint64_t n) SKR_NOEXCEPT
@@ -156,12 +177,13 @@ void RAMService::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 
     if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
     {
-        while (runner.getQueuedBatchCount(priority) > 0 ||
-               runner.getExecutingBatchCount(priority) > 0 ||
-               runner.getProcessingRequestCount(priority) > 0)
-        {
-            // ...
-        }
+        const bool sucess = wait_timeout([&](){
+            return (runner.getQueuedBatchCount(priority) == 0) &&
+            (runner.getExecutingBatchCount(priority) == 0) &&
+            (runner.getProcessingRequestCount(priority) == 0);
+        }, 8);
+        SKR_ASSERT(sucess);
+        abort();
     }
     else
     {

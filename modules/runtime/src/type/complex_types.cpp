@@ -70,7 +70,7 @@ const skr_type_t* make_sobject_ptr_type(const skr_type_t* type)
     cache[type] = ptr_type;
     return ptr_type;
 }
-const skr_type_t* make_array_type(const skr_type_t* type, size_t num, size_t size)
+const skr_type_t* make_array_type(const skr_type_t* type, uint64_t num, uint64_t size)
 {
     static skr::flat_hash_map<std::pair<const skr_type_t*, size_t>, const skr_type_t*> cache;
     auto it = cache.find({ type, size });
