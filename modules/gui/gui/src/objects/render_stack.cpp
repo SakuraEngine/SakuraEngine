@@ -1,4 +1,5 @@
 #include "SkrGui/render_objects/render_stack.hpp"
+#include "misc/log.h"
 
 namespace skr
 {
@@ -27,6 +28,10 @@ void RenderStack::layout(BoxConstraint constraints, bool needSize)
         childConstraints.max_size = skr_float2_t{ std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()};
         if (positional.left && positional.right)
         {
+            if(positional.width)
+            {
+                SKR_LOG_WARN("Both left and right are set, width will be ignored");
+            }
             childConstraints.min_size.x = childConstraints.max_size.x =
             width - positional.left.get_value(width) - positional.right.get_value(width);
         }
@@ -36,6 +41,10 @@ void RenderStack::layout(BoxConstraint constraints, bool needSize)
         }
         if (positional.top && positional.bottom)
         {
+            if (positional.height)
+            {
+                SKR_LOG_WARN("Both top and bottom are set, height will be ignored");
+            }
             childConstraints.min_size.y = childConstraints.max_size.y =
             height - positional.top.get_value(height) - positional.bottom.get_value(height);
         }
@@ -58,6 +67,7 @@ void RenderStack::layout(BoxConstraint constraints, bool needSize)
         }
         else
         {
+            SKR_LOG_WARN("Both left and right are not set, default to left 0");
             childPosition.x = - child->get_size().x * positional.pivot.x;
         }
         if (positional.top)
@@ -72,6 +82,7 @@ void RenderStack::layout(BoxConstraint constraints, bool needSize)
         }
         else
         {
+            SKR_LOG_WARN("Both top and bottom are not set, default to top 0");
             childPosition.y = -child->get_size().y * positional.pivot.y;
         }
         child->set_position(childPosition);
