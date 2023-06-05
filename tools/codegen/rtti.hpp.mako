@@ -10,7 +10,7 @@ namespace skr::type
         ${api} static const skr_type_t* get();
     };
 %if hasattr(record.attrs, "hashable"):
-    size_t Hash(const ${record.name}& value, size_t base);
+    uint64_t Hash(const ${record.name}& value, uint64_t base);
 %endif
 %endfor
 

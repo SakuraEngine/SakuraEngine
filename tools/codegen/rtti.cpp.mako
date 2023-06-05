@@ -14,7 +14,7 @@ enums = generator.filter_rtti(db.enums)
 namespace skr::type
 {
 %if hasattr(record.attrs, "hashable"):
-    size_t Hash(const ${record.name}& value, size_t base)
+    uint64_t Hash(const ${record.name}& value, uint64_t base)
     {
     %for base in record.bases:
         base = Hash(static_cast<const ${base.name}&>(value), base);
@@ -48,7 +48,7 @@ namespace skr::type
                 GetCopyCtor<${record.name}>(),
                 GetMoveCtor<${record.name}>(),
         %if hasattr(record.attrs, "hashable"):
-                +[](const void* self, size_t base) { return Hash(*(const ${record.name}*)self, base); }, //hash
+                +[](const void* self, uint64_t base) { return Hash(*(const ${record.name}*)self, base); }, //hash
         %else:
                 nullptr, //hash
         %endif
