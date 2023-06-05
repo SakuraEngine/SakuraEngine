@@ -37,14 +37,6 @@ typedef enum SkrAsyncServiceStatus
     SKR_ASYNC_SERVICE_STATUS_MAX_ENUM = UINT32_MAX
 } SkrAsyncServiceStatus;
 
-typedef enum SkrAsyncServiceSleepMode
-{
-    SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR = 0,
-    SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP = 1,
-    SKR_ASYNC_SERVICE_SLEEP_MODE_COUNT,
-    SKR_ASYNC_SERVICE_SLEEP_MAX_ENUM = UINT32_MAX
-} SkrAsyncServiceSleepMode;
-
 typedef enum SkrAsyncServicePriority
 {
     SKR_ASYNC_SERVICE_PRIORITY_URGENT = 0,
@@ -121,10 +113,9 @@ typedef void (*skr_io_callback_t)(skr_io_future_t* future, skr_io_request_t* req
 typedef struct skr_ram_io_service_desc_t {
     const char8_t* name SKR_IF_CPP(= nullptr);
     uint32_t sleep_time SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_TIME_MAX);
-    bool lockless SKR_IF_CPP(= true);
-    SkrAsyncServiceSleepMode sleep_mode SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR);
     skr_job_queue_id io_job_queue SKR_IF_CPP(= nullptr);
     bool trace_log SKR_IF_CPP(= false);
+    bool awake_at_request SKR_IF_CPP(= true);
 } skr_ram_io_service_desc_t;
 
 #ifdef __cplusplus

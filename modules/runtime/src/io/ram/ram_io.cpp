@@ -55,8 +55,17 @@ inline static IOReaderId CreateReader(RAMService* service, const skr_ram_io_serv
 
 RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
     : name(desc->name ? skr::string(desc->name) : skr::format(u8"IRAMService-{}", global_idx++)), 
-      trace_log(desc->trace_log), runner(this, CreateReader(this, desc))
+      trace_log(desc->trace_log), awake_at_request(desc->awake_at_request),
+      runner(this, CreateReader(this, desc))
 {
+    if (!desc->awake_at_request)
+    {
+        if (desc->sleep_time > 2000)
+        {
+            SKR_ASSERT(desc->sleep_time <= 2000);
+            SKR_LOG_FATAL("RAMService: too long sleep_time causes 'deadlock' when awake_at_request is false");
+        }
+    }
     runner.setSleepTime(desc->sleep_time);
 }
 
@@ -105,12 +114,10 @@ IORequestId RAMService::open_request() SKR_NOEXCEPT
     return skr::static_pointer_cast<IIORequest>(request_pool.allocate(seq));
 }
 
-const bool kAwakeAtRequest = false;
 void RAMService::request(IOBatchId batch) SKR_NOEXCEPT
 {
-    const auto empty = !runner.getQueuedBatchCount(batch->get_priority());
     runner.enqueueBatch(batch);
-    if (kAwakeAtRequest || empty)
+    if (awake_at_request)
     {
         runner.tryAwake();
     }

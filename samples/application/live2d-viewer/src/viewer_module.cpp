@@ -93,9 +93,7 @@ void SLive2DViewerModule::on_load(int argc, char8_t** argv)
 
     auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
     ioServiceDesc.name = u8"Live2DViewerRAMIOService";
-    ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
     ioServiceDesc.sleep_time = 1000 / 60;
-    ioServiceDesc.lockless = true;
     ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
     ram_service->add_default_resolvers();
     

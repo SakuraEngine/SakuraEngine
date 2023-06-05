@@ -33,16 +33,13 @@ bool initialize_gdi_application(gdi_application_t* app)
     {
         auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
         ioServiceDesc.name = SKR_UTF8("GUI-IRAMService");
-        ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
         ioServiceDesc.sleep_time = 1000 / 60;
-        ioServiceDesc.lockless = true;
         app->ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
         app->ram_service->add_default_resolvers();
     }
     {
         auto ioServiceDesc = make_zeroed<skr_vram_io_service_desc_t>();
         ioServiceDesc.name = SKR_UTF8("GUI-VRAMService");
-        ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
         ioServiceDesc.sleep_time = 1000 / 60;
         ioServiceDesc.lockless = true;
         app->vram_service = skr_io_vram_service_t::create(&ioServiceDesc);
