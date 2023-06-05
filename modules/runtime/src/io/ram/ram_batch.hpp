@@ -7,8 +7,8 @@ namespace io {
 
 struct RAMIOBatch : public IOBatchBase
 {
-    RAMIOBatch(ISmartPool<IIOBatch>* pool, uint64_t seq, uint64_t n)
-        : IOBatchBase(pool, seq)
+    RAMIOBatch(ISmartPool<IIOBatch>* pool, IIOService* service, uint64_t seq, uint64_t n)
+        : IOBatchBase(pool, service, seq)
     {
         reserve(n);
     }

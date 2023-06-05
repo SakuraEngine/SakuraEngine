@@ -9,8 +9,6 @@ namespace skr {
 namespace io {
 
 const char* kIOBufferMemoryName = "IOBuffer";
-SmartPool<RAMIOBuffer, IRAMIOBuffer> ram_buffer_pool;
-SmartPool<RAMIOBatch, IIOBatch> ram_batch_pool;
 uint32_t RAMService::global_idx = 0;
 
 IRAMIOBuffer::~IRAMIOBuffer() SKR_NOEXCEPT {}
@@ -38,7 +36,8 @@ void RAMIOBuffer::free_buffer() SKR_NOEXCEPT
 
 IOResultId RAMIOBatch::add_request(IORequestId request, skr_io_future_t* future) SKR_NOEXCEPT
 {
-    auto buffer = ram_buffer_pool.allocate();
+    auto srv = static_cast<RAMService*>(service);
+    auto buffer = srv->ram_buffer_pool->allocate();
     auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
     rq->future = future;
     rq->destination = buffer;
@@ -58,6 +57,10 @@ RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
       trace_log(desc->trace_log), awake_at_request(desc->awake_at_request),
       runner(this, CreateReader(this, desc), desc->callback_job_queue)
 {
+    request_pool = skr::SObjectPtr<SmartPool<RAMIORequest, IIORequest>>::Create();
+    ram_buffer_pool = skr::SObjectPtr<SmartPool<RAMIOBuffer, IRAMIOBuffer>>::Create();
+    ram_batch_pool = skr::SObjectPtr<SmartPool<RAMIOBatch, IIOBatch>>::Create();
+
     if (!desc->awake_at_request)
     {
         if (desc->sleep_time > 2000)
@@ -105,13 +108,13 @@ void IRAMService::destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT
 IOBatchId RAMService::open_batch(uint64_t n) SKR_NOEXCEPT
 {
     uint64_t seq = (uint64_t)skr_atomicu64_add_relaxed(&batch_sequence, 1);
-    return skr::static_pointer_cast<IIOBatch>(ram_batch_pool.allocate(seq, n));
+    return skr::static_pointer_cast<IIOBatch>(ram_batch_pool->allocate(this, seq, n));
 }
 
 IORequestId RAMService::open_request() SKR_NOEXCEPT
 {
     uint64_t seq = (uint64_t)skr_atomicu64_add_relaxed(&request_sequence, 1);
-    return skr::static_pointer_cast<IIORequest>(request_pool.allocate(seq));
+    return skr::static_pointer_cast<IIORequest>(request_pool->allocate(seq));
 }
 
 void RAMService::request(IOBatchId batch) SKR_NOEXCEPT
