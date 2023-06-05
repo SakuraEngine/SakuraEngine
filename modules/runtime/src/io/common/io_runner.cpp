@@ -122,6 +122,25 @@ void RunnerBase::uncompress() SKR_NOEXCEPT
     // do nothing now
 }
 
+bool RunnerBase::cancelFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT
+{
+    rq->setStatus(SKR_IO_STAGE_CANCELLED);
+    if (rq->needPollFinish())
+    {
+        finish_queues[priority].enqueue(rq);
+        rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_PENDING);
+    }
+    else
+    {
+        rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
+    }
+    skr_atomicu32_add_relaxed(&processing_request_counts[priority], -1);
+    return true;
+}
+
+const bool async_cancel = false;
+const bool async_finish = false;
+
 bool RunnerBase::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT
 {
     const auto status = rq->getStatus();
@@ -131,21 +150,37 @@ bool RunnerBase::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEX
     {
         if (rq->getFinishStep() == SKR_ASYNC_IO_FINISH_STEP_NONE)
         {
-            rq->setStatus(SKR_IO_STAGE_CANCELLED);
-            if (rq->needPollFinish())
+            if (async_cancel)
             {
-                finish_queues[priority].enqueue(rq);
-                rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_PENDING);
+                auto& future = finish_futures.emplace_back();
+                future = IORunner::FutureLauncher(job_queue).async(
+                [this, priority, rq = rq](){
+                    return cancelFunction(rq, priority);
+                });
             }
             else
             {
-                rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
+                cancelFunction(rq, priority);
             }
-            skr_atomicu32_add_relaxed(&processing_request_counts[priority], -1);
         }
         return true;
     }
     return false;
+}
+
+bool RunnerBase::finishFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT
+{
+    rq->setStatus(SKR_IO_STAGE_COMPLETED);
+    if (rq->needPollFinish())
+    {
+        finish_queues[priority].enqueue(rq);
+    }
+    else
+    {
+        rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
+    }
+    skr_atomicu32_add_relaxed(&processing_request_counts[priority], -1);
+    return true;
 }
 
 void RunnerBase::finish() SKR_NOEXCEPT
@@ -157,20 +192,18 @@ void RunnerBase::finish() SKR_NOEXCEPT
         while (auto request = reader->poll_finish_request((SkrAsyncServicePriority)i))
         {
             auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
-            auto& future = finish_futures.emplace_back();
-            future = IORunner::FutureLauncher(job_queue).async([this, i, rq = rq](){
-                rq->setStatus(SKR_IO_STAGE_COMPLETED);
-                if (rq->needPollFinish())
-                {
-                    finish_queues[i].enqueue(rq);
-                }
-                else
-                {
-                    rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
-                }
-                skr_atomicu32_add_relaxed(&processing_request_counts[i], -1);
-                return true;
-            });
+            if (async_finish)
+            {
+                auto& future = finish_futures.emplace_back();
+                future = IORunner::FutureLauncher(job_queue).async(
+                [this, i, rq = rq](){
+                    return finishFunction(rq, (SkrAsyncServicePriority)i);
+                });
+            }
+            else
+            {
+                finishFunction(rq, (SkrAsyncServicePriority)i);
+            }
         }
         while (auto batch = reader->poll_finish_batch((SkrAsyncServicePriority)i))
         {
