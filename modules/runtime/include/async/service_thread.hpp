@@ -24,17 +24,17 @@ public:
         kStatusExiting = 4,
         kStatusExitted = 5
     };
-    Status get_status() const SKR_NOEXCEPT;
+    virtual Status get_status() const SKR_NOEXCEPT;
     
-    void request_stop() SKR_NOEXCEPT;
-    void stop() SKR_NOEXCEPT;
-    void wait_stop() SKR_NOEXCEPT;
+    virtual void request_stop() SKR_NOEXCEPT;
+    virtual void stop() SKR_NOEXCEPT;
+    virtual void wait_stop() SKR_NOEXCEPT;
 
-    void run() SKR_NOEXCEPT;
+    virtual void run() SKR_NOEXCEPT;
 
-    void request_exit() SKR_NOEXCEPT;
-    void exit() SKR_NOEXCEPT;
-    void wait_exit() SKR_NOEXCEPT;
+    virtual void request_exit() SKR_NOEXCEPT;
+    virtual void exit() SKR_NOEXCEPT;
+    virtual void wait_exit() SKR_NOEXCEPT;
 
     virtual AsyncResult serve() SKR_NOEXCEPT = 0;
 
