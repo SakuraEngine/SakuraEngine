@@ -111,9 +111,9 @@ public:
             p->pool->deallocate(p); 
         };
     }
-    IORequestBase(ISmartPool<IIORequest>* pool) : pool(pool) {}
+    IORequestBase(skr::SObjectPtr<ISmartPool<IIORequest>> pool) : pool(pool) {}
 protected:
-    ISmartPool<IIORequest>* pool = nullptr;
+    skr::SObjectPtr<ISmartPool<IIORequest>> pool = nullptr;
     
 public:
     uint32_t add_refcount() 

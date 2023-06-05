@@ -55,11 +55,14 @@ struct RAMService final : public IRAMService
     const bool trace_log = false;
     const bool awake_at_request = false;
     Runner runner;
+    
+    skr::SObjectPtr<SmartPool<RAMIORequest, IIORequest>> request_pool = nullptr;
+    skr::SObjectPtr<SmartPool<RAMIOBuffer, IRAMIOBuffer>> ram_buffer_pool = nullptr;
+    skr::SObjectPtr<SmartPool<RAMIOBatch, IIOBatch>> ram_batch_pool = nullptr;
 protected:
     static uint32_t global_idx;
     SAtomicU64 request_sequence = 0;
     SAtomicU64 batch_sequence = 0;
-    SmartPool<RAMIORequest, IIORequest> request_pool;
 };
 
 } // namespace io

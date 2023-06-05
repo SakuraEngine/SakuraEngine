@@ -245,8 +245,8 @@ const skr_type_t* make_variant_type(const skr::span<const skr_type_t*> types)
     size_t size = 0;
     size_t align = alignof(size_t);
     for(auto type : types) {
-        size = std::max(size, type->Size());
-        align = std::max(align, type->Align());
+        size = std::max((uint64_t)size, type->Size());
+        align = std::max((uint64_t)align, type->Align());
     }
     uint64_t padding = ((sizeof(size_t) + align - 1) & ~(align - 1)) - sizeof(size_t);
     size += sizeof(size_t) + padding;

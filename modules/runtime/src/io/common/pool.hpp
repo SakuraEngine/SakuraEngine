@@ -8,12 +8,25 @@ namespace skr {
 namespace io {
 
 template<typename I>
-struct ISmartPool
+struct ISmartPool : public skr::SInterface
 {
     virtual ~ISmartPool() = default;
     // template<typename...Args>
     // virtual SObjectPtr<I> allocate(Args&&... args) SKR_NOEXCEPT = 0;
     virtual void deallocate(I* ptr) SKR_NOEXCEPT = 0;
+
+public:
+    uint32_t add_refcount() 
+    { 
+        return 1 + skr_atomicu32_add_relaxed(&rc, 1); 
+    }
+    uint32_t release() 
+    {
+        skr_atomicu32_add_relaxed(&rc, -1);
+        return skr_atomicu32_load_acquire(&rc);
+    }
+private:
+    SAtomicU32 rc = 0;
 };
 
 extern const char* kIOPoolObjectsMemoryName; 
@@ -55,6 +68,10 @@ struct SmartPool : public ISmartPool<I>
         {
             ptr = (T*)sakura_calloc_alignedN(1, sizeof(T), alignof(T), kIOPoolObjectsMemoryName);
         }
+        else
+        {
+            memset((void*)ptr, 0, sizeof(T));
+        }
         new (ptr) T(this, std::forward<Args>(args)...);
 
         skr_atomic64_add_relaxed(&objcnt, 1);
@@ -65,10 +82,10 @@ struct SmartPool : public ISmartPool<I>
     {
         if (auto ptr = static_cast<T*>(iptr))
         {
-            ptr->~T();
-            memset((void*)ptr, 0, sizeof(T));
             skr_atomic64_add_relaxed(&objcnt, -1);
             blocks.enqueue(ptr);
+            ptr->~T(); // !DO NOT ADD CODE BELOW!
+            // CODE ENDS HERE
         }
     }
     skr::ConcurrentQueue<T*> blocks;
