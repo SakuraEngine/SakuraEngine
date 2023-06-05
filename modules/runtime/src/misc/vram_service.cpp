@@ -841,8 +841,7 @@ void skr::io::VRAMService::request(const skr_vram_texture_io_t* texture_info, sk
 skr_io_vram_service_t* skr_io_vram_service_t::create(const skr_vram_io_service_desc_t* desc) SKR_NOEXCEPT
 {
     auto service = SkrNew<skr::io::VRAMService>(desc->sleep_time, desc->lockless);
-    service->threaded_service.create_(desc->sleep_mode);
-    service->threaded_service.sleepMode = desc->sleep_mode;
+    service->threaded_service.create_();
     service->threaded_service.threadItem.pData = service;
     service->threaded_service.threadItem.pFunc = &__ioThreadTask_VRAM;
     skr_init_thread(&service->threaded_service.threadItem, &service->threaded_service.serviceThread);

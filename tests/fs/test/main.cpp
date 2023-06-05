@@ -245,7 +245,6 @@ TEST_F(FSTest, cancel)
         ioServiceDesc.trace_log = true;
         ioServiceDesc.name = u8"Test";
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
-        ioServiceDesc.lockless = false;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
         ioService->add_default_resolvers();
         ioService->set_sleep_time(0); // make test faster
@@ -300,7 +299,6 @@ TEST_F(FSTest, defer_cancel)
         skr_ram_io_service_desc_t ioServiceDesc = {};
         ioServiceDesc.trace_log = true;
         ioServiceDesc.name = u8"Test";
-        ioServiceDesc.lockless = true;
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
         ioService->add_default_resolvers();

@@ -96,7 +96,7 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
         skr_init_mutex(&cook_system.assetMutex);
 
         auto jqDesc = make_zeroed<skr::JobQueueDesc>();
-        jqDesc.thread_count = 2;
+        jqDesc.thread_count = 1;
         jqDesc.priority = SKR_THREAD_ABOVE_NORMAL;
         jqDesc.name = u8"Tool-IOJobQueue";
         io_job_queue = SkrNew<skr::JobQueue>(jqDesc);
@@ -107,10 +107,9 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
             if (ioService == nullptr)
             {
                 skr_ram_io_service_desc_t desc = {};
-                desc.sleep_time = 1;
-                desc.lockless = true;
+                desc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
+                desc.awake_at_request = true;
                 desc.name = u8"Tool-IOService";
-                desc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
                 desc.io_job_queue = io_job_queue;
                 ioService = skr_io_ram_service_t::create(&desc);        
                 ioService->add_default_resolvers();

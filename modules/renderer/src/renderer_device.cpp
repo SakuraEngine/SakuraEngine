@@ -129,7 +129,6 @@ void RendererDeviceImpl::initialize(const Builder& builder)
     auto vram_service_desc = make_zeroed<skr_vram_io_service_desc_t>();
     vram_service_desc.lockless = true;
     vram_service_desc.name = u8"vram_service";
-    vram_service_desc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
     vram_service_desc.sleep_time = 1000 / 60;
     vram_service = skr_io_vram_service_t::create(&vram_service_desc);
 }
