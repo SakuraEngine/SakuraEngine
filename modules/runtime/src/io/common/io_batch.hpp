@@ -50,14 +50,14 @@ public:
     }
     friend struct SmartPool<IOBatchBase, IIOBatch>;
 protected:
-    IOBatchBase(skr::SObjectPtr<ISmartPool<IIOBatch>> pool, IIOService* service, const uint64_t sequence) 
+    IOBatchBase(ISmartPoolPtr<IIOBatch> pool, IIOService* service, const uint64_t sequence) 
         : sequence(sequence), pool(pool), service(service)
     {
 
     }
     
     const uint64_t sequence;
-    skr::SObjectPtr<ISmartPool<IIOBatch>> pool = nullptr;
+    ISmartPoolPtr<IIOBatch> pool = nullptr;
     IIOService* service = nullptr;
 };
 

@@ -28,6 +28,8 @@ public:
 private:
     SAtomicU32 rc = 0;
 };
+template<typename I>
+using ISmartPoolPtr = skr::SObjectPtr<ISmartPool<I>>;
 
 extern const char* kIOPoolObjectsMemoryName; 
 extern const char* kIOConcurrentQueueName;
@@ -91,6 +93,8 @@ struct SmartPool : public ISmartPool<I>
     skr::ConcurrentQueue<T*> blocks;
     SAtomic64 objcnt = 0;
 };
+template<typename T, typename I>
+using SmartPoolPtr = skr::SObjectPtr<SmartPool<T, I>>;
 
 struct IOConcurrentQueueTraits : public skr::ConcurrentQueueDefaultTraits
 {

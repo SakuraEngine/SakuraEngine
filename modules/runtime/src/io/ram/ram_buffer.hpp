@@ -44,8 +44,8 @@ public:
     }
     friend struct SmartPool<RAMIOBuffer, IRAMIOBuffer>;
 protected:
-    RAMIOBuffer(skr::SObjectPtr<ISmartPool<IRAMIOBuffer>> pool) : pool(pool) {}
-    skr::SObjectPtr<ISmartPool<IRAMIOBuffer>> pool = nullptr;
+    RAMIOBuffer(ISmartPoolPtr<IRAMIOBuffer> pool) : pool(pool) {}
+    ISmartPoolPtr<IRAMIOBuffer> pool = nullptr;
 };
 
 } // namespace io
