@@ -34,16 +34,17 @@ struct SleepyService : public skr::ServiceThread
         skr_atomicu32_store_release(&sleep_time, time);
     }
 
-    virtual bool predicate() const SKR_NOEXCEPT = 0;
-
     void sleep() SKR_NOEXCEPT
     {
         const auto ms = skr_atomicu64_load_relaxed(&sleep_time);
 
         ZoneScopedNC("ioServiceSleep(Cond)", tracy::Color::Gray55);
         condlock.lock();
-        if (!predicate())
+        if (!event)
+        {
             condlock.wait(ms);
+            event = false;
+        }
         condlock.unlock();
     }
 
@@ -61,11 +62,15 @@ struct SleepyService : public skr::ServiceThread
 
     void tryAwake()
     {
+        condlock.lock();
+        event = true;
         condlock.signal();
+        condlock.unlock();
     }
 
 private:
     SAtomicU32 sleep_time = 16u;
+    bool event = false;
     CondLock condlock;
     SAtomicU32 service_status = SKR_ASYNC_SERVICE_STATUS_SLEEPING;
 };
@@ -155,11 +160,6 @@ struct RunnerBase : public SleepyService
         {
             rq->tryPollFinish();
         }
-    }
-
-    bool predicate() const SKR_NOEXCEPT
-    {
-        return getQueuedBatchCount() > 0;
     }
 
     // cancel request marked as request_cancel
