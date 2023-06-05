@@ -25,6 +25,7 @@ public:
         kStatusExitted = 5
     };
     virtual Status get_status() const SKR_NOEXCEPT;
+    virtual void set_status(Status status) SKR_NOEXCEPT;
     
     virtual void request_stop() SKR_NOEXCEPT;
     virtual void stop() SKR_NOEXCEPT;
@@ -49,7 +50,8 @@ protected:
     friend struct ServiceFunc;
     ServiceFunc f;
     NamedThread t;
-    SAtomicU32 status = kStatusStopped;
     SAtomicU32 rid = 0;
+private:
+    SAtomicU32 status = kStatusStopped;
 };
 }
