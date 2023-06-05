@@ -11,6 +11,8 @@
 #include "platform/vfs.h"
 #include "platform/thread.h"
 #include "platform/time.h"
+#include "platform/filesystem.hpp"
+#include "async/thread_job.hpp"
 
 #include "misc/log.h"
 #include "cgpu/io.h"
@@ -32,6 +34,8 @@
 #ifdef _WIN32
 #include "SkrImageCoder/extensions/win_dstorage_decompressor.h"
 #endif
+
+namespace skr { struct JobQueue; }
 
 enum DemoUploadMethod
 {
@@ -62,9 +66,8 @@ public:
     SRendererId l2d_renderer = nullptr;
     skr_vfs_t* resource_vfs = nullptr;
     skr_io_ram_service_t* ram_service = nullptr;
-
+    skr::JobQueue* io_job_queue = nullptr;
 };
-#include "platform/filesystem.hpp"
 
 IMPLEMENT_DYNAMIC_MODULE(SLive2DViewerModule, Live2DViewer);
 
@@ -91,9 +94,16 @@ void SLive2DViewerModule::on_load(int argc, char8_t** argv)
     auto render_device = skr_get_default_render_device();
     l2d_renderer = skr_create_renderer(render_device, l2d_world);
 
+    auto jqDesc = make_zeroed<skr::JobQueueDesc>();
+    jqDesc.thread_count = 1;
+    jqDesc.priority = SKR_THREAD_ABOVE_NORMAL;
+    jqDesc.name = u8"Live2DViewer-RAMIOJobQueue";
+    io_job_queue = SkrNew<skr::JobQueue>(jqDesc);
+
     auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
-    ioServiceDesc.name = u8"Live2DViewerRAMIOService";
-    ioServiceDesc.sleep_time = 1000 / 60;
+    ioServiceDesc.name = u8"Live2DViewer-RAMIOService";
+    ioServiceDesc.sleep_time = 1000 / 100; // TickRate: 100
+    ioServiceDesc.io_job_queue = io_job_queue;
     ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
     ram_service->add_default_resolvers();
     
@@ -113,6 +123,8 @@ void SLive2DViewerModule::on_unload()
     skr_free_vfs(resource_vfs);
 
     dualS_release(l2d_world);
+
+    SkrDelete(io_job_queue);
 }
 
 extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs);
