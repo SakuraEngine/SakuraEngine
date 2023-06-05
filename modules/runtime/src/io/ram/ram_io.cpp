@@ -123,7 +123,6 @@ void IRAMService::destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT
         S->runner.exit();
     }
     SkrDelete(S);
-    SKR_LOG_TRACE("IRAMService::destroy: !");
 }
 
 IOBatchId RAMService::open_batch(uint64_t n) SKR_NOEXCEPT
@@ -184,7 +183,10 @@ void RAMService::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
         }, 8);
         if (!sucess)
         {
-            SKR_LOG_FATAL("RAMService::drain: timeout!");
+            SKR_LOG_FATAL("RAMService::drain: timeout! queued: %llu, executing: %llu, processing: %llu",
+                runner.getQueuedBatchCount(priority),
+                runner.getExecutingBatchCount(priority),
+                runner.getProcessingRequestCount(priority));
             abort();
         }
     }
