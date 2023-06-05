@@ -42,7 +42,7 @@ struct SleepyService : public skr::ServiceThread
 
         ZoneScopedNC("ioServiceSleep(Cond)", tracy::Color::Gray55);
         condlock.lock();
-        while (!predicate())
+        if (!predicate())
             condlock.wait(ms);
         condlock.unlock();
     }
