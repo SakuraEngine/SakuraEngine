@@ -30,18 +30,42 @@ ServiceThread::~ServiceThread() SKR_NOEXCEPT
 
 ServiceThread::Status ServiceThread::get_status() const SKR_NOEXCEPT
 {
-    return static_cast<Status>(skr_atomic32_load_acquire(&status));
+    return static_cast<Status>(skr_atomicu32_load_acquire(&status));
+}
+
+void ServiceThread::set_status(Status to_set) SKR_NOEXCEPT
+{
+    const auto S = get_status();
+    if (to_set == kStatusStopping)
+    {
+        if (S != kStatusRunning)
+        {
+            SKR_LOG_FATAL("must stop from a running service! current status: %d", S);
+            SKR_ASSERT(S == kStatusRunning);  
+        }
+    }
+    else if (to_set == kStatusWaking)
+    {
+        if (S != kStatusStopped)
+        {
+            SKR_LOG_FATAL("must wake from a stopped service!");
+            SKR_ASSERT(S == kStatusStopped);
+        }
+    }
+    else if (to_set == kStatusExiting)
+    {
+        if (S != kStatusStopped)
+        {
+            SKR_LOG_FATAL("must exit from a stopped service!");
+            SKR_ASSERT(S == kStatusStopped);
+        }
+    }
+    skr_atomicu32_store_release(&status, to_set);
 }
 
 void ServiceThread::request_stop() SKR_NOEXCEPT
 {
-    const auto S = get_status();
-    if (S != kStatusRunning)
-    {
-        SKR_LOG_FATAL("must stop from a running service! current status: %d", S);
-        SKR_ASSERT(S == kStatusRunning);
-    }
-    skr_atomic32_store_release(&status, kStatusStopping);
+    set_status(kStatusStopping);
 }
 
 void ServiceThread::stop() SKR_NOEXCEPT
@@ -67,18 +91,11 @@ void ServiceThread::wait_stop() SKR_NOEXCEPT
 
 void ServiceThread::run() SKR_NOEXCEPT
 {
-    const auto S = get_status();
-    if (S != kStatusStopped)
-    {
-        SKR_LOG_FATAL("must run from a stopped service!");
-        SKR_ASSERT(S == kStatusStopped);
-    }
-    
     // record last turn id
     const auto orid = skr_atomicu32_load_relaxed(&rid);
     
     // signal waking
-    skr_atomic32_store_release(&status, kStatusWaking);
+    set_status(kStatusWaking);
     if (!t.has_started())
     {
         t.start(&f);
@@ -93,18 +110,14 @@ void ServiceThread::run() SKR_NOEXCEPT
 
 void ServiceThread::request_exit() SKR_NOEXCEPT
 {
-    const auto S = get_status();
-    if (S != kStatusStopped)
-    {
-        SKR_LOG_FATAL("must exit from a stopped service!");
-        SKR_ASSERT(S == kStatusStopped);
-    }
-    skr_atomic32_store_release(&status, kStatusExiting);
+    set_status(kStatusExiting);
 }
 
 void ServiceThread::exit() SKR_NOEXCEPT
 {
+    // SKR_LOG_TRACE("ServiceThread::destroy: wait runner thread to request_exit...");
     request_exit();
+    // SKR_LOG_TRACE("ServiceThread::destroy: wait runner thread to wait_exit...");
     wait_exit();
 }
 
@@ -115,6 +128,13 @@ void ServiceThread::wait_exit() SKR_NOEXCEPT
     {
         SKR_LOG_FATAL("dead lock detected!");
         SKR_ASSERT((tid != t.get_id()) && "dead lock detected!");
+    }
+
+    const auto S = get_status();
+    if (S < kStatusExiting)
+    {
+        SKR_LOG_FATAL("must wait from a exiting service!");
+        SKR_ASSERT(S  < kStatusStopped);
     }
 
     while (get_status() != kStatusExitted)
@@ -135,7 +155,7 @@ WAKING:
 {
     ZoneScopedN("WAKING");
 
-    auto S = skr_atomic32_load_acquire(&_service->status);
+    auto S = _service->get_status();
     if (S == kStatusWaking)
     {
         goto RUNNING;
@@ -146,7 +166,7 @@ RUNNING:
 {
     ZoneScopedN("RUNNING");
 
-    skr_atomic32_store_release(&_service->status, kStatusRunning);
+    _service->set_status(kStatusRunning);
     skr_atomic32_add_relaxed(&_service->rid, 1);
     for (;;)
     {
@@ -159,7 +179,7 @@ RUNNING:
             return R;
         }
         // 3. check status
-        auto S = skr_atomic32_load_acquire(&_service->status);
+        auto S = _service->get_status();
         if (S == kStatusRunning)
         {
             continue;
@@ -181,7 +201,7 @@ STOP:
 {
     ZoneScopedN("STOP");
 
-    auto S = skr_atomic32_load_acquire(&_service->status);
+    auto S = _service->get_status();
     if (S == kStatusWaking)
     {
         goto WAKING;
@@ -192,7 +212,7 @@ STOP:
     }
     else if (S == kStatusStopping)
     {
-        skr_atomic32_store_release(&_service->status, kStatusStopped);
+        _service->set_status(kStatusStopped);
     }
     else if (S == kStatusExiting)
     {
@@ -211,7 +231,8 @@ EXIT:
 {
     ZoneScopedN("EXIT");
 
-    skr_atomic32_store_release(&_service->status, kStatusExitted);
+    _service->set_status(kStatusExitted);
+    // SKR_LOG_TRACE("Service Thread exited!");
 }
     return ASYNC_RESULT_OK;
 }
