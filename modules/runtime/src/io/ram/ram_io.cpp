@@ -128,7 +128,6 @@ void RAMService::stop(bool wait_drain) SKR_NOEXCEPT
     {
         drain();
     }
-    runner.tryAwake();
     runner.stop();
 }
 
