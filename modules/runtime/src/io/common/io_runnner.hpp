@@ -131,6 +131,7 @@ struct RunnerBase : public SleepyService
 
     // cancel request marked as request_cancel
     bool try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT;
+    bool cancelFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     // 0. recycletry_cancel
     void recycle() SKR_NOEXCEPT;
     // 1. fetch requests from queue
@@ -143,6 +144,7 @@ struct RunnerBase : public SleepyService
     void uncompress() SKR_NOEXCEPT;
     // 6. finish
     void finish() SKR_NOEXCEPT;
+    bool finishFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
 
     SObjectPtr<IIOReader> reader = nullptr;
     SObjectPtr<IOBatchResolverChain> resolver_chain = nullptr;
