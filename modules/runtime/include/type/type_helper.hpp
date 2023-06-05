@@ -11,10 +11,10 @@ struct skr_value_t;
 namespace skr
 {
     template<class T>
-    constexpr auto GetDefaultCtor() -> void(*)(void*, skr_value_t*, size_t)
+    constexpr auto GetDefaultCtor() -> void(*)(void*, skr_value_t*, uint64_t)
     {
         if constexpr (std::is_default_constructible_v<T>)
-            return [](void* self, skr_value_t* param, size_t nparam) 
+            return [](void* self, skr_value_t* param, uint64_t nparam) 
             { 
                 new (self) T();
             };
