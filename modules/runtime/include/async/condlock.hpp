@@ -47,12 +47,4 @@ private:
     SConditionVariable cond;
     SMutex mutex;
 };
-
-struct RUNTIME_STATIC_API CondLockEvent
-{
-
-private:
-    CondLock condlock;
-};
-
 }
