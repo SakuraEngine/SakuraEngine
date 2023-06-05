@@ -55,7 +55,7 @@ inline static IOReaderId CreateReader(RAMService* service, const skr_ram_io_serv
 
 RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
     : name(desc->name ? skr::string(desc->name) : skr::format(u8"IRAMService-{}", global_idx++)), 
-      runner(this, CreateReader(this, desc))
+      trace_log(desc->trace_log), runner(this, CreateReader(this, desc))
 {
     runner.setSleepTime(desc->sleep_time);
 }
@@ -80,10 +80,14 @@ void IRAMService::destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT
     }
     {
         ZoneScopedN("wait_stop");
+        if (S->trace_log)
+            SKR_LOG_TRACE("IRAMService::destroy: wait runner thread to stop...");
         S->runner.wait_stop();
     }
     {
         ZoneScopedN("exit");
+        if (S->trace_log)
+            SKR_LOG_TRACE("IRAMService::destroy: wait runner thread to exit...");
         S->runner.exit();
     }
     SkrDelete(service);

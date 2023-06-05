@@ -58,8 +58,8 @@ struct SleepyService : public skr::ServiceThread
 
     void wait_stop() SKR_NOEXCEPT override
     {
-        skr::ServiceThread::wait_stop();
         tryAwake();
+        skr::ServiceThread::wait_stop();
     }
 
     void tryAwake()

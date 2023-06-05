@@ -124,6 +124,7 @@ typedef struct skr_ram_io_service_desc_t {
     bool lockless SKR_IF_CPP(= true);
     SkrAsyncServiceSleepMode sleep_mode SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR);
     skr_job_queue_id io_job_queue SKR_IF_CPP(= nullptr);
+    bool trace_log SKR_IF_CPP(= false);
 } skr_ram_io_service_desc_t;
 
 #ifdef __cplusplus
