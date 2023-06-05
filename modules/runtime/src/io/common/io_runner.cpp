@@ -100,8 +100,8 @@ uint64_t RunnerBase::fetch() SKR_NOEXCEPT
         {
             reader->fetch((SkrAsyncServicePriority)i, batch);
 
-            skr_atomicu64_add_relaxed(&dispatching_batch_counts[i], 1);
-            skr_atomicu64_add_relaxed(&queued_batch_counts[i], -1);
+            skr_atomic64_add_relaxed(&dispatching_batch_counts[i], 1);
+            skr_atomic64_add_relaxed(&queued_batch_counts[i], -1);
             N++;
         }
     }
@@ -134,7 +134,7 @@ bool RunnerBase::cancelFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServi
     {
         rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
     }
-    skr_atomicu32_add_relaxed(&processing_request_counts[priority], -1);
+    skr_atomic64_add_relaxed(&processing_request_counts[priority], -1);
     return true;
 }
 
@@ -179,7 +179,7 @@ bool RunnerBase::finishFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServi
     {
         rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
     }
-    skr_atomicu32_add_relaxed(&processing_request_counts[priority], -1);
+    skr_atomic64_add_relaxed(&processing_request_counts[priority], -1);
     return true;
 }
 
@@ -207,7 +207,7 @@ void RunnerBase::finish() SKR_NOEXCEPT
         }
         while (auto batch = reader->poll_finish_batch((SkrAsyncServicePriority)i))
         {
-            skr_atomicu64_add_relaxed(&dispatching_batch_counts[i], -1);
+            skr_atomic64_add_relaxed(&dispatching_batch_counts[i], -1);
         }
     }
 }
