@@ -34,22 +34,14 @@ struct SleepyService : public skr::ServiceThread
         skr_atomicu32_store_release(&sleep_time, time);
     }
 
-    const bool condsleep = true;
     void sleep() SKR_NOEXCEPT
     {
         const auto ms = skr_atomicu64_load_relaxed(&sleep_time);
-        if (!condsleep)
-        {
-            ZoneScopedNC("ioServiceSleep(Sleep)", tracy::Color::Gray55);
-            skr_thread_sleep(ms);
-        }
-        else
-        {
-            ZoneScopedNC("ioServiceSleep(Cond)", tracy::Color::Gray55);
-            condlock.lock();
-            condlock.wait(ms);
-            condlock.unlock();
-        }
+
+        ZoneScopedNC("ioServiceSleep(Cond)", tracy::Color::Gray55);
+        condlock.lock();
+        condlock.wait(ms);
+        condlock.unlock();
     }
 
     void request_stop() SKR_NOEXCEPT override
@@ -66,12 +58,7 @@ struct SleepyService : public skr::ServiceThread
 
     void tryAwake()
     {
-        if (condsleep)
-        {
-            condlock.lock();
-            condlock.signal();
-            condlock.unlock();
-        } 
+        condlock.signal();
     }
 
 private:
@@ -107,19 +94,55 @@ struct RunnerBase : public SleepyService
         skr_atomicu32_add_relaxed(&queued_batch_counts[pri], 1);
     }
 
-    uint64_t getQueuedBatchCount(SkrAsyncServicePriority priority) const SKR_NOEXCEPT
+    uint64_t getQueuedBatchCount(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
     {
-        return skr_atomicu64_load_relaxed(&queued_batch_counts[priority]);
+        if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
+        {
+            return skr_atomicu64_load_relaxed(&queued_batch_counts[priority]);
+        }
+        else
+        {
+            uint64_t count = 0;
+            for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
+            {
+                count += skr_atomicu64_load_relaxed(&queued_batch_counts[i]);
+            }
+            return count;
+        }
     }
 
-    uint64_t getExecutingBatchCount(SkrAsyncServicePriority priority) const SKR_NOEXCEPT
+    uint64_t getExecutingBatchCount(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
     {
-        return skr_atomicu64_load_relaxed(&dispatching_batch_counts[priority]);
+        if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
+        {
+            return skr_atomicu64_load_relaxed(&dispatching_batch_counts[priority]);
+        }
+        else
+        {
+            uint64_t count = 0;
+            for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
+            {
+                count += skr_atomicu64_load_relaxed(&dispatching_batch_counts[i]);
+            }
+            return count;
+        }
     }
 
-    uint64_t getProcessingRequestCount(SkrAsyncServicePriority priority) const SKR_NOEXCEPT
+    uint64_t getProcessingRequestCount(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
     {
-        return skr_atomicu64_load_relaxed(&processing_request_counts[priority]);
+        if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
+        {
+            return skr_atomicu64_load_relaxed(&processing_request_counts[priority]);
+        }
+        else
+        {
+            uint64_t count = 0;
+            for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
+            {
+                count += skr_atomicu64_load_relaxed(&processing_request_counts[i]);
+            }
+            return count;
+        }
     }
 
     void poll_finish_callbacks()
