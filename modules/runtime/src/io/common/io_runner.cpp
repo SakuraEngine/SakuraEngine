@@ -57,10 +57,10 @@ void RunnerBase::resolve() SKR_NOEXCEPT
     SKR_ASSERT(reader);
     ZoneScopedN("resolve");
 
-    const uint32_t NBytes = reader->get_prefer_batch_size();
+    const uint64_t NBytes = reader->get_prefer_batch_size();
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        uint32_t bytes = 0;
+        uint64_t bytes = 0;
         BatchPtr batch = nullptr;
         while ((bytes <= NBytes) && batch_queues[i].try_dequeue(batch))
         {

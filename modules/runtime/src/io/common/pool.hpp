@@ -10,7 +10,7 @@ namespace io {
 template<typename I>
 struct ISmartPool : public skr::SInterface
 {
-    virtual ~ISmartPool() = default;
+    virtual ~ISmartPool() SKR_NOEXCEPT = default;
     // template<typename...Args>
     // virtual SObjectPtr<I> allocate(Args&&... args) SKR_NOEXCEPT = 0;
     virtual void deallocate(I* ptr) SKR_NOEXCEPT = 0;
@@ -39,7 +39,7 @@ struct SmartPool : public ISmartPool<I>
 {
     static_assert(std::is_base_of_v<I, T>, "T must be derived from I");
 
-    SmartPool(uint64_t cnt = 64)
+    SmartPool(uint64_t cnt = 64) SKR_NOEXCEPT
     {
         for (uint64_t i = 0; i < cnt; ++i)
         {
@@ -47,7 +47,7 @@ struct SmartPool : public ISmartPool<I>
         }
     }
 
-    ~SmartPool()
+    virtual ~SmartPool() SKR_NOEXCEPT
     {
         const auto N = skr_atomic64_load_acquire(&objcnt);
         if (N != 0)
@@ -70,10 +70,6 @@ struct SmartPool : public ISmartPool<I>
         {
             ptr = (T*)sakura_calloc_alignedN(1, sizeof(T), alignof(T), kIOPoolObjectsMemoryName);
         }
-        else
-        {
-            memset((void*)ptr, 0, sizeof(T));
-        }
         new (ptr) T(this, std::forward<Args>(args)...);
 
         skr_atomic64_add_relaxed(&objcnt, 1);
@@ -84,12 +80,29 @@ struct SmartPool : public ISmartPool<I>
     {
         if (auto ptr = static_cast<T*>(iptr))
         {
-            skr_atomic64_add_relaxed(&objcnt, -1);
+            ptr->~T(); 
+            memset((void*)ptr, 0, sizeof(T));
             blocks.enqueue(ptr);
-            ptr->~T(); // !DO NOT ADD CODE BELOW!
-            // CODE ENDS HERE
+            skr_atomic64_add_relaxed(&objcnt, -1);
         }
+        if (recursive_deleting)
+            SkrDelete(this);
     }
+
+    bool recursive_deleting = false;
+    SInterfaceDeleter custom_deleter() const 
+    { 
+        return +[](SInterface* ptr) 
+        { 
+            auto* p = static_cast<SmartPool<T, I>*>(ptr);
+            const auto N = skr_atomic64_load_acquire(&p->objcnt);
+            if (N)
+                p->recursive_deleting = true;
+            else
+                SkrDelete(p);
+        };
+    }
+
     skr::ConcurrentQueue<T*> blocks;
     SAtomic64 objcnt = 0;
 };
