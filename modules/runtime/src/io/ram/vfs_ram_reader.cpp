@@ -48,9 +48,14 @@ void VFSRAMReader::dispatchFunction(IOBatchId batch) SKR_NOEXCEPT
             {
                 // cancel...
                 if (rq->file) 
+                {
                     skr_vfs_fclose(rq->file);
+                    rq->file = nullptr;
+                }
                 if (buf)
+                {
                     buf->free_buffer();
+                }
             }
             else if (rq->getStatus() == SKR_IO_STAGE_RESOLVING)
             {
