@@ -52,6 +52,7 @@ struct RAMService final : public IRAMService
         RAMService* service = nullptr;
     };
     const skr::string name;
+    const bool trace_log = false;
     Runner runner;
 protected:
     static uint32_t global_idx;
