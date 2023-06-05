@@ -74,6 +74,8 @@ struct RUNTIME_API ModuleSubsystemBase
     virtual ~ModuleSubsystemBase() SKR_NOEXCEPT = default;
     virtual void Initialize() = 0;
     virtual void Finalize() = 0;
+    virtual void BeginReload() {}
+    virtual void EndReload() {}
 };
 
 /**
@@ -92,6 +94,7 @@ public:
     virtual void on_unload() = 0;
     virtual int main_module_exec(int argc, char8_t** argv) { return 0; }
     virtual const char8_t* get_meta_data(void) = 0;
+    virtual bool reloadable() { return false; }
     virtual const ModuleInfo* get_module_info()
     {
         return &information;
@@ -113,7 +116,15 @@ struct RUNTIME_API IDynamicModule : public IModule {
     }
 };
 struct IStaticModule : public IModule {
-    
+};
+struct RUNTIME_API IHotfixModule : public IDynamicModule {
+    void* state = nullptr;
+    virtual void on_reload_begin() = 0;
+    virtual void on_reload_finish() = 0;
+    virtual bool reloadable() override final
+    {
+        return true;
+    }
 };
 } // namespace skr
 

@@ -124,10 +124,3 @@ TEST_F(BINARY_BITPACK, VectorPack)
     EXPECT_FLOAT_EQ(value2.y, readValue2.y);
     EXPECT_FLOAT_EQ(value2.z, readValue2.z);
 }
-
-int main(int argc, char** argv)
-{
-    ::testing::InitGoogleTest(&argc, argv);
-    auto result = RUN_ALL_TESTS();
-    return result;
-}

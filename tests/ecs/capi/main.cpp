@@ -8,6 +8,7 @@ using test = int;
 dual_type_index_t type_test;
 dual_type_index_t type_test_arr;
 dual_type_index_t type_test2;
+dual_type_index_t type_test3;
 dual_type_index_t type_test2_arr;
 using ref = dual_entity_t;
 dual_type_index_t type_ref;
@@ -162,6 +163,122 @@ TEST_F(APITest, remove_component)
     EXPECT_EQ(dualV_get_owned_ro(&view, type_test), nullptr);
 }
 
+TEST_F(APITest, pin)
+{
+    dual_entity_t e2;
+    dual_chunk_view_t view;
+    {
+        dual_entity_type_t entityType;
+        dual_type_index_t types[] = { type_test, type_pinned };
+        entityType.type = { types, 2 };
+        entityType.meta = { nullptr, 0 };
+        auto callback = [&](dual_chunk_view_t* inView) {
+            view = *inView;
+            *(test*)dualV_get_owned_rw(&view, type_test) = 123;
+        };
+        dualS_allocate_type(storage, &entityType, 1, DUAL_LAMBDA(callback));
+
+        e2 = dualV_get_entities(&view)[0];
+    }
+    
+    dualS_destroy(storage, &view);
+    {
+        // entity with pinned component will only be marked as dead and keep existing
+        EXPECT_TRUE(dualS_exist(storage, e2));
+        dual_chunk_view_t view2;
+        dualS_access(storage, e2, &view2);
+        EXPECT_EQ(*(test*)dualV_get_owned_ro(&view2, type_test), 123);
+        //only explicit query can access dead entity
+        {
+            auto query = dualQ_from_literal(storage, "[in]pinned, [has]dead");
+            dual_chunk_view_t view3;
+            auto callback = [&](dual_chunk_view_t* inView) {
+                view3 = *inView;
+            };
+            dualQ_get_views(query, DUAL_LAMBDA(callback));
+            EXPECT_EQ(*dualV_get_entities(&view3), e2);
+        }
+        {
+            auto query2 = dualQ_from_literal(storage, "[in]pinned");
+            dual_chunk_view_t view4 = { 0 };
+            auto callback = [&](dual_chunk_view_t* inView) {
+                view4 = *inView;
+            };
+            dualQ_get_views(query2, DUAL_LAMBDA(callback));
+            EXPECT_EQ(view4.chunk, nullptr);
+        }
+        //when all pinned components are removed from a dead entity, entity will be destroyed
+        dual_delta_type_t deltaType;
+        zero(deltaType);
+        deltaType.removed = { { &type_pinned, 1 } };
+        dualS_cast_view_delta(storage, &view2, &deltaType, nullptr, nullptr);
+        EXPECT_FALSE(dualS_exist(storage, e2));
+    }
+}
+
+TEST_F(APITest, manage)
+{
+    std::weak_ptr<int> observer;
+    dual_entity_t e2;
+    {
+        dual_chunk_view_t view;
+        dual_entity_type_t entityType;
+        entityType.type = { &type_managed, 1 };
+        entityType.meta = { nullptr, 0 };
+        auto callback = [&](dual_chunk_view_t* inView) {
+            view = *inView;
+            auto& d = *(std::shared_ptr<int>*)dualV_get_owned_rw(&view, type_managed);
+            d.reset(new int(1));
+            observer = d;
+        };
+        dualS_allocate_type(storage, &entityType, 1, DUAL_LAMBDA(callback));
+        e2 = dualV_get_entities(&view)[0];
+
+        EXPECT_EQ(observer.use_count(), 1);
+        EXPECT_EQ(*observer.lock(), 1);
+        dualS_instantiate(storage, e2, 3, nullptr, nullptr);
+        EXPECT_EQ(observer.use_count(), 4);
+
+        dualS_destroy(storage, &view);
+        EXPECT_EQ(observer.use_count(), 3);
+    }
+}
+
+TEST_F(APITest, ref)
+{
+    dual_entity_t e2, e3, e4;
+    {
+        dual_chunk_view_t view;
+        dual_entity_type_t entityType;
+        entityType.type = { &type_ref, 1 };
+        entityType.meta = { nullptr, 0 };
+        auto callback = [&](dual_chunk_view_t* inView) {
+            view = *inView;
+            auto& d = *(dual_entity_t*)dualV_get_owned_rw(&view, type_ref);
+            d = e1;
+        };
+        dualS_allocate_type(storage, &entityType, 1, DUAL_LAMBDA(callback));
+        e2 = dualV_get_entities(&view)[0];
+        auto callback2 = [&](dual_chunk_view_t* inView) {
+            view = *inView;
+            auto d = (dual_entity_t*)dualV_get_owned_rw(&view, type_ref);
+            if(d)
+            {
+                e4 = *d;
+            }
+            else 
+            {
+                e3 = dualV_get_entities(&view)[0];
+            }
+        };
+        dual_entity_t ents[] = { e1, e2 };
+        dualS_instantiate_entities(storage, ents, 2, 1, DUAL_LAMBDA(callback2));
+        auto totalCount = dualS_count(storage, false, false);
+        EXPECT_EQ(totalCount, 4);
+        EXPECT_EQ(e3, e4);
+    }
+}
+
 TEST_F(APITest, batch)
 {
     dual_chunk_view_t view[2];
@@ -223,6 +340,64 @@ TEST_F(APITest, query)
     EXPECT_EQ(*dualV_get_entities(&view), e1);
 }
 
+TEST_F(APITest, query_overload)
+{
+    dual_entity_t e2, e3;
+    {
+        dual_chunk_view_t view;
+        dual_entity_type_t entityType;
+        dual_type_index_t type[2] = { type_test, type_test2 };
+        std::sort(type, type + 2);
+        entityType.type = { type, 2 };
+        entityType.meta = { nullptr, 0 };
+        auto callback = [&](dual_chunk_view_t* inView) {
+            view = *inView;
+            *(test*)dualV_get_owned_rw(&view, type_test) = 123;
+        };
+        dualS_allocate_type(storage, &entityType, 1, DUAL_LAMBDA(callback));
+
+        e2 = dualV_get_entities(&view)[0];
+    }
+    {
+        dual_chunk_view_t view;
+        dual_entity_type_t entityType;
+        dual_type_index_t type[3] = { type_test, type_test2, type_test3 };
+        std::sort(type, type + 3);
+        entityType.type = { type, 3 };
+        entityType.meta = { nullptr, 0 };
+        auto callback = [&](dual_chunk_view_t* inView) {
+            view = *inView;
+            *(test*)dualV_get_owned_rw(&view, type_test) = 123;
+        };
+        dualS_allocate_type(storage, &entityType, 1, DUAL_LAMBDA(callback));
+
+        e3 = dualV_get_entities(&view)[0];
+    }
+    
+    auto query1 = dualQ_from_literal(storage, "[inout]test'");
+    auto query2 = dualQ_from_literal(storage, "[inout]test',[in]test2");
+    auto query3 = dualQ_from_literal(storage, "[inout]test',[in]test3");
+
+    {
+        dual_chunk_view_t view;
+        auto callback = [&](dual_chunk_view_t* inView) {
+            EXPECT_EQ(inView->count, 1);
+            view = *inView;
+        };
+        dualQ_get_views(query1, DUAL_LAMBDA(callback));
+        EXPECT_EQ(*dualV_get_entities(&view), e1);
+    }
+    {
+        dual_chunk_view_t view;
+        auto callback = [&](dual_chunk_view_t* inView) {
+            EXPECT_EQ(inView->count, 1);
+            view = *inView;
+        };
+        dualQ_get_views(query2, DUAL_LAMBDA(callback));
+        EXPECT_EQ(*dualV_get_entities(&view), e2);
+    }
+}
+
 void register_test_component()
 {
     using namespace guid_parse::literals;
@@ -240,6 +415,7 @@ void register_test_component()
         type_test = dualT_register_type(&desc);
         desc.elementSize = desc.size;
         desc.size = desc.size * 10;
+        desc.guid = u8"{82D170AE-6D06-406C-A451-F670103D7894}"_guid;
         desc.name = u8"test_arr";
         type_test_arr = dualT_register_type(&desc);
     }
@@ -257,10 +433,26 @@ void register_test_component()
         desc.elementSize = 0;
         desc.alignment = alignof(test);
         type_test2 = dualT_register_type(&desc);
+        desc.guid = u8"{FD70F4BD-52FB-4911-8930-41A80C482DBF}"_guid;
         desc.elementSize = desc.size;
         desc.size = desc.size * 10;
         desc.name = u8"test_arr";
         type_test2_arr = dualT_register_type(&desc);
+    }
+
+    {
+
+        dual_type_description_t desc = make_zeroed<dual_type_description_t>();
+        desc.name = u8"test3";
+        desc.size = sizeof(test);
+        desc.entityFieldsCount = 0;
+        desc.entityFields = 0;
+        desc.guid = u8"{3E5A2C5F-7FBE-486C-BCCE-8E6D8933B2C5}"_guid;
+        desc.callback = {};
+        desc.flags = 0;
+        desc.elementSize = 0;
+        desc.alignment = alignof(test);
+        type_test3 = dualT_register_type(&desc);
     }
 }
 auto register_ref_component()
@@ -278,6 +470,7 @@ auto register_ref_component()
     desc.elementSize = 0;
     desc.alignment = alignof(ref);
     type_ref = dualT_register_type(&desc);
+    desc.guid = u8"{F84BB5DE-DB21-4CEF-8DF1-8CD7AEEE766F}"_guid;
     desc.elementSize = desc.size;
     desc.size = desc.size * 10;
     desc.name = u8"ref_arr";
@@ -297,18 +490,18 @@ auto register_managed_component()
     desc.alignment = alignof(managed);
     desc.callback = {
         +[](dual_chunk_t* chunk, EIndex index, char* data) { new (data) managed; },
-        +[](dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src) { *(managed*)dst = *(const managed*)src; },
+        +[](dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, const char* src) { new (dst) managed(*(managed*)src); },
         +[](dual_chunk_t* chunk, EIndex index, char* data) { ((managed*)data)->~managed(); },
-        +[](dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src) { *(managed*)dst = std::move(*(managed*)src); },
+        +[](dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src) { new (dst) managed(std::move(*(managed*)src)); },
         +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_writer_t* v) {
         },
         +[](dual_chunk_t* chunk, EIndex index, char* data, EIndex count, skr_binary_reader_t* v)
         {
-            new (data) managed;
         },
         nullptr
     };
     type_managed = dualT_register_type(&desc);
+    desc.guid = u8"{BCF22A9B-908C-4F84-89B4-C7BD803FC6C2}"_guid;
     desc.elementSize = desc.size;
     desc.size = desc.size * 10;
     desc.name = u8"managed_arr";
@@ -328,6 +521,7 @@ auto register_pinned_component()
     desc.elementSize = 0;
     desc.alignment = alignof(pinned);
     type_pinned = dualT_register_type(&desc);
+    desc.guid = u8"{673605E0-C52C-40F5-A3F0-736409617D15}"_guid;
     desc.elementSize = desc.size;
     desc.size = desc.size * 10;
     desc.name = u8"pinned_arr";

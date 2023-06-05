@@ -74,6 +74,9 @@ using SPtr = SPtrHelper<T, true>;
 
 template <typename T>
 using SObjectPtr = SPtrHelper<T, false>;
+
+template <typename T>
+using SBoxedPtr = SPtrHelper<SBoxed<T>, false>;
 }
 
 // implement SPtrHelper

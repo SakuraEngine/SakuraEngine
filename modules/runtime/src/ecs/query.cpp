@@ -555,12 +555,12 @@ void dual_storage_t::build_queries()
                 SKR_ASSERT(merged.length < 256);
                 auto excludeA = set_utils<dual_type_index_t>::substract(merged, a->filter.all, localStack.allocate<dual_type_index_t>(merged.length));
                 auto excludeB = set_utils<dual_type_index_t>::substract(merged, b->filter.all, localStack.allocate<dual_type_index_t>(merged.length));
-                if(excludeA.length == 0)
+                if(excludeA.length != 0)
                 {
                     char* data = (char*)queryBuildArena.allocate(data_size(excludeA), alignof(dual_type_index_t));
                     a->excludes.push_back(dual::clone(excludeA, data));
                 }
-                if(excludeB.length == 0)
+                if(excludeB.length != 0)
                 {
                     char* data = (char*)queryBuildArena.allocate(data_size(excludeB), alignof(dual_type_index_t));
                     b->excludes.push_back(dual::clone(excludeB, data));

@@ -15,19 +15,19 @@ TypeTreeNode::~TypeTreeNode() SKR_NOEXCEPT
 
 }
 
-void TypeTreeNode::create_dynamic_type(skr_guid_t id, skr_dynamic_record_type_id parent_type, const char8_t* name) SKR_NOEXCEPT
+void TypeTreeNode::create_dynamic_type(skr_guid_t id, skr_record_type_id parent_type, const char8_t* name) SKR_NOEXCEPT
 {
-    if (parent_type)
-    {
-        skr_guid_t parent_id = {};
-        skr_get_type_id((skr_type_t*)parent_type, &parent_id);
-        type = skr_create_record_type(&id, size, align, &parent_id);
-    }
-    else
-    {
-        type = skr_create_record_type(&id, size, align, nullptr);
-    }
-    if (name) skr_record_type_set_name(type, name);
+    // if (parent_type)
+    // {
+    //     skr_guid_t parent_id = {};
+    //     skr_get_type_id((skr_type_t*)parent_type, &parent_id);
+    //     type = skr_create_record_type(&id, size, align, &parent_id);
+    // }
+    // else
+    // {
+    //     type = skr_create_record_type(&id, size, align, nullptr);
+    // }
+    // if (name) skr_record_type_set_name(type, name);
 }
 
 struct TypeTreeImpl : public TypeTree
