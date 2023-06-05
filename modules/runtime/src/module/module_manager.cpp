@@ -7,8 +7,44 @@
 #include "serde/json/reader.h"
 #include "platform/filesystem.hpp"
 
+
+#if defined(_MSC_VER)
+bool cr_pdb_replace(const std::string &filename, const std::string &pdbname,
+                           std::string &orig_pdb);
+
+static bool ProcessPDB(const skr::filesystem::path& dst)
+{
+    auto basePath = dst.lexically_normal();
+    skr::filesystem::path folder, fname, ext;
+    folder = basePath.parent_path();
+    fname = basePath.stem();
+    ext = basePath.extension();
+    //replace ext with .pdb
+    auto pdbDst = folder / (fname.string() + ".pdb");
+    std::string orig_pdb;
+    bool result = cr_pdb_replace(dst.string(), fname.string() + ".pdb", orig_pdb);
+    std::error_code ec;
+    skr::filesystem::copy(orig_pdb, pdbDst, skr::filesystem::copy_options::overwrite_existing, ec);
+    if(ec)
+    {
+        SKR_LOG_ERROR("copy pdb file failed: %s", ec.message().c_str());
+        result = false;
+    }
+    return result;
+}
+#endif
+
 namespace skr
 {
+struct ModuleContext
+{
+    skr::filesystem::path path = {};
+    skr::filesystem::path temppath = {};
+    skr::filesystem::file_time_type timestamp = {};
+    unsigned int version = 0;
+    unsigned int next_version = 1;
+    unsigned int last_working_version = 0;
+};
 class ModuleManagerImpl : public skr::ModuleManager
 {
 public:
@@ -34,6 +70,8 @@ public:
     virtual void mount(const char8_t* path) final;
     virtual skr::string_view get_root(void) final;
     virtual ModuleProperty& get_module_property(const skr::string& name) final;
+    virtual void enable_hotfix_for_module(skr::string_view name) override final;
+    virtual bool update(void) override final;
 
     virtual void register_subsystem(const char8_t* moduleName, const char8_t* id, ModuleSubsystemBase::CreatePFN pCreate) final;
 
@@ -41,12 +79,13 @@ public:
 
 protected:
     virtual IModule* spawnStaticModule(const skr::string& moduleName) final;
-    virtual IModule* spawnDynamicModule(const skr::string& moduleName) final;
+    virtual IModule* spawnDynamicModule(const skr::string& moduleName, bool hotfix) final;
+    virtual bool loadHotfixModule(SharedLibrary& lib, const skr::string& moduleName) final;
 
 private:
     bool __internal_DestroyModuleGraph(const skr::string& nodename);
-    void __internal_MakeModuleGraph(const skr::string& entry,
-    bool shared = false);
+    bool __internal_UpdateModuleGraph(const skr::string& nodename);
+    void __internal_MakeModuleGraph(const skr::string& entry, bool shared = false);
     bool __internal_InitModuleGraph(const skr::string& nodename, int argc, char8_t** argv);
     ModuleInfo parseMetaData(const char8_t* metadata);
 
@@ -56,6 +95,8 @@ private:
     skr::string mainModuleName;
     // ModuleGraphImpl moduleDependecyGraph;
     skr::DependencyGraph* dependency_graph = nullptr;
+    skr::flat_hash_set<skr::string, skr::hash<skr::string>> hotfixTraversalSet;
+    skr::flat_hash_map<skr::string, ModuleContext, skr::hash<skr::string>> hotfixModules;
     skr::flat_hash_map<skr::string, ModuleProperty*, skr::hash<skr::string>> nodeMap;
     skr::flat_hash_map<skr::string, module_registerer, skr::hash<skr::string>> initializeMap;
     skr::flat_hash_map<skr::string, eastl::unique_ptr<IModule>, skr::hash<skr::string>> modulesMap;
@@ -123,7 +164,68 @@ public:
     skr::string name = u8"";
 };
 
-IModule* ModuleManagerImpl::spawnDynamicModule(const skr::string& name)
+static skr::filesystem::path GetVersionPath(const skr::filesystem::path &basepath,
+                                   unsigned version,
+                                   const skr::filesystem::path &temppath) {
+    auto basePath = basepath.lexically_normal();
+    skr::filesystem::path folder, fname, ext;
+    folder = basePath.parent_path();
+    fname = basePath.stem();
+    ext = basePath.extension();
+    auto ver = std::to_string(version);
+    if(!temppath.empty())
+    {
+        folder = temppath;
+    }
+    return folder / (fname.string() + ver + ext.string());
+}
+
+bool ModuleManagerImpl::loadHotfixModule(SharedLibrary& lib, const skr::string& moduleName)
+{
+    auto& ctx = hotfixModules[moduleName];
+    skr::string filename;
+    filename.append(skr::SharedLibrary::GetPlatformFilePrefixName())
+            .append(moduleName)
+            .append(skr::SharedLibrary::GetPlatformFileExtensionName());
+    skr::filesystem::path path = filename.c_str();
+    ctx.path = path;
+    std::error_code ec;
+    if(!skr::filesystem::exists(path, ec))
+    {
+        SKR_LOG_ERROR("hotfix module %s not found!", path.c_str());
+        return false;
+    }
+    skr::filesystem::path new_path = GetVersionPath(path, ctx.version, ctx.temppath);
+    {
+        ctx.last_working_version = ctx.version;
+        skr::filesystem::copy(path, new_path, skr::filesystem::copy_options::overwrite_existing, ec);
+        if(ec)
+        {
+            SKR_LOG_ERROR("hotfix module %s rename failed! reason: %s", path.c_str(), ec.message().c_str());
+            return false;
+        }
+        ctx.next_version = ctx.next_version + 1;
+#if defined(_MSC_VER)
+        if(!ProcessPDB(new_path))
+        {
+            SKR_LOG_ERROR("hotfix module %s pdb process failed, debugging may be "
+                         "affected and/or reload may fail", path.c_str());
+        }
+#endif
+    }
+    if(!lib.load(new_path.u8string().c_str()))
+    {
+        SKR_LOG_ERROR("hotfix module %s load failed!", new_path.c_str());
+        return false;
+    }
+    //TODO: validate sections
+    //TODO: reload sections
+    ctx.timestamp = skr::filesystem::last_write_time(new_path, ec);
+    ctx.version = ctx.next_version - 1;
+    return true;
+}
+
+IModule* ModuleManagerImpl::spawnDynamicModule(const skr::string& name, bool hotfix)
 {
     if (modulesMap.find(name) != modulesMap.end())
         return modulesMap[name].get();
@@ -142,6 +244,10 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const skr::string& name)
     {
         func = processSymbolTable.get<IModule*()>(initName.u8_str());
     }
+    if (hotfix && (is_proc_mod || func))
+    {
+        SKR_LOG_ERROR("Hotfix module %s failed, module already loaded!", name.c_str());
+    }
 #ifndef SHIPPING_ONE_ARCHIVE
     if (!is_proc_mod && func == nullptr)
     {
@@ -151,16 +257,34 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const skr::string& name)
                 .append(name)
                 .append(skr::SharedLibrary::GetPlatformFileExtensionName());
         auto finalPath = (skr::filesystem::path(moduleDir.c_str()) / filename.c_str()).u8string();
-        if (!sharedLib->load((const char8_t*)finalPath.c_str()))
+        if(!hotfix)
         {
-            SKR_LOG_DEBUG("%s\nLoad Shared Lib Error:%s", filename.c_str(), sharedLib->errorString().c_str());
+            if (!sharedLib->load((const char8_t*)finalPath.c_str()))
+            {
+                SKR_LOG_DEBUG("%s\nLoad Shared Lib Error:%s", filename.c_str(), sharedLib->errorString().c_str());
+            }
+            else
+            {
+                SKR_LOG_TRACE("Load dll success: %s", filename.c_str());
+                if (sharedLib->hasSymbol(initName.u8_str()))
+                {
+                    func = sharedLib->get<IModule*()>(initName.u8_str());
+                }
+            }
         }
         else
         {
-            SKR_LOG_TRACE("Load dll success: %s", filename.c_str());
-            if (sharedLib->hasSymbol(initName.u8_str()))
+            if(!loadHotfixModule(*sharedLib, name))
             {
-                func = sharedLib->get<IModule*()>(initName.u8_str());
+                SKR_LOG_ERROR("Hotfix module %s failed, load failed!", name.c_str());
+            }
+            else
+            {
+                SKR_LOG_TRACE("Hotfix module %s success!", name.c_str());
+                if (sharedLib->hasSymbol(initName.u8_str()))
+                {
+                    func = sharedLib->get<IModule*()>(initName.u8_str());
+                }
             }
         }
     }
@@ -303,22 +427,22 @@ void ModuleManagerImpl::__internal_MakeModuleGraph(const skr::string& entry, boo
 {
     if (nodeMap.find(entry) != nodeMap.end())
         return;
-    IModule* _module = nullptr;
-    if (!_module)
-    {
-        _module = shared ?
-                spawnDynamicModule(entry) :
-                spawnStaticModule(entry);
-    }
+    bool hotfix = hotfixModules.contains(entry);
+    IModule* _module = shared ?
+            spawnDynamicModule(entry, hotfix) :
+            spawnStaticModule(entry);
     auto prop = nodeMap[entry] = SkrNew<ModuleProperty>();
     prop->name = entry;
     prop->bActive = false;
+    prop->bShared = shared;
+    SKR_ASSERT(hotfix <= _module->reloadable());
     dependency_graph->insert(prop);
-    if (_module->get_module_info()->dependencies.size() == 0)
+    auto moduleInfo = _module->get_module_info();
+    if (moduleInfo->dependencies.size() == 0)
         roots.push_back(entry);
-    for (auto i = 0u; i < _module->get_module_info()->dependencies.size(); i++)
+    for (auto i = 0u; i < moduleInfo->dependencies.size(); i++)
     {
-        auto iterName = _module->get_module_info()->dependencies[i].name.u8_str();
+        auto iterName = moduleInfo->dependencies[i].name.u8_str();
         // Static
         if (initializeMap.find(iterName) != initializeMap.end())
             __internal_MakeModuleGraph(iterName, false);
@@ -342,6 +466,96 @@ bool ModuleManagerImpl::patch_module_graph(const skr::string& entry, bool shared
     if (!__internal_InitModuleGraph(entry, argc, argv))
         return false;
     return true;
+}
+void ModuleManagerImpl::enable_hotfix_for_module(skr::string_view name)
+{
+    std::pair<skr::string, ModuleContext> pair(name, ModuleContext{});
+    hotfixModules.insert(std::move(pair));
+}
+
+bool ModuleManagerImpl::__internal_UpdateModuleGraph(const skr::string& entry)
+{
+    if (hotfixTraversalSet.find(entry) != hotfixTraversalSet.end())
+        return true;
+    dependency_graph->foreach_neighbors(nodeMap.find(entry)->second, 
+        [this](DependencyGraphNode* node){
+            ModuleProperty* property = static_cast<ModuleProperty*>(node);
+            __internal_UpdateModuleGraph(property->name);
+        });
+    auto iter = hotfixModules.find(entry);
+    if(iter == hotfixModules.end())
+        return true;
+    auto& ctx = iter->second;
+    //check file timestamp
+    bool changed = std::filesystem::last_write_time(ctx.path) > ctx.timestamp;
+    if(!changed)
+        return true;
+    //reload module
+    SKR_LOG_DEBUG("Hotfix module: %s", entry.c_str());
+    
+    eastl::unique_ptr<SharedLibrary> sharedLib = eastl::make_unique<SharedLibrary>();
+    //unload old module
+    auto this_module = (IHotfixModule*)get_module(entry);
+    // subsystems
+    for (auto&& subsystem : this_module->subsystems)
+    {
+        subsystem->BeginReload();
+    }
+    for (auto&& subsystem : this_module->subsystems)
+    {
+        SkrDelete(subsystem);
+    }
+    this_module->on_reload_begin();
+    auto this_state = std::move(this_module->state);
+    auto old_lib = std::move(this_module->sharedLib);
+    modulesMap[entry].reset();
+    subsystemCreateMap[entry].clear();
+    //old_lib->unload();
+    IModule* (*func)() = nullptr;
+    if(!loadHotfixModule(*sharedLib, entry))
+    {
+        SKR_LOG_ERROR("Failed to load hotfix module: %s", entry.c_str());
+        return false;
+    }
+    else 
+    {
+        skr::string initName(u8"__initializeModule");
+        skr::string mName(entry);
+        initName.append(mName);
+        if (sharedLib->hasSymbol(initName.u8_str()))
+        {
+            func = sharedLib->get<IModule*()>(initName.u8_str());
+        }
+        if(!func)
+        {
+            SKR_LOG_ERROR("Failed to load hotfix module: %s", entry.c_str());
+            return false;
+        }
+    }
+    auto new_module = (IHotfixModule*)func();
+    new_module->sharedLib = std::move(sharedLib);
+    // pre-init name for meta reading
+    new_module->information.name = entry;
+    new_module->information = parseMetaData(new_module->get_meta_data());
+    modulesMap[entry].reset(new_module);
+    new_module->state = std::move(this_state);
+    new_module->on_reload_finish();
+    auto&& create_funcs = subsystemCreateMap[entry];
+    for (auto&& func : create_funcs)
+    {
+        auto subsystem = func();
+        new_module->subsystems.emplace_back(subsystem);
+    }
+    for (auto&& subsystem : new_module->subsystems)
+    {
+        subsystem->EndReload();
+    }
+    return true;
+}
+
+bool ModuleManagerImpl::update()
+{
+    return __internal_UpdateModuleGraph(mainModuleName);
 }
 
 void ModuleManagerImpl::mount(const char8_t* rootdir)

@@ -12,7 +12,6 @@ struct skr_binary_writer_t;
 struct skr_binary_reader_t;
 
 SKR_DECLARE_TYPE_ID_FWD(skr::type, RecordType, skr_record_type)
-SKR_DECLARE_TYPE_ID_FWD(skr::type, DynamicRecordType, skr_dynamic_record_type)
 
 enum skr_type_category_t
 {
@@ -81,15 +80,6 @@ const char8_t* skr_get_field_name(const skr_field_t* field);
 extern const skr_type_t* $type;
 extern const skr_field_t* $field;
 extern const skr_method_t* $method;
-
-RUNTIME_EXTERN_C RUNTIME_API 
-skr_dynamic_record_type_id skr_create_record_type(const skr_guid_t* type_id, uint64_t size, uint64_t align, const skr_guid_t* parent);
-
-RUNTIME_EXTERN_C RUNTIME_API 
-void skr_record_type_set_name(skr_dynamic_record_type_id type, const char8_t* name);
-
-RUNTIME_EXTERN_C RUNTIME_API 
-void skr_record_type_set_hasher(skr_dynamic_record_type_id type, size_t (*hasher)(const void* self, size_t base));
 
 // RUNTIME_EXTERN_C RUNTIME_API
 // void skr_free_record_type(const skr_guid_t* type_id);

@@ -155,7 +155,7 @@ int ReadBitpacked(skr_binary_reader_t* reader, T& value, VectorPackConfig<Scalar
 {
     ScalarType* array = (ScalarType*)&value;
     static constexpr size_t size = sizeof(T) / sizeof(ScalarType);
-	using IntType = std::conditional_t<sizeof(ScalarType) == 4, int32_t, int64_t>;
+	//using IntType = std::conditional_t<sizeof(ScalarType) == 4, int32_t, int64_t>;
 
 	uint8_t ComponentBitCountAndExtraInfo = 0;
     auto ret = reader->read(&ComponentBitCountAndExtraInfo, 1);
