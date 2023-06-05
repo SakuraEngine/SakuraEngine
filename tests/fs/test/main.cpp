@@ -1,11 +1,14 @@
 #include "gtest/gtest.h"
 #include "platform/vfs.h"
 #include "platform/thread.h"
+#include "misc/log.h"
+#include "misc/make_zeroed.hpp"
+#include "async/thread_job.hpp"
+#include "io/io.h"
+
 #include <string>
 #include <iostream>
 #include <platform/filesystem.hpp>
-#include "io/io.h"
-#include "misc/log.h"
 
 #include "tracy/Tracy.hpp"
 
@@ -147,6 +150,50 @@ TEST_F(FSTest, asyncread)
     std::cout << "..." << std::endl;
 }
 
+TEST_F(FSTest, asyncread2)
+{
+    ZoneScopedN("asyncread2");
+
+    auto jqDesc = make_zeroed<skr::JobQueueDesc>();
+    jqDesc.thread_count = 2;
+    jqDesc.priority = SKR_THREAD_ABOVE_NORMAL;
+    jqDesc.name = u8"Tool-IOJobQueue";
+    auto io_job_queue = SkrNew<skr::JobQueue>(jqDesc);
+
+    skr_ram_io_service_desc_t ioServiceDesc = {};
+    ioServiceDesc.name = u8"Test";
+    ioServiceDesc.io_job_queue = io_job_queue;
+    auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
+    ioService->add_default_resolvers();
+
+    skr_io_future_t future = {};
+    skr::BlobId blob = nullptr;
+    {
+        auto rq = ioService->open_request();
+        rq->set_vfs(abs_fs);
+        rq->set_path(u8"testfile2");
+        rq->add_block({}); // read all
+        rq->add_callback(SKR_IO_STAGE_COMPLETED,
+            +[](skr_io_future_t* future, skr_io_request_t* request, void* arg){
+                auto pRamIO = (skr_io_request_t*)arg;
+                SKR_LOG_INFO("async read of file %s ok", pRamIO->get_path());
+            }, rq.get());
+        blob = ioService->request(rq, &future);
+    }
+
+    wait_timeout([&future]()->bool
+    {
+        return future.is_ready();
+    });
+    
+    ioService->drain();
+    std::cout << (const char*)blob->get_data() << std::endl;
+    skr_io_ram_service_t::destroy(ioService);
+    std::cout << "..." << std::endl;
+
+    SkrDelete(io_job_queue);
+}
+
 TEST_F(FSTest, chunking)
 {
     ZoneScopedN("chunking");
@@ -176,7 +223,7 @@ TEST_F(FSTest, chunking)
         return future.is_ready();
     });
     
-    // ioService->drain();
+    ioService->drain();
     std::cout << (const char*)blob->get_data() << std::endl;
     skr_io_ram_service_t::destroy(ioService);
     std::cout << "..." << std::endl;
