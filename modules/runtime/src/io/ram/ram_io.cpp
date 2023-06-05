@@ -182,8 +182,11 @@ void RAMService::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
             (runner.getExecutingBatchCount(priority) == 0) &&
             (runner.getProcessingRequestCount(priority) == 0);
         }, 8);
-        SKR_ASSERT(sucess);
-        abort();
+        if (!sucess)
+        {
+            SKR_LOG_FATAL("RAMService::drain: timeout!");
+            abort();
+        }
     }
     else
     {
