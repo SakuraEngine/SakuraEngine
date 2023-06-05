@@ -72,9 +72,9 @@ void IRAMService::destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT
     ZoneScopedN("destroy");
 
     auto S = static_cast<RAMService*>(service);
+    S->drain();
     if (S->runner.get_status() == skr::ServiceThread::Status::kStatusRunning)
     {
-        S->drain();
         S->runner.setServiceStatus(SKR_ASYNC_SERVICE_STATUS_QUITING);
         S->stop(false);
     }
