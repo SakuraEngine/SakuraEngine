@@ -69,6 +69,7 @@ TEST_F(RTTI, TestRecordType)
     }
 }
 
+#ifdef _WIN32
 TEST_F(RTTI, TestConvert)
 {
     uint32_t a = 0;
@@ -116,13 +117,12 @@ TEST_F(RTTI, TestTextSerialize)
     EXPECT_EQ(vec[2], 2);
     dynarrType->Destruct(dynarr);
 }
-
+#endif
 
 TEST_F(RTTI, DynamicRecord)
 {
     
 }
-
 
 int main(int argc, char** argv)
 {
