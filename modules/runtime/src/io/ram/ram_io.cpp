@@ -183,7 +183,8 @@ void RAMService::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
         }, 8);
         if (!sucess)
         {
-            SKR_LOG_FATAL("RAMService::drain: timeout! queued: %llu, executing: %llu, processing: %llu",
+            SKR_LOG_FATAL("RAMService::drain: timeout! awake_at_request is %d, queued: %llu, executing: %llu, processing: %llu",
+                awake_at_request,
                 runner.getQueuedBatchCount(priority),
                 runner.getExecutingBatchCount(priority),
                 runner.getProcessingRequestCount(priority));

@@ -68,7 +68,9 @@ struct SleepyService : public skr::ServiceThread
     {
         if (condsleep)
         {
+            condlock.lock();
             condlock.signal();
+            condlock.unlock();
         } 
     }
 
