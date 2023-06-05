@@ -3,6 +3,7 @@
 
 typedef struct skr_win_dstorage_decompress_service_t skr_win_dstorage_decompress_service_t;
 typedef struct skr_win_dstorage_decompress_service_t* skr_win_dstorage_decompress_service_id;
+SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)
 
 #define SKR_WIN_DSTORAGE_COMPRESSION_TYPE_IMAGE SKR_DSTORAGE_COMPRESSION_CUSTOM + 1
 
@@ -13,6 +14,10 @@ typedef enum EWinDStorageDecompressionFlag {
     WIN_DSTORAGE_DECOMPRESSION_FLAG_MAX_ENUM_BIT = 0xFFFFFFFF
 } EWinDStorageDecompressionFlag;
 typedef uint32_t WinDStorageDecompressionFlags;
+
+typedef struct skr_win_dstorage_decompress_desc_t {
+    skr_job_queue_id job_queue SKR_IF_CPP(= nullptr);
+} skr_win_dstorage_decompress_desc_t;
 
 typedef struct skr_win_dstorage_decompress_request_t {
     uint64_t id;
@@ -36,7 +41,7 @@ RUNTIME_EXTERN_C RUNTIME_API
 void skr_win_dstorage_set_staging_buffer_size(uint64_t size);
 
 RUNTIME_EXTERN_C RUNTIME_API
-skr_win_dstorage_decompress_service_id skr_win_dstorage_create_decompress_service();
+skr_win_dstorage_decompress_service_id skr_win_dstorage_create_decompress_service(const skr_win_dstorage_decompress_desc_t* desc);
 
 RUNTIME_EXTERN_C RUNTIME_API
 bool skr_win_dstorage_decompress_service_register_callback(skr_win_dstorage_decompress_service_id service, SkrDStorageCompression, skr_win_dstorage_decompress_callback_t, void*);

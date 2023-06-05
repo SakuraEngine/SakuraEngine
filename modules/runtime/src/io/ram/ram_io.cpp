@@ -56,7 +56,7 @@ inline static IOReaderId CreateReader(RAMService* service, const skr_ram_io_serv
 RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
     : name(desc->name ? skr::string(desc->name) : skr::format(u8"IRAMService-{}", global_idx++)), 
       trace_log(desc->trace_log), awake_at_request(desc->awake_at_request),
-      runner(this, CreateReader(this, desc))
+      runner(this, CreateReader(this, desc), desc->callback_job_queue)
 {
     if (!desc->awake_at_request)
     {

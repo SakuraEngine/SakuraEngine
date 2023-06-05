@@ -52,7 +52,10 @@ void SkrRuntimeModule::on_unload()
         skr_free_dstorage_instance(inst);
     }
 
-    skr_destroy_mutex(&log_mutex);
+#ifdef _WIN32
+    if (dstroageDecompressService)
+        skr_win_dstorage_free_decompress_service(dstroageDecompressService);
+#endif
 
 #ifdef TRACY_ENABLE
     //std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
@@ -60,6 +63,8 @@ void SkrRuntimeModule::on_unload()
     //while( !tracy::GetProfiler().HasShutdownFinished() ) { std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) ); };
     tracyLibrary.unload();
 #endif
+
+    skr_destroy_mutex(&log_mutex);
 }
 
 SkrRuntimeModule* SkrRuntimeModule::Get()
@@ -97,3 +102,25 @@ RUNTIME_EXTERN_C RUNTIME_API skr::ModuleManager* skr_get_module_manager()
     static auto sModuleManager = eastl::make_unique<skr::ModuleManagerImpl>();
     return sModuleManager.get();
 }
+
+#ifdef _WIN32
+
+skr_win_dstorage_decompress_service_id skr_runtime_create_win_dstorage_decompress_service(const skr_win_dstorage_decompress_desc_t* desc)
+{
+    if (!SkrRuntimeModule::Get()) 
+    {
+        return skr_win_dstorage_create_decompress_service(desc);
+    }
+    SkrRuntimeModule::Get()->dstroageDecompressService = skr_win_dstorage_create_decompress_service(desc);
+    return SkrRuntimeModule::Get()->dstroageDecompressService;
+}
+
+skr_win_dstorage_decompress_service_id skr_runtime_get_win_dstorage_decompress_service()
+{
+    if (!SkrRuntimeModule::Get()) 
+        return nullptr;
+    return SkrRuntimeModule::Get()->dstroageDecompressService;
+}
+
+#endif
+

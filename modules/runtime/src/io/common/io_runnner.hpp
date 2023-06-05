@@ -5,6 +5,8 @@
 #include "io_batch.hpp"
 #include "io_resolver.hpp"
 
+namespace skr { template <typename Artifact> struct IFuture; struct JobQueue; }
+
 namespace skr {
 namespace io {
 
@@ -78,8 +80,8 @@ private:
 
 struct RunnerBase : public SleepyService
 {
-    RunnerBase(const ServiceThreadDesc& desc, SObjectPtr<IIOReader> reader) SKR_NOEXCEPT
-        : SleepyService(desc), reader(reader)
+    RunnerBase(const ServiceThreadDesc& desc, SObjectPtr<IIOReader> reader, skr::JobQueue* job_queue) SKR_NOEXCEPT
+        : SleepyService(desc), reader(reader), job_queue(job_queue)
     {
         for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
         {
@@ -154,6 +156,8 @@ private:
     SAtomicU64 dispatching_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
     IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    skr::vector<skr::IFuture<bool>*> finish_futures;
+    skr::JobQueue* job_queue = nullptr;
 };
 
 } // namespace io

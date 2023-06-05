@@ -84,12 +84,6 @@ struct SKR_RENDERER_API RendererDeviceImpl : public RendererDevice
         return vram_service;
     }
 
-#ifdef _WIN32
-    skr_win_dstorage_decompress_service_id get_win_dstorage_decompress_service() const override
-    {
-        return decompress_service;
-    }
-#endif
 protected:
     // Device objects
     uint32_t backbuffer_index = 0;
@@ -106,9 +100,6 @@ protected:
     CGPUDStorageQueueId file_dstorage_queue = nullptr;
     CGPUDStorageQueueId memory_dstorage_queue = nullptr;
     CGPURootSignaturePoolId root_signature_pool = nullptr;
-#ifdef _WIN32
-    skr_win_dstorage_decompress_service_id decompress_service = nullptr;
-#endif
     CGPUNSightTrackerId nsight_tracker = nullptr;
 };
 
@@ -147,10 +138,7 @@ void RendererDeviceImpl::finalize()
     }
     surfaces.clear();
     cgpu_free_sampler(linear_sampler);
-    // free dstorage services & queues
-#ifdef _WIN32
-    skr_win_dstorage_free_decompress_service(decompress_service);
-#endif
+    // free dstorage queues
     if(file_dstorage_queue) cgpu_free_dstorage_queue(file_dstorage_queue);
     if(memory_dstorage_queue) cgpu_free_dstorage_queue(memory_dstorage_queue);
     // free queues & device
@@ -281,10 +269,6 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
     sampler_desc.mag_filter = CGPU_FILTER_TYPE_LINEAR;
     sampler_desc.compare_func = CGPU_CMP_NEVER;
     linear_sampler = cgpu_create_sampler(device, &sampler_desc);
-
-#ifdef _WIN32
-    decompress_service = skr_win_dstorage_create_decompress_service();
-#endif
 }
 
 CGPUSwapChainId RendererDeviceImpl::register_window(SWindowHandle window)

@@ -42,8 +42,8 @@ struct RAMService final : public IRAMService
 
     struct Runner final : public RunnerBase
     {
-        Runner(RAMService* service, SObjectPtr<IIOReader> reader) SKR_NOEXCEPT 
-            : RunnerBase({ service->name.u8_str(), SKR_THREAD_ABOVE_NORMAL }, reader),
+        Runner(RAMService* service, SObjectPtr<IIOReader> reader, skr::JobQueue* job_queue) SKR_NOEXCEPT 
+            : RunnerBase({ service->name.u8_str(), SKR_THREAD_ABOVE_NORMAL }, reader, job_queue),
             service(service)
         {
 

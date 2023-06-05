@@ -1,9 +1,8 @@
+#include "winheaders.h"
+#include <process.h> // _beginthreadex
+
 #include "platform/thread.h"
 #include "platform/debug.h"
-#define WIN32_LEAN_AND_MEAN
-#include "windows.h"
-#include "synchapi.h"
-#include <process.h> // _beginthreadex
 #include <assert.h>
 
 /// implementation of callonce
