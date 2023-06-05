@@ -47,5 +47,4 @@ private:
     SConditionVariable cond;
     SMutex mutex;
 };
-
 }

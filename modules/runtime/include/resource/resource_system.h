@@ -4,7 +4,7 @@
 #include "resource/resource_header.hpp"
 #include "misc/types.h"
 
-SKR_DECLARE_TYPE_ID_FWD(skr::io, RAMService, skr_io_ram_service)
+SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service)
 
 typedef enum ESkrLoadingPhase
 {

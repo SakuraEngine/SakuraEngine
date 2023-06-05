@@ -30,7 +30,10 @@ void ThreadedJobQueueFutureJob::wait() SKR_NOEXCEPT
 
 skr::FutureStatus ThreadedJobQueueFutureJob::wait_for(uint32_t ms) SKR_NOEXCEPT
 {
-    skr_thread_sleep(ms);
+    if (ms > 0)
+    {
+        skr_thread_sleep(ms);
+    }
     const auto f = skr_atomic32_load_relaxed(&finished);
     if (f) return skr::FutureStatus::Ready;
     return skr::FutureStatus::Timeout;

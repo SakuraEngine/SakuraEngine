@@ -36,6 +36,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
     D3D12_RESOURCE_STATES res_states = D3D12Util_TranslateResourceState(start_state);
 
     // Do Allocation
+    const bool log_allocation = false;
     D3D12MA::ALLOCATION_DESC alloc_desc = D3D12Util_CreateAllocationDesc(desc);
 #ifdef CGPU_USE_NVAPI
     if ((desc->memory_usage == CGPU_MEM_USAGE_GPU_ONLY && desc->flags & CGPU_BCF_HOST_VISIBLE) ||
@@ -57,7 +58,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             &cpuVisibleVRamSupported);
         if (!cpuVisibleVRamSupported)
             B->pDxResource = nullptr;
-        else
+        else if (log_allocation)
         {
             SKR_LOG_TRACE("[D3D12] Create CVV Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
                 desc->name ? desc->name : u8"", allocationSize, desc->format);
@@ -75,10 +76,13 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
             heapProps.VisibleNodeMask = CGPU_SINGLE_GPU_NODE_MASK;
             heapProps.CreationNodeMask = CGPU_SINGLE_GPU_NODE_MASK;
-            CHECK_HRESULT(D->pDxDevice->CreateCommittedResource(
-            &heapProps, alloc_desc.ExtraHeapFlags, &bufDesc, res_states, NULL, IID_ARGS(&B->pDxResource)));
-            SKR_LOG_TRACE("[D3D12] Create Committed Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
-                desc->name ? desc->name : u8"", allocationSize, desc->format);
+            CHECK_HRESULT(D->pDxDevice->CreateCommittedResource(&heapProps, alloc_desc.ExtraHeapFlags, 
+            &bufDesc, res_states, NULL, IID_ARGS(&B->pDxResource)));
+            if (log_allocation)
+            {
+                SKR_LOG_TRACE("[D3D12] Create Committed Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
+                    desc->name ? desc->name : u8"", allocationSize, desc->format);
+            }
         }
         else
         {
@@ -87,7 +91,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
                 CHECK_HRESULT(D->pResourceAllocator->CreateResource(&alloc_desc, &bufDesc, res_states, 
                     NULL, &B->pDxAllocation, IID_ARGS(&B->pDxResource)));
             }            
-
+            if (log_allocation)
             {
                 ZoneScopedN("Log(Allocation)");
                 SKR_LOG_TRACE("[D3D12] Create Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 

@@ -1,11 +1,14 @@
 #include "gtest/gtest.h"
 #include "platform/vfs.h"
 #include "platform/thread.h"
+#include "misc/log.h"
+#include "misc/make_zeroed.hpp"
+#include "async/thread_job.hpp"
+#include "io/io.h"
+
 #include <string>
 #include <iostream>
 #include <platform/filesystem.hpp>
-#include "io/io.h"
-#include "misc/log.h"
 
 #include "tracy/Tracy.hpp"
 
@@ -117,42 +120,7 @@ TEST_F(FSTest, asyncread)
     ZoneScopedN("asyncread");
 
     skr_ram_io_service_desc_t ioServiceDesc = {};
-    ioServiceDesc.name = u8"Test";
-    auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
-    ioService->add_file_resolver();
-    ioService->add_iobuffer_resolver();
-
-    skr_io_future_t future = {};
-    skr::BlobId blob = nullptr;
-    {
-        auto rq = ioService->open_request();
-        rq->set_vfs(abs_fs);
-        rq->set_path(u8"testfile2");
-        rq->add_block({}); // read all
-        rq->add_callback(SKR_IO_STAGE_COMPLETED,
-            +[](skr_io_future_t* future, skr_io_request_t* request, void* arg){
-                auto pRamIO = (skr_io_request_t*)arg;
-                SKR_LOG_INFO("async read of file %s ok", pRamIO->get_path());
-            }, rq.get());
-        blob = ioService->request(rq, &future);
-    }
-
-    wait_timeout([&future]()->bool
-    {
-        return future.is_ready();
-    });
-    
-    // ioService->drain();
-    std::cout << (const char*)blob->get_data() << std::endl;
-    skr_io_ram_service_t::destroy(ioService);
-    std::cout << "..." << std::endl;
-}
-
-TEST_F(FSTest, chunking)
-{
-    ZoneScopedN("chunking");
-
-    skr_ram_io_service_desc_t ioServiceDesc = {};
+    ioServiceDesc.trace_log = true;
     ioServiceDesc.name = u8"Test";
     auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
     ioService->add_default_resolvers();
@@ -183,6 +151,88 @@ TEST_F(FSTest, chunking)
     std::cout << "..." << std::endl;
 }
 
+TEST_F(FSTest, asyncread2)
+{
+    ZoneScopedN("asyncread2");
+
+    auto jqDesc = make_zeroed<skr::JobQueueDesc>();
+    jqDesc.thread_count = 2;
+    jqDesc.priority = SKR_THREAD_ABOVE_NORMAL;
+    jqDesc.name = u8"Tool-IOJobQueue";
+    auto io_job_queue = SkrNew<skr::JobQueue>(jqDesc);
+
+    skr_ram_io_service_desc_t ioServiceDesc = {};
+    ioServiceDesc.trace_log = true;
+    ioServiceDesc.name = u8"Test";
+    ioServiceDesc.io_job_queue = io_job_queue;
+    ioServiceDesc.callback_job_queue = io_job_queue;
+    auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
+    ioService->add_default_resolvers();
+
+    skr_io_future_t future = {};
+    skr::BlobId blob = nullptr;
+    {
+        auto rq = ioService->open_request();
+        rq->set_vfs(abs_fs);
+        rq->set_path(u8"testfile2");
+        rq->add_block({}); // read all
+        rq->add_callback(SKR_IO_STAGE_COMPLETED,
+            +[](skr_io_future_t* future, skr_io_request_t* request, void* arg){
+                auto pRamIO = (skr_io_request_t*)arg;
+                SKR_LOG_INFO("async read of file %s ok", pRamIO->get_path());
+            }, rq.get());
+        blob = ioService->request(rq, &future);
+    }
+
+    wait_timeout([&future]()->bool
+    {
+        return future.is_ready();
+    });
+    
+    ioService->drain();
+    std::cout << (const char*)blob->get_data() << std::endl;
+    skr_io_ram_service_t::destroy(ioService);
+    std::cout << "..." << std::endl;
+
+    SkrDelete(io_job_queue);
+}
+
+TEST_F(FSTest, chunking)
+{
+    ZoneScopedN("chunking");
+
+    skr_ram_io_service_desc_t ioServiceDesc = {};
+    ioServiceDesc.trace_log = true;
+    ioServiceDesc.name = u8"Test";
+    auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
+    ioService->add_default_resolvers();
+
+    skr_io_future_t future = {};
+    skr::BlobId blob = nullptr;
+    {
+        auto rq = ioService->open_request();
+        rq->set_vfs(abs_fs);
+        rq->set_path(u8"testfile2");
+        rq->add_block({}); // read all
+        rq->add_callback(SKR_IO_STAGE_COMPLETED,
+            +[](skr_io_future_t* future, skr_io_request_t* request, void* arg){
+                auto pRamIO = (skr_io_request_t*)arg;
+                SKR_LOG_INFO("async read of file %s ok", pRamIO->get_path());
+            }, rq.get());
+        blob = ioService->request(rq, &future);
+    }
+
+    wait_timeout([&future]()->bool
+    {
+        return future.is_ready();
+    });
+    
+    ioService->drain();
+    std::cout << (const char*)blob->get_data() << std::endl;
+    skr_io_ram_service_t::destroy(ioService);
+    std::cout << "..." << std::endl;
+}
+
 #define TEST_CYCLES_COUNT 50
 
 TEST_F(FSTest, cancel)
@@ -193,12 +243,11 @@ TEST_F(FSTest, cancel)
     for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
+        ioServiceDesc.trace_log = true;
         ioServiceDesc.name = u8"Test";
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
-        ioServiceDesc.lockless = false;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
-        ioService->add_file_resolver();
-        ioService->add_iobuffer_resolver();
+        ioService->add_default_resolvers();
         ioService->set_sleep_time(0); // make test faster
 
         skr_io_future_t future = {};
@@ -249,12 +298,11 @@ TEST_F(FSTest, defer_cancel)
     for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
+        ioServiceDesc.trace_log = true;
         ioServiceDesc.name = u8"Test";
-        ioServiceDesc.lockless = true;
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
-        ioService->add_file_resolver();
-        ioService->add_iobuffer_resolver();
+        ioService->add_default_resolvers();
         ioService->set_sleep_time(0); // make test faster
 
         skr_io_future_t future = {};
@@ -311,12 +359,11 @@ TEST_F(FSTest, sort)
     for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
+        ioServiceDesc.trace_log = true;
         ioServiceDesc.name = u8"Test";
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
-        ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
-        ioService->add_file_resolver();
-        ioService->add_iobuffer_resolver();
+        ioService->add_default_resolvers();
         ioService->set_sleep_time(0); // make test faster
         ioService->stop(true);
 
@@ -327,15 +374,13 @@ TEST_F(FSTest, sort)
         {
             auto rq = ioService->open_request();
             rq->set_vfs(abs_fs);
-            rq->set_priority(SKR_ASYNC_SERVICE_PRIORITY_NORMAL);
             rq->set_path(u8"testfile");
             rq->add_block({}); // read all
-            blob = ioService->request(rq, &future);
+            blob = ioService->request(rq, &future, SKR_ASYNC_SERVICE_PRIORITY_NORMAL);
         }
         {
             auto rq2 = ioService->open_request();
             rq2->set_vfs(abs_fs);
-            rq2->set_priority(SKR_ASYNC_SERVICE_PRIORITY_URGENT);
             rq2->set_path(u8"testfile");
             rq2->add_block({}); // read all
             rq2->add_callback(SKR_IO_STAGE_COMPLETED, 
@@ -343,7 +388,7 @@ TEST_F(FSTest, sort)
                 auto future = (skr_io_future_t*)data;
                 EXPECT_TRUE(!future->is_ready());
             }, &future);
-            blob2 = ioService->request(rq2, &future2);
+            blob2 = ioService->request(rq2, &future2, SKR_ASYNC_SERVICE_PRIORITY_URGENT);
         }
         ioService->run();
         ioService->drain();

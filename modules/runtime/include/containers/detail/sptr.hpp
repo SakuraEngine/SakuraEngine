@@ -128,7 +128,8 @@ skr::SPtrHelper<T, EmbedRC>::SPtrHelper(SPtrHelper<U, EmbedRC>&& lp, typename st
 template <typename T, bool EmbedRC>
 skr::SPtrHelper<T, EmbedRC>::~SPtrHelper() SKR_NOEXCEPT
 {
-    if (this->p) release();
+    if (this->p) 
+        release();
 }
 
 // methods

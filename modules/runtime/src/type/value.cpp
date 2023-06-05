@@ -73,7 +73,7 @@ void skr_value_t::Reset()
     type = nullptr;
 }
 
-size_t skr_value_t::Hash() const
+uint64_t skr_value_t::Hash() const
 {
     if (!type)
         return 0;
@@ -179,7 +179,7 @@ void skr_value_ref_t::Reset()
     ptr = nullptr;
 }
 
-size_t skr_value_ref_t::Hash() const
+uint64_t skr_value_ref_t::Hash() const
 {
     CHECK_OUTDATED();
     if (!type)

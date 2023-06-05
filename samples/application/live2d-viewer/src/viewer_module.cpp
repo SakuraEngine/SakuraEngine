@@ -11,6 +11,8 @@
 #include "platform/vfs.h"
 #include "platform/thread.h"
 #include "platform/time.h"
+#include "platform/filesystem.hpp"
+#include "async/thread_job.hpp"
 
 #include "misc/log.h"
 #include "cgpu/io.h"
@@ -18,6 +20,7 @@
 #include "misc/make_zeroed.hpp"
 
 #include "module/module_manager.hpp"
+#include "runtime_module.h"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_effect.h"
 
@@ -32,6 +35,8 @@
 #ifdef _WIN32
 #include "SkrImageCoder/extensions/win_dstorage_decompressor.h"
 #endif
+
+namespace skr { struct JobQueue; }
 
 enum DemoUploadMethod
 {
@@ -62,9 +67,8 @@ public:
     SRendererId l2d_renderer = nullptr;
     skr_vfs_t* resource_vfs = nullptr;
     skr_io_ram_service_t* ram_service = nullptr;
-
+    skr::JobQueue* io_job_queue = nullptr;
 };
-#include "platform/filesystem.hpp"
 
 IMPLEMENT_DYNAMIC_MODULE(SLive2DViewerModule, Live2DViewer);
 
@@ -91,20 +95,29 @@ void SLive2DViewerModule::on_load(int argc, char8_t** argv)
     auto render_device = skr_get_default_render_device();
     l2d_renderer = skr_create_renderer(render_device, l2d_world);
 
+    auto jqDesc = make_zeroed<skr::JobQueueDesc>();
+    jqDesc.thread_count = 2;
+    jqDesc.priority = SKR_THREAD_ABOVE_NORMAL;
+    jqDesc.name = u8"Live2DViewer-RAMIOJobQueue";
+    io_job_queue = SkrNew<skr::JobQueue>(jqDesc);
+
     auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
-    ioServiceDesc.name = u8"Live2DViewerRAMIOService";
-    ioServiceDesc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
-    ioServiceDesc.sleep_time = 1000 / 60;
-    ioServiceDesc.lockless = true;
-    ioServiceDesc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
+    ioServiceDesc.name = u8"Live2DViewer-RAMIOService";
+    ioServiceDesc.sleep_time = 1000 / 100; // TickRate: 100
+    ioServiceDesc.io_job_queue = io_job_queue;
+    ioServiceDesc.callback_job_queue = io_job_queue;
     ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
     ram_service->add_default_resolvers();
     
 #ifdef _WIN32
-    auto decompress_service = skr_render_device_get_win_dstorage_decompress_service(render_device);
-    skr_win_dstorage_decompress_service_register_callback(decompress_service, 
-        SKR_WIN_DSTORAGE_COMPRESSION_TYPE_IMAGE, 
-        &skr_image_coder_win_dstorage_decompressor, nullptr);
+    {
+        skr_win_dstorage_decompress_desc_t decompress_desc = {};
+        decompress_desc.job_queue = io_job_queue;
+        auto decompress_service = skr_runtime_create_win_dstorage_decompress_service(&decompress_desc);
+        skr_win_dstorage_decompress_service_register_callback(decompress_service, 
+            SKR_WIN_DSTORAGE_COMPRESSION_TYPE_IMAGE, 
+            &skr_image_coder_win_dstorage_decompressor, nullptr);
+    }
 #endif
 }
 
@@ -116,6 +129,8 @@ void SLive2DViewerModule::on_unload()
     skr_free_vfs(resource_vfs);
 
     dualS_release(l2d_world);
+
+    SkrDelete(io_job_queue);
 }
 
 extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs);

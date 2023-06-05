@@ -1,14 +1,12 @@
-#ifndef WIN32_LEAN_AND_MEAN
-	#define WIN32_LEAN_AND_MEAN
-#endif
+#include "winheaders.h"
+
 #include "platform/time.h"
 #include "platform/debug.h"
 #include "platform/thread.h"
 
 #include <time.h>
 #include <stdint.h>
-#include <windows.h>
-#include <timeapi.h>
+
 #pragma comment(lib, "winmm.lib")
 
 /************************************************************************/

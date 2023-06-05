@@ -5,6 +5,7 @@
 #include <EASTL/vector_map.h>
 #include <EASTL/string.h>
 #include <EASTL/fixed_vector.h>
+#include "runtime_module.h"
 #ifdef _WIN32
 #include "platform/win/dstorage_windows.h"
 #endif
@@ -83,12 +84,6 @@ struct SKR_RENDERER_API RendererDeviceImpl : public RendererDevice
         return vram_service;
     }
 
-#ifdef _WIN32
-    skr_win_dstorage_decompress_service_id get_win_dstorage_decompress_service() const override
-    {
-        return decompress_service;
-    }
-#endif
 protected:
     // Device objects
     uint32_t backbuffer_index = 0;
@@ -105,9 +100,6 @@ protected:
     CGPUDStorageQueueId file_dstorage_queue = nullptr;
     CGPUDStorageQueueId memory_dstorage_queue = nullptr;
     CGPURootSignaturePoolId root_signature_pool = nullptr;
-#ifdef _WIN32
-    skr_win_dstorage_decompress_service_id decompress_service = nullptr;
-#endif
     CGPUNSightTrackerId nsight_tracker = nullptr;
 };
 
@@ -123,21 +115,12 @@ void RendererDevice::Free(RendererDevice* device) SKR_NOEXCEPT
 
 void RendererDeviceImpl::initialize(const Builder& builder)
 {
-    // TODO: move this to somewhere else
-    {
-        SkrDStorageConfig config = {};
-        skr_create_dstorage_instance(&config);
-    }
-    // END TODO
-
     create_api_objects(builder);
 
     auto vram_service_desc = make_zeroed<skr_vram_io_service_desc_t>();
     vram_service_desc.lockless = true;
     vram_service_desc.name = u8"vram_service";
-    vram_service_desc.sleep_mode = SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP;
     vram_service_desc.sleep_time = 1000 / 60;
-    vram_service_desc.sort_method = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
     vram_service = skr_io_vram_service_t::create(&vram_service_desc);
 }
 
@@ -155,10 +138,7 @@ void RendererDeviceImpl::finalize()
     }
     surfaces.clear();
     cgpu_free_sampler(linear_sampler);
-    // free dstorage services & queues
-#ifdef _WIN32
-    skr_win_dstorage_free_decompress_service(decompress_service);
-#endif
+    // free dstorage queues
     if(file_dstorage_queue) cgpu_free_dstorage_queue(file_dstorage_queue);
     if(memory_dstorage_queue) cgpu_free_dstorage_queue(memory_dstorage_queue);
     // free queues & device
@@ -173,11 +153,6 @@ void RendererDeviceImpl::finalize()
     // free nsight tracker
     if (nsight_tracker) cgpu_free_nsight_tracker(nsight_tracker);
     cgpu_free_instance(instance);
-
-    if (auto inst = skr_get_dstorage_instnace())
-    {
-        skr_free_dstorage_instance(inst);
-    }
 }
 
 #define MAX_CPY_QUEUE_COUNT 2
@@ -294,10 +269,6 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
     sampler_desc.mag_filter = CGPU_FILTER_TYPE_LINEAR;
     sampler_desc.compare_func = CGPU_CMP_NEVER;
     linear_sampler = cgpu_create_sampler(device, &sampler_desc);
-
-#ifdef _WIN32
-    decompress_service = skr_win_dstorage_create_decompress_service();
-#endif
 }
 
 CGPUSwapChainId RendererDeviceImpl::register_window(SWindowHandle window)
