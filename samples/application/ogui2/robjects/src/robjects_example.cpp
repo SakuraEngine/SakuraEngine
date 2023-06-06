@@ -107,7 +107,7 @@ struct robjects_example_application : public robjects_application_t
         stack->add_child(flex);
         stack->set_positional(0, skr::gui::Positional{}.set_left(0).set_right(0).set_top(0).set_height(400));
         stack->add_child(text);
-        stack->set_positional(1, skr::gui::Positional{}.set_left_percent(0.5).set_width(200).set_bottom(0).set_height(100).set_pivot(0.5, 0));
+        stack->set_positional(1, skr::gui::Positional{}.set_left_percent(0.5).set_top(10).set_pivot(0.5, 0));
         canvas->add_child(stack);
 
         stack->layout(skr::gui::BoxConstraint{{(float)gdi.gfx.window_width, (float)gdi.gfx.window_height}, {0, 0}}, true);

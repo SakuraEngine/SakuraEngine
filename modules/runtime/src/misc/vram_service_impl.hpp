@@ -20,7 +20,7 @@ enum EVramTaskStep
     kStepFinished
 };
 
-class VRAMServiceImpl final : public skr_io_vram_service_t
+class VRAMService final : public skr_io_vram_service_t
 {
 public:
     struct TaskBatch;
@@ -72,8 +72,8 @@ public:
             return skr::get_if<DStorageBufferTask>(&resource_task) || skr::get_if<DStorageTextureTask>(&resource_task);
         }
     };
-    ~VRAMServiceImpl() SKR_NOEXCEPT = default;
-    VRAMServiceImpl(uint32_t sleep_time, bool lockless) SKR_NOEXCEPT
+    ~VRAMService() SKR_NOEXCEPT = default;
+    VRAMService(uint32_t sleep_time, bool lockless) SKR_NOEXCEPT
         : tasks(lockless), threaded_service(sleep_time, lockless)
 
     {

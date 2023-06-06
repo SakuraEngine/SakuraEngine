@@ -33,7 +33,7 @@ struct type_registry_t {
     skr::vector<type_description_t> descriptions;
     skr::vector<intptr_t> entityFields;
     block_arena_t nameArena;
-    skr::flat_hash_map<skr::string_view, type_index_t, skr::hash<skr::string_view>> name2type;
+    skr::flat_hash_map<skr::string, type_index_t, skr::hash<skr::string>> name2type;
     skr::flat_hash_map<guid_t, type_index_t, skr::guid::hash> guid2type;
     guid_func_t guid_func = nullptr;
     type_index_t register_type(const type_description_t& desc);

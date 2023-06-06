@@ -166,14 +166,8 @@ CGPUDStorageQueueId skr_render_device_get_file_dstorage_queue(SRenderDeviceId de
 {
     return device->get_file_dstorage_queue();
 }
+
 CGPUDStorageQueueId skr_render_device_get_memory_dstorage_queue(SRenderDeviceId device)
 {
     return device->get_memory_dstorage_queue();
 }
-
-#ifdef _WIN32
-skr_win_dstorage_decompress_service_id skr_render_device_get_win_dstorage_decompress_service(SRenderDeviceId device)
-{
-    return device->get_win_dstorage_decompress_service();
-}
-#endif

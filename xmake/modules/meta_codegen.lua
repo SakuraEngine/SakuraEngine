@@ -27,17 +27,24 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
     end
     table.insert(argv, "-I"..os.projectdir()..vformat("/SDKs/tools/$(host)/meta-include"))
 
-    if not opt.quiet then
-        cprint("${green}[%s]: compiling.meta ${clear}%s", target:name(), path.relative(outdir))
-    end
-
+    local argv2 = {sourcefile, "--output="..path.absolute(outdir), "--root="..rootdir or path.absolute(target:scriptdir()), "--"}
+    
     if is_host("windows") then
+        local argv2l = 0
+        for _, v in pairs(argv2) do
+            argv2l = argv2l + #v
+        end
+        local dummy = "-DFUCK_YOU_WINDOWS" .. string.rep("S", argv2l)
+        -- hack: insert a placeholder to avoid the case where (#argv < limit) and (#argv + #argv2 > limit)
+        table.insert(argv, #argv + 1, dummy)
         argv = winos.cmdargv(argv)
     end
-
-    local argv2 = {sourcefile, "--output="..path.absolute(outdir), "--root="..rootdir or path.absolute(target:scriptdir()), "--"}
     for k,v in pairs(argv2) do  
         table.insert(argv, k, v)
+    end
+    local command = program .. " " .. table.concat(argv, " ")
+    if not opt.quiet then
+        cprint("${green}[%s]: compiling.meta ${clear}%s - %s", target:name(), path.relative(outdir), command)
     end
     os.runv(meta.program, argv)
 

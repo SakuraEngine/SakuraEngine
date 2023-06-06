@@ -3,13 +3,13 @@
 const char* skr::io::kIOTaskQueueName = "io::task_queue";
 
 // create resource
-void skr::io::VRAMServiceImpl::createResource(skr::io::VRAMServiceImpl::Task &task) SKR_NOEXCEPT
+void skr::io::VRAMService::createResource(skr::io::VRAMService::Task &task) SKR_NOEXCEPT
 {
     tryCreateBufferResource(task);
     tryCreateTextureResource(task);
 }
 
-CGPUBufferId skr::io::VRAMServiceImpl::createCGPUBuffer(const skr_vram_buffer_io_t& buffer_io, uint64_t backfill_size) SKR_NOEXCEPT
+CGPUBufferId skr::io::VRAMService::createCGPUBuffer(const skr_vram_buffer_io_t& buffer_io, uint64_t backfill_size) SKR_NOEXCEPT
 {
     auto buffer_desc = make_zeroed<CGPUBufferDescriptor>();
     buffer_desc.size = buffer_io.vbuffer.buffer_size ? buffer_io.vbuffer.buffer_size : backfill_size;
@@ -27,7 +27,7 @@ CGPUBufferId skr::io::VRAMServiceImpl::createCGPUBuffer(const skr_vram_buffer_io
     return buffer;
 }
 
-CGPUTextureId skr::io::VRAMServiceImpl::createCGPUTexture(const skr_vram_texture_io_t &texture_io) SKR_NOEXCEPT
+CGPUTextureId skr::io::VRAMService::createCGPUTexture(const skr_vram_texture_io_t &texture_io) SKR_NOEXCEPT
 {
     auto texture_desc = make_zeroed<CGPUTextureDescriptor>();
     texture_desc.width = texture_io.vtexture.width;
@@ -45,9 +45,9 @@ CGPUTextureId skr::io::VRAMServiceImpl::createCGPUTexture(const skr_vram_texture
     return texture;
 }
 
-void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl::Task &task) SKR_NOEXCEPT
+void skr::io::VRAMService::tryCreateBufferResource(skr::io::VRAMService::Task &task) SKR_NOEXCEPT
 {
-    if (auto buffer_task = skr::get_if<skr::io::VRAMServiceImpl::BufferTask>(&task.resource_task))
+    if (auto buffer_task = skr::get_if<skr::io::VRAMService::BufferTask>(&task.resource_task))
     {
         SKR_ASSERT( (buffer_task->buffer_io.src_memory.size) && "buffer_io.size must be set");
         const auto& buffer_io = buffer_task->buffer_io;
@@ -64,7 +64,7 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
             SKR_UNREACHABLE_CODE();
         }
     }
-    if (auto ds_buffer_task = skr::get_if<skr::io::VRAMServiceImpl::DStorageBufferTask>(&task.resource_task))
+    if (auto ds_buffer_task = skr::get_if<skr::io::VRAMService::DStorageBufferTask>(&task.resource_task))
     {
         const auto& buffer_io = ds_buffer_task->buffer_io;
         const auto& destination = ds_buffer_task->destination;
@@ -109,9 +109,9 @@ void skr::io::VRAMServiceImpl::tryCreateBufferResource(skr::io::VRAMServiceImpl:
     }
 }
 
-void skr::io::VRAMServiceImpl::tryCreateTextureResource(skr::io::VRAMServiceImpl::Task &task) SKR_NOEXCEPT
+void skr::io::VRAMService::tryCreateTextureResource(skr::io::VRAMService::Task &task) SKR_NOEXCEPT
 {
-    if (auto texture_task = skr::get_if<skr::io::VRAMServiceImpl::TextureTask>(&task.resource_task))
+    if (auto texture_task = skr::get_if<skr::io::VRAMService::TextureTask>(&task.resource_task))
     {
         if (texture_task->destination->texture) return;
         
@@ -129,7 +129,7 @@ void skr::io::VRAMServiceImpl::tryCreateTextureResource(skr::io::VRAMServiceImpl
             SKR_UNREACHABLE_CODE();
         }
     }
-    if (auto ds_texture_task = skr::get_if<skr::io::VRAMServiceImpl::DStorageTextureTask>(&task.resource_task))
+    if (auto ds_texture_task = skr::get_if<skr::io::VRAMService::DStorageTextureTask>(&task.resource_task))
     {
         if (ds_texture_task->texture_io.dstorage.source_type == SKR_DSTORAGE_SOURCE_FILE)
         {
@@ -177,15 +177,15 @@ void skr::io::VRAMServiceImpl::tryCreateTextureResource(skr::io::VRAMServiceImpl
 // create resource
 
 // upload resource
-void skr::io::VRAMServiceImpl::uploadResource(skr::io::VRAMServiceImpl::Task& task) SKR_NOEXCEPT
+void skr::io::VRAMService::uploadResource(skr::io::VRAMService::Task& task) SKR_NOEXCEPT
 {
     tryUploadBufferResource(task);
     tryUploadTextureResource(task);
 }
 
-void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl::Task& task) SKR_NOEXCEPT
+void skr::io::VRAMService::tryUploadBufferResource(skr::io::VRAMService::Task& task) SKR_NOEXCEPT
 {
-    if (auto buffer_task = skr::get_if<skr::io::VRAMServiceImpl::BufferTask>(&task.resource_task))
+    if (auto buffer_task = skr::get_if<skr::io::VRAMService::BufferTask>(&task.resource_task))
     {
     #ifdef TRACY_ENABLE
         skr::string BufferUpload = u8"BufferUpload-";
@@ -246,9 +246,9 @@ void skr::io::VRAMServiceImpl::tryUploadBufferResource(skr::io::VRAMServiceImpl:
     }
 }
 
-void skr::io::VRAMServiceImpl::tryUploadTextureResource(skr::io::VRAMServiceImpl::Task& task) SKR_NOEXCEPT
+void skr::io::VRAMService::tryUploadTextureResource(skr::io::VRAMService::Task& task) SKR_NOEXCEPT
 {
-    if (auto texture_task = skr::get_if<skr::io::VRAMServiceImpl::TextureTask>(&task.resource_task))
+    if (auto texture_task = skr::get_if<skr::io::VRAMService::TextureTask>(&task.resource_task))
     {
     #ifdef TRACY_ENABLE
         const auto TextureUpload = skr::format(u8"TextureUpload-{}", task.path);
@@ -313,15 +313,15 @@ void skr::io::VRAMServiceImpl::tryUploadTextureResource(skr::io::VRAMServiceImpl
 
 
 // dstorage resource
-void skr::io::VRAMServiceImpl::dstorageResource(skr::io::VRAMServiceImpl::Task& task) SKR_NOEXCEPT
+void skr::io::VRAMService::dstorageResource(skr::io::VRAMService::Task& task) SKR_NOEXCEPT
 {
     tryDStorageBufferResource(task);
     tryDStorageTextureResource(task);
 }
 
-void skr::io::VRAMServiceImpl::tryDStorageBufferResource(skr::io::VRAMServiceImpl::Task& task) SKR_NOEXCEPT
+void skr::io::VRAMService::tryDStorageBufferResource(skr::io::VRAMService::Task& task) SKR_NOEXCEPT
 {
-    if (auto ds_buffer_task = skr::get_if<skr::io::VRAMServiceImpl::DStorageBufferTask>(&task.resource_task))
+    if (auto ds_buffer_task = skr::get_if<skr::io::VRAMService::DStorageBufferTask>(&task.resource_task))
     {
     #ifdef TRACY_ENABLE
         skr::string BufferDStorage = u8"BufferDStorage-";
@@ -360,9 +360,9 @@ void skr::io::VRAMServiceImpl::tryDStorageBufferResource(skr::io::VRAMServiceImp
     }
 }
 
-void skr::io::VRAMServiceImpl::tryDStorageTextureResource(skr::io::VRAMServiceImpl::Task& task) SKR_NOEXCEPT
+void skr::io::VRAMService::tryDStorageTextureResource(skr::io::VRAMService::Task& task) SKR_NOEXCEPT
 {
-    if (auto ds_texture_task = skr::get_if<skr::io::VRAMServiceImpl::DStorageTextureTask>(&task.resource_task))
+    if (auto ds_texture_task = skr::get_if<skr::io::VRAMService::DStorageTextureTask>(&task.resource_task))
     {
     #ifdef TRACY_ENABLE
         skr::string TextureDStorage = u8"TextureDStorage-";
@@ -408,9 +408,9 @@ void skr::io::VRAMServiceImpl::tryDStorageTextureResource(skr::io::VRAMServiceIm
 // dstorage resource
 
 // status check
-bool skr::io::VRAMServiceImpl::vramIOFinished(skr::io::VRAMServiceImpl::Task& task) SKR_NOEXCEPT
+bool skr::io::VRAMService::vramIOFinished(skr::io::VRAMService::Task& task) SKR_NOEXCEPT
 {
-    if (auto buffer_task = skr::get_if<skr::io::VRAMServiceImpl::BufferTask>(&task.resource_task))
+    if (auto buffer_task = skr::get_if<skr::io::VRAMService::BufferTask>(&task.resource_task))
     {
         SKR_ASSERT(buffer_task->upload_task != nullptr);
         auto status = cgpu_query_fence_status(task.task_batch->get_fence(buffer_task->buffer_io.transfer_queue));
@@ -420,7 +420,7 @@ bool skr::io::VRAMServiceImpl::vramIOFinished(skr::io::VRAMServiceImpl::Task& ta
             return true;
         }
     }
-    if (auto ds_buffer_task = skr::get_if<skr::io::VRAMServiceImpl::DStorageBufferTask>(&task.resource_task))
+    if (auto ds_buffer_task = skr::get_if<skr::io::VRAMService::DStorageBufferTask>(&task.resource_task))
     {
         auto status = cgpu_query_fence_status(task.task_batch->get_fence(ds_buffer_task->dstorage_task->storage_queue));
         if (status == CGPU_FENCE_STATUS_COMPLETE)
@@ -429,7 +429,7 @@ bool skr::io::VRAMServiceImpl::vramIOFinished(skr::io::VRAMServiceImpl::Task& ta
             return true;
         }
     }
-    if (auto texture_task = skr::get_if<skr::io::VRAMServiceImpl::TextureTask>(&task.resource_task))
+    if (auto texture_task = skr::get_if<skr::io::VRAMService::TextureTask>(&task.resource_task))
     {
         SKR_ASSERT(texture_task->upload_task != nullptr);
         auto status = cgpu_query_fence_status(task.task_batch->get_fence(texture_task->texture_io.transfer_queue));
@@ -439,7 +439,7 @@ bool skr::io::VRAMServiceImpl::vramIOFinished(skr::io::VRAMServiceImpl::Task& ta
             return true;
         }
     }
-    if (auto ds_texture_task = skr::get_if<skr::io::VRAMServiceImpl::DStorageTextureTask>(&task.resource_task))
+    if (auto ds_texture_task = skr::get_if<skr::io::VRAMService::DStorageTextureTask>(&task.resource_task))
     {
         auto status = cgpu_query_fence_status(task.task_batch->get_fence(ds_texture_task->dstorage_task->storage_queue));
         if (status == CGPU_FENCE_STATUS_COMPLETE)
@@ -453,28 +453,28 @@ bool skr::io::VRAMServiceImpl::vramIOFinished(skr::io::VRAMServiceImpl::Task& ta
 // status check
 
 // cgpu helpers
-skr::io::VRAMServiceImpl::CGPUUploadTask* skr::io::VRAMServiceImpl::allocateCGPUUploadTask(CGPUDeviceId device, CGPUQueueId queue, CGPUSemaphoreId semaphore) SKR_NOEXCEPT
+skr::io::VRAMService::CGPUUploadTask* skr::io::VRAMService::allocateCGPUUploadTask(CGPUDeviceId device, CGPUQueueId queue, CGPUSemaphoreId semaphore) SKR_NOEXCEPT
 {
     ZoneScopedN("AllocateCGPUUploadTask");
 
-    auto upload = SkrNew<skr::io::VRAMServiceImpl::CGPUUploadTask>();
+    auto upload = SkrNew<skr::io::VRAMService::CGPUUploadTask>();
     upload->queue = queue;
     upload->semaphore = semaphore;
     resource_uploads.emplace_back(upload);
     return upload;
 }
 
-void skr::io::VRAMServiceImpl::freeCGPUUploadTask(skr::io::VRAMServiceImpl::CGPUUploadTask* upload) SKR_NOEXCEPT
+void skr::io::VRAMService::freeCGPUUploadTask(skr::io::VRAMService::CGPUUploadTask* upload) SKR_NOEXCEPT
 {
     if (upload->upload_buffer) cgpu_free_buffer(upload->upload_buffer);
     SkrDelete(upload);
 }
 
-skr::io::VRAMServiceImpl::CGPUDStorageTask* skr::io::VRAMServiceImpl::allocateCGPUDStorageTask(CGPUDeviceId device, CGPUDStorageQueueId storage_queue, CGPUDStorageFileHandle file) SKR_NOEXCEPT
+skr::io::VRAMService::CGPUDStorageTask* skr::io::VRAMService::allocateCGPUDStorageTask(CGPUDeviceId device, CGPUDStorageQueueId storage_queue, CGPUDStorageFileHandle file) SKR_NOEXCEPT
 {
     ZoneScopedN("AllocateCGPUDStorageTask");
 
-    auto dstorage = SkrNew<skr::io::VRAMServiceImpl::CGPUDStorageTask>();
+    auto dstorage = SkrNew<skr::io::VRAMService::CGPUDStorageTask>();
     dstorage->storage_queue = storage_queue;
     if (file)
     {
@@ -487,14 +487,14 @@ skr::io::VRAMServiceImpl::CGPUDStorageTask* skr::io::VRAMServiceImpl::allocateCG
     return dstorage;
 }
 
-void skr::io::VRAMServiceImpl::freeCGPUDStorageTask(CGPUDStorageTask* task) SKR_NOEXCEPT
+void skr::io::VRAMService::freeCGPUDStorageTask(CGPUDStorageTask* task) SKR_NOEXCEPT
 {
     if(task->ds_file) cgpu_dstorage_close_file(task->storage_queue, task->ds_file);
     SkrDelete(task);
 }
 // cgpu helpers
 
-void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
+void __ioThreadTask_VRAM_execute(skr::io::VRAMService* service)
 {
     using namespace skr::io;
     // 0.update task 
@@ -566,8 +566,8 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMServiceImpl* service)
         {
             static uint64_t upload_batch_id = 0;
             static uint64_t dstorage_batch_id = 0;
-            auto upload_batch = SkrNew<skr::io::VRAMServiceImpl::TaskBatch>();
-            auto dstorage_batch = SkrNew<skr::io::VRAMServiceImpl::TaskBatch>();
+            auto upload_batch = SkrNew<skr::io::VRAMService::TaskBatch>();
+            auto dstorage_batch = SkrNew<skr::io::VRAMService::TaskBatch>();
             upload_batch->id = upload_batch_id;
             dstorage_batch->id = dstorage_batch_id;
 
@@ -762,7 +762,7 @@ void __ioThreadTask_VRAM(void* arg)
     skr::string name = skr::format(u8"ioVRAMServiceThread-{}", taskIndex++);
     tracy::SetThreadName(name.c_str());
 #endif
-    auto service = reinterpret_cast<skr::io::VRAMServiceImpl*>(arg);
+    auto service = reinterpret_cast<skr::io::VRAMService*>(arg);
     for (; service->threaded_service.getThreadStatus() != _SKR_IO_THREAD_STATUS_QUIT;)
     {
         if (service->threaded_service.getThreadStatus() == _SKR_IO_THREAD_STATUS_SUSPEND)
@@ -776,7 +776,7 @@ void __ioThreadTask_VRAM(void* arg)
     }
 }
 
-void skr::io::VRAMServiceImpl::request(const skr_vram_buffer_io_t* buffer_info, skr_io_future_t* async_request, skr_async_vbuffer_destination_t* destination) SKR_NOEXCEPT
+void skr::io::VRAMService::request(const skr_vram_buffer_io_t* buffer_info, skr_io_future_t* async_request, skr_async_vbuffer_destination_t* destination) SKR_NOEXCEPT
 {
     // try push back new request
     auto io_task = make_zeroed<Task>();
@@ -807,7 +807,7 @@ void skr::io::VRAMServiceImpl::request(const skr_vram_buffer_io_t* buffer_info, 
     threaded_service.request_();
 }
 
-void skr::io::VRAMServiceImpl::request(const skr_vram_texture_io_t* texture_info, skr_io_future_t* async_request, skr_async_vtexture_destination_t* destination) SKR_NOEXCEPT
+void skr::io::VRAMService::request(const skr_vram_texture_io_t* texture_info, skr_io_future_t* async_request, skr_async_vtexture_destination_t* destination) SKR_NOEXCEPT
 {
     // try push back new request
     auto io_task = make_zeroed<Task>();
@@ -840,10 +840,8 @@ void skr::io::VRAMServiceImpl::request(const skr_vram_texture_io_t* texture_info
 
 skr_io_vram_service_t* skr_io_vram_service_t::create(const skr_vram_io_service_desc_t* desc) SKR_NOEXCEPT
 {
-    auto service = SkrNew<skr::io::VRAMServiceImpl>(desc->sleep_time, desc->lockless);
-    service->threaded_service.create_(desc->sleep_mode);
-    service->threaded_service.sortMethod = desc->sort_method;
-    service->threaded_service.sleepMode = desc->sleep_mode;
+    auto service = SkrNew<skr::io::VRAMService>(desc->sleep_time, desc->lockless);
+    service->threaded_service.create_();
     service->threaded_service.threadItem.pData = service;
     service->threaded_service.threadItem.pFunc = &__ioThreadTask_VRAM;
     skr_init_thread(&service->threaded_service.threadItem, &service->threaded_service.serviceThread);
@@ -853,40 +851,40 @@ skr_io_vram_service_t* skr_io_vram_service_t::create(const skr_vram_io_service_d
 
 void skr_io_vram_service_t::destroy(skr_io_vram_service_t* s) SKR_NOEXCEPT
 {
-    auto service = static_cast<skr::io::VRAMServiceImpl*>(s);
+    auto service = static_cast<skr::io::VRAMService*>(s);
     s->drain();
     service->threaded_service.destroy_();
     SkrDelete(service);
 }
 
-bool skr::io::VRAMServiceImpl::try_cancel(skr_io_future_t* request) SKR_NOEXCEPT
+bool skr::io::VRAMService::try_cancel(skr_io_future_t* request) SKR_NOEXCEPT
 {
     // TODO: Cancel on DStorage Queue
     return tasks.try_cancel_(request);
 }
 
-void skr::io::VRAMServiceImpl::defer_cancel(skr_io_future_t* request) SKR_NOEXCEPT
+void skr::io::VRAMService::defer_cancel(skr_io_future_t* request) SKR_NOEXCEPT
 {
     // TODO: Cancel on DStorage Queue
     tasks.defer_cancel_(request);
 }
 
-void skr::io::VRAMServiceImpl::drain() SKR_NOEXCEPT
+void skr::io::VRAMService::drain() SKR_NOEXCEPT
 {
     threaded_service.drain_();
 }
 
-void skr::io::VRAMServiceImpl::set_sleep_time(uint32_t time) SKR_NOEXCEPT
+void skr::io::VRAMService::set_sleep_time(uint32_t time) SKR_NOEXCEPT
 {
     threaded_service.set_sleep_time_(time);
 }
 
-void skr::io::VRAMServiceImpl::stop(bool wait_drain) SKR_NOEXCEPT
+void skr::io::VRAMService::stop(bool wait_drain) SKR_NOEXCEPT
 {
     threaded_service.stop_(wait_drain);
 }
 
-void skr::io::VRAMServiceImpl::run() SKR_NOEXCEPT
+void skr::io::VRAMService::run() SKR_NOEXCEPT
 {
     threaded_service.run_();
 }

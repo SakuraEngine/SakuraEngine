@@ -1,9 +1,5 @@
-#ifdef _WIN32
-    #ifndef WIN32_MEAN_AND_LEAN
-        #define WIN32_MEAN_AND_LEAN
-    #endif
-    #include <windows.h> 
-#endif
+#include "winheaders.h"
+
 #include "platform/process.h"
 #include "platform/memory.h"
 #include <containers/string.hpp>
