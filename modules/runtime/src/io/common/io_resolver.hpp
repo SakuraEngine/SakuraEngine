@@ -8,14 +8,14 @@ namespace skr {
 namespace io {
 struct RunnerBase;
 
-struct IOBatchResolverBase : public IIOBatchResolver
+struct IORequestResolverBase : public IIORequestResolver
 {
     IO_RC_OBJECT_BODY
 public:
 
 };
 
-struct IOBatchResolverChain final : public IIOBatchResolverChain
+struct IORequestResolverChain final : public IIORequestResolverChain
 {
     IO_RC_OBJECT_BODY
 public:
@@ -34,20 +34,19 @@ public:
         return;
     }
 
-    virtual IORequestId poll_processed_request(SkrAsyncServicePriority priority) SKR_NOEXCEPT
+    virtual bool poll_processed_request(SkrAsyncServicePriority priority, IORequestId& request) SKR_NOEXCEPT
     {
         SKR_ASSERT(false && "Not implemented");
-        return nullptr;
+        return false;
     }
 
-    virtual IOBatchId poll_processed_batch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
+    virtual bool poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT
     {
-        IOBatchId batch;
         if (resolved_batches[priority].try_dequeue(batch))
         {
-            return batch;
+            return batch.get();
         }
-        return nullptr;
+        return false;
     }
 
     RunnerBase* runner = nullptr;
@@ -56,20 +55,20 @@ private:
     IOBatchQueue resolved_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
 public:
-    IOBatchResolverChain(IOBatchResolverId resolver) SKR_NOEXCEPT
+    IORequestResolverChain(IORequestResolverId resolver) SKR_NOEXCEPT
     {
         if (resolver)
         {
             chain.emplace_back(resolver);
         }
     }
-    SObjectPtr<IIOBatchResolverChain> then(IOBatchResolverId resolver) SKR_NOEXCEPT
+    SObjectPtr<IIORequestResolverChain> then(IORequestResolverId resolver) SKR_NOEXCEPT
     {
         chain.emplace_back(resolver);
         return this;
     }
 private:
-    skr::vector<IOBatchResolverId> chain;
+    skr::vector<IORequestResolverId> chain;
 };
 
 } // namespace io

@@ -38,7 +38,7 @@ public:
         };
     }
     friend struct SmartPool<IOBatchBase, IIOBatch>;
-    
+
 protected:
     IOBatchBase(ISmartPoolPtr<IIOBatch> pool, IIOService* service, const uint64_t sequence) 
         : sequence(sequence), pool(pool), service(service)
@@ -54,5 +54,38 @@ protected:
 using BatchPtr = skr::SObjectPtr<IIOBatch>;
 using IOBatchQueue = IOConcurrentQueue<BatchPtr>;  
 using IOBatchArray = skr::vector<BatchPtr>;
+
+struct IOBatchBuffer : public IIOBatchBuffer
+{
+    IO_RC_OBJECT_BODY
+public:
+    uint64_t get_prefer_batch_size() const SKR_NOEXCEPT { return UINT64_MAX; }
+
+    bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
+    {
+        queues[priority].enqueue(batch);
+        return true;
+    }
+
+    virtual void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT {}
+    virtual void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT {}
+
+    virtual bool poll_processed_request(SkrAsyncServicePriority priority, IORequestId& request) SKR_NOEXCEPT
+    {
+        SKR_ASSERT(false && "Not implemented");
+        return false;
+    }
+
+    virtual bool poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT
+    {
+        if (queues[priority].try_dequeue(batch))
+        {
+            return batch.get();
+        }
+        return false;
+    }
+public:
+    IOBatchQueue queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+};
 } // namespace io
 } // namespace skr

@@ -112,24 +112,22 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     }
 }
 
-IORequestId VFSRAMReader::poll_processed_request(SkrAsyncServicePriority priority) SKR_NOEXCEPT
+bool VFSRAMReader::poll_processed_request(SkrAsyncServicePriority priority, IORequestId& request) SKR_NOEXCEPT
 {
-    IORequestId request;
     if (loaded_requests[priority].try_dequeue(request))
     {
-        return request;
+        return request.get();
     }
-    return nullptr;
+    return false;
 }
 
-IOBatchId VFSRAMReader::poll_processed_batch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
+bool VFSRAMReader::poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT
 {
-    IOBatchId batch;
     if (loaded_batches[priority].try_dequeue(batch))
     {
-        return batch;
+        return batch.get();
     }
-    return nullptr;
+    return false;
 }
 
 void VFSRAMReader::recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT

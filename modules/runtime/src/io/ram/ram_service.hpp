@@ -16,7 +16,7 @@ struct RAMService final : public IRAMService
     [[nodiscard]] IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT;
     [[nodiscard]] IORequestId open_request() SKR_NOEXCEPT;
 
-    void set_resolvers(IOBatchResolverChainId chain) SKR_NOEXCEPT
+    void set_resolvers(IORequestResolverChainId chain) SKR_NOEXCEPT
     {
         runner.set_resolvers(chain);
     }

@@ -52,19 +52,19 @@ void RunnerBase::recycle() SKR_NOEXCEPT
     }
 }
 
-void RunnerBase::resolve() SKR_NOEXCEPT
+void RunnerBase::dispatch_resolve() SKR_NOEXCEPT
 {
-    SKR_ASSERT(reader);
-    ZoneScopedN("resolve");
+    SKR_ASSERT(resolver_chain);
+    ZoneScopedN("dispatch_resolve");
 
-    const uint64_t NBytes = reader->get_prefer_batch_size();
+    const uint64_t NBytes = resolver_chain->get_prefer_batch_size();
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
         uint64_t bytes = 0;
         BatchPtr batch = nullptr;
-        while ((bytes <= NBytes) && batch_queues[i].try_dequeue(batch))
+        const auto priority = (SkrAsyncServicePriority)i;
+        while ((bytes <= NBytes) && batch_buffer->poll_processed_batch(priority, batch))
         {
-            const auto priority = (SkrAsyncServicePriority)i;
             uint64_t batch_size = 0;
             if (bool sucess = resolver_chain->fetch(priority, batch))
             {
@@ -81,33 +81,36 @@ void RunnerBase::resolve() SKR_NOEXCEPT
     }
 }
 
-uint64_t RunnerBase::fetch() SKR_NOEXCEPT
+void RunnerBase::dispatch_read() SKR_NOEXCEPT
 {
     SKR_ASSERT(reader);
-    ZoneScopedN("fetch");
+    ZoneScopedN("dispatch_read");
 
-    uint64_t N = 0;
+
+    const uint64_t NBytes = reader->get_prefer_batch_size();
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
+        uint64_t bytes = 0;
+        BatchPtr batch = nullptr;
         const auto priority = (SkrAsyncServicePriority)i;
-        while (IOBatchId batch = resolver_chain->poll_processed_batch(priority))
+        while ((bytes <= NBytes) && resolver_chain->poll_processed_batch(priority, batch))
         {
-            reader->fetch((SkrAsyncServicePriority)i, batch);
+            uint64_t batch_size = 0;
+            if (bool sucess = reader->fetch(priority, batch))
+            {
+                SKR_ASSERT(sucess);
+                for (auto&& request : batch->get_requests())
+                {
+                    for (auto block : request->get_blocks())
+                        batch_size += block.size;
+                }
+                bytes += batch_size;
 
-            skr_atomic64_add_relaxed(&reading_batch_counts[i], 1);
-            skr_atomic64_add_relaxed(&queued_batch_counts[i], -1);
-            N++;
+                skr_atomic64_add_relaxed(&reading_batch_counts[i], 1);
+                skr_atomic64_add_relaxed(&queued_batch_counts[i], -1);
+            }
         }
-    }
-    return N;
-}
-
-void RunnerBase::dispatch() SKR_NOEXCEPT
-{
-    ZoneScopedN("dispatch");
-    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
-    {
-        reader->dispatch((SkrAsyncServicePriority)i);
+        reader->dispatch(priority);
     }
 }
 
@@ -173,7 +176,7 @@ bool RunnerBase::finishFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServi
     return true;
 }
 
-bool RunnerBase::route_decompress(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT
+bool RunnerBase::dispatch_decompress(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT
 {
     const bool need_decompress = false;
     if (!need_decompress)
@@ -182,7 +185,7 @@ bool RunnerBase::route_decompress(SkrAsyncServicePriority priority, skr::SObject
     return true;
 }
 
-void RunnerBase::route_finish(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT
+void RunnerBase::dispatch_finish(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT
 {
     if (async_finish)
     {
@@ -205,16 +208,18 @@ void RunnerBase::route_loaded() SKR_NOEXCEPT
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
         const SkrAsyncServicePriority priority = (SkrAsyncServicePriority)i;
-        while (auto loaded = reader->poll_processed_request(priority))
+        IORequestId request;
+        while (reader->poll_processed_request(priority, request))
         {
-            auto&& rq = skr::static_pointer_cast<IORequestBase>(loaded);
-            auto need_decompress = route_decompress(priority, rq);
+            auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
+            auto need_decompress = dispatch_decompress(priority, rq);
             if (!need_decompress)
             {
-                route_finish(priority, rq);
+                dispatch_finish(priority, rq);
             }
         }
-        while (auto batch = reader->poll_processed_batch(priority))
+        IOBatchId batch;
+        while (reader->poll_processed_batch(priority, batch))
         {
             skr_atomic64_add_relaxed(&reading_batch_counts[i], -1);
         }
