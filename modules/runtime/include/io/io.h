@@ -147,12 +147,12 @@ struct RUNTIME_API IIORequest : public skr::SInterface
     virtual void set_path(const char8_t* path) SKR_NOEXCEPT = 0;
     virtual const char8_t* get_path() const SKR_NOEXCEPT = 0;
     
+    virtual void use_async_complete() SKR_NOEXCEPT = 0;
+    virtual void use_async_cancel() SKR_NOEXCEPT = 0;
+
     virtual void open_file() SKR_NOEXCEPT = 0; 
 
     virtual uint64_t get_fsize() const SKR_NOEXCEPT = 0;
-
-    virtual void set_sub_priority(float sub_pri) SKR_NOEXCEPT = 0; 
-    virtual float get_sub_priority() const SKR_NOEXCEPT = 0;
 
     virtual void add_callback(ESkrIOStage stage, skr_io_callback_t callback, void* data) SKR_NOEXCEPT = 0;
     virtual void add_finish_callback(ESkrIOFinishPoint point, skr_io_callback_t callback, void* data) SKR_NOEXCEPT = 0;
@@ -189,7 +189,9 @@ using IORequestResolverId = SObjectPtr<IIORequestResolver>;
 
 struct RUNTIME_API IIOBatchProcessor : public skr::SInterface
 {
-    virtual uint64_t get_prefer_batch_size() const SKR_NOEXCEPT = 0;
+    virtual uint64_t get_prefer_batch_size() const SKR_NOEXCEPT;
+    // virtual uint64_t get_prefer_batch_count() const SKR_NOEXCEPT;
+
     virtual bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT = 0;
     virtual void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
     virtual void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
@@ -197,7 +199,7 @@ struct RUNTIME_API IIOBatchProcessor : public skr::SInterface
     virtual bool poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT = 0;
     
     virtual bool is_async(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT = 0;
-    virtual uint64_t pending_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT = 0;
+    virtual uint64_t processing_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT = 0;
     virtual uint64_t processed_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT = 0;
 
     virtual ~IIOBatchProcessor() SKR_NOEXCEPT;

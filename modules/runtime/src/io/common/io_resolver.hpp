@@ -21,8 +21,6 @@ struct IORequestResolverChain final : public IIORequestResolverChain
 public:
     IORequestResolverChain() SKR_NOEXCEPT;
 
-    uint64_t get_prefer_batch_size() const SKR_NOEXCEPT { return UINT64_MAX; }
-
     bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
     {
         fetched_batches[priority].enqueue(batch);
@@ -57,7 +55,7 @@ public:
         return false;
     }
 
-    virtual uint64_t pending_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
+    virtual uint64_t processing_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
     {
         if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
         {
@@ -121,7 +119,6 @@ struct IOBatchProcessorChain : public IIOBatchProcessorChain
 {
     IO_RC_OBJECT_BODY
 public:
-    virtual uint64_t get_prefer_batch_size() const SKR_NOEXCEPT { return UINT64_MAX; }
     virtual bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
     {
         if (!chain.size()) return false;

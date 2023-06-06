@@ -126,9 +126,6 @@ bool RunnerBase::cancelFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServi
     return true;
 }
 
-const bool async_cancel = false;
-const bool async_finish = false;
-
 bool RunnerBase::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT
 {
     const auto status = rq->getStatus();
@@ -138,7 +135,7 @@ bool RunnerBase::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEX
     {
         if (rq->getFinishStep() == SKR_ASYNC_IO_FINISH_STEP_NONE)
         {
-            if (async_cancel)
+            if (rq->async_cancel)
             {
                 auto& future = finish_futures.emplace_back();
                 future = IORunner::FutureLauncher(job_queue).async(
@@ -156,7 +153,7 @@ bool RunnerBase::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEX
     return false;
 }
 
-bool RunnerBase::finishFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT
+bool RunnerBase::completeFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     rq->setStatus(SKR_IO_STAGE_COMPLETED);
     if (rq->needPollFinish())
@@ -172,19 +169,19 @@ bool RunnerBase::finishFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServi
     return true;
 }
 
-void RunnerBase::dispatch_finish(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT
+void RunnerBase::dispatch_complete(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT
 {
-    if (async_finish)
+    if (rq->async_complete)
     {
         auto& future = finish_futures.emplace_back();
         future = IORunner::FutureLauncher(job_queue).async(
         [this, priority, rq = rq](){
-            return finishFunction(rq, priority);
+            return completeFunction(rq, priority);
         });
     }
     else
     {
-        finishFunction(rq, priority);
+        completeFunction(rq, priority);
     }
 }
 
@@ -209,7 +206,7 @@ void RunnerBase::route_loaded() SKR_NOEXCEPT
         {
             auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
             // auto need_decompress = dispatch_decompress(priority, rq);
-            dispatch_finish(priority, rq);
+            dispatch_complete(priority, rq);
         }
         IOBatchId batch;
         while (reader->poll_processed_batch(priority, batch))
