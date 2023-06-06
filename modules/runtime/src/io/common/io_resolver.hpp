@@ -10,22 +10,15 @@ struct RunnerBase;
 
 struct IOBatchResolverBase : public IIOBatchResolver
 {
+    IO_RC_OBJECT_BODY
 public:
-    uint32_t add_refcount() 
-    { 
-        return 1 + skr_atomicu32_add_relaxed(&rc, 1); 
-    }
-    uint32_t release() 
-    {
-        skr_atomicu32_add_relaxed(&rc, -1);
-        return skr_atomicu32_load_acquire(&rc);
-    }
-private:
-    SAtomicU32 rc = 0;
+
 };
 
 struct IOBatchResolverChain final : public IIOBatchResolverChain
 {
+    IO_RC_OBJECT_BODY
+public:
     uint64_t get_prefer_batch_size() const SKR_NOEXCEPT { return UINT64_MAX; }
 
     bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
@@ -77,19 +70,6 @@ public:
     }
 private:
     skr::vector<IOBatchResolverId> chain;
-
-public:
-    uint32_t add_refcount() 
-    { 
-        return 1 + skr_atomicu32_add_relaxed(&rc, 1); 
-    }
-    uint32_t release() 
-    {
-        skr_atomicu32_add_relaxed(&rc, -1);
-        return skr_atomicu32_load_acquire(&rc);
-    }
-private:
-    SAtomicU32 rc = 0;
 };
 
 } // namespace io

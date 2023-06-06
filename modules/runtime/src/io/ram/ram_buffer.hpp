@@ -8,6 +8,7 @@ namespace io {
 
 struct RUNTIME_API RAMIOBuffer : public IRAMIOBuffer
 {
+    IO_RC_OBJECT_BODY
 public:
     virtual ~RAMIOBuffer() SKR_NOEXCEPT;
 
@@ -19,19 +20,6 @@ public:
 
     uint8_t* bytes = nullptr;
     uint64_t size = 0;
-
-public:
-    uint32_t add_refcount() 
-    { 
-        return 1 + skr_atomicu32_add_relaxed(&rc, 1); 
-    }
-    uint32_t release() 
-    {
-        skr_atomicu32_add_relaxed(&rc, -1);
-        return skr_atomicu32_load_acquire(&rc);
-    }
-private:
-    SAtomicU32 rc = 0;
 
 public:
     SInterfaceDeleter custom_deleter() const 

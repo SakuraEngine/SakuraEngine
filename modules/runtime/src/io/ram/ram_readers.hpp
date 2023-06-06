@@ -11,6 +11,7 @@ struct RAMService;
 
 struct RAMReaderBase : public IIOReader
 {
+    IO_RC_OBJECT_BODY
 public:
     RAMReaderBase(RAMService* service) SKR_NOEXCEPT : service(service) {}
     virtual ~RAMReaderBase() SKR_NOEXCEPT {}
@@ -21,19 +22,6 @@ public:
     }
 protected:
     RAMService* service = nullptr;
-
-public:
-    uint32_t add_refcount() 
-    { 
-        return 1 + skr_atomicu32_add_relaxed(&rc, 1); 
-    }
-    uint32_t release() 
-    {
-        skr_atomicu32_add_relaxed(&rc, -1);
-        return skr_atomicu32_load_acquire(&rc);
-    }
-private:
-    SAtomicU32 rc = 0;
 };
 
 struct VFSRAMReader final : public RAMReaderBase
