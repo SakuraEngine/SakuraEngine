@@ -18,7 +18,7 @@ struct RAMService final : public IRAMService
 
     void set_resolvers(IOBatchResolverChainId chain) SKR_NOEXCEPT
     {
-        runner.resolver_chain = skr::static_pointer_cast<IOBatchResolverChain>(chain);
+        runner.set_resolvers(chain);
     }
 
     RAMIOBufferId request(IORequestId request, skr_io_future_t* future, SkrAsyncServicePriority priority) SKR_NOEXCEPT;

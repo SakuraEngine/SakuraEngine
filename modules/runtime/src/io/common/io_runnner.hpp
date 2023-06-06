@@ -162,6 +162,12 @@ struct RunnerBase : public SleepyService
         }
     }
 
+    void set_resolvers(IOBatchResolverChainId chain) SKR_NOEXCEPT
+    {
+        resolver_chain = skr::static_pointer_cast<IOBatchResolverChain>(chain);
+        resolver_chain->runner = this;
+    }
+
     // cancel request marked as request_cancel
     bool try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT;
     bool cancelFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT;

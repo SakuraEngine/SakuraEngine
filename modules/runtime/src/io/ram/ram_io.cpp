@@ -225,6 +225,7 @@ namespace io {
 skr::AsyncResult RAMService::Runner::serve() SKR_NOEXCEPT
 {
     SKR_DEFER( { ZoneScopedNC("Finish", tracy::Color::Tan1); route_loaded(); recycle(); } );
+    setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
 
     uint64_t cnt;
     {
@@ -235,7 +236,6 @@ skr::AsyncResult RAMService::Runner::serve() SKR_NOEXCEPT
     if (cnt)
     {
         ZoneScopedNC("Dispatch", tracy::Color::Maroon1);
-        setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
         dispatch();
         return ASYNC_RESULT_OK;
     }

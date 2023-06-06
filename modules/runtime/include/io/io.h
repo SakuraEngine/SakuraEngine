@@ -187,19 +187,10 @@ struct RUNTIME_API IIOBatchResolver : public skr::SInterface
 };
 using IOBatchResolverId = SObjectPtr<IIOBatchResolver>;
 
-struct RUNTIME_API IIOBatchResolverChain : public skr::SInterface
-{
-    static SObjectPtr<IIOBatchResolverChain> Create(IOBatchResolverId resolver = nullptr) SKR_NOEXCEPT;
-    virtual SObjectPtr<IIOBatchResolverChain> then(IOBatchResolverId resolver) SKR_NOEXCEPT = 0;
-
-    virtual ~IIOBatchResolverChain() SKR_NOEXCEPT;
-};
-using IOBatchResolverChainId = SObjectPtr<IIOBatchResolverChain>;
-
 struct RUNTIME_API IIORequestProcessor : public skr::SInterface
 {
     virtual uint64_t get_prefer_batch_size() const SKR_NOEXCEPT = 0;
-    virtual void fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT = 0;
+    virtual bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT = 0;
     virtual void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
     virtual void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
     virtual IORequestId poll_processed_request(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
@@ -208,6 +199,15 @@ struct RUNTIME_API IIORequestProcessor : public skr::SInterface
     virtual ~IIORequestProcessor() SKR_NOEXCEPT;
     IIORequestProcessor() SKR_NOEXCEPT = default;
 };
+
+struct RUNTIME_API IIOBatchResolverChain : public IIORequestProcessor
+{
+    static SObjectPtr<IIOBatchResolverChain> Create(IOBatchResolverId resolver = nullptr) SKR_NOEXCEPT;
+    virtual SObjectPtr<IIOBatchResolverChain> then(IOBatchResolverId resolver) SKR_NOEXCEPT = 0;
+
+    virtual ~IIOBatchResolverChain() SKR_NOEXCEPT;
+};
+using IOBatchResolverChainId = SObjectPtr<IIOBatchResolverChain>;
 
 struct RUNTIME_API IIOReader : public IIORequestProcessor
 {

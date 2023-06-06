@@ -24,9 +24,10 @@ struct FutureLauncher
 };
 }
 
-void VFSRAMReader::fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
+bool VFSRAMReader::fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
 {
     fetched_batches[priority].enqueue(batch);
+    return true;
 }
 
 uint64_t VFSRAMReader::get_prefer_batch_size() const SKR_NOEXCEPT
