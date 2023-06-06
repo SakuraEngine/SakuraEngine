@@ -110,6 +110,7 @@ SProject* SProject::OpenProject(const skr::filesystem::path& projectFile) noexce
     ioServiceDesc.sleep_time = 1000 / 60;
     project->ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
     project->ram_service->add_default_resolvers();
+    project->ram_service->run();
 
     return project;
 }

@@ -74,7 +74,6 @@ void RunnerBase::resolve() SKR_NOEXCEPT
                     for (auto block : request->get_blocks())
                         batch_size += block.size;
                 }
-                resolved_batch_queues[i].enqueue(batch);
                 bytes += batch_size;
             }
             resolver_chain->dispatch(priority);
@@ -90,8 +89,8 @@ uint64_t RunnerBase::fetch() SKR_NOEXCEPT
     uint64_t N = 0;
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        BatchPtr batch = nullptr;
-        while (resolved_batch_queues[i].try_dequeue(batch))
+        const auto priority = (SkrAsyncServicePriority)i;
+        while (IOBatchId batch = resolver_chain->poll_processed_batch(priority))
         {
             reader->fetch((SkrAsyncServicePriority)i, batch);
 

@@ -94,9 +94,7 @@ RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
 
 skr_io_ram_service_t* IRAMService::create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
 {
-    auto srv = SkrNew<RAMService>(desc);
-    srv->run();
-    return srv;
+    return SkrNew<RAMService>(desc);
 }
 
 void IRAMService::destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT

@@ -193,7 +193,6 @@ struct RunnerBase : public SleepyService
 
 private:
     IOBatchQueue batch_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    IOBatchQueue resolved_batch_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
     SAtomic64 processing_request_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];

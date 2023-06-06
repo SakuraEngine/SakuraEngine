@@ -124,6 +124,7 @@ TEST_F(FSTest, asyncread)
     ioServiceDesc.name = u8"Test";
     auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
     ioService->add_default_resolvers();
+    ioService->run();
 
     skr_io_future_t future = {};
     skr::BlobId blob = nullptr;
@@ -168,6 +169,7 @@ TEST_F(FSTest, asyncread2)
     ioServiceDesc.callback_job_queue = io_job_queue;
     auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
     ioService->add_default_resolvers();
+    ioService->run();
 
     skr_io_future_t future = {};
     skr::BlobId blob = nullptr;
@@ -206,6 +208,7 @@ TEST_F(FSTest, chunking)
     ioServiceDesc.name = u8"Test";
     auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
     ioService->add_default_resolvers();
+    ioService->run();
 
     skr_io_future_t future = {};
     skr::BlobId blob = nullptr;
@@ -249,6 +252,7 @@ TEST_F(FSTest, cancel)
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
         ioService->add_default_resolvers();
         ioService->set_sleep_time(0); // make test faster
+        ioService->run();
 
         skr_io_future_t future = {};
         skr::BlobId blob = nullptr;
@@ -304,6 +308,7 @@ TEST_F(FSTest, defer_cancel)
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
         ioService->add_default_resolvers();
         ioService->set_sleep_time(0); // make test faster
+        ioService->run();
 
         skr_io_future_t future = {};
         skr::BlobId blob = nullptr;
@@ -365,7 +370,6 @@ TEST_F(FSTest, sort)
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
         ioService->add_default_resolvers();
         ioService->set_sleep_time(0); // make test faster
-        ioService->stop(true);
 
         skr_io_future_t future = {};
         skr::BlobId blob = nullptr;
