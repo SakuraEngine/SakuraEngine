@@ -84,7 +84,7 @@ struct RunnerBase : public SleepyService
         {
             skr_atomic64_store_relaxed(&processing_request_counts[i], 0);
             skr_atomic64_store_relaxed(&queued_batch_counts[i], 0);
-            skr_atomic64_store_relaxed(&dispatching_batch_counts[i], 0);
+            skr_atomic64_store_relaxed(&reading_batch_counts[i], 0);
         }
     }
     virtual ~RunnerBase() SKR_NOEXCEPT = default;
@@ -123,14 +123,14 @@ struct RunnerBase : public SleepyService
     {
         if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
         {
-            return skr_atomic64_load_relaxed(&dispatching_batch_counts[priority]);
+            return skr_atomic64_load_relaxed(&reading_batch_counts[priority]);
         }
         else
         {
             uint64_t count = 0;
             for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
             {
-                count += skr_atomic64_load_relaxed(&dispatching_batch_counts[i]);
+                count += skr_atomic64_load_relaxed(&reading_batch_counts[i]);
             }
             return count;
         }
@@ -173,11 +173,14 @@ struct RunnerBase : public SleepyService
     void resolve() SKR_NOEXCEPT;
     // 4. dispatch I/O blocks to drives (+allocate & cpy to raw)
     void dispatch() SKR_NOEXCEPT;
-    // 5. do uncompress works (+allocate & cpy to uncompressed)
-    void uncompress() SKR_NOEXCEPT;
+    // 5. do decompress works (+allocate & cpy to uncompressed)
+    // returns true if rq is moved to decompress router
+    bool route_decompress(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT;
     // 6. finish
-    void finish() SKR_NOEXCEPT;
+    void route_finish(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT;
     bool finishFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+
+    void route_loaded() SKR_NOEXCEPT;
 
     SObjectPtr<IIOReader> reader = nullptr;
     SObjectPtr<IOBatchResolverChain> resolver_chain = nullptr;
@@ -185,12 +188,12 @@ struct RunnerBase : public SleepyService
 private:
     IOBatchQueue batch_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IOBatchQueue resolved_batch_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
     SAtomic64 processing_request_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     SAtomic64 queued_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    SAtomic64 dispatching_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    SAtomic64 reading_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
-    IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     skr::vector<skr::IFuture<bool>*> finish_futures;
     skr::JobQueue* job_queue = nullptr;
 };

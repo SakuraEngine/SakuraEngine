@@ -54,6 +54,7 @@ typedef enum ESkrIOStage
     SKR_IO_STAGE_LOADING,
     SKR_IO_STAGE_LOADED,
     SKR_IO_STAGE_DECOMPRESSIONG,
+    SKR_IO_STAGE_DECOMPRESSED,
     SKR_IO_STAGE_COMPLETED,
     SKR_IO_STAGE_CANCELLED,
 
@@ -195,17 +196,30 @@ struct RUNTIME_API IIOBatchResolverChain : public skr::SInterface
 };
 using IOBatchResolverChainId = SObjectPtr<IIOBatchResolverChain>;
 
-struct RUNTIME_API IIOReader : public skr::SInterface
+struct RUNTIME_API IIORequestProcessor : public skr::SInterface
 {
     virtual uint64_t get_prefer_batch_size() const SKR_NOEXCEPT = 0;
     virtual void fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT = 0;
     virtual void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
     virtual void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
-    virtual IORequestId poll_finish_request(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
-    virtual IOBatchId poll_finish_batch(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
+    virtual IORequestId poll_processed_request(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
+    virtual IOBatchId poll_processed_batch(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
 
+    virtual ~IIORequestProcessor() SKR_NOEXCEPT;
+    IIORequestProcessor() SKR_NOEXCEPT = default;
+};
+
+struct RUNTIME_API IIOReader : public IIORequestProcessor
+{
     virtual ~IIOReader() SKR_NOEXCEPT;
     IIOReader() SKR_NOEXCEPT = default;
+};
+using IOReaderId = SObjectPtr<IIOReader>;
+
+struct RUNTIME_API IIODecompressor : public IIORequestProcessor
+{
+    virtual ~IIODecompressor() SKR_NOEXCEPT;
+    IIODecompressor() SKR_NOEXCEPT = default;
 };
 using IOReaderId = SObjectPtr<IIOReader>;
 

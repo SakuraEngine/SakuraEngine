@@ -42,7 +42,17 @@ IIOBatchResolverChain::~IIOBatchResolverChain() SKR_NOEXCEPT
 
 }
 
+IIORequestProcessor::~IIORequestProcessor() SKR_NOEXCEPT
+{
+    
+}
+
 IIOReader::~IIOReader() SKR_NOEXCEPT
+{
+    
+}
+
+IIODecompressor::~IIODecompressor() SKR_NOEXCEPT
 {
     
 }
