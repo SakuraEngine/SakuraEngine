@@ -20,7 +20,6 @@ SpaceAfterCStyleCast: false
 SpaceBeforeParens: ControlStatements
 SpaceBeforeRangeBasedForLoopColon: true
 SpaceInEmptyParentheses: false
-BreakBeforeBraces: Allman
 
 ColumnLimit: 0
 PointerAlignment: Left
@@ -33,7 +32,6 @@ AlignOperands: Align
 
 BinPackArguments: true
 BinPackParameters: true
-AlignAfterOpenBracket: DontAlign 
 IndentPPDirectives: BeforeHash
 
 BreakBeforeBraces: Custom
