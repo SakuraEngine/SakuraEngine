@@ -224,22 +224,19 @@ namespace io {
 
 skr::AsyncResult RAMService::Runner::serve() SKR_NOEXCEPT
 {
-    SKR_DEFER( { ZoneScopedNC("Finish", tracy::Color::Tan1); finish(); recycle(); } );
+    SKR_DEFER( { ZoneScopedNC("Finish", tracy::Color::Tan1); route_loaded(); recycle(); } );
 
     uint64_t cnt;
     {
         ZoneScopedNC("Resolve", tracy::Color::Orchid1);
-
         resolve();
         cnt = fetch();
     }
     if (cnt)
     {
         ZoneScopedNC("Dispatch", tracy::Color::Maroon1);
-
         setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
         dispatch();
-        uncompress();
         return ASYNC_RESULT_OK;
     }
     else if (!getQueuedBatchCount())

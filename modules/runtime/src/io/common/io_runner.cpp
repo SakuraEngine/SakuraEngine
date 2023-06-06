@@ -100,7 +100,7 @@ uint64_t RunnerBase::fetch() SKR_NOEXCEPT
         {
             reader->fetch((SkrAsyncServicePriority)i, batch);
 
-            skr_atomic64_add_relaxed(&dispatching_batch_counts[i], 1);
+            skr_atomic64_add_relaxed(&reading_batch_counts[i], 1);
             skr_atomic64_add_relaxed(&queued_batch_counts[i], -1);
             N++;
         }
@@ -117,18 +117,13 @@ void RunnerBase::dispatch() SKR_NOEXCEPT
     }
 }
 
-void RunnerBase::uncompress() SKR_NOEXCEPT
-{
-    // do nothing now
-}
-
 bool RunnerBase::cancelFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     rq->setStatus(SKR_IO_STAGE_CANCELLED);
     if (rq->needPollFinish())
     {
         finish_queues[priority].enqueue(rq);
-        rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_PENDING);
+        rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_WAIT_CALLBACK_POLLING);
     }
     else
     {
@@ -174,6 +169,7 @@ bool RunnerBase::finishFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServi
     if (rq->needPollFinish())
     {
         finish_queues[priority].enqueue(rq);
+        rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_WAIT_CALLBACK_POLLING);
     }
     else
     {
@@ -183,31 +179,50 @@ bool RunnerBase::finishFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServi
     return true;
 }
 
-void RunnerBase::finish() SKR_NOEXCEPT
+bool RunnerBase::route_decompress(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT
 {
-    ZoneScopedN("finish");
+    const bool need_decompress = false;
+    if (!need_decompress)
+        return false;
+    // decompressor->decompress();
+    return true;
+}
+
+void RunnerBase::route_finish(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT
+{
+    if (async_finish)
+    {
+        auto& future = finish_futures.emplace_back();
+        future = IORunner::FutureLauncher(job_queue).async(
+        [this, priority, rq = rq](){
+            return finishFunction(rq, priority);
+        });
+    }
+    else
+    {
+        finishFunction(rq, priority);
+    }
+}
+
+void RunnerBase::route_loaded() SKR_NOEXCEPT
+{
+    ZoneScopedN("route_loaded");
 
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        while (auto request = reader->poll_finish_request((SkrAsyncServicePriority)i))
+        const SkrAsyncServicePriority priority = (SkrAsyncServicePriority)i;
+        while (auto loaded = reader->poll_processed_request(priority))
         {
-            auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
-            if (async_finish)
+            auto&& rq = skr::static_pointer_cast<IORequestBase>(loaded);
+            auto need_decompress = route_decompress(priority, rq);
+            if (!need_decompress)
             {
-                auto& future = finish_futures.emplace_back();
-                future = IORunner::FutureLauncher(job_queue).async(
-                [this, i, rq = rq](){
-                    return finishFunction(rq, (SkrAsyncServicePriority)i);
-                });
-            }
-            else
-            {
-                finishFunction(rq, (SkrAsyncServicePriority)i);
+                route_finish(priority, rq);
             }
         }
-        while (auto batch = reader->poll_finish_batch((SkrAsyncServicePriority)i))
+        while (auto batch = reader->poll_processed_batch(priority))
         {
-            skr_atomic64_add_relaxed(&dispatching_batch_counts[i], -1);
+            skr_atomic64_add_relaxed(&reading_batch_counts[i], -1);
         }
     }
 }

@@ -84,11 +84,11 @@ void VFSRAMReader::dispatchFunction(IOBatchId batch) SKR_NOEXCEPT
                 // SKR_LOG_DEBUG("dispatch close request: %s", rq->path.c_str());
                 skr_vfs_fclose(rq->file);
                 rq->file = nullptr;
-                finish_requests[priority].enqueue(rq);
+                loaded_requests[priority].enqueue(rq);
             }
         }
     }
-    finish_batches[priority].enqueue(batch);
+    loaded_batches[priority].enqueue(batch);
     tryAwakeService();
 }
 
@@ -100,7 +100,7 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
         if (fetched_batches[i].try_dequeue(batch))
         {
             auto launcher = VFSReader::FutureLauncher(job_queue);
-            futures[i].emplace_back(
+            loaded_futures[i].emplace_back(
                 launcher.async([this, batch](){
                     ZoneScopedN("VFSReadTask");
                     dispatchFunction(batch);
@@ -111,22 +111,20 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     }
 }
 
-IORequestId VFSRAMReader::poll_finish_request(SkrAsyncServicePriority priority) SKR_NOEXCEPT
+IORequestId VFSRAMReader::poll_processed_request(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     IORequestId request;
-    if (finish_requests[priority].try_dequeue(request))
+    if (loaded_requests[priority].try_dequeue(request))
     {
-        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-        rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_PENDING);
-        return rq;
+        return request;
     }
     return nullptr;
 }
 
-IOBatchId VFSRAMReader::poll_finish_batch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
+IOBatchId VFSRAMReader::poll_processed_batch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     IOBatchId batch;
-    if (finish_batches[priority].try_dequeue(batch))
+    if (loaded_batches[priority].try_dequeue(batch))
     {
         return batch;
     }
@@ -137,7 +135,7 @@ void VFSRAMReader::recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     ZoneScopedN("VFSRAMReader::recycle");
 
-    auto& arr = futures[priority];
+    auto& arr = loaded_futures[priority];
     for (auto& future : arr)
     {
         auto status = future->wait_for(0);
