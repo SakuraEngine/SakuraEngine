@@ -121,3 +121,17 @@ using IOConcurrentQueue = moodycamel::ConcurrentQueue<T, IOConcurrentQueueTraits
 
 } // namespace io
 } // namespace skr
+
+#define IO_RC_OBJECT_BODY \
+private:\
+    SAtomicU32 rc = 0;\
+public:\
+    uint32_t add_refcount() final\
+    {\
+        return 1 + skr_atomicu32_add_relaxed(&rc, 1);\
+    }\
+    uint32_t release() final\
+    {\
+        skr_atomicu32_add_relaxed(&rc, -1);\
+        return skr_atomicu32_load_acquire(&rc);\
+    }

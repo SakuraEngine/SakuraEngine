@@ -9,6 +9,8 @@ namespace io {
 
 struct IOBatchBase : public IIOBatch
 {
+    IO_RC_OBJECT_BODY
+public:
     void reserve(uint64_t n) SKR_NOEXCEPT
     {
         requests.reserve(n);
@@ -27,19 +29,6 @@ protected:
     eastl::fixed_vector<IORequestId, 1> requests;
 
 public:
-    uint32_t add_refcount() 
-    { 
-        return 1 + skr_atomicu32_add_relaxed(&rc, 1); 
-    }
-    uint32_t release() 
-    {
-        skr_atomicu32_add_relaxed(&rc, -1);
-        return skr_atomicu32_load_acquire(&rc);
-    }
-private:
-    SAtomicU32 rc = 0;
-
-public:
     SInterfaceDeleter custom_deleter() const 
     { 
         return +[](SInterface* ptr) 
@@ -49,6 +38,7 @@ public:
         };
     }
     friend struct SmartPool<IOBatchBase, IIOBatch>;
+    
 protected:
     IOBatchBase(ISmartPoolPtr<IIOBatch> pool, IIOService* service, const uint64_t sequence) 
         : sequence(sequence), pool(pool), service(service)

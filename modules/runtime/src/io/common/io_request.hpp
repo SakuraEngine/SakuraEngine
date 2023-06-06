@@ -27,6 +27,7 @@ constexpr const char* callback_names[SKR_IO_STAGE_COUNT] = {
 
 struct IORequestBase : public IIORequest
 {
+    IO_RC_OBJECT_BODY
 public:
     SkrAsyncIOFinishStep getFinishStep() const SKR_NOEXCEPT
     { 
@@ -114,19 +115,6 @@ public:
     IORequestBase(ISmartPoolPtr<IIORequest> pool) : pool(pool) {}
 protected:
     ISmartPoolPtr<IIORequest> pool = nullptr;
-    
-public:
-    uint32_t add_refcount() 
-    { 
-        return 1 + skr_atomicu32_add_relaxed(&rc, 1); 
-    }
-    uint32_t release() 
-    {
-        skr_atomicu32_add_relaxed(&rc, -1);
-        return skr_atomicu32_load_acquire(&rc);
-    }
-private:
-    SAtomicU32 rc = 0;
 };
 
 using RQPtr = skr::SObjectPtr<IORequestBase>;
