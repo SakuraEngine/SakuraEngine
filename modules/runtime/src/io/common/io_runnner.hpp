@@ -78,9 +78,7 @@ private:
 struct RunnerBase : public SleepyService
 {
     RunnerBase(const ServiceThreadDesc& desc, SObjectPtr<IIOReader> reader, skr::JobQueue* job_queue) SKR_NOEXCEPT
-        : SleepyService(desc), 
-        batch_buffer(SObjectPtr<IOBatchBuffer>::Create()),
-        reader(reader), job_queue(job_queue)
+        : SleepyService(desc), reader(reader), job_queue(job_queue)
     {
         for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
         {
@@ -141,7 +139,10 @@ struct RunnerBase : public SleepyService
     {
         auto chain = skr::static_pointer_cast<IORequestResolverChain>(_chain);
         chain->runner = this;
+
         resolver_chain = chain;
+        batch_buffer = SObjectPtr<IOBatchBuffer>::Create();
+        batch_processors = { batch_buffer, resolver_chain, reader };
     }
 
     // cancel request marked as request_cancel
@@ -152,9 +153,7 @@ struct RunnerBase : public SleepyService
     // 1. fetch requests from queue
     uint64_t fetch() SKR_NOEXCEPT;
     // 3. resolve requests to pending raw request array
-    void dispatch_resolve() SKR_NOEXCEPT;
-    // 4. dispatch I/O blocks to drives (+allocate & cpy to raw)
-    void dispatch_read() SKR_NOEXCEPT;
+    void process_batches() SKR_NOEXCEPT;
     // 5. do decompress works (+allocate & cpy to uncompressed)
     // returns true if rq is moved to decompress router
     bool dispatch_decompress(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT;
@@ -162,12 +161,24 @@ struct RunnerBase : public SleepyService
     void dispatch_complete(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT;
     bool completeFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
 
-    void route_loaded() SKR_NOEXCEPT;
+    uint64_t predicate() const
+    {
+        uint64_t cnt = 0;
+        for (auto processor : batch_processors)
+        {
+            if (!processor->is_async())
+            {
+                cnt += processor->processing_count();
+            }
+            cnt += processor->processed_count();
+        }
+        return cnt;
+    }
 
     IOBatchBufferId batch_buffer = nullptr;
     IORequestResolverChainId resolver_chain = nullptr;
     IOReaderId reader = nullptr;
-
+    skr::vector<IOBatchProcessorId> batch_processors; 
 private:
     IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     SAtomic64 processing_request_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
