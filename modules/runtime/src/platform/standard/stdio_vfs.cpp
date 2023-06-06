@@ -9,6 +9,7 @@
 struct skr_vfile_stdio_t : public skr_vfile_t {
     FILE* fh;
     uint64_t offset;
+    decltype(skr::filesystem::path().u8string()) filePath;
 };
 
 skr_vfile_t* skr_stdio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mode, ESkrFileCreation creation) SKR_NOEXCEPT
@@ -35,6 +36,7 @@ skr_vfile_t* skr_stdio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mo
     FILE* cfile = nullptr;
     {
         ZoneScopedN("stdio::fopen");
+        TracyMessage((const char*)filePath.c_str(), filePath.size());
         cfile = fopen((const char*)filePathStr, (const char*)modeStr);
     }
     std::error_code ec = {};
@@ -61,6 +63,7 @@ skr_vfile_t* skr_stdio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mo
         vfile->mode = mode;
         vfile->fs = fs;
         vfile->fh = cfile;
+        vfile->filePath = std::move(filePath);
         return vfile;
     }
 }
@@ -81,6 +84,7 @@ size_t skr_stdio_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_
         size_t bytesRead = 0;
         {
             ZoneScopedN("stdio::fread");
+            TracyMessage((const char*)vfile->filePath.c_str(), vfile->filePath.size());
             bytesRead = fread(out_buffer, 1, byte_count, vfile->fh);
             vfile->offset += bytesRead;
         }

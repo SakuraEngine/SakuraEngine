@@ -67,8 +67,6 @@ public:
         }
     }
 
-    uint64_t get_prefer_batch_size() const SKR_NOEXCEPT { return UINT64_MAX; }
-
     bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
     {
         queues[priority].enqueue(batch);
@@ -99,7 +97,7 @@ public:
         return false;
     }
 
-    uint64_t pending_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
+    uint64_t processing_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
     {
         return 0;
     }

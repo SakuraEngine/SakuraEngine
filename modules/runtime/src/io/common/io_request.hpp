@@ -14,16 +14,18 @@ typedef enum SkrAsyncIOFinishStep
     SKR_ASYNC_IO_FINISH_STEP_DONE = 2
 } SkrAsyncIOFinishStep;
 
-constexpr const char* callback_names[SKR_IO_STAGE_COUNT] = {
+constexpr const char* callback_names[] = {
     "IOCallback(None)",
     "IOCallback(Enqueued)",
     "IOCallback(Resolving)",
     "IOCallback(Loading)",
     "IOCallback(Loaded)",
     "IOCallback(Decompressing)",
+    "IOCallback(Decompressed)",
     "IOCallback(Completed)",
     "IOCallback(Cancelled)",
 };
+static_assert(sizeof(callback_names) / sizeof(callback_names[0]) == SKR_IO_STAGE_COUNT, "callback_names size mismatch");
 
 struct IORequestBase : public IIORequest
 {
@@ -88,12 +90,13 @@ public:
         finish_callbacks[point] = callback;
         finish_callback_datas[point] = data;
     }
-        
-    void set_sub_priority(float sub_pri) SKR_NOEXCEPT { sub_priority = sub_pri; }
-    float get_sub_priority() const SKR_NOEXCEPT { return sub_priority; }
 
+    void use_async_complete() SKR_NOEXCEPT { async_complete = true; }
+    void use_async_cancel() SKR_NOEXCEPT { async_cancel = true; }
+
+    bool async_complete = false;
+    bool async_cancel = false;
     skr_io_future_t* future = nullptr;
-    float sub_priority;
 
 protected:
     SAtomic32 finish_step = 0;

@@ -52,6 +52,9 @@ IIOBatchProcessorChain::~IIOBatchProcessorChain() SKR_NOEXCEPT
 
 }
 
+uint64_t IIOBatchProcessor::get_prefer_batch_size() const SKR_NOEXCEPT { return UINT64_MAX; }
+// uint64_t IIOBatchProcessor::get_prefer_batch_count() const SKR_NOEXCEPT { return UINT64_MAX; }
+
 IIOBatchProcessor::~IIOBatchProcessor() SKR_NOEXCEPT
 {
     

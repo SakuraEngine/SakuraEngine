@@ -29,7 +29,7 @@ public:
         service->runner.tryAwake();
     }
 
-    uint64_t pending_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
+    uint64_t processing_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
     {
         if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
         {
