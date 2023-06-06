@@ -4,5 +4,7 @@
     "xmake.additionalConfigArguments": [
         "--use_tracy=enable",
         "--build_tests=y"
-    ]
+    ],
+    "editor.formatOnSave": false,
+    "editor.formatOnPaste": false,
 }
