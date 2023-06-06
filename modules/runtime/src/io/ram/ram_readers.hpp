@@ -43,7 +43,7 @@ struct VFSRAMReader final : public RAMReaderBase
     ~VFSRAMReader() SKR_NOEXCEPT {}
 
     uint64_t get_prefer_batch_size() const SKR_NOEXCEPT;
-    void fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT;
+    bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT;
     void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     IORequestId poll_processed_request(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
