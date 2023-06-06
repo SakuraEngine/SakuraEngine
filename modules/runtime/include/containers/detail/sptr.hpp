@@ -74,6 +74,9 @@ using SPtr = SPtrHelper<T, true>;
 
 template <typename T>
 using SObjectPtr = SPtrHelper<T, false>;
+
+template <typename T>
+using SBoxedPtr = SPtrHelper<SBoxed<T>, false>;
 }
 
 // implement SPtrHelper
@@ -125,7 +128,8 @@ skr::SPtrHelper<T, EmbedRC>::SPtrHelper(SPtrHelper<U, EmbedRC>&& lp, typename st
 template <typename T, bool EmbedRC>
 skr::SPtrHelper<T, EmbedRC>::~SPtrHelper() SKR_NOEXCEPT
 {
-    if (this->p) release();
+    if (this->p) 
+        release();
 }
 
 // methods

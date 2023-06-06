@@ -2,10 +2,6 @@
 #include "SkrRenderer/module.configure.h"
 #include "fwd_types.h"
 #include "cgpu/io.h"
-#ifdef _WIN32
-#include "platform/win/dstorage_windows.h"
-#endif
-
 #ifdef __cplusplus
 #include "platform/window.h"
 
@@ -43,10 +39,6 @@ struct SKR_RENDERER_API RendererDevice
     virtual CGPUSamplerId get_linear_sampler() const = 0;
     virtual CGPURootSignaturePoolId get_root_signature_pool() const = 0;
     virtual skr_io_vram_service_t* get_vram_service() const = 0;
-
-#ifdef _WIN32
-    virtual skr_win_dstorage_decompress_service_id get_win_dstorage_decompress_service() const = 0;
-#endif
 };
 } // namespace skr
 #endif
@@ -92,8 +84,3 @@ CGPUDeviceId skr_render_device_get_cgpu_device(SRenderDeviceId device);
 
 RUNTIME_EXTERN_C SKR_RENDERER_API 
 skr_io_vram_service_t* skr_render_device_get_vram_service(SRenderDeviceId device);
-
-#ifdef _WIN32
-RUNTIME_EXTERN_C SKR_RENDERER_API
-skr_win_dstorage_decompress_service_id skr_render_device_get_win_dstorage_decompress_service(SRenderDeviceId device);
-#endif

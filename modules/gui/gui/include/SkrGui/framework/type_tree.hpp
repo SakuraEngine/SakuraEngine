@@ -11,17 +11,17 @@ struct Diagnosticable;
 struct SKR_GUI_API TypeTreeNode
 {
     virtual ~TypeTreeNode() SKR_NOEXCEPT;
-    virtual void initialize(skr_guid_t id, skr_dynamic_record_type_id type) SKR_NOEXCEPT {};
+    virtual void initialize(skr_guid_t id, skr_record_type_id type) SKR_NOEXCEPT {};
 
-    skr_dynamic_record_type_id get_type() SKR_NOEXCEPT { return type; }
+    skr_record_type_id get_type() SKR_NOEXCEPT { return type; }
 
 protected:
     friend struct TypeTreeImpl;
-    virtual void create_dynamic_type(skr_guid_t id, skr_dynamic_record_type_id parent_type, const char8_t* name) SKR_NOEXCEPT;
+    virtual void create_dynamic_type(skr_guid_t id, skr_record_type_id parent_type, const char8_t* name) SKR_NOEXCEPT;
 
     uint64_t size = 0;
     uint64_t align = 0;
-    skr_dynamic_record_type_id type = nullptr;
+    skr_record_type_id type = nullptr;
 };
 
 template<typename T>
@@ -47,7 +47,7 @@ struct TypeTreeNodeBase : public TypeTreeNode
         return _this;
     }
 
-    void create_dynamic_type(skr_guid_t id, skr_dynamic_record_type_id parent_type, const char8_t* name) SKR_NOEXCEPT final
+    void create_dynamic_type(skr_guid_t id, skr_record_type_id parent_type, const char8_t* name) SKR_NOEXCEPT final
     {
         size = sizeof(T);
         align = alignof(T);

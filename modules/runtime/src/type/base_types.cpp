@@ -1,4 +1,5 @@
 #include "misc/hash.h"
+#include "resource/resource_handle.h"
 #include "type/type.hpp"
 
 namespace skr {
@@ -105,80 +106,96 @@ const skr_type_t* type_of<skr::string_view>::get()
     return &type;
 }
 
-size_t Hash(bool value, size_t base)
+const skr_type_t* type_of<void*>::get()
+{
+    static ReferenceType type{
+        ReferenceType::Observed,
+        true,
+        false,
+        nullptr
+    };
+    return &type;
+}
+
+const skr_type_t* type_of<SInterface>::get()
+{
+    return nullptr;
+}
+
+uint64_t Hash(bool value, uint64_t base)
 {
     return skr_hash(&value, 1, base);
 }
-size_t Hash(int32_t value, size_t base)
+uint64_t Hash(int32_t value, uint64_t base)
 {
     return skr_hash(&value, sizeof(value), base);
 }
-size_t Hash(int64_t value, size_t base)
+uint64_t Hash(int64_t value, uint64_t base)
 {
     return skr_hash(&value, sizeof(value), base);
 }
-size_t Hash(uint32_t value, size_t base)
+uint64_t Hash(uint32_t value, uint64_t base)
 {
     return skr_hash(&value, sizeof(value), base);
 }
-size_t Hash(uint64_t value, size_t base)
+uint64_t Hash(uint64_t value, uint64_t base)
 {
     return skr_hash(&value, sizeof(value), base);
 }
-size_t Hash(float value, size_t base)
+uint64_t Hash(float value, uint64_t base)
 {
     return skr_hash(&value, sizeof(value), base);
 }
-size_t Hash(const skr_float2_t& value, size_t base)
+uint64_t Hash(const skr_float2_t& value, uint64_t base)
 {
     return skr_hash(&value, sizeof(value), base);
 }
-size_t Hash(const skr_float3_t& value, size_t base)
+uint64_t Hash(const skr_float3_t& value, uint64_t base)
 {
     return skr_hash(&value, sizeof(value), base);
 }
-size_t Hash(const skr_float4_t& value, size_t base)
+uint64_t Hash(const skr_float4_t& value, uint64_t base)
 {
     return skr_hash(&value, sizeof(value), base);
 }
-size_t Hash(const skr_float4x4_t& value, size_t base)
+uint64_t Hash(const skr_float4x4_t& value, uint64_t base)
 {
     return skr_hash(&value, sizeof(value), base);
 }
-size_t Hash(const skr_quaternion_t& value, size_t base)
+uint64_t Hash(const skr_quaternion_t& value, uint64_t base)
 {
     return skr_hash(&value, sizeof(value), base);
 }
-size_t Hash(const skr_rotator_t& value, size_t base)
+uint64_t Hash(const skr_rotator_t& value, uint64_t base)
 {
     return skr_hash(&value, sizeof(value), base);
 }
-size_t Hash(double value, size_t base)
+uint64_t Hash(double value, uint64_t base)
 {
     return skr_hash(&value, sizeof(value), base);
 }
-size_t Hash(const skr_guid_t& value, size_t base)
+uint64_t Hash(const skr_guid_t& value, uint64_t base)
 {
     return skr_hash(&value, sizeof(value), base);
 }
-size_t Hash(const skr_md5_t& value, size_t base)
+uint64_t Hash(const skr_md5_t& value, uint64_t base)
 {
     return skr_hash(&value, sizeof(value), base);
 }
-size_t Hash(const skr_resource_handle_t& value, size_t base)
+uint64_t Hash(const skr_resource_handle_t& value, uint64_t base)
 {
     auto guid = value.get_guid();
     return skr_hash(&guid, sizeof(guid), base);
 }
-size_t Hash(void* value, size_t base)
+uint64_t Hash(void* value, uint64_t base)
 {
     return skr_hash((void*)&value, sizeof(value), base);
 }
-size_t Hash(const skr::string& value, size_t base)
+uint64_t Hash(const skr::string& value, uint64_t base)
 {
     return skr_hash(value.c_str(), value.size(), base);
 }
-size_t Hash(const skr::string_view& value, size_t base)
+uint64_t Hash(const skr::string_view& value, uint64_t base)
 {
     return skr_hash(value.c_str(), value.size(), base);
 }

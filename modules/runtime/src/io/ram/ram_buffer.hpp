@@ -1,5 +1,5 @@
 #pragma once
-#include "pool.hpp"
+#include "../common/pool.hpp"
 
 #include "tracy/Tracy.hpp"
 
@@ -14,14 +14,9 @@ public:
     uint8_t* get_data() const SKR_NOEXCEPT { return bytes; }
     uint64_t get_size() const SKR_NOEXCEPT { return size; }
 
-protected:
     void allocate_buffer(uint64_t n) SKR_NOEXCEPT;
     void free_buffer() SKR_NOEXCEPT;
 
-    friend struct RAMIORequest;
-    friend struct RAMService;
-    friend struct RAMServiceImpl;
-    friend struct RAMBufferFuture;
     uint8_t* bytes = nullptr;
     uint64_t size = 0;
 
@@ -49,8 +44,8 @@ public:
     }
     friend struct SmartPool<RAMIOBuffer, IRAMIOBuffer>;
 protected:
-    RAMIOBuffer(ISmartPool<IRAMIOBuffer>* pool) : pool(pool) {}
-    ISmartPool<IRAMIOBuffer>* pool = nullptr;
+    RAMIOBuffer(ISmartPoolPtr<IRAMIOBuffer> pool) : pool(pool) {}
+    ISmartPoolPtr<IRAMIOBuffer> pool = nullptr;
 };
 
 } // namespace io

@@ -1,7 +1,7 @@
 #pragma once
 #include "common/render_application.h"
 
-SKR_DECLARE_TYPE_ID_FWD(skr::io, RAMService, skr_io_ram_service)
+SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIRenderer, skr_gdi_renderer)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIDevice, skr_gdi_device)
 SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)

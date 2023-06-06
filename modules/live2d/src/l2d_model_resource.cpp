@@ -58,7 +58,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
     cbData->model_resource = this;
 
     SKR_LOG_TRACE("Read Live2D From Home %s", data->u8HomePath.c_str());
-
+    auto batch = ioService->open_batch(4); // 4 files
     // Model Request
     {
         ZoneScopedN("Request Model");
@@ -83,7 +83,8 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             skr_atomicu32_add_relaxed(&_this->cbData->finished_models, 1);
             _this->cbData->partial_finished();
         }, this);
-        modelBlob = ioService->request(rq, &modelFuture);
+        // modelBlob = ioService->request(rq, &modelFuture);
+        modelBlob = skr::static_pointer_cast<skr::io::IRAMIOBuffer>(batch->add_request(rq, &modelFuture));
     }
     // Physics Request
     if (cbData->phys_count)
@@ -110,7 +111,8 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             skr_atomicu32_add_relaxed(&_this->cbData->finished_physics, 1);
             _this->cbData->partial_finished();
         }, this);
-        physicsBlob = ioService->request(rq, &pyhsicsFuture);
+        // physicsBlob = ioService->request(rq, &pyhsicsFuture);
+        physicsBlob = skr::static_pointer_cast<skr::io::IRAMIOBuffer>(batch->add_request(rq, &pyhsicsFuture));
     }
     // Pose Request
     if (cbData->pose_count)
@@ -137,7 +139,8 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             skr_atomicu32_add_relaxed(&_this->cbData->finished_poses, 1);
             _this->cbData->partial_finished();
         }, this);
-        poseBlob = ioService->request(rq, &poseFuture);
+        // poseBlob = ioService->request(rq, &poseFuture);
+        poseBlob = skr::static_pointer_cast<skr::io::IRAMIOBuffer>(batch->add_request(rq, &poseFuture));
     }
     // UsrData Request
     if (cbData->usr_data_count)
@@ -164,8 +167,10 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             skr_atomicu32_add_relaxed(&_this->cbData->finished_usr_data, 1);
             _this->cbData->partial_finished();
         }, this);
-        usrDataBlob = ioService->request(rq, &usrDataFuture);
+        // usrDataBlob = ioService->request(rq, &usrDataFuture);
+        usrDataBlob = skr::static_pointer_cast<skr::io::IRAMIOBuffer>(batch->add_request(rq, &usrDataFuture));
     }
+    ioService->request(batch);
 }
 
 void csmUserModel::on_finished() SKR_NOEXCEPT
@@ -390,6 +395,7 @@ void csmExpressionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallba
     expressionPaths.resize(settings->GetExpressionCount());
     expressionFutures.resize(settings->GetExpressionCount());
     expressionBlobs.resize(settings->GetExpressionCount());
+    auto batch = ioService->open_batch(expressionFutures.size());
     for (uint32_t i = 0; i < expressionFutures.size(); i++)
     {
         auto& future = expressionFutures[i];
@@ -428,8 +434,10 @@ void csmExpressionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallba
             skr_atomicu32_add_relaxed(&_this->cbData->finished_expressions, 1);
             _this->cbData->partial_finished();
         }, this);
-        expressionBlobs[i] = ioService->request(rq, &future);
+        // expressionBlobs[i] = ioService->request(rq, &future);
+        expressionBlobs[i] = skr::static_pointer_cast<skr::io::IRAMIOBuffer>(batch->add_request(rq, &future));
     }
+    ioService->request(batch);
 }
 
 csmMotionMap::~csmMotionMap() SKR_NOEXCEPT
@@ -482,6 +490,7 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             slot++;
         }
     }
+    auto batch = ioService->open_batch(motionFutures.size());
     for (uint32_t i = 0; i < motionFutures.size(); i++)
     {
         ZoneScopedN("Request Motion");
@@ -512,8 +521,10 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             skr_atomicu32_add_relaxed(&_this->cbData->finished_motions, 1);
             _this->cbData->partial_finished();
         }, this);
-        motionBlobs[i] = ioService->request(rq, &future);
+        // motionBlobs[i] = ioService->request(rq, &future);
+        motionBlobs[i] = skr::static_pointer_cast<skr::io::IRAMIOBuffer>(batch->add_request(rq, &future));
     }
+    ioService->request(batch);
 }
 
 void csmMotionMap::on_finished() SKR_NOEXCEPT

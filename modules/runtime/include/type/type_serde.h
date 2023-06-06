@@ -111,8 +111,8 @@ struct TValueSerializePolicy : ValueSerializePolicy {
             case SKR_TYPE_CATEGORY_DYNARR: {
                 auto& arr = (const DynArrayType&)(*type);
                 auto element = arr.elementType;
-                auto d = (char*)arr.operations.data(data);
-                auto n = arr.operations.size(data);
+                auto d = (char*)arr.Get(data, 0);
+                auto n = arr.Num(data);
                 auto size = element->Size();
                 ctx.BeginArray(n);
                 for (int i = 0; i < n; ++i)

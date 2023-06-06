@@ -224,6 +224,41 @@ struct RUNTIME_API SInterface
 template <class T>
 constexpr bool is_object_v = std::is_base_of_v<skr::SInterface, T>;
 
+struct RUNTIME_API SObjectHeader : public SInterface
+{
+    uint32_t rc = 1;
+    skr_guid_t type = {};
+    SInterfaceDeleter deleter = nullptr;
+    virtual uint32_t add_refcount() override;
+    virtual uint32_t release() override;
+    virtual skr_guid_t get_type() override { return type; }
+    virtual SInterfaceDeleter custom_deleter() const override { return deleter; }
+};
+namespace type {
+template <class T> struct type_id;
+}
+template<class T>
+struct SBoxed : public SObjectHeader
+{
+    T value;
+    T* get() { return &value; }
+    const T* get() const { return &value; }
+    SBoxed(T&& value, SInterfaceDeleter deleter = nullptr) : value(std::move(value)) 
+    {
+        type = skr::type::type_id<T>::get();
+        this->deleter = deleter;
+    }
+    static SBoxed<T>* from(T* ptr)
+    {
+        return (SBoxed<T>*)((uint8_t*)(ptr) - offsetof(SBoxed<T>, value));
+    }
+};
+template<class T>
+SBoxed<T>* box(T* ptr)
+{
+    return SBoxed<T>::from(ptr);
+}
+
 struct RUNTIME_API IBlob : public SInterface
 {
     static SObjectPtr<IBlob> Create(const uint8_t* data, uint64_t size, bool move, const char* name = nullptr) SKR_NOEXCEPT;

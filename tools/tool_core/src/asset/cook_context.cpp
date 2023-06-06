@@ -185,6 +185,7 @@ skr::filesystem::path SCookContextImpl::AddFileDependencyAndLoad(skr_io_ram_serv
     rq->add_block({}); // read all
     rq->add_callback(SKR_IO_STAGE_COMPLETED,
     +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
+        ZoneScopedN("SignalCounter");
         auto pCounter = (skr::task::event_t*)data;
         pCounter->signal();
     }, &counter);

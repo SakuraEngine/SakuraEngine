@@ -9,6 +9,7 @@
 #include <EASTL/deque.h>
 #include <EASTL/optional.h>
 #include <EASTL/sort.h>
+#include "containers/concurrent_queue.h"
 
 #include "tracy/Tracy.hpp"
 #include "tracy/TracyC.h"
@@ -23,6 +24,15 @@ typedef enum _SkrIOThreadStatus
     _SKR_IO_THREAD_STATUS_QUIT = 1,
     _SKR_IO_THREAD_STATUS_SUSPEND = 2
 } _SkrIOThreadStatus;
+
+typedef enum SkrAsyncServiceSortMethod
+{
+    SKR_ASYNC_SERVICE_SORT_METHOD_NEVER = 0,
+    SKR_ASYNC_SERVICE_SORT_METHOD_STABLE = 1,
+    SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL = 2,
+    SKR_ASYNC_SERVICE_SORT_METHOD_COUNT,
+    SKR_ASYNC_SERVICE_SORT_METHOD_MAX_ENUM = INT32_MAX
+} SkrAsyncServiceSortMethod;
 
 class AsyncServiceBase
 {
@@ -52,11 +62,10 @@ public:
 
     // util methods
 
-    virtual void create_(SkrAsyncServiceSleepMode sleep_mode) SKR_NOEXCEPT
+    virtual void create_() SKR_NOEXCEPT
     {
         auto service = this;
         service->setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
-        sleep_mode = sleepMode;
     }
 
     virtual void sleep_() SKR_NOEXCEPT
@@ -117,7 +126,6 @@ public:
     SAtomicU32 _running_status /*SkrAsyncServiceStatus*/;
     // can be simply exchanged by atomic vars to support runtime mode modify
     SkrAsyncServiceSortMethod sortMethod = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
-    SkrAsyncServiceSleepMode sleepMode = SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR;
 };
 
 RUNTIME_API extern const char* kIOTaskQueueName;
@@ -349,10 +357,10 @@ public:
 
     }
 
-    void create_(SkrAsyncServiceSleepMode sleep_mode) SKR_NOEXCEPT override
+    void create_() SKR_NOEXCEPT override
     {
         auto service = this;
-        AsyncServiceBase::create_(sleep_mode);
+        AsyncServiceBase::create_();
         service->setThreadStatus(_SKR_IO_THREAD_STATUS_RUNNING);
     }
 
@@ -363,31 +371,17 @@ public:
         const auto sleepTimeVal = skr_atomicu32_load_acquire(&service->_sleepTime);
         {
             service->setServiceStatus(SKR_ASYNC_SERVICE_STATUS_SLEEPING);
-            if (service->sleepMode == SKR_ASYNC_SERVICE_SLEEP_MODE_SLEEP && sleepTimeVal != 0)
+
+            // use condition variable to sleep
+            TracyCZoneC(sleepZone, tracy::Color::Gray43, 1);
+            TracyCZoneName(sleepZone, "ioServiceSleep(Cond)", strlen("ioServiceSleep(Cond)"));
             {
-                auto sleepTime = eastl::min(sleepTimeVal, 100u);
-                sleepTime = eastl::max(sleepTimeVal, 1u);
-                TracyCZoneC(sleepZone, tracy::Color::Gray43, 1);
-                TracyCZoneName(sleepZone, "ioServiceSleep(Sleep)", strlen("ioServiceSleep(Sleep)"));
-                skr_thread_sleep(sleepTime);
-                TracyCZoneEnd(sleepZone);
+                SMutexLock sleepLock(service->sleepMutex);
+                skr_wait_condition_vars(&service->sleepCv, &service->sleepMutex, sleepTimeVal);
+                skr_init_condition_var(&service->sleepCv);
             }
-            else if (service->sleepMode == SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR)
-            {
-                // use condition variable to sleep
-                TracyCZoneC(sleepZone, tracy::Color::Gray43, 1);
-                TracyCZoneName(sleepZone, "ioServiceSleep(Cond)", strlen("ioServiceSleep(Cond)"));
-                {
-                    SMutexLock sleepLock(service->sleepMutex);
-                    skr_wait_condition_vars(&service->sleepCv, &service->sleepMutex, sleepTimeVal);
-                    skr_init_condition_var(&service->sleepCv);
-                }
-                TracyCZoneEnd(sleepZone);
-            }
-            else
-            {
-                SKR_UNREACHABLE_CODE();
-            }
+            TracyCZoneEnd(sleepZone);
+
             auto serviceQuiting = getServiceStatus();
             if (serviceQuiting == SKR_ASYNC_SERVICE_STATUS_QUITING)
             {
@@ -401,11 +395,9 @@ public:
     {
         // unlock cv
         const auto sleepTimeVal = skr_atomicu32_load_acquire(&_sleepTime);
-        if (sleepTimeVal == SKR_ASYNC_SERVICE_SLEEP_TIME_MAX && sleepMode == SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR)
-        {
-            SMutexLock sleepLock(sleepMutex);
-            skr_wake_all_condition_vars(&sleepCv);
-        }
+            
+        SMutexLock sleepLock(sleepMutex);
+        skr_wake_all_condition_vars(&sleepCv);
     }
 
     virtual void destroy_() SKR_NOEXCEPT override
@@ -413,7 +405,6 @@ public:
         auto service = this;
         AsyncServiceBase::destroy_();
         service->setServiceStatus(SKR_ASYNC_SERVICE_STATUS_QUITING);
-        if (service->sleepMode == SKR_ASYNC_SERVICE_SLEEP_MODE_COND_VAR)
         {
             while (service->getThreadStatus() != _SKR_IO_THREAD_STATUS_QUIT)
             {

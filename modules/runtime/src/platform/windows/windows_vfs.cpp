@@ -6,7 +6,7 @@
 #if !defined(XBOX)
     #include "shlobj.h"
     #include "commdlg.h"
-    #include <WinBase.h>
+    #include <winbase.h>
 #endif
 
 inline static char8_t* duplicate_string(const char8_t* src_string) SKR_NOEXCEPT
