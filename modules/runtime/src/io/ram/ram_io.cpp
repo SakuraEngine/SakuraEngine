@@ -222,6 +222,17 @@ namespace io {
 
 skr::AsyncResult RAMService::Runner::serve() SKR_NOEXCEPT
 {
+    const auto pending = 
+        batch_buffer->pending_count() + batch_buffer->processed_count() +
+        resolver_chain->pending_count() + resolver_chain->processed_count() +
+        reader->processed_count();
+    if (!pending)
+    {
+        setServiceStatus(SKR_ASYNC_SERVICE_STATUS_SLEEPING);
+        sleep();
+        return ASYNC_RESULT_OK;
+    }
+
     setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
     {
         ZoneScopedNC("Finish", tracy::Color::Tan1);
@@ -233,12 +244,7 @@ skr::AsyncResult RAMService::Runner::serve() SKR_NOEXCEPT
         dispatch_read();
         recycle();
     }
-    if (!getQueuedBatchCount())
-    {
-        setServiceStatus(SKR_ASYNC_SERVICE_STATUS_SLEEPING);
-        sleep();
-        return ASYNC_RESULT_OK;
-    }
+
     return ASYNC_RESULT_OK;
 }
 

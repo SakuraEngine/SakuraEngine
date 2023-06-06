@@ -27,6 +27,7 @@ struct FutureLauncher
 bool VFSRAMReader::fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
 {
     fetched_batches[priority].enqueue(batch);
+    skr_atomic64_add_relaxed(&pending_batch_counts[priority], 1);
     return true;
 }
 
@@ -86,10 +87,12 @@ void VFSRAMReader::dispatchFunction(IOBatchId batch) SKR_NOEXCEPT
                 skr_vfs_fclose(rq->file);
                 rq->file = nullptr;
                 loaded_requests[priority].enqueue(rq);
+                skr_atomic64_add_relaxed(&processed_batch_counts[priority], 1);
             }
         }
     }
-    loaded_batches[priority].enqueue(batch);
+    skr_atomic64_add_relaxed(&pending_batch_counts[priority], -1);
+
     tryAwakeService();
 }
 
@@ -116,16 +119,8 @@ bool VFSRAMReader::poll_processed_request(SkrAsyncServicePriority priority, IORe
 {
     if (loaded_requests[priority].try_dequeue(request))
     {
+        skr_atomic64_add_relaxed(&processed_batch_counts[priority], -1);
         return request.get();
-    }
-    return false;
-}
-
-bool VFSRAMReader::poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT
-{
-    if (loaded_batches[priority].try_dequeue(batch))
-    {
-        return batch.get();
     }
     return false;
 }

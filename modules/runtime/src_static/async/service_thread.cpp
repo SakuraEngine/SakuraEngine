@@ -154,7 +154,6 @@ AsyncResult ServiceThread::ServiceFunc::run() SKR_NOEXCEPT
 WAKING:    
 {
     ZoneScopedN("WAKING");
-
     auto S = _service->get_status();
     if (S == kStatusWaking)
     {
@@ -165,7 +164,6 @@ WAKING:
 RUNNING:
 {
     ZoneScopedN("RUNNING");
-
     _service->set_status(kStatusRunning);
     skr_atomic32_add_relaxed(&_service->rid, 1);
     for (;;)
