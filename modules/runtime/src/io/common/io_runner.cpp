@@ -48,65 +48,59 @@ void RunnerBase::recycle() SKR_NOEXCEPT
 
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        reader->recycle((SkrAsyncServicePriority)i);
+        const auto priority = (SkrAsyncServicePriority)i;
+        for (auto processor : batch_processors)
+            processor->recycle(priority);
     }
 }
 
-void RunnerBase::dispatch_resolve() SKR_NOEXCEPT
+void RunnerBase::process_batches() SKR_NOEXCEPT
 {
-    SKR_ASSERT(resolver_chain);
-    ZoneScopedN("dispatch_resolve");
+    ZoneScopedN("process_batches");
 
-    const uint64_t NBytes = resolver_chain->get_prefer_batch_size();
-    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
+    for (size_t j = 1; j < batch_processors.size(); j++)
     {
-        uint64_t bytes = 0;
-        BatchPtr batch = nullptr;
-        const auto priority = (SkrAsyncServicePriority)i;
-        while ((bytes <= NBytes) && batch_buffer->poll_processed_batch(priority, batch))
+        auto&& processor = batch_processors[j];
+        auto&& prev_processor = batch_processors[j - 1];
+        const uint64_t NBytes = processor->get_prefer_batch_size();
+        for (uint32_t k = 0; k < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++k)
         {
-            uint64_t batch_size = 0;
-            if (bool sucess = resolver_chain->fetch(priority, batch))
+            const auto priority = (SkrAsyncServicePriority)k;
+            IORequestId request;
+            while (prev_processor->poll_processed_request(priority, request))
             {
-                SKR_ASSERT(sucess);
-                for (auto&& request : batch->get_requests())
-                {
-                    for (auto block : request->get_blocks())
-                        batch_size += block.size;
-                }
-                bytes += batch_size;
+                SKR_ASSERT(0);
             }
-            resolver_chain->dispatch(priority);
+            
+            uint64_t bytes = 0;
+            BatchPtr batch = nullptr;
+            while ((bytes <= NBytes) && prev_processor->poll_processed_batch(priority, batch))
+            {
+                uint64_t batch_size = 0;
+                if (bool sucess = processor->fetch(priority, batch))
+                {
+                    SKR_ASSERT(sucess);
+                    for (auto&& request : batch->get_requests())
+                    {
+                        for (auto block : request->get_blocks())
+                            batch_size += block.size;
+                    }
+                    bytes += batch_size;
+                }
+            }
+            processor->dispatch(priority);
         }
     }
-}
-
-void RunnerBase::dispatch_read() SKR_NOEXCEPT
-{
-    SKR_ASSERT(reader);
-    ZoneScopedN("dispatch_read");
-
-    const uint64_t NBytes = reader->get_prefer_batch_size();
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        uint64_t bytes = 0;
-        BatchPtr batch = nullptr;
         const auto priority = (SkrAsyncServicePriority)i;
-        while ((bytes <= NBytes) && resolver_chain->poll_processed_batch(priority, batch))
+        IORequestId request;
+        while (batch_processors.back()->poll_processed_request(priority, request))
         {
-            uint64_t batch_size = 0;
-            if (bool sucess = reader->fetch(priority, batch))
-            {
-                SKR_ASSERT(sucess);
-                for (auto&& request : batch->get_requests())
-                {
-                    for (auto block : request->get_blocks())
-                        batch_size += block.size;
-                }
-                bytes += batch_size;
-            }
+            auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
+            // auto need_decompress = dispatch_decompress(priority, rq);
+            dispatch_complete(priority, rq);
         }
-        reader->dispatch(priority);
     }
 }
 
@@ -192,28 +186,6 @@ bool RunnerBase::dispatch_decompress(SkrAsyncServicePriority priority, skr::SObj
         return false;
     // decompressor->decompress();
     return true;
-}
-
-void RunnerBase::route_loaded() SKR_NOEXCEPT
-{
-    ZoneScopedN("route_loaded");
-
-    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
-    {
-        const SkrAsyncServicePriority priority = (SkrAsyncServicePriority)i;
-        IORequestId request;
-        while (reader->poll_processed_request(priority, request))
-        {
-            auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
-            // auto need_decompress = dispatch_decompress(priority, rq);
-            dispatch_complete(priority, rq);
-        }
-        IOBatchId batch;
-        while (reader->poll_processed_batch(priority, batch))
-        {
-            
-        }
-    }
 }
 
 } // namespace io
