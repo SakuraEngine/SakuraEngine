@@ -36,6 +36,7 @@ bool initialize_gdi_application(gdi_application_t* app)
         ioServiceDesc.sleep_time = 1000 / 60;
         app->ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
         app->ram_service->add_default_resolvers();
+        app->ram_service->run();
     }
     {
         auto ioServiceDesc = make_zeroed<skr_vram_io_service_desc_t>();

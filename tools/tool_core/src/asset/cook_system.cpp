@@ -118,6 +118,7 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
                 desc.callback_job_queue = io_callback_job_queue;
                 ioService = skr_io_ram_service_t::create(&desc);        
                 ioService->add_default_resolvers();
+                ioService->run();
             }
         }
     }
