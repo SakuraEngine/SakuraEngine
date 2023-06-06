@@ -28,8 +28,10 @@ struct Positional
     PositionalValue top;
     PositionalValue right;
     PositionalValue bottom;
-    PositionalValue width;
-    PositionalValue height;
+    PositionalValue minWidth;
+    PositionalValue minHeight;
+    PositionalValue maxWidth;
+    PositionalValue maxHeight;
 
     skr_float2_t pivot;
     Positional& set_left(float left)
@@ -80,28 +82,84 @@ struct Positional
         this->bottom.is_percent = true;
         return *this;
     }
+    Positional& set_min_width(float width)
+    {
+        this->minWidth.value = width;
+        this->minWidth.is_percent = false;
+        return *this;
+    }
+    Positional& set_min_width_percent(float width)
+    {
+        this->minWidth.value = width;
+        this->minWidth.is_percent = true;
+        return *this;
+    }
+    Positional& set_min_height(float height)
+    {
+        this->minHeight.value = height;
+        this->minHeight.is_percent = false;
+        return *this;
+    }
+    Positional& set_min_height_percent(float height)
+    {
+        this->minHeight.value = height;
+        this->minHeight.is_percent = true;
+        return *this;
+    }
+    Positional& set_max_width(float width)
+    {
+        this->maxWidth.value = width;
+        this->maxWidth.is_percent = false;
+        return *this;
+    }
+    Positional& set_max_width_percent(float width)
+    {
+        this->maxWidth.value = width;
+        this->maxWidth.is_percent = true;
+        return *this;
+    }
+    Positional& set_max_height(float height)
+    {
+        this->maxHeight.value = height;
+        this->maxHeight.is_percent = false;
+        return *this;
+    }
+    Positional& set_max_height_percent(float height)
+    {
+        this->maxHeight.value = height;
+        this->maxHeight.is_percent = true;
+        return *this;
+    }
     Positional& set_width(float width)
     {
-        this->width.value = width;
-        this->width.is_percent = false;
+        this->minWidth.value = width;
+        this->minWidth.is_percent = false;
+        this->maxWidth.value = width;
+        this->maxWidth.is_percent = false;
         return *this;
     }
     Positional& set_width_percent(float width)
     {
-        this->width.value = width;
-        this->width.is_percent = true;
+        this->minWidth.value = width;
+        this->minWidth.is_percent = true;
+        this->maxWidth.value = width;
+        this->maxWidth.is_percent = true;
         return *this;
     }
     Positional& set_height(float height)
     {
-        this->height.value = height;
-        this->height.is_percent = false;
+        this->minHeight.value = height;
+        this->minHeight.is_percent = false;
+        this->maxHeight.value = height;
+        this->maxHeight.is_percent = false;
         return *this;
     }
     Positional& set_height_percent(float height)
     {
-        this->height.value = height;
-        this->height.is_percent = true;
+        this->minHeight.value = height;
+        this->minHeight.is_percent = true;
+        this->maxHeight.value = height;
+        this->maxHeight.is_percent = true;
         return *this;
     }
     Positional& set_pivot(float x, float y)
