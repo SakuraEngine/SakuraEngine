@@ -222,6 +222,8 @@ namespace io {
 
 skr::AsyncResult RAMService::Runner::serve() SKR_NOEXCEPT
 {
+    ZoneScopedNC("Serve", tracy::Color::Gray55);
+
     const auto pending = 
         batch_buffer->pending_count() + batch_buffer->processed_count() +
         resolver_chain->pending_count() + resolver_chain->processed_count() +
