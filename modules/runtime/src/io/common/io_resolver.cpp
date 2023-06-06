@@ -27,7 +27,9 @@ void IORequestResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEX
                     }
                 }
             }
-            resolved_batches[priority].enqueue(batch);
+            processed_batches[priority].enqueue(batch);
+            skr_atomic64_add_relaxed(&pending_batch_counts[priority], -1);
+            skr_atomic64_add_relaxed(&processed_batch_counts[priority], 1);
         }
     }
 }

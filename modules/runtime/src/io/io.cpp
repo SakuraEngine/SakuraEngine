@@ -47,7 +47,12 @@ IIORequestResolverChain::~IIORequestResolverChain() SKR_NOEXCEPT
 
 }
 
-IIORequestProcessor::~IIORequestProcessor() SKR_NOEXCEPT
+IIOBatchProcessorChain::~IIOBatchProcessorChain() SKR_NOEXCEPT
+{
+
+}
+
+IIOBatchProcessor::~IIOBatchProcessor() SKR_NOEXCEPT
 {
     
 }

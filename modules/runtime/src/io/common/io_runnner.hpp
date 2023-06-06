@@ -38,10 +38,10 @@ struct SleepyService : public skr::ServiceThread
     {
         const auto ms = skr_atomicu64_load_relaxed(&sleep_time);
 
-        ZoneScopedNC("ioServiceSleep(Cond)", tracy::Color::Gray55);
         condlock.lock();
         if (!event)
         {
+            ZoneScopedNC("ioServiceSleep(Cond)", tracy::Color::Gray55);
             condlock.wait(ms);
             event = false;
         }
@@ -85,8 +85,6 @@ struct RunnerBase : public SleepyService
         for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
         {
             skr_atomic64_store_relaxed(&processing_request_counts[i], 0);
-            skr_atomic64_store_relaxed(&queued_batch_counts[i], 0);
-            skr_atomic64_store_relaxed(&reading_batch_counts[i], 0);
         }
     }
     virtual ~RunnerBase() SKR_NOEXCEPT = default;
@@ -101,41 +99,16 @@ struct RunnerBase : public SleepyService
             rq->setStatus(SKR_IO_STAGE_ENQUEUED);
             skr_atomic64_add_relaxed(&processing_request_counts[pri], 1);
         }
-        skr_atomic64_add_relaxed(&queued_batch_counts[pri], 1);
     }
 
     uint64_t getQueuedBatchCount(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
     {
-        if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
-        {
-            return skr_atomic64_load_relaxed(&queued_batch_counts[priority]);
-        }
-        else
-        {
-            uint64_t count = 0;
-            for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
-            {
-                count += skr_atomic64_load_relaxed(&queued_batch_counts[i]);
-            }
-            return count;
-        }
+        return batch_buffer->pending_count();
     }
 
     uint64_t getExecutingBatchCount(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
     {
-        if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
-        {
-            return skr_atomic64_load_relaxed(&reading_batch_counts[priority]);
-        }
-        else
-        {
-            uint64_t count = 0;
-            for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
-            {
-                count += skr_atomic64_load_relaxed(&reading_batch_counts[i]);
-            }
-            return count;
-        }
+        return reader->pending_count();
     }
 
     uint64_t getProcessingRequestCount(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
@@ -164,10 +137,11 @@ struct RunnerBase : public SleepyService
         }
     }
 
-    void set_resolvers(IORequestResolverChainId chain) SKR_NOEXCEPT
+    void set_resolvers(IORequestResolverChainId _chain) SKR_NOEXCEPT
     {
-        resolver_chain = skr::static_pointer_cast<IORequestResolverChain>(chain);
-        resolver_chain->runner = this;
+        auto chain = skr::static_pointer_cast<IORequestResolverChain>(_chain);
+        chain->runner = this;
+        resolver_chain = chain;
     }
 
     // cancel request marked as request_cancel
@@ -191,15 +165,12 @@ struct RunnerBase : public SleepyService
     void route_loaded() SKR_NOEXCEPT;
 
     IOBatchBufferId batch_buffer = nullptr;
-    SObjectPtr<IORequestResolverChain> resolver_chain = nullptr;
-    SObjectPtr<IIOReader> reader = nullptr;
+    IORequestResolverChainId resolver_chain = nullptr;
+    IOReaderId reader = nullptr;
 
 private:
     IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-
     SAtomic64 processing_request_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    SAtomic64 queued_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    SAtomic64 reading_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
     skr::vector<skr::IFuture<bool>*> finish_futures;
     skr::JobQueue* job_queue = nullptr;

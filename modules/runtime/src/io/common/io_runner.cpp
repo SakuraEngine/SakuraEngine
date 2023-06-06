@@ -86,7 +86,6 @@ void RunnerBase::dispatch_read() SKR_NOEXCEPT
     SKR_ASSERT(reader);
     ZoneScopedN("dispatch_read");
 
-
     const uint64_t NBytes = reader->get_prefer_batch_size();
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
@@ -105,9 +104,6 @@ void RunnerBase::dispatch_read() SKR_NOEXCEPT
                         batch_size += block.size;
                 }
                 bytes += batch_size;
-
-                skr_atomic64_add_relaxed(&reading_batch_counts[i], 1);
-                skr_atomic64_add_relaxed(&queued_batch_counts[i], -1);
             }
         }
         reader->dispatch(priority);
@@ -176,15 +172,6 @@ bool RunnerBase::finishFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServi
     return true;
 }
 
-bool RunnerBase::dispatch_decompress(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT
-{
-    const bool need_decompress = false;
-    if (!need_decompress)
-        return false;
-    // decompressor->decompress();
-    return true;
-}
-
 void RunnerBase::dispatch_finish(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT
 {
     if (async_finish)
@@ -201,6 +188,15 @@ void RunnerBase::dispatch_finish(SkrAsyncServicePriority priority, skr::SObjectP
     }
 }
 
+bool RunnerBase::dispatch_decompress(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT
+{
+    const bool need_decompress = false;
+    if (!need_decompress)
+        return false;
+    // decompressor->decompress();
+    return true;
+}
+
 void RunnerBase::route_loaded() SKR_NOEXCEPT
 {
     ZoneScopedN("route_loaded");
@@ -212,16 +208,13 @@ void RunnerBase::route_loaded() SKR_NOEXCEPT
         while (reader->poll_processed_request(priority, request))
         {
             auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
-            auto need_decompress = dispatch_decompress(priority, rq);
-            if (!need_decompress)
-            {
-                dispatch_finish(priority, rq);
-            }
+            // auto need_decompress = dispatch_decompress(priority, rq);
+            dispatch_finish(priority, rq);
         }
         IOBatchId batch;
         while (reader->poll_processed_batch(priority, batch))
         {
-            skr_atomic64_add_relaxed(&reading_batch_counts[i], -1);
+            
         }
     }
 }

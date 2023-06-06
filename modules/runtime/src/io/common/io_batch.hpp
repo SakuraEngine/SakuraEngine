@@ -59,11 +59,20 @@ struct IOBatchBuffer : public IIOBatchBuffer
 {
     IO_RC_OBJECT_BODY
 public:
+    IOBatchBuffer() SKR_NOEXCEPT 
+    {
+        for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
+        {
+            skr_atomic64_store_relaxed(&processed_batch_counts[i], 0);
+        }
+    }
+
     uint64_t get_prefer_batch_size() const SKR_NOEXCEPT { return UINT64_MAX; }
 
     bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
     {
         queues[priority].enqueue(batch);
+        skr_atomic64_add_relaxed(&processed_batch_counts[priority], 1);
         return true;
     }
 
@@ -72,7 +81,6 @@ public:
 
     virtual bool poll_processed_request(SkrAsyncServicePriority priority, IORequestId& request) SKR_NOEXCEPT
     {
-        SKR_ASSERT(false && "Not implemented");
         return false;
     }
 
@@ -80,10 +88,40 @@ public:
     {
         if (queues[priority].try_dequeue(batch))
         {
+            skr_atomic64_add_relaxed(&processed_batch_counts[priority], -1);
             return batch.get();
         }
         return false;
     }
+
+    bool is_async(SkrAsyncServicePriority priority) const SKR_NOEXCEPT
+    {
+        return false;
+    }
+
+    uint64_t pending_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
+    {
+        return 0;
+    }
+
+    uint64_t processed_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
+    {
+        if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
+        {
+            return skr_atomic64_load_acquire(&processed_batch_counts[priority]);
+        }
+        else
+        {
+            uint64_t count = 0;
+            for (int i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
+            {
+                count += skr_atomic64_load_acquire(&processed_batch_counts[i]);
+            }
+            return count;
+        }
+    }
+protected:
+    SAtomic64 processed_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 public:
     IOBatchQueue queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 };
