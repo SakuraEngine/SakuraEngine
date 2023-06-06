@@ -4,7 +4,7 @@
 namespace skr {
 namespace io {
 
-void IOBatchResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
+void IORequestResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
@@ -32,7 +32,7 @@ void IOBatchResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCE
     }
 }
 
-struct OpenFileResolver : public IOBatchResolverBase
+struct OpenFileResolver : public IORequestResolverBase
 {
     virtual void resolve(IORequestId request) SKR_NOEXCEPT
     {
@@ -40,7 +40,7 @@ struct OpenFileResolver : public IOBatchResolverBase
     }
 };
 
-IOBatchResolverId IIOService::create_file_resolver() SKR_NOEXCEPT
+IORequestResolverId IIOService::create_file_resolver() SKR_NOEXCEPT
 { 
     return SObjectPtr<OpenFileResolver>::Create();
 }

@@ -78,7 +78,9 @@ private:
 struct RunnerBase : public SleepyService
 {
     RunnerBase(const ServiceThreadDesc& desc, SObjectPtr<IIOReader> reader, skr::JobQueue* job_queue) SKR_NOEXCEPT
-        : SleepyService(desc), reader(reader), job_queue(job_queue)
+        : SleepyService(desc), 
+        batch_buffer(SObjectPtr<IOBatchBuffer>::Create()),
+        reader(reader), job_queue(job_queue)
     {
         for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
         {
@@ -92,7 +94,7 @@ struct RunnerBase : public SleepyService
     void enqueueBatch(const IOBatchId& batch)
     {
         const auto pri = batch->get_priority();
-        batch_queues[pri].enqueue(batch);
+        batch_buffer->fetch(pri, batch);
         for (auto&& request : batch->get_requests())
         {
             auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
@@ -162,9 +164,9 @@ struct RunnerBase : public SleepyService
         }
     }
 
-    void set_resolvers(IOBatchResolverChainId chain) SKR_NOEXCEPT
+    void set_resolvers(IORequestResolverChainId chain) SKR_NOEXCEPT
     {
-        resolver_chain = skr::static_pointer_cast<IOBatchResolverChain>(chain);
+        resolver_chain = skr::static_pointer_cast<IORequestResolverChain>(chain);
         resolver_chain->runner = this;
     }
 
@@ -176,23 +178,23 @@ struct RunnerBase : public SleepyService
     // 1. fetch requests from queue
     uint64_t fetch() SKR_NOEXCEPT;
     // 3. resolve requests to pending raw request array
-    void resolve() SKR_NOEXCEPT;
+    void dispatch_resolve() SKR_NOEXCEPT;
     // 4. dispatch I/O blocks to drives (+allocate & cpy to raw)
-    void dispatch() SKR_NOEXCEPT;
+    void dispatch_read() SKR_NOEXCEPT;
     // 5. do decompress works (+allocate & cpy to uncompressed)
     // returns true if rq is moved to decompress router
-    bool route_decompress(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT;
+    bool dispatch_decompress(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT;
     // 6. finish
-    void route_finish(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT;
+    void dispatch_finish(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT;
     bool finishFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
 
     void route_loaded() SKR_NOEXCEPT;
 
+    IOBatchBufferId batch_buffer = nullptr;
+    SObjectPtr<IORequestResolverChain> resolver_chain = nullptr;
     SObjectPtr<IIOReader> reader = nullptr;
-    SObjectPtr<IOBatchResolverChain> resolver_chain = nullptr;
 
 private:
-    IOBatchQueue batch_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
     SAtomic64 processing_request_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];

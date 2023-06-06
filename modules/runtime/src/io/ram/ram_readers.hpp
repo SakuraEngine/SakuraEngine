@@ -34,8 +34,9 @@ struct VFSRAMReader final : public RAMReaderBase
     bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT;
     void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
-    IORequestId poll_processed_request(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
-    IOBatchId poll_processed_batch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    
+    bool poll_processed_request(SkrAsyncServicePriority priority, IORequestId& request) SKR_NOEXCEPT;
+    bool poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT;
 
     void dispatchFunction(IOBatchId batch) SKR_NOEXCEPT;
 

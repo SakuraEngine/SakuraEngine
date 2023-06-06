@@ -27,17 +27,22 @@ namespace io {
 const char* kIOPoolObjectsMemoryName = "I/O PoolObjects";
 const char* kIOConcurrentQueueName = "IOConcurrentQueue";
 
-IIOBatchResolver::~IIOBatchResolver() SKR_NOEXCEPT
+IIORequestResolver::~IIORequestResolver() SKR_NOEXCEPT
 {
 
 }
 
-void IIOBatchResolver::resolve(IORequestId request) SKR_NOEXCEPT
+void IIORequestResolver::resolve(IORequestId request) SKR_NOEXCEPT
 {
     (void)request;
 }
 
-IIOBatchResolverChain::~IIOBatchResolverChain() SKR_NOEXCEPT
+IIOBatchBuffer::~IIOBatchBuffer() SKR_NOEXCEPT
+{
+
+}
+
+IIORequestResolverChain::~IIORequestResolverChain() SKR_NOEXCEPT
 {
 
 }
@@ -57,9 +62,9 @@ IIODecompressor::~IIODecompressor() SKR_NOEXCEPT
     
 }
 
-SObjectPtr<IIOBatchResolverChain> IIOBatchResolverChain::Create(IOBatchResolverId resolver) SKR_NOEXCEPT
+SObjectPtr<IIORequestResolverChain> IIORequestResolverChain::Create(IORequestResolverId resolver) SKR_NOEXCEPT
 {
-    auto chain = SObjectPtr<IOBatchResolverChain>::Create(resolver);
+    auto chain = SObjectPtr<IORequestResolverChain>::Create(resolver);
     return chain;
 }
 
