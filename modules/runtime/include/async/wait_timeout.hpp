@@ -7,7 +7,7 @@ template<typename F>
 bool wait_timeout(F f, uint32_t seconds_timeout = 3)
 {
     ZoneScopedN("WaitTimeOut");
-    uint32_t milliseconds = 0;
+    uint64_t milliseconds = 0;
     const auto start = skr_sys_get_usec(true);
     auto current = start;
     while (!f())

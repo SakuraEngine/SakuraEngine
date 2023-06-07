@@ -74,7 +74,8 @@ void RunnerBase::process_batches() SKR_NOEXCEPT
         // poll requests from last batches processor
         {
             BatchPtr batch = nullptr;
-            while (batch_processors.back()->poll_processed_batch(priority, batch))
+            auto& back_processor = batch_processors.back();
+            while (back_processor->poll_processed_batch(priority, batch))
             {
                 auto&& bq = skr::static_pointer_cast<IOBatchBase>(batch);
                 for (auto&& request : bq->get_requests())
@@ -107,32 +108,26 @@ void RunnerBase::process_batches() SKR_NOEXCEPT
 
 void RunnerBase::complete_batches(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
+    BatchPtr batch;
+    auto& back_processor = batch_processors.back();
+    while (back_processor->poll_processed_batch(priority, batch))
     {
-        const auto priority = (SkrAsyncServicePriority)i;
-        BatchPtr batch;
-        while (batch_processors.back()->poll_processed_batch(priority, batch))
+        for (auto&& request : batch->get_requests())
         {
-            for (auto&& request : batch->get_requests())
-            {
-                auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
-                dispatch_complete(priority, rq);
-            }
+            auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
+            dispatch_complete(priority, rq);
         }
     }
 };
 
 void RunnerBase::complete_requests(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
+    IORequestId request;
+    auto& back_processor = request_processors.back();
+    while (back_processor->poll_processed_request(priority, request))
     {
-        const auto priority = (SkrAsyncServicePriority)i;
-        IORequestId request;
-        while (request_processors.back()->poll_processed_request(priority, request))
-        {
-            auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
-            dispatch_complete(priority, rq);
-        }
+        auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
+        dispatch_complete(priority, rq);
     }
 }
 
@@ -154,9 +149,9 @@ bool RunnerBase::cancelFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServi
 bool RunnerBase::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT
 {
     const auto status = rq->getStatus();
-    if (status >= SKR_IO_STAGE_LOADING) return false;
+    if (status == SKR_IO_STAGE_LOADING) return false;
 
-    if (bool cancel_requested = skr_atomicu32_load_acquire(&rq->future->request_cancel))
+    if (bool cancel_requested = rq->getCancelRequested())
     {
         if (rq->getFinishStep() == SKR_ASYNC_IO_FINISH_STEP_NONE)
         {
@@ -177,6 +172,7 @@ bool RunnerBase::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEX
 
 bool RunnerBase::completeFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
+    SKR_ASSERT(rq->getStatus() == SKR_IO_STAGE_LOADED);
     rq->setStatus(SKR_IO_STAGE_COMPLETED);
     if (rq->needPollFinish())
     {
@@ -226,13 +222,16 @@ skr::AsyncResult RunnerBase::serve() SKR_NOEXCEPT
 
 void RunnerBase::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    ZoneScopedN("drain");
+    if (priority == SKR_ASYNC_SERVICE_PRIORITY_COUNT)
+        return drain();
+
+    ZoneScopedN("runner_drain");
     auto predicate = [this, priority]() {
         uint64_t cnt = 0;
         for (auto processor : batch_processors)
-            cnt += processor->processing_count(priority) +  processor->processed_count(priority);
+            cnt += (processor->processing_count(priority) + processor->processed_count(priority));
         for (auto processor : request_processors)
-            cnt += processor->processing_count(priority) + processor->processed_count(priority);
+            cnt += (processor->processing_count(priority) + processor->processed_count(priority));
         return !cnt;
     };
     bool fatal = !wait_timeout(predicate, 5);
@@ -240,22 +239,22 @@ void RunnerBase::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     {
         {
             skr::string processing_message = u8"batch processing: ";
-            skr::string processed_message = u8"batch processing: ";
+            skr::string processed_message = u8"batch processed: ";
             for (auto processor : batch_processors)
             {
-                processing_message += skr::format(u8", {}", processor->processing_count(priority));
-                processed_message += skr::format(u8", {}", processor->processed_count(priority));
+                processing_message += skr::format(u8"{} ", processor->processing_count(priority));
+                processed_message += skr::format(u8"{} ", processor->processed_count(priority));
             }
             SKR_LOG_FATAL(processing_message.c_str());
             SKR_LOG_FATAL(processed_message.c_str());
         }
         {
             skr::string processing_message = u8"request processing: ";
-            skr::string processed_message = u8"request processing: ";
+            skr::string processed_message = u8"request processed: ";
             for (auto processor : request_processors)
             {
-                processing_message += skr::format(u8", {}", processor->processing_count(priority));
-                processed_message += skr::format(u8", {}", processor->processed_count(priority));
+                processing_message += skr::format(u8"{} ", processor->processing_count(priority));
+                processed_message += skr::format(u8"{} ", processor->processed_count(priority));
             }
             SKR_LOG_FATAL(processing_message.c_str());
             SKR_LOG_FATAL(processed_message.c_str());

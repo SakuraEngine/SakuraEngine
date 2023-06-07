@@ -1,11 +1,12 @@
 #pragma once
 #include "io_batch.hpp"
+#include "io_request.hpp"
 
 namespace skr {
 namespace io {
 struct RunnerBase;
 
-struct IOBatchBuffer : public IIOBatchBuffer
+struct IOBatchBuffer : public IIOBatchProcessor
 {
     IO_RC_OBJECT_BODY
 public:
@@ -13,14 +14,14 @@ public:
     {
         for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
         {
-            skr_atomic64_store_relaxed(&processed_batch_counts[i], 0);
+            skr_atomic64_store_relaxed(&counts[i], 0);
         }
     }
 
     bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
     {
         queues[priority].enqueue(batch);
-        skr_atomic64_add_relaxed(&processed_batch_counts[priority], 1);
+        skr_atomic64_add_relaxed(&counts[priority], 1);
         return true;
     }
 
@@ -28,7 +29,7 @@ public:
     {
         if (queues[priority].try_dequeue(batch))
         {
-            skr_atomic64_add_relaxed(&processed_batch_counts[priority], -1);
+            skr_atomic64_add_relaxed(&counts[priority], -1);
             return batch.get();
         }
         return false;
@@ -38,14 +39,14 @@ public:
     {
         if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
         {
-            return skr_atomic64_load_acquire(&processed_batch_counts[priority]);
+            return skr_atomic64_load_acquire(&counts[priority]);
         }
         else
         {
             uint64_t count = 0;
             for (int i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
             {
-                count += skr_atomic64_load_acquire(&processed_batch_counts[i]);
+                count += skr_atomic64_load_acquire(&counts[i]);
             }
             return count;
         }
@@ -57,9 +58,10 @@ public:
     uint64_t processing_count(SkrAsyncServicePriority priority) const SKR_NOEXCEPT { return 0; }
 
 protected:
-    SAtomic64 processed_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    SAtomic64 counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IOBatchQueue queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 };
+using IOBatchBufferId = SObjectPtr<IOBatchBuffer>;
 
 #define IO_RESOLVER_OBJECT_BODY \
     IO_RC_OBJECT_BODY\

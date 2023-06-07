@@ -1,5 +1,6 @@
 #include "../common/io_runnner.hpp"
 
+#include "async/wait_timeout.hpp"
 #include "misc/defer.hpp"
 #include "ram_readers.hpp"
 #include "ram_batch.hpp"
@@ -138,6 +139,18 @@ void RAMService::run() SKR_NOEXCEPT
 void RAMService::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     runner.drain(priority);    
+    {
+        ZoneScopedN("server_drain");
+        auto predicate = [this, priority] {
+            return !runner.processing_count(priority);
+        };
+        bool fatal = !wait_timeout(predicate, 5);
+        if (fatal)
+        {
+            SKR_LOG_FATAL("RAMService: drain timeout, %llu requests are still processing", 
+                runner.processing_count(priority));
+        }
+    }
 }
 
 void RAMService::set_sleep_time(uint32_t ms) SKR_NOEXCEPT
