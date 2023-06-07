@@ -1,6 +1,5 @@
 #pragma once
 #include "../common/io_batch.hpp"
-#include "ram_request.hpp"
 
 namespace skr {
 namespace io {
