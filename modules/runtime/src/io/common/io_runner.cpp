@@ -116,7 +116,6 @@ bool RunnerBase::cancelFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServi
     {
         rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
     }
-    skr_atomic64_add_relaxed(&processing_request_counts[priority], -1);
     return true;
 }
 
@@ -159,7 +158,6 @@ bool RunnerBase::completeFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncSer
     {
         rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
     }
-    skr_atomic64_add_relaxed(&processing_request_counts[priority], -1);
     return true;
 }
 
@@ -186,6 +184,29 @@ bool RunnerBase::dispatch_decompress(SkrAsyncServicePriority priority, skr::SObj
         return false;
     // decompressor->decompress();
     return true;
+}
+
+skr::AsyncResult RunnerBase::serve() SKR_NOEXCEPT
+{
+    const auto pending = predicate();
+    if (!pending)
+    {
+        setServiceStatus(SKR_ASYNC_SERVICE_STATUS_SLEEPING);
+        sleep();
+        return ASYNC_RESULT_OK;
+    }
+
+    setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
+    {
+        ZoneScopedNC("Dispatch", tracy::Color::Orchid1);
+        process_batches();
+    }
+    {
+        ZoneScopedNC("Recycle", tracy::Color::Tan1);
+        recycle();
+    }
+
+    return ASYNC_RESULT_OK;
 }
 
 } // namespace io

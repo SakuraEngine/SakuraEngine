@@ -42,13 +42,84 @@ struct RAMService final : public IRAMService
 
     struct Runner final : public RunnerBase
     {
-        Runner(RAMService* service, SObjectPtr<IIOReader> reader, skr::JobQueue* job_queue) SKR_NOEXCEPT 
-            : RunnerBase({ service->name.u8_str(), SKR_THREAD_ABOVE_NORMAL }, reader, job_queue),
+        Runner(RAMService* service, skr::JobQueue* job_queue) SKR_NOEXCEPT 
+            : RunnerBase({ service->name.u8_str(), SKR_THREAD_ABOVE_NORMAL }, job_queue),
             service(service)
         {
-
+            for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
+            {
+                skr_atomic64_store_relaxed(&processing_request_counts[i], 0);
+            }
         }
-        skr::AsyncResult serve() SKR_NOEXCEPT;
+
+        void enqueueBatch(const IOBatchId& batch)
+        {
+            const auto priority = batch->get_priority();
+            batch_buffer->fetch(priority, batch);
+            for (auto&& request : batch->get_requests())
+            {
+                auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
+                rq->setStatus(SKR_IO_STAGE_ENQUEUED);
+            }
+            skr_atomic64_add_relaxed(&processing_request_counts[priority], 1);
+        }
+
+        uint64_t getQueuedBatchCount(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
+        {
+            return batch_buffer->processing_count();
+        }
+
+        uint64_t getExecutingBatchCount(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
+        {
+            return reader->processing_count();
+        }
+
+        void set_resolvers(IORequestResolverChainId _chain) SKR_NOEXCEPT
+        {
+            auto chain = skr::static_pointer_cast<IORequestResolverChain>(_chain);
+            chain->runner = this;
+
+            resolver_chain = chain;
+            batch_buffer = SObjectPtr<IOBatchBuffer>::Create();
+            batch_processors = { batch_buffer, resolver_chain, reader };
+        }
+
+        // TODO: REMOVE THESE
+        uint64_t getProcessingRequestCount(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
+        {
+            if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
+            {
+                return skr_atomic64_load_relaxed(&processing_request_counts[priority]);
+            }
+            else
+            {
+                uint64_t count = 0;
+                for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
+                {
+                    count += skr_atomic64_load_relaxed(&processing_request_counts[i]);
+                }
+                return count;
+            }
+        }
+        bool cancelFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT override
+        {
+            auto ret = RunnerBase::cancelFunction(rq, priority);
+            skr_atomic64_add_relaxed(&processing_request_counts[priority], -1);
+            return ret;
+        }
+        bool completeFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT override
+        {
+            auto ret = RunnerBase::completeFunction(rq, priority);
+            skr_atomic64_add_relaxed(&processing_request_counts[priority], -1);
+            return ret;
+        }
+        SAtomic64 processing_request_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+        // END TODO
+
+        IOBatchBufferId batch_buffer = nullptr;
+        IORequestResolverChainId resolver_chain = nullptr;
+        IOReaderId reader = nullptr;
+
         RAMService* service = nullptr;
     };
     const skr::string name;

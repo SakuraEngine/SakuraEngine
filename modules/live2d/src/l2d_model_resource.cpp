@@ -58,7 +58,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
     cbData->model_resource = this;
 
     SKR_LOG_TRACE("Read Live2D From Home %s", data->u8HomePath.c_str());
-    auto batch = ioService->open_batch(4); // 4 files
+    auto batch = ioService->open_batch(4); // 4 file requests
     // Model Request
     {
         ZoneScopedN("Request Model");
@@ -76,9 +76,10 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
         +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata) noexcept {
             ZoneScopedN("Create Model");
             auto _this = (csmUserModel*)usrdata;
+            auto& blob = _this->modelBlob;
 
-            _this->LoadModel(_this->modelBlob->get_data(), (L2DF::csmSizeInt)_this->modelBlob->get_size());
-            _this->modelBlob.reset();
+            _this->LoadModel(blob->get_data(), (L2DF::csmSizeInt)blob->get_size());
+            blob.reset();
             
             skr_atomicu32_add_relaxed(&_this->cbData->finished_models, 1);
             _this->cbData->partial_finished();
@@ -105,9 +106,10 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
         +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
             ZoneScopedN("Create Physics");
             auto _this = (csmUserModel*)data;
+            auto& blob = _this->physicsBlob;
             
-            _this->LoadPhysics(_this->physicsBlob->get_data(), (L2DF::csmSizeInt)_this->physicsBlob->get_size());
-            _this->physicsBlob.reset();
+            _this->LoadPhysics(blob->get_data(), (L2DF::csmSizeInt)blob->get_size());
+            blob.reset();
             
             skr_atomicu32_add_relaxed(&_this->cbData->finished_physics, 1);
             _this->cbData->partial_finished();
@@ -134,9 +136,10 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
         +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
             ZoneScopedN("Create Pose");
             auto _this = (csmUserModel*)data;
+            auto& blob = _this->poseBlob;
             
-            _this->LoadPose(_this->poseBlob->get_data(), (L2DF::csmSizeInt)_this->poseBlob->get_size());
-            _this->poseBlob.reset();
+            _this->LoadPose(blob->get_data(), (L2DF::csmSizeInt)blob->get_size());
+            blob.reset();
             
             skr_atomicu32_add_relaxed(&_this->cbData->finished_poses, 1);
             _this->cbData->partial_finished();
@@ -163,9 +166,10 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
         +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
             ZoneScopedN("Create UsrData");
             auto _this = (csmUserModel*)data;
+            auto& blob = _this->usrDataBlob;
             
-            _this->LoadUserData(_this->usrDataBlob->get_data(), (L2DF::csmSizeInt)_this->usrDataBlob->get_size());
-            _this->usrDataBlob.reset();
+            _this->LoadUserData(blob->get_data(), (L2DF::csmSizeInt)blob->get_size());
+            blob.reset();
             
             skr_atomicu32_add_relaxed(&_this->cbData->finished_usr_data, 1);
             _this->cbData->partial_finished();
