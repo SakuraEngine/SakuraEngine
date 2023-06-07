@@ -95,7 +95,7 @@ inline static constexpr skr_guid_t SkrGUITypeInfo(const IObject* obj) SKR_NOEXCE
 } // namespace skr::gui
 
 // type marco
-#define SKR_GUI_TYPE_BASE(__T, __GUID)                                                                                         \
+#define SKR_GUI_TYPE_ROOT(__T, __GUID)                                                                                         \
     using CastHelper = BaseCastHelper<__T>;                                                                                    \
     inline static constexpr skr_guid_t static_guid() SKR_NOEXCEPT { return ::skr::gui::__help::make_guid_helper(u8##__GUID); } \
     inline static constexpr void static_base_guid(const skr_guid_t*& p, size_t n) SKR_NOEXCEPT                                 \
@@ -123,6 +123,9 @@ inline static constexpr skr_guid_t SkrGUITypeInfo(const IObject* obj) SKR_NOEXCE
     virtual skr_guid_t guid() const SKR_NOEXCEPT override { return static_guid(); }                                \
     virtual void base_guid(const skr_guid_t*& p, size_t n) const SKR_NOEXCEPT override { static_base_guid(p, n); } \
     virtual void* cast(skr_guid_t id) const SKR_NOEXCEPT override { return CastHelper::cast(id, this); }
+
+#define SKR_GUI_INTERFACE_ROOT(__T, __GUID) SKR_GUI_TYPE_ROOT(__T, __GUID)
+#define SKR_GUI_INTERFACE(__T, __GUID, ...) SKR_GUI_TYPE(__T, __GUID, __VA_ARGS__)
 
 // base marco
 #define SKR_GUI_OBJECT_BASE : virtual public IObject
