@@ -5,33 +5,16 @@
 namespace skr {
 namespace io {
 
-namespace IORunner
-{
-using Future = skr::IFuture<bool>;
-using JobQueueFuture = skr::ThreadedJobQueueFuture<bool>;
-using SerialFuture = skr::SerialFuture<bool>;
-struct FutureLauncher
-{
-    FutureLauncher(skr::JobQueue* q) : job_queue(q) {}
-    template<typename F, typename... Args>
-    Future* async(F&& f, Args&&... args)
-    {
-        if (job_queue)
-            return SkrNew<JobQueueFuture>(job_queue, std::forward<F>(f), std::forward<Args>(args)...);
-        else
-            return SkrNew<SerialFuture>(std::forward<F>(f), std::forward<Args>(args)...);
-    }
-    skr::JobQueue* job_queue = nullptr;
-};
-}
-
 void RunnerBase::recycle() SKR_NOEXCEPT
 {
     ZoneScopedN("recycle");
     
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        for (auto& future : finish_futures)
+        const auto priority = (SkrAsyncServicePriority)i;
+
+        auto& futures = finish_futures;
+        for (auto& future : futures)
         {
             auto status = future->wait_for(0);
             if (status == skr::FutureStatus::Ready)
@@ -40,16 +23,10 @@ void RunnerBase::recycle() SKR_NOEXCEPT
                 future = nullptr;
             }
         }
-        auto it = eastl::remove_if(finish_futures.begin(), finish_futures.end(), 
-            [](skr::IFuture<bool>* future) {
-                return (future == nullptr);
-            });
-        finish_futures.erase(it, finish_futures.end());
-    }
+        auto cleaner = [](skr::IFuture<bool>* future) { return (future == nullptr); };
+        auto it = eastl::remove_if(futures.begin(), futures.end(), cleaner);
+        futures.erase(it, futures.end());
 
-    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
-    {
-        const auto priority = (SkrAsyncServicePriority)i;
         for (auto processor : batch_processors)
             processor->recycle(priority);
     }
@@ -116,9 +93,7 @@ void RunnerBase::process_batches() SKR_NOEXCEPT
             
             IORequestId request = nullptr;
             while (prev_processor->poll_processed_request(priority, request))
-            {
                 processor->fetch(priority, request);
-            }
             processor->dispatch(priority);
         }
 
@@ -183,11 +158,8 @@ bool RunnerBase::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEX
         {
             if (rq->async_cancel)
             {
-                auto& future = finish_futures.emplace_back();
-                future = IORunner::FutureLauncher(job_queue).async(
-                [this, priority, rq = rq](){
-                    return cancelFunction(rq, priority);
-                });
+                auto cancel = [this, priority, rq] { return cancelFunction(rq, priority); };
+                finish_futures.emplace_back(skr::FutureLauncher<bool>(job_queue).async(cancel));
             }
             else
             {
@@ -218,11 +190,8 @@ void RunnerBase::dispatch_complete(SkrAsyncServicePriority priority, skr::SObjec
 {
     if (rq->async_complete)
     {
-        auto& future = finish_futures.emplace_back();
-        future = IORunner::FutureLauncher(job_queue).async(
-        [this, priority, rq = rq](){
-            return completeFunction(rq, priority);
-        });
+        auto complete = [this, priority, rq] { return completeFunction(rq, priority); };
+        finish_futures.emplace_back(skr::FutureLauncher<bool>(job_queue).async(complete));
     }
     else
     {
@@ -230,29 +199,17 @@ void RunnerBase::dispatch_complete(SkrAsyncServicePriority priority, skr::SObjec
     }
 }
 
-/*
-bool RunnerBase::dispatch_decompress(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT
-{
-    const bool need_decompress = false;
-    if (!need_decompress)
-        return false;
-    // decompressor->decompress();
-    return true;
-}
-*/
-
 skr::AsyncResult RunnerBase::serve() SKR_NOEXCEPT
 {
-    const auto pending = predicate();
-    if (!pending)
+    if (!predicate())
     {
         setServiceStatus(SKR_ASYNC_SERVICE_STATUS_SLEEPING);
         sleep();
         return ASYNC_RESULT_OK;
     }
-
-    setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
+    
     {
+        setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
         ZoneScopedNC("Dispatch", tracy::Color::Orchid1);
         process_batches();
     }
@@ -260,26 +217,18 @@ skr::AsyncResult RunnerBase::serve() SKR_NOEXCEPT
         ZoneScopedNC("Recycle", tracy::Color::Tan1);
         recycle();
     }
-
     return ASYNC_RESULT_OK;
 }
 
 void RunnerBase::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     ZoneScopedN("drain");
-
-    auto predicate = [this, priority]() -> bool {
+    auto predicate = [this, priority]() {
         uint64_t cnt = 0;
         for (auto processor : batch_processors)
-        {
-            cnt += processor->processing_count(priority);
-            cnt += processor->processed_count(priority);
-        }
+            cnt += processor->processing_count(priority) +  processor->processed_count(priority);
         for (auto processor : request_processors)
-        {
-            cnt += processor->processing_count(priority);
-            cnt += processor->processed_count(priority);
-        }
+            cnt += processor->processing_count(priority) + processor->processed_count(priority);
         return !cnt;
     };
     bool fatal = !wait_timeout(predicate, 5);
@@ -312,11 +261,9 @@ void RunnerBase::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 
 void RunnerBase::drain() SKR_NOEXCEPT
 {
-    ZoneScopedN("drain");
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        const auto priority = (SkrAsyncServicePriority)i;
-        drain(priority);
+        drain((SkrAsyncServicePriority)i);
     }
 }
 

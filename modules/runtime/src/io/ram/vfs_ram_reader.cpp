@@ -4,31 +4,16 @@
 namespace skr {
 namespace io {
 
-namespace VFSReader
-{
-using Future = skr::IFuture<bool>;
-using JobQueueFuture = skr::ThreadedJobQueueFuture<bool>;
-using SerialFuture = skr::SerialFuture<bool>;
-struct FutureLauncher
-{
-    FutureLauncher(skr::JobQueue* q) : job_queue(q) {}
-    template<typename F, typename... Args>
-    Future* async(F&& f, Args&&... args)
-    {
-        if (job_queue)
-            return SkrNew<JobQueueFuture>(job_queue, std::forward<F>(f), std::forward<Args>(args)...);
-        else
-            return SkrNew<SerialFuture>(std::forward<F>(f), std::forward<Args>(args)...);
-    }
-    skr::JobQueue* job_queue = nullptr;
-};
-}
+using VFSReaderFutureLauncher = skr::FutureLauncher<bool>;
 
 bool VFSRAMReader::fetch(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
 {
     auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-    fetched_requests[priority].enqueue(rq);
-    skr_atomic64_add_relaxed(&pending_counts[priority], 1);
+    if (!rq->future->is_cancelled()) //TODO: !
+    {
+        fetched_requests[priority].enqueue(rq);
+        skr_atomic64_add_relaxed(&pending_counts[priority], 1);
+    }
     return true;
 }
 
@@ -86,7 +71,7 @@ void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORe
     }
     skr_atomic64_add_relaxed(&pending_counts[priority], -1);
 
-    tryAwakeService();
+    awakeService();
 }
 
 void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
@@ -94,7 +79,7 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     RQPtr rq;
     if (fetched_requests[priority].try_dequeue(rq))
     {
-        auto launcher = VFSReader::FutureLauncher(job_queue);
+        auto launcher = VFSReaderFutureLauncher(job_queue);
         loaded_futures[priority].emplace_back(
             launcher.async([this, rq, priority](){
                 ZoneScopedN("VFSReadTask");

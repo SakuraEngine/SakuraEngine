@@ -1,4 +1,5 @@
 #include "common/io_resolver.hpp"
+#include "common/batch_processors.hpp"
 
 bool skr_io_future_t::is_ready() const SKR_NOEXCEPT
 {
@@ -58,11 +59,6 @@ void IIORequestResolver::resolve(IORequestId request) SKR_NOEXCEPT
 }
 
 IIORequestResolverChain::~IIORequestResolverChain() SKR_NOEXCEPT
-{
-
-}
-
-IIOBatchProcessorChain::~IIOBatchProcessorChain() SKR_NOEXCEPT
 {
 
 }

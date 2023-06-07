@@ -191,7 +191,7 @@ void GDIRenderer_RenderGraph::createRenderPipelines()
 int GDIRenderer_RenderGraph::initialize(const GDIRendererDescriptor* desc) SKR_NOEXCEPT
 {
     const auto pDesc = reinterpret_cast<GDIRendererDescriptor_RenderGraph*>(desc->usr_data);
-    future_launcher = SPtr<skr::gdi::ImageTex::FutureLauncher>::Create(pDesc->job_queue);
+    future_launcher = SPtr<skr::gdi::ImageTexFutureLauncher>::Create(pDesc->job_queue);
 
     const uint32_t pos_offset = static_cast<uint32_t>(offsetof(GDIVertex, position));
     const uint32_t texcoord_offset = static_cast<uint32_t>(offsetof(GDIVertex, texcoord));

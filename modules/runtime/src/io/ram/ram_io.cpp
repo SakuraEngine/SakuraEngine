@@ -73,7 +73,7 @@ RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
             SKR_LOG_FATAL("RAMService: too long sleep_time causes 'deadlock' when awake_at_request is false");
         }
     }
-    runner.setSleepTime(desc->sleep_time);
+    runner.set_sleep_time(desc->sleep_time);
 }
 
 skr_io_ram_service_t* IRAMService::create(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
@@ -107,7 +107,7 @@ void RAMService::request(IOBatchId batch) SKR_NOEXCEPT
     runner.enqueueBatch(batch);
     if (awake_at_request)
     {
-        runner.tryAwake();
+        runner.awake();
     }
 }
 
@@ -142,7 +142,7 @@ void RAMService::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 
 void RAMService::set_sleep_time(uint32_t ms) SKR_NOEXCEPT
 {
-    runner.setSleepTime(ms);
+    runner.set_sleep_time(ms);
 }
 
 SkrAsyncServiceStatus RAMService::get_service_status() const SKR_NOEXCEPT
