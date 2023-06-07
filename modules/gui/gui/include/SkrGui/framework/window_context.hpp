@@ -1,6 +1,5 @@
 #pragma once
-#include "SkrGui/module.configure.h"
-#include "platform/configure.h"
+#include "SkrGui/fwd_config.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIDevice, skr_gdi_device)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIRenderer, skr_gdi_renderer)
@@ -23,11 +22,12 @@ typedef struct skr_gui_window_context_render_params_t {
     void* usr_data SKR_IF_CPP(= nullptr);
 } skr_gui_window_context_render_params_t;
 
-namespace skr {
-namespace gui {
-
-struct SKR_GUI_API WindowContext
+namespace skr
 {
+namespace gui
+{
+
+struct SKR_GUI_API WindowContext {
     using Descriptor = skr_gui_window_context_descriptor_t;
     using DrawParams = skr_gui_window_context_draw_params_t;
     using RenderParams = skr_gui_window_context_render_params_t;
@@ -38,7 +38,7 @@ struct SKR_GUI_API WindowContext
     static void Free(WindowContext* context) SKR_NOEXCEPT;
 
     virtual skr_gui_platform_window_id get_platform_window() const SKR_NOEXCEPT = 0;
-    
+
     virtual void set_root_element(struct RenderWindow* root) SKR_NOEXCEPT = 0;
     virtual RenderWindow* get_root_element() const SKR_NOEXCEPT = 0;
 
@@ -46,6 +46,7 @@ struct SKR_GUI_API WindowContext
     virtual void render(skr_gdi_renderer_id renderer, const RenderParams* params) SKR_NOEXCEPT = 0;
 };
 
-} }
+} // namespace gui
+} // namespace skr
 
 SKR_DECLARE_TYPE_ID(skr::gui::WindowContext, skr_gui_window_context);

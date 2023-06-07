@@ -11,4 +11,4 @@ using Offset = skr_float2_t;
 // TODO. Size class
 using Size = skr_float2_t;
 // TODO. Rect class
-}
+} // namespace skr::gui

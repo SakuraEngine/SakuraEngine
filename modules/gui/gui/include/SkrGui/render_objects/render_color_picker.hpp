@@ -5,11 +5,12 @@ SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIDevice, skr_gdi_device)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIElement, skr_gdi_element)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIPaint, skr_gdi_paint)
 
-namespace skr {
-namespace gui {
-
-struct SKR_GUI_API RenderColorPicker : public RenderBox
+namespace skr
 {
+namespace gui
+{
+
+struct SKR_GUI_API RenderColorPicker : public RenderBox {
 public:
     SKR_GUI_TYPE(RenderColorPicker, RenderBox, u8"25a95354-b3fa-4729-b06f-1a85d0f227c4");
     RenderColorPicker(skr_gdi_device_id gdi_device);
@@ -28,6 +29,7 @@ protected:
     skr_gdi_paint_id gdi_paint = nullptr;
 };
 
-} }
+} // namespace gui
+} // namespace skr
 
 SKR_DECLARE_TYPE_ID(skr::gui::RenderColorPicker, skr_gui_render_color_picker);

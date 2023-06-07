@@ -8,12 +8,12 @@ SKR_GUI_TYPE_IMPLEMENTATION(Widget);
 not_null<Element*> Widget::create_element() noexcept
 {
     SKR_UNREACHABLE_CODE();
-    return not_null<Element*>{(Element*)0};
+    return not_null<Element*>{ (Element*)0 };
 }
 
-bool Widget::CanUpdate(not_null<Widget*> old_widget, not_null<Widget*> new_widget) noexcept
+bool Widget::can_update(not_null<Widget*> old_widget, not_null<Widget*> new_widget) noexcept
 {
-    if(old_widget->key != new_widget->key)
+    if (old_widget->key() != new_widget->key())
     {
         return false;
     }
@@ -24,4 +24,4 @@ bool Widget::CanUpdate(not_null<Widget*> old_widget, not_null<Widget*> new_widge
     return true;
 }
 
-}
+} // namespace skr::gui

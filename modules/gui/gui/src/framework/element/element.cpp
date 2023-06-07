@@ -63,9 +63,9 @@ void Element::detach_render_object() SKR_NOEXCEPT
 not_null<Element*> Element::inflate_widget(not_null<Widget*> widget, Slot* new_slot) SKR_NOEXCEPT
 {
     //TODO: global key
-    if(widget->key.is_keep_state())
+    if(widget->key().is_keep_state())
     {
-        Element* newChild = _retake_inactive_element(widget->key, widget);
+        Element* newChild = _retake_inactive_element(widget->key(), widget);
         if(newChild)
         {
             SKR_ASSERT(newChild->_parent == nullptr);
@@ -123,7 +123,7 @@ Element* Element::update_child(Element* child, Widget* new_widget, Slot* new_slo
             }
             newChild = child;
         }
-        else if(hasSameSuperclass && Widget::CanUpdate(make_not_null(child->_widget), widget))
+        else if(hasSameSuperclass && Widget::can_update(make_not_null(child->_widget), widget))
         {
             if(child->_slot != new_slot)
             {
@@ -240,7 +240,7 @@ RenderObject* Element::find_render_object() SKR_NOEXCEPT
     return nullptr;
 }
 
-Element* Element::_retake_inactive_element(Key& key, not_null<Widget*> widget) SKR_NOEXCEPT
+Element* Element::_retake_inactive_element(const Key& key, not_null<Widget*> widget) SKR_NOEXCEPT
 {
     auto iter = _owner->_global_key_registry->find(key.get_state());
     if (iter == _owner->_global_key_registry->end())
@@ -248,7 +248,7 @@ Element* Element::_retake_inactive_element(Key& key, not_null<Widget*> widget) S
         return nullptr;
     }
     Element* element = iter->second;
-    if(!Widget::CanUpdate(make_not_null(element->_widget), widget))
+    if(!Widget::can_update(make_not_null(element->_widget), widget))
     {
         return nullptr;
     }

@@ -43,7 +43,7 @@ enum class FlexFit
 };
 
 struct Flexable {
-    float flex = 1;     // determines how much the child should grow or shrink relative to other flex items
+    float flex = 1;                    // determines how much the child should grow or shrink relative to other flex items
     FlexFit flex_fit = FlexFit::Loose; // determines how much the child should be allowed to shrink relative to its own size
 };
 
@@ -54,7 +54,7 @@ public:
     RenderFlex(skr_gdi_device_id gdi_device);
 
     virtual void layout(BoxConstraint constraints, bool needSize = false) override;
-    Flexable get_flex(int index); //each child's corresponding flexable property
+    Flexable get_flex(int index); // each child's corresponding flexable property
     virtual void add_child(RenderObject* child) override;
     virtual void insert_child(RenderObject* child, int index) override;
     virtual void remove_child(RenderObject* child) override;
@@ -73,7 +73,6 @@ private:
     AlignItems align_items = AlignItems::FlexStart;
     VectorStorage<Flexable> flexables;
 };
-
 
 } // namespace gui
 } // namespace skr

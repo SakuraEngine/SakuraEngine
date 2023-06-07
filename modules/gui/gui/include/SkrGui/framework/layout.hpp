@@ -1,8 +1,5 @@
 #pragma once
 #include "SkrGui/framework/geometry.hpp"
-#include <cinttypes>
-#include <cstddef>
-#include <limits>
 
 namespace skr::gui
 {
