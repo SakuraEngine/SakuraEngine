@@ -82,7 +82,8 @@ struct SmartPool : public ISmartPool<I>
         if (auto ptr = static_cast<T*>(iptr))
         {
             ptr->~T(); 
-            memset((void*)ptr, 0, sizeof(T));
+            // avoid vtable erasing
+            // memset((void*)ptr, 0, sizeof(T));
             blocks.enqueue(ptr);
             skr_atomic64_add_relaxed(&objcnt, -1);
         }
