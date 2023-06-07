@@ -77,11 +77,6 @@ public:
     virtual void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT {}
     virtual void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT {}
 
-    virtual bool poll_processed_request(SkrAsyncServicePriority priority, IORequestId& request) SKR_NOEXCEPT
-    {
-        return false;
-    }
-
     virtual bool poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT
     {
         if (queues[priority].try_dequeue(batch))

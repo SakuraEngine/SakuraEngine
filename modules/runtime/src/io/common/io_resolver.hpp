@@ -35,11 +35,6 @@ public:
         return;
     }
 
-    virtual bool poll_processed_request(SkrAsyncServicePriority priority, IORequestId& request) SKR_NOEXCEPT
-    {
-        return false;
-    }
-
     virtual bool poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT
     {
         if (processed_batches[priority].try_dequeue(batch))
@@ -128,7 +123,6 @@ public:
     virtual void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
     
     virtual void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT = 0;
-    virtual bool poll_processed_request(SkrAsyncServicePriority priority, IORequestId& request) SKR_NOEXCEPT = 0;
     virtual bool poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT = 0;
 
 public:

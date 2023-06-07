@@ -58,20 +58,16 @@ void RunnerBase::process_batches() SKR_NOEXCEPT
 {
     ZoneScopedN("process_batches");
 
-    for (size_t j = 1; j < batch_processors.size(); j++)
+    for (uint32_t k = 0; k < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++k)
     {
-        auto&& processor = batch_processors[j];
-        auto&& prev_processor = batch_processors[j - 1];
-        const uint64_t NBytes = processor->get_prefer_batch_size();
-        for (uint32_t k = 0; k < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++k)
+        const auto priority = (SkrAsyncServicePriority)k;
+        // poll batches across batches processor
+        for (size_t j = 1; j < batch_processors.size(); j++)
         {
-            const auto priority = (SkrAsyncServicePriority)k;
-            IORequestId request;
-            while (prev_processor->poll_processed_request(priority, request))
-            {
-                SKR_ASSERT(0);
-            }
+            auto&& processor = batch_processors[j];
+            auto&& prev_processor = batch_processors[j - 1];
             
+            const uint64_t NBytes = processor->get_prefer_batch_size();
             uint64_t bytes = 0;
             BatchPtr batch = nullptr;
             while ((bytes <= NBytes) && prev_processor->poll_processed_batch(priority, batch))
@@ -90,15 +86,71 @@ void RunnerBase::process_batches() SKR_NOEXCEPT
             }
             processor->dispatch(priority);
         }
+
+        if (!request_processors.size())
+        {
+            complete_batches(priority);
+            continue;
+        }
+
+        // poll requests from last batches processor
+        {
+            BatchPtr batch = nullptr;
+            while (batch_processors.back()->poll_processed_batch(priority, batch))
+            {
+                auto&& bq = skr::static_pointer_cast<IOBatchBase>(batch);
+                for (auto&& request : bq->get_requests())
+                {
+                    request_processors.front()->fetch(priority, request);
+                }
+            }
+            request_processors.front()->dispatch(priority);
+        }
+
+        // poll requests across requests processor
+        for (size_t j = 1; j < request_processors.size(); j++)
+        {
+            auto&& processor = request_processors[j];
+            auto&& prev_processor = request_processors[j - 1];
+            
+            IORequestId request = nullptr;
+            while (prev_processor->poll_processed_request(priority, request))
+            {
+                processor->fetch(priority, request);
+            }
+            processor->dispatch(priority);
+        }
+
+        complete_requests(priority);
     }
+}
+
+void RunnerBase::complete_batches(SkrAsyncServicePriority priority) SKR_NOEXCEPT
+{
+    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
+    {
+        const auto priority = (SkrAsyncServicePriority)i;
+        BatchPtr batch;
+        while (batch_processors.back()->poll_processed_batch(priority, batch))
+        {
+            for (auto&& request : batch->get_requests())
+            {
+                auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
+                dispatch_complete(priority, rq);
+            }
+        }
+    }
+};
+
+void RunnerBase::complete_requests(SkrAsyncServicePriority priority) SKR_NOEXCEPT
+{
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
         const auto priority = (SkrAsyncServicePriority)i;
         IORequestId request;
-        while (batch_processors.back()->poll_processed_request(priority, request))
+        while (request_processors.back()->poll_processed_request(priority, request))
         {
             auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
-            // auto need_decompress = dispatch_decompress(priority, rq);
             dispatch_complete(priority, rq);
         }
     }
@@ -177,6 +229,7 @@ void RunnerBase::dispatch_complete(SkrAsyncServicePriority priority, skr::SObjec
     }
 }
 
+/*
 bool RunnerBase::dispatch_decompress(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT
 {
     const bool need_decompress = false;
@@ -185,6 +238,7 @@ bool RunnerBase::dispatch_decompress(SkrAsyncServicePriority priority, skr::SObj
     // decompressor->decompress();
     return true;
 }
+*/
 
 skr::AsyncResult RunnerBase::serve() SKR_NOEXCEPT
 {

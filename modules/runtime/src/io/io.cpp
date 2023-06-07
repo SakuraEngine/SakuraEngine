@@ -27,17 +27,32 @@ namespace io {
 const char* kIOPoolObjectsMemoryName = "I/O PoolObjects";
 const char* kIOConcurrentQueueName = "IOConcurrentQueue";
 
+IIOProcessor::~IIOProcessor() SKR_NOEXCEPT
+{
+
+}
+
+IIORequestProcessor::~IIORequestProcessor() SKR_NOEXCEPT
+{
+
+}
+
+IIOBatchProcessor::~IIOBatchProcessor() SKR_NOEXCEPT
+{
+    
+}
+
+IIOBatchBuffer::~IIOBatchBuffer() SKR_NOEXCEPT
+{
+
+}
+
 IIORequestResolver::~IIORequestResolver() SKR_NOEXCEPT
 {
 
 }
 
 void IIORequestResolver::resolve(IORequestId request) SKR_NOEXCEPT
-{
-    (void)request;
-}
-
-IIOBatchBuffer::~IIOBatchBuffer() SKR_NOEXCEPT
 {
 
 }
@@ -55,20 +70,14 @@ IIOBatchProcessorChain::~IIOBatchProcessorChain() SKR_NOEXCEPT
 uint64_t IIOBatchProcessor::get_prefer_batch_size() const SKR_NOEXCEPT { return UINT64_MAX; }
 // uint64_t IIOBatchProcessor::get_prefer_batch_count() const SKR_NOEXCEPT { return UINT64_MAX; }
 
-IIOBatchProcessor::~IIOBatchProcessor() SKR_NOEXCEPT
-{
-    
-}
-
-IIOReader::~IIOReader() SKR_NOEXCEPT
-{
-    
-}
-
-IIODecompressor::~IIODecompressor() SKR_NOEXCEPT
-{
-    
-}
+template<>
+IIOReader<IIORequestProcessor>::~IIOReader() SKR_NOEXCEPT {}
+template<>
+IIOReader<IIOBatchProcessor>::~IIOReader() SKR_NOEXCEPT {}
+template<>
+IIODecompressor<IIORequestProcessor>::~IIODecompressor() SKR_NOEXCEPT {}
+template<>
+IIODecompressor<IIOBatchProcessor>::~IIODecompressor() SKR_NOEXCEPT {}
 
 SObjectPtr<IIORequestResolverChain> IIORequestResolverChain::Create(IORequestResolverId resolver) SKR_NOEXCEPT
 {

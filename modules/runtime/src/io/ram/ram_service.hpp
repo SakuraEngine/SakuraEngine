@@ -81,7 +81,8 @@ struct RAMService final : public IRAMService
 
             resolver_chain = chain;
             batch_buffer = SObjectPtr<IOBatchBuffer>::Create();
-            batch_processors = { batch_buffer, resolver_chain, reader };
+            batch_processors = { batch_buffer, resolver_chain };
+            request_processors = { reader };
         }
 
         // TODO: REMOVE THESE
@@ -118,7 +119,7 @@ struct RAMService final : public IRAMService
 
         IOBatchBufferId batch_buffer = nullptr;
         IORequestResolverChainId resolver_chain = nullptr;
-        IOReaderId reader = nullptr;
+        IOReaderId<IIORequestProcessor> reader = nullptr;
 
         RAMService* service = nullptr;
     };
