@@ -1,17 +1,13 @@
 #include "io_runnner.hpp"
 #include "io_resolver.hpp"
-#include "batch_processors.hpp"
+#include "processors.hpp"
 
 namespace skr {
 namespace io {
 
 IORequestResolverChain::IORequestResolverChain() SKR_NOEXCEPT 
 {
-    for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
-    {
-        skr_atomic64_store_relaxed(&resolving_counts[i], 0);
-        skr_atomic64_store_relaxed(&processed_batch_counts[i], 0);
-    }
+    init_counters();
 }
 
 void IORequestResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
@@ -32,8 +28,8 @@ void IORequestResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEX
             }
         }
         processed_batches[priority].enqueue(batch);
-        skr_atomic64_add_relaxed(&resolving_counts[priority], -1);
-        skr_atomic64_add_relaxed(&processed_batch_counts[priority], 1);
+        dec_processing(priority);
+        inc_processed(priority);
     }
 }
 

@@ -10,7 +10,7 @@ bool VFSRAMReader::fetch(SkrAsyncServicePriority priority, IORequestId request) 
 {
     auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
     fetched_requests[priority].enqueue(rq);
-    skr_atomic64_add_relaxed(&pending_counts[priority], 1);
+    inc_processing(priority);
     return true;
 }
 
@@ -63,10 +63,10 @@ void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORe
             skr_vfs_fclose(rq->file);
             rq->file = nullptr;
             loaded_requests[priority].enqueue(rq);
-            skr_atomic64_add_relaxed(&processed_counts[priority], 1);
+            inc_processed(priority);
         }
     }
-    skr_atomic64_add_relaxed(&pending_counts[priority], -1);
+    dec_processing(priority);
 
     awakeService();
 }
@@ -91,7 +91,7 @@ bool VFSRAMReader::poll_processed_request(SkrAsyncServicePriority priority, IORe
 {
     if (loaded_requests[priority].try_dequeue(request))
     {
-        skr_atomic64_add_relaxed(&processed_counts[priority], -1);
+        dec_processed(priority);
         return request.get();
     }
     return false;
