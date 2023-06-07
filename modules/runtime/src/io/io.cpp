@@ -43,11 +43,6 @@ IIOBatchProcessor::~IIOBatchProcessor() SKR_NOEXCEPT
     
 }
 
-IIOBatchBuffer::~IIOBatchBuffer() SKR_NOEXCEPT
-{
-
-}
-
 IIORequestResolver::~IIORequestResolver() SKR_NOEXCEPT
 {
 

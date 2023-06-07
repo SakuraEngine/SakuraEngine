@@ -42,14 +42,8 @@ struct VFSRAMReader final : public RAMReaderBase<IIORequestProcessor>
     bool fetch(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT;
     void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
-    
     bool poll_processed_request(SkrAsyncServicePriority priority, IORequestId& request) SKR_NOEXCEPT;
-
-    bool is_async(SkrAsyncServicePriority priority) const SKR_NOEXCEPT
-    {
-        return true;
-    }
-
+    bool is_async(SkrAsyncServicePriority priority) const SKR_NOEXCEPT { return job_queue; }
     void dispatchFunction(SkrAsyncServicePriority priority, const IORequestId& request) SKR_NOEXCEPT;
 
     skr::JobQueue* job_queue = nullptr;

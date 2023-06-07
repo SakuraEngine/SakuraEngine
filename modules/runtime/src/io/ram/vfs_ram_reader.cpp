@@ -9,6 +9,7 @@ using VFSReaderFutureLauncher = skr::FutureLauncher<bool>;
 bool VFSRAMReader::fetch(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
 {
     auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
+    SKR_ASSERT(rq->getStatus() == SKR_IO_STAGE_RESOLVING);
     fetched_requests[priority].enqueue(rq);
     inc_processing(priority);
     return true;
@@ -52,6 +53,10 @@ void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORe
                 dst_offset += block.size;
             }
             rq->setStatus(SKR_IO_STAGE_LOADED);
+        }
+        else
+        {
+            SKR_UNREACHABLE_CODE();
         }
     }
     {

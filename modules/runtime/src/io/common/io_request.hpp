@@ -79,6 +79,11 @@ public:
     {
         return static_cast<ESkrIOStage>(skr_atomicu32_load_relaxed(&future->status));
     }
+
+    bool getCancelRequested() const
+    {
+        return skr_atomicu32_load_relaxed(&future->request_cancel);
+    }
     
     void add_callback(ESkrIOStage stage, skr_io_callback_t callback, void* data) SKR_NOEXCEPT 
     { 
@@ -98,8 +103,10 @@ public:
 
     bool async_complete = false;
     bool async_cancel = false;
-    skr_io_future_t* future = nullptr;
 
+private:
+    friend struct RAMIOBatch;
+    skr_io_future_t* future = nullptr;
 protected:
     SAtomic32 finish_step = 0;
     skr_io_callback_t callbacks[SKR_IO_STAGE_COUNT];
