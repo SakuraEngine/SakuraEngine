@@ -94,7 +94,10 @@ void RunnerBase::process_batches() SKR_NOEXCEPT
             
             IORequestId request = nullptr;
             while (prev_processor->poll_processed_request(priority, request))
-                processor->fetch(priority, request);
+            {
+                if (!request->get_future()->is_cancelled())
+                    processor->fetch(priority, request);
+            }
             processor->dispatch(priority);
         }
 
