@@ -24,7 +24,7 @@
 // type system
 #include "SkrGui/dev/type_system.hpp"
 
-#define SKR_GUI_RAII_INJECT()                                   \
+#define SKR_GUI_RAII_MIX_IN()                                   \
     template <typename To>                                      \
     auto type_cast() const SKR_NOEXCEPT                         \
     {                                                           \
