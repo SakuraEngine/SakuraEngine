@@ -29,13 +29,13 @@ public:
     
     virtual void request_stop() SKR_NOEXCEPT;
     virtual void stop() SKR_NOEXCEPT;
-    virtual void wait_stop() SKR_NOEXCEPT;
+    virtual void wait_stop(uint32_t fatal_timeout = 8) SKR_NOEXCEPT;
 
     virtual void run() SKR_NOEXCEPT;
 
     virtual void request_exit() SKR_NOEXCEPT;
     virtual void exit() SKR_NOEXCEPT;
-    virtual void wait_exit() SKR_NOEXCEPT;
+    virtual void wait_exit(uint32_t fatal_timeout = 8) SKR_NOEXCEPT;
 
     virtual AsyncResult serve() SKR_NOEXCEPT = 0;
 

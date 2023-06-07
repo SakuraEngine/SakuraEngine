@@ -116,7 +116,6 @@ typedef struct skr_ram_io_service_desc_t {
     uint32_t sleep_time SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_TIME_MAX);
     skr_job_queue_id io_job_queue SKR_IF_CPP(= nullptr);
     skr_job_queue_id callback_job_queue SKR_IF_CPP(= nullptr);
-    bool trace_log SKR_IF_CPP(= false);
     bool awake_at_request SKR_IF_CPP(= true);
 } skr_ram_io_service_desc_t;
 

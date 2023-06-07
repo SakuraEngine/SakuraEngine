@@ -54,10 +54,10 @@ struct SleepyService : public skr::ServiceThread
         tryAwake();
     }
 
-    void wait_stop() SKR_NOEXCEPT override
+    void wait_stop(uint32_t fatal_timeout = 8) SKR_NOEXCEPT override
     {
         tryAwake();
-        skr::ServiceThread::wait_stop();
+        skr::ServiceThread::wait_stop(fatal_timeout);
     }
 
     void tryAwake()
@@ -102,6 +102,9 @@ struct RunnerBase : public SleepyService
     void process_batches() SKR_NOEXCEPT;
     void recycle() SKR_NOEXCEPT;
     virtual skr::AsyncResult serve() SKR_NOEXCEPT;
+    virtual void drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    virtual void drain() SKR_NOEXCEPT;
+    virtual void destroy() SKR_NOEXCEPT;
 
     uint64_t predicate() const
     {

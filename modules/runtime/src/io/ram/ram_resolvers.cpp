@@ -76,18 +76,10 @@ struct ChunkingVFSReadResolver : public IORequestResolverBase
     }
     const uint64_t chunk_size = 256 * 1024;
 };
+
 IORequestResolverId IRAMService::create_chunking_resolver(uint64_t chunk_size) SKR_NOEXCEPT
 {
     return SObjectPtr<ChunkingVFSReadResolver>::Create(chunk_size);
-}
-
-IORequestResolverChain::IORequestResolverChain() SKR_NOEXCEPT 
-{
-    for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
-    {
-        skr_atomic64_store_relaxed(&pending_batch_counts[i], 0);
-        skr_atomic64_store_relaxed(&processed_batch_counts[i], 0);
-    }
 }
 
 void IRAMService::add_default_resolvers() SKR_NOEXCEPT

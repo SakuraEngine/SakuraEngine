@@ -120,7 +120,6 @@ TEST_F(FSTest, asyncread)
     ZoneScopedN("asyncread");
 
     skr_ram_io_service_desc_t ioServiceDesc = {};
-    ioServiceDesc.trace_log = true;
     ioServiceDesc.name = u8"Test";
     auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
     ioService->add_default_resolvers();
@@ -163,7 +162,6 @@ TEST_F(FSTest, asyncread2)
     auto io_job_queue = SkrNew<skr::JobQueue>(jqDesc);
 
     skr_ram_io_service_desc_t ioServiceDesc = {};
-    ioServiceDesc.trace_log = true;
     ioServiceDesc.name = u8"Test";
     ioServiceDesc.io_job_queue = io_job_queue;
     ioServiceDesc.callback_job_queue = io_job_queue;
@@ -204,7 +202,6 @@ TEST_F(FSTest, chunking)
     ZoneScopedN("chunking");
 
     skr_ram_io_service_desc_t ioServiceDesc = {};
-    ioServiceDesc.trace_log = true;
     ioServiceDesc.name = u8"Test";
     auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
     ioService->add_default_resolvers();
@@ -246,7 +243,6 @@ TEST_F(FSTest, cancel)
     for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
-        ioServiceDesc.trace_log = true;
         ioServiceDesc.name = u8"Test";
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
@@ -302,7 +298,6 @@ TEST_F(FSTest, defer_cancel)
     for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
-        ioServiceDesc.trace_log = true;
         ioServiceDesc.name = u8"Test";
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
@@ -364,7 +359,6 @@ TEST_F(FSTest, sort)
     for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
-        ioServiceDesc.trace_log = true;
         ioServiceDesc.name = u8"Test";
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
