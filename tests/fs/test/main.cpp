@@ -4,6 +4,7 @@
 #include "misc/log.h"
 #include "misc/make_zeroed.hpp"
 #include "async/thread_job.hpp"
+#include "async/wait_timeout.hpp"
 #include "io/io.h"
 
 #include <string>
@@ -94,25 +95,6 @@ TEST_F(FSTest, seqread)
     EXPECT_EQ(std::string((const char*)string_out2), std::string("llo"));
     EXPECT_EQ(skr_vfs_fsize(f), strlen((const char*)string));
     EXPECT_EQ(skr_vfs_fclose(f), true);
-}
-
-template<typename F>
-void wait_timeout(F f, uint32_t seconds_timeout = 3)
-{
-    ZoneScopedN("WaitTimeOut");
-
-    uint32_t seconds = 0;
-    while (!f())
-    {
-        skr_thread_sleep(1);
-        seconds++;
-        if (seconds > seconds_timeout * 100)
-        {
-            SKR_LOG_ERROR("drain timeout, force quit");
-            EXPECT_TRUE(0);
-            break;
-        }
-    }
 }
 
 TEST_F(FSTest, asyncread)
@@ -233,7 +215,62 @@ TEST_F(FSTest, chunking)
     std::cout << "..." << std::endl;
 }
 
-#define TEST_CYCLES_COUNT 50
+#define TEST_CYCLES_COUNT 100
+
+TEST_F(FSTest, defer_cancel)
+{
+    ZoneScopedN("defer_cancel");
+
+    uint32_t sucess = 0;
+    for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
+    {
+        skr_ram_io_service_desc_t ioServiceDesc = {};
+        ioServiceDesc.name = u8"Test";
+        ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
+        auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
+        ioService->add_default_resolvers();
+        ioService->set_sleep_time(0); // make test faster
+        ioService->run();
+
+        skr_io_future_t future = {};
+        skr::BlobId blob = nullptr;
+        skr_io_future_t future2 = {};
+        skr::BlobId blob2 = nullptr;
+        {
+            auto rq = ioService->open_request();
+            rq->set_vfs(abs_fs);
+            rq->set_path(u8"testfile2");
+            rq->add_block({}); // read all
+            blob = ioService->request(rq, &future);
+        }
+        {
+            auto rq2 = ioService->open_request();
+            rq2->set_vfs(abs_fs);
+            rq2->set_path(u8"testfile");
+            rq2->add_block({}); // read all
+            blob2 = ioService->request(rq2, &future2);
+        }
+        // try cancel io of testfile
+        ioService->cancel(&future2);
+        ioService->drain();
+        if (future2.is_cancelled())
+        {
+            EXPECT_EQ(blob2->get_data(), nullptr);
+            sucess++;
+        }
+        else if (future2.is_ready())
+        {
+            EXPECT_EQ(std::string((const char*)blob2->get_data(), blob2->get_size()), std::string("Hello, World!"));
+        }
+        SKR_ASSERT(std::string((const char*)blob->get_data(), blob->get_size()) == std::string("Hello, World2!"));
+        
+        blob.reset();
+        blob2.reset();
+
+        skr_io_ram_service_t::destroy(ioService);
+    }
+    SKR_LOG_INFO("defer_cancel tested for %d times, sucess %d", TEST_CYCLES_COUNT, sucess);
+}
 
 TEST_F(FSTest, cancel)
 {
@@ -288,68 +325,6 @@ TEST_F(FSTest, cancel)
         skr_io_ram_service_t::destroy(ioService);
     }
     SKR_LOG_INFO("cancel tested for %d times, sucess %d", TEST_CYCLES_COUNT, sucess);
-}
-
-TEST_F(FSTest, defer_cancel)
-{
-    ZoneScopedN("defer_cancel");
-
-    uint32_t sucess = 0;
-    for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
-    {
-        skr_ram_io_service_desc_t ioServiceDesc = {};
-        ioServiceDesc.name = u8"Test";
-        ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
-        auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
-        ioService->add_default_resolvers();
-        ioService->set_sleep_time(0); // make test faster
-        ioService->run();
-
-        skr_io_future_t future = {};
-        skr::BlobId blob = nullptr;
-        skr_io_future_t future2 = {};
-        skr::BlobId blob2 = nullptr;
-        {
-            auto rq = ioService->open_request();
-            rq->set_vfs(abs_fs);
-            rq->set_path(u8"testfile2");
-            rq->add_block({}); // read all
-            blob = ioService->request(rq, &future);
-        }
-        {
-            auto rq2 = ioService->open_request();
-            rq2->set_vfs(abs_fs);
-            rq2->set_path(u8"testfile");
-            rq2->add_block({}); // read all
-            blob2 = ioService->request(rq2, &future2);
-        }
-        // try cancel io of testfile
-        ioService->cancel(&future2);
-        ioService->drain();
-        if (future2.is_cancelled())
-        {
-            EXPECT_EQ(blob2->get_data(), nullptr);
-            sucess++;
-        }
-        else
-        {
-            EXPECT_TRUE(future2.is_enqueued() || future2.is_loading() || future2.is_ready());
-
-            wait_timeout([&future2]()->bool
-            {
-                return future2.is_ready();
-            });
-
-            EXPECT_EQ(std::string((const char*)blob2->get_data(), blob2->get_size()), std::string("Hello, World!"));
-        }
-        EXPECT_EQ(std::string((const char*)blob->get_data(), blob->get_size()), std::string("Hello, World2!"));
-        
-        blob.reset();
-        blob2.reset();
-
-        skr_io_ram_service_t::destroy(ioService);
-    }
-    SKR_LOG_INFO("defer_cancel tested for %d times, sucess %d", TEST_CYCLES_COUNT, sucess);
 }
 
 TEST_F(FSTest, sort)
