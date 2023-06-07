@@ -1,9 +1,6 @@
 #pragma once
+#include "SkrGui/fwd_config.hpp"
 #include "SkrGui/framework/type_tree.hpp"
-#include "SkrGui/module.configure.h"
-#include "containers/lite.hpp"
-#include "platform/configure.h"
-#include <stdint.h>
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gui, State, skr_gui_state)
 
@@ -18,21 +15,20 @@ namespace gui
 // IntStorage/FloatStorage/NameStorage 用于暂存一些页面信息，例如多个 Tab 中某一页内的 Scroll Pos
 enum class EKeyType
 {
-    None,           // -
-    Unique,         // -
-    KeepState,      // State*
+    None,      // -
+    Unique,    // -
+    KeepState, // State*
 
-    Int,            // int64_t
-    Float,          // float
-    Name,           // string
-    
-    IntStorage,     // int64_t
-    FloatStorage,   // float
-    NameStorage,    // name
+    Int,   // int64_t
+    Float, // float
+    Name,  // string
+
+    IntStorage,   // int64_t
+    FloatStorage, // float
+    NameStorage,  // name
 };
 
-struct SKR_GUI_API Key final
-{
+struct SKR_GUI_API Key final {
     // create
     static Key unique() SKR_NOEXCEPT;
     static Key keep_state(State* state) SKR_NOEXCEPT;
@@ -50,7 +46,7 @@ struct SKR_GUI_API Key final
     Key& operator=(const Key&) SKR_NOEXCEPT;
     Key& operator=(Key&&) SKR_NOEXCEPT;
     ~Key() SKR_NOEXCEPT;
-    
+
     // compare
     bool operator==(const Key& other) const SKR_NOEXCEPT;
     bool operator!=(const Key& other) const SKR_NOEXCEPT;
@@ -89,9 +85,9 @@ private:
     EKeyType _type;
     union
     {
-        State*      _state;
-        int64_t    _int;
-        float       _float;
+        State* _state;
+        int64_t _int;
+        float _float;
         TextStorage _name;
     };
 };
@@ -271,5 +267,5 @@ inline void Key::set_storage(float v) SKR_NOEXCEPT
     _float = v;
 }
 
-}
+} // namespace gui
 } // namespace skr

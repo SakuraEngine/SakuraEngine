@@ -1,13 +1,15 @@
 #pragma once
-#include "type/type.h"
 #include "platform/memory.h"
 
-SKR_DECLARE_TYPE_ID_FWD(skr::gui, Widget, skr_gui_widget)
+#define SKR_GUI_HIDE_CONSTRUCT(__PARAM) \
+private:                                \
+    using __PARAM;                      \
+    using void construct(__PARAM)
 
 namespace skr::gui
 {
 template <typename W>
-inline W* NewWidget(typename W::Params params)
+inline W* NewWidget(typename W::Params params) SKR_NOEXCEPT
 {
     auto result = SkrNew<W>();
     result->construct(std::move(params));
@@ -15,11 +17,10 @@ inline W* NewWidget(typename W::Params params)
 }
 
 template <typename P>
-inline auto NewWidget(P params) -> typename P::WidgetType
+inline auto NewWidget(P params) SKR_NOEXCEPT->typename P::WidgetType
 {
     auto result = SkrNew<P::WidgetType>();
     result->construct(std::move(params));
     return result;
 }
-}
-
+} // namespace skr::gui

@@ -1,13 +1,11 @@
 #pragma once
-#include "SkrGui/module.configure.h"
-#include "misc/macros.h"
+#include "SkrGui/fwd_config.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gui, Widget, skr_gui_widget)
 
-namespace skr::gui 
+namespace skr::gui
 {
-struct SKR_GUI_API Sandbox
-{
+struct SKR_GUI_API Sandbox {
     Sandbox(Widget* root_widget);
 
     void update();
@@ -20,4 +18,4 @@ struct SKR_GUI_API Sandbox
 private:
     Widget* _root_widget;
 };
-}
+} // namespace skr::gui

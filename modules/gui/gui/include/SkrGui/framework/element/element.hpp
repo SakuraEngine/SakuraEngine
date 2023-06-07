@@ -75,7 +75,7 @@ struct SKR_GUI_API Element : public BuildContext
 
 private:
     // help functions
-    Element* _retake_inactive_element(Key& key, not_null<Widget*> widget) SKR_NOEXCEPT;
+    Element* _retake_inactive_element(const Key& key, not_null<Widget*> widget) SKR_NOEXCEPT;
     void _active_with_parent(Element* parent, Slot* slot) SKR_NOEXCEPT;
     static void _active_recursively(Element* element) SKR_NOEXCEPT;
     virtual void _update_slot(Slot* new_slot) SKR_NOEXCEPT;

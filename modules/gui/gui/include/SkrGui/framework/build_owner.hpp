@@ -1,6 +1,6 @@
 #pragma once
+#include "SkrGui/fwd_config.hpp"
 #include "SkrGui/framework/type_tree.hpp"
-#include "fwd_containers.hpp"
 #include "SkrGui/framework/key.hpp"
 #include "containers/not_null.hpp"
 
@@ -11,8 +11,7 @@ namespace skr
 {
 namespace gui
 {
-struct SKR_GUI_API BuildOwner
-{
+struct SKR_GUI_API BuildOwner {
     BuildOwner();
     ~BuildOwner();
 
@@ -25,7 +24,7 @@ struct SKR_GUI_API BuildOwner
     // global key
     void register_global_key(State* key, Element* element) SKR_NOEXCEPT;
     void unregister_global_key(State* key, Element* element) SKR_NOEXCEPT;
-    
+
     VectorStorage<Element*> _dirty_elements;
     bool _dirty_elements_needs_resorting;
     bool _debug_is_in_build_scope;
@@ -36,5 +35,5 @@ struct SKR_GUI_API BuildOwner
     FocusManager* _focus_manager;
     HashMapStorage<State*, Element*> _global_key_registry;
 };
-}
+} // namespace gui
 } // namespace skr

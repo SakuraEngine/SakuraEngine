@@ -1,17 +1,17 @@
 #pragma once
-#include "SkrGui/framework/fwd_containers.hpp"
-#include "type/type.h"
+#include "SkrGui/fwd_config.hpp"
 #include "SkrGui/framework/type_tree.hpp"
-#include <assert.h>
+#include "type/type.h"
 
-namespace skr {
-namespace gui {
+namespace skr
+{
+namespace gui
+{
 struct Diagnosticable;
 
-struct SKR_GUI_API TypeTreeNode
-{
+struct SKR_GUI_API TypeTreeNode {
     virtual ~TypeTreeNode() SKR_NOEXCEPT;
-    virtual void initialize(skr_guid_t id, skr_record_type_id type) SKR_NOEXCEPT {};
+    virtual void initialize(skr_guid_t id, skr_record_type_id type) SKR_NOEXCEPT{};
 
     skr_record_type_id get_type() SKR_NOEXCEPT { return type; }
 
@@ -24,9 +24,8 @@ protected:
     skr_record_type_id type = nullptr;
 };
 
-template<typename T>
-struct TypeTreeNodeBase : public TypeTreeNode
-{
+template <typename T>
+struct TypeTreeNodeBase : public TypeTreeNode {
     TypeTreeNodeBase()
     {
         if constexpr (T::hasBaseType())
@@ -41,8 +40,8 @@ struct TypeTreeNodeBase : public TypeTreeNode
         if (!_this->type)
         {
             _this->create_dynamic_type(
-                T::getStaticTypeId(), _parent ? _parent->get_type() : nullptr,
-                _name);
+            T::getStaticTypeId(), _parent ? _parent->get_type() : nullptr,
+            _name);
         }
         return _this;
     }
@@ -59,10 +58,9 @@ struct TypeTreeNodeBase : public TypeTreeNode
     static TypeTreeNode* _parent;
 };
 
-struct SKR_GUI_API TypeTree
-{
+struct SKR_GUI_API TypeTree {
     virtual ~TypeTree() SKR_NOEXCEPT;
-    
+
     virtual void register_type(skr_guid_t id, TypeTreeNode* node) SKR_NOEXCEPT = 0;
 };
 
@@ -120,77 +118,79 @@ constexpr skr_guid_t operator""_guid(const char8_t* str, size_t N)
     if (N == long_guid_form_length && (str[0] != '{' || str[long_guid_form_length - 1] != '}'))
     {
         assert(0 && "Missing opening or closing brace");
-    }   
+    }
     return make_guid_helper(str + (N == long_guid_form_length ? 1 : 0));
 }
-}
+} // namespace literals
 
-} }
+} // namespace gui
+} // namespace skr
 
 namespace skr::type
 {
-    template<>
-    struct type_id<struct skr::gui::Diagnosticable>
+template <>
+struct type_id<struct skr::gui::Diagnosticable> {
+    inline static SKR_CONSTEXPR const char8_t* str()
     {
-        inline static SKR_CONSTEXPR const char8_t* str()
-        {
-            return u8"ae91b91e-e45b-4aa9-b574-bccd5e8119cb";
-        }
-        inline static SKR_CONSTEXPR skr_guid_t get()
-        {
-            return skr::gui::literals::make_guid_helper(str());
-        }
-    };
-}
+        return u8"ae91b91e-e45b-4aa9-b574-bccd5e8119cb";
+    }
+    inline static SKR_CONSTEXPR skr_guid_t get()
+    {
+        return skr::gui::literals::make_guid_helper(str());
+    }
+};
+} // namespace skr::type
 
 // TYPE BODY MACROS
 
 #define SKR_GUI_BASE_TYPE_BODY(__T) \
-inline static SKR_CONSTEXPR bool hasBaseType() { return false; }
+    inline static SKR_CONSTEXPR bool hasBaseType() { return false; }
 
-#define SKR_GUI_CHILD_TYPE_BODY(__T, __BASE) \
-inline static SKR_CONSTEXPR skr_guid_t getBaseTypeId() \
-{\
-    return __BASE::getStaticTypeId();\
-}\
-inline static const skr_record_type_id getBaseType() \
-{\
-    return __BASE::getStaticType();\
-}\
-using BaseType = __BASE;\
-inline static SKR_CONSTEXPR bool hasBaseType() { return true; }
+#define SKR_GUI_CHILD_TYPE_BODY(__T, __BASE)               \
+    inline static SKR_CONSTEXPR skr_guid_t getBaseTypeId() \
+    {                                                      \
+        return __BASE::getStaticTypeId();                  \
+    }                                                      \
+    inline static const skr_record_type_id getBaseType()   \
+    {                                                      \
+        return __BASE::getStaticType();                    \
+    }                                                      \
+    using BaseType = __BASE;                               \
+    inline static SKR_CONSTEXPR bool hasBaseType() { return true; }
 
-#define SKR_GUI_TYPE_COMMON_BODY(__T, __GUID) \
-static const skr_record_type_id getStaticType(); \
-inline static SKR_CONSTEXPR const char8_t* getStaticTypeIdStr() \
-{ \
-    return __GUID; \
-} \
-inline static SKR_CONSTEXPR skr_guid_t getStaticTypeId() \
-{ \
-    return skr::gui::literals::make_guid_helper(getStaticTypeIdStr()); \
-} \
-skr_guid_t get_type() override { return getStaticTypeId(); }\
+#define SKR_GUI_TYPE_COMMON_BODY(__T, __GUID)                              \
+    static const skr_record_type_id getStaticType();                       \
+    inline static SKR_CONSTEXPR const char8_t* getStaticTypeIdStr()        \
+    {                                                                      \
+        return __GUID;                                                     \
+    }                                                                      \
+    inline static SKR_CONSTEXPR skr_guid_t getStaticTypeId()               \
+    {                                                                      \
+        return skr::gui::literals::make_guid_helper(getStaticTypeIdStr()); \
+    }                                                                      \
+    skr_guid_t get_type() override { return getStaticTypeId(); }
 
-#define SKR_GUI_BASE_TYPE(__T, __GUID) \
-SKR_GUI_TYPE_COMMON_BODY(__T, __GUID) \
-SKR_GUI_BASE_TYPE_BODY(__T)\
-virtual const skr_record_type_id getType() { return getStaticType(); } \
+#define SKR_GUI_BASE_TYPE(__T, __GUID)    \
+    SKR_GUI_TYPE_COMMON_BODY(__T, __GUID) \
+    SKR_GUI_BASE_TYPE_BODY(__T)           \
+    virtual const skr_record_type_id getType() { return getStaticType(); }
 
 #define SKR_GUI_TYPE(__T, __BASE, __GUID) \
-SKR_GUI_TYPE_COMMON_BODY(__T, __GUID) \
-SKR_GUI_CHILD_TYPE_BODY(__T, __BASE) \
-virtual const skr_record_type_id getType() override { return getStaticType(); } \
-
+    SKR_GUI_TYPE_COMMON_BODY(__T, __GUID) \
+    SKR_GUI_CHILD_TYPE_BODY(__T, __BASE)  \
+    virtual const skr_record_type_id getType() override { return getStaticType(); }
 
 // TYPE IMPLEMENTATION MACROS
 
-#define SKR_GUI_TYPE_IMPLEMENTATION(__T) \
-skr::gui::TypeTreeNodeBase<__T> __Type_##__T##_Instance__; \
-template<> skr::gui::TypeTreeNodeBase<__T>* skr::gui::TypeTreeNodeBase<__T>::_this = &__Type_##__T##_Instance__; \
-template<> skr::gui::TypeTreeNode* skr::gui::TypeTreeNodeBase<__T>::_parent = nullptr; \
-template<> const char8_t* skr::gui::TypeTreeNodeBase<__T>::_name = OSTR_UTF8(#__T); \
-const skr_record_type_id __T::getStaticType() \
-{ \
-    return (skr_record_type_id)__Type_##__T##_Instance__.get_type(); \
-}
+#define SKR_GUI_TYPE_IMPLEMENTATION(__T)                                                                  \
+    skr::gui::TypeTreeNodeBase<__T> __Type_##__T##_Instance__;                                            \
+    template <>                                                                                           \
+    skr::gui::TypeTreeNodeBase<__T>* skr::gui::TypeTreeNodeBase<__T>::_this = &__Type_##__T##_Instance__; \
+    template <>                                                                                           \
+    skr::gui::TypeTreeNode* skr::gui::TypeTreeNodeBase<__T>::_parent = nullptr;                           \
+    template <>                                                                                           \
+    const char8_t* skr::gui::TypeTreeNodeBase<__T>::_name = OSTR_UTF8(#__T);                              \
+    const skr_record_type_id __T::getStaticType()                                                         \
+    {                                                                                                     \
+        return (skr_record_type_id)__Type_##__T##_Instance__.get_type();                                  \
+    }
