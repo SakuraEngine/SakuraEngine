@@ -23,7 +23,10 @@ RAMIOBuffer::~RAMIOBuffer() SKR_NOEXCEPT
 
 void RAMIOBuffer::allocate_buffer(uint64_t n) SKR_NOEXCEPT
 {
-    bytes = (uint8_t*)sakura_mallocN(n, kIOBufferMemoryName);
+    if (n)
+    {
+        bytes = (uint8_t*)sakura_mallocN(n, kIOBufferMemoryName);
+    }
     size = n;
 }
 
@@ -41,7 +44,7 @@ IOResultId RAMIOBatch::add_request(IORequestId request, skr_io_future_t* future)
 {
     auto srv = static_cast<RAMService*>(service);
     auto buffer = srv->ram_buffer_pool->allocate();
-    auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
+    auto rq = skr::static_pointer_cast<RAMIORequest>(request);
     rq->future = future;
     rq->destination = buffer;
     SKR_ASSERT(!rq->blocks.empty());
@@ -116,7 +119,7 @@ RAMIOBufferId RAMService::request(IORequestId request, skr_io_future_t* future, 
 {
     auto batch = open_batch(1);
     auto result = batch->add_request(request, future);
-    auto&& buffer = skr::static_pointer_cast<RAMIOBuffer>(result);
+    auto buffer = skr::static_pointer_cast<RAMIOBuffer>(result);
     batch->set_priority(priority);
     this->request(batch);
     return buffer;

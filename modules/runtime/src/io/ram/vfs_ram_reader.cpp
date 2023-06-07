@@ -8,7 +8,7 @@ using VFSReaderFutureLauncher = skr::FutureLauncher<bool>;
 
 bool VFSRAMReader::fetch(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
 {
-    auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
+    auto rq = skr::static_pointer_cast<RAMIORequest>(request);
     SKR_ASSERT(rq->getStatus() == SKR_IO_STAGE_RESOLVING);
     fetched_requests[priority].enqueue(rq);
     inc_processing(priority);
@@ -24,8 +24,8 @@ void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORe
 {
     {
         ZoneScopedN("dispatch_read");
-        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-        auto&& buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
+        auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+        auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
         if (service->runner.try_cancel(priority, rq))
         {
             // cancel...
@@ -61,7 +61,7 @@ void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORe
     }
     {
         ZoneScopedN("dispatch_close");
-        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
+        auto rq = skr::static_pointer_cast<RAMIORequest>(request);
         if (rq->file)
         {
             // SKR_LOG_DEBUG("dispatch close request: %s", rq->path.c_str());

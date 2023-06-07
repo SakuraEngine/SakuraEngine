@@ -13,8 +13,8 @@ struct AllocateIOBufferResolver : public IORequestResolverBase
     virtual void resolve(IORequestId request) SKR_NOEXCEPT
     {
         ZoneScopedNC("IOBufferAllocate", tracy::Color::BlueViolet);
-        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-        auto&& buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
+        auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+        auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
         // deal with 0 block size
         for (auto& block : rq->blocks)
         {
@@ -50,7 +50,7 @@ struct ChunkingVFSReadResolver : public IORequestResolverBase
     virtual void resolve(IORequestId request) SKR_NOEXCEPT
     {
         ZoneScopedN("IORequestChunking");
-        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
+        auto rq = skr::static_pointer_cast<RAMIORequest>(request);
         uint64_t total = 0;
         for (auto& block : rq->get_blocks())
             total += block.size;

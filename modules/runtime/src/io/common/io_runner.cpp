@@ -77,7 +77,7 @@ void RunnerBase::process_batches() SKR_NOEXCEPT
             auto& back_processor = batch_processors.back();
             while (back_processor->poll_processed_batch(priority, batch))
             {
-                auto&& bq = skr::static_pointer_cast<IOBatchBase>(batch);
+                auto bq = skr::static_pointer_cast<IOBatchBase>(batch);
                 for (auto&& request : bq->get_requests())
                 {
                     if (!request->get_future()->is_cancelled())
@@ -114,7 +114,7 @@ void RunnerBase::complete_batches(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     {
         for (auto&& request : batch->get_requests())
         {
-            auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
+            auto rq = skr::static_pointer_cast<IORequestBase>(request);
             dispatch_complete(priority, rq);
         }
     }
@@ -126,7 +126,7 @@ void RunnerBase::complete_requests(SkrAsyncServicePriority priority) SKR_NOEXCEP
     auto& back_processor = request_processors.back();
     while (back_processor->poll_processed_request(priority, request))
     {
-        auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
+        auto rq = skr::static_pointer_cast<IORequestBase>(request);
         dispatch_complete(priority, rq);
     }
 }
