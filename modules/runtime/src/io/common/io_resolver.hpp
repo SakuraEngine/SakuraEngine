@@ -24,7 +24,7 @@ public:
     bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
     {
         fetched_batches[priority].enqueue(batch);
-        skr_atomic64_add_relaxed(&pending_batch_counts[priority], 1);
+        skr_atomic64_add_relaxed(&resolving_counts[priority], 1);
         return true;
     }
 
@@ -54,14 +54,14 @@ public:
     {
         if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
         {
-            return skr_atomic64_load_acquire(&pending_batch_counts[priority]);
+            return skr_atomic64_load_acquire(&resolving_counts[priority]);
         }
         else
         {
             uint64_t count = 0;
             for (int i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
             {
-                count += skr_atomic64_load_acquire(&pending_batch_counts[i]);
+                count += skr_atomic64_load_acquire(&resolving_counts[i]);
             }
             return count;
         }
@@ -88,7 +88,7 @@ public:
 private:
     IOBatchQueue fetched_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IOBatchQueue processed_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    SAtomic64 pending_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    SAtomic64 resolving_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     SAtomic64 processed_batch_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
 public:

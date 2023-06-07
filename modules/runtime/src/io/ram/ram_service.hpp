@@ -124,7 +124,6 @@ struct RAMService final : public IRAMService
         RAMService* service = nullptr;
     };
     const skr::string name;
-    const bool trace_log = false;
     const bool awake_at_request = false;
     Runner runner;
     

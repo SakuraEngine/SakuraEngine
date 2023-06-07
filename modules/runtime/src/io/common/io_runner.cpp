@@ -1,5 +1,6 @@
 #include "../common/io_runnner.hpp"
 #include "async/thread_job.hpp"
+#include "async/wait_timeout.hpp"
 
 namespace skr {
 namespace io {
@@ -261,6 +262,80 @@ skr::AsyncResult RunnerBase::serve() SKR_NOEXCEPT
     }
 
     return ASYNC_RESULT_OK;
+}
+
+void RunnerBase::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
+{
+    ZoneScopedN("drain");
+
+    auto predicate = [this, priority]() -> bool {
+        uint64_t cnt = 0;
+        for (auto processor : batch_processors)
+        {
+            cnt += processor->processing_count(priority);
+            cnt += processor->processed_count(priority);
+        }
+        for (auto processor : request_processors)
+        {
+            cnt += processor->processing_count(priority);
+            cnt += processor->processed_count(priority);
+        }
+        return !cnt;
+    };
+    bool fatal = !wait_timeout(predicate, 5);
+    if (fatal)
+    {
+        {
+            skr::string processing_message = u8"batch processing: ";
+            skr::string processed_message = u8"batch processing: ";
+            for (auto processor : batch_processors)
+            {
+                processing_message += skr::format(u8", {}", processor->processing_count(priority));
+                processed_message += skr::format(u8", {}", processor->processed_count(priority));
+            }
+            SKR_LOG_FATAL(processing_message.c_str());
+            SKR_LOG_FATAL(processed_message.c_str());
+        }
+        {
+            skr::string processing_message = u8"request processing: ";
+            skr::string processed_message = u8"request processing: ";
+            for (auto processor : request_processors)
+            {
+                processing_message += skr::format(u8", {}", processor->processing_count(priority));
+                processed_message += skr::format(u8", {}", processor->processed_count(priority));
+            }
+            SKR_LOG_FATAL(processing_message.c_str());
+            SKR_LOG_FATAL(processed_message.c_str());
+        }
+    }
+}
+
+void RunnerBase::drain() SKR_NOEXCEPT
+{
+    ZoneScopedN("drain");
+    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
+    {
+        const auto priority = (SkrAsyncServicePriority)i;
+        drain(priority);
+    }
+}
+
+void RunnerBase::destroy() SKR_NOEXCEPT
+{
+    drain();
+    if (get_status() == skr::ServiceThread::Status::kStatusRunning)
+    {
+        setServiceStatus(SKR_ASYNC_SERVICE_STATUS_QUITING);
+        stop();
+    }
+    {
+        ZoneScopedN("wait_stop");
+        wait_stop();
+    }
+    {
+        ZoneScopedN("exit");
+        exit();
+    }
 }
 
 } // namespace io

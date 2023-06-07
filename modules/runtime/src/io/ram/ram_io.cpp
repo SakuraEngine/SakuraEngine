@@ -13,24 +13,6 @@ namespace io {
 const char* kIOBufferMemoryName = "IOBuffer";
 uint32_t RAMService::global_idx = 0;
 
-template<typename F>
-bool wait_timeout(F f, uint32_t seconds_timeout = 3)
-{
-    ZoneScopedN("WaitTimeOut");
-    uint32_t milliseconds = 0;
-    while (!f())
-    {
-        if (milliseconds > seconds_timeout * 100)
-        {
-            SKR_LOG_ERROR("drain timeout, force quit");
-            return false;
-        }
-        skr_thread_sleep(1);
-        milliseconds++;
-    }
-    return true;
-}
-
 IRAMIOBuffer::~IRAMIOBuffer() SKR_NOEXCEPT {}
 
 RAMIOBuffer::~RAMIOBuffer() SKR_NOEXCEPT
@@ -74,7 +56,7 @@ inline static IOReaderId<IIORequestProcessor> CreateReader(RAMService* service, 
 
 RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
     : name(desc->name ? skr::string(desc->name) : skr::format(u8"IRAMService-{}", global_idx++)), 
-      trace_log(desc->trace_log), awake_at_request(desc->awake_at_request),
+      awake_at_request(desc->awake_at_request),
       runner(this, desc->callback_job_queue)
 {
     request_pool = SmartPoolPtr<RAMIORequest, IIORequest>::Create();
@@ -104,24 +86,7 @@ void IRAMService::destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT
     ZoneScopedN("destroy");
 
     auto S = static_cast<RAMService*>(service);
-    S->drain();
-    if (S->runner.get_status() == skr::ServiceThread::Status::kStatusRunning)
-    {
-        S->runner.setServiceStatus(SKR_ASYNC_SERVICE_STATUS_QUITING);
-        S->stop(false);
-    }
-    {
-        ZoneScopedN("wait_stop");
-        if (S->trace_log)
-            SKR_LOG_TRACE("IRAMService::destroy: wait runner thread to stop...");
-        S->runner.wait_stop();
-    }
-    {
-        ZoneScopedN("exit");
-        if (S->trace_log)
-            SKR_LOG_TRACE("IRAMService::destroy: wait runner thread to exit...");
-        S->runner.exit();
-    }
+    S->runner.destroy();
     SkrDelete(S);
 }
 
@@ -172,33 +137,7 @@ void RAMService::run() SKR_NOEXCEPT
 
 void RAMService::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    ZoneScopedN("drain");
-
-    if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
-    {
-        const bool sucess = wait_timeout([&](){
-            return (runner.getQueuedBatchCount(priority) == 0) &&
-            (runner.getExecutingBatchCount(priority) == 0) &&
-            (runner.getProcessingRequestCount(priority) == 0);
-        }, 8);
-        if (!sucess)
-        {
-            SKR_LOG_FATAL("RAMService::drain: timeout! awake_at_request is %d, queued: %llu, executing: %llu, processing: %llu",
-                awake_at_request,
-                runner.getQueuedBatchCount(priority),
-                runner.getExecutingBatchCount(priority),
-                runner.getProcessingRequestCount(priority));
-            abort();
-        }
-    }
-    else
-    {
-        for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; i++)
-        {
-            const auto p = (SkrAsyncServicePriority)i;
-            drain(p);
-        }
-    }
+    runner.drain(priority);    
 }
 
 void RAMService::set_sleep_time(uint32_t ms) SKR_NOEXCEPT

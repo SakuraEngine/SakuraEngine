@@ -4,33 +4,39 @@
 namespace skr {
 namespace io {
 
+IORequestResolverChain::IORequestResolverChain() SKR_NOEXCEPT 
+{
+    for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
+    {
+        skr_atomic64_store_relaxed(&resolving_counts[i], 0);
+        skr_atomic64_store_relaxed(&processed_batch_counts[i], 0);
+    }
+}
+
 void IORequestResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
+    IOBatchId batch;
+    while (fetched_batches[priority].try_dequeue(batch))
     {
-        IOBatchId batch;
-        if (fetched_batches[i].try_dequeue(batch))
+        for (auto request : batch->get_requests())
         {
-            for (auto request : batch->get_requests())
+            auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
+            if (runner->try_cancel(priority, rq))
             {
-                auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
-                if (runner->try_cancel((SkrAsyncServicePriority)i, rq))
+                continue;
+            }
+            else
+            {
+                rq->setStatus(SKR_IO_STAGE_RESOLVING);
+                for (auto resolver : chain)
                 {
-                    continue;
-                }
-                else
-                {
-                    rq->setStatus(SKR_IO_STAGE_RESOLVING);
-                    for (auto resolver : chain)
-                    {
-                        resolver->resolve(request);
-                    }
+                    resolver->resolve(request);
                 }
             }
-            processed_batches[priority].enqueue(batch);
-            skr_atomic64_add_relaxed(&pending_batch_counts[priority], -1);
-            skr_atomic64_add_relaxed(&processed_batch_counts[priority], 1);
         }
+        processed_batches[priority].enqueue(batch);
+        skr_atomic64_add_relaxed(&resolving_counts[priority], -1);
+        skr_atomic64_add_relaxed(&processed_batch_counts[priority], 1);
     }
 }
 

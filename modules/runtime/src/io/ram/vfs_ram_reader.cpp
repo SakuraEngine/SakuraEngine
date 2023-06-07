@@ -91,20 +91,17 @@ void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORe
 
 void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
+    RQPtr rq;
+    if (fetched_requests[priority].try_dequeue(rq))
     {
-        RQPtr rq;
-        if (fetched_requests[i].try_dequeue(rq))
-        {
-            auto launcher = VFSReader::FutureLauncher(job_queue);
-            loaded_futures[i].emplace_back(
-                launcher.async([this, rq, priority](){
-                    ZoneScopedN("VFSReadTask");
-                    dispatchFunction(priority, rq);
-                    return true;
-                })
-            );
-        }
+        auto launcher = VFSReader::FutureLauncher(job_queue);
+        loaded_futures[priority].emplace_back(
+            launcher.async([this, rq, priority](){
+                ZoneScopedN("VFSReadTask");
+                dispatchFunction(priority, rq);
+                return true;
+            })
+        );
     }
 }
 
