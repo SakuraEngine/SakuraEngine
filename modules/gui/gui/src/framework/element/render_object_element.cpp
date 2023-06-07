@@ -2,5 +2,4 @@
 
 namespace skr::gui
 {
-    SKR_GUI_TYPE_IMPLEMENTATION(RenderObjectElement)
 }

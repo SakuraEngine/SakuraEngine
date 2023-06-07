@@ -4,10 +4,8 @@
 #include "math/matrix4x4f.h"
 #include "math/vector.h"
 
-namespace skr {
-namespace gui {
-
-    
+namespace skr::gui
+{
 RenderBoxSizeType BoxConstraint::apply(const RenderBoxSizeType& size) const
 {
     RenderBoxSizeType result = size;
@@ -17,11 +15,11 @@ RenderBoxSizeType BoxConstraint::apply(const RenderBoxSizeType& size) const
 }
 
 RenderBox::RenderBox(skr_gdi_device_id gdi_device)
-    : gdi_device(gdi_device), debug_element(nullptr)
+    : gdi_device(gdi_device)
+    , debug_element(nullptr)
 {
     diagnostic_builder.add_properties(
-        SkrNew<BoolDiagnosticProperty>(u8"render_box", true, u8"")
-    );
+        SkrNew<BoolDiagnosticProperty>(u8"render_box", true, u8""));
     debug_element = gdi_device->create_element();
 }
 
@@ -37,22 +35,25 @@ void RenderBox::before_draw(const DrawParams* params)
     if (auto canvas = draw_debug_rect ? params->canvas : nullptr)
     {
         debug_element->begin_frame(1.f);
-        {            
+        {
             debug_element->begin_path();
             // actual region
             debug_element->fill_color(128u, 0u, 0u, 128u);
             debug_element->rect(pos.x, pos.y, size.x, size.y);
             debug_element->fill();
-            
+
             // padding region
             debug_element->begin_path();
             debug_element->fill_color(128u, 0u, 0u, 64u);
             const float Rate = 0.01f;
-            float CanvasW, CanvasH; canvas->get_size(&CanvasW, &CanvasH);
+            float CanvasW, CanvasH;
+            canvas->get_size(&CanvasW, &CanvasH);
             const auto DistX = Rate * std::min(CanvasW, CanvasH);
             const auto DistY = Rate * std::min(CanvasW, CanvasH);
-            auto X = pos.x - DistX; const auto W = size.x + 2 * DistX;
-            auto Y = pos.y - DistY; const auto H = size.y + 2 * DistY;
+            auto X = pos.x - DistX;
+            const auto W = size.x + 2 * DistX;
+            auto Y = pos.y - DistY;
+            const auto H = size.y + 2 * DistY;
             debug_element->rect(X, Y, W, H);
             debug_element->fill();
         }
@@ -67,14 +68,14 @@ void RenderBox::draw(const DrawParams* params)
 
 bool RenderBox::hit_test(const Ray& point, HitTestRecord* record) const
 {
-    //convert to local space
+    // convert to local space
     auto origin = skr::math::load(point.origin);
     auto direction = skr::math::load(point.direction);
     rtm::matrix4x4f matrix = skr::math::load(render_matrix);
     auto inv_matrix = rtm::matrix_inverse(matrix);
     origin = rtm::matrix_mul_vector(origin, inv_matrix);
     direction = rtm::matrix_mul_vector(direction, inv_matrix);
-    //check hit
+    // check hit
     auto min = skr::math::load(pos);
     auto max = rtm::vector_add(skr::math::load(pos), skr::math::load(size));
     auto o = origin;
@@ -125,6 +126,4 @@ void RenderBox::enable_debug_draw(bool enable)
     draw_debug_rect = enable;
 }
 
-SKR_GUI_TYPE_IMPLEMENTATION(RenderBox);
-
-} }
+} // namespace skr::gui

@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
-#include "SkrGui/framework/type_tree.hpp"
 #include "SkrGui/framework/key.hpp"
 #include "containers/not_null.hpp"
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
-#include "SkrGui/framework/type_tree.hpp"
 #include "type/type.h"
+#include <assert.h>
 
 namespace skr
 {
@@ -40,8 +40,8 @@ struct TypeTreeNodeBase : public TypeTreeNode {
         if (!_this->type)
         {
             _this->create_dynamic_type(
-            T::getStaticTypeId(), _parent ? _parent->get_type() : nullptr,
-            _name);
+                T::getStaticTypeId(), _parent ? _parent->get_type() : nullptr,
+                _name);
         }
         return _this;
     }

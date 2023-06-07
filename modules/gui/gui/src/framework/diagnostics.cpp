@@ -1,18 +1,17 @@
 #include "SkrGui/framework/diagnostics.hpp"
 #include "platform/guid.hpp"
 
-namespace skr {
-namespace gui {
+namespace skr::gui
+{
 
 IDiagnosticsProperty::IDiagnosticsProperty(const char8_t* name, const char8_t* description) SKR_NOEXCEPT
-    : name(name), description(description)
+    : name(name),
+      description(description)
 {
-    
 }
 
 IDiagnosticsProperty::~IDiagnosticsProperty() SKR_NOEXCEPT
 {
-    
 }
 
 const char8_t* IDiagnosticsProperty::get_name() const SKR_NOEXCEPT
@@ -73,7 +72,6 @@ LiteSpan<IDiagnosticsProperty* const> DiagnosticsBuilder::get_diagnostics_proper
 
 Diagnosticable::~Diagnosticable() SKR_NOEXCEPT
 {
-    
 }
 
 IDiagnosticsProperty* Diagnosticable::find_property(const char8_t* name) const SKR_NOEXCEPT
@@ -86,30 +84,12 @@ LiteSpan<IDiagnosticsProperty* const> Diagnosticable::get_diagnostics_properties
     return diagnostic_builder.get_diagnostics_properties();
 }
 
-uint32_t Diagnosticable::add_refcount()
-{
-    auto last = skr_atomicu32_add_relaxed(&rc, 1);
-    return last + 1;
-}
-
-uint32_t Diagnosticable::release()
-{
-    skr_atomicu32_add_relaxed(&rc, -1);
-    return skr_atomicu32_load_acquire(&rc);
-}
-
 DiagnosticableTree::~DiagnosticableTree() SKR_NOEXCEPT
 {
-
 }
 
 DiagnosticableTreeNode::~DiagnosticableTreeNode() SKR_NOEXCEPT
 {
-
 }
 
-SKR_GUI_TYPE_IMPLEMENTATION(Diagnosticable);
-SKR_GUI_TYPE_IMPLEMENTATION(DiagnosticableTree);
-SKR_GUI_TYPE_IMPLEMENTATION(DiagnosticableTreeNode);
-
-} }
+} // namespace skr::gui

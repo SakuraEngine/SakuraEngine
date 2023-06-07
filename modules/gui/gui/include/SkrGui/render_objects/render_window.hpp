@@ -3,13 +3,14 @@
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIDevice, skr_gdi_device)
 
-namespace skr {
-namespace gui {
-
-struct SKR_GUI_API RenderWindow : public RenderBox
+namespace skr
 {
+namespace gui
+{
+
+struct SKR_GUI_API RenderWindow : public RenderBox {
 public:
-    SKR_GUI_TYPE(RenderWindow, RenderBox, u8"bf44681e-380e-4c21-9d3b-def143c20df1");
+    SKR_GUI_TYPE(RenderWindow, "bf44681e-380e-4c21-9d3b-def143c20df1", RenderBox);
     RenderWindow(skr_gdi_device_id gdi_device);
     virtual ~RenderWindow();
 
@@ -22,6 +23,7 @@ protected:
     skr_gdi_viewport_id gdi_viewport = nullptr;
 };
 
-} }
+} // namespace gui
+} // namespace skr
 
 SKR_DECLARE_TYPE_ID(skr::gui::RenderWindow, skr_gui_render_window);

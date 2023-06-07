@@ -1,19 +1,20 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
-#include "SkrGui/framework/type_tree.hpp"
 #include "platform/atomic.h"
 
-namespace skr
+// fwd
+namespace skr::gui
 {
-namespace gui
-{
-
 template <typename T>
 struct DiagnosticsProperty;
 struct Diagnosticable;
 struct DiagnosticableTree;
 struct DiagnosticableTreeNode;
+} // namespace skr::gui
 
+// properties
+namespace skr::gui
+{
 struct SKR_GUI_API IDiagnosticsProperty {
     IDiagnosticsProperty(const char8_t* name, const char8_t* description) SKR_NOEXCEPT;
     virtual ~IDiagnosticsProperty() SKR_NOEXCEPT;
@@ -64,7 +65,11 @@ struct SKR_GUI_API TextDiagnosticProperty : public DiagnosticsProperty<TextStora
     const char8_t* get_value() const SKR_NOEXCEPT;
     const char8_t* get_value_as_string() const SKR_NOEXCEPT override;
 };
+} // namespace skr::gui
 
+// Diagnostics tree
+namespace skr::gui
+{
 struct SKR_GUI_API DiagnosticsBuilder {
     ~DiagnosticsBuilder() SKR_NOEXCEPT;
     IDiagnosticsProperty* add_property(IDiagnosticsProperty* property) SKR_NOEXCEPT;
@@ -80,48 +85,27 @@ protected:
     VectorStorage<IDiagnosticsProperty*> diagnostic_properties;
 };
 
-struct SKR_GUI_API Diagnosticable : public SInterface {
-    SKR_GUI_BASE_TYPE(Diagnosticable, u8"4e81165e-b13e-41ae-a84f-672429ea969e");
-    virtual ~Diagnosticable() SKR_NOEXCEPT;
+struct SKR_GUI_API Diagnosticable SKR_GUI_OBJECT_BASE() {
+    SKR_GUI_TYPE_BASE(Diagnosticable, "4e81165e-b13e-41ae-a84f-672429ea969e");
 
+    virtual ~Diagnosticable() SKR_NOEXCEPT;
     IDiagnosticsProperty* find_property(const char8_t* name) const SKR_NOEXCEPT;
     LiteSpan<IDiagnosticsProperty* const> get_diagnostics_properties() const SKR_NOEXCEPT;
 
-    template <typename T>
-    bool IsA()
-    {
-        if (!std::is_base_of_v<Diagnosticable, T>) return false;
-        auto T_type = T::getStaticType();
-        return T_type->IsBaseOf(*this->getType());
-    }
-    template <typename T>
-    T* Cast()
-    {
-        if (!IsA<T>()) return nullptr;
-        return static_cast<T*>(this);
-    }
-
-    virtual uint32_t add_refcount() override;
-    virtual uint32_t release() override;
-
-    static struct TypeTree* type_tree;
-
 protected:
-    SAtomicU32 rc = 0;
     DiagnosticsBuilder diagnostic_builder;
 };
 
 struct SKR_GUI_API DiagnosticableTree : public Diagnosticable {
-    SKR_GUI_TYPE(DiagnosticableTree, Diagnosticable, u8"64b856c5-2127-46ee-9fb7-80e4d3a65163");
+    SKR_GUI_TYPE(DiagnosticableTree, "64b856c5-2127-46ee-9fb7-80e4d3a65163", Diagnosticable);
     virtual ~DiagnosticableTree() SKR_NOEXCEPT;
 };
 
 struct SKR_GUI_API DiagnosticableTreeNode : public DiagnosticableTree {
-    SKR_GUI_TYPE(DiagnosticableTreeNode, DiagnosticableTree, u8"26e5515a-7654-4943-a9fe-766db8cedf72");
+    SKR_GUI_TYPE(DiagnosticableTreeNode, "26e5515a-7654-4943-a9fe-766db8cedf72", DiagnosticableTree);
     virtual ~DiagnosticableTreeNode() SKR_NOEXCEPT;
 
     virtual LiteSpan<DiagnosticableTreeNode* const> get_diagnostics_children() const = 0;
 };
 
-} // namespace gui
-} // namespace skr
+} // namespace skr::gui

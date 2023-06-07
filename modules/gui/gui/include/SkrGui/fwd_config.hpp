@@ -21,6 +21,9 @@
 #endif
 #include "containers/lite.hpp"
 
+// type system
+#include "SkrGui/dev/type_system.hpp"
+
 namespace skr::gui
 {
 // Lite container
