@@ -3,13 +3,13 @@
 
 namespace skr::gui
 {
-not_null<Element*> Widget::create_element() noexcept
+NotNull<Element*> Widget::create_element() noexcept
 {
     SKR_UNREACHABLE_CODE();
-    return not_null<Element*>{ (Element*)0 };
+    return NotNull<Element*>{ (Element*)0 };
 }
 
-bool Widget::can_update(not_null<Widget*> old_widget, not_null<Widget*> new_widget) noexcept
+bool Widget::can_update(NotNull<Widget*> old_widget, NotNull<Widget*> new_widget) noexcept
 {
     if (old_widget->key() != new_widget->key())
     {

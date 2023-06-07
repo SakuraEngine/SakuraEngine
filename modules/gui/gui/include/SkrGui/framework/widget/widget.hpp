@@ -2,7 +2,6 @@
 #include "SkrGui/framework/diagnostics.hpp"
 #include "SkrGui/framework/key.hpp"
 #include "SkrGui/framework/widget_misc.hpp"
-#include "containers/not_null.hpp"
 
 namespace skr::gui
 {
@@ -14,10 +13,10 @@ struct SKR_GUI_API Widget : public DiagnosticableTreeNode {
     inline const Key& key() const SKR_NOEXCEPT { return _key; }
 
     // bind element
-    virtual not_null<Element*> create_element() SKR_NOEXCEPT = 0;
+    virtual NotNull<Element*> create_element() SKR_NOEXCEPT = 0;
 
     // help function
-    static bool can_update(not_null<Widget*> old_widget, not_null<Widget*> new_widget) SKR_NOEXCEPT;
+    static bool can_update(NotNull<Widget*> old_widget, NotNull<Widget*> new_widget) SKR_NOEXCEPT;
 
 protected:
     Key _key;
