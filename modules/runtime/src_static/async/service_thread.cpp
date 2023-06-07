@@ -2,6 +2,8 @@
 #include "async/wait_timeout.hpp"
 #include "misc/log.h"
 
+#include "tracy/Tracy.hpp"
+
 namespace skr
 {
 ServiceThread::ServiceThread(const ServiceThreadDesc& desc) SKR_NOEXCEPT
@@ -71,12 +73,16 @@ void ServiceThread::request_stop() SKR_NOEXCEPT
 
 void ServiceThread::stop() SKR_NOEXCEPT
 {
+    ZoneScopedN("stop");
+
     request_stop();
     wait_stop();
 }
 
 void ServiceThread::wait_stop(uint32_t fatal_timeout) SKR_NOEXCEPT
 {
+    ZoneScopedN("wait_stop");
+
     const auto tid = skr_current_thread_id();
     if (tid == t.get_id())
     {
@@ -110,6 +116,8 @@ void ServiceThread::request_exit() SKR_NOEXCEPT
 
 void ServiceThread::exit() SKR_NOEXCEPT
 {
+    ZoneScopedN("exit");
+
     // SKR_LOG_TRACE("ServiceThread::destroy: wait runner thread to request_exit...");
     request_exit();
     // SKR_LOG_TRACE("ServiceThread::destroy: wait runner thread to wait_exit...");
@@ -118,6 +126,8 @@ void ServiceThread::exit() SKR_NOEXCEPT
 
 void ServiceThread::wait_exit(uint32_t fatal_timeout) SKR_NOEXCEPT
 {
+    ZoneScopedN("wait_exit");
+
     const auto tid = skr_current_thread_id();
     if (tid == t.get_id())
     {
