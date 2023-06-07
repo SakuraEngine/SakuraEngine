@@ -56,7 +56,7 @@ void Element::detach_render_object() SKR_NOEXCEPT
     _slot = nullptr;
 }
 
-not_null<Element*> Element::inflate_widget(not_null<Widget*> widget, Slot* new_slot) SKR_NOEXCEPT
+NotNull<Element*> Element::inflate_widget(NotNull<Widget*> widget, Slot* new_slot) SKR_NOEXCEPT
 {
     // TODO: global key
     if (widget->key().is_keep_state())
@@ -138,12 +138,12 @@ Element* Element::update_child(Element* child, Widget* new_widget, Slot* new_slo
     return newChild;
 }
 
-void Element::visit_children(skr::function_ref<void(Element*)> visitor) SKR_NOEXCEPT
+void Element::visit_children(Callback<void(Element*)> visitor) SKR_NOEXCEPT
 {
     //...
 }
 
-void Element::visit_child_elements(skr::function_ref<void(Element*)> visitor) SKR_NOEXCEPT
+void Element::visit_child_elements(Callback<void(Element*)> visitor) SKR_NOEXCEPT
 {
     visit_children(visitor);
 }
@@ -235,7 +235,7 @@ RenderObject* Element::find_render_object() SKR_NOEXCEPT
     return nullptr;
 }
 
-Element* Element::_retake_inactive_element(const Key& key, not_null<Widget*> widget) SKR_NOEXCEPT
+Element* Element::_retake_inactive_element(const Key& key, NotNull<Widget*> widget) SKR_NOEXCEPT
 {
     auto iter = _owner->_global_key_registry->find(key.get_state());
     if (iter == _owner->_global_key_registry->end())

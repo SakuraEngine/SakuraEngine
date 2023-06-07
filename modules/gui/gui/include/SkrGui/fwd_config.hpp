@@ -24,6 +24,12 @@
 // type system
 #include "SkrGui/dev/type_system.hpp"
 
+// function ref
+#include "misc/function_ref.hpp"
+
+// not_null
+#include "containers/not_null.hpp"
+
 #define SKR_GUI_RAII_MIX_IN()                                   \
     template <typename To>                                      \
     auto type_cast() const SKR_NOEXCEPT                         \
@@ -47,6 +53,14 @@
 
 namespace skr::gui
 {
+// function
+template <typename F>
+using Callback = ::skr::function_ref<F>;
+
+// not null
+template <typename T>
+using NotNull = ::skr::not_null<T>;
+
 // Lite container
 using skr::lite::HashMapStorage;
 using skr::lite::LiteOptional;

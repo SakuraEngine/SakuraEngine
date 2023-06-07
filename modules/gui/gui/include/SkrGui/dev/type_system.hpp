@@ -1,6 +1,7 @@
 #pragma once
 #include "misc/types.h"
 #include "platform/guid.hpp"
+#include "platform/configure.h"
 
 namespace skr::gui
 {
@@ -81,13 +82,13 @@ struct BaseCastHelper {
 
 // cast
 template <typename To, typename From>
-To* SkrGUICast(From* from)
+inline To* SkrGUICast(From* from) SKR_NOEXCEPT
 {
     if (from == nullptr) return nullptr;
     void* p = from->cast(To::static_guid());
     return p ? reinterpret_cast<To*>(p) : nullptr;
 }
-inline static constexpr skr_guid_t SkrGUITypeInfo(const IObject* obj) SKR_NOEXCEPT
+inline skr_guid_t SkrGUITypeInfo(const IObject* obj) SKR_NOEXCEPT
 {
     return obj->guid();
 }
