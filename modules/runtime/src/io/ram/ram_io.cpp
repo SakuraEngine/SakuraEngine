@@ -75,11 +75,13 @@ inline static IOReaderId CreateReader(RAMService* service, const skr_ram_io_serv
 RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
     : name(desc->name ? skr::string(desc->name) : skr::format(u8"IRAMService-{}", global_idx++)), 
       trace_log(desc->trace_log), awake_at_request(desc->awake_at_request),
-      runner(this, CreateReader(this, desc), desc->callback_job_queue)
+      runner(this, desc->callback_job_queue)
 {
     request_pool = SmartPoolPtr<RAMIORequest, IIORequest>::Create();
     ram_buffer_pool = SmartPoolPtr<RAMIOBuffer, IRAMIOBuffer>::Create();
     ram_batch_pool = SmartPoolPtr<RAMIOBatch, IIOBatch>::Create();
+
+    runner.reader = CreateReader(this, desc);
 
     if (!desc->awake_at_request)
     {
@@ -212,32 +214,6 @@ SkrAsyncServiceStatus RAMService::get_service_status() const SKR_NOEXCEPT
 void RAMService::poll_finish_callbacks() SKR_NOEXCEPT
 {
     runner.poll_finish_callbacks();
-}
-
-} // namespace io
-} // namespace skr
-
-namespace skr {
-namespace io {
-
-skr::AsyncResult RAMService::Runner::serve() SKR_NOEXCEPT
-{
-    const auto pending = predicate();
-    if (!pending)
-    {
-        setServiceStatus(SKR_ASYNC_SERVICE_STATUS_SLEEPING);
-        sleep();
-        return ASYNC_RESULT_OK;
-    }
-
-    setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
-    {
-        ZoneScopedNC("Dispatch", tracy::Color::Orchid1);
-        process_batches();
-        recycle();
-    }
-
-    return ASYNC_RESULT_OK;
 }
 
 } // namespace io

@@ -212,7 +212,8 @@ bool SShaderCooker::Cook(SCookContext* ctx)
                             {
                                 auto file = fopen(bytesPath.string().c_str(), "wb");
                                 SKR_DEFER({ fclose(file); });
-                                if (!file) SKR_UNREACHABLE_CODE();
+                                if (!file)
+                                    SKR_UNREACHABLE_CODE();
                                 fwrite(bytes.data(), bytes.size(), 1, file);
                             }
                         }
@@ -223,7 +224,8 @@ bool SShaderCooker::Cook(SCookContext* ctx)
                             {
                                 auto pdb_file = fopen(pdbPath.string().c_str(), "wb");
                                 SKR_DEFER({ fclose(pdb_file); });
-                                if (!pdb_file) SKR_UNREACHABLE_CODE();
+                                if (!pdb_file) 
+                                    SKR_UNREACHABLE_CODE();
                                 fwrite(pdb.data(), pdb.size(), 1, pdb_file);
                             }
                         }

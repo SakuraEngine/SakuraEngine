@@ -77,54 +77,12 @@ private:
 
 struct RunnerBase : public SleepyService
 {
-    RunnerBase(const ServiceThreadDesc& desc, SObjectPtr<IIOReader> reader, skr::JobQueue* job_queue) SKR_NOEXCEPT
-        : SleepyService(desc), reader(reader), job_queue(job_queue)
+    RunnerBase(const ServiceThreadDesc& desc, skr::JobQueue* job_queue) SKR_NOEXCEPT
+        : SleepyService(desc), job_queue(job_queue)
     {
-        for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
-        {
-            skr_atomic64_store_relaxed(&processing_request_counts[i], 0);
-        }
+
     }
     virtual ~RunnerBase() SKR_NOEXCEPT = default;
-
-    void enqueueBatch(const IOBatchId& batch)
-    {
-        const auto pri = batch->get_priority();
-        batch_buffer->fetch(pri, batch);
-        for (auto&& request : batch->get_requests())
-        {
-            auto&& rq = skr::static_pointer_cast<IORequestBase>(request);
-            rq->setStatus(SKR_IO_STAGE_ENQUEUED);
-            skr_atomic64_add_relaxed(&processing_request_counts[pri], 1);
-        }
-    }
-
-    uint64_t getQueuedBatchCount(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
-    {
-        return batch_buffer->processing_count();
-    }
-
-    uint64_t getExecutingBatchCount(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
-    {
-        return reader->processing_count();
-    }
-
-    uint64_t getProcessingRequestCount(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
-    {
-        if (priority != SKR_ASYNC_SERVICE_PRIORITY_COUNT)
-        {
-            return skr_atomic64_load_relaxed(&processing_request_counts[priority]);
-        }
-        else
-        {
-            uint64_t count = 0;
-            for (uint32_t i = 0 ; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT ; ++i)
-            {
-                count += skr_atomic64_load_relaxed(&processing_request_counts[i]);
-            }
-            return count;
-        }
-    }
 
     void poll_finish_callbacks()
     {
@@ -135,19 +93,9 @@ struct RunnerBase : public SleepyService
         }
     }
 
-    void set_resolvers(IORequestResolverChainId _chain) SKR_NOEXCEPT
-    {
-        auto chain = skr::static_pointer_cast<IORequestResolverChain>(_chain);
-        chain->runner = this;
-
-        resolver_chain = chain;
-        batch_buffer = SObjectPtr<IOBatchBuffer>::Create();
-        batch_processors = { batch_buffer, resolver_chain, reader };
-    }
-
     // cancel request marked as request_cancel
     bool try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT;
-    bool cancelFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    virtual bool cancelFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     // 0. recycletry_cancel
     void recycle() SKR_NOEXCEPT;
     // 1. fetch requests from queue
@@ -159,7 +107,9 @@ struct RunnerBase : public SleepyService
     bool dispatch_decompress(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT;
     // 6. finish
     void dispatch_complete(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT;
-    bool completeFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    virtual bool completeFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+
+    virtual skr::AsyncResult serve() SKR_NOEXCEPT;
 
     uint64_t predicate() const
     {
@@ -175,14 +125,10 @@ struct RunnerBase : public SleepyService
         return cnt;
     }
 
-    IOBatchBufferId batch_buffer = nullptr;
-    IORequestResolverChainId resolver_chain = nullptr;
-    IOReaderId reader = nullptr;
     skr::vector<IOBatchProcessorId> batch_processors; 
 private:
     IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    SAtomic64 processing_request_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-
+    
     skr::vector<skr::IFuture<bool>*> finish_futures;
     skr::JobQueue* job_queue = nullptr;
 };
