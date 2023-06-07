@@ -79,6 +79,21 @@ struct BaseCastHelper {
     }
 };
 
+// cast
+template <typename To, typename From>
+To* SkrGUICast(From* from)
+{
+    if (from == nullptr) return nullptr;
+    void* p = from->cast(To::static_guid());
+    return p ? reinterpret_cast<To*>(p) : nullptr;
+}
+inline static constexpr skr_guid_t SkrGUITypeInfo(const IObject* obj) SKR_NOEXCEPT
+{
+    return obj->guid();
+}
+
+} // namespace skr::gui
+
 // type marco
 #define SKR_GUI_TYPE_BASE(__T, __GUID)                                                                                         \
     using CastHelper = BaseCastHelper<__T>;                                                                                    \
@@ -110,26 +125,14 @@ struct BaseCastHelper {
     virtual void* cast(skr_guid_t id) const SKR_NOEXCEPT override { return CastHelper::cast(id, this); }
 
 // base marco
-#define SKR_GUI_OBJECT_BASE(...) : virtual public IObject, __VA_ARGS__
-#define SKR_GUI_INTERFACE_BASE(...) : virtual public IObject, __VA_ARGS__
+#define SKR_GUI_OBJECT_BASE : virtual public IObject
+#define SKR_GUI_INTERFACE_BASE : virtual public IObject
+#define SKR_GUI_OBJECT_BASE_WITH(...) : virtual public IObject, __VA_ARGS__
+#define SKR_GUI_INTERFACE_BASE_WITH(...) : virtual public IObject, __VA_ARGS__
 
-// cast
-template <typename To, typename From>
-To* SkrGUICast(From* from)
-{
-    if (from == nullptr) return nullptr;
-    void* p = from->cast(To::static_guid());
-    return p ? reinterpret_cast<To*>(p) : nullptr;
-}
-template <typename To, typename From>
-bool SkrGUIIs(From* from)
-{
-    if (from == nullptr) return false;
-    return from->cast(To::static_guid()) != nullptr;
-}
-inline static constexpr skr_guid_t SkrGUITypeInfo(const IObject* obj) SKR_NOEXCEPT
-{
-    return obj->guid();
-}
-
-} // namespace skr::gui
+// type id
+#define SKR_GUI_TYPE_ID ::skr_guid_t
+// TypeID SKR_GUI_TYPE_ID(Object*)
+#define SKR_GUI_TYPE_ID_OF ::skr::gui::SkrGUITypeInfo
+// To* SKR_GUI_CAST<To>(From*)
+#define SKR_GUI_CAST ::skr::gui::SkrGUICast

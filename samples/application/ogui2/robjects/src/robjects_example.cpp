@@ -202,7 +202,7 @@ struct robjects_example_application : public robjects_application_t {
         auto diagnostic_as_render_box = [&]() {
             if (selected_diagnostic)
             {
-                if (auto render_box = skr::gui::SkrGUICast<skr::gui::RenderBox>(selected_diagnostic))
+                if (auto render_box = selected_diagnostic->type_cast<skr::gui::RenderBox>())
                 {
                     return render_box;
                 }

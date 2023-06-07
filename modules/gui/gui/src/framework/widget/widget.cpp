@@ -15,7 +15,7 @@ bool Widget::can_update(not_null<Widget*> old_widget, not_null<Widget*> new_widg
     {
         return false;
     }
-    if (SkrGUITypeInfo(old_widget) != SkrGUITypeInfo(new_widget))
+    if (old_widget->type_id() != new_widget->type_id())
     {
         return false;
     }
