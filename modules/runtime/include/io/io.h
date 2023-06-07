@@ -151,6 +151,7 @@ struct RUNTIME_API IIORequest : public skr::SInterface
 
     virtual void open_file() SKR_NOEXCEPT = 0; 
 
+    virtual const skr_io_future_t* get_future() const SKR_NOEXCEPT = 0;
     virtual uint64_t get_fsize() const SKR_NOEXCEPT = 0;
 
     virtual void add_callback(ESkrIOStage stage, skr_io_callback_t callback, void* data) SKR_NOEXCEPT = 0;
