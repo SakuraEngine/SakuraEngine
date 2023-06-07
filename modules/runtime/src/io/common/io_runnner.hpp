@@ -96,19 +96,11 @@ struct RunnerBase : public SleepyService
     // cancel request marked as request_cancel
     bool try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT;
     virtual bool cancelFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
-    // 0. recycletry_cancel
-    void recycle() SKR_NOEXCEPT;
-    // 1. fetch requests from queue
-    uint64_t fetch() SKR_NOEXCEPT;
-    // 3. resolve requests to pending raw request array
-    void process_batches() SKR_NOEXCEPT;
-    // 5. do decompress works (+allocate & cpy to uncompressed)
-    // returns true if rq is moved to decompress router
-    bool dispatch_decompress(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT;
-    // 6. finish
     void dispatch_complete(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT;
     virtual bool completeFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
 
+    void process_batches() SKR_NOEXCEPT;
+    void recycle() SKR_NOEXCEPT;
     virtual skr::AsyncResult serve() SKR_NOEXCEPT;
 
     uint64_t predicate() const
@@ -117,15 +109,23 @@ struct RunnerBase : public SleepyService
         for (auto processor : batch_processors)
         {
             if (!processor->is_async())
-            {
                 cnt += processor->processing_count();
-            }
+            cnt += processor->processed_count();
+        }
+        for (auto processor : request_processors)
+        {
+            if (!processor->is_async())
+                cnt += processor->processing_count();
             cnt += processor->processed_count();
         }
         return cnt;
     }
 
+protected:
+    void complete_batches(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    void complete_requests(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     skr::vector<IOBatchProcessorId> batch_processors; 
+    skr::vector<IORequestProcessorId> request_processors; 
 private:
     IORequestQueue finish_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     

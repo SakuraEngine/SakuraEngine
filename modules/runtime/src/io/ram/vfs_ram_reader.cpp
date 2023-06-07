@@ -24,10 +24,11 @@ struct FutureLauncher
 };
 }
 
-bool VFSRAMReader::fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
+bool VFSRAMReader::fetch(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
 {
-    fetched_batches[priority].enqueue(batch);
-    skr_atomic64_add_relaxed(&pending_batch_counts[priority], 1);
+    auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
+    fetched_requests[priority].enqueue(rq);
+    skr_atomic64_add_relaxed(&pending_counts[priority], 1);
     return true;
 }
 
@@ -36,62 +37,54 @@ uint64_t VFSRAMReader::get_prefer_batch_size() const SKR_NOEXCEPT
     return 0; // fread is blocking, so we don't need to batch
 }
 
-void VFSRAMReader::dispatchFunction(IOBatchId batch) SKR_NOEXCEPT
+void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORequestId& request) SKR_NOEXCEPT
 {
-    const auto priority = batch->get_priority();
-    auto&& arr = batch->get_requests();
     {
         ZoneScopedN("dispatch_read");
-        for (auto&& request : arr)
+        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
+        auto&& buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
+        if (service->runner.try_cancel(priority, rq))
         {
-            auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-            auto&& buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
-            if (service->runner.try_cancel(priority, rq))
+            // cancel...
+            if (rq->file) 
             {
-                // cancel...
-                if (rq->file) 
-                {
-                    skr_vfs_fclose(rq->file);
-                    rq->file = nullptr;
-                }
-                if (buf)
-                {
-                    buf->free_buffer();
-                }
+                skr_vfs_fclose(rq->file);
+                rq->file = nullptr;
             }
-            else if (rq->getStatus() == SKR_IO_STAGE_RESOLVING)
+            if (buf)
             {
-                ZoneScopedN("read_request");
+                buf->free_buffer();
+            }
+        }
+        else if (rq->getStatus() == SKR_IO_STAGE_RESOLVING)
+        {
+            ZoneScopedN("read_request");
 
-                rq->setStatus(SKR_IO_STAGE_LOADING);
-                // SKR_LOG_DEBUG("dispatch read request: %s", rq->path.c_str());
-                uint64_t dst_offset = 0u;
-                for (const auto& block : rq->blocks)
-                {
-                    const auto address = buf->bytes + dst_offset;
-                    skr_vfs_fread(rq->file, address, block.offset, block.size);
-                    dst_offset += block.size;
-                }
-                rq->setStatus(SKR_IO_STAGE_LOADED);
+            rq->setStatus(SKR_IO_STAGE_LOADING);
+            // SKR_LOG_DEBUG("dispatch read request: %s", rq->path.c_str());
+            uint64_t dst_offset = 0u;
+            for (const auto& block : rq->blocks)
+            {
+                const auto address = buf->bytes + dst_offset;
+                skr_vfs_fread(rq->file, address, block.offset, block.size);
+                dst_offset += block.size;
             }
+            rq->setStatus(SKR_IO_STAGE_LOADED);
         }
     }
     {
         ZoneScopedN("dispatch_close");
-        for (auto&& request : arr)
+        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
+        if (rq->file)
         {
-            auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-            if (rq->file)
-            {
-                // SKR_LOG_DEBUG("dispatch close request: %s", rq->path.c_str());
-                skr_vfs_fclose(rq->file);
-                rq->file = nullptr;
-                loaded_requests[priority].enqueue(rq);
-                skr_atomic64_add_relaxed(&processed_batch_counts[priority], 1);
-            }
+            // SKR_LOG_DEBUG("dispatch close request: %s", rq->path.c_str());
+            skr_vfs_fclose(rq->file);
+            rq->file = nullptr;
+            loaded_requests[priority].enqueue(rq);
+            skr_atomic64_add_relaxed(&processed_counts[priority], 1);
         }
     }
-    skr_atomic64_add_relaxed(&pending_batch_counts[priority], -1);
+    skr_atomic64_add_relaxed(&pending_counts[priority], -1);
 
     tryAwakeService();
 }
@@ -100,14 +93,14 @@ void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        IOBatchId batch;
-        if (fetched_batches[i].try_dequeue(batch))
+        RQPtr rq;
+        if (fetched_requests[i].try_dequeue(rq))
         {
             auto launcher = VFSReader::FutureLauncher(job_queue);
             loaded_futures[i].emplace_back(
-                launcher.async([this, batch](){
+                launcher.async([this, rq, priority](){
                     ZoneScopedN("VFSReadTask");
-                    dispatchFunction(batch);
+                    dispatchFunction(priority, rq);
                     return true;
                 })
             );
@@ -119,7 +112,7 @@ bool VFSRAMReader::poll_processed_request(SkrAsyncServicePriority priority, IORe
 {
     if (loaded_requests[priority].try_dequeue(request))
     {
-        skr_atomic64_add_relaxed(&processed_batch_counts[priority], -1);
+        skr_atomic64_add_relaxed(&processed_counts[priority], -1);
         return request.get();
     }
     return false;

@@ -66,7 +66,7 @@ IOResultId RAMIOBatch::add_request(IORequestId request, skr_io_future_t* future)
     return buffer;
 }
 
-inline static IOReaderId CreateReader(RAMService* service, const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
+inline static IOReaderId<IIORequestProcessor> CreateReader(RAMService* service, const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
 {
     auto reader = skr::SObjectPtr<VFSRAMReader>::Create(service, desc->io_job_queue);
     return std::move(reader);
