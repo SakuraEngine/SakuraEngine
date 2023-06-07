@@ -279,14 +279,8 @@ void RunnerBase::destroy() SKR_NOEXCEPT
         setServiceStatus(SKR_ASYNC_SERVICE_STATUS_QUITING);
         stop();
     }
-    {
-        ZoneScopedN("wait_stop");
-        wait_stop();
-    }
-    {
-        ZoneScopedN("exit");
-        exit();
-    }
+    wait_stop();
+    exit();
 }
 
 } // namespace io
