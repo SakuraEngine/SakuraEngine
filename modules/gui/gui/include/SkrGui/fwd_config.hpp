@@ -24,6 +24,27 @@
 // type system
 #include "SkrGui/dev/type_system.hpp"
 
+#define SKR_GUI_RAII_INJECT()                                   \
+    template <typename To>                                      \
+    auto type_cast() const SKR_NOEXCEPT                         \
+    {                                                           \
+        return SKR_GUI_CAST<const std::remove_cv_t<To>*>(this); \
+    }                                                           \
+    template <typename To>                                      \
+    auto type_cast() SKR_NOEXCEPT                               \
+    {                                                           \
+        return SKR_GUI_CAST<To>(this);                          \
+    }                                                           \
+    template <typename To>                                      \
+    bool type_is() const SKR_NOEXCEPT                           \
+    {                                                           \
+        return SKR_GUI_CAST<To>(this) != nullptr;               \
+    }                                                           \
+    SKR_GUI_TYPE_ID type_id() const SKR_NOEXCEPT                \
+    {                                                           \
+        return SKR_GUI_TYPE_ID_OF(this);                        \
+    }
+
 namespace skr::gui
 {
 // Lite container

@@ -85,8 +85,9 @@ protected:
     VectorStorage<IDiagnosticsProperty*> diagnostic_properties;
 };
 
-struct SKR_GUI_API Diagnosticable SKR_GUI_OBJECT_BASE() {
+struct SKR_GUI_API Diagnosticable SKR_GUI_OBJECT_BASE {
     SKR_GUI_TYPE_BASE(Diagnosticable, "4e81165e-b13e-41ae-a84f-672429ea969e");
+    SKR_GUI_RAII_INJECT()
 
     virtual ~Diagnosticable() SKR_NOEXCEPT;
     IDiagnosticsProperty* find_property(const char8_t* name) const SKR_NOEXCEPT;

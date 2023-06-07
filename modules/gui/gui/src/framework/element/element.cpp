@@ -203,7 +203,7 @@ BoxSizeType Element::get_size() SKR_NOEXCEPT
     auto render_object = find_render_object();
     if (render_object)
     {
-        if (auto rbox = SkrGUICast<RenderBox>(render_object))
+        if (auto rbox = render_object->type_cast<RenderBox>())
         {
             return rbox->get_size();
             ;
