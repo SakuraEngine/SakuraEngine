@@ -9,11 +9,8 @@ using VFSReaderFutureLauncher = skr::FutureLauncher<bool>;
 bool VFSRAMReader::fetch(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
 {
     auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-    if (!rq->future->is_cancelled()) //TODO: !
-    {
-        fetched_requests[priority].enqueue(rq);
-        skr_atomic64_add_relaxed(&pending_counts[priority], 1);
-    }
+    fetched_requests[priority].enqueue(rq);
+    skr_atomic64_add_relaxed(&pending_counts[priority], 1);
     return true;
 }
 

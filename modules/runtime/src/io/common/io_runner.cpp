@@ -79,7 +79,8 @@ void RunnerBase::process_batches() SKR_NOEXCEPT
                 auto&& bq = skr::static_pointer_cast<IOBatchBase>(batch);
                 for (auto&& request : bq->get_requests())
                 {
-                    request_processors.front()->fetch(priority, request);
+                    if (!request->get_future()->is_cancelled())
+                        request_processors.front()->fetch(priority, request);
                 }
             }
             request_processors.front()->dispatch(priority);

@@ -93,6 +93,7 @@ public:
 
     void use_async_complete() SKR_NOEXCEPT { async_complete = true; }
     void use_async_cancel() SKR_NOEXCEPT { async_cancel = true; }
+    const skr_io_future_t* get_future() const SKR_NOEXCEPT { return future; }
 
     bool async_complete = false;
     bool async_cancel = false;
