@@ -6,17 +6,13 @@
 
 namespace skr::gui
 {
-SKR_GUI_TYPE_IMPLEMENTATION(BuildContext)
-SKR_GUI_TYPE_IMPLEMENTATION(Element)
 
 void Element::activate() SKR_NOEXCEPT
 {
-
 }
 
 void Element::deactivate() SKR_NOEXCEPT
 {
-
 }
 
 void Element::mount(Element* parent, Slot* slot) SKR_NOEXCEPT
@@ -62,11 +58,11 @@ void Element::detach_render_object() SKR_NOEXCEPT
 
 not_null<Element*> Element::inflate_widget(not_null<Widget*> widget, Slot* new_slot) SKR_NOEXCEPT
 {
-    //TODO: global key
-    if(widget->key().is_keep_state())
+    // TODO: global key
+    if (widget->key().is_keep_state())
     {
         Element* newChild = _retake_inactive_element(widget->key(), widget);
-        if(newChild)
+        if (newChild)
         {
             SKR_ASSERT(newChild->_parent == nullptr);
             newChild->_active_with_parent(this, new_slot);
@@ -95,37 +91,36 @@ void Element::update_slot_for_child(Element* child, Slot* new_slot) SKR_NOEXCEPT
     SKR_ASSERT(child->_parent == this);
 
     child->_update_slot(new_slot);
-    child->visit_child_elements([child, new_slot](Element* cc)
-    {
+    child->visit_child_elements([child, new_slot](Element* cc) {
         child->update_slot_for_child(cc, new_slot);
     });
 }
 
 Element* Element::update_child(Element* child, Widget* new_widget, Slot* new_slot) SKR_NOEXCEPT
 {
-    if(!new_widget)
+    if (!new_widget)
     {
-        if(child)
+        if (child)
             deactivate_child(child);
         return nullptr;
     }
     auto widget = make_not_null(new_widget);
     Element* newChild = nullptr;
-    if(child)
+    if (child)
     {
         bool hasSameSuperclass = true;
-        //TODO
-        if(hasSameSuperclass && child->_widget == new_widget)
+        // TODO
+        if (hasSameSuperclass && child->_widget == new_widget)
         {
-            if(child->_slot != new_slot)
+            if (child->_slot != new_slot)
             {
                 update_slot_for_child(child, new_slot);
             }
             newChild = child;
         }
-        else if(hasSameSuperclass && Widget::can_update(make_not_null(child->_widget), widget))
+        else if (hasSameSuperclass && Widget::can_update(make_not_null(child->_widget), widget))
         {
-            if(child->_slot != new_slot)
+            if (child->_slot != new_slot)
             {
                 update_slot_for_child(child, new_slot);
             }
@@ -191,7 +186,6 @@ void Element::_update_slot(Slot* new_slot) SKR_NOEXCEPT
     _slot = new_slot;
 }
 
-
 // implement build context interfaces
 
 bool Element::mounted() SKR_NOEXCEPT
@@ -209,9 +203,10 @@ BoxSizeType Element::get_size() SKR_NOEXCEPT
     auto render_object = find_render_object();
     if (render_object)
     {
-        if (auto rbox = render_object->Cast<RenderBox>())
+        if (auto rbox = SkrGUICast<RenderBox>(render_object))
         {
-            return rbox->get_size();;
+            return rbox->get_size();
+            ;
         }
     }
     return { 0, 0 };
@@ -220,20 +215,20 @@ BoxSizeType Element::get_size() SKR_NOEXCEPT
 RenderObject* Element::find_render_object() SKR_NOEXCEPT
 {
     Element* current = this;
-    while (current != nullptr) 
+    while (current != nullptr)
     {
-        if (current->_lifecycle_state == ElementLifecycle::defunct) 
+        if (current->_lifecycle_state == ElementLifecycle::defunct)
         {
             break;
         }
-        else 
+        else
         {
             Element* next = nullptr;
             current->visit_child_elements(
                 [&](Element* child) {
-                assert(next == nullptr);  // This verifies that there's only one child.
-                next = child;
-            });
+                    assert(next == nullptr); // This verifies that there's only one child.
+                    next = child;
+                });
             current = next;
         }
     }
@@ -248,7 +243,7 @@ Element* Element::_retake_inactive_element(const Key& key, not_null<Widget*> wid
         return nullptr;
     }
     Element* element = iter->second;
-    if(!Widget::can_update(make_not_null(element->_widget), widget))
+    if (!Widget::can_update(make_not_null(element->_widget), widget))
     {
         return nullptr;
     }
@@ -286,11 +281,10 @@ void Element::_active_recursively(Element* element) SKR_NOEXCEPT
 void Element::_update_depth(int parentDepth) SKR_NOEXCEPT
 {
     int expectedDepth = parentDepth + 1;
-    if(_depth < expectedDepth)
+    if (_depth < expectedDepth)
     {
         _depth = expectedDepth;
-        visit_child_elements([expectedDepth](Element* child)
-        {
+        visit_child_elements([expectedDepth](Element* child) {
             child->_update_depth(expectedDepth);
         });
     }
@@ -298,11 +292,11 @@ void Element::_update_depth(int parentDepth) SKR_NOEXCEPT
 
 int Element::_compare_depth(Element* a, Element* b) SKR_NOEXCEPT
 {
-    if(a->_depth < b->_depth)
+    if (a->_depth < b->_depth)
     {
         return -1;
     }
-    else if(a->_depth > b->_depth)
+    else if (a->_depth > b->_depth)
     {
         return 1;
     }
@@ -310,7 +304,7 @@ int Element::_compare_depth(Element* a, Element* b) SKR_NOEXCEPT
     {
         // If the `dirty` values are not equal, sort with non-dirty elements being
         // less than dirty elements.
-        if(a->_dirty != b->_dirty)
+        if (a->_dirty != b->_dirty)
         {
             return a->_dirty ? 1 : -1;
         }
@@ -334,4 +328,4 @@ bool Element::_debug_is_in_scope(Element* ancestor) SKR_NOEXCEPT
     }
     return false;
 }
-} // namespace skr
+} // namespace skr::gui

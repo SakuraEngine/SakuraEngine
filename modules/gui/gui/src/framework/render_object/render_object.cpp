@@ -1,19 +1,17 @@
 #include "SkrGui/framework/render_object/render_object.hpp"
 #include "SkrGui/gdi/gdi.hpp"
 
-namespace skr {
-namespace gui {
+namespace skr::gui
+{
 
 RenderObject::RenderObject()
 {
     diagnostic_builder.add_properties(
-        SkrNew<BoolDiagnosticProperty>(u8"active", active, u8"")
-    );
+        SkrNew<BoolDiagnosticProperty>(u8"active", active, u8""));
 }
 
 RenderObject::~RenderObject()
 {
-
 }
 
 void RenderObject::set_parent(RenderObject* new_parent)
@@ -94,12 +92,11 @@ void RenderObject::markLayoutDirty()
     layoutDirty = true;
 }
 
-void RenderObject::before_draw(const DrawParams* params) 
+void RenderObject::before_draw(const DrawParams* params)
 {
-
 }
 
-void RenderObject::draw(const DrawParams* params) 
+void RenderObject::draw(const DrawParams* params)
 {
     if (!active) { return; }
     auto& _children = this->children.get();
@@ -111,9 +108,8 @@ void RenderObject::draw(const DrawParams* params)
     }
 }
 
-void RenderObject::after_draw(const DrawParams* params) 
+void RenderObject::after_draw(const DrawParams* params)
 {
-
 }
 
 void RenderObject::addElementToCanvas(const DrawParams* params, gdi::GDIElement* element)
@@ -139,7 +135,4 @@ LiteSpan<DiagnosticableTreeNode* const> RenderObject::get_diagnostics_children()
     return { (DiagnosticableTreeNode* const*)children_.data(), children_.size() };
 }
 
-SKR_GUI_TYPE_IMPLEMENTATION(RenderObject);
-
-} // namespace gui
-} // namespace skr
+} // namespace skr::gui

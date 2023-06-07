@@ -3,19 +3,21 @@
 #include "SkrGui/framework/window_context.hpp"
 #include "SkrGui/interface/window.hpp"
 
-namespace skr {
-namespace gui {
+namespace skr
+{
+namespace gui
+{
 
 RenderCanvas::RenderCanvas(skr_gdi_device_id gdi_device)
-    : RenderBox(gdi_device), gdi_canvas(nullptr)
+    : RenderBox(gdi_device)
+    , gdi_canvas(nullptr)
 {
-    //SKR_ASSERT(this->IsA<RenderBox>() && "RenderCanvas should be a RenderBox");
+    // SKR_ASSERT(this->IsA<RenderBox>() && "RenderCanvas should be a RenderBox");
 
     gdi_canvas = gdi_device->create_canvas();
 
     diagnostic_builder.add_properties(
-        SkrNew<TextDiagnosticProperty>(u8"type", u8"canvas", u8"")
-    );
+        SkrNew<TextDiagnosticProperty>(u8"type", u8"canvas", u8""));
 }
 
 RenderCanvas::~RenderCanvas()
@@ -25,7 +27,6 @@ RenderCanvas::~RenderCanvas()
 
 void RenderCanvas::layout(BoxConstraint constraints, bool needSize)
 {
-
 }
 
 void RenderCanvas::draw(const DrawParams* params)
@@ -36,7 +37,8 @@ void RenderCanvas::draw(const DrawParams* params)
     platform_window->get_extent(&w, &h);
     const float window_width = (float)w, window_height = (float)h;
     pos.x = pos.y = 0;
-    size.x = window_width; size.y = window_height;
+    size.x = window_width;
+    size.y = window_height;
     // END TEST
 
     // use this canvas for rendering (input canvas should be nullptr normally)
@@ -50,6 +52,5 @@ void RenderCanvas::draw(const DrawParams* params)
     RenderBox::draw(&draw_params);
 }
 
-SKR_GUI_TYPE_IMPLEMENTATION(RenderCanvas);
-
-} }
+} // namespace gui
+} // namespace skr

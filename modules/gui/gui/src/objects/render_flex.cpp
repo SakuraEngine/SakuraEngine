@@ -9,8 +9,7 @@ RenderFlex::RenderFlex(skr_gdi_device_id gdi_device)
     : RenderBox(gdi_device)
 {
     diagnostic_builder.add_properties(
-        SkrNew<TextDiagnosticProperty>(u8"type", u8"flex", u8"layout children")
-    );
+        SkrNew<TextDiagnosticProperty>(u8"type", u8"flex", u8"layout children"));
 }
 
 void RenderFlex::layout(BoxConstraint constraints, bool needSize)
@@ -18,7 +17,7 @@ void RenderFlex::layout(BoxConstraint constraints, bool needSize)
     // Determine main axis and cross axis based on flex direction
     skr_float2_t size = constraints.max_size;
     bool isRow = flex_direction == FlexDirection::Row ||
-                flex_direction == FlexDirection::RowReverse;
+                 flex_direction == FlexDirection::RowReverse;
     float mainAxisSize = isRow ? size.x : size.y;
     float crossAxisSize = isRow ? size.y : size.x;
 
@@ -146,8 +145,8 @@ void RenderFlex::layout(BoxConstraint constraints, bool needSize)
         {
             childCrossAxisPosition = crossAxisSize - childSize.y;
         }
-        else if (align_items == AlignItems::Center || 
-            align_items == AlignItems::Stretch)
+        else if (align_items == AlignItems::Center ||
+                 align_items == AlignItems::Stretch)
         {
             childCrossAxisPosition = (crossAxisSize - childSize.y) / 2.0f;
         }
@@ -159,7 +158,6 @@ void RenderFlex::layout(BoxConstraint constraints, bool needSize)
         child->set_position({ childMainAxisPosition, childCrossAxisPosition });
         mainAxisStartPosition += childSize.x;
     }
-
 
     // Set size of flex container
     if (needSize)
@@ -175,19 +173,19 @@ void RenderFlex::layout(BoxConstraint constraints, bool needSize)
     }
 }
 
-void RenderFlex::add_child(RenderObject *child)
+void RenderFlex::add_child(RenderObject* child)
 {
     RenderObject::add_child(child);
     flexables.get().emplace_back();
 }
 
-void RenderFlex::insert_child(RenderObject *child, int index)
+void RenderFlex::insert_child(RenderObject* child, int index)
 {
     RenderObject::insert_child(child, index);
     flexables.get().insert(flexables.get().begin() + index, Flexable{});
 }
 
-void RenderFlex::remove_child(RenderObject *child)
+void RenderFlex::remove_child(RenderObject* child)
 {
     flexables.get().erase(flexables.get().begin() + get_child_index(child));
     RenderObject::remove_child(child);
@@ -235,8 +233,6 @@ AlignItems RenderFlex::get_align_items()
 {
     return align_items;
 }
-
-SKR_GUI_TYPE_IMPLEMENTATION(RenderFlex);
 
 } // namespace gui
 } // namespace skr

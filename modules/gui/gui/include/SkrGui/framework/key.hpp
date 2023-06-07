@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
-#include "SkrGui/framework/type_tree.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gui, State, skr_gui_state)
 

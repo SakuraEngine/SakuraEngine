@@ -9,7 +9,7 @@ namespace skr::gui
 struct Element;
 
 struct SKR_GUI_API Widget : public DiagnosticableTreeNode {
-    SKR_GUI_TYPE(Widget, DiagnosticableTreeNode, u8"9f69910d-ba18-4ff4-bf5f-3966507c56ba");
+    SKR_GUI_TYPE(Widget, "9f69910d-ba18-4ff4-bf5f-3966507c56ba", DiagnosticableTreeNode);
 
     inline const Key& key() const SKR_NOEXCEPT { return _key; }
 

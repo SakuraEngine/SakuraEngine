@@ -3,8 +3,6 @@
 
 namespace skr::gui
 {
-SKR_GUI_TYPE_IMPLEMENTATION(Widget);
-
 not_null<Element*> Widget::create_element() noexcept
 {
     SKR_UNREACHABLE_CODE();
@@ -17,7 +15,7 @@ bool Widget::can_update(not_null<Widget*> old_widget, not_null<Widget*> new_widg
     {
         return false;
     }
-    if (old_widget->get_type() != new_widget->get_type())
+    if (SkrGUITypeInfo(old_widget) != SkrGUITypeInfo(new_widget))
     {
         return false;
     }
