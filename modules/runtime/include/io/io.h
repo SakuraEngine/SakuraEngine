@@ -236,15 +236,6 @@ struct RUNTIME_API IIORequestResolverChain : public IIOBatchProcessor
 };
 using IORequestResolverChainId = SObjectPtr<IIORequestResolverChain>;
 
-struct RUNTIME_API IIOBatchProcessorChain : public IIOBatchProcessor
-{
-    static SObjectPtr<IIOBatchProcessorChain> Create(IOBatchProcessorId processor = nullptr) SKR_NOEXCEPT;
-    virtual SObjectPtr<IIOBatchProcessorChain> then(IOBatchProcessorId processor) SKR_NOEXCEPT = 0;
-
-    virtual ~IIOBatchProcessorChain() SKR_NOEXCEPT;
-};
-using IORequestResolverChainId = SObjectPtr<IIORequestResolverChain>;
-
 template<typename I = IIORequestProcessor>
 struct RUNTIME_API IIOReader : public I
 {

@@ -19,17 +19,12 @@ struct SleepyService : public skr::ServiceThread
     }
     virtual ~SleepyService() SKR_NOEXCEPT = default;
 
-    void setServiceStatus(SkrAsyncServiceStatus status) SKR_NOEXCEPT
-    {
-        skr_atomicu32_store_release(&service_status, status);
-    }
-
     SkrAsyncServiceStatus getServiceStatus() const SKR_NOEXCEPT
     {
         return (SkrAsyncServiceStatus)skr_atomicu32_load_acquire(&service_status);
     }
 
-    void setSleepTime(uint32_t time) SKR_NOEXCEPT
+    void set_sleep_time(uint32_t time) SKR_NOEXCEPT
     {
         skr_atomicu32_store_release(&sleep_time, time);
     }
@@ -51,21 +46,27 @@ struct SleepyService : public skr::ServiceThread
     void request_stop() SKR_NOEXCEPT override
     {
         skr::ServiceThread::request_stop();
-        tryAwake();
+        awake();
     }
 
     void wait_stop(uint32_t fatal_timeout = 8) SKR_NOEXCEPT override
     {
-        tryAwake();
+        awake();
         skr::ServiceThread::wait_stop(fatal_timeout);
     }
 
-    void tryAwake()
+    void awake()
     {
         condlock.lock();
         event = true;
         condlock.signal();
         condlock.unlock();
+    }
+
+protected:
+    void setServiceStatus(SkrAsyncServiceStatus status) SKR_NOEXCEPT
+    {
+        skr_atomicu32_store_release(&service_status, status);
     }
 
 private:

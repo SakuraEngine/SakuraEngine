@@ -1,5 +1,6 @@
 #include "io_runnner.hpp"
 #include "io_resolver.hpp"
+#include "batch_processors.hpp"
 
 namespace skr {
 namespace io {

@@ -25,9 +25,9 @@ public:
     }
     virtual ~RAMReaderBase() SKR_NOEXCEPT {}
 
-    void tryAwakeService()
+    void awakeService()
     {
-        service->runner.tryAwake();
+        service->runner.awake();
     }
 
     uint64_t processing_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
@@ -63,10 +63,10 @@ public:
             return count;
         }
     }
-    SAtomic64 pending_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    SAtomic64 processed_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
 protected:
+    SAtomic64 pending_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    SAtomic64 processed_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     RAMService* service = nullptr;
 };
 

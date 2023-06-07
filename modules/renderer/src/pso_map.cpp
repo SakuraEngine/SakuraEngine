@@ -15,29 +15,9 @@
 namespace skr {
 namespace renderer {
 struct PSOMapImpl;
-namespace PSO
-{
+using PSOFutureLauncher = skr::FutureLauncher<bool>;
 
-using Future = skr::IFuture<bool>;
-using JobQueueFuture = skr::ThreadedJobQueueFuture<bool>;
-using SerialFuture = skr::SerialFuture<bool>;
-struct FutureLauncher
-{
-    FutureLauncher(skr::JobQueue* q) : job_queue(q) {}
-    template<typename F, typename... Args>
-    Future* async(F&& f, Args&&... args)
-    {
-        if (job_queue)
-            return SkrNew<JobQueueFuture>(job_queue, std::forward<F>(f), std::forward<Args>(args)...);
-        else
-            return SkrNew<SerialFuture>(std::forward<F>(f), std::forward<Args>(args)...);
-    }
-    skr::JobQueue* job_queue = nullptr;
-};
-
-}
-
-struct PSOProgress : public skr::AsyncProgress<PSO::FutureLauncher, int, bool>
+struct PSOProgress : public skr::AsyncProgress<PSOFutureLauncher, int, bool>
 {
     PSOProgress(PSOMapImpl* map, skr_pso_map_key_id key)
         : map(map), key(key)
@@ -66,7 +46,7 @@ struct PSOMapImpl : public skr_pso_map_t
     PSOMapImpl(const skr_pso_map_root_t& root)
         : root(root)
     {
-        future_launcher = SPtr<PSO::FutureLauncher>::Create(root.job_queue);
+        future_launcher = SPtr<PSOFutureLauncher>::Create(root.job_queue);
     }
 
     ~PSOMapImpl()
@@ -285,7 +265,7 @@ struct PSOMapImpl : public skr_pso_map_t
         clearFinishedRequests();
     }
 
-    SPtr<PSO::FutureLauncher> future_launcher;
+    SPtr<PSOFutureLauncher> future_launcher;
     skr_pso_map_root_t root;
     skr::parallel_flat_hash_set<SPtr<PSOMapKey>, key_ptr_hasher, key_ptr_equal> sets;
     skr::parallel_flat_hash_map<skr_pso_map_key_id, SPtr<PSOProgress>> mPSOProgresses;
