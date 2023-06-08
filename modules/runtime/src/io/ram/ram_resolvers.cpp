@@ -8,7 +8,7 @@ namespace io {
 
 struct VFSFileResolver : public IORequestResolverBase
 {
-    virtual void resolve(IORequestId request) SKR_NOEXCEPT
+    virtual void resolve(SkrAsyncServicePriority priority,IORequestId request) SKR_NOEXCEPT
     {
         auto rq = skr::static_pointer_cast<RAMIORequest>(request);
         SKR_ASSERT(rq->vfs);
@@ -21,7 +21,7 @@ struct VFSFileResolver : public IORequestResolverBase
 
 struct AllocateIOBufferResolver : public IORequestResolverBase
 {
-    virtual void resolve(IORequestId request) SKR_NOEXCEPT
+    virtual void resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
     {
         ZoneScopedNC("IOBufferAllocate", tracy::Color::BlueViolet);
         auto rq = skr::static_pointer_cast<RAMIORequest>(request);
@@ -53,7 +53,7 @@ struct AllocateIOBufferResolver : public IORequestResolverBase
 struct ChunkingVFSReadResolver : public IORequestResolverBase
 {
     ChunkingVFSReadResolver(uint64_t chunk_size) : chunk_size(chunk_size) {}
-    virtual void resolve(IORequestId request) SKR_NOEXCEPT
+    virtual void resolve(SkrAsyncServicePriority priority,IORequestId request) SKR_NOEXCEPT
     {
         ZoneScopedN("IORequestChunking");
         auto rq = skr::static_pointer_cast<RAMIORequest>(request);

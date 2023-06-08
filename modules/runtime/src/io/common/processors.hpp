@@ -98,10 +98,10 @@ using IOBatchBufferId = SObjectPtr<IOBatchBuffer>;
             skr_atomic64_store_relaxed(&processed_counts[i], 0);\
         }\
     }\
-    inline void inc_processing(SkrAsyncServicePriority priority) { skr_atomic64_add_relaxed(&processing_counts[priority], 1); }\
-    inline void dec_processing(SkrAsyncServicePriority priority) { skr_atomic64_add_relaxed(&processing_counts[priority], -1); }\
-    inline void inc_processed(SkrAsyncServicePriority priority) { skr_atomic64_add_relaxed(&processed_counts[priority], 1); }\
-    inline void dec_processed(SkrAsyncServicePriority priority) { skr_atomic64_add_relaxed(&processed_counts[priority], -1); }\
+    inline void inc_processing(SkrAsyncServicePriority priority, int64_t n = 1) { skr_atomic64_add_relaxed(&processing_counts[priority], (n)); }\
+    inline void dec_processing(SkrAsyncServicePriority priority, int64_t n = 1) { skr_atomic64_add_relaxed(&processing_counts[priority], -(n)); }\
+    inline void inc_processed(SkrAsyncServicePriority priority, int64_t n = 1) { skr_atomic64_add_relaxed(&processed_counts[priority], (n)); }\
+    inline void dec_processed(SkrAsyncServicePriority priority, int64_t n = 1) { skr_atomic64_add_relaxed(&processed_counts[priority], -(n)); }\
 private:\
     SAtomic64 processing_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT] = { 0, 0, 0 };\
     SAtomic64 processed_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT] = { 0, 0, 0 };

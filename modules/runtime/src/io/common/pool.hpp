@@ -35,7 +35,7 @@ using ISmartPoolPtr = skr::SObjectPtr<ISmartPool<I>>;
 extern const char* kIOPoolObjectsMemoryName; 
 extern const char* kIOConcurrentQueueName;
 
-template<typename T, typename I>
+template<typename T, typename I = T>
 struct SmartPool : public ISmartPool<I>
 {
     static_assert(std::is_base_of_v<I, T>, "T must be derived from I");
@@ -82,8 +82,6 @@ struct SmartPool : public ISmartPool<I>
         if (auto ptr = static_cast<T*>(iptr))
         {
             ptr->~T(); 
-            // avoid vtable erasing
-            // memset((void*)ptr, 0, sizeof(T));
             blocks.enqueue(ptr);
             skr_atomic64_add_relaxed(&objcnt, -1);
         }
@@ -108,7 +106,7 @@ struct SmartPool : public ISmartPool<I>
     skr::ConcurrentQueue<T*> blocks;
     SAtomic64 objcnt = 0;
 };
-template<typename T, typename I>
+template<typename T, typename I = T>
 using SmartPoolPtr = skr::SObjectPtr<SmartPool<T, I>>;
 
 struct IOConcurrentQueueTraits : public skr::ConcurrentQueueDefaultTraits

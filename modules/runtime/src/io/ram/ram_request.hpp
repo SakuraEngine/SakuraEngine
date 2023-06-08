@@ -18,8 +18,20 @@ struct RAMIORequest final : public IORequestBase
     
     uint64_t get_fsize() const SKR_NOEXCEPT
     {
-        SKR_ASSERT(file);
-        return skr_vfs_fsize(file);
+        if (file)
+        {
+            SKR_ASSERT(!dfile);
+            return skr_vfs_fsize(file);
+        }
+        else
+        {
+            SKR_ASSERT(dfile);
+            SKR_ASSERT(!file);
+            auto instance = skr_get_dstorage_instnace();
+            SkrDStorageFileInfo info;
+            skr_dstorage_query_file_info(instance, dfile, &info);
+            return info.file_size;
+        }
     }
 
     skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT { return blocks; }

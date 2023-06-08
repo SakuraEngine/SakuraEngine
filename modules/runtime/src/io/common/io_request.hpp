@@ -1,4 +1,5 @@
 #pragma once
+#include "platform/dstorage.h"
 #include "io/io.h"
 #include "pool.hpp"
 #include "containers/vector.hpp"
@@ -107,6 +108,7 @@ public:
     skr::string path;
     skr_vfs_t* vfs = nullptr;
     skr_io_file_handle file = nullptr;
+    SkrDStorageFileHandle dfile = nullptr;
     void set_vfs(skr_vfs_t* _vfs) SKR_NOEXCEPT { vfs = _vfs; }
     void set_path(const char8_t* p) SKR_NOEXCEPT { path = p; }
     const char8_t* get_path() const SKR_NOEXCEPT { return path.u8_str(); }

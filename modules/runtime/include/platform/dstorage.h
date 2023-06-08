@@ -108,11 +108,12 @@ RUNTIME_API void skr_free_dstorage_instance(SkrDStorageInstanceId inst);
 RUNTIME_API SkrDStorageQueueId skr_create_dstorage_queue(const SkrDStorageQueueDescriptor* desc);
 RUNTIME_API void skr_free_dstorage_queue(SkrDStorageQueueId queue);
 
-RUNTIME_API SkrDStorageFileHandle skr_dstorage_open_file(SkrDStorageInstanceId queue, const char* abs_path);
-RUNTIME_API void skr_dstorage_query_file_info(SkrDStorageInstanceId queue, SkrDStorageFileHandle file, SkrDStorageFileInfo* info);
-RUNTIME_API void skr_dstorage_close_file(SkrDStorageInstanceId queue, SkrDStorageFileHandle file);
+RUNTIME_API SkrDStorageFileHandle skr_dstorage_open_file(SkrDStorageInstanceId instance, const char* abs_path);
+RUNTIME_API void skr_dstorage_query_file_info(SkrDStorageInstanceId instance, SkrDStorageFileHandle file, SkrDStorageFileInfo* info);
+RUNTIME_API void skr_dstorage_close_file(SkrDStorageInstanceId instance, SkrDStorageFileHandle file);
 
 RUNTIME_API SkrDStorageEventId skr_dstorage_queue_create_event(SkrDStorageQueueId queue);
+RUNTIME_API bool skr_dstorage_event_test(SkrDStorageEventId event);
 RUNTIME_API void skr_dstorage_queue_free_event(SkrDStorageQueueId queue, SkrDStorageEventId);
 
 RUNTIME_API void skr_dstorage_queue_submit(SkrDStorageQueueId queue, SkrDStorageEventId event);

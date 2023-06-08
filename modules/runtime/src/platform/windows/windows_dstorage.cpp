@@ -166,9 +166,9 @@ void skr_dstorage_close_file(SkrDStorageInstanceId inst, SkrDStorageFileHandle f
 
 struct SkrDStorageEvent
 {
-    SkrDStorageEvent(ID3D12Fence* pFence) : pFence(pFence) {}
+    SkrDStorageEvent(ID3D12Fence* pFence) : pFence(pFence), mFenceValue(1) {}
     ID3D12Fence* pFence = nullptr;
-    uint64_t mFenceValue = 0;
+    uint64_t mFenceValue = 1;
 };
 
 SkrDStorageEventId skr_dstorage_queue_create_event(SkrDStorageQueueId queue)
@@ -177,6 +177,15 @@ SkrDStorageEventId skr_dstorage_queue_create_event(SkrDStorageQueueId queue)
     ID3D12Fence* pFence = nullptr;
     Q->pDxDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&pFence));
     return SkrNew<SkrDStorageEvent>(pFence);
+}
+
+bool skr_dstorage_event_test(SkrDStorageEventId event)
+{
+    const auto Value = event->pFence->GetCompletedValue();
+    if (Value < event->mFenceValue - 1)
+        return false;
+    else
+        return true;
 }
 
 void skr_dstorage_queue_free_event(SkrDStorageQueueId queue, SkrDStorageEventId event)
