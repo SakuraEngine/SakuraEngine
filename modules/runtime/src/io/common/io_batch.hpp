@@ -1,6 +1,8 @@
 #pragma once
 #include "io/io.h"
 #include "pool.hpp"
+#include "platform/thread.h"
+#include "misc/defer.hpp"
 #include "containers/vector.hpp"
 #include <EASTL/fixed_vector.h>
 
@@ -18,6 +20,8 @@ public:
 
     skr::span<IORequestId> get_requests() SKR_NOEXCEPT
     {
+        skr_rw_mutex_acuire_r(&rw_lock);
+        SKR_DEFER( { skr_rw_mutex_release(&rw_lock); });
         return requests;
     }
 
@@ -25,8 +29,29 @@ public:
     SkrAsyncServicePriority get_priority() const SKR_NOEXCEPT { return priority; }
 
 protected:
+    friend struct RunnerBase;
+    void addRequest(IORequestId rq) SKR_NOEXCEPT
+    {
+        skr_rw_mutex_acuire_w(&rw_lock);
+        SKR_DEFER( { skr_rw_mutex_release(&rw_lock); });
+        requests.push_back(rq);
+    }
+
+    void removeCancelledRequest(IORequestId rq) SKR_NOEXCEPT
+    {
+        skr_rw_mutex_acuire_w(&rw_lock);
+        SKR_DEFER( { skr_rw_mutex_release(&rw_lock); });
+        auto fnd = eastl::remove_if(
+            requests.begin(), requests.end(), [rq](IORequestId r) { return r == rq; });
+        cancelled_requests.emplace_back(*fnd);
+        requests.erase(fnd, requests.end());
+    }
+
+private:
     SkrAsyncServicePriority priority;
-    eastl::fixed_vector<IORequestId, 1> requests;
+    SRWMutex rw_lock;
+    eastl::fixed_vector<IORequestId, 4> requests;
+    eastl::fixed_vector<IORequestId, 1> cancelled_requests;
 
 public:
     SInterfaceDeleter custom_deleter() const 
@@ -40,10 +65,15 @@ public:
     friend struct SmartPool<IOBatchBase, IIOBatch>;
 
 protected:
-    IOBatchBase(ISmartPoolPtr<IIOBatch> pool, IIOService* service, const uint64_t sequence) 
+    IOBatchBase(ISmartPoolPtr<IIOBatch> pool, IIOService* service, const uint64_t sequence) SKR_NOEXCEPT
         : sequence(sequence), pool(pool), service(service)
     {
+        skr_init_rw_mutex(&rw_lock);
+    }
 
+    ~IOBatchBase() SKR_NOEXCEPT
+    {
+        skr_destroy_rw_mutex(&rw_lock);
     }
     
     const uint64_t sequence;

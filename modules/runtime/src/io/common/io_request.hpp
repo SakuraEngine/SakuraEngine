@@ -81,6 +81,8 @@ public:
         return static_cast<ESkrIOStage>(skr_atomicu32_load_relaxed(&future->status));
     }
 
+    IIOBatch* getOwnerBatch() const { return owner_batch; }
+
     bool getCancelRequested() const
     {
         return skr_atomicu32_load_relaxed(&future->request_cancel);
@@ -116,6 +118,8 @@ public:
 private:
     friend struct RAMIOBatch;
     skr_io_future_t* future = nullptr;
+    IIOBatch* owner_batch = nullptr; // avoid circular reference
+
 protected:
     SAtomic32 finish_step = 0;
     skr_io_callback_t callbacks[SKR_IO_STAGE_COUNT];
