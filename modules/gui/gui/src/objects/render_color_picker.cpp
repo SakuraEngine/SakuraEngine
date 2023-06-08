@@ -33,7 +33,7 @@ void RenderColorPicker::draw_color_picker(gdi::GDIElement* element, gdi::GDIPain
         element->circle(cx, cy, r);
         element->close_path();
         element->stroke_width(r1 - r0);
-        SKR_ASSERT(paint && "ColorPicker: paint is null!");
+        SKR_GUI_ASSERT(paint && "ColorPicker: paint is null!");
         // element->stroke_color(255u, 255u, 255u, 255u);
         paint->set_pattern(cx, cy, w, h, 0, (gdi::GDITextureId) nullptr, { 1.f, 1.f, 1.f, 1.f });
         paint->custom_vertex_color(

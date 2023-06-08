@@ -1,7 +1,6 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
 #include "type/type.h"
-#include <assert.h>
 
 namespace skr
 {
@@ -113,11 +112,11 @@ constexpr skr_guid_t operator""_guid(const char8_t* str, size_t N)
 {
     if (!(N == long_guid_form_length || N == short_guid_form_length))
     {
-        assert(0 && "String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected");
+        SKR_GUI_ASSERT(0 && "String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected");
     }
     if (N == long_guid_form_length && (str[0] != '{' || str[long_guid_form_length - 1] != '}'))
     {
-        assert(0 && "Missing opening or closing brace");
+        SKR_GUI_ASSERT(0 && "Missing opening or closing brace");
     }
     return make_guid_helper(str + (N == long_guid_form_length ? 1 : 0));
 }

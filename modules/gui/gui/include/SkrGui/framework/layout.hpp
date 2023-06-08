@@ -10,6 +10,14 @@ enum class TextDirection
     RTL,
 };
 
+// Box 约束器
+struct BoxConstraint {
+    float min_width = 0;
+    float max_width = std::numeric_limits<float>::infinity();
+    float min_height = 0;
+    float max_height = std::numeric_limits<float>::infinity();
+};
+
 // 布局定位使用的基本单位，在实现 Optional 功能的同时
 struct PositionalUnit {
     enum Type
@@ -35,19 +43,25 @@ struct PositionalUnit {
     {
     }
 
+    // type
+    inline constexpr bool is_null() const SKR_NOEXCEPT { return type == Type::Unset; }
+    inline constexpr bool has_value() const SKR_NOEXCEPT { return type != Type::Unset; }
+    inline constexpr bool is_px() const SKR_NOEXCEPT { return type == Type::Pixel; }
+    inline constexpr bool is_pct() const SKR_NOEXCEPT { return type == Type::Percent; }
+
     // compare
-    constexpr explicit operator bool() const { return type != Type::Unset; }
-    constexpr bool operator==(std::nullptr_t) const { return type == Type::Unset; }
-    constexpr bool operator!=(std::nullptr_t) const { return type != Type::Unset; }
-    constexpr bool operator<=>(const PositionalUnit& other) const = default;
+    inline constexpr operator bool() const SKR_NOEXCEPT { return type != Type::Unset; }
+    inline constexpr bool operator==(std::nullptr_t) const SKR_NOEXCEPT { return type == Type::Unset; }
+    inline constexpr bool operator!=(std::nullptr_t) const SKR_NOEXCEPT { return type != Type::Unset; }
+    inline constexpr bool operator<=>(const PositionalUnit& other) const SKR_NOEXCEPT = default;
 
     // factory
-    static constexpr PositionalUnit null() { return PositionalUnit{}; }
-    static constexpr PositionalUnit px(float value) { return PositionalUnit{ value, Type::Pixel }; }
-    static constexpr PositionalUnit pct(float value) { return PositionalUnit{ value, Type::Percent }; }
+    inline static constexpr PositionalUnit null() SKR_NOEXCEPT { return PositionalUnit{}; }
+    inline static constexpr PositionalUnit px(float value) SKR_NOEXCEPT { return PositionalUnit{ value, Type::Pixel }; }
+    inline static constexpr PositionalUnit pct(float value) SKR_NOEXCEPT { return PositionalUnit{ value, Type::Percent }; }
 
     // calc
-    constexpr float get_pixel(float parent_value) const
+    inline constexpr float get_pixel(float parent_value) const SKR_NOEXCEPT
     {
         if (type == Type::Percent)
         {
@@ -61,12 +75,12 @@ struct PositionalUnit {
 };
 
 // float literal
-constexpr PositionalUnit operator""_px(long double value) { return PositionalUnit::px(static_cast<float>(value)); }
-constexpr PositionalUnit operator""_pct(long double value) { return PositionalUnit::pct(static_cast<float>(value)); }
+constexpr PositionalUnit operator""_px(long double value) SKR_NOEXCEPT { return PositionalUnit::px(static_cast<float>(value)); }
+constexpr PositionalUnit operator""_pct(long double value) SKR_NOEXCEPT { return PositionalUnit::pct(static_cast<float>(value)); }
 
 // int literal
-constexpr PositionalUnit operator""_px(unsigned long long value) { return PositionalUnit::px(static_cast<float>(value)); }
-constexpr PositionalUnit operator""_pct(unsigned long long value) { return PositionalUnit::pct(static_cast<float>(value)); }
+constexpr PositionalUnit operator""_px(unsigned long long value) SKR_NOEXCEPT { return PositionalUnit::px(static_cast<float>(value)); }
+constexpr PositionalUnit operator""_pct(unsigned long long value) SKR_NOEXCEPT { return PositionalUnit::pct(static_cast<float>(value)); }
 
 // 布局定位 + 约束
 struct Positional {
@@ -77,21 +91,197 @@ struct Positional {
     PositionalUnit bottom = PositionalUnit::null();
 
     // 锚点定位中使用的尺寸约束
-    PositionalUnit min_width = PositionalUnit::null();
-    PositionalUnit max_width = PositionalUnit::null();
-    PositionalUnit min_height = PositionalUnit::null();
-    PositionalUnit max_height = PositionalUnit::null();
+    PositionalUnit min_width = PositionalUnit::null();  // as 0 if needs
+    PositionalUnit max_width = PositionalUnit::null();  // as inf if needs
+    PositionalUnit min_height = PositionalUnit::null(); // as o if needs
+    PositionalUnit max_height = PositionalUnit::null(); // as inf if needs
 
     // 锚点
     Offset pivot = { 0, 0 };
-};
 
-// Box 约束器
-struct BoxConstraint {
-    float min_width = 0;
-    float max_width = std::numeric_limits<float>::infinity();
-    float min_height = 0;
-    float max_height = std::numeric_limits<float>::infinity();
+    // constants
+    inline static constexpr Positional fill() SKR_NOEXCEPT { return { 0, 0, 0, 0 }; }
+
+    // factory
+    struct PaddingParams {
+        PositionalUnit all = PositionalUnit::null();
+
+        PositionalUnit horizontal = PositionalUnit::null();
+        PositionalUnit vertical = PositionalUnit::null();
+
+        PositionalUnit left = PositionalUnit::null();
+        PositionalUnit top = PositionalUnit::null();
+        PositionalUnit right = PositionalUnit::null();
+        PositionalUnit bottom = PositionalUnit::null();
+
+        inline constexpr bool is_valid() SKR_NOEXCEPT
+        {
+            // all 与其它所有互斥
+            // horizontal 与 left、right 互斥
+            // vertical 与 top、bottom 互斥
+            return (all.has_value() && (horizontal.is_null() && vertical.is_null() && left.is_null() && top.is_null() && right.is_null() && bottom.is_null())) ||
+                   (all.is_null() && (horizontal.has_value() && left.is_null() && top.is_null()) && (vertical.has_value() && right.is_null() && bottom.is_null()));
+        }
+    };
+    struct ConstraintsParams {
+        PositionalUnit width = PositionalUnit::null();
+        PositionalUnit height = PositionalUnit::null();
+
+        PositionalUnit min_width = PositionalUnit::null();
+        PositionalUnit max_width = PositionalUnit::null();
+        PositionalUnit min_height = PositionalUnit::null();
+        PositionalUnit max_height = PositionalUnit::null();
+        inline constexpr bool is_valid() SKR_NOEXCEPT
+        {
+            // width 与 min_width、max_width 互斥
+            // height 与 min_height、max_height 互斥
+            return (width.has_value() && (min_width.is_null() && max_width.is_null())) ||
+                   (height.has_value() && (min_height.is_null() && max_height.is_null()));
+        }
+    };
+    struct PivotParams {
+        PositionalUnit left = PositionalUnit::null();
+        PositionalUnit top = PositionalUnit::null();
+        PositionalUnit right = PositionalUnit::null();
+        PositionalUnit bottom = PositionalUnit::null();
+        inline constexpr bool is_valid() SKR_NOEXCEPT
+        {
+            // left 与 right 互斥，定位横向锚点
+            // top 与 bottom 互斥，定位纵向锚点
+            return ((left.has_value() + right.has_value()) == 1) &&
+                   ((top.has_value() + bottom.has_value()) == 1);
+        }
+    };
+    inline constexpr static Positional Padding(PaddingParams params) SKR_NOEXCEPT
+    {
+        Positional result;
+        if (params.all.has_value())
+        {
+            result.left = result.top = result.right = result.bottom = params.all;
+        }
+        else
+        {
+            if (params.horizontal.has_value())
+            {
+                result.left = result.right = params.horizontal;
+            }
+            else
+            {
+                result.left = params.left;
+                result.right = params.right;
+            }
+            if (params.vertical.has_value())
+            {
+                result.top = result.bottom = params.vertical;
+            }
+            else
+            {
+                result.top = params.top;
+                result.bottom = params.bottom;
+            }
+        }
+        return result;
+    };
+    inline constexpr static Positional Anchor(PivotParams parent_pivot, ConstraintsParams constraints, Offset child_pivot) SKR_NOEXCEPT
+    {
+        Positional result;
+
+        // parent pivot
+        if (parent_pivot.left) // protect for invalid value
+        {
+            result.left = parent_pivot.left;
+        }
+        else
+        {
+            result.right = parent_pivot.right;
+        }
+        if (parent_pivot.top) // protect for invalid value
+        {
+            result.top = parent_pivot.top;
+        }
+        else
+        {
+            result.bottom = parent_pivot.bottom;
+        }
+
+        // child pivot
+        result.pivot = child_pivot;
+
+        // size
+        if (constraints.width)
+        {
+            result.min_width = result.max_width = constraints.width;
+        }
+        else
+        {
+            result.min_width = constraints.min_width;
+            result.max_width = constraints.max_width;
+        }
+        if (constraints.height)
+        {
+            result.min_height = result.max_height = constraints.height;
+        }
+        else
+        {
+            result.min_height = constraints.min_height;
+            result.max_height = constraints.max_height;
+        }
+
+        return result;
+    }
+
+    // checker
+    inline constexpr bool with_constraints() SKR_NOEXCEPT
+    {
+        return min_width.has_value() || max_width.has_value() || min_height.has_value() || max_height.has_value();
+    }
+    inline constexpr bool with_height_constraints() SKR_NOEXCEPT
+    {
+        return min_height.has_value() || max_height.has_value();
+    }
+    inline constexpr bool with_width_constraints() SKR_NOEXCEPT
+    {
+        return min_width.has_value() && max_width.has_value();
+    }
+    inline constexpr bool is_padding() SKR_NOEXCEPT
+    {
+        return !with_constraints();
+    }
+    inline constexpr bool is_anchor() SKR_NOEXCEPT
+    {
+        return ((left.has_value() + right.has_value()) == 1) &&
+               ((top).has_value() + right.has_value()) == 1 &&
+               with_constraints();
+    }
+    inline constexpr bool is_valid() SKR_NOEXCEPT
+    {
+        // padding mode: [left] + [right]
+        // anchor mode: [left/right] + [width constraints] + [pivot.x]
+        // anchor mode fallback: 未设父锚点的情况下，使用 0_pct 作为父锚点
+        // 无约束 0 点对齐: 全空
+        // error: 全有值
+        // 横竖两轴可以使用各自的模式来完成布局
+        return (left.is_null() || right.is_null() || !with_width_constraints()) &&
+               (top.is_null() || bottom.is_null() || !with_height_constraints());
+    }
+
+    // setter
+    inline constexpr void clear_constraints() SKR_NOEXCEPT
+    {
+        min_width = max_width = min_height = max_height = PositionalUnit::null();
+    }
+    inline constexpr void constraints_inf() SKR_NOEXCEPT
+    {
+        min_width = 0;
+        max_width = std::numeric_limits<float>::infinity();
+        min_height = 0;
+        max_height = std::numeric_limits<float>::infinity();
+    }
+    inline constexpr void constraints_sized(PositionalUnit width, PositionalUnit height) SKR_NOEXCEPT
+    {
+        min_width = max_width = width;
+        min_height = max_height = height;
+    }
 };
 
 } // namespace skr::gui

@@ -170,22 +170,22 @@ inline bool Key::is_storage() const SKR_NOEXCEPT
 // getter
 inline State* Key::get_state() const SKR_NOEXCEPT
 {
-    SKR_ASSERT(is_keep_state());
+    SKR_GUI_ASSERT(is_keep_state());
     return _state;
 }
 inline int64_t Key::get_int() const SKR_NOEXCEPT
 {
-    SKR_ASSERT(_type == EKeyType::Int || _type == EKeyType::IntStorage);
+    SKR_GUI_ASSERT(_type == EKeyType::Int || _type == EKeyType::IntStorage);
     return _int;
 }
 inline float Key::get_float() const SKR_NOEXCEPT
 {
-    SKR_ASSERT(_type == EKeyType::Float || _type == EKeyType::FloatStorage);
+    SKR_GUI_ASSERT(_type == EKeyType::Float || _type == EKeyType::FloatStorage);
     return _float;
 }
 inline const TextStorage& Key::get_name() const SKR_NOEXCEPT
 {
-    SKR_ASSERT(_type == EKeyType::Name || _type == EKeyType::NameStorage);
+    SKR_GUI_ASSERT(_type == EKeyType::Name || _type == EKeyType::NameStorage);
     return _name;
 }
 inline bool Key::try_get_state(State*& out) const SKR_NOEXCEPT

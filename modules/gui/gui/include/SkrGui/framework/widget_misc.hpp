@@ -4,7 +4,9 @@
 #define SKR_GUI_HIDE_CONSTRUCT(__PARAM) \
 private:                                \
     using __PARAM;                      \
-    using void construct(__PARAM)
+    using void construct(__PARAM);      \
+                                        \
+public:
 
 namespace skr::gui
 {

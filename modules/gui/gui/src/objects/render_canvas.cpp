@@ -12,7 +12,7 @@ RenderCanvas::RenderCanvas(skr_gdi_device_id gdi_device)
     : RenderBox(gdi_device)
     , gdi_canvas(nullptr)
 {
-    // SKR_ASSERT(this->IsA<RenderBox>() && "RenderCanvas should be a RenderBox");
+    // SKR_GUI_ASSERT(this->IsA<RenderBox>() && "RenderCanvas should be a RenderBox");
 
     gdi_canvas = gdi_device->create_canvas();
 
