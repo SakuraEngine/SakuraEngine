@@ -46,8 +46,9 @@ IOResultId RAMIOBatch::add_request(IORequestId request, skr_io_future_t* future)
     auto rq = skr::static_pointer_cast<RAMIORequest>(request);
     rq->future = future;
     rq->destination = buffer;
+    rq->owner_batch = this;
     SKR_ASSERT(!rq->blocks.empty());
-    requests.emplace_back(request);
+    addRequest(request);
     return buffer;
 }
 
@@ -78,7 +79,7 @@ RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
 
     if (desc->use_dstorage)
         runner.batch_reader = CreateBatchReader(this, desc);
-        
+
     runner.reader = CreateReader(this, desc);
     runner.set_resolvers();
 

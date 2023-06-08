@@ -80,6 +80,7 @@ void RunnerBase::process_batches() SKR_NOEXCEPT
                 auto bq = skr::static_pointer_cast<IOBatchBase>(batch);
                 for (auto&& request : bq->get_requests())
                 {
+                    // TODO: Remove this check when batch cancel is ready
                     if (!request->get_future()->is_cancelled())
                         request_processors.front()->fetch(priority, request);
                 }
@@ -96,6 +97,7 @@ void RunnerBase::process_batches() SKR_NOEXCEPT
             IORequestId request = nullptr;
             while (prev_processor->poll_processed_request(priority, request))
             {
+                // TODO: Remove this check when batch cancel is ready
                 if (!request->get_future()->is_cancelled())
                     processor->fetch(priority, request);
             }
@@ -166,6 +168,11 @@ bool RunnerBase::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEX
                 cancelFunction(rq, priority);
             }
         }
+        // remove from batch
+        if (auto batch = static_cast<IOBatchBase*>(rq->getOwnerBatch()))
+            batch->removeCancelledRequest(rq);
+        else
+            SKR_UNREACHABLE_CODE();
         return true;
     }
     return false;

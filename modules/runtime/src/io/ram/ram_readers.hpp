@@ -55,7 +55,6 @@ struct VFSRAMReader final : public RAMReaderBase<IIORequestProcessor>
 } // namespace io
 } // namespace skr
 
-#ifdef _WIN32
 #include "platform/dstorage.h"
 #include <EASTL/fixed_vector.h>
 
@@ -127,4 +126,3 @@ struct DStorageRAMReader final
 
 } // namespace io
 } // namespace skr
-#endif

@@ -64,24 +64,17 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
     IOBatchId batch;
     while (fetched_batches[priority].try_dequeue(batch))
     {
-        //TODO: cancel from batch & remove this
-        bool all_cancelled = true;
         for (auto request : batch->get_requests())
         {
             auto rq = skr::static_pointer_cast<RAMIORequest>(request);
             auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
             if (service->runner.try_cancel(priority, rq))
             {
-                if (rq->dfile)
-                {
-                    skr_dstorage_close_file(instance, rq->dfile);
-                    rq->dfile = nullptr;
-                }
+                skr_dstorage_close_file(instance, rq->dfile);
+                rq->dfile = nullptr;
             }
             else if ( rq->getStatus() == SKR_IO_STAGE_RESOLVING)
             {
-                all_cancelled = false;
-
                 ZoneScopedN("read_request");
                 SKR_ASSERT(rq->dfile);
                 rq->setStatus(SKR_IO_STAGE_LOADING);
@@ -109,11 +102,7 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
             else
                 SKR_UNREACHABLE_CODE();
         }
-
-        if (all_cancelled)
-            dec_processing(priority);
-        else
-            event->batches.emplace_back(batch);
+        event->batches.emplace_back(batch);
     }
     if (const auto enqueued = event->batches.size())
     {
@@ -126,7 +115,7 @@ void DStorageRAMReader::pollSubmitted(SkrAsyncServicePriority priority) SKR_NOEX
 {
     for (auto& e : submitted[priority])
     {
-        if (e->okay())
+        if (e->okay() || e->batches.empty())
         {
             for (auto batch : e->batches)
             {
