@@ -113,6 +113,7 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
 
 void DStorageRAMReader::pollSubmitted(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
+    auto instance = skr_get_dstorage_instnace();
     for (auto& e : submitted[priority])
     {
         if (e->okay() || e->batches.empty())
@@ -123,6 +124,8 @@ void DStorageRAMReader::pollSubmitted(SkrAsyncServicePriority priority) SKR_NOEX
                 {
                     auto rq = skr::static_pointer_cast<RAMIORequest>(request);
                     rq->setStatus(SKR_IO_STAGE_LOADED);
+                    skr_dstorage_close_file(instance, rq->dfile);
+                    rq->dfile = nullptr;
                 }
                 loaded_batches[priority].enqueue(batch);
                 dec_processing(priority);
