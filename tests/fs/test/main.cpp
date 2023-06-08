@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "platform/vfs.h"
 #include "platform/thread.h"
+#include "platform/dstorage.h"
 #include "misc/log.h"
 #include "misc/make_zeroed.hpp"
 #include "async/thread_job.hpp"
@@ -26,6 +27,9 @@ public:
         std::error_code ec = {};
         const auto current_path = skr::filesystem::current_path(ec).string();
         EXPECT_EQ(std::string((const char*)abs_fs->mount_dir), current_path);
+
+        SkrDStorageConfig config = {};
+        skr_create_dstorage_instance(&config);
     }
 
     void TearDown() override

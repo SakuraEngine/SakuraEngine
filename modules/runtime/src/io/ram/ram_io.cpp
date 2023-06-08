@@ -59,8 +59,12 @@ inline static IOReaderId<IIORequestProcessor> CreateReader(RAMService* service, 
 
 inline static IOReaderId<IIOBatchProcessor> CreateBatchReader(RAMService* service, const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
 {
+#ifdef _WIN32
     auto reader = skr::SObjectPtr<DStorageRAMReader>::Create(service);
     return std::move(reader);
+#else
+    return nullptr;
+#endif
 }
 
 RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
