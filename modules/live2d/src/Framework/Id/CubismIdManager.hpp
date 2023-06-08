@@ -10,6 +10,7 @@
 #include "Type/CubismBasicType.hpp"
 #include "Type/csmString.hpp"
 #include "Type/csmVector.hpp"
+#include "platform/thread.h"
 
 namespace Live2D { namespace Cubism { namespace Framework {
 
@@ -133,6 +134,7 @@ private:
     CubismId* FindId(const csmChar* id) const;
 
     csmVector<CubismId*> _ids;      ///< 登録されているIDのリスト
+    mutable SMutex rwMutex;
 };
 
 }}}

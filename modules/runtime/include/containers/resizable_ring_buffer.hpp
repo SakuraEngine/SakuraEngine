@@ -23,12 +23,12 @@ public:
     T get(uint64_t index = 0);
     uint64_t get_size() const 
     { 
-        skr_rw_mutex_acuire_r(&rw_mutex);
+        skr_rw_mutex_acquire_r(&rw_mutex);
         uint64_t sz = ring.get_size();
         skr_rw_mutex_release(&rw_mutex);
         return sz;
     }
-    void acquire_read() { skr_rw_mutex_acuire_r(&rw_mutex); }
+    void acquire_read() { skr_rw_mutex_acquire_r(&rw_mutex); }
     void release_read() { skr_rw_mutex_release(&rw_mutex); }
 protected:
     ring_buffer<T> ring;
@@ -41,7 +41,7 @@ void resizable_ring_buffer<T>::resize(int newSize)
     const auto currentSize = skr_atomicu64_load_acquire(&ring.size);
     if (newSize == currentSize) return;
 
-    skr_rw_mutex_acuire_w(&rw_mutex);
+    skr_rw_mutex_acquire_w(&rw_mutex);
     if (newSize < currentSize) 
     {
         // if the new size is smaller than the current size, we need to
@@ -73,7 +73,7 @@ void resizable_ring_buffer<T>::resize(int newSize)
 template <typename T>
 T resizable_ring_buffer<T>::add(T value) 
 {
-    skr_rw_mutex_acuire_r(&rw_mutex);
+    skr_rw_mutex_acquire_r(&rw_mutex);
     const auto old = ring.add(value);
     skr_rw_mutex_release(&rw_mutex);
     return old;
@@ -82,7 +82,7 @@ T resizable_ring_buffer<T>::add(T value)
 template <typename T>
 T resizable_ring_buffer<T>::get(uint64_t index) 
 {
-    skr_rw_mutex_acuire_r(&rw_mutex);
+    skr_rw_mutex_acquire_r(&rw_mutex);
     auto result = ring.get(index);
     skr_rw_mutex_release(&rw_mutex);
     return result;
