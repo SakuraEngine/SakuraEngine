@@ -23,7 +23,7 @@ void IORequestResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEX
                 rq->setStatus(SKR_IO_STAGE_RESOLVING);
                 for (auto resolver : chain)
                 {
-                    resolver->resolve(request);
+                    resolver->resolve(priority, request);
                 }
             }
         }

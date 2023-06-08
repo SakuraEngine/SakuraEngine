@@ -57,6 +57,12 @@ inline static IOReaderId<IIORequestProcessor> CreateReader(RAMService* service, 
     return std::move(reader);
 }
 
+inline static IOReaderId<IIOBatchProcessor> CreateBatchReader(RAMService* service, const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
+{
+    auto reader = skr::SObjectPtr<DStorageRAMReader>::Create(service);
+    return std::move(reader);
+}
+
 RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
     : name(desc->name ? skr::string(desc->name) : skr::format(u8"IRAMService-{}", global_idx++)), 
       awake_at_request(desc->awake_at_request),
@@ -66,6 +72,7 @@ RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
     ram_buffer_pool = SmartPoolPtr<RAMIOBuffer, IRAMIOBuffer>::Create();
     ram_batch_pool = SmartPoolPtr<RAMIOBatch, IIOBatch>::Create();
 
+    runner.batch_reader = CreateBatchReader(this, desc);
     runner.reader = CreateReader(this, desc);
     runner.set_resolvers();
 

@@ -14,7 +14,6 @@ IORequestResolverId create_vfs_buffer_resolver() SKR_NOEXCEPT;
 IORequestResolverId create_chunking_resolver(uint64_t chunk_size) SKR_NOEXCEPT;
 
 IORequestResolverId create_dstorage_file_resolver() SKR_NOEXCEPT;
-IORequestResolverId create_dstorage_buffer_resolver() SKR_NOEXCEPT;
 
 struct RAMService final : public IRAMService
 {
@@ -70,7 +69,7 @@ struct RAMService final : public IRAMService
 
         void set_resolvers() SKR_NOEXCEPT
         {
-            const bool dstorage = false;
+            const bool dstorage = batch_reader.get() && false;
             auto openfile = dstorage ? create_dstorage_file_resolver() : create_vfs_file_resolver();
             auto alloc_buffer = create_vfs_buffer_resolver();
             auto chain = skr::static_pointer_cast<IORequestResolverChain>(IIORequestResolverChain::Create());

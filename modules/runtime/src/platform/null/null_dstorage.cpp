@@ -49,6 +49,11 @@ SkrDStorageEventId skr_dstorage_queue_create_event(SkrDStorageQueueId queue)
     return nullptr;
 }
 
+bool skr_dstorage_event_test(SkrDStorageEventId event)
+{
+    return false;
+}
+
 void skr_dstorage_queue_free_event(SkrDStorageQueueId queue, SkrDStorageEventId)
 {
 
