@@ -18,12 +18,12 @@ struct allocator
 {
 	static T* allocate_single()
 	{
-		return (T*)sakura_newN(sizeof(T), kOpenStringMemory);
+		return (T*)sakura_new_nN(1, sizeof(T), kOpenStringMemory);
 	}
 	
 	static T* allocate_array(const size_t count)
 	{
-		return (T*)sakura_new_nN(sizeof(T), count, kOpenStringMemory);
+		return (T*)sakura_new_nN(count, sizeof(T), kOpenStringMemory);
 	}
 
 	static void deallocate_single(const T* ptr)
