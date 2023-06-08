@@ -9,7 +9,6 @@ struct DStorageFileResolver : public IORequestResolverBase
     virtual void resolve(IORequestId request) SKR_NOEXCEPT
     {
         auto rq = skr::static_pointer_cast<IORequestBase>(request);
-        
     }
 };
 

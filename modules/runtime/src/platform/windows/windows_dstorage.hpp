@@ -18,6 +18,7 @@ struct SkrWindowsDStorageInstance : public SkrDStorageInstance
     ~SkrWindowsDStorageInstance();
 
     IDStorageFactory* pFactory = nullptr;
+    struct ID3D12Device* pWarpDevice;
     skr::SharedLibrary dstorage_library;
     skr::SharedLibrary dstorage_core;
     bool dstorage_dll_dont_exist = false;
@@ -26,6 +27,7 @@ struct SkrWindowsDStorageInstance : public SkrDStorageInstance
 
 struct DStorageQueueWindows : public SkrDStorageQueue {
     SkrWindowsDStorageInstance* pInstance;
+    struct ID3D12Device* pDxDevice;
     IDStorageQueue* pQueue;
     IDStorageFactory* pFactory;
     uint64_t max_size;
@@ -60,3 +62,7 @@ struct DStorageQueueWindows : public SkrDStorageQueue {
 #endif
     }
 };
+
+#ifdef TRACY_PROFILE_DIRECT_STORAGE
+void skr_dstorage_queue_trace_submit(SkrDStorageQueueId queue);
+#endif

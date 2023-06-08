@@ -172,71 +172,10 @@ void cgpu_dstorage_queue_submit_d3d12(CGPUDStorageQueueId queue, CGPUFenceId fen
 {
     CGPUDStorageQueueD3D12* Q = (CGPUDStorageQueueD3D12*)queue;
     CGPUFence_D3D12* F = (CGPUFence_D3D12*)fence;
-#ifdef TRACY_PROFILE_DIRECT_STORAGE
-    {
-        static uint64_t submit_index = 0;
-        auto D = (CGPUDevice_D3D12*)F->super.device;
-        HANDLE event_handle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
-        CGPUDStorageQueueD3D12::ProfileTracer* tracer = nullptr;
-        {
-            SMutexLock profile_lock(Q->profile_mutex);
-            for (auto&& _tracer : Q->profile_tracers)
-            {
-                if (skr_atomicu32_load_acquire(&_tracer->finished))
-                {
-                    tracer = _tracer;
-                    skr_destroy_thread(tracer->thread_handle);
-                    tracer->fence->SetEventOnCompletion(tracer->fence_value++, event_handle);
-                    tracer->finished = 0;
-                    break;
-                }
-            }
-        }
-        if (tracer == nullptr)
-        {
-            tracer = SkrNew<CGPUDStorageQueueD3D12::ProfileTracer>();
-            tracer->fence_value = 1;
-            D->pDxDevice->CreateFence(0, D3D12_FENCE_FLAGS::D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&tracer->fence));
-            tracer->fence->SetEventOnCompletion(tracer->fence_value, event_handle);
-            {
-                SMutexLock profile_lock(Q->profile_mutex);
-                Q->profile_tracers.emplace_back(tracer);
-            }
-        }
-        Q->pQueue->EnqueueSignal(tracer->fence, tracer->fence_value);
-        tracer->fence_event = event_handle;
-        tracer->submit_index = submit_index++;
-        tracer->Q = Q;
-        tracer->desc.pData = tracer;
-        tracer->desc.pFunc = +[](void* arg){
-            auto tracer = (CGPUDStorageQueueD3D12::ProfileTracer*)arg;
-            auto Q = tracer->Q;
-            const auto event_handle = tracer->fence_event;
-            const auto name = skr::format(u8"DirectStorageQueueSubmit-{}", tracer->submit_index);
-            TracyFiberEnter(name.c_str());
-            if (Q->source_type == DSTORAGE_REQUEST_SOURCE_FILE)
-            {
-                ZoneScopedN("Working(File)");
-                WaitForSingleObject(event_handle, INFINITE);
-            }
-            else if (Q->source_type == DSTORAGE_REQUEST_SOURCE_MEMORY)
-            {
-                ZoneScopedN("Working(Memory)");
-                WaitForSingleObject(event_handle, INFINITE);
-            }
-            else
-            {
-                WaitForSingleObject(event_handle, INFINITE);
-            }
-            TracyFiberLeave;
-            CloseHandle(event_handle);
-            skr_atomicu32_store_release(&tracer->finished, 1);
-        };
-        skr_init_thread(&tracer->desc, &tracer->thread_handle);
-        submit_index++;
-    }
-#endif
     Q->pQueue->EnqueueSignal(F->pDxFence, F->mFenceValue++);
+#ifdef TRACY_PROFILE_DIRECT_STORAGE
+    skr_dstorage_queue_trace_submit(queue);
+#endif
     Q->pQueue->Submit();
 }
 

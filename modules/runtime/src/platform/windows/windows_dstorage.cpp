@@ -31,6 +31,9 @@ SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Get()
                     SKR_LOG_ERROR("Failed to get DStorage factory!");
                     return nullptr;
                 }
+
+                // Create WRAP Device
+                D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&_this->pWarpDevice));
             }
         }
     }
@@ -103,6 +106,7 @@ SkrDStorageQueueId skr_create_dstorage_queue(const SkrDStorageQueueDescriptor* d
 #endif
     Q->max_size = _this->sDirectStorageStagingBufferSize;
     Q->pFactory = pFactory;
+    Q->pDxDevice = queueDesc.Device ? queueDesc.Device : _this->pWarpDevice;
     Q->device = desc->gpu_device;
     Q->pInstance = _this;
     return Q;
@@ -111,7 +115,6 @@ SkrDStorageQueueId skr_create_dstorage_queue(const SkrDStorageQueueDescriptor* d
 void skr_free_dstorage_queue(SkrDStorageQueueId queue)
 {
     DStorageQueueWindows* Q = (DStorageQueueWindows*)queue;
-
     if (Q->pQueue)
     {
         // TODO: WaitErrorEvent & Handle errors 
@@ -160,3 +163,135 @@ void skr_dstorage_close_file(SkrDStorageInstanceId inst, SkrDStorageFileHandle f
     pFile->Close();
     pFile->Release();
 }
+
+struct SkrDStorageEvent
+{
+    SkrDStorageEvent(ID3D12Fence* pFence) : pFence(pFence) {}
+    ID3D12Fence* pFence = nullptr;
+    uint64_t mFenceValue = 0;
+};
+
+SkrDStorageEventId skr_dstorage_queue_create_event(SkrDStorageQueueId queue)
+{
+    DStorageQueueWindows* Q = (DStorageQueueWindows*)queue;
+    ID3D12Fence* pFence = nullptr;
+    Q->pDxDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&pFence));
+    return SkrNew<SkrDStorageEvent>(pFence);
+}
+
+void skr_dstorage_queue_free_event(SkrDStorageQueueId queue, SkrDStorageEventId event)
+{
+    event->pFence->Release();
+}
+
+void skr_dstorage_queue_submit(SkrDStorageQueueId queue, SkrDStorageEventId event)
+{
+    DStorageQueueWindows* Q = (DStorageQueueWindows*)queue;
+    Q->pQueue->EnqueueSignal(event->pFence, event->mFenceValue++);
+#ifdef TRACY_PROFILE_DIRECT_STORAGE
+    skr_dstorage_queue_trace_submit(queue);
+#endif
+    Q->pQueue->Submit();
+}
+
+void skr_dstorage_enqueue_request(SkrDStorageQueueId queue, const SkrDStorageIODescriptor* desc)
+{
+    ZoneScopedN("EnqueueDStorage(Memory)");
+
+    DSTORAGE_REQUEST request = {};
+    DStorageQueueWindows* Q = (DStorageQueueWindows*)queue;
+    request.Options.DestinationType = DSTORAGE_REQUEST_DESTINATION_MEMORY;
+    if (desc->compression == 0 || desc->compression >= SKR_DSTORAGE_COMPRESSION_CUSTOM)
+    {
+        request.Options.CompressionFormat = (DSTORAGE_COMPRESSION_FORMAT)desc->compression;
+    }
+    if (desc->source_type == SKR_DSTORAGE_SOURCE_FILE)
+    {
+        SKR_ASSERT(Q->source_type == DSTORAGE_REQUEST_SOURCE_FILE);
+
+        request.Options.SourceType = DSTORAGE_REQUEST_SOURCE_FILE;
+        request.Source.File.Source = (IDStorageFile*)desc->source_file.file;
+        request.Source.File.Offset = desc->source_file.offset;
+        request.Source.File.Size = (uint32_t)desc->source_file.size;
+    }
+    else if (desc->source_type == SKR_DSTORAGE_SOURCE_MEMORY)
+    {
+        SKR_ASSERT(Q->source_type == DSTORAGE_REQUEST_SOURCE_MEMORY);
+
+        request.Options.SourceType = DSTORAGE_REQUEST_SOURCE_MEMORY;
+        request.Source.Memory.Source = desc->source_memory.bytes;
+        request.Source.Memory.Size = (uint32_t)desc->source_memory.bytes_size;
+    }
+    request.Destination.Memory.Size = (uint32_t)desc->uncompressed_size;
+    request.Destination.Memory.Buffer = desc->destination;
+    request.UncompressedSize = (uint32_t)desc->uncompressed_size;
+    Q->pQueue->EnqueueRequest(&request);
+    if (auto event = desc->event)
+        Q->pQueue->EnqueueSignal(event->pFence, event->mFenceValue++);
+}
+
+#ifdef TRACY_PROFILE_DIRECT_STORAGE
+void skr_dstorage_queue_trace_submit(SkrDStorageQueueId queue)
+{
+    DStorageQueueWindows* Q = (DStorageQueueWindows*)queue;
+    static uint64_t submit_index = 0;
+    HANDLE event_handle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
+    DStorageQueueWindows::ProfileTracer* tracer = nullptr;
+    {
+        SMutexLock profile_lock(Q->profile_mutex);
+        for (auto&& _tracer : Q->profile_tracers)
+        {
+            if (skr_atomicu32_load_acquire(&_tracer->finished))
+            {
+                tracer = _tracer;
+                skr_destroy_thread(tracer->thread_handle);
+                tracer->fence->SetEventOnCompletion(tracer->fence_value++, event_handle);
+                tracer->finished = 0;
+                break;
+            }
+        }
+    }
+    if (tracer == nullptr)
+    {
+        tracer = SkrNew<DStorageQueueWindows::ProfileTracer>();
+        tracer->fence_value = 1;
+        Q->pDxDevice->CreateFence(0, D3D12_FENCE_FLAGS::D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&tracer->fence));
+        tracer->fence->SetEventOnCompletion(tracer->fence_value, event_handle);
+        {
+            SMutexLock profile_lock(Q->profile_mutex);
+            Q->profile_tracers.emplace_back(tracer);
+        }
+    }
+    Q->pQueue->EnqueueSignal(tracer->fence, tracer->fence_value);
+    tracer->fence_event = event_handle;
+    tracer->submit_index = submit_index++;
+    tracer->Q = Q;
+    tracer->desc.pData = tracer;
+    tracer->desc.pFunc = +[](void* arg){
+        auto tracer = (DStorageQueueWindows::ProfileTracer*)arg;
+        auto Q = tracer->Q;
+        const auto event_handle = tracer->fence_event;
+        const auto name = skr::format(u8"DirectStorageQueueSubmit-{}", tracer->submit_index);
+        TracyFiberEnter(name.c_str());
+        if (Q->source_type == DSTORAGE_REQUEST_SOURCE_FILE)
+        {
+            ZoneScopedN("Working(File)");
+            WaitForSingleObject(event_handle, INFINITE);
+        }
+        else if (Q->source_type == DSTORAGE_REQUEST_SOURCE_MEMORY)
+        {
+            ZoneScopedN("Working(Memory)");
+            WaitForSingleObject(event_handle, INFINITE);
+        }
+        else
+        {
+            WaitForSingleObject(event_handle, INFINITE);
+        }
+        TracyFiberLeave;
+        CloseHandle(event_handle);
+        skr_atomicu32_store_release(&tracer->finished, 1);
+    };
+    skr_init_thread(&tracer->desc, &tracer->thread_handle);
+    submit_index++;
+}
+#endif
