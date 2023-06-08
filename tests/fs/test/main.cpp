@@ -141,7 +141,7 @@ TEST_P(VFSTest, asyncread2)
     ZoneScopedN("asyncread2");
 
     auto jqDesc = make_zeroed<skr::JobQueueDesc>();
-    jqDesc.thread_count = 2;
+    jqDesc.thread_count = 1;
     jqDesc.priority = SKR_THREAD_ABOVE_NORMAL;
     jqDesc.name = u8"Tool-IOJobQueue";
     auto io_job_queue = SkrNew<skr::JobQueue>(jqDesc);
