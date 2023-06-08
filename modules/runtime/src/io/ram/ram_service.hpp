@@ -73,19 +73,18 @@ struct RAMService final : public IRAMService
             const bool dstorage = false;
             auto openfile = dstorage ? create_dstorage_file_resolver() : create_vfs_file_resolver();
             auto alloc_buffer = create_vfs_buffer_resolver();
-            resolver_chain = IIORequestResolverChain::Create();
-            auto chain = skr::static_pointer_cast<IORequestResolverChain>(resolver_chain);
+            auto chain = skr::static_pointer_cast<IORequestResolverChain>(IIORequestResolverChain::Create());
             chain->runner = this;
             chain->then(openfile)
                 ->then(alloc_buffer);
             batch_buffer = SObjectPtr<IOBatchBuffer>::Create(); // hold batches
             if (dstorage)
             {
-                batch_processors = { batch_buffer, resolver_chain, batch_reader };
+                batch_processors = { batch_buffer, chain, batch_reader };
             }
             else
             {
-                batch_processors = { batch_buffer, resolver_chain };
+                batch_processors = { batch_buffer, chain };
                 request_processors = { reader };
             }
         }
@@ -122,7 +121,6 @@ struct RAMService final : public IRAMService
         }
 
         IOBatchBufferId batch_buffer = nullptr;
-        IORequestResolverChainId resolver_chain = nullptr;
         IOReaderId<IIORequestProcessor> reader = nullptr;
         IOReaderId<IIOBatchProcessor> batch_reader = nullptr;
 

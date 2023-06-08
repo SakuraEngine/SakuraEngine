@@ -44,3 +44,29 @@ RUNTIME_API void skr_dstorage_close_file(SkrDStorageQueueId queue, SkrDStorageFi
 {
 
 }
+SkrDStorageEventId skr_dstorage_queue_create_event(SkrDStorageQueueId queue)
+{
+    return nullptr;
+}
+
+void skr_dstorage_queue_free_event(SkrDStorageQueueId queue, SkrDStorageEventId)
+{
+
+}
+
+void skr_dstorage_queue_submit(SkrDStorageQueueId queue, SkrDStorageEventId event)
+{
+
+}
+
+void skr_dstorage_enqueue_request(SkrDStorageQueueId queue, const SkrDStorageIODescriptor* desc)
+{
+
+}
+
+#ifdef TRACY_PROFILE_DIRECT_STORAGE
+void skr_dstorage_queue_trace_submit(SkrDStorageQueueId queue)
+{
+
+}
+#endif
