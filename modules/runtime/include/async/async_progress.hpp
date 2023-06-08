@@ -337,14 +337,14 @@ private:
 
         void store(Data const& data)
         {
-            skr_rw_mutex_acuire_w(&mMutex);
+            skr_rw_mutex_acquire_w(&mMutex);
             mData = data;
             skr_rw_mutex_release(&mMutex);
         }
 
         Data load() const
         {
-            skr_rw_mutex_acuire_r(&mMutex);
+            skr_rw_mutex_acquire_r(&mMutex);
             const auto data = mData;
             skr_rw_mutex_release(&mMutex);
             return data;
@@ -402,7 +402,7 @@ private:
         template <typename BinaryOp>
         void store(Data const& data, BinaryOp fnLastShouldBeOverride)
         {
-            skr_rw_mutex_acuire_w(&mMutex);
+            skr_rw_mutex_acquire_w(&mMutex);
 
             if (mData.empty() || !fnLastShouldBeOverride(mData.back(), data))
             {
@@ -418,7 +418,7 @@ private:
 
         eastl::queue<Data> move()
         {
-            skr_rw_mutex_acuire_w(&mMutex);
+            skr_rw_mutex_acquire_w(&mMutex);
             auto const mDataMoved = std::move(mData);
             skr_rw_mutex_release(&mMutex);
             return mDataMoved;

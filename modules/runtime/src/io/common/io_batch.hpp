@@ -20,7 +20,7 @@ public:
 
     skr::span<IORequestId> get_requests() SKR_NOEXCEPT
     {
-        skr_rw_mutex_acuire_r(&rw_lock);
+        skr_rw_mutex_acquire_r(&rw_lock);
         SKR_DEFER( { skr_rw_mutex_release(&rw_lock); });
         return requests;
     }
@@ -32,14 +32,14 @@ protected:
     friend struct RunnerBase;
     void addRequest(IORequestId rq) SKR_NOEXCEPT
     {
-        skr_rw_mutex_acuire_w(&rw_lock);
+        skr_rw_mutex_acquire_w(&rw_lock);
         SKR_DEFER( { skr_rw_mutex_release(&rw_lock); });
         requests.push_back(rq);
     }
 
     void removeCancelledRequest(IORequestId rq) SKR_NOEXCEPT
     {
-        skr_rw_mutex_acuire_w(&rw_lock);
+        skr_rw_mutex_acquire_w(&rw_lock);
         SKR_DEFER( { skr_rw_mutex_release(&rw_lock); });
         auto fnd = eastl::remove_if(
             requests.begin(), requests.end(), [rq](IORequestId r) { return r == rq; });

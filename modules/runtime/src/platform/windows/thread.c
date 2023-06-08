@@ -194,7 +194,7 @@ void skr_destroy_rw_mutex(SRWMutex* pMutex)
     skr_destroy_mutex(&pMutex->m);
 }
 
-void skr_rw_mutex_acuire_r(SRWMutex* pMutex)
+void skr_rw_mutex_acquire_r(SRWMutex* pMutex)
 {
     if (pMutex->m.isSRW)
         skr_mutex_acquire_srw_shared(&pMutex->m);
@@ -202,7 +202,7 @@ void skr_rw_mutex_acuire_r(SRWMutex* pMutex)
         skr_mutex_acquire_cs(&pMutex->m);
 }
 
-void skr_rw_mutex_acuire_w(SRWMutex* pMutex)
+void skr_rw_mutex_acquire_w(SRWMutex* pMutex)
 {
     if (pMutex->m.isSRW)
         skr_mutex_acquire_srw(&pMutex->m);
