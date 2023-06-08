@@ -248,7 +248,7 @@ void skr_dstorage_queue_trace_submit(SkrDStorageQueueId queue)
     DStorageQueueWindows::ProfileTracer* tracer = nullptr;
     {
         SMutexLock profile_lock(Q->profile_mutex);
-        for (auto&& _tracer : Q->profile_tracers)
+        for (auto&& _tracer : Q->profile_tracers) // find and use an existed & finished tracer
         {
             if (skr_atomicu32_load_acquire(&_tracer->finished))
             {
@@ -272,16 +272,18 @@ void skr_dstorage_queue_trace_submit(SkrDStorageQueueId queue)
         }
     }
     Q->pQueue->EnqueueSignal(tracer->fence, tracer->fence_value);
+    tracer->Q = Q;
     tracer->fence_event = event_handle;
     tracer->submit_index = submit_index++;
-    tracer->Q = Q;
-    tracer->desc.pData = tracer;
+    if (Q->device)
+        tracer->name = skr::format(u8"DirectStorageQueueSubmit(VRAM)-{}", tracer->submit_index);
+    else
+        tracer->name = skr::format(u8"DirectStorageQueueSubmit(RAM)-{}", tracer->submit_index);
     tracer->desc.pFunc = +[](void* arg){
         auto tracer = (DStorageQueueWindows::ProfileTracer*)arg;
         auto Q = tracer->Q;
         const auto event_handle = tracer->fence_event;
-        const auto name = skr::format(u8"DirectStorageQueueSubmit-{}", tracer->submit_index);
-        TracyFiberEnter(name.c_str());
+        TracyFiberEnter(tracer->name.c_str());
         if (Q->source_type == DSTORAGE_REQUEST_SOURCE_FILE)
         {
             ZoneScopedN("Working(File)");
@@ -300,6 +302,7 @@ void skr_dstorage_queue_trace_submit(SkrDStorageQueueId queue)
         CloseHandle(event_handle);
         skr_atomicu32_store_release(&tracer->finished, 1);
     };
+    tracer->desc.pData = tracer;
     skr_init_thread(&tracer->desc, &tracer->thread_handle);
     submit_index++;
 }

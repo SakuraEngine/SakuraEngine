@@ -35,6 +35,7 @@ struct DStorageQueueWindows : public SkrDStorageQueue {
 #ifdef TRACY_PROFILE_DIRECT_STORAGE
     SMutex profile_mutex;
     struct ProfileTracer {
+        skr::string name;
         DStorageQueueWindows* Q;
         ID3D12Fence* fence;
         SThreadDesc desc;

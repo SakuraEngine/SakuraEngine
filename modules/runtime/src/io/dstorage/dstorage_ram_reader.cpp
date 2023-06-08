@@ -64,19 +64,26 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
     IOBatchId batch;
     while (fetched_batches[priority].try_dequeue(batch))
     {
+        //TODO: cancel from batch & remove this
+        bool all_cancelled = true;
         for (auto request : batch->get_requests())
         {
             auto rq = skr::static_pointer_cast<RAMIORequest>(request);
             auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
-            SKR_ASSERT(rq->dfile);
             if (service->runner.try_cancel(priority, rq))
             {
-                skr_dstorage_close_file(instance, rq->dfile);
-                rq->dfile = nullptr;
+                if (rq->dfile)
+                {
+                    skr_dstorage_close_file(instance, rq->dfile);
+                    rq->dfile = nullptr;
+                }
             }
             else if ( rq->getStatus() == SKR_IO_STAGE_RESOLVING)
             {
+                all_cancelled = false;
+
                 ZoneScopedN("read_request");
+                SKR_ASSERT(rq->dfile);
                 rq->setStatus(SKR_IO_STAGE_LOADING);
                 uint64_t dst_offset = 0u;
                 for (const auto& block : rq->blocks)
@@ -102,7 +109,11 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
             else
                 SKR_UNREACHABLE_CODE();
         }
-        event->batches.emplace_back(batch);
+
+        if (all_cancelled)
+            dec_processing(priority);
+        else
+            event->batches.emplace_back(batch);
     }
     if (const auto enqueued = event->batches.size())
     {
@@ -124,12 +135,17 @@ void DStorageRAMReader::pollSubmitted(SkrAsyncServicePriority priority) SKR_NOEX
                     auto rq = skr::static_pointer_cast<RAMIORequest>(request);
                     rq->setStatus(SKR_IO_STAGE_LOADED);
                 }
-                loaded_requests[priority].enqueue(batch);
+                loaded_batches[priority].enqueue(batch);
                 dec_processing(priority);
                 inc_processed(priority);
             }
+            e.reset();
         }
     }
+
+    // remove empty events
+    auto cleaner = eastl::remove_if(submitted[priority].begin(), submitted[priority].end(), [](const auto& e) { return !e; });
+    submitted[priority].erase(cleaner, submitted[priority].end());
 }
 
 void DStorageRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
@@ -143,12 +159,12 @@ void DStorageRAMReader::recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 
 }
 
-bool DStorageRAMReader::poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& request) SKR_NOEXCEPT
+bool DStorageRAMReader::poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT
 {
-    if (loaded_requests[priority].try_dequeue(request))
+    if (loaded_batches[priority].try_dequeue(batch))
     {
         dec_processed(priority);
-        return request.get();
+        return batch.get();
     }
     return false;
 }
