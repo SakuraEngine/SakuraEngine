@@ -35,7 +35,6 @@ bool initialize_gdi_application(gdi_application_t* app)
         ioServiceDesc.name = SKR_UTF8("GUI-IRAMService");
         ioServiceDesc.sleep_time = 1000 / 60;
         app->ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
-        app->ram_service->add_default_resolvers();
         app->ram_service->run();
     }
     {

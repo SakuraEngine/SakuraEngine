@@ -25,6 +25,7 @@ struct SkrWindowsDStorageInstance : public SkrDStorageInstance
 };
 
 struct DStorageQueueWindows : public SkrDStorageQueue {
+    SkrWindowsDStorageInstance* pInstance;
     IDStorageQueue* pQueue;
     IDStorageFactory* pFactory;
     uint64_t max_size;

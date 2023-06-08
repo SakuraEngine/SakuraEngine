@@ -33,18 +33,5 @@ void IORequestResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEX
     }
 }
 
-struct OpenFileResolver : public IORequestResolverBase
-{
-    virtual void resolve(IORequestId request) SKR_NOEXCEPT
-    {
-        request->open_file(); 
-    }
-};
-
-IORequestResolverId IIOService::create_file_resolver() SKR_NOEXCEPT
-{ 
-    return SObjectPtr<OpenFileResolver>::Create();
-}
-
 } // namespace io
 } // namespace skr

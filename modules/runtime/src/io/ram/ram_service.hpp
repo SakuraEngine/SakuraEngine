@@ -9,17 +9,19 @@
 namespace skr {
 namespace io {
 
+IORequestResolverId create_vfs_file_resolver() SKR_NOEXCEPT;
+IORequestResolverId create_vfs_buffer_resolver() SKR_NOEXCEPT;
+IORequestResolverId create_chunking_resolver(uint64_t chunk_size) SKR_NOEXCEPT;
+
+IORequestResolverId create_dstorage_file_resolver() SKR_NOEXCEPT;
+IORequestResolverId create_dstorage_buffer_resolver() SKR_NOEXCEPT;
+
 struct RAMService final : public IRAMService
 {
     RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
     
     [[nodiscard]] IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT;
     [[nodiscard]] IORequestId open_request() SKR_NOEXCEPT;
-
-    void set_resolvers(IORequestResolverChainId chain) SKR_NOEXCEPT
-    {
-        runner.set_resolvers(chain);
-    }
 
     RAMIOBufferId request(IORequestId request, skr_io_future_t* future, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void request(IOBatchId request) SKR_NOEXCEPT;
@@ -66,15 +68,26 @@ struct RAMService final : public IRAMService
             skr_atomic64_add_relaxed(&processing_request_counts[priority], 1);
         }
 
-        void set_resolvers(IORequestResolverChainId _chain) SKR_NOEXCEPT
+        void set_resolvers() SKR_NOEXCEPT
         {
-            auto chain = skr::static_pointer_cast<IORequestResolverChain>(_chain);
+            const bool dstorage = false;
+            auto openfile = dstorage ? create_dstorage_file_resolver() : create_vfs_file_resolver();
+            auto alloc_buffer = create_vfs_buffer_resolver();
+            resolver_chain = IIORequestResolverChain::Create();
+            auto chain = skr::static_pointer_cast<IORequestResolverChain>(resolver_chain);
             chain->runner = this;
-
-            resolver_chain = chain;
-            batch_buffer = SObjectPtr<IOBatchBuffer>::Create();
-            batch_processors = { batch_buffer, resolver_chain };
-            request_processors = { reader };
+            chain->then(openfile)
+                ->then(alloc_buffer);
+            batch_buffer = SObjectPtr<IOBatchBuffer>::Create(); // hold batches
+            if (dstorage)
+            {
+                batch_processors = { batch_buffer, resolver_chain, batch_reader };
+            }
+            else
+            {
+                batch_processors = { batch_buffer, resolver_chain };
+                request_processors = { reader };
+            }
         }
 
         uint64_t processing_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT
@@ -111,6 +124,7 @@ struct RAMService final : public IRAMService
         IOBatchBufferId batch_buffer = nullptr;
         IORequestResolverChainId resolver_chain = nullptr;
         IOReaderId<IIORequestProcessor> reader = nullptr;
+        IOReaderId<IIOBatchProcessor> batch_reader = nullptr;
 
         SAtomic64 processing_request_counts[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
         RAMService* service = nullptr;
