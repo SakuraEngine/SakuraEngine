@@ -3,6 +3,22 @@
 
 namespace skr::gui
 {
+constexpr float fmod(float x, float y) SKR_NOEXCEPT
+{
+    if (std::is_constant_evaluated())
+    {
+        float div = x / y;
+        div = div > 0 ? div : -div;
+        if(div < 8388608.f) //check if div is in range of int
+            div = float(static_cast<int>(div));
+        return x - div * y;
+    }
+    else 
+    {
+        return std::fmod(x, y);
+    }
+    
+}
 struct Offset {
     float x = 0;
     float y = 0;
@@ -28,7 +44,7 @@ struct Offset {
     inline float radians() const SKR_NOEXCEPT { return std::atan2(y, x); }
 
     // compare
-    inline constexpr bool operator<=>(const Offset& other) const SKR_NOEXCEPT = default;
+    inline constexpr std::partial_ordering operator<=>(const Offset& other) const SKR_NOEXCEPT = default;
 
     // arithmetic
     inline constexpr Offset operator-() const SKR_NOEXCEPT { return { -x, -y }; }
@@ -37,13 +53,13 @@ struct Offset {
     inline constexpr Offset operator-(float rhs) const SKR_NOEXCEPT { return { x - rhs, y - rhs }; }
     inline constexpr Offset operator*(float rhs) const SKR_NOEXCEPT { return { x * rhs, y * rhs }; }
     inline constexpr Offset operator/(float rhs) const SKR_NOEXCEPT { return { x / rhs, y / rhs }; }
-    inline constexpr Offset operator%(float rhs) const SKR_NOEXCEPT { return { std::fmod(x, rhs), std::fmod(y, rhs) }; }
+    inline constexpr Offset operator%(float rhs) const SKR_NOEXCEPT { return { fmod(x, rhs), fmod(y, rhs) }; }
 
     inline constexpr Offset operator+(const Offset& rhs) const SKR_NOEXCEPT { return { x + rhs.x, y + rhs.y }; }
     inline constexpr Offset operator-(const Offset& rhs) const SKR_NOEXCEPT { return { x - rhs.x, y - rhs.y }; }
     inline constexpr Offset operator*(const Offset& rhs) const SKR_NOEXCEPT { return { x * rhs.x, y * rhs.y }; }
     inline constexpr Offset operator/(const Offset& rhs) const SKR_NOEXCEPT { return { x / rhs.x, y / rhs.y }; }
-    inline constexpr Offset operator%(const Offset& rhs) const SKR_NOEXCEPT { return { std::fmod(x, rhs.x), std::fmod(y, rhs.y) }; }
+    inline constexpr Offset operator%(const Offset& rhs) const SKR_NOEXCEPT { return { fmod(x, rhs.x), fmod(y, rhs.y) }; }
 
     inline constexpr Offset& operator+=(float rhs) SKR_NOEXCEPT { return *this = *this + rhs; }
     inline constexpr Offset& operator-=(float rhs) SKR_NOEXCEPT { return *this = *this - rhs; }
@@ -134,20 +150,20 @@ public:
     inline constexpr Offset bottom_right(const Offset& offset) const SKR_NOEXCEPT { return { offset.x + width, offset.y + height }; }
 
     // compare
-    inline constexpr bool operator<=>(const Size& other) const SKR_NOEXCEPT = default;
+    inline constexpr std::partial_ordering operator<=>(const Size& other) const SKR_NOEXCEPT = default;
 
     // arithmetic
     inline constexpr Size operator+(float rhs) const SKR_NOEXCEPT { return { width + rhs, height + rhs }; }
     inline constexpr Size operator-(float rhs) const SKR_NOEXCEPT { return { width - rhs, height - rhs }; }
     inline constexpr Size operator*(float rhs) const SKR_NOEXCEPT { return { width * rhs, height * rhs }; }
     inline constexpr Size operator/(float rhs) const SKR_NOEXCEPT { return { width / rhs, height / rhs }; }
-    inline constexpr Size operator%(float rhs) const SKR_NOEXCEPT { return { std::fmod(width, rhs), std::fmod(height, rhs) }; }
+    inline constexpr Size operator%(float rhs) const SKR_NOEXCEPT { return { fmod(width, rhs), fmod(height, rhs) }; }
 
     inline constexpr Size operator+(const Size& rhs) const SKR_NOEXCEPT { return { width + rhs.width, height + rhs.height }; }
     inline constexpr Size operator-(const Size& rhs) const SKR_NOEXCEPT { return { width - rhs.width, height - rhs.height }; }
     inline constexpr Size operator*(const Size& rhs) const SKR_NOEXCEPT { return { width * rhs.width, height * rhs.height }; }
     inline constexpr Size operator/(const Size& rhs) const SKR_NOEXCEPT { return { width / rhs.width, height / rhs.height }; }
-    inline constexpr Size operator%(const Size& rhs) const SKR_NOEXCEPT { return { std::fmod(width, rhs.width), std::fmod(height, rhs.height) }; }
+    inline constexpr Size operator%(const Size& rhs) const SKR_NOEXCEPT { return { fmod(width, rhs.width), fmod(height, rhs.height) }; }
 
     inline constexpr Size& operator+=(float rhs) SKR_NOEXCEPT { return *this = *this + rhs; }
     inline constexpr Size& operator-=(float rhs) SKR_NOEXCEPT { return *this = *this - rhs; }
@@ -333,7 +349,7 @@ public:
     }
 
     // compare
-    inline constexpr bool operator<=>(const Rect& other) const SKR_NOEXCEPT = default;
+    inline constexpr std::partial_ordering operator<=>(const Rect& other) const SKR_NOEXCEPT = default;
 
     // arithmetic
     inline static LiteOptional<Rect> lerp(LiteOptional<Rect> a, LiteOptional<Rect> b, float t)
