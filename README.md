@@ -193,6 +193,10 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 
 </div>
 
+## 花絮
+
+我们最终抛弃但曾探索过的成果。抛弃不代表这些技术差或是不可用，而是我们综合考虑后选择性地放弃了它们。
+
 ### [热更三角形](samples/hot-triangle)
 
 这是一个多后端的三角形绘制 demo。
@@ -210,7 +214,6 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - platform
 - math
 - cgpu: [[api]](include/cgpu/api.h) [[design]](include/cgpu/README.md)
-- swa: [[api]](include/wasm/api.h) [[design]](include/wasm/README.md)
 
 ## 嵌入源码的开源库和版本
 - LMDB v0.9.29 (BSD)
@@ -221,7 +224,6 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - VulkanMemoryAllocator 3.0.1, release
 - D3D12MemoryAllocator 2.0.1 release
 - SPIRV-Reflect b68b5a8 (Apache-2.0)
-- wasm3 a3abb3f, org.fork (MIT)
 - RealtimeMath 80d08a8 (MIT)
 - FiberTaskingLib 9d7b27d (Apache-2.0)
 - sole 1.0.1 (zlib License)
