@@ -85,7 +85,7 @@ private:
 
     skr_gui_widget_id _widget = nullptr;
     skr_gui_element_id _parent = nullptr;
-    skr_gui_slot_id _slot = nullptr;
+    skr_gui_slot_id _slot = nullptr; // TODO. use int64_t and rename to _slot_index, parentData -> slot and slot -> slot_index
     BuildOwner* _owner = nullptr;
     ElementLifecycle _lifecycle_state = ElementLifecycle::initial;
 };

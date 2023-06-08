@@ -49,6 +49,7 @@ constexpr skr_guid_t make_guid_helper(const char8_t* begin)
 
 // object & interface base
 struct IObject {
+    virtual ~IObject() = default;
     virtual skr_guid_t guid() const SKR_NOEXCEPT = 0;
     virtual void base_guid(const skr_guid_t*& p, size_t n) const SKR_NOEXCEPT = 0;
     virtual void* cast(skr_guid_t id) const SKR_NOEXCEPT = 0;

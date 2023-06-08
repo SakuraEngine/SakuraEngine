@@ -51,6 +51,16 @@
         return SKR_GUI_TYPE_ID_OF(this);                        \
     }
 
+// assert
+#define SKR_GUI_ASSERT(__EXPR) SKR_ASSERT(__EXPR)
+
+// log
+#include "misc/log.hpp"
+#define SKR_GUI_LOG_ERROR(...) SKR_LOG_ERROR(__VA_ARGS__)
+#define SKR_GUI_LOG_WARN(...) SKR_LOG_WARN(__VA_ARGS__)
+#define SKR_GUI_LOG_INFO(...) SKR_LOG_INFO(__VA_ARGS__)
+#define SKR_GUI_LOG_DEBUG(...) SKR_LOG_DEBUG(__VA_ARGS__)
+
 namespace skr::gui
 {
 // function

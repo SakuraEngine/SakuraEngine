@@ -17,11 +17,11 @@ BuildOwner::~BuildOwner()
 
 void BuildOwner::schedule_build_for(NotNull<Element*> element) SKR_NOEXCEPT
 {
-    SKR_ASSERT(element->_owner == this);
-    SKR_ASSERT(element->_dirty);
+    SKR_GUI_ASSERT(element->_owner == this);
+    SKR_GUI_ASSERT(element->_dirty);
     if (element->_in_dirty_list)
     {
-        SKR_ASSERT(_debug_is_in_build_scope);
+        SKR_GUI_ASSERT(_debug_is_in_build_scope);
         _dirty_elements_needs_resorting = true;
         return;
     }
@@ -37,8 +37,8 @@ void BuildOwner::build_scope(Element* context) SKR_NOEXCEPT
 {
     if (_dirty_elements->empty())
         return;
-    SKR_ASSERT(_debug_state_lock_level >= 0);
-    SKR_ASSERT(!_debug_building);
+    SKR_GUI_ASSERT(_debug_state_lock_level >= 0);
+    SKR_GUI_ASSERT(!_debug_building);
     _debug_state_lock_level++;
     _debug_building = true;
     _debug_is_in_build_scope = true;
@@ -46,17 +46,17 @@ void BuildOwner::build_scope(Element* context) SKR_NOEXCEPT
     auto cleanup = [&]() {
         for (Element* element : *_dirty_elements)
         {
-            SKR_ASSERT(element->_in_dirty_list);
+            SKR_GUI_ASSERT(element->_in_dirty_list);
             element->_in_dirty_list = false;
         }
         _dirty_elements->clear();
         _scheduled_flush_dirty_elements = false;
         _dirty_elements_needs_resorting = false;
         _debug_is_in_build_scope = false;
-        SKR_ASSERT(_debug_building);
+        SKR_GUI_ASSERT(_debug_building);
         _debug_building = false;
         _debug_state_lock_level--;
-        SKR_ASSERT(_debug_state_lock_level >= 0);
+        SKR_GUI_ASSERT(_debug_state_lock_level >= 0);
     };
     SKR_DEFER({ cleanup(); });
 
@@ -88,8 +88,8 @@ void BuildOwner::build_scope(Element* context) SKR_NOEXCEPT
             }
         }
         Element* dirty_element = _dirty_elements[i];
-        SKR_ASSERT(dirty_element->_in_dirty_list);
-        SKR_ASSERT(dirty_element->_lifecycle_state != ElementLifecycle::active || dirty_element->_debug_is_in_scope(context));
+        SKR_GUI_ASSERT(dirty_element->_in_dirty_list);
+        SKR_GUI_ASSERT(dirty_element->_lifecycle_state != ElementLifecycle::active || dirty_element->_debug_is_in_scope(context));
         dirty_element->rebuild();
     }
     auto checkIfMissing = [&]() {
@@ -101,7 +101,7 @@ void BuildOwner::build_scope(Element* context) SKR_NOEXCEPT
         }
         return false;
     };
-    SKR_ASSERT(!checkIfMissing());
+    SKR_GUI_ASSERT(!checkIfMissing());
 }
 
 void BuildOwner::finalize_tree() SKR_NOEXCEPT
