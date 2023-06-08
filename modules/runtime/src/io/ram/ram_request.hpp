@@ -12,25 +12,10 @@ namespace io {
 struct RAMIORequest final : public IORequestBase
 {
     friend struct SmartPool<RAMIORequest, IIORequest>;
-    skr_vfs_t* vfs = nullptr;
-    skr::string path;
-    skr_io_file_handle file;
+
     RAMIOBufferId destination = nullptr;
     eastl::fixed_vector<skr_io_block_t, 1> blocks;
-
-    void set_vfs(skr_vfs_t* _vfs) SKR_NOEXCEPT { vfs = _vfs; }
-    void set_path(const char8_t* p) SKR_NOEXCEPT { path = p; }
-    virtual const char8_t* get_path() const SKR_NOEXCEPT { return path.u8_str(); }
     
-    void open_file() SKR_NOEXCEPT
-    {
-        SKR_ASSERT(vfs);
-        if (!file)
-        {
-            file = skr_vfs_fopen(vfs, path.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
-        }
-    }
-
     uint64_t get_fsize() const SKR_NOEXCEPT
     {
         SKR_ASSERT(file);

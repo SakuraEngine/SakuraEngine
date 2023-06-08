@@ -61,32 +61,9 @@ ECGPUDStorageAvailability cgpu_query_dstorage_availability_d3d12(CGPUDeviceId de
 using CGPUDStorageQueueD3D12 = DStorageQueueWindows;
 CGPUDStorageQueueId cgpu_create_dstorage_queue_d3d12(CGPUDeviceId device, const CGPUDStorageQueueDescriptor* desc)
 {
-    auto _this = (SkrWindowsDStorageInstance*)skr_get_dstorage_instnace();
-    if (!_this) return nullptr;
-
-    CGPUDStorageQueueD3D12* Q = SkrNew<CGPUDStorageQueueD3D12>();
-    auto Device = (CGPUDevice_D3D12*)device;
-    DSTORAGE_QUEUE_DESC queueDesc{};
-    queueDesc.Capacity = desc->capacity;
-    queueDesc.Priority = (DSTORAGE_PRIORITY)desc->priority;
-    Q->source_type = queueDesc.SourceType = (DSTORAGE_REQUEST_SOURCE_TYPE)desc->source;
-    queueDesc.Name = (const char*)desc->name;
-    if(Device) queueDesc.Device = Device->pDxDevice;
-    IDStorageFactory* pFactory = _this->pFactory;
-    if (!pFactory) return nullptr;
-    if (!SUCCEEDED(pFactory->CreateQueue(&queueDesc, IID_PPV_ARGS(&Q->pQueue))))
-    {
-        SKR_LOG_ERROR("Failed to create DStorage queue!");
-        SkrDelete(Q);
-        return nullptr;
-    }
-#ifdef TRACY_PROFILE_DIRECT_STORAGE
-    skr_init_mutex_recursive(&Q->profile_mutex);
-#endif
-    Q->max_size = _this->sDirectStorageStagingBufferSize;
-    Q->pFactory = pFactory;
-    Q->device = device;
-    return Q;
+    SkrDStorageQueueDescriptor desc2 = *desc;
+    desc2.gpu_device = device;
+    return skr_create_dstorage_queue(&desc2);
 }
 
 void cgpu_free_dstorage_queue_d3d12(CGPUDStorageQueueId queue)
@@ -98,12 +75,14 @@ void cgpu_free_dstorage_queue_d3d12(CGPUDStorageQueueId queue)
 
 CGPUDStorageFileHandle cgpu_dstorage_open_file_d3d12(CGPUDStorageQueueId queue, const char* abs_path)
 {
-    return skr_dstorage_open_file(queue, abs_path);
+    CGPUDStorageQueueD3D12* Q = (CGPUDStorageQueueD3D12*)queue;
+    return skr_dstorage_open_file(Q->pInstance, abs_path);
 }
 
 void cgpu_dstorage_query_file_info_d3d12(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info)
 {
-    return skr_dstorage_query_file_info(queue, file, info);
+    CGPUDStorageQueueD3D12* Q = (CGPUDStorageQueueD3D12*)queue;
+    return skr_dstorage_query_file_info(Q->pInstance, file, info);
 }
 
 void cgpu_dstorage_enqueue_buffer_request_d3d12(CGPUDStorageQueueId queue, const CGPUDStorageBufferIODescriptor* desc)
@@ -263,5 +242,6 @@ void cgpu_dstorage_queue_submit_d3d12(CGPUDStorageQueueId queue, CGPUFenceId fen
 
 void cgpu_dstorage_close_file_d3d12(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file)
 {
-    skr_dstorage_close_file(queue, file);
+    CGPUDStorageQueueD3D12* Q = (CGPUDStorageQueueD3D12*)queue;
+    skr_dstorage_close_file(Q->pInstance, file);
 }

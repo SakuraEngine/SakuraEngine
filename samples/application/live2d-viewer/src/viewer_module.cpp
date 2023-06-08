@@ -107,7 +107,6 @@ void SLive2DViewerModule::on_load(int argc, char8_t** argv)
     ioServiceDesc.io_job_queue = io_job_queue;
     ioServiceDesc.callback_job_queue = io_job_queue;
     ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
-    ram_service->add_default_resolvers();
     ram_service->run();
     
 #ifdef _WIN32

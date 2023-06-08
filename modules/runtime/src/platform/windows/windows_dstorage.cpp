@@ -1,4 +1,5 @@
 #include "platform/windows/windows_dstorage.hpp"
+#include "cgpu/extensions/cgpu_d3d12_exts.h"
 
 #include "EASTL/vector_map.h"
 #include "EASTL/algorithm.h"
@@ -84,6 +85,11 @@ SkrDStorageQueueId skr_create_dstorage_queue(const SkrDStorageQueueDescriptor* d
     Q->source_type = queueDesc.SourceType = (DSTORAGE_REQUEST_SOURCE_TYPE)desc->source;
     queueDesc.Name = (const char*)desc->name;
     queueDesc.Device = nullptr;
+    if (desc->gpu_device)
+    {
+        SKR_ASSERT(desc->gpu_device);
+        queueDesc.Device = cgpu_d3d12_get_device(desc->gpu_device);
+    }
     IDStorageFactory* pFactory = _this->pFactory;
     if (!pFactory) return nullptr;
     if (!SUCCEEDED(pFactory->CreateQueue(&queueDesc, IID_PPV_ARGS(&Q->pQueue))))
@@ -97,7 +103,8 @@ SkrDStorageQueueId skr_create_dstorage_queue(const SkrDStorageQueueDescriptor* d
 #endif
     Q->max_size = _this->sDirectStorageStagingBufferSize;
     Q->pFactory = pFactory;
-    Q->device = nullptr;
+    Q->device = desc->gpu_device;
+    Q->pInstance = _this;
     return Q;
 }
 
@@ -122,16 +129,16 @@ void skr_free_dstorage_queue(SkrDStorageQueueId queue)
 
 #include <filesystem>
 
-SkrDStorageFileHandle skr_dstorage_open_file(SkrDStorageQueueId queue, const char* abs_path)
+SkrDStorageFileHandle skr_dstorage_open_file(SkrDStorageInstanceId inst, const char* abs_path)
 {
     IDStorageFile* pFile = nullptr;
-    DStorageQueueWindows* Q = (DStorageQueueWindows*)queue;
+    auto I = (SkrWindowsDStorageInstance*)inst;
     auto absPath = std::filesystem::path(abs_path);
-    Q->pFactory->OpenFile(absPath.c_str(), IID_PPV_ARGS(&pFile));
+    I->pFactory->OpenFile(absPath.c_str(), IID_PPV_ARGS(&pFile));
     return (SkrDStorageFileHandle)pFile;
 }
 
-void skr_dstorage_query_file_info(SkrDStorageQueueId queue, SkrDStorageFileHandle file, SkrDStorageFileInfo* info)
+void skr_dstorage_query_file_info(SkrDStorageInstanceId inst, SkrDStorageFileHandle file, SkrDStorageFileInfo* info)
 {
     BY_HANDLE_FILE_INFORMATION fileInfo;
     IDStorageFile* pFile = (IDStorageFile*)file;
@@ -147,7 +154,7 @@ void skr_dstorage_query_file_info(SkrDStorageQueueId queue, SkrDStorageFileHandl
     }
 }
 
-void skr_dstorage_close_file(SkrDStorageQueueId queue, SkrDStorageFileHandle file)
+void skr_dstorage_close_file(SkrDStorageInstanceId inst, SkrDStorageFileHandle file)
 {
     IDStorageFile* pFile = (IDStorageFile*)file;
     pFile->Close();

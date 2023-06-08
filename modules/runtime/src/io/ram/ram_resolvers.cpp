@@ -6,6 +6,19 @@
 namespace skr {
 namespace io {
 
+struct VFSFileResolver : public IORequestResolverBase
+{
+    virtual void resolve(IORequestId request) SKR_NOEXCEPT
+    {
+        auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+        SKR_ASSERT(rq->vfs);
+        if (!rq->file)
+        {
+            rq->file = skr_vfs_fopen(rq->vfs, rq->path.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+        }
+    }
+};
+
 struct AllocateIOBufferResolver : public IORequestResolverBase
 {
     virtual void resolve(IORequestId request) SKR_NOEXCEPT
@@ -36,11 +49,6 @@ struct AllocateIOBufferResolver : public IORequestResolverBase
         }
     }
 };
-
-IORequestResolverId IRAMService::create_iobuffer_resolver() SKR_NOEXCEPT
-{
-    return SObjectPtr<AllocateIOBufferResolver>::Create();
-}
 
 struct ChunkingVFSReadResolver : public IORequestResolverBase
 {
@@ -75,19 +83,19 @@ struct ChunkingVFSReadResolver : public IORequestResolverBase
     const uint64_t chunk_size = 256 * 1024;
 };
 
-IORequestResolverId IRAMService::create_chunking_resolver(uint64_t chunk_size) SKR_NOEXCEPT
-{
-    return SObjectPtr<ChunkingVFSReadResolver>::Create(chunk_size);
+IORequestResolverId create_vfs_file_resolver() SKR_NOEXCEPT
+{ 
+    return SObjectPtr<VFSFileResolver>::Create();
 }
 
-void IRAMService::add_default_resolvers() SKR_NOEXCEPT
+IORequestResolverId create_vfs_buffer_resolver() SKR_NOEXCEPT
 {
-    auto openfile = create_file_resolver();
-    auto alloc_buffer = create_iobuffer_resolver();
-    auto chain = IIORequestResolverChain::Create()
-        ->then(openfile)
-        ->then(alloc_buffer);
-    set_resolvers(chain);
+    return SObjectPtr<AllocateIOBufferResolver>::Create();
+}
+
+IORequestResolverId create_chunking_resolver(uint64_t chunk_size) SKR_NOEXCEPT
+{
+    return SObjectPtr<ChunkingVFSReadResolver>::Create(chunk_size);
 }
 
 } // namespace io

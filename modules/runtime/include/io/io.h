@@ -149,8 +149,6 @@ struct RUNTIME_API IIORequest : public skr::SInterface
     virtual void use_async_complete() SKR_NOEXCEPT = 0;
     virtual void use_async_cancel() SKR_NOEXCEPT = 0;
 
-    virtual void open_file() SKR_NOEXCEPT = 0; 
-
     virtual const skr_io_future_t* get_future() const SKR_NOEXCEPT = 0;
     virtual uint64_t get_fsize() const SKR_NOEXCEPT = 0;
 
@@ -251,7 +249,7 @@ using IODecompressorId = SObjectPtr<IIODecompressor<I>>;
 struct RUNTIME_API IIOService
 {
     // add a resolver to service
-    virtual void set_resolvers(IORequestResolverChainId chain) SKR_NOEXCEPT = 0;
+    // virtual void set_resolvers(IORequestResolverChainId chain) SKR_NOEXCEPT = 0;
 
     // open a request for filling
     [[nodiscard]] virtual IORequestId open_request() SKR_NOEXCEPT = 0;
@@ -279,8 +277,6 @@ struct RUNTIME_API IIOService
 
     virtual ~IIOService() SKR_NOEXCEPT = default;
     IIOService() SKR_NOEXCEPT = default;
-    
-    IORequestResolverId create_file_resolver() SKR_NOEXCEPT;
 };
 
 struct RUNTIME_API IRAMIOBuffer : public skr::IBlob
@@ -297,10 +293,6 @@ struct RUNTIME_API IRAMService : public IIOService
     virtual RAMIOBufferId request(IORequestId request, skr_io_future_t* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
     
     virtual void request(IOBatchId request) SKR_NOEXCEPT = 0;
-
-    IORequestResolverId create_iobuffer_resolver() SKR_NOEXCEPT;
-    IORequestResolverId create_chunking_resolver(uint64_t chunk_size = 256 * 1024) SKR_NOEXCEPT;
-    void add_default_resolvers() SKR_NOEXCEPT;
 
     virtual ~IRAMService() SKR_NOEXCEPT = default;
     IRAMService() SKR_NOEXCEPT = default;

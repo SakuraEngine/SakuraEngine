@@ -67,6 +67,7 @@ RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
     ram_batch_pool = SmartPoolPtr<RAMIOBatch, IIOBatch>::Create();
 
     runner.reader = CreateReader(this, desc);
+    runner.set_resolvers();
 
     if (!desc->awake_at_request)
     {
