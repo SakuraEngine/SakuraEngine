@@ -109,7 +109,7 @@ struct DStorageRAMReader final
     bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT;
     void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
-    bool poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& request) SKR_NOEXCEPT;
+    bool poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT;
     bool is_async(SkrAsyncServicePriority priority) const SKR_NOEXCEPT { return false; }
 
     void enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
@@ -119,7 +119,7 @@ struct DStorageRAMReader final
     SkrDStorageQueueId m2m_queue;
     
     IOBatchQueue fetched_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    IOBatchQueue loaded_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    IOBatchQueue loaded_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     eastl::vector<skr::SObjectPtr<DStorageEvent>> submitted[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
     SmartPoolPtr<DStorageEvent> events[SKR_ASYNC_SERVICE_PRIORITY_COUNT] = { nullptr, nullptr, nullptr };

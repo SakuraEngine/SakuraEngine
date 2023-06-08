@@ -117,6 +117,7 @@ typedef struct skr_ram_io_service_desc_t {
     skr_job_queue_id io_job_queue SKR_IF_CPP(= nullptr);
     skr_job_queue_id callback_job_queue SKR_IF_CPP(= nullptr);
     bool awake_at_request SKR_IF_CPP(= true);
+    bool use_dstorage SKR_IF_CPP(= true);
 } skr_ram_io_service_desc_t;
 
 #ifdef __cplusplus

@@ -69,7 +69,7 @@ struct RAMService final : public IRAMService
 
         void set_resolvers() SKR_NOEXCEPT
         {
-            const bool dstorage = batch_reader.get() && false;
+            const bool dstorage = batch_reader.get();
             auto openfile = dstorage ? create_dstorage_file_resolver() : create_vfs_file_resolver();
             auto alloc_buffer = create_vfs_buffer_resolver();
             auto chain = skr::static_pointer_cast<IORequestResolverChain>(IIORequestResolverChain::Create());

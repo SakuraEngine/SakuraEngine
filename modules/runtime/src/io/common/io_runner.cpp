@@ -149,6 +149,7 @@ bool RunnerBase::cancelFunction(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServi
 bool RunnerBase::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT
 {
     const auto status = rq->getStatus();
+    if (status == SKR_IO_STAGE_CANCELLED) return true;
     if (status == SKR_IO_STAGE_LOADING) return false;
 
     if (bool cancel_requested = rq->getCancelRequested())
