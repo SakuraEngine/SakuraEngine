@@ -14,6 +14,7 @@
 
 struct SkrWindowsDStorageInstance : public SkrDStorageInstance
 {
+    static SkrWindowsDStorageInstance* Initialize(const SkrDStorageConfig& cfg);
     static SkrWindowsDStorageInstance* Get();
     ~SkrWindowsDStorageInstance();
 
@@ -23,6 +24,7 @@ struct SkrWindowsDStorageInstance : public SkrDStorageInstance
     skr::SharedLibrary dstorage_core;
     bool dstorage_dll_dont_exist = false;
     uint64_t sDirectStorageStagingBufferSize = DSTORAGE_STAGING_BUFFER_SIZE_32MB;
+    static SkrWindowsDStorageInstance* _this;
 };
 
 struct DStorageQueueWindows : public SkrDStorageQueue {
