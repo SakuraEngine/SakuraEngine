@@ -1,4 +1,5 @@
 #include "common/io_resolver.hpp"
+#include "common/processors.hpp"
 
 bool skr_io_future_t::is_ready() const SKR_NOEXCEPT
 {
@@ -27,29 +28,51 @@ namespace io {
 const char* kIOPoolObjectsMemoryName = "I/O PoolObjects";
 const char* kIOConcurrentQueueName = "IOConcurrentQueue";
 
-IIOBatchResolver::~IIOBatchResolver() SKR_NOEXCEPT
+IIOProcessor::~IIOProcessor() SKR_NOEXCEPT
 {
 
 }
 
-void IIOBatchResolver::resolve(IORequestId request) SKR_NOEXCEPT
-{
-    (void)request;
-}
-
-IIOBatchResolverChain::~IIOBatchResolverChain() SKR_NOEXCEPT
+IIORequestProcessor::~IIORequestProcessor() SKR_NOEXCEPT
 {
 
 }
 
-IIOReader::~IIOReader() SKR_NOEXCEPT
+IIOBatchProcessor::~IIOBatchProcessor() SKR_NOEXCEPT
 {
     
 }
 
-SObjectPtr<IIOBatchResolverChain> IIOBatchResolverChain::Create(IOBatchResolverId resolver) SKR_NOEXCEPT
+IIORequestResolver::~IIORequestResolver() SKR_NOEXCEPT
 {
-    auto chain = SObjectPtr<IOBatchResolverChain>::Create(resolver);
+
+}
+
+void IIORequestResolver::resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
+{
+
+}
+
+IIORequestResolverChain::~IIORequestResolverChain() SKR_NOEXCEPT
+{
+
+}
+
+uint64_t IIOBatchProcessor::get_prefer_batch_size() const SKR_NOEXCEPT { return UINT64_MAX; }
+// uint64_t IIOBatchProcessor::get_prefer_batch_count() const SKR_NOEXCEPT { return UINT64_MAX; }
+
+template<>
+IIOReader<IIORequestProcessor>::~IIOReader() SKR_NOEXCEPT {}
+template<>
+IIOReader<IIOBatchProcessor>::~IIOReader() SKR_NOEXCEPT {}
+template<>
+IIODecompressor<IIORequestProcessor>::~IIODecompressor() SKR_NOEXCEPT {}
+template<>
+IIODecompressor<IIOBatchProcessor>::~IIODecompressor() SKR_NOEXCEPT {}
+
+SObjectPtr<IIORequestResolverChain> IIORequestResolverChain::Create(IORequestResolverId resolver) SKR_NOEXCEPT
+{
+    auto chain = SObjectPtr<IORequestResolverChain>::Create(resolver);
     return chain;
 }
 

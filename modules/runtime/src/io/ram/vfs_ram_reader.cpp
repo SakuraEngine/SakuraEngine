@@ -4,29 +4,15 @@
 namespace skr {
 namespace io {
 
-namespace VFSReader
-{
-using Future = skr::IFuture<bool>;
-using JobQueueFuture = skr::ThreadedJobQueueFuture<bool>;
-using SerialFuture = skr::SerialFuture<bool>;
-struct FutureLauncher
-{
-    FutureLauncher(skr::JobQueue* q) : job_queue(q) {}
-    template<typename F, typename... Args>
-    Future* async(F&& f, Args&&... args)
-    {
-        if (job_queue)
-            return SkrNew<JobQueueFuture>(job_queue, std::forward<F>(f), std::forward<Args>(args)...);
-        else
-            return SkrNew<SerialFuture>(std::forward<F>(f), std::forward<Args>(args)...);
-    }
-    skr::JobQueue* job_queue = nullptr;
-};
-}
+using VFSReaderFutureLauncher = skr::FutureLauncher<bool>;
 
-void VFSRAMReader::fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
+bool VFSRAMReader::fetch(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
 {
-    fetched_batches[priority].enqueue(batch);
+    auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+    SKR_ASSERT(rq->getStatus() == SKR_IO_STAGE_RESOLVING);
+    fetched_requests[priority].enqueue(rq);
+    inc_processing(priority);
+    return true;
 }
 
 uint64_t VFSRAMReader::get_prefer_batch_size() const SKR_NOEXCEPT
@@ -34,110 +20,93 @@ uint64_t VFSRAMReader::get_prefer_batch_size() const SKR_NOEXCEPT
     return 0; // fread is blocking, so we don't need to batch
 }
 
-void VFSRAMReader::dispatchFunction(IOBatchId batch) SKR_NOEXCEPT
+void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORequestId& request) SKR_NOEXCEPT
 {
-    const auto priority = batch->get_priority();
-    auto&& arr = batch->get_requests();
     {
         ZoneScopedN("dispatch_read");
-        for (auto&& request : arr)
+        auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+        auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
+        if (service->runner.try_cancel(priority, rq))
         {
-            auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-            auto&& buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
-            if (service->runner.try_cancel(priority, rq))
+            // cancel...
+            if (rq->file) 
             {
-                // cancel...
-                if (rq->file) 
-                {
-                    skr_vfs_fclose(rq->file);
-                    rq->file = nullptr;
-                }
-                if (buf)
-                {
-                    buf->free_buffer();
-                }
+                skr_vfs_fclose(rq->file);
+                rq->file = nullptr;
             }
-            else if (rq->getStatus() == SKR_IO_STAGE_RESOLVING)
+            if (buf)
             {
-                ZoneScopedN("read_request");
+                buf->free_buffer();
+            }
+        }
+        else if (rq->getStatus() == SKR_IO_STAGE_RESOLVING)
+        {
+            ZoneScopedN("read_request");
 
-                rq->setStatus(SKR_IO_STAGE_LOADING);
-                // SKR_LOG_DEBUG("dispatch read request: %s", rq->path.c_str());
-                uint64_t dst_offset = 0u;
-                for (const auto& block : rq->blocks)
-                {
-                    const auto address = buf->bytes + dst_offset;
-                    skr_vfs_fread(rq->file, address, block.offset, block.size);
-                    dst_offset += block.size;
-                }
-                rq->setStatus(SKR_IO_STAGE_LOADED);
+            rq->setStatus(SKR_IO_STAGE_LOADING);
+            // SKR_LOG_DEBUG("dispatch read request: %s", rq->path.c_str());
+            uint64_t dst_offset = 0u;
+            for (const auto& block : rq->blocks)
+            {
+                const auto address = buf->bytes + dst_offset;
+                skr_vfs_fread(rq->file, address, block.offset, block.size);
+                dst_offset += block.size;
             }
+            rq->setStatus(SKR_IO_STAGE_LOADED);
+        }
+        else
+        {
+            SKR_UNREACHABLE_CODE();
         }
     }
     {
         ZoneScopedN("dispatch_close");
-        for (auto&& request : arr)
+        auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+        if (rq->file)
         {
-            auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-            if (rq->file)
-            {
-                // SKR_LOG_DEBUG("dispatch close request: %s", rq->path.c_str());
-                skr_vfs_fclose(rq->file);
-                rq->file = nullptr;
-                finish_requests[priority].enqueue(rq);
-            }
+            // SKR_LOG_DEBUG("dispatch close request: %s", rq->path.c_str());
+            skr_vfs_fclose(rq->file);
+            rq->file = nullptr;
+            loaded_requests[priority].enqueue(rq);
+            inc_processed(priority);
         }
     }
-    finish_batches[priority].enqueue(batch);
-    tryAwakeService();
+    dec_processing(priority);
+
+    awakeService();
 }
 
 void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
+    RQPtr rq;
+    if (fetched_requests[priority].try_dequeue(rq))
     {
-        IOBatchId batch;
-        if (fetched_batches[i].try_dequeue(batch))
-        {
-            auto launcher = VFSReader::FutureLauncher(job_queue);
-            futures[i].emplace_back(
-                launcher.async([this, batch](){
-                    ZoneScopedN("VFSReadTask");
-                    dispatchFunction(batch);
-                    return true;
-                })
-            );
-        }
+        auto launcher = VFSReaderFutureLauncher(job_queue);
+        loaded_futures[priority].emplace_back(
+            launcher.async([this, rq, priority](){
+                ZoneScopedN("VFSReadTask");
+                dispatchFunction(priority, rq);
+                return true;
+            })
+        );
     }
 }
 
-IORequestId VFSRAMReader::poll_finish_request(SkrAsyncServicePriority priority) SKR_NOEXCEPT
+bool VFSRAMReader::poll_processed_request(SkrAsyncServicePriority priority, IORequestId& request) SKR_NOEXCEPT
 {
-    IORequestId request;
-    if (finish_requests[priority].try_dequeue(request))
+    if (loaded_requests[priority].try_dequeue(request))
     {
-        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-        rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_PENDING);
-        return rq;
+        dec_processed(priority);
+        return request.get();
     }
-    return nullptr;
-}
-
-IOBatchId VFSRAMReader::poll_finish_batch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
-{
-    IOBatchId batch;
-    if (finish_batches[priority].try_dequeue(batch))
-    {
-        return batch;
-    }
-    return nullptr;
+    return false;
 }
 
 void VFSRAMReader::recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     ZoneScopedN("VFSRAMReader::recycle");
 
-    auto& arr = futures[priority];
+    auto& arr = loaded_futures[priority];
     for (auto& future : arr)
     {
         auto status = future->wait_for(0);

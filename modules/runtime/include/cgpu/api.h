@@ -55,6 +55,7 @@ typedef struct SkrDStorageFileInfo CGPUDStorageFileInfo;
 typedef SkrDStorageQueue CGPUDStorageQueue;
 typedef const CGPUDStorageQueue* CGPUDStorageQueueId;
 
+typedef SkrDStorageFileRange CGPUDStorageFileRange;
 typedef SkrDStorageFile CGPUDStorageFile;
 typedef const CGPUDStorageFile* CGPUDStorageFileId;
 typedef SkrDStorageFileHandle CGPUDStorageFileHandle;
@@ -387,14 +388,6 @@ CGPU_API void cgpu_cmd_end_event(CGPUCommandBufferId cmd);
 typedef void (*CGPUProcCmdEndEvent)(CGPUCommandBufferId cmd);
 
 // dstorage
-typedef struct CGPUDStorageFileRange
-{
-    CGPUDStorageFileHandle file;
-    uint64_t offset;
-    uint64_t size;
-} CGPUDStorageFileRange;
-
-
 typedef struct CGPUDStorageBufferIODescriptor {
     CGPUDStorageCompression compression;
     ECGPUDStorageSource source_type;

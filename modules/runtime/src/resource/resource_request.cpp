@@ -281,6 +281,7 @@ void SResourceRequestImpl::Update()
                     rq->set_vfs(vfs);
                     rq->set_path(resourceUrl.u8_str());
                     rq->add_block({}); // read all
+                    SKR_ASSERT(dataFuture.status == 0);
                     dataBlob = ioService->request(rq, &dataFuture);
                 }
 #ifdef SKR_RESOURCE_DEV_MODE
@@ -290,6 +291,7 @@ void SResourceRequestImpl::Update()
                     rq->set_vfs(vfs);
                     rq->set_path(artifactsUrl.u8_str());
                     rq->add_block({}); // read all
+                    SKR_ASSERT(artifactsFuture.status == 0);
                     artifactsBlob = ioService->request(rq, &artifactsFuture);
                 }
 #endif

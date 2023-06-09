@@ -131,8 +131,8 @@ THREADS_API void skr_mutex_release(SMutex* pMutex);
 // rw mutex
 THREADS_API bool skr_init_rw_mutex(SRWMutex* pMutex);
 THREADS_API void skr_destroy_rw_mutex(SRWMutex* pMutex);
-THREADS_API void skr_rw_mutex_acuire_r(SRWMutex* pMutex);
-THREADS_API void skr_rw_mutex_acuire_w(SRWMutex* pMutex);
+THREADS_API void skr_rw_mutex_acquire_r(SRWMutex* pMutex);
+THREADS_API void skr_rw_mutex_acquire_w(SRWMutex* pMutex);
 THREADS_API void skr_rw_mutex_release(SRWMutex* pMutex);
 
 /// cv

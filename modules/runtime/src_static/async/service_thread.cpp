@@ -1,5 +1,8 @@
 #include "async/service_thread.hpp"
+#include "async/wait_timeout.hpp"
 #include "misc/log.h"
+
+#include "tracy/Tracy.hpp"
 
 namespace skr
 {
@@ -70,12 +73,16 @@ void ServiceThread::request_stop() SKR_NOEXCEPT
 
 void ServiceThread::stop() SKR_NOEXCEPT
 {
+    ZoneScopedN("stop");
+
     request_stop();
     wait_stop();
 }
 
-void ServiceThread::wait_stop() SKR_NOEXCEPT
+void ServiceThread::wait_stop(uint32_t fatal_timeout) SKR_NOEXCEPT
 {
+    ZoneScopedN("wait_stop");
+
     const auto tid = skr_current_thread_id();
     if (tid == t.get_id())
     {
@@ -83,10 +90,7 @@ void ServiceThread::wait_stop() SKR_NOEXCEPT
         SKR_ASSERT((tid != t.get_id()) && "dead lock detected!");
     }
 
-    while (get_status() != kStatusStopped)
-    {
-        // ... wait stopping
-    }
+    wait_timeout([&] { return get_status() == kStatusStopped; }, fatal_timeout);
 }
 
 void ServiceThread::run() SKR_NOEXCEPT
@@ -102,10 +106,7 @@ void ServiceThread::run() SKR_NOEXCEPT
     }
 
     // secure runned
-    while (skr_atomicu32_load_relaxed(&rid) <= orid)
-    {
-        // ... wait run++
-    }
+    wait_timeout([&] { return skr_atomicu32_load_relaxed(&rid) > orid; }, 8);
 }
 
 void ServiceThread::request_exit() SKR_NOEXCEPT
@@ -115,14 +116,18 @@ void ServiceThread::request_exit() SKR_NOEXCEPT
 
 void ServiceThread::exit() SKR_NOEXCEPT
 {
+    ZoneScopedN("exit");
+
     // SKR_LOG_TRACE("ServiceThread::destroy: wait runner thread to request_exit...");
     request_exit();
     // SKR_LOG_TRACE("ServiceThread::destroy: wait runner thread to wait_exit...");
     wait_exit();
 }
 
-void ServiceThread::wait_exit() SKR_NOEXCEPT
+void ServiceThread::wait_exit(uint32_t fatal_timeout) SKR_NOEXCEPT
 {
+    ZoneScopedN("wait_exit");
+
     const auto tid = skr_current_thread_id();
     if (tid == t.get_id())
     {
@@ -136,11 +141,8 @@ void ServiceThread::wait_exit() SKR_NOEXCEPT
         SKR_LOG_FATAL("must wait from a exiting service!");
         SKR_ASSERT(S  < kStatusStopped);
     }
-
-    while (get_status() != kStatusExitted)
-    {
-        // ... wait stopping
-    }
+    
+    wait_timeout([&] { return get_status() == kStatusExitted; }, fatal_timeout);
 }
 
 void ServiceThread::waitJoin() SKR_NOEXCEPT
@@ -154,7 +156,6 @@ AsyncResult ServiceThread::ServiceFunc::run() SKR_NOEXCEPT
 WAKING:    
 {
     ZoneScopedN("WAKING");
-
     auto S = _service->get_status();
     if (S == kStatusWaking)
     {
@@ -165,7 +166,6 @@ WAKING:
 RUNNING:
 {
     ZoneScopedN("RUNNING");
-
     _service->set_status(kStatusRunning);
     skr_atomic32_add_relaxed(&_service->rid, 1);
     for (;;)

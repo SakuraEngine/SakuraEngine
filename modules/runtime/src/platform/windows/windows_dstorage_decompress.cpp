@@ -73,25 +73,7 @@ struct skr_win_dstorage_decompress_service_t
     skr::vector<skr::IFuture<bool>*> decompress_futures;
 };
 
-namespace DirectStorageDecompress
-{
-using Future = skr::IFuture<bool>;
-using JobQueueFuture = skr::ThreadedJobQueueFuture<bool>;
-using SerialFuture = skr::SerialFuture<bool>;
-struct FutureLauncher
-{
-    FutureLauncher(skr::JobQueue* q) : job_queue(q) {}
-    template<typename F, typename... Args>
-    Future* async(F&& f, Args&&... args)
-    {
-        if (job_queue)
-            return SkrNew<JobQueueFuture>(job_queue, std::forward<F>(f), std::forward<Args>(args)...);
-        else
-            return SkrNew<SerialFuture>(std::forward<F>(f), std::forward<Args>(args)...);
-    }
-    skr::JobQueue* job_queue = nullptr;
-};
-}
+using DSDecompressFutureLauncher = skr::FutureLauncher<bool>;
 
 static void __decompressTask_DirectStorage(skr_win_dstorage_decompress_service_id service)
 {
@@ -112,7 +94,7 @@ static void __decompressTask_DirectStorage(skr_win_dstorage_decompress_service_i
             for (uint32_t i = 0; i < numRequests; ++i)
             {
                 auto& future = service->decompress_futures.emplace_back();
-                future = DirectStorageDecompress::FutureLauncher(service->job_queue).async(
+                future = DSDecompressFutureLauncher(service->job_queue).async(
                 [service, request = requests[i]](){
                     auto resolver = service->resolvers.find(request.CompressionFormat);
                     if (resolver != service->resolvers.end())
