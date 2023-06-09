@@ -88,7 +88,7 @@ T* cgpu_new_placed(void* memory, Args&&... args)
 template <typename T, typename... Args>
 T* cgpu_new(Args&&... args)
 {
-    return SkrNew<T>(std::forward<Args>(args)...);
+    return SkrNewZeroed<T>(std::forward<Args>(args)...);
 }
 template <typename T>
 void cgpu_delete_placed(T* object)
