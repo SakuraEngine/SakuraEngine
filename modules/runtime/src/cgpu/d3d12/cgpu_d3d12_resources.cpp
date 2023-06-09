@@ -509,8 +509,8 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateFromAllocator(CGPUAdapter_D3D12* A, 
 #endif
     // Do allocation (TODO: mGPU)
     allocDesc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
-    if (desc->flags & CGPU_TCF_OWN_MEMORY_BIT || desc->sample_count != CGPU_SAMPLE_COUNT_1 // for smaller alignment that not suitable for MSAA
-    )
+    // for smaller alignment that not suitable for MSAA
+    if (desc->flags & CGPU_TCF_OWN_MEMORY_BIT || desc->sample_count != CGPU_SAMPLE_COUNT_1)
     {
         allocDesc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED;
     }
@@ -733,21 +733,19 @@ bool cgpu_try_bind_aliasing_texture_d3d12(CGPUDeviceId device, const struct CGPU
         CGPUTexture_D3D12* Aliased = (CGPUTexture_D3D12*)desc->aliased;
         CGPUTextureAliasing_D3D12* Aliasing = (CGPUTextureAliasing_D3D12*)desc->aliasing;
         cgpu_assert(Aliasing->super.is_aliasing && "aliasing texture need to be created as aliasing!");
-        if (Aliased->pDxResource != nullptr &&
-            Aliased->pDxAllocation != nullptr &&
-            !Aliased->super.is_dedicated &&
-            Aliasing->super.is_aliasing)
+        if (Aliased->pDxResource != nullptr && Aliased->pDxAllocation != nullptr &&
+            !Aliased->super.is_dedicated && Aliasing->super.is_aliasing)
         {
-            result = D->pResourceAllocator->CreateAliasingResource(Aliased->pDxAllocation,
-            0, &Aliasing->mDxDesc,
-            D3D12_RESOURCE_STATE_COMMON,
-            nullptr,
-            IID_PPV_ARGS(&Aliasing->pDxResource));
+            result = D->pResourceAllocator->CreateAliasingResource(
+                Aliased->pDxAllocation,
+                0, &Aliasing->mDxDesc,
+                D3D12_RESOURCE_STATE_COMMON,
+                nullptr,
+                IID_PPV_ARGS(&Aliasing->pDxResource));
             if (result == S_OK)
             {
                 Aliasing->pDxAllocation = Aliased->pDxAllocation;
                 Aliasing->super.size_in_bytes = Aliased->super.size_in_bytes;
-                Aliasing->super.native_handle = Aliased->super.native_handle;
                 // Set debug name
                 if (device->adapter->instance->enable_set_name)
                 {
@@ -871,7 +869,6 @@ CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const
     T->super.can_alias = false;
     T->super.is_aliasing = false;
     T->super.is_dedicated = false;
-    T->super.native_handle = imported;
     T->super.owns_image = false;
     T->super.unique_id = D->super.next_texture_id++;
     T->super.is_cube = (imported_desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D && imported_desc.DepthOrArraySize > 6);

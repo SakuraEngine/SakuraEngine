@@ -1571,7 +1571,6 @@ typedef struct CGPUTexture {
     uint32_t can_alias : 1;
     uint32_t is_imported : 1;
     uint32_t can_export : 1;
-    void* native_handle;
     uint64_t unique_id;
 } CGPUTexture;
 
