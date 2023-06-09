@@ -16,6 +16,10 @@ struct Canvas : public MultiChildRenderObjectWidget {
     void construct(Params params) SKR_NOEXCEPT;
 
 private:
-    VectorStorage<Slot> _children;
+    struct _Slot {
+        Positional layout = Positional::fill();
+        int32_t z_index = 0;
+    };
+    VectorStorage<Slot> _children_slots;
 };
 } // namespace skr::gui
