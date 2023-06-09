@@ -11,14 +11,20 @@
 namespace Live2D { namespace Cubism { namespace Framework {
 
 CubismIdManager::CubismIdManager()
-{ }
+{ 
+    skr_init_mutex_recursive(&rwMutex);
+}
 
 CubismIdManager::~CubismIdManager()
 {
+    skr_mutex_acquire(&rwMutex);
     for (csmUint32 i = 0; i < _ids.GetSize(); ++i)
     {
         CSM_DELETE_SELF(CubismId, _ids[i]);
     }
+    skr_mutex_release(&rwMutex);
+
+    skr_destroy_mutex(&rwMutex);
 }
 
 void CubismIdManager::RegisterIds(const csmChar** ids, csmInt32 count)
@@ -60,13 +66,18 @@ const CubismId* CubismIdManager::RegisterId(const csmChar* id)
 {
     CubismId* result = NULL;
 
+    skr_mutex_acquire(&rwMutex);
     if ((result = FindId(id)) != NULL)
     {
+        skr_mutex_release(&rwMutex);
         return result;
     }
+    skr_mutex_release(&rwMutex);
 
     result = CSM_NEW CubismId(id);
+    skr_mutex_acquire(&rwMutex);
     _ids.PushBack(result);
+    skr_mutex_release(&rwMutex);
 
     return result;
 }
@@ -78,13 +89,16 @@ const CubismId* CubismIdManager::RegisterId(const csmString& id)
 
 CubismId* CubismIdManager::FindId(const csmChar* id) const
 {
+    skr_mutex_acquire(&rwMutex);
     for (csmUint32 i = 0; i < _ids.GetSize(); ++i)
     {
         if (_ids[i]->GetString() == id)
         {
+            skr_mutex_release(&rwMutex);
             return _ids[i];
         }
     }
+    skr_mutex_release(&rwMutex);
 
     return NULL;
 }

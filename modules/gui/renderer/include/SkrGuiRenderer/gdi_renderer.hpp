@@ -14,7 +14,7 @@
 #include "containers/sptr.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi::ImageTex, FutureLauncher, gdi_img_tex_future_launcher)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, ImageTexFutureLauncher, gdi_img_tex_future_launcher)
 namespace skr { struct JobQueue; }
 namespace skr { namespace gdi { struct DecodingProgress; } }
 

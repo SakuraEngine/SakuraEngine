@@ -54,7 +54,7 @@ skr::BlobId image_coder_decode_image(const uint8_t* bytes, uint64_t size, uint32
 }
 #endif
 
-struct DecodingProgress : public skr::AsyncProgress<ImageTex::FutureLauncher, int, bool>
+struct DecodingProgress : public skr::AsyncProgress<ImageTexFutureLauncher, int, bool>
 {
     DecodingProgress(GDIImage_RenderGraph* image)
         : owner(image)

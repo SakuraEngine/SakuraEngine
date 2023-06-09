@@ -68,6 +68,7 @@ typedef struct SkrDStorageQueueDescriptor {
     ESkrDStorageSource source;
     uint16_t capacity;
     ESkrDStoragePriority priority;
+    const struct CGPUDevice* gpu_device;
 } SkrDStorageQueueDescriptor;
 
 typedef struct SkrDStorageFile SkrDStorageFile;
@@ -75,9 +76,29 @@ typedef struct SkrDStorageFile SkrDStorageFile;
 typedef struct SkrDStorageFileInfo {
     uint64_t file_size;
 } SkrDStorageFileInfo;
-
 typedef const SkrDStorageFile* SkrDStorageFileId;
 typedef SkrDStorageFileId SkrDStorageFileHandle;
+
+typedef struct SkrDStorageFileRange
+{
+    SkrDStorageFileHandle file;
+    uint64_t offset;
+    uint64_t size;
+} SkrDStorageFileRange;
+
+typedef struct SkrDStorageEvent SkrDStorageEvent;
+typedef struct SkrDStorageEvent* SkrDStorageEventId;
+
+typedef struct SkrDStorageIODescriptor {
+    SkrDStorageCompression compression;
+    ESkrDStorageSource source_type;
+    SkrDStorageMemoryRange source_memory;
+    SkrDStorageFileRange source_file;
+    uint64_t uncompressed_size;
+    void* destination;
+    SkrDStorageEventId event;
+    const char8_t* name;
+} SkrDStorageIODescriptor;
 
 RUNTIME_API SkrDStorageInstanceId skr_create_dstorage_instance(SkrDStorageConfig* config);
 RUNTIME_API SkrDStorageInstanceId skr_get_dstorage_instnace();
@@ -87,10 +108,16 @@ RUNTIME_API void skr_free_dstorage_instance(SkrDStorageInstanceId inst);
 RUNTIME_API SkrDStorageQueueId skr_create_dstorage_queue(const SkrDStorageQueueDescriptor* desc);
 RUNTIME_API void skr_free_dstorage_queue(SkrDStorageQueueId queue);
 
-RUNTIME_API SkrDStorageFileHandle skr_dstorage_open_file(SkrDStorageQueueId queue, const char* abs_path);
-RUNTIME_API void skr_dstorage_query_file_info(SkrDStorageQueueId queue, SkrDStorageFileHandle file, SkrDStorageFileInfo* info);
-RUNTIME_API void skr_dstorage_close_file(SkrDStorageQueueId queue, SkrDStorageFileHandle file);
+RUNTIME_API SkrDStorageFileHandle skr_dstorage_open_file(SkrDStorageInstanceId instance, const char* abs_path);
+RUNTIME_API void skr_dstorage_query_file_info(SkrDStorageInstanceId instance, SkrDStorageFileHandle file, SkrDStorageFileInfo* info);
+RUNTIME_API void skr_dstorage_close_file(SkrDStorageInstanceId instance, SkrDStorageFileHandle file);
 
+RUNTIME_API SkrDStorageEventId skr_dstorage_queue_create_event(SkrDStorageQueueId queue);
+RUNTIME_API bool skr_dstorage_event_test(SkrDStorageEventId event);
+RUNTIME_API void skr_dstorage_queue_free_event(SkrDStorageQueueId queue, SkrDStorageEventId);
+
+RUNTIME_API void skr_dstorage_queue_submit(SkrDStorageQueueId queue, SkrDStorageEventId event);
+RUNTIME_API void skr_dstorage_enqueue_request(SkrDStorageQueueId queue, const SkrDStorageIODescriptor* desc);
 
 #ifdef __cplusplus
 } // extern "C"

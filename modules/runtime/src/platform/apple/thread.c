@@ -90,7 +90,7 @@ void skr_destroy_rw_mutex(SRWMutex* pMutex)
     pthread_rwlock_destroy(&pMutex->pHandle); 
 }
 
-void skr_rw_mutex_acuire_r(SRWMutex* pMutex)
+void skr_rw_mutex_acquire_r(SRWMutex* pMutex)
 {
     uint32_t count = 0;
 
@@ -105,7 +105,7 @@ void skr_rw_mutex_acuire_r(SRWMutex* pMutex)
     }
 }
 
-void skr_rw_mutex_acuire_w(SRWMutex* pMutex)
+void skr_rw_mutex_acquire_w(SRWMutex* pMutex)
 {
     uint32_t count = 0;
 

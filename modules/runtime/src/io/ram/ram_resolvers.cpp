@@ -1,33 +1,31 @@
-#include "../common/io_runnner.hpp"
 #include "../common/io_resolver.hpp"
 
-#include "ram_readers.hpp"
-#include "ram_batch.hpp"
+#include "ram_request.hpp"
 #include "ram_buffer.hpp"
 
 namespace skr {
 namespace io {
-    
-struct OpenFileResolver : public IOBatchResolverBase
+
+struct VFSFileResolver : public IORequestResolverBase
 {
-    virtual void resolve(IORequestId request) SKR_NOEXCEPT
+    virtual void resolve(SkrAsyncServicePriority priority,IORequestId request) SKR_NOEXCEPT
     {
-        request->open_file(); 
+        auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+        SKR_ASSERT(rq->vfs);
+        if (!rq->file)
+        {
+            rq->file = skr_vfs_fopen(rq->vfs, rq->path.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+        }
     }
 };
 
-IOBatchResolverId IIOService::create_file_resolver() SKR_NOEXCEPT
-{ 
-    return SObjectPtr<OpenFileResolver>::Create();
-}
-
-struct AllocateIOBufferResolver : public IOBatchResolverBase
+struct AllocateIOBufferResolver : public IORequestResolverBase
 {
-    virtual void resolve(IORequestId request) SKR_NOEXCEPT
+    virtual void resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
     {
         ZoneScopedNC("IOBufferAllocate", tracy::Color::BlueViolet);
-        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
-        auto&& buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
+        auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+        auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
         // deal with 0 block size
         for (auto& block : rq->blocks)
         {
@@ -52,18 +50,13 @@ struct AllocateIOBufferResolver : public IOBatchResolverBase
     }
 };
 
-IOBatchResolverId IRAMService::create_iobuffer_resolver() SKR_NOEXCEPT
-{
-    return SObjectPtr<AllocateIOBufferResolver>::Create();
-}
-
-struct ChunkingVFSReadResolver : public IOBatchResolverBase
+struct ChunkingVFSReadResolver : public IORequestResolverBase
 {
     ChunkingVFSReadResolver(uint64_t chunk_size) : chunk_size(chunk_size) {}
-    virtual void resolve(IORequestId request) SKR_NOEXCEPT
+    virtual void resolve(SkrAsyncServicePriority priority,IORequestId request) SKR_NOEXCEPT
     {
         ZoneScopedN("IORequestChunking");
-        auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
+        auto rq = skr::static_pointer_cast<RAMIORequest>(request);
         uint64_t total = 0;
         for (auto& block : rq->get_blocks())
             total += block.size;
@@ -89,19 +82,20 @@ struct ChunkingVFSReadResolver : public IOBatchResolverBase
     }
     const uint64_t chunk_size = 256 * 1024;
 };
-IOBatchResolverId IRAMService::create_chunking_resolver(uint64_t chunk_size) SKR_NOEXCEPT
-{
-    return SObjectPtr<ChunkingVFSReadResolver>::Create(chunk_size);
+
+IORequestResolverId create_vfs_file_resolver() SKR_NOEXCEPT
+{ 
+    return SObjectPtr<VFSFileResolver>::Create();
 }
 
-void IRAMService::add_default_resolvers() SKR_NOEXCEPT
+IORequestResolverId create_vfs_buffer_resolver() SKR_NOEXCEPT
 {
-    auto openfile = create_file_resolver();
-    auto alloc_buffer = create_iobuffer_resolver();
-    auto chain = IIOBatchResolverChain::Create()
-        ->then(openfile)
-        ->then(alloc_buffer);
-    set_resolvers(chain);
+    return SObjectPtr<AllocateIOBufferResolver>::Create();
+}
+
+IORequestResolverId create_chunking_resolver(uint64_t chunk_size) SKR_NOEXCEPT
+{
+    return SObjectPtr<ChunkingVFSReadResolver>::Create(chunk_size);
 }
 
 } // namespace io

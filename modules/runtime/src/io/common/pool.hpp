@@ -1,7 +1,8 @@
 #pragma once
-#include "io/io.h"
+#include "platform/atomic.h"
+#include "misc/types.h"
 #include "misc/log.h"
-#include <type_traits>
+#include "containers/sptr.hpp"
 #include "containers/concurrent_queue.h"
 
 namespace skr {
@@ -34,7 +35,7 @@ using ISmartPoolPtr = skr::SObjectPtr<ISmartPool<I>>;
 extern const char* kIOPoolObjectsMemoryName; 
 extern const char* kIOConcurrentQueueName;
 
-template<typename T, typename I>
+template<typename T, typename I = T>
 struct SmartPool : public ISmartPool<I>
 {
     static_assert(std::is_base_of_v<I, T>, "T must be derived from I");
@@ -81,7 +82,6 @@ struct SmartPool : public ISmartPool<I>
         if (auto ptr = static_cast<T*>(iptr))
         {
             ptr->~T(); 
-            memset((void*)ptr, 0, sizeof(T));
             blocks.enqueue(ptr);
             skr_atomic64_add_relaxed(&objcnt, -1);
         }
@@ -106,7 +106,7 @@ struct SmartPool : public ISmartPool<I>
     skr::ConcurrentQueue<T*> blocks;
     SAtomic64 objcnt = 0;
 };
-template<typename T, typename I>
+template<typename T, typename I = T>
 using SmartPoolPtr = skr::SObjectPtr<SmartPool<T, I>>;
 
 struct IOConcurrentQueueTraits : public skr::ConcurrentQueueDefaultTraits
@@ -121,3 +121,17 @@ using IOConcurrentQueue = moodycamel::ConcurrentQueue<T, IOConcurrentQueueTraits
 
 } // namespace io
 } // namespace skr
+
+#define IO_RC_OBJECT_BODY \
+private:\
+    SAtomicU32 rc = 0;\
+public:\
+    uint32_t add_refcount() final\
+    {\
+        return 1 + skr_atomicu32_add_relaxed(&rc, 1);\
+    }\
+    uint32_t release() final\
+    {\
+        skr_atomicu32_add_relaxed(&rc, -1);\
+        return skr_atomicu32_load_acquire(&rc);\
+    }

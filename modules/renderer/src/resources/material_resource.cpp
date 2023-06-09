@@ -19,27 +19,7 @@ namespace skr
 namespace renderer
 {
 using namespace skr::resource;
-namespace Material
-{
-template<typename T> using Future = skr::IFuture<T>;
-template<typename T> using JobQueueFuture = skr::ThreadedJobQueueFuture<T>;
-template<typename T> using SerialFuture = skr::SerialFuture<T>;
-
-struct FutureLauncher
-{
-    FutureLauncher(skr::JobQueue* q) : job_queue(q) {}
-    template<typename F, typename... Args>
-    Future<bool>* async(F&& f, Args&&... args)
-    {
-        if (job_queue)
-            return SkrNew<JobQueueFuture<bool>>(job_queue, std::forward<F>(f), std::forward<Args>(args)...);
-        else
-            return SkrNew<SerialFuture<bool>>(std::forward<F>(f), std::forward<Args>(args)...);
-    }
-    skr::JobQueue* job_queue = nullptr;
-};
-
-}
+using MaterialFutureLancher = skr::FutureLauncher<bool>;
 
 struct SMaterialFactoryImpl : public SMaterialFactory
 {
@@ -47,7 +27,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
         : root(root)
     {
         // 0.async launcher
-        launcher = skr::SPtr<Material::FutureLauncher>::Create(root.job_queue);
+        launcher = skr::SPtr<MaterialFutureLancher>::Create(root.job_queue);
 
         // 1.create shader map
         shader_map = root.shader_map;
@@ -486,7 +466,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
     }
 
     struct RootSignatureRequest
-        : public skr::AsyncProgress<Material::FutureLauncher, int, bool>
+        : public skr::AsyncProgress<MaterialFutureLancher, int, bool>
     {
         RootSignatureRequest(const skr_material_resource_t* material, SMaterialFactoryImpl* factory, skr_material_resource_t::installed_pass& installed_pass, skr::span<CGPUShaderLibraryId> shaders)
             : material(material), installed_pass(installed_pass), factory(factory), shaders(shaders.data(), shaders.data() + shaders.size())
@@ -510,7 +490,7 @@ struct SMaterialFactoryImpl : public SMaterialFactory
     };
 
     skr::flat_hash_map<skr_guid_t, SPtr<RootSignatureRequest>, skr::guid::hash> mRootSignatureRequests;
-    skr::SPtr<Material::FutureLauncher> launcher = nullptr;
+    skr::SPtr<MaterialFutureLancher> launcher = nullptr;
 
     skr_shader_map_id shader_map = nullptr;
     skr_pso_map_id pso_map = nullptr;

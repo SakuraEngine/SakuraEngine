@@ -2086,3 +2086,9 @@ ID3D12Resource* cgpu_d3d12_get_buffer(CGPUBufferId buffer)
     CGPUBuffer_D3D12* Buf = (CGPUBuffer_D3D12*)buffer;
     return Buf->pDxResource;
 }
+
+ID3D12Device* cgpu_d3d12_get_device(CGPUDeviceId device)
+{
+    CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
+    return D->pDxDevice;
+}
