@@ -26,23 +26,20 @@ void RenderObject::set_parent(RenderObject* new_parent)
 
 void RenderObject::add_child(RenderObject* child)
 {
-    auto& _children = this->children.get();
-    _children.push_back(child);
+    children.push_back(child);
     child->parent = parent;
 }
 
 void RenderObject::insert_child(RenderObject* child, int index)
 {
-    auto& _children = this->children.get();
-    _children.insert(_children.begin() + index, child);
+    children.insert(children.begin() + index, child);
 }
 
 int RenderObject::get_child_index(RenderObject* child)
 {
-    auto& _children = this->children.get();
-    for (int i = 0; i < _children.size(); ++i)
+    for (int i = 0; i < children.size(); ++i)
     {
-        if (_children[i] == child)
+        if (children[i] == child)
         {
             return i;
         }
@@ -52,12 +49,11 @@ int RenderObject::get_child_index(RenderObject* child)
 
 void RenderObject::remove_child(RenderObject* child)
 {
-    auto& _children = this->children.get();
-    for (auto it = _children.begin(); it != _children.end(); ++it)
+    for (auto it = children.begin(); it != children.end(); ++it)
     {
         if (*it == child)
         {
-            _children.erase(it);
+            children.erase(it);
             break;
         }
     }
@@ -65,12 +61,12 @@ void RenderObject::remove_child(RenderObject* child)
 
 int RenderObject::get_child_count() const
 {
-    return children.get().size();
+    return children.size();
 }
 
 RenderObject* RenderObject::get_child(int index) const
 {
-    return children.get()[index];
+    return children[index];
 }
 
 void RenderObject::set_render_matrix(const skr_float4x4_t& matrix)
@@ -99,8 +95,7 @@ void RenderObject::before_draw(const DrawParams* params)
 void RenderObject::draw(const DrawParams* params)
 {
     if (!active) { return; }
-    auto& _children = this->children.get();
-    for (auto& child : _children)
+    for (auto& child : children)
     {
         child->before_draw(params);
         child->draw(params);
@@ -131,7 +126,7 @@ void RenderObject::addElementToCanvas(const DrawParams* params, gdi::GDIElement*
 
 LiteSpan<DiagnosticableTreeNode* const> RenderObject::get_diagnostics_children() const
 {
-    const eastl::vector<RenderObject*>& children_ = children.get();
+    const eastl::vector<RenderObject*>& children_ = children;
     return { (DiagnosticableTreeNode* const*)children_.data(), children_.size() };
 }
 

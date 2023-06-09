@@ -104,32 +104,32 @@ void RenderStack::layout(BoxConstraint constraints, bool needSize)
 
 Positional RenderStack::get_position(int index)
 {
-    SKR_GUI_ASSERT(index >= 0 && index < positionals.get().size());
-    return positionals.get()[index];
+    SKR_GUI_ASSERT(index >= 0 && index < positionals.size());
+    return positionals[index];
 }
 
 void RenderStack::add_child(RenderObject* child)
 {
     RenderBox::add_child(child);
-    positionals.get().emplace_back(Positional{});
+    positionals.emplace_back(Positional{});
 }
 
 void RenderStack::insert_child(RenderObject* child, int index)
 {
     RenderBox::insert_child(child, index);
-    positionals.get().insert(positionals.get().begin() + index, Positional{});
+    positionals.insert(positionals.begin() + index, Positional{});
 }
 
 void RenderStack::remove_child(RenderObject* child)
 {
-    positionals.get().erase(positionals.get().begin() + get_child_index(child));
+    positionals.erase(positionals.begin() + get_child_index(child));
     RenderBox::remove_child(child);
 }
 
 void RenderStack::set_positional(int index, Positional positional)
 {
-    SKR_GUI_ASSERT(index >= 0 && index < positionals.get().size());
-    this->positionals.get()[index] = positional;
+    SKR_GUI_ASSERT(index >= 0 && index < positionals.size());
+    this->positionals[index] = positional;
 }
 
 } // namespace gui

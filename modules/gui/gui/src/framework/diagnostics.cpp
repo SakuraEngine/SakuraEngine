@@ -16,17 +16,17 @@ IDiagnosticsProperty::~IDiagnosticsProperty() SKR_NOEXCEPT
 
 const char8_t* IDiagnosticsProperty::get_name() const SKR_NOEXCEPT
 {
-    return name.get().u8_str();
+    return name.u8_str();
 }
 
 const char8_t* IDiagnosticsProperty::get_description() const SKR_NOEXCEPT
 {
-    return description.get().u8_str();
+    return description.u8_str();
 }
 
 const char8_t* TextDiagnosticProperty::get_value() const SKR_NOEXCEPT
 {
-    return value.get().get().u8_str();
+    return value.get().u8_str();
 }
 
 const char8_t* BoolDiagnosticProperty::get_value_as_string() const SKR_NOEXCEPT
@@ -36,17 +36,17 @@ const char8_t* BoolDiagnosticProperty::get_value_as_string() const SKR_NOEXCEPT
 
 const char8_t* TextDiagnosticProperty::get_value_as_string() const SKR_NOEXCEPT
 {
-    return value.get().get().u8_str();
+    return value.get().u8_str();
 }
 
 IDiagnosticsProperty* DiagnosticsBuilder::add_property(IDiagnosticsProperty* property) SKR_NOEXCEPT
 {
-    return diagnostic_properties.get().emplace_back(property);
+    return diagnostic_properties.emplace_back(property);
 }
 
 IDiagnosticsProperty* DiagnosticsBuilder::find_property(const char8_t* name) const SKR_NOEXCEPT
 {
-    for (const auto& property : diagnostic_properties.get())
+    for (const auto& property : diagnostic_properties)
     {
         if (strcmp((const char*)property->get_name(), (const char*)name) == 0)
         {
@@ -58,7 +58,7 @@ IDiagnosticsProperty* DiagnosticsBuilder::find_property(const char8_t* name) con
 
 DiagnosticsBuilder::~DiagnosticsBuilder() SKR_NOEXCEPT
 {
-    for (auto& property : diagnostic_properties.get())
+    for (auto& property : diagnostic_properties)
     {
         SkrDelete(property);
     }
@@ -66,7 +66,6 @@ DiagnosticsBuilder::~DiagnosticsBuilder() SKR_NOEXCEPT
 
 LiteSpan<IDiagnosticsProperty* const> DiagnosticsBuilder::get_diagnostics_properties() const SKR_NOEXCEPT
 {
-    const auto& diagnostic_properties = this->diagnostic_properties.get();
     return { diagnostic_properties.data(), diagnostic_properties.size() };
 }
 

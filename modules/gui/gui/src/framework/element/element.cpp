@@ -158,7 +158,7 @@ void Element::deactivate_child(Element* child) SKR_NOEXCEPT
     SKR_GUI_ASSERT(child->_parent == this);
     child->_parent = nullptr;
     child->detach_render_object();
-    _owner->_inactive_elements->push_back(child); // this eventually calls child.deactivate()
+    _owner->_inactive_elements.push_back(child); // this eventually calls child.deactivate()
 }
 
 void Element::perform_rebuild() SKR_NOEXCEPT
@@ -237,8 +237,8 @@ RenderObject* Element::find_render_object() SKR_NOEXCEPT
 
 Element* Element::_retake_inactive_element(const Key& key, NotNull<Widget*> widget) SKR_NOEXCEPT
 {
-    auto iter = _owner->_global_key_registry->find(key.get_state());
-    if (iter == _owner->_global_key_registry->end())
+    auto iter = _owner->_global_key_registry.find(key.get_state());
+    if (iter == _owner->_global_key_registry.end())
     {
         return nullptr;
     }
@@ -255,7 +255,7 @@ Element* Element::_retake_inactive_element(const Key& key, NotNull<Widget*> widg
         parent->deactivate_child(element);
     }
     SKR_GUI_ASSERT(element->_parent == nullptr);
-    auto& inactiveElements = *_owner->_inactive_elements;
+    auto& inactiveElements = _owner->_inactive_elements;
     inactiveElements.erase(std::remove(inactiveElements.begin(), inactiveElements.end(), element), inactiveElements.end());
     return element;
 }

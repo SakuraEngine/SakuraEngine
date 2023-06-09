@@ -25,7 +25,7 @@ void BuildOwner::schedule_build_for(NotNull<Element*> element) SKR_NOEXCEPT
         _dirty_elements_needs_resorting = true;
         return;
     }
-    _dirty_elements->push_back(element);
+    _dirty_elements.push_back(element);
     element->_in_dirty_list = true;
 }
 
@@ -35,7 +35,7 @@ void BuildOwner::reassemble(Element* element) SKR_NOEXCEPT
 
 void BuildOwner::build_scope(Element* context) SKR_NOEXCEPT
 {
-    if (_dirty_elements->empty())
+    if (_dirty_elements.empty())
         return;
     SKR_GUI_ASSERT(_debug_state_lock_level >= 0);
     SKR_GUI_ASSERT(!_debug_building);
@@ -44,12 +44,12 @@ void BuildOwner::build_scope(Element* context) SKR_NOEXCEPT
     _debug_is_in_build_scope = true;
 
     auto cleanup = [&]() {
-        for (Element* element : *_dirty_elements)
+        for (Element* element : _dirty_elements)
         {
             SKR_GUI_ASSERT(element->_in_dirty_list);
             element->_in_dirty_list = false;
         }
-        _dirty_elements->clear();
+        _dirty_elements.clear();
         _scheduled_flush_dirty_elements = false;
         _dirty_elements_needs_resorting = false;
         _debug_is_in_build_scope = false;
@@ -61,20 +61,20 @@ void BuildOwner::build_scope(Element* context) SKR_NOEXCEPT
     SKR_DEFER({ cleanup(); });
 
     _scheduled_flush_dirty_elements = true;
-    std::sort(_dirty_elements->begin(), _dirty_elements->end(), [](Element* a, Element* b) {
+    std::sort(_dirty_elements.begin(), _dirty_elements.end(), [](Element* a, Element* b) {
         return Element::_compare_depth(a, b) < 0;
     });
     _dirty_elements_needs_resorting = false;
-    int dirty_elements_count = _dirty_elements->size();
+    int dirty_elements_count = _dirty_elements.size();
     for (int i = 0; i < dirty_elements_count; i++)
     {
         if (_dirty_elements_needs_resorting)
         {
-            std::sort(_dirty_elements->begin(), _dirty_elements->end(), [](Element* a, Element* b) {
+            std::sort(_dirty_elements.begin(), _dirty_elements.end(), [](Element* a, Element* b) {
                 return Element::_compare_depth(a, b) < 0;
             });
             _dirty_elements_needs_resorting = false;
-            dirty_elements_count = _dirty_elements->size();
+            dirty_elements_count = _dirty_elements.size();
             while (i > 0 && _dirty_elements[i]->_dirty)
             {
                 // It is possible for previously dirty but inactive widgets to move right in the list.
