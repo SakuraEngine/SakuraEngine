@@ -53,7 +53,6 @@ struct PositionalUnit {
     inline constexpr operator bool() const SKR_NOEXCEPT { return type != Type::Unset; }
     inline constexpr bool operator==(std::nullptr_t) const SKR_NOEXCEPT { return type == Type::Unset; }
     inline constexpr bool operator!=(std::nullptr_t) const SKR_NOEXCEPT { return type != Type::Unset; }
-    inline constexpr std::partial_ordering operator<=>(const PositionalUnit& other) const SKR_NOEXCEPT = default;
 
     // factory
     inline static constexpr PositionalUnit null() SKR_NOEXCEPT { return PositionalUnit{}; }
