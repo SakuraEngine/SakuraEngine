@@ -10,6 +10,8 @@
 
 OPEN_STRING_NS_BEGIN
 
+OPEN_STRING_API const char* kOpenStringMemory = "OpenString";
+
 text::text() noexcept = default;
 text::text(const text&) noexcept = default;
 text::text(text&&) noexcept = default;

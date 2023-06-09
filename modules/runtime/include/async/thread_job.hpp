@@ -205,4 +205,22 @@ protected:
     Artifact artifact;
 };
 
+template<typename R>
+struct FutureLauncher
+{
+    using JobQueueFuture = ThreadedJobQueueFuture<R>;
+    using SerialFuture = skr::SerialFuture<R>;
+
+    FutureLauncher(skr::JobQueue* q) : job_queue(q) {}
+    template<typename F, typename... Args>
+    skr::IFuture<R>* async(F&& f, Args&&... args)
+    {
+        if (job_queue)
+            return SkrNew<JobQueueFuture>(job_queue, std::forward<F>(f), std::forward<Args>(args)...);
+        else
+            return SkrNew<SerialFuture>(std::forward<F>(f), std::forward<Args>(args)...);
+    }
+    skr::JobQueue* job_queue = nullptr;
+};
+
 }

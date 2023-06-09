@@ -1,4 +1,6 @@
 #pragma once
+#include "platform/dstorage.h"
+#include "io/io.h"
 #include "pool.hpp"
 #include "containers/vector.hpp"
 #include <string.h> // ::strlen
@@ -10,23 +12,26 @@ namespace io {
 typedef enum SkrAsyncIOFinishStep
 {
     SKR_ASYNC_IO_FINISH_STEP_NONE = 0,
-    SKR_ASYNC_IO_FINISH_STEP_PENDING = 1,
+    SKR_ASYNC_IO_FINISH_STEP_WAIT_CALLBACK_POLLING = 1,
     SKR_ASYNC_IO_FINISH_STEP_DONE = 2
 } SkrAsyncIOFinishStep;
 
-constexpr const char* callback_names[SKR_IO_STAGE_COUNT] = {
+constexpr const char* callback_names[] = {
     "IOCallback(None)",
     "IOCallback(Enqueued)",
     "IOCallback(Resolving)",
     "IOCallback(Loading)",
     "IOCallback(Loaded)",
     "IOCallback(Decompressing)",
+    "IOCallback(Decompressed)",
     "IOCallback(Completed)",
     "IOCallback(Cancelled)",
 };
+static_assert(sizeof(callback_names) / sizeof(callback_names[0]) == SKR_IO_STAGE_COUNT, "callback_names size mismatch");
 
 struct IORequestBase : public IIORequest
 {
+    IO_RC_OBJECT_BODY
 public:
     SkrAsyncIOFinishStep getFinishStep() const SKR_NOEXCEPT
     { 
@@ -75,6 +80,13 @@ public:
     {
         return static_cast<ESkrIOStage>(skr_atomicu32_load_relaxed(&future->status));
     }
+
+    IIOBatch* getOwnerBatch() const { return owner_batch; }
+
+    bool getCancelRequested() const
+    {
+        return skr_atomicu32_load_relaxed(&future->request_cancel);
+    }
     
     void add_callback(ESkrIOStage stage, skr_io_callback_t callback, void* data) SKR_NOEXCEPT 
     { 
@@ -87,12 +99,26 @@ public:
         finish_callbacks[point] = callback;
         finish_callback_datas[point] = data;
     }
-        
-    void set_sub_priority(float sub_pri) SKR_NOEXCEPT { sub_priority = sub_pri; }
-    float get_sub_priority() const SKR_NOEXCEPT { return sub_priority; }
 
+    void use_async_complete() SKR_NOEXCEPT { async_complete = true; }
+    void use_async_cancel() SKR_NOEXCEPT { async_cancel = true; }
+    const skr_io_future_t* get_future() const SKR_NOEXCEPT { return future; }
+
+    bool async_complete = false;
+    bool async_cancel = false;
+
+    skr::string path;
+    skr_vfs_t* vfs = nullptr;
+    skr_io_file_handle file = nullptr;
+    SkrDStorageFileHandle dfile = nullptr;
+    void set_vfs(skr_vfs_t* _vfs) SKR_NOEXCEPT { vfs = _vfs; }
+    void set_path(const char8_t* p) SKR_NOEXCEPT { path = p; }
+    const char8_t* get_path() const SKR_NOEXCEPT { return path.u8_str(); }
+
+private:
+    friend struct RAMIOBatch;
     skr_io_future_t* future = nullptr;
-    float sub_priority;
+    IIOBatch* owner_batch = nullptr; // avoid circular reference
 
 protected:
     SAtomic32 finish_step = 0;
@@ -114,19 +140,6 @@ public:
     IORequestBase(ISmartPoolPtr<IIORequest> pool) : pool(pool) {}
 protected:
     ISmartPoolPtr<IIORequest> pool = nullptr;
-    
-public:
-    uint32_t add_refcount() 
-    { 
-        return 1 + skr_atomicu32_add_relaxed(&rc, 1); 
-    }
-    uint32_t release() 
-    {
-        skr_atomicu32_add_relaxed(&rc, -1);
-        return skr_atomicu32_load_acquire(&rc);
-    }
-private:
-    SAtomicU32 rc = 0;
 };
 
 using RQPtr = skr::SObjectPtr<IORequestBase>;

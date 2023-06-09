@@ -15,29 +15,8 @@
 namespace skr
 {
 struct ShaderMapImpl;
-namespace Shader
-{
 
-using Future = skr::IFuture<bool>;
-using JobQueueFuture = skr::ThreadedJobQueueFuture<bool>;
-using SerialFuture = skr::SerialFuture<bool>;
-struct FutureLauncher
-{
-    FutureLauncher(skr::JobQueue* q) : job_queue(q) {}
-    template<typename F, typename... Args>
-    Future* async(F&& f, Args&&... args)
-    {
-        if (job_queue)
-            return SkrNew<JobQueueFuture>(job_queue, std::forward<F>(f), std::forward<Args>(args)...);
-        else
-            return SkrNew<SerialFuture>(std::forward<F>(f), std::forward<Args>(args)...);
-    }
-    skr::JobQueue* job_queue = nullptr;
-};
-
-}
-
-struct ShaderProgress : public skr::AsyncProgress<Shader::FutureLauncher, int, bool>
+struct ShaderProgress : public skr::AsyncProgress<skr::FutureLauncher<bool>, int, bool>
 {
     ShaderProgress(ShaderMapImpl* factory, const char8_t* uri, const skr_platform_shader_identifier_t& identifier)
         : factory(factory), bytes_uri(uri), identifier(identifier)
@@ -59,7 +38,7 @@ struct ShaderMapImpl : public skr_shader_map_t
     ShaderMapImpl(const skr_shader_map_root_t& root)
         : root(root)
     {
-        future_launcher = SPtr<Shader::FutureLauncher>::Create(root.job_queue);
+        future_launcher = SPtr<skr::FutureLauncher<bool>>::Create(root.job_queue);
     }
 
     ~ShaderMapImpl()
@@ -90,7 +69,7 @@ struct ShaderMapImpl : public skr_shader_map_t
         SAtomicU32 shader_status = 0;
     };
 
-    SPtr<Shader::FutureLauncher> future_launcher;
+    SPtr<skr::FutureLauncher<bool>> future_launcher;
     uint64_t frame_index = 0;
     skr_shader_map_root_t root;
 

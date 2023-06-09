@@ -122,7 +122,7 @@ void SGameModule::installResourceFactories()
     ioServiceDesc.name = u8"GameRuntimeRAMIOService";
     ioServiceDesc.sleep_time = 1000 / 60;
     ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
-    ram_service->add_default_resolvers();
+    ram_service->run();
 
     registry = SkrNew<skr::resource::SLocalResourceRegistry>(resource_vfs);
     skr::resource::GetResourceSystem()->Initialize(registry, ram_service);
