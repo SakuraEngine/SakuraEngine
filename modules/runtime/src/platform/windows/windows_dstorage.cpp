@@ -1,13 +1,24 @@
 #include "platform/windows/windows_dstorage.hpp"
 #include "cgpu/extensions/cgpu_d3d12_exts.h"
+#include "misc/make_zeroed.hpp"
+#include "platform/win/misc.h"
 
 #include "EASTL/vector_map.h"
 #include "EASTL/algorithm.h"
 
+SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::_this = nullptr;
+
 SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Get()
 {
-    static SkrWindowsDStorageInstance* _this = nullptr;
-    if (!_this)
+    return _this;
+}
+
+SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Initialize(const SkrDStorageConfig& cfg)
+{
+    const bool wine = skr_win_is_wine();
+    if (wine)
+        _this->dstorage_dll_dont_exist = true;
+    else if (!_this)
     {
         _this = SkrNew<SkrWindowsDStorageInstance>();
         {
@@ -23,9 +34,28 @@ SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Get()
             {
                 SKR_LOG_TRACE("dstorage.dll loaded");
 
+                auto pfn_set_config = SKR_SHARED_LIB_LOAD_API(_this->dstorage_library, DStorageSetConfiguration);
+                if (!pfn_set_config) return nullptr;
+               
+                auto pfn_set_config1 = SKR_SHARED_LIB_LOAD_API(_this->dstorage_library, DStorageSetConfiguration1);
+                if (!pfn_set_config1) return nullptr;
+                auto config1 = make_zeroed<DSTORAGE_CONFIGURATION1>();
+                config1.DisableBypassIO = cfg.no_bypass;
+                config1.ForceFileBuffering = cfg.enable_cache;
+                if (const bool hdd = !skr_win_is_executable_on_ssd())
+                {
+                    // force file buffering on HDD
+                    config1.DisableBypassIO = true;
+                    config1.ForceFileBuffering = true;
+                }
+                if (!SUCCEEDED(pfn_set_config1(&config1)))
+                {
+                    SKR_LOG_ERROR("Failed to set DStorage config!");
+                    return nullptr;
+                }
+
                 auto pfn_get_factory = SKR_SHARED_LIB_LOAD_API(_this->dstorage_library, DStorageGetFactory);
                 if (!pfn_get_factory) return nullptr;
-                
                 if (!SUCCEEDED(pfn_get_factory(IID_PPV_ARGS(&_this->pFactory))))
                 {
                     SKR_LOG_ERROR("Failed to get DStorage factory!");
@@ -44,25 +74,25 @@ SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Get()
 SkrWindowsDStorageInstance::~SkrWindowsDStorageInstance()
 {
     if (pFactory) pFactory->Release();
+    if (pWarpDevice) pWarpDevice->Release();
     if (dstorage_core.isLoaded()) dstorage_core.unload();
     if (dstorage_library.isLoaded()) dstorage_library.unload();
     
     SKR_LOG_TRACE("Direct Storage unloaded");
 }
 
-bool created = false;
 SkrDStorageInstanceId skr_create_dstorage_instance(SkrDStorageConfig* config)
 {
-    created = true;
-    return SkrWindowsDStorageInstance::Get();
+    return SkrWindowsDStorageInstance::Initialize(*config);
 }
 
 SkrDStorageInstanceId skr_get_dstorage_instnace()
 {
+    auto created = SkrWindowsDStorageInstance::Get();
     SKR_ASSERT(created && 
         "Direct Storage instance not created, "
         "you must call 'skr_create_dstorage_instance' at first!");
-    return SkrWindowsDStorageInstance::Get();
+    return created;
 }
 
 ESkrDStorageAvailability skr_query_dstorage_availability()
@@ -107,6 +137,8 @@ SkrDStorageQueueId skr_create_dstorage_queue(const SkrDStorageQueueDescriptor* d
     Q->max_size = _this->sDirectStorageStagingBufferSize;
     Q->pFactory = pFactory;
     Q->pDxDevice = queueDesc.Device ? queueDesc.Device : _this->pWarpDevice;
+    Q->pFactory->AddRef();
+    Q->pDxDevice->AddRef();
     Q->device = desc->gpu_device;
     Q->pInstance = _this;
     return Q;
@@ -124,8 +156,9 @@ void skr_free_dstorage_queue(SkrDStorageQueueId queue)
 #ifdef TRACY_PROFILE_DIRECT_STORAGE
         skr_destroy_mutex(&Q->profile_mutex);
 #endif
-
         Q->pQueue->Release();
+        Q->pDxDevice->Release();
+        Q->pFactory->Release();
     }
     SkrDelete(Q);
 }

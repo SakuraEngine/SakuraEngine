@@ -8,6 +8,9 @@
 #endif
 #include "stdint.h"
 #include "stdbool.h"
+#include "platform/win/misc.h"
+#include "platform/debug.h"
+#include "platform/memory.h"
 
 HANDLE __GetVolumeHandleForFile(const wchar_t* filePath)
 {
@@ -53,6 +56,31 @@ bool __IsFileOnSSD(const wchar_t* file_path)
     return is_ssd;
 }
 
+bool __IsFileOnSSD_U8(const char8_t* file_path)
+{
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, file_path, -1, 0, 0);
+    wchar_t wpath_small[MAX_PATH];
+    wchar_t* wpath_big = NULL;
+    wchar_t* wpath = wpath_small;
+    if (wlen > _countof(wpath_small)) 
+    {
+        wpath = wpath_big = (wchar_t*)sakura_malloc(wlen * sizeof(wchar_t));
+    }
+
+    if (MultiByteToWideChar(CP_UTF8, 0, file_path, -1, wpath, wlen) != wlen) 
+    {
+        SKR_ASSERT(0);
+        return false;
+    }
+    
+    bool result = __IsFileOnSSD(wpath);
+    if (wpath_big) 
+    {
+        sakura_free(wpath_big);
+    }
+    return result;
+}
+
 bool __IsProgramOnSSD()
 {
     TCHAR path[MAX_PATH];
@@ -87,4 +115,19 @@ bool __VerifyWindowsVersion(uint32_t MajorVersion, uint32_t MinorVersion)
 	ConditionMask = VerSetConditionMask(ConditionMask, VER_MINORVERSION, VER_GREATER_EQUAL);
 
 	return !!VerifyVersionInfo(&Version, VER_MAJORVERSION | VER_MINORVERSION, ConditionMask);
+}
+
+bool skr_win_is_file_on_ssd(const char8_t* file_path)
+{
+    return __IsFileOnSSD_U8(file_path);
+}
+
+bool skr_win_is_executable_on_ssd()
+{
+    return __IsProgramOnSSD();
+}
+
+bool skr_win_is_wine()
+{
+    return (__GetWineVersion() != NULL);
 }
