@@ -9,16 +9,29 @@ constexpr float fmod(float x, float y) SKR_NOEXCEPT
     {
         float div = x / y;
         div = div > 0 ? div : -div;
-        if(div < 8388608.f) //check if div is in range of int
+        if (div < 8388608.f) // check if div is in range of int
             div = float(static_cast<int>(div));
         return x - div * y;
     }
-    else 
+    else
     {
         return std::fmod(x, y);
     }
-    
 }
+
+#if (__cplusplus >= 202002L)
+
+using std::lerp;
+
+#else
+
+constexpr float lerp(float a, float b, float t) SKR_NOEXCEPT
+{
+    return a + (b - a) * t;
+}
+
+#endif
+
 struct Offset {
     float x = 0;
     float y = 0;
@@ -44,7 +57,8 @@ struct Offset {
     inline float radians() const SKR_NOEXCEPT { return std::atan2(y, x); }
 
     // compare
-    inline constexpr std::partial_ordering operator<=>(const Offset& other) const SKR_NOEXCEPT = default;
+    inline constexpr bool operator==(const Offset& rhs) const SKR_NOEXCEPT { return x == rhs.x && y == rhs.y; }
+    inline constexpr bool operator!=(const Offset& rhs) const SKR_NOEXCEPT { return !(*this == rhs); }
 
     // arithmetic
     inline constexpr Offset operator-() const SKR_NOEXCEPT { return { -x, -y }; }
@@ -75,7 +89,7 @@ struct Offset {
 
     inline static Offset lerp(const Offset& a, const Offset& b, float t) SKR_NOEXCEPT
     {
-        return { std::lerp(a.x, b.x, t), std::lerp(a.y, b.y, t) };
+        return { ::skr::gui::lerp(a.x, b.x, t), ::skr::gui::lerp(a.y, b.y, t) };
     }
 };
 
@@ -150,7 +164,8 @@ public:
     inline constexpr Offset bottom_right(const Offset& offset) const SKR_NOEXCEPT { return { offset.x + width, offset.y + height }; }
 
     // compare
-    inline constexpr std::partial_ordering operator<=>(const Size& other) const SKR_NOEXCEPT = default;
+    inline constexpr bool operator==(const Size& rhs) const SKR_NOEXCEPT { return width == rhs.width && height == rhs.height; }
+    inline constexpr bool operator!=(const Size& rhs) const SKR_NOEXCEPT { return !(*this == rhs); }
 
     // arithmetic
     inline constexpr Size operator+(float rhs) const SKR_NOEXCEPT { return { width + rhs, height + rhs }; }
@@ -349,7 +364,11 @@ public:
     }
 
     // compare
-    inline constexpr std::partial_ordering operator<=>(const Rect& other) const SKR_NOEXCEPT = default;
+    inline constexpr bool operator==(const Rect& rhs) const SKR_NOEXCEPT
+    {
+        return left == rhs.left && top == rhs.top && right == rhs.right && bottom == rhs.bottom;
+    }
+    inline constexpr bool operator!=(const Rect& rhs) const SKR_NOEXCEPT { return !(*this == rhs); }
 
     // arithmetic
     inline static LiteOptional<Rect> lerp(LiteOptional<Rect> a, LiteOptional<Rect> b, float t)
@@ -375,10 +394,10 @@ public:
             else
             {
                 return Rect{
-                    std::lerp((*a).left, (*b).left, t),
-                    std::lerp((*a).top, (*b).top, t),
-                    std::lerp((*a).right, (*b).right, t),
-                    std::lerp((*a).bottom, (*b).bottom, t),
+                    ::skr::gui::lerp((*a).left, (*b).left, t),
+                    ::skr::gui::lerp((*a).top, (*b).top, t),
+                    ::skr::gui::lerp((*a).right, (*b).right, t),
+                    ::skr::gui::lerp((*a).bottom, (*b).bottom, t),
                 };
             }
         }
