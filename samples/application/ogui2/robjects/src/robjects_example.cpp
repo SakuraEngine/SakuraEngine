@@ -1,3 +1,4 @@
+#define CONTAINER_LITE_IMPL
 #include "robjects_application.h"
 #include "gui_render_graph.hpp"
 

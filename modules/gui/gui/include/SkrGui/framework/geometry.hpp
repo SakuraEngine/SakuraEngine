@@ -63,13 +63,13 @@ struct Offset {
     inline constexpr Offset& operator-=(float rhs) SKR_NOEXCEPT { return *this = *this - rhs; }
     inline constexpr Offset& operator*=(float rhs) SKR_NOEXCEPT { return *this = *this * rhs; }
     inline constexpr Offset& operator/=(float rhs) SKR_NOEXCEPT { return *this = *this / rhs; }
-    inline constexpr Offset& operator%=(float rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
+    inline Offset& operator%=(float rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
 
     inline constexpr Offset& operator+=(const Offset& rhs) SKR_NOEXCEPT { return *this = *this + rhs; }
     inline constexpr Offset& operator-=(const Offset& rhs) SKR_NOEXCEPT { return *this = *this - rhs; }
     inline constexpr Offset& operator*=(const Offset& rhs) SKR_NOEXCEPT { return *this = *this * rhs; }
     inline constexpr Offset& operator/=(const Offset& rhs) SKR_NOEXCEPT { return *this = *this / rhs; }
-    inline constexpr Offset& operator%=(const Offset& rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
+    inline Offset& operator%=(const Offset& rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
 
     inline static Offset lerp(const Offset& a, const Offset& b, float t) SKR_NOEXCEPT
     {
@@ -168,13 +168,13 @@ public:
     inline constexpr Size& operator-=(float rhs) SKR_NOEXCEPT { return *this = *this - rhs; }
     inline constexpr Size& operator*=(float rhs) SKR_NOEXCEPT { return *this = *this * rhs; }
     inline constexpr Size& operator/=(float rhs) SKR_NOEXCEPT { return *this = *this / rhs; }
-    inline constexpr Size& operator%=(float rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
+    inline Size& operator%=(float rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
 
     inline constexpr Size& operator+=(const Size& rhs) SKR_NOEXCEPT { return *this = *this + rhs; }
     inline constexpr Size& operator-=(const Size& rhs) SKR_NOEXCEPT { return *this = *this - rhs; }
     inline constexpr Size& operator*=(const Size& rhs) SKR_NOEXCEPT { return *this = *this * rhs; }
     inline constexpr Size& operator/=(const Size& rhs) SKR_NOEXCEPT { return *this = *this / rhs; }
-    inline constexpr Size& operator%=(const Size& rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
+    inline Size& operator%=(const Size& rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
 };
 struct Rect {
     float left = 0;
