@@ -103,11 +103,12 @@ void SLive2DViewerModule::on_load(int argc, char8_t** argv)
 
     auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
     ioServiceDesc.name = u8"Live2DViewer-RAMIOService";
-    ioServiceDesc.sleep_time = 1000 / 100; // TickRate: 100
+    ioServiceDesc.sleep_time = 1000 / 100; // tick rate: 100
     ioServiceDesc.io_job_queue = io_job_queue;
     ioServiceDesc.callback_job_queue = io_job_queue;
+    ioServiceDesc.awake_at_request = false; // add latency but reduce CPU usage & batch IO requests
     ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
-    ram_service->add_default_resolvers();
+    ram_service->run();
     
 #ifdef _WIN32
     {

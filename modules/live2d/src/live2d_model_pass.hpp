@@ -81,7 +81,7 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& pass_context) {
             for (uint32_t i = 0; i < drawcalls.size(); i++)
                 for (uint32_t j = 0; j < drawcalls[i].count; j++)
-                    for (uint32_t k = 0; k < drawcalls[i].lists[k].count; k++)
+                    for (uint32_t k = 0; k < drawcalls[i].lists[j].count; k++)
                     {
                         ZoneScopedN("UpdateBindTables");
                         auto&& dc = drawcalls[i].lists[j].drawcalls[k];

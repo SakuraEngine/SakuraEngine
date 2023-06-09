@@ -1,14 +1,18 @@
 #pragma once
+#include "io/io.h"
 #include "pool.hpp"
+#include "platform/thread.h"
+#include "misc/defer.hpp"
 #include "containers/vector.hpp"
 #include <EASTL/fixed_vector.h>
-#include "tracy/Tracy.hpp"
 
 namespace skr {
 namespace io {
 
 struct IOBatchBase : public IIOBatch
 {
+    IO_RC_OBJECT_BODY
+public:
     void reserve(uint64_t n) SKR_NOEXCEPT
     {
         requests.reserve(n);
@@ -16,6 +20,8 @@ struct IOBatchBase : public IIOBatch
 
     skr::span<IORequestId> get_requests() SKR_NOEXCEPT
     {
+        skr_rw_mutex_acquire_r(&rw_lock);
+        SKR_DEFER( { skr_rw_mutex_release(&rw_lock); });
         return requests;
     }
 
@@ -23,21 +29,29 @@ struct IOBatchBase : public IIOBatch
     SkrAsyncServicePriority get_priority() const SKR_NOEXCEPT { return priority; }
 
 protected:
-    SkrAsyncServicePriority priority;
-    eastl::fixed_vector<IORequestId, 1> requests;
-
-public:
-    uint32_t add_refcount() 
-    { 
-        return 1 + skr_atomicu32_add_relaxed(&rc, 1); 
-    }
-    uint32_t release() 
+    friend struct RunnerBase;
+    void addRequest(IORequestId rq) SKR_NOEXCEPT
     {
-        skr_atomicu32_add_relaxed(&rc, -1);
-        return skr_atomicu32_load_acquire(&rc);
+        skr_rw_mutex_acquire_w(&rw_lock);
+        SKR_DEFER( { skr_rw_mutex_release(&rw_lock); });
+        requests.push_back(rq);
     }
+
+    void removeCancelledRequest(IORequestId rq) SKR_NOEXCEPT
+    {
+        skr_rw_mutex_acquire_w(&rw_lock);
+        SKR_DEFER( { skr_rw_mutex_release(&rw_lock); });
+        auto fnd = eastl::remove_if(
+            requests.begin(), requests.end(), [rq](IORequestId r) { return r == rq; });
+        cancelled_requests.emplace_back(*fnd);
+        requests.erase(fnd, requests.end());
+    }
+
 private:
-    SAtomicU32 rc = 0;
+    SkrAsyncServicePriority priority;
+    SRWMutex rw_lock;
+    eastl::fixed_vector<IORequestId, 4> requests;
+    eastl::fixed_vector<IORequestId, 1> cancelled_requests;
 
 public:
     SInterfaceDeleter custom_deleter() const 
@@ -49,11 +63,17 @@ public:
         };
     }
     friend struct SmartPool<IOBatchBase, IIOBatch>;
+
 protected:
-    IOBatchBase(ISmartPoolPtr<IIOBatch> pool, IIOService* service, const uint64_t sequence) 
+    IOBatchBase(ISmartPoolPtr<IIOBatch> pool, IIOService* service, const uint64_t sequence) SKR_NOEXCEPT
         : sequence(sequence), pool(pool), service(service)
     {
+        skr_init_rw_mutex(&rw_lock);
+    }
 
+    ~IOBatchBase() SKR_NOEXCEPT
+    {
+        skr_destroy_rw_mutex(&rw_lock);
     }
     
     const uint64_t sequence;
@@ -64,5 +84,6 @@ protected:
 using BatchPtr = skr::SObjectPtr<IIOBatch>;
 using IOBatchQueue = IOConcurrentQueue<BatchPtr>;  
 using IOBatchArray = skr::vector<BatchPtr>;
+
 } // namespace io
 } // namespace skr

@@ -61,7 +61,7 @@ protected:
     SPtrBase(SPtrBase<U, EmbedRC>&& lp, typename std::enable_if<std::is_convertible<U*, T*>::value>::type* = 0) SKR_NOEXCEPT;
 
     void Swap(SPtrBase& other);
-    T* p;
+    T* p = nullptr;
 };
 } // namespace skr
 

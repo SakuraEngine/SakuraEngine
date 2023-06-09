@@ -115,7 +115,11 @@ skr::SPtrHelper<T, EmbedRC>::SPtrHelper(const SPtrHelper<U, EmbedRC>& lp, typena
 }
 
 template <typename T, bool EmbedRC>
-skr::SPtrHelper<T, EmbedRC>::SPtrHelper(this_type&& lp) SKR_NOEXCEPT  : SPtrBase<T, EmbedRC>(std::move(lp)) { }
+skr::SPtrHelper<T, EmbedRC>::SPtrHelper(this_type&& lp) SKR_NOEXCEPT  
+    : SPtrBase<T, EmbedRC>(std::move(lp)) 
+{
+
+}
 
 template <typename T, bool EmbedRC>
 template <typename U>

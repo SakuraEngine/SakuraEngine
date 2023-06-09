@@ -9,22 +9,27 @@
 
 #include "EASTL/vector.h"
 
-#define TRACY_PROFILE_DIRECT_STORAGE
+// #define TRACY_PROFILE_DIRECT_STORAGE
 #include "tracy/Tracy.hpp"
 
 struct SkrWindowsDStorageInstance : public SkrDStorageInstance
 {
+    static SkrWindowsDStorageInstance* Initialize(const SkrDStorageConfig& cfg);
     static SkrWindowsDStorageInstance* Get();
     ~SkrWindowsDStorageInstance();
 
     IDStorageFactory* pFactory = nullptr;
+    struct ID3D12Device* pWarpDevice;
     skr::SharedLibrary dstorage_library;
     skr::SharedLibrary dstorage_core;
     bool dstorage_dll_dont_exist = false;
     uint64_t sDirectStorageStagingBufferSize = DSTORAGE_STAGING_BUFFER_SIZE_32MB;
+    static SkrWindowsDStorageInstance* _this;
 };
 
 struct DStorageQueueWindows : public SkrDStorageQueue {
+    SkrWindowsDStorageInstance* pInstance;
+    struct ID3D12Device* pDxDevice;
     IDStorageQueue* pQueue;
     IDStorageFactory* pFactory;
     uint64_t max_size;
@@ -32,6 +37,7 @@ struct DStorageQueueWindows : public SkrDStorageQueue {
 #ifdef TRACY_PROFILE_DIRECT_STORAGE
     SMutex profile_mutex;
     struct ProfileTracer {
+        skr::string name;
         DStorageQueueWindows* Q;
         ID3D12Fence* fence;
         SThreadDesc desc;
@@ -59,3 +65,7 @@ struct DStorageQueueWindows : public SkrDStorageQueue {
 #endif
     }
 };
+
+#ifdef TRACY_PROFILE_DIRECT_STORAGE
+void skr_dstorage_queue_trace_submit(SkrDStorageQueueId queue);
+#endif

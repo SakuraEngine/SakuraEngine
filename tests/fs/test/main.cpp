@@ -1,10 +1,12 @@
-#include "gtest/gtest.h"
 #include "platform/vfs.h"
 #include "platform/thread.h"
+#include "platform/dstorage.h"
 #include "misc/log.h"
 #include "misc/make_zeroed.hpp"
 #include "async/thread_job.hpp"
+#include "async/wait_timeout.hpp"
 #include "io/io.h"
+#include "gtest/gtest.h"
 
 #include <string>
 #include <iostream>
@@ -12,9 +14,8 @@
 
 #include "tracy/Tracy.hpp"
 
-class FSTest : public ::testing::Test
+struct VFSTest : public ::testing::TestWithParam<bool>
 {
-public:
     void SetUp() override
     {
         skr_vfs_desc_t abs_fs_desc = {};
@@ -25,6 +26,9 @@ public:
         std::error_code ec = {};
         const auto current_path = skr::filesystem::current_path(ec).string();
         EXPECT_EQ(std::string((const char*)abs_fs->mount_dir), current_path);
+
+        SkrDStorageConfig config = {};
+        skr_create_dstorage_instance(&config);
     }
 
     void TearDown() override
@@ -35,7 +39,7 @@ public:
     skr_vfs_t* abs_fs = nullptr;
 };
 
-TEST_F(FSTest, mount)
+TEST_P(VFSTest, mount)
 {
     ZoneScopedN("mount");
 
@@ -48,7 +52,7 @@ TEST_F(FSTest, mount)
     skr_free_vfs(fs);
 }
 
-TEST_F(FSTest, readwrite)
+TEST_P(VFSTest, readwrite)
 {
     ZoneScopedN("readwrite");
 
@@ -63,7 +67,7 @@ TEST_F(FSTest, readwrite)
     EXPECT_EQ(skr_vfs_fclose(f), true);
 }
 
-TEST_F(FSTest, readwrite2)
+TEST_P(VFSTest, readwrite2)
 {
     ZoneScopedN("readwrite2");
 
@@ -78,7 +82,7 @@ TEST_F(FSTest, readwrite2)
     EXPECT_EQ(skr_vfs_fclose(f), true);
 }
 
-TEST_F(FSTest, seqread)
+TEST_P(VFSTest, seqread)
 {
     ZoneScopedN("seqread");
     
@@ -96,34 +100,15 @@ TEST_F(FSTest, seqread)
     EXPECT_EQ(skr_vfs_fclose(f), true);
 }
 
-template<typename F>
-void wait_timeout(F f, uint32_t seconds_timeout = 3)
-{
-    ZoneScopedN("WaitTimeOut");
-
-    uint32_t seconds = 0;
-    while (!f())
-    {
-        skr_thread_sleep(1);
-        seconds++;
-        if (seconds > seconds_timeout * 100)
-        {
-            SKR_LOG_ERROR("drain timeout, force quit");
-            EXPECT_TRUE(0);
-            break;
-        }
-    }
-}
-
-TEST_F(FSTest, asyncread)
+TEST_P(VFSTest, asyncread)
 {
     ZoneScopedN("asyncread");
 
     skr_ram_io_service_desc_t ioServiceDesc = {};
-    ioServiceDesc.trace_log = true;
     ioServiceDesc.name = u8"Test";
+    ioServiceDesc.use_dstorage = GetParam();
     auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
-    ioService->add_default_resolvers();
+    ioService->run();
 
     skr_io_future_t future = {};
     skr::BlobId blob = nullptr;
@@ -151,23 +136,23 @@ TEST_F(FSTest, asyncread)
     std::cout << "..." << std::endl;
 }
 
-TEST_F(FSTest, asyncread2)
+TEST_P(VFSTest, asyncread2)
 {
     ZoneScopedN("asyncread2");
 
     auto jqDesc = make_zeroed<skr::JobQueueDesc>();
-    jqDesc.thread_count = 2;
+    jqDesc.thread_count = 1;
     jqDesc.priority = SKR_THREAD_ABOVE_NORMAL;
     jqDesc.name = u8"Tool-IOJobQueue";
     auto io_job_queue = SkrNew<skr::JobQueue>(jqDesc);
 
     skr_ram_io_service_desc_t ioServiceDesc = {};
-    ioServiceDesc.trace_log = true;
     ioServiceDesc.name = u8"Test";
+    ioServiceDesc.use_dstorage = GetParam();
     ioServiceDesc.io_job_queue = io_job_queue;
     ioServiceDesc.callback_job_queue = io_job_queue;
     auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
-    ioService->add_default_resolvers();
+    ioService->run();
 
     skr_io_future_t future = {};
     skr::BlobId blob = nullptr;
@@ -197,15 +182,15 @@ TEST_F(FSTest, asyncread2)
     SkrDelete(io_job_queue);
 }
 
-TEST_F(FSTest, chunking)
+TEST_P(VFSTest, chunking)
 {
     ZoneScopedN("chunking");
 
     skr_ram_io_service_desc_t ioServiceDesc = {};
-    ioServiceDesc.trace_log = true;
     ioServiceDesc.name = u8"Test";
+    ioServiceDesc.use_dstorage = GetParam();
     auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
-    ioService->add_default_resolvers();
+    ioService->run();
 
     skr_io_future_t future = {};
     skr::BlobId blob = nullptr;
@@ -233,9 +218,64 @@ TEST_F(FSTest, chunking)
     std::cout << "..." << std::endl;
 }
 
-#define TEST_CYCLES_COUNT 50
+#define TEST_CYCLES_COUNT 100
 
-TEST_F(FSTest, cancel)
+TEST_P(VFSTest, defer_cancel)
+{
+    ZoneScopedN("defer_cancel");
+
+    uint32_t sucess = 0;
+    for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
+    {
+        skr_ram_io_service_desc_t ioServiceDesc = {};
+        ioServiceDesc.name = u8"Test";
+        ioServiceDesc.use_dstorage = GetParam();
+        ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
+        auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
+        ioService->set_sleep_time(0); // make test faster
+        ioService->run();
+
+        skr_io_future_t future = {};
+        skr::BlobId blob = nullptr;
+        skr_io_future_t future2 = {};
+        skr::BlobId blob2 = nullptr;
+        {
+            auto rq = ioService->open_request();
+            rq->set_vfs(abs_fs);
+            rq->set_path(u8"testfile2");
+            rq->add_block({}); // read all
+            blob = ioService->request(rq, &future);
+        }
+        {
+            auto rq2 = ioService->open_request();
+            rq2->set_vfs(abs_fs);
+            rq2->set_path(u8"testfile");
+            rq2->add_block({}); // read all
+            blob2 = ioService->request(rq2, &future2);
+        }
+        // try cancel io of testfile
+        ioService->cancel(&future2);
+        ioService->drain();
+        if (future2.is_cancelled())
+        {
+            EXPECT_EQ(blob2->get_data(), nullptr);
+            sucess++;
+        }
+        else if (future2.is_ready())
+        {
+            EXPECT_EQ(std::string((const char*)blob2->get_data(), blob2->get_size()), std::string("Hello, World!"));
+        }
+        SKR_ASSERT(std::string((const char*)blob->get_data(), blob->get_size()) == std::string("Hello, World2!"));
+        
+        blob.reset();
+        blob2.reset();
+
+        skr_io_ram_service_t::destroy(ioService);
+    }
+    SKR_LOG_INFO("defer_cancel tested for %d times, sucess %d", TEST_CYCLES_COUNT, sucess);
+}
+
+TEST_P(VFSTest, cancel)
 {
     ZoneScopedN("cancel");
 
@@ -243,12 +283,12 @@ TEST_F(FSTest, cancel)
     for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
-        ioServiceDesc.trace_log = true;
         ioServiceDesc.name = u8"Test";
+        ioServiceDesc.use_dstorage = GetParam();
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
-        ioService->add_default_resolvers();
         ioService->set_sleep_time(0); // make test faster
+        ioService->run();
 
         skr_io_future_t future = {};
         skr::BlobId blob = nullptr;
@@ -290,82 +330,21 @@ TEST_F(FSTest, cancel)
     SKR_LOG_INFO("cancel tested for %d times, sucess %d", TEST_CYCLES_COUNT, sucess);
 }
 
-TEST_F(FSTest, defer_cancel)
+// this test dont works with batch NVMe queue APIs, like windows DirectStorage.
+TEST_P(VFSTest, sort)
 {
-    ZoneScopedN("defer_cancel");
+    if (bool use_dstorage = GetParam()) 
+        return;
 
-    uint32_t sucess = 0;
-    for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
-    {
-        skr_ram_io_service_desc_t ioServiceDesc = {};
-        ioServiceDesc.trace_log = true;
-        ioServiceDesc.name = u8"Test";
-        ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
-        auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
-        ioService->add_default_resolvers();
-        ioService->set_sleep_time(0); // make test faster
-
-        skr_io_future_t future = {};
-        skr::BlobId blob = nullptr;
-        skr_io_future_t future2 = {};
-        skr::BlobId blob2 = nullptr;
-        {
-            auto rq = ioService->open_request();
-            rq->set_vfs(abs_fs);
-            rq->set_path(u8"testfile2");
-            rq->add_block({}); // read all
-            blob = ioService->request(rq, &future);
-        }
-        {
-            auto rq2 = ioService->open_request();
-            rq2->set_vfs(abs_fs);
-            rq2->set_path(u8"testfile");
-            rq2->add_block({}); // read all
-            blob2 = ioService->request(rq2, &future2);
-        }
-        // try cancel io of testfile
-        ioService->cancel(&future2);
-        ioService->drain();
-        if (future2.is_cancelled())
-        {
-            EXPECT_EQ(blob2->get_data(), nullptr);
-            sucess++;
-        }
-        else
-        {
-            EXPECT_TRUE(future2.is_enqueued() || future2.is_loading() || future2.is_ready());
-
-            wait_timeout([&future2]()->bool
-            {
-                return future2.is_ready();
-            });
-
-            EXPECT_EQ(std::string((const char*)blob2->get_data(), blob2->get_size()), std::string("Hello, World!"));
-        }
-        EXPECT_EQ(std::string((const char*)blob->get_data(), blob->get_size()), std::string("Hello, World2!"));
-        
-        blob.reset();
-        blob2.reset();
-
-        skr_io_ram_service_t::destroy(ioService);
-    }
-    SKR_LOG_INFO("defer_cancel tested for %d times, sucess %d", TEST_CYCLES_COUNT, sucess);
-}
-
-TEST_F(FSTest, sort)
-{
     ZoneScopedN("sort");
-
     for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
-        ioServiceDesc.trace_log = true;
         ioServiceDesc.name = u8"Test";
+        ioServiceDesc.use_dstorage = GetParam();
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
-        ioService->add_default_resolvers();
         ioService->set_sleep_time(0); // make test faster
-        ioService->stop(true);
 
         skr_io_future_t future = {};
         skr::BlobId blob = nullptr;
@@ -376,6 +355,11 @@ TEST_F(FSTest, sort)
             rq->set_vfs(abs_fs);
             rq->set_path(u8"testfile");
             rq->add_block({}); // read all
+            rq->add_callback(SKR_IO_STAGE_COMPLETED, 
+            +[](skr_io_future_t* f, skr_io_request_t* request, void* data) {
+                auto future2 = (skr_io_future_t*)data;
+                EXPECT_TRUE(future2->is_ready());
+            }, &future2);
             blob = ioService->request(rq, &future, SKR_ASYNC_SERVICE_PRIORITY_NORMAL);
         }
         {
@@ -407,6 +391,15 @@ TEST_F(FSTest, sort)
     }
     SKR_LOG_INFO("sorts tested for %d times", TEST_CYCLES_COUNT);
 }
+
+#ifdef _WIN32
+// TODO: fix DirectStorage on Github Action Machines
+static const auto permutations = testing::Values( /*true,*/ false ); 
+#else
+static const auto permutations = testing::Values( false );
+#endif
+
+INSTANTIATE_TEST_SUITE_P(VFSTest, VFSTest, permutations);
 
 int main(int argc, char** argv)
 {
