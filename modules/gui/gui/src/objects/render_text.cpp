@@ -234,7 +234,7 @@ void RenderText::draw(const DrawParams* params)
 
 void RenderText::add_text(const char8_t* u8_text)
 {
-    inlines_.get().emplace_back(InlineType{ skr::string::from_utf8(u8_text) });
+    inlines_.emplace_back(InlineType{ skr::string::from_utf8(u8_text) });
     paragraph_dirty_ = true;
 }
 
@@ -266,8 +266,7 @@ void RenderText::BuildParagraph()
 
 void RenderText::buildParagraphRec(Paragraph* p, const StyleText& txt)
 {
-    auto& inlines = inlines_.get();
-    for (auto& inl : inlines)
+    for (auto& inl : inlines_)
     {
         std::visit(overloaded{
                        [&](skr::string& text) {
@@ -309,7 +308,7 @@ void RenderText::buildParagraphRec(Paragraph* p, const StyleText& txt)
                            */
                            auto font = static_pointer_cast<godot::Font>(font_);
                            auto ft = godot::Ref<godot::Font>(font);
-                           paragraph_->add_string((wchar_t*)Bind->text.get().c_str(), ft, txt.font_size, "", {});
+                           paragraph_->add_string((wchar_t*)Bind->text.c_str(), ft, txt.font_size, "", {});
                        } },
                    inl);
     }

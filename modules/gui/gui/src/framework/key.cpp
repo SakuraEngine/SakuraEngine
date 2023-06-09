@@ -9,7 +9,7 @@ Key::Key() SKR_NOEXCEPT : _type(EKeyType::None) {}
 
 Key::~Key() SKR_NOEXCEPT
 {
-   clear();
+    clear();
 }
 
 Key::Key(const Key& other) SKR_NOEXCEPT
@@ -106,7 +106,7 @@ Key& Key::operator=(Key&& other) SKR_NOEXCEPT
             break;
         case EKeyType::Name:
         case EKeyType::NameStorage:
-            _name.get() = std::move(other._name.get());
+            _name = std::move(other._name);
             break;
         default:
             break;
@@ -118,7 +118,7 @@ bool Key::operator==(const Key& other) const SKR_NOEXCEPT
 {
     if (_type != other._type) return false;
     if (_type == EKeyType::None) return true;
-    if (_type == EKeyType::Unique)  return false;
+    if (_type == EKeyType::Unique) return false;
 
     switch (_type)
     {
@@ -132,7 +132,7 @@ bool Key::operator==(const Key& other) const SKR_NOEXCEPT
             return _float == other._float;
         case EKeyType::Name:
         case EKeyType::NameStorage:
-            return _name.get() == other._name.get();
+            return _name == other._name;
         default:
             return true;
     }
@@ -145,7 +145,7 @@ bool Key::operator!=(const Key& other) const SKR_NOEXCEPT
 
 void Key::clear() SKR_NOEXCEPT
 {
-     switch (_type)
+    switch (_type)
     {
         case EKeyType::Name:
         case EKeyType::NameStorage:
@@ -161,13 +161,13 @@ void Key::set_value(const TextStorage& value) SKR_NOEXCEPT
 {
     clear();
     _type = EKeyType::NameStorage;
-    _name.get() = value.get();
+    _name = value;
 }
 void Key::set_storage(const TextStorage& value) SKR_NOEXCEPT
 {
     clear();
     _type = EKeyType::NameStorage;
-    _name.get() = value.get();
+    _name = value;
 }
 
 } // namespace gui
