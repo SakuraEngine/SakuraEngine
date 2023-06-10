@@ -23,15 +23,15 @@ struct SKR_GUI_API BuildOwner {
     void register_global_key(State* key, Element* element) SKR_NOEXCEPT;
     void unregister_global_key(State* key, Element* element) SKR_NOEXCEPT;
 
-    VectorStorage<Element*> _dirty_elements;
+    Array<Element*> _dirty_elements;
     bool _dirty_elements_needs_resorting;
     bool _debug_is_in_build_scope;
     bool _debug_building;
     bool _scheduled_flush_dirty_elements;
     int _debug_state_lock_level;
-    VectorStorage<Element*> _inactive_elements;
+    Array<Element*> _inactive_elements;
     FocusManager* _focus_manager;
-    HashMapStorage<State*, Element*> _global_key_registry;
+    HashMap<State*, Element*> _global_key_registry;
 };
 } // namespace gui
 } // namespace skr

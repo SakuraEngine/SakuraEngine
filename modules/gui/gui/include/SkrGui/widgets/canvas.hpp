@@ -20,6 +20,6 @@ private:
         Positional layout = Positional::fill();
         int32_t z_index = 0;
     };
-    VectorStorage<Slot> _children_slots;
+    Array<Slot> _children_slots;
 };
 } // namespace skr::gui

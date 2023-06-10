@@ -1,10 +1,10 @@
 #pragma once
-#define CONTAINER_LITE_IMPL
 #include "SkrInputSystem/input_action.hpp"
 #include "SkrInputSystem/input_trigger.hpp"
 #include "SkrInputSystem/input_modifier.hpp"
 #include "platform/guid.hpp"
 #include <EASTL/functional.h>
+#include "containers/vector.hpp"
 
 namespace skr
 {
@@ -136,9 +136,9 @@ struct SKR_INPUTSYSTEM_API InputActionImpl : public InputAction {
 
 protected:
     InputValueStorage current_value;
-    lite::VectorStorage<ActionEventStorage> events;
-    lite::VectorStorage<SObjectPtr<InputTrigger>> triggers;
-    lite::VectorStorage<SObjectPtr<InputModifier>> modifiers;
+    vector<ActionEventStorage> events;
+    vector<SObjectPtr<InputTrigger>> triggers;
+    vector<SObjectPtr<InputModifier>> modifiers;
 };
 
 } // namespace input

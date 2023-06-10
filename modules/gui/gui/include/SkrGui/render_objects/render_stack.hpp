@@ -182,7 +182,7 @@ public:
     void set_positional(int index, Positional positional);
 
 private:
-    VectorStorage<Positional> positionals;
+    Array<Positional> positionals;
 };
 } // namespace gui
 } // namespace skr

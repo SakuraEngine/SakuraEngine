@@ -30,7 +30,7 @@ Key::Key(const Key& other) SKR_NOEXCEPT
             break;
         case EKeyType::Name:
         case EKeyType::NameStorage:
-            new (&_name) TextStorage(other._name);
+            new (&_name) String(other._name);
             break;
         default:
             break;
@@ -55,7 +55,7 @@ Key::Key(Key&& other) SKR_NOEXCEPT
             break;
         case EKeyType::Name:
         case EKeyType::NameStorage:
-            new (&_name) TextStorage(std::move(other._name));
+            new (&_name) String(std::move(other._name));
             break;
         default:
             break;
@@ -80,7 +80,7 @@ Key& Key::operator=(const Key& other) SKR_NOEXCEPT
             break;
         case EKeyType::Name:
         case EKeyType::NameStorage:
-            new (&_name) TextStorage(other._name);
+            new (&_name) String(other._name);
             break;
         default:
             break;
@@ -149,7 +149,7 @@ void Key::clear() SKR_NOEXCEPT
     {
         case EKeyType::Name:
         case EKeyType::NameStorage:
-            _name.~TextStorage();
+            _name.~String();
             break;
         default:
             break;
@@ -157,13 +157,13 @@ void Key::clear() SKR_NOEXCEPT
     _type = EKeyType::None;
 }
 
-void Key::set_value(const TextStorage& value) SKR_NOEXCEPT
+void Key::set_value(const String& value) SKR_NOEXCEPT
 {
     clear();
     _type = EKeyType::NameStorage;
     _name = value;
 }
-void Key::set_storage(const TextStorage& value) SKR_NOEXCEPT
+void Key::set_storage(const String& value) SKR_NOEXCEPT
 {
     clear();
     _type = EKeyType::NameStorage;

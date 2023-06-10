@@ -28,7 +28,7 @@ struct StyleText {
 };
 
 struct SKR_GUI_API BindText {
-    TextStorage text;
+    String text;
 };
 
 struct SKR_GUI_API RenderText : public RenderBox {
@@ -50,7 +50,7 @@ protected:
 private:
     void buildParagraphRec(Paragraph* p, const StyleText& txt);
 
-    VectorStorage<struct InlineType> inlines_;
+    Array<struct InlineType> inlines_;
     Paragraph* paragraph_ = nullptr;
     skr::SPtr<FontFile> font_ = nullptr;
 
