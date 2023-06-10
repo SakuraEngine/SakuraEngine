@@ -33,10 +33,10 @@ struct SKR_GUI_API Key final {
     static Key keep_state(State* state) SKR_NOEXCEPT;
     static Key value(int64_t v) SKR_NOEXCEPT;
     static Key value(float v) SKR_NOEXCEPT;
-    static Key value(const TextStorage& v) SKR_NOEXCEPT;
+    static Key value(const String& v) SKR_NOEXCEPT;
     static Key storage(int64_t v) SKR_NOEXCEPT;
     static Key storage(float v) SKR_NOEXCEPT;
-    static Key storage(const TextStorage& v) SKR_NOEXCEPT;
+    static Key storage(const String& v) SKR_NOEXCEPT;
 
     // ctor & dtor & assign
     Key() SKR_NOEXCEPT;
@@ -62,11 +62,11 @@ struct SKR_GUI_API Key final {
     State* get_state() const SKR_NOEXCEPT;
     int64_t get_int() const SKR_NOEXCEPT;
     float get_float() const SKR_NOEXCEPT;
-    const TextStorage& get_name() const SKR_NOEXCEPT;
+    const String& get_name() const SKR_NOEXCEPT;
     bool try_get_state(State*& out) const SKR_NOEXCEPT;
     bool try_get_int(int64_t& out) const SKR_NOEXCEPT;
     bool try_get_float(float& out) const SKR_NOEXCEPT;
-    bool try_get_name(TextStorage& out) const SKR_NOEXCEPT;
+    bool try_get_name(String& out) const SKR_NOEXCEPT;
 
     // setter
     void clear() SKR_NOEXCEPT;
@@ -75,10 +75,10 @@ struct SKR_GUI_API Key final {
     void set_keep_state(State* state) SKR_NOEXCEPT;
     void set_value(int64_t v) SKR_NOEXCEPT;
     void set_value(float v) SKR_NOEXCEPT;
-    void set_value(const TextStorage& v) SKR_NOEXCEPT;
+    void set_value(const String& v) SKR_NOEXCEPT;
     void set_storage(int64_t v) SKR_NOEXCEPT;
     void set_storage(float v) SKR_NOEXCEPT;
-    void set_storage(const TextStorage& v) SKR_NOEXCEPT;
+    void set_storage(const String& v) SKR_NOEXCEPT;
 
 private:
     EKeyType _type;
@@ -87,7 +87,7 @@ private:
         State* _state;
         int64_t _int;
         float _float;
-        TextStorage _name;
+        String _name;
     };
 };
 
@@ -116,7 +116,7 @@ inline Key Key::value(float v) SKR_NOEXCEPT
     k.set_value(v);
     return k;
 }
-inline Key Key::value(const TextStorage& v) SKR_NOEXCEPT
+inline Key Key::value(const String& v) SKR_NOEXCEPT
 {
     Key k;
     k.set_value(v);
@@ -134,7 +134,7 @@ inline Key Key::storage(float v) SKR_NOEXCEPT
     k.set_storage(v);
     return k;
 }
-inline Key Key::storage(const TextStorage& v) SKR_NOEXCEPT
+inline Key Key::storage(const String& v) SKR_NOEXCEPT
 {
     Key k;
     k.set_storage(v);
@@ -183,7 +183,7 @@ inline float Key::get_float() const SKR_NOEXCEPT
     SKR_GUI_ASSERT(_type == EKeyType::Float || _type == EKeyType::FloatStorage);
     return _float;
 }
-inline const TextStorage& Key::get_name() const SKR_NOEXCEPT
+inline const String& Key::get_name() const SKR_NOEXCEPT
 {
     SKR_GUI_ASSERT(_type == EKeyType::Name || _type == EKeyType::NameStorage);
     return _name;
@@ -215,7 +215,7 @@ inline bool Key::try_get_float(float& out) const SKR_NOEXCEPT
     }
     return false;
 }
-inline bool Key::try_get_name(TextStorage& out) const SKR_NOEXCEPT
+inline bool Key::try_get_name(String& out) const SKR_NOEXCEPT
 {
     if (_type == EKeyType::Name || _type == EKeyType::NameStorage)
     {

@@ -1,10 +1,10 @@
 #pragma once
-#ifdef CONTAINER_LITE_IMPL
+/* #ifdef CONTAINER_LITE_IMPL
     #include "containers/vector.hpp"
     #include "containers/string.hpp"
     #include "containers/hashmap.hpp"
     #include <new> // placement new operator
-#endif
+#endif */
 #include "misc/types.h"
 
 namespace skr
@@ -86,7 +86,7 @@ struct AlignedStorage {
     alignas(_align) uint8_t storage[_size];
 };
 
-#ifndef CONTAINER_LITE_IMPL
+/* #ifndef CONTAINER_LITE_IMPL
 template <typename T>
 struct VectorStorage : public AlignedStorage<24, 8> {
     VectorStorage();
@@ -130,7 +130,7 @@ struct HashMapStorage : public AlignedStorage<48, 8> {
 #else
 template <typename K, typename V>
 using HashMapStorage = skr::flat_hash_map<K, V>;
-#endif
+#endif */
 
 } // namespace lite
 } // namespace skr

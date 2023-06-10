@@ -48,7 +48,7 @@ protected:
     bool active = true;
     bool layoutDirty = true;
     RenderObject* parent = nullptr;
-    VectorStorage<RenderObject*> children;
+    Array<RenderObject*> children;
     skr_float4x4_t render_matrix;
 };
 

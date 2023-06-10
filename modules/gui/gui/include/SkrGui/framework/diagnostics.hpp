@@ -27,8 +27,8 @@ struct SKR_GUI_API IDiagnosticsProperty {
     template <typename T>
     T& as() { return static_cast<T&>(*this); }
 
-    TextStorage name;
-    TextStorage description;
+    String name;
+    String description;
 };
 
 template <typename T>
@@ -56,7 +56,7 @@ struct SKR_GUI_API BoolDiagnosticProperty : public DiagnosticsProperty<bool> {
     const char8_t* get_value_as_string() const SKR_NOEXCEPT override;
 };
 
-struct SKR_GUI_API TextDiagnosticProperty : public DiagnosticsProperty<TextStorage> {
+struct SKR_GUI_API TextDiagnosticProperty : public DiagnosticsProperty<String> {
     TextDiagnosticProperty(const char8_t* name, const char8_t* value, const char8_t* description = nullptr)
         : DiagnosticsProperty(name, value, description)
     {
@@ -82,7 +82,7 @@ struct SKR_GUI_API DiagnosticsBuilder {
     LiteSpan<IDiagnosticsProperty* const> get_diagnostics_properties() const SKR_NOEXCEPT;
 
 protected:
-    VectorStorage<IDiagnosticsProperty*> diagnostic_properties;
+    Array<IDiagnosticsProperty*> diagnostic_properties;
 };
 
 struct SKR_GUI_API Diagnosticable SKR_GUI_OBJECT_BASE {

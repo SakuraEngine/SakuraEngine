@@ -71,7 +71,7 @@ private:
     JustifyContent justify_content = JustifyContent::FlexStart;
     FlexDirection flex_direction = FlexDirection::Row;
     AlignItems align_items = AlignItems::FlexStart;
-    VectorStorage<Flexable> flexables;
+    Array<Flexable> flexables;
 };
 
 } // namespace gui

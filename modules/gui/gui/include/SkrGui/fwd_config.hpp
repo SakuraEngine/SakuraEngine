@@ -16,10 +16,10 @@
 #include "misc/types.h"
 
 // skr containers
-#ifdef SKR_GUI_IMPL
-    #define CONTAINER_LITE_IMPL
-#endif
 #include "containers/lite.hpp"
+#include "containers/vector.hpp"
+#include "containers/string.hpp"
+#include "containers/hashmap.hpp"
 
 // type system
 #include "SkrGui/dev/type_system.hpp"
@@ -72,11 +72,15 @@ template <typename T>
 using NotNull = ::skr::not_null<T>;
 
 // Lite container
-using skr::lite::HashMapStorage;
 using skr::lite::LiteOptional;
 using skr::lite::LiteSpan;
-using skr::lite::TextStorage;
-using skr::lite::VectorStorage;
+
+// containers
+template <typename T>
+using Array = skr::vector<T>;
+using String = skr::string;
+template <typename K, typename V>
+using HashMap = skr::flat_hash_map<K, V>;
 
 // TODO. use Size class
 using BoxSizeType = skr_float2_t;

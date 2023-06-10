@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrGui/module.configure.h"
 #include "misc/types.h"
 #include "platform/guid.hpp"
 #include "platform/configure.h"
@@ -48,7 +49,7 @@ constexpr skr_guid_t make_guid_helper(const char8_t* begin)
 } // namespace __help
 
 // object & interface base
-struct IObject {
+struct SKR_GUI_API IObject {
     virtual ~IObject() = default;
     virtual skr_guid_t guid() const SKR_NOEXCEPT = 0;
     virtual void base_guid(const skr_guid_t*& p, size_t n) const SKR_NOEXCEPT = 0;
