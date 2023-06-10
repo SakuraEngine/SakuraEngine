@@ -9,8 +9,8 @@ void Canvas::construct(Params params) SKR_NOEXCEPT
     for (const Slot& slot : params)
     {
         _children_slots.push_back({
-            .layout = slot.layout,
-            .z_index = slot.z_index,
+            slot.layout,
+            slot.z_index,
         });
         _children.push_back(slot.widget);
     }

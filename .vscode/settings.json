@@ -3,8 +3,7 @@
     "dascript.server.connectTimeout": 10,
     "xmake.additionalConfigArguments": [
         "--use_tracy=enable",
-        "--build_tests=y"
-    ],
-    "editor.formatOnSave": false,
-    "editor.formatOnPaste": false,
+        "--build_tests=y",
+        "--cxx_version=cxx17"
+    ]
 }
