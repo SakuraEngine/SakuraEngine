@@ -61,6 +61,11 @@
 #define SKR_GUI_LOG_INFO(...) SKR_LOG_INFO(__VA_ARGS__)
 #define SKR_GUI_LOG_DEBUG(...) SKR_LOG_DEBUG(__VA_ARGS__)
 
+// memory
+#include "platform/memory.h"
+#define SKR_GUI_NEW SkrNew
+#define SKR_GUI_DELETE SkrDelete
+
 namespace skr::gui
 {
 // function
@@ -81,6 +86,8 @@ using Array = skr::vector<T>;
 using String = skr::string;
 template <typename K, typename V>
 using HashMap = skr::flat_hash_map<K, V>;
+template <typename T>
+using Span = skr::span<T>;
 
 // TODO. use Size class
 using BoxSizeType = skr_float2_t;
