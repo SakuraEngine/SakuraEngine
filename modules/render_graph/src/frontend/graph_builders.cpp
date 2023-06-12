@@ -399,9 +399,9 @@ RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::import(CGPUBufferId buff
     node.imported = buffer;
     node.frame_buffer = buffer;
     node.init_state = init_state;
-    node.descriptor.descriptors = buffer->descriptors;
-    node.descriptor.size = buffer->size;
-    node.descriptor.memory_usage = (ECGPUMemoryUsage)buffer->memory_usage;
+    node.descriptor.descriptors = buffer->info->descriptors;
+    node.descriptor.size = buffer->info->size;
+    node.descriptor.memory_usage = (ECGPUMemoryUsage)buffer->info->memory_usage;
     return *this;
 }
 

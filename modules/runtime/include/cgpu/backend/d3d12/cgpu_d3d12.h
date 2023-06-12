@@ -307,7 +307,7 @@ typedef struct CGPURenderPipeline_D3D12 {
     D3D12_GRAPHICS_PIPELINE_STATE_DESC mDxGfxPipelineStateDesc SKR_IF_CPP(= {});
 } CGPURenderPipeline_D3D12;
 
-typedef struct CGPUBuffer_D3D12 {
+typedef struct SKR_ALIGNAS(16) CGPUBuffer_D3D12 {
     CGPUBuffer super;
     /// GPU Address - Cache to avoid calls to ID3D12Resource::GetGpuVirtualAddress
     D3D12_GPU_VIRTUAL_ADDRESS mDxGpuAddress;

@@ -131,7 +131,7 @@ void imguir_render_draw_data(ImDrawData* draw_data,
                 },
                 [upload_buffer_handle, draw_data](rg::RenderGraph& g, rg::CopyPassContext& context){
                     auto upload_buffer = context.resolve(upload_buffer_handle);
-                    ImDrawVert* vtx_dst = (ImDrawVert*)upload_buffer->cpu_mapped_address;
+                    ImDrawVert* vtx_dst = (ImDrawVert*)upload_buffer->info->cpu_mapped_address;
                     ImDrawIdx* idx_dst = (ImDrawIdx*)(vtx_dst + draw_data->TotalVtxCount);
                     for (int n = 0; n < draw_data->CmdListsCount; n++)
                     {
@@ -189,7 +189,7 @@ void imguir_render_draw_data(ImDrawData* draw_data,
                     { (R+L)/(L-R),  (T+B)/(B-T),    0.5f,       1.0f },
                 };
                 auto buf = context.resolve(constant_buffer);
-                memcpy(buf->cpu_mapped_address, mvp, sizeof(mvp));
+                memcpy(buf->info->cpu_mapped_address, mvp, sizeof(mvp));
             }
             cgpu_render_encoder_set_viewport(context.encoder,
                 0.0f, 0.0f,
@@ -209,8 +209,8 @@ void imguir_render_draw_data(ImDrawData* draw_data,
             if (useCVV)
             {
                 // upload
-                ImDrawVert* vtx_dst = (ImDrawVert*)resolved_vb->cpu_mapped_address;
-                ImDrawIdx* idx_dst = (ImDrawIdx*)resolved_ib->cpu_mapped_address;
+                ImDrawVert* vtx_dst = (ImDrawVert*)resolved_vb->info->cpu_mapped_address;
+                ImDrawIdx* idx_dst = (ImDrawIdx*)resolved_ib->info->cpu_mapped_address;
                 for (int n = 0; n < draw_data->CmdListsCount; n++)
                 {
                     const ImDrawList* cmd_list = draw_data->CmdLists[n];
@@ -345,7 +345,7 @@ void imgui_create_fonts(CGPUQueueId queue)
     upload_buffer_desc.size = upload_size;
     CGPUBufferId tex_upload_buffer = cgpu_create_buffer(queue->device, &upload_buffer_desc);
     {
-        memcpy(tex_upload_buffer->cpu_mapped_address, pixels, upload_size);
+        memcpy(tex_upload_buffer->info->cpu_mapped_address, pixels, upload_size);
     }
     auto cpy_cmd_pool = cgpu_create_command_pool(queue, &cmd_pool_desc);
     auto cpy_cmd = cgpu_create_command_buffer(cpy_cmd_pool, &cmd_desc);

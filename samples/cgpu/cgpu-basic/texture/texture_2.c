@@ -70,7 +70,7 @@ void create_sampled_texture()
     };
     CGPUBufferId upload_buffer = cgpu_create_buffer(App.device, &upload_buffer_desc);
     {
-        memcpy(upload_buffer->cpu_mapped_address, TEXTURE_DATA, upload_buffer_desc.size);
+        memcpy(upload_buffer->info->cpu_mapped_address, TEXTURE_DATA, upload_buffer_desc.size);
     }
     cgpu_reset_command_pool(pools[0]);
     // record

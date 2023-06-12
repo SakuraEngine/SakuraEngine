@@ -87,7 +87,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
                 }
 
                 auto upload_buffer = context.resolve(upload_buffer_handle);
-                auto mapped = (uint8_t*)upload_buffer->cpu_mapped_address;
+                auto mapped = (uint8_t*)upload_buffer->info->cpu_mapped_address;
 
                 // barrier from vb to copy dest
                 {
@@ -272,7 +272,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& pass_context) {
             auto cb = pass_context.resolve(cbuffer);
             SKR_ASSERT(cb && "cbuffer not found");
-            ::memcpy(cb->cpu_mapped_address, &viewport->view_projection, sizeof(viewport->view_projection));
+            ::memcpy(cb->info->cpu_mapped_address, &viewport->view_projection, sizeof(viewport->view_projection));
             cgpu_render_encoder_set_viewport(pass_context.encoder,
                 0.0f, 0.0f,
                 (float)viewport->viewport_width, (float)viewport->viewport_height,

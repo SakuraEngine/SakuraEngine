@@ -168,7 +168,7 @@ void skr_init_anim_buffers(CGPUDeviceId device, skr_render_anim_comp_t* anim, co
         {                        
             ZoneScopedN("CVVUpdateVB");
 
-            void* vtx_dst = anim->vbs[j]->cpu_mapped_address;
+            void* vtx_dst = anim->vbs[j]->info->cpu_mapped_address;
             memcpy(vtx_dst, anim->buffers[j]->get_data(), vertex_size);
         }
     }

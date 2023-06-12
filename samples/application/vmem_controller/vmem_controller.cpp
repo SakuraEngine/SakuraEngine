@@ -152,9 +152,9 @@ void SVMemCCModule::imgui_ui()
                 ImGui::TableNextColumn();
                 ImGui::Text("%04d", row_n);
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted((buffer->memory_usage == CGPU_MEM_USAGE_GPU_ONLY) ? "VideoMemory" : "SharedMemory");
+                ImGui::TextUnformatted((buffer->info->memory_usage == CGPU_MEM_USAGE_GPU_ONLY) ? "VideoMemory" : "SharedMemory");
                 ImGui::TableNextColumn();
-                ImGui::Text("%.3f", (float)buffer->size / 1024.f / 1024.f);
+                ImGui::Text("%.3f", (float)buffer->info->size / 1024.f / 1024.f);
                 ImGui::TableNextColumn();
                 if (ImGui::SmallButton("Delete"))
                 {

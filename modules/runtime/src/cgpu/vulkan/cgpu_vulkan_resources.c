@@ -147,10 +147,17 @@ CGPUBufferId cgpu_create_buffer_vulkan(CGPUDeviceId device, const struct CGPUBuf
         cgpu_assert(0 && "VMA failed to create buffer!");
         return CGPU_NULLPTR;
     }
-    CGPUBuffer_Vulkan* B = cgpu_calloc_aligned(1, sizeof(CGPUBuffer_Vulkan), _Alignof(CGPUBuffer_Vulkan));
-    B->super.cpu_mapped_address = alloc_info.pMappedData;
+    CGPUBuffer_Vulkan* B = cgpu_calloc_aligned(1, sizeof(CGPUBuffer_Vulkan) + sizeof(CGPUBufferInfo), _Alignof(CGPUBuffer_Vulkan));
+    CGPUBufferInfo* info = (CGPUBufferInfo*)(B + 1);
+    B->super.info = info;
     B->pVkAllocation = mVmaAllocation;
     B->pVkBuffer = pVkBuffer;
+
+    // Set Buffer Object Props
+    info->size = desc->size;
+    info->cpu_mapped_address = alloc_info.pMappedData;
+    info->memory_usage = desc->memory_usage;
+    info->descriptors = desc->descriptors;
 
     // Setup Descriptors
     if ((desc->descriptors & CGPU_RESOURCE_TYPE_UNIFORM_BUFFER) || (desc->descriptors & CGPU_RESOURCE_TYPE_BUFFER) ||
@@ -203,10 +210,7 @@ CGPUBufferId cgpu_create_buffer_vulkan(CGPUDeviceId device, const struct CGPUBuf
     }
     // Set Buffer Name
     VkUtil_OptionalSetObjectName(D, (uint64_t)B->pVkBuffer, VK_OBJECT_TYPE_BUFFER, desc->name);
-    // Set Buffer Object Props
-    B->super.size = desc->size;
-    B->super.memory_usage = desc->memory_usage;
-    B->super.descriptors = desc->descriptors;
+
     // Start state
     CGPUQueue_Vulkan* Q = (CGPUQueue_Vulkan*)desc->owner_queue;
     if (Q && B->pVkBuffer != VK_NULL_HANDLE && B->pVkAllocation != VK_NULL_HANDLE)
@@ -247,14 +251,15 @@ void cgpu_map_buffer_vulkan(CGPUBufferId buffer, const struct CGPUBufferRange* r
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)B->super.device;
     CGPUAdapter_Vulkan* A = (CGPUAdapter_Vulkan*)buffer->device->adapter;
     if (!A->adapter_detail.support_host_visible_vram)
-        cgpu_assert(B->super.memory_usage != CGPU_MEM_USAGE_GPU_ONLY && "Trying to map non-cpu accessible resource");
+        cgpu_assert(buffer->info->memory_usage != CGPU_MEM_USAGE_GPU_ONLY && "Trying to map non-cpu accessible resource");
 
-    VkResult vk_res = vmaMapMemory(D->pVmaAllocator, B->pVkAllocation, &B->super.cpu_mapped_address);
+    CGPUBufferInfo* pInfo = (CGPUBufferInfo*)buffer->info;
+    VkResult vk_res = vmaMapMemory(D->pVmaAllocator, B->pVkAllocation, &pInfo->cpu_mapped_address);
     cgpu_assert(vk_res == VK_SUCCESS);
 
     if (range && (vk_res == VK_SUCCESS))
     {
-        B->super.cpu_mapped_address = ((uint8_t*)B->super.cpu_mapped_address + range->offset);
+        pInfo->cpu_mapped_address = ((uint8_t*)pInfo->cpu_mapped_address + range->offset);
     }
 }
 
@@ -264,10 +269,11 @@ void cgpu_unmap_buffer_vulkan(CGPUBufferId buffer)
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)B->super.device;
     CGPUAdapter_Vulkan* A = (CGPUAdapter_Vulkan*)buffer->device->adapter;
     if (!A->adapter_detail.support_host_visible_vram)
-        cgpu_assert(B->super.memory_usage != CGPU_MEM_USAGE_GPU_ONLY && "Trying to unmap non-cpu accessible resource");
+        cgpu_assert(buffer->info->memory_usage != CGPU_MEM_USAGE_GPU_ONLY && "Trying to unmap non-cpu accessible resource");
 
+    CGPUBufferInfo* pInfo = (CGPUBufferInfo*)buffer->info;
     vmaUnmapMemory(D->pVmaAllocator, B->pVkAllocation);
-    B->super.cpu_mapped_address = CGPU_NULLPTR;
+    pInfo->cpu_mapped_address = CGPU_NULLPTR;
 }
 
 void cgpu_cmd_transfer_buffer_to_buffer_vulkan(CGPUCommandBufferId cmd, const struct CGPUBufferToBufferTransfer* desc)
