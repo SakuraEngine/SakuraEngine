@@ -302,7 +302,7 @@ typedef struct CGPUCommandBuffer_Vulkan {
     uint32_t mType : 3;
 } CGPUCommandBuffer_Vulkan;
 
-typedef struct CGPUBuffer_Vulkan {
+typedef struct SKR_ALIGNAS(16) CGPUBuffer_Vulkan {
     CGPUBuffer super;
     VkBuffer pVkBuffer;
     VkBufferView pVkStorageTexelView;

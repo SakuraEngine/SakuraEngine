@@ -1435,9 +1435,10 @@ void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUR
         const CGPUBufferBarrier* pTransBarrier = &desc->buffer_barriers[i];
         D3D12_RESOURCE_BARRIER* pBarrier = &barriers[transitionCount];
         CGPUBuffer_D3D12* pBuffer = (CGPUBuffer_D3D12*)pTransBarrier->buffer;
-        if (pBuffer->super.memory_usage == CGPU_MEM_USAGE_GPU_ONLY ||
-            pBuffer->super.memory_usage == CGPU_MEM_USAGE_GPU_TO_CPU ||
-            (pBuffer->super.memory_usage == CGPU_MEM_USAGE_CPU_TO_GPU && (pBuffer->super.descriptors & CGPU_RESOURCE_TYPE_RW_BUFFER)))
+        const auto memory_usage = pTransBarrier->buffer->info->memory_usage;
+        const auto descriptors = pTransBarrier->buffer->info->descriptors;
+        if (memory_usage == CGPU_MEM_USAGE_GPU_ONLY || memory_usage == CGPU_MEM_USAGE_GPU_TO_CPU ||
+            (memory_usage == CGPU_MEM_USAGE_CPU_TO_GPU && (descriptors & CGPU_RESOURCE_TYPE_RW_BUFFER)))
         {
             if (CGPU_RESOURCE_STATE_UNORDERED_ACCESS == pTransBarrier->src_state &&
                 CGPU_RESOURCE_STATE_UNORDERED_ACCESS == pTransBarrier->dst_state)
@@ -1655,9 +1656,9 @@ const CGPUBufferId* buffers, const uint32_t* strides, const uint32_t* offsets)
         cgpu_assert(D3D12_GPU_VIRTUAL_ADDRESS_NULL != Buffers[i]->mDxGpuAddress);
 
         views[i].BufferLocation =
-        (Buffers[i]->mDxGpuAddress + (offsets ? offsets[i] : 0));
+            (Buffers[i]->mDxGpuAddress + (offsets ? offsets[i] : 0));
         views[i].SizeInBytes =
-        (UINT)(Buffers[i]->super.size - (offsets ? offsets[i] : 0));
+            (UINT)(Buffers[i]->super.info->size - (offsets ? offsets[i] : 0));
         views[i].StrideInBytes = (UINT)strides[i];
     }
 
@@ -1680,7 +1681,7 @@ uint32_t index_stride, uint64_t offset)
         (sizeof(uint16_t) == index_stride) ?
         DXGI_FORMAT_R16_UINT :
         ((sizeof(uint8_t) == index_stride) ? DXGI_FORMAT_R8_UINT : DXGI_FORMAT_R32_UINT);
-    view.SizeInBytes = (UINT)(Buffer->super.size - offset);
+    view.SizeInBytes = (UINT)(Buffer->super.info->size - offset);
     Cmd->pDxCmdList->IASetIndexBuffer(&view);
 }
 

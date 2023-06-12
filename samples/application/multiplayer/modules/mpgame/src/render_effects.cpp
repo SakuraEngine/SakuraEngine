@@ -384,7 +384,7 @@ void RenderEffectForward::prepare_geometry_resources(SRendererId renderer)
     auto cpy_cmd = cgpu_create_command_buffer(cmd_pool, &cmd_desc);
     {
         auto geom = CubeGeometry();
-        memcpy(upload_buffer->cpu_mapped_address, &geom, sizeof(CubeGeometry));
+        memcpy(upload_buffer->info->cpu_mapped_address, &geom, sizeof(CubeGeometry));
     }
     cgpu_cmd_begin(cpy_cmd);
     CGPUBufferToBufferTransfer vb_cpy = {};
@@ -395,7 +395,7 @@ void RenderEffectForward::prepare_geometry_resources(SRendererId renderer)
     vb_cpy.size = sizeof(CubeGeometry);
     cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &vb_cpy);
     {
-        memcpy((char8_t*)upload_buffer->cpu_mapped_address + sizeof(CubeGeometry),
+        memcpy((char8_t*)upload_buffer->info->cpu_mapped_address + sizeof(CubeGeometry),
         CubeGeometry::g_Indices, sizeof(CubeGeometry::g_Indices));
     }
     CGPUBufferToBufferTransfer ib_cpy = {};

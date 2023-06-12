@@ -223,7 +223,7 @@ void ComputeFunc(void* usrdata)
             .size = buffer_desc.size
         };
         cgpu_map_buffer(readback_buffer, &map_range);
-        Pixel* mapped_memory = (Pixel*)readback_buffer->cpu_mapped_address;
+        Pixel* mapped_memory = (Pixel*)readback_buffer->info->cpu_mapped_address;
         image = sakura_malloc(MANDELBROT_WIDTH * MANDELBROT_HEIGHT * 4);
         for (int i = 0; i < MANDELBROT_WIDTH * MANDELBROT_HEIGHT; i += 1)
         {

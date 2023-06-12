@@ -131,7 +131,7 @@ void upload_resources()
     CGPUBufferId upload_buffer = cgpu_create_buffer(device, &upload_buffer_desc);
     // upload texture
     {
-        memcpy(upload_buffer->cpu_mapped_address, TEXTURE_DATA, upload_buffer_desc.size);
+        memcpy(upload_buffer->info->cpu_mapped_address, TEXTURE_DATA, upload_buffer_desc.size);
     }
     cgpu_reset_command_pool(pools[0]);
     cgpu_cmd_begin(cmds[0]);
@@ -156,7 +156,7 @@ void upload_resources()
     cgpu_wait_queue_idle(gfx_queue);
     // upload vertex buffer
     {
-        memcpy(upload_buffer->cpu_mapped_address, vertices, sizeof(vertices));
+        memcpy(upload_buffer->info->cpu_mapped_address, vertices, sizeof(vertices));
     }
     cgpu_reset_command_pool(pools[0]);
     cgpu_cmd_begin(cmds[0]);
@@ -182,7 +182,7 @@ void upload_resources()
     cgpu_wait_queue_idle(gfx_queue);
     // upload index buffer
     {
-        memcpy(upload_buffer->cpu_mapped_address, indices, sizeof(indices));
+        memcpy(upload_buffer->info->cpu_mapped_address, indices, sizeof(indices));
     }
     cgpu_reset_command_pool(pools[0]);
     cgpu_cmd_begin(cmds[0]);

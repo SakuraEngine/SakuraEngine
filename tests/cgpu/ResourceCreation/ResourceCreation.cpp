@@ -104,7 +104,7 @@ TEST_P(ResourceCreation, CreateIndexBuffer)
     desc.name = u8"IndexBuffer";
     auto buffer = cgpu_create_buffer(device, &desc);
     EXPECT_NE(buffer, CGPU_NULLPTR);
-    EXPECT_EQ(buffer->cpu_mapped_address, CGPU_NULLPTR);
+    EXPECT_EQ(buffer->info->cpu_mapped_address, CGPU_NULLPTR);
     cgpu_free_buffer(buffer);
 }
 
@@ -141,7 +141,7 @@ TEST_P(ResourceCreation, CreateUploadBuffer)
     range.size = desc.size;
     {
         cgpu_map_buffer(buffer, &range);
-        uint16_t* indices = (uint16_t*)buffer->cpu_mapped_address;
+        uint16_t* indices = (uint16_t*)buffer->info->cpu_mapped_address;
         indices[0] = 2;
         indices[1] = 3;
         indices[2] = 3;
@@ -149,7 +149,7 @@ TEST_P(ResourceCreation, CreateUploadBuffer)
     }
     {
         cgpu_map_buffer(buffer, &range);
-        uint16_t* read_indices = (uint16_t*)buffer->cpu_mapped_address;
+        uint16_t* read_indices = (uint16_t*)buffer->info->cpu_mapped_address;
         EXPECT_EQ(read_indices[0], 2);
         EXPECT_EQ(read_indices[1], 3);
         EXPECT_EQ(read_indices[2], 3);
@@ -170,7 +170,7 @@ TEST_P(ResourceCreation, CreateUploadBufferPersistent)
     desc.name = u8"UploadBuffer";
     auto buffer = cgpu_create_buffer(device, &desc);
     EXPECT_NE(buffer, CGPU_NULLPTR);
-    EXPECT_NE(buffer->cpu_mapped_address, CGPU_NULLPTR);
+    EXPECT_NE(buffer->info->cpu_mapped_address, CGPU_NULLPTR);
     cgpu_free_buffer(buffer);
 }
 
@@ -189,13 +189,13 @@ TEST_P(ResourceCreation, CreateHostVisibleDeviceMemory)
     if (detail->support_host_visible_vram)
     {
         EXPECT_NE(buffer, CGPU_NULLPTR);
-        EXPECT_NE(buffer->cpu_mapped_address, CGPU_NULLPTR);
+        EXPECT_NE(buffer->info->cpu_mapped_address, CGPU_NULLPTR);
     }
     else
     {
         if (buffer)
         {
-            EXPECT_EQ(buffer->cpu_mapped_address, CGPU_NULLPTR);
+            EXPECT_EQ(buffer->info->cpu_mapped_address, CGPU_NULLPTR);
         }
     }
     cgpu_free_buffer(buffer);
@@ -206,7 +206,7 @@ TEST_P(ResourceCreation, CreateConstantBufferX)
     auto buffer = cgpux_create_mapped_constant_buffer(device,
         sizeof(uint16_t) * 3, u8"ConstantBuffer", true);
     EXPECT_NE(buffer, CGPU_NULLPTR);
-    EXPECT_NE(buffer->cpu_mapped_address, CGPU_NULLPTR);
+    EXPECT_NE(buffer->info->cpu_mapped_address, CGPU_NULLPTR);
     cgpu_free_buffer(buffer);
 }
 

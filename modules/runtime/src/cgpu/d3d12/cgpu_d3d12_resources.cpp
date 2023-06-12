@@ -19,7 +19,8 @@ D3D12MA::ALLOCATION_DESC D3D12Util_CreateAllocationDesc(const struct CGPUBufferD
 cgpu_static_assert(sizeof(CGPUBuffer_D3D12) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
 CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBufferDescriptor* desc)
 {
-    CGPUBuffer_D3D12* B = cgpu_new<CGPUBuffer_D3D12>();
+    CGPUBuffer_D3D12* B = cgpu_new_sized<CGPUBuffer_D3D12>(sizeof(CGPUBuffer_D3D12) + sizeof(CGPUBufferInfo));
+    auto pInfo = (CGPUBufferInfo*)(B + 1);
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
     CGPUAdapter_D3D12* A = (CGPUAdapter_D3D12*)device->adapter;
     D3D12_RESOURCE_DESC bufDesc = D3D12Util_CreateBufferDesc(A, D, desc);
@@ -106,7 +107,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
     {
         ZoneScopedN("Map(Buffer)");
 
-        auto mapResult = B->pDxResource->Map(0, NULL, &B->super.cpu_mapped_address);
+        auto mapResult = B->pDxResource->Map(0, NULL, &pInfo->cpu_mapped_address);
         if (!SUCCEEDED(mapResult))
         {
             cgpu_warn("[D3D12] Map Buffer Resource Failed %d! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
@@ -225,34 +226,38 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
         }
         B->pDxResource->SetName(debugName);
     }
+
     // Set Buffer Object Props
-    B->super.size = allocationSize;
-    B->super.memory_usage = desc->memory_usage;
-    B->super.descriptors = desc->descriptors;
+    B->super.info = pInfo;
+    pInfo->size = allocationSize;
+    pInfo->memory_usage = desc->memory_usage;
+    pInfo->descriptors = desc->descriptors;
     return &B->super;
 }
 
 void cgpu_map_buffer_d3d12(CGPUBufferId buffer, const struct CGPUBufferRange* range)
 {
     CGPUBuffer_D3D12* B = (CGPUBuffer_D3D12*)buffer;
-    cgpu_assert(B->super.memory_usage != CGPU_MEM_USAGE_GPU_ONLY && "Trying to map non-cpu accessible resource");
+    CGPUBufferInfo* pInfo = (CGPUBufferInfo*)B->super.info;
+    cgpu_assert(pInfo->memory_usage != CGPU_MEM_USAGE_GPU_ONLY && "Trying to map non-cpu accessible resource");
 
-    D3D12_RANGE dxrange = { 0, B->super.size };
+    D3D12_RANGE dxrange = { 0, pInfo->size };
     if (range)
     {
         dxrange.Begin += range->offset;
         dxrange.End = dxrange.Begin + range->size;
     }
-    CHECK_HRESULT(B->pDxResource->Map(0, &dxrange, &B->super.cpu_mapped_address));
+    CHECK_HRESULT(B->pDxResource->Map(0, &dxrange, &pInfo->cpu_mapped_address));
 }
 
 void cgpu_unmap_buffer_d3d12(CGPUBufferId buffer)
 {
     CGPUBuffer_D3D12* B = (CGPUBuffer_D3D12*)buffer;
-    cgpu_assert(B->super.memory_usage != CGPU_MEM_USAGE_GPU_ONLY && "Trying to unmap non-cpu accessible resource");
+    CGPUBufferInfo* pInfo = (CGPUBufferInfo*)B->super.info;
+    cgpu_assert(pInfo->memory_usage != CGPU_MEM_USAGE_GPU_ONLY && "Trying to unmap non-cpu accessible resource");
 
     B->pDxResource->Unmap(0, NULL);
-    B->super.cpu_mapped_address = NULL;
+    pInfo->cpu_mapped_address = NULL;
 }
 
 void cgpu_cmd_transfer_buffer_to_buffer_d3d12(CGPUCommandBufferId cmd, const struct CGPUBufferToBufferTransfer* desc)
@@ -345,12 +350,13 @@ void cgpu_cmd_transfer_buffer_to_texture_d3d12(CGPUCommandBufferId cmd, const st
 void cgpu_free_buffer_d3d12(CGPUBufferId buffer)
 {
     CGPUBuffer_D3D12* B = (CGPUBuffer_D3D12*)buffer;
+    CGPUBufferInfo* pInfo = (CGPUBufferInfo*)B->super.info;
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)B->super.device;
     if (B->mDxDescriptorHandles.ptr != D3D12_GPU_VIRTUAL_ADDRESS_NULL)
     {
-        uint32_t handleCount = ((B->super.descriptors & CGPU_RESOURCE_TYPE_UNIFORM_BUFFER) ? 1 : 0) +
-                               ((B->super.descriptors & CGPU_RESOURCE_TYPE_BUFFER) ? 1 : 0) +
-                               ((B->super.descriptors & CGPU_RESOURCE_TYPE_RW_BUFFER) ? 1 : 0);
+        uint32_t handleCount = ((pInfo->descriptors & CGPU_RESOURCE_TYPE_UNIFORM_BUFFER) ? 1 : 0) +
+                               ((pInfo->descriptors & CGPU_RESOURCE_TYPE_BUFFER) ? 1 : 0) +
+                               ((pInfo->descriptors & CGPU_RESOURCE_TYPE_RW_BUFFER) ? 1 : 0);
         D3D12Util_ReturnDescriptorHandles(
         D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], B->mDxDescriptorHandles,
         handleCount);

@@ -94,7 +94,7 @@ void RenderGraphFrameExecutor::write_marker(const char8_t* message)
 
 void RenderGraphFrameExecutor::print_error_trace(uint64_t frame_index)
 {
-    auto fill_data = (const uint32_t*)marker_buffer->cgpu_buffer->cpu_mapped_address;
+    auto fill_data = (const uint32_t*)marker_buffer->cgpu_buffer->info->cpu_mapped_address;
     if (fill_data[0] == 0) return;// begin cmd is unlikely to fail on gpu
     SKR_LOG_FATAL("Device lost caused by GPU command buffer failure detected %d frames ago, command trace:", frame_index - exec_frame);
     for (uint32_t i = 0; i < marker_messages.size(); i++)

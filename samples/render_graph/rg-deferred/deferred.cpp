@@ -130,7 +130,7 @@ void create_resources()
     auto cpy_cmd = cgpu_create_command_buffer(cmd_pool, &cmd_desc);
     {
         auto geom = CubeGeometry();
-        memcpy(upload_buffer->cpu_mapped_address, &geom, upload_buffer_desc.size);
+        memcpy(upload_buffer->info->cpu_mapped_address, &geom, upload_buffer_desc.size);
     }
     cgpu_cmd_begin(cpy_cmd);
     CGPUBufferToBufferTransfer vb_cpy = {};
@@ -141,7 +141,7 @@ void create_resources()
     vb_cpy.size = sizeof(CubeGeometry);
     cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &vb_cpy);
     {
-        memcpy((char8_t*)upload_buffer->cpu_mapped_address + sizeof(CubeGeometry),
+        memcpy((char8_t*)upload_buffer->info->cpu_mapped_address + sizeof(CubeGeometry),
         CubeGeometry::g_Indices, sizeof(CubeGeometry::g_Indices));
     }
     CGPUBufferToBufferTransfer ib_cpy = {};
@@ -162,7 +162,7 @@ void create_resources()
     const rtm::matrix4x4f matrix = rtm::matrix_cast(rtm::matrix_from_qvv(transform));
     CubeGeometry::instance_data.world = *(skr_float4x4_t*)&matrix;
     {
-        memcpy((char8_t*)upload_buffer->cpu_mapped_address + sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices),
+        memcpy((char8_t*)upload_buffer->info->cpu_mapped_address + sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices),
         &CubeGeometry::instance_data, sizeof(CubeGeometry::InstanceData));
     }
     CGPUBufferToBufferTransfer istb_cpy = {};

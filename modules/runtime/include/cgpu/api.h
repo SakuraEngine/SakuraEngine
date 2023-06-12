@@ -980,18 +980,6 @@ typedef struct CGPUDescriptorData {
     uint32_t count;
 } CGPUDescriptorData;
 
-typedef struct CGPUBuffer {
-    CGPUDeviceId device;
-    /**
-     * CPU address of the mapped buffer.
-     * Applicable to buffers created in CPU accessible heaps (CPU, CPU_TO_GPU, GPU_TO_CPU)
-     */
-    void* cpu_mapped_address;
-    uint64_t size : 37;
-    uint64_t descriptors : 24;
-    uint64_t memory_usage : 3;
-} CGPUBuffer;
-
 typedef union CGPUClearValue
 {
     struct
@@ -1477,6 +1465,18 @@ typedef struct CGPUBufferDescriptor {
     /// Only available when memory_usage is CPU_TO_GPU or GPU_TO_CPU
     bool prefer_on_host;
 } CGPUBufferDescriptor;
+
+typedef struct CGPUBufferInfo {
+    uint64_t size;
+    void* cpu_mapped_address;
+    uint32_t descriptors;
+    uint32_t memory_usage;
+} CGPUBufferInfo;
+
+typedef struct SKR_ALIGNAS(16) CGPUBuffer {
+    CGPUDeviceId device;
+    const struct CGPUBufferInfo* info;
+} CGPUBuffer;
 
 typedef struct CGPUTextureDescriptor {
     /// Debug name used in gpu profile
