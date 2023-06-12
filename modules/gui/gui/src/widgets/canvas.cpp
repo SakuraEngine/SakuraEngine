@@ -8,7 +8,7 @@ void Canvas::construct(Params params) SKR_NOEXCEPT
     _children_slots.reserve(params.children.size());
     for (const Slot& slot : params.children)
     {
-        _children_slots.push_back({ slot.layout, slot.z_index, slot.child });
+        _children_slots.push_back({ slot.positional, slot.z_index, slot.child });
         _children.push_back(slot.child);
     }
 }
