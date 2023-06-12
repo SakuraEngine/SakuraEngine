@@ -26,22 +26,17 @@ void MayBeExample()
     // SNewWidget(Canvas) {
     //     SNewSlot(p.children)
     //     {
-    //         p.layout = Positional::Fill();
+    //         p.positional.fill();
     //         p.child = SNewWidget(GridPaper){};
     //     };
     //     SNewSlot(p.children)
     //     {
-    //         p.layout = Positional::Fill();
+    //         p.positional.fill();
     //         p.child = SNewWidget(ColorPicker){};
     //     };
     //     SNewSlot(p.children)
     //     {
-    //         p.layout = SNewParam(Positional)
-    //         {
-    //             p.left = p.top = 0;
-    //             p.min_height = p.max_height = 400;
-    //             p.pivot = { 0.5, 0 };
-    //         };
+    //         p.positional.anchor_LT(0, 0).sized(400, 400).pivot({ 0.5, 0 });
     //         p.child = SNewWidget(Flex)
     //         {
     //             p.align_items = AlignItems::FlexStart;
@@ -77,12 +72,7 @@ void MayBeExample()
     //     };
     //     SNewSlot(p.children)
     //     {
-    //         p.layout = SNewParam(Positional)
-    //         {
-    //             p.left = 0.5_pct;
-    //             p.top = 10_px;
-    //             p.pivot = { 0.5, 0 };
-    //         };
+    //         p.positional.anchor_LT(0.5_pct, 10_px).pivot({ 0.5, 0 });
     //         p.child = SNewWidget(Text) { p.text = u8"Hello World!"; };
     //     };
     // });

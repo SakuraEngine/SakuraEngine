@@ -161,133 +161,352 @@ struct Positional {
     Offset pivot = { 0, 0 };
 
     // factory
-    struct PaddingParams {
-        PositionalUnit all = PositionalUnit::null();
-
-        PositionalUnit horizontal = PositionalUnit::null();
-        PositionalUnit vertical = PositionalUnit::null();
-
-        PositionalUnit left = PositionalUnit::null();
-        PositionalUnit top = PositionalUnit::null();
-        PositionalUnit right = PositionalUnit::null();
-        PositionalUnit bottom = PositionalUnit::null();
-
-        inline constexpr bool is_valid() SKR_NOEXCEPT
-        {
-            // all 与其它所有互斥
-            // horizontal 与 left、right 互斥
-            // vertical 与 top、bottom 互斥
-            return (all.has_value() && (horizontal.is_null() && vertical.is_null() && left.is_null() && top.is_null() && right.is_null() && bottom.is_null())) ||
-                   (all.is_null() && (horizontal.has_value() && left.is_null() && top.is_null()) && (vertical.has_value() && right.is_null() && bottom.is_null()));
-        }
-    };
-    struct ConstraintsParams {
-        PositionalUnit width = PositionalUnit::null();
-        PositionalUnit height = PositionalUnit::null();
-
-        PositionalUnit        min_width = PositionalUnit::null();
-        PositionalUnit        max_width = PositionalUnit::null();
-        PositionalUnit        min_height = PositionalUnit::null();
-        PositionalUnit        max_height = PositionalUnit::null();
-        inline constexpr bool is_valid() SKR_NOEXCEPT
-        {
-            // width 与 min_width、max_width 互斥
-            // height 与 min_height、max_height 互斥
-            return (width.has_value() && (min_width.is_null() && max_width.is_null())) ||
-                   (height.has_value() && (min_height.is_null() && max_height.is_null()));
-        }
-    };
-    struct PivotParams {
-        PositionalUnit        left = PositionalUnit::null();
-        PositionalUnit        top = PositionalUnit::null();
-        PositionalUnit        right = PositionalUnit::null();
-        PositionalUnit        bottom = PositionalUnit::null();
-        inline constexpr bool is_valid() SKR_NOEXCEPT
-        {
-            // left 与 right 互斥，定位横向锚点
-            // top 与 bottom 互斥，定位纵向锚点
-            return ((left.has_value() + right.has_value()) == 1) &&
-                   ((top.has_value() + bottom.has_value()) == 1);
-        }
-    };
-    inline constexpr static Positional Padding(PaddingParams params) SKR_NOEXCEPT
+    inline constexpr static Positional Fill()
     {
-        Positional result;
-        if (params.all.has_value())
-        {
-            result.left = result.top = result.right = result.bottom = params.all;
-        }
-        else
-        {
-            if (params.horizontal.has_value())
-            {
-                result.left = result.right = params.horizontal;
-            }
-            else
-            {
-                result.left = params.left;
-                result.right = params.right;
-            }
-            if (params.vertical.has_value())
-            {
-                result.top = result.bottom = params.vertical;
-            }
-            else
-            {
-                result.top = params.top;
-                result.bottom = params.bottom;
-            }
-        }
-        return result;
-    };
-    inline constexpr static Positional Anchor(PivotParams parent_pivot, ConstraintsParams constraints, Offset child_pivot) SKR_NOEXCEPT
-    {
-        Positional result;
-
-        // parent pivot
-        if (parent_pivot.left) // protect for invalid value
-        {
-            result.left = parent_pivot.left;
-        }
-        else
-        {
-            result.right = parent_pivot.right;
-        }
-        if (parent_pivot.top) // protect for invalid value
-        {
-            result.top = parent_pivot.top;
-        }
-        else
-        {
-            result.bottom = parent_pivot.bottom;
-        }
-
-        // child pivot
-        result.pivot = child_pivot;
-
-        // size
-        if (constraints.width)
-        {
-            result.min_width = result.max_width = constraints.width;
-        }
-        else
-        {
-            result.min_width = constraints.min_width;
-            result.max_width = constraints.max_width;
-        }
-        if (constraints.height)
-        {
-            result.min_height = result.max_height = constraints.height;
-        }
-        else
-        {
-            result.min_height = constraints.min_height;
-            result.max_height = constraints.max_height;
-        }
-
-        return result;
+        return {
+            0,
+            0,
+            0,
+            0,
+            PositionalUnit::null(),
+            PositionalUnit::null(),
+            PositionalUnit::null(),
+            PositionalUnit::null(),
+            { 0, 0 }
+        };
     }
-    inline static constexpr Positional Fill() SKR_NOEXCEPT { return { 0, 0, 0, 0 }; }
+
+    // setter
+    struct PaddingBuilder {
+        inline constexpr PaddingBuilder(Positional& positional) SKR_NOEXCEPT
+            : _positional(positional)
+        {
+        }
+
+        inline constexpr PaddingBuilder& all(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.left = _positional.top = _positional.right = _positional.bottom = value;
+            return *this;
+        }
+        inline constexpr PaddingBuilder& horizontal(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.left = _positional.right = value;
+            return *this;
+        }
+        inline constexpr PaddingBuilder& vertical(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.top = _positional.bottom = value;
+            return *this;
+        }
+        inline constexpr PaddingBuilder& left(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.left = value;
+            return *this;
+        }
+        inline constexpr PaddingBuilder& top(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.top = value;
+            return *this;
+        }
+        inline constexpr PaddingBuilder& right(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.right = value;
+            return *this;
+        }
+        inline constexpr PaddingBuilder& bottom(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.bottom = value;
+            return *this;
+        }
+        inline constexpr PaddingBuilder& width(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.min_width = _positional.max_width = value;
+            return *this;
+        }
+        inline constexpr PaddingBuilder& height(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.min_height = _positional.max_height = value;
+            return *this;
+        }
+        inline constexpr PaddingBuilder& width_loose(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.min_width = 0;
+            _positional.max_width = value;
+            return *this;
+        }
+        inline constexpr PaddingBuilder& height_loose(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.min_height = 0;
+            _positional.max_height = value;
+            return *this;
+        }
+        inline constexpr PaddingBuilder& min_width(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.min_width = value;
+            return *this;
+        }
+        inline constexpr PaddingBuilder& min_height(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.min_height = value;
+            return *this;
+        }
+        inline constexpr PaddingBuilder& max_width(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.max_width = value;
+            return *this;
+        }
+        inline constexpr PaddingBuilder& max_height(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.max_height = value;
+            return *this;
+        }
+
+    private:
+        Positional& _positional;
+    };
+    struct AnchorBuilder {
+        inline constexpr AnchorBuilder(Positional& positional) SKR_NOEXCEPT
+            : _positional(positional)
+        {
+        }
+        inline constexpr AnchorBuilder& sized(PositionalUnit width, PositionalUnit height) SKR_NOEXCEPT
+        {
+            _positional.min_width = _positional.max_width = width;
+            _positional.min_height = _positional.max_height = height;
+            return *this;
+        }
+        inline constexpr AnchorBuilder& width(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.min_width = _positional.max_width = value;
+            return *this;
+        }
+        inline constexpr AnchorBuilder& height(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.min_height = _positional.max_height = value;
+            return *this;
+        }
+        inline constexpr AnchorBuilder& loose(PositionalUnit width, PositionalUnit height) SKR_NOEXCEPT
+        {
+            _positional.min_width = 0;
+            _positional.max_width = width;
+            _positional.min_height = 0;
+            _positional.max_height = height;
+            return *this;
+        }
+        inline constexpr AnchorBuilder& loose_width(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.min_width = 0;
+            _positional.max_width = value;
+            return *this;
+        }
+        inline constexpr AnchorBuilder& loose_height(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.min_height = 0;
+            _positional.max_height = value;
+            return *this;
+        }
+        inline constexpr AnchorBuilder& loose_inf() SKR_NOEXCEPT
+        {
+            _positional.min_width = _positional.min_height = 0;
+            _positional.max_width = _positional.max_height = std::numeric_limits<PositionalUnit>::infinity();
+            return *this;
+        }
+        inline constexpr AnchorBuilder& loose_inf_width() SKR_NOEXCEPT
+        {
+            _positional.min_width = 0;
+            _positional.max_width = std::numeric_limits<PositionalUnit>::infinity();
+            return *this;
+        }
+        inline constexpr AnchorBuilder& loose_inf_height() SKR_NOEXCEPT
+        {
+            _positional.min_height = 0;
+            _positional.max_height = std::numeric_limits<PositionalUnit>::infinity();
+            return *this;
+        }
+        inline constexpr AnchorBuilder& expand() SKR_NOEXCEPT
+        {
+            _positional.min_width = _positional.min_height = _positional.max_width = _positional.max_height = std::numeric_limits<PositionalUnit>::infinity();
+            return *this;
+        }
+        inline constexpr AnchorBuilder& expand_width() SKR_NOEXCEPT
+        {
+            _positional.min_width = _positional.max_width = std::numeric_limits<PositionalUnit>::infinity();
+            return *this;
+        }
+        inline constexpr AnchorBuilder& expand_height() SKR_NOEXCEPT
+        {
+            _positional.min_height = _positional.max_height = std::numeric_limits<PositionalUnit>::infinity();
+            return *this;
+        }
+        inline constexpr AnchorBuilder& min_width(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.min_width = value;
+            return *this;
+        }
+        inline constexpr AnchorBuilder& min_height(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.min_height = value;
+            return *this;
+        }
+        inline constexpr AnchorBuilder& max_width(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.max_width = value;
+            return *this;
+        }
+        inline constexpr AnchorBuilder& max_height(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.max_height = value;
+            return *this;
+        }
+        inline constexpr AnchorBuilder& pivot(Offset value) SKR_NOEXCEPT
+        {
+            _positional.pivot = value;
+            return *this;
+        }
+
+    private:
+        Positional& _positional;
+    };
+    struct AlignBuilder {
+        inline constexpr AlignBuilder(Positional& positional) SKR_NOEXCEPT
+            : _positional(positional)
+        {
+        }
+        inline constexpr AlignBuilder& sized(PositionalUnit width, PositionalUnit height) SKR_NOEXCEPT
+        {
+            _positional.min_width = _positional.max_width = width;
+            _positional.min_height = _positional.max_height = height;
+            return *this;
+        }
+        inline constexpr AlignBuilder& width(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.min_width = _positional.max_width = value;
+            return *this;
+        }
+        inline constexpr AlignBuilder& height(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.min_height = _positional.max_height = value;
+            return *this;
+        }
+        inline constexpr AlignBuilder& loose(PositionalUnit width, PositionalUnit height) SKR_NOEXCEPT
+        {
+            _positional.min_width = 0;
+            _positional.max_width = width;
+            _positional.min_height = 0;
+            _positional.max_height = height;
+            return *this;
+        }
+        inline constexpr AlignBuilder& loose_width(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.min_width = 0;
+            _positional.max_width = value;
+            return *this;
+        }
+        inline constexpr AlignBuilder& loose_height(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.min_height = 0;
+            _positional.max_height = value;
+            return *this;
+        }
+        inline constexpr AlignBuilder& loose_inf() SKR_NOEXCEPT
+        {
+            _positional.min_width = _positional.min_height = 0;
+            _positional.max_width = _positional.max_height = std::numeric_limits<PositionalUnit>::infinity();
+            return *this;
+        }
+        inline constexpr AlignBuilder& loose_inf_width() SKR_NOEXCEPT
+        {
+            _positional.min_width = 0;
+            _positional.max_width = std::numeric_limits<PositionalUnit>::infinity();
+            return *this;
+        }
+        inline constexpr AlignBuilder& loose_inf_height() SKR_NOEXCEPT
+        {
+            _positional.min_height = 0;
+            _positional.max_height = std::numeric_limits<PositionalUnit>::infinity();
+            return *this;
+        }
+        inline constexpr AlignBuilder& expand() SKR_NOEXCEPT
+        {
+            _positional.min_width = _positional.min_height = _positional.max_width = _positional.max_height = std::numeric_limits<PositionalUnit>::infinity();
+            return *this;
+        }
+        inline constexpr AlignBuilder& expand_width() SKR_NOEXCEPT
+        {
+            _positional.min_width = _positional.max_width = std::numeric_limits<PositionalUnit>::infinity();
+            return *this;
+        }
+        inline constexpr AlignBuilder& expand_height() SKR_NOEXCEPT
+        {
+            _positional.min_height = _positional.max_height = std::numeric_limits<PositionalUnit>::infinity();
+            return *this;
+        }
+        inline constexpr AlignBuilder& min_width(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.min_width = value;
+            return *this;
+        }
+        inline constexpr AlignBuilder& min_height(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.min_height = value;
+            return *this;
+        }
+        inline constexpr AlignBuilder& max_width(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.max_width = value;
+            return *this;
+        }
+        inline constexpr AlignBuilder& max_height(PositionalUnit value) SKR_NOEXCEPT
+        {
+            _positional.max_height = value;
+            return *this;
+        }
+
+    private:
+        Positional& _positional;
+    };
+    inline constexpr void           fill() SKR_NOEXCEPT { left = top = right = bottom = 0; }
+    inline constexpr PaddingBuilder padding() SKR_NOEXCEPT { return PaddingBuilder(*this); }
+    inline constexpr AnchorBuilder  anchor_LT(PositionalUnit l, PositionalUnit t) SKR_NOEXCEPT
+    {
+        left = l;
+        top = t;
+        return AnchorBuilder(*this);
+    }
+    inline constexpr AnchorBuilder anchor_RT(PositionalUnit r, PositionalUnit t) SKR_NOEXCEPT
+    {
+        right = r;
+        top = t;
+        return AnchorBuilder(*this);
+    }
+    inline constexpr AnchorBuilder anchor_LB(PositionalUnit l, PositionalUnit b) SKR_NOEXCEPT
+    {
+        left = l;
+        bottom = b;
+        return AnchorBuilder(*this);
+    }
+    inline constexpr AnchorBuilder anchor_RB(PositionalUnit r, PositionalUnit b) SKR_NOEXCEPT
+    {
+        right = r;
+        bottom = b;
+        return AnchorBuilder(*this);
+    }
+    inline constexpr AlignBuilder align(Offset align_point) SKR_NOEXCEPT
+    {
+        left = PositionalUnit::pct(align_point.x);
+        top = PositionalUnit::pct(align_point.y);
+        pivot = align_point;
+        return AlignBuilder(*this);
+    }
+    inline constexpr AlignBuilder left_top() SKR_NOEXCEPT { return align({ 0, 0 }); }
+    inline constexpr AlignBuilder center_top() SKR_NOEXCEPT { return align({ 0.5, 0 }); }
+    inline constexpr AlignBuilder right_top() SKR_NOEXCEPT { return align({ 1, 0 }); }
+    inline constexpr AlignBuilder left_center() SKR_NOEXCEPT { return align({ 0, 0.5 }); }
+    inline constexpr AlignBuilder center() SKR_NOEXCEPT { return align({ 0.5, 0.5 }); }
+    inline constexpr AlignBuilder right_center() SKR_NOEXCEPT { return align({ 1, 0.5 }); }
+    inline constexpr AlignBuilder left_bottom() SKR_NOEXCEPT { return align({ 0, 1 }); }
+    inline constexpr AlignBuilder center_bottom() SKR_NOEXCEPT { return align({ 0.5, 1 }); }
+    inline constexpr AlignBuilder right_bottom() SKR_NOEXCEPT { return align({ 1, 1 }); }
 
     // checker
     inline constexpr bool with_constraints() SKR_NOEXCEPT
@@ -328,18 +547,6 @@ struct Positional {
     inline constexpr void clear_constraints() SKR_NOEXCEPT
     {
         min_width = max_width = min_height = max_height = PositionalUnit::null();
-    }
-    inline constexpr void constraints_inf() SKR_NOEXCEPT
-    {
-        min_width = 0;
-        max_width = std::numeric_limits<float>::infinity();
-        min_height = 0;
-        max_height = std::numeric_limits<float>::infinity();
-    }
-    inline constexpr void constraints_sized(PositionalUnit width, PositionalUnit height) SKR_NOEXCEPT
-    {
-        min_width = max_width = width;
-        min_height = max_height = height;
     }
 };
 } // namespace skr::gui
