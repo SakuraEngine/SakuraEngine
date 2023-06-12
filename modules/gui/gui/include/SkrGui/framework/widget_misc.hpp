@@ -53,76 +53,175 @@ namespace skr::gui
 {
 struct Widget;
 
+namespace __helper
+{
+// is detected
+template <typename, template <typename...> class Op, typename... T>
+struct is_detected_impl : std::false_type {
+};
+template <template <typename...> class Op, typename... T>
+struct is_detected_impl<std::void_t<Op<T...>>, Op, T...> : std::true_type {
+};
+template <template <typename...> class Op, typename... T>
+using is_detected = is_detected_impl<void, Op, T...>;
+template <template <typename...> class Op, typename... T>
+inline constexpr bool is_detected_v = is_detected<Op, T...>::value;
+
+// checker
+template <typename T, typename Params>
+using has_construct = decltype(std::declval<T>().construct(std::declval<Params>()));
+template <typename T, typename Params>
+inline static constexpr bool has_construct_v = is_detected_v<has_construct, T, Params>;
+
+template <typename T>
+using has_default_params = typename T::Params;
+template <typename T>
+inline static constexpr bool has_default_params_v = is_detected_v<has_default_params, T>;
+
+template <typename T>
+inline static constexpr bool has_default_constructor_v = has_construct_v<T, typename T::Params>;
+
+template <typename T>
+using has_widget_type = typename T::WidgetType;
+template <typename T>
+inline static constexpr bool has_widget_type_v = is_detected_v<has_widget_type, T>;
+
 template <class T>
 inline static constexpr bool is_widget_v = std::is_base_of_v<Widget, T>;
 
-template <typename, class T>
-struct is_widget_param : std::false_type {
-};
+template <class T>
+inline static constexpr auto param_checker()
+{
+    if constexpr (__helper::is_widget_v<T>)
+    {
+        static_assert(__helper::has_default_params_v<T>, "Widget must have default params");
+        static_assert(__helper::has_default_constructor_v<T>, "Widget must have default constructor");
+
+        using ParamsType = typename T::Params;
+        return ParamsType{};
+    }
+    else if constexpr (__helper::has_widget_type_v<T>)
+    {
+        static_assert(__helper::has_construct_v<typename T::WidgetType, T>, "Widget must have construct for params");
+
+        using ParamsType = T;
+        return ParamsType{};
+    }
+    else
+    {
+        return int{};
+    }
+}
+template <class T>
+using params_type_t = decltype(param_checker<T>());
 
 template <class T>
-struct is_widget_param<std::void_t<typename T::WidgetType>, T> : std::true_type {
-};
-
+using has_slot = typename T::Slot;
 template <class T>
-inline static constexpr bool is_widget_param_v = is_widget_param<void, T>::value;
+inline static constexpr bool has_slot_v = is_detected_v<has_slot, T>;
 
-template <class T>
-using widget_param_t = std::conditional_t<is_widget_param_v<T>, T, typename T::Params>;
+} // namespace __helper
 
 template <class T>
 struct WidgetBuilder {
-    const char8_t* file;
+    const char* file;
     const size_t line;
 
     template <class F>
-    T* operator<<=(F&& f)
+    auto operator<<=(F&& f)
     {
         FixedStackScope _(get_default_fixed_stack());
 
-        typename T::Params params;
-        f(params);
+        if constexpr (__helper::is_widget_v<T>)
+        {
+            static_assert(__helper::has_default_params_v<T>, "Widget must have default params");
+            static_assert(__helper::has_default_constructor_v<T>, "Widget must have default constructor");
 
-        auto widget = SKR_GUI_NEW<T>();
-        widget->construct(std::move(params));
-        return widget;
+            using WidgetType = T;
+            using ParamsType = typename T::Params;
+
+            ParamsType params;
+            f(params);
+
+            auto widget = SKR_GUI_NEW<WidgetType>();
+            widget->construct(std::move(params));
+            return widget;
+        }
+        else if constexpr (__helper::has_widget_type_v<T>)
+        {
+            static_assert(__helper::has_construct_v<typename T::WidgetType, T>, "Widget must have construct for params");
+
+            using WidgetType = typename T::WidgetType;
+            using ParamsType = T;
+
+            ParamsType params;
+            f(params);
+
+            auto widget = SKR_GUI_NEW<WidgetType>();
+            widget->construct(std::move(params));
+            return widget;
+        }
+        else
+        {
+            static_assert(__helper::is_widget_v<T> || __helper::has_widget_type_v<T>, "bad type, must be widget or widget params");
+        }
     };
 };
 
 template <class T>
-struct WidgetBuilderParams {
-    const char8_t* file;
+struct SlotListBuilder {
+    const char* file;
     const size_t line;
 
     template <class F>
-    class T::WidgetType* operator<<=(F&& f)
+    Span<typename T::Slot> operator<<=(F&& f)
     {
-        FixedStackScope _(get_default_fixed_stack());
+        static_assert(__helper::has_slot_v<T>, "widget must have slot");
 
-        T params;
-        f(params);
-
-        auto widget = SKR_GUI_NEW<typename T::WidgetType>();
-        widget->construct(std::move(params));
-        return widget;
-    };
+        using SlotType = typename T::Slot;
+        Span<SlotType> s_list;
+        f(s_list);
+        return s_list;
+    }
 };
 
-template <typename W>
-inline WidgetBuilder<W>& MakeBuilder(const char8_t* file, const size_t line) SKR_NOEXCEPT
-{
-    return WidgetBuilder<W>{ file, line };
-}
+template <class T>
+struct SlotBuilder {
+    const char* file;
+    const size_t line;
+    Span<typename T::Slot>& s_list;
 
-template <typename W>
-inline WidgetBuilderParams<W>& MakeBuilder(const char8_t* file, const size_t line) SKR_NOEXCEPT
-{
-    return WidgetBuilderParams<W>{ file, line };
-}
+    template <class F>
+    typename T::Slot operator<<=(F&& f)
+    {
+        static_assert(__helper::has_slot_v<T>, "widget must have slot");
+
+        // TODO. more safe span
+        using SlotType = typename T::Slot;
+        SlotType* slot = get_default_fixed_stack().allocate<SlotType>();
+        f(*slot);
+        s_list = { s_list.data(), s_list.size() + 1 };
+        return std::move(slot);
+    }
+};
+
+template <class T>
+struct ParamBuilder {
+    template <class F>
+    T operator<<=(F&& f)
+    {
+        T params;
+        f(params);
+        return std::move(params);
+    }
+};
 
 } // namespace skr::gui
 
-#define SNewWidget(type) MakeBuilder<type>(__FILE__, __LINE__) <<= [&](widget_param_t<type> & params)
+#define SNewWidget(__TYPE) ::skr::gui::WidgetBuilder<__TYPE>{ __FILE__, __LINE__ } <<= [&](::skr::gui::__helper::params_type_t<__TYPE> & p)
+#define SNewSlotList(__TYPE) ::skr::gui::SlotListBuilder<__TYPE>{ __FILE__, __LINE__ } <<= [&](::skr::gui::Span<typename __TYPE::Slot> & s_list)
+#define SNewSlot(__TYPE) ::skr::gui::SlotBuilder<__TYPE>{ __FILE__, __LINE__, s_list } <<= [&](typename __TYPE::Slot & s)
+#define SNewParam(__TYPE) ::skr::gui::ParamBuilder<__TYPE>{} <<= [&](__TYPE & p)
 
 #define SKR_GUI_HIDE_CONSTRUCT(__PARAM) \
 private:                                \

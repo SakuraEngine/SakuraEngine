@@ -9,6 +9,7 @@ struct SKR_GUI_API Positioned : public SingleChildRenderObjectWidget {
 
     //==> Begin Construct
     struct Params {
+        using WidgetType = Positioned;
         // 约束定位 or 锚点定位
         PositionalUnit left = PositionalUnit::null();
         PositionalUnit top = PositionalUnit::null();
@@ -42,6 +43,7 @@ struct SKR_GUI_API Positioned : public SingleChildRenderObjectWidget {
     }
 
     struct Padding {
+        using WidgetType = Positioned;
         PositionalUnit all = PositionalUnit::null();
 
         PositionalUnit horizontal = PositionalUnit::null();
@@ -56,60 +58,64 @@ struct SKR_GUI_API Positioned : public SingleChildRenderObjectWidget {
     };
     inline void construct(Padding params) SKR_NOEXCEPT
     {
-        // _positional = Positional::Padding({
-        //     .all = params.all,
-        //     .horizontal = params.horizontal,
-        //     .vertical = params.vertical,
-        //     .left = params.left,
-        //     .top = params.top,
-        //     .right = params.right,
-        //     .bottom = params.bottom,
-        // });
+        _positional = Positional::Padding(SNewParam(Positional::PaddingParams) {
+            p.all = params.all;
+            p.horizontal = params.horizontal;
+            p.vertical = params.vertical;
+            p.left = params.left;
+            p.top = params.top;
+            p.right = params.right;
+            p.bottom = params.bottom;
+        });
 
         _child = params.child;
     }
 
     struct Align {
+        using WidgetType = Positioned;
         Offset pivot = { 0.5, 0.5 }; // percent offset
         Positional::ConstraintsParams constraints = {};
         Widget* child = nullptr;
     };
     inline void construct(Align params) SKR_NOEXCEPT
     {
-        // _positional = Positional::Anchor({
-        //                                      .left = params.pivot.x,
-        //                                      .top = params.pivot.y,
-        //                                  },
-        //                                  params.constraints, params.pivot);
+        _positional = Positional::Anchor(
+        SNewParam(Positional::PivotParams) {
+            p.left = params.pivot.x;
+            p.top = params.pivot.y;
+        },
+        params.constraints, params.pivot);
 
         _child = params.child;
     }
 
     struct Center {
+        using WidgetType = Positioned;
         Positional::ConstraintsParams constraints = {};
         Widget* child = nullptr;
     };
     inline void construct(Center params) SKR_NOEXCEPT
     {
-        // construct(Align{
-        //     .pivot = { 0.5, 0.5 },
-        //     .constraints = params.constraints,
-        //     .child = params.child,
-        // });
+        construct(SNewParam(Align) {
+            p.pivot = { 0.5, 0.5 };
+            p.constraints = params.constraints;
+            p.child = params.child;
+        });
     }
 
     struct Fill {
+        using WidgetType = Positioned;
         Widget* child = nullptr;
     };
     inline void construct(Fill params) SKR_NOEXCEPT
     {
-        // construct(Params{
-        //     .left = 0,
-        //     .top = 0,
-        //     .right = 0,
-        //     .bottom = 0,
-        //     .child = params.child,
-        // });
+        construct(SNewParam(Params) {
+            p.left = 0;
+            p.top = 0;
+            p.right = 0;
+            p.bottom = 0;
+            p.child = params.child;
+        });
     }
     //==> End Construct
 
