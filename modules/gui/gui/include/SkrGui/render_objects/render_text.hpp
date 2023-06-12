@@ -1,13 +1,15 @@
 #pragma once
-#include "SkrGui/framework/render_box.hpp"
+#include "SkrGui/framework/render_object/render_box.hpp"
 // Avoid including type/type.hpp by including "containers/detail/sptr.hpp" instead.
 // #include "containers/sptr.hpp"
 #include "containers/detail/sptr.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIPaint, skr_gdi_paint);
 
-namespace skr {
-namespace gui {
+namespace skr
+{
+namespace gui
+{
 
 struct Paragraph;
 struct FontFile;
@@ -20,21 +22,18 @@ enum class EInlineAlignment : uint32_t
     Middle
 };
 
-struct StyleText
-{
+struct StyleText {
     float font_size;
     skr_float4_t color;
 };
 
-struct SKR_GUI_API BindText
-{
-    TextStorage text;
+struct SKR_GUI_API BindText {
+    String text;
 };
 
-struct SKR_GUI_API RenderText : public RenderBox
-{
+struct SKR_GUI_API RenderText : public RenderBox {
 public:
-    SKR_GUI_TYPE(RenderText, RenderBox, u8"72e8d4de-c288-4675-a22f-4c7a6487cabd");
+    SKR_GUI_TYPE(RenderText, "72e8d4de-c288-4675-a22f-4c7a6487cabd", RenderBox);
     RenderText(skr_gdi_device_id gdi_device);
     virtual ~RenderText();
 
@@ -46,12 +45,12 @@ public:
 protected:
     void BuildParagraph();
     void DrawParagraph();
-    void MarkLayoutDirty(bool visibility) {};
+    void MarkLayoutDirty(bool visibility){};
 
 private:
     void buildParagraphRec(Paragraph* p, const StyleText& txt);
 
-    VectorStorage<struct InlineType> inlines_;
+    Array<struct InlineType> inlines_;
     Paragraph* paragraph_ = nullptr;
     skr::SPtr<FontFile> font_ = nullptr;
 
@@ -62,6 +61,7 @@ private:
     skr_float4_t font_color = { 1.f, 0.f, 1.f, 1.f };
 };
 
-} }
+} // namespace gui
+} // namespace skr
 
 SKR_DECLARE_TYPE_ID(skr::gui::RenderText, skr_gui_render_text);

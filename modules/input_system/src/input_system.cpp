@@ -1,4 +1,3 @@
-#define CONTAINER_LITE_IMPL
 #include "SkrInputSystem/input_system.hpp"
 #include "SkrInputSystem/input_modifier.hpp"
 #include "./input_action_impl.hpp"

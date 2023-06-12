@@ -1,11 +1,11 @@
 #pragma once
-#include "SkrGui/framework/render_object.hpp"
+#include "SkrGui/framework/render_object/render_object.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIDevice, skr_gdi_device)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIElement, skr_gdi_element)
 
-namespace skr {
-namespace gui {
+namespace skr::gui
+{
 using RenderBoxSizeType = BoxSizeType;
 
 struct BoxConstraint {
@@ -19,11 +19,11 @@ struct Ray {
     skr_float3_t direction;
 };
 
-struct HitTestRecord {};
+struct HitTestRecord {
+};
 
-struct SKR_GUI_API RenderBox : public RenderObject
-{
-    SKR_GUI_TYPE(RenderBox, RenderObject, u8"01a2eb19-1299-4069-962f-88db0c719134");
+struct SKR_GUI_API RenderBox : public RenderObject {
+    SKR_GUI_TYPE(RenderBox, "01a2eb19-1299-4069-962f-88db0c719134", RenderObject);
 
 public:
     RenderBox(skr_gdi_device_id gdi_device);
@@ -50,6 +50,6 @@ protected:
     skr_gdi_element_id debug_element = nullptr;
 };
 
-} }
+} // namespace skr::gui
 
 SKR_DECLARE_TYPE_ID(skr::gui::RenderBox, skr_gui_render_box);

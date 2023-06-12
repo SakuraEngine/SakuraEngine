@@ -8,10 +8,9 @@ namespace gui
 
 RenderStack::RenderStack(skr_gdi_device_id gdi_device)
     : RenderBox(gdi_device)
-{  
+{
     diagnostic_builder.add_properties(
-        SkrNew<TextDiagnosticProperty>(u8"type", u8"stack", u8"place children in stack")
-    );
+        SkrNew<TextDiagnosticProperty>(u8"type", u8"stack", u8"place children in stack"));
 }
 
 void RenderStack::layout(BoxConstraint constraints, bool needSize)
@@ -25,23 +24,23 @@ void RenderStack::layout(BoxConstraint constraints, bool needSize)
         Positional positional = get_position(i);
         BoxConstraint childConstraints;
         childConstraints.min_size = skr_float2_t{ 0, 0 };
-        childConstraints.max_size = skr_float2_t{ std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()};
+        childConstraints.max_size = skr_float2_t{ std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() };
         if (positional.left && positional.right)
         {
-            if(positional.minWidth || positional.maxWidth)
+            if (positional.minWidth || positional.maxWidth)
             {
-                SKR_LOG_WARN("Both left and right are set, width will be ignored");
+                SKR_GUI_LOG_WARN("Both left and right are set, width will be ignored");
             }
             childConstraints.min_size.x = childConstraints.max_size.x =
-            width - positional.left.get_value(width) - positional.right.get_value(width);
+                width - positional.left.get_value(width) - positional.right.get_value(width);
         }
         else
         {
-            if(positional.minWidth)
+            if (positional.minWidth)
             {
                 childConstraints.min_size.x = positional.minWidth.get_value(width);
             }
-            if(positional.maxWidth)
+            if (positional.maxWidth)
             {
                 childConstraints.max_size.x = positional.maxWidth.get_value(width);
             }
@@ -50,10 +49,10 @@ void RenderStack::layout(BoxConstraint constraints, bool needSize)
         {
             if (positional.minHeight || positional.maxHeight)
             {
-                SKR_LOG_WARN("Both top and bottom are set, height will be ignored");
+                SKR_GUI_LOG_WARN("Both top and bottom are set, height will be ignored");
             }
             childConstraints.min_size.y = childConstraints.max_size.y =
-            height - positional.top.get_value(height) - positional.bottom.get_value(height);
+                height - positional.top.get_value(height) - positional.bottom.get_value(height);
         }
         else
         {
@@ -69,20 +68,20 @@ void RenderStack::layout(BoxConstraint constraints, bool needSize)
 
         child->layout(childConstraints, true);
         skr_float2_t childPosition = { 0, 0 };
-        if(positional.left)
+        if (positional.left)
         {
             float pivotX = positional.right ? 0 : positional.pivot.x;
             childPosition.x = positional.left.get_value(width) - child->get_size().x * pivotX;
         }
-        else if(positional.right)
+        else if (positional.right)
         {
             float pivotY = positional.pivot.y;
             childPosition.x = width - positional.right.get_value(width) - child->get_size().x * (1 - pivotY);
         }
         else
         {
-            SKR_LOG_WARN("Both left and right are not set, default to left 0");
-            childPosition.x = - child->get_size().x * positional.pivot.x;
+            SKR_GUI_LOG_WARN("Both left and right are not set, default to left 0");
+            childPosition.x = -child->get_size().x * positional.pivot.x;
         }
         if (positional.top)
         {
@@ -96,7 +95,7 @@ void RenderStack::layout(BoxConstraint constraints, bool needSize)
         }
         else
         {
-            SKR_LOG_WARN("Both top and bottom are not set, default to top 0");
+            SKR_GUI_LOG_WARN("Both top and bottom are not set, default to top 0");
             childPosition.y = -child->get_size().y * positional.pivot.y;
         }
         child->set_position(childPosition);
@@ -105,35 +104,33 @@ void RenderStack::layout(BoxConstraint constraints, bool needSize)
 
 Positional RenderStack::get_position(int index)
 {
-    assert(index >= 0 && index < positionals.get().size());
-    return positionals.get()[index];
+    SKR_GUI_ASSERT(index >= 0 && index < positionals.size());
+    return positionals[index];
 }
 
 void RenderStack::add_child(RenderObject* child)
 {
     RenderBox::add_child(child);
-    positionals.get().emplace_back(Positional{});
+    positionals.emplace_back(Positional{});
 }
 
 void RenderStack::insert_child(RenderObject* child, int index)
 {
     RenderBox::insert_child(child, index);
-    positionals.get().insert(positionals.get().begin() + index, Positional{});
+    positionals.insert(positionals.begin() + index, Positional{});
 }
 
 void RenderStack::remove_child(RenderObject* child)
 {
-    positionals.get().erase(positionals.get().begin() + get_child_index(child));
+    positionals.erase(positionals.begin() + get_child_index(child));
     RenderBox::remove_child(child);
 }
 
 void RenderStack::set_positional(int index, Positional positional)
 {
-    SKR_ASSERT(index >= 0 && index < positionals.get().size());
-    this->positionals.get()[index] = positional;
+    SKR_GUI_ASSERT(index >= 0 && index < positionals.size());
+    this->positionals[index] = positional;
 }
-
-SKR_GUI_TYPE_IMPLMENTATION(RenderStack);
 
 } // namespace gui
 } // namespace skr

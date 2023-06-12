@@ -12,8 +12,7 @@ RenderImage::RenderImage(skr_gdi_device_id gdi_device)
 {
     gdi_element = gdi_device->create_element();
     diagnostic_builder.add_properties(
-        SkrNew<TextDiagnosticProperty>(u8"type", u8"image", u8"draw an image")
-    );
+        SkrNew<TextDiagnosticProperty>(u8"type", u8"image", u8"draw an image"));
 }
 
 RenderImage::~RenderImage()
@@ -34,11 +33,10 @@ void RenderImage::draw(const DrawParams* params)
     gdi_element->rect(pos.x, pos.y, size.x, size.y);
     gdi_element->fill_color(color.x, color.y, color.z, color.w);
     gdi_element->fill();
-    //gdi_element->restore();
+    // gdi_element->restore();
     params->canvas->add_element(gdi_element);
     RenderBox::draw(params);
 }
 
-SKR_GUI_TYPE_IMPLMENTATION(RenderImage);
-
-}}
+} // namespace gui
+} // namespace skr
