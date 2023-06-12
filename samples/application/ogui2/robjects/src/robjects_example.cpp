@@ -399,6 +399,8 @@ void UpdateScan(skr::span<uint8_t> write_span)
 
 int main(int argc, char* argv[])
 {
+    SkrDStorageConfig config = {};
+    skr_create_dstorage_instance(&config);
     auto App = make_zeroed<robjects_example_application>();
     App.initialize();
     bool          quit = false;
