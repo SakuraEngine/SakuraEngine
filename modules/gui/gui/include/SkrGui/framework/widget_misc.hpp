@@ -5,7 +5,7 @@
 namespace skr::gui
 {
 struct SKR_GUI_API FixedStack {
-    void* buffer;
+    void*  buffer;
     size_t size;
     size_t capacity;
 
@@ -13,7 +13,7 @@ struct SKR_GUI_API FixedStack {
     ~FixedStack();
 
     void* allocate(size_t size);
-    void free(size_t size);
+    void  free(size_t size);
 
     template <class T>
     T* allocate() { return (T*)allocate(sizeof(T)); }
@@ -27,7 +27,7 @@ struct SKR_GUI_API FixedStack {
 SKR_GUI_API FixedStack& get_default_fixed_stack();
 
 struct FixedStackScope {
-    size_t top;
+    size_t      top;
     FixedStack& stack;
     FixedStackScope(FixedStack& stack)
         : top(stack.size)
@@ -120,11 +120,24 @@ using has_slot = typename T::Slot;
 template <class T>
 inline static constexpr bool has_slot_v = is_detected_v<has_slot, T>;
 
+template <class T>
+struct slot_type {
+    using type = T;
+};
+
+template <class T>
+struct slot_type<Span<T>> {
+    using type = T;
+};
+
+template <class T>
+using slot_type_t = typename slot_type<T>::type;
+
 } // namespace __helper
 
 template <class T>
 struct WidgetBuilder {
-    const char* file;
+    const char*  file;
     const size_t line;
 
     template <class F>
@@ -169,38 +182,22 @@ struct WidgetBuilder {
 };
 
 template <class T>
-struct SlotListBuilder {
-    const char* file;
-    const size_t line;
-
-    template <class F>
-    Span<typename T::Slot> operator<<=(F&& f)
-    {
-        static_assert(__helper::has_slot_v<T>, "widget must have slot");
-
-        using SlotType = typename T::Slot;
-        Span<SlotType> s_list;
-        f(s_list);
-        return s_list;
-    }
-};
-
-template <class T>
 struct SlotBuilder {
-    const char* file;
+    const char*  file;
     const size_t line;
-    Span<typename T::Slot>& s_list;
+    T&           slot_list;
 
     template <class F>
-    typename T::Slot operator<<=(F&& f)
+    __helper::slot_type_t<T> operator<<=(F&& f)
     {
         static_assert(__helper::has_slot_v<T>, "widget must have slot");
 
         // TODO. more safe span
-        using SlotType = typename T::Slot;
+        using SlotType = __helper::slot_type_t<T>;
+        static_assert(!std::is_same_v<T, __helper::slot_type_t<T>>, "bad slot type");
         SlotType* slot = get_default_fixed_stack().allocate<SlotType>();
         f(*slot);
-        s_list = { s_list.data(), s_list.size() + 1 };
+        slot_list = { slot_list.data(), slot_list.size() + 1 };
         return std::move(slot);
     }
 };
@@ -219,8 +216,7 @@ struct ParamBuilder {
 } // namespace skr::gui
 
 #define SNewWidget(__TYPE) ::skr::gui::WidgetBuilder<__TYPE>{ __FILE__, __LINE__ } <<= [&](::skr::gui::__helper::params_type_t<__TYPE> & p)
-#define SNewSlotList(__TYPE) ::skr::gui::SlotListBuilder<__TYPE>{ __FILE__, __LINE__ } <<= [&](::skr::gui::Span<typename __TYPE::Slot> & s_list)
-#define SNewSlot(__TYPE) ::skr::gui::SlotBuilder<__TYPE>{ __FILE__, __LINE__, s_list } <<= [&](typename __TYPE::Slot & s)
+#define SNewSlot(__SLOT_PARAM) ::skr::gui::SlotBuilder<decltype(__SLOT_PARAM)>{ __FILE__, __LINE__, __SLOT_PARAM } <<= [&](::skr::gui::__helper::slot_type_t<decltype(__SLOT_PARAM)> & p)
 #define SNewParam(__TYPE) ::skr::gui::ParamBuilder<__TYPE>{} <<= [&](__TYPE & p)
 
 #define SKR_GUI_HIDE_CONSTRUCT(__PARAM) \

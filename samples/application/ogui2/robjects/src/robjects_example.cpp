@@ -43,7 +43,7 @@ extern void create_imgui_resources(ECGPUFormat format, CGPUSamplerId sampler, sk
 
 struct robjects_example_application : public robjects_application_t {
     CGPUSamplerId imgui_sampler = nullptr;
-    bool initialize()
+    bool          initialize()
     {
 #ifdef SKR_OS_WINDOWS
         ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
@@ -108,7 +108,12 @@ struct robjects_example_application : public robjects_application_t {
         0, SNewParam(skr::gui::Positional) { p.left = p.top = 0; p.min_height = p.max_height = 400; });
         stack->add_child(text);
         stack->set_positional(
-        1, SNewParam(skr::gui::Positional) { using namespace skr::gui; p.left = 0_px; p.top = 10; p.pivot = {0.5, 0}; });
+        1, SNewParam(skr::gui::Positional) {
+            using namespace skr::gui;
+            p.left = 0.5_pct;
+            p.top = 10_px;
+            p.pivot = { 0.5, 0 };
+        });
         canvas->add_child(stack);
 
         stack->layout(skr::gui::BoxConstraint::Loose({ (float)gdi.gfx.window_width, (float)gdi.gfx.window_height }));
@@ -133,12 +138,12 @@ struct robjects_example_application : public robjects_application_t {
     }
 
     skr::gui::DiagnosticableTreeNode* selected_diagnostic = nullptr;
-    void diagnostics_inspect_recursively(skr::gui::DiagnosticableTreeNode* diagnostic)
+    void                              diagnostics_inspect_recursively(skr::gui::DiagnosticableTreeNode* diagnostic)
     {
         ImGui::PushID(diagnostic);
-        auto type_property = static_cast<skr::gui::TextDiagnosticProperty*>(diagnostic->find_property(u8"type"));
-        auto type = type_property ? type_property->get_value() : u8"object";
-        skr::string show_name = skr::format(SKR_UTF8("{}{}{}"), SKR_UTF8("["), type, SKR_UTF8("]"));
+        auto               type_property = static_cast<skr::gui::TextDiagnosticProperty*>(diagnostic->find_property(u8"type"));
+        auto               type = type_property ? type_property->get_value() : u8"object";
+        skr::string        show_name = skr::format(SKR_UTF8("{}{}{}"), SKR_UTF8("["), type, SKR_UTF8("]"));
         ImGuiTreeNodeFlags node_flags = (selected_diagnostic == diagnostic) ? ImGuiTreeNodeFlags_Selected : 0;
         node_flags |= ImGuiTreeNodeFlags_SpanFullWidth;
         node_flags |= ImGuiTreeNodeFlags_OpenOnArrow;
@@ -228,8 +233,8 @@ struct robjects_example_application : public robjects_application_t {
         graph.declare_render_resources(gdi.gfx);
 
         // render
-        skr::gui::WindowContext::RenderParams render_params = {};
-        skr::gdi::ViewportRenderParams vp_render_params = {};
+        skr::gui::WindowContext::RenderParams      render_params = {};
+        skr::gdi::ViewportRenderParams             vp_render_params = {};
         skr::gdi::ViewportRenderParams_RenderGraph vp_render_params2 = {};
         vp_render_params2.render_graph = graph.graph;
         vp_render_params.usr_data = &vp_render_params2;
@@ -274,23 +279,23 @@ struct robjects_example_application : public robjects_application_t {
         finalize_robjects_application(this);
     }
 
-    skr::gui::RenderCanvas* canvas = nullptr;
-    skr::gui::RenderGridPaper* grid_paper = nullptr;
+    skr::gui::RenderCanvas*      canvas = nullptr;
+    skr::gui::RenderGridPaper*   grid_paper = nullptr;
     skr::gui::RenderColorPicker* color_picker = nullptr;
-    skr::gui::RenderFlex* flex = nullptr;
-    skr::gui::RenderImage* image1 = nullptr;
-    skr::gui::RenderImage* image2 = nullptr;
-    skr::gui::RenderImage* image3 = nullptr;
-    skr::gui::RenderStack* stack = nullptr;
-    skr::gui::RenderText* text = nullptr;
-    gui_render_graph_t graph;
+    skr::gui::RenderFlex*        flex = nullptr;
+    skr::gui::RenderImage*       image1 = nullptr;
+    skr::gui::RenderImage*       image2 = nullptr;
+    skr::gui::RenderImage*       image3 = nullptr;
+    skr::gui::RenderStack*       stack = nullptr;
+    skr::gui::RenderText*        text = nullptr;
+    gui_render_graph_t           graph;
 
     skr::input::InputSystem* input_system = nullptr;
 };
 
 struct KeyboardTest {
     skr::input::InputLayer* pLayer = nullptr;
-    void PollKeyboardInput() noexcept
+    void                    PollKeyboardInput() noexcept
     {
         using namespace skr::input;
         if (auto input = skr::input::Input::GetInstance())
@@ -301,9 +306,9 @@ struct KeyboardTest {
                 const auto currentTimestamp = pLayer->GetCurrentTimestampUSec();
 
                 InputKeyState keystates[16];
-                uint32_t readCount = pLayer->GetKeyState(pReading, 16, keystates);
-                const auto timestamp = pLayer->GetTimestampUSec(pReading);
-                const auto elapsed_us = currentTimestamp - timestamp;
+                uint32_t      readCount = pLayer->GetKeyState(pReading, 16, keystates);
+                const auto    timestamp = pLayer->GetTimestampUSec(pReading);
+                const auto    elapsed_us = currentTimestamp - timestamp;
                 for (uint32_t j = 0; j < readCount; j++)
                 {
                     auto k = keystates[j];
@@ -325,13 +330,13 @@ struct ClickListener {
     {
     }
     // ~ClickListener() { if (Mouse) Mouse->Release(); if (previous) previous->Release(); }
-    skr::input::InputLayer* pLayer = nullptr;
-    skr::input::InputDevice* Mouse = nullptr;
+    skr::input::InputLayer*   pLayer = nullptr;
+    skr::input::InputDevice*  Mouse = nullptr;
     skr::input::InputReading* previous = nullptr;
-    bool WasUp = false;
-    uint32_t Counter = 0;
-    uint32_t ThresholdInMs = 0;
-    bool isDown(const skr::input::InputMouseState& state)
+    bool                      WasUp = false;
+    uint32_t                  Counter = 0;
+    uint32_t                  ThresholdInMs = 0;
+    bool                      isDown(const skr::input::InputMouseState& state)
     {
         return (state.buttons & skr::input::InputMouseLeftButton) && (state.buttons & skr::input::InputMouseRightButton);
     }
@@ -383,7 +388,7 @@ struct ClickListener {
 #include <iostream>
 void UpdateScan(skr::span<uint8_t> write_span)
 {
-    int numkeys;
+    int            numkeys;
     const uint8_t* state = SDL_GetKeyboardState(&numkeys);
     for (int scancode = 0, i = 0; scancode < numkeys && i < write_span.size(); ++scancode)
     {
@@ -396,10 +401,10 @@ int main(int argc, char* argv[])
 {
     auto App = make_zeroed<robjects_example_application>();
     App.initialize();
-    bool quit = false;
-    KeyboardTest keyboard_test;
+    bool          quit = false;
+    KeyboardTest  keyboard_test;
     ClickListener doubleClickListener = ClickListener(500);
-    auto handler = skr_system_get_default_handler();
+    auto          handler = skr_system_get_default_handler();
     handler->add_window_close_handler(
     +[](SWindowHandle window, void* pQuit) {
         bool& quit = *(bool*)pQuit;

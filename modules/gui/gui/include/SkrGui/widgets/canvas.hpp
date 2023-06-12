@@ -8,9 +8,9 @@ struct SKR_GUI_API Canvas : public MultiChildRenderObjectWidget {
     SKR_GUI_TYPE(Canvas, "94714676-422c-4e4e-a754-e26b5466900f", MultiChildRenderObjectWidget)
 
     struct Slot {
-        Positional layout = Positional::fill();
-        int32_t z_index = 0;
-        Widget* child = nullptr;
+        Positional layout = Positional::Fill();
+        int32_t    z_index = 0;
+        Widget*    child = nullptr;
     };
 
     //==> Begin Construct

@@ -24,7 +24,7 @@ template <class T>
 constexpr T parse_hex(const char8_t* ptr)
 {
     constexpr size_t digits = sizeof(T) * 2;
-    T result{};
+    T                result{};
     for (size_t i = 0; i < digits; ++i)
         result |= parse_hex_digit(ptr[i]) << (4 * (digits - i - 1));
     return result;
@@ -52,14 +52,14 @@ constexpr skr_guid_t make_guid_helper(const char8_t* begin)
 struct SKR_GUI_API IObject {
     virtual ~IObject() = default;
     virtual skr_guid_t guid() const SKR_NOEXCEPT = 0;
-    virtual void base_guid(const skr_guid_t*& p, size_t n) const SKR_NOEXCEPT = 0;
-    virtual void* cast(skr_guid_t id) const SKR_NOEXCEPT = 0;
+    virtual void       base_guid(const skr_guid_t*& p, size_t n) const SKR_NOEXCEPT = 0;
+    virtual void*      cast(skr_guid_t id) const SKR_NOEXCEPT = 0;
 };
 
 // helper
 template <typename... Super>
 struct BaseGUIDHelper {
-    inline static constexpr size_t count = sizeof...(Super);
+    inline static constexpr size_t     count = sizeof...(Super);
     inline static constexpr skr_guid_t base_guid[] = { Super::static_guid()... };
 };
 template <typename Base, typename... Super>
@@ -101,7 +101,7 @@ inline skr_guid_t SkrGUITypeInfo(const IObject* obj) SKR_NOEXCEPT
 #define SKR_GUI_TYPE_ROOT(__T, __GUID)                                                                                         \
     using CastHelper = BaseCastHelper<__T>;                                                                                    \
     inline static constexpr skr_guid_t static_guid() SKR_NOEXCEPT { return ::skr::gui::__help::make_guid_helper(u8##__GUID); } \
-    inline static constexpr void static_base_guid(const skr_guid_t*& p, size_t n) SKR_NOEXCEPT                                 \
+    inline static constexpr void       static_base_guid(const skr_guid_t*& p, size_t n) SKR_NOEXCEPT                           \
     {                                                                                                                          \
         p = nullptr;                                                                                                           \
         n = 0;                                                                                                                 \
@@ -118,7 +118,7 @@ inline skr_guid_t SkrGUITypeInfo(const IObject* obj) SKR_NOEXCEPT
     using CastHelper = BaseCastHelper<__T, __VA_ARGS__>;                                                           \
     using GUIDHelper = BaseGUIDHelper<__VA_ARGS__>;                                                                \
     inline static constexpr skr_guid_t static_guid() { return ::skr::gui::__help::make_guid_helper(u8##__GUID); }  \
-    inline static constexpr void static_base_guid(const skr_guid_t*& p, size_t n)                                  \
+    inline static constexpr void       static_base_guid(const skr_guid_t*& p, size_t n)                            \
     {                                                                                                              \
         p = GUIDHelper::base_guid;                                                                                 \
         n = GUIDHelper::count;                                                                                     \
