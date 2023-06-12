@@ -1510,7 +1510,6 @@ typedef struct CGPUTextureDescriptor {
     CGPUResourceTypes descriptors;
     /// Memory Aliasing
     uint32_t is_dedicated;
-    uint32_t is_aliasing;
 } CGPUTextureDescriptor;
 
 typedef struct CGPUExportTextureDescriptor {
@@ -1549,29 +1548,49 @@ typedef struct CGPUTextureAliasingBindDescriptor {
 } CGPUTextureAliasingBindDescriptor;
 
 typedef struct CGPUTextureInfo {
-    uint32_t width;
+    uint64_t width;
     uint32_t height;
     uint32_t depth;
     uint32_t mip_levels;
     uint32_t array_size_minus_one;
-    ECGPUFormat format;
     uint64_t size_in_bytes;
+    ECGPUFormat format;
     ECGPUSampleCount sample_count;
     uint64_t unique_id;
     uint32_t aspect_mask;
     uint32_t node_index;
     uint8_t owns_image;
     uint8_t is_cube;
-    uint8_t is_dedicated;
+    uint8_t is_heap_dedicated;
+    uint8_t is_driver_dedicated;
     uint8_t is_aliasing;
+    uint8_t is_tiled;
     uint8_t is_imported;
     uint8_t can_alias;
     uint8_t can_export;
 } CGPUTextureInfo;
 
+typedef struct CGPUMemoryPage {
+    uint64_t size;
+} CGPUMemoryPage;
+
+typedef struct CGPUTiledTexturePage {
+	uint32_t mip_level;
+	uint32_t layer;
+    uint32_t index;
+} CGPUTiledTexturePage;
+
+typedef struct CGPUTiledResourceInfo {
+    const CGPUMemoryPage* pages;
+    const CGPUTiledTexturePage* tex_pages;
+    uint64_t total_pages_count;
+    uint64_t alive_pages_count;
+} CGPUTiledResourceInfo;
+
 typedef struct SKR_ALIGNAS(16) CGPUTexture {
-    CGPUDeviceId device SKR_IF_CPP(= CGPU_NULLPTR);
-    const struct CGPUTextureInfo* info SKR_IF_CPP(= CGPU_NULLPTR);
+    CGPUDeviceId device;
+    const CGPUTextureInfo* info;
+    const CGPUTiledResourceInfo* tiled_resource;
 } CGPUTexture;
 
 typedef struct CGPUTextureView {

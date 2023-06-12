@@ -222,7 +222,7 @@ CGPUTextureId RenderGraphBackend::try_aliasing_allocate(RenderGraphFrameExecutor
         if (!node.frame_aliasing)
         {
             cgpu_free_texture(aliasing_texture);
-            ((TextureNode&)node).descriptor.is_aliasing = false;
+            ((TextureNode&)node).descriptor.flags &= ~CGPU_TCF_ALIASING_RESOURCE;
             return nullptr;
         }
         executor.aliasing_textures.emplace_back(aliasing_texture);

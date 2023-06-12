@@ -423,7 +423,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
         owns_image = false;
         pVkImage = (VkImage)desc->native_handle;
     }
-    else if (!desc->is_aliasing)
+    else if (!(desc->flags & CGPU_TCF_ALIASING_RESOURCE))
     {
         owns_image = true;
     }
@@ -512,7 +512,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
         VkFormatFeatureFlags flags = format_props.optimalTilingFeatures & format_features;
         cgpu_assert((flags != 0) && "Format is not supported for GPU local images (i.e. not host visible images)");
         DECLARE_ZERO(VmaAllocationCreateInfo, mem_reqs)
-        if (desc->is_aliasing)
+        if (desc->flags & CGPU_TCF_ALIASING_RESOURCE)
         {
             // Aliasing VkImage
             VkResult res = D->mVkDeviceTable.vkCreateImage(D->pVkDevice, &imageCreateInfo, GLOBAL_VkAllocationCallbacks, &pVkImage);
@@ -681,9 +681,10 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
     cgpu_assert(T);
     info->owns_image = owns_image;
     info->aspect_mask = aspect_mask;
-    info->is_dedicated = is_dedicated;
-    info->is_aliasing = desc->is_aliasing;
-    info->can_alias = can_alias_alloc || desc->is_aliasing;
+    info->is_heap_dedicated = is_dedicated;
+    info->is_driver_dedicated = is_dedicated;
+    info->is_aliasing = (desc->flags & CGPU_TCF_ALIASING_RESOURCE);
+    info->can_alias = can_alias_alloc || info->is_aliasing;
     T->pVkImage = pVkImage;
     if (pVkDeviceMemory) T->pVkDeviceMemory = pVkDeviceMemory;
     if (vmaAllocation) T->pVkAllocation = vmaAllocation;
@@ -903,11 +904,9 @@ bool cgpu_try_bind_aliasing_texture_vulkan(CGPUDeviceId device, const struct CGP
         const CGPUTextureInfo* AliasedInfo = Aliased->super.info;
 
         cgpu_assert(AliasingInfo->is_aliasing && "aliasing texture need to be created as aliasing!");
-        if (Aliased->pVkImage != VK_NULL_HANDLE &&
-            Aliased->pVkAllocation != VK_NULL_HANDLE &&
+        if (Aliased->pVkImage != VK_NULL_HANDLE && Aliased->pVkAllocation != VK_NULL_HANDLE &&
             Aliasing->pVkImage != VK_NULL_HANDLE &&
-            !AliasedInfo->is_dedicated &&
-            AliasingInfo->is_aliasing)
+            !AliasedInfo->is_driver_dedicated && AliasingInfo->is_aliasing)
         {
             VkMemoryRequirements aliasingMemReq;
             VkMemoryRequirements aliasedMemReq;
