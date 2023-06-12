@@ -24,53 +24,50 @@ void MayBeExample()
     //   text
     // auto sandbox = SkrNew<Sandbox>(
     // SNewWidget(Canvas) {
-    //     SNewSlot(p.children)
+    //     SNewSlot(p.canvas_children)
     //     {
     //         p.positional.fill();
     //         p.child = SNewWidget(GridPaper){};
     //     };
-    //     SNewSlot(p.children)
+    //     SNewSlot(p.canvas_children)
     //     {
     //         p.positional.fill();
     //         p.child = SNewWidget(ColorPicker){};
     //     };
-    //     SNewSlot(p.children)
+    //     SNewSlot(p.canvas_children)
     //     {
     //         p.positional.anchor_LT(0, 0).sized(400, 400).pivot({ 0.5, 0 });
     //         p.child = SNewWidget(Flex)
     //         {
     //             p.align_items = AlignItems::FlexStart;
     //             p.justify_content = JustifyContent::Center;
-    //             SNewSlot(p.children)
+    //             SNewSlot(p.flex_children)
     //             {
     //                 p.child = SNewWidget(SizedBox)
     //                 {
-    //                     p.width = 100;
-    //                     p.height = 300;
+    //                     p.size = { 100, 300 };
     //                     SNewWidget(ColoredBox) { p.color = Color::SRGB("#F00"); };
     //                 };
     //             };
-    //             SNewSlot(p.children)
+    //             SNewSlot(p.flex_children)
     //             {
     //                 p.child = SNewWidget(SizedBox)
     //                 {
-    //                     p.width = 100;
-    //                     p.height = 200;
+    //                     p.size = { 100, 200 };
     //                     SNewWidget(ColoredBox) { p.color = Color::SRGB("#0F0"); };
     //                 };
     //             };
-    //             SNewSlot(p.children)
+    //             SNewSlot(p.flex_children)
     //             {
     //                 p.child = SNewWidget(SizedBox)
     //                 {
-    //                     p.width = 100;
-    //                     p.height = 400;
+    //                     p.size = { 100, 400 };
     //                     SNewWidget(ColoredBox) { p.color = Color::SRGB("#00F"); };
     //                 };
     //             };
     //         };
     //     };
-    //     SNewSlot(p.children)
+    //     SNewSlot(p.canvas_children)
     //     {
     //         p.positional.anchor_LT(0.5_pct, 10_px).pivot({ 0.5, 0 });
     //         p.child = SNewWidget(Text) { p.text = u8"Hello World!"; };

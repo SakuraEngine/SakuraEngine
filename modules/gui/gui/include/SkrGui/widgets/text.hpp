@@ -6,14 +6,6 @@ namespace skr::gui
 struct SKR_GUI_API Text : public LeafRenderObjectWidget {
     SKR_GUI_TYPE(Text, "b852a75d-8035-422f-8738-e251b15acb26", LeafRenderObjectWidget)
 
-    //==>Begin Construct
-    struct Params {
-        using WidgetType = Text;
-        String text;
-    };
-    void construct(Params params);
-    //==>End Construct
-private:
-    String _text;
+    String text;
 };
 } // namespace skr::gui

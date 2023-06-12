@@ -11,7 +11,7 @@ NotNull<Element*> Widget::create_element() noexcept
 
 bool Widget::can_update(NotNull<Widget*> old_widget, NotNull<Widget*> new_widget) noexcept
 {
-    if (old_widget->key() != new_widget->key())
+    if (old_widget->key != new_widget->key)
     {
         return false;
     }

@@ -59,9 +59,9 @@ void Element::detach_render_object() SKR_NOEXCEPT
 NotNull<Element*> Element::inflate_widget(NotNull<Widget*> widget, Slot* new_slot) SKR_NOEXCEPT
 {
     // TODO: global key
-    if (widget->key().is_keep_state())
+    if (widget->key.is_keep_state())
     {
-        Element* newChild = _retake_inactive_element(widget->key(), widget);
+        Element* newChild = _retake_inactive_element(widget->key, widget);
         if (newChild)
         {
             SKR_GUI_ASSERT(newChild->_parent == nullptr);
@@ -104,7 +104,7 @@ Element* Element::update_child(Element* child, Widget* new_widget, Slot* new_slo
             deactivate_child(child);
         return nullptr;
     }
-    auto widget = make_not_null(new_widget);
+    auto     widget = make_not_null(new_widget);
     Element* newChild = nullptr;
     if (child)
     {
