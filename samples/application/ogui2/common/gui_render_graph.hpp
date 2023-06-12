@@ -65,8 +65,9 @@ struct gui_render_graph_t
         }
         depth_buffer = graph->create_texture(
             [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
+                const auto texInfo = render_app.swapchain->back_buffers[0]->info;
                 builder.set_name(SKR_UTF8("depth"))
-                    .extent(render_app.swapchain->back_buffers[0]->width, render_app.swapchain->back_buffers[0]->height)
+                    .extent(texInfo->width, texInfo->height)
                     .format(CGPU_FORMAT_D32_SFLOAT)
                     .owns_memory()
                     .sample_count(sample_count)

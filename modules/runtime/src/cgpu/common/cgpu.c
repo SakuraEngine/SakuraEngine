@@ -945,8 +945,9 @@ CGPUTextureId cgpu_create_texture(CGPUDeviceId device, const struct CGPUTextureD
     if (desc->sample_count == 0) new_desc.sample_count = 1;
     CGPUProcCreateTexture fn_create_texture = device->proc_table_cache->create_texture;
     CGPUTexture* texture = (CGPUTexture*)fn_create_texture(device, &new_desc);
+    CGPUTextureInfo* info = (CGPUTextureInfo*)texture->info;
     texture->device = device;
-    texture->sample_count = desc->sample_count;
+    info->sample_count = desc->sample_count;
     return texture;
 }
 
@@ -1031,10 +1032,11 @@ CGPUTextureId cgpu_import_shared_texture_handle(CGPUDeviceId device, const struc
     CGPUProcImportSharedTextureHandle fn_import_shared_texture = device->proc_table_cache->import_shared_texture_handle;
     if (!fn_import_shared_texture) return CGPU_NULLPTR;
     CGPUTexture* texture = (CGPUTexture*)fn_import_shared_texture(device, desc);
+    CGPUTextureInfo* info = (CGPUTextureInfo*)texture->info;
     if (texture)
     {
         texture->device = device;
-        texture->unique_id = ((CGPUDevice*)device)->next_texture_id++;
+        info->unique_id = ((CGPUDevice*)device)->next_texture_id++;
     }
     return texture;
 }
@@ -1056,15 +1058,17 @@ CGPUSwapChainId cgpu_create_swapchain(CGPUDeviceId device, const CGPUSwapChainDe
                     "fatal cgpu_create_swapchain: queue array & queue count dismatch!");
     }
     CGPUSwapChain* swapchain = (CGPUSwapChain*)device->proc_table_cache->create_swapchain(device, desc);
+    CGPUTextureInfo* pInfo = (CGPUTextureInfo*)swapchain->back_buffers[0]->info;
     cgpu_assert(swapchain && "fatal cgpu_create_swapchain: NULL swapchain id returned from backend.");
     swapchain->device = device;
     cgpu_trace("cgpu_create_swapchain: swapchain(%dx%d) %p created, buffers: [%p, %p], surface: %p", 
-        swapchain->back_buffers[0]->width, swapchain->back_buffers[0]->height, swapchain,
+        pInfo->width, pInfo->height, swapchain,
         swapchain->back_buffers[0], swapchain->back_buffers[1], desc->surface);
 
     for (uint32_t i = 0; i < swapchain->buffer_count; i++)
     {
-        ((CGPUTexture*)swapchain->back_buffers[i])->unique_id = ((CGPUDevice*)device)->next_texture_id++;
+        CGPUTextureInfo* info = (CGPUTextureInfo*)swapchain->back_buffers[i]->info;
+        info->unique_id = ((CGPUDevice*)device)->next_texture_id++;
     }
 
     return swapchain;
@@ -1085,8 +1089,9 @@ void cgpu_free_swapchain(CGPUSwapChainId swapchain)
     cgpu_assert(swapchain->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(swapchain->device->proc_table_cache->create_swapchain && "create_swapchain Proc Missing!");
 
+    CGPUTextureInfo* pInfo = (CGPUTextureInfo*)swapchain->back_buffers[0]->info;
     cgpu_trace("cgpu_free_swapchain: swapchain(%dx%d) %p freed, buffers:  [%p, %p]", 
-        swapchain->back_buffers[0]->width, swapchain->back_buffers[0]->height, swapchain,
+        pInfo->width, pInfo->height, swapchain,
         swapchain->back_buffers[0], swapchain->back_buffers[1]);
 
     swapchain->device->proc_table_cache->free_swapchain(swapchain);

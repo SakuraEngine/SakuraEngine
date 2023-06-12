@@ -291,12 +291,13 @@ void cgpu_cmd_transfer_buffer_to_texture_vulkan(CGPUCommandBufferId cmd, const s
     CGPUTexture_Vulkan* Dst = (CGPUTexture_Vulkan*)desc->dst;
     CGPUBuffer_Vulkan* Src = (CGPUBuffer_Vulkan*)desc->src;
     const bool isSinglePlane = true;
-    const ECGPUFormat fmt = desc->dst->format;
+    const CGPUTextureInfo* texInfo = desc->dst->info;
+    const ECGPUFormat fmt = texInfo->format;
     if (isSinglePlane)
     {
-        const uint32_t width = cgpu_max(1, desc->dst->width >> desc->dst_subresource.mip_level);
-        const uint32_t height = cgpu_max(1, desc->dst->height >> desc->dst_subresource.mip_level);
-        const uint32_t depth = cgpu_max(1, desc->dst->depth >> desc->dst_subresource.mip_level);
+        const uint32_t width = cgpu_max(1, texInfo->width >> desc->dst_subresource.mip_level);
+        const uint32_t height = cgpu_max(1, texInfo->height >> desc->dst_subresource.mip_level);
+        const uint32_t depth = cgpu_max(1, texInfo->depth >> desc->dst_subresource.mip_level);
 
 		const uint32_t xBlocksCount = width / FormatUtil_WidthOfBlock(fmt);
 		const uint32_t yBlocksCount = height / FormatUtil_HeightOfBlock(fmt);
@@ -305,7 +306,7 @@ void cgpu_cmd_transfer_buffer_to_texture_vulkan(CGPUCommandBufferId cmd, const s
             .bufferOffset = desc->src_offset,
             .bufferRowLength = xBlocksCount * FormatUtil_WidthOfBlock(fmt),
             .bufferImageHeight = yBlocksCount * FormatUtil_HeightOfBlock(fmt),
-            .imageSubresource.aspectMask = (VkImageAspectFlags)desc->dst->aspect_mask,
+            .imageSubresource.aspectMask = (VkImageAspectFlags)texInfo->aspect_mask,
             .imageSubresource.mipLevel = desc->dst_subresource.mip_level,
             .imageSubresource.baseArrayLayer = desc->dst_subresource.base_array_layer,
             .imageSubresource.layerCount = desc->dst_subresource.layer_count,
@@ -329,11 +330,12 @@ void cgpu_cmd_transfer_texture_to_texture_vulkan(CGPUCommandBufferId cmd, const 
     CGPUTexture_Vulkan* Dst = (CGPUTexture_Vulkan*)desc->dst;
     CGPUTexture_Vulkan* Src = (CGPUTexture_Vulkan*)desc->src;
     const bool isSinglePlane = true;
+    const CGPUTextureInfo* texInfo = desc->dst->info;
     if (isSinglePlane)
     {
-        const uint32_t width = cgpu_max(1, desc->dst->width >> desc->dst_subresource.mip_level);
-        const uint32_t height = cgpu_max(1, desc->dst->height >> desc->dst_subresource.mip_level);
-        const uint32_t depth = cgpu_max(1, desc->dst->depth >> desc->dst_subresource.mip_level);
+        const uint32_t width = cgpu_max(1, texInfo->width >> desc->dst_subresource.mip_level);
+        const uint32_t height = cgpu_max(1, texInfo->height >> desc->dst_subresource.mip_level);
+        const uint32_t depth = cgpu_max(1, texInfo->depth >> desc->dst_subresource.mip_level);
 
         VkImageCopy copy_region = {
             .srcSubresource = {
@@ -392,7 +394,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
         return CGPU_NULLPTR;
     }
     // Alloc aligned memory
-    size_t totalSize = sizeof(CGPUTexture_Vulkan);
+    size_t totalSize = sizeof(CGPUTexture_Vulkan) + sizeof(CGPUTextureInfo);
     uint64_t unique_id = UINT64_MAX;
     CGPUQueue_Vulkan* Q = (CGPUQueue_Vulkan*)desc->owner_queue;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)device;
@@ -668,25 +670,27 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
         }
     }
     CGPUTexture_Vulkan* T = (CGPUTexture_Vulkan*)cgpu_calloc_aligned(1, totalSize, _Alignof(CGPUTexture_Vulkan));
+    CGPUTextureInfo* info = (CGPUTextureInfo*)(T + 1);
+    T->super.info = info;
     cgpu_assert(T);
-    T->super.owns_image = owns_image;
-    T->super.aspect_mask = aspect_mask;
-    T->super.is_dedicated = is_dedicated;
-    T->super.is_aliasing = desc->is_aliasing;
-    T->super.can_alias = can_alias_alloc || desc->is_aliasing;
+    info->owns_image = owns_image;
+    info->aspect_mask = aspect_mask;
+    info->is_dedicated = is_dedicated;
+    info->is_aliasing = desc->is_aliasing;
+    info->can_alias = can_alias_alloc || desc->is_aliasing;
     T->pVkImage = pVkImage;
     if (pVkDeviceMemory) T->pVkDeviceMemory = pVkDeviceMemory;
     if (vmaAllocation) T->pVkAllocation = vmaAllocation;
-    T->super.sample_count = desc->sample_count;
-    T->super.width = desc->width;
-    T->super.height = desc->height;
-    T->super.depth = desc->depth;
-    T->super.mip_levels = desc->mip_levels;
-    T->super.is_cube = cubemapRequired;
-    T->super.array_size_minus_one = arraySize - 1;
-    T->super.format = desc->format;
-    T->super.is_imported = is_imported;
-    T->super.unique_id = (unique_id == UINT64_MAX) ? D->super.next_texture_id++ : unique_id;
+    info->sample_count = desc->sample_count;
+    info->width = desc->width;
+    info->height = desc->height;
+    info->depth = desc->depth;
+    info->mip_levels = desc->mip_levels;
+    info->is_cube = cubemapRequired;
+    info->array_size_minus_one = arraySize - 1;
+    info->format = desc->format;
+    info->is_imported = is_imported;
+    info->unique_id = (unique_id == UINT64_MAX) ? D->super.next_texture_id++ : unique_id;
     // Set Texture Name
     VkUtil_OptionalSetObjectName(D, (uint64_t)T->pVkImage, VK_OBJECT_TYPE_IMAGE, desc->name);
     // Start state
@@ -747,23 +751,24 @@ void cgpu_free_texture_vulkan(CGPUTextureId texture)
 {
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)texture->device;
     CGPUTexture_Vulkan* T = (CGPUTexture_Vulkan*)texture;
+    const CGPUTextureInfo* pInfo = T->super.info;
     if (T->pVkImage != VK_NULL_HANDLE)
     {
-        if (T->super.is_imported)
+        if (pInfo->is_imported)
         {
             D->mVkDeviceTable.vkDestroyImage(D->pVkDevice, T->pVkImage, GLOBAL_VkAllocationCallbacks);
             D->mVkDeviceTable.vkFreeMemory(D->pVkDevice, T->pVkDeviceMemory, GLOBAL_VkAllocationCallbacks);
         }
-        else if (T->super.owns_image)
+        else if (pInfo->owns_image)
         {
-            const ECGPUFormat fmt = texture->format;
+            const ECGPUFormat fmt = pInfo->format;
             (void)fmt;
             // TODO: Support planar formats
             const bool isSinglePlane = true;
             if (isSinglePlane)
             {
                 cgpu_trace("Freeing texture allocation %p \n\t size: %dx%dx%d owns_image: %d imported: %d", 
-                    T->pVkImage, texture->width, texture->height, texture->depth, T->super.owns_image, T->super.is_imported);
+                    T->pVkImage, pInfo->width, pInfo->height, pInfo->depth, pInfo->owns_image, pInfo->is_imported);
 
                 vmaDestroyImage(D->pVmaAllocator, T->pVkImage, T->pVkAllocation);
             }
@@ -776,7 +781,7 @@ void cgpu_free_texture_vulkan(CGPUTextureId texture)
         else
         {
             cgpu_trace("Freeing texture %p \n\t size: %dx%dx%d owns_image: %d imported: %d", 
-                    T->pVkImage, texture->width, texture->height, texture->depth, T->super.owns_image, T->super.is_imported);
+                    T->pVkImage, pInfo->width, pInfo->height, pInfo->depth, pInfo->owns_image, pInfo->is_imported);
 
             D->mVkDeviceTable.vkDestroyImage(D->pVkDevice, T->pVkImage, GLOBAL_VkAllocationCallbacks);
         }
@@ -788,16 +793,17 @@ CGPUTextureViewId cgpu_create_texture_view_vulkan(CGPUDeviceId device, const str
 {
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)desc->texture->device;
     CGPUTexture_Vulkan* T = (CGPUTexture_Vulkan*)desc->texture;
+    const CGPUTextureInfo* pInfo = T->super.info;
     CGPUTextureView_Vulkan* TV = (CGPUTextureView_Vulkan*)cgpu_calloc_aligned(1, sizeof(CGPUTextureView_Vulkan), _Alignof(CGPUTextureView_Vulkan));
     VkImageViewType view_type = VK_IMAGE_VIEW_TYPE_MAX_ENUM;
-    VkImageType mImageType = T->super.is_cube ? VK_IMAGE_TYPE_3D : VK_IMAGE_TYPE_2D;
+    VkImageType mImageType = pInfo->is_cube ? VK_IMAGE_TYPE_3D : VK_IMAGE_TYPE_2D;
     switch (mImageType)
     {
         case VK_IMAGE_TYPE_1D:
             view_type = desc->array_layer_count > 1 ? VK_IMAGE_VIEW_TYPE_1D_ARRAY : VK_IMAGE_VIEW_TYPE_1D;
             break;
         case VK_IMAGE_TYPE_2D:
-            if (T->super.is_cube)
+            if (pInfo->is_cube)
                 view_type = (desc->dims == CGPU_TEX_DIMENSION_CUBE_ARRAY) ? VK_IMAGE_VIEW_TYPE_CUBE_ARRAY : VK_IMAGE_VIEW_TYPE_CUBE;
             else
                 view_type = ((desc->dims == CGPU_TEX_DIMENSION_2D_ARRAY) || (desc->dims == CGPU_TEX_DIMENSION_2DMS_ARRAY)) ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
@@ -887,12 +893,15 @@ bool cgpu_try_bind_aliasing_texture_vulkan(CGPUDeviceId device, const struct CGP
     {
         CGPUTexture_Vulkan* Aliased = (CGPUTexture_Vulkan*)desc->aliased;
         CGPUTexture_Vulkan* Aliasing = (CGPUTexture_Vulkan*)desc->aliasing;
-        cgpu_assert(Aliasing->super.is_aliasing && "aliasing texture need to be created as aliasing!");
+        CGPUTextureInfo* AliasingInfo = (CGPUTextureInfo*)Aliasing->super.info;
+        const CGPUTextureInfo* AliasedInfo = Aliased->super.info;
+
+        cgpu_assert(AliasingInfo->is_aliasing && "aliasing texture need to be created as aliasing!");
         if (Aliased->pVkImage != VK_NULL_HANDLE &&
             Aliased->pVkAllocation != VK_NULL_HANDLE &&
             Aliasing->pVkImage != VK_NULL_HANDLE &&
-            !Aliased->super.is_dedicated &&
-            Aliasing->super.is_aliasing)
+            !AliasedInfo->is_dedicated &&
+            AliasingInfo->is_aliasing)
         {
             VkMemoryRequirements aliasingMemReq;
             VkMemoryRequirements aliasedMemReq;

@@ -124,7 +124,8 @@ struct robjects_example_application : public robjects_application_t
             sampler_desc.mag_filter = CGPU_FILTER_TYPE_NEAREST;
             sampler_desc.compare_func = CGPU_CMP_NEVER;
             imgui_sampler = cgpu_create_sampler(gdi.gfx.device, &sampler_desc);
-            const auto backbuffer_format = (ECGPUFormat)gdi.gfx.swapchain->back_buffers[0]->format;
+            const auto texInfo = gdi.gfx.swapchain->back_buffers[0]->info;
+            const auto backbuffer_format = texInfo->format;
             create_imgui_resources(backbuffer_format, imgui_sampler, graph.graph, gdi.resource_vfs);
             return true;
         }
@@ -165,7 +166,8 @@ struct robjects_example_application : public robjects_application_t
         ZoneScopedN("ImGUINewFrame");
 
         auto& io = ImGui::GetIO();
-        io.DisplaySize = ImVec2((float)gdi.gfx.swapchain->back_buffers[0]->width, (float)gdi.gfx.swapchain->back_buffers[0]->height);
+        const auto texInfo = gdi.gfx.swapchain->back_buffers[0]->info;
+        io.DisplaySize = ImVec2((float)texInfo->width, (float)texInfo->height);
         skr_imgui_new_frame(gdi.gfx.window_handle, 1.f / 60.f);
 
         ImGui::Begin("GUI RenderObjects Example");

@@ -496,7 +496,9 @@ inline uint32_t D3D12Util_CalculateTextureSampleCount(ID3D12Device* pDxDevice, D
 inline CGPUTexture_D3D12* D3D12Util_AllocateFromAllocator(CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D, const struct CGPUTextureDescriptor* desc,
     D3D12_RESOURCE_DESC resDesc, D3D12_RESOURCE_STATES startStates, const D3D12_CLEAR_VALUE* pClearValue)
 {
-    auto T = cgpu_new<CGPUTexture_D3D12>();
+    auto T = cgpu_new_sized<CGPUTexture_D3D12>(sizeof(CGPUTexture_D3D12) + sizeof(CGPUTextureInfo));
+    auto pInfo = (CGPUTextureInfo*)(T + 1);
+    T->super.info = pInfo;
     ID3D12Resource* pDxResource = nullptr;
     D3D12MA::Allocation* pDxAllocation = nullptr;
     D3D12MA::ALLOCATION_DESC allocDesc = {};
@@ -579,9 +581,9 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateFromAllocator(CGPUAdapter_D3D12* A, 
     }
     T->pDxAllocation = pDxAllocation;
     T->pDxResource = pDxResource;
-    T->super.is_dedicated = is_dedicated;
-    T->super.can_alias = can_alias_allocation || desc->is_aliasing;
-    T->super.can_export = (allocDesc.ExtraHeapFlags & D3D12_HEAP_FLAG_SHARED);
+    pInfo->is_dedicated = is_dedicated;
+    pInfo->can_alias = can_alias_allocation || desc->is_aliasing;
+    pInfo->can_export = (allocDesc.ExtraHeapFlags & D3D12_HEAP_FLAG_SHARED);
     return T;
 FAIL:
     SAFE_RELEASE(pDxAllocation);
@@ -642,6 +644,7 @@ inline D3D12_CLEAR_VALUE D3D12Util_CalculateClearValue(DXGI_FORMAT dxFormat, con
     return clearValue;
 }
 
+static_assert(sizeof(CGPUTexture_D3D12) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine");
 CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTextureDescriptor* desc)
 {
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
@@ -686,32 +689,41 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
         if (!desc->is_aliasing)
             T = D3D12Util_AllocateFromAllocator(A, D, desc, resDesc, startStates, pClearValue);
         else
-            T = cgpu_new<CGPUTextureAliasing_D3D12>(resDesc, desc->name);
+        {
+            T = cgpu_new_sized<CGPUTextureAliasing_D3D12>(
+                sizeof(CGPUTextureAliasing_D3D12) + sizeof(CGPUTextureInfo), 
+                resDesc, desc->name
+            );
+            T->super.info = (CGPUTextureInfo*)(T + 1);
+        }
     }
     else // do import
     {
+        T = cgpu_new_sized<CGPUTexture_D3D12>(sizeof(CGPUTexture_D3D12) + sizeof(CGPUTextureInfo));
+        T->super.info = (CGPUTextureInfo*)(T + 1);
         T->pDxResource = (ID3D12Resource*)desc->native_handle;
-        T->super.is_imported = true;
         resDesc = ((ID3D12Resource*)desc->native_handle)->GetDesc();
         dxFormat = resDesc.Format;
     }
     
-    T->super.owns_image = !desc->is_aliasing && !T->super.is_imported;
-    T->super.sample_count = desc->sample_count;
-    T->super.is_aliasing = desc->is_aliasing;
-    T->super.width = desc->width;
-    T->super.height = desc->height;
-    T->super.depth = desc->depth;
-    T->super.mip_levels = desc->mip_levels;
-    T->super.is_cube = (CGPU_RESOURCE_TYPE_TEXTURE_CUBE == (desc->descriptors & CGPU_RESOURCE_TYPE_TEXTURE_CUBE));
-    T->super.array_size_minus_one = desc->array_size - 1;
-    T->super.format = desc->format;
+    auto pInfo = const_cast<CGPUTextureInfo*>(T->super.info);
+    pInfo->is_imported = desc->native_handle ? 1 : 0;
+    pInfo->owns_image = !desc->is_aliasing && !pInfo->is_imported;
+    pInfo->sample_count = desc->sample_count;
+    pInfo->is_aliasing = desc->is_aliasing;
+    pInfo->width = desc->width;
+    pInfo->height = desc->height;
+    pInfo->depth = desc->depth;
+    pInfo->mip_levels = desc->mip_levels;
+    pInfo->is_cube = (CGPU_RESOURCE_TYPE_TEXTURE_CUBE == (desc->descriptors & CGPU_RESOURCE_TYPE_TEXTURE_CUBE));
+    pInfo->array_size_minus_one = desc->array_size - 1;
+    pInfo->format = desc->format;
     if (T->pDxResource)
     {
         const auto Desc = T->pDxResource->GetDesc();
         auto allocDesc = D->pDxDevice->GetResourceAllocationInfo(
             CGPU_SINGLE_GPU_NODE_MASK, 1, &Desc);
-        T->super.size_in_bytes = allocDesc.SizeInBytes;
+        pInfo->size_in_bytes = allocDesc.SizeInBytes;
     }
     // Set debug name
     if (device->adapter->instance->enable_set_name && desc->name && T->pDxResource)
@@ -732,9 +744,11 @@ bool cgpu_try_bind_aliasing_texture_d3d12(CGPUDeviceId device, const struct CGPU
     {
         CGPUTexture_D3D12* Aliased = (CGPUTexture_D3D12*)desc->aliased;
         CGPUTextureAliasing_D3D12* Aliasing = (CGPUTextureAliasing_D3D12*)desc->aliasing;
-        cgpu_assert(Aliasing->super.is_aliasing && "aliasing texture need to be created as aliasing!");
+        auto AliasingInfo = const_cast<CGPUTextureInfo*>(Aliasing->super.info);
+        const auto AliasedInfo = Aliased->super.info;
+        cgpu_assert(AliasingInfo->is_aliasing && "aliasing texture need to be created as aliasing!");
         if (Aliased->pDxResource != nullptr && Aliased->pDxAllocation != nullptr &&
-            !Aliased->super.is_dedicated && Aliasing->super.is_aliasing)
+            !AliasedInfo->is_dedicated && AliasingInfo->is_aliasing)
         {
             result = D->pResourceAllocator->CreateAliasingResource(
                 Aliased->pDxAllocation,
@@ -745,7 +759,7 @@ bool cgpu_try_bind_aliasing_texture_d3d12(CGPUDeviceId device, const struct CGPU
             if (result == S_OK)
             {
                 Aliasing->pDxAllocation = Aliased->pDxAllocation;
-                Aliasing->super.size_in_bytes = Aliased->super.size_in_bytes;
+                AliasingInfo->size_in_bytes = AliasedInfo->size_in_bytes;
                 // Set debug name
                 if (device->adapter->instance->enable_set_name)
                 {
@@ -784,15 +798,16 @@ uint64_t cgpu_export_shared_texture_handle_d3d12(CGPUDeviceId device, const stru
     auto winHdlLong = HandleToLong(winHdl);
 
     // deal with info & error
+    const auto pInfo = T->super.info;
     if (FAILED(result))
     {
         cgpu_error("Create Shared Handle Failed! Error Code: %d\n\tcan_export: %d\n\tsize:%dx%dx%d" ,
-            result, T->super.can_export, T->super.width, T->super.height, T->super.depth);
+            result, pInfo->can_export, pInfo->width, pInfo->height, pInfo->depth);
     }
     else
     {
         cgpu_trace("Create Shared Handle Success! Handle: %lld(Windows handle %lld, As Long %d)\n\tcan_export: %d\n\tsize:%dx%dx%d",
-            hdl, winHdl, winHdlLong, T->super.can_export, T->super.width, T->super.height, T->super.depth);
+            hdl, winHdl, winHdlLong, pInfo->can_export, pInfo->width, pInfo->height, pInfo->depth);
     }
     return hdl;
 }
@@ -853,48 +868,51 @@ CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const
     auto imported_desc = imported->GetDesc();
     D3D12_RESOURCE_ALLOCATION_INFO alloc_info 
         = D->pDxDevice->GetResourceAllocationInfo(CGPU_SINGLE_GPU_NODE_MASK, 1, &imported_desc);
-    auto T = cgpu_new<CGPUTexture_D3D12>();
+    auto T = cgpu_new_sized<CGPUTexture_D3D12>(sizeof(CGPUTexture_D3D12) + sizeof(CGPUTextureInfo));
+    auto pInfo = (CGPUTextureInfo*)(T + 1);
+    T->super.info = pInfo;
     T->pDxResource = imported;
     T->pDxAllocation = CGPU_NULLPTR;
-    T->super.format = DXGIUtil_FormatToCGPU(imported_desc.Format);
-    T->super.width = imported_desc.Width;
+    pInfo->format = DXGIUtil_FormatToCGPU(imported_desc.Format);
+    pInfo->width = imported_desc.Width;
     cgpu_assert(imported_desc.Width == desc->width);
-    T->super.height = imported_desc.Height;
+    pInfo->height = imported_desc.Height;
     cgpu_assert(imported_desc.Height == desc->height);
-    T->super.depth = imported_desc.DepthOrArraySize;
+    pInfo->depth = imported_desc.DepthOrArraySize;
     cgpu_assert(imported_desc.DepthOrArraySize == desc->depth);
-    T->super.mip_levels = imported_desc.MipLevels;
+    pInfo->mip_levels = imported_desc.MipLevels;
     cgpu_assert(imported_desc.MipLevels == desc->mip_levels);
-    T->super.array_size_minus_one = imported_desc.DepthOrArraySize - 1;
-    T->super.can_alias = false;
-    T->super.is_aliasing = false;
-    T->super.is_dedicated = false;
-    T->super.owns_image = false;
-    T->super.unique_id = D->super.next_texture_id++;
-    T->super.is_cube = (imported_desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D && imported_desc.DepthOrArraySize > 6);
-    T->super.is_imported = true;
+    pInfo->array_size_minus_one = imported_desc.DepthOrArraySize - 1;
+    pInfo->can_alias = false;
+    pInfo->is_aliasing = false;
+    pInfo->is_dedicated = false;
+    pInfo->owns_image = false;
+    pInfo->unique_id = D->super.next_texture_id++;
+    pInfo->is_cube = (imported_desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D && imported_desc.DepthOrArraySize > 6);
+    pInfo->is_imported = true;
     // TODO: mGPU
-    T->super.node_index = CGPU_SINGLE_GPU_NODE_INDEX;
-    T->super.size_in_bytes = alloc_info.SizeInBytes;
+    pInfo->node_index = CGPU_SINGLE_GPU_NODE_INDEX;
+    pInfo->size_in_bytes = alloc_info.SizeInBytes;
     return &T->super;
 }
 
 void cgpu_free_texture_d3d12(CGPUTextureId texture)
 {
     CGPUTexture_D3D12* T = (CGPUTexture_D3D12*)texture;
-    if (texture->owns_image)
+    const auto pInfo = texture->info;
+    if (pInfo->owns_image)
     {
         SAFE_RELEASE(T->pDxAllocation);
         SAFE_RELEASE(T->pDxResource);
         cgpu_delete(T);
     }
-    else if (T->super.is_aliasing)
+    else if (pInfo->is_aliasing)
     {
         CGPUTextureAliasing_D3D12* AT = (CGPUTextureAliasing_D3D12*)T;
         SAFE_RELEASE(AT->pDxResource);
         cgpu_delete(AT);
     }
-    else if (T->super.is_imported)
+    else if (pInfo->is_imported)
     {
         SAFE_RELEASE(T->pDxResource);
         cgpu_delete(T);

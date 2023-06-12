@@ -407,7 +407,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
                 view_desc.array_layer_count = read_edge->get_array_count();
                 view_desc.base_mip_level = read_edge->get_mip_base();
                 view_desc.mip_level_count = read_edge->get_mip_count();
-                view_desc.format = (ECGPUFormat)view_desc.texture->format;
+                view_desc.format = view_desc.texture->info->format;
                 const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(view_desc.format);
                 const bool is_depth_only = FormatUtil_IsDepthStencilFormat(view_desc.format);
                 view_desc.aspects =
@@ -446,7 +446,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
                 view_desc.base_mip_level = 0;
                 view_desc.mip_level_count = 1;
                 view_desc.aspects = CGPU_TVA_COLOR;
-                view_desc.format = (ECGPUFormat)view_desc.texture->format;
+                view_desc.format = view_desc.texture->info->format;
                 view_desc.usages = CGPU_TVU_UAV;
                 view_desc.dims = CGPU_TEX_DIMENSION_2D;
                 uavs[e_idx] = texture_view_pool.allocate(view_desc, frame_index);
@@ -634,9 +634,9 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
             }
         }
         const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(
-            (ECGPUFormat)resolve(executor, *texture_target)->format);
+            resolve(executor, *texture_target)->info->format);
         const bool is_depth_only = FormatUtil_IsDepthOnlyFormat(
-            (ECGPUFormat)resolve(executor, *texture_target)->format);
+            resolve(executor, *texture_target)->info->format);
         if (write_edge->requested_state == CGPU_RESOURCE_STATE_DEPTH_WRITE && is_depth_stencil)
         {
             CGPUTextureViewDescriptor view_desc = {};
@@ -647,7 +647,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
             view_desc.mip_level_count = 1;
             view_desc.aspects =
                 is_depth_only ? CGPU_TVA_DEPTH : CGPU_TVA_DEPTH | CGPU_TVA_STENCIL;
-            view_desc.format = (ECGPUFormat)view_desc.texture->format;
+            view_desc.format = view_desc.texture->info->format;
             view_desc.usages = CGPU_TVU_RTV_DSV;
             if (sample_count == CGPU_SAMPLE_COUNT_1)
             {
@@ -677,7 +677,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
                 view_desc.array_layer_count = 1;
                 view_desc.base_mip_level = 0;
                 view_desc.mip_level_count = 1; // TODO: resolve MSAA to specific mip slice?
-                view_desc.format = (ECGPUFormat)view_desc.texture->format;
+                view_desc.format = view_desc.texture->info->format;
                 view_desc.aspects = CGPU_TVA_COLOR;
                 view_desc.usages = CGPU_TVU_RTV_DSV;
                 view_desc.dims = CGPU_TEX_DIMENSION_2D;
@@ -691,7 +691,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
                 view_desc.array_layer_count = write_edge->get_array_count();
                 view_desc.base_mip_level = write_edge->get_mip_level();
                 view_desc.mip_level_count = 1; // TODO: mip
-                view_desc.format = (ECGPUFormat)view_desc.texture->format;
+                view_desc.format = view_desc.texture->info->format;
                 view_desc.aspects = CGPU_TVA_COLOR;
                 view_desc.usages = CGPU_TVU_RTV_DSV;
                 if (sample_count == CGPU_SAMPLE_COUNT_1)

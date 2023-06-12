@@ -548,15 +548,16 @@ RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::with_tags(uint32_t tag
 
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::import(CGPUTextureId texture, ECGPUResourceState init_state) SKR_NOEXCEPT
 {
+    const auto texInfo = texture->info;
     node.imported = texture;
     node.frame_texture = texture;
     node.init_state = init_state;
-    node.descriptor.width = texture->width;
-    node.descriptor.height = texture->height;
-    node.descriptor.depth = texture->depth;
-    node.descriptor.format = (ECGPUFormat)texture->format;
-    node.descriptor.array_size = texture->array_size_minus_one + 1;
-    node.descriptor.sample_count = texture->sample_count;
+    node.descriptor.width = texInfo->width;
+    node.descriptor.height = texInfo->height;
+    node.descriptor.depth = texInfo->depth;
+    node.descriptor.format = (ECGPUFormat)texInfo->format;
+    node.descriptor.array_size = texInfo->array_size_minus_one + 1;
+    node.descriptor.sample_count = texInfo->sample_count;
     return *this;
 }
 
