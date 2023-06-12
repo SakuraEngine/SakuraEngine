@@ -12,22 +12,10 @@ struct SKR_GUI_API Flex : public MultiChildRenderObjectWidget {
         Widget* child;
     };
 
-    //==> Begin Constructors
-    struct Params {
-        using WidgetType = Flex;
-        JustifyContent justify_content = JustifyContent::FlexStart;
-        FlexDirection  flex_direction = FlexDirection::Row;
-        AlignItems     align_items = AlignItems::FlexStart;
-        Span<Slot>     children;
-    };
-    void construct(const Params& params) SKR_NOEXCEPT;
-    //==> End Constructors
-
-private:
-    JustifyContent _justify_content;
-    FlexDirection  _flex_direction;
-    AlignItems     _align_items;
-    Array<Slot>    _children_slots;
+    JustifyContent justify_content;
+    FlexDirection  flex_direction;
+    AlignItems     align_items;
+    Array<Slot>    flex_children;
 };
 
 } // namespace skr::gui

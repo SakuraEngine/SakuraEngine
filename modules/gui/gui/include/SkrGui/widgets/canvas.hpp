@@ -12,15 +12,6 @@ struct SKR_GUI_API Canvas : public MultiChildRenderObjectWidget {
         int32_t    z_index = 0;
         Widget*    child = nullptr;
     };
-
-    //==> Begin Construct
-    struct Params {
-        using WidgetType = Canvas;
-        Span<Slot> children;
-    };
-    void construct(Params params) SKR_NOEXCEPT;
-    //==> End Construct
-private:
-    Array<Slot> _children_slots;
+    Array<Slot> canvas_children;
 };
 } // namespace skr::gui
