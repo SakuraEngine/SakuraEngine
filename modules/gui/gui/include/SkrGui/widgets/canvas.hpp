@@ -12,7 +12,7 @@ struct Canvas : public MultiChildRenderObjectWidget {
         int32_t z_index = 0;
         Widget* widget = nullptr;
     };
-    using Params = std::initializer_list<Slot>;
+    using Params = Span<Slot>;
     void construct(Params params) SKR_NOEXCEPT;
 
 private:
