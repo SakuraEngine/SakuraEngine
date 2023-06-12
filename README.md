@@ -254,6 +254,7 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 ## 构建
 ### 前置
 - xmake
+- 初始化 LFS
 
 ### 编译
 使用以下命令编译
@@ -261,13 +262,14 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 ```
 > xmake l setup.lua
 > xmake f -m debug -c
-> xmake project -k compile_commands
 > xmake 
 ```
 
 Tips：
 - 默认构建只包含模块。要构建工具或例子，需要在 xmake f 时加上 --build_cgpu_samples=true 等参数 (详见 xmake/options.lua);
-- 目前版本构建中途失败可能产生 codegen 中断或是不全的问题，可以删除 /build 文件夹后重试。如进一步出现问题，请务必上报 issues 😀
+- 目前版本构建中途失败可能产生 codegen 中断或是不全的问题，可以删除 `/build` 和 `.xmake` 文件夹后重试。如进一步出现问题，请务必上报 issues 😀
+- 上报 issue 时尽量提供 `xmake f -m debug -c -v` 在中断处的详细输出;
+- 当出现 xrepo 安装失败问题（例如 LFS 没有初始化造成错误的库文件安装）时，可用 `xrepo remove --all -y` 清理错误安装的仓库后再重新构建。
 
 ## 编辑环境
 推荐使用 vscode + clangd 作为编辑环境，使用命令 `xmake project -k compile_commands` 来生成 clangd 需要的数据集
