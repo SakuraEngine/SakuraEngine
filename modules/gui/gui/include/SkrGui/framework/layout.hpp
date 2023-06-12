@@ -89,7 +89,7 @@ struct PositionalUnit {
         Percent,
     };
 
-    float value = 0;
+    float   value = 0;
     uint8_t type = Type::Unset;
 
     // construct
@@ -160,9 +160,6 @@ struct Positional {
     // 锚点
     Offset pivot = { 0, 0 };
 
-    // constants
-    inline static constexpr Positional fill() SKR_NOEXCEPT { return { 0, 0, 0, 0 }; }
-
     // factory
     struct PaddingParams {
         PositionalUnit all = PositionalUnit::null();
@@ -188,10 +185,10 @@ struct Positional {
         PositionalUnit width = PositionalUnit::null();
         PositionalUnit height = PositionalUnit::null();
 
-        PositionalUnit min_width = PositionalUnit::null();
-        PositionalUnit max_width = PositionalUnit::null();
-        PositionalUnit min_height = PositionalUnit::null();
-        PositionalUnit max_height = PositionalUnit::null();
+        PositionalUnit        min_width = PositionalUnit::null();
+        PositionalUnit        max_width = PositionalUnit::null();
+        PositionalUnit        min_height = PositionalUnit::null();
+        PositionalUnit        max_height = PositionalUnit::null();
         inline constexpr bool is_valid() SKR_NOEXCEPT
         {
             // width 与 min_width、max_width 互斥
@@ -201,10 +198,10 @@ struct Positional {
         }
     };
     struct PivotParams {
-        PositionalUnit left = PositionalUnit::null();
-        PositionalUnit top = PositionalUnit::null();
-        PositionalUnit right = PositionalUnit::null();
-        PositionalUnit bottom = PositionalUnit::null();
+        PositionalUnit        left = PositionalUnit::null();
+        PositionalUnit        top = PositionalUnit::null();
+        PositionalUnit        right = PositionalUnit::null();
+        PositionalUnit        bottom = PositionalUnit::null();
         inline constexpr bool is_valid() SKR_NOEXCEPT
         {
             // left 与 right 互斥，定位横向锚点
@@ -290,6 +287,7 @@ struct Positional {
 
         return result;
     }
+    inline static constexpr Positional Fill() SKR_NOEXCEPT { return { 0, 0, 0, 0 }; }
 
     // checker
     inline constexpr bool with_constraints() SKR_NOEXCEPT
