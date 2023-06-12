@@ -618,6 +618,8 @@ typedef enum ECGPUTextureCreationFlag
     CGPU_TCF_NORMAL_MAP = 0x100,
     /// Fragment mask
     CGPU_TCF_FRAG_MASK = 0x200,
+    /// Create as AliasingResource
+    CGPU_TCF_ALIASING_RESOURCE = 0x400,
     /// Create as TiledResource
     CGPU_TCF_TILED_RESOURCE = 0x800,
     /// 

@@ -282,7 +282,7 @@ bool RenderGraph::compile() SKR_NOEXCEPT
                         texture->frame_aliasing_source->get_size() > aliased->get_size() // always choose smallest block
                     )
                     {
-                        texture->descriptor.is_aliasing = true;
+                        texture->descriptor.flags |= CGPU_TCF_ALIASING_RESOURCE;
                         texture->frame_aliasing_source = aliased;
                         aliaed_span.to = texture->lifespan().to;
                     }
@@ -297,7 +297,7 @@ bool RenderGraph::compile() SKR_NOEXCEPT
                         texture->frame_aliasing_source->get_size() > aliased->get_size() // always choose smallest block
                     )
                     {
-                        texture->descriptor.is_aliasing = true;
+                        texture->descriptor.flags |= CGPU_TCF_ALIASING_RESOURCE;
                         texture->frame_aliasing_source = aliased;
                         alliasing_lifespans[aliased].from = aliased->lifespan().from;
                         alliasing_lifespans[aliased].to = aliased->lifespan().from;
