@@ -1548,30 +1548,30 @@ typedef struct CGPUTextureAliasingBindDescriptor {
     CGPUTextureId aliasing;
 } CGPUTextureAliasingBindDescriptor;
 
-typedef struct CGPUTexture {
-    CGPUDeviceId device;
+typedef struct CGPUTextureInfo {
+    uint32_t width;
+    uint32_t height;
+    uint32_t depth;
+    uint32_t mip_levels;
+    uint32_t array_size_minus_one;
+    ECGPUFormat format;
     uint64_t size_in_bytes;
-    ECGPUSampleCount sample_count : 8;
-    /// Current state of the buffer
-    uint32_t width : 24;
-    uint32_t height : 24;
-    uint32_t depth : 12;
-    uint32_t mip_levels : 6;
-    uint32_t array_size_minus_one : 12;
-    uint32_t format : 12;
-    /// Flags specifying which aspects (COLOR,DEPTH,STENCIL) are included in the pVkImageView
-    uint32_t aspect_mask : 4;
-    uint32_t node_index : 4;
-    uint32_t is_cube : 1;
-    uint32_t is_dedicated : 1;
-    /// This value will be false if the underlying resource is not owned by the texture (swapchain textures,...)
-    uint32_t owns_image : 1;
-    /// In CGPU concept aliasing resource owns no memory
-    uint32_t is_aliasing : 1;
-    uint32_t can_alias : 1;
-    uint32_t is_imported : 1;
-    uint32_t can_export : 1;
+    ECGPUSampleCount sample_count;
     uint64_t unique_id;
+    uint32_t aspect_mask;
+    uint32_t node_index;
+    uint8_t owns_image;
+    uint8_t is_cube;
+    uint8_t is_dedicated;
+    uint8_t is_aliasing;
+    uint8_t is_imported;
+    uint8_t can_alias;
+    uint8_t can_export;
+} CGPUTextureInfo;
+
+typedef struct SKR_ALIGNAS(16) CGPUTexture {
+    CGPUDeviceId device SKR_IF_CPP(= CGPU_NULLPTR);
+    const struct CGPUTextureInfo* info SKR_IF_CPP(= CGPU_NULLPTR);
 } CGPUTexture;
 
 typedef struct CGPUTextureView {

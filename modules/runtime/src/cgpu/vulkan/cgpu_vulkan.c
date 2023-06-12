@@ -1487,6 +1487,7 @@ void cgpu_cmd_resource_barrier_vulkan(CGPUCommandBufferId cmd, const struct CGPU
     {
         const CGPUTextureBarrier* texture_barrier = &desc->texture_barriers[i];
         CGPUTexture_Vulkan* T = (CGPUTexture_Vulkan*)texture_barrier->texture;
+        const CGPUTextureInfo* pInfo = T->super.info;
         VkImageMemoryBarrier* pImageBarrier = NULL;
         if (CGPU_RESOURCE_STATE_UNORDERED_ACCESS == texture_barrier->src_state &&
             CGPU_RESOURCE_STATE_UNORDERED_ACCESS == texture_barrier->dst_state)
@@ -1515,7 +1516,7 @@ void cgpu_cmd_resource_barrier_vulkan(CGPUCommandBufferId cmd, const struct CGPU
         if (pImageBarrier)
         {
             pImageBarrier->image = T->pVkImage;
-            pImageBarrier->subresourceRange.aspectMask = (VkImageAspectFlags)T->super.aspect_mask;
+            pImageBarrier->subresourceRange.aspectMask = (VkImageAspectFlags)pInfo->aspect_mask;
             pImageBarrier->subresourceRange.baseMipLevel = texture_barrier->subresource_barrier ? texture_barrier->mip_level : 0;
             pImageBarrier->subresourceRange.levelCount = texture_barrier->subresource_barrier ? 1 : VK_REMAINING_MIP_LEVELS;
             pImageBarrier->subresourceRange.baseArrayLayer = texture_barrier->subresource_barrier ? texture_barrier->array_layer : 0;
@@ -1827,13 +1828,16 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGPUCommandBufferId cm
         };
         for (uint32_t i = 0; i < desc->render_target_count; i++)
         {
+            CGPUTextureId tex = desc->color_attachments[i].view->info.texture;
+            const CGPUTextureInfo* info = tex->info;
+
             rpdesc.pResolveMasks[i] = (desc->sample_count != CGPU_SAMPLE_COUNT_1) &&
                                       (desc->color_attachments[i].resolve_view != NULL);
             rpdesc.pColorFormats[i] = desc->color_attachments[i].view->info.format;
             rpdesc.pLoadActionsColor[i] = desc->color_attachments[i].load_action;
             rpdesc.pStoreActionsColor[i] = desc->color_attachments[i].store_action;
-            Width = desc->color_attachments[i].view->info.texture->width;
-            Height = desc->color_attachments[i].view->info.texture->height;
+            Width = info->width;
+            Height = info->height;
         }
         VkUtil_FindOrCreateRenderPass(D, &rpdesc, &render_pass);
     }
@@ -2269,34 +2273,44 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan_impl(CGPUDeviceId device, const CGP
     CGPUSwapChain_Vulkan* S = old;
     if (!old)
     {
-        S = (CGPUSwapChain_Vulkan*)cgpu_calloc(1,
-            sizeof(CGPUSwapChain_Vulkan) + sizeof(CGPUTexture_Vulkan) * buffer_count + sizeof(CGPUTextureId) * buffer_count);
+        S = (CGPUSwapChain_Vulkan*)cgpu_calloc_aligned(1,
+            sizeof(CGPUSwapChain_Vulkan) + 
+            (sizeof(CGPUTexture_Vulkan) + sizeof(CGPUTextureInfo)) * buffer_count + 
+            sizeof(CGPUTextureId) * buffer_count, _Alignof(CGPUSwapChain_Vulkan));
     }
     S->pVkSwapChain = new_chain;
     S->super.buffer_count = buffer_count;
     DECLARE_ZERO_VLA(VkImage, vimages, S->super.buffer_count)
     CHECK_VKRESULT(D->mVkDeviceTable.vkGetSwapchainImagesKHR(D->pVkDevice, S->pVkSwapChain, &S->super.buffer_count, vimages));
-    CGPUTexture_Vulkan* Ts = (CGPUTexture_Vulkan*)(S + 1);
+    
+    struct THeader
+    {
+        CGPUTexture_Vulkan T;
+        CGPUTextureInfo I;
+    };
+    struct THeader* Ts = (struct THeader*)(S + 1);
     for (uint32_t i = 0; i < buffer_count; i++)
     {
-        Ts[i].pVkImage = vimages[i];
-        Ts[i].super.is_cube = false;
-        Ts[i].super.array_size_minus_one = 0;
-        Ts[i].super.device = &D->super;
-        Ts[i].super.sample_count = CGPU_SAMPLE_COUNT_1; // TODO: ?
-        Ts[i].super.format = VkUtil_FormatTranslateToCGPU(surface_format.format);
-        Ts[i].super.aspect_mask = VkUtil_DeterminAspectMask(Ts[i].super.format, false);
-        Ts[i].super.depth = 1;
-        Ts[i].super.width = extent.width;
-        Ts[i].super.height = extent.height;
-        Ts[i].super.mip_levels = 1;
-        Ts[i].super.node_index = CGPU_SINGLE_GPU_NODE_INDEX;
-        Ts[i].super.owns_image = false;
+        Ts[i].T.pVkImage = vimages[i];
+        Ts[i].T.super.device = &D->super;
+        Ts[i].T.super.info = &Ts[i].I;
+
+        Ts[i].I.is_cube = false;
+        Ts[i].I.array_size_minus_one = 0;
+        Ts[i].I.sample_count = CGPU_SAMPLE_COUNT_1; // TODO: ?
+        Ts[i].I.format = VkUtil_FormatTranslateToCGPU(surface_format.format);
+        Ts[i].I.aspect_mask = VkUtil_DeterminAspectMask(VkUtil_FormatTranslateToVk(Ts[i].I.format), false);
+        Ts[i].I.depth = 1;
+        Ts[i].I.width = extent.width;
+        Ts[i].I.height = extent.height;
+        Ts[i].I.mip_levels = 1;
+        Ts[i].I.node_index = CGPU_SINGLE_GPU_NODE_INDEX;
+        Ts[i].I.owns_image = false;
     }
     CGPUTextureId* Vs = (CGPUTextureId*)(Ts + buffer_count);
     for (uint32_t i = 0; i < buffer_count; i++)
     {
-        Vs[i] = &Ts[i].super;
+        Vs[i] = &Ts[i].T.super;
     }
     S->super.back_buffers = Vs;
     S->pVkSurface = vkSurface;

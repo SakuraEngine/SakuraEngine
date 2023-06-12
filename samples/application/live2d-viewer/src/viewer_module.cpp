@@ -305,9 +305,8 @@ int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
             ZoneScopedN("ImGUINewFrame");
 
             auto& io = ImGui::GetIO();
-            io.DisplaySize = ImVec2(
-            (float)swapchain->back_buffers[0]->width,
-            (float)swapchain->back_buffers[0]->height);
+            const auto texInfo = swapchain->back_buffers[0]->info;
+            io.DisplaySize = ImVec2((float)texInfo->width, (float)texInfo->height);
             skr_imgui_new_frame(main_window, 1.f / 60.f);
         }
         static uint32_t sample_count = 0;

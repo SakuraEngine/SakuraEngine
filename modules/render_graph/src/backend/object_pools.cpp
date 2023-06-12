@@ -234,9 +234,9 @@ TextureViewPool::Key::Key(CGPUDeviceId device, const CGPUTextureViewDescriptor& 
     , array_layer_count(desc.array_layer_count)
     , base_mip_level(desc.base_mip_level)
     , mip_level_count(desc.mip_level_count)
-    , tex_width(desc.texture->width)
-    , tex_height(desc.texture->height)
-    , unique_id(desc.texture->unique_id)
+    , tex_width(desc.texture->info->width)
+    , tex_height(desc.texture->info->height)
+    , unique_id(desc.texture->info->unique_id)
 
 {
 
