@@ -7,7 +7,7 @@ namespace skr::gui
 RenderObject::RenderObject()
 {
     diagnostic_builder.add_properties(
-        SkrNew<BoolDiagnosticProperty>(u8"active", active, u8""));
+    SkrNew<BoolDiagnosticProperty>(u8"active", active, u8""));
 }
 
 RenderObject::~RenderObject()
@@ -124,7 +124,7 @@ void RenderObject::addElementToCanvas(const DrawParams* params, gdi::GDIElement*
     }
 }
 
-LiteSpan<DiagnosticableTreeNode* const> RenderObject::get_diagnostics_children() const
+Span<DiagnosticableTreeNode* const> RenderObject::get_diagnostics_children() const
 {
     const eastl::vector<RenderObject*>& children_ = children;
     return { (DiagnosticableTreeNode* const*)children_.data(), children_.size() };

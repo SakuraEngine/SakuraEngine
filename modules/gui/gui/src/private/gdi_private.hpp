@@ -2,12 +2,13 @@
 #include "SkrGui/gdi/gdi.hpp"
 #include <containers/vector.hpp>
 
-namespace skr {
-namespace gdi {
-struct SKR_GUI_API GDIElementPrivate : public GDIElement
+namespace skr
 {
+namespace gdi
+{
+struct SKR_GUI_API GDIElementPrivate : public GDIElement {
     virtual ~GDIElementPrivate() SKR_NOEXCEPT = default;
-    
+
     void set_z(int32_t _z) final
     {
         z = _z;
@@ -27,24 +28,21 @@ struct SKR_GUI_API GDIElementPrivate : public GDIElement
     }
 
     int32_t z = 0.f;
-    uint32_t texture_swizzle[4] = {0, 0, 0, 0};
+    uint32_t texture_swizzle[4] = { 0, 0, 0, 0 };
     skr::vector<GDIVertex> vertices;
     skr::vector<index_t> indices;
     skr::vector<GDIElementDrawCommand> commands;
 };
 
-struct SKR_GUI_API GDIPaintPrivate : public GDIPaint
-{
-    
+struct SKR_GUI_API GDIPaintPrivate : public GDIPaint {
 };
 
-struct SKR_GUI_API GDICanvasPrivate : public GDICanvas
-{
+struct SKR_GUI_API GDICanvasPrivate : public GDICanvas {
     virtual void add_element(GDIElement* element) SKR_NOEXCEPT;
     virtual void remove_element(GDIElement* element) SKR_NOEXCEPT;
-    virtual LiteSpan<GDIElement*> all_elements() SKR_NOEXCEPT;
+    virtual Span<GDIElement*> all_elements() SKR_NOEXCEPT;
     virtual void clear_elements() SKR_NOEXCEPT;
-    
+
     virtual void set_zrange(int32_t min, int32_t max) SKR_NOEXCEPT
     {
         z_min = min;
@@ -56,11 +54,11 @@ struct SKR_GUI_API GDICanvasPrivate : public GDICanvas
         if (out_max) *out_max = z_max;
     }
 
-    virtual void enable_hardware_z() SKR_NOEXCEPT 
+    virtual void enable_hardware_z() SKR_NOEXCEPT
     {
         hardware_z_enabled = true;
     }
-    virtual void disable_hardware_z() SKR_NOEXCEPT 
+    virtual void disable_hardware_z() SKR_NOEXCEPT
     {
         hardware_z_enabled = false;
     }
@@ -100,19 +98,17 @@ struct SKR_GUI_API GDICanvasPrivate : public GDICanvas
     skr::vector<GDIElement*> all_elements_;
 };
 
-struct SKR_GUI_API GDIViewportPrivate : public GDIViewport
-{
+struct SKR_GUI_API GDIViewportPrivate : public GDIViewport {
     virtual void add_canvas(GDICanvas* canvas) SKR_NOEXCEPT;
     virtual void remove_canvas(GDICanvas* canvas) SKR_NOEXCEPT;
     virtual void clear_canvas() SKR_NOEXCEPT;
-    virtual LiteSpan<GDICanvas*> all_canvas() SKR_NOEXCEPT;
+    virtual Span<GDICanvas*> all_canvas() SKR_NOEXCEPT;
 
     skr::vector<GDICanvas*> all_canvas_;
 };
 
-struct SKR_GUI_API GDIDevicePrivate : public GDIDevice
-{
-
+struct SKR_GUI_API GDIDevicePrivate : public GDIDevice {
 };
 
-} }
+} // namespace gdi
+} // namespace skr

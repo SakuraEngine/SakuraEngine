@@ -35,7 +35,7 @@ namespace gdi
 {
 
 template <typename T>
-using LiteSpan = skr::gui::LiteSpan<T>;
+using Span = skr::gui::Span<T>;
 
 using index_t = skr_gdi_index_t;
 typedef struct IGDIImage* GDIImageId;
@@ -152,7 +152,7 @@ struct SKR_GUI_API GDICanvas {
 
     virtual void add_element(GDIElement* element) SKR_NOEXCEPT = 0;
     virtual void remove_element(GDIElement* element) SKR_NOEXCEPT = 0;
-    virtual LiteSpan<GDIElement*> all_elements() SKR_NOEXCEPT = 0;
+    virtual Span<GDIElement*> all_elements() SKR_NOEXCEPT = 0;
     virtual void clear_elements() SKR_NOEXCEPT = 0;
 
     virtual void set_zrange(int32_t min, int32_t max) SKR_NOEXCEPT = 0;
@@ -175,7 +175,7 @@ struct SKR_GUI_API GDIViewport {
     virtual void add_canvas(GDICanvas* canvas) SKR_NOEXCEPT = 0;
     virtual void remove_canvas(GDICanvas* canvas) SKR_NOEXCEPT = 0;
     virtual void clear_canvas() SKR_NOEXCEPT = 0;
-    virtual LiteSpan<GDICanvas*> all_canvas() SKR_NOEXCEPT = 0;
+    virtual Span<GDICanvas*> all_canvas() SKR_NOEXCEPT = 0;
 };
 
 struct SKR_GUI_API GDIDevice {

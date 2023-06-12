@@ -15,11 +15,22 @@
 
 SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, ImageTexFutureLauncher, gdi_img_tex_future_launcher)
-namespace skr { struct JobQueue; }
-namespace skr { namespace gdi { struct DecodingProgress; } }
+namespace skr
+{
+struct JobQueue;
+}
+namespace skr
+{
+namespace gdi
+{
+struct DecodingProgress;
+}
+} // namespace skr
 
-namespace skr {
-namespace gdi {
+namespace skr
+{
+namespace gdi
+{
 
 enum EGDIRendererPipelineAttribute
 {
@@ -31,8 +42,7 @@ enum EGDIRendererPipelineAttribute
 };
 using GDIRendererPipelineAttributes = uint32_t;
 
-struct GDIElementDrawCommand_RenderGraph
-{
+struct GDIElementDrawCommand_RenderGraph {
     GDIRendererPipelineAttributes attributes = 0;
     GDITextureId texture = nullptr;
     GDIMaterialId material = nullptr;
@@ -45,9 +55,8 @@ struct GDIElementDrawCommand_RenderGraph
     uint32_t rb_offset = 0;
 };
 
-struct SKR_GUI_RENDERER_API GDIViewportData_RenderGraph
-{
-    inline GDIViewportData_RenderGraph(GDIViewport* viewport) SKR_NOEXCEPT : viewport(viewport) { }
+struct SKR_GUI_RENDERER_API GDIViewportData_RenderGraph {
+    inline GDIViewportData_RenderGraph(GDIViewport* viewport) SKR_NOEXCEPT : viewport(viewport) {}
 
     GDIViewport* viewport = nullptr;
 
@@ -62,15 +71,14 @@ struct SKR_GUI_RENDERER_API GDIViewportData_RenderGraph
     skr::vector<rtm::matrix4x4f> render_transforms;
     skr::vector<rtm::matrix4x4f> render_projections;
     // texture_swizzle:[_, _, _, _] None-0, R-1, G-2, B-3, A-4
-    // placeholder0:   [_, _, _, _] 
-    // placeholder1:   [_, _, _, _] 
-    // placeholder2:   [_, _, _, _] 
+    // placeholder0:   [_, _, _, _]
+    // placeholder1:   [_, _, _, _]
+    // placeholder2:   [_, _, _, _]
     skr::vector<skr_float4x4_t> render_data;
     skr::vector<index_t> render_indices;
 };
 
-struct GDIRendererDescriptor_RenderGraph
-{
+struct GDIRendererDescriptor_RenderGraph {
     ECGPUFormat target_format;
     CGPUDeviceId device = nullptr;
     CGPUQueueId transfer_queue = nullptr;
@@ -80,34 +88,30 @@ struct GDIRendererDescriptor_RenderGraph
     skr::JobQueue* job_queue = nullptr;
 };
 
-struct ViewportRenderParams_RenderGraph
-{
+struct ViewportRenderParams_RenderGraph {
     skr::render_graph::RenderGraph* render_graph = nullptr;
 };
 
-struct GDIImageDescriptor_RenderGraph
-{
+struct GDIImageDescriptor_RenderGraph {
     bool useImageCoder = false;
     skr_guid_t guid;
 };
 
-struct GDITextureDescriptor_RenderGraph
-{
+struct GDITextureDescriptor_RenderGraph {
     bool useImageCoder = false;
     skr_guid_t guid;
 };
 
-struct SKR_GUI_RENDERER_API GDIImageAsyncData_RenderGraph
-{
+struct SKR_GUI_RENDERER_API GDIImageAsyncData_RenderGraph {
     friend struct GDITextureAsyncData_RenderGraph;
     friend struct skr::gdi::DecodingProgress;
 
-    struct 
+    struct
     {
         skr::string uri = u8"";
     } from_file;
-    
-    struct 
+
+    struct
     {
         uint32_t width;
         uint32_t height;
@@ -129,15 +133,14 @@ protected:
     eastl::function<void()> ram_data_finsihed_callback = {};
 };
 
-struct SKR_GUI_RENDERER_API GDITextureAsyncData_RenderGraph
-{
+struct SKR_GUI_RENDERER_API GDITextureAsyncData_RenderGraph {
     skr_io_future_t vram_request = {};
     skr_async_vtexture_destination_t vram_destination = {};
 
     CGPUDeviceId device;
     CGPUQueueId transfer_queue;
     CGPURootSignatureId root_signature = nullptr;
-    skr_io_vram_service_t* vram_service = nullptr; 
+    skr_io_vram_service_t* vram_service = nullptr;
 
     GDITextureId DoAsync(struct GDITexture_RenderGraph* texture, skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT;
 
@@ -146,16 +149,15 @@ protected:
     eastl::function<void()> vram_finsihed_callback = {};
 };
 
-struct SKR_GUI_RENDERER_API GDIImage_RenderGraph : public IGDIImage
-{
+struct SKR_GUI_RENDERER_API GDIImage_RenderGraph : public IGDIImage {
     GDIImage_RenderGraph(struct GDIRenderer_RenderGraph* renderer) SKR_NOEXCEPT
-        : renderer(renderer) { }
+        : renderer(renderer) {}
 
     EGDIResourceState get_state() const SKR_NOEXCEPT final;
     GDIRendererId get_renderer() const SKR_NOEXCEPT final;
     uint32_t get_width() const SKR_NOEXCEPT final;
     uint32_t get_height() const SKR_NOEXCEPT final;
-    LiteSpan<const uint8_t> get_data() const SKR_NOEXCEPT final;
+    Span<const uint8_t> get_data() const SKR_NOEXCEPT final;
     EGDIImageFormat get_format() const SKR_NOEXCEPT final;
 
     void preInit(const GDIImageDescriptor* desc);
@@ -175,10 +177,10 @@ struct SKR_GUI_RENDERER_API GDIImage_RenderGraph : public IGDIImage
     struct GDIRenderer_RenderGraph* renderer = nullptr;
 };
 
-struct SKR_GUI_RENDERER_API GDITexture_RenderGraph : public IGDITexture
-{
+struct SKR_GUI_RENDERER_API GDITexture_RenderGraph : public IGDITexture {
     GDITexture_RenderGraph(struct GDIRenderer_RenderGraph* renderer) SKR_NOEXCEPT
-        : intermediate_image(renderer), renderer(renderer) { }
+        : intermediate_image(renderer),
+          renderer(renderer) {}
 
     EGDIResourceState get_state() const SKR_NOEXCEPT final;
     GDIRendererId get_renderer() const SKR_NOEXCEPT final;
@@ -188,7 +190,7 @@ struct SKR_GUI_RENDERER_API GDITexture_RenderGraph : public IGDITexture
     EGDITextureType get_type() const SKR_NOEXCEPT final;
 
     void intializeBindTable() SKR_NOEXCEPT;
-    
+
     SAtomicU32 state = static_cast<uint32_t>(EGDIResourceState::Requsted);
     EGDITextureSource source = EGDITextureSource::Count;
     GDITextureAsyncData_RenderGraph async_data;
@@ -202,8 +204,7 @@ struct SKR_GUI_RENDERER_API GDITexture_RenderGraph : public IGDITexture
     struct GDIRenderer_RenderGraph* renderer = nullptr;
 };
 
-struct SKR_GUI_RENDERER_API GDITextureUpdate_RenderGraph : public IGDITextureUpdate
-{
+struct SKR_GUI_RENDERER_API GDITextureUpdate_RenderGraph : public IGDITextureUpdate {
     EGDIResourceState get_state() const SKR_NOEXCEPT final;
 
     GDITextureId texture = nullptr;
@@ -215,8 +216,7 @@ struct SKR_GUI_RENDERER_API GDITextureUpdate_RenderGraph : public IGDITextureUpd
     SAtomicU32 state = static_cast<uint32_t>(EGDIResourceState::Requsted);
 };
 
-struct SKR_GUI_RENDERER_API GDIRenderer_RenderGraph : public IGDIRenderer
-{
+struct SKR_GUI_RENDERER_API GDIRenderer_RenderGraph : public IGDIRenderer {
     friend struct GDITexture_RenderGraph;
 
     // Tier 1
@@ -240,7 +240,6 @@ struct SKR_GUI_RENDERER_API GDIRenderer_RenderGraph : public IGDIRenderer
     bool support_mipmap_generation() const SKR_NOEXCEPT final;
     gdi_img_tex_future_launcher_t* get_future_launcher() const SKR_NOEXCEPT { return future_launcher.get(); }
 
-
     skr_io_ram_service_t* get_ram_service() const SKR_NOEXCEPT { return ram_service; }
     skr_io_vram_service_t* get_vram_service() const SKR_NOEXCEPT { return vram_service; }
 
@@ -255,8 +254,7 @@ protected:
     void createRenderPipelines();
 
     CGPUVertexLayout vertex_layout = {};
-    struct PipelineKey
-    {
+    struct PipelineKey {
         GDIRendererPipelineAttributes attributes;
         ECGPUSampleCount sample_count;
         inline bool operator==(const PipelineKey& other) const
@@ -273,7 +271,7 @@ protected:
         }
     };
     eastl::vector_map<PipelineKey, CGPURenderPipelineId> pipelines;
-    
+
     skr_job_queue_id job_queue = nullptr;
     skr::SPtr<gdi_img_tex_future_launcher_t> future_launcher = nullptr;
 
@@ -287,4 +285,5 @@ protected:
     ECGPUFormat target_format;
 };
 
-} }
+} // namespace gdi
+} // namespace skr

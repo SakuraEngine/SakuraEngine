@@ -64,7 +64,7 @@ DiagnosticsBuilder::~DiagnosticsBuilder() SKR_NOEXCEPT
     }
 }
 
-LiteSpan<IDiagnosticsProperty* const> DiagnosticsBuilder::get_diagnostics_properties() const SKR_NOEXCEPT
+Span<IDiagnosticsProperty* const> DiagnosticsBuilder::get_diagnostics_properties() const SKR_NOEXCEPT
 {
     return { diagnostic_properties.data(), diagnostic_properties.size() };
 }
@@ -78,7 +78,7 @@ IDiagnosticsProperty* Diagnosticable::find_property(const char8_t* name) const S
     return diagnostic_builder.find_property(name);
 }
 
-LiteSpan<IDiagnosticsProperty* const> Diagnosticable::get_diagnostics_properties() const SKR_NOEXCEPT
+Span<IDiagnosticsProperty* const> Diagnosticable::get_diagnostics_properties() const SKR_NOEXCEPT
 {
     return diagnostic_builder.get_diagnostics_properties();
 }

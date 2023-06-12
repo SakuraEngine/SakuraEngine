@@ -12,6 +12,7 @@
 #include "SkrGui/interface/gdi_renderer.hpp"
 #include "SkrGui/framework/window_context.hpp"
 
+#include "SkrGui/framework/widget_misc.hpp"
 #include "SkrGui/render_objects/render_window.hpp"
 #include "SkrGui/render_objects/render_canvas.hpp"
 #include "SkrGui/render_objects/render_grid_paper.hpp"
@@ -103,12 +104,14 @@ struct robjects_example_application : public robjects_application_t {
         flex->add_child(image3);
         image3->set_size({ 100, 400 });
         stack->add_child(flex);
-        stack->set_positional(0, skr::gui::Positional{}.set_left(0).set_right(0).set_top(0).set_height(400));
+        stack->set_positional(
+        0, SNewParam(skr::gui::Positional) { p.left = p.top = 0; p.min_height = p.max_height = 400; });
         stack->add_child(text);
-        stack->set_positional(1, skr::gui::Positional{}.set_left_percent(0.5).set_top(10).set_pivot(0.5, 0));
+        stack->set_positional(
+        1, SNewParam(skr::gui::Positional) { using namespace skr::gui; p.left = 0_px; p.top = 10; p.pivot = {0.5, 0}; });
         canvas->add_child(stack);
 
-        stack->layout(skr::gui::BoxConstraint{ { (float)gdi.gfx.window_width, (float)gdi.gfx.window_height }, { 0, 0 } }, true);
+        stack->layout(skr::gui::BoxConstraint::Loose({ (float)gdi.gfx.window_width, (float)gdi.gfx.window_height }));
 
         // initialize render graph
         if (graph.initialize(gdi.gfx))
@@ -398,17 +401,17 @@ int main(int argc, char* argv[])
     ClickListener doubleClickListener = ClickListener(500);
     auto handler = skr_system_get_default_handler();
     handler->add_window_close_handler(
-        +[](SWindowHandle window, void* pQuit) {
-            bool& quit = *(bool*)pQuit;
-            quit = true;
-        },
-        &quit);
+    +[](SWindowHandle window, void* pQuit) {
+        bool& quit = *(bool*)pQuit;
+        quit = true;
+    },
+    &quit);
     handler->add_window_resize_handler(
-        +[](SWindowHandle window, int32_t w, int32_t h, void* usr_data) {
-            robjects_example_application* pApp = (robjects_example_application*)usr_data;
-            app_resize_window(&pApp->gdi.gfx, w, h);
-        },
-        &App);
+    +[](SWindowHandle window, int32_t w, int32_t h, void* usr_data) {
+        robjects_example_application* pApp = (robjects_example_application*)usr_data;
+        app_resize_window(&pApp->gdi.gfx, w, h);
+    },
+    &App);
     skr_imgui_initialize(handler);
     while (!quit)
     {

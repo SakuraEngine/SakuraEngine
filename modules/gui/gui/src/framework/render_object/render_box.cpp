@@ -6,20 +6,13 @@
 
 namespace skr::gui
 {
-RenderBoxSizeType BoxConstraint::apply(const RenderBoxSizeType& size) const
-{
-    RenderBoxSizeType result = size;
-    result.x = std::max(min_size.x, std::min(max_size.x, result.x));
-    result.y = std::max(min_size.y, std::min(max_size.y, result.y));
-    return result;
-}
 
 RenderBox::RenderBox(skr_gdi_device_id gdi_device)
     : gdi_device(gdi_device)
     , debug_element(nullptr)
 {
     diagnostic_builder.add_properties(
-        SkrNew<BoolDiagnosticProperty>(u8"render_box", true, u8""));
+    SkrNew<BoolDiagnosticProperty>(u8"render_box", true, u8""));
     debug_element = gdi_device->create_element();
 }
 
@@ -39,7 +32,7 @@ void RenderBox::before_draw(const DrawParams* params)
             debug_element->begin_path();
             // actual region
             debug_element->fill_color(128u, 0u, 0u, 128u);
-            debug_element->rect(pos.x, pos.y, size.x, size.y);
+            debug_element->rect(pos.x, pos.y, size.width, size.height);
             debug_element->fill();
 
             // padding region
@@ -51,9 +44,9 @@ void RenderBox::before_draw(const DrawParams* params)
             const auto DistX = Rate * std::min(CanvasW, CanvasH);
             const auto DistY = Rate * std::min(CanvasW, CanvasH);
             auto X = pos.x - DistX;
-            const auto W = size.x + 2 * DistX;
+            const auto W = size.width + 2 * DistX;
             auto Y = pos.y - DistY;
-            const auto H = size.y + 2 * DistY;
+            const auto H = size.height + 2 * DistY;
             debug_element->rect(X, Y, W, H);
             debug_element->fill();
         }
@@ -76,8 +69,8 @@ bool RenderBox::hit_test(const Ray& point, HitTestRecord* record) const
     origin = rtm::matrix_mul_vector(origin, inv_matrix);
     direction = rtm::matrix_mul_vector(direction, inv_matrix);
     // check hit
-    auto min = skr::math::load(pos);
-    auto max = rtm::vector_add(skr::math::load(pos), skr::math::load(size));
+    auto min = skr::math::load(skr_float2_t{ pos.x, pos.y });
+    auto max = rtm::vector_add(skr::math::load(skr_float2_t{ pos.x, pos.y }), skr::math::load(skr_float2_t{ size.width, size.height }));
     auto o = origin;
     auto d = direction;
     auto tmin = rtm::vector_div(rtm::vector_sub(min, o), d);
@@ -106,17 +99,17 @@ bool RenderBox::hit_test(const Ray& point, HitTestRecord* record) const
     return false;
 }
 
-RenderBoxSizeType RenderBox::get_size() const
+Size RenderBox::get_size() const
 {
     return size;
 }
 
-void RenderBox::set_size(const RenderBoxSizeType& in_size)
+void RenderBox::set_size(const Size& in_size)
 {
     size = in_size;
 }
 
-void RenderBox::set_position(const RenderBoxSizeType& in_pos)
+void RenderBox::set_position(const Offset& in_pos)
 {
     pos = in_pos;
 }

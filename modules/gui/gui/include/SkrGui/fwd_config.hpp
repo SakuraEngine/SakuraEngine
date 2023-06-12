@@ -77,8 +77,10 @@ template <typename T>
 using NotNull = ::skr::not_null<T>;
 
 // Lite container
-using skr::lite::LiteOptional;
-using skr::lite::LiteSpan;
+template <typename T>
+using Optional = skr::lite::LiteOptional<T>;
+template <typename T>
+using Span = skr::lite::LiteSpan<T>;
 
 // containers
 template <typename T>
@@ -86,10 +88,5 @@ using Array = skr::vector<T>;
 using String = skr::string;
 template <typename K, typename V>
 using HashMap = skr::flat_hash_map<K, V>;
-template <typename T>
-using Span = skr::span<T>;
-
-// TODO. use Size class
-using BoxSizeType = skr_float2_t;
 
 } // namespace skr::gui

@@ -355,7 +355,7 @@ public:
     inline constexpr bool operator!=(const Rect& rhs) const SKR_NOEXCEPT { return !(*this == rhs); }
 
     // arithmetic
-    inline static LiteOptional<Rect> lerp(LiteOptional<Rect> a, LiteOptional<Rect> b, float t)
+    inline static Optional<Rect> lerp(Optional<Rect> a, Optional<Rect> b, float t)
     {
         if (!b)
         {
@@ -386,5 +386,11 @@ public:
             }
         }
     }
+};
+
+// TODO. Ray Hit Test
+struct Ray {
+    skr_float3_t origin;
+    skr_float3_t direction;
 };
 } // namespace skr::gui

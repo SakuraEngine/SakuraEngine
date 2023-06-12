@@ -17,7 +17,7 @@ RenderCanvas::RenderCanvas(skr_gdi_device_id gdi_device)
     gdi_canvas = gdi_device->create_canvas();
 
     diagnostic_builder.add_properties(
-        SkrNew<TextDiagnosticProperty>(u8"type", u8"canvas", u8""));
+    SkrNew<TextDiagnosticProperty>(u8"type", u8"canvas", u8""));
 }
 
 RenderCanvas::~RenderCanvas()
@@ -37,8 +37,8 @@ void RenderCanvas::draw(const DrawParams* params)
     platform_window->get_extent(&w, &h);
     const float window_width = (float)w, window_height = (float)h;
     pos.x = pos.y = 0;
-    size.x = window_width;
-    size.y = window_height;
+    size.width = window_width;
+    size.height = window_height;
     // END TEST
 
     // use this canvas for rendering (input canvas should be nullptr normally)
