@@ -9,17 +9,17 @@ RenderFlex::RenderFlex(skr_gdi_device_id gdi_device)
     : RenderBox(gdi_device)
 {
     diagnostic_builder.add_properties(
-        SkrNew<TextDiagnosticProperty>(u8"type", u8"flex", u8"layout children"));
+    SkrNew<TextDiagnosticProperty>(u8"type", u8"flex", u8"layout children"));
 }
 
 void RenderFlex::layout(BoxConstraint constraints, bool needSize)
 {
     // Determine main axis and cross axis based on flex direction
-    skr_float2_t size = constraints.max_size;
+    Size size = constraints.max_size();
     bool isRow = flex_direction == FlexDirection::Row ||
                  flex_direction == FlexDirection::RowReverse;
-    float mainAxisSize = isRow ? size.x : size.y;
-    float crossAxisSize = isRow ? size.y : size.x;
+    float mainAxisSize = isRow ? size.width : size.height;
+    float crossAxisSize = isRow ? size.height : size.width;
 
     // Calculate total flex factor of all children
     int totalFlex = 0;
@@ -37,7 +37,7 @@ void RenderFlex::layout(BoxConstraint constraints, bool needSize)
         if (flex.flex == 0)
         {
             child->layout(constraints, true);
-            availableSpace -= isRow ? child->get_size().x : child->get_size().y;
+            availableSpace -= isRow ? child->get_size().width : child->get_size().height;
         }
     }
 
@@ -47,39 +47,39 @@ void RenderFlex::layout(BoxConstraint constraints, bool needSize)
         RenderBox* child = get_child_as_box(i);
         Flexable flex = get_flex(i);
         BoxConstraint childConstraints = constraints;
-        childConstraints.min_size = skr_float2_t{ 0, 0 };
+        childConstraints.set_min_size({ 0, 0 });
         if (flex.flex > 0)
         {
             float childMainAxisSize = availableSpace * (float)flex.flex / (float)totalFlex;
 
             if (isRow)
             {
-                childConstraints.max_size.x = childMainAxisSize;
+                childConstraints.max_width = childMainAxisSize;
             }
             else
             {
-                childConstraints.max_size.y = childMainAxisSize;
+                childConstraints.max_height = childMainAxisSize;
             }
             if (align_items == AlignItems::Stretch)
             {
                 if (isRow)
                 {
-                    childConstraints.min_size.y = crossAxisSize;
+                    childConstraints.min_height = crossAxisSize;
                 }
                 else
                 {
-                    childConstraints.min_size.x = crossAxisSize;
+                    childConstraints.min_width = crossAxisSize;
                 }
             }
             if (flex.flex_fit == FlexFit::Tight)
             {
                 if (isRow)
                 {
-                    childConstraints.min_size.x = childConstraints.max_size.x;
+                    childConstraints.min_width = childConstraints.max_width;
                 }
                 else
                 {
-                    childConstraints.min_size.y = childConstraints.max_size.y;
+                    childConstraints.min_height = childConstraints.max_height;
                 }
             }
             child->layout(childConstraints, true);
@@ -90,14 +90,14 @@ void RenderFlex::layout(BoxConstraint constraints, bool needSize)
     for (int i = 0; i < get_child_count(); i++)
     {
         RenderBox* child = get_child_as_box(i);
-        skr_float2_t childSize = child->get_size();
+        Size childSize = child->get_size();
         if (isRow)
         {
-            mainAxisOffset += childSize.x;
+            mainAxisOffset += childSize.width;
         }
         else
         {
-            mainAxisOffset += childSize.y;
+            mainAxisOffset += childSize.height;
         }
     }
 
@@ -137,26 +137,26 @@ void RenderFlex::layout(BoxConstraint constraints, bool needSize)
             mainAxisStartPosition += (mainAxisSize - mainAxisOffset) / (get_child_count() + 1);
         }
         RenderBox* child = get_child_as_box(i);
-        skr_float2_t childSize = child->get_size();
+        Size childSize = child->get_size();
         float childMainAxisPosition = mainAxisStartPosition;
         float childCrossAxisPosition = 0.0f;
         if (align_items == AlignItems::FlexEnd ||
             align_items == AlignItems::Baseline)
         {
-            childCrossAxisPosition = crossAxisSize - childSize.y;
+            childCrossAxisPosition = crossAxisSize - childSize.height;
         }
         else if (align_items == AlignItems::Center ||
                  align_items == AlignItems::Stretch)
         {
-            childCrossAxisPosition = (crossAxisSize - childSize.y) / 2.0f;
+            childCrossAxisPosition = (crossAxisSize - childSize.height) / 2.0f;
         }
         if (flex_direction == FlexDirection::RowReverse ||
             flex_direction == FlexDirection::ColumnReverse)
         {
-            childMainAxisPosition = mainAxisSize - childMainAxisPosition - childSize.x;
+            childMainAxisPosition = mainAxisSize - childMainAxisPosition - childSize.width;
         }
         child->set_position({ childMainAxisPosition, childCrossAxisPosition });
-        mainAxisStartPosition += childSize.x;
+        mainAxisStartPosition += childSize.width;
     }
 
     // Set size of flex container

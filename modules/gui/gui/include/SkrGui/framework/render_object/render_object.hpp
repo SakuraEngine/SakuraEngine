@@ -40,7 +40,7 @@ public:
     virtual void draw(const DrawParams* params);
     virtual void after_draw(const DrawParams* params);
 
-    virtual LiteSpan<DiagnosticableTreeNode* const> get_diagnostics_children() const override;
+    virtual Span<DiagnosticableTreeNode* const> get_diagnostics_children() const override;
 
 protected:
     void addElementToCanvas(const DrawParams* params, gdi::GDIElement* element);

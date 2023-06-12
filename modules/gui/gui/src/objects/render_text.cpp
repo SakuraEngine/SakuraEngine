@@ -177,13 +177,13 @@ RenderText::RenderText(skr_gdi_device_id gdi_device)
     , gdi_device(gdi_device)
 {
     diagnostic_builder.add_properties(
-        SkrNew<TextDiagnosticProperty>(u8"type", u8"text", u8"draws text paragraph"));
+    SkrNew<TextDiagnosticProperty>(u8"type", u8"text", u8"draws text paragraph"));
 
     gdi_paint = gdi_device->create_paint();
     gdi_element = gdi_device->create_element();
     gdi_element->set_texture_swizzle(
-        gdi::GDIElement::kSwizzleOverride1, gdi::GDIElement::kSwizzleOverride1,
-        gdi::GDIElement::kSwizzleOverride1, gdi::GDIElement::kSwizzleChanelR);
+    gdi::GDIElement::kSwizzleOverride1, gdi::GDIElement::kSwizzleOverride1,
+    gdi::GDIElement::kSwizzleOverride1, gdi::GDIElement::kSwizzleChanelR);
 
     paragraph_ = SkrNew<Paragraph>();
     font_ = SPtr<FontFile>::Create();
@@ -212,11 +212,11 @@ RenderText::~RenderText()
 void RenderText::layout(BoxConstraint constraints, bool needSize)
 {
     BuildParagraph();
-    paragraph_->set_width(constraints.max_size.x);
+    paragraph_->set_width(constraints.max_width);
     auto textSize = paragraph_->get_size();
-    size.x = textSize.x;
-    size.y = textSize.y;
-    size = constraints.apply(size);
+    size.width = textSize.x;
+    size.height = textSize.y;
+    size = constraints.constrain(size);
 }
 
 void RenderText::draw(const DrawParams* params)
@@ -247,7 +247,7 @@ void RenderText::DrawParagraph()
     proxy.gdi_element = gdi_element;
     proxy.gdi_paint = gdi_paint;
     proxy.gdi_element->begin_frame(1.f);
-    paragraph_->draw(&proxy, pos, p_color, p_dc_color);
+    paragraph_->draw(&proxy, { pos.x, pos.y }, p_color, p_dc_color);
 }
 
 void RenderText::BuildParagraph()
@@ -269,47 +269,47 @@ void RenderText::buildParagraphRec(Paragraph* p, const StyleText& txt)
     for (auto& inl : inlines_)
     {
         std::visit(overloaded{
-                       [&](skr::string& text) {
-                           godot::Color color(txt.color.x, txt.color.y, txt.color.z, txt.color.w);
-                           /*
-                           godot::Color decorationColor(txt.textDecorationColor.X, txt.textDecorationColor.Y, txt.textDecorationColor.Z, txt.textDecorationColor.W);
-                           godot::TextDecorationData decoration;
-                           decoration.decorationColor = decorationColor;
-                           decoration.decorationTexture = nullptr;
-                           decoration.decorationLineFlag = (int64_t)txt.textDecorationLine;
-                           decoration.decorationThickness = txt.textDecorationThickness;
-                           int64_t flags = 0;
-                           */
-                           auto font = static_pointer_cast<godot::Font>(font_);
-                           auto ft = godot::Ref<godot::Font>(font);
-                           p->add_string(godot::String::utf8(text.c_str()), ft, txt.font_size, "", {});
-                       },
-                       [&](RenderObject*& child) {
-                           // if(!child->Visible()) return;
-                           // auto& pos = StylePosition::Get(child->_style);
-                           const auto TODO = EInlineAlignment::Middle;
-                           p->add_object(child, { 0, 0 }, GetInlineAlignment(TODO));
-                       },
-                       [&](RenderText*& child) {
-                           // if(!child->Visible()) return;
-                           // StyleText& ctxt = StyleText::Get(child->_style);
-                           StyleText& ctxt = TODO_StyleText;
-                           child->buildParagraphRec(p, ctxt);
-                       },
-                       [&](skr::SPtr<BindText>& Bind) {
-                           godot::Color color(txt.color.x, txt.color.y, txt.color.z, txt.color.w);
-                           /*
-                           godot::Color decorationColor(txt.textDecorationColor.X, txt.textDecorationColor.Y, txt.textDecorationColor.Z, txt.textDecorationColor.W);
-                           godot::TextDecorationData decoration;
-                           decoration.decorationColor = decorationColor;
-                           decoration.decorationTexture = nullptr;
-                           decoration.decorationLineFlag = (int64_t)txt.textDecorationLine;
-                           decoration.decorationThickness = txt.textDecorationThickness;
-                           */
-                           auto font = static_pointer_cast<godot::Font>(font_);
-                           auto ft = godot::Ref<godot::Font>(font);
-                           paragraph_->add_string((wchar_t*)Bind->text.c_str(), ft, txt.font_size, "", {});
-                       } },
+                   [&](skr::string& text) {
+                       godot::Color color(txt.color.x, txt.color.y, txt.color.z, txt.color.w);
+                       /*
+                       godot::Color decorationColor(txt.textDecorationColor.X, txt.textDecorationColor.Y, txt.textDecorationColor.Z, txt.textDecorationColor.W);
+                       godot::TextDecorationData decoration;
+                       decoration.decorationColor = decorationColor;
+                       decoration.decorationTexture = nullptr;
+                       decoration.decorationLineFlag = (int64_t)txt.textDecorationLine;
+                       decoration.decorationThickness = txt.textDecorationThickness;
+                       int64_t flags = 0;
+                       */
+                       auto font = static_pointer_cast<godot::Font>(font_);
+                       auto ft = godot::Ref<godot::Font>(font);
+                       p->add_string(godot::String::utf8(text.c_str()), ft, txt.font_size, "", {});
+                   },
+                   [&](RenderObject*& child) {
+                       // if(!child->Visible()) return;
+                       // auto& pos = StylePosition::Get(child->_style);
+                       const auto TODO = EInlineAlignment::Middle;
+                       p->add_object(child, { 0, 0 }, GetInlineAlignment(TODO));
+                   },
+                   [&](RenderText*& child) {
+                       // if(!child->Visible()) return;
+                       // StyleText& ctxt = StyleText::Get(child->_style);
+                       StyleText& ctxt = TODO_StyleText;
+                       child->buildParagraphRec(p, ctxt);
+                   },
+                   [&](skr::SPtr<BindText>& Bind) {
+                       godot::Color color(txt.color.x, txt.color.y, txt.color.z, txt.color.w);
+                       /*
+                       godot::Color decorationColor(txt.textDecorationColor.X, txt.textDecorationColor.Y, txt.textDecorationColor.Z, txt.textDecorationColor.W);
+                       godot::TextDecorationData decoration;
+                       decoration.decorationColor = decorationColor;
+                       decoration.decorationTexture = nullptr;
+                       decoration.decorationLineFlag = (int64_t)txt.textDecorationLine;
+                       decoration.decorationThickness = txt.textDecorationThickness;
+                       */
+                       auto font = static_pointer_cast<godot::Font>(font_);
+                       auto ft = godot::Ref<godot::Font>(font);
+                       paragraph_->add_string((wchar_t*)Bind->text.c_str(), ft, txt.font_size, "", {});
+                   } },
                    inl);
     }
 }

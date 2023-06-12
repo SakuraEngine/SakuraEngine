@@ -198,7 +198,7 @@ Widget* Element::get_widget() SKR_NOEXCEPT
     return _widget;
 }
 
-BoxSizeType Element::get_size() SKR_NOEXCEPT
+Size Element::get_size() SKR_NOEXCEPT
 {
     auto render_object = find_render_object();
     if (render_object)
@@ -225,10 +225,10 @@ RenderObject* Element::find_render_object() SKR_NOEXCEPT
         {
             Element* next = nullptr;
             current->visit_child_elements(
-                [&](Element* child) {
-                    SKR_GUI_ASSERT(next == nullptr); // This verifies that there's only one child.
-                    next = child;
-                });
+            [&](Element* child) {
+                SKR_GUI_ASSERT(next == nullptr); // This verifies that there's only one child.
+                next = child;
+            });
             current = next;
         }
     }

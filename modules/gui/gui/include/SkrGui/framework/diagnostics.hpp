@@ -44,7 +44,7 @@ struct SKR_GUI_API DiagnosticsProperty : public IDiagnosticsProperty {
         return u8"undefined";
     }
 
-    LiteOptional<T> value;
+    Optional<T> value;
 };
 
 struct SKR_GUI_API BoolDiagnosticProperty : public DiagnosticsProperty<bool> {
@@ -79,7 +79,7 @@ struct SKR_GUI_API DiagnosticsBuilder {
         (add_property(properties), ...);
     }
     IDiagnosticsProperty* find_property(const char8_t* name) const SKR_NOEXCEPT;
-    LiteSpan<IDiagnosticsProperty* const> get_diagnostics_properties() const SKR_NOEXCEPT;
+    Span<IDiagnosticsProperty* const> get_diagnostics_properties() const SKR_NOEXCEPT;
 
 protected:
     Array<IDiagnosticsProperty*> diagnostic_properties;
@@ -91,7 +91,7 @@ struct SKR_GUI_API Diagnosticable SKR_GUI_OBJECT_BASE {
 
     virtual ~Diagnosticable() SKR_NOEXCEPT;
     IDiagnosticsProperty* find_property(const char8_t* name) const SKR_NOEXCEPT;
-    LiteSpan<IDiagnosticsProperty* const> get_diagnostics_properties() const SKR_NOEXCEPT;
+    Span<IDiagnosticsProperty* const> get_diagnostics_properties() const SKR_NOEXCEPT;
 
 protected:
     DiagnosticsBuilder diagnostic_builder;
@@ -106,7 +106,7 @@ struct SKR_GUI_API DiagnosticableTreeNode : public DiagnosticableTree {
     SKR_GUI_TYPE(DiagnosticableTreeNode, "26e5515a-7654-4943-a9fe-766db8cedf72", DiagnosticableTree);
     virtual ~DiagnosticableTreeNode() SKR_NOEXCEPT;
 
-    virtual LiteSpan<DiagnosticableTreeNode* const> get_diagnostics_children() const = 0;
+    virtual Span<DiagnosticableTreeNode* const> get_diagnostics_children() const = 0;
 };
 
 } // namespace skr::gui

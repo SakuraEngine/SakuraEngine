@@ -1,29 +1,34 @@
 #include "futures.hpp"
 
 #ifdef SKR_GUI_RENDERER_USE_IMAGE_CODER
-#include "SkrImageCoder/skr_image_coder.h"
+    #include "SkrImageCoder/skr_image_coder.h"
 #endif
 
-namespace skr {
-namespace gdi {
+namespace skr
+{
+namespace gdi
+{
 
 #ifdef SKR_GUI_RENDERER_USE_IMAGE_CODER
-ECGPUFormat cgpu_format_from_image_coder_format(EImageCoderFormat format,EImageCoderColorFormat cformat, uint32_t bit_depth) SKR_NOEXCEPT
+ECGPUFormat cgpu_format_from_image_coder_format(EImageCoderFormat format, EImageCoderColorFormat cformat, uint32_t bit_depth) SKR_NOEXCEPT
 {
     (void)bit_depth;
     if (format == IMAGE_CODER_FORMAT_JPEG || format == IMAGE_CODER_FORMAT_PNG)
     {
         switch (cformat)
         {
-        case IMAGE_CODER_COLOR_FORMAT_RGBA: return CGPU_FORMAT_R8G8B8A8_UNORM;
-        case IMAGE_CODER_COLOR_FORMAT_BGRA: return CGPU_FORMAT_B8G8R8A8_UNORM;
-        case IMAGE_CODER_COLOR_FORMAT_Gray: return CGPU_FORMAT_R8_UNORM;
+            case IMAGE_CODER_COLOR_FORMAT_RGBA:
+                return CGPU_FORMAT_R8G8B8A8_UNORM;
+            case IMAGE_CODER_COLOR_FORMAT_BGRA:
+                return CGPU_FORMAT_B8G8R8A8_UNORM;
+            case IMAGE_CODER_COLOR_FORMAT_Gray:
+                return CGPU_FORMAT_R8_UNORM;
 
-        case IMAGE_CODER_COLOR_FORMAT_GrayF:
-        case IMAGE_CODER_COLOR_FORMAT_RGBAF: 
-        case IMAGE_CODER_COLOR_FORMAT_BGRE: 
-        default: 
-            return CGPU_FORMAT_UNDEFINED;
+            case IMAGE_CODER_COLOR_FORMAT_GrayF:
+            case IMAGE_CODER_COLOR_FORMAT_RGBAF:
+            case IMAGE_CODER_COLOR_FORMAT_BGRE:
+            default:
+                return CGPU_FORMAT_UNDEFINED;
         }
     }
     SKR_UNREACHABLE_CODE();
@@ -54,16 +59,13 @@ skr::BlobId image_coder_decode_image(const uint8_t* bytes, uint64_t size, uint32
 }
 #endif
 
-struct DecodingProgress : public skr::AsyncProgress<ImageTexFutureLauncher, int, bool>
-{
+struct DecodingProgress : public skr::AsyncProgress<ImageTexFutureLauncher, int, bool> {
     DecodingProgress(GDIImage_RenderGraph* image)
         : owner(image)
     {
-
     }
     ~DecodingProgress()
     {
-
     }
     GDIImage_RenderGraph* owner = nullptr;
 
@@ -71,14 +73,18 @@ struct DecodingProgress : public skr::AsyncProgress<ImageTexFutureLauncher, int,
     bool do_in_background() override
     {
         auto pAsyncData = &owner->async_data;
-        owner->pixel_data = image_coder_decode_image(owner->raw_data->get_data(), 
-            owner->raw_data->get_size(), owner->image_height, 
-            owner->image_width, owner->image_depth, owner->format);
+        owner->pixel_data = image_coder_decode_image(owner->raw_data->get_data(),
+                                                     owner->raw_data->get_size(), owner->image_height,
+                                                     owner->image_width, owner->image_depth, owner->format);
         pAsyncData->ram_data_finsihed_callback();
         return true;
     }
 #else
-    bool do_in_background() override {  SKR_ASSERT(0 && "ImageCoder not supportted or disabled at this platform!"); return true; }
+    bool do_in_background() override
+    {
+        SKR_ASSERT(0 && "ImageCoder not supportted or disabled at this platform!");
+        return true;
+    }
 #endif
 };
 
@@ -87,11 +93,16 @@ ECGPUFormat TranslateFormat(EGDIImageFormat format)
 {
     switch (format)
     {
-    case EGDIImageFormat::RGB8: return CGPU_FORMAT_R8G8B8_UNORM;
-    case EGDIImageFormat::RGBA8: return CGPU_FORMAT_R8G8B8A8_UNORM;
-    case EGDIImageFormat::LA8: return CGPU_FORMAT_R8G8_UNORM;
-    case EGDIImageFormat::R8: return CGPU_FORMAT_R8_UNORM;
-    default: break;
+        case EGDIImageFormat::RGB8:
+            return CGPU_FORMAT_R8G8B8_UNORM;
+        case EGDIImageFormat::RGBA8:
+            return CGPU_FORMAT_R8G8B8A8_UNORM;
+        case EGDIImageFormat::LA8:
+            return CGPU_FORMAT_R8G8_UNORM;
+        case EGDIImageFormat::R8:
+            return CGPU_FORMAT_R8_UNORM;
+        default:
+            break;
     }
     SKR_UNREACHABLE_CODE();
     return CGPU_FORMAT_UNDEFINED;
@@ -130,10 +141,10 @@ inline static void function_append(eastl::function<void()>& func1, const eastl::
     if (func2 && func1)
     {
         auto _func1 = func1;
-        func1 = [func2, _func1](){ _func1(); func2(); };
+        func1 = [func2, _func1]() { _func1(); func2(); };
         return;
     }
-    if (func2) 
+    if (func2)
         func1 = func2;
 }
 // end helpers
@@ -159,7 +170,7 @@ uint32_t GDIImage_RenderGraph::get_height() const SKR_NOEXCEPT
     return image_height;
 }
 
-LiteSpan<const uint8_t> GDIImage_RenderGraph::get_data() const SKR_NOEXCEPT
+Span<const uint8_t> GDIImage_RenderGraph::get_data() const SKR_NOEXCEPT
 {
     return { pixel_data->get_data(), pixel_data->get_size() };
 }
@@ -168,32 +179,52 @@ EGDIImageFormat GDIImage_RenderGraph::get_format() const SKR_NOEXCEPT
 {
     switch (format)
     {
-    case CGPU_FORMAT_R8G8B8A8_UNORM: return EGDIImageFormat::RGBA8;
-    case CGPU_FORMAT_R8G8B8A8_SNORM: return EGDIImageFormat::RGBA8;
-    case CGPU_FORMAT_R8G8B8A8_UINT: return EGDIImageFormat::RGBA8;
-    case CGPU_FORMAT_R8G8B8A8_SINT: return EGDIImageFormat::RGBA8;
-    case CGPU_FORMAT_R8G8B8A8_SRGB: return EGDIImageFormat::RGBA8;
-    
-    case CGPU_FORMAT_R8G8B8_UNORM: return EGDIImageFormat::RGB8;
-    case CGPU_FORMAT_R8G8B8_SNORM: return EGDIImageFormat::RGB8;
-    case CGPU_FORMAT_R8G8B8_UINT: return EGDIImageFormat::RGB8;
-    case CGPU_FORMAT_R8G8B8_SINT: return EGDIImageFormat::RGB8;
-    case CGPU_FORMAT_R8G8B8_SRGB: return EGDIImageFormat::RGB8;
+        case CGPU_FORMAT_R8G8B8A8_UNORM:
+            return EGDIImageFormat::RGBA8;
+        case CGPU_FORMAT_R8G8B8A8_SNORM:
+            return EGDIImageFormat::RGBA8;
+        case CGPU_FORMAT_R8G8B8A8_UINT:
+            return EGDIImageFormat::RGBA8;
+        case CGPU_FORMAT_R8G8B8A8_SINT:
+            return EGDIImageFormat::RGBA8;
+        case CGPU_FORMAT_R8G8B8A8_SRGB:
+            return EGDIImageFormat::RGBA8;
 
-    case CGPU_FORMAT_R8_UNORM: return EGDIImageFormat::R8;
-    case CGPU_FORMAT_R8_SNORM: return EGDIImageFormat::R8;
-    case CGPU_FORMAT_R8_UINT: return EGDIImageFormat::R8;
-    case CGPU_FORMAT_R8_SINT: return EGDIImageFormat::R8;
-    case CGPU_FORMAT_R8_SRGB: return EGDIImageFormat::R8;
+        case CGPU_FORMAT_R8G8B8_UNORM:
+            return EGDIImageFormat::RGB8;
+        case CGPU_FORMAT_R8G8B8_SNORM:
+            return EGDIImageFormat::RGB8;
+        case CGPU_FORMAT_R8G8B8_UINT:
+            return EGDIImageFormat::RGB8;
+        case CGPU_FORMAT_R8G8B8_SINT:
+            return EGDIImageFormat::RGB8;
+        case CGPU_FORMAT_R8G8B8_SRGB:
+            return EGDIImageFormat::RGB8;
 
-    case CGPU_FORMAT_R8G8_UNORM: return EGDIImageFormat::LA8;
-    case CGPU_FORMAT_R8G8_SNORM: return EGDIImageFormat::LA8;
-    case CGPU_FORMAT_R8G8_UINT: return EGDIImageFormat::LA8;
-    case CGPU_FORMAT_R8G8_SINT: return EGDIImageFormat::LA8;
-    case CGPU_FORMAT_R8G8_SRGB: return EGDIImageFormat::LA8;
+        case CGPU_FORMAT_R8_UNORM:
+            return EGDIImageFormat::R8;
+        case CGPU_FORMAT_R8_SNORM:
+            return EGDIImageFormat::R8;
+        case CGPU_FORMAT_R8_UINT:
+            return EGDIImageFormat::R8;
+        case CGPU_FORMAT_R8_SINT:
+            return EGDIImageFormat::R8;
+        case CGPU_FORMAT_R8_SRGB:
+            return EGDIImageFormat::R8;
 
-    default:
-        break;
+        case CGPU_FORMAT_R8G8_UNORM:
+            return EGDIImageFormat::LA8;
+        case CGPU_FORMAT_R8G8_SNORM:
+            return EGDIImageFormat::LA8;
+        case CGPU_FORMAT_R8G8_UINT:
+            return EGDIImageFormat::LA8;
+        case CGPU_FORMAT_R8G8_SINT:
+            return EGDIImageFormat::LA8;
+        case CGPU_FORMAT_R8G8_SRGB:
+            return EGDIImageFormat::LA8;
+
+        default:
+            break;
     }
     return EGDIImageFormat::None;
 }
@@ -228,7 +259,7 @@ void GDIRenderer_RenderGraph::free_image(GDIImageId img) SKR_NOEXCEPT
 {
     auto image = static_cast<GDIImage_RenderGraph*>(img);
     // TODO: cancellation
-    while (image->get_state() != EGDIResourceState::Okay) 
+    while (image->get_state() != EGDIResourceState::Okay)
     {
         // wait creation...
     }
@@ -240,7 +271,7 @@ void GDIRenderer_RenderGraph::free_texture(GDITextureId tex) SKR_NOEXCEPT
 {
     auto texture = static_cast<GDITexture_RenderGraph*>(tex);
     // TODO: cancellation
-    while (texture->get_state() != EGDIResourceState::Okay) 
+    while (texture->get_state() != EGDIResourceState::Okay)
     {
         // wait creation...
     }
@@ -261,7 +292,7 @@ void GDIRenderer_RenderGraph::free_texture_update(IGDITextureUpdate* tex) SKR_NO
 {
     auto update = static_cast<GDITextureUpdate_RenderGraph*>(tex);
     // TODO: cancellation
-    while (update->get_state() != EGDIResourceState::Okay) 
+    while (update->get_state() != EGDIResourceState::Okay)
     {
         // wait creation...
     }
@@ -273,23 +304,22 @@ GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* o
     // image data must have an owner
     SKR_ASSERT(owner);
 
-    function_append(this->ram_io_enqueued_callback, [image = owner](){
+    function_append(this->ram_io_enqueued_callback, [image = owner]() {
         skr_atomicu32_store_release(&image->state, static_cast<uint32_t>(EGDIResourceState::Loading));
     });
-    function_append(this->ram_io_finished_callback, [image = owner](){
+    function_append(this->ram_io_finished_callback, [image = owner]() {
         skr_atomicu32_store_release(&image->state, static_cast<uint32_t>(EGDIResourceState::Initializing));
     });
-    function_append(this->ram_data_finsihed_callback, [image = owner](){
+    function_append(this->ram_data_finsihed_callback, [image = owner]() {
         skr_atomicu32_store_release(&image->state, static_cast<uint32_t>(EGDIResourceState::Okay));
     });
-    
+
     if (owner->source == EGDIImageSource::File)
     {
-        const auto on_complete = +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata)
-        {
+        const auto on_complete = +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata) {
             auto owner = static_cast<GDIImage_RenderGraph*>(usrdata);
             owner->async_data.ram_io_finished_callback();
-    #ifdef SKR_GUI_RENDERER_USE_IMAGE_CODER
+#ifdef SKR_GUI_RENDERER_USE_IMAGE_CODER
             if (owner->async_data.useImageCoder)
             {
                 auto progress = owner->async_data.decoding_progress = SPtr<DecodingProgress>::Create(owner);
@@ -299,15 +329,14 @@ GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* o
                 }
             }
             else
-    #endif
+#endif
             {
                 owner->pixel_data = owner->raw_data;
                 owner->async_data.ram_data_finsihed_callback();
                 // owner->format
             }
         };
-        const auto on_enqueue = +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata)
-        {
+        const auto on_enqueue = +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata) {
             auto pAsyncData = static_cast<GDIImageAsyncData_RenderGraph*>(usrdata);
             pAsyncData->ram_io_enqueued_callback();
         };
@@ -328,7 +357,7 @@ GDIImageId GDIImageAsyncData_RenderGraph::DoAsync(struct GDIImage_RenderGraph* o
         if (owner->async_data.useImageCoder)
         {
             owner->pixel_data = image_coder_decode_image(owner->raw_data->get_data(), owner->raw_data->get_size(),
-                owner->image_height, owner->image_width, owner->image_depth, owner->format);
+                                                         owner->image_height, owner->image_width, owner->image_depth, owner->format);
         }
         else
 #endif
@@ -353,52 +382,51 @@ GDITextureId GDITextureAsyncData_RenderGraph::DoAsync(struct GDITexture_RenderGr
     // texture data must have an owner
     SKR_ASSERT(owner);
 
-    auto vram_request_from_image = [texture = owner](){
-            ZoneScopedN("CreateGUITexture(VRAMService)");
+    auto vram_request_from_image = [texture = owner]() {
+        ZoneScopedN("CreateGUITexture(VRAMService)");
 
-            auto vram_io_info = make_zeroed<skr_vram_texture_io_t>();
+        auto vram_io_info = make_zeroed<skr_vram_texture_io_t>();
+        auto& intermediate_image = texture->intermediate_image;
+
+        const auto& pixel_data = intermediate_image.pixel_data;
+        vram_io_info.src_memory.bytes = pixel_data->get_data();
+        vram_io_info.src_memory.size = pixel_data->get_size();
+        vram_io_info.device = texture->async_data.device;
+        vram_io_info.transfer_queue = texture->async_data.transfer_queue;
+
+        vram_io_info.vtexture.depth = intermediate_image.image_depth;
+        vram_io_info.vtexture.height = intermediate_image.image_height;
+        vram_io_info.vtexture.width = intermediate_image.image_width;
+        vram_io_info.vtexture.format = intermediate_image.format;
+        vram_io_info.vtexture.resource_types = CGPU_RESOURCE_TYPE_TEXTURE;
+
+        vram_io_info.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata) {
+            auto texture = static_cast<GDITexture_RenderGraph*>(usrdata);
             auto& intermediate_image = texture->intermediate_image;
+            texture->texture = texture->async_data.vram_destination.texture;
+            texture->intializeBindTable();
 
-            const auto& pixel_data = intermediate_image.pixel_data;
-            vram_io_info.src_memory.bytes = pixel_data->get_data();
-            vram_io_info.src_memory.size = pixel_data->get_size();
-            vram_io_info.device = texture->async_data.device;
-            vram_io_info.transfer_queue = texture->async_data.transfer_queue;
+            skr_atomicu32_store_release(&texture->state, static_cast<uint32_t>(EGDIResourceState::Okay));
 
-            vram_io_info.vtexture.depth = intermediate_image.image_depth;
-            vram_io_info.vtexture.height = intermediate_image.image_height;
-            vram_io_info.vtexture.width = intermediate_image.image_width;
-            vram_io_info.vtexture.format = intermediate_image.format;
-            vram_io_info.vtexture.resource_types = CGPU_RESOURCE_TYPE_TEXTURE;
-
-            vram_io_info.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata)
-            {
-                auto texture = static_cast<GDITexture_RenderGraph*>(usrdata);
-                auto& intermediate_image = texture->intermediate_image;
-                texture->texture = texture->async_data.vram_destination.texture;
-                texture->intializeBindTable();
-
-                skr_atomicu32_store_release(&texture->state, static_cast<uint32_t>(EGDIResourceState::Okay));
-                
-                intermediate_image.pixel_data.reset();
-                intermediate_image.raw_data.reset();
-            };
-            vram_io_info.callback_datas[SKR_IO_STAGE_COMPLETED] = texture;
-            texture->async_data.vram_service->request(&vram_io_info, &texture->async_data.vram_request, &texture->async_data.vram_destination);
+            intermediate_image.pixel_data.reset();
+            intermediate_image.raw_data.reset();
         };
+        vram_io_info.callback_datas[SKR_IO_STAGE_COMPLETED] = texture;
+        texture->async_data.vram_service->request(&vram_io_info, &texture->async_data.vram_request, &texture->async_data.vram_destination);
+    };
 
     if (owner->source == EGDITextureSource::File || owner->source == EGDITextureSource::Data)
     {
         auto& image_async_data = owner->intermediate_image.async_data;
-        function_append(image_async_data.ram_io_enqueued_callback, [texture = owner](){
+        function_append(image_async_data.ram_io_enqueued_callback, [texture = owner]() {
             skr_atomicu32_store_release(&texture->state, static_cast<uint32_t>(EGDIResourceState::Loading));
         });
-        function_append(image_async_data.ram_io_finished_callback, [texture = owner](){
+        function_append(image_async_data.ram_io_finished_callback, [texture = owner]() {
             skr_atomicu32_store_release(&texture->state, static_cast<uint32_t>(EGDIResourceState::Initializing));
         });
-        function_append(image_async_data.ram_data_finsihed_callback,  vram_request_from_image);
+        function_append(image_async_data.ram_data_finsihed_callback, vram_request_from_image);
         // ram + vram
-        owner->intermediate_image.async_data.DoAsync(&owner->intermediate_image, vfs, ram_service); 
+        owner->intermediate_image.async_data.DoAsync(&owner->intermediate_image, vfs, ram_service);
         // direct vram storage (TBD)
     }
     else if (owner->source == EGDITextureSource::Image)
@@ -485,4 +513,5 @@ GDITextureId GDIRenderer_RenderGraph::create_texture(const GDITextureDescriptor*
     return texture->async_data.DoAsync(texture, vfs, ram_service);
 }
 
-} }
+} // namespace gdi
+} // namespace skr

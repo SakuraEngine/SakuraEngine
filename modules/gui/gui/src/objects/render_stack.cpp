@@ -10,93 +10,89 @@ RenderStack::RenderStack(skr_gdi_device_id gdi_device)
     : RenderBox(gdi_device)
 {
     diagnostic_builder.add_properties(
-        SkrNew<TextDiagnosticProperty>(u8"type", u8"stack", u8"place children in stack"));
+    SkrNew<TextDiagnosticProperty>(u8"type", u8"stack", u8"place children in stack"));
 }
 
 void RenderStack::layout(BoxConstraint constraints, bool needSize)
 {
-    set_size(constraints.max_size);
-    float width = get_size().x;
-    float height = get_size().y;
+    set_size(constraints.max_size());
+    float width = get_size().width;
+    float height = get_size().height;
     for (int i = 0; i < get_child_count(); i++)
     {
         RenderBox* child = get_child_as_box(i);
         Positional positional = get_position(i);
-        BoxConstraint childConstraints;
-        childConstraints.min_size = skr_float2_t{ 0, 0 };
-        childConstraints.max_size = skr_float2_t{ std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() };
+        BoxConstraint childConstraints = {};
         if (positional.left && positional.right)
         {
-            if (positional.minWidth || positional.maxWidth)
+            if (positional.min_width || positional.max_width)
             {
                 SKR_GUI_LOG_WARN("Both left and right are set, width will be ignored");
             }
-            childConstraints.min_size.x = childConstraints.max_size.x =
-                width - positional.left.get_value(width) - positional.right.get_value(width);
+            childConstraints.min_width = childConstraints.max_width = width - positional.left.get_pixel(width) - positional.right.get_pixel(width);
         }
         else
         {
-            if (positional.minWidth)
+            if (positional.min_width)
             {
-                childConstraints.min_size.x = positional.minWidth.get_value(width);
+                childConstraints.min_width = positional.min_width.get_pixel(width);
             }
-            if (positional.maxWidth)
+            if (positional.max_width)
             {
-                childConstraints.max_size.x = positional.maxWidth.get_value(width);
+                childConstraints.max_width = positional.max_width.get_pixel(width);
             }
         }
         if (positional.top && positional.bottom)
         {
-            if (positional.minHeight || positional.maxHeight)
+            if (positional.min_height || positional.max_height)
             {
                 SKR_GUI_LOG_WARN("Both top and bottom are set, height will be ignored");
             }
-            childConstraints.min_size.y = childConstraints.max_size.y =
-                height - positional.top.get_value(height) - positional.bottom.get_value(height);
+            childConstraints.min_width = childConstraints.max_width = height - positional.top.get_pixel(height) - positional.bottom.get_pixel(height);
         }
         else
         {
-            if (positional.minHeight)
+            if (positional.min_height)
             {
-                childConstraints.min_size.y = positional.minHeight.get_value(height);
+                childConstraints.min_height = positional.min_height.get_pixel(height);
             }
-            if (positional.maxHeight)
+            if (positional.max_height)
             {
-                childConstraints.max_size.y = positional.maxHeight.get_value(height);
+                childConstraints.max_height = positional.max_height.get_pixel(height);
             }
         }
 
         child->layout(childConstraints, true);
-        skr_float2_t childPosition = { 0, 0 };
+        Offset childPosition = { 0, 0 };
         if (positional.left)
         {
             float pivotX = positional.right ? 0 : positional.pivot.x;
-            childPosition.x = positional.left.get_value(width) - child->get_size().x * pivotX;
+            childPosition.x = positional.left.get_pixel(width) - child->get_size().width * pivotX;
         }
         else if (positional.right)
         {
             float pivotY = positional.pivot.y;
-            childPosition.x = width - positional.right.get_value(width) - child->get_size().x * (1 - pivotY);
+            childPosition.x = width - positional.right.get_pixel(width) - child->get_size().width * (1 - pivotY);
         }
         else
         {
             SKR_GUI_LOG_WARN("Both left and right are not set, default to left 0");
-            childPosition.x = -child->get_size().x * positional.pivot.x;
+            childPosition.x = -child->get_size().width * positional.pivot.x;
         }
         if (positional.top)
         {
             float pivotY = positional.bottom ? 0 : positional.pivot.y;
-            childPosition.y = positional.top.get_value(height) - child->get_size().y * pivotY;
+            childPosition.y = positional.top.get_pixel(height) - child->get_size().height * pivotY;
         }
         else if (positional.bottom)
         {
             float pivotY = positional.pivot.y;
-            childPosition.y = height - positional.bottom.get_value(height) - child->get_size().y * (1 - pivotY);
+            childPosition.y = height - positional.bottom.get_pixel(height) - child->get_size().height * (1 - pivotY);
         }
         else
         {
             SKR_GUI_LOG_WARN("Both top and bottom are not set, default to top 0");
-            childPosition.y = -child->get_size().y * positional.pivot.y;
+            childPosition.y = -child->get_size().height * positional.pivot.y;
         }
         child->set_position(childPosition);
     }

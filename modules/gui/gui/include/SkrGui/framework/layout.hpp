@@ -16,6 +16,68 @@ struct BoxConstraint {
     float max_width = std::numeric_limits<float>::infinity();
     float min_height = 0;
     float max_height = std::numeric_limits<float>::infinity();
+
+    // factory
+    inline static BoxConstraint Sized(Size size) SKR_NOEXCEPT
+    {
+        return {
+            size.width,
+            size.width,
+            size.height,
+            size.height,
+        };
+    }
+    inline static BoxConstraint Loose(Size size) SKR_NOEXCEPT
+    {
+        return {
+            0,
+            size.width,
+            0,
+            size.height,
+        };
+    }
+    inline static BoxConstraint Expand(Optional<float> width = {}, Optional<float> height = {})
+    {
+        return {
+            width ? width.get() : std::numeric_limits<float>::infinity(),
+            width ? width.get() : std::numeric_limits<float>::infinity(),
+            height ? height.get() : std::numeric_limits<float>::infinity(),
+            height ? height.get() : std::numeric_limits<float>::infinity(),
+        };
+    }
+
+    // getter setter
+    inline constexpr Size min_size() const SKR_NOEXCEPT
+    {
+        return { min_width, min_height };
+    }
+    inline constexpr Size max_size() const SKR_NOEXCEPT { return { max_width, max_height }; }
+    inline constexpr void set_min_size(Size size) SKR_NOEXCEPT
+    {
+        min_width = size.width;
+        min_height = size.height;
+    }
+    inline constexpr void set_max_size(Size size) SKR_NOEXCEPT
+    {
+        max_width = size.width;
+        max_height = size.height;
+    }
+
+    // ops
+    inline constexpr float constrain_width(float width) const SKR_NOEXCEPT
+    {
+        return std::clamp(width, min_width, max_width);
+    }
+    inline constexpr float constrain_height(float height) const SKR_NOEXCEPT
+    {
+        return std::clamp(height, min_height, max_height);
+    }
+    inline constexpr Size constrain(Size size) const SKR_NOEXCEPT
+    {
+        size.width = constrain_width(size.width);
+        size.height = constrain_height(size.height);
+        return size;
+    }
 };
 
 // 布局定位使用的基本单位，在实现 Optional 功能的同时
@@ -282,5 +344,44 @@ struct Positional {
         min_height = max_height = height;
     }
 };
+} // namespace skr::gui
 
+// flex
+namespace skr::gui
+{
+// Defines the direction in which the flex container's children are laid out.
+enum class FlexDirection
+{
+    Row,          // Children are laid out horizontally from left to right.
+    RowReverse,   // Children are laid out horizontally from right to left.
+    Column,       // Children are laid out vertically from top to bottom.
+    ColumnReverse // Children are laid out vertically from bottom to top.
+};
+
+// Defines how the children are distributed along the main axis of the flex container.
+enum class JustifyContent
+{
+    FlexStart,    // Children are packed at the start of the main axis.
+    FlexEnd,      // Children are packed at the end of the main axis.
+    Center,       // Children are centered along the main axis.
+    SpaceBetween, // Children are evenly distributed with the first child at the start and the last child at the end.
+    SpaceAround,  // Children are evenly distributed with equal space around them.
+    SpaceEvenly   // Children are evenly distributed with equal space between them.
+};
+
+// Defines how the children are aligned along the cross axis of the flex container.
+enum class AlignItems
+{
+    FlexStart, // Children are aligned at the start of the cross axis.
+    FlexEnd,   // Children are aligned at the end of the cross axis.
+    Center,    // Children are centered along the cross axis.
+    Stretch,   // Children are stretched to fill the cross axis.
+    Baseline   // Children are aligned based on their baseline.
+};
+
+enum class FlexFit
+{
+    Tight,
+    Loose,
+};
 } // namespace skr::gui

@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 #include "SkrGui/gdi/gdi.hpp"
 #include "SkrGui/interface/gdi_renderer.hpp"
 
@@ -6,11 +6,12 @@ typedef struct skr_gdi_viewport_render_params_t {
     void* usr_data SKR_IF_CPP(= nullptr);
 } skr_gdi_viewport_render_params_t;
 
-namespace skr {
-namespace gdi {
-
-struct GDIRendererDescriptor
+namespace skr
 {
+namespace gdi
+{
+
+struct GDIRendererDescriptor {
     void* usr_data = nullptr;
 };
 
@@ -49,8 +50,7 @@ enum class EGDITextureSource : uint32_t
     Count
 };
 
-typedef struct GDIImageDescriptor
-{
+typedef struct GDIImageDescriptor {
     EGDIImageSource source;
     EGDIImageFormat format;
     union
@@ -71,13 +71,12 @@ typedef struct GDIImageDescriptor
     void* usr_data = nullptr;
 } GDIImageDescriptor;
 
-typedef struct GDITextureDescriptor
-{
+typedef struct GDITextureDescriptor {
     EGDITextureSource source;
     EGDIImageFormat format;
     union
     {
-        struct 
+        struct
         {
             IGDIImage* image = nullptr;
         } from_image;
@@ -100,29 +99,25 @@ typedef struct GDITextureDescriptor
     void* usr_data = nullptr;
 } GDITextureDescriptor;
 
-typedef struct GDITextureUpdateDescriptor
-{
+typedef struct GDITextureUpdateDescriptor {
     IGDITexture* texture = nullptr;
     IGDIImage* image = nullptr;
 } GDITextureUpdateDescriptor;
 
-struct SKR_GUI_API IGDIImage : public GDIResource
-{
+struct SKR_GUI_API IGDIImage : public GDIResource {
     virtual ~IGDIImage() SKR_NOEXCEPT = default;
     virtual GDIRendererId get_renderer() const SKR_NOEXCEPT = 0;
     virtual uint32_t get_width() const SKR_NOEXCEPT = 0;
     virtual uint32_t get_height() const SKR_NOEXCEPT = 0;
-    virtual LiteSpan<const uint8_t> get_data() const SKR_NOEXCEPT = 0;
+    virtual Span<const uint8_t> get_data() const SKR_NOEXCEPT = 0;
     virtual EGDIImageFormat get_format() const SKR_NOEXCEPT = 0;
 };
 
-struct SKR_GUI_API IGDITextureUpdate : public GDIResource
-{
+struct SKR_GUI_API IGDITextureUpdate : public GDIResource {
     virtual ~IGDITextureUpdate() SKR_NOEXCEPT = default;
 };
 
-struct SKR_GUI_API IGDITexture : public GDIResource
-{
+struct SKR_GUI_API IGDITexture : public GDIResource {
     virtual ~IGDITexture() SKR_NOEXCEPT = default;
     virtual GDIRendererId get_renderer() const SKR_NOEXCEPT = 0;
     virtual uint32_t get_width() const SKR_NOEXCEPT = 0;
@@ -131,13 +126,12 @@ struct SKR_GUI_API IGDITexture : public GDIResource
     virtual EGDITextureType get_type() const SKR_NOEXCEPT = 0;
 };
 
-struct SKR_GUI_API IGDIRenderer
-{
+struct SKR_GUI_API IGDIRenderer {
     virtual ~IGDIRenderer() SKR_NOEXCEPT = default;
 
-    virtual LiteSpan<GDIVertex> fetch_element_vertices(GDIElement* element) SKR_NOEXCEPT;
-    virtual LiteSpan<index_t> fetch_element_indices(GDIElement* element) SKR_NOEXCEPT;
-    virtual LiteSpan<GDIElementDrawCommand> fetch_element_draw_commands(GDIElement* element) SKR_NOEXCEPT;
+    virtual Span<GDIVertex> fetch_element_vertices(GDIElement* element) SKR_NOEXCEPT;
+    virtual Span<index_t> fetch_element_indices(GDIElement* element) SKR_NOEXCEPT;
+    virtual Span<GDIElementDrawCommand> fetch_element_draw_commands(GDIElement* element) SKR_NOEXCEPT;
 
     // Tier 1
     virtual int initialize(const GDIRendererDescriptor* desc) SKR_NOEXCEPT = 0;
@@ -157,6 +151,7 @@ struct SKR_GUI_API IGDIRenderer
     // Tier 3
 };
 
-} }
+} // namespace gdi
+} // namespace skr
 
 SKR_DECLARE_TYPE_ID(skr::gdi::IGDIRenderer, skr_gdi_renderer);

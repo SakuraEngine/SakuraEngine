@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrGui/framework/diagnostics.hpp"
+#include "SkrGui/framework/geometry.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gui, RenderObject, skr_gui_render_object)
 SKR_DECLARE_TYPE_ID_FWD(skr::gui, Widget, skr_gui_widget)
@@ -23,7 +24,7 @@ struct SKR_GUI_API BuildContext : public DiagnosticableTreeNode {
     virtual bool mounted() SKR_NOEXCEPT = 0;
     virtual Widget* get_widget() SKR_NOEXCEPT = 0;
     virtual RenderObject* find_render_object() SKR_NOEXCEPT = 0;
-    virtual BoxSizeType get_size() SKR_NOEXCEPT = 0;
+    virtual Size get_size() SKR_NOEXCEPT = 0;
 };
 
 struct SKR_GUI_API Element : public BuildContext {
@@ -65,7 +66,7 @@ struct SKR_GUI_API Element : public BuildContext {
     // build context interfaces
     virtual bool mounted() SKR_NOEXCEPT override;
     virtual Widget* get_widget() SKR_NOEXCEPT override;
-    virtual BoxSizeType get_size() SKR_NOEXCEPT override;
+    virtual Size get_size() SKR_NOEXCEPT override;
     virtual RenderObject* find_render_object() SKR_NOEXCEPT override;
 
 private:

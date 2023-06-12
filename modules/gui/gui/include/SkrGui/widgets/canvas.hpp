@@ -4,22 +4,23 @@
 
 namespace skr::gui
 {
-struct Canvas : public MultiChildRenderObjectWidget {
+struct SKR_GUI_API Canvas : public MultiChildRenderObjectWidget {
     SKR_GUI_TYPE(Canvas, "94714676-422c-4e4e-a754-e26b5466900f", MultiChildRenderObjectWidget)
 
     struct Slot {
         Positional layout = Positional::fill();
         int32_t z_index = 0;
-        Widget* widget = nullptr;
+        Widget* child = nullptr;
     };
-    using Params = Span<Slot>;
-    void construct(Params params) SKR_NOEXCEPT;
 
-private:
-    struct _Slot {
-        Positional layout = Positional::fill();
-        int32_t z_index = 0;
+    //==> Begin Construct
+    struct Params {
+        using WidgetType = Canvas;
+        Span<Slot> children;
     };
+    void construct(Params params) SKR_NOEXCEPT;
+    //==> End Construct
+private:
     Array<Slot> _children_slots;
 };
 } // namespace skr::gui
