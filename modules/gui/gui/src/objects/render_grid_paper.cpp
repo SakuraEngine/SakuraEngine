@@ -5,8 +5,10 @@
 
 #include "tracy/Tracy.hpp"
 
-namespace skr {
-namespace gui {
+namespace skr
+{
+namespace gui
+{
 
 inline static void draw_grid_paper(gdi::GDIElement* element, float window_width, float window_height)
 {
@@ -15,7 +17,7 @@ inline static void draw_grid_paper(gdi::GDIElement* element, float window_width,
 
     element->begin_frame(1.f);
     // draw background
-    {            
+    {
         element->begin_path();
         element->rect(0, 0, window_width, window_height);
         element->fill_color(235u, 235u, 235u, 255u);
@@ -72,7 +74,7 @@ inline static void draw_grid_paper(gdi::GDIElement* element, float window_width,
         element->line_to(pos, window_height);
     }
     element->stroke();
-    
+
     // draw absolute sub-meshes
     element->begin_path();
     element->stroke_width(1.f);
@@ -93,13 +95,13 @@ inline static void draw_grid_paper(gdi::GDIElement* element, float window_width,
 }
 
 RenderGridPaper::RenderGridPaper(skr_gdi_device_id gdi_device)
-    : RenderBox(gdi_device), gdi_element(nullptr)
+    : RenderBox(gdi_device)
+    , gdi_element(nullptr)
 {
     gdi_element = gdi_device->create_element();
 
     diagnostic_builder.add_properties(
-        SkrNew<TextDiagnosticProperty>(u8"type", u8"grid_paper", u8"draws grid paper")
-    );
+        SkrNew<TextDiagnosticProperty>(u8"type", u8"grid_paper", u8"draws grid paper"));
 
     // TEST
     size.x = 900.f;
@@ -113,7 +115,6 @@ RenderGridPaper::~RenderGridPaper()
 
 void RenderGridPaper::layout(BoxConstraint constraints, bool needSize)
 {
-
 }
 
 void RenderGridPaper::draw(const DrawParams* params)
@@ -126,7 +127,7 @@ void RenderGridPaper::draw(const DrawParams* params)
     platform_window->get_extent(&w, &h);
     const float window_width = (float)w, window_height = (float)h;
     // END TEST
-    
+
     draw_grid_paper(gdi_element, window_width, window_height);
 
     addElementToCanvas(params, gdi_element);
@@ -134,6 +135,5 @@ void RenderGridPaper::draw(const DrawParams* params)
     RenderBox::draw(params);
 }
 
-SKR_GUI_TYPE_IMPLMENTATION(RenderGridPaper);
-
-} }
+} // namespace gui
+} // namespace skr

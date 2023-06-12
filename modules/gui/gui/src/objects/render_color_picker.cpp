@@ -6,9 +6,10 @@
 
 #include "tracy/Tracy.hpp"
 
-namespace skr {
-namespace gui {
-
+namespace skr
+{
+namespace gui
+{
 
 void RenderColorPicker::draw_color_picker(gdi::GDIElement* element, gdi::GDIPaint* paint, float x, float y, float w, float h)
 {
@@ -18,40 +19,41 @@ void RenderColorPicker::draw_color_picker(gdi::GDIElement* element, gdi::GDIPain
     const float kPi = 3.1415926535897932384626433832795f;
     element->begin_frame(1.f);
     float cx = x + w * 0.5f;
-	float cy = y + h * 0.5f;
-	// float r = (w < h ? w : h) * 0.5f;
-	float r1 = (w < h ? w : h) * 0.5f - 5.0f;
-	float r0 = r1 - 20.0f;
+    float cy = y + h * 0.5f;
+    // float r = (w < h ? w : h) * 0.5f;
+    float r1 = (w < h ? w : h) * 0.5f - 5.0f;
+    float r0 = r1 - 20.0f;
     float r = (r0 + r1) * 0.5f;
 
     // const uint32_t n = 6u;
     // const float nf = (float)n;
-	// for (int32_t i = 0; i < n; i++) 
+    // for (int32_t i = 0; i < n; i++)
     {
         element->begin_path();
         element->circle(cx, cy, r);
         element->close_path();
         element->stroke_width(r1 - r0);
-        SKR_ASSERT(paint && "ColorPicker: paint is null!");
+        SKR_GUI_ASSERT(paint && "ColorPicker: paint is null!");
         // element->stroke_color(255u, 255u, 255u, 255u);
-        paint->set_pattern(cx, cy, w, h, 0, (gdi::GDITextureId)nullptr, {1.f, 1.f, 1.f, 1.f});
-        paint->custom_vertex_color(+[](struct skr_gdi_vertex_t* pVertex, void* usrdata) SKR_NOEXCEPT
-        {
-            // adjust the rotate to CW[H:0~360]
-            pVertex->texcoord.x = 1.f - pVertex->texcoord.x;
-            // adjust H:0 to 0 degree
-            float h = fmod((180.f + pVertex->texcoord.x * 360.f), 360.f);
-            pVertex->color = gdi::hsv_to_abgr(h, 1.0, 1.0);
-        }, this);
+        paint->set_pattern(cx, cy, w, h, 0, (gdi::GDITextureId) nullptr, { 1.f, 1.f, 1.f, 1.f });
+        paint->custom_vertex_color(
+            +[](struct skr_gdi_vertex_t* pVertex, void* usrdata) SKR_NOEXCEPT {
+                // adjust the rotate to CW[H:0~360]
+                pVertex->texcoord.x = 1.f - pVertex->texcoord.x;
+                // adjust H:0 to 0 degree
+                float h = fmod((180.f + pVertex->texcoord.x * 360.f), 360.f);
+                pVertex->color = gdi::hsv_to_abgr(h, 1.0, 1.0);
+            },
+            this);
         element->stroke_paint(paint);
         element->stroke();
-	}
+    }
     // hue ring
     element->begin_path();
     element->circle(cx, cy, r0 - 0.5f);
     element->circle(cx, cy, r1 + 0.5f);
     element->stroke_color(0u, 0u, 0u, 64u);
-	element->stroke_width(1.0f);
+    element->stroke_width(1.0f);
     element->stroke();
 
     // selector
@@ -87,24 +89,25 @@ void RenderColorPicker::draw_color_picker(gdi::GDIElement* element, gdi::GDIPain
     element->line_to(ax, ay);
     element->line_to(bx, by);
     element->close_path();
-    paint->custom_vertex_color(+[](struct skr_gdi_vertex_t* pVertex, void* usrdata) SKR_NOEXCEPT
-    {
-        auto _this = (RenderColorPicker*)usrdata;
-        const auto index = static_cast<uint32_t>(pVertex->texcoord.x / 0.3333f);
-        const double S[] = { 0.0, 0.0, 1.0 };
-        const double V[] = { 0.0, 1.0, 1.0 };
-        if (0 <= index && index < 3)
-        {
-            pVertex->color = gdi::hsv_to_abgr(_this->get_current_hue_by_degree(), S[index], V[index]);
-        }
-    }, this);
+    paint->custom_vertex_color(
+        +[](struct skr_gdi_vertex_t* pVertex, void* usrdata) SKR_NOEXCEPT {
+            auto _this = (RenderColorPicker*)usrdata;
+            const auto index = static_cast<uint32_t>(pVertex->texcoord.x / 0.3333f);
+            const double S[] = { 0.0, 0.0, 1.0 };
+            const double V[] = { 0.0, 1.0, 1.0 };
+            if (0 <= index && index < 3)
+            {
+                pVertex->color = gdi::hsv_to_abgr(_this->get_current_hue_by_degree(), S[index], V[index]);
+            }
+        },
+        this);
     paint->enable_imagespace_coordinate(true);
     element->fill_paint(paint);
     element->fill();
 
     // select circle on triangle
-    ax = cosf(120.0f/180.0f *kPi) * r * 0.3f;
-	ay = sinf(120.0f/180.0f * kPi) * r * 0.4f;
+    ax = cosf(120.0f / 180.0f * kPi) * r * 0.3f;
+    ay = sinf(120.0f / 180.0f * kPi) * r * 0.4f;
     element->stroke_width(2.f);
     element->begin_path();
     element->circle(ax, ay, 5);
@@ -115,14 +118,14 @@ void RenderColorPicker::draw_color_picker(gdi::GDIElement* element, gdi::GDIPain
 }
 
 RenderColorPicker::RenderColorPicker(skr_gdi_device_id gdi_device)
-    : RenderBox(gdi_device), gdi_element(nullptr)
+    : RenderBox(gdi_device)
+    , gdi_element(nullptr)
 {
     gdi_element = gdi_device->create_element();
     gdi_paint = gdi_device->create_paint();
 
     diagnostic_builder.add_properties(
-        SkrNew<TextDiagnosticProperty>(u8"type", u8"color_picker", u8"draws color picker")
-    );
+        SkrNew<TextDiagnosticProperty>(u8"type", u8"color_picker", u8"draws color picker"));
 }
 
 RenderColorPicker::~RenderColorPicker()
@@ -133,7 +136,6 @@ RenderColorPicker::~RenderColorPicker()
 
 void RenderColorPicker::layout(BoxConstraint constraints, bool needSize)
 {
-
 }
 
 void RenderColorPicker::draw(const DrawParams* params)
@@ -153,14 +155,13 @@ void RenderColorPicker::draw(const DrawParams* params)
     // END TEST
 
     current_degree = fmod(current_degree, 360.f);
-    draw_color_picker(gdi_element, gdi_paint, 
-        pos.x, pos.y, size.x, size.y);
-        
+    draw_color_picker(gdi_element, gdi_paint,
+                      pos.x, pos.y, size.x, size.y);
+
     addElementToCanvas(params, gdi_element);
 
     RenderBox::draw(params);
 }
 
-SKR_GUI_TYPE_IMPLMENTATION(RenderColorPicker);
-
-} }
+} // namespace gui
+} // namespace skr

@@ -1,6 +1,7 @@
 #pragma once
 #include "platform/memory.h"
 #include "SkrInputSystem/input_value.hpp"
+#include "containers/vector.hpp"
 
 namespace skr {
 namespace input {
@@ -40,7 +41,7 @@ protected:
 
     bool runtime_mappable = false;
     //TODO: modifier ownership?
-    lite::VectorStorage<InputModifierId> modifiers;
+    vector<InputModifierId> modifiers;
     InputValueStorage raw_value;
 };
 
@@ -62,7 +63,7 @@ public:
     void unmap_all() SKR_NOEXCEPT;
 
 protected:
-    lite::VectorStorage<SObjectPtr<InputMapping>> mappings_;
+    vector<SObjectPtr<InputMapping>> mappings_;
 };
 
 struct SKR_INPUTSYSTEM_API InputMapping_Keyboard : public InputMapping

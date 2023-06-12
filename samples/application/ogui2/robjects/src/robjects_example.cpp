@@ -27,11 +27,11 @@
 #include "SkrImGui/skr_imgui_rg.h"
 
 #ifdef SKR_OS_WINDOWS
-#ifndef WIN32_LEAN_AND_MEAN
-    #define WIN32_LEAN_AND_MEAN
-#endif
-#include <shellscalingapi.h>
-#pragma comment(lib, "Shcore.lib")
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
+    #include <shellscalingapi.h>
+    #pragma comment(lib, "Shcore.lib")
 #endif
 
 #include "SkrInput/input.h"
@@ -40,8 +40,7 @@
 
 extern void create_imgui_resources(ECGPUFormat format, CGPUSamplerId sampler, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs);
 
-struct robjects_example_application : public robjects_application_t
-{
+struct robjects_example_application : public robjects_application_t {
     CGPUSamplerId imgui_sampler = nullptr;
     bool initialize()
     {
@@ -59,7 +58,7 @@ struct robjects_example_application : public robjects_application_t
         auto action = input_system->create_input_action(skr::input::EValueType::kBool);
         auto trigger = input_system->create_trigger<skr::input::InputTriggerDown>();
         action->add_trigger(trigger);
-        action->bind_event<bool>([](const bool& down){
+        action->bind_event<bool>([](const bool& down) {
             SKR_LOG_INFO("Key F pressed: %d", down);
         });
         mapping->action = action;
@@ -69,7 +68,7 @@ struct robjects_example_application : public robjects_application_t
         auto action2 = input_system->create_input_action(skr::input::EValueType::kBool);
         auto trigger2 = input_system->create_trigger<skr::input::InputTriggerPressed>();
         action2->add_trigger(trigger2);
-        action2->bind_event<bool>([](const bool& f2){
+        action2->bind_event<bool>([](const bool& f2) {
             int x, y;
             skr_cursor_pos(&x, &y, ECursorCoordinate::CURSOR_COORDINATE_WINDOW);
             SKR_LOG_INFO("Mouse Clicked at: X[%d] Y[%d]", x, y);
@@ -94,7 +93,6 @@ struct robjects_example_application : public robjects_application_t
         text->add_text(SKR_UTF8("Hello World!"));
         stack = SkrNew<skr::gui::RenderStack>(gdi.device);
 
-
         root_window->add_child(canvas);
         canvas->add_child(grid_paper);
         canvas->add_child(color_picker);
@@ -110,7 +108,7 @@ struct robjects_example_application : public robjects_application_t
         stack->set_positional(1, skr::gui::Positional{}.set_left_percent(0.5).set_top(10).set_pivot(0.5, 0));
         canvas->add_child(stack);
 
-        stack->layout(skr::gui::BoxConstraint{{(float)gdi.gfx.window_width, (float)gdi.gfx.window_height}, {0, 0}}, true);
+        stack->layout(skr::gui::BoxConstraint{ { (float)gdi.gfx.window_width, (float)gdi.gfx.window_height }, { 0, 0 } }, true);
 
         // initialize render graph
         if (graph.initialize(gdi.gfx))
@@ -146,17 +144,17 @@ struct robjects_example_application : public robjects_application_t
             node_flags |= ImGuiTreeNodeFlags_Leaf;
         }
         if (ImGui::TreeNodeEx(show_name.c_str(), node_flags))
-		{
-            if (ImGui::IsItemClicked()) 
+        {
+            if (ImGui::IsItemClicked())
             {
                 selected_diagnostic = diagnostic;
             }
-			for (const auto diagnostic_node : diagnostic->get_diagnostics_children())
+            for (const auto diagnostic_node : diagnostic->get_diagnostics_children())
             {
-				diagnostics_inspect_recursively(diagnostic_node);
+                diagnostics_inspect_recursively(diagnostic_node);
             }
-			ImGui::TreePop();
-		}
+            ImGui::TreePop();
+        }
         ImGui::PopID();
     }
 
@@ -176,7 +174,7 @@ struct robjects_example_application : public robjects_application_t
             diagnostics_inspect_recursively(root_window);
             ImGui::EndChild();
         }
-        ImGui::NextColumn(); 
+        ImGui::NextColumn();
         {
             ImGui::BeginChild("Properties");
             if (selected_diagnostic)
@@ -201,10 +199,10 @@ struct robjects_example_application : public robjects_application_t
 
     void draw()
     {
-        auto diagnostic_as_render_box = [&](){
+        auto diagnostic_as_render_box = [&]() {
             if (selected_diagnostic)
             {
-                if (auto render_box = selected_diagnostic->Cast<skr::gui::RenderBox>())
+                if (auto render_box = selected_diagnostic->type_cast<skr::gui::RenderBox>())
                 {
                     return render_box;
                 }
@@ -213,12 +211,12 @@ struct robjects_example_application : public robjects_application_t
         };
 
         auto render_box = diagnostic_as_render_box();
-        if(render_box) render_box->enable_debug_draw(true);
+        if (render_box) render_box->enable_debug_draw(true);
 
         skr::gui::WindowContext::DrawParams draw_params = {};
         window_context->draw(&draw_params);
-        
-        if(render_box) render_box->enable_debug_draw(false);
+
+        if (render_box) render_box->enable_debug_draw(false);
     }
 
     void render()
@@ -255,7 +253,7 @@ struct robjects_example_application : public robjects_application_t
 
         if (imgui_sampler) cgpu_free_sampler(imgui_sampler);
         render_graph_imgui_finalize();
-        
+
         // free render objects
         SkrDelete(text);
         SkrDelete(image1);
@@ -265,7 +263,7 @@ struct robjects_example_application : public robjects_application_t
         SkrDelete(color_picker);
         SkrDelete(grid_paper);
         SkrDelete(canvas);
-        
+
         skr::input::InputSystem::Destroy(input_system);
         skr::input::Input::Finalize();
 
@@ -287,10 +285,9 @@ struct robjects_example_application : public robjects_application_t
     skr::input::InputSystem* input_system = nullptr;
 };
 
-struct KeyboardTest
-{
+struct KeyboardTest {
     skr::input::InputLayer* pLayer = nullptr;
-    void PollKeyboardInput() noexcept 
+    void PollKeyboardInput() noexcept
     {
         using namespace skr::input;
         if (auto input = skr::input::Input::GetInstance())
@@ -308,7 +305,7 @@ struct KeyboardTest
                 {
                     auto k = keystates[j];
                     SKR_LOG_INFO("GameInput: Key:0x%02X, Timestamp: %lld, Elapsed: %d us(%d ms), Dead:%d",
-                        keystates[j].virtual_key, timestamp, elapsed_us, elapsed_us / 1000, k.is_dead_key);
+                                 keystates[j].virtual_key, timestamp, elapsed_us, elapsed_us / 1000, k.is_dead_key);
                 }
                 if (pReading) pLayer->Release(pReading);
             }
@@ -316,58 +313,60 @@ struct KeyboardTest
     }
     ~KeyboardTest()
     {
-
     }
 };
 
-struct ClickListener
-{
-    ClickListener(uint32_t threshold_in_ms = 500) : ThresholdInMs(threshold_in_ms) {}
+struct ClickListener {
+    ClickListener(uint32_t threshold_in_ms = 500)
+        : ThresholdInMs(threshold_in_ms)
+    {
+    }
     // ~ClickListener() { if (Mouse) Mouse->Release(); if (previous) previous->Release(); }
     skr::input::InputLayer* pLayer = nullptr;
-    skr::input::InputDevice* Mouse = nullptr; 
-    skr::input::InputReading* previous = nullptr; 
+    skr::input::InputDevice* Mouse = nullptr;
+    skr::input::InputReading* previous = nullptr;
     bool WasUp = false;
     uint32_t Counter = 0;
     uint32_t ThresholdInMs = 0;
-    bool isDown(const skr::input::InputMouseState& state) 
-    { 
-        return (state.buttons & skr::input::InputMouseLeftButton) && (state.buttons & skr::input::InputMouseRightButton); 
+    bool isDown(const skr::input::InputMouseState& state)
+    {
+        return (state.buttons & skr::input::InputMouseLeftButton) && (state.buttons & skr::input::InputMouseRightButton);
     }
     uint32_t Trigger()
     {
         using namespace skr::input;
-        InputReading* current = nullptr; 
+        InputReading* current = nullptr;
         if (auto input = skr::input::Input::GetInstance())
         {
-            if (input->GetCurrentReading(InputKindMouse, Mouse, &pLayer, &current) == INPUT_RESULT_OK) 
-            { 
+            if (input->GetCurrentReading(InputKindMouse, Mouse, &pLayer, &current) == INPUT_RESULT_OK)
+            {
                 InputMouseState mouseState = {};
-                if (pLayer->GetMouseState(current, &mouseState)) 
-                { 
-                    SKR_DEFER({WasUp = !isDown(mouseState);});
+                if (pLayer->GetMouseState(current, &mouseState))
+                {
+                    SKR_DEFER({ WasUp = !isDown(mouseState); });
                     if (isDown(mouseState) && previous != current && WasUp)
                     {
                         SKR_DEFER({ if (previous) pLayer->Release(previous); previous = current; });
                         if (previous && pLayer->GetTimestampUSec(previous) + ThresholdInMs * 1000.f >= pLayer->GetTimestampUSec(current))
                         {
                             Counter++;
-                        } 
-                        else /* new click */ {
+                        }
+                        else /* new click */
+                        {
                             if (Mouse) pLayer->Release(Mouse);
-                            pLayer->GetDevice(current, &Mouse); 
+                            pLayer->GetDevice(current, &Mouse);
                             Counter = 1;
                         }
                         return Counter;
                     }
                 }
                 pLayer->Release(current);
-            } 
+            }
         }
         return 0;
     }
-    void PollMouseInput() noexcept 
-    { 
+    void PollMouseInput() noexcept
+    {
         if (uint32_t trigger_count = Trigger())
         {
             if (trigger_count)
@@ -402,12 +401,14 @@ int main(int argc, char* argv[])
         +[](SWindowHandle window, void* pQuit) {
             bool& quit = *(bool*)pQuit;
             quit = true;
-        }, &quit);
+        },
+        &quit);
     handler->add_window_resize_handler(
         +[](SWindowHandle window, int32_t w, int32_t h, void* usr_data) {
             robjects_example_application* pApp = (robjects_example_application*)usr_data;
             app_resize_window(&pApp->gdi.gfx, w, h);
-        }, &App);
+        },
+        &App);
     skr_imgui_initialize(handler);
     while (!quit)
     {

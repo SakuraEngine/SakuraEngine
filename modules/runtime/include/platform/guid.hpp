@@ -14,6 +14,11 @@ inline SKR_CONSTEXPR bool operator==(skr_guid_t a, skr_guid_t b)
     return result;
 }
 
+inline SKR_CONSTEXPR bool operator!=(skr_guid_t a, skr_guid_t b)
+{
+    return !(a == b);
+}
+
 namespace skr::guid
 {
 struct hash {

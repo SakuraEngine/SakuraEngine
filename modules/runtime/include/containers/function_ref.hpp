@@ -83,8 +83,7 @@ public:
 
 private:
     void* obj_ = nullptr;
-    R (*callback_)
-    (void*, Args...) = nullptr;
+    R (*callback_)(void*, Args...) = nullptr;
 };
 
 /// Swaps the referred callables of `lhs` and `rhs`.

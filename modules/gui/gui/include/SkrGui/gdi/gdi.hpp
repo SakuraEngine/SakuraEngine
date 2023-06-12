@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrGui/framework/fwd_containers.hpp"
+#include "SkrGui/fwd_config.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIPaint, skr_gdi_paint)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIImage, skr_gdi_image)
@@ -8,33 +8,33 @@ SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDITextureUpdate, skr_gdi_texture_update)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIRenderer, skr_gdi_renderer)
 SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIMaterial, skr_gdi_material)
 
-typedef struct skr_gdi_element_draw_command_t
-{
+typedef struct skr_gdi_element_draw_command_t {
     skr_gdi_texture_id texture SKR_IF_CPP(= nullptr);
     skr_gdi_material_id material SKR_IF_CPP(= nullptr);
     uint32_t first_index SKR_IF_CPP(= 0);
     uint32_t index_count SKR_IF_CPP(= 0);
-    skr_float4_t texture_swizzle SKR_IF_CPP(= {0.0f, 0.0f, 0.0f, 0.0f});
+    skr_float4_t texture_swizzle SKR_IF_CPP(= { 0.0f, 0.0f, 0.0f, 0.0f });
 } skr_gdi_element_draw_command_t;
 
-typedef struct skr_gdi_vertex_t
-{
+typedef struct skr_gdi_vertex_t {
     skr_float4_t position;
     skr_float2_t texcoord;
     skr_float2_t aa;
-    skr_float2_t clipUV; //uv in clipspace
+    skr_float2_t clipUV; // uv in clipspace
     skr_float2_t clipUV2;
-    uint32_t     color; 
+    uint32_t color;
 } skr_gdi_vertex_t;
 
 typedef uint16_t skr_gdi_index_t;
 
-typedef void(*skr_gdi_custom_vertex_painter_t)(struct skr_gdi_vertex_t* pVertex, void* usrdata);
+typedef void (*skr_gdi_custom_vertex_painter_t)(struct skr_gdi_vertex_t* pVertex, void* usrdata);
 
-namespace skr {
-namespace gdi {
+namespace skr
+{
+namespace gdi
+{
 
-template<typename T>
+template <typename T>
 using LiteSpan = skr::gui::LiteSpan<T>;
 
 using index_t = skr_gdi_index_t;
@@ -56,22 +56,20 @@ enum class EGDIBackend
 
 enum class EGDIResourceState : uint32_t
 {
-    Requsted     =    0x00000001,
-    Loading      =    0x00000002,
-    Initializing =    0x00000004,
-    Okay         =    0x00000008,
-    Finalizing   =    0x00000010,
+    Requsted = 0x00000001,
+    Loading = 0x00000002,
+    Initializing = 0x00000004,
+    Okay = 0x00000008,
+    Finalizing = 0x00000010,
     Count = 5
 };
 
-struct SKR_GUI_API GDIResource
-{
+struct SKR_GUI_API GDIResource {
     virtual ~GDIResource() SKR_NOEXCEPT = default;
     virtual EGDIResourceState get_state() const SKR_NOEXCEPT = 0;
 };
 
-struct SKR_GUI_API GDIPaint
-{
+struct SKR_GUI_API GDIPaint {
     virtual ~GDIPaint() SKR_NOEXCEPT = default;
 
     /*
@@ -100,11 +98,10 @@ enum class EGDISolidity : uint32_t
     Count = 2
 };
 
-struct SKR_GUI_API GDIElement
-{
+struct SKR_GUI_API GDIElement {
     friend struct IGDIRenderer;
     virtual ~GDIElement() SKR_NOEXCEPT = default;
-    
+
     virtual void begin_frame(float devicePixelRatio) = 0;
     virtual void begin_path() = 0;
     virtual void close_path() = 0;
@@ -112,12 +109,12 @@ struct SKR_GUI_API GDIElement
     virtual void rect(float x, float y, float w, float h) = 0;
     virtual void circle(float cx, float cy, float r) = 0;
     virtual void rounded_rect_varying(float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft) = 0;
-    
+
     virtual void translate(float x, float y) = 0;
     virtual void rotate(float r) = 0;
     virtual void move_to(float x, float y) = 0;
     virtual void line_to(float x, float y) = 0;
-    
+
     virtual void stroke_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a) = 0;
     virtual void stroke_color(float r, float g, float b, float a) = 0;
     virtual void stroke_paint(GDIPaint* paint) = 0;
@@ -150,8 +147,7 @@ struct SKR_GUI_API GDIElement
     virtual void set_texture_swizzle(uint32_t X, uint32_t Y, uint32_t Z, uint32_t W) = 0;
 };
 
-struct SKR_GUI_API GDICanvas
-{
+struct SKR_GUI_API GDICanvas {
     virtual ~GDICanvas() SKR_NOEXCEPT = default;
 
     virtual void add_element(GDIElement* element) SKR_NOEXCEPT = 0;
@@ -173,8 +169,7 @@ struct SKR_GUI_API GDICanvas
     virtual void get_size(float* out_w, float* out_h) SKR_NOEXCEPT = 0;
 };
 
-struct SKR_GUI_API GDIViewport
-{
+struct SKR_GUI_API GDIViewport {
     virtual ~GDIViewport() SKR_NOEXCEPT = default;
 
     virtual void add_canvas(GDICanvas* canvas) SKR_NOEXCEPT = 0;
@@ -183,8 +178,7 @@ struct SKR_GUI_API GDIViewport
     virtual LiteSpan<GDICanvas*> all_canvas() SKR_NOEXCEPT = 0;
 };
 
-struct SKR_GUI_API GDIDevice
-{
+struct SKR_GUI_API GDIDevice {
     virtual ~GDIDevice() SKR_NOEXCEPT = default;
 
     [[nodiscard]] static GDIDevice* Create(EGDIBackend backend);
@@ -203,13 +197,13 @@ struct SKR_GUI_API GDIDevice
     virtual void free_paint(GDIPaint* paint) = 0;
 };
 
-struct SKR_GUI_API GDIText
-{
+struct SKR_GUI_API GDIText {
     static bool Initialize(skr_gdi_renderer_id renderer);
     static bool Finalize();
     static GDIText* Get();
 };
-} }
+} // namespace gdi
+} // namespace skr
 
 SKR_DECLARE_TYPE_ID(skr::gdi::GDIResource, skr_gdi_resource)
 SKR_DECLARE_TYPE_ID(skr::gdi::GDIPaint, skr_gdi_paint)
