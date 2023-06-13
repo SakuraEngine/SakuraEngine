@@ -51,22 +51,22 @@ constexpr skr_guid_t make_guid_helper(const char8_t* begin)
 // object & interface base
 struct SKR_GUI_API IObject {
     virtual ~IObject() = default;
-    virtual skr_guid_t guid() const SKR_NOEXCEPT = 0;
-    virtual void       base_guid(const skr_guid_t*& p, size_t n) const SKR_NOEXCEPT = 0;
-    virtual void*      cast(skr_guid_t id) const SKR_NOEXCEPT = 0;
+    virtual skr_guid_t __internal_guid() const SKR_NOEXCEPT = 0;
+    virtual void       __internal_base_guid(const skr_guid_t*& p, size_t n) const SKR_NOEXCEPT = 0;
+    virtual void*      __internal_cast(skr_guid_t id) const SKR_NOEXCEPT = 0;
 };
 
 // helper
 template <typename... Super>
 struct BaseGUIDHelper {
     inline static constexpr size_t     count = sizeof...(Super);
-    inline static constexpr skr_guid_t base_guid[] = { Super::static_guid()... };
+    inline static constexpr skr_guid_t base_guid[] = { Super::__internal_static_guid()... };
 };
 template <typename Base, typename... Super>
 struct BaseCastHelper {
     inline static void* super_cast(skr_guid_t guid, const Base* self) SKR_NOEXCEPT
     {
-        for (auto result : { Super::CastHelper::cast(guid, static_cast<const Super*>(self))... })
+        for (auto result : { Super::__Internal_CastHelper::cast(guid, static_cast<const Super*>(self))... })
         {
             if (result != nullptr) return result;
         }
@@ -76,9 +76,9 @@ struct BaseCastHelper {
     inline static void* cast(skr_guid_t guid, const Base* self) SKR_NOEXCEPT
     {
         if constexpr (sizeof...(Super) == 0)
-            return guid == Base::static_guid() ? const_cast<Base*>(self) : nullptr;
+            return guid == Base::__internal_static_guid() ? const_cast<Base*>(self) : nullptr;
         else
-            return guid == Base::static_guid() ? const_cast<Base*>(self) : super_cast(guid, self);
+            return guid == Base::__internal_static_guid() ? const_cast<Base*>(self) : super_cast(guid, self);
     }
 };
 
@@ -87,45 +87,53 @@ template <typename To, typename From>
 inline To* SkrGUICast(From* from) SKR_NOEXCEPT
 {
     if (from == nullptr) return nullptr;
-    void* p = from->cast(To::static_guid());
+    void* p = from->__internal_cast(To::__internal_static_guid());
     return p ? reinterpret_cast<To*>(p) : nullptr;
 }
 inline skr_guid_t SkrGUITypeInfo(const IObject* obj) SKR_NOEXCEPT
 {
-    return obj->guid();
+    return obj->__internal_guid();
 }
 
 } // namespace skr::gui
 
 // type marco
-#define SKR_GUI_TYPE_ROOT(__T, __GUID)                                                                                         \
-    using CastHelper = BaseCastHelper<__T>;                                                                                    \
-    inline static constexpr skr_guid_t static_guid() SKR_NOEXCEPT { return ::skr::gui::__help::make_guid_helper(u8##__GUID); } \
-    inline static constexpr void       static_base_guid(const skr_guid_t*& p, size_t n) SKR_NOEXCEPT                           \
-    {                                                                                                                          \
-        p = nullptr;                                                                                                           \
-        n = 0;                                                                                                                 \
-    }                                                                                                                          \
-    inline static void* cast(skr_guid_t id, const __T* self)                                                                   \
-    {                                                                                                                          \
-        return id == static_guid() ? const_cast<__T*>(self) : nullptr;                                                         \
-    }                                                                                                                          \
-    virtual skr_guid_t guid() const SKR_NOEXCEPT override { return static_guid(); }                                            \
-    virtual void base_guid(const skr_guid_t*& p, size_t n) const SKR_NOEXCEPT override { static_base_guid(p, n); }             \
-    virtual void* cast(skr_guid_t id) const SKR_NOEXCEPT override { return CastHelper::cast(id, this); }
+#define SKR_GUI_TYPE_ROOT(__T, __GUID)                                                                                                   \
+    using __Internal_CastHelper = BaseCastHelper<__T>;                                                                                   \
+    inline static constexpr skr_guid_t __internal_static_guid() SKR_NOEXCEPT                                                             \
+    {                                                                                                                                    \
+        constexpr auto guid = ::skr::gui::__help::make_guid_helper(u8##__GUID);                                                          \
+        return guid;                                                                                                                     \
+    }                                                                                                                                    \
+    inline static constexpr void __internal_static_base_guid(const skr_guid_t*& p, size_t n) SKR_NOEXCEPT                                \
+    {                                                                                                                                    \
+        p = nullptr;                                                                                                                     \
+        n = 0;                                                                                                                           \
+    }                                                                                                                                    \
+    inline static void* __internal_cast(skr_guid_t id, const __T* self)                                                                  \
+    {                                                                                                                                    \
+        return id == __internal_static_guid() ? const_cast<__T*>(self) : nullptr;                                                        \
+    }                                                                                                                                    \
+    virtual skr_guid_t __internal_guid() const SKR_NOEXCEPT override { return __internal_static_guid(); }                                \
+    virtual void __internal_base_guid(const skr_guid_t*& p, size_t n) const SKR_NOEXCEPT override { __internal_static_base_guid(p, n); } \
+    virtual void* __internal_cast(skr_guid_t id) const SKR_NOEXCEPT override { return __Internal_CastHelper::cast(id, this); }
 
-#define SKR_GUI_TYPE(__T, __GUID, ...)                                                                             \
-    using CastHelper = BaseCastHelper<__T, __VA_ARGS__>;                                                           \
-    using GUIDHelper = BaseGUIDHelper<__VA_ARGS__>;                                                                \
-    inline static constexpr skr_guid_t static_guid() { return ::skr::gui::__help::make_guid_helper(u8##__GUID); }  \
-    inline static constexpr void       static_base_guid(const skr_guid_t*& p, size_t n)                            \
-    {                                                                                                              \
-        p = GUIDHelper::base_guid;                                                                                 \
-        n = GUIDHelper::count;                                                                                     \
-    }                                                                                                              \
-    virtual skr_guid_t guid() const SKR_NOEXCEPT override { return static_guid(); }                                \
-    virtual void base_guid(const skr_guid_t*& p, size_t n) const SKR_NOEXCEPT override { static_base_guid(p, n); } \
-    virtual void* cast(skr_guid_t id) const SKR_NOEXCEPT override { return CastHelper::cast(id, this); }
+#define SKR_GUI_TYPE(__T, __GUID, ...)                                                                                                   \
+    using __Internal_CastHelper = BaseCastHelper<__T, __VA_ARGS__>;                                                                      \
+    using __Internal_GUIDHelper = BaseGUIDHelper<__VA_ARGS__>;                                                                           \
+    inline static constexpr skr_guid_t __internal_static_guid()                                                                          \
+    {                                                                                                                                    \
+        constexpr auto guid = ::skr::gui::__help::make_guid_helper(u8##__GUID);                                                          \
+        return guid;                                                                                                                     \
+    }                                                                                                                                    \
+    inline static constexpr void __internal_static_base_guid(const skr_guid_t*& p, size_t n)                                             \
+    {                                                                                                                                    \
+        p = __Internal_GUIDHelper::base_guid;                                                                                            \
+        n = __Internal_GUIDHelper::count;                                                                                                \
+    }                                                                                                                                    \
+    virtual skr_guid_t __internal_guid() const SKR_NOEXCEPT override { return __internal_static_guid(); }                                \
+    virtual void __internal_base_guid(const skr_guid_t*& p, size_t n) const SKR_NOEXCEPT override { __internal_static_base_guid(p, n); } \
+    virtual void* __internal_cast(skr_guid_t id) const SKR_NOEXCEPT override { return __Internal_CastHelper::cast(id, this); }
 
 #define SKR_GUI_INTERFACE_ROOT(__T, __GUID) SKR_GUI_TYPE_ROOT(__T, __GUID)
 #define SKR_GUI_INTERFACE(__T, __GUID, ...) SKR_GUI_TYPE(__T, __GUID, __VA_ARGS__)
