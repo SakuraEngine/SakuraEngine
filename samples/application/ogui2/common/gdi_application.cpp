@@ -1,7 +1,7 @@
 #include "./gdi_application.h"
 #include "misc/make_zeroed.hpp"
 #include "SkrGuiRenderer/gdi_renderer.hpp"
-#include "SkrGui/interface/gdi_renderer.hpp"
+#include "SkrGui/dev/interface/gdi_renderer.hpp"
 #include "platform/filesystem.hpp"
 #include "platform/vfs.h"
 #include "io/io.h"
@@ -13,19 +13,19 @@ bool initialize_gdi_application(gdi_application_t* app)
 {
     // initialize gfx
     app->gfx.backend = platform_default_backend;
-    auto app_name = skr::string::from_utf8(SKR_UTF8("GDI [backend:")); 
+    auto app_name = skr::string::from_utf8(SKR_UTF8("GDI [backend:"));
     app_name += gCGPUBackendNames[app->gfx.backend];
     app_name += SKR_UTF8("]");
     app->gfx.window_title = app_name.u8_str();
     if (app_create_window(&app->gfx, 900, 900)) return false;
     if (app_create_gfx_objects(&app->gfx)) return false;
-    
+
     // initialize services
     {
         std::error_code ec = {};
-        auto resourceRoot = (skr::filesystem::current_path(ec) / "../resources");
-        auto u8ResourceRoot = resourceRoot.u8string();
-        skr_vfs_desc_t vfs_desc = {};
+        auto            resourceRoot = (skr::filesystem::current_path(ec) / "../resources");
+        auto            u8ResourceRoot = resourceRoot.u8string();
+        skr_vfs_desc_t  vfs_desc = {};
         vfs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
         vfs_desc.override_mount_dir = u8ResourceRoot.c_str();
         app->resource_vfs = skr_create_vfs(&vfs_desc);
@@ -56,7 +56,7 @@ bool initialize_gdi_application(gdi_application_t* app)
     app->device = skr::gdi::GDIDevice::Create(skr::gdi::EGDIBackend::NANOVG);
 
     // initialize gdi renderer
-    skr::gdi::GDIRendererDescriptor gdir_desc = {};
+    skr::gdi::GDIRendererDescriptor             gdir_desc = {};
     skr::gdi::GDIRendererDescriptor_RenderGraph gdir_desc2 = {};
     gdir_desc2.target_format = (ECGPUFormat)app->gfx.swapchain->back_buffers[0]->format;
     gdir_desc2.device = app->gfx.device;
@@ -68,7 +68,7 @@ bool initialize_gdi_application(gdi_application_t* app)
     gdir_desc.usr_data = &gdir_desc2;
     app->renderer = SkrNew<skr::gdi::GDIRenderer_RenderGraph>();
     app->renderer->initialize(&gdir_desc);
-    
+
     // initialize text
     skr::gdi::GDIText::Initialize(app->renderer);
     return true;

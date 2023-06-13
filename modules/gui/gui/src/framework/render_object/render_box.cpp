@@ -1,5 +1,5 @@
 #include "SkrGui/framework/render_object/render_box.hpp"
-#include "SkrGui/gdi/gdi.hpp"
+#include "SkrGui/dev/gdi/gdi.hpp"
 #include <algorithm>
 #include "math/matrix4x4f.h"
 #include "math/vector.h"
@@ -39,13 +39,13 @@ void RenderBox::before_draw(const DrawParams* params)
             debug_element->begin_path();
             debug_element->fill_color(128u, 0u, 0u, 64u);
             const float Rate = 0.01f;
-            float CanvasW, CanvasH;
+            float       CanvasW, CanvasH;
             canvas->get_size(&CanvasW, &CanvasH);
             const auto DistX = Rate * std::min(CanvasW, CanvasH);
             const auto DistY = Rate * std::min(CanvasW, CanvasH);
-            auto X = pos.x - DistX;
+            auto       X = pos.x - DistX;
             const auto W = size.width + 2 * DistX;
-            auto Y = pos.y - DistY;
+            auto       Y = pos.y - DistY;
             const auto H = size.height + 2 * DistY;
             debug_element->rect(X, Y, W, H);
             debug_element->fill();
@@ -62,10 +62,10 @@ void RenderBox::draw(const DrawParams* params)
 bool RenderBox::hit_test(const Ray& point, HitTestRecord* record) const
 {
     // convert to local space
-    auto origin = skr::math::load(point.origin);
-    auto direction = skr::math::load(point.direction);
+    auto            origin = skr::math::load(point.origin);
+    auto            direction = skr::math::load(point.direction);
     rtm::matrix4x4f matrix = skr::math::load(render_matrix);
-    auto inv_matrix = rtm::matrix_inverse(matrix);
+    auto            inv_matrix = rtm::matrix_inverse(matrix);
     origin = rtm::matrix_mul_vector(origin, inv_matrix);
     direction = rtm::matrix_mul_vector(direction, inv_matrix);
     // check hit

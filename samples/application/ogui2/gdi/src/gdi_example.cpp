@@ -4,22 +4,21 @@
 
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "misc/make_zeroed.hpp"
-#include "SkrGui/interface/gdi_renderer.hpp"
+#include "SkrGui/dev/interface/gdi_renderer.hpp"
 
 #include "SkrGuiRenderer/gdi_renderer.hpp"
 
-struct gdi_example_application : public gdi_application_t
-{
+struct gdi_example_application : public gdi_application_t {
     void draw_background_canvas()
     {
-        const bool bDrawRelativeXMesh = false;
-        const bool bDrawRelativeYMesh = false;
+        const bool  bDrawRelativeXMesh = false;
+        const bool  bDrawRelativeYMesh = false;
         const float window_width = static_cast<float>(gfx.window_width);
         const float window_height = static_cast<float>(gfx.window_height);
 
         background_element->begin_frame(1.f);
         // draw background
-        {            
+        {
             background_element->begin_path();
             background_element->rect(0, 0, window_width, window_height);
             background_element->fill_color(235u, 235u, 235u, 255u);
@@ -76,7 +75,7 @@ struct gdi_example_application : public gdi_application_t
             background_element->line_to(pos, window_height);
         }
         background_element->stroke();
-        
+
         // draw absolute sub-meshes
         background_element->begin_path();
         background_element->stroke_width(1.f);
@@ -112,7 +111,7 @@ struct gdi_example_application : public gdi_application_t
         gdi_viewport->add_canvas(gdi_canvas);
         gdi_canvas->set_size((float)gfx.window_width, (float)gfx.window_height);
         backgroud_canvas->set_size((float)gfx.window_width, (float)gfx.window_height);
-        
+
         background_element = device->create_element();
         backgroud_canvas->add_element(background_element);
 
@@ -122,7 +121,7 @@ struct gdi_example_application : public gdi_application_t
         gdi_canvas->add_element(debug_element);
         gdi_canvas->add_element(test_element);
         {
-            skr::gdi::GDITextureDescriptor tex_desc = {};
+            skr::gdi::GDITextureDescriptor             tex_desc = {};
             skr::gdi::GDITextureDescriptor_RenderGraph tex_desc2 = {};
             tex_desc.source = skr::gdi::EGDITextureSource::File;
             tex_desc.from_file.u8Uri = u8"OpenGUI/rubduck.png";
@@ -149,7 +148,7 @@ struct gdi_example_application : public gdi_application_t
             test_element->begin_frame(1.f);
             test_element->begin_path();
             test_element->rect(120, 120, 300, 300);
-            skr_float4_t color = {1.f, 1.f, 1.f, 1.f};
+            skr_float4_t color = { 1.f, 1.f, 1.f, 1.f };
             if (test_texture->get_state() != skr::gdi::EGDIResourceState::Okay)
             {
                 color.w = 0.f; // set transparent if texture is not ready
@@ -164,7 +163,7 @@ struct gdi_example_application : public gdi_application_t
         graph.declare_render_resources(gfx);
 
         // render GDI canvas group
-        skr::gdi::ViewportRenderParams render_params = {};
+        skr::gdi::ViewportRenderParams             render_params = {};
         skr::gdi::ViewportRenderParams_RenderGraph gdir_params2 = {};
         gdir_params2.render_graph = graph.graph;
         render_params.usr_data = &gdir_params2;
@@ -193,39 +192,43 @@ struct gdi_example_application : public gdi_application_t
 
     gui_render_graph_t graph;
 
-    skr::gdi::GDICanvas* gdi_canvas = nullptr;
+    skr::gdi::GDICanvas*   gdi_canvas = nullptr;
     skr::gdi::GDIViewport* gdi_viewport = nullptr;
 
-    skr::gdi::GDICanvas* backgroud_canvas = nullptr;
+    skr::gdi::GDICanvas*  backgroud_canvas = nullptr;
     skr::gdi::GDIElement* background_element = nullptr;
 
     skr::gdi::GDITextureId test_texture = nullptr;
-    skr::gdi::GDIPaint* test_paint = nullptr;
-    skr::gdi::GDIElement* test_element = nullptr;
-    skr::gdi::GDIElement* debug_element = nullptr;
+    skr::gdi::GDIPaint*    test_paint = nullptr;
+    skr::gdi::GDIElement*  test_element = nullptr;
+    skr::gdi::GDIElement*  debug_element = nullptr;
 };
 
 #include "tracy/Tracy.hpp"
 
 int main(int argc, char* argv[])
 {
+    SkrDStorageConfig config = {};
+    skr_create_dstorage_instance(&config);
     auto App = make_zeroed<gdi_example_application>();
     App.initialize();
     bool quit = false;
     auto handler = skr_system_get_default_handler();
     handler->add_window_close_handler(
-        +[](SWindowHandle window, void* pQuit) {
-            bool& quit = *(bool*)pQuit;
-            quit = true;
-        }, &quit);
+    +[](SWindowHandle window, void* pQuit) {
+        bool& quit = *(bool*)pQuit;
+        quit = true;
+    },
+    &quit);
     handler->add_window_resize_handler(
-        +[](SWindowHandle window, int32_t w, int32_t h, void* usr_data) {
-            gdi_example_application* pApp = (gdi_example_application*)usr_data;
-            app_resize_window(&pApp->gfx, w, h);
-            pApp->gdi_canvas->set_size((float)pApp->gfx.window_width, (float)pApp->gfx.window_height);
-            pApp->backgroud_canvas->set_size((float)pApp->gfx.window_width, (float)pApp->gfx.window_height);
-        }, &App);
-    
+    +[](SWindowHandle window, int32_t w, int32_t h, void* usr_data) {
+        gdi_example_application* pApp = (gdi_example_application*)usr_data;
+        app_resize_window(&pApp->gfx, w, h);
+        pApp->gdi_canvas->set_size((float)pApp->gfx.window_width, (float)pApp->gfx.window_height);
+        pApp->backgroud_canvas->set_size((float)pApp->gfx.window_width, (float)pApp->gfx.window_height);
+    },
+    &App);
+
     while (!quit)
     {
         FrameMark;
