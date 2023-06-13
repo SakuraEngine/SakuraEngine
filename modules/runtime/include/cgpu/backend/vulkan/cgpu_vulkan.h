@@ -251,7 +251,7 @@ typedef struct CGPUDevice_Vulkan {
     struct VmaAllocator_T* pVmaAllocator;
     struct VmaPool_T* pExternalMemoryVmaPools[VK_MAX_MEMORY_TYPES];
     void* pExternalMemoryVmaPoolNexts[VK_MAX_MEMORY_TYPES];
-    struct VmaPool_T* pDedicatedAllocationVmaPools[VK_MAX_MEMORY_TYPES];
+    // struct VmaPool_T* pDedicatedAllocationVmaPools[VK_MAX_MEMORY_TYPES];
     struct VolkDeviceTable mVkDeviceTable;
     // Created renderpass table
     struct CGPUVkPassTable* pPassTable;
