@@ -37,6 +37,7 @@ DEFINE_CGPU_OBJECT(CGPURootSignature)
 DEFINE_CGPU_OBJECT(CGPURootSignaturePool)
 DEFINE_CGPU_OBJECT(CGPUDescriptorSet)
 DEFINE_CGPU_OBJECT(CGPUMemoryPool)
+DEFINE_CGPU_OBJECT(CGPUTiledHeap)
 DEFINE_CGPU_OBJECT(CGPUBuffer)
 DEFINE_CGPU_OBJECT(CGPUTexture)
 DEFINE_CGPU_OBJECT(CGPUSampler)
@@ -217,14 +218,18 @@ CGPU_API CGPURenderPipelineId cgpu_create_render_pipeline(CGPUDeviceId device, c
 typedef CGPURenderPipelineId (*CGPUProcCreateRenderPipeline)(CGPUDeviceId device, const struct CGPURenderPipelineDescriptor* desc);
 CGPU_API void cgpu_free_render_pipeline(CGPURenderPipelineId pipeline);
 typedef void (*CGPUProcFreeRenderPipeline)(CGPURenderPipelineId pipeline);
-CGPU_API CGPUMemoryPoolId cgpu_create_memory_pool(CGPUDeviceId, const struct CGPUMemoryPoolDescriptor* desc);
-typedef CGPUMemoryPoolId (*CGPUProcCreateMemoryPool)(CGPUDeviceId, const struct CGPUMemoryPoolDescriptor* desc);
-CGPU_API void cgpu_free_memory_pool(CGPUMemoryPoolId pool);
-typedef void (*CGPUProcFreeMemoryPool)(CGPUMemoryPoolId pool);
 CGPU_API CGPUQueryPoolId cgpu_create_query_pool(CGPUDeviceId, const struct CGPUQueryPoolDescriptor* desc);
 typedef CGPUQueryPoolId (*CGPUProcCreateQueryPool)(CGPUDeviceId, const struct CGPUQueryPoolDescriptor* desc);
 CGPU_API void cgpu_free_query_pool(CGPUQueryPoolId);
 typedef void (*CGPUProcFreeQueryPool)(CGPUQueryPoolId);
+CGPU_API CGPUMemoryPoolId cgpu_create_memory_pool(CGPUDeviceId, const struct CGPUMemoryPoolDescriptor* desc);
+typedef CGPUMemoryPoolId (*CGPUProcCreateMemoryPool)(CGPUDeviceId, const struct CGPUMemoryPoolDescriptor* desc);
+CGPU_API void cgpu_free_memory_pool(CGPUMemoryPoolId pool);
+typedef void (*CGPUProcFreeMemoryPool)(CGPUMemoryPoolId pool);
+CGPU_API CGPUTiledHeapId cgpu_create_tiled_heap(CGPUDeviceId, const struct CGPUTiledHeapDescriptor* desc);
+typedef CGPUTiledHeapId (*CGPUProcCreateTiledHeap)(CGPUDeviceId, const struct CGPUTiledHeapDescriptor* desc);
+CGPU_API void cgpu_free_tiled_heap(CGPUTiledHeapId heap);
+typedef void (*CGPUProcFreeTiledHeap)(CGPUTiledHeapId heap);
 
 // Queue APIs
 // Warn: If you get a queue at an index with a specific type, you must hold the handle and reuses it.
@@ -1350,6 +1355,18 @@ typedef struct CGPUMemoryPoolDescriptor {
     uint32_t max_block_count;
     uint64_t min_alloc_alignment;
 } CGPUMemoryPoolDescriptor;
+
+typedef struct CGPUMemoryPool {
+    CGPUDeviceId device;
+} CGPUMemoryPool;
+
+typedef struct CGPUTiledHeapDescriptor {
+    uint64_t total_size;
+} CGPUTiledHeapDescriptor;
+
+typedef struct CGPUTiledHeap {
+    CGPUDeviceId device;
+} CGPUTiledHeap;
 
 typedef struct CGPUParameterTable {
     // This should be stored here because shader could be destoryed after RS creation
