@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrGui/framework/geometry.hpp"
+#include "SkrGui/gui_math/geometry.hpp"
 #include "SkrGui/fwd_config.hpp"
 
 namespace skr::gui
