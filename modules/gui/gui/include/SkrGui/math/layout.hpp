@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrGui/gui_math/geometry.hpp"
+#include "SkrGui/math/geometry.hpp"
 
 namespace skr::gui
 {
@@ -178,11 +178,6 @@ struct Positional {
 
     // setter
     struct PaddingBuilder {
-        inline constexpr PaddingBuilder(Positional& positional) SKR_NOEXCEPT
-            : _positional(positional)
-        {
-        }
-
         inline constexpr PaddingBuilder& all(PositionalUnit value) SKR_NOEXCEPT
         {
             _positional.left = _positional.top = _positional.right = _positional.bottom = value;
@@ -262,13 +257,19 @@ struct Positional {
         }
 
     private:
-        Positional& _positional;
-    };
-    struct AnchorBuilder {
-        inline constexpr AnchorBuilder(Positional& positional) SKR_NOEXCEPT
+        friend struct Positional;
+        inline constexpr PaddingBuilder(Positional& positional) SKR_NOEXCEPT
             : _positional(positional)
         {
         }
+        PaddingBuilder(const PaddingBuilder&) = delete;
+        PaddingBuilder(PaddingBuilder&&) = delete;
+        PaddingBuilder& operator=(const PaddingBuilder&) = delete;
+        PaddingBuilder& operator=(PaddingBuilder&&) = delete;
+
+        Positional& _positional;
+    };
+    struct AnchorBuilder {
         inline constexpr AnchorBuilder& sized(PositionalUnit width, PositionalUnit height) SKR_NOEXCEPT
         {
             _positional.min_width = _positional.max_width = width;
@@ -365,6 +366,16 @@ struct Positional {
         }
 
     private:
+        friend struct Positional;
+        inline constexpr AnchorBuilder(Positional& positional) SKR_NOEXCEPT
+            : _positional(positional)
+        {
+        }
+        AnchorBuilder(const AnchorBuilder&) = delete;
+        AnchorBuilder(AnchorBuilder&&) = delete;
+        AnchorBuilder& operator=(const AnchorBuilder&) = delete;
+        AnchorBuilder& operator=(AnchorBuilder&&) = delete;
+
         Positional& _positional;
     };
     struct AlignBuilder {
