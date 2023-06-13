@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrGui/framework/diagnostics.hpp"
-#include "SkrGui/gui_math/geometry.hpp"
+#include "SkrGui/math/geometry.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::gui, RenderObject, skr_gui_render_object)
 SKR_DECLARE_TYPE_ID_FWD(skr::gui, Widget, skr_gui_widget)
