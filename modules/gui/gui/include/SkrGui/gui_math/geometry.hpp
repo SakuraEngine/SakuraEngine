@@ -51,25 +51,25 @@ struct Offset {
     inline constexpr Offset operator-(float rhs) const SKR_NOEXCEPT { return { x - rhs, y - rhs }; }
     inline constexpr Offset operator*(float rhs) const SKR_NOEXCEPT { return { x * rhs, y * rhs }; }
     inline constexpr Offset operator/(float rhs) const SKR_NOEXCEPT { return { x / rhs, y / rhs }; }
-    inline Offset operator%(float rhs) const SKR_NOEXCEPT { return { std::fmod(x, rhs), std::fmod(y, rhs) }; }
+    inline Offset           operator%(float rhs) const SKR_NOEXCEPT { return { std::fmod(x, rhs), std::fmod(y, rhs) }; }
 
     inline constexpr Offset operator+(const Offset& rhs) const SKR_NOEXCEPT { return { x + rhs.x, y + rhs.y }; }
     inline constexpr Offset operator-(const Offset& rhs) const SKR_NOEXCEPT { return { x - rhs.x, y - rhs.y }; }
     inline constexpr Offset operator*(const Offset& rhs) const SKR_NOEXCEPT { return { x * rhs.x, y * rhs.y }; }
     inline constexpr Offset operator/(const Offset& rhs) const SKR_NOEXCEPT { return { x / rhs.x, y / rhs.y }; }
-    inline Offset operator%(const Offset& rhs) const SKR_NOEXCEPT { return { std::fmod(x, rhs.x), std::fmod(y, rhs.y) }; }
+    inline Offset           operator%(const Offset& rhs) const SKR_NOEXCEPT { return { std::fmod(x, rhs.x), std::fmod(y, rhs.y) }; }
 
     inline constexpr Offset& operator+=(float rhs) SKR_NOEXCEPT { return *this = *this + rhs; }
     inline constexpr Offset& operator-=(float rhs) SKR_NOEXCEPT { return *this = *this - rhs; }
     inline constexpr Offset& operator*=(float rhs) SKR_NOEXCEPT { return *this = *this * rhs; }
     inline constexpr Offset& operator/=(float rhs) SKR_NOEXCEPT { return *this = *this / rhs; }
-    inline Offset& operator%=(float rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
+    inline Offset&           operator%=(float rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
 
     inline constexpr Offset& operator+=(const Offset& rhs) SKR_NOEXCEPT { return *this = *this + rhs; }
     inline constexpr Offset& operator-=(const Offset& rhs) SKR_NOEXCEPT { return *this = *this - rhs; }
     inline constexpr Offset& operator*=(const Offset& rhs) SKR_NOEXCEPT { return *this = *this * rhs; }
     inline constexpr Offset& operator/=(const Offset& rhs) SKR_NOEXCEPT { return *this = *this / rhs; }
-    inline Offset& operator%=(const Offset& rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
+    inline Offset&           operator%=(const Offset& rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
 
     inline static Offset lerp(const Offset& a, const Offset& b, float t) SKR_NOEXCEPT
     {
@@ -129,14 +129,14 @@ public:
         }
         return 0.0;
     }
-    inline constexpr bool is_empty() const SKR_NOEXCEPT { return width <= 0.0 || height <= 0.0; }
+    inline constexpr bool  is_empty() const SKR_NOEXCEPT { return width <= 0.0 || height <= 0.0; }
     inline constexpr float area() const SKR_NOEXCEPT { return is_finite() ? std::abs(width * height) : std::numeric_limits<float>::infinity(); }
     inline constexpr float shortest_side() const SKR_NOEXCEPT { return std::min(std::abs(width), std::abs(height)); }
     inline constexpr float longest_side() const SKR_NOEXCEPT { return std::max(std::abs(width), std::abs(height)); }
-    inline constexpr Size flipped() const SKR_NOEXCEPT { return { height, width }; }
+    inline constexpr Size  flipped() const SKR_NOEXCEPT { return { height, width }; }
 
     // offset ops
-    inline constexpr bool contains(const Offset& offset) const SKR_NOEXCEPT { return offset.x >= 0.0 && offset.x <= width && offset.y >= 0.0 && offset.y <= height; }
+    inline constexpr bool   contains(const Offset& offset) const SKR_NOEXCEPT { return offset.x >= 0.0 && offset.x <= width && offset.y >= 0.0 && offset.y <= height; }
     inline constexpr Offset top_left(const Offset& offset) const SKR_NOEXCEPT { return { offset.x, offset.y }; }
     inline constexpr Offset top_center(const Offset& offset) const SKR_NOEXCEPT { return { offset.x + width / 2.0f, offset.y }; }
     inline constexpr Offset top_right(const Offset& offset) const SKR_NOEXCEPT { return { offset.x + width, offset.y }; }
@@ -156,25 +156,25 @@ public:
     inline constexpr Size operator-(float rhs) const SKR_NOEXCEPT { return { width - rhs, height - rhs }; }
     inline constexpr Size operator*(float rhs) const SKR_NOEXCEPT { return { width * rhs, height * rhs }; }
     inline constexpr Size operator/(float rhs) const SKR_NOEXCEPT { return { width / rhs, height / rhs }; }
-    inline Size operator%(float rhs) const SKR_NOEXCEPT { return { std::fmod(width, rhs), std::fmod(height, rhs) }; }
+    inline Size           operator%(float rhs) const SKR_NOEXCEPT { return { std::fmod(width, rhs), std::fmod(height, rhs) }; }
 
     inline constexpr Size operator+(const Size& rhs) const SKR_NOEXCEPT { return { width + rhs.width, height + rhs.height }; }
     inline constexpr Size operator-(const Size& rhs) const SKR_NOEXCEPT { return { width - rhs.width, height - rhs.height }; }
     inline constexpr Size operator*(const Size& rhs) const SKR_NOEXCEPT { return { width * rhs.width, height * rhs.height }; }
     inline constexpr Size operator/(const Size& rhs) const SKR_NOEXCEPT { return { width / rhs.width, height / rhs.height }; }
-    inline Size operator%(const Size& rhs) const SKR_NOEXCEPT { return { std::fmod(width, rhs.width), std::fmod(height, rhs.height) }; }
+    inline Size           operator%(const Size& rhs) const SKR_NOEXCEPT { return { std::fmod(width, rhs.width), std::fmod(height, rhs.height) }; }
 
     inline constexpr Size& operator+=(float rhs) SKR_NOEXCEPT { return *this = *this + rhs; }
     inline constexpr Size& operator-=(float rhs) SKR_NOEXCEPT { return *this = *this - rhs; }
     inline constexpr Size& operator*=(float rhs) SKR_NOEXCEPT { return *this = *this * rhs; }
     inline constexpr Size& operator/=(float rhs) SKR_NOEXCEPT { return *this = *this / rhs; }
-    inline Size& operator%=(float rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
+    inline Size&           operator%=(float rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
 
     inline constexpr Size& operator+=(const Size& rhs) SKR_NOEXCEPT { return *this = *this + rhs; }
     inline constexpr Size& operator-=(const Size& rhs) SKR_NOEXCEPT { return *this = *this - rhs; }
     inline constexpr Size& operator*=(const Size& rhs) SKR_NOEXCEPT { return *this = *this * rhs; }
     inline constexpr Size& operator/=(const Size& rhs) SKR_NOEXCEPT { return *this = *this / rhs; }
-    inline Size& operator%=(const Size& rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
+    inline Size&           operator%=(const Size& rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
 };
 struct Rect {
     float left = 0;
@@ -191,11 +191,11 @@ private:
     };
     struct __CircleParams {
         Offset center = { 0, 0 };
-        float radius = 0;
+        float  radius = 0;
     };
     struct __CenterParams {
         Offset center = { 0, 0 };
-        Size size = { 0, 0 };
+        Size   size = { 0, 0 };
     };
 
 public:
@@ -273,11 +273,11 @@ public:
     }
 
     // info
-    inline constexpr bool is_empty() const SKR_NOEXCEPT { return left >= right || top >= bottom; }
-    inline constexpr bool is_point() const SKR_NOEXCEPT { return left == right && top == bottom; }
-    inline constexpr float width() const SKR_NOEXCEPT { return right - left; }
-    inline constexpr float height() const SKR_NOEXCEPT { return bottom - top; }
-    inline constexpr Size size() const SKR_NOEXCEPT { return { width(), height() }; }
+    inline constexpr bool   is_empty() const SKR_NOEXCEPT { return left >= right || top >= bottom; }
+    inline constexpr bool   is_point() const SKR_NOEXCEPT { return left == right && top == bottom; }
+    inline constexpr float  width() const SKR_NOEXCEPT { return right - left; }
+    inline constexpr float  height() const SKR_NOEXCEPT { return bottom - top; }
+    inline constexpr Size   size() const SKR_NOEXCEPT { return { width(), height() }; }
     inline constexpr Offset top_left() const SKR_NOEXCEPT { return { left, top }; }
     inline constexpr Offset top_center() const SKR_NOEXCEPT { return { (left + right) / 2.0f, top }; }
     inline constexpr Offset top_right() const SKR_NOEXCEPT { return { right, top }; }

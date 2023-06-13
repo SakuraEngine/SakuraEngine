@@ -1,5 +1,5 @@
 #include "SkrGui/framework/render_object/render_box.hpp"
-#include "SkrGui/framework/layout.hpp"
+#include "SkrGui/gui_math/layout.hpp"
 
 namespace skr
 {
@@ -12,11 +12,11 @@ public:
     RenderStack(skr_gdi_device_id gdi_device);
 
     virtual void layout(BoxConstraint constraints, bool needSize = false) override;
-    Positional get_position(int index); // each child's corresponding positional property
+    Positional   get_position(int index); // each child's corresponding positional property
     virtual void add_child(RenderObject* child) override;
     virtual void insert_child(RenderObject* child, int index) override;
     virtual void remove_child(RenderObject* child) override;
-    void set_positional(int index, Positional positional);
+    void         set_positional(int index, Positional positional);
 
 private:
     Array<Positional> positionals;
