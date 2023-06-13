@@ -1,5 +1,5 @@
 #include "SkrGui/framework/render_object/render_object.hpp"
-#include "SkrGui/gdi/gdi.hpp"
+#include "SkrGui/dev/gdi/gdi.hpp"
 
 namespace skr::gui
 {
@@ -115,7 +115,7 @@ void RenderObject::addElementToCanvas(const DrawParams* params, gdi::GDIElement*
         if (renderer_z_enabled)
         {
             const int32_t ui_z = params->ui_z;
-            int32_t z_min, z_max;
+            int32_t       z_min, z_max;
             canvas->get_zrange(&z_min, &z_max);
             const int32_t canvas_z = std::clamp(ui_z, z_min, z_max);
             element->set_z(canvas_z);

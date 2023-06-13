@@ -1,16 +1,22 @@
 #include "text_server/image_texture.h"
-#include "SkrGui/interface/gdi_renderer.hpp"
+#include "SkrGui/dev/interface/gdi_renderer.hpp"
 
-namespace godot {
+namespace godot
+{
 skr::gdi::EGDIImageFormat translate_format(ImageFormat format)
 {
     switch (format)
     {
-        case ImageFormat::FORMAT_RGB8: return skr::gdi::EGDIImageFormat::RGB8;
-        case ImageFormat::FORMAT_RGBA8: return skr::gdi::EGDIImageFormat::RGBA8;
-        case ImageFormat::FORMAT_LA8: return skr::gdi::EGDIImageFormat::LA8;
-        case ImageFormat::FORMAT_R8: return skr::gdi::EGDIImageFormat::R8;
-        default: break;
+        case ImageFormat::FORMAT_RGB8:
+            return skr::gdi::EGDIImageFormat::RGB8;
+        case ImageFormat::FORMAT_RGBA8:
+            return skr::gdi::EGDIImageFormat::RGBA8;
+        case ImageFormat::FORMAT_LA8:
+            return skr::gdi::EGDIImageFormat::LA8;
+        case ImageFormat::FORMAT_R8:
+            return skr::gdi::EGDIImageFormat::R8;
+        default:
+            break;
     }
     SKR_UNREACHABLE_CODE();
     return skr::gdi::EGDIImageFormat::None;
@@ -20,18 +26,23 @@ ImageFormat translate_format(skr::gdi::EGDIImageFormat format)
 {
     switch (format)
     {
-        case skr::gdi::EGDIImageFormat::RGB8: return ImageFormat::FORMAT_RGB8;
-        case skr::gdi::EGDIImageFormat::RGBA8: return ImageFormat::FORMAT_RGBA8;
-        case skr::gdi::EGDIImageFormat::LA8: return ImageFormat::FORMAT_LA8;
-        case skr::gdi::EGDIImageFormat::R8: return ImageFormat::FORMAT_R8;
-        default: break;
+        case skr::gdi::EGDIImageFormat::RGB8:
+            return ImageFormat::FORMAT_RGB8;
+        case skr::gdi::EGDIImageFormat::RGBA8:
+            return ImageFormat::FORMAT_RGBA8;
+        case skr::gdi::EGDIImageFormat::LA8:
+            return ImageFormat::FORMAT_LA8;
+        case skr::gdi::EGDIImageFormat::R8:
+            return ImageFormat::FORMAT_R8;
+        default:
+            break;
     }
     SKR_UNREACHABLE_CODE();
     return ImageFormat::FORMAT_None;
 }
 
-Ref<Image> Image::create_from_data(skr::gdi::IGDIRenderer* renderer, uint32_t w, uint32_t h, 
-    bool p_use_mipmaps, Format format, const Span<const uint8_t> &p_data)
+Ref<Image> Image::create_from_data(skr::gdi::IGDIRenderer* renderer, uint32_t w, uint32_t h,
+                                   bool p_use_mipmaps, Format format, const Span<const uint8_t>& p_data)
 {
     Ref<Image> image;
     image.instantiate();
@@ -48,18 +59,18 @@ Ref<Image> Image::create_from_data(skr::gdi::IGDIRenderer* renderer, uint32_t w,
     return image;
 }
 
-void Image::generate_mipmaps() 
+void Image::generate_mipmaps()
 {
     auto renderer = underlying->get_renderer();
     if (renderer->support_mipmap_generation())
     {
-        SKR_UNIMPLEMENTED_FUNCTION(); 
+        SKR_UNIMPLEMENTED_FUNCTION();
         // use renderer implementation...
     }
     else
     {
-        // use our implementation... 
-        SKR_UNIMPLEMENTED_FUNCTION(); 
+        // use our implementation...
+        SKR_UNIMPLEMENTED_FUNCTION();
     }
 }
 
@@ -71,15 +82,15 @@ Image::~Image()
     }
 }
 
-Span<const uint8_t> Image::get_data() 
-{ 
+Span<const uint8_t> Image::get_data()
+{
     const auto data = underlying->get_data();
     return { data.data(), data.size() };
 }
 
-uint32_t Image::get_width() const { return underlying->get_width(); }
-uint32_t Image::get_height() const { return underlying->get_height(); }
-ImageFormat Image::get_format() const 
+uint32_t    Image::get_width() const { return underlying->get_width(); }
+uint32_t    Image::get_height() const { return underlying->get_height(); }
+ImageFormat Image::get_format() const
 {
     const auto format = underlying->get_format();
     return translate_format(format);
@@ -100,7 +111,6 @@ Ref<ImageTexture> ImageTexture::create_from_image(skr::gdi::IGDIRenderer* render
     {
         while (gdi_image->get_state() != skr::gdi::EGDIResourceState::Okay)
         {
-
         }
         Ref<ImageTexture> texture;
         texture.instantiate();
@@ -116,12 +126,12 @@ Ref<ImageTexture> ImageTexture::create_from_image(skr::gdi::IGDIRenderer* render
     return nullptr;
 }
 
-Size2 ImageTexture::get_size() const 
-{ 
-    return { (float)underlying->get_width(), (float)underlying->get_height() }; 
+Size2 ImageTexture::get_size() const
+{
+    return { (float)underlying->get_width(), (float)underlying->get_height() };
 }
 
-void ImageTexture::update(const Ref<Image> image) 
+void ImageTexture::update(const Ref<Image> image)
 {
     if (auto texture = underlying)
     {
@@ -139,9 +149,9 @@ void ImageTexture::update(const Ref<Image> image)
         update_desc.texture = texture;
         update_desc.image = image->underlying;
         auto update_handle = renderer->update_texture(&update_desc);
-        updates.emplace_back( image, update_handle );
+        updates.emplace_back(image, update_handle);
     }
 }
 
 RID ImageTexture::get_rid() const { return rid; }
-}
+} // namespace godot

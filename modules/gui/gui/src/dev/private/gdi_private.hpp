@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrGui/gdi/gdi.hpp"
+#include "SkrGui/dev/gdi/gdi.hpp"
 #include <containers/vector.hpp>
 
 namespace skr
@@ -27,10 +27,10 @@ struct SKR_GUI_API GDIElementPrivate : public GDIElement {
         texture_swizzle[3] = A;
     }
 
-    int32_t z = 0.f;
-    uint32_t texture_swizzle[4] = { 0, 0, 0, 0 };
-    skr::vector<GDIVertex> vertices;
-    skr::vector<index_t> indices;
+    int32_t                            z = 0.f;
+    uint32_t                           texture_swizzle[4] = { 0, 0, 0, 0 };
+    skr::vector<GDIVertex>             vertices;
+    skr::vector<index_t>               indices;
     skr::vector<GDIElementDrawCommand> commands;
 };
 
@@ -38,10 +38,10 @@ struct SKR_GUI_API GDIPaintPrivate : public GDIPaint {
 };
 
 struct SKR_GUI_API GDICanvasPrivate : public GDICanvas {
-    virtual void add_element(GDIElement* element) SKR_NOEXCEPT;
-    virtual void remove_element(GDIElement* element) SKR_NOEXCEPT;
+    virtual void              add_element(GDIElement* element) SKR_NOEXCEPT;
+    virtual void              remove_element(GDIElement* element) SKR_NOEXCEPT;
     virtual Span<GDIElement*> all_elements() SKR_NOEXCEPT;
-    virtual void clear_elements() SKR_NOEXCEPT;
+    virtual void              clear_elements() SKR_NOEXCEPT;
 
     virtual void set_zrange(int32_t min, int32_t max) SKR_NOEXCEPT
     {
@@ -92,16 +92,16 @@ struct SKR_GUI_API GDICanvasPrivate : public GDICanvas {
     skr_float2_t pivot = { 0.f, 0.f };
     skr_float2_t size = { 0.f, 0.0f };
 
-    bool hardware_z_enabled = true;
-    int32_t z_min = 0;
-    int32_t z_max = 100;
+    bool                     hardware_z_enabled = true;
+    int32_t                  z_min = 0;
+    int32_t                  z_max = 100;
     skr::vector<GDIElement*> all_elements_;
 };
 
 struct SKR_GUI_API GDIViewportPrivate : public GDIViewport {
-    virtual void add_canvas(GDICanvas* canvas) SKR_NOEXCEPT;
-    virtual void remove_canvas(GDICanvas* canvas) SKR_NOEXCEPT;
-    virtual void clear_canvas() SKR_NOEXCEPT;
+    virtual void             add_canvas(GDICanvas* canvas) SKR_NOEXCEPT;
+    virtual void             remove_canvas(GDICanvas* canvas) SKR_NOEXCEPT;
+    virtual void             clear_canvas() SKR_NOEXCEPT;
     virtual Span<GDICanvas*> all_canvas() SKR_NOEXCEPT;
 
     skr::vector<GDICanvas*> all_canvas_;

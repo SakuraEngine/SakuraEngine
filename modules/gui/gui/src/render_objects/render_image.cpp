@@ -1,7 +1,7 @@
 #include "SkrGui/render_objects/render_image.hpp"
-#include "SkrGui/gdi/gdi.hpp"
+#include "SkrGui/dev/gdi/gdi.hpp"
 #include "SkrGui/framework/window_context.hpp"
-#include "SkrGui/interface/window.hpp"
+#include "SkrGui/dev/interface/window.hpp"
 
 namespace skr
 {

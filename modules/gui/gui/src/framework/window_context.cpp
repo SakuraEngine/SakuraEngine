@@ -1,28 +1,28 @@
-#include "SkrGui/interface/window.hpp"
+#include "SkrGui/dev/interface/window.hpp"
 #include "SkrGui/framework/window_context.hpp"
-#include "SkrGui/interface/gdi_renderer.hpp"
+#include "SkrGui/dev/interface/gdi_renderer.hpp"
 #include "SkrGui/render_objects/render_window.hpp"
 #include "platform/memory.h"
 
-namespace skr {
-namespace gui {
+namespace skr
+{
+namespace gui
+{
 
 IPlatformWindow::~IPlatformWindow() SKR_NOEXCEPT
 {
-
 }
 
-struct WindowContextImpl : public WindowContext
-{
+struct WindowContextImpl : public WindowContext {
     IPlatformWindow* get_platform_window() const SKR_NOEXCEPT final
     {
         return platform_window;
     }
-    
+
     void set_root_element(struct RenderWindow* root) SKR_NOEXCEPT final
     {
         root_element = root;
-    }   
+    }
 
     RenderWindow* get_root_element() const SKR_NOEXCEPT final
     {
@@ -48,8 +48,8 @@ struct WindowContextImpl : public WindowContext
     }
 
 protected:
-    RenderWindow* root_element = nullptr;
-    IPlatformWindow* platform_window = nullptr;
+    RenderWindow*     root_element = nullptr;
+    IPlatformWindow*  platform_window = nullptr;
     skr_gdi_device_id gdi_device = nullptr;
 };
 
@@ -78,7 +78,7 @@ WindowContext* WindowContext::Create(const Descriptor* desc) SKR_NOEXCEPT
     WindowContextImpl* context = SkrNew<WindowContextImpl>();
     if (context->initialize(desc))
     {
-        return context;    
+        return context;
     }
     else
     {
@@ -94,4 +94,5 @@ void WindowContext::Free(WindowContext* context) SKR_NOEXCEPT
     SkrDelete(impl);
 }
 
-} }
+} // namespace gui
+} // namespace skr

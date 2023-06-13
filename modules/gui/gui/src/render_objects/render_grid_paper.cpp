@@ -1,7 +1,7 @@
 #include "SkrGui/render_objects/render_grid_paper.hpp"
-#include "SkrGui/gdi/gdi.hpp"
+#include "SkrGui/dev/gdi/gdi.hpp"
 #include "SkrGui/framework/window_context.hpp"
-#include "SkrGui/interface/window.hpp"
+#include "SkrGui/dev/interface/window.hpp"
 
 #include "tracy/Tracy.hpp"
 
@@ -122,7 +122,7 @@ void RenderGridPaper::draw(const DrawParams* params)
     ZoneScopedN("DrawGridPaper");
 
     // TEST
-    auto platform_window = params->window_context->get_platform_window();
+    auto     platform_window = params->window_context->get_platform_window();
     uint32_t w, h;
     platform_window->get_extent(&w, &h);
     const float window_width = (float)w, window_height = (float)h;

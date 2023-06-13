@@ -1,12 +1,13 @@
-#include "SkrGui/gdi/gdi.hpp"
+#include "SkrGui/dev/gdi/gdi.hpp"
 #include "text_server/text_server_adv.h"
 #include "containers/sptr.hpp"
 
-namespace skr {
-namespace gdi {
-
-struct GDITextImpl : public GDIText
+namespace skr
 {
+namespace gdi
+{
+
+struct GDITextImpl : public GDIText {
     GDITextImpl(skr_gdi_renderer_id renderer)
         : pRenderer(renderer)
     {
@@ -20,13 +21,13 @@ struct GDITextImpl : public GDIText
         SkrDelete(text_server);
     }
 
-    static GDITextImpl* this_;
+    static GDITextImpl*        this_;
     godot::TextServerAdvanced* text_server = nullptr;
-    skr_gdi_renderer_id pRenderer = nullptr;
+    skr_gdi_renderer_id        pRenderer = nullptr;
 };
 
 GDITextImpl* GDITextImpl::this_ = nullptr;
-bool GDIText::Initialize(skr_gdi_renderer_id renderer)
+bool         GDIText::Initialize(skr_gdi_renderer_id renderer)
 {
     if (auto gdi_text = SkrNew<GDITextImpl>(renderer))
     {
@@ -47,7 +48,8 @@ GDIText* GDIText::Get()
     return GDITextImpl::this_;
 }
 
-} }
+} // namespace gdi
+} // namespace skr
 
 godot::TextServer* godot::get_text_server()
 {

@@ -9,7 +9,7 @@
 
 #include "SkrInputSystem/input_system.hpp"
 
-#include "SkrGui/interface/gdi_renderer.hpp"
+#include "SkrGui/dev/interface/gdi_renderer.hpp"
 #include "SkrGui/framework/window_context.hpp"
 
 #include "SkrGui/framework/widget_misc.hpp"

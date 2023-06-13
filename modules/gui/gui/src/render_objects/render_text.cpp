@@ -1,4 +1,4 @@
-#include "SkrGui/gdi/gdi.hpp"
+#include "SkrGui/dev/gdi/gdi.hpp"
 #include "SkrGui/render_objects/render_text.hpp"
 #include "text_server/text_paragraph.h"
 #include "text_server/font.h"
@@ -27,13 +27,13 @@ struct Paragraph : public godot::TextParagraph {
     void draw(godot::TextServer::TextDrawProxy* proxy, const skr_float2_t& p_pos, const godot::Color& p_color, const godot::Color& p_dc_color)
     {
         const float line_height_scale = 1.f;
-        const int spacing_top = 0;
-        const int spacing_bottom = 0;
-        godot::RID p_canvas = godot::RID::from_uint64((uint64_t)proxy);
+        const int   spacing_top = 0;
+        const int   spacing_bottom = 0;
+        godot::RID  p_canvas = godot::RID::from_uint64((uint64_t)proxy);
 
         _shape_lines();
         godot::Vector2 ofs = { p_pos.x, p_pos.y };
-        float h_offset = 0.f;
+        float          h_offset = 0.f;
         if (godot::TS->shaped_text_get_orientation(dropcap_rid) == godot::TextServer::ORIENTATION_HORIZONTAL)
         {
             h_offset = godot::TS->shaped_text_get_size(dropcap_rid).x + dropcap_margins.size.x + dropcap_margins.position.x;
@@ -240,8 +240,8 @@ void RenderText::add_text(const char8_t* u8_text)
 
 void RenderText::DrawParagraph()
 {
-    godot::Color p_color = { font_color.x, font_color.y, font_color.z };
-    godot::Color p_dc_color = { 1.f, 1.f, 1.f };
+    godot::Color                     p_color = { font_color.x, font_color.y, font_color.z };
+    godot::Color                     p_dc_color = { 1.f, 1.f, 1.f };
     godot::TextServer::TextDrawProxy proxy = {};
     proxy.gdi_device = gdi_device;
     proxy.gdi_element = gdi_element;

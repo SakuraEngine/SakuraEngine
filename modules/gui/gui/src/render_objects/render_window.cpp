@@ -1,5 +1,5 @@
 #include "SkrGui/render_objects/render_window.hpp"
-#include "SkrGui/gdi/gdi.hpp"
+#include "SkrGui/dev/gdi/gdi.hpp"
 
 namespace skr
 {
@@ -13,7 +13,7 @@ RenderWindow::RenderWindow(skr_gdi_device_id gdi_device)
     gdi_viewport = gdi_device->create_viewport();
 
     diagnostic_builder.add_properties(
-        SkrNew<TextDiagnosticProperty>(u8"type", u8"window", u8"a virtual window to place canvas"));
+    SkrNew<TextDiagnosticProperty>(u8"type", u8"window", u8"a virtual window to place canvas"));
 }
 
 RenderWindow::~RenderWindow()

@@ -1,8 +1,8 @@
 #include "SkrGui/render_objects/render_color_picker.hpp"
-#include "SkrGui/gdi/gdi.hpp"
-#include "SkrGui/gdi/color.hpp"
+#include "SkrGui/dev/gdi/gdi.hpp"
+#include "SkrGui/dev/gdi/color.hpp"
 #include "SkrGui/framework/window_context.hpp"
-#include "SkrGui/interface/window.hpp"
+#include "SkrGui/dev/interface/window.hpp"
 
 #include "tracy/Tracy.hpp"
 
@@ -91,8 +91,8 @@ void RenderColorPicker::draw_color_picker(gdi::GDIElement* element, gdi::GDIPain
     element->close_path();
     paint->custom_vertex_color(
     +[](struct skr_gdi_vertex_t* pVertex, void* usrdata) SKR_NOEXCEPT {
-        auto _this = (RenderColorPicker*)usrdata;
-        const auto index = static_cast<uint32_t>(pVertex->texcoord.x / 0.3333f);
+        auto         _this = (RenderColorPicker*)usrdata;
+        const auto   index = static_cast<uint32_t>(pVertex->texcoord.x / 0.3333f);
         const double S[] = { 0.0, 0.0, 1.0 };
         const double V[] = { 0.0, 1.0, 1.0 };
         if (0 <= index && index < 3)
@@ -143,7 +143,7 @@ void RenderColorPicker::draw(const DrawParams* params)
     ZoneScopedN("DrawGridPaper");
 
     // TEST
-    auto platform_window = params->window_context->get_platform_window();
+    auto     platform_window = params->window_context->get_platform_window();
     uint32_t w, h;
     platform_window->get_extent(&w, &h);
     const float window_width = (float)w, window_height = (float)h;
