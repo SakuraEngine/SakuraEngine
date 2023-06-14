@@ -42,7 +42,7 @@ struct SKR_GUI_API ICanvas final {
     void             state_restore() SKR_NOEXCEPT;
     CanvasStateScope state_scope() SKR_NOEXCEPT;
 
-    //==> fill states
+    //==> vg states
     void state_reset() SKR_NOEXCEPT;
     void state_paint_style(EPaintStyle style) SKR_NOEXCEPT;  // DEFAULT: Fill
     void state_stroke_cap(EStrokeCap cap) SKR_NOEXCEPT;      // DEFAULT: Butt
@@ -94,27 +94,48 @@ struct SKR_GUI_API ICanvas final {
     // TODO. draw round rect
     // TODO. draw IParagraph
 
-protected:
+private:
     // paint mode builder
-    void _state_paint_color(Color color) SKR_NOEXCEPT;
-    void _state_paint_uv_rect(Rect uv_rect) SKR_NOEXCEPT;
-    void _state_paint_uv_rect_nine(Rect center, Rect total) SKR_NOEXCEPT;
-    void _state_paint_blend_mode(BlendMode mode) SKR_NOEXCEPT;
-    void _state_paint_rotation(float degree) SKR_NOEXCEPT;
-    void _state_paint_texture_swizzle(uint32_t r, uint32_t g, uint32_t b, uint32_t a) SKR_NOEXCEPT;
-    void _state_paint_custom_draw(CustomPaintCallback custom, void* userdata) SKR_NOEXCEPT;
+    void _state_paint_color(Color color) SKR_NOEXCEPT;                                      // DEFAULT: white (Color { 1, 1, 1, 1 })
+    void _state_paint_uv_rect(Rect uv_rect) SKR_NOEXCEPT;                                   // DEFAULT: empty rect { 0, 0, 0, 0 }
+    void _state_paint_uv_rect_nine(Rect center, Rect total) SKR_NOEXCEPT;                   // DEFAULT: empty rect { 0, 0, 0, 0 }
+    void _state_paint_blend_mode(BlendMode mode) SKR_NOEXCEPT;                              // DEFAULT: { 1, 1 - SrcAlpha, 1, 1 - SrcAlpha }
+    void _state_paint_rotation(float degree) SKR_NOEXCEPT;                                  // DEFAULT: 0.0f
+    void _state_paint_texture_swizzle(Swizzle swizzle) SKR_NOEXCEPT;                        // DEFAULT: { R, G, B, A }
+    void _state_paint_custom_draw(CustomPaintCallback custom, void* userdata) SKR_NOEXCEPT; // DEFAULT: nullptr
+
+    // helper
+    bool __internal_repair_state_stack_if_need() SKR_NOEXCEPT;
 
 private:
     friend struct ColorPaintBuilder;
     friend struct TexturePaintBuilder;
     friend struct MaterialPaintBuilder;
 
+    struct _State {
+        EPaintType          paint_type = EPaintType::Color;
+        EPaintStyle         paint_style = EPaintStyle::Fill;
+        bool                anti_alias = true;
+        ITexture*           texture = nullptr;
+        IMaterial*          material = nullptr;
+        Color               color = { 1, 1, 1, 1 };
+        Rect                rect = {};
+        Rect                rect_nine_total = {};
+        BlendMode           blend_mode = {};
+        float               degree = 0.0f;
+        Swizzle             swizzle = {};
+        CustomPaintCallback custom_paint = nullptr;
+        void*               custom_paint_userdata = nullptr;
+    };
+
     GDIDevice*         _gdi_device;
     GDICanvas*         _gdi_canvas;
     GDIElement*        _current_gdi_element;
     Array<GDIElement*> _gdi_elements;
-    Array<GDIPaint*>   _gdi_paint_stack;
-    EPaintStyle        _paint_style;
+
+    Array<_State> _state_stack;
+    bool          _is_in_paint_scope;
+    bool          _is_in_path_scope;
 };
 
 // paint mode builders
@@ -163,9 +184,9 @@ struct TexturePaintBuilder {
         _canvas->_state_paint_blend_mode(mode);
         return *this;
     }
-    TexturePaintBuilder& swizzle(uint32_t r, uint32_t g, uint32_t b, uint32_t a) SKR_NOEXCEPT
+    TexturePaintBuilder& swizzle(Swizzle swizzle) SKR_NOEXCEPT
     {
-        _canvas->_state_paint_texture_swizzle(r, g, b, a);
+        _canvas->_state_paint_texture_swizzle(swizzle);
         return *this;
     }
     TexturePaintBuilder& custom(CustomPaintCallback callback, void* userdata) SKR_NOEXCEPT
