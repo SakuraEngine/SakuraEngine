@@ -19,7 +19,8 @@ bool bUseStaticSampler = true;
 CGPUTextureViewId views[BACK_BUFFER_COUNT];
 
 #define TOTAL_MIPS 3
-uint32_t current_mip = 0;
+CGPUBufferId streaming_heap;
+uint32_t current_mip = ~0;
 CGPUTextureViewId sampled_views[TOTAL_MIPS];
 
 render_application_t App;
@@ -75,60 +76,60 @@ void create_sampled_texture()
         .elemet_count = 1,
         .size = sizeof(TEXTURE_DATA)
     };
-    CGPUBufferId upload_buffer = cgpu_create_buffer(App.device, &upload_buffer_desc);
+    streaming_heap = cgpu_create_buffer(App.device, &upload_buffer_desc);
     {
-        memcpy(upload_buffer->info->cpu_mapped_address, TEXTURE_DATA, upload_buffer_desc.size);
+        memcpy(streaming_heap->info->cpu_mapped_address, TEXTURE_DATA, upload_buffer_desc.size);
     }
+}
+
+void update_streaming_map(CGPUCommandBufferId cmd, uint32_t MipLevel)
+{
+    if (current_mip == MipLevel)
+        return;
+
     // map tiled texture
     {
-        const uint32_t Mips = sampled_texture->info->mip_levels;
+        const uint32_t Width = (uint32_t)sampled_texture->info->width;
+        const uint32_t Height = (uint32_t)sampled_texture->info->height;
+
+        const uint32_t MipWidth = (uint32_t)cgpu_max(1, (int32_t)Width >> (int32_t)MipLevel);
+        const uint32_t MipHeight = (uint32_t)cgpu_max(1, (int32_t)Height >> (int32_t)MipLevel);
+
         const uint32_t TileWidth = sampled_texture->tiled_resource->width_texels;
         const uint32_t TileHeight = sampled_texture->tiled_resource->height_texels;
-        CGPUTextureCoordinateRegion* coordinates = sakura_calloc(Mips, sizeof(CGPUTextureCoordinateRegion));
-        for (uint64_t MipLevel = 0; MipLevel < Mips; MipLevel++)
-        {
-            const uint32_t MipWidth = (uint32_t)cgpu_max(1, (int32_t)tex_desc.width >> (int32_t)MipLevel);
-            const uint32_t MipHeight = (uint32_t)cgpu_max(1, (int32_t)tex_desc.height >> (int32_t)MipLevel);
-            const CGPUCoordinate start = { 0, 0, 0 };
-            const CGPUCoordinate end = { MipWidth / TileWidth, MipHeight / TileHeight, 0 };
-
-            coordinates[MipLevel].start = start;
-            coordinates[MipLevel].end = end;
-            coordinates[MipLevel].mip_level = MipLevel;
-            coordinates[MipLevel].layer = 0;
-        }
+        CGPUTextureCoordinateRegion coordinate = {
+            .start = { 0, 0, 0 },
+            .end = { MipWidth / TileWidth, MipHeight / TileHeight, 0 },
+            .mip_level = MipLevel,
+            .layer = 0
+        };
         CGPUMapTiledTextureDescriptor map_desc = {
             .texture = sampled_texture,
-            .regions = coordinates,
-            .region_count = (uint32_t)Mips
+            .regions = &coordinate,
+            .region_count = 1
         };
         cgpu_queue_map_tiled_texture(App.gfx_queue, &map_desc);
-        sakura_free(coordinates);
     }
+    current_mip = MipLevel;
     // record
-    cgpu_reset_command_pool(pools[0]);
-    cgpu_cmd_begin(cmds[0]);
-    CGPUBufferToTextureTransfer b2t = {
-        .src = upload_buffer,
-        .src_offset = 0,
-        .dst = sampled_texture,
-        .dst_subresource.mip_level = 0,
-        .dst_subresource.base_array_layer = 0,
-        .dst_subresource.layer_count = 1
-    };
-    cgpu_cmd_transfer_buffer_to_texture(cmds[0], &b2t);
+    {
+        CGPUBufferToTextureTransfer b2t = {
+            .src = streaming_heap,
+            .src_offset = 0,
+            .dst = sampled_texture,
+            .dst_subresource.mip_level = MipLevel,
+            .dst_subresource.base_array_layer = 0,
+            .dst_subresource.layer_count = 1
+        };
+        cgpu_cmd_transfer_buffer_to_texture(cmd, &b2t);
+    }
     CGPUTextureBarrier srv_barrier = {
         .texture = sampled_texture,
         .src_state = CGPU_RESOURCE_STATE_COPY_DEST,
         .dst_state = CGPU_RESOURCE_STATE_SHADER_RESOURCE
     };
     CGPUResourceBarrierDescriptor barrier_desc1 = { .texture_barriers = &srv_barrier, .texture_barriers_count = 1 };
-    cgpu_cmd_resource_barrier(cmds[0], &barrier_desc1);
-    cgpu_cmd_end(cmds[0]);
-    CGPUQueueSubmitDescriptor cpy_submit = { .cmds = cmds, .cmds_count = 1 };
-    cgpu_submit_queue(App.gfx_queue, &cpy_submit);
-    cgpu_wait_queue_idle(App.gfx_queue);
-    cgpu_free_buffer(upload_buffer);
+    cgpu_cmd_resource_barrier(cmd, &barrier_desc1);
 }
 
 void create_render_pipeline()
@@ -275,6 +276,7 @@ void raster_redraw()
     cgpu_reset_command_pool(pool);
     // record
     cgpu_cmd_begin(cmd);
+    update_streaming_map(cmd, 0);
     CGPUColorAttachment screen_attachment = {
         .view = views[App.backbuffer_index],
         .load_action = CGPU_LOAD_ACTION_CLEAR,
@@ -394,6 +396,7 @@ void raster_program()
 void finalize()
 {
     cgpu_wait_fences(exec_fences, FLIGHT_FRAMES);
+    cgpu_free_buffer(streaming_heap);
     for (uint32_t i = 0; i < FLIGHT_FRAMES; i++)
     {
         cgpu_free_command_buffer(cmds[i]);
