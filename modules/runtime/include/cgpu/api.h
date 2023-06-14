@@ -1593,6 +1593,7 @@ typedef struct CGPUTextureInfo {
 
 typedef struct CGPUTiledMemoryPage {
     uint64_t size;
+    volatile void* allocation;
 } CGPUTiledMemoryPage;
 
 typedef struct CGPUCoordinate {

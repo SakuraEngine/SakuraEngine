@@ -1325,15 +1325,8 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapT
     }
     if (!PageCount) return;
 
-    CGPUQueue_D3D12* Q = (CGPUQueue_D3D12*)queue;
+    // ensure memory pool
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)queue->device;
-    CGPUTexture_D3D12* T = (CGPUTexture_D3D12*)desc->texture;
-    auto Memory = sakura_calloc(RegionCount, sizeof(D3D12_TILED_RESOURCE_COORDINATE) + sizeof(D3D12_TILE_REGION_SIZE) + sizeof(UINT) + sizeof(UINT));
-    SKR_DEFER( { sakura_free(Memory); } );
-    auto pTileCoordinates = (D3D12_TILED_RESOURCE_COORDINATE*)Memory;
-    auto pTileSizes = (D3D12_TILE_REGION_SIZE*)(pTileCoordinates + RegionCount);
-    UINT* pRangeOffsets = (UINT*)(pTileSizes + RegionCount);
-    UINT* pTileCounts = (UINT*)(pRangeOffsets + RegionCount);
     if (!D->pTiledMemoryPool)
     {
         D3D12MA::POOL_DESC poolDesc = {};
@@ -1356,6 +1349,15 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapT
     allocInfo.SizeInBytes = PageCount * kPageSize;
     D3D12MA::Allocation* pAllocation = nullptr;
     D->pResourceAllocator->AllocateMemory(&allocDesc, &allocInfo, &pAllocation);
+
+    CGPUQueue_D3D12* Q = (CGPUQueue_D3D12*)queue;
+    CGPUTexture_D3D12* T = (CGPUTexture_D3D12*)desc->texture;
+    auto Memory = sakura_calloc(RegionCount, sizeof(D3D12_TILED_RESOURCE_COORDINATE) + sizeof(D3D12_TILE_REGION_SIZE) + sizeof(UINT) + sizeof(UINT));
+    SKR_DEFER( { sakura_free(Memory); } );
+    auto pTileCoordinates = (D3D12_TILED_RESOURCE_COORDINATE*)Memory;
+    auto pTileSizes = (D3D12_TILE_REGION_SIZE*)(pTileCoordinates + RegionCount);
+    UINT* pRangeOffsets = (UINT*)(pTileSizes + RegionCount);
+    UINT* pTileCounts = (UINT*)(pRangeOffsets + RegionCount);
 
     struct ID3D12Heap* pHeap = pAllocation->GetHeap();
     auto BytesOffset = pAllocation->GetOffset();
