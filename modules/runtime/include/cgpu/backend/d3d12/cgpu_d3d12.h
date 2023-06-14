@@ -307,7 +307,7 @@ typedef struct CGPURenderPipeline_D3D12 {
     D3D12_GRAPHICS_PIPELINE_STATE_DESC mDxGfxPipelineStateDesc SKR_IF_CPP(= {});
 } CGPURenderPipeline_D3D12;
 
-typedef struct SKR_ALIGNAS(16) CGPUBuffer_D3D12 {
+typedef struct CGPUBuffer_D3D12 {
     CGPUBuffer super;
     /// GPU Address - Cache to avoid calls to ID3D12Resource::GetGpuVirtualAddress
     D3D12_GPU_VIRTUAL_ADDRESS mDxGpuAddress;
@@ -327,7 +327,7 @@ typedef struct SKR_ALIGNAS(16) CGPUBuffer_D3D12 {
 #endif
 } CGPUBuffer_D3D12;
 
-typedef struct SKR_ALIGNAS(16) CGPUTexture_D3D12 {
+typedef struct CGPUTexture_D3D12 {
     CGPUTexture super;
     ID3D12Resource* pDxResource;
 #ifdef __cplusplus
@@ -357,7 +357,7 @@ typedef struct CGPUSampler_D3D12 {
     D3D12_CPU_DESCRIPTOR_HANDLE mDxHandle;
 } CGPUSampler_D3D12;
 
-typedef struct SKR_ALIGNAS(16) CGPUSwapChain_D3D12 {
+typedef struct CGPUSwapChain_D3D12 {
     CGPUSwapChain super;
     struct IDXGISwapChain3* pDxSwapChain;
     uint32_t mDxSyncInterval : 3;

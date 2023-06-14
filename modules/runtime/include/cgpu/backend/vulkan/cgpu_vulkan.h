@@ -302,7 +302,7 @@ typedef struct CGPUCommandBuffer_Vulkan {
     uint32_t mType : 3;
 } CGPUCommandBuffer_Vulkan;
 
-typedef struct SKR_ALIGNAS(16) CGPUBuffer_Vulkan {
+typedef struct CGPUBuffer_Vulkan {
     CGPUBuffer super;
     VkBuffer pVkBuffer;
     VkBufferView pVkStorageTexelView;
@@ -311,7 +311,7 @@ typedef struct SKR_ALIGNAS(16) CGPUBuffer_Vulkan {
     uint64_t mOffset;
 } CGPUBuffer_Vulkan;
 
-typedef struct SKR_ALIGNAS(16) CGPUTexture_Vulkan {
+typedef struct CGPUTexture_Vulkan {
     CGPUTexture super;
     VkImage pVkImage;
     union
@@ -340,7 +340,7 @@ typedef struct CGPUShaderLibrary_Vulkan {
     struct SpvReflectShaderModule* pReflect;
 } CGPUShaderLibrary_Vulkan;
 
-typedef struct SKR_ALIGNAS(16) CGPUSwapChain_Vulkan {
+typedef struct CGPUSwapChain_Vulkan {
     CGPUSwapChain super;
     VkSurfaceKHR pVkSurface;
     VkSwapchainKHR pVkSwapChain;

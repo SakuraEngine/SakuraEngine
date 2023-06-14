@@ -1009,7 +1009,7 @@ static const CGPUClearValue fastclear_1111 = {
     { 1.f, 1.f, 1.f, 1.f }
 };
 
-typedef struct SKR_ALIGNAS(16) CGPUSwapChain {
+typedef struct CGPUSwapChain {
     CGPUDeviceId device;
     const CGPUTextureId* back_buffers;
     uint32_t buffer_count;
@@ -1477,7 +1477,7 @@ typedef struct CGPUBufferInfo {
     uint32_t memory_usage;
 } CGPUBufferInfo;
 
-typedef struct SKR_ALIGNAS(16) CGPUBuffer {
+typedef struct CGPUBuffer {
     CGPUDeviceId device;
     const struct CGPUBufferInfo* info;
 } CGPUBuffer;
@@ -1605,7 +1605,7 @@ typedef struct CGPUTiledTextureInfo {
     uint32_t tiled_mip_levels;
 } CGPUTiledTextureInfo;
 
-typedef struct SKR_ALIGNAS(16) CGPUTexture {
+typedef struct CGPUTexture {
     CGPUDeviceId device;
     const CGPUTextureInfo* info;
     const CGPUTiledTextureInfo* tiled_resource;

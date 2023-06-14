@@ -19,10 +19,10 @@
         #define CHECK_HRESULT(exp)                                               \
             do                                                                   \
             {                                                                    \
-                HRESULT hres = (exp);                                            \
-                if (!SUCCEEDED(hres))                                            \
+                HRESULT __hres = (exp);                                            \
+                if (!SUCCEEDED(__hres))                                            \
                 {                                                                \
-                    printf("%s: FAILED with HRESULT: %u", #exp, (uint32_t)hres); \
+                    printf("%s: FAILED with HRESULT: %u\n", #exp, (uint32_t)__hres); \
                     assert(false);                                               \
                 }                                                                \
             } while (0)
