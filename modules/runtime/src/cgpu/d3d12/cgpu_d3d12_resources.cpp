@@ -583,7 +583,6 @@ FAIL:
     return nullptr;
 }
 
-
 struct CGPUTextureAliasing_D3D12 : public CGPUTexture_D3D12 {
     D3D12_RESOURCE_DESC mDxDesc;
     skr::string name;
@@ -625,8 +624,10 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
     D3D12_RESOURCE_DESC resDesc, D3D12_RESOURCE_STATES startStates, const D3D12_CLEAR_VALUE* pClearValue)
 {
     ID3D12Resource* pDxResource = nullptr;
-    CHECK_HRESULT(D->pDxDevice->CreateReservedResource(
-        &resDesc, startStates, pClearValue, IID_PPV_ARGS(&pDxResource)));
+    auto res = D->pDxDevice->CreateReservedResource(
+        &resDesc, startStates, pClearValue, IID_PPV_ARGS(&pDxResource));
+    CHECK_HRESULT(res);
+
     // query page informations
     UINT numTiles = 0;
 	D3D12_PACKED_MIP_INFO packedMipInfo;
@@ -668,9 +669,9 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
         for (uint32_t mipLevel = 0; mipLevel < tiledMiplevel; mipLevel++)
         {
 			D3D12_TILED_RESOURCE_COORDINATE extent;
-			extent.X = cgpu_max(resDesc.Width >> mipLevel, 1u);
-			extent.Y = cgpu_max(resDesc.Height >> mipLevel, 1u);
-			extent.Z = cgpu_max(resDesc.DepthOrArraySize >> mipLevel, 1u);
+			extent.X = (UINT)cgpu_max(resDesc.Width >> mipLevel, 1u);
+			extent.Y = (UINT)cgpu_max(resDesc.Height >> mipLevel, 1u);
+			extent.Z = (UINT)cgpu_max(resDesc.DepthOrArraySize >> mipLevel, 1u);
 
             // Aligned sizes by image granularity
 			D3D12_TILED_RESOURCE_COORDINATE imageGranularity;
@@ -752,7 +753,9 @@ inline D3D12_RESOURCE_FLAGS D3D12Util_CalculateTextureFlags(const struct CGPUTex
 inline D3D12_TEXTURE_LAYOUT D3D12Util_CalculateTextureLayout(const struct CGPUTextureDescriptor* desc)
 {
     D3D12_TEXTURE_LAYOUT Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    if (desc->flags & CGPU_TCF_EXPORT_ADAPTER_BIT)
+    if (desc->flags & CGPU_TCF_TILED_RESOURCE)
+        Layout = D3D12_TEXTURE_LAYOUT_64KB_UNDEFINED_SWIZZLE;
+    else if (desc->flags & CGPU_TCF_EXPORT_ADAPTER_BIT)
         Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
     return Layout;
 }
@@ -1544,7 +1547,7 @@ D3D12Util_DescriptorHandle D3D12Util_ConsumeDescriptorHandles(D3D12Util_Descript
 }
 
 void D3D12Util_CreateDescriptorHeap(ID3D12Device* pDevice,
-const D3D12_DESCRIPTOR_HEAP_DESC* pDesc, struct D3D12Util_DescriptorHeap** ppDescHeap)
+    const D3D12_DESCRIPTOR_HEAP_DESC* pDesc, struct D3D12Util_DescriptorHeap** ppDescHeap)
 {
     uint32_t numDescriptors = pDesc->NumDescriptors;
     D3D12Util_DescriptorHeap* pHeap = (D3D12Util_DescriptorHeap*)cgpu_calloc(1, sizeof(*pHeap));
@@ -1576,7 +1579,7 @@ const D3D12_DESCRIPTOR_HEAP_DESC* pDesc, struct D3D12Util_DescriptorHeap** ppDes
 }
 
 void D3D12Util_ReturnDescriptorHandles(
-struct D3D12Util_DescriptorHeap* pHeap, D3D12_CPU_DESCRIPTOR_HANDLE handle, uint32_t count)
+    struct D3D12Util_DescriptorHeap* pHeap, D3D12_CPU_DESCRIPTOR_HANDLE handle, uint32_t count)
 {
     cgpu_assert((pHeap->mDesc.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE) == 0);
 #ifdef CGPU_THREAD_SAFETY
