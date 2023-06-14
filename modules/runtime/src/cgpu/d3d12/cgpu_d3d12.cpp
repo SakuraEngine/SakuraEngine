@@ -1,5 +1,6 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "d3d12_utils.h"
+#include "misc/defer.hpp"
 #include "../common/common_utils.h"
 
 #include <EASTL/string_hash_map.h>
@@ -1306,6 +1307,97 @@ float cgpu_queue_get_timestamp_period_ns_d3d12(CGPUQueueId queue)
     // ns per tick
     const double ms_period = 1e9 / (double)freq;
     return (float)ms_period;
+}
+
+void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapTiledTextureDescriptor* desc)
+{
+    const auto kPageSize = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+    const uint32_t RegionCount = desc->region_count;
+    uint64_t PageCount = 0;
+    for (uint32_t i = 0; i < RegionCount; i++)
+    {
+        const auto& Region = desc->regions[i];
+        const auto Width = Region.end.x - Region.start.x;
+        const auto Height = Region.end.y - Region.start.y;
+        const auto Depth = (1 + Region.end.z - Region.start.z);
+        const auto RegionPageCount = Width * Height * Depth;
+        PageCount += RegionPageCount;
+    }
+    if (!PageCount) return;
+
+    CGPUQueue_D3D12* Q = (CGPUQueue_D3D12*)queue;
+    CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)queue->device;
+    CGPUTexture_D3D12* T = (CGPUTexture_D3D12*)desc->texture;
+    auto Memory = sakura_calloc(RegionCount, sizeof(D3D12_TILED_RESOURCE_COORDINATE) + sizeof(D3D12_TILE_REGION_SIZE) + sizeof(UINT) + sizeof(UINT));
+    SKR_DEFER( { sakura_free(Memory); } );
+    auto pTileCoordinates = (D3D12_TILED_RESOURCE_COORDINATE*)Memory;
+    auto pTileSizes = (D3D12_TILE_REGION_SIZE*)(pTileCoordinates + RegionCount);
+    UINT* pRangeOffsets = (UINT*)(pTileSizes + RegionCount);
+    UINT* pTileCounts = (UINT*)(pRangeOffsets + RegionCount);
+    if (!D->pTiledMemoryPool)
+    {
+        D3D12MA::POOL_DESC poolDesc = {};
+        poolDesc.MinAllocationAlignment = kPageSize;
+        poolDesc.BlockSize = kPageSize * 256; // Res=4K, BPU=8
+        poolDesc.MinBlockCount = 32;
+        poolDesc.MaxBlockCount = 256;
+        // poolDesc.HeapFlags = D3D12_HEAP_FLAG_ALLOW_ONLY_NON_RT_DS_TEXTURES;
+        poolDesc.HeapFlags = D3D12_HEAP_FLAG_NONE;
+        poolDesc.HeapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+        auto hres = D->pResourceAllocator->CreatePool(&poolDesc, &D->pTiledMemoryPool);
+        CHECK_HRESULT(hres);
+    }
+
+    // do allocations
+    D3D12MA::ALLOCATION_DESC allocDesc;
+    allocDesc.CustomPool = D->pTiledMemoryPool;
+    D3D12_RESOURCE_ALLOCATION_INFO allocInfo;
+    allocInfo.Alignment = kPageSize;
+    allocInfo.SizeInBytes = PageCount * kPageSize;
+    D3D12MA::Allocation* pAllocation = nullptr;
+    D->pResourceAllocator->AllocateMemory(&allocDesc, &allocInfo, &pAllocation);
+
+    struct ID3D12Heap* pHeap = pAllocation->GetHeap();
+    auto BytesOffset = pAllocation->GetOffset();
+    uint32_t ActualRegionCount = 0;
+    for (uint32_t i = 0; i < RegionCount; i++)
+    {
+        const auto& Region = desc->regions[i];
+        pTileSizes[ActualRegionCount].UseBox = TRUE;
+        const auto Width = pTileSizes[ActualRegionCount].Width = Region.end.x - Region.start.x;
+        const auto Height = pTileSizes[ActualRegionCount].Height = Region.end.y - Region.start.y;
+        const auto Depth = pTileSizes[ActualRegionCount].Depth = (1 + Region.end.z - Region.start.z);
+        const auto NumTiles = pTileSizes[ActualRegionCount].NumTiles = Width * Height * Depth;
+        if (NumTiles == 0)
+            continue;
+            
+        pTileCoordinates[ActualRegionCount].X = Region.start.x;
+        pTileCoordinates[ActualRegionCount].Y = Region.start.y;
+        pTileCoordinates[ActualRegionCount].Z = Region.start.z;
+        pTileCoordinates[ActualRegionCount].Subresource = CALC_SUBRESOURCE_INDEX(
+            Region.mip_level, Region.layer, 0, 1, 1);
+
+        pTileCounts[ActualRegionCount] = pTileSizes[i].NumTiles;
+        
+        pRangeOffsets[ActualRegionCount] = (uint32_t)(BytesOffset / kPageSize);
+        BytesOffset += pTileCounts[ActualRegionCount] * kPageSize;
+
+        ActualRegionCount++;
+    }
+    
+    {
+		Q->pCommandQueue->UpdateTileMappings(
+			T->pDxResource,
+			ActualRegionCount,
+			pTileCoordinates,
+			pTileSizes,  // All regions are single tiles
+			pHeap, // ID3D12Heap*
+			ActualRegionCount,
+			NULL,  // All ranges are sequential tiles in the heap
+			pRangeOffsets,
+			pTileCounts,
+			D3D12_TILE_MAPPING_FLAG_NONE);
+    }
 }
 
 void cgpu_free_queue_d3d12(CGPUQueueId queue)

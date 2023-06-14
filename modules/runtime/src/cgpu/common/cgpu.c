@@ -446,6 +446,15 @@ float cgpu_queue_get_timestamp_period_ns(CGPUQueueId queue)
     return fn_get_timestamp_period(queue);
 }
 
+void cgpu_queue_map_tiled_texture(CGPUQueueId queue, const struct CGPUMapTiledTextureDescriptor* desc)
+{
+    cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcQueueMapTiledTexture fn = queue->device->proc_table_cache->queue_map_tiled_texture;
+    cgpu_assert(fn && "queue_map_tiled_texture Proc Missing!");
+    fn(queue, desc);
+}
+
 void cgpu_free_queue(CGPUQueueId queue)
 {
     cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");

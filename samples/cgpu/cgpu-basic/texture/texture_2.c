@@ -16,8 +16,11 @@ CGPUCommandBufferId cmds[FLIGHT_FRAMES];
 CGPUTextureId sampled_texture;
 CGPUSamplerId sampler_state;
 bool bUseStaticSampler = true;
-CGPUTextureViewId sampled_view;
 CGPUTextureViewId views[BACK_BUFFER_COUNT];
+
+#define TOTAL_MIPS 3
+uint32_t current_mip = 0;
+CGPUTextureViewId sampled_views[TOTAL_MIPS];
 
 render_application_t App;
 
@@ -37,28 +40,32 @@ void create_sampled_texture()
     // Texture
     CGPUTextureDescriptor tex_desc = {
         .descriptors = CGPU_RESOURCE_TYPE_TEXTURE,
-        .flags = CGPU_TCF_OWN_MEMORY_BIT,
+        .flags = CGPU_TCF_TILED_RESOURCE,
         .width = TEXTURE_WIDTH,
         .height = TEXTURE_HEIGHT,
         .depth = 1,
+        .mip_levels = TOTAL_MIPS,
         .format = CGPU_FORMAT_R8G8B8A8_UNORM,
         .array_size = 1,
         .owner_queue = App.gfx_queue,
         .start_state = CGPU_RESOURCE_STATE_COPY_DEST
     };
     sampled_texture = cgpu_create_texture(App.device, &tex_desc);
-    CGPUTextureViewDescriptor sview_desc = {
-        .texture = sampled_texture,
-        .format = tex_desc.format,
-        .array_layer_count = 1,
-        .base_array_layer = 0,
-        .mip_level_count = 1,
-        .base_mip_level = 0,
-        .aspects = CGPU_TVA_COLOR,
-        .dims = CGPU_TEX_DIMENSION_2D,
-        .usages = CGPU_TVU_SRV
-    };
-    sampled_view = cgpu_create_texture_view(App.device, &sview_desc);
+    for (uint32_t i = 0; i < TOTAL_MIPS; i++)
+    {
+        CGPUTextureViewDescriptor sview_desc = {
+            .texture = sampled_texture,
+            .format = tex_desc.format,
+            .array_layer_count = 1,
+            .base_array_layer = 0,
+            .mip_level_count = 1,
+            .base_mip_level = i,
+            .aspects = CGPU_TVA_COLOR,
+            .dims = CGPU_TEX_DIMENSION_2D,
+            .usages = CGPU_TVU_SRV
+        };
+        sampled_views[i] = cgpu_create_texture_view(App.device, &sview_desc);
+    }
     CGPUBufferDescriptor upload_buffer_desc = {
         .name = "UploadBuffer",
         .flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT,
@@ -72,8 +79,34 @@ void create_sampled_texture()
     {
         memcpy(upload_buffer->info->cpu_mapped_address, TEXTURE_DATA, upload_buffer_desc.size);
     }
-    cgpu_reset_command_pool(pools[0]);
+    // map tiled texture
+    {
+        const uint32_t Mips = sampled_texture->info->mip_levels;
+        const uint32_t TileWidth = sampled_texture->tiled_resource->width_texels;
+        const uint32_t TileHeight = sampled_texture->tiled_resource->height_texels;
+        CGPUTextureCoordinateRegion* coordinates = sakura_calloc(Mips, sizeof(CGPUTextureCoordinateRegion));
+        for (uint64_t MipLevel = 0; MipLevel < Mips; MipLevel++)
+        {
+            const uint32_t MipWidth = (uint32_t)cgpu_max(1, (int32_t)tex_desc.width >> (int32_t)MipLevel);
+            const uint32_t MipHeight = (uint32_t)cgpu_max(1, (int32_t)tex_desc.height >> (int32_t)MipLevel);
+            const CGPUCoordinate start = { 0, 0, 0 };
+            const CGPUCoordinate end = { MipWidth / TileWidth, MipHeight / TileHeight, 0 };
+
+            coordinates[MipLevel].start = start;
+            coordinates[MipLevel].end = end;
+            coordinates[MipLevel].mip_level = MipLevel;
+            coordinates[MipLevel].layer = 0;
+        }
+        CGPUMapTiledTextureDescriptor map_desc = {
+            .texture = sampled_texture,
+            .regions = coordinates,
+            .region_count = (uint32_t)Mips
+        };
+        cgpu_queue_map_tiled_texture(App.gfx_queue, &map_desc);
+        sakura_free(coordinates);
+    }
     // record
+    cgpu_reset_command_pool(pools[0]);
     cgpu_cmd_begin(cmds[0]);
     CGPUBufferToTextureTransfer b2t = {
         .src = upload_buffer,
@@ -173,7 +206,7 @@ void create_render_pipeline()
     arguments[0].name = "sampled_texture";
     // via binding: arguments[0].binding = 0;
     arguments[0].count = 1;
-    arguments[0].textures = &sampled_view;
+    arguments[0].textures = &sampled_views[0];
     arguments[1].name = sampler_name;
     // via binding: arguments[1].binding = 1;
     arguments[1].count = 1;
@@ -267,7 +300,7 @@ void raster_redraw()
         0.0f, 0.0f,
         (float)back_buffer->info->width, (float)back_buffer->info->height,
         0.f, 1.f);
-        cgpu_render_encoder_set_scissor(rp_encoder, 0, 0, back_buffer->info->width, back_buffer->info->height);
+        cgpu_render_encoder_set_scissor(rp_encoder, 0, 0, (uint32_t)back_buffer->info->width, (uint32_t)back_buffer->info->height);
         cgpu_render_encoder_bind_pipeline(rp_encoder, pipeline);
         cgpu_render_encoder_bind_descriptor_set(rp_encoder, desc_set);
         cgpu_render_encoder_push_constants(rp_encoder, root_sig, "push_constants", &data);
@@ -372,7 +405,8 @@ void finalize()
     if (desc_set2) cgpu_free_descriptor_set(desc_set2);
     cgpu_free_sampler(sampler_state);
     cgpu_free_texture(sampled_texture);
-    cgpu_free_texture_view(sampled_view);
+    for (uint32_t i = 0; i < TOTAL_MIPS; i++)
+        cgpu_free_texture_view(sampled_views[i]);
     for (uint32_t i = 0; i < App.swapchain->buffer_count; i++)
     {
         cgpu_free_texture_view(views[i]);
