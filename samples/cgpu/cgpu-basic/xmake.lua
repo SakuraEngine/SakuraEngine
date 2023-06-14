@@ -36,13 +36,13 @@ target("Example-CGPUTexture")
     add_files("texture/texture.c")
     add_files("texture/**.hlsl")
 
-target("Example-CGPUTexture2")
+target("Example-CGPUTiledTexture")
     set_group("04.examples/cgpu")
     set_exceptions("no-cxx")
     set_kind("binary")
     public_dependency("SkrRT", engine_version)
     add_includedirs("./../../common", {public = false})
-    add_files("texture/texture_2.c")
+    add_files("texture/tiled_texture.c")
     
 -- close this demo until we fix exception rule issue
 if has_config("build_cgpu_samples") then 
