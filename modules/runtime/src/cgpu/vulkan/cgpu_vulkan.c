@@ -1836,8 +1836,8 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGPUCommandBufferId cm
             rpdesc.pColorFormats[i] = desc->color_attachments[i].view->info.format;
             rpdesc.pLoadActionsColor[i] = desc->color_attachments[i].load_action;
             rpdesc.pStoreActionsColor[i] = desc->color_attachments[i].store_action;
-            Width = info->width;
-            Height = info->height;
+            Width = (uint32_t)info->width;
+            Height = (uint32_t)info->height;
         }
         VkUtil_FindOrCreateRenderPass(D, &rpdesc, &render_pass);
     }

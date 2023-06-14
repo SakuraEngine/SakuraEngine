@@ -319,9 +319,9 @@ void cgpu_cmd_transfer_buffer_to_texture_vulkan(CGPUCommandBufferId cmd, const s
             .imageOffset.x = 0,
             .imageOffset.y = 0,
             .imageOffset.z = 0,
-            .imageExtent.width = width,
-            .imageExtent.height = height,
-            .imageExtent.depth = depth
+            .imageExtent.width = (uint32_t)width,
+            .imageExtent.height = (uint32_t)height,
+            .imageExtent.depth = (uint32_t)depth
         };
         D->mVkDeviceTable.vkCmdCopyBufferToImage(Cmd->pVkCmdBuf,
         Src->pVkBuffer, Dst->pVkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
@@ -339,9 +339,9 @@ void cgpu_cmd_transfer_texture_to_texture_vulkan(CGPUCommandBufferId cmd, const 
     const CGPUTextureInfo* texInfo = desc->dst->info;
     if (isSinglePlane)
     {
-        const uint32_t width = cgpu_max(1, texInfo->width >> desc->dst_subresource.mip_level);
-        const uint32_t height = cgpu_max(1, texInfo->height >> desc->dst_subresource.mip_level);
-        const uint32_t depth = cgpu_max(1, texInfo->depth >> desc->dst_subresource.mip_level);
+        const uint32_t width = (uint32_t)cgpu_max(1, texInfo->width >> desc->dst_subresource.mip_level);
+        const uint32_t height = (uint32_t)cgpu_max(1, texInfo->height >> desc->dst_subresource.mip_level);
+        const uint32_t depth = (uint32_t)cgpu_max(1, texInfo->depth >> desc->dst_subresource.mip_level);
 
         VkImageCopy copy_region = {
             .srcSubresource = {
@@ -474,9 +474,9 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
             .flags = 0,
             .imageType = mImageType,
             .format = (VkFormat)VkUtil_FormatTranslateToVk(desc->format),
-            .extent.width = desc->width,
-            .extent.height = desc->height,
-            .extent.depth = desc->depth,
+            .extent.width = (uint32_t)desc->width,
+            .extent.height = (uint32_t)desc->height,
+            .extent.depth = (uint32_t)desc->depth,
             .mipLevels = desc->mip_levels,
             .arrayLayers = arraySize,
             .samples = VkUtil_SampleCountTranslateToVk(desc->sample_count),
