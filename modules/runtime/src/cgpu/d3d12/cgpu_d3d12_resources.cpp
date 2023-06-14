@@ -641,13 +641,14 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
         tilings);
 
     const auto objSize = sizeof(CGPUTiledTexture_D3D12) + sizeof(CGPUTextureInfo) + sizeof(CGPUTiledTextureInfo);
-    const auto pagesSize = numTiles * (sizeof(CGPUTiledMemoryPage) + sizeof(CGPUTiledTextureInfo));
+    const auto pagesSize = numTiles * (sizeof(CGPUTiledMemoryPage) + sizeof(CGPUTiledTexturePage));
     const auto totalSize = objSize + pagesSize;
     auto T = cgpu_new_sized<CGPUTiledTexture_D3D12>(totalSize, resDesc);
     auto pInfo = (CGPUTextureInfo*)(T + 1);
     auto pTiledInfo = (CGPUTiledTextureInfo*)(pInfo + 1);
     auto pMemTiles = (CGPUTiledMemoryPage*)(pTiledInfo + 1);
     auto pTexTiles = (CGPUTiledTexturePage*)(pMemTiles + numTiles);
+    SKR_ASSERT(pTexTiles + numTiles == (CGPUTiledTexturePage*)((uint8_t*)T + totalSize));
     pTiledInfo->pages = pMemTiles;
     pTiledInfo->total_pages_count = numTiles;
     pTiledInfo->alive_pages_count = 0;
@@ -656,7 +657,8 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
     pTiledInfo->width_texels = tileShape.WidthInTexels;
     pTiledInfo->height_texels = tileShape.HeightInTexels;
     pTiledInfo->depth_texels = tileShape.DepthInTexels;
-    const uint32_t tiledMiplevel = desc->mip_levels - (uint32_t)log2(float(cgpu_min(pTiledInfo->width_texels, pTiledInfo->height_texels)));
+    const uint32_t tailMipsStart = (uint32_t)log2(float(cgpu_min(pTiledInfo->width_texels, pTiledInfo->height_texels)));
+    const uint32_t tiledMiplevel = cgpu_min(desc->mip_levels, tailMipsStart);
     pTiledInfo->tiled_mip_levels = tiledMiplevel;
 
     T->super.info = pInfo;
@@ -708,6 +710,7 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
 						extent.Subresource = mipLevel;
 
 						// Add new virtual page
+                        SKR_ASSERT(currentPageIndex < numTiles);
                         auto& memoryPage = pMemTiles[currentPageIndex];
                         auto& texturePage = pTexTiles[currentPageIndex];
                         memoryPage.size = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
@@ -794,7 +797,7 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
         // assign D3D12_DEFAULT_MSAA_RESOURCE_PLACEMENT_ALIGNMENT if MSAA is used
         resDesc.Alignment = (UINT)desc->sample_count > 1 ? D3D12_DEFAULT_MSAA_RESOURCE_PLACEMENT_ALIGNMENT : 0;
         resDesc.Width = desc->width;
-        resDesc.Height = desc->height;
+        resDesc.Height = (UINT)desc->height;
         resDesc.DepthOrArraySize = (UINT16)(desc->array_size != 1 ? desc->array_size : desc->depth);
         resDesc.MipLevels = (UINT16)desc->mip_levels;
         resDesc.Dimension = D3D12Util_CalculateTextureDimension(desc);
@@ -1055,6 +1058,12 @@ void cgpu_free_texture_d3d12(CGPUTextureId texture)
         CGPUTextureAliasing_D3D12* AT = (CGPUTextureAliasing_D3D12*)T;
         SAFE_RELEASE(AT->pDxResource);
         cgpu_delete(AT);
+    }
+    else if (pInfo->is_tiled)
+    {
+        CGPUTiledTexture_D3D12* TT = (CGPUTiledTexture_D3D12*)T;
+        SAFE_RELEASE(TT->pDxResource);
+        cgpu_delete(TT);
     }
     else if (pInfo->is_imported)
     {

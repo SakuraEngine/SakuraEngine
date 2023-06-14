@@ -124,23 +124,24 @@ TEST_P(ResourceCreation, CreateTexture)
     cgpu_free_texture(texture);
 }
 
-/*
 TEST_P(ResourceCreation, CreateTiledTexture)
 {
-    DECLARE_ZERO(CGPUTextureDescriptor, desc)
-    desc.name = u8"Texture";
-    desc.flags = CGPU_TCF_OWN_MEMORY_BIT | CGPU_TCF_TILED_RESOURCE;
-    desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
-    desc.start_state = CGPU_RESOURCE_STATE_COMMON;
-    desc.descriptors = CGPU_RESOURCE_TYPE_TEXTURE;
-    desc.width = 512;
-    desc.height = 512;
-    desc.depth = 1;
-    auto texture = cgpu_create_texture(device, &desc);
-    EXPECT_NE(texture, CGPU_NULLPTR);
-    cgpu_free_texture(texture);
+    if (GetParam() == CGPU_BACKEND_D3D12)
+    {
+        DECLARE_ZERO(CGPUTextureDescriptor, desc)
+        desc.name = u8"Texture";
+        desc.flags = CGPU_TCF_OWN_MEMORY_BIT | CGPU_TCF_TILED_RESOURCE;
+        desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
+        desc.start_state = CGPU_RESOURCE_STATE_COMMON;
+        desc.descriptors = CGPU_RESOURCE_TYPE_TEXTURE;
+        desc.width = 512;
+        desc.height = 512;
+        desc.depth = 1;
+        auto texture = cgpu_create_texture(device, &desc);
+        EXPECT_NE(texture, CGPU_NULLPTR);
+        cgpu_free_texture(texture);
+    }
 }
-*/
 
 TEST_P(ResourceCreation, CreateUploadBuffer)
 {
