@@ -82,6 +82,13 @@ void create_sampled_texture()
     }
 }
 
+void update_streaming_unmap(CGPUCommandBufferId cmd, uint32_t MipLevel)
+{
+    if (current_mip == MipLevel)
+        return;
+    // cgpu_queue_unmap_tiled_texture(cmd, current_mip);
+}
+
 void update_streaming_map(CGPUCommandBufferId cmd, uint32_t MipLevel)
 {
     if (current_mip == MipLevel)
@@ -130,6 +137,12 @@ void update_streaming_map(CGPUCommandBufferId cmd, uint32_t MipLevel)
     };
     CGPUResourceBarrierDescriptor barrier_desc1 = { .texture_barriers = &srv_barrier, .texture_barriers_count = 1 };
     cgpu_cmd_resource_barrier(cmd, &barrier_desc1);
+}
+
+void update_streaming(CGPUCommandBufferId cmd, uint32_t MipLevel)
+{
+    update_streaming_unmap(cmd, current_mip);
+    update_streaming_map(cmd, MipLevel);
 }
 
 void create_render_pipeline()
