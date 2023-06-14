@@ -265,7 +265,7 @@ void initialize(void* usrdata)
             .texture = swapchain->back_buffers[i],
             .aspects = CGPU_TVA_COLOR,
             .dims = CGPU_TEX_DIMENSION_2D,
-            .format = swapchain->back_buffers[i]->format,
+            .format = swapchain->back_buffers[i]->info->format,
             .usages = CGPU_TVU_RTV_DSV,
             .array_layer_count = 1
         };
@@ -324,9 +324,9 @@ void raster_redraw()
     {
         cgpu_render_encoder_set_viewport(rp_encoder,
         0.0f, 0.0f,
-        (float)back_buffer->width, (float)back_buffer->height,
+        (float)back_buffer->info->width, (float)back_buffer->info->height,
         0.f, 1.f);
-        cgpu_render_encoder_set_scissor(rp_encoder, 0, 0, back_buffer->width, back_buffer->height);
+        cgpu_render_encoder_set_scissor(rp_encoder, 0, 0, back_buffer->info->width, back_buffer->info->height);
         cgpu_render_encoder_bind_pipeline(rp_encoder, pipeline);
         cgpu_render_encoder_bind_descriptor_set(rp_encoder, desc_set);
         cgpu_render_encoder_push_constants(rp_encoder, root_sig, "push_constants", &data);
@@ -401,7 +401,7 @@ void raster_program()
                                 .texture = swapchain->back_buffers[i],
                                 .aspects = CGPU_TVA_COLOR,
                                 .dims = CGPU_TEX_DIMENSION_2D,
-                                .format = swapchain->back_buffers[i]->format,
+                                .format = swapchain->back_buffers[i]->info->format,
                                 .usages = CGPU_TVU_RTV_DSV,
                                 .array_layer_count = 1
                             };

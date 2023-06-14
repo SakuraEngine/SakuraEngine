@@ -301,17 +301,17 @@ void cgpu_cmd_transfer_buffer_to_texture_vulkan(CGPUCommandBufferId cmd, const s
     const ECGPUFormat fmt = texInfo->format;
     if (isSinglePlane)
     {
-        const uint32_t width = cgpu_max(1, texInfo->width >> desc->dst_subresource.mip_level);
-        const uint32_t height = cgpu_max(1, texInfo->height >> desc->dst_subresource.mip_level);
-        const uint32_t depth = cgpu_max(1, texInfo->depth >> desc->dst_subresource.mip_level);
+        const uint64_t width = cgpu_max(1, texInfo->width >> desc->dst_subresource.mip_level);
+        const uint64_t height = cgpu_max(1, texInfo->height >> desc->dst_subresource.mip_level);
+        const uint64_t depth = cgpu_max(1, texInfo->depth >> desc->dst_subresource.mip_level);
 
-		const uint32_t xBlocksCount = width / FormatUtil_WidthOfBlock(fmt);
-		const uint32_t yBlocksCount = height / FormatUtil_HeightOfBlock(fmt);
+		const uint64_t xBlocksCount = width / FormatUtil_WidthOfBlock(fmt);
+		const uint64_t yBlocksCount = height / FormatUtil_HeightOfBlock(fmt);
 
         VkBufferImageCopy copy = {
             .bufferOffset = desc->src_offset,
-            .bufferRowLength = xBlocksCount * FormatUtil_WidthOfBlock(fmt),
-            .bufferImageHeight = yBlocksCount * FormatUtil_HeightOfBlock(fmt),
+            .bufferRowLength = (uint32_t)xBlocksCount * FormatUtil_WidthOfBlock(fmt),
+            .bufferImageHeight = (uint32_t)yBlocksCount * FormatUtil_HeightOfBlock(fmt),
             .imageSubresource.aspectMask = (VkImageAspectFlags)texInfo->aspect_mask,
             .imageSubresource.mipLevel = desc->dst_subresource.mip_level,
             .imageSubresource.baseArrayLayer = desc->dst_subresource.base_array_layer,

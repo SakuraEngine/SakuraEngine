@@ -186,7 +186,7 @@ public:
         TextureBuilder& with_flags(CGPUTextureCreationFlags tags) SKR_NOEXCEPT;
         TextureBuilder& with_tags(uint32_t tags) SKR_NOEXCEPT;
         TextureBuilder& import(CGPUTextureId texture, ECGPUResourceState init_state) SKR_NOEXCEPT;
-        TextureBuilder& extent(uint32_t width, uint32_t height, uint32_t depth = 1) SKR_NOEXCEPT;
+        TextureBuilder& extent(uint64_t width, uint64_t height, uint64_t depth = 1) SKR_NOEXCEPT;
         TextureBuilder& format(ECGPUFormat format) SKR_NOEXCEPT;
         TextureBuilder& array(uint32_t size) SKR_NOEXCEPT;
         TextureBuilder& sample_count(ECGPUSampleCount count) SKR_NOEXCEPT;

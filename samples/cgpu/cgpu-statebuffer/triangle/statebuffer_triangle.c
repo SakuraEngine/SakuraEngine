@@ -149,7 +149,7 @@ void initialize(void* usrdata)
             .aspects = CGPU_TVA_COLOR,
             .array_layer_count = 1,
             .dims = CGPU_TEX_DIMENSION_2D,
-            .format = swapchain->back_buffers[i]->format,
+            .format = swapchain->back_buffers[i]->info->format,
             .usages = CGPU_TVU_RTV_DSV
         };
         views[i] = cgpu_create_texture_view(device, &view_desc);
@@ -214,7 +214,7 @@ void raster_redraw()
     cgpu_cmd_resource_barrier(cmd, &barrier_desc0);
 
     // record pass & draws
-    triangle_pass(back_buffer->width, back_buffer->height);
+    triangle_pass(back_buffer->info->width, back_buffer->info->height);
 
     // barrier swapchain to present
     CGPUTextureBarrier present_barrier = {
