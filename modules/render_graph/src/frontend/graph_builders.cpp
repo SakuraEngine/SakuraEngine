@@ -561,7 +561,7 @@ RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::import(CGPUTextureId t
     return *this;
 }
 
-RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::extent(uint32_t width, uint32_t height, uint32_t depth) SKR_NOEXCEPT
+RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::extent(uint64_t width, uint64_t height, uint64_t depth) SKR_NOEXCEPT
 {
     node.descriptor.width = width;
     node.descriptor.height = height;

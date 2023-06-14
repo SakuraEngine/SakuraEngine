@@ -143,7 +143,7 @@ void initialize(void* usrdata)
             .aspects = CGPU_TVA_COLOR,
             .array_layer_count = 1,
             .dims = CGPU_TEX_DIMENSION_2D,
-            .format = swapchain->back_buffers[i]->format,
+            .format = swapchain->back_buffers[i]->info->format,
             .usages = CGPU_TVU_RTV_DSV
         };
         views[i] = cgpu_create_texture_view(device, &view_desc);
@@ -194,9 +194,9 @@ void raster_redraw()
         params[1].I = (int64_t)pipeline;
         params[1].type = SWA_VAL_I64;
         params[2].I = (int64_t)rp_encoder;
-        params[3].i = back_buffer->width;
+        params[3].i = back_buffer->info->width;
         params[3].type = SWA_VAL_I32;
-        params[4].i = back_buffer->height;
+        params[4].i = back_buffer->info->height;
         params[4].type = SWA_VAL_I32;
         SWAExecDescriptor exec_desc = {
             5, params,
@@ -209,7 +209,7 @@ void raster_redraw()
     {
         raster_cmd_record(cmd, pipeline,
         rp_encoder,
-        back_buffer->width, back_buffer->height);
+        back_buffer->info->width, back_buffer->info->height);
     }
     CGPUTextureBarrier present_barrier = {
         .texture = back_buffer,

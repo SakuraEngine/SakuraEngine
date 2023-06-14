@@ -155,7 +155,7 @@ void ProviderRenderer::create_render_pipeline()
     rp_desc.vertex_shader = &ppl_shaders[0];
     rp_desc.fragment_shader = &ppl_shaders[1];
     rp_desc.render_target_count = 1;
-    auto backend_format = (ECGPUFormat)swapchain->back_buffers[0]->format;
+    auto backend_format = (ECGPUFormat)swapchain->back_buffers[0]->info->format;
     rp_desc.color_formats = &backend_format;
     pipeline = cgpu_create_render_pipeline(device, &rp_desc);
     cgpu_free_shader_library(vertex_shader);
@@ -208,7 +208,7 @@ void ProviderRenderer::create_blit_pipeline()
     rp_desc.vertex_shader = &ppl_shaders[0];
     rp_desc.fragment_shader = &ppl_shaders[1];
     rp_desc.render_target_count = 1;
-    auto backend_format = (ECGPUFormat)swapchain->back_buffers[0]->format;
+    auto backend_format = (ECGPUFormat)swapchain->back_buffers[0]->info->format;
     rp_desc.color_formats = &backend_format;
     blit_pipeline = cgpu_create_render_pipeline(device, &rp_desc);
     cgpu_free_shader_library(screen_vs);
@@ -355,8 +355,8 @@ int provider_main(int argc, char* argv[])
         auto target_buffer = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
                 builder.set_name(u8"target_buffer")
-                .extent(to_import->width, to_import->height)
-                .format((ECGPUFormat)to_import->format)
+                .extent(to_import->info->width, to_import->info->height)
+                .format((ECGPUFormat)to_import->info->format)
                 .with_flags(CGPU_TCF_EXPORT_BIT)
                 .owns_memory()
                 .allow_render_target();
@@ -370,9 +370,9 @@ int provider_main(int argc, char* argv[])
             [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
                 cgpu_render_encoder_set_viewport(stack.encoder,
                     0.0f, 0.0f,
-                    (float)to_import->width, (float)to_import->height,
+                    (float)to_import->info->width, (float)to_import->info->height,
                     0.f, 1.f);
-                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->width, to_import->height);
+                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, (uint32_t)to_import->info->width, (uint32_t)to_import->info->height);
                 cgpu_render_encoder_draw(stack.encoder, 3, 0);
             });
         graph->add_render_pass(
@@ -394,21 +394,21 @@ int provider_main(int argc, char* argv[])
                     CGPUImportTextureDescriptor import_info = {};
                     import_info.backend = renderer->backend;
                     import_info.shared_handle = shared_handle;
-                    import_info.width = shared_texture->width;
-                    import_info.height = shared_texture->height;
-                    import_info.depth = shared_texture->depth;
-                    import_info.is_dedicated = shared_texture->is_dedicated;
-                    import_info.format = (ECGPUFormat)shared_texture->format;
-                    import_info.mip_levels = shared_texture->mip_levels;
-                    import_info.size_in_bytes = shared_texture->size_in_bytes;
+                    import_info.width = shared_texture->info->width;
+                    import_info.height = shared_texture->info->height;
+                    import_info.depth = shared_texture->info->depth;
+                    import_info.is_dedicated = shared_texture->info->is_driver_dedicated;
+                    import_info.format = (ECGPUFormat)shared_texture->info->format;
+                    import_info.mip_levels = shared_texture->info->mip_levels;
+                    import_info.size_in_bytes = shared_texture->info->size_in_bytes;
                     provider_set_shared_handle(env, dbi, provider_id, import_info);
                 }
 
                 cgpu_render_encoder_set_viewport(stack.encoder,
                     0.0f, 0.0f,
-                    (float)to_import->width, (float)to_import->height,
+                    (float)to_import->info->width, (float)to_import->info->height,
                     0.f, 1.f);
-                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->width, to_import->height);
+                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->info->width, to_import->info->height);
                 cgpu_render_encoder_draw(stack.encoder, 6, 0);
             });
         graph->add_present_pass(

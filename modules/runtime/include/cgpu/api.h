@@ -37,7 +37,6 @@ DEFINE_CGPU_OBJECT(CGPURootSignature)
 DEFINE_CGPU_OBJECT(CGPURootSignaturePool)
 DEFINE_CGPU_OBJECT(CGPUDescriptorSet)
 DEFINE_CGPU_OBJECT(CGPUMemoryPool)
-DEFINE_CGPU_OBJECT(CGPUTiledHeap)
 DEFINE_CGPU_OBJECT(CGPUBuffer)
 DEFINE_CGPU_OBJECT(CGPUTexture)
 DEFINE_CGPU_OBJECT(CGPUSampler)
@@ -226,10 +225,6 @@ CGPU_API CGPUMemoryPoolId cgpu_create_memory_pool(CGPUDeviceId, const struct CGP
 typedef CGPUMemoryPoolId (*CGPUProcCreateMemoryPool)(CGPUDeviceId, const struct CGPUMemoryPoolDescriptor* desc);
 CGPU_API void cgpu_free_memory_pool(CGPUMemoryPoolId pool);
 typedef void (*CGPUProcFreeMemoryPool)(CGPUMemoryPoolId pool);
-CGPU_API CGPUTiledHeapId cgpu_create_tiled_heap(CGPUDeviceId, const struct CGPUTiledHeapDescriptor* desc);
-typedef CGPUTiledHeapId (*CGPUProcCreateTiledHeap)(CGPUDeviceId, const struct CGPUTiledHeapDescriptor* desc);
-CGPU_API void cgpu_free_tiled_heap(CGPUTiledHeapId heap);
-typedef void (*CGPUProcFreeTiledHeap)(CGPUTiledHeapId heap);
 
 // Queue APIs
 // Warn: If you get a queue at an index with a specific type, you must hold the handle and reuses it.
@@ -1014,7 +1009,7 @@ static const CGPUClearValue fastclear_1111 = {
     { 1.f, 1.f, 1.f, 1.f }
 };
 
-typedef struct CGPUSwapChain {
+typedef struct SKR_ALIGNAS(16) CGPUSwapChain {
     CGPUDeviceId device;
     const CGPUTextureId* back_buffers;
     uint32_t buffer_count;
@@ -1360,14 +1355,6 @@ typedef struct CGPUMemoryPool {
     CGPUDeviceId device;
 } CGPUMemoryPool;
 
-typedef struct CGPUTiledHeapDescriptor {
-    uint64_t total_size;
-} CGPUTiledHeapDescriptor;
-
-typedef struct CGPUTiledHeap {
-    CGPUDeviceId device;
-} CGPUTiledHeap;
-
 typedef struct CGPUParameterTable {
     // This should be stored here because shader could be destoryed after RS creation
     CGPUShaderResource* resources;
@@ -1504,11 +1491,11 @@ typedef struct CGPUTextureDescriptor {
     /// Optimized clear value (recommended to use this same value when clearing the rendertarget)
     CGPUClearValue clear_value;
     /// Width
-    uint32_t width;
+    uint64_t width;
     /// Height
-    uint32_t height;
+    uint64_t height;
     /// Depth (Should be 1 if not a mType is not TEXTURE_TYPE_3D)
-    uint32_t depth;
+    uint64_t depth;
     /// Texture array size (Should be 1 if texture is not a texture array or cubemap)
     uint32_t array_size;
     ///  image format
@@ -1566,8 +1553,8 @@ typedef struct CGPUTextureAliasingBindDescriptor {
 
 typedef struct CGPUTextureInfo {
     uint64_t width;
-    uint32_t height;
-    uint32_t depth;
+    uint64_t height;
+    uint64_t depth;
     uint32_t mip_levels;
     uint32_t array_size_minus_one;
     uint64_t size_in_bytes;

@@ -1936,9 +1936,10 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12_impl(CGPUDeviceId device, const CGPU
     const uint32_t buffer_count = desc->image_count;
     if (!old)
     {
-        void* Memory = cgpu_calloc_aligned(1, sizeof(CGPUSwapChain_D3D12) +
+        const auto size = sizeof(CGPUSwapChain_D3D12) +
                                     (sizeof(CGPUTexture_D3D12) + sizeof(CGPUTextureInfo)) * buffer_count +
-                                    sizeof(CGPUTextureId) * buffer_count, alignof(CGPUSwapChain_D3D12));
+                                    sizeof(CGPUTextureId) * buffer_count;
+        void* Memory = cgpu_calloc_aligned(1, size, alignof(CGPUSwapChain_D3D12));
         S = cgpu_new_placed<CGPUSwapChain_D3D12>(Memory);
     }
     S->mDxSyncInterval = 0;
@@ -2061,7 +2062,7 @@ void cgpu_free_swapchain_d3d12(CGPUSwapChainId swapchain)
     CGPUSwapChain_D3D12* S = (CGPUSwapChain_D3D12*)swapchain;
     cgpu_free_swapchain_d3d12_impl(swapchain);
     cgpu_delete_placed(S);
-    cgpu_free(S);
+    cgpu_free_aligned(S, alignof(CGPUSwapChain_D3D12));
 }
 
 #include "cgpu/extensions/cgpu_d3d12_exts.h"
