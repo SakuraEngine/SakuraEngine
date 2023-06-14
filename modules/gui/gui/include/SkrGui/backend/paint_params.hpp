@@ -14,6 +14,15 @@ using CustomPaintCallback = skr_gdi_custom_vertex_painter_t;
 
 namespace skr::gui
 {
+
+enum class EPaintType : uint8_t
+{
+    Color,
+    Texture,
+    Material,
+    __Count,
+};
+
 enum class EPaintStyle : uint8_t
 {
     Fill,
@@ -53,16 +62,26 @@ enum class EBlendFactor : uint8_t
     __Count,
 };
 
-enum class EPaintType : uint8_t
+enum class ESwizzleChannel
 {
-    Color,
-    Texture,
-    Material,
+    R,
+    G,
+    B,
+    A,
+    Zero,
+    One,
     __Count,
 };
 
+struct Swizzle {
+    ESwizzleChannel r = ESwizzleChannel::R;
+    ESwizzleChannel g = ESwizzleChannel::G;
+    ESwizzleChannel b = ESwizzleChannel::B;
+    ESwizzleChannel a = ESwizzleChannel::A;
+};
+
 struct BlendMode {
-    EBlendFactor src_color = EBlendFactor::SrcAlpha;
+    EBlendFactor src_color = EBlendFactor::One;
     EBlendFactor dst_color = EBlendFactor::OneMinusSrcAlpha;
     EBlendFactor src_alpha = EBlendFactor::One;
     EBlendFactor dst_alpha = EBlendFactor::OneMinusSrcAlpha;
