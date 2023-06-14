@@ -1574,27 +1574,41 @@ typedef struct CGPUTextureInfo {
     uint8_t can_export;
 } CGPUTextureInfo;
 
-typedef struct CGPUMemoryPage {
+typedef struct CGPUTiledMemoryPage {
     uint64_t size;
-} CGPUMemoryPage;
+} CGPUTiledMemoryPage;
+
+typedef struct CGPUTextureCoordinate {
+    uint32_t x;
+    uint32_t y;
+    uint32_t z;
+    uint32_t subresource_index;
+} CGPUTextureCoordinate;
 
 typedef struct CGPUTiledTexturePage {
 	uint32_t mip_level;
 	uint32_t layer;
     uint32_t index;
+    CGPUTextureCoordinate extent;
+    CGPUTextureCoordinate offset;
 } CGPUTiledTexturePage;
 
-typedef struct CGPUTiledResourceInfo {
-    const CGPUMemoryPage* pages;
-    const CGPUTiledTexturePage* tex_pages;
+typedef struct CGPUTiledTextureInfo {
+    const CGPUTiledMemoryPage* pages;
     uint64_t total_pages_count;
     uint64_t alive_pages_count;
-} CGPUTiledResourceInfo;
+
+    const CGPUTiledTexturePage* tex_pages;
+    uint32_t width_texels;
+    uint32_t height_texels;
+    uint32_t depth_texels;
+    uint32_t tiled_mip_levels;
+} CGPUTiledTextureInfo;
 
 typedef struct SKR_ALIGNAS(16) CGPUTexture {
     CGPUDeviceId device;
     const CGPUTextureInfo* info;
-    const CGPUTiledResourceInfo* tiled_resource;
+    const CGPUTiledTextureInfo* tiled_resource;
 } CGPUTexture;
 
 typedef struct CGPUTextureView {

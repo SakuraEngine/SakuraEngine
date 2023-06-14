@@ -4,6 +4,7 @@
 #include "d3d12_utils.h"
 #include "platform/memory.h"
 #include "misc/make_zeroed.hpp"
+#include "misc/defer.hpp"
 #include <containers/string.hpp>
 #include <dxcapi.h>
 
@@ -497,13 +498,6 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateFromAllocator(CGPUAdapter_D3D12* A, 
     ID3D12Resource* pDxResource = nullptr;
     D3D12MA::Allocation* pDxAllocation = nullptr;
     D3D12MA::ALLOCATION_DESC allocDesc = {};
-#if defined(XBOX)
-    if (desc->flags & CGPU_TCF_ALLOW_DISPLAY_TARGET)
-    {
-        allocDesc.ExtraHeapFlags |= D3D12_HEAP_FLAG_ALLOW_DISPLAY;
-        resDesc.Format = dxFormat;
-    }
-#endif
     // Do allocation (TODO: mGPU)
     allocDesc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
     // for smaller alignment that not suitable for MSAA
@@ -613,19 +607,121 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateAliasing(const struct CGPUTextureDes
 
 struct CGPUTiledTexture_D3D12 : public CGPUTexture_D3D12 {
     D3D12_RESOURCE_DESC mDxDesc;
-    skr::string name;
-    CGPUTiledTexture_D3D12(const D3D12_RESOURCE_DESC& dxDesc, const char8_t* name)
+    CGPUTiledTexture_D3D12(const D3D12_RESOURCE_DESC& dxDesc)
         : CGPUTexture_D3D12()
         , mDxDesc(dxDesc)
-        , name(name)
     {
     }
 };
 
+inline static void alignedDivision(const D3D12_TILED_RESOURCE_COORDINATE& extent, const D3D12_TILED_RESOURCE_COORDINATE& granularity, D3D12_TILED_RESOURCE_COORDINATE* out)
+{
+    out->X = (extent.X / granularity.X + ((extent.X % granularity.X) ? 1u : 0u));
+    out->Y = (extent.Y / granularity.Y + ((extent.Y % granularity.Y) ? 1u : 0u));
+    out->Z = (extent.Z / granularity.Z + ((extent.Z % granularity.Z) ? 1u : 0u));
+}
+
 inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D, const struct CGPUTextureDescriptor* desc,
     D3D12_RESOURCE_DESC resDesc, D3D12_RESOURCE_STATES startStates, const D3D12_CLEAR_VALUE* pClearValue)
 {
-    return CGPU_NULLPTR;
+    ID3D12Resource* pDxResource = nullptr;
+    CHECK_HRESULT(D->pDxDevice->CreateReservedResource(
+        &resDesc, startStates, pClearValue, IID_PPV_ARGS(&pDxResource)));
+    // query page informations
+    UINT numTiles = 0;
+	D3D12_PACKED_MIP_INFO packedMipInfo;
+	D3D12_TILE_SHAPE tileShape = {};
+	UINT subresourceCount = resDesc.MipLevels;
+    auto tilings = (D3D12_SUBRESOURCE_TILING*)cgpu_calloc(subresourceCount, sizeof(D3D12_SUBRESOURCE_TILING));
+    SKR_DEFER({ cgpu_free(tilings);});
+	D->pDxDevice->GetResourceTiling(pDxResource, &numTiles, 
+        &packedMipInfo, &tileShape, 
+        &subresourceCount, 0, 
+        tilings);
+
+    const auto objSize = sizeof(CGPUTiledTexture_D3D12) + sizeof(CGPUTextureInfo) + sizeof(CGPUTiledTextureInfo);
+    const auto pagesSize = numTiles * (sizeof(CGPUTiledMemoryPage) + sizeof(CGPUTiledTextureInfo));
+    const auto totalSize = objSize + pagesSize;
+    auto T = cgpu_new_sized<CGPUTiledTexture_D3D12>(totalSize, resDesc);
+    auto pInfo = (CGPUTextureInfo*)(T + 1);
+    auto pTiledInfo = (CGPUTiledTextureInfo*)(pInfo + 1);
+    auto pMemTiles = (CGPUTiledMemoryPage*)(pTiledInfo + 1);
+    auto pTexTiles = (CGPUTiledTexturePage*)(pMemTiles + numTiles);
+    pTiledInfo->pages = pMemTiles;
+    pTiledInfo->total_pages_count = numTiles;
+    pTiledInfo->alive_pages_count = 0;
+    
+    pTiledInfo->tex_pages = pTexTiles;
+    pTiledInfo->width_texels = tileShape.WidthInTexels;
+    pTiledInfo->height_texels = tileShape.HeightInTexels;
+    pTiledInfo->depth_texels = tileShape.DepthInTexels;
+    const uint32_t tiledMiplevel = desc->mip_levels - (uint32_t)log2(float(cgpu_min(pTiledInfo->width_texels, pTiledInfo->height_texels)));
+    pTiledInfo->tiled_mip_levels = tiledMiplevel;
+
+    T->super.info = pInfo;
+    T->super.tiled_resource = pTiledInfo;
+    T->pDxResource = pDxResource;
+
+	uint32_t currentPageIndex = 0;
+	for (uint32_t layer = 0; layer < 1; layer++)
+    {
+        for (uint32_t mipLevel = 0; mipLevel < tiledMiplevel; mipLevel++)
+        {
+			D3D12_TILED_RESOURCE_COORDINATE extent;
+			extent.X = cgpu_max(resDesc.Width >> mipLevel, 1u);
+			extent.Y = cgpu_max(resDesc.Height >> mipLevel, 1u);
+			extent.Z = cgpu_max(resDesc.DepthOrArraySize >> mipLevel, 1u);
+
+            // Aligned sizes by image granularity
+			D3D12_TILED_RESOURCE_COORDINATE imageGranularity;
+			imageGranularity.X = tileShape.WidthInTexels;
+			imageGranularity.Y = tileShape.HeightInTexels;
+			imageGranularity.Z = tileShape.DepthInTexels;
+
+            D3D12_TILED_RESOURCE_COORDINATE sparseBindCounts = {};
+			D3D12_TILED_RESOURCE_COORDINATE lastBlockExtent = {};
+			alignedDivision(extent, imageGranularity, &sparseBindCounts);
+			lastBlockExtent.X = ((extent.X % imageGranularity.X) ? extent.X % imageGranularity.X : imageGranularity.X);
+			lastBlockExtent.Y = ((extent.Y % imageGranularity.Y) ? extent.Y % imageGranularity.Y : imageGranularity.Y);
+			lastBlockExtent.Z = ((extent.Z % imageGranularity.Z) ? extent.Z % imageGranularity.Z : imageGranularity.Z);
+
+            // Alllocate memory for some blocks
+			for (uint32_t z = 0; z < sparseBindCounts.Z; z++)
+			{
+				for (uint32_t y = 0; y < sparseBindCounts.Y; y++)
+				{
+					for (uint32_t x = 0; x < sparseBindCounts.X; x++)
+					{
+						// Offset
+						D3D12_TILED_RESOURCE_COORDINATE offset;
+						offset.X = x * imageGranularity.X;
+						offset.Y = y * imageGranularity.Y;
+						offset.Z = z * imageGranularity.Z;
+						offset.Subresource = mipLevel;
+
+						// Size of the page
+						D3D12_TILED_RESOURCE_COORDINATE extent;
+						extent.X = (x == sparseBindCounts.X - 1) ? lastBlockExtent.X : imageGranularity.X;
+						extent.Y = (y == sparseBindCounts.Y - 1) ? lastBlockExtent.Y : imageGranularity.Y;
+						extent.Z = (z == sparseBindCounts.Z - 1) ? lastBlockExtent.Z : imageGranularity.Z;
+						extent.Subresource = mipLevel;
+
+						// Add new virtual page
+                        auto& memoryPage = pMemTiles[currentPageIndex];
+                        auto& texturePage = pTexTiles[currentPageIndex];
+                        memoryPage.size = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+                        texturePage.index = currentPageIndex;
+                        texturePage.mip_level = mipLevel;
+                        texturePage.layer = layer;
+                        texturePage.extent = { extent.X, extent.Y, extent.Z, extent.Subresource };
+                        texturePage.offset = { offset.X, offset.Y, offset.Z, offset.Subresource };
+						currentPageIndex++;
+					}
+				}
+			}
+        }
+    }
+    return T;
 }
 
 inline D3D12_RESOURCE_FLAGS D3D12Util_CalculateTextureFlags(const struct CGPUTextureDescriptor* desc)
@@ -700,7 +796,13 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
         resDesc.MipLevels = (UINT16)desc->mip_levels;
         resDesc.Dimension = D3D12Util_CalculateTextureDimension(desc);
         resDesc.Format = DXGIUtil_FormatToTypeless(dxFormat);
-
+#if defined(XBOX)
+        if (desc->flags & CGPU_TCF_ALLOW_DISPLAY_TARGET)
+        {
+            allocDesc.ExtraHeapFlags |= D3D12_HEAP_FLAG_ALLOW_DISPLAY;
+            resDesc.Format = dxFormat;
+        }
+#endif
         // Sample Count
         resDesc.SampleDesc.Quality = (UINT)desc->sample_quality;
         resDesc.SampleDesc.Count = (UINT)desc->sample_count ? desc->sample_count : 1;
@@ -724,11 +826,11 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
 
         if (desc->flags & CGPU_TCF_ALIASING_RESOURCE)
         {
-            T = D3D12Util_AllocateTiled(A, D, desc, resDesc, startStates, pClearValue);
+            T = D3D12Util_AllocateAliasing(desc, resDesc);
         }
         else if (desc->flags & CGPU_TCF_TILED_RESOURCE)
         {
-            T = D3D12Util_AllocateAliasing(desc, resDesc);
+            T = D3D12Util_AllocateTiled(A, D, desc, resDesc, startStates, pClearValue);
         }
         else
         {
