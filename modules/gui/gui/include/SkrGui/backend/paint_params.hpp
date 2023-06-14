@@ -3,11 +3,17 @@
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/math/color.hpp"
 
+// TODO. remove gdi
+#include "SkrGui/dev/gdi/gdi.hpp"
 namespace skr::gui
 {
-struct ITexture;
-struct IMaterial;
+using ITexture = ::skr::gdi::IGDITexture;
+using IMaterial = ::skr::gdi::IGDIMaterial;
+using CustomPaintCallback = skr_gdi_custom_vertex_painter_t;
+} // namespace skr::gui
 
+namespace skr::gui
+{
 enum class EPaintStyle : uint8_t
 {
     Fill,
@@ -44,6 +50,15 @@ enum class EBlendFactor : uint8_t
     DstAlpha,
     OneMinusDstAlpha,
     SrcAlphaSaturate,
+    __Count,
+};
+
+enum class EPaintType : uint8_t
+{
+    Color,
+    Texture,
+    Material,
+    __Count,
 };
 
 struct BlendMode {
@@ -51,27 +66,5 @@ struct BlendMode {
     EBlendFactor dst_color = EBlendFactor::OneMinusSrcAlpha;
     EBlendFactor src_alpha = EBlendFactor::One;
     EBlendFactor dst_alpha = EBlendFactor::OneMinusSrcAlpha;
-};
-
-struct PaintParams {
-    //==> draw state
-    Color       color;
-    EPaintStyle paint_style = EPaintStyle::Fill;
-    EStrokeCap  stroke_cap = EStrokeCap::Butt;
-    EStrokeJoin stroke_join = EStrokeJoin::Miter;
-    bool        anti_alias = true;
-    float       stroke_width = 0.0f;
-    float       stroke_miter_limit = 4.0f;
-
-    //==> resource TODO. use Surface class
-    ITexture*    texture = nullptr;
-    IMaterial*   material = nullptr;
-    EBlendFactor blend = {};
-    // - mask filter (impl by material)
-    // - filter quality (impl by material pls)
-    // - color filter (material pls sir)
-    // - image filter (material pls sir)
-    // - invert colors (material pls sir)
-    // - _dither (material pls sir)
 };
 } // namespace skr::gui
