@@ -657,9 +657,6 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
     pTiledInfo->width_texels = tileShape.WidthInTexels;
     pTiledInfo->height_texels = tileShape.HeightInTexels;
     pTiledInfo->depth_texels = tileShape.DepthInTexels;
-    const uint32_t tailMipsStart = (uint32_t)log2(float(cgpu_min(pTiledInfo->width_texels, pTiledInfo->height_texels)));
-    const uint32_t tiledMiplevel = cgpu_min(desc->mip_levels, tailMipsStart);
-    pTiledInfo->tiled_mip_levels = tiledMiplevel;
 
     T->super.info = pInfo;
     T->super.tiled_resource = pTiledInfo;
@@ -668,12 +665,19 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
 	uint32_t currentPageIndex = 0;
 	for (uint32_t layer = 0; layer < 1; layer++)
     {
-        for (uint32_t mipLevel = 0; mipLevel < tiledMiplevel; mipLevel++)
+        for (uint32_t mipLevel = 0; mipLevel < desc->mip_levels; mipLevel++)
         {
 			D3D12_TILED_RESOURCE_COORDINATE extent;
 			extent.X = (UINT)cgpu_max(resDesc.Width >> mipLevel, 1u);
 			extent.Y = (UINT)cgpu_max(resDesc.Height >> mipLevel, 1u);
 			extent.Z = (UINT)cgpu_max(resDesc.DepthOrArraySize >> mipLevel, 1u);
+            if (extent.X < tileShape.WidthInTexels || 
+                extent.Y < tileShape.HeightInTexels || 
+                extent.Z < tileShape.DepthInTexels)
+            {
+                pTiledInfo->tail_mip_start = mipLevel;
+                break;
+            }
 
             // Aligned sizes by image granularity
 			D3D12_TILED_RESOURCE_COORDINATE imageGranularity;
@@ -717,8 +721,8 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
                         texturePage.index = currentPageIndex;
                         texturePage.mip_level = mipLevel;
                         texturePage.layer = layer;
-                        texturePage.extent = { extent.X, extent.Y, extent.Z, extent.Subresource };
-                        texturePage.offset = { offset.X, offset.Y, offset.Z, offset.Subresource };
+                        texturePage.extent = { extent.X, extent.Y, extent.Z };
+                        texturePage.offset = { offset.X, offset.Y, offset.Z };
 						currentPageIndex++;
 					}
 				}
