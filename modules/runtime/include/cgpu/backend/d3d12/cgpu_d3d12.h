@@ -61,6 +61,8 @@ CGPU_API CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId dev
 CGPU_API void cgpu_free_render_pipeline_d3d12(CGPURenderPipelineId pipeline);
 CGPU_API CGPUQueryPoolId cgpu_create_query_pool_d3d12(CGPUDeviceId device, const struct CGPUQueryPoolDescriptor* desc);
 CGPU_API void cgpu_free_query_pool_d3d12(CGPUQueryPoolId pool);
+CGPU_API CGPUMemoryPoolId cgpu_create_memory_pool_d3d12(CGPUDeviceId device, const struct CGPUMemoryPoolDescriptor* desc);
+CGPU_API void cgpu_free_memory_pool_d3d12(CGPUMemoryPoolId pool);
 
 // Queue APIs
 CGPU_API CGPUQueueId cgpu_get_queue_d3d12(CGPUDeviceId device, ECGPUQueueType type, uint32_t index);
@@ -217,12 +219,11 @@ typedef struct CGPUDevice_D3D12 {
     ID3D12Device* pDxDevice;
     struct ID3D12CommandQueue** const ppCommandQueues[CGPU_QUEUE_TYPE_COUNT] SKR_IF_CPP(= {});
     const uint32_t pCommandQueueCounts[CGPU_QUEUE_TYPE_COUNT] SKR_IF_CPP(= {});
+    struct CGPUTiledMemoryPool_D3D12* pTiledMemoryPool;
 #ifdef __cplusplus
     class D3D12MA::Allocator* pResourceAllocator;
-    class D3D12MA::Pool* pTiledMemoryPool;
 #else
     struct DMA_Allocator* pResourceAllocator;
-    struct DMA_Pool* pTiledMemoryPool;
 #endif
     struct D3D12Util_StaticSamplerMap* pStaticSamplersMap;
     ID3D12PipelineLibrary* pPipelineLibrary;
