@@ -957,15 +957,15 @@ CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTe
     // Set Texture Object Props
     auto pInfo = const_cast<CGPUTextureInfo*>(T->super.info);
     pInfo->is_imported = desc->native_handle ? 1 : 0;
-    pInfo->is_aliasing = (desc->flags & CGPU_TCF_ALIASING_RESOURCE);
-    pInfo->is_tiled = (desc->flags & CGPU_TCF_TILED_RESOURCE);
+    pInfo->is_aliasing = (desc->flags & CGPU_TCF_ALIASING_RESOURCE) ? 1 : 0;
+    pInfo->is_tiled = (desc->flags & CGPU_TCF_TILED_RESOURCE) ? 1 : 0;
+    pInfo->is_cube = (CGPU_RESOURCE_TYPE_TEXTURE_CUBE == (desc->descriptors & CGPU_RESOURCE_TYPE_TEXTURE_CUBE)) ? 1 : 0;
     pInfo->owns_image = !pInfo->is_aliasing && !pInfo->is_imported;
     pInfo->sample_count = desc->sample_count;
     pInfo->width = desc->width;
     pInfo->height = desc->height;
     pInfo->depth = desc->depth;
     pInfo->mip_levels = desc->mip_levels;
-    pInfo->is_cube = (CGPU_RESOURCE_TYPE_TEXTURE_CUBE == (desc->descriptors & CGPU_RESOURCE_TYPE_TEXTURE_CUBE));
     pInfo->array_size_minus_one = desc->array_size - 1;
     pInfo->format = desc->format;
     if (T->pDxResource)
@@ -1150,13 +1150,7 @@ void cgpu_free_texture_d3d12(CGPUTextureId texture)
 {
     CGPUTexture_D3D12* T = (CGPUTexture_D3D12*)texture;
     const auto pInfo = texture->info;
-    if (pInfo->owns_image)
-    {
-        SAFE_RELEASE(T->pDxAllocation);
-        SAFE_RELEASE(T->pDxResource);
-        cgpu_delete(T);
-    }
-    else if (pInfo->is_aliasing)
+    if (pInfo->is_aliasing)
     {
         CGPUTextureAliasing_D3D12* AT = (CGPUTextureAliasing_D3D12*)T;
         SAFE_RELEASE(AT->pDxResource);
@@ -1170,6 +1164,12 @@ void cgpu_free_texture_d3d12(CGPUTextureId texture)
     }
     else if (pInfo->is_imported)
     {
+        SAFE_RELEASE(T->pDxResource);
+        cgpu_delete(T);
+    }
+    else if (pInfo->owns_image)
+    {
+        SAFE_RELEASE(T->pDxAllocation);
         SAFE_RELEASE(T->pDxResource);
         cgpu_delete(T);
     }
