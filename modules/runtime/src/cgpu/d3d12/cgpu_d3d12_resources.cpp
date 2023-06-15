@@ -6,6 +6,7 @@
 #include "misc/make_zeroed.hpp"
 #include "misc/defer.hpp"
 #include <containers/string.hpp>
+#include <containers/concurrent_queue.h>
 #include <dxcapi.h>
 
 #include <EASTL/string.h>
@@ -15,6 +16,16 @@
 // Inline Utils
 D3D12_RESOURCE_DESC D3D12Util_CreateBufferDesc(CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D, const struct CGPUBufferDescriptor* desc);
 D3D12MA::ALLOCATION_DESC D3D12Util_CreateAllocationDesc(const struct CGPUBufferDescriptor* desc);
+
+inline D3D12_HEAP_TYPE D3D12Util_TranslateHeapType(ECGPUMemoryUsage usage)
+{
+    if (usage == CGPU_MEM_USAGE_CPU_ONLY || usage == CGPU_MEM_USAGE_CPU_TO_GPU)
+        return D3D12_HEAP_TYPE_UPLOAD;
+    else if (usage == CGPU_MEM_USAGE_GPU_TO_CPU)
+        return D3D12_HEAP_TYPE_READBACK;
+    else
+        return D3D12_HEAP_TYPE_DEFAULT;
+}
 
 // Buffer APIs
 cgpu_static_assert(sizeof(CGPUBuffer_D3D12) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
@@ -604,21 +615,20 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateAliasing(const struct CGPUTextureDes
     return T;
 }
 
-struct CGPUTiledTexture_D3D12 : public CGPUTexture_D3D12 {
-    D3D12_RESOURCE_DESC mDxDesc;
-    CGPUTiledTexture_D3D12(const D3D12_RESOURCE_DESC& dxDesc)
-        : CGPUTexture_D3D12()
-        , mDxDesc(dxDesc)
-    {
-    }
-};
-
 inline static void alignedDivision(const D3D12_TILED_RESOURCE_COORDINATE& extent, const D3D12_TILED_RESOURCE_COORDINATE& granularity, D3D12_TILED_RESOURCE_COORDINATE* out)
 {
     out->X = (extent.X / granularity.X + ((extent.X % granularity.X) ? 1u : 0u));
     out->Y = (extent.Y / granularity.Y + ((extent.Y % granularity.Y) ? 1u : 0u));
     out->Z = (extent.Z / granularity.Z + ((extent.Z % granularity.Z) ? 1u : 0u));
 }
+
+struct CGPUTiledTexture_D3D12 : public CGPUTexture_D3D12 {
+    CGPUTiledTexture_D3D12()
+        : CGPUTexture_D3D12()
+    {
+    }
+};
+cgpu_static_assert(sizeof(CGPUTiledTexture_D3D12) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
 
 inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D, const struct CGPUTextureDescriptor* desc,
     D3D12_RESOURCE_DESC resDesc, D3D12_RESOURCE_STATES startStates, const D3D12_CLEAR_VALUE* pClearValue)
@@ -641,94 +651,26 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
         tilings);
 
     const auto objSize = sizeof(CGPUTiledTexture_D3D12) + sizeof(CGPUTextureInfo) + sizeof(CGPUTiledTextureInfo);
-    const auto pagesSize = numTiles * (sizeof(CGPUTiledMemoryPage) + sizeof(CGPUTiledTexturePage));
-    const auto totalSize = objSize + pagesSize;
-    auto T = cgpu_new_sized<CGPUTiledTexture_D3D12>(totalSize, resDesc);
+    const auto totalSize = objSize;
+    auto T = cgpu_new_sized<CGPUTiledTexture_D3D12>(totalSize);
     auto pInfo = (CGPUTextureInfo*)(T + 1);
     auto pTiledInfo = (CGPUTiledTextureInfo*)(pInfo + 1);
-    auto pMemTiles = (CGPUTiledMemoryPage*)(pTiledInfo + 1);
-    auto pTexTiles = (CGPUTiledTexturePage*)(pMemTiles + numTiles);
-    SKR_ASSERT(pTexTiles + numTiles == (CGPUTiledTexturePage*)((uint8_t*)T + totalSize));
-    pTiledInfo->pages = pMemTiles;
-    pTiledInfo->total_pages_count = numTiles;
-    pTiledInfo->alive_pages_count = 0;
+    pTiledInfo->total_tiles_count = numTiles;
+    pTiledInfo->alive_tiles_count = 0;
+    pTiledInfo->tile_size = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
     
-    pTiledInfo->tex_pages = pTexTiles;
     pTiledInfo->width_texels = tileShape.WidthInTexels;
     pTiledInfo->height_texels = tileShape.HeightInTexels;
     pTiledInfo->depth_texels = tileShape.DepthInTexels;
+
+    pTiledInfo->tail_mip_start = packedMipInfo.NumStandardMips;
+    pTiledInfo->tail_mip_count = packedMipInfo.NumPackedMips;
+    pTiledInfo->tail_tiles_count = packedMipInfo.NumTilesForPackedMips;
 
     T->super.info = pInfo;
     T->super.tiled_resource = pTiledInfo;
     T->pDxResource = pDxResource;
 
-	uint32_t currentPageIndex = 0;
-	for (uint32_t layer = 0; layer < 1; layer++)
-    {
-        for (uint32_t mipLevel = 0; mipLevel < desc->mip_levels; mipLevel++)
-        {
-			D3D12_TILED_RESOURCE_COORDINATE extent;
-			extent.X = (UINT)cgpu_max(resDesc.Width >> mipLevel, 1u);
-			extent.Y = (UINT)cgpu_max(resDesc.Height >> mipLevel, 1u);
-			extent.Z = (UINT)cgpu_max(resDesc.DepthOrArraySize >> mipLevel, 1u);
-            if (extent.X < tileShape.WidthInTexels || 
-                extent.Y < tileShape.HeightInTexels || 
-                extent.Z < tileShape.DepthInTexels)
-            {
-                pTiledInfo->tail_mip_start = mipLevel;
-                break;
-            }
-
-            // Aligned sizes by image granularity
-			D3D12_TILED_RESOURCE_COORDINATE imageGranularity;
-			imageGranularity.X = tileShape.WidthInTexels;
-			imageGranularity.Y = tileShape.HeightInTexels;
-			imageGranularity.Z = tileShape.DepthInTexels;
-
-            D3D12_TILED_RESOURCE_COORDINATE sparseBindCounts = {};
-			D3D12_TILED_RESOURCE_COORDINATE lastBlockExtent = {};
-			alignedDivision(extent, imageGranularity, &sparseBindCounts);
-			lastBlockExtent.X = ((extent.X % imageGranularity.X) ? extent.X % imageGranularity.X : imageGranularity.X);
-			lastBlockExtent.Y = ((extent.Y % imageGranularity.Y) ? extent.Y % imageGranularity.Y : imageGranularity.Y);
-			lastBlockExtent.Z = ((extent.Z % imageGranularity.Z) ? extent.Z % imageGranularity.Z : imageGranularity.Z);
-
-            // Alllocate memory for some blocks
-			for (uint32_t z = 0; z < sparseBindCounts.Z; z++)
-			{
-				for (uint32_t y = 0; y < sparseBindCounts.Y; y++)
-				{
-					for (uint32_t x = 0; x < sparseBindCounts.X; x++)
-					{
-						// Offset
-						D3D12_TILED_RESOURCE_COORDINATE offset;
-						offset.X = x * imageGranularity.X;
-						offset.Y = y * imageGranularity.Y;
-						offset.Z = z * imageGranularity.Z;
-						offset.Subresource = mipLevel;
-
-						// Size of the page
-						D3D12_TILED_RESOURCE_COORDINATE extent;
-						extent.X = (x == sparseBindCounts.X - 1) ? lastBlockExtent.X : imageGranularity.X;
-						extent.Y = (y == sparseBindCounts.Y - 1) ? lastBlockExtent.Y : imageGranularity.Y;
-						extent.Z = (z == sparseBindCounts.Z - 1) ? lastBlockExtent.Z : imageGranularity.Z;
-						extent.Subresource = mipLevel;
-
-						// Add new virtual page
-                        SKR_ASSERT(currentPageIndex < numTiles);
-                        auto& memoryPage = pMemTiles[currentPageIndex];
-                        auto& texturePage = pTexTiles[currentPageIndex];
-                        memoryPage.size = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-                        texturePage.index = currentPageIndex;
-                        texturePage.mip_level = mipLevel;
-                        texturePage.layer = layer;
-                        texturePage.extent = { extent.X, extent.Y, extent.Z };
-                        texturePage.offset = { offset.X, offset.Y, offset.Z };
-						currentPageIndex++;
-					}
-				}
-			}
-        }
-    }
     return T;
 }
 
@@ -1416,6 +1358,56 @@ void cgpu_free_shader_library_d3d12(CGPUShaderLibraryId shader_library)
     cgpu_delete(S);
 }
 
+struct CGPUTiledMemoryPool_D3D12 : public CGPUMemoryPool_D3D12
+{
+
+
+    skr::ConcurrentQueue<D3D12MA::Allocation*> allocations;
+};
+
+CGPUMemoryPoolId cgpu_create_memory_pool_d3d12(CGPUDeviceId device, const struct CGPUMemoryPoolDescriptor* desc)
+{
+    CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)device;
+    CGPUMemoryPool_D3D12* pool = CGPU_NULLPTR;
+
+    D3D12MA::POOL_DESC poolDesc = {};
+    switch (desc->type)
+    {
+        case CGPU_MEM_POOL_TYPE_TILED:
+            poolDesc.HeapFlags = D3D12_HEAP_FLAG_ALLOW_ONLY_NON_RT_DS_TEXTURES;
+            pool = cgpu_new<CGPUTiledMemoryPool_D3D12>();
+            break;
+        default:
+            poolDesc.HeapFlags = D3D12_HEAP_FLAG_NONE;
+            pool = cgpu_new<CGPUMemoryPool_D3D12>();
+            break;
+    }
+    poolDesc.HeapProperties.Type = D3D12Util_TranslateHeapType(desc->memory_usage);
+    poolDesc.MinAllocationAlignment = desc->min_alloc_alignment;
+    poolDesc.BlockSize = desc->block_size;
+    poolDesc.MinBlockCount = desc->min_block_count;
+    poolDesc.MaxBlockCount = desc->max_block_count;
+    auto hres = D->pResourceAllocator->CreatePool(&poolDesc, &pool->pDxPool);
+    CHECK_HRESULT(hres);
+
+    pool->super.device = device;
+    pool->super.type = desc->type;
+    return &pool->super;
+}
+
+void cgpu_free_memory_pool_d3d12(CGPUMemoryPoolId pool)
+{
+    switch (pool->type)
+    {
+        case CGPU_MEM_POOL_TYPE_TILED:
+            cgpu_delete((CGPUTiledMemoryPool_D3D12*)pool);
+            break;
+        default:
+            cgpu_delete((CGPUMemoryPool_D3D12*)pool);
+            break;
+    }
+}
+
 // Util Implementations
 inline D3D12_RESOURCE_DESC D3D12Util_CreateBufferDesc(CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D, const struct CGPUBufferDescriptor* desc)
 {
@@ -1466,12 +1458,7 @@ inline D3D12MA::ALLOCATION_DESC D3D12Util_CreateAllocationDesc(const struct CGPU
 {
     // Alloc Info
     DECLARE_ZERO(D3D12MA::ALLOCATION_DESC, alloc_desc)
-    if (desc->memory_usage == CGPU_MEM_USAGE_CPU_ONLY || desc->memory_usage == CGPU_MEM_USAGE_CPU_TO_GPU)
-        alloc_desc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
-    else if (desc->memory_usage == CGPU_MEM_USAGE_GPU_TO_CPU)
-        alloc_desc.HeapType = D3D12_HEAP_TYPE_READBACK;
-    else
-        alloc_desc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
+    alloc_desc.HeapType = D3D12Util_TranslateHeapType(desc->memory_usage);
 
     if (desc->flags & CGPU_BCF_OWN_MEMORY_BIT)
         alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED;

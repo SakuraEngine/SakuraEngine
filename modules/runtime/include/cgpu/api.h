@@ -1361,7 +1361,8 @@ typedef struct CGPURenderPipelineDescriptor {
 } CGPURenderPipelineDescriptor;
 
 typedef struct CGPUMemoryPoolDescriptor {
-    ECGPUMemoryUsage mem_usage;
+    ECGPUMemoryPoolType type;
+    ECGPUMemoryUsage memory_usage;
     uint64_t block_size;
     uint32_t min_block_count;
     uint32_t max_block_count;
@@ -1370,6 +1371,7 @@ typedef struct CGPUMemoryPoolDescriptor {
 
 typedef struct CGPUMemoryPool {
     CGPUDeviceId device;
+    ECGPUMemoryPoolType type;
 } CGPUMemoryPool;
 
 typedef struct CGPUParameterTable {
@@ -1591,11 +1593,6 @@ typedef struct CGPUTextureInfo {
     uint8_t can_export;
 } CGPUTextureInfo;
 
-typedef struct CGPUTiledMemoryPage {
-    uint64_t size;
-    volatile void* allocation;
-} CGPUTiledMemoryPage;
-
 typedef struct CGPUCoordinate {
     uint32_t x;
     uint32_t y;
@@ -1614,24 +1611,18 @@ typedef struct CGPUTextureCoordinateRegion {
     uint32_t layer;
 } CGPUTextureCoordinateRegion;
 
-typedef struct CGPUTiledTexturePage {
-    CGPUCoordinate extent;
-    CGPUCoordinate offset;
-	uint32_t mip_level;
-	uint32_t layer;
-    uint32_t index;
-} CGPUTiledTexturePage;
-
 typedef struct CGPUTiledTextureInfo {
-    const CGPUTiledMemoryPage* pages;
-    uint64_t total_pages_count;
-    uint64_t alive_pages_count;
+    uint64_t tile_size;
+    uint64_t total_tiles_count;
+    uint64_t alive_tiles_count;
 
-    const CGPUTiledTexturePage* tex_pages;
     uint32_t width_texels;
     uint32_t height_texels;
     uint32_t depth_texels;
+
+    uint64_t tail_tiles_count;
     uint32_t tail_mip_start;
+    uint32_t tail_mip_count;
 } CGPUTiledTextureInfo;
 
 typedef struct CGPUTexture {

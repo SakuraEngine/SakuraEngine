@@ -1342,9 +1342,9 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapT
     }
 
     // do allocations
-    D3D12MA::ALLOCATION_DESC allocDesc;
+    D3D12MA::ALLOCATION_DESC allocDesc = {};
     allocDesc.CustomPool = D->pTiledMemoryPool;
-    D3D12_RESOURCE_ALLOCATION_INFO allocInfo;
+    D3D12_RESOURCE_ALLOCATION_INFO allocInfo = {};
     allocInfo.Alignment = kPageSize;
     allocInfo.SizeInBytes = PageCount * kPageSize;
     D3D12MA::Allocation* pAllocation = nullptr;
@@ -1368,7 +1368,7 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapT
         pTileSizes[ActualRegionCount].UseBox = TRUE;
         const auto Width = pTileSizes[ActualRegionCount].Width = Region.end.x - Region.start.x;
         const auto Height = pTileSizes[ActualRegionCount].Height = Region.end.y - Region.start.y;
-        const auto Depth = pTileSizes[ActualRegionCount].Depth = (1 + Region.end.z - Region.start.z);
+        const auto Depth = pTileSizes[ActualRegionCount].Depth = cgpu_max(1, Region.end.z - Region.start.z);
         const auto NumTiles = pTileSizes[ActualRegionCount].NumTiles = Width * Height * Depth;
         if (NumTiles == 0)
             continue;
