@@ -181,6 +181,18 @@ CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDes
     // Create D3D12MA Allocator
     D3D12Util_CreateDMAAllocator(I, A, D);
     cgpu_assert(D->pResourceAllocator && "DMA Allocator Must be Created!");
+    
+    // Create Tiled Memory Pool
+    const auto kTileSize = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+    CGPUMemoryPoolDescriptor poolDesc = {};
+    poolDesc.type = CGPU_MEM_POOL_TYPE_TILED;
+    poolDesc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
+    poolDesc.min_alloc_alignment = kTileSize;
+    poolDesc.block_size = kTileSize * 256;
+    poolDesc.min_block_count = 32;
+    poolDesc.max_block_count = 256;
+    D->pTiledMemoryPool = (CGPUTiledMemoryPool_D3D12*)cgpu_create_memory_pool_d3d12(&D->super, &poolDesc);
+    
     // Create Descriptor Heaps
     D->pCPUDescriptorHeaps = (D3D12Util_DescriptorHeap**)cgpu_malloc(D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES * sizeof(D3D12Util_DescriptorHeap*));
     D->pCbvSrvUavHeaps = (D3D12Util_DescriptorHeap**)cgpu_malloc(sizeof(D3D12Util_DescriptorHeap*));
@@ -331,6 +343,8 @@ void cgpu_free_device_d3d12(CGPUDeviceId device)
         }
         cgpu_free((ID3D12CommandQueue**)D->ppCommandQueues[t]);
     }
+    // Free Tiled Pool
+    cgpu_free_memory_pool_d3d12((CGPUMemoryPoolId)D->pTiledMemoryPool);
     // Free D3D12MA Allocator
     SAFE_RELEASE(D->pResourceAllocator);
     // Free Descriptor Heaps
