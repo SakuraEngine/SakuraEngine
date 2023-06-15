@@ -622,11 +622,58 @@ inline static void alignedDivision(const D3D12_TILED_RESOURCE_COORDINATE& extent
     out->Z = (extent.Z / granularity.Z + ((extent.Z % granularity.Z) ? 1u : 0u));
 }
 
+struct TileMapping_D3D12
+{
+    D3D12MA::Allocation* pDxAllocation;
+};
+
+struct SubresTileMappings_D3D12
+{
+    SubresTileMappings_D3D12(uint32_t X, uint32_t Y, uint32_t Z) SKR_NOEXCEPT
+        : X(X), Y(Y), Z(Z)
+    {
+        mappings = cgpu_new_sized<TileMapping_D3D12>(X * Y * Z * sizeof(TileMapping_D3D12));
+    }
+
+    ~SubresTileMappings_D3D12() SKR_NOEXCEPT
+    {
+        cgpu_delete(mappings);
+    }
+
+    TileMapping_D3D12* at(uint32_t x, uint32_t y, uint32_t z) 
+    { 
+        SKR_ASSERT(x < X && y < Y && z < Z && "SubresTileMappings::at: Out of Range!"); 
+        return mappings + (x + y * X + z * X * Y); 
+    }
+
+    const TileMapping_D3D12* at(uint32_t x, uint32_t y, uint32_t z) const 
+    { 
+        SKR_ASSERT(x < X && y < Y && z < Z && "SubresTileMappings::at: Out of Range!"); 
+        return mappings + (x + y * X + z * X * Y); 
+    }
+
+private:
+    const uint32_t X = 0;
+    const uint32_t Y = 0;
+    const uint32_t Z = 0;
+    TileMapping_D3D12* mappings = nullptr;
+};
+
 struct CGPUTiledTexture_D3D12 : public CGPUTexture_D3D12 {
-    CGPUTiledTexture_D3D12()
+    CGPUTiledTexture_D3D12() SKR_NOEXCEPT
         : CGPUTexture_D3D12()
     {
+
     }
+    ~CGPUTiledTexture_D3D12() SKR_NOEXCEPT
+    {
+        const auto N = super.info->mip_levels * (super.info->array_size_minus_one + 1);
+        for (uint32_t i = 0; i < N; i++)
+        {
+            cgpu_delete(subres_mappings + i);
+        }
+    }
+    SubresTileMappings_D3D12* subres_mappings;
 };
 cgpu_static_assert(sizeof(CGPUTiledTexture_D3D12) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
 
@@ -652,19 +699,20 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
         tilings);
 
     const auto objSize = sizeof(CGPUTiledTexture_D3D12) + sizeof(CGPUTextureInfo) + sizeof(CGPUTiledTextureInfo);
-    const auto subresSize = sizeof(CGPUTiledSubresourceInfo) * subresourceCount;
+    const auto subresSize = (sizeof(CGPUTiledSubresourceInfo) + sizeof(SubresTileMappings_D3D12)) * subresourceCount;
     const auto totalSize = objSize + subresSize;
     auto T = cgpu_new_sized<CGPUTiledTexture_D3D12>(totalSize);
     auto pInfo = (CGPUTextureInfo*)(T + 1);
     auto pTiledInfo = (CGPUTiledTextureInfo*)(pInfo + 1);
     auto pSubresInfo = (CGPUTiledSubresourceInfo*)(pTiledInfo + 1);
+    auto pSubresMapping = T->subres_mappings = (SubresTileMappings_D3D12*)(pSubresInfo + subresourceCount);
     pTiledInfo->total_tiles_count = numTiles;
     pTiledInfo->alive_tiles_count = 0;
     pTiledInfo->tile_size = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
     
-    pTiledInfo->width_texels = tileShape.WidthInTexels;
-    pTiledInfo->height_texels = tileShape.HeightInTexels;
-    pTiledInfo->depth_texels = tileShape.DepthInTexels;
+    pTiledInfo->tile_width_in_texels = tileShape.WidthInTexels;
+    pTiledInfo->tile_height_in_texels = tileShape.HeightInTexels;
+    pTiledInfo->tile_depth_in_texels = tileShape.DepthInTexels;
     pTiledInfo->subresources = pSubresInfo;
 
     pTiledInfo->tail_mip_start = packedMipInfo.NumStandardMips;
@@ -679,6 +727,8 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
         SubresInfo.depth_in_tiles = tilings[i].DepthInTiles;
         SubresInfo.layer = 0;
         SubresInfo.mip_level = i;
+
+        new (&pSubresMapping[i]) SubresTileMappings_D3D12(SubresInfo.width_in_tiles, SubresInfo.height_in_tiles, SubresInfo.depth_in_tiles);
     }
 
     T->super.info = pInfo;
@@ -686,6 +736,99 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
     T->pDxResource = pDxResource;
 
     return T;
+}
+
+void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapTiledTextureDescriptor* desc)
+{
+    const auto kPageSize = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+    const uint32_t RegionCount = desc->region_count;
+    uint64_t PageCount = 0;
+    for (uint32_t i = 0; i < RegionCount; i++)
+    {
+        const auto& Region = desc->regions[i];
+        const auto Width = Region.end.x - Region.start.x;
+        const auto Height = Region.end.y - Region.start.y;
+        const auto Depth = (1 + Region.end.z - Region.start.z);
+        const auto RegionPageCount = Width * Height * Depth;
+        PageCount += RegionPageCount;
+    }
+    if (!PageCount) return;
+
+    // ensure memory pool
+    CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)queue->device;
+    CGPUQueue_D3D12* Q = (CGPUQueue_D3D12*)queue;
+    CGPUTiledTexture_D3D12* T = (CGPUTiledTexture_D3D12*)desc->texture;
+    if (!D->pTiledMemoryPool)
+    {
+        D3D12MA::POOL_DESC poolDesc = {};
+        poolDesc.MinAllocationAlignment = kPageSize;
+        poolDesc.BlockSize = kPageSize * 256; // Res=4K, BPU=8
+        poolDesc.MinBlockCount = 32;
+        poolDesc.MaxBlockCount = 256;
+        // poolDesc.HeapFlags = D3D12_HEAP_FLAG_ALLOW_ONLY_NON_RT_DS_TEXTURES;
+        poolDesc.HeapFlags = D3D12_HEAP_FLAG_NONE;
+        poolDesc.HeapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+        auto hres = D->pResourceAllocator->CreatePool(&poolDesc, &D->pTiledMemoryPool);
+        CHECK_HRESULT(hres);
+    }
+
+    // do allocations
+    D3D12MA::Allocation* pAllocation = nullptr;
+    D3D12MA::ALLOCATION_DESC allocDesc = {};
+    allocDesc.CustomPool = D->pTiledMemoryPool;
+    D3D12_RESOURCE_ALLOCATION_INFO allocInfo = {};
+    allocInfo.Alignment = kPageSize;
+    allocInfo.SizeInBytes = PageCount * kPageSize;
+    D->pResourceAllocator->AllocateMemory(&allocDesc, &allocInfo, &pAllocation);
+    struct ID3D12Heap* pHeap = pAllocation->GetHeap();
+    auto BytesOffset = pAllocation->GetOffset();
+
+    auto ArgsMemory = sakura_calloc(RegionCount, sizeof(D3D12_TILED_RESOURCE_COORDINATE) + sizeof(D3D12_TILE_REGION_SIZE) + sizeof(UINT) + sizeof(UINT));
+    SKR_DEFER( { sakura_free(ArgsMemory); } );
+    auto pTileCoordinates = (D3D12_TILED_RESOURCE_COORDINATE*)ArgsMemory;
+    auto pTileSizes = (D3D12_TILE_REGION_SIZE*)(pTileCoordinates + RegionCount);
+    UINT* pRangeOffsets = (UINT*)(pTileSizes + RegionCount);
+    UINT* pTileCounts = (UINT*)(pRangeOffsets + RegionCount);
+
+    uint32_t ActualRegionCount = 0;
+    for (uint32_t i = 0; i < RegionCount; i++)
+    {
+        const auto& Region = desc->regions[i];
+        pTileSizes[ActualRegionCount].UseBox = TRUE;
+        const auto Width = pTileSizes[ActualRegionCount].Width = Region.end.x - Region.start.x;
+        const auto Height = pTileSizes[ActualRegionCount].Height = Region.end.y - Region.start.y;
+        const auto Depth = pTileSizes[ActualRegionCount].Depth = cgpu_max(1, Region.end.z - Region.start.z);
+        const auto NumTiles = pTileSizes[ActualRegionCount].NumTiles = Width * Height * Depth;
+        if (NumTiles == 0)
+            continue;
+            
+        pTileCoordinates[ActualRegionCount].X = Region.start.x;
+        pTileCoordinates[ActualRegionCount].Y = Region.start.y;
+        pTileCoordinates[ActualRegionCount].Z = Region.start.z;
+        pTileCoordinates[ActualRegionCount].Subresource = CALC_SUBRESOURCE_INDEX(
+            Region.mip_level, Region.layer, 0, 1, 1);
+
+        pTileCounts[ActualRegionCount] = pTileSizes[i].NumTiles;
+        
+        pRangeOffsets[ActualRegionCount] = (uint32_t)(BytesOffset / kPageSize);
+        BytesOffset += pTileCounts[ActualRegionCount] * kPageSize;
+
+        ActualRegionCount++;
+    }
+    
+    {
+		Q->pCommandQueue->UpdateTileMappings(
+			T->pDxResource,
+			ActualRegionCount,
+			pTileCoordinates,
+			pTileSizes,  // All regions are single tiles
+			pHeap, // ID3D12Heap*
+			ActualRegionCount,
+			NULL,  // All ranges are sequential tiles in the heap
+			pRangeOffsets,
+			pTileCounts,
+			D3D12_TILE_MAPPING_FLAG_NONE);
+    }
 }
 
 inline D3D12_RESOURCE_FLAGS D3D12Util_CalculateTextureFlags(const struct CGPUTextureDescriptor* desc)

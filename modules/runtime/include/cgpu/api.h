@@ -1624,9 +1624,9 @@ typedef struct CGPUTiledTextureInfo {
     uint64_t total_tiles_count;
     uint64_t alive_tiles_count;
 
-    uint32_t width_texels;
-    uint32_t height_texels;
-    uint32_t depth_texels;
+    uint32_t tile_width_in_texels;
+    uint32_t tile_height_in_texels;
+    uint32_t tile_depth_in_texels;
     const CGPUTiledSubresourceInfo* subresources;
 
     uint64_t tail_tiles_count;
