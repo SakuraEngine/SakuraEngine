@@ -637,6 +637,7 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
     auto res = D->pDxDevice->CreateReservedResource(
         &resDesc, startStates, pClearValue, IID_PPV_ARGS(&pDxResource));
     CHECK_HRESULT(res);
+    SKR_ASSERT(resDesc.DepthOrArraySize == 1);
 
     // query page informations
     UINT numTiles = 0;
@@ -651,10 +652,12 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
         tilings);
 
     const auto objSize = sizeof(CGPUTiledTexture_D3D12) + sizeof(CGPUTextureInfo) + sizeof(CGPUTiledTextureInfo);
-    const auto totalSize = objSize;
+    const auto subresSize = sizeof(CGPUTiledSubresourceInfo) * subresourceCount;
+    const auto totalSize = objSize + subresSize;
     auto T = cgpu_new_sized<CGPUTiledTexture_D3D12>(totalSize);
     auto pInfo = (CGPUTextureInfo*)(T + 1);
     auto pTiledInfo = (CGPUTiledTextureInfo*)(pInfo + 1);
+    auto pSubresInfo = (CGPUTiledSubresourceInfo*)(pTiledInfo + 1);
     pTiledInfo->total_tiles_count = numTiles;
     pTiledInfo->alive_tiles_count = 0;
     pTiledInfo->tile_size = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
@@ -662,10 +665,21 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
     pTiledInfo->width_texels = tileShape.WidthInTexels;
     pTiledInfo->height_texels = tileShape.HeightInTexels;
     pTiledInfo->depth_texels = tileShape.DepthInTexels;
+    pTiledInfo->subresources = pSubresInfo;
 
     pTiledInfo->tail_mip_start = packedMipInfo.NumStandardMips;
     pTiledInfo->tail_mip_count = packedMipInfo.NumPackedMips;
     pTiledInfo->tail_tiles_count = packedMipInfo.NumTilesForPackedMips;
+
+    for (uint32_t i = 0; i < subresourceCount; i++)
+    {
+        auto& SubresInfo = pSubresInfo[i];
+        SubresInfo.width_in_tiles = tilings[i].WidthInTiles;
+        SubresInfo.height_in_tiles = tilings[i].HeightInTiles;
+        SubresInfo.depth_in_tiles = tilings[i].DepthInTiles;
+        SubresInfo.layer = 0;
+        SubresInfo.mip_level = i;
+    }
 
     T->super.info = pInfo;
     T->super.tiled_resource = pTiledInfo;

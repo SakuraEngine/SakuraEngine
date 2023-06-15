@@ -96,17 +96,10 @@ void update_streaming_map(CGPUCommandBufferId cmd, uint32_t MipLevel)
 
     // map tiled texture
     {
-        const uint32_t Width = (uint32_t)sampled_texture->info->width;
-        const uint32_t Height = (uint32_t)sampled_texture->info->height;
-
-        const uint32_t MipWidth = (uint32_t)cgpu_max(1, (int32_t)Width >> (int32_t)MipLevel);
-        const uint32_t MipHeight = (uint32_t)cgpu_max(1, (int32_t)Height >> (int32_t)MipLevel);
-
-        const uint32_t TileWidth = sampled_texture->tiled_resource->width_texels;
-        const uint32_t TileHeight = sampled_texture->tiled_resource->height_texels;
+        const CGPUTiledSubresourceInfo subres = sampled_texture->tiled_resource->subresources[MipLevel];
         CGPUTextureCoordinateRegion coordinate = {
             .start = { 0, 0, 0 },
-            .end = { MipWidth / TileWidth, MipHeight / TileHeight, 0 },
+            .end = { subres.width_in_tiles, subres.height_in_tiles, subres.depth_in_tiles },
             .mip_level = MipLevel,
             .layer = 0
         };

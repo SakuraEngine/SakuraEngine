@@ -1611,6 +1611,14 @@ typedef struct CGPUTextureCoordinateRegion {
     uint32_t layer;
 } CGPUTextureCoordinateRegion;
 
+typedef struct CGPUTiledSubresourceInfo {
+    uint16_t layer;
+    uint16_t mip_level;
+    uint32_t width_in_tiles;
+    uint16_t height_in_tiles;
+    uint16_t depth_in_tiles;
+} CGPUTiledSubresourceInfo;
+
 typedef struct CGPUTiledTextureInfo {
     uint64_t tile_size;
     uint64_t total_tiles_count;
@@ -1619,6 +1627,7 @@ typedef struct CGPUTiledTextureInfo {
     uint32_t width_texels;
     uint32_t height_texels;
     uint32_t depth_texels;
+    const CGPUTiledSubresourceInfo* subresources;
 
     uint64_t tail_tiles_count;
     uint32_t tail_mip_start;
