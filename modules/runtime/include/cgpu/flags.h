@@ -565,6 +565,15 @@ typedef enum ECGPUMemoryUsage
     CGPU_MEM_USAGE_MAX_ENUM = 0x7FFFFFFF
 } ECGPUMemoryUsage;
 
+typedef enum ECGPUMemoryPoolType
+{
+    CGPU_MEM_POOL_TYPE_AUTOMATIC = 0,
+    CGPU_MEM_POOL_TYPE_LINEAR = 1,
+    CGPU_MEM_POOL_TYPE_TILED = 2,
+    CGPU_MEM_POOL_TYPE_COUNT,
+    CGPU_MEM_POOL_TYPE_MAX_ENUM = 0x7FFFFFFF
+} ECGPUMemoryPoolType;
+
 typedef enum ECGPUBufferCreationFlag
 {
     /// Default flag (Buffer will use aliased memory, buffer will not be cpu accessible until mapBuffer is called)
