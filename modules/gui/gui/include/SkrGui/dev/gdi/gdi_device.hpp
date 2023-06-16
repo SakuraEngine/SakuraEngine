@@ -3,23 +3,23 @@
 
 namespace skr::gdi
 {
-struct SKR_GUI_API GDIDevice {
-    virtual ~GDIDevice() SKR_NOEXCEPT = default;
+struct SKR_GUI_API IGDIDevice {
+    virtual ~IGDIDevice() SKR_NOEXCEPT = default;
 
-    [[nodiscard]] static GDIDevice* Create(EGDIBackend backend);
-    static void                     Free(GDIDevice* device);
+    [[nodiscard]] static IGDIDevice* Create(EGDIBackend backend);
+    static void                      Free(IGDIDevice* device);
 
-    [[nodiscard]] virtual GDICanvas* create_canvas();
-    virtual void                     free_canvas(GDICanvas* canvas);
+    [[nodiscard]] virtual IGDICanvas* create_canvas();
+    virtual void                      free_canvas(IGDICanvas* canvas);
 
-    [[nodiscard]] virtual GDIViewport* create_viewport();
-    virtual void                       free_viewport(GDIViewport* render_group);
+    [[nodiscard]] virtual IGDIViewport* create_viewport();
+    virtual void                        free_viewport(IGDIViewport* render_group);
 
-    [[nodiscard]] virtual GDIElement* create_element() = 0;
-    virtual void                      free_element(GDIElement* element) = 0;
+    [[nodiscard]] virtual IGDIElement* create_element() = 0;
+    virtual void                       free_element(IGDIElement* element) = 0;
 
-    [[nodiscard]] virtual GDIPaint* create_paint() = 0;
-    virtual void                    free_paint(GDIPaint* paint) = 0;
+    [[nodiscard]] virtual IGDIPaint* create_paint() = 0;
+    virtual void                     free_paint(IGDIPaint* paint) = 0;
 };
 
 } // namespace skr::gdi

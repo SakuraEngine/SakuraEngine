@@ -1,10 +1,13 @@
 #pragma once
 #include "SkrGui/dev/gdi/gdi_types.hpp"
+#include "SkrGui/backend/paint_params.hpp"
 
 namespace skr::gdi
 {
-struct SKR_GUI_API GDIPaint {
-    virtual ~GDIPaint() SKR_NOEXCEPT = default;
+using ::skr::gui::Swizzle;
+
+struct SKR_GUI_API IGDIPaint {
+    virtual ~IGDIPaint() SKR_NOEXCEPT = default;
 
     /*
     virtual void radial_gradient(float cx, float cy, float inr, float outr, skr_float4_t icol, skr_float4_t ocol) SKR_NOEXCEPT = 0;
@@ -32,9 +35,9 @@ enum class EGDISolidity : uint32_t
     Count = 2
 };
 
-struct SKR_GUI_API GDIElement {
+struct SKR_GUI_API IGDIElement {
     friend struct IGDIRenderer;
-    virtual ~GDIElement() SKR_NOEXCEPT = default;
+    virtual ~IGDIElement() SKR_NOEXCEPT = default;
 
     virtual void begin_frame(float devicePixelRatio) = 0;
     virtual void begin_path() = 0;
@@ -51,7 +54,7 @@ struct SKR_GUI_API GDIElement {
 
     virtual void stroke_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a) = 0;
     virtual void stroke_color(float r, float g, float b, float a) = 0;
-    virtual void stroke_paint(GDIPaint* paint) = 0;
+    virtual void stroke_paint(IGDIPaint* paint) = 0;
     virtual void stroke_width(float size) = 0;
     virtual void stroke() = 0;
 
@@ -59,7 +62,7 @@ struct SKR_GUI_API GDIElement {
 
     virtual void fill_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a) = 0;
     virtual void fill_color(float r, float g, float b, float a) = 0;
-    virtual void fill_paint(GDIPaint* paint) = 0;
+    virtual void fill_paint(IGDIPaint* paint) = 0;
     virtual void fill() = 0;
     virtual void fill_no_aa() = 0;
 
@@ -70,14 +73,6 @@ struct SKR_GUI_API GDIElement {
 
     virtual void    set_z(int32_t z) = 0;
     virtual int32_t get_z() const = 0;
-
-    static const uint32_t kSwizzleChanelNone = 0;
-    static const uint32_t kSwizzleChanelR = 1;
-    static const uint32_t kSwizzleChanelG = 2;
-    static const uint32_t kSwizzleChanelB = 3;
-    static const uint32_t kSwizzleChanelA = 4;
-    static const uint32_t kSwizzleOverride0 = 5;
-    static const uint32_t kSwizzleOverride1 = 6;
-    virtual void          set_texture_swizzle(uint32_t X, uint32_t Y, uint32_t Z, uint32_t W) = 0;
+    virtual void    set_texture_swizzle(Swizzle swizzle) = 0;
 };
 } // namespace skr::gdi

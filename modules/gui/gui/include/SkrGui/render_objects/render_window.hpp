@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_box.hpp"
 
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIDevice, skr_gdi_device)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIDevice, skr_gdi_device)
 
 namespace skr
 {

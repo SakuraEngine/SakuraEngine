@@ -44,7 +44,7 @@ struct GDIElementNVG : public GDIElementPrivate {
 
     void stroke_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a) final;
     void stroke_color(float r, float g, float b, float a) final;
-    void stroke_paint(GDIPaint* paint) final;
+    void stroke_paint(IGDIPaint* paint) final;
     void stroke_width(float size) final;
     void stroke() final;
 
@@ -52,7 +52,7 @@ struct GDIElementNVG : public GDIElementPrivate {
 
     void fill_color(uint32_t r, uint32_t g, uint32_t b, uint32_t a) final;
     void fill_color(float r, float g, float b, float a) final;
-    void fill_paint(GDIPaint* paint) final;
+    void fill_paint(IGDIPaint* paint) final;
     void fill() final;
     void fill_no_aa() final;
 

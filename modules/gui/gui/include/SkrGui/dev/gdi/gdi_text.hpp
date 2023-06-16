@@ -3,9 +3,9 @@
 
 namespace skr::gdi
 {
-struct SKR_GUI_API GDIText {
-    static bool     Initialize(IGDIRenderer* renderer);
-    static bool     Finalize();
-    static GDIText* Get();
+struct SKR_GUI_API IGDIText {
+    static bool      Initialize(IGDIRenderer* renderer);
+    static bool      Finalize();
+    static IGDIText* Get();
 };
 } // namespace skr::gdi

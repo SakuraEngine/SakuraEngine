@@ -3,6 +3,6 @@
 
 namespace skr::gdi
 {
-struct GDIDevicePrivate : public GDIDevice {
+struct GDIDevicePrivate : public IGDIDevice {
 };
 } // namespace skr::gdi

@@ -10,7 +10,7 @@ namespace skr
 namespace gui
 {
 
-inline static void draw_grid_paper(gdi::GDIElement* element, float window_width, float window_height)
+inline static void draw_grid_paper(gdi::IGDIElement* element, float window_width, float window_height)
 {
     const bool bDrawRelativeXMesh = false;
     const bool bDrawRelativeYMesh = false;

@@ -4,18 +4,18 @@
 // fwd
 namespace skr::gdi
 {
-struct GDICanvas;
-struct GDIDevice;
-struct GDIPaint;
+struct IGDICanvas;
+struct IGDIDevice;
+struct IGDIPaint;
 struct IGDIRenderer;
-struct GDIResource;
+struct IGDIResource;
 struct IGDIImage;
 struct IGDITextureUpdate;
 struct IGDITexture;
 struct IGDIMaterial;
-struct GDIText;
-struct GDIViewport;
-struct GDIElement;
+struct IGDIText;
+struct IGDIViewport;
+struct IGDIElement;
 } // namespace skr::gdi
 
 // basic types

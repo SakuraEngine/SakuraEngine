@@ -3,10 +3,10 @@
 
 namespace skr::gdi
 {
-struct GDIPaintPrivate : public GDIPaint {
+struct GDIPaintPrivate : public IGDIPaint {
 };
 
-struct GDIElementPrivate : public GDIElement {
+struct GDIElementPrivate : public IGDIElement {
     virtual ~GDIElementPrivate() SKR_NOEXCEPT = default;
 
     void set_z(int32_t _z) final
@@ -19,12 +19,12 @@ struct GDIElementPrivate : public GDIElement {
         return z;
     }
 
-    void set_texture_swizzle(uint32_t R, uint32_t G, uint32_t B, uint32_t A) SKR_NOEXCEPT final
+    void set_texture_swizzle(Swizzle swizzle) SKR_NOEXCEPT final
     {
-        texture_swizzle[0] = R;
-        texture_swizzle[1] = G;
-        texture_swizzle[2] = B;
-        texture_swizzle[3] = A;
+        texture_swizzle[0] = static_cast<uint32_t>(swizzle.r) + 1;
+        texture_swizzle[1] = static_cast<uint32_t>(swizzle.g) + 1;
+        texture_swizzle[2] = static_cast<uint32_t>(swizzle.b) + 1;
+        texture_swizzle[3] = static_cast<uint32_t>(swizzle.a) + 1;
     }
 
     int32_t                            z = 0.f;

@@ -1,9 +1,9 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_box.hpp"
 
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIDevice, skr_gdi_device)
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIElement, skr_gdi_element)
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIPaint, skr_gdi_paint)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIDevice, skr_gdi_device)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIElement, skr_gdi_element)
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIPaint, skr_gdi_paint)
 
 namespace skr
 {
@@ -19,14 +19,14 @@ public:
     virtual void layout(BoxConstraint constraints, bool needSize = false) override;
     virtual void draw(const DrawParams* params) override;
 
-    void draw_color_picker(gdi::GDIElement* element, gdi::GDIPaint* paint, float x, float y, float w, float h);
+    void draw_color_picker(gdi::IGDIElement* element, gdi::IGDIPaint* paint, float x, float y, float w, float h);
 
     float get_current_hue_by_degree() const { return current_degree; }
 
 protected:
-    float current_degree = 0.0f;
+    float              current_degree = 0.0f;
     skr_gdi_element_id gdi_element = nullptr;
-    skr_gdi_paint_id gdi_paint = nullptr;
+    skr_gdi_paint_id   gdi_paint = nullptr;
 };
 
 } // namespace gui

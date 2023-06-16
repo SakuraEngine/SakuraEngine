@@ -3,13 +3,13 @@
 
 namespace skr::gdi
 {
-struct SKR_GUI_API GDICanvas {
-    virtual ~GDICanvas() SKR_NOEXCEPT = default;
+struct SKR_GUI_API IGDICanvas {
+    virtual ~IGDICanvas() SKR_NOEXCEPT = default;
 
-    virtual void              add_element(GDIElement* element) SKR_NOEXCEPT = 0;
-    virtual void              remove_element(GDIElement* element) SKR_NOEXCEPT = 0;
-    virtual Span<GDIElement*> all_elements() SKR_NOEXCEPT = 0;
-    virtual void              clear_elements() SKR_NOEXCEPT = 0;
+    virtual void               add_element(IGDIElement* element) SKR_NOEXCEPT = 0;
+    virtual void               remove_element(IGDIElement* element) SKR_NOEXCEPT = 0;
+    virtual Span<IGDIElement*> all_elements() SKR_NOEXCEPT = 0;
+    virtual void               clear_elements() SKR_NOEXCEPT = 0;
 
     virtual void set_zrange(int32_t min, int32_t max) SKR_NOEXCEPT = 0;
     virtual void get_zrange(int32_t* out_min, int32_t* out_max) SKR_NOEXCEPT = 0;

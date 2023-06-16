@@ -3,12 +3,12 @@
 
 namespace skr::gdi
 {
-struct SKR_GUI_API GDIViewport {
-    virtual ~GDIViewport() SKR_NOEXCEPT = default;
+struct SKR_GUI_API IGDIViewport {
+    virtual ~IGDIViewport() SKR_NOEXCEPT = default;
 
-    virtual void             add_canvas(GDICanvas* canvas) SKR_NOEXCEPT = 0;
-    virtual void             remove_canvas(GDICanvas* canvas) SKR_NOEXCEPT = 0;
-    virtual void             clear_canvas() SKR_NOEXCEPT = 0;
-    virtual Span<GDICanvas*> all_canvas() SKR_NOEXCEPT = 0;
+    virtual void              add_canvas(IGDICanvas* canvas) SKR_NOEXCEPT = 0;
+    virtual void              remove_canvas(IGDICanvas* canvas) SKR_NOEXCEPT = 0;
+    virtual void              clear_canvas() SKR_NOEXCEPT = 0;
+    virtual Span<IGDICanvas*> all_canvas() SKR_NOEXCEPT = 0;
 };
 } // namespace skr::gdi

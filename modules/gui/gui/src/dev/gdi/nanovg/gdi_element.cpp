@@ -103,7 +103,7 @@ void GDIElementNVG::stroke_color(float r, float g, float b, float a)
     nvgStrokeColor(nvg, nvgRGBAf(r, g, b, a));
 }
 
-void GDIElementNVG::stroke_paint(GDIPaint* paint)
+void GDIElementNVG::stroke_paint(IGDIPaint* paint)
 {
     gdi_paint = static_cast<GDIPaintNVG*>(paint);
     auto nvg_paint = static_cast<GDIPaintNVG*>(paint);
@@ -137,7 +137,7 @@ void GDIElementNVG::fill_color(float r, float g, float b, float a)
     nvgFillColor(nvg, nvgRGBAf(r, g, b, a));
 }
 
-void GDIElementNVG::fill_paint(GDIPaint* paint)
+void GDIElementNVG::fill_paint(IGDIPaint* paint)
 {
     gdi_paint = static_cast<GDIPaintNVG*>(paint);
     auto nvg_paint = static_cast<GDIPaintNVG*>(paint);
