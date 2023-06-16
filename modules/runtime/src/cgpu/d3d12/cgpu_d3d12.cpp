@@ -195,9 +195,10 @@ CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDes
     D->pTiledMemoryPool = (CGPUTiledMemoryPool_D3D12*)cgpu_create_memory_pool_d3d12(&D->super, &poolDesc);
     if (A->mTiledResourceTier <= D3D12_TILED_RESOURCES_TIER_1) 
     {
+        const auto kPageSize = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
         D3D12_HEAP_DESC heapDesc = {};
-        heapDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-        heapDesc.SizeInBytes = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+        heapDesc.Alignment = kPageSize;
+        heapDesc.SizeInBytes = kPageSize;
         heapDesc.Flags = D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES;
         heapDesc.Properties.Type = D3D12_HEAP_TYPE_DEFAULT;
         heapDesc.Properties.VisibleNodeMask = CGPU_SINGLE_GPU_NODE_MASK;
@@ -208,6 +209,7 @@ CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDes
         queueDesc.NodeMask = CGPU_SINGLE_GPU_NODE_MASK;
         hres = D->pDxDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&D->pUndefinedTileMappingQueue));
         CHECK_HRESULT(hres);
+        D->pUndefinedTileMappingQueue->SetName(L"MappingQueue");
     }
 
     // Create Descriptor Heaps

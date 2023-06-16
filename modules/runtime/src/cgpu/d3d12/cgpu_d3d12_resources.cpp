@@ -6,7 +6,6 @@
 #include "misc/make_zeroed.hpp"
 #include "misc/defer.hpp"
 #include <containers/string.hpp>
-#include <containers/hashmap.hpp>
 #include <containers/concurrent_queue.h>
 #include <dxcapi.h>
 
@@ -27,43 +26,6 @@ inline D3D12_HEAP_TYPE D3D12Util_TranslateHeapType(ECGPUMemoryUsage usage)
     else
         return D3D12_HEAP_TYPE_DEFAULT;
 }
-
-struct CGPUTiledMemoryPool_D3D12 : public CGPUMemoryPool_D3D12
-{
-    void AllocateTiles(uint32_t N, D3D12MA::Allocation** ppAllocation) SKR_NOEXCEPT
-    {
-        CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)super.device;
-        const auto kPageSize = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-        D3D12MA::ALLOCATION_DESC allocDesc = {};
-        allocDesc.CustomPool = pDxPool;
-        D3D12_RESOURCE_ALLOCATION_INFO allocInfo = {};
-        allocInfo.Alignment = kPageSize;
-        allocInfo.SizeInBytes = kPageSize;
-        for (uint32_t i = 0; i < N; ++i)
-        {
-            D->pResourceAllocator->AllocateMemory(&allocDesc, &allocInfo, &ppAllocation[i]);
-            allocated.insert(ppAllocation[i]);
-        }
-    }
-
-    void DeallocateTiles(D3D12MA::Allocation* A) SKR_NOEXCEPT
-    {
-
-    }
-
-    ~CGPUTiledMemoryPool_D3D12() SKR_NOEXCEPT
-    {
-        for (auto pAllocation : allocated)
-        {
-            SAFE_RELEASE(pAllocation);
-        }
-        allocated.clear();
-        SAFE_RELEASE(pDxPool);
-    }
-
-private:
-    skr::parallel_flat_hash_set<D3D12MA::Allocation*> allocated;
-};
 
 CGPUMemoryPoolId cgpu_create_memory_pool_d3d12(CGPUDeviceId device, const struct CGPUMemoryPoolDescriptor* desc)
 {
@@ -765,6 +727,18 @@ private:
 };
 cgpu_static_assert(sizeof(CGPUTiledTexture_D3D12) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
 
+inline void D3D12Util_MapAllTilesAsUndefined(ID3D12CommandQueue* pDxQueue, ID3D12Resource* pDxResource, ID3D12Heap* pHeap)
+{
+    D3D12_TILE_RANGE_FLAGS RangeFlags = D3D12_TILE_RANGE_FLAG_REUSE_SINGLE_TILE;
+    UINT StartOffset = 0;
+    pDxQueue->UpdateTileMappings(pDxResource, 1,
+        NULL, NULL,
+        pHeap, 1, 
+        &RangeFlags, &StartOffset,
+        NULL, D3D12_TILE_MAPPING_FLAG_NONE
+    );
+}
+
 inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D, const struct CGPUTextureDescriptor* desc,
     D3D12_RESOURCE_DESC resDesc, D3D12_RESOURCE_STATES startStates, const D3D12_CLEAR_VALUE* pClearValue)
 {
@@ -824,26 +798,10 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
     T->super.tiled_resource = pTiledInfo;
     T->pDxResource = pDxResource;
     // GPU reads or writes to NULL mappings are undefined under Tier1.   
-    if (A->mTiledResourceTier <= D3D12_TILED_RESOURCES_TIER_1)
+    if (desc->owner_queue && A->mTiledResourceTier <= D3D12_TILED_RESOURCES_TIER_1)
     {
-        /*
-        auto pDxQueue = D->pUndefinedTileMappingQueue;
-        D3D12_TILED_RESOURCE_COORDINATE TRC = { 1, 1, 0, 0 };
-        D3D12_TILE_REGION_SIZE TRS;
-        TRS.UseBox = TRUE;
-        TRS.Width = 1;
-        TRS.Height = 1; 
-        TRS.Depth = 1;
-        TRS.NumTiles = TRS.Width * TRS.Height * TRS.Depth;
-
-        D3D12_TILE_RANGE_FLAGS RangeFlags = D3D12_TILE_RANGE_FLAG_REUSE_SINGLE_TILE;
-        UINT StartOffset = 0;
-        pDxQueue->UpdateTileMappings(T->pDxResource, 1,
-            &TRC, &TRS,
-            D->pUndefinedTileHeap, 1, 
-            &RangeFlags, &StartOffset,
-            NULL, D3D12_TILE_MAPPING_FLAG_NONE);
-        */
+        auto Q = (CGPUQueue_D3D12*)desc->owner_queue;
+        D3D12Util_MapAllTilesAsUndefined(Q->pCommandQueue, T->pDxResource, D->pUndefinedTileHeap);
     }
     return T;
 }
@@ -855,7 +813,7 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapT
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)queue->device;
     CGPUQueue_D3D12* Q = (CGPUQueue_D3D12*)queue;
     CGPUTiledTexture_D3D12* T = (CGPUTiledTexture_D3D12*)desc->texture;
-    
+
     // calculate page count
     uint32_t TotalTileCount = 0;
     for (uint32_t i = 0; i < RegionCount; i++)
@@ -1284,11 +1242,6 @@ void cgpu_free_texture_d3d12(CGPUTextureId texture)
     else if (pInfo->is_tiled)
     {
         CGPUTiledTexture_D3D12* TT = (CGPUTiledTexture_D3D12*)T;
-        // GPU reads or writes to NULL mappings are undefined under Tier1.   
-        if (A->mTiledResourceTier <= D3D12_TILED_RESOURCES_TIER_1)
-        {
-            // D3D12_TILE_RANGE_FLAGS Flags = D3D12_TILE_RANGE_FLAG_NULL;
-        }
         SAFE_RELEASE(TT->pDxResource);
         cgpu_delete(TT);
     }

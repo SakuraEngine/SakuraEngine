@@ -5,6 +5,7 @@
 #ifdef __cplusplus
 #include "D3D12MemAlloc.h"
 #include <EASTL/vector.h>
+#include <containers/hashmap.hpp>
 #endif
 #ifdef CGPU_THREAD_SAFETY
     #include "platform/thread.h"
@@ -98,6 +99,43 @@ typedef struct D3D12Util_DescriptorHeap {
     uint32_t mUsedDescriptors;
 #endif
 } D3D12Util_DescriptorHeap;
+
+struct CGPUTiledMemoryPool_D3D12 : public CGPUMemoryPool_D3D12
+{
+    void AllocateTiles(uint32_t N, D3D12MA::Allocation** ppAllocation) SKR_NOEXCEPT
+    {
+        CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)super.device;
+        const auto kPageSize = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+        D3D12MA::ALLOCATION_DESC allocDesc = {};
+        allocDesc.CustomPool = pDxPool;
+        D3D12_RESOURCE_ALLOCATION_INFO allocInfo = {};
+        allocInfo.Alignment = kPageSize;
+        allocInfo.SizeInBytes = kPageSize;
+        for (uint32_t i = 0; i < N; ++i)
+        {
+            D->pResourceAllocator->AllocateMemory(&allocDesc, &allocInfo, &ppAllocation[i]);
+            allocated.insert(ppAllocation[i]);
+        }
+    }
+
+    void DeallocateTiles(D3D12MA::Allocation* A) SKR_NOEXCEPT
+    {
+
+    }
+
+    ~CGPUTiledMemoryPool_D3D12() SKR_NOEXCEPT
+    {
+        for (auto pAllocation : allocated)
+        {
+            SAFE_RELEASE(pAllocation);
+        }
+        allocated.clear();
+        SAFE_RELEASE(pDxPool);
+    }
+private:
+    skr::parallel_flat_hash_set<D3D12MA::Allocation*> allocated;
+};
+
 
 typedef struct DescriptorHeapProperties {
     uint32_t mMaxDescriptors;
