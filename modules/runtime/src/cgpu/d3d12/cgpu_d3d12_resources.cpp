@@ -730,7 +730,6 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
         SubresInfo.depth_in_tiles = tilings[i].DepthInTiles;
         SubresInfo.layer = 0;
         SubresInfo.mip_level = i;
-
         new (&pSubresMapping[i]) SubresTileMappings_D3D12(SubresInfo.width_in_tiles, SubresInfo.height_in_tiles, SubresInfo.depth_in_tiles);
     }
     T->super.info = pInfo;
@@ -760,17 +759,17 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTile
         const auto& Region = regions->regions[i];
         auto& Mappings = *T->getSubresTileMappings(Region.mip_level, Region.layer);
         uint32_t RegionTileCount = 0;
-        for (uint32_t x = Region.start.x; x < Region.end.x; x++)
+            for (uint32_t x = Region.start.x; x < Region.end.x; x++)
             for (uint32_t y = Region.start.y; y < Region.end.y; y++)
-                for (uint32_t z = Region.start.z; z < Region.end.z; z++)
+            for (uint32_t z = Region.start.z; z < Region.end.z; z++)
+            {
+                auto& Mapping = *Mappings.at(x, y, z);
+                const auto prev = skr_atomic32_cas_relaxed(&Mapping.status, TILE_MAPPING_STATUS_UNMAPPED, TILE_MAPPING_STATUS_PENDING);
+                if (prev == TILE_MAPPING_STATUS_UNMAPPED)
                 {
-                    auto& Mapping = *Mappings.at(x, y, z);
-                    const auto prev = skr_atomic32_cas_relaxed(&Mapping.status, TILE_MAPPING_STATUS_UNMAPPED, TILE_MAPPING_STATUS_PENDING);
-                    if (prev == TILE_MAPPING_STATUS_UNMAPPED)
-                    {
-                        RegionTileCount += 1;
-                    }
+                    RegionTileCount += 1;
                 }
+            }
         TotalTileCount += RegionTileCount;
     }
     if (!TotalTileCount) return;
@@ -804,22 +803,22 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTile
         const auto SubresIndex = CALC_SUBRESOURCE_INDEX(Region.mip_level, Region.layer, 0, 1, 1);
         auto& Mappings = *T->getSubresTileMappings(Region.mip_level, Region.layer);
         for (uint32_t x = Region.start.x; x < Region.end.x; x++)
-            for (uint32_t y = Region.start.y; y < Region.end.y; y++)
-                for (uint32_t z = Region.start.z; z < Region.end.z; z++)
-                {
-                    auto& Mapping = *Mappings.at(x, y, z);
-                    const auto status = skr_atomic32_cas_relaxed(&Mapping.status, TILE_MAPPING_STATUS_PENDING, TILE_MAPPING_STATUS_MAPPING);
-                    if (status != TILE_MAPPING_STATUS_PENDING) continue; // skip if already mapped
+        for (uint32_t y = Region.start.y; y < Region.end.y; y++)
+        for (uint32_t z = Region.start.z; z < Region.end.z; z++)
+        {
+            auto& Mapping = *Mappings.at(x, y, z);
+            const auto status = skr_atomic32_cas_relaxed(&Mapping.status, TILE_MAPPING_STATUS_PENDING, TILE_MAPPING_STATUS_MAPPING);
+            if (status != TILE_MAPPING_STATUS_PENDING) continue; // skip if already mapped
 
-                    // calc mapping args
-                    Mapping.pDxAllocation = ppAllocations[AllocateTileCount];
-                    ppMappings[AllocateTileCount] = &Mapping;
-                    pTileCoordinates[AllocateTileCount] = { x, y, z };
-                    pTileCoordinates[AllocateTileCount].Subresource = SubresIndex;
-                    pRangeOffsets[AllocateTileCount] = (uint32_t)(ppAllocations[AllocateTileCount]->GetOffset() / kPageSize);
-                    pRangeTileCounts[AllocateTileCount] = 1;
-                    AllocateTileCount++;
-                }
+            // calc mapping args
+            Mapping.pDxAllocation = ppAllocations[AllocateTileCount];
+            ppMappings[AllocateTileCount] = &Mapping;
+            pTileCoordinates[AllocateTileCount] = { x, y, z };
+            pTileCoordinates[AllocateTileCount].Subresource = SubresIndex;
+            pRangeOffsets[AllocateTileCount] = (uint32_t)(ppAllocations[AllocateTileCount]->GetOffset() / kPageSize);
+            pRangeTileCounts[AllocateTileCount] = 1;
+            AllocateTileCount++;
+        }
     }
     
     // do mapping
@@ -838,10 +837,13 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTile
             pRangeOffsets,
             pRangeTileCounts,
             D3D12_TILE_MAPPING_FLAG_NONE);
+            
         for (uint32_t i = 0; i < N; i++)
         {
+            auto& TiledInfo = *const_cast<CGPUTiledTextureInfo*>(T->super.tiled_resource);
             auto& Mapping = *ppMappings[i];
             skr_atomic32_cas_relaxed(&Mapping.status, TILE_MAPPING_STATUS_MAPPING, TILE_MAPPING_STATUS_MAPPED);
+            skr_atomicu64_add_relaxed(&TiledInfo.alive_tiles_count, 1);
         }
     };
     uint32_t TileIndex = 0;
@@ -867,6 +869,7 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTile
 void cgpu_queue_unmap_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTiledTextureRegions* regions)
 {
     CGPUTiledTexture_D3D12* T = (CGPUTiledTexture_D3D12*)regions->texture;
+    auto& TiledInfo = *const_cast<CGPUTiledTextureInfo*>(T->super.tiled_resource);
     CGPUQueue_D3D12* Q = (CGPUQueue_D3D12*)queue;
     const uint32_t RegionCount = regions->region_count;
 
@@ -880,6 +883,7 @@ void cgpu_queue_unmap_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTi
         for (uint32_t z = Region.start.z; z < Region.end.z; z++)
         {
             Mappings.unmap(x, y, z);
+            skr_atomicu64_add_relaxed(&TiledInfo.alive_tiles_count, -1);
 
             const bool ForceUnmap = false;
             if (ForceUnmap) // slow and only useful for debugging
