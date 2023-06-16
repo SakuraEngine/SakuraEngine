@@ -1,6 +1,7 @@
 #include "common/render_application.h"
 #include "common/texture.h"
 #include "math.h"
+#include "string.h"
 #include "platform/thread.h"
 
 #define FLIGHT_FRAMES 3
@@ -117,24 +118,39 @@ void update_streaming_map(CGPUCommandBufferId cmd, uint32_t MipLevel)
                 .layer = 0
             }
         };
-        CGPUTiledTextureRegions mapping = {
-            .texture = sampled_texture,
-            .regions = coordinates,
-            .region_count = 1
-        };
-        cgpu_queue_map_tiled_texture(App.gfx_queue, &mapping);
-        CGPUTiledTextureRegions unmapping = {
-            .texture = sampled_texture,
-            .regions = coordinates + 1,
-            .region_count = 1
-        };
-        cgpu_queue_unmap_tiled_texture(App.gfx_queue, &unmapping);
-        CGPUTiledTextureRegions mapping1 = {
-            .texture = sampled_texture,
-            .regions = coordinates + 2,
-            .region_count = 1
-        };
-        cgpu_queue_map_tiled_texture(App.gfx_queue, &mapping1);
+        {
+            TracyCZone(z, 1);
+            TracyCZoneName(z, "map", strlen("map"));
+            CGPUTiledTextureRegions mapping = {
+                .texture = sampled_texture,
+                .regions = coordinates,
+                .region_count = 1
+            };
+            cgpu_queue_map_tiled_texture(App.gfx_queue, &mapping);
+            TracyCZoneEnd(z);
+        }
+        {
+            TracyCZone(z, 1);
+            TracyCZoneName(z, "unmap", strlen("unmap"));
+            CGPUTiledTextureRegions unmapping = {
+                .texture = sampled_texture,
+                .regions = coordinates + 1,
+                .region_count = 1
+            };
+            cgpu_queue_unmap_tiled_texture(App.gfx_queue, &unmapping);
+            TracyCZoneEnd(z);
+        }
+        {
+            TracyCZone(z, 1);
+            TracyCZoneName(z, "map", strlen("map"));
+            CGPUTiledTextureRegions mapping1 = {
+                .texture = sampled_texture,
+                .regions = coordinates + 2,
+                .region_count = 1
+            };
+            cgpu_queue_map_tiled_texture(App.gfx_queue, &mapping1);
+            TracyCZoneEnd(z);
+        }
     }
     current_mip = MipLevel;
     // record
