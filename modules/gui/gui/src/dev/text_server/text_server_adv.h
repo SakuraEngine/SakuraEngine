@@ -998,7 +998,7 @@ public: // MODBINDs
     TextServerAdvanced(const SkrGuiData& gui_data);
     virtual ~TextServerAdvanced();
 
-    skr_gdi_renderer_id get_gdi_renderer() override
+    ::skr::gdi::IGDIRenderer* get_gdi_renderer() override
     {
         return gui_data.gdi_renderer;
     }

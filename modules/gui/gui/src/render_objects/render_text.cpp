@@ -172,7 +172,7 @@ StyleText TODO_StyleText = {
     { 1.0f, 0.0f, 1.0f, 1.0f }
 };
 
-RenderText::RenderText(skr_gdi_device_id gdi_device)
+RenderText::RenderText(gdi::IGDIDevice* gdi_device)
     : RenderBox(gdi_device)
     , gdi_device(gdi_device)
 {

@@ -29,5 +29,3 @@ struct SKR_GUI_API IGDIRenderer {
 };
 
 } // namespace skr::gdi
-
-SKR_DECLARE_TYPE_ID(skr::gdi::IGDIRenderer, skr_gdi_renderer);

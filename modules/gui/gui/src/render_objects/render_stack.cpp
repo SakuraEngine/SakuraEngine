@@ -6,7 +6,7 @@ namespace skr
 namespace gui
 {
 
-RenderStack::RenderStack(skr_gdi_device_id gdi_device)
+RenderStack::RenderStack(gdi::IGDIDevice* gdi_device)
     : RenderBox(gdi_device)
 {
     diagnostic_builder.add_properties(
@@ -20,8 +20,8 @@ void RenderStack::layout(BoxConstraint constraints, bool needSize)
     float height = get_size().height;
     for (int i = 0; i < get_child_count(); i++)
     {
-        RenderBox* child = get_child_as_box(i);
-        Positional positional = get_position(i);
+        RenderBox*    child = get_child_as_box(i);
+        Positional    positional = get_position(i);
         BoxConstraint childConstraints = {};
         if (positional.left && positional.right)
         {

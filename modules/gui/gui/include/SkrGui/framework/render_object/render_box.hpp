@@ -2,11 +2,16 @@
 #include "SkrGui/framework/render_object/render_object.hpp"
 #include "SkrGui/math/layout.hpp"
 
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIDevice, skr_gdi_device)
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIElement, skr_gdi_element)
+namespace skr::gdi
+{
+struct IGDIDevice;
+struct IGDIElement;
+} // namespace skr::gdi
 
 namespace skr::gui
 {
+using gdi::IGDIDevice;
+using gdi::IGDIElement;
 
 struct HitTestRecord {
 };
@@ -15,7 +20,7 @@ struct SKR_GUI_API RenderBox : public RenderObject {
     SKR_GUI_TYPE(RenderBox, "01a2eb19-1299-4069-962f-88db0c719134", RenderObject);
 
 public:
-    RenderBox(skr_gdi_device_id gdi_device);
+    RenderBox(IGDIDevice* gdi_device);
     virtual ~RenderBox();
 
     virtual void layout(BoxConstraint constraints, bool needSize = false) = 0;
@@ -35,10 +40,8 @@ protected:
     Offset pos = { 0, 0 };
     Size   size = { 0, 0 };
 
-    skr_gdi_device_id  gdi_device = nullptr;
-    skr_gdi_element_id debug_element = nullptr;
+    IGDIDevice*  gdi_device = nullptr;
+    IGDIElement* debug_element = nullptr;
 };
 
 } // namespace skr::gui
-
-SKR_DECLARE_TYPE_ID(skr::gui::RenderBox, skr_gui_render_box);

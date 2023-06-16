@@ -94,7 +94,7 @@ inline static void draw_grid_paper(gdi::IGDIElement* element, float window_width
     element->stroke();
 }
 
-RenderGridPaper::RenderGridPaper(skr_gdi_device_id gdi_device)
+RenderGridPaper::RenderGridPaper(gdi::IGDIDevice* gdi_device)
     : RenderBox(gdi_device)
     , gdi_element(nullptr)
 {

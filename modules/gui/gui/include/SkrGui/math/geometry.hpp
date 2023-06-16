@@ -365,7 +365,7 @@ public:
             }
             else
             {
-                const float k = 1.0 - t;
+                const float k = 1.0f - t;
                 return Rect{ (*a).left * k, (*a).top * k, (*a).right * k, (*a).bottom * k };
             }
         }

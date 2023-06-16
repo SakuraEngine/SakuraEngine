@@ -7,7 +7,7 @@
 namespace skr::gui
 {
 
-RenderBox::RenderBox(skr_gdi_device_id gdi_device)
+RenderBox::RenderBox(gdi::IGDIDevice* gdi_device)
     : gdi_device(gdi_device)
     , debug_element(nullptr)
 {

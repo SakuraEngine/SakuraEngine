@@ -1,24 +1,25 @@
 #pragma once
 #include "SkrGui/framework/diagnostics.hpp"
 
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDICanvas, skr_gdi_canvas)
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIElement, skr_gdi_element)
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIViewport, skr_gdi_viewport)
-SKR_DECLARE_TYPE_ID_FWD(skr::gui, WindowContext, skr_gui_window_context)
-
-typedef struct skr_gui_render_object_draw_params_t {
-    skr_gdi_viewport_id viewport             SKR_IF_CPP(= nullptr);
-    skr_gdi_canvas_id canvas                 SKR_IF_CPP(= nullptr);
-    skr_gui_window_context_id window_context SKR_IF_CPP(= nullptr);
-    int32_t ui_z                             SKR_IF_CPP(= 0);
-} skr_gui_render_object_draw_params_t;
+namespace skr::gdi
+{
+struct IGDICanvas;
+struct IGDIElement;
+struct IGDIViewport;
+} // namespace skr::gdi
 
 namespace skr::gui
 {
+struct WindowContext;
 struct SKR_GUI_API RenderObject : public DiagnosticableTreeNode {
     SKR_GUI_TYPE(RenderObject, "74844fa6-8994-4915-8f8e-ec944a1cbea4", DiagnosticableTreeNode);
 
-    using DrawParams = skr_gui_render_object_draw_params_t;
+    struct DrawParams {
+        gdi::IGDIViewport* viewport = nullptr;
+        gdi::IGDICanvas*   canvas = nullptr;
+        WindowContext*     window_context = nullptr;
+        int32_t            ui_z = 0;
+    };
 
 public:
     RenderObject();

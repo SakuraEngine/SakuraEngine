@@ -117,7 +117,7 @@ void RenderColorPicker::draw_color_picker(gdi::IGDIElement* element, gdi::IGDIPa
     element->restore();
 }
 
-RenderColorPicker::RenderColorPicker(skr_gdi_device_id gdi_device)
+RenderColorPicker::RenderColorPicker(gdi::IGDIDevice* gdi_device)
     : RenderBox(gdi_device)
     , gdi_element(nullptr)
 {
