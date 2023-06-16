@@ -1,12 +1,10 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
 
-SKR_DECLARE_TYPE_ID_FWD(skr::gui, State, skr_gui_state)
+namespace skr::gui
+{
+struct State;
 
-namespace skr
-{
-namespace gui
-{
 // 三种 Key
 // Unique 永远不相等
 // KeepState 用来保持 State 的引用，方便 State 在控件树的各处流转
@@ -52,21 +50,21 @@ struct SKR_GUI_API Key final {
 
     // type
     EKeyType type() const SKR_NOEXCEPT;
-    bool is_none() const SKR_NOEXCEPT;
-    bool is_unique() const SKR_NOEXCEPT;
-    bool is_keep_state() const SKR_NOEXCEPT;
-    bool is_value() const SKR_NOEXCEPT;
-    bool is_storage() const SKR_NOEXCEPT;
+    bool     is_none() const SKR_NOEXCEPT;
+    bool     is_unique() const SKR_NOEXCEPT;
+    bool     is_keep_state() const SKR_NOEXCEPT;
+    bool     is_value() const SKR_NOEXCEPT;
+    bool     is_storage() const SKR_NOEXCEPT;
 
     // getter
-    State* get_state() const SKR_NOEXCEPT;
-    int64_t get_int() const SKR_NOEXCEPT;
-    float get_float() const SKR_NOEXCEPT;
+    State*        get_state() const SKR_NOEXCEPT;
+    int64_t       get_int() const SKR_NOEXCEPT;
+    float         get_float() const SKR_NOEXCEPT;
     const String& get_name() const SKR_NOEXCEPT;
-    bool try_get_state(State*& out) const SKR_NOEXCEPT;
-    bool try_get_int(int64_t& out) const SKR_NOEXCEPT;
-    bool try_get_float(float& out) const SKR_NOEXCEPT;
-    bool try_get_name(String& out) const SKR_NOEXCEPT;
+    bool          try_get_state(State*& out) const SKR_NOEXCEPT;
+    bool          try_get_int(int64_t& out) const SKR_NOEXCEPT;
+    bool          try_get_float(float& out) const SKR_NOEXCEPT;
+    bool          try_get_name(String& out) const SKR_NOEXCEPT;
 
     // setter
     void clear() SKR_NOEXCEPT;
@@ -84,10 +82,10 @@ private:
     EKeyType _type;
     union
     {
-        State* _state;
+        State*  _state;
         int64_t _int;
-        float _float;
-        String _name;
+        float   _float;
+        String  _name;
     };
 };
 
@@ -266,5 +264,4 @@ inline void Key::set_storage(float v) SKR_NOEXCEPT
     _float = v;
 }
 
-} // namespace gui
-} // namespace skr
+} // namespace skr::gui

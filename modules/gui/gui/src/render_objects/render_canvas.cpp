@@ -8,7 +8,7 @@ namespace skr
 namespace gui
 {
 
-RenderCanvas::RenderCanvas(skr_gdi_device_id gdi_device)
+RenderCanvas::RenderCanvas(gdi::IGDIDevice* gdi_device)
     : RenderBox(gdi_device)
     , gdi_canvas(nullptr)
 {

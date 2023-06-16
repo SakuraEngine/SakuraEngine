@@ -4,11 +4,13 @@
 // #include "containers/sptr.hpp"
 #include "containers/detail/sptr.hpp"
 
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIPaint, skr_gdi_paint);
-
-namespace skr
+namespace skr::gdi
 {
-namespace gui
+struct IGDIDevice;
+struct IGDIElement;
+struct IGDIPaint;
+} // namespace skr::gdi
+namespace skr::gui
 {
 
 struct Paragraph;
@@ -34,7 +36,7 @@ struct SKR_GUI_API BindText {
 struct SKR_GUI_API RenderText : public RenderBox {
 public:
     SKR_GUI_TYPE(RenderText, "72e8d4de-c288-4675-a22f-4c7a6487cabd", RenderBox);
-    RenderText(skr_gdi_device_id gdi_device);
+    RenderText(gdi::IGDIDevice* gdi_device);
     virtual ~RenderText();
 
     virtual void layout(BoxConstraint constraints, bool needSize = false) override;
@@ -54,14 +56,11 @@ private:
     Paragraph*               paragraph_ = nullptr;
     skr::SPtr<FontFile>      font_ = nullptr;
 
-    bool               paragraph_dirty_ = true;
-    skr_gdi_device_id  gdi_device = nullptr;
-    skr_gdi_element_id gdi_element = nullptr;
-    skr_gdi_paint_id   gdi_paint = nullptr;
-    skr_float4_t       font_color = { 1.f, 0.f, 1.f, 1.f };
+    bool              paragraph_dirty_ = true;
+    gdi::IGDIDevice*  gdi_device = nullptr;
+    gdi::IGDIElement* gdi_element = nullptr;
+    gdi::IGDIPaint*   gdi_paint = nullptr;
+    skr_float4_t      font_color = { 1.f, 0.f, 1.f, 1.f };
 };
 
-} // namespace gui
-} // namespace skr
-
-SKR_DECLARE_TYPE_ID(skr::gui::RenderText, skr_gui_render_text);
+} // namespace skr::gui

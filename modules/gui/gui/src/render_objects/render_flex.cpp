@@ -5,7 +5,7 @@ namespace skr
 namespace gui
 {
 
-RenderFlex::RenderFlex(skr_gdi_device_id gdi_device)
+RenderFlex::RenderFlex(gdi::IGDIDevice* gdi_device)
     : RenderBox(gdi_device)
 {
     diagnostic_builder.add_properties(
@@ -33,7 +33,7 @@ void RenderFlex::layout(BoxConstraint constraints, bool needSize)
     for (int i = 0; i < get_child_count(); i++)
     {
         RenderBox* child = get_child_as_box(i);
-        Flexable flex = get_flex(i);
+        Flexable   flex = get_flex(i);
         if (flex.flex == 0)
         {
             child->layout(constraints, true);
@@ -44,8 +44,8 @@ void RenderFlex::layout(BoxConstraint constraints, bool needSize)
     // Calculate size of each child based on flex factor and available space
     for (int i = 0; i < get_child_count(); i++)
     {
-        RenderBox* child = get_child_as_box(i);
-        Flexable flex = get_flex(i);
+        RenderBox*    child = get_child_as_box(i);
+        Flexable      flex = get_flex(i);
         BoxConstraint childConstraints = constraints;
         childConstraints.set_min_size({ 0, 0 });
         if (flex.flex > 0)
@@ -90,7 +90,7 @@ void RenderFlex::layout(BoxConstraint constraints, bool needSize)
     for (int i = 0; i < get_child_count(); i++)
     {
         RenderBox* child = get_child_as_box(i);
-        Size childSize = child->get_size();
+        Size       childSize = child->get_size();
         if (isRow)
         {
             mainAxisOffset += childSize.width;
@@ -137,9 +137,9 @@ void RenderFlex::layout(BoxConstraint constraints, bool needSize)
             mainAxisStartPosition += (mainAxisSize - mainAxisOffset) / (get_child_count() + 1);
         }
         RenderBox* child = get_child_as_box(i);
-        Size childSize = child->get_size();
-        float childMainAxisPosition = mainAxisStartPosition;
-        float childCrossAxisPosition = 0.0f;
+        Size       childSize = child->get_size();
+        float      childMainAxisPosition = mainAxisStartPosition;
+        float      childCrossAxisPosition = 0.0f;
         if (align_items == AlignItems::FlexEnd ||
             align_items == AlignItems::Baseline)
         {

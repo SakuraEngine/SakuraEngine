@@ -13,23 +13,18 @@
 #include "containers/vector.hpp"
 #include "containers/sptr.hpp"
 
-SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, ImageTexFutureLauncher, gdi_img_tex_future_launcher)
+namespace skr::gdi
+{
+struct ImageTexFutureLauncher;
+struct DecodingProgress;
+} // namespace skr::gdi
+
 namespace skr
 {
 struct JobQueue;
 }
-namespace skr
-{
-namespace gdi
-{
-struct DecodingProgress;
-}
-} // namespace skr
 
-namespace skr
-{
-namespace gdi
+namespace skr::gdi
 {
 
 enum EGDIRendererPipelineAttribute
@@ -237,8 +232,8 @@ struct SKR_GUI_RENDERER_API GDIRenderer_RenderGraph : public IGDIRenderer {
         if (out_max) *out_max = 1000.f;
         return true;
     }
-    bool                           support_mipmap_generation() const SKR_NOEXCEPT final;
-    gdi_img_tex_future_launcher_t* get_future_launcher() const SKR_NOEXCEPT { return future_launcher.get(); }
+    bool                    support_mipmap_generation() const SKR_NOEXCEPT final;
+    ImageTexFutureLauncher* get_future_launcher() const SKR_NOEXCEPT { return future_launcher.get(); }
 
     skr_io_ram_service_t*  get_ram_service() const SKR_NOEXCEPT { return ram_service; }
     skr_io_vram_service_t* get_vram_service() const SKR_NOEXCEPT { return vram_service; }
@@ -272,8 +267,8 @@ protected:
     };
     eastl::vector_map<PipelineKey, CGPURenderPipelineId> pipelines;
 
-    skr_job_queue_id                         job_queue = nullptr;
-    skr::SPtr<gdi_img_tex_future_launcher_t> future_launcher = nullptr;
+    skr_job_queue_id                  job_queue = nullptr;
+    skr::SPtr<ImageTexFutureLauncher> future_launcher = nullptr;
 
     skr_io_ram_service_t*   ram_service = nullptr;
     skr_io_vram_service_t*  vram_service = nullptr;
@@ -285,5 +280,4 @@ protected:
     ECGPUFormat             target_format;
 };
 
-} // namespace gdi
-} // namespace skr
+} // namespace skr::gdi

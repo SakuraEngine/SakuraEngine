@@ -15,7 +15,7 @@ class SKR_GUI_API RenderFlex : public RenderBox
 {
 public:
     SKR_GUI_TYPE(RenderFlex, "d3987dfd-24d2-478a-910e-537f24c4bae7", RenderBox);
-    RenderFlex(skr_gdi_device_id gdi_device);
+    RenderFlex(gdi::IGDIDevice* gdi_device);
 
     virtual void layout(BoxConstraint constraints, bool needSize = false) override;
     Flexable     get_flex(int index); // each child's corresponding flexable property

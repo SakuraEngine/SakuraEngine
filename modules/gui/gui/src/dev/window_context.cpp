@@ -4,9 +4,7 @@
 #include "SkrGui/render_objects/render_window.hpp"
 #include "platform/memory.h"
 
-namespace skr
-{
-namespace gui
+namespace skr::gui
 {
 
 IPlatformWindow::~IPlatformWindow() SKR_NOEXCEPT
@@ -30,7 +28,7 @@ struct WindowContextImpl : public WindowContext {
     }
 
     void draw(const DrawParams* params) SKR_NOEXCEPT final;
-    void render(skr_gdi_renderer_id renderer, const RenderParams* params) SKR_NOEXCEPT final;
+    void render(gdi::IGDIRenderer* renderer, const RenderParams* params) SKR_NOEXCEPT final;
 
     // impl helpers
 
@@ -48,9 +46,9 @@ struct WindowContextImpl : public WindowContext {
     }
 
 protected:
-    RenderWindow*     root_element = nullptr;
-    IPlatformWindow*  platform_window = nullptr;
-    skr_gdi_device_id gdi_device = nullptr;
+    RenderWindow*    root_element = nullptr;
+    IPlatformWindow* platform_window = nullptr;
+    gdi::IGDIDevice* gdi_device = nullptr;
 };
 
 void WindowContextImpl::draw(const DrawParams* params) SKR_NOEXCEPT
@@ -65,7 +63,7 @@ void WindowContextImpl::draw(const DrawParams* params) SKR_NOEXCEPT
     }
 }
 
-void WindowContextImpl::render(skr_gdi_renderer_id renderer, const RenderParams* params) SKR_NOEXCEPT
+void WindowContextImpl::render(gdi::IGDIRenderer* renderer, const RenderParams* params) SKR_NOEXCEPT
 {
     if (root_element && root_element->get_gdi_viewport())
     {
@@ -94,5 +92,4 @@ void WindowContext::Free(WindowContext* context) SKR_NOEXCEPT
     SkrDelete(impl);
 }
 
-} // namespace gui
-} // namespace skr
+} // namespace skr::gui

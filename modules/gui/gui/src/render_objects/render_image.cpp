@@ -7,7 +7,7 @@ namespace skr
 {
 namespace gui
 {
-RenderImage::RenderImage(skr_gdi_device_id gdi_device)
+RenderImage::RenderImage(gdi::IGDIDevice* gdi_device)
     : RenderBox(gdi_device)
 {
     gdi_element = gdi_device->create_element();

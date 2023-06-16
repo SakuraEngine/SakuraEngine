@@ -36,10 +36,13 @@
 #include "dev/text_server/transform_2d.h"
 #include "dev/text_server/image_texture.h"
 
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIRenderer, skr_gdi_renderer)
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIPaint, skr_gdi_paint);
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIDevice, skr_gdi_device);
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIElement, skr_gdi_element);
+namespace skr::gdi
+{
+struct IGDIRenderer;
+struct IGDIPaint;
+struct IGDIDevice;
+struct IGDIElement;
+} // namespace skr::gdi
 
 namespace godot
 {
@@ -66,9 +69,9 @@ class TextServer
 public:
     // ++ SKR
     struct TextDrawProxy {
-        skr_gdi_device_id  gdi_device = nullptr;
-        skr_gdi_element_id gdi_element = nullptr;
-        skr_gdi_paint_id   gdi_paint = nullptr;
+        ::skr::gdi::IGDIDevice*  gdi_device = nullptr;
+        ::skr::gdi::IGDIElement* gdi_element = nullptr;
+        ::skr::gdi::IGDIPaint*   gdi_paint = nullptr;
     };
     // --SKR
     enum FontAntialiasing
@@ -559,7 +562,7 @@ public:
     virtual void cleanup() {}
 
     // ++ SKR
-    virtual skr_gdi_renderer_id get_gdi_renderer() = 0;
+    virtual ::skr::gdi::IGDIRenderer* get_gdi_renderer() = 0;
     // -- SKR
 
     TextServer();

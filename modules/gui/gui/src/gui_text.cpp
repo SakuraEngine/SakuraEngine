@@ -8,7 +8,7 @@ namespace gdi
 {
 
 struct GDITextImpl : public IGDIText {
-    GDITextImpl(skr_gdi_renderer_id renderer)
+    GDITextImpl(gdi::IGDIRenderer* renderer)
         : pRenderer(renderer)
     {
         godot::SkrGuiData data = {};
@@ -23,11 +23,11 @@ struct GDITextImpl : public IGDIText {
 
     static GDITextImpl*        this_;
     godot::TextServerAdvanced* text_server = nullptr;
-    skr_gdi_renderer_id        pRenderer = nullptr;
+    gdi::IGDIRenderer*         pRenderer = nullptr;
 };
 
 GDITextImpl* GDITextImpl::this_ = nullptr;
-bool         IGDIText::Initialize(skr_gdi_renderer_id renderer)
+bool         IGDIText::Initialize(gdi::IGDIRenderer* renderer)
 {
     if (auto gdi_text = SkrNew<GDITextImpl>(renderer))
     {

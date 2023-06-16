@@ -2,13 +2,12 @@
 #include "SkrGui/framework/diagnostics.hpp"
 #include "SkrGui/math/geometry.hpp"
 
-SKR_DECLARE_TYPE_ID_FWD(skr::gui, RenderObject, skr_gui_render_object)
-SKR_DECLARE_TYPE_ID_FWD(skr::gui, Widget, skr_gui_widget)
-SKR_DECLARE_TYPE_ID_FWD(skr::gui, Element, skr_gui_element)
-SKR_DECLARE_TYPE_ID_FWD(skr::gui, Slot, skr_gui_slot)
-
 namespace skr::gui
 {
+struct RenderObject;
+struct Widget;
+struct Element;
+struct Slot;
 struct BuildOwner;
 struct Key;
 enum class ElementLifecycle : uint32_t
@@ -32,7 +31,7 @@ struct SKR_GUI_API Element : public BuildContext {
 
     friend struct BuildOwner;
 
-    Element(skr_gui_widget_id widget) SKR_NOEXCEPT;
+    Element(Widget* widget) SKR_NOEXCEPT;
 
     // life circle
     virtual void activate() SKR_NOEXCEPT;
@@ -84,10 +83,10 @@ private:
     bool     _dirty = true;
     bool     _in_dirty_list = false;
 
-    skr_gui_widget_id  _widget = nullptr;
-    skr_gui_element_id _parent = nullptr;
-    skr_gui_slot_id    _slot = nullptr; // TODO. use int64_t and rename to _slot_index, parentData -> slot and slot -> slot_index
-    BuildOwner*        _owner = nullptr;
-    ElementLifecycle   _lifecycle_state = ElementLifecycle::initial;
+    Widget*          _widget = nullptr;
+    Element*         _parent = nullptr;
+    Slot*            _slot = nullptr; // TODO. use int64_t and rename to _slot_index, parentData -> slot and slot -> slot_index
+    BuildOwner*      _owner = nullptr;
+    ElementLifecycle _lifecycle_state = ElementLifecycle::initial;
 };
 } // namespace skr::gui
