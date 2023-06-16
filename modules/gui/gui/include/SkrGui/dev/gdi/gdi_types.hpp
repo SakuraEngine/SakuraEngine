@@ -1,13 +1,26 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
 
+// fwd
+namespace skr::gdi
+{
+struct GDICanvas;
+struct GDIDevice;
+struct GDIPaint;
+struct IGDIRenderer;
+struct GDIResource;
+struct IGDIImage;
+struct IGDITextureUpdate;
+struct IGDITexture;
+struct IGDIMaterial;
+struct GDIText;
+struct GDIViewport;
+struct GDIElement;
+} // namespace skr::gdi
+
 // basic types
 namespace skr::gdi
 {
-struct IGDITexture;
-struct IGDIMaterial;
-struct GDIDevice;
-struct IGDIRenderer;
 
 struct GDIElementDrawCommand {
     IGDITexture*  texture = nullptr;
@@ -48,7 +61,7 @@ struct IGDITexture;
 
 enum class EGDIResourceState : uint32_t
 {
-    Requsted = 0x00000001,
+    Requested = 0x00000001,
     Loading = 0x00000002,
     Initializing = 0x00000004,
     Okay = 0x00000008,

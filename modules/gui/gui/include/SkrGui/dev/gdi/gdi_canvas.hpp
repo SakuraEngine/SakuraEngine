@@ -3,8 +3,6 @@
 
 namespace skr::gdi
 {
-struct GDIElement;
-
 struct SKR_GUI_API GDICanvas {
     virtual ~GDICanvas() SKR_NOEXCEPT = default;
 

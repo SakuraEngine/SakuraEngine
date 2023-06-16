@@ -3,10 +3,6 @@
 
 namespace skr::gdi
 {
-struct GDIElement;
-struct GDIViewport;
-struct IGDITextureUpdate;
-
 struct SKR_GUI_API IGDIRenderer {
     virtual ~IGDIRenderer() SKR_NOEXCEPT = default;
 

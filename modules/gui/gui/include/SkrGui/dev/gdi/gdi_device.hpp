@@ -3,11 +3,6 @@
 
 namespace skr::gdi
 {
-struct GDICanvas;
-struct GDIViewport;
-struct GDIElement;
-struct GDIPaint;
-
 struct SKR_GUI_API GDIDevice {
     virtual ~GDIDevice() SKR_NOEXCEPT = default;
 
