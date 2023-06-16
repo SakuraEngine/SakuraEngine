@@ -4,7 +4,7 @@
 
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "misc/make_zeroed.hpp"
-#include "SkrGui/dev/interface/gdi_renderer.hpp"
+#include "SkrGui/dev/gdi/gdi.hpp"
 
 #include "SkrGuiRenderer/gdi_renderer.hpp"
 
@@ -198,7 +198,7 @@ struct gdi_example_application : public gdi_application_t {
     skr::gdi::GDICanvas*  backgroud_canvas = nullptr;
     skr::gdi::GDIElement* background_element = nullptr;
 
-    skr::gdi::GDITextureId test_texture = nullptr;
+    skr::gdi::IGDITexture* test_texture = nullptr;
     skr::gdi::GDIPaint*    test_paint = nullptr;
     skr::gdi::GDIElement*  test_element = nullptr;
     skr::gdi::GDIElement*  debug_element = nullptr;

@@ -35,9 +35,9 @@ void RenderColorPicker::draw_color_picker(gdi::GDIElement* element, gdi::GDIPain
         element->stroke_width(r1 - r0);
         SKR_GUI_ASSERT(paint && "ColorPicker: paint is null!");
         // element->stroke_color(255u, 255u, 255u, 255u);
-        paint->set_pattern(cx, cy, w, h, 0, (gdi::GDITextureId) nullptr, { 1.f, 1.f, 1.f, 1.f });
+        paint->set_pattern(cx, cy, w, h, 0, (gdi::IGDITexture*)nullptr, { 1.f, 1.f, 1.f, 1.f });
         paint->custom_vertex_color(
-        +[](struct skr_gdi_vertex_t* pVertex, void* usrdata) SKR_NOEXCEPT {
+        +[](gdi::GDIVertex* pVertex, void* usrdata) SKR_NOEXCEPT {
             // adjust the rotate to CW[H:0~360]
             pVertex->texcoord.x = 1.f - pVertex->texcoord.x;
             // adjust H:0 to 0 degree
@@ -90,7 +90,7 @@ void RenderColorPicker::draw_color_picker(gdi::GDIElement* element, gdi::GDIPain
     element->line_to(bx, by);
     element->close_path();
     paint->custom_vertex_color(
-    +[](struct skr_gdi_vertex_t* pVertex, void* usrdata) SKR_NOEXCEPT {
+    +[](gdi::GDIVertex* pVertex, void* usrdata) SKR_NOEXCEPT {
         auto         _this = (RenderColorPicker*)usrdata;
         const auto   index = static_cast<uint32_t>(pVertex->texcoord.x / 0.3333f);
         const double S[] = { 0.0, 0.0, 1.0 };

@@ -5,13 +5,12 @@
 
 // TODO. remove gdi
 #include "SkrGui/dev/gdi/gdi.hpp"
-#include "SkrGui/dev/interface/gdi_renderer.hpp"
 
 namespace skr::gui
 {
 using ITexture = ::skr::gdi::IGDITexture;
 using IMaterial = ::skr::gdi::IGDIMaterial;
-using CustomPaintCallback = skr_gdi_custom_vertex_painter_t;
+using CustomPaintCallback = ::skr::gdi::CustomVertexPainter;
 } // namespace skr::gui
 
 namespace skr::gui

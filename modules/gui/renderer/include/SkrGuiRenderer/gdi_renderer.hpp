@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrGuiRenderer/module.configure.h"
-#include "SkrGui/dev/interface/gdi_renderer.hpp"
+#include "SkrGui/dev/gdi/gdi.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "cgpu/cgpux.h"
 #include "cgpu/io.h"
@@ -44,8 +44,8 @@ using GDIRendererPipelineAttributes = uint32_t;
 
 struct GDIElementDrawCommand_RenderGraph {
     GDIRendererPipelineAttributes attributes = 0;
-    GDITextureId                  texture = nullptr;
-    GDIMaterialId                 material = nullptr;
+    IGDITexture*                  texture = nullptr;
+    IGDIMaterial*                 material = nullptr;
     uint32_t                      first_index = 0;
     uint32_t                      index_count = 0;
     uint32_t                      ib_offset = 0;
@@ -75,7 +75,7 @@ struct SKR_GUI_RENDERER_API GDIViewportData_RenderGraph {
     // placeholder1:   [_, _, _, _]
     // placeholder2:   [_, _, _, _]
     skr::vector<skr_float4x4_t> render_data;
-    skr::vector<index_t>        render_indices;
+    skr::vector<GDIIndex>       render_indices;
 };
 
 struct GDIRendererDescriptor_RenderGraph {
@@ -125,7 +125,7 @@ struct SKR_GUI_RENDERER_API GDIImageAsyncData_RenderGraph {
 
     skr::SPtr<skr::gdi::DecodingProgress> decoding_progress = nullptr;
 
-    GDIImageId DoAsync(struct GDIImage_RenderGraph* owner, skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT;
+    IGDIImage* DoAsync(struct GDIImage_RenderGraph* owner, skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT;
 
 protected:
     eastl::function<void()> ram_io_enqueued_callback = {};
@@ -142,7 +142,7 @@ struct SKR_GUI_RENDERER_API GDITextureAsyncData_RenderGraph {
     CGPURootSignatureId    root_signature = nullptr;
     skr_io_vram_service_t* vram_service = nullptr;
 
-    GDITextureId DoAsync(struct GDITexture_RenderGraph* texture, skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT;
+    IGDITexture* DoAsync(struct GDITexture_RenderGraph* texture, skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT;
 
 protected:
     eastl::function<void()> vram_enqueued_callback = {};
@@ -154,7 +154,7 @@ struct SKR_GUI_RENDERER_API GDIImage_RenderGraph : public IGDIImage {
         : renderer(renderer) {}
 
     EGDIResourceState   get_state() const SKR_NOEXCEPT final;
-    GDIRendererId       get_renderer() const SKR_NOEXCEPT final;
+    IGDIRenderer*       get_renderer() const SKR_NOEXCEPT final;
     uint32_t            get_width() const SKR_NOEXCEPT final;
     uint32_t            get_height() const SKR_NOEXCEPT final;
     Span<const uint8_t> get_data() const SKR_NOEXCEPT final;
@@ -183,7 +183,7 @@ struct SKR_GUI_RENDERER_API GDITexture_RenderGraph : public IGDITexture {
           renderer(renderer) {}
 
     EGDIResourceState get_state() const SKR_NOEXCEPT final;
-    GDIRendererId     get_renderer() const SKR_NOEXCEPT final;
+    IGDIRenderer*     get_renderer() const SKR_NOEXCEPT final;
     uint32_t          get_width() const SKR_NOEXCEPT final;
     uint32_t          get_height() const SKR_NOEXCEPT final;
 
@@ -207,8 +207,8 @@ struct SKR_GUI_RENDERER_API GDITexture_RenderGraph : public IGDITexture {
 struct SKR_GUI_RENDERER_API GDITextureUpdate_RenderGraph : public IGDITextureUpdate {
     EGDIResourceState get_state() const SKR_NOEXCEPT final;
 
-    GDITextureId                     texture = nullptr;
-    GDIImageId                       image = nullptr;
+    IGDITexture*                     texture = nullptr;
+    IGDIImage*                       image = nullptr;
     skr::render_graph::BufferHandle  upload_buffer;
     skr::render_graph::TextureHandle texture_handle;
 
@@ -222,12 +222,12 @@ struct SKR_GUI_RENDERER_API GDIRenderer_RenderGraph : public IGDIRenderer {
     // Tier 1
     int                initialize(const GDIRendererDescriptor* desc) SKR_NOEXCEPT final;
     int                finalize() SKR_NOEXCEPT final;
-    GDIImageId         create_image(const GDIImageDescriptor* descriptor) SKR_NOEXCEPT final;
-    GDITextureId       create_texture(const GDITextureDescriptor* descriptor) SKR_NOEXCEPT final;
-    GDITextureUpdateId update_texture(const GDITextureUpdateDescriptor* descriptor) SKR_NOEXCEPT final;
-    void               free_image(GDIImageId image) SKR_NOEXCEPT final;
-    void               free_texture(GDITextureId texture) SKR_NOEXCEPT final;
-    void               free_texture_update(GDITextureUpdateId texture) SKR_NOEXCEPT final;
+    IGDIImage*         create_image(const GDIImageDescriptor* descriptor) SKR_NOEXCEPT final;
+    IGDITexture*       create_texture(const GDITextureDescriptor* descriptor) SKR_NOEXCEPT final;
+    IGDITextureUpdate* update_texture(const GDITextureUpdateDescriptor* descriptor) SKR_NOEXCEPT final;
+    void               free_image(IGDIImage* image) SKR_NOEXCEPT final;
+    void               free_texture(IGDITexture* texture) SKR_NOEXCEPT final;
+    void               free_texture_update(IGDITextureUpdate* texture) SKR_NOEXCEPT final;
     void               render(GDIViewport* viewport, const ViewportRenderParams* params) SKR_NOEXCEPT final;
 
     // Tier 2

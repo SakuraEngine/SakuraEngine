@@ -30,7 +30,7 @@ struct SKR_GUI_API GDIElementPrivate : public GDIElement {
     int32_t                            z = 0.f;
     uint32_t                           texture_swizzle[4] = { 0, 0, 0, 0 };
     skr::vector<GDIVertex>             vertices;
-    skr::vector<index_t>               indices;
+    skr::vector<GDIIndex>              indices;
     skr::vector<GDIElementDrawCommand> commands;
 };
 

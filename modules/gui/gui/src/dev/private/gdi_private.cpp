@@ -1,6 +1,6 @@
 #include "platform/debug.h"
 #include "platform/memory.h"
-#include "SkrGui/dev/interface/gdi_renderer.hpp"
+#include "SkrGui/dev/gdi/gdi.hpp"
 #include "dev/private/gdi_private.hpp"
 
 #include "dev/nanovg/gdi_nanovg.hpp"
@@ -104,7 +104,7 @@ Span<GDIVertex> IGDIRenderer::fetch_element_vertices(GDIElement* element) SKR_NO
     return { element_private->vertices.data(), element_private->vertices.size() };
 }
 
-Span<index_t> IGDIRenderer::fetch_element_indices(GDIElement* element) SKR_NOEXCEPT
+Span<GDIIndex> IGDIRenderer::fetch_element_indices(GDIElement* element) SKR_NOEXCEPT
 {
     const auto element_private = static_cast<GDIElementPrivate*>(element);
     return { element_private->indices.data(), element_private->indices.size() };
