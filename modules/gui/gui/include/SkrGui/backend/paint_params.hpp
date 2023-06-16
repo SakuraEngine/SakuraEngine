@@ -5,6 +5,8 @@
 
 // TODO. remove gdi
 #include "SkrGui/dev/gdi/gdi.hpp"
+#include "SkrGui/dev/interface/gdi_renderer.hpp"
+
 namespace skr::gui
 {
 using ITexture = ::skr::gdi::IGDITexture;
