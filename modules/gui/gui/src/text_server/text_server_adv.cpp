@@ -1,6 +1,5 @@
 #include "SkrGui/dev/gdi/gdi.hpp"
 #include "SkrGui/dev/gdi/color.hpp"
-#include "SkrGui/dev/interface/gdi_renderer.hpp"
 #include "image_texture.h"
 
 #include "text_server/text_server_adv.h"

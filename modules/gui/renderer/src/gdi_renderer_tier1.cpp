@@ -6,8 +6,10 @@
 #include "math/rtm/qvvf.h"
 #include <cmath>
 
-namespace skr {
-namespace gdi {
+namespace skr
+{
+namespace gdi
+{
 // HACK
 inline static void read_bytes(const char8_t* file_name, char8_t** bytes, uint32_t* length)
 {
@@ -22,7 +24,7 @@ inline static void read_bytes(const char8_t* file_name, char8_t** bytes, uint32_
 
 inline static void read_shader_bytes(const char8_t* virtual_path, uint32_t** bytes, uint32_t* length, ECGPUBackend backend)
 {
-    char8_t shader_file[256];
+    char8_t        shader_file[256];
     const char8_t* shader_path = SKR_UTF8("./../resources/shaders/");
     strcpy((char*)shader_file, (const char*)shader_path);
     strcat((char*)shader_file, (const char*)virtual_path);
@@ -42,11 +44,11 @@ inline static void read_shader_bytes(const char8_t* virtual_path, uint32_t** byt
 }
 
 CGPURenderPipelineId GDIRenderer_RenderGraph::createRenderPipeline(
-    GDIRendererPipelineAttributes attributes, ECGPUSampleCount sample_count)
+GDIRendererPipelineAttributes attributes, ECGPUSampleCount sample_count)
 {
     const bool use_texture = attributes & GDI_RENDERER_PIPELINE_ATTRIBUTE_TEXTURED;
-    uint32_t *vs_bytes = nullptr, vs_length = 0;
-    uint32_t *fs_bytes = nullptr, fs_length = 0;
+    uint32_t * vs_bytes = nullptr, vs_length = 0;
+    uint32_t * fs_bytes = nullptr, fs_length = 0;
     read_shader_bytes(SKR_UTF8("GUI/vertex"), &vs_bytes, &vs_length, device->adapter->instance->backend);
     if (use_texture)
     {
@@ -78,7 +80,7 @@ CGPURenderPipelineId GDIRenderer_RenderGraph::createRenderPipeline(
     ppl_shaders[1].entry = SKR_UTF8("main");
     ppl_shaders[1].library = fragment_shader;
 
-    const char8_t* static_sampler_name = u8"color_sampler";
+    const char8_t*              static_sampler_name = u8"color_sampler";
     CGPURootSignatureDescriptor rs_desc = {};
     rs_desc.shaders = ppl_shaders;
     rs_desc.shader_count = 2;
@@ -100,7 +102,7 @@ CGPURenderPipelineId GDIRenderer_RenderGraph::createRenderPipeline(
     rp_desc.render_target_count = 1;
     rp_desc.color_formats = &target_format;
     rp_desc.depth_stencil_format = CGPU_FORMAT_D32_SFLOAT;
-    
+
     CGPURasterizerStateDescriptor rs_state = {};
     rs_state.cull_mode = CGPU_CULL_MODE_NONE;
     rs_state.fill_mode = CGPU_FILL_MODE_SOLID;
@@ -114,19 +116,19 @@ CGPURenderPipelineId GDIRenderer_RenderGraph::createRenderPipeline(
 
     CGPUDepthStateDescriptor depth_state = {};
     depth_state.depth_test = attributes & GDI_RENDERER_PIPELINE_ATTRIBUTE_TEST_Z;
-    depth_state.depth_func = depth_state.depth_test ? CGPU_CMP_LEQUAL : CGPU_CMP_NEVER; 
+    depth_state.depth_func = depth_state.depth_test ? CGPU_CMP_LEQUAL : CGPU_CMP_NEVER;
     depth_state.depth_write = attributes & GDI_RENDERER_PIPELINE_ATTRIBUTE_WRITE_Z;
     rp_desc.depth_state = &depth_state;
 
     CGPUBlendStateDescriptor blend_state = {};
     for (uint32_t i = 0; i < 1; i++)
     {
-        blend_state.blend_modes[i] = CGPU_BLEND_MODE_ADD; 
-        blend_state.blend_alpha_modes[i] = CGPU_BLEND_MODE_ADD; 
-        blend_state.masks[i] = CGPU_COLOR_MASK_ALL; 
+        blend_state.blend_modes[i] = CGPU_BLEND_MODE_ADD;
+        blend_state.blend_alpha_modes[i] = CGPU_BLEND_MODE_ADD;
+        blend_state.masks[i] = CGPU_COLOR_MASK_ALL;
 
-        blend_state.src_factors[i] = CGPU_BLEND_CONST_SRC_ALPHA; 
-        blend_state.dst_factors[i] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA; 
+        blend_state.src_factors[i] = CGPU_BLEND_CONST_SRC_ALPHA;
+        blend_state.dst_factors[i] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA;
         blend_state.src_alpha_factors[i] = CGPU_BLEND_CONST_ONE;
         blend_state.dst_alpha_factors[i] = CGPU_BLEND_CONST_ZERO;
     }
@@ -140,7 +142,7 @@ CGPURenderPipelineId GDIRenderer_RenderGraph::createRenderPipeline(
     return pipeline;
 }
 
-GDITextureUpdateId GDIRenderer_RenderGraph::update_texture(const GDITextureUpdateDescriptor* descriptor) SKR_NOEXCEPT
+IGDITextureUpdate* GDIRenderer_RenderGraph::update_texture(const GDITextureUpdateDescriptor* descriptor) SKR_NOEXCEPT
 {
     GDITextureUpdate_RenderGraph* update = SkrNew<GDITextureUpdate_RenderGraph>();
     update->texture = descriptor->texture;
@@ -151,8 +153,8 @@ GDITextureUpdateId GDIRenderer_RenderGraph::update_texture(const GDITextureUpdat
 
 CGPURenderPipelineId GDIRenderer_RenderGraph::findOrCreateRenderPipeline(GDIRendererPipelineAttributes attributes, ECGPUSampleCount sample_count)
 {
-    PipelineKey key = {attributes, sample_count};
-    auto it = pipelines.find(key);
+    PipelineKey key = { attributes, sample_count };
+    auto        it = pipelines.find(key);
     if (it != pipelines.end()) return it->second;
     auto pipeline = createRenderPipeline(attributes, sample_count);
     pipelines[key] = pipeline;
@@ -169,11 +171,11 @@ bool validateAttributes(GDIRendererPipelineAttributes attributes)
 
 void GDIRenderer_RenderGraph::createRenderPipelines()
 {
-    eastl::vector<eastl::vector<bool>> option_selections(GDI_RENDERER_PIPELINE_ATTRIBUTE_COUNT, {true, false});
-    skr::cartesian_product<bool> cartesian(option_selections);
+    eastl::vector<eastl::vector<bool>> option_selections(GDI_RENDERER_PIPELINE_ATTRIBUTE_COUNT, { true, false });
+    skr::cartesian_product<bool>       cartesian(option_selections);
     while (cartesian.has_next())
     {
-        const auto sequence = cartesian.next();
+        const auto                    sequence = cartesian.next();
         GDIRendererPipelineAttributes attributes = 0;
         for (uint32_t i = 0; i < sequence.size(); i++)
         {
@@ -209,7 +211,7 @@ int GDIRenderer_RenderGraph::initialize(const GDIRendererDescriptor* desc) SKR_N
     vertex_layout.attributes[7] = { u8"PROJECTION", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 2, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
     vertex_layout.attributes[8] = { u8"DRAW_DATA", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
     vertex_layout.attribute_count = 9;
-    
+
     target_format = pDesc->target_format;
     vfs = pDesc->vfs;
     ram_service = pDesc->ram_service;
@@ -238,10 +240,10 @@ int GDIRenderer_RenderGraph::initialize(const GDIRendererDescriptor* desc) SKR_N
 
 void GDIRenderer_RenderGraph::updatePendingTextures(skr::render_graph::RenderGraph* graph) SKR_NOEXCEPT
 {
-    const auto frame_index = graph->get_frame_index();
+    const auto                    frame_index = graph->get_frame_index();
     GDITextureUpdate_RenderGraph* update = nullptr;
     // 1. filter request_updates to pending_updates
-    eastl::vector_map<GDITextureId, GDITextureUpdate_RenderGraph*> filter_map;
+    eastl::vector_map<IGDITexture*, GDITextureUpdate_RenderGraph*> filter_map;
     while (request_updates.try_dequeue(update))
     {
         auto iter = filter_map.find(update->texture);
@@ -265,16 +267,16 @@ void GDIRenderer_RenderGraph::updatePendingTextures(skr::render_graph::RenderGra
             if (update->get_state() == EGDIResourceState::Requsted)
             {
                 update->upload_buffer = graph->create_buffer(
-                    [update](auto& g, auto& builder){
-                        builder.size(update->image->get_data().size())
-                            .with_tags(kRenderGraphDynamicResourceTag)
-                            .as_upload_buffer();
-                    });
+                [update](auto& g, auto& builder) {
+                    builder.size(update->image->get_data().size())
+                    .with_tags(kRenderGraphDynamicResourceTag)
+                    .as_upload_buffer();
+                });
                 update->texture_handle = graph->create_texture(
-                    [update](auto& g, auto& builder){
-                        GDITexture_RenderGraph* T = (GDITexture_RenderGraph*)update->texture;
-                        builder.import(T->texture, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
-                    });
+                [update](auto& g, auto& builder) {
+                    GDITexture_RenderGraph* T = (GDITexture_RenderGraph*)update->texture;
+                    builder.import(T->texture, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
+                });
                 copies.emplace_back(update);
                 continue;
             }
@@ -295,21 +297,21 @@ void GDIRenderer_RenderGraph::updatePendingTextures(skr::render_graph::RenderGra
     {
         pending_updates.enqueue(update);
     }
-    
+
     graph->add_copy_pass(
     [&](render_graph::RenderGraph& g, render_graph::CopyPassBuilder& builder) {
         ZoneScopedN("UpdateTextures");
         builder.set_name(u8"gdi_texture_update_pass")
-            .can_be_lone();
+        .can_be_lone();
         for (auto copy : copies)
         {
             builder.buffer_to_texture(copy->upload_buffer.range(0, 0), copy->texture_handle, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
         }
     },
-    [=](render_graph::RenderGraph& g, render_graph::CopyPassContext& context){
+    [=](render_graph::RenderGraph& g, render_graph::CopyPassContext& context) {
         for (auto copy : copies)
         {
-            auto buffer = context.resolve(copy->upload_buffer);
+            auto       buffer = context.resolve(copy->upload_buffer);
             const auto data = copy->image->get_data();
             ::memcpy(buffer->cpu_mapped_address, data.data(), data.size());
         }
@@ -318,8 +320,7 @@ void GDIRenderer_RenderGraph::updatePendingTextures(skr::render_graph::RenderGra
 
 int GDIRenderer_RenderGraph::finalize() SKR_NOEXCEPT
 {
-    auto free_rs_and_pipeline = +[](CGPURenderPipelineId pipeline)
-    {
+    auto free_rs_and_pipeline = +[](CGPURenderPipelineId pipeline) {
         if (!pipeline) return;
         auto rs = pipeline->root_signature;
         cgpu_free_render_pipeline(pipeline);
@@ -338,8 +339,8 @@ int GDIRenderer_RenderGraph::finalize() SKR_NOEXCEPT
 void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRenderParams* params) SKR_NOEXCEPT
 {
     const auto pParams = reinterpret_cast<ViewportRenderParams_RenderGraph*>(params->usr_data);
-    auto rg = pParams->render_graph;
-    auto viewport_data = SkrNew<GDIViewportData_RenderGraph>(viewport);
+    auto       rg = pParams->render_graph;
+    auto       viewport_data = SkrNew<GDIViewportData_RenderGraph>(viewport);
     const auto all_canvas = viewport->all_canvas();
     if (all_canvas.empty()) return;
     uint64_t vertex_count = 0u, index_count = 0u;
@@ -347,19 +348,19 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
     // 1. loop prepare counters & render data
     for (auto canvas : all_canvas)
     {
-    for (auto element : canvas->all_elements())
-    {
-        const auto element_vertices = fetch_element_vertices(element);
-        const auto element_indices = fetch_element_indices(element);
-        const auto element_commands = fetch_element_draw_commands(element);
-        
-        vertex_count += element_vertices.size();
-        index_count += element_indices.size();
-        element_count += 1;
-        command_count += element_commands.size();
+        for (auto element : canvas->all_elements())
+        {
+            const auto element_vertices = fetch_element_vertices(element);
+            const auto element_indices = fetch_element_indices(element);
+            const auto element_commands = fetch_element_draw_commands(element);
+
+            vertex_count += element_vertices.size();
+            index_count += element_indices.size();
+            element_count += 1;
+            command_count += element_commands.size();
+        }
     }
-    }
-    
+
     if (!vertex_count) return;
 
     viewport_data->render_vertices.reserve(vertex_count);
@@ -371,166 +372,168 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
     uint64_t vb_cursor = 0u, ib_cursor = 0u, tb_cursor = 0u, pb_cursor = 0u, rb_cursor = 0u;
     for (auto canvas : all_canvas)
     {
-    for (auto element : canvas->all_elements())
-    {
-        const auto element_vertices = fetch_element_vertices(element);
-        const auto element_indices = fetch_element_indices(element);
-        const auto element_commands = fetch_element_draw_commands(element);
-
-        // insert data
-        vb_cursor = viewport_data->render_vertices.size();
-        ib_cursor = viewport_data->render_indices.size();
-        tb_cursor = viewport_data->render_transforms.size();
-        pb_cursor = viewport_data->render_projections.size();
-        viewport_data->render_vertices.insert(viewport_data->render_vertices.end(), element_vertices.begin(), element_vertices.end());
-        viewport_data->render_indices.insert(viewport_data->render_indices.end(), element_indices.begin(), element_indices.end());
-
-        // calculate z offset
-        float hardware_zmin, hardware_zmax;
-        float transformZ = 0.f;
-        const bool use_hardware_z = support_hardware_z(&hardware_zmin, &hardware_zmax) && canvas->is_hardware_z_enabled();
-        if (use_hardware_z)
+        for (auto element : canvas->all_elements())
         {
-            const auto hardware_zrange = hardware_zmax - hardware_zmin;
-            int32_t z_min = 0, z_max = 1000;
-            canvas->get_zrange(&z_min, &z_max);
+            const auto element_vertices = fetch_element_vertices(element);
+            const auto element_indices = fetch_element_indices(element);
+            const auto element_commands = fetch_element_draw_commands(element);
 
-            // remap z range from [min, max] to [0, max - min]
-            const auto element_z =  (float)::fmax(element->get_z(), z_min) - z_min;
-            z_max = std::max(z_max - z_min, 0);
-            z_min = 0;
+            // insert data
+            vb_cursor = viewport_data->render_vertices.size();
+            ib_cursor = viewport_data->render_indices.size();
+            tb_cursor = viewport_data->render_transforms.size();
+            pb_cursor = viewport_data->render_projections.size();
+            viewport_data->render_vertices.insert(viewport_data->render_vertices.end(), element_vertices.begin(), element_vertices.end());
+            viewport_data->render_indices.insert(viewport_data->render_indices.end(), element_indices.begin(), element_indices.end());
 
-            const auto z_unit = hardware_zrange / static_cast<float>(z_max - z_min);
-            const auto element_hardware_z = element_z * z_unit;
-            transformZ = hardware_zmax - element_hardware_z + hardware_zmin;
-        }
-        else
-        {
-            // TODO: element sort
-            transformZ = 0.f;
-        }
+            // calculate z offset
+            float      hardware_zmin, hardware_zmax;
+            float      transformZ = 0.f;
+            const bool use_hardware_z = support_hardware_z(&hardware_zmin, &hardware_zmax) && canvas->is_hardware_z_enabled();
+            if (use_hardware_z)
+            {
+                const auto hardware_zrange = hardware_zmax - hardware_zmin;
+                int32_t    z_min = 0, z_max = 1000;
+                canvas->get_zrange(&z_min, &z_max);
 
-        // compose transform
-        auto& transform = viewport_data->render_transforms.emplace_back();
-        const auto scaleX = 1.f;
-        const auto scaleY = 1.f;
-        const auto scaleZ = 1.f;
-        const auto transformX = 0.f;
-        const auto transformY = 0.f;
-        const auto transformW = 1.f;
-        const auto pitchInDegrees = 0.f;
-        const auto yawInDegrees = 0.f;
-        const auto rollInDegrees = 0.f;
-        const auto quat = rtm::quat_from_euler_rh(
+                // remap z range from [min, max] to [0, max - min]
+                const auto element_z = (float)::fmax(element->get_z(), z_min) - z_min;
+                z_max = std::max(z_max - z_min, 0);
+                z_min = 0;
+
+                const auto z_unit = hardware_zrange / static_cast<float>(z_max - z_min);
+                const auto element_hardware_z = element_z * z_unit;
+                transformZ = hardware_zmax - element_hardware_z + hardware_zmin;
+            }
+            else
+            {
+                // TODO: element sort
+                transformZ = 0.f;
+            }
+
+            // compose transform
+            auto&      transform = viewport_data->render_transforms.emplace_back();
+            const auto scaleX = 1.f;
+            const auto scaleY = 1.f;
+            const auto scaleZ = 1.f;
+            const auto transformX = 0.f;
+            const auto transformY = 0.f;
+            const auto transformW = 1.f;
+            const auto pitchInDegrees = 0.f;
+            const auto yawInDegrees = 0.f;
+            const auto rollInDegrees = 0.f;
+            const auto quat = rtm::quat_from_euler_rh(
             rtm::scalar_deg_to_rad(-pitchInDegrees),
             rtm::scalar_deg_to_rad(yawInDegrees),
             rtm::scalar_deg_to_rad(rollInDegrees));
-        const rtm::vector4f translation = rtm::vector_set(transformX, transformY, transformZ, transformW);
-        const rtm::vector4f scale = rtm::vector_set(scaleX, scaleY, scaleZ, 0.f);
-        const auto transform_qvv = rtm::qvv_set(quat, translation, scale);
-        transform = rtm::matrix_cast(rtm::matrix_from_qvv(transform_qvv));
-        
-        // projection
-        auto& projection = viewport_data->render_projections.emplace_back();
-        skr_float2_t canvas_size;
-        canvas->get_size(&canvas_size.x, &canvas_size.y);
-        skr_float2_t canvas_pivot;
-        canvas->get_pivot(&canvas_pivot.x, &canvas_pivot.y);
-        const skr_float2_t abs_canvas_pivot = { canvas_pivot.x * canvas_size.x, canvas_pivot.y * canvas_size.y };
-        const skr_float2_t zero_point =  { canvas_size.x * 0.5f, canvas_size.y * 0.5f };
-        const skr_float2_t eye_position = { zero_point.x - abs_canvas_pivot.x, zero_point.y - abs_canvas_pivot.y };
-        const auto view = rtm::look_at_matrix(
-            {eye_position.x, eye_position.y, 0.f} /*eye*/, 
-            {eye_position.x, eye_position.y, 1000.f} /*at*/,
+            const rtm::vector4f translation = rtm::vector_set(transformX, transformY, transformZ, transformW);
+            const rtm::vector4f scale = rtm::vector_set(scaleX, scaleY, scaleZ, 0.f);
+            const auto          transform_qvv = rtm::qvv_set(quat, translation, scale);
+            transform = rtm::matrix_cast(rtm::matrix_from_qvv(transform_qvv));
+
+            // projection
+            auto&        projection = viewport_data->render_projections.emplace_back();
+            skr_float2_t canvas_size;
+            canvas->get_size(&canvas_size.x, &canvas_size.y);
+            skr_float2_t canvas_pivot;
+            canvas->get_pivot(&canvas_pivot.x, &canvas_pivot.y);
+            const skr_float2_t abs_canvas_pivot = { canvas_pivot.x * canvas_size.x, canvas_pivot.y * canvas_size.y };
+            const skr_float2_t zero_point = { canvas_size.x * 0.5f, canvas_size.y * 0.5f };
+            const skr_float2_t eye_position = { zero_point.x - abs_canvas_pivot.x, zero_point.y - abs_canvas_pivot.y };
+            const auto         view = rtm::look_at_matrix(
+            { eye_position.x, eye_position.y, 0.f } /*eye*/,
+            { eye_position.x, eye_position.y, 1000.f } /*at*/,
             { 0.f, -1.f, 0.f } /*up*/
-        );
-        const auto proj = rtm::orthographic(canvas_size.x, canvas_size.y, 0.f, 1000.f);
-        projection = rtm::matrix_mul(view, proj);
+            );
+            const auto proj = rtm::orthographic(canvas_size.x, canvas_size.y, 0.f, 1000.f);
+            projection = rtm::matrix_mul(view, proj);
 
-        for (const auto& command : element_commands)
-        {
-            rb_cursor = viewport_data->render_data.size();
-            auto& render_data = viewport_data->render_data.emplace_back();
-            render_data.M[0][0] = command.texture_swizzle.x; render_data.M[0][1] = command.texture_swizzle.y;
-            render_data.M[0][2] = command.texture_swizzle.z; render_data.M[0][3] = command.texture_swizzle.w;
-            
-            GDIElementDrawCommand_RenderGraph command2 = {};
-            command2.texture = command.texture;
-            command2.material = command.material;
-            command2.first_index = command.first_index;
-            command2.index_count = command.index_count;
-            command2.ib_offset = static_cast<uint32_t>(ib_cursor * sizeof(index_t));
-            command2.vb_offset = static_cast<uint32_t>(vb_cursor * sizeof(GDIVertex));
-            command2.tb_offset = static_cast<uint32_t>(tb_cursor * sizeof(rtm::matrix4x4f));
-            command2.pb_offset = static_cast<uint32_t>(pb_cursor * sizeof(rtm::matrix4x4f));
-            command2.rb_offset = static_cast<uint32_t>(rb_cursor * sizeof(skr_float4x4_t));
+            for (const auto& command : element_commands)
+            {
+                rb_cursor = viewport_data->render_data.size();
+                auto& render_data = viewport_data->render_data.emplace_back();
+                render_data.M[0][0] = command.texture_swizzle.x;
+                render_data.M[0][1] = command.texture_swizzle.y;
+                render_data.M[0][2] = command.texture_swizzle.z;
+                render_data.M[0][3] = command.texture_swizzle.w;
 
-            command2.attributes |= command2.texture ? GDI_RENDERER_PIPELINE_ATTRIBUTE_TEXTURED : 0;
-            command2.attributes |= use_hardware_z ? GDI_RENDERER_PIPELINE_ATTRIBUTE_TEST_Z : 0;
-            command2.attributes |= use_hardware_z ? GDI_RENDERER_PIPELINE_ATTRIBUTE_WRITE_Z : 0;
+                GDIElementDrawCommand_RenderGraph command2 = {};
+                command2.texture = command.texture;
+                command2.material = command.material;
+                command2.first_index = command.first_index;
+                command2.index_count = command.index_count;
+                command2.ib_offset = static_cast<uint32_t>(ib_cursor * sizeof(GDIIndex));
+                command2.vb_offset = static_cast<uint32_t>(vb_cursor * sizeof(GDIVertex));
+                command2.tb_offset = static_cast<uint32_t>(tb_cursor * sizeof(rtm::matrix4x4f));
+                command2.pb_offset = static_cast<uint32_t>(pb_cursor * sizeof(rtm::matrix4x4f));
+                command2.rb_offset = static_cast<uint32_t>(rb_cursor * sizeof(skr_float4x4_t));
 
-            viewport_data->render_commands.emplace_back(command2);
+                command2.attributes |= command2.texture ? GDI_RENDERER_PIPELINE_ATTRIBUTE_TEXTURED : 0;
+                command2.attributes |= use_hardware_z ? GDI_RENDERER_PIPELINE_ATTRIBUTE_TEST_Z : 0;
+                command2.attributes |= use_hardware_z ? GDI_RENDERER_PIPELINE_ATTRIBUTE_WRITE_Z : 0;
+
+                viewport_data->render_commands.emplace_back(command2);
+            }
         }
-    }
     }
 
     // 2. prepare render resource
     const uint64_t vertices_size = vertex_count * sizeof(GDIVertex);
-    const uint64_t indices_size = index_count * sizeof(index_t);
+    const uint64_t indices_size = index_count * sizeof(GDIIndex);
     const uint64_t transform_size = element_count * sizeof(rtm::matrix4x4f);
     const uint64_t projection_size = element_count * sizeof(rtm::matrix4x4f);
     const uint64_t rdata_size = command_count * sizeof(skr_float4x4_t);
-    const bool useCVV = false;
-    auto vertex_buffer = rg->create_buffer(
-        [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
-            builder.set_name(u8"gdi_vertex_buffer")
-                .size(vertices_size)
-                .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
-                .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
-                .with_tags(useCVV ? kRenderGraphDynamicResourceTag : kRenderGraphDefaultResourceTag)
-                .prefer_on_device()
-                .as_vertex_buffer();
-        });
+    const bool     useCVV = false;
+    auto           vertex_buffer = rg->create_buffer(
+    [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
+        builder.set_name(u8"gdi_vertex_buffer")
+        .size(vertices_size)
+        .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
+        .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
+        .with_tags(useCVV ? kRenderGraphDynamicResourceTag : kRenderGraphDefaultResourceTag)
+        .prefer_on_device()
+        .as_vertex_buffer();
+    });
     auto transform_buffer = rg->create_buffer(
-        [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
-            builder.set_name(u8"gdi_transform_buffer")
-                .size(transform_size)
-                .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
-                .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
-                .with_tags(useCVV ? kRenderGraphDynamicResourceTag : kRenderGraphDefaultResourceTag)
-                .prefer_on_device()
-                .as_vertex_buffer();
-        });
+    [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
+        builder.set_name(u8"gdi_transform_buffer")
+        .size(transform_size)
+        .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
+        .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
+        .with_tags(useCVV ? kRenderGraphDynamicResourceTag : kRenderGraphDefaultResourceTag)
+        .prefer_on_device()
+        .as_vertex_buffer();
+    });
     auto projection_buffer = rg->create_buffer(
-        [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
-            builder.set_name(u8"gdi_projection_buffer")
-                .size(projection_size)
-                .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
-                .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
-                .with_tags(useCVV ? kRenderGraphDynamicResourceTag : kRenderGraphDefaultResourceTag)
-                .prefer_on_device()
-                .as_vertex_buffer();
-        });
+    [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
+        builder.set_name(u8"gdi_projection_buffer")
+        .size(projection_size)
+        .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
+        .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
+        .with_tags(useCVV ? kRenderGraphDynamicResourceTag : kRenderGraphDefaultResourceTag)
+        .prefer_on_device()
+        .as_vertex_buffer();
+    });
     auto rdata_buffer = rg->create_buffer(
-        [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
-            builder.set_name(u8"gdi_rdata_buffer")
-                .size(rdata_size)
-                .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
-                .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
-                .with_tags(useCVV ? kRenderGraphDynamicResourceTag : kRenderGraphDefaultResourceTag)
-                .prefer_on_device()
-                .as_vertex_buffer();
-        });
+    [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
+        builder.set_name(u8"gdi_rdata_buffer")
+        .size(rdata_size)
+        .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
+        .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
+        .with_tags(useCVV ? kRenderGraphDynamicResourceTag : kRenderGraphDefaultResourceTag)
+        .prefer_on_device()
+        .as_vertex_buffer();
+    });
     auto index_buffer = rg->create_buffer(
-        [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
-            builder.set_name(u8"gdi_index_buffer")
-                .size(indices_size)
-                .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
-                .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
-                .with_tags(useCVV ? kRenderGraphDynamicResourceTag : kRenderGraphDefaultResourceTag)
-                .prefer_on_device()
-                .as_index_buffer();
-        });
+    [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
+        builder.set_name(u8"gdi_index_buffer")
+        .size(indices_size)
+        .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
+        .with_flags(useCVV ? CGPU_BCF_PERSISTENT_MAP_BIT : CGPU_BCF_NONE)
+        .with_tags(useCVV ? kRenderGraphDynamicResourceTag : kRenderGraphDefaultResourceTag)
+        .prefer_on_device()
+        .as_index_buffer();
+    });
     viewport_data->vertex_buffers.emplace_back(vertex_buffer);
     viewport_data->transform_buffers.emplace_back(transform_buffer);
     viewport_data->projection_buffers.emplace_back(projection_buffer);
@@ -541,54 +544,54 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
     if (!useCVV)
     {
         auto upload_buffer_handle = rg->create_buffer(
-            [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
+        [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
             ZoneScopedN("ConstructUploadPass");
             builder.set_name(u8"gdi_upload_buffer")
-                    .size(indices_size + vertices_size + transform_size + projection_size + rdata_size)
-                    .with_tags(kRenderGraphDynamicResourceTag)
-                    .as_upload_buffer();
-            });
+            .size(indices_size + vertices_size + transform_size + projection_size + rdata_size)
+            .with_tags(kRenderGraphDynamicResourceTag)
+            .as_upload_buffer();
+        });
         rg->add_copy_pass(
-            [=](render_graph::RenderGraph& g, render_graph::CopyPassBuilder& builder) {
-                ZoneScopedN("ConstructCopyPass");
-                builder.set_name(u8"gdi_copy_pass");
-                uint64_t cursor = 0;
-                builder.buffer_to_buffer(upload_buffer_handle.range(cursor, vertices_size), vertex_buffer.range(0, vertices_size));
-                cursor += vertices_size;
-                builder.buffer_to_buffer(upload_buffer_handle.range(cursor, cursor + indices_size), index_buffer.range(0, indices_size));
-                cursor += indices_size;
-                builder.buffer_to_buffer(upload_buffer_handle.range(cursor, cursor + transform_size), transform_buffer.range(0, transform_size));
-                cursor += transform_size;
-                builder.buffer_to_buffer(upload_buffer_handle.range(cursor, cursor + projection_size), projection_buffer.range(0, projection_size));
-                cursor += projection_size;
-                builder.buffer_to_buffer(upload_buffer_handle.range(cursor, cursor + rdata_size), rdata_buffer.range(0, rdata_size));
-            },
-            [upload_buffer_handle, viewport_data](render_graph::RenderGraph& g, render_graph::CopyPassContext& context){
-                auto upload_buffer = context.resolve(upload_buffer_handle);
-                const uint64_t vertices_count = viewport_data->render_vertices.size();
-                const uint64_t indices_count = viewport_data->render_indices.size();
-                const uint64_t transforms_count = viewport_data->render_transforms.size();
-                const uint64_t projections_count = viewport_data->render_projections.size();
-                const uint64_t rdata_count = viewport_data->render_data.size();
+        [=](render_graph::RenderGraph& g, render_graph::CopyPassBuilder& builder) {
+            ZoneScopedN("ConstructCopyPass");
+            builder.set_name(u8"gdi_copy_pass");
+            uint64_t cursor = 0;
+            builder.buffer_to_buffer(upload_buffer_handle.range(cursor, vertices_size), vertex_buffer.range(0, vertices_size));
+            cursor += vertices_size;
+            builder.buffer_to_buffer(upload_buffer_handle.range(cursor, cursor + indices_size), index_buffer.range(0, indices_size));
+            cursor += indices_size;
+            builder.buffer_to_buffer(upload_buffer_handle.range(cursor, cursor + transform_size), transform_buffer.range(0, transform_size));
+            cursor += transform_size;
+            builder.buffer_to_buffer(upload_buffer_handle.range(cursor, cursor + projection_size), projection_buffer.range(0, projection_size));
+            cursor += projection_size;
+            builder.buffer_to_buffer(upload_buffer_handle.range(cursor, cursor + rdata_size), rdata_buffer.range(0, rdata_size));
+        },
+        [upload_buffer_handle, viewport_data](render_graph::RenderGraph& g, render_graph::CopyPassContext& context) {
+            auto           upload_buffer = context.resolve(upload_buffer_handle);
+            const uint64_t vertices_count = viewport_data->render_vertices.size();
+            const uint64_t indices_count = viewport_data->render_indices.size();
+            const uint64_t transforms_count = viewport_data->render_transforms.size();
+            const uint64_t projections_count = viewport_data->render_projections.size();
+            const uint64_t rdata_count = viewport_data->render_data.size();
 
-                GDIVertex* vtx_dst = (GDIVertex*)upload_buffer->cpu_mapped_address;
-                index_t* idx_dst = (index_t*)(vtx_dst + vertices_count);
-                rtm::matrix4x4f* transform_dst = (rtm::matrix4x4f*)(idx_dst + indices_count);
-                rtm::matrix4x4f* projection_dst = (rtm::matrix4x4f*)(transform_dst + transforms_count);
-                skr_float4x4_t* rdata_dst = (skr_float4x4_t*)(projection_dst + projections_count);
+            GDIVertex*       vtx_dst = (GDIVertex*)upload_buffer->cpu_mapped_address;
+            GDIIndex*        idx_dst = (GDIIndex*)(vtx_dst + vertices_count);
+            rtm::matrix4x4f* transform_dst = (rtm::matrix4x4f*)(idx_dst + indices_count);
+            rtm::matrix4x4f* projection_dst = (rtm::matrix4x4f*)(transform_dst + transforms_count);
+            skr_float4x4_t*  rdata_dst = (skr_float4x4_t*)(projection_dst + projections_count);
 
-                const skr::span<GDIVertex> render_vertices = viewport_data->render_vertices;
-                const skr::span<index_t> render_indices = viewport_data->render_indices;
-                const skr::span<rtm::matrix4x4f> render_transforms = viewport_data->render_transforms;
-                const skr::span<rtm::matrix4x4f> render_projections = viewport_data->render_projections;
-                const skr::span<skr_float4x4_t> render_data = viewport_data->render_data;
+            const skr::span<GDIVertex>       render_vertices = viewport_data->render_vertices;
+            const skr::span<GDIIndex>        render_indices = viewport_data->render_indices;
+            const skr::span<rtm::matrix4x4f> render_transforms = viewport_data->render_transforms;
+            const skr::span<rtm::matrix4x4f> render_projections = viewport_data->render_projections;
+            const skr::span<skr_float4x4_t>  render_data = viewport_data->render_data;
 
-                memcpy(vtx_dst, render_vertices.data(), vertices_count * sizeof(GDIVertex));
-                memcpy(idx_dst, render_indices.data(), indices_count * sizeof(index_t));
-                memcpy(transform_dst, render_transforms.data(), transforms_count * sizeof(rtm::matrix4x4f));
-                memcpy(projection_dst, render_projections.data(), projections_count * sizeof(rtm::matrix4x4f));
-                memcpy(rdata_dst, render_data.data(), rdata_count * sizeof(skr_float4x4_t));
-            });
+            memcpy(vtx_dst, render_vertices.data(), vertices_count * sizeof(GDIVertex));
+            memcpy(idx_dst, render_indices.data(), indices_count * sizeof(GDIIndex));
+            memcpy(transform_dst, render_transforms.data(), transforms_count * sizeof(rtm::matrix4x4f));
+            memcpy(projection_dst, render_projections.data(), projections_count * sizeof(rtm::matrix4x4f));
+            memcpy(rdata_dst, render_data.data(), rdata_count * sizeof(skr_float4x4_t));
+        });
     }
     updatePendingTextures(rg);
 
@@ -611,59 +614,58 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
         {
             skr::render_graph::TextureHandle real_target = rg->get_texture(u8"presentbuffer");
             builder.resolve_msaa(0, real_target);
-        }
-    },
-    [this, target, viewport_data, useCVV, index_buffer, vertex_buffer, transform_buffer, projection_buffer, rdata_buffer]
-    (render_graph::RenderGraph& g, render_graph::RenderPassContext& ctx) {
-        ZoneScopedN("GDI-RenderPass");
-        const auto target_desc = g.resolve_descriptor(target);
-        auto resolved_ib = ctx.resolve(index_buffer);
-        auto resolved_vb = ctx.resolve(vertex_buffer);
-        auto resolved_tb = ctx.resolve(transform_buffer);
-        auto resolved_pb = ctx.resolve(projection_buffer);
-        auto resolved_rdata = ctx.resolve(rdata_buffer);
-        CGPUBufferId vertex_streams[4] = { resolved_vb, resolved_tb, resolved_pb, resolved_rdata };
-        const uint32_t vertex_stream_strides[4] = { sizeof(GDIVertex), sizeof(rtm::matrix4x4f), sizeof(rtm::matrix4x4f), sizeof(skr_float4x4_t) };
+        } },
+                        [this, target, viewport_data, useCVV, index_buffer, vertex_buffer, transform_buffer, projection_buffer, rdata_buffer](render_graph::RenderGraph& g, render_graph::RenderPassContext& ctx) {
+                            ZoneScopedN("GDI-RenderPass");
+                            const auto     target_desc = g.resolve_descriptor(target);
+                            auto           resolved_ib = ctx.resolve(index_buffer);
+                            auto           resolved_vb = ctx.resolve(vertex_buffer);
+                            auto           resolved_tb = ctx.resolve(transform_buffer);
+                            auto           resolved_pb = ctx.resolve(projection_buffer);
+                            auto           resolved_rdata = ctx.resolve(rdata_buffer);
+                            CGPUBufferId   vertex_streams[4] = { resolved_vb, resolved_tb, resolved_pb, resolved_rdata };
+                            const uint32_t vertex_stream_strides[4] = { sizeof(GDIVertex), sizeof(rtm::matrix4x4f), sizeof(rtm::matrix4x4f), sizeof(skr_float4x4_t) };
 
-        cgpu_render_encoder_set_viewport(ctx.encoder,
-            0.0f, 0.0f,
-            (float)target_desc->width,
-            (float)target_desc->height,
-            0.f, 1.f);
-        cgpu_render_encoder_set_scissor(ctx.encoder,
-            0, 0, 
-            target_desc->width, target_desc->height);
+                            cgpu_render_encoder_set_viewport(ctx.encoder,
+                                                             0.0f, 0.0f,
+                                                             (float)target_desc->width,
+                                                             (float)target_desc->height,
+                                                             0.f, 1.f);
+                            cgpu_render_encoder_set_scissor(ctx.encoder,
+                                                            0, 0,
+                                                            target_desc->width, target_desc->height);
 
-        const skr::span<GDIElementDrawCommand_RenderGraph> render_commands = viewport_data->render_commands;
-        PipelineKey pipeline_key_cache = { UINT32_MAX, CGPU_SAMPLE_COUNT_1 };
+                            const skr::span<GDIElementDrawCommand_RenderGraph> render_commands = viewport_data->render_commands;
+                            PipelineKey                                        pipeline_key_cache = { UINT32_MAX, CGPU_SAMPLE_COUNT_1 };
 
-        for (const auto& command : render_commands)
-        {
-            const bool use_texture = command.texture && (command.texture->get_state() == EGDIResourceState::Okay);
-            PipelineKey key = { command.attributes, target_desc->sample_count };
-            if (pipeline_key_cache != key)
-            {
-                CGPURenderPipelineId this_pipeline = findOrCreateRenderPipeline(key.attributes, key.sample_count);
-                cgpu_render_encoder_bind_pipeline(ctx.encoder, this_pipeline);
-                pipeline_key_cache = key;
-            }
+                            for (const auto& command : render_commands)
+                            {
+                                const bool  use_texture = command.texture && (command.texture->get_state() == EGDIResourceState::Okay);
+                                PipelineKey key = { command.attributes, target_desc->sample_count };
+                                if (pipeline_key_cache != key)
+                                {
+                                    CGPURenderPipelineId this_pipeline = findOrCreateRenderPipeline(key.attributes, key.sample_count);
+                                    cgpu_render_encoder_bind_pipeline(ctx.encoder, this_pipeline);
+                                    pipeline_key_cache = key;
+                                }
 
-            if (use_texture)
-            {
-                const auto gui_texture = static_cast<GDITexture_RenderGraph*>(command.texture);
-                cgpux_render_encoder_bind_bind_table(ctx.encoder, gui_texture->bind_table);
-            }
+                                if (use_texture)
+                                {
+                                    const auto gui_texture = static_cast<GDITexture_RenderGraph*>(command.texture);
+                                    cgpux_render_encoder_bind_bind_table(ctx.encoder, gui_texture->bind_table);
+                                }
 
-            const uint32_t vertex_stream_offsets[4] = { command.vb_offset, command.tb_offset, command.pb_offset, command.rb_offset };
-            cgpu_render_encoder_bind_index_buffer(ctx.encoder, resolved_ib, sizeof(index_t), command.ib_offset);
-            cgpu_render_encoder_bind_vertex_buffers(ctx.encoder,
-                4, vertex_streams, vertex_stream_strides, vertex_stream_offsets);
-            cgpu_render_encoder_draw_indexed_instanced(ctx.encoder,
-                command.index_count,command.first_index,
-                1, 0, 0);
-        }
-        SkrDelete(viewport_data);
-    });
+                                const uint32_t vertex_stream_offsets[4] = { command.vb_offset, command.tb_offset, command.pb_offset, command.rb_offset };
+                                cgpu_render_encoder_bind_index_buffer(ctx.encoder, resolved_ib, sizeof(GDIIndex), command.ib_offset);
+                                cgpu_render_encoder_bind_vertex_buffers(ctx.encoder,
+                                                                        4, vertex_streams, vertex_stream_strides, vertex_stream_offsets);
+                                cgpu_render_encoder_draw_indexed_instanced(ctx.encoder,
+                                                                           command.index_count, command.first_index,
+                                                                           1, 0, 0);
+                            }
+                            SkrDelete(viewport_data);
+                        });
 }
 
-} }
+} // namespace gdi
+} // namespace skr

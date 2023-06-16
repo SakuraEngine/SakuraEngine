@@ -178,21 +178,21 @@ static skr_float4x4_t nvg__getMatrix(NVGpaint* paint)
 static void nvg__renderPath(GDIElementNVG* element, const NVGpath& path, NVGpaint* paint, const skr_float4x4_t& transform, float fringe)
 {
     skr_float2_t extend{ paint->extent[0], paint->extent[1] };
-    auto& vertices = element->vertices;
-    auto& indices = element->indices;
-    auto push_vertex = [&](const NVGvertex& nv, uint32_t i, uint32_t nfill) {
-        auto gdi_paint = element->gdi_paint;
+    auto&        vertices = element->vertices;
+    auto&        indices = element->indices;
+    auto         push_vertex = [&](const NVGvertex& nv, uint32_t i, uint32_t nfill) {
+        auto      gdi_paint = element->gdi_paint;
         GDIVertex v;
         v.clipUV = { 0.f, 0.f };
         v.clipUV2 = { 0.f, 0.f };
         v.position = { nv.x, nv.y, 0.f, 1.f };
         v.aa = { nv.u, fringe };
         const rtm::vector4f pos = rtm::vector_load((const uint8_t*)&v.position);
-        const auto col0 = rtm::vector_set(transform.M[0][0], transform.M[0][1], transform.M[0][2], transform.M[0][3]);
-        const auto col1 = rtm::vector_set(transform.M[1][0], transform.M[1][1], transform.M[1][2], transform.M[1][3]);
-        const auto col2 = rtm::vector_set(transform.M[2][0], transform.M[2][1], transform.M[2][2], transform.M[2][3]);
-        const auto col3 = rtm::vector_set(transform.M[3][0], transform.M[3][1], transform.M[3][2], transform.M[3][3]);
-        const auto trans = rtm::matrix_set(col0, col1, col2, col3);
+        const auto          col0 = rtm::vector_set(transform.M[0][0], transform.M[0][1], transform.M[0][2], transform.M[0][3]);
+        const auto          col1 = rtm::vector_set(transform.M[1][0], transform.M[1][1], transform.M[1][2], transform.M[1][3]);
+        const auto          col2 = rtm::vector_set(transform.M[2][0], transform.M[2][1], transform.M[2][2], transform.M[2][3]);
+        const auto          col3 = rtm::vector_set(transform.M[3][0], transform.M[3][1], transform.M[3][2], transform.M[3][3]);
+        const auto          trans = rtm::matrix_set(col0, col1, col2, col3);
         v.color = ToColor32ABGR(paint->innerColor);
 
         const bool override_image_space = gdi_paint && (GDIPaintNVG::CoordinateMethod::ImageSpace & gdi_paint->coordinate_method_override);
@@ -200,7 +200,7 @@ static void nvg__renderPath(GDIElementNVG* element, const NVGpath& path, NVGpain
         const bool default_image_space = path.nfill;
         if (!override_nvg && (override_image_space || default_image_space))
         {
-            auto imgSpace = rtm::matrix_mul_vector(pos, trans);
+            auto        imgSpace = rtm::matrix_mul_vector(pos, trans);
             const float imgSpaceX = rtm::vector_get_x(imgSpace);
             const float imgSpaceY = rtm::vector_get_y(imgSpace);
             v.texcoord = nvg__remapUV({ imgSpaceX, imgSpaceY }, extend, paint->box);
@@ -221,13 +221,13 @@ static void nvg__renderPath(GDIElementNVG* element, const NVGpath& path, NVGpain
     {
         vertices.reserve(vertices.size() + path.nfill);
         indices.reserve(indices.size() + path.nfill * 3);
-        const auto start = static_cast<index_t>(vertices.size());
+        const auto start = static_cast<GDIIndex>(vertices.size());
         for (int j = 0; j < path.nfill; ++j)
         {
             push_vertex(path.fill[j], j, path.nfill);
             if (j < path.nfill - 2)
             {
-                const auto id = static_cast<index_t>(vertices.size());
+                const auto id = static_cast<GDIIndex>(vertices.size());
                 indices.push_back(start);
                 indices.push_back(id + 1);
                 indices.push_back(id);
@@ -243,7 +243,7 @@ static void nvg__renderPath(GDIElementNVG* element, const NVGpath& path, NVGpain
             push_vertex(path.stroke[j], j, path.nstroke);
             if (j < path.nstroke - 2)
             {
-                const auto id = static_cast<index_t>(vertices.size() - 1);
+                const auto id = static_cast<GDIIndex>(vertices.size() - 1);
                 indices.push_back(id);
                 indices.push_back(id + 1 + (j % 2));
                 indices.push_back(id + 1 + !(j % 2));
@@ -266,7 +266,7 @@ static void nvg__renderFill(void* uptr, NVGpaint* paint, NVGcompositeOperationSt
     if (npaths == 1 && paths[0].convex)
     {
         auto& command = element->commands.emplace_back();
-        auto begin = element->indices.size();
+        auto  begin = element->indices.size();
         for (int i = 0; i < npaths; ++i)
         {
             nvg__renderPath(element, paths[i], paint, invTransform, 1.f);
@@ -279,8 +279,8 @@ static void nvg__renderFill(void* uptr, NVGpaint* paint, NVGcompositeOperationSt
 
         command.index_count = static_cast<uint32_t>(element->indices.size() - begin);
         command.first_index = static_cast<uint32_t>(begin);
-        command.material = static_cast<GDIMaterialId>(paint->material);
-        command.texture = static_cast<GDITextureId>(paint->image);
+        command.material = static_cast<IGDIMaterial*>(paint->material);
+        command.texture = static_cast<IGDITexture*>(paint->image);
         if (command.texture && ((GDIResource*)command.texture)->get_state() != EGDIResourceState::Okay)
         {
             command.texture = nullptr;
@@ -305,7 +305,7 @@ static void nvg__renderStroke(void* uptr, NVGpaint* paint, NVGcompositeOperation
     auto invTransform = nvg__getMatrix(paint);
     // fast path
     auto& command = element->commands.emplace_back();
-    auto begin = element->indices.size();
+    auto  begin = element->indices.size();
     float aa = (fringe * 0.5f + strokeWidth * 0.5f) / fringe;
     for (int i = 0; i < npaths; ++i)
     {
@@ -313,8 +313,8 @@ static void nvg__renderStroke(void* uptr, NVGpaint* paint, NVGcompositeOperation
     }
     command.index_count = static_cast<uint32_t>(element->indices.size() - begin);
     command.first_index = static_cast<uint32_t>(begin);
-    command.material = static_cast<GDIMaterialId>(paint->material);
-    command.texture = static_cast<GDITextureId>(paint->image);
+    command.material = static_cast<IGDIMaterial*>(paint->material);
+    command.texture = static_cast<IGDITexture*>(paint->image);
     if (command.texture && ((GDIResource*)command.texture)->get_state() != EGDIResourceState::Okay)
     {
         command.texture = nullptr;
@@ -358,7 +358,7 @@ void GDIElementNVG::begin_path()
 void GDIElementNVG::arc(float cx, float cy, float r, float a0, float a1, EGDIWinding dir)
 {
     const uint32_t dirIndex = static_cast<uint32_t>(dir) - 1;
-    const int32_t WindingLUT[] = { NVG_CW, NVG_CCW };
+    const int32_t  WindingLUT[] = { NVG_CW, NVG_CCW };
     nvgArc(nvg, cx, cy, r, a0, a1, WindingLUT[dirIndex]);
 }
 
@@ -434,7 +434,7 @@ void GDIElementNVG::stroke()
 void GDIElementNVG::path_winding(EGDISolidity dir)
 {
     const uint32_t dirIndex = static_cast<uint32_t>(dir) - 1;
-    const int32_t SolidityLUT[] = { NVG_SOLID, NVG_HOLE };
+    const int32_t  SolidityLUT[] = { NVG_SOLID, NVG_HOLE };
     nvgPathWinding(nvg, SolidityLUT[dirIndex]);
 }
 
@@ -478,13 +478,13 @@ void GDIElementNVG::save()
     nvgSave(nvg);
 }
 
-void GDIPaintNVG::set_pattern(float cx, float cy, float w, float h, float angle, GDITextureId texture, skr_float4_t ocol) SKR_NOEXCEPT
+void GDIPaintNVG::set_pattern(float cx, float cy, float w, float h, float angle, IGDITexture* texture, skr_float4_t ocol) SKR_NOEXCEPT
 {
     NVGcolor color = nvgRGBAf(ocol.x, ocol.y, ocol.z, ocol.w);
     nvg_paint = nvgImagePattern(nullptr, cx, cy, w, h, angle, texture, color);
 }
 
-void GDIPaintNVG::set_pattern(float cx, float cy, float w, float h, float angle, GDIMaterialId material, skr_float4_t ocol) SKR_NOEXCEPT
+void GDIPaintNVG::set_pattern(float cx, float cy, float w, float h, float angle, IGDIMaterial* material, skr_float4_t ocol) SKR_NOEXCEPT
 {
     NVGcolor color = nvgRGBAf(ocol.x, ocol.y, ocol.z, ocol.w);
     nvg_paint = nvgMaterialPattern(nullptr, cx, cy, w, h, angle, material, color);
@@ -495,7 +495,7 @@ void GDIPaintNVG::enable_imagespace_coordinate(bool enable) SKR_NOEXCEPT
     coordinate_method_override = enable ? NVG : ImageSpace;
 }
 
-void GDIPaintNVG::custom_vertex_color(skr_gdi_custom_vertex_painter_t painter, void* usrdata) SKR_NOEXCEPT
+void GDIPaintNVG::custom_vertex_color(CustomVertexPainter painter, void* usrdata) SKR_NOEXCEPT
 {
     custom_painter = painter;
     custom_painter_data = usrdata;

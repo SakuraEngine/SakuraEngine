@@ -48,16 +48,16 @@ struct GDIElementNVG : public GDIElementPrivate {
 };
 
 struct GDIPaintNVG : public GDIPaintPrivate {
-    void set_pattern(float cx, float cy, float w, float h, float angle, GDITextureId texture, skr_float4_t ocol) SKR_NOEXCEPT final;
-    void set_pattern(float cx, float cy, float w, float h, float angle, GDIMaterialId texture, skr_float4_t ocol) SKR_NOEXCEPT final;
+    void set_pattern(float cx, float cy, float w, float h, float angle, IGDITexture* texture, skr_float4_t ocol) SKR_NOEXCEPT final;
+    void set_pattern(float cx, float cy, float w, float h, float angle, IGDIMaterial* texture, skr_float4_t ocol) SKR_NOEXCEPT final;
 
     void enable_imagespace_coordinate(bool enable) SKR_NOEXCEPT final;
-    void custom_vertex_color(skr_gdi_custom_vertex_painter_t painter, void* usrdata) SKR_NOEXCEPT final;
+    void custom_vertex_color(CustomVertexPainter painter, void* usrdata) SKR_NOEXCEPT final;
 
-    NVGpaint                        nvg_paint = {};
-    skr_float4_t                    ocol = {};
-    skr_gdi_custom_vertex_painter_t custom_painter = nullptr;
-    void*                           custom_painter_data = nullptr;
+    NVGpaint            nvg_paint = {};
+    skr_float4_t        ocol = {};
+    CustomVertexPainter custom_painter = nullptr;
+    void*               custom_painter_data = nullptr;
     enum CoordinateMethod
     {
         None,

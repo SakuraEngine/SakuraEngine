@@ -1,7 +1,7 @@
 #include "./gdi_application.h"
 #include "misc/make_zeroed.hpp"
 #include "SkrGuiRenderer/gdi_renderer.hpp"
-#include "SkrGui/dev/interface/gdi_renderer.hpp"
+#include "SkrGui/dev/gdi/gdi.hpp"
 #include "platform/filesystem.hpp"
 #include "platform/vfs.h"
 #include "io/io.h"

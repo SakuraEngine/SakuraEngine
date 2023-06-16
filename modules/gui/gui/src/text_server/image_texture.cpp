@@ -1,5 +1,5 @@
 #include "text_server/image_texture.h"
-#include "SkrGui/dev/interface/gdi_renderer.hpp"
+#include "SkrGui/dev/gdi/gdi.hpp"
 
 namespace godot
 {
