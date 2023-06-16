@@ -2,7 +2,7 @@
 #include "dev/gdi/private/gdi_element.hpp"
 #include <nanovg.h>
 
-namespace skr::gdi
+namespace skr::gui
 {
 struct GDIPaintNVG : public GDIPaintPrivate {
     void set_pattern(float cx, float cy, float w, float h, float angle, IGDITexture* texture, skr_float4_t ocol) SKR_NOEXCEPT final;
@@ -62,4 +62,4 @@ struct GDIElementNVG : public GDIElementPrivate {
     NVGcontext*         nvg = nullptr;
     struct GDIPaintNVG* gdi_paint = nullptr;
 };
-} // namespace skr::gdi
+} // namespace skr::gui

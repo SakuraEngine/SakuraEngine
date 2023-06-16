@@ -1,11 +1,9 @@
 #include "SkrGui/render_objects/render_flex.hpp"
 
-namespace skr
-{
-namespace gui
+namespace skr::gui
 {
 
-RenderFlex::RenderFlex(gdi::IGDIDevice* gdi_device)
+RenderFlex::RenderFlex(IGDIDevice* gdi_device)
     : RenderBox(gdi_device)
 {
     diagnostic_builder.add_properties(
@@ -29,11 +27,11 @@ void RenderFlex::layout(BoxConstraint constraints, bool needSize)
     }
 
     float availableSpace = mainAxisSize;
-    // Calculate non-flexable children's size
+    // Calculate non-flexible children's size
     for (int i = 0; i < get_child_count(); i++)
     {
         RenderBox* child = get_child_as_box(i);
-        Flexable   flex = get_flex(i);
+        Flexible   flex = get_flex(i);
         if (flex.flex == 0)
         {
             child->layout(constraints, true);
@@ -45,7 +43,7 @@ void RenderFlex::layout(BoxConstraint constraints, bool needSize)
     for (int i = 0; i < get_child_count(); i++)
     {
         RenderBox*    child = get_child_as_box(i);
-        Flexable      flex = get_flex(i);
+        Flexible      flex = get_flex(i);
         BoxConstraint childConstraints = constraints;
         childConstraints.set_min_size({ 0, 0 });
         if (flex.flex > 0)
@@ -176,29 +174,29 @@ void RenderFlex::layout(BoxConstraint constraints, bool needSize)
 void RenderFlex::add_child(RenderObject* child)
 {
     RenderObject::add_child(child);
-    flexables.emplace_back();
+    flexible_slots.emplace_back();
 }
 
 void RenderFlex::insert_child(RenderObject* child, int index)
 {
     RenderObject::insert_child(child, index);
-    flexables.insert(flexables.begin() + index, Flexable{});
+    flexible_slots.insert(flexible_slots.begin() + index, Flexible{});
 }
 
 void RenderFlex::remove_child(RenderObject* child)
 {
-    flexables.erase(flexables.begin() + get_child_index(child));
+    flexible_slots.erase(flexible_slots.begin() + get_child_index(child));
     RenderObject::remove_child(child);
 }
 
-void RenderFlex::set_flexable(int index, Flexable flexable)
+void RenderFlex::set_flexible(int index, Flexible flexible)
 {
-    flexables[index] = flexable;
+    flexible_slots[index] = flexible;
 }
 
-Flexable RenderFlex::get_flex(int index)
+Flexible RenderFlex::get_flex(int index)
 {
-    return flexables[index];
+    return flexible_slots[index];
 }
 
 void RenderFlex::set_flex_direction(FlexDirection direction)
@@ -234,5 +232,4 @@ AlignItems RenderFlex::get_align_items()
     return align_items;
 }
 
-} // namespace gui
-} // namespace skr
+} // namespace skr::gui

@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrGui/dev/gdi/gdi_types.hpp"
 
-namespace skr::gdi
+namespace skr::gui
 {
 struct SKR_GUI_API IGDICanvas {
     virtual ~IGDICanvas() SKR_NOEXCEPT = default;
@@ -25,4 +25,4 @@ struct SKR_GUI_API IGDICanvas {
     virtual void get_size(float* out_w, float* out_h) SKR_NOEXCEPT = 0;
 };
 
-} // namespace skr::gdi
+} // namespace skr::gui

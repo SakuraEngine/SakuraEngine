@@ -229,8 +229,8 @@ struct robjects_example_application : public robjects_application_t {
 
         // render
         skr::gui::WindowContext::RenderParams      render_params = {};
-        skr::gdi::ViewportRenderParams             vp_render_params = {};
-        skr::gdi::ViewportRenderParams_RenderGraph vp_render_params2 = {};
+        skr::gui::ViewportRenderParams             vp_render_params = {};
+        skr::gui::ViewportRenderParams_RenderGraph vp_render_params2 = {};
         vp_render_params2.render_graph = graph.graph;
         vp_render_params.usr_data = &vp_render_params2;
         render_params.gdi_params = &vp_render_params;

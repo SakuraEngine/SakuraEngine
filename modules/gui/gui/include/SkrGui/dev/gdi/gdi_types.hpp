@@ -2,7 +2,7 @@
 #include "SkrGui/fwd_config.hpp"
 
 // fwd
-namespace skr::gdi
+namespace skr::gui
 {
 struct IGDICanvas;
 struct IGDIDevice;
@@ -16,10 +16,10 @@ struct IGDIMaterial;
 struct IGDIText;
 struct IGDIViewport;
 struct IGDIElement;
-} // namespace skr::gdi
+} // namespace skr::gui
 
 // basic types
-namespace skr::gdi
+namespace skr::gui
 {
 
 struct GDIElementDrawCommand {
@@ -51,14 +51,11 @@ using CustomVertexPainter = void (*)(GDIVertex* pVertex, void* userdata);
 template <typename T>
 using Span = skr::gui::Span<T>;
 
-} // namespace skr::gdi
+} // namespace skr::gui
 
 // resource types
-namespace skr::gdi
+namespace skr::gui
 {
-struct IGDIImage;
-struct IGDITexture;
-
 enum class EGDIResourceState : uint32_t
 {
     Requested = 0x00000001,
@@ -163,4 +160,4 @@ struct GDITextureUpdateDescriptor {
     IGDITexture* texture = nullptr;
     IGDIImage*   image = nullptr;
 };
-} // namespace skr::gdi
+} // namespace skr::gui

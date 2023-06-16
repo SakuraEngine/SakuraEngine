@@ -3,36 +3,36 @@
 
 namespace godot
 {
-skr::gdi::EGDIImageFormat translate_format(ImageFormat format)
+skr::gui::EGDIImageFormat translate_format(ImageFormat format)
 {
     switch (format)
     {
         case ImageFormat::FORMAT_RGB8:
-            return skr::gdi::EGDIImageFormat::RGB8;
+            return skr::gui::EGDIImageFormat::RGB8;
         case ImageFormat::FORMAT_RGBA8:
-            return skr::gdi::EGDIImageFormat::RGBA8;
+            return skr::gui::EGDIImageFormat::RGBA8;
         case ImageFormat::FORMAT_LA8:
-            return skr::gdi::EGDIImageFormat::LA8;
+            return skr::gui::EGDIImageFormat::LA8;
         case ImageFormat::FORMAT_R8:
-            return skr::gdi::EGDIImageFormat::R8;
+            return skr::gui::EGDIImageFormat::R8;
         default:
             break;
     }
     SKR_UNREACHABLE_CODE();
-    return skr::gdi::EGDIImageFormat::None;
+    return skr::gui::EGDIImageFormat::None;
 }
 
-ImageFormat translate_format(skr::gdi::EGDIImageFormat format)
+ImageFormat translate_format(skr::gui::EGDIImageFormat format)
 {
     switch (format)
     {
-        case skr::gdi::EGDIImageFormat::RGB8:
+        case skr::gui::EGDIImageFormat::RGB8:
             return ImageFormat::FORMAT_RGB8;
-        case skr::gdi::EGDIImageFormat::RGBA8:
+        case skr::gui::EGDIImageFormat::RGBA8:
             return ImageFormat::FORMAT_RGBA8;
-        case skr::gdi::EGDIImageFormat::LA8:
+        case skr::gui::EGDIImageFormat::LA8:
             return ImageFormat::FORMAT_LA8;
-        case skr::gdi::EGDIImageFormat::R8:
+        case skr::gui::EGDIImageFormat::R8:
             return ImageFormat::FORMAT_R8;
         default:
             break;
@@ -41,14 +41,14 @@ ImageFormat translate_format(skr::gdi::EGDIImageFormat format)
     return ImageFormat::FORMAT_None;
 }
 
-Ref<Image> Image::create_from_data(skr::gdi::IGDIRenderer* renderer, uint32_t w, uint32_t h,
+Ref<Image> Image::create_from_data(skr::gui::IGDIRenderer* renderer, uint32_t w, uint32_t h,
                                    bool p_use_mipmaps, Format format, const Span<const uint8_t>& p_data)
 {
     Ref<Image> image;
     image.instantiate();
-    skr::gdi::GDIImageDescriptor desc = {};
+    skr::gui::GDIImageDescriptor desc = {};
     desc.format = translate_format(format);
-    desc.source = skr::gdi::EGDIImageSource::Data;
+    desc.source = skr::gui::EGDIImageSource::Data;
     desc.from_data.data = p_data.data();
     desc.from_data.size = p_data.size();
     desc.from_data.w = w;
@@ -105,18 +105,18 @@ ImageTexture::~ImageTexture()
     }
 }
 
-Ref<ImageTexture> ImageTexture::create_from_image(skr::gdi::IGDIRenderer* renderer, Ref<Image> image)
+Ref<ImageTexture> ImageTexture::create_from_image(skr::gui::IGDIRenderer* renderer, Ref<Image> image)
 {
     if (auto gdi_image = image.get()->underlying)
     {
-        while (gdi_image->get_state() != skr::gdi::EGDIResourceState::Okay)
+        while (gdi_image->get_state() != skr::gui::EGDIResourceState::Okay)
         {
         }
         Ref<ImageTexture> texture;
         texture.instantiate();
-        skr::gdi::GDITextureDescriptor desc = {};
+        skr::gui::GDITextureDescriptor desc = {};
         desc.format = translate_format(image->get_format());
-        desc.source = skr::gdi::EGDITextureSource::Image;
+        desc.source = skr::gui::EGDITextureSource::Image;
         desc.from_image.image = gdi_image;
         texture->underlying = renderer->create_texture(&desc);
         texture->rid = texture_owner.make_rid(texture.get());
@@ -138,14 +138,14 @@ void ImageTexture::update(const Ref<Image> image)
         auto renderer = texture->get_renderer();
         for (auto [image, update] : updates)
         {
-            if (update->get_state() == skr::gdi::EGDIResourceState::Okay)
+            if (update->get_state() == skr::gui::EGDIResourceState::Okay)
             {
                 renderer->free_texture_update(update);
                 image.reset();
             }
         }
         updates.erase(std::remove_if(updates.begin(), updates.end(), [](auto& pair) { return !pair.first; }), updates.end());
-        skr::gdi::GDITextureUpdateDescriptor update_desc = {};
+        skr::gui::GDITextureUpdateDescriptor update_desc = {};
         update_desc.texture = texture;
         update_desc.image = image->underlying;
         auto update_handle = renderer->update_texture(&update_desc);

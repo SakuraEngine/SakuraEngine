@@ -36,13 +36,13 @@
 #include "dev/text_server/transform_2d.h"
 #include "dev/text_server/image_texture.h"
 
-namespace skr::gdi
+namespace skr::gui
 {
 struct IGDIRenderer;
 struct IGDIPaint;
 struct IGDIDevice;
 struct IGDIElement;
-} // namespace skr::gdi
+} // namespace skr::gui
 
 namespace godot
 {
@@ -69,9 +69,9 @@ class TextServer
 public:
     // ++ SKR
     struct TextDrawProxy {
-        ::skr::gdi::IGDIDevice*  gdi_device = nullptr;
-        ::skr::gdi::IGDIElement* gdi_element = nullptr;
-        ::skr::gdi::IGDIPaint*   gdi_paint = nullptr;
+        ::skr::gui::IGDIDevice*  gdi_device = nullptr;
+        ::skr::gui::IGDIElement* gdi_element = nullptr;
+        ::skr::gui::IGDIPaint*   gdi_paint = nullptr;
     };
     // --SKR
     enum FontAntialiasing
@@ -562,7 +562,7 @@ public:
     virtual void cleanup() {}
 
     // ++ SKR
-    virtual ::skr::gdi::IGDIRenderer* get_gdi_renderer() = 0;
+    virtual ::skr::gui::IGDIRenderer* get_gdi_renderer() = 0;
     // -- SKR
 
     TextServer();

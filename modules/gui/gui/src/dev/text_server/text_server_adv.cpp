@@ -3651,7 +3651,7 @@ void TextServerAdvanced::_font_draw_glyph(const RID& p_font_rid, const RID& p_ca
 
                         auto image_texture = ImageTexture::texture_owner.get_or_null(texture);
                         auto gdi_texture = image_texture->underlying ? image_texture->underlying : nullptr;
-                        if (gdi_texture->get_state() != skr::gdi::EGDIResourceState::Okay)
+                        if (gdi_texture->get_state() != skr::gui::EGDIResourceState::Okay)
                         {
                             gdi_texture = nullptr;
                         }
@@ -3669,7 +3669,7 @@ void TextServerAdvanced::_font_draw_glyph(const RID& p_font_rid, const RID& p_ca
                         proxy->gdi_paint->enable_imagespace_coordinate(false);
                         proxy->gdi_paint->set_pattern(cpos.x, cpos.y, csize.x, csize.y, 0, gdi_texture, color);
                         proxy->gdi_paint->custom_vertex_color(
-                        +[](skr::gdi::GDIVertex* vertex, void* data) {
+                        +[](skr::gui::GDIVertex* vertex, void* data) {
                             const auto& rect = *(float8*)data;
                             const auto  x_u = rect.x;
                             const auto  x_U = rect.x + rect.w;

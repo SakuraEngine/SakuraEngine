@@ -121,9 +121,9 @@ struct gdi_example_application : public gdi_application_t {
         gdi_canvas->add_element(debug_element);
         gdi_canvas->add_element(test_element);
         {
-            skr::gdi::GDITextureDescriptor             tex_desc = {};
-            skr::gdi::GDITextureDescriptor_RenderGraph tex_desc2 = {};
-            tex_desc.source = skr::gdi::EGDITextureSource::File;
+            skr::gui::GDITextureDescriptor             tex_desc = {};
+            skr::gui::GDITextureDescriptor_RenderGraph tex_desc2 = {};
+            tex_desc.source = skr::gui::EGDITextureSource::File;
             tex_desc.from_file.u8Uri = u8"OpenGUI/rubduck.png";
             tex_desc2.useImageCoder = true;
             tex_desc.usr_data = &tex_desc2;
@@ -149,7 +149,7 @@ struct gdi_example_application : public gdi_application_t {
             test_element->begin_path();
             test_element->rect(120, 120, 300, 300);
             skr_float4_t color = { 1.f, 1.f, 1.f, 1.f };
-            if (test_texture->get_state() != skr::gdi::EGDIResourceState::Okay)
+            if (test_texture->get_state() != skr::gui::EGDIResourceState::Okay)
             {
                 color.w = 0.f; // set transparent if texture is not ready
             }
@@ -163,8 +163,8 @@ struct gdi_example_application : public gdi_application_t {
         graph.declare_render_resources(gfx);
 
         // render GDI canvas group
-        skr::gdi::ViewportRenderParams             render_params = {};
-        skr::gdi::ViewportRenderParams_RenderGraph gdir_params2 = {};
+        skr::gui::ViewportRenderParams             render_params = {};
+        skr::gui::ViewportRenderParams_RenderGraph gdir_params2 = {};
         gdir_params2.render_graph = graph.graph;
         render_params.usr_data = &gdir_params2;
         renderer->render(gdi_viewport, &render_params);
@@ -192,16 +192,16 @@ struct gdi_example_application : public gdi_application_t {
 
     gui_render_graph_t graph;
 
-    skr::gdi::IGDICanvas*   gdi_canvas = nullptr;
-    skr::gdi::IGDIViewport* gdi_viewport = nullptr;
+    skr::gui::IGDICanvas*   gdi_canvas = nullptr;
+    skr::gui::IGDIViewport* gdi_viewport = nullptr;
 
-    skr::gdi::IGDICanvas*  backgroud_canvas = nullptr;
-    skr::gdi::IGDIElement* background_element = nullptr;
+    skr::gui::IGDICanvas*  backgroud_canvas = nullptr;
+    skr::gui::IGDIElement* background_element = nullptr;
 
-    skr::gdi::IGDITexture* test_texture = nullptr;
-    skr::gdi::IGDIPaint*   test_paint = nullptr;
-    skr::gdi::IGDIElement* test_element = nullptr;
-    skr::gdi::IGDIElement* debug_element = nullptr;
+    skr::gui::IGDITexture* test_texture = nullptr;
+    skr::gui::IGDIPaint*   test_paint = nullptr;
+    skr::gui::IGDIElement* test_element = nullptr;
+    skr::gui::IGDIElement* debug_element = nullptr;
 };
 
 #include "tracy/Tracy.hpp"

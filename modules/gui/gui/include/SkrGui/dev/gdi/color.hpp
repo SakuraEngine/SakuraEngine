@@ -2,7 +2,7 @@
 #include "misc/types.h"
 #include <cmath>
 
-namespace skr::gdi
+namespace skr::gui
 {
 
 inline static float modf(float a, float b) { return fmodf(a, b); }
@@ -124,4 +124,4 @@ inline static uint32_t encode_rgba(float r, float g, float b, float a)
     return (A << 24) | (B << 16) | (G << 8) | R;
 }
 
-} // namespace skr::gdi
+} // namespace skr::gui

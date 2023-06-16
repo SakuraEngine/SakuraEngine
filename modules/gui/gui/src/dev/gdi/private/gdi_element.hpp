@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrGui/dev/gdi/gdi.hpp"
 
-namespace skr::gdi
+namespace skr::gui
 {
 struct GDIPaintPrivate : public IGDIPaint {
 };
@@ -33,4 +33,4 @@ struct GDIElementPrivate : public IGDIElement {
     skr::vector<GDIIndex>              indices;
     skr::vector<GDIElementDrawCommand> commands;
 };
-} // namespace skr::gdi
+} // namespace skr::gui

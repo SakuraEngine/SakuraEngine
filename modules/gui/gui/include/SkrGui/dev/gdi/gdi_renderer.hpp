@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrGui/dev/gdi/gdi_types.hpp"
 
-namespace skr::gdi
+namespace skr::gui
 {
 struct SKR_GUI_API IGDIRenderer {
     virtual ~IGDIRenderer() SKR_NOEXCEPT = default;
@@ -28,4 +28,4 @@ struct SKR_GUI_API IGDIRenderer {
     // Tier 3
 };
 
-} // namespace skr::gdi
+} // namespace skr::gui

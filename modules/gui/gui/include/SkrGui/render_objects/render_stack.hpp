@@ -9,7 +9,7 @@ class SKR_GUI_API RenderStack : public RenderBox
 {
 public:
     SKR_GUI_TYPE(RenderStack, "0c1ac8b5-d3aa-4560-a011-4b655231c8ac", RenderBox);
-    RenderStack(gdi::IGDIDevice* gdi_device);
+    RenderStack(IGDIDevice* gdi_device);
 
     virtual void layout(BoxConstraint constraints, bool needSize = false) override;
     Positional   get_position(int index); // each child's corresponding positional property

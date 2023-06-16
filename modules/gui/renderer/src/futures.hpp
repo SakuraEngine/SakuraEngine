@@ -4,11 +4,8 @@
 #include "misc/defer.hpp"
 #include "async/thread_job.hpp"
 
-namespace skr
-{
-namespace gdi
+namespace skr::gui
 {
 struct ImageTexFutureLauncher : public skr::FutureLauncher<bool> {
 };
-} // namespace gdi
-} // namespace skr
+} // namespace skr::gui

@@ -2,9 +2,7 @@
 #include "SkrGui/fwd_config.hpp"
 #include "type/type.h"
 
-namespace skr
-{
-namespace gui
+namespace skr::gui
 {
 struct Diagnosticable;
 
@@ -18,8 +16,8 @@ protected:
     friend struct TypeTreeImpl;
     virtual void create_dynamic_type(skr_guid_t id, skr_record_type_id parent_type, const char8_t* name) SKR_NOEXCEPT;
 
-    uint64_t size = 0;
-    uint64_t align = 0;
+    uint64_t           size = 0;
+    uint64_t           align = 0;
     skr_record_type_id type = nullptr;
 };
 
@@ -39,8 +37,8 @@ struct TypeTreeNodeBase : public TypeTreeNode {
         if (!_this->type)
         {
             _this->create_dynamic_type(
-                T::getStaticTypeId(), _parent ? _parent->get_type() : nullptr,
-                _name);
+            T::getStaticTypeId(), _parent ? _parent->get_type() : nullptr,
+            _name);
         }
         return _this;
     }
@@ -52,9 +50,9 @@ struct TypeTreeNodeBase : public TypeTreeNode {
 
         TypeTreeNode::create_dynamic_type(id, parent_type, name);
     }
-    static const char8_t* _name;
+    static const char8_t*    _name;
     static TypeTreeNodeBase* _this;
-    static TypeTreeNode* _parent;
+    static TypeTreeNode*     _parent;
 };
 
 struct SKR_GUI_API TypeTree {
@@ -84,7 +82,7 @@ template <class T>
 constexpr T parse_hex(const char8_t* ptr)
 {
     constexpr size_t digits = sizeof(T) * 2;
-    T result{};
+    T                result{};
     for (size_t i = 0; i < digits; ++i)
         result |= parse_hex_digit(ptr[i]) << (4 * (digits - i - 1));
     return result;
@@ -122,9 +120,7 @@ constexpr skr_guid_t operator""_guid(const char8_t* str, size_t N)
 }
 } // namespace literals
 
-} // namespace gui
-} // namespace skr
-
+} // namespace skr::gui
 namespace skr::type
 {
 template <>
@@ -158,7 +154,7 @@ struct type_id<struct skr::gui::Diagnosticable> {
     inline static SKR_CONSTEXPR bool hasBaseType() { return true; }
 
 #define SKR_GUI_TYPE_COMMON_BODY(__T, __GUID)                              \
-    static const skr_record_type_id getStaticType();                       \
+    static const skr_record_type_id            getStaticType();            \
     inline static SKR_CONSTEXPR const char8_t* getStaticTypeIdStr()        \
     {                                                                      \
         return __GUID;                                                     \
@@ -188,7 +184,7 @@ struct type_id<struct skr::gui::Diagnosticable> {
     template <>                                                                                           \
     skr::gui::TypeTreeNode* skr::gui::TypeTreeNodeBase<__T>::_parent = nullptr;                           \
     template <>                                                                                           \
-    const char8_t* skr::gui::TypeTreeNodeBase<__T>::_name = OSTR_UTF8(#__T);                              \
+    const char8_t*           skr::gui::TypeTreeNodeBase<__T>::_name = OSTR_UTF8(#__T);                    \
     const skr_record_type_id __T::getStaticType()                                                         \
     {                                                                                                     \
         return (skr_record_type_id)__Type_##__T##_Instance__.get_type();                                  \

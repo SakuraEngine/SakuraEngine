@@ -2,17 +2,8 @@
 #include "SkrGui/framework/render_object/render_object.hpp"
 #include "SkrGui/math/layout.hpp"
 
-namespace skr::gdi
-{
-struct IGDIDevice;
-struct IGDIElement;
-} // namespace skr::gdi
-
 namespace skr::gui
 {
-using gdi::IGDIDevice;
-using gdi::IGDIElement;
-
 struct HitTestRecord {
 };
 

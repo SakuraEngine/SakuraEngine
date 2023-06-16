@@ -6,7 +6,7 @@ namespace skr
 namespace gui
 {
 
-RenderWindow::RenderWindow(gdi::IGDIDevice* gdi_device)
+RenderWindow::RenderWindow(IGDIDevice* gdi_device)
     : RenderBox(gdi_device)
     , gdi_viewport(nullptr)
 {

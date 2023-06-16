@@ -6,9 +6,7 @@
 #include <variant>
 #include <fstream>
 
-namespace skr
-{
-namespace gui
+namespace skr::gui
 {
 
 // helper type for the visitor #4
@@ -172,7 +170,7 @@ StyleText TODO_StyleText = {
     { 1.0f, 0.0f, 1.0f, 1.0f }
 };
 
-RenderText::RenderText(gdi::IGDIDevice* gdi_device)
+RenderText::RenderText(IGDIDevice* gdi_device)
     : RenderBox(gdi_device)
     , gdi_device(gdi_device)
 {
@@ -313,5 +311,4 @@ void RenderText::buildParagraphRec(Paragraph* p, const StyleText& txt)
     }
 }
 
-} // namespace gui
-} // namespace skr
+} // namespace skr::gui

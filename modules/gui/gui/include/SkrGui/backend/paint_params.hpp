@@ -8,13 +8,9 @@
 
 namespace skr::gui
 {
-using ITexture = ::skr::gdi::IGDITexture;
-using IMaterial = ::skr::gdi::IGDIMaterial;
-using CustomPaintCallback = ::skr::gdi::CustomVertexPainter;
-} // namespace skr::gui
-
-namespace skr::gui
-{
+using ITexture = IGDITexture;
+using IMaterial = IGDIMaterial;
+using CustomPaintCallback = CustomVertexPainter;
 
 enum class EPaintType : uint8_t
 {
