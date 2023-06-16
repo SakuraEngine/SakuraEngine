@@ -10,34 +10,42 @@ ICanvas::ICanvas(GDIDevice* device) SKR_NOEXCEPT
       _gdi_canvas(nullptr),
       _current_gdi_element(nullptr),
       _gdi_elements(),
-      _state_stack()
+      _state_stack(),
+      _current_state(),
+      _is_in_paint_scope(false),
+      _is_in_path_scope(false)
 {
     SKR_GUI_ASSERT(_gdi_device != nullptr);
 
     _gdi_canvas = _gdi_device->create_canvas();
-    _state_stack.push_back({}); // default stack layer
 }
 
 ICanvas::~ICanvas() SKR_NOEXCEPT
 {
     SKR_GUI_ASSERT(_gdi_device != nullptr);
 
+    // destroy canvas
     if (_gdi_canvas)
     {
         _gdi_device->free_canvas(_gdi_canvas);
         _gdi_canvas = nullptr;
     }
 
+    // destroy elements
     for (auto& element : _gdi_elements)
     {
         _gdi_device->free_element(element);
     }
     _gdi_elements.clear();
+
+    // clean up states
+    _state_stack.clear();
 }
 
 //==> paint scope
 void ICanvas::paint_begin(float pixel_ratio) SKR_NOEXCEPT
 {
+    // check
     if (_current_gdi_element)
     {
         SKR_GUI_LOG_ERROR("ICanvas::paint_begin() called without a matching ICanvas::paint_end() call");
@@ -45,6 +53,7 @@ void ICanvas::paint_begin(float pixel_ratio) SKR_NOEXCEPT
         _current_gdi_element = nullptr;
     }
 
+    // per element per draw
     _current_gdi_element = _gdi_device->create_element();
     _gdi_elements.push_back(_current_gdi_element);
     _current_gdi_element->begin_frame(pixel_ratio);
@@ -64,19 +73,14 @@ void ICanvas::paint_end() SKR_NOEXCEPT
     }
 
     // reset state stack
-    if (_state_stack.size() > 1)
+    if (_state_stack.size() > 0)
     {
-        while (_state_stack.size() > 1)
-        {
-            state_restore();
-        }
+        _state_stack.clear();
         SKR_GUI_LOG_ERROR("state stack should be empty before paint_end() call, please check ICanvas::state_save() and ICanvas::state_restore() calls");
     }
 
-    __internal_repair_state_stack_if_need();
-
-    // reset stack
-    _state_stack.back() = {};
+    // reset state
+    _current_state = {};
     _is_in_paint_scope = false;
 }
 CanvasPaintScope ICanvas::paint_scope(float pixel_ratio) SKR_NOEXCEPT
@@ -94,7 +98,9 @@ void ICanvas::state_save() SKR_NOEXCEPT
     if (_is_in_paint_scope)
     {
         _current_gdi_element->save();
-        _state_stack.push_back({});
+
+        _state_stack.push_back(_current_state);
+        _current_state = {};
     }
     else
     {
@@ -106,13 +112,15 @@ void ICanvas::state_restore() SKR_NOEXCEPT
     if (_is_in_paint_scope)
     {
         _current_gdi_element->restore();
+
         if (_state_stack.size() >= 1)
         {
+            _current_state = _state_stack.back();
             _state_stack.pop_back();
         }
         else
         {
-            __internal_repair_state_stack_if_need();
+            SKR_GUI_LOG_ERROR("ICanvas::state_restore() called without a matching ICanvas::state_save() call");
         }
     }
     else
@@ -135,7 +143,7 @@ void ICanvas::state_reset() SKR_NOEXCEPT
     if (_is_in_paint_scope)
     {
         // TODO. impl state_reset
-        SKR_ASSERT(false && "ICanvas::state_reset() not implemented yet");
+        _current_state = {};
     }
     else
     {
@@ -146,7 +154,7 @@ void ICanvas::state_paint_style(EPaintStyle style) SKR_NOEXCEPT
 {
     if (_is_in_paint_scope)
     {
-        _state_stack.back().paint_style = style;
+        _current_state.paint_style = style;
     }
     else
     {
@@ -205,8 +213,7 @@ void ICanvas::state_anti_alias(bool enable) SKR_NOEXCEPT
     if (_is_in_paint_scope)
     {
         // TODO. impl in GDI
-        __internal_repair_state_stack_if_need();
-        _state_stack.back().anti_alias = enable;
+        _current_state.anti_alias = enable;
     }
     else
     {
@@ -291,8 +298,7 @@ void ICanvas::state_paint_reset() SKR_NOEXCEPT
 {
     if (_is_in_paint_scope)
     {
-        __internal_repair_state_stack_if_need();
-        _state_stack.back() = {};
+        _current_state = {};
     }
     else
     {
@@ -303,9 +309,8 @@ ColorPaintBuilder ICanvas::state_paint_color(Color color) SKR_NOEXCEPT
 {
     if (_is_in_paint_scope)
     {
-        __internal_repair_state_stack_if_need();
-        _state_stack.back().paint_type = EPaintType::Color;
-        _state_stack.back().color = color;
+        _current_state.paint_type = EPaintType::Color;
+        _current_state.color = color;
     }
     else
     {
@@ -317,9 +322,8 @@ TexturePaintBuilder ICanvas::state_paint_texture(ITexture* texture) SKR_NOEXCEPT
 {
     if (_is_in_paint_scope)
     {
-        __internal_repair_state_stack_if_need();
-        _state_stack.back().paint_type = EPaintType::Texture;
-        _state_stack.back().texture = texture;
+        _current_state.paint_type = EPaintType::Texture;
+        _current_state.texture = texture;
     }
     else
     {
@@ -331,9 +335,8 @@ MaterialPaintBuilder ICanvas::state_paint_material(IMaterial* material) SKR_NOEX
 {
     if (_is_in_paint_scope)
     {
-        __internal_repair_state_stack_if_need();
-        _state_stack.back().paint_type = EPaintType::Material;
-        _state_stack.back().material = material;
+        _current_state.paint_type = EPaintType::Material;
+        _current_state.material = material;
     }
     else
     {
@@ -360,8 +363,6 @@ void ICanvas::path_end() SKR_NOEXCEPT
 {
     if (_is_in_paint_scope)
     {
-        __internal_repair_state_stack_if_need();
-        auto& paint_state = _state_stack.back();
         // TODO. call fill()/stroke() api
     }
     else
@@ -590,19 +591,84 @@ void ICanvas::draw_ellipse(Offset center, float radius_x, float radius_y) SKR_NO
     this->path_ellipse(center, radius_x, radius_y);
 }
 
-// help
-bool ICanvas::__internal_repair_state_stack_if_need() SKR_NOEXCEPT
+// paint mode builder
+void ICanvas::_state_paint_color(Color color) SKR_NOEXCEPT
 {
-    if (_state_stack.size() < 1)
+    if (_is_in_paint_scope)
     {
-        SKR_GUI_LOG_ERROR("state stack not balanced, restoring to default state");
-        _state_stack.push_back({}); // default stack layer
-        return true;
+        _current_state.color = color;
     }
     else
     {
-        return false;
+        SKR_GUI_LOG_ERROR("ICanvas::paint_color() called outside of a paint scope");
     }
 }
-
+void ICanvas::_state_paint_uv_rect(Rect uv_rect) SKR_NOEXCEPT
+{
+    if (_is_in_paint_scope)
+    {
+        _current_state.uv_rect = uv_rect;
+    }
+    else
+    {
+        SKR_GUI_LOG_ERROR("ICanvas::paint_uv_rect() called outside of a paint scope");
+    }
+}
+void ICanvas::_state_paint_uv_rect_nine(Rect center, Rect total) SKR_NOEXCEPT
+{
+    if (_is_in_paint_scope)
+    {
+        _current_state.uv_rect = center;
+        _current_state.uv_rect_nine_total = total;
+    }
+    else
+    {
+        SKR_GUI_LOG_ERROR("ICanvas::paint_uv_rect_nine() called outside of a paint scope");
+    }
+}
+void ICanvas::_state_paint_blend_mode(BlendMode mode) SKR_NOEXCEPT
+{
+    if (_is_in_paint_scope)
+    {
+        _current_state.blend_mode = mode;
+    }
+    else
+    {
+        SKR_GUI_LOG_ERROR("ICanvas::paint_blend_mode() called outside of a paint scope");
+    }
+}
+void ICanvas::_state_paint_rotation(float degree) SKR_NOEXCEPT
+{
+    if (_is_in_paint_scope)
+    {
+        _current_state.degree = degree;
+    }
+    else
+    {
+        SKR_GUI_LOG_ERROR("ICanvas::paint_rotation() called outside of a paint scope");
+    }
+}
+void ICanvas::_state_paint_texture_swizzle(Swizzle swizzle) SKR_NOEXCEPT
+{
+    if (_is_in_paint_scope)
+    {
+        _current_state.swizzle = swizzle;
+    }
+    else
+    {
+        SKR_GUI_LOG_ERROR("ICanvas::paint_texture_swizzle() called outside of a paint scope");
+    }
+}
+void ICanvas::_state_paint_custom_paint(CustomPaintCallback custom, void* userdata) SKR_NOEXCEPT
+{
+    if (_is_in_paint_scope)
+    {
+        _current_state.custom_paint = custom;
+        _current_state.custom_paint_userdata = userdata;
+    }
+    else
+    {
+        SKR_GUI_LOG_ERROR("ICanvas::paint_custom_draw() called outside of a paint scope");
+    }
+}
 } // namespace skr::gui
