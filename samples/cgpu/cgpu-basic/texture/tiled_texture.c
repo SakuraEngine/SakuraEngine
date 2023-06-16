@@ -425,9 +425,7 @@ void finalize()
     for (uint32_t i = 0; i < TOTAL_MIPS; i++)
         cgpu_free_texture_view(sampled_views[i]);
     for (uint32_t i = 0; i < App.swapchain->buffer_count; i++)
-    {
         cgpu_free_texture_view(views[i]);
-    }
     cgpu_free_render_pipeline(pipeline);
     cgpu_free_root_signature(root_sig);
     app_finalize(&App);
