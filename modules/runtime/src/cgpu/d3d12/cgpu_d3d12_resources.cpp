@@ -1,7 +1,7 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "cgpu/drivers/cgpu_nvapi.h"
 #include "cgpu/drivers/cgpu_ags.h"
-#include "d3d12_utils.h"
+#include "d3d12_utils.hpp"
 #include "platform/memory.h"
 #include "misc/make_zeroed.hpp"
 #include "misc/defer.hpp"
@@ -125,7 +125,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
     if (!B->pDxResource)
     {
         if (D3D12_HEAP_TYPE_DEFAULT != alloc_desc.HeapType &&
-            (alloc_desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS))
+            (bufDesc.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS))
         {
             D3D12_HEAP_PROPERTIES heapProps = {};
             heapProps.Type = D3D12_HEAP_TYPE_CUSTOM;
@@ -665,68 +665,6 @@ inline static void alignedDivision(const D3D12_TILED_RESOURCE_COORDINATE& extent
     out->Z = (extent.Z / granularity.Z + ((extent.Z % granularity.Z) ? 1u : 0u));
 }
 
-struct TileMapping_D3D12
-{
-    SAtomicUPtr pDxAllocation;
-};
-static_assert(std::is_trivially_constructible_v<TileMapping_D3D12>, "TileMapping_D3D12 Must Be Trivially Constructible!");
-
-struct SubresTileMappings_D3D12
-{
-    SubresTileMappings_D3D12(uint32_t X, uint32_t Y, uint32_t Z) SKR_NOEXCEPT
-        : X(X), Y(Y), Z(Z)
-    {
-        if (X * Y * Z)
-            mappings = (TileMapping_D3D12*)cgpu_calloc(1, X * Y * Z * sizeof(TileMapping_D3D12));
-    }
-    ~SubresTileMappings_D3D12() SKR_NOEXCEPT
-    {
-        if (mappings)
-            cgpu_free(mappings);
-    }
-    TileMapping_D3D12* at(uint32_t x, uint32_t y, uint32_t z) 
-    { 
-        SKR_ASSERT(mappings && x < X && y < Y && z < Z && "SubresTileMappings::at: Out of Range!"); 
-        return mappings + (x + y * X + z * X * Y); 
-    }
-    const TileMapping_D3D12* at(uint32_t x, uint32_t y, uint32_t z) const 
-    { 
-        SKR_ASSERT(mappings && x < X && y < Y && z < Z && "SubresTileMappings::at: Out of Range!"); 
-        return mappings + (x + y * X + z * X * Y); 
-    }
-
-private:
-    const uint32_t X = 0;
-    const uint32_t Y = 0;
-    const uint32_t Z = 0;
-    TileMapping_D3D12* mappings = nullptr;
-};
-
-struct CGPUTiledTexture_D3D12 : public CGPUTexture_D3D12 {
-    CGPUTiledTexture_D3D12(SubresTileMappings_D3D12* pMappings) SKR_NOEXCEPT
-        : CGPUTexture_D3D12(), pMappings(pMappings)
-    {
-
-    }
-    ~CGPUTiledTexture_D3D12() SKR_NOEXCEPT
-    {
-        const auto N = super.info->mip_levels * (super.info->array_size_minus_one + 1);
-        for (uint32_t i = 0; i < N; i++)
-        {
-            pMappings[i].~SubresTileMappings_D3D12();
-        }
-    }
-    SubresTileMappings_D3D12* getSubresTileMappings(uint32_t mip_level, uint32_t array_index)
-    {
-        SKR_ASSERT(mip_level < super.info->mip_levels && array_index < super.info->array_size_minus_one + 1);
-        return pMappings + (mip_level * (super.info->array_size_minus_one + 1) + array_index);
-    }
-    
-private:
-    SubresTileMappings_D3D12* pMappings;
-};
-cgpu_static_assert(sizeof(CGPUTiledTexture_D3D12) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
-
 inline void D3D12Util_MapAllTilesAsUndefined(ID3D12CommandQueue* pDxQueue, ID3D12Resource* pDxResource, ID3D12Heap* pHeap)
 {
     D3D12_TILE_RANGE_FLAGS RangeFlags = D3D12_TILE_RANGE_FLAG_REUSE_SINGLE_TILE;
@@ -739,6 +677,7 @@ inline void D3D12Util_MapAllTilesAsUndefined(ID3D12CommandQueue* pDxQueue, ID3D1
     );
 }
 
+cgpu_static_assert(sizeof(CGPUTiledTexture_D3D12) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
 inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D, const struct CGPUTextureDescriptor* desc,
     D3D12_RESOURCE_DESC resDesc, D3D12_RESOURCE_STATES startStates, const D3D12_CLEAR_VALUE* pClearValue)
 {
@@ -806,19 +745,19 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
     return T;
 }
 
-void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapTiledTextureDescriptor* desc)
+void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTiledTextureRegions* regions)
 {
     const auto kPageSize = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-    const uint32_t RegionCount = desc->region_count;
+    const uint32_t RegionCount = regions->region_count;
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)queue->device;
     CGPUQueue_D3D12* Q = (CGPUQueue_D3D12*)queue;
-    CGPUTiledTexture_D3D12* T = (CGPUTiledTexture_D3D12*)desc->texture;
+    CGPUTiledTexture_D3D12* T = (CGPUTiledTexture_D3D12*)regions->texture;
 
     // calculate page count
     uint32_t TotalTileCount = 0;
     for (uint32_t i = 0; i < RegionCount; i++)
     {
-        const auto& Region = desc->regions[i];
+        const auto& Region = regions->regions[i];
         auto& Mappings = *T->getSubresTileMappings(Region.mip_level, Region.layer);
         uint32_t RegionTileCount = 0;
         for (uint32_t x = Region.start.x; x < Region.end.x; x++)
@@ -826,21 +765,28 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapT
                 for (uint32_t z = Region.start.z; z < Region.end.z; z++)
                 {
                     auto& Mapping = *Mappings.at(x, y, z);
-                    const auto Alloc = skr_atomicuptr_load_acquire(&Mapping.pDxAllocation);
-                    RegionTileCount += !Alloc ? 1 : 0;
+                    const auto prev = skr_atomic32_cas_relaxed(&Mapping.status, TILE_MAPPING_STATUS_UNMAPPED, TILE_MAPPING_STATUS_PENDING);
+                    if (prev == TILE_MAPPING_STATUS_UNMAPPED)
+                    {
+                        RegionTileCount += 1;
+                    }
                 }
         TotalTileCount += RegionTileCount;
     }
     if (!TotalTileCount) return;
 
     // allocate memory for arguments
-    auto ArgsMemory = sakura_calloc(TotalTileCount, sizeof(D3D12_TILED_RESOURCE_COORDINATE) + sizeof(UINT) + sizeof(UINT) + sizeof(ID3D12Heap*) + sizeof(D3D12MA::Allocation*));
+    auto ArgsMemory = sakura_calloc(TotalTileCount, 
+        sizeof(D3D12_TILED_RESOURCE_COORDINATE) + sizeof(UINT) + sizeof(UINT) +
+        sizeof(ID3D12Heap*) + sizeof(D3D12MA::Allocation*) + sizeof(struct TileMapping_D3D12*)
+    );
     SKR_DEFER( { sakura_free(ArgsMemory); } );
     auto pTileCoordinates = (D3D12_TILED_RESOURCE_COORDINATE*)ArgsMemory;
     UINT* pRangeTileCounts = (UINT*)(pTileCoordinates + TotalTileCount);
     UINT* pRangeOffsets = (UINT*)(pRangeTileCounts + TotalTileCount);
     ID3D12Heap** ppHeaps = (ID3D12Heap**)(pRangeOffsets + TotalTileCount);
     D3D12MA::Allocation** ppAllocations = (D3D12MA::Allocation**)(ppHeaps + TotalTileCount);
+    TileMapping_D3D12** ppMappings = (TileMapping_D3D12**)(ppAllocations + TotalTileCount);
 
     // do allocations
     D->pTiledMemoryPool->AllocateTiles(TotalTileCount, ppAllocations);
@@ -854,7 +800,7 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapT
     uint32_t AllocateTileCount = 0;
     for (uint32_t i = 0; i < RegionCount; i++)
     {
-        const auto& Region = desc->regions[i];
+        const auto& Region = regions->regions[i];
         const auto SubresIndex = CALC_SUBRESOURCE_INDEX(Region.mip_level, Region.layer, 0, 1, 1);
         auto& Mappings = *T->getSubresTileMappings(Region.mip_level, Region.layer);
         for (uint32_t x = Region.start.x; x < Region.end.x; x++)
@@ -862,13 +808,13 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapT
                 for (uint32_t z = Region.start.z; z < Region.end.z; z++)
                 {
                     auto& Mapping = *Mappings.at(x, y, z);
-                    if (Mapping.pDxAllocation) continue; // skip if already mapped
+                    const auto status = skr_atomic32_cas_relaxed(&Mapping.status, TILE_MAPPING_STATUS_PENDING, TILE_MAPPING_STATUS_MAPPING);
+                    if (status != TILE_MAPPING_STATUS_PENDING) continue; // skip if already mapped
 
                     // calc mapping args
-                    skr_atomicuptr_store_release(&Mapping.pDxAllocation, (uintptr_t)ppAllocations[AllocateTileCount]);
-                    pTileCoordinates[AllocateTileCount].X = Region.start.x + x;
-                    pTileCoordinates[AllocateTileCount].Y = Region.start.y + y;
-                    pTileCoordinates[AllocateTileCount].Z = Region.start.z + z;
+                    Mapping.pDxAllocation = ppAllocations[AllocateTileCount];
+                    ppMappings[AllocateTileCount] = &Mapping;
+                    pTileCoordinates[AllocateTileCount] = { x, y, z };
                     pTileCoordinates[AllocateTileCount].Subresource = SubresIndex;
                     pRangeOffsets[AllocateTileCount] = (uint32_t)(ppAllocations[AllocateTileCount]->GetOffset() / kPageSize);
                     pRangeTileCounts[AllocateTileCount] = 1;
@@ -877,22 +823,29 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapT
     }
     
     // do mapping
-    const auto fnMap = [&](uint32_t N, ID3D12Heap* pHeap, 
-        const D3D12_TILED_RESOURCE_COORDINATE* pCoordinates, const UINT* pOffsets, const UINT* pRangeTileCounts)
+    const auto fnMap = [&](uint32_t N, uint32_t Offset, ID3D12Heap* pHeap)
     {
+        if (N == 0) return;
+
         Q->pCommandQueue->UpdateTileMappings(
             T->pDxResource,
             N,
-            pCoordinates,
+            pTileCoordinates,
             NULL,  // All regions are single tiles
             pHeap, // ID3D12Heap*
             N,
             NULL,  // All ranges are sequential tiles in the heap
-            pOffsets,
+            pRangeOffsets,
             pRangeTileCounts,
             D3D12_TILE_MAPPING_FLAG_NONE);
+        for (uint32_t i = 0; i < N; i++)
+        {
+            auto& Mapping = *ppMappings[i];
+            skr_atomic32_cas_relaxed(&Mapping.status, TILE_MAPPING_STATUS_MAPPING, TILE_MAPPING_STATUS_MAPPED);
+        }
     };
     uint32_t TileIndex = 0;
+    uint32_t SeqTileOffset = 0;
     uint32_t SeqTileCount = 0;
     auto LastHeap = ppHeaps[0];
     while (TileIndex < AllocateTileCount)
@@ -900,17 +853,54 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapT
         auto CurrentHeap = ppHeaps[TileIndex];
         if (CurrentHeap != LastHeap)
         {
-            fnMap(SeqTileCount, LastHeap, pTileCoordinates, pRangeOffsets, pRangeTileCounts);
-            pTileCoordinates += SeqTileCount;
-            pRangeOffsets += SeqTileCount;
-            pRangeTileCounts += SeqTileCount;
+            fnMap(SeqTileCount, SeqTileOffset, LastHeap);
             LastHeap = CurrentHeap;
+            SeqTileOffset += SeqTileCount;
             SeqTileCount = 0;
         }
         TileIndex++;
         SeqTileCount++;
     }
-    fnMap(SeqTileCount, LastHeap, pTileCoordinates, pRangeOffsets, pRangeTileCounts);
+    fnMap(SeqTileCount, SeqTileOffset, LastHeap);
+}
+
+void cgpu_queue_unmap_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTiledTextureRegions* regions)
+{
+    CGPUTiledTexture_D3D12* T = (CGPUTiledTexture_D3D12*)regions->texture;
+    CGPUQueue_D3D12* Q = (CGPUQueue_D3D12*)queue;
+    const uint32_t RegionCount = regions->region_count;
+
+    // calculate page count
+    for (uint32_t i = 0; i < RegionCount; i++)
+    {
+        const auto& Region = regions->regions[i];
+        auto& Mappings = *T->getSubresTileMappings(Region.mip_level, Region.layer);
+        for (uint32_t x = Region.start.x; x < Region.end.x; x++)
+        for (uint32_t y = Region.start.y; y < Region.end.y; y++)
+        for (uint32_t z = Region.start.z; z < Region.end.z; z++)
+        {
+            Mappings.unmap(x, y, z);
+
+            const bool ForceUnmap = false;
+            if (ForceUnmap) // slow and only useful for debugging
+            {
+                D3D12_TILE_RANGE_FLAGS Flags = D3D12_TILE_RANGE_FLAG_NULL;
+                UINT N = 1;
+                D3D12_TILED_RESOURCE_COORDINATE Coord = { x, y, z };
+                Q->pCommandQueue->UpdateTileMappings(
+                    T->pDxResource,
+                    1,
+                    &Coord,
+                    NULL,  // All regions are single tiles
+                    NULL, // ID3D12Heap*
+                    1,
+                    &Flags,  // All ranges are sequential tiles in the heap
+                    NULL,
+                    &N,
+                    D3D12_TILE_MAPPING_FLAG_NONE);
+            }
+        }
+    }
 }
 
 inline D3D12_RESOURCE_FLAGS D3D12Util_CalculateTextureFlags(const struct CGPUTextureDescriptor* desc)
@@ -1231,8 +1221,6 @@ CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const
 void cgpu_free_texture_d3d12(CGPUTextureId texture)
 {
     CGPUTexture_D3D12* T = (CGPUTexture_D3D12*)texture;
-    CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)texture->device;
-    CGPUAdapter_D3D12* A = (CGPUAdapter_D3D12*)texture->device->adapter;
     const auto pInfo = texture->info;
     if (pInfo->is_aliasing)
     {
@@ -1243,8 +1231,9 @@ void cgpu_free_texture_d3d12(CGPUTextureId texture)
     else if (pInfo->is_tiled)
     {
         CGPUTiledTexture_D3D12* TT = (CGPUTiledTexture_D3D12*)T;
-        SAFE_RELEASE(TT->pDxResource);
+        auto pResource = TT->pDxResource;
         cgpu_delete(TT);
+        SAFE_RELEASE(pResource);
     }
     else if (pInfo->is_imported)
     {

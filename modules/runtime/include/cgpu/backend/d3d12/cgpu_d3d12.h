@@ -70,7 +70,8 @@ CGPU_API void cgpu_submit_queue_d3d12(CGPUQueueId queue, const struct CGPUQueueS
 CGPU_API void cgpu_wait_queue_idle_d3d12(CGPUQueueId queue);
 CGPU_API void cgpu_queue_present_d3d12(CGPUQueueId queue, const struct CGPUQueuePresentDescriptor* desc);
 CGPU_API float cgpu_queue_get_timestamp_period_ns_d3d12(CGPUQueueId queue);
-CGPU_API void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapTiledTextureDescriptor* desc);
+CGPU_API void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTiledTextureRegions* desc);
+CGPU_API void cgpu_queue_unmap_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTiledTextureRegions* desc);
 CGPU_API void cgpu_free_queue_d3d12(CGPUQueueId queue);
 
 // Command APIs

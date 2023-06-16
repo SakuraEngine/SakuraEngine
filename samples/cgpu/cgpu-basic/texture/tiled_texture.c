@@ -96,7 +96,7 @@ void update_streaming_map(CGPUCommandBufferId cmd, uint32_t MipLevel)
     // map tiled texture
     {
         const CGPUTiledSubresourceInfo subres = sampled_texture->tiled_resource->subresources[MipLevel];
-        CGPUTextureCoordinateRegion coordinates[2] = 
+        CGPUTextureCoordinateRegion coordinates[3] = 
         {
             {
                 .start = { 0, 0, 0 },
@@ -106,17 +106,35 @@ void update_streaming_map(CGPUCommandBufferId cmd, uint32_t MipLevel)
             },
             {
                 .start = { 0, 0, 0 },
+                .end = { subres.width_in_tiles / 2, subres.height_in_tiles / 2, subres.depth_in_tiles },
+                .mip_level = MipLevel,
+                .layer = 0
+            },
+            {
+                .start = { subres.width_in_tiles / 2, 0, 0 },
                 .end = { subres.width_in_tiles, subres.height_in_tiles / 2, subres.depth_in_tiles },
                 .mip_level = MipLevel,
                 .layer = 0
             }
         };
-        CGPUMapTiledTextureDescriptor map_desc = {
+        CGPUTiledTextureRegions mapping = {
             .texture = sampled_texture,
             .regions = coordinates,
-            .region_count = 2
+            .region_count = 1
         };
-        cgpu_queue_map_tiled_texture(App.gfx_queue, &map_desc);
+        cgpu_queue_map_tiled_texture(App.gfx_queue, &mapping);
+        CGPUTiledTextureRegions unmapping = {
+            .texture = sampled_texture,
+            .regions = coordinates + 1,
+            .region_count = 1
+        };
+        cgpu_queue_unmap_tiled_texture(App.gfx_queue, &unmapping);
+        CGPUTiledTextureRegions mapping1 = {
+            .texture = sampled_texture,
+            .regions = coordinates + 2,
+            .region_count = 1
+        };
+        cgpu_queue_map_tiled_texture(App.gfx_queue, &mapping1);
     }
     current_mip = MipLevel;
     // record
