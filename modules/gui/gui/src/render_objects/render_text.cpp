@@ -1,7 +1,7 @@
 #include "SkrGui/dev/gdi/gdi.hpp"
 #include "SkrGui/render_objects/render_text.hpp"
-#include "text_server/text_paragraph.h"
-#include "text_server/font.h"
+#include "dev/text_server/text_paragraph.h"
+#include "dev/text_server/font.h"
 #include <containers/sptr.hpp>
 #include <variant>
 #include <fstream>

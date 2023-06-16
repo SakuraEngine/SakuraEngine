@@ -31,35 +31,37 @@
 #pragma once
 
 #ifndef SCRIPT_ITERATOR_H
-#define SCRIPT_ITERATOR_H
+    #define SCRIPT_ITERATOR_H
 
-#include "text_server.h"
+    #include "dev/text_server/text_server.h"
 
-#include <unicode/uchar.h>
-#include <unicode/uloc.h>
-#include <unicode/uscript.h>
-#include <unicode/ustring.h>
-#include <unicode/utypes.h>
+    #include <unicode/uchar.h>
+    #include <unicode/uloc.h>
+    #include <unicode/uscript.h>
+    #include <unicode/ustring.h>
+    #include <unicode/utypes.h>
 
-#include <hb-icu.h>
-#include <hb.h>
+    #include <hb-icu.h>
+    #include <hb.h>
 
-namespace godot{
-class ScriptIterator {
+namespace godot
+{
+class ScriptIterator
+{
 public:
-	struct ScriptRange {
-		int start = 0;
-		int end = 0;
-		hb_script_t script = HB_SCRIPT_COMMON;
-	};
-	Vector<ScriptRange> script_ranges;
+    struct ScriptRange {
+        int         start = 0;
+        int         end = 0;
+        hb_script_t script = HB_SCRIPT_COMMON;
+    };
+    Vector<ScriptRange> script_ranges;
 
 private:
-	static bool same_script(int32_t p_script_one, int32_t p_script_two);
+    static bool same_script(int32_t p_script_one, int32_t p_script_two);
 
 public:
-	ScriptIterator(const String &p_string, int p_start, int p_length);
+    ScriptIterator(const String& p_string, int p_start, int p_length);
 };
 
-}
-#endif //SCRIPT_ITERATOR_H
+} // namespace godot
+#endif // SCRIPT_ITERATOR_H

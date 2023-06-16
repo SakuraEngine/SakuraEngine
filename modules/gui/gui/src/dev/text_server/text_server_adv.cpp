@@ -2,8 +2,8 @@
 #include "SkrGui/dev/gdi/color.hpp"
 #include "image_texture.h"
 
-#include "text_server/text_server_adv.h"
-#include "text_server/char_utils.h"
+#include "dev/text_server/text_server_adv.h"
+#include "dev/text_server/char_utils.h"
 #include <new>
 
 namespace godot
