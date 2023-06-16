@@ -803,6 +803,7 @@ typedef struct CGPUAdapterDetail {
     uint32_t max_vertex_input_bindings;
     uint32_t wave_lane_count;
     uint64_t host_visible_vram_budget;
+    CGPUDynamicStateFeatures dynamic_state_features;
     bool support_host_visible_vram : 1;
     bool multidraw_indirect : 1;
     bool support_geom_shader : 1;
@@ -810,7 +811,9 @@ typedef struct CGPUAdapterDetail {
     bool is_uma : 1;
     bool is_virtual : 1;
     bool is_cpu : 1;
-    CGPUDynamicStateFeatures dynamic_state_features;
+    bool support_tiled_buffer : 1;
+    bool support_tiled_texture : 1;
+    bool support_tiled_volume : 1;
     // RDNA2 
     bool support_shading_rate : 1;
     bool support_shading_rate_mask : 1;

@@ -127,7 +127,8 @@ uint32_t cgpu_query_queue_count_d3d12(const CGPUAdapterId adapter, const ECGPUQu
         default: return 0;
     }
     */
-    return UINT32_MAX;
+    // return UINT32_MAX;
+    return 8; // Avoid returning unreasonable large number
 }
 
 CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDescriptor* desc)
@@ -192,7 +193,23 @@ CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDes
     poolDesc.min_block_count = 32;
     poolDesc.max_block_count = 256;
     D->pTiledMemoryPool = (CGPUTiledMemoryPool_D3D12*)cgpu_create_memory_pool_d3d12(&D->super, &poolDesc);
-    
+    if (A->mTiledResourceTier <= D3D12_TILED_RESOURCES_TIER_1) 
+    {
+        D3D12_HEAP_DESC heapDesc = {};
+        heapDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+        heapDesc.SizeInBytes = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+        heapDesc.Flags = D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES;
+        heapDesc.Properties.Type = D3D12_HEAP_TYPE_DEFAULT;
+        heapDesc.Properties.VisibleNodeMask = CGPU_SINGLE_GPU_NODE_MASK;
+        auto hres = D->pDxDevice->CreateHeap(&heapDesc, IID_PPV_ARGS(&D->pUndefinedTileHeap));
+        CHECK_HRESULT(hres);
+        D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+        queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
+        queueDesc.NodeMask = CGPU_SINGLE_GPU_NODE_MASK;
+        hres = D->pDxDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&D->pUndefinedTileMappingQueue));
+        CHECK_HRESULT(hres);
+    }
+
     // Create Descriptor Heaps
     D->pCPUDescriptorHeaps = (D3D12Util_DescriptorHeap**)cgpu_malloc(D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES * sizeof(D3D12Util_DescriptorHeap*));
     D->pCbvSrvUavHeaps = (D3D12Util_DescriptorHeap**)cgpu_malloc(sizeof(D3D12Util_DescriptorHeap*));
@@ -344,6 +361,8 @@ void cgpu_free_device_d3d12(CGPUDeviceId device)
         cgpu_free((ID3D12CommandQueue**)D->ppCommandQueues[t]);
     }
     // Free Tiled Pool
+    SAFE_RELEASE(D->pUndefinedTileHeap);
+    SAFE_RELEASE(D->pUndefinedTileMappingQueue);
     cgpu_free_memory_pool_d3d12((CGPUMemoryPoolId)D->pTiledMemoryPool);
     // Free D3D12MA Allocator
     SAFE_RELEASE(D->pResourceAllocator);
