@@ -167,7 +167,7 @@ struct SKR_GUI_RENDERER_API GDIImage_RenderGraph : public IGDIImage {
     uint32_t    image_depth = 0;
     ECGPUFormat format = CGPU_FORMAT_UNDEFINED;
 
-    SAtomicU32      state = static_cast<uint32_t>(EGDIResourceState::Requsted);
+    SAtomicU32      state = static_cast<uint32_t>(EGDIResourceState::Requested);
     EGDIImageSource source = EGDIImageSource::Count;
 
     skr::BlobId pixel_data = nullptr;
@@ -191,7 +191,7 @@ struct SKR_GUI_RENDERER_API GDITexture_RenderGraph : public IGDITexture {
 
     void intializeBindTable() SKR_NOEXCEPT;
 
-    SAtomicU32                      state = static_cast<uint32_t>(EGDIResourceState::Requsted);
+    SAtomicU32                      state = static_cast<uint32_t>(EGDIResourceState::Requested);
     EGDITextureSource               source = EGDITextureSource::Count;
     GDITextureAsyncData_RenderGraph async_data;
 
@@ -213,7 +213,7 @@ struct SKR_GUI_RENDERER_API GDITextureUpdate_RenderGraph : public IGDITextureUpd
     skr::render_graph::TextureHandle texture_handle;
 
     uint64_t   execute_frame_index = 0;
-    SAtomicU32 state = static_cast<uint32_t>(EGDIResourceState::Requsted);
+    SAtomicU32 state = static_cast<uint32_t>(EGDIResourceState::Requested);
 };
 
 struct SKR_GUI_RENDERER_API GDIRenderer_RenderGraph : public IGDIRenderer {

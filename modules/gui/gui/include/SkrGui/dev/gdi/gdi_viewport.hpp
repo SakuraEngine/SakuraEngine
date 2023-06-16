@@ -3,8 +3,6 @@
 
 namespace skr::gdi
 {
-struct GDICanvas;
-
 struct SKR_GUI_API GDIViewport {
     virtual ~GDIViewport() SKR_NOEXCEPT = default;
 

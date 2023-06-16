@@ -3,8 +3,6 @@
 
 namespace skr::gdi
 {
-struct IGDIRenderer;
-
 struct SKR_GUI_API GDIResource {
     virtual ~GDIResource() SKR_NOEXCEPT = default;
     virtual EGDIResourceState get_state() const SKR_NOEXCEPT = 0;

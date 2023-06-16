@@ -264,7 +264,7 @@ void GDIRenderer_RenderGraph::updatePendingTextures(skr::render_graph::RenderGra
     {
         if (update->texture->get_state() == EGDIResourceState::Okay)
         {
-            if (update->get_state() == EGDIResourceState::Requsted)
+            if (update->get_state() == EGDIResourceState::Requested)
             {
                 update->upload_buffer = graph->create_buffer(
                 [update](auto& g, auto& builder) {
