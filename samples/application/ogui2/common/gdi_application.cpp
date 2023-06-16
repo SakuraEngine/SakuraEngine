@@ -53,11 +53,11 @@ bool initialize_gdi_application(gdi_application_t* app)
     }
 
     // initialize gdi device
-    app->device = skr::gdi::IGDIDevice::Create(skr::gdi::EGDIBackend::NANOVG);
+    app->device = skr::gui::IGDIDevice::Create(skr::gui::EGDIBackend::NANOVG);
 
     // initialize gdi renderer
-    skr::gdi::GDIRendererDescriptor             gdir_desc = {};
-    skr::gdi::GDIRendererDescriptor_RenderGraph gdir_desc2 = {};
+    skr::gui::GDIRendererDescriptor             gdir_desc = {};
+    skr::gui::GDIRendererDescriptor_RenderGraph gdir_desc2 = {};
     gdir_desc2.target_format = (ECGPUFormat)app->gfx.swapchain->back_buffers[0]->format;
     gdir_desc2.device = app->gfx.device;
     gdir_desc2.transfer_queue = app->gfx.gfx_queue;
@@ -66,20 +66,20 @@ bool initialize_gdi_application(gdi_application_t* app)
     gdir_desc2.vram_service = app->vram_service;
     gdir_desc2.job_queue = app->job_queue;
     gdir_desc.usr_data = &gdir_desc2;
-    app->renderer = SkrNew<skr::gdi::GDIRenderer_RenderGraph>();
+    app->renderer = SkrNew<skr::gui::GDIRenderer_RenderGraph>();
     app->renderer->initialize(&gdir_desc);
 
     // initialize text
-    skr::gdi::IGDIText::Initialize(app->renderer);
+    skr::gui::IGDIText::Initialize(app->renderer);
     return true;
 }
 
 bool finalize_gdi_application(gdi_application_t* app)
 {
     app_wait_gpu_idle(&app->gfx);
-    skr::gdi::IGDIDevice::Free(app->device);
+    skr::gui::IGDIDevice::Free(app->device);
 
-    skr::gdi::IGDIText::Finalize();
+    skr::gui::IGDIText::Finalize();
     app->renderer->finalize();
     SkrDelete(app->renderer);
 

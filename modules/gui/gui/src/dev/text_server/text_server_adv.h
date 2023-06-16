@@ -85,7 +85,7 @@ namespace godot
 {
 
 struct SkrGuiData {
-    skr::gdi::IGDIRenderer* gdi_renderer = nullptr;
+    skr::gui::IGDIRenderer* gdi_renderer = nullptr;
 };
 
 class TextServerAdvanced : public TextServer
@@ -998,7 +998,7 @@ public: // MODBINDs
     TextServerAdvanced(const SkrGuiData& gui_data);
     virtual ~TextServerAdvanced();
 
-    ::skr::gdi::IGDIRenderer* get_gdi_renderer() override
+    ::skr::gui::IGDIRenderer* get_gdi_renderer() override
     {
         return gui_data.gdi_renderer;
     }

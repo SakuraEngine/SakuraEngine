@@ -501,7 +501,7 @@ void ICanvas::path_arc(Offset center, float radius, float start_degree, float en
     {
         if (_is_in_path_scope)
         {
-            _current_gdi_element->arc(center.x, center.y, radius, start_degree, end_degree, ::skr::gdi::EGDIWinding::CW);
+            _current_gdi_element->arc(center.x, center.y, radius, start_degree, end_degree, EGDIWinding::CW);
         }
         else
         {

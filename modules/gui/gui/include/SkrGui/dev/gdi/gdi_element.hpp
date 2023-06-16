@@ -2,7 +2,7 @@
 #include "SkrGui/dev/gdi/gdi_types.hpp"
 #include "SkrGui/backend/paint_params.hpp"
 
-namespace skr::gdi
+namespace skr::gui
 {
 using ::skr::gui::Swizzle;
 
@@ -75,4 +75,4 @@ struct SKR_GUI_API IGDIElement {
     virtual int32_t get_z() const = 0;
     virtual void    set_texture_swizzle(Swizzle swizzle) = 0;
 };
-} // namespace skr::gdi
+} // namespace skr::gui

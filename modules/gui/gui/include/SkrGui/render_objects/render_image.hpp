@@ -8,7 +8,7 @@ class SKR_GUI_API RenderImage : public RenderBox
 {
 public:
     SKR_GUI_TYPE(RenderImage, "ad732810-9b4e-4903-b371-42aa23d75c0a", RenderBox);
-    RenderImage(gdi::IGDIDevice* gdi_device);
+    RenderImage(IGDIDevice* gdi_device);
     virtual ~RenderImage();
 
     virtual void layout(BoxConstraint constraints, bool needSize = false) override;
@@ -18,8 +18,8 @@ public:
     skr_float4_t get_color() const { return color; }
 
 private:
-    skr_float4_t      color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    gdi::IGDIElement* gdi_element = nullptr;
+    skr_float4_t color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    IGDIElement* gdi_element = nullptr;
 };
 
 } // namespace skr::gui

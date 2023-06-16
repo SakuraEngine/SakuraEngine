@@ -7,7 +7,7 @@
 #include "math/rtm/rtmx.h"
 
 // nvg helper functions
-namespace skr::gdi
+namespace skr::gui
 {
 uint32_t ToColor32ABGR(NVGcolor color)
 {
@@ -321,10 +321,10 @@ static void nvg__renderStroke(void* uptr, NVGpaint* paint, NVGcompositeOperation
         command.texture = nullptr;
     }
 }
-} // namespace skr::gdi
+} // namespace skr::gui
 
 // device code
-namespace skr::gdi
+namespace skr::gui
 {
 GDIDeviceNVG::~GDIDeviceNVG()
 {
@@ -386,4 +386,4 @@ void GDIDeviceNVG::free_paint(IGDIPaint* paint)
 {
     SkrDelete(paint);
 }
-} // namespace skr::gdi
+} // namespace skr::gui

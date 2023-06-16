@@ -13,18 +13,18 @@
 #include "containers/vector.hpp"
 #include "containers/sptr.hpp"
 
-namespace skr::gdi
+namespace skr::gui
 {
 struct ImageTexFutureLauncher;
 struct DecodingProgress;
-} // namespace skr::gdi
+} // namespace skr::gui
 
 namespace skr
 {
 struct JobQueue;
 }
 
-namespace skr::gdi
+namespace skr::gui
 {
 
 enum EGDIRendererPipelineAttribute
@@ -99,7 +99,7 @@ struct GDITextureDescriptor_RenderGraph {
 
 struct SKR_GUI_RENDERER_API GDIImageAsyncData_RenderGraph {
     friend struct GDITextureAsyncData_RenderGraph;
-    friend struct skr::gdi::DecodingProgress;
+    friend struct skr::gui::DecodingProgress;
 
     struct
     {
@@ -118,7 +118,7 @@ struct SKR_GUI_RENDERER_API GDIImageAsyncData_RenderGraph {
     bool            useImageCoder = false;
     skr_io_future_t ram_request = {};
 
-    skr::SPtr<skr::gdi::DecodingProgress> decoding_progress = nullptr;
+    skr::SPtr<skr::gui::DecodingProgress> decoding_progress = nullptr;
 
     IGDIImage* DoAsync(struct GDIImage_RenderGraph* owner, skr_vfs_t* vfs, skr_io_ram_service_t* ram_service) SKR_NOEXCEPT;
 
@@ -280,4 +280,4 @@ protected:
     ECGPUFormat             target_format;
 };
 
-} // namespace skr::gdi
+} // namespace skr::gui

@@ -28,7 +28,7 @@ struct WindowContextImpl : public WindowContext {
     }
 
     void draw(const DrawParams* params) SKR_NOEXCEPT final;
-    void render(gdi::IGDIRenderer* renderer, const RenderParams* params) SKR_NOEXCEPT final;
+    void render(IGDIRenderer* renderer, const RenderParams* params) SKR_NOEXCEPT final;
 
     // impl helpers
 
@@ -48,7 +48,7 @@ struct WindowContextImpl : public WindowContext {
 protected:
     RenderWindow*    root_element = nullptr;
     IPlatformWindow* platform_window = nullptr;
-    gdi::IGDIDevice* gdi_device = nullptr;
+    IGDIDevice*      gdi_device = nullptr;
 };
 
 void WindowContextImpl::draw(const DrawParams* params) SKR_NOEXCEPT
@@ -63,7 +63,7 @@ void WindowContextImpl::draw(const DrawParams* params) SKR_NOEXCEPT
     }
 }
 
-void WindowContextImpl::render(gdi::IGDIRenderer* renderer, const RenderParams* params) SKR_NOEXCEPT
+void WindowContextImpl::render(IGDIRenderer* renderer, const RenderParams* params) SKR_NOEXCEPT
 {
     if (root_element && root_element->get_gdi_viewport())
     {

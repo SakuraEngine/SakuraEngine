@@ -1,6 +1,6 @@
 #include "dev/gdi/nanovg/gdi_element.hpp"
 
-namespace skr::gdi
+namespace skr::gui
 {
 
 void GDIPaintNVG::set_pattern(float cx, float cy, float w, float h, float angle, IGDITexture* texture, skr_float4_t ocol) SKR_NOEXCEPT
@@ -166,4 +166,4 @@ void GDIElementNVG::save()
 {
     nvgSave(nvg);
 }
-} // namespace skr::gdi
+} // namespace skr::gui

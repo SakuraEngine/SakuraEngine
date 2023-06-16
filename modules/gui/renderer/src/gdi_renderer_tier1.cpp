@@ -6,9 +6,7 @@
 #include "math/rtm/qvvf.h"
 #include <cmath>
 
-namespace skr
-{
-namespace gdi
+namespace skr::gui
 {
 // HACK
 inline static void read_bytes(const char8_t* file_name, char8_t** bytes, uint32_t* length)
@@ -193,7 +191,7 @@ void GDIRenderer_RenderGraph::createRenderPipelines()
 int GDIRenderer_RenderGraph::initialize(const GDIRendererDescriptor* desc) SKR_NOEXCEPT
 {
     const auto pDesc = reinterpret_cast<GDIRendererDescriptor_RenderGraph*>(desc->usr_data);
-    future_launcher = SPtr<skr::gdi::ImageTexFutureLauncher>::Create(pDesc->job_queue);
+    future_launcher = SPtr<skr::gui::ImageTexFutureLauncher>::Create(pDesc->job_queue);
 
     const uint32_t pos_offset = static_cast<uint32_t>(offsetof(GDIVertex, position));
     const uint32_t texcoord_offset = static_cast<uint32_t>(offsetof(GDIVertex, texcoord));
@@ -667,5 +665,4 @@ void GDIRenderer_RenderGraph::render(IGDIViewport* viewport, const ViewportRende
                         });
 }
 
-} // namespace gdi
-} // namespace skr
+} // namespace skr::gui

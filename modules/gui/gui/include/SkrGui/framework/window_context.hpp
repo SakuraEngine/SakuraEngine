@@ -4,10 +4,6 @@
 
 namespace skr::gui
 {
-using skr::gdi::IGDIDevice;
-using skr::gdi::IGDIRenderer;
-using skr::gdi::ViewportRenderParams;
-
 struct IPlatformWindow;
 struct RenderWindow;
 

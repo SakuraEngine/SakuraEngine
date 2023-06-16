@@ -1,12 +1,10 @@
 #include "SkrGui/render_objects/render_stack.hpp"
 #include "misc/log.h"
 
-namespace skr
-{
-namespace gui
+namespace skr::gui
 {
 
-RenderStack::RenderStack(gdi::IGDIDevice* gdi_device)
+RenderStack::RenderStack(IGDIDevice* gdi_device)
     : RenderBox(gdi_device)
 {
     diagnostic_builder.add_properties(
@@ -128,5 +126,4 @@ void RenderStack::set_positional(int index, Positional positional)
     this->positionals[index] = positional;
 }
 
-} // namespace gui
-} // namespace skr
+} // namespace skr::gui

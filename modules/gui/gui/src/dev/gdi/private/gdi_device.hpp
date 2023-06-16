@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrGui/dev/gdi/gdi_device.hpp"
 
-namespace skr::gdi
+namespace skr::gui
 {
 struct GDIDevicePrivate : public IGDIDevice {
 };
-} // namespace skr::gdi
+} // namespace skr::gui

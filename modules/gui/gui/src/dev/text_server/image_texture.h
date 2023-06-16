@@ -4,16 +4,13 @@
 #include "dev/text_server/rid_owner.h"
 #include "dev/text_server/containers.h"
 
-namespace skr
-{
-namespace gdi
+namespace skr::gui
 {
 struct IGDIRenderer;
 struct IGDIImage;
 struct IGDITexture;
 struct IGDITextureUpdate;
-} // namespace gdi
-} // namespace skr
+} // namespace skr::gui
 
 namespace godot
 {
@@ -29,7 +26,7 @@ struct Image {
         FORMAT_COUNT
     };
 
-    [[nodiscard]] static Ref<Image> create_from_data(skr::gdi::IGDIRenderer* renderer, uint32_t w, uint32_t h,
+    [[nodiscard]] static Ref<Image> create_from_data(skr::gui::IGDIRenderer* renderer, uint32_t w, uint32_t h,
                                                      bool p_use_mipmaps, Format format, const Span<const uint8_t>& p_data);
 
     ~Image();
@@ -39,12 +36,12 @@ struct Image {
     uint32_t            get_height() const;
     Format              get_format() const;
 
-    skr::gdi::IGDIImage* underlying = nullptr;
+    skr::gui::IGDIImage* underlying = nullptr;
 };
 using ImageFormat = Image::Format;
 
 struct ImageTexture {
-    [[nodiscard]] static Ref<ImageTexture> create_from_image(skr::gdi::IGDIRenderer* renderer, Ref<Image> image);
+    [[nodiscard]] static Ref<ImageTexture> create_from_image(skr::gui::IGDIRenderer* renderer, Ref<Image> image);
 
     ~ImageTexture();
     Size2 get_size() const;
@@ -52,8 +49,8 @@ struct ImageTexture {
     RID   get_rid() const;
 
     RID                                                                  rid = {};
-    skr::gdi::IGDITexture*                                               underlying = nullptr;
-    eastl::vector<eastl::pair<Ref<Image>, skr::gdi::IGDITextureUpdate*>> updates;
+    skr::gui::IGDITexture*                                               underlying = nullptr;
+    eastl::vector<eastl::pair<Ref<Image>, skr::gui::IGDITextureUpdate*>> updates;
 
     static RID_PtrOwner<ImageTexture> texture_owner;
 };

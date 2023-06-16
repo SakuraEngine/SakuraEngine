@@ -3,11 +3,9 @@
 #include "SkrGui/framework/window_context.hpp"
 #include "SkrGui/dev/interface/window.hpp"
 
-namespace skr
+namespace skr::gui
 {
-namespace gui
-{
-RenderImage::RenderImage(gdi::IGDIDevice* gdi_device)
+RenderImage::RenderImage(IGDIDevice* gdi_device)
     : RenderBox(gdi_device)
 {
     gdi_element = gdi_device->create_element();
@@ -37,5 +35,4 @@ void RenderImage::draw(const DrawParams* params)
     RenderBox::draw(params);
 }
 
-} // namespace gui
-} // namespace skr
+} // namespace skr::gui

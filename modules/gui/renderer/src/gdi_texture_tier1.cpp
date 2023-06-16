@@ -4,9 +4,7 @@
     #include "SkrImageCoder/skr_image_coder.h"
 #endif
 
-namespace skr
-{
-namespace gdi
+namespace skr::gui
 {
 
 #ifdef SKR_GUI_RENDERER_USE_IMAGE_CODER
@@ -513,5 +511,4 @@ IGDITexture* GDIRenderer_RenderGraph::create_texture(const GDITextureDescriptor*
     return texture->async_data.DoAsync(texture, vfs, ram_service);
 }
 
-} // namespace gdi
-} // namespace skr
+} // namespace skr::gui

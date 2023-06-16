@@ -1,13 +1,6 @@
 #pragma once
 #include "SkrGui/framework/diagnostics.hpp"
 
-namespace skr::gdi
-{
-struct IGDICanvas;
-struct IGDIElement;
-struct IGDIViewport;
-} // namespace skr::gdi
-
 namespace skr::gui
 {
 struct WindowContext;
@@ -15,10 +8,10 @@ struct SKR_GUI_API RenderObject : public DiagnosticableTreeNode {
     SKR_GUI_TYPE(RenderObject, "74844fa6-8994-4915-8f8e-ec944a1cbea4", DiagnosticableTreeNode);
 
     struct DrawParams {
-        gdi::IGDIViewport* viewport = nullptr;
-        gdi::IGDICanvas*   canvas = nullptr;
-        WindowContext*     window_context = nullptr;
-        int32_t            ui_z = 0;
+        IGDIViewport*  viewport = nullptr;
+        IGDICanvas*    canvas = nullptr;
+        WindowContext* window_context = nullptr;
+        int32_t        ui_z = 0;
     };
 
 public:
@@ -44,7 +37,7 @@ public:
     virtual Span<DiagnosticableTreeNode* const> get_diagnostics_children() const override;
 
 protected:
-    void addElementToCanvas(const DrawParams* params, gdi::IGDIElement* element);
+    void addElementToCanvas(const DrawParams* params, IGDIElement* element);
 
     bool                 active = true;
     bool                 layoutDirty = true;

@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrGui/dev/gdi/gdi_types.hpp"
 
-namespace skr::gdi
+namespace skr::gui
 {
 struct SKR_GUI_API IGDIDevice {
     virtual ~IGDIDevice() SKR_NOEXCEPT = default;
@@ -22,4 +22,4 @@ struct SKR_GUI_API IGDIDevice {
     virtual void                     free_paint(IGDIPaint* paint) = 0;
 };
 
-} // namespace skr::gdi
+} // namespace skr::gui

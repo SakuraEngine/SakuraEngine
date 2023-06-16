@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrGui/dev/gdi/gdi_types.hpp"
 
-namespace skr::gdi
+namespace skr::gui
 {
 struct SKR_GUI_API IGDIViewport {
     virtual ~IGDIViewport() SKR_NOEXCEPT = default;
@@ -11,4 +11,4 @@ struct SKR_GUI_API IGDIViewport {
     virtual void              clear_canvas() SKR_NOEXCEPT = 0;
     virtual Span<IGDICanvas*> all_canvas() SKR_NOEXCEPT = 0;
 };
-} // namespace skr::gdi
+} // namespace skr::gui

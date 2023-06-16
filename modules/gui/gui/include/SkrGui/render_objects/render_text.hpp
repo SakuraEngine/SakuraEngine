@@ -4,12 +4,6 @@
 // #include "containers/sptr.hpp"
 #include "containers/detail/sptr.hpp"
 
-namespace skr::gdi
-{
-struct IGDIDevice;
-struct IGDIElement;
-struct IGDIPaint;
-} // namespace skr::gdi
 namespace skr::gui
 {
 
@@ -36,7 +30,7 @@ struct SKR_GUI_API BindText {
 struct SKR_GUI_API RenderText : public RenderBox {
 public:
     SKR_GUI_TYPE(RenderText, "72e8d4de-c288-4675-a22f-4c7a6487cabd", RenderBox);
-    RenderText(gdi::IGDIDevice* gdi_device);
+    RenderText(IGDIDevice* gdi_device);
     virtual ~RenderText();
 
     virtual void layout(BoxConstraint constraints, bool needSize = false) override;
@@ -56,11 +50,11 @@ private:
     Paragraph*               paragraph_ = nullptr;
     skr::SPtr<FontFile>      font_ = nullptr;
 
-    bool              paragraph_dirty_ = true;
-    gdi::IGDIDevice*  gdi_device = nullptr;
-    gdi::IGDIElement* gdi_element = nullptr;
-    gdi::IGDIPaint*   gdi_paint = nullptr;
-    skr_float4_t      font_color = { 1.f, 0.f, 1.f, 1.f };
+    bool         paragraph_dirty_ = true;
+    IGDIDevice*  gdi_device = nullptr;
+    IGDIElement* gdi_element = nullptr;
+    IGDIPaint*   gdi_paint = nullptr;
+    skr_float4_t font_color = { 1.f, 0.f, 1.f, 1.f };
 };
 
 } // namespace skr::gui

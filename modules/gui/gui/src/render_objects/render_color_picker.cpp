@@ -6,12 +6,10 @@
 
 #include "tracy/Tracy.hpp"
 
-namespace skr
-{
-namespace gui
+namespace skr::gui
 {
 
-void RenderColorPicker::draw_color_picker(gdi::IGDIElement* element, gdi::IGDIPaint* paint, float x, float y, float w, float h)
+void RenderColorPicker::draw_color_picker(IGDIElement* element, IGDIPaint* paint, float x, float y, float w, float h)
 {
     const float current_hue_in_degrees = get_current_hue_by_degree();
     const float current_hue_in_radians = current_hue_in_degrees * 3.1415926535897932384626433832795f / 180.f;
@@ -35,14 +33,14 @@ void RenderColorPicker::draw_color_picker(gdi::IGDIElement* element, gdi::IGDIPa
         element->stroke_width(r1 - r0);
         SKR_GUI_ASSERT(paint && "ColorPicker: paint is null!");
         // element->stroke_color(255u, 255u, 255u, 255u);
-        paint->set_pattern(cx, cy, w, h, 0, (gdi::IGDITexture*)nullptr, { 1.f, 1.f, 1.f, 1.f });
+        paint->set_pattern(cx, cy, w, h, 0, (IGDITexture*)nullptr, { 1.f, 1.f, 1.f, 1.f });
         paint->custom_vertex_color(
-        +[](gdi::GDIVertex* pVertex, void* usrdata) SKR_NOEXCEPT {
+        +[](GDIVertex* pVertex, void* usrdata) SKR_NOEXCEPT {
             // adjust the rotate to CW[H:0~360]
             pVertex->texcoord.x = 1.f - pVertex->texcoord.x;
             // adjust H:0 to 0 degree
             float h = fmod((180.f + pVertex->texcoord.x * 360.f), 360.f);
-            pVertex->color = gdi::hsv_to_abgr(h, 1.0, 1.0);
+            pVertex->color = hsv_to_abgr(h, 1.0, 1.0);
         },
         this);
         element->stroke_paint(paint);
@@ -72,7 +70,7 @@ void RenderColorPicker::draw_color_picker(gdi::IGDIElement* element, gdi::IGDIPa
     element->begin_path();
     element->rect(r0 - 2 - 10, -4 - 10, r1 - r0 + 4 + 20, 8 + 20);
     element->stroke_color(r0 - 2, -4, r1 - r0 + 4, 8);
-    element->path_winding(gdi::EGDISolidity::Hole);
+    element->path_winding(EGDISolidity::Hole);
     // element->fill_paint(paint);
     element->stroke_color(255u, 255u, 255u, 192u);
     element->fill();
@@ -90,14 +88,14 @@ void RenderColorPicker::draw_color_picker(gdi::IGDIElement* element, gdi::IGDIPa
     element->line_to(bx, by);
     element->close_path();
     paint->custom_vertex_color(
-    +[](gdi::GDIVertex* pVertex, void* usrdata) SKR_NOEXCEPT {
+    +[](GDIVertex* pVertex, void* usrdata) SKR_NOEXCEPT {
         auto         _this = (RenderColorPicker*)usrdata;
         const auto   index = static_cast<uint32_t>(pVertex->texcoord.x / 0.3333f);
         const double S[] = { 0.0, 0.0, 1.0 };
         const double V[] = { 0.0, 1.0, 1.0 };
         if (0 <= index && index < 3)
         {
-            pVertex->color = gdi::hsv_to_abgr(_this->get_current_hue_by_degree(), S[index], V[index]);
+            pVertex->color = hsv_to_abgr(_this->get_current_hue_by_degree(), S[index], V[index]);
         }
     },
     this);
@@ -117,7 +115,7 @@ void RenderColorPicker::draw_color_picker(gdi::IGDIElement* element, gdi::IGDIPa
     element->restore();
 }
 
-RenderColorPicker::RenderColorPicker(gdi::IGDIDevice* gdi_device)
+RenderColorPicker::RenderColorPicker(IGDIDevice* gdi_device)
     : RenderBox(gdi_device)
     , gdi_element(nullptr)
 {
@@ -163,5 +161,4 @@ void RenderColorPicker::draw(const DrawParams* params)
     RenderBox::draw(params);
 }
 
-} // namespace gui
-} // namespace skr
+} // namespace skr::gui

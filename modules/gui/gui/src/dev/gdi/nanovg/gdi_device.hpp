@@ -2,7 +2,7 @@
 #include <nanovg.h>
 #include "dev/gdi/private/gdi_device.hpp"
 
-namespace skr::gdi
+namespace skr::gui
 {
 struct GDIDeviceNVG : public GDIDevicePrivate {
     ~GDIDeviceNVG();
@@ -21,4 +21,4 @@ struct GDIDeviceNVG : public GDIDevicePrivate {
     IGDIPaint* create_paint() final;
     void       free_paint(IGDIPaint* paint) final;
 };
-} // namespace skr::gdi
+} // namespace skr::gui

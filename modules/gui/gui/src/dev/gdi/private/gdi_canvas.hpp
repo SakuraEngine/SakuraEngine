@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrGui/dev/gdi/gdi.hpp"
 
-namespace skr::gdi
+namespace skr::gui
 {
 struct GDICanvasPrivate : public IGDICanvas {
     virtual void add_element(IGDIElement* element) SKR_NOEXCEPT
@@ -80,4 +80,4 @@ struct GDICanvasPrivate : public IGDICanvas {
     skr::vector<IGDIElement*> all_elements_;
 };
 
-} // namespace skr::gdi
+} // namespace skr::gui

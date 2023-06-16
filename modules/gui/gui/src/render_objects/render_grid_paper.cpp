@@ -5,12 +5,10 @@
 
 #include "tracy/Tracy.hpp"
 
-namespace skr
-{
-namespace gui
+namespace skr::gui
 {
 
-inline static void draw_grid_paper(gdi::IGDIElement* element, float window_width, float window_height)
+inline static void draw_grid_paper(IGDIElement* element, float window_width, float window_height)
 {
     const bool bDrawRelativeXMesh = false;
     const bool bDrawRelativeYMesh = false;
@@ -94,7 +92,7 @@ inline static void draw_grid_paper(gdi::IGDIElement* element, float window_width
     element->stroke();
 }
 
-RenderGridPaper::RenderGridPaper(gdi::IGDIDevice* gdi_device)
+RenderGridPaper::RenderGridPaper(IGDIDevice* gdi_device)
     : RenderBox(gdi_device)
     , gdi_element(nullptr)
 {
@@ -135,5 +133,4 @@ void RenderGridPaper::draw(const DrawParams* params)
     RenderBox::draw(params);
 }
 
-} // namespace gui
-} // namespace skr
+} // namespace skr::gui

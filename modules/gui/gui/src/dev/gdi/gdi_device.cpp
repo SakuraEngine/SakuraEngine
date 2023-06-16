@@ -4,7 +4,7 @@
 #include "dev/gdi/private/gdi_canvas.hpp"
 #include "dev/gdi/nanovg/gdi_device.hpp"
 
-namespace skr::gdi
+namespace skr::gui
 {
 IGDIDevice* IGDIDevice::Create(EGDIBackend backend)
 {
@@ -45,4 +45,4 @@ void IGDIDevice::free_canvas(IGDICanvas* render_group)
 {
     SkrDelete(render_group);
 }
-} // namespace skr::gdi
+} // namespace skr::gui

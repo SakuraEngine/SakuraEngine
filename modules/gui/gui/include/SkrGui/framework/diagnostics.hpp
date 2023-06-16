@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
 #include "platform/atomic.h"
+#include "SkrGui/dev/gdi/gdi_types.hpp"
 
 // fwd
 namespace skr::gui
@@ -78,7 +79,7 @@ struct SKR_GUI_API DiagnosticsBuilder {
     {
         (add_property(properties), ...);
     }
-    IDiagnosticsProperty* find_property(const char8_t* name) const SKR_NOEXCEPT;
+    IDiagnosticsProperty*             find_property(const char8_t* name) const SKR_NOEXCEPT;
     Span<IDiagnosticsProperty* const> get_diagnostics_properties() const SKR_NOEXCEPT;
 
 protected:
@@ -90,7 +91,7 @@ struct SKR_GUI_API Diagnosticable SKR_GUI_OBJECT_BASE {
     SKR_GUI_RAII_MIX_IN()
 
     virtual ~Diagnosticable() SKR_NOEXCEPT;
-    IDiagnosticsProperty* find_property(const char8_t* name) const SKR_NOEXCEPT;
+    IDiagnosticsProperty*             find_property(const char8_t* name) const SKR_NOEXCEPT;
     Span<IDiagnosticsProperty* const> get_diagnostics_properties() const SKR_NOEXCEPT;
 
 protected:

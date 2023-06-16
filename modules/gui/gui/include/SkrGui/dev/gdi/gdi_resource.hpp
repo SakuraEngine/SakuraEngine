@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrGui/dev/gdi/gdi_types.hpp"
 
-namespace skr::gdi
+namespace skr::gui
 {
 struct SKR_GUI_API IGDIResource {
     virtual ~IGDIResource() SKR_NOEXCEPT = default;
@@ -29,4 +29,4 @@ struct SKR_GUI_API IGDITexture : public IGDIResource {
     virtual EGDITextureType get_type() const SKR_NOEXCEPT = 0;
 };
 
-} // namespace skr::gdi
+} // namespace skr::gui

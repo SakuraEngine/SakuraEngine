@@ -3,12 +3,10 @@
 #include "SkrGui/framework/window_context.hpp"
 #include "SkrGui/dev/interface/window.hpp"
 
-namespace skr
-{
-namespace gui
+namespace skr::gui
 {
 
-RenderCanvas::RenderCanvas(gdi::IGDIDevice* gdi_device)
+RenderCanvas::RenderCanvas(IGDIDevice* gdi_device)
     : RenderBox(gdi_device)
     , gdi_canvas(nullptr)
 {
@@ -52,5 +50,4 @@ void RenderCanvas::draw(const DrawParams* params)
     RenderBox::draw(&draw_params);
 }
 
-} // namespace gui
-} // namespace skr
+} // namespace skr::gui

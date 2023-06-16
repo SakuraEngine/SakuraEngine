@@ -8,11 +8,6 @@
 
 namespace skr::gui
 {
-using ::skr::gdi::IGDICanvas;
-using ::skr::gdi::IGDIDevice;
-using ::skr::gdi::IGDIElement;
-using ::skr::gdi::IGDIPaint;
-
 struct CanvasPaintScope;
 struct CanvasPathScope;
 struct CanvasStateScope;

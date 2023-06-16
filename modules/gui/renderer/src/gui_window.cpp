@@ -3,8 +3,8 @@
 #include "platform/memory.h"
 #include "misc/log.h"
 
-namespace skr {
-namespace gui {
+namespace skr::gui
+{
 
 bool SPlatformWindow::initialize(const SPlatformWindowDescriptor* desc) SKR_NOEXCEPT
 {
@@ -21,7 +21,7 @@ bool SPlatformWindow::initialize(const SPlatformWindowDescriptor* desc) SKR_NOEX
 
 bool SPlatformWindow::finalize()
 {
-    if(handle) skr_free_window(handle);
+    if (handle) skr_free_window(handle);
     return true;
 }
 
@@ -68,7 +68,7 @@ void SPlatformWindow::Free(IPlatformWindow* window) SKR_NOEXCEPT
 {
     if (auto window_impl = static_cast<SPlatformWindow*>(window))
     {
-        if (!window_impl->imported) 
+        if (!window_impl->imported)
         {
             window_impl->finalize();
         }
@@ -76,4 +76,4 @@ void SPlatformWindow::Free(IPlatformWindow* window) SKR_NOEXCEPT
     }
 }
 
-} }
+} // namespace skr::gui
