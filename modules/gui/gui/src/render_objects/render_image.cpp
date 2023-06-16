@@ -29,7 +29,7 @@ void RenderImage::draw(const DrawParams* params)
 {
     gdi_element->begin_frame(1.0f);
     gdi_element->begin_path();
-    gdi_element->rect(pos.x, pos.y, size.width, size.width);
+    gdi_element->rect(pos.x, pos.y, size.width, size.height);
     gdi_element->fill_color(color.x, color.y, color.z, color.w);
     gdi_element->fill();
     // gdi_element->restore();

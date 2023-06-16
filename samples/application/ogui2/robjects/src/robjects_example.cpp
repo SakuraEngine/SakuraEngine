@@ -9,7 +9,7 @@
 
 #include "SkrInputSystem/input_system.hpp"
 
-#include "SkrGui/dev/interface/gdi_renderer.hpp"
+#include "SkrGui/dev/gdi/gdi.hpp"
 #include "SkrGui/framework/window_context.hpp"
 
 #include "SkrGui/framework/widget_misc.hpp"
@@ -105,15 +105,10 @@ struct robjects_example_application : public robjects_application_t {
         image3->set_size({ 100, 400 });
         stack->add_child(flex);
         stack->set_positional(
-        0, SNewParam(skr::gui::Positional) { p.left = p.top = 0; p.min_height = p.max_height = 400; });
+        0, SNewParam(skr::gui::Positional) { using namespace skr::gui; p.anchor_LT(0, 0).sized(1_pct, 400_px); });
         stack->add_child(text);
         stack->set_positional(
-        1, SNewParam(skr::gui::Positional) {
-            using namespace skr::gui;
-            p.left = 0.5_pct;
-            p.top = 10_px;
-            p.pivot = { 0.5, 0 };
-        });
+        1, SNewParam(skr::gui::Positional) { using namespace skr::gui;p.anchor_LT(0.5_pct, 10_px).pivot({0.5, 0.0}); });
         canvas->add_child(stack);
 
         stack->layout(skr::gui::BoxConstraint::Loose({ (float)gdi.gfx.window_width, (float)gdi.gfx.window_height }));
