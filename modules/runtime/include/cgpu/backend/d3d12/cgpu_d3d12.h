@@ -198,7 +198,9 @@ typedef struct CGPUAdapter_D3D12 {
 #endif
     D3D_FEATURE_LEVEL mFeatureLevel;
     CGPUAdapterDetail adapter_detail;
+    bool mStandardSwizzle64KBSupported : 1;
     bool mEnhancedBarriersSupported : 1;
+    uint8_t mTiledResourceTier;
 } CGPUAdapter_D3D12;
 
 typedef struct CGPUEmptyDescriptors_D3D12 {
@@ -220,6 +222,8 @@ typedef struct CGPUDevice_D3D12 {
     struct ID3D12CommandQueue** const ppCommandQueues[CGPU_QUEUE_TYPE_COUNT] SKR_IF_CPP(= {});
     const uint32_t pCommandQueueCounts[CGPU_QUEUE_TYPE_COUNT] SKR_IF_CPP(= {});
     struct CGPUTiledMemoryPool_D3D12* pTiledMemoryPool;
+    struct ID3D12Heap* pUndefinedTileHeap;
+    struct ID3D12CommandQueue* pUndefinedTileMappingQueue;
 #ifdef __cplusplus
     class D3D12MA::Allocator* pResourceAllocator;
 #else

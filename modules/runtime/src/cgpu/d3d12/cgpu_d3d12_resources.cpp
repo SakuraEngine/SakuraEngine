@@ -820,11 +820,31 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
 
         new (&pSubresMapping[i]) SubresTileMappings_D3D12(SubresInfo.width_in_tiles, SubresInfo.height_in_tiles, SubresInfo.depth_in_tiles);
     }
-
     T->super.info = pInfo;
     T->super.tiled_resource = pTiledInfo;
     T->pDxResource = pDxResource;
+    // GPU reads or writes to NULL mappings are undefined under Tier1.   
+    if (A->mTiledResourceTier <= D3D12_TILED_RESOURCES_TIER_1)
+    {
+        /*
+        auto pDxQueue = D->pUndefinedTileMappingQueue;
+        D3D12_TILED_RESOURCE_COORDINATE TRC = { 1, 1, 0, 0 };
+        D3D12_TILE_REGION_SIZE TRS;
+        TRS.UseBox = TRUE;
+        TRS.Width = 1;
+        TRS.Height = 1; 
+        TRS.Depth = 1;
+        TRS.NumTiles = TRS.Width * TRS.Height * TRS.Depth;
 
+        D3D12_TILE_RANGE_FLAGS RangeFlags = D3D12_TILE_RANGE_FLAG_REUSE_SINGLE_TILE;
+        UINT StartOffset = 0;
+        pDxQueue->UpdateTileMappings(T->pDxResource, 1,
+            &TRC, &TRS,
+            D->pUndefinedTileHeap, 1, 
+            &RangeFlags, &StartOffset,
+            NULL, D3D12_TILE_MAPPING_FLAG_NONE);
+        */
+    }
     return T;
 }
 
@@ -855,10 +875,11 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapT
     if (!TotalTileCount) return;
 
     // allocate memory for arguments
-    auto ArgsMemory = sakura_calloc(TotalTileCount, sizeof(D3D12_TILED_RESOURCE_COORDINATE) + sizeof(UINT) + sizeof(ID3D12Heap*) + sizeof(D3D12MA::Allocation*));
+    auto ArgsMemory = sakura_calloc(TotalTileCount, sizeof(D3D12_TILED_RESOURCE_COORDINATE) + sizeof(UINT) + sizeof(UINT) + sizeof(ID3D12Heap*) + sizeof(D3D12MA::Allocation*));
     SKR_DEFER( { sakura_free(ArgsMemory); } );
     auto pTileCoordinates = (D3D12_TILED_RESOURCE_COORDINATE*)ArgsMemory;
-    UINT* pRangeOffsets = (UINT*)(pTileCoordinates + TotalTileCount);
+    UINT* pRangeTileCounts = (UINT*)(pTileCoordinates + TotalTileCount);
+    UINT* pRangeOffsets = (UINT*)(pRangeTileCounts + TotalTileCount);
     ID3D12Heap** ppHeaps = (ID3D12Heap**)(pRangeOffsets + TotalTileCount);
     D3D12MA::Allocation** ppAllocations = (D3D12MA::Allocation**)(ppHeaps + TotalTileCount);
 
@@ -891,25 +912,26 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapT
                     pTileCoordinates[AllocateTileCount].Z = Region.start.z + z;
                     pTileCoordinates[AllocateTileCount].Subresource = SubresIndex;
                     pRangeOffsets[AllocateTileCount] = (uint32_t)(Mapping.pDxAllocation->GetOffset() / kPageSize);
+                    pRangeTileCounts[AllocateTileCount] = 1;
                     AllocateTileCount++;
                 }
     }
     
     // do mapping
     const auto fnMap = [&](uint32_t N, ID3D12Heap* pHeap, 
-        const D3D12_TILED_RESOURCE_COORDINATE* pCoordinates, const UINT* pOffsets)
+        const D3D12_TILED_RESOURCE_COORDINATE* pCoordinates, const UINT* pOffsets, const UINT* pRangeTileCounts)
     {
         Q->pCommandQueue->UpdateTileMappings(
-        T->pDxResource,
-        N,
-        pCoordinates,
-        NULL,  // All regions are single tiles
-        pHeap, // ID3D12Heap*
-        N,
-        NULL,  // All ranges are sequential tiles in the heap
-        pOffsets,
-        NULL,
-        D3D12_TILE_MAPPING_FLAG_NONE);
+            T->pDxResource,
+            N,
+            pCoordinates,
+            NULL,  // All regions are single tiles
+            pHeap, // ID3D12Heap*
+            N,
+            NULL,  // All ranges are sequential tiles in the heap
+            pOffsets,
+            pRangeTileCounts,
+            D3D12_TILE_MAPPING_FLAG_NONE);
     };
     uint32_t TileIndex = 0;
     uint32_t SeqTileCount = 0;
@@ -919,16 +941,17 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapT
         auto CurrentHeap = ppHeaps[TileIndex];
         if (CurrentHeap != LastHeap)
         {
-            fnMap(SeqTileCount, LastHeap, pTileCoordinates, pRangeOffsets);
+            fnMap(SeqTileCount, LastHeap, pTileCoordinates, pRangeOffsets, pRangeTileCounts);
             pTileCoordinates += SeqTileCount;
             pRangeOffsets += SeqTileCount;
+            pRangeTileCounts += SeqTileCount;
             LastHeap = CurrentHeap;
             SeqTileCount = 0;
         }
         TileIndex++;
         SeqTileCount++;
     }
-    fnMap(SeqTileCount, LastHeap, pTileCoordinates, pRangeOffsets);
+    fnMap(SeqTileCount, LastHeap, pTileCoordinates, pRangeOffsets, pRangeTileCounts);
 }
 
 inline D3D12_RESOURCE_FLAGS D3D12Util_CalculateTextureFlags(const struct CGPUTextureDescriptor* desc)
@@ -1249,6 +1272,8 @@ CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const
 void cgpu_free_texture_d3d12(CGPUTextureId texture)
 {
     CGPUTexture_D3D12* T = (CGPUTexture_D3D12*)texture;
+    CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)texture->device;
+    CGPUAdapter_D3D12* A = (CGPUAdapter_D3D12*)texture->device->adapter;
     const auto pInfo = texture->info;
     if (pInfo->is_aliasing)
     {
@@ -1259,6 +1284,11 @@ void cgpu_free_texture_d3d12(CGPUTextureId texture)
     else if (pInfo->is_tiled)
     {
         CGPUTiledTexture_D3D12* TT = (CGPUTiledTexture_D3D12*)T;
+        // GPU reads or writes to NULL mappings are undefined under Tier1.   
+        if (A->mTiledResourceTier <= D3D12_TILED_RESOURCES_TIER_1)
+        {
+            // D3D12_TILE_RANGE_FLAGS Flags = D3D12_TILE_RANGE_FLAG_NULL;
+        }
         SAFE_RELEASE(TT->pDxResource);
         cgpu_delete(TT);
     }
