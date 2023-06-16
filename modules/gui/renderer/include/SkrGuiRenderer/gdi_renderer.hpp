@@ -56,9 +56,9 @@ struct GDIElementDrawCommand_RenderGraph {
 };
 
 struct SKR_GUI_RENDERER_API GDIViewportData_RenderGraph {
-    inline GDIViewportData_RenderGraph(GDIViewport* viewport) SKR_NOEXCEPT : viewport(viewport) {}
+    inline GDIViewportData_RenderGraph(IGDIViewport* viewport) SKR_NOEXCEPT : viewport(viewport) {}
 
-    GDIViewport* viewport = nullptr;
+    IGDIViewport* viewport = nullptr;
 
     skr::vector<skr::render_graph::BufferHandle> vertex_buffers;
     skr::vector<skr::render_graph::BufferHandle> transform_buffers;
@@ -228,7 +228,7 @@ struct SKR_GUI_RENDERER_API GDIRenderer_RenderGraph : public IGDIRenderer {
     void               free_image(IGDIImage* image) SKR_NOEXCEPT final;
     void               free_texture(IGDITexture* texture) SKR_NOEXCEPT final;
     void               free_texture_update(IGDITextureUpdate* texture) SKR_NOEXCEPT final;
-    void               render(GDIViewport* viewport, const ViewportRenderParams* params) SKR_NOEXCEPT final;
+    void               render(IGDIViewport* viewport, const ViewportRenderParams* params) SKR_NOEXCEPT final;
 
     // Tier 2
     bool support_hardware_z(float* out_min, float* out_max) const SKR_NOEXCEPT final

@@ -6,9 +6,9 @@ namespace skr::gdi
 struct SKR_GUI_API IGDIRenderer {
     virtual ~IGDIRenderer() SKR_NOEXCEPT = default;
 
-    virtual Span<GDIVertex>             fetch_element_vertices(GDIElement* element) SKR_NOEXCEPT;
-    virtual Span<GDIIndex>              fetch_element_indices(GDIElement* element) SKR_NOEXCEPT;
-    virtual Span<GDIElementDrawCommand> fetch_element_draw_commands(GDIElement* element) SKR_NOEXCEPT;
+    virtual Span<GDIVertex>             fetch_element_vertices(IGDIElement* element) SKR_NOEXCEPT;
+    virtual Span<GDIIndex>              fetch_element_indices(IGDIElement* element) SKR_NOEXCEPT;
+    virtual Span<GDIElementDrawCommand> fetch_element_draw_commands(IGDIElement* element) SKR_NOEXCEPT;
 
     // Tier 1
     virtual int                              initialize(const GDIRendererDescriptor* desc) SKR_NOEXCEPT = 0;
@@ -19,7 +19,7 @@ struct SKR_GUI_API IGDIRenderer {
     virtual void                             free_image(IGDIImage* image) SKR_NOEXCEPT = 0;
     virtual void                             free_texture(IGDITexture* texture) SKR_NOEXCEPT = 0;
     virtual void                             free_texture_update(IGDITextureUpdate* update) SKR_NOEXCEPT = 0;
-    virtual void                             render(GDIViewport* render_group, const ViewportRenderParams* params) SKR_NOEXCEPT = 0;
+    virtual void                             render(IGDIViewport* render_group, const ViewportRenderParams* params) SKR_NOEXCEPT = 0;
 
     // Tier 2
     virtual bool support_hardware_z(float* out_min, float* max) const SKR_NOEXCEPT = 0;

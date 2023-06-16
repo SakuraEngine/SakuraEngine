@@ -4,7 +4,7 @@
 
 namespace skr::gui
 {
-using skr::gdi::GDIDevice;
+using skr::gdi::IGDIDevice;
 using skr::gdi::IGDIRenderer;
 using skr::gdi::ViewportRenderParams;
 
@@ -14,7 +14,7 @@ struct RenderWindow;
 struct SKR_GUI_API WindowContext {
     struct Descriptor {
         IPlatformWindow* platform_window = nullptr;
-        GDIDevice*       gdi_device = nullptr;
+        IGDIDevice*      gdi_device = nullptr;
         RenderWindow*    root_window = nullptr;
     };
     struct DrawParams {

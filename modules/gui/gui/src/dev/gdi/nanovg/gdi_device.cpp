@@ -282,7 +282,7 @@ static void nvg__renderFill(void* uptr, NVGpaint* paint, NVGcompositeOperationSt
         command.first_index = static_cast<uint32_t>(begin);
         command.material = static_cast<IGDIMaterial*>(paint->material);
         command.texture = static_cast<IGDITexture*>(paint->image);
-        if (command.texture && ((GDIResource*)command.texture)->get_state() != EGDIResourceState::Okay)
+        if (command.texture && ((IGDIResource*)command.texture)->get_state() != EGDIResourceState::Okay)
         {
             command.texture = nullptr;
         }
@@ -316,7 +316,7 @@ static void nvg__renderStroke(void* uptr, NVGpaint* paint, NVGcompositeOperation
     command.first_index = static_cast<uint32_t>(begin);
     command.material = static_cast<IGDIMaterial*>(paint->material);
     command.texture = static_cast<IGDITexture*>(paint->image);
-    if (command.texture && ((GDIResource*)command.texture)->get_state() != EGDIResourceState::Okay)
+    if (command.texture && ((IGDIResource*)command.texture)->get_state() != EGDIResourceState::Okay)
     {
         command.texture = nullptr;
     }
@@ -340,27 +340,27 @@ int GDIDeviceNVG::finalize() SKR_NOEXCEPT
     return 0;
 }
 
-GDIViewport* GDIDeviceNVG::create_viewport()
+IGDIViewport* GDIDeviceNVG::create_viewport()
 {
     return SkrNew<GDIViewportNVG>();
 }
 
-void GDIDeviceNVG::free_viewport(GDIViewport* canvas)
+void GDIDeviceNVG::free_viewport(IGDIViewport* canvas)
 {
     SkrDelete(canvas);
 }
 
-GDICanvas* GDIDeviceNVG::create_canvas()
+IGDICanvas* GDIDeviceNVG::create_canvas()
 {
     return SkrNew<GDICanvasNVG>();
 }
 
-void GDIDeviceNVG::free_canvas(GDICanvas* group)
+void GDIDeviceNVG::free_canvas(IGDICanvas* group)
 {
     SkrDelete(group);
 }
 
-GDIElement* GDIDeviceNVG::create_element()
+IGDIElement* GDIDeviceNVG::create_element()
 {
     auto element = SkrNew<GDIElementNVG>();
     auto params = make_zeroed<NVGparams>();
@@ -372,17 +372,17 @@ GDIElement* GDIDeviceNVG::create_element()
     return element;
 }
 
-void GDIDeviceNVG::free_element(GDIElement* element)
+void GDIDeviceNVG::free_element(IGDIElement* element)
 {
     SkrDelete(element);
 }
 
-GDIPaint* GDIDeviceNVG::create_paint()
+IGDIPaint* GDIDeviceNVG::create_paint()
 {
     return SkrNew<GDIPaintNVG>();
 }
 
-void GDIDeviceNVG::free_paint(GDIPaint* paint)
+void GDIDeviceNVG::free_paint(IGDIPaint* paint)
 {
     SkrDelete(paint);
 }

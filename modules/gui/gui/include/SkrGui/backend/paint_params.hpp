@@ -4,7 +4,7 @@
 #include "SkrGui/math/color.hpp"
 
 // TODO. remove gdi
-#include "SkrGui/dev/gdi/gdi.hpp"
+#include "SkrGui/dev/gdi/gdi_types.hpp"
 
 namespace skr::gui
 {

@@ -53,7 +53,7 @@ bool initialize_gdi_application(gdi_application_t* app)
     }
 
     // initialize gdi device
-    app->device = skr::gdi::GDIDevice::Create(skr::gdi::EGDIBackend::NANOVG);
+    app->device = skr::gdi::IGDIDevice::Create(skr::gdi::EGDIBackend::NANOVG);
 
     // initialize gdi renderer
     skr::gdi::GDIRendererDescriptor             gdir_desc = {};
@@ -70,16 +70,16 @@ bool initialize_gdi_application(gdi_application_t* app)
     app->renderer->initialize(&gdir_desc);
 
     // initialize text
-    skr::gdi::GDIText::Initialize(app->renderer);
+    skr::gdi::IGDIText::Initialize(app->renderer);
     return true;
 }
 
 bool finalize_gdi_application(gdi_application_t* app)
 {
     app_wait_gpu_idle(&app->gfx);
-    skr::gdi::GDIDevice::Free(app->device);
+    skr::gdi::IGDIDevice::Free(app->device);
 
-    skr::gdi::GDIText::Finalize();
+    skr::gdi::IGDIText::Finalize();
     app->renderer->finalize();
     SkrDelete(app->renderer);
 

@@ -11,7 +11,7 @@ namespace skr
 namespace gui
 {
 
-void RenderColorPicker::draw_color_picker(gdi::GDIElement* element, gdi::GDIPaint* paint, float x, float y, float w, float h)
+void RenderColorPicker::draw_color_picker(gdi::IGDIElement* element, gdi::IGDIPaint* paint, float x, float y, float w, float h)
 {
     const float current_hue_in_degrees = get_current_hue_by_degree();
     const float current_hue_in_radians = current_hue_in_degrees * 3.1415926535897932384626433832795f / 180.f;

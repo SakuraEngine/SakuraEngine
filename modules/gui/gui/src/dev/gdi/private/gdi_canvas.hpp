@@ -3,12 +3,12 @@
 
 namespace skr::gdi
 {
-struct GDICanvasPrivate : public GDICanvas {
-    virtual void add_element(GDIElement* element) SKR_NOEXCEPT
+struct GDICanvasPrivate : public IGDICanvas {
+    virtual void add_element(IGDIElement* element) SKR_NOEXCEPT
     {
         all_elements_.emplace_back(element);
     }
-    virtual void remove_element(GDIElement* element) SKR_NOEXCEPT
+    virtual void remove_element(IGDIElement* element) SKR_NOEXCEPT
     {
         auto it = eastl::find(all_elements_.begin(), all_elements_.end(), element);
         if (it != all_elements_.end())
@@ -16,7 +16,7 @@ struct GDICanvasPrivate : public GDICanvas {
             all_elements_.erase(it);
         }
     }
-    virtual Span<GDIElement*> all_elements() SKR_NOEXCEPT
+    virtual Span<IGDIElement*> all_elements() SKR_NOEXCEPT
     {
         return { all_elements_.data(), all_elements_.size() };
     }
@@ -74,10 +74,10 @@ struct GDICanvasPrivate : public GDICanvas {
     skr_float2_t pivot = { 0.f, 0.f };
     skr_float2_t size = { 0.f, 0.0f };
 
-    bool                     hardware_z_enabled = true;
-    int32_t                  z_min = 0;
-    int32_t                  z_max = 100;
-    skr::vector<GDIElement*> all_elements_;
+    bool                      hardware_z_enabled = true;
+    int32_t                   z_min = 0;
+    int32_t                   z_max = 100;
+    skr::vector<IGDIElement*> all_elements_;
 };
 
 } // namespace skr::gdi

@@ -336,7 +336,7 @@ int GDIRenderer_RenderGraph::finalize() SKR_NOEXCEPT
     return 0;
 }
 
-void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRenderParams* params) SKR_NOEXCEPT
+void GDIRenderer_RenderGraph::render(IGDIViewport* viewport, const ViewportRenderParams* params) SKR_NOEXCEPT
 {
     const auto pParams = reinterpret_cast<ViewportRenderParams_RenderGraph*>(params->usr_data);
     auto       rg = pParams->render_graph;
@@ -598,7 +598,7 @@ void GDIRenderer_RenderGraph::render(GDIViewport* viewport, const ViewportRender
     // 4. loop & record render commands
     skr::render_graph::TextureRTVHandle target = rg->get_texture(u8"backbuffer");
     skr::render_graph::TextureDSVHandle depth = rg->get_texture(u8"depth");
-    // skr::vector<GDIViewport*> canvas_copy(canvas_span.begin(), canvas_span.end());
+    // skr::vector<IGDIViewport*> canvas_copy(canvas_span.begin(), canvas_span.end());
     rg->add_render_pass([&](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
         ZoneScopedN("ConstructRenderPass");
         const auto back_desc = g.resolve_descriptor(target);

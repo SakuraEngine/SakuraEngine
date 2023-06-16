@@ -8,10 +8,10 @@
 
 namespace skr::gui
 {
-using ::skr::gdi::GDICanvas;
-using ::skr::gdi::GDIDevice;
-using ::skr::gdi::GDIElement;
-using ::skr::gdi::GDIPaint;
+using ::skr::gdi::IGDICanvas;
+using ::skr::gdi::IGDIDevice;
+using ::skr::gdi::IGDIElement;
+using ::skr::gdi::IGDIPaint;
 
 struct CanvasPaintScope;
 struct CanvasPathScope;
@@ -22,7 +22,7 @@ struct TexturePaintBuilder;
 struct MaterialPaintBuilder;
 
 struct SKR_GUI_API ICanvas final {
-    ICanvas(GDIDevice* device) SKR_NOEXCEPT;
+    ICanvas(IGDIDevice* device) SKR_NOEXCEPT;
     ~ICanvas() SKR_NOEXCEPT;
 
     //==> paint scope
@@ -129,10 +129,10 @@ private:
     };
 
     // gdi
-    GDIDevice*         _gdi_device;
-    GDICanvas*         _gdi_canvas;
-    GDIElement*        _current_gdi_element;
-    Array<GDIElement*> _gdi_elements;
+    IGDIDevice*         _gdi_device;
+    IGDICanvas*         _gdi_canvas;
+    IGDIElement*        _current_gdi_element;
+    Array<IGDIElement*> _gdi_elements;
 
     // state & validate
     Array<_State> _state_stack;

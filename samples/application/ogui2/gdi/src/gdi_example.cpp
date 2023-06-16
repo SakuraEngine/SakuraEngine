@@ -192,16 +192,16 @@ struct gdi_example_application : public gdi_application_t {
 
     gui_render_graph_t graph;
 
-    skr::gdi::GDICanvas*   gdi_canvas = nullptr;
-    skr::gdi::GDIViewport* gdi_viewport = nullptr;
+    skr::gdi::IGDICanvas*   gdi_canvas = nullptr;
+    skr::gdi::IGDIViewport* gdi_viewport = nullptr;
 
-    skr::gdi::GDICanvas*  backgroud_canvas = nullptr;
-    skr::gdi::GDIElement* background_element = nullptr;
+    skr::gdi::IGDICanvas*  backgroud_canvas = nullptr;
+    skr::gdi::IGDIElement* background_element = nullptr;
 
     skr::gdi::IGDITexture* test_texture = nullptr;
-    skr::gdi::GDIPaint*    test_paint = nullptr;
-    skr::gdi::GDIElement*  test_element = nullptr;
-    skr::gdi::GDIElement*  debug_element = nullptr;
+    skr::gdi::IGDIPaint*   test_paint = nullptr;
+    skr::gdi::IGDIElement* test_element = nullptr;
+    skr::gdi::IGDIElement* debug_element = nullptr;
 };
 
 #include "tracy/Tracy.hpp"

@@ -181,9 +181,8 @@ RenderText::RenderText(skr_gdi_device_id gdi_device)
 
     gdi_paint = gdi_device->create_paint();
     gdi_element = gdi_device->create_element();
-    gdi_element->set_texture_swizzle(
-    gdi::GDIElement::kSwizzleOverride1, gdi::GDIElement::kSwizzleOverride1,
-    gdi::GDIElement::kSwizzleOverride1, gdi::GDIElement::kSwizzleChanelR);
+    gdi_element->set_texture_swizzle({ ESwizzleChannel::One, ESwizzleChannel::One,
+                                       ESwizzleChannel::One, ESwizzleChannel::R });
 
     paragraph_ = SkrNew<Paragraph>();
     font_ = SPtr<FontFile>::Create();

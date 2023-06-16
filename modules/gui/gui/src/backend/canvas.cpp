@@ -5,7 +5,7 @@
 
 namespace skr::gui
 {
-ICanvas::ICanvas(GDIDevice* device) SKR_NOEXCEPT
+ICanvas::ICanvas(IGDIDevice* device) SKR_NOEXCEPT
     : _gdi_device(device),
       _gdi_canvas(nullptr),
       _current_gdi_element(nullptr),

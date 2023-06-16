@@ -107,7 +107,7 @@ void RenderObject::after_draw(const DrawParams* params)
 {
 }
 
-void RenderObject::addElementToCanvas(const DrawParams* params, gdi::GDIElement* element)
+void RenderObject::addElementToCanvas(const DrawParams* params, gdi::IGDIElement* element)
 {
     if (auto canvas = params->canvas)
     {

@@ -4,7 +4,7 @@
 // #include "containers/sptr.hpp"
 #include "containers/detail/sptr.hpp"
 
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIPaint, skr_gdi_paint);
+SKR_DECLARE_TYPE_ID_FWD(skr::gdi, IGDIPaint, skr_gdi_paint);
 
 namespace skr
 {
@@ -23,7 +23,7 @@ enum class EInlineAlignment : uint32_t
 };
 
 struct StyleText {
-    float font_size;
+    float        font_size;
     skr_float4_t color;
 };
 
@@ -51,14 +51,14 @@ private:
     void buildParagraphRec(Paragraph* p, const StyleText& txt);
 
     Array<struct InlineType> inlines_;
-    Paragraph* paragraph_ = nullptr;
-    skr::SPtr<FontFile> font_ = nullptr;
+    Paragraph*               paragraph_ = nullptr;
+    skr::SPtr<FontFile>      font_ = nullptr;
 
-    bool paragraph_dirty_ = true;
-    skr_gdi_device_id gdi_device = nullptr;
+    bool               paragraph_dirty_ = true;
+    skr_gdi_device_id  gdi_device = nullptr;
     skr_gdi_element_id gdi_element = nullptr;
-    skr_gdi_paint_id gdi_paint = nullptr;
-    skr_float4_t font_color = { 1.f, 0.f, 1.f, 1.f };
+    skr_gdi_paint_id   gdi_paint = nullptr;
+    skr_float4_t       font_color = { 1.f, 0.f, 1.f, 1.f };
 };
 
 } // namespace gui

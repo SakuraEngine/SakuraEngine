@@ -6,7 +6,7 @@
 
 namespace skr::gdi
 {
-GDIDevice* GDIDevice::Create(EGDIBackend backend)
+IGDIDevice* IGDIDevice::Create(EGDIBackend backend)
 {
     switch (backend)
     {
@@ -21,27 +21,27 @@ GDIDevice* GDIDevice::Create(EGDIBackend backend)
     }
 }
 
-void GDIDevice::Free(GDIDevice* device)
+void IGDIDevice::Free(IGDIDevice* device)
 {
     SkrDelete(device);
 }
 
-GDIViewport* GDIDevice::create_viewport()
+IGDIViewport* IGDIDevice::create_viewport()
 {
     return SkrNew<GDIViewportPrivate>();
 }
 
-void GDIDevice::free_viewport(GDIViewport* canvas)
+void IGDIDevice::free_viewport(IGDIViewport* canvas)
 {
     SkrDelete(canvas);
 }
 
-GDICanvas* GDIDevice::create_canvas()
+IGDICanvas* IGDIDevice::create_canvas()
 {
     return SkrNew<GDICanvasPrivate>();
 }
 
-void GDIDevice::free_canvas(GDICanvas* render_group)
+void IGDIDevice::free_canvas(IGDICanvas* render_group)
 {
     SkrDelete(render_group);
 }

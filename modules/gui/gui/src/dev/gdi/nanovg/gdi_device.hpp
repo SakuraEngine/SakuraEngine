@@ -9,16 +9,16 @@ struct GDIDeviceNVG : public GDIDevicePrivate {
     int initialize() SKR_NOEXCEPT;
     int finalize() SKR_NOEXCEPT;
 
-    GDICanvas* create_canvas() final;
-    void       free_canvas(GDICanvas* canvas) final;
+    IGDICanvas* create_canvas() final;
+    void        free_canvas(IGDICanvas* canvas) final;
 
-    GDIViewport* create_viewport() final;
-    void         free_viewport(GDIViewport* group) final;
+    IGDIViewport* create_viewport() final;
+    void          free_viewport(IGDIViewport* group) final;
 
-    GDIElement* create_element() final;
-    void        free_element(GDIElement* element) final;
+    IGDIElement* create_element() final;
+    void         free_element(IGDIElement* element) final;
 
-    GDIPaint* create_paint() final;
-    void      free_paint(GDIPaint* paint) final;
+    IGDIPaint* create_paint() final;
+    void       free_paint(IGDIPaint* paint) final;
 };
 } // namespace skr::gdi
