@@ -50,7 +50,7 @@ struct RUNTIME_STATIC_API JobItem
 public:
     JobItem(const char8_t* name, const JobItemDesc& desc = {}) SKR_NOEXCEPT;
     JobItem(const JobItem& src) SKR_NOEXCEPT
-        : status( skr_atomic32_load_acquire(&status) )
+        : status( skr_atomic32_load_acquire(&src.status) )
         , name(src.name), result(src.result), desc(src.desc)
     {
 

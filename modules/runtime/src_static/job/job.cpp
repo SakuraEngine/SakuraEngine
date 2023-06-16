@@ -37,7 +37,6 @@ public:
         cond = SkrNew<JobQueueCond>();
         cond->initialize(u8"SampleUtilJobItemQueueCond");					
         SKR_ASSERT(cond != nullptr);
-
     }
 
     ~JobItemQueue()
