@@ -114,28 +114,101 @@ struct CGPUTiledMemoryPool_D3D12 : public CGPUMemoryPool_D3D12
         for (uint32_t i = 0; i < N; ++i)
         {
             D->pResourceAllocator->AllocateMemory(&allocDesc, &allocInfo, &ppAllocation[i]);
-            allocated.insert(ppAllocation[i]);
         }
-    }
-
-    void DeallocateTiles(D3D12MA::Allocation* A) SKR_NOEXCEPT
-    {
-
     }
 
     ~CGPUTiledMemoryPool_D3D12() SKR_NOEXCEPT
     {
-        for (auto pAllocation : allocated)
-        {
-            SAFE_RELEASE(pAllocation);
-        }
-        allocated.clear();
         SAFE_RELEASE(pDxPool);
     }
-private:
-    skr::parallel_flat_hash_set<D3D12MA::Allocation*> allocated;
 };
 
+enum ETileMappingStatus_D3D12
+{
+    TILE_MAPPING_STATUS_UNMAPPED = 0,
+    TILE_MAPPING_STATUS_PENDING = 1,
+    TILE_MAPPING_STATUS_MAPPING = 2,
+    TILE_MAPPING_STATUS_MAPPED = 3,
+    TILE_MAPPING_STATUS_INVALID = 4
+};
+
+struct TileMapping_D3D12
+{
+    D3D12MA::Allocation* pDxAllocation;
+    SAtomic32 status;
+};
+static_assert(std::is_trivially_constructible_v<TileMapping_D3D12>, "TileMapping_D3D12 Must Be Trivially Constructible!");
+
+struct SubresTileMappings_D3D12
+{
+    SubresTileMappings_D3D12(uint32_t X, uint32_t Y, uint32_t Z) SKR_NOEXCEPT
+        : X(X), Y(Y), Z(Z)
+    {
+        if (X * Y * Z)
+            mappings = (TileMapping_D3D12*)cgpu_calloc(1, X * Y * Z * sizeof(TileMapping_D3D12));
+    }
+    ~SubresTileMappings_D3D12() SKR_NOEXCEPT
+    {
+        if (mappings)
+        {
+            for (uint32_t x = 0; x < X; x++)
+            for (uint32_t y = 0; y < Y; y++)
+            for (uint32_t z = 0; z < Z; z++)
+            {
+                unmap(x, y, z);
+            }
+            cgpu_free(mappings);
+        }
+    }
+    TileMapping_D3D12* at(uint32_t x, uint32_t y, uint32_t z) 
+    { 
+        SKR_ASSERT(mappings && x < X && y < Y && z < Z && "SubresTileMappings::at: Out of Range!"); 
+        return mappings + (x + y * X + z * X * Y); 
+    }
+    const TileMapping_D3D12* at(uint32_t x, uint32_t y, uint32_t z) const 
+    { 
+        SKR_ASSERT(mappings && x < X && y < Y && z < Z && "SubresTileMappings::at: Out of Range!"); 
+        return mappings + (x + y * X + z * X * Y); 
+    }
+    void unmap(uint32_t x, uint32_t y, uint32_t z)
+    {
+        auto* mapping = at(x, y, z);
+        const auto status = skr_atomic32_cas_relaxed(&mapping->status, TILE_MAPPING_STATUS_MAPPED, TILE_MAPPING_STATUS_UNMAPPED);
+        if (status == TILE_MAPPING_STATUS_MAPPED)
+        {
+            SAFE_RELEASE(mapping->pDxAllocation);
+        }  
+    }
+private:
+    const uint32_t X = 0;
+    const uint32_t Y = 0;
+    const uint32_t Z = 0;
+    TileMapping_D3D12* mappings = nullptr;
+};
+
+struct CGPUTiledTexture_D3D12 : public CGPUTexture_D3D12 {
+    CGPUTiledTexture_D3D12(SubresTileMappings_D3D12* pMappings) SKR_NOEXCEPT
+        : CGPUTexture_D3D12(), pMappings(pMappings)
+    {
+
+    }
+    ~CGPUTiledTexture_D3D12() SKR_NOEXCEPT
+    {
+        const auto N = super.info->mip_levels * (super.info->array_size_minus_one + 1);
+        for (uint32_t i = 0; i < N; i++)
+        {
+            pMappings[i].~SubresTileMappings_D3D12();
+        }
+    }
+    SubresTileMappings_D3D12* getSubresTileMappings(uint32_t mip_level, uint32_t array_index)
+    {
+        SKR_ASSERT(mip_level < super.info->mip_levels && array_index < super.info->array_size_minus_one + 1);
+        return pMappings + (mip_level * (super.info->array_size_minus_one + 1) + array_index);
+    }
+    
+private:
+    SubresTileMappings_D3D12* pMappings;
+};
 
 typedef struct DescriptorHeapProperties {
     uint32_t mMaxDescriptors;

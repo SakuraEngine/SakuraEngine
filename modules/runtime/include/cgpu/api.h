@@ -73,7 +73,7 @@ struct CGPUExportTextureDescriptor;
 struct CGPUImportTextureDescriptor;
 
 struct CGPUVertexLayout;
-struct CGPUMapTiledTextureDescriptor;
+struct CGPUTiledTextureRegions;
 struct CGPUMapTiledBufferDescriptor;
 struct CGPUBufferToBufferTransfer;
 struct CGPUBufferToTextureTransfer;
@@ -240,8 +240,10 @@ CGPU_API void cgpu_wait_queue_idle(CGPUQueueId queue);
 typedef void (*CGPUProcWaitQueueIdle)(CGPUQueueId queue);
 CGPU_API float cgpu_queue_get_timestamp_period_ns(CGPUQueueId queue);
 typedef float (*CGPUProcQueueGetTimestampPeriodNS)(CGPUQueueId queue);
-CGPU_API void cgpu_queue_map_tiled_texture(CGPUQueueId queue, const struct CGPUMapTiledTextureDescriptor* desc);
-typedef void (*CGPUProcQueueMapTiledTexture)(CGPUQueueId queue, const struct CGPUMapTiledTextureDescriptor* desc);
+CGPU_API void cgpu_queue_map_tiled_texture(CGPUQueueId queue, const struct CGPUTiledTextureRegions* desc);
+typedef void (*CGPUProcQueueMapTiledTexture)(CGPUQueueId queue, const struct CGPUTiledTextureRegions* desc);
+CGPU_API void cgpu_queue_unmap_tiled_texture(CGPUQueueId queue, const struct CGPUTiledTextureRegions* desc);
+typedef void (*CGPUProcQueueUnmapTiledTexture)(CGPUQueueId queue, const struct CGPUTiledTextureRegions* desc);
 CGPU_API void cgpu_free_queue(CGPUQueueId queue);
 typedef void (*CGPUProcFreeQueue)(CGPUQueueId queue);
 
@@ -572,6 +574,7 @@ typedef struct CGPUProcTable {
     const CGPUProcQueuePresent queue_present;
     const CGPUProcQueueGetTimestampPeriodNS queue_get_timestamp_period;
     const CGPUProcQueueMapTiledTexture queue_map_tiled_texture;
+    const CGPUProcQueueUnmapTiledTexture queue_unmap_tiled_texture;
     const CGPUProcFreeQueue free_queue;
 
     // Command APIs
@@ -1085,11 +1088,11 @@ typedef struct CGPUTextureSubresource {
     uint32_t layer_count;
 } CGPUTextureSubresource;
 
-typedef struct CGPUMapTiledTextureDescriptor {
+typedef struct CGPUTiledTextureRegions {
     CGPUTextureId texture;
-    uint32_t region_count;
     struct CGPUTextureCoordinateRegion* regions;
-} CGPUMapTiledTextureDescriptor;
+    uint32_t region_count;
+} CGPUTiledTextureRegions;
 
 typedef struct CGPUMapTiledBufferDescriptor {
     CGPUTextureId texture;

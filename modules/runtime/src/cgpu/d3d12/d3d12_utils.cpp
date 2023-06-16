@@ -1,7 +1,7 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "cgpu/drivers/cgpu_nvapi.h"
 #include "cgpu/drivers/cgpu_ags.h"
-#include "d3d12_utils.h"
+#include "d3d12_utils.hpp"
 #include <dxcapi.h>
 #include <d3d12shader.h>
 #include "D3D12MemAlloc.h"
@@ -250,7 +250,7 @@ void D3D12Util_RecordAdapterDetail(struct CGPUAdapter_D3D12* D3D12Adapter)
     DECLARE_ZERO(D3D12_FEATURE_DATA_ARCHITECTURE1, dxgi_feature)
     pCheckDevice->CheckFeatureSupport(D3D12_FEATURE_ARCHITECTURE1, &dxgi_feature, sizeof(dxgi_feature));
     adapter_detail.is_uma = dxgi_feature.UMA;
-    adapter_detail.is_cpu = desc3.Flags & DXGI_ADAPTER_FLAG_SOFTWARE;
+    adapter_detail.is_cpu = (desc3.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE) ? 1 : 0;
     adapter_detail.is_virtual = false;
     // Constants
     adapter_detail.max_vertex_input_bindings = 32u;
