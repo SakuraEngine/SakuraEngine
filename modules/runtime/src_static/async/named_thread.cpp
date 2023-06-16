@@ -81,10 +81,10 @@ SThreadID NamedThread::get_id() const SKR_NOEXCEPT
     return tID;
 }
 
-SThreadPriority NamedThread::change_priority(SThreadPriority priority) SKR_NOEXCEPT
+SThreadPriority NamedThread::change_priority(SThreadPriority pri) SKR_NOEXCEPT
 {
-    skr_atomic32_store_relaxed(&priority, priority);
-    return skr_thread_set_priority(tHandle, priority);
+    skr_atomic32_store_relaxed(&priority, pri);
+    return skr_thread_set_priority(tHandle, pri);
 }
 
 NamedThreadFunction* NamedThread::get_function() const SKR_NOEXCEPT

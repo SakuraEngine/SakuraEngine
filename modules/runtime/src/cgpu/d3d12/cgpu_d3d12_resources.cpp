@@ -667,7 +667,7 @@ inline static void alignedDivision(const D3D12_TILED_RESOURCE_COORDINATE& extent
 
 struct TileMapping_D3D12
 {
-    D3D12MA::Allocation* pDxAllocation;
+    SAtomicUPtr pDxAllocation;
 };
 static_assert(std::is_trivially_constructible_v<TileMapping_D3D12>, "TileMapping_D3D12 Must Be Trivially Constructible!");
 
@@ -826,7 +826,8 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapT
                 for (uint32_t z = Region.start.z; z < Region.end.z; z++)
                 {
                     auto& Mapping = *Mappings.at(x, y, z);
-                    RegionTileCount += !Mapping.pDxAllocation ? 1 : 0;
+                    const auto Alloc = skr_atomicuptr_load_acquire(&Mapping.pDxAllocation);
+                    RegionTileCount += !Alloc ? 1 : 0;
                 }
         TotalTileCount += RegionTileCount;
     }
@@ -864,12 +865,12 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUMapT
                     if (Mapping.pDxAllocation) continue; // skip if already mapped
 
                     // calc mapping args
-                    Mapping.pDxAllocation = ppAllocations[AllocateTileCount];
+                    skr_atomicuptr_store_release(&Mapping.pDxAllocation, (uintptr_t)ppAllocations[AllocateTileCount]);
                     pTileCoordinates[AllocateTileCount].X = Region.start.x + x;
                     pTileCoordinates[AllocateTileCount].Y = Region.start.y + y;
                     pTileCoordinates[AllocateTileCount].Z = Region.start.z + z;
                     pTileCoordinates[AllocateTileCount].Subresource = SubresIndex;
-                    pRangeOffsets[AllocateTileCount] = (uint32_t)(Mapping.pDxAllocation->GetOffset() / kPageSize);
+                    pRangeOffsets[AllocateTileCount] = (uint32_t)(ppAllocations[AllocateTileCount]->GetOffset() / kPageSize);
                     pRangeTileCounts[AllocateTileCount] = 1;
                     AllocateTileCount++;
                 }
