@@ -28,9 +28,9 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "text_server/font.h"
-#include "text_server/text_line.h"
-#include "text_server/text_paragraph.h"
+#include "dev/text_server/font.h"
+#include "dev/text_server/text_line.h"
+#include "dev/text_server/text_paragraph.h"
 
 namespace godot {
 /*************************************************************************/

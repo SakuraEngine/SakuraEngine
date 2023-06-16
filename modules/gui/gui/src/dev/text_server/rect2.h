@@ -28,51 +28,60 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 #pragma once
-#include "text_server/config.h"
-#include "text_server/vector2.h"
-#include "text_server/error_macros.h"
+#include "dev/text_server/config.h"
+#include "dev/text_server/vector2.h"
+#include "dev/text_server/error_macros.h"
 
-namespace godot{
+namespace godot
+{
 
 struct Rect2 {
-	Point2 position;
-	Size2 size;
+    Point2 position;
+    Size2  size;
 
-	Rect2() {}
-	Rect2(real_t p_x, real_t p_y, real_t p_width, real_t p_height) :
-			position(Point2(p_x, p_y)),
-			size(Size2(p_width, p_height)) {
-	}
-	Rect2(const Point2 &p_pos, const Size2 &p_size) :
-			position(p_pos),
-			size(p_size) {
-	}
+    Rect2() {}
+    Rect2(real_t p_x, real_t p_y, real_t p_width, real_t p_height)
+        : position(Point2(p_x, p_y))
+        , size(Size2(p_width, p_height))
+    {
+    }
+    Rect2(const Point2& p_pos, const Size2& p_size)
+        : position(p_pos)
+        , size(p_size)
+    {
+    }
 
-	inline void expand_to(const Vector2 &p_vector) { // In place function for speed.
+    inline void expand_to(const Vector2& p_vector)
+    { // In place function for speed.
 #ifdef MATH_CHECKS
-		if (unlikely(size.x < 0 || size.y < 0)) {
-			ERR_PRINT("Rect2 size is negative, this is not supported. Use Rect2.abs() to get a Rect2 with a positive size.");
-		}
+        if (unlikely(size.x < 0 || size.y < 0))
+        {
+            ERR_PRINT("Rect2 size is negative, this is not supported. Use Rect2.abs() to get a Rect2 with a positive size.");
+        }
 #endif
-		Vector2 begin = position;
-		Vector2 end = position + size;
+        Vector2 begin = position;
+        Vector2 end = position + size;
 
-		if (p_vector.x < begin.x) {
-			begin.x = p_vector.x;
-		}
-		if (p_vector.y < begin.y) {
-			begin.y = p_vector.y;
-		}
+        if (p_vector.x < begin.x)
+        {
+            begin.x = p_vector.x;
+        }
+        if (p_vector.y < begin.y)
+        {
+            begin.y = p_vector.y;
+        }
 
-		if (p_vector.x > end.x) {
-			end.x = p_vector.x;
-		}
-		if (p_vector.y > end.y) {
-			end.y = p_vector.y;
-		}
+        if (p_vector.x > end.x)
+        {
+            end.x = p_vector.x;
+        }
+        if (p_vector.y > end.y)
+        {
+            end.y = p_vector.y;
+        }
 
-		position = begin;
-		size = end - begin;
-	}
+        position = begin;
+        size = end - begin;
+    }
 };
-}
+} // namespace godot
