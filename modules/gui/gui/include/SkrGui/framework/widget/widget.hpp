@@ -2,11 +2,10 @@
 #include "SkrGui/framework/diagnostics.hpp"
 #include "SkrGui/framework/key.hpp"
 #include "SkrGui/framework/widget_misc.hpp"
+#include "SkrGui/framework/fwd_framework.hpp"
 
 namespace skr::gui
 {
-struct Element;
-
 struct SKR_GUI_API Widget : public DiagnosticableTreeNode {
     SKR_GUI_TYPE(Widget, "9f69910d-ba18-4ff4-bf5f-3966507c56ba", DiagnosticableTreeNode);
 

@@ -4,130 +4,186 @@
 namespace skr::gui
 {
 
-RenderObject::RenderObject()
+RenderObject::RenderObject() SKR_NOEXCEPT
+    : _parent(nullptr),
+      _owner(nullptr),
+      _depth(0),
+      _needs_layout(true),
+      _needs_paint(true),
+      _force_relayout_boundary(false),
+      _is_constraints_changed(false),
+      _relayout_boundary(nullptr),
+      _layer(nullptr),
+      _doing_this_layout_with_callback(false)
 {
-    diagnostic_builder.add_properties(
-    SkrNew<BoolDiagnosticProperty>(u8"active", active, u8""));
 }
-
 RenderObject::~RenderObject()
 {
 }
 
-void RenderObject::set_parent(RenderObject* new_parent)
+// render object tree
+void RenderObject::adopt_child(NotNull<RenderObject*> child) SKR_NOEXCEPT
 {
-    if (parent)
+    // validate
+    if (child->_parent != nullptr) { SKR_GUI_LOG_ERROR("child already has a parent"); }
     {
-        parent->remove_child(this);
-        parent = nullptr;
+        RenderObject* node = this;
+        while (node->_parent)
+            node = node->_parent;
+        if (node == child) { SKR_GUI_LOG_ERROR("cycle in the tree"); }
     }
-    new_parent->add_child(this);
-}
 
-void RenderObject::add_child(RenderObject* child)
-{
-    children.push_back(child);
-    child->parent = parent;
-}
-
-void RenderObject::insert_child(RenderObject* child, int index)
-{
-    children.insert(children.begin() + index, child);
-}
-
-int RenderObject::get_child_index(RenderObject* child)
-{
-    for (int i = 0; i < children.size(); ++i)
+    child->_parent = this;
+    if (attached())
     {
-        if (children[i] == child)
+        child->attach(make_not_null(owner()));
+    }
+    child->flush_depth();
+}
+void RenderObject::drop_child(NotNull<RenderObject*> child) SKR_NOEXCEPT
+{
+    // validate
+    if (child->_parent != this) { SKR_GUI_LOG_ERROR("child is not a child of this"); }
+    if (child->attached() != this->attached()) { SKR_GUI_LOG_ERROR("child is not attached to the same owner"); }
+
+    child->_parent = nullptr;
+    if (attached())
+    {
+        child->detach();
+    }
+}
+void RenderObject::flush_depth() SKR_NOEXCEPT
+{
+    _depth = _parent->_depth + 1;
+}
+void RenderObject::visit_children(function_ref<void(RenderObject*)> visitor) const SKR_NOEXCEPT {}
+void RenderObject::visit_children_recursive(function_ref<void(RenderObject*)> visitor) const SKR_NOEXCEPT {}
+
+// pipeline owner
+void RenderObject::attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT
+{
+    // validate
+    if (_owner != nullptr) { SKR_GUI_LOG_ERROR("already attached"); }
+
+    _owner = owner;
+
+    // If the node was dirtied in some way while unattached, make sure to add
+    // it to the appropriate dirty list now that an owner is available
+    if (_needs_layout && _relayout_boundary != nullptr)
+    {
+        // Don't enter this block if we've never laid out at all;
+        // scheduleInitialLayout() will handle it
+        _needs_layout = false;
+        mark_needs_layout();
+    }
+    if (_needs_paint && _layer != nullptr)
+    {
+        // Don't enter this block if we've never painted at all;
+        // scheduleInitialPaint() will handle it
+        _needs_paint = false;
+        mark_needs_paint();
+    }
+}
+void RenderObject::detach() SKR_NOEXCEPT
+{
+    if (_owner == nullptr) { SKR_GUI_LOG_ERROR("already detached"); }
+    _owner = nullptr;
+    if (_parent != nullptr && _parent->attached() != _parent->attached()) { SKR_GUI_LOG_ERROR("detach from owner but parent is still attached"); }
+}
+
+// layout & paint marks
+void RenderObject::mark_needs_layout() SKR_NOEXCEPT
+{
+    if (_relayout_boundary == nullptr)
+    {
+        _needs_layout = true;
+        if (_parent != nullptr)
         {
-            return i;
+            _mark_parent_needs_layout();
         }
     }
-    return -1;
-}
-
-void RenderObject::remove_child(RenderObject* child)
-{
-    for (auto it = children.begin(); it != children.end(); ++it)
+    else if (_relayout_boundary != this)
     {
-        if (*it == child)
+        _mark_parent_needs_layout();
+    }
+    else
+    {
+        _needs_layout = true;
+        if (_owner != nullptr)
         {
-            children.erase(it);
-            break;
+            // TODO.
+            // owner!._nodesNeedingLayout.add(this);
+            // owner!.requestVisualUpdate();
         }
     }
 }
-
-int RenderObject::get_child_count() const
+void RenderObject::mark_needs_paint() SKR_NOEXCEPT
 {
-    return children.size();
+    SKR_UNIMPLEMENTED_FUNCTION()
 }
 
-RenderObject* RenderObject::get_child(int index) const
+// layout process
+bool RenderObject::is_sized_by_parent() const SKR_NOEXCEPT { return false; }
+void RenderObject::layout(bool parent_uses_size) SKR_NOEXCEPT
 {
-    return children[index];
-}
+    bool          is_relayout_boundary = !parent_uses_size || is_sized_by_parent() || _force_relayout_boundary || !_parent;
+    RenderObject* relayout_boundary = is_relayout_boundary ? this : _parent->_relayout_boundary;
 
-void RenderObject::set_render_matrix(const skr_float4x4_t& matrix)
-{
-    render_matrix = matrix;
-}
-
-void RenderObject::set_active(bool active)
-{
-    if (auto property = diagnostic_builder.find_property(u8"active"))
+    if (!_needs_layout && !_is_constraints_changed)
     {
-        property->as<BoolDiagnosticProperty>().value = active;
-    }
-    this->active = active;
-}
-
-void RenderObject::markLayoutDirty()
-{
-    layoutDirty = true;
-}
-
-void RenderObject::before_draw(const DrawParams* params)
-{
-}
-
-void RenderObject::draw(const DrawParams* params)
-{
-    if (!active) { return; }
-    for (auto& child : children)
-    {
-        child->before_draw(params);
-        child->draw(params);
-        child->after_draw(params);
-    }
-}
-
-void RenderObject::after_draw(const DrawParams* params)
-{
-}
-
-void RenderObject::addElementToCanvas(const DrawParams* params, IGDIElement* element)
-{
-    if (auto canvas = params->canvas)
-    {
-        const bool renderer_z_enabled = canvas->is_hardware_z_enabled();
-        if (renderer_z_enabled)
+        if (relayout_boundary != _relayout_boundary)
         {
-            const int32_t ui_z = params->ui_z;
-            int32_t       z_min, z_max;
-            canvas->get_zrange(&z_min, &z_max);
-            const int32_t canvas_z = std::clamp(ui_z, z_min, z_max);
-            element->set_z(canvas_z);
+            _relayout_boundary = relayout_boundary;
+            visit_children([](RenderObject* child) { child->_flush_relayout_boundary(); });
         }
-        canvas->add_element(element);
     }
+    else
+    {
+        _relayout_boundary = relayout_boundary;
+        if (is_sized_by_parent())
+        {
+            perform_resize();
+        }
+        perform_layout();
+
+        _needs_layout = false;
+        mark_needs_paint();
+    }
+
+    // clean up flags
+    _is_constraints_changed = false;
+}
+void RenderObject::perform_resize() SKR_NOEXCEPT {}
+void RenderObject::perform_layout() SKR_NOEXCEPT {}
+
+// paint process
+void RenderObject::debug_paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT {}
+void RenderObject::paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT {}
+bool RenderObject::is_repaint_boundary() const SKR_NOEXCEPT { return false; }
+
+// transform
+bool    RenderObject::paints_child(NotNull<RenderObject*> child) const SKR_NOEXCEPT { return true; }
+void    RenderObject::apply_paint_transform(NotNull<RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT {}
+Matrix4 RenderObject::get_transform_to(RenderObject* ancestor) const SKR_NOEXCEPT
+{
+    SKR_UNIMPLEMENTED_FUNCTION()
+    return {};
 }
 
-Span<DiagnosticableTreeNode* const> RenderObject::get_diagnostics_children() const
+void RenderObject::_mark_parent_needs_layout() SKR_NOEXCEPT
 {
-    const eastl::vector<RenderObject*>& children_ = children;
-    return { (DiagnosticableTreeNode* const*)children_.data(), children_.size() };
+    SKR_UNIMPLEMENTED_FUNCTION()
 }
+void RenderObject::_flush_relayout_boundary() SKR_NOEXCEPT
+{
+    SKR_UNIMPLEMENTED_FUNCTION()
+}
+
+//==> Begin DiagnosticableTreeNode API
+void RenderObject::visit_diagnostics_children(function_ref<void(DiagnosticableTreeNode*)> visitor) SKR_NOEXCEPT
+{
+    visit_children([&visitor](RenderObject* o) { visitor(o); });
+}
+//==> End DiagnosticableTreeNode API
 
 } // namespace skr::gui

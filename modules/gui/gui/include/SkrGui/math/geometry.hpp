@@ -20,6 +20,9 @@ struct Offset {
     float x = 0;
     float y = 0;
 
+    // factory
+    inline static Offset Radians(float radians, float radius = 1) SKR_NOEXCEPT { return { radius * std::cos(radians), radius * std::sin(radians) }; }
+
     // constant
     inline static constexpr Offset zero() SKR_NOEXCEPT { return { 0, 0 }; }
     inline static constexpr Offset infinite() SKR_NOEXCEPT { return { std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() }; }
@@ -175,6 +178,28 @@ public:
     inline constexpr Size& operator*=(const Size& rhs) SKR_NOEXCEPT { return *this = *this * rhs; }
     inline constexpr Size& operator/=(const Size& rhs) SKR_NOEXCEPT { return *this = *this / rhs; }
     inline Size&           operator%=(const Size& rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
+
+    inline static Size lerp(const Size& a, const Size& b, float t) SKR_NOEXCEPT
+    {
+        return {
+            ::skr::gui::lerp(a.width, b.width, t),
+            ::skr::gui::lerp(a.height, b.height, t),
+        };
+    }
+    inline static Size min(const Size& a, const Size& b) SKR_NOEXCEPT
+    {
+        return {
+            std::min(a.width, b.width),
+            std::min(a.height, b.height),
+        };
+    }
+    inline static Size max(const Size& a, const Size& b) SKR_NOEXCEPT
+    {
+        return {
+            std::max(a.width, b.width),
+            std::max(a.height, b.height),
+        };
+    }
 };
 struct Rect {
     float left = 0;
@@ -182,49 +207,33 @@ struct Rect {
     float right = 0;
     float bottom = 0;
 
-private:
-    struct __LTWHParams {
-        float left = 0;
-        float top = 0;
-        float width = 0;
-        float height = 0;
-    };
-    struct __CircleParams {
-        Offset center = { 0, 0 };
-        float  radius = 0;
-    };
-    struct __CenterParams {
-        Offset center = { 0, 0 };
-        Size   size = { 0, 0 };
-    };
-
 public:
     // factory
-    inline static constexpr Rect LTWH(__LTWHParams params) SKR_NOEXCEPT
+    inline static constexpr Rect LTWH(float left, float top, float width, float height) SKR_NOEXCEPT
     {
         return {
-            params.left,
-            params.top,
-            params.left + params.width,
-            params.top + params.height,
+            left,
+            top,
+            left + width,
+            top + height,
         };
     }
-    inline static constexpr Rect Circle(__CircleParams params) SKR_NOEXCEPT
+    inline static constexpr Rect Circle(Offset center, float radius) SKR_NOEXCEPT
     {
         return {
-            params.center.x - params.radius,
-            params.center.y - params.radius,
-            params.center.x + params.radius,
-            params.center.y + params.radius,
+            center.x - radius,
+            center.y - radius,
+            center.x + radius,
+            center.y + radius,
         };
     }
-    inline static constexpr Rect Center(__CenterParams params) SKR_NOEXCEPT
+    inline static constexpr Rect Center(Offset center, Size size) SKR_NOEXCEPT
     {
         return {
-            params.center.x - params.size.width / 2.0f,
-            params.center.y - params.size.height / 2.0f,
-            params.center.x + params.size.width / 2.0f,
-            params.center.y + params.size.height / 2.0f,
+            center.x - size.width / 2.0f,
+            center.y - size.height / 2.0f,
+            center.x + size.width / 2.0f,
+            center.y + size.height / 2.0f,
         };
     }
     inline static constexpr Rect Points(const Offset& a, const Offset& b) SKR_NOEXCEPT
@@ -234,6 +243,15 @@ public:
             std::min(a.y, b.y),
             std::max(a.x, b.x),
             std::max(a.y, b.y),
+        };
+    }
+    inline static constexpr Rect OffsetSize(const Offset& offset, const Size& size) SKR_NOEXCEPT
+    {
+        return {
+            offset.x,
+            offset.y,
+            offset.x + size.width,
+            offset.y + size.height,
         };
     }
 

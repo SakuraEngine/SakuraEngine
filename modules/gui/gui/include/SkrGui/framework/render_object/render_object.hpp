@@ -1,49 +1,100 @@
 #pragma once
 #include "SkrGui/framework/diagnostics.hpp"
+#include "SkrGui/framework/fwd_framework.hpp"
+#include "SkrGui/math/geometry.hpp"
+#include "SkrGui/math/matrix.hpp"
 
 namespace skr::gui
 {
-struct WindowContext;
 struct SKR_GUI_API RenderObject : public DiagnosticableTreeNode {
     SKR_GUI_TYPE(RenderObject, "74844fa6-8994-4915-8f8e-ec944a1cbea4", DiagnosticableTreeNode);
 
-    struct DrawParams {
-        IGDIViewport*  viewport = nullptr;
-        IGDICanvas*    canvas = nullptr;
-        WindowContext* window_context = nullptr;
-        int32_t        ui_z = 0;
-    };
-
-public:
-    RenderObject();
+    RenderObject() SKR_NOEXCEPT;
     virtual ~RenderObject();
 
-    virtual void          set_parent(RenderObject* parent);
-    virtual void          add_child(RenderObject* child);
-    virtual void          insert_child(RenderObject* child, int index);
-    virtual int           get_child_index(RenderObject* child);
-    virtual void          remove_child(RenderObject* child);
-    virtual int           get_child_count() const;
-    virtual RenderObject* get_child(int index) const;
-    virtual void          set_render_matrix(const skr_float4x4_t& matrix);
+    // render object tree
+    void         adopt_child(NotNull<RenderObject*> child) SKR_NOEXCEPT;
+    void         drop_child(NotNull<RenderObject*> child) SKR_NOEXCEPT;
+    virtual void flush_depth() SKR_NOEXCEPT;
+    virtual void visit_children(function_ref<void(RenderObject*)> visitor) const SKR_NOEXCEPT;
+    virtual void visit_children_recursive(function_ref<void(RenderObject*)> visitor) const SKR_NOEXCEPT;
 
-    virtual void set_active(bool active);
-    virtual void markLayoutDirty();
+    // pipeline owner
+    virtual void          attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT;
+    virtual void          detach() SKR_NOEXCEPT;
+    inline PipelineOwner* owner() const SKR_NOEXCEPT { return _owner; }
+    inline bool           attached() const SKR_NOEXCEPT { return _owner != nullptr; }
 
-    virtual void before_draw(const DrawParams* params);
-    virtual void draw(const DrawParams* params);
-    virtual void after_draw(const DrawParams* params);
+    // layout & paint marks
+    virtual void mark_needs_layout() SKR_NOEXCEPT;
+    virtual void mark_needs_paint() SKR_NOEXCEPT;
 
-    virtual Span<DiagnosticableTreeNode* const> get_diagnostics_children() const override;
+    // layout process
+    // 1. 传递 constraints 并标记 _is_constraints_changed
+    // 2. 调用 layout()，并解析 layout_boundary 信息
+    //    2.1 [if !_needs_layout && !_is_constraints_changed] 向下传递 layout_boundary 信息
+    //    2.2 [if is_sized_by_parent()] 说明 child 尺寸计算完全由传递的约束决定，调用 perform_resize()
+    //    2.3 调用 perform_layout()
+    // 3. 清除 _is_relayout_boundary 与 _is_constraints_changed 标记
+    // Note: parent_uses_size 主要作用是影响 child 重新布局向父亲的信息传播
+    virtual bool is_sized_by_parent() const SKR_NOEXCEPT;
+    void         layout(bool parent_uses_size = false) SKR_NOEXCEPT;
+    virtual void perform_resize() SKR_NOEXCEPT;
+    virtual void perform_layout() SKR_NOEXCEPT;
 
+    // paint process
+    // paint 流程由 layer 发起，其调用流程被 PaintingContext 严格封装，不允许直接调用，而是调用 PaintingContext::paintChild
+    virtual void debug_paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT;
+    virtual void paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT;
+    virtual bool is_repaint_boundary() const SKR_NOEXCEPT;
+
+    // transform
+    // 用于做坐标点转换，通常用于 hit-test
+    virtual bool    paints_child(NotNull<RenderObject*> child) const SKR_NOEXCEPT;
+    virtual void    apply_paint_transform(NotNull<RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT;
+    virtual Matrix4 get_transform_to(RenderObject* ancestor) const SKR_NOEXCEPT;
+
+    // TODO
+    // invoke_layout_callback：用于在 layout 过程中创建 child，通常用于 Sliver
+    // layer：repaint_boundary 存储对应 layer 用于局部重绘
+    // _paint_with_context：call by PaintingContext
+    // handle_event：处理输入事件
+    // show_on_screen：或许可以实现，用于 ScrollView 的目标追踪
+
+    //==> Begin DiagnosticableTreeNode API
+    void visit_diagnostics_children(function_ref<void(DiagnosticableTreeNode*)> visitor) SKR_NOEXCEPT override;
+    //==> End DiagnosticableTreeNode API
 protected:
-    void addElementToCanvas(const DrawParams* params, IGDIElement* element);
+    void        _mark_parent_needs_layout() SKR_NOEXCEPT;
+    inline void _set_force_relayout_boundary(bool v) SKR_NOEXCEPT { _force_relayout_boundary = v; }
+    inline void _set_constraints_changed(bool v) SKR_NOEXCEPT { _is_constraints_changed = v; }
 
-    bool                 active = true;
-    bool                 layoutDirty = true;
-    RenderObject*        parent = nullptr;
-    Array<RenderObject*> children;
-    skr_float4x4_t       render_matrix;
+private:
+    void _flush_relayout_boundary() SKR_NOEXCEPT;
+
+private:
+    // render object tree
+    RenderObject*  _parent;
+    PipelineOwner* _owner;
+    int32_t        _depth;
+
+    // dirty marks
+    bool _needs_layout;
+    bool _needs_paint;
+
+    // layout temporal data
+    bool _force_relayout_boundary; // 强制自己称为 layout_boundary
+    bool _is_constraints_changed;  // 约束发生变化，在 layout 结束后被清理
+
+    // layout & paint boundary
+    RenderObject* _relayout_boundary;
+    void*         _layer; // TODO. layer
+
+    // 用于 invoke_layout_callback()
+    bool _doing_this_layout_with_callback;
+
+    // Impl By Child
+    // _constraints
 };
 
 } // namespace skr::gui

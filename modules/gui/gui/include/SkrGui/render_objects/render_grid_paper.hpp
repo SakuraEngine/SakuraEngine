@@ -6,13 +6,13 @@ namespace skr::gui
 struct SKR_GUI_API RenderGridPaper : public RenderBox {
 public:
     SKR_GUI_TYPE(RenderGridPaper, "13dd33c9-5d56-4b06-94ce-d1c526fe75d0", RenderBox);
-    RenderGridPaper(IGDIDevice* gdi_device);
+    using Super = RenderBox;
+
+    RenderGridPaper();
     virtual ~RenderGridPaper();
 
-    virtual void layout(BoxConstraint constraints, bool needSize = false) override;
-    virtual void draw(const DrawParams* params) override;
-
-    IGDIElement* gdi_element = nullptr;
+    void perform_layout() SKR_NOEXCEPT override;
+    void paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT override;
 };
 
 } // namespace skr::gui

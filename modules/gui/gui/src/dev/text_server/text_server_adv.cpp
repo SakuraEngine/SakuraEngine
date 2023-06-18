@@ -1,4 +1,5 @@
 #include "SkrGui/dev/gdi/gdi.hpp"
+#include "SkrGui/backend/canvas.hpp"
 #include "SkrGui/dev/gdi/color.hpp"
 #include "image_texture.h"
 
@@ -3666,31 +3667,27 @@ void TextServerAdvanced::_font_draw_glyph(const RID& p_font_rid, const RID& p_ca
                             resolve_uv_pos.x + resolve_uv_size.x, resolve_uv_pos.y + resolve_uv_size.y
                         };
 
-                        proxy->gdi_paint->enable_imagespace_coordinate(false);
-                        proxy->gdi_paint->set_pattern(cpos.x, cpos.y, csize.x, csize.y, 0, gdi_texture, color);
-                        proxy->gdi_paint->custom_vertex_color(
-                        +[](skr::gui::GDIVertex* vertex, void* data) {
-                            const auto& rect = *(float8*)data;
-                            const auto  x_u = rect.x;
-                            const auto  x_U = rect.x + rect.w;
-                            const auto  y_v = rect.y;
-                            const auto  y_V = rect.y + rect.h;
-                            const auto  u = rect.u;
-                            const auto  v = rect.v;
-                            const auto  u2 = rect.u2;
-                            const auto  v2 = rect.v2;
-                            const auto  x = vertex->position.x;
-                            const auto  y = vertex->position.y;
-                            const auto  u_ = u + (u2 - u) * (x - x_u) / (x_U - x_u);
-                            const auto  v_ = v + (v2 - v) * (y - y_v) / (y_V - y_v);
-                            vertex->texcoord.x = u_;
-                            vertex->texcoord.y = v_;
-                        },
-                        &rect);
-                        proxy->gdi_element->begin_path();
-                        proxy->gdi_element->rect(cpos.x, cpos.y, csize.x, csize.y);
-                        proxy->gdi_element->fill_paint(proxy->gdi_paint);
-                        proxy->gdi_element->fill_no_aa();
+                        proxy->canvas->state_anti_alias(false);
+                        proxy->canvas->path_begin();
+                        proxy->canvas->path_rect(skr::gui::Rect::LTWH(cpos.x, cpos.y, csize.x, csize.y));
+                        proxy->canvas->path_fill(skr::gui::TextureBrush(gdi_texture)
+                                                 .uv_rect(skr::gui::Rect::LTWH(cpos.x, cpos.y, csize.x, csize.y))
+                                                 .custom_paint([&rect](skr::gui::GDIVertex& vtx) {
+                                                     const auto x_u = rect.x;
+                                                     const auto x_U = rect.x + rect.w;
+                                                     const auto y_v = rect.y;
+                                                     const auto y_V = rect.y + rect.h;
+                                                     const auto u = rect.u;
+                                                     const auto v = rect.v;
+                                                     const auto u2 = rect.u2;
+                                                     const auto v2 = rect.v2;
+                                                     const auto x = vtx.position.x;
+                                                     const auto y = vtx.position.y;
+                                                     const auto u_ = u + (u2 - u) * (x - x_u) / (x_U - x_u);
+                                                     const auto v_ = v + (v2 - v) * (y - y_v) / (y_V - y_v);
+                                                     vtx.texcoord.x = u_;
+                                                     vtx.texcoord.y = v_;
+                                                 }));
                     }
                 }
             }

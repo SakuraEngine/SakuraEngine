@@ -2,6 +2,7 @@
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/backend/paint_params.hpp"
+#include "SkrGui/backend/brush.hpp"
 
 // TODO. remove gdi
 #include "SkrGui/dev/gdi/gdi.hpp"
@@ -9,12 +10,10 @@
 namespace skr::gui
 {
 struct CanvasPaintScope;
-struct CanvasPathScope;
+struct CanvasPathFillScope;
+struct CanvasPathStrokeScope;
 struct CanvasStateScope;
-
-struct ColorPaintBuilder;
-struct TexturePaintBuilder;
-struct MaterialPaintBuilder;
+struct Brush;
 
 struct SKR_GUI_API ICanvas final {
     ICanvas(IGDIDevice* device) SKR_NOEXCEPT;
@@ -39,7 +38,6 @@ struct SKR_GUI_API ICanvas final {
 
     //==> vg states
     void state_reset() SKR_NOEXCEPT;
-    void state_paint_style(EPaintStyle style) SKR_NOEXCEPT;  // DEFAULT: Fill
     void state_stroke_cap(EStrokeCap cap) SKR_NOEXCEPT;      // DEFAULT: Butt
     void state_stroke_join(EStrokeJoin join) SKR_NOEXCEPT;   // DEFAULT: Miter
     void state_stroke_width(float width) SKR_NOEXCEPT;       // DEFAULT: 1.0f
@@ -54,16 +52,12 @@ struct SKR_GUI_API ICanvas final {
     void state_skew_x(float skew) SKR_NOEXCEPT;                  // APPLY skew
     void state_skew_y(float skew) SKR_NOEXCEPT;                  // APPLY skew
 
-    //==> paint states
-    void                 state_paint_reset() SKR_NOEXCEPT;                       // DEFAULT: Color { white }
-    ColorPaintBuilder    state_paint_color(Color color) SKR_NOEXCEPT;            // SWITCH paint mode to color
-    TexturePaintBuilder  state_paint_texture(ITexture* texture) SKR_NOEXCEPT;    // SWITCH paint mode to texture
-    MaterialPaintBuilder state_paint_material(IMaterial* material) SKR_NOEXCEPT; // SWITCH paint mode to material
-
     //==> path
-    void            path_begin() SKR_NOEXCEPT; // begin a new path
-    void            path_end() SKR_NOEXCEPT;   // end a path and build vertices by current [fill-states and paint-states]
-    CanvasPathScope path_scope() SKR_NOEXCEPT;
+    void                  path_begin() SKR_NOEXCEPT;                    // begin a new path
+    void                  path_fill(const Brush& brush) SKR_NOEXCEPT;   // end a path and build vertices for fill
+    void                  path_stroke(const Brush& brush) SKR_NOEXCEPT; // end a path and build vertices for stroke
+    CanvasPathFillScope   path_fill_scope(const Brush& brush) SKR_NOEXCEPT;
+    CanvasPathStrokeScope path_stroke_scope(const Brush& brush) SKR_NOEXCEPT;
 
     //==> custom path
     void path_move_to(Offset to) SKR_NOEXCEPT;                                                // NEW sub-path from pos
@@ -79,50 +73,12 @@ struct SKR_GUI_API ICanvas final {
     void path_circle(Offset center, float radius) SKR_NOEXCEPT;                                    // ADD CLOSED circle sub-path
     void path_ellipse(Offset center, float radius_x, float radius_y) SKR_NOEXCEPT;                 // ADD CLOSED ellipse sub-path
 
-    //==> helper draw, warper for path
-    void draw_arc(Offset center, float radius, float start_degree, float end_degree) SKR_NOEXCEPT;
-    void draw_rect(Rect rect) SKR_NOEXCEPT;
-    void draw_circle(Offset center, float radius) SKR_NOEXCEPT;
-    void draw_ellipse(Offset center, float radius_x, float radius_y) SKR_NOEXCEPT;
-
     // TODO. custom vertices draw
     // TODO. draw round rect
     // TODO. draw IParagraph
+    // TODO. curve quality
 
 private:
-    // paint mode builder
-    void _state_paint_color(Color color) SKR_NOEXCEPT;                                       // DEFAULT: white (Color { 1, 1, 1, 1 })
-    void _state_paint_uv_rect(Rect uv_rect) SKR_NOEXCEPT;                                    // DEFAULT: empty rect { 0, 0, 0, 0 }
-    void _state_paint_uv_rect_nine(Rect center, Rect total) SKR_NOEXCEPT;                    // DEFAULT: empty rect { 0, 0, 0, 0 }
-    void _state_paint_blend_mode(BlendMode mode) SKR_NOEXCEPT;                               // DEFAULT: { 1, 1 - SrcAlpha, 1, 1 - SrcAlpha }
-    void _state_paint_rotation(float degree) SKR_NOEXCEPT;                                   // DEFAULT: 0.0f
-    void _state_paint_texture_swizzle(Swizzle swizzle) SKR_NOEXCEPT;                         // DEFAULT: { R, G, B, A }
-    void _state_paint_custom_paint(CustomPaintCallback custom, void* userdata) SKR_NOEXCEPT; // DEFAULT: nullptr
-
-private:
-    friend struct ColorPaintBuilder;
-    friend struct TexturePaintBuilder;
-    friend struct MaterialPaintBuilder;
-
-    struct _State {
-        // TODO. move to GDI
-        bool anti_alias = true;
-
-        EPaintStyle paint_style = EPaintStyle::Fill;
-
-        EPaintType          paint_type = EPaintType::Color;
-        Color               color = { 1, 1, 1, 1 };
-        ITexture*           texture = nullptr;
-        IMaterial*          material = nullptr;
-        Rect                uv_rect = {};
-        Rect                uv_rect_nine_total = {};
-        BlendMode           blend_mode = {};
-        float               degree = 0.0f;
-        Swizzle             swizzle = {};
-        CustomPaintCallback custom_paint = nullptr;
-        void*               custom_paint_userdata = nullptr;
-    };
-
     // gdi
     IGDIDevice*         _gdi_device;
     IGDICanvas*         _gdi_canvas;
@@ -130,119 +86,8 @@ private:
     Array<IGDIElement*> _gdi_elements;
 
     // state & validate
-    Array<_State> _state_stack;
-    _State        _current_state;
-    bool          _is_in_paint_scope;
-    bool          _is_in_path_scope;
-};
-
-// paint mode builders
-struct ColorPaintBuilder {
-    ColorPaintBuilder& custom(CustomPaintCallback callback, void* userdata) SKR_NOEXCEPT
-    {
-        _canvas->_state_paint_custom_paint(callback, userdata);
-        return *this;
-    }
-
-private:
-    friend struct ICanvas;
-    inline ColorPaintBuilder(ICanvas* canvas) SKR_NOEXCEPT
-        : _canvas(canvas)
-    {
-    }
-    ColorPaintBuilder(const ColorPaintBuilder&) = delete;
-    ColorPaintBuilder(ColorPaintBuilder&&) = delete;
-    ColorPaintBuilder& operator=(const ColorPaintBuilder&) = delete;
-    ColorPaintBuilder& operator=(ColorPaintBuilder&&) = delete;
-    ICanvas*           _canvas;
-};
-struct TexturePaintBuilder {
-    TexturePaintBuilder& color(Color color) SKR_NOEXCEPT
-    {
-        _canvas->_state_paint_color(color);
-        return *this;
-    }
-    TexturePaintBuilder& uv(Rect uv) SKR_NOEXCEPT
-    {
-        _canvas->_state_paint_uv_rect(uv);
-        return *this;
-    }
-    TexturePaintBuilder& uv_nine(Rect center, Rect total) SKR_NOEXCEPT
-    {
-        _canvas->_state_paint_uv_rect_nine(center, total);
-        return *this;
-    }
-    TexturePaintBuilder& rotation(float degree) SKR_NOEXCEPT
-    {
-        _canvas->_state_paint_rotation(degree);
-        return *this;
-    }
-    TexturePaintBuilder& blend(BlendMode mode) SKR_NOEXCEPT
-    {
-        _canvas->_state_paint_blend_mode(mode);
-        return *this;
-    }
-    TexturePaintBuilder& swizzle(Swizzle swizzle) SKR_NOEXCEPT
-    {
-        _canvas->_state_paint_texture_swizzle(swizzle);
-        return *this;
-    }
-    TexturePaintBuilder& custom(CustomPaintCallback callback, void* userdata) SKR_NOEXCEPT
-    {
-        _canvas->_state_paint_custom_paint(callback, userdata);
-        return *this;
-    }
-
-private:
-    friend struct ICanvas;
-    inline TexturePaintBuilder(ICanvas* canvas) SKR_NOEXCEPT
-        : _canvas(canvas)
-    {
-    }
-    TexturePaintBuilder(const TexturePaintBuilder&) = delete;
-    TexturePaintBuilder(TexturePaintBuilder&&) = delete;
-    TexturePaintBuilder& operator=(const TexturePaintBuilder&) = delete;
-    TexturePaintBuilder& operator=(TexturePaintBuilder&&) = delete;
-    ICanvas*             _canvas;
-};
-struct MaterialPaintBuilder {
-    MaterialPaintBuilder& color(Color color) SKR_NOEXCEPT
-    {
-        _canvas->_state_paint_color(color);
-        return *this;
-    }
-    MaterialPaintBuilder& uv(Rect uv) SKR_NOEXCEPT
-    {
-        _canvas->_state_paint_uv_rect(uv);
-        return *this;
-    }
-    MaterialPaintBuilder& uv_nine(Rect center, Rect total) SKR_NOEXCEPT
-    {
-        _canvas->_state_paint_uv_rect_nine(center, total);
-        return *this;
-    }
-    MaterialPaintBuilder& rotation(float degree) SKR_NOEXCEPT
-    {
-        _canvas->_state_paint_rotation(degree);
-        return *this;
-    }
-    MaterialPaintBuilder& custom(CustomPaintCallback callback, void* userdata) SKR_NOEXCEPT
-    {
-        _canvas->_state_paint_custom_paint(callback, userdata);
-        return *this;
-    }
-
-private:
-    friend struct ICanvas;
-    inline MaterialPaintBuilder(ICanvas* canvas) SKR_NOEXCEPT
-        : _canvas(canvas)
-    {
-    }
-    MaterialPaintBuilder(const MaterialPaintBuilder&) = delete;
-    MaterialPaintBuilder(MaterialPaintBuilder&&) = delete;
-    MaterialPaintBuilder& operator=(const MaterialPaintBuilder&) = delete;
-    MaterialPaintBuilder& operator=(MaterialPaintBuilder&&) = delete;
-    ICanvas*              _canvas;
+    bool _is_in_paint_scope;
+    bool _is_in_path_scope;
 };
 
 // scopes
@@ -260,21 +105,38 @@ struct CanvasPaintScope {
 private:
     ICanvas* _canvas;
 };
-struct CanvasPathScope {
-    inline CanvasPathScope(ICanvas* canvas) SKR_NOEXCEPT
-        : _canvas(canvas)
+struct CanvasPathFillScope {
+    inline CanvasPathFillScope(ICanvas* canvas, const Brush& painter) SKR_NOEXCEPT
+        : _canvas(canvas),
+          _painter(painter)
     {
         _canvas->path_begin();
     }
-    inline ~CanvasPathScope() SKR_NOEXCEPT
+    inline ~CanvasPathFillScope() SKR_NOEXCEPT
     {
-        _canvas->path_end();
+        _canvas->path_fill(_painter);
     }
 
 private:
-    ICanvas* _canvas;
+    ICanvas*     _canvas;
+    const Brush& _painter;
 };
+struct CanvasPathStrokeScope {
+    inline CanvasPathStrokeScope(ICanvas* canvas, const Brush& painter) SKR_NOEXCEPT
+        : _canvas(canvas),
+          _painter(painter)
+    {
+        _canvas->path_begin();
+    }
+    inline ~CanvasPathStrokeScope() SKR_NOEXCEPT
+    {
+        _canvas->path_stroke(_painter);
+    }
 
+private:
+    ICanvas*     _canvas;
+    const Brush& _painter;
+};
 struct CanvasStateScope {
     inline CanvasStateScope(ICanvas* canvas) SKR_NOEXCEPT
         : _canvas(canvas)
@@ -289,5 +151,10 @@ struct CanvasStateScope {
 private:
     ICanvas* _canvas;
 };
+
+inline CanvasPaintScope      ICanvas::paint_scope(float pixel_ratio) SKR_NOEXCEPT { return { this, pixel_ratio }; }
+inline CanvasStateScope      ICanvas::state_scope() SKR_NOEXCEPT { return { this }; }
+inline CanvasPathFillScope   ICanvas::path_fill_scope(const Brush& brush) SKR_NOEXCEPT { return { this, brush }; }
+inline CanvasPathStrokeScope ICanvas::path_stroke_scope(const Brush& brush) SKR_NOEXCEPT { return { this, brush }; }
 
 } // namespace skr::gui

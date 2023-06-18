@@ -89,5 +89,9 @@ struct Color {
         return Color{ LINEAR_TO_SRGB(c.r), LINEAR_TO_SRGB(c.g), LINEAR_TO_SRGB(c.b), c.a };
 #undef LINEAR_TO_SRGB
     }
+
+    // compare
+    inline bool operator==(const Color& rhs) const SKR_NOEXCEPT { return r == rhs.r && g == rhs.g && b == rhs.b && a == rhs.a; }
+    inline bool operator!=(const Color& rhs) const SKR_NOEXCEPT { return !(*this == rhs); }
 };
 } // namespace skr::gui

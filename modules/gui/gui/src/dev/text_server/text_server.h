@@ -39,9 +39,7 @@
 namespace skr::gui
 {
 struct IGDIRenderer;
-struct IGDIPaint;
-struct IGDIDevice;
-struct IGDIElement;
+struct ICanvas;
 } // namespace skr::gui
 
 namespace godot
@@ -69,9 +67,7 @@ class TextServer
 public:
     // ++ SKR
     struct TextDrawProxy {
-        ::skr::gui::IGDIDevice*  gdi_device = nullptr;
-        ::skr::gui::IGDIElement* gdi_element = nullptr;
-        ::skr::gui::IGDIPaint*   gdi_paint = nullptr;
+        ::skr::gui::ICanvas* canvas = nullptr;
     };
     // --SKR
     enum FontAntialiasing

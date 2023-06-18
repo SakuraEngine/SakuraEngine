@@ -62,13 +62,29 @@ struct BoxConstraint {
         max_width = size.width;
         max_height = size.height;
     }
+    inline constexpr Size smallest() const SKR_NOEXCEPT { return constrain({ 0, 0 }); }
+    inline constexpr Size biggest() const SKR_NOEXCEPT { return constrain({ std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() }); }
+    inline constexpr bool has_bounded_width() const SKR_NOEXCEPT { return max_width < std::numeric_limits<float>::infinity(); }
+    inline constexpr bool has_bounded_height() const SKR_NOEXCEPT { return max_height < std::numeric_limits<float>::infinity(); }
+    inline constexpr bool has_infinite_width() const SKR_NOEXCEPT { return min_width >= std::numeric_limits<float>::infinity(); }
+    inline constexpr bool has_infinite_height() const SKR_NOEXCEPT { return min_height >= std::numeric_limits<float>::infinity(); }
+    inline constexpr bool has_tight_width() const SKR_NOEXCEPT { return min_width >= max_width; }
+    inline constexpr bool has_tight_height() const SKR_NOEXCEPT { return min_height >= max_height; }
+    inline constexpr bool is_tight() const SKR_NOEXCEPT { return has_tight_width() && has_tight_height(); }
+
+    // compare
+    inline constexpr bool operator==(const BoxConstraint& rhs) const SKR_NOEXCEPT
+    {
+        return min_width == rhs.min_width && max_width == rhs.max_width && min_height == rhs.min_height && max_height == rhs.max_height;
+    }
+    inline constexpr bool operator!=(const BoxConstraint& rhs) const SKR_NOEXCEPT { return !(*this == rhs); }
 
     // ops
-    inline constexpr float constrain_width(float width) const SKR_NOEXCEPT
+    inline constexpr float constrain_width(float width = std::numeric_limits<float>::infinity()) const SKR_NOEXCEPT
     {
         return std::clamp(width, min_width, max_width);
     }
-    inline constexpr float constrain_height(float height) const SKR_NOEXCEPT
+    inline constexpr float constrain_height(float height = std::numeric_limits<float>::infinity()) const SKR_NOEXCEPT
     {
         return std::clamp(height, min_height, max_height);
     }
@@ -77,6 +93,15 @@ struct BoxConstraint {
         size.width = constrain_width(size.width);
         size.height = constrain_height(size.height);
         return size;
+    }
+    inline BoxConstraint enforce(BoxConstraint constraints) const
+    {
+        return {
+            std::clamp(min_width, constraints.min_width, constraints.max_width),
+            std::clamp(max_width, constraints.min_width, constraints.max_width),
+            std::clamp(min_height, constraints.min_height, constraints.max_height),
+            std::clamp(max_height, constraints.min_height, constraints.max_height),
+        };
     }
 };
 
@@ -115,6 +140,8 @@ struct PositionalUnit {
     inline constexpr operator bool() const SKR_NOEXCEPT { return type != Type::Unset; }
     inline constexpr bool operator==(std::nullptr_t) const SKR_NOEXCEPT { return type == Type::Unset; }
     inline constexpr bool operator!=(std::nullptr_t) const SKR_NOEXCEPT { return type != Type::Unset; }
+    inline constexpr bool operator==(const PositionalUnit& rhs) const SKR_NOEXCEPT { return type == rhs.type && (type == Unset || value == rhs.value); }
+    inline constexpr bool operator!=(const PositionalUnit& rhs) const SKR_NOEXCEPT { return !(*this == rhs); }
 
     // factory
     inline static constexpr PositionalUnit null() SKR_NOEXCEPT { return PositionalUnit{}; }
@@ -158,7 +185,7 @@ struct Positional {
     PositionalUnit max_height = PositionalUnit::null(); // as inf if needs
 
     // 锚点
-    Offset pivot = { 0, 0 };
+    Offset pivot = { 0, 0 }; // percent of child size
 
     // factory
     inline constexpr static Positional Fill()
@@ -520,29 +547,43 @@ struct Positional {
     inline constexpr AlignBuilder right_bottom() SKR_NOEXCEPT { return align({ 1, 1 }); }
 
     // checker
-    inline constexpr bool with_constraints() SKR_NOEXCEPT
+    inline constexpr bool with_constraints() const SKR_NOEXCEPT
     {
         return min_width.has_value() || max_width.has_value() || min_height.has_value() || max_height.has_value();
     }
-    inline constexpr bool with_height_constraints() SKR_NOEXCEPT
+    inline constexpr bool with_height_constraints() const SKR_NOEXCEPT
     {
         return min_height.has_value() || max_height.has_value();
     }
-    inline constexpr bool with_width_constraints() SKR_NOEXCEPT
+    inline constexpr bool with_width_constraints() const SKR_NOEXCEPT
     {
         return min_width.has_value() && max_width.has_value();
     }
-    inline constexpr bool is_padding() SKR_NOEXCEPT
+    inline constexpr bool is_width_padding() const SKR_NOEXCEPT
     {
-        return !with_constraints();
+        return left.has_value() && right.has_value();
     }
-    inline constexpr bool is_anchor() SKR_NOEXCEPT
+    inline constexpr bool is_height_padding() const SKR_NOEXCEPT
     {
-        return ((left.has_value() + right.has_value()) == 1) &&
-               ((top).has_value() + right.has_value()) == 1 &&
-               with_constraints();
+        return top.has_value() && bottom.has_value();
     }
-    inline constexpr bool is_valid() SKR_NOEXCEPT
+    inline constexpr bool is_padding() const SKR_NOEXCEPT
+    {
+        return left.has_value() && right.has_value() && top.has_value() && bottom.has_value();
+    }
+    inline constexpr bool is_width_anchor() const SKR_NOEXCEPT
+    {
+        return (left.has_value() + right.has_value()) == 1;
+    }
+    inline constexpr bool is_height_anchor() const SKR_NOEXCEPT
+    {
+        return (top.has_value() + bottom.has_value()) == 1;
+    }
+    inline constexpr bool is_anchor() const SKR_NOEXCEPT
+    {
+        return is_width_anchor() && is_height_anchor();
+    }
+    inline constexpr bool is_valid() const SKR_NOEXCEPT
     {
         // padding mode: [left] + [right]
         // anchor mode: [left/right] + [width constraints] + [pivot.x]
@@ -553,11 +594,31 @@ struct Positional {
         return (left.is_null() || right.is_null() || !with_width_constraints()) &&
                (top.is_null() || bottom.is_null() || !with_height_constraints());
     }
+    inline constexpr bool is_width_valid() const SKR_NOEXCEPT
+    {
+        return (left.is_null() || right.is_null() || !with_width_constraints());
+    }
+    inline constexpr bool is_height_valid() const SKR_NOEXCEPT
+    {
+        return (top.is_null() || bottom.is_null() || !with_height_constraints());
+    }
 
     // setter
     inline constexpr void clear_constraints() SKR_NOEXCEPT
     {
         min_width = max_width = min_height = max_height = PositionalUnit::null();
+    }
+
+    // compare
+    inline constexpr bool operator==(const Positional& rhs) const SKR_NOEXCEPT
+    {
+        return left == rhs.left && top == rhs.top && right == rhs.right && bottom == rhs.bottom &&
+               min_width == rhs.min_width && min_height == rhs.min_height && max_width == rhs.max_width &&
+               max_height == rhs.max_height && pivot == rhs.pivot;
+    }
+    inline constexpr bool operator!=(const Positional& rhs) const SKR_NOEXCEPT
+    {
+        return !(*this == rhs);
     }
 };
 } // namespace skr::gui

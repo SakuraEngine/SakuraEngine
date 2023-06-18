@@ -10,21 +10,14 @@ namespace skr::gui
 {
 using ITexture = IGDITexture;
 using IMaterial = IGDIMaterial;
-using CustomPaintCallback = CustomVertexPainter;
+using CustomPaintfunction_ref = CustomVertexPainter;
 
 enum class EPaintType : uint8_t
 {
+    Custom,
     Color,
     Texture,
     Material,
-    __Count,
-};
-
-enum class EPaintStyle : uint8_t
-{
-    Fill,
-    Stroke,
-    __Count,
 };
 
 enum class EStrokeCap : uint8_t
@@ -32,7 +25,6 @@ enum class EStrokeCap : uint8_t
     Butt,
     Round,
     Square,
-    __Count,
 };
 
 enum class EStrokeJoin : uint8_t
@@ -40,7 +32,6 @@ enum class EStrokeJoin : uint8_t
     Miter,
     Round,
     Bevel,
-    __Count,
 };
 
 enum class EBlendFactor : uint8_t
@@ -56,7 +47,6 @@ enum class EBlendFactor : uint8_t
     DstAlpha,
     OneMinusDstAlpha,
     SrcAlphaSaturate,
-    __Count,
 };
 
 enum class ESwizzleChannel
@@ -67,7 +57,6 @@ enum class ESwizzleChannel
     A,
     Zero,
     One,
-    __Count,
 };
 
 struct Swizzle {
