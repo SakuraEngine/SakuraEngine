@@ -5,6 +5,8 @@
 #include <containers/sptr.hpp>
 #include <variant>
 #include <fstream>
+#include "SkrGui/framework/painting_context.hpp"
+#include "SkrGui/backend/canvas.hpp"
 
 namespace skr::gui
 {
@@ -170,17 +172,10 @@ StyleText TODO_StyleText = {
     { 1.0f, 0.0f, 1.0f, 1.0f }
 };
 
-RenderText::RenderText(IGDIDevice* gdi_device)
-    : RenderBox(gdi_device)
-    , gdi_device(gdi_device)
+RenderText::RenderText()
 {
     diagnostic_builder.add_properties(
     SkrNew<TextDiagnosticProperty>(u8"type", u8"text", u8"draws text paragraph"));
-
-    gdi_paint = gdi_device->create_paint();
-    gdi_element = gdi_device->create_element();
-    gdi_element->set_texture_swizzle({ ESwizzleChannel::One, ESwizzleChannel::One,
-                                       ESwizzleChannel::One, ESwizzleChannel::R });
 
     paragraph_ = SkrNew<Paragraph>();
     font_ = SPtr<FontFile>::Create();
@@ -201,32 +196,32 @@ RenderText::RenderText(IGDIDevice* gdi_device)
 
 RenderText::~RenderText()
 {
-    gdi_device->free_paint(gdi_paint);
-    gdi_device->free_element(gdi_element);
     SkrDelete(paragraph_);
 }
 
-void RenderText::layout(BoxConstraint constraints, bool needSize)
+void RenderText::perform_layout() SKR_NOEXCEPT
 {
     BuildParagraph();
-    paragraph_->set_width(constraints.max_width);
-    auto textSize = paragraph_->get_size();
-    size.width = textSize.x;
-    size.height = textSize.y;
-    size = constraints.constrain(size);
+    paragraph_->set_width(constraints().max_width);
+    auto text_size = paragraph_->get_size();
+    set_size(constraints().constrain({ text_size.x, text_size.y }));
 }
 
-void RenderText::draw(const DrawParams* params)
+void RenderText::paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT
 {
     BuildParagraph();
-    DrawParagraph();
-
-    if (auto canvas = params->canvas)
     {
-        canvas->add_element(gdi_element);
-    }
+        godot::Color                     p_color = { font_color.r, font_color.g, font_color.b, font_color.a };
+        godot::Color                     p_dc_color = { 1.f, 1.f, 1.f };
+        godot::TextServer::TextDrawProxy proxy = { context->canvas() };
 
-    RenderBox::draw(params);
+        auto canvas = context->canvas();
+        {
+            auto _ = canvas->paint_scope();
+            paragraph_->draw(&proxy, { offset.x, offset.y }, p_color, p_dc_color);
+        }
+    }
+    Super::paint(context, offset);
 }
 
 void RenderText::add_text(const char8_t* u8_text)
@@ -237,14 +232,6 @@ void RenderText::add_text(const char8_t* u8_text)
 
 void RenderText::DrawParagraph()
 {
-    godot::Color                     p_color = { font_color.x, font_color.y, font_color.z };
-    godot::Color                     p_dc_color = { 1.f, 1.f, 1.f };
-    godot::TextServer::TextDrawProxy proxy = {};
-    proxy.gdi_device = gdi_device;
-    proxy.gdi_element = gdi_element;
-    proxy.gdi_paint = gdi_paint;
-    proxy.gdi_element->begin_frame(1.f);
-    paragraph_->draw(&proxy, { pos.x, pos.y }, p_color, p_dc_color);
 }
 
 void RenderText::BuildParagraph()
@@ -256,7 +243,6 @@ void RenderText::BuildParagraph()
         // auto& txt = StyleText::Get(_style);
         auto& txt = TODO_StyleText;
         buildParagraphRec(paragraph_, txt);
-        MarkLayoutDirty(false);
         paragraph_dirty_ = false;
     }
 }

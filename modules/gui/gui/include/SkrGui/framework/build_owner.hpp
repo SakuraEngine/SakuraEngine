@@ -1,11 +1,10 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/framework/key.hpp"
+#include "SkrGui/framework/fwd_framework.hpp"
 
 namespace skr::gui
 {
-struct Element;
-struct FocusManager;
 struct SKR_GUI_API BuildOwner {
     BuildOwner();
     ~BuildOwner();

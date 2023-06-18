@@ -1,15 +1,10 @@
 #pragma once
 #include "SkrGui/framework/diagnostics.hpp"
 #include "SkrGui/math/geometry.hpp"
+#include "SkrGui/framework/fwd_framework.hpp"
 
 namespace skr::gui
 {
-struct RenderObject;
-struct Widget;
-struct Element;
-struct Slot;
-struct BuildOwner;
-struct Key;
 enum class ElementLifecycle : uint32_t
 {
     initial,
@@ -57,8 +52,8 @@ struct SKR_GUI_API Element : public BuildContext {
     virtual NotNull<Element*> inflate_widget(NotNull<Widget*> widget, Slot* new_slot) SKR_NOEXCEPT;          // 刷新 widget，最耗的更新
 
     // element tree query
-    virtual void visit_children(Callback<void(Element*)> visitor) SKR_NOEXCEPT;
-    virtual void visit_child_elements(Callback<void(Element*)> visitor) SKR_NOEXCEPT;
+    virtual void visit_children(function_ref<void(Element*)> visitor) SKR_NOEXCEPT;
+    virtual void visit_child_elements(function_ref<void(Element*)> visitor) SKR_NOEXCEPT;
     virtual void forget_child(Element* child) SKR_NOEXCEPT;
     virtual void deactivate_child(Element* child) SKR_NOEXCEPT;
 

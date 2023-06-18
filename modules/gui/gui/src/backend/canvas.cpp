@@ -10,8 +10,6 @@ ICanvas::ICanvas(IGDIDevice* device) SKR_NOEXCEPT
       _gdi_canvas(nullptr),
       _current_gdi_element(nullptr),
       _gdi_elements(),
-      _state_stack(),
-      _current_state(),
       _is_in_paint_scope(false),
       _is_in_path_scope(false)
 {
@@ -37,9 +35,6 @@ ICanvas::~ICanvas() SKR_NOEXCEPT
         _gdi_device->free_element(element);
     }
     _gdi_elements.clear();
-
-    // clean up states
-    _state_stack.clear();
 }
 
 //==> paint scope
@@ -72,24 +67,8 @@ void ICanvas::paint_end() SKR_NOEXCEPT
         _current_gdi_element = nullptr;
     }
 
-    // reset state stack
-    if (_state_stack.size() > 0)
-    {
-        _state_stack.clear();
-        SKR_GUI_LOG_ERROR("state stack should be empty before paint_end() call, please check ICanvas::state_save() and ICanvas::state_restore() calls");
-    }
-
     // reset state
-    _current_state = {};
     _is_in_paint_scope = false;
-}
-CanvasPaintScope ICanvas::paint_scope(float pixel_ratio) SKR_NOEXCEPT
-{
-    if (!_is_in_paint_scope)
-    {
-        SKR_GUI_LOG_ERROR("ICanvas::paint_scope() called without a matching ICanvas::paint_end() call");
-    }
-    return { this, pixel_ratio };
 }
 
 //==> states stack
@@ -98,9 +77,6 @@ void ICanvas::state_save() SKR_NOEXCEPT
     if (_is_in_paint_scope)
     {
         _current_gdi_element->save();
-
-        _state_stack.push_back(_current_state);
-        _current_state = {};
     }
     else
     {
@@ -112,29 +88,11 @@ void ICanvas::state_restore() SKR_NOEXCEPT
     if (_is_in_paint_scope)
     {
         _current_gdi_element->restore();
-
-        if (_state_stack.size() >= 1)
-        {
-            _current_state = _state_stack.back();
-            _state_stack.pop_back();
-        }
-        else
-        {
-            SKR_GUI_LOG_ERROR("ICanvas::state_restore() called without a matching ICanvas::state_save() call");
-        }
     }
     else
     {
         SKR_GUI_LOG_ERROR("ICanvas::state_restore() called without a matching ICanvas::state_save() call");
     }
-}
-CanvasStateScope ICanvas::state_scope() SKR_NOEXCEPT
-{
-    if (!_is_in_paint_scope)
-    {
-        SKR_GUI_LOG_ERROR("ICanvas::state_scope() called without a matching ICanvas::state_save() call");
-    }
-    return (this);
 }
 
 //==> vg states
@@ -143,22 +101,11 @@ void ICanvas::state_reset() SKR_NOEXCEPT
     if (_is_in_paint_scope)
     {
         // TODO. impl state_reset
-        _current_state = {};
+        SKR_UNIMPLEMENTED_FUNCTION()
     }
     else
     {
         SKR_GUI_LOG_ERROR("ICanvas::state_reset() called outside of a paint scope");
-    }
-}
-void ICanvas::state_paint_style(EPaintStyle style) SKR_NOEXCEPT
-{
-    if (_is_in_paint_scope)
-    {
-        _current_state.paint_style = style;
-    }
-    else
-    {
-        SKR_GUI_LOG_ERROR("ICanvas::state_paint_style() called outside of a paint scope");
     }
 }
 void ICanvas::state_stroke_cap(EStrokeCap cap) SKR_NOEXCEPT
@@ -166,7 +113,7 @@ void ICanvas::state_stroke_cap(EStrokeCap cap) SKR_NOEXCEPT
     if (_is_in_paint_scope)
     {
         // TODO. impl state_stroke_cap
-        SKR_ASSERT(false && "ICanvas::state_stroke_cap() not implemented yet");
+        SKR_UNIMPLEMENTED_FUNCTION()
     }
     else
     {
@@ -178,7 +125,7 @@ void ICanvas::state_stroke_join(EStrokeJoin join) SKR_NOEXCEPT
     if (_is_in_paint_scope)
     {
         // TODO. impl state_stroke_join
-        SKR_ASSERT(false && "ICanvas::state_stroke_join() not implemented yet");
+        SKR_UNIMPLEMENTED_FUNCTION()
     }
     else
     {
@@ -201,7 +148,7 @@ void ICanvas::state_stroke_miter_limit(float limit) SKR_NOEXCEPT
     if (_is_in_paint_scope)
     {
         // TODO. impl state_stroke_miter_limit
-        SKR_ASSERT(false && "ICanvas::state_stroke_miter_limit() not implemented yet");
+        SKR_UNIMPLEMENTED_FUNCTION()
     }
     else
     {
@@ -213,7 +160,7 @@ void ICanvas::state_anti_alias(bool enable) SKR_NOEXCEPT
     if (_is_in_paint_scope)
     {
         // TODO. impl in GDI
-        _current_state.anti_alias = enable;
+        SKR_UNIMPLEMENTED_FUNCTION()
     }
     else
     {
@@ -227,7 +174,7 @@ void ICanvas::state_transform_reset() SKR_NOEXCEPT
     if (_is_in_paint_scope)
     {
         // TODO. impl state_transform_reset
-        SKR_ASSERT(false && "ICanvas::state_transform_reset() not implemented yet");
+        SKR_UNIMPLEMENTED_FUNCTION()
     }
     else
     {
@@ -261,7 +208,7 @@ void ICanvas::state_scale(float scale_x, float scale_y) SKR_NOEXCEPT
     if (_is_in_paint_scope)
     {
         // TODO. impl state_scale
-        SKR_ASSERT(false && "ICanvas::state_scale() not implemented yet");
+        SKR_UNIMPLEMENTED_FUNCTION()
     }
     else
     {
@@ -273,7 +220,7 @@ void ICanvas::state_skew_x(float skew) SKR_NOEXCEPT
     if (_is_in_paint_scope)
     {
         // TODO. impl state_skew_x
-        SKR_ASSERT(false && "ICanvas::state_skew_x() not implemented yet");
+        SKR_UNIMPLEMENTED_FUNCTION()
     }
     else
     {
@@ -285,64 +232,12 @@ void ICanvas::state_skew_y(float skew) SKR_NOEXCEPT
     if (_is_in_paint_scope)
     {
         // TODO. impl state_skew_y
-        SKR_ASSERT(false && "ICanvas::state_skew_y() not implemented yet");
+        SKR_UNIMPLEMENTED_FUNCTION()
     }
     else
     {
         SKR_GUI_LOG_ERROR("ICanvas::state_skew_y() called outside of a paint scope");
     }
-}
-
-//==> paint states
-void ICanvas::state_paint_reset() SKR_NOEXCEPT
-{
-    if (_is_in_paint_scope)
-    {
-        _current_state = {};
-    }
-    else
-    {
-        SKR_GUI_LOG_ERROR("ICanvas::state_paint_reset() called outside of a paint scope");
-    }
-}
-ColorPaintBuilder ICanvas::state_paint_color(Color color) SKR_NOEXCEPT
-{
-    if (_is_in_paint_scope)
-    {
-        _current_state.paint_type = EPaintType::Color;
-        _current_state.color = color;
-    }
-    else
-    {
-        SKR_GUI_LOG_ERROR("ICanvas::state_paint_color() called outside of a paint scope");
-    }
-    return { this };
-}
-TexturePaintBuilder ICanvas::state_paint_texture(ITexture* texture) SKR_NOEXCEPT
-{
-    if (_is_in_paint_scope)
-    {
-        _current_state.paint_type = EPaintType::Texture;
-        _current_state.texture = texture;
-    }
-    else
-    {
-        SKR_GUI_LOG_ERROR("ICanvas::state_paint_texture() called outside of a paint scope");
-    }
-    return { this };
-}
-MaterialPaintBuilder ICanvas::state_paint_material(IMaterial* material) SKR_NOEXCEPT
-{
-    if (_is_in_paint_scope)
-    {
-        _current_state.paint_type = EPaintType::Material;
-        _current_state.material = material;
-    }
-    else
-    {
-        SKR_GUI_LOG_ERROR("ICanvas::state_paint_material() called outside of a paint scope");
-    }
-    return { this };
 }
 
 //==> path
@@ -359,26 +254,32 @@ void ICanvas::path_begin() SKR_NOEXCEPT
 
     _is_in_path_scope = true;
 }
-void ICanvas::path_end() SKR_NOEXCEPT
+
+void ICanvas::path_fill(const Brush& brush) SKR_NOEXCEPT
 {
     if (_is_in_paint_scope)
     {
-        // TODO. call fill()/stroke() api
+        // TODO. call fill() api
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::path_end() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR("ICanvas::path_fill() called outside of a paint scope");
     }
 
     _is_in_path_scope = false;
 }
-CanvasPathScope ICanvas::path_scope() SKR_NOEXCEPT
+void ICanvas::path_stroke(const Brush& brush) SKR_NOEXCEPT
 {
-    if (!_is_in_paint_scope)
+    if (_is_in_paint_scope)
     {
-        SKR_GUI_LOG_ERROR("ICanvas::path_scope() called outside of a paint scope");
+        // TODO. call stroke() api
     }
-    return { this };
+    else
+    {
+        SKR_GUI_LOG_ERROR("ICanvas::path_stroke() called outside of a paint scope");
+    }
+
+    _is_in_path_scope = false;
 }
 
 //==> custom path
@@ -425,7 +326,7 @@ void ICanvas::path_quad_to(Offset to, Offset control_point) SKR_NOEXCEPT
         if (_is_in_path_scope)
         {
             // TODO. impl path_quad_to
-            SKR_ASSERT(false && "ICanvas::path_quad_to() not implemented yet");
+            SKR_UNIMPLEMENTED_FUNCTION()
         }
         else
         {
@@ -444,7 +345,7 @@ void ICanvas::path_cubic_to(Offset to, Offset control_point1, Offset control_poi
         if (_is_in_path_scope)
         {
             // TODO. impl path_cubic_to
-            SKR_ASSERT(false && "ICanvas::path_cubic_to() not implemented yet");
+            SKR_UNIMPLEMENTED_FUNCTION()
         }
         else
         {
@@ -463,7 +364,7 @@ void ICanvas::path_arc_to(Offset to, Offset control_point, float radius) SKR_NOE
         if (_is_in_path_scope)
         {
             // TODO. impl path_arc_to
-            SKR_ASSERT(false && "ICanvas::path_arc_to() not implemented yet");
+            SKR_UNIMPLEMENTED_FUNCTION()
         }
         else
         {
@@ -556,7 +457,7 @@ void ICanvas::path_ellipse(Offset center, float radius_x, float radius_y) SKR_NO
         if (_is_in_path_scope)
         {
             // TODO. impl path_ellipse
-            SKR_ASSERT(false && "ICanvas::path_ellipse() not implemented yet");
+            SKR_UNIMPLEMENTED_FUNCTION()
         }
         else
         {
@@ -566,109 +467,6 @@ void ICanvas::path_ellipse(Offset center, float radius_x, float radius_y) SKR_NO
     else
     {
         SKR_GUI_LOG_ERROR("ICanvas::path_ellipse() called outside of a paint scope");
-    }
-}
-
-//==> helper draw, warper for path
-void ICanvas::draw_arc(Offset center, float radius, float start_degree, float end_degree) SKR_NOEXCEPT
-{
-    auto _ = this->path_scope();
-    this->path_arc(center, radius, start_degree, end_degree);
-}
-void ICanvas::draw_rect(Rect rect) SKR_NOEXCEPT
-{
-    auto _ = this->path_scope();
-    this->path_rect(rect);
-}
-void ICanvas::draw_circle(Offset center, float radius) SKR_NOEXCEPT
-{
-    auto _ = this->path_scope();
-    this->path_circle(center, radius);
-}
-void ICanvas::draw_ellipse(Offset center, float radius_x, float radius_y) SKR_NOEXCEPT
-{
-    auto _ = this->path_scope();
-    this->path_ellipse(center, radius_x, radius_y);
-}
-
-// paint mode builder
-void ICanvas::_state_paint_color(Color color) SKR_NOEXCEPT
-{
-    if (_is_in_paint_scope)
-    {
-        _current_state.color = color;
-    }
-    else
-    {
-        SKR_GUI_LOG_ERROR("ICanvas::paint_color() called outside of a paint scope");
-    }
-}
-void ICanvas::_state_paint_uv_rect(Rect uv_rect) SKR_NOEXCEPT
-{
-    if (_is_in_paint_scope)
-    {
-        _current_state.uv_rect = uv_rect;
-    }
-    else
-    {
-        SKR_GUI_LOG_ERROR("ICanvas::paint_uv_rect() called outside of a paint scope");
-    }
-}
-void ICanvas::_state_paint_uv_rect_nine(Rect center, Rect total) SKR_NOEXCEPT
-{
-    if (_is_in_paint_scope)
-    {
-        _current_state.uv_rect = center;
-        _current_state.uv_rect_nine_total = total;
-    }
-    else
-    {
-        SKR_GUI_LOG_ERROR("ICanvas::paint_uv_rect_nine() called outside of a paint scope");
-    }
-}
-void ICanvas::_state_paint_blend_mode(BlendMode mode) SKR_NOEXCEPT
-{
-    if (_is_in_paint_scope)
-    {
-        _current_state.blend_mode = mode;
-    }
-    else
-    {
-        SKR_GUI_LOG_ERROR("ICanvas::paint_blend_mode() called outside of a paint scope");
-    }
-}
-void ICanvas::_state_paint_rotation(float degree) SKR_NOEXCEPT
-{
-    if (_is_in_paint_scope)
-    {
-        _current_state.degree = degree;
-    }
-    else
-    {
-        SKR_GUI_LOG_ERROR("ICanvas::paint_rotation() called outside of a paint scope");
-    }
-}
-void ICanvas::_state_paint_texture_swizzle(Swizzle swizzle) SKR_NOEXCEPT
-{
-    if (_is_in_paint_scope)
-    {
-        _current_state.swizzle = swizzle;
-    }
-    else
-    {
-        SKR_GUI_LOG_ERROR("ICanvas::paint_texture_swizzle() called outside of a paint scope");
-    }
-}
-void ICanvas::_state_paint_custom_paint(CustomPaintCallback custom, void* userdata) SKR_NOEXCEPT
-{
-    if (_is_in_paint_scope)
-    {
-        _current_state.custom_paint = custom;
-        _current_state.custom_paint_userdata = userdata;
-    }
-    else
-    {
-        SKR_GUI_LOG_ERROR("ICanvas::paint_custom_draw() called outside of a paint scope");
     }
 }
 } // namespace skr::gui

@@ -1,11 +1,10 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
+#include "SkrGui/framework/fwd_framework.hpp"
 
 // builders
 namespace skr::gui
 {
-struct Widget;
-
 template <class TWidget>
 struct WidgetBuilder {
     const char*  file;

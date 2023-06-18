@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrGui/framework/element/element.hpp"
+#include "SkrGui/framework/fwd_framework.hpp"
 
 namespace skr::gui
 {

@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_object.hpp"
 #include "SkrGui/math/layout.hpp"
+#include "SkrGui/framework/fwd_framework.hpp"
 
 namespace skr::gui
 {
@@ -11,28 +12,57 @@ struct SKR_GUI_API RenderBox : public RenderObject {
     SKR_GUI_TYPE(RenderBox, "01a2eb19-1299-4069-962f-88db0c719134", RenderObject);
 
 public:
-    RenderBox(IGDIDevice* gdi_device);
-    virtual ~RenderBox();
+    RenderBox();
+    ~RenderBox();
 
-    virtual void layout(BoxConstraint constraints, bool needSize = false) = 0;
-    virtual void before_draw(const DrawParams* params) override;
-    virtual void draw(const DrawParams* params) override;
-    virtual bool hit_test(const Ray& point, HitTestRecord* record) const;
+    // getter & setter
+    inline Size          size() const SKR_NOEXCEPT { return _size; }
+    inline void          set_size(Size size) SKR_NOEXCEPT { _size = size; }
+    inline BoxConstraint constraints() const SKR_NOEXCEPT { return _constraints; }
+    inline void          set_constraints(BoxConstraint constraints) SKR_NOEXCEPT
+    {
+        if (_constraints != constraints)
+        {
+            _constraints = constraints;
+            _set_force_relayout_boundary(_constraints.is_tight());
+            _set_constraints_changed(true);
+        }
+    }
 
-    virtual Size get_size() const;
-    virtual void set_size(const Size& size);
-    virtual void set_position(const Offset& position);
-    RenderBox*   get_child_as_box(int index) const { return (RenderBox*)get_child(index); }
+    // intrinsic size
+    float get_min_intrinsic_width(float height) const SKR_NOEXCEPT;
+    float get_max_intrinsic_width(float height) const SKR_NOEXCEPT;
+    float get_min_intrinsic_height(float width) const SKR_NOEXCEPT;
+    float get_max_intrinsic_height(float width) const SKR_NOEXCEPT;
 
-    virtual void enable_debug_draw(bool enable);
+    // dry layout
+    Size get_dry_layout(BoxConstraint constraints) const SKR_NOEXCEPT;
+
+    // TODO.
+    // global_to_local
+    // local_to_global
+    // paint_bounds
+    // hit_test
+    // handle_event
 
 protected:
-    bool   draw_debug_rect = false;
-    Offset pos = { 0, 0 };
-    Size   size = { 0, 0 };
+    // intrinsic size
+    virtual float compute_min_intrinsic_width(float height) const SKR_NOEXCEPT;
+    virtual float compute_max_intrinsic_width(float height) const SKR_NOEXCEPT;
+    virtual float compute_min_intrinsic_height(float width) const SKR_NOEXCEPT;
+    virtual float compute_max_intrinsic_height(float width) const SKR_NOEXCEPT;
 
-    IGDIDevice*  gdi_device = nullptr;
-    IGDIElement* debug_element = nullptr;
+    // dry layout
+    virtual Size compute_dry_layout(BoxConstraint constraints) const SKR_NOEXCEPT;
+
+private:
+    void perform_resize() SKR_NOEXCEPT override; // override compute_dry_layout
+
+private:
+    Size          _size;
+    BoxConstraint _constraints;
+
+    // TODO. cached data
 };
 
 } // namespace skr::gui

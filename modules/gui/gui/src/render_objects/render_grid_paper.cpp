@@ -1,136 +1,65 @@
 #include "SkrGui/render_objects/render_grid_paper.hpp"
 #include "SkrGui/dev/gdi/gdi.hpp"
 #include "SkrGui/framework/window_context.hpp"
-#include "SkrGui/dev/interface/window.hpp"
-
-#include "tracy/Tracy.hpp"
+#include "SkrGui/framework/painting_context.hpp"
+#include "SkrGui/backend/canvas.hpp"
 
 namespace skr::gui
 {
-
-inline static void draw_grid_paper(IGDIElement* element, float window_width, float window_height)
+void RenderGridPaper::perform_layout() SKR_NOEXCEPT
 {
-    const bool bDrawRelativeXMesh = false;
-    const bool bDrawRelativeYMesh = false;
+    set_size(constraints().biggest());
+}
 
-    element->begin_frame(1.f);
-    // draw background
+void RenderGridPaper::paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT
+{
+    // paint
+    ICanvas* canvas = context->canvas();
+    Rect     paint_rect = Rect::OffsetSize(offset, size());
+    Color    background_color = { 235.f / 255.f, 235.f / 255.f, 235.f / 255.f, 235.f / 255.f };
+    Size     grid_size = { 100, 100 };
+    Size     sub_grid_size = { 10, 10 };
+    Color    grid_color = { 125.f / 255.f, 125.f / 255.f, 255.f / 255.f, 200.f / 255.f };
+    Color    sub_grid_color = { 88.f / 255.f, 88.f / 255.f, 222.f / 255.f, 180.f / 255.f };
     {
-        element->begin_path();
-        element->rect(0, 0, window_width, window_height);
-        element->fill_color(235u, 235u, 235u, 255u);
-        element->fill();
-    }
-    const auto epsillon = 3.f;
-    const auto absUnitX = 10.f;
-    const auto absUnitY = absUnitX;
-    const auto unitX = window_width / 100.f;
-    const auto unitY = window_height / 100.f;
+        auto _ = canvas->paint_scope();
 
-    // draw relative main-meshes
-    if (bDrawRelativeXMesh)
-    {
-        element->begin_path();
-        element->stroke_width(2.f);
-        element->stroke_color(0u, 200u, 64u, 200u);
-        for (uint32_t i = 0; i < 10; ++i)
+        // background
+        canvas->path_begin();
+        canvas->path_rect(paint_rect);
+        canvas->path_fill(ColorBrush(background_color));
+
+        // draw grid
+        canvas->state_stroke_width(2.0f);
+        canvas->path_begin();
+        for (float x = std::ceil((paint_rect.left - 1) / grid_size.width) * grid_size.width; x < paint_rect.right + 1; x += grid_size.width)
         {
-            const auto pos = eastl::max(i * unitY * 10.f, epsillon);
-            element->move_to(0.f, pos);
-            element->line_to(window_width, pos);
+            canvas->path_move_to({ x, paint_rect.top });
+            canvas->path_line_to({ x, paint_rect.bottom });
         }
-        element->stroke();
-    }
-    if (bDrawRelativeYMesh)
-    {
-        element->begin_path();
-        element->stroke_width(2.f);
-        element->stroke_color(200u, 0u, 64u, 200u);
-        for (uint32_t i = 0; i < 10; ++i)
+        for (float y = std::ceil((paint_rect.top - 1) / grid_size.height) * grid_size.height; y < paint_rect.bottom + 1; y += grid_size.height)
         {
-            const auto pos = eastl::max(i * unitX * 10.f, epsillon);
-            element->move_to(pos, 0.f);
-            element->line_to(pos, window_height);
+            canvas->path_move_to({ paint_rect.left, y });
+            canvas->path_line_to({ paint_rect.right, y });
         }
-        element->stroke();
+        canvas->path_stroke(ColorBrush(grid_color));
+
+        // draw sub grid
+        canvas->state_stroke_width(1.0f);
+        canvas->path_begin();
+        for (float x = std::ceil((paint_rect.left - 1) / sub_grid_size.width) * sub_grid_size.width; x < paint_rect.right + 1; x += sub_grid_size.width)
+        {
+            canvas->path_move_to({ x, paint_rect.top });
+            canvas->path_line_to({ x, paint_rect.bottom });
+        }
+        for (float y = std::ceil((paint_rect.top - 1) / sub_grid_size.height) * sub_grid_size.height; y < paint_rect.bottom + 1; y += sub_grid_size.height)
+        {
+            canvas->path_move_to({ paint_rect.left, y });
+            canvas->path_line_to({ paint_rect.right, y });
+        }
+        canvas->path_stroke(ColorBrush(sub_grid_color));
     }
 
-    // draw absolute main-meshes
-    element->begin_path();
-    element->stroke_width(2.f);
-    element->stroke_color(125u, 125u, 255u, 200u);
-    for (uint32_t i = 0; i < window_height / absUnitY / 10; ++i)
-    {
-        const auto pos = eastl::max(i * absUnitY * 10.f, epsillon);
-        element->move_to(0.f, pos);
-        element->line_to(window_width, pos);
-    }
-    for (uint32_t i = 0; i < window_width / absUnitX / 10; ++i)
-    {
-        const auto pos = eastl::max(i * absUnitX * 10.f, epsillon);
-        element->move_to(pos, 0.f);
-        element->line_to(pos, window_height);
-    }
-    element->stroke();
-
-    // draw absolute sub-meshes
-    element->begin_path();
-    element->stroke_width(1.f);
-    element->stroke_color(88u, 88u, 222u, 180u);
-    for (uint32_t i = 0; i < window_height / absUnitY; ++i)
-    {
-        const auto pos = eastl::max(i * absUnitY, epsillon);
-        element->move_to(0.f, pos);
-        element->line_to(window_width, pos);
-    }
-    for (uint32_t i = 0; i < window_width / absUnitX; ++i)
-    {
-        const auto pos = eastl::max(i * absUnitX, epsillon);
-        element->move_to(pos, 0.f);
-        element->line_to(pos, window_height);
-    }
-    element->stroke();
+    Super::paint(context, offset);
 }
-
-RenderGridPaper::RenderGridPaper(IGDIDevice* gdi_device)
-    : RenderBox(gdi_device)
-    , gdi_element(nullptr)
-{
-    gdi_element = gdi_device->create_element();
-
-    diagnostic_builder.add_properties(
-    SkrNew<TextDiagnosticProperty>(u8"type", u8"grid_paper", u8"draws grid paper"));
-
-    // TEST
-    size.width = 900.f;
-    size.height = 900.f;
-}
-
-RenderGridPaper::~RenderGridPaper()
-{
-    gdi_device->free_element(gdi_element);
-}
-
-void RenderGridPaper::layout(BoxConstraint constraints, bool needSize)
-{
-}
-
-void RenderGridPaper::draw(const DrawParams* params)
-{
-    ZoneScopedN("DrawGridPaper");
-
-    // TEST
-    auto     platform_window = params->window_context->get_platform_window();
-    uint32_t w, h;
-    platform_window->get_extent(&w, &h);
-    const float window_width = (float)w, window_height = (float)h;
-    // END TEST
-
-    draw_grid_paper(gdi_element, window_width, window_height);
-
-    addElementToCanvas(params, gdi_element);
-
-    RenderBox::draw(params);
-}
-
 } // namespace skr::gui

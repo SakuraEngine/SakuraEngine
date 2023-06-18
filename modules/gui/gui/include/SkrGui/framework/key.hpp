@@ -1,10 +1,9 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
+#include "SkrGui/framework/fwd_framework.hpp"
 
 namespace skr::gui
 {
-struct State;
-
 // 三种 Key
 // Unique 永远不相等
 // KeepState 用来保持 State 的引用，方便 State 在控件树的各处流转

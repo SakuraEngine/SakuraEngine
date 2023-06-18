@@ -202,7 +202,7 @@ Flexible RenderFlex::get_flex(int index)
 void RenderFlex::set_flex_direction(FlexDirection direction)
 {
     flex_direction = direction;
-    markLayoutDirty();
+    // markLayoutDirty();
 }
 
 FlexDirection RenderFlex::get_flex_direction()
@@ -213,7 +213,7 @@ FlexDirection RenderFlex::get_flex_direction()
 void RenderFlex::set_justify_content(JustifyContent content)
 {
     justify_content = content;
-    markLayoutDirty();
+    // markLayoutDirty();
 }
 
 JustifyContent RenderFlex::get_justify_content()
@@ -224,7 +224,7 @@ JustifyContent RenderFlex::get_justify_content()
 void RenderFlex::set_align_items(AlignItems items)
 {
     align_items = items;
-    markLayoutDirty();
+    // markLayoutDirty();
 }
 
 AlignItems RenderFlex::get_align_items()

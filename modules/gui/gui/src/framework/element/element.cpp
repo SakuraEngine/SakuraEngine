@@ -138,12 +138,12 @@ Element* Element::update_child(Element* child, Widget* new_widget, Slot* new_slo
     return newChild;
 }
 
-void Element::visit_children(Callback<void(Element*)> visitor) SKR_NOEXCEPT
+void Element::visit_children(function_ref<void(Element*)> visitor) SKR_NOEXCEPT
 {
     //...
 }
 
-void Element::visit_child_elements(Callback<void(Element*)> visitor) SKR_NOEXCEPT
+void Element::visit_child_elements(function_ref<void(Element*)> visitor) SKR_NOEXCEPT
 {
     visit_children(visitor);
 }

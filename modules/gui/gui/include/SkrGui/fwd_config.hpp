@@ -42,6 +42,11 @@
         return SKR_GUI_CAST<To>(this);                          \
     }                                                           \
     template <typename To>                                      \
+    auto type_cast_fast() SKR_NOEXCEPT                          \
+    {                                                           \
+        return SKR_GUI_CAST_FAST<To>(this);                     \
+    }                                                           \
+    template <typename To>                                      \
     bool type_is() const SKR_NOEXCEPT                           \
     {                                                           \
         return SKR_GUI_CAST<To>(this) != nullptr;               \
@@ -68,9 +73,13 @@
 
 namespace skr::gui
 {
-// function
+// !!! 生命周期无法保证，仅用于参数或局部使用
 template <typename F>
-using Callback = ::skr::function_ref<F>;
+using function_ref = ::skr::function_ref<F>;
+
+// TODO. delegate
+template <typename F>
+using Event = ::eastl::function<F>;
 
 // not null
 template <typename T>
