@@ -16,10 +16,10 @@ public:
     ~RenderBox();
 
     // getter & setter
-    inline Size          size() const SKR_NOEXCEPT { return _size; }
-    inline void          set_size(Size size) SKR_NOEXCEPT { _size = size; }
-    inline BoxConstraint constraints() const SKR_NOEXCEPT { return _constraints; }
-    inline void          set_constraints(BoxConstraint constraints) SKR_NOEXCEPT
+    inline Size           size() const SKR_NOEXCEPT { return _size; }
+    inline void           set_size(Size size) SKR_NOEXCEPT { _size = size; }
+    inline BoxConstraints constraints() const SKR_NOEXCEPT { return _constraints; }
+    inline void           set_constraints(BoxConstraints constraints) SKR_NOEXCEPT
     {
         if (_constraints != constraints)
         {
@@ -36,7 +36,7 @@ public:
     float get_max_intrinsic_height(float width) const SKR_NOEXCEPT;
 
     // dry layout
-    Size get_dry_layout(BoxConstraint constraints) const SKR_NOEXCEPT;
+    Size get_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT;
 
     // TODO.
     // global_to_local
@@ -53,14 +53,14 @@ protected:
     virtual float compute_max_intrinsic_height(float width) const SKR_NOEXCEPT;
 
     // dry layout
-    virtual Size compute_dry_layout(BoxConstraint constraints) const SKR_NOEXCEPT;
+    virtual Size compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT;
 
 private:
-    void perform_resize() SKR_NOEXCEPT override; // override compute_dry_layout
+    void perform_resize() SKR_NOEXCEPT override; // override compute_dry_layout instead
 
 private:
-    Size          _size;
-    BoxConstraint _constraints;
+    Size           _size;
+    BoxConstraints _constraints;
 
     // TODO. cached data
 };

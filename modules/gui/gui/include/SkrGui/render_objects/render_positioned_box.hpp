@@ -5,17 +5,9 @@ namespace skr::gui
 {
 struct RenderPositionedBox : public RenderShiftedBox {
     SKR_GUI_TYPE(RenderPositionedBox, "17953364-abcc-4430-ac0c-7242c11dce92", RenderShiftedBox)
+    using Super = RenderShiftedBox;
 
     // getter & setter
-    inline bool pass_constraints() const SKR_NOEXCEPT { return _pass_constraints; }
-    inline void set_pass_constraints(bool value) SKR_NOEXCEPT
-    {
-        if (_pass_constraints != value)
-        {
-            _pass_constraints = value;
-            mark_needs_layout();
-        }
-    }
     inline float width_factor() const SKR_NOEXCEPT { return _width_factor; }
     inline void  set_width_factor(float value) SKR_NOEXCEPT
     {
@@ -51,15 +43,18 @@ struct RenderPositionedBox : public RenderShiftedBox {
     float compute_max_intrinsic_height(float width) const SKR_NOEXCEPT override;
 
     // dry layout
-    Size compute_dry_layout(BoxConstraint constraints) const SKR_NOEXCEPT override;
+    Size compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT override;
 
     // layout
     void perform_layout() SKR_NOEXCEPT override;
 
 private:
-    bool       _pass_constraints;
-    float      _width_factor;
-    float      _height_factor;
-    Positional _positional;
+    inline bool shrink_wrap_width() const SKR_NOEXCEPT { return _width_factor || !constraints().has_bounded_width(); }
+    inline bool shrink_wrap_height() const SKR_NOEXCEPT { return _height_factor || !constraints().has_bounded_height(); }
+
+private:
+    Optional<float> _width_factor;  // used in anchor mode
+    Optional<float> _height_factor; // used in anchor mode
+    Positional      _positional;
 };
 } // namespace skr::gui

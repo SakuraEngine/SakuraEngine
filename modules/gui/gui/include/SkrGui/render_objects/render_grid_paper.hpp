@@ -8,9 +8,6 @@ public:
     SKR_GUI_TYPE(RenderGridPaper, "13dd33c9-5d56-4b06-94ce-d1c526fe75d0", RenderBox);
     using Super = RenderBox;
 
-    RenderGridPaper();
-    virtual ~RenderGridPaper();
-
     void perform_layout() SKR_NOEXCEPT override;
     void paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT override;
 };

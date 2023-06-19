@@ -13,16 +13,8 @@ enum class ElementLifecycle : uint32_t
     defunct,
 };
 
-struct SKR_GUI_API BuildContext : public DiagnosticableTreeNode {
-    SKR_GUI_TYPE(BuildContext, "17f40d5e-cf8d-40c5-9e1e-1fd4ee7716e6", DiagnosticableTreeNode)
-    virtual bool          mounted() SKR_NOEXCEPT = 0;
-    virtual Widget*       get_widget() SKR_NOEXCEPT = 0;
-    virtual RenderObject* find_render_object() SKR_NOEXCEPT = 0;
-    virtual Size          get_size() SKR_NOEXCEPT = 0;
-};
-
-struct SKR_GUI_API Element : public BuildContext {
-    SKR_GUI_TYPE(Element, "123127c7-4eed-4007-87ff-6843bd56771a", BuildContext)
+struct SKR_GUI_API Element : public DiagnosticableTreeNode {
+    SKR_GUI_TYPE(Element, "123127c7-4eed-4007-87ff-6843bd56771a", DiagnosticableTreeNode)
 
     friend struct BuildOwner;
 
@@ -56,12 +48,6 @@ struct SKR_GUI_API Element : public BuildContext {
     virtual void visit_child_elements(function_ref<void(Element*)> visitor) SKR_NOEXCEPT;
     virtual void forget_child(Element* child) SKR_NOEXCEPT;
     virtual void deactivate_child(Element* child) SKR_NOEXCEPT;
-
-    // build context interfaces
-    virtual bool          mounted() SKR_NOEXCEPT override;
-    virtual Widget*       get_widget() SKR_NOEXCEPT override;
-    virtual Size          get_size() SKR_NOEXCEPT override;
-    virtual RenderObject* find_render_object() SKR_NOEXCEPT override;
 
 private:
     // help functions

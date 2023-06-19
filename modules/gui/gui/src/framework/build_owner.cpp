@@ -2,9 +2,7 @@
 #include "misc/defer.hpp"
 #include "SkrGui/framework/element/element.hpp"
 
-namespace skr
-{
-namespace gui
+namespace skr::gui
 {
 BuildOwner::BuildOwner()
     : _dirty_elements_needs_resorting(false)
@@ -107,5 +105,4 @@ void BuildOwner::build_scope(Element* context) SKR_NOEXCEPT
 void BuildOwner::finalize_tree() SKR_NOEXCEPT
 {
 }
-} // namespace gui
-} // namespace skr
+} // namespace skr::gui

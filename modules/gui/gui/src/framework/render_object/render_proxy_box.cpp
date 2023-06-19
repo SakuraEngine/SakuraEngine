@@ -22,7 +22,7 @@ float RenderProxyBox::compute_max_intrinsic_height(float width) const SKR_NOEXCE
 }
 
 // dry layout
-Size RenderProxyBox::compute_dry_layout(BoxConstraint constraints) const SKR_NOEXCEPT
+Size RenderProxyBox::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
 {
     return child() ? child()->get_dry_layout(constraints) : constraints.smallest();
 }

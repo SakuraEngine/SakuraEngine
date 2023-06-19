@@ -13,13 +13,8 @@
 #include "SkrGui/framework/window_context.hpp"
 
 #include "SkrGui/framework/widget_misc.hpp"
-#include "SkrGui/render_objects/render_window.hpp"
-#include "SkrGui/render_objects/render_canvas.hpp"
 #include "SkrGui/render_objects/render_grid_paper.hpp"
 #include "SkrGui/render_objects/render_color_picker.hpp"
-#include "SkrGui/render_objects/render_flex.hpp"
-#include "SkrGui/render_objects/render_stack.hpp"
-#include "SkrGui/render_objects/render_image.hpp"
 #include "SkrGui/render_objects/render_text.hpp"
 
 #include "SkrGuiRenderer/gdi_renderer.hpp"
@@ -77,41 +72,7 @@ struct robjects_example_application : public robjects_application_t {
         mapping2->action = action2;
         mapping_ctx->add_mapping(mapping2);
 
-        // add objects
-        canvas = SkrNew<skr::gui::RenderCanvas>(gdi.device);
-        grid_paper = SkrNew<skr::gui::RenderGridPaper>(gdi.device);
-        color_picker = SkrNew<skr::gui::RenderColorPicker>(gdi.device);
-        flex = SkrNew<skr::gui::RenderFlex>(gdi.device);
-        flex->set_align_items(skr::gui::AlignItems::FlexStart);
-        flex->set_justify_content(skr::gui::JustifyContent::Center);
-        image1 = SkrNew<skr::gui::RenderImage>(gdi.device);
-        image1->set_color({ 1, 0, 0, 1 });
-        image2 = SkrNew<skr::gui::RenderImage>(gdi.device);
-        image2->set_color({ 0, 1, 0, 1 });
-        image3 = SkrNew<skr::gui::RenderImage>(gdi.device);
-        image3->set_color({ 0, 0, 1, 1 });
-        text = SkrNew<skr::gui::RenderText>(gdi.device);
-        text->add_text(SKR_UTF8("Hello World!"));
-        stack = SkrNew<skr::gui::RenderStack>(gdi.device);
-
-        root_window->add_child(canvas);
-        canvas->add_child(grid_paper);
-        canvas->add_child(color_picker);
-        flex->add_child(image1);
-        image1->set_size({ 100, 300 });
-        flex->add_child(image2);
-        image2->set_size({ 100, 200 });
-        flex->add_child(image3);
-        image3->set_size({ 100, 400 });
-        stack->add_child(flex);
-        stack->set_positional(
-        0, SNewParam(skr::gui::Positional) { using namespace skr::gui; p.anchor_LT(0, 0).sized(1_pct, 400_px); });
-        stack->add_child(text);
-        stack->set_positional(
-        1, SNewParam(skr::gui::Positional) { using namespace skr::gui;p.anchor_LT(0.5_pct, 10_px).pivot({0.5, 0.0}); });
-        canvas->add_child(stack);
-
-        stack->layout(skr::gui::BoxConstraint::Loose({ (float)gdi.gfx.window_width, (float)gdi.gfx.window_height }));
+        // TODO. init sandbox
 
         // initialize render graph
         if (graph.initialize(gdi.gfx))
@@ -132,67 +93,7 @@ struct robjects_example_application : public robjects_application_t {
         return false;
     }
 
-    skr::gui::DiagnosticableTreeNode* selected_diagnostic = nullptr;
-    void                              diagnostics_inspect_recursively(skr::gui::DiagnosticableTreeNode* diagnostic)
-    {
-        ImGui::PushID(diagnostic);
-        auto               type_property = static_cast<skr::gui::TextDiagnosticProperty*>(diagnostic->find_property(u8"type"));
-        auto               type = type_property ? type_property->get_value() : u8"object";
-        skr::string        show_name = skr::format(SKR_UTF8("{}{}{}"), SKR_UTF8("["), type, SKR_UTF8("]"));
-        ImGuiTreeNodeFlags node_flags = (selected_diagnostic == diagnostic) ? ImGuiTreeNodeFlags_Selected : 0;
-        node_flags |= ImGuiTreeNodeFlags_SpanFullWidth;
-        node_flags |= ImGuiTreeNodeFlags_OpenOnArrow;
-        if (diagnostic->get_diagnostics_children().empty())
-        {
-            node_flags |= ImGuiTreeNodeFlags_Leaf;
-        }
-        if (ImGui::TreeNodeEx(show_name.c_str(), node_flags))
-        {
-            if (ImGui::IsItemClicked())
-            {
-                selected_diagnostic = diagnostic;
-            }
-            for (const auto diagnostic_node : diagnostic->get_diagnostics_children())
-            {
-                diagnostics_inspect_recursively(diagnostic_node);
-            }
-            ImGui::TreePop();
-        }
-        ImGui::PopID();
-    }
-
-    void diagnostics_inspect()
-    {
-        ZoneScopedN("ImGUINewFrame");
-
-        auto& io = ImGui::GetIO();
-        io.DisplaySize = ImVec2((float)gdi.gfx.swapchain->back_buffers[0]->width, (float)gdi.gfx.swapchain->back_buffers[0]->height);
-        skr_imgui_new_frame(gdi.gfx.window_handle, 1.f / 60.f);
-
-        ImGui::Begin("GUI RenderObjects Example");
-        ImGui::Columns(2, "DockSpace");
-        {
-            ImGui::BeginChild("TreeView");
-
-            diagnostics_inspect_recursively(root_window);
-            ImGui::EndChild();
-        }
-        ImGui::NextColumn();
-        {
-            ImGui::BeginChild("Properties");
-            if (selected_diagnostic)
-            {
-                for (const auto property : selected_diagnostic->get_diagnostics_properties())
-                {
-                    ImGui::Text("%s", (const char*)property->get_name());
-                    ImGui::SameLine();
-                    ImGui::Text("%s", (const char*)property->get_value_as_string());
-                }
-            }
-            ImGui::EndChild();
-        }
-        ImGui::End();
-    }
+    // TODO. diagnostic
 
     void tick(float delta)
     {
@@ -202,24 +103,8 @@ struct robjects_example_application : public robjects_application_t {
 
     void draw()
     {
-        auto diagnostic_as_render_box = [&]() {
-            if (selected_diagnostic)
-            {
-                if (auto render_box = selected_diagnostic->type_cast<skr::gui::RenderBox>())
-                {
-                    return render_box;
-                }
-            }
-            return (skr::gui::RenderBox*)nullptr;
-        };
-
-        auto render_box = diagnostic_as_render_box();
-        if (render_box) render_box->enable_debug_draw(true);
-
-        skr::gui::WindowContext::DrawParams draw_params = {};
-        window_context->draw(&draw_params);
-
-        if (render_box) render_box->enable_debug_draw(false);
+        // TODO. draw diagnostic
+        // TODO. draw sandbox
     }
 
     void render()
@@ -257,15 +142,7 @@ struct robjects_example_application : public robjects_application_t {
         if (imgui_sampler) cgpu_free_sampler(imgui_sampler);
         render_graph_imgui_finalize();
 
-        // free render objects
-        SkrDelete(text);
-        SkrDelete(image1);
-        SkrDelete(image2);
-        SkrDelete(image3);
-        SkrDelete(flex);
-        SkrDelete(color_picker);
-        SkrDelete(grid_paper);
-        SkrDelete(canvas);
+        // TODO. free sandbox
 
         skr::input::InputSystem::Destroy(input_system);
         skr::input::Input::Finalize();
@@ -274,16 +151,7 @@ struct robjects_example_application : public robjects_application_t {
         finalize_robjects_application(this);
     }
 
-    skr::gui::RenderCanvas*      canvas = nullptr;
-    skr::gui::RenderGridPaper*   grid_paper = nullptr;
-    skr::gui::RenderColorPicker* color_picker = nullptr;
-    skr::gui::RenderFlex*        flex = nullptr;
-    skr::gui::RenderImage*       image1 = nullptr;
-    skr::gui::RenderImage*       image2 = nullptr;
-    skr::gui::RenderImage*       image3 = nullptr;
-    skr::gui::RenderStack*       stack = nullptr;
-    skr::gui::RenderText*        text = nullptr;
-    gui_render_graph_t           graph;
+    gui_render_graph_t graph;
 
     skr::input::InputSystem* input_system = nullptr;
 };
@@ -430,10 +298,6 @@ int main(int argc, char* argv[])
         {
             keyboard_test.PollKeyboardInput();
             doubleClickListener.PollMouseInput();
-        }
-        {
-            ZoneScopedN("DiagnosticsInspect");
-            App.diagnostics_inspect();
         }
         {
             ZoneScopedN("DrawGUI");

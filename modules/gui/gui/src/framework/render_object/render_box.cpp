@@ -6,7 +6,69 @@
 
 namespace skr::gui
 {
+RenderBox::RenderBox() {}
+RenderBox::~RenderBox() {}
 
+// intrinsic size
+float RenderBox::get_min_intrinsic_width(float height) const SKR_NOEXCEPT
+{
+    // TODO. cache
+    return compute_min_intrinsic_width(height);
+}
+float RenderBox::get_max_intrinsic_width(float height) const SKR_NOEXCEPT
+{
+    // TODO. cache
+    return compute_max_intrinsic_width(height);
+}
+float RenderBox::get_min_intrinsic_height(float width) const SKR_NOEXCEPT
+{
+    // TODO. cache
+    return compute_min_intrinsic_height(width);
+}
+float RenderBox::get_max_intrinsic_height(float width) const SKR_NOEXCEPT
+{
+    // TODO. cache
+    return compute_max_intrinsic_height(width);
+}
+
+// dry layout
+Size RenderBox::get_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
+{
+    // TODO. cache
+    return compute_dry_layout(constraints);
+}
+
+// intrinsic size
+float RenderBox::compute_min_intrinsic_width(float height) const SKR_NOEXCEPT
+{
+    return 0.0f;
+}
+float RenderBox::compute_max_intrinsic_width(float height) const SKR_NOEXCEPT
+{
+    return 0.0f;
+}
+float RenderBox::compute_min_intrinsic_height(float width) const SKR_NOEXCEPT
+{
+    return 0.0f;
+}
+float RenderBox::compute_max_intrinsic_height(float width) const SKR_NOEXCEPT
+{
+    return 0.0f;
+}
+
+// dry layout
+Size RenderBox::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
+{
+    return Size::zero();
+}
+
+void RenderBox::perform_resize() SKR_NOEXCEPT
+{
+    set_size(compute_dry_layout(constraints()));
+    if (!size().is_finite()) { SKR_GUI_LOG_ERROR("Box that [is_sized_by_parent() == true] must return finite size"); }
+}
+
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! old code !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // void RenderBox::before_draw(const DrawParams* params)
 // {
 //     RenderObject::before_draw(params);

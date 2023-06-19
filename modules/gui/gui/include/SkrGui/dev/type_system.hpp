@@ -3,6 +3,7 @@
 #include "misc/types.h"
 #include "platform/guid.hpp"
 #include "platform/configure.h"
+#include "misc/log.hpp"
 
 namespace skr::gui
 {

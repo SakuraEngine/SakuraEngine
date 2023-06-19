@@ -186,55 +186,6 @@ void Element::_update_slot(Slot* new_slot) SKR_NOEXCEPT
     _slot = new_slot;
 }
 
-// implement build context interfaces
-
-bool Element::mounted() SKR_NOEXCEPT
-{
-    return _widget;
-}
-
-Widget* Element::get_widget() SKR_NOEXCEPT
-{
-    return _widget;
-}
-
-Size Element::get_size() SKR_NOEXCEPT
-{
-    auto render_object = find_render_object();
-    if (render_object)
-    {
-        if (auto rbox = render_object->type_cast<RenderBox>())
-        {
-            return rbox->get_size();
-            ;
-        }
-    }
-    return { 0, 0 };
-}
-
-RenderObject* Element::find_render_object() SKR_NOEXCEPT
-{
-    Element* current = this;
-    while (current != nullptr)
-    {
-        if (current->_lifecycle_state == ElementLifecycle::defunct)
-        {
-            break;
-        }
-        else
-        {
-            Element* next = nullptr;
-            current->visit_child_elements(
-            [&](Element* child) {
-                SKR_GUI_ASSERT(next == nullptr); // This verifies that there's only one child.
-                next = child;
-            });
-            current = next;
-        }
-    }
-    return nullptr;
-}
-
 Element* Element::_retake_inactive_element(const Key& key, NotNull<Widget*> widget) SKR_NOEXCEPT
 {
     auto iter = _owner->_global_key_registry.find(key.get_state());

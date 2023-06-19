@@ -45,7 +45,7 @@ float RenderConstrainedBox::compute_max_intrinsic_height(float width) const SKR_
 }
 
 // dry layout
-Size RenderConstrainedBox::compute_dry_layout(BoxConstraint constraints) const SKR_NOEXCEPT
+Size RenderConstrainedBox::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
 {
     if (child())
     {

@@ -1,7 +1,6 @@
 #include "SkrGui/dev/interface/window.hpp"
 #include "SkrGui/framework/window_context.hpp"
 #include "SkrGui/dev/gdi/gdi.hpp"
-#include "SkrGui/render_objects/render_window.hpp"
 #include "platform/memory.h"
 
 namespace skr::gui
@@ -53,22 +52,22 @@ protected:
 
 void WindowContextImpl::draw(const DrawParams* params) SKR_NOEXCEPT
 {
-    RenderObject::DrawParams init_param = {};
-    init_param.canvas = nullptr;
-    init_param.viewport = nullptr;
-    init_param.window_context = this;
-    if (root_element && root_element->get_gdi_viewport())
-    {
-        root_element->draw(&init_param);
-    }
+    // RenderObject::DrawParams init_param = {};
+    // init_param.canvas = nullptr;
+    // init_param.viewport = nullptr;
+    // init_param.window_context = this;
+    // if (root_element && root_element->get_gdi_viewport())
+    // {
+    //     root_element->draw(&init_param);
+    // }
 }
 
 void WindowContextImpl::render(IGDIRenderer* renderer, const RenderParams* params) SKR_NOEXCEPT
 {
-    if (root_element && root_element->get_gdi_viewport())
-    {
-        renderer->render(root_element->get_gdi_viewport(), params->gdi_params);
-    }
+    // if (root_element && root_element->get_gdi_viewport())
+    // {
+    //     renderer->render(root_element->get_gdi_viewport(), params->gdi_params);
+    // }
 }
 
 WindowContext* WindowContext::Create(const Descriptor* desc) SKR_NOEXCEPT

@@ -8,8 +8,8 @@ struct RenderConstrainedBox : public RenderProxyBox {
     using Super = RenderProxyBox;
 
     // getter setter
-    inline const BoxConstraint& additional_constraint() const SKR_NOEXCEPT { return _additional_constraint; }
-    inline void                 set_additional_constraint(const BoxConstraint& constraint) SKR_NOEXCEPT
+    inline const BoxConstraints& additional_constraint() const SKR_NOEXCEPT { return _additional_constraint; }
+    inline void                  set_additional_constraint(const BoxConstraints& constraint) SKR_NOEXCEPT
     {
         if (_additional_constraint != constraint)
         {
@@ -25,12 +25,12 @@ struct RenderConstrainedBox : public RenderProxyBox {
     float compute_max_intrinsic_height(float width) const SKR_NOEXCEPT override;
 
     // dry layout
-    Size compute_dry_layout(BoxConstraint constraints) const SKR_NOEXCEPT override;
+    Size compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT override;
 
     // layout
     void perform_layout() SKR_NOEXCEPT override;
 
 private:
-    BoxConstraint _additional_constraint;
+    BoxConstraints _additional_constraint;
 };
 } // namespace skr::gui

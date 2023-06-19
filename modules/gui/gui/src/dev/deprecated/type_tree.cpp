@@ -1,11 +1,8 @@
 #include "SkrGui/dev/deprecated/type_tree.hpp"
 #include "platform/guid.hpp"
 
-namespace skr
+namespace skr::gui
 {
-namespace gui
-{
-
 // type tree
 TypeTree::~TypeTree() SKR_NOEXCEPT
 {
@@ -41,5 +38,4 @@ struct TypeTreeImpl : public TypeTree {
     skr::flat_hash_map<skr_guid_t, TypeTreeNode*, skr::guid::hash> all_nodes;
 };
 
-} // namespace gui
-} // namespace skr
+} // namespace skr::gui
