@@ -745,6 +745,11 @@ void VkUtil_SelectQueueIndices(CGPUAdapter_Vulkan* VkAdapter)
         {
             VkAdapter->mQueueFamilyIndices[CGPU_QUEUE_TYPE_TRANSFER] = j;
         }
+        else if ((VkAdapter->mQueueFamilyIndices[CGPU_QUEUE_TYPE_TILE_MAPPING] == -1) &&
+                 (prop->queueFlags & VK_QUEUE_SPARSE_BINDING_BIT))
+        {
+            VkAdapter->mQueueFamilyIndices[CGPU_QUEUE_TYPE_TILE_MAPPING] = j;
+        }
     }
 }
 
