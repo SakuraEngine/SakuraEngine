@@ -220,6 +220,26 @@ uint32_t cgpu_query_queue_count_vulkan(const CGPUAdapterId adapter, const ECGPUQ
             }
         }
         break;
+        case CGPU_QUEUE_TYPE_TILE_MAPPING: {
+            for (uint32_t i = 0; i < A->mQueueFamiliesCount; i++)
+            {
+                const VkQueueFamilyProperties* prop = &A->pQueueFamilyProperties[i];
+                if (prop->queueFlags & VK_QUEUE_SPARSE_BINDING_BIT)
+                {
+                    if (!(prop->queueFlags & VK_QUEUE_TRANSFER_BIT))
+                    {
+                        if (!(prop->queueFlags & VK_QUEUE_COMPUTE_BIT))
+                        {
+                            if (!(prop->queueFlags & VK_QUEUE_GRAPHICS_BIT))
+                            {
+                                count += prop->queueCount;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        break;
         default:
             cgpu_assert(0 && "CGPU VULKAN: ERROR Queue Type!");
     }

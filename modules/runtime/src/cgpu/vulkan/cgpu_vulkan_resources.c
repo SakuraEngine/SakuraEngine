@@ -387,56 +387,10 @@ void cgpu_free_buffer_vulkan(CGPUBufferId buffer)
 
 // Texture/TextureView APIs
 cgpu_static_assert(sizeof(CGPUTexture_Vulkan) <= 8 * sizeof(uint64_t), "Acquire Single CacheLine"); // Cache Line
-typedef struct ImportHandleInfo {
-    void* pHandle;
-    VkExternalMemoryHandleTypeFlagBitsKHR mHandleType;
-} ImportHandleInfo;
-CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUTextureDescriptor* desc)
+
+VkImageType VkUtil_TranslateImageType(const struct CGPUTextureDescriptor* desc)
 {
-    if (desc->sample_count > CGPU_SAMPLE_COUNT_1 && desc->mip_levels > 1)
-    {
-        cgpu_error("Multi-Sampled textures cannot have mip maps");
-        cgpu_assert(false);
-        return CGPU_NULLPTR;
-    }
-    // Alloc aligned memory
-    size_t totalSize = sizeof(CGPUTexture_Vulkan) + sizeof(CGPUTextureInfo);
-    uint64_t unique_id = UINT64_MAX;
-    CGPUQueue_Vulkan* Q = (CGPUQueue_Vulkan*)desc->owner_queue;
-    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)device;
-    CGPUAdapter_Vulkan* A = (CGPUAdapter_Vulkan*)device->adapter;
-
-    bool owns_image = false;
-    bool is_dedicated = false;
-    bool can_alias_alloc = false;
-    bool is_imported = false;
-
-    VkImageType mImageType;
-    VkImage pVkImage = VK_NULL_HANDLE;
-    VkDeviceMemory pVkDeviceMemory = VK_NULL_HANDLE;
-    uint32_t aspect_mask = 0;
-    VmaAllocation vmaAllocation = VK_NULL_HANDLE;
-    const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(desc->format);
-    const CGPUFormatSupport* format_support = &A->adapter_detail.format_supports[desc->format];
-    if (desc->native_handle && !(desc->flags & CGPU_INNER_TCF_IMPORT_SHARED_HANDLE))
-    {
-        owns_image = false;
-        pVkImage = (VkImage)desc->native_handle;
-    }
-    else if (!(desc->flags & CGPU_TCF_ALIASING_RESOURCE))
-    {
-        owns_image = true;
-    }
-
-    // Usage flags
-    VkImageUsageFlags additionalFlags = 0;
-    if (desc->descriptors & CGPU_RESOURCE_TYPE_RENDER_TARGET)
-        additionalFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    else if (is_depth_stencil)
-        additionalFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-    uint32_t arraySize = desc->array_size;
-    // Image type
-    mImageType = VK_IMAGE_TYPE_MAX_ENUM;
+    VkImageType mImageType = VK_IMAGE_TYPE_MAX_ENUM;
     if (desc->flags & CGPU_TCF_FORCE_2D)
     {
         cgpu_assert(desc->depth == 1);
@@ -453,6 +407,263 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
         else
             mImageType = VK_IMAGE_TYPE_1D;
     }
+    return mImageType;
+}
+
+void VkUtil_ImportSharedTexture(CGPUQueue_Vulkan* Q, VmaAllocationCreateInfo* pMemReq, VkImageCreateInfo* pImageCreateInfo, 
+    const struct CGPUTextureDescriptor* desc, const wchar_t* win32Name, 
+    VkExternalMemoryImageCreateInfo* pExternalInfo, VkImportMemoryWin32HandleInfoKHR* pWin32ImportInfo,
+    VkImage* outImage, VkDeviceMemory* outMemory)
+{
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)Q->super.device;
+    pImageCreateInfo->pNext = pExternalInfo;
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
+    CGPUImportTextureDescriptor* pImportDesc = (CGPUImportTextureDescriptor*)desc->native_handle;
+    pExternalInfo->handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
+    if (pImportDesc->backend == CGPU_BACKEND_D3D12)
+    {
+        pExternalInfo->handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_RESOURCE_BIT;
+        pWin32ImportInfo->handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_RESOURCE_BIT;
+    }
+    if (pImportDesc->backend == CGPU_BACKEND_VULKAN)
+    {
+        pExternalInfo->handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
+        pWin32ImportInfo->handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
+    }
+
+    // record import info
+    pWin32ImportInfo->handle = NULL;
+    pWin32ImportInfo->name = win32Name;
+    // Allocate external (importable / exportable) memory as dedicated memory to avoid adding unnecessary complexity to the Vulkan Memory Allocator
+    uint32_t memoryType = 0;
+    VkResult findResult = vmaFindMemoryTypeIndexForImageInfo(D->pVmaAllocator, 
+        pImageCreateInfo, pMemReq, &memoryType);
+    if (findResult != VK_SUCCESS)
+    {
+        cgpu_error("Failed to find memory type for image");
+    }
+    // import memory
+    VkResult importRes = D->mVkDeviceTable.vkCreateImage(D->pVkDevice, pImageCreateInfo, GLOBAL_VkAllocationCallbacks, outImage);
+    CHECK_VKRESULT(importRes);
+    VkMemoryDedicatedRequirements MemoryDedicatedRequirements = { VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS };
+    VkMemoryRequirements2 MemoryRequirements2 = { VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2 };
+    MemoryRequirements2.pNext = &MemoryDedicatedRequirements;
+    VkImageMemoryRequirementsInfo2 ImageMemoryRequirementsInfo2 = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_REQUIREMENTS_INFO_2 };
+    ImageMemoryRequirementsInfo2.image = *outImage;
+    // WARN: Memory access violation unless validation instance layer is enabled, otherwise success but...
+    D->mVkDeviceTable.vkGetImageMemoryRequirements2(D->pVkDevice, &ImageMemoryRequirementsInfo2, &MemoryRequirements2);
+    VkMemoryAllocateInfo importAllocation = {
+        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+        .allocationSize = MemoryRequirements2.memoryRequirements.size, // this is valid for import allocations
+        .memoryTypeIndex = memoryType,
+        .pNext = pWin32ImportInfo
+    }; 
+    cgpu_info("Importing external memory %ls allocation of size %llu", win32Name, importAllocation.allocationSize);
+    importRes = D->mVkDeviceTable.vkAllocateMemory(D->pVkDevice, &importAllocation, GLOBAL_VkAllocationCallbacks, outMemory);
+    CHECK_VKRESULT(importRes);
+    // bind memory
+    importRes = D->mVkDeviceTable.vkBindImageMemory(D->pVkDevice, *outImage, *outMemory, 0);
+    CHECK_VKRESULT(importRes);
+    if (importRes == VK_SUCCESS)
+    {
+        cgpu_trace("Imported image %p with allocation %p", *outImage, *outMemory);
+    }
+#endif
+}
+
+void VkUtil_AllocateSharedTexture(CGPUQueue_Vulkan* Q, VmaAllocationCreateInfo* pMemReq, VkImageCreateInfo* pImageCreateInfo, 
+    const struct CGPUTextureDescriptor* desc, const wchar_t* win32Name,
+    VkExternalMemoryImageCreateInfo* pExternalInfo, VkExportMemoryAllocateInfo* pExportMemoryInfo, 
+    VkExportMemoryWin32HandleInfoKHR* pWin32ExportMemoryInfo)
+{
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)Q->super.device;
+    pImageCreateInfo->pNext = pExternalInfo;
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
+    const VkExternalMemoryHandleTypeFlags exportFlags = 
+        VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT | 
+        VK_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_RESOURCE_BIT | VK_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_HEAP_BIT;
+    pExternalInfo->handleTypes = exportFlags;
+    // record export info
+    pWin32ExportMemoryInfo->dwAccess = GENERIC_ALL;
+    pWin32ExportMemoryInfo->name = win32Name;
+    pWin32ExportMemoryInfo->pAttributes = CGPU_NULLPTR;
+    pExportMemoryInfo->pNext = pWin32ExportMemoryInfo;
+    pExportMemoryInfo->handleTypes = exportFlags;
+    cgpu_trace("Exporting texture with name %ls size %dx%dx%d", win32Name, desc->width, desc->height, desc->depth);
+#else
+    exportMemoryInfo.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT;
+#endif
+
+    // mem_reqs.pUserData = &exportMemoryInfo;
+    uint32_t memoryType = 0;
+    VkResult findResult = vmaFindMemoryTypeIndexForImageInfo(D->pVmaAllocator, pImageCreateInfo, pMemReq, &memoryType);
+    if (findResult != VK_SUCCESS)
+    {
+        cgpu_error("Failed to find memory type for image");
+    }
+    if (D->pExternalMemoryVmaPools[memoryType] == CGPU_NULLPTR)
+    {
+        D->pExternalMemoryVmaPoolNexts[memoryType] = cgpu_calloc(1, sizeof(VkExportMemoryAllocateInfoKHR));
+        VkExportMemoryAllocateInfoKHR* Next = (VkExportMemoryAllocateInfoKHR*)D->pExternalMemoryVmaPoolNexts[memoryType];
+        Next->sType = VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO_KHR;
+        VmaPoolCreateInfo poolCreateInfo = {
+            .memoryTypeIndex  = memoryType,
+            .blockSize = 0,
+            .maxBlockCount = 1024,
+            .pMemoryAllocateNext = D->pExternalMemoryVmaPoolNexts[memoryType]
+        };
+        if (vmaCreatePool(D->pVmaAllocator, &poolCreateInfo, &D->pExternalMemoryVmaPools[memoryType]) != VK_SUCCESS)
+        {
+            cgpu_assert(0 && "Failed to create VMA Pool");
+        }
+    }
+    memcpy(D->pExternalMemoryVmaPoolNexts[memoryType], pExportMemoryInfo, sizeof(VkExportMemoryAllocateInfoKHR));
+    pMemReq->pool = D->pExternalMemoryVmaPools[memoryType];
+    // Allocate external (importable / exportable) memory as dedicated memory to avoid adding unnecessary complexity to the Vulkan Memory Allocator
+    pMemReq->flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+}
+
+CGPUTiledTextureInfo* VkUtil_FillTiledTextureInfo(CGPUDevice_Vulkan* D, VkImage pVkImage, const struct CGPUTextureDescriptor* desc)
+{
+    CGPUAdapter_Vulkan* A = (CGPUAdapter_Vulkan*)D->super.adapter;
+    // Get memory requirements
+    VkMemoryRequirements sparseImageMemoryReqs;
+    // Sparse image memory requirement counts
+    D->mVkDeviceTable.vkGetImageMemoryRequirements(D->pVkDevice, pVkImage, &sparseImageMemoryReqs);
+    // Check requested image size against hardware sparse limit
+    if (sparseImageMemoryReqs.size > A->mPhysicalDeviceProps.properties.limits.sparseAddressSpaceSize)
+    {
+        cgpu_error("Requested sparse image size exceeds supported sparse address space size!");
+        return CGPU_NULLPTR;
+    }
+    // Get sparse memory requirements
+    // Count
+    uint32_t sparseMemoryReqsCount;
+    bool colorAspectFound = false;
+    bool noneStandardLayoutFound = false;
+    D->mVkDeviceTable.vkGetImageSparseMemoryRequirements(D->pVkDevice, pVkImage, &sparseMemoryReqsCount, NULL);  // Get count
+    DECLARE_ZERO(VkSparseImageMemoryRequirements, sparseReq);
+    DECLARE_ZERO_VLA(VkSparseImageMemoryRequirements, sparseMemoryReqs, sparseMemoryReqsCount);
+    if (sparseMemoryReqsCount == 0)
+    {
+        cgpu_error("No memory requirements for the sparse image!");
+        return CGPU_NULLPTR;
+    }
+    else
+    {
+        D->mVkDeviceTable.vkGetImageSparseMemoryRequirements(D->pVkDevice, pVkImage, &sparseMemoryReqsCount, sparseMemoryReqs);  // Get reqs
+    }
+    for (uint32_t i = 0; i < sparseMemoryReqsCount; i++)
+    {
+        if (sparseMemoryReqs[i].formatProperties.aspectMask & VK_IMAGE_ASPECT_COLOR_BIT)
+		{
+            if (sparseMemoryReqs[i].formatProperties.flags & VK_SPARSE_IMAGE_FORMAT_NONSTANDARD_BLOCK_SIZE_BIT)
+            {
+                noneStandardLayoutFound = true;
+            }
+            else
+            {
+                sparseReq = sparseMemoryReqs[i];
+                colorAspectFound = true;
+                break;
+            }
+		}
+    }
+    if (!colorAspectFound)
+    {
+        if (noneStandardLayoutFound)
+        {
+            cgpu_error("Only found non-standard sparse block size layout!");
+        }
+        cgpu_error("Could not find sparse image memory requirements for color aspect bit!");
+        return CGPU_NULLPTR;
+    }
+
+    // iterate all mips and calculate the total number of tiles
+    uint32_t layers = 1;
+    uint32_t subres_cnt = layers * desc->mip_levels;
+    uint32_t total_tiles_count = 0;
+
+    CGPUTiledTextureInfo* pTiledInfo = cgpu_calloc_aligned(1, sizeof(CGPUTiledTextureInfo) + subres_cnt * sizeof(CGPUTiledSubresourceInfo), _Alignof(CGPUTiledTextureInfo));
+    CGPUTiledSubresourceInfo* pSubresInfos = (CGPUTiledSubresourceInfo*)(pTiledInfo + 1);
+    // record subresource infos
+    for (uint32_t layer = 0; layer < 1; layer++)
+    {
+        for (uint32_t mip = 0; mip < desc->mip_levels; mip++)
+        {
+            uint32_t i = layer * desc->mip_levels + mip;
+            const uint32_t mipWidth = (uint32_t)cgpu_max(1, desc->width >> mip);
+            const uint32_t mipHeight = (uint32_t)cgpu_max(1, desc->height >> mip);
+            const uint32_t mipDepth = (uint32_t)cgpu_max(1, desc->depth >> mip);
+            const uint32_t mipWidthInTiles = (mipWidth + sparseReq.formatProperties.imageGranularity.width - 1) / sparseReq.formatProperties.imageGranularity.width;
+            const uint32_t mipHeightInTiles = (mipHeight + sparseReq.formatProperties.imageGranularity.height - 1) / sparseReq.formatProperties.imageGranularity.height;
+            const uint32_t mipDepthInTiles = (mipDepth + sparseReq.formatProperties.imageGranularity.depth - 1) / sparseReq.formatProperties.imageGranularity.depth;
+            const uint32_t mipSizeInTiles = mipWidthInTiles * mipHeightInTiles * mipDepthInTiles;
+            total_tiles_count += mipSizeInTiles;
+
+            pSubresInfos[i].layer = layer;
+            pSubresInfos[i].mip_level = mip;
+            pSubresInfos[i].depth_in_tiles = mipDepthInTiles;
+            pSubresInfos[i].height_in_tiles = mipHeightInTiles;
+            pSubresInfos[i].width_in_tiles = mipWidthInTiles;
+        }
+    }
+
+    pTiledInfo->tile_size = VK_SPARSE_PAGE_STANDARD_SIZE;
+    pTiledInfo->total_tiles_count = total_tiles_count;
+    pTiledInfo->alive_tiles_count = 0;
+
+    pTiledInfo->tile_width_in_texels = sparseReq.formatProperties.imageGranularity.width;
+    pTiledInfo->tile_height_in_texels = sparseReq.formatProperties.imageGranularity.height;
+    pTiledInfo->tile_depth_in_texels = sparseReq.formatProperties.imageGranularity.depth;
+    pTiledInfo->subresources = pSubresInfos;
+
+    pTiledInfo->tail_tiles_count = sparseReq.imageMipTailSize / VK_SPARSE_PAGE_STANDARD_SIZE;
+    pTiledInfo->tail_mip_start = sparseReq.imageMipTailFirstLod;
+    pTiledInfo->tail_mip_count = desc->mip_levels - sparseReq.imageMipTailFirstLod;
+    return pTiledInfo;
+}
+
+CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUTextureDescriptor* desc)
+{
+    if (desc->sample_count > CGPU_SAMPLE_COUNT_1 && desc->mip_levels > 1)
+    {
+        cgpu_error("Multi-Sampled textures cannot have mip maps");
+        cgpu_assert(false);
+        return CGPU_NULLPTR;
+    }
+    // Alloc aligned memory
+    size_t totalSize = sizeof(CGPUTexture_Vulkan) + sizeof(CGPUTextureInfo);
+    uint64_t unique_id = UINT64_MAX;
+    CGPUQueue_Vulkan* Q = (CGPUQueue_Vulkan*)desc->owner_queue;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)device;
+    CGPUAdapter_Vulkan* A = (CGPUAdapter_Vulkan*)device->adapter;
+    CGPUTiledTextureInfo* pTiledInfo = CGPU_NULLPTR;
+
+    bool owns_image = false;
+    bool is_dedicated = false;
+    bool can_alias_alloc = false;
+    bool is_imported = false;
+
+    VkImage pVkImage = VK_NULL_HANDLE;
+    VkDeviceMemory pVkDeviceMemory = VK_NULL_HANDLE;
+    uint32_t aspect_mask = 0;
+    VmaAllocation vmaAllocation = VK_NULL_HANDLE;
+    const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(desc->format);
+    const CGPUFormatSupport* format_support = &A->adapter_detail.format_supports[desc->format];
+    if (desc->native_handle && !(desc->flags & CGPU_INNER_TCF_IMPORT_SHARED_HANDLE))
+    {
+        owns_image = false;
+        pVkImage = (VkImage)desc->native_handle;
+    }
+    else if (!(desc->flags & CGPU_TCF_ALIASING_RESOURCE))
+    {
+        owns_image = true;
+    }
+
+    uint32_t arraySize = desc->array_size;
+    // Image type
+    VkImageType mImageType = VkUtil_TranslateImageType(desc);
     CGPUResourceTypes descriptors = desc->descriptors;
     bool cubemapRequired = (CGPU_RESOURCE_TYPE_TEXTURE_CUBE == (descriptors & CGPU_RESOURCE_TYPE_TEXTURE_CUBE));
     bool arrayRequired = mImageType == VK_IMAGE_TYPE_3D;
@@ -488,7 +699,13 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
             .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
         };
         aspect_mask = VkUtil_DeterminAspectMask(imageCreateInfo.format, true);
-        imageCreateInfo.usage |= additionalFlags;
+        
+        // Usage flags
+        if (desc->descriptors & CGPU_RESOURCE_TYPE_RENDER_TARGET)
+            imageCreateInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        else if (is_depth_stencil)
+            imageCreateInfo.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
         if (cubemapRequired)
             imageCreateInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
         if (arrayRequired)
@@ -507,14 +724,20 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
             imageCreateInfo.usage |= (VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
         }
         cgpu_assert(format_support->shader_read && "GPU shader can't' read from this format");
+        if (desc->flags & CGPU_TCF_TILED_RESOURCE)
+        {
+            imageCreateInfo.flags |= VK_IMAGE_CREATE_SPARSE_BINDING_BIT;
+            imageCreateInfo.flags |= VK_IMAGE_CREATE_SPARSE_RESIDENCY_BIT;
+            imageCreateInfo.tiling |= VK_SHARING_MODE_EXCLUSIVE;
+        }
+
         // Verify that GPU supports this format
         VkFormatFeatureFlags format_features = VkUtil_ImageUsageToFormatFeatures(imageCreateInfo.usage);
         VkFormatFeatureFlags flags = format_props.optimalTilingFeatures & format_features;
         cgpu_assert((flags != 0) && "Format is not supported for GPU local images (i.e. not host visible images)");
         DECLARE_ZERO(VmaAllocationCreateInfo, mem_reqs)
-        if (desc->flags & CGPU_TCF_ALIASING_RESOURCE)
+        if ((desc->flags & CGPU_TCF_ALIASING_RESOURCE) || (desc->flags & CGPU_TCF_TILED_RESOURCE))
         {
-            // Aliasing VkImage
             VkResult res = D->mVkDeviceTable.vkCreateImage(D->pVkDevice, &imageCreateInfo, GLOBAL_VkAllocationCallbacks, &pVkImage);
             CHECK_VKRESULT(res);
         }
@@ -523,85 +746,34 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
             // Allocate texture memory
             if (desc->flags & CGPU_TCF_OWN_MEMORY_BIT)
                 mem_reqs.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
-
             mem_reqs.usage = (VmaMemoryUsage)VMA_MEMORY_USAGE_GPU_ONLY;
+            
 #ifdef USE_EXTERNAL_MEMORY_EXTENSIONS
+            wchar_t* win32Name = CGPU_NULLPTR;
             VkExternalMemoryImageCreateInfo externalInfo = { VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO_KHR, NULL };
             VkExportMemoryAllocateInfo exportMemoryInfo = { VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO_KHR, NULL };
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-            wchar_t* win32Name = CGPU_NULLPTR;
             const wchar_t* nameFormat = L"cgpu-shared-texture-%llu";
-            VkImportMemoryWin32HandleInfoKHR win32ImportInfo = { VK_STRUCTURE_TYPE_IMPORT_MEMORY_WIN32_HANDLE_INFO_KHR, NULL };
             VkExportMemoryWin32HandleInfoKHR win32ExportMemoryInfo = { VK_STRUCTURE_TYPE_EXPORT_MEMORY_WIN32_HANDLE_INFO_KHR, NULL };
+            VkImportMemoryWin32HandleInfoKHR win32ImportInfo = { VK_STRUCTURE_TYPE_IMPORT_MEMORY_WIN32_HANDLE_INFO_KHR, NULL };
 #endif
             if (A->external_memory && (desc->flags & CGPU_INNER_TCF_IMPORT_SHARED_HANDLE))
             {
                 is_imported = true;
-                imageCreateInfo.pNext = &externalInfo;
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-                CGPUImportTextureDescriptor* pImportDesc = (CGPUImportTextureDescriptor*)desc->native_handle;
-                externalInfo.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
-                if (pImportDesc->backend == CGPU_BACKEND_D3D12)
-                {
-                    externalInfo.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_RESOURCE_BIT;
-                    win32ImportInfo.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_RESOURCE_BIT;
-                }
-                if (pImportDesc->backend == CGPU_BACKEND_VULKAN)
-                {
-                    externalInfo.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
-                    win32ImportInfo.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
-                }
                 // format name wstring
+                CGPUImportTextureDescriptor* pImportDesc = (CGPUImportTextureDescriptor*)desc->native_handle;
                 unique_id = pImportDesc->shared_handle;
                 int size_needed = swprintf(CGPU_NULL, 0, nameFormat, unique_id);
                 win32Name = cgpu_calloc(1 + size_needed, sizeof(wchar_t));
                 swprintf(win32Name, 1 + size_needed, nameFormat, unique_id);
-                // record import info
-                win32ImportInfo.handle = NULL;
-                win32ImportInfo.name = win32Name;
-                // Allocate external (importable / exportable) memory as dedicated memory to avoid adding unnecessary complexity to the Vulkan Memory Allocator
-                uint32_t memoryType = 0;
-                VkResult findResult = vmaFindMemoryTypeIndexForImageInfo(D->pVmaAllocator, &imageCreateInfo, &mem_reqs, &memoryType);
-                if (findResult != VK_SUCCESS)
-                {
-                    cgpu_error("Failed to find memory type for image");
-                }
-                // import memory
-                VkResult importRes = D->mVkDeviceTable.vkCreateImage(D->pVkDevice, &imageCreateInfo, GLOBAL_VkAllocationCallbacks, &pVkImage);
-                CHECK_VKRESULT(importRes);
-                VkMemoryDedicatedRequirements MemoryDedicatedRequirements = { VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS };
-                VkMemoryRequirements2 MemoryRequirements2 = { VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2 };
-                MemoryRequirements2.pNext = &MemoryDedicatedRequirements;
-                VkImageMemoryRequirementsInfo2 ImageMemoryRequirementsInfo2 = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_REQUIREMENTS_INFO_2 };
-                ImageMemoryRequirementsInfo2.image = pVkImage;
-                // WARN: Memory access violation unless validation instance layer is enabled, otherwise success but...
-                D->mVkDeviceTable.vkGetImageMemoryRequirements2(D->pVkDevice, &ImageMemoryRequirementsInfo2, &MemoryRequirements2);
-                VkMemoryAllocateInfo importAllocation = {
-                    .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-                    .allocationSize = MemoryRequirements2.memoryRequirements.size, // this is valid for import allocations
-                    .memoryTypeIndex = memoryType,
-                    .pNext = &win32ImportInfo
-                }; 
-                cgpu_info("Importing external memory %ls allocation of size %llu", win32Name, importAllocation.allocationSize);
-                importRes = D->mVkDeviceTable.vkAllocateMemory(D->pVkDevice, &importAllocation, GLOBAL_VkAllocationCallbacks, &pVkDeviceMemory);
-                CHECK_VKRESULT(importRes);
-                // bind memory
-                importRes = D->mVkDeviceTable.vkBindImageMemory(D->pVkDevice, pVkImage, pVkDeviceMemory, 0);
-                CHECK_VKRESULT(importRes);
-                if (importRes == VK_SUCCESS)
-                {
-                    cgpu_trace("Imported image %p with allocation %p", pVkImage, pVkDeviceMemory);
-                }
 #endif
+                VkUtil_ImportSharedTexture(Q, &mem_reqs, &imageCreateInfo, desc, win32Name, 
+                    &externalInfo, &win32ImportInfo, &pVkImage, &pVkDeviceMemory);
             }
             else if (A->external_memory && desc->flags & CGPU_TCF_EXPORT_BIT)
             {
-                imageCreateInfo.pNext = &externalInfo;
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-                const VkExternalMemoryHandleTypeFlags exportFlags = 
-                    VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT | 
-                    VK_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_RESOURCE_BIT | VK_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_HEAP_BIT;
-                externalInfo.handleTypes = exportFlags;
                 // format name wstring
                 uint64_t pid = (uint64_t)GetCurrentProcessId();
                 uint64_t shared_id = D->next_shared_id++;
@@ -609,75 +781,47 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
                 int size_needed = swprintf(CGPU_NULL, 0, nameFormat, unique_id);
                 win32Name = cgpu_calloc(1 + size_needed, sizeof(wchar_t));
                 swprintf(win32Name, 1 + size_needed, nameFormat, unique_id);
-                // record export info
-                win32ExportMemoryInfo.dwAccess = GENERIC_ALL;
-                win32ExportMemoryInfo.name = win32Name;
-                win32ExportMemoryInfo.pAttributes = CGPU_NULLPTR;
-                exportMemoryInfo.pNext = &win32ExportMemoryInfo;
-                exportMemoryInfo.handleTypes = exportFlags;
-                cgpu_trace("Exporting texture with name %ls size %dx%dx%d", win32Name, desc->width, desc->height, desc->depth);
-#else
-                exportMemoryInfo.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT;
 #endif
-                // mem_reqs.pUserData = &exportMemoryInfo;
-                uint32_t memoryType = 0;
-                VkResult findResult = vmaFindMemoryTypeIndexForImageInfo(D->pVmaAllocator, &imageCreateInfo, &mem_reqs, &memoryType);
-                if (findResult != VK_SUCCESS)
-                {
-                    cgpu_error("Failed to find memory type for image");
-                }
-                if (D->pExternalMemoryVmaPools[memoryType] == CGPU_NULLPTR)
-                {
-                    D->pExternalMemoryVmaPoolNexts[memoryType] = cgpu_calloc(1, sizeof(VkExportMemoryAllocateInfoKHR));
-                    VkExportMemoryAllocateInfoKHR* Next = (VkExportMemoryAllocateInfoKHR*)D->pExternalMemoryVmaPoolNexts[memoryType];
-                    Next->sType = VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO_KHR;
-                    VmaPoolCreateInfo poolCreateInfo = {
-                        .memoryTypeIndex  = memoryType,
-                        .blockSize = 0,
-                        .maxBlockCount = 1024,
-                        .pMemoryAllocateNext = D->pExternalMemoryVmaPoolNexts[memoryType]
-                    };
-                    if (vmaCreatePool(D->pVmaAllocator, &poolCreateInfo, &D->pExternalMemoryVmaPools[memoryType]) != VK_SUCCESS)
-                    {
-                        cgpu_assert(0 && "Failed to create VMA Pool");
-                    }
-                }
-                memcpy(D->pExternalMemoryVmaPoolNexts[memoryType], &exportMemoryInfo, sizeof(VkExportMemoryAllocateInfoKHR));
-                mem_reqs.pool = D->pExternalMemoryVmaPools[memoryType];
-                // Allocate external (importable / exportable) memory as dedicated memory to avoid adding unnecessary complexity to the Vulkan Memory Allocator
-                mem_reqs.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+                VkUtil_AllocateSharedTexture(Q, &mem_reqs, &imageCreateInfo, desc, win32Name, 
+                    &externalInfo, &exportMemoryInfo, &win32ExportMemoryInfo);
             }
 #endif
-            // Do allocation if is not imported
-            if (!is_imported)
+            VmaAllocationInfo alloc_info = { 0 };
+            if (!is_imported && isSinglePlane)
             {
-                VmaAllocationInfo alloc_info = { 0 };
-                if (isSinglePlane)
+                if (!desc->is_dedicated && !is_imported && !(desc->flags & CGPU_TCF_EXPORT_BIT))
                 {
-                    if (!desc->is_dedicated && !is_imported && !(desc->flags & CGPU_TCF_EXPORT_BIT))
-                    {
-                        mem_reqs.flags |= VMA_ALLOCATION_CREATE_CAN_ALIAS_BIT;
-                    }
-                    VkResult res = vmaCreateImage(D->pVmaAllocator,
-                        &imageCreateInfo, &mem_reqs, &pVkImage,
-                        &vmaAllocation, &alloc_info);
-                    CHECK_VKRESULT(res);
+                    mem_reqs.flags |= VMA_ALLOCATION_CREATE_CAN_ALIAS_BIT;
                 }
-                else // Multi-planar formats
-                {
-                    // TODO: Planar formats
-                }
+                VkResult res = vmaCreateImage(D->pVmaAllocator,
+                    &imageCreateInfo, &mem_reqs, &pVkImage,
+                    &vmaAllocation, &alloc_info);
+                CHECK_VKRESULT(res);
+            }
+            else // Multi-planar formats
+            {
+                SKR_UNIMPLEMENTED_FUNCTION();
             }
 #ifdef VK_USE_PLATFORM_WIN32_KHR
-            cgpu_free(win32Name);
+            if (win32Name != CGPU_NULLPTR) 
+                cgpu_free(win32Name);
 #endif
             is_dedicated = mem_reqs.flags & VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
             can_alias_alloc = mem_reqs.flags & VMA_ALLOCATION_CREATE_CAN_ALIAS_BIT;
         }
     }
+    
+    // fill tile info
+    if (desc->flags & CGPU_TCF_TILED_RESOURCE)
+    {
+        pTiledInfo = VkUtil_FillTiledTextureInfo(D, pVkImage, desc);
+    }
+
+    // Create texture object
     CGPUTexture_Vulkan* T = (CGPUTexture_Vulkan*)cgpu_calloc_aligned(1, totalSize, _Alignof(CGPUTexture_Vulkan));
     CGPUTextureInfo* info = (CGPUTextureInfo*)(T + 1);
     T->super.info = info;
+    T->super.tiled_resource = pTiledInfo;
     cgpu_assert(T);
     info->owns_image = owns_image;
     info->aspect_mask = aspect_mask;
@@ -793,6 +937,8 @@ void cgpu_free_texture_vulkan(CGPUTextureId texture)
             D->mVkDeviceTable.vkDestroyImage(D->pVkDevice, T->pVkImage, GLOBAL_VkAllocationCallbacks);
         }
     }
+    if (T->super.tiled_resource)
+        cgpu_free_aligned((void*)T->super.tiled_resource, _Alignof(CGPUTiledTextureInfo));
     cgpu_free_aligned(T, _Alignof(CGPUTexture_Vulkan));
 }
 
