@@ -28,14 +28,14 @@ struct Offset {
     inline static constexpr Offset infinite() SKR_NOEXCEPT { return { std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() }; }
 
     // infinite
-    inline constexpr bool is_infinite() const SKR_NOEXCEPT
+    inline bool is_infinite() const SKR_NOEXCEPT
     {
         return x >= std::numeric_limits<float>::infinity() || y >= std::numeric_limits<float>::infinity();
     }
-    inline constexpr bool is_finite() const SKR_NOEXCEPT
+    inline bool is_finite() const SKR_NOEXCEPT
     {
-        return x != std::numeric_limits<float>::infinity() && x != std::numeric_limits<float>::quiet_NaN() && x != std::numeric_limits<float>::signaling_NaN() &&
-               y != std::numeric_limits<float>::infinity() && y != std::numeric_limits<float>::quiet_NaN() && y != std::numeric_limits<float>::signaling_NaN();
+        return x != std::numeric_limits<float>::infinity() && !std::isnan(x) &&
+               y != std::numeric_limits<float>::infinity() && !std::isnan(x);
     }
 
     // info
@@ -105,14 +105,14 @@ public:
     inline static constexpr Size infinite() SKR_NOEXCEPT { return { std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() }; }
 
     // infinite
-    inline constexpr bool is_infinite() const SKR_NOEXCEPT
+    inline bool is_infinite() const SKR_NOEXCEPT
     {
         return width >= std::numeric_limits<float>::infinity() || height >= std::numeric_limits<float>::infinity();
     }
-    inline constexpr bool is_finite() const SKR_NOEXCEPT
+    inline bool is_finite() const SKR_NOEXCEPT
     {
-        return width != std::numeric_limits<float>::infinity() && width != std::numeric_limits<float>::quiet_NaN() && width != std::numeric_limits<float>::signaling_NaN() &&
-               height != std::numeric_limits<float>::infinity() && height != std::numeric_limits<float>::quiet_NaN() && height != std::numeric_limits<float>::signaling_NaN();
+        return width != std::numeric_limits<float>::infinity() && !std::isnan(width) &&
+               height != std::numeric_limits<float>::infinity() && !std::isnan(height);
     }
 
     // info
@@ -275,19 +275,19 @@ public:
                right >= std::numeric_limits<float>::infinity() ||
                bottom >= std::numeric_limits<float>::infinity();
     }
-    inline constexpr bool is_finite() const SKR_NOEXCEPT
+    inline bool is_finite() const SKR_NOEXCEPT
     {
-        return left != std::numeric_limits<float>::infinity() && left != std::numeric_limits<float>::quiet_NaN() && left != std::numeric_limits<float>::signaling_NaN() &&
-               top != std::numeric_limits<float>::infinity() && top != std::numeric_limits<float>::quiet_NaN() && top != std::numeric_limits<float>::signaling_NaN() &&
-               right != std::numeric_limits<float>::infinity() && right != std::numeric_limits<float>::quiet_NaN() && right != std::numeric_limits<float>::signaling_NaN() &&
-               bottom != std::numeric_limits<float>::infinity() && bottom != std::numeric_limits<float>::quiet_NaN() && bottom != std::numeric_limits<float>::signaling_NaN();
+        return left != std::numeric_limits<float>::infinity() && !std::isnan(left) &&
+               top != std::numeric_limits<float>::infinity() && !std::isnan(top) &&
+               right != std::numeric_limits<float>::infinity() && !std::isnan(right) &&
+               bottom != std::numeric_limits<float>::infinity() && !std::isnan(bottom);
     }
-    inline constexpr bool has_nan() const SKR_NOEXCEPT
+    inline bool has_nan() const SKR_NOEXCEPT
     {
-        return left == std::numeric_limits<float>::quiet_NaN() || left == std::numeric_limits<float>::signaling_NaN() ||
-               top == std::numeric_limits<float>::quiet_NaN() || top == std::numeric_limits<float>::signaling_NaN() ||
-               right == std::numeric_limits<float>::quiet_NaN() || right == std::numeric_limits<float>::signaling_NaN() ||
-               bottom == std::numeric_limits<float>::quiet_NaN() || bottom == std::numeric_limits<float>::signaling_NaN();
+        return std::isnan(left) ||
+               std::isnan(top) ||
+               std::isnan(right) ||
+               std::isnan(bottom);
     }
 
     // info

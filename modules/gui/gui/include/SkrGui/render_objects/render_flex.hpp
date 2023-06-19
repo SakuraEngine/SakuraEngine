@@ -2,14 +2,8 @@
 #include "SkrGui/framework/render_object/render_box.hpp"
 #include "SkrGui/math/layout.hpp"
 
-namespace skr
+namespace skr::gui
 {
-namespace gui
-{
-struct Flexible {
-    float   flex = 1;                  // determines how much the child should grow or shrink relative to other flex items
-    FlexFit flex_fit = FlexFit::Loose; // determines how much the child should be allowed to shrink relative to its own size
-};
 
 class SKR_GUI_API RenderFlex : public RenderBox
 {
@@ -17,26 +11,17 @@ public:
     SKR_GUI_TYPE(RenderFlex, "d3987dfd-24d2-478a-910e-537f24c4bae7", RenderBox);
     RenderFlex(IGDIDevice* gdi_device);
 
-    virtual void layout(BoxConstraint constraints, bool needSize = false) override;
-    Flexible     get_flex(int index); // each child's corresponding flexible property
-    virtual void add_child(RenderObject* child) override;
-    virtual void insert_child(RenderObject* child, int index) override;
-    virtual void remove_child(RenderObject* child) override;
-    void         set_flexible(int index, Flexible flexible);
-
-    void           set_justify_content(JustifyContent justify_content);
-    void           set_flex_direction(FlexDirection flex_direction);
-    void           set_align_items(AlignItems align_items);
-    JustifyContent get_justify_content();
-    FlexDirection  get_flex_direction();
-    AlignItems     get_align_items();
+    struct Slot {
+        float      flex = 1;                  // determines how much the child should grow or shrink relative to other flex items
+        FlexFit    flex_fit = FlexFit::Loose; // determines how much the child should be allowed to shrink relative to its own size
+        RenderBox* child = nullptr;
+    };
 
 private:
-    JustifyContent  justify_content = JustifyContent::FlexStart;
-    FlexDirection   flex_direction = FlexDirection::Row;
-    AlignItems      align_items = AlignItems::FlexStart;
-    Array<Flexible> flexible_slots;
+    JustifyContent justify_content = JustifyContent::FlexStart;
+    FlexDirection  flex_direction = FlexDirection::Row;
+    AlignItems     align_items = AlignItems::FlexStart;
+    Array<Slot>    flexible_slots;
 };
 
-} // namespace gui
-} // namespace skr
+} // namespace skr::gui

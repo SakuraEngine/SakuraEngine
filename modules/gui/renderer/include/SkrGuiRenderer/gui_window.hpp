@@ -3,9 +3,7 @@
 #include "SkrGui/dev/interface/window.hpp"
 
 struct SWindow;
-namespace skr
-{
-namespace gui
+namespace skr::gui
 {
 
 struct SPlatformWindowDescriptor {
@@ -35,5 +33,4 @@ struct SKR_GUI_RENDERER_API SPlatformWindow : public IPlatformWindow {
     bool     imported = false;
 };
 
-} // namespace gui
-} // namespace skr
+} // namespace skr::gui
