@@ -96,6 +96,7 @@ const CGPUProcTable tbl_d3d12 = {
     .cmd_transfer_buffer_to_buffer = &cgpu_cmd_transfer_buffer_to_buffer_d3d12,
     .cmd_transfer_texture_to_texture = &cgpu_cmd_transfer_texture_to_texture_d3d12,
     .cmd_transfer_buffer_to_texture = &cgpu_cmd_transfer_buffer_to_texture_d3d12,
+    .cmd_transfer_buffer_to_tiles = &cgpu_cmd_transfer_buffer_to_tiles_d3d12,
     .cmd_resource_barrier = &cgpu_cmd_resource_barrier_d3d12,
     .cmd_begin_query = &cgpu_cmd_begin_query_d3d12,
     .cmd_end_query = &cgpu_cmd_end_query_d3d12,

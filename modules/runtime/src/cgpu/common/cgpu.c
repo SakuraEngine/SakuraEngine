@@ -586,6 +586,19 @@ void cgpu_cmd_transfer_texture_to_texture(CGPUCommandBufferId cmd, const struct 
     fn_cmd_transfer_texture_to_texture(cmd, desc);
 }
 
+void cgpu_cmd_transfer_buffer_to_tiles(CGPUCommandBufferId cmd, const struct CGPUBufferToTilesTransfer* desc)
+{
+    cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    cgpu_assert(cmd->current_dispatch == CGPU_PIPELINE_TYPE_NONE && "fatal: can't call transfer apis on commdn buffer while preparing dispatching!");
+    cgpu_assert(cmd->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(desc != CGPU_NULLPTR && "fatal: call on NULL cpy_desc!");
+    cgpu_assert(desc->src != CGPU_NULLPTR && "fatal: call on NULL cpy_src!");
+    cgpu_assert(desc->dst != CGPU_NULLPTR && "fatal: call on NULL cpy_dst!");
+    const CGPUProcCmdTransferBufferToTiles fn_cmd_transfer_buffer_to_tiles = cmd->device->proc_table_cache->cmd_transfer_buffer_to_tiles;
+    cgpu_assert(fn_cmd_transfer_buffer_to_tiles && "cmd_transfer_buffer_to_tiles Proc Missing!");
+    fn_cmd_transfer_buffer_to_tiles(cmd, desc);
+}
+
 void cgpu_cmd_resource_barrier(CGPUCommandBufferId cmd, const struct CGPUResourceBarrierDescriptor* desc)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
