@@ -9,19 +9,37 @@ class SKR_GUI_API RenderFlex : public RenderBox
 {
 public:
     SKR_GUI_TYPE(RenderFlex, "d3987dfd-24d2-478a-910e-537f24c4bae7", RenderBox);
-    RenderFlex(IGDIDevice* gdi_device);
+    using Super = RenderBox;
+
+    // intrinsic size
+    float compute_min_intrinsic_width(float height) const SKR_NOEXCEPT override;
+    float compute_max_intrinsic_width(float height) const SKR_NOEXCEPT override;
+    float compute_min_intrinsic_height(float width) const SKR_NOEXCEPT override;
+    float compute_max_intrinsic_height(float width) const SKR_NOEXCEPT override;
+
+    // dry layout
+    Size compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT override;
+
+    // layout
+    void perform_layout() SKR_NOEXCEPT override;
 
     struct Slot {
-        float      flex = 1;                  // determines how much the child should grow or shrink relative to other flex items
-        FlexFit    flex_fit = FlexFit::Loose; // determines how much the child should be allowed to shrink relative to its own size
+        float   flex = 1;
+        FlexFit flex_fit = FlexFit::Loose;
+
+        Offset     offset = Offset::zero();
         RenderBox* child = nullptr;
     };
 
 private:
-    JustifyContent justify_content = JustifyContent::FlexStart;
-    FlexDirection  flex_direction = FlexDirection::Row;
-    AlignItems     align_items = AlignItems::FlexStart;
-    Array<Slot>    flexible_slots;
+    friend struct _FlexHelper;
+    FlexDirection      _flex_direction = FlexDirection::Row;
+    MainAxisAlignment  _main_axis_alignment = MainAxisAlignment::Start;
+    CrossAxisAlignment _cross_axis_alignment = CrossAxisAlignment::Start;
+    MainAxisSize       _main_axis_size = MainAxisSize::Max;
+    Array<Slot>        _flexible_slots;
+
+    float _overflow;
 };
 
 } // namespace skr::gui
