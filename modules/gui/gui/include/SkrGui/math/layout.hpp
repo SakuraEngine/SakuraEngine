@@ -6,7 +6,7 @@
 namespace skr::gui
 {
 // 文字布局朝向
-enum class TextDirection
+enum class TextDirection : uint8_t
 {
     LTR,
     RTL,
@@ -17,7 +17,7 @@ enum class TextDirection
 namespace skr::gui
 {
 // Defines the direction in which the flex container's children are laid out.
-enum class FlexDirection
+enum class FlexDirection : uint8_t
 {
     Row,          // Children are laid out horizontally from left to right.
     RowReverse,   // Children are laid out horizontally from right to left.
@@ -26,10 +26,10 @@ enum class FlexDirection
 };
 
 // Defines how the children are distributed along the main axis of the flex container.
-enum class JustifyContent
+enum class MainAxisAlignment : uint8_t
 {
-    FlexStart,    // Children are packed at the start of the main axis.
-    FlexEnd,      // Children are packed at the end of the main axis.
+    Start,        // Children are packed at the start of the main axis.
+    End,          // Children are packed at the end of the main axis.
     Center,       // Children are centered along the main axis.
     SpaceBetween, // Children are evenly distributed with the first child at the start and the last child at the end.
     SpaceAround,  // Children are evenly distributed with equal space around them.
@@ -37,16 +37,22 @@ enum class JustifyContent
 };
 
 // Defines how the children are aligned along the cross axis of the flex container.
-enum class AlignItems
+enum class CrossAxisAlignment : uint8_t
 {
-    FlexStart, // Children are aligned at the start of the cross axis.
-    FlexEnd,   // Children are aligned at the end of the cross axis.
-    Center,    // Children are centered along the cross axis.
-    Stretch,   // Children are stretched to fill the cross axis.
-    Baseline   // Children are aligned based on their baseline.
+    Start,   // Children are aligned at the start of the cross axis.
+    End,     // Children are aligned at the end of the cross axis.
+    Center,  // Children are centered along the cross axis.
+    Stretch, // Children are stretched to fill the cross axis.
+    Baseline // Children are aligned based on their baseline.
 };
 
-enum class FlexFit
+enum class MainAxisSize : uint8_t
+{
+    Min,
+    Max,
+};
+
+enum class FlexFit : uint8_t
 {
     Tight,
     Loose,

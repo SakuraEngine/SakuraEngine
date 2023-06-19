@@ -11,13 +11,31 @@ struct BoxConstraints {
     float max_height = std::numeric_limits<float>::infinity();
 
     // factory
-    inline static BoxConstraints Sized(Size size) SKR_NOEXCEPT
+    inline static BoxConstraints Tight(Size size) SKR_NOEXCEPT
     {
         return {
             size.width,
             size.width,
             size.height,
             size.height,
+        };
+    }
+    inline static BoxConstraints TightWidth(float width) SKR_NOEXCEPT
+    {
+        return {
+            width,
+            width,
+            0,
+            std::numeric_limits<float>::infinity(),
+        };
+    }
+    inline static BoxConstraints TightHeight(float height) SKR_NOEXCEPT
+    {
+        return {
+            0,
+            std::numeric_limits<float>::infinity(),
+            height,
+            height,
         };
     }
     inline static BoxConstraints Loose(Size size) SKR_NOEXCEPT
@@ -29,13 +47,67 @@ struct BoxConstraints {
             size.height,
         };
     }
-    inline static BoxConstraints Expand(Optional<float> width = {}, Optional<float> height = {})
+    inline static BoxConstraints LooseWidth(float width) SKR_NOEXCEPT
     {
         return {
-            width ? width.get() : std::numeric_limits<float>::infinity(),
-            width ? width.get() : std::numeric_limits<float>::infinity(),
-            height ? height.get() : std::numeric_limits<float>::infinity(),
-            height ? height.get() : std::numeric_limits<float>::infinity(),
+            0,
+            width,
+            0,
+            std::numeric_limits<float>::infinity(),
+        };
+    }
+    inline static BoxConstraints LooseHeight(float height) SKR_NOEXCEPT
+    {
+        return {
+            0,
+            std::numeric_limits<float>::infinity(),
+            0,
+            height,
+        };
+    }
+    inline static BoxConstraints Expand() SKR_NOEXCEPT
+    {
+        return {
+            std::numeric_limits<float>::infinity(),
+            std::numeric_limits<float>::infinity(),
+            std::numeric_limits<float>::infinity(),
+            std::numeric_limits<float>::infinity(),
+        };
+    }
+    inline static BoxConstraints ExpandWidth(float height) SKR_NOEXCEPT
+    {
+        return {
+            std::numeric_limits<float>::infinity(),
+            std::numeric_limits<float>::infinity(),
+            height,
+            height,
+        };
+    }
+    inline static BoxConstraints ExpandWidth(float min_height, float max_height) SKR_NOEXCEPT
+    {
+        return {
+            std::numeric_limits<float>::infinity(),
+            std::numeric_limits<float>::infinity(),
+            min_height,
+            max_height,
+        };
+    }
+    inline static BoxConstraints ExpandHeight(float width) SKR_NOEXCEPT
+    {
+        return {
+            width,
+            width,
+            std::numeric_limits<float>::infinity(),
+            std::numeric_limits<float>::infinity(),
+        };
+    }
+    inline static BoxConstraints ExpandHeight(float min_width, float max_width) SKR_NOEXCEPT
+    {
+        return {
+            min_width,
+            max_width,
+            std::numeric_limits<float>::infinity(),
+            std::numeric_limits<float>::infinity(),
         };
     }
 
