@@ -74,8 +74,8 @@ struct CGPUImportTextureDescriptor;
 
 struct CGPUVertexLayout;
 struct CGPUTiledTextureRegions;
-struct CGPUMapTiledBufferDescriptor;
 struct CGPUBufferToBufferTransfer;
+struct CGPUBufferToTilesTransfer;
 struct CGPUBufferToTextureTransfer;
 struct CGPUTextureToTextureTransfer;
 struct CGPUQueryDescriptor;
@@ -316,6 +316,8 @@ CGPU_API void cgpu_cmd_transfer_texture_to_texture(CGPUCommandBufferId cmd, cons
 typedef void (*CGPUProcCmdTransferTextureToTexture)(CGPUCommandBufferId cmd, const struct CGPUTextureToTextureTransfer* desc);
 CGPU_API void cgpu_cmd_transfer_buffer_to_texture(CGPUCommandBufferId cmd, const struct CGPUBufferToTextureTransfer* desc);
 typedef void (*CGPUProcCmdTransferBufferToTexture)(CGPUCommandBufferId cmd, const struct CGPUBufferToTextureTransfer* desc);
+CGPU_API void cgpu_cmd_transfer_buffer_to_tiles(CGPUCommandBufferId cmd, const struct CGPUBufferToTilesTransfer* desc);
+typedef void (*CGPUProcCmdTransferBufferToTiles)(CGPUCommandBufferId cmd, const struct CGPUBufferToTilesTransfer* desc);
 CGPU_API void cgpu_cmd_resource_barrier(CGPUCommandBufferId cmd, const struct CGPUResourceBarrierDescriptor* desc);
 typedef void (*CGPUProcCmdResourceBarrier)(CGPUCommandBufferId cmd, const struct CGPUResourceBarrierDescriptor* desc);
 CGPU_API void cgpu_cmd_begin_query(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
@@ -618,6 +620,7 @@ typedef struct CGPUProcTable {
     const CGPUProcCmdBegin cmd_begin;
     const CGPUProcCmdTransferBufferToBuffer cmd_transfer_buffer_to_buffer;
     const CGPUProcCmdTransferBufferToTexture cmd_transfer_buffer_to_texture;
+    const CGPUProcCmdTransferBufferToTiles cmd_transfer_buffer_to_tiles;
     const CGPUProcCmdTransferTextureToTexture cmd_transfer_texture_to_texture;
     const CGPUProcCmdResourceBarrier cmd_resource_barrier;
     const CGPUProcCmdBeginQuery cmd_begin_query;
@@ -1088,17 +1091,29 @@ typedef struct CGPUTextureSubresource {
     uint32_t layer_count;
 } CGPUTextureSubresource;
 
+typedef struct CGPUCoordinate {
+    uint32_t x;
+    uint32_t y;
+    uint32_t z;
+} CGPUCoordinate;
+
+typedef struct CGPUCoordinateRegion {
+    CGPUCoordinate start;
+    CGPUCoordinate end;
+} CGPUCoordinateRegion;
+
+typedef struct CGPUTextureCoordinateRegion {
+    CGPUCoordinate start;
+    CGPUCoordinate end;
+    uint32_t mip_level;
+    uint32_t layer;
+} CGPUTextureCoordinateRegion;
+
 typedef struct CGPUTiledTextureRegions {
     CGPUTextureId texture;
     struct CGPUTextureCoordinateRegion* regions;
     uint32_t region_count;
 } CGPUTiledTextureRegions;
-
-typedef struct CGPUMapTiledBufferDescriptor {
-    CGPUTextureId texture;
-    uint32_t region_count;
-    struct CGPUCoordinateRegion* regions;
-} CGPUMapTiledBufferDescriptor;
 
 typedef struct CGPUBufferToBufferTransfer {
     CGPUBufferId dst;
@@ -1107,6 +1122,13 @@ typedef struct CGPUBufferToBufferTransfer {
     uint64_t src_offset;
     uint64_t size;
 } CGPUBufferToBufferTransfer;
+
+typedef struct CGPUBufferToTilesTransfer {
+    CGPUBufferId src;
+    uint64_t src_offset;
+    CGPUTextureId dst;
+    CGPUTextureCoordinateRegion region;
+} CGPUBufferToTilesTransfer;
 
 typedef struct CGPUTextureToTextureTransfer {
     CGPUTextureId src;
@@ -1598,24 +1620,6 @@ typedef struct CGPUTextureInfo {
     uint8_t can_alias;
     uint8_t can_export;
 } CGPUTextureInfo;
-
-typedef struct CGPUCoordinate {
-    uint32_t x;
-    uint32_t y;
-    uint32_t z;
-} CGPUCoordinate;
-
-typedef struct CGPUCoordinateRegion {
-    CGPUCoordinate start;
-    CGPUCoordinate end;
-} CGPUCoordinateRegion;
-
-typedef struct CGPUTextureCoordinateRegion {
-    CGPUCoordinate start;
-    CGPUCoordinate end;
-    uint32_t mip_level;
-    uint32_t layer;
-} CGPUTextureCoordinateRegion;
 
 typedef struct CGPUTiledSubresourceInfo {
     uint16_t layer;

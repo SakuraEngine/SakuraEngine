@@ -402,6 +402,32 @@ void cgpu_cmd_transfer_buffer_to_texture_d3d12(CGPUCommandBufferId cmd, const st
 #endif
 }
 
+void cgpu_cmd_transfer_buffer_to_tiles_d3d12(CGPUCommandBufferId cmd, const struct CGPUBufferToTilesTransfer* desc)
+{
+    CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)cmd;
+    CGPUBuffer_D3D12* Src = (CGPUBuffer_D3D12*)desc->src;
+    CGPUTexture_D3D12* Dst = (CGPUTexture_D3D12*)desc->dst;
+    
+    uint32_t subresource = CALC_SUBRESOURCE_INDEX(
+        desc->region.mip_level,
+        desc->region.layer,
+        0, 1, 1);
+    D3D12_TILED_RESOURCE_COORDINATE DstCoord = { 
+        desc->region.start.x, desc->region.start.y, desc->region.start.z, subresource 
+    };
+    const auto Width = desc->region.end.x - desc->region.start.x;
+    const auto Height = desc->region.end.y - desc->region.start.y;
+    const auto Depth = desc->region.end.z - desc->region.start.z;
+    const auto N = Width * Height * Depth;
+    D3D12_TILE_REGION_SIZE CoordSize = {
+        N, TRUE, Width, (UINT16)Height, (UINT16)Depth
+    };
+
+    Cmd->pDxCmdList->CopyTiles(Dst->pDxResource, &DstCoord, 
+        &CoordSize, Src->pDxResource, desc->src_offset, 
+        D3D12_TILE_COPY_FLAG_LINEAR_BUFFER_TO_SWIZZLED_TILED_RESOURCE);
+}
+
 void cgpu_free_buffer_d3d12(CGPUBufferId buffer)
 {
     CGPUBuffer_D3D12* B = (CGPUBuffer_D3D12*)buffer;

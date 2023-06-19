@@ -26,6 +26,9 @@ CGPUTextureViewId sampled_views[TOTAL_MIPS];
 
 render_application_t App;
 
+static const uint32_t TILE_WIDTH = 128;
+static const uint32_t TILE_HEIGHT= 128;
+
 void create_sampled_texture()
 {
     // Sampler
@@ -78,6 +81,31 @@ void create_sampled_texture()
         .size = sizeof(TEXTURE_DATA)
     };
     streaming_heap = cgpu_create_buffer(App.device, &upload_buffer_desc);
+    if (true)
+    {
+        const uint32_t TEXEL_SIZE = 4 * sizeof(uint8_t);
+        uint8_t* SWIZZLED_TEXTURE_DATA = (uint8_t*)sakura_malloc(sizeof(TEXTURE_DATA));
+        // swizzle linear row data to tile blocks
+        const uint32_t TILE_COUNT_PER_ROW = TEXTURE_WIDTH / TILE_WIDTH;
+        const uint32_t TILE_COUNT =  TILE_WIDTH * TILE_HEIGHT;
+        for (uint32_t y = 0; y < TEXTURE_HEIGHT; y += TILE_HEIGHT)
+        {
+            const uint32_t TILE_Y = y / TILE_HEIGHT;
+            for (uint32_t x = 0; x < TEXTURE_WIDTH; x += TILE_WIDTH)
+            {
+                const uint32_t TILE_X =  x / TILE_WIDTH;
+                for (uint32_t ty = 0; ty < TILE_HEIGHT; ty++)
+                {
+                    uint32_t src_index = (y + ty) * TEXTURE_WIDTH + x;
+                    uint32_t dst_index = TILE_Y * TILE_COUNT_PER_ROW * TILE_COUNT + TILE_X * TILE_COUNT + ty * TILE_WIDTH;
+                    memcpy(SWIZZLED_TEXTURE_DATA + dst_index * TEXEL_SIZE, TEXTURE_DATA + src_index * TEXEL_SIZE, TEXEL_SIZE * TILE_WIDTH);
+                }
+            }
+        }
+        memcpy(streaming_heap->info->cpu_mapped_address, SWIZZLED_TEXTURE_DATA, upload_buffer_desc.size);
+        sakura_free(SWIZZLED_TEXTURE_DATA);
+    }
+    else
     {
         memcpy(streaming_heap->info->cpu_mapped_address, TEXTURE_DATA, upload_buffer_desc.size);
     }
@@ -94,9 +122,9 @@ void update_streaming_map(CGPUCommandBufferId cmd, uint32_t MipLevel)
 {
     if (current_mip == MipLevel)
         return;
+    const CGPUTiledSubresourceInfo subres = sampled_texture->tiled_resource->subresources[MipLevel];
     // map tiled texture
     {
-        const CGPUTiledSubresourceInfo subres = sampled_texture->tiled_resource->subresources[MipLevel];
         CGPUTextureCoordinateRegion coordinates[3] = 
         {
             {
@@ -154,6 +182,22 @@ void update_streaming_map(CGPUCommandBufferId cmd, uint32_t MipLevel)
     }
     current_mip = MipLevel;
     // record
+    if (true)
+    {
+        CGPUBufferToTilesTransfer b2t = {
+            .src = streaming_heap,
+            .src_offset = 0,
+            .dst = sampled_texture,
+            .region = {
+                .start = { 0, 0, 0 },
+                .end = { subres.width_in_tiles, subres.height_in_tiles, subres.depth_in_tiles },
+                .mip_level = MipLevel,
+                .layer = 0
+            }
+        };
+        cgpu_cmd_transfer_buffer_to_tiles(cmd, &b2t);
+    }
+    else
     {
         CGPUBufferToTextureTransfer b2t = {
             .src = streaming_heap,
