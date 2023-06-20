@@ -24,7 +24,7 @@ struct CGPUDStorageSingleton
                 SkrDelete(_this);
             };
             cgpu_runtime_table_add_early_sweep_callback(instance->runtime_table, SKR_DSTORAGE_SINGLETON_NAME, sweep, _this);
-            return _instance->dstorage_dll_dont_exist ? nullptr : _this;
+            return _instance->initialize_failed ? nullptr : _this;
         }
         return nullptr;
     }

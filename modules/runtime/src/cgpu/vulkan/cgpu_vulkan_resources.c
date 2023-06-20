@@ -703,7 +703,6 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
             .pQueueFamilyIndices = NULL,
             .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
         };
-        
         aspect_mask = VkUtil_DeterminAspectMask(imageCreateInfo.format, true);
         
         // Usage flags
