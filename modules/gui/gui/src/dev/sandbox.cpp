@@ -41,8 +41,8 @@ void MayBeExample()
     //         p.positional.anchor_LT(0, 0).sized(400, 400).pivot({ 0.5, 0 });
     //         p.child = SNewWidget(Flex)
     //         {
-    //             p.cross_axis_alignment = CrossAxisAlignment::Start;
-    //             p.main_axis_alignment = MainAxisAlignment::Center;
+    //             p.cross_axis_alignment = ECrossAxisAlignment::Start;
+    //             p.main_axis_alignment = EMainAxisAlignment::Center;
     //             SNewChild(p.flex_children, SizedBox)
     //             {
     //                 p.size = { 100, 300 };

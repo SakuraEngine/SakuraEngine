@@ -1,9 +1,9 @@
-#include "SkrGui/render_objects/render_positioned_box.hpp"
+#include "SkrGui/render_objects/render_positioned.hpp"
 
 namespace skr::gui
 {
 // intrinsic size
-float RenderPositionedBox::compute_min_intrinsic_width(float height) const SKR_NOEXCEPT
+float RenderPositioned::compute_min_intrinsic_width(float height) const SKR_NOEXCEPT
 {
     if (positional().is_width_padding())
     {
@@ -17,7 +17,7 @@ float RenderPositionedBox::compute_min_intrinsic_width(float height) const SKR_N
         return Super::compute_min_intrinsic_width(height);
     }
 }
-float RenderPositionedBox::compute_max_intrinsic_width(float height) const SKR_NOEXCEPT
+float RenderPositioned::compute_max_intrinsic_width(float height) const SKR_NOEXCEPT
 {
     if (positional().is_width_padding())
     {
@@ -31,7 +31,7 @@ float RenderPositionedBox::compute_max_intrinsic_width(float height) const SKR_N
         return Super::compute_max_intrinsic_width(height);
     }
 }
-float RenderPositionedBox::compute_min_intrinsic_height(float width) const SKR_NOEXCEPT
+float RenderPositioned::compute_min_intrinsic_height(float width) const SKR_NOEXCEPT
 {
     if (positional().is_height_padding())
     {
@@ -45,7 +45,7 @@ float RenderPositionedBox::compute_min_intrinsic_height(float width) const SKR_N
         return Super::compute_min_intrinsic_height(width);
     }
 }
-float RenderPositionedBox::compute_max_intrinsic_height(float width) const SKR_NOEXCEPT
+float RenderPositioned::compute_max_intrinsic_height(float width) const SKR_NOEXCEPT
 {
     if (positional().is_height_padding())
     {
@@ -61,7 +61,7 @@ float RenderPositionedBox::compute_max_intrinsic_height(float width) const SKR_N
 }
 
 // dry layout
-Size RenderPositionedBox::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
+Size RenderPositioned::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
 {
     if (child())
     {
@@ -126,7 +126,7 @@ Size RenderPositionedBox::compute_dry_layout(BoxConstraints constraints) const S
 }
 
 // layout
-void RenderPositionedBox::perform_layout() SKR_NOEXCEPT
+void RenderPositioned::perform_layout() SKR_NOEXCEPT
 {
     if (child())
     {
