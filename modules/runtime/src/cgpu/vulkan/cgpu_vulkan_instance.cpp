@@ -213,17 +213,19 @@ struct CGPUVkExtensionsTable : public skr::parallel_flat_hash_map<eastl::string,
         auto& Table = *I->pExtensionsTable;
         for (uint32_t j = 0; j < wanted_instance_extensions_count; j++)
         {
-            Table.insert({ wanted_instance_extensions[j], false });
+            const auto key = wanted_instance_extensions[j];
+            Table.insert_or_assign(key, false);
         }
         for (uint32_t j = 0; j < I->mExtensionsCount; j++)
         {
-            Table.insert({ I->pExtensionNames[j], true });
+            const auto key = I->pExtensionNames[j];
+            Table.insert_or_assign(key, true);
         }
         // Cache
         {
             I->device_group_creation = Table[VK_KHR_DEVICE_GROUP_CREATION_EXTENSION_NAME]; // Linked GPU
             I->debug_utils = Table[VK_EXT_DEBUG_UTILS_EXTENSION_NAME];
-            I->debug_report = !I->debug_utils && Table[VK_EXT_DEBUG_UTILS_EXTENSION_NAME];
+            I->debug_report = !I->debug_utils && Table[VK_EXT_DEBUG_REPORT_EXTENSION_NAME];
         }
     }
 };

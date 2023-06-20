@@ -20,7 +20,9 @@ namespace render_graph
 
 void RenderGraphFrameExecutor::initialize(CGPUQueueId gfx_queue, CGPUDeviceId device)
 {
-    CGPUCommandPoolDescriptor pool_desc = {};
+    CGPUCommandPoolDescriptor pool_desc = {
+        u8"RenderGraphCmdPool"
+    };
     gfx_cmd_pool = cgpu_create_command_pool(gfx_queue, &pool_desc);
     CGPUCommandBufferDescriptor cmd_desc = {};
     cmd_desc.is_secondary = false;

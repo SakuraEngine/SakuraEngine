@@ -1175,7 +1175,7 @@ CGPUQueueId cgpu_get_queue_vulkan(CGPUDeviceId device, ECGPUQueueType type, uint
     CGPUQueue_Vulkan* RQ = (CGPUQueue_Vulkan*)cgpu_calloc(1, sizeof(CGPUQueue_Vulkan));
     memcpy(RQ, &Q, sizeof(Q));
     CGPUCommandPoolDescriptor pool_desc = {
-        .___nothing_and_useless__ = 0
+        .name = "InternalCmdPool"
     };
     RQ->pInnerCmdPool = cgpu_create_command_pool(&RQ->super, &pool_desc);
     CGPUCommandBufferDescriptor cmd_desc = {
@@ -1358,7 +1358,8 @@ VkCommandPool allocate_transient_command_pool(CGPUDevice_Vulkan* D, CGPUQueueId 
         .queueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[queue->type]
     };
     CHECK_VKRESULT(D->mVkDeviceTable.vkCreateCommandPool(
-    D->pVkDevice, &create_info, GLOBAL_VkAllocationCallbacks, &P));
+        D->pVkDevice, &create_info, GLOBAL_VkAllocationCallbacks, &P));
+        
     return P;
 }
 
@@ -1372,6 +1373,7 @@ CGPUCommandPoolId cgpu_create_command_pool_vulkan(CGPUQueueId queue, const CGPUC
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)queue->device;
     CGPUCommandPool_Vulkan* P = (CGPUCommandPool_Vulkan*)cgpu_calloc(1, sizeof(CGPUCommandPool_Vulkan));
     P->pVkCmdPool = allocate_transient_command_pool(D, queue);
+    VkUtil_OptionalSetObjectName(D, (uint64_t)P->pVkCmdPool, VK_OBJECT_TYPE_COMMAND_POOL, desc->name);
     return &P->super;
 }
 
