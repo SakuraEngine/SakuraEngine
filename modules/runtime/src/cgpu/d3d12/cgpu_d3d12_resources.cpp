@@ -1183,8 +1183,8 @@ CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const
     }
     else
     {
-        cgpu_trace("Open Shared Handle %ls Success! Handle: %lld backend: %d is_dedicated: %d", 
-            name.c_str(), desc->shared_handle, desc->backend, desc->is_dedicated);
+        cgpu_trace("Open Shared Handle %ls Success! Handle: %lld backend: %d", 
+            name.c_str(), desc->shared_handle, desc->backend);
     }
 
     if (desc->backend == CGPU_BACKEND_D3D12)

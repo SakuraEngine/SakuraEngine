@@ -397,7 +397,6 @@ int provider_main(int argc, char* argv[])
                     import_info.width = shared_texture->info->width;
                     import_info.height = shared_texture->info->height;
                     import_info.depth = shared_texture->info->depth;
-                    import_info.is_dedicated = shared_texture->info->is_driver_dedicated;
                     import_info.format = (ECGPUFormat)shared_texture->info->format;
                     import_info.mip_levels = shared_texture->info->mip_levels;
                     import_info.size_in_bytes = shared_texture->info->size_in_bytes;

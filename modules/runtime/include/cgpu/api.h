@@ -1571,11 +1571,10 @@ typedef struct CGPUExportTextureDescriptor {
 typedef struct CGPUImportTextureDescriptor {
     ECGPUBackend backend;
     uint64_t shared_handle;
-    uint32_t width;
-    uint32_t height;
-    uint32_t depth;
+    uint64_t width;
+    uint64_t height;
+    uint64_t depth;
     uint64_t size_in_bytes;
-    uint32_t is_dedicated;
     ECGPUFormat format;
     uint32_t mip_levels;
 } CGPUImportTextureDescriptor;
