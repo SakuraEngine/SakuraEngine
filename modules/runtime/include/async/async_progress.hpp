@@ -339,14 +339,14 @@ private:
         {
             skr_rw_mutex_acquire_w(&mMutex);
             mData = data;
-            skr_rw_mutex_release(&mMutex);
+            skr_rw_mutex_release_w(&mMutex);
         }
 
         Data load() const
         {
             skr_rw_mutex_acquire_r(&mMutex);
             const auto data = mData;
-            skr_rw_mutex_release(&mMutex);
+            skr_rw_mutex_release_r(&mMutex);
             return data;
         }
     };
@@ -413,14 +413,14 @@ private:
                 mData.back() = data;
             }
 
-            skr_rw_mutex_release(&mMutex);
+            skr_rw_mutex_release_w(&mMutex);
         }
 
         eastl::queue<Data> move()
         {
             skr_rw_mutex_acquire_w(&mMutex);
             auto const mDataMoved = std::move(mData);
-            skr_rw_mutex_release(&mMutex);
+            skr_rw_mutex_release_w(&mMutex);
             return mDataMoved;
         }
     };

@@ -133,7 +133,8 @@ THREADS_API bool skr_init_rw_mutex(SRWMutex* pMutex);
 THREADS_API void skr_destroy_rw_mutex(SRWMutex* pMutex);
 THREADS_API void skr_rw_mutex_acquire_r(SRWMutex* pMutex);
 THREADS_API void skr_rw_mutex_acquire_w(SRWMutex* pMutex);
-THREADS_API void skr_rw_mutex_release(SRWMutex* pMutex);
+THREADS_API void skr_rw_mutex_release_r(SRWMutex* pMutex);
+THREADS_API void skr_rw_mutex_release_w(SRWMutex* pMutex);
 
 /// cv
 THREADS_API bool skr_init_condition_var(SConditionVariable* cv);

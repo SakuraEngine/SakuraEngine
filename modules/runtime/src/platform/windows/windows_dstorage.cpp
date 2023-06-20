@@ -21,6 +21,7 @@ struct SkrDStorageEvent
     }
 
     bool test() SKR_NOEXCEPT;
+    bool get_enqueued() SKR_NOEXCEPT { return mEnqueued; }
     void enqueue_status(IDStorageQueue* Q) SKR_NOEXCEPT;
 
 protected:
@@ -28,6 +29,7 @@ protected:
     friend struct DStorageEventPool;
     StatusEventArray* pArray = nullptr;
     uint32_t mSlot = 0;
+    bool mEnqueued = false;
 };
 
 struct StatusEventArray
@@ -78,6 +80,7 @@ bool SkrDStorageEvent::test() SKR_NOEXCEPT
 void SkrDStorageEvent::enqueue_status(IDStorageQueue* Q) SKR_NOEXCEPT
 {
     Q->EnqueueStatus(pArray->pArray, mSlot);
+    mEnqueued = true;
 }
 
 struct DStorageEventPool
@@ -105,18 +108,6 @@ struct DStorageEventPool
         return tryAllocate();
     }
 
-    SkrDStorageEvent* tryAllocate()
-    {
-        skr_rw_mutex_acquire_r(&arrMutex);
-        SKR_DEFER({ skr_rw_mutex_release(&arrMutex); });
-        for (auto& arr : statusArrays)
-        {
-            if (auto e = arr->Allocate())
-                return e;
-        }
-        return nullptr;
-    }
-
     void Deallocate(SkrDStorageEvent* e)
     {
         if (!e) return;
@@ -128,13 +119,25 @@ struct DStorageEventPool
     }
 
 private:
+    SkrDStorageEvent* tryAllocate()
+    {
+        skr_rw_mutex_acquire_r(&arrMutex);
+        SKR_DEFER({ skr_rw_mutex_release_r(&arrMutex); });
+        for (auto arr : statusArrays)
+        {
+            if (auto e = arr->Allocate())
+                return e;
+        }
+        return nullptr;
+    }
+
     void addArray()
     {
         IDStorageStatusArray* pArray = nullptr;
         pFactory->CreateStatusArray(StatusEventArray::kMaxEvents, "DirectStorageEvents", IID_PPV_ARGS(&pArray));
         {
             skr_rw_mutex_acquire_w(&arrMutex);
-            SKR_DEFER({ skr_rw_mutex_release(&arrMutex); });
+            SKR_DEFER({ skr_rw_mutex_release_w(&arrMutex); });
             statusArrays.emplace_back(SkrNew<StatusEventArray>(pArray));
         }
     }
@@ -142,7 +145,7 @@ private:
     void removeArray(StatusEventArray* pArray)
     {
         skr_rw_mutex_acquire_w(&arrMutex);
-        SKR_DEFER({ skr_rw_mutex_release(&arrMutex); });
+        SKR_DEFER({ skr_rw_mutex_release_w(&arrMutex); });
         auto it = eastl::find(statusArrays.begin(), statusArrays.end(), pArray);
         if (it != statusArrays.end())
         {
@@ -154,7 +157,7 @@ private:
     void removeAllArrays()
     {
         skr_rw_mutex_acquire_w(&arrMutex);
-        SKR_DEFER({ skr_rw_mutex_release(&arrMutex); });
+        SKR_DEFER({ skr_rw_mutex_release_w(&arrMutex); });
         for (auto& arr : statusArrays)
         {
             SkrDelete(arr);
@@ -376,7 +379,7 @@ bool skr_dstorage_event_test(SkrDStorageEventId event)
 void skr_dstorage_queue_free_event(SkrDStorageQueueId queue, SkrDStorageEventId event)
 {
     DStorageQueueWindows* Q = (DStorageQueueWindows*)queue;
-    SKR_ASSERT(event->test() && "You must wait for the event before freeing it!");
+    SKR_ASSERT(event->test() || !event->get_enqueued() && "You must wait for the event before freeing it!");
     Q->pInstance->pEventPool->Deallocate(event);
 }
 

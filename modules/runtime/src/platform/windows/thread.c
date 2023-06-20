@@ -4,6 +4,7 @@
 #include "platform/thread.h"
 #include "platform/debug.h"
 #include <assert.h>
+#include <synchapi.h>
 
 /// implementation of callonce
 
@@ -131,10 +132,19 @@ bool skr_mutex_try_acquire_srw_shared(SMutex* mutex)
 #endif
 }
 
-void skr_mutex_release_srw(SMutex* mutex)
+void skr_mutex_release_srw_exclusive(SMutex* mutex)
 {
 #if (_WIN32_WINNT >= 0x0600)
     ReleaseSRWLockExclusive((PSRWLOCK)mutex->muStorage_);
+#else
+    skr_mutex_release_cs(mutex);
+#endif
+}
+
+void skr_mutex_release_srw_shared(SMutex* mutex)
+{
+#if (_WIN32_WINNT >= 0x0600)
+    ReleaseSRWLockShared((PSRWLOCK)mutex->muStorage_);
 #else
     skr_mutex_release_cs(mutex);
 #endif
@@ -177,7 +187,7 @@ bool skr_mutex_try_acquire(SMutex* mutex)
 void skr_mutex_release(SMutex* mutex)
 {
     if (mutex->isSRW)
-        skr_mutex_release_srw(mutex);
+        skr_mutex_release_srw_exclusive(mutex);
     else
         skr_mutex_release_cs(mutex);
 }
@@ -210,10 +220,18 @@ void skr_rw_mutex_acquire_w(SRWMutex* pMutex)
         skr_mutex_acquire_cs(&pMutex->m);
 }
 
-void skr_rw_mutex_release(SRWMutex* pMutex)
+void skr_rw_mutex_release_w(SRWMutex* pMutex)
 {
     if (pMutex->m.isSRW)
-        skr_mutex_release_srw(&pMutex->m);
+        skr_mutex_release_srw_exclusive(&pMutex->m);
+    else
+        skr_mutex_release_cs(&pMutex->m);
+}
+
+void skr_rw_mutex_release_r(SRWMutex* pMutex)
+{
+    if (pMutex->m.isSRW)
+        skr_mutex_release_srw_shared(&pMutex->m);
     else
         skr_mutex_release_cs(&pMutex->m);
 }
