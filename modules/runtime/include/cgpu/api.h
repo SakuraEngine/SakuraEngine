@@ -1561,7 +1561,7 @@ typedef struct CGPUTextureDescriptor {
     /// Descriptor creation
     CGPUResourceTypes descriptors;
     /// Memory Aliasing
-    uint32_t is_dedicated;
+    uint32_t is_restrict_dedicated;
 } CGPUTextureDescriptor;
 
 typedef struct CGPUExportTextureDescriptor {
@@ -1612,8 +1612,8 @@ typedef struct CGPUTextureInfo {
     uint32_t node_index;
     uint8_t owns_image;
     uint8_t is_cube;
-    uint8_t is_heap_dedicated;
-    uint8_t is_driver_dedicated;
+    uint8_t is_allocation_dedicated;
+    uint8_t is_restrict_dedicated;
     uint8_t is_aliasing;
     uint8_t is_tiled;
     uint8_t is_imported;

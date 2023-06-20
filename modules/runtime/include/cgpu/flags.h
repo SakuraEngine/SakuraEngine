@@ -607,7 +607,7 @@ typedef enum ECGPUTextureCreationFlag
     /// Note that this flag is not restricted Commited/Dedicated Allocation
     /// Actually VMA/D3D12MA allocate dedicated memories with ALLOW_ALIAS flag with specific loacl heaps
     /// If the texture needs to be restricted Committed/Dedicated(thus you want to keep its priority high)
-    /// Toggle is_dedicated flag in CGPUTextureDescriptor
+    /// Toggle is_restrict_dedicated flag in CGPUTextureDescriptor
     CGPU_TCF_DEDICATED_BIT = 0x01,
     /// Texture will be allocated in memory which can be shared among multiple processes
     CGPU_TCF_EXPORT_BIT = 0x02,

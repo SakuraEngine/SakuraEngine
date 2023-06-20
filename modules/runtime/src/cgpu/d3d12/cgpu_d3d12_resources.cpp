@@ -581,16 +581,16 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateFromAllocator(CGPUAdapter_D3D12* A, 
     // Do allocation (TODO: mGPU)
     allocDesc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
     // for smaller alignment that not suitable for MSAA
-    if (desc->flags & CGPU_TCF_DEDICATED_BIT || desc->sample_count != CGPU_SAMPLE_COUNT_1)
+    if (desc->is_restrict_dedicated || desc->flags & CGPU_TCF_DEDICATED_BIT || desc->sample_count != CGPU_SAMPLE_COUNT_1)
     {
         allocDesc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED;
     }
-    bool is_heap_dedicated = allocDesc.Flags & D3D12MA::ALLOCATION_FLAG_COMMITTED;
-    bool is_driver_dedicated = is_heap_dedicated;
-    if (!desc->is_dedicated && desc->sample_count == CGPU_SAMPLE_COUNT_1 && !(desc->flags & CGPU_TCF_EXPORT_BIT))
+    bool is_allocation_dedicated = allocDesc.Flags & D3D12MA::ALLOCATION_FLAG_COMMITTED;
+    bool is_restrict_dedicated = is_allocation_dedicated;
+    if (!desc->is_restrict_dedicated && desc->sample_count == CGPU_SAMPLE_COUNT_1 && !(desc->flags & CGPU_TCF_EXPORT_BIT))
     {
         allocDesc.Flags |= D3D12MA::ALLOCATION_FLAG_CAN_ALIAS;
-        is_driver_dedicated = false;
+        is_restrict_dedicated = false;
     }
     bool can_alias_allocation = allocDesc.Flags & D3D12MA::ALLOCATION_FLAG_CAN_ALIAS;
     if ( desc->flags & CGPU_TCF_EXPORT_BIT )
@@ -626,7 +626,7 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateFromAllocator(CGPUAdapter_D3D12* A, 
                 pClearValue, IID_ARGS(&pDxResource));
             if (fallbackHres == S_OK)
             {
-                is_driver_dedicated = true;
+                is_restrict_dedicated = true;
                 can_alias_allocation = false;
                 pDxAllocation = nullptr;
                 SKR_LOG_TRACE("[D3D12] Create Texture With Fallback Driver API Succeed!");
@@ -651,8 +651,8 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateFromAllocator(CGPUAdapter_D3D12* A, 
     }
     T->pDxAllocation = pDxAllocation;
     T->pDxResource = pDxResource;
-    pInfo->is_driver_dedicated = is_driver_dedicated;
-    pInfo->is_heap_dedicated = is_heap_dedicated;
+    pInfo->is_restrict_dedicated = is_restrict_dedicated;
+    pInfo->is_allocation_dedicated = is_allocation_dedicated;
     pInfo->can_alias = can_alias_allocation || (desc->flags & CGPU_TCF_ALIASING_RESOURCE);
     pInfo->can_export = (allocDesc.ExtraHeapFlags & D3D12_HEAP_FLAG_SHARED);
     return T;
@@ -1100,7 +1100,7 @@ bool cgpu_try_bind_aliasing_texture_d3d12(CGPUDeviceId device, const struct CGPU
         const auto AliasedInfo = Aliased->super.info;
         cgpu_assert(AliasingInfo->is_aliasing && "aliasing texture need to be created as aliasing!");
         if (Aliased->pDxResource != nullptr && Aliased->pDxAllocation != nullptr &&
-            !AliasedInfo->is_driver_dedicated && AliasingInfo->is_aliasing)
+            !AliasedInfo->is_restrict_dedicated && AliasingInfo->is_aliasing)
         {
             result = D->pResourceAllocator->CreateAliasingResource(
                 Aliased->pDxAllocation,
@@ -1237,7 +1237,7 @@ CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const
     pInfo->array_size_minus_one = imported_desc.DepthOrArraySize - 1;
     pInfo->can_alias = false;
     pInfo->is_aliasing = false;
-    pInfo->is_driver_dedicated = false;
+    pInfo->is_restrict_dedicated = false;
     pInfo->owns_image = false;
     pInfo->unique_id = D->super.next_texture_id++;
     pInfo->is_cube = (imported_desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D && imported_desc.DepthOrArraySize > 6);
