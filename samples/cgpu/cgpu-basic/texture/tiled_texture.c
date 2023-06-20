@@ -521,7 +521,7 @@ int main(int argc, char* argv[])
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
         // When we support more add them here
 #ifdef CGPU_USE_D3D12
-    ECGPUBackend backend = CGPU_BACKEND_D3D12;
+    ECGPUBackend backend = CGPU_BACKEND_VULKAN;
 #else
     ECGPUBackend backend = CGPU_BACKEND_VULKAN;
 #endif

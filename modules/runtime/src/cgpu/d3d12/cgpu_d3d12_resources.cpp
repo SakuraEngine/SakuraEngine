@@ -790,8 +790,8 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTile
             for (uint32_t z = Region.start.z; z < Region.end.z; z++)
             {
                 auto& Mapping = *Mappings.at(x, y, z);
-                const auto prev = skr_atomic32_cas_relaxed(&Mapping.status, TILE_MAPPING_STATUS_UNMAPPED, TILE_MAPPING_STATUS_PENDING);
-                if (prev == TILE_MAPPING_STATUS_UNMAPPED)
+                const auto prev = skr_atomic32_cas_relaxed(&Mapping.status, D3D12_TILE_MAPPING_STATUS_UNMAPPED, D3D12_TILE_MAPPING_STATUS_PENDING);
+                if (prev == D3D12_TILE_MAPPING_STATUS_UNMAPPED)
                 {
                     RegionTileCount += 1;
                 }
@@ -833,8 +833,8 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTile
         for (uint32_t z = Region.start.z; z < Region.end.z; z++)
         {
             auto& Mapping = *Mappings.at(x, y, z);
-            const auto status = skr_atomic32_cas_relaxed(&Mapping.status, TILE_MAPPING_STATUS_PENDING, TILE_MAPPING_STATUS_MAPPING);
-            if (status != TILE_MAPPING_STATUS_PENDING) continue; // skip if already mapped
+            const auto status = skr_atomic32_cas_relaxed(&Mapping.status, D3D12_TILE_MAPPING_STATUS_PENDING, D3D12_TILE_MAPPING_STATUS_MAPPING);
+            if (status != D3D12_TILE_MAPPING_STATUS_PENDING) continue; // skip if already mapped
 
             // calc mapping args
             Mapping.pDxAllocation = ppAllocations[AllocateTileCount];
@@ -868,7 +868,7 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTile
         {
             auto& TiledInfo = *const_cast<CGPUTiledTextureInfo*>(T->super.tiled_resource);
             auto& Mapping = *ppMappings[i];
-            skr_atomic32_cas_relaxed(&Mapping.status, TILE_MAPPING_STATUS_MAPPING, TILE_MAPPING_STATUS_MAPPED);
+            skr_atomic32_cas_relaxed(&Mapping.status, D3D12_TILE_MAPPING_STATUS_MAPPING, D3D12_TILE_MAPPING_STATUS_MAPPED);
             skr_atomicu64_add_relaxed(&TiledInfo.alive_tiles_count, 1);
         }
     };

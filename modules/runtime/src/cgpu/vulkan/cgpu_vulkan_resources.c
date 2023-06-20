@@ -1,4 +1,5 @@
 #include "float.h"
+#include "platform/atomic.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "../common/common_utils.h"
 #include "vulkan_utils.h"
@@ -523,7 +524,7 @@ void VkUtil_AllocateSharedTexture(CGPUQueue_Vulkan* Q, VmaAllocationCreateInfo* 
 }
 #endif
 
-CGPUTiledTextureInfo* VkUtil_FillTiledTextureInfo(CGPUDevice_Vulkan* D, VkImage pVkImage, const struct CGPUTextureDescriptor* desc)
+CGPUTiledTextureInfo* VkUtil_FillTiledTextureInfo(CGPUDevice_Vulkan* D, VkImage pVkImage, const struct CGPUTextureDescriptor* desc, uint32_t* outTypeBits)
 {
     CGPUAdapter_Vulkan* A = (CGPUAdapter_Vulkan*)D->super.adapter;
     // Get memory requirements
@@ -609,6 +610,7 @@ CGPUTiledTextureInfo* VkUtil_FillTiledTextureInfo(CGPUDevice_Vulkan* D, VkImage 
         }
     }
 
+    SKR_ASSERT(sparseImageMemoryReqs.size == VK_SPARSE_PAGE_STANDARD_SIZE * total_tiles_count && "Unexpected sparse image memory requirements size!");
     pTiledInfo->tile_size = VK_SPARSE_PAGE_STANDARD_SIZE;
     pTiledInfo->total_tiles_count = total_tiles_count;
     pTiledInfo->alive_tiles_count = 0;
@@ -621,6 +623,9 @@ CGPUTiledTextureInfo* VkUtil_FillTiledTextureInfo(CGPUDevice_Vulkan* D, VkImage 
     pTiledInfo->tail_tiles_count = sparseReq.imageMipTailSize / VK_SPARSE_PAGE_STANDARD_SIZE;
     pTiledInfo->tail_mip_start = sparseReq.imageMipTailFirstLod;
     pTiledInfo->tail_mip_count = desc->mip_levels - sparseReq.imageMipTailFirstLod;
+
+    *outTypeBits = sparseImageMemoryReqs.memoryTypeBits;
+    
     return pTiledInfo;
 }
 
@@ -812,9 +817,23 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
     }
     
     // fill tile info
+    CGPUTileTextureSubresourceMapping_Vulkan* pVkTileMappings = CGPU_NULLPTR;
+    uint32_t memTypBits = 0;
     if (desc->flags & CGPU_TCF_TILED_RESOURCE)
     {
-        pTiledInfo = VkUtil_FillTiledTextureInfo(D, pVkImage, desc);
+        pTiledInfo = VkUtil_FillTiledTextureInfo(D, pVkImage, desc, &memTypBits);
+        pVkTileMappings = cgpu_calloc_aligned(pTiledInfo->tail_mip_start, sizeof(CGPUTileTextureSubresourceMapping_Vulkan), _Alignof(CGPUTileTextureSubresourceMapping_Vulkan));
+        for (uint32_t i = 0; i < pTiledInfo->tail_mip_start; i++)
+        {
+            CGPUTileTextureSubresourceMapping_Vulkan SM = {
+                .X = pTiledInfo->subresources[i].width_in_tiles,
+                .Y = pTiledInfo->subresources[i].height_in_tiles,
+                .Z = pTiledInfo->subresources[i].depth_in_tiles,
+                .mVkMemoryTypeBits = memTypBits,
+                .mappings = cgpu_calloc_aligned(pVkTileMappings[i].X * pVkTileMappings[i].Y * pVkTileMappings[i].Z, sizeof(CGPUTileMapping_Vulkan), _Alignof(CGPUTileMapping_Vulkan))
+            };
+            memcpy(&pVkTileMappings[i], &SM, sizeof(CGPUTileTextureSubresourceMapping_Vulkan));
+        }
     }
 
     // Create texture object
@@ -822,6 +841,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
     CGPUTextureInfo* info = (CGPUTextureInfo*)(T + 1);
     T->super.info = info;
     T->super.tiled_resource = pTiledInfo;
+    T->pVkTileMappings = pVkTileMappings;
     cgpu_assert(T);
     info->owns_image = owns_image;
     info->aspect_mask = aspect_mask;
@@ -875,6 +895,89 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
 #endif
     }
     return &T->super;
+}
+
+enum ETileMappingStatus_Vulkan
+{
+    VK_TILE_MAPPING_STATUS_UNMAPPED = 0,
+    VK_TILE_MAPPING_STATUS_PENDING = 1,
+    VK_TILE_MAPPING_STATUS_MAPPING = 2,
+    VK_TILE_MAPPING_STATUS_MAPPED = 3,
+    VK_TILE_MAPPING_STATUS_INVALID = 4
+};
+
+CGPUTileMapping_Vulkan* VkUtil_TileMappingAt(CGPUTileTextureSubresourceMapping_Vulkan* subres, uint32_t x, uint32_t y, uint32_t z)
+{
+    SKR_ASSERT(subres->mappings && x < subres->X && y < subres->Y && z < subres->Z && "SubresTileMappings::at: Out of Range!"); 
+    return subres->mappings + (x + y * subres->X + z * subres->X * subres->Y); 
+}
+
+void cgpu_queue_map_tiled_texture_vulkan(CGPUQueueId queue, const struct CGPUTiledTextureRegions* regions)
+{
+    const uint32_t kPageSize = VK_SPARSE_PAGE_STANDARD_SIZE;
+    const uint32_t RegionCount = regions->region_count;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)queue->device;
+    CGPUQueue_Vulkan* Q = (CGPUQueue_Vulkan*)queue;
+    CGPUTexture_Vulkan* T = (CGPUTexture_Vulkan*)regions->texture;
+
+    // calculate page count
+    uint32_t TotalTileCount = 0;
+    for (uint32_t i = 0; i < RegionCount; i++)
+    {
+        const CGPUTextureCoordinateRegion Region = regions->regions[i];
+        uint32_t RegionTileCount = 0;
+            for (uint32_t x = Region.start.x; x < Region.end.x; x++)
+            for (uint32_t y = Region.start.y; y < Region.end.y; y++)
+            for (uint32_t z = Region.start.z; z < Region.end.z; z++)
+            {
+                uint32_t subres_index = Region.layer * T->super.info->mip_levels + Region.mip_level;
+                CGPUTileTextureSubresourceMapping_Vulkan* subres = T->pVkTileMappings + subres_index;
+                CGPUTileMapping_Vulkan* pMapping = VkUtil_TileMappingAt(subres, x, y, z);
+                const int32_t prev = skr_atomic32_cas_relaxed(&pMapping->status, VK_TILE_MAPPING_STATUS_UNMAPPED, VK_TILE_MAPPING_STATUS_PENDING);
+                if (prev == VK_TILE_MAPPING_STATUS_UNMAPPED)
+                {
+                    RegionTileCount += 1;
+                }
+            }
+        TotalTileCount += RegionTileCount;
+    }
+    if (!TotalTileCount) return;
+
+    void* ArgMemory = cgpu_calloc(TotalTileCount, sizeof(VmaAllocation) + sizeof(VmaAllocationInfo) + sizeof(VkSparseImageMemoryBind));
+    VmaAllocation* pAllocations = (VmaAllocation*)ArgMemory;
+    VmaAllocationInfo* pAllocationInfos = (VmaAllocationInfo*)(pAllocations + TotalTileCount);
+    VkSparseImageMemoryBind* pBinds = (VkSparseImageMemoryBind*)(pAllocationInfos + TotalTileCount);
+	DECLARE_ZERO(VkMemoryRequirements, memReqs);
+	memReqs.size = kPageSize;
+	memReqs.memoryTypeBits = T->pVkTileMappings->mVkMemoryTypeBits;
+	memReqs.alignment = memReqs.size;
+	DECLARE_ZERO(VmaAllocationCreateInfo, vmaAllocInfo);
+    // do allocations
+    VkResult result = vmaAllocateMemoryPages(D->pVmaAllocator, &memReqs, &vmaAllocInfo, 
+        TotalTileCount, pAllocations, pAllocationInfos);
+    CHECK_VKRESULT(result);
+
+    // do mapping
+	DECLARE_ZERO(VkBindSparseInfo, bindSparseInfo);
+    bindSparseInfo.sType = VK_STRUCTURE_TYPE_BIND_SPARSE_INFO;
+    uint32_t AllocateTileCount = 0;
+    for (uint32_t i = 0; i < RegionCount; i++)
+    {
+        VkSparseImageMemoryBind* pBind = pBinds + AllocateTileCount;
+        
+    }
+
+    // Image memory binds
+	DECLARE_ZERO(VkSparseImageMemoryBindInfo, imageMemoryBindInfo);
+    imageMemoryBindInfo.image = T->pVkImage;
+    imageMemoryBindInfo.bindCount = TotalTileCount;
+    imageMemoryBindInfo.pBinds = pBinds;
+    bindSparseInfo.imageBindCount = 1;
+    bindSparseInfo.pImageBinds = &imageMemoryBindInfo;
+
+    CHECK_VKRESULT(D->mVkDeviceTable.vkQueueBindSparse(Q->pVkQueue, (uint32_t)1, &bindSparseInfo, VK_NULL_HANDLE));
+    
+    cgpu_free(ArgMemory);
 }
 
 #ifdef _WIN32
@@ -939,6 +1042,16 @@ void cgpu_free_texture_vulkan(CGPUTextureId texture)
     }
     if (T->super.tiled_resource)
         cgpu_free_aligned((void*)T->super.tiled_resource, _Alignof(CGPUTiledTextureInfo));
+    if (T->pVkTileMappings)
+    {
+        for (uint32_t i = 0; i < pInfo->mip_levels * (pInfo->array_size_minus_one + 1); i++)
+        {
+            CGPUTileTextureSubresourceMapping_Vulkan* subres = T->pVkTileMappings + i;
+            if (subres->mappings)
+                cgpu_free_aligned(subres->mappings, _Alignof(CGPUTileMapping_Vulkan));
+        }
+        cgpu_free_aligned(T->pVkTileMappings, _Alignof(VkSparseImageMemoryBind));
+    }
     cgpu_free_aligned(T, _Alignof(CGPUTexture_Vulkan));
 }
 

@@ -311,9 +311,24 @@ typedef struct CGPUBuffer_Vulkan {
     uint64_t mOffset;
 } CGPUBuffer_Vulkan;
 
+typedef struct CGPUTileMapping_Vulkan
+{
+    struct VmaAllocation_T* pVkAllocation;
+    volatile int32_t status;
+} CGPUTileMapping_Vulkan;
+
+typedef struct CGPUTileTextureSubresourceMapping_Vulkan {
+    const uint32_t X;
+    const uint32_t Y;
+    const uint32_t Z;
+    const uint32_t mVkMemoryTypeBits;
+    CGPUTileMapping_Vulkan* mappings;
+} CGPUTileTextureSubresourceMapping_Vulkan;
+
 typedef struct CGPUTexture_Vulkan {
     CGPUTexture super;
     VkImage pVkImage;
+    CGPUTileTextureSubresourceMapping_Vulkan* pVkTileMappings;
     union
     {
         /// Contains resource allocation info such as parent heap, offset in heap
