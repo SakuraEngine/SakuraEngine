@@ -1,3 +1,4 @@
+#include "cgpu/api.h"
 #include "common/render_application.h"
 #include "common/texture.h"
 #include "math.h"
@@ -22,7 +23,8 @@ CGPUTextureViewId views[BACK_BUFFER_COUNT];
 
 #define TOTAL_MIPS 3
 CGPUBufferId streaming_heap;
-uint32_t current_mip = ~0;
+const uint32_t resident_mip = 0;
+uint32_t mapped_mip = ~0;
 CGPUTextureViewId sampled_views[TOTAL_MIPS];
 
 render_application_t App;
@@ -114,17 +116,34 @@ void create_sampled_texture()
 
 void update_streaming_unmap(CGPUCommandBufferId cmd, uint32_t MipLevel)
 {
-    if (current_mip == MipLevel)
+    if (mapped_mip == MipLevel)
         return;
-    // cgpu_queue_unmap_tiled_texture(cmd, current_mip);
+    // cgpu_queue_unmap_tiled_texture(cmd, mapped_mip);
 }
 
 void update_streaming_map(CGPUCommandBufferId cmd, uint32_t MipLevel) 
 {
-    if (current_mip == MipLevel)
+    if (mapped_mip == MipLevel)
         return;
     const CGPUTiledSubresourceInfo subres = sampled_texture->tiled_resource->subresources[MipLevel];
     // map tiled texture
+    if (MipLevel == 1)
+    {
+        CGPUTextureCoordinateRegion coordinate = 
+        {
+            .start = { 0, 0, 0 },
+            .end = { 1, 1, 1 },
+            .mip_level = MipLevel,
+            .layer = 0
+        };
+        CGPUTiledTextureRegions mapping = {
+            .texture = sampled_texture,
+            .regions = &coordinate,
+            .region_count = 1
+        };
+        cgpu_queue_map_tiled_texture(App.gfx_queue, &mapping);
+    }
+    else
     {
         CGPUTextureCoordinateRegion coordinates[3] = 
         {
@@ -181,7 +200,7 @@ void update_streaming_map(CGPUCommandBufferId cmd, uint32_t MipLevel)
             TracyCZoneEnd(z);
         }
     }
-    current_mip = MipLevel;
+    mapped_mip = MipLevel;
     // record
     if (bUseTiledCopy)
     {
@@ -221,7 +240,7 @@ void update_streaming_map(CGPUCommandBufferId cmd, uint32_t MipLevel)
 
 void update_streaming(CGPUCommandBufferId cmd, uint32_t MipLevel)
 {
-    update_streaming_unmap(cmd, current_mip);
+    update_streaming_unmap(cmd, mapped_mip);
     update_streaming_map(cmd, MipLevel);
 }
 
@@ -300,7 +319,7 @@ void create_render_pipeline()
     arguments[0].name = "sampled_texture";
     // via binding: arguments[0].binding = 0;
     arguments[0].count = 1;
-    arguments[0].textures = &sampled_views[0];
+    arguments[0].textures = &sampled_views[resident_mip];
     arguments[1].name = sampler_name;
     // via binding: arguments[1].binding = 1;
     arguments[1].count = 1;
@@ -369,7 +388,7 @@ void raster_redraw()
     cgpu_reset_command_pool(pool);
     // record
     cgpu_cmd_begin(cmd);
-    update_streaming_map(cmd, 0);
+    update_streaming_map(cmd, resident_mip);
     CGPUColorAttachment screen_attachment = {
         .view = views[App.backbuffer_index],
         .load_action = CGPU_LOAD_ACTION_CLEAR,
@@ -522,7 +541,7 @@ int main(int argc, char* argv[])
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
         // When we support more add them here
 #ifdef CGPU_USE_D3D12
-    ECGPUBackend backend = CGPU_BACKEND_VULKAN;
+    ECGPUBackend backend = CGPU_BACKEND_D3D12;
 #else
     ECGPUBackend backend = CGPU_BACKEND_VULKAN;
 #endif

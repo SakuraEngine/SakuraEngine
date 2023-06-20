@@ -120,7 +120,12 @@ void skr_rw_mutex_acquire_w(SRWMutex* pMutex)
     }
 }
 
-void skr_rw_mutex_release(SRWMutex* pMutex)
+void skr_rw_mutex_release_w(SRWMutex* pMutex)
+{
+    pthread_rwlock_unlock(&pMutex->pHandle); 
+}
+
+void skr_rw_mutex_release_r(SRWMutex* pMutex)
 {
     pthread_rwlock_unlock(&pMutex->pHandle); 
 }

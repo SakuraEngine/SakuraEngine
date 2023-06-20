@@ -1,4 +1,5 @@
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
+#include "cgpu/cgpu_config.h"
 #include "vulkan_utils.h"
 #include "cgpu/shader-reflections/spirv/spirv_reflect.h"
 #include "../common/common_utils.h"
@@ -1373,7 +1374,7 @@ CGPUCommandPoolId cgpu_create_command_pool_vulkan(CGPUQueueId queue, const CGPUC
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)queue->device;
     CGPUCommandPool_Vulkan* P = (CGPUCommandPool_Vulkan*)cgpu_calloc(1, sizeof(CGPUCommandPool_Vulkan));
     P->pVkCmdPool = allocate_transient_command_pool(D, queue);
-    VkUtil_OptionalSetObjectName(D, (uint64_t)P->pVkCmdPool, VK_OBJECT_TYPE_COMMAND_POOL, desc->name);
+    VkUtil_OptionalSetObjectName(D, (uint64_t)P->pVkCmdPool, VK_OBJECT_TYPE_COMMAND_POOL, desc ? desc->name : CGPU_NULLPTR);
     return &P->super;
 }
 

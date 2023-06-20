@@ -309,8 +309,8 @@ CGPUInstanceId cgpu_create_instance_vulkan(CGPUInstanceDescriptor const* desc)
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
     // Instance Layers
-    createInfo.enabledLayerCount = (uint32_t)blackboard.instance_layers.size();
-    createInfo.ppEnabledLayerNames = blackboard.instance_layers.data();
+    createInfo.enabledLayerCount = I->mLayersCount;
+    createInfo.ppEnabledLayerNames = I->pLayerNames;
     // Instance Extensions
     createInfo.enabledExtensionCount = I->mExtensionsCount;
     createInfo.ppEnabledExtensionNames = I->pExtensionNames;
