@@ -1,4 +1,4 @@
-#include "SkrGui/widgets/canvas.hpp"
+#include "SkrGui/widgets/stack.hpp"
 
 namespace skr::gui
 {
