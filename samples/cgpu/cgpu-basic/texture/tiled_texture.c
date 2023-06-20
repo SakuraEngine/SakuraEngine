@@ -74,7 +74,7 @@ void create_sampled_texture()
     }
     CGPUBufferDescriptor upload_buffer_desc = {
         .name = "UploadBuffer",
-        .flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT,
+        .flags = CGPU_BCF_PERSISTENT_MAP_BIT,
         .descriptors = CGPU_RESOURCE_TYPE_NONE,
         .memory_usage = CGPU_MEM_USAGE_CPU_ONLY,
         .element_stride = sizeof(TEXTURE_DATA),

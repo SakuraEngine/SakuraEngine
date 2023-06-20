@@ -581,7 +581,7 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateFromAllocator(CGPUAdapter_D3D12* A, 
     // Do allocation (TODO: mGPU)
     allocDesc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
     // for smaller alignment that not suitable for MSAA
-    if (desc->flags & CGPU_TCF_OWN_MEMORY_BIT || desc->sample_count != CGPU_SAMPLE_COUNT_1)
+    if (desc->flags & CGPU_TCF_DEDICATED_BIT || desc->sample_count != CGPU_SAMPLE_COUNT_1)
     {
         allocDesc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED;
     }
@@ -1671,7 +1671,7 @@ inline D3D12MA::ALLOCATION_DESC D3D12Util_CreateAllocationDesc(const struct CGPU
     DECLARE_ZERO(D3D12MA::ALLOCATION_DESC, alloc_desc)
     alloc_desc.HeapType = D3D12Util_TranslateHeapType(desc->memory_usage);
 
-    if (desc->flags & CGPU_BCF_OWN_MEMORY_BIT)
+    if (desc->flags & CGPU_BCF_DEDICATED_BIT)
         alloc_desc.Flags |= D3D12MA::ALLOCATION_FLAG_COMMITTED;
     return alloc_desc;
 }

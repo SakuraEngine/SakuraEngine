@@ -329,7 +329,7 @@ void imgui_create_fonts(CGPUQueueId queue)
     tex_desc.depth = 1;
     tex_desc.descriptors = CGPU_RESOURCE_TYPE_TEXTURE;
     tex_desc.array_size = 1;
-    tex_desc.flags = CGPU_TCF_OWN_MEMORY_BIT;
+    tex_desc.flags = CGPU_TCF_NONE;
     tex_desc.mip_levels = 1;
     tex_desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
     tex_desc.start_state = CGPU_RESOURCE_STATE_COPY_DEST;
@@ -339,7 +339,7 @@ void imgui_create_fonts(CGPUQueueId queue)
     CGPUCommandBufferDescriptor cmd_desc = {};
     CGPUBufferDescriptor upload_buffer_desc = {};
     upload_buffer_desc.name = u8"IMGUI_FontUploadBuffer";
-    upload_buffer_desc.flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT;
+    upload_buffer_desc.flags = CGPU_BCF_PERSISTENT_MAP_BIT;
     upload_buffer_desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
     upload_buffer_desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
     upload_buffer_desc.size = upload_size;

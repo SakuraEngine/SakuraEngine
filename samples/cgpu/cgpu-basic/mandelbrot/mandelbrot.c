@@ -149,7 +149,7 @@ void ComputeFunc(void* usrdata)
     // Create readback buffer
     CGPUBufferDescriptor rb_desc = {
         .name = "ReadbackBuffer",
-        .flags = CGPU_BCF_OWN_MEMORY_BIT,
+        .flags = CGPU_BCF_NONE,
         .descriptors = CGPU_RESOURCE_TYPE_NONE,
         .start_state = CGPU_RESOURCE_STATE_COPY_DEST,
         .memory_usage = CGPU_MEM_USAGE_GPU_TO_CPU,

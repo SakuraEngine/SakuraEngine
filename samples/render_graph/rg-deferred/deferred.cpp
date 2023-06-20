@@ -98,28 +98,28 @@ void create_resources()
     // upload
     CGPUBufferDescriptor upload_buffer_desc = {};
     upload_buffer_desc.name = u8"UploadBuffer";
-    upload_buffer_desc.flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT;
+    upload_buffer_desc.flags = CGPU_BCF_PERSISTENT_MAP_BIT;
     upload_buffer_desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
     upload_buffer_desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
     upload_buffer_desc.size = sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices) + sizeof(CubeGeometry::InstanceData);
     auto upload_buffer = cgpu_create_buffer(device, &upload_buffer_desc);
     CGPUBufferDescriptor vb_desc = {};
     vb_desc.name = u8"VertexBuffer";
-    vb_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+    vb_desc.flags = CGPU_BCF_NONE;
     vb_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
     vb_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     vb_desc.size = sizeof(CubeGeometry);
     vertex_buffer = cgpu_create_buffer(device, &vb_desc);
     CGPUBufferDescriptor ib_desc = {};
     ib_desc.name = u8"IndexBuffer";
-    ib_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+    ib_desc.flags = CGPU_BCF_NONE;
     ib_desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER;
     ib_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     ib_desc.size = sizeof(CubeGeometry::g_Indices);
     index_buffer = cgpu_create_buffer(device, &ib_desc);
     CGPUBufferDescriptor inb_desc = {};
     inb_desc.name = u8"InstanceBuffer";
-    inb_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+    inb_desc.flags = CGPU_BCF_NONE;
     inb_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
     inb_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     inb_desc.size = sizeof(CubeGeometry::InstanceData);
@@ -454,7 +454,7 @@ int main(int argc, char* argv[])
                 builder.set_name(u8"composite_buffer")
                 .extent(native_backbuffer->info->width, native_backbuffer->info->height)
                 .format((ECGPUFormat)native_backbuffer->info->format)
-                .owns_memory()
+                .allocate_dedicated()
                 .allow_render_target();
             });
             auto gbuffer_color = graph->create_texture(
@@ -462,7 +462,7 @@ int main(int argc, char* argv[])
                 builder.set_name(u8"gbuffer_color")
                 .extent(native_backbuffer->info->width, native_backbuffer->info->height)
                 .format(gbuffer_formats[0])
-                .owns_memory()
+                .allocate_dedicated()
                 .allow_render_target();
             });
             auto gbuffer_depth = graph->create_texture(
@@ -470,7 +470,7 @@ int main(int argc, char* argv[])
                 builder.set_name(u8"gbuffer_depth")
                 .extent(native_backbuffer->info->width, native_backbuffer->info->height)
                 .format(gbuffer_depth_format)
-                .owns_memory()
+                .allocate_dedicated()
                 .allow_depth_stencil();
             });
             auto gbuffer_normal = graph->create_texture(
@@ -478,7 +478,7 @@ int main(int argc, char* argv[])
                 builder.set_name(u8"gbuffer_normal")
                 .extent(native_backbuffer->info->width, native_backbuffer->info->height)
                 .format(gbuffer_formats[1])
-                .owns_memory()
+                .allocate_dedicated()
                 .allow_render_target();
             });
             auto lighting_buffer = graph->create_texture(
@@ -486,7 +486,7 @@ int main(int argc, char* argv[])
                 builder.set_name(u8"lighting_buffer")
                 .extent(native_backbuffer->info->width, native_backbuffer->info->height)
                 .format(lighting_buffer_format)
-                .owns_memory()
+                .allocate_dedicated()
                 .allow_readwrite();
             });
             // camera

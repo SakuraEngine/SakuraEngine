@@ -166,8 +166,8 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
             builder.set_name(u8"depth")
                 .extent(viewport->viewport_width, viewport->viewport_height)
                 .format(depth_format)
-                .owns_memory()
                 .allow_depth_stencil();
+            if (viewport->viewport_width > 2048) builder.allocate_dedicated();
         });(void)depth;
     if (!drawcalls.size()) return;
 
