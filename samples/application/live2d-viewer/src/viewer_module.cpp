@@ -111,10 +111,10 @@ void SLive2DViewerModule::on_load(int argc, char8_t** argv)
     ram_service->run();
     
 #ifdef _WIN32
+    skr_win_dstorage_decompress_desc_t decompress_desc = {};
+    decompress_desc.job_queue = io_job_queue;
+    if (auto decompress_service = skr_runtime_create_win_dstorage_decompress_service(&decompress_desc))
     {
-        skr_win_dstorage_decompress_desc_t decompress_desc = {};
-        decompress_desc.job_queue = io_job_queue;
-        auto decompress_service = skr_runtime_create_win_dstorage_decompress_service(&decompress_desc);
         skr_win_dstorage_decompress_service_register_callback(decompress_service, 
             SKR_WIN_DSTORAGE_COMPRESSION_TYPE_IMAGE, 
             &skr_image_coder_win_dstorage_decompressor, nullptr);

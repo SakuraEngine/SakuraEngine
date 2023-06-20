@@ -16,11 +16,14 @@ SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Get()
 SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Initialize(const SkrDStorageConfig& cfg)
 {
     const bool wine = skr_win_is_wine();
-    if (wine)
-        _this->dstorage_dll_dont_exist = true;
-    else if (!_this)
+    if (!_this)
     {
         _this = SkrNew<SkrWindowsDStorageInstance>();
+        if (wine)
+        {
+            _this->initialize_failed = true;
+        }
+        else
         {
             _this->dstorage_core.load(u8"dstoragecore.dll");
             _this->dstorage_library.load(u8"dstorage.dll");
@@ -28,7 +31,7 @@ SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Initialize(const SkrDSto
             {
                 if (!_this->dstorage_core.isLoaded()) SKR_LOG_TRACE("dstoragecore.dll not found, direct storage is disabled");
                 if (!_this->dstorage_library.isLoaded()) SKR_LOG_TRACE("dstorage.dll not found, direct storage is disabled");
-                _this->dstorage_dll_dont_exist = true;
+                _this->initialize_failed = true;
             }
             else
             {
@@ -67,7 +70,7 @@ SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Initialize(const SkrDSto
             }
         }
     }
-    return _this->dstorage_dll_dont_exist ? nullptr : _this;
+    return _this->initialize_failed ? nullptr : _this;
 }
 
 
@@ -97,8 +100,11 @@ SkrDStorageInstanceId skr_get_dstorage_instnace()
 
 ESkrDStorageAvailability skr_query_dstorage_availability()
 {
-    auto inst = SkrWindowsDStorageInstance::Get();
-    return inst ? SKR_DSTORAGE_AVAILABILITY_HARDWARE : SKR_DSTORAGE_AVAILABILITY_NONE;
+    if (auto inst = SkrWindowsDStorageInstance::Get())
+    {
+        return inst->initialize_failed ? SKR_DSTORAGE_AVAILABILITY_NONE : SKR_DSTORAGE_AVAILABILITY_HARDWARE;
+    }
+    return SKR_DSTORAGE_AVAILABILITY_NONE;
 }
 
 void skr_free_dstorage_instance(SkrDStorageInstanceId inst)
