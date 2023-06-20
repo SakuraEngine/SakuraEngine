@@ -17,6 +17,7 @@ CGPUCommandBufferId cmds[FLIGHT_FRAMES];
 CGPUTextureId sampled_texture;
 CGPUSamplerId sampler_state;
 bool bUseStaticSampler = true;
+bool bUseTiledCopy = false;
 CGPUTextureViewId views[BACK_BUFFER_COUNT];
 
 #define TOTAL_MIPS 3
@@ -81,7 +82,7 @@ void create_sampled_texture()
         .size = sizeof(TEXTURE_DATA)
     };
     streaming_heap = cgpu_create_buffer(App.device, &upload_buffer_desc);
-    if (true)
+    if (bUseTiledCopy)
     {
         const uint32_t TEXEL_SIZE = 4 * sizeof(uint8_t);
         uint8_t* SWIZZLED_TEXTURE_DATA = (uint8_t*)sakura_malloc(sizeof(TEXTURE_DATA));
@@ -182,7 +183,7 @@ void update_streaming_map(CGPUCommandBufferId cmd, uint32_t MipLevel)
     }
     current_mip = MipLevel;
     // record
-    if (true)
+    if (bUseTiledCopy)
     {
         CGPUBufferToTilesTransfer b2t = {
             .src = streaming_heap,

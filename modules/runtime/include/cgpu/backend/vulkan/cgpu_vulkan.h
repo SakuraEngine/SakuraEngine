@@ -72,6 +72,8 @@ RUNTIME_API void cgpu_submit_queue_vulkan(CGPUQueueId queue, const struct CGPUQu
 RUNTIME_API void cgpu_wait_queue_idle_vulkan(CGPUQueueId queue);
 RUNTIME_API void cgpu_queue_present_vulkan(CGPUQueueId queue, const struct CGPUQueuePresentDescriptor* desc);
 RUNTIME_API float cgpu_queue_get_timestamp_period_ns_vulkan(CGPUQueueId queue);
+RUNTIME_API void cgpu_queue_map_tiled_texture_vulkan(CGPUQueueId queue, const struct CGPUTiledTextureRegions* regions);
+RUNTIME_API void cgpu_queue_unmap_tiled_texture_vulkan(CGPUQueueId queue, const struct CGPUTiledTextureRegions* regions);
 RUNTIME_API void cgpu_free_queue_vulkan(CGPUQueueId queue);
 
 // Command APIs

@@ -855,19 +855,19 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTile
         Q->pCommandQueue->UpdateTileMappings(
             T->pDxResource,
             N,
-            pTileCoordinates,
+            pTileCoordinates + Offset,
             NULL,  // All regions are single tiles
             pHeap, // ID3D12Heap*
             N,
             NULL,  // All ranges are sequential tiles in the heap
-            pRangeOffsets,
-            pRangeTileCounts,
+            pRangeOffsets + Offset,
+            pRangeTileCounts + Offset,
             D3D12_TILE_MAPPING_FLAG_NONE);
             
         for (uint32_t i = 0; i < N; i++)
         {
             auto& TiledInfo = *const_cast<CGPUTiledTextureInfo*>(T->super.tiled_resource);
-            auto& Mapping = *ppMappings[i];
+            auto& Mapping = *ppMappings[Offset + i];
             skr_atomic32_cas_relaxed(&Mapping.status, D3D12_TILE_MAPPING_STATUS_MAPPING, D3D12_TILE_MAPPING_STATUS_MAPPED);
             skr_atomicu64_add_relaxed(&TiledInfo.alive_tiles_count, 1);
         }
