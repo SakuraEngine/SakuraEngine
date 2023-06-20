@@ -125,11 +125,11 @@ struct CGPUTiledMemoryPool_D3D12 : public CGPUMemoryPool_D3D12
 
 enum ETileMappingStatus_D3D12
 {
-    TILE_MAPPING_STATUS_UNMAPPED = 0,
-    TILE_MAPPING_STATUS_PENDING = 1,
-    TILE_MAPPING_STATUS_MAPPING = 2,
-    TILE_MAPPING_STATUS_MAPPED = 3,
-    TILE_MAPPING_STATUS_INVALID = 4
+    D3D12_TILE_MAPPING_STATUS_UNMAPPED = 0,
+    D3D12_TILE_MAPPING_STATUS_PENDING = 1,
+    D3D12_TILE_MAPPING_STATUS_MAPPING = 2,
+    D3D12_TILE_MAPPING_STATUS_MAPPED = 3,
+    D3D12_TILE_MAPPING_STATUS_INVALID = 4
 };
 
 struct TileMapping_D3D12
@@ -173,8 +173,8 @@ struct SubresTileMappings_D3D12
     void unmap(uint32_t x, uint32_t y, uint32_t z)
     {
         auto* mapping = at(x, y, z);
-        const auto status = skr_atomic32_cas_relaxed(&mapping->status, TILE_MAPPING_STATUS_MAPPED, TILE_MAPPING_STATUS_UNMAPPED);
-        if (status == TILE_MAPPING_STATUS_MAPPED)
+        const auto status = skr_atomic32_cas_relaxed(&mapping->status, D3D12_TILE_MAPPING_STATUS_MAPPED, D3D12_TILE_MAPPING_STATUS_UNMAPPED);
+        if (status == D3D12_TILE_MAPPING_STATUS_MAPPED)
         {
             SAFE_RELEASE(mapping->pDxAllocation);
         }  

@@ -4,8 +4,8 @@
 
 typedef volatile SKR_ALIGNAS(4) uint32_t SAtomicU32;
 typedef volatile SKR_ALIGNAS(8) uint64_t SAtomicU64;
-typedef volatile SKR_ALIGNAS(4) uint32_t SAtomic32;
-typedef volatile SKR_ALIGNAS(8) uint64_t SAtomic64;
+typedef volatile SKR_ALIGNAS(4) int32_t SAtomic32;
+typedef volatile SKR_ALIGNAS(8) int64_t SAtomic64;
 typedef volatile SKR_ALIGNAS(PTR_SIZE) uintptr_t SAtomicUPtr;
 typedef volatile SKR_ALIGNAS(PTR_SIZE) intptr_t SAtomicPtr;
 

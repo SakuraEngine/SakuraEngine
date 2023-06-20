@@ -2363,12 +2363,11 @@ uint32_t cgpu_acquire_next_image_vulkan(CGPUSwapChainId swapchain, const struct 
     VkSemaphore vsemaphore = Semaphore ? Semaphore->pVkSemaphore : VK_NULL_HANDLE;
     VkFence vfence = Fence ? Fence->pVkFence : VK_NULL_HANDLE;
 
-    vk_res = vkAcquireNextImageKHR(
-    D->pVkDevice, SC->pVkSwapChain,
-    UINT64_MAX,
-    vsemaphore, // sem
-    vfence,     // fence
-    &idx);
+    vk_res = vkAcquireNextImageKHR(D->pVkDevice, SC->pVkSwapChain,
+        UINT64_MAX,
+        vsemaphore, // sem
+        vfence,     // fence
+        &idx);
 
     // If swapchain is out of date, let caller know by setting image index to -1
     if (vk_res == VK_ERROR_OUT_OF_DATE_KHR)

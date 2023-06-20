@@ -35,12 +35,12 @@ struct IORequestBase : public IIORequest
 public:
     SkrAsyncIOFinishStep getFinishStep() const SKR_NOEXCEPT
     { 
-        return (SkrAsyncIOFinishStep)skr_atomicu32_load_acquire(&finish_step); 
+        return (SkrAsyncIOFinishStep)skr_atomic32_load_acquire(&finish_step); 
     }
 
     void setFinishStep(SkrAsyncIOFinishStep step) SKR_NOEXCEPT
     { 
-        skr_atomicu32_store_release(&finish_step, step); 
+        skr_atomic32_store_release(&finish_step, step); 
     }
 
     void tryPollFinish() SKR_NOEXCEPT
@@ -55,7 +55,7 @@ public:
             finish_callbacks[SKR_IO_FINISH_POINT_CANCEL](
                 future, this, finish_callback_datas[SKR_IO_FINISH_POINT_CANCEL]);
         }
-        skr_atomicu32_store_relaxed(&finish_step, SKR_ASYNC_IO_FINISH_STEP_DONE);
+        skr_atomic32_store_relaxed(&finish_step, SKR_ASYNC_IO_FINISH_STEP_DONE);
     }
 
     bool needPollFinish() SKR_NOEXCEPT
