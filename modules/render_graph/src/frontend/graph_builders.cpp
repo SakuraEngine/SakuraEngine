@@ -522,7 +522,7 @@ RenderGraph::TextureBuilder::TextureBuilder(RenderGraph& graph, TextureNode& nod
 {
     node.descriptor.sample_count = CGPU_SAMPLE_COUNT_1;
     node.descriptor.descriptors = CGPU_RESOURCE_TYPE_TEXTURE;
-    node.descriptor.is_dedicated = false;
+    node.descriptor.is_restrict_dedicated = false;
 }
 
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(const char8_t* name) SKR_NOEXCEPT

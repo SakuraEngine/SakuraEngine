@@ -646,7 +646,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
     CGPUTiledTextureInfo* pTiledInfo = CGPU_NULLPTR;
 
     bool owns_image = false;
-    bool is_dedicated = false;
+    bool is_allocation_dedicated = false;
     bool can_alias_alloc = false;
     bool is_imported = false;
 
@@ -794,7 +794,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
             VmaAllocationInfo alloc_info = { 0 };
             if (!is_imported && isSinglePlane)
             {
-                if (!desc->is_dedicated && !is_imported && !(desc->flags & CGPU_TCF_EXPORT_BIT))
+                if (!desc->is_restrict_dedicated && !is_imported && !(desc->flags & CGPU_TCF_EXPORT_BIT))
                 {
                     mem_reqs.flags |= VMA_ALLOCATION_CREATE_CAN_ALIAS_BIT;
                 }
@@ -811,7 +811,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
             if (win32Name != CGPU_NULLPTR) 
                 cgpu_free(win32Name);
 #endif
-            is_dedicated = mem_reqs.flags & VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+            is_allocation_dedicated = mem_reqs.flags & VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
             can_alias_alloc = mem_reqs.flags & VMA_ALLOCATION_CREATE_CAN_ALIAS_BIT;
         }
     }
@@ -848,8 +848,8 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
     cgpu_assert(T);
     info->owns_image = owns_image;
     info->aspect_mask = aspect_mask;
-    info->is_heap_dedicated = is_dedicated;
-    info->is_driver_dedicated = is_dedicated;
+    info->is_allocation_dedicated = is_allocation_dedicated;
+    info->is_restrict_dedicated = desc->is_restrict_dedicated;
     info->is_aliasing = (desc->flags & CGPU_TCF_ALIASING_RESOURCE);
     info->can_alias = can_alias_alloc || info->is_aliasing;
     T->pVkImage = pVkImage;
@@ -1208,7 +1208,7 @@ bool cgpu_try_bind_aliasing_texture_vulkan(CGPUDeviceId device, const struct CGP
         cgpu_assert(AliasingInfo->is_aliasing && "aliasing texture need to be created as aliasing!");
         if (Aliased->pVkImage != VK_NULL_HANDLE && Aliased->pVkAllocation != VK_NULL_HANDLE &&
             Aliasing->pVkImage != VK_NULL_HANDLE &&
-            !AliasedInfo->is_driver_dedicated && AliasingInfo->is_aliasing)
+            !AliasedInfo->is_restrict_dedicated && AliasingInfo->is_aliasing)
         {
             VkMemoryRequirements aliasingMemReq;
             VkMemoryRequirements aliasedMemReq;

@@ -36,7 +36,7 @@ CGPU_EXTERN_C CGPUTextureId cgpu_import_shared_texture_handle_vulkan_win32(CGPUD
     tex_desc.mip_levels = desc->mip_levels;
     tex_desc.array_size = 1;
     tex_desc.native_handle = desc;
-    tex_desc.is_dedicated = true;
+    tex_desc.is_restrict_dedicated = true;
 
     cgpu_trace("Vulkan Win32 Imported shared texture handle %llu %dx%dx%d backend: %d", 
         desc->shared_handle, desc->width, desc->height, desc->depth, desc->backend);

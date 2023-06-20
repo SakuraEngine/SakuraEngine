@@ -167,7 +167,7 @@ TexturePool::Key::Key(CGPUDeviceId device, const CGPUTextureDescriptor& desc)
     , sample_count(desc.sample_count ? desc.sample_count : CGPU_SAMPLE_COUNT_1)
     , sample_quality(desc.sample_quality)
     , descriptors(desc.descriptors)
-    , is_dedicated(desc.is_dedicated)
+    , is_restrict_dedicated(desc.is_restrict_dedicated)
 {
     
 }
