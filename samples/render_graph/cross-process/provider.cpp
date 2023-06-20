@@ -358,7 +358,7 @@ int provider_main(int argc, char* argv[])
                 .extent(to_import->info->width, to_import->info->height)
                 .format((ECGPUFormat)to_import->info->format)
                 .with_flags(CGPU_TCF_EXPORT_BIT)
-                .owns_memory()
+                .allocate_dedicated()
                 .allow_render_target();
             });
         graph->add_render_pass(

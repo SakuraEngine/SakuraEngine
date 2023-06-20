@@ -47,7 +47,7 @@ void create_sampled_texture()
     // Texture
     CGPUTextureDescriptor tex_desc = {
         .descriptors = CGPU_RESOURCE_TYPE_TEXTURE,
-        .flags = CGPU_TCF_OWN_MEMORY_BIT,
+        .flags = CGPU_TCF_DEDICATED_BIT,
         .width = TEXTURE_WIDTH,
         .height = TEXTURE_HEIGHT,
         .depth = 1,
@@ -92,7 +92,7 @@ typedef uint16_t Index;
 void create_vertex_buffer()
 {
     CGPUBufferDescriptor vertex_buffer_desc = {
-        .flags = CGPU_BCF_OWN_MEMORY_BIT,
+        .flags = CGPU_BCF_NONE,
         .descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER,
         .memory_usage = CGPU_MEM_USAGE_GPU_ONLY,
         .element_stride = sizeof(Vertex),
@@ -106,7 +106,7 @@ void create_vertex_buffer()
 void create_index_buffer()
 {
     CGPUBufferDescriptor index_buffer_desc = {
-        .flags = CGPU_BCF_OWN_MEMORY_BIT,
+        .flags = CGPU_BCF_NONE,
         .descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER,
         .memory_usage = CGPU_MEM_USAGE_GPU_ONLY,
         .element_stride = sizeof(Index),
@@ -121,7 +121,7 @@ void upload_resources()
 {
     CGPUBufferDescriptor upload_buffer_desc = {
         .name = "UploadBuffer",
-        .flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT,
+        .flags = CGPU_BCF_PERSISTENT_MAP_BIT,
         .descriptors = CGPU_RESOURCE_TYPE_NONE,
         .memory_usage = CGPU_MEM_USAGE_CPU_ONLY,
         .element_stride = sizeof(TEXTURE_DATA),

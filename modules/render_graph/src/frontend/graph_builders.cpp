@@ -405,9 +405,9 @@ RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::import(CGPUBufferId buff
     return *this;
 }
 
-RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::owns_memory() SKR_NOEXCEPT
+RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::allocate_dedicated() SKR_NOEXCEPT
 {
-    node.descriptor.flags |= CGPU_BCF_OWN_MEMORY_BIT;
+    node.descriptor.flags |= CGPU_BCF_DEDICATED_BIT;
     return *this;
 }
 
@@ -608,9 +608,9 @@ RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_depth_stencil() 
     return *this;
 }
 
-RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::owns_memory() SKR_NOEXCEPT
+RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allocate_dedicated() SKR_NOEXCEPT
 {
-    node.descriptor.flags |= CGPU_TCF_OWN_MEMORY_BIT;
+    node.descriptor.flags |= CGPU_TCF_DEDICATED_BIT;
     return *this;
 }
 

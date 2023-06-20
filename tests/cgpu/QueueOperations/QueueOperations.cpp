@@ -129,7 +129,7 @@ TEST_P(QueueOperations, TransferCmdReadback)
     }
     {
         DECLARE_ZERO(BufferDescriptor, desc)
-        desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+        desc.flags = CGPU_BCF_NONE;
         desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
         desc.start_state = RESOURCE_STATE_COPY_DEST;
         desc.memory_usage = CGPU_MEM_USAGE_GPU_TO_CPU;

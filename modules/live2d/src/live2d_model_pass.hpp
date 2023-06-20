@@ -22,9 +22,9 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
             builder.set_name(u8"live2d_msaa")
                 .extent(back_desc->width, back_desc->height)
                 .format(back_desc->format)
-                .owns_memory()
                 .sample_count((ECGPUSampleCount)sample_level)
                 .allow_render_target();
+            if (back_desc->height > 2048) builder.allocate_dedicated();
         });(void)msaaTarget;
         
         auto depth = renderGraph->create_texture(
@@ -35,9 +35,9 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
             builder.set_name(u8"depth")
                 .extent(back_desc->width, back_desc->height)
                 .format(live2d_depth_format)
-                .owns_memory()
                 .sample_count((ECGPUSampleCount)sample_level)
                 .allow_depth_stencil();
+            if (back_desc->height > 2048) builder.allocate_dedicated();
         });(void)depth;
     }
 

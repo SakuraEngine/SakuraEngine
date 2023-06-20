@@ -579,7 +579,7 @@ typedef enum ECGPUBufferCreationFlag
     /// Default flag (Buffer will use aliased memory, buffer will not be cpu accessible until mapBuffer is called)
     CGPU_BCF_NONE = 0,
     /// Buffer will allocate its own memory (COMMITTED resource)
-    CGPU_BCF_OWN_MEMORY_BIT = 0x02,
+    CGPU_BCF_DEDICATED_BIT = 0x02,
     /// Buffer will be persistently mapped
     CGPU_BCF_PERSISTENT_MAP_BIT = 0x04,
     /// Use ESRAM to store this buffer
@@ -608,7 +608,7 @@ typedef enum ECGPUTextureCreationFlag
     /// Actually VMA/D3D12MA allocate dedicated memories with ALLOW_ALIAS flag with specific loacl heaps
     /// If the texture needs to be restricted Committed/Dedicated(thus you want to keep its priority high)
     /// Toggle is_dedicated flag in CGPUTextureDescriptor
-    CGPU_TCF_OWN_MEMORY_BIT = 0x01,
+    CGPU_TCF_DEDICATED_BIT = 0x01,
     /// Texture will be allocated in memory which can be shared among multiple processes
     CGPU_TCF_EXPORT_BIT = 0x02,
     /// Texture will be allocated in memory which can be shared among multiple gpus

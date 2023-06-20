@@ -107,7 +107,7 @@ CGPUBufferId cgpu_create_buffer_vulkan(CGPUDeviceId device, const struct CGPUBuf
     VmaAllocationCreateInfo vma_mem_reqs = {
         .usage = (VmaMemoryUsage)desc->memory_usage
     };
-    if (desc->flags & CGPU_BCF_OWN_MEMORY_BIT)
+    if (desc->flags & CGPU_BCF_DEDICATED_BIT)
         vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
     if (desc->flags & CGPU_BCF_PERSISTENT_MAP_BIT)
         vma_mem_reqs.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
@@ -749,7 +749,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
         else
         {
             // Allocate texture memory
-            if (desc->flags & CGPU_TCF_OWN_MEMORY_BIT)
+            if (desc->flags & CGPU_TCF_DEDICATED_BIT)
                 mem_reqs.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
             mem_reqs.usage = (VmaMemoryUsage)VMA_MEMORY_USAGE_GPU_ONLY;
             

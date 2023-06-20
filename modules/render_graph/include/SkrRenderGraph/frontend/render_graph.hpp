@@ -154,7 +154,7 @@ public:
         BufferBuilder& set_name(const char8_t* name) SKR_NOEXCEPT;
         BufferBuilder& with_tags(uint32_t tags) SKR_NOEXCEPT;
         BufferBuilder& import(CGPUBufferId buffer, ECGPUResourceState init_state) SKR_NOEXCEPT;
-        BufferBuilder& owns_memory() SKR_NOEXCEPT;
+        BufferBuilder& allocate_dedicated() SKR_NOEXCEPT;
         BufferBuilder& structured(uint64_t first_element, uint64_t element_count, uint64_t element_stride) SKR_NOEXCEPT;
         BufferBuilder& size(uint64_t size) SKR_NOEXCEPT;
         BufferBuilder& with_flags(CGPUBufferCreationFlags flags) SKR_NOEXCEPT;
@@ -193,7 +193,7 @@ public:
         TextureBuilder& allow_render_target() SKR_NOEXCEPT;
         TextureBuilder& allow_depth_stencil() SKR_NOEXCEPT;
         TextureBuilder& allow_readwrite() SKR_NOEXCEPT;
-        TextureBuilder& owns_memory() SKR_NOEXCEPT;
+        TextureBuilder& allocate_dedicated() SKR_NOEXCEPT;
         TextureBuilder& allow_lone() SKR_NOEXCEPT;
 
     protected:

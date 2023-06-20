@@ -95,7 +95,7 @@ TEST_P(ResourceCreation, CreateDStorageQueue)
 TEST_P(ResourceCreation, CreateIndexBuffer)
 {
     DECLARE_ZERO(CGPUBufferDescriptor, desc)
-    desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+    desc.flags = CGPU_BCF_NONE;
     desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER;
     desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     desc.element_stride = sizeof(uint16_t);
@@ -112,7 +112,7 @@ TEST_P(ResourceCreation, CreateTexture)
 {
     DECLARE_ZERO(CGPUTextureDescriptor, desc)
     desc.name = u8"Texture";
-    desc.flags = CGPU_TCF_OWN_MEMORY_BIT;
+    desc.flags = CGPU_TCF_DEDICATED_BIT;
     desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
     desc.start_state = CGPU_RESOURCE_STATE_COMMON;
     desc.descriptors = CGPU_RESOURCE_TYPE_TEXTURE;
@@ -130,7 +130,7 @@ TEST_P(ResourceCreation, CreateTiledTexture)
     {
         DECLARE_ZERO(CGPUTextureDescriptor, desc)
         desc.name = u8"Texture";
-        desc.flags = CGPU_TCF_OWN_MEMORY_BIT | CGPU_TCF_TILED_RESOURCE;
+        desc.flags = CGPU_TCF_DEDICATED_BIT | CGPU_TCF_TILED_RESOURCE;
         desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
         desc.start_state = CGPU_RESOURCE_STATE_COMMON;
         desc.descriptors = CGPU_RESOURCE_TYPE_TEXTURE;
@@ -146,7 +146,7 @@ TEST_P(ResourceCreation, CreateTiledTexture)
 TEST_P(ResourceCreation, CreateUploadBuffer)
 {
     DECLARE_ZERO(CGPUBufferDescriptor, desc)
-    desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+    desc.flags = CGPU_BCF_NONE;
     desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER | CGPU_RESOURCE_TYPE_BUFFER;
     desc.memory_usage = CGPU_MEM_USAGE_CPU_TO_GPU;
     desc.element_stride = sizeof(uint16_t);
