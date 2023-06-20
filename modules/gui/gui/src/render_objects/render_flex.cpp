@@ -1,9 +1,11 @@
 #include "SkrGui/render_objects/render_flex.hpp"
+#include "SkrGui/framework/painting_context.hpp"
 
 // help functions
 namespace skr::gui
 {
 struct _FlexHelper {
+    // main-cross select & combine
     template <typename TH, typename TV>
     inline static auto _select_main(const RenderFlex& self, TH&& horizontal, TV&& vertical) -> decltype(std::declval<TH>()())
     {
@@ -61,19 +63,23 @@ struct _FlexHelper {
         [&]() { return Offset{ cross_offset, main_offset }; });
     }
 
-    inline static bool _is_coord_flipped(const RenderFlex& self) SKR_NOEXCEPT
+    // flip
+    inline static bool _is_coord_flipped(FlexDirection dir)
     {
-        switch (self._flex_direction)
+        switch (dir)
         {
             case FlexDirection::Row:
             case FlexDirection::RowReverse:
-                return true;
+                return false;
             case FlexDirection::Column:
             case FlexDirection::ColumnReverse:
-                return false;
+                return true;
         }
     }
-
+    inline static bool _is_coord_flipped(const RenderFlex& self) SKR_NOEXCEPT
+    {
+        return _is_coord_flipped(self._flex_direction);
+    }
     inline static bool _is_main_axis_flipped(const RenderFlex& self) SKR_NOEXCEPT
     {
         switch (self._flex_direction)
@@ -86,12 +92,18 @@ struct _FlexHelper {
                 return true;
         }
     }
-
     inline static bool _is_cross_axis_flipped(const RenderFlex& self) SKR_NOEXCEPT
     {
         return false;
     }
 
+    // check
+    inline static bool _can_compute_intrinsics(const RenderFlex& self) SKR_NOEXCEPT
+    {
+        return self._cross_axis_alignment != CrossAxisAlignment::Baseline;
+    }
+
+    // compute
     template <typename TLayoutFunc>
     inline static void _compute_sizes(const RenderFlex& self,
                                       BoxConstraints    constraints,
@@ -196,6 +208,88 @@ struct _FlexHelper {
 
         out_main_size = can_flex && self._main_axis_size == MainAxisSize::Max ? max_main_size : out_allocated_size;
     }
+    template <typename TChildSizeFunc>
+    inline static float _get_intrinsics_size(const RenderFlex& self,
+                                             FlexDirection     sizing_direction,
+                                             float             extent,
+                                             TChildSizeFunc&&  child_size_func)
+    {
+        if (!_can_compute_intrinsics(self))
+        {
+            SKR_GUI_LOG_ERROR("Intrinsics are not available for CrossAxisAlignment.baseline, which requires a full layout.");
+            return 0.0f;
+        }
+
+        if (_is_coord_flipped(sizing_direction) == _is_coord_flipped(self))
+        {
+            // INTRINSIC MAIN SIZE
+            // Intrinsic main size is the smallest size the flex container can take
+            // while maintaining the min/max-content contributions of its flex items.
+            float total_flex = 0.f, inflexible_space = 0.f, max_flex_fraction_so_far = 0.f;
+            for (const auto& slot : self._flexible_slots)
+            {
+                total_flex += slot.flex;
+                if (slot.flex > 0)
+                {
+                    const float flex_fraction = child_size_func(slot.child, extent) / slot.flex;
+                    max_flex_fraction_so_far = std::max(max_flex_fraction_so_far, flex_fraction);
+                }
+                else
+                {
+                    inflexible_space += child_size_func(slot.child, extent);
+                }
+            }
+            return max_flex_fraction_so_far * total_flex + inflexible_space;
+        }
+        else
+        {
+            // INTRINSIC CROSS SIZE
+            // Intrinsic cross size is the max of the intrinsic cross sizes of the
+            // children, after the flexible children are fit into the available space,
+            // with the children sized using their max intrinsic dimensions.
+
+            // Get inflexible space using the max intrinsic dimensions of fixed children in the main direction.
+            const float available_main_size = extent;
+            float       total_flex = 0.f, inflexible_space = 0.f, max_cross_size = 0.f;
+            for (const auto& slot : self._flexible_slots)
+            {
+                total_flex += slot.flex;
+                float main_size, cross_size;
+                if (slot.flex == 0)
+                {
+                    switch (self._flex_direction)
+                    {
+                        case FlexDirection::Row:
+                        case FlexDirection::RowReverse:
+                            main_size = slot.child->get_max_intrinsic_width(std::numeric_limits<float>::infinity());
+                            cross_size = child_size_func(slot.child, main_size);
+                            break;
+                        case FlexDirection::Column:
+                        case FlexDirection::ColumnReverse:
+                            main_size = slot.child->get_max_intrinsic_height(std::numeric_limits<float>::infinity());
+                            cross_size = child_size_func(slot.child, main_size);
+                            break;
+                    }
+                    inflexible_space += main_size;
+                    max_cross_size = std::max(max_cross_size, cross_size);
+                }
+            }
+
+            // Determine the spacePerFlex by allocating the remaining available space.
+            // When you're overconstrained spacePerFlex can be negative.
+            const float space_per_flex = std::max(0.f, (available_main_size - inflexible_space) / total_flex);
+
+            // Size remaining (flexible) items, find the maximum cross size.
+            for (const auto& slot : self._flexible_slots)
+            {
+                if (slot.flex > 0)
+                {
+                    max_cross_size = std::max(max_cross_size, child_size_func(slot.child, space_per_flex * slot.flex));
+                }
+            }
+            return max_cross_size;
+        }
+    }
 };
 } // namespace skr::gui
 
@@ -204,30 +298,67 @@ namespace skr::gui
 // intrinsic size
 float RenderFlex::compute_min_intrinsic_width(float height) const SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return Super::get_min_intrinsic_width(height);
+    return _FlexHelper::_get_intrinsics_size(
+    *this,
+    FlexDirection::Row, // reverse is not cared here
+    height,
+    [](const RenderBox* child, float extent) {
+        return child->get_min_intrinsic_width(extent);
+    });
 }
 float RenderFlex::compute_max_intrinsic_width(float height) const SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return Super::get_max_intrinsic_width(height);
+    return _FlexHelper::_get_intrinsics_size(
+    *this,
+    FlexDirection::Row, // reverse is not cared here
+    height,
+    [](const RenderBox* child, float extent) {
+        return child->get_max_intrinsic_width(extent);
+    });
 }
 float RenderFlex::compute_min_intrinsic_height(float width) const SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return Super::get_min_intrinsic_height(width);
+    return _FlexHelper::_get_intrinsics_size(
+    *this,
+    FlexDirection::Column, // reverse is not cared here
+    width,
+    [](const RenderBox* child, float extent) {
+        return child->get_min_intrinsic_height(extent);
+    });
 }
 float RenderFlex::compute_max_intrinsic_height(float width) const SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return Super::get_max_intrinsic_height(width);
+    return _FlexHelper::_get_intrinsics_size(
+    *this,
+    FlexDirection::Column, // reverse is not cared here
+    width,
+    [](const RenderBox* child, float extent) {
+        return child->get_max_intrinsic_height(extent);
+    });
 }
 
 // dry layout
 Size RenderFlex::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return Super::compute_dry_layout(constraints);
+    if (!_FlexHelper::_can_compute_intrinsics(*this))
+    {
+        SKR_GUI_LOG_ERROR("Dry layout cannot be computed for CrossAxisAlignment.baseline, which requires a full layout.");
+        return Size::zero();
+    }
+
+    // compute sizes
+    float main_size, cross_size, allocated_size;
+    _FlexHelper::_compute_sizes(
+    *this,
+    constraints,
+    +[](RenderBox* child, const BoxConstraints& constraints) {
+        return child->get_dry_layout(constraints);
+    },
+    main_size,
+    cross_size,
+    allocated_size);
+
+    return _FlexHelper::_combine_size(*this, main_size, cross_size);
 }
 
 // layout
@@ -253,7 +384,10 @@ void RenderFlex::perform_layout() SKR_NOEXCEPT
     cross_size,
     allocated_size);
 
+    // update self size
     set_size(constraints().constrain(is_coord_flipped ? Size{ cross_size, main_size } : Size{ main_size, cross_size }));
+    main_size = _FlexHelper::_get_main_size(*this, size());
+    cross_size = _FlexHelper::_get_cross_size(*this, size());
 
     // Step6. Place each child based on main axis alignment and cross axis alignment
     float leading_space, between_space;
@@ -334,6 +468,23 @@ void RenderFlex::perform_layout() SKR_NOEXCEPT
 
         // update main axis offset
         child_main_offset += flip_main_axis ? -between_space : child_main_size + between_space;
+    }
+}
+
+// paint
+void RenderFlex::paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT
+{
+    // TODO. handle overflow
+    for (const auto& slot : _flexible_slots)
+    {
+        if (slot.child)
+        {
+            context->paint_child(make_not_null(slot.child), slot.offset + offset);
+        }
+        else
+        {
+            SKR_GUI_LOG_ERROR("RenderFlex::paint: child is nullptr.");
+        }
     }
 }
 } // namespace skr::gui
