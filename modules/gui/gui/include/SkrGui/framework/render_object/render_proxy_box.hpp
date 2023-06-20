@@ -7,8 +7,6 @@ namespace skr::gui
 // 代理 Box，其渲染 Size 等属性严格由 child 决定，通常起到修饰作用
 struct RenderProxyBox : public RenderBox, public ISingleChildRenderObject {
     SKR_GUI_TYPE(RenderProxyBox, "7b69daee-a739-4497-b64a-a7421035975d", RenderBox, ISingleChildRenderObject);
-    RenderProxyBox();
-    ~RenderProxyBox();
 
 protected:
     // intrinsic size

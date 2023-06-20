@@ -8,9 +8,6 @@ namespace skr::gui
 struct RenderShiftedBox : public RenderBox, public ISingleChildRenderObject {
     SKR_GUI_TYPE(RenderShiftedBox, "58e69c83-86c1-4f86-90e0-a82d4f78038c", RenderBox, ISingleChildRenderObject);
 
-    RenderShiftedBox();
-    ~RenderShiftedBox();
-
     inline Offset offset() const SKR_NOEXCEPT { return _offset; }
     inline void   set_offset(Offset offset) SKR_NOEXCEPT { _offset = offset; }
 

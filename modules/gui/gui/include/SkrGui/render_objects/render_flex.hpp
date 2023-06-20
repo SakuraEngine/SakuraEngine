@@ -23,6 +23,9 @@ public:
     // layout
     void perform_layout() SKR_NOEXCEPT override;
 
+    // paint
+    void paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT override;
+
     struct Slot {
         float   flex = 1;
         FlexFit flex_fit = FlexFit::Loose;
@@ -39,7 +42,7 @@ private:
     MainAxisSize       _main_axis_size = MainAxisSize::Max;
     Array<Slot>        _flexible_slots;
 
-    float _overflow;
+    float _overflow = 0.0f;
 };
 
 } // namespace skr::gui
