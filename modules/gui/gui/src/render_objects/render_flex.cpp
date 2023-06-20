@@ -11,12 +11,12 @@ struct _FlexHelper {
     {
         switch (self._flex_direction)
         {
-            case FlexDirection::Row:
-            case FlexDirection::RowReverse:
+            case EFlexDirection::Row:
+            case EFlexDirection::RowReverse:
                 return horizontal();
                 break;
-            case FlexDirection::Column:
-            case FlexDirection::ColumnReverse:
+            case EFlexDirection::Column:
+            case EFlexDirection::ColumnReverse:
                 return vertical();
                 break;
         }
@@ -26,12 +26,12 @@ struct _FlexHelper {
     {
         switch (self._flex_direction)
         {
-            case FlexDirection::Row:
-            case FlexDirection::RowReverse:
+            case EFlexDirection::Row:
+            case EFlexDirection::RowReverse:
                 return vertical();
                 break;
-            case FlexDirection::Column:
-            case FlexDirection::ColumnReverse:
+            case EFlexDirection::Column:
+            case EFlexDirection::ColumnReverse:
                 return horizontal();
                 break;
         }
@@ -64,15 +64,15 @@ struct _FlexHelper {
     }
 
     // flip
-    inline static bool _is_coord_flipped(FlexDirection dir)
+    inline static bool _is_coord_flipped(EFlexDirection dir)
     {
         switch (dir)
         {
-            case FlexDirection::Row:
-            case FlexDirection::RowReverse:
+            case EFlexDirection::Row:
+            case EFlexDirection::RowReverse:
                 return false;
-            case FlexDirection::Column:
-            case FlexDirection::ColumnReverse:
+            case EFlexDirection::Column:
+            case EFlexDirection::ColumnReverse:
                 return true;
         }
     }
@@ -84,11 +84,11 @@ struct _FlexHelper {
     {
         switch (self._flex_direction)
         {
-            case FlexDirection::Row:
-            case FlexDirection::Column:
+            case EFlexDirection::Row:
+            case EFlexDirection::Column:
                 return false;
-            case FlexDirection::RowReverse:
-            case FlexDirection::ColumnReverse:
+            case EFlexDirection::RowReverse:
+            case EFlexDirection::ColumnReverse:
                 return true;
         }
     }
@@ -100,7 +100,7 @@ struct _FlexHelper {
     // check
     inline static bool _can_compute_intrinsics(const RenderFlex& self) SKR_NOEXCEPT
     {
-        return self._cross_axis_alignment != CrossAxisAlignment::Baseline;
+        return self._cross_axis_alignment != ECrossAxisAlignment::Baseline;
     }
 
     // compute
@@ -131,7 +131,7 @@ struct _FlexHelper {
             else
             {
                 // solve child constraints
-                BoxConstraints inner_constraints = self._cross_axis_alignment == CrossAxisAlignment::Stretch ?
+                BoxConstraints inner_constraints = self._cross_axis_alignment == ECrossAxisAlignment::Stretch ?
                                                    is_coord_flipped ?
                                                    BoxConstraints::TightWidth(constraints.max_width) :
                                                    BoxConstraints::TightHeight(constraints.max_height) :
@@ -161,16 +161,16 @@ struct _FlexHelper {
                     float       min_child_extent;
                     switch (slot.flex_fit)
                     {
-                        case FlexFit::Tight:
+                        case EFlexFit::Tight:
                             min_child_extent = max_child_extent;
                             break;
-                        case FlexFit::Loose:
+                        case EFlexFit::Loose:
                             min_child_extent = 0.0f;
                             break;
                     }
 
                     // solve child constraints
-                    BoxConstraints inner_constraints = self._cross_axis_alignment == CrossAxisAlignment::Stretch ?
+                    BoxConstraints inner_constraints = self._cross_axis_alignment == ECrossAxisAlignment::Stretch ?
                                                        is_coord_flipped ?
                                                        BoxConstraints{
                                                            constraints.max_width,
@@ -206,17 +206,17 @@ struct _FlexHelper {
             }
         }
 
-        out_main_size = can_flex && self._main_axis_size == MainAxisSize::Max ? max_main_size : out_allocated_size;
+        out_main_size = can_flex && self._main_axis_size == EMainAxisSize::Max ? max_main_size : out_allocated_size;
     }
     template <typename TChildSizeFunc>
     inline static float _get_intrinsics_size(const RenderFlex& self,
-                                             FlexDirection     sizing_direction,
+                                             EFlexDirection    sizing_direction,
                                              float             extent,
                                              TChildSizeFunc&&  child_size_func)
     {
         if (!_can_compute_intrinsics(self))
         {
-            SKR_GUI_LOG_ERROR("Intrinsics are not available for CrossAxisAlignment.baseline, which requires a full layout.");
+            SKR_GUI_LOG_ERROR("Intrinsics are not available for ECrossAxisAlignment.baseline, which requires a full layout.");
             return 0.0f;
         }
 
@@ -259,13 +259,13 @@ struct _FlexHelper {
                 {
                     switch (self._flex_direction)
                     {
-                        case FlexDirection::Row:
-                        case FlexDirection::RowReverse:
+                        case EFlexDirection::Row:
+                        case EFlexDirection::RowReverse:
                             main_size = slot.child->get_max_intrinsic_width(std::numeric_limits<float>::infinity());
                             cross_size = child_size_func(slot.child, main_size);
                             break;
-                        case FlexDirection::Column:
-                        case FlexDirection::ColumnReverse:
+                        case EFlexDirection::Column:
+                        case EFlexDirection::ColumnReverse:
                             main_size = slot.child->get_max_intrinsic_height(std::numeric_limits<float>::infinity());
                             cross_size = child_size_func(slot.child, main_size);
                             break;
@@ -300,7 +300,7 @@ float RenderFlex::compute_min_intrinsic_width(float height) const SKR_NOEXCEPT
 {
     return _FlexHelper::_get_intrinsics_size(
     *this,
-    FlexDirection::Row, // reverse is not cared here
+    EFlexDirection::Row, // reverse is not cared here
     height,
     [](const RenderBox* child, float extent) {
         return child->get_min_intrinsic_width(extent);
@@ -310,7 +310,7 @@ float RenderFlex::compute_max_intrinsic_width(float height) const SKR_NOEXCEPT
 {
     return _FlexHelper::_get_intrinsics_size(
     *this,
-    FlexDirection::Row, // reverse is not cared here
+    EFlexDirection::Row, // reverse is not cared here
     height,
     [](const RenderBox* child, float extent) {
         return child->get_max_intrinsic_width(extent);
@@ -320,7 +320,7 @@ float RenderFlex::compute_min_intrinsic_height(float width) const SKR_NOEXCEPT
 {
     return _FlexHelper::_get_intrinsics_size(
     *this,
-    FlexDirection::Column, // reverse is not cared here
+    EFlexDirection::Column, // reverse is not cared here
     width,
     [](const RenderBox* child, float extent) {
         return child->get_min_intrinsic_height(extent);
@@ -330,7 +330,7 @@ float RenderFlex::compute_max_intrinsic_height(float width) const SKR_NOEXCEPT
 {
     return _FlexHelper::_get_intrinsics_size(
     *this,
-    FlexDirection::Column, // reverse is not cared here
+    EFlexDirection::Column, // reverse is not cared here
     width,
     [](const RenderBox* child, float extent) {
         return child->get_max_intrinsic_height(extent);
@@ -342,8 +342,8 @@ Size RenderFlex::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCE
 {
     if (!_FlexHelper::_can_compute_intrinsics(*this))
     {
-        SKR_GUI_LOG_ERROR("Dry layout cannot be computed for CrossAxisAlignment.baseline, which requires a full layout.");
-        return Size::zero();
+        SKR_GUI_LOG_ERROR("Dry layout cannot be computed for ECrossAxisAlignment.baseline, which requires a full layout.");
+        return Size::Zero();
     }
 
     // compute sizes
@@ -401,27 +401,27 @@ void RenderFlex::perform_layout() SKR_NOEXCEPT
         const auto child_count = _flexible_slots.size();
         switch (_main_axis_alignment)
         {
-            case MainAxisAlignment::Start:
+            case EMainAxisAlignment::Start:
                 leading_space = 0.0f;
                 between_space = 0.0f;
                 break;
-            case MainAxisAlignment::End:
+            case EMainAxisAlignment::End:
                 leading_space = slack_space;
                 between_space = 0.0f;
                 break;
-            case MainAxisAlignment::Center:
+            case EMainAxisAlignment::Center:
                 leading_space = slack_space / 2.0f;
                 between_space = 0.0f;
                 break;
-            case MainAxisAlignment::SpaceBetween:
+            case EMainAxisAlignment::SpaceBetween:
                 leading_space = 0.0f;
                 between_space = child_count > 1 ? (slack_space / (child_count - 1)) : 0.0f;
                 break;
-            case MainAxisAlignment::SpaceAround:
+            case EMainAxisAlignment::SpaceAround:
                 between_space = child_count > 0 ? (slack_space / child_count) : 0.0f;
                 leading_space = between_space / 2.0f;
                 break;
-            case MainAxisAlignment::SpaceEvenly:
+            case EMainAxisAlignment::SpaceEvenly:
                 between_space = child_count > 0 ? (slack_space / (child_count + 1)) : 0.0f;
                 leading_space = between_space;
                 break;
@@ -442,19 +442,19 @@ void RenderFlex::perform_layout() SKR_NOEXCEPT
         float child_cross_offset;
         switch (_cross_axis_alignment)
         {
-            case CrossAxisAlignment::Start:
+            case ECrossAxisAlignment::Start:
                 child_cross_offset = flip_cross_axis ? cross_size - child_cross_size : 0.f;
                 break;
-            case CrossAxisAlignment::End:
+            case ECrossAxisAlignment::End:
                 child_cross_offset = flip_cross_axis ? 0.0f : cross_size - child_cross_size;
                 break;
-            case CrossAxisAlignment::Center:
+            case ECrossAxisAlignment::Center:
                 child_cross_offset = (cross_size - child_cross_size) / 2.f;
                 break;
-            case CrossAxisAlignment::Stretch:
+            case ECrossAxisAlignment::Stretch:
                 child_cross_offset = 0.f;
                 break;
-            case CrossAxisAlignment::Baseline:
+            case ECrossAxisAlignment::Baseline:
                 // TODO. baseline
                 child_cross_offset = 0.f;
                 break;

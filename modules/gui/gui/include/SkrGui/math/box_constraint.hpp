@@ -159,6 +159,15 @@ struct BoxConstraints {
         size.height = constrain_height(size.height);
         return size;
     }
+    inline constexpr BoxConstraints loosen() const SKR_NOEXCEPT
+    {
+        return {
+            0,
+            max_width,
+            0,
+            max_height,
+        };
+    }
     inline BoxConstraints enforce(BoxConstraints constraints) const
     {
         return {

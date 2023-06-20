@@ -21,11 +21,9 @@ struct Offset {
     float y = 0;
 
     // factory
-    inline static Offset Radians(float radians, float radius = 1) SKR_NOEXCEPT { return { radius * std::cos(radians), radius * std::sin(radians) }; }
-
-    // constant
-    inline static constexpr Offset zero() SKR_NOEXCEPT { return { 0, 0 }; }
-    inline static constexpr Offset infinite() SKR_NOEXCEPT { return { std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() }; }
+    inline static constexpr Offset Zero() SKR_NOEXCEPT { return { 0, 0 }; }
+    inline static constexpr Offset Infinite() SKR_NOEXCEPT { return { std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() }; }
+    inline static Offset           Radians(float radians, float radius = 1) SKR_NOEXCEPT { return { radius * std::cos(radians), radius * std::sin(radians) }; }
 
     // infinite
     inline bool is_infinite() const SKR_NOEXCEPT
@@ -84,25 +82,14 @@ struct Size {
     float width = 0;
     float height = 0;
 
-private:
-    struct __InfinityParams {
-        float width = std::numeric_limits<float>::infinity();
-        float height = std::numeric_limits<float>::infinity();
-    };
-
 public:
     // factory
-    inline static constexpr Size Inf(__InfinityParams params) SKR_NOEXCEPT { return { params.width, params.height }; }
+    inline static constexpr Size Zero() SKR_NOEXCEPT { return { 0, 0 }; }
+    inline static constexpr Size Infinite() SKR_NOEXCEPT { return { std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() }; }
+    inline static constexpr Size InfiniteWidth(float height) SKR_NOEXCEPT { return { std::numeric_limits<float>::infinity(), height }; }
+    inline static constexpr Size InfiniteHeight(float width) SKR_NOEXCEPT { return { width, std::numeric_limits<float>::infinity() }; }
     inline static constexpr Size Square(float size) SKR_NOEXCEPT { return { size, size }; }
     inline static constexpr Size Radius(float radius) SKR_NOEXCEPT { return { radius * 2, radius * 2 }; }
-
-public:
-    // constant
-    inline static constexpr Size zero() SKR_NOEXCEPT
-    {
-        return { 0, 0 };
-    }
-    inline static constexpr Size infinite() SKR_NOEXCEPT { return { std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() }; }
 
     // infinite
     inline bool is_infinite() const SKR_NOEXCEPT
@@ -209,6 +196,16 @@ struct Rect {
 
 public:
     // factory
+    inline static constexpr Rect Zero() SKR_NOEXCEPT { return { 0, 0, 0, 0 }; }
+    inline static constexpr Rect Largest() SKR_NOEXCEPT
+    {
+        return {
+            std::numeric_limits<float>::min(),
+            std::numeric_limits<float>::min(),
+            std::numeric_limits<float>::max(),
+            std::numeric_limits<float>::max(),
+        };
+    }
     inline static constexpr Rect LTWH(float left, float top, float width, float height) SKR_NOEXCEPT
     {
         return {
@@ -252,18 +249,6 @@ public:
             offset.y,
             offset.x + size.width,
             offset.y + size.height,
-        };
-    }
-
-    // constant
-    inline static constexpr Rect zero() SKR_NOEXCEPT { return { 0, 0, 0, 0 }; }
-    inline static constexpr Rect largest() SKR_NOEXCEPT
-    {
-        return {
-            std::numeric_limits<float>::min(),
-            std::numeric_limits<float>::min(),
-            std::numeric_limits<float>::max(),
-            std::numeric_limits<float>::max(),
         };
     }
 
@@ -404,6 +389,68 @@ public:
             }
         }
     }
+};
+
+struct Alignment {
+    float x = 0;
+    float y = 0;
+
+    // factory
+    inline static constexpr Alignment TopLeft() { return { 0, 0 }; }
+    inline static constexpr Alignment TopCenter() { return { 0.5f, 0 }; }
+    inline static constexpr Alignment TopRight() { return { 1, 0 }; }
+    inline static constexpr Alignment CenterLeft() { return { 0, 0.5f }; }
+    inline static constexpr Alignment Center() { return { 0.5f, 0.5f }; }
+    inline static constexpr Alignment CenterRight() { return { 1, 0.5f }; }
+    inline static constexpr Alignment BottomLeft() { return { 0, 1 }; }
+    inline static constexpr Alignment BottomCenter() { return { 0.5f, 1 }; }
+    inline static constexpr Alignment BottomRight() { return { 1, 1 }; }
+
+    // arithmetic
+    inline constexpr Alignment operator-() const SKR_NOEXCEPT { return { -x, -y }; }
+
+    inline constexpr Alignment operator+(float rhs) const SKR_NOEXCEPT { return { x + rhs, y + rhs }; }
+    inline constexpr Alignment operator-(float rhs) const SKR_NOEXCEPT { return { x - rhs, y - rhs }; }
+    inline constexpr Alignment operator*(float rhs) const SKR_NOEXCEPT { return { x * rhs, y * rhs }; }
+    inline constexpr Alignment operator/(float rhs) const SKR_NOEXCEPT { return { x / rhs, y / rhs }; }
+    inline Alignment           operator%(float rhs) const SKR_NOEXCEPT { return { std::fmod(x, rhs), std::fmod(y, rhs) }; }
+
+    inline constexpr Alignment operator+(const Alignment& rhs) const SKR_NOEXCEPT { return { x + rhs.x, y + rhs.y }; }
+    inline constexpr Alignment operator-(const Alignment& rhs) const SKR_NOEXCEPT { return { x - rhs.x, y - rhs.y }; }
+    inline constexpr Alignment operator*(const Alignment& rhs) const SKR_NOEXCEPT { return { x * rhs.x, y * rhs.y }; }
+    inline constexpr Alignment operator/(const Alignment& rhs) const SKR_NOEXCEPT { return { x / rhs.x, y / rhs.y }; }
+    inline Alignment           operator%(const Alignment& rhs) const SKR_NOEXCEPT { return { std::fmod(x, rhs.x), std::fmod(y, rhs.y) }; }
+
+    inline constexpr Alignment& operator+=(float rhs) SKR_NOEXCEPT { return *this = *this + rhs; }
+    inline constexpr Alignment& operator-=(float rhs) SKR_NOEXCEPT { return *this = *this - rhs; }
+    inline constexpr Alignment& operator*=(float rhs) SKR_NOEXCEPT { return *this = *this * rhs; }
+    inline constexpr Alignment& operator/=(float rhs) SKR_NOEXCEPT { return *this = *this / rhs; }
+    inline Alignment&           operator%=(float rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
+
+    inline constexpr Alignment& operator+=(const Alignment& rhs) SKR_NOEXCEPT { return *this = *this + rhs; }
+    inline constexpr Alignment& operator-=(const Alignment& rhs) SKR_NOEXCEPT { return *this = *this - rhs; }
+    inline constexpr Alignment& operator*=(const Alignment& rhs) SKR_NOEXCEPT { return *this = *this * rhs; }
+    inline constexpr Alignment& operator/=(const Alignment& rhs) SKR_NOEXCEPT { return *this = *this / rhs; }
+    inline Alignment&           operator%=(const Alignment& rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
+
+    // alignment along
+    inline constexpr Offset along_offset(const Offset& offset) const SKR_NOEXCEPT { return { offset.x * x, offset.y * y }; }
+    inline constexpr Offset along_size(const Size& size) const SKR_NOEXCEPT { return { size.width * x, size.height * y }; }
+    inline constexpr Offset along_rect(const Rect& rect) const SKR_NOEXCEPT { return { rect.left + rect.width() * x, rect.top + rect.height() * y }; }
+
+    // compare
+    inline constexpr bool operator==(const Alignment& rhs) const SKR_NOEXCEPT { return x == rhs.x && y == rhs.y; }
+    inline constexpr bool operator!=(const Alignment& rhs) const SKR_NOEXCEPT { return x != rhs.x || y != rhs.y; }
+
+    // location rect
+    inline constexpr Rect inscribe(const Size& child_size, const Rect& parent_rect) const SKR_NOEXCEPT
+    {
+        const Size size_delta = parent_rect.size() - child_size;
+        return Rect::LTWH(parent_rect.left + size_delta.width * x, parent_rect.top + size_delta.height * y, child_size.width, child_size.height);
+    }
+
+    // lerp
+    inline constexpr Alignment lerp(const Alignment& rhs, float t) const SKR_NOEXCEPT { return { ::skr::gui::lerp(x, rhs.x, t), ::skr::gui::lerp(y, rhs.y, t) }; }
 };
 
 // TODO. Ray Hit Test

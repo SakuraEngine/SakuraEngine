@@ -5,10 +5,9 @@
 namespace skr::gui
 {
 
-class SKR_GUI_API RenderFlex : public RenderBox
-{
+struct SKR_GUI_API RenderStack : public RenderBox {
 public:
-    SKR_GUI_TYPE(RenderFlex, "d3987dfd-24d2-478a-910e-537f24c4bae7", RenderBox);
+    SKR_GUI_TYPE(RenderStack, "b3c8ede6-d878-472c-a1c1-6b3acdc9f1f0", RenderBox);
     using Super = RenderBox;
 
     // intrinsic size
@@ -28,8 +27,6 @@ public:
 
     struct Slot {
         // slot data
-        float    flex = 1;
-        EFlexFit flex_fit = EFlexFit::Loose;
 
         // child data
         Offset     offset = Offset::Zero();
@@ -37,14 +34,11 @@ public:
     };
 
 private:
-    friend struct _FlexHelper;
-    EFlexDirection      _flex_direction = EFlexDirection::Row;
-    EMainAxisAlignment  _main_axis_alignment = EMainAxisAlignment::Start;
-    ECrossAxisAlignment _cross_axis_alignment = ECrossAxisAlignment::Start;
-    EMainAxisSize       _main_axis_size = EMainAxisSize::Max;
-    Array<Slot>         _flexible_slots;
-
-    float _overflow = 0.0f;
+    friend struct _StackHelper;
+    Alignment      _stack_alignment = Alignment::TopLeft();
+    EPositionalFit _child_fit = EPositionalFit::PassThrough;
+    EStackSize     _stack_size = EStackSize::Shrink;
+    Array<Slot>    _stack_slots;
 };
 
 } // namespace skr::gui

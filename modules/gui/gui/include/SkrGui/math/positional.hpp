@@ -116,19 +116,19 @@ inline constexpr PositionalUnit operator""_pct(unsigned long long value) SKR_NOE
 // 布局定位 + 约束
 struct Positional {
     // 约束定位 or 锚点定位
-    PositionalUnit left = PositionalUnit::null();
-    PositionalUnit top = PositionalUnit::null();
-    PositionalUnit right = PositionalUnit::null();
-    PositionalUnit bottom = PositionalUnit::null();
+    PositionalUnit left = PositionalUnit::null();   // constraints offset (both min and max)
+    PositionalUnit top = PositionalUnit::null();    // constraints offset (both min and max)
+    PositionalUnit right = PositionalUnit::null();  // constraints offset (both min and max)
+    PositionalUnit bottom = PositionalUnit::null(); // constraints offset (both min and max)
 
     // 锚点定位中使用的尺寸约束
-    PositionalUnit min_width = PositionalUnit::null();  // as 0 if needs
-    PositionalUnit max_width = PositionalUnit::null();  // as inf if needs
-    PositionalUnit min_height = PositionalUnit::null(); // as o if needs
-    PositionalUnit max_height = PositionalUnit::null(); // as inf if needs
+    PositionalUnit min_width = PositionalUnit::null();  // min width constraints override(px) or scale(pct)
+    PositionalUnit max_width = PositionalUnit::null();  // max width constraints override(px) or scale(pct)
+    PositionalUnit min_height = PositionalUnit::null(); // min height constraints override(px) or scale(pct)
+    PositionalUnit max_height = PositionalUnit::null(); // max height constraints override(px) of scale(pct)
 
     // 锚点
-    Offset pivot = { 0, 0 }; // percent of child size
+    Alignment pivot = { 0, 0 }; // child pivot postion (in percent)
 
     // factory
     inline constexpr static Positional Fill()
@@ -329,7 +329,7 @@ struct Positional {
             _positional.max_height = value;
             return *this;
         }
-        inline constexpr AnchorBuilder& pivot(Offset value) SKR_NOEXCEPT
+        inline constexpr AnchorBuilder& pivot(Alignment value) SKR_NOEXCEPT
         {
             _positional.pivot = value;
             return *this;
@@ -472,7 +472,7 @@ struct Positional {
         bottom = b;
         return AnchorBuilder(*this);
     }
-    inline constexpr AlignBuilder align(Offset align_point) SKR_NOEXCEPT
+    inline constexpr AlignBuilder align(Alignment align_point) SKR_NOEXCEPT
     {
         left = PositionalUnit::pct(align_point.x);
         top = PositionalUnit::pct(align_point.y);
@@ -562,8 +562,8 @@ struct Positional {
     inline BoxConstraints resolve_constraints(const BoxConstraints& parent_constraints) const SKR_NOEXCEPT
     {
         // 约束逻辑，以横轴为例，竖轴同理：
-        // 1. padding mode [left && right] -> width = parent_width - left - right
-        // 2. 根据 min_width max_width 的设置情况传递约束
+        //     padding mode: [left && right] -> width = parent_width - left - right
+        //     anchor mode: 根据 min_width max_width 的设置情况传递约束，如果都没设则不做约束
 
         BoxConstraints result = {};
 

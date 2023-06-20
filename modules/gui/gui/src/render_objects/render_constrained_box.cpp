@@ -53,7 +53,7 @@ Size RenderConstrainedBox::compute_dry_layout(BoxConstraints constraints) const 
     }
     else
     {
-        return additional_constraint().enforce(constraints).constrain(Size::zero());
+        return additional_constraint().enforce(constraints).constrain(Size::Zero());
     }
 }
 
@@ -68,7 +68,7 @@ void RenderConstrainedBox::perform_layout() SKR_NOEXCEPT
     }
     else
     {
-        set_size(additional_constraint().enforce(constraints()).constrain(Size::zero()));
+        set_size(additional_constraint().enforce(constraints()).constrain(Size::Zero()));
     }
 }
 } // namespace skr::gui
