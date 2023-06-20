@@ -703,6 +703,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
             .pQueueFamilyIndices = NULL,
             .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
         };
+        
         aspect_mask = VkUtil_DeterminAspectMask(imageCreateInfo.format, true);
         
         // Usage flags
@@ -868,7 +869,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
     // Set Texture Name
     VkUtil_OptionalSetObjectName(D, (uint64_t)T->pVkImage, VK_OBJECT_TYPE_IMAGE, desc->name);
     // Start state
-    if (Q && T->pVkImage != VK_NULL_HANDLE && T->pVkAllocation != VK_NULL_HANDLE)
+    if (Q && T->pVkImage != VK_NULL_HANDLE)
     {
 #ifdef CGPU_THREAD_SAFETY
         if (Q->pMutex) skr_mutex_acquire(Q->pMutex);
@@ -990,9 +991,9 @@ void cgpu_queue_map_tiled_texture_vulkan(CGPUQueueId queue, const struct CGPUTil
                 pBind->subresource.mipLevel = Region.mip_level;
                 pBind->subresource.arrayLayer = Region.layer;
 
-                pBind->offset.x = pTiledInfo->tile_width_in_texels * (Region.start.x + x);
-                pBind->offset.y = pTiledInfo->tile_height_in_texels * (Region.start.y + y);
-                pBind->offset.z = pTiledInfo->tile_depth_in_texels * (Region.start.z + z);
+                pBind->offset.x = pTiledInfo->tile_width_in_texels * x;
+                pBind->offset.y = pTiledInfo->tile_height_in_texels * y;
+                pBind->offset.z = pTiledInfo->tile_depth_in_texels * z;
 
                 pBind->extent.width = pTiledInfo->tile_width_in_texels;
                 pBind->extent.height = pTiledInfo->tile_height_in_texels;
