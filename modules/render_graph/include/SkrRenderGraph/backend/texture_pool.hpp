@@ -29,9 +29,9 @@ public:
     struct Key {
         const CGPUDeviceId device;
         const CGPUTextureCreationFlags flags;
-        uint32_t width;
-        uint32_t height;
-        uint32_t depth;
+        uint64_t width;
+        uint64_t height;
+        uint64_t depth;
         uint32_t array_size;
         ECGPUFormat format;
         uint32_t mip_levels;

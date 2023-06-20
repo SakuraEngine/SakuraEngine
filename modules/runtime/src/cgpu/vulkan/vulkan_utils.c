@@ -720,12 +720,12 @@ void VkUtil_SelectQueueIndices(CGPUAdapter_Vulkan* VkAdapter)
 {
     // Query Queue Information.
     vkGetPhysicalDeviceQueueFamilyProperties(
-    VkAdapter->pPhysicalDevice, &VkAdapter->mQueueFamiliesCount,
-    CGPU_NULLPTR);
+        VkAdapter->pPhysicalDevice, &VkAdapter->mQueueFamiliesCount,
+        CGPU_NULLPTR);
     VkAdapter->pQueueFamilyProperties = (VkQueueFamilyProperties*)cgpu_calloc(
     VkAdapter->mQueueFamiliesCount, sizeof(VkQueueFamilyProperties));
-    vkGetPhysicalDeviceQueueFamilyProperties(VkAdapter->pPhysicalDevice,
-    &VkAdapter->mQueueFamiliesCount, VkAdapter->pQueueFamilyProperties);
+        vkGetPhysicalDeviceQueueFamilyProperties(VkAdapter->pPhysicalDevice,
+        &VkAdapter->mQueueFamiliesCount, VkAdapter->pQueueFamilyProperties);
 
     for (uint32_t j = 0; j < VkAdapter->mQueueFamiliesCount; j++)
     {
@@ -827,9 +827,10 @@ const char* const* instance_extensions, uint32_t instance_extension_count)
         {
             for (uint32_t i = 0; i < count; i++)
             {
-                if (strcmp(ext_props[i].extensionName, instance_extensions[j]) == 0)
+                VkExtensionProperties ext_prop = ext_props[i];
+                if (strcmp(ext_prop.extensionName, instance_extensions[j]) == 0)
                 {
-                    VkInstance->pExtensionProperties[filled_exts] = ext_props[i];
+                    VkInstance->pExtensionProperties[filled_exts] = ext_prop;
                     VkInstance->pExtensionNames[filled_exts] = VkInstance->pExtensionProperties[filled_exts].extensionName;
                     filled_exts++;
                     break;

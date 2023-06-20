@@ -150,6 +150,11 @@ void RendererDeviceImpl::finalize()
         if (cpy_queue && cpy_queue != gfx_queue) 
             cgpu_free_queue(cpy_queue);
     }
+    for (auto& cmpt_queue : cmpt_queues)
+    {
+        if (cmpt_queue && cmpt_queue != gfx_queue) 
+            cgpu_free_queue(cmpt_queue);
+    }
     cpy_queues.clear();
     cgpu_free_queue(gfx_queue);
     cgpu_free_device(device);

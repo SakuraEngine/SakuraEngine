@@ -1186,7 +1186,7 @@ typedef struct CGPUDeviceDescriptor {
 } CGPUDeviceDescriptor;
 
 typedef struct CGPUCommandPoolDescriptor {
-    uint32_t ___nothing_and_useless__;
+    const char8_t* name;
 } CGPUCommandPoolDescriptor;
 
 typedef struct CGPUCommandBufferDescriptor {
