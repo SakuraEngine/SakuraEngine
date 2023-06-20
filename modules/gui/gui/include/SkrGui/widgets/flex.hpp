@@ -7,9 +7,10 @@ namespace skr::gui
 struct SKR_GUI_API Flex : public MultiChildRenderObjectWidget {
     SKR_GUI_TYPE(Flex, "03fbfa97-39bb-4233-afdb-1f53648e5152", MultiChildRenderObjectWidget)
 
-    EMainAxisAlignment  main_axis_alignment;
-    EFlexDirection      flex_direction;
-    ECrossAxisAlignment cross_axis_alignment;
+    EFlexDirection      flex_direction = EFlexDirection::Row;
+    EMainAxisAlignment  main_axis_alignment = EMainAxisAlignment::Start;
+    ECrossAxisAlignment cross_axis_alignment = ECrossAxisAlignment::Start;
+    EMainAxisSize       main_axis_size = EMainAxisSize::Max;
     Array<Widget*>      flex_children;
 };
 

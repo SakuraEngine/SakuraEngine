@@ -2,7 +2,7 @@
 #include "platform/memory.h"
 
 // !!!! TestWidgets !!!!
-#include "SkrGui/widgets/canvas.hpp"
+#include "SkrGui/widgets/stack.hpp"
 #include "SkrGui/widgets/color_picker.hpp"
 #include "SkrGui/widgets/colored_box.hpp"
 #include "SkrGui/widgets/flex.hpp"
@@ -10,7 +10,6 @@
 #include "SkrGui/widgets/positioned.hpp"
 #include "SkrGui/widgets/sized_box.hpp"
 #include "SkrGui/widgets/text.hpp"
-#include "SkrGui/widgets/canvas_slot.hpp"
 #include "SkrGui/widgets/flex_slot.hpp"
 namespace skr::gui
 {
@@ -25,18 +24,18 @@ void MayBeExample()
     //     colored_box
     //   text
     // auto sandbox = SkrNew<Sandbox>(
-    // SNewWidget(Canvas) {
-    //     SNewChild(p.canvas_children, CanvasSlot)
+    // SNewWidget(Stack) {
+    //     SNewChild(p.stack_children, Positioned)
     //     {
     //         p.positional.fill();
     //         p.child = SNewWidget(GridPaper){};
     //     };
-    //     SNewChild(p.canvas_children, CanvasSlot)
+    //     SNewChild(p.stack_children, Positioned)
     //     {
     //         p.positional.fill();
     //         p.child = SNewWidget(ColorPicker){};
     //     };
-    //     SNewChild(p.canvas_children, CanvasSlot)
+    //     SNewChild(p.stack_children, Positioned)
     //     {
     //         p.positional.anchor_LT(0, 0).sized(400, 400).pivot({ 0.5, 0 });
     //         p.child = SNewWidget(Flex)
@@ -60,7 +59,7 @@ void MayBeExample()
     //             };
     //         };
     //     };
-    //     SNewChild(p.canvas_children, CanvasSlot)
+    //     SNewChild(p.stack_children, Positioned)
     //     {
     //         p.positional.anchor_LT(0.5_pct, 10_px).pivot({ 0.5, 0 });
     //         p.child = SNewWidget(Text) { p.text = u8"Hello World!"; };
