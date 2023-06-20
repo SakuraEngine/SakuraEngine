@@ -109,6 +109,10 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
         skr_dstorage_queue_submit(queue, event->event);
         submitted[priority].emplace_back(event);
     }
+    else
+    {
+        // SKR_ASSERT(0);
+    }
 }
 
 void DStorageRAMReader::pollSubmitted(SkrAsyncServicePriority priority) SKR_NOEXCEPT

@@ -3,10 +3,169 @@
 #include "misc/make_zeroed.hpp"
 #include "platform/win/misc.h"
 
+#include "misc/defer.hpp"
+#include "containers/vector.hpp"
+#include "containers/concurrent_queue.h"
 #include "EASTL/vector_map.h"
 #include "EASTL/algorithm.h"
 
+struct StatusEventArray;
 SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::_this = nullptr;
+
+struct SkrDStorageEvent
+{
+    SkrDStorageEvent(StatusEventArray* array, uint32_t slot) 
+        : pArray(array), mSlot(slot) 
+    {
+
+    }
+
+    bool test() SKR_NOEXCEPT;
+    void enqueue_status(IDStorageQueue* Q) SKR_NOEXCEPT;
+
+protected:
+    friend struct StatusEventArray;
+    friend struct DStorageEventPool;
+    StatusEventArray* pArray = nullptr;
+    uint32_t mSlot = 0;
+};
+
+struct StatusEventArray
+{
+    StatusEventArray(IDStorageStatusArray* pArray)
+        : pArray(pArray)
+    {
+        for (uint32_t i = 0; i < kMaxEvents; i++)
+            freeSlots.enqueue(i);
+        pArray->AddRef();
+    }
+
+    ~StatusEventArray()
+    {
+        if (pArray)
+            pArray->Release();
+    }
+
+    SkrDStorageEvent* Allocate()
+    {
+        uint32_t slot = 0;
+        if (freeSlots.try_dequeue(slot))
+        {
+            return SkrNew<SkrDStorageEvent>(this, slot);
+        }
+        return nullptr;
+    }
+
+    void Deallocate(SkrDStorageEvent* e)
+    {
+        freeSlots.enqueue(e->mSlot);
+        SkrDelete(e);
+    }
+    static const uint32_t kMaxEvents = 1024;
+protected:
+    friend struct SkrDStorageEvent;
+    friend struct DStorageEventPool;
+    IDStorageStatusArray* pArray = nullptr;
+    skr::ConcurrentQueue<uint32_t> freeSlots;
+};
+
+bool SkrDStorageEvent::test() SKR_NOEXCEPT
+{
+    const auto c = pArray->pArray->IsComplete(mSlot);
+    return c;
+}
+
+void SkrDStorageEvent::enqueue_status(IDStorageQueue* Q) SKR_NOEXCEPT
+{
+    Q->EnqueueStatus(pArray->pArray, mSlot);
+}
+
+struct DStorageEventPool
+{
+    DStorageEventPool(IDStorageFactory* pFactory)
+        : pFactory(pFactory)
+    {
+        pFactory->AddRef();
+        skr_init_rw_mutex(&arrMutex);
+        addArray();
+    }
+    
+    ~DStorageEventPool()
+    {
+        removeAllArrays();
+        pFactory->Release();
+        skr_destroy_rw_mutex(&arrMutex);
+    }
+
+    SkrDStorageEvent* Allocate()
+    {
+        if (auto e = tryAllocate())
+            return e;
+        addArray();
+        return tryAllocate();
+    }
+
+    SkrDStorageEvent* tryAllocate()
+    {
+        skr_rw_mutex_acquire_r(&arrMutex);
+        SKR_DEFER({ skr_rw_mutex_release(&arrMutex); });
+        for (auto& arr : statusArrays)
+        {
+            if (auto e = arr->Allocate())
+                return e;
+        }
+        return nullptr;
+    }
+
+    void Deallocate(SkrDStorageEvent* e)
+    {
+        if (!e) return;
+        SKR_ASSERT(e->pArray && "Invalid event");
+        if (e->pArray)
+        {
+            e->pArray->Deallocate(e);
+        }
+    }
+
+private:
+    void addArray()
+    {
+        IDStorageStatusArray* pArray = nullptr;
+        pFactory->CreateStatusArray(StatusEventArray::kMaxEvents, "DirectStorageEvents", IID_PPV_ARGS(&pArray));
+        {
+            skr_rw_mutex_acquire_w(&arrMutex);
+            SKR_DEFER({ skr_rw_mutex_release(&arrMutex); });
+            statusArrays.emplace_back(SkrNew<StatusEventArray>(pArray));
+        }
+    }
+
+    void removeArray(StatusEventArray* pArray)
+    {
+        skr_rw_mutex_acquire_w(&arrMutex);
+        SKR_DEFER({ skr_rw_mutex_release(&arrMutex); });
+        auto it = eastl::find(statusArrays.begin(), statusArrays.end(), pArray);
+        if (it != statusArrays.end())
+        {
+            SkrDelete(*it);
+            statusArrays.erase(it);
+        }
+    }
+
+    void removeAllArrays()
+    {
+        skr_rw_mutex_acquire_w(&arrMutex);
+        SKR_DEFER({ skr_rw_mutex_release(&arrMutex); });
+        for (auto& arr : statusArrays)
+        {
+            SkrDelete(arr);
+        }
+        statusArrays.clear();
+    }
+
+    SRWMutex arrMutex;
+    skr::vector<StatusEventArray*> statusArrays;
+    IDStorageFactory* pFactory = nullptr;
+};
 
 SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Get()
 {
@@ -39,7 +198,7 @@ SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Initialize(const SkrDSto
 
                 auto pfn_set_config = SKR_SHARED_LIB_LOAD_API(_this->dstorage_library, DStorageSetConfiguration);
                 if (!pfn_set_config) return nullptr;
-               
+
                 auto pfn_set_config1 = SKR_SHARED_LIB_LOAD_API(_this->dstorage_library, DStorageSetConfiguration1);
                 if (!pfn_set_config1) return nullptr;
                 auto config1 = make_zeroed<DSTORAGE_CONFIGURATION1>();
@@ -65,19 +224,17 @@ SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Initialize(const SkrDSto
                     return nullptr;
                 }
 
-                // Create WRAP Device
-                D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&_this->pWarpDevice));
+                _this->pEventPool = SkrNew<DStorageEventPool>(_this->pFactory);
             }
         }
     }
     return _this->initialize_failed ? nullptr : _this;
 }
 
-
 SkrWindowsDStorageInstance::~SkrWindowsDStorageInstance()
 {
+    if (_this->pEventPool) SkrDelete(_this->pEventPool);
     if (pFactory) pFactory->Release();
-    if (pWarpDevice) pWarpDevice->Release();
     if (dstorage_core.isLoaded()) dstorage_core.unload();
     if (dstorage_library.isLoaded()) dstorage_library.unload();
     
@@ -142,9 +299,10 @@ SkrDStorageQueueId skr_create_dstorage_queue(const SkrDStorageQueueDescriptor* d
 #endif
     Q->max_size = _this->sDirectStorageStagingBufferSize;
     Q->pFactory = pFactory;
-    Q->pDxDevice = queueDesc.Device ? queueDesc.Device : _this->pWarpDevice;
+    Q->pDxDevice = queueDesc.Device ? queueDesc.Device : nullptr;
     Q->pFactory->AddRef();
-    Q->pDxDevice->AddRef();
+    if (Q->pDxDevice)
+        Q->pDxDevice->AddRef();
     Q->device = desc->gpu_device;
     Q->pInstance = _this;
     return Q;
@@ -163,7 +321,8 @@ void skr_free_dstorage_queue(SkrDStorageQueueId queue)
         skr_destroy_mutex(&Q->profile_mutex);
 #endif
         Q->pQueue->Release();
-        Q->pDxDevice->Release();
+        if (Q->pDxDevice)
+            Q->pDxDevice->Release();
         Q->pFactory->Release();
     }
     SkrDelete(Q);
@@ -203,39 +362,28 @@ void skr_dstorage_close_file(SkrDStorageInstanceId inst, SkrDStorageFileHandle f
     pFile->Release();
 }
 
-struct SkrDStorageEvent
-{
-    SkrDStorageEvent(ID3D12Fence* pFence) : pFence(pFence), mFenceValue(1) {}
-    ID3D12Fence* pFence = nullptr;
-    uint64_t mFenceValue = 1;
-};
-
 SkrDStorageEventId skr_dstorage_queue_create_event(SkrDStorageQueueId queue)
 {
     DStorageQueueWindows* Q = (DStorageQueueWindows*)queue;
-    ID3D12Fence* pFence = nullptr;
-    Q->pDxDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&pFence));
-    return SkrNew<SkrDStorageEvent>(pFence);
+    return Q->pInstance->pEventPool->Allocate();
 }
 
 bool skr_dstorage_event_test(SkrDStorageEventId event)
 {
-    const auto Value = event->pFence->GetCompletedValue();
-    if (Value < event->mFenceValue - 1)
-        return false;
-    else
-        return true;
+    return event->test();
 }
 
 void skr_dstorage_queue_free_event(SkrDStorageQueueId queue, SkrDStorageEventId event)
 {
-    event->pFence->Release();
+    DStorageQueueWindows* Q = (DStorageQueueWindows*)queue;
+    SKR_ASSERT(event->test() && "You must wait for the event before freeing it!");
+    Q->pInstance->pEventPool->Deallocate(event);
 }
 
 void skr_dstorage_queue_submit(SkrDStorageQueueId queue, SkrDStorageEventId event)
 {
     DStorageQueueWindows* Q = (DStorageQueueWindows*)queue;
-    Q->pQueue->EnqueueSignal(event->pFence, event->mFenceValue++);
+    event->enqueue_status(Q->pQueue);
 #ifdef TRACY_PROFILE_DIRECT_STORAGE
     skr_dstorage_queue_trace_submit(queue);
 #endif
@@ -275,7 +423,7 @@ void skr_dstorage_enqueue_request(SkrDStorageQueueId queue, const SkrDStorageIOD
     request.UncompressedSize = (uint32_t)desc->uncompressed_size;
     Q->pQueue->EnqueueRequest(&request);
     if (auto event = desc->event)
-        Q->pQueue->EnqueueSignal(event->pFence, event->mFenceValue++);
+        event->enqueue_status(Q->pQueue);
 }
 
 #ifdef TRACY_PROFILE_DIRECT_STORAGE
