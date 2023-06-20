@@ -19,7 +19,7 @@ struct SkrWindowsDStorageInstance : public SkrDStorageInstance
     ~SkrWindowsDStorageInstance();
 
     IDStorageFactory* pFactory = nullptr;
-    struct ID3D12Device* pWarpDevice;
+    struct DStorageEventPool* pEventPool = nullptr;
     skr::SharedLibrary dstorage_library;
     skr::SharedLibrary dstorage_core;
     bool initialize_failed = false;
