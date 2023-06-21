@@ -439,15 +439,15 @@ const struct CGPURootSignatureDescriptor* desc)
                     i_binding++;
                 }
             }
-            VkDescriptorSetLayoutCreateInfo set_info = {
+            VkDescriptorSetLayoutCreateInfo setLayoutInfo = {
                 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
                 .pNext = NULL,
-                .flags = 0,
+                .flags = 0, //VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT,
                 .pBindings = vkbindings,
                 .bindingCount = i_binding
             };
             CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorSetLayout(D->pVkDevice,
-                &set_info, GLOBAL_VkAllocationCallbacks, &RS->pSetLayouts[set_index].layout));
+                &setLayoutInfo, GLOBAL_VkAllocationCallbacks, &RS->pSetLayouts[set_index].layout));
             VkUtil_ConsumeDescriptorSets(D->pDescriptorPool, &RS->pSetLayouts[set_index].layout,
                 &RS->pSetLayouts[set_index].pEmptyDescSet, 1);
 
