@@ -74,6 +74,8 @@ CGPU_API void cgpu_queue_present_vulkan(CGPUQueueId queue, const struct CGPUQueu
 CGPU_API float cgpu_queue_get_timestamp_period_ns_vulkan(CGPUQueueId queue);
 CGPU_API void cgpu_queue_map_tiled_texture_vulkan(CGPUQueueId queue, const struct CGPUTiledTextureRegions* regions);
 CGPU_API void cgpu_queue_unmap_tiled_texture_vulkan(CGPUQueueId queue, const struct CGPUTiledTextureRegions* regions);
+CGPU_API void cgpu_queue_map_packed_mips_vulkan(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions);
+CGPU_API void cgpu_queue_unmap_packed_mips_vulkan(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions);
 CGPU_API void cgpu_free_queue_vulkan(CGPUQueueId queue);
 
 // Command APIs
@@ -343,15 +345,28 @@ typedef struct CGPUTileTextureSubresourceMapping_Vulkan {
     CGPUTileMapping_Vulkan* mappings;
 } CGPUTileTextureSubresourceMapping_Vulkan;
 
+typedef struct CGPUTileTexturePackedMipMapping_Vulkan {
+    struct VmaAllocation_T* pVkAllocation;
+    volatile int32_t status;
+    uint64_t mVkSparseTailStride;
+    uint64_t mVkSparseTailOffset;
+    uint64_t mVkSparseTailSize;
+} CGPUTileTexturePackedMipMapping_Vulkan;
+
 typedef struct CGPUTexture_Vulkan {
     CGPUTexture super;
     VkImage pVkImage;
-    CGPUTileTextureSubresourceMapping_Vulkan* pVkTileMappings;
     union
     {
         /// Contains resource allocation info such as parent heap, offset in heap
         struct VmaAllocation_T* pVkAllocation;
         VkDeviceMemory pVkDeviceMemory;
+        struct {
+            CGPUTileTextureSubresourceMapping_Vulkan* pVkTileMappings;
+            CGPUTileTexturePackedMipMapping_Vulkan* pVkPackedMappings;
+            uint32_t mPackedMappingsCount;
+            bool mSingleTail;
+        };
     };
 } CGPUTexture_Vulkan;
 

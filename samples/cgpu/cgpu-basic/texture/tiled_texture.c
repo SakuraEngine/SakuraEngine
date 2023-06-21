@@ -126,6 +126,17 @@ void update_streaming_map(CGPUCommandBufferId cmd, uint32_t MipLevel)
     if (mapped_mip == MipLevel)
         return;
     const CGPUTiledSubresourceInfo subres = sampled_texture->tiled_resource->subresources[MipLevel];
+    
+    CGPUTiledTexturePackedMip packed_update = {
+        .texture = sampled_texture,
+        .layer = 0
+    };
+    CGPUTiledTexturePackedMips packed_updates = {
+        .packed_mips = &packed_update,
+        .packed_mip_count = 1
+    };
+    cgpu_queue_map_packed_mips(App.gfx_queue, &packed_updates);
+    
     // map tiled texture
     if (MipLevel == 1)
     {

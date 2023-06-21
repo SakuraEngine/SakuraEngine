@@ -48,6 +48,8 @@ const CGPUProcTable tbl_vk = {
     .queue_get_timestamp_period = &cgpu_queue_get_timestamp_period_ns_vulkan,
     .queue_map_tiled_texture = &cgpu_queue_map_tiled_texture_vulkan,
     .queue_unmap_tiled_texture = &cgpu_queue_unmap_tiled_texture_vulkan,
+    .queue_map_packed_mips = &cgpu_queue_map_packed_mips_vulkan,
+    .queue_unmap_packed_mips = &cgpu_queue_unmap_packed_mips_vulkan,
     .free_queue = &cgpu_free_queue_vulkan,
 
     // Command APIs

@@ -129,7 +129,7 @@ enum ETileMappingStatus_D3D12
     D3D12_TILE_MAPPING_STATUS_PENDING = 1,
     D3D12_TILE_MAPPING_STATUS_MAPPING = 2,
     D3D12_TILE_MAPPING_STATUS_MAPPED = 3,
-    D3D12_TILE_MAPPING_STATUS_INVALID = 4
+    D3D12_TILE_MAPPING_STATUS_UNMAPPING = 4
 };
 
 struct TileMapping_D3D12
@@ -175,12 +175,14 @@ struct SubresTileMappings_D3D12
         auto pTiledInfo = const_cast<CGPUTiledTextureInfo*>(T->super.tiled_resource);
         auto* mapping = at(x, y, z);
         const auto status = skr_atomic32_cas_relaxed(&mapping->status, 
-            D3D12_TILE_MAPPING_STATUS_MAPPED, D3D12_TILE_MAPPING_STATUS_UNMAPPED);
+            D3D12_TILE_MAPPING_STATUS_MAPPED, D3D12_TILE_MAPPING_STATUS_UNMAPPING);
         if (status == D3D12_TILE_MAPPING_STATUS_MAPPED)
         {
             SAFE_RELEASE(mapping->pDxAllocation);
             skr_atomicu64_add_relaxed(&pTiledInfo->alive_tiles_count, -1);
         }  
+        skr_atomic32_cas_relaxed(&mapping->status, 
+            D3D12_TILE_MAPPING_STATUS_UNMAPPING, D3D12_TILE_MAPPING_STATUS_UNMAPPED);
     }
 private:
     CGPUTexture_D3D12* T = nullptr;
@@ -191,8 +193,8 @@ private:
 };
 
 struct CGPUTiledTexture_D3D12 : public CGPUTexture_D3D12 {
-    CGPUTiledTexture_D3D12(SubresTileMappings_D3D12* pMappings) SKR_NOEXCEPT
-        : CGPUTexture_D3D12(), pMappings(pMappings)
+    CGPUTiledTexture_D3D12(SubresTileMappings_D3D12* pMappings, uint32_t NumTilesForPackedMips) SKR_NOEXCEPT
+        : CGPUTexture_D3D12(), pMappings(pMappings), NumTilesForPackedMips(NumTilesForPackedMips)
     {
 
     }
@@ -212,6 +214,7 @@ struct CGPUTiledTexture_D3D12 : public CGPUTexture_D3D12 {
     
 private:
     SubresTileMappings_D3D12* pMappings;
+    uint32_t NumTilesForPackedMips;
 };
 
 typedef struct DescriptorHeapProperties {

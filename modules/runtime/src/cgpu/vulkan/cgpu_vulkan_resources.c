@@ -1,7 +1,11 @@
+#include "cgpu/api.h"
+#include "cgpu/vulkan/vulkan_utils.h"
 #include "float.h"
 #include "platform/atomic.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "../common/common_utils.h"
+#include "platform/configure.h"
+#include "vulkan/vulkan_core.h"
 #include "vulkan_utils.h"
 #ifdef CGPU_THREAD_SAFETY
     #include "platform/thread.h"
@@ -569,8 +573,9 @@ void VkUtil_AllocateSharedTexture(CGPUQueue_Vulkan* Q, VmaAllocationCreateInfo* 
 }
 #endif
 
-CGPUTiledTextureInfo* VkUtil_FillTiledTextureInfo(CGPUDevice_Vulkan* D, VkImage pVkImage, const struct CGPUTextureDescriptor* desc, uint32_t* outTypeBits)
+VkSparseImageMemoryRequirements VkUtil_FillTiledTextureInfo(CGPUDevice_Vulkan* D, CGPUTexture_Vulkan* T, const struct CGPUTextureDescriptor* desc, uint32_t* outTypeBits)
 {
+    VkImage pVkImage = T->pVkImage;
     CGPUAdapter_Vulkan* A = (CGPUAdapter_Vulkan*)D->super.adapter;
     // Get memory requirements
     VkMemoryRequirements sparseImageMemoryReqs;
@@ -580,7 +585,6 @@ CGPUTiledTextureInfo* VkUtil_FillTiledTextureInfo(CGPUDevice_Vulkan* D, VkImage 
     if (sparseImageMemoryReqs.size > A->mPhysicalDeviceProps.properties.limits.sparseAddressSpaceSize)
     {
         cgpu_error("Requested sparse image size exceeds supported sparse address space size!");
-        return CGPU_NULLPTR;
     }
     // Get sparse memory requirements
     // Count
@@ -593,7 +597,6 @@ CGPUTiledTextureInfo* VkUtil_FillTiledTextureInfo(CGPUDevice_Vulkan* D, VkImage 
     if (sparseMemoryReqsCount == 0)
     {
         cgpu_error("No memory requirements for the sparse image!");
-        return CGPU_NULLPTR;
     }
     else
     {
@@ -622,7 +625,6 @@ CGPUTiledTextureInfo* VkUtil_FillTiledTextureInfo(CGPUDevice_Vulkan* D, VkImage 
             cgpu_error("Only found non-standard sparse block size layout!");
         }
         cgpu_error("Could not find sparse image memory requirements for color aspect bit!");
-        return CGPU_NULLPTR;
     }
 
     // iterate all mips and calculate the total number of tiles
@@ -630,7 +632,9 @@ CGPUTiledTextureInfo* VkUtil_FillTiledTextureInfo(CGPUDevice_Vulkan* D, VkImage 
     uint32_t subres_cnt = layers * desc->mip_levels;
     uint32_t total_tiles_count = 0;
 
-    CGPUTiledTextureInfo* pTiledInfo = cgpu_calloc_aligned(1, sizeof(CGPUTiledTextureInfo) + subres_cnt * sizeof(CGPUTiledSubresourceInfo), _Alignof(CGPUTiledTextureInfo));
+    CGPUTiledTextureInfo* pTiledInfo = cgpu_calloc_aligned(1, 
+        sizeof(CGPUTiledTextureInfo) + subres_cnt * sizeof(CGPUTiledSubresourceInfo), 
+        _Alignof(CGPUTiledTextureInfo));
     CGPUTiledSubresourceInfo* pSubresInfos = (CGPUTiledSubresourceInfo*)(pTiledInfo + 1);
     // record subresource infos
     for (uint32_t layer = 0; layer < 1; layer++)
@@ -659,22 +663,22 @@ CGPUTiledTextureInfo* VkUtil_FillTiledTextureInfo(CGPUDevice_Vulkan* D, VkImage 
     pTiledInfo->tile_size = VK_SPARSE_PAGE_STANDARD_SIZE;
     pTiledInfo->total_tiles_count = total_tiles_count;
     pTiledInfo->alive_tiles_count = 0;
+    pTiledInfo->alive_pack_count = 0;
 
     pTiledInfo->tile_width_in_texels = sparseReq.formatProperties.imageGranularity.width;
     pTiledInfo->tile_height_in_texels = sparseReq.formatProperties.imageGranularity.height;
     pTiledInfo->tile_depth_in_texels = sparseReq.formatProperties.imageGranularity.depth;
     pTiledInfo->subresources = pSubresInfos;
 
-    pTiledInfo->packed_mip_tiles_count = sparseReq.imageMipTailSize / VK_SPARSE_PAGE_STANDARD_SIZE;
     pTiledInfo->packed_mip_start = sparseReq.imageMipTailFirstLod;
     pTiledInfo->packed_mip_count = desc->mip_levels - sparseReq.imageMipTailFirstLod;
-
     pTiledInfo->pack_unaligned = (sparseReq.formatProperties.flags & VK_SPARSE_IMAGE_FORMAT_ALIGNED_MIP_SIZE_BIT) ? true : false;
-    pTiledInfo->pack_all_layers = (sparseReq.formatProperties.flags & VK_SPARSE_IMAGE_FORMAT_SINGLE_MIPTAIL_BIT) ? true : false;
 
     *outTypeBits = sparseImageMemoryReqs.memoryTypeBits;
     
-    return pTiledInfo;
+    T->super.tiled_resource = pTiledInfo;
+    
+    return sparseReq;
 }
 
 CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUTextureDescriptor* desc)
@@ -691,7 +695,6 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
     CGPUQueue_Vulkan* Q = (CGPUQueue_Vulkan*)desc->owner_queue;
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)device;
     CGPUAdapter_Vulkan* A = (CGPUAdapter_Vulkan*)device->adapter;
-    CGPUTiledTextureInfo* pTiledInfo = CGPU_NULLPTR;
 
     bool owns_image = false;
     bool is_allocation_dedicated = false;
@@ -864,12 +867,19 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
         }
     }
     
+    // create texture object
+    CGPUTexture_Vulkan* T = (CGPUTexture_Vulkan*)cgpu_calloc_aligned(1, totalSize, _Alignof(CGPUTexture_Vulkan));
+    cgpu_assert(T);
+    T->pVkImage = pVkImage;
+    
     // fill tile info
     CGPUTileTextureSubresourceMapping_Vulkan* pVkTileMappings = CGPU_NULLPTR;
+    CGPUTileTexturePackedMipMapping_Vulkan* pVkPackedMappings = CGPU_NULLPTR;
     uint32_t memTypBits = 0;
     if (desc->flags & CGPU_TCF_TILED_RESOURCE)
     {
-        pTiledInfo = VkUtil_FillTiledTextureInfo(D, pVkImage, desc, &memTypBits);
+        VkSparseImageMemoryRequirements sparseReq = VkUtil_FillTiledTextureInfo(D, T, desc, &memTypBits);
+        const CGPUTiledTextureInfo* pTiledInfo = T->super.tiled_resource;
         pVkTileMappings = cgpu_calloc_aligned(pTiledInfo->packed_mip_start, sizeof(CGPUTileTextureSubresourceMapping_Vulkan), _Alignof(CGPUTileTextureSubresourceMapping_Vulkan));
         for (uint32_t i = 0; i < pTiledInfo->packed_mip_start; i++)
         {
@@ -885,22 +895,28 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
             };
             memcpy(&pVkTileMappings[i], &SM, sizeof(CGPUTileTextureSubresourceMapping_Vulkan));
         }
+        const bool SingleTail = (sparseReq.formatProperties.flags & VK_SPARSE_IMAGE_FORMAT_SINGLE_MIPTAIL_BIT);
+        T->mPackedMappingsCount = SingleTail ? 1 : arraySize;
+        T->mSingleTail = SingleTail;
+        pVkPackedMappings = cgpu_calloc_aligned(T->mPackedMappingsCount, sizeof(CGPUTileTexturePackedMipMapping_Vulkan), _Alignof(CGPUTileTexturePackedMipMapping_Vulkan));
+        for (uint32_t i = 0; i < T->mPackedMappingsCount; i++)
+        {
+            pVkPackedMappings[i].mVkSparseTailStride = sparseReq.imageMipTailStride;
+            pVkPackedMappings[i].mVkSparseTailOffset = sparseReq.imageMipTailOffset;
+            pVkPackedMappings[i].mVkSparseTailSize = sparseReq.imageMipTailSize;
+        }
     }
-
-    // Create texture object
-    CGPUTexture_Vulkan* T = (CGPUTexture_Vulkan*)cgpu_calloc_aligned(1, totalSize, _Alignof(CGPUTexture_Vulkan));
+    // fill texture info
     CGPUTextureInfo* info = (CGPUTextureInfo*)(T + 1);
     T->super.info = info;
-    T->super.tiled_resource = pTiledInfo;
     T->pVkTileMappings = pVkTileMappings;
-    cgpu_assert(T);
+    T->pVkPackedMappings = pVkPackedMappings;
     info->owns_image = owns_image;
     info->aspect_mask = aspect_mask;
     info->is_allocation_dedicated = is_allocation_dedicated;
     info->is_restrict_dedicated = desc->is_restrict_dedicated;
     info->is_aliasing = (desc->flags & CGPU_TCF_ALIASING_RESOURCE);
     info->can_alias = can_alias_alloc || info->is_aliasing;
-    T->pVkImage = pVkImage;
     if (pVkDeviceMemory) T->pVkDeviceMemory = pVkDeviceMemory;
     if (vmaAllocation) T->pVkAllocation = vmaAllocation;
     info->sample_count = desc->sample_count;
@@ -912,6 +928,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
     info->array_size_minus_one = arraySize - 1;
     info->format = desc->format;
     info->is_imported = is_imported;
+    info->is_tiled = (desc->flags & CGPU_TCF_TILED_RESOURCE) ? 1 : 0;
     info->unique_id = (unique_id == UINT64_MAX) ? D->super.next_texture_id++ : unique_id;
     // Set Texture Name
     VkUtil_OptionalSetObjectName(D, (uint64_t)T->pVkImage, VK_OBJECT_TYPE_IMAGE, desc->name);
@@ -954,7 +971,7 @@ enum ETileMappingStatus_Vulkan
     VK_TILE_MAPPING_STATUS_PENDING = 1,
     VK_TILE_MAPPING_STATUS_MAPPING = 2,
     VK_TILE_MAPPING_STATUS_MAPPED = 3,
-    VK_TILE_MAPPING_STATUS_INVALID = 4
+    VK_TILE_MAPPING_STATUS_UNMAPPING = 4
 };
 
 CGPUTileMapping_Vulkan* VkUtil_TileMappingAt(CGPUTileTextureSubresourceMapping_Vulkan* subres, uint32_t x, uint32_t y, uint32_t z)
@@ -975,18 +992,123 @@ void VkUtil_UnmapTileMappingAt(CGPUTexture_Vulkan* T, CGPUTileTextureSubresource
     CGPUTiledTextureInfo* pTiledInfo = (CGPUTiledTextureInfo*)T->super.tiled_resource;
     CGPUTileMapping_Vulkan* Mapping = VkUtil_TileMappingAt(subres, x, y, z);
     const int32_t status = skr_atomic32_cas_relaxed(&Mapping->status, 
-            VK_TILE_MAPPING_STATUS_MAPPED, VK_TILE_MAPPING_STATUS_UNMAPPED);
+            VK_TILE_MAPPING_STATUS_MAPPED, VK_TILE_MAPPING_STATUS_UNMAPPING);
     if (status == VK_TILE_MAPPING_STATUS_MAPPED)
     {
         vmaFreeMemory(D->pVmaAllocator, Mapping->pVkAllocation);
         Mapping->pVkAllocation = NULL;
         skr_atomicu64_add_relaxed(&pTiledInfo->alive_tiles_count, -1);
     }
+    skr_atomic32_cas_relaxed(&Mapping->status, 
+        VK_TILE_MAPPING_STATUS_UNMAPPING, VK_TILE_MAPPING_STATUS_UNMAPPED);
+}
+
+void VkUtil_UnmapPackedMappingAt(CGPUTexture_Vulkan* T, uint32_t n)
+{
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)T->super.device;
+    CGPUTiledTextureInfo* pTiledInfo = (CGPUTiledTextureInfo*)T->super.tiled_resource;
+    CGPUTileTexturePackedMipMapping_Vulkan* Mapping = &T->pVkPackedMappings[n];
+    const int32_t status = skr_atomic32_cas_relaxed(&Mapping->status, 
+            VK_TILE_MAPPING_STATUS_MAPPED, VK_TILE_MAPPING_STATUS_UNMAPPING);
+    if (status == VK_TILE_MAPPING_STATUS_MAPPED)
+    {
+        vmaFreeMemory(D->pVmaAllocator, Mapping->pVkAllocation);
+        Mapping->pVkAllocation = NULL;
+        skr_atomicu64_add_relaxed(&pTiledInfo->alive_pack_count, -1);
+    }    
+    skr_atomic32_cas_relaxed(&Mapping->status, 
+        VK_TILE_MAPPING_STATUS_UNMAPPING, VK_TILE_MAPPING_STATUS_UNMAPPED);
 }
 
 void cgpu_queue_map_packed_mips_vulkan(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)queue->device;
+    CGPUQueue_Vulkan* Q = (CGPUQueue_Vulkan*)queue;
+    uint32_t N = 0;
+    for (uint32_t i = 0; i < regions->packed_mip_count; i++)
+    {
+        CGPUTexture_Vulkan* T = (CGPUTexture_Vulkan*)regions->packed_mips[i].texture;
+        uint32_t layer = T->mSingleTail ? 0 : regions->packed_mips[i].layer;
+        CGPUTileTexturePackedMipMapping_Vulkan* pMapping = &T->pVkPackedMappings[layer];
+
+        const int32_t prev = skr_atomic32_cas_relaxed(&pMapping->status, VK_TILE_MAPPING_STATUS_UNMAPPED, VK_TILE_MAPPING_STATUS_PENDING);
+        if (prev != VK_TILE_MAPPING_STATUS_UNMAPPED) continue;
+
+        N++;
+    }
+    if (N == 0) 
+        return;
+    
+    uint32_t M = 0;
+    VkSparseMemoryBind* opaqueBinds = cgpu_calloc(N, sizeof(VkSparseMemoryBind) + sizeof(VkSparseImageOpaqueMemoryBindInfo));
+    VkSparseImageOpaqueMemoryBindInfo* bindInfos = (VkSparseImageOpaqueMemoryBindInfo*)(opaqueBinds + N);
+    for (uint32_t i = 0; i < regions->packed_mip_count; i++)
+    {
+        CGPUTexture_Vulkan* T = (CGPUTexture_Vulkan*)regions->packed_mips[i].texture;
+        uint32_t layer = T->mSingleTail ? 0 : regions->packed_mips[i].layer;
+        CGPUTileTexturePackedMipMapping_Vulkan* pMapping = &T->pVkPackedMappings[layer];
+
+        const int32_t prev = skr_atomic32_cas_relaxed(&pMapping->status, VK_TILE_MAPPING_STATUS_PENDING, VK_TILE_MAPPING_STATUS_MAPPING);
+        if (prev != VK_TILE_MAPPING_STATUS_PENDING) continue;
+
+        const uint64_t kPageSize = T->pVkPackedMappings->mVkSparseTailSize;
+        DECLARE_ZERO(VkMemoryRequirements, memReqs);
+        memReqs.size = kPageSize;
+        memReqs.memoryTypeBits = T->pVkTileMappings->mVkMemoryTypeBits;
+        memReqs.alignment = memReqs.size;
+        DECLARE_ZERO(VmaAllocationCreateInfo, vmaAllocInfo);
+        VmaAllocation pAllocation;
+        VmaAllocationInfo AllocationInfo;
+        // do allocations
+        VkResult result = vmaAllocateMemoryPages(D->pVmaAllocator, &memReqs, 
+            &vmaAllocInfo, 1, &pAllocation, &AllocationInfo);
+        CHECK_VKRESULT(result);
+
+        pMapping->pVkAllocation = pAllocation;
+
+        opaqueBinds[M].resourceOffset = pMapping->mVkSparseTailOffset + layer * pMapping->mVkSparseTailStride;
+		opaqueBinds[M].size = pMapping->mVkSparseTailSize;
+		opaqueBinds[M].memory = AllocationInfo.deviceMemory;
+		opaqueBinds[M].memoryOffset = AllocationInfo.offset;
+
+        bindInfos[M].pBinds = opaqueBinds + M;
+        bindInfos[M].bindCount = 1;
+        bindInfos[M].image = T->pVkImage;
+
+        M++;
+    }
+    DECLARE_ZERO(VkBindSparseInfo, bindSparseInfo);
+    bindSparseInfo.sType = VK_STRUCTURE_TYPE_BIND_SPARSE_INFO;
+    bindSparseInfo.imageOpaqueBindCount = M;
+    bindSparseInfo.pImageOpaqueBinds = bindInfos;
+
+    VkResult result = D->mVkDeviceTable.vkQueueBindSparse(Q->pVkQueue, (uint32_t)1, &bindSparseInfo, VK_NULL_HANDLE);
+    CHECK_VKRESULT(result);
+    
+    // mark mapping requests as complete
+    for (uint32_t i = 0; i < N; i++)
+    {
+        CGPUTexture_Vulkan* T = (CGPUTexture_Vulkan*)regions->packed_mips[i].texture;
+        CGPUTiledTextureInfo* pModTiledInfo = (CGPUTiledTextureInfo*)T->super.tiled_resource;
+        uint32_t layer = T->mSingleTail ? 0 : regions->packed_mips[i].layer;
+        CGPUTileTexturePackedMipMapping_Vulkan* pMapping = &T->pVkPackedMappings[layer];
+        
+        skr_atomic32_cas_relaxed(&pMapping->status, VK_TILE_MAPPING_STATUS_MAPPING, VK_TILE_MAPPING_STATUS_MAPPED);
+        skr_atomicu64_add_relaxed(&pModTiledInfo->alive_pack_count, 1);
+    }
+
+    cgpu_free(opaqueBinds);
+}
+
+void cgpu_queue_unmap_packed_mips_vulkan(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions)
+{
+    for (uint32_t i = 0; i < regions->packed_mip_count; i++)
+    {
+        CGPUTexture_Vulkan* T = (CGPUTexture_Vulkan*)regions->packed_mips[i].texture;
+        uint32_t layer = T->mSingleTail ? 0 : regions->packed_mips[i].layer;
+
+        VkUtil_UnmapPackedMappingAt(T, layer);
+    }
 }
 
 void cgpu_queue_map_tiled_texture_vulkan(CGPUQueueId queue, const struct CGPUTiledTextureRegions* regions)
@@ -1192,7 +1314,7 @@ void cgpu_free_texture_vulkan(CGPUTextureId texture)
             D->mVkDeviceTable.vkDestroyImage(D->pVkDevice, T->pVkImage, GLOBAL_VkAllocationCallbacks);
         }
     }
-    if (T->pVkTileMappings)
+    if (pInfo->is_tiled && T->pVkTileMappings)
     {
         for (uint32_t i = 0; i < T->super.tiled_resource->packed_mip_start; i++)
         {
@@ -1207,7 +1329,11 @@ void cgpu_free_texture_vulkan(CGPUTextureId texture)
                 cgpu_free_aligned(subres->mappings, _Alignof(CGPUTileMapping_Vulkan));
             }
         }
-        cgpu_free_aligned(T->pVkTileMappings, _Alignof(VkSparseImageMemoryBind));
+        cgpu_free_aligned(T->pVkTileMappings, _Alignof(CGPUTileTextureSubresourceMapping_Vulkan));
+
+        for (uint32_t n = 0; n < T->mPackedMappingsCount; n++)
+            VkUtil_UnmapPackedMappingAt(T, n);
+        cgpu_free_aligned(T->pVkPackedMappings, _Alignof(CGPUTileTexturePackedMipMapping_Vulkan));
     }
     if (T->super.tiled_resource)
         cgpu_free_aligned((void*)T->super.tiled_resource, _Alignof(CGPUTiledTextureInfo));
