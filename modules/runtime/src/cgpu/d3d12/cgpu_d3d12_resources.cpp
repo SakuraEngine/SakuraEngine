@@ -733,7 +733,7 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
     auto pTiledInfo = (CGPUTiledTextureInfo*)(pInfo + 1);
     auto pSubresInfo = (CGPUTiledSubresourceInfo*)(pTiledInfo + 1);
     auto pSubresMapping = (SubresTileMappings_D3D12*)(pSubresInfo + subresourceCount);
-    new (T) CGPUTiledTexture_D3D12(pSubresMapping);
+    new (T) CGPUTiledTexture_D3D12(pSubresMapping, packedMipInfo.NumTilesForPackedMips);
 
     pTiledInfo->total_tiles_count = numTiles;
     pTiledInfo->alive_tiles_count = 0;
@@ -751,7 +751,6 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
 
     pTiledInfo->packed_mip_start = packedMipInfo.NumStandardMips;
     pTiledInfo->packed_mip_count = packedMipInfo.NumPackedMips;
-    pTiledInfo->packed_mip_tiles_count = packedMipInfo.NumTilesForPackedMips;
 
     for (uint32_t i = 0; i < subresourceCount; i++)
     {
@@ -903,7 +902,6 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTile
 void cgpu_queue_unmap_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTiledTextureRegions* regions)
 {
     CGPUTiledTexture_D3D12* T = (CGPUTiledTexture_D3D12*)regions->texture;
-    auto& TiledInfo = *const_cast<CGPUTiledTextureInfo*>(T->super.tiled_resource);
     CGPUQueue_D3D12* Q = (CGPUQueue_D3D12*)queue;
     const uint32_t RegionCount = regions->region_count;
 

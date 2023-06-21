@@ -74,6 +74,7 @@ struct CGPUImportTextureDescriptor;
 
 struct CGPUVertexLayout;
 struct CGPUTiledTextureRegions;
+struct CGPUTiledTexturePackedMips;
 struct CGPUBufferToBufferTransfer;
 struct CGPUBufferToTilesTransfer;
 struct CGPUBufferToTextureTransfer;
@@ -245,6 +246,10 @@ CGPU_API void cgpu_queue_map_tiled_texture(CGPUQueueId queue, const struct CGPUT
 typedef void (*CGPUProcQueueMapTiledTexture)(CGPUQueueId queue, const struct CGPUTiledTextureRegions* desc);
 CGPU_API void cgpu_queue_unmap_tiled_texture(CGPUQueueId queue, const struct CGPUTiledTextureRegions* desc);
 typedef void (*CGPUProcQueueUnmapTiledTexture)(CGPUQueueId queue, const struct CGPUTiledTextureRegions* desc);
+CGPU_API void cgpu_queue_map_packed_mips(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions);
+typedef void (*CGPUProcQueueMapPackedMips)(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions);
+CGPU_API void cgpu_queue_unmap_packed_mips(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions);
+typedef void (*CGPUProcQueueUnmapPackedMips)(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions);
 CGPU_API void cgpu_free_queue(CGPUQueueId queue);
 typedef void (*CGPUProcFreeQueue)(CGPUQueueId queue);
 
@@ -578,6 +583,8 @@ typedef struct CGPUProcTable {
     const CGPUProcQueueGetTimestampPeriodNS queue_get_timestamp_period;
     const CGPUProcQueueMapTiledTexture queue_map_tiled_texture;
     const CGPUProcQueueUnmapTiledTexture queue_unmap_tiled_texture;
+    const CGPUProcQueueMapPackedMips queue_map_packed_mips;
+    const CGPUProcQueueUnmapPackedMips queue_unmap_packed_mips;
     const CGPUProcFreeQueue free_queue;
 
     // Command APIs
@@ -1649,11 +1656,10 @@ typedef struct CGPUTiledTextureInfo {
     uint32_t tile_depth_in_texels;
     const CGPUTiledSubresourceInfo* subresources;
 
-    uint64_t packed_mip_tiles_count;
     uint32_t packed_mip_start;
     uint32_t packed_mip_count;
+    volatile uint64_t alive_pack_count;
 
-    bool pack_all_layers;
     bool pack_unaligned;
 } CGPUTiledTextureInfo;
 

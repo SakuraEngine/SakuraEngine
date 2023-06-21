@@ -464,6 +464,24 @@ void cgpu_queue_unmap_tiled_texture(CGPUQueueId queue, const struct CGPUTiledTex
     fn(queue, desc);
 }
 
+void cgpu_queue_map_packed_mips(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions)
+{
+    cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcQueueMapPackedMips fn = queue->device->proc_table_cache->queue_map_packed_mips;
+    cgpu_assert(fn && "queue_map_packed_mips Proc Missing!");
+    fn(queue, regions);
+}
+
+void cgpu_queue_unmap_packed_mips(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions)
+{
+    cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
+    cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcQueueUnmapPackedMips fn = queue->device->proc_table_cache->queue_unmap_packed_mips;
+    cgpu_assert(fn && "queue_unmap_packed_mips Proc Missing!");
+    fn(queue, regions);
+}
+
 void cgpu_free_queue(CGPUQueueId queue)
 {
     cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
