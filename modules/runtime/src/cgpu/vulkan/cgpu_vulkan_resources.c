@@ -325,9 +325,54 @@ void cgpu_cmd_transfer_buffer_to_texture_vulkan(CGPUCommandBufferId cmd, const s
             .imageExtent.depth = (uint32_t)depth
         };
         D->mVkDeviceTable.vkCmdCopyBufferToImage(Cmd->pVkCmdBuf,
-        Src->pVkBuffer, Dst->pVkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
-        &copy);
+            Src->pVkBuffer, Dst->pVkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
+            &copy);
     }
+}
+
+void cgpu_cmd_transfer_buffer_to_tiles_vulkan(CGPUCommandBufferId cmd, const struct CGPUBufferToTilesTransfer* desc)
+{
+    CGPUCommandBuffer_Vulkan* Cmd = (CGPUCommandBuffer_Vulkan*)cmd;
+    CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)cmd->device;
+    const CGPUTexture_Vulkan* Dst = (const CGPUTexture_Vulkan*)desc->dst;
+    CGPUBuffer_Vulkan* Src = (CGPUBuffer_Vulkan*)desc->src;
+
+    const CGPUTiledTextureInfo* pTiledInfo = Dst->super.tiled_resource;
+    const uint32_t TileWidth = pTiledInfo->tile_width_in_texels;
+    const uint32_t TileHeight = pTiledInfo->tile_height_in_texels;
+    const uint32_t TileDepth = pTiledInfo->tile_depth_in_texels;
+    const uint64_t TileByteSize = pTiledInfo->tile_size;
+
+    const VkFormat fmt = VkUtil_FormatTranslateToVk(Dst->super.info->format);
+    const VkImageAspectFlags aspects = VkUtil_DeterminAspectMask(fmt, false);
+
+    const CGPUCoordinate start = desc->region.start;
+    const CGPUCoordinate end = desc->region.end;
+    VkDeviceSize Offset = desc->src_offset;
+    for (uint32_t z = start.y; z < end.z; z++)
+        for (uint32_t y = start.y; y < end.y; y++)
+            for (uint32_t x = start.x; x < end.x; x++)
+            {
+                VkBufferImageCopy copy = {
+                    .bufferOffset = Offset,
+                    .bufferRowLength = (uint32_t)TileWidth,
+                    .bufferImageHeight = (uint32_t)pTiledInfo->tile_height_in_texels,
+                    .imageSubresource.aspectMask = aspects,
+                    .imageSubresource.mipLevel = desc->region.mip_level,
+                    .imageSubresource.baseArrayLayer = desc->region.layer,
+                    .imageSubresource.layerCount = 1,
+                    .imageOffset.x = x * TileWidth,
+                    .imageOffset.y = y * TileHeight,
+                    .imageOffset.z = z * TileDepth,
+                    .imageExtent.width = TileWidth,
+                    .imageExtent.height = TileHeight,
+                    .imageExtent.depth = TileDepth
+                };
+                D->mVkDeviceTable.vkCmdCopyBufferToImage(Cmd->pVkCmdBuf,
+                    Src->pVkBuffer, Dst->pVkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
+                    1, &copy);
+                Offset += TileByteSize;
+            }
 }
 
 void cgpu_cmd_transfer_texture_to_texture_vulkan(CGPUCommandBufferId cmd, const struct CGPUTextureToTextureTransfer* desc)
