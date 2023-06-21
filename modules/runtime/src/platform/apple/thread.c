@@ -101,7 +101,9 @@ void skr_rw_mutex_acquire_r(SRWMutex* pMutex)
     {
         int r = pthread_rwlock_rdlock(&pMutex->pHandle);
         (void)r;
-        assert(r == 0 && "RWMutex::Acquire failed to take the read lock");
+        assert(r != EINVAL && "RWMutex::AcquireR: The value specified by rwlock does not refer to an initialised read-write lock object.");
+        assert(r != EDEADLK && "RWMutex::AcquireR: Current thread already owns the read-write lock for writing or reading.");
+        assert(r == 0 && "RWMutex::AcquireR: failed to take the read lock");
     }
 }
 
@@ -115,8 +117,9 @@ void skr_rw_mutex_acquire_w(SRWMutex* pMutex)
     if (count == pMutex->mSpinCount)
     {
         int r = pthread_rwlock_wrlock(&pMutex->pHandle);
-        (void)r;
-        assert(r == 0 && "RWMutex::Acquire failed to take the write lock");
+        assert(r != EINVAL && "RWMutex::AcquireW: The value specified by rwlock does not refer to an initialised read-write lock object.");
+        assert(r != EDEADLK && "RWMutex::AcquireW: Current thread already owns the read-write lock for writing or reading.");
+        assert(r == 0 && "RWMutex::AcquireW: failed to take the write lock");
     }
 }
 
