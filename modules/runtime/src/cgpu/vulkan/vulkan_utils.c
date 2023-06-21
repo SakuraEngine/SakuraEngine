@@ -158,6 +158,11 @@ const char* const* device_extensions, uint32_t device_extension_count)
             // Append pNexts
             {
                 void** ppNext = &VkAdapter->mPhysicalDeviceFeatures.pNext;
+#if VK_KHR_buffer_device_address
+                VkAdapter->mPhysicalDeviceBufferDeviceAddressFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_EXT;
+                *ppNext = &VkAdapter->mPhysicalDeviceBufferDeviceAddressFeatures;
+                ppNext = &VkAdapter->mPhysicalDeviceBufferDeviceAddressFeatures.pNext;
+#endif
 #if VK_EXT_descriptor_buffer
                 VkAdapter->mPhysicalDeviceDescriptorBufferFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_FEATURES_EXT;
                 *ppNext = &VkAdapter->mPhysicalDeviceDescriptorBufferFeatures;

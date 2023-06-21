@@ -184,6 +184,7 @@ struct CGPUVkExtensionsTable : public skr::parallel_flat_hash_map<eastl::string,
             }
             // Cache
             {
+                Adapter.buffer_device_address = Table[VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME];
                 Adapter.descriptor_buffer = Table[VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME];
                 Adapter.descriptor_indexing = Table[VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME];
 

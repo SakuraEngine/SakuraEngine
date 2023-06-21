@@ -206,6 +206,9 @@ typedef struct CGPUAdapter_Vulkan {
     VkPhysicalDeviceShaderObjectFeaturesEXT mPhysicalDeviceShaderObjectFeatures;
     VkPhysicalDeviceShaderObjectPropertiesEXT mPhysicalDeviceShaderObjectProperties;
 #endif
+#if VK_KHR_buffer_device_address
+    VkPhysicalDeviceBufferDeviceAddressFeaturesKHR mPhysicalDeviceBufferDeviceAddressFeatures;
+#endif
 #if VK_EXT_descriptor_buffer
     VkPhysicalDeviceDescriptorBufferFeaturesEXT mPhysicalDeviceDescriptorBufferFeatures;
     VkPhysicalDeviceDescriptorBufferPropertiesEXT mPhysicalDeviceDescriptorBufferProperties;
@@ -240,6 +243,7 @@ typedef struct CGPUAdapter_Vulkan {
     uint32_t draw_indirect_count : 1;
     uint32_t amd_draw_indirect_count : 1;
     uint32_t amd_gcn_shader : 1;
+    uint32_t buffer_device_address : 1;
     uint32_t descriptor_buffer : 1;
     uint32_t descriptor_indexing : 1;
     uint32_t sampler_ycbcr : 1;
