@@ -91,6 +91,7 @@ const CGPUProcTable tbl_vk = {
     .cmd_begin = &cgpu_cmd_begin_vulkan,
     .cmd_transfer_buffer_to_buffer = &cgpu_cmd_transfer_buffer_to_buffer_vulkan,
     .cmd_transfer_buffer_to_texture = &cgpu_cmd_transfer_buffer_to_texture_vulkan,
+    .cmd_transfer_buffer_to_tiles = &cgpu_cmd_transfer_buffer_to_tiles_vulkan,
     .cmd_transfer_texture_to_texture = &cgpu_cmd_transfer_texture_to_texture_vulkan,
     .cmd_resource_barrier = &cgpu_cmd_resource_barrier_vulkan,
     .cmd_begin_query = &cgpu_cmd_begin_query_vulkan,
