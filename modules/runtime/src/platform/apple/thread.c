@@ -79,10 +79,9 @@ void skr_mutex_release(SMutex* pMutex)
 bool skr_init_rw_mutex(SRWMutex* pMutex)
 {
     pMutex->mSpinCount = MUTEX_DEFAULT_SPIN_COUNT;
-    pMutex->pHandle = (pthread_rwlock_t)PTHREAD_RWLOCK_INITIALIZER;
-    pthread_mutexattr_t attr;
-    int status = 0;
-    return status == 0;
+    int err = pthread_rwlock_init(&pMutex->pHandle, NULL);
+    assert(err == 0 && "RWMutex::Init: failed to initialize the rw lock");
+    return err == 0;
 }
 
 void skr_destroy_rw_mutex(SRWMutex* pMutex) 
