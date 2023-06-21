@@ -1,4 +1,5 @@
 #include "platform/thread.h"
+#include "platform/debug.h"
 #include <sys/sysctl.h>
 #include <time.h>
 #include <mach/clock.h>
@@ -60,7 +61,7 @@ void skr_mutex_acquire(SMutex* pMutex)
     {
         int r = pthread_mutex_lock(&pMutex->pHandle);
         (void)r;
-        assert(r == 0 && "Mutex::Acquire failed to take the lock");
+        SKR_ASSERT(r == 0 && "Mutex::Acquire failed to take the lock");
     }
 }
 
@@ -80,7 +81,7 @@ bool skr_init_rw_mutex(SRWMutex* pMutex)
 {
     pMutex->mSpinCount = MUTEX_DEFAULT_SPIN_COUNT;
     int err = pthread_rwlock_init(&pMutex->pHandle, NULL);
-    assert(err == 0 && "RWMutex::Init: failed to initialize the rw lock");
+    SKR_ASSERT(err == 0 && "RWMutex::Init: failed to initialize the rw lock");
     return err == 0;
 }
 
@@ -100,9 +101,9 @@ void skr_rw_mutex_acquire_r(SRWMutex* pMutex)
     {
         int r = pthread_rwlock_rdlock(&pMutex->pHandle);
         (void)r;
-        assert(r != EINVAL && "RWMutex::AcquireR: The value specified by rwlock does not refer to an initialised read-write lock object.");
-        assert(r != EDEADLK && "RWMutex::AcquireR: Current thread already owns the read-write lock for writing or reading.");
-        assert(r == 0 && "RWMutex::AcquireR: failed to take the read lock");
+        SKR_ASSERT(r != EINVAL && "RWMutex::AcquireR: The value specified by rwlock does not refer to an initialised read-write lock object.");
+        SKR_ASSERT(r != EDEADLK && "RWMutex::AcquireR: Current thread already owns the read-write lock for writing or reading.");
+        SKR_ASSERT(r == 0 && "RWMutex::AcquireR: failed to take the read lock");
     }
 }
 
@@ -116,9 +117,9 @@ void skr_rw_mutex_acquire_w(SRWMutex* pMutex)
     if (count == pMutex->mSpinCount)
     {
         int r = pthread_rwlock_wrlock(&pMutex->pHandle);
-        assert(r != EINVAL && "RWMutex::AcquireW: The value specified by rwlock does not refer to an initialised read-write lock object.");
-        assert(r != EDEADLK && "RWMutex::AcquireW: Current thread already owns the read-write lock for writing or reading.");
-        assert(r == 0 && "RWMutex::AcquireW: failed to take the write lock");
+        SKR_ASSERT(r != EINVAL && "RWMutex::AcquireW: The value specified by rwlock does not refer to an initialised read-write lock object.");
+        SKR_ASSERT(r != EDEADLK && "RWMutex::AcquireW: Current thread already owns the read-write lock for writing or reading.");
+        SKR_ASSERT(r == 0 && "RWMutex::AcquireW: failed to take the write lock");
     }
 }
 
@@ -138,7 +139,7 @@ bool skr_init_condition_var(SConditionVariable* pCv)
 {
     pCv->pHandle = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
     int res = pthread_cond_init(&pCv->pHandle, NULL);
-    assert(res == 0);
+    SKR_ASSERT(res == 0);
     return res == 0;
 }
 
@@ -231,7 +232,7 @@ void skr_init_thread(SThreadDesc* pData, SThreadHandle* pHandle)
     int res = pthread_create(pHandle, NULL, ThreadFunctionStatic, pData);
     skr_thread_set_priority(*pHandle, SKR_THREAD_NORMAL);
     SKR_UNREF_PARAM(res);
-    assert(res == 0);
+    SKR_ASSERT(res == 0);
 }
 
 void skr_destroy_thread(SThreadHandle handle)
