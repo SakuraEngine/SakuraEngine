@@ -515,6 +515,7 @@ void finalize()
         cgpu_free_command_pool(pools[i]);
         cgpu_free_fence(exec_fences[i]);
     }
+    cgpu_wait_queue_idle(App.gfx_queue);
     cgpu_free_semaphore(present_semaphore);
     cgpu_free_descriptor_set(desc_set);
     if (desc_set2) cgpu_free_descriptor_set(desc_set2);
