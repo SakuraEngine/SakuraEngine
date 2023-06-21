@@ -286,36 +286,48 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
     stack_vector<CGPUTextureBarrier>& tex_barriers, stack_vector<eastl::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
     stack_vector<CGPUBufferBarrier>& buf_barriers, stack_vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) SKR_NOEXCEPT
 {
+    stack_set<TextureHandle> tex_resolve_set;
+    stack_set<BufferHandle> buf_resolve_set;
+
     ZoneScopedN("CalculateBarriers");
-    tex_barriers.reserve(pass->textures_count());
-    resolved_textures.reserve(pass->textures_count());
-    buf_barriers.reserve(pass->buffers_count());
-    resolved_buffers.reserve(pass->buffers_count());
     pass->foreach_textures(
         [&](TextureNode* texture, TextureEdge* edge) {
             auto tex_resolved = resolve(executor, *texture);
-            resolved_textures.emplace_back(texture->get_handle(), tex_resolved);
-            const auto current_state = get_lastest_state(texture, pass);
-            const auto dst_state = edge->requested_state;
-            if (current_state == dst_state) return;
-            CGPUTextureBarrier barrier = {};
-            barrier.src_state = current_state;
-            barrier.dst_state = dst_state;
-            barrier.texture = tex_resolved;
-            tex_barriers.emplace_back(barrier);
+            if (tex_resolve_set.find(texture->get_handle()) == tex_resolve_set.end())
+            {
+                resolved_textures.emplace_back(texture->get_handle(), tex_resolved);
+                tex_resolve_set.insert(texture->get_handle());
+
+                const auto current_state = get_lastest_state(texture, pass);
+                const auto dst_state = edge->requested_state;
+                if (current_state == dst_state) return;
+                
+                CGPUTextureBarrier barrier = {};
+                barrier.src_state = current_state;
+                barrier.dst_state = dst_state;
+                barrier.texture = tex_resolved;
+                
+                tex_barriers.emplace_back(barrier);
+            }
         });
     pass->foreach_buffers(
         [&](BufferNode* buffer, BufferEdge* edge) {
             auto buf_resolved = resolve(executor, *buffer);
-            resolved_buffers.emplace_back(buffer->get_handle(), buf_resolved);
-            const auto current_state = get_lastest_state(buffer, pass);
-            const auto dst_state = edge->requested_state;
-            if (current_state == dst_state) return;
-            CGPUBufferBarrier barrier = {};
-            barrier.src_state = current_state;
-            barrier.dst_state = dst_state;
-            barrier.buffer = buf_resolved;
-            buf_barriers.emplace_back(barrier);
+            if (buf_resolve_set.find(buffer->get_handle()) == buf_resolve_set.end())
+            {
+                resolved_buffers.emplace_back(buffer->get_handle(), buf_resolved);
+                buf_resolve_set.insert(buffer->get_handle());
+
+                const auto current_state = get_lastest_state(buffer, pass);
+                const auto dst_state = edge->requested_state;
+                if (current_state == dst_state) return;
+
+                CGPUBufferBarrier barrier = {};
+                barrier.src_state = current_state;
+                barrier.dst_state = dst_state;
+                barrier.buffer = buf_resolved;
+                buf_barriers.emplace_back(barrier);
+            }
         });
 }
 

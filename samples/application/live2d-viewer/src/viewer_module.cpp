@@ -55,7 +55,7 @@ class SLive2DViewerModule : public skr::IDynamicModule
 public:
     static SLive2DViewerModule* Get();
 
-    bool bUseCVV = false;
+    bool bUseCVV = true;
     DemoUploadMethod upload_method;
 
     CGPUSwapChainId swapchain = nullptr;

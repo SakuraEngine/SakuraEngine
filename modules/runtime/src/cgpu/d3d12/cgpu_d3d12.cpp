@@ -1499,8 +1499,7 @@ void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUR
                 }
                 pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
                 pBarrier->Transition.pResource = pBuffer->pDxResource;
-                pBarrier->Transition.Subresource =
-                D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+                pBarrier->Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
                 if (pTransBarrier->queue_acquire)
                     pBarrier->Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
@@ -1547,8 +1546,7 @@ void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUR
                 pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
             }
             pBarrier->Transition.pResource = pTexture->pDxResource;
-            pBarrier->Transition.Subresource =
-            pTransBarrier->subresource_barrier ? CALC_SUBRESOURCE_INDEX(
+            pBarrier->Transition.Subresource = pTransBarrier->subresource_barrier ? CALC_SUBRESOURCE_INDEX(
                                                  pTransBarrier->mip_level, pTransBarrier->array_layer,
                                                  0, pTexInfo->mip_levels, pTexInfo->array_size_minus_one + 1) :
                                                  D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
