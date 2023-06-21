@@ -2,72 +2,81 @@
 #include "SkrGui/framework/diagnostics.hpp"
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
+#include "SkrGui/framework/build_context.hpp"
 
 namespace skr::gui
 {
-enum class ElementLifecycle : uint32_t
+enum class EElementLifecycle : uint8_t
 {
-    initial,
-    active,
-    inactive,
-    defunct,
+    Initial,
+    Active,
+    Inactive,
+    Defunct,
 };
 
-struct SKR_GUI_API Element : public DiagnosticableTreeNode {
-    SKR_GUI_TYPE(Element, "123127c7-4eed-4007-87ff-6843bd56771a", DiagnosticableTreeNode)
-
-    friend struct BuildOwner;
+struct SKR_GUI_API Element : public DiagnosticableTreeNode, public IBuildContext {
+    SKR_GUI_TYPE(Element, "123127c7-4eed-4007-87ff-6843bd56771a", DiagnosticableTreeNode, IBuildContext)
 
     Element(Widget* widget) SKR_NOEXCEPT;
 
+    // element tree
+    virtual void flush_depth() SKR_NOEXCEPT;
+    virtual void visit_children(FunctionRef<void(Element*)> visitor) const SKR_NOEXCEPT;
+    virtual void visit_children_recursive(FunctionRef<void(Element*)> visitor) const SKR_NOEXCEPT;
+
     // life circle
+    virtual void mount(Element* parent, uint64_t slot) SKR_NOEXCEPT;
     virtual void activate() SKR_NOEXCEPT;
     virtual void deactivate() SKR_NOEXCEPT;
-
-    // element tree modify
-    virtual void mount(Element* parent, Slot* slot) SKR_NOEXCEPT;
     virtual void unmount() SKR_NOEXCEPT;
 
-    // render object tree modify
-    virtual void attach_render_object(Slot* new_slot) SKR_NOEXCEPT;
-    virtual void detach_render_object() SKR_NOEXCEPT;
+    // owner
+    inline BuildOwner* owner() const SKR_NOEXCEPT { return _owner; }
+    inline void        set_owner(BuildOwner* owner) SKR_NOEXCEPT { _owner = owner; }
 
-    // widget update
-    // rebuild --> perform_rebuild --> update_child --> update_slot_for_child
-    //                                              --> update
-    //                                              --> inflate_widget
-    void                      rebuild(bool force = false) SKR_NOEXCEPT;                                      // 控件树刷新的入口，由 BuildOwner 调用，实现固定，主要做一些 assert 工作
-    virtual void              perform_rebuild() SKR_NOEXCEPT;                                                // 实际走到的 rebuild 逻辑，由具体的 Element 实现
-    virtual Element*          update_child(Element* child, Widget* new_widget, Slot* new_slot) SKR_NOEXCEPT; // perform_rebuild 中调用，在这里做 child 的 diff 工作
-    virtual void              update_slot_for_child(Element* child, Slot* new_slot) SKR_NOEXCEPT;            // 最低开销的更新，仅仅更新 slot
-    virtual void              update(Widget* new_widget) SKR_NOEXCEPT;                                       // 更新 child 的数据，将 widget 信息透传到 render object
-    virtual NotNull<Element*> inflate_widget(NotNull<Widget*> widget, Slot* new_slot) SKR_NOEXCEPT;          // 刷新 widget，最耗的更新
+    // mark functions
+    virtual void mark_needs_build() SKR_NOEXCEPT;
 
-    // element tree query
-    virtual void visit_children(function_ref<void(Element*)> visitor) SKR_NOEXCEPT;
-    virtual void visit_child_elements(function_ref<void(Element*)> visitor) SKR_NOEXCEPT;
-    virtual void forget_child(Element* child) SKR_NOEXCEPT;
-    virtual void deactivate_child(Element* child) SKR_NOEXCEPT;
+    // build & update
+    void         rebuild(bool force = false) SKR_NOEXCEPT;
+    virtual void perform_rebuild() SKR_NOEXCEPT = 0;
+    virtual void update_slot(uint64_t new_slot) SKR_NOEXCEPT;
+    virtual void update(NotNull<Widget*> new_widget) SKR_NOEXCEPT;
 
-private:
+    // render object (self or child's)
+    virtual RenderObject* render_object() const SKR_NOEXCEPT;
+
+    // TODO. notification
+    // TODO. IBuildContext API
+
+    // getter & setter
+    inline Element* parent() const SKR_NOEXCEPT { return _parent; }
+    inline uint64_t slot() const SKR_NOEXCEPT { return _slot; }
+    inline Widget*  widget() const SKR_NOEXCEPT { return _widget; }
+
+protected:
     // help functions
-    Element*     _retake_inactive_element(const Key& key, NotNull<Widget*> widget) SKR_NOEXCEPT;
-    void         _active_with_parent(Element* parent, Slot* slot) SKR_NOEXCEPT;
-    static void  _active_recursively(Element* element) SKR_NOEXCEPT;
-    virtual void _update_slot(Slot* new_slot) SKR_NOEXCEPT;
-    void         _update_depth(int parentDepth) SKR_NOEXCEPT;
-    static int   _compare_depth(Element* a, Element* b) SKR_NOEXCEPT;
-    bool         _debug_is_in_scope(Element* ancestor) SKR_NOEXCEPT;
+    Element*          _update_child(Element* child, Widget* new_widget, uint64_t new_slot) SKR_NOEXCEPT;
+    NotNull<Element*> _inflate_widget(NotNull<Widget*> widget, uint64_t slot) SKR_NOEXCEPT;
+    inline void       _cancel_dirty() SKR_NOEXCEPT { _dirty = false; }
+    // TODO. static helper update_children
 
 private:
-    uint32_t _depth = 0;
-    bool     _dirty = true;
-    bool     _in_dirty_list = false;
+    friend struct BuildOwner;
+    // element tree
+    Element*    _parent = nullptr;
+    BuildOwner* _owner = nullptr;
+    uint32_t    _depth = 0;
 
-    Widget*          _widget = nullptr;
-    Element*         _parent = nullptr;
-    Slot*            _slot = nullptr; // TODO. use int64_t and rename to _slot_index, parentData -> slot and slot -> slot_index
-    BuildOwner*      _owner = nullptr;
-    ElementLifecycle _lifecycle_state = ElementLifecycle::initial;
+    // dirty marks & lifecycle
+    bool              _dirty = false;
+    bool              _in_dirty_list = false;
+    EElementLifecycle _lifecycle_state = EElementLifecycle::Initial;
+
+    // context
+    // TODO. InheritedElement 的广播 CowMap<TYPE_ID, InheritedElement> _inherited_elements;
+    // TODO. InheritedElement 的广播 Set<InheritedElement> _dependencies;
+    uint64_t _slot = 0;
+    Widget*  _widget = nullptr;
 };
 } // namespace skr::gui

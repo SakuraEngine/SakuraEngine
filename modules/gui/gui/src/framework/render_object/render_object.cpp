@@ -5,16 +5,6 @@ namespace skr::gui
 {
 
 RenderObject::RenderObject() SKR_NOEXCEPT
-    : _parent(nullptr),
-      _owner(nullptr),
-      _depth(0),
-      _needs_layout(true),
-      _needs_paint(true),
-      _force_relayout_boundary(false),
-      _is_constraints_changed(false),
-      _relayout_boundary(nullptr),
-      _layer(nullptr),
-      _doing_this_layout_with_callback(false)
 {
 }
 RenderObject::~RenderObject()
@@ -56,8 +46,8 @@ void RenderObject::flush_depth() SKR_NOEXCEPT
 {
     _depth = _parent->_depth + 1;
 }
-void RenderObject::visit_children(function_ref<void(RenderObject*)> visitor) const SKR_NOEXCEPT {}
-void RenderObject::visit_children_recursive(function_ref<void(RenderObject*)> visitor) const SKR_NOEXCEPT {}
+void RenderObject::visit_children(FunctionRef<void(RenderObject*)> visitor) const SKR_NOEXCEPT {}
+void RenderObject::visit_children_recursive(FunctionRef<void(RenderObject*)> visitor) const SKR_NOEXCEPT {}
 
 // pipeline owner
 void RenderObject::attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT
@@ -170,6 +160,13 @@ Matrix4 RenderObject::get_transform_to(RenderObject* ancestor) const SKR_NOEXCEP
     return {};
 }
 
+// element bind
+void RenderObject::dispose() SKR_NOEXCEPT
+{
+    SKR_UNIMPLEMENTED_FUNCTION()
+}
+
+// layout & paint marks
 void RenderObject::_mark_parent_needs_layout() SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION()
@@ -180,7 +177,7 @@ void RenderObject::_flush_relayout_boundary() SKR_NOEXCEPT
 }
 
 //==> Begin DiagnosticableTreeNode API
-void RenderObject::visit_diagnostics_children(function_ref<void(DiagnosticableTreeNode*)> visitor) SKR_NOEXCEPT
+void RenderObject::visit_diagnostics_children(FunctionRef<void(DiagnosticableTreeNode*)> visitor) SKR_NOEXCEPT
 {
     visit_children([&visitor](RenderObject* o) { visitor(o); });
 }

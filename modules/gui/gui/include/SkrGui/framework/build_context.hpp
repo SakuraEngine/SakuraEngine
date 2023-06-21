@@ -20,8 +20,8 @@ struct SKR_GUI_API IBuildContext SKR_GUI_INTERFACE_BASE {
     virtual State*                    find_ancestor_state_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT = 0;
     virtual State*                    find_root_ancestor_state_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT = 0;
     virtual RenderObject*             find_ancestor_render_object_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT = 0;
-    virtual void                      visit_ancestor_elements(function_ref<bool(NotNull<Element*>)> visitor) SKR_NOEXCEPT = 0;
-    virtual void                      visit_child_elements(function_ref<void(NotNull<Element*>)> visitor) SKR_NOEXCEPT = 0;
+    virtual void                      visit_ancestor_elements(FunctionRef<bool(NotNull<Element*>)> visitor) SKR_NOEXCEPT = 0;
+    virtual void                      visit_child_elements(FunctionRef<void(NotNull<Element*>)> visitor) SKR_NOEXCEPT = 0;
     virtual void                      dispatch_notification(NotNull<Notification*> notification) SKR_NOEXCEPT = 0;
 
     // TODO. describeElement

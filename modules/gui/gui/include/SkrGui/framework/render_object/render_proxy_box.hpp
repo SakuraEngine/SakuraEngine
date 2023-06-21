@@ -29,8 +29,8 @@ public:
     SKR_GUI_TYPE_ID   accept_child_type() const noexcept override;
     void              set_child(RenderObject* child) noexcept override;
     void              flush_depth() noexcept override;
-    void              visit_children(function_ref<void(RenderObject*)> visitor) const noexcept override;
-    void              visit_children_recursive(function_ref<void(RenderObject*)> visitor) const noexcept override;
+    void              visit_children(FunctionRef<void(RenderObject*)> visitor) const noexcept override;
+    void              visit_children_recursive(FunctionRef<void(RenderObject*)> visitor) const noexcept override;
     void              attach(NotNull<PipelineOwner*> owner) noexcept override;
     void              detach() noexcept override;
     inline RenderBox* child() const noexcept { return _child; }
