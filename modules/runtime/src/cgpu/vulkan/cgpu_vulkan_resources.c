@@ -665,9 +665,9 @@ CGPUTiledTextureInfo* VkUtil_FillTiledTextureInfo(CGPUDevice_Vulkan* D, VkImage 
     pTiledInfo->tile_depth_in_texels = sparseReq.formatProperties.imageGranularity.depth;
     pTiledInfo->subresources = pSubresInfos;
 
-    pTiledInfo->tail_tiles_count = sparseReq.imageMipTailSize / VK_SPARSE_PAGE_STANDARD_SIZE;
-    pTiledInfo->tail_mip_start = sparseReq.imageMipTailFirstLod;
-    pTiledInfo->tail_mip_count = desc->mip_levels - sparseReq.imageMipTailFirstLod;
+    pTiledInfo->packed_mip_tiles_count = sparseReq.imageMipTailSize / VK_SPARSE_PAGE_STANDARD_SIZE;
+    pTiledInfo->packed_mip_start = sparseReq.imageMipTailFirstLod;
+    pTiledInfo->packed_mip_count = desc->mip_levels - sparseReq.imageMipTailFirstLod;
 
     *outTypeBits = sparseImageMemoryReqs.memoryTypeBits;
     
@@ -867,8 +867,8 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
     if (desc->flags & CGPU_TCF_TILED_RESOURCE)
     {
         pTiledInfo = VkUtil_FillTiledTextureInfo(D, pVkImage, desc, &memTypBits);
-        pVkTileMappings = cgpu_calloc_aligned(pTiledInfo->tail_mip_start, sizeof(CGPUTileTextureSubresourceMapping_Vulkan), _Alignof(CGPUTileTextureSubresourceMapping_Vulkan));
-        for (uint32_t i = 0; i < pTiledInfo->tail_mip_start; i++)
+        pVkTileMappings = cgpu_calloc_aligned(pTiledInfo->packed_mip_start, sizeof(CGPUTileTextureSubresourceMapping_Vulkan), _Alignof(CGPUTileTextureSubresourceMapping_Vulkan));
+        for (uint32_t i = 0; i < pTiledInfo->packed_mip_start; i++)
         {
             const uint32_t X = pTiledInfo->subresources[i].width_in_tiles;
             const uint32_t Y = pTiledInfo->subresources[i].height_in_tiles;
@@ -981,6 +981,11 @@ void VkUtil_UnmapTileMappingAt(CGPUTexture_Vulkan* T, CGPUTileTextureSubresource
     }
 }
 
+void cgpu_queue_map_packed_mips_vulkan(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions)
+{
+
+}
+
 void cgpu_queue_map_tiled_texture_vulkan(CGPUQueueId queue, const struct CGPUTiledTextureRegions* regions)
 {
     const uint32_t kPageSize = VK_SPARSE_PAGE_STANDARD_SIZE;
@@ -1000,6 +1005,8 @@ void cgpu_queue_map_tiled_texture_vulkan(CGPUQueueId queue, const struct CGPUTil
             for (uint32_t y = Region.start.y; y < Region.end.y; y++)
             for (uint32_t z = Region.start.z; z < Region.end.z; z++)
             {
+                SKR_ASSERT(Region.mip_level < pTiledInfo->packed_mip_start && 
+                    "cgpu_queue_map_tiled_texture_vulkan: Mip level must be less than packed mip start!");
                 uint32_t subres_index = Region.layer * T->super.info->mip_levels + Region.mip_level;
                 CGPUTileTextureSubresourceMapping_Vulkan* subres = T->pVkTileMappings + subres_index;
                 CGPUTileMapping_Vulkan* pMapping = VkUtil_TileMappingAt(subres, x, y, z);
@@ -1181,7 +1188,7 @@ void cgpu_free_texture_vulkan(CGPUTextureId texture)
     }
     if (T->pVkTileMappings)
     {
-        for (uint32_t i = 0; i < T->super.tiled_resource->tail_mip_start; i++)
+        for (uint32_t i = 0; i < T->super.tiled_resource->packed_mip_start; i++)
         {
             CGPUTileTextureSubresourceMapping_Vulkan* subres = T->pVkTileMappings + i;
             if (subres->mappings)

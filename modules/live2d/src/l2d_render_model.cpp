@@ -68,16 +68,19 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
             );
         }
     }
+
     void texture_finish(skr_io_future_t* p_io_request)
     {
         finished_texture_request++;
         try_finish();
     }
+
     void buffer_finish(skr_io_future_t* p_io_request)
     {
         finished_buffer_request++;
         try_finish();
     }
+
     void finish()
     {
         for (uint32_t i = 0; i < textures.size(); i++)
@@ -102,6 +105,7 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
         skr_atomicu32_store_relaxed(&request->io_status, SKR_IO_STAGE_COMPLETED);
         request = nullptr;
     }
+
     void try_finish()
     {
         if (finished_texture_request < texture_io_requests.size()) return;
@@ -109,6 +113,7 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
         if (finished_buffer_request < bios) return;
         finish();
     }
+
     uint32_t finished_texture_request = 0;
     uint32_t finished_buffer_request = 0;
     skr_live2d_render_model_request_t* request = nullptr;
