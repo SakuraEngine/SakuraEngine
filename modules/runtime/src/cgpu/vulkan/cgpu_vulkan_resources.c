@@ -669,6 +669,9 @@ CGPUTiledTextureInfo* VkUtil_FillTiledTextureInfo(CGPUDevice_Vulkan* D, VkImage 
     pTiledInfo->packed_mip_start = sparseReq.imageMipTailFirstLod;
     pTiledInfo->packed_mip_count = desc->mip_levels - sparseReq.imageMipTailFirstLod;
 
+    pTiledInfo->pack_unaligned = (sparseReq.formatProperties.flags & VK_SPARSE_IMAGE_FORMAT_ALIGNED_MIP_SIZE_BIT) ? true : false;
+    pTiledInfo->pack_all_layers = (sparseReq.formatProperties.flags & VK_SPARSE_IMAGE_FORMAT_SINGLE_MIPTAIL_BIT) ? true : false;
+
     *outTypeBits = sparseImageMemoryReqs.memoryTypeBits;
     
     return pTiledInfo;
@@ -983,7 +986,7 @@ void VkUtil_UnmapTileMappingAt(CGPUTexture_Vulkan* T, CGPUTileTextureSubresource
 
 void cgpu_queue_map_packed_mips_vulkan(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions)
 {
-
+    SKR_UNIMPLEMENTED_FUNCTION();
 }
 
 void cgpu_queue_map_tiled_texture_vulkan(CGPUQueueId queue, const struct CGPUTiledTextureRegions* regions)
@@ -1165,11 +1168,14 @@ void cgpu_free_texture_vulkan(CGPUTextureId texture)
             (void)fmt;
             // TODO: Support planar formats
             const bool isSinglePlane = true;
-            if (isSinglePlane)
+            if (pInfo->is_tiled)
+            {
+                D->mVkDeviceTable.vkDestroyImage(D->pVkDevice, T->pVkImage, GLOBAL_VkAllocationCallbacks);
+            }
+            else if (isSinglePlane)
             {
                 cgpu_trace("Freeing texture allocation %p \n\t size: %dx%dx%d owns_image: %d imported: %d", 
                     T->pVkImage, pInfo->width, pInfo->height, pInfo->depth, pInfo->owns_image, pInfo->is_imported);
-
                 vmaDestroyImage(D->pVmaAllocator, T->pVkImage, T->pVkAllocation);
             }
             else

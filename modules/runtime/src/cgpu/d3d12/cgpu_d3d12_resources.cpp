@@ -744,6 +744,11 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
     pTiledInfo->tile_depth_in_texels = tileShape.DepthInTexels;
     pTiledInfo->subresources = pSubresInfo;
 
+    if (A->mTiledResourceTier <= D3D12_TILED_RESOURCES_TIER_1)
+        pTiledInfo->pack_unaligned = true;
+    else
+        pTiledInfo->pack_unaligned = false;
+
     pTiledInfo->packed_mip_start = packedMipInfo.NumStandardMips;
     pTiledInfo->packed_mip_count = packedMipInfo.NumPackedMips;
     pTiledInfo->packed_mip_tiles_count = packedMipInfo.NumTilesForPackedMips;
