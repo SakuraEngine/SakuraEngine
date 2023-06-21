@@ -1,4 +1,5 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
+#include "cgpu/d3d12/D3D12MemAlloc.h"
 #include "cgpu/drivers/cgpu_nvapi.h"
 #include "cgpu/drivers/cgpu_ags.h"
 #include "d3d12_utils.hpp"
@@ -712,6 +713,7 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
         &resDesc, startStates, pClearValue, IID_PPV_ARGS(&pDxResource));
     CHECK_HRESULT(res);
     SKR_ASSERT(resDesc.DepthOrArraySize == 1);
+    uint32_t layers = resDesc.DepthOrArraySize;
 
     // query page informations
     UINT numTiles = 0;
@@ -724,16 +726,23 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
         &packedMipInfo, &tileShape, 
         &subresourceCount, 0, 
         tilings);
-
+    
     const auto objSize = sizeof(CGPUTiledTexture_D3D12) + sizeof(CGPUTextureInfo) + sizeof(CGPUTiledTextureInfo);
     const auto subresSize = (sizeof(CGPUTiledSubresourceInfo) + sizeof(SubresTileMappings_D3D12)) * subresourceCount;
-    const auto totalSize = objSize + subresSize;
+    const auto packedMipSize = sizeof(PackedMipMapping_D3D12);
+    const auto totalPackedMipSize = layers * packedMipSize;
+    const auto totalSize = objSize + subresSize + totalPackedMipSize;
     auto T = (CGPUTiledTexture_D3D12*)cgpu_calloc(1, totalSize);
     auto pInfo = (CGPUTextureInfo*)(T + 1);
     auto pTiledInfo = (CGPUTiledTextureInfo*)(pInfo + 1);
     auto pSubresInfo = (CGPUTiledSubresourceInfo*)(pTiledInfo + 1);
     auto pSubresMapping = (SubresTileMappings_D3D12*)(pSubresInfo + subresourceCount);
-    new (T) CGPUTiledTexture_D3D12(pSubresMapping, packedMipInfo.NumTilesForPackedMips);
+    auto pPackedMipsMapping = (PackedMipMapping_D3D12*)(pSubresMapping + subresourceCount);
+    for (uint32_t i = 0; i < layers; i++)
+    {
+        new (pPackedMipsMapping + i) PackedMipMapping_D3D12(T, packedMipInfo.NumTilesForPackedMips);
+    }
+    new (T) CGPUTiledTexture_D3D12(pSubresMapping, pPackedMipsMapping, layers);
 
     pTiledInfo->total_tiles_count = numTiles;
     pTiledInfo->alive_tiles_count = 0;
@@ -772,6 +781,55 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
         D3D12Util_MapAllTilesAsUndefined(Q->pCommandQueue, T->pDxResource, D->pUndefinedTileHeap);
     }
     return T;
+}
+
+void cgpu_queue_map_packed_mips_d3d12(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions)
+{
+    CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)queue->device;
+    CGPUQueue_D3D12* Q = (CGPUQueue_D3D12*)queue;
+    for (uint32_t i = 0; i < regions->packed_mip_count; i++)
+    {
+        CGPUTiledTexture_D3D12* T = (CGPUTiledTexture_D3D12*)regions->packed_mips[i].texture;
+        uint32_t layer = regions->packed_mips[i].layer;
+        auto* pMapping = T->getPackedMipMapping(layer);
+
+        const int32_t prev = skr_atomic32_cas_relaxed(&pMapping->status, D3D12_TILE_MAPPING_STATUS_UNMAPPED, D3D12_TILE_MAPPING_STATUS_PENDING);
+        if (prev != D3D12_TILE_MAPPING_STATUS_UNMAPPED) continue;
+        
+        D->pTiledMemoryPool->AllocateTiles(1, &pMapping->pAllocation, pMapping->N);
+
+        const int32_t prev2 = skr_atomic32_cas_relaxed(&pMapping->status, D3D12_TILE_MAPPING_STATUS_PENDING, D3D12_TILE_MAPPING_STATUS_MAPPING);
+        if (prev2 != D3D12_TILE_MAPPING_STATUS_PENDING) continue;
+
+        const auto HeapOffset = (UINT32)pMapping->pAllocation->GetOffset();
+        const auto firstSubresource = CALC_SUBRESOURCE_INDEX(T->super.tiled_resource->packed_mip_start, layer, 0, 1, 1);
+        D3D12_TILED_RESOURCE_COORDINATE resourceRegionStartCoordinates{ 0, 0, 0, firstSubresource };
+        D3D12_TILE_REGION_SIZE resourceRegionSizes{ pMapping->N, FALSE, 0, 0, 0 };
+        Q->pCommandQueue->UpdateTileMappings(
+            T->pDxResource,
+            1,
+            &resourceRegionStartCoordinates,
+            &resourceRegionSizes, 
+            pMapping->pAllocation->GetHeap(), // ID3D12Heap*
+            pMapping->N,
+            NULL,  // All ranges are sequential tiles in the heap
+            &HeapOffset,
+            nullptr,
+            D3D12_TILE_MAPPING_FLAG_NONE);
+
+        skr_atomic32_cas_relaxed(&pMapping->status, D3D12_TILE_MAPPING_STATUS_MAPPING, D3D12_TILE_MAPPING_STATUS_MAPPED);
+    }
+}
+
+void cgpu_queue_unmap_packed_mips_d3d12(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions)
+{
+    for (uint32_t i = 0; i < regions->packed_mip_count; i++)
+    {
+        CGPUTiledTexture_D3D12* T = (CGPUTiledTexture_D3D12*)regions->packed_mips[i].texture;
+        uint32_t layer = regions->packed_mips[i].layer;
+        auto* pMapping = T->getPackedMipMapping(layer);
+        pMapping->unmap();
+    }
 }
 
 void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTiledTextureRegions* regions)
@@ -1196,7 +1254,7 @@ CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const
     {
         result = D->pDxDevice->OpenSharedHandle(namedResourceHandle, IID_PPV_ARGS(&imported));
     }
-    else if (desc->backend == CGPU_BACKEND_VULKAN)
+    else if (desc->backend == CGPU_BACKEND_D3D12)
     {
         CloseHandle(namedResourceHandle);
         cgpu_warn("Not implementated!");

@@ -47,6 +47,8 @@ const CGPUProcTable tbl_d3d12 = {
     .queue_get_timestamp_period = &cgpu_queue_get_timestamp_period_ns_d3d12,
     .queue_map_tiled_texture = &cgpu_queue_map_tiled_texture_d3d12,
     .queue_unmap_tiled_texture = &cgpu_queue_unmap_tiled_texture_d3d12,
+    .queue_map_packed_mips = &cgpu_queue_map_packed_mips_d3d12,
+    .queue_unmap_packed_mips = &cgpu_queue_unmap_packed_mips_d3d12,
     .free_queue = &cgpu_free_queue_d3d12,
 
     // Command APIs
