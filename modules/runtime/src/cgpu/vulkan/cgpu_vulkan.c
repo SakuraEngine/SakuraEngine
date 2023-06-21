@@ -1906,30 +1906,37 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGPUCommandBufferId cm
     }
     // Cmd begin render pass
     VkClearValue clearValues[2 * CGPU_MAX_MRT_COUNT + 1] = { 0 };
-    uint32_t idx = 0;
+    uint32_t clearCount = 0;
     for (uint32_t i = 0; i < desc->render_target_count; i++)
     {
         CGPUClearValue clearValue = desc->color_attachments[i].clear_color;
-        clearValues[i].color.float32[0] = clearValue.r;
-        clearValues[i].color.float32[1] = clearValue.g;
-        clearValues[i].color.float32[2] = clearValue.b;
-        clearValues[i].color.float32[3] = clearValue.a;
-        idx++;
+        if (desc->color_attachments[i].load_action == CGPU_LOAD_ACTION_CLEAR)
+        {
+            clearValues[i].color.float32[0] = clearValue.r;
+            clearValues[i].color.float32[1] = clearValue.g;
+            clearValues[i].color.float32[2] = clearValue.b;
+            clearValues[i].color.float32[3] = clearValue.a;
+            clearCount++;
+        }
     }
     // clear msaa resolve targets
     for (uint32_t i = 0; i < desc->render_target_count; i++)
     {
-        if (desc->color_attachments[i].resolve_view)
-        {
-            idx++;
-        }
+        if (desc->color_attachments[i].load_action == CGPU_LOAD_ACTION_CLEAR)
+            if (desc->color_attachments[i].resolve_view)
+            {
+                clearCount++;
+            }
     }
     // depth stencil clear
     if (desc->depth_stencil)
     {
-        clearValues[idx].depthStencil.depth = desc->depth_stencil->clear_depth;
-        clearValues[idx].depthStencil.stencil = desc->depth_stencil->clear_stencil;
-        idx++;
+        if (desc->depth_stencil->depth_load_action == CGPU_LOAD_ACTION_CLEAR)
+        {
+            clearValues[clearCount].depthStencil.depth = desc->depth_stencil->clear_depth;
+            clearValues[clearCount].depthStencil.stencil = desc->depth_stencil->clear_stencil;
+            clearCount++;
+        }
     }
     VkRect2D render_area = {
         .offset.x = 0,
@@ -1943,7 +1950,7 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGPUCommandBufferId cm
         .renderPass = render_pass,
         .framebuffer = pFramebuffer,
         .renderArea = render_area,
-        .clearValueCount = idx,
+        .clearValueCount = clearCount,
         .pClearValues = clearValues
     };
     D->mVkDeviceTable.vkCmdBeginRenderPass(Cmd->pVkCmdBuf, &begin_info, VK_SUBPASS_CONTENTS_INLINE);
