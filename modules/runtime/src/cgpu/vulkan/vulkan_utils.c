@@ -42,12 +42,59 @@ void VkUtil_DeInitializeEnvironment(struct CGPUInstance* Inst)
     Inst->nvapi_status = CGPU_NVAPI_NONE;
 }
 
+typedef struct VkUtil_MessageToSkip {
+    const char* what;
+    uint64_t hash;
+} VkUtil_MessageToSkip;
+
+VkUtil_MessageToSkip kSkippedMessages[] = {
+    { "UNASSIGNED-BestPractices-vkCreateDevice-deprecated-extension" },
+};
+
+
+FORCEINLINE bool VkUtil_TryIgnoreMessage(const char* MessageId, bool Scan)
+{
+    if (!MessageId)
+        return false;
+    if (Scan)
+    {
+        for (uint32_t i = 0; i < sizeof(kSkippedMessages) / sizeof(VkUtil_MessageToSkip); ++i)
+        {
+            if (strstr(kSkippedMessages[i].what, MessageId) != CGPU_NULLPTR)
+                return true;
+        }
+    }
+    else
+    {
+        const uint64_t msg_hash = cgpu_hash(MessageId, strlen(MessageId), CGPU_NAME_HASH_SEED);
+        for (uint32_t i = 0; i < sizeof(kSkippedMessages) / sizeof(VkUtil_MessageToSkip); ++i)
+        {
+            const uint64_t hash = kSkippedMessages[i].hash;
+            if (msg_hash != hash)
+                continue;
+            if (strcmp(kSkippedMessages[i].what, MessageId) == 0)
+                return true;
+        }
+    }
+    return false;
+}
+
+FORCEINLINE void VkUtil_InitializeMessagesToSkip()
+{
+    for (uint32_t i = 0; i < sizeof(kSkippedMessages) / sizeof(VkUtil_MessageToSkip); ++i)
+    {
+        const char* what = kSkippedMessages[i].what;
+        kSkippedMessages[i].hash = cgpu_hash(what, strlen(what), CGPU_NAME_HASH_SEED);
+    }
+}
+
 // Instance APIs
 void VkUtil_EnableValidationLayer(
     CGPUInstance_Vulkan* I,
     const VkDebugUtilsMessengerCreateInfoEXT* messenger_info_ptr,
     const VkDebugReportCallbackCreateInfoEXT* report_info_ptr)
 {
+    VkUtil_InitializeMessagesToSkip();
     if (I->debug_utils)
     {
         VkDebugUtilsMessengerCreateInfoEXT messengerInfo = {
@@ -948,7 +995,7 @@ VkObjectType type, const char* pName)
 }
 
 FORCEINLINE static void VkUtil_DebugReportSetObjectName(VkDevice pDevice, uint64_t handle,
-VkDebugReportObjectTypeEXT type, const char* pName)
+    VkDebugReportObjectTypeEXT type, const char* pName)
 {
     VkDebugMarkerObjectNameInfoEXT nameInfo = {
         .sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_OBJECT_NAME_INFO_EXT,
@@ -978,10 +1025,13 @@ void VkUtil_OptionalSetObjectName(struct CGPUDevice_Vulkan* device, uint64_t han
 
 VKAPI_ATTR VkBool32 VKAPI_CALL
 VkUtil_DebugUtilsCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-VkDebugUtilsMessageTypeFlagsEXT messageType,
-const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-void* pUserData)
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    void* pUserData)
 {
+    if (VkUtil_TryIgnoreMessage(pCallbackData->pMessageIdName, false))
+        return VK_FALSE;
+
     switch (messageSeverity)
     {
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
@@ -1004,10 +1054,13 @@ void* pUserData)
 
 VKAPI_ATTR VkBool32 VKAPI_CALL
 VkUtil_DebugReportCallback(
-VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
-uint64_t object, size_t location, int32_t messageCode,
-const char* pLayerPrefix, const char* pMessage, void* pUserData)
+    VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
+    uint64_t object, size_t location, int32_t messageCode,
+    const char* pLayerPrefix, const char* pMessage, void* pUserData)
 {
+    if (VkUtil_TryIgnoreMessage(pMessage, true))
+        return VK_FALSE;
+
     switch (flags)
     {
         case VK_DEBUG_REPORT_INFORMATION_BIT_EXT:
