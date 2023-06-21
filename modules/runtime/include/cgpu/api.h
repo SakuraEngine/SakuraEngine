@@ -1116,6 +1116,16 @@ typedef struct CGPUTiledTextureRegions {
     uint32_t region_count;
 } CGPUTiledTextureRegions;
 
+typedef struct CGPUTiledTexturePackedMip {
+    CGPUTextureId texture;
+    uint32_t layer;
+} CGPUTiledTexturePackedMip;
+
+typedef struct CGPUTiledTexturePackedMips {
+    struct CGPUTiledTexturePackedMip* packed_mips;
+    uint32_t packed_mip_count;
+} CGPUTiledTexturePackedMips;
+
 typedef struct CGPUBufferToBufferTransfer {
     CGPUBufferId dst;
     uint64_t dst_offset;
@@ -1639,9 +1649,12 @@ typedef struct CGPUTiledTextureInfo {
     uint32_t tile_depth_in_texels;
     const CGPUTiledSubresourceInfo* subresources;
 
-    uint64_t tail_tiles_count;
-    uint32_t tail_mip_start;
-    uint32_t tail_mip_count;
+    uint64_t packed_mip_tiles_count;
+    uint32_t packed_mip_start;
+    uint32_t packed_mip_count;
+
+    bool pack_all_layers;
+    bool pack_unaligned;
 } CGPUTiledTextureInfo;
 
 typedef struct CGPUTexture {

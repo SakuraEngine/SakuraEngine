@@ -744,9 +744,9 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
     pTiledInfo->tile_depth_in_texels = tileShape.DepthInTexels;
     pTiledInfo->subresources = pSubresInfo;
 
-    pTiledInfo->tail_mip_start = packedMipInfo.NumStandardMips;
-    pTiledInfo->tail_mip_count = packedMipInfo.NumPackedMips;
-    pTiledInfo->tail_tiles_count = packedMipInfo.NumTilesForPackedMips;
+    pTiledInfo->packed_mip_start = packedMipInfo.NumStandardMips;
+    pTiledInfo->packed_mip_count = packedMipInfo.NumPackedMips;
+    pTiledInfo->packed_mip_tiles_count = packedMipInfo.NumTilesForPackedMips;
 
     for (uint32_t i = 0; i < subresourceCount; i++)
     {
@@ -777,6 +777,7 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTile
     CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)queue->device;
     CGPUQueue_D3D12* Q = (CGPUQueue_D3D12*)queue;
     CGPUTiledTexture_D3D12* T = (CGPUTiledTexture_D3D12*)regions->texture;
+    const CGPUTiledTextureInfo* pTiledInfo = T->super.tiled_resource;
 
     // calculate page count
     uint32_t TotalTileCount = 0;
@@ -789,6 +790,8 @@ void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTile
             for (uint32_t y = Region.start.y; y < Region.end.y; y++)
             for (uint32_t z = Region.start.z; z < Region.end.z; z++)
             {
+                SKR_ASSERT(Region.mip_level < pTiledInfo->packed_mip_start && 
+                    "cgpu_queue_map_tiled_texture_d3d12: Mip level must be less than packed mip start!");
                 auto& Mapping = *Mappings.at(x, y, z);
                 const auto prev = skr_atomic32_cas_relaxed(&Mapping.status, D3D12_TILE_MAPPING_STATUS_UNMAPPED, D3D12_TILE_MAPPING_STATUS_PENDING);
                 if (prev == D3D12_TILE_MAPPING_STATUS_UNMAPPED)
