@@ -179,10 +179,14 @@ struct CGPUVkExtensionsTable : public skr::parallel_flat_hash_map<eastl::string,
             }
             for (uint32_t j = 0; j < Adapter.mExtensionsCount; j++)
             {
-                Table[Adapter.pExtensionNames[j]] = true;
+                const auto extension_name = Adapter.pExtensionNames[j];
+                Table[extension_name] = true;
             }
             // Cache
             {
+                Adapter.descriptor_buffer = Table[VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME];
+                Adapter.descriptor_indexing = Table[VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME];
+
                 Adapter.debug_marker = Table[VK_EXT_DEBUG_MARKER_EXTENSION_NAME];
                 Adapter.dedicated_allocation = Table[VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME];
                 Adapter.memory_req2 = Table[VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME];
@@ -194,8 +198,8 @@ struct CGPUVkExtensionsTable : public skr::parallel_flat_hash_map<eastl::string,
                 Adapter.draw_indirect_count = Table[VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME];
                 Adapter.amd_draw_indirect_count = Table[VK_AMD_DRAW_INDIRECT_COUNT_EXTENSION_NAME];
                 Adapter.amd_gcn_shader = Table[VK_AMD_GCN_SHADER_EXTENSION_NAME];
-                Adapter.descriptor_indexing = Table[VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME];
                 Adapter.sampler_ycbcr = Table[VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME];
+                
 #ifdef ENABLE_NSIGHT_AFTERMATH
                 Adapter.nv_diagnostic_checkpoints = Table[VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME];
                 Adapter.nv_diagnostic_config = Table[VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME];

@@ -157,19 +157,6 @@ static const char* validation_layer_name = "VK_LAYER_KHRONOS_validation";
 static const char* cgpu_wanted_instance_exts[] = {
     VK_KHR_SURFACE_EXTENSION_NAME,
 
-#if VK_EXT_extended_dynamic_state
-    VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
-#endif
-#if VK_EXT_extended_dynamic_state2
-    VK_EXT_EXTENDED_DYNAMIC_STATE_2_EXTENSION_NAME,
-#endif
-#if VK_EXT_extended_dynamic_state3
-    VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME,
-#endif
-#if VK_EXT_shader_object
-    VK_EXT_SHADER_OBJECT_EXTENSION_NAME,
-#endif
-
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
     VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #elif defined(_MACOS)
@@ -217,6 +204,20 @@ static const char* cgpu_wanted_device_exts[] = {
 // VK_GOOGLE_USER_TYPE_EXTENSION_NAME,
 // VK_GOOGLE_HLSL_FUNCTIONALITY_1_EXTENSION_NAME,
 #endif
+
+#if VK_EXT_extended_dynamic_state
+    VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
+#endif
+#if VK_EXT_extended_dynamic_state2
+    VK_EXT_EXTENDED_DYNAMIC_STATE_2_EXTENSION_NAME,
+#endif
+#if VK_EXT_extended_dynamic_state3
+    VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME,
+#endif
+#if VK_EXT_shader_object
+    VK_EXT_SHADER_OBJECT_EXTENSION_NAME,
+#endif
+
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     VK_KHR_MAINTENANCE1_EXTENSION_NAME,
     VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,
@@ -280,6 +281,10 @@ static const char* cgpu_wanted_device_exts[] = {
 #if VK_KHR_maintenance3 // descriptor indexing depends on this
     VK_KHR_MAINTENANCE3_EXTENSION_NAME,
 #endif
+#if VK_EXT_descriptor_buffer
+    VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME,
+#endif
+
     /************************************************************************/
     // Descriptor Update Template Extension for efficient descriptor set updates
     /************************************************************************/

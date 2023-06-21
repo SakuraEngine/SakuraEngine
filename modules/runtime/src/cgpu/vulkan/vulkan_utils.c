@@ -131,6 +131,11 @@ const char* const* device_extensions, uint32_t device_extension_count)
                 VkAdapter->mSubgroupProperties.pNext = NULL;
                 *ppNext = &VkAdapter->mSubgroupProperties;
                 ppNext = &VkAdapter->mSubgroupProperties.pNext;
+#if VK_EXT_descriptor_buffer
+                VkAdapter->mPhysicalDeviceDescriptorBufferProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_PROPERTIES_EXT;
+                *ppNext = &VkAdapter->mPhysicalDeviceDescriptorBufferProperties;
+                ppNext = &VkAdapter->mPhysicalDeviceDescriptorBufferProperties.pNext;
+#endif
 #if VK_KHR_fragment_shading_rate
                 VkAdapter->mPhysicalDeviceFragmentShadingRateProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_PROPERTIES_KHR;
                 *ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateProps;
@@ -153,6 +158,11 @@ const char* const* device_extensions, uint32_t device_extension_count)
             // Append pNexts
             {
                 void** ppNext = &VkAdapter->mPhysicalDeviceFeatures.pNext;
+#if VK_EXT_descriptor_buffer
+                VkAdapter->mPhysicalDeviceDescriptorBufferFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_FEATURES_EXT;
+                *ppNext = &VkAdapter->mPhysicalDeviceDescriptorBufferFeatures;
+                ppNext = &VkAdapter->mPhysicalDeviceDescriptorBufferFeatures.pNext;
+#endif
 #if VK_KHR_fragment_shading_rate
                 VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_FEATURES_KHR;
                 *ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures;
