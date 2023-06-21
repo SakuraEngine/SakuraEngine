@@ -205,6 +205,12 @@ static const char* cgpu_wanted_device_exts[] = {
 // VK_GOOGLE_HLSL_FUNCTIONALITY_1_EXTENSION_NAME,
 #endif
 
+#if VK_KHR_depth_stencil_resolve
+    VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
+#endif
+#if VK_KHR_dynamic_rendering
+    VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+#endif
 #if VK_EXT_extended_dynamic_state
     VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
 #endif
@@ -283,6 +289,9 @@ static const char* cgpu_wanted_device_exts[] = {
 #endif
 #if VK_KHR_buffer_device_address
     VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
+#endif
+#if VK_KHR_synchronization2
+    VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
 #endif
 #if VK_EXT_descriptor_buffer
     VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME,

@@ -131,15 +131,10 @@ const char* const* device_extensions, uint32_t device_extension_count)
                 VkAdapter->mSubgroupProperties.pNext = NULL;
                 *ppNext = &VkAdapter->mSubgroupProperties;
                 ppNext = &VkAdapter->mSubgroupProperties.pNext;
-#if VK_EXT_descriptor_buffer
-                VkAdapter->mPhysicalDeviceDescriptorBufferProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_PROPERTIES_EXT;
-                *ppNext = &VkAdapter->mPhysicalDeviceDescriptorBufferProperties;
-                ppNext = &VkAdapter->mPhysicalDeviceDescriptorBufferProperties.pNext;
-#endif
-#if VK_KHR_fragment_shading_rate
-                VkAdapter->mPhysicalDeviceFragmentShadingRateProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_PROPERTIES_KHR;
-                *ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateProps;
-                ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateProps.pNext;
+#if VK_KHR_depth_stencil_resolve
+                VkAdapter->mPhysicalDeviceDepthStencilResolveProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_STENCIL_RESOLVE_PROPERTIES_KHR;
+                *ppNext = &VkAdapter->mPhysicalDeviceDepthStencilResolveProps;
+                ppNext = &VkAdapter->mPhysicalDeviceDepthStencilResolveProps.pNext;
 #endif
 #if VK_EXT_extended_dynamic_state3
                 VkAdapter->mPhysicalDeviceExtendedDynamicState3Properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_PROPERTIES_EXT;
@@ -150,6 +145,17 @@ const char* const* device_extensions, uint32_t device_extension_count)
                 VkAdapter->mPhysicalDeviceShaderObjectProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_PROPERTIES_EXT;
                 *ppNext = &VkAdapter->mPhysicalDeviceShaderObjectProperties;
                 ppNext = &VkAdapter->mPhysicalDeviceShaderObjectProperties.pNext;
+#endif
+
+#if VK_EXT_descriptor_buffer
+                VkAdapter->mPhysicalDeviceDescriptorBufferProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_PROPERTIES_EXT;
+                *ppNext = &VkAdapter->mPhysicalDeviceDescriptorBufferProperties;
+                ppNext = &VkAdapter->mPhysicalDeviceDescriptorBufferProperties.pNext;
+#endif
+#if VK_KHR_fragment_shading_rate
+                VkAdapter->mPhysicalDeviceFragmentShadingRateProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_PROPERTIES_KHR;
+                *ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateProps;
+                ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateProps.pNext;
 #endif
             }
             vkGetPhysicalDeviceProperties2KHR(pysicalDevices[i], &VkAdapter->mPhysicalDeviceProps);
@@ -168,10 +174,17 @@ const char* const* device_extensions, uint32_t device_extension_count)
                 *ppNext = &VkAdapter->mPhysicalDeviceDescriptorBufferFeatures;
                 ppNext = &VkAdapter->mPhysicalDeviceDescriptorBufferFeatures.pNext;
 #endif
+
 #if VK_KHR_fragment_shading_rate
                 VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_FEATURES_KHR;
                 *ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures;
                 ppNext = &VkAdapter->mPhysicalDeviceFragmentShadingRateFeatures.pNext;
+#endif
+
+#if VK_KHR_dynamic_rendering
+                VkAdapter->mPhysicalDeviceDynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+                *ppNext = &VkAdapter->mPhysicalDeviceDynamicRenderingFeatures;
+                ppNext = &VkAdapter->mPhysicalDeviceDynamicRenderingFeatures.pNext;
 #endif
 #if VK_EXT_extended_dynamic_state
                 VkAdapter->mPhysicalDeviceExtendedDynamicStateFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT;
