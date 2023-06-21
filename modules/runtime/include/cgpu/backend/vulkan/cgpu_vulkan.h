@@ -192,6 +192,12 @@ typedef struct CGPUAdapter_Vulkan {
     VkPhysicalDeviceFragmentShadingRatePropertiesKHR mPhysicalDeviceFragmentShadingRateProps;
     VkPhysicalDeviceFragmentShadingRateFeaturesKHR mPhysicalDeviceFragmentShadingRateFeatures;
 #endif
+#if VK_KHR_depth_stencil_resolve
+    VkPhysicalDeviceDepthStencilResolvePropertiesKHR mPhysicalDeviceDepthStencilResolveProps;
+#endif
+#if VK_KHR_dynamic_rendering
+    VkPhysicalDeviceDynamicRenderingFeaturesKHR mPhysicalDeviceDynamicRenderingFeatures;
+#endif
 #if VK_EXT_extended_dynamic_state
     VkPhysicalDeviceExtendedDynamicStateFeaturesEXT mPhysicalDeviceExtendedDynamicStateFeatures;
 #endif

@@ -442,7 +442,7 @@ const struct CGPURootSignatureDescriptor* desc)
             VkDescriptorSetLayoutCreateInfo setLayoutInfo = {
                 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
                 .pNext = NULL,
-                .flags = 0, //VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT,
+                .flags = 0,
                 .pBindings = vkbindings,
                 .bindingCount = i_binding
             };
