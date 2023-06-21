@@ -357,8 +357,7 @@ uint32_t get_set_count(uint32_t set_index_mask)
     return set_count;
 }
 
-CGPURootSignatureId cgpu_create_root_signature_vulkan(CGPUDeviceId device,
-const struct CGPURootSignatureDescriptor* desc)
+CGPURootSignatureId cgpu_create_root_signature_vulkan(CGPUDeviceId device,const struct CGPURootSignatureDescriptor* desc)
 {
     const CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)device;
     CGPURootSignature_Vulkan* RS = (CGPURootSignature_Vulkan*)cgpu_calloc(1, sizeof(CGPURootSignature_Vulkan));
@@ -1576,10 +1575,10 @@ void cgpu_cmd_resource_barrier_vulkan(CGPUCommandBufferId cmd, const struct CGPU
     if (bufferBarrierCount || imageBarrierCount)
     {
         D->mVkDeviceTable.vkCmdPipelineBarrier(Cmd->pVkCmdBuf,
-        srcStageMask, dstStageMask, 0,
-        0, NULL,
-        bufferBarrierCount, BBs,
-        imageBarrierCount, TBs);
+            srcStageMask, dstStageMask, 0,
+            0, NULL,
+            bufferBarrierCount, BBs,
+            imageBarrierCount, TBs);
     }
 }
 
