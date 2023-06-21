@@ -86,14 +86,14 @@ void VkUtil_FramebufferTableAdd(struct CGPUVkPassTable* table, const struct VkUt
 
 // Debug Helpers
 VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugUtilsCallback(
-VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-VkDebugUtilsMessageTypeFlagsEXT messageType,
-const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-void* pUserData);
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    void* pUserData);
 VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugReportCallback(
-VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
-uint64_t object, size_t location, int32_t messageCode,
-const char* pLayerPrefix, const char* pMessage, void* pUserData);
+    VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
+    uint64_t object, size_t location, int32_t messageCode,
+    const char* pLayerPrefix, const char* pMessage, void* pUserData);
 void VkUtil_OptionalSetObjectName(struct CGPUDevice_Vulkan* device, uint64_t handle, VkObjectType type, const char* name);
 
 #define CGPU_VK_DESCRIPTOR_TYPE_RANGE_SIZE (VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT + 1)
