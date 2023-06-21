@@ -1,4 +1,5 @@
 #pragma once
+#include "cgpu/d3d12/D3D12MemAlloc.h"
 #include "platform/configure.h"
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "./../common/common_utils.h"
@@ -102,7 +103,7 @@ typedef struct D3D12Util_DescriptorHeap {
 
 struct CGPUTiledMemoryPool_D3D12 : public CGPUMemoryPool_D3D12
 {
-    void AllocateTiles(uint32_t N, D3D12MA::Allocation** ppAllocation) SKR_NOEXCEPT
+    void AllocateTiles(uint32_t N, D3D12MA::Allocation** ppAllocation, uint32_t Scale = 1) SKR_NOEXCEPT
     {
         CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)super.device;
         const auto kPageSize = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
@@ -110,7 +111,7 @@ struct CGPUTiledMemoryPool_D3D12 : public CGPUMemoryPool_D3D12
         allocDesc.CustomPool = pDxPool;
         D3D12_RESOURCE_ALLOCATION_INFO allocInfo = {};
         allocInfo.Alignment = kPageSize;
-        allocInfo.SizeInBytes = kPageSize;
+        allocInfo.SizeInBytes = kPageSize * Scale;
         for (uint32_t i = 0; i < N; ++i)
         {
             D->pResourceAllocator->AllocateMemory(&allocDesc, &allocInfo, &ppAllocation[i]);
@@ -192,9 +193,42 @@ private:
     TileMapping_D3D12* mappings = nullptr;
 };
 
+struct PackedMipMapping_D3D12
+{
+    PackedMipMapping_D3D12(CGPUTexture_D3D12* T, uint32_t N) SKR_NOEXCEPT
+        : N(N), T(T)
+    {
+        
+    }    
+    ~PackedMipMapping_D3D12() SKR_NOEXCEPT
+    {
+        unmap();
+    }
+    void unmap()
+    {
+        auto pTiledInfo = const_cast<CGPUTiledTextureInfo*>(T->super.tiled_resource);
+        const auto prev = skr_atomic32_cas_relaxed(&status, 
+            D3D12_TILE_MAPPING_STATUS_MAPPED, D3D12_TILE_MAPPING_STATUS_UNMAPPING);
+        if (prev == D3D12_TILE_MAPPING_STATUS_MAPPED)
+        {
+            SAFE_RELEASE(pAllocation);
+            skr_atomicu64_add_relaxed(&pTiledInfo->alive_tiles_count, -1);
+        }  
+        skr_atomic32_cas_relaxed(&status, 
+            D3D12_TILE_MAPPING_STATUS_UNMAPPING, D3D12_TILE_MAPPING_STATUS_UNMAPPED);
+    }
+    D3D12MA::Allocation* pAllocation = nullptr;
+    const uint32_t N = 0;
+    SAtomic32 status;
+
+private:
+    CGPUTexture_D3D12* T = nullptr;
+};
+
 struct CGPUTiledTexture_D3D12 : public CGPUTexture_D3D12 {
-    CGPUTiledTexture_D3D12(SubresTileMappings_D3D12* pMappings, uint32_t NumTilesForPackedMips) SKR_NOEXCEPT
-        : CGPUTexture_D3D12(), pMappings(pMappings), NumTilesForPackedMips(NumTilesForPackedMips)
+    CGPUTiledTexture_D3D12(SubresTileMappings_D3D12* pMappings, PackedMipMapping_D3D12* pPackedMips, uint32_t NumPacks) SKR_NOEXCEPT
+        : CGPUTexture_D3D12(), pMappings(pMappings), 
+        pPackedMips(pPackedMips), NumPacks(NumPacks)
     {
 
     }
@@ -202,19 +236,24 @@ struct CGPUTiledTexture_D3D12 : public CGPUTexture_D3D12 {
     {
         const auto N = super.info->mip_levels * (super.info->array_size_minus_one + 1);
         for (uint32_t i = 0; i < N; i++)
-        {
             pMappings[i].~SubresTileMappings_D3D12();
-        }
+        for (uint32_t i = 0; i < NumPacks; i++)
+            pPackedMips[i].~PackedMipMapping_D3D12();
     }
     SubresTileMappings_D3D12* getSubresTileMappings(uint32_t mip_level, uint32_t array_index)
     {
         SKR_ASSERT(mip_level < super.info->mip_levels && array_index < super.info->array_size_minus_one + 1);
         return pMappings + (mip_level * (super.info->array_size_minus_one + 1) + array_index);
     }
+    PackedMipMapping_D3D12* getPackedMipMapping(uint32_t layer)
+    {
+        return pPackedMips + layer;
+    }
     
 private:
     SubresTileMappings_D3D12* pMappings;
-    uint32_t NumTilesForPackedMips;
+    PackedMipMapping_D3D12* pPackedMips;
+    uint32_t NumPacks;
 };
 
 typedef struct DescriptorHeapProperties {
