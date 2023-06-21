@@ -141,8 +141,8 @@ static_assert(std::is_trivially_constructible_v<TileMapping_D3D12>, "TileMapping
 
 struct SubresTileMappings_D3D12
 {
-    SubresTileMappings_D3D12(uint32_t X, uint32_t Y, uint32_t Z) SKR_NOEXCEPT
-        : X(X), Y(Y), Z(Z)
+    SubresTileMappings_D3D12(CGPUTexture_D3D12* T, uint32_t X, uint32_t Y, uint32_t Z) SKR_NOEXCEPT
+        : T(T), X(X), Y(Y), Z(Z)
     {
         if (X * Y * Z)
             mappings = (TileMapping_D3D12*)cgpu_calloc(1, X * Y * Z * sizeof(TileMapping_D3D12));
@@ -172,14 +172,18 @@ struct SubresTileMappings_D3D12
     }
     void unmap(uint32_t x, uint32_t y, uint32_t z)
     {
+        auto pTiledInfo = const_cast<CGPUTiledTextureInfo*>(T->super.tiled_resource);
         auto* mapping = at(x, y, z);
-        const auto status = skr_atomic32_cas_relaxed(&mapping->status, D3D12_TILE_MAPPING_STATUS_MAPPED, D3D12_TILE_MAPPING_STATUS_UNMAPPED);
+        const auto status = skr_atomic32_cas_relaxed(&mapping->status, 
+            D3D12_TILE_MAPPING_STATUS_MAPPED, D3D12_TILE_MAPPING_STATUS_UNMAPPED);
         if (status == D3D12_TILE_MAPPING_STATUS_MAPPED)
         {
             SAFE_RELEASE(mapping->pDxAllocation);
+            skr_atomicu64_add_relaxed(&pTiledInfo->alive_tiles_count, -1);
         }  
     }
 private:
+    CGPUTexture_D3D12* T = nullptr;
     const uint32_t X = 0;
     const uint32_t Y = 0;
     const uint32_t Z = 0;

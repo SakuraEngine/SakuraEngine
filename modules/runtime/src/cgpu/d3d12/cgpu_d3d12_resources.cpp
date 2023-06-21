@@ -756,7 +756,7 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateTiled(CGPUAdapter_D3D12* A, CGPUDevi
         SubresInfo.depth_in_tiles = tilings[i].DepthInTiles;
         SubresInfo.layer = 0;
         SubresInfo.mip_level = i;
-        new (&pSubresMapping[i]) SubresTileMappings_D3D12(SubresInfo.width_in_tiles, SubresInfo.height_in_tiles, SubresInfo.depth_in_tiles);
+        new (&pSubresMapping[i]) SubresTileMappings_D3D12(T, SubresInfo.width_in_tiles, SubresInfo.height_in_tiles, SubresInfo.depth_in_tiles);
     }
     T->super.info = pInfo;
     T->super.tiled_resource = pTiledInfo;
@@ -909,7 +909,6 @@ void cgpu_queue_unmap_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTi
         for (uint32_t z = Region.start.z; z < Region.end.z; z++)
         {
             Mappings.unmap(x, y, z);
-            skr_atomicu64_add_relaxed(&TiledInfo.alive_tiles_count, -1);
 
             const bool ForceUnmap = false;
             if (ForceUnmap) // slow and only useful for debugging
