@@ -6,10 +6,10 @@
 namespace skr::gui
 {
 struct CustomBrush {
-    function_ref<void(GDIVertex&)> _custom_paint = nullptr;
+    FunctionRef<void(GDIVertex&)> _custom_paint = nullptr;
 
     inline CustomBrush() SKR_NOEXCEPT = default;
-    inline CustomBrush(function_ref<void(GDIVertex&)> custom_paint) SKR_NOEXCEPT : _custom_paint(custom_paint) {}
+    inline CustomBrush(FunctionRef<void(GDIVertex&)> custom_paint) SKR_NOEXCEPT : _custom_paint(custom_paint) {}
 };
 
 struct ColorBrush {
@@ -20,13 +20,13 @@ struct ColorBrush {
 };
 
 struct TextureBrush {
-    ITexture*                      _texture = nullptr;
-    Color                          _color = { 1, 1, 1, 1 };
-    Rect                           _uv_rect = {};
-    Rect                           _uv_rect_nine_total = {};
-    float                          _rotation = 0.0f;
-    Swizzle                        _swizzle = {};
-    function_ref<void(GDIVertex&)> _custom_paint = nullptr;
+    ITexture*                     _texture = nullptr;
+    Color                         _color = { 1, 1, 1, 1 };
+    Rect                          _uv_rect = {};
+    Rect                          _uv_rect_nine_total = {};
+    float                         _rotation = 0.0f;
+    Swizzle                       _swizzle = {};
+    FunctionRef<void(GDIVertex&)> _custom_paint = nullptr;
 
     inline TextureBrush() SKR_NOEXCEPT = default;
     inline TextureBrush(ITexture* texture) SKR_NOEXCEPT
@@ -67,7 +67,7 @@ struct TextureBrush {
         _swizzle = swizzle;
         return *this;
     }
-    TextureBrush& custom_paint(function_ref<void(GDIVertex&)> custom_paint) SKR_NOEXCEPT
+    TextureBrush& custom_paint(FunctionRef<void(GDIVertex&)> custom_paint) SKR_NOEXCEPT
     {
         _custom_paint = custom_paint;
         return *this;
@@ -75,12 +75,12 @@ struct TextureBrush {
 };
 
 struct MaterialBrush {
-    IMaterial*                     _material = nullptr;
-    Color                          _color = { 1, 1, 1, 1 };
-    Rect                           _uv_rect = {};
-    Rect                           _uv_rect_nine_total = {};
-    float                          _rotation = 0.0f;
-    function_ref<void(GDIVertex&)> _custom_paint = nullptr;
+    IMaterial*                    _material = nullptr;
+    Color                         _color = { 1, 1, 1, 1 };
+    Rect                          _uv_rect = {};
+    Rect                          _uv_rect_nine_total = {};
+    float                         _rotation = 0.0f;
+    FunctionRef<void(GDIVertex&)> _custom_paint = nullptr;
 
     inline MaterialBrush() SKR_NOEXCEPT = default;
     inline MaterialBrush(IMaterial* material) SKR_NOEXCEPT
@@ -115,7 +115,7 @@ struct MaterialBrush {
         _rotation = rotation;
         return *this;
     }
-    MaterialBrush& custom_paint(function_ref<void(GDIVertex&)> custom_paint) SKR_NOEXCEPT
+    MaterialBrush& custom_paint(FunctionRef<void(GDIVertex&)> custom_paint) SKR_NOEXCEPT
     {
         _custom_paint = custom_paint;
         return *this;

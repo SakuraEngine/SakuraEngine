@@ -16,7 +16,6 @@ public:
     inline constexpr PositionalUnit() SKR_NOEXCEPT = default;
     inline constexpr PositionalUnit(float pixel) SKR_NOEXCEPT
         : pixel(pixel),
-          percent(),
           is_set(true)
     {
     }

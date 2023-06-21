@@ -75,11 +75,10 @@ namespace skr::gui
 {
 // !!! 生命周期无法保证，仅用于参数或局部使用
 template <typename F>
-using function_ref = ::skr::function_ref<F>;
+using FunctionRef = ::skr::function_ref<F>;
 
-// TODO. delegate
 template <typename F>
-using Event = ::eastl::function<F>;
+using Function = ::eastl::function<F>;
 
 // not null
 template <typename T>

@@ -16,8 +16,8 @@ struct SKR_GUI_API RenderObject : public DiagnosticableTreeNode {
     void         adopt_child(NotNull<RenderObject*> child) SKR_NOEXCEPT;
     void         drop_child(NotNull<RenderObject*> child) SKR_NOEXCEPT;
     virtual void flush_depth() SKR_NOEXCEPT;
-    virtual void visit_children(function_ref<void(RenderObject*)> visitor) const SKR_NOEXCEPT;
-    virtual void visit_children_recursive(function_ref<void(RenderObject*)> visitor) const SKR_NOEXCEPT;
+    virtual void visit_children(FunctionRef<void(RenderObject*)> visitor) const SKR_NOEXCEPT;
+    virtual void visit_children_recursive(FunctionRef<void(RenderObject*)> visitor) const SKR_NOEXCEPT;
 
     // pipeline owner
     virtual void          attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT;
@@ -61,8 +61,11 @@ struct SKR_GUI_API RenderObject : public DiagnosticableTreeNode {
     // handle_event：处理输入事件
     // show_on_screen：或许可以实现，用于 ScrollView 的目标追踪
 
+    // element bind
+    virtual void dispose() SKR_NOEXCEPT;
+
     //==> Begin DiagnosticableTreeNode API
-    void visit_diagnostics_children(function_ref<void(DiagnosticableTreeNode*)> visitor) SKR_NOEXCEPT override;
+    void visit_diagnostics_children(FunctionRef<void(DiagnosticableTreeNode*)> visitor) SKR_NOEXCEPT override;
     //==> End DiagnosticableTreeNode API
 protected:
     void        _mark_parent_needs_layout() SKR_NOEXCEPT;
@@ -74,24 +77,24 @@ private:
 
 private:
     // render object tree
-    RenderObject*  _parent;
-    PipelineOwner* _owner;
-    int32_t        _depth;
+    RenderObject*  _parent = nullptr;
+    PipelineOwner* _owner = nullptr;
+    int32_t        _depth = 0;
 
     // dirty marks
-    bool _needs_layout;
-    bool _needs_paint;
+    bool _needs_layout = true;
+    bool _needs_paint = true;
 
     // layout temporal data
-    bool _force_relayout_boundary; // 强制自己称为 layout_boundary
-    bool _is_constraints_changed;  // 约束发生变化，在 layout 结束后被清理
+    bool _force_relayout_boundary = false; // 强制自己称为 layout_boundary
+    bool _is_constraints_changed = false;  // 约束发生变化，在 layout 结束后被清理
 
     // layout & paint boundary
-    RenderObject* _relayout_boundary;
-    void*         _layer; // TODO. layer
+    RenderObject* _relayout_boundary = nullptr;
+    void*         _layer = nullptr; // TODO. layer
 
     // 用于 invoke_layout_callback()
-    bool _doing_this_layout_with_callback;
+    bool _doing_this_layout_with_callback = false;
 
     // Impl By Child
     // _constraints

@@ -19,8 +19,8 @@ struct SKR_GUI_API ISingleChildRenderObject SKR_GUI_INTERFACE_BASE {
 //     SKR_GUI_TYPE_ID   accept_child_type() const noexcept override;
 //     void              set_child(RenderObject* child) noexcept override;
 //     void              flush_depth() noexcept override;
-//     void              visit_children(function_ref<void(RenderObject*)> visitor) const noexcept override;
-//     void              visit_children_recursive(function_ref<void(RenderObject*)> visitor) const noexcept override;
+//     void              visit_children(FunctionRef<void(RenderObject*)> visitor) const noexcept override;
+//     void              visit_children_recursive(FunctionRef<void(RenderObject*)> visitor) const noexcept override;
 //     void              attach(NotNull<PipelineOwner*> owner) noexcept override;
 //     void              detach() noexcept override;
 //     inline __CHILD_TYPE__* child() const noexcept { return _child; }
@@ -43,13 +43,17 @@ struct SKR_GUI_API ISingleChildRenderObject SKR_GUI_INTERFACE_BASE {
 //     __SUPER_TYPE__::flush_depth();
 //     if (_child) _child->flush_depth();
 // }
-// void __MIX_IN_TARGET__::visit_children(function_ref<void(RenderObject*)> visitor) const noexcept
+// void __MIX_IN_TARGET__::visit_children(FunctionRef<void(RenderObject*)> visitor) const noexcept
 // {
 //     if (_child) visitor(_child);
 // }
-// void __MIX_IN_TARGET__::visit_children_recursive(function_ref<void(RenderObject*)> visitor) const noexcept
+// void __MIX_IN_TARGET__::visit_children_recursive(FunctionRef<void(RenderObject*)> visitor) const noexcept
 // {
-//     if (_child) _child->visit_children_recursive(visitor);
+//     if (_child)
+//     {
+//         visitor(_child);
+//         _child->visit_children_recursive(visitor);
+//     }
 // }
 // void __MIX_IN_TARGET__::attach(NotNull<PipelineOwner*> owner) noexcept
 // {

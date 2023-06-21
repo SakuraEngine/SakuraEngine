@@ -64,13 +64,17 @@ void RenderProxyBox::flush_depth() noexcept
     RenderBox::flush_depth();
     if (_child) _child->flush_depth();
 }
-void RenderProxyBox::visit_children(function_ref<void(RenderObject*)> visitor) const noexcept
+void RenderProxyBox::visit_children(FunctionRef<void(RenderObject*)> visitor) const noexcept
 {
     if (_child) visitor(_child);
 }
-void RenderProxyBox::visit_children_recursive(function_ref<void(RenderObject*)> visitor) const noexcept
+void RenderProxyBox::visit_children_recursive(FunctionRef<void(RenderObject*)> visitor) const noexcept
 {
-    if (_child) _child->visit_children_recursive(visitor);
+    if (_child)
+    {
+        visitor(_child);
+        _child->visit_children_recursive(visitor);
+    }
 }
 void RenderProxyBox::attach(NotNull<PipelineOwner*> owner) noexcept
 {

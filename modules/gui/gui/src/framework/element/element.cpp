@@ -6,277 +6,178 @@
 
 namespace skr::gui
 {
-
-void Element::activate() SKR_NOEXCEPT
+Element::Element(Widget* widget) SKR_NOEXCEPT
+    : _widget(widget)
 {
+    if (_widget == nullptr) { SKR_GUI_LOG_ERROR("widget is nullptr"); }
 }
 
-void Element::deactivate() SKR_NOEXCEPT
+// element tree
+void Element::flush_depth() SKR_NOEXCEPT
 {
+    _depth = _parent->_depth + 1;
 }
+void Element::visit_children(FunctionRef<void(Element*)> visitor) const SKR_NOEXCEPT {}
+void Element::visit_children_recursive(FunctionRef<void(Element*)> visitor) const SKR_NOEXCEPT {}
 
-void Element::mount(Element* parent, Slot* slot) SKR_NOEXCEPT
+// life circle
+void Element::mount(Element* parent, uint64_t slot) SKR_NOEXCEPT
 {
-    SKR_GUI_ASSERT(_lifecycle_state == ElementLifecycle::initial);
-    SKR_GUI_ASSERT(_parent == nullptr);
-    SKR_GUI_ASSERT(!parent || parent->_lifecycle_state == ElementLifecycle::active);
-    SKR_GUI_ASSERT(_slot == nullptr);
+    // validate
+    if (_widget == nullptr) { SKR_GUI_LOG_ERROR("widget is nullptr"); }
+    if (_parent != nullptr) { SKR_GUI_LOG_ERROR("already mounted"); }
+    if (parent != nullptr && parent->_lifecycle_state != EElementLifecycle::Active) { SKR_GUI_LOG_ERROR("parent is not active"); }
+
+    // copy value
     _parent = parent;
     _slot = slot;
-    _lifecycle_state = ElementLifecycle::active;
+    _lifecycle_state = EElementLifecycle::Active;
     _depth = _parent ? _parent->_depth + 1 : 0;
-    // if (parent) _owner = parent.get()._owner;
-}
+    _owner = _parent ? _parent->_owner : nullptr;
 
+    // validate
+    if (_owner == nullptr) { SKR_GUI_LOG_ERROR("owner is nullptr"); }
+
+    // TODO. process global key
+    // TODO. process dependencies
+    // TODO. process notify
+}
+void Element::activate() SKR_NOEXCEPT
+{
+    // validate
+    if (_lifecycle_state != EElementLifecycle::Inactive) { SKR_GUI_LOG_ERROR("already active"); }
+    if (_widget == nullptr) { SKR_GUI_LOG_ERROR("widget is nullptr"); }
+    if (_owner == nullptr) { SKR_GUI_LOG_ERROR("owner is nullptr"); }
+
+    _lifecycle_state = EElementLifecycle::Active;
+
+    // TODO. process dependencies
+    // TODO. process notify
+}
+void Element::deactivate() SKR_NOEXCEPT
+{
+    // validate
+    if (_lifecycle_state == EElementLifecycle::Active) { SKR_GUI_LOG_ERROR("already inactive"); }
+    if (_widget == nullptr) { SKR_GUI_LOG_ERROR("widget is nullptr"); }
+
+    // TODO. process dependencies
+
+    _lifecycle_state = EElementLifecycle::Inactive;
+}
 void Element::unmount() SKR_NOEXCEPT
 {
-    SKR_GUI_ASSERT(_lifecycle_state == ElementLifecycle::inactive);
-    SKR_GUI_ASSERT(_widget != nullptr);
-    // SKR_GUI_ASSERT(_owner != nullptr);
+    // validate
+    if (_lifecycle_state != EElementLifecycle::Active) { SKR_GUI_LOG_ERROR("already unmounted"); }
+    if (_widget == nullptr) { SKR_GUI_LOG_ERROR("widget is nullptr"); }
+    if (_owner == nullptr) { SKR_GUI_LOG_ERROR("owner is nullptr"); }
 
+    // TODO. process global key
     _widget = nullptr;
-    _lifecycle_state = ElementLifecycle::defunct;
+    _lifecycle_state = EElementLifecycle::Defunct;
 }
 
-void Element::attach_render_object(Slot* new_slot) SKR_NOEXCEPT
+// mark functions
+void Element::mark_needs_build() SKR_NOEXCEPT
 {
-    SKR_GUI_ASSERT(_slot == nullptr);
+    // validate
+    if (_lifecycle_state == EElementLifecycle::Defunct) { SKR_GUI_LOG_ERROR("already unmounted"); }
+    if (_lifecycle_state != EElementLifecycle::Active) { return; }
+    if (_owner == nullptr)
+    {
+        SKR_GUI_LOG_ERROR("owner is nullptr");
+        return;
+    }
+    if (_dirty) { return; }
 
-    visit_child_elements([new_slot](Element* child) {
-        child->attach_render_object(new_slot);
-    });
+    // dirty
+    _dirty = true;
+    _owner->schedule_build_for(make_not_null(this));
+}
+
+// build & update
+void Element::rebuild(bool force) SKR_NOEXCEPT
+{
+    // validate
+    if (_lifecycle_state == EElementLifecycle::Initial) { SKR_GUI_LOG_ERROR("element is incomplete"); }
+    if (_lifecycle_state != EElementLifecycle::Active || (!_dirty && !force)) { return; }
+
+    perform_rebuild();
+
+    // validate
+    if (_dirty) { SKR_GUI_LOG_ERROR("perform_rebuild() must set dirty to false"); }
+}
+void Element::update_slot(uint64_t new_slot) SKR_NOEXCEPT
+{
+    // validate
+    if (_lifecycle_state != EElementLifecycle::Active) { SKR_GUI_LOG_ERROR("element is not active"); }
+    if (_widget == nullptr) { SKR_GUI_LOG_ERROR("widget is nullptr"); }
+    if (_parent == nullptr) { SKR_GUI_LOG_ERROR("parent is nullptr"); }
+    if (_parent && _parent->_lifecycle_state != EElementLifecycle::Active) { SKR_GUI_LOG_ERROR("parent is not active"); }
+
     _slot = new_slot;
 }
-
-void Element::detach_render_object() SKR_NOEXCEPT
+void Element::update(NotNull<Widget*> new_widget) SKR_NOEXCEPT
 {
-    visit_child_elements([](Element* child) {
-        child->detach_render_object();
-    });
-    _slot = nullptr;
-}
-
-NotNull<Element*> Element::inflate_widget(NotNull<Widget*> widget, Slot* new_slot) SKR_NOEXCEPT
-{
-    // TODO: global key
-    if (widget->key.is_keep_state())
-    {
-        Element* newChild = _retake_inactive_element(widget->key, widget);
-        if (newChild)
-        {
-            SKR_GUI_ASSERT(newChild->_parent == nullptr);
-            newChild->_active_with_parent(this, new_slot);
-            Element* updatedChild = update_child(newChild, widget, new_slot);
-            SKR_GUI_ASSERT(updatedChild == newChild);
-            return make_not_null(newChild);
-        }
-    }
-    auto element = widget->create_element();
-    element->mount(this, new_slot);
-    return element;
-}
-
-void Element::update(Widget* new_widget) SKR_NOEXCEPT
-{
-    SKR_GUI_ASSERT(_lifecycle_state == ElementLifecycle::active);
-    SKR_GUI_ASSERT(_widget != new_widget);
-    SKR_GUI_ASSERT(new_widget != nullptr);
+    // validate
+    if (_lifecycle_state != EElementLifecycle::Active) { SKR_GUI_LOG_ERROR("element is not active"); }
+    if (_widget == nullptr) { SKR_GUI_LOG_ERROR("widget is nullptr"); }
+    if (new_widget == _widget) { SKR_GUI_LOG_ERROR("new_widget is same as old widget"); }
+    if (_widget && !Widget::can_update(make_not_null(_widget), new_widget)) { SKR_GUI_LOG_ERROR("can not update widget"); }
 
     _widget = new_widget;
 }
 
-void Element::update_slot_for_child(Element* child, Slot* new_slot) SKR_NOEXCEPT
-{
-    SKR_GUI_ASSERT(_lifecycle_state == ElementLifecycle::active);
-    SKR_GUI_ASSERT(child->_parent == this);
+// render object (self or child's)
+RenderObject* Element::render_object() const SKR_NOEXCEPT { return nullptr; }
 
-    child->_update_slot(new_slot);
-    child->visit_child_elements([child, new_slot](Element* cc) {
-        child->update_slot_for_child(cc, new_slot);
-    });
-}
-
-Element* Element::update_child(Element* child, Widget* new_widget, Slot* new_slot) SKR_NOEXCEPT
+// help functions
+Element* Element::_update_child(Element* child, Widget* new_widget, uint64_t new_slot) SKR_NOEXCEPT
 {
-    if (!new_widget)
+    // validate
+    if (_owner == nullptr) { SKR_GUI_LOG_ERROR("owner is nullptr"); }
+
+    // new widget is nullptr, just deactivate child
+    if (new_widget == nullptr)
     {
         if (child)
-            deactivate_child(child);
+        {
+            if (_owner) _owner->deactivate_element(make_not_null(child));
+        }
         return nullptr;
     }
-    auto     widget = make_not_null(new_widget);
-    Element* newChild = nullptr;
-    if (child)
+
+    if (child != nullptr)
     {
-        bool hasSameSuperclass = true;
-        // TODO
-        if (hasSameSuperclass && child->_widget == new_widget)
+        if (child->_widget == new_widget)
         {
-            if (child->_slot != new_slot)
-            {
-                update_slot_for_child(child, new_slot);
-            }
-            newChild = child;
+            if (child->_slot != new_slot) child->update_slot(new_slot);
+            return child;
         }
-        else if (hasSameSuperclass && Widget::can_update(make_not_null(child->_widget), widget))
+        else if (Widget::can_update(make_not_null(child->_widget), make_not_null(new_widget)))
         {
-            if (child->_slot != new_slot)
-            {
-                update_slot_for_child(child, new_slot);
-            }
-            child->update(new_widget);
-            SKR_GUI_ASSERT(child->_widget == new_widget);
-            newChild = child;
+            if (child->_slot != new_slot) child->update_slot(new_slot);
+            child->update(make_not_null(new_widget));
+            return child;
         }
         else
         {
-            deactivate_child(child);
-            SKR_GUI_ASSERT(child->_parent == nullptr);
-            newChild = inflate_widget(widget, new_slot);
+            if (_owner) _owner->deactivate_element(make_not_null(child));
+            if (child->_parent != nullptr) { SKR_LOG_ERROR("child's parent is not nullptr after deactivate"); }
+            return _inflate_widget(make_not_null(new_widget), new_slot);
         }
-    }
-    return newChild;
-}
-
-void Element::visit_children(function_ref<void(Element*)> visitor) SKR_NOEXCEPT
-{
-    //...
-}
-
-void Element::visit_child_elements(function_ref<void(Element*)> visitor) SKR_NOEXCEPT
-{
-    visit_children(visitor);
-}
-
-void Element::forget_child(Element* child) SKR_NOEXCEPT
-{
-    //...
-}
-
-void Element::deactivate_child(Element* child) SKR_NOEXCEPT
-{
-    SKR_GUI_ASSERT(child->_parent == this);
-    child->_parent = nullptr;
-    child->detach_render_object();
-    _owner->_inactive_elements.push_back(child); // this eventually calls child.deactivate()
-}
-
-void Element::perform_rebuild() SKR_NOEXCEPT
-{
-    _dirty = false;
-}
-
-void Element::rebuild(bool force) SKR_NOEXCEPT
-{
-    SKR_GUI_ASSERT(_lifecycle_state != ElementLifecycle::initial);
-    if (_lifecycle_state != ElementLifecycle::active)
-        return;
-    if (!_dirty && !force)
-        return;
-
-    perform_rebuild();
-}
-
-void Element::_update_slot(Slot* new_slot) SKR_NOEXCEPT
-{
-    SKR_GUI_ASSERT(_lifecycle_state == ElementLifecycle::active);
-    SKR_GUI_ASSERT(_parent != nullptr);
-    SKR_GUI_ASSERT(_parent->_lifecycle_state == ElementLifecycle::active);
-
-    _slot = new_slot;
-}
-
-Element* Element::_retake_inactive_element(const Key& key, NotNull<Widget*> widget) SKR_NOEXCEPT
-{
-    auto iter = _owner->_global_key_registry.find(key.get_state());
-    if (iter == _owner->_global_key_registry.end())
-    {
-        return nullptr;
-    }
-    Element* element = iter->second;
-    if (!Widget::can_update(make_not_null(element->_widget), widget))
-    {
-        return nullptr;
-    }
-    Element* parent = element->_parent;
-    if (parent != nullptr)
-    {
-        SKR_GUI_ASSERT(parent != this);
-        parent->forget_child(element);
-        parent->deactivate_child(element);
-    }
-    SKR_GUI_ASSERT(element->_parent == nullptr);
-    auto& inactiveElements = _owner->_inactive_elements;
-    inactiveElements.erase(std::remove(inactiveElements.begin(), inactiveElements.end(), element), inactiveElements.end());
-    return element;
-}
-
-void Element::_active_with_parent(Element* parent, Slot* slot) SKR_NOEXCEPT
-{
-    SKR_GUI_ASSERT(_lifecycle_state == ElementLifecycle::inactive);
-    _parent = parent;
-    _update_depth(_parent->_depth);
-    _active_recursively(this);
-    attach_render_object(slot);
-    SKR_GUI_ASSERT(_lifecycle_state == ElementLifecycle::active);
-}
-
-void Element::_active_recursively(Element* element) SKR_NOEXCEPT
-{
-    SKR_GUI_ASSERT(element->_lifecycle_state == ElementLifecycle::inactive);
-    element->activate();
-    SKR_GUI_ASSERT(element->_lifecycle_state == ElementLifecycle::active);
-    element->visit_child_elements(_active_recursively);
-}
-
-void Element::_update_depth(int parentDepth) SKR_NOEXCEPT
-{
-    int expectedDepth = parentDepth + 1;
-    if (_depth < expectedDepth)
-    {
-        _depth = expectedDepth;
-        visit_child_elements([expectedDepth](Element* child) {
-            child->_update_depth(expectedDepth);
-        });
-    }
-}
-
-int Element::_compare_depth(Element* a, Element* b) SKR_NOEXCEPT
-{
-    if (a->_depth < b->_depth)
-    {
-        return -1;
-    }
-    else if (a->_depth > b->_depth)
-    {
-        return 1;
     }
     else
     {
-        // If the `dirty` values are not equal, sort with non-dirty elements being
-        // less than dirty elements.
-        if (a->_dirty != b->_dirty)
-        {
-            return a->_dirty ? 1 : -1;
-        }
-        else
-        {
-            return 0;
-        }
+        return _inflate_widget(make_not_null(new_widget), new_slot);
     }
+}
+NotNull<Element*> Element::_inflate_widget(NotNull<Widget*> new_widget, uint64_t slot) SKR_NOEXCEPT
+{
+    // TODO. process global key
+
+    Element* const new_child = new_widget->create_element();
+    new_child->mount(this, slot);
+    return make_not_null(new_child);
 }
 
-bool Element::_debug_is_in_scope(Element* ancestor) SKR_NOEXCEPT
-{
-    Element* current = this;
-    while (current != nullptr)
-    {
-        if (current == ancestor)
-        {
-            return true;
-        }
-        current = current->_parent;
-    }
-    return false;
-}
 } // namespace skr::gui

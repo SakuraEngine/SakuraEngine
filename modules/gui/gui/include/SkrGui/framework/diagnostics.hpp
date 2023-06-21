@@ -98,7 +98,7 @@ struct SKR_GUI_API DiagnosticableTreeNode : public DiagnosticableTree {
     SKR_GUI_TYPE(DiagnosticableTreeNode, "26e5515a-7654-4943-a9fe-766db8cedf72", DiagnosticableTree);
     virtual ~DiagnosticableTreeNode() SKR_NOEXCEPT;
 
-    virtual void visit_diagnostics_children(function_ref<void(DiagnosticableTreeNode*)> visitor) SKR_NOEXCEPT = 0;
+    virtual void visit_diagnostics_children(FunctionRef<void(DiagnosticableTreeNode*)> visitor) SKR_NOEXCEPT = 0;
 };
 
 } // namespace skr::gui
