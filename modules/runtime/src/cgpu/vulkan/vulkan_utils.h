@@ -281,6 +281,9 @@ static const char* cgpu_wanted_device_exts[] = {
 #if VK_KHR_maintenance3 // descriptor indexing depends on this
     VK_KHR_MAINTENANCE3_EXTENSION_NAME,
 #endif
+#if VK_KHR_buffer_device_address
+    VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
+#endif
 #if VK_EXT_descriptor_buffer
     VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME,
 #endif
