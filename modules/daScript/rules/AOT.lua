@@ -7,7 +7,6 @@ target("daScriptAOTTemplate")
     add_files("./../none.c")
 
 rule("daScript")
-    add_deps("c++")
     set_extensions(".das")
     after_load(function (target)
         -- collect aot files

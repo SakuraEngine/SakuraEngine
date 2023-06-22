@@ -27,7 +27,7 @@ public:
     }
     skr::span<uint64_t> readback_query_data()
     {
-        return skr::span<uint64_t>((uint64_t*)query_buffer->cpu_mapped_address, query_cursor);
+        return skr::span<uint64_t>((uint64_t*)query_buffer->info->cpu_mapped_address, query_cursor);
     }
     virtual void on_acquire_executor(class skr::render_graph::RenderGraph& g, class skr::render_graph::RenderGraphFrameExecutor& e)
     {

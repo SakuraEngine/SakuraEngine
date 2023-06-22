@@ -167,7 +167,7 @@ TexturePool::Key::Key(CGPUDeviceId device, const CGPUTextureDescriptor& desc)
     , sample_count(desc.sample_count ? desc.sample_count : CGPU_SAMPLE_COUNT_1)
     , sample_quality(desc.sample_quality)
     , descriptors(desc.descriptors)
-    , is_dedicated(desc.is_dedicated)
+    , is_restrict_dedicated(desc.is_restrict_dedicated)
 {
     
 }
@@ -234,9 +234,9 @@ TextureViewPool::Key::Key(CGPUDeviceId device, const CGPUTextureViewDescriptor& 
     , array_layer_count(desc.array_layer_count)
     , base_mip_level(desc.base_mip_level)
     , mip_level_count(desc.mip_level_count)
-    , tex_width(desc.texture->width)
-    , tex_height(desc.texture->height)
-    , unique_id(desc.texture->unique_id)
+    , tex_width(desc.texture->info->width)
+    , tex_height(desc.texture->info->height)
+    , unique_id(desc.texture->info->unique_id)
 
 {
 
@@ -345,7 +345,7 @@ eastl::pair<CGPUBufferId, ECGPUResourceState> BufferPool::allocate(const CGPUBuf
     for (uint32_t i = 0; i < buffers[key].size(); ++i)
     {
         auto&& pooled = buffers[key][i];
-        if (pooled.mark.frame_index < min_frame_index && pooled.buffer->size >= desc.size)
+        if (pooled.mark.frame_index < min_frame_index && pooled.buffer->info->size >= desc.size)
         {
             found_index = i;
             break;

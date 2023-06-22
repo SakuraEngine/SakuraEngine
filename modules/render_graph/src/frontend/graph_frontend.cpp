@@ -222,7 +222,7 @@ const CGPUTextureDescriptor* RenderGraph::resolve_descriptor(TextureHandle hdl) 
 inline static bool aliasing_capacity(TextureNode* aliased, TextureNode* aliasing) SKR_NOEXCEPT
 {
     return !aliased->is_imported() &&
-        !aliased->get_desc().is_dedicated &&
+        !aliased->get_desc().is_restrict_dedicated &&
         aliased->get_size() >= aliasing->get_size() &&
         aliased->get_sample_count() == aliasing->get_sample_count();
 }
@@ -282,7 +282,7 @@ bool RenderGraph::compile() SKR_NOEXCEPT
                         texture->frame_aliasing_source->get_size() > aliased->get_size() // always choose smallest block
                     )
                     {
-                        texture->descriptor.is_aliasing = true;
+                        texture->descriptor.flags |= CGPU_TCF_ALIASING_RESOURCE;
                         texture->frame_aliasing_source = aliased;
                         aliaed_span.to = texture->lifespan().to;
                     }
@@ -297,7 +297,7 @@ bool RenderGraph::compile() SKR_NOEXCEPT
                         texture->frame_aliasing_source->get_size() > aliased->get_size() // always choose smallest block
                     )
                     {
-                        texture->descriptor.is_aliasing = true;
+                        texture->descriptor.flags |= CGPU_TCF_ALIASING_RESOURCE;
                         texture->frame_aliasing_source = aliased;
                         alliasing_lifespans[aliased].from = aliased->lifespan().from;
                         alliasing_lifespans[aliased].to = aliased->lifespan().from;

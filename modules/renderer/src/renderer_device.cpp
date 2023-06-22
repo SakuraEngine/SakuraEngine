@@ -65,7 +65,10 @@ struct SKR_RENDERER_API RendererDeviceImpl : public RendererDevice
     ECGPUFormat get_swapchain_format() const override
     {
         if (swapchains.size())
-            return (ECGPUFormat)swapchains.at(0).second->back_buffers[0]->format;
+        {
+            const auto pInfo = swapchains.at(0).second->back_buffers[0]->info;
+            return pInfo->format;
+        }
         return CGPU_FORMAT_B8G8R8A8_UNORM;
     }
 
@@ -146,6 +149,11 @@ void RendererDeviceImpl::finalize()
     {
         if (cpy_queue && cpy_queue != gfx_queue) 
             cgpu_free_queue(cpy_queue);
+    }
+    for (auto& cmpt_queue : cmpt_queues)
+    {
+        if (cmpt_queue && cmpt_queue != gfx_queue) 
+            cgpu_free_queue(cmpt_queue);
     }
     cpy_queues.clear();
     cgpu_free_queue(gfx_queue);

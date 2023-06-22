@@ -34,6 +34,11 @@ void SkrRendererModule::on_load(int argc, char8_t** argv)
     builder.enable_gpu_based_validation = false;
     builder.enable_set_name = true;
     builder.aux_thread_count = 1;
+#ifdef _WIN32
+    builder.backend = CGPU_BACKEND_D3D12;
+#else
+    builder.backend = CGPU_BACKEND_VULKAN;
+#endif
     for (auto i = 0; i < argc; i++)
     {
         if (::strcmp((const char*)argv[i], "--vulkan") == 0)
@@ -43,14 +48,6 @@ void SkrRendererModule::on_load(int argc, char8_t** argv)
         else if (::strcmp((const char*)argv[i], "--d3d12") == 0)
         {
             builder.backend = CGPU_BACKEND_D3D12;
-        }
-        else
-        {
-#ifdef _WIN32
-            builder.backend = CGPU_BACKEND_D3D12;
-#else
-            builder.backend = CGPU_BACKEND_VULKAN;
-#endif
         }
         builder.enable_debug_layer |= (0 == ::strcmp((const char*)argv[i], "--debug_layer"));
         builder.enable_gpu_based_validation |= (0 == ::strcmp((const char*)argv[i], "--gpu_based_validation"));

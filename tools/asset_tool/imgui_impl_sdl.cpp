@@ -518,8 +518,9 @@ void ImGui_ImplSDL2_NewFrame()
         w = h = 0;
     if (bd->swapChain != NULL)
     {
-        display_w = bd->swapChain->back_buffers[0]->width,
-        display_h = bd->swapChain->back_buffers[0]->height;
+        const auto texInfo = bd->swapChain->back_buffers[0]->info;
+        display_w = texInfo->width,
+        display_h = texInfo->height;
     }
     else
         SDL_GL_GetDrawableSize(bd->Window, &display_w, &display_h);

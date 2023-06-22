@@ -394,7 +394,7 @@ TEST_P(VFSTest, sort)
 
 #ifdef _WIN32
 // TODO: fix DirectStorage on Github Action Machines
-static const auto permutations = testing::Values( /*true,*/ false ); 
+static const auto permutations = testing::Values( true, false ); 
 #else
 static const auto permutations = testing::Values( false );
 #endif

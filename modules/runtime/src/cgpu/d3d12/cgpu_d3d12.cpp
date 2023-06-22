@@ -1,5 +1,6 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
-#include "d3d12_utils.h"
+#include "d3d12_utils.hpp"
+#include "misc/defer.hpp"
 #include "../common/common_utils.h"
 
 #include <EASTL/string_hash_map.h>
@@ -126,7 +127,8 @@ uint32_t cgpu_query_queue_count_d3d12(const CGPUAdapterId adapter, const ECGPUQu
         default: return 0;
     }
     */
-    return UINT32_MAX;
+    // return UINT32_MAX;
+    return 8; // Avoid returning unreasonable large number
 }
 
 CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDescriptor* desc)
@@ -180,6 +182,36 @@ CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDes
     // Create D3D12MA Allocator
     D3D12Util_CreateDMAAllocator(I, A, D);
     cgpu_assert(D->pResourceAllocator && "DMA Allocator Must be Created!");
+    
+    // Create Tiled Memory Pool
+    const auto kTileSize = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+    CGPUMemoryPoolDescriptor poolDesc = {};
+    poolDesc.type = CGPU_MEM_POOL_TYPE_TILED;
+    poolDesc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
+    poolDesc.min_alloc_alignment = kTileSize;
+    poolDesc.block_size = kTileSize * 256;
+    poolDesc.min_block_count = 32;
+    poolDesc.max_block_count = 256;
+    D->pTiledMemoryPool = (CGPUTiledMemoryPool_D3D12*)cgpu_create_memory_pool_d3d12(&D->super, &poolDesc);
+    if (A->mTiledResourceTier <= D3D12_TILED_RESOURCES_TIER_1) 
+    {
+        const auto kPageSize = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+        D3D12_HEAP_DESC heapDesc = {};
+        heapDesc.Alignment = kPageSize;
+        heapDesc.SizeInBytes = kPageSize;
+        heapDesc.Flags = D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES;
+        heapDesc.Properties.Type = D3D12_HEAP_TYPE_DEFAULT;
+        heapDesc.Properties.VisibleNodeMask = CGPU_SINGLE_GPU_NODE_MASK;
+        auto hres = D->pDxDevice->CreateHeap(&heapDesc, IID_PPV_ARGS(&D->pUndefinedTileHeap));
+        CHECK_HRESULT(hres);
+        D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+        queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
+        queueDesc.NodeMask = CGPU_SINGLE_GPU_NODE_MASK;
+        hres = D->pDxDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&D->pUndefinedTileMappingQueue));
+        CHECK_HRESULT(hres);
+        D->pUndefinedTileMappingQueue->SetName(L"MappingQueue");
+    }
+
     // Create Descriptor Heaps
     D->pCPUDescriptorHeaps = (D3D12Util_DescriptorHeap**)cgpu_malloc(D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES * sizeof(D3D12Util_DescriptorHeap*));
     D->pCbvSrvUavHeaps = (D3D12Util_DescriptorHeap**)cgpu_malloc(sizeof(D3D12Util_DescriptorHeap*));
@@ -330,6 +362,10 @@ void cgpu_free_device_d3d12(CGPUDeviceId device)
         }
         cgpu_free((ID3D12CommandQueue**)D->ppCommandQueues[t]);
     }
+    // Free Tiled Pool
+    SAFE_RELEASE(D->pUndefinedTileHeap);
+    SAFE_RELEASE(D->pUndefinedTileMappingQueue);
+    cgpu_free_memory_pool_d3d12((CGPUMemoryPoolId)D->pTiledMemoryPool);
     // Free D3D12MA Allocator
     SAFE_RELEASE(D->pResourceAllocator);
     // Free Descriptor Heaps
@@ -1435,9 +1471,10 @@ void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUR
         const CGPUBufferBarrier* pTransBarrier = &desc->buffer_barriers[i];
         D3D12_RESOURCE_BARRIER* pBarrier = &barriers[transitionCount];
         CGPUBuffer_D3D12* pBuffer = (CGPUBuffer_D3D12*)pTransBarrier->buffer;
-        if (pBuffer->super.memory_usage == CGPU_MEM_USAGE_GPU_ONLY ||
-            pBuffer->super.memory_usage == CGPU_MEM_USAGE_GPU_TO_CPU ||
-            (pBuffer->super.memory_usage == CGPU_MEM_USAGE_CPU_TO_GPU && (pBuffer->super.descriptors & CGPU_RESOURCE_TYPE_RW_BUFFER)))
+        const auto memory_usage = pTransBarrier->buffer->info->memory_usage;
+        const auto descriptors = pTransBarrier->buffer->info->descriptors;
+        if (memory_usage == CGPU_MEM_USAGE_GPU_ONLY || memory_usage == CGPU_MEM_USAGE_GPU_TO_CPU ||
+            (memory_usage == CGPU_MEM_USAGE_CPU_TO_GPU && (descriptors & CGPU_RESOURCE_TYPE_RW_BUFFER)))
         {
             if (CGPU_RESOURCE_STATE_UNORDERED_ACCESS == pTransBarrier->src_state &&
                 CGPU_RESOURCE_STATE_UNORDERED_ACCESS == pTransBarrier->dst_state)
@@ -1462,8 +1499,7 @@ void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUR
                 }
                 pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
                 pBarrier->Transition.pResource = pBuffer->pDxResource;
-                pBarrier->Transition.Subresource =
-                D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+                pBarrier->Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
                 if (pTransBarrier->queue_acquire)
                     pBarrier->Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
@@ -1486,6 +1522,7 @@ void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUR
         const CGPUTextureBarrier* pTransBarrier = &desc->texture_barriers[i];
         D3D12_RESOURCE_BARRIER* pBarrier = &barriers[transitionCount];
         CGPUTexture_D3D12* pTexture = (CGPUTexture_D3D12*)pTransBarrier->texture;
+        const auto pTexInfo = pTexture->super.info;
         if (CGPU_RESOURCE_STATE_UNORDERED_ACCESS == pTransBarrier->src_state &&
             CGPU_RESOURCE_STATE_UNORDERED_ACCESS == pTransBarrier->dst_state)
         {
@@ -1509,11 +1546,9 @@ void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUR
                 pBarrier->Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
             }
             pBarrier->Transition.pResource = pTexture->pDxResource;
-            pBarrier->Transition.Subresource =
-            pTransBarrier->subresource_barrier ? CALC_SUBRESOURCE_INDEX(
+            pBarrier->Transition.Subresource = pTransBarrier->subresource_barrier ? CALC_SUBRESOURCE_INDEX(
                                                  pTransBarrier->mip_level, pTransBarrier->array_layer,
-                                                 0, pTexture->super.mip_levels,
-                                                 pTexture->super.array_size_minus_one + 1) :
+                                                 0, pTexInfo->mip_levels, pTexInfo->array_size_minus_one + 1) :
                                                  D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
             if (pTransBarrier->queue_acquire)
                 pBarrier->Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
@@ -1655,9 +1690,9 @@ const CGPUBufferId* buffers, const uint32_t* strides, const uint32_t* offsets)
         cgpu_assert(D3D12_GPU_VIRTUAL_ADDRESS_NULL != Buffers[i]->mDxGpuAddress);
 
         views[i].BufferLocation =
-        (Buffers[i]->mDxGpuAddress + (offsets ? offsets[i] : 0));
+            (Buffers[i]->mDxGpuAddress + (offsets ? offsets[i] : 0));
         views[i].SizeInBytes =
-        (UINT)(Buffers[i]->super.size - (offsets ? offsets[i] : 0));
+            (UINT)(Buffers[i]->super.info->size - (offsets ? offsets[i] : 0));
         views[i].StrideInBytes = (UINT)strides[i];
     }
 
@@ -1680,7 +1715,7 @@ uint32_t index_stride, uint64_t offset)
         (sizeof(uint16_t) == index_stride) ?
         DXGI_FORMAT_R16_UINT :
         ((sizeof(uint8_t) == index_stride) ? DXGI_FORMAT_R8_UINT : DXGI_FORMAT_R32_UINT);
-    view.SizeInBytes = (UINT)(Buffer->super.size - offset);
+    view.SizeInBytes = (UINT)(Buffer->super.info->size - offset);
     Cmd->pDxCmdList->IASetIndexBuffer(&view);
 }
 
@@ -1724,6 +1759,9 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd
         {
             CGPUTexture_D3D12* T = (CGPUTexture_D3D12*)TV->super.info.texture;
             CGPUTexture_D3D12* T_Resolve = (CGPUTexture_D3D12*)TV_Resolve->super.info.texture;
+            const auto pTexInfo = T->super.info;
+            const auto pResolveTexInfo = T_Resolve->super.info;
+
             D3D12_RENDER_PASS_ENDING_ACCESS_TYPE endingAccess = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_RESOLVE;
             renderPassRenderTargetDescs[colorTargetCount].cpuDescriptor = TV->mDxRtvDsvDescriptorHandle;
             renderPassRenderTargetDescs[colorTargetCount].BeginningAccess = { beginningAccess, { clearValues[i] } };
@@ -1735,13 +1773,13 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd
             Resolve.pDstResource = T_Resolve->pDxResource;
             // Cmd->mSubResolveResource[i].SrcRect = { 0, 0, 0, 0 };
             // RenderDoc has a bug, it will crash if SrcRect is zero
-            Cmd->mSubResolveResource[i].SrcRect = { 0, 0, (LONG)T->super.width, (LONG)T->super.height };
+            Cmd->mSubResolveResource[i].SrcRect = { 0, 0, (LONG)pTexInfo->width, (LONG)pTexInfo->height };
             Cmd->mSubResolveResource[i].DstX = 0;
             Cmd->mSubResolveResource[i].DstY = 0;
             Cmd->mSubResolveResource[i].SrcSubresource = 0;
             Cmd->mSubResolveResource[i].DstSubresource = CALC_SUBRESOURCE_INDEX(
                 0, 0, 0,
-                T_Resolve->super.mip_levels, T_Resolve->super.array_size_minus_one + 1);
+                pResolveTexInfo->mip_levels, pResolveTexInfo->array_size_minus_one + 1);
             Resolve.PreserveResolveSource = false;
             Resolve.SubresourceCount = 1;
             Resolve.pSubresourceParameters = &Cmd->mSubResolveResource[i];
@@ -1932,9 +1970,10 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12_impl(CGPUDeviceId device, const CGPU
     const uint32_t buffer_count = desc->image_count;
     if (!old)
     {
-        void* Memory = cgpu_calloc(1, sizeof(CGPUSwapChain_D3D12) +
-                                    sizeof(CGPUTexture_D3D12) * buffer_count +
-                                    sizeof(CGPUTextureId) * buffer_count);
+        const auto size = sizeof(CGPUSwapChain_D3D12) +
+                                    (sizeof(CGPUTexture_D3D12) + sizeof(CGPUTextureInfo)) * buffer_count +
+                                    sizeof(CGPUTextureId) * buffer_count;
+        void* Memory = cgpu_calloc_aligned(1, size, alignof(CGPUSwapChain_D3D12));
         S = cgpu_new_placed<CGPUSwapChain_D3D12>(Memory);
     }
     S->mDxSyncInterval = 0;
@@ -1989,29 +2028,34 @@ CGPUSwapChainId cgpu_create_swapchain_d3d12_impl(CGPUDeviceId device, const CGPU
     {
         CHECK_HRESULT(S->pDxSwapChain->GetBuffer(i, IID_ARGS(&backbuffers[i])));
     }
-    CGPUTexture_D3D12* Ts = (CGPUTexture_D3D12*)(S + 1);
+    struct THeader
+    {
+        CGPUTexture_D3D12 T;
+        CGPUTextureInfo I;
+    };
+    THeader* Ts = (THeader*)(S + 1);
     for (uint32_t i = 0; i < buffer_count; i++)
     {
-        Ts[i].pDxResource = backbuffers[i];
-        Ts[i].pDxAllocation = nullptr;
-        Ts[i].super.is_cube = false;
-        Ts[i].super.array_size_minus_one = 0;
-        Ts[i].super.device = &D->super;
-        Ts[i].super.sample_count = CGPU_SAMPLE_COUNT_1; // TODO: ?
-        Ts[i].super.format = desc->format;
-        Ts[i].super.aspect_mask = 1;
-        Ts[i].super.depth = 1;
-        Ts[i].super.width = desc->width;
-        Ts[i].super.height = desc->height;
-        Ts[i].super.mip_levels = 1;
-        Ts[i].super.node_index = CGPU_SINGLE_GPU_NODE_INDEX;
-        Ts[i].super.owns_image = false;
-        Ts[i].super.native_handle = Ts[i].pDxResource;
+        Ts[i].T.pDxResource = backbuffers[i];
+        Ts[i].T.pDxAllocation = nullptr;
+        Ts[i].T.super.device = &D->super;
+        Ts[i].T.super.info = &Ts[i].I;
+        Ts[i].I.is_cube = false;
+        Ts[i].I.array_size_minus_one = 0;
+        Ts[i].I.sample_count = CGPU_SAMPLE_COUNT_1; // TODO: ?
+        Ts[i].I.format = desc->format;
+        Ts[i].I.aspect_mask = 1;
+        Ts[i].I.depth = 1;
+        Ts[i].I.width = desc->width;
+        Ts[i].I.height = desc->height;
+        Ts[i].I.mip_levels = 1;
+        Ts[i].I.node_index = CGPU_SINGLE_GPU_NODE_INDEX;
+        Ts[i].I.owns_image = false;
     }
     CGPUTextureId* Vs = (CGPUTextureId*)(Ts + buffer_count);
     for (uint32_t i = 0; i < buffer_count; i++)
     {
-        Vs[i] = &Ts[i].super;
+        Vs[i] = &Ts[i].T.super;
     }
     S->super.back_buffers = Vs;
     S->super.buffer_count = buffer_count;
@@ -2052,7 +2096,7 @@ void cgpu_free_swapchain_d3d12(CGPUSwapChainId swapchain)
     CGPUSwapChain_D3D12* S = (CGPUSwapChain_D3D12*)swapchain;
     cgpu_free_swapchain_d3d12_impl(swapchain);
     cgpu_delete_placed(S);
-    cgpu_free(S);
+    cgpu_free_aligned(S, alignof(CGPUSwapChain_D3D12));
 }
 
 #include "cgpu/extensions/cgpu_d3d12_exts.h"

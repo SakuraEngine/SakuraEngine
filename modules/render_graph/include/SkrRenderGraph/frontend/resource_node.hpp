@@ -40,13 +40,13 @@ public:
     }
     inline const TextureHandle get_handle() const SKR_NOEXCEPT { return TextureHandle(get_id()); }
     inline const CGPUTextureDescriptor& get_desc() const SKR_NOEXCEPT { return descriptor; }
-    inline const uint32_t get_size() const SKR_NOEXCEPT
+    inline const uint64_t get_size() const SKR_NOEXCEPT
     {
-        uint32_t asize = cgpu_max(descriptor.array_size, 1);
-        uint32_t mips = cgpu_max(descriptor.mip_levels, 1);
-        uint32_t width = cgpu_max(descriptor.width, 1);
-        uint32_t height = cgpu_max(descriptor.height, 1);
-        uint32_t depth = cgpu_max(descriptor.depth, 1);
+        uint64_t asize = cgpu_max(descriptor.array_size, 1);
+        uint64_t mips = cgpu_max(descriptor.mip_levels, 1);
+        uint64_t width = cgpu_max(descriptor.width, 1);
+        uint64_t height = cgpu_max(descriptor.height, 1);
+        uint64_t depth = cgpu_max(descriptor.depth, 1);
         return asize * mips * width * height * depth * FormatUtil_BitSizeOfBlock(descriptor.format);
     }
     inline const ECGPUSampleCount get_sample_count() const SKR_NOEXCEPT { return descriptor.sample_count; }

@@ -47,7 +47,7 @@ void create_sampled_texture()
     // Texture
     CGPUTextureDescriptor tex_desc = {
         .descriptors = CGPU_RESOURCE_TYPE_TEXTURE,
-        .flags = CGPU_TCF_OWN_MEMORY_BIT,
+        .flags = CGPU_TCF_DEDICATED_BIT,
         .width = TEXTURE_WIDTH,
         .height = TEXTURE_HEIGHT,
         .depth = 1,
@@ -92,7 +92,7 @@ typedef uint16_t Index;
 void create_vertex_buffer()
 {
     CGPUBufferDescriptor vertex_buffer_desc = {
-        .flags = CGPU_BCF_OWN_MEMORY_BIT,
+        .flags = CGPU_BCF_NONE,
         .descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER,
         .memory_usage = CGPU_MEM_USAGE_GPU_ONLY,
         .element_stride = sizeof(Vertex),
@@ -106,7 +106,7 @@ void create_vertex_buffer()
 void create_index_buffer()
 {
     CGPUBufferDescriptor index_buffer_desc = {
-        .flags = CGPU_BCF_OWN_MEMORY_BIT,
+        .flags = CGPU_BCF_NONE,
         .descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER,
         .memory_usage = CGPU_MEM_USAGE_GPU_ONLY,
         .element_stride = sizeof(Index),
@@ -121,7 +121,7 @@ void upload_resources()
 {
     CGPUBufferDescriptor upload_buffer_desc = {
         .name = "UploadBuffer",
-        .flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT,
+        .flags = CGPU_BCF_PERSISTENT_MAP_BIT,
         .descriptors = CGPU_RESOURCE_TYPE_NONE,
         .memory_usage = CGPU_MEM_USAGE_CPU_ONLY,
         .element_stride = sizeof(TEXTURE_DATA),
@@ -131,7 +131,7 @@ void upload_resources()
     CGPUBufferId upload_buffer = cgpu_create_buffer(device, &upload_buffer_desc);
     // upload texture
     {
-        memcpy(upload_buffer->cpu_mapped_address, TEXTURE_DATA, upload_buffer_desc.size);
+        memcpy(upload_buffer->info->cpu_mapped_address, TEXTURE_DATA, upload_buffer_desc.size);
     }
     cgpu_reset_command_pool(pools[0]);
     cgpu_cmd_begin(cmds[0]);
@@ -156,7 +156,7 @@ void upload_resources()
     cgpu_wait_queue_idle(gfx_queue);
     // upload vertex buffer
     {
-        memcpy(upload_buffer->cpu_mapped_address, vertices, sizeof(vertices));
+        memcpy(upload_buffer->info->cpu_mapped_address, vertices, sizeof(vertices));
     }
     cgpu_reset_command_pool(pools[0]);
     cgpu_cmd_begin(cmds[0]);
@@ -182,7 +182,7 @@ void upload_resources()
     cgpu_wait_queue_idle(gfx_queue);
     // upload index buffer
     {
-        memcpy(upload_buffer->cpu_mapped_address, indices, sizeof(indices));
+        memcpy(upload_buffer->info->cpu_mapped_address, indices, sizeof(indices));
     }
     cgpu_reset_command_pool(pools[0]);
     cgpu_cmd_begin(cmds[0]);
@@ -395,7 +395,7 @@ void initialize(void* usrdata)
             .texture = swapchain->back_buffers[i],
             .aspects = CGPU_TVA_COLOR,
             .dims = CGPU_TEX_DIMENSION_2D,
-            .format = swapchain->back_buffers[i]->format,
+            .format = swapchain->back_buffers[i]->info->format,
             .usages = CGPU_TVU_RTV_DSV,
             .array_layer_count = 1
         };
@@ -460,9 +460,9 @@ void raster_redraw()
     {
         cgpu_render_encoder_set_viewport(rp_encoder,
         0.0f, 0.0f,
-        (float)back_buffer->width, (float)back_buffer->height,
+        (float)back_buffer->info->width, (float)back_buffer->info->height,
         0.f, 1.f);
-        cgpu_render_encoder_set_scissor(rp_encoder, 0, 0, back_buffer->width, back_buffer->height);
+        cgpu_render_encoder_set_scissor(rp_encoder, 0, 0, back_buffer->info->width, back_buffer->info->height);
         cgpu_render_encoder_bind_pipeline(rp_encoder, pipeline);
         const uint32_t stride = sizeof(Vertex);
         cgpu_render_encoder_bind_vertex_buffers(rp_encoder, 1, &vertex_buffer, &stride, CGPU_NULLPTR);

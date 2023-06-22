@@ -359,21 +359,21 @@ void RenderEffectForward::prepare_geometry_resources(SRendererId renderer)
     // upload
     CGPUBufferDescriptor upload_buffer_desc = {};
     upload_buffer_desc.name = u8"UploadBuffer";
-    upload_buffer_desc.flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT;
+    upload_buffer_desc.flags = CGPU_BCF_PERSISTENT_MAP_BIT;
     upload_buffer_desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
     upload_buffer_desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
     upload_buffer_desc.size = sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices);
     auto upload_buffer = cgpu_create_buffer(device, &upload_buffer_desc);
     CGPUBufferDescriptor vb_desc = {};
     vb_desc.name = u8"VertexBuffer";
-    vb_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+    vb_desc.flags = CGPU_BCF_NONE;
     vb_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
     vb_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     vb_desc.size = sizeof(CubeGeometry);
     vertex_buffer = cgpu_create_buffer(device, &vb_desc);
     CGPUBufferDescriptor ib_desc = {};
     ib_desc.name = u8"IndexBuffer";
-    ib_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+    ib_desc.flags = CGPU_BCF_NONE;
     ib_desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER;
     ib_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     ib_desc.size = sizeof(CubeGeometry::g_Indices);
@@ -384,7 +384,7 @@ void RenderEffectForward::prepare_geometry_resources(SRendererId renderer)
     auto cpy_cmd = cgpu_create_command_buffer(cmd_pool, &cmd_desc);
     {
         auto geom = CubeGeometry();
-        memcpy(upload_buffer->cpu_mapped_address, &geom, sizeof(CubeGeometry));
+        memcpy(upload_buffer->info->cpu_mapped_address, &geom, sizeof(CubeGeometry));
     }
     cgpu_cmd_begin(cpy_cmd);
     CGPUBufferToBufferTransfer vb_cpy = {};
@@ -395,7 +395,7 @@ void RenderEffectForward::prepare_geometry_resources(SRendererId renderer)
     vb_cpy.size = sizeof(CubeGeometry);
     cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &vb_cpy);
     {
-        memcpy((char8_t*)upload_buffer->cpu_mapped_address + sizeof(CubeGeometry),
+        memcpy((char8_t*)upload_buffer->info->cpu_mapped_address + sizeof(CubeGeometry),
         CubeGeometry::g_Indices, sizeof(CubeGeometry::g_Indices));
     }
     CGPUBufferToBufferTransfer ib_cpy = {};
