@@ -521,7 +521,7 @@ protected:
                     const void* pSrc = getVBData(render_model, j, vcount);
                     if (render_model->use_dynamic_buffer) // direct copy vertices to CVV buffer
                     {
-                        memcpy((uint8_t*)view.buffer->cpu_mapped_address + view.offset, pSrc, vcount * view.stride);
+                        memcpy((uint8_t*)view.buffer->info->cpu_mapped_address + view.offset, pSrc, vcount * view.stride);
                     }
                 }
             }
@@ -583,7 +583,7 @@ protected:
                     },
                     [upload_buffer_hdl = upload_buffer, vb_c, render_model](rg::RenderGraph& g, rg::CopyPassContext& context){
                         auto upload_buffer = context.resolve(upload_buffer_hdl);
-                        uint8_t* range_cursor =(uint8_t*)upload_buffer->cpu_mapped_address;
+                        uint8_t* range_cursor =(uint8_t*)upload_buffer->info->cpu_mapped_address;
                         for (uint32_t j = 0; j < vb_c; j++)
                         {
                             auto& view = render_model->vertex_buffer_views[j];

@@ -31,7 +31,7 @@ struct SleepyService : public skr::ServiceThread
 
     void sleep() SKR_NOEXCEPT
     {
-        const auto ms = skr_atomicu64_load_relaxed(&sleep_time);
+        const auto ms = skr_atomicu32_load_relaxed(&sleep_time);
         ZoneScopedNC("ioServiceSleep(Cond)", tracy::Color::Gray55);
 
         condlock.lock();

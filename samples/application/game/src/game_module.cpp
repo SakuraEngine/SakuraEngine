@@ -657,10 +657,11 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
             auto cameras = dual::get_owned_rw<skr_camera_comp_t>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {
+                const auto pInfo = swapchain->back_buffers[0]->info;
                 cameras[i].renderer = game_renderer;
                 cameras[i].viewport_id = 0u; // TODO: viewport id
-                cameras[i].viewport_width = swapchain->back_buffers[0]->width;
-                cameras[i].viewport_height = swapchain->back_buffers[0]->height;
+                cameras[i].viewport_width = pInfo->width;
+                cameras[i].viewport_height = pInfo->height;
             }
         };
         dualQ_get_views(cameraQuery, DUAL_LAMBDA(cameraUpdate));

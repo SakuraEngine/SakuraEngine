@@ -20,9 +20,9 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
             builder.set_name(u8"live2d_mask_msaa")
                 .extent(Csm::kMaskResolution, Csm::kMaskResolution)
                 .format(live2d_mask_format)
-                .owns_memory()
                 .sample_count((ECGPUSampleCount)sample_level)
                 .allow_render_target();
+            if constexpr (Csm::kMaskResolution > 2048) builder.allocate_dedicated();
         });(void)live2d_mask_msaa;
 
         auto mask = renderGraph->create_texture(
@@ -30,8 +30,8 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
             builder.set_name(u8"live2d_mask")
                 .extent(Csm::kMaskResolution, Csm::kMaskResolution)
                 .format(live2d_mask_format)
-                .owns_memory()
                 .allow_render_target();
+            if constexpr (Csm::kMaskResolution > 2048) builder.allocate_dedicated();
         });(void)mask;
         
         auto depth = renderGraph->create_texture(
@@ -42,9 +42,9 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
             builder.set_name(u8"mask_depth")
                 .extent(Csm::kMaskResolution, Csm::kMaskResolution)
                 .format(live2d_depth_format)
-                .owns_memory()
                 .sample_count((ECGPUSampleCount)sample_level)
                 .allow_depth_stencil();
+            if constexpr (Csm::kMaskResolution > 2048) builder.allocate_dedicated();
         });(void)depth;
     }
 

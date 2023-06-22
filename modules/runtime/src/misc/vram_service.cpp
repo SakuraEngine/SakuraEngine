@@ -208,7 +208,7 @@ void skr::io::VRAMService::tryUploadBufferResource(skr::io::VRAMService::Task& t
         {
             ZoneScopedN("MemcpyToUploadBuffer");
 
-            memcpy((uint8_t*)upload->upload_buffer->cpu_mapped_address, 
+            memcpy((uint8_t*)upload->upload_buffer->info->cpu_mapped_address, 
                 buffer_io.src_memory.bytes, buffer_io.src_memory.size);
         }
         
@@ -270,7 +270,7 @@ void skr::io::VRAMService::tryUploadTextureResource(skr::io::VRAMService::Task& 
         {
             ZoneScopedN("MemcpyToUploadBuffer");
 
-            memcpy((uint8_t*)upload->upload_buffer->cpu_mapped_address, texture_io.src_memory.bytes, texture_io.src_memory.size);
+            memcpy((uint8_t*)upload->upload_buffer->info->cpu_mapped_address, texture_io.src_memory.bytes, texture_io.src_memory.size);
         }
         
         auto cmd = task.task_batch->get_cmd(texture_io.transfer_queue);

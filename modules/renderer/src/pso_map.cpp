@@ -132,7 +132,7 @@ struct PSOMapImpl : public skr_pso_map_t
         // 1. use async service install
         auto progress = SPtr<PSOProgress>::Create(this, key);
         mPSOProgresses.emplace(key, progress);
-        skr_atomicu64_store_relaxed(&progress->key->pso_status, SKR_PSO_MAP_PSO_STATUS_REQUESTED);
+        skr_atomicu32_store_relaxed(&progress->key->pso_status, SKR_PSO_MAP_PSO_STATUS_REQUESTED);
         if (auto launcher = future_launcher.get()) // create shaders on aux thread
         {
             progress->execute(*launcher);
@@ -213,7 +213,7 @@ struct PSOMapImpl : public skr_pso_map_t
         if (found != sets.end())
         {
         #ifdef _DEBUG
-            const auto pso_frame = skr_atomicu32_load_relaxed(&found->get()->pso_frame);
+            const auto pso_frame = skr_atomicu64_load_relaxed(&found->get()->pso_frame);
             SKR_ASSERT(pso_frame != UINT64_MAX && "this shader is freed but never installed, check your code for errors!");
         #endif
             skr_atomicu32_add_relaxed(&found->get()->pso_rc, -1);
@@ -280,13 +280,13 @@ bool PSOProgress::do_in_background()
     key->pso = cgpu_create_render_pipeline(map->root.device, &key->descriptor);
     if (key->pso)
     {
-        skr_atomicu64_store_relaxed(&key->pso_status, SKR_PSO_MAP_PSO_STATUS_INSTALLED);
+        skr_atomicu32_store_relaxed(&key->pso_status, SKR_PSO_MAP_PSO_STATUS_INSTALLED);
         skr_atomicu64_store_relaxed(&key->pso_frame, map->frame_index); // store frame index to indicate pso is created
         return true;
     }
     else
     {
-        skr_atomicu64_store_relaxed(&key->pso_status, SKR_PSO_MAP_PSO_STATUS_FAILED);
+        skr_atomicu32_store_relaxed(&key->pso_status, SKR_PSO_MAP_PSO_STATUS_FAILED);
         skr_atomicu64_store_relaxed(&key->pso_frame, UINT64_MAX); // store frame index to indicate pso is failed
         return false;
     }

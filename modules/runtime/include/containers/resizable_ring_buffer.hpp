@@ -25,11 +25,11 @@ public:
     { 
         skr_rw_mutex_acquire_r(&rw_mutex);
         uint64_t sz = ring.get_size();
-        skr_rw_mutex_release(&rw_mutex);
+        skr_rw_mutex_release_r(&rw_mutex);
         return sz;
     }
     void acquire_read() { skr_rw_mutex_acquire_r(&rw_mutex); }
-    void release_read() { skr_rw_mutex_release(&rw_mutex); }
+    void release_read() { skr_rw_mutex_release_r(&rw_mutex); }
 protected:
     ring_buffer<T> ring;
     mutable SRWMutex rw_mutex;
@@ -67,7 +67,7 @@ void resizable_ring_buffer<T>::resize(int newSize)
         skr_atomicu32_store_release(&ring.head, currentSize);
     }
     skr_atomicu32_store_release(&ring.size, newSize);
-    skr_rw_mutex_release(&rw_mutex);
+    skr_rw_mutex_release_w(&rw_mutex);
 }
 
 template <typename T>
@@ -75,7 +75,7 @@ T resizable_ring_buffer<T>::add(T value)
 {
     skr_rw_mutex_acquire_r(&rw_mutex);
     const auto old = ring.add(value);
-    skr_rw_mutex_release(&rw_mutex);
+    skr_rw_mutex_release_r(&rw_mutex);
     return old;
 }
 
@@ -84,7 +84,7 @@ T resizable_ring_buffer<T>::get(uint64_t index)
 {
     skr_rw_mutex_acquire_r(&rw_mutex);
     auto result = ring.get(index);
-    skr_rw_mutex_release(&rw_mutex);
+    skr_rw_mutex_release_r(&rw_mutex);
     return result;
 }
 

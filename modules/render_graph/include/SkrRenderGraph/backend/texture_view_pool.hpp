@@ -35,8 +35,8 @@ public:
         uint32_t array_layer_count = 0;
         uint32_t base_mip_level = 0;
         uint32_t mip_level_count = 0;
-        uint32_t tex_width = 0;
-        uint32_t tex_height = 0;
+        uint64_t tex_width = 0;
+        uint64_t tex_height = 0;
         int64_t unique_id = 0;
         
         operator size_t() const;

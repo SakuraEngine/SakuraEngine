@@ -21,7 +21,7 @@ public:
     skr::span<IORequestId> get_requests() SKR_NOEXCEPT
     {
         skr_rw_mutex_acquire_r(&rw_lock);
-        SKR_DEFER( { skr_rw_mutex_release(&rw_lock); });
+        SKR_DEFER( { skr_rw_mutex_release_r(&rw_lock); });
         return requests;
     }
 
@@ -33,14 +33,14 @@ protected:
     void addRequest(IORequestId rq) SKR_NOEXCEPT
     {
         skr_rw_mutex_acquire_w(&rw_lock);
-        SKR_DEFER( { skr_rw_mutex_release(&rw_lock); });
+        SKR_DEFER( { skr_rw_mutex_release_w(&rw_lock); });
         requests.push_back(rq);
     }
 
     void removeCancelledRequest(IORequestId rq) SKR_NOEXCEPT
     {
         skr_rw_mutex_acquire_w(&rw_lock);
-        SKR_DEFER( { skr_rw_mutex_release(&rw_lock); });
+        SKR_DEFER( { skr_rw_mutex_release_w(&rw_lock); });
         auto fnd = eastl::remove_if(
             requests.begin(), requests.end(), [rq](IORequestId r) { return r == rq; });
         cancelled_requests.emplace_back(*fnd);

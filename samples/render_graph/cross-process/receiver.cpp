@@ -170,7 +170,7 @@ void ReceiverRenderer::create_blit_pipeline()
     rp_desc.vertex_shader = &ppl_shaders[0];
     rp_desc.fragment_shader = &ppl_shaders[1];
     rp_desc.render_target_count = 1;
-    auto backend_format = (ECGPUFormat)swapchain->back_buffers[0]->format;
+    auto backend_format = (ECGPUFormat)swapchain->back_buffers[0]->info->format;
     rp_desc.color_formats = &backend_format;
     blit_pipeline = cgpu_create_render_pipeline(device, &rp_desc);
     cgpu_free_shader_library(screen_vs);
@@ -353,9 +353,9 @@ int receiver_main(int argc, char* argv[])
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
                     cgpu_render_encoder_set_viewport(stack.encoder,
                         0.0f, 0.0f,
-                        (float)to_import->width, (float)to_import->height,
+                        (float)to_import->info->width, (float)to_import->info->height,
                         0.f, 1.f);
-                    cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->width, to_import->height);
+                    cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, to_import->info->width, to_import->info->height);
                     cgpu_render_encoder_draw(stack.encoder, 6, 0);
                 });
         }

@@ -4,6 +4,7 @@
 #include "buffer_pool.hpp"
 #include "texture_view_pool.hpp"
 #include "bind_table_pool.hpp"
+#include <EASTL/fixed_set.h>
 
 #include "cgpu/extensions/cgpu_marker_buffer.h"
 
@@ -47,6 +48,8 @@ protected:
 static constexpr size_t stack_vector_fixed_count = 8;
 template <typename T>
 using stack_vector = eastl::fixed_vector<T, stack_vector_fixed_count>;
+template <typename T>
+using stack_set = eastl::fixed_set<T, stack_vector_fixed_count>;
 
 class RenderGraphBackend : public RenderGraph
 {

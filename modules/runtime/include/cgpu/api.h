@@ -73,7 +73,10 @@ struct CGPUExportTextureDescriptor;
 struct CGPUImportTextureDescriptor;
 
 struct CGPUVertexLayout;
+struct CGPUTiledTextureRegions;
+struct CGPUTiledTexturePackedMips;
 struct CGPUBufferToBufferTransfer;
+struct CGPUBufferToTilesTransfer;
 struct CGPUBufferToTextureTransfer;
 struct CGPUTextureToTextureTransfer;
 struct CGPUQueryDescriptor;
@@ -123,6 +126,7 @@ typedef enum ECGPUQueueType
     CGPU_QUEUE_TYPE_GRAPHICS = 0,
     CGPU_QUEUE_TYPE_COMPUTE = 1,
     CGPU_QUEUE_TYPE_TRANSFER = 2,
+    CGPU_QUEUE_TYPE_TILE_MAPPING = 3,
     CGPU_QUEUE_TYPE_COUNT,
     CGPU_QUEUE_TYPE_MAX_ENUM_BIT = 0x7FFFFFFF
 } ECGPUQueueType;
@@ -217,14 +221,14 @@ CGPU_API CGPURenderPipelineId cgpu_create_render_pipeline(CGPUDeviceId device, c
 typedef CGPURenderPipelineId (*CGPUProcCreateRenderPipeline)(CGPUDeviceId device, const struct CGPURenderPipelineDescriptor* desc);
 CGPU_API void cgpu_free_render_pipeline(CGPURenderPipelineId pipeline);
 typedef void (*CGPUProcFreeRenderPipeline)(CGPURenderPipelineId pipeline);
-CGPU_API CGPUMemoryPoolId cgpu_create_memory_pool(CGPUDeviceId, const struct CGPUMemoryPoolDescriptor* desc);
-typedef CGPUMemoryPoolId (*CGPUProcCreateMemoryPool)(CGPUDeviceId, const struct CGPUMemoryPoolDescriptor* desc);
-CGPU_API void cgpu_free_memory_pool(CGPUMemoryPoolId pool);
-typedef void (*CGPUProcFreeMemoryPool)(CGPUMemoryPoolId pool);
 CGPU_API CGPUQueryPoolId cgpu_create_query_pool(CGPUDeviceId, const struct CGPUQueryPoolDescriptor* desc);
 typedef CGPUQueryPoolId (*CGPUProcCreateQueryPool)(CGPUDeviceId, const struct CGPUQueryPoolDescriptor* desc);
 CGPU_API void cgpu_free_query_pool(CGPUQueryPoolId);
 typedef void (*CGPUProcFreeQueryPool)(CGPUQueryPoolId);
+CGPU_API CGPUMemoryPoolId cgpu_create_memory_pool(CGPUDeviceId, const struct CGPUMemoryPoolDescriptor* desc);
+typedef CGPUMemoryPoolId (*CGPUProcCreateMemoryPool)(CGPUDeviceId, const struct CGPUMemoryPoolDescriptor* desc);
+CGPU_API void cgpu_free_memory_pool(CGPUMemoryPoolId pool);
+typedef void (*CGPUProcFreeMemoryPool)(CGPUMemoryPoolId pool);
 
 // Queue APIs
 // Warn: If you get a queue at an index with a specific type, you must hold the handle and reuses it.
@@ -238,6 +242,14 @@ CGPU_API void cgpu_wait_queue_idle(CGPUQueueId queue);
 typedef void (*CGPUProcWaitQueueIdle)(CGPUQueueId queue);
 CGPU_API float cgpu_queue_get_timestamp_period_ns(CGPUQueueId queue);
 typedef float (*CGPUProcQueueGetTimestampPeriodNS)(CGPUQueueId queue);
+CGPU_API void cgpu_queue_map_tiled_texture(CGPUQueueId queue, const struct CGPUTiledTextureRegions* desc);
+typedef void (*CGPUProcQueueMapTiledTexture)(CGPUQueueId queue, const struct CGPUTiledTextureRegions* desc);
+CGPU_API void cgpu_queue_unmap_tiled_texture(CGPUQueueId queue, const struct CGPUTiledTextureRegions* desc);
+typedef void (*CGPUProcQueueUnmapTiledTexture)(CGPUQueueId queue, const struct CGPUTiledTextureRegions* desc);
+CGPU_API void cgpu_queue_map_packed_mips(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions);
+typedef void (*CGPUProcQueueMapPackedMips)(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions);
+CGPU_API void cgpu_queue_unmap_packed_mips(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions);
+typedef void (*CGPUProcQueueUnmapPackedMips)(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions);
 CGPU_API void cgpu_free_queue(CGPUQueueId queue);
 typedef void (*CGPUProcFreeQueue)(CGPUQueueId queue);
 
@@ -310,6 +322,8 @@ CGPU_API void cgpu_cmd_transfer_texture_to_texture(CGPUCommandBufferId cmd, cons
 typedef void (*CGPUProcCmdTransferTextureToTexture)(CGPUCommandBufferId cmd, const struct CGPUTextureToTextureTransfer* desc);
 CGPU_API void cgpu_cmd_transfer_buffer_to_texture(CGPUCommandBufferId cmd, const struct CGPUBufferToTextureTransfer* desc);
 typedef void (*CGPUProcCmdTransferBufferToTexture)(CGPUCommandBufferId cmd, const struct CGPUBufferToTextureTransfer* desc);
+CGPU_API void cgpu_cmd_transfer_buffer_to_tiles(CGPUCommandBufferId cmd, const struct CGPUBufferToTilesTransfer* desc);
+typedef void (*CGPUProcCmdTransferBufferToTiles)(CGPUCommandBufferId cmd, const struct CGPUBufferToTilesTransfer* desc);
 CGPU_API void cgpu_cmd_resource_barrier(CGPUCommandBufferId cmd, const struct CGPUResourceBarrierDescriptor* desc);
 typedef void (*CGPUProcCmdResourceBarrier)(CGPUCommandBufferId cmd, const struct CGPUResourceBarrierDescriptor* desc);
 CGPU_API void cgpu_cmd_begin_query(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
@@ -567,6 +581,10 @@ typedef struct CGPUProcTable {
     const CGPUProcWaitQueueIdle wait_queue_idle;
     const CGPUProcQueuePresent queue_present;
     const CGPUProcQueueGetTimestampPeriodNS queue_get_timestamp_period;
+    const CGPUProcQueueMapTiledTexture queue_map_tiled_texture;
+    const CGPUProcQueueUnmapTiledTexture queue_unmap_tiled_texture;
+    const CGPUProcQueueMapPackedMips queue_map_packed_mips;
+    const CGPUProcQueueUnmapPackedMips queue_unmap_packed_mips;
     const CGPUProcFreeQueue free_queue;
 
     // Command APIs
@@ -610,6 +628,7 @@ typedef struct CGPUProcTable {
     const CGPUProcCmdBegin cmd_begin;
     const CGPUProcCmdTransferBufferToBuffer cmd_transfer_buffer_to_buffer;
     const CGPUProcCmdTransferBufferToTexture cmd_transfer_buffer_to_texture;
+    const CGPUProcCmdTransferBufferToTiles cmd_transfer_buffer_to_tiles;
     const CGPUProcCmdTransferTextureToTexture cmd_transfer_texture_to_texture;
     const CGPUProcCmdResourceBarrier cmd_resource_barrier;
     const CGPUProcCmdBeginQuery cmd_begin_query;
@@ -798,6 +817,7 @@ typedef struct CGPUAdapterDetail {
     uint32_t max_vertex_input_bindings;
     uint32_t wave_lane_count;
     uint64_t host_visible_vram_budget;
+    CGPUDynamicStateFeatures dynamic_state_features;
     bool support_host_visible_vram : 1;
     bool multidraw_indirect : 1;
     bool support_geom_shader : 1;
@@ -805,7 +825,9 @@ typedef struct CGPUAdapterDetail {
     bool is_uma : 1;
     bool is_virtual : 1;
     bool is_cpu : 1;
-    CGPUDynamicStateFeatures dynamic_state_features;
+    bool support_tiled_buffer : 1;
+    bool support_tiled_texture : 1;
+    bool support_tiled_volume : 1;
     // RDNA2 
     bool support_shading_rate : 1;
     bool support_shading_rate_mask : 1;
@@ -980,18 +1002,6 @@ typedef struct CGPUDescriptorData {
     uint32_t count;
 } CGPUDescriptorData;
 
-typedef struct CGPUBuffer {
-    CGPUDeviceId device;
-    /**
-     * CPU address of the mapped buffer.
-     * Applicable to buffers created in CPU accessible heaps (CPU, CPU_TO_GPU, GPU_TO_CPU)
-     */
-    void* cpu_mapped_address;
-    uint64_t size : 37;
-    uint64_t descriptors : 24;
-    uint64_t memory_usage : 3;
-} CGPUBuffer;
-
 typedef union CGPUClearValue
 {
     struct
@@ -1089,6 +1099,40 @@ typedef struct CGPUTextureSubresource {
     uint32_t layer_count;
 } CGPUTextureSubresource;
 
+typedef struct CGPUCoordinate {
+    uint32_t x;
+    uint32_t y;
+    uint32_t z;
+} CGPUCoordinate;
+
+typedef struct CGPUCoordinateRegion {
+    CGPUCoordinate start;
+    CGPUCoordinate end;
+} CGPUCoordinateRegion;
+
+typedef struct CGPUTextureCoordinateRegion {
+    CGPUCoordinate start;
+    CGPUCoordinate end;
+    uint32_t mip_level;
+    uint32_t layer;
+} CGPUTextureCoordinateRegion;
+
+typedef struct CGPUTiledTextureRegions {
+    CGPUTextureId texture;
+    struct CGPUTextureCoordinateRegion* regions;
+    uint32_t region_count;
+} CGPUTiledTextureRegions;
+
+typedef struct CGPUTiledTexturePackedMip {
+    CGPUTextureId texture;
+    uint32_t layer;
+} CGPUTiledTexturePackedMip;
+
+typedef struct CGPUTiledTexturePackedMips {
+    struct CGPUTiledTexturePackedMip* packed_mips;
+    uint32_t packed_mip_count;
+} CGPUTiledTexturePackedMips;
+
 typedef struct CGPUBufferToBufferTransfer {
     CGPUBufferId dst;
     uint64_t dst_offset;
@@ -1096,6 +1140,13 @@ typedef struct CGPUBufferToBufferTransfer {
     uint64_t src_offset;
     uint64_t size;
 } CGPUBufferToBufferTransfer;
+
+typedef struct CGPUBufferToTilesTransfer {
+    CGPUBufferId src;
+    uint64_t src_offset;
+    CGPUTextureId dst;
+    CGPUTextureCoordinateRegion region;
+} CGPUBufferToTilesTransfer;
 
 typedef struct CGPUTextureToTextureTransfer {
     CGPUTextureId src;
@@ -1152,7 +1203,7 @@ typedef struct CGPUDeviceDescriptor {
 } CGPUDeviceDescriptor;
 
 typedef struct CGPUCommandPoolDescriptor {
-    uint32_t ___nothing_and_useless__;
+    const char8_t* name;
 } CGPUCommandPoolDescriptor;
 
 typedef struct CGPUCommandBufferDescriptor {
@@ -1356,12 +1407,18 @@ typedef struct CGPURenderPipelineDescriptor {
 } CGPURenderPipelineDescriptor;
 
 typedef struct CGPUMemoryPoolDescriptor {
-    ECGPUMemoryUsage mem_usage;
+    ECGPUMemoryPoolType type;
+    ECGPUMemoryUsage memory_usage;
     uint64_t block_size;
     uint32_t min_block_count;
     uint32_t max_block_count;
     uint64_t min_alloc_alignment;
 } CGPUMemoryPoolDescriptor;
+
+typedef struct CGPUMemoryPool {
+    CGPUDeviceId device;
+    ECGPUMemoryPoolType type;
+} CGPUMemoryPool;
 
 typedef struct CGPUParameterTable {
     // This should be stored here because shader could be destoryed after RS creation
@@ -1478,6 +1535,18 @@ typedef struct CGPUBufferDescriptor {
     bool prefer_on_host;
 } CGPUBufferDescriptor;
 
+typedef struct CGPUBufferInfo {
+    uint64_t size;
+    void* cpu_mapped_address;
+    uint32_t descriptors;
+    uint32_t memory_usage;
+} CGPUBufferInfo;
+
+typedef struct CGPUBuffer {
+    CGPUDeviceId device;
+    const struct CGPUBufferInfo* info;
+} CGPUBuffer;
+
 typedef struct CGPUTextureDescriptor {
     /// Debug name used in gpu profile
     const char8_t* name;
@@ -1487,11 +1556,11 @@ typedef struct CGPUTextureDescriptor {
     /// Optimized clear value (recommended to use this same value when clearing the rendertarget)
     CGPUClearValue clear_value;
     /// Width
-    uint32_t width;
+    uint64_t width;
     /// Height
-    uint32_t height;
+    uint64_t height;
     /// Depth (Should be 1 if not a mType is not TEXTURE_TYPE_3D)
-    uint32_t depth;
+    uint64_t depth;
     /// Texture array size (Should be 1 if texture is not a texture array or cubemap)
     uint32_t array_size;
     ///  image format
@@ -1509,8 +1578,7 @@ typedef struct CGPUTextureDescriptor {
     /// Descriptor creation
     CGPUResourceTypes descriptors;
     /// Memory Aliasing
-    uint32_t is_dedicated;
-    uint32_t is_aliasing;
+    uint32_t is_restrict_dedicated;
 } CGPUTextureDescriptor;
 
 typedef struct CGPUExportTextureDescriptor {
@@ -1520,11 +1588,10 @@ typedef struct CGPUExportTextureDescriptor {
 typedef struct CGPUImportTextureDescriptor {
     ECGPUBackend backend;
     uint64_t shared_handle;
-    uint32_t width;
-    uint32_t height;
-    uint32_t depth;
+    uint64_t width;
+    uint64_t height;
+    uint64_t depth;
     uint64_t size_in_bytes;
-    uint32_t is_dedicated;
     ECGPUFormat format;
     uint32_t mip_levels;
 } CGPUImportTextureDescriptor;
@@ -1548,31 +1615,58 @@ typedef struct CGPUTextureAliasingBindDescriptor {
     CGPUTextureId aliasing;
 } CGPUTextureAliasingBindDescriptor;
 
+typedef struct CGPUTextureInfo {
+    uint64_t width;
+    uint64_t height;
+    uint64_t depth;
+    uint32_t mip_levels;
+    uint32_t array_size_minus_one;
+    uint64_t size_in_bytes;
+    ECGPUFormat format;
+    ECGPUSampleCount sample_count;
+    uint64_t unique_id;
+    uint32_t aspect_mask;
+    uint32_t node_index;
+    uint8_t owns_image;
+    uint8_t is_cube;
+    uint8_t is_allocation_dedicated;
+    uint8_t is_restrict_dedicated;
+    uint8_t is_aliasing;
+    uint8_t is_tiled;
+    uint8_t is_imported;
+    uint8_t can_alias;
+    uint8_t can_export;
+} CGPUTextureInfo;
+
+typedef struct CGPUTiledSubresourceInfo {
+    uint16_t layer;
+    uint16_t mip_level;
+    uint32_t width_in_tiles;
+    uint16_t height_in_tiles;
+    uint16_t depth_in_tiles;
+} CGPUTiledSubresourceInfo;
+
+typedef struct CGPUTiledTextureInfo {
+    uint64_t tile_size;
+    uint64_t total_tiles_count;
+    volatile uint64_t alive_tiles_count;
+
+    uint32_t tile_width_in_texels;
+    uint32_t tile_height_in_texels;
+    uint32_t tile_depth_in_texels;
+    const CGPUTiledSubresourceInfo* subresources;
+
+    uint32_t packed_mip_start;
+    uint32_t packed_mip_count;
+    volatile uint64_t alive_pack_count;
+
+    bool pack_unaligned;
+} CGPUTiledTextureInfo;
+
 typedef struct CGPUTexture {
     CGPUDeviceId device;
-    uint64_t size_in_bytes;
-    ECGPUSampleCount sample_count : 8;
-    /// Current state of the buffer
-    uint32_t width : 24;
-    uint32_t height : 24;
-    uint32_t depth : 12;
-    uint32_t mip_levels : 6;
-    uint32_t array_size_minus_one : 12;
-    uint32_t format : 12;
-    /// Flags specifying which aspects (COLOR,DEPTH,STENCIL) are included in the pVkImageView
-    uint32_t aspect_mask : 4;
-    uint32_t node_index : 4;
-    uint32_t is_cube : 1;
-    uint32_t is_dedicated : 1;
-    /// This value will be false if the underlying resource is not owned by the texture (swapchain textures,...)
-    uint32_t owns_image : 1;
-    /// In CGPU concept aliasing resource owns no memory
-    uint32_t is_aliasing : 1;
-    uint32_t can_alias : 1;
-    uint32_t is_imported : 1;
-    uint32_t can_export : 1;
-    void* native_handle;
-    uint64_t unique_id;
+    const CGPUTextureInfo* info;
+    const CGPUTiledTextureInfo* tiled_resource;
 } CGPUTexture;
 
 typedef struct CGPUTextureView {

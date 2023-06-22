@@ -26,6 +26,7 @@
 
 #define CGPU_INNER_TCF_IMPORT_SHARED_HANDLE (CGPU_TCF_USABLE_MAX << 1)
 #define USE_EXTERNAL_MEMORY_EXTENSIONS
+#define VK_SPARSE_PAGE_STANDARD_SIZE ( 65536 )
 
 #ifdef __cplusplus
 extern "C" {
@@ -85,14 +86,14 @@ void VkUtil_FramebufferTableAdd(struct CGPUVkPassTable* table, const struct VkUt
 
 // Debug Helpers
 VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugUtilsCallback(
-VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-VkDebugUtilsMessageTypeFlagsEXT messageType,
-const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-void* pUserData);
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    void* pUserData);
 VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugReportCallback(
-VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
-uint64_t object, size_t location, int32_t messageCode,
-const char* pLayerPrefix, const char* pMessage, void* pUserData);
+    VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
+    uint64_t object, size_t location, int32_t messageCode,
+    const char* pLayerPrefix, const char* pMessage, void* pUserData);
 void VkUtil_OptionalSetObjectName(struct CGPUDevice_Vulkan* device, uint64_t handle, VkObjectType type, const char* name);
 
 #define CGPU_VK_DESCRIPTOR_TYPE_RANGE_SIZE (VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT + 1)
@@ -156,19 +157,6 @@ static const char* validation_layer_name = "VK_LAYER_KHRONOS_validation";
 static const char* cgpu_wanted_instance_exts[] = {
     VK_KHR_SURFACE_EXTENSION_NAME,
 
-#if VK_EXT_extended_dynamic_state
-    VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
-#endif
-#if VK_EXT_extended_dynamic_state2
-    VK_EXT_EXTENDED_DYNAMIC_STATE_2_EXTENSION_NAME,
-#endif
-#if VK_EXT_extended_dynamic_state3
-    VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME,
-#endif
-#if VK_EXT_shader_object
-    VK_EXT_SHADER_OBJECT_EXTENSION_NAME,
-#endif
-
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
     VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #elif defined(_MACOS)
@@ -216,6 +204,26 @@ static const char* cgpu_wanted_device_exts[] = {
 // VK_GOOGLE_USER_TYPE_EXTENSION_NAME,
 // VK_GOOGLE_HLSL_FUNCTIONALITY_1_EXTENSION_NAME,
 #endif
+
+#if VK_KHR_depth_stencil_resolve
+    VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
+#endif
+#if VK_KHR_dynamic_rendering
+    VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+#endif
+#if VK_EXT_extended_dynamic_state
+    VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
+#endif
+#if VK_EXT_extended_dynamic_state2
+    VK_EXT_EXTENDED_DYNAMIC_STATE_2_EXTENSION_NAME,
+#endif
+#if VK_EXT_extended_dynamic_state3
+    VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME,
+#endif
+#if VK_EXT_shader_object
+    VK_EXT_SHADER_OBJECT_EXTENSION_NAME,
+#endif
+
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     VK_KHR_MAINTENANCE1_EXTENSION_NAME,
     VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,
@@ -279,6 +287,16 @@ static const char* cgpu_wanted_device_exts[] = {
 #if VK_KHR_maintenance3 // descriptor indexing depends on this
     VK_KHR_MAINTENANCE3_EXTENSION_NAME,
 #endif
+#if VK_KHR_buffer_device_address
+    VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
+#endif
+#if VK_KHR_synchronization2
+    VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
+#endif
+#if VK_EXT_descriptor_buffer
+    VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME,
+#endif
+
     /************************************************************************/
     // Descriptor Update Template Extension for efficient descriptor set updates
     /************************************************************************/
