@@ -10,8 +10,8 @@ struct SKR_GUI_API BuildOwner {
     // build
     void schedule_build_for(NotNull<Element*> element) SKR_NOEXCEPT;
     void build_scope(NotNull<Element*> element) SKR_NOEXCEPT;
-    void deactivate_element(NotNull<Element*> element) SKR_NOEXCEPT;
-    // TODO. retake_inactive_element
+    void drop_unmount_element(NotNull<Element*> element) SKR_NOEXCEPT;
+    // TODO. retake_unmounted_element
 
     // TODO. focus management
     // TODO. navigation management

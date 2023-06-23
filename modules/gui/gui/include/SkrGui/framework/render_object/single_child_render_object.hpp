@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
+#include "SkrGui/framework/render_object/render_object.hpp"
 
 namespace skr::gui
 {
@@ -12,59 +13,48 @@ struct SKR_GUI_API ISingleChildRenderObject SKR_GUI_INTERFACE_BASE {
     virtual void            set_child(RenderObject* child) SKR_NOEXCEPT = 0;
 };
 
-// 施舍一点样板代码，快拷走使用吧
-// ===> .hpp
-//     //==> MIXIN: single child render object
-// public:
-//     SKR_GUI_TYPE_ID   accept_child_type() const noexcept override;
-//     void              set_child(RenderObject* child) noexcept override;
-//     void              flush_depth() noexcept override;
-//     void              visit_children(FunctionRef<void(RenderObject*)> visitor) const noexcept override;
-//     void              visit_children_recursive(FunctionRef<void(RenderObject*)> visitor) const noexcept override;
-//     void              attach(NotNull<PipelineOwner*> owner) noexcept override;
-//     void              detach() noexcept override;
-//     inline __CHILD_TYPE__* child() const noexcept { return _child; }
-//
-// private:
-//     __CHILD_TYPE__* _child;
-//     //==> MIXIN: single child render object
+template <typename TSelf, typename TChild>
+struct SingleChildRenderObjectMixin {
+    TChild* _child;
 
-// ===> .cpp
-// //==> MIXIN: single child render object
-// SKR_GUI_TYPE_ID __MIX_IN_TARGET__::accept_child_type() const noexcept { return SKR_GUI_TYPE_ID_OF_STATIC(__CHILD_TYPE__); }
-// void            __MIX_IN_TARGET__::set_child(RenderObject* child) noexcept
-// {
-//     if (_child) drop_child(make_not_null(_child));
-//     _child = child->type_cast_fast<__CHILD_TYPE__>();
-//     if (_child) adopt_child(make_not_null(_child));
-// }
-// void __MIX_IN_TARGET__::flush_depth() noexcept
-// {
-//     __SUPER_TYPE__::flush_depth();
-//     if (_child) _child->flush_depth();
-// }
-// void __MIX_IN_TARGET__::visit_children(FunctionRef<void(RenderObject*)> visitor) const noexcept
-// {
-//     if (_child) visitor(_child);
-// }
-// void __MIX_IN_TARGET__::visit_children_recursive(FunctionRef<void(RenderObject*)> visitor) const noexcept
-// {
-//     if (_child)
-//     {
-//         visitor(_child);
-//         _child->visit_children_recursive(visitor);
-//     }
-// }
-// void __MIX_IN_TARGET__::attach(NotNull<PipelineOwner*> owner) noexcept
-// {
-//     __SUPER_TYPE__ ::attach(owner);
-//     if (_child) _child->attach(owner);
-// }
-// void __MIX_IN_TARGET__::detach() noexcept
-// {
-//     if (_child) _child->detach();
-//     __SUPER_TYPE__::detach();
-// }
-// //==> MIXIN: single child render object
+    inline SKR_GUI_TYPE_ID accept_child_type(const TSelf& self) const SKR_NOEXCEPT
+    {
+        return SKR_GUI_TYPE_ID_OF_STATIC(TSelf);
+    }
+    inline void set_child(TSelf& self, RenderObject* child) SKR_NOEXCEPT
+    {
+        if (_child) _child->unmount();
+        _child = child->type_cast_fast<TChild>();
+        if (_child) _child->mount(make_not_null(&self));
+    }
+    inline void visit_children(const TSelf& self, RenderObject::VisitFuncRef visitor) const SKR_NOEXCEPT
+    {
+        if (_child) visitor(make_not_null(_child));
+    }
+};
+
+#define SKR_GUI_SINGLE_CHILD_RENDER_OBJECT_MIXIN(__SELF, __CHILD)                    \
+    /*===============> Begin Single Child Render Object Mixin <===============*/     \
+private:                                                                             \
+    SingleChildRenderObjectMixin<__SELF, __CHILD> _single_child_render_object_mixin; \
+                                                                                     \
+public:                                                                              \
+    SKR_GUI_TYPE_ID accept_child_type() const noexcept override                      \
+    {                                                                                \
+        return _single_child_render_object_mixin.accept_child_type(*this);           \
+    }                                                                                \
+    void set_child(RenderObject* child) noexcept override                            \
+    {                                                                                \
+        _single_child_render_object_mixin.set_child(*this, child);                   \
+    }                                                                                \
+    void visit_children(VisitFuncRef visitor) const noexcept override                \
+    {                                                                                \
+        _single_child_render_object_mixin.visit_children(*this, visitor);            \
+    }                                                                                \
+    inline __CHILD* child() const noexcept                                           \
+    {                                                                                \
+        return _single_child_render_object_mixin._child;                             \
+    }                                                                                \
+    /*===============> End Single Child Render Object Mixin <===============*/
 
 } // namespace skr::gui

@@ -678,7 +678,7 @@ class TextServerAdvanced : public TextServer
 
     struct bmp_font_t {
         TextServerAdvanced::FontForSizeAdvanced* face = nullptr;
-        bool                                     unref = false; /* Whether to destroy bm_face when done. */
+        bool                                     unref = false; /* Whether to unmount bm_face when done. */
     };
 
     static bmp_font_t*   _bmp_font_create(TextServerAdvanced::FontForSizeAdvanced* p_face, bool p_unref);

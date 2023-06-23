@@ -29,41 +29,4 @@ void RenderShiftedBox::paint(NotNull<PaintingContext*> context, Offset offset) S
         context->paint_child(make_not_null(child()), this->offset() + offset);
     }
 }
-
-//==> MIXIN: single child render object
-SKR_GUI_TYPE_ID RenderShiftedBox::accept_child_type() const noexcept { return SKR_GUI_TYPE_ID_OF_STATIC(RenderBox); }
-void            RenderShiftedBox::set_child(RenderObject* child) noexcept
-{
-    if (_child) drop_child(make_not_null(_child));
-    _child = child->type_cast_fast<RenderBox>();
-    if (_child) adopt_child(make_not_null(_child));
-}
-void RenderShiftedBox::flush_depth() noexcept
-{
-    RenderBox::flush_depth();
-    if (_child) _child->flush_depth();
-}
-void RenderShiftedBox::visit_children(FunctionRef<void(RenderObject*)> visitor) const noexcept
-{
-    if (_child) visitor(_child);
-}
-void RenderShiftedBox::visit_children_recursive(FunctionRef<void(RenderObject*)> visitor) const noexcept
-{
-    if (_child)
-    {
-        visitor(_child);
-        _child->visit_children_recursive(visitor);
-    }
-}
-void RenderShiftedBox::attach(NotNull<PipelineOwner*> owner) noexcept
-{
-    RenderBox ::attach(owner);
-    if (_child) _child->attach(owner);
-}
-void RenderShiftedBox::detach() noexcept
-{
-    if (_child) _child->detach();
-    RenderBox::detach();
-}
-//==> MIXIN: single child render object
 } // namespace skr::gui

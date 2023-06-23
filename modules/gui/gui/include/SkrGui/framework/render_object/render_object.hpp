@@ -6,24 +6,31 @@
 
 namespace skr::gui
 {
+enum class ERenderObjectLifecycle : uint8_t
+{
+    Initial,
+    Mounted,
+    Unmounted,
+    Destroyed,
+};
+
 struct SKR_GUI_API RenderObject : public DiagnosticableTreeNode {
     SKR_GUI_TYPE(RenderObject, "74844fa6-8994-4915-8f8e-ec944a1cbea4", DiagnosticableTreeNode);
+    using VisitFuncRef = FunctionRef<void(NotNull<RenderObject*>)>;
 
     RenderObject() SKR_NOEXCEPT;
     virtual ~RenderObject();
 
-    // render object tree
-    void         adopt_child(NotNull<RenderObject*> child) SKR_NOEXCEPT;
-    void         drop_child(NotNull<RenderObject*> child) SKR_NOEXCEPT;
-    virtual void flush_depth() SKR_NOEXCEPT;
-    virtual void visit_children(FunctionRef<void(RenderObject*)> visitor) const SKR_NOEXCEPT;
-    virtual void visit_children_recursive(FunctionRef<void(RenderObject*)> visitor) const SKR_NOEXCEPT;
-
-    // pipeline owner
-    virtual void          attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT;
-    virtual void          detach() SKR_NOEXCEPT;
-    inline PipelineOwner* owner() const SKR_NOEXCEPT { return _owner; }
-    inline bool           attached() const SKR_NOEXCEPT { return _owner != nullptr; }
+    // lifecycle & tree
+    // ctor -> mount <-> unmount -> destroy
+    void                          mount(NotNull<RenderObject*> parent) SKR_NOEXCEPT;  // 挂到父节点下
+    void                          unmount() SKR_NOEXCEPT;                             // 从父节点卸载
+    virtual void                  destroy() SKR_NOEXCEPT;                             // 销毁，生命周期结束
+    virtual void                  attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT; // 自身或子树挂载到带有 pipeline owner 的树下
+    virtual void                  detach() SKR_NOEXCEPT;                              // 自身或子树从带有 pipeline owner 的树下卸载
+    inline ERenderObjectLifecycle lifecycle() const SKR_NOEXCEPT { return _lifecycle; }
+    inline PipelineOwner*         owner() const SKR_NOEXCEPT { return _owner; }
+    virtual void                  visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT = 0;
 
     // layout & paint marks
     virtual void mark_needs_layout() SKR_NOEXCEPT;
@@ -96,8 +103,8 @@ private:
     // 用于 invoke_layout_callback()
     bool _doing_this_layout_with_callback = false;
 
-    // Impl By Child
-    // _constraints
+    // 生命周
+    ERenderObjectLifecycle _lifecycle = ERenderObjectLifecycle::Initial;
 };
 
 } // namespace skr::gui

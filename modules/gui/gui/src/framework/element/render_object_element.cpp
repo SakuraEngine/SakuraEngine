@@ -4,16 +4,19 @@
 
 namespace skr::gui
 {
-// life circle
-void RenderObjectElement::mount(Element* parent, uint64_t slot) SKR_NOEXCEPT
+// lifecycle & tree
+void RenderObjectElement::first_mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT
 {
-    Super::mount(parent, slot);
+    Super::first_mount(parent, slot);
+    // validate
     if (widget() == nullptr)
     {
         SKR_GUI_LOG_ERROR("widget is nullptr");
         _cancel_dirty();
         return;
     }
+
+    // create render object and mount
     auto render_object_widget = widget()->type_cast_fast<RenderObjectWidget>();
     if (render_object_widget)
     {
@@ -26,32 +29,32 @@ void RenderObjectElement::mount(Element* parent, uint64_t slot) SKR_NOEXCEPT
         SKR_GUI_LOG_ERROR("widget is not RenderObjectWidget");
     }
 }
-void RenderObjectElement::deactivate() SKR_NOEXCEPT
+void RenderObjectElement::detach() SKR_NOEXCEPT
 {
-    Super::deactivate();
+    Super::detach();
     if (_render_object)
     {
-        if (!_render_object->attached()) { SKR_GUI_LOG_ERROR("render_object is not attached"); }
+        if (_render_object->owner()) { SKR_GUI_LOG_ERROR("render_object is not detached"); }
     }
     else
     {
         SKR_GUI_LOG_ERROR("_render_object is nullptr");
     }
 }
-void RenderObjectElement::unmount() SKR_NOEXCEPT
+void RenderObjectElement::destroy() SKR_NOEXCEPT
 {
     if (widget() == nullptr)
     {
         SKR_GUI_LOG_ERROR("widget is nullptr");
-        _cancel_dirty();
+        Super::destroy();
         return;
     }
-    auto render_object_widget = widget()->type_cast_fast<RenderObjectWidget>();
-    if (render_object_widget)
+    auto old_widget = widget()->type_cast_fast<RenderObjectWidget>();
+    if (old_widget)
     {
         if (_render_object)
         {
-            render_object_widget->did_unmount_render_object(make_not_null(_render_object));
+            old_widget->did_unmount_render_object(make_not_null(_render_object));
             _render_object->dispose();
             _render_object = nullptr;
         }
@@ -64,6 +67,7 @@ void RenderObjectElement::unmount() SKR_NOEXCEPT
     {
         SKR_GUI_LOG_ERROR("widget is not RenderObjectWidget");
     }
+    Super::destroy();
 }
 
 // build & update
@@ -71,7 +75,7 @@ void RenderObjectElement::perform_rebuild() SKR_NOEXCEPT
 {
     _update_render_object();
 }
-void RenderObjectElement::update_slot(uint64_t new_slot) SKR_NOEXCEPT
+void RenderObjectElement::update_slot(Slot new_slot) SKR_NOEXCEPT
 {
     Super::update_slot(new_slot);
     // TODO. pass to render_object

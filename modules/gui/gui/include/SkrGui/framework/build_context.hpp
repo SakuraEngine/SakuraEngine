@@ -10,9 +10,9 @@ struct SKR_GUI_API IBuildContext SKR_GUI_INTERFACE_BASE {
     virtual ~IBuildContext() = default;
     virtual Widget*           bound_widget() const SKR_NOEXCEPT = 0;
     virtual BuildOwner*       build_owner() const SKR_NOEXCEPT = 0;
-    virtual bool              is_mounted() const SKR_NOEXCEPT = 0;
+    virtual bool              is_destroyed() const SKR_NOEXCEPT = 0;
     virtual RenderObject*     find_render_object() const SKR_NOEXCEPT = 0;
-    virtual Size              size() const SKR_NOEXCEPT = 0;
+    virtual Optional<Size>    render_box_size() const SKR_NOEXCEPT = 0;
     virtual InheritedWidget*  depend_on_inherited_element(NotNull<InheritedElement*> ancestor) SKR_NOEXCEPT = 0;
     virtual InheritedWidget*  depend_on_inherited_widget_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT = 0;
     virtual InheritedElement* get_element_for_inherited_widget_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT = 0;
