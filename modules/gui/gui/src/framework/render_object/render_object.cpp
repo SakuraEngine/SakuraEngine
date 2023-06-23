@@ -11,51 +11,79 @@ RenderObject::~RenderObject()
 {
 }
 
-// render object tree
-void RenderObject::adopt_child(NotNull<RenderObject*> child) SKR_NOEXCEPT
+// new lifecycle
+void RenderObject::mount(NotNull<RenderObject*> parent) SKR_NOEXCEPT
 {
     // validate
-    if (child->_parent != nullptr) { SKR_GUI_LOG_ERROR("child already has a parent"); }
+    if (_parent != nullptr)
     {
-        RenderObject* node = this;
+        unmount();
+        SKR_GUI_LOG_ERROR("already mounted");
+    }
+    {
+        RenderObject* node = parent;
         while (node->_parent)
+        {
             node = node->_parent;
-        if (node == child) { SKR_GUI_LOG_ERROR("cycle in the tree"); }
+            if (node == this)
+            {
+                SKR_GUI_LOG_ERROR("cycle in the tree");
+                break;
+            }
+        }
     }
 
-    child->_parent = this;
-    if (attached())
+    // mount
+    _parent = parent;
+    if (parent->owner())
     {
-        child->attach(make_not_null(owner()));
+        struct _RecursiveHelper {
+            NotNull<PipelineOwner*> owner;
+
+            void operator()(NotNull<RenderObject*> obj) const SKR_NOEXCEPT
+            {
+                obj->attach(owner);
+                obj->visit_children(_RecursiveHelper{ owner });
+            }
+        };
+        this->visit_children(_RecursiveHelper{ make_not_null(_parent->owner()) });
     }
-    child->flush_depth();
+    _lifecycle = ERenderObjectLifecycle::Mounted;
 }
-void RenderObject::drop_child(NotNull<RenderObject*> child) SKR_NOEXCEPT
+void RenderObject::unmount() SKR_NOEXCEPT
 {
     // validate
-    if (child->_parent != this) { SKR_GUI_LOG_ERROR("child is not a child of this"); }
-    if (child->attached() != this->attached()) { SKR_GUI_LOG_ERROR("child is not attached to the same owner"); }
+    if (_parent == nullptr) { SKR_GUI_LOG_ERROR("already unmounted"); }
 
-    child->_parent = nullptr;
-    if (attached())
+    // unmount
+    _parent = nullptr;
+    if (owner())
     {
-        child->detach();
+        struct _RecursiveHelper {
+            void operator()(NotNull<RenderObject*> obj) const SKR_NOEXCEPT
+            {
+                obj->detach();
+                obj->visit_children(_RecursiveHelper{});
+            }
+        };
+        this->visit_children(_RecursiveHelper{});
     }
+    _lifecycle = ERenderObjectLifecycle::Unmounted;
 }
-void RenderObject::flush_depth() SKR_NOEXCEPT
+void RenderObject::destroy() SKR_NOEXCEPT
 {
-    _depth = _parent->_depth + 1;
+    // TODO. release layer
+    _lifecycle = ERenderObjectLifecycle::Destroyed;
 }
-void RenderObject::visit_children(FunctionRef<void(RenderObject*)> visitor) const SKR_NOEXCEPT {}
-void RenderObject::visit_children_recursive(FunctionRef<void(RenderObject*)> visitor) const SKR_NOEXCEPT {}
-
-// pipeline owner
 void RenderObject::attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT
 {
     // validate
     if (_owner != nullptr) { SKR_GUI_LOG_ERROR("already attached"); }
+    if (_parent == nullptr) { SKR_GUI_LOG_ERROR("parent is nullptr"); }
 
+    // attach
     _owner = owner;
+    _depth = _parent ? _parent->_depth + 1 : 0;
 
     // If the node was dirtied in some way while unattached, make sure to add
     // it to the appropriate dirty list now that an owner is available
@@ -73,12 +101,14 @@ void RenderObject::attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT
         _needs_paint = false;
         mark_needs_paint();
     }
+
+    // recursive
 }
 void RenderObject::detach() SKR_NOEXCEPT
 {
     if (_owner == nullptr) { SKR_GUI_LOG_ERROR("already detached"); }
     _owner = nullptr;
-    if (_parent != nullptr && _parent->attached() != _parent->attached()) { SKR_GUI_LOG_ERROR("detach from owner but parent is still attached"); }
+    if (_parent != nullptr && _owner != _parent->_owner) { SKR_GUI_LOG_ERROR("detach from owner but parent is still attached"); }
 }
 
 // layout & paint marks

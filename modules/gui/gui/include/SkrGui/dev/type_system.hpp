@@ -165,7 +165,7 @@ inline skr_guid_t SkrGUITypeInfo(const IObject* obj) SKR_NOEXCEPT
 #define SKR_GUI_INTERFACE_BASE_WITH(...) : virtual public IObject, __VA_ARGS__
 
 // type id
-#define SKR_GUI_TYPE_ID ::skr_guid_t
+using SKR_GUI_TYPE_ID = ::skr_guid_t;
 // TypeID SKR_GUI_TYPE_ID(Object*)
 #define SKR_GUI_TYPE_ID_OF ::skr::gui::SkrGUITypeInfo
 #define SKR_GUI_TYPE_ID_OF_STATIC(__TYPE) __TYPE::zz_internal_static_guid()

@@ -9,19 +9,13 @@ struct SKR_GUI_API ComponentElement : public Element {
     using Super = Element;
     using Super::Super;
 
-    // element tree
-    void flush_depth() SKR_NOEXCEPT override;
-    void visit_children(FunctionRef<void(Element*)> visitor) const SKR_NOEXCEPT override;
-    void visit_children_recursive(FunctionRef<void(Element*)> visitor) const SKR_NOEXCEPT override;
-
-    // life circle
-    void mount(Element* parent, uint64_t slot) SKR_NOEXCEPT override;
-    void activate() SKR_NOEXCEPT override;
-    void deactivate() SKR_NOEXCEPT override;
+    // lifecycle & tree
+    virtual void first_mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT override;
+    void         visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override;
 
     // build & update
     void perform_rebuild() SKR_NOEXCEPT override;
-    void update_slot(uint64_t new_slot) SKR_NOEXCEPT override;
+    void update_slot(Slot new_slot) SKR_NOEXCEPT override;
 
     // render object (self or child's)
     RenderObject* render_object() const SKR_NOEXCEPT override;

@@ -22,14 +22,14 @@ ICanvas::~ICanvas() SKR_NOEXCEPT
 {
     SKR_GUI_ASSERT(_gdi_device != nullptr);
 
-    // destroy canvas
+    // unmount canvas
     if (_gdi_canvas)
     {
         _gdi_device->free_canvas(_gdi_canvas);
         _gdi_canvas = nullptr;
     }
 
-    // destroy elements
+    // unmount elements
     for (auto& element : _gdi_elements)
     {
         _gdi_device->free_element(element);

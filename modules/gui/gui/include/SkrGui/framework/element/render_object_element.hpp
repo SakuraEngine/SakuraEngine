@@ -9,14 +9,14 @@ struct SKR_GUI_API RenderObjectElement : public Element {
     using Super = Element;
     using Super::Super;
 
-    // life circle
-    void mount(Element* parent, uint64_t slot) SKR_NOEXCEPT override;
-    void deactivate() SKR_NOEXCEPT override;
-    void unmount() SKR_NOEXCEPT override;
+    // lifecycle & tree
+    void first_mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT override;
+    void detach() SKR_NOEXCEPT override;
+    void destroy() SKR_NOEXCEPT override;
 
     // build & update
     void perform_rebuild() SKR_NOEXCEPT override;
-    void update_slot(uint64_t new_slot) SKR_NOEXCEPT override;
+    void update_slot(Slot new_slot) SKR_NOEXCEPT override;
     void update(NotNull<Widget*> new_widget) SKR_NOEXCEPT override;
 
     // render object (self or child's)
