@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrGui/dev/gdi/gdi_types.hpp"
-#include "SkrGui/backend/paint_params.hpp"
+#include "SkrGui/backend/render/paint_params.hpp"
 
 namespace skr::gui
 {

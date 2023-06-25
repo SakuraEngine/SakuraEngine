@@ -10,7 +10,6 @@ namespace skr::gui
 {
 using ITexture = IGDITexture;
 using IMaterial = IGDIMaterial;
-using CustomPaintfunction_ref = CustomVertexPainter;
 
 enum class EPaintType : uint8_t
 {
