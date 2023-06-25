@@ -1,7 +1,7 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "cgpu/drivers/cgpu_nvapi.h"
 #include "cgpu/drivers/cgpu_ags.h"
-#include "d3d12_utils.h"
+#include "d3d12_utils.hpp"
 #include <dxcapi.h>
 #include <d3d12shader.h>
 #include "D3D12MemAlloc.h"
@@ -250,7 +250,7 @@ void D3D12Util_RecordAdapterDetail(struct CGPUAdapter_D3D12* D3D12Adapter)
     DECLARE_ZERO(D3D12_FEATURE_DATA_ARCHITECTURE1, dxgi_feature)
     pCheckDevice->CheckFeatureSupport(D3D12_FEATURE_ARCHITECTURE1, &dxgi_feature, sizeof(dxgi_feature));
     adapter_detail.is_uma = dxgi_feature.UMA;
-    adapter_detail.is_cpu = desc3.Flags & DXGI_ADAPTER_FLAG_SOFTWARE;
+    adapter_detail.is_cpu = (desc3.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE) ? 1 : 0;
     adapter_detail.is_virtual = false;
     // Constants
     adapter_detail.max_vertex_input_bindings = 32u;
@@ -259,6 +259,15 @@ void D3D12Util_RecordAdapterDetail(struct CGPUAdapter_D3D12* D3D12Adapter)
     adapter_detail.upload_buffer_texture_row_alignment = D3D12_TEXTURE_DATA_PITCH_ALIGNMENT;
     // Check Format Capacities
     D3D12Util_EnumFormatSupports(D3D12Adapter, pCheckDevice);
+    D3D12_FEATURE_DATA_D3D12_OPTIONS options = make_zeroed<D3D12_FEATURE_DATA_D3D12_OPTIONS>();
+    if (SUCCEEDED(pCheckDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS, &options, sizeof(options))))
+    {
+        adapter.mTiledResourceTier = options.TiledResourcesTier;
+        adapter.mStandardSwizzle64KBSupported = options.StandardSwizzle64KBSupported;
+        adapter_detail.support_tiled_volume = (options.TiledResourcesTier >= D3D12_TILED_RESOURCES_TIER_3);
+        adapter_detail.support_tiled_texture = (options.TiledResourcesTier >= D3D12_TILED_RESOURCES_TIER_1);
+        adapter_detail.support_tiled_buffer = (options.TiledResourcesTier >= D3D12_TILED_RESOURCES_TIER_1);
+    }
     D3D12_FEATURE_DATA_D3D12_OPTIONS1 options1 = make_zeroed<D3D12_FEATURE_DATA_D3D12_OPTIONS1>();
 	if (SUCCEEDED(pCheckDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS1, &options1, sizeof(options1))))
     {

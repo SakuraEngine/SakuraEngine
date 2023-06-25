@@ -7,10 +7,13 @@
 #endif
 #ifdef SKR_APPLE_DEBUG_H
 
+    RUNTIME_EXTERN_C RUNTIME_API 
+    void apple_assert_handler(int sig);
 
     #if !SKR_SHIPPING
         #include "misc/macros.h"
         #include <stdio.h>
+        #include <signal.h>
 
         #define SKR_TRACE_MSG(msg) \
             printf(msg);           \
@@ -22,6 +25,7 @@
                 if (!(cond))                                                          \
                 {                                                                     \
                     SKR_TRACE_MSG("Skr Assert fired: " #cond " (" SKR_FILE_LINE ")"); \
+                    signal(SIGSEGV, apple_assert_handler);\
                     __builtin_debugtrap();                                            \
                 }                                                                     \
             } while (0)

@@ -205,7 +205,7 @@ extern const char* $name;
 #endif
 
 #if defined(__cplusplus)
-    #define DECLARE_ZERO(type, var) type var = {};
+    #define DECLARE_ZERO(type, var) static_assert(std::is_trivially_constructible<type>::value, "not trival, 0 init is invalid!"); type var = {};
 #else
     #define DECLARE_ZERO(type, var) type var = { 0 };
 #endif

@@ -20,7 +20,9 @@ namespace render_graph
 
 void RenderGraphFrameExecutor::initialize(CGPUQueueId gfx_queue, CGPUDeviceId device)
 {
-    CGPUCommandPoolDescriptor pool_desc = {};
+    CGPUCommandPoolDescriptor pool_desc = {
+        u8"RenderGraphCmdPool"
+    };
     gfx_cmd_pool = cgpu_create_command_pool(gfx_queue, &pool_desc);
     CGPUCommandBufferDescriptor cmd_desc = {};
     cmd_desc.is_secondary = false;
@@ -94,7 +96,7 @@ void RenderGraphFrameExecutor::write_marker(const char8_t* message)
 
 void RenderGraphFrameExecutor::print_error_trace(uint64_t frame_index)
 {
-    auto fill_data = (const uint32_t*)marker_buffer->cgpu_buffer->cpu_mapped_address;
+    auto fill_data = (const uint32_t*)marker_buffer->cgpu_buffer->info->cpu_mapped_address;
     if (fill_data[0] == 0) return;// begin cmd is unlikely to fail on gpu
     SKR_LOG_FATAL("Device lost caused by GPU command buffer failure detected %d frames ago, command trace:", frame_index - exec_frame);
     for (uint32_t i = 0; i < marker_messages.size(); i++)
@@ -222,7 +224,7 @@ CGPUTextureId RenderGraphBackend::try_aliasing_allocate(RenderGraphFrameExecutor
         if (!node.frame_aliasing)
         {
             cgpu_free_texture(aliasing_texture);
-            ((TextureNode&)node).descriptor.is_aliasing = false;
+            ((TextureNode&)node).descriptor.flags &= ~CGPU_TCF_ALIASING_RESOURCE;
             return nullptr;
         }
         executor.aliasing_textures.emplace_back(aliasing_texture);
@@ -284,36 +286,48 @@ void RenderGraphBackend::calculate_barriers(RenderGraphFrameExecutor& executor, 
     stack_vector<CGPUTextureBarrier>& tex_barriers, stack_vector<eastl::pair<TextureHandle, CGPUTextureId>>& resolved_textures,
     stack_vector<CGPUBufferBarrier>& buf_barriers, stack_vector<eastl::pair<BufferHandle, CGPUBufferId>>& resolved_buffers) SKR_NOEXCEPT
 {
+    stack_set<TextureHandle> tex_resolve_set;
+    stack_set<BufferHandle> buf_resolve_set;
+
     ZoneScopedN("CalculateBarriers");
-    tex_barriers.reserve(pass->textures_count());
-    resolved_textures.reserve(pass->textures_count());
-    buf_barriers.reserve(pass->buffers_count());
-    resolved_buffers.reserve(pass->buffers_count());
     pass->foreach_textures(
         [&](TextureNode* texture, TextureEdge* edge) {
             auto tex_resolved = resolve(executor, *texture);
-            resolved_textures.emplace_back(texture->get_handle(), tex_resolved);
-            const auto current_state = get_lastest_state(texture, pass);
-            const auto dst_state = edge->requested_state;
-            if (current_state == dst_state) return;
-            CGPUTextureBarrier barrier = {};
-            barrier.src_state = current_state;
-            barrier.dst_state = dst_state;
-            barrier.texture = tex_resolved;
-            tex_barriers.emplace_back(barrier);
+            if (tex_resolve_set.find(texture->get_handle()) == tex_resolve_set.end())
+            {
+                resolved_textures.emplace_back(texture->get_handle(), tex_resolved);
+                tex_resolve_set.insert(texture->get_handle());
+
+                const auto current_state = get_lastest_state(texture, pass);
+                const auto dst_state = edge->requested_state;
+                if (current_state == dst_state) return;
+                
+                CGPUTextureBarrier barrier = {};
+                barrier.src_state = current_state;
+                barrier.dst_state = dst_state;
+                barrier.texture = tex_resolved;
+                
+                tex_barriers.emplace_back(barrier);
+            }
         });
     pass->foreach_buffers(
         [&](BufferNode* buffer, BufferEdge* edge) {
             auto buf_resolved = resolve(executor, *buffer);
-            resolved_buffers.emplace_back(buffer->get_handle(), buf_resolved);
-            const auto current_state = get_lastest_state(buffer, pass);
-            const auto dst_state = edge->requested_state;
-            if (current_state == dst_state) return;
-            CGPUBufferBarrier barrier = {};
-            barrier.src_state = current_state;
-            barrier.dst_state = dst_state;
-            barrier.buffer = buf_resolved;
-            buf_barriers.emplace_back(barrier);
+            if (buf_resolve_set.find(buffer->get_handle()) == buf_resolve_set.end())
+            {
+                resolved_buffers.emplace_back(buffer->get_handle(), buf_resolved);
+                buf_resolve_set.insert(buffer->get_handle());
+
+                const auto current_state = get_lastest_state(buffer, pass);
+                const auto dst_state = edge->requested_state;
+                if (current_state == dst_state) return;
+
+                CGPUBufferBarrier barrier = {};
+                barrier.src_state = current_state;
+                barrier.dst_state = dst_state;
+                barrier.buffer = buf_resolved;
+                buf_barriers.emplace_back(barrier);
+            }
         });
 }
 
@@ -407,7 +421,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
                 view_desc.array_layer_count = read_edge->get_array_count();
                 view_desc.base_mip_level = read_edge->get_mip_base();
                 view_desc.mip_level_count = read_edge->get_mip_count();
-                view_desc.format = (ECGPUFormat)view_desc.texture->format;
+                view_desc.format = view_desc.texture->info->format;
                 const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(view_desc.format);
                 const bool is_depth_only = FormatUtil_IsDepthStencilFormat(view_desc.format);
                 view_desc.aspects =
@@ -446,7 +460,7 @@ CGPUXBindTableId RenderGraphBackend::alloc_update_pass_bind_table(RenderGraphFra
                 view_desc.base_mip_level = 0;
                 view_desc.mip_level_count = 1;
                 view_desc.aspects = CGPU_TVA_COLOR;
-                view_desc.format = (ECGPUFormat)view_desc.texture->format;
+                view_desc.format = view_desc.texture->info->format;
                 view_desc.usages = CGPU_TVU_UAV;
                 view_desc.dims = CGPU_TEX_DIMENSION_2D;
                 uavs[e_idx] = texture_view_pool.allocate(view_desc, frame_index);
@@ -634,9 +648,9 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
             }
         }
         const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(
-            (ECGPUFormat)resolve(executor, *texture_target)->format);
+            resolve(executor, *texture_target)->info->format);
         const bool is_depth_only = FormatUtil_IsDepthOnlyFormat(
-            (ECGPUFormat)resolve(executor, *texture_target)->format);
+            resolve(executor, *texture_target)->info->format);
         if (write_edge->requested_state == CGPU_RESOURCE_STATE_DEPTH_WRITE && is_depth_stencil)
         {
             CGPUTextureViewDescriptor view_desc = {};
@@ -647,7 +661,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
             view_desc.mip_level_count = 1;
             view_desc.aspects =
                 is_depth_only ? CGPU_TVA_DEPTH : CGPU_TVA_DEPTH | CGPU_TVA_STENCIL;
-            view_desc.format = (ECGPUFormat)view_desc.texture->format;
+            view_desc.format = view_desc.texture->info->format;
             view_desc.usages = CGPU_TVU_RTV_DSV;
             if (sample_count == CGPU_SAMPLE_COUNT_1)
             {
@@ -677,7 +691,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
                 view_desc.array_layer_count = 1;
                 view_desc.base_mip_level = 0;
                 view_desc.mip_level_count = 1; // TODO: resolve MSAA to specific mip slice?
-                view_desc.format = (ECGPUFormat)view_desc.texture->format;
+                view_desc.format = view_desc.texture->info->format;
                 view_desc.aspects = CGPU_TVA_COLOR;
                 view_desc.usages = CGPU_TVU_RTV_DSV;
                 view_desc.dims = CGPU_TEX_DIMENSION_2D;
@@ -691,7 +705,7 @@ void RenderGraphBackend::execute_render_pass(RenderGraphFrameExecutor& executor,
                 view_desc.array_layer_count = write_edge->get_array_count();
                 view_desc.base_mip_level = write_edge->get_mip_level();
                 view_desc.mip_level_count = 1; // TODO: mip
-                view_desc.format = (ECGPUFormat)view_desc.texture->format;
+                view_desc.format = view_desc.texture->info->format;
                 view_desc.aspects = CGPU_TVA_COLOR;
                 view_desc.usages = CGPU_TVU_RTV_DSV;
                 if (sample_count == CGPU_SAMPLE_COUNT_1)

@@ -17,153 +17,162 @@ extern "C" {
 #endif
 
 struct DMA_Allocator;
+struct DMA_Pool;
 struct DMA_Allocation;
 struct D3D12Util_DescriptorHandle;
 struct D3D12Util_DescriptorHeap;
 
-RUNTIME_API const CGPUProcTable* CGPU_D3D12ProcTable();
-RUNTIME_API const CGPUSurfacesProcTable* CGPU_D3D12SurfacesProcTable();
+CGPU_API const CGPUProcTable* CGPU_D3D12ProcTable();
+CGPU_API const CGPUSurfacesProcTable* CGPU_D3D12SurfacesProcTable();
 
 // Instance APIs
-RUNTIME_API CGPUInstanceId cgpu_create_instance_d3d12(CGPUInstanceDescriptor const* descriptor);
-RUNTIME_API void cgpu_query_instance_features_d3d12(CGPUInstanceId instance, struct CGPUInstanceFeatures* features);
-RUNTIME_API void cgpu_free_instance_d3d12(CGPUInstanceId instance);
+CGPU_API CGPUInstanceId cgpu_create_instance_d3d12(CGPUInstanceDescriptor const* descriptor);
+CGPU_API void cgpu_query_instance_features_d3d12(CGPUInstanceId instance, struct CGPUInstanceFeatures* features);
+CGPU_API void cgpu_free_instance_d3d12(CGPUInstanceId instance);
 
 // Adapter APIs
-RUNTIME_API void cgpu_enum_adapters_d3d12(CGPUInstanceId instance, CGPUAdapterId* const adapters, uint32_t* adapters_num);
-RUNTIME_API const struct CGPUAdapterDetail* cgpu_query_adapter_detail_d3d12(const CGPUAdapterId adapter);
-RUNTIME_API uint32_t cgpu_query_queue_count_d3d12(const CGPUAdapterId adapter, const ECGPUQueueType type);
+CGPU_API void cgpu_enum_adapters_d3d12(CGPUInstanceId instance, CGPUAdapterId* const adapters, uint32_t* adapters_num);
+CGPU_API const struct CGPUAdapterDetail* cgpu_query_adapter_detail_d3d12(const CGPUAdapterId adapter);
+CGPU_API uint32_t cgpu_query_queue_count_d3d12(const CGPUAdapterId adapter, const ECGPUQueueType type);
 
 // Device APIs
-RUNTIME_API CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDescriptor* desc);
-RUNTIME_API void cgpu_query_video_memory_info_d3d12(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
-RUNTIME_API void cgpu_query_shared_memory_info_d3d12(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
-RUNTIME_API void cgpu_free_device_d3d12(CGPUDeviceId device);
+CGPU_API CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDescriptor* desc);
+CGPU_API void cgpu_query_video_memory_info_d3d12(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
+CGPU_API void cgpu_query_shared_memory_info_d3d12(const CGPUDeviceId device, uint64_t* total, uint64_t* used_bytes);
+CGPU_API void cgpu_free_device_d3d12(CGPUDeviceId device);
 
 // API Object APIs
-RUNTIME_API CGPUFenceId cgpu_create_fence_d3d12(CGPUDeviceId device);
-RUNTIME_API void cgpu_wait_fences_d3d12(const CGPUFenceId* fences, uint32_t fence_count);
+CGPU_API CGPUFenceId cgpu_create_fence_d3d12(CGPUDeviceId device);
+CGPU_API void cgpu_wait_fences_d3d12(const CGPUFenceId* fences, uint32_t fence_count);
 ECGPUFenceStatus cgpu_query_fence_status_d3d12(CGPUFenceId fence);
-RUNTIME_API void cgpu_free_fence_d3d12(CGPUFenceId fence);
-RUNTIME_API CGPUSemaphoreId cgpu_create_semaphore_d3d12(CGPUDeviceId device);
-RUNTIME_API void cgpu_free_semaphore_d3d12(CGPUSemaphoreId semaphore);
-RUNTIME_API CGPURootSignaturePoolId cgpu_create_root_signature_pool_d3d12(CGPUDeviceId device, const struct CGPURootSignaturePoolDescriptor* desc);
-RUNTIME_API void cgpu_free_root_signature_pool_d3d12(CGPURootSignaturePoolId pool);
-RUNTIME_API CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc);
-RUNTIME_API void cgpu_free_root_signature_d3d12(CGPURootSignatureId signature);
-RUNTIME_API CGPUDescriptorSetId cgpu_create_descriptor_set_d3d12(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc);
-RUNTIME_API void cgpu_update_descriptor_set_d3d12(CGPUDescriptorSetId set, const struct CGPUDescriptorData* datas, uint32_t count);
-RUNTIME_API void cgpu_free_descriptor_set_d3d12(CGPUDescriptorSetId set);
-RUNTIME_API CGPUComputePipelineId cgpu_create_compute_pipeline_d3d12(CGPUDeviceId device, const struct CGPUComputePipelineDescriptor* desc);
-RUNTIME_API void cgpu_free_compute_pipeline_d3d12(CGPUComputePipelineId pipeline);
-RUNTIME_API CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, const struct CGPURenderPipelineDescriptor* desc);
-RUNTIME_API void cgpu_free_render_pipeline_d3d12(CGPURenderPipelineId pipeline);
-RUNTIME_API CGPUQueryPoolId cgpu_create_query_pool_d3d12(CGPUDeviceId device, const struct CGPUQueryPoolDescriptor* desc);
-RUNTIME_API void cgpu_free_query_pool_d3d12(CGPUQueryPoolId pool);
+CGPU_API void cgpu_free_fence_d3d12(CGPUFenceId fence);
+CGPU_API CGPUSemaphoreId cgpu_create_semaphore_d3d12(CGPUDeviceId device);
+CGPU_API void cgpu_free_semaphore_d3d12(CGPUSemaphoreId semaphore);
+CGPU_API CGPURootSignaturePoolId cgpu_create_root_signature_pool_d3d12(CGPUDeviceId device, const struct CGPURootSignaturePoolDescriptor* desc);
+CGPU_API void cgpu_free_root_signature_pool_d3d12(CGPURootSignaturePoolId pool);
+CGPU_API CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc);
+CGPU_API void cgpu_free_root_signature_d3d12(CGPURootSignatureId signature);
+CGPU_API CGPUDescriptorSetId cgpu_create_descriptor_set_d3d12(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc);
+CGPU_API void cgpu_update_descriptor_set_d3d12(CGPUDescriptorSetId set, const struct CGPUDescriptorData* datas, uint32_t count);
+CGPU_API void cgpu_free_descriptor_set_d3d12(CGPUDescriptorSetId set);
+CGPU_API CGPUComputePipelineId cgpu_create_compute_pipeline_d3d12(CGPUDeviceId device, const struct CGPUComputePipelineDescriptor* desc);
+CGPU_API void cgpu_free_compute_pipeline_d3d12(CGPUComputePipelineId pipeline);
+CGPU_API CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, const struct CGPURenderPipelineDescriptor* desc);
+CGPU_API void cgpu_free_render_pipeline_d3d12(CGPURenderPipelineId pipeline);
+CGPU_API CGPUQueryPoolId cgpu_create_query_pool_d3d12(CGPUDeviceId device, const struct CGPUQueryPoolDescriptor* desc);
+CGPU_API void cgpu_free_query_pool_d3d12(CGPUQueryPoolId pool);
+CGPU_API CGPUMemoryPoolId cgpu_create_memory_pool_d3d12(CGPUDeviceId device, const struct CGPUMemoryPoolDescriptor* desc);
+CGPU_API void cgpu_free_memory_pool_d3d12(CGPUMemoryPoolId pool);
 
 // Queue APIs
-RUNTIME_API CGPUQueueId cgpu_get_queue_d3d12(CGPUDeviceId device, ECGPUQueueType type, uint32_t index);
-RUNTIME_API void cgpu_submit_queue_d3d12(CGPUQueueId queue, const struct CGPUQueueSubmitDescriptor* desc);
-RUNTIME_API void cgpu_wait_queue_idle_d3d12(CGPUQueueId queue);
-RUNTIME_API void cgpu_queue_present_d3d12(CGPUQueueId queue, const struct CGPUQueuePresentDescriptor* desc);
-RUNTIME_API float cgpu_queue_get_timestamp_period_ns_d3d12(CGPUQueueId queue);
-RUNTIME_API void cgpu_free_queue_d3d12(CGPUQueueId queue);
+CGPU_API CGPUQueueId cgpu_get_queue_d3d12(CGPUDeviceId device, ECGPUQueueType type, uint32_t index);
+CGPU_API void cgpu_submit_queue_d3d12(CGPUQueueId queue, const struct CGPUQueueSubmitDescriptor* desc);
+CGPU_API void cgpu_wait_queue_idle_d3d12(CGPUQueueId queue);
+CGPU_API void cgpu_queue_present_d3d12(CGPUQueueId queue, const struct CGPUQueuePresentDescriptor* desc);
+CGPU_API float cgpu_queue_get_timestamp_period_ns_d3d12(CGPUQueueId queue);
+CGPU_API void cgpu_queue_map_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTiledTextureRegions* desc);
+CGPU_API void cgpu_queue_unmap_tiled_texture_d3d12(CGPUQueueId queue, const struct CGPUTiledTextureRegions* desc);
+CGPU_API void cgpu_queue_map_packed_mips_d3d12(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions);
+CGPU_API void cgpu_queue_unmap_packed_mips_d3d12(CGPUQueueId queue, const struct CGPUTiledTexturePackedMips* regions);
+CGPU_API void cgpu_free_queue_d3d12(CGPUQueueId queue);
 
 // Command APIs
-RUNTIME_API CGPUCommandPoolId cgpu_create_command_pool_d3d12(CGPUQueueId queue, const CGPUCommandPoolDescriptor* desc);
-RUNTIME_API CGPUCommandBufferId cgpu_create_command_buffer_d3d12(CGPUCommandPoolId pool, const struct CGPUCommandBufferDescriptor* desc);
-RUNTIME_API void cgpu_reset_command_pool_d3d12(CGPUCommandPoolId pool);
-RUNTIME_API void cgpu_free_command_buffer_d3d12(CGPUCommandBufferId cmd);
-RUNTIME_API void cgpu_free_command_pool_d3d12(CGPUCommandPoolId pool);
+CGPU_API CGPUCommandPoolId cgpu_create_command_pool_d3d12(CGPUQueueId queue, const CGPUCommandPoolDescriptor* desc);
+CGPU_API CGPUCommandBufferId cgpu_create_command_buffer_d3d12(CGPUCommandPoolId pool, const struct CGPUCommandBufferDescriptor* desc);
+CGPU_API void cgpu_reset_command_pool_d3d12(CGPUCommandPoolId pool);
+CGPU_API void cgpu_free_command_buffer_d3d12(CGPUCommandBufferId cmd);
+CGPU_API void cgpu_free_command_pool_d3d12(CGPUCommandPoolId pool);
 
 // Event & Markers
-RUNTIME_API void cgpu_cmd_begin_event_d3d12(CGPUCommandBufferId cmd, const CGPUEventInfo* event);
-RUNTIME_API void cgpu_cmd_set_marker_d3d12(CGPUCommandBufferId cmd, const CGPUMarkerInfo* marker);
-RUNTIME_API void cgpu_cmd_end_event_d3d12(CGPUCommandBufferId cmd);
+CGPU_API void cgpu_cmd_begin_event_d3d12(CGPUCommandBufferId cmd, const CGPUEventInfo* event);
+CGPU_API void cgpu_cmd_set_marker_d3d12(CGPUCommandBufferId cmd, const CGPUMarkerInfo* marker);
+CGPU_API void cgpu_cmd_end_event_d3d12(CGPUCommandBufferId cmd);
 
 // Shader APIs
-RUNTIME_API CGPUShaderLibraryId cgpu_create_shader_library_d3d12(CGPUDeviceId device, const struct CGPUShaderLibraryDescriptor* desc);
-RUNTIME_API void cgpu_free_shader_library_d3d12(CGPUShaderLibraryId shader_module);
+CGPU_API CGPUShaderLibraryId cgpu_create_shader_library_d3d12(CGPUDeviceId device, const struct CGPUShaderLibraryDescriptor* desc);
+CGPU_API void cgpu_free_shader_library_d3d12(CGPUShaderLibraryId shader_module);
 
 // Buffer APIs
-RUNTIME_API CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBufferDescriptor* desc);
-RUNTIME_API void cgpu_map_buffer_d3d12(CGPUBufferId buffer, const struct CGPUBufferRange* range);
-RUNTIME_API void cgpu_unmap_buffer_d3d12(CGPUBufferId buffer);
-RUNTIME_API void cgpu_free_buffer_d3d12(CGPUBufferId buffer);
+CGPU_API CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBufferDescriptor* desc);
+CGPU_API void cgpu_map_buffer_d3d12(CGPUBufferId buffer, const struct CGPUBufferRange* range);
+CGPU_API void cgpu_unmap_buffer_d3d12(CGPUBufferId buffer);
+CGPU_API void cgpu_free_buffer_d3d12(CGPUBufferId buffer);
 
 // Sampler APIs
-RUNTIME_API CGPUSamplerId cgpu_create_sampler_d3d12(CGPUDeviceId device, const struct CGPUSamplerDescriptor* desc);
-RUNTIME_API void cgpu_free_sampler_d3d12(CGPUSamplerId sampler);
+CGPU_API CGPUSamplerId cgpu_create_sampler_d3d12(CGPUDeviceId device, const struct CGPUSamplerDescriptor* desc);
+CGPU_API void cgpu_free_sampler_d3d12(CGPUSamplerId sampler);
 
 // Texture/TextureView APIs
-RUNTIME_API CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTextureDescriptor* desc);
-RUNTIME_API void cgpu_free_texture_d3d12(CGPUTextureId texture);
-RUNTIME_API CGPUTextureViewId cgpu_create_texture_view_d3d12(CGPUDeviceId device, const struct CGPUTextureViewDescriptor* desc);
-RUNTIME_API void cgpu_free_texture_view_d3d12(CGPUTextureViewId render_target);
-RUNTIME_API bool cgpu_try_bind_aliasing_texture_d3d12(CGPUDeviceId device, const struct CGPUTextureAliasingBindDescriptor* desc);
+CGPU_API CGPUTextureId cgpu_create_texture_d3d12(CGPUDeviceId device, const struct CGPUTextureDescriptor* desc);
+CGPU_API void cgpu_free_texture_d3d12(CGPUTextureId texture);
+CGPU_API CGPUTextureViewId cgpu_create_texture_view_d3d12(CGPUDeviceId device, const struct CGPUTextureViewDescriptor* desc);
+CGPU_API void cgpu_free_texture_view_d3d12(CGPUTextureViewId render_target);
+CGPU_API bool cgpu_try_bind_aliasing_texture_d3d12(CGPUDeviceId device, const struct CGPUTextureAliasingBindDescriptor* desc);
 
 // Shared Resource APIs
-RUNTIME_API uint64_t cgpu_export_shared_texture_handle_d3d12(CGPUDeviceId device, const struct CGPUExportTextureDescriptor* desc);
-RUNTIME_API CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const struct CGPUImportTextureDescriptor* desc);
+CGPU_API uint64_t cgpu_export_shared_texture_handle_d3d12(CGPUDeviceId device, const struct CGPUExportTextureDescriptor* desc);
+CGPU_API CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const struct CGPUImportTextureDescriptor* desc);
 
 // Swapchain APIs
-RUNTIME_API CGPUSwapChainId cgpu_create_swapchain_d3d12(CGPUDeviceId device, const CGPUSwapChainDescriptor* desc);
-RUNTIME_API uint32_t cgpu_acquire_next_image_d3d12(CGPUSwapChainId swapchain, const struct CGPUAcquireNextDescriptor* desc);
-RUNTIME_API void cgpu_free_swapchain_d3d12(CGPUSwapChainId swapchain);
+CGPU_API CGPUSwapChainId cgpu_create_swapchain_d3d12(CGPUDeviceId device, const CGPUSwapChainDescriptor* desc);
+CGPU_API uint32_t cgpu_acquire_next_image_d3d12(CGPUSwapChainId swapchain, const struct CGPUAcquireNextDescriptor* desc);
+CGPU_API void cgpu_free_swapchain_d3d12(CGPUSwapChainId swapchain);
 
 // CMDs
-RUNTIME_API void cgpu_cmd_begin_d3d12(CGPUCommandBufferId cmd);
-RUNTIME_API void cgpu_cmd_transfer_buffer_to_buffer_d3d12(CGPUCommandBufferId cmd, const struct CGPUBufferToBufferTransfer* desc);
-RUNTIME_API void cgpu_cmd_transfer_texture_to_texture_d3d12(CGPUCommandBufferId cmd, const struct CGPUTextureToTextureTransfer* desc);
-RUNTIME_API void cgpu_cmd_transfer_buffer_to_texture_d3d12(CGPUCommandBufferId cmd, const struct CGPUBufferToTextureTransfer* desc);
-RUNTIME_API void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUResourceBarrierDescriptor* desc);
-RUNTIME_API void cgpu_cmd_begin_query_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
-RUNTIME_API void cgpu_cmd_end_query_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
-RUNTIME_API void cgpu_cmd_reset_query_pool_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId, uint32_t start_query, uint32_t query_count);
-RUNTIME_API void cgpu_cmd_resolve_query_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, CGPUBufferId readback, uint32_t start_query, uint32_t query_count);
-RUNTIME_API void cgpu_cmd_end_d3d12(CGPUCommandBufferId cmd);
+CGPU_API void cgpu_cmd_begin_d3d12(CGPUCommandBufferId cmd);
+CGPU_API void cgpu_cmd_transfer_buffer_to_buffer_d3d12(CGPUCommandBufferId cmd, const struct CGPUBufferToBufferTransfer* desc);
+CGPU_API void cgpu_cmd_transfer_texture_to_texture_d3d12(CGPUCommandBufferId cmd, const struct CGPUTextureToTextureTransfer* desc);
+CGPU_API void cgpu_cmd_transfer_buffer_to_texture_d3d12(CGPUCommandBufferId cmd, const struct CGPUBufferToTextureTransfer* desc);
+CGPU_API void cgpu_cmd_transfer_buffer_to_tiles_d3d12(CGPUCommandBufferId cmd, const struct CGPUBufferToTilesTransfer* desc);
+CGPU_API void cgpu_cmd_resource_barrier_d3d12(CGPUCommandBufferId cmd, const struct CGPUResourceBarrierDescriptor* desc);
+CGPU_API void cgpu_cmd_begin_query_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
+CGPU_API void cgpu_cmd_end_query_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, const struct CGPUQueryDescriptor* desc);
+CGPU_API void cgpu_cmd_reset_query_pool_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId, uint32_t start_query, uint32_t query_count);
+CGPU_API void cgpu_cmd_resolve_query_d3d12(CGPUCommandBufferId cmd, CGPUQueryPoolId pool, CGPUBufferId readback, uint32_t start_query, uint32_t query_count);
+CGPU_API void cgpu_cmd_end_d3d12(CGPUCommandBufferId cmd);
 
 // Compute CMDs
-RUNTIME_API CGPUComputePassEncoderId cgpu_cmd_begin_compute_pass_d3d12(CGPUCommandBufferId cmd, const struct CGPUComputePassDescriptor* desc);
-RUNTIME_API void cgpu_compute_encoder_bind_descriptor_set_d3d12(CGPUComputePassEncoderId encoder, CGPUDescriptorSetId set);
-RUNTIME_API void cgpu_compute_encoder_push_constants_d3d12(CGPUComputePassEncoderId encoder, CGPURootSignatureId rs, const char8_t* name, const void* data);
-RUNTIME_API void cgpu_compute_encoder_bind_pipeline_d3d12(CGPUComputePassEncoderId encoder, CGPUComputePipelineId pipeline);
-RUNTIME_API void cgpu_compute_encoder_dispatch_d3d12(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
-RUNTIME_API void cgpu_cmd_end_compute_pass_d3d12(CGPUCommandBufferId cmd, CGPUComputePassEncoderId encoder);
+CGPU_API CGPUComputePassEncoderId cgpu_cmd_begin_compute_pass_d3d12(CGPUCommandBufferId cmd, const struct CGPUComputePassDescriptor* desc);
+CGPU_API void cgpu_compute_encoder_bind_descriptor_set_d3d12(CGPUComputePassEncoderId encoder, CGPUDescriptorSetId set);
+CGPU_API void cgpu_compute_encoder_push_constants_d3d12(CGPUComputePassEncoderId encoder, CGPURootSignatureId rs, const char8_t* name, const void* data);
+CGPU_API void cgpu_compute_encoder_bind_pipeline_d3d12(CGPUComputePassEncoderId encoder, CGPUComputePipelineId pipeline);
+CGPU_API void cgpu_compute_encoder_dispatch_d3d12(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
+CGPU_API void cgpu_cmd_end_compute_pass_d3d12(CGPUCommandBufferId cmd, CGPUComputePassEncoderId encoder);
 
 // Render CMDs
-RUNTIME_API CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd, const struct CGPURenderPassDescriptor* desc);
-RUNTIME_API void cgpu_render_encoder_set_shading_rate_d3d12(CGPURenderPassEncoderId encoder, ECGPUShadingRate shading_rate, ECGPUShadingRateCombiner post_rasterizer_rate, ECGPUShadingRateCombiner final_rate);
-RUNTIME_API void cgpu_render_encoder_bind_descriptor_set_d3d12(CGPURenderPassEncoderId encoder, CGPUDescriptorSetId set);
-RUNTIME_API void cgpu_render_encoder_set_viewport_d3d12(CGPURenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth);
-RUNTIME_API void cgpu_render_encoder_set_scissor_d3d12(CGPURenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
-RUNTIME_API void cgpu_render_encoder_bind_pipeline_d3d12(CGPURenderPassEncoderId encoder, CGPURenderPipelineId pipeline);
-RUNTIME_API void cgpu_render_encoder_bind_vertex_buffers_d3d12(CGPURenderPassEncoderId encoder, uint32_t buffer_count,
-const CGPUBufferId* buffers, const uint32_t* strides, const uint32_t* offsets);
-RUNTIME_API void cgpu_render_encoder_bind_index_buffer_d3d12(CGPURenderPassEncoderId encoder, CGPUBufferId buffer, uint32_t index_stride, uint64_t offset);
-RUNTIME_API void cgpu_render_encoder_push_constants_d3d12(CGPURenderPassEncoderId encoder, CGPURootSignatureId rs, const char8_t* name, const void* data);
-RUNTIME_API void cgpu_render_encoder_draw_d3d12(CGPURenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex);
-RUNTIME_API void cgpu_render_encoder_draw_instanced_d3d12(CGPURenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex, uint32_t instance_count, uint32_t first_instance);
-RUNTIME_API void cgpu_render_encoder_draw_indexed_d3d12(CGPURenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t first_vertex);
-RUNTIME_API void cgpu_render_encoder_draw_indexed_instanced_d3d12(CGPURenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t instance_count, uint32_t first_instance, uint32_t first_vertex);
-RUNTIME_API void cgpu_cmd_end_render_pass_d3d12(CGPUCommandBufferId cmd, CGPURenderPassEncoderId encoder);
+CGPU_API CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd, const struct CGPURenderPassDescriptor* desc);
+CGPU_API void cgpu_render_encoder_set_shading_rate_d3d12(CGPURenderPassEncoderId encoder, ECGPUShadingRate shading_rate, ECGPUShadingRateCombiner post_rasterizer_rate, ECGPUShadingRateCombiner final_rate);
+CGPU_API void cgpu_render_encoder_bind_descriptor_set_d3d12(CGPURenderPassEncoderId encoder, CGPUDescriptorSetId set);
+CGPU_API void cgpu_render_encoder_set_viewport_d3d12(CGPURenderPassEncoderId encoder, float x, float y, float width, float height, float min_depth, float max_depth);
+CGPU_API void cgpu_render_encoder_set_scissor_d3d12(CGPURenderPassEncoderId encoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+CGPU_API void cgpu_render_encoder_bind_pipeline_d3d12(CGPURenderPassEncoderId encoder, CGPURenderPipelineId pipeline);
+CGPU_API void cgpu_render_encoder_bind_vertex_buffers_d3d12(CGPURenderPassEncoderId encoder, uint32_t buffer_count,
+    const CGPUBufferId* buffers, const uint32_t* strides, const uint32_t* offsets);
+CGPU_API void cgpu_render_encoder_bind_index_buffer_d3d12(CGPURenderPassEncoderId encoder, CGPUBufferId buffer, uint32_t index_stride, uint64_t offset);
+CGPU_API void cgpu_render_encoder_push_constants_d3d12(CGPURenderPassEncoderId encoder, CGPURootSignatureId rs, const char8_t* name, const void* data);
+CGPU_API void cgpu_render_encoder_draw_d3d12(CGPURenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex);
+CGPU_API void cgpu_render_encoder_draw_instanced_d3d12(CGPURenderPassEncoderId encoder, uint32_t vertex_count, uint32_t first_vertex, uint32_t instance_count, uint32_t first_instance);
+CGPU_API void cgpu_render_encoder_draw_indexed_d3d12(CGPURenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t first_vertex);
+CGPU_API void cgpu_render_encoder_draw_indexed_instanced_d3d12(CGPURenderPassEncoderId encoder, uint32_t index_count, uint32_t first_index, uint32_t instance_count, uint32_t first_instance, uint32_t first_vertex);
+CGPU_API void cgpu_cmd_end_render_pass_d3d12(CGPUCommandBufferId cmd, CGPURenderPassEncoderId encoder);
 
 // dstorage
-RUNTIME_API ECGPUDStorageAvailability cgpu_query_dstorage_availability_d3d12(CGPUDeviceId device);
-RUNTIME_API CGPUDStorageQueueId cgpu_create_dstorage_queue_d3d12(CGPUDeviceId device, const CGPUDStorageQueueDescriptor* descriptor);
-RUNTIME_API CGPUDStorageFileHandle cgpu_dstorage_open_file_d3d12(CGPUDStorageQueueId queue, const char* abs_path);
-RUNTIME_API void cgpu_dstorage_query_file_info_d3d12(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info);
-RUNTIME_API void cgpu_dstorage_enqueue_buffer_request_d3d12(CGPUDStorageQueueId queue, const CGPUDStorageBufferIODescriptor* desc);
-RUNTIME_API void cgpu_dstorage_enqueue_texture_request_d3d12(CGPUDStorageQueueId queue, const CGPUDStorageTextureIODescriptor* desc);
-RUNTIME_API void cgpu_dstorage_queue_submit_d3d12(CGPUDStorageQueueId queue, CGPUFenceId fence);
-RUNTIME_API void cgpu_dstorage_close_file_d3d12(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file);
-RUNTIME_API void cgpu_free_dstorage_queue_d3d12(CGPUDStorageQueueId queue);
+CGPU_API ECGPUDStorageAvailability cgpu_query_dstorage_availability_d3d12(CGPUDeviceId device);
+CGPU_API CGPUDStorageQueueId cgpu_create_dstorage_queue_d3d12(CGPUDeviceId device, const CGPUDStorageQueueDescriptor* descriptor);
+CGPU_API CGPUDStorageFileHandle cgpu_dstorage_open_file_d3d12(CGPUDStorageQueueId queue, const char* abs_path);
+CGPU_API void cgpu_dstorage_query_file_info_d3d12(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file, CGPUDStorageFileInfo* info);
+CGPU_API void cgpu_dstorage_enqueue_buffer_request_d3d12(CGPUDStorageQueueId queue, const CGPUDStorageBufferIODescriptor* desc);
+CGPU_API void cgpu_dstorage_enqueue_texture_request_d3d12(CGPUDStorageQueueId queue, const CGPUDStorageTextureIODescriptor* desc);
+CGPU_API void cgpu_dstorage_queue_submit_d3d12(CGPUDStorageQueueId queue, CGPUFenceId fence);
+CGPU_API void cgpu_dstorage_close_file_d3d12(CGPUDStorageQueueId queue, CGPUDStorageFileHandle file);
+CGPU_API void cgpu_free_dstorage_queue_d3d12(CGPUDStorageQueueId queue);
 
 #ifdef __cplusplus
 } // end extern "C"
 namespace D3D12MA
 {
 class Allocator;
+class Pool;
 class Allocation;
 } // namespace D3D12MA
 #endif
@@ -193,7 +202,9 @@ typedef struct CGPUAdapter_D3D12 {
 #endif
     D3D_FEATURE_LEVEL mFeatureLevel;
     CGPUAdapterDetail adapter_detail;
+    bool mStandardSwizzle64KBSupported : 1;
     bool mEnhancedBarriersSupported : 1;
+    uint8_t mTiledResourceTier;
 } CGPUAdapter_D3D12;
 
 typedef struct CGPUEmptyDescriptors_D3D12 {
@@ -214,6 +225,9 @@ typedef struct CGPUDevice_D3D12 {
     ID3D12Device* pDxDevice;
     struct ID3D12CommandQueue** const ppCommandQueues[CGPU_QUEUE_TYPE_COUNT] SKR_IF_CPP(= {});
     const uint32_t pCommandQueueCounts[CGPU_QUEUE_TYPE_COUNT] SKR_IF_CPP(= {});
+    struct CGPUTiledMemoryPool_D3D12* pTiledMemoryPool;
+    struct ID3D12Heap* pUndefinedTileHeap;
+    struct ID3D12CommandQueue* pUndefinedTileMappingQueue;
 #ifdef __cplusplus
     class D3D12MA::Allocator* pResourceAllocator;
 #else
@@ -306,6 +320,15 @@ typedef struct CGPURenderPipeline_D3D12 {
     D3D_PRIMITIVE_TOPOLOGY mDxPrimitiveTopology;
     D3D12_GRAPHICS_PIPELINE_STATE_DESC mDxGfxPipelineStateDesc SKR_IF_CPP(= {});
 } CGPURenderPipeline_D3D12;
+
+typedef struct CGPUMemoryPool_D3D12 {
+    CGPUMemoryPool super;
+#ifdef __cplusplus
+    D3D12MA::Pool* pDxPool;
+#else
+    struct DMA_Pool* pDxPool;
+#endif
+} CGPUMemoryPool_D3D12;
 
 typedef struct CGPUBuffer_D3D12 {
     CGPUBuffer super;

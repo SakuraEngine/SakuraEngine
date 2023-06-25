@@ -102,7 +102,7 @@ void SVMemCCModule::imgui_ui()
     if (ImGui::Button("AllocateVideoMemory"))
     {
         auto buf_desc = make_zeroed<CGPUBufferDescriptor>();
-        buf_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+        buf_desc.flags = CGPU_BCF_NONE;
         buf_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
         buf_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
         buf_desc.size = (uint64_t)(vbuffer_size * 1024 * 1024);
@@ -116,7 +116,7 @@ void SVMemCCModule::imgui_ui()
     if (ImGui::Button("AllocateSharedMemory"))
     {
         auto buf_desc = make_zeroed<CGPUBufferDescriptor>();
-        buf_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+        buf_desc.flags = CGPU_BCF_NONE;
         buf_desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
         buf_desc.memory_usage = CGPU_MEM_USAGE_CPU_TO_GPU;
         buf_desc.size = (uint64_t)(sbuffer_size * 1024 * 1024);
@@ -152,9 +152,9 @@ void SVMemCCModule::imgui_ui()
                 ImGui::TableNextColumn();
                 ImGui::Text("%04d", row_n);
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted((buffer->memory_usage == CGPU_MEM_USAGE_GPU_ONLY) ? "VideoMemory" : "SharedMemory");
+                ImGui::TextUnformatted((buffer->info->memory_usage == CGPU_MEM_USAGE_GPU_ONLY) ? "VideoMemory" : "SharedMemory");
                 ImGui::TableNextColumn();
-                ImGui::Text("%.3f", (float)buffer->size / 1024.f / 1024.f);
+                ImGui::Text("%.3f", (float)buffer->info->size / 1024.f / 1024.f);
                 ImGui::TableNextColumn();
                 if (ImGui::SmallButton("Delete"))
                 {
@@ -216,10 +216,9 @@ int SVMemCCModule::main_module_exec(int argc, char8_t** argv)
             handler->process_messages(delta);
         }
         static uint64_t frame_index = 0;
+        const auto texInfo = swapchain->back_buffers[0]->info;
         auto& io = ImGui::GetIO();
-        io.DisplaySize = ImVec2(
-            (float)swapchain->back_buffers[0]->width,
-            (float)swapchain->back_buffers[0]->height);
+        io.DisplaySize = ImVec2((float)texInfo->width, (float)texInfo->height);
         skr_imgui_new_frame(window, 1.f / 60.f);
         imgui_ui();
         buffers.erase(eastl::remove(buffers.begin(), buffers.end(), nullptr), buffers.end());
@@ -405,9 +404,10 @@ void SVMemCCModule::initialize_imgui()
     CGPUShaderLibraryId imgui_fs = cgpu_create_shader_library(device, &fs_desc);
     free(im_vs_bytes);
     free(im_fs_bytes);
+    const auto texInfo = swapchain->back_buffers[backbuffer_index]->info;
     RenderGraphImGuiDescriptor imgui_graph_desc = {};
     imgui_graph_desc.render_graph = graph;
-    imgui_graph_desc.backbuffer_format = (ECGPUFormat)swapchain->back_buffers[backbuffer_index]->format;
+    imgui_graph_desc.backbuffer_format = texInfo->format;
     imgui_graph_desc.vs.library = imgui_vs;
     imgui_graph_desc.vs.stage = CGPU_SHADER_STAGE_VERT;
     imgui_graph_desc.vs.entry = SKR_UTF8("main");

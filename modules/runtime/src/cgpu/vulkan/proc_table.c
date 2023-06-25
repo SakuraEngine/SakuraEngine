@@ -46,6 +46,10 @@ const CGPUProcTable tbl_vk = {
     .wait_queue_idle = &cgpu_wait_queue_idle_vulkan,
     .queue_present = &cgpu_queue_present_vulkan,
     .queue_get_timestamp_period = &cgpu_queue_get_timestamp_period_ns_vulkan,
+    .queue_map_tiled_texture = &cgpu_queue_map_tiled_texture_vulkan,
+    .queue_unmap_tiled_texture = &cgpu_queue_unmap_tiled_texture_vulkan,
+    .queue_map_packed_mips = &cgpu_queue_map_packed_mips_vulkan,
+    .queue_unmap_packed_mips = &cgpu_queue_unmap_packed_mips_vulkan,
     .free_queue = &cgpu_free_queue_vulkan,
 
     // Command APIs
@@ -89,6 +93,7 @@ const CGPUProcTable tbl_vk = {
     .cmd_begin = &cgpu_cmd_begin_vulkan,
     .cmd_transfer_buffer_to_buffer = &cgpu_cmd_transfer_buffer_to_buffer_vulkan,
     .cmd_transfer_buffer_to_texture = &cgpu_cmd_transfer_buffer_to_texture_vulkan,
+    .cmd_transfer_buffer_to_tiles = &cgpu_cmd_transfer_buffer_to_tiles_vulkan,
     .cmd_transfer_texture_to_texture = &cgpu_cmd_transfer_texture_to_texture_vulkan,
     .cmd_resource_barrier = &cgpu_cmd_resource_barrier_vulkan,
     .cmd_begin_query = &cgpu_cmd_begin_query_vulkan,

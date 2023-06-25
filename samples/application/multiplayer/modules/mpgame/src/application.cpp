@@ -364,10 +364,11 @@ void MPApplication::Render()
             auto cameras = dual::get_owned_rw<skr_camera_comp_t>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {
+                const auto info = renderer.swapChain->back_buffers[0]->info;
                 cameras[i].renderer = renderer.renderer;
                 cameras[i].viewport_id = 0u; // TODO: viewport id
-                cameras[i].viewport_width = renderer.swapChain->back_buffers[0]->width;
-                cameras[i].viewport_height = renderer.swapChain->back_buffers[0]->height;
+                cameras[i].viewport_width = info->width;
+                cameras[i].viewport_height = info->height;
             }
         };
         dualQ_get_views(renderWorld.cameraQuery, DUAL_LAMBDA(cameraUpdate));

@@ -98,28 +98,28 @@ void create_resources()
     // upload
     CGPUBufferDescriptor upload_buffer_desc = {};
     upload_buffer_desc.name = u8"UploadBuffer";
-    upload_buffer_desc.flags = CGPU_BCF_OWN_MEMORY_BIT | CGPU_BCF_PERSISTENT_MAP_BIT;
+    upload_buffer_desc.flags = CGPU_BCF_PERSISTENT_MAP_BIT;
     upload_buffer_desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
     upload_buffer_desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
     upload_buffer_desc.size = sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices) + sizeof(CubeGeometry::InstanceData);
     auto upload_buffer = cgpu_create_buffer(device, &upload_buffer_desc);
     CGPUBufferDescriptor vb_desc = {};
     vb_desc.name = u8"VertexBuffer";
-    vb_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+    vb_desc.flags = CGPU_BCF_NONE;
     vb_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
     vb_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     vb_desc.size = sizeof(CubeGeometry);
     vertex_buffer = cgpu_create_buffer(device, &vb_desc);
     CGPUBufferDescriptor ib_desc = {};
     ib_desc.name = u8"IndexBuffer";
-    ib_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+    ib_desc.flags = CGPU_BCF_NONE;
     ib_desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER;
     ib_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     ib_desc.size = sizeof(CubeGeometry::g_Indices);
     index_buffer = cgpu_create_buffer(device, &ib_desc);
     CGPUBufferDescriptor inb_desc = {};
     inb_desc.name = u8"InstanceBuffer";
-    inb_desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+    inb_desc.flags = CGPU_BCF_NONE;
     inb_desc.descriptors = CGPU_RESOURCE_TYPE_VERTEX_BUFFER;
     inb_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     inb_desc.size = sizeof(CubeGeometry::InstanceData);
@@ -130,7 +130,7 @@ void create_resources()
     auto cpy_cmd = cgpu_create_command_buffer(cmd_pool, &cmd_desc);
     {
         auto geom = CubeGeometry();
-        memcpy(upload_buffer->cpu_mapped_address, &geom, upload_buffer_desc.size);
+        memcpy(upload_buffer->info->cpu_mapped_address, &geom, upload_buffer_desc.size);
     }
     cgpu_cmd_begin(cpy_cmd);
     CGPUBufferToBufferTransfer vb_cpy = {};
@@ -141,7 +141,7 @@ void create_resources()
     vb_cpy.size = sizeof(CubeGeometry);
     cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &vb_cpy);
     {
-        memcpy((char8_t*)upload_buffer->cpu_mapped_address + sizeof(CubeGeometry),
+        memcpy((char8_t*)upload_buffer->info->cpu_mapped_address + sizeof(CubeGeometry),
         CubeGeometry::g_Indices, sizeof(CubeGeometry::g_Indices));
     }
     CGPUBufferToBufferTransfer ib_cpy = {};
@@ -162,7 +162,7 @@ void create_resources()
     const rtm::matrix4x4f matrix = rtm::matrix_cast(rtm::matrix_from_qvv(transform));
     CubeGeometry::instance_data.world = *(skr_float4x4_t*)&matrix;
     {
-        memcpy((char8_t*)upload_buffer->cpu_mapped_address + sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices),
+        memcpy((char8_t*)upload_buffer->info->cpu_mapped_address + sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices),
         &CubeGeometry::instance_data, sizeof(CubeGeometry::InstanceData));
     }
     CGPUBufferToBufferTransfer istb_cpy = {};
@@ -204,10 +204,10 @@ void create_render_pipeline()
 {
     gbuffer_pipeline = create_gbuffer_render_pipeline(device);
     lighting_pipeline = create_lighting_render_pipeline(device,
-    static_sampler, (ECGPUFormat)swapchain->back_buffers[0]->format);
+    static_sampler, (ECGPUFormat)swapchain->back_buffers[0]->info->format);
     lighting_cs_pipeline = create_lighting_compute_pipeline(device);
     blit_pipeline = create_blit_render_pipeline(device, static_sampler,
-    (ECGPUFormat)swapchain->back_buffers[0]->format);
+    (ECGPUFormat)swapchain->back_buffers[0]->info->format);
 }
 
 void finalize()
@@ -337,7 +337,7 @@ int main(int argc, char* argv[])
     free(im_fs_bytes);
     RenderGraphImGuiDescriptor imgui_graph_desc = {};
     imgui_graph_desc.render_graph = graph;
-    imgui_graph_desc.backbuffer_format = (ECGPUFormat)swapchain->back_buffers[backbuffer_index]->format;
+    imgui_graph_desc.backbuffer_format = (ECGPUFormat)swapchain->back_buffers[backbuffer_index]->info->format;
     imgui_graph_desc.vs.library = imgui_vs;
     imgui_graph_desc.vs.stage = CGPU_SHADER_STAGE_VERT;
     imgui_graph_desc.vs.entry = u8"main";
@@ -386,8 +386,8 @@ int main(int argc, char* argv[])
             ZoneScopedN("ImGui");
             auto& io = ImGui::GetIO();
             io.DisplaySize = ImVec2(
-                (float)swapchain->back_buffers[0]->width,
-                (float)swapchain->back_buffers[0]->height);
+                (float)swapchain->back_buffers[0]->info->width,
+                (float)swapchain->back_buffers[0]->info->height);
             skr_imgui_new_frame(window, 1.f / 60.f);
             ImGui::Begin("RenderGraphProfile");
             if (ImGui::Button(fragmentLightingPass ? "SwitchToComputeLightingPass" : "SwitchToFragmentLightingPass"))
@@ -452,41 +452,41 @@ int main(int argc, char* argv[])
             render_graph::TextureHandle composite_buffer = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
                 builder.set_name(u8"composite_buffer")
-                .extent(native_backbuffer->width, native_backbuffer->height)
-                .format((ECGPUFormat)native_backbuffer->format)
-                .owns_memory()
+                .extent(native_backbuffer->info->width, native_backbuffer->info->height)
+                .format((ECGPUFormat)native_backbuffer->info->format)
+                .allocate_dedicated()
                 .allow_render_target();
             });
             auto gbuffer_color = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
                 builder.set_name(u8"gbuffer_color")
-                .extent(native_backbuffer->width, native_backbuffer->height)
+                .extent(native_backbuffer->info->width, native_backbuffer->info->height)
                 .format(gbuffer_formats[0])
-                .owns_memory()
+                .allocate_dedicated()
                 .allow_render_target();
             });
             auto gbuffer_depth = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
                 builder.set_name(u8"gbuffer_depth")
-                .extent(native_backbuffer->width, native_backbuffer->height)
+                .extent(native_backbuffer->info->width, native_backbuffer->info->height)
                 .format(gbuffer_depth_format)
-                .owns_memory()
+                .allocate_dedicated()
                 .allow_depth_stencil();
             });
             auto gbuffer_normal = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
                 builder.set_name(u8"gbuffer_normal")
-                .extent(native_backbuffer->width, native_backbuffer->height)
+                .extent(native_backbuffer->info->width, native_backbuffer->info->height)
                 .format(gbuffer_formats[1])
-                .owns_memory()
+                .allocate_dedicated()
                 .allow_render_target();
             });
             auto lighting_buffer = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
                 builder.set_name(u8"lighting_buffer")
-                .extent(native_backbuffer->width, native_backbuffer->height)
+                .extent(native_backbuffer->info->width, native_backbuffer->info->height)
                 .format(lighting_buffer_format)
-                .owns_memory()
+                .allocate_dedicated()
                 .allow_readwrite();
             });
             // camera
@@ -510,9 +510,9 @@ int main(int argc, char* argv[])
             [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
                 cgpu_render_encoder_set_viewport(stack.encoder,
                 0.0f, 0.0f,
-                (float)native_backbuffer->width, (float)native_backbuffer->height,
+                (float)native_backbuffer->info->width, (float)native_backbuffer->info->height,
                 0.f, 1.f);
-                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->width, native_backbuffer->height);
+                cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->info->width, native_backbuffer->info->height);
                 CGPUBufferId vertex_buffers[5] = {
                     vertex_buffer, vertex_buffer, vertex_buffer,
                     vertex_buffer, instance_buffer
@@ -546,9 +546,9 @@ int main(int argc, char* argv[])
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
                     cgpu_render_encoder_set_viewport(stack.encoder,
                     0.0f, 0.0f,
-                    (float)native_backbuffer->width, (float)native_backbuffer->height,
+                    (float)native_backbuffer->info->width, (float)native_backbuffer->info->height,
                     0.f, 1.f);
-                    cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->width, native_backbuffer->height);
+                    cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->info->width, native_backbuffer->info->height);
                     cgpu_render_encoder_push_constants(stack.encoder, lighting_pipeline->root_signature, u8"push_constants", &lighting_data);
                     cgpu_render_encoder_draw(stack.encoder, 3, 0);
                 });
@@ -582,9 +582,9 @@ int main(int argc, char* argv[])
                     [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
                         cgpu_render_encoder_set_viewport(stack.encoder,
                             0.0f, 0.0f,
-                            (float)native_backbuffer->width, (float)native_backbuffer->height,
+                            (float)native_backbuffer->info->width, (float)native_backbuffer->info->height,
                             0.f, 1.f);
-                        cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->width, native_backbuffer->height);
+                        cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->info->width, native_backbuffer->info->height);
                         cgpu_render_encoder_draw(stack.encoder, 3, 0);
                     });
             }
@@ -599,9 +599,9 @@ int main(int argc, char* argv[])
                 [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
                     cgpu_render_encoder_set_viewport(stack.encoder,
                         0.0f, 0.0f,
-                        (float)native_backbuffer->width, (float)native_backbuffer->height,
+                        (float)native_backbuffer->info->width, (float)native_backbuffer->info->height,
                         0.f, 1.f);
-                    cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->width, native_backbuffer->height);
+                    cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, native_backbuffer->info->width, native_backbuffer->info->height);
                     cgpu_render_encoder_draw(stack.encoder, 3, 0);
                 });
             graph->add_present_pass(
