@@ -21,7 +21,7 @@ void RenderObjectElement::first_mount(NotNull<Element*> parent, Slot slot) SKR_N
     if (render_object_widget)
     {
         _render_object = render_object_widget->create_render_object();
-        // TODO. attach render object
+        _attach_render_object_children(slot);
         _cancel_dirty();
     }
     else
@@ -55,7 +55,7 @@ void RenderObjectElement::destroy() SKR_NOEXCEPT
         if (_render_object)
         {
             old_widget->did_unmount_render_object(make_not_null(_render_object));
-            _render_object->dispose();
+            _render_object->destroy();
             _render_object = nullptr;
         }
         else
@@ -75,11 +75,6 @@ void RenderObjectElement::perform_rebuild() SKR_NOEXCEPT
 {
     _update_render_object();
 }
-void RenderObjectElement::update_slot(Slot new_slot) SKR_NOEXCEPT
-{
-    Super::update_slot(new_slot);
-    // TODO. pass to render_object
-}
 void RenderObjectElement::update(NotNull<Widget*> new_widget) SKR_NOEXCEPT
 {
     Super::update(new_widget);
@@ -87,11 +82,46 @@ void RenderObjectElement::update(NotNull<Widget*> new_widget) SKR_NOEXCEPT
     _update_render_object();
 }
 
-// render object (self or child's)
+// render object
 RenderObject* RenderObjectElement::render_object() const SKR_NOEXCEPT
 {
     if (_render_object == nullptr) { SKR_GUI_LOG_ERROR("_render_object is nullptr"); }
     return _render_object;
+}
+
+// attach & detach & move
+void RenderObjectElement::update_slot(Slot new_slot) SKR_NOEXCEPT
+{
+    // validate
+    if (lifecycle() != EElementLifecycle::Mounted) { SKR_GUI_LOG_ERROR("element is not active"); }
+    if (widget() == nullptr) { SKR_GUI_LOG_ERROR("widget is nullptr"); }
+    if (parent() == nullptr) { SKR_GUI_LOG_ERROR("parent is nullptr"); }
+    if (parent() && parent()->lifecycle() != EElementLifecycle::Mounted) { SKR_GUI_LOG_ERROR("parent is not active"); }
+
+    if (_ancestor_render_object_element)
+    {
+        _ancestor_render_object_element->move_render_object_child(make_not_null(_render_object), slot(), new_slot);
+    }
+}
+void RenderObjectElement::attach_render_object_to_parent(Slot slot) SKR_NOEXCEPT
+{
+    if (_ancestor_render_object_element != nullptr) SKR_GUI_LOG_ERROR("render_object is already attached");
+    if (_render_object != nullptr) SKR_GUI_LOG_ERROR("_render_object is not nullptr");
+    _ancestor_render_object_element = _find_ancestor_render_object_element();
+    if (_ancestor_render_object_element == nullptr)
+    {
+        SKR_GUI_LOG_ERROR("cannot find ancestor render_object");
+        return;
+    }
+    _ancestor_render_object_element->add_render_object_child(make_not_null(_render_object), slot);
+}
+void RenderObjectElement::detach_render_object_from_parent() SKR_NOEXCEPT
+{
+    if (_ancestor_render_object_element)
+    {
+        _ancestor_render_object_element->remove_render_object_child(make_not_null(_render_object), slot());
+        _ancestor_render_object_element = nullptr;
+    }
 }
 
 // help functions
@@ -114,4 +144,14 @@ void RenderObjectElement::_update_render_object() SKR_NOEXCEPT
     }
     _cancel_dirty();
 }
+RenderObjectElement* RenderObjectElement::_find_ancestor_render_object_element() const SKR_NOEXCEPT
+{
+    Element* ancestor = parent();
+    while (ancestor && !ancestor->type_is<RenderObjectElement>())
+    {
+        ancestor = ancestor->parent();
+    }
+    return ancestor ? ancestor->type_cast_fast<RenderObjectElement>() : nullptr;
+}
+
 } // namespace skr::gui

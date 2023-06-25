@@ -23,48 +23,48 @@ void MayBeExample()
     //     colored_box
     //     colored_box
     //   text
-    // auto sandbox = SkrNew<Sandbox>(
-    // SNewWidget(Stack) {
-    //     SNewChild(p.stack_children, Positioned)
-    //     {
-    //         p.positional.fill();
-    //         p.child = SNewWidget(GridPaper){};
-    //     };
-    //     SNewChild(p.stack_children, Positioned)
-    //     {
-    //         p.positional.fill();
-    //         p.child = SNewWidget(ColorPicker){};
-    //     };
-    //     SNewChild(p.stack_children, Positioned)
-    //     {
-    //         p.positional.anchor_LT(0, 0).sized(400, 400).pivot({ 0.5, 0 });
-    //         p.child = SNewWidget(Flex)
-    //         {
-    //             p.cross_axis_alignment = ECrossAxisAlignment::Start;
-    //             p.main_axis_alignment = EMainAxisAlignment::Center;
-    //             SNewChild(p.flex_children, SizedBox)
-    //             {
-    //                 p.size = { 100, 300 };
-    //                 SNewWidget(ColoredBox) { p.color = Color::SRGB("#F00"); };
-    //             };
-    //             SNewChild(p.flex_children, SizedBox)
-    //             {
-    //                 p.size = { 100, 200 };
-    //                 SNewWidget(ColoredBox) { p.color = Color::SRGB("#0F0"); };
-    //             };
-    //             SNewChild(p.flex_children, SizedBox)
-    //             {
-    //                 p.size = { 100, 400 };
-    //                 SNewWidget(ColoredBox) { p.color = Color::SRGB("#00F"); };
-    //             };
-    //         };
-    //     };
-    //     SNewChild(p.stack_children, Positioned)
-    //     {
-    //         p.positional.anchor_LT(0.5_pct, 10_px).pivot({ 0.5, 0 });
-    //         p.child = SNewWidget(Text) { p.text = u8"Hello World!"; };
-    //     };
-    // });
+    auto sandbox = SkrNew<Sandbox>(
+    SNewWidget(Stack) {
+        SNewChild(p.children, Positioned)
+        {
+            p.positional.fill();
+            p.child = SNewWidget(GridPaper){};
+        };
+        SNewChild(p.children, Positioned)
+        {
+            p.positional.fill();
+            p.child = SNewWidget(ColorPicker){};
+        };
+        SNewChild(p.children, Positioned)
+        {
+            p.positional.anchor_LT(0, 0).sized(400, 400).pivot({ 0.5, 0 });
+            p.child = SNewWidget(Flex)
+            {
+                p.cross_axis_alignment = ECrossAxisAlignment::Start;
+                p.main_axis_alignment = EMainAxisAlignment::Center;
+                SNewChild(p.children, SizedBox)
+                {
+                    p.size = { 100, 300 };
+                    SNewWidget(ColoredBox) { p.color = Color::SRGB("#F00"); };
+                };
+                SNewChild(p.children, SizedBox)
+                {
+                    p.size = { 100, 200 };
+                    SNewWidget(ColoredBox) { p.color = Color::SRGB("#0F0"); };
+                };
+                SNewChild(p.children, SizedBox)
+                {
+                    p.size = { 100, 400 };
+                    SNewWidget(ColoredBox) { p.color = Color::SRGB("#00F"); };
+                };
+            };
+        };
+        SNewChild(p.children, Positioned)
+        {
+            p.positional.anchor_LT(0.5_pct, 10_px).pivot({ 0.5, 0 });
+            p.child = SNewWidget(Text) { p.text = u8"Hello World!"; };
+        };
+    });
 
     // sandbox->update();
     // sandbox->layout();

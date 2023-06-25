@@ -115,6 +115,12 @@ inline skr_guid_t SkrGUITypeInfo(const IObject* obj) SKR_NOEXCEPT
     return obj->zz_internal_guid();
 }
 
+inline bool SkrGUIBasedOn(const IObject* obj, skr_guid_t base_guid)
+{
+    void* p = obj->zz_internal_cast(base_guid);
+    return p != nullptr;
+}
+
 } // namespace skr::gui
 
 // type marco
@@ -172,3 +178,4 @@ using SKR_GUI_TYPE_ID = ::skr_guid_t;
 // To* SKR_GUI_CAST<To>(From*)
 #define SKR_GUI_CAST ::skr::gui::SkrGUICast
 #define SKR_GUI_CAST_FAST ::skr::gui::SkrGUICastFast
+#define SKR_GUI_BASED_ON(__OBJ, __TYPE_ID) ::skr::gui::SkrGUIBasedOn(__OBJ, __TYPE_ID)

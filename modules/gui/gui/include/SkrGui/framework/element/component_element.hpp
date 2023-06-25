@@ -15,10 +15,6 @@ struct SKR_GUI_API ComponentElement : public Element {
 
     // build & update
     void perform_rebuild() SKR_NOEXCEPT override;
-    void update_slot(Slot new_slot) SKR_NOEXCEPT override;
-
-    // render object (self or child's)
-    RenderObject* render_object() const SKR_NOEXCEPT override;
 
     virtual Widget* build() SKR_NOEXCEPT = 0;
 

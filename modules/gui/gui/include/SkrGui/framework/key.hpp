@@ -13,7 +13,7 @@ enum class EKeyType
 {
     None,      // -
     Unique,    // -
-    KeepState, // State*
+    KeepState, // State* TODO. GlobalKey
 
     Int,   // int64_t
     Float, // float
@@ -21,7 +21,7 @@ enum class EKeyType
 
     IntStorage,   // int64_t
     FloatStorage, // float
-    NameStorage,  // name
+    NameStorage,  // string
 };
 
 struct SKR_GUI_API Key final {
@@ -262,5 +262,33 @@ inline void Key::set_storage(float v) SKR_NOEXCEPT
     _type = EKeyType::FloatStorage;
     _float = v;
 }
-
 } // namespace skr::gui
+
+// TODO. skr hash
+namespace phmap
+{
+template <>
+struct Hash<::skr::gui::Key> {
+    size_t operator()(const ::skr::gui::Key& key) const SKR_NOEXCEPT
+    {
+        using namespace ::skr::gui;
+        switch (key.type())
+        {
+            case EKeyType::None:
+            case EKeyType::Unique:
+                return 0;
+            case EKeyType::KeepState:
+                return Hash<State*>()(key.get_state());
+            case EKeyType::Int:
+            case EKeyType::IntStorage:
+                return Hash<int64_t>()(key.get_int());
+            case EKeyType::Float:
+            case EKeyType::FloatStorage:
+                return Hash<float>()(key.get_float());
+            case EKeyType::Name:
+            case EKeyType::NameStorage:
+                return key.get_name().get_hash();
+        }
+    }
+};
+} // namespace phmap

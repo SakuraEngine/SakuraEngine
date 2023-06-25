@@ -3,6 +3,7 @@
 #include "SkrGui/framework/fwd_framework.hpp"
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/math/matrix.hpp"
+#include "SkrGui/framework/slot.hpp"
 
 namespace skr::gui
 {
@@ -68,12 +69,18 @@ struct SKR_GUI_API RenderObject : public DiagnosticableTreeNode {
     // handle_event：处理输入事件
     // show_on_screen：或许可以实现，用于 ScrollView 的目标追踪
 
-    // element bind
-    virtual void dispose() SKR_NOEXCEPT;
-
     //==> Begin DiagnosticableTreeNode API
     void visit_diagnostics_children(FunctionRef<void(DiagnosticableTreeNode*)> visitor) SKR_NOEXCEPT override;
     //==> End DiagnosticableTreeNode API
+
+    // getter
+    inline RenderObject* parent() const SKR_NOEXCEPT { return _parent; }
+    inline int32_t       depth() const SKR_NOEXCEPT { return _depth; }
+    inline Slot          slot() const SKR_NOEXCEPT { return _slot; }
+
+    // setter
+    inline void set_slot(Slot slot) SKR_NOEXCEPT { _slot = slot; }
+
 protected:
     void        _mark_parent_needs_layout() SKR_NOEXCEPT;
     inline void _set_force_relayout_boundary(bool v) SKR_NOEXCEPT { _force_relayout_boundary = v; }
@@ -103,8 +110,11 @@ private:
     // 用于 invoke_layout_callback()
     bool _doing_this_layout_with_callback = false;
 
-    // 生命周
+    // 生命周期
     ERenderObjectLifecycle _lifecycle = ERenderObjectLifecycle::Initial;
+
+    // parent 分配的实际 Slot 位置
+    Slot _slot = {};
 };
 
 } // namespace skr::gui

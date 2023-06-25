@@ -122,11 +122,11 @@ struct _FlexHelper {
         float total_flex = 0;
 
         // Step1. Calculate non-flexible children's size
-        for (const auto& slot : self._flexible_slots)
+        for (const auto& slot : self.children())
         {
-            if (slot.flex > 0)
+            if (slot.data.flex > 0)
             {
-                total_flex += slot.flex;
+                total_flex += slot.data.flex;
             }
             else
             {
@@ -152,14 +152,14 @@ struct _FlexHelper {
         if (total_flex > 0)
         {
             const float space_per_flex = can_flex ? (free_space / total_flex) : std::numeric_limits<float>::signaling_NaN();
-            for (const auto& slot : self._flexible_slots)
+            for (const auto& slot : self.children())
             {
-                if (slot.flex > 0)
+                if (slot.data.flex > 0)
                 {
                     // solve child extent
-                    const float max_child_extent = can_flex ? space_per_flex * slot.flex : std::numeric_limits<float>::infinity();
+                    const float max_child_extent = can_flex ? space_per_flex * slot.data.flex : std::numeric_limits<float>::infinity();
                     float       min_child_extent;
-                    switch (slot.flex_fit)
+                    switch (slot.data.flex_fit)
                     {
                         case EFlexFit::Tight:
                             min_child_extent = max_child_extent;
@@ -226,12 +226,12 @@ struct _FlexHelper {
             // Intrinsic main size is the smallest size the flex container can take
             // while maintaining the min/max-content contributions of its flex items.
             float total_flex = 0.f, inflexible_space = 0.f, max_flex_fraction_so_far = 0.f;
-            for (const auto& slot : self._flexible_slots)
+            for (const auto& slot : self.children())
             {
-                total_flex += slot.flex;
-                if (slot.flex > 0)
+                total_flex += slot.data.flex;
+                if (slot.data.flex > 0)
                 {
-                    const float flex_fraction = child_size_func(slot.child, extent) / slot.flex;
+                    const float flex_fraction = child_size_func(slot.child, extent) / slot.data.flex;
                     max_flex_fraction_so_far = std::max(max_flex_fraction_so_far, flex_fraction);
                 }
                 else
@@ -251,11 +251,11 @@ struct _FlexHelper {
             // Get inflexible space using the max intrinsic dimensions of fixed children in the main direction.
             const float available_main_size = extent;
             float       total_flex = 0.f, inflexible_space = 0.f, max_cross_size = 0.f;
-            for (const auto& slot : self._flexible_slots)
+            for (const auto& slot : self.children())
             {
-                total_flex += slot.flex;
+                total_flex += slot.data.flex;
                 float main_size, cross_size;
-                if (slot.flex == 0)
+                if (slot.data.flex == 0)
                 {
                     switch (self._flex_direction)
                     {
@@ -280,11 +280,11 @@ struct _FlexHelper {
             const float space_per_flex = std::max(0.f, (available_main_size - inflexible_space) / total_flex);
 
             // Size remaining (flexible) items, find the maximum cross size.
-            for (const auto& slot : self._flexible_slots)
+            for (const auto& slot : self.children())
             {
-                if (slot.flex > 0)
+                if (slot.data.flex > 0)
                 {
-                    max_cross_size = std::max(max_cross_size, child_size_func(slot.child, space_per_flex * slot.flex));
+                    max_cross_size = std::max(max_cross_size, child_size_func(slot.child, space_per_flex * slot.data.flex));
                 }
             }
             return max_cross_size;
@@ -398,7 +398,7 @@ void RenderFlex::perform_layout() SKR_NOEXCEPT
         slack_space = std::max(0.f, slack_space);
 
         // calc leading space & between space
-        const auto child_count = _flexible_slots.size();
+        const auto child_count = children().size();
         switch (_main_axis_alignment)
         {
             case EMainAxisAlignment::Start:
@@ -431,9 +431,9 @@ void RenderFlex::perform_layout() SKR_NOEXCEPT
     const bool flip_main_axis = _FlexHelper::_is_main_axis_flipped(*this);
     const bool flip_cross_axis = _FlexHelper::_is_cross_axis_flipped(*this);
     float      child_main_offset = flip_main_axis ? (main_size - leading_space) : leading_space;
-    for (size_t i = 0; i < _flexible_slots.size(); ++i)
+    for (size_t i = 0; i < children().size(); ++i)
     {
-        auto&       slot = _flexible_slots[i];
+        auto&       slot = children()[i];
         const Size  child_size = slot.child->size();
         const float child_main_size = _FlexHelper::_get_main_size(*this, child_size);
         const float child_cross_size = _FlexHelper::_get_cross_size(*this, child_size);
@@ -464,7 +464,7 @@ void RenderFlex::perform_layout() SKR_NOEXCEPT
         if (flip_main_axis) { child_main_offset -= child_main_size; }
 
         // set child offset
-        slot.offset = _FlexHelper::_combine_offset(*this, child_main_offset, child_cross_offset);
+        slot.data.offset = _FlexHelper::_combine_offset(*this, child_main_offset, child_cross_offset);
 
         // update main axis offset
         child_main_offset += flip_main_axis ? -between_space : child_main_size + between_space;
@@ -475,11 +475,11 @@ void RenderFlex::perform_layout() SKR_NOEXCEPT
 void RenderFlex::paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT
 {
     // TODO. handle overflow
-    for (const auto& slot : _flexible_slots)
+    for (const auto& slot : children())
     {
         if (slot.child)
         {
-            context->paint_child(make_not_null(slot.child), slot.offset + offset);
+            context->paint_child(make_not_null(slot.child), slot.data.offset + offset);
         }
         else
         {

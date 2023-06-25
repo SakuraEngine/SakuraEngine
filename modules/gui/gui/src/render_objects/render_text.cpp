@@ -3,7 +3,6 @@
 #include "dev/text_server/text_paragraph.h"
 #include "dev/text_server/font.h"
 #include <containers/sptr.hpp>
-#include <variant>
 #include <fstream>
 #include "SkrGui/framework/painting_context.hpp"
 #include "SkrGui/backend/canvas.hpp"
@@ -19,9 +18,6 @@ struct overloaded : Ts... {
 // explicit deduction guide (not needed as of C++20)
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
-
-struct InlineType : public std::variant<skr::string, RenderObject*, RenderText*, skr::SPtr<BindText>> {
-};
 
 struct Paragraph : public godot::TextParagraph {
     void draw(godot::TextServer::TextDrawProxy* proxy, const skr_float2_t& p_pos, const godot::Color& p_color, const godot::Color& p_dc_color)

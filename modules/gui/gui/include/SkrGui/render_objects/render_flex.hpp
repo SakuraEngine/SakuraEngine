@@ -1,14 +1,14 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_box.hpp"
+#include "SkrGui/framework/render_object/multi_child_render_object.hpp"
 #include "SkrGui/math/layout.hpp"
 
 namespace skr::gui
 {
-
-class SKR_GUI_API RenderFlex : public RenderBox
+class SKR_GUI_API RenderFlex : public RenderBox, public IMultiChildRenderObject
 {
 public:
-    SKR_GUI_TYPE(RenderFlex, "d3987dfd-24d2-478a-910e-537f24c4bae7", RenderBox);
+    SKR_GUI_TYPE(RenderFlex, "d3987dfd-24d2-478a-910e-537f24c4bae7", RenderBox, IMultiChildRenderObject);
     using Super = RenderBox;
 
     // intrinsic size
@@ -26,14 +26,13 @@ public:
     // paint
     void paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT override;
 
-    struct Slot {
+    struct SlotData {
         // slot data
         float    flex = 1;
         EFlexFit flex_fit = EFlexFit::Loose;
 
         // child data
-        Offset     offset = Offset::Zero();
-        RenderBox* child = nullptr;
+        Offset offset = Offset::Zero();
     };
 
 private:
@@ -42,9 +41,11 @@ private:
     EMainAxisAlignment  _main_axis_alignment = EMainAxisAlignment::Start;
     ECrossAxisAlignment _cross_axis_alignment = ECrossAxisAlignment::Start;
     EMainAxisSize       _main_axis_size = EMainAxisSize::Max;
-    Array<Slot>         _flexible_slots;
 
     float _overflow = 0.0f;
+
+    // MIXIN
+    MULTI_CHILD_RENDER_OBJECT_MIX_IN(RenderFlex, RenderBox, SlotData)
 };
 
 } // namespace skr::gui

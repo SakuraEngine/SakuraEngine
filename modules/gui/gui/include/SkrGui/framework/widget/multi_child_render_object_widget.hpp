@@ -6,5 +6,9 @@ namespace skr::gui
 {
 struct SKR_GUI_API MultiChildRenderObjectWidget : public RenderObjectWidget {
     SKR_GUI_TYPE(MultiChildRenderObjectWidget, "d9e3dde8-f6e2-48bc-8a33-13f109ea5149", RenderObjectWidget);
+
+    NotNull<Element*> create_element() SKR_NOEXCEPT override;
+
+    Array<Widget*> children;
 };
 } // namespace skr::gui

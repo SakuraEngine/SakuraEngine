@@ -1,13 +1,14 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_box.hpp"
 #include "SkrGui/math/layout.hpp"
+#include "SkrGui/framework/render_object/multi_child_render_object.hpp"
 
 namespace skr::gui
 {
 
-struct SKR_GUI_API RenderStack : public RenderBox {
+struct SKR_GUI_API RenderStack : public RenderBox, public IMultiChildRenderObject {
 public:
-    SKR_GUI_TYPE(RenderStack, "b3c8ede6-d878-472c-a1c1-6b3acdc9f1f0", RenderBox);
+    SKR_GUI_TYPE(RenderStack, "b3c8ede6-d878-472c-a1c1-6b3acdc9f1f0", RenderBox, IMultiChildRenderObject);
     using Super = RenderBox;
 
     // intrinsic size
@@ -25,12 +26,8 @@ public:
     // paint
     void paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT override;
 
-    struct Slot {
-        // slot data
-
-        // child data
-        Offset     offset = Offset::Zero();
-        RenderBox* child = nullptr;
+    struct SlotData {
+        Offset offset = Offset::Zero();
     };
 
 private:
@@ -38,7 +35,9 @@ private:
     Alignment      _stack_alignment = Alignment::TopLeft();
     EPositionalFit _child_fit = EPositionalFit::PassThrough;
     EStackSize     _stack_size = EStackSize::Shrink;
-    Array<Slot>    _stack_slots;
+
+    // MIXIN
+    MULTI_CHILD_RENDER_OBJECT_MIX_IN(RenderStack, RenderBox, SlotData)
 };
 
 } // namespace skr::gui
