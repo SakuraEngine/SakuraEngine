@@ -22,13 +22,13 @@ struct _StackHelper {
                                      const BoxConstraints& constraints,
                                      TLayoutFunc&&         layout_func) SKR_NOEXCEPT
     {
-        if (self._stack_slots.size() == 0) return constraints.biggest().is_finite() ? constraints.biggest() : constraints.smallest();
+        if (self.children().size() == 0) return constraints.biggest().is_finite() ? constraints.biggest() : constraints.smallest();
         if (self._stack_size == EStackSize::Expand) return constraints.biggest();
 
         BoxConstraints fit_constraints = _fit_constraints(self, constraints);
         float          width = constraints.min_width;
         float          height = constraints.min_height;
-        for (const auto& slot : self._stack_slots)
+        for (const auto& slot : self.children())
         {
             Size child_size = layout_func(slot.child, fit_constraints);
             width = std::max(width, child_size.width);
@@ -43,7 +43,7 @@ struct _StackHelper {
     TIntrinsicFunc&&   intrinsic_func) SKR_NOEXCEPT
     {
         float result = 0.0f;
-        for (const auto& slot : self._stack_slots)
+        for (const auto& slot : self.children())
         {
             result = std::max(result, intrinsic_func(slot.child));
         }
@@ -103,9 +103,9 @@ void RenderStack::perform_layout() SKR_NOEXCEPT
         return child->size();
     }));
 
-    for (auto& slot : _stack_slots)
+    for (auto& slot : children())
     {
-        slot.offset = _stack_alignment.along_size(size() - slot.child->size());
+        slot.data.offset = _stack_alignment.along_size(size() - slot.child->size());
     }
 }
 
@@ -113,11 +113,11 @@ void RenderStack::perform_layout() SKR_NOEXCEPT
 void RenderStack::paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT
 {
     // TODO. clip behaviour
-    for (const auto& slot : _stack_slots)
+    for (const auto& slot : children())
     {
         if (slot.child)
         {
-            context->paint_child(make_not_null(slot.child), slot.offset + offset);
+            context->paint_child(make_not_null(slot.child), slot.data.offset + offset);
         }
         else
         {

@@ -16,22 +16,28 @@ struct SKR_GUI_API RenderObjectElement : public Element {
 
     // build & update
     void perform_rebuild() SKR_NOEXCEPT override;
-    void update_slot(Slot new_slot) SKR_NOEXCEPT override;
     void update(NotNull<Widget*> new_widget) SKR_NOEXCEPT override;
 
-    // render object (self or child's)
-    RenderObject* render_object() const SKR_NOEXCEPT override;
+    // getter
+    RenderObject* render_object() const SKR_NOEXCEPT;
 
-    // child ops
-    virtual void add_render_object_child(NotNull<RenderObject*> child, uint64_t slot) SKR_NOEXCEPT = 0;
-    virtual void remove_render_object_child(NotNull<RenderObject*> child, uint64_t slot) SKR_NOEXCEPT = 0;
-    virtual void move_render_object_child(NotNull<RenderObject*> child, uint64_t old_slot, uint64_t new_slot) SKR_NOEXCEPT = 0;
+    // child render object ops
+    virtual void add_render_object_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT = 0;
+    virtual void remove_render_object_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT = 0;
+    virtual void move_render_object_child(NotNull<RenderObject*> child, Slot old_slot, Slot new_slot) SKR_NOEXCEPT = 0;
+
+    // attach & detach & move
+    void update_slot(Slot new_slot) SKR_NOEXCEPT;
+    void attach_render_object_to_parent(Slot slot) SKR_NOEXCEPT;
+    void detach_render_object_from_parent() SKR_NOEXCEPT;
 
 private:
     // help functions
-    void _update_render_object() SKR_NOEXCEPT;
+    void                 _update_render_object() SKR_NOEXCEPT;
+    RenderObjectElement* _find_ancestor_render_object_element() const SKR_NOEXCEPT;
 
 private:
-    RenderObject* _render_object = nullptr;
+    RenderObject*        _render_object = nullptr;
+    RenderObjectElement* _ancestor_render_object_element = nullptr;
 };
 } // namespace skr::gui

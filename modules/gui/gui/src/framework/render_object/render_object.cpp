@@ -190,12 +190,6 @@ Matrix4 RenderObject::get_transform_to(RenderObject* ancestor) const SKR_NOEXCEP
     return {};
 }
 
-// element bind
-void RenderObject::dispose() SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION()
-}
-
 // layout & paint marks
 void RenderObject::_mark_parent_needs_layout() SKR_NOEXCEPT
 {

@@ -11,7 +11,7 @@ struct Slot {
 
     // ctor & dtor & assign
     inline constexpr Slot() SKR_NOEXCEPT = default;
-    inline constexpr Slot(uint64_t index) SKR_NOEXCEPT : index(index) {}
+    inline constexpr explicit Slot(uint64_t index) SKR_NOEXCEPT : index(index) {}
     inline constexpr Slot(const Slot& other) SKR_NOEXCEPT = default;
     inline constexpr Slot(Slot&& other) SKR_NOEXCEPT = default;
     inline constexpr Slot& operator=(const Slot& other) SKR_NOEXCEPT = default;
