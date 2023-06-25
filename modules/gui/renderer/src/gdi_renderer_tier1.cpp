@@ -311,7 +311,7 @@ void GDIRenderer_RenderGraph::updatePendingTextures(skr::render_graph::RenderGra
         {
             auto       buffer = context.resolve(copy->upload_buffer);
             const auto data = copy->image->get_data();
-            ::memcpy(buffer->cpu_mapped_address, data.data(), data.size());
+            ::memcpy(buffer->info->cpu_mapped_address, data.data(), data.size());
         }
     });
 }
@@ -572,7 +572,7 @@ void GDIRenderer_RenderGraph::render(IGDIViewport* viewport, const ViewportRende
             const uint64_t projections_count = viewport_data->render_projections.size();
             const uint64_t rdata_count = viewport_data->render_data.size();
 
-            GDIVertex*       vtx_dst = (GDIVertex*)upload_buffer->cpu_mapped_address;
+            GDIVertex*       vtx_dst = (GDIVertex*)upload_buffer->info->cpu_mapped_address;
             GDIIndex*        idx_dst = (GDIIndex*)(vtx_dst + vertices_count);
             rtm::matrix4x4f* transform_dst = (rtm::matrix4x4f*)(idx_dst + indices_count);
             rtm::matrix4x4f* projection_dst = (rtm::matrix4x4f*)(transform_dst + transforms_count);

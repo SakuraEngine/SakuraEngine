@@ -58,7 +58,7 @@ bool initialize_gdi_application(gdi_application_t* app)
     // initialize gdi renderer
     skr::gui::GDIRendererDescriptor             gdir_desc = {};
     skr::gui::GDIRendererDescriptor_RenderGraph gdir_desc2 = {};
-    gdir_desc2.target_format = (ECGPUFormat)app->gfx.swapchain->back_buffers[0]->format;
+    gdir_desc2.target_format = (ECGPUFormat)app->gfx.swapchain->back_buffers[0]->info->format;
     gdir_desc2.device = app->gfx.device;
     gdir_desc2.transfer_queue = app->gfx.gfx_queue;
     gdir_desc2.vfs = app->resource_vfs;
