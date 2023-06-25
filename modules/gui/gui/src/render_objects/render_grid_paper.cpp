@@ -2,7 +2,7 @@
 #include "SkrGui/dev/gdi/gdi.hpp"
 #include "SkrGui/framework/window_context.hpp"
 #include "SkrGui/framework/painting_context.hpp"
-#include "SkrGui/backend/canvas.hpp"
+#include "SkrGui/backend/render/canvas.hpp"
 
 namespace skr::gui
 {

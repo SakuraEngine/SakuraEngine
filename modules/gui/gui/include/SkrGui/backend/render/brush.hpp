@@ -1,10 +1,15 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/math/geometry.hpp"
-#include "SkrGui/backend/paint_params.hpp"
+#include "SkrGui/backend/render/paint_params.hpp"
 
 namespace skr::gui
 {
+// TODO. better brush
+// Custom Brush
+// Color Brush
+// Surface Brush
+// Surface Nine Brush
 struct CustomBrush {
     FunctionRef<void(GDIVertex&)> _custom_paint = nullptr;
 

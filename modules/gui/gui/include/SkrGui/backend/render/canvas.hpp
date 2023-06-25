@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/math/geometry.hpp"
-#include "SkrGui/backend/paint_params.hpp"
-#include "SkrGui/backend/brush.hpp"
+#include "SkrGui/backend/render/paint_params.hpp"
+#include "SkrGui/backend/render/brush.hpp"
 
 // TODO. remove gdi
 #include "SkrGui/dev/gdi/gdi.hpp"
