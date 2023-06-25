@@ -9,6 +9,9 @@
 #include "platform/guid.hpp"
 #include "containers/hashmap.hpp"
 #include "EASTL/fixed_vector.h"
+
+#include "tracy/Tracy.hpp"
+
 #ifndef __meta__
     #include "MPShared/shared.generated.h"
 #endif
