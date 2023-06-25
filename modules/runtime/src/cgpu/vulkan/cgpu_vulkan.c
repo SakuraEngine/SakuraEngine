@@ -1,4 +1,5 @@
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
+#include "cgpu/cgpu_config.h"
 #include "vulkan_utils.h"
 #include "cgpu/shader-reflections/spirv/spirv_reflect.h"
 #include "../common/common_utils.h"
@@ -220,6 +221,26 @@ uint32_t cgpu_query_queue_count_vulkan(const CGPUAdapterId adapter, const ECGPUQ
             }
         }
         break;
+        case CGPU_QUEUE_TYPE_TILE_MAPPING: {
+            for (uint32_t i = 0; i < A->mQueueFamiliesCount; i++)
+            {
+                const VkQueueFamilyProperties* prop = &A->pQueueFamilyProperties[i];
+                if (prop->queueFlags & VK_QUEUE_SPARSE_BINDING_BIT)
+                {
+                    if (!(prop->queueFlags & VK_QUEUE_TRANSFER_BIT))
+                    {
+                        if (!(prop->queueFlags & VK_QUEUE_COMPUTE_BIT))
+                        {
+                            if (!(prop->queueFlags & VK_QUEUE_GRAPHICS_BIT))
+                            {
+                                count += prop->queueCount;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        break;
         default:
             cgpu_assert(0 && "CGPU VULKAN: ERROR Queue Type!");
     }
@@ -336,8 +357,7 @@ uint32_t get_set_count(uint32_t set_index_mask)
     return set_count;
 }
 
-CGPURootSignatureId cgpu_create_root_signature_vulkan(CGPUDeviceId device,
-const struct CGPURootSignatureDescriptor* desc)
+CGPURootSignatureId cgpu_create_root_signature_vulkan(CGPUDeviceId device,const struct CGPURootSignatureDescriptor* desc)
 {
     const CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)device;
     CGPURootSignature_Vulkan* RS = (CGPURootSignature_Vulkan*)cgpu_calloc(1, sizeof(CGPURootSignature_Vulkan));
@@ -418,7 +438,7 @@ const struct CGPURootSignatureDescriptor* desc)
                     i_binding++;
                 }
             }
-            VkDescriptorSetLayoutCreateInfo set_info = {
+            VkDescriptorSetLayoutCreateInfo setLayoutInfo = {
                 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
                 .pNext = NULL,
                 .flags = 0,
@@ -426,7 +446,7 @@ const struct CGPURootSignatureDescriptor* desc)
                 .bindingCount = i_binding
             };
             CHECK_VKRESULT(D->mVkDeviceTable.vkCreateDescriptorSetLayout(D->pVkDevice,
-                &set_info, GLOBAL_VkAllocationCallbacks, &RS->pSetLayouts[set_index].layout));
+                &setLayoutInfo, GLOBAL_VkAllocationCallbacks, &RS->pSetLayouts[set_index].layout));
             VkUtil_ConsumeDescriptorSets(D->pDescriptorPool, &RS->pSetLayouts[set_index].layout,
                 &RS->pSetLayouts[set_index].pEmptyDescSet, 1);
 
@@ -1155,7 +1175,7 @@ CGPUQueueId cgpu_get_queue_vulkan(CGPUDeviceId device, ECGPUQueueType type, uint
     CGPUQueue_Vulkan* RQ = (CGPUQueue_Vulkan*)cgpu_calloc(1, sizeof(CGPUQueue_Vulkan));
     memcpy(RQ, &Q, sizeof(Q));
     CGPUCommandPoolDescriptor pool_desc = {
-        .___nothing_and_useless__ = 0
+        .name = "InternalCmdPool"
     };
     RQ->pInnerCmdPool = cgpu_create_command_pool(&RQ->super, &pool_desc);
     CGPUCommandBufferDescriptor cmd_desc = {
@@ -1338,7 +1358,8 @@ VkCommandPool allocate_transient_command_pool(CGPUDevice_Vulkan* D, CGPUQueueId 
         .queueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[queue->type]
     };
     CHECK_VKRESULT(D->mVkDeviceTable.vkCreateCommandPool(
-    D->pVkDevice, &create_info, GLOBAL_VkAllocationCallbacks, &P));
+        D->pVkDevice, &create_info, GLOBAL_VkAllocationCallbacks, &P));
+        
     return P;
 }
 
@@ -1352,6 +1373,7 @@ CGPUCommandPoolId cgpu_create_command_pool_vulkan(CGPUQueueId queue, const CGPUC
     CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)queue->device;
     CGPUCommandPool_Vulkan* P = (CGPUCommandPool_Vulkan*)cgpu_calloc(1, sizeof(CGPUCommandPool_Vulkan));
     P->pVkCmdPool = allocate_transient_command_pool(D, queue);
+    VkUtil_OptionalSetObjectName(D, (uint64_t)P->pVkCmdPool, VK_OBJECT_TYPE_COMMAND_POOL, desc ? desc->name : CGPU_NULLPTR);
     return &P->super;
 }
 
@@ -1487,6 +1509,7 @@ void cgpu_cmd_resource_barrier_vulkan(CGPUCommandBufferId cmd, const struct CGPU
     {
         const CGPUTextureBarrier* texture_barrier = &desc->texture_barriers[i];
         CGPUTexture_Vulkan* T = (CGPUTexture_Vulkan*)texture_barrier->texture;
+        const CGPUTextureInfo* pInfo = T->super.info;
         VkImageMemoryBarrier* pImageBarrier = NULL;
         if (CGPU_RESOURCE_STATE_UNORDERED_ACCESS == texture_barrier->src_state &&
             CGPU_RESOURCE_STATE_UNORDERED_ACCESS == texture_barrier->dst_state)
@@ -1515,7 +1538,7 @@ void cgpu_cmd_resource_barrier_vulkan(CGPUCommandBufferId cmd, const struct CGPU
         if (pImageBarrier)
         {
             pImageBarrier->image = T->pVkImage;
-            pImageBarrier->subresourceRange.aspectMask = (VkImageAspectFlags)T->super.aspect_mask;
+            pImageBarrier->subresourceRange.aspectMask = (VkImageAspectFlags)pInfo->aspect_mask;
             pImageBarrier->subresourceRange.baseMipLevel = texture_barrier->subresource_barrier ? texture_barrier->mip_level : 0;
             pImageBarrier->subresourceRange.levelCount = texture_barrier->subresource_barrier ? 1 : VK_REMAINING_MIP_LEVELS;
             pImageBarrier->subresourceRange.baseArrayLayer = texture_barrier->subresource_barrier ? texture_barrier->array_layer : 0;
@@ -1552,10 +1575,10 @@ void cgpu_cmd_resource_barrier_vulkan(CGPUCommandBufferId cmd, const struct CGPU
     if (bufferBarrierCount || imageBarrierCount)
     {
         D->mVkDeviceTable.vkCmdPipelineBarrier(Cmd->pVkCmdBuf,
-        srcStageMask, dstStageMask, 0,
-        0, NULL,
-        bufferBarrierCount, BBs,
-        imageBarrierCount, TBs);
+            srcStageMask, dstStageMask, 0,
+            0, NULL,
+            bufferBarrierCount, BBs,
+            imageBarrierCount, TBs);
     }
 }
 
@@ -1827,13 +1850,16 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGPUCommandBufferId cm
         };
         for (uint32_t i = 0; i < desc->render_target_count; i++)
         {
+            CGPUTextureId tex = desc->color_attachments[i].view->info.texture;
+            const CGPUTextureInfo* info = tex->info;
+
             rpdesc.pResolveMasks[i] = (desc->sample_count != CGPU_SAMPLE_COUNT_1) &&
                                       (desc->color_attachments[i].resolve_view != NULL);
             rpdesc.pColorFormats[i] = desc->color_attachments[i].view->info.format;
             rpdesc.pLoadActionsColor[i] = desc->color_attachments[i].load_action;
             rpdesc.pStoreActionsColor[i] = desc->color_attachments[i].store_action;
-            Width = desc->color_attachments[i].view->info.texture->width;
-            Height = desc->color_attachments[i].view->info.texture->height;
+            Width = (uint32_t)info->width;
+            Height = (uint32_t)info->height;
         }
         VkUtil_FindOrCreateRenderPass(D, &rpdesc, &render_pass);
     }
@@ -1880,30 +1906,37 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGPUCommandBufferId cm
     }
     // Cmd begin render pass
     VkClearValue clearValues[2 * CGPU_MAX_MRT_COUNT + 1] = { 0 };
-    uint32_t idx = 0;
+    uint32_t clearCount = 0;
     for (uint32_t i = 0; i < desc->render_target_count; i++)
     {
         CGPUClearValue clearValue = desc->color_attachments[i].clear_color;
-        clearValues[i].color.float32[0] = clearValue.r;
-        clearValues[i].color.float32[1] = clearValue.g;
-        clearValues[i].color.float32[2] = clearValue.b;
-        clearValues[i].color.float32[3] = clearValue.a;
-        idx++;
+        if (desc->color_attachments[i].load_action == CGPU_LOAD_ACTION_CLEAR)
+        {
+            clearValues[i].color.float32[0] = clearValue.r;
+            clearValues[i].color.float32[1] = clearValue.g;
+            clearValues[i].color.float32[2] = clearValue.b;
+            clearValues[i].color.float32[3] = clearValue.a;
+            clearCount++;
+        }
     }
     // clear msaa resolve targets
     for (uint32_t i = 0; i < desc->render_target_count; i++)
     {
-        if (desc->color_attachments[i].resolve_view)
-        {
-            idx++;
-        }
+        if (desc->color_attachments[i].load_action == CGPU_LOAD_ACTION_CLEAR)
+            if (desc->color_attachments[i].resolve_view)
+            {
+                clearCount++;
+            }
     }
     // depth stencil clear
     if (desc->depth_stencil)
     {
-        clearValues[idx].depthStencil.depth = desc->depth_stencil->clear_depth;
-        clearValues[idx].depthStencil.stencil = desc->depth_stencil->clear_stencil;
-        idx++;
+        if (desc->depth_stencil->depth_load_action == CGPU_LOAD_ACTION_CLEAR)
+        {
+            clearValues[clearCount].depthStencil.depth = desc->depth_stencil->clear_depth;
+            clearValues[clearCount].depthStencil.stencil = desc->depth_stencil->clear_stencil;
+            clearCount++;
+        }
     }
     VkRect2D render_area = {
         .offset.x = 0,
@@ -1917,7 +1950,7 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_vulkan(CGPUCommandBufferId cm
         .renderPass = render_pass,
         .framebuffer = pFramebuffer,
         .renderArea = render_area,
-        .clearValueCount = idx,
+        .clearValueCount = clearCount,
         .pClearValues = clearValues
     };
     D->mVkDeviceTable.vkCmdBeginRenderPass(Cmd->pVkCmdBuf, &begin_info, VK_SUBPASS_CONTENTS_INLINE);
@@ -2269,35 +2302,44 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan_impl(CGPUDeviceId device, const CGP
     CGPUSwapChain_Vulkan* S = old;
     if (!old)
     {
-        S = (CGPUSwapChain_Vulkan*)cgpu_calloc(1,
-            sizeof(CGPUSwapChain_Vulkan) + sizeof(CGPUTexture_Vulkan) * buffer_count + sizeof(CGPUTextureId) * buffer_count);
+        S = (CGPUSwapChain_Vulkan*)cgpu_calloc_aligned(1,
+            sizeof(CGPUSwapChain_Vulkan) + 
+            (sizeof(CGPUTexture_Vulkan) + sizeof(CGPUTextureInfo)) * buffer_count + 
+            sizeof(CGPUTextureId) * buffer_count, _Alignof(CGPUSwapChain_Vulkan));
     }
     S->pVkSwapChain = new_chain;
     S->super.buffer_count = buffer_count;
     DECLARE_ZERO_VLA(VkImage, vimages, S->super.buffer_count)
     CHECK_VKRESULT(D->mVkDeviceTable.vkGetSwapchainImagesKHR(D->pVkDevice, S->pVkSwapChain, &S->super.buffer_count, vimages));
-    CGPUTexture_Vulkan* Ts = (CGPUTexture_Vulkan*)(S + 1);
+    
+    struct THeader
+    {
+        CGPUTexture_Vulkan T;
+        CGPUTextureInfo I;
+    };
+    struct THeader* Ts = (struct THeader*)(S + 1);
     for (uint32_t i = 0; i < buffer_count; i++)
     {
-        Ts[i].pVkImage = vimages[i];
-        Ts[i].super.is_cube = false;
-        Ts[i].super.array_size_minus_one = 0;
-        Ts[i].super.device = &D->super;
-        Ts[i].super.sample_count = CGPU_SAMPLE_COUNT_1; // TODO: ?
-        Ts[i].super.format = VkUtil_FormatTranslateToCGPU(surface_format.format);
-        Ts[i].super.aspect_mask = VkUtil_DeterminAspectMask(Ts[i].super.format, false);
-        Ts[i].super.depth = 1;
-        Ts[i].super.width = extent.width;
-        Ts[i].super.height = extent.height;
-        Ts[i].super.mip_levels = 1;
-        Ts[i].super.node_index = CGPU_SINGLE_GPU_NODE_INDEX;
-        Ts[i].super.owns_image = false;
-        Ts[i].super.native_handle = Ts[i].pVkImage;
+        Ts[i].T.pVkImage = vimages[i];
+        Ts[i].T.super.device = &D->super;
+        Ts[i].T.super.info = &Ts[i].I;
+
+        Ts[i].I.is_cube = false;
+        Ts[i].I.array_size_minus_one = 0;
+        Ts[i].I.sample_count = CGPU_SAMPLE_COUNT_1; // TODO: ?
+        Ts[i].I.format = VkUtil_FormatTranslateToCGPU(surface_format.format);
+        Ts[i].I.aspect_mask = VkUtil_DeterminAspectMask(VkUtil_FormatTranslateToVk(Ts[i].I.format), false);
+        Ts[i].I.depth = 1;
+        Ts[i].I.width = extent.width;
+        Ts[i].I.height = extent.height;
+        Ts[i].I.mip_levels = 1;
+        Ts[i].I.node_index = CGPU_SINGLE_GPU_NODE_INDEX;
+        Ts[i].I.owns_image = false;
     }
     CGPUTextureId* Vs = (CGPUTextureId*)(Ts + buffer_count);
     for (uint32_t i = 0; i < buffer_count; i++)
     {
-        Vs[i] = &Ts[i].super;
+        Vs[i] = &Ts[i].T.super;
     }
     S->super.back_buffers = Vs;
     S->pVkSurface = vkSurface;
@@ -2330,12 +2372,11 @@ uint32_t cgpu_acquire_next_image_vulkan(CGPUSwapChainId swapchain, const struct 
     VkSemaphore vsemaphore = Semaphore ? Semaphore->pVkSemaphore : VK_NULL_HANDLE;
     VkFence vfence = Fence ? Fence->pVkFence : VK_NULL_HANDLE;
 
-    vk_res = vkAcquireNextImageKHR(
-    D->pVkDevice, SC->pVkSwapChain,
-    UINT64_MAX,
-    vsemaphore, // sem
-    vfence,     // fence
-    &idx);
+    vk_res = vkAcquireNextImageKHR(D->pVkDevice, SC->pVkSwapChain,
+        UINT64_MAX,
+        vsemaphore, // sem
+        vfence,     // fence
+        &idx);
 
     // If swapchain is out of date, let caller know by setting image index to -1
     if (vk_res == VK_ERROR_OUT_OF_DATE_KHR)

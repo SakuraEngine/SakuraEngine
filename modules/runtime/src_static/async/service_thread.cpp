@@ -33,7 +33,7 @@ ServiceThread::~ServiceThread() SKR_NOEXCEPT
 
 ServiceThread::Status ServiceThread::get_status() const SKR_NOEXCEPT
 {
-    return static_cast<Status>(skr_atomicu32_load_acquire(&status));
+    return static_cast<Status>(skr_atomic32_load_acquire(&status));
 }
 
 void ServiceThread::set_status(Status to_set) SKR_NOEXCEPT
@@ -63,7 +63,7 @@ void ServiceThread::set_status(Status to_set) SKR_NOEXCEPT
             SKR_ASSERT(S == kStatusStopped);
         }
     }
-    skr_atomicu32_store_release(&status, to_set);
+    skr_atomic32_store_release(&status, to_set);
 }
 
 void ServiceThread::request_stop() SKR_NOEXCEPT
@@ -96,7 +96,7 @@ void ServiceThread::wait_stop(uint32_t fatal_timeout) SKR_NOEXCEPT
 void ServiceThread::run() SKR_NOEXCEPT
 {
     // record last turn id
-    const auto orid = skr_atomicu32_load_relaxed(&rid);
+    const auto orid = skr_atomic32_load_relaxed(&rid);
     
     // signal waking
     set_status(kStatusWaking);
@@ -106,7 +106,7 @@ void ServiceThread::run() SKR_NOEXCEPT
     }
 
     // secure runned
-    wait_timeout([&] { return skr_atomicu32_load_relaxed(&rid) > orid; }, 8);
+    wait_timeout([&] { return skr_atomic32_load_relaxed(&rid) > orid; }, 8);
 }
 
 void ServiceThread::request_exit() SKR_NOEXCEPT

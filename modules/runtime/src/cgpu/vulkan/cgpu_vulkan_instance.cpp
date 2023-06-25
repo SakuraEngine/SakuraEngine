@@ -179,10 +179,15 @@ struct CGPUVkExtensionsTable : public skr::parallel_flat_hash_map<eastl::string,
             }
             for (uint32_t j = 0; j < Adapter.mExtensionsCount; j++)
             {
-                Table[Adapter.pExtensionNames[j]] = true;
+                const auto extension_name = Adapter.pExtensionNames[j];
+                Table[extension_name] = true;
             }
             // Cache
             {
+                Adapter.buffer_device_address = Table[VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME];
+                Adapter.descriptor_buffer = Table[VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME];
+                Adapter.descriptor_indexing = Table[VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME];
+
                 Adapter.debug_marker = Table[VK_EXT_DEBUG_MARKER_EXTENSION_NAME];
                 Adapter.dedicated_allocation = Table[VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME];
                 Adapter.memory_req2 = Table[VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME];
@@ -194,8 +199,8 @@ struct CGPUVkExtensionsTable : public skr::parallel_flat_hash_map<eastl::string,
                 Adapter.draw_indirect_count = Table[VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME];
                 Adapter.amd_draw_indirect_count = Table[VK_AMD_DRAW_INDIRECT_COUNT_EXTENSION_NAME];
                 Adapter.amd_gcn_shader = Table[VK_AMD_GCN_SHADER_EXTENSION_NAME];
-                Adapter.descriptor_indexing = Table[VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME];
                 Adapter.sampler_ycbcr = Table[VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME];
+                
 #ifdef ENABLE_NSIGHT_AFTERMATH
                 Adapter.nv_diagnostic_checkpoints = Table[VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME];
                 Adapter.nv_diagnostic_config = Table[VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME];
@@ -213,17 +218,19 @@ struct CGPUVkExtensionsTable : public skr::parallel_flat_hash_map<eastl::string,
         auto& Table = *I->pExtensionsTable;
         for (uint32_t j = 0; j < wanted_instance_extensions_count; j++)
         {
-            Table.insert({ wanted_instance_extensions[j], false });
+            const auto key = wanted_instance_extensions[j];
+            Table.insert_or_assign(key, false);
         }
         for (uint32_t j = 0; j < I->mExtensionsCount; j++)
         {
-            Table.insert({ I->pExtensionNames[j], true });
+            const auto key = I->pExtensionNames[j];
+            Table.insert_or_assign(key, true);
         }
         // Cache
         {
             I->device_group_creation = Table[VK_KHR_DEVICE_GROUP_CREATION_EXTENSION_NAME]; // Linked GPU
             I->debug_utils = Table[VK_EXT_DEBUG_UTILS_EXTENSION_NAME];
-            I->debug_report = !I->debug_utils && Table[VK_EXT_DEBUG_UTILS_EXTENSION_NAME];
+            I->debug_report = !I->debug_utils && Table[VK_EXT_DEBUG_REPORT_EXTENSION_NAME];
         }
     }
 };
@@ -307,8 +314,8 @@ CGPUInstanceId cgpu_create_instance_vulkan(CGPUInstanceDescriptor const* desc)
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
     // Instance Layers
-    createInfo.enabledLayerCount = (uint32_t)blackboard.instance_layers.size();
-    createInfo.ppEnabledLayerNames = blackboard.instance_layers.data();
+    createInfo.enabledLayerCount = I->mLayersCount;
+    createInfo.ppEnabledLayerNames = I->pLayerNames;
     // Instance Extensions
     createInfo.enabledExtensionCount = I->mExtensionsCount;
     createInfo.ppEnabledExtensionNames = I->pExtensionNames;

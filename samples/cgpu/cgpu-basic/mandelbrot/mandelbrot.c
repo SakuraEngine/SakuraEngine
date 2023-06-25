@@ -149,7 +149,7 @@ void ComputeFunc(void* usrdata)
     // Create readback buffer
     CGPUBufferDescriptor rb_desc = {
         .name = "ReadbackBuffer",
-        .flags = CGPU_BCF_OWN_MEMORY_BIT,
+        .flags = CGPU_BCF_NONE,
         .descriptors = CGPU_RESOURCE_TYPE_NONE,
         .start_state = CGPU_RESOURCE_STATE_COPY_DEST,
         .memory_usage = CGPU_MEM_USAGE_GPU_TO_CPU,
@@ -223,7 +223,7 @@ void ComputeFunc(void* usrdata)
             .size = buffer_desc.size
         };
         cgpu_map_buffer(readback_buffer, &map_range);
-        Pixel* mapped_memory = (Pixel*)readback_buffer->cpu_mapped_address;
+        Pixel* mapped_memory = (Pixel*)readback_buffer->info->cpu_mapped_address;
         image = sakura_malloc(MANDELBROT_WIDTH * MANDELBROT_HEIGHT * 4);
         for (int i = 0; i < MANDELBROT_WIDTH * MANDELBROT_HEIGHT; i += 1)
         {

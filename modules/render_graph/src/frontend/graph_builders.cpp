@@ -399,15 +399,15 @@ RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::import(CGPUBufferId buff
     node.imported = buffer;
     node.frame_buffer = buffer;
     node.init_state = init_state;
-    node.descriptor.descriptors = buffer->descriptors;
-    node.descriptor.size = buffer->size;
-    node.descriptor.memory_usage = (ECGPUMemoryUsage)buffer->memory_usage;
+    node.descriptor.descriptors = buffer->info->descriptors;
+    node.descriptor.size = buffer->info->size;
+    node.descriptor.memory_usage = (ECGPUMemoryUsage)buffer->info->memory_usage;
     return *this;
 }
 
-RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::owns_memory() SKR_NOEXCEPT
+RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::allocate_dedicated() SKR_NOEXCEPT
 {
-    node.descriptor.flags |= CGPU_BCF_OWN_MEMORY_BIT;
+    node.descriptor.flags |= CGPU_BCF_DEDICATED_BIT;
     return *this;
 }
 
@@ -522,7 +522,7 @@ RenderGraph::TextureBuilder::TextureBuilder(RenderGraph& graph, TextureNode& nod
 {
     node.descriptor.sample_count = CGPU_SAMPLE_COUNT_1;
     node.descriptor.descriptors = CGPU_RESOURCE_TYPE_TEXTURE;
-    node.descriptor.is_dedicated = false;
+    node.descriptor.is_restrict_dedicated = false;
 }
 
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(const char8_t* name) SKR_NOEXCEPT
@@ -548,19 +548,20 @@ RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::with_tags(uint32_t tag
 
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::import(CGPUTextureId texture, ECGPUResourceState init_state) SKR_NOEXCEPT
 {
+    const auto texInfo = texture->info;
     node.imported = texture;
     node.frame_texture = texture;
     node.init_state = init_state;
-    node.descriptor.width = texture->width;
-    node.descriptor.height = texture->height;
-    node.descriptor.depth = texture->depth;
-    node.descriptor.format = (ECGPUFormat)texture->format;
-    node.descriptor.array_size = texture->array_size_minus_one + 1;
-    node.descriptor.sample_count = texture->sample_count;
+    node.descriptor.width = texInfo->width;
+    node.descriptor.height = texInfo->height;
+    node.descriptor.depth = texInfo->depth;
+    node.descriptor.format = (ECGPUFormat)texInfo->format;
+    node.descriptor.array_size = texInfo->array_size_minus_one + 1;
+    node.descriptor.sample_count = texInfo->sample_count;
     return *this;
 }
 
-RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::extent(uint32_t width, uint32_t height, uint32_t depth) SKR_NOEXCEPT
+RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::extent(uint64_t width, uint64_t height, uint64_t depth) SKR_NOEXCEPT
 {
     node.descriptor.width = width;
     node.descriptor.height = height;
@@ -607,9 +608,9 @@ RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_depth_stencil() 
     return *this;
 }
 
-RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::owns_memory() SKR_NOEXCEPT
+RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allocate_dedicated() SKR_NOEXCEPT
 {
-    node.descriptor.flags |= CGPU_TCF_OWN_MEMORY_BIT;
+    node.descriptor.flags |= CGPU_TCF_DEDICATED_BIT;
     return *this;
 }
 

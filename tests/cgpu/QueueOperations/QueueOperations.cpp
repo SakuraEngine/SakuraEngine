@@ -121,15 +121,15 @@ TEST_P(QueueOperations, TransferCmdReadback)
         desc.name = "UploadBuffer";
         upload_buffer = cgpu_create_buffer(device, &desc);
         EXPECT_NE(upload_buffer, CGPU_NULLPTR);
-        EXPECT_NE(upload_buffer->cpu_mapped_address, CGPU_NULLPTR);
-        uint16_t* indices = (uint16_t*)upload_buffer->cpu_mapped_address;
+        EXPECT_NE(upload_buffer->info->cpu_mapped_address, CGPU_NULLPTR);
+        uint16_t* indices = (uint16_t*)upload_buffer->info->cpu_mapped_address;
         indices[0] = 2;
         indices[1] = 3;
         indices[2] = 3;
     }
     {
         DECLARE_ZERO(BufferDescriptor, desc)
-        desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+        desc.flags = CGPU_BCF_NONE;
         desc.descriptors = CGPU_RESOURCE_TYPE_NONE;
         desc.start_state = RESOURCE_STATE_COPY_DEST;
         desc.memory_usage = CGPU_MEM_USAGE_GPU_TO_CPU;
@@ -139,7 +139,7 @@ TEST_P(QueueOperations, TransferCmdReadback)
         desc.name = "ReadbackBuffer";
         index_buffer = cgpu_create_buffer(device, &desc);
         EXPECT_NE(index_buffer, CGPU_NULLPTR);
-        EXPECT_EQ(index_buffer->cpu_mapped_address, CGPU_NULLPTR);
+        EXPECT_EQ(index_buffer->info->cpu_mapped_address, CGPU_NULLPTR);
     }
     // Transfer
     QueueId transferQueue;
@@ -183,7 +183,7 @@ TEST_P(QueueOperations, TransferCmdReadback)
                 range.offset = 0;
                 range.size = sizeof(uint16_t) * 3;
                 cgpu_map_buffer(index_buffer, &range);
-                uint16_t* read_indices = (uint16_t*)index_buffer->cpu_mapped_address;
+                uint16_t* read_indices = (uint16_t*)index_buffer->info->cpu_mapped_address;
                 EXPECT_EQ(read_indices[0], 2);
                 EXPECT_EQ(read_indices[1], 3);
                 EXPECT_EQ(read_indices[2], 3);

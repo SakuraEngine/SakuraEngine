@@ -88,13 +88,22 @@ T* cgpu_new_placed(void* memory, Args&&... args)
 template <typename T, typename... Args>
 T* cgpu_new(Args&&... args)
 {
-    return SkrNew<T>(std::forward<Args>(args)...);
+    return SkrNewZeroed<T>(std::forward<Args>(args)...);
 }
+
+template <typename T, typename... Args>
+T* cgpu_new_sized(uint64_t size, Args&&... args)
+{
+    void* ptr = cgpu_calloc_aligned(1, size, alignof(T));
+    return cgpu_new_placed<T>(ptr, std::forward<Args>(args)...);
+}
+
 template <typename T>
 void cgpu_delete_placed(T* object)
 {
     object->~T();
 }
+
 template <typename T>
 void cgpu_delete(T* object)
 {

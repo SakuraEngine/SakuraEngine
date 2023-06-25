@@ -108,9 +108,10 @@ ECGPUFormat TranslateFormat(EGDIImageFormat format)
 
 void GDITexture_RenderGraph::intializeBindTable() SKR_NOEXCEPT
 {
+    const auto texInfo = texture->info;
     CGPUTextureViewDescriptor view_desc = {};
     view_desc.texture = texture;
-    view_desc.format = (ECGPUFormat)texture->format;
+    view_desc.format = texInfo->format;
     view_desc.array_layer_count = 1;
     view_desc.base_array_layer = 0;
     view_desc.mip_level_count = 1;
@@ -240,12 +241,12 @@ IGDIRenderer* GDITexture_RenderGraph::get_renderer() const SKR_NOEXCEPT
 
 uint32_t GDITexture_RenderGraph::get_width() const SKR_NOEXCEPT
 {
-    return texture ? texture->width : 1;
+    return texture ? texture->info->width : 1;
 }
 
 uint32_t GDITexture_RenderGraph::get_height() const SKR_NOEXCEPT
 {
-    return texture ? texture->height : 1;
+    return texture ? texture->info->height : 1;
 }
 
 EGDITextureType GDITexture_RenderGraph::get_type() const SKR_NOEXCEPT

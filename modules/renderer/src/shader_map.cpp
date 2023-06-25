@@ -45,7 +45,7 @@ struct ShaderMapImpl : public skr_shader_map_t
     {
         for (auto iter : mShaderMap)
         {
-            if (skr_atomicu32_load_relaxed(&iter.second->frame) != UINT64_MAX)
+            if (skr_atomicu64_load_relaxed(&iter.second->frame) != UINT64_MAX)
             {
                 cgpu_free_shader_library(iter.second->shader);
             }
@@ -113,7 +113,7 @@ CGPUShaderLibraryId ShaderMapImpl::find_shader(const skr_platform_shader_identif
     auto found = mShaderMap.find(identifier);
     if (found != mShaderMap.end())
     {
-        if (skr_atomicu32_load_relaxed(&found->second->frame) != UINT64_MAX)
+        if (skr_atomicu64_load_relaxed(&found->second->frame) != UINT64_MAX)
         {
             return found->second->shader;
         }
@@ -127,7 +127,7 @@ bool ShaderMapImpl::free_shader(const skr_platform_shader_identifier_t& identifi
     if (found != mShaderMap.end())
     {
     #ifdef _DEBUG
-        const auto frame = skr_atomicu32_load_relaxed(&found->second->frame);
+        const auto frame = skr_atomicu64_load_relaxed(&found->second->frame);
         SKR_ASSERT(frame != UINT64_MAX && "this shader is freed but never installed, check your code for errors!");
     #endif
         skr_atomicu32_add_relaxed(&found->second->rc, -1);

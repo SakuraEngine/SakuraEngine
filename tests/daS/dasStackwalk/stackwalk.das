@@ -4,7 +4,6 @@ require rtti
 require debugapi
 
 // sample of debug agent
-
 class SampleDataWalker : DapiDataWalker
     def override Float ( var value:float & ) : void
         print("[float] {value}")

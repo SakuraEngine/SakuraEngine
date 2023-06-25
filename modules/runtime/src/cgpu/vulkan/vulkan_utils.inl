@@ -444,7 +444,7 @@ FORCEINLINE static VkPipelineStageFlags VkUtil_DeterminePipelineStageFlags(CGPUA
 
 FORCEINLINE static VkAccessFlags VkUtil_ResourceStateToVkAccessFlags(ECGPUResourceState state)
 {
-	VkAccessFlags ret = 0;
+	VkAccessFlags ret = VK_ACCESS_NONE;
 	if (state & CGPU_RESOURCE_STATE_COPY_SOURCE)
 		ret |= VK_ACCESS_TRANSFER_READ_BIT;
 	if (state & CGPU_RESOURCE_STATE_COPY_DEST)
@@ -466,7 +466,7 @@ FORCEINLINE static VkAccessFlags VkUtil_ResourceStateToVkAccessFlags(ECGPUResour
 	if (state & CGPU_RESOURCE_STATE_SHADER_RESOURCE)
 		ret |= VK_ACCESS_SHADER_READ_BIT;
 	if (state & CGPU_RESOURCE_STATE_PRESENT)
-		ret |= VK_ACCESS_MEMORY_READ_BIT;
+		ret |= VK_ACCESS_NONE;
 #ifdef ENABLE_RAYTRACING
 	if (state & CGPU_RESOURCE_STATE_ACCELERATION_STRUCTURE)
 		ret |= VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_NV | VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_NV;

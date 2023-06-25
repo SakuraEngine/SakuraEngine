@@ -50,8 +50,8 @@ protected:
     friend struct ServiceFunc;
     ServiceFunc f;
     NamedThread t;
-    SAtomicU32 rid = 0;
+    SAtomic32 rid = 0;
 private:
-    SAtomicU32 status = kStatusStopped;
+    SAtomic32 status = kStatusStopped;
 };
 }

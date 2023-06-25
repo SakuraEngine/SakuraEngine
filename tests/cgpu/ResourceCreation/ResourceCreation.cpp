@@ -95,7 +95,7 @@ TEST_P(ResourceCreation, CreateDStorageQueue)
 TEST_P(ResourceCreation, CreateIndexBuffer)
 {
     DECLARE_ZERO(CGPUBufferDescriptor, desc)
-    desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+    desc.flags = CGPU_BCF_NONE;
     desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER;
     desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
     desc.element_stride = sizeof(uint16_t);
@@ -104,7 +104,7 @@ TEST_P(ResourceCreation, CreateIndexBuffer)
     desc.name = u8"IndexBuffer";
     auto buffer = cgpu_create_buffer(device, &desc);
     EXPECT_NE(buffer, CGPU_NULLPTR);
-    EXPECT_EQ(buffer->cpu_mapped_address, CGPU_NULLPTR);
+    EXPECT_EQ(buffer->info->cpu_mapped_address, CGPU_NULLPTR);
     cgpu_free_buffer(buffer);
 }
 
@@ -112,7 +112,7 @@ TEST_P(ResourceCreation, CreateTexture)
 {
     DECLARE_ZERO(CGPUTextureDescriptor, desc)
     desc.name = u8"Texture";
-    desc.flags = CGPU_TCF_OWN_MEMORY_BIT;
+    desc.flags = CGPU_TCF_DEDICATED_BIT;
     desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
     desc.start_state = CGPU_RESOURCE_STATE_COMMON;
     desc.descriptors = CGPU_RESOURCE_TYPE_TEXTURE;
@@ -124,10 +124,29 @@ TEST_P(ResourceCreation, CreateTexture)
     cgpu_free_texture(texture);
 }
 
+TEST_P(ResourceCreation, CreateTiledTexture)
+{
+    if (GetParam() == CGPU_BACKEND_D3D12)
+    {
+        DECLARE_ZERO(CGPUTextureDescriptor, desc)
+        desc.name = u8"Texture";
+        desc.flags = CGPU_TCF_DEDICATED_BIT | CGPU_TCF_TILED_RESOURCE;
+        desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
+        desc.start_state = CGPU_RESOURCE_STATE_COMMON;
+        desc.descriptors = CGPU_RESOURCE_TYPE_TEXTURE;
+        desc.width = 512;
+        desc.height = 512;
+        desc.depth = 1;
+        auto texture = cgpu_create_texture(device, &desc);
+        EXPECT_NE(texture, CGPU_NULLPTR);
+        cgpu_free_texture(texture);
+    }
+}
+
 TEST_P(ResourceCreation, CreateUploadBuffer)
 {
     DECLARE_ZERO(CGPUBufferDescriptor, desc)
-    desc.flags = CGPU_BCF_OWN_MEMORY_BIT;
+    desc.flags = CGPU_BCF_NONE;
     desc.descriptors = CGPU_RESOURCE_TYPE_INDEX_BUFFER | CGPU_RESOURCE_TYPE_BUFFER;
     desc.memory_usage = CGPU_MEM_USAGE_CPU_TO_GPU;
     desc.element_stride = sizeof(uint16_t);
@@ -141,7 +160,7 @@ TEST_P(ResourceCreation, CreateUploadBuffer)
     range.size = desc.size;
     {
         cgpu_map_buffer(buffer, &range);
-        uint16_t* indices = (uint16_t*)buffer->cpu_mapped_address;
+        uint16_t* indices = (uint16_t*)buffer->info->cpu_mapped_address;
         indices[0] = 2;
         indices[1] = 3;
         indices[2] = 3;
@@ -149,7 +168,7 @@ TEST_P(ResourceCreation, CreateUploadBuffer)
     }
     {
         cgpu_map_buffer(buffer, &range);
-        uint16_t* read_indices = (uint16_t*)buffer->cpu_mapped_address;
+        uint16_t* read_indices = (uint16_t*)buffer->info->cpu_mapped_address;
         EXPECT_EQ(read_indices[0], 2);
         EXPECT_EQ(read_indices[1], 3);
         EXPECT_EQ(read_indices[2], 3);
@@ -170,7 +189,7 @@ TEST_P(ResourceCreation, CreateUploadBufferPersistent)
     desc.name = u8"UploadBuffer";
     auto buffer = cgpu_create_buffer(device, &desc);
     EXPECT_NE(buffer, CGPU_NULLPTR);
-    EXPECT_NE(buffer->cpu_mapped_address, CGPU_NULLPTR);
+    EXPECT_NE(buffer->info->cpu_mapped_address, CGPU_NULLPTR);
     cgpu_free_buffer(buffer);
 }
 
@@ -189,13 +208,13 @@ TEST_P(ResourceCreation, CreateHostVisibleDeviceMemory)
     if (detail->support_host_visible_vram)
     {
         EXPECT_NE(buffer, CGPU_NULLPTR);
-        EXPECT_NE(buffer->cpu_mapped_address, CGPU_NULLPTR);
+        EXPECT_NE(buffer->info->cpu_mapped_address, CGPU_NULLPTR);
     }
     else
     {
         if (buffer)
         {
-            EXPECT_EQ(buffer->cpu_mapped_address, CGPU_NULLPTR);
+            EXPECT_EQ(buffer->info->cpu_mapped_address, CGPU_NULLPTR);
         }
     }
     cgpu_free_buffer(buffer);
@@ -206,7 +225,7 @@ TEST_P(ResourceCreation, CreateConstantBufferX)
     auto buffer = cgpux_create_mapped_constant_buffer(device,
         sizeof(uint16_t) * 3, u8"ConstantBuffer", true);
     EXPECT_NE(buffer, CGPU_NULLPTR);
-    EXPECT_NE(buffer->cpu_mapped_address, CGPU_NULLPTR);
+    EXPECT_NE(buffer->info->cpu_mapped_address, CGPU_NULLPTR);
     cgpu_free_buffer(buffer);
 }
 
