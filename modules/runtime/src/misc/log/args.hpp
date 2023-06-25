@@ -12,6 +12,8 @@ struct Node : public skr::SInterface
     SKR_RC_OBJECT_BODY
     virtual ~Node() SKR_NOEXCEPT = default;
     skr::SObjectPtr<Node<>> next_;
+
+    // argument_value_formatter_type...
 };
 
 template <typename NodeType = Node<void>>
@@ -39,6 +41,11 @@ public:
         new_node->next = std::move(head_);
         head_ = std::move(new_node);
         return value;
+    }
+    template <typename...Args>
+    void push(Args&&...args)
+    {
+        auto _ = { push<Args>(std::forward<Args>(args))... };
     }
 };
 

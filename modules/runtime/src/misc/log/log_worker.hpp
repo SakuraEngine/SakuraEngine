@@ -1,9 +1,14 @@
 #pragma once
-#include "containers/concurrent_queue.h"
 
 namespace skr {
 namespace log {
 
-
+struct LogWorker
+{
+    void run()
+    {
+        
+    }
+};
 
 } } // namespace skr::log
