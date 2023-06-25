@@ -191,21 +191,10 @@ FORCEINLINE static intptr_t skr_atomicptr_max_relaxed(SAtomicPtr* pVar, intptr_t
 #endif
 
 // Yield
-#if defined(__cplusplus)
-#include <thread>
-static inline void skr_atomic_yield(void) {
-	std::this_thread::yield();
-}
-#elif defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-static inline void skr_atomic_yield(void) {
-	YieldProcessor();
-}
-#elif defined(__SSE2__)
+#if defined(__SSE2__)
 #include <emmintrin.h>
 static inline void skr_atomic_yield(void) {
-		_mm_pause();
+	_mm_pause();
 }
 #elif (defined(__GNUC__) || defined(__clang__)) && \
 	(defined(__x86_64__) || defined(__i386__) || defined(__arm__) || defined(__armel__) || defined(__ARMEL__) || \
@@ -247,6 +236,17 @@ static inline void skr_atomic_yield(void) {
 #include <sched.h>
 static inline void skr_atomic_yield(void) {
 	sched_yield();
+}
+#elif defined(__cplusplus)
+#include <thread>
+static inline void skr_atomic_yield(void) {
+	std::this_thread::yield();
+}
+#elif defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+static inline void skr_atomic_yield(void) {
+	YieldProcessor();
 }
 #else
 #include <unistd.h>

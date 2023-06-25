@@ -1,7 +1,7 @@
 #pragma once
 #include "type/type.h"
 #include "enum_as_byte.hpp"
-#include <string_view>
+#include <string_view> // TODO: replace with skr::string_view
 
 // fwd declares
 namespace skr {

@@ -6,6 +6,8 @@
 #include "math/rtm/qvvf.h"
 #include <cmath>
 
+#include "tracy/Tracy.hpp"
+
 namespace skr {
 namespace gdi {
 // HACK
