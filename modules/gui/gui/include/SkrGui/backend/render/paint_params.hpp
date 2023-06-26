@@ -11,28 +11,6 @@ namespace skr::gui
 using ITexture = IGDITexture;
 using IMaterial = IGDIMaterial;
 
-enum class EPaintType : uint8_t
-{
-    Custom,
-    Color,
-    Texture,
-    Material,
-};
-
-enum class EStrokeCap : uint8_t
-{
-    Butt,
-    Round,
-    Square,
-};
-
-enum class EStrokeJoin : uint8_t
-{
-    Miter,
-    Round,
-    Bevel,
-};
-
 enum class EBlendFactor : uint8_t
 {
     Zero,
@@ -71,4 +49,22 @@ struct BlendMode {
     EBlendFactor src_alpha = EBlendFactor::One;
     EBlendFactor dst_alpha = EBlendFactor::OneMinusSrcAlpha;
 };
+
+struct PaintVertex {
+    skr_float4_t position;
+    skr_float2_t texcoord;
+    skr_float2_t aa;
+    skr_float2_t clipUV; // uv in clip-space
+    skr_float2_t clipUV2;
+    uint32_t     color;
+};
+using PaintIndex = uint16_t;
+struct PaintCommand {
+    ITexture*  texture = nullptr;
+    IMaterial* material = nullptr;
+    PaintIndex index_begin = 0;
+    PaintIndex index_count = 0;
+    Swizzle    texture_swizzle = {};
+};
+
 } // namespace skr::gui

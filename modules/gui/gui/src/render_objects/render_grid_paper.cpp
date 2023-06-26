@@ -25,12 +25,8 @@ void RenderGridPaper::paint(NotNull<PaintingContext*> context, Offset offset) SK
         auto _ = canvas->paint_scope();
 
         // background
-        canvas->path_begin();
-        canvas->path_rect(paint_rect);
-        canvas->path_fill(ColorBrush(background_color));
-
+        canvas->draw_rect(paint_rect, FillPen(), ColorBrush(background_color));
         // draw grid
-        canvas->state_stroke_width(2.0f);
         canvas->path_begin();
         for (float x = std::ceil((paint_rect.left - 1) / grid_size.width) * grid_size.width; x < paint_rect.right + 1; x += grid_size.width)
         {
@@ -42,10 +38,9 @@ void RenderGridPaper::paint(NotNull<PaintingContext*> context, Offset offset) SK
             canvas->path_move_to({ paint_rect.left, y });
             canvas->path_line_to({ paint_rect.right, y });
         }
-        canvas->path_stroke(ColorBrush(grid_color));
+        canvas->path_end(StrokePen().width(2), ColorBrush(grid_color));
 
         // draw sub grid
-        canvas->state_stroke_width(1.0f);
         canvas->path_begin();
         for (float x = std::ceil((paint_rect.left - 1) / sub_grid_size.width) * sub_grid_size.width; x < paint_rect.right + 1; x += sub_grid_size.width)
         {
@@ -57,7 +52,7 @@ void RenderGridPaper::paint(NotNull<PaintingContext*> context, Offset offset) SK
             canvas->path_move_to({ paint_rect.left, y });
             canvas->path_line_to({ paint_rect.right, y });
         }
-        canvas->path_stroke(ColorBrush(sub_grid_color));
+        canvas->path_end(StrokePen().width(1), ColorBrush(sub_grid_color));
     }
 
     Super::paint(context, offset);

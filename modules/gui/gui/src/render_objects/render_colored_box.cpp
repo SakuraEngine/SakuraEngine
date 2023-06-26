@@ -11,11 +11,7 @@ void RenderColoredBox::paint(NotNull<PaintingContext*> context, Offset offset) S
         auto canvas = context->canvas();
 
         auto _ = canvas->paint_scope();
-        {
-            auto _ = canvas->path_fill_scope(ColorBrush(color()));
-            canvas->state_anti_alias(false);
-            canvas->path_rect(Rect::OffsetSize(offset, size()));
-        }
+        canvas->draw_rect(Rect::OffsetSize(offset, size()), FillPen().anti_alias(false), ColorBrush(color()));
     }
 
     if (child())

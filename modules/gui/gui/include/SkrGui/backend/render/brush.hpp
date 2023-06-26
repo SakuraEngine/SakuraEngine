@@ -3,284 +3,188 @@
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/backend/render/paint_params.hpp"
 
+// brush base
 namespace skr::gui
 {
-// TODO. better brush
-// Custom Brush
-// Color Brush
-// Surface Brush
-// Surface Nine Brush
-struct CustomBrush {
-    FunctionRef<void(GDIVertex&)> _custom_paint = nullptr;
-
-    inline CustomBrush() SKR_NOEXCEPT = default;
-    inline CustomBrush(FunctionRef<void(GDIVertex&)> custom_paint) SKR_NOEXCEPT : _custom_paint(custom_paint) {}
+enum class EBrushType : uint8_t
+{
+    Color,
+    Surface,
+    SurfaceNine,
 };
 
-struct ColorBrush {
+using CustomVertexFuncRef = FunctionRef<void(PaintVertex&)>;
+
+struct ColorBrush;
+struct SurfaceBrush;
+struct SurfaceNineBrush;
+
+struct Brush {
+    inline EBrushType type() const SKR_NOEXCEPT { return _type; }
+
+    auto& as_color() SKR_NOEXCEPT;
+    auto& as_color() const SKR_NOEXCEPT;
+    auto& as_surface() SKR_NOEXCEPT;
+    auto& as_surface() const SKR_NOEXCEPT;
+    auto& as_surface_nine() SKR_NOEXCEPT;
+    auto& as_surface_nine() const SKR_NOEXCEPT;
+
     Color _color = { 1, 1, 1, 1 };
 
-    inline ColorBrush() SKR_NOEXCEPT = default;
-    inline ColorBrush(const Color& color) SKR_NOEXCEPT : _color(color) {}
+protected:
+    inline Brush(EBrushType type) SKR_NOEXCEPT
+        : _type(type)
+    {
+    }
+    inline Brush(EBrushType type, const Color& color) SKR_NOEXCEPT
+        : _color(color),
+          _type(type)
+    {
+    }
+    EBrushType _type;
 };
+} // namespace skr::gui
 
-struct TextureBrush {
-    ITexture*                     _texture = nullptr;
-    Color                         _color = { 1, 1, 1, 1 };
-    Rect                          _uv_rect = {};
-    Rect                          _uv_rect_nine_total = {};
-    float                         _rotation = 0.0f;
-    Swizzle                       _swizzle = {};
-    FunctionRef<void(GDIVertex&)> _custom_paint = nullptr;
-
-    inline TextureBrush() SKR_NOEXCEPT = default;
-    inline TextureBrush(ITexture* texture) SKR_NOEXCEPT
-        : _texture(texture),
-          _color{ 1, 1, 1, 1 },
-          _uv_rect{},
-          _uv_rect_nine_total{},
-          _rotation(0.0f),
-          _swizzle{},
-          _custom_paint(nullptr)
+// color brush
+namespace skr::gui
+{
+struct ColorBrush : public Brush {
+    inline ColorBrush() SKR_NOEXCEPT
+        : Brush(EBrushType::Color)
+    {
+    }
+    inline ColorBrush(const Color& color) SKR_NOEXCEPT
+        : Brush(EBrushType::Color, color)
     {
     }
 
-    TextureBrush& color(Color color) SKR_NOEXCEPT
+    // params
+    CustomVertexFuncRef _custom = nullptr;
+
+    // builder
+    inline ColorBrush& custom(CustomVertexFuncRef custom) SKR_NOEXCEPT
+    {
+        _custom = custom;
+        return *this;
+    }
+};
+} // namespace skr::gui
+
+// surface brush
+namespace skr::gui
+{
+struct SurfaceBrush : public Brush {
+    inline SurfaceBrush(ITexture* surface) SKR_NOEXCEPT
+        : Brush(EBrushType::Surface),
+          _surface(surface)
+    {
+    }
+
+    // params
+    ITexture*           _surface = nullptr; // TODO. use ISurface
+    Rect                _uv_rect = {};
+    float               _rotation = 0.0f; // in degree
+    Swizzle             _swizzle = {};
+    CustomVertexFuncRef _custom = nullptr;
+
+    // builder
+    inline SurfaceBrush& surface(ITexture* surface) SKR_NOEXCEPT
+    {
+        _surface = surface;
+        return *this;
+    }
+    inline SurfaceBrush& color(Color color) SKR_NOEXCEPT
     {
         _color = color;
         return *this;
     }
-    TextureBrush& uv_rect(Rect uv_rect) SKR_NOEXCEPT
+    inline SurfaceBrush& uv_rect(Rect uv_rect) SKR_NOEXCEPT
     {
         _uv_rect = uv_rect;
-        _uv_rect_nine_total = {};
         return *this;
     }
-    TextureBrush& uv_rect_nine(Rect center, Rect total) SKR_NOEXCEPT
-    {
-        _uv_rect = center;
-        _uv_rect_nine_total = total;
-        return *this;
-    }
-    TextureBrush& rotation(float rotation) SKR_NOEXCEPT
+    inline SurfaceBrush& rotation(float rotation) SKR_NOEXCEPT
     {
         _rotation = rotation;
         return *this;
     }
-    TextureBrush& swizzle(Swizzle swizzle) SKR_NOEXCEPT
+    inline SurfaceBrush& swizzle(Swizzle swizzle) SKR_NOEXCEPT
     {
         _swizzle = swizzle;
         return *this;
     }
-    TextureBrush& custom_paint(FunctionRef<void(GDIVertex&)> custom_paint) SKR_NOEXCEPT
+    inline SurfaceBrush& custom(CustomVertexFuncRef custom) SKR_NOEXCEPT
     {
-        _custom_paint = custom_paint;
+        _custom = custom;
         return *this;
     }
 };
+} // namespace skr::gui
 
-struct MaterialBrush {
-    IMaterial*                    _material = nullptr;
-    Color                         _color = { 1, 1, 1, 1 };
-    Rect                          _uv_rect = {};
-    Rect                          _uv_rect_nine_total = {};
-    float                         _rotation = 0.0f;
-    FunctionRef<void(GDIVertex&)> _custom_paint = nullptr;
-
-    inline MaterialBrush() SKR_NOEXCEPT = default;
-    inline MaterialBrush(IMaterial* material) SKR_NOEXCEPT
-        : _material(material),
-          _color{ 1, 1, 1, 1 },
-          _uv_rect{},
-          _uv_rect_nine_total{},
-          _rotation(0.0f),
-          _custom_paint(nullptr)
+// surface nine brush
+namespace skr::gui
+{
+struct SurfaceNineBrush : public Brush {
+    inline SurfaceNineBrush(ITexture* surface) SKR_NOEXCEPT
+        : Brush(EBrushType::SurfaceNine),
+          _surface(surface)
     {
     }
 
-    MaterialBrush& color(Color color) SKR_NOEXCEPT
+    // params
+    ITexture*           _surface = nullptr; // TODO. use ISurface
+    Rect                _uv_rect = {};
+    Rect                _inner_rect = {};
+    float               _rotation = 0.0f; // in degree
+    Swizzle             _swizzle = {};
+    CustomVertexFuncRef _custom = nullptr;
+
+    // builder
+    inline SurfaceNineBrush& surface(ITexture* surface) SKR_NOEXCEPT
+    {
+        _surface = surface;
+        return *this;
+    }
+    inline SurfaceNineBrush& color(Color color) SKR_NOEXCEPT
     {
         _color = color;
         return *this;
     }
-    MaterialBrush& uv_rect(Rect uv_rect) SKR_NOEXCEPT
+    inline SurfaceNineBrush& uv_rect(Rect uv_rect) SKR_NOEXCEPT
     {
         _uv_rect = uv_rect;
-        _uv_rect_nine_total = {};
         return *this;
     }
-    MaterialBrush& uv_rect_nine(Rect center, Rect total) SKR_NOEXCEPT
+    inline SurfaceNineBrush& inner_rect(Rect inner_rect) SKR_NOEXCEPT
     {
-        _uv_rect = center;
-        _uv_rect_nine_total = total;
+        _inner_rect = inner_rect;
         return *this;
     }
-    MaterialBrush& rotation(float rotation) SKR_NOEXCEPT
+    inline SurfaceNineBrush& rotation(float rotation) SKR_NOEXCEPT
     {
         _rotation = rotation;
         return *this;
     }
-    MaterialBrush& custom_paint(FunctionRef<void(GDIVertex&)> custom_paint) SKR_NOEXCEPT
+    inline SurfaceNineBrush& swizzle(Swizzle swizzle) SKR_NOEXCEPT
     {
-        _custom_paint = custom_paint;
+        _swizzle = swizzle;
+        return *this;
+    }
+    inline SurfaceNineBrush& custom(CustomVertexFuncRef custom) SKR_NOEXCEPT
+    {
+        _custom = custom;
         return *this;
     }
 };
+} // namespace skr::gui
 
-struct Brush {
-    EPaintType paint_type;
-    union
-    {
-        CustomBrush   custom;
-        ColorBrush    color;
-        TextureBrush  texture;
-        MaterialBrush material;
-    };
-
-    inline Brush() SKR_NOEXCEPT
-        : paint_type(EPaintType::Color),
-          color()
-    {
-    }
-
-    inline Brush(const ColorBrush& color_brush) SKR_NOEXCEPT
-        : paint_type(EPaintType::Color),
-          color(color_brush)
-    {
-    }
-    inline Brush(const TextureBrush& texture_brush) SKR_NOEXCEPT
-        : paint_type(EPaintType::Texture),
-          texture(texture_brush)
-    {
-    }
-    inline Brush(const MaterialBrush& material_brush) SKR_NOEXCEPT
-        : paint_type(EPaintType::Material),
-          material(material_brush)
-    {
-    }
-    inline Brush(const CustomBrush& custom_brush) SKR_NOEXCEPT
-        : paint_type(EPaintType::Custom),
-          custom(custom_brush)
-    {
-    }
-    inline Brush(ColorBrush&& color_brush) SKR_NOEXCEPT
-        : paint_type(EPaintType::Color),
-          color(std::move(color_brush))
-    {
-    }
-    inline Brush(TextureBrush&& texture_brush) SKR_NOEXCEPT
-        : paint_type(EPaintType::Texture),
-          texture(std::move(texture_brush))
-    {
-    }
-    inline Brush(MaterialBrush&& material_brush) SKR_NOEXCEPT
-        : paint_type(EPaintType::Material),
-          material(std::move(material_brush))
-    {
-    }
-    inline Brush(CustomBrush&& custom_brush) SKR_NOEXCEPT
-        : paint_type(EPaintType::Custom),
-          custom(std::move(custom_brush))
-    {
-    }
-
-    inline ~Brush() SKR_NOEXCEPT
-    {
-        switch (paint_type)
-        {
-            case EPaintType::Custom:
-                custom.~CustomBrush();
-                break;
-            case EPaintType::Color:
-                color.~ColorBrush();
-                break;
-            case EPaintType::Texture:
-                texture.~TextureBrush();
-                break;
-            case EPaintType::Material:
-                material.~MaterialBrush();
-                break;
-        }
-    }
-
-    inline Brush(const Brush& other) SKR_NOEXCEPT
-        : paint_type(other.paint_type)
-    {
-        switch (paint_type)
-        {
-            case EPaintType::Custom:
-                custom = other.custom;
-                break;
-            case EPaintType::Color:
-                color = other.color;
-                break;
-            case EPaintType::Texture:
-                texture = other.texture;
-                break;
-            case EPaintType::Material:
-                material = other.material;
-                break;
-        }
-    }
-    inline Brush(Brush&& other) SKR_NOEXCEPT
-        : paint_type(other.paint_type)
-    {
-        switch (paint_type)
-        {
-            case EPaintType::Custom:
-                custom = std::move(other.custom);
-                break;
-            case EPaintType::Color:
-                color = std::move(other.color);
-                break;
-            case EPaintType::Texture:
-                texture = std::move(other.texture);
-                break;
-            case EPaintType::Material:
-                material = std::move(other.material);
-                break;
-        }
-    }
-
-    inline Brush& operator=(const Brush& other) SKR_NOEXCEPT
-    {
-        paint_type = other.paint_type;
-        switch (paint_type)
-        {
-            case EPaintType::Custom:
-                custom = other.custom;
-                break;
-            case EPaintType::Color:
-                color = other.color;
-                break;
-            case EPaintType::Texture:
-                texture = other.texture;
-                break;
-            case EPaintType::Material:
-                material = other.material;
-                break;
-        }
-        return *this;
-    }
-    inline Brush& operator=(Brush&& other) SKR_NOEXCEPT
-    {
-        paint_type = other.paint_type;
-        switch (paint_type)
-        {
-            case EPaintType::Custom:
-                custom = std::move(other.custom);
-                break;
-            case EPaintType::Color:
-                color = std::move(other.color);
-                break;
-            case EPaintType::Texture:
-                texture = std::move(other.texture);
-                break;
-            case EPaintType::Material:
-                material = std::move(other.material);
-                break;
-        }
-        return *this;
-    }
-};
+// cast
+namespace skr::gui
+{
+inline auto& Brush::as_color() SKR_NOEXCEPT { return static_cast<ColorBrush&>(*this); }
+inline auto& Brush::as_color() const SKR_NOEXCEPT { return static_cast<const ColorBrush&>(*this); }
+inline auto& Brush::as_surface() SKR_NOEXCEPT { return static_cast<SurfaceBrush&>(*this); }
+inline auto& Brush::as_surface() const SKR_NOEXCEPT { return static_cast<const SurfaceBrush&>(*this); }
+inline auto& Brush::as_surface_nine() SKR_NOEXCEPT { return static_cast<SurfaceNineBrush&>(*this); }
+inline auto& Brush::as_surface_nine() const SKR_NOEXCEPT { return static_cast<const SurfaceNineBrush&>(*this); }
 } // namespace skr::gui
