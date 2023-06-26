@@ -2,9 +2,9 @@
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/math/geometry.hpp"
 
-// type
 namespace skr::gui
 {
+struct INativeDevice;
 enum class EResourceState
 {
     Requested,
@@ -13,22 +13,12 @@ enum class EResourceState
     Okay,
     Destroying,
 };
-}
 
-// interface
-namespace skr::gui
-{
 struct SKR_GUI_API ISurface {
     virtual ~ISurface() = default;
-};
 
-struct SKR_GUI_API IImage : public ISurface {
-};
-
-struct SKR_GUI_API ITexture : public ISurface {
-};
-
-struct SKR_GUI_API IMaterial : public ISurface {
+    virtual EResourceState state() const SKR_NOEXCEPT = 0;
+    virtual INativeDevice* device() const SKR_NOEXCEPT = 0;
 };
 
 } // namespace skr::gui

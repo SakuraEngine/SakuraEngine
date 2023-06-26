@@ -32,8 +32,7 @@ void RenderColorPicker::paint(NotNull<PaintingContext*> context, Offset offset) 
             // center
             canvas->path_begin();
             canvas->path_circle(center, radius);
-            canvas->state_stroke_width(outer_radius - inner_radius);
-            canvas->path_stroke(CustomBrush(+[](GDIVertex& v) {
+            canvas->path_end(StrokePen().width(outer_radius - inner_radius), ColorBrush().custom(+[](PaintVertex& v) {
                 // adjust the rotate to CW[H:0~360]
                 v.texcoord.x = 1.f - v.texcoord.x;
                 // adjust H:0 to 0 degree
@@ -45,8 +44,7 @@ void RenderColorPicker::paint(NotNull<PaintingContext*> context, Offset offset) 
             canvas->path_begin();
             canvas->path_circle(center, inner_radius - 0.5f);
             canvas->path_circle(center, outer_radius + 0.5f);
-            canvas->state_stroke_width(1.0f);
-            canvas->path_stroke(ColorBrush({ 0, 0, 0, 0.5f }));
+            canvas->path_end(StrokePen().width(1.0f), ColorBrush({ 0, 0, 0, 0.5f }));
         }
 
         // draw selector
@@ -57,10 +55,7 @@ void RenderColorPicker::paint(NotNull<PaintingContext*> context, Offset offset) 
             canvas->state_rotate(current_degree);
 
             // marker on
-            canvas->path_begin();
-            canvas->path_rect({ inner_radius - 1, -3, outer_radius + 1, 3 });
-            canvas->state_stroke_width(2.f);
-            canvas->path_stroke(ColorBrush({ 1, 1, 1, 0.7529411765f }));
+            canvas->draw_rect({ inner_radius - 1, -3, outer_radius + 1, 3 }, StrokePen().width(2.0f), ColorBrush({ 1, 1, 1, 0.7529411765f }));
 
             // center triangle
             canvas->path_begin();
@@ -68,21 +63,19 @@ void RenderColorPicker::paint(NotNull<PaintingContext*> context, Offset offset) 
             canvas->path_line_to(Offset::Radians(120.f / kPi, radius));
             canvas->path_line_to(Offset::Radians(-120.f / kPi, radius));
             canvas->path_close();
-            canvas->path_fill(CustomBrush([current_degree](GDIVertex& v) {
-                const auto   index = static_cast<uint32_t>(v.texcoord.x / 0.3333f);
-                const double S[] = { 0.0, 0.0, 1.0 };
-                const double V[] = { 0.0, 1.0, 1.0 };
-                if (0 <= index && index < 3)
-                {
-                    v.color = hsv_to_abgr(current_degree, S[index], V[index]);
-                }
-            }));
+            canvas->path_end(FillPen(), ColorBrush().custom(
+                                        [current_degree](PaintVertex& v) {
+                                            const auto   index = static_cast<uint32_t>(v.texcoord.x / 0.3333f);
+                                            const double S[] = { 0.0, 0.0, 1.0 };
+                                            const double V[] = { 0.0, 1.0, 1.0 };
+                                            if (0 <= index && index < 3)
+                                            {
+                                                v.color = hsv_to_abgr(current_degree, S[index], V[index]);
+                                            }
+                                        }));
 
             // select circle on triangle
-            canvas->path_begin();
-            canvas->path_circle(center, 5);
-            canvas->state_stroke_width(2.f);
-            canvas->path_stroke(ColorBrush({ 1, 1, 1, 0.7529411765f }));
+            canvas->draw_circle(center, 5, StrokePen().width(2), ColorBrush({ 1, 1, 1, 0.7529411765f }));
         }
     }
 
