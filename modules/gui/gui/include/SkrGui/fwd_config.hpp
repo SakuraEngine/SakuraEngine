@@ -20,6 +20,7 @@
 #include "containers/vector.hpp"
 #include "containers/string.hpp"
 #include "containers/hashmap.hpp"
+#include "containers/sptr.hpp"
 
 // type system
 #include "SkrGui/dev/type_system.hpp"
@@ -83,6 +84,10 @@ using FunctionRef = ::skr::function_ref<F>;
 
 template <typename F>
 using Function = ::eastl::function<F>;
+
+// smart ptr
+template <typename T>
+using SPtr = ::skr::SPtr<T>;
 
 // not null
 template <typename T>
