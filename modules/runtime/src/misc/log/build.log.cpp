@@ -163,8 +163,8 @@ RUNTIME_EXTERN_C
 void log_finalize()
 {
     {
-        auto worker = skr::log::LogWorkerSingleton::_weak_this.lock();
-        worker->drain();
+        if (auto worker = skr::log::LogWorkerSingleton::_weak_this.lock())
+            worker->drain();
     }
     skr::log::g_logger.reset();
 
