@@ -2,7 +2,6 @@
 #include "misc/log.h"
 #include "platform/vfs.h"
 #include "io/io.h"
-#include "simdjson.h"
 #include "serde/json/reader.h"
 #include "misc/make_zeroed.hpp"
 

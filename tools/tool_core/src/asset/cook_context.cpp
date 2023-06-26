@@ -5,6 +5,8 @@
 #include "io/io.h"
 #include "serde/json/reader.h"
 
+#include "tracy/Tracy.hpp"
+
 namespace skd::asset
 {
 struct SCookContextImpl : public SCookContext

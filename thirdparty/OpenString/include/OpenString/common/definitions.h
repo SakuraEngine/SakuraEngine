@@ -93,8 +93,7 @@ OPEN_STRING_NS_END
     }
 
     // Visual Studio will not trigger the breakpoint during single-step debugging without __nop()
-    #include <intrin.h>
-    #define OPEN_STRING_DEBUG_BREAK() (__nop(), __debugbreak())
+    #define OPEN_STRING_DEBUG_BREAK() __debugbreak()
 #endif
 
 #ifndef OPEN_STRING_UNLIKELY

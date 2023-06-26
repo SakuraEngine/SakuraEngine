@@ -4,8 +4,6 @@
 
 IMPLEMENT_DYNAMIC_MODULE(SkrRuntimeModule, SkrRT);
 
-extern "C" void dualX_register_types();
-
 #ifdef SKR_OS_WINDOWS
     #ifndef WIN32_LEAN_AND_MEAN
         #define WIN32_LEAN_AND_MEAN
@@ -33,8 +31,6 @@ void SkrRuntimeModule::on_load(int argc, char8_t** argv)
 
     SkrDStorageConfig config = {};
     dstorageInstance = skr_create_dstorage_instance(&config);
-
-    dualX_register_types();
 
     SKR_LOG_TRACE("SkrRuntime module loaded!");
 

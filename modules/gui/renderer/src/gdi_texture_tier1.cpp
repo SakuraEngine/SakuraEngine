@@ -4,6 +4,8 @@
 #include "SkrImageCoder/skr_image_coder.h"
 #endif
 
+#include "tracy/Tracy.hpp"
+
 namespace skr {
 namespace gdi {
 
