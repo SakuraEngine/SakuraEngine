@@ -7,7 +7,7 @@ struct skr_arena_t;
 
 #if defined(__cplusplus)
 
-    #define SKR_SIMDJSON_PLAT westmere
+    #define SKR_SIMDJSON_PLAT fallback
 namespace simdjson
 {
 namespace SKR_SIMDJSON_PLAT
