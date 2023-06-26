@@ -3,6 +3,7 @@
 #include "ecs/dual.h"
 #include "guid.hpp" //for guid
 #include "misc/make_zeroed.hpp"
+#include "misc/log.h"
 
 using test = int;
 dual_type_index_t type_test;
@@ -537,5 +538,6 @@ int main(int argc, char** argv)
     register_pinned_component();
     auto result = RUN_ALL_TESTS();
     dual_shutdown();
+    log_finalize();
     return result;
 }

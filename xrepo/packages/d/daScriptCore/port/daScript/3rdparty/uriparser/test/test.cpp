@@ -26,10 +26,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cwchar>
+#include "misc/log.h"
 
 using namespace std;
-
-
 
 extern "C" {
 UriBool uri_TESTING_ONLY_ParseIpSixA(const char * text);
@@ -2235,5 +2234,7 @@ TEST(ParseIpFourAddressSuite, FourSaneOctets) {
 
 int main(int argc, char ** argv) {
 	::testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
+	auto result = RUN_ALL_TESTS();
+	log_finalize();
+	return result;
 }

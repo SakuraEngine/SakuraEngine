@@ -39,6 +39,7 @@ void SkrRuntimeModule::on_load(int argc, char8_t** argv)
     DPIAware = true;
 #endif
 }
+
 void SkrRuntimeModule::on_unload()
 {
     SKR_LOG_TRACE("SkrRuntime module unloaded!");
@@ -61,6 +62,7 @@ void SkrRuntimeModule::on_unload()
 #endif
 
     skr_destroy_mutex(&log_mutex);
+    log_finalize();
 }
 
 SkrRuntimeModule* SkrRuntimeModule::Get()

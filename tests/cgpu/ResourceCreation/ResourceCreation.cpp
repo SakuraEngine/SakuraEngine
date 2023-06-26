@@ -2,6 +2,7 @@
 #include "cgpu/flags.h"
 #include "platform/configure.h"
 #include "gtest/gtest.h"
+#include "misc/log.h"
 #include <containers/string.hpp>
 #include <EASTL/vector.h>
 #include "cgpu/api.h"
@@ -341,5 +342,6 @@ int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
     auto result = RUN_ALL_TESTS();
+    log_finalize();
     return result;
 }

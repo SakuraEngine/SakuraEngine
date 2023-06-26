@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "platform/thread.h"
 #include "misc/make_zeroed.hpp"
+#include "misc/log.h"
 #include <thread>
 #include <future>
 
@@ -108,5 +109,6 @@ int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
     auto result = RUN_ALL_TESTS();
+    log_finalize();
     return result;
 }
