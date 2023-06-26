@@ -1,6 +1,4 @@
 #pragma once
-#include "platform/configure.h"
-#include "misc/types.h"
 #include "misc/smart_pool.hpp"
 
 namespace skr

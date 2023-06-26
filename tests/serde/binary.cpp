@@ -1,5 +1,6 @@
 #include "serde/binary/writer.h"
 #include "serde/binary/reader.h"
+#include "containers/string.hpp"
 #include "containers/span.hpp"
 #include "containers/vector.hpp"
 #include "gtest/gtest.h"

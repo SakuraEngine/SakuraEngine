@@ -1,6 +1,20 @@
 #pragma once
 #include "platform/configure.h"
 #include "platform/debug.h"
+#include <string.h>  // memset
+#ifdef __cplusplus
+#include <new>         // 'operator new' function for non-allocating placement new expression
+#include <string.h>    // memset
+#include <cstddef>     // std::size_t
+#include <cstdint>     // PTRDIFF_MAX
+#include <type_traits> // std::true_type
+#include <EASTL/internal/move_help.h>     // eastl::forward
+#if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
+#include "misc/demangle.hpp"
+#endif
+#endif
+
+#include "tracy/TracyC.h"
 
 RUNTIME_EXTERN_C RUNTIME_API const char* kTracedNewDefaultPoolName;
 RUNTIME_EXTERN_C RUNTIME_API void* _sakura_malloc(size_t size, const char* pool_name);
@@ -28,9 +42,6 @@ RUNTIME_EXTERN_C RUNTIME_API void containers_free_aligned(void* p, size_t alignm
 #define SKR_ALLOC_TRACY_MARKER_COLOR 0xff0000
 #define SKR_DEALLOC_TRACY_MARKER_COLOR 0x0000ff
 #if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
-
-#include <string.h>  // memset
-#include "tracy/TracyC.h"
 
 FORCEINLINE void* SkrMallocWithCZone(size_t size, const char* line, const char* pool_name)
 {
@@ -176,19 +187,8 @@ FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line,
 #endif
 
 #if defined(__cplusplus)
-#include "platform/debug.h"
-#include <new>         // 'operator new' function for non-allocating placement new expression
-#include <string.h>    // memset
-#include <cstddef>     // std::size_t
-#include <cstdint>     // PTRDIFF_MAX
-#if (__cplusplus >= 201103L) || (_MSC_VER > 1900)  // C++11
-#include <type_traits> // std::true_type
-// #include <utility>     // std::forward
-#include <EASTL/internal/move_help.h>     // eastl::forward
-#endif
 
 #if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
-#include "misc/demangle.hpp"
 
 struct SkrTracedNew
 {
