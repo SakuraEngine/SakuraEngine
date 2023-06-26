@@ -52,6 +52,7 @@ RUNTIME_API void log_set_lock(log_LockFn fn, void* udata);
 RUNTIME_API void log_set_level(int level);
 
 RUNTIME_API void log_log(int level, const char* file, int line, const char* fmt, ...);
+RUNTIME_API void log_finalize();
 
 #ifdef __cplusplus
 }

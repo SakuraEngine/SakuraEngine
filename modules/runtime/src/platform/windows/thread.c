@@ -300,7 +300,9 @@ unsigned WINAPI ThreadFunctionStatic(void* data)
 void skr_init_thread(SThreadDesc* pDesc, SThreadHandle* pHandle)
 {
     assert(pHandle != NULL);
-    SThreadHandle handle = (SThreadHandle)_beginthreadex(0, 0, ThreadFunctionStatic, pDesc, 0, 0);
+    SThreadHandle handle = (SThreadHandle)_beginthreadex(
+        0, 0, &ThreadFunctionStatic, 
+        pDesc, 0, 0);
     assert(handle != NULL);
     *pHandle = handle;
 }

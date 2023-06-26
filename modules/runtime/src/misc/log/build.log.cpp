@@ -1,7 +1,10 @@
 #include "log_queue.hpp"
 #include "log_worker.hpp"
 #include "logger.hpp"
+
 #include <thread>
+#include <csignal>
+#include <stdio.h> // ::atexit
 
 #include "tracy/Tracy.hpp"
 
@@ -10,27 +13,36 @@ namespace log {
 
 Logger::Logger() SKR_NOEXCEPT
 {
-    auto worker = LogWorkerSingleton::Get();
+    auto worker = LogWorkerSingleton::ShareOrCreate();
+    queue_ = worker->queue_;
+    worker_ = worker;
     worker->add_logger(this);
 }
 
 Logger::~Logger() SKR_NOEXCEPT
 {
-    auto worker = LogWorkerSingleton::Get();
-    worker->remove_logger(this);
+    worker_->remove_logger(this);
 }
 
 void Logger::notifyWorker() SKR_NOEXCEPT
 {
-    auto worker = LogWorkerSingleton::Get();
-    worker->awake();
+    worker_->awake();
 }
 
-static const ServiceThreadDesc kLoggerWorkerThreadDesc =  {
-    u8"logger_worker", SKR_THREAD_ABOVE_NORMAL
-};
-
-LogWorker LogWorkerSingleton::_this(kLoggerWorkerThreadDesc);
+SWeakPtr<LogWorker> LogWorkerSingleton::_weak_this;
+std::mutex g_worker_shared_mutex;
+SPtr<LogWorker> LogWorkerSingleton::ShareOrCreate() SKR_NOEXCEPT
+{
+    std::lock_guard _(g_worker_shared_mutex);
+    if (auto _this = _weak_this.lock())
+    {
+        return _this;
+    }
+    auto new_this = SPtr<LogWorker>::Create(kLoggerWorkerThreadDesc);
+    _weak_this = new_this;
+    new_this->run();
+    return new_this;
+}
 
 static const skr::log::LogLevel kLogLevelsLUT[] = {
     skr::log::LogLevel::kTrace, 
@@ -42,8 +54,26 @@ static const skr::log::LogLevel kLogLevelsLUT[] = {
 };
 static_assert(sizeof(kLogLevelsLUT) / sizeof(kLogLevelsLUT[0]) == (int)skr::log::LogLevel::kCount, "kLogLevelsLUT size mismatch");
 skr::log::LogLevel g_log_level = skr::log::LogLevel::kTrace;
-skr::log::Logger g_logger = {};
+skr::SPtr<skr::log::Logger> g_logger = {};
 std::once_flag g_start_once_flag;
+
+LogWorker::LogWorker(const ServiceThreadDesc& desc) SKR_NOEXCEPT
+    : AsyncService(desc), queue_(SPtr<LogQueue>::Create())
+{
+
+}
+
+LogWorker::~LogWorker() SKR_NOEXCEPT
+{
+    drain();
+    if (get_status() == skr::ServiceThread::Status::kStatusRunning)
+    {
+        setServiceStatus(SKR_ASYNC_SERVICE_STATUS_QUITING);
+        stop();
+    }
+    wait_stop();
+    exit();
+}
 
 void LogWorker::add_logger(Logger* logger) SKR_NOEXCEPT
 {
@@ -59,25 +89,17 @@ void LogWorker::remove_logger(Logger* logger) SKR_NOEXCEPT
 
 bool LogWorker::predicate() SKR_NOEXCEPT
 {
-    for (auto logger : loggers)
-    {
-        if (logger->query_cnt())
-            return true;
-    }
-    return false;
+    return queue_->query_cnt();
 }
 
 void LogWorker::process_logs() SKR_NOEXCEPT
 {
-    for (auto logger : loggers)
+    LogQueueElement e;
+    while (queue_->try_dequeue(e))
     {
-        LogQueueElement e;
-        while (logger->try_dequeue(e))
-        {
-            ZoneScopedNC("LogSingle", tracy::Color::Orchid1);
-            const auto what = e.produce();
-            printf("%s\n", what.c_str());
-        }
+        ZoneScopedNC("LogSingle", tracy::Color::Orchid1);
+        const auto what = e.produce();
+        printf("%s\n", what.c_str());
     }
 }
 
@@ -116,18 +138,36 @@ void log_set_level(int level)
 RUNTIME_EXTERN_C 
 void log_log(int level, const char* file, int line, const char* fmt, ...)
 {
-    const auto kLogLevel = skr::log::kLogLevelsLUT[level];\
+    const auto kLogLevel = skr::log::kLogLevelsLUT[level];
     if (kLogLevel < skr::log::g_log_level) return;
 
     std::call_once(
         skr::log::g_start_once_flag,
         [] {
-            skr::log::LogWorkerSingleton::Get()->run();
+            skr::log::g_logger = skr::SPtr<skr::log::Logger>::Create();
+            
+            ::atexit(+[]() {
+                auto worker = skr::log::LogWorkerSingleton::_weak_this.lock();
+                SKR_ASSERT(!worker && "worker must be null & properly stopped at exit!");
+            });
         }
     );
 
     va_list va_args;
     va_start(va_args, fmt);
-    skr::log::g_logger.log(kLogLevel, (const char8_t*)fmt, va_args);
+    skr::log::g_logger->log(kLogLevel, (const char8_t*)fmt, va_args);
     va_end(va_args);
+}
+
+RUNTIME_EXTERN_C 
+void log_finalize()
+{
+    {
+        auto worker = skr::log::LogWorkerSingleton::_weak_this.lock();
+        worker->drain();
+    }
+    skr::log::g_logger.reset();
+
+    auto worker = skr::log::LogWorkerSingleton::_weak_this.lock();
+    SKR_ASSERT(!worker && "worker must be null & properly stopped at exit!");
 }

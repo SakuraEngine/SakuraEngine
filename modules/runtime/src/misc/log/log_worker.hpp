@@ -1,6 +1,7 @@
 #pragma once
 #include "async/wait_timeout.hpp"
 #include "async/async_service.h"
+#include "log_queue.hpp"
 #include "containers/vector.hpp"
 #include "misc/defer.hpp"
 
@@ -10,22 +11,8 @@ namespace log {
 struct Logger;
 struct LogWorker : public AsyncService
 {
-    LogWorker(const ServiceThreadDesc& desc) SKR_NOEXCEPT
-        : AsyncService(desc)
-    {
-    }
-
-    ~LogWorker() SKR_NOEXCEPT
-    {
-        drain();
-        if (get_status() == skr::ServiceThread::Status::kStatusRunning)
-        {
-            setServiceStatus(SKR_ASYNC_SERVICE_STATUS_QUITING);
-            stop();
-        }
-        wait_stop();
-        exit();
-    }
+    LogWorker(const ServiceThreadDesc& desc) SKR_NOEXCEPT;
+    ~LogWorker() SKR_NOEXCEPT;
 
     void drain()
     {
@@ -43,16 +30,21 @@ struct LogWorker : public AsyncService
     void process_logs() SKR_NOEXCEPT;
     virtual skr::AsyncResult serve() SKR_NOEXCEPT;
 
+protected:
+    friend struct Logger;
+    std::once_flag start_once_flag;
+    skr::SPtr<LogQueue> queue_;
     skr::vector<Logger*> loggers;
+};
+
+static const ServiceThreadDesc kLoggerWorkerThreadDesc =  {
+    u8"logger_worker", SKR_THREAD_ABOVE_NORMAL
 };
 
 struct RUNTIME_API LogWorkerSingleton
 {
-    static LogWorker* Get() SKR_NOEXCEPT
-    {
-        return &_this;
-    }
-    static LogWorker _this;
+    static SPtr<LogWorker> ShareOrCreate() SKR_NOEXCEPT;
+    static SWeakPtr<LogWorker> _weak_this;
 };
 
 } } // namespace skr::log

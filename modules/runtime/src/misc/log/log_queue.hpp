@@ -71,6 +71,7 @@ public:
         element.need_format = false;
         
         queue_.enqueue(skr::move(element));
+        skr_atomic64_add_relaxed(&cnt_, 1);
     }
     
     template <typename...Args>
@@ -83,13 +84,24 @@ public:
         element.need_format = true;
 
         queue_.enqueue(skr::move(element));
+        skr_atomic64_add_relaxed(&cnt_, 1);
     }
 
     bool try_dequeue(LogQueueElement& element)
     {
-        return queue_.try_dequeue(element);
+        if (queue_.try_dequeue(element))
+        {
+            skr_atomic64_add_relaxed(&cnt_, -1);
+            return true;
+        }
+        return false;
     }
     
+    int64_t query_cnt() const SKR_NOEXCEPT
+    {
+        return skr_atomic64_load_relaxed(&cnt_);
+    }
+
 private:
     // formatter & args
     struct LogQueueTraits : public ConcurrentQueueDefaultTraits
@@ -97,6 +109,7 @@ private:
         static const int BLOCK_SIZE = 256;
     };
     skr::ConcurrentQueue<LogQueueElement, LogQueueTraits> queue_;
+    SAtomic64 cnt_ = 0;
 };
 
 
