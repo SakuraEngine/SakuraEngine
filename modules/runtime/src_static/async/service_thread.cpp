@@ -95,6 +95,7 @@ void ServiceThread::run() SKR_NOEXCEPT
 {
     // record last turn id
     const auto orid = skr_atomic32_load_relaxed(&rid);
+    (void)orid;
     
     // signal waking
     set_status(kStatusWaking);
@@ -102,9 +103,9 @@ void ServiceThread::run() SKR_NOEXCEPT
     {
         t.start(&f);
     }
-
+    
     // secure runned
-    wait_timeout([&] { return skr_atomic32_load_relaxed(&rid) > orid; }, 8);
+    // wait_timeout([&] { return skr_atomic32_load_relaxed(&rid) > orid; }, 8);
 }
 
 void ServiceThread::request_exit() SKR_NOEXCEPT
