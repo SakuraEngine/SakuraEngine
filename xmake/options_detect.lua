@@ -17,6 +17,7 @@ project_mxflags = {}
 
 -- uses utf-8 charset at runtime
 if is_host("windows") then
+    table.insert(project_cxflags, "/arch:AVX2")
     table.insert(project_cxflags, "/execution-charset:utf-8")
     table.insert(project_cxflags, "/source-charset:utf-8")
 end

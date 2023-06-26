@@ -9,6 +9,7 @@
 #include "containers/vector.hpp"
 #include "containers/string.hpp"
 
+#include <numeric> // std::iota
 #include <execution>
 
 void skr_save_scene(dual_storage_t* world, skr_json_writer_t* writer)
