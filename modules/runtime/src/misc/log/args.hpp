@@ -21,7 +21,7 @@ private:
     template <typename T>
     struct TypedNode : public NodeType {
         template <typename Arg>
-        constexpr TypedNode(const Arg& arg)
+        constexpr TypedNode(const Arg& arg) SKR_NOEXCEPT
             : value(arg)
         {
         }
@@ -32,7 +32,7 @@ private:
 
 public:
     template <typename T, typename Arg>
-    const T& push(const Arg& arg)
+    const T& push(const Arg& arg) SKR_NOEXCEPT
     {
         auto new_node = SObjectPtr<TypedNode<T>>::Create(arg);
         auto& value = new_node->value;
@@ -41,7 +41,7 @@ public:
         return value;
     }
     template <typename...Args>
-    void push(Args&&...args)
+    void push(Args&&...args) SKR_NOEXCEPT
     {
         auto _ = { push<Args>(std::forward<Args>(args))... };
     }

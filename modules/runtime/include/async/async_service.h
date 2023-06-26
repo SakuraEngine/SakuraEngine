@@ -112,7 +112,7 @@ struct RUNTIME_STATIC_API AsyncService : public skr::ServiceThread
         skr::ServiceThread::wait_stop(fatal_timeout);
     }
 
-    void awake()
+    void awake() SKR_NOEXCEPT
     {
         condlock.lock();
         event = true;

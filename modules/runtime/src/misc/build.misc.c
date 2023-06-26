@@ -1,4 +1,4 @@
-#include "log.c"
+// #include "log.c"
 #include "misc/types.h"
 
 extern void dual_make_guid(skr_guid_t* guid);
