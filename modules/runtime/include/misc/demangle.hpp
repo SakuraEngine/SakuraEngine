@@ -23,18 +23,10 @@
 
 #pragma once
 #include <cctype>
-
-#include <EASTL/string.h>
-#include <EASTL/array.h>
-
-#ifdef MINGW_CCTYPE_IS_POISONED
-extern "C" {
-#include <ctype.h>
-}
-#endif // MinGW is on some stuff
+#include <string>
 
 namespace skr { namespace detail {
-inline constexpr eastl::array<eastl::string_view, 9> removals { { 
+inline constexpr std::string_view removals[] = { 
 	"{anonymous}",
 	"(anonymous namespace)",
 	"public:",
@@ -44,25 +36,24 @@ inline constexpr eastl::array<eastl::string_view, 9> removals { {
 	"class ",
 	"`anonymous-namespace'",
 	"`anonymous namespace'" 
-} };
-
+};
 
 //check compiler is gcc or clang
 #if defined(__GNUC__) || defined(__clang__)
-	inline eastl::string ctti_get_type_name_from_sig(eastl::string name) {
+	inline std::string ctti_get_type_name_from_sig(std::string name) {
 		// cardinal sins from MINGW
 		size_t start = name.find_first_of('[');
 		start = name.find_first_of('=', start);
 		size_t end = name.find_last_of(']');
-		if (end == eastl::string::npos)
+		if (end == std::string::npos)
 			end = name.size();
-		if (start == eastl::string::npos)
+		if (start == std::string::npos)
 			start = 0;
 		if (start < name.size() - 1)
 			start += 1;
 		name = name.substr(start, end - start);
 		start = name.rfind("seperator_mark");
-		if (start != eastl::string::npos) {
+		if (start != std::string::npos) {
 			name.erase(start - 2, name.length());
 		}
 		while (!name.empty() && isblank(name.front()))
@@ -70,11 +61,11 @@ inline constexpr eastl::array<eastl::string_view, 9> removals { {
 		while (!name.empty() && isblank(name.back()))
 			name.pop_back();
 
-		for (size_t r = 0; r < removals.size(); ++r) {
-			auto found = name.find(removals[r].data(), 0, removals[r].size());
-			while (found != eastl::string::npos) {
-				name.erase(found, removals[r].size());
-				found = name.find(removals[r].data(), 0, removals[r].size());
+		for (auto removal : removals) {
+			auto found = name.find(removal.data(), 0, removal.size());
+			while (found != std::string::npos) {
+				name.erase(found, removal.size());
+				found = name.find(removal.data(), 0, removal.size());
 			}
 		}
 
@@ -82,20 +73,20 @@ inline constexpr eastl::array<eastl::string_view, 9> removals { {
 	}
 
 	template <typename T, class seperator_mark = int>
-	inline eastl::string ctti_get_type_name() {
+	inline std::string ctti_get_type_name() {
 		return ctti_get_type_name_from_sig(__PRETTY_FUNCTION__);
 	}
 #elif defined(_MSC_VER)
-	inline eastl::string ctti_get_type_name_from_sig(eastl::string name) {
+	inline std::string ctti_get_type_name_from_sig(std::string name) {
 		size_t start = name.find("get_type_name");
-		if (start == eastl::string::npos)
+		if (start == std::string::npos)
 			start = 0;
 		else
 			start += 13;
 		if (start < name.size() - 1)
 			start += 1;
 		size_t end = name.find_last_of('>');
-		if (end == eastl::string::npos)
+		if (end == std::string::npos)
 			end = name.size();
 		name = name.substr(start, end - start);
 		if (name.find("struct", 0) == 0)
@@ -109,7 +100,7 @@ inline constexpr eastl::array<eastl::string_view, 9> removals { {
 
 		for (size_t r = 0; r < removals.size(); ++r) {
 			auto found = name.find(removals[r].data(), 0, removals[r].size());
-			while (found != eastl::string::npos) {
+			while (found != std::string::npos) {
 				name.erase(found, removals[r].size());
 				found = name.find(removals[r].data(), 0, removals[r].size());
 			}
@@ -119,7 +110,7 @@ inline constexpr eastl::array<eastl::string_view, 9> removals { {
 	}
 
 	template <typename T>
-	eastl::string ctti_get_type_name() {
+	std::string ctti_get_type_name() {
 		return ctti_get_type_name_from_sig(__FUNCSIG__);
 	}
 #else
@@ -127,15 +118,15 @@ inline constexpr eastl::array<eastl::string_view, 9> removals { {
 #endif // compilers
 
 	template <typename T>
-	eastl::string demangle_once() {
-		eastl::string realname = ctti_get_type_name<T>();
+	std::string demangle_once() {
+		std::string realname = ctti_get_type_name<T>();
 		return realname;
 	}
 
-	inline eastl::string short_demangle_from_type_name(eastl::string realname) {
+	inline std::string short_demangle_from_type_name(std::string realname) {
 		// This isn't the most complete but it'll do for now...?
-		static const eastl::array<eastl::string, 10> ops = {
-			{ "operator<", "operator<<", "operator<<=", "operator<=", "operator>", "operator>>", "operator>>=", "operator>=", "operator->", "operator->*" }
+		static const std::string ops[] = {
+			"operator<", "operator<<", "operator<<=", "operator<=", "operator>", "operator>>", "operator>>=", "operator>=", "operator->", "operator->*"
 		};
 		int level = 0;
 		size_t idx = 0;
@@ -150,7 +141,7 @@ inline constexpr eastl::array<eastl::string_view, 9> removals { {
 			bool earlybreak = false;
 			for (const auto& op : ops) {
 				size_t nisop = realname.rfind(op, idx);
-				if (nisop == eastl::string::npos)
+				if (nisop == std::string::npos)
 					continue;
 				size_t nisopidx = idx - op.size() + 1;
 				if (nisop == nisopidx) {
@@ -171,20 +162,20 @@ inline constexpr eastl::array<eastl::string_view, 9> removals { {
 	}
 
 	template <typename T>
-	eastl::string short_demangle_once() {
-		eastl::string realname = ctti_get_type_name<T>();
+	std::string short_demangle_once() {
+		std::string realname = ctti_get_type_name<T>();
 		return short_demangle_from_type_name(realname);
 	}
 
 	template <typename T>
-	const eastl::string& demangle() {
-		static const eastl::string d = demangle_once<T>();
+	const std::string& demangle() {
+		static const std::string d = demangle_once<T>();
 		return d;
 	}
 
 	template <typename T>
-	const eastl::string& short_demangle() {
-		static const eastl::string d = short_demangle_once<T>();
+	const std::string& short_demangle() {
+		static const std::string d = short_demangle_once<T>();
 		return d;
 	}
 }
