@@ -1,6 +1,7 @@
 #pragma once
 #include "misc/traits.hpp"
 #include "platform/memory.h"
+#include "serde/binary/serde.h"
 #include "serde/binary/writer_fwd.h"
 #include "serde/binary/reader_fwd.h"
 #include "serde/json/reader_fwd.h"
@@ -44,25 +45,6 @@ namespace skr
             return [](void* address, void* src) { new (address) T(std::move(*(T*)src)); };
         return nullptr;
     }
-
-    
-
-    template<class T>
-    struct SerdeCompleteChecker : std::true_type {};
-
-    template <class T>
-    inline constexpr bool is_complete_serde()
-    {
-    if constexpr (skr::is_complete_v<T>)
-    {
-        return SerdeCompleteChecker<T>::value;
-    }
-    else
-        return false;
-    }
-
-    template <class T>
-    constexpr bool is_complete_serde_v = is_complete_serde<T>();
 
     template<class T>
     constexpr auto GetSerialize() -> int(*)(const void*, skr_binary_writer_t* writer)

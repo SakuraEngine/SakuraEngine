@@ -4,6 +4,7 @@
 #include "type/type_helper.hpp"
 
 #include "containers/span.hpp"
+#include "containers/vector.hpp"
 #include "containers/string.hpp"
 
 #if defined(__cplusplus)
@@ -371,6 +372,32 @@ struct RUNTIME_API ArrayViewType : skr_type_t {
     {
     }
 };
+// vector storage
+struct DynArrayStorage
+{
+    uint8_t* begin;
+    uint8_t* end;
+    uint8_t* capacity;
+};
+// skr::vector<T>
+struct DynArrayType : skr_type_t {
+    const struct skr_type_t* elementType;
+    skr::string name;
+    RUNTIME_API uint64_t Num(void* data) const;
+    RUNTIME_API void* Get(void* data, uint64_t index) const;
+    RUNTIME_API void Reset(void* data, uint64_t size) const;
+    RUNTIME_API void Reserve(void* data, uint64_t size) const;
+    RUNTIME_API void Resize(void* data, uint64_t size) const;
+    RUNTIME_API void* Insert(void* data, uint64_t index) const;
+    RUNTIME_API void Erase(void* data, uint64_t index, bool bKeepOrder) const;
+    DynArrayType(const skr_type_t* elementType)
+        : skr_type_t{ SKR_TYPE_CATEGORY_DYNARR }
+        , elementType(elementType)
+    {
+    }
+private:
+    void Grow(void* data, uint64_t size) const;
+};
 // struct/class T
 struct RUNTIME_API RecordType : skr_type_t {
     uint64_t size = 0;
@@ -497,6 +524,20 @@ struct type_of<T&> {
     {
         return make_reference_type(type_of<T>::get());
     }
+};
+
+RUNTIME_API const skr_type_t* make_dynarray_type(const skr_type_t* type);
+template <class V, class T>
+struct type_of_vector {
+    static const skr_type_t* get()
+    {
+        return make_dynarray_type(type_of<T>::get());
+    }
+};
+
+template <class T, class Allocator>
+struct type_of<skr::vector<T, Allocator>> : type_of_vector<skr::vector<T, Allocator>, T> 
+{
 };
 
 RUNTIME_API const skr_type_t* make_array_type(const skr_type_t* type, uint64_t num, uint64_t size);

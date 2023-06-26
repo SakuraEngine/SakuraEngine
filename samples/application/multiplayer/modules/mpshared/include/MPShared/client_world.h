@@ -4,7 +4,7 @@
 #include "platform/time.h"
 #include "MPShared/shared.h"
 #include "MPShared/world_delta.h"
-#include "simdjson.h"
+#include "serde/json/reader.h"
 #include "async/fib_task.hpp"
 #include "containers/hashmap.hpp"
 

@@ -1,8 +1,11 @@
 #pragma once
-#include <type_traits>
-#include <numeric>
+#include "misc/traits.hpp"
+#include "serde/binary/serde.h"
+#include <limits>
+
 namespace skr
 {
+
 namespace binary
 {
 template<class T>
@@ -44,5 +47,23 @@ enum class ErrorCode
     Success = 0,
     OutOfRange = -2,
 };
+
+} // namespace binary
+
+template<class T>
+struct SerdeCompleteChecker : std::true_type {};
+
+template <class T>
+inline constexpr bool is_complete_serde()
+{
+if constexpr (skr::is_complete_v<T>)
+{
+    return SerdeCompleteChecker<T>::value;
 }
+else
+    return false;
 }
+
+template <class T>
+constexpr bool is_complete_serde_v = is_complete_serde<T>();
+} // namespace skr

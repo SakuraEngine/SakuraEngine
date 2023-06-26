@@ -1,7 +1,6 @@
 #include "MPServer/server.h"
 #include "platform/thread.h"
 #include "platform/time.h"
-#include "simdjson.h"
 #include "steam/isteamnetworkingutils.h"
 #include "steam/isteamnetworkingsockets.h"
 #include "steam/steamnetworkingsockets.h"

@@ -8,6 +8,7 @@
 #include "math/vector.h"
 #include "math/quat.h"
 
+#include "tracy/Tracy.hpp"
 
 void MPRenderWorld::Initialize(MPClientWorld* gameWorld)
 {
