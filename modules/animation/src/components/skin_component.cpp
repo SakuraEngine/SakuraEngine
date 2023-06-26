@@ -9,6 +9,8 @@
 #include "SkrAnim/ozz/base/span.h"
 #include "containers/sptr.hpp"
 
+#include "tracy/Tracy.hpp"
+
 skr_render_anim_comp_t::~skr_render_anim_comp_t()
 {
     for(auto vb : vbs)
