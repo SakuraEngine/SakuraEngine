@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "misc/make_zeroed.hpp"
 #include "misc/log.h"
-#include "async/service_thread.hpp"
+#include "async/async_service.h"
 
 TEST(ServiceThread, AsyncPrint)
 {

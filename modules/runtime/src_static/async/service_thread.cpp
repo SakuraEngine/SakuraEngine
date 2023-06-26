@@ -1,4 +1,4 @@
-#include "async/service_thread.hpp"
+#include "async/async_service.h"
 #include "async/wait_timeout.hpp"
 #include "misc/log.h"
 
@@ -26,8 +26,6 @@ ServiceThread::~ServiceThread() SKR_NOEXCEPT
         SKR_LOG_FATAL("service must be exitted before being destroyed!");
         SKR_ASSERT(S == kStatusExitted);
     }
-
-    waitJoin();
     t.finalize();
 }
 
@@ -235,6 +233,20 @@ EXIT:
     // SKR_LOG_TRACE("Service Thread exited!");
 }
     return ASYNC_RESULT_OK;
+}
+
+void AsyncService::sleep() SKR_NOEXCEPT
+{
+    const auto ms = skr_atomicu32_load_relaxed(&sleep_time);
+    ZoneScopedNC("ioServiceSleep(Cond)", tracy::Color::Gray55);
+
+    condlock.lock();
+    if (!event)
+    {
+        condlock.wait(ms);
+    }
+    event = false;
+    condlock.unlock();
 }
 
 }
