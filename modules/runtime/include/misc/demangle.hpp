@@ -98,11 +98,11 @@ inline constexpr std::string_view removals[] = {
 		while (!name.empty() && isblank(name.back()))
 			name.pop_back();
 
-		for (size_t r = 0; r < removals.size(); ++r) {
-			auto found = name.find(removals[r].data(), 0, removals[r].size());
+		for (auto removal : removals) {
+			auto found = name.find(removal.data(), 0, removal.size());
 			while (found != std::string::npos) {
-				name.erase(found, removals[r].size());
-				found = name.find(removals[r].data(), 0, removals[r].size());
+				name.erase(found, removal.size());
+				found = name.find(removal.data(), 0, removal.size());
 			}
 		}
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "misc/traits.hpp"
 #include "serde/binary/serde.h"
-#include <numeric>
+#include <limits>
 
 namespace skr
 {

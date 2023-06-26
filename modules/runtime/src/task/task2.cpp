@@ -11,9 +11,9 @@
 
 inline void nop() {
 #if defined(_WIN32)
-  __nop();
+    __nop();
 #else
-  __asm__ __volatile__("nop");
+    __asm__ __volatile__("nop");
 #endif
 }
 
