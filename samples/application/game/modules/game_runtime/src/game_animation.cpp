@@ -5,6 +5,8 @@
 #include "SkrTweak/module.h"
 #include "SkrInspector/inspect_value.h"
 
+#include "tracy/Tracy.hpp"
+
 namespace game
 {
     void InitializeAnimState(anim_state_t *state, skr_skeleton_resource_t* skeleton)
