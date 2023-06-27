@@ -106,6 +106,7 @@ void cgpu_delete_placed(T* object)
 template <typename T>
 void cgpu_delete(T* object)
 {
-    SkrDelete(object);
+    cgpu_delete_placed(object);
+    cgpu_free_aligned(object, alignof(T));
 }
 #endif
