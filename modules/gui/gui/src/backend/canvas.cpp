@@ -436,7 +436,7 @@ void ICanvas::state_reset() SKR_NOEXCEPT
         SKR_GUI_LOG_ERROR("ICanvas::state_reset() called outside of a paint scope");
     }
 }
-void ICanvas::state_translate(Offset offset) SKR_NOEXCEPT
+void ICanvas::state_translate(Offsetf offset) SKR_NOEXCEPT
 {
     if (_is_in_paint_scope)
     {
@@ -545,7 +545,7 @@ void ICanvas::path_end(const Pen& pen, const Brush& brush) SKR_NOEXCEPT
 }
 
 //==> path
-void ICanvas::path_move_to(Offset to) SKR_NOEXCEPT
+void ICanvas::path_move_to(Offsetf to) SKR_NOEXCEPT
 {
     if (_is_in_paint_scope)
     {
@@ -563,7 +563,7 @@ void ICanvas::path_move_to(Offset to) SKR_NOEXCEPT
         SKR_GUI_LOG_ERROR("ICanvas::path_move_to() called outside of a paint scope");
     }
 }
-void ICanvas::path_line_to(Offset to) SKR_NOEXCEPT
+void ICanvas::path_line_to(Offsetf to) SKR_NOEXCEPT
 {
     if (_is_in_paint_scope)
     {
@@ -581,7 +581,7 @@ void ICanvas::path_line_to(Offset to) SKR_NOEXCEPT
         SKR_GUI_LOG_ERROR("ICanvas::path_line_to() called outside of a paint scope");
     }
 }
-void ICanvas::path_quad_to(Offset to, Offset control_point) SKR_NOEXCEPT
+void ICanvas::path_quad_to(Offsetf to, Offsetf control_point) SKR_NOEXCEPT
 {
     if (_is_in_paint_scope)
     {
@@ -599,7 +599,7 @@ void ICanvas::path_quad_to(Offset to, Offset control_point) SKR_NOEXCEPT
         SKR_GUI_LOG_ERROR("ICanvas::path_quad_to() called outside of a paint scope");
     }
 }
-void ICanvas::path_cubic_to(Offset to, Offset control_point1, Offset control_point2) SKR_NOEXCEPT
+void ICanvas::path_cubic_to(Offsetf to, Offsetf control_point1, Offsetf control_point2) SKR_NOEXCEPT
 {
     if (_is_in_paint_scope)
     {
@@ -617,7 +617,7 @@ void ICanvas::path_cubic_to(Offset to, Offset control_point1, Offset control_poi
         SKR_GUI_LOG_ERROR("ICanvas::path_cubic_to() called outside of a paint scope");
     }
 }
-void ICanvas::path_arc_to(Offset to, Offset control_point, float radius) SKR_NOEXCEPT
+void ICanvas::path_arc_to(Offsetf to, Offsetf control_point, float radius) SKR_NOEXCEPT
 {
     if (_is_in_paint_scope)
     {
@@ -655,7 +655,7 @@ void ICanvas::path_close() SKR_NOEXCEPT
 }
 
 //==> close path
-void ICanvas::path_arc(Offset center, float radius, float start_degree, float end_degree) SKR_NOEXCEPT
+void ICanvas::path_arc(Offsetf center, float radius, float start_degree, float end_degree) SKR_NOEXCEPT
 {
     if (_is_in_paint_scope)
     {
@@ -673,7 +673,7 @@ void ICanvas::path_arc(Offset center, float radius, float start_degree, float en
         SKR_GUI_LOG_ERROR("ICanvas::path_arc() called outside of a paint scope");
     }
 }
-void ICanvas::path_rect(Rect rect) SKR_NOEXCEPT
+void ICanvas::path_rect(Rectf rect) SKR_NOEXCEPT
 {
     if (_is_in_paint_scope)
     {
@@ -691,7 +691,7 @@ void ICanvas::path_rect(Rect rect) SKR_NOEXCEPT
         SKR_GUI_LOG_ERROR("ICanvas::path_rect() called outside of a paint scope");
     }
 }
-void ICanvas::path_circle(Offset center, float radius) SKR_NOEXCEPT
+void ICanvas::path_circle(Offsetf center, float radius) SKR_NOEXCEPT
 {
     if (_is_in_paint_scope)
     {
@@ -709,7 +709,7 @@ void ICanvas::path_circle(Offset center, float radius) SKR_NOEXCEPT
         SKR_GUI_LOG_ERROR("ICanvas::path_circle() called outside of a paint scope");
     }
 }
-void ICanvas::path_ellipse(Offset center, float radius_x, float radius_y) SKR_NOEXCEPT
+void ICanvas::path_ellipse(Offsetf center, float radius_x, float radius_y) SKR_NOEXCEPT
 {
     if (_is_in_paint_scope)
     {
@@ -729,32 +729,32 @@ void ICanvas::path_ellipse(Offset center, float radius_x, float radius_y) SKR_NO
 }
 
 //==> draw primitives
-void ICanvas::draw_arc(Offset center, float radius, float start_degree, float end_degree, const Pen& pen, const Brush& brush) SKR_NOEXCEPT
+void ICanvas::draw_arc(Offsetf center, float radius, float start_degree, float end_degree, const Pen& pen, const Brush& brush) SKR_NOEXCEPT
 {
     auto _ = path_scope(pen, brush);
     path_arc(center, radius, start_degree, end_degree);
 }
-void ICanvas::draw_rect(Rect rect, const Pen& pen, const Brush& brush) SKR_NOEXCEPT
+void ICanvas::draw_rect(Rectf rect, const Pen& pen, const Brush& brush) SKR_NOEXCEPT
 {
     auto _ = path_scope(pen, brush);
     path_rect(rect);
 }
-void ICanvas::draw_circle(Offset center, float radius, const Pen& pen, const Brush& brush) SKR_NOEXCEPT
+void ICanvas::draw_circle(Offsetf center, float radius, const Pen& pen, const Brush& brush) SKR_NOEXCEPT
 {
     auto _ = path_scope(pen, brush);
     path_circle(center, radius);
 }
-void ICanvas::draw_ellipse(Offset center, float radius_x, float radius_y, const Pen& pen, const Brush& brush) SKR_NOEXCEPT
+void ICanvas::draw_ellipse(Offsetf center, float radius_x, float radius_y, const Pen& pen, const Brush& brush) SKR_NOEXCEPT
 {
     auto _ = path_scope(pen, brush);
     path_ellipse(center, radius_x, radius_y);
 }
-void ICanvas::draw_image(Rect rect, const Pen& pen, const Brush& brush) SKR_NOEXCEPT
+void ICanvas::draw_image(Rectf rect, const Pen& pen, const Brush& brush) SKR_NOEXCEPT
 {
     // TODO. draw image
     draw_rect(rect, pen, brush);
 }
-void ICanvas::draw_image_nine(Rect rect, const Pen& pen, const Brush& brush) SKR_NOEXCEPT
+void ICanvas::draw_image_nine(Rectf rect, const Pen& pen, const Brush& brush) SKR_NOEXCEPT
 {
     // TODO. draw image nine
     draw_rect(rect, pen, brush);

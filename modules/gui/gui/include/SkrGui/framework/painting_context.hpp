@@ -7,7 +7,7 @@ namespace skr::gui
 {
 struct PaintingContext final {
     inline ICanvas* canvas() const noexcept { return _canvas; }
-    void            paint_child(NotNull<RenderObject*> child, Offset offset) noexcept;
+    void            paint_child(NotNull<RenderObject*> child, Offsetf offset) noexcept;
 
 private:
     ICanvas* _canvas;

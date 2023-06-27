@@ -22,7 +22,7 @@ float RenderProxyBox::compute_max_intrinsic_height(float width) const SKR_NOEXCE
 }
 
 // dry layout
-Size RenderProxyBox::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
+Sizef RenderProxyBox::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
 {
     return child() ? child()->get_dry_layout(constraints) : constraints.smallest();
 }
@@ -43,7 +43,7 @@ void RenderProxyBox::perform_layout() SKR_NOEXCEPT
 }
 
 // paint
-void RenderProxyBox::paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT
+void RenderProxyBox::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT
 {
     if (child())
     {

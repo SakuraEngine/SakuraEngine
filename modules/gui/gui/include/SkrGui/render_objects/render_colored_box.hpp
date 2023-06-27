@@ -7,7 +7,7 @@ namespace skr::gui
 struct RenderColoredBox : public RenderProxyBox {
     SKR_GUI_TYPE(RenderColoredBox, "ffe5f08b-8d7c-4d49-a9f5-37565bdebe32", RenderProxyBox)
 
-    void paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT override;
+    void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
 
     // getter setter
     inline const Color& color() const SKR_NOEXCEPT { return _color; }

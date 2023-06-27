@@ -2,7 +2,7 @@
 
 namespace skr::gui
 {
-void PaintingContext::paint_child(NotNull<RenderObject*> child, Offset offset) noexcept
+void PaintingContext::paint_child(NotNull<RenderObject*> child, Offsetf offset) noexcept
 {
     SKR_UNIMPLEMENTED_FUNCTION()
 }

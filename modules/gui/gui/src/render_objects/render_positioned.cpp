@@ -61,13 +61,13 @@ float RenderPositioned::compute_max_intrinsic_height(float width) const SKR_NOEX
 }
 
 // dry layout
-Size RenderPositioned::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
+Sizef RenderPositioned::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
 {
     if (child())
     {
         BoxConstraints child_constraints = positional().resolve_constraints(constraints);
-        Size           child_size = child()->get_dry_layout(child_constraints);
-        Size           parent_size;
+        Sizef          child_size = child()->get_dry_layout(child_constraints);
+        Sizef          parent_size;
 
         // calc horizontal
         if (positional().is_width_padding())
@@ -134,8 +134,8 @@ void RenderPositioned::perform_layout() SKR_NOEXCEPT
         child()->set_constraints(positional().resolve_constraints(constraints()));
         child()->layout(true);
 
-        Size child_size = child()->size();
-        Size parent_size;
+        Sizef child_size = child()->size();
+        Sizef parent_size;
 
         // calc horizontal
         if (positional().is_width_padding())

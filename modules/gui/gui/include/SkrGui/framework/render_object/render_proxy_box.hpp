@@ -4,7 +4,7 @@
 
 namespace skr::gui
 {
-// 代理 Box，其渲染 Size 等属性严格由 child 决定，通常起到修饰作用
+// 代理 Box，其渲染 Sizef 等属性严格由 child 决定，通常起到修饰作用
 struct RenderProxyBox : public RenderBox, public ISingleChildRenderObject {
     SKR_GUI_TYPE(RenderProxyBox, "7b69daee-a739-4497-b64a-a7421035975d", RenderBox, ISingleChildRenderObject);
 
@@ -16,13 +16,13 @@ protected:
     float compute_max_intrinsic_height(float width) const SKR_NOEXCEPT override;
 
     // dry layout
-    Size compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT override;
+    Sizef compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT override;
 
     // layout
     void perform_layout() SKR_NOEXCEPT override;
 
     // paint
-    void paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT override;
+    void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
 
     // MIXIN
     SKR_GUI_SINGLE_CHILD_RENDER_OBJECT_MIXIN(RenderProxyBox, RenderBox);

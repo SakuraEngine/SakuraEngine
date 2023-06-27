@@ -25,7 +25,7 @@ struct RenderConstrainedBox : public RenderProxyBox {
     float compute_max_intrinsic_height(float width) const SKR_NOEXCEPT override;
 
     // dry layout
-    Size compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT override;
+    Sizef compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT override;
 
     // layout
     void perform_layout() SKR_NOEXCEPT override;

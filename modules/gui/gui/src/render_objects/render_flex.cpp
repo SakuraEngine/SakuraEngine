@@ -36,31 +36,31 @@ struct _FlexHelper {
                 break;
         }
     }
-    inline static float _get_main_size(const RenderFlex& self, Size size) SKR_NOEXCEPT
+    inline static float _get_main_size(const RenderFlex& self, Sizef size) SKR_NOEXCEPT
     {
         return _select_main(
         self,
         [&]() { return size.width; },
         [&]() { return size.height; });
     }
-    inline static float _get_cross_size(const RenderFlex& self, Size size) SKR_NOEXCEPT
+    inline static float _get_cross_size(const RenderFlex& self, Sizef size) SKR_NOEXCEPT
     {
         return _select_cross(
         self, [&]() { return size.width; }, [&]() { return size.height; });
     }
-    inline static Size _combine_size(const RenderFlex& self, float main_size, float cross_size) SKR_NOEXCEPT
+    inline static Sizef _combine_size(const RenderFlex& self, float main_size, float cross_size) SKR_NOEXCEPT
     {
         return _select_main(
         self,
-        [&]() { return Size{ main_size, cross_size }; },
-        [&]() { return Size{ cross_size, main_size }; });
+        [&]() { return Sizef{ main_size, cross_size }; },
+        [&]() { return Sizef{ cross_size, main_size }; });
     }
-    inline static Offset _combine_offset(const RenderFlex& self, float main_offset, float cross_offset) SKR_NOEXCEPT
+    inline static Offsetf _combine_offset(const RenderFlex& self, float main_offset, float cross_offset) SKR_NOEXCEPT
     {
         return _select_main(
         self,
-        [&]() { return Offset{ main_offset, cross_offset }; },
-        [&]() { return Offset{ cross_offset, main_offset }; });
+        [&]() { return Offsetf{ main_offset, cross_offset }; },
+        [&]() { return Offsetf{ cross_offset, main_offset }; });
     }
 
     // flip
@@ -140,7 +140,7 @@ struct _FlexHelper {
                                                    BoxConstraints::LooseHeight(constraints.max_height);
 
                 // layout child
-                const Size child_size = layout_func(slot.child, inner_constraints);
+                const Sizef child_size = layout_func(slot.child, inner_constraints);
                 out_allocated_size += _get_main_size(self, child_size);
                 out_cross_size = std::max(out_cross_size, _get_cross_size(self, child_size));
             }
@@ -199,7 +199,7 @@ struct _FlexHelper {
                                                        };
 
                     // layout child
-                    const Size child_size = layout_func(slot.child, inner_constraints);
+                    const Sizef child_size = layout_func(slot.child, inner_constraints);
                     out_allocated_size += _get_main_size(self, child_size);
                     out_cross_size = std::max(out_cross_size, _get_cross_size(self, child_size));
                 }
@@ -279,7 +279,7 @@ struct _FlexHelper {
             // When you're overconstrained spacePerFlex can be negative.
             const float space_per_flex = std::max(0.f, (available_main_size - inflexible_space) / total_flex);
 
-            // Size remaining (flexible) items, find the maximum cross size.
+            // Sizef remaining (flexible) items, find the maximum cross size.
             for (const auto& slot : self.children())
             {
                 if (slot.data.flex > 0)
@@ -338,12 +338,12 @@ float RenderFlex::compute_max_intrinsic_height(float width) const SKR_NOEXCEPT
 }
 
 // dry layout
-Size RenderFlex::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
+Sizef RenderFlex::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
 {
     if (!_FlexHelper::_can_compute_intrinsics(*this))
     {
         SKR_GUI_LOG_ERROR("Dry layout cannot be computed for ECrossAxisAlignment.baseline, which requires a full layout.");
-        return Size::Zero();
+        return Sizef::Zero();
     }
 
     // compute sizes
@@ -385,7 +385,7 @@ void RenderFlex::perform_layout() SKR_NOEXCEPT
     allocated_size);
 
     // update self size
-    set_size(constraints().constrain(is_coord_flipped ? Size{ cross_size, main_size } : Size{ main_size, cross_size }));
+    set_size(constraints().constrain(is_coord_flipped ? Sizef{ cross_size, main_size } : Sizef{ main_size, cross_size }));
     main_size = _FlexHelper::_get_main_size(*this, size());
     cross_size = _FlexHelper::_get_cross_size(*this, size());
 
@@ -434,7 +434,7 @@ void RenderFlex::perform_layout() SKR_NOEXCEPT
     for (size_t i = 0; i < children().size(); ++i)
     {
         auto&       slot = children()[i];
-        const Size  child_size = slot.child->size();
+        const Sizef child_size = slot.child->size();
         const float child_main_size = _FlexHelper::_get_main_size(*this, child_size);
         const float child_cross_size = _FlexHelper::_get_cross_size(*this, child_size);
 
@@ -472,7 +472,7 @@ void RenderFlex::perform_layout() SKR_NOEXCEPT
 }
 
 // paint
-void RenderFlex::paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT
+void RenderFlex::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT
 {
     // TODO. handle overflow
     for (const auto& slot : children())

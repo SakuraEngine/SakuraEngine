@@ -45,7 +45,7 @@ float RenderConstrainedBox::compute_max_intrinsic_height(float width) const SKR_
 }
 
 // dry layout
-Size RenderConstrainedBox::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
+Sizef RenderConstrainedBox::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
 {
     if (child())
     {
@@ -53,7 +53,7 @@ Size RenderConstrainedBox::compute_dry_layout(BoxConstraints constraints) const 
     }
     else
     {
-        return additional_constraint().enforce(constraints).constrain(Size::Zero());
+        return additional_constraint().enforce(constraints).constrain(Sizef::Zero());
     }
 }
 
@@ -68,7 +68,7 @@ void RenderConstrainedBox::perform_layout() SKR_NOEXCEPT
     }
     else
     {
-        set_size(additional_constraint().enforce(constraints()).constrain(Size::Zero()));
+        set_size(additional_constraint().enforce(constraints()).constrain(Sizef::Zero()));
     }
 }
 } // namespace skr::gui

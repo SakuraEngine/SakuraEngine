@@ -203,7 +203,7 @@ void RenderText::perform_layout() SKR_NOEXCEPT
     set_size(constraints().constrain({ text_size.x, text_size.y }));
 }
 
-void RenderText::paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT
+void RenderText::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT
 {
     BuildParagraph();
     {

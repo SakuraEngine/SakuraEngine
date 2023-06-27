@@ -11,9 +11,9 @@ void RenderColorPicker::perform_layout() SKR_NOEXCEPT
     set_size(constraints().biggest());
 }
 
-void RenderColorPicker::paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT
+void RenderColorPicker::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT
 {
-    Rect        paint_rect = Rect::OffsetSize(offset, size());
+    Rectf       paint_rect = Rectf::OffsetSize(offset, size());
     float       current_degree = 0;
     const float kPi = 3.1415926535897932384626433832795f;
 
@@ -22,10 +22,10 @@ void RenderColorPicker::paint(NotNull<PaintingContext*> context, Offset offset) 
     {
         auto _ = canvas->paint_scope();
 
-        Offset center = paint_rect.center();
-        float  outer_radius = paint_rect.size().shortest_side() / 2.f - 5.f;
-        float  inner_radius = outer_radius - 20.f;
-        float  radius = (outer_radius + inner_radius) / 2.f;
+        Offsetf center = paint_rect.center();
+        float   outer_radius = paint_rect.size().shortest_side() / 2.f - 5.f;
+        float   inner_radius = outer_radius - 20.f;
+        float   radius = (outer_radius + inner_radius) / 2.f;
 
         // draw hue ring
         {
@@ -59,9 +59,9 @@ void RenderColorPicker::paint(NotNull<PaintingContext*> context, Offset offset) 
 
             // center triangle
             canvas->path_begin();
-            canvas->path_move_to(Offset::Radians(0, radius));
-            canvas->path_line_to(Offset::Radians(120.f / kPi, radius));
-            canvas->path_line_to(Offset::Radians(-120.f / kPi, radius));
+            canvas->path_move_to(Offsetf::Radians(0, radius));
+            canvas->path_line_to(Offsetf::Radians(120.f / kPi, radius));
+            canvas->path_line_to(Offsetf::Radians(-120.f / kPi, radius));
             canvas->path_close();
             canvas->path_end(FillPen(), ColorBrush().custom(
                                         [current_degree](PaintVertex& v) {

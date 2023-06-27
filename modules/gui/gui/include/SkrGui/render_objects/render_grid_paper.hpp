@@ -9,7 +9,7 @@ public:
     using Super = RenderBox;
 
     void perform_layout() SKR_NOEXCEPT override;
-    void paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT override;
+    void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
     void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override {}
 };
 

@@ -18,9 +18,9 @@ struct _StackHelper {
     }
 
     template <typename TLayoutFunc>
-    inline static Size _compute_size(const RenderStack&    self,
-                                     const BoxConstraints& constraints,
-                                     TLayoutFunc&&         layout_func) SKR_NOEXCEPT
+    inline static Sizef _compute_size(const RenderStack&    self,
+                                      const BoxConstraints& constraints,
+                                      TLayoutFunc&&         layout_func) SKR_NOEXCEPT
     {
         if (self.children().size() == 0) return constraints.biggest().is_finite() ? constraints.biggest() : constraints.smallest();
         if (self._stack_size == EStackSize::Expand) return constraints.biggest();
@@ -30,7 +30,7 @@ struct _StackHelper {
         float          height = constraints.min_height;
         for (const auto& slot : self.children())
         {
-            Size child_size = layout_func(slot.child, fit_constraints);
+            Sizef child_size = layout_func(slot.child, fit_constraints);
             width = std::max(width, child_size.width);
             height = std::max(height, child_size.height);
         }
@@ -81,7 +81,7 @@ float RenderStack::compute_max_intrinsic_height(float width) const SKR_NOEXCEPT
 }
 
 // dry layout
-Size RenderStack::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
+Sizef RenderStack::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
 {
     return _StackHelper::_compute_size(
     *this,
@@ -110,7 +110,7 @@ void RenderStack::perform_layout() SKR_NOEXCEPT
 }
 
 // paint
-void RenderStack::paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT
+void RenderStack::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT
 {
     // TODO. clip behaviour
     for (const auto& slot : children())

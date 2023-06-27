@@ -19,7 +19,7 @@ enum class EMonitorFeatureState
 };
 
 struct MonitorFeature {
-    Rect                 bound; // in physical unit
+    Rectf                bound; // in physical unit
     EMonitorFeatureType  type;
     EMonitorFeatureState state;
 };
@@ -34,8 +34,8 @@ struct MonitorInfo {
     int32_t max_resolution_width;  // in physical unit
     int32_t max_resolution_height; // in physical unit
 
-    Rect virtual_display_area; // in physical unit
-    Rect virtual_work_area;    // in physical unit
+    Rectf virtual_display_area; // in physical unit
+    Rectf virtual_work_area;    // in physical unit
 
     bool is_primary;
 
@@ -46,8 +46,8 @@ struct DesktopInfo {
     int32_t primary_display_width;  // in physical unit
     int32_t primary_display_height; // in physical unit
 
-    Rect primary_display_area; // in physical unit
-    Rect virtual_display_area; // in physical unit
+    Rectf primary_display_area; // in physical unit
+    Rectf virtual_display_area; // in physical unit
 
     // EdgeInset title_safe_padding;
     // EdgeInset action_safe_padding;

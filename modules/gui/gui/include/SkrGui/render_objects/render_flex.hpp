@@ -18,13 +18,13 @@ public:
     float compute_max_intrinsic_height(float width) const SKR_NOEXCEPT override;
 
     // dry layout
-    Size compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT override;
+    Sizef compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT override;
 
     // layout
     void perform_layout() SKR_NOEXCEPT override;
 
     // paint
-    void paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT override;
+    void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
 
     struct SlotData {
         // slot data
@@ -32,7 +32,7 @@ public:
         EFlexFit flex_fit = EFlexFit::Loose;
 
         // child data
-        Offset offset = Offset::Zero();
+        Offsetf offset = Offsetf::Zero();
     };
 
 private:

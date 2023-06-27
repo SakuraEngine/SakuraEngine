@@ -196,7 +196,7 @@ RenderObject* Element::find_ancestor_render_object() const SKR_NOEXCEPT
     SKR_UNIMPLEMENTED_FUNCTION();
     return nullptr;
 }
-Optional<Size> Element::render_box_size() const SKR_NOEXCEPT
+Optional<Sizef> Element::render_box_size() const SKR_NOEXCEPT
 {
     if (auto render_object = find_render_object())
     {

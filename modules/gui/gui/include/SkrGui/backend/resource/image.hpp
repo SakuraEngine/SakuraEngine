@@ -12,19 +12,19 @@ struct IImageSource;
 // 将 GDI Texture 映射为 IImage
 // TODO. ResourceProvider Widget/Element
 struct SKR_GUI_API IImage : public ISurface {
-    virtual Size                   size() const SKR_NOEXCEPT = 0; // in image pixel
+    virtual Sizef                  size() const SKR_NOEXCEPT = 0; // in image pixel
     virtual NotNull<IImageSource*> source() const SKR_NOEXCEPT = 0;
-    virtual Rect                   uv_rect() const SKR_NOEXCEPT = 0;         // [0, 1]
-    virtual Rect                   nine_inner_rect() const SKR_NOEXCEPT = 0; // [0, size()]
+    virtual Rectf                  uv_rect() const SKR_NOEXCEPT = 0;         // [0, 1]
+    virtual Rectf                  nine_inner_rect() const SKR_NOEXCEPT = 0; // [0, size()]
 };
 
 struct SKR_GUI_API IImageEntry {
     virtual ~IImageEntry() = default;
 
-    virtual NotNull<IImage*> load_image_of_size(Size show_size) SKR_NOEXCEPT = 0;
+    virtual NotNull<IImage*> load_image_of_size(Sizef show_size) SKR_NOEXCEPT = 0;
     virtual void             release_image(NotNull<IImage*> image) SKR_NOEXCEPT = 0;
 
-    virtual void visit_useable_image_size(FunctionRef<void(Size)> visitor) const SKR_NOEXCEPT = 0;
+    virtual void visit_useable_image_size(FunctionRef<void(Sizef)> visitor) const SKR_NOEXCEPT = 0;
     virtual void visit_requested_image(FunctionRef<void(NotNull<IImage*>)> visitor) const SKR_NOEXCEPT = 0;
 };
 

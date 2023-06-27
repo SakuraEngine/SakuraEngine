@@ -40,7 +40,7 @@ public:
     virtual ~RenderText();
 
     void perform_layout() SKR_NOEXCEPT override;
-    void paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT override;
+    void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
     void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override {}
 
     void add_text(const char8_t* u8_text);
