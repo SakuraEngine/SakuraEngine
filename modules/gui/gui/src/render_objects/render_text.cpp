@@ -5,7 +5,7 @@
 #include <containers/sptr.hpp>
 #include <fstream>
 #include "SkrGui/framework/painting_context.hpp"
-#include "SkrGui/backend/render/canvas.hpp"
+#include "SkrGui/backend/canvas/canvas.hpp"
 
 namespace skr::gui
 {

@@ -1,10 +1,12 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
+#include "SkrGui/math/geometry.hpp"
 
 namespace skr::gui
 {
 struct IDeviceView;
 struct ICanvas;
+struct DisplayMetrics;
 
 // Device/DeviceView 均通过 View/RenderView 注入到上下文中
 // View 代理可以通过创建自己的 View/RenderView 来覆写 BuildOwner/PipelineOwner
@@ -25,18 +27,59 @@ struct ICanvas;
 // Canvas/CanvasService：提供 VG 绘制服务
 // TextService：文本绘制服务
 // Resource/ResourceEntry/ResourceProvider：资源管理服务
-struct SKR_GUI_API IDevice {
+
+enum class EViewType : uint8_t
+{
+    Normal,
+    Popup,
+    Modal,
+    Tooltip,
+};
+
+enum class EViewFlag : uint32_t
+{
+    None = 0,
+    NoMove = 1 << 0,
+    NoResize = 1 << 1,
+    NoTitle = 1 << 2,
+    NoBorder = 1 << 3,
+    NoMinimize = 1 << 4,
+    NoMaximize = 1 << 5,
+    NoClose = 1 << 6,
+    AutoSizedByContent = 1 << 7,
+};
+
+struct ViewDesc {
+    EViewType type = EViewType::Normal;
+    EViewFlag flags = EViewFlag::None;
+    Offsetf   pos = {};
+    Alignment anchor = Alignment::TopLeft();
+    Sizef     size = {};
+    String    name = {};
+};
+
+struct SKR_GUI_API IDevice SKR_GUI_INTERFACE_BASE {
+    SKR_GUI_INTERFACE_ROOT(IDevice, "22730f6a-c631-4982-8762-31abafc17bfe")
     virtual ~IDevice() = default;
 
-    // viewport manage
-    NotNull<IDeviceView*> main_view();
-    bool                  can_create_view();
-    NotNull<IDeviceView*> create_view();
-    void                  destroy_view(NotNull<IDeviceView*> view);
+    // main view
+    virtual NotNull<IDeviceView*> create_main_view(const ViewDesc& desc) = 0;
+    virtual NotNull<IDeviceView*> main_view() = 0;
+
+    // other view
+    virtual NotNull<IDeviceView*> create_view(const ViewDesc& desc) = 0;
+    virtual void                  destroy_view(NotNull<IDeviceView*> view) = 0;
+
+    // view ops
+    virtual void update_view(NotNull<IDeviceView*> view) = 0;
+    virtual void draw_view(NotNull<IDeviceView*> view) = 0;
+    // TODO. input
 };
 
 struct SKR_GUI_API INativeDevice : public IDevice {
-    // TODO. virtual desktop & monitor getter
+    SKR_GUI_INTERFACE(INativeDevice, "209fefb2-b6dc-4035-ba71-9b5a7fc147d0", IDevice)
+
+    virtual const DisplayMetrics& display_metrics() const = 0;
 };
 
 } // namespace skr::gui
