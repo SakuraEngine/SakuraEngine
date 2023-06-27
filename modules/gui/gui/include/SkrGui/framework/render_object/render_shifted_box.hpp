@@ -6,7 +6,7 @@ namespace skr::gui
 {
 // 会对 child 施加布局偏移的 RenderBox
 struct RenderShiftedBox : public RenderBox, public ISingleChildRenderObject {
-    SKR_GUI_TYPE(RenderShiftedBox, "58e69c83-86c1-4f86-90e0-a82d4f78038c", RenderBox, ISingleChildRenderObject);
+    SKR_GUI_OBJECT(RenderShiftedBox, "58e69c83-86c1-4f86-90e0-a82d4f78038c", RenderBox, ISingleChildRenderObject);
 
     inline Offsetf offset() const SKR_NOEXCEPT { return _offset; }
     inline void    set_offset(Offsetf offset) SKR_NOEXCEPT { _offset = offset; }

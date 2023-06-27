@@ -5,6 +5,6 @@
 namespace skr::gui
 {
 struct SKR_GUI_API StatelessElement : public ComponentElement {
-    SKR_GUI_TYPE(StatelessElement, "efeba07d-131b-4a15-b263-889182119f45", ComponentElement)
+    SKR_GUI_OBJECT(StatelessElement, "efeba07d-131b-4a15-b263-889182119f45", ComponentElement)
 };
 } // namespace skr::gui

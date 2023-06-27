@@ -4,7 +4,7 @@
 namespace skr::gui
 {
 struct RenderConstrainedBox : public RenderProxyBox {
-    SKR_GUI_TYPE(RenderConstrainedBox, "9a72f533-5afd-46dc-b78e-ef943957ecd4", RenderProxyBox)
+    SKR_GUI_OBJECT(RenderConstrainedBox, "9a72f533-5afd-46dc-b78e-ef943957ecd4", RenderProxyBox)
     using Super = RenderProxyBox;
 
     // getter setter

@@ -5,7 +5,7 @@
 namespace skr::gui
 {
 struct SKR_GUI_API RenderObjectElement : public Element {
-    SKR_GUI_TYPE(RenderObjectElement, "947962f5-5bd7-4f54-b6dd-277a9c2a3760", Element)
+    SKR_GUI_OBJECT(RenderObjectElement, "947962f5-5bd7-4f54-b6dd-277a9c2a3760", Element)
     using Super = Element;
     using Super::Super;
 

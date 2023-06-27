@@ -5,7 +5,7 @@
 namespace skr::gui
 {
 struct SKR_GUI_API ColoredBox : public SingleChildRenderObjectWidget {
-    SKR_GUI_TYPE(ColoredBox, "5ae444e6-eb5a-44a1-aeb0-9050c8587795", SingleChildRenderObjectWidget)
+    SKR_GUI_OBJECT(ColoredBox, "5ae444e6-eb5a-44a1-aeb0-9050c8587795", SingleChildRenderObjectWidget)
 
     NotNull<RenderObject*> create_render_object() SKR_NOEXCEPT override;
     void                   update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;

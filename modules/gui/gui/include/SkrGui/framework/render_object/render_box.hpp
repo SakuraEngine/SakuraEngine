@@ -9,7 +9,7 @@ struct HitTestRecord {
 };
 
 struct SKR_GUI_API RenderBox : public RenderObject {
-    SKR_GUI_TYPE(RenderBox, "01a2eb19-1299-4069-962f-88db0c719134", RenderObject);
+    SKR_GUI_OBJECT(RenderBox, "01a2eb19-1299-4069-962f-88db0c719134", RenderObject);
 
 public:
     RenderBox();

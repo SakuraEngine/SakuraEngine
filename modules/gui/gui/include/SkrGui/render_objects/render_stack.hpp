@@ -8,7 +8,7 @@ namespace skr::gui
 
 struct SKR_GUI_API RenderStack : public RenderBox, public IMultiChildRenderObject {
 public:
-    SKR_GUI_TYPE(RenderStack, "b3c8ede6-d878-472c-a1c1-6b3acdc9f1f0", RenderBox, IMultiChildRenderObject);
+    SKR_GUI_OBJECT(RenderStack, "b3c8ede6-d878-472c-a1c1-6b3acdc9f1f0", RenderBox, IMultiChildRenderObject);
     using Super = RenderBox;
 
     // intrinsic size

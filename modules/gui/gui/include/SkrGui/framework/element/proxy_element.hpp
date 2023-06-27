@@ -5,7 +5,7 @@
 namespace skr::gui
 {
 struct SKR_GUI_API ProxyElement : public ComponentElement {
-    SKR_GUI_TYPE(ProxyElement, "752d1492-e111-4f86-b50e-954ee871e53c", ComponentElement)
+    SKR_GUI_OBJECT(ProxyElement, "752d1492-e111-4f86-b50e-954ee871e53c", ComponentElement)
     using Super = ComponentElement;
     using Super::Super;
 

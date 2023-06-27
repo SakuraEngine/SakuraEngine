@@ -200,11 +200,4 @@ void RenderObject::_flush_relayout_boundary() SKR_NOEXCEPT
     SKR_UNIMPLEMENTED_FUNCTION()
 }
 
-//==> Begin DiagnosticableTreeNode API
-void RenderObject::visit_diagnostics_children(FunctionRef<void(DiagnosticableTreeNode*)> visitor) SKR_NOEXCEPT
-{
-    visit_children([&visitor](RenderObject* o) { visitor(o); });
-}
-//==> End DiagnosticableTreeNode API
-
 } // namespace skr::gui

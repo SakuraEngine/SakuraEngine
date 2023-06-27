@@ -8,7 +8,7 @@ namespace skr::gui
 class SKR_GUI_API RenderFlex : public RenderBox, public IMultiChildRenderObject
 {
 public:
-    SKR_GUI_TYPE(RenderFlex, "d3987dfd-24d2-478a-910e-537f24c4bae7", RenderBox, IMultiChildRenderObject);
+    SKR_GUI_OBJECT(RenderFlex, "d3987dfd-24d2-478a-910e-537f24c4bae7", RenderBox, IMultiChildRenderObject);
     using Super = RenderBox;
 
     // intrinsic size

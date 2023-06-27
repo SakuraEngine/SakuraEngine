@@ -5,7 +5,7 @@
 namespace skr::gui
 {
 struct SKR_GUI_API Stack : public MultiChildRenderObjectWidget {
-    SKR_GUI_TYPE(Stack, "94714676-422c-4e4e-a754-e26b5466900f", MultiChildRenderObjectWidget)
+    SKR_GUI_OBJECT(Stack, "94714676-422c-4e4e-a754-e26b5466900f", MultiChildRenderObjectWidget)
 
     NotNull<RenderObject*> create_render_object() SKR_NOEXCEPT override;
     void                   update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;

@@ -124,7 +124,7 @@ inline bool SkrGUIBasedOn(const IObject* obj, skr_guid_t base_guid)
 } // namespace skr::gui
 
 // type marco
-#define SKR_GUI_TYPE_ROOT(__T, __GUID)                                                                                                     \
+#define SKR_GUI_OBJECT_ROOT(__T, __GUID)                                                                                                   \
     using zz_internal_castHelper = BaseCastHelper<__T>;                                                                                    \
     inline static constexpr skr_guid_t zz_internal_static_guid() SKR_NOEXCEPT                                                              \
     {                                                                                                                                      \
@@ -144,7 +144,7 @@ inline bool SkrGUIBasedOn(const IObject* obj, skr_guid_t base_guid)
     virtual void zz_internal_base_guid(const skr_guid_t*& p, size_t n) const SKR_NOEXCEPT override { zz_internal_static_base_guid(p, n); } \
     virtual void* zz_internal_cast(skr_guid_t id) const SKR_NOEXCEPT override { return zz_internal_castHelper::cast(id, this); }
 
-#define SKR_GUI_TYPE(__T, __GUID, ...)                                                                                                     \
+#define SKR_GUI_OBJECT(__T, __GUID, ...)                                                                                                   \
     using zz_internal_castHelper = BaseCastHelper<__T, __VA_ARGS__>;                                                                       \
     using zz_internal_guidHelper = BaseGUIDHelper<__VA_ARGS__>;                                                                            \
     inline static constexpr skr_guid_t zz_internal_static_guid()                                                                           \
@@ -161,8 +161,8 @@ inline bool SkrGUIBasedOn(const IObject* obj, skr_guid_t base_guid)
     virtual void zz_internal_base_guid(const skr_guid_t*& p, size_t n) const SKR_NOEXCEPT override { zz_internal_static_base_guid(p, n); } \
     virtual void* zz_internal_cast(skr_guid_t id) const SKR_NOEXCEPT override { return zz_internal_castHelper::cast(id, this); }
 
-#define SKR_GUI_INTERFACE_ROOT(__T, __GUID) SKR_GUI_TYPE_ROOT(__T, __GUID)
-#define SKR_GUI_INTERFACE(__T, __GUID, ...) SKR_GUI_TYPE(__T, __GUID, __VA_ARGS__)
+#define SKR_GUI_INTERFACE_ROOT(__T, __GUID) SKR_GUI_OBJECT_ROOT(__T, __GUID)
+#define SKR_GUI_INTERFACE(__T, __GUID, ...) SKR_GUI_OBJECT(__T, __GUID, __VA_ARGS__)
 
 // base marco
 #define SKR_GUI_OBJECT_BASE : virtual public IObject

@@ -4,7 +4,7 @@
 namespace skr::gui
 {
 struct RenderPositioned : public RenderShiftedBox {
-    SKR_GUI_TYPE(RenderPositioned, "17953364-abcc-4430-ac0c-7242c11dce92", RenderShiftedBox)
+    SKR_GUI_OBJECT(RenderPositioned, "17953364-abcc-4430-ac0c-7242c11dce92", RenderShiftedBox)
     using Super = RenderShiftedBox;
 
     // getter & setter

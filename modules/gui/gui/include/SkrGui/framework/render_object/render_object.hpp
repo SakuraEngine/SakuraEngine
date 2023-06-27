@@ -1,5 +1,4 @@
 #pragma once
-#include "SkrGui/framework/diagnostics.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/math/matrix.hpp"
@@ -15,8 +14,9 @@ enum class ERenderObjectLifecycle : uint8_t
     Destroyed,
 };
 
-struct SKR_GUI_API RenderObject : public DiagnosticableTreeNode {
-    SKR_GUI_TYPE(RenderObject, "74844fa6-8994-4915-8f8e-ec944a1cbea4", DiagnosticableTreeNode);
+struct SKR_GUI_API RenderObject SKR_GUI_OBJECT_BASE {
+    SKR_GUI_OBJECT_ROOT(RenderObject, "74844fa6-8994-4915-8f8e-ec944a1cbea4");
+    SKR_GUI_RAII_MIX_IN()
     using VisitFuncRef = FunctionRef<void(NotNull<RenderObject*>)>;
 
     RenderObject() SKR_NOEXCEPT;
@@ -68,10 +68,6 @@ struct SKR_GUI_API RenderObject : public DiagnosticableTreeNode {
     // _paint_with_context：call by PaintingContext
     // handle_event：处理输入事件
     // show_on_screen：或许可以实现，用于 ScrollView 的目标追踪
-
-    //==> Begin DiagnosticableTreeNode API
-    void visit_diagnostics_children(FunctionRef<void(DiagnosticableTreeNode*)> visitor) SKR_NOEXCEPT override;
-    //==> End DiagnosticableTreeNode API
 
     // getter
     inline RenderObject* parent() const SKR_NOEXCEPT { return _parent; }

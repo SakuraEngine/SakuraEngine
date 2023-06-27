@@ -33,7 +33,7 @@ struct InlineType : public std::variant<skr::string, RenderObject*, RenderText*,
 
 struct SKR_GUI_API RenderText : public RenderBox {
 public:
-    SKR_GUI_TYPE(RenderText, "72e8d4de-c288-4675-a22f-4c7a6487cabd", RenderBox);
+    SKR_GUI_OBJECT(RenderText, "72e8d4de-c288-4675-a22f-4c7a6487cabd", RenderBox);
     using Super = RenderBox;
 
     RenderText();
