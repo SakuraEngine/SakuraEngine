@@ -19,8 +19,8 @@ namespace skr::gui
 //
 // ! 考虑下 HitTest 怎么做
 // ! 考虑下 Focus 怎么管理
-struct SKR_GUI_API IDeviceViewport {
-    virtual ~IDeviceViewport() = default;
+struct SKR_GUI_API IDeviceView {
+    virtual ~IDeviceView() = default;
 
     // getter
     virtual IDevice* device() = 0;
@@ -45,6 +45,7 @@ struct SKR_GUI_API IDeviceViewport {
     virtual void     render() = 0;
 };
 
-struct SKR_GUI_API INativeDeviceViewport : public IDeviceViewport {
+struct SKR_GUI_API INativeDeviceView : public IDeviceView {
 };
+
 } // namespace skr::gui
