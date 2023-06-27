@@ -1,8 +1,8 @@
 #pragma once
 #include "misc/smart_pool.hpp"
 
-namespace skr
-{
+namespace skr {
+namespace log {
 
 template <typename = void>
 struct Node : public skr::SInterface 
@@ -47,4 +47,5 @@ public:
     }
 };
 
+} // namespace log
 } // namespace skr

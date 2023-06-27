@@ -1,3 +1,4 @@
+#include "platform/thread.h"
 #include "log_queue.hpp"
 #include "log_worker.hpp"
 #include "logger.hpp"
@@ -12,6 +13,12 @@ namespace skr {
 namespace log {
 
 const char* kLogMemoryName = "sakura::log";
+
+LogEvent::LogEvent(LogLevel level) SKR_NOEXCEPT
+    : level(level)
+{
+    thread_id = skr_current_thread_id();
+}
 
 Logger::Logger() SKR_NOEXCEPT
 {
@@ -35,6 +42,28 @@ void Logger::notifyWorker() SKR_NOEXCEPT
     {
         worker->awake();
     }
+}
+
+LogQueueElement::LogQueueElement(LogEvent ev) SKR_NOEXCEPT
+    : event(ev)
+{
+
+}
+
+LogQueueElement::LogQueueElement() SKR_NOEXCEPT
+    : event(LogLevel::kTrace)
+{
+    
+}
+
+skr::string_view LogQueueElement::produce() SKR_NOEXCEPT
+{
+    if (need_format)
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+        // format = ...
+    }
+    return format.view();
 }
 
 eastl::unique_ptr<LogWorker> LogWorkerSingleton::_this = nullptr;

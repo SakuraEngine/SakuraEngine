@@ -1,61 +1,23 @@
 #pragma once
-#include "args.hpp"
-#include "platform/thread.h"
 #include "containers/string.hpp"
 #include "containers/concurrent_queue.h"
+
+#include "log_base.hpp"
+#include "log_formatter.hpp"
 
 namespace skr {
 namespace log {
 
-extern const char* kLogMemoryName;
-
-enum class LogLevel : uint32_t
-{
-    kTrace,
-    kDebug,
-    kInfo,
-    kWarning,
-    kError,
-    kFatal,
-    kCount
-};
-
-struct LogEvent
-{
-    LogEvent(LogLevel level) SKR_NOEXCEPT
-        : level(level)
-    {
-        thread_id = skr_current_thread_id();
-
-    }
-    LogLevel level;
-    SThreadID thread_id;
-    bool flush = false;
-};
-
 struct LogQueueElement
 {
-    skr::string_view produce()
-    {
-        if (need_format)
-        {
-            SKR_UNIMPLEMENTED_FUNCTION();
-            // format = ...
-        }
-        return format.view();
-    }
-
+    skr::string_view produce() SKR_NOEXCEPT;
 private:
+    LogQueueElement(LogEvent ev) SKR_NOEXCEPT;
+    LogQueueElement() SKR_NOEXCEPT;
+    
     friend struct LogQueue;
     friend struct LogWorker;
-    LogQueueElement(LogEvent ev) SKR_NOEXCEPT
-        : event(ev)
-    {
-    }
-    LogQueueElement() SKR_NOEXCEPT
-        : event(LogLevel::kTrace)
-    {
-    }
+
     LogEvent event;
     skr::string format;
     ArgsList<> args;

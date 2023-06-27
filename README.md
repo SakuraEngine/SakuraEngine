@@ -242,7 +242,10 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - icu 72.1 ([LICENSE](https://github.com/unicode-org/icu/blob/main/icu4c/LICENSE))
 - harfbuzz 7.1.0 ([LICENSE](https://github.com/harfbuzz/harfbuzz/blob/main/COPYING))
 
-## 接入的扩展API以及版本
+## 参考和借鉴的开源库
+- [quill](https://github.com/odygrd/quill) v3.0.2 (MIT)
+
+## 接入的扩展 API 以及版本
 - [vulkan headers](https://github.com/KhronosGroup/Vulkan-Headers) & volk 1.3.250.0
 - nvapi R510
 - amd_ags 6.0.1
