@@ -337,9 +337,9 @@ typedef struct CGPUBuffer_D3D12 {
     /// Descriptor handle of the CBV in a CPU visible descriptor heap (applicable to BUFFER_USAGE_UNIFORM)
     D3D12_CPU_DESCRIPTOR_HANDLE mDxDescriptorHandles;
     /// Offset from mDxDescriptors for srv descriptor handle
-    uint64_t mDxSrvOffset : 8;
+    uint8_t mDxSrvOffset;
     /// Offset from mDxDescriptors for uav descriptor handle
-    uint64_t mDxUavOffset : 8;
+    uint8_t mDxUavOffset;
     /// Native handle of the underlying resource
     struct ID3D12Resource* pDxResource;
     /// Contains resource allocation info such as parent heap, offset in heap
