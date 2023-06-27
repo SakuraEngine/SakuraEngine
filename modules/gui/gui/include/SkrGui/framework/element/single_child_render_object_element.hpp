@@ -4,7 +4,7 @@
 namespace skr::gui
 {
 struct SingleChildRenderObjectElement : public RenderObjectElement {
-    SKR_GUI_TYPE(SingleChildRenderObjectElement, "a4d38770-bc3b-4404-8224-963563234880", RenderObjectElement)
+    SKR_GUI_OBJECT(SingleChildRenderObjectElement, "a4d38770-bc3b-4404-8224-963563234880", RenderObjectElement)
     using Super = RenderObjectElement;
     using Super::Super;
 

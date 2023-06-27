@@ -170,9 +170,6 @@ StyleText TODO_StyleText = {
 
 RenderText::RenderText()
 {
-    diagnostic_builder.add_properties(
-    SkrNew<TextDiagnosticProperty>(u8"type", u8"text", u8"draws text paragraph"));
-
     paragraph_ = SkrNew<Paragraph>();
     font_ = SPtr<FontFile>::Create();
     godot::PackedByteArray data = {};

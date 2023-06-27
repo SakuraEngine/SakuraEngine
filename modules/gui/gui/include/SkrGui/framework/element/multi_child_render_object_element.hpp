@@ -4,7 +4,7 @@
 namespace skr::gui
 {
 struct MultiChildRenderObjectElement : public RenderObjectElement {
-    SKR_GUI_TYPE(MultiChildRenderObjectElement, "145cedaa-cc1c-4a06-acab-f83a30d997a4", RenderObjectElement)
+    SKR_GUI_OBJECT(MultiChildRenderObjectElement, "145cedaa-cc1c-4a06-acab-f83a30d997a4", RenderObjectElement)
     using Super = RenderObjectElement;
     using Super::Super;
 

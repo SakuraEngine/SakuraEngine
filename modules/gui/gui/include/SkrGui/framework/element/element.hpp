@@ -1,5 +1,4 @@
 #pragma once
-#include "SkrGui/framework/diagnostics.hpp"
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
 #include "SkrGui/framework/build_context.hpp"
@@ -15,8 +14,9 @@ enum class EElementLifecycle : uint8_t
     Destroyed, // 完全被销毁
 };
 
-struct SKR_GUI_API Element : public DiagnosticableTreeNode, public IBuildContext {
-    SKR_GUI_TYPE(Element, "123127c7-4eed-4007-87ff-6843bd56771a", DiagnosticableTreeNode, IBuildContext)
+struct SKR_GUI_API Element SKR_GUI_OBJECT_BASE_WITH(public IBuildContext) {
+    SKR_GUI_OBJECT(Element, "123127c7-4eed-4007-87ff-6843bd56771a", IBuildContext)
+    SKR_GUI_RAII_MIX_IN()
     using VisitFuncRef = FunctionRef<void(NotNull<Element*>)>;
 
     Element(Widget* widget) SKR_NOEXCEPT;

@@ -4,7 +4,7 @@
 namespace skr::gui
 {
 struct SlotElement : public ProxyElement {
-    SKR_GUI_TYPE(SlotElement, "70e475e0-193e-4945-a17b-0c358621a1b3", ProxyElement)
+    SKR_GUI_OBJECT(SlotElement, "70e475e0-193e-4945-a17b-0c358621a1b3", ProxyElement)
     using Super = ProxyElement;
     using Super::Super;
 

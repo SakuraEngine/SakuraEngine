@@ -5,7 +5,7 @@ namespace skr::gui
 {
 struct SKR_GUI_API RenderGridPaper : public RenderBox {
 public:
-    SKR_GUI_TYPE(RenderGridPaper, "13dd33c9-5d56-4b06-94ce-d1c526fe75d0", RenderBox);
+    SKR_GUI_OBJECT(RenderGridPaper, "13dd33c9-5d56-4b06-94ce-d1c526fe75d0", RenderBox);
     using Super = RenderBox;
 
     void perform_layout() SKR_NOEXCEPT override;

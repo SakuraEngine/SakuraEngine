@@ -4,7 +4,7 @@
 namespace skr::gui
 {
 struct LeafRenderObjectElement : public RenderObjectElement {
-    SKR_GUI_TYPE(LeafRenderObjectElement, "a9295b40-1b17-417b-899e-7a1fe881f990", RenderObjectElement)
+    SKR_GUI_OBJECT(LeafRenderObjectElement, "a9295b40-1b17-417b-899e-7a1fe881f990", RenderObjectElement)
     using Super = RenderObjectElement;
     using Super::Super;
 

@@ -1,13 +1,13 @@
 #pragma once
-#include "SkrGui/framework/diagnostics.hpp"
 #include "SkrGui/framework/key.hpp"
 #include "SkrGui/framework/widget_misc.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
 
 namespace skr::gui
 {
-struct SKR_GUI_API Widget : public DiagnosticableTreeNode {
-    SKR_GUI_TYPE(Widget, "9f69910d-ba18-4ff4-bf5f-3966507c56ba", DiagnosticableTreeNode);
+struct SKR_GUI_API Widget SKR_GUI_OBJECT_BASE {
+    SKR_GUI_OBJECT_ROOT(Widget, "9f69910d-ba18-4ff4-bf5f-3966507c56ba");
+    SKR_GUI_RAII_MIX_IN()
 
     // build callback
     virtual void pre_construct() SKR_NOEXCEPT {}

@@ -170,9 +170,9 @@ struct type_id<struct skr::gui::Diagnosticable> {
     SKR_GUI_BASE_TYPE_BODY(__T)           \
     virtual const skr_record_type_id getType() { return getStaticType(); }
 
-#define SKR_GUI_TYPE(__T, __BASE, __GUID) \
-    SKR_GUI_TYPE_COMMON_BODY(__T, __GUID) \
-    SKR_GUI_CHILD_TYPE_BODY(__T, __BASE)  \
+#define SKR_GUI_OBJECT(__T, __BASE, __GUID) \
+    SKR_GUI_TYPE_COMMON_BODY(__T, __GUID)   \
+    SKR_GUI_CHILD_TYPE_BODY(__T, __BASE)    \
     virtual const skr_record_type_id getType() override { return getStaticType(); }
 
 // TYPE IMPLEMENTATION MACROS
