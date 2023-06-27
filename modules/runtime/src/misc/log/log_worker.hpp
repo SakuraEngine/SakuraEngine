@@ -1,9 +1,8 @@
 #pragma once
-#include "async/wait_timeout.hpp"
 #include "async/async_service.h"
 #include "log_queue.hpp"
 #include "containers/vector.hpp"
-#include "misc/defer.hpp"
+#include <EASTL/unique_ptr.h>
 
 namespace skr {
 namespace log {
@@ -43,8 +42,13 @@ static const ServiceThreadDesc kLoggerWorkerThreadDesc =  {
 
 struct RUNTIME_API LogWorkerSingleton
 {
-    static SPtr<LogWorker> ShareOrCreate() SKR_NOEXCEPT;
-    static SWeakPtr<LogWorker> _weak_this;
+    static LogWorker* TryGet() SKR_NOEXCEPT;
+
+    static void Initialize() SKR_NOEXCEPT;
+    static void Finalize() SKR_NOEXCEPT;
+
+    static eastl::unique_ptr<LogWorker> _this;
+    static SAtomic64 _available;
 };
 
 } } // namespace skr::log

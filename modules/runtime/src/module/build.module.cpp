@@ -26,8 +26,7 @@ auto log_locker = +[](bool isLocked, void* pMutex){
 void SkrRuntimeModule::on_load(int argc, char8_t** argv)
 {
     // set lock for log
-    skr_init_mutex_recursive(&log_mutex);
-    log_set_lock(log_locker, &log_mutex);
+    log_initialize_async_worker();
 
     SkrDStorageConfig config = {};
     dstorageInstance = skr_create_dstorage_instance(&config);
@@ -61,7 +60,6 @@ void SkrRuntimeModule::on_unload()
     tracyLibrary.unload();
 #endif
 
-    skr_destroy_mutex(&log_mutex);
     log_finalize();
 }
 

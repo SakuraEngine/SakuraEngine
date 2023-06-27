@@ -48,9 +48,8 @@ enum
 #define SKR_LOG_ERROR(...) log_log(SKR_LOG_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
 #define SKR_LOG_FATAL(...) log_log(SKR_LOG_LEVEL_FATAL, __FILE__, __LINE__, __VA_ARGS__)
 
-RUNTIME_API void log_set_lock(log_LockFn fn, void* udata);
+RUNTIME_API void log_initialize_async_worker();
 RUNTIME_API void log_set_level(int level);
-
 RUNTIME_API void log_log(int level, const char* file, int line, const char* fmt, ...);
 RUNTIME_API void log_finalize();
 

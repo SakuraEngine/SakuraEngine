@@ -15,35 +15,55 @@ const char* kLogMemoryName = "sakura::log";
 
 Logger::Logger() SKR_NOEXCEPT
 {
-    auto worker = LogWorkerSingleton::ShareOrCreate();
-    queue_ = worker->queue_;
-    worker_ = worker;
-    worker->add_logger(this);
+    if (auto worker = LogWorkerSingleton::TryGet())
+    {
+        worker->add_logger(this);
+    }
 }
 
 Logger::~Logger() SKR_NOEXCEPT
 {
-    worker_->remove_logger(this);
+    if (auto worker = LogWorkerSingleton::TryGet())
+    {
+        worker->remove_logger(this);
+    }
 }
 
 void Logger::notifyWorker() SKR_NOEXCEPT
 {
-    worker_->awake();
+    if (auto worker = LogWorkerSingleton::TryGet())
+    {
+        worker->awake();
+    }
 }
 
-SWeakPtr<LogWorker> LogWorkerSingleton::_weak_this;
-std::mutex g_worker_shared_mutex;
-SPtr<LogWorker> LogWorkerSingleton::ShareOrCreate() SKR_NOEXCEPT
+eastl::unique_ptr<LogWorker> LogWorkerSingleton::_this = nullptr;
+SAtomic64 LogWorkerSingleton::_available = 0;
+
+void LogWorkerSingleton::Initialize() SKR_NOEXCEPT
 {
-    std::lock_guard _(g_worker_shared_mutex);
-    if (auto _this = _weak_this.lock())
+    if (!_this)
     {
-        return _this;
+        _this = eastl::make_unique<LogWorker>(kLoggerWorkerThreadDesc);
+        _this->run();
+        skr_atomic64_cas_relaxed(&_available, 0, 1);
     }
-    auto new_this = SPtr<LogWorker>::Create(kLoggerWorkerThreadDesc);
-    _weak_this = new_this;
-    new_this->run();
-    return new_this;
+}
+
+LogWorker* LogWorkerSingleton::TryGet() SKR_NOEXCEPT
+{
+    if (skr_atomic64_load_acquire(&_available) == 0)
+        return nullptr;
+    return _this.get();
+}
+
+void LogWorkerSingleton::Finalize() SKR_NOEXCEPT
+{
+    if (skr_atomic64_load_acquire(&_available) != 0)
+    {
+        _this.reset();
+        skr_atomic64_cas_relaxed(&_available, 1, 0);
+    }
 }
 
 static const skr::log::LogLevel kLogLevelsLUT[] = {
@@ -125,9 +145,12 @@ skr::AsyncResult LogWorker::serve() SKR_NOEXCEPT
 } } // namespace skr::log
 
 RUNTIME_EXTERN_C
-void log_set_lock(log_LockFn fn, void* udata)
+void log_initialize_async_worker()
 {
-    // thread-safe and dont need this
+    skr::log::LogWorkerSingleton::Initialize();
+
+    auto worker = skr::log::LogWorkerSingleton::TryGet();
+    SKR_ASSERT(worker && "worker must not be null & something is wrong with initialization!");
 }
 
 RUNTIME_EXTERN_C
@@ -149,7 +172,7 @@ void log_log(int level, const char* file, int line, const char* fmt, ...)
             skr::log::g_logger = skr::SPtr<skr::log::Logger>::Create();
             
             ::atexit(+[]() {
-                auto worker = skr::log::LogWorkerSingleton::_weak_this.lock();
+                auto worker = skr::log::LogWorkerSingleton::TryGet();
                 SKR_ASSERT(!worker && "worker must be null & properly stopped at exit!");
             });
         }
@@ -165,11 +188,12 @@ RUNTIME_EXTERN_C
 void log_finalize()
 {
     {
-        if (auto worker = skr::log::LogWorkerSingleton::_weak_this.lock())
+        if (auto worker = skr::log::LogWorkerSingleton::TryGet())
             worker->drain();
     }
     skr::log::g_logger.reset();
+    skr::log::LogWorkerSingleton::Finalize();
 
-    auto worker = skr::log::LogWorkerSingleton::_weak_this.lock();
+    auto worker = skr::log::LogWorkerSingleton::TryGet();
     SKR_ASSERT(!worker && "worker must be null & properly stopped at exit!");
 }

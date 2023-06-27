@@ -531,6 +531,7 @@ auto register_pinned_component()
 
 int main(int argc, char** argv)
 {
+    log_initialize_async_worker();
     ::testing::InitGoogleTest(&argc, argv);
     register_test_component();
     register_ref_component();
