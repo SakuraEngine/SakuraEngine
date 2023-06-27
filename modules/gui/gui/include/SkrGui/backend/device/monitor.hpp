@@ -18,39 +18,37 @@ enum class EMonitorFeatureState
     PostureHalfOpened, // 折叠屏半开
 };
 
+// in physical pixel
 struct MonitorFeature {
-    Rectf                bound; // in physical unit
+    Recti                bound;
     EMonitorFeatureType  type;
     EMonitorFeatureState state;
 };
 
+// in physical pixel
 struct MonitorInfo {
     String name;
-    String id;
+    String device_id;
 
-    int32_t width;  // in physical unit
-    int32_t height; // in physical unit
+    Sizei native_size;
+    Sizei max_resolution;
 
-    int32_t max_resolution_width;  // in physical unit
-    int32_t max_resolution_height; // in physical unit
-
-    Rectf virtual_display_area; // in physical unit
-    Rectf virtual_work_area;    // in physical unit
+    Recti display_area;
+    Recti work_area;
 
     bool is_primary;
 
     Array<MonitorFeature> features;
 };
 
-struct DesktopInfo {
-    int32_t primary_display_width;  // in physical unit
-    int32_t primary_display_height; // in physical unit
+// in physical pixel
+struct DisplayMetrics {
+    Recti primary_display_area;
+    Recti primary_work_area;
+    Recti virtual_display_area;
 
-    Rectf primary_display_area; // in physical unit
-    Rectf virtual_display_area; // in physical unit
-
-    // EdgeInset title_safe_padding;
-    // EdgeInset action_safe_padding;
+    EdgeInsetsf title_safe_padding;
+    EdgeInsetsf action_safe_padding;
 
     Array<MonitorInfo> monitors;
 };

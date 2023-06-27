@@ -1,9 +1,9 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/math/geometry.hpp"
-#include "SkrGui/backend/render/paint_params.hpp"
-#include "SkrGui/backend/render/brush.hpp"
-#include "SkrGui/backend/render/pen.hpp"
+#include "SkrGui/backend/canvas/canvas_types.hpp"
+#include "SkrGui/backend/canvas/brush.hpp"
+#include "SkrGui/backend/canvas/pen.hpp"
 
 struct NVGcontext;
 namespace skr::gui

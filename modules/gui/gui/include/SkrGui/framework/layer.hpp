@@ -1,9 +1,9 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
+#include "SkrGui/framework/fwd_framework.hpp"
 
 namespace skr::gui
 {
-struct SKR_GUI_API ITextService {
-    virtual ~ITextService() = default;
-};
+// TODO. Layer
+using Layer = ICanvas;
 } // namespace skr::gui

@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/math/geometry.hpp"
-#include "SkrGui/backend/render/paint_params.hpp"
+#include "SkrGui/backend/canvas/canvas_types.hpp"
 
 // pen base
 namespace skr::gui

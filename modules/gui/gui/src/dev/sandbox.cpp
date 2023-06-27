@@ -11,20 +11,13 @@
 #include "SkrGui/widgets/sized_box.hpp"
 #include "SkrGui/widgets/text.hpp"
 #include "SkrGui/widgets/flex_slot.hpp"
+
 namespace skr::gui
 {
-void MayBeExample()
+Widget* _example()
 {
-    // canvas
-    //   grid_paper
-    //   color_picker
-    //   flex
-    //     colored_box
-    //     colored_box
-    //     colored_box
-    //   text
-    auto sandbox = SkrNew<Sandbox>(
-    SNewWidget(Stack) {
+    return SNewWidget(Stack)
+    {
         SNewChild(p.children, Positioned)
         {
             p.positional.fill();
@@ -64,30 +57,16 @@ void MayBeExample()
             p.positional.anchor_LT(0.5_pct, 10_px).pivot({ 0.5, 0 });
             p.child = SNewWidget(Text) { p.text = u8"Hello World!"; };
         };
-    });
-
-    // sandbox->update();
-    // sandbox->layout();
-    // sandbox->draw();
+    };
 }
 } // namespace skr::gui
 
 namespace skr::gui
 {
-Sandbox::Sandbox(Widget* root_widget)
-    : _root_widget(root_widget)
-{
-}
-
-void Sandbox::update()
-{
-}
-
-void Sandbox::layout()
-{
-}
-
-void Sandbox::draw()
+Sandbox::Sandbox(INativeDevice* device, ICanvasService* canvas_service, ITextService* text_service) SKR_NOEXCEPT
+    : _device(device),
+      _canvas_service(canvas_service),
+      _text_service(text_service)
 {
 }
 

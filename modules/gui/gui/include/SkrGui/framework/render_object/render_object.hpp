@@ -101,7 +101,7 @@ private:
 
     // layout & paint boundary
     RenderObject* _relayout_boundary = nullptr;
-    void*         _layer = nullptr; // TODO. layer
+    Layer*        _layer = nullptr; // TODO. layer
 
     // 用于 invoke_layout_callback()
     bool _doing_this_layout_with_callback = false;

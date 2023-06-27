@@ -3,30 +3,32 @@
 
 namespace skr::gui
 {
-#define SKR_GUI_MATH_UTILITY_MIXIN(__TYPE)                                                                                            \
-private:                                                                                                                              \
-    inline static constexpr bool _is_floating = std::is_floating_point_v<__TYPE>;                                                     \
-    template <typename TRet>                                                                                                          \
-    using enable_if_floating_t = std::enable_if_t<_is_floating, TRet>;                                                                \
-    inline static constexpr enable_if_floating_t<__TYPE> _infinity() SKR_NOEXCEPT { return std::numeric_limits<__TYPE>::infinity(); } \
-    inline static constexpr __TYPE                       _min() { return std::numeric_limits<__TYPE>::min(); }                        \
-    inline static constexpr __TYPE                       _max() { return std::numeric_limits<__TYPE>::max(); }                        \
-    inline static enable_if_floating_t<bool>             _is_nan(__TYPE v) SKR_NOEXCEPT { return std::isnan(v); }                     \
-    inline static enable_if_floating_t<__TYPE>           _lerp(__TYPE a, __TYPE b, __TYPE t) { return a + (b - a) * t; }              \
-    template <typename TShit>                                                                                                         \
-    inline static TShit  _shit_mod(TShit v, TShit mod) { return v % mod; }                                                            \
-    inline static __TYPE _mod(__TYPE v, __TYPE mod)                                                                                   \
-    {                                                                                                                                 \
-        if constexpr (_is_floating)                                                                                                   \
-        {                                                                                                                             \
-            return std::fmod(v, mod);                                                                                                 \
-        }                                                                                                                             \
-        else                                                                                                                          \
-        {                                                                                                                             \
-            return _shit_mod(v, mod);                                                                                                 \
-        }                                                                                                                             \
-    }                                                                                                                                 \
-                                                                                                                                      \
+#define SKR_GUI_MATH_ENABLE_IF_FLOAT(__TYPE) template <typename TT = __TYPE, std::enable_if_t<std::is_floating_point_v<TT>, int> = 0>
+#define SKR_GUI_MATH_UTILITY_MIXIN(__TYPE)                                                                      \
+private:                                                                                                        \
+    inline static constexpr bool _is_floating = std::is_floating_point_v<__TYPE>;                               \
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(__TYPE)                                                                        \
+    inline static constexpr __TYPE _infinity() SKR_NOEXCEPT { return std::numeric_limits<__TYPE>::infinity(); } \
+    inline static constexpr __TYPE _min() { return std::numeric_limits<__TYPE>::min(); }                        \
+    inline static constexpr __TYPE _max() { return std::numeric_limits<__TYPE>::max(); }                        \
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(__TYPE)                                                                        \
+    inline static bool _is_nan(__TYPE v) SKR_NOEXCEPT { return std::isnan(v); }                                 \
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(__TYPE)                                                                        \
+    inline static __TYPE _lerp(__TYPE a, __TYPE b, __TYPE t) { return a + (b - a) * t; }                        \
+    template <typename TShit>                                                                                   \
+    inline static TShit  _shit_mod(TShit v, TShit mod) { return v % mod; }                                      \
+    inline static __TYPE _mod(__TYPE v, __TYPE mod)                                                             \
+    {                                                                                                           \
+        if constexpr (_is_floating)                                                                             \
+        {                                                                                                       \
+            return std::fmod(v, mod);                                                                           \
+        }                                                                                                       \
+        else                                                                                                    \
+        {                                                                                                       \
+            return _shit_mod(v, mod);                                                                           \
+        }                                                                                                       \
+    }                                                                                                           \
+                                                                                                                \
 public:
 
 template <typename T>
@@ -41,24 +43,31 @@ struct Offset {
     {
         return { 0, 0 };
     }
-    inline static enable_if_floating_t<Offset> Infinite() SKR_NOEXCEPT { return { _infinity(), _infinity() }; }
-    inline static enable_if_floating_t<Offset> Radians(T radians, T radius = 1) SKR_NOEXCEPT { return { radius * std::cos(radians), radius * std::sin(radians) }; }
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline static Offset Infinite() SKR_NOEXCEPT { return { _infinity(), _infinity() }; }
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline static Offset Radians(T radians, T radius = 1) SKR_NOEXCEPT { return { radius * std::cos(radians), radius * std::sin(radians) }; }
 
     // infinite
-    inline enable_if_floating_t<bool> is_infinite() const SKR_NOEXCEPT
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline bool is_infinite() const SKR_NOEXCEPT
     {
         return x >= _infinity() || y >= _infinity();
     }
-    inline enable_if_floating_t<bool> is_finite() const SKR_NOEXCEPT
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline bool is_finite() const SKR_NOEXCEPT
     {
         return x != _infinity() && !_is_nan(x) &&
                y != _infinity() && !_is_nan(x);
     }
 
     // info
-    inline enable_if_floating_t<T> length() const SKR_NOEXCEPT { return std::sqrt(x * x + y * y); }
-    inline enable_if_floating_t<T> length_squared() const SKR_NOEXCEPT { return x * x + y * y; }
-    inline enable_if_floating_t<T> radians() const SKR_NOEXCEPT { return std::atan2(y, x); }
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline T length() const SKR_NOEXCEPT { return std::sqrt(x * x + y * y); }
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline T length_squared() const SKR_NOEXCEPT { return x * x + y * y; }
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline T radians() const SKR_NOEXCEPT { return std::atan2(y, x); }
 
     // compare
     inline bool operator==(const Offset& rhs) const SKR_NOEXCEPT { return x == rhs.x && y == rhs.y; }
@@ -92,7 +101,8 @@ struct Offset {
     inline Offset& operator%=(const Offset& rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
 
     // calculations
-    inline static enable_if_floating_t<Offset> lerp(const Offset& a, const Offset& b, T t) SKR_NOEXCEPT
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline static Offset lerp(const Offset& a, const Offset& b, T t) SKR_NOEXCEPT
     {
         return { _lerp(a.x, b.x, t), _lerp(a.y, b.y, t) };
     }
@@ -106,26 +116,33 @@ struct Size {
     SKR_GUI_MATH_UTILITY_MIXIN(T)
 
     // factory
-    inline static Size                       Zero() SKR_NOEXCEPT { return { 0, 0 }; }
-    inline static Size                       Square(T size) SKR_NOEXCEPT { return { size, size }; }
-    inline static Size                       Radius(T radius) SKR_NOEXCEPT { return { radius * 2, radius * 2 }; }
-    inline static enable_if_floating_t<Size> Infinite() SKR_NOEXCEPT { return { _infinity(), _infinity() }; }
-    inline static enable_if_floating_t<Size> InfiniteWidth(T height) SKR_NOEXCEPT { return { _infinity(), height }; }
-    inline static enable_if_floating_t<Size> InfiniteHeight(T width) SKR_NOEXCEPT { return { width, _infinity() }; }
+    inline static Size Zero() SKR_NOEXCEPT { return { 0, 0 }; }
+    inline static Size Square(T size) SKR_NOEXCEPT { return { size, size }; }
+    inline static Size Radius(T radius) SKR_NOEXCEPT { return { radius * 2, radius * 2 }; }
+
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline static Size Infinite() SKR_NOEXCEPT { return { _infinity(), _infinity() }; }
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline static Size InfiniteWidth(T height) SKR_NOEXCEPT { return { _infinity(), height }; }
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline static Size InfiniteHeight(T width) SKR_NOEXCEPT { return { width, _infinity() }; }
 
     // infinite
-    inline enable_if_floating_t<bool> is_infinite() const SKR_NOEXCEPT
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline bool is_infinite() const SKR_NOEXCEPT
     {
         return width >= _infinity() || height >= _infinity();
     }
-    inline enable_if_floating_t<bool> is_finite() const SKR_NOEXCEPT
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline bool is_finite() const SKR_NOEXCEPT
     {
         return width != _infinity() && !_is_nan(width) &&
                height != _infinity() && !_is_nan(height);
     }
 
     // info
-    inline enable_if_floating_t<T> aspect_ratio() const SKR_NOEXCEPT
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline T aspect_ratio() const SKR_NOEXCEPT
     {
         if (height != 0.0)
         {
@@ -198,7 +215,8 @@ struct Size {
     inline Size& operator/=(const Size& rhs) SKR_NOEXCEPT { return *this = *this / rhs; }
     inline Size& operator%=(const Size& rhs) SKR_NOEXCEPT { return *this = *this % rhs; }
 
-    inline static enable_if_floating_t<Size> lerp(const Size& a, const Size& b, T t) SKR_NOEXCEPT
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline static Size lerp(const Size& a, const Size& b, T t) SKR_NOEXCEPT
     {
         return {
             _lerp(a.width, b.width, t),
@@ -240,19 +258,22 @@ struct Rect {
     inline static Rect Points(const Offset<T>& a, const Offset<T>& b) SKR_NOEXCEPT { return { std::min(a.x, b.x), std::min(a.y, b.y), std::max(a.x, b.x), std::max(a.y, b.y) }; }
 
     // infinite & nan
-    inline enable_if_floating_t<bool> is_infinite() const SKR_NOEXCEPT
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline bool is_infinite() const SKR_NOEXCEPT
     {
         return left <= -_infinity() || top <= -_infinity() ||
                right >= _infinity() || bottom >= _infinity();
     }
-    inline enable_if_floating_t<bool> is_finite() const SKR_NOEXCEPT
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline bool is_finite() const SKR_NOEXCEPT
     {
         return left != _infinity() && !_is_nan(left) &&
                top != _infinity() && !_is_nan(top) &&
                right != _infinity() && !_is_nan(right) &&
                bottom != _infinity() && !_is_nan(bottom);
     }
-    inline enable_if_floating_t<bool> has_nan() const SKR_NOEXCEPT
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline bool has_nan() const SKR_NOEXCEPT
     {
         return _is_nan(left) ||
                _is_nan(top) ||
@@ -342,7 +363,8 @@ struct Rect {
     inline bool operator!=(const Rect& rhs) const SKR_NOEXCEPT { return !(*this == rhs); }
 
     // arithmetic
-    inline static enable_if_floating_t<Optional<Rect>> lerp(const Optional<Rect>& a, const Optional<Rect>& b, float t)
+    SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
+    inline static Optional<Rect> lerp(const Optional<Rect>& a, const Optional<Rect>& b, float t)
     {
         if (!b)
         {
@@ -429,14 +451,14 @@ struct Alignment {
     inline constexpr bool operator!=(const Alignment& rhs) const SKR_NOEXCEPT { return x != rhs.x || y != rhs.y; }
 
     // location rect
-    inline constexpr Rect<float> inscribe(const Size<float>& child_size, const Rect<float>& parent_rect) const SKR_NOEXCEPT
+    inline Rect<float> inscribe(const Size<float>& child_size, const Rect<float>& parent_rect) const SKR_NOEXCEPT
     {
         const Size<float> size_delta = parent_rect.size() - child_size;
         return Rect<float>::LTWH(parent_rect.left + size_delta.width * x, parent_rect.top + size_delta.height * y, child_size.width, child_size.height);
     }
 
     // lerp
-    inline constexpr Alignment lerp(const Alignment& rhs, float t) const SKR_NOEXCEPT { return { _lerp(x, rhs.x, t), _lerp(y, rhs.y, t) }; }
+    inline Alignment lerp(const Alignment& rhs, float t) const SKR_NOEXCEPT { return { _lerp(x, rhs.x, t), _lerp(y, rhs.y, t) }; }
 };
 
 using Offsetf = Offset<float>;
@@ -454,5 +476,6 @@ struct Ray {
     skr_float3_t direction;
 };
 
+#undef SKR_GUI_MATH_ENABLE_IF_FLOAT
 #undef SKR_GUI_MATH_UTILITY_MIXIN
 } // namespace skr::gui

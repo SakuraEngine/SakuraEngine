@@ -11,6 +11,6 @@ struct PaintingContext final {
 
 private:
     ICanvas* _canvas;
-    // layer
+    Layer*   _root_layer;
 };
 } // namespace skr::gui
