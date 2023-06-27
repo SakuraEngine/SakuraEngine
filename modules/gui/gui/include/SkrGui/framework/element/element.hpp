@@ -50,7 +50,7 @@ struct SKR_GUI_API Element : public DiagnosticableTreeNode, public IBuildContext
     bool              is_destroyed() const SKR_NOEXCEPT override;
     RenderObject*     find_render_object() const SKR_NOEXCEPT override;
     RenderObject*     find_ancestor_render_object() const SKR_NOEXCEPT override;
-    Optional<Size>    render_box_size() const SKR_NOEXCEPT override;
+    Optional<Sizef>   render_box_size() const SKR_NOEXCEPT override;
     InheritedWidget*  depend_on_inherited_element(NotNull<InheritedElement*> ancestor) SKR_NOEXCEPT override;
     InheritedWidget*  depend_on_inherited_widget_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT override;
     InheritedElement* get_element_for_inherited_widget_of_exact_type(const SKR_GUI_TYPE_ID& type_id) SKR_NOEXCEPT override;

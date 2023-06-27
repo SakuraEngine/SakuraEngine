@@ -4,14 +4,14 @@
 
 namespace skr::gui
 {
-void RenderColoredBox::paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT
+void RenderColoredBox::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT
 {
     if (!size().is_empty())
     {
         auto canvas = context->canvas();
 
         auto _ = canvas->paint_scope();
-        canvas->draw_rect(Rect::OffsetSize(offset, size()), FillPen().anti_alias(false), ColorBrush(color()));
+        canvas->draw_rect(Rectf::OffsetSize(offset, size()), FillPen().anti_alias(false), ColorBrush(color()));
     }
 
     if (child())

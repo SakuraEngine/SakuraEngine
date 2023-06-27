@@ -24,16 +24,16 @@ struct SKR_GUI_API IDeviceView {
 
     // getter
     virtual IDevice* device() = 0;
-    virtual Offset   pos() = 0;              // in logical pixel
-    virtual Size     size() = 0;             // in logical pixel
+    virtual Offsetf  pos() = 0;              // in logical pixel
+    virtual Sizef    size() = 0;             // in logical pixel
     virtual float    pixel_ratio() = 0;      // frame_buffer_pixel_size / logical_pixel_size
     virtual float    text_pixel_ratio() = 0; // text_texture_pixel_size / logical_pixel_size
     virtual bool     minimized() = 0;        // is minimized
     virtual bool     focused() = 0;          // is focused
 
     // setter
-    virtual void set_pos(Offset pos) = 0;
-    virtual void set_size(Size size) = 0;
+    virtual void set_pos(Offsetf pos) = 0;
+    virtual void set_size(Sizef size) = 0;
     virtual void set_minimized(bool minimized) = 0;
     virtual void set_title(const String& str) = 0;
     virtual void take_focus() = 0;

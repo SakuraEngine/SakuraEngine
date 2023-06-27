@@ -11,7 +11,7 @@ struct BoxConstraints {
     float max_height = std::numeric_limits<float>::infinity();
 
     // factory
-    inline static BoxConstraints Tight(Size size) SKR_NOEXCEPT
+    inline static BoxConstraints Tight(Sizef size) SKR_NOEXCEPT
     {
         return {
             size.width,
@@ -38,7 +38,7 @@ struct BoxConstraints {
             height,
         };
     }
-    inline static BoxConstraints Loose(Size size) SKR_NOEXCEPT
+    inline static BoxConstraints Loose(Sizef size) SKR_NOEXCEPT
     {
         return {
             0,
@@ -112,30 +112,30 @@ struct BoxConstraints {
     }
 
     // getter setter
-    inline constexpr Size min_size() const SKR_NOEXCEPT
+    inline constexpr Sizef min_size() const SKR_NOEXCEPT
     {
         return { min_width, min_height };
     }
-    inline constexpr Size max_size() const SKR_NOEXCEPT { return { max_width, max_height }; }
-    inline constexpr void set_min_size(Size size) SKR_NOEXCEPT
+    inline constexpr Sizef max_size() const SKR_NOEXCEPT { return { max_width, max_height }; }
+    inline constexpr void  set_min_size(Sizef size) SKR_NOEXCEPT
     {
         min_width = size.width;
         min_height = size.height;
     }
-    inline constexpr void set_max_size(Size size) SKR_NOEXCEPT
+    inline constexpr void set_max_size(Sizef size) SKR_NOEXCEPT
     {
         max_width = size.width;
         max_height = size.height;
     }
-    inline constexpr Size smallest() const SKR_NOEXCEPT { return constrain({ 0, 0 }); }
-    inline constexpr Size biggest() const SKR_NOEXCEPT { return constrain({ std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() }); }
-    inline constexpr bool has_bounded_width() const SKR_NOEXCEPT { return max_width < std::numeric_limits<float>::infinity(); }
-    inline constexpr bool has_bounded_height() const SKR_NOEXCEPT { return max_height < std::numeric_limits<float>::infinity(); }
-    inline constexpr bool has_infinite_width() const SKR_NOEXCEPT { return min_width >= std::numeric_limits<float>::infinity(); }
-    inline constexpr bool has_infinite_height() const SKR_NOEXCEPT { return min_height >= std::numeric_limits<float>::infinity(); }
-    inline constexpr bool has_tight_width() const SKR_NOEXCEPT { return min_width >= max_width; }
-    inline constexpr bool has_tight_height() const SKR_NOEXCEPT { return min_height >= max_height; }
-    inline constexpr bool is_tight() const SKR_NOEXCEPT { return has_tight_width() && has_tight_height(); }
+    inline constexpr Sizef smallest() const SKR_NOEXCEPT { return constrain({ 0, 0 }); }
+    inline constexpr Sizef biggest() const SKR_NOEXCEPT { return constrain({ std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() }); }
+    inline constexpr bool  has_bounded_width() const SKR_NOEXCEPT { return max_width < std::numeric_limits<float>::infinity(); }
+    inline constexpr bool  has_bounded_height() const SKR_NOEXCEPT { return max_height < std::numeric_limits<float>::infinity(); }
+    inline constexpr bool  has_infinite_width() const SKR_NOEXCEPT { return min_width >= std::numeric_limits<float>::infinity(); }
+    inline constexpr bool  has_infinite_height() const SKR_NOEXCEPT { return min_height >= std::numeric_limits<float>::infinity(); }
+    inline constexpr bool  has_tight_width() const SKR_NOEXCEPT { return min_width >= max_width; }
+    inline constexpr bool  has_tight_height() const SKR_NOEXCEPT { return min_height >= max_height; }
+    inline constexpr bool  is_tight() const SKR_NOEXCEPT { return has_tight_width() && has_tight_height(); }
 
     // compare
     inline constexpr bool operator==(const BoxConstraints& rhs) const SKR_NOEXCEPT
@@ -153,7 +153,7 @@ struct BoxConstraints {
     {
         return std::clamp(height, min_height, max_height);
     }
-    inline constexpr Size constrain(Size size) const SKR_NOEXCEPT
+    inline constexpr Sizef constrain(Sizef size) const SKR_NOEXCEPT
     {
         size.width = constrain_width(size.width);
         size.height = constrain_height(size.height);

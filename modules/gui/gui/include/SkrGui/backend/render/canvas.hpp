@@ -40,7 +40,7 @@ struct SKR_GUI_API ICanvas final {
 
     //==> state
     void state_reset() SKR_NOEXCEPT;                             // DEFAULT: identity
-    void state_translate(Offset offset) SKR_NOEXCEPT;            // APPLY translate
+    void state_translate(Offsetf offset) SKR_NOEXCEPT;           // APPLY translate
     void state_rotate(float degree) SKR_NOEXCEPT;                // APPLY rotate
     void state_scale(float scale_x, float scale_y) SKR_NOEXCEPT; // APPLY scale
     void state_skew_x(float degree) SKR_NOEXCEPT;                // APPLY skew
@@ -52,26 +52,26 @@ struct SKR_GUI_API ICanvas final {
     auto path_scope(const Pen& pen, const Brush& brush) SKR_NOEXCEPT;
 
     //==> path
-    void path_move_to(Offset to) SKR_NOEXCEPT;                                                // NEW sub-path from pos
-    void path_line_to(Offset to) SKR_NOEXCEPT;                                                // ADD line for CURRENT sub-path
-    void path_quad_to(Offset to, Offset control_point) SKR_NOEXCEPT;                          // ADD quadratic bezier for CURRENT sub-path
-    void path_cubic_to(Offset to, Offset control_point1, Offset control_point2) SKR_NOEXCEPT; // ADD cubic bezier for CURRENT sub-path
-    void path_arc_to(Offset to, Offset control_point, float radius) SKR_NOEXCEPT;             // ADD arc for CURRENT sub-path
-    void path_close() SKR_NOEXCEPT;                                                           // CLOSE CURRENT sub-path WITH a line segment
+    void path_move_to(Offsetf to) SKR_NOEXCEPT;                                                  // NEW sub-path from pos
+    void path_line_to(Offsetf to) SKR_NOEXCEPT;                                                  // ADD line for CURRENT sub-path
+    void path_quad_to(Offsetf to, Offsetf control_point) SKR_NOEXCEPT;                           // ADD quadratic bezier for CURRENT sub-path
+    void path_cubic_to(Offsetf to, Offsetf control_point1, Offsetf control_point2) SKR_NOEXCEPT; // ADD cubic bezier for CURRENT sub-path
+    void path_arc_to(Offsetf to, Offsetf control_point, float radius) SKR_NOEXCEPT;              // ADD arc for CURRENT sub-path
+    void path_close() SKR_NOEXCEPT;                                                              // CLOSE CURRENT sub-path WITH a line segment
 
     //==> closed path
-    void path_arc(Offset center, float radius, float start_degree, float end_degree) SKR_NOEXCEPT; // ADD CLOSED arc sub-path, arc is in CW
-    void path_rect(Rect rect) SKR_NOEXCEPT;                                                        // ADD CLOSED rect sub-path
-    void path_circle(Offset center, float radius) SKR_NOEXCEPT;                                    // ADD CLOSED circle sub-path
-    void path_ellipse(Offset center, float radius_x, float radius_y) SKR_NOEXCEPT;                 // ADD CLOSED ellipse sub-path
+    void path_arc(Offsetf center, float radius, float start_degree, float end_degree) SKR_NOEXCEPT; // ADD CLOSED arc sub-path, arc is in CW
+    void path_rect(Rectf rect) SKR_NOEXCEPT;                                                        // ADD CLOSED rect sub-path
+    void path_circle(Offsetf center, float radius) SKR_NOEXCEPT;                                    // ADD CLOSED circle sub-path
+    void path_ellipse(Offsetf center, float radius_x, float radius_y) SKR_NOEXCEPT;                 // ADD CLOSED ellipse sub-path
 
     //==> draw primitives
-    void draw_arc(Offset center, float radius, float start_degree, float end_degree, const Pen& pen, const Brush& brush) SKR_NOEXCEPT; // DRAW arc, arc is in CW
-    void draw_rect(Rect rect, const Pen& pen, const Brush& brush) SKR_NOEXCEPT;                                                        // DRAW rect
-    void draw_circle(Offset center, float radius, const Pen& pen, const Brush& brush) SKR_NOEXCEPT;                                    // DRAW circle
-    void draw_ellipse(Offset center, float radius_x, float radius_y, const Pen& pen, const Brush& brush) SKR_NOEXCEPT;                 // DRAW ellipse
-    void draw_image(Rect rect, const Pen& pen, const Brush& brush) SKR_NOEXCEPT;                                                       // DRAW image
-    void draw_image_nine(Rect rect, const Pen& pen, const Brush& brush) SKR_NOEXCEPT;                                                  // DRAW image nine
+    void draw_arc(Offsetf center, float radius, float start_degree, float end_degree, const Pen& pen, const Brush& brush) SKR_NOEXCEPT; // DRAW arc, arc is in CW
+    void draw_rect(Rectf rect, const Pen& pen, const Brush& brush) SKR_NOEXCEPT;                                                        // DRAW rect
+    void draw_circle(Offsetf center, float radius, const Pen& pen, const Brush& brush) SKR_NOEXCEPT;                                    // DRAW circle
+    void draw_ellipse(Offsetf center, float radius_x, float radius_y, const Pen& pen, const Brush& brush) SKR_NOEXCEPT;                 // DRAW ellipse
+    void draw_image(Rectf rect, const Pen& pen, const Brush& brush) SKR_NOEXCEPT;                                                       // DRAW image
+    void draw_image_nine(Rectf rect, const Pen& pen, const Brush& brush) SKR_NOEXCEPT;                                                  // DRAW image nine
 
     // TODO. custom vertices draw
     // TODO. draw round rect

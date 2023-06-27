@@ -620,7 +620,7 @@ struct Positional {
 
         return result;
     }
-    inline Offset resolve_offset(Size child_size, Size parent_size) const SKR_NOEXCEPT
+    inline Offsetf resolve_offset(Sizef child_size, Sizef parent_size) const SKR_NOEXCEPT
     {
         float offset_x, offset_y;
 

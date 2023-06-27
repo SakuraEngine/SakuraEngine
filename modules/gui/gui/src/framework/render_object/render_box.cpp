@@ -32,7 +32,7 @@ float RenderBox::get_max_intrinsic_height(float width) const SKR_NOEXCEPT
 }
 
 // dry layout
-Size RenderBox::get_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
+Sizef RenderBox::get_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
 {
     // TODO. cache
     return compute_dry_layout(constraints);
@@ -57,9 +57,9 @@ float RenderBox::compute_max_intrinsic_height(float width) const SKR_NOEXCEPT
 }
 
 // dry layout
-Size RenderBox::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
+Sizef RenderBox::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT
 {
-    return Size::Zero();
+    return Sizef::Zero();
 }
 
 void RenderBox::perform_resize() SKR_NOEXCEPT

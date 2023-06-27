@@ -177,8 +177,8 @@ void RenderObject::perform_resize() SKR_NOEXCEPT {}
 void RenderObject::perform_layout() SKR_NOEXCEPT {}
 
 // paint process
-void RenderObject::debug_paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT {}
-void RenderObject::paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT {}
+void RenderObject::debug_paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT {}
+void RenderObject::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT {}
 bool RenderObject::is_repaint_boundary() const SKR_NOEXCEPT { return false; }
 
 // transform

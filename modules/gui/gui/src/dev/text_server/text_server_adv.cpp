@@ -3669,10 +3669,10 @@ void TextServerAdvanced::_font_draw_glyph(const RID& p_font_rid, const RID& p_ca
 
                         {
                             using namespace skr::gui;
-                            proxy->canvas->draw_rect(Rect::LTWH(cpos.x, cpos.y, csize.x, csize.y),
+                            proxy->canvas->draw_rect(Rectf::LTWH(cpos.x, cpos.y, csize.x, csize.y),
                                                      FillPen().anti_alias(false),
                                                      SurfaceBrush(gdi_texture)
-                                                     .uv_rect(skr::gui::Rect::LTWH(cpos.x, cpos.y, csize.x, csize.y))
+                                                     .uv_rect(skr::gui::Rectf::LTWH(cpos.x, cpos.y, csize.x, csize.y))
                                                      .custom([&rect](skr::gui::PaintVertex& vtx) {
                                                          const auto x_u = rect.x;
                                                          const auto x_U = rect.x + rect.w;

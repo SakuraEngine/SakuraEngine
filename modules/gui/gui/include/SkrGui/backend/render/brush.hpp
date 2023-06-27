@@ -82,7 +82,7 @@ struct SurfaceBrush : public Brush {
 
     // params
     ITexture*           _surface = nullptr; // TODO. use ISurface
-    Rect                _uv_rect = {};
+    Rectf               _uv_rect = {};
     float               _rotation = 0.0f; // in degree
     Swizzle             _swizzle = {};
     CustomVertexFuncRef _custom = nullptr;
@@ -98,7 +98,7 @@ struct SurfaceBrush : public Brush {
         _color = color;
         return *this;
     }
-    inline SurfaceBrush& uv_rect(Rect uv_rect) SKR_NOEXCEPT
+    inline SurfaceBrush& uv_rect(Rectf uv_rect) SKR_NOEXCEPT
     {
         _uv_rect = uv_rect;
         return *this;
@@ -133,8 +133,8 @@ struct SurfaceNineBrush : public Brush {
 
     // params
     ITexture*           _surface = nullptr; // TODO. use ISurface
-    Rect                _uv_rect = {};
-    Rect                _inner_rect = {};
+    Rectf               _uv_rect = {};
+    Rectf               _inner_rect = {};
     float               _rotation = 0.0f; // in degree
     Swizzle             _swizzle = {};
     CustomVertexFuncRef _custom = nullptr;
@@ -150,12 +150,12 @@ struct SurfaceNineBrush : public Brush {
         _color = color;
         return *this;
     }
-    inline SurfaceNineBrush& uv_rect(Rect uv_rect) SKR_NOEXCEPT
+    inline SurfaceNineBrush& uv_rect(Rectf uv_rect) SKR_NOEXCEPT
     {
         _uv_rect = uv_rect;
         return *this;
     }
-    inline SurfaceNineBrush& inner_rect(Rect inner_rect) SKR_NOEXCEPT
+    inline SurfaceNineBrush& inner_rect(Rectf inner_rect) SKR_NOEXCEPT
     {
         _inner_rect = inner_rect;
         return *this;

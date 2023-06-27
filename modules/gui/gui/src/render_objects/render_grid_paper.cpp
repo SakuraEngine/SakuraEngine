@@ -10,14 +10,14 @@ void RenderGridPaper::perform_layout() SKR_NOEXCEPT
     set_size(constraints().biggest());
 }
 
-void RenderGridPaper::paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT
+void RenderGridPaper::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT
 {
     // paint
     ICanvas* canvas = context->canvas();
-    Rect     paint_rect = Rect::OffsetSize(offset, size());
+    Rectf    paint_rect = Rectf::OffsetSize(offset, size());
     Color    background_color = { 235.f / 255.f, 235.f / 255.f, 235.f / 255.f, 235.f / 255.f };
-    Size     grid_size = { 100, 100 };
-    Size     sub_grid_size = { 10, 10 };
+    Sizef    grid_size = { 100, 100 };
+    Sizef    sub_grid_size = { 10, 10 };
     Color    grid_color = { 125.f / 255.f, 125.f / 255.f, 255.f / 255.f, 200.f / 255.f };
     Color    sub_grid_color = { 88.f / 255.f, 88.f / 255.f, 222.f / 255.f, 180.f / 255.f };
     {

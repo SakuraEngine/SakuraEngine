@@ -22,7 +22,7 @@ float RenderShiftedBox::compute_max_intrinsic_height(float width) const SKR_NOEX
 }
 
 // paint
-void RenderShiftedBox::paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT
+void RenderShiftedBox::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT
 {
     if (child())
     {

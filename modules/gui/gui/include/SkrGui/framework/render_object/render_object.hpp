@@ -52,8 +52,8 @@ struct SKR_GUI_API RenderObject : public DiagnosticableTreeNode {
 
     // paint process
     // paint 流程由 layer 发起，其调用流程被 PaintingContext 严格封装，不允许直接调用，而是调用 PaintingContext::paintChild
-    virtual void debug_paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT;
-    virtual void paint(NotNull<PaintingContext*> context, Offset offset) SKR_NOEXCEPT;
+    virtual void debug_paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT;
+    virtual void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT;
     virtual bool is_repaint_boundary() const SKR_NOEXCEPT;
 
     // transform
