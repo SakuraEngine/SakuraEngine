@@ -23,7 +23,7 @@ DStorageRAMReader::DStorageRAMReader(RAMService* service) SKR_NOEXCEPT
     SkrDStorageQueueDescriptor desc = {};
     for (auto i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        events[i] = SmartPoolPtr<DStorageEvent>::Create();
+        events[i] = SmartPoolPtr<DStorageEvent>::Create(kIOPoolObjectsMemoryName);
     }
     for (auto i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {

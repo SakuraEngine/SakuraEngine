@@ -7,6 +7,8 @@
 namespace skr {
 namespace log {
 
+extern const char* kLogMemoryName;
+
 enum class LogLevel : uint32_t
 {
     kTrace,
@@ -106,11 +108,14 @@ private:
     // formatter & args
     struct LogQueueTraits : public ConcurrentQueueDefaultTraits
     {
+        static const bool RECYCLE_ALLOCATED_BLOCKS = true;
         static const int BLOCK_SIZE = 256;
+
+        static inline void* malloc(size_t size) { return sakura_mallocN(size, kLogMemoryName); }
+        static inline void free(void* ptr) { return sakura_freeN(ptr, kLogMemoryName); }
     };
     skr::ConcurrentQueue<LogQueueElement, LogQueueTraits> queue_;
     SAtomic64 cnt_ = 0;
 };
-
 
 } } // namespace skr::log

@@ -11,6 +11,8 @@
 namespace skr {
 namespace log {
 
+const char* kLogMemoryName = "sakura::log";
+
 Logger::Logger() SKR_NOEXCEPT
 {
     auto worker = LogWorkerSingleton::ShareOrCreate();

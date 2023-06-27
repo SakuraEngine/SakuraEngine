@@ -34,14 +34,10 @@ template<typename T, typename I = T>
 struct SmartPool : public ISmartPool<I>
 {
     static_assert(std::is_base_of_v<I, T>, "T must be derived from I");
-    SmartPool(const char* PoolMemoryPoolName) SKR_NOEXCEPT
-        : kPoolMemoryPoolName(PoolMemoryPoolName)
-    {
-
-    }
     const char* kPoolMemoryPoolName = nullptr;
 
-    SmartPool(uint64_t cnt = 64) SKR_NOEXCEPT
+    SmartPool(const char* PoolMemoryPoolName, uint64_t cnt = 64) SKR_NOEXCEPT
+        : kPoolMemoryPoolName(PoolMemoryPoolName)
     {
         for (uint64_t i = 0; i < cnt; ++i)
         {

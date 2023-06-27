@@ -38,7 +38,7 @@ protected:
 };
 
 static const ServiceThreadDesc kLoggerWorkerThreadDesc =  {
-    u8"logger_worker", SKR_THREAD_ABOVE_NORMAL
+    u8"AsyncLogWorker", SKR_THREAD_ABOVE_NORMAL
 };
 
 struct RUNTIME_API LogWorkerSingleton
