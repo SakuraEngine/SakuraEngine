@@ -3,6 +3,7 @@
 
 #include "backend/text_server/text_server_adv.h"
 #include "backend/text_server/char_utils.h"
+#include "backend/text_server/file_access.h"
 #include <new>
 
 namespace godot
@@ -426,7 +427,7 @@ bool TextServerAdvanced::_load_support_data(const String& p_filename)
 #else
     if (!icu_data_loaded)
     {
-        /*
+        
         String filename = (p_filename.is_empty()) ? String("res://") + _MKSTR(ICU_DATA_NAME) : p_filename;
 
         Ref<FileAccess> f = FileAccess::open(filename, FileAccess::READ);
@@ -448,8 +449,6 @@ bool TextServerAdvanced::_load_support_data(const String& p_filename)
             ERR_FAIL_V_MSG(false, u_errorName(err));
         }
         icu_data_loaded = true;
-        */
-        SKR_UNIMPLEMENTED_FUNCTION();
         icu_data_loaded = false;
     }
 #endif
@@ -507,7 +506,6 @@ void TextServerAdvanced::_insert_feature_sets()
 {
     // Registered OpenType feature tags.
     // Name, Tag, Data Type, Hidden
-    /*
     _insert_feature("access_all_alternates", HB_TAG('a', 'a', 'l', 't'), Variant::Type::INT, false);
     _insert_feature("above_base_forms", HB_TAG('a', 'b', 'v', 'f'), Variant::Type::INT, true);
     _insert_feature("above_base_mark_positioning", HB_TAG('a', 'b', 'v', 'm'), Variant::Type::INT, true);
@@ -756,11 +754,8 @@ void TextServerAdvanced::_insert_feature_sets()
     _insert_feature("slant", HB_TAG('s', 'l', 'n', 't'), Variant::Type::INT, false);
     _insert_feature("width", HB_TAG('w', 'd', 't', 'h'), Variant::Type::INT, false);
     _insert_feature("weight", HB_TAG('w', 'g', 'h', 't'), Variant::Type::INT, false);
-    */
 }
 
-// TODO: Variant
-/*
 _FORCE_INLINE_ void TextServerAdvanced::_insert_feature(const StringName &p_name, int32_t p_tag, Variant::Type p_vtype, bool p_hidden) {
     FeatureInfo fi;
     fi.name = p_name;
@@ -770,7 +765,6 @@ _FORCE_INLINE_ void TextServerAdvanced::_insert_feature(const StringName &p_name
     feature_sets.insert(p_name, p_tag);
     feature_sets_inv.insert(p_tag, fi);
 }
-*/
 
 int64_t TextServerAdvanced::_name_to_tag(const String& p_name) const
 {
@@ -1823,7 +1817,6 @@ _FORCE_INLINE_ bool TextServerAdvanced::_ensure_cache_for_size(FontAdvanced* p_f
                     coords[i] = CLAMP(var.value * 65536.0, amaster->axis[i].minimum, amaster->axis[i].maximum);
                 }
 
-                // TODO: readable feature map
                 /*
                 if (p_font_data->variation_coordinates.has(_tag_to_name(var.tag))) {
                     var.value = p_font_data->variation_coordinates[_tag_to_name(var.tag)];
@@ -5850,27 +5843,35 @@ Glyph TextServerAdvanced::_shape_single_glyph(ShapedTextDataAdvanced* p_sd, char
     return gl;
 }
 
-_FORCE_INLINE_ void TextServerAdvanced::_add_featuers(const TextServerFeatures& p_source, Vector<hb_feature_t>& r_ftrs)
+_FORCE_INLINE_ void TextServerAdvanced::_add_features(const TextServerFeatures& p_source, Vector<hb_feature_t>& r_ftrs)
 {
-    /*
-    auto& keys = p_source.key();
-    auto& values = p_source.values();
+    auto keys = p_source.keys();
+    auto values = p_source.values();
     for (int i = 0; i < keys.size(); i++) {
         int32_t value = values[i];
         if (value >= 0) {
             hb_feature_t feature;
-            if (keys[i].get_type() == Variant::STRING) {
-                feature.tag = _name_to_tag(keys[i]);
-            } else {
-                feature.tag = keys[i];
-            }
+            feature.tag = keys[i];
             feature.value = value;
             feature.start = 0;
             feature.end = -1;
             r_ftrs.push_back(feature);
         }
     }
-    */
+}
+
+String get_default_locale()
+{
+    // TODO: locale
+    SKR_UNIMPLEMENTED_FUNCTION();
+    return "zh";
+}
+
+PackedStringArray get_system_font_path_for_text(const String& p_font_name, const String& p_text, const String& p_locale, const String& p_script_code, int p_font_weight, int p_font_stretch, bool p_italic)
+{
+    // TODO: system font
+    SKR_UNIMPLEMENTED_FUNCTION();
+    return PackedStringArray();
 }
 
 void TextServerAdvanced::_shape_run(ShapedTextDataAdvanced* p_sd, int64_t p_start, int64_t p_end, hb_script_t p_script, hb_direction_t p_direction, TypedArray<RID> p_fonts, int64_t p_span, int64_t p_fb_index, int64_t p_prev_start, int64_t p_prev_end)
@@ -5886,9 +5887,7 @@ void TextServerAdvanced::_shape_run(ShapedTextDataAdvanced* p_sd, int64_t p_star
     else if (kHasSystemFont() && p_fonts.size() > 0 && ((p_fb_index == p_fonts.size()) || (p_fb_index > p_fonts.size() && p_start != p_prev_start)))
     {
         // Try system fallback.
-        SKR_UNIMPLEMENTED_FUNCTION();
-        (void)fs;
-        /*
+        
         RID fdef = p_fonts[0];
         if (_font_is_allow_system_fallback(fdef)) {
             String text = p_sd->text.substr(p_start, 1);
@@ -5901,21 +5900,21 @@ void TextServerAdvanced::_shape_run(ShapedTextDataAdvanced* p_sd, int64_t p_star
             static int64_t wdth_tag = _name_to_tag("width");
             static int64_t ital_tag = _name_to_tag("italic");
             if (dvar.has(wgth_tag)) {
-                font_weight = dvar[wgth_tag].operator int();
+                font_weight = (int)dvar[wgth_tag];
             }
             if (dvar.has(wdth_tag)) {
-                font_stretch = dvar[wdth_tag].operator int();
+                font_stretch = (int)dvar[wdth_tag];
             }
-            if (dvar.has(ital_tag) && dvar[ital_tag].operator int() == 1) {
+            if (dvar.has(ital_tag) && (int)dvar[ital_tag] == 1) {
                 font_style.set_flag(TextServer::FONT_ITALIC);
             }
 
             char scr_buffer[5] = { 0, 0, 0, 0, 0 };
             hb_tag_to_string(hb_script_to_iso15924_tag(p_script), scr_buffer);
             String script_code = String(scr_buffer);
-            String locale = (p_sd->spans[p_span].language.is_empty()) ? TranslationServer::get_singleton()->get_tool_locale() : p_sd->spans[p_span].language;
+            String locale = (p_sd->spans[p_span].language.is_empty()) ? get_default_locale() : p_sd->spans[p_span].language;
 
-            PackedStringArray fallback_font_name = OS::get_singleton()->get_system_font_path_for_text(font_name, text, locale, script_code, font_weight, font_stretch, font_style & TextServer::FONT_ITALIC);
+            PackedStringArray fallback_font_name = get_system_font_path_for_text(font_name, text, locale, script_code, font_weight, font_stretch, font_style & TextServer::FONT_ITALIC);
 #ifdef GDEXTENSION
             for (int fb = 0; fb < fallback_font_name.size(); fb++) {
                 const String &E = fallback_font_name[fb];
@@ -5971,7 +5970,7 @@ void TextServerAdvanced::_shape_run(ShapedTextDataAdvanced* p_sd, int64_t p_star
                     sysf.rid = _create_font();
                     _font_set_data_ptr(sysf.rid, font_data.ptr(), font_data.size());
 
-                    Dictionary var = dvar;
+                    auto var = dvar;
                     // Select matching style from collection.
                     int best_score = 0;
                     int best_match = -1;
@@ -6006,7 +6005,7 @@ void TextServerAdvanced::_shape_run(ShapedTextDataAdvanced* p_sd, int64_t p_star
 
                     // If it's a variable font, apply weight, stretch and italic coordinates to match requested style.
                     if (best_score != 70) {
-                        Dictionary ftr = _font_supported_variation_list(sysf.rid);
+                        auto ftr = _font_supported_variation_list(sysf.rid);
                         if (ftr.has(wdth_tag)) {
                             var[wdth_tag] = font_stretch;
                             _font_set_stretch(sysf.rid, font_stretch);
@@ -6047,7 +6046,7 @@ void TextServerAdvanced::_shape_run(ShapedTextDataAdvanced* p_sd, int64_t p_star
                 break;
             }
         }
-        */
+        
     }
 
     if (!f.is_valid())
@@ -6124,11 +6123,8 @@ void TextServerAdvanced::_shape_run(ShapedTextDataAdvanced* p_sd, int64_t p_star
     {
         auto default_lang = hb_language_get_default();
         hb_buffer_set_language(p_sd->hb_buffer, default_lang);
-        /*
-        TODO: translation
-        hb_language_t lang = hb_language_from_string(TranslationServer::get_singleton()->get_tool_locale().ascii().get_data(), -1);
+        hb_language_t lang = hb_language_from_string(get_default_locale().ascii().get_data(), -1);
         hb_buffer_set_language(p_sd->hb_buffer, lang);
-        */
     }
     else
     {
@@ -6139,8 +6135,8 @@ void TextServerAdvanced::_shape_run(ShapedTextDataAdvanced* p_sd, int64_t p_star
     hb_buffer_add_utf32(p_sd->hb_buffer, (const uint32_t*)p_sd->text.ptr(), p_sd->text.length(), p_start, p_end - p_start);
 
     Vector<hb_feature_t> ftrs;
-    _add_featuers(_font_get_opentype_feature_overrides(f), ftrs);
-    _add_featuers(p_sd->spans[p_span].features, ftrs);
+    _add_features(_font_get_opentype_feature_overrides(f), ftrs);
+    _add_features(p_sd->spans[p_span].features, ftrs);
 
     hb_shape(hb_font, p_sd->hb_buffer, ftrs.is_empty() ? nullptr : &ftrs[0], ftrs.size());
 
@@ -7636,17 +7632,14 @@ TextServerAdvanced::TextServerAdvanced(const SkrGuiData& gui_data)
 
 void TextServerAdvanced::_cleanup(){
     _THREAD_SAFE_METHOD_
-    // TODO: system font
-    /*
     for (const auto& E : system_fonts) {
-        const Vector<SystemFontCacheRec> &sysf_cache = E.value.var;
+        const Vector<SystemFontCacheRec> &sysf_cache = E.second.var;
         for (const SystemFontCacheRec &F : sysf_cache) {
             _free_rid(F.rid);
         }
     }
     system_fonts.clear();
     system_font_data.clear();
-    */
 }
 
 TextServerAdvanced::~TextServerAdvanced()
