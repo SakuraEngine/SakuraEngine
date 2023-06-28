@@ -4,6 +4,7 @@
 #include "misc/log.h"
 #include "serde/json/reader.h"
 #include "serde/json/writer.h"
+#include "tracy/Tracy.hpp"
 const char* JsonArrayJsonFieldArchiveFailedFormat = "[SERDE/JSON] Archive %s.%s[%d] failed: %s";
 const char* JsonArrayFieldArchiveWarnFormat = "[SERDE/JSON] %s.%s got too many elements (%d expected, given %d), ignoring overflowed elements";
 const char* JsonFieldArchiveFailedFormat = "[SERDE/JSON] Archive %s.%s failed: %s";
