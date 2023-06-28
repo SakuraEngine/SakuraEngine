@@ -23,7 +23,7 @@ struct Logger
             constexpr bool copyable = checkCopyable(args...);
             if constexpr (copyable)
             {
-                ArgsList<> args_list = {};
+                ArgsList args_list = {};
                 args_list.push(skr::forward<Args>(args)...);
                 sucess = tryPushToQueue(ev, format, skr::move(args_list));
             }
@@ -66,7 +66,7 @@ private:
     }
 
     bool canPushToQueue() const SKR_NOEXCEPT;
-    bool tryPushToQueue(LogEvent ev, skr::string_view format, ArgsList<>&& args) SKR_NOEXCEPT;
+    bool tryPushToQueue(LogEvent ev, skr::string_view format, ArgsList&& args) SKR_NOEXCEPT;
     bool tryPushToQueue(LogEvent ev, skr::string&& what) SKR_NOEXCEPT;
     void notifyWorker() SKR_NOEXCEPT;
 };

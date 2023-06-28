@@ -6,6 +6,7 @@
 
 #include <thread>
 #include <csignal>
+#include <stdarg.h> // va_start
 #include <stdio.h> // ::atexit
 
 #include "tracy/Tracy.hpp"
@@ -26,9 +27,9 @@ LogFormatter::~LogFormatter() SKR_NOEXCEPT
 
 }
 
-skr::string const& LogFormatter::format(const skr::string& format, const ArgsList<>& args_list)
+skr::string const& LogFormatter::format(const skr::string& format, const ArgsList& args_list)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    args_list.format_(*this);
     return formatted_string;
 }
 
@@ -72,7 +73,7 @@ bool Logger::canPushToQueue() const SKR_NOEXCEPT
     return worker;
 }
 
-bool Logger::tryPushToQueue(LogEvent ev, skr::string_view format, ArgsList<>&& args_list) SKR_NOEXCEPT
+bool Logger::tryPushToQueue(LogEvent ev, skr::string_view format, ArgsList&& args_list) SKR_NOEXCEPT
 {
     auto worker = LogManager::TryGetWorker();
     if (worker)

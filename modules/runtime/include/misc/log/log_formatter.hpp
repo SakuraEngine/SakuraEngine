@@ -1,58 +1,23 @@
 #pragma once
+#include "platform/memory.h"
 #include "log_base.hpp"
-#include "misc/smart_pool.hpp"
+
+#include <tuple>
+#include <EASTL/fixed_function.h>
 
 namespace skr {
 namespace log {
 
-template <typename = void>
-struct ArgNode : public skr::SInterface 
-{
-    SKR_RC_OBJECT_BODY
-    virtual ~ArgNode() SKR_NOEXCEPT = default;
-    skr::SObjectPtr<ArgNode<>> next_;
+struct LogFormatter;
 
-    // argument_value_formatter_type...
-    virtual skr::string produce(const skr::string& specification) SKR_NOEXCEPT = 0;
-};
-
-template <typename NodeType = ArgNode<void>>
 struct ArgsList 
 {
-private:
-    template <typename T>
-    struct TypedNode : public NodeType {
-        template <typename Arg>
-        constexpr TypedNode(const Arg& arg) SKR_NOEXCEPT
-            : value(arg)
-        {
-        }
-
-        virtual skr::string produce(const skr::string& specification) SKR_NOEXCEPT
-        {
-            return skr::text::argument_formatter<T>::produce(value, specification);
-        }
-
-        T value;
-    };
-    skr::SObjectPtr<ArgNode<>> head_;
-
-public:
-    template <typename T, typename Arg>
-    const T& push(const Arg& arg) SKR_NOEXCEPT
-    {
-        auto new_node = SObjectPtr<TypedNode<T>>::Create(arg);
-        auto& value = new_node->value;
-        new_node->next = std::move(head_);
-        head_ = std::move(new_node);
-        return value;
-    }
     template <typename...Args>
-    void push(Args&&...args) SKR_NOEXCEPT
-    {
-        auto _ = { push<Args>(std::forward<Args>(args))... }; (void)_;
-        
-    }
+    void push(Args&&...args) SKR_NOEXCEPT;
+
+protected:
+    friend struct LogFormatter;
+    eastl::fixed_function<8 * sizeof(uint64_t), bool(LogFormatter&)> format_;
 };
 
 struct LogFormatter
@@ -61,10 +26,43 @@ struct LogFormatter
 
     [[nodiscard]] skr::string const& format(
         const skr::string& format,
-        const ArgsList<>& args_list
+        const ArgsList& args_list
     );
+
     skr::string formatted_string = u8"";
 };
+
+// Capture args and add them as additional arguments
+template <typename Lambda, typename ... Args>
+auto capture_call(Lambda&& lambda, Args&& ... args)
+{
+    return [
+        lambda = std::forward<Lambda>(lambda),
+        capture_args = std::make_tuple(skr::forward<Args>(args) ...)
+    ](auto&& ... original_args) mutable {
+        return std::apply([&lambda](auto&& ... args){
+            lambda(std::forward<decltype(args)>(args) ...);
+        }, std::tuple_cat(
+            std::forward_as_tuple(original_args ...),
+            std::apply([](auto&& ... args){
+                return std::forward_as_tuple< Args ... >(
+                    std::move(args) ...);
+            }, std::move(capture_args))
+        ));
+    };
+}
+
+template <typename...Args>
+void ArgsList::push(Args&&...args) SKR_NOEXCEPT
+{
+    auto f_format_ = capture_call(
+        [](skr::string& format, LogFormatter& formatter, Args&& ... args)
+        {
+            formatter.formatted_string = skr::format(format, skr::forward<Args>(args)...);
+            return true;
+        }, skr::forward(args)...
+    );
+}
 
 } // namespace log
 } // namespace skr

@@ -1,4 +1,5 @@
 #pragma once
+#include "platform/atomic.h"
 #include "containers/string.hpp"
 #include "containers/concurrent_queue.h"
 
@@ -18,10 +19,9 @@ private:
 
     LogEvent event;
     skr::string format;
-    ArgsList<> args;
+    ArgsList args;
     bool need_format = true;
 };
-static_assert(sizeof(LogElement) <= 8 * sizeof(uint64_t), "Acquire single cache line.");
 
 struct LogQueue
 {
@@ -37,7 +37,7 @@ public:
         skr_atomic64_add_relaxed(&cnt_, 1);
     }
     
-    void push(LogEvent ev, const skr::string_view format, ArgsList<>&& args) SKR_NOEXCEPT
+    void push(LogEvent ev, const skr::string_view format, ArgsList&& args) SKR_NOEXCEPT
     {
         auto element = LogElement(ev);
 

@@ -5,6 +5,7 @@
 #include "log_queue.hpp"
 
 #include "containers/vector.hpp"
+#include "containers/sptr.hpp"
 #include "containers/hashmap.hpp"
 #include <EASTL/unique_ptr.h>
 
