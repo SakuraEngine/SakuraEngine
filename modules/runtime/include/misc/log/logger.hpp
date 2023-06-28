@@ -36,7 +36,7 @@ struct Logger
         if (!sucess) // sink immediate
         {
             skr::string s = skr::format(format, skr::forward<Args>(args)...);
-            printf("%s", s.c_str());
+            printf("%s\n", s.c_str());
         }
     }
 
@@ -54,7 +54,7 @@ struct Logger
         }
         if (!sucess) // sink immediate
         {
-            printf("%s", (const char*)buffer);
+            printf("%s\n", (const char*)buffer);
         }
     }
 

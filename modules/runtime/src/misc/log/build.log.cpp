@@ -122,6 +122,9 @@ LogElement::LogElement() SKR_NOEXCEPT
 SAtomic64 LogManager::available_ = 0;
 eastl::unique_ptr<LogWorker> LogManager::worker_ = nullptr;
 LogPatternMap LogManager::patterns_ = {};
+std::once_flag g_start_once_flag;
+eastl::unique_ptr<skr::log::Logger> LogManager::logger_ = nullptr;
+
 using namespace skr::guid::literals;
 const skr_guid_t LogConstants::kDefaultPatternId = u8"c236a30a-c91e-4b26-be7c-c7337adae428"_guid;
 
@@ -144,6 +147,7 @@ void LogManager::Initialize() SKR_NOEXCEPT
 
 void LogManager::Finalize() SKR_NOEXCEPT
 {
+    skr::log::LogManager::logger_.reset();
     if (skr_atomic64_load_acquire(&available_) != 0)
     {
         worker_.reset();
@@ -156,6 +160,17 @@ LogWorker* LogManager::TryGetWorker() SKR_NOEXCEPT
     if (skr_atomic64_load_acquire(&available_) == 0)
         return nullptr;
     return worker_.get();
+}
+
+Logger* LogManager::GetDefaultLogger() SKR_NOEXCEPT
+{
+    std::call_once(
+        skr::log::g_start_once_flag,
+        [] {
+            skr::log::LogManager::logger_ = eastl::make_unique<skr::log::Logger>();
+        }
+    );
+    return logger_.get();
 }
 
 skr_guid_t LogManager::RegisterPattern(eastl::unique_ptr<LogPattern> pattern)
@@ -184,8 +199,6 @@ static const skr::log::LogLevel kLogLevelsLUT[] = {
 };
 static_assert(sizeof(kLogLevelsLUT) / sizeof(kLogLevelsLUT[0]) == (int)skr::log::LogLevel::kCount, "kLogLevelsLUT size mismatch");
 skr::log::LogLevel g_log_level = skr::log::LogLevel::kTrace;
-skr::SPtr<skr::log::Logger> g_logger = {};
-std::once_flag g_start_once_flag;
 
 LogWorker::LogWorker(const ServiceThreadDesc& desc) SKR_NOEXCEPT
     : AsyncService(desc), queue_(SPtr<LogQueue>::Create())
@@ -261,6 +274,11 @@ void log_initialize_async_worker()
 
     auto worker = skr::log::LogManager::TryGetWorker();
     SKR_ASSERT(worker && "worker must not be null & something is wrong with initialization!");
+
+    ::atexit(+[]() {
+        auto worker = skr::log::LogManager::TryGetWorker();
+        SKR_ASSERT(!worker && "worker must be null & properly stopped at exit!");
+    });
 }
 
 RUNTIME_EXTERN_C
@@ -277,21 +295,11 @@ void log_log(int level, const char* file, int line, const char* fmt, ...)
     if (kLogLevel < skr::log::g_log_level) return;
 
     const auto Event = skr::log::LogEvent(kLogLevel);
-    std::call_once(
-        skr::log::g_start_once_flag,
-        [] {
-            skr::log::g_logger = skr::SPtr<skr::log::Logger>::Create();
-            
-            ::atexit(+[]() {
-                auto worker = skr::log::LogManager::TryGetWorker();
-                SKR_ASSERT(!worker && "worker must be null & properly stopped at exit!");
-            });
-        }
-    );
+    auto logger = skr::log::LogManager::GetDefaultLogger();
 
     va_list va_args;
     va_start(va_args, fmt);
-    skr::log::g_logger->log(Event, (const char8_t*)fmt, va_args);
+    logger->log(Event, (const char8_t*)fmt, va_args);
     va_end(va_args);
 }
 
@@ -302,7 +310,6 @@ void log_finalize()
         if (auto worker = skr::log::LogManager::TryGetWorker())
             worker->drain();
     }
-    skr::log::g_logger.reset();
     skr::log::LogManager::Finalize();
 
     auto worker = skr::log::LogManager::TryGetWorker();

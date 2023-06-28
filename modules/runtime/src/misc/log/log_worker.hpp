@@ -54,6 +54,7 @@ struct RUNTIME_API LogManager
     static void Finalize() SKR_NOEXCEPT;
 
     static LogWorker* TryGetWorker() SKR_NOEXCEPT;
+    static Logger* GetDefaultLogger() SKR_NOEXCEPT;
 
     static skr_guid_t RegisterPattern(eastl::unique_ptr<LogPattern> pattern);
     static LogPattern* QueryPattern(skr_guid_t guid);
@@ -61,6 +62,7 @@ struct RUNTIME_API LogManager
     static SAtomic64 available_;
     static eastl::unique_ptr<LogWorker> worker_;
     static LogPatternMap patterns_;
+    static eastl::unique_ptr<skr::log::Logger> logger_;
 };
 
 } } // namespace skr::log
