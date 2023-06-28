@@ -9,7 +9,6 @@ namespace log {
 
 struct LogElement
 {
-    skr::string_view produce() SKR_NOEXCEPT;
 private:
     LogElement(LogEvent ev) SKR_NOEXCEPT;
     LogElement() SKR_NOEXCEPT;

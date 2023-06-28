@@ -13,6 +13,7 @@ struct ArgNode : public skr::SInterface
     skr::SObjectPtr<ArgNode<>> next_;
 
     // argument_value_formatter_type...
+    virtual skr::string produce(const skr::string& specification) SKR_NOEXCEPT = 0;
 };
 
 template <typename NodeType = ArgNode<void>>
@@ -25,6 +26,11 @@ private:
         constexpr TypedNode(const Arg& arg) SKR_NOEXCEPT
             : value(arg)
         {
+        }
+
+        virtual skr::string produce(const skr::string& specification) SKR_NOEXCEPT
+        {
+            return skr::text::argument_formatter<T>::produce(value, specification);
         }
 
         T value;
@@ -44,8 +50,20 @@ public:
     template <typename...Args>
     void push(Args&&...args) SKR_NOEXCEPT
     {
-        auto _ = { push<Args>(std::forward<Args>(args))... };
+        auto _ = { push<Args>(std::forward<Args>(args))... }; (void)_;
+        
     }
+};
+
+struct LogFormatter
+{
+    ~LogFormatter() SKR_NOEXCEPT;
+
+    [[nodiscard]] skr::string const& format(
+        const skr::string& format,
+        const ArgsList<>& args_list
+    );
+    skr::string formatted_string = u8"";
 };
 
 } // namespace log

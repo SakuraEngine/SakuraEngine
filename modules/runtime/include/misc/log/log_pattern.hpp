@@ -1,6 +1,5 @@
 #pragma once
 #include "misc/log/log_base.hpp"
-#include "containers/string.hpp"
 
 namespace skr {
 namespace log {
@@ -15,19 +14,20 @@ public:
         MicroSeconds,
         NanoSeconds
     };
-    enum Attribute : uint32_t
+
+    enum class Attribute : uint32_t
     {
         ascii_time,
         level_id,
         level_name,
-        logger_name,
+        // logger_name,
         thread_id,
-        thread_name,
-        process_id,
-        process_name,
-        file_name,
-        file_line,
-        funtion_name,
+        // thread_name,
+        // process_id,
+        // process_name,
+        // file_name,
+        // file_line,
+        // funtion_name,
         message,
         Count
     };
@@ -41,7 +41,7 @@ public:
     {
         // Set the default pattern
         _set_pattern(
-            u8"{ascii_time} [{thread_name}] {file_line} LOG_{level_name} {logger_name} {message}"
+            u8"{ascii_time} [{thread_id}] {file_line} LOG_{level_name} {logger_name} {message}"
         );
     }
     LogPattern(const char8_t* format_pattern, const char8_t* timestamp_format, Timezone timezone)

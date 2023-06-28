@@ -21,6 +21,35 @@ LogEvent::LogEvent(LogLevel level) SKR_NOEXCEPT
 
 }
 
+LogFormatter::~LogFormatter() SKR_NOEXCEPT
+{
+
+}
+
+skr::string const& LogFormatter::format(const skr::string& format, const ArgsList<>& args_list)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+    return formatted_string;
+}
+
+LogPattern::~LogPattern() SKR_NOEXCEPT
+{
+
+}
+
+skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view formatted_message)
+{
+    const auto ascii_time = event.timestamp;
+    const auto level_id = (uint32_t)event.level;
+    const auto thread_id = event.thread_id;
+    const auto message = formatted_message;
+    formatted_string = skr::format(calculated_format, 
+        ascii_time, thread_id, 0, 
+        level_id, u8"root", message
+    );
+    return formatted_string;
+}
+
 Logger::Logger() SKR_NOEXCEPT
 {
     if (auto worker = LogManager::TryGetWorker())
@@ -89,26 +118,35 @@ LogElement::LogElement() SKR_NOEXCEPT
     
 }
 
-skr::string_view LogElement::produce() SKR_NOEXCEPT
-{
-    if (need_format)
-    {
-        SKR_UNIMPLEMENTED_FUNCTION();
-        // format = ...
-    }
-    return format.view();
-}
-
-eastl::unique_ptr<LogWorker> LogManager::worker_ = nullptr;
 SAtomic64 LogManager::available_ = 0;
+eastl::unique_ptr<LogWorker> LogManager::worker_ = nullptr;
+LogPatternMap LogManager::patterns_ = {};
+using namespace skr::guid::literals;
+const skr_guid_t LogConstants::kDefaultPatternId = u8"c236a30a-c91e-4b26-be7c-c7337adae428"_guid;
 
 void LogManager::Initialize() SKR_NOEXCEPT
 {
+    if (skr_atomic64_load_acquire(&available_) != 0)
+        return;
+
+    // register default pattern
+    patterns_.emplace(LogConstants::kDefaultPatternId, eastl::make_unique<LogPattern>());
+
+    // start worker
     if (!worker_)
     {
         worker_ = eastl::make_unique<LogWorker>(kLoggerWorkerThreadDesc);
         worker_->run();
-        skr_atomic64_cas_relaxed(&available_, 0, 1);
+    }
+    skr_atomic64_cas_relaxed(&available_, 0, 1);
+}
+
+void LogManager::Finalize() SKR_NOEXCEPT
+{
+    if (skr_atomic64_load_acquire(&available_) != 0)
+    {
+        worker_.reset();
+        skr_atomic64_cas_relaxed(&available_, 1, 0);
     }
 }
 
@@ -119,13 +157,20 @@ LogWorker* LogManager::TryGetWorker() SKR_NOEXCEPT
     return worker_.get();
 }
 
-void LogManager::Finalize() SKR_NOEXCEPT
+skr_guid_t LogManager::RegisterPattern(eastl::unique_ptr<LogPattern> pattern)
 {
-    if (skr_atomic64_load_acquire(&available_) != 0)
-    {
-        worker_.reset();
-        skr_atomic64_cas_relaxed(&available_, 1, 0);
-    }
+    auto guid = skr_guid_t();
+    skr_make_guid(&guid);
+    patterns_.emplace(guid, skr::move(pattern));
+    return guid;
+}
+
+LogPattern* LogManager::QueryPattern(skr_guid_t guid)
+{
+    auto it = patterns_.find(guid);
+    if (it != patterns_.end())
+        return it->second.get();
+    return nullptr;
 }
 
 static const skr::log::LogLevel kLogLevelsLUT[] = {
@@ -162,13 +207,13 @@ LogWorker::~LogWorker() SKR_NOEXCEPT
 void LogWorker::add_logger(Logger* logger) SKR_NOEXCEPT
 {
     drain();
-    loggers.emplace_back(logger);
+    loggers_.emplace_back(logger);
 }
 
 void LogWorker::remove_logger(Logger* logger) SKR_NOEXCEPT
 {
     drain();
-    loggers.erase(std::remove(loggers.begin(), loggers.end(), logger), loggers.end());
+    loggers_.erase(std::remove(loggers_.begin(), loggers_.end(), logger), loggers_.end());
 }
 
 bool LogWorker::predicate() SKR_NOEXCEPT
@@ -182,7 +227,9 @@ void LogWorker::process_logs() SKR_NOEXCEPT
     while (queue_->try_dequeue(e))
     {
         ZoneScopedNC("LogSingle", tracy::Color::Orchid1);
-        const auto what = e.produce();
+        const auto& what = e.need_format ? 
+            formatter_.format(e.format, e.args) :
+            e.format;
         printf("%s\n", what.c_str());
     }
 }

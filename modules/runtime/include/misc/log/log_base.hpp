@@ -1,5 +1,6 @@
 #pragma once
 #include "platform/configure.h"
+#include "containers/string.hpp"
 
 namespace skr {
 namespace log {
@@ -27,10 +28,23 @@ struct RUNTIME_API LogEvent
     LogEvent(LogLevel level) SKR_NOEXCEPT;
     
 protected:
+    friend struct LogPattern;
     bool flush = false;
     LogLevel level;
     uint64_t thread_id;
     uint64_t timestamp;
+};
+
+struct LogSourceData
+{
+    const char* func_;
+    const char* file_;
+    const char* line_;
+};
+
+struct LogConstants
+{
+    static const skr_guid_t kDefaultPatternId;
 };
 
 } // namespace log

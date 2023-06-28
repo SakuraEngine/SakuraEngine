@@ -1,7 +1,11 @@
 #pragma once
+#include "platform/guid.hpp"
 #include "async/async_service.h"
+#include "misc/log/log_pattern.hpp"
 #include "log_queue.hpp"
+
 #include "containers/vector.hpp"
+#include "containers/hashmap.hpp"
 #include <EASTL/unique_ptr.h>
 
 namespace skr {
@@ -31,24 +35,28 @@ struct LogWorker : public AsyncService
 
 protected:
     friend struct Logger;
-    std::once_flag start_once_flag;
     skr::SPtr<LogQueue> queue_;
-    skr::vector<Logger*> loggers;
+    skr::vector<Logger*> loggers_;
+    LogFormatter formatter_;
 };
 
 static const ServiceThreadDesc kLoggerWorkerThreadDesc =  {
     u8"AsyncLogWorker", SKR_THREAD_ABOVE_NORMAL
 };
 
+using LogPatternMap = skr::parallel_flat_hash_map<skr_guid_t, eastl::unique_ptr<LogPattern>, skr::guid::hash>;
+
 struct RUNTIME_API LogManager
 {
-    static LogWorker* TryGetWorker() SKR_NOEXCEPT;
-
     static void Initialize() SKR_NOEXCEPT;
     static void Finalize() SKR_NOEXCEPT;
+    static LogWorker* TryGetWorker() SKR_NOEXCEPT;
+    static skr_guid_t RegisterPattern(eastl::unique_ptr<LogPattern> pattern);
+    static LogPattern* QueryPattern(skr_guid_t guid);
 
-    static eastl::unique_ptr<LogWorker> worker_;
     static SAtomic64 available_;
+    static eastl::unique_ptr<LogWorker> worker_;
+    static LogPatternMap patterns_;
 };
 
 } } // namespace skr::log
