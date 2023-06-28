@@ -1,6 +1,5 @@
-#include "misc/log.h"
 #include "platform/thread.h"
-#include "log_rdtsc.hpp"
+#include "misc/log.h"
 #include "log_queue.hpp"
 #include "log_worker.hpp"
 #include "misc/log/logger.hpp"
@@ -18,7 +17,7 @@ namespace log {
 const char* kLogMemoryName = "sakura::log";
 
 LogEvent::LogEvent(LogLevel level) SKR_NOEXCEPT
-    : level(level), thread_id(skr_current_thread_id()), timestamp(skr::log::rdtsc())
+    : level(level), timestamp(skr_sys_get_time()), thread_id(skr_current_thread_id())
 {
 
 }

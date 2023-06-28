@@ -31,8 +31,8 @@ protected:
     friend struct LogPattern;
     bool flush = false;
     LogLevel level;
+    uint32_t timestamp;
     uint64_t thread_id;
-    uint64_t timestamp;
 };
 
 struct LogSourceData

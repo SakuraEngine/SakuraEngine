@@ -1,5 +1,6 @@
 #pragma once
 #include "platform/guid.hpp"
+#include "platform/time.h"
 #include "async/async_service.h"
 #include "misc/log/log_pattern.hpp"
 #include "log_queue.hpp"
@@ -51,7 +52,9 @@ struct RUNTIME_API LogManager
 {
     static void Initialize() SKR_NOEXCEPT;
     static void Finalize() SKR_NOEXCEPT;
+
     static LogWorker* TryGetWorker() SKR_NOEXCEPT;
+
     static skr_guid_t RegisterPattern(eastl::unique_ptr<LogPattern> pattern);
     static LogPattern* QueryPattern(skr_guid_t guid);
 
