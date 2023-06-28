@@ -5,6 +5,7 @@
 #include "serde/binary/reader.h"
 #include "serde/binary/writer.h"
 #include "serde/binary/blob.h"
+#include "tracy/Tracy.hpp"
 const char* BinaryArrayBinaryFieldArchiveFailedFormat = "[SERDE/BIN] Failed to %s %s.%s[%d]: %d";
 const char* BinaryFieldArchiveFailedFormat = "[SERDE/BIN] Failed to %s %s.%s: %d";
 const char* BinaryBaseArchiveFailedFormat = "[SERDE/BIN] Failed to %s %s's base %s: %d";

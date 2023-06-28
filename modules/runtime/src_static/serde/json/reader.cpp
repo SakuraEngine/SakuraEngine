@@ -2,6 +2,7 @@
 #include "serde/json/reader.h"
 #include "EASTL/string.h"
 #include "misc/log.h"
+#include "tracy/Tracy.hpp"
 
 namespace skr::json
 {
@@ -82,6 +83,7 @@ error_code ReadTrait<double>::Read(simdjson::ondemand::value&& json, double& val
 
 error_code ReadTrait<skr::string>::Read(simdjson::ondemand::value&& json, skr::string& value)
 {
+    ZoneScopedN("json::ReadTrait<skr::string>::Read");
     auto result = json.get_string();
     if (result.error() == simdjson::SUCCESS)
     {
@@ -172,6 +174,7 @@ error_code ReadTrait<skr_float3_t>::Read(simdjson::ondemand::value&& json, skr_f
 
 error_code ReadTrait<skr_float4_t>::Read(simdjson::ondemand::value&& json, skr_float4_t& value)
 {
+    ZoneScopedN("json::ReadTrait<skr_float4_t>::Read");
     auto result = json.get_array();
     if (result.error() == simdjson::SUCCESS)
     {
@@ -333,6 +336,7 @@ error_code ReadTrait<skr_guid_t>::Read(simdjson::ondemand::value&& json, skr_gui
 
 error_code ReadTrait<skr_resource_handle_t>::Read(simdjson::ondemand::value&& json, skr_resource_handle_t& handle)
 {
+    ZoneScopedN("json::ReadTrait<skr_resource_handle_t>::Read");
     auto result = json.get_string();
     if (result.error() == simdjson::SUCCESS)
     {
