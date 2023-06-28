@@ -16,3 +16,4 @@ target("OpenGUI_DemoResources")
     
 includes("gdi/xmake.lua")
 includes("robjects/xmake.lua")
+includes("sandbox/xmake.lua")

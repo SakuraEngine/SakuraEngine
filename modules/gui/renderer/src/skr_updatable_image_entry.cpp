@@ -1,5 +1,5 @@
-#include "SkrGuiRenderer/skr_updatable_image_entry.hpp"
-#include "SkrGuiRenderer/skr_native_device.hpp"
+#include "SkrGuiRenderer/resource/skr_updatable_image_entry.hpp"
+#include "SkrGuiRenderer/device/skr_native_device.hpp"
 
 namespace skr::gui
 {
