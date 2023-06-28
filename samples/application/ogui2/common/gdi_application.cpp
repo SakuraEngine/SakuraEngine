@@ -70,7 +70,7 @@ bool initialize_gdi_application(gdi_application_t* app)
     app->renderer->initialize(&gdir_desc);
 
     // initialize text
-    skr::gui::IGDIText::Initialize(app->renderer);
+    // skr::gui::IGDIText::Initialize(app->renderer);
     return true;
 }
 
@@ -79,7 +79,7 @@ bool finalize_gdi_application(gdi_application_t* app)
     app_wait_gpu_idle(&app->gfx);
     skr::gui::IGDIDevice::Free(app->device);
 
-    skr::gui::IGDIText::Finalize();
+    // skr::gui::IGDIText::Finalize();
     app->renderer->finalize();
     SkrDelete(app->renderer);
 

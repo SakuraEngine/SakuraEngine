@@ -36,28 +36,12 @@ public:
     SKR_GUI_OBJECT(RenderText, "72e8d4de-c288-4675-a22f-4c7a6487cabd", RenderBox);
     using Super = RenderBox;
 
-    RenderText();
-    virtual ~RenderText();
+    RenderText() {}
+    ~RenderText() {}
 
-    void perform_layout() SKR_NOEXCEPT override;
-    void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
+    void perform_layout() SKR_NOEXCEPT override {}
+    void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override {}
     void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override {}
-
-    void add_text(const char8_t* u8_text);
-
-protected:
-    void BuildParagraph();
-    void DrawParagraph();
-
-private:
-    void buildParagraphRec(Paragraph* p, const StyleText& txt);
-
-    Array<InlineType>   inlines_ = {};
-    Paragraph*          paragraph_ = nullptr;
-    skr::SPtr<FontFile> font_ = nullptr;
-
-    bool  paragraph_dirty_ = true;
-    Color font_color = { 1.f, 0.f, 1.f, 1.f };
 };
 
 } // namespace skr::gui

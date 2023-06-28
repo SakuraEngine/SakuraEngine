@@ -3,10 +3,6 @@
 
 namespace skr::gui
 {
-NotNull<IResourceProvider*> SkrUpdatableImageEntry::provider() const SKR_NOEXCEPT
-{
-    return make_not_null(_provider);
-}
 void SkrUpdatableImageEntry::destroy_resoure(NotNull<IResource*> resource) SKR_NOEXCEPT
 {
     SkrDelete(resource.get());
@@ -24,7 +20,7 @@ void SkrUpdatableImageEntry::visit_useable_image_size(FunctionRef<void(Sizef)> v
 {
     SKR_UNIMPLEMENTED_FUNCTION();
 }
-void SkrUpdatableImageEntry::update(const ImageUpdateDesc& desc) SKR_NOEXCEPT
+void SkrUpdatableImageEntry::update(const IUpdatableImageEntry::UpdateDesc& desc) SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION();
 }
