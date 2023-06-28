@@ -346,4 +346,25 @@ error_code ReadTrait<skr_resource_handle_t>::Read(simdjson::ondemand::value&& js
     }
     return (error_code)result.error();
 }
+
+void RUNTIME_STATIC_API _CODEGEN_LOG_DEFAULT_FIELD(const char8_t* field, const char8_t* record)
+{
+    SKR_LOG_TRACE("Field {} in record {} not found while reading, using default value.", field, record);
+}
+
+void RUNTIME_STATIC_API _CODEGEN_FAILED_READ_RECORD(const char8_t* record, const char8_t* msg)
+{
+    SKR_LOG_ERROR("Failed to read record {}, msg:\n {}", record, msg);
+}
+
+void RUNTIME_STATIC_API _CODEGEN_FAILED_READ_FIELD(const char8_t* field, const char8_t* record, const char8_t* msg)
+{
+    SKR_LOG_ERROR("Failed to read field {} in record {}, msg:\n {}", field, record, msg);
+}
+
+void RUNTIME_STATIC_API _CODEGEN_FAILED_READ_FIELD_ARR_ELEM(const char8_t* field, const char8_t* record, uint64_t idx, const char8_t* msg)
+{
+    SKR_LOG_ERROR("Failed to read array element {} of array field {} in record {}, msg:\n {}", idx, field, record, msg);
+}
+
 } // namespace skr::json
