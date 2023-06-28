@@ -9,6 +9,8 @@ enums = generator.filter_rtti(db.enums)
 #include "misc/hash.h"
 #include "misc/log.h"
 #include "type/type_helper.hpp"
+const char* ArgumentNumMisMatchFormat = "Argument number mismatch while calling %s, expected %d, got %d.";
+const char* ArgumentIncompatibleFormat = "Argument %s is incompatible while calling %s. %s can not be converted to %s.";
 
 %for record in records:
 namespace skr::type
@@ -99,13 +101,13 @@ namespace skr::type
                     skr_value_t result = {};
                     if(nargs < ${len(vars(method.parameters))})
                     {
-                        SKR_LOG_ERROR("[${method.name}] not enough arguments provided.");
+                        SKR_LOG_ERROR(ArgumentNumMisMatchFormat, "${method.name}", ${len(vars(method.parameters))}, nargs);
                         return result;
                     }
                 %for j, (name, parameter) in enumerate(vars(method.parameters).items()):
                     if(!args[${j}].type->Convertible(type_of<${parameter.type}>::get()))
                     {
-                        SKR_LOG_ERROR("[${method.name}] argument ${name} is not compatible.");
+                        SKR_LOG_ERROR(ArgumentIncompatibleFormat, "${name}", "${method.name}", args[${j}].type->Name(), "${parameter.type}");
                         return result;
                     }
                 %endfor
