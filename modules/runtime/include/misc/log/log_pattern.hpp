@@ -15,7 +15,6 @@ public:
         MicroSeconds,
         NanoSeconds
     };
-
     enum Attribute : uint32_t
     {
         ascii_time,
@@ -32,6 +31,12 @@ public:
         message,
         Count
     };
+
+    [[nodiscard]] skr::string const& pattern(
+        const LogEvent& event,
+        skr::string_view formatted_message
+    );
+
     LogPattern() SKR_NOEXCEPT
     {
         // Set the default pattern
@@ -56,6 +61,7 @@ protected:
 
     }
     skr::string calculated_format = u8"{} [{}] {} LOG_{} {} {}";
+    skr::string formatted_string = u8"";
 };
 
 } // namespace log

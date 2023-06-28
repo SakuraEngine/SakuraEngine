@@ -7,12 +7,12 @@
 namespace skr {
 namespace log {
 
-struct LogQueueElement
+struct LogElement
 {
     skr::string_view produce() SKR_NOEXCEPT;
 private:
-    LogQueueElement(LogEvent ev) SKR_NOEXCEPT;
-    LogQueueElement() SKR_NOEXCEPT;
+    LogElement(LogEvent ev) SKR_NOEXCEPT;
+    LogElement() SKR_NOEXCEPT;
     
     friend struct LogQueue;
     friend struct LogWorker;
@@ -22,14 +22,14 @@ private:
     ArgsList<> args;
     bool need_format = true;
 };
-static_assert(sizeof(LogQueueElement) <= 8 * sizeof(uint64_t), "Acquire single cache line.");
+static_assert(sizeof(LogElement) <= 8 * sizeof(uint64_t), "Acquire single cache line.");
 
 struct LogQueue
 {
 public:
     void push(LogEvent ev, const skr::string&& what) SKR_NOEXCEPT
     {
-        auto element = LogQueueElement(ev);
+        auto element = LogElement(ev);
 
         element.format = skr::move(what);
         element.need_format = false;
@@ -40,7 +40,7 @@ public:
     
     void push(LogEvent ev, const skr::string_view format, ArgsList<>&& args) SKR_NOEXCEPT
     {
-        auto element = LogQueueElement(ev);
+        auto element = LogElement(ev);
 
         element.format = format.raw();
         element.args = skr::move(args);
@@ -50,7 +50,7 @@ public:
         skr_atomic64_add_relaxed(&cnt_, 1);
     }
 
-    bool try_dequeue(LogQueueElement& element)
+    bool try_dequeue(LogElement& element)
     {
         if (queue_.try_dequeue(element))
         {
@@ -75,7 +75,7 @@ private:
         static inline void* malloc(size_t size) { return sakura_mallocN(size, kLogMemoryName); }
         static inline void free(void* ptr) { return sakura_freeN(ptr, kLogMemoryName); }
     };
-    skr::ConcurrentQueue<LogQueueElement, LogQueueTraits> queue_;
+    skr::ConcurrentQueue<LogElement, LogQueueTraits> queue_;
     SAtomic64 cnt_ = 0;
 };
 

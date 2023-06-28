@@ -23,7 +23,7 @@ LogEvent::LogEvent(LogLevel level) SKR_NOEXCEPT
 
 Logger::Logger() SKR_NOEXCEPT
 {
-    if (auto worker = LogWorkerSingleton::TryGet())
+    if (auto worker = LogManager::TryGetWorker())
     {
         worker->add_logger(this);
     }
@@ -31,7 +31,7 @@ Logger::Logger() SKR_NOEXCEPT
 
 Logger::~Logger() SKR_NOEXCEPT
 {
-    if (auto worker = LogWorkerSingleton::TryGet())
+    if (auto worker = LogManager::TryGetWorker())
     {
         worker->remove_logger(this);
     }
@@ -39,13 +39,13 @@ Logger::~Logger() SKR_NOEXCEPT
 
 bool Logger::canPushToQueue() const SKR_NOEXCEPT
 {
-    auto worker = LogWorkerSingleton::TryGet();
+    auto worker = LogManager::TryGetWorker();
     return worker;
 }
 
 bool Logger::tryPushToQueue(LogEvent ev, skr::string_view format, ArgsList<>&& args_list) SKR_NOEXCEPT
 {
-    auto worker = LogWorkerSingleton::TryGet();
+    auto worker = LogManager::TryGetWorker();
     if (worker)
     {
         auto queue_ = worker->queue_;
@@ -58,7 +58,7 @@ bool Logger::tryPushToQueue(LogEvent ev, skr::string_view format, ArgsList<>&& a
 
 bool Logger::tryPushToQueue(LogEvent ev, skr::string&& what) SKR_NOEXCEPT
 {
-    auto worker = LogWorkerSingleton::TryGet();
+    auto worker = LogManager::TryGetWorker();
     if (worker)
     {
         auto queue_ = worker->queue_;
@@ -71,25 +71,25 @@ bool Logger::tryPushToQueue(LogEvent ev, skr::string&& what) SKR_NOEXCEPT
 
 void Logger::notifyWorker() SKR_NOEXCEPT
 {
-    if (auto worker = LogWorkerSingleton::TryGet())
+    if (auto worker = LogManager::TryGetWorker())
     {
         worker->awake();
     }
 }
 
-LogQueueElement::LogQueueElement(LogEvent ev) SKR_NOEXCEPT
+LogElement::LogElement(LogEvent ev) SKR_NOEXCEPT
     : event(ev)
 {
 
 }
 
-LogQueueElement::LogQueueElement() SKR_NOEXCEPT
+LogElement::LogElement() SKR_NOEXCEPT
     : event(LogLevel::kTrace)
 {
     
 }
 
-skr::string_view LogQueueElement::produce() SKR_NOEXCEPT
+skr::string_view LogElement::produce() SKR_NOEXCEPT
 {
     if (need_format)
     {
@@ -99,32 +99,32 @@ skr::string_view LogQueueElement::produce() SKR_NOEXCEPT
     return format.view();
 }
 
-eastl::unique_ptr<LogWorker> LogWorkerSingleton::_this = nullptr;
-SAtomic64 LogWorkerSingleton::_available = 0;
+eastl::unique_ptr<LogWorker> LogManager::worker_ = nullptr;
+SAtomic64 LogManager::available_ = 0;
 
-void LogWorkerSingleton::Initialize() SKR_NOEXCEPT
+void LogManager::Initialize() SKR_NOEXCEPT
 {
-    if (!_this)
+    if (!worker_)
     {
-        _this = eastl::make_unique<LogWorker>(kLoggerWorkerThreadDesc);
-        _this->run();
-        skr_atomic64_cas_relaxed(&_available, 0, 1);
+        worker_ = eastl::make_unique<LogWorker>(kLoggerWorkerThreadDesc);
+        worker_->run();
+        skr_atomic64_cas_relaxed(&available_, 0, 1);
     }
 }
 
-LogWorker* LogWorkerSingleton::TryGet() SKR_NOEXCEPT
+LogWorker* LogManager::TryGetWorker() SKR_NOEXCEPT
 {
-    if (skr_atomic64_load_acquire(&_available) == 0)
+    if (skr_atomic64_load_acquire(&available_) == 0)
         return nullptr;
-    return _this.get();
+    return worker_.get();
 }
 
-void LogWorkerSingleton::Finalize() SKR_NOEXCEPT
+void LogManager::Finalize() SKR_NOEXCEPT
 {
-    if (skr_atomic64_load_acquire(&_available) != 0)
+    if (skr_atomic64_load_acquire(&available_) != 0)
     {
-        _this.reset();
-        skr_atomic64_cas_relaxed(&_available, 1, 0);
+        worker_.reset();
+        skr_atomic64_cas_relaxed(&available_, 1, 0);
     }
 }
 
@@ -178,7 +178,7 @@ bool LogWorker::predicate() SKR_NOEXCEPT
 
 void LogWorker::process_logs() SKR_NOEXCEPT
 {
-    LogQueueElement e;
+    LogElement e;
     while (queue_->try_dequeue(e))
     {
         ZoneScopedNC("LogSingle", tracy::Color::Orchid1);
@@ -209,9 +209,9 @@ skr::AsyncResult LogWorker::serve() SKR_NOEXCEPT
 RUNTIME_EXTERN_C
 void log_initialize_async_worker()
 {
-    skr::log::LogWorkerSingleton::Initialize();
+    skr::log::LogManager::Initialize();
 
-    auto worker = skr::log::LogWorkerSingleton::TryGet();
+    auto worker = skr::log::LogManager::TryGetWorker();
     SKR_ASSERT(worker && "worker must not be null & something is wrong with initialization!");
 }
 
@@ -235,7 +235,7 @@ void log_log(int level, const char* file, int line, const char* fmt, ...)
             skr::log::g_logger = skr::SPtr<skr::log::Logger>::Create();
             
             ::atexit(+[]() {
-                auto worker = skr::log::LogWorkerSingleton::TryGet();
+                auto worker = skr::log::LogManager::TryGetWorker();
                 SKR_ASSERT(!worker && "worker must be null & properly stopped at exit!");
             });
         }
@@ -251,12 +251,12 @@ RUNTIME_EXTERN_C
 void log_finalize()
 {
     {
-        if (auto worker = skr::log::LogWorkerSingleton::TryGet())
+        if (auto worker = skr::log::LogManager::TryGetWorker())
             worker->drain();
     }
     skr::log::g_logger.reset();
-    skr::log::LogWorkerSingleton::Finalize();
+    skr::log::LogManager::Finalize();
 
-    auto worker = skr::log::LogWorkerSingleton::TryGet();
+    auto worker = skr::log::LogManager::TryGetWorker();
     SKR_ASSERT(!worker && "worker must be null & properly stopped at exit!");
 }

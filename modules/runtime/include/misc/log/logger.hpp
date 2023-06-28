@@ -5,8 +5,7 @@ namespace skr {
 namespace log {
 
 template<typename T>
-struct IsCopyableArgument
-{
+struct IsCopyableArgument {
     static constexpr bool value = std::is_copy_constructible_v<T>;
 };
 
@@ -59,6 +58,7 @@ struct Logger
         }
     }
 
+private:
     template <typename... Args>
     constexpr bool checkCopyable(Args&&... arg) const SKR_NOEXCEPT
     {

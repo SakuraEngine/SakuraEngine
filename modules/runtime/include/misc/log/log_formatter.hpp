@@ -6,16 +6,16 @@ namespace skr {
 namespace log {
 
 template <typename = void>
-struct Node : public skr::SInterface 
+struct ArgNode : public skr::SInterface 
 {
     SKR_RC_OBJECT_BODY
-    virtual ~Node() SKR_NOEXCEPT = default;
-    skr::SObjectPtr<Node<>> next_;
+    virtual ~ArgNode() SKR_NOEXCEPT = default;
+    skr::SObjectPtr<ArgNode<>> next_;
 
     // argument_value_formatter_type...
 };
 
-template <typename NodeType = Node<void>>
+template <typename NodeType = ArgNode<void>>
 struct ArgsList 
 {
 private:
@@ -29,7 +29,7 @@ private:
 
         T value;
     };
-    skr::SObjectPtr<Node<>> head_;
+    skr::SObjectPtr<ArgNode<>> head_;
 
 public:
     template <typename T, typename Arg>

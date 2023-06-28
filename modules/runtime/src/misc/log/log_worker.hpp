@@ -40,15 +40,15 @@ static const ServiceThreadDesc kLoggerWorkerThreadDesc =  {
     u8"AsyncLogWorker", SKR_THREAD_ABOVE_NORMAL
 };
 
-struct RUNTIME_API LogWorkerSingleton
+struct RUNTIME_API LogManager
 {
-    static LogWorker* TryGet() SKR_NOEXCEPT;
+    static LogWorker* TryGetWorker() SKR_NOEXCEPT;
 
     static void Initialize() SKR_NOEXCEPT;
     static void Finalize() SKR_NOEXCEPT;
 
-    static eastl::unique_ptr<LogWorker> _this;
-    static SAtomic64 _available;
+    static eastl::unique_ptr<LogWorker> worker_;
+    static SAtomic64 available_;
 };
 
 } } // namespace skr::log
