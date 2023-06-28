@@ -2,6 +2,7 @@
 #include "platform/thread.h"
 #include "platform/dstorage.h"
 #include "misc/log.h"
+#include "misc/log.hpp"
 #include "misc/make_zeroed.hpp"
 #include "async/thread_job.hpp"
 #include "async/wait_timeout.hpp"
@@ -29,6 +30,8 @@ struct VFSTest : public ::testing::TestWithParam<bool>
 
         SkrDStorageConfig config = {};
         skr_create_dstorage_instance(&config);
+
+        SKR_LOG_FMT_INFO(u8"Current path: {}", (const char8_t*)current_path.c_str());
     }
 
     void TearDown() override

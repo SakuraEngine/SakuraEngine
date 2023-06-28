@@ -42,9 +42,19 @@ struct LogSourceData
     const char* line_;
 };
 
-struct LogConstants
+struct RUNTIME_API LogConstants
 {
+    static skr::log::LogLevel gLogLevel;
     static const skr_guid_t kDefaultPatternId;
+    static constexpr skr::log::LogLevel kLogLevelsLUT[] = {
+        skr::log::LogLevel::kTrace, 
+        skr::log::LogLevel::kDebug, 
+        skr::log::LogLevel::kInfo, 
+        skr::log::LogLevel::kWarning, 
+        skr::log::LogLevel::kError, 
+        skr::log::LogLevel::kFatal 
+    };
+    static_assert(sizeof(kLogLevelsLUT) / sizeof(kLogLevelsLUT[0]) == (int)skr::log::LogLevel::kCount, "kLogLevelsLUT size mismatch");
 };
 
 } // namespace log

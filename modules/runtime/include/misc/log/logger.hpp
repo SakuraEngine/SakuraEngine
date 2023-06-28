@@ -4,15 +4,34 @@
 namespace skr {
 namespace log {
 
-template<typename T>
-struct IsCopyableArgument {
-    static constexpr bool value = std::is_copy_constructible_v<T>;
+template<typename Arg>
+struct IsCStringFamily {
+    using ArgType = std::decay_t<Arg>;
+    static constexpr bool value =
+        std::disjunction_v<std::is_same<ArgType, char const*>, std::is_same<ArgType, char*>> ||
+        std::disjunction_v<std::is_same<ArgType, char8_t const*>, std::is_same<ArgType, char8_t*>> ||
+        std::disjunction_v<std::is_same<ArgType, wchar_t const*>, std::is_same<ArgType, wchar_t*>>;
 };
 
-struct Logger
+template<typename Arg>
+struct IsCopyableArgument {
+    using ArgType = std::decay_t<Arg>;
+    static constexpr bool value = !IsCStringFamily<ArgType>::value && 
+        std::is_trivially_copy_constructible_v<ArgType>;
+};
+
+template <typename... Args>
+static constexpr bool checkArgsCopyable() SKR_NOEXCEPT
+{
+    return (IsCopyableArgument<Args>::value && ...);
+}
+
+struct RUNTIME_API Logger
 {
     Logger() SKR_NOEXCEPT;
     ~Logger() SKR_NOEXCEPT;
+
+    static Logger* GetDefault() SKR_NOEXCEPT;
 
     template <typename...Args>
     void log(LogEvent ev, skr::string_view format, Args&&... args) SKR_NOEXCEPT
@@ -20,7 +39,7 @@ struct Logger
         bool sucess = false;
         if (canPushToQueue())
         {
-            constexpr bool copyable = checkCopyable(args...);
+            constexpr bool copyable = checkArgsCopyable<Args...>();
             if constexpr (copyable)
             {
                 ArgsList args_list = {};
@@ -59,12 +78,6 @@ struct Logger
     }
 
 private:
-    template <typename... Args>
-    constexpr bool checkCopyable(Args&&... arg) const SKR_NOEXCEPT
-    {
-        return (IsCopyableArgument<Args>::value && ...);
-    }
-
     bool canPushToQueue() const SKR_NOEXCEPT;
     bool tryPushToQueue(LogEvent ev, skr::string_view format, ArgsList&& args) SKR_NOEXCEPT;
     bool tryPushToQueue(LogEvent ev, skr::string&& what) SKR_NOEXCEPT;

@@ -1,14 +1,24 @@
 #pragma once
 #include "log.h"
+#include "log/logger.hpp"
 
 #ifdef __cplusplus
-    #include "containers/string.hpp"
+    template <typename...Args>
+    void log_log_cxx(int level, const char* file, int line, const char8_t* fmt, Args&&... args)
+    {
+        const auto kLogLevel = skr::log::LogConstants::kLogLevelsLUT[level];
+        if (kLogLevel < skr::log::LogConstants::gLogLevel) return;
 
+        const auto Event = skr::log::LogEvent(kLogLevel);
+        auto logger = skr::log::Logger::GetDefault();
 
-    #define SKR_LOG_FMT_TRACE(...) log_log(SKR_LOG_LEVEL_TRACE, __FILE__, __LINE__, "%s", skr::format(__VA_ARGS__).c_str())
-    #define SKR_LOG_FMT_DEBUG(...) log_log(SKR_LOG_LEVEL_DEBUG, __FILE__, __LINE__, "%s", skr::format(__VA_ARGS__).c_str())
-    #define SKR_LOG_FMT_INFO(...) log_log(SKR_LOG_LEVEL_INFO, __FILE__, __LINE__, "%s", skr::format(__VA_ARGS__).c_str())
-    #define SKR_LOG_FMT_WARN(...) log_log(SKR_LOG_LEVEL_WARN, __FILE__, __LINE__, "%s", skr::format(__VA_ARGS__).c_str())
-    #define SKR_LOG_FMT_ERROR(...) log_log(SKR_LOG_LEVEL_ERROR, __FILE__, __LINE__, "%s", skr::format(__VA_ARGS__).c_str())
-    #define SKR_LOG_FMT_FATAL(...) log_log(SKR_LOG_LEVEL_FATAL, __FILE__, __LINE__, "%s", skr::format(__VA_ARGS__).c_str())
+        logger->log(Event, fmt, skr::forward<Args>(args)...);
+    }
+
+    #define SKR_LOG_FMT_TRACE(fmt, ...) log_log_cxx(SKR_LOG_LEVEL_TRACE, __FILE__, __LINE__, (fmt), __VA_ARGS__)
+    #define SKR_LOG_FMT_DEBUG(fmt, ...) log_log_cxx(SKR_LOG_LEVEL_DEBUG, __FILE__, __LINE__, (fmt), __VA_ARGS__)
+    #define SKR_LOG_FMT_INFO(fmt, ...) log_log_cxx(SKR_LOG_LEVEL_INFO, __FILE__, __LINE__, (fmt), __VA_ARGS__)
+    #define SKR_LOG_FMT_WARN(fmt, ...) log_log_cxx(SKR_LOG_LEVEL_WARN, __FILE__, __LINE__, (fmt), __VA_ARGS__)
+    #define SKR_LOG_FMT_ERROR(fmt, ...) log_log_cxx(SKR_LOG_LEVEL_ERROR, __FILE__, __LINE__, (fmt), __VA_ARGS__)
+    #define SKR_LOG_FMT_FATAL(fmt, ...) log_log_cxx(SKR_LOG_LEVEL_FATAL, __FILE__, __LINE__, (fmt), __VA_ARGS__)
 #endif

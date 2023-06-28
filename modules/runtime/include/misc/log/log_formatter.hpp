@@ -17,7 +17,7 @@ struct ArgsList
 
 protected:
     friend struct LogFormatter;
-    eastl::fixed_function<8 * sizeof(uint64_t), bool(LogFormatter&)> format_;
+    eastl::fixed_function<8 * sizeof(uint64_t), bool(const skr::string& format, LogFormatter&)> format_;
 };
 
 struct LogFormatter
@@ -32,36 +32,15 @@ struct LogFormatter
     skr::string formatted_string = u8"";
 };
 
-// Capture args and add them as additional arguments
-template <typename Lambda, typename ... Args>
-auto capture_call(Lambda&& lambda, Args&& ... args)
-{
-    return [
-        lambda = std::forward<Lambda>(lambda),
-        capture_args = std::make_tuple(skr::forward<Args>(args) ...)
-    ](auto&& ... original_args) mutable {
-        return std::apply([&lambda](auto&& ... args){
-            lambda(std::forward<decltype(args)>(args) ...);
-        }, std::tuple_cat(
-            std::forward_as_tuple(original_args ...),
-            std::apply([](auto&& ... args){
-                return std::forward_as_tuple< Args ... >(
-                    std::move(args) ...);
-            }, std::move(capture_args))
-        ));
-    };
-}
-
 template <typename...Args>
-void ArgsList::push(Args&&...args) SKR_NOEXCEPT
+FORCEINLINE void ArgsList::push(Args&&...args) SKR_NOEXCEPT
 {
-    auto f_format_ = capture_call(
-        [](skr::string& format, LogFormatter& formatter, Args&& ... args)
-        {
+    format_ = [args = std::make_tuple(std::forward<Args>(args) ...)](const skr::string& format, LogFormatter& formatter) mutable {
+        return std::apply([&](auto&& ... args){
             formatter.formatted_string = skr::format(format, skr::forward<Args>(args)...);
             return true;
-        }, skr::forward(args)...
-    );
+        }, std::move(args));
+    };
 }
 
 } // namespace log

@@ -29,7 +29,7 @@ LogFormatter::~LogFormatter() SKR_NOEXCEPT
 
 skr::string const& LogFormatter::format(const skr::string& format, const ArgsList& args_list)
 {
-    args_list.format_(*this);
+    args_list.format_(format, *this);
     return formatted_string;
 }
 
@@ -65,6 +65,11 @@ Logger::~Logger() SKR_NOEXCEPT
     {
         worker->remove_logger(this);
     }
+}
+
+Logger* Logger::GetDefault() SKR_NOEXCEPT
+{
+    return LogManager::GetDefaultLogger();
 }
 
 bool Logger::canPushToQueue() const SKR_NOEXCEPT
@@ -119,14 +124,15 @@ LogElement::LogElement() SKR_NOEXCEPT
     
 }
 
+using namespace skr::guid::literals;
+const skr_guid_t LogConstants::kDefaultPatternId = u8"c236a30a-c91e-4b26-be7c-c7337adae428"_guid;
+skr::log::LogLevel LogConstants::gLogLevel = skr::log::LogLevel::kTrace;
+
 SAtomic64 LogManager::available_ = 0;
 eastl::unique_ptr<LogWorker> LogManager::worker_ = nullptr;
 LogPatternMap LogManager::patterns_ = {};
 std::once_flag g_start_once_flag;
 eastl::unique_ptr<skr::log::Logger> LogManager::logger_ = nullptr;
-
-using namespace skr::guid::literals;
-const skr_guid_t LogConstants::kDefaultPatternId = u8"c236a30a-c91e-4b26-be7c-c7337adae428"_guid;
 
 void LogManager::Initialize() SKR_NOEXCEPT
 {
@@ -147,7 +153,7 @@ void LogManager::Initialize() SKR_NOEXCEPT
 
 void LogManager::Finalize() SKR_NOEXCEPT
 {
-    skr::log::LogManager::logger_.reset();
+    // skr::log::LogManager::logger_.reset();
     if (skr_atomic64_load_acquire(&available_) != 0)
     {
         worker_.reset();
@@ -188,17 +194,6 @@ LogPattern* LogManager::QueryPattern(skr_guid_t guid)
         return it->second.get();
     return nullptr;
 }
-
-static const skr::log::LogLevel kLogLevelsLUT[] = {
-    skr::log::LogLevel::kTrace, 
-    skr::log::LogLevel::kDebug, 
-    skr::log::LogLevel::kInfo, 
-    skr::log::LogLevel::kWarning, 
-    skr::log::LogLevel::kError, 
-    skr::log::LogLevel::kFatal 
-};
-static_assert(sizeof(kLogLevelsLUT) / sizeof(kLogLevelsLUT[0]) == (int)skr::log::LogLevel::kCount, "kLogLevelsLUT size mismatch");
-skr::log::LogLevel g_log_level = skr::log::LogLevel::kTrace;
 
 LogWorker::LogWorker(const ServiceThreadDesc& desc) SKR_NOEXCEPT
     : AsyncService(desc), queue_(SPtr<LogQueue>::Create())
@@ -284,15 +279,15 @@ void log_initialize_async_worker()
 RUNTIME_EXTERN_C
 void log_set_level(int level)
 {
-    const auto kLogLevel = skr::log::kLogLevelsLUT[level];\
-    skr::log::g_log_level = kLogLevel;
+    const auto kLogLevel = skr::log::LogConstants::kLogLevelsLUT[level];\
+    skr::log::LogConstants::gLogLevel = kLogLevel;
 }
 
 RUNTIME_EXTERN_C 
 void log_log(int level, const char* file, int line, const char* fmt, ...)
 {
-    const auto kLogLevel = skr::log::kLogLevelsLUT[level];
-    if (kLogLevel < skr::log::g_log_level) return;
+    const auto kLogLevel = skr::log::LogConstants::kLogLevelsLUT[level];
+    if (kLogLevel < skr::log::LogConstants::gLogLevel) return;
 
     const auto Event = skr::log::LogEvent(kLogLevel);
     auto logger = skr::log::LogManager::GetDefaultLogger();
