@@ -1,3 +1,4 @@
+#include "misc/log.h"
 #include "platform/thread.h"
 #include "log_rdtsc.hpp"
 #include "log_queue.hpp"
