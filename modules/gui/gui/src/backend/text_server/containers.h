@@ -184,10 +184,16 @@ public:
 template <class K, class T, class Hasher = godot::Hasher<K>>
 class HashMap : public skr::flat_hash_map<K, T, Hasher>
 {
+    using base = skr::flat_hash_map<K, T, Hasher>;
 public:
     bool has(const K& key) const
     {
         return this->find(key) != this->end();
+    }
+    template<class KT, class TT>
+    void insert(KT&& key, TT&& value)
+    {
+        this->emplace(std::forward<KT>(key), std::forward<TT>(value));
     }
     const T& operator[](const K& key) const
     {
@@ -196,7 +202,7 @@ public:
     T& operator[](const K& key)
     {
         if (has(key)) return this->at(key);
-        return this->insert({ key, T() }).first->second;
+        return this->base::insert({ key, T() }).first->second;
     }
     bool is_empty() const
     {
@@ -212,12 +218,58 @@ public:
         }
         return hash;
     }
+    Vector<K> keys() const
+    {
+        Vector<K> keys;
+        keys.reserve(this->size());
+        for (auto& e : *this)
+        {
+            keys.push_back(e.first);
+        }
+        return keys;
+    }
+    Vector<T> values() const
+    {
+        Vector<T> values;
+        values.reserve(this->size());
+        for (auto& e : *this)
+        {
+            values.push_back(e.second);
+        }
+        return values;
+    }
 };
 
 template <class T>
 using List = eastl::list<T>;
 
-using Variant = void*;
+struct Variant
+{
+    enum Type
+    {
+        INT,
+        BOOL,
+    };
+    Variant() = default;
+    void* data = nullptr;
+    bool operator==(const Variant& p_other) const
+    {
+        return data == p_other.data;
+    }
+    bool operator!=(const Variant& p_other) const
+    {
+        return data != p_other.data;
+    }
+};
+template <>
+struct Hasher<Variant>
+{
+    uint32_t operator()(const Variant& p_key) const
+    {
+        return eastl::hash<void*>()(p_key.data);
+    }
+};
+
 
 template <class T>
 struct Ref : public skr::SPtr<T> {
@@ -271,7 +323,7 @@ public:
     _FORCE_INLINE_      BitField(int64_t p_value) { value = p_value; }
     _FORCE_INLINE_      BitField(T p_value) { value = (int64_t)p_value; }
     _FORCE_INLINE_ operator int64_t() const { return value; }
-    _FORCE_INLINE_ operator Variant() const { return value; }
+    //_FORCE_INLINE_ operator Variant() const { return value; }
     _FORCE_INLINE_ bool operator!=(const BitField<T>& p_other) const { return (int64_t)p_other != value; }
     _FORCE_INLINE_ bool operator==(const BitField<T>& p_other) const { return (int64_t)p_other == value; }
 };

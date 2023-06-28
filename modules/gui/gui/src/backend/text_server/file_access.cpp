@@ -49,6 +49,18 @@ Vector<uint8_t> FileAccess::get_buffer(int64_t p_length) const
     skr_vfs_fread(file, ret.data(), 0, p_length);
     return ret;
 }
+Vector<uint8_t> FileAccess::get_file_as_bytes(const String& p_path)
+{
+    auto file = skr_vfs_fopen(godot_vfs, (char8_t*)p_path.utf8().get_data(), ESkrFileMode::SKR_FM_READ_BINARY, ESkrFileCreation::SKR_FILE_CREATION_OPEN_EXISTING);
+    if (file == nullptr)
+        return Vector<uint8_t>();
+    auto size = skr_vfs_fsize(file);
+    Vector<uint8_t> ret;
+    ret.resize(size);
+    skr_vfs_fread(file, ret.data(), 0, size);
+    skr_vfs_fclose(file);
+    return ret;
+}
 FileAccess::~FileAccess()
 {
     skr_vfs_fclose(file);
