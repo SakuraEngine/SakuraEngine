@@ -6,6 +6,8 @@
 // brush base
 namespace skr::gui
 {
+struct ISurface;
+
 enum class EBrushType : uint8_t
 {
     Color,
@@ -74,21 +76,21 @@ struct ColorBrush : public Brush {
 namespace skr::gui
 {
 struct SurfaceBrush : public Brush {
-    inline SurfaceBrush(ITexture* surface) SKR_NOEXCEPT
+    inline SurfaceBrush(ISurface* surface) SKR_NOEXCEPT
         : Brush(EBrushType::Surface),
           _surface(surface)
     {
     }
 
     // params
-    ITexture*           _surface = nullptr; // TODO. use ISurface
+    ISurface*           _surface = nullptr; // TODO. use ISurface
     Rectf               _uv_rect = {};
     float               _rotation = 0.0f; // in degree
     Swizzle             _swizzle = {};
     CustomVertexFuncRef _custom = nullptr;
 
     // builder
-    inline SurfaceBrush& surface(ITexture* surface) SKR_NOEXCEPT
+    inline SurfaceBrush& surface(ISurface* surface) SKR_NOEXCEPT
     {
         _surface = surface;
         return *this;
@@ -125,14 +127,14 @@ struct SurfaceBrush : public Brush {
 namespace skr::gui
 {
 struct SurfaceNineBrush : public Brush {
-    inline SurfaceNineBrush(ITexture* surface) SKR_NOEXCEPT
+    inline SurfaceNineBrush(ISurface* surface) SKR_NOEXCEPT
         : Brush(EBrushType::SurfaceNine),
           _surface(surface)
     {
     }
 
     // params
-    ITexture*           _surface = nullptr; // TODO. use ISurface
+    ISurface*           _surface = nullptr; // TODO. use ISurface
     Rectf               _uv_rect = {};
     Rectf               _inner_rect = {};
     float               _rotation = 0.0f; // in degree
@@ -140,7 +142,7 @@ struct SurfaceNineBrush : public Brush {
     CustomVertexFuncRef _custom = nullptr;
 
     // builder
-    inline SurfaceNineBrush& surface(ITexture* surface) SKR_NOEXCEPT
+    inline SurfaceNineBrush& surface(ISurface* surface) SKR_NOEXCEPT
     {
         _surface = surface;
         return *this;

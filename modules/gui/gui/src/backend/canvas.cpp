@@ -308,8 +308,8 @@ struct _NVGHelper {
 
             command.index_begin = static_cast<uint32_t>(begin);
             command.index_count = static_cast<uint32_t>(canvas->_indices.size() - begin);
-            command.material = static_cast<IGDIMaterial*>(paint->material);
-            command.texture = static_cast<IGDITexture*>(paint->image);
+            command.material = static_cast<IMaterial*>(paint->material);
+            command.texture = static_cast<ITexture*>(paint->image);
             if (command.texture && ((IGDIResource*)command.texture)->get_state() != EGDIResourceState::Okay)
             {
                 command.texture = nullptr;
@@ -341,8 +341,8 @@ struct _NVGHelper {
         // combine command
         command.index_begin = static_cast<uint32_t>(begin);
         command.index_count = static_cast<uint32_t>(canvas->_indices.size() - begin);
-        command.material = static_cast<IGDIMaterial*>(paint->material);
-        command.texture = static_cast<IGDITexture*>(paint->image);
+        command.material = static_cast<IMaterial*>(paint->material);
+        command.texture = static_cast<ITexture*>(paint->image);
         if (command.texture && ((IGDIResource*)command.texture)->get_state() != EGDIResourceState::Okay)
         {
             command.texture = nullptr;

@@ -101,6 +101,7 @@ using Span = skr::lite::LiteSpan<T>;
 
 // containers
 using String = skr::string;
+using StringView = skr::string_view;
 template <typename T>
 using Array = skr::vector<T>;
 template <typename K, typename V>

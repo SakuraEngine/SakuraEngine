@@ -8,8 +8,8 @@
 
 namespace skr::gui
 {
-using ITexture = IGDITexture;
-using IMaterial = IGDIMaterial;
+struct ITexture;
+struct IMaterial;
 
 enum class EBlendFactor : uint8_t
 {

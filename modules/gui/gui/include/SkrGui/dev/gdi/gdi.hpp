@@ -4,7 +4,6 @@
 #include "gdi_element.hpp"
 #include "gdi_renderer.hpp"
 #include "gdi_resource.hpp"
-#include "gdi_text.hpp"
 #include "gdi_types.hpp"
 #include "gdi_viewport.hpp"
 
