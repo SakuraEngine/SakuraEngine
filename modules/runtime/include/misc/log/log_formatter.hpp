@@ -1,4 +1,5 @@
 #pragma once
+#include "log_base.hpp"
 #include "misc/smart_pool.hpp"
 
 namespace skr {

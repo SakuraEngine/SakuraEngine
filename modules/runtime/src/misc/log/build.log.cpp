@@ -1,7 +1,8 @@
 #include "platform/thread.h"
+#include "log_rdtsc.hpp"
 #include "log_queue.hpp"
 #include "log_worker.hpp"
-#include "logger.hpp"
+#include "misc/log/logger.hpp"
 
 #include <thread>
 #include <csignal>
@@ -15,9 +16,9 @@ namespace log {
 const char* kLogMemoryName = "sakura::log";
 
 LogEvent::LogEvent(LogLevel level) SKR_NOEXCEPT
-    : level(level)
+    : level(level), thread_id(skr_current_thread_id()), timestamp(skr::log::rdtsc())
 {
-    thread_id = skr_current_thread_id();
+
 }
 
 Logger::Logger() SKR_NOEXCEPT
@@ -34,6 +35,38 @@ Logger::~Logger() SKR_NOEXCEPT
     {
         worker->remove_logger(this);
     }
+}
+
+bool Logger::canPushToQueue() const SKR_NOEXCEPT
+{
+    auto worker = LogWorkerSingleton::TryGet();
+    return worker;
+}
+
+bool Logger::tryPushToQueue(LogEvent ev, skr::string_view format, ArgsList<>&& args_list) SKR_NOEXCEPT
+{
+    auto worker = LogWorkerSingleton::TryGet();
+    if (worker)
+    {
+        auto queue_ = worker->queue_;
+        queue_->push(ev, format, skr::move(args_list));
+        notifyWorker();
+        return true;
+    }
+    return false;
+}
+
+bool Logger::tryPushToQueue(LogEvent ev, skr::string&& what) SKR_NOEXCEPT
+{
+    auto worker = LogWorkerSingleton::TryGet();
+    if (worker)
+    {
+        auto queue_ = worker->queue_;
+        queue_->push(ev, skr::move(what));
+        notifyWorker();
+        return true;
+    }
+    return false;
 }
 
 void Logger::notifyWorker() SKR_NOEXCEPT
@@ -195,6 +228,7 @@ void log_log(int level, const char* file, int line, const char* fmt, ...)
     const auto kLogLevel = skr::log::kLogLevelsLUT[level];
     if (kLogLevel < skr::log::g_log_level) return;
 
+    const auto Event = skr::log::LogEvent(kLogLevel);
     std::call_once(
         skr::log::g_start_once_flag,
         [] {
@@ -209,7 +243,7 @@ void log_log(int level, const char* file, int line, const char* fmt, ...)
 
     va_list va_args;
     va_start(va_args, fmt);
-    skr::log::g_logger->log(kLogLevel, (const char8_t*)fmt, va_args);
+    skr::log::g_logger->log(Event, (const char8_t*)fmt, va_args);
     va_end(va_args);
 }
 

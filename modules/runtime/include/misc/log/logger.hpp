@@ -1,6 +1,5 @@
 #pragma once
-#include "log_queue.hpp"
-#include "log_worker.hpp"
+#include "log_formatter.hpp"
 
 namespace skr {
 namespace log {
@@ -17,49 +16,44 @@ struct Logger
     ~Logger() SKR_NOEXCEPT;
 
     template <typename...Args>
-    void log(LogLevel level, skr::string_view format, Args&&... args) SKR_NOEXCEPT
+    void log(LogEvent ev, skr::string_view format, Args&&... args) SKR_NOEXCEPT
     {
-        LogEvent ev = LogEvent(level);
-        auto worker = LogWorkerSingleton::TryGet();
-        if (worker)
+        bool sucess = false;
+        if (canPushToQueue())
         {
-            auto queue_ = worker->queue_;
             constexpr bool copyable = checkCopyable(args...);
             if constexpr (copyable)
             {
-                queue_->push(ev, format, skr::forward<Args>(args)...);
+                ArgsList<> args_list = {};
+                args_list.push(skr::forward<Args>(args)...);
+                sucess = tryPushToQueue(ev, format, skr::move(args_list));
             }
             else // foramt inplace, expensive
             {
                 skr::string s = skr::format(format, skr::forward<Args>(args)...);
-                queue_->push(ev, skr::move(s));
+                sucess = tryPushToQueue(ev, skr::move(s));
             }
-            notifyWorker();
         }
-        else // print immediate
+        if (!sucess) // sink immediate
         {
             skr::string s = skr::format(format, skr::forward<Args>(args)...);
             printf("%s", s.c_str());
         }
     }
 
-    void log(LogLevel level, skr::string_view format, va_list va_args) SKR_NOEXCEPT
+    void log(LogEvent ev, skr::string_view format, va_list va_args) SKR_NOEXCEPT
     {
-        LogEvent ev = LogEvent(level);
-        auto worker = LogWorkerSingleton::TryGet();
-        
+        bool sucess = false;
         // va_list can only be formatted inplace
         skr::string fmt(format);
         char8_t buffer[1024];
         vsnprintf((char* const)buffer, sizeof(buffer), fmt.c_str(), va_args);
 
-        if (worker)
+        if (canPushToQueue())
         {
-            auto queue_ = worker->queue_;
-            queue_->push(ev, skr::string(buffer));
-            notifyWorker();
+            sucess = tryPushToQueue(ev, skr::string(buffer));
         }
-        else // print immediate
+        if (!sucess) // sink immediate
         {
             printf("%s", (const char*)buffer);
         }
@@ -71,6 +65,9 @@ struct Logger
         return (IsCopyableArgument<Args>::value && ...);
     }
 
+    bool canPushToQueue() const SKR_NOEXCEPT;
+    bool tryPushToQueue(LogEvent ev, skr::string_view format, ArgsList<>&& args) SKR_NOEXCEPT;
+    bool tryPushToQueue(LogEvent ev, skr::string&& what) SKR_NOEXCEPT;
     void notifyWorker() SKR_NOEXCEPT;
 };
 

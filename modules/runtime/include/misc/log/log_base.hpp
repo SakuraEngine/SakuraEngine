@@ -26,9 +26,11 @@ struct RUNTIME_API LogEvent
 {
     LogEvent(LogLevel level) SKR_NOEXCEPT;
     
+protected:
+    bool flush = false;
     LogLevel level;
     uint64_t thread_id;
-    bool flush = false;
+    uint64_t timestamp;
 };
 
 } // namespace log

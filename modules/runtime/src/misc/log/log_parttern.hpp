@@ -1,5 +1,6 @@
 #pragma once
-#include "log_base.hpp"
+#include "misc/log/log_base.hpp"
+#include "containers/string.hpp"
 
 namespace skr {
 namespace log {
@@ -35,8 +36,7 @@ public:
     {
         // Set the default pattern
         _set_pattern(
-            u8"{ascii_time} [{thread_name}] {file_line} "
-            u8"LOG_{level_name} {logger_name} {message}"
+            u8"{ascii_time} [{thread_name}] {file_line} LOG_{level_name} {logger_name} {message}"
         );
     }
     LogPattern(const char8_t* format_pattern, const char8_t* timestamp_format, Timezone timezone)
@@ -51,7 +51,11 @@ public:
     virtual ~LogPattern() SKR_NOEXCEPT;
 
 protected:
-    void _set_pattern(const char8_t* pattern) SKR_NOEXCEPT;
+    void _set_pattern(const char8_t* pattern) SKR_NOEXCEPT
+    {
+
+    }
+    skr::string calculated_format = u8"{} [{}] {} LOG_{} {} {}";
 };
 
 } // namespace log

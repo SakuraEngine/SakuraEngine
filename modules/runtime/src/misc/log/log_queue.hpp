@@ -2,8 +2,7 @@
 #include "containers/string.hpp"
 #include "containers/concurrent_queue.h"
 
-#include "log_base.hpp"
-#include "log_formatter.hpp"
+#include "misc/log/log_formatter.hpp"
 
 namespace skr {
 namespace log {
@@ -23,6 +22,7 @@ private:
     ArgsList<> args;
     bool need_format = true;
 };
+static_assert(sizeof(LogQueueElement) <= 8 * sizeof(uint64_t), "Acquire single cache line.");
 
 struct LogQueue
 {
@@ -38,13 +38,12 @@ public:
         skr_atomic64_add_relaxed(&cnt_, 1);
     }
     
-    template <typename...Args>
-    void push(LogEvent ev, const skr::string_view format, Args&&...args) SKR_NOEXCEPT
+    void push(LogEvent ev, const skr::string_view format, ArgsList<>&& args) SKR_NOEXCEPT
     {
         auto element = LogQueueElement(ev);
 
         element.format = format.raw();
-        element.args.push(std::forward<Args>(args)...);
+        element.args = skr::move(args);
         element.need_format = true;
 
         queue_.enqueue(skr::move(element));
