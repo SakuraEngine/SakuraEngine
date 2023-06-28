@@ -42,11 +42,12 @@ skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view f
 {
     const auto ascii_time = event.timestamp;
     const auto level_id = (uint32_t)event.level;
+    const auto level_name = LogConstants::kLogLevelNameLUT[level_id];
     const auto thread_id = event.thread_id;
     const auto message = formatted_message;
     formatted_string = skr::format(calculated_format, 
         ascii_time, thread_id, 0, 
-        level_id, u8"root", message
+        level_name, u8"root", message
     );
     return formatted_string;
 }
@@ -239,7 +240,11 @@ void LogWorker::process_logs() SKR_NOEXCEPT
         const auto& what = e.need_format ? 
             formatter_.format(e.format, e.args) :
             e.format;
-        printf("%s\n", what.c_str());
+            
+        auto pattern = LogManager::QueryPattern(LogConstants::kDefaultPatternId);
+        const auto& output = pattern->pattern(e.event, what.view());
+
+        printf("%s\n", output.c_str());
     }
 }
 
