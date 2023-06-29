@@ -92,6 +92,7 @@ using SPtr = ::skr::SPtr<T>;
 // not null
 template <typename T>
 using NotNull = ::skr::not_null<T>;
+using ::skr::make_not_null;
 
 // Lite container
 template <typename T>

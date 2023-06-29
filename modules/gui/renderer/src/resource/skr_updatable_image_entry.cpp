@@ -3,6 +3,12 @@
 
 namespace skr::gui
 {
+SkrUpdatableImageEntry::SkrUpdatableImageEntry(SkrResourceDevice* resource_device, SkrRenderDevice* render_device)
+    : _resource_device(resource_device)
+    , _render_device(render_device)
+{
+}
+
 void SkrUpdatableImageEntry::destroy_resoure(NotNull<IResource*> resource) SKR_NOEXCEPT
 {
     SkrDelete(resource.get());
