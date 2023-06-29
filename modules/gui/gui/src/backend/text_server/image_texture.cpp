@@ -160,14 +160,12 @@ namespace godot
 namespace godot
 {
 FontAtlasImage::FontAtlasImage()
-    : _provider(TS->get_resource_provider())
 {
-    _entry = _provider->create_updatable_image_entry();
     _rid = texture_owner().make_rid(this);
 }
 FontAtlasImage::~FontAtlasImage()
 {
-    _provider->destroy_updatable_image_entry(skr::make_not_null(_entry));
+    if (_image) TS->get_resource_service()->destroy_resource(skr::make_not_null(_image));
 }
 
 Ref<FontAtlasImage> FontAtlasImage::create(Sizei size, int32_t mip_count, Format format, Span<const uint8_t> data)
@@ -192,6 +190,28 @@ Ref<FontAtlasImage> FontAtlasImage::create(Sizei size, int32_t mip_count, Format
     result->set_mip_count(mip_count);
 
     return result;
+}
+
+void FontAtlasImage::flush_update() SKR_NOEXCEPT
+{
+    if (_dirty)
+    {
+        skr::gui::UpdatableImageDesc desc = {};
+        desc.format = _format;
+        desc.size = _size;
+        desc.mip_count = 0; // TODO. mip maps
+        desc.data = { _data.data(), _data.size() };
+
+        if (_image == nullptr)
+        {
+            _image = TS->get_resource_service()->create_updatable_image(desc);
+        }
+        else
+        {
+            _image->update(desc);
+        }
+        _dirty = false;
+    }
 }
 
 // RID

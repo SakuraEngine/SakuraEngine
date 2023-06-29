@@ -10,7 +10,7 @@ namespace skr::gui
 {
 using skr::render_graph::RenderGraph;
 struct SkrRenderWindow;
-struct IUpdatableImageEntry;
+struct IUpdatableImage;
 
 // 渲染设备，渲染的
 struct SKR_GUI_RENDERER_API SkrRenderDevice final {
@@ -80,6 +80,6 @@ private:
     CGPUVertexLayout                                     _vertex_layout = {};
 
     // Texture updates
-    Array<IUpdatableImageEntry*> _texture_updates;
+    Array<IUpdatableImage*> _texture_updates;
 };
 } // namespace skr::gui

@@ -11,10 +11,10 @@ TextServerAdvanced*& _text_server();
 
 namespace skr::gui
 {
-_EmbeddedTextService::_EmbeddedTextService(IEmbeddedTextServiceResourceProvider* provider)
+_EmbeddedTextService::_EmbeddedTextService(IResourceService* resource_service)
 {
     godot::SkrGuiData data;
-    data.resource_provider = provider;
+    data.resource_service = resource_service;
     godot::_text_server() = SkrNew<godot::TextServerAdvanced>(data);
 }
 _EmbeddedTextService::~_EmbeddedTextService()

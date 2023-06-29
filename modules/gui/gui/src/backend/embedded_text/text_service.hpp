@@ -3,12 +3,12 @@
 
 namespace skr::gui
 {
-struct IEmbeddedTextServiceResourceProvider;
+struct IResourceService;
 
 struct _EmbeddedTextService : public ITextService {
     SKR_GUI_INTERFACE(_EmbeddedTextService, "758e0890-7030-486f-8593-5f3d6abc8c67", ITextService)
 
-    _EmbeddedTextService(IEmbeddedTextServiceResourceProvider* provider);
+    _EmbeddedTextService(IResourceService* resource_service);
     ~_EmbeddedTextService();
 
     NotNull<IParagraph*> create_paragraph() override;

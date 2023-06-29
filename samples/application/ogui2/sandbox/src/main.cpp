@@ -1,6 +1,5 @@
 #include "SkrGuiRenderer/device/skr_native_device.hpp"
 #include "SkrGuiRenderer/render/skr_render_device.hpp"
-#include "SkrGuiRenderer/resource/skr_resource_device.hpp"
 #include "SkrGui/backend/embed_services.hpp"
 #include "SkrGui/dev/sandbox.hpp"
 

@@ -559,7 +559,7 @@ public:
     virtual void cleanup() {}
 
     // ++ SKR
-    virtual ::skr::gui::IEmbeddedTextServiceResourceProvider* get_resource_provider() = 0;
+    virtual ::skr::gui::IResourceService* get_resource_service() = 0;
     // -- SKR
 
     TextServer();
