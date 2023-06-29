@@ -88,6 +88,7 @@ struct SkrGuiData {
     ::skr::gui::IEmbeddedTextServiceResourceProvider* resource_provider = nullptr;
 };
 
+
 class TextServerAdvanced : public TextServer
 {
 
@@ -104,8 +105,7 @@ class TextServerAdvanced : public TextServer
 
     struct FeatureInfo {
         StringName name;
-        // TODO: Variant
-        // Variant::Type vtype = Variant::INT;
+        Variant::Type vtype = Variant::INT;
         bool hidden = false;
     };
 
@@ -114,8 +114,7 @@ class TextServerAdvanced : public TextServer
 
     void _insert_num_systems_lang();
     void _insert_feature_sets();
-    // TODO: Variant
-    // _FORCE_INLINE_ void _insert_feature(const StringName &p_name, int32_t p_tag, Variant::Type p_vtype = Variant::INT, bool p_hidden = false);
+    _FORCE_INLINE_ void _insert_feature(const StringName &p_name, int32_t p_tag, Variant::Type p_vtype = Variant::INT, bool p_hidden = false);
 
     // ICU support data.
 
@@ -495,7 +494,7 @@ class TextServerAdvanced : public TextServer
             Vector<RID> fonts;
             int         font_size = 0;
 
-            Variant embedded_key = Variant();
+            Variant embedded_key;
 
             String             language;
             TextServerFeatures features;
@@ -663,8 +662,7 @@ class TextServerAdvanced : public TextServer
     void    _shape_run(ShapedTextDataAdvanced* p_sd, int64_t p_start, int64_t p_end, hb_script_t p_script, hb_direction_t p_direction, TypedArray<RID> p_fonts, int64_t p_span, int64_t p_fb_index, int64_t p_prev_start, int64_t p_prev_end);
     Glyph   _shape_single_glyph(ShapedTextDataAdvanced* p_sd, char32_t p_char, hb_script_t p_script, hb_direction_t p_direction, const RID& p_font, int64_t p_font_size);
 
-    // TODO
-    _FORCE_INLINE_ void _add_featuers(const TextServerFeatures /*?*/& p_source, Vector<hb_feature_t>& r_ftrs);
+    _FORCE_INLINE_ void _add_features(const TextServerFeatures /*?*/& p_source, Vector<hb_feature_t>& r_ftrs);
 
     Mutex ft_mutex;
 

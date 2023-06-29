@@ -217,6 +217,11 @@ class TextServer* get_text_server();
 
 #define TS ::godot::get_text_server()
 
+namespace Math
+{
+    inline int abs(int a) { return ABS(a); }
+};
+
 #define MODULE_FREETYPE_ENABLED
 } // namespace godot
 
