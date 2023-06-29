@@ -1,0 +1,14 @@
+#pragma once
+#include "SkrGuiRenderer/module.configure.h"
+#include "cgpu/api.h"
+namespace skr::gui
+{
+struct SKR_GUI_RENDERER_API SkrGUIRenderDevice {
+
+private:
+    CGPUInstanceId _cgpu_instance = nullptr;
+    CGPUAdapterId  _cgpu_adapter = nullptr;
+    CGPUDeviceId   _cgpu_device = nullptr;
+    CGPUQueueId    _cgpu_queue = nullptr;
+};
+} // namespace skr::gui
