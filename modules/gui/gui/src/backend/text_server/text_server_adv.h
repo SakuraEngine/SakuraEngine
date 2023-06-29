@@ -85,9 +85,8 @@ namespace godot
 {
 
 struct SkrGuiData {
-    ::skr::gui::IEmbeddedTextServiceResourceProvider* resource_provider = nullptr;
+    ::skr::gui::IResourceService* resource_service = nullptr;
 };
-
 
 class TextServerAdvanced : public TextServer
 {
@@ -104,17 +103,17 @@ class TextServerAdvanced : public TextServer
     Vector<NumSystemData> num_systems;
 
     struct FeatureInfo {
-        StringName name;
+        StringName    name;
         Variant::Type vtype = Variant::INT;
-        bool hidden = false;
+        bool          hidden = false;
     };
 
     HashMap<StringName, int32_t>  feature_sets;
     HashMap<int32_t, FeatureInfo> feature_sets_inv;
 
-    void _insert_num_systems_lang();
-    void _insert_feature_sets();
-    _FORCE_INLINE_ void _insert_feature(const StringName &p_name, int32_t p_tag, Variant::Type p_vtype = Variant::INT, bool p_hidden = false);
+    void                _insert_num_systems_lang();
+    void                _insert_feature_sets();
+    _FORCE_INLINE_ void _insert_feature(const StringName& p_name, int32_t p_tag, Variant::Type p_vtype = Variant::INT, bool p_hidden = false);
 
     // ICU support data.
 
@@ -993,9 +992,9 @@ public: // MODBINDs
     virtual ~TextServerAdvanced();
 
     // ++ SKR GUI
-    ::skr::gui::IEmbeddedTextServiceResourceProvider* get_resource_provider() override final
+    ::skr::gui::IResourceService* get_resource_service() override final
     {
-        return gui_data.resource_provider;
+        return gui_data.resource_service;
     }
 
     SkrGuiData gui_data = {};

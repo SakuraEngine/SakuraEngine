@@ -21,9 +21,8 @@ using ImageFormat = ::skr::gui::EPixelFormat;
 struct FontAtlasImage {
     using Format = ::skr::gui::EPixelFormat;
     using Sizei = ::skr::gui::Sizei;
-    using ImageProvider = ::skr::gui::IEmbeddedTextServiceResourceProvider;
-    using ImageEntry = ::skr::gui::IUpdatableImageEntry;
-    using Image = ::skr::gui::IImage;
+    using ResourceService = ::skr::gui::IResourceService;
+    using Image = ::skr::gui::IUpdatableImage;
 
     FontAtlasImage();
     ~FontAtlasImage();
@@ -41,7 +40,6 @@ struct FontAtlasImage {
     inline Format                 format() const SKR_NOEXCEPT { return _format; }
     inline int32_t                mip_count() const SKR_NOEXCEPT { return _mip_count; }
     inline const PackedByteArray& data() const SKR_NOEXCEPT { return _data; }
-    inline ImageEntry*            entry() const SKR_NOEXCEPT { return _entry; }
     inline bool                   dirty() const SKR_NOEXCEPT { return _dirty; }
 
     // modify & flush
@@ -64,24 +62,11 @@ struct FontAtlasImage {
         mark_dirty();
         _data.assign(data.begin(), data.end());
     }
-    inline void mark_dirty() SKR_NOEXCEPT { _dirty = true; }
-    inline void flush_update() SKR_NOEXCEPT
-    {
-        if (_dirty)
-        {
-            ImageEntry::UpdateDesc desc = {};
-            desc.format = _format;
-            desc.size = _size;
-            desc.mip_count = 0; // TODO. mip maps
-            desc.data = { _data.data(), _data.size() };
-            _entry->update(desc);
-            _dirty = false;
-        }
-    }
+    inline void   mark_dirty() SKR_NOEXCEPT { _dirty = true; }
+    void          flush_update() SKR_NOEXCEPT;
     inline Image* render_image() const SKR_NOEXCEPT
     {
-        auto result = _entry->request_image_of_size({});
-        return result->state() == ::skr::gui::EResourceState::Okay ? result.get() : nullptr;
+        return _image;
     }
 
     // RID
@@ -93,9 +78,8 @@ private:
     Format          _format = Format::Unknown;
     int32_t         _mip_count = 0;
     PackedByteArray _data = {};
-    ImageEntry*     _entry = nullptr;
+    Image*          _image = nullptr;
     bool            _dirty = true;
-    ImageProvider*  _provider = nullptr;
     RID             _rid = {};
 };
 } // namespace godot

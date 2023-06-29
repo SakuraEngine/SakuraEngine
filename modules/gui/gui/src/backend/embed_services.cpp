@@ -2,6 +2,7 @@
 #include "SkrGui/backend/canvas/canvas_service.hpp"
 #include "SkrGui/backend/canvas/canvas.hpp"
 #include "SkrGui/backend/text/text_service.hpp"
+#include "backend/embedded_text/text_service.hpp"
 
 namespace skr::gui
 {
@@ -18,14 +19,13 @@ struct _EmbeddedCanvasService : public ICanvasService {
     }
 };
 
-NotNull<ICanvasService*> create_embedded_canvas_service(NotNull<IEmbeddedTextServiceResourceProvider*> resource_provider)
+NotNull<ICanvasService*> create_embedded_canvas_service()
 {
     return make_not_null(SkrNew<_EmbeddedCanvasService>());
 }
-NotNull<ITextService*> create_embedded_text_service()
+NotNull<ITextService*> create_embedded_text_service(NotNull<IResourceService*> resource_service)
 {
-    SKR_UNIMPLEMENTED_FUNCTION()
-    return make_not_null<ITextService*>(nullptr);
+    return make_not_null(SkrNew<_EmbeddedTextService>(resource_service));
 }
 void destroy_embedded_canvas_service(NotNull<ICanvasService*> service)
 {

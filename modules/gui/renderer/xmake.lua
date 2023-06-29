@@ -3,6 +3,7 @@ shared_module("SkrGuiRenderer", "SKR_GUI_RENDERER", engine_version)
     public_dependency("SkrGui", engine_version)
     public_dependency("SkrRenderGraph", engine_version)
     add_includedirs("include", {public=true})
+    add_includedirs("src", {public=false})
     add_files("src/**.cpp")
     -- add render graph shaders
     add_rules("utils.dxc", {
