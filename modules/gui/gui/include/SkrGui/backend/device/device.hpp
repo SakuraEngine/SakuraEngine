@@ -28,46 +28,15 @@ struct DisplayMetrics;
 // TextService：文本绘制服务
 // Resource/ResourceEntry/ResourceProvider：资源管理服务
 
-enum class EViewType : uint8_t
-{
-    Normal,
-    Popup,
-    Modal,
-    Tooltip,
-};
-
-enum class EViewFlag : uint32_t
-{
-    None = 0,
-    NoMove = 1 << 0,
-    NoResize = 1 << 1,
-    NoTitle = 1 << 2,
-    NoBorder = 1 << 3,
-    NoMinimize = 1 << 4,
-    NoMaximize = 1 << 5,
-    NoClose = 1 << 6,
-    AutoSizedByContent = 1 << 7,
-};
-
-struct WindowDesc {
-    EViewType type = EViewType::Normal;
-    EViewFlag flags = EViewFlag::None;
-    Offsetf   pos = {};
-    Alignment anchor = Alignment::TopLeft();
-    Sizef     size = {};
-    String    name = {};
-};
-
 struct SKR_GUI_API IDevice SKR_GUI_INTERFACE_BASE {
     SKR_GUI_INTERFACE_ROOT(IDevice, "22730f6a-c631-4982-8762-31abafc17bfe")
     virtual ~IDevice() = default;
 
     // window
-    virtual NotNull<IWindow*> create_window(const WindowDesc& desc) = 0;
+    virtual NotNull<IWindow*> create_window() = 0;
     virtual void              destroy_window(NotNull<IWindow*> view) = 0;
 
     // window ops
-    virtual void update_window(NotNull<IWindow*> view) = 0;
     virtual void draw_window(NotNull<IWindow*> view) = 0;
     // TODO. input
 };
@@ -75,6 +44,7 @@ struct SKR_GUI_API IDevice SKR_GUI_INTERFACE_BASE {
 struct SKR_GUI_API INativeDevice : public IDevice {
     SKR_GUI_INTERFACE(INativeDevice, "209fefb2-b6dc-4035-ba71-9b5a7fc147d0", IDevice)
 
+    // display info
     virtual const DisplayMetrics& display_metrics() const = 0;
 };
 
