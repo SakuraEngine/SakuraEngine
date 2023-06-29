@@ -20,9 +20,9 @@ namespace skr::gui
 //
 // ! 考虑下 HitTest 怎么做
 // ! 考虑下 Focus 怎么管理
-struct SKR_GUI_API IDeviceView SKR_GUI_INTERFACE_BASE {
-    SKR_GUI_INTERFACE_ROOT(IDeviceView, "ac74082f-42c1-4d39-930e-ee1f022bbda7")
-    virtual ~IDeviceView() = default;
+struct SKR_GUI_API IWindow SKR_GUI_INTERFACE_BASE {
+    SKR_GUI_INTERFACE_ROOT(IWindow, "ac74082f-42c1-4d39-930e-ee1f022bbda7")
+    virtual ~IWindow() = default;
 
     // absolute/relative coordinate
     virtual Offsetf to_absolute(const Offsetf& relative_to_view) SKR_NOEXCEPT = 0;
@@ -50,8 +50,8 @@ struct SKR_GUI_API IDeviceView SKR_GUI_INTERFACE_BASE {
     virtual void raise() SKR_NOEXCEPT = 0;
 };
 
-struct SKR_GUI_API INativeDeviceView : public IDeviceView {
-    SKR_GUI_INTERFACE(INativeDeviceView, "47b82f64-2f95-4276-9ffa-0f3d0288894a", IDeviceView)
+struct SKR_GUI_API INativeWindow : public IWindow {
+    SKR_GUI_INTERFACE(INativeWindow, "47b82f64-2f95-4276-9ffa-0f3d0288894a", IWindow)
 
     // getter
     virtual bool          minimized() SKR_NOEXCEPT = 0;
