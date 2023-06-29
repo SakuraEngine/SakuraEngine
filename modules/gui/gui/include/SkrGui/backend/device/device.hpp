@@ -4,7 +4,7 @@
 
 namespace skr::gui
 {
-struct IDeviceView;
+struct IWindow;
 struct ICanvas;
 struct DisplayMetrics;
 
@@ -49,7 +49,7 @@ enum class EViewFlag : uint32_t
     AutoSizedByContent = 1 << 7,
 };
 
-struct ViewDesc {
+struct WindowDesc {
     EViewType type = EViewType::Normal;
     EViewFlag flags = EViewFlag::None;
     Offsetf   pos = {};
@@ -62,17 +62,13 @@ struct SKR_GUI_API IDevice SKR_GUI_INTERFACE_BASE {
     SKR_GUI_INTERFACE_ROOT(IDevice, "22730f6a-c631-4982-8762-31abafc17bfe")
     virtual ~IDevice() = default;
 
-    // main view
-    virtual NotNull<IDeviceView*> create_main_view(const ViewDesc& desc) = 0;
-    virtual NotNull<IDeviceView*> main_view() = 0;
+    // window
+    virtual NotNull<IWindow*> create_window(const WindowDesc& desc) = 0;
+    virtual void              destroy_window(NotNull<IWindow*> view) = 0;
 
-    // other view
-    virtual NotNull<IDeviceView*> create_view(const ViewDesc& desc) = 0;
-    virtual void                  destroy_view(NotNull<IDeviceView*> view) = 0;
-
-    // view ops
-    virtual void update_view(NotNull<IDeviceView*> view) = 0;
-    virtual void draw_view(NotNull<IDeviceView*> view) = 0;
+    // window ops
+    virtual void update_window(NotNull<IWindow*> view) = 0;
+    virtual void draw_window(NotNull<IWindow*> view) = 0;
     // TODO. input
 };
 
