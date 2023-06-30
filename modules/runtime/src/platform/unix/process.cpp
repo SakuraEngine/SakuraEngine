@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <unistd.h> 
 #include <spawn.h>
 #include <sys/types.h>
@@ -5,7 +6,6 @@
 #include <sys/resource.h>
 #include <sys/ioctl.h>
 #include <sys/file.h>
-#include <asm/ioctls.h>
 #include <sys/prctl.h>
 
 #include "platform/debug.h"
