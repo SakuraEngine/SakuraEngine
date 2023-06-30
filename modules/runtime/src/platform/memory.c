@@ -91,7 +91,7 @@ RUNTIME_API void* traced_os_malloc_aligned(size_t size, size_t alignment, const 
     if (!ptr)
     {
         alignment = (alignment > 16) ? alignment : 16;
-        aligned_alloc(alignment, size * count);
+        aligned_alloc(alignment, size);
     }
     if (!ptr)
     {
