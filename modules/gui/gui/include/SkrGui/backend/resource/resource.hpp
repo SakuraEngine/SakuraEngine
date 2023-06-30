@@ -45,7 +45,7 @@ struct SKR_GUI_API IResource SKR_GUI_INTERFACE_BASE {
     SKR_GUI_INTERFACE_ROOT(IResource, "26ede0ec-cd41-420b-ba29-893ab06bfce9")
     virtual ~IResource() = default;
 
-    virtual bool okey() const SKR_NOEXCEPT = 0;
+    virtual bool is_okey() const SKR_NOEXCEPT = 0;
 };
 
 struct SKR_GUI_API ISurface : virtual public IResource {

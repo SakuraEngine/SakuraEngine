@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrGuiRenderer/module.configure.h"
 #include "cgpu/io.h"
 #include "SkrGui/backend/resource/resource.hpp"
 
@@ -6,8 +7,9 @@ namespace skr::gui
 {
 struct SkrResourceService;
 struct DecodingProgress;
+struct SkrUpdatableImage;
 
-struct SkrImageData {
+struct SKR_GUI_RENDERER_API SkrImageDataTask {
     enum class EState : uint32_t
     {
         Requested,
@@ -16,7 +18,7 @@ struct SkrImageData {
         Okey,
     };
 
-    SkrImageData(SkrResourceService* resource_service);
+    SkrImageDataTask(SkrResourceService* resource_service);
 
     EState state() const SKR_NOEXCEPT;
     void   from_file(StringView file_path, bool need_decode);
@@ -45,4 +47,22 @@ private:
     SPtr<DecodingProgress> _decoding_progress = nullptr;
     bool                   _need_decode = false;
 };
+
+struct SKR_GUI_RENDERER_API SkrImageUploadTask {
+    SkrImageUploadTask(SkrResourceService* resource_service);
+
+    bool is_okey();
+
+private:
+    SkrResourceService* _owner = nullptr;
+
+    // data
+    SkrUpdatableImage* _update_image = nullptr;
+    SkrImageDataTask*  _image_data_task = nullptr;
+
+    // async
+    skr_async_vtexture_destination_t _async_destination = {};
+    uint32_t                         _async_is_okey = false;
+};
+
 } // namespace skr::gui
