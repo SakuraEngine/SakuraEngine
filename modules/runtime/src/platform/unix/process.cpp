@@ -1,10 +1,14 @@
+#include <unistd.h> 
+#include <spawn.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #include "platform/debug.h"
 #include "platform/memory.h"
 #include "platform/process.h"
 
 #include "containers/string.hpp"
 #include <EASTL/vector.h>
-#include <unistd.h> 
 
 typedef struct SProcess
 {
@@ -77,7 +81,18 @@ SProcessId skr_get_current_process_id()
 
 int skr_wait_process(SProcessHandle process)
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    const auto pid = process->pid;
+    int status;
+    if ((pid = waitpid(pid, &status, WNOHANG)) == -1)
+    {
+        perror("wait() error");
+    }
+    else
+    {
+        if (WIFEXITED(status))
+            return 0;
+        return -1;
+    }
     return -1;
 }
 
