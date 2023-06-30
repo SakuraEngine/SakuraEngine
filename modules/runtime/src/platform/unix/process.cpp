@@ -2,6 +2,11 @@
 #include <spawn.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/resource.h>
+#include <sys/ioctl.h>
+#include <sys/file.h>
+#include <asm/ioctls.h>
+#include <sys/prctl.h>
 
 #include "platform/debug.h"
 #include "platform/memory.h"
