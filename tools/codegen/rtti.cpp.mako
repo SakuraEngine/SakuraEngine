@@ -9,8 +9,8 @@ enums = generator.filter_rtti(db.enums)
 #include "misc/hash.h"
 #include "misc/log.h"
 #include "type/type_helper.hpp"
-const char* ArgumentNumMisMatchFormat = "Argument number mismatch while calling %s, expected %d, got %d.";
-const char* ArgumentIncompatibleFormat = "Argument %s is incompatible while calling %s. %s can not be converted to %s.";
+static const char* ArgumentNumMisMatchFormat = "Argument number mismatch while calling %s, expected %d, got %d.";
+static const char* ArgumentIncompatibleFormat = "Argument %s is incompatible while calling %s. %s can not be converted to %s.";
 
 %for record in records:
 namespace skr::type
