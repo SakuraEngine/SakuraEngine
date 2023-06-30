@@ -5,8 +5,6 @@
 #include "serde/json/reader.h"
 #include "serde/json/writer.h"
 
-#include "tracy/Tracy.hpp"
-
 namespace skr::type
 {
 %for enum in generator.filter_types(db.enums):
@@ -63,8 +61,6 @@ void WriteTrait<const ${enum.name}&>::Write(skr_json_writer_t* writer, ${enum.na
 %if not generator.filter_debug_type(record):
 error_code ReadTrait<${record.name}>::Read(value_t&& json, ${record.name}& record)
 {
-    ZoneScopedN("ReadTrait<${record.name}>::Read");
-
     %for base in record.bases:
     {
         auto baseJson = json;
@@ -73,9 +69,6 @@ error_code ReadTrait<${record.name}>::Read(value_t&& json, ${record.name}& recor
     %endfor
     %for name, field in generator.filter_fields(record.fields):
     {
-        constexpr const char8_t* kName = u8"${name}";
-        constexpr const char8_t* kRecordName = u8"${record.name}";
-
         auto field = json["${name}"];
         if (field.error() == simdjson::NO_SUCH_FIELD)
         {
@@ -83,23 +76,22 @@ error_code ReadTrait<${record.name}>::Read(value_t&& json, ${record.name}& recor
             SKR_LOG_ERROR("Field ${name} in record ${record.name} not found while reading.");
             return (error_code)simdjson::NO_SUCH_FIELD;
         %else:
-            _CODEGEN_LOG_DEFAULT_FIELD(kName, kRecordName);
+            SKR_LOG_TRACE("Field ${name} in record ${record.name} not found while reading, using default value.");
         %endif
         }
         else if (field.error() != simdjson::SUCCESS)
         {
-            _CODEGEN_FAILED_READ_RECORD(kRecordName, (const char8_t*)error_message((error_code)field.error()));
+            SKR_LOG_ERROR("Failed to read record ${record.name} %s", error_message((error_code)field.error()));
             return (error_code)field.error();
         }
         else
         {
             %if field.arraySize > 0:
             {
-
                 auto array = field.get_array();
                 if (array.error() != simdjson::SUCCESS)
                 {
-                    _CODEGEN_FAILED_READ_RECORD(u8"array ${record.name}", (const char8_t*)error_message((error_code)field.error()));
+                    SKR_LOG_ERROR("Failed to read array ${name} in record ${record.name} %s", error_message((error_code)array.error()));
                     return (error_code)array.error();
                 }
                 size_t i = 0;
@@ -107,18 +99,18 @@ error_code ReadTrait<${record.name}>::Read(value_t&& json, ${record.name}& recor
                 {
                     if(i > ${field.arraySize})
                     {
-                        SKR_LOG_WARN("Array %s in record %s has too many elements", (const char*)kName, (const char*)kRecordName);
+                        SKR_LOG_WARN("Array ${name} in record ${record.name} has too many elements");
                         break;
                     }
                     if (element.error() != simdjson::SUCCESS)
                     {
-                        _CODEGEN_FAILED_READ_FIELD_ARR_ELEM(kName, kRecordName, i, (const char8_t*)error_message((error_code)element.error()));
+                        SKR_LOG_ERROR("Failed to read field ${name} array element %lld in record ${record.name}", i);
                         return (error_code)element.error();
                     }
                     error_code result = skr::json::Read(std::move(element).value_unsafe(), record.${name}[i]);
                     if(result != error_code::SUCCESS)
                     {
-                        _CODEGEN_FAILED_READ_FIELD_ARR_ELEM(kName, kRecordName, i, (const char8_t*)error_message((error_code)element.error()));
+                        SKR_LOG_ERROR("Failed to read field ${name} array element %lld in record ${record.name}", i);
                         return result;
                     }
                     ++i;
@@ -132,7 +124,7 @@ error_code ReadTrait<${record.name}>::Read(value_t&& json, ${record.name}& recor
             error_code result = skr::json::Read(std::move(field).value_unsafe(), (${field.type}&)record.${name});
             if(result != error_code::SUCCESS)
             {
-                _CODEGEN_FAILED_READ_FIELD(kName, kRecordName, (const char8_t*)error_message((error_code)field.error()));
+                SKR_LOG_ERROR("Failed to read field ${name} of record ${record.name} %s", error_message(result));
                 return result;
             }
             %endif

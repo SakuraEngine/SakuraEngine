@@ -234,26 +234,19 @@ error_code Read(simdjson::ondemand::value&& json, T& value)
 {
     return ReadTrait<T>::Read(std::move(json), value);
 }
-
-void RUNTIME_STATIC_API _CODEGEN_LOG_DEFAULT_FIELD(const char8_t* field, const char8_t* record);
-
-void RUNTIME_STATIC_API _CODEGEN_FAILED_READ_RECORD(const char8_t* record, const char8_t* msg);
-void RUNTIME_STATIC_API _CODEGEN_FAILED_READ_FIELD(const char8_t* field, const char8_t* record, const char8_t* msg);
-void RUNTIME_STATIC_API _CODEGEN_FAILED_READ_FIELD_ARR_ELEM(const char8_t* field, const char8_t* record, uint64_t idx, const char8_t* msg);
-
 } // namespace json
 
 template <class K, class V, class Hash, class Eq>
 struct SerdeCompleteChecker<json::ReadTrait<skr::flat_hash_map<K, V, Hash, Eq>>> 
-    : std::bool_constant<is_complete_serde_v<json::ReadTrait<K>> && is_complete_serde_v<json::ReadTrait<V>>> {};
+: std::bool_constant<is_complete_serde_v<json::ReadTrait<K>> && is_complete_serde_v<json::ReadTrait<V>>> {};
 
 template <class V, class Allocator>
 struct SerdeCompleteChecker<json::ReadTrait<eastl::vector<V, Allocator>>>
-    : std::bool_constant<is_complete_serde_v<json::ReadTrait<V>>> {};
+: std::bool_constant<is_complete_serde_v<json::ReadTrait<V>>> {};
 
 template <class... Ts>
 struct SerdeCompleteChecker<json::ReadTrait<skr::variant<Ts...>>>
-    : std::bool_constant<(is_complete_serde_v<json::ReadTrait<Ts>> && ...)> {};
+: std::bool_constant<(is_complete_serde_v<json::ReadTrait<Ts>> && ...)> {};
 
 } // namespace skr
 #else
