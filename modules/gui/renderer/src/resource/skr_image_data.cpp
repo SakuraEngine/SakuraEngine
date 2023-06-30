@@ -1,4 +1,4 @@
-#include "SkrGuiRenderer/resource/skr_image_data.hpp"
+#include "SkrGuiRenderer/resource/skr_image_task.hpp"
 #include "SkrGuiRenderer/resource/skr_resource_service.hpp"
 #include "SkrImageCoder/skr_image_coder.h"
 #include "futures.hpp"
@@ -75,14 +75,14 @@ skr::BlobId _image_coder_decode_image(const uint8_t* bytes, uint64_t size, uint3
     return {};
 }
 struct DecodingProgress : public skr::AsyncProgress<skr::FutureLauncher<bool>, int, bool> {
-    DecodingProgress(SkrImageData* image)
+    DecodingProgress(SkrImageDataTask* image)
         : owner(image)
     {
     }
     ~DecodingProgress()
     {
     }
-    SkrImageData* owner = nullptr;
+    SkrImageDataTask* owner = nullptr;
 
     bool do_in_background() override
     {
@@ -93,7 +93,7 @@ struct DecodingProgress : public skr::AsyncProgress<skr::FutureLauncher<bool>, i
                                                        width,
                                                        owner->_image_depth,
                                                        owner->_format);
-        owner->_async_trans_state(SkrImageData::EState::Okey);
+        owner->_async_trans_state(SkrImageDataTask::EState::Okey);
         return true;
     }
 };
@@ -101,16 +101,16 @@ struct DecodingProgress : public skr::AsyncProgress<skr::FutureLauncher<bool>, i
 
 namespace skr::gui
 {
-SkrImageData::SkrImageData(SkrResourceService* resource_service)
+SkrImageDataTask::SkrImageDataTask(SkrResourceService* resource_service)
     : _owner(resource_service)
 {
 }
 
-SkrImageData::EState SkrImageData::state() const SKR_NOEXCEPT
+SkrImageDataTask::EState SkrImageDataTask::state() const SKR_NOEXCEPT
 {
     return (EState)skr_atomicu32_load_relaxed((uint32_t*)&_state);
 }
-void SkrImageData::from_file(StringView file_path, bool need_decode)
+void SkrImageDataTask::from_file(StringView file_path, bool need_decode)
 {
     _need_decode = need_decode;
 
@@ -123,27 +123,27 @@ void SkrImageData::from_file(StringView file_path, bool need_decode)
     rq->add_block({}); // read all
     rq->add_callback(
     SKR_IO_STAGE_ENQUEUED, +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata) {
-        auto self = reinterpret_cast<SkrImageData*>(usrdata);
+        auto self = reinterpret_cast<SkrImageDataTask*>(usrdata);
         self->_async_trans_state(EState::Loading);
     },
     this);
     rq->add_callback(
     SKR_IO_STAGE_COMPLETED, +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata) {
-        auto self = reinterpret_cast<SkrImageData*>(usrdata);
+        auto self = reinterpret_cast<SkrImageDataTask*>(usrdata);
         self->_async_trans_state(EState::Initializing);
         self->_async_decode_data();
     },
     this);
     _raw_data = ram_service->request(rq, &_ram_request);
 }
-void SkrImageData::from_data(Span<const uint8_t> data)
+void SkrImageDataTask::from_data(Span<const uint8_t> data)
 {
     _need_decode = true;
     _raw_data = IBlob::Create(data.data(), data.size(), false);
     _async_trans_state(EState::Initializing);
     _async_decode_data();
 }
-void SkrImageData::from_decoded_data(EPixelFormat format, Sizei size, Span<const uint8_t> data)
+void SkrImageDataTask::from_decoded_data(EPixelFormat format, Sizei size, Span<const uint8_t> data)
 {
     _need_decode = false;
     _format = TranslateFormat(format);
@@ -152,11 +152,11 @@ void SkrImageData::from_decoded_data(EPixelFormat format, Sizei size, Span<const
     _async_trans_state(EState::Okey);
 }
 
-void SkrImageData::_async_trans_state(EState target)
+void SkrImageDataTask::_async_trans_state(EState target)
 {
     skr_atomicu32_store_release((uint32_t*)&_state, (uint32_t)target);
 }
-void SkrImageData::_async_decode_data()
+void SkrImageDataTask::_async_decode_data()
 {
     if (_need_decode)
     {
@@ -171,6 +171,11 @@ void SkrImageData::_async_decode_data()
         _pixel_data = _raw_data;
         _async_trans_state(EState::Okey);
     }
+}
+
+bool SkrImageUploadTask::is_okey()
+{
+    return skr_atomicu32_load_relaxed(&_async_is_okey);
 }
 
 } // namespace skr::gui

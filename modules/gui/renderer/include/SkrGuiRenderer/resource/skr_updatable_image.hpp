@@ -11,7 +11,7 @@ struct SKR_GUI_RENDERER_API SkrUpdatableImage final : public IUpdatableImage {
     SkrUpdatableImage(SkrRenderDevice* render_device);
     ~SkrUpdatableImage();
 
-    bool                      okey() const SKR_NOEXCEPT override;
+    bool                      is_okey() const SKR_NOEXCEPT override;
     Sizei                     size() const SKR_NOEXCEPT override;
     Rectf                     uv_rect() const SKR_NOEXCEPT override;
     EdgeInsetsf               nine_inset() const SKR_NOEXCEPT override;
