@@ -6,9 +6,10 @@
 #include "serde/binary/writer.h"
 #include "serde/binary/blob.h"
 #include "tracy/Tracy.hpp"
-const char* BinaryArrayBinaryFieldArchiveFailedFormat = "[SERDE/BIN] Failed to %s %s.%s[%d]: %d";
-const char* BinaryFieldArchiveFailedFormat = "[SERDE/BIN] Failed to %s %s.%s: %d";
-const char* BinaryBaseArchiveFailedFormat = "[SERDE/BIN] Failed to %s %s's base %s: %d";
+
+static const char* BinaryArrayBinaryFieldArchiveFailedFormat = "[SERDE/BIN] Failed to %s %s.%s[%d]: %d";
+static const char* BinaryFieldArchiveFailedFormat = "[SERDE/BIN] Failed to %s %s.%s: %d";
+static const char* BinaryBaseArchiveFailedFormat = "[SERDE/BIN] Failed to %s %s's base %s: %d";
 
 <%def name="archive_field(name, field, array, cfg)">
 %if hasattr(field.attrs, "arena"):
