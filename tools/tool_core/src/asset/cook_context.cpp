@@ -100,6 +100,7 @@ void SCookContextImpl::_Destroy(void* resource)
 
 void* SCookContextImpl::_Import()
 {
+    ZoneScoped;
     //-----load importer
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(record->meta);
@@ -116,6 +117,9 @@ void* SCookContextImpl::_Import()
         importerVersion = importer->Version();
         importerType = importerTypeGuid;
         //-----import raw data
+        ZoneScopedN("Importer.Import");
+        const auto type_name = skr_get_type_name(&importerType);
+        ZoneName((const char*)type_name, strlen((const char*)type_name));
         auto rawData = importer->Import(ioService, this);
         SKR_LOG_INFO("[SCookContext::Cook] asset imported for asset: %s", record->path.u8string().c_str());
         return rawData;

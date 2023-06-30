@@ -51,8 +51,8 @@ public:
     bool String(const TChar* str, TSize length);
     bool String(skr::string_view view);
     bool StartObject();
-    bool Key(const TChar* str, TSize length) { return String(str, length); }
-    bool Key(skr::string_view view) { return String(view.u8_str(), view.size()); }
+    bool Key(const TChar* str, TSize length);
+    bool Key(skr::string_view view);
     bool EndObject();
     bool StartArray();
     bool EndArray();
