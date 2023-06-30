@@ -1,8 +1,6 @@
 #include "platform/memory.h"
 #include "tracy/TracyC.h"
 
-const char* kTracedNewDefaultPoolName = "sakura::default";
-
 #if defined(_WIN32)
 
 #ifdef SKR_RUNTIME_USE_MIMALLOC

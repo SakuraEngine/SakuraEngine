@@ -16,7 +16,6 @@
 
 #include "tracy/TracyC.h"
 
-RUNTIME_EXTERN_C RUNTIME_API const char* kTracedNewDefaultPoolName;
 RUNTIME_EXTERN_C RUNTIME_API void* _sakura_malloc(size_t size, const char* pool_name);
 RUNTIME_EXTERN_C RUNTIME_API void* _sakura_calloc(size_t count, size_t size, const char* pool_name);
 RUNTIME_EXTERN_C RUNTIME_API void* _sakura_malloc_aligned(size_t size, size_t alignment, const char* pool_name);
@@ -193,16 +192,16 @@ FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line,
 struct SkrTracedNew
 {
     const std::string_view sourcelocation;
-    const std::string_view poolname;
-    SkrTracedNew(std::string_view sourcelocation) noexcept : sourcelocation(sourcelocation), poolname(kTracedNewDefaultPoolName) {}
-    SkrTracedNew(std::string_view sourcelocation, std::string_view poolname) noexcept : sourcelocation(sourcelocation), poolname(poolname) {}
+    const char* poolname;
+    SkrTracedNew(std::string_view sourcelocation) noexcept : sourcelocation(sourcelocation), poolname(NULL) {}
+    SkrTracedNew(std::string_view sourcelocation, const char* poolname) noexcept : sourcelocation(sourcelocation), poolname(poolname) {}
 
     template<class T>
     [[nodiscard]] FORCEINLINE T* New()
     {
         const std::string_view name = skr::demangle<T>();
         TracyCMessage(name.data(), name.size());
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
     }
@@ -212,7 +211,7 @@ struct SkrTracedNew
     {
         const std::string_view name = skr::demangle<T>();
         TracyCMessage(name.data(), name.size());
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ eastl::forward<TArgs>(params)... };
     }
@@ -222,7 +221,7 @@ struct SkrTracedNew
     {
         const std::string_view name = skr::demangle<T>();
         TracyCMessage(name.data(), name.size());
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname);
         memset(pMemory, 0, sizeof(T));
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ eastl::forward<TArgs>(params)... };
@@ -233,7 +232,7 @@ struct SkrTracedNew
     {
         const std::string_view name = skr::demangle<T>();
         TracyCMessage(name.data(), name.size());
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname);
         memset(pMemory, 0, sizeof(T));
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
@@ -245,7 +244,7 @@ struct SkrTracedNew
         const std::string_view name = skr::demangle<T>();
         TracyCMessage(name.data(), name.size());
         SKR_ASSERT(size >= sizeof(T));
-        void* pMemory = SkrNewAlignedWithCZone(size, alignof(T), sourcelocation.data(), poolname.data());
+        void* pMemory = SkrNewAlignedWithCZone(size, alignof(T), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ eastl::forward<TArgs>(params)... };
     }
@@ -256,7 +255,7 @@ struct SkrTracedNew
         const std::string_view name = skr::demangle<T>();
         TracyCMessage(name.data(), name.size());
         SKR_ASSERT(size >= sizeof(T));
-        void* pMemory = SkrNewAlignedWithCZone(size, alignof(T), sourcelocation.data(), poolname.data());
+        void* pMemory = SkrNewAlignedWithCZone(size, alignof(T), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
     }
@@ -265,7 +264,7 @@ struct SkrTracedNew
     [[nodiscard]] FORCEINLINE F* NewLambda(F&& lambda)
     {
         using ValueType = std::remove_reference_t<F>;
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(F), alignof(F), sourcelocation.data(), poolname.data());
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(F), alignof(F), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE auto(eastl::forward<F>(lambda));
     }
@@ -278,7 +277,7 @@ struct SkrTracedNew
             const std::string_view name = skr::demangle<T>();
             TracyCMessage(name.data(), name.size());
             pType->~T();
-            SkrFreeAlignedWithCZone((void*)pType, alignof(T), sourcelocation.data(), poolname.data());
+            SkrFreeAlignedWithCZone((void*)pType, alignof(T), sourcelocation.data(), poolname);
         }
     }
 };
