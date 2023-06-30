@@ -54,6 +54,14 @@ Logger* Logger::GetDefault() SKR_NOEXCEPT
     return LogManager::GetDefaultLogger();
 }
 
+void Logger::sinkDefaultImmediate(const LogEvent& e, skr::string_view what) const SKR_NOEXCEPT
+{
+    auto pattern = LogManager::QueryPattern(LogConstants::kDefaultPatternId);
+    const auto& output = pattern->pattern(e, what);
+    
+    printf("%s", output.c_str());
+}
+
 bool Logger::canPushToQueue() const SKR_NOEXCEPT
 {
     auto worker = LogManager::TryGetWorker();
@@ -113,16 +121,14 @@ skr::log::LogLevel LogConstants::gLogLevel = skr::log::LogLevel::kTrace;
 SAtomic64 LogManager::available_ = 0;
 eastl::unique_ptr<LogWorker> LogManager::worker_ = nullptr;
 LogPatternMap LogManager::patterns_ = {};
-std::once_flag g_start_once_flag;
+std::once_flag g_default_logger_once;
+std::once_flag g_default_pattern_once;
 eastl::unique_ptr<skr::log::Logger> LogManager::logger_ = nullptr;
 
 void LogManager::Initialize() SKR_NOEXCEPT
 {
     if (skr_atomic64_load_acquire(&available_) != 0)
         return;
-
-    // register default pattern
-    patterns_.emplace(LogConstants::kDefaultPatternId, eastl::make_unique<LogPattern>());
 
     // start worker
     if (!worker_)
@@ -153,9 +159,12 @@ LogWorker* LogManager::TryGetWorker() SKR_NOEXCEPT
 Logger* LogManager::GetDefaultLogger() SKR_NOEXCEPT
 {
     std::call_once(
-        skr::log::g_start_once_flag,
+        skr::log::g_default_logger_once,
         [] {
             skr::log::LogManager::logger_ = eastl::make_unique<skr::log::Logger>();
+
+            // register default pattern
+            patterns_.emplace(LogConstants::kDefaultPatternId, eastl::make_unique<LogPattern>());
         }
     );
     return logger_.get();

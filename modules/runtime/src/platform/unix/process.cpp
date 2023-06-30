@@ -6,11 +6,12 @@
 #include <sys/resource.h>
 #include <sys/ioctl.h>
 #include <sys/file.h>
-#include <sys/prctl.h>
+#include <signal.h>
 
 #include "platform/debug.h"
 #include "platform/memory.h"
 #include "platform/process.h"
+#include "misc/log.h"
 
 #include "containers/string.hpp"
 #include <EASTL/vector.h>
@@ -22,13 +23,17 @@ typedef struct SProcess
 
 SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments, uint32_t arg_count, const char8_t* stdout_file)
 {
-	eastl::vector<const char8_t*> argPtrs;
-	skr::string Args;
+	eastl::vector<skr::string> Args;
 	for (size_t i = 0; i < arg_count; ++i)
 	{
-		Args += skr::string(arguments[i]);
-        Args += u8" ";
+        Args.emplace_back(arguments[i]);
 	}
+    char* Argv[256] = { NULL };
+    const auto Argc = Args.size();
+    for (size_t i = 0; i < Argc; ++i)
+    {
+        Argv[i] = (char*)Args[i].c_str();
+    }
 
 	// int errcode = system(cmd.c_str()); (void)errcode;
 	extern char ** environ;	// provided by libc
@@ -48,10 +53,23 @@ SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments
 
 	sigset_t SetToDefaultSignalSet;
 	sigemptyset(&SetToDefaultSignalSet);
-	for (int SigNum = SIGRTMIN; SigNum <= SIGRTMAX; ++SigNum)
+
+    long SigrtMin, SigrtMax;
+#if defined(SIGRTMIN) && defined(SIGRTMAX)
+    SigrtMin = SIGRTMIN;
+    SigrtMax = SIGRTMAX;
+#elif defined(_SC_SIGRT_MIN) && defined(_SC_SIGRT_MAX)
+    SigrtMin = sysconf(_SC_SIGRT_MIN);
+	SigrtMax = sysconf(_SC_SIGRT_MAX);
+#else
+    SigrtMin = SIGUSR1;
+    SigrtMax = SIGUSR2;
+#endif
+	for (int SigNum = SigrtMin; SigNum <= SigrtMax; ++SigNum)
 	{
 		sigaddset(&SetToDefaultSignalSet, SigNum);
 	}
+
 	posix_spawnattr_setsigdefault(&SpawnAttr, &SetToDefaultSignalSet);
 	SpawnFlags |= POSIX_SPAWN_SETSIGDEF;
 
@@ -60,6 +78,7 @@ SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments
 
 	int PosixSpawnErrNo = -1;
     {
+#ifdef POSIX_SPAWN_USEVFORK
 		// if we don't have any actions to do, use a faster route that will use vfork() instead.
 		// This is not just faster, it is crucial when spawning a crash reporter to report a crash due to stack overflow in a thread
 		// since otherwise atfork handlers will get called and posix_spawn() will crash (in glibc's __reclaim_stacks()).
@@ -68,12 +87,19 @@ SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments
 		//		https://sourceware.org/bugzilla/show_bug.cgi?id=14750
 		//		https://sourceware.org/bugzilla/show_bug.cgi?id=14749
 		SpawnFlags |= POSIX_SPAWN_USEVFORK;
+#endif
 
 		posix_spawnattr_setflags(&SpawnAttr, SpawnFlags);
-		PosixSpawnErrNo = posix_spawn(&ChildPid, command, nullptr, &SpawnAttr, Args.c_str(), environ);
+		PosixSpawnErrNo = posix_spawn(&ChildPid, command, nullptr, &SpawnAttr, Argv, environ);
 	}
 	posix_spawnattr_destroy(&SpawnAttr);
     
+	if (PosixSpawnErrNo != 0)
+	{
+		SKR_LOG_FATAL("skr_run_process: posix_spawn() failed (%d, %s)", PosixSpawnErrNo, strerror(PosixSpawnErrNo));
+		return nullptr;
+	}
+
     SProcessHandle result = SkrNew<SProcess>();
     result->pid = ChildPid;
     return result;
@@ -88,7 +114,7 @@ int skr_wait_process(SProcessHandle process)
 {
     const auto pid = process->pid;
     int status;
-    if ((pid = waitpid(pid, &status, WNOHANG)) == -1)
+    if (waitpid(pid, &status, WNOHANG) == -1)
     {
         perror("wait() error");
     }

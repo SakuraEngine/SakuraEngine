@@ -55,7 +55,7 @@ struct RUNTIME_API Logger
         if (!sucess) // sink immediate
         {
             skr::string s = skr::format(format, skr::forward<Args>(args)...);
-            printf("%s\n", s.c_str());
+            sinkDefaultImmediate(ev, s.view());
         }
     }
 
@@ -73,11 +73,12 @@ struct RUNTIME_API Logger
         }
         if (!sucess) // sink immediate
         {
-            printf("%s\n", (const char*)buffer);
+            sinkDefaultImmediate(ev, skr::string_view(buffer));
         }
     }
 
 private:
+    void sinkDefaultImmediate(const LogEvent& event, skr::string_view formatted_message) const SKR_NOEXCEPT;
     bool canPushToQueue() const SKR_NOEXCEPT;
     bool tryPushToQueue(LogEvent ev, skr::string_view format, ArgsList&& args) SKR_NOEXCEPT;
     bool tryPushToQueue(LogEvent ev, skr::string&& what) SKR_NOEXCEPT;
