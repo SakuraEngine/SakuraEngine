@@ -90,7 +90,7 @@ SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments
 #endif
 
 		posix_spawnattr_setflags(&SpawnAttr, SpawnFlags);
-		PosixSpawnErrNo = posix_spawn(&ChildPid, command, nullptr, &SpawnAttr, Argv, environ);
+		PosixSpawnErrNo = posix_spawn(&ChildPid, (const char*)command, nullptr, &SpawnAttr, Argv, environ);
 	}
 	posix_spawnattr_destroy(&SpawnAttr);
     
