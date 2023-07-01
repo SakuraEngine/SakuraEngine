@@ -1,9 +1,12 @@
 #pragma once
+#include "containers/hashmap.hpp"
 #include "platform/atomic.h"
 #include "misc/log/log_base.hpp"
 #include "misc/log/log_formatter.hpp"
 
+#include "containers/sptr.hpp"
 #include "containers/concurrent_queue.h"
+#include "platform/thread.h"
 
 namespace skr {
 namespace log {
@@ -26,6 +29,12 @@ private:
 struct LogQueue
 {
 public:
+    LogQueue() SKR_NOEXCEPT
+        : ctok_(queue_)
+    {
+
+    }
+
     void push(LogEvent ev, const skr::string&& what) SKR_NOEXCEPT
     {
         auto element = LogElement(ev);
@@ -49,9 +58,9 @@ public:
         skr_atomic64_add_relaxed(&cnt_, 1);
     }
 
-    bool try_dequeue(LogElement& element)
+    bool try_dequeue(LogElement& element) SKR_NOEXCEPT
     {
-        if (queue_.try_dequeue(element))
+        if (queue_.try_dequeue(ctok_, element))
         {
             skr_atomic64_add_relaxed(&cnt_, -1);
             return true;
@@ -71,10 +80,11 @@ private:
         static const bool RECYCLE_ALLOCATED_BLOCKS = true;
         static const int BLOCK_SIZE = 256;
 
-        static inline void* malloc(size_t size) { return sakura_mallocN(size, kLogMemoryName); }
-        static inline void free(void* ptr) { return sakura_freeN(ptr, kLogMemoryName); }
+        static inline void* malloc(size_t size) SKR_NOEXCEPT { return sakura_mallocN(size, kLogMemoryName); }
+        static inline void free(void* ptr) SKR_NOEXCEPT { return sakura_freeN(ptr, kLogMemoryName); }
     };
     skr::ConcurrentQueue<LogElement, LogQueueTraits> queue_;
+    skr::ConsumerToken ctok_; // MPSC
     SAtomic64 cnt_ = 0;
 };
 

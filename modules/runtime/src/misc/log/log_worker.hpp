@@ -1,14 +1,10 @@
 #pragma once
-#include "platform/guid.hpp"
-#include "platform/time.h"
 #include "async/async_service.h"
 #include "misc/log/log_pattern.hpp"
 #include "log_queue.hpp"
 
 #include "containers/vector.hpp"
 #include "containers/sptr.hpp"
-#include "containers/hashmap.hpp"
-#include <EASTL/unique_ptr.h>
 
 namespace skr {
 namespace log {
@@ -44,25 +40,6 @@ protected:
 
 static const ServiceThreadDesc kLoggerWorkerThreadDesc =  {
     u8"AsyncLogWorker", SKR_THREAD_ABOVE_NORMAL
-};
-
-using LogPatternMap = skr::parallel_flat_hash_map<skr_guid_t, eastl::unique_ptr<LogPattern>, skr::guid::hash>;
-
-struct RUNTIME_API LogManager
-{
-    static void Initialize() SKR_NOEXCEPT;
-    static void Finalize() SKR_NOEXCEPT;
-
-    static LogWorker* TryGetWorker() SKR_NOEXCEPT;
-    static Logger* GetDefaultLogger() SKR_NOEXCEPT;
-
-    static skr_guid_t RegisterPattern(eastl::unique_ptr<LogPattern> pattern);
-    static LogPattern* QueryPattern(skr_guid_t guid);
-
-    static SAtomic64 available_;
-    static eastl::unique_ptr<LogWorker> worker_;
-    static LogPatternMap patterns_;
-    static eastl::unique_ptr<skr::log::Logger> logger_;
 };
 
 } } // namespace skr::log

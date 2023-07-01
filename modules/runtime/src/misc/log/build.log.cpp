@@ -1,7 +1,9 @@
 #include "platform/thread.h"
+#include "platform/time.h"
 #include "misc/log.h"
 #include "log_queue.hpp"
 #include "log_worker.hpp"
+#include "log_manager.hpp"
 #include "misc/log/logger.hpp"
 
 #include <thread>
@@ -127,6 +129,7 @@ LogPatternMap LogManager::patterns_ = {};
 std::once_flag default_logger_once_;
 std::once_flag default_pattern_once_;
 eastl::unique_ptr<skr::log::Logger> LogManager::logger_ = nullptr;
+TSCNS LogManager::tscns_ = {};
 
 void LogManager::Initialize() SKR_NOEXCEPT
 {
@@ -284,6 +287,8 @@ void log_set_level(int level)
 RUNTIME_EXTERN_C 
 void log_log(int level, const char* file, const char* func, const char* line, const char* fmt, ...)
 {
+    ZoneScopedN("Log");
+    
     const auto kLogLevel = skr::log::LogConstants::kLogLevelsLUT[level];
     if (kLogLevel < skr::log::LogConstants::gLogLevel) return;
 

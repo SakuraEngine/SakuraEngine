@@ -88,4 +88,7 @@ struct ConcurrentQueueDefaultTraits
 };
     template<typename T, typename Traits = ConcurrentQueueDefaultTraits>
     using ConcurrentQueue = moodycamel::ConcurrentQueue<T, Traits>;
+
+	using ProducerToken = moodycamel::ProducerToken;
+	using ConsumerToken = moodycamel::ConsumerToken;
 }

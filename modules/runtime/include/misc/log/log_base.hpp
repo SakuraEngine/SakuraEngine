@@ -59,8 +59,8 @@ struct RUNTIME_API LogConstants
     static constexpr const char8_t* kLogLevelNameLUT[] = {
         u8"TRACE",
         u8"DEBUG",
-        u8"INFO ",
-        u8"WARN ",
+        u8"INFO",
+        u8"WARN",
         u8"ERROR",
         u8"FATAL"
     };

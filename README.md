@@ -233,6 +233,7 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - fast_float v3.4.0
 - zlib v1.2.8
 - cgltf v1.13 (MIT)
+- [TSCNS](https://github.com/MengRao/tscns) v2.0 (MIT)
 - marl e007bd3 (Apache-2.0)
 - cpu_features v0.7.0 (Apache-2.0)
 - EASTL v3.19.05, master-db16065 (BSD-3-Clause)

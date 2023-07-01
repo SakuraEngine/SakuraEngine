@@ -31,18 +31,16 @@ void SkrRuntimeModule::on_load(int argc, char8_t** argv)
     SkrDStorageConfig config = {};
     dstorageInstance = skr_create_dstorage_instance(&config);
 
-    SKR_LOG_TRACE("SkrRuntime module loaded!");
-
 #ifdef SKR_OS_WINDOWS
     ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
     DPIAware = true;
 #endif
+
+    SKR_LOG_TRACE("SkrRuntime module loaded!");
 }
 
 void SkrRuntimeModule::on_unload()
 {
-    SKR_LOG_TRACE("SkrRuntime module unloaded!");
-
     if (auto inst = skr_runtime_get_dstorage_instance())
     {
         skr_free_dstorage_instance(inst);
@@ -60,6 +58,7 @@ void SkrRuntimeModule::on_unload()
     tracyLibrary.unload();
 #endif
 
+    SKR_LOG_TRACE("SkrRuntime module unloaded!");
     log_finalize();
 }
 
