@@ -109,7 +109,7 @@ public:
         _initialize();
         // Set the default pattern
         _set_pattern(
-            u8"%(level_name) [%(timestamp)][%(thread_name)(%(thread_id))] %(logger_name): %(message) "
+            u8"[%(timestamp)][%(thread_name)(tid:%(thread_id))] %(logger_name).%(level_name): %(message) "
                     u8"\n    \x1b[90mIn %(function_name) At %(file_name):%(file_line)\x1b[0m"
         );
     }
