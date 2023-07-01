@@ -1,3 +1,4 @@
+#include "platform/thread.h"
 #include "platform/process.h"
 #include "misc/log/log_pattern.hpp"
 #include "containers/hashmap.hpp"
@@ -17,7 +18,7 @@ struct named_arg_info {
 LogPattern::Attribute attribute_from_string(eastl::u8string const& attribute_name)
 {
     static skr::flat_hash_map<skr::string, LogPattern::Attribute, skr::hash<skr::string>> const attr_map = {
-        { u8"ascii_time", LogPattern::Attribute::ascii_time },
+        { u8"timestamp", LogPattern::Attribute::timestamp },
         { u8"level_id", LogPattern::Attribute::level_id },
         { u8"level_name", LogPattern::Attribute::level_name },
         { u8"logger_name", LogPattern::Attribute::logger_name },
@@ -59,13 +60,13 @@ constexpr void _store_named_args(eastl::array<named_arg_info, kAttributeCount>& 
 /**
  * Convert the pattern to fmt format string and also populate the order index array
  * e.g. given :
- *   "%(ascii_time) [%(thread_id)] %(file_name):%(lineno) %(level_name) %(logger_name) - "
+ *   "%(timestamp) [%(thread_id)] %(file_name):%(lineno) %(level_name) %(logger_name) - "
  *
  * is changed to :
  *  {} [{}] {}:{} {:<12} {} -
  *
  *  with a order index of :
- *  i: 0 order idx[i] is: 0 - %(ascii_time)
+ *  i: 0 order idx[i] is: 0 - %(timestamp)
  *  i: 1 order idx[i] is: 10 - empty
  *  i: 2 order idx[i] is: 4 - %(level_name)
  *  i: 3 order idx[i] is: 5 - %(logger_name)
@@ -149,8 +150,7 @@ template <typename... Args>
             }
 
             // reorder
-            int id = -1;
-
+            int64_t id = -1;
             for (size_t i = 0; i < kAttributeCount; ++i)
             {
                 if (named_args[i].name == attr_name)
@@ -202,7 +202,7 @@ void LogPattern::_set_pattern(skr::string pattern) SKR_NOEXCEPT
         // the order we pass the arguments here must match with the order of Attribute enum
         auto _ = _generate_fmt_format_string(
             is_set_in_pattern_, _args_n, format_pattern.u8_str(), 
-            u8"ascii_time", u8"level_id", u8"level_name", u8"logger_name",
+            u8"timestamp", u8"level_id", u8"level_name", u8"logger_name",
             u8"thread_id", u8"thread_name", u8"process_id", u8"process_name", 
             u8"file_name", u8"file_line", u8"funtion_name", u8"message"
         );
@@ -210,7 +210,7 @@ void LogPattern::_set_pattern(skr::string pattern) SKR_NOEXCEPT
         calculated_format_ = _.first;
         order_index_ = _.second;
 
-        _set_arg<Attribute::ascii_time, uint32_t>(u8"ascii_time");
+        _set_arg<Attribute::timestamp, uint32_t>(u8"timestamp");
         _set_arg<Attribute::level_id, uint32_t>(u8"level_id");
         _set_arg<Attribute::level_name, skr::string_view>(u8"level_name");
         _set_arg<Attribute::logger_name, skr::string_view>(u8"logger_name");
@@ -243,6 +243,9 @@ skr::string format_NArgs(eastl::index_sequence<N...>, const skr::string_view& fm
     return skr::format(fmt, args[N]...);
 }
 
+const static char8_t* main_thread_name = u8"main";
+const static char8_t* unknown_thread_name = u8"unknown";
+const static SThreadID main_thread_id = skr_current_thread_id();
 skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view formatted_message)
 {
     formatted_string_.empty();
@@ -251,10 +254,10 @@ skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view f
     
     const auto level_id = (uint32_t)event.level;
 
-    if (is_set_in_pattern_[(size_t)Attribute::ascii_time])
+    if (is_set_in_pattern_[(size_t)Attribute::timestamp])
     {
-        const auto ascii_time = event.timestamp;
-        _set_arg_val<Attribute::ascii_time>(ascii_time);
+        const auto timestamp = event.timestamp;
+        _set_arg_val<Attribute::timestamp>(timestamp);
     }
         
     if (is_set_in_pattern_[(size_t)Attribute::level_id])
@@ -282,7 +285,9 @@ skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view f
 
     if (is_set_in_pattern_[(size_t)Attribute::thread_name])
     {
-        const auto thread_name = skr::string_view(LogConstants::kLogLevelNameLUT[level_id]); // TODO
+        auto thread_name = skr::string_view(event.thread_name);
+        if (thread_name.is_empty())
+            thread_name = (event.thread_id == main_thread_id) ? main_thread_name : unknown_thread_name;
         _set_arg_val<Attribute::thread_name>(thread_name);
     }
 

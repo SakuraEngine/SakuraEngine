@@ -20,7 +20,6 @@ TEST(SPTRCommon, Base)
         EXPECT_EQ(pT1, nullptr);
         EXPECT_EQ(pT1.get(), nullptr);
     }
-    /*
     {
         SKR_LOG_DEBUG("I wonder ");
         auto ptr = SkrNew<int>(5);
@@ -61,7 +60,6 @@ TEST(SPTRCommon, Base)
 		EXPECT_EQ(pT1.use_count(), 1);
 		EXPECT_NE(pT1, pT2);
     }
-    */
 }
 
 struct A

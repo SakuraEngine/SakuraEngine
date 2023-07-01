@@ -764,6 +764,7 @@ void __ioThreadTask_VRAM(void* arg)
     skr::string name = skr::format(u8"ioVRAMServiceThread-{}", taskIndex++);
     tracy::SetThreadName(name.c_str());
 #endif
+    skr_current_thread_set_name(u8"ioVRAMServiceThread");
     auto service = reinterpret_cast<skr::io::VRAMService*>(arg);
     for (; service->threaded_service.getThreadStatus() != _SKR_IO_THREAD_STATUS_QUIT;)
     {

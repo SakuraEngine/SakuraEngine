@@ -82,7 +82,7 @@ public:
 
     enum class Attribute : uint32_t
     {
-        ascii_time,
+        timestamp,
         level_id,
         level_name,
         logger_name,
@@ -108,7 +108,7 @@ public:
         _initialize();
         // Set the default pattern
         _set_pattern(
-            u8"%(ascii_time) [%(thread_id)] %(file_line) LOG_%(level_name) %(logger_name) %(message)"
+            u8"LOG_%(level_name) %(timestamp) [%(thread_name)(%(thread_id))] %(file_line) %(logger_name) %(message)"
         );
     }
     /*

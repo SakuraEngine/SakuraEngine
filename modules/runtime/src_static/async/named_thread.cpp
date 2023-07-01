@@ -27,6 +27,7 @@ NamedThread::~NamedThread() SKR_NOEXCEPT
 void NamedThread::threadFunc(void* args)
 {
     NamedThread* pSelf = (NamedThread*)args;
+    skr_current_thread_set_name(pSelf->tname.u8_str());
     pSelf->tID = skr_current_thread_id();
     
     skr_atomic32_store_release(&pSelf->started, true);
@@ -50,7 +51,6 @@ AsyncResult NamedThread::start(NamedThreadFunction* pFunc) SKR_NOEXCEPT
     tDesc.pFunc = &threadFunc;
     tDesc.pData = this;
     skr_init_thread(&tDesc, &tHandle);
-    skr_thread_set_name(tHandle, tname.u8_str());
     
     const auto P = (SThreadPriority)skr_atomic32_load_acquire(&priority);
     skr_thread_set_priority(tHandle, P);

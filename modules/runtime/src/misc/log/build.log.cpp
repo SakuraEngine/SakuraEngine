@@ -17,7 +17,8 @@ namespace log {
 const char* kLogMemoryName = "sakura::log";
 
 LogEvent::LogEvent(LogLevel level) SKR_NOEXCEPT
-    : level(level), timestamp(skr_sys_get_time()), thread_id(skr_current_thread_id())
+    : level(level), timestamp(skr_sys_get_time()), 
+      thread_id(skr_current_thread_id()), thread_name(skr_current_thread_get_name())
 {
 
 }
