@@ -1,3 +1,4 @@
+#include "misc/log/log_manager.hpp"
 #include "platform/thread.h"
 #include "platform/time.h"
 #include "misc/log.h"
@@ -19,7 +20,7 @@ namespace log {
 const char* kLogMemoryName = "sakura::log";
 
 LogEvent::LogEvent(Logger* logger, LogLevel level, const LogSourceData& src_data) SKR_NOEXCEPT
-    : level(level), timestamp(skr_sys_get_time()), 
+    : level(level), timestamp(LogManager::tscns_.rdtsc()), 
       thread_id(skr_current_thread_id()), thread_name(skr_current_thread_get_name()),
       logger(logger), src_data(src_data)
 {
@@ -130,6 +131,7 @@ std::once_flag default_logger_once_;
 std::once_flag default_pattern_once_;
 eastl::unique_ptr<skr::log::Logger> LogManager::logger_ = nullptr;
 TSCNS LogManager::tscns_ = {};
+LogManager::DateTime LogManager::datetime_ = {};
 
 void LogManager::Initialize() SKR_NOEXCEPT
 {
@@ -167,8 +169,9 @@ Logger* LogManager::GetDefaultLogger() SKR_NOEXCEPT
     std::call_once(
         skr::log::default_logger_once_,
         [] {
+            skr::log::LogManager::tscns_.init();
+            skr::log::LogManager::datetime_.reset_date();
             skr::log::LogManager::logger_ = eastl::make_unique<skr::log::Logger>(u8"Log");
-
             // register default pattern
             patterns_.emplace(LogConstants::kDefaultPatternId, eastl::make_unique<LogPattern>());
         }
@@ -190,6 +193,17 @@ LogPattern* LogManager::QueryPattern(skr_guid_t guid)
     if (it != patterns_.end())
         return it->second.get();
     return nullptr;
+}
+
+void LogManager::DateTime::reset_date() SKR_NOEXCEPT
+{
+    time_t rawtime = LogManager::tscns_.rdns() / 1000000000;
+    struct tm* timeinfo = localtime(&rawtime);
+    timeinfo->tm_sec = timeinfo->tm_min = timeinfo->tm_hour = 0;
+    midnightNs = mktime(timeinfo) * 1000000000;
+    year = 1900 + timeinfo->tm_year;
+    month = 1 + timeinfo->tm_mon;
+    day = timeinfo->tm_mday;
 }
 
 LogWorker::LogWorker(const ServiceThreadDesc& desc) SKR_NOEXCEPT
@@ -229,6 +243,8 @@ bool LogWorker::predicate() SKR_NOEXCEPT
 
 void LogWorker::process_logs() SKR_NOEXCEPT
 {
+    LogManager::tscns_.calibrate();
+    
     LogElement e;
     while (queue_->try_dequeue(e))
     {

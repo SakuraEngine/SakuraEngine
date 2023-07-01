@@ -37,7 +37,7 @@ protected:
     friend struct LogPattern;
     bool flush = false;
     LogLevel level;
-    uint32_t timestamp;
+    int64_t timestamp;
     uint64_t thread_id;
     const char8_t* thread_name;
     struct Logger* logger;

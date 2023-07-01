@@ -26,7 +26,15 @@ struct RUNTIME_API LogManager
     static eastl::unique_ptr<LogWorker> worker_;
     static LogPatternMap patterns_;
     static eastl::unique_ptr<skr::log::Logger> logger_;
+
     static TSCNS tscns_;
+    static struct DateTime {
+        void reset_date() SKR_NOEXCEPT;
+        int64_t midnightNs;
+        uint32_t year;
+        uint32_t month;
+        uint32_t day;
+    } datetime_;
 };
 
 } } // namespace skr::log

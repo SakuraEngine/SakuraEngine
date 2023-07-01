@@ -1,3 +1,4 @@
+#include "misc/log/log_manager.hpp"
 #include "platform/thread.h"
 #include "platform/process.h"
 #include "misc/log/logger.hpp"
@@ -211,7 +212,7 @@ void LogPattern::_set_pattern(skr::string pattern) SKR_NOEXCEPT
         calculated_format_ = _.first;
         order_index_ = _.second;
 
-        _set_arg<Attribute::timestamp, uint32_t>(u8"timestamp");
+        _set_arg<Attribute::timestamp, skr::string_view>(u8"timestamp");
         _set_arg<Attribute::level_id, uint32_t>(u8"level_id");
         _set_arg<Attribute::level_name, skr::string_view>(u8"level_name");
         _set_arg<Attribute::logger_name, skr::string_view>(u8"logger_name");
@@ -247,6 +248,7 @@ skr::string format_NArgs(eastl::index_sequence<N...>, const skr::string_view& fm
 const static char8_t* main_thread_name = u8"main";
 const static char8_t* unknown_thread_name = u8"unknown";
 const static SThreadID main_thread_id = skr_current_thread_id();
+static skr::string timestring = u8"";
 skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view formatted_message)
 {
     formatted_string_.empty();
@@ -257,8 +259,29 @@ skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view f
 
     if (is_set_in_pattern_[(size_t)Attribute::timestamp])
     {
-        const auto timestamp = event.timestamp;
-        _set_arg_val<Attribute::timestamp>(timestamp);
+        const auto& dt = LogManager::datetime_;
+        const auto midnightNs = dt.midnightNs;
+        const auto ts = LogManager::tscns_.tsc2ns(event.timestamp);
+        auto t =  (ts > midnightNs) ? (ts - midnightNs) : 0;
+        t /= 1'000;
+        const uint64_t us = t % 1'000;
+        t /= 1'000;
+        const uint64_t ms = t % 1'000;
+        t /= 1'000;
+        const uint64_t second = t % 60;
+        t /= 60;
+        const uint64_t minute = (t % 60);
+        t /= 60;
+        uint32_t h = t;
+        if (h > 23) {
+            h %= 24;
+            LogManager::datetime_.reset_date();
+        }
+        timestring = skr::format(
+            u8"{}/{}/{} {}:{}:{}({}:{})",
+            dt.year, dt.month, dt.day,
+            h, minute, second, ms, us);
+        _set_arg_val<Attribute::timestamp>(timestring.view());
     }
         
     if (is_set_in_pattern_[(size_t)Attribute::level_id])
