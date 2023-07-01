@@ -1,9 +1,9 @@
 #pragma once
 #include "platform/atomic.h"
-#include "containers/string.hpp"
-#include "containers/concurrent_queue.h"
-
+#include "misc/log/log_base.hpp"
 #include "misc/log/log_formatter.hpp"
+
+#include "containers/concurrent_queue.h"
 
 namespace skr {
 namespace log {

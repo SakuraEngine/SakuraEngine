@@ -1,6 +1,5 @@
 #pragma once
-#include "platform/configure.h"
-#include "containers/string.hpp"
+#include "misc/types.h"
 
 namespace skr {
 namespace log {
@@ -23,9 +22,16 @@ enum class Timezone : uint8_t
     GmtTime
 };
 
+struct LogSourceData
+{
+    const char* file_;
+    const char* func_;
+    const char* line_;
+};
+
 struct RUNTIME_API LogEvent
 {
-    LogEvent(LogLevel level) SKR_NOEXCEPT;
+    LogEvent(struct Logger* logger, LogLevel level, const LogSourceData& src_data) SKR_NOEXCEPT;
     
 protected:
     friend struct LogPattern;
@@ -34,13 +40,8 @@ protected:
     uint32_t timestamp;
     uint64_t thread_id;
     const char8_t* thread_name;
-};
-
-struct LogSourceData
-{
-    const char* func_;
-    const char* file_;
-    const char* line_;
+    struct Logger* logger;
+    LogSourceData src_data;
 };
 
 struct RUNTIME_API LogConstants
@@ -58,8 +59,8 @@ struct RUNTIME_API LogConstants
     static constexpr const char8_t* kLogLevelNameLUT[] = {
         u8"TRACE",
         u8"DEBUG",
-        u8"INFO",
-        u8"WARN",
+        u8"INFO ",
+        u8"WARN ",
         u8"ERROR",
         u8"FATAL"
     };

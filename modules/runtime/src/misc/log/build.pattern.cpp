@@ -1,5 +1,6 @@
 #include "platform/thread.h"
 #include "platform/process.h"
+#include "misc/log/logger.hpp"
 #include "misc/log/log_pattern.hpp"
 #include "containers/hashmap.hpp"
 
@@ -28,7 +29,7 @@ LogPattern::Attribute attribute_from_string(eastl::u8string const& attribute_nam
         { u8"process_name", LogPattern::Attribute::process_name },
         { u8"file_name", LogPattern::Attribute::file_name },
         { u8"file_line", LogPattern::Attribute::file_line },
-        { u8"function_name", LogPattern::Attribute::funtion_name },
+        { u8"function_name", LogPattern::Attribute::function_name },
         { u8"message", LogPattern::Attribute::message }
     };
 
@@ -204,7 +205,7 @@ void LogPattern::_set_pattern(skr::string pattern) SKR_NOEXCEPT
             is_set_in_pattern_, _args_n, format_pattern.u8_str(), 
             u8"timestamp", u8"level_id", u8"level_name", u8"logger_name",
             u8"thread_id", u8"thread_name", u8"process_id", u8"process_name", 
-            u8"file_name", u8"file_line", u8"funtion_name", u8"message"
+            u8"file_name", u8"file_line", u8"function_name", u8"message"
         );
         
         calculated_format_ = _.first;
@@ -219,8 +220,8 @@ void LogPattern::_set_pattern(skr::string pattern) SKR_NOEXCEPT
         _set_arg<Attribute::process_id, uint64_t>(u8"process_id");
         _set_arg<Attribute::process_name, skr::string_view>(u8"process_name");
         _set_arg<Attribute::file_name, skr::string_view>(u8"file_name");
-        _set_arg<Attribute::file_line, uint64_t>(u8"file_line");
-        _set_arg<Attribute::funtion_name, skr::string_view>(u8"funtion_name");
+        _set_arg<Attribute::file_line, skr::string_view>(u8"file_line");
+        _set_arg<Attribute::function_name, skr::string_view>(u8"function_name");
         _set_arg<Attribute::message, skr::string_view>(u8"message");
     }
 }
@@ -273,7 +274,7 @@ skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view f
 
     if (is_set_in_pattern_[(size_t)Attribute::logger_name])
     {
-        const auto logger_name = skr::string_view(LogConstants::kLogLevelNameLUT[level_id]); // TODO
+        const auto logger_name = event.logger->get_name();
         _set_arg_val<Attribute::logger_name>(logger_name);
     }
 
@@ -305,20 +306,20 @@ skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view f
 
     if (is_set_in_pattern_[(size_t)Attribute::file_name])
     {
-        const auto file_name = skr::string_view(LogConstants::kLogLevelNameLUT[level_id]); // TODO
+        const auto file_name = skr::string_view((const char8_t*)event.src_data.file_);
         _set_arg_val<Attribute::file_name>(file_name);
     }
 
     if (is_set_in_pattern_[(size_t)Attribute::file_line])
     {
-        const auto file_line = event.thread_id; // TODO
+        const auto file_line = skr::string_view((const char8_t*)event.src_data.line_);
         _set_arg_val<Attribute::file_line>(file_line);
     }
 
-    if (is_set_in_pattern_[(size_t)Attribute::funtion_name])
+    if (is_set_in_pattern_[(size_t)Attribute::function_name])
     {
-        const auto funtion_name = skr::string_view(LogConstants::kLogLevelNameLUT[level_id]); // TODO
-        _set_arg_val<Attribute::funtion_name>(funtion_name);
+        const auto function_name = skr::string_view((const char8_t*)event.src_data.func_);
+        _set_arg_val<Attribute::function_name>(function_name);
     }
 
     if (is_set_in_pattern_[(size_t)Attribute::message])

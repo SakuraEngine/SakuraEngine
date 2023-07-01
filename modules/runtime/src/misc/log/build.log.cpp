@@ -16,9 +16,10 @@ namespace log {
 
 const char* kLogMemoryName = "sakura::log";
 
-LogEvent::LogEvent(LogLevel level) SKR_NOEXCEPT
+LogEvent::LogEvent(Logger* logger, LogLevel level, const LogSourceData& src_data) SKR_NOEXCEPT
     : level(level), timestamp(skr_sys_get_time()), 
-      thread_id(skr_current_thread_id()), thread_name(skr_current_thread_get_name())
+      thread_id(skr_current_thread_id()), thread_name(skr_current_thread_get_name()),
+      logger(logger), src_data(src_data)
 {
 
 }
@@ -34,7 +35,8 @@ skr::string const& LogFormatter::format(const skr::string& format, const ArgsLis
     return formatted_string;
 }
 
-Logger::Logger() SKR_NOEXCEPT
+Logger::Logger(const char8_t* name) SKR_NOEXCEPT
+    : name(name)
 {
     if (auto worker = LogManager::TryGetWorker())
     {
@@ -110,7 +112,7 @@ LogElement::LogElement(LogEvent ev) SKR_NOEXCEPT
 }
 
 LogElement::LogElement() SKR_NOEXCEPT
-    : event(LogLevel::kTrace)
+    : event(nullptr, LogLevel::kTrace, {})
 {
     
 }
@@ -122,8 +124,8 @@ skr::log::LogLevel LogConstants::gLogLevel = skr::log::LogLevel::kTrace;
 SAtomic64 LogManager::available_ = 0;
 eastl::unique_ptr<LogWorker> LogManager::worker_ = nullptr;
 LogPatternMap LogManager::patterns_ = {};
-std::once_flag g_default_logger_once;
-std::once_flag g_default_pattern_once;
+std::once_flag default_logger_once_;
+std::once_flag default_pattern_once_;
 eastl::unique_ptr<skr::log::Logger> LogManager::logger_ = nullptr;
 
 void LogManager::Initialize() SKR_NOEXCEPT
@@ -160,9 +162,9 @@ LogWorker* LogManager::TryGetWorker() SKR_NOEXCEPT
 Logger* LogManager::GetDefaultLogger() SKR_NOEXCEPT
 {
     std::call_once(
-        skr::log::g_default_logger_once,
+        skr::log::default_logger_once_,
         [] {
-            skr::log::LogManager::logger_ = eastl::make_unique<skr::log::Logger>();
+            skr::log::LogManager::logger_ = eastl::make_unique<skr::log::Logger>(u8"Log");
 
             // register default pattern
             patterns_.emplace(LogConstants::kDefaultPatternId, eastl::make_unique<LogPattern>());
@@ -280,13 +282,14 @@ void log_set_level(int level)
 }
 
 RUNTIME_EXTERN_C 
-void log_log(int level, const char* file, int line, const char* fmt, ...)
+void log_log(int level, const char* file, const char* func, const char* line, const char* fmt, ...)
 {
     const auto kLogLevel = skr::log::LogConstants::kLogLevelsLUT[level];
     if (kLogLevel < skr::log::LogConstants::gLogLevel) return;
 
-    const auto Event = skr::log::LogEvent(kLogLevel);
     auto logger = skr::log::LogManager::GetDefaultLogger();
+    const skr::log::LogSourceData Src = { file, func, line  };
+    const auto Event = skr::log::LogEvent(logger, kLogLevel, Src);
 
     va_list va_args;
     va_start(va_args, fmt);

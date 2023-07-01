@@ -1,6 +1,6 @@
 #pragma once
 #include "platform/memory.h"
-#include "log_base.hpp"
+#include "containers/string.hpp"
 
 #include <tuple>
 #include <EASTL/fixed_function.h>

@@ -1,5 +1,6 @@
 #pragma once
-#include "log_formatter.hpp"
+#include "misc/log/log_base.hpp"
+#include "misc/log/log_formatter.hpp"
 
 namespace skr {
 namespace log {
@@ -28,7 +29,7 @@ static constexpr bool checkArgsCopyable() SKR_NOEXCEPT
 
 struct RUNTIME_API Logger
 {
-    Logger() SKR_NOEXCEPT;
+    Logger(const char8_t* name) SKR_NOEXCEPT;
     ~Logger() SKR_NOEXCEPT;
 
     static Logger* GetDefault() SKR_NOEXCEPT;
@@ -77,12 +78,15 @@ struct RUNTIME_API Logger
         }
     }
 
+    skr::string_view get_name() const SKR_NOEXCEPT { return name.view(); }
+
 private:
     void sinkDefaultImmediate(const LogEvent& event, skr::string_view formatted_message) const SKR_NOEXCEPT;
     bool canPushToQueue() const SKR_NOEXCEPT;
     bool tryPushToQueue(LogEvent ev, skr::string_view format, ArgsList&& args) SKR_NOEXCEPT;
     bool tryPushToQueue(LogEvent ev, skr::string&& what) SKR_NOEXCEPT;
     void notifyWorker() SKR_NOEXCEPT;
+    skr::string name;
 };
 
 } } // namespace skr::log

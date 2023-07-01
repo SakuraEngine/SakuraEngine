@@ -1,6 +1,7 @@
 #pragma once
 #include "platform/memory.h"
 #include "misc/log/log_base.hpp"
+#include "containers/string.hpp"
 
 #include <EASTL/array.h>
 
@@ -92,7 +93,7 @@ public:
         process_name,
         file_name,
         file_line,
-        funtion_name,
+        function_name,
         message,
         Count
     };
@@ -108,7 +109,8 @@ public:
         _initialize();
         // Set the default pattern
         _set_pattern(
-            u8"LOG_%(level_name) %(timestamp) [%(thread_name)(%(thread_id))] %(file_line) %(logger_name) %(message)"
+            u8"%(level_name) [%(timestamp)][%(thread_name)(%(thread_id))] %(logger_name): %(message) "
+                    u8"\n    \x1b[90mIn %(function_name) At %(file_name):%(file_line)\x1b[0m"
         );
     }
     /*
