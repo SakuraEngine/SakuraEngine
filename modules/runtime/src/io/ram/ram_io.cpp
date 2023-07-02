@@ -10,7 +10,7 @@
 namespace skr {
 namespace io {
 
-const char* kIOBufferMemoryName = "IOBuffer";
+const char* kIOBufferMemoryName = "io::buffer";
 uint32_t RAMService::global_idx = 0;
 
 IRAMIOBuffer::~IRAMIOBuffer() SKR_NOEXCEPT {}
@@ -75,9 +75,9 @@ RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
       awake_at_request(desc->awake_at_request),
       runner(this, desc->callback_job_queue)
 {
-    request_pool = SmartPoolPtr<RAMIORequest, IIORequest>::Create();
-    ram_buffer_pool = SmartPoolPtr<RAMIOBuffer, IRAMIOBuffer>::Create();
-    ram_batch_pool = SmartPoolPtr<RAMIOBatch, IIOBatch>::Create();
+    request_pool = SmartPoolPtr<RAMIORequest, IIORequest>::Create(kIOPoolObjectsMemoryName);
+    ram_buffer_pool = SmartPoolPtr<RAMIOBuffer, IRAMIOBuffer>::Create(kIOPoolObjectsMemoryName);
+    ram_batch_pool = SmartPoolPtr<RAMIOBatch, IIOBatch>::Create(kIOPoolObjectsMemoryName);
 
     if (desc->use_dstorage)
         runner.batch_reader = CreateBatchReader(this, desc);

@@ -1,4 +1,5 @@
 #include "test.hpp"
+#include "misc/log.h"
 
 class SPTRCommon : public SPTRBase
 {
@@ -19,7 +20,6 @@ TEST(SPTRCommon, Base)
         EXPECT_EQ(pT1, nullptr);
         EXPECT_EQ(pT1.get(), nullptr);
     }
-    /*
     {
         SKR_LOG_DEBUG("I wonder ");
         auto ptr = SkrNew<int>(5);
@@ -60,7 +60,6 @@ TEST(SPTRCommon, Base)
 		EXPECT_EQ(pT1.use_count(), 1);
 		EXPECT_NE(pT1, pT2);
     }
-    */
 }
 
 struct A
@@ -232,7 +231,9 @@ TEST(SPTRCommon, Weak)
 
 int main(int argc, char** argv)
 {
+    log_initialize_async_worker();
     ::testing::InitGoogleTest(&argc, argv);
     auto result = RUN_ALL_TESTS();
+    log_finalize();
     return result;
 }

@@ -1,8 +1,6 @@
 #include "platform/memory.h"
 #include "tracy/TracyC.h"
 
-#if defined(_WIN32)
-
 #ifdef SKR_RUNTIME_USE_MIMALLOC
     #include "mimalloc.h"
 #else
@@ -39,8 +37,6 @@
     #define mi_realloc_aligned(p, newsize, alignment) realloc((p), (newsize))
 #endif
 
-#endif
-
 // traced_os_alooc
 #include <stdlib.h>
 #include <string.h>
@@ -48,10 +44,15 @@
 FORCEINLINE static void* calloc_aligned(size_t count, size_t size, size_t alignment)
 {
 #if !defined(_WIN32)
-    void* ptr = (alignment == 1) ? malloc(size) : aligned_alloc(alignment, size * count);
+    void* ptr = (alignment == 1) ? malloc(size * count) : NULL;
     if (!ptr)
     {
-        posix_memalign(&ptr, alignment, size);
+        alignment = (alignment > 16) ? alignment : 16;
+        aligned_alloc(alignment, size * count);
+    }
+    if (!ptr)
+    {
+        posix_memalign(&ptr, alignment, size * count);
     }
 #else
     void* ptr = _aligned_malloc(size * count, alignment);
@@ -86,7 +87,12 @@ RUNTIME_API void* traced_os_calloc_aligned(size_t count, size_t size, size_t ali
 RUNTIME_API void* traced_os_malloc_aligned(size_t size, size_t alignment, const char* pool_name) 
 {
 #if !defined(_WIN32)
-    void* ptr = (alignment == 1) ? malloc(size) : aligned_alloc(alignment, size);
+    void* ptr = (alignment == 1) ? malloc(size) : NULL;
+    if (!ptr)
+    {
+        alignment = (alignment > 16) ? alignment : 16;
+        aligned_alloc(alignment, size);
+    }
     if (!ptr)
     {
         posix_memalign(&ptr, alignment, size);
@@ -151,7 +157,7 @@ RUNTIME_EXTERN_C RUNTIME_API void* traced_os_realloc_aligned(void* p, size_t new
 
 // _sakura_alloc
 
-#if defined(_WIN32)
+#if defined(SKR_RUNTIME_USE_MIMALLOC)
 RUNTIME_API void* _sakura_malloc(size_t size, const char* pool_name) 
 {
     void* p = mi_malloc(size);

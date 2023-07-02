@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "cgpu/api.h"
+#include "misc/log.h"
 #if defined(_WIN32) || defined(_WIN64)
     #ifndef WIN32_LEAN_AND_MEAN
         #define WIN32_LEAN_AND_MEAN
@@ -177,7 +178,9 @@ HWND createWin32Window()
 
 int main(int argc, char** argv)
 {
+    log_initialize_async_worker();
     ::testing::InitGoogleTest(&argc, argv);
     auto result = RUN_ALL_TESTS();
+    log_finalize();
     return result;
 }

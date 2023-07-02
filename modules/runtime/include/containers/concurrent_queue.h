@@ -5,7 +5,9 @@
 
 namespace skr
 {
-    
+
+extern RUNTIME_API const char* kConcurrentQueueMemoryName;
+
 // Default traits for the ConcurrentQueue. To change some of the
 // traits without re-implementing all of them, inherit from this
 // struct and shadow the declarations you wish to be different;
@@ -81,11 +83,12 @@ struct ConcurrentQueueDefaultTraits
 	// of the queue (not following destruction of the token) regardless of this trait.
 	static const bool RECYCLE_ALLOCATED_BLOCKS = true;
 
-	constexpr static const char* kName = "ConcurrentQueue";
-
-	static inline void* malloc(size_t size) { return sakura_mallocN(size, kName); }
-	static inline void free(void* ptr) { return sakura_freeN(ptr, kName); }
+	static inline void* malloc(size_t size) { return sakura_mallocN(size, kConcurrentQueueMemoryName); }
+	static inline void free(void* ptr) { return sakura_freeN(ptr, kConcurrentQueueMemoryName); }
 };
     template<typename T, typename Traits = ConcurrentQueueDefaultTraits>
     using ConcurrentQueue = moodycamel::ConcurrentQueue<T, Traits>;
+
+	using ProducerToken = moodycamel::ProducerToken;
+	using ConsumerToken = moodycamel::ConsumerToken;
 }

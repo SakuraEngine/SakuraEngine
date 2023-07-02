@@ -26,23 +26,21 @@ auto log_locker = +[](bool isLocked, void* pMutex){
 void SkrRuntimeModule::on_load(int argc, char8_t** argv)
 {
     // set lock for log
-    skr_init_mutex_recursive(&log_mutex);
-    log_set_lock(log_locker, &log_mutex);
+    log_initialize_async_worker();
 
     SkrDStorageConfig config = {};
     dstorageInstance = skr_create_dstorage_instance(&config);
-
-    SKR_LOG_TRACE("SkrRuntime module loaded!");
 
 #ifdef SKR_OS_WINDOWS
     ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
     DPIAware = true;
 #endif
+
+    SKR_LOG_TRACE("SkrRuntime module loaded!");
 }
+
 void SkrRuntimeModule::on_unload()
 {
-    SKR_LOG_TRACE("SkrRuntime module unloaded!");
-
     if (auto inst = skr_runtime_get_dstorage_instance())
     {
         skr_free_dstorage_instance(inst);
@@ -60,7 +58,8 @@ void SkrRuntimeModule::on_unload()
     tracyLibrary.unload();
 #endif
 
-    skr_destroy_mutex(&log_mutex);
+    SKR_LOG_TRACE("SkrRuntime module unloaded!");
+    log_finalize();
 }
 
 SkrRuntimeModule* SkrRuntimeModule::Get()

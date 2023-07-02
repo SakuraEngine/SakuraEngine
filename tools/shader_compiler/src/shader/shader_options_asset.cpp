@@ -1,14 +1,11 @@
-#include <EASTL/array.h>
-#include "io/io.h"
-#include "misc/log.hpp"
-#include "misc/make_zeroed.hpp"
-
+#include "../pch.hpp"
+#include "SkrRenderer/resources/shader_meta_resource.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrShaderCompiler/assets/shader_asset.hpp"
 #include "SkrShaderCompiler/shader_compiler.hpp"
-#include "SkrRenderer/resources/shader_meta_resource.hpp"
-#include "serde/json/reader.h"
+
+#include <EASTL/array.h>
 
 #include "tracy/Tracy.hpp"
 

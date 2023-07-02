@@ -1,19 +1,11 @@
+#include "../pch.hpp"
 #include "misc/parallel_for.hpp"
-#include "io/io.h"
-#include "misc/log.hpp"
-#include "misc/make_zeroed.hpp"
-
-#include "serde/json/writer.h"
-
+#include "misc/cartesian_product.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
-#include "SkrToolCore/project/project.hpp"
-#include "SkrShaderCompiler/assets/shader_asset.hpp"
-#include "SkrShaderCompiler/shader_compiler.hpp"
-
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 #include "SkrRenderer/resources/shader_resource.hpp"
-
-#include "misc/cartesian_product.hpp"
+#include "SkrShaderCompiler/assets/shader_asset.hpp"
+#include "SkrShaderCompiler/shader_compiler.hpp"
 
 #include <EASTL/array.h>
 
