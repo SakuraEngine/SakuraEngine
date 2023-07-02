@@ -1,5 +1,6 @@
 #include "../../pch.hpp"
 #include "misc/log.h"
+#include "misc/defer.hpp"
 #include "misc/log/logger.hpp"
 #include "misc/log/log_manager.hpp"
 
@@ -14,6 +15,16 @@ ThreadToken::ThreadToken(LogQueue& q) SKR_NOEXCEPT
 
 }
 
+int64_t ThreadToken::query_cnt() const SKR_NOEXCEPT
+{
+    return skr_atomic64_load_relaxed(&tls_cnt_);
+}
+
+EFlushStatus ThreadToken::query_status() const SKR_NOEXCEPT
+{
+    return static_cast<EFlushStatus>(skr_atomic32_load_relaxed(&flush_status_));
+}
+
 LogElement::LogElement(LogEvent ev, ThreadToken* ptok) SKR_NOEXCEPT
     : event(ev), tok(ptok)
 {
@@ -26,17 +37,25 @@ LogElement::LogElement() SKR_NOEXCEPT
     
 }
 
-void LogElement::dec() SKR_NOEXCEPT
-{
-    auto last = skr_atomic64_add_relaxed(&tok->tls_cnt_, -1);
-    if (last == 1)
-        skr_atomic32_cas_relaxed(&tok->flush_status_, kFlushing, kFlushed);
-}
-
 LogQueue::LogQueue() SKR_NOEXCEPT
     : ctok_(queue_)
 {
+    skr_init_rw_mutex(&tids_mutex_);
+}
 
+LogQueue::~LogQueue() SKR_NOEXCEPT
+{
+    skr_destroy_rw_mutex(&tids_mutex_);
+}
+
+void LogQueue::finish(const LogElement& e) SKR_NOEXCEPT
+{
+    skr_atomic64_add_relaxed(&total_cnt_, -1);
+    auto last = skr_atomic64_add_relaxed(&e.tok->tls_cnt_, -1);
+    if (last == 1)
+    {
+        skr_atomic32_cas_relaxed(&e.tok->flush_status_, kFlushing, kFlushed);
+    }
 }
 
 void LogQueue::push(LogEvent ev, const skr::string&& what) SKR_NOEXCEPT
@@ -50,7 +69,6 @@ void LogQueue::push(LogEvent ev, const skr::string&& what) SKR_NOEXCEPT
     element.need_format = false;
     
     queue_.enqueue(ptok_->ptok_, skr::move(element));
-    skr_atomic64_add_relaxed(&total_cnt_, 1);
 }
 
 void LogQueue::push(LogEvent ev, const skr::string_view format, ArgsList&& args) SKR_NOEXCEPT
@@ -64,14 +82,13 @@ void LogQueue::push(LogEvent ev, const skr::string_view format, ArgsList&& args)
     element.need_format = true;
 
     queue_.enqueue(ptok_->ptok_, skr::move(element));
-    skr_atomic64_add_relaxed(&total_cnt_, 1);
 }
 
 void LogQueue::mark_flushing(SThreadID tid) SKR_NOEXCEPT
 {
     if (auto tok = query_token(tid))
     {
-        if (skr_atomic64_load_relaxed(&tok->tls_cnt_) != 0) // if there is no log in this thread, we don't need to flush
+        if (tok->query_cnt() != 0) // if there is no log in this thread, we don't need to flush
             skr_atomic32_cas_relaxed(&tok->flush_status_, kNoFlush, kFlushing);
     }
 }
@@ -80,8 +97,6 @@ bool LogQueue::try_dequeue(LogElement& element) SKR_NOEXCEPT
 {
     if (queue_.try_dequeue(ctok_, element))
     {
-        element.dec();
-        skr_atomic64_add_relaxed(&total_cnt_, -1);
         return true;
     }
     return false;
@@ -91,8 +106,6 @@ bool LogQueue::try_dequeue_from(ThreadToken* tok, LogElement& element) SKR_NOEXC
 {
     if (queue_.try_dequeue_from_producer(tok->ptok_, element))
     {
-        element.dec();
-        skr_atomic64_add_relaxed(&total_cnt_, -1);
         return true;
     }
     return false;
@@ -106,24 +119,24 @@ ThreadToken* LogQueue::query_token(SThreadID tid) const SKR_NOEXCEPT
     return 0;
 }
 
-ThreadToken* LogQueue::query_flusing() const SKR_NOEXCEPT
+ThreadToken* LogQueue::query_flushing() const SKR_NOEXCEPT
 {
-    for (auto&& [id, token] :thread_id_map_)
+    skr_rw_mutex_acquire_r(&tids_mutex_);
+    tids_cpy_ = tids_;
+    skr_rw_mutex_release_r(&tids_mutex_);
+
+    for (uint64_t tid : tids_cpy_)
     {
-        if (skr_atomic32_load_relaxed(&token->flush_status_) == kFlushing)
+        auto iter = thread_id_map_.find(tid);
+        if (iter != thread_id_map_.end())
         {
-            return token.get();
+            if (skr_atomic32_load_relaxed(&iter->second->flush_status_) == kFlushing)
+            {
+                return iter->second.get();
+            }
         }
     }
     return nullptr;
-}
-
-int64_t LogQueue::query_cnt(SThreadID tid) const SKR_NOEXCEPT
-{
-    auto iter = thread_id_map_.find(tid);
-    if (iter != thread_id_map_.end())
-        return skr_atomic64_load_relaxed(&iter->second->tls_cnt_);
-    return 0;
 }
 
 int64_t LogQueue::query_cnt() const SKR_NOEXCEPT
@@ -133,12 +146,20 @@ int64_t LogQueue::query_cnt() const SKR_NOEXCEPT
 
 ThreadToken* LogQueue::on_push(const LogEvent& ev) SKR_NOEXCEPT
 {
-    auto iter = thread_id_map_.find(ev.get_thread_id());
+    const auto tid = ev.get_thread_id();
+    auto iter = thread_id_map_.find(tid);
     if (iter == thread_id_map_.end())
-        thread_id_map_.emplace(ev.get_thread_id(), eastl::make_unique<ThreadToken>(*this));
-    
-    if (auto token = thread_id_map_[ev.get_thread_id()].get())
     {
+        skr_rw_mutex_acquire_w(&tids_mutex_);
+        tids_.emplace_back(tid);
+        skr_rw_mutex_release_w(&tids_mutex_);
+
+        thread_id_map_.emplace(tid, eastl::make_unique<ThreadToken>(*this));
+    }
+    
+    if (auto token = thread_id_map_[tid].get())
+    {
+        skr_atomic64_add_relaxed(&total_cnt_, 1);
         skr_atomic64_add_relaxed(&token->tls_cnt_, 1);
         return token;
     }
@@ -190,23 +211,24 @@ void LogWorker::process_logs() SKR_NOEXCEPT
     LogElement e;
 
     // try flush
-    while (auto flush_tok = queue_->query_flusing())
+    while (auto flush_tok = queue_->query_flushing())
     {
-        SKR_ASSERT(skr_atomic32_load_relaxed(&flush_tok->flush_status_) == kFlushing);
+        SKR_ASSERT(flush_tok->query_status() == kFlushing);
         while (queue_->try_dequeue_from(flush_tok, e))
         {
             patternAndSink(e);
         }
-        SKR_ASSERT(skr_atomic64_load_relaxed(&flush_tok->tls_cnt_) == 0);
+        SKR_ASSERT(flush_tok->query_cnt() == 0);
         skr_atomic32_cas_relaxed(&flush_tok->flush_status_, kFlushing, kFlushed);
     }
 
     // normal polling    
-    const uint32_t N = 8; // avoid too many logs in one cycle
+    const uint32_t N = 0; // avoid too many logs in one cycle
     uint32_t n = 0;
     while (queue_->try_dequeue(e))
     {
         patternAndSink(e);
+
         n++;
         if (n >= N) break;
     }
@@ -254,6 +276,7 @@ void LogWorker::patternAndSink(const LogElement& e) SKR_NOEXCEPT
         formatter_.format(e.format, e.args) :
         e.format;
     skr::log::LogManager::PatternAndSink(e.event, what.view());
+    queue_->finish(e);
 }
 
 } } // namespace skr::log
