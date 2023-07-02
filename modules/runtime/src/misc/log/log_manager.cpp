@@ -151,6 +151,8 @@ void LogManager::PatternAndSink(const LogEvent& event, skr::string_view formatte
             
             if (auto p = LogManager::QueryPattern(pattern_id))
             {
+                ZoneScopedN("LogPattern::Pattern");
+
                 [[maybe_unused]] 
                 auto& _ = p->pattern(event, formatted_message);
                 patterns_.insert(pattern_id);
@@ -170,6 +172,8 @@ void LogManager::PatternAndSink(const LogEvent& event, skr::string_view formatte
 
             if (auto p = LogManager::QueryPattern(pattern_id))
             {
+                ZoneScopedN("LogSink::Sink");
+
                 sink->sink(event, p->last_result().view());
             }
             else
