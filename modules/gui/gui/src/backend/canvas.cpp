@@ -2,8 +2,7 @@
 #include <nanovg.h>
 #include "misc/make_zeroed.hpp"
 #include "math/rtm/rtmx.h"
-
-#include "SkrGui/dev/gdi/gdi.hpp"
+#include "SkrGui/backend/resource/resource.hpp"
 
 // nvg integration
 namespace skr::gui
@@ -245,13 +244,13 @@ struct _NVGHelper {
         {
             vertices.reserve(vertices.size() + path.nfill);
             indices.reserve(indices.size() + path.nfill * 3);
-            const auto start = static_cast<GDIIndex>(vertices.size());
+            const auto start = static_cast<PaintIndex>(vertices.size());
             for (int j = 0; j < path.nfill; ++j)
             {
                 push_vertex(path.fill[j], j, path.nfill);
                 if (j < path.nfill - 2)
                 {
-                    const auto id = static_cast<GDIIndex>(vertices.size());
+                    const auto id = static_cast<PaintIndex>(vertices.size());
                     indices.push_back(start);
                     indices.push_back(id + 1);
                     indices.push_back(id);
@@ -267,7 +266,7 @@ struct _NVGHelper {
                 push_vertex(path.stroke[j], j, path.nstroke);
                 if (j < path.nstroke - 2)
                 {
-                    const auto id = static_cast<GDIIndex>(vertices.size() - 1);
+                    const auto id = static_cast<PaintIndex>(vertices.size() - 1);
                     indices.push_back(id);
                     indices.push_back(id + 1 + (j % 2));
                     indices.push_back(id + 1 + !(j % 2));
@@ -309,8 +308,8 @@ struct _NVGHelper {
             command.index_begin = static_cast<uint32_t>(begin);
             command.index_count = static_cast<uint32_t>(canvas->_indices.size() - begin);
             command.material = static_cast<IMaterial*>(paint->material);
-            command.texture = static_cast<ITexture*>(paint->image);
-            if (command.texture && ((IGDIResource*)command.texture)->get_state() != EGDIResourceState::Okay)
+            command.texture = static_cast<IImage*>(paint->image);
+            if (command.texture && command.texture->is_okey())
             {
                 command.texture = nullptr;
             }
@@ -342,8 +341,8 @@ struct _NVGHelper {
         command.index_begin = static_cast<uint32_t>(begin);
         command.index_count = static_cast<uint32_t>(canvas->_indices.size() - begin);
         command.material = static_cast<IMaterial*>(paint->material);
-        command.texture = static_cast<ITexture*>(paint->image);
-        if (command.texture && ((IGDIResource*)command.texture)->get_state() != EGDIResourceState::Okay)
+        command.texture = static_cast<IImage*>(paint->image);
+        if (command.texture && command.texture->is_okey())
         {
             command.texture = nullptr;
         }

@@ -78,6 +78,11 @@ struct SKR_GUI_API ICanvas final {
     // TODO. draw IParagraph
     // TODO. curve quality
 
+    // getter
+    inline Span<const PaintVertex>  vertices() const SKR_NOEXCEPT { return { _vertices.data(), _vertices.size() }; }
+    inline Span<const PaintIndex>   indices() const SKR_NOEXCEPT { return { _indices.data(), _indices.size() }; }
+    inline Span<const PaintCommand> commands() const SKR_NOEXCEPT { return { _commands.data(), _commands.size() }; }
+
 private:
     friend struct _NVGHelper;
 

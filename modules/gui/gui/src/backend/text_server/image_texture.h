@@ -10,7 +10,7 @@ namespace skr::gui
 {
 struct IGDIRenderer;
 struct IGDIImage;
-struct ITexture;
+struct IImage;
 struct IGDITextureUpdate;
 } // namespace skr::gui
 

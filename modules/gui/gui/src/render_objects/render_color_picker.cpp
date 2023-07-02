@@ -1,6 +1,5 @@
 #include "SkrGui/render_objects/render_color_picker.hpp"
-#include "SkrGui/dev/gdi/gdi.hpp"
-#include "SkrGui/dev/gdi/color.hpp"
+#include "SkrGui/dev/gdi/color.hpp" // TODO. move to color
 #include "SkrGui/framework/painting_context.hpp"
 #include "SkrGui/backend/canvas/canvas.hpp"
 

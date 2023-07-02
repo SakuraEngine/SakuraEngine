@@ -134,6 +134,12 @@ void SkrRenderDevice::shutdown()
     if (_cgpu_instance) cgpu_free_instance(_cgpu_instance);
     if (_static_color_sampler) cgpu_free_sampler(_static_color_sampler);
     if (_rs_pool) cgpu_free_root_signature_pool(_rs_pool);
+    for (const auto& [flags, pipeline] : _pipelines)
+    {
+        auto rs = pipeline->root_signature;
+        cgpu_free_render_pipeline(pipeline);
+        cgpu_free_root_signature(rs);
+    }
 }
 
 // create view
@@ -147,18 +153,18 @@ void SkrRenderDevice::destroy_window(SkrRenderWindow* view)
 }
 
 // pipeline
-CGPURenderPipelineId SkrRenderDevice::get_pipeline(EPipelineFlag flags, ECGPUSampleCount sample_count)
+CGPURenderPipelineId SkrRenderDevice::get_pipeline(ESkrPipelineFlag flags, ECGPUSampleCount sample_count)
 {
-    PipelineKey key = { flags, sample_count };
-    auto        it = _pipelines.find(key);
+    SkrPipelineKey key = { flags, sample_count };
+    auto           it = _pipelines.find(key);
     if (it != _pipelines.end()) return it->second;
     auto pipeline = create_pipeline(flags, sample_count);
     _pipelines[key] = pipeline;
     return pipeline;
 }
-CGPURenderPipelineId SkrRenderDevice::create_pipeline(EPipelineFlag flags, ECGPUSampleCount sample_count)
+CGPURenderPipelineId SkrRenderDevice::create_pipeline(ESkrPipelineFlag flags, ECGPUSampleCount sample_count)
 {
-    const bool use_texture = flags & EPipelineFlag_Textured;
+    const bool use_texture = flags & ESkrPipelineFlag_Textured;
     uint32_t * vs_bytes = nullptr, vs_length = 0;
     uint32_t * fs_bytes = nullptr, fs_length = 0;
     read_shader_bytes(SKR_UTF8("GUI/vertex"), &vs_bytes, &vs_length, _cgpu_device->adapter->instance->backend);
@@ -197,7 +203,7 @@ CGPURenderPipelineId SkrRenderDevice::create_pipeline(EPipelineFlag flags, ECGPU
     rs_desc.shaders = ppl_shaders;
     rs_desc.shader_count = 2;
     rs_desc.pool = _rs_pool;
-    if ((!(flags & EPipelineFlag_CustomSampler)) && use_texture)
+    if ((!(flags & ESkrPipelineFlag_CustomSampler)) && use_texture)
     {
         rs_desc.static_sampler_count = 1;
         rs_desc.static_sampler_names = &static_sampler_name;
@@ -227,9 +233,9 @@ CGPURenderPipelineId SkrRenderDevice::create_pipeline(EPipelineFlag flags, ECGPU
     rp_desc.rasterizer_state = &rs_state;
 
     CGPUDepthStateDescriptor depth_state = {};
-    depth_state.depth_test = flags & EPipelineFlag_TestZ;
+    depth_state.depth_test = flags & ESkrPipelineFlag_TestZ;
     depth_state.depth_func = depth_state.depth_test ? CGPU_CMP_LEQUAL : CGPU_CMP_NEVER;
-    depth_state.depth_write = flags & EPipelineFlag_WriteZ;
+    depth_state.depth_write = flags & ESkrPipelineFlag_WriteZ;
     rp_desc.depth_state = &depth_state;
 
     CGPUBlendStateDescriptor blend_state = {};
@@ -254,3 +260,91 @@ CGPURenderPipelineId SkrRenderDevice::create_pipeline(EPipelineFlag flags, ECGPU
     return pipeline;
 }
 } // namespace skr::gui
+
+// bool validateAttributes(GDIRendererPipelineAttributes attributes)
+// {
+//     const bool use_custom_sampler = attributes & GDI_RENDERER_PIPELINE_ATTRIBUTE_CUSTOM_SAMPLER;
+//     const bool use_texture = attributes & GDI_RENDERER_PIPELINE_ATTRIBUTE_TEXTURED;
+//     if (use_custom_sampler && !use_texture) return false;
+//     return true;
+// }
+
+// void GDIRenderer_RenderGraph::updatePendingTextures(skr::render_graph::RenderGraph* graph) SKR_NOEXCEPT
+// {
+//     const auto                    frame_index = graph->get_frame_index();
+//     GDITextureUpdate_RenderGraph* update = nullptr;
+//     // 1. filter request_updates to pending_updates
+//     eastl::vector_map<IGDITexture*, GDITextureUpdate_RenderGraph*> filter_map;
+//     while (request_updates.try_dequeue(update))
+//     {
+//         auto iter = filter_map.find(update->texture);
+//         if (iter != filter_map.end())
+//         {
+//             skr_atomicu32_store_relaxed(&iter->second->state, (uint32_t)EGDIResourceState::Okay);
+//         }
+//         filter_map[update->texture] = update;
+//     }
+//     for (auto& [id, update] : filter_map)
+//     {
+//         pending_updates.enqueue(update);
+//     }
+//     // 2. filter pending_updates to copies
+//     eastl::fixed_vector<GDITextureUpdate_RenderGraph*, 8> copies;
+//     eastl::fixed_vector<GDITextureUpdate_RenderGraph*, 8> pending;
+//     while (pending_updates.try_dequeue(update))
+//     {
+//         if (update->texture->get_state() == EGDIResourceState::Okay)
+//         {
+//             if (update->get_state() == EGDIResourceState::Requested)
+//             {
+//                 update->upload_buffer = graph->create_buffer(
+//                 [update](auto& g, auto& builder) {
+//                     builder.size(update->image->get_data().size())
+//                     .with_tags(kRenderGraphDynamicResourceTag)
+//                     .as_upload_buffer();
+//                 });
+//                 update->texture_handle = graph->create_texture(
+//                 [update](auto& g, auto& builder) {
+//                     GDITexture_RenderGraph* T = (GDITexture_RenderGraph*)update->texture;
+//                     builder.import(T->texture, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
+//                 });
+//                 copies.emplace_back(update);
+//                 continue;
+//             }
+//             else if (update->get_state() == EGDIResourceState::Loading)
+//             {
+//                 if (frame_index > update->execute_frame_index + RG_MAX_FRAME_IN_FLIGHT)
+//                 {
+//                     skr_atomicu32_store_relaxed(&update->state, (uint32_t)EGDIResourceState::Okay);
+//                 }
+//             }
+//         }
+//         if (update->get_state() != EGDIResourceState::Okay)
+//         {
+//             pending.emplace_back(update);
+//         }
+//     }
+//     for (auto update : pending)
+//     {
+//         pending_updates.enqueue(update);
+//     }
+
+//     graph->add_copy_pass(
+//     [&](render_graph::RenderGraph& g, render_graph::CopyPassBuilder& builder) {
+//         ZoneScopedN("UpdateTextures");
+//         builder.set_name(u8"gdi_texture_update_pass")
+//         .can_be_lone();
+//         for (auto copy : copies)
+//         {
+//             builder.buffer_to_texture(copy->upload_buffer.range(0, 0), copy->texture_handle, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
+//         }
+//     },
+//     [=](render_graph::RenderGraph& g, render_graph::CopyPassContext& context) {
+//         for (auto copy : copies)
+//         {
+//             auto       buffer = context.resolve(copy->upload_buffer);
+//             const auto data = copy->image->get_data();
+//             ::memcpy(buffer->info->cpu_mapped_address, data.data(), data.size());
+//         }
+//     });
+// }
