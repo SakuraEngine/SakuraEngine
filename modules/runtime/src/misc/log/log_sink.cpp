@@ -34,14 +34,14 @@ LogConsoleSink::LogConsoleSink() SKR_NOEXCEPT
     set_front_color(LogLevel::kDebug, EConsoleColor::CYAN);
     set_front_color(LogLevel::kInfo, EConsoleColor::GREEN);
 
-    set_style(LogLevel::kWarning, EConsoleStyle::BOLD);
+    set_style(LogLevel::kWarning, EConsoleStyle::HIGHLIGHT);
     set_front_color(LogLevel::kWarning, EConsoleColor::YELLOW);
 
-    set_style(LogLevel::kError, EConsoleStyle::BOLD);
+    set_style(LogLevel::kError, EConsoleStyle::HIGHLIGHT);
     set_front_color(LogLevel::kError, EConsoleColor::RED);
 
     // white bold on red background
-    set_style(LogLevel::kFatal, EConsoleStyle::BOLD);
+    set_style(LogLevel::kFatal, EConsoleStyle::HIGHLIGHT);
     set_back_color(LogLevel::kFatal, EConsoleColor::RED);
     set_front_color(LogLevel::kFatal, EConsoleColor::WHILE);
 }
@@ -77,7 +77,7 @@ template <> struct BackColorSpec<EConsoleColor::CYAN> { [[maybe_unused]] static 
 template <> struct BackColorSpec<EConsoleColor::WHILE> { [[maybe_unused]] static constexpr WORD value = BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE; };
 
 template <EConsoleStyle> struct StyleSpec { [[maybe_unused]] static constexpr WORD value = 0; };
-template <> struct StyleSpec<EConsoleStyle::BOLD> { [[maybe_unused]] static constexpr WORD value = FOREGROUND_INTENSITY; };
+template <> struct StyleSpec<EConsoleStyle::HIGHLIGHT> { [[maybe_unused]] static constexpr WORD value = FOREGROUND_INTENSITY; };
 #else
 using StyleLiteral = std::string_view;
 
@@ -143,7 +143,7 @@ static constexpr StyleLiteral GetStyle(EConsoleStyle style) SKR_NOEXCEPT
     switch (style)
     {
         case EConsoleStyle::NORMAL: return StyleSpec<EConsoleStyle::NORMAL>::value;
-        case EConsoleStyle::BOLD: return StyleSpec<EConsoleStyle::BOLD>::value;
+        case EConsoleStyle::HIGHLIGHT: return StyleSpec<EConsoleStyle::HIGHLIGHT>::value;
         default: return 0;
     }
 }
