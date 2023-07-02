@@ -25,6 +25,7 @@ sizeof(T) < 2 * sizeof(void*) && std::is_trivially_copy_constructible<T>::value,
 const T,
 const T&>;
 } // namespace details
+
 //
 // not_null
 //

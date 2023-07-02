@@ -1,7 +1,8 @@
 #pragma once
 #include "type/type.h"
 #include "enum_as_byte.hpp"
-#include <string_view>
+#include "containers/string.hpp"
+#include <string_view> // TODO: replace with skr::string_view
 
 // fwd declares
 namespace skr {
@@ -66,7 +67,10 @@ SKR_RTTI_INLINE_REGISTER_BASE_TYPE(skr_float4_t, 0x38bfb8ad, 0x2287, 0x40fc, 0x8
 SKR_RTTI_INLINE_REGISTER_BASE_TYPE(skr_float4x4_t, 0xe49d2f13, 0x9dff, 0x4a7b, 0x8d, 0x43, 0x27, 0xf6, 0x8b, 0xa9, 0x32, 0xe0, "E49D2F13-9DFF-4A7B-8D43-27F68BA932E0");
 // {51977A88-7095-4FA7-8467-541698803936}
 SKR_RTTI_INLINE_REGISTER_BASE_TYPE(skr_quaternion_t, 0x51977a88, 0x7095, 0x4fa7, 0x84, 0x67, 0x54, 0x16, 0x98, 0x80, 0x39, 0x36, "51977A88-7095-4FA7-8467-541698803936");
-
+// {214ed643-54bd-4213-be37-e336a77fde84}
+SKR_RTTI_INLINE_REGISTER_BASE_TYPE(skr::string, 0x214ed643, 0x54bd, 0x4213, 0xbe, 0x37, 0xe3, 0x36, 0xa7, 0x7f, 0xde, 0x84, "214ED643-54BD-4213-BE37-E336A77FDE84");
+// {b799ba81-6009-405d-9131-e4b6101660dc}
+SKR_RTTI_INLINE_REGISTER_BASE_TYPE(skr::string_view, 0xb799ba81, 0x6009, 0x405d, 0x91, 0x31, 0xe4, 0xb6, 0x10, 0x16, 0x60, 0xdc, "B799BA81-6009-405D-9131-E4B6101660DC");
 
 template<class T>
 struct type_of<TEnumAsByte<T>>

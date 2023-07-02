@@ -198,7 +198,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
         auto cooker = system->GetCooker(metaAsset);
         SKR_ASSERT(cooker);
         // Trace
-        ZoneScoped;
+        ZoneScopedN("CookingTask");
         const auto rtti_type = type::GetTypeRegistry()->get_type(metaAsset->type);
         const auto type_name = skr_get_type_name(&metaAsset->type);
         const auto cookerTypeName = rtti_type ? rtti_type->Name() : type_name ? type_name : u8"UnknownResource";
@@ -321,6 +321,7 @@ void SCookSystemImpl::UnregisterCooker(skr_guid_t guid)
 
 skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
 {
+    ZoneScoped;
     {
         skr::task::event_t result{nullptr};
         cooking.if_contains(guid, [&](SCookContext* ctx) {
@@ -484,6 +485,7 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
 
 SAssetRecord* SCookSystemImpl::ImportAsset(SProject* project, skr::filesystem::path path)
 {
+    ZoneScoped;
     std::error_code ec = {};
     auto record = SkrNew<SAssetRecord>();
     // TODO: replace file load with skr api

@@ -1,8 +1,21 @@
 #pragma once
 #include "platform/configure.h"
 #include "platform/debug.h"
+#include <string.h>  // memset
+#ifdef __cplusplus
+#include <new>         // 'operator new' function for non-allocating placement new expression
+#include <string.h>    // memset
+#include <cstddef>     // std::size_t
+#include <cstdint>     // PTRDIFF_MAX
+#include <type_traits> // std::true_type
+#include <EASTL/internal/move_help.h>     // eastl::forward
+#if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
+#include "misc/demangle.hpp"
+#endif
+#endif
 
-RUNTIME_EXTERN_C RUNTIME_API const char* kTracedNewDefaultPoolName;
+#include "tracy/TracyC.h"
+
 RUNTIME_EXTERN_C RUNTIME_API void* _sakura_malloc(size_t size, const char* pool_name);
 RUNTIME_EXTERN_C RUNTIME_API void* _sakura_calloc(size_t count, size_t size, const char* pool_name);
 RUNTIME_EXTERN_C RUNTIME_API void* _sakura_malloc_aligned(size_t size, size_t alignment, const char* pool_name);
@@ -28,9 +41,6 @@ RUNTIME_EXTERN_C RUNTIME_API void containers_free_aligned(void* p, size_t alignm
 #define SKR_ALLOC_TRACY_MARKER_COLOR 0xff0000
 #define SKR_DEALLOC_TRACY_MARKER_COLOR 0x0000ff
 #if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
-
-#include <string.h>  // memset
-#include "tracy/TracyC.h"
 
 FORCEINLINE void* SkrMallocWithCZone(size_t size, const char* line, const char* pool_name)
 {
@@ -176,35 +186,22 @@ FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line,
 #endif
 
 #if defined(__cplusplus)
-#include "platform/debug.h"
-#include <new>         // 'operator new' function for non-allocating placement new expression
-#include <string.h>    // memset
-#include <cstddef>     // std::size_t
-#include <cstdint>     // PTRDIFF_MAX
-#if (__cplusplus >= 201103L) || (_MSC_VER > 1900)  // C++11
-#include <type_traits> // std::true_type
-#include <utility>     // std::forward
-#endif
-
-#include "tracy/Tracy.hpp"
 
 #if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
-#include <string_view>
-#include "misc/demangle.hpp"
 
 struct SkrTracedNew
 {
-    const eastl::string_view sourcelocation;
-    const eastl::string_view poolname;
-    SkrTracedNew(eastl::string_view sourcelocation) noexcept : sourcelocation(sourcelocation), poolname(kTracedNewDefaultPoolName) {}
-    SkrTracedNew(eastl::string_view sourcelocation, eastl::string_view poolname) noexcept : sourcelocation(sourcelocation), poolname(poolname) {}
+    const std::string_view sourcelocation;
+    const char* poolname;
+    SkrTracedNew(std::string_view sourcelocation) noexcept : sourcelocation(sourcelocation), poolname(NULL) {}
+    SkrTracedNew(std::string_view sourcelocation, const char* poolname) noexcept : sourcelocation(sourcelocation), poolname(poolname) {}
 
     template<class T>
     [[nodiscard]] FORCEINLINE T* New()
     {
-        const eastl::string_view name = skr::demangle<T>();
-        TracyMessage(name.data(), name.size());
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
+        const std::string_view name = skr::demangle<T>();
+        TracyCMessage(name.data(), name.size());
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
     }
@@ -212,30 +209,30 @@ struct SkrTracedNew
     template<class T, class... TArgs>
     [[nodiscard]] FORCEINLINE T* New(TArgs&&... params)
     {
-        const eastl::string_view name = skr::demangle<T>();
-        TracyMessage(name.data(), name.size());
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
+        const std::string_view name = skr::demangle<T>();
+        TracyCMessage(name.data(), name.size());
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
-        return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
+        return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ eastl::forward<TArgs>(params)... };
     }
 
     template<class T, class... TArgs>
     [[nodiscard]] FORCEINLINE T* NewZeroed(TArgs&&... params)
     {
-        const eastl::string_view name = skr::demangle<T>();
-        TracyMessage(name.data(), name.size());
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
+        const std::string_view name = skr::demangle<T>();
+        TracyCMessage(name.data(), name.size());
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname);
         memset(pMemory, 0, sizeof(T));
         SKR_ASSERT(pMemory != nullptr);
-        return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
+        return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ eastl::forward<TArgs>(params)... };
     }
 
     template<class T>
     [[nodiscard]] FORCEINLINE T* NewZeroed()
     {
-        const eastl::string_view name = skr::demangle<T>();
-        TracyMessage(name.data(), name.size());
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname.data());
+        const std::string_view name = skr::demangle<T>();
+        TracyCMessage(name.data(), name.size());
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname);
         memset(pMemory, 0, sizeof(T));
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
@@ -244,21 +241,21 @@ struct SkrTracedNew
     template<class T, class... TArgs>
     [[nodiscard]] FORCEINLINE T* NewSized(size_t size, TArgs&&... params)
     {
-        const eastl::string_view name = skr::demangle<T>();
-        TracyMessage(name.data(), name.size());
+        const std::string_view name = skr::demangle<T>();
+        TracyCMessage(name.data(), name.size());
         SKR_ASSERT(size >= sizeof(T));
-        void* pMemory = SkrNewAlignedWithCZone(size, alignof(T), sourcelocation.data(), poolname.data());
+        void* pMemory = SkrNewAlignedWithCZone(size, alignof(T), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
-        return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
+        return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ eastl::forward<TArgs>(params)... };
     }
 
     template<class T>
     [[nodiscard]] FORCEINLINE T* NewSized(size_t size)
     {
-        const eastl::string_view name = skr::demangle<T>();
-        TracyMessage(name.data(), name.size());
+        const std::string_view name = skr::demangle<T>();
+        TracyCMessage(name.data(), name.size());
         SKR_ASSERT(size >= sizeof(T));
-        void* pMemory = SkrNewAlignedWithCZone(size, alignof(T), sourcelocation.data(), poolname.data());
+        void* pMemory = SkrNewAlignedWithCZone(size, alignof(T), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
     }
@@ -267,9 +264,9 @@ struct SkrTracedNew
     [[nodiscard]] FORCEINLINE F* NewLambda(F&& lambda)
     {
         using ValueType = std::remove_reference_t<F>;
-        void* pMemory = SkrNewAlignedWithCZone(sizeof(F), alignof(F), sourcelocation.data(), poolname.data());
+        void* pMemory = SkrNewAlignedWithCZone(sizeof(F), alignof(F), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
-        return new (pMemory) DEBUG_NEW_SOURCE_LINE auto(std::forward<F>(lambda));
+        return new (pMemory) DEBUG_NEW_SOURCE_LINE auto(eastl::forward<F>(lambda));
     }
 
     template<class T>
@@ -277,10 +274,10 @@ struct SkrTracedNew
     {
         if (pType != nullptr)
         {
-            const eastl::string_view name = skr::demangle<T>();
-            TracyMessage(name.data(), name.size());
+            const std::string_view name = skr::demangle<T>();
+            TracyCMessage(name.data(), name.size());
             pType->~T();
-            SkrFreeAlignedWithCZone((void*)pType, alignof(T), sourcelocation.data(), poolname.data());
+            SkrFreeAlignedWithCZone((void*)pType, alignof(T), sourcelocation.data(), poolname);
         }
     }
 };
@@ -300,18 +297,14 @@ struct SkrTracedNew
 template <typename T, typename... TArgs>
 [[nodiscard]] FORCEINLINE T* SkrNew(TArgs&&... params)
 {
-    ZoneScopedN("SkrNew");
-
     void* pMemory = sakura_new_aligned(sizeof(T), alignof(T));
     SKR_ASSERT(pMemory != nullptr);
-    return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
+    return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ eastl::forward<TArgs>(params)... };
 }
 
 template <typename T>
 [[nodiscard]] FORCEINLINE T* SkrNew()
 {
-    ZoneScopedN("SkrNew");
-    
     void* pMemory = sakura_new_aligned(sizeof(T), alignof(T));
     SKR_ASSERT(pMemory != nullptr);
     return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
@@ -320,19 +313,15 @@ template <typename T>
 template <typename T, typename... TArgs>
 [[nodiscard]] FORCEINLINE T* SkrNewZeroed(TArgs&&... params)
 {
-    ZoneScopedN("SkrNew");
-
     void* pMemory = sakura_new_aligned(sizeof(T), alignof(T));
     memset(pMemory, 0, sizeof(T));
     SKR_ASSERT(pMemory != nullptr);
-    return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
+    return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ eastl::forward<TArgs>(params)... };
 }
 
 template <typename T>
 [[nodiscard]] FORCEINLINE T* SkrNewZeroed()
 {
-    ZoneScopedN("SkrNew");
-    
     void* pMemory = sakura_new_aligned(sizeof(T), alignof(T));
     memset(pMemory, 0, sizeof(T));
     SKR_ASSERT(pMemory != nullptr);
@@ -342,19 +331,15 @@ template <typename T>
 template <typename T, typename... TArgs>
 [[nodiscard]] FORCEINLINE T* SkrNewSized(size_t size, TArgs&&... params)
 {
-    ZoneScopedN("SkrNewSized");
-
     SKR_ASSERT(size >= sizeof(T));
     void* pMemory = sakura_new_aligned(size, alignof(T));
     SKR_ASSERT(pMemory != nullptr);
-    return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ std::forward<TArgs>(params)... };
+    return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ eastl::forward<TArgs>(params)... };
 }
 
 template <typename T>
 [[nodiscard]] FORCEINLINE T* SkrNewSized(size_t size)
 {
-    ZoneScopedN("SkrNewSized");
-
     SKR_ASSERT(size >= sizeof(T));
     void* pMemory = sakura_new_aligned(size, alignof(T));
     SKR_ASSERT(pMemory != nullptr);
@@ -364,12 +349,10 @@ template <typename T>
 template <typename F>
 [[nodiscard]] FORCEINLINE F* SkrNewLambda(F&& lambda)
 {
-    ZoneScopedN("SkrNewLambda");
-
     using ValueType = std::remove_reference_t<F>;
     void* pMemory = sakura_new_aligned(sizeof(ValueType), alignof(ValueType));
     SKR_ASSERT(pMemory != nullptr);
-    return new (pMemory) DEBUG_NEW_SOURCE_LINE auto(std::forward<F>(lambda));
+    return new (pMemory) DEBUG_NEW_SOURCE_LINE auto(eastl::forward<F>(lambda));
 }
 
 template <typename T>
@@ -420,7 +403,7 @@ struct skr_stl_allocator
     using propagate_on_container_move_assignment = std::true_type;
     using propagate_on_container_swap            = std::true_type;
     using is_always_equal                        = std::true_type;
-    template <class U, class ...Args> void construct(U* p, Args&& ...args) { ::new(p) U(std::forward<Args>(args)...); }
+    template <class U, class ...Args> void construct(U* p, Args&& ...args) { ::new(p) U(eastl::forward<Args>(args)...); }
     template <class U> void destroy(U* p) SKR_NOEXCEPT { p->~U(); }
 #else
     void construct(pointer p, value_type const& val) { ::new(p) value_type(val); }

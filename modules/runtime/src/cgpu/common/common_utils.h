@@ -78,24 +78,23 @@ FORCEINLINE static void* _aligned_calloc(size_t nelem, size_t elsize, size_t ali
 #endif
 
 #ifdef __cplusplus
-    #include <type_traits>
 template <typename T, typename... Args>
 T* cgpu_new_placed(void* memory, Args&&... args)
 {
-    return new (memory) T(std::forward<Args>(args)...);
+    return new (memory) T(eastl::forward<Args>(args)...);
 }
 
 template <typename T, typename... Args>
 T* cgpu_new(Args&&... args)
 {
-    return SkrNewZeroed<T>(std::forward<Args>(args)...);
+    return SkrNewZeroed<T>(eastl::forward<Args>(args)...);
 }
 
 template <typename T, typename... Args>
 T* cgpu_new_sized(uint64_t size, Args&&... args)
 {
     void* ptr = cgpu_calloc_aligned(1, size, alignof(T));
-    return cgpu_new_placed<T>(ptr, std::forward<Args>(args)...);
+    return cgpu_new_placed<T>(ptr, eastl::forward<Args>(args)...);
 }
 
 template <typename T>
@@ -107,6 +106,7 @@ void cgpu_delete_placed(T* object)
 template <typename T>
 void cgpu_delete(T* object)
 {
-    SkrDelete(object);
+    cgpu_delete_placed(object);
+    cgpu_free_aligned(object, alignof(T));
 }
 #endif

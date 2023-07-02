@@ -36,7 +36,7 @@ target("SkrRTStatic")
     add_includedirs(include_dir_list, {public = true})
     add_includedirs(private_include_dir_list, {public = false})
     add_files("src_static/**/build.*.cpp")
-    -- add_files("src_static/**/build.*.c")
+    add_files("src_static/**/build.*.c")
 
 shared_module("SkrRT", "RUNTIME", engine_version)
     set_group("01.modules")

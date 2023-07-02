@@ -20,7 +20,6 @@
 #include "SkrRenderer/render_effect.h"
 #include "tracy/Tracy.hpp"
 #include "imgui_impl_sdl.h"
-#include "simdjson.h"
 #include "misc/make_zeroed.hpp"
 #include "platform/guid.hpp"
 

@@ -3,6 +3,8 @@
 #include "platform/time.h"
 #include "platform/thread.h"
 
+#include "tracy/Tracy.hpp"
+
 template<typename F>
 bool wait_timeout(F f, uint32_t seconds_timeout = 3)
 {

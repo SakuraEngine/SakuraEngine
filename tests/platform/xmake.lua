@@ -24,6 +24,7 @@ target("MarlTest")
     set_group("05.tests/platform")
     public_dependency("SkrRT", engine_version)
     add_packages("gtest")
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_files("marl-test/**.cpp")
 
 executable_module("Task2Test", "TASK2_TEST", engine_version)
