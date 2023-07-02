@@ -11,6 +11,8 @@
     #include <shellscalingapi.h>
 #endif
 
+#include "tracy/Tracy.hpp"
+
 class SVMemCCModule : public skr::IDynamicModule
 {
     virtual void on_load(int argc, char8_t** argv) override;

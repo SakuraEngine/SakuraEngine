@@ -22,6 +22,8 @@
     }
 #endif
 
+#include "tracy/Tracy.hpp"
+
 namespace skr
 {
 namespace task2

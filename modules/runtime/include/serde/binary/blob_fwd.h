@@ -1,6 +1,7 @@
 
 #pragma once
 #include "platform/configure.h"
+#include "serde/binary/serde.h"
 #include <type_traits>
 
 struct RUNTIME_STATIC_API skr_blob_arena_t

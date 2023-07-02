@@ -1,5 +1,6 @@
 #include "SkrGui/dev/deprecated/type_tree.hpp"
 #include "platform/guid.hpp"
+#include "type/type.hpp"
 
 namespace skr::gui
 {

@@ -17,6 +17,7 @@
 
 // skr containers
 #include "containers/lite.hpp"
+#include "containers/span.hpp"
 #include "containers/vector.hpp"
 #include "containers/string.hpp"
 #include "containers/hashmap.hpp"

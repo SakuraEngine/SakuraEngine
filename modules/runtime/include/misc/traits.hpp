@@ -1,6 +1,5 @@
 #pragma once
 #include <type_traits>
-#include <memory>
 
 namespace skr
 {
@@ -32,12 +31,6 @@ constexpr static auto is_complete = SKR_VALIDATOR((auto t), sizeof(t));
 template<class T>
 constexpr bool is_complete_v = is_complete(SKR_TYPELIST(T));
 
-#if __cpp_lib_assume_aligned
-
-using std::assume_aligned;
-
-#else
-
 template<std::size_t N, class T>
 [[nodiscard]] constexpr T* assume_aligned(T* ptr)
 {
@@ -60,9 +53,15 @@ template<std::size_t N, class T>
     }
     return ptr;
 #else // unknown compiler
+#define SKR_USE_FALLBACK_ASSUME_ALIGNED
     return ptr;
 #endif
 }
 
+#ifdef SKR_USE_FALLBACK_ASSUME_ALIGNED
+#include <memory>
+#if __cpp_lib_assume_aligned
+using std::assume_aligned;
+#endif
 #endif
 }

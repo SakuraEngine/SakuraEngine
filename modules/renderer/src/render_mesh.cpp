@@ -8,8 +8,6 @@
 #include "SkrRenderer/render_mesh.h"
 #include <platform/filesystem.hpp>
 
-
-
 #include "tracy/Tracy.hpp"
 
 void skr_render_mesh_initialize(skr_render_mesh_id render_mesh, skr_mesh_resource_id mesh_resource)
