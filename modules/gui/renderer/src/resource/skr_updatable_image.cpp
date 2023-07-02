@@ -15,7 +15,7 @@ SkrUpdatableImage::~SkrUpdatableImage()
     }
 }
 
-bool SkrUpdatableImage::okey() const SKR_NOEXCEPT
+bool SkrUpdatableImage::is_okey() const SKR_NOEXCEPT
 {
     return true;
 }

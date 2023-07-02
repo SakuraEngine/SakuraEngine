@@ -1,3 +1,4 @@
+#pragma once
 #include "SkrGui/backend/text/paragraph.hpp"
 
 namespace godot
