@@ -21,10 +21,9 @@
     #ifndef WIN32_LEAN_AND_MEAN
 	#define WIN32_LEAN_AND_MEAN
     #endif
-    
     #include <atlbase.h>
-    #include "dxc/dxcapi.h"
-
 #endif
+#include "dxc/dxcapi.h"
+
 
 #include "tracy/Tracy.hpp"
