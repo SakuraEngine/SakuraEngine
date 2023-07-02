@@ -10,7 +10,6 @@
 namespace skr::log
 {
 
-
 struct named_arg_info {
     eastl::u8string name;
     int64_t id;
@@ -249,7 +248,7 @@ const static char8_t* main_thread_name = u8"main";
 const static char8_t* unknown_thread_name = u8"unknown";
 const static SThreadID main_thread_id = skr_current_thread_id();
 static skr::string timestring = u8"";
-skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view formatted_message)
+skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view formatted_message) SKR_NOEXCEPT
 {
     formatted_string_.empty();
     if (calculated_format_.is_empty())
@@ -353,6 +352,11 @@ skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view f
     auto sequence = eastl::make_index_sequence<kAttributeCount>();
     formatted_string_ = format_NArgs(sequence, calculated_format_.view(), _args);
 
+    return formatted_string_;
+}
+
+skr::string const& LogPattern::last_result() SKR_NOEXCEPT
+{
     return formatted_string_;
 }
 

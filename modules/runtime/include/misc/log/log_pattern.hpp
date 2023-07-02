@@ -102,25 +102,16 @@ public:
     [[nodiscard]] skr::string const& pattern(
         const LogEvent& event,
         skr::string_view formatted_message
-    );
+    ) SKR_NOEXCEPT;
 
-    LogPattern() SKR_NOEXCEPT
-    {
-        _initialize();
-        // Set the default pattern
-        _set_pattern(
-            u8"[%(timestamp)][%(thread_name)(tid:%(thread_id))] %(logger_name).%(level_name): %(message) "
-                    u8"\n    \x1b[90mIn %(function_name) At %(file_name):%(file_line)\x1b[0m"
-        );
-    }
-    /*
-    LogPattern(const char8_t* format_pattern, const char8_t* timestamp_format, Timezone timezone)
-        // : _timestamp_formatter(timestamp_format, timezone)
+    [[nodiscard]] skr::string const& last_result() SKR_NOEXCEPT;
+
+    LogPattern(const char8_t* format_pattern) SKR_NOEXCEPT
     {
         _initialize();
         _set_pattern(format_pattern);
     }
-    */
+
     LogPattern(LogPattern const& other) = delete;
     LogPattern(LogPattern&& other) noexcept = delete;
     LogPattern& operator=(LogPattern const& other) = delete;
