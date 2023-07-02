@@ -50,7 +50,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     add_files(source_list)
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
     if (is_os("macosx")) then 
-        add_files("src/**/build.*.m", "src/**/build.*.mxx")
+        add_files("src/**/build.*.m", "src/**/build.*.mm")
     else 
         set_pcheader("src/pch.h")
         set_pcxxheader("src/pch.hpp")
