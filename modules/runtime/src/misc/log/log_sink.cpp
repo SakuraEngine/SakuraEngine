@@ -91,8 +91,8 @@ template <> struct FrontColorSpec<EConsoleColor::MAGENTA> { [[maybe_unused]] sta
 template <> struct FrontColorSpec<EConsoleColor::CYAN> { [[maybe_unused]] static constexpr const char* value = "\033[36m"; };
 template <> struct FrontColorSpec<EConsoleColor::WHILE> { [[maybe_unused]] static constexpr const char* value = "\033[37m"; };
 
-template <EConsoleColor> struct BackColorSpec { [[maybe_unused]] static constexpr const char* value = "\033[40m"; };
-template <> struct BackColorSpec<EConsoleColor::BLACK> { [[maybe_unused]] static constexpr const char* value = "\033[40m"; };
+template <EConsoleColor> struct BackColorSpec { [[maybe_unused]] static constexpr const char* value = ""; };
+template <> struct BackColorSpec<EConsoleColor::BLACK> { [[maybe_unused]] static constexpr const char* value = ""; };
 template <> struct BackColorSpec<EConsoleColor::RED> { [[maybe_unused]] static constexpr const char* value = "\033[41m"; };
 template <> struct BackColorSpec<EConsoleColor::GREEN> { [[maybe_unused]] static constexpr const char* value = "\033[42m"; };
 template <> struct BackColorSpec<EConsoleColor::YELLOW> { [[maybe_unused]] static constexpr const char* value = "\033[43m"; };
@@ -101,8 +101,8 @@ template <> struct BackColorSpec<EConsoleColor::MAGENTA> { [[maybe_unused]] stat
 template <> struct BackColorSpec<EConsoleColor::CYAN> { [[maybe_unused]] static constexpr const char* value = "\033[46m"; };
 template <> struct BackColorSpec<EConsoleColor::WHILE> { [[maybe_unused]] static constexpr const char* value = "\033[47m"; };
 
-template <EConsoleStyle> struct StyleSpec { [[maybe_unused]] static constexpr const char* value = "\033[1m"; };
-template <> struct StyleSpec<EConsoleStyle::BOLD> { [[maybe_unused]] static constexpr const char* value = ""; };
+template <EConsoleStyle> struct StyleSpec { [[maybe_unused]] static constexpr const char* value = ""; };
+template <> struct StyleSpec<EConsoleStyle::BOLD> { [[maybe_unused]] static constexpr const char* value = "\033[1m"; };
 #endif
 
 static constexpr StyleLiteral GetFrontColor(EConsoleColor front) SKR_NOEXCEPT
@@ -151,9 +151,18 @@ static constexpr StyleLiteral GetStyle(EConsoleStyle style) SKR_NOEXCEPT
 #ifdef USE_WIN32_CONSOLE
 static const DWORD GetTextAttribute(EConsoleColor front, EConsoleColor back, EConsoleStyle style) SKR_NOEXCEPT
 {
-    return static_cast<DWORD>(front) | static_cast<DWORD>(back) | static_cast<DWORD>(style);
+    return GetFrontColor(front) | GetBackColor(back) | GetStyle(style);
 }
 #else
+static const std::string_view GetAnsiEscapeCode(std::string& buf, EConsoleColor front, EConsoleColor back, EConsoleStyle style) SKR_NOEXCEPT
+{
+    buf.clear();
+    const auto fcv = GetFrontColor(front);
+    const auto bcv = GetBackColor(back);
+    const auto scv = GetStyle(style);
+    buf.append(fcv).append(bcv).append(scv);
+    return buf;
+}
 #endif
 
 }
@@ -195,9 +204,13 @@ void LogConsoleSink::sink(const LogEvent& event, skr::string_view content) SKR_N
     if (csbiInfo.wAttributes != attrs)
         ::SetConsoleTextAttribute(StdHandle, csbiInfo.wAttributes);
 #else
+    // set color
+    static THREAD_LOCAL std::string buf; 
+    const auto L = static_cast<uint32_t>(event.get_level());
+    const auto escape = GetAnsiEscapeCode(buf, color_sets_[L].f, color_sets_[L].b, color_sets_[L].s);
 
-    ::printf("%s\n", content.c_str());
-
+    // output to console (use '\033[0m' to reset color)
+    ::printf("%s%s\033[0m", escape.data(), content.c_str());
 #endif
 }
 

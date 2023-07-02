@@ -1,3 +1,6 @@
+#ifdef _WIN32
+#include "../platform/windows/winheaders.h"
+#endif
 #include "cgpu/cgpu_config.h"
 #ifdef CGPU_USE_VULKAN
     #include "vulkan/vulkan_utils.c"
