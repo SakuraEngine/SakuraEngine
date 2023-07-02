@@ -1,9 +1,11 @@
 #include "../../pch.hpp"
+#include "platform/process.h"
 #include "misc/log.h"
 #include "misc/log/log_sink.hpp"
 #include "misc/log/log_manager.hpp"
 #include "misc/log/logger.hpp"
 
+#include <stdio.h> // FILE
 #include "tracy/Tracy.hpp"
 
 #ifdef _WIN32
@@ -40,7 +42,7 @@ LogConsoleSink::LogConsoleSink() SKR_NOEXCEPT
     set_style(LogLevel::kError, EConsoleStyle::HIGHLIGHT);
     set_front_color(LogLevel::kError, EConsoleColor::RED);
 
-    // white bold on red background
+    // white hignlight on red background
     set_style(LogLevel::kFatal, EConsoleStyle::HIGHLIGHT);
     set_back_color(LogLevel::kFatal, EConsoleColor::RED);
     set_front_color(LogLevel::kFatal, EConsoleColor::WHILE);
@@ -102,7 +104,7 @@ template <> struct BackColorSpec<EConsoleColor::CYAN> { [[maybe_unused]] static 
 template <> struct BackColorSpec<EConsoleColor::WHILE> { [[maybe_unused]] static constexpr const char* value = "\033[47m"; };
 
 template <EConsoleStyle> struct StyleSpec { [[maybe_unused]] static constexpr const char* value = ""; };
-template <> struct StyleSpec<EConsoleStyle::BOLD> { [[maybe_unused]] static constexpr const char* value = "\033[1m"; };
+template <> struct StyleSpec<EConsoleStyle::HIGHLIGHT> { [[maybe_unused]] static constexpr const char* value = "\033[1m"; };
 #endif
 
 static constexpr StyleLiteral GetFrontColor(EConsoleColor front) SKR_NOEXCEPT
@@ -185,6 +187,8 @@ void LogConsoleSink::set_style(LogLevel level, EConsoleStyle style) SKR_NOEXCEPT
 void LogConsoleSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
 {
 #ifdef USE_WIN32_CONSOLE
+    ZoneScopedN("Console::Write");
+
     const auto StdHandle = ::GetStdHandle(STD_OUTPUT_HANDLE);
     // get origin
     CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
@@ -204,6 +208,8 @@ void LogConsoleSink::sink(const LogEvent& event, skr::string_view content) SKR_N
     if (csbiInfo.wAttributes != attrs)
         ::SetConsoleTextAttribute(StdHandle, csbiInfo.wAttributes);
 #else
+    ZoneScopedN("ANSI::Print");
+
     // set color
     static THREAD_LOCAL std::string buf; 
     const auto L = static_cast<uint32_t>(event.get_level());
@@ -214,20 +220,55 @@ void LogConsoleSink::sink(const LogEvent& event, skr::string_view content) SKR_N
 #endif
 }
 
+struct CFILE
+{
+    CFILE(FILE* fp) SKR_NOEXCEPT : fp(fp) {}
+    ~CFILE() SKR_NOEXCEPT { flush(); fclose(fp); }
+
+    void write(const skr::string_view content)
+    {
+        ZoneScopedN("CFILE::write");
+        fwrite(content.u8_str(), sizeof(char8_t), content.size(), fp);
+    }
+
+    void flush() SKR_NOEXCEPT 
+    { 
+        ZoneScopedN("CFILE::flush");
+        fflush(fp); 
+    }
+private:
+    FILE* fp;
+};
+
 LogFileSink::LogFileSink() SKR_NOEXCEPT
     : LogSink(LogConstants::kDefaultFilePatternId)
 {
-
+    /*
+    auto current_path = skr::filesystem::current_path();
+    auto txt_path = current_path / "log.log";
+    if (skr::filesystem::is_regular_file(txt_path))
+    {
+        auto time = skr::filesystem::last_write_time(txt_path);
+        // append time to fname & rename 
+        auto new_path = current_path / "log.txt";
+        skr::filesystem::rename(txt_path, new_path);
+    }
+    */
+    auto pname = skr::string(skr_get_current_process_name());
+    pname.replace(u8".exe", u8"");
+    auto fname = skr::format(u8"{}.log", pname);
+    file_ = SkrNew<CFILE>(fopen(fname.c_str(), "w"));
 }
 
 LogFileSink::~LogFileSink() SKR_NOEXCEPT
 {
-
+    SkrDelete(file_);
 }
 
 void LogFileSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
 {
-
+    file_->write(content);
+    file_->flush();
 }
 
 } } // namespace skr::log

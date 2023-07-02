@@ -59,6 +59,11 @@ SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments
 	return result;
 }
 
+const char8_t* skr_get_current_process_name()
+{
+	return (const char8_t*)__argv[0];
+}
+
 SProcessId skr_get_current_process_id()
 {
 	return (SProcessId)GetCurrentProcessId();

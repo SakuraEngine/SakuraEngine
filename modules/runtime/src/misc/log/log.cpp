@@ -254,37 +254,43 @@ LogSink* LogManager::QuerySink(skr_guid_t guid)
 
 void LogManager::PatternAndSink(const LogEvent& event, skr::string_view formatted_message) SKR_NOEXCEPT
 {
-    eastl::fixed_hash_set<skr_guid_t, 4, 5, true, skr::guid::hash> patterns_;
-    for (auto&& [id, sink] : sinks_)
+    static THREAD_LOCAL eastl::fixed_hash_set<skr_guid_t, 4, 5, true, skr::guid::hash> patterns_;
     {
-        auto pattern_id = sink->get_pattern();
-        auto&& iter = patterns_.find(pattern_id);
-        if (iter != patterns_.end())
-            continue;
-        
-        if (auto p = LogManager::QueryPattern(pattern_id))
+        ZoneScopedN("PatternAll");
+        for (auto&& [id, sink] : sinks_)
         {
-            [[maybe_unused]] 
-            auto& _ = p->pattern(event, formatted_message);
-            patterns_.insert(pattern_id);
-        }
-        else
-        {
-            SKR_UNREACHABLE_CODE();
+            auto pattern_id = sink->get_pattern();
+            auto&& iter = patterns_.find(pattern_id);
+            if (iter != patterns_.end())
+                continue;
+            
+            if (auto p = LogManager::QueryPattern(pattern_id))
+            {
+                [[maybe_unused]] 
+                auto& _ = p->pattern(event, formatted_message);
+                patterns_.insert(pattern_id);
+            }
+            else
+            {
+                SKR_UNREACHABLE_CODE();
+            }
         }
     }
-    
-    for (auto&& [id, sink] : sinks_)
-    {
-        auto pattern_id = sink->get_pattern();
 
-        if (auto p = LogManager::QueryPattern(pattern_id))
+    {
+        ZoneScopedN("SinkAll");
+        for (auto&& [id, sink] : sinks_)
         {
-            sink->sink(event, p->last_result().view());
-        }
-        else
-        {
-            SKR_UNREACHABLE_CODE();
+            auto pattern_id = sink->get_pattern();
+
+            if (auto p = LogManager::QueryPattern(pattern_id))
+            {
+                sink->sink(event, p->last_result().view());
+            }
+            else
+            {
+                SKR_UNREACHABLE_CODE();
+            }
         }
     }
 }

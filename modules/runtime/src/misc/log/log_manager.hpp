@@ -3,6 +3,9 @@
 #include "log_worker.hpp"
 #include "tscns.hpp"
 
+#include "containers/hashmap.hpp"
+#include <EASTL/unique_ptr.h>
+
 namespace skr {
 namespace log {
 
