@@ -38,8 +38,14 @@ enum
 #define SKR_LOG_FATAL(...) log_log(SKR_LOG_LEVEL_FATAL, __FILE__, __LOG_FUNC__, SKR_MAKE_STRING(__LINE__), __VA_ARGS__)
 
 RUNTIME_API void log_initialize_async_worker();
+
 RUNTIME_API void log_set_level(int level);
+
 RUNTIME_API void log_log(int level, const char* file, const char* func, const char* line, const char* fmt, ...);
+
+// flush logs of this thread
+RUNTIME_API void log_flush();
+
 RUNTIME_API void log_finalize();
 
 #ifdef __cplusplus
