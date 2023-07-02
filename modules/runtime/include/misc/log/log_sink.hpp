@@ -48,6 +48,7 @@ struct RUNTIME_API LogConsoleSink : public LogSink
         EConsoleColor b = EConsoleColor::BLACK;
         EConsoleStyle s = EConsoleStyle::NORMAL;
     } color_sets_[static_cast<uint32_t>(LogLevel::kCount)];
+    struct BufCache* buf_cache_ = nullptr;
 };
 
 struct RUNTIME_API LogFileSink : public LogSink
