@@ -108,18 +108,6 @@ void Logger::notifyWorker() SKR_NOEXCEPT
     }
 }
 
-LogElement::LogElement(LogEvent ev) SKR_NOEXCEPT
-    : event(ev)
-{
-
-}
-
-LogElement::LogElement() SKR_NOEXCEPT
-    : event(nullptr, LogLevel::kTrace, {})
-{
-    
-}
-
 } } // namespace skr::log
 
 RUNTIME_EXTERN_C

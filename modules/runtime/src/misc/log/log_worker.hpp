@@ -29,9 +29,14 @@ struct LogWorker : public AsyncService
 
     bool predicate() SKR_NOEXCEPT;
     void process_logs() SKR_NOEXCEPT;
+    void flush(SThreadID tid) SKR_NOEXCEPT;
+    // void flush() SKR_NOEXCEPT;
+
     virtual skr::AsyncResult serve() SKR_NOEXCEPT;
 
 protected:
+    void patternAndSink(const LogElement& e) SKR_NOEXCEPT;
+
     friend struct Logger;
     skr::SPtr<LogQueue> queue_;
     skr::vector<Logger*> loggers_;
