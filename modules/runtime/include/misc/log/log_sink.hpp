@@ -33,7 +33,7 @@ enum class EConsoleColor : uint16_t
 enum class EConsoleStyle : uint16_t
 {
     NORMAL,
-    BOLD
+    HIGHLIGHT
 };
 
 struct RUNTIME_API LogConsoleSink : public LogSink
