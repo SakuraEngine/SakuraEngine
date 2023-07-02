@@ -2,6 +2,7 @@
 #include "cgpu/flags.h"
 #include "platform/configure.h"
 #include "gtest/gtest.h"
+#include "misc/log.h"
 #include <containers/string.hpp>
 #include <EASTL/vector.h>
 #include "cgpu/api.h"
@@ -339,7 +340,9 @@ INSTANTIATE_TEST_SUITE_P(ResourceCreation, ResourceCreation, allPlatforms);
 
 int main(int argc, char** argv)
 {
+    log_initialize_async_worker();
     ::testing::InitGoogleTest(&argc, argv);
     auto result = RUN_ALL_TESTS();
+    log_finalize();
     return result;
 }

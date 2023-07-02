@@ -23,7 +23,7 @@ DStorageRAMReader::DStorageRAMReader(RAMService* service) SKR_NOEXCEPT
     SkrDStorageQueueDescriptor desc = {};
     for (auto i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        events[i] = SmartPoolPtr<DStorageEvent>::Create();
+        events[i] = SmartPoolPtr<DStorageEvent>::Create(kIOPoolObjectsMemoryName);
     }
     for (auto i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
@@ -73,7 +73,7 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
                 skr_dstorage_close_file(instance, rq->dfile);
                 rq->dfile = nullptr;
             }
-            else if ( rq->getStatus() == SKR_IO_STAGE_RESOLVING)
+            else if (rq->getStatus() == SKR_IO_STAGE_RESOLVING)
             {
                 ZoneScopedN("read_request");
                 SKR_ASSERT(rq->dfile);

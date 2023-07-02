@@ -56,6 +56,7 @@ FORCEINLINE static void* _aligned_calloc(size_t nelem, size_t elsize, size_t ali
 }
     #define cgpu_malloc malloc
     #define cgpu_malloc_aligned _aligned_malloc
+    #define cgpu_malloc_alignedN(size, alignment, ...)  _aligned_malloc(size, alignment)
     #define cgpu_calloc calloc
     #define cgpu_callocN(count, size, ...) calloc((count), (size))
     #define cgpu_calloc_aligned _aligned_calloc
@@ -67,6 +68,7 @@ FORCEINLINE static void* _aligned_calloc(size_t nelem, size_t elsize, size_t ali
 #else
     #define cgpu_malloc sakura_malloc
     #define cgpu_malloc_aligned sakura_malloc_aligned
+    #define cgpu_malloc_alignedN sakura_malloc_alignedN
     #define cgpu_calloc sakura_calloc
     #define cgpu_callocN sakura_callocN
     #define cgpu_calloc_aligned sakura_calloc_aligned

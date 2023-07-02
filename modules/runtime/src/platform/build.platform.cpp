@@ -1,9 +1,4 @@
-#ifdef _WIN32
-    #ifndef WIN32_LEAN_AND_MEAN
-        #define WIN32_LEAN_AND_MEAN
-    #endif
-    #include <windows.h> 
-#endif
+#include "../pch.hpp"
 #include "platform/configure.h"
 #include "debug.cpp"
 #include "vfs.cpp"

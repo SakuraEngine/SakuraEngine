@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "misc/make_zeroed.hpp"
 #include "misc/log.h"
-#include "async/service_thread.hpp"
+#include "async/async_service.h"
 
 TEST(ServiceThread, AsyncPrint)
 {
@@ -71,7 +71,9 @@ TEST(ServiceThread, AsyncPrint2)
 
 int main(int argc, char** argv)
 {
+    log_initialize_async_worker();
     ::testing::InitGoogleTest(&argc, argv);
     auto result = RUN_ALL_TESTS();
+    log_finalize(); 
     return result;
 }

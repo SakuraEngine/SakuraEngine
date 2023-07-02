@@ -1,6 +1,7 @@
 #pragma once
 #include "misc/types.h"
 #include "platform/atomic.h"
+#include "async/async_service.h"
 
 #define SKR_IO_SERVICE_MAX_TASK_COUNT 32
 #define SKR_ASYNC_SERVICE_SLEEP_TIME_MAX UINT32_MAX
@@ -27,24 +28,6 @@ typedef enum ESkrIOErrorCode
     SKR_IO_ERROR_DECOMPRESS_FAILED,
     SKR_IO_ERROR_CODE_MAX_ENUM = UINT32_MAX
 } ESkrIOErrorCode;
-
-typedef enum SkrAsyncServiceStatus
-{
-    SKR_ASYNC_SERVICE_STATUS_SLEEPING = 0,
-    SKR_ASYNC_SERVICE_STATUS_RUNNING = 1,
-    SKR_ASYNC_SERVICE_STATUS_QUITING = 2,
-    SKR_ASYNC_SERVICE_STATUS_COUNT,
-    SKR_ASYNC_SERVICE_STATUS_MAX_ENUM = UINT32_MAX
-} SkrAsyncServiceStatus;
-
-typedef enum SkrAsyncServicePriority
-{
-    SKR_ASYNC_SERVICE_PRIORITY_URGENT = 0,
-    SKR_ASYNC_SERVICE_PRIORITY_NORMAL = 1,
-    SKR_ASYNC_SERVICE_PRIORITY_LOW = 2,
-    SKR_ASYNC_SERVICE_PRIORITY_COUNT = 3,
-    SKR_ASYNC_SERVICE_PRIORITY_MAX_ENUM = INT32_MAX
-} SkrAsyncServicePriority;
 
 typedef enum ESkrIOStage
 {

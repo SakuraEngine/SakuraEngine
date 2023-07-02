@@ -41,7 +41,6 @@ public:
     typename std::enable_if<std::is_convertible<U*, T*>::value, this_type&>::type
     operator=(SWeakPtr<U>&& lp) SKR_NOEXCEPT;
     template <typename U>
-
     // assigns to a weak_ptr from a shared_ptr
     typename std::enable_if<std::is_convertible<U*, T*>::value, this_type&>::type
     operator=(const SPtr<U>& lp) SKR_NOEXCEPT;
@@ -89,7 +88,8 @@ skr::SWeakPtr<T>::SWeakPtr(const SPtr<U>& lp, typename std::enable_if<std::is_co
 template <typename T>
 skr::SWeakPtr<T>::~SWeakPtr() SKR_NOEXCEPT
 {
-    if (this->p) this->release();
+    if (this->block) 
+        this->block->weak_release();
 }
 
 template <typename T>

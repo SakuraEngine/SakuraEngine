@@ -221,10 +221,21 @@ void skr_thread_set_affinity(SThreadHandle handle, uint64_t affinityMask)
     thread_policy_set(pthread_mach_thread_np(handle), THREAD_AFFINITY_POLICY, (thread_policy_t)&policy, 1);
 }
 
-void skr_thread_set_name(SThreadHandle handle, const char8_t* pName)
+char8_t* thread_name()
 {
-    // no-standard method for this shit
-    // pthread_setname_np(handle, pName);
+	THREAD_LOCAL static char8_t name[SKR_MAX_THREAD_NAME_LENGTH + 1];
+	return name;
+}
+
+void skr_current_thread_set_name(const char8_t* pName)
+{
+    pthread_setname_np(pName);
+    strcpy(thread_name(), pName);
+}
+
+const char8_t* skr_current_thread_get_name()
+{
+    return thread_name();
 }
 
 void skr_init_thread(SThreadDesc* pData, SThreadHandle* pHandle)
@@ -233,6 +244,11 @@ void skr_init_thread(SThreadDesc* pData, SThreadHandle* pHandle)
     skr_thread_set_priority(*pHandle, SKR_THREAD_NORMAL);
     SKR_UNREF_PARAM(res);
     SKR_ASSERT(res == 0);
+}
+
+SThreadHandle skr_get_current_thread()
+{
+    return (SThreadHandle)pthread_self();
 }
 
 void skr_destroy_thread(SThreadHandle handle)

@@ -1,4 +1,5 @@
 #include "async/thread_job.hpp"
+#include "async/wait_timeout.hpp"
 #include "job_thread.hpp"
 #include "containers/vector.hpp"
 #include "misc/defer.hpp"
@@ -398,10 +399,9 @@ uint32_t JobQueue::items_count() const SKR_NOEXCEPT
 
 void JobQueue::wait_empty() const SKR_NOEXCEPT
 {
-    while (items_count() > 0)
-    {
-        skr_thread_sleep(10);
-    }
+    wait_timeout([this](){
+        return items_count() <= 0;
+    }, 8);
 }
 
 void JobQueue::change_priority(JobQueuePriority priority) SKR_NOEXCEPT

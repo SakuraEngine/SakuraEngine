@@ -5,15 +5,15 @@
 #include "serde/json/reader.h"
 #include "serde/json/writer.h"
 #include "tracy/Tracy.hpp"
-static const char* JsonArrayJsonFieldArchiveFailedFormat = "[SERDE/JSON] Archive %s.%s[%d] failed: %s";
-static const char* JsonArrayFieldArchiveWarnFormat = "[SERDE/JSON] %s.%s got too many elements (%d expected, given %d), ignoring overflowed elements";
-static const char* JsonFieldArchiveFailedFormat = "[SERDE/JSON] Archive %s.%s failed: %s";
-static const char* JsonFieldNotFoundErrorFormat = "[SERDE/JSON] %s.%s not found";
-static const char* JsonFieldNotFoundFormat = "[SERDE/JSON] %s.%s not found, using default value";
+[[maybe_unused]] static const char* JsonArrayJsonFieldArchiveFailedFormat = "[SERDE/JSON] Archive %s.%s[%d] failed: %s";
+[[maybe_unused]] static const char* JsonArrayFieldArchiveWarnFormat = "[SERDE/JSON] %s.%s got too many elements (%d expected, given %d), ignoring overflowed elements";
+[[maybe_unused]] static const char* JsonFieldArchiveFailedFormat = "[SERDE/JSON] Archive %s.%s failed: %s";
+[[maybe_unused]] static const char* JsonFieldNotFoundErrorFormat = "[SERDE/JSON] %s.%s not found";
+[[maybe_unused]] static const char* JsonFieldNotFoundFormat = "[SERDE/JSON] %s.%s not found, using default value";
 
-static const char* JsonArrayFieldNotEnoughErrorFormat = "[SERDE/JSON] %s.%s has too few elements (%d expected, given %d)";
-static const char* JsonArrayFieldNotEnoughWarnFormat = "[SERDE/JSON] %s.%s got too few elements (%d expected, given %d), using default value";
-static const char* JsonBaseArchiveFailedFormat = "[SERDE/JSON] Archive %s base %s failed: %d";
+[[maybe_unused]] static const char* JsonArrayFieldNotEnoughErrorFormat = "[SERDE/JSON] %s.%s has too few elements (%d expected, given %d)";
+[[maybe_unused]] static const char* JsonArrayFieldNotEnoughWarnFormat = "[SERDE/JSON] %s.%s got too few elements (%d expected, given %d), using default value";
+[[maybe_unused]] static const char* JsonBaseArchiveFailedFormat = "[SERDE/JSON] Archive %s base %s failed: %d";
 
 namespace skr::type
 {

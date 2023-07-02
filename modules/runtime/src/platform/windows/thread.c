@@ -1,4 +1,4 @@
-#include "winheaders.h"
+#include "../../pch.h"
 #include <process.h> // _beginthreadex
 
 #include "platform/thread.h"
@@ -300,9 +300,16 @@ unsigned WINAPI ThreadFunctionStatic(void* data)
 void skr_init_thread(SThreadDesc* pDesc, SThreadHandle* pHandle)
 {
     assert(pHandle != NULL);
-    SThreadHandle handle = (SThreadHandle)_beginthreadex(0, 0, ThreadFunctionStatic, pDesc, 0, 0);
+    SThreadHandle handle = (SThreadHandle)_beginthreadex(
+        0, 0, &ThreadFunctionStatic, 
+        pDesc, 0, 0);
     assert(handle != NULL);
     *pHandle = handle;
+}
+
+SThreadHandle skr_get_current_thread()
+{
+    return (SThreadHandle)GetCurrentThread();
 }
 
 static const int priorities[SKR_THREAD_PRIORITY_COUNT] = {
@@ -327,7 +334,13 @@ void skr_thread_set_affinity(SThreadHandle handle, uint64_t affinityMask)
     SetThreadAffinityMask((HANDLE)handle, (DWORD_PTR)affinityMask);
 }
 
-void skr_thread_set_name(SThreadHandle handle, const char8_t* pName)
+char8_t* thread_name()
+{
+	THREAD_LOCAL static char8_t name[SKR_MAX_THREAD_NAME_LENGTH + 1];
+	return name;
+}
+
+void skr_current_thread_set_name(const char8_t* pName)
 {
     size_t len = strlen(pName);
     wchar_t* buffer = (wchar_t*)sakura_malloc((len + 1) * sizeof(wchar_t));
@@ -335,9 +348,16 @@ void skr_thread_set_name(SThreadHandle handle, const char8_t* pName)
     size_t resultLength = MultiByteToWideChar(CP_UTF8, 0, pName, (int)len, buffer, (int)len);
     buffer[resultLength] = 0;
 
+    SThreadHandle handle = skr_get_current_thread();
     SetThreadDescription((HANDLE)handle, buffer);
+    strcpy_s(thread_name(), SKR_MAX_THREAD_NAME_LENGTH + 1, pName);
 
     sakura_free(buffer);
+}
+
+const char8_t* skr_current_thread_get_name()
+{
+    return thread_name();
 }
 
 void skr_destroy_thread(SThreadHandle handle)
