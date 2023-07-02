@@ -25,10 +25,7 @@ void cgpu_free_surface_vulkan(CGPUDeviceId device, CGPUSurfaceId surface)
 }
 
 #if defined(_WIN32) || defined(_WIN64)
-    #ifndef WIN32_LEAN_AND_MEAN
-        #define WIN32_LEAN_AND_MEAN
-    #endif
-    #include "windows.h"
+#include "../../platform/windows/winheaders.h"
 
 CGPUSurfaceId cgpu_surface_from_hwnd_vulkan(CGPUDeviceId device, HWND window)
 {

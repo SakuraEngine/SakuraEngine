@@ -1,17 +1,13 @@
 
 #if defined(_MSC_VER)
-#include <crtdbg.h>
 #include <limits.h>
 #include <stdio.h>
 #include <tchar.h>
 #include <string>
 #include <memory>
 #include "platform/debug.h"
-// clang-format off
-#ifndef WIN32_LEAN_AND_MEAN
-#   define WIN32_LEAN_AND_MEAN
-#endif
-#include <windows.h>
+#include "../platform/windows/winheaders.h"
+#include <crtdbg.h>
 #include <dbghelp.h>
 // clang-format on
 #if defined(_MSC_VER)

@@ -2,7 +2,7 @@
 #include "shared_library.cpp"
 #include <stdio.h>
 #if defined(_WIN32)
-    #include "windows.h"
+#include "../platform/windows/winheaders.h"
 #endif
 
 #if defined(_WIN32)

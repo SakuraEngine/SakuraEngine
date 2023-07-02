@@ -24,10 +24,7 @@ inline skr::string AftermathErrorMessage(GFSDK_Aftermath_Result result)
 // Helper macro for checking Nsight Aftermath results and throwing exception
 // in case of a failure.
 #ifdef _WIN32
-    #ifndef WIN32_LEAN_AND_MEAN
-        #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers.
-    #endif
-#include <windows.h>
+#include "../../platform/windows/winheaders.h"
 #endif
 
 inline static void AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_Result _result)
