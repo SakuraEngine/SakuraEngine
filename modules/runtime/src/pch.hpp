@@ -1,12 +1,12 @@
 #pragma once
-#include <intrin.h>
-#include <chrono>
 
-#include "platform/debug.h"
 #ifdef _WIN32
+#include <intrin.h>
 #include "platform/windows/winheaders.h"
 #endif
 
+#include <chrono>
+#include "platform/debug.h"
 #include <platform/filesystem.hpp>
 
 #include <containers/sptr.hpp>
