@@ -19,7 +19,6 @@ enum class EPixelFormat
     RGBA8,
     L8,
     LA8,
-    R8,
 };
 
 struct UpdatableImageDesc {

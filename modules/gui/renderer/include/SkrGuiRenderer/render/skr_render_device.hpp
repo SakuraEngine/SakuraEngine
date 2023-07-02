@@ -12,17 +12,33 @@ using skr::render_graph::RenderGraph;
 struct SkrRenderWindow;
 struct IUpdatableImage;
 
-// 渲染设备，渲染的
-struct SKR_GUI_RENDERER_API SkrRenderDevice final {
-    enum EPipelineFlag
+enum ESkrPipelineFlag
+{
+    ESkrPipelineFlag_None = 0,
+    ESkrPipelineFlag_TestZ = 1 << 0,
+    ESkrPipelineFlag_Textured = 1 << 1,
+    ESkrPipelineFlag_WriteZ = 1 << 2,
+    ESkrPipelineFlag_CustomSampler = 1 << 3,
+    __Count = 4,
+};
+struct SkrPipelineKey {
+    ESkrPipelineFlag flags;
+    ECGPUSampleCount sample_count;
+    inline bool      operator==(const SkrPipelineKey& other) const
     {
-        EPipelineFlag_None = 0,
-        EPipelineFlag_TestZ = 1 << 0,
-        EPipelineFlag_Textured = 1 << 1,
-        EPipelineFlag_WriteZ = 1 << 2,
-        EPipelineFlag_CustomSampler = 1 << 3,
-        __Count = 4,
-    };
+        return flags == other.flags && sample_count == other.sample_count;
+    }
+    inline bool operator!=(const SkrPipelineKey& other) const
+    {
+        return flags != other.flags || sample_count != other.sample_count;
+    }
+    inline bool operator<(const SkrPipelineKey& other) const
+    {
+        return flags < other.flags || (flags == other.flags && sample_count < other.sample_count);
+    }
+};
+
+struct SKR_GUI_RENDERER_API SkrRenderDevice final {
 
     // init & shutdown
     void init();
@@ -40,8 +56,8 @@ struct SKR_GUI_RENDERER_API SkrRenderDevice final {
     inline RenderGraph*   render_graph() const { return _render_graph; }
 
     // pipeline
-    CGPURenderPipelineId get_pipeline(EPipelineFlag flags, ECGPUSampleCount sample_count);
-    CGPURenderPipelineId create_pipeline(EPipelineFlag flags, ECGPUSampleCount sample_count);
+    CGPURenderPipelineId get_pipeline(ESkrPipelineFlag flags, ECGPUSampleCount sample_count);
+    CGPURenderPipelineId create_pipeline(ESkrPipelineFlag flags, ECGPUSampleCount sample_count);
 
     // texture
     // create texture
@@ -58,26 +74,11 @@ private:
     RenderGraph* _render_graph = nullptr;
 
     // PSO
-    struct PipelineKey {
-        EPipelineFlag    flags;
-        ECGPUSampleCount sample_count;
-        inline bool      operator==(const PipelineKey& other) const
-        {
-            return flags == other.flags && sample_count == other.sample_count;
-        }
-        inline bool operator!=(const PipelineKey& other) const
-        {
-            return flags != other.flags || sample_count != other.sample_count;
-        }
-        inline bool operator<(const PipelineKey& other) const
-        {
-            return flags < other.flags || (flags == other.flags && sample_count < other.sample_count);
-        }
-    };
-    eastl::vector_map<PipelineKey, CGPURenderPipelineId> _pipelines;
-    CGPURootSignaturePoolId                              _rs_pool;
-    CGPUSamplerId                                        _static_color_sampler;
-    CGPUVertexLayout                                     _vertex_layout = {};
+
+    eastl::vector_map<SkrPipelineKey, CGPURenderPipelineId> _pipelines;
+    CGPURootSignaturePoolId                                 _rs_pool;
+    CGPUSamplerId                                           _static_color_sampler;
+    CGPUVertexLayout                                        _vertex_layout = {};
 
     // Texture updates
     Array<IUpdatableImage*> _texture_updates;

@@ -3,12 +3,9 @@
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/math/color.hpp"
 
-// TODO. remove gdi
-#include "SkrGui/dev/gdi/gdi_types.hpp"
-
 namespace skr::gui
 {
-struct ITexture;
+struct IImage;
 struct IMaterial;
 
 enum class EBlendFactor : uint8_t
@@ -60,10 +57,10 @@ struct PaintVertex {
 };
 using PaintIndex = uint16_t;
 struct PaintCommand {
-    ITexture*  texture = nullptr;
+    IImage*    texture = nullptr;
     IMaterial* material = nullptr;
-    PaintIndex index_begin = 0;
-    PaintIndex index_count = 0;
+    size_t     index_begin = 0;
+    size_t     index_count = 0;
     Swizzle    texture_swizzle = {};
 };
 
