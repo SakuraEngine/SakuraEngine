@@ -26,11 +26,18 @@ LogSink::~LogSink() SKR_NOEXCEPT
 
 }
 
+struct BufCache
+{
+    std::string buf;
+};
+
 LogConsoleSink::LogConsoleSink() SKR_NOEXCEPT
     : LogSink(LogConstants::kDefaultConsolePatternId)
 {
 #ifdef USE_WIN32_CONSOLE
     ::SetConsoleOutputCP(CP_UTF8);
+#else
+    buf_cache_ = SkrNew<BufCache>();
 #endif
     set_front_color(LogLevel::kTrace, EConsoleColor::WHILE);
     set_front_color(LogLevel::kDebug, EConsoleColor::CYAN);
@@ -50,7 +57,8 @@ LogConsoleSink::LogConsoleSink() SKR_NOEXCEPT
 
 LogConsoleSink::~LogConsoleSink() SKR_NOEXCEPT
 {
-
+    if (buf_cache_)
+        SkrDelete(buf_cache_);
 }
 
 namespace 
@@ -166,7 +174,6 @@ static const std::string_view GetAnsiEscapeCode(std::string& buf, EConsoleColor 
     return buf;
 }
 #endif
-
 }
 
 void LogConsoleSink::set_front_color(LogLevel level, EConsoleColor front) SKR_NOEXCEPT
@@ -211,9 +218,8 @@ void LogConsoleSink::sink(const LogEvent& event, skr::string_view content) SKR_N
     ZoneScopedN("ANSI::Print");
 
     // set color
-    static THREAD_LOCAL std::string buf; 
     const auto L = static_cast<uint32_t>(event.get_level());
-    const auto escape = GetAnsiEscapeCode(buf, color_sets_[L].f, color_sets_[L].b, color_sets_[L].s);
+    const auto escape = GetAnsiEscapeCode(buf_cache_->buf, color_sets_[L].f, color_sets_[L].b, color_sets_[L].s);
 
     // output to console (use '\033[0m' to reset color)
     ::printf("%s%s\033[0m", escape.data(), content.c_str());
