@@ -1,6 +1,4 @@
-#ifdef _WIN32
-#include "../platform/windows/winheaders.h"
-#endif
+#include "../pch.hpp"
 #include "platform/configure.h"
 #include "debug.cpp"
 #include "vfs.cpp"

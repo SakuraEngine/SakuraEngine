@@ -1,12 +1,10 @@
-
+#include "../pch.hpp"
 #if defined(_MSC_VER)
 #include <limits.h>
 #include <stdio.h>
 #include <tchar.h>
 #include <string>
 #include <memory>
-#include "platform/debug.h"
-#include "../platform/windows/winheaders.h"
 #include <crtdbg.h>
 #include <dbghelp.h>
 // clang-format on

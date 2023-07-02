@@ -6,3 +6,7 @@
 #include <winbase.h>
 #include <winioctl.h>
 #include <timeapi.h>
+#include <commdlg.h>
+#include <shlobj.h>
+
+#include <windows.h>

@@ -1,5 +1,5 @@
+#include "../../pch.hpp"
 #include "misc/log/log_manager.hpp"
-#include "platform/thread.h"
 #include "platform/process.h"
 #include "misc/log/logger.hpp"
 #include "misc/log/log_pattern.hpp"

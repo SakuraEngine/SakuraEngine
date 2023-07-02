@@ -1,13 +1,8 @@
+#include "../../pch.hpp"
 #include "platform/vfs.h"
 #include "platform/memory.h"
 #include "misc/log.h"
 #include "platform/filesystem.hpp"
-
-#if !defined(XBOX)
-    #include "shlobj.h"
-    #include "commdlg.h"
-    #include <winbase.h>
-#endif
 
 inline static char8_t* duplicate_string(const char8_t* src_string) SKR_NOEXCEPT
 {

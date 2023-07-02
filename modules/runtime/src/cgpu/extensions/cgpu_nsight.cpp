@@ -1,3 +1,4 @@
+#include "../../pch.hpp"
 #include <iostream>
 #include <fstream>
 #include <EASTL/set.h>
@@ -20,12 +21,6 @@ inline skr::string AftermathErrorMessage(GFSDK_Aftermath_Result result)
         return skr::format(u8"Aftermath Error 0x{}", result - GFSDK_Aftermath_Result_Fail);
     }
 }
-
-// Helper macro for checking Nsight Aftermath results and throwing exception
-// in case of a failure.
-#ifdef _WIN32
-#include "../../platform/windows/winheaders.h"
-#endif
 
 inline static void AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_Result _result)
 {
