@@ -1,4 +1,4 @@
-#include "../../pch.h"
+#include "../../platform/windows/winheaders.h"
 #include <process.h> // _beginthreadex
 
 #include "platform/thread.h"
