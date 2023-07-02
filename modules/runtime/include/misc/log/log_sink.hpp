@@ -2,9 +2,6 @@
 #include "platform/guid.hpp"
 #include "misc/log/log_pattern.hpp"
 
-#include "containers/hashmap.hpp"
-#include <EASTL/unique_ptr.h>
-
 namespace skr {
 namespace log {
 
@@ -58,6 +55,7 @@ struct RUNTIME_API LogFileSink : public LogSink
     LogFileSink() SKR_NOEXCEPT;
     virtual ~LogFileSink() SKR_NOEXCEPT;
     void sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT override;
+    struct CFILE* file_ = nullptr;
 };
 
 } // namespace log
