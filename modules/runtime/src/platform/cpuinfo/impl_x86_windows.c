@@ -26,7 +26,7 @@ static void OverrideOsPreserves(OsPreserves* os_preserves) {
   // No override
 }
 
-#include "../../pch.h"
+#include "../../platform/windows/winheaders.h"
 
 #if defined(CPU_FEATURES_MOCK_CPUID_X86)
 extern bool GetWindowsIsProcessorFeaturePresent(DWORD);

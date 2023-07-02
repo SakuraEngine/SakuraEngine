@@ -7,6 +7,7 @@
 
 #include <chrono>
 #include "platform/debug.h"
+#include "platform/guid.hpp"
 #include <platform/filesystem.hpp>
 
 #include <containers/sptr.hpp>

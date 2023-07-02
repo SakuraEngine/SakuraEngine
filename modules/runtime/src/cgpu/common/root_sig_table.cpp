@@ -168,7 +168,7 @@ void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSign
     RS->table_count = (uint32_t)valid_sets.size();
     RS->tables = (CGPUParameterTable*)cgpu_calloc(RS->table_count, sizeof(CGPUParameterTable));
     uint32_t table_index = 0;
-    for (auto set_index : valid_sets)
+    for (auto&set_index : valid_sets)
     {
         CGPUParameterTable& table = RS->tables[table_index];
         table.set_index = set_index;

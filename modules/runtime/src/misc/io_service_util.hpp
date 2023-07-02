@@ -394,7 +394,7 @@ public:
     virtual void request_() SKR_NOEXCEPT override
     {
         // unlock cv
-        const auto sleepTimeVal = skr_atomicu32_load_acquire(&_sleepTime);
+        [[maybe_unused]] const auto sleepTimeVal = skr_atomicu32_load_acquire(&_sleepTime);
             
         SMutexLock sleepLock(sleepMutex);
         skr_wake_all_condition_vars(&sleepCv);

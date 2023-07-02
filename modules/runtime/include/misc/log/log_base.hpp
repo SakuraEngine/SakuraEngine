@@ -33,6 +33,8 @@ struct RUNTIME_API LogEvent
 {
     LogEvent(struct Logger* logger, LogLevel level, const LogSourceData& src_data) SKR_NOEXCEPT;
     
+    FORCEINLINE LogLevel get_level() const SKR_NOEXCEPT { return level; }
+
 protected:
     friend struct LogPattern;
     bool flush = false;
@@ -47,7 +49,6 @@ protected:
 struct RUNTIME_API LogConstants
 {
     static skr::log::LogLevel gLogLevel;
-    static const skr_guid_t kDefaultPatternId;
     static constexpr skr::log::LogLevel kLogLevelsLUT[] = {
         skr::log::LogLevel::kTrace, 
         skr::log::LogLevel::kDebug, 
@@ -65,6 +66,12 @@ struct RUNTIME_API LogConstants
         u8"FATAL"
     };
     static_assert(sizeof(kLogLevelsLUT) / sizeof(kLogLevelsLUT[0]) == (int)skr::log::LogLevel::kCount, "kLogLevelsLUT size mismatch");
+
+    static const skr_guid_t kDefaultPatternId;
+    static const skr_guid_t kDefaultConsolePatternId;
+    static const skr_guid_t kDefaultConsoleSinkId;
+    static const skr_guid_t kDefaultFilePatternId;
+    static const skr_guid_t kDefaultFileSinkId;
 };
 
 } // namespace log
