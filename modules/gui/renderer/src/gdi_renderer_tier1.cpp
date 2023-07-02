@@ -1,6 +1,7 @@
 #include "futures.hpp"
-
+#include "platform/debug.h"
 #include "misc/cartesian_product.hpp"
+#include "tracy/Tracy.hpp"
 
 #include <EASTL/fixed_vector.h>
 #include "math/rtm/qvvf.h"

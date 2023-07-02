@@ -1,6 +1,7 @@
 #include "SkrGuiRenderer/resource/skr_image_task.hpp"
 #include "SkrGuiRenderer/resource/skr_resource_service.hpp"
 #include "SkrImageCoder/skr_image_coder.h"
+#include "tracy/Tracy.hpp"
 #include "futures.hpp"
 
 // decode

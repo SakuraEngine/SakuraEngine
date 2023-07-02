@@ -9,9 +9,12 @@ shared_module("SkrGui", "SKR_GUI", engine_version)
     add_packages("freetype", "icu", "harfbuzz")
     add_packages("nanovg")
     public_dependency("SkrRT", engine_version)
+    -- TODO. unity build group
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_includedirs("include", {public=true})
     add_includedirs("src", {public=false})
     add_files("src/**.cpp")
+    remove_files("src/dev/deprecated/**.cpp")
     if (is_plat("windows")) then
         add_cxflags("/wd4267", "/wd4244", "/wd4018","/source-charset:utf-8", {public=false})
     end

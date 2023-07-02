@@ -5,5 +5,7 @@
 namespace skr::gui
 {
 // TODO. Layer
-using Layer = ICanvas;
+struct Layer {
+    ICanvas* TODO_canvas = nullptr;
+};
 } // namespace skr::gui

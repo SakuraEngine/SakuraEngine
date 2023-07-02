@@ -49,6 +49,6 @@ struct WindowContext;
 struct State;
 struct Notification;
 struct Slot;
-using Layer = ICanvas;
+struct Layer;
 
 } // namespace skr::gui

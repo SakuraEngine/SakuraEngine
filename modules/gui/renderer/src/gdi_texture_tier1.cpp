@@ -1,4 +1,7 @@
 #include "futures.hpp"
+#include "trace.h"
+#include "platform/debug.h"
+#include "tracy/Tracy.hpp"
 
 #ifdef SKR_GUI_RENDERER_USE_IMAGE_CODER
     #include "SkrImageCoder/skr_image_coder.h"
@@ -108,7 +111,7 @@ ECGPUFormat TranslateFormat(EGDIImageFormat format)
 
 void GDITexture_RenderGraph::intializeBindTable() SKR_NOEXCEPT
 {
-    const auto texInfo = texture->info;
+    const auto                texInfo = texture->info;
     CGPUTextureViewDescriptor view_desc = {};
     view_desc.texture = texture;
     view_desc.format = texInfo->format;
