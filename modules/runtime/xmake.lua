@@ -47,12 +47,13 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     add_packages("boost-context", "luau", {public = true, inherit = true})
 
     -- add source files
-    set_pcheader("src/pch.h")
-    set_pcxxheader("src/pch.hpp")
     add_files(source_list)
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
     if (is_os("macosx")) then 
         add_files("src/**/build.*.m", "src/**/build.*.mxx")
+    else 
+        set_pcheader("src/pch.h")
+        set_pcxxheader("src/pch.hpp")
     end
 
     -- add deps & links
