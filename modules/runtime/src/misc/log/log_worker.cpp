@@ -233,7 +233,7 @@ void LogWorker::process_logs() SKR_NOEXCEPT
     }
 
     // normal polling    
-    const uint32_t N = 0; // avoid too many logs in one cycle
+    const uint32_t N = 16; // avoid too many logs in one cycle
     uint32_t n = 0;
     while (queue_->try_dequeue(e))
     {

@@ -265,14 +265,16 @@ void LogConsoleSink::sink(const LogEvent& event, skr::string_view content) SKR_N
 
 void LogConsoleSink::flush() SKR_NOEXCEPT
 {
+    ZoneScopedN("ANSI::Flush");
+
     ::fflush(stdout);
 }
 
 void LogConsoleWindowSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
 {
-#ifdef USE_WIN32_CONSOLE
     ZoneScopedN("Console::Write");
 
+#ifdef USE_WIN32_CONSOLE
     const auto StdHandle = ::GetStdHandle(STD_OUTPUT_HANDLE);
     // get origin
     CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
@@ -298,11 +300,13 @@ void LogConsoleWindowSink::sink(const LogEvent& event, skr::string_view content)
 
 void LogConsoleWindowSink::flush() SKR_NOEXCEPT
 {
+    ZoneScopedN("Console::Flush");
+
 #ifdef USE_WIN32_CONSOLE
     const auto StdHandle = ::GetStdHandle(STD_OUTPUT_HANDLE);
     ::FlushFileBuffers(StdHandle);
 #else
-    ::fflush(stdout);
+    LogConsoleSink::flush();
 #endif
 }
 
@@ -326,11 +330,13 @@ void LogDebugOutputSink::sink(const LogEvent& event, skr::string_view content) S
 
 void LogDebugOutputSink::flush() SKR_NOEXCEPT
 {
+    ZoneScopedN("DebugOutput::Flush");
+
 #ifdef USE_WIN32_CONSOLE
     const auto StdHandle = ::GetStdHandle(STD_OUTPUT_HANDLE);
     ::FlushFileBuffers(StdHandle);
 #else
-    ::fflush(stdout);
+    LogConsoleSink::flush();
 #endif
 }
 
@@ -381,11 +387,15 @@ LogFileSink::~LogFileSink() SKR_NOEXCEPT
 
 void LogFileSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
 {
+    ZoneScopedN("FileSink::Print");
+
     file_->write(content);
 }
 
 void LogFileSink::flush() SKR_NOEXCEPT
 {
+    ZoneScopedN("FileSink::Flush");
+
     file_->flush();
 }
 

@@ -258,6 +258,8 @@ skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view f
 
     if (is_set_in_pattern_[(size_t)Attribute::timestamp])
     {
+        ZoneScopedN("LogPattern::Time");
+
         const auto& dt = LogManager::datetime_;
         const auto midnightNs = dt.midnightNs;
         const auto ts = LogManager::tscns_.tsc2ns(event.timestamp);
@@ -349,8 +351,11 @@ skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view f
         _set_arg_val<Attribute::message>(formatted_message);
     }
 
-    auto sequence = eastl::make_index_sequence<kAttributeCount>();
-    formatted_string_ = format_NArgs(sequence, calculated_format_.view(), _args);
+    {
+        ZoneScopedN("LogPattern::FormatNArgs");
+        auto sequence = eastl::make_index_sequence<kAttributeCount>();
+        formatted_string_ = format_NArgs(sequence, calculated_format_.view(), _args);
+    }
 
     return formatted_string_;
 }
