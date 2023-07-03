@@ -1,9 +1,6 @@
 #include "../../pch.hpp"
 #include "platform/process.h"
-#include "misc/log.h"
 #include "misc/log/log_sink.hpp"
-#include "misc/log/log_manager.hpp"
-#include "misc/log/logger.hpp"
 
 #include <stdio.h> // FILE
 #include "tracy/Tracy.hpp"
@@ -31,14 +28,9 @@ struct BufCache
     std::string buf;
 };
 
-LogConsoleSink::LogConsoleSink() SKR_NOEXCEPT
-    : LogSink(LogConstants::kDefaultConsolePatternId)
+LogConsoleSink::LogConsoleSink(skr_guid_t pattern) SKR_NOEXCEPT
+    : LogSink(pattern), buf_cache_(SkrNew<BufCache>())
 {
-#ifdef USE_WIN32_CONSOLE
-    ::SetConsoleOutputCP(CP_UTF8);
-#else
-    buf_cache_ = SkrNew<BufCache>();
-#endif
     set_front_color(LogLevel::kTrace, EConsoleColor::WHILE);
     set_front_color(LogLevel::kDebug, EConsoleColor::CYAN);
     set_front_color(LogLevel::kInfo, EConsoleColor::GREEN);
@@ -61,9 +53,68 @@ LogConsoleSink::~LogConsoleSink() SKR_NOEXCEPT
         SkrDelete(buf_cache_);
 }
 
+LogANSIOutputSink::LogANSIOutputSink(skr_guid_t pattern) SKR_NOEXCEPT
+    : LogConsoleSink(pattern)
+{
+
+}
+
+LogANSIOutputSink::~LogANSIOutputSink() SKR_NOEXCEPT
+{
+
+}
+
+LogConsoleWindowSink::LogConsoleWindowSink(skr_guid_t pattern) SKR_NOEXCEPT
+    : LogANSIOutputSink(pattern)
+{
+#ifdef USE_WIN32_CONSOLE
+    const auto minLength = 2048;
+    if (!AttachConsole(ATTACH_PARENT_PROCESS)) 
+    {
+        ::FreeConsole();
+        if (auto ret = ::AllocConsole())
+        {
+            CONSOLE_SCREEN_BUFFER_INFO conInfo;
+            ::GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &conInfo);
+            if (conInfo.dwSize.Y < minLength)
+                conInfo.dwSize.Y = minLength;
+            ::SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), conInfo.dwSize);
+
+            freopen("CONIN$", "r",stdin);
+            freopen("CONOUT$", "w",stdout);
+            freopen("CONOUT$", "w",stderr);
+        }
+    }
+    const auto StdHandle = ::GetStdHandle(STD_OUTPUT_HANDLE);
+    ::SetConsoleMode(StdHandle, 
+        ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_LVB_GRID_WORLDWIDE |
+        ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT
+    );
+    ::SetConsoleOutputCP(CP_UTF8);
+#endif
+}
+
+LogConsoleWindowSink::~LogConsoleWindowSink() SKR_NOEXCEPT
+{
+
+}
+
+LogDebugOutputSink::LogDebugOutputSink(skr_guid_t pattern) SKR_NOEXCEPT
+    : LogANSIOutputSink(pattern)
+{
+
+}
+
+LogDebugOutputSink::~LogDebugOutputSink() SKR_NOEXCEPT
+{
+
+}
+
 namespace 
 {
 #ifdef USE_WIN32_CONSOLE
+struct Win
+{
 using StyleLiteral = WORD;
 
 template <EConsoleColor> struct FrontColorSpec { [[maybe_unused]] static constexpr WORD value = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE; };
@@ -88,7 +139,11 @@ template <> struct BackColorSpec<EConsoleColor::WHILE> { [[maybe_unused]] static
 
 template <EConsoleStyle> struct StyleSpec { [[maybe_unused]] static constexpr WORD value = 0; };
 template <> struct StyleSpec<EConsoleStyle::HIGHLIGHT> { [[maybe_unused]] static constexpr WORD value = FOREGROUND_INTENSITY; };
-#else
+};
+#endif
+
+struct ANSI
+{
 using StyleLiteral = std::string_view;
 
 template <EConsoleColor> struct FrontColorSpec { [[maybe_unused]] static constexpr const char* value = "\033[37m"; };
@@ -113,9 +168,10 @@ template <> struct BackColorSpec<EConsoleColor::WHILE> { [[maybe_unused]] static
 
 template <EConsoleStyle> struct StyleSpec { [[maybe_unused]] static constexpr const char* value = ""; };
 template <> struct StyleSpec<EConsoleStyle::HIGHLIGHT> { [[maybe_unused]] static constexpr const char* value = "\033[1m"; };
-#endif
+};
 
-static constexpr StyleLiteral GetFrontColor(EConsoleColor front) SKR_NOEXCEPT
+template<template<EConsoleColor C> class FrontColorSpec>
+static constexpr auto GetFrontColor(EConsoleColor front) SKR_NOEXCEPT
 {
     switch (front)
     {
@@ -131,8 +187,8 @@ static constexpr StyleLiteral GetFrontColor(EConsoleColor front) SKR_NOEXCEPT
     }
 }
 
-
-static constexpr StyleLiteral GetBackColor(EConsoleColor front) SKR_NOEXCEPT
+template<template<EConsoleColor C> class BackColorSpec>
+static constexpr auto GetBackColor(EConsoleColor front) SKR_NOEXCEPT
 {
     switch (front)
     {
@@ -148,32 +204,33 @@ static constexpr StyleLiteral GetBackColor(EConsoleColor front) SKR_NOEXCEPT
     }
 }
 
-static constexpr StyleLiteral GetStyle(EConsoleStyle style) SKR_NOEXCEPT
+template<template<EConsoleStyle S> class StyleSpec>
+static constexpr auto GetStyle(EConsoleStyle style) SKR_NOEXCEPT
 {
     switch (style)
     {
         case EConsoleStyle::NORMAL: return StyleSpec<EConsoleStyle::NORMAL>::value;
         case EConsoleStyle::HIGHLIGHT: return StyleSpec<EConsoleStyle::HIGHLIGHT>::value;
-        default: return 0;
+        default: return StyleSpec<EConsoleStyle::NORMAL>::value;
     }
 }
 
 #ifdef USE_WIN32_CONSOLE
 static const DWORD GetTextAttribute(EConsoleColor front, EConsoleColor back, EConsoleStyle style) SKR_NOEXCEPT
 {
-    return GetFrontColor(front) | GetBackColor(back) | GetStyle(style);
+    return GetFrontColor<Win::FrontColorSpec>(front) | GetBackColor<Win::BackColorSpec>(back) | GetStyle<Win::StyleSpec>(style);
 }
-#else
+#endif
+
 static const std::string_view GetAnsiEscapeCode(std::string& buf, EConsoleColor front, EConsoleColor back, EConsoleStyle style) SKR_NOEXCEPT
 {
     buf.clear();
-    const auto fcv = GetFrontColor(front);
-    const auto bcv = GetBackColor(back);
-    const auto scv = GetStyle(style);
+    const auto fcv = GetFrontColor<ANSI::FrontColorSpec>(front);
+    const auto bcv = GetBackColor<ANSI::BackColorSpec>(back);
+    const auto scv = GetStyle<ANSI::StyleSpec>(style);
     buf.append(fcv).append(bcv).append(scv);
     return buf;
 }
-#endif
 }
 
 void LogConsoleSink::set_front_color(LogLevel level, EConsoleColor front) SKR_NOEXCEPT
@@ -191,7 +248,19 @@ void LogConsoleSink::set_style(LogLevel level, EConsoleStyle style) SKR_NOEXCEPT
     color_sets_[static_cast<uint32_t>(level)].s = style;
 }
 
-void LogConsoleSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
+void LogANSIOutputSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
+{
+    ZoneScopedN("ANSI::Print");
+
+    // set color
+    const auto L = static_cast<uint32_t>(event.get_level());
+    const auto escape = GetAnsiEscapeCode(buf_cache_->buf, color_sets_[L].f, color_sets_[L].b, color_sets_[L].s);
+
+    // output to console (use '\033[0m' to reset color)
+    ::printf("%s%s\033[0m", escape.data(), content.c_str());
+}
+
+void LogConsoleWindowSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
 {
 #ifdef USE_WIN32_CONSOLE
     ZoneScopedN("Console::Write");
@@ -215,14 +284,25 @@ void LogConsoleSink::sink(const LogEvent& event, skr::string_view content) SKR_N
     if (csbiInfo.wAttributes != attrs)
         ::SetConsoleTextAttribute(StdHandle, csbiInfo.wAttributes);
 #else
-    ZoneScopedN("ANSI::Print");
+    LogANSIOutputSink::sink(event, content);
+#endif
+}
+
+void LogDebugOutputSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
+{
+    ZoneScopedN("DebugOutput::Print");
 
     // set color
     const auto L = static_cast<uint32_t>(event.get_level());
-    const auto escape = GetAnsiEscapeCode(buf_cache_->buf, color_sets_[L].f, color_sets_[L].b, color_sets_[L].s);
+    [[maybe_unused]] const auto escape = 
+        GetAnsiEscapeCode(buf_cache_->buf, color_sets_[L].f, color_sets_[L].b, color_sets_[L].s);
 
-    // output to console (use '\033[0m' to reset color)
-    ::printf("%s%s\033[0m", escape.data(), content.c_str());
+#ifdef USE_WIN32_CONSOLE
+    skr::string output((const char8_t*)buf_cache_->buf.c_str());
+    output.append(content);
+    ::OutputDebugStringA(output.c_str());
+#else
+    LogANSIOutputSink::sink(event, content);
 #endif
 }
 
