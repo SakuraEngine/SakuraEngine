@@ -186,6 +186,8 @@ void LogManager::PatternAndSink(const LogEvent& event, skr::string_view formatte
 
 void LogManager::FlushAllSinks() SKR_NOEXCEPT
 {
+    ZoneScopedN("LogManager::FlushSinks");
+
     for (auto&& [id, sink] : sinks_)
     {
         sink->flush();
