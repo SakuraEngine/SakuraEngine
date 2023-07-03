@@ -9,6 +9,9 @@ namespace skr::gui
 struct SKR_GUI_RENDERER_API SkrResourceService final : public IResourceService {
     SKR_GUI_OBJECT(SkrResourceService, "5be84757-282b-4a1c-8c5e-4b4d58807d7d", IResourceService)
 
+    void init();
+    void shutdown();
+
     NotNull<IUpdatableImage*> create_updatable_image(const UpdatableImageDesc& desc) override;
     void                      destroy_resource(NotNull<IResource*> resource) override;
 
@@ -22,6 +25,7 @@ private:
     skr_io_ram_service_t*  _ram_service;
     skr_io_vram_service_t* _vram_service;
     skr_vfs_t*             _vfs;
+    JobQueue*              _job_queue;
     FutureLauncher<bool>*  _future_launcher;
 };
 } // namespace skr::gui

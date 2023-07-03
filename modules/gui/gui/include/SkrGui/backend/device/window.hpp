@@ -72,11 +72,13 @@ struct SKR_GUI_API IWindow SKR_GUI_INTERFACE_BASE {
     // operators
     virtual void set_absolute_pos(Offsetf absolute) SKR_NOEXCEPT = 0;
     virtual void set_absolute_size(Sizef absolute) SKR_NOEXCEPT = 0;
-    virtual void set_layer(Layer* layer) SKR_NOEXCEPT = 0;
     virtual void take_focus() SKR_NOEXCEPT = 0;
     virtual void raise() SKR_NOEXCEPT = 0;
     virtual void show() SKR_NOEXCEPT = 0;
     virtual void hide() SKR_NOEXCEPT = 0;
+
+    // rendering
+    virtual void update_content(Layer* layer) SKR_NOEXCEPT = 0;
 };
 
 struct SKR_GUI_API INativeWindow : public IWindow {

@@ -126,7 +126,7 @@ void SkrNativeWindow::set_absolute_size(Sizef absolute) SKR_NOEXCEPT
 {
     skr_window_set_extent(_window, (int32_t)absolute.width, (int32_t)absolute.height);
 }
-void SkrNativeWindow::set_layer(Layer* layer) SKR_NOEXCEPT
+void SkrNativeWindow::update_content(Layer* layer) SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION();
 }

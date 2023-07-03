@@ -1,6 +1,7 @@
 #include "SkrGuiRenderer/device/skr_native_device.hpp"
 #include "SkrGuiRenderer/device/skr_native_window.hpp"
 #include "SkrGuiRenderer/render/skr_render_device.hpp"
+#include "SkrGuiRenderer/resource/skr_resource_service.hpp"
 
 namespace skr::gui
 {
@@ -9,6 +10,10 @@ void SkrNativeDevice::init()
     // init render device
     _render_device = SkrNew<SkrRenderDevice>();
     _render_device->init();
+
+    // init resource service
+    _resource_service = SkrNew<SkrResourceService>();
+    _resource_service->init();
 
     // get display metrics
     uint32_t       count;
@@ -37,6 +42,9 @@ void SkrNativeDevice::init()
 }
 void SkrNativeDevice::shutdown()
 {
+    // shutdown resource device
+    _resource_service->shutdown();
+    SkrDelete(_resource_service);
 
     // shutdown render device
     _render_device->shutdown();
@@ -61,12 +69,6 @@ void SkrNativeDevice::destroy_window(NotNull<IWindow*> view)
 
     // delete
     SkrDelete(view.get());
-}
-
-// view ops
-void SkrNativeDevice::draw_window(NotNull<IWindow*> view)
-{
-    // TODO. draw window
 }
 
 // display info
