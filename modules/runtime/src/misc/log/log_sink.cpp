@@ -59,7 +59,7 @@ LogConsoleSink::~LogConsoleSink() SKR_NOEXCEPT
 LogANSIOutputSink::LogANSIOutputSink(skr_guid_t pattern) SKR_NOEXCEPT
     : LogConsoleSink(pattern)
 {
-    ::setvbuf(stdout, _IOFBF, _IONBF, bufSize);
+    ::setvbuf(stdout, NULL, _IOFBF, bufSize);
 }
 
 LogANSIOutputSink::~LogANSIOutputSink() SKR_NOEXCEPT
