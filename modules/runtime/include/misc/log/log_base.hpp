@@ -13,6 +13,7 @@ enum class LogLevel : uint32_t
     kWarning,
     kError,
     kFatal,
+    kBackTrace,
     kCount
 };
 
@@ -56,7 +57,8 @@ struct RUNTIME_API LogConstants
         skr::log::LogLevel::kInfo, 
         skr::log::LogLevel::kWarning, 
         skr::log::LogLevel::kError, 
-        skr::log::LogLevel::kFatal 
+        skr::log::LogLevel::kFatal,
+        skr::log::LogLevel::kBackTrace
     };
     static constexpr const char8_t* kLogLevelNameLUT[] = {
         u8"TRACE",
@@ -64,7 +66,8 @@ struct RUNTIME_API LogConstants
         u8"INFO",
         u8"WARN",
         u8"ERROR",
-        u8"FATAL"
+        u8"FATAL",
+        u8"BACKTRACE"
     };
     static_assert(sizeof(kLogLevelsLUT) / sizeof(kLogLevelsLUT[0]) == (int)skr::log::LogLevel::kCount, "kLogLevelsLUT size mismatch");
 

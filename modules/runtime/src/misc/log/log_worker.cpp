@@ -10,7 +10,7 @@ namespace skr {
 namespace log {
 
 ThreadToken::ThreadToken(LogQueue& q) SKR_NOEXCEPT
-    : ptok_(q.queue_)
+    : ptok_(q.queue_), backtraces_(4)
 {
 
 }
@@ -26,13 +26,13 @@ EFlushStatus ThreadToken::query_status() const SKR_NOEXCEPT
 }
 
 LogElement::LogElement(LogEvent ev, ThreadToken* ptok) SKR_NOEXCEPT
-    : event(ev), tok(ptok)
+    : event(ev), tok(ptok), valid(true)
 {
 
 }
 
 LogElement::LogElement() SKR_NOEXCEPT
-    : event(nullptr, LogLevel::kTrace, {})
+    : event(nullptr, LogLevel::kTrace, {}), valid(false)
 {
     
 }
@@ -58,9 +58,9 @@ void LogQueue::finish(const LogElement& e) SKR_NOEXCEPT
     }
 }
 
-void LogQueue::push(LogEvent ev, const skr::string&& what) SKR_NOEXCEPT
+void LogQueue::push(LogEvent ev, const skr::string&& what, bool backtrace) SKR_NOEXCEPT
 {
-    auto ptok_ = on_push(ev);
+    auto ptok_ = on_push(ev, backtrace);
     SKR_ASSERT(ptok_);
     
     auto element = LogElement(ev, ptok_);
@@ -68,12 +68,15 @@ void LogQueue::push(LogEvent ev, const skr::string&& what) SKR_NOEXCEPT
     element.format = skr::move(what);
     element.need_format = false;
     
-    queue_.enqueue(ptok_->ptok_, skr::move(element));
+    if (!backtrace)
+        queue_.enqueue(ptok_->ptok_, skr::move(element));
+    else
+        ptok_->backtraces_.add(element);
 }
 
-void LogQueue::push(LogEvent ev, const skr::string_view format, ArgsList&& args) SKR_NOEXCEPT
+void LogQueue::push(LogEvent ev, const skr::string_view format, ArgsList&& args, bool backtrace) SKR_NOEXCEPT
 {
-    auto ptok_ = on_push(ev);
+    auto ptok_ = on_push(ev, backtrace);
     SKR_ASSERT(ptok_);
     auto element = LogElement(ev, ptok_);
 
@@ -81,7 +84,10 @@ void LogQueue::push(LogEvent ev, const skr::string_view format, ArgsList&& args)
     element.args = skr::move(args);
     element.need_format = true;
 
-    queue_.enqueue(ptok_->ptok_, skr::move(element));
+    if (!backtrace)
+        queue_.enqueue(ptok_->ptok_, skr::move(element));
+    else
+        ptok_->backtraces_.add(element);
 }
 
 void LogQueue::mark_flushing(SThreadID tid) SKR_NOEXCEPT
@@ -90,6 +96,8 @@ void LogQueue::mark_flushing(SThreadID tid) SKR_NOEXCEPT
     {
         if (tok->query_cnt() != 0) // if there is no log in this thread, we don't need to flush
             skr_atomic32_cas_relaxed(&tok->flush_status_, kNoFlush, kFlushing);
+        else
+            skr_atomic32_cas_relaxed(&tok->flush_status_, kNoFlush, kFlushed);
     }
 }
 
@@ -144,7 +152,7 @@ int64_t LogQueue::query_cnt() const SKR_NOEXCEPT
     return skr_atomic64_load_relaxed(&total_cnt_);
 }
 
-ThreadToken* LogQueue::on_push(const LogEvent& ev) SKR_NOEXCEPT
+ThreadToken* LogQueue::on_push(const LogEvent& ev, bool backtrace) SKR_NOEXCEPT
 {
     const auto tid = ev.get_thread_id();
     auto iter = thread_id_map_.find(tid);
@@ -159,6 +167,8 @@ ThreadToken* LogQueue::on_push(const LogEvent& ev) SKR_NOEXCEPT
     
     if (auto token = thread_id_map_[tid].get())
     {
+        if (backtrace) 
+            return token;
         skr_atomic64_add_relaxed(&total_cnt_, 1);
         skr_atomic64_add_relaxed(&token->tls_cnt_, 1);
         return token;
@@ -232,6 +242,9 @@ void LogWorker::process_logs() SKR_NOEXCEPT
         n++;
         if (n >= N) break;
     }
+
+    // flush sinks
+    LogManager::FlushAllSinks();
 }
 
 void LogWorker::flush(SThreadID tid) SKR_NOEXCEPT
@@ -272,12 +285,37 @@ skr::AsyncResult LogWorker::serve() SKR_NOEXCEPT
 
 void LogWorker::patternAndSink(const LogElement& e) SKR_NOEXCEPT
 {
-    ZoneScopedNC("LogSingle", tracy::Color::Orchid1);
-    const auto& what = e.need_format ? 
-        formatter_.format(e.format, e.args) :
-        e.format;
-    skr::log::LogManager::PatternAndSink(e.event, what.view());
-    queue_->finish(e);
+    if (e.valid)
+    {
+        ZoneScopedNC("LogSingle", tracy::Color::Orchid1);
+        const auto& what = e.need_format ? 
+            formatter_.format(e.format, e.args) :
+            e.format;
+        skr::log::LogManager::PatternAndSink(e.event, what.view());
+        
+        if (auto should_backtrace = LogManager::ShouldBacktrace(e.event))
+        {
+            ZoneScopedNC("Backtrace", tracy::Color::Orchid2);
+            const auto tid = e.event.get_thread_id();
+            if (auto token = queue_->query_token(tid))
+            {
+                for (int64_t i = token->backtraces_.get_size() - 1; i >= 0; i--)
+                {
+                    const auto bt_e = token->backtraces_.get(i);
+                    if (bt_e.valid)
+                    {
+                        const auto& bt_what = bt_e.need_format ? 
+                            formatter_.format(bt_e.format, bt_e.args) :
+                            bt_e.format;
+                        skr::log::LogManager::PatternAndSink(bt_e.event, bt_what.view());
+                    }
+                }
+                token->backtraces_.zero();
+            }
+        }
+
+        queue_->finish(e);
+    }
 }
 
 } } // namespace skr::log

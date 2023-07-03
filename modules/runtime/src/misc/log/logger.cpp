@@ -63,6 +63,14 @@ Logger* Logger::GetDefault() SKR_NOEXCEPT
     return LogManager::GetDefaultLogger();
 }
 
+void Logger::onLog(const LogEvent& ev) SKR_NOEXCEPT
+{
+    if (auto should_backtrace = LogManager::ShouldBacktrace(ev))
+    {
+        log_flush();
+    }
+}
+
 void Logger::sinkDefaultImmediate(const LogEvent& e, skr::string_view what) const SKR_NOEXCEPT
 {
     skr::log::LogManager::PatternAndSink(e, what);
@@ -80,7 +88,7 @@ bool Logger::tryPushToQueue(LogEvent ev, skr::string_view format, ArgsList&& arg
     if (worker)
     {
         auto queue_ = worker->queue_;
-        queue_->push(ev, format, skr::move(args_list));
+        queue_->push(ev, format, skr::move(args_list), ev.get_level() == LogLevel::kBackTrace);
         notifyWorker();
         return true;
     }
@@ -93,7 +101,7 @@ bool Logger::tryPushToQueue(LogEvent ev, skr::string&& what) SKR_NOEXCEPT
     if (worker)
     {
         auto queue_ = worker->queue_;
-        queue_->push(ev, skr::move(what));
+        queue_->push(ev, skr::move(what), ev.get_level() == LogLevel::kBackTrace);
         notifyWorker();
         return true;
     }
