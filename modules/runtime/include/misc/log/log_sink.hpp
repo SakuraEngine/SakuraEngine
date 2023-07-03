@@ -11,6 +11,7 @@ struct RUNTIME_API LogSink
     virtual ~LogSink() SKR_NOEXCEPT;
     virtual skr_guid_t get_pattern() const SKR_NOEXCEPT { return pattern_; }
     virtual void sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT = 0;
+    virtual void flush() SKR_NOEXCEPT {}
 protected:
     skr_guid_t pattern_ = LogConstants::kDefaultPatternId;
 };   
@@ -42,6 +43,9 @@ struct RUNTIME_API LogConsoleSink : public LogSink
     virtual void set_front_color(LogLevel level, EConsoleColor front) SKR_NOEXCEPT;
     virtual void set_back_color(LogLevel level, EConsoleColor back) SKR_NOEXCEPT;
 
+    void sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT override;
+    virtual void flush() SKR_NOEXCEPT override;
+
 protected:
     struct ColorSet
     {
@@ -50,27 +54,29 @@ protected:
         EConsoleStyle s = EConsoleStyle::NORMAL;
     } color_sets_[static_cast<uint32_t>(LogLevel::kCount)];
     struct BufCache* buf_cache_ = nullptr;
+    uint64_t bufSize = 2048;
 };
 
 struct RUNTIME_API LogANSIOutputSink : public LogConsoleSink
 {
     LogANSIOutputSink(skr_guid_t pattern = LogConstants::kDefaultConsolePatternId) SKR_NOEXCEPT;
     virtual ~LogANSIOutputSink() SKR_NOEXCEPT;
-    void sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT override;
 };
 
-struct RUNTIME_API LogConsoleWindowSink : public LogANSIOutputSink
+struct RUNTIME_API LogConsoleWindowSink : public LogConsoleSink
 {
     LogConsoleWindowSink(skr_guid_t pattern = LogConstants::kDefaultConsolePatternId) SKR_NOEXCEPT;
     virtual ~LogConsoleWindowSink() SKR_NOEXCEPT;
     void sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT override;
+    virtual void flush() SKR_NOEXCEPT override;
 };
 
-struct RUNTIME_API LogDebugOutputSink : public LogANSIOutputSink
+struct RUNTIME_API LogDebugOutputSink : public LogConsoleSink
 {
     LogDebugOutputSink(skr_guid_t pattern = LogConstants::kDefaultConsolePatternId) SKR_NOEXCEPT;
     virtual ~LogDebugOutputSink() SKR_NOEXCEPT;
     void sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT override;
+    virtual void flush() SKR_NOEXCEPT override;
 };
 
 struct RUNTIME_API LogFileSink : public LogSink
@@ -78,6 +84,7 @@ struct RUNTIME_API LogFileSink : public LogSink
     LogFileSink() SKR_NOEXCEPT;
     virtual ~LogFileSink() SKR_NOEXCEPT;
     void sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT override;
+    virtual void flush() SKR_NOEXCEPT override;
     struct CFILE* file_ = nullptr;
 };
 
