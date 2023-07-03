@@ -6,6 +6,17 @@
 #include "platform/system.h"
 #include "tracy/Tracy.hpp"
 
+// !!!! TestWidgets !!!!
+#include "SkrGui/widgets/stack.hpp"
+#include "SkrGui/widgets/color_picker.hpp"
+#include "SkrGui/widgets/colored_box.hpp"
+#include "SkrGui/widgets/flex.hpp"
+#include "SkrGui/widgets/grid_paper.hpp"
+#include "SkrGui/widgets/positioned.hpp"
+#include "SkrGui/widgets/sized_box.hpp"
+#include "SkrGui/widgets/text.hpp"
+#include "SkrGui/widgets/flex_slot.hpp"
+
 int main(void)
 {
     using namespace skr::gui;
@@ -18,6 +29,54 @@ int main(void)
 
     // create sandbox
     Sandbox* sandbox = SkrNew<Sandbox>(device, canvas_service, text_service);
+    sandbox->init();
+
+    // setup content
+    {
+        auto widget = SNewWidget(Stack)
+        {
+            SNewChild(p.children, Positioned)
+            {
+                p.positional.fill();
+                p.child = SNewWidget(GridPaper){};
+            };
+            SNewChild(p.children, Positioned)
+            {
+                p.positional.fill();
+                p.child = SNewWidget(ColorPicker){};
+            };
+            SNewChild(p.children, Positioned)
+            {
+                p.positional.anchor_LT(0, 0).sized(400, 400).pivot({ 0.5, 0 });
+                p.child = SNewWidget(Flex)
+                {
+                    p.cross_axis_alignment = ECrossAxisAlignment::Start;
+                    p.main_axis_alignment = EMainAxisAlignment::Center;
+                    SNewChild(p.children, SizedBox)
+                    {
+                        p.size = { 100, 300 };
+                        SNewWidget(ColoredBox) { p.color = Color::SRGB("#F00"); };
+                    };
+                    SNewChild(p.children, SizedBox)
+                    {
+                        p.size = { 100, 200 };
+                        SNewWidget(ColoredBox) { p.color = Color::SRGB("#0F0"); };
+                    };
+                    SNewChild(p.children, SizedBox)
+                    {
+                        p.size = { 100, 400 };
+                        SNewWidget(ColoredBox) { p.color = Color::SRGB("#00F"); };
+                    };
+                };
+            };
+            SNewChild(p.children, Positioned)
+            {
+                p.positional.anchor_LT(0.5_pct, 10_px).pivot({ 0.5, 0 });
+                p.child = SNewWidget(Text) { p.text = u8"Hello World!"; };
+            };
+        };
+        sandbox->set_content(skr::make_not_null(widget));
+    }
 
     // run application
     bool quit = false;

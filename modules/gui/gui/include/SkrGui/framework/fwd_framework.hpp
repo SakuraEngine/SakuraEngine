@@ -29,10 +29,14 @@ struct RenderObjectElement;
 struct ProxyElement;
 struct InheritedElement;
 struct ComponentElement;
+struct RenderWindowElement;
+struct RenderNativeWindowElement;
 
 // render object
 struct RenderObject;
 struct RenderBox;
+struct RenderWindow;
+struct RenderNativeWindow;
 
 // binding
 struct PipelineOwner;
