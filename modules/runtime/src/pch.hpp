@@ -13,6 +13,7 @@
 #include "misc/log.h"
 #include "misc/log.hpp"
 
+#include <containers/concurrent_queue.h>
 #include <containers/sptr.hpp>
 #include <containers/string.hpp>
 #include <containers/vector.hpp>
