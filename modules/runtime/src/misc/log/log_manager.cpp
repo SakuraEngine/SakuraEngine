@@ -72,7 +72,7 @@ Logger* LogManager::GetDefaultLogger() SKR_NOEXCEPT
                     u8"\n    \x1b[90mIn %(function_name) At %(file_name):%(file_line)\x1b[0m"
                 ));
             SKR_ASSERT(ret && "Default log console pattern register failed!");
-            ret = LogManager::RegisterSink(LogConstants::kDefaultConsoleSinkId, eastl::make_unique<LogANSIOutputSink>());
+            ret = LogManager::RegisterSink(LogConstants::kDefaultConsoleSinkId, eastl::make_unique<LogConsoleWindowSink>());
             SKR_ASSERT(ret && "Default log console sink register failed!");
             
             // register default file pattern & sink
@@ -181,6 +181,14 @@ void LogManager::PatternAndSink(const LogEvent& event, skr::string_view formatte
                 SKR_UNREACHABLE_CODE();
             }
         }
+    }
+}
+
+void LogManager::FlushAllSinks() SKR_NOEXCEPT
+{
+    for (auto&& [id, sink] : sinks_)
+    {
+        sink->flush();
     }
 }
 

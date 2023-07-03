@@ -246,6 +246,7 @@ void LogWorker::flush(SThreadID tid) SKR_NOEXCEPT
             skr_thread_sleep(0);
         }
         SKR_ASSERT(skr_atomic64_load_relaxed(&tok->tls_cnt_) == 0);
+        LogManager::FlushAllSinks();
         skr_atomic32_cas_relaxed(&tok->flush_status_, kFlushed, kNoFlush);
     }
     else

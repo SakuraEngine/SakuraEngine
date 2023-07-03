@@ -25,7 +25,7 @@ LogSink::LogSink(skr_guid_t pattern) SKR_NOEXCEPT
 
 LogSink::~LogSink() SKR_NOEXCEPT
 {
-
+    flush();
 }
 
 LogConsoleSink::LogConsoleSink(skr_guid_t pattern) SKR_NOEXCEPT
@@ -56,7 +56,7 @@ LogConsoleSink::~LogConsoleSink() SKR_NOEXCEPT
 LogANSIOutputSink::LogANSIOutputSink(skr_guid_t pattern) SKR_NOEXCEPT
     : LogConsoleSink(pattern)
 {
-
+    ::setvbuf(stdout, _IOFBF, _IONBF, bufSize);
 }
 
 LogANSIOutputSink::~LogANSIOutputSink() SKR_NOEXCEPT
@@ -65,10 +65,10 @@ LogANSIOutputSink::~LogANSIOutputSink() SKR_NOEXCEPT
 }
 
 LogConsoleWindowSink::LogConsoleWindowSink(skr_guid_t pattern) SKR_NOEXCEPT
-    : LogANSIOutputSink(pattern)
+    : LogConsoleSink(pattern)
 {
 #ifdef USE_WIN32_CONSOLE
-    const auto minLength = 2048;
+    const auto minLength = bufSize;
     if (!AttachConsole(ATTACH_PARENT_PROCESS)) 
     {
         ::FreeConsole();
@@ -100,7 +100,7 @@ LogConsoleWindowSink::~LogConsoleWindowSink() SKR_NOEXCEPT
 }
 
 LogDebugOutputSink::LogDebugOutputSink(skr_guid_t pattern) SKR_NOEXCEPT
-    : LogANSIOutputSink(pattern)
+    : LogConsoleSink(pattern)
 {
 
 }
@@ -248,7 +248,7 @@ void LogConsoleSink::set_style(LogLevel level, EConsoleStyle style) SKR_NOEXCEPT
     color_sets_[static_cast<uint32_t>(level)].s = style;
 }
 
-void LogANSIOutputSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
+void LogConsoleSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
 {
     ZoneScopedN("ANSI::Print");
 
@@ -258,6 +258,11 @@ void LogANSIOutputSink::sink(const LogEvent& event, skr::string_view content) SK
 
     // output to console (use '\033[0m' to reset color)
     ::printf("%s%s\033[0m", escape.data(), content.c_str());
+}
+
+void LogConsoleSink::flush() SKR_NOEXCEPT
+{
+    ::fflush(stdout);
 }
 
 void LogConsoleWindowSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
@@ -284,7 +289,17 @@ void LogConsoleWindowSink::sink(const LogEvent& event, skr::string_view content)
     if (csbiInfo.wAttributes != attrs)
         ::SetConsoleTextAttribute(StdHandle, csbiInfo.wAttributes);
 #else
-    LogANSIOutputSink::sink(event, content);
+    LogConsoleSink::sink(event, content);
+#endif
+}
+
+void LogConsoleWindowSink::flush() SKR_NOEXCEPT
+{
+#ifdef USE_WIN32_CONSOLE
+    const auto StdHandle = ::GetStdHandle(STD_OUTPUT_HANDLE);
+    ::FlushFileBuffers(StdHandle);
+#else
+    ::fflush(stdout);
 #endif
 }
 
@@ -302,7 +317,17 @@ void LogDebugOutputSink::sink(const LogEvent& event, skr::string_view content) S
     output.append(content);
     ::OutputDebugStringA(output.c_str());
 #else
-    LogANSIOutputSink::sink(event, content);
+    LogConsoleSink::sink(event, content);
+#endif
+}
+
+void LogDebugOutputSink::flush() SKR_NOEXCEPT
+{
+#ifdef USE_WIN32_CONSOLE
+    const auto StdHandle = ::GetStdHandle(STD_OUTPUT_HANDLE);
+    ::FlushFileBuffers(StdHandle);
+#else
+    ::fflush(stdout);
 #endif
 }
 
@@ -354,6 +379,10 @@ LogFileSink::~LogFileSink() SKR_NOEXCEPT
 void LogFileSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
 {
     file_->write(content);
+}
+
+void LogFileSink::flush() SKR_NOEXCEPT
+{
     file_->flush();
 }
 
