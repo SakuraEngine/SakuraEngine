@@ -72,7 +72,7 @@ Logger* LogManager::GetDefaultLogger() SKR_NOEXCEPT
                     u8"\n    \x1b[90mIn %(function_name) At %(file_name):%(file_line)\x1b[0m"
                 ));
             SKR_ASSERT(ret && "Default log console pattern register failed!");
-            ret = LogManager::RegisterSink(LogConstants::kDefaultConsoleSinkId, eastl::make_unique<LogConsoleSink>());
+            ret = LogManager::RegisterSink(LogConstants::kDefaultConsoleSinkId, eastl::make_unique<LogANSIOutputSink>());
             SKR_ASSERT(ret && "Default log console sink register failed!");
             
             // register default file pattern & sink
