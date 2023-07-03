@@ -36,8 +36,6 @@ struct SKR_GUI_API IDevice SKR_GUI_INTERFACE_BASE {
     virtual NotNull<IWindow*> create_window() = 0;
     virtual void              destroy_window(NotNull<IWindow*> view) = 0;
 
-    // window ops
-    virtual void draw_window(NotNull<IWindow*> view) = 0;
     // TODO. input
 };
 

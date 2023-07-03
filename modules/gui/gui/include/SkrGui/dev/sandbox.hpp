@@ -13,8 +13,6 @@ struct INativeDevice;
 struct SKR_GUI_API Sandbox {
     Sandbox(INativeDevice* device, ICanvasService* canvas_service, ITextService* text_service) SKR_NOEXCEPT;
 
-    void init(Widget* root_widget);
-
     // void update();
     // void animation();
     // void layout();
@@ -23,8 +21,6 @@ struct SKR_GUI_API Sandbox {
     // void finalize();
 
 private:
-    Widget* _root_widget = nullptr;
-
     INativeDevice*  _device = nullptr;
     ICanvasService* _canvas_service = nullptr;
     ITextService*   _text_service = nullptr;

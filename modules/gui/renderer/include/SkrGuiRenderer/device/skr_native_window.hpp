@@ -42,11 +42,13 @@ struct SKR_GUI_RENDERER_API SkrNativeWindow final : public INativeWindow {
     // operators
     void set_absolute_pos(Offsetf absolute) SKR_NOEXCEPT override;
     void set_absolute_size(Sizef absolute) SKR_NOEXCEPT override;
-    void set_layer(Layer* layer) SKR_NOEXCEPT override;
     void take_focus() SKR_NOEXCEPT override;
     void raise() SKR_NOEXCEPT override;
     void show() SKR_NOEXCEPT override;
     void hide() SKR_NOEXCEPT override;
+
+    // rendering
+    void update_content(Layer* layer) SKR_NOEXCEPT override;
 
     // getter
     bool   minimized() SKR_NOEXCEPT override;

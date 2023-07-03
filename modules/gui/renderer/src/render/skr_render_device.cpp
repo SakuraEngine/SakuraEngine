@@ -129,17 +129,17 @@ void SkrRenderDevice::shutdown()
     if (_render_graph) RenderGraph::destroy(_render_graph);
 
     // destroy cgpu
-    if (_cgpu_queue) cgpu_free_queue(_cgpu_queue);
-    if (_cgpu_device) cgpu_free_device(_cgpu_device);
-    if (_cgpu_instance) cgpu_free_instance(_cgpu_instance);
-    if (_static_color_sampler) cgpu_free_sampler(_static_color_sampler);
-    if (_rs_pool) cgpu_free_root_signature_pool(_rs_pool);
     for (const auto& [flags, pipeline] : _pipelines)
     {
         auto rs = pipeline->root_signature;
         cgpu_free_render_pipeline(pipeline);
         cgpu_free_root_signature(rs);
     }
+    if (_rs_pool) cgpu_free_root_signature_pool(_rs_pool);
+    if (_static_color_sampler) cgpu_free_sampler(_static_color_sampler);
+    if (_cgpu_queue) cgpu_free_queue(_cgpu_queue);
+    if (_cgpu_device) cgpu_free_device(_cgpu_device);
+    if (_cgpu_instance) cgpu_free_instance(_cgpu_instance);
 }
 
 // create view
