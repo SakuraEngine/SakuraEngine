@@ -12,6 +12,11 @@
 namespace skr {
 namespace log {
 
+struct BufCache
+{
+    std::string buf;
+};
+
 LogSink::LogSink(skr_guid_t pattern) SKR_NOEXCEPT
     : pattern_(pattern)
 {
@@ -22,11 +27,6 @@ LogSink::~LogSink() SKR_NOEXCEPT
 {
 
 }
-
-struct BufCache
-{
-    std::string buf;
-};
 
 LogConsoleSink::LogConsoleSink(skr_guid_t pattern) SKR_NOEXCEPT
     : LogSink(pattern), buf_cache_(SkrNew<BufCache>())
