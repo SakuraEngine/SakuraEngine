@@ -30,6 +30,7 @@ struct RUNTIME_API LogManager
 
     static void PatternAndSink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT;
     static void FlushAllSinks() SKR_NOEXCEPT;
+    static bool ShouldBacktrace(const LogEvent& event) SKR_NOEXCEPT;
 
     static SAtomic64 available_;
     static eastl::unique_ptr<LogWorker> worker_;

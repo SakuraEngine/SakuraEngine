@@ -7,6 +7,7 @@
 
 #include "containers/concurrent_queue.h"
 #include "containers/vector.hpp"
+#include "containers/resizable_ring_buffer.hpp"
 #include <EASTL/unique_ptr.h>
 
 namespace skr {
@@ -21,6 +22,23 @@ enum EFlushStatus
     kFlushed = 2
 };
 
+struct LogElement
+{
+    LogElement() SKR_NOEXCEPT;
+private:
+    LogElement(LogEvent ev, struct ThreadToken* ptok) SKR_NOEXCEPT;
+    
+    friend struct LogQueue;
+    friend struct LogWorker;
+
+    LogEvent event;
+    struct ThreadToken* tok;
+    skr::string format;
+    ArgsList args;
+    bool need_format = true;
+    bool valid = false;
+};
+
 struct ThreadToken
 {
     ThreadToken(LogQueue& q) SKR_NOEXCEPT;
@@ -32,22 +50,7 @@ protected:
     SAtomic64 tls_cnt_ = 0;
     SAtomic32 flush_status_ = kNoFlush;
     skr::ProducerToken ptok_;
-};
-
-struct LogElement
-{
-private:
-    LogElement(LogEvent ev, ThreadToken* ptok) SKR_NOEXCEPT;
-    LogElement() SKR_NOEXCEPT;
-    
-    friend struct LogQueue;
-    friend struct LogWorker;
-
-    LogEvent event;
-    ThreadToken* tok;
-    skr::string format;
-    ArgsList args;
-    bool need_format = true;
+    skr::resizable_ring_buffer<LogElement> backtraces_;
 };
 
 struct LogQueue
@@ -56,8 +59,8 @@ public:
     LogQueue() SKR_NOEXCEPT;
     ~LogQueue() SKR_NOEXCEPT;
 
-    void push(LogEvent ev, const skr::string&& what) SKR_NOEXCEPT;
-    void push(LogEvent ev, const skr::string_view format, ArgsList&& args) SKR_NOEXCEPT;
+    void push(LogEvent ev, const skr::string&& what, bool backtrace) SKR_NOEXCEPT;
+    void push(LogEvent ev, const skr::string_view format, ArgsList&& args, bool backtrace) SKR_NOEXCEPT;
     void mark_flushing(SThreadID tid) SKR_NOEXCEPT;
     
     bool try_dequeue(LogElement& element) SKR_NOEXCEPT;
@@ -69,7 +72,7 @@ public:
     int64_t query_cnt() const SKR_NOEXCEPT;
 
 private:
-    [[nodiscard]] ThreadToken* on_push(const LogEvent& ev) SKR_NOEXCEPT;
+    [[nodiscard]] ThreadToken* on_push(const LogEvent& ev, bool backtrace) SKR_NOEXCEPT;
 
     // formatter & args
     template<int BLK_SIZE = 256>

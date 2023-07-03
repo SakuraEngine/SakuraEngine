@@ -19,6 +19,7 @@ public:
         skr_destroy_rw_mutex(&rw_mutex);
     }
     void resize(int newSize);
+    void zero();
     T add(T value);
     T get(uint64_t index = 0);
     uint64_t get_size() const 
@@ -52,7 +53,7 @@ void resizable_ring_buffer<T>::resize(int newSize)
         {
             ring.buffer[i] = ring.buffer[i + offset];
         }
-        skr_atomicu32_store_release(&ring.head, newSize);
+        skr_atomicu64_store_release(&ring.head, newSize);
     } 
     else 
     {
@@ -64,9 +65,20 @@ void resizable_ring_buffer<T>::resize(int newSize)
         {
             ring.buffer[i] = ring.buffer[i - currentSize];
         }
-        skr_atomicu32_store_release(&ring.head, currentSize);
+        skr_atomicu64_store_release(&ring.head, currentSize);
     }
-    skr_atomicu32_store_release(&ring.size, newSize);
+    skr_atomicu64_store_release(&ring.size, newSize);
+    skr_rw_mutex_release_w(&rw_mutex);
+}
+
+template <typename T>
+void resizable_ring_buffer<T>::zero()
+{
+    skr_rw_mutex_acquire_w(&rw_mutex);
+    for (int i = 0; i < ring.buffer.size(); i++) 
+    {
+        ring.buffer[i] = {};
+    }
     skr_rw_mutex_release_w(&rw_mutex);
 }
 

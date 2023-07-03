@@ -72,7 +72,7 @@ Logger* LogManager::GetDefaultLogger() SKR_NOEXCEPT
                     u8"\n    \x1b[90mIn %(function_name) At %(file_name):%(file_line)\x1b[0m"
                 ));
             SKR_ASSERT(ret && "Default log console pattern register failed!");
-            ret = LogManager::RegisterSink(LogConstants::kDefaultConsoleSinkId, eastl::make_unique<LogConsoleWindowSink>());
+            ret = LogManager::RegisterSink(LogConstants::kDefaultConsoleSinkId, eastl::make_unique<LogANSIOutputSink>());
             SKR_ASSERT(ret && "Default log console sink register failed!");
             
             // register default file pattern & sink
@@ -190,6 +190,14 @@ void LogManager::FlushAllSinks() SKR_NOEXCEPT
     {
         sink->flush();
     }
+}
+
+bool LogManager::ShouldBacktrace(const LogEvent& event) SKR_NOEXCEPT
+{
+    const auto lv = event.get_level();
+    const auto gt = lv >= LogLevel::kError;
+    const auto ne = lv != LogLevel::kBackTrace;
+    return gt && ne;
 }
 
 void LogManager::DateTime::reset_date() SKR_NOEXCEPT

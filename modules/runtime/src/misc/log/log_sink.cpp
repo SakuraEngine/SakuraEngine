@@ -45,6 +45,9 @@ LogConsoleSink::LogConsoleSink(skr_guid_t pattern) SKR_NOEXCEPT
     set_style(LogLevel::kFatal, EConsoleStyle::HIGHLIGHT);
     set_back_color(LogLevel::kFatal, EConsoleColor::RED);
     set_front_color(LogLevel::kFatal, EConsoleColor::WHILE);
+
+    set_style(LogLevel::kBackTrace, EConsoleStyle::HIGHLIGHT);
+    set_front_color(LogLevel::kBackTrace, EConsoleColor::MAGENTA);
 }
 
 LogConsoleSink::~LogConsoleSink() SKR_NOEXCEPT
