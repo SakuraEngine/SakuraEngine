@@ -17,6 +17,7 @@ enum class ERenderObjectLifecycle : uint8_t
 struct SKR_GUI_API RenderObject SKR_GUI_OBJECT_BASE {
     SKR_GUI_OBJECT_ROOT(RenderObject, "74844fa6-8994-4915-8f8e-ec944a1cbea4");
     SKR_GUI_RAII_MIX_IN()
+    friend struct PipelineOwner;
     using VisitFuncRef = FunctionRef<void(NotNull<RenderObject*>)>;
 
     RenderObject() SKR_NOEXCEPT;
@@ -73,6 +74,8 @@ struct SKR_GUI_API RenderObject SKR_GUI_OBJECT_BASE {
     inline RenderObject* parent() const SKR_NOEXCEPT { return _parent; }
     inline int32_t       depth() const SKR_NOEXCEPT { return _depth; }
     inline Slot          slot() const SKR_NOEXCEPT { return _slot; }
+    inline bool          needs_layout() const SKR_NOEXCEPT { return _needs_layout; }
+    inline bool          needs_paint() const SKR_NOEXCEPT { return _needs_paint; }
 
     // setter
     inline void set_slot(Slot slot) SKR_NOEXCEPT { _slot = slot; }

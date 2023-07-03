@@ -64,9 +64,11 @@ struct SKR_GUI_API Element SKR_GUI_OBJECT_BASE_WITH(public IBuildContext) {
     //==> End IBuildContext API
 
     // getter & setter
+    inline uint32_t depth() const SKR_NOEXCEPT { return _depth; }
     inline Element* parent() const SKR_NOEXCEPT { return _parent; }
     inline Slot     slot() const SKR_NOEXCEPT { return _slot; }
     inline Widget*  widget() const SKR_NOEXCEPT { return _widget; }
+    inline bool     is_dirty() const SKR_NOEXCEPT { return _dirty; }
 
 protected:
     // help functions

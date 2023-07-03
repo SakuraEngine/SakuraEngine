@@ -1,6 +1,7 @@
 #include "SkrGuiRenderer/render/skr_render_window.hpp"
 #include "SkrGuiRenderer/render/skr_render_device.hpp"
-#include "SkrGui/framework/layer.hpp"
+#include "SkrGui/framework/layer/offet_layer.hpp"
+#include "SkrGui/framework/layer/geometry_layer.hpp"
 #include "SkrGui/backend/canvas/canvas.hpp"
 #include "math/rtm/qvvf.h"
 #include "tracy/Tracy.hpp"
@@ -109,7 +110,7 @@ void SkrRenderWindow::_prepare_draw_data(const Layer* layer, Sizef window_size)
     _commands.clear();
 
     // copy data
-    auto canvas = layer->TODO_canvas;
+    auto canvas = SKR_GUI_CAST<GeometryLayer>(layer)->canvas();
     _vertices.assign(canvas->vertices().begin(), canvas->vertices().end());
     _indices.assign(canvas->indices().begin(), canvas->indices().end());
     for (const auto& cmd : canvas->commands())

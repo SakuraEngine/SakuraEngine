@@ -9,16 +9,14 @@ struct SKR_GUI_API BuildOwner {
 
     // build
     void schedule_build_for(NotNull<Element*> element) SKR_NOEXCEPT;
-    void build_scope(NotNull<Element*> element) SKR_NOEXCEPT;
-    void drop_unmount_element(NotNull<Element*> element) SKR_NOEXCEPT;
-    // TODO. retake_unmounted_element
+    void flush_build() SKR_NOEXCEPT;
 
-    // TODO. focus management
-    // TODO. navigation management
-    // TODO. global key management
+    // TODO. temporal impl for pass compile, move to global context
+    inline void drop_unmount_element(NotNull<Element*> element) SKR_NOEXCEPT
+    {
+    }
 
 private:
-    Array<Element*> _inactive_elements;
     Array<Element*> _dirty_elements;
 };
 } // namespace skr::gui
