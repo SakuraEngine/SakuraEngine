@@ -22,8 +22,10 @@ struct RUNTIME_API SRCBlock
     virtual ~SRCBlock() = default;
     template<typename T, typename Deleter>
     static SRCBlock* Create(T* ptr, const Deleter& deleter) SKR_NOEXCEPT;
+
     static void Destroy(SRCBlock* b) SKR_NOEXCEPT;
 
+    virtual void free_value() SKR_NOEXCEPT = 0;
     void add_refcount() SKR_NOEXCEPT;
     void add_weak_refcount() SKR_NOEXCEPT;
     void weak_release() SKR_NOEXCEPT;
@@ -43,10 +45,19 @@ struct SRCBlockTyped : public SRCBlock
         , deleter(deleter)
     {
     }
+
     inline ~SRCBlockTyped() SKR_NOEXCEPT
     {
-        deleter(ptr);
+        SKR_ASSERT(ptr == nullptr && "ptr must be nullptr");
     }
+
+    void free_value() SKR_NOEXCEPT final
+    {
+        if (ptr)
+            deleter(ptr);
+        ptr = nullptr;
+    }
+
     T* ptr;
     Deleter deleter;
 };
@@ -61,7 +72,6 @@ inline void SRCBlock::Destroy(SRCBlock* b) SKR_NOEXCEPT
 {
     SkrDelete(b);
 }
-
 
 template <bool Use> struct SRCInst { virtual ~SRCInst() = default; };
 template <> struct SRCInst<true> 

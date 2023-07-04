@@ -8,7 +8,8 @@
 #include <cstddef>     // std::size_t
 #include <cstdint>     // PTRDIFF_MAX
 #include <type_traits> // std::true_type
-#include <EASTL/internal/move_help.h>     // eastl::forward
+#include <EASTL/internal/move_help.h>     // skr::forward
+namespace skr { using eastl::forward; using eastl::move; }
 #if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
 #include "misc/demangle.hpp"
 #endif
@@ -213,7 +214,7 @@ struct SkrTracedNew
         TracyCMessage(name.data(), name.size());
         void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
-        return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ eastl::forward<TArgs>(params)... };
+        return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ skr::forward<TArgs>(params)... };
     }
 
     template<class T, class... TArgs>
@@ -224,7 +225,7 @@ struct SkrTracedNew
         void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname);
         memset(pMemory, 0, sizeof(T));
         SKR_ASSERT(pMemory != nullptr);
-        return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ eastl::forward<TArgs>(params)... };
+        return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ skr::forward<TArgs>(params)... };
     }
 
     template<class T>
@@ -246,7 +247,7 @@ struct SkrTracedNew
         SKR_ASSERT(size >= sizeof(T));
         void* pMemory = SkrNewAlignedWithCZone(size, alignof(T), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
-        return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ eastl::forward<TArgs>(params)... };
+        return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ skr::forward<TArgs>(params)... };
     }
 
     template<class T>
@@ -266,7 +267,7 @@ struct SkrTracedNew
         using ValueType = std::remove_reference_t<F>;
         void* pMemory = SkrNewAlignedWithCZone(sizeof(F), alignof(F), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
-        return new (pMemory) DEBUG_NEW_SOURCE_LINE auto(eastl::forward<F>(lambda));
+        return new (pMemory) DEBUG_NEW_SOURCE_LINE auto(skr::forward<F>(lambda));
     }
 
     template<class T>
@@ -299,7 +300,7 @@ template <typename T, typename... TArgs>
 {
     void* pMemory = sakura_new_aligned(sizeof(T), alignof(T));
     SKR_ASSERT(pMemory != nullptr);
-    return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ eastl::forward<TArgs>(params)... };
+    return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ skr::forward<TArgs>(params)... };
 }
 
 template <typename T>
@@ -316,7 +317,7 @@ template <typename T, typename... TArgs>
     void* pMemory = sakura_new_aligned(sizeof(T), alignof(T));
     memset(pMemory, 0, sizeof(T));
     SKR_ASSERT(pMemory != nullptr);
-    return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ eastl::forward<TArgs>(params)... };
+    return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ skr::forward<TArgs>(params)... };
 }
 
 template <typename T>
@@ -334,7 +335,7 @@ template <typename T, typename... TArgs>
     SKR_ASSERT(size >= sizeof(T));
     void* pMemory = sakura_new_aligned(size, alignof(T));
     SKR_ASSERT(pMemory != nullptr);
-    return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ eastl::forward<TArgs>(params)... };
+    return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ skr::forward<TArgs>(params)... };
 }
 
 template <typename T>
@@ -352,7 +353,7 @@ template <typename F>
     using ValueType = std::remove_reference_t<F>;
     void* pMemory = sakura_new_aligned(sizeof(ValueType), alignof(ValueType));
     SKR_ASSERT(pMemory != nullptr);
-    return new (pMemory) DEBUG_NEW_SOURCE_LINE auto(eastl::forward<F>(lambda));
+    return new (pMemory) DEBUG_NEW_SOURCE_LINE auto(skr::forward<F>(lambda));
 }
 
 template <typename T>
@@ -403,7 +404,7 @@ struct skr_stl_allocator
     using propagate_on_container_move_assignment = std::true_type;
     using propagate_on_container_swap            = std::true_type;
     using is_always_equal                        = std::true_type;
-    template <class U, class ...Args> void construct(U* p, Args&& ...args) { ::new(p) U(eastl::forward<Args>(args)...); }
+    template <class U, class ...Args> void construct(U* p, Args&& ...args) { ::new(p) U(skr::forward<Args>(args)...); }
     template <class U> void destroy(U* p) SKR_NOEXCEPT { p->~U(); }
 #else
     void construct(pointer p, value_type const& val) { ::new(p) value_type(val); }

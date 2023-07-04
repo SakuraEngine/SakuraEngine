@@ -4,23 +4,23 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-static const VkCullModeFlagBits gVkCullModeTranslator[CGPU_CULL_MODE_COUNT] = {
+SKR_UNUSED static const VkCullModeFlagBits gVkCullModeTranslator[CGPU_CULL_MODE_COUNT] = {
     VK_CULL_MODE_NONE,
     VK_CULL_MODE_BACK_BIT,
     VK_CULL_MODE_FRONT_BIT
 };
 
-static const VkPolygonMode gVkFillModeTranslator[CGPU_FILL_MODE_COUNT] = {
+SKR_UNUSED static const VkPolygonMode gVkFillModeTranslator[CGPU_FILL_MODE_COUNT] = {
     VK_POLYGON_MODE_FILL,
     VK_POLYGON_MODE_LINE
 };
 
-static const VkFrontFace gVkFrontFaceTranslator[] = {
+SKR_UNUSED static const VkFrontFace gVkFrontFaceTranslator[] = {
     VK_FRONT_FACE_COUNTER_CLOCKWISE,
     VK_FRONT_FACE_CLOCKWISE
 };
 
-static const VkBlendFactor gVkBlendConstantTranslator[CGPU_BLEND_CONST_COUNT] = {
+SKR_UNUSED static const VkBlendFactor gVkBlendConstantTranslator[CGPU_BLEND_CONST_COUNT] = {
     VK_BLEND_FACTOR_ZERO,
     VK_BLEND_FACTOR_ONE,
     VK_BLEND_FACTOR_SRC_COLOR,
@@ -36,7 +36,7 @@ static const VkBlendFactor gVkBlendConstantTranslator[CGPU_BLEND_CONST_COUNT] = 
     VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR,
 };
 
-static const VkBlendOp gVkBlendOpTranslator[CGPU_BLEND_MODE_COUNT] = {
+SKR_UNUSED static const VkBlendOp gVkBlendOpTranslator[CGPU_BLEND_MODE_COUNT] = {
     VK_BLEND_OP_ADD,
     VK_BLEND_OP_SUBTRACT,
     VK_BLEND_OP_REVERSE_SUBTRACT,

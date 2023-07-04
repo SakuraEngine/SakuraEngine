@@ -1,4 +1,4 @@
-#include "misc/log.h"
+#include "../pch.hpp"
 #include "containers/hashmap.hpp"
 #include "module/module.hpp"
 

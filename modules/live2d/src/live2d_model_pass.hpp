@@ -95,7 +95,8 @@ struct RenderPassLive2D : public IPrimitiveRenderPass {
                 0.0f, 0.0f,
                 (float)back_desc->width, (float)back_desc->height,
                 0.f, 1.f);
-            cgpu_render_encoder_set_scissor(pass_context.encoder, 0, 0, back_desc->width, back_desc->height);
+            cgpu_render_encoder_set_scissor(pass_context.encoder, 
+                0, 0, (uint32_t)back_desc->width, (uint32_t)back_desc->height);
             CGPURenderPipelineId old_pipeline = nullptr;
             for (uint32_t i = 0; i < drawcalls.size(); i++)
             for (uint32_t j = 0; j < drawcalls[i].count; j++)

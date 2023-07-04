@@ -5,15 +5,6 @@ namespace skr {
 namespace io {
 
 extern const char* kIOPoolObjectsMemoryName; 
-template<typename T, typename I = T>
-struct IOSmartPool : public skr::SmartPool<T, I>
-{
-    IOSmartPool() SKR_NOEXCEPT
-        : skr::SmartPool<T, I>(kIOPoolObjectsMemoryName)
-    {
-    }
-};
-
 extern const char* kIOConcurrentQueueName;
 struct IOConcurrentQueueTraits : public skr::ConcurrentQueueDefaultTraits
 {

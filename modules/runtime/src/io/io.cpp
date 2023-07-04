@@ -25,8 +25,8 @@ ESkrIOStage skr_io_future_t::get_status() const SKR_NOEXCEPT
 namespace skr {
 namespace io {
 
-const char* kIOPoolObjectsMemoryName = "I/O PoolObjects";
-const char* kIOConcurrentQueueName = "IOConcurrentQueue";
+const char* kIOPoolObjectsMemoryName = "io::objects";
+const char* kIOConcurrentQueueName = "io::queue";
 
 IIOProcessor::~IIOProcessor() SKR_NOEXCEPT
 {

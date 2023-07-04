@@ -319,6 +319,7 @@ void D3D12Util_RecordAdapterDetail(struct CGPUAdapter_D3D12* D3D12Adapter)
     SAFE_RELEASE(pCheckDevice);
 }
 
+const char* kD3D12MAMemoryName = "D3D12MA";
 void D3D12Util_CreateDMAAllocator(CGPUInstance_D3D12* I, CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D)
 {
     D3D12MA::ALLOCATOR_DESC desc = {};
@@ -328,10 +329,10 @@ void D3D12Util_CreateDMAAllocator(CGPUInstance_D3D12* I, CGPUAdapter_D3D12* A, C
 
     D3D12MA::ALLOCATION_CALLBACKS allocationCallbacks = {};
     allocationCallbacks.pAllocate = +[](size_t size, size_t alignment, void*) {
-        return cgpu_memalign(size, alignment);
+        return cgpu_malloc_alignedN(size, alignment, kD3D12MAMemoryName);
     };
     allocationCallbacks.pFree = +[](void* ptr, void*) { 
-        cgpu_free_aligned(ptr, 1); //TODO: Fix this 
+        cgpu_free_alignedN(ptr, 1, kD3D12MAMemoryName); //TODO: Fix this 
     };
     desc.pAllocationCallbacks = &allocationCallbacks;
     desc.Flags |= D3D12MA::ALLOCATOR_FLAG_MSAA_TEXTURES_ALWAYS_COMMITTED;

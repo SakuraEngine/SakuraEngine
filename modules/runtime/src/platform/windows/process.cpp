@@ -1,8 +1,7 @@
-#include "winheaders.h"
-
+#include "../../pch.hpp"
 #include "platform/process.h"
 #include "platform/memory.h"
-#include <containers/string.hpp>
+#include "platform/atomic.h"
 
 typedef struct SProcess
 {
@@ -59,6 +58,66 @@ SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments
 	result->processInfo = processInfo;
 	result->stdOut = stdOut;
 	return result;
+}
+
+const char8_t* skr_get_current_process_name()
+{
+	const auto vs = __argv;
+	const char8_t* v = vs ? (const char8_t*)vs[0] : nullptr;
+	if (!v)
+	{
+		static char pname[64] = { 0 };
+		v = (const char8_t*)pname;
+
+		enum
+		{
+			kNotInit = -1,
+			kInitializing = 0,
+			kInitialized = 1,
+		};
+
+		static SAtomic32 once = -1;
+		if (skr_atomic32_cas_relaxed(&once, kNotInit, kInitializing) == kNotInit)
+		{
+			HANDLE handle = OpenProcess(
+#if _WIN32_WINNT >= 0x0600
+				PROCESS_QUERY_LIMITED_INFORMATION,
+#else
+				PROCESS_QUERY_INFORMATION | PROCESS_VM_READ
+#endif
+				FALSE,
+				GetCurrentProcessId()
+			);
+			if (handle)
+			{
+				DWORD buffSize = 1024;
+				CHAR buffer[1024];
+#if _WIN32_WINNT >= 0x0600
+				if (QueryFullProcessImageNameA(handle, 0, buffer, &buffSize))
+#else
+				if (GetModuleFileNameExA(handle, NULL, buffer, buffSize))
+#endif
+				{
+					// resolve to relative
+					const auto p = PathFindFileNameA(buffer); // remove path
+					const auto l = strlen(p);
+					const auto ll = (l > 63) ? 63 : l;
+					memcpy(pname, p, ll);
+					pname[ll] = '\0';
+				}
+				else
+					printf("Error GetModuleBaseNameA : %lu", GetLastError());
+				CloseHandle(handle);
+			}
+			else
+			{
+				printf("Error OpenProcess : %lu", GetLastError());
+			}
+			skr_atomic32_store_relaxed(&once, kInitialized);
+		}
+		while (skr_atomic32_load_relaxed(&once) != kInitialized) {}
+	}
+	return v ? v : u8"unknown";
 }
 
 SProcessId skr_get_current_process_id()

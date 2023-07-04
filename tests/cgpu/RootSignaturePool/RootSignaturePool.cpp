@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "cgpu/api.h"
+#include "misc/log.h"
 #include "misc/make_zeroed.hpp"
 
 class RootSignaturePool : public ::testing::TestWithParam<ECGPUBackend>
@@ -243,7 +244,9 @@ INSTANTIATE_TEST_SUITE_P(RootSignaturePool, RootSignaturePool, allPlatforms);
 
 int main(int argc, char** argv)
 {
+    log_initialize_async_worker();
     ::testing::InitGoogleTest(&argc, argv);
     auto result = RUN_ALL_TESTS();
+    log_finalize();
     return result;
 }

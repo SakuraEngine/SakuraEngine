@@ -16,7 +16,6 @@ public:
 
     static SkrRuntimeModule* Get();
 
-    SMutex log_mutex;
     bool DPIAware = false;
     skr::SharedLibrary tracyLibrary;
     SkrDStorageInstanceId dstorageInstance = nullptr;

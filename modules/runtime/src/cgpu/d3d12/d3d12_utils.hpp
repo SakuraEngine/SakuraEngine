@@ -4,9 +4,9 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "./../common/common_utils.h"
 #ifdef __cplusplus
-#include "D3D12MemAlloc.h"
-#include <EASTL/vector.h>
-#include <containers/hashmap.hpp>
+    #include "D3D12MemAlloc.h"
+    #include <EASTL/vector.h>
+    #include <containers/hashmap.hpp>
 #endif
 #ifdef CGPU_THREAD_SAFETY
     #include "platform/thread.h"
@@ -25,7 +25,7 @@ void D3D12Util_Optionalenable_debug_layer(CGPUInstance_D3D12* result, CGPUInstan
 void D3D12Util_CreateDMAAllocator(CGPUInstance_D3D12* I, CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D);
 
 #if !defined(XBOX) && defined(_WIN32)
-#include "dxc/dxcapi.h"
+    #include "dxc/dxcapi.h"
 
 void D3D12Util_LoadDxcDLL();
 void D3D12Util_UnloadDxcDLL();
@@ -57,7 +57,7 @@ typedef struct D3D12Util_DescriptorHandle {
 } D3D12Util_DescriptorHandle;
 
 void D3D12Util_CreateDescriptorHeap(ID3D12Device* pDevice,
-const D3D12_DESCRIPTOR_HEAP_DESC* pDesc, struct D3D12Util_DescriptorHeap** ppDescHeap);
+                                    const D3D12_DESCRIPTOR_HEAP_DESC* pDesc, struct D3D12Util_DescriptorHeap** ppDescHeap);
 void D3D12Util_ResetDescriptorHeap(struct D3D12Util_DescriptorHeap* pHeap);
 void D3D12Util_FreeDescriptorHeap(struct D3D12Util_DescriptorHeap* pHeap);
 
@@ -68,14 +68,14 @@ struct D3D12Util_DescriptorHeap* pHeap, D3D12_CPU_DESCRIPTOR_HANDLE handle, uint
 
 // Use Views
 void D3D12Util_CreateSRV(CGPUDevice_D3D12* D, ID3D12Resource* pResource,
-const D3D12_SHADER_RESOURCE_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
+                         const D3D12_SHADER_RESOURCE_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
 void D3D12Util_CreateUAV(CGPUDevice_D3D12* D, ID3D12Resource* pResource,
-ID3D12Resource* pCounterResource,
-const D3D12_UNORDERED_ACCESS_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
+                         ID3D12Resource* pCounterResource,
+                         const D3D12_UNORDERED_ACCESS_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
 void D3D12Util_CreateCBV(CGPUDevice_D3D12* D,
-const D3D12_CONSTANT_BUFFER_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
+                         const D3D12_CONSTANT_BUFFER_VIEW_DESC* pSrvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
 void D3D12Util_CreateRTV(CGPUDevice_D3D12* D, ID3D12Resource* pResource,
-const D3D12_RENDER_TARGET_VIEW_DESC* pRtvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
+                         const D3D12_RENDER_TARGET_VIEW_DESC* pRtvDesc, D3D12_CPU_DESCRIPTOR_HANDLE* pHandle);
 
 typedef struct D3D12Util_DescriptorHeap {
     /// DX Heap
@@ -101,8 +101,7 @@ typedef struct D3D12Util_DescriptorHeap {
 #endif
 } D3D12Util_DescriptorHeap;
 
-struct CGPUTiledMemoryPool_D3D12 : public CGPUMemoryPool_D3D12
-{
+struct CGPUTiledMemoryPool_D3D12 : public CGPUMemoryPool_D3D12 {
     void AllocateTiles(uint32_t N, D3D12MA::Allocation** ppAllocation, uint32_t Scale = 1) SKR_NOEXCEPT
     {
         CGPUDevice_D3D12* D = (CGPUDevice_D3D12*)super.device;
@@ -133,17 +132,18 @@ enum ETileMappingStatus_D3D12
     D3D12_TILE_MAPPING_STATUS_UNMAPPING = 4
 };
 
-struct TileMapping_D3D12
-{
+struct TileMapping_D3D12 {
     D3D12MA::Allocation* pDxAllocation;
     SAtomic32 status;
 };
 static_assert(std::is_trivially_constructible_v<TileMapping_D3D12>, "TileMapping_D3D12 Must Be Trivially Constructible!");
 
-struct SubresTileMappings_D3D12
-{
+struct SubresTileMappings_D3D12 {
     SubresTileMappings_D3D12(CGPUTexture_D3D12* T, uint32_t X, uint32_t Y, uint32_t Z) SKR_NOEXCEPT
-        : T(T), X(X), Y(Y), Z(Z)
+        : T(T),
+          X(X),
+          Y(Y),
+          Z(Z)
     {
         if (X * Y * Z)
             mappings = (TileMapping_D3D12*)cgpu_calloc(1, X * Y * Z * sizeof(TileMapping_D3D12));
@@ -153,38 +153,39 @@ struct SubresTileMappings_D3D12
         if (mappings)
         {
             for (uint32_t x = 0; x < X; x++)
-            for (uint32_t y = 0; y < Y; y++)
-            for (uint32_t z = 0; z < Z; z++)
-            {
-                unmap(x, y, z);
-            }
+                for (uint32_t y = 0; y < Y; y++)
+                    for (uint32_t z = 0; z < Z; z++)
+                    {
+                        unmap(x, y, z);
+                    }
             cgpu_free(mappings);
         }
     }
-    TileMapping_D3D12* at(uint32_t x, uint32_t y, uint32_t z) 
-    { 
-        SKR_ASSERT(mappings && x < X && y < Y && z < Z && "SubresTileMappings::at: Out of Range!"); 
-        return mappings + (x + y * X + z * X * Y); 
+    TileMapping_D3D12* at(uint32_t x, uint32_t y, uint32_t z)
+    {
+        SKR_ASSERT(mappings && x < X && y < Y && z < Z && "SubresTileMappings::at: Out of Range!");
+        return mappings + (x + y * X + z * X * Y);
     }
-    const TileMapping_D3D12* at(uint32_t x, uint32_t y, uint32_t z) const 
-    { 
-        SKR_ASSERT(mappings && x < X && y < Y && z < Z && "SubresTileMappings::at: Out of Range!"); 
-        return mappings + (x + y * X + z * X * Y); 
+    const TileMapping_D3D12* at(uint32_t x, uint32_t y, uint32_t z) const
+    {
+        SKR_ASSERT(mappings && x < X && y < Y && z < Z && "SubresTileMappings::at: Out of Range!");
+        return mappings + (x + y * X + z * X * Y);
     }
     void unmap(uint32_t x, uint32_t y, uint32_t z)
     {
         auto pTiledInfo = const_cast<CGPUTiledTextureInfo*>(T->super.tiled_resource);
         auto* mapping = at(x, y, z);
-        const auto status = skr_atomic32_cas_relaxed(&mapping->status, 
-            D3D12_TILE_MAPPING_STATUS_MAPPED, D3D12_TILE_MAPPING_STATUS_UNMAPPING);
+        const auto status = skr_atomic32_cas_relaxed(&mapping->status,
+                                                     D3D12_TILE_MAPPING_STATUS_MAPPED, D3D12_TILE_MAPPING_STATUS_UNMAPPING);
         if (status == D3D12_TILE_MAPPING_STATUS_MAPPED)
         {
             SAFE_RELEASE(mapping->pDxAllocation);
             skr_atomicu64_add_relaxed(&pTiledInfo->alive_tiles_count, -1);
-        }  
-        skr_atomic32_cas_relaxed(&mapping->status, 
-            D3D12_TILE_MAPPING_STATUS_UNMAPPING, D3D12_TILE_MAPPING_STATUS_UNMAPPED);
+        }
+        skr_atomic32_cas_relaxed(&mapping->status,
+                                 D3D12_TILE_MAPPING_STATUS_UNMAPPING, D3D12_TILE_MAPPING_STATUS_UNMAPPED);
     }
+
 private:
     CGPUTexture_D3D12* T = nullptr;
     const uint32_t X = 0;
@@ -193,13 +194,12 @@ private:
     TileMapping_D3D12* mappings = nullptr;
 };
 
-struct PackedMipMapping_D3D12
-{
+struct PackedMipMapping_D3D12 {
     PackedMipMapping_D3D12(CGPUTexture_D3D12* T, uint32_t N) SKR_NOEXCEPT
-        : N(N), T(T)
+        : N(N),
+          T(T)
     {
-        
-    }    
+    }
     ~PackedMipMapping_D3D12() SKR_NOEXCEPT
     {
         unmap();
@@ -207,15 +207,15 @@ struct PackedMipMapping_D3D12
     void unmap()
     {
         auto pTiledInfo = const_cast<CGPUTiledTextureInfo*>(T->super.tiled_resource);
-        const auto prev = skr_atomic32_cas_relaxed(&status, 
-            D3D12_TILE_MAPPING_STATUS_MAPPED, D3D12_TILE_MAPPING_STATUS_UNMAPPING);
+        const auto prev = skr_atomic32_cas_relaxed(&status,
+                                                   D3D12_TILE_MAPPING_STATUS_MAPPED, D3D12_TILE_MAPPING_STATUS_UNMAPPING);
         if (prev == D3D12_TILE_MAPPING_STATUS_MAPPED)
         {
             SAFE_RELEASE(pAllocation);
             skr_atomicu64_add_relaxed(&pTiledInfo->alive_tiles_count, -1);
-        }  
-        skr_atomic32_cas_relaxed(&status, 
-            D3D12_TILE_MAPPING_STATUS_UNMAPPING, D3D12_TILE_MAPPING_STATUS_UNMAPPED);
+        }
+        skr_atomic32_cas_relaxed(&status,
+                                 D3D12_TILE_MAPPING_STATUS_UNMAPPING, D3D12_TILE_MAPPING_STATUS_UNMAPPED);
     }
     D3D12MA::Allocation* pAllocation = nullptr;
     const uint32_t N = 0;
@@ -227,10 +227,11 @@ private:
 
 struct CGPUTiledTexture_D3D12 : public CGPUTexture_D3D12 {
     CGPUTiledTexture_D3D12(SubresTileMappings_D3D12* pMappings, PackedMipMapping_D3D12* pPackedMips, uint32_t NumPacks) SKR_NOEXCEPT
-        : CGPUTexture_D3D12(), pMappings(pMappings), 
-        pPackedMips(pPackedMips), NumPacks(NumPacks)
+        : CGPUTexture_D3D12(),
+          pMappings(pMappings),
+          pPackedMips(pPackedMips),
+          NumPacks(NumPacks)
     {
-
     }
     ~CGPUTiledTexture_D3D12() SKR_NOEXCEPT
     {
@@ -249,7 +250,7 @@ struct CGPUTiledTexture_D3D12 : public CGPUTexture_D3D12 {
     {
         return pPackedMips + layer;
     }
-    
+
 private:
     SubresTileMappings_D3D12* pMappings;
     PackedMipMapping_D3D12* pPackedMips;
@@ -264,8 +265,8 @@ typedef struct DescriptorHeapProperties {
 static const DescriptorHeapProperties gCpuDescriptorHeapProperties[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES] = {
     { 1024 * 256, D3D12_DESCRIPTOR_HEAP_FLAG_NONE }, // CBV SRV UAV
     { 2048, D3D12_DESCRIPTOR_HEAP_FLAG_NONE },       // Sampler
-    { 1024 * 64, D3D12_DESCRIPTOR_HEAP_FLAG_NONE },        // RTV
-    { 1024 * 64, D3D12_DESCRIPTOR_HEAP_FLAG_NONE },        // DSV
+    { 1024 * 64, D3D12_DESCRIPTOR_HEAP_FLAG_NONE },  // RTV
+    { 1024 * 64, D3D12_DESCRIPTOR_HEAP_FLAG_NONE },  // DSV
 };
 
 static const D3D12_BLEND_OP gDx12BlendOpTranslator[CGPU_BLEND_MODE_COUNT] = {
@@ -580,7 +581,7 @@ FORCEINLINE static  D3D12_DEPTH_STENCIL_DESC D3D12Util_TranslateDephStencilState
 }
 
 FORCEINLINE static D3D12_PRIMITIVE_TOPOLOGY_TYPE D3D12Util_TranslatePrimitiveTopology(ECGPUPrimitiveTopology topology) {
-  switch (topology) {
+switch (topology) {
   case CGPU_PRIM_TOPO_POINT_LIST:
     return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
   case CGPU_PRIM_TOPO_LINE_LIST:
@@ -591,6 +592,8 @@ FORCEINLINE static D3D12_PRIMITIVE_TOPOLOGY_TYPE D3D12Util_TranslatePrimitiveTop
     return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
   case CGPU_PRIM_TOPO_PATCH_LIST:
     return D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+default:
+  return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
   }
   return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
 }
@@ -1020,7 +1023,9 @@ FORCEINLINE static DXGI_FORMAT DXGIUtil_FormatToTypeless(DXGI_FORMAT fmt) {
 	case DXGI_FORMAT_P208:
 	case DXGI_FORMAT_V208:
 	case DXGI_FORMAT_V408:
-	case DXGI_FORMAT_UNKNOWN: return DXGI_FORMAT_UNKNOWN;
+	case DXGI_FORMAT_UNKNOWN:
+    default:
+    return DXGI_FORMAT_UNKNOWN;
 	}
 	return DXGI_FORMAT_UNKNOWN;
 }
