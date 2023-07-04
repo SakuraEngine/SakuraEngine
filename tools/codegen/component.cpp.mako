@@ -76,6 +76,10 @@ static struct RegisterComponent${type.id}Helper
     %if hasattr(type.attrs.component, "custom"):
         ${type.attrs.component.custom}(desc, skr::type_t<${type.name}>{});
     %endif
+    
+    %if not hasattr(type.attrs.component, "unsafe"):
+        ::dual::check_managed(desc, skr::type_t<${type.name}>{});
+    %endif
         type = dualT_register_type(&desc);
     }
     dual_type_index_t type = DUAL_NULL_TYPE;

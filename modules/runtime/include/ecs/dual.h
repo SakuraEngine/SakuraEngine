@@ -828,6 +828,7 @@ struct dual_id_of {
 #include "type/type_helper.hpp"
 #include "ecs/callback.hpp"
 #include "ecs/type_builder.hpp"
+#include "misc/log.h"
 
 namespace dual
 {
@@ -886,6 +887,39 @@ namespace dual
                 desc.callback.move = +[](dual_chunk_t* chunk, EIndex index, char* dst, dual_chunk_t* schunk, EIndex sindex, char* src) {
                     new (dst) C(std::move(*(C*)src));
                 };
+        }
+    }
+
+    template<class C>
+    void check_managed(const dual_type_description_t& desc, skr::type_t<C>)
+    {
+        if constexpr (!std::is_trivially_constructible_v<C>)
+        {
+            if (desc.callback.constructor == nullptr)
+            {
+                SKR_LOG_WARN("type %s is not trivially constructible but no contructor was provided.", desc.name);
+            }
+        }
+        if constexpr (!std::is_trivially_destructible_v<C>)
+        {
+            if (desc.callback.destructor == nullptr)
+            {
+                SKR_LOG_WARN("type %s is not trivially destructible but no destructor was provided.", desc.name);
+            }
+        }
+        if constexpr (!std::is_trivially_copy_constructible_v<C>)
+        {
+            if (desc.callback.copy == nullptr)
+            {
+                SKR_LOG_WARN("type %s is not trivially copy constructible but no copy constructor was provided.", desc.name);
+            }
+        }
+        if constexpr (!std::is_trivially_move_constructible_v<C>)
+        {
+            if (desc.callback.move == nullptr)
+            {
+                SKR_LOG_WARN("type %s is not trivially move constructible but no move constructor was provided.", desc.name);
+            }
         }
     }
 
