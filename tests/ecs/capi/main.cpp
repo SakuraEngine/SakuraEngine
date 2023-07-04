@@ -534,7 +534,7 @@ auto register_pinned_component()
 int main(int argc, char** argv)
 {
     skr_initialize_crash_handler();
-    log_initialize_async_worker();
+    skr_log_initialize_async_worker();
 
     ::testing::InitGoogleTest(&argc, argv);
     register_test_component();
@@ -543,8 +543,8 @@ int main(int argc, char** argv)
     register_pinned_component();
     auto result = RUN_ALL_TESTS();
     dual_shutdown();
-    
-    log_finalize();
+
+    skr_log_finalize();
     skr_finalize_crash_handler();
     return result;
 }

@@ -67,7 +67,7 @@ void Logger::onLog(const LogEvent& ev) SKR_NOEXCEPT
 {
     if (auto should_backtrace = LogManager::ShouldBacktrace(ev))
     {
-        log_flush();
+        skr_log_flush();
     }
 }
 
@@ -119,14 +119,14 @@ void Logger::notifyWorker() SKR_NOEXCEPT
 } } // namespace skr::log
 
 RUNTIME_EXTERN_C
-void log_set_level(int level)
+void skr_log_set_level(int level)
 {
     const auto kLogLevel = skr::log::LogConstants::kLogLevelsLUT[level];\
     skr::log::LogConstants::gLogLevel = kLogLevel;
 }
 
 RUNTIME_EXTERN_C 
-void log_log(int level, const char* file, const char* func, const char* line, const char* fmt, ...)
+void skr_log_log(int level, const char* file, const char* func, const char* line, const char* fmt, ...)
 {
     ZoneScopedN("Log");
     
@@ -144,7 +144,7 @@ void log_log(int level, const char* file, const char* func, const char* line, co
 }
 
 RUNTIME_EXTERN_C 
-void log_finalize()
+void skr_log_finalize()
 {
     {
         if (auto worker = skr::log::LogManager::TryGetWorker())

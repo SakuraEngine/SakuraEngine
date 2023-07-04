@@ -182,7 +182,7 @@ int compile_project(skd::SProject* project)
 
 int compile_all(int argc, char** argv)
 {
-    log_set_level(SKR_LOG_LEVEL_INFO);
+    skr_log_set_level(SKR_LOG_LEVEL_INFO);
     
     skr::task::scheduler_t scheduler;
     scheduler.initialize(skr::task::scheudler_config_t());

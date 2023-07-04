@@ -27,7 +27,7 @@ void SkrRuntimeModule::on_load(int argc, char8_t** argv)
 {
     // set lock for log
     skr_initialize_crash_handler();
-    log_initialize_async_worker();
+    skr_log_initialize_async_worker();
 
     SkrDStorageConfig config = {};
     dstorageInstance = skr_create_dstorage_instance(&config);
@@ -60,7 +60,7 @@ void SkrRuntimeModule::on_unload()
 #endif
 
     SKR_LOG_TRACE("SkrRuntime module unloaded!");
-    log_finalize();
+    skr_log_finalize();
     skr_finalize_crash_handler();
 }
 
