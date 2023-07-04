@@ -2,6 +2,7 @@
 
 #ifdef _WIN32
 #include <intrin.h>
+#include <new.h>
 #include "platform/windows/winheaders.h"
 #endif
 

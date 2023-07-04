@@ -2,14 +2,17 @@
 #include "platform/configure.h"
 #include "debug.cpp"
 #include "vfs.cpp"
-#include "standard/stdio_vfs.cpp"
 #include "guid.cpp"
+
+#include "standard/stdio_vfs.cpp"
+#include "standard/crash_handler.cpp"
 #ifdef SKR_OS_UNIX
     #include "unix/unix_vfs.cpp"
     #include "unix/process.cpp"
 #elif defined(SKR_OS_WINDOWS)
     #include "windows/windows_vfs.cpp"
     #include "windows/process.cpp"
+    #include "windows/crash_handler.cpp"
 #endif
 
 #if defined(SKR_OS_WINDOWS)
