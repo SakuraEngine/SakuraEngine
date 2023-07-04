@@ -8,7 +8,6 @@
 
 namespace
 {
-
 static const char8_t* kDebugHelpDLLName = u8"dbghelp.dll";
 struct WinCrashHandler : public SCrashHandler
 {
@@ -71,8 +70,6 @@ WinCrashHandler::~WinCrashHandler() SKR_NOEXCEPT
 
 bool WinCrashHandler::Initialize() SKR_NOEXCEPT
 {
-    skr_init_mutex_recursive(&crash_lock);
-
     crashSetErrorMsg(u8"Unspecified error.");
     app_name = skr_get_current_process_name();
 
@@ -280,8 +277,7 @@ bool WinCrashHandler::UnsetThreadSignalHandlers() SKR_NOEXCEPT
 
     return SCrashHandler::UnsetThreadSignalHandlers();
 }
-
-}
+} // namespace
 
 extern "C"
 {
@@ -296,11 +292,6 @@ RUNTIME_API SCrashHandlerId skr_initialize_crash_handler() SKR_NOEXCEPT
 RUNTIME_API SCrashHandlerId skr_crash_handler_get() SKR_NOEXCEPT
 {
     return &::windows_crash_handler;
-}
-
-RUNTIME_API void skr_crash_handler_add_callback(SCrashHandlerId handler, SProcCrashCallback callback, void* usr_data) SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
 }
 
 RUNTIME_API void skr_finalize_crash_handler() SKR_NOEXCEPT

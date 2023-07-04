@@ -30,6 +30,7 @@ bool SCrashHandler::Initialize() SKR_NOEXCEPT
     prevSigSEGV = NULL;
 
     skr_make_guid(&guid);
+    skr_init_mutex_recursive(&crash_lock);
     // set process exception handlers 
     if (bool phdls = SetProcessSignalHandlers(); !phdls)
     {
@@ -137,4 +138,14 @@ bool SCrashHandler::UnsetThreadSignalHandlers() SKR_NOEXCEPT
     if(prevSigSEGV != NULL)
         signal(SIGSEGV, prevSigSEGV);
     return true;
+}
+
+extern "C"
+{
+
+RUNTIME_API void skr_crash_handler_add_callback(SCrashHandlerId handler, SProcCrashCallback callback, void* usr_data) SKR_NOEXCEPT
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
 }

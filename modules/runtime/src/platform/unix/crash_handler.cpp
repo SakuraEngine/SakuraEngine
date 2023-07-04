@@ -1,34 +1,40 @@
 #include "../../pch.hpp"
-#include "misc/types.h"
-#include "platform/thread.h"
-#include "platform/process.h"
-#include "platform/crash.h"
+#include "../unix/crash_handler.hpp"
 
-#include "containers/string.hpp"
+SUnixCrashHandler::SUnixCrashHandler() SKR_NOEXCEPT
+    : SCrashHandler()
+{
 
+}
+
+SUnixCrashHandler::~SUnixCrashHandler() SKR_NOEXCEPT
+{
+
+}
+
+#ifndef UNIX_CRASH_HANDLER_IMPLEMENTED
+namespace 
+{
+    SUnixCrashHandler unix_crash_handler;
+}
 extern "C"
 {
-    
 RUNTIME_API SCrashHandlerId skr_initialize_crash_handler() SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
+    auto& this_ = ::unix_crash_handler;
+    this_.Initialize();
+    return &this_;
 }
 
 RUNTIME_API SCrashHandlerId skr_crash_handler_get() SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return nullptr;
-}
-
-RUNTIME_API void skr_crash_handler_add_callback(SCrashHandlerId handler, SProcCrashCallback callback, void* usr_data) SKR_NOEXCEPT
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
+    return &::unix_crash_handler;
 }
 
 RUNTIME_API void skr_finalize_crash_handler() SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    auto& this_ = ::unix_crash_handler;
+    this_.Finalize();
 }
-
 }
+#endif

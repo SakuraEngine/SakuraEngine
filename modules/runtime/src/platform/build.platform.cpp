@@ -6,7 +6,14 @@
 
 #include "standard/stdio_vfs.cpp"
 #include "standard/crash_handler.cpp"
-#ifdef SKR_OS_UNIX
+#if defined(SKR_OS_UNIX)
+    #if defined(SKR_OS_MACOSX)
+        #define UNIX_CRASH_HANDLER_IMPLEMENTED
+        #include "apple/crash_handler.cpp"
+    #elif defined(SKR_OS_LINUX)
+        #define UNIX_CRASH_HANDLER_IMPLEMENTED
+        #include "linux/crash_handler.cpp"
+    #endif
     #include "unix/unix_vfs.cpp"
     #include "unix/process.cpp"
     #include "unix/crash_handler.cpp"
