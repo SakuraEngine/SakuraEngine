@@ -1,4 +1,5 @@
 #include "vulkan_utils.h"
+#include "cgpu/extensions/cgpu_vulkan_exts.h"
 #include <EASTL/vector.h>
 #include <EASTL/sort.h>
 #include <EASTL/string.h>
