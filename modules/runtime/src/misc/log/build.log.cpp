@@ -1,4 +1,6 @@
 #include "../../pch.hpp"
-#include "log.cpp"
+#include "logger.cpp"
 #include "log_pattern.cpp"
 #include "log_sink.cpp"
+#include "log_manager.cpp"
+#include "log_worker.cpp"

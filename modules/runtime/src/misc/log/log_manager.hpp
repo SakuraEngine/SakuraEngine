@@ -3,6 +3,9 @@
 #include "log_worker.hpp"
 #include "tscns.hpp"
 
+#include "containers/hashmap.hpp"
+#include <EASTL/unique_ptr.h>
+
 namespace skr {
 namespace log {
 
@@ -26,6 +29,8 @@ struct RUNTIME_API LogManager
     static LogSink* QuerySink(skr_guid_t guid);
 
     static void PatternAndSink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT;
+    static void FlushAllSinks() SKR_NOEXCEPT;
+    static bool ShouldBacktrace(const LogEvent& event) SKR_NOEXCEPT;
 
     static SAtomic64 available_;
     static eastl::unique_ptr<LogWorker> worker_;

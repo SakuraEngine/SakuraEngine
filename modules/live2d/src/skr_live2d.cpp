@@ -3,10 +3,17 @@
 #include "SkrLive2D/skr_live2d.h"
 #include "CubismFramework.hpp"
 
+#include <EASTL/fixed_string.h>
+
 /**	Log out func register to cubism */
 static void Cubism_Log(const char* message)
 {
-	SKR_LOG_TRACE("[Live2D] %s", message);
+    eastl::fixed_string<char, 32> buf;
+    buf = message;
+    // replace the last '\n' with '\0'
+    if (buf[buf.size() - 1] == '\n')
+        buf[buf.size() - 1] = '\0';
+	SKR_LOG_TRACE("[Live2D] %s", buf.c_str());
 }
 
 class CubismFrameWorkAllocator : public Csm::ICubismAllocator

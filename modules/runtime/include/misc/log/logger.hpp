@@ -58,6 +58,7 @@ struct RUNTIME_API Logger
             skr::string s = skr::format(format, skr::forward<Args>(args)...);
             sinkDefaultImmediate(ev, s.view());
         }
+        onLog(ev);
     }
 
     void log(LogEvent ev, skr::string_view format, va_list va_args) SKR_NOEXCEPT
@@ -76,11 +77,13 @@ struct RUNTIME_API Logger
         {
             sinkDefaultImmediate(ev, skr::string_view(buffer));
         }
+        onLog(ev);
     }
 
     skr::string_view get_name() const SKR_NOEXCEPT { return name.view(); }
 
 private:
+    void onLog(const LogEvent& ev) SKR_NOEXCEPT;
     void sinkDefaultImmediate(const LogEvent& event, skr::string_view formatted_message) const SKR_NOEXCEPT;
     bool canPushToQueue() const SKR_NOEXCEPT;
     bool tryPushToQueue(LogEvent ev, skr::string_view format, ArgsList&& args) SKR_NOEXCEPT;
