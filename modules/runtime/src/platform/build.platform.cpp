@@ -9,6 +9,7 @@
 #ifdef SKR_OS_UNIX
     #include "unix/unix_vfs.cpp"
     #include "unix/process.cpp"
+    #include "unix/crash_handler.cpp"
 #elif defined(SKR_OS_WINDOWS)
     #include "windows/windows_vfs.cpp"
     #include "windows/process.cpp"
