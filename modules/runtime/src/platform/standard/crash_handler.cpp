@@ -57,15 +57,7 @@ void SCrashHandler::SigabrtHandler(int code)
     auto& this_ = *skr_crash_handler_get();
 	this_.handleFunction([&](){
         (void)code; // TODO: do something here...
-    });
-}
-
-void SCrashHandler::SigfpeHandler(int code, int subcode)
-{
-    auto& this_ = *skr_crash_handler_get();
-	this_.handleFunction([&](){
-        (void)code; // TODO: do something here...
-    });
+    }, kCrashCodeAbort);
 }
 
 void SCrashHandler::SigintHandler(int code)
@@ -73,23 +65,7 @@ void SCrashHandler::SigintHandler(int code)
     auto& this_ = *skr_crash_handler_get();
 	this_.handleFunction([&](){
         (void)code; // TODO: do something here...
-    });
-}
-
-void SCrashHandler::SigillHandler(int code)
-{
-    auto& this_ = *skr_crash_handler_get();
-	this_.handleFunction([&](){
-        (void)code; // TODO: do something here...
-    });
-}
-
-void SCrashHandler::SigsegvHandler(int code)
-{
-    auto& this_ = *skr_crash_handler_get();
-	this_.handleFunction([&](){
-        (void)code; // TODO: do something here...
-    });
+    }, kCrashCodeInterrupt);
 }
 
 void SCrashHandler::SigtermHandler(int code)
@@ -97,14 +73,38 @@ void SCrashHandler::SigtermHandler(int code)
     auto& this_ = *skr_crash_handler_get();
 	this_.handleFunction([&](){
         (void)code; // TODO: do something here...
-    });
+    }, kCrashCodeKill);
+}
+
+void SCrashHandler::SigfpeHandler(int code, int subcode)
+{
+    auto& this_ = *skr_crash_handler_get();
+	this_.handleFunction([&](){
+        (void)code; // TODO: do something here...
+    }, kCrashCodeDividedByZero);
+}
+
+void SCrashHandler::SigillHandler(int code)
+{
+    auto& this_ = *skr_crash_handler_get();
+	this_.handleFunction([&](){
+        (void)code; // TODO: do something here...
+    }, kCrashCodeIllInstruction);
+}
+
+void SCrashHandler::SigsegvHandler(int code)
+{
+    auto& this_ = *skr_crash_handler_get();
+	this_.handleFunction([&](){
+        (void)code; // TODO: do something here...
+    }, kCrashCodeSegFault);
 }
 
 bool SCrashHandler::SetProcessSignalHandlers() SKR_NOEXCEPT
 {
-    prevSigABRT = signal(SIGABRT, SigabrtHandler);  
-    prevSigINT = signal(SIGINT, SigintHandler); 
-    prevSigTERM = signal(SIGTERM, SigtermHandler);
+    prevSigABRT = signal(SIGABRT, SigabrtHandler);// abort
+    prevSigINT = signal(SIGINT, SigintHandler);   // ctrl + c
+    prevSigTERM = signal(SIGTERM, SigtermHandler);// kill
     return true;
 }
 
@@ -122,9 +122,9 @@ bool SCrashHandler::UnsetProcessSignalHandlers() SKR_NOEXCEPT
 bool SCrashHandler::SetThreadSignalHandlers() SKR_NOEXCEPT
 {
     typedef void (*sigh)(int);
-    prevSigFPE = signal(SIGFPE, (sigh)SigfpeHandler);
-    prevSigILL = signal(SIGILL, SigillHandler);
-    prevSigSEGV = signal(SIGSEGV, SigsegvHandler);
+    prevSigFPE = signal(SIGFPE, (sigh)SigfpeHandler); // divide by zero
+    prevSigILL = signal(SIGILL, SigillHandler);       // illegal instruction
+    prevSigSEGV = signal(SIGSEGV, SigsegvHandler);    // segmentation fault
     return true;
 }
 

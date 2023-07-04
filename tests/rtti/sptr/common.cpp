@@ -1,3 +1,4 @@
+#include "platform/crash.h"
 #include "test.hpp"
 #include "misc/log.h"
 
@@ -231,9 +232,13 @@ TEST(SPTRCommon, Weak)
 
 int main(int argc, char** argv)
 {
+    skr_initialize_crash_handler();
     log_initialize_async_worker();
+
     ::testing::InitGoogleTest(&argc, argv);
     auto result = RUN_ALL_TESTS();
+
     log_finalize();
+    skr_finalize_crash_handler();
     return result;
 }

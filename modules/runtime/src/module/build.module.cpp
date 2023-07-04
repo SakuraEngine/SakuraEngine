@@ -1,6 +1,6 @@
+#include "platform/crash.h"
 #include "module_manager.cpp"
 #include "runtime_module.h"
-#include "ecs/dual.h"
 
 IMPLEMENT_DYNAMIC_MODULE(SkrRuntimeModule, SkrRT);
 
@@ -26,6 +26,7 @@ auto log_locker = +[](bool isLocked, void* pMutex){
 void SkrRuntimeModule::on_load(int argc, char8_t** argv)
 {
     // set lock for log
+    skr_initialize_crash_handler();
     log_initialize_async_worker();
 
     SkrDStorageConfig config = {};
@@ -60,6 +61,7 @@ void SkrRuntimeModule::on_unload()
 
     SKR_LOG_TRACE("SkrRuntime module unloaded!");
     log_finalize();
+    skr_finalize_crash_handler();
 }
 
 SkrRuntimeModule* SkrRuntimeModule::Get()

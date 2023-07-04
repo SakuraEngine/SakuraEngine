@@ -26,7 +26,7 @@ struct WinCrashHandler : public SCrashHandler
     bool UnsetThreadSignalHandlers() SKR_NOEXCEPT override;
     void terminateProcess(int32_t code = 1) SKR_NOEXCEPT override
     {
-        TerminateProcess(GetCurrentProcess(), 1);
+        TerminateProcess(GetCurrentProcess(), code);
     }
 
 private:
@@ -133,7 +133,7 @@ DWORD WINAPI WinCrashHandler::StackOverflowThreadFunction(LPVOID lpParameter) SK
 	PEXCEPTION_POINTERS pExceptionPtrs = reinterpret_cast<PEXCEPTION_POINTERS>(lpParameter);
 	this_.handleFunction([&](){
         (void)pExceptionPtrs; // TODO: do something here...
-    });
+    }, kCrashCodeStackOverflow);
     return 0;
 }
 
@@ -142,7 +142,7 @@ void WINAPI WinCrashHandler::TerminateHandler() SKR_NOEXCEPT
     auto& this_ = windows_crash_handler;
     this_.handleFunction([&](){
         (void)this_; // TODO: do something here...
-    });
+    }, kCrashCodeTerminate);
 }
 
 void WINAPI WinCrashHandler::UnexpectedHandler() SKR_NOEXCEPT
@@ -150,7 +150,7 @@ void WINAPI WinCrashHandler::UnexpectedHandler() SKR_NOEXCEPT
     auto& this_ = windows_crash_handler;
     this_.handleFunction([&](){
         (void)this_; // TODO: do something here...
-    });
+    }, kCrashCodeUnexpected);
 }
 
 LONG WINAPI WinCrashHandler::SehHandler(PEXCEPTION_POINTERS pExceptionPtrs) SKR_NOEXCEPT
@@ -175,12 +175,10 @@ LONG WINAPI WinCrashHandler::SehHandler(PEXCEPTION_POINTERS pExceptionPtrs) SKR_
 			&StackOverflowThreadFunction, pExceptionPtrs, 0, 0);
 		::WaitForSingleObject(thread, INFINITE);
 		::CloseHandle(thread);
-		// Terminate process
-		TerminateProcess(GetCurrentProcess(), 1);
 
         this_.handleFunction([&](){
             (void)pExceptionPtrs; // TODO: do something here...
-        });
+        }, kCrashCodeUnhandled);
 	}
 
     return EXCEPTION_EXECUTE_HANDLER;
@@ -192,7 +190,7 @@ void WINAPI WinCrashHandler::PureCallHandler() SKR_NOEXCEPT
     auto& this_ = windows_crash_handler;
 	this_.handleFunction([&](){
         (void)this_; // TODO: do something here...
-    });
+    }, kCrashCodePureVirtual);
 }
 
 int WINAPI WinCrashHandler::NewHandler(size_t sz) SKR_NOEXCEPT
@@ -200,7 +198,7 @@ int WINAPI WinCrashHandler::NewHandler(size_t sz) SKR_NOEXCEPT
     auto& this_ = windows_crash_handler;
     this_.handleFunction([&](){
         (void)this_; // TODO: do something here...
-    });
+    }, kCrashCodeOpNewError);
     return 0;
 }
 #endif
@@ -213,7 +211,7 @@ void WINAPI WinCrashHandler::InvalidParameterHandler(const wchar_t* expression, 
     auto& this_ = windows_crash_handler;
 	this_.handleFunction([&](){
         (void)this_; // TODO: do something here...
-    });
+    }, kCrashCodeInvalidParam);
 }
 #endif
 

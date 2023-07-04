@@ -1,9 +1,11 @@
 #include "gtest/gtest.h"
-#include <memory>
+#include "platform/crash.h"
 #include "ecs/dual.h"
 #include "guid.hpp" //for guid
 #include "misc/make_zeroed.hpp"
 #include "misc/log.h"
+
+#include <memory>
 
 using test = int;
 dual_type_index_t type_test;
@@ -531,7 +533,9 @@ auto register_pinned_component()
 
 int main(int argc, char** argv)
 {
+    skr_initialize_crash_handler();
     log_initialize_async_worker();
+
     ::testing::InitGoogleTest(&argc, argv);
     register_test_component();
     register_ref_component();
@@ -539,6 +543,8 @@ int main(int argc, char** argv)
     register_pinned_component();
     auto result = RUN_ALL_TESTS();
     dual_shutdown();
+    
     log_finalize();
+    skr_finalize_crash_handler();
     return result;
 }
