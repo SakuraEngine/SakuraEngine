@@ -7,13 +7,10 @@
 #include "cgpu/flags.h"
 #include "cgpu/api.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
-#include "cgpu/extensions/cgpu_vulkan_exts.h"
 #include "internal/vk_mem_alloc.h"
 #include "../common/common_utils.h"
 #include "cgpu/flags.h"
 
-#include "platform/debug.h"
-#include "misc/log.h"
 #include "vulkan/vulkan_core.h"
 
 #ifdef CGPU_THREAD_SAFETY
@@ -97,7 +94,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugReportCallback(
 void VkUtil_OptionalSetObjectName(struct CGPUDevice_Vulkan* device, uint64_t handle, VkObjectType type, const char* name);
 
 #define CGPU_VK_DESCRIPTOR_TYPE_RANGE_SIZE (VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT + 1)
-static const VkDescriptorPoolSize gDescriptorPoolSizes[CGPU_VK_DESCRIPTOR_TYPE_RANGE_SIZE] = {
+SKR_UNUSED static const VkDescriptorPoolSize gDescriptorPoolSizes[CGPU_VK_DESCRIPTOR_TYPE_RANGE_SIZE] = {
     { VK_DESCRIPTOR_TYPE_SAMPLER, 1024 },
     { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 },
     { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 8192 },
@@ -153,8 +150,8 @@ typedef struct VkUtil_FramebufferDesc {
         }                                                                               \
     }
 
-static const char* validation_layer_name = "VK_LAYER_KHRONOS_validation";
-static const char* cgpu_wanted_instance_exts[] = {
+SKR_UNUSED static const char* validation_layer_name = "VK_LAYER_KHRONOS_validation";
+SKR_UNUSED static const char* cgpu_wanted_instance_exts[] = {
     VK_KHR_SURFACE_EXTENSION_NAME,
 
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
@@ -198,7 +195,7 @@ static const char* cgpu_wanted_instance_exts[] = {
 #endif
 };
 
-static const char* cgpu_wanted_device_exts[] = {
+SKR_UNUSED static const char* cgpu_wanted_device_exts[] = {
     "VK_KHR_portability_subset",
 #if defined(VK_VERSION_1_3)
 // VK_GOOGLE_USER_TYPE_EXTENSION_NAME,

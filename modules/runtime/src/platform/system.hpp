@@ -337,7 +337,6 @@ struct SystemHandlerBase : public ISystemHandler
     }
 
     SystemMessageHandlerProxy message_handler_proxy;
-
 };
 
 inline void SystemHandlerBase::add_message_handler(ISystemMessageHandler* handler) SKR_NOEXCEPT

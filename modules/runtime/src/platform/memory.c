@@ -219,11 +219,11 @@ RUNTIME_EXTERN_C RUNTIME_API void* _sakura_new_n(size_t count, size_t size, cons
     void* p = mi_new_n(count, size);
     if (pool_name)
     {
-        TracyCAllocN(p, size, pool_name);
+        TracyCAllocN(p, size * count, pool_name);
     }
     else
     {
-        TracyCAlloc(p, size);
+        TracyCAlloc(p, size* count);
     }
     return p;
 }

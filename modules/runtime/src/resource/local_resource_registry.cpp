@@ -22,6 +22,7 @@ bool SLocalResourceRegistry::RequestResourceFile(SResourceRequest* request)
     skr::filesystem::path headerPath = skr::format(u8"{}.rh", guid).c_str();
     auto headerUri = headerPath.u8string();
     // TODO: 检查文件存在？
+    SKR_LOG_BACKTRACE("Failed to find resource file: %s!", headerUri.c_str());
     auto file = skr_vfs_fopen(vfs, headerUri.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     if (!file) return false;
     SKR_DEFER({ skr_vfs_fclose(file); });
