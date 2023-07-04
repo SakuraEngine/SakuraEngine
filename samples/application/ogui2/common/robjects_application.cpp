@@ -21,3 +21,8 @@
 //     skr::gui::SPlatformWindow::Free(app->platform_window);
 //     return finalize_gdi_application(&app->gdi);
 // }
+
+void export_something()
+{
+    // avoid archiving an empty library
+}
