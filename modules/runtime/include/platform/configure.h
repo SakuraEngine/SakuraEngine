@@ -7,6 +7,14 @@
     #include <stdint.h>
 #endif
 
+#if defined(__cplusplus)
+    #define SKR_UNUSED [[maybe_unused]]
+#elif defined(__GNUC__) || defined(__clang__)
+    #define SKR_UNUSED __attribute__((unused))
+#elif defined(_MSC_VER)
+    #define SKR_UNUSED 
+#endif
+
 #ifdef __cplusplus
     #define SKR_IF_CPP(...) __VA_ARGS__
 #else

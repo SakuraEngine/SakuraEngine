@@ -16,8 +16,8 @@
     #include "MPShared/shared.generated.h"
 #endif
 
-static constexpr double serverTickInterval = 1.0 / 30;
-static constexpr uint32_t syncRate = 3;
+[[maybe_unused]] static constexpr double serverTickInterval = 1.0 / 30;
+[[maybe_unused]] static constexpr uint32_t syncRate = 3;
 
 enum class MPEventType : uint32_t
 {

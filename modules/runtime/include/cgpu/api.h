@@ -99,8 +99,8 @@ struct CGPUAcquireNextDescriptor;
 CGPU_EXTERN_C_BEGIN
 #endif
 
-static const CGPUBufferId CGPU_BUFFER_OUT_OF_HOST_MEMORY = (CGPUBufferId)1;
-static const CGPUBufferId CGPU_BUFFER_OUT_OF_DEVICE_MEMORY = (CGPUBufferId)3;
+SKR_UNUSED static const CGPUBufferId CGPU_BUFFER_OUT_OF_HOST_MEMORY = (CGPUBufferId)1;
+SKR_UNUSED static const CGPUBufferId CGPU_BUFFER_OUT_OF_DEVICE_MEMORY = (CGPUBufferId)3;
 
 typedef enum ECGPUBackend
 {

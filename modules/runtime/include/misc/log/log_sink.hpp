@@ -1,6 +1,7 @@
 #pragma once
-#include "platform/guid.hpp"
-#include "misc/log/log_pattern.hpp"
+#include "misc/types.h"
+#include "misc/log/log_base.hpp"
+#include "containers/string.hpp"
 
 namespace skr {
 namespace log {
