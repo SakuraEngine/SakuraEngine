@@ -3,6 +3,7 @@
 #include "ecs/dual.h"
 #include "guid.hpp" //for guid
 #include "misc/make_zeroed.hpp"
+#include "misc/log.h"
 
 using test = int;
 dual_type_index_t type_test;
@@ -20,7 +21,7 @@ using pinned = int*;
 dual_type_index_t type_pinned;
 dual_type_index_t type_pinned_arr;
 
-class APITest : public ::testing::Test
+class ECSTest : public ::testing::Test
 {
 public:
     void SetUp() override
@@ -56,12 +57,12 @@ void zero(T& t)
     std::memset(&t, 0, sizeof(T));
 }
 
-TEST_F(APITest, allocate_one)
+TEST_F(ECSTest, allocate_one)
 {
     EXPECT_TRUE(dualS_exist(storage, e1));
 }
 
-TEST_F(APITest, allocate_100000)
+TEST_F(ECSTest, allocate_100000)
 {
     dual_chunk_view_t view;
     dual_entity_type_t entityType;
@@ -81,7 +82,7 @@ TEST_F(APITest, allocate_100000)
     EXPECT_EQ(data[10], 123);
 }
 
-TEST_F(APITest, instantiate_single)
+TEST_F(ECSTest, instantiate_single)
 {
     dual_chunk_view_t view;
     auto callback = [&](dual_chunk_view_t* inView) { view = *inView; };
@@ -93,7 +94,7 @@ TEST_F(APITest, instantiate_single)
     EXPECT_EQ(data[9], 123);
 }
 
-TEST_F(APITest, instantiate_group)
+TEST_F(ECSTest, instantiate_group)
 {
     dual_entity_t e2;
     {
@@ -118,7 +119,7 @@ TEST_F(APITest, instantiate_group)
     }
 }
 
-TEST_F(APITest, destroy_entity)
+TEST_F(ECSTest, destroy_entity)
 {
     EXPECT_TRUE(dualS_exist(storage, e1));
     dual_chunk_view_t view;
@@ -137,7 +138,7 @@ TEST_F(APITest, destroy_entity)
     }
 }
 
-TEST_F(APITest, add_component)
+TEST_F(ECSTest, add_component)
 {
     dual_chunk_view_t view;
     dualS_access(storage, e1, &view);
@@ -150,7 +151,7 @@ TEST_F(APITest, add_component)
     EXPECT_NE(dualV_get_owned_ro(&view, type_test2), nullptr);
 }
 
-TEST_F(APITest, remove_component)
+TEST_F(ECSTest, remove_component)
 {
     dual_chunk_view_t view;
     dualS_access(storage, e1, &view);
@@ -163,7 +164,7 @@ TEST_F(APITest, remove_component)
     EXPECT_EQ(dualV_get_owned_ro(&view, type_test), nullptr);
 }
 
-TEST_F(APITest, pin)
+TEST_F(ECSTest, pin)
 {
     dual_entity_t e2;
     dual_chunk_view_t view;
@@ -216,7 +217,7 @@ TEST_F(APITest, pin)
     }
 }
 
-TEST_F(APITest, manage)
+TEST_F(ECSTest, manage)
 {
     std::weak_ptr<int> observer;
     dual_entity_t e2;
@@ -244,7 +245,7 @@ TEST_F(APITest, manage)
     }
 }
 
-TEST_F(APITest, ref)
+TEST_F(ECSTest, ref)
 {
     dual_entity_t e2, e3, e4;
     {
@@ -279,7 +280,7 @@ TEST_F(APITest, ref)
     }
 }
 
-TEST_F(APITest, batch)
+TEST_F(ECSTest, batch)
 {
     dual_chunk_view_t view[2];
     {
@@ -314,7 +315,7 @@ TEST_F(APITest, batch)
     dualS_batch(storage, es.data(), 20, DUAL_LAMBDA(callback2));
 }
 
-TEST_F(APITest, filter)
+TEST_F(ECSTest, filter)
 {
     dual_filter_t filter;
     zero(filter);
@@ -328,7 +329,7 @@ TEST_F(APITest, filter)
     EXPECT_EQ(*dualV_get_entities(&view), e1);
 }
 
-TEST_F(APITest, query)
+TEST_F(ECSTest, query)
 {
     auto query = dualQ_from_literal(storage, "[in]test");
 
@@ -340,7 +341,7 @@ TEST_F(APITest, query)
     EXPECT_EQ(*dualV_get_entities(&view), e1);
 }
 
-TEST_F(APITest, query_overload)
+TEST_F(ECSTest, query_overload)
 {
     dual_entity_t e2, e3;
     {
@@ -530,6 +531,7 @@ auto register_pinned_component()
 
 int main(int argc, char** argv)
 {
+    log_initialize_async_worker();
     ::testing::InitGoogleTest(&argc, argv);
     register_test_component();
     register_ref_component();
@@ -537,5 +539,6 @@ int main(int argc, char** argv)
     register_pinned_component();
     auto result = RUN_ALL_TESTS();
     dual_shutdown();
+    log_finalize();
     return result;
 }

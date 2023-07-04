@@ -47,7 +47,6 @@ if (is_os("windows")) then
 elseif (is_os("macosx") or is_os("linux")) then
     add_requires("python")
     add_requires("libsdl")
-    add_requires("gtest")
 else
 
 end

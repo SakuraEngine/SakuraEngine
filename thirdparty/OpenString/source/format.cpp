@@ -104,7 +104,10 @@ codeunit_sequence details::format_integer(const i64& value, const codeunit_seque
     return result;
 }
 
-codeunit_sequence details::format_float(const float& value, const codeunit_sequence_view& specification)
+namespace details
+{
+template <typename T>
+codeunit_sequence format_floating(const T& value, const codeunit_sequence_view& specification)
 {
     if (std::isinf(value))
         return codeunit_sequence{ value < 0 ? OSTR_UTF8("-inf"_cuqv) : OSTR_UTF8("inf"_cuqv) };
@@ -153,7 +156,7 @@ codeunit_sequence details::format_float(const float& value, const codeunit_seque
     const bool negative = value < 0;
     if(negative)
         result.append(OSTR_UTF8("-"));
-    float remaining = negative ? -value : value;
+    auto remaining = negative ? -value : value;
     const i32 decimal = static_cast<i32>(remaining);
     result.append(format_integer(decimal, { }));
     remaining -= static_cast<float>(decimal);
@@ -167,7 +170,7 @@ codeunit_sequence details::format_float(const float& value, const codeunit_seque
             floating *= 10;
             const i32 ones = static_cast<i32>(remaining);
             floating += ones;
-            remaining -= static_cast<float>(ones);
+            remaining -= static_cast<T>(ones);
             if(remaining < epsilon && remaining > -epsilon)
                 break;
         }
@@ -188,7 +191,7 @@ codeunit_sequence details::format_float(const float& value, const codeunit_seque
             floating *= 10;
             const i32 ones = static_cast<i32>(remaining);
             floating += ones;
-            remaining -= static_cast<float>(ones);
+            remaining -= static_cast<T>(ones);
         }
         const i32 dot_position = result.size();
         result
@@ -196,6 +199,17 @@ codeunit_sequence details::format_float(const float& value, const codeunit_seque
         .write_at(dot_position, '.');
     }
     return result;
+}
+}
+
+codeunit_sequence details::format_double(const double& value, const codeunit_sequence_view& specification)
+{
+    return format_floating<double>(value, specification);
+}
+
+codeunit_sequence details::format_float(const float& value, const codeunit_sequence_view& specification)
+{
+    return format_floating<float>(value, specification);
 }
 
 OPEN_STRING_NS_END

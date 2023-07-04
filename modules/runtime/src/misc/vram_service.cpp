@@ -582,9 +582,10 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMService* service)
             
             if (!upload_batch->tasks.empty())
             {
-                ZoneScopedN("LogCreateBatch(Upload)");
-
-                SKR_LOG_TRACE("Created Upload Batch %d with %d Tasks", dstorage_batch->id, dstorage_batch->tasks.size());
+                {
+                    ZoneScopedN("LogCreateBatch(Upload)");
+                    SKR_LOG_TRACE("Created Upload Batch %d with %d Tasks", dstorage_batch->id, dstorage_batch->tasks.size());
+                }
                 SKR_ASSERT(service->upload_batch_queue.find(upload_batch->id) == service->upload_batch_queue.end());
                 service->upload_batch_queue[upload_batch->id] = upload_batch;
             }
@@ -593,9 +594,10 @@ void __ioThreadTask_VRAM_execute(skr::io::VRAMService* service)
                 
             if (!dstorage_batch->tasks.empty())
             {
-                ZoneScopedN("LogCreateBatch(DStorage)");
-
-                SKR_LOG_TRACE("Created DirectStorage Batch %d with %d Tasks", dstorage_batch->id, dstorage_batch->tasks.size());
+                {
+                    ZoneScopedN("LogCreateBatch(DStorage)");
+                    SKR_LOG_TRACE("Created DirectStorage Batch %d with %d Tasks", dstorage_batch->id, dstorage_batch->tasks.size());
+                }
                 SKR_ASSERT(service->dstorage_batch_queue.find(dstorage_batch->id) == service->dstorage_batch_queue.end());
                 service->dstorage_batch_queue[dstorage_batch->id] = dstorage_batch;
             }
@@ -762,6 +764,7 @@ void __ioThreadTask_VRAM(void* arg)
     skr::string name = skr::format(u8"ioVRAMServiceThread-{}", taskIndex++);
     tracy::SetThreadName(name.c_str());
 #endif
+    skr_current_thread_set_name(u8"ioVRAMServiceThread");
     auto service = reinterpret_cast<skr::io::VRAMService*>(arg);
     for (; service->threaded_service.getThreadStatus() != _SKR_IO_THREAD_STATUS_QUIT;)
     {

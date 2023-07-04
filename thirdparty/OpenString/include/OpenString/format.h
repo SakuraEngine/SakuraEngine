@@ -230,6 +230,7 @@ namespace details
 {
     codeunit_sequence OPEN_STRING_API format_integer(const i64& value, const codeunit_sequence_view& specification);
     codeunit_sequence OPEN_STRING_API format_float(const float& value, const codeunit_sequence_view& specification);
+    codeunit_sequence OPEN_STRING_API format_double(const double& value, const codeunit_sequence_view& specification);
 }
 
 template<> 
@@ -354,6 +355,15 @@ struct argument_formatter<float>
     static codeunit_sequence produce(const float& value, const codeunit_sequence_view& specification)
     {
         return details::format_float(value, specification);
+    }
+};
+
+template<> 
+struct argument_formatter<double>
+{
+    static codeunit_sequence produce(const float& value, const codeunit_sequence_view& specification)
+    {
+        return details::format_double(value, specification);
     }
 };
 

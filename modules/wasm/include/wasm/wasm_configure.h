@@ -75,12 +75,12 @@ void swa_delete(T* object)
 #include "misc/hash.h"
 #define swa_hash(buffer, size, seed) skr_hash((buffer), (size), (seed))
 #include "misc/log.h"
-#define swa_trace(...) log_log(SKR_LOG_LEVEL_TRACE, __FILE__, __LINE__, __VA_ARGS__)
-#define swa_debug(...) log_log(SKR_LOG_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
-#define swa_info(...) log_log(SKR_LOG_LEVEL_INFO, __FILE__, __LINE__, __VA_ARGS__)
-#define swa_warn(...) log_log(SKR_LOG_LEVEL_WARN, __FILE__, __LINE__, __VA_ARGS__)
-#define swa_error(...) log_log(SKR_LOG_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
-#define swa_fatal(...) log_log(SKR_LOG_LEVEL_FATAL, __FILE__, __LINE__, __VA_ARGS__)
+#define swa_trace(...) SKR_LOG_TRACE(__VA_ARGS__)
+#define swa_debug(...) SKR_LOG_DEBUG(__VA_ARGS__)
+#define swa_info(...) SKR_LOG_INFO(__VA_ARGS__)
+#define swa_warn(...) SKR_LOG_WARN(__VA_ARGS__)
+#define swa_error(...) SKR_LOG_ERROR(__VA_ARGS__)
+#define swa_fatal(...) SKR_LOG_FATAL(__VA_ARGS__)
 
 typedef int64_t swa_i64;
 typedef int32_t swa_i32;

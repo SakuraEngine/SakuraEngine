@@ -33,6 +33,7 @@ void skr::SRCBlock::release(uint32_t* pRC) SKR_NOEXCEPT
     }
     else
     {
+        this->free_value();
         auto weak_prev = skr_atomicu32_add_relaxed(&weak_refcount, -1);
         if (weak_prev <= 1)
         {

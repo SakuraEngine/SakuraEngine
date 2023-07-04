@@ -1,11 +1,8 @@
+#include "../pch.hpp"
 #include "platform/shared_library.hpp"
 #if defined(SKR_OS_UNIX)
     #include <dlfcn.h>
 #elif defined(SKR_OS_WINDOWS)
-    #ifndef WIN32_MEAN_AND_LEAN
-        #define WIN32_MEAN_AND_LEAN
-    #endif
-    #include <windows.h>
     #include <platform/filesystem.hpp>
 #endif
 

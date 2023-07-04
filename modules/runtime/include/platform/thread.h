@@ -2,6 +2,10 @@
 #include "configure.h"
 #include "platform/memory.h"
 
+#ifndef SKR_MAX_THREAD_NAME_LENGTH
+#define SKR_MAX_THREAD_NAME_LENGTH 31
+#endif
+
 #if defined(_WIN32) || defined(XBOX)
 typedef unsigned long SThreadID;
     #define THREAD_ID_MAX ULONG_MAX
@@ -145,9 +149,11 @@ THREADS_API void skr_wake_condition_var(SConditionVariable* cv);
 
 /// thread
 THREADS_API void skr_init_thread(SThreadDesc* pItem, SThreadHandle* pHandle);
+THREADS_API SThreadHandle skr_get_current_thread();
 THREADS_API SThreadPriority skr_thread_set_priority(SThreadHandle, SThreadPriority);
 THREADS_API void skr_thread_set_affinity(SThreadHandle, uint64_t affinityMask);
-THREADS_API void skr_thread_set_name(SThreadHandle, const char8_t* pName);
+THREADS_API void skr_current_thread_set_name(const char8_t* name);
+THREADS_API const char8_t* skr_current_thread_get_name();
 THREADS_API void skr_destroy_thread(SThreadHandle handle);
 THREADS_API void skr_join_thread(SThreadHandle handle);
 THREADS_API SThreadID skr_current_thread_id(void);

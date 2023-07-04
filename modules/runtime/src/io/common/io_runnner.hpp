@@ -1,5 +1,5 @@
 #pragma once
-#include "async/service_thread.hpp"
+#include "async/async_service.h"
 #include "async/condlock.hpp"
 #include "io_request.hpp"
 #include "io_batch.hpp"
@@ -10,76 +10,10 @@ namespace skr { template <typename Artifact> struct IFuture; struct JobQueue; }
 namespace skr {
 namespace io {
 
-struct SleepyService : public skr::ServiceThread
-{
-    SleepyService(const ServiceThreadDesc& desc) SKR_NOEXCEPT
-        : skr::ServiceThread(desc)
-    {
-        condlock.initialize(skr::format(u8"{}-CondLock", desc.name).u8_str());
-    }
-    virtual ~SleepyService() SKR_NOEXCEPT = default;
-
-    SkrAsyncServiceStatus getServiceStatus() const SKR_NOEXCEPT
-    {
-        return (SkrAsyncServiceStatus)skr_atomicu32_load_acquire(&service_status);
-    }
-
-    void set_sleep_time(uint32_t time) SKR_NOEXCEPT
-    {
-        skr_atomicu32_store_release(&sleep_time, time);
-    }
-
-    void sleep() SKR_NOEXCEPT
-    {
-        const auto ms = skr_atomicu32_load_relaxed(&sleep_time);
-        ZoneScopedNC("ioServiceSleep(Cond)", tracy::Color::Gray55);
-
-        condlock.lock();
-        if (!event)
-        {
-            condlock.wait(ms);
-        }
-        event = false;
-        condlock.unlock();
-    }
-
-    void request_stop() SKR_NOEXCEPT override
-    {
-        skr::ServiceThread::request_stop();
-        awake();
-    }
-
-    void wait_stop(uint32_t fatal_timeout = 8) SKR_NOEXCEPT override
-    {
-        awake();
-        skr::ServiceThread::wait_stop(fatal_timeout);
-    }
-
-    void awake()
-    {
-        condlock.lock();
-        event = true;
-        condlock.signal();
-        condlock.unlock();
-    }
-
-protected:
-    void setServiceStatus(SkrAsyncServiceStatus status) SKR_NOEXCEPT
-    {
-        skr_atomicu32_store_release(&service_status, status);
-    }
-
-private:
-    SAtomicU32 sleep_time = 16u;
-    bool event = false;
-    CondLock condlock;
-    SAtomicU32 service_status = SKR_ASYNC_SERVICE_STATUS_SLEEPING;
-};
-
-struct RunnerBase : public SleepyService
+struct RunnerBase : public AsyncService
 {
     RunnerBase(const ServiceThreadDesc& desc, skr::JobQueue* job_queue) SKR_NOEXCEPT
-        : SleepyService(desc), job_queue(job_queue)
+        : AsyncService(desc), job_queue(job_queue)
     {
 
     }

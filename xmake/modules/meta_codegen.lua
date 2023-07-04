@@ -330,7 +330,10 @@ function generate_once(targetname)
         if (target:rule("c++.codegen")) then
             -- resume meta compile
             scheduler.co_group_begin(target:name()..".cpp-codegen.meta", function ()
-                scheduler.co_start(compile_task, meta_compile, target, opt)
+                meta_target = target:clone()
+                meta_target:set("pcxxheader", nil)
+                meta_target:set("pcheader", nil)
+                scheduler.co_start(compile_task, meta_compile, meta_target, opt)
             end)
         end
     end

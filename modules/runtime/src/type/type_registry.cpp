@@ -1104,7 +1104,7 @@ void skr_type_t::Construct(void* dst, skr::type::Value* args, uint64_t nargs) co
         }
         break;
         case SKR_TYPE_CATEGORY_DYNARR: {
-            auto& arr = (const DynArrayType&)(*this);
+            [[maybe_unused]] auto& arr = (const DynArrayType&)(*this);
             auto storage = (DynArrayStorage*)dst;
             storage->begin = storage->end = storage->capacity = nullptr;
             break;

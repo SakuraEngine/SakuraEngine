@@ -502,11 +502,12 @@ int skr_lua_log(lua_State* L)
         split(Source, tokens, u8"/");
         
         const auto modulename = join(tokens, u8".");
-        log_log(level, (const char*)modulename.c_str(), line, str.c_str());
+        auto lstr = skr::format(u8"{}", line);
+        log_log(level, (const char*)modulename.c_str(), "unknown", lstr.c_str(), str.c_str());
     }
     else 
     {
-        log_log(level, "unknown", 0, str.c_str());
+        log_log(level, "unknown", "unknown", 0, str.c_str());
     }
     return 0;
 }
