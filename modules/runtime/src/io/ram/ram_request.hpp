@@ -1,5 +1,6 @@
 #pragma once
 #include "../common/io_request.hpp"
+#include "ram_buffer.hpp"
 #include "platform/vfs.h"
 #include <EASTL/fixed_vector.h>
 #include <EASTL/variant.h>
@@ -16,7 +17,7 @@ struct RAMIORequest final : public IORequestBase
     RAMIOBufferId destination = nullptr;
     eastl::fixed_vector<skr_io_block_t, 1> blocks;
     
-    uint64_t get_fsize() const SKR_NOEXCEPT
+    uint64_t get_fsize() const SKR_NOEXCEPT override
     {
         if (file)
         {
@@ -34,13 +35,25 @@ struct RAMIORequest final : public IORequestBase
         }
     }
 
-    skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT { return blocks; }
-    void add_block(const skr_io_block_t& block) SKR_NOEXCEPT { blocks.emplace_back(block); }
-    void reset_blocks() SKR_NOEXCEPT { blocks.clear(); }
+    void setStatus(ESkrIOStage status) SKR_NOEXCEPT override
+    {
+        if (status == SKR_IO_STAGE_CANCELLED)
+        {
+            if (auto dest = static_cast<RAMIOBuffer*>(destination.get()))
+            {
+                dest->free_buffer();
+            }
+        }
+        return IORequestBase::setStatus(status);
+    }
 
-    skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT { return {}; }
-    void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT {  }
-    void reset_compressed_blocks() SKR_NOEXCEPT {  }
+    skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT override { return blocks; }
+    void add_block(const skr_io_block_t& block) SKR_NOEXCEPT override { blocks.emplace_back(block); }
+    void reset_blocks() SKR_NOEXCEPT override { blocks.clear(); }
+
+    skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT override { return {}; }
+    void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT override {  }
+    void reset_compressed_blocks() SKR_NOEXCEPT override {  }
 
 protected:
     RAMIORequest(ISmartPool<IIORequest>* pool, const uint64_t sequence) : IORequestBase(pool), sequence(sequence) {}

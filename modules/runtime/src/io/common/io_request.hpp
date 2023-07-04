@@ -65,7 +65,7 @@ public:
         return false;
     }
 
-    void setStatus(ESkrIOStage status)
+    virtual void setStatus(ESkrIOStage status) SKR_NOEXCEPT
     {
         skr_atomicu32_store_release(&future->status, status);
         if (const auto callback = callbacks[status])
@@ -76,14 +76,14 @@ public:
         }
     }
 
-    ESkrIOStage getStatus() const
+    virtual ESkrIOStage getStatus() const SKR_NOEXCEPT
     {
         return static_cast<ESkrIOStage>(skr_atomicu32_load_relaxed(&future->status));
     }
 
-    IIOBatch* getOwnerBatch() const { return owner_batch; }
+    IIOBatch* getOwnerBatch() const SKR_NOEXCEPT { return owner_batch; }
 
-    bool getCancelRequested() const
+    bool getCancelRequested() const SKR_NOEXCEPT
     {
         return skr_atomicu32_load_relaxed(&future->request_cancel);
     }
