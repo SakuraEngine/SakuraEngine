@@ -38,6 +38,12 @@ struct RenderBox;
 struct RenderWindow;
 struct RenderNativeWindow;
 
+// layer
+struct Layer;
+struct GeometryLayer;
+struct ContainerLayer;
+struct OffsetLayer;
+
 // binding
 struct PipelineOwner;
 struct PaintingContext;
@@ -53,6 +59,5 @@ struct WindowContext;
 struct State;
 struct Notification;
 struct Slot;
-struct Layer;
 
 } // namespace skr::gui

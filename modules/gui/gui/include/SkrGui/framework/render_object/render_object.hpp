@@ -97,6 +97,7 @@ private:
     // dirty marks
     bool _needs_layout = true;
     bool _needs_paint = true;
+    // TODO. compositing layer & compositing bits，其中 Bits 是 Flutter Picture 位图化的产物，我们或许只需要标记 Layer 的更新
 
     // layout temporal data
     bool _force_relayout_boundary = false; // 强制自己称为 layout_boundary
