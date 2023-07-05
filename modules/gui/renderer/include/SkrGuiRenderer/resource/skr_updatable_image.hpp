@@ -12,7 +12,10 @@ struct SKR_GUI_RENDERER_API SkrUpdatableImage final : public IUpdatableImage {
     SkrUpdatableImage(SkrRenderDevice* render_device);
     ~SkrUpdatableImage();
 
-    bool                      is_okey() const SKR_NOEXCEPT override;
+    EResourceState            state() const SKR_NOEXCEPT override;
+    void                      request() override;
+    void                      cancel_request() override;
+    void                      destroy() override;
     Sizei                     size() const SKR_NOEXCEPT override;
     Rectf                     uv_rect() const SKR_NOEXCEPT override;
     EdgeInsetsf               nine_inset() const SKR_NOEXCEPT override;
@@ -27,9 +30,9 @@ private:
     SkrRenderDevice* _render_device = nullptr;
 
     CGPUTextureId     _cgpu_texture = nullptr;
-    CGPUTextureId     _texture = nullptr;
+    CGPUTextureId     _texture      = nullptr;
     CGPUTextureViewId _texture_view = nullptr;
-    CGPUXBindTableId  _bind_table = nullptr;
+    CGPUXBindTableId  _bind_table   = nullptr;
 
     UpdatableImageDesc _desc;
 };

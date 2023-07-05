@@ -1,6 +1,7 @@
 #include "SkrGui/framework/painting_context.hpp"
 #include "SkrGui/framework/layer/geometry_layer.hpp"
 #include "SkrGui/framework/layer/container_layer.hpp"
+#include "SkrGui/framework/render_object/render_object.hpp"
 
 namespace skr::gui
 {
@@ -18,7 +19,19 @@ ICanvas* PaintingContext::canvas() SKR_NOEXCEPT
 }
 void PaintingContext::paint_child(NotNull<RenderObject*> child, Offsetf offset) noexcept
 {
-    SKR_UNIMPLEMENTED_FUNCTION()
+    if (child->is_repaint_boundary())
+    {
+        _stop_recording();
+        // TODO. composite child
+    }
+    else if (false)
+    {
+        // TODO. was repaint boundary
+    }
+    else
+    {
+        // TODO. paint child
+    }
 }
 void PaintingContext::add_layer(NotNull<Layer*> layer) SKR_NOEXCEPT
 {
