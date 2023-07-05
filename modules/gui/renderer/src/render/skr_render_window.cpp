@@ -15,23 +15,23 @@ SkrRenderWindow::SkrRenderWindow(SkrRenderDevice* owner, SWindowHandle window)
     , _window(window)
 {
     auto device = _owner->cgpu_device();
-    auto queue = _owner->cgpu_queue();
+    auto queue  = _owner->cgpu_queue();
 
-    _cgpu_fence = cgpu_create_fence(_owner->cgpu_device());
+    _cgpu_fence   = cgpu_create_fence(_owner->cgpu_device());
     _cgpu_surface = cgpu_surface_from_native_view(device, skr_window_get_native_view(_window));
 
     int32_t width, height;
     skr_window_get_extent(_window, &width, &height);
     CGPUSwapChainDescriptor chain_desc = {};
-    chain_desc.surface = _cgpu_surface;
-    chain_desc.present_queues = &queue;
-    chain_desc.present_queues_count = 1;
-    chain_desc.width = width;
-    chain_desc.height = height;
-    chain_desc.image_count = 2;
-    chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM; // TODO: use correct screen buffer format
-    chain_desc.enable_vsync = false;
-    _cgpu_swapchain = cgpu_create_swapchain(device, &chain_desc);
+    chain_desc.surface                 = _cgpu_surface;
+    chain_desc.present_queues          = &queue;
+    chain_desc.present_queues_count    = 1;
+    chain_desc.width                   = width;
+    chain_desc.height                  = height;
+    chain_desc.image_count             = 2;
+    chain_desc.format                  = CGPU_FORMAT_B8G8R8A8_UNORM; // TODO: use correct screen buffer format
+    chain_desc.enable_vsync            = false;
+    _cgpu_swapchain                    = cgpu_create_swapchain(device, &chain_desc);
 }
 SkrRenderWindow::~SkrRenderWindow()
 {
@@ -52,7 +52,7 @@ SkrRenderWindow::~SkrRenderWindow()
 void SkrRenderWindow::sync_window_size()
 {
     auto device = _owner->cgpu_device();
-    auto queue = _owner->cgpu_queue();
+    auto queue  = _owner->cgpu_queue();
 
     // TODO. fix this hack
     cgpu_wait_queue_idle(queue);
@@ -78,15 +78,15 @@ void SkrRenderWindow::sync_window_size()
     int32_t width, height;
     skr_window_get_extent(_window, &width, &height);
     CGPUSwapChainDescriptor chain_desc = {};
-    chain_desc.surface = _cgpu_surface;
-    chain_desc.present_queues = &queue;
-    chain_desc.present_queues_count = 1;
-    chain_desc.width = width;
-    chain_desc.height = height;
-    chain_desc.image_count = 2;
-    chain_desc.format = CGPU_FORMAT_B8G8R8A8_UNORM; // TODO: use correct screen buffer format
-    chain_desc.enable_vsync = false;
-    _cgpu_swapchain = cgpu_create_swapchain(device, &chain_desc);
+    chain_desc.surface                 = _cgpu_surface;
+    chain_desc.present_queues          = &queue;
+    chain_desc.present_queues_count    = 1;
+    chain_desc.width                   = width;
+    chain_desc.height                  = height;
+    chain_desc.image_count             = 2;
+    chain_desc.format                  = CGPU_FORMAT_B8G8R8A8_UNORM; // TODO: use correct screen buffer format
+    chain_desc.enable_vsync            = false;
+    _cgpu_swapchain                    = cgpu_create_swapchain(device, &chain_desc);
 }
 
 void SkrRenderWindow::render(const Layer* layer, Sizef window_size)
@@ -116,57 +116,57 @@ void SkrRenderWindow::_prepare_draw_data(const Layer* layer, Sizef window_size)
     for (const auto& cmd : canvas->commands())
     {
         // copy command
-        DrawCommand draw_cmd = {};
-        draw_cmd.texture = cmd.texture;
-        draw_cmd.index_count = cmd.index_count;
-        draw_cmd.index_count = cmd.index_count;
+        DrawCommand draw_cmd     = {};
+        draw_cmd.texture         = cmd.texture;
+        draw_cmd.index_count     = cmd.index_count;
+        draw_cmd.index_count     = cmd.index_count;
         draw_cmd.texture_swizzle = cmd.texture_swizzle;
 
         // make transform
-        auto       tb_cursor = _transforms.size();
-        auto&      transform = _transforms.emplace_back();
-        const auto scaleX = 1.f;
-        const auto scaleY = 1.f;
-        const auto scaleZ = 1.f;
-        const auto transformX = 0.f;
-        const auto transformY = 0.f;
-        const auto transformW = 1.f;
+        auto       tb_cursor      = _transforms.size();
+        auto&      transform      = _transforms.emplace_back();
+        const auto scaleX         = 1.f;
+        const auto scaleY         = 1.f;
+        const auto scaleZ         = 1.f;
+        const auto transformX     = 0.f;
+        const auto transformY     = 0.f;
+        const auto transformW     = 1.f;
         const auto pitchInDegrees = 0.f;
-        const auto yawInDegrees = 0.f;
-        const auto rollInDegrees = 0.f;
-        const auto quat = rtm::quat_from_euler_rh(
+        const auto yawInDegrees   = 0.f;
+        const auto rollInDegrees  = 0.f;
+        const auto quat           = rtm::quat_from_euler_rh(
         rtm::scalar_deg_to_rad(-pitchInDegrees),
         rtm::scalar_deg_to_rad(yawInDegrees),
         rtm::scalar_deg_to_rad(rollInDegrees));
-        const rtm::vector4f translation = rtm::vector_set(transformX, transformY, 0.f, transformW);
-        const rtm::vector4f scale = rtm::vector_set(scaleX, scaleY, scaleZ, 0.f);
+        const rtm::vector4f translation   = rtm::vector_set(transformX, transformY, 0.f, transformW);
+        const rtm::vector4f scale         = rtm::vector_set(scaleX, scaleY, scaleZ, 0.f);
         const auto          transform_qvv = rtm::qvv_set(quat, translation, scale);
-        transform = rtm::matrix_cast(rtm::matrix_from_qvv(transform_qvv));
+        transform                         = rtm::matrix_cast(rtm::matrix_from_qvv(transform_qvv));
 
         // make projection
-        auto               pb_cursor = _projections.size();
-        auto&              projection = _projections.emplace_back();
-        const skr_float2_t zero_point = { window_size.width * 0.5f, window_size.height * 0.5f };
+        auto               pb_cursor    = _projections.size();
+        auto&              projection   = _projections.emplace_back();
+        const skr_float2_t zero_point   = { window_size.width * 0.5f, window_size.height * 0.5f };
         const skr_float2_t eye_position = { zero_point.x, zero_point.y };
-        const auto         view = rtm::look_at_matrix(
+        const auto         view         = rtm::look_at_matrix(
         { eye_position.x, eye_position.y, 0.f } /*eye*/,
         { eye_position.x, eye_position.y, 1000.f } /*at*/,
         { 0.f, -1.f, 0.f } /*up*/
         );
         const auto proj = rtm::orthographic(window_size.width, window_size.height, 0.f, 1000.f);
-        projection = rtm::matrix_mul(view, proj);
+        projection      = rtm::matrix_mul(view, proj);
 
         // make render data
-        auto  rb_cursor = _render_data.size();
-        auto& render_data = _render_data.emplace_back();
+        auto  rb_cursor     = _render_data.size();
+        auto& render_data   = _render_data.emplace_back();
         render_data.M[0][0] = static_cast<float>(cmd.texture_swizzle.r);
         render_data.M[0][1] = static_cast<float>(cmd.texture_swizzle.g);
         render_data.M[0][2] = static_cast<float>(cmd.texture_swizzle.b);
         render_data.M[0][3] = static_cast<float>(cmd.texture_swizzle.a);
 
         // record buffer info
-        draw_cmd.transform_buffer_offset = tb_cursor * sizeof(rtm::matrix4x4f);
-        draw_cmd.projection_buffer_offset = pb_cursor * sizeof(rtm::matrix4x4f);
+        draw_cmd.transform_buffer_offset   = tb_cursor * sizeof(rtm::matrix4x4f);
+        draw_cmd.projection_buffer_offset  = pb_cursor * sizeof(rtm::matrix4x4f);
         draw_cmd.render_data_buffer_offset = rb_cursor * sizeof(skr_float4x4_t);
 
         _commands.push_back(draw_cmd);
@@ -174,12 +174,12 @@ void SkrRenderWindow::_prepare_draw_data(const Layer* layer, Sizef window_size)
 }
 void SkrRenderWindow::_upload_draw_data()
 {
-    const uint64_t vertices_size = _vertices.size() * sizeof(PaintVertex);
-    const uint64_t indices_size = _indices.size() * sizeof(PaintIndex);
-    const uint64_t transform_size = _transforms.size() * sizeof(rtm::matrix4x4f);
-    const uint64_t projection_size = _projections.size() * sizeof(rtm::matrix4x4f);
+    const uint64_t vertices_size    = _vertices.size() * sizeof(PaintVertex);
+    const uint64_t indices_size     = _indices.size() * sizeof(PaintIndex);
+    const uint64_t transform_size   = _transforms.size() * sizeof(rtm::matrix4x4f);
+    const uint64_t projection_size  = _projections.size() * sizeof(rtm::matrix4x4f);
     const uint64_t render_data_size = _render_data.size() * sizeof(skr_float4x4_t);
-    const bool     useCVV = false;
+    const bool     useCVV           = false;
 
     auto rg = _owner->render_graph();
 
@@ -234,10 +234,10 @@ void SkrRenderWindow::_upload_draw_data()
         .as_vertex_buffer();
     });
 
-    _vertex_buffer = vertex_buffer;
-    _index_buffer = index_buffer;
-    _transform_buffer = transform_buffer;
-    _projection_buffer = projection_buffer;
+    _vertex_buffer      = vertex_buffer;
+    _index_buffer       = index_buffer;
+    _transform_buffer   = transform_buffer;
+    _projection_buffer  = projection_buffer;
     _render_data_buffer = rdata_buffer;
 
     if (!useCVV)
@@ -266,24 +266,24 @@ void SkrRenderWindow::_upload_draw_data()
             builder.buffer_to_buffer(upload_buffer_handle.range(cursor, cursor + render_data_size), rdata_buffer.range(0, render_data_size));
         },
         [upload_buffer_handle, this](render_graph::RenderGraph& g, render_graph::CopyPassContext& context) {
-            auto           upload_buffer = context.resolve(upload_buffer_handle);
-            const uint64_t vertices_count = _vertices.size();
-            const uint64_t indices_count = _indices.size();
-            const uint64_t transforms_count = _transforms.size();
+            auto           upload_buffer     = context.resolve(upload_buffer_handle);
+            const uint64_t vertices_count    = _vertices.size();
+            const uint64_t indices_count     = _indices.size();
+            const uint64_t transforms_count  = _transforms.size();
             const uint64_t projections_count = _projections.size();
             const uint64_t render_data_count = _render_data.size();
 
-            PaintVertex*     vtx_dst = (PaintVertex*)upload_buffer->info->cpu_mapped_address;
-            PaintIndex*      idx_dst = (PaintIndex*)(vtx_dst + vertices_count);
-            rtm::matrix4x4f* transform_dst = (rtm::matrix4x4f*)(idx_dst + indices_count);
+            PaintVertex*     vtx_dst        = (PaintVertex*)upload_buffer->info->cpu_mapped_address;
+            PaintIndex*      idx_dst        = (PaintIndex*)(vtx_dst + vertices_count);
+            rtm::matrix4x4f* transform_dst  = (rtm::matrix4x4f*)(idx_dst + indices_count);
             rtm::matrix4x4f* projection_dst = (rtm::matrix4x4f*)(transform_dst + transforms_count);
-            skr_float4x4_t*  rdata_dst = (skr_float4x4_t*)(projection_dst + projections_count);
+            skr_float4x4_t*  rdata_dst      = (skr_float4x4_t*)(projection_dst + projections_count);
 
-            const skr::span<PaintVertex>     render_vertices = _vertices;
-            const skr::span<PaintIndex>      render_indices = _indices;
-            const skr::span<rtm::matrix4x4f> render_transforms = _transforms;
+            const skr::span<PaintVertex>     render_vertices    = _vertices;
+            const skr::span<PaintIndex>      render_indices     = _indices;
+            const skr::span<rtm::matrix4x4f> render_transforms  = _transforms;
             const skr::span<rtm::matrix4x4f> render_projections = _projections;
-            const skr::span<skr_float4x4_t>  render_data = _render_data;
+            const skr::span<skr_float4x4_t>  render_data        = _render_data;
 
             memcpy(vtx_dst, render_vertices.data(), vertices_count * sizeof(PaintVertex));
             memcpy(idx_dst, render_indices.data(), indices_count * sizeof(PaintIndex));
@@ -295,9 +295,9 @@ void SkrRenderWindow::_upload_draw_data()
 }
 void SkrRenderWindow::_render()
 {
-    auto rg = _owner->render_graph();
+    auto rg     = _owner->render_graph();
     auto target = rg->get_texture(u8"backbuffer");
-    auto depth = rg->get_texture(u8"depth");
+    auto depth  = rg->get_texture(u8"depth");
 
     rg->add_render_pass(
     [&](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
@@ -318,13 +318,13 @@ void SkrRenderWindow::_render()
         } },
     [this, target](render_graph::RenderGraph& g, render_graph::RenderPassContext& ctx) {
         ZoneScopedN("GUI-RenderPass");
-        const auto     target_desc = g.resolve_descriptor(target);
-        auto           resolved_ib = ctx.resolve(_index_buffer);
-        auto           resolved_vb = ctx.resolve(_vertex_buffer);
-        auto           resolved_tb = ctx.resolve(_transform_buffer);
-        auto           resolved_pb = ctx.resolve(_projection_buffer);
-        auto           resolved_rdata = ctx.resolve(_render_data_buffer);
-        CGPUBufferId   vertex_streams[4] = { resolved_vb, resolved_tb, resolved_pb, resolved_rdata };
+        const auto     target_desc              = g.resolve_descriptor(target);
+        auto           resolved_ib              = ctx.resolve(_index_buffer);
+        auto           resolved_vb              = ctx.resolve(_vertex_buffer);
+        auto           resolved_tb              = ctx.resolve(_transform_buffer);
+        auto           resolved_pb              = ctx.resolve(_projection_buffer);
+        auto           resolved_rdata           = ctx.resolve(_render_data_buffer);
+        CGPUBufferId   vertex_streams[4]        = { resolved_vb, resolved_tb, resolved_pb, resolved_rdata };
         const uint32_t vertex_stream_strides[4] = { sizeof(PaintVertex), sizeof(rtm::matrix4x4f), sizeof(rtm::matrix4x4f), sizeof(skr_float4x4_t) };
 
         cgpu_render_encoder_set_viewport(ctx.encoder,
@@ -340,8 +340,8 @@ void SkrRenderWindow::_render()
 
         for (const auto& cmd : _commands)
         {
-            const bool     use_texture = cmd.texture && cmd.texture->is_okey();
-            SkrPipelineKey key = { cmd.pipeline_flags, target_desc->sample_count };
+            const bool     use_texture = cmd.texture && cmd.texture->state() == skr::gui::EResourceState::Okey;
+            SkrPipelineKey key         = { cmd.pipeline_flags, target_desc->sample_count };
             if (pipeline_key_cache != key)
             {
                 CGPURenderPipelineId this_pipeline = _owner->get_pipeline(key.flags, key.sample_count);

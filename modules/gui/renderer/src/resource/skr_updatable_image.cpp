@@ -15,11 +15,23 @@ SkrUpdatableImage::~SkrUpdatableImage()
     }
 }
 
-bool SkrUpdatableImage::is_okey() const SKR_NOEXCEPT
+EResourceState SkrUpdatableImage::state() const SKR_NOEXCEPT
 {
-    return true;
+    SKR_UNIMPLEMENTED_FUNCTION()
+    return EResourceState::Entry;
 }
-Sizei SkrUpdatableImage::size() const SKR_NOEXCEPT
+void SkrUpdatableImage::request()
+{
+    SKR_UNIMPLEMENTED_FUNCTION()
+}
+void SkrUpdatableImage::cancel_request()
+{
+    SKR_UNIMPLEMENTED_FUNCTION()
+}
+void SkrUpdatableImage::destroy(){
+    SKR_UNIMPLEMENTED_FUNCTION()
+
+} Sizei SkrUpdatableImage::size() const SKR_NOEXCEPT
 {
     return _desc.size;
 }

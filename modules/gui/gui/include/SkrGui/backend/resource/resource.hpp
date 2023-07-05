@@ -22,29 +22,48 @@ enum class EPixelFormat
 };
 
 struct UpdatableImageDesc {
-    EPixelFormat        format = EPixelFormat::Unknown;
-    Sizei               size = {};
+    EPixelFormat        format    = EPixelFormat::Unknown;
+    Sizei               size      = {};
     uint32_t            mip_count = 0;
-    Span<const uint8_t> data = {};
+    Span<const uint8_t> data      = {};
 };
 
+// 不如直接挪到 Device 中，由 Renderer 层决定实现
+// 因为 Resource 本身涉及 Renderer 层的资源管理，单独拆分一个 Service 出来比较隔离
+// 同时，Device 作为一个中心概念，资源管理也是它的职责之一，并且，各种 Service 通常也是全局唯一的
+// Device 本身的接口现在变的过于精简，因此将 ResourceService 的接口合并到 Device 中也是趋于合理的
 struct SKR_GUI_API IResourceService SKR_GUI_INTERFACE_BASE {
     SKR_GUI_INTERFACE_ROOT(IResourceService, "4d8c09d2-2b06-40c2-979a-213b3f1e08e6")
     virtual ~IResourceService() = default;
 
     virtual NotNull<IUpdatableImage*> create_updatable_image(const UpdatableImageDesc& desc) = 0;
-    virtual void                      destroy_resource(NotNull<IResource*> resource) = 0;
+    virtual void                      destroy_resource(NotNull<IResource*> resource)         = 0;
 };
 } // namespace skr::gui
 
 // resource
 namespace skr::gui
 {
+enum class EResourceState : uint32_t
+{
+    Entry,          // 入口状态，知晓部分资产信息，但是还未被加载
+    Requested,      // 已经申请加载，但是还没进入正式的加载流程，这个阶段是可以取消加载的
+    Loading,        // 正在加载，这个阶段是不可以取消加载的
+    Okey,           // 加载完成
+    Failed,         // 加载失败，调用 Request 重新请求加载
+    PendingDestroy, // 资源正在等待释放，此时调用 Request 可以保住资源并直接进入 Okey 状态
+    Destroyed,      // 资源已经被释放，此时再调用 Request 必须重新加载
+};
+
 struct SKR_GUI_API IResource SKR_GUI_INTERFACE_BASE {
     SKR_GUI_INTERFACE_ROOT(IResource, "26ede0ec-cd41-420b-ba29-893ab06bfce9")
     virtual ~IResource() = default;
 
-    virtual bool is_okey() const SKR_NOEXCEPT = 0;
+    // resource state
+    virtual EResourceState state() const SKR_NOEXCEPT = 0;
+    virtual void           request()                  = 0;
+    virtual void           cancel_request()           = 0;
+    virtual void           destroy()                  = 0;
 };
 
 struct SKR_GUI_API ISurface : virtual public IResource {
@@ -57,14 +76,14 @@ struct SKR_GUI_API IMaterial : virtual public ISurface {
 
 struct SKR_GUI_API IImage : virtual public ISurface {
     SKR_GUI_INTERFACE(IImage, "4cc917b5-2e84-491d-87ab-9f6b74c2c44c", ISurface)
-    virtual Sizei       size() const SKR_NOEXCEPT = 0;       // in image pixel
-    virtual Rectf       uv_rect() const SKR_NOEXCEPT = 0;    // [0, 1]
+    virtual Sizei       size() const SKR_NOEXCEPT       = 0; // in image pixel
+    virtual Rectf       uv_rect() const SKR_NOEXCEPT    = 0; // [0, 1]
     virtual EdgeInsetsf nine_inset() const SKR_NOEXCEPT = 0; // [0, size()]
 };
 
 struct SKR_GUI_API IUpdatableImage : virtual public IImage {
     SKR_GUI_INTERFACE(IUpdatableImage, "e82f5c9e-3a79-4d86-99df-7e949a41fbdf", IImage)
     virtual void                      update(const UpdatableImageDesc& desc) = 0;
-    virtual const UpdatableImageDesc& desc() const SKR_NOEXCEPT = 0;
+    virtual const UpdatableImageDesc& desc() const SKR_NOEXCEPT              = 0;
 };
 } // namespace skr::gui

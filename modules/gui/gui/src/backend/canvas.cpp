@@ -10,10 +10,10 @@ namespace skr::gui
 struct _NVGHelper {
     inline static uint32_t ToColor32ABGR(NVGcolor color)
     {
-        color.r = std::clamp(color.r, 0.f, 1.f);
-        color.g = std::clamp(color.g, 0.f, 1.f);
-        color.b = std::clamp(color.b, 0.f, 1.f);
-        color.a = std::clamp(color.a, 0.f, 1.f);
+        color.r   = std::clamp(color.r, 0.f, 1.f);
+        color.g   = std::clamp(color.g, 0.f, 1.f);
+        color.b   = std::clamp(color.b, 0.f, 1.f);
+        color.a   = std::clamp(color.a, 0.f, 1.f);
         uint8_t r = static_cast<uint8_t>(color.r * 255.f);
         uint8_t g = static_cast<uint8_t>(color.g * 255.f);
         uint8_t b = static_cast<uint8_t>(color.b * 255.f);
@@ -38,16 +38,16 @@ struct _NVGHelper {
                 marginLeft = box.margin.left + box.radius[3];
             else if (is.y < box.margin.bottom + box.radius[3])
             {
-                auto off = box.margin.bottom + box.radius[3] - is.y;
-                off = off * off + box.radius[3] * box.radius[3];
+                auto off   = box.margin.bottom + box.radius[3] - is.y;
+                off        = off * off + box.radius[3] * box.radius[3];
                 marginLeft = box.margin.left + box.radius[3] - std::sqrt(off);
             }
             else if (is.y > (size.y - box.margin.top))
                 marginLeft = box.margin.left + box.radius[0];
             else if (is.y > (size.y - box.margin.top) - box.radius[0])
             {
-                auto off = is.y - (size.y - box.margin.top) + box.radius[0];
-                off = off * off + box.radius[0] * box.radius[0];
+                auto off   = is.y - (size.y - box.margin.top) + box.radius[0];
+                off        = off * off + box.radius[0] * box.radius[0];
                 marginLeft = box.margin.left + box.radius[0] - std::sqrt(off);
             }
             else
@@ -56,16 +56,16 @@ struct _NVGHelper {
                 marginRight = box.margin.right + box.radius[2];
             else if (is.y < box.margin.bottom + box.radius[2])
             {
-                auto off = box.margin.bottom + box.radius[2] - is.y;
-                off = off * off + box.radius[2] * box.radius[2];
+                auto off    = box.margin.bottom + box.radius[2] - is.y;
+                off         = off * off + box.radius[2] * box.radius[2];
                 marginRight = box.margin.right + box.radius[2] - std::sqrt(off);
             }
             else if (is.y > (size.y - box.margin.top))
                 marginRight = box.margin.right + box.radius[1];
             else if (is.y > (size.y - box.margin.top) - box.radius[1])
             {
-                auto off = is.y - (size.y - box.margin.top) + box.radius[1];
-                off = off * off + box.radius[1] * box.radius[1];
+                auto off    = is.y - (size.y - box.margin.top) + box.radius[1];
+                off         = off * off + box.radius[1] * box.radius[1];
                 marginRight = box.margin.right + box.radius[1] - std::sqrt(off);
             }
             else
@@ -74,16 +74,16 @@ struct _NVGHelper {
                 marginTop = box.margin.top + box.radius[0];
             else if (is.x < box.margin.left + box.radius[0])
             {
-                auto off = box.margin.left + box.radius[0] - is.x;
-                off = off * off + box.radius[0] * box.radius[0];
+                auto off  = box.margin.left + box.radius[0] - is.x;
+                off       = off * off + box.radius[0] * box.radius[0];
                 marginTop = box.margin.top + box.radius[0] - std::sqrt(off);
             }
             else if (is.x > (size.x - box.margin.right))
                 marginTop = box.margin.right + box.radius[1];
             else if (is.x > (size.x - box.margin.right) - box.radius[1])
             {
-                auto off = is.x - (size.x - box.margin.right) + box.radius[1];
-                off = off * off + box.radius[1] * box.radius[1];
+                auto off  = is.x - (size.x - box.margin.right) + box.radius[1];
+                off       = off * off + box.radius[1] * box.radius[1];
                 marginTop = box.margin.top + box.radius[1] - std::sqrt(off);
             }
             else
@@ -92,16 +92,16 @@ struct _NVGHelper {
                 marginBottom = box.margin.bottom + box.radius[3];
             else if (is.x < box.margin.left + box.radius[3])
             {
-                auto off = box.margin.left + box.radius[3] - is.x;
-                off = off * off + box.radius[3] * box.radius[3];
+                auto off     = box.margin.left + box.radius[3] - is.x;
+                off          = off * off + box.radius[3] * box.radius[3];
                 marginBottom = box.margin.bottom + box.radius[3] - std::sqrt(off);
             }
             else if (is.x > (size.x - box.margin.right))
                 marginBottom = box.margin.right + box.radius[2];
             else if (is.x > (size.x - box.margin.right) - box.radius[2])
             {
-                auto off = is.x - (size.x - box.margin.right) + box.radius[2];
-                off = off * off + box.radius[2] * box.radius[2];
+                auto off     = is.x - (size.x - box.margin.right) + box.radius[2];
+                off          = off * off + box.radius[2] * box.radius[2];
                 marginBottom = box.margin.bottom + box.radius[2] - std::sqrt(off);
             }
             else
@@ -119,7 +119,7 @@ struct _NVGHelper {
         else
         {
             auto alpha = (is.x - marginLeft) / (size.x - marginLeft - marginRight);
-            result.x = (marginLeft / box.extend[0]) * alpha + (1 - marginRight / box.extend[0]) * (1 - alpha);
+            result.x   = (marginLeft / box.extend[0]) * alpha + (1 - marginRight / box.extend[0]) * (1 - alpha);
         }
 
         if (is.y < marginBottom)
@@ -133,7 +133,7 @@ struct _NVGHelper {
         else
         {
             auto alpha = (is.y - marginBottom) / (size.y - marginBottom - marginTop);
-            result.y = (marginBottom / box.extend[1]) * alpha + (1 - marginTop / box.extend[1]) * (1 - alpha);
+            result.y   = (marginBottom / box.extend[1]) * alpha + (1 - marginTop / box.extend[1]) * (1 - alpha);
         }
         return result;
     }
@@ -178,32 +178,32 @@ struct _NVGHelper {
     static void nvg__renderPath(ICanvas* canvas, const NVGpath& path, NVGpaint* paint, const skr_float4x4_t& transform, float fringe)
     {
         skr_float2_t extend{ paint->extent[0], paint->extent[1] };
-        auto&        vertices = canvas->_vertices;
-        auto&        indices = canvas->_indices;
+        auto&        vertices    = canvas->_vertices;
+        auto&        indices     = canvas->_indices;
         auto         push_vertex = [&](const NVGvertex& nv, uint32_t i, uint32_t nfill) {
             auto        brush = canvas->_tmp_brush;
             PaintVertex v;
-            v.clipUV = { 0.f, 0.f };
-            v.clipUV2 = { 0.f, 0.f };
-            v.position = { nv.x, nv.y, 0.f, 1.f };
-            v.aa = { nv.u, fringe };
-            const rtm::vector4f pos = rtm::vector_load((const uint8_t*)&v.position);
-            const auto          col0 = rtm::vector_set(transform.M[0][0], transform.M[0][1], transform.M[0][2], transform.M[0][3]);
-            const auto          col1 = rtm::vector_set(transform.M[1][0], transform.M[1][1], transform.M[1][2], transform.M[1][3]);
-            const auto          col2 = rtm::vector_set(transform.M[2][0], transform.M[2][1], transform.M[2][2], transform.M[2][3]);
-            const auto          col3 = rtm::vector_set(transform.M[3][0], transform.M[3][1], transform.M[3][2], transform.M[3][3]);
+            v.clipUV                  = { 0.f, 0.f };
+            v.clipUV2                 = { 0.f, 0.f };
+            v.position                = { nv.x, nv.y, 0.f, 1.f };
+            v.aa                      = { nv.u, fringe };
+            const rtm::vector4f pos   = rtm::vector_load((const uint8_t*)&v.position);
+            const auto          col0  = rtm::vector_set(transform.M[0][0], transform.M[0][1], transform.M[0][2], transform.M[0][3]);
+            const auto          col1  = rtm::vector_set(transform.M[1][0], transform.M[1][1], transform.M[1][2], transform.M[1][3]);
+            const auto          col2  = rtm::vector_set(transform.M[2][0], transform.M[2][1], transform.M[2][2], transform.M[2][3]);
+            const auto          col3  = rtm::vector_set(transform.M[3][0], transform.M[3][1], transform.M[3][2], transform.M[3][3]);
             const auto          trans = rtm::matrix_set(col0, col1, col2, col3);
-            v.color = ToColor32ABGR(paint->innerColor);
+            v.color                   = ToColor32ABGR(paint->innerColor);
 
             if (brush->type() == EBrushType::SurfaceNine)
             {
                 auto& brush_surface_nine = brush->as_surface_nine();
 
                 // TODO. use brush param
-                auto        imgSpace = rtm::matrix_mul_vector(pos, trans);
+                auto        imgSpace  = rtm::matrix_mul_vector(pos, trans);
                 const float imgSpaceX = rtm::vector_get_x(imgSpace);
                 const float imgSpaceY = rtm::vector_get_y(imgSpace);
-                v.texcoord = nvg__remapUV({ imgSpaceX, imgSpaceY }, extend, paint->box);
+                v.texcoord            = nvg__remapUV({ imgSpaceX, imgSpaceY }, extend, paint->box);
 
                 if (brush_surface_nine._custom)
                 {
@@ -215,10 +215,10 @@ struct _NVGHelper {
                 auto& brush_surface = brush->as_surface();
 
                 // TODO. use brush param
-                auto        imgSpace = rtm::matrix_mul_vector(pos, trans);
+                auto        imgSpace  = rtm::matrix_mul_vector(pos, trans);
                 const float imgSpaceX = rtm::vector_get_x(imgSpace);
                 const float imgSpaceY = rtm::vector_get_y(imgSpace);
-                v.texcoord = nvg__remapUV({ imgSpaceX, imgSpaceY }, extend, paint->box);
+                v.texcoord            = nvg__remapUV({ imgSpaceX, imgSpaceY }, extend, paint->box);
 
                 if (brush_surface._custom)
                 {
@@ -282,10 +282,10 @@ struct _NVGHelper {
         if (npaths == 1 && paths[0].convex)
         {
             // init data
-            auto  canvas = (ICanvas*)uptr;
+            auto  canvas       = (ICanvas*)uptr;
             auto  invTransform = nvg__getMatrix(paint);
-            auto& command = canvas->_commands.emplace_back();
-            auto  begin = canvas->_indices.size();
+            auto& command      = canvas->_commands.emplace_back();
+            auto  begin        = canvas->_indices.size();
 
             // combine vertices
             for (int i = 0; i < npaths; ++i)
@@ -297,19 +297,19 @@ struct _NVGHelper {
             if (canvas->_tmp_brush->type() == EBrushType::Surface)
             {
                 const auto surface_brush = static_cast<const SurfaceBrush*>(canvas->_tmp_brush);
-                command.texture_swizzle = surface_brush->_swizzle;
+                command.texture_swizzle  = surface_brush->_swizzle;
             }
             else if (canvas->_tmp_brush->type() == EBrushType::SurfaceNine)
             {
                 const auto surface_nine_brush = static_cast<const SurfaceBrush*>(canvas->_tmp_brush);
-                command.texture_swizzle = surface_nine_brush->_swizzle;
+                command.texture_swizzle       = surface_nine_brush->_swizzle;
             }
 
             command.index_begin = static_cast<uint32_t>(begin);
             command.index_count = static_cast<uint32_t>(canvas->_indices.size() - begin);
-            command.material = static_cast<IMaterial*>(paint->material);
-            command.texture = static_cast<IImage*>(paint->image);
-            if (command.texture && command.texture->is_okey())
+            command.material    = static_cast<IMaterial*>(paint->material);
+            command.texture     = static_cast<IImage*>(paint->image);
+            if (command.texture && command.texture->state() == EResourceState::Okey)
             {
                 command.texture = nullptr;
             }
@@ -325,11 +325,11 @@ struct _NVGHelper {
                                   float strokeWidth, const NVGpath* paths, int npaths)
     {
         // init data
-        auto  canvas = (ICanvas*)uptr;
+        auto  canvas       = (ICanvas*)uptr;
         auto  invTransform = nvg__getMatrix(paint);
-        auto& command = canvas->_commands.emplace_back();
-        auto  begin = canvas->_indices.size();
-        float aa = (fringe * 0.5f + strokeWidth * 0.5f) / fringe;
+        auto& command      = canvas->_commands.emplace_back();
+        auto  begin        = canvas->_indices.size();
+        float aa           = (fringe * 0.5f + strokeWidth * 0.5f) / fringe;
 
         // combine vertices & indices
         for (int i = 0; i < npaths; ++i)
@@ -340,9 +340,9 @@ struct _NVGHelper {
         // combine command
         command.index_begin = static_cast<uint32_t>(begin);
         command.index_count = static_cast<uint32_t>(canvas->_indices.size() - begin);
-        command.material = static_cast<IMaterial*>(paint->material);
-        command.texture = static_cast<IImage*>(paint->image);
-        if (command.texture && command.texture->is_okey())
+        command.material    = static_cast<IMaterial*>(paint->material);
+        command.texture     = static_cast<IImage*>(paint->image);
+        if (command.texture && command.texture->state() == EResourceState::Okey)
         {
             command.texture = nullptr;
         }
@@ -354,12 +354,12 @@ namespace skr::gui
 {
 ICanvas::ICanvas() SKR_NOEXCEPT
 {
-    auto params = make_zeroed<NVGparams>();
-    params.renderFill = _NVGHelper::nvg__renderFill;
-    params.renderStroke = _NVGHelper::nvg__renderStroke;
-    params.userPtr = this;
+    auto params          = make_zeroed<NVGparams>();
+    params.renderFill    = _NVGHelper::nvg__renderFill;
+    params.renderStroke  = _NVGHelper::nvg__renderStroke;
+    params.userPtr       = this;
     params.edgeAntiAlias = true;
-    _nvg = nvgCreateInternal(&params);
+    _nvg                 = nvgCreateInternal(&params);
 }
 
 ICanvas::~ICanvas() SKR_NOEXCEPT
