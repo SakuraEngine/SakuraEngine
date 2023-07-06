@@ -4,6 +4,11 @@
 
 namespace skr::gui
 {
+PipelineOwner::PipelineOwner(ICanvasService* canvas_service) SKR_NOEXCEPT
+    : _canvas_service(canvas_service)
+{
+}
+
 // schedule
 void PipelineOwner::schedule_layout_for(NotNull<RenderObject*> node) SKR_NOEXCEPT
 {

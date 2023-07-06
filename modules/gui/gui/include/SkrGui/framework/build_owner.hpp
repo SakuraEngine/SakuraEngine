@@ -5,7 +5,7 @@
 
 namespace skr::gui
 {
-struct SKR_GUI_API BuildOwner {
+struct SKR_GUI_API BuildOwner final {
 
     // build
     void schedule_build_for(NotNull<Element*> element) SKR_NOEXCEPT;

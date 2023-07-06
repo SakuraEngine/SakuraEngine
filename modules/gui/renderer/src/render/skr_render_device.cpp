@@ -58,12 +58,12 @@ namespace skr::gui
 void SkrRenderDevice::init()
 {
     // create instance
-    auto instance_desc = make_zeroed<CGPUInstanceDescriptor>();
-    instance_desc.backend = kSKR_GUI_DEFAULT_RENDER_BACKEND;
-    instance_desc.enable_debug_layer = true;
+    auto instance_desc                        = make_zeroed<CGPUInstanceDescriptor>();
+    instance_desc.backend                     = kSKR_GUI_DEFAULT_RENDER_BACKEND;
+    instance_desc.enable_debug_layer          = true;
     instance_desc.enable_gpu_based_validation = true;
-    instance_desc.enable_set_name = true;
-    _cgpu_instance = cgpu_create_instance(&instance_desc);
+    instance_desc.enable_set_name             = true;
+    _cgpu_instance                            = cgpu_create_instance(&instance_desc);
 
     // filter adapters
     uint32_t adapters_count = 0;
@@ -73,14 +73,14 @@ void SkrRenderDevice::init()
     _cgpu_adapter = adapters[0];
 
     // create device & queue
-    auto queue_group_desc = make_zeroed<CGPUQueueGroupDescriptor>();
-    queue_group_desc.queue_type = CGPU_QUEUE_TYPE_GRAPHICS;
-    queue_group_desc.queue_count = 1;
-    auto device_desc = make_zeroed<CGPUDeviceDescriptor>();
-    device_desc.queue_groups = &queue_group_desc;
+    auto queue_group_desc         = make_zeroed<CGPUQueueGroupDescriptor>();
+    queue_group_desc.queue_type   = CGPU_QUEUE_TYPE_GRAPHICS;
+    queue_group_desc.queue_count  = 1;
+    auto device_desc              = make_zeroed<CGPUDeviceDescriptor>();
+    device_desc.queue_groups      = &queue_group_desc;
     device_desc.queue_group_count = 1;
-    _cgpu_device = cgpu_create_device(_cgpu_adapter, &device_desc);
-    _cgpu_queue = cgpu_get_queue(_cgpu_device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
+    _cgpu_device                  = cgpu_create_device(_cgpu_adapter, &device_desc);
+    _cgpu_queue                   = cgpu_get_queue(_cgpu_device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
 
     // create rg
     _render_graph = RenderGraph::create(
@@ -90,38 +90,38 @@ void SkrRenderDevice::init()
     });
 
     // init vertex layout
-    const uint32_t pos_offset = static_cast<uint32_t>(offsetof(PaintVertex, position));
+    const uint32_t pos_offset      = static_cast<uint32_t>(offsetof(PaintVertex, position));
     const uint32_t texcoord_offset = static_cast<uint32_t>(offsetof(PaintVertex, texcoord));
-    const uint32_t aa_offset = static_cast<uint32_t>(offsetof(PaintVertex, aa));
-    const uint32_t uv_offset = static_cast<uint32_t>(offsetof(PaintVertex, clipUV));
-    const uint32_t uv2_offset = static_cast<uint32_t>(offsetof(PaintVertex, clipUV2));
-    const uint32_t color_offset = static_cast<uint32_t>(offsetof(PaintVertex, color));
-    _vertex_layout.attributes[0] = { u8"POSITION", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 0, pos_offset, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
-    _vertex_layout.attributes[1] = { u8"TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, texcoord_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    _vertex_layout.attributes[2] = { u8"AA", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, aa_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    _vertex_layout.attributes[3] = { u8"UV", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, uv_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    _vertex_layout.attributes[4] = { u8"UV_Two", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, uv2_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    _vertex_layout.attributes[5] = { u8"COLOR", 1, CGPU_FORMAT_R8G8B8A8_UNORM, 0, color_offset, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
-    _vertex_layout.attributes[6] = { u8"TRANSFORM", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 1, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
-    _vertex_layout.attributes[7] = { u8"PROJECTION", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 2, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
-    _vertex_layout.attributes[8] = { u8"DRAW_DATA", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
+    const uint32_t aa_offset       = static_cast<uint32_t>(offsetof(PaintVertex, aa));
+    const uint32_t uv_offset       = static_cast<uint32_t>(offsetof(PaintVertex, clipUV));
+    const uint32_t uv2_offset      = static_cast<uint32_t>(offsetof(PaintVertex, clipUV2));
+    const uint32_t color_offset    = static_cast<uint32_t>(offsetof(PaintVertex, color));
+    _vertex_layout.attributes[0]   = { u8"POSITION", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 0, pos_offset, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
+    _vertex_layout.attributes[1]   = { u8"TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, texcoord_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    _vertex_layout.attributes[2]   = { u8"AA", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, aa_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    _vertex_layout.attributes[3]   = { u8"UV", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, uv_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    _vertex_layout.attributes[4]   = { u8"UV_Two", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, uv2_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    _vertex_layout.attributes[5]   = { u8"COLOR", 1, CGPU_FORMAT_R8G8B8A8_UNORM, 0, color_offset, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
+    _vertex_layout.attributes[6]   = { u8"TRANSFORM", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 1, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
+    _vertex_layout.attributes[7]   = { u8"PROJECTION", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 2, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
+    _vertex_layout.attributes[8]   = { u8"DRAW_DATA", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
     _vertex_layout.attribute_count = 9;
 
     // create sampler
     CGPUSamplerDescriptor sampler_desc = {};
-    sampler_desc.address_u = CGPU_ADDRESS_MODE_REPEAT;
-    sampler_desc.address_v = CGPU_ADDRESS_MODE_REPEAT;
-    sampler_desc.address_w = CGPU_ADDRESS_MODE_REPEAT;
-    sampler_desc.mipmap_mode = CGPU_MIPMAP_MODE_NEAREST;
-    sampler_desc.min_filter = CGPU_FILTER_TYPE_NEAREST;
-    sampler_desc.mag_filter = CGPU_FILTER_TYPE_NEAREST;
-    sampler_desc.compare_func = CGPU_CMP_NEVER;
-    _static_color_sampler = cgpu_create_sampler(_cgpu_device, &sampler_desc);
+    sampler_desc.address_u             = CGPU_ADDRESS_MODE_REPEAT;
+    sampler_desc.address_v             = CGPU_ADDRESS_MODE_REPEAT;
+    sampler_desc.address_w             = CGPU_ADDRESS_MODE_REPEAT;
+    sampler_desc.mipmap_mode           = CGPU_MIPMAP_MODE_NEAREST;
+    sampler_desc.min_filter            = CGPU_FILTER_TYPE_NEAREST;
+    sampler_desc.mag_filter            = CGPU_FILTER_TYPE_NEAREST;
+    sampler_desc.compare_func          = CGPU_CMP_NEVER;
+    _static_color_sampler              = cgpu_create_sampler(_cgpu_device, &sampler_desc);
 
     // create rs_pool
     CGPURootSignaturePoolDescriptor rs_pool_desc = {};
-    rs_pool_desc.name = u8"GUI_RS_POOL";
-    _rs_pool = cgpu_create_root_signature_pool(_cgpu_device, &rs_pool_desc);
+    rs_pool_desc.name                            = u8"GUI_RS_POOL";
+    _rs_pool                                     = cgpu_create_root_signature_pool(_cgpu_device, &rs_pool_desc);
 }
 void SkrRenderDevice::shutdown()
 {
@@ -156,9 +156,9 @@ void SkrRenderDevice::destroy_window(SkrRenderWindow* view)
 CGPURenderPipelineId SkrRenderDevice::get_pipeline(ESkrPipelineFlag flags, ECGPUSampleCount sample_count)
 {
     SkrPipelineKey key = { flags, sample_count };
-    auto           it = _pipelines.find(key);
+    auto           it  = _pipelines.find(key);
     if (it != _pipelines.end()) return it->second;
-    auto pipeline = create_pipeline(flags, sample_count);
+    auto pipeline   = create_pipeline(flags, sample_count);
     _pipelines[key] = pipeline;
     return pipeline;
 }
@@ -177,76 +177,76 @@ CGPURenderPipelineId SkrRenderDevice::create_pipeline(ESkrPipelineFlag flags, EC
         read_shader_bytes(SKR_UTF8("GUI/pixel"), &fs_bytes, &fs_length, _cgpu_device->adapter->instance->backend);
     }
     CGPUShaderLibraryDescriptor vs_desc = {};
-    vs_desc.stage = CGPU_SHADER_STAGE_VERT;
-    vs_desc.name = SKR_UTF8("VertexShaderLibrary");
-    vs_desc.code = vs_bytes;
-    vs_desc.code_size = vs_length;
+    vs_desc.stage                       = CGPU_SHADER_STAGE_VERT;
+    vs_desc.name                        = SKR_UTF8("VertexShaderLibrary");
+    vs_desc.code                        = vs_bytes;
+    vs_desc.code_size                   = vs_length;
     CGPUShaderLibraryDescriptor ps_desc = {};
-    ps_desc.name = SKR_UTF8("FragmentShaderLibrary");
-    ps_desc.stage = CGPU_SHADER_STAGE_FRAG;
-    ps_desc.code = fs_bytes;
-    ps_desc.code_size = fs_length;
-    CGPUShaderLibraryId vertex_shader = cgpu_create_shader_library(_cgpu_device, &vs_desc);
+    ps_desc.name                        = SKR_UTF8("FragmentShaderLibrary");
+    ps_desc.stage                       = CGPU_SHADER_STAGE_FRAG;
+    ps_desc.code                        = fs_bytes;
+    ps_desc.code_size                   = fs_length;
+    CGPUShaderLibraryId vertex_shader   = cgpu_create_shader_library(_cgpu_device, &vs_desc);
     CGPUShaderLibraryId fragment_shader = cgpu_create_shader_library(_cgpu_device, &ps_desc);
     free(vs_bytes);
     free(fs_bytes);
     CGPUShaderEntryDescriptor ppl_shaders[2];
-    ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
-    ppl_shaders[0].entry = SKR_UTF8("main");
+    ppl_shaders[0].stage   = CGPU_SHADER_STAGE_VERT;
+    ppl_shaders[0].entry   = SKR_UTF8("main");
     ppl_shaders[0].library = vertex_shader;
-    ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
-    ppl_shaders[1].entry = SKR_UTF8("main");
+    ppl_shaders[1].stage   = CGPU_SHADER_STAGE_FRAG;
+    ppl_shaders[1].entry   = SKR_UTF8("main");
     ppl_shaders[1].library = fragment_shader;
 
     const char8_t*              static_sampler_name = u8"color_sampler";
-    CGPURootSignatureDescriptor rs_desc = {};
-    rs_desc.shaders = ppl_shaders;
-    rs_desc.shader_count = 2;
-    rs_desc.pool = _rs_pool;
+    CGPURootSignatureDescriptor rs_desc             = {};
+    rs_desc.shaders                                 = ppl_shaders;
+    rs_desc.shader_count                            = 2;
+    rs_desc.pool                                    = _rs_pool;
     if ((!(flags & ESkrPipelineFlag_CustomSampler)) && use_texture)
     {
         rs_desc.static_sampler_count = 1;
         rs_desc.static_sampler_names = &static_sampler_name;
-        rs_desc.static_samplers = &_static_color_sampler;
+        rs_desc.static_samplers      = &_static_color_sampler;
     }
     auto root_sig = cgpu_create_root_signature(_cgpu_device, &rs_desc);
 
     CGPURenderPipelineDescriptor rp_desc = {};
-    rp_desc.root_signature = root_sig;
-    rp_desc.prim_topology = CGPU_PRIM_TOPO_TRI_LIST;
-    rp_desc.vertex_layout = &_vertex_layout;
-    rp_desc.vertex_shader = &ppl_shaders[0];
-    rp_desc.fragment_shader = &ppl_shaders[1];
-    rp_desc.render_target_count = 1;
-    rp_desc.color_formats = &kSKR_GUI_BACKBUFFER_FORMAT;
-    rp_desc.depth_stencil_format = CGPU_FORMAT_D32_SFLOAT;
+    rp_desc.root_signature               = root_sig;
+    rp_desc.prim_topology                = CGPU_PRIM_TOPO_TRI_LIST;
+    rp_desc.vertex_layout                = &_vertex_layout;
+    rp_desc.vertex_shader                = &ppl_shaders[0];
+    rp_desc.fragment_shader              = &ppl_shaders[1];
+    rp_desc.render_target_count          = 1;
+    rp_desc.color_formats                = &kSKR_GUI_BACKBUFFER_FORMAT;
+    rp_desc.depth_stencil_format         = CGPU_FORMAT_D32_SFLOAT;
 
     CGPURasterizerStateDescriptor rs_state = {};
-    rs_state.cull_mode = CGPU_CULL_MODE_NONE;
-    rs_state.fill_mode = CGPU_FILL_MODE_SOLID;
-    rs_state.front_face = CGPU_FRONT_FACE_CCW;
-    rs_state.slope_scaled_depth_bias = 0.f;
-    rs_state.enable_depth_clamp = false;
-    rs_state.enable_scissor = true;
-    rs_state.enable_multi_sample = false;
-    rs_state.depth_bias = 0;
-    rp_desc.rasterizer_state = &rs_state;
+    rs_state.cull_mode                     = CGPU_CULL_MODE_NONE;
+    rs_state.fill_mode                     = CGPU_FILL_MODE_SOLID;
+    rs_state.front_face                    = CGPU_FRONT_FACE_CCW;
+    rs_state.slope_scaled_depth_bias       = 0.f;
+    rs_state.enable_depth_clamp            = false;
+    rs_state.enable_scissor                = true;
+    rs_state.enable_multi_sample           = false;
+    rs_state.depth_bias                    = 0;
+    rp_desc.rasterizer_state               = &rs_state;
 
     CGPUDepthStateDescriptor depth_state = {};
-    depth_state.depth_test = flags & ESkrPipelineFlag_TestZ;
-    depth_state.depth_func = depth_state.depth_test ? CGPU_CMP_LEQUAL : CGPU_CMP_NEVER;
-    depth_state.depth_write = flags & ESkrPipelineFlag_WriteZ;
-    rp_desc.depth_state = &depth_state;
+    depth_state.depth_test               = flags & ESkrPipelineFlag_TestZ;
+    depth_state.depth_func               = depth_state.depth_test ? CGPU_CMP_LEQUAL : CGPU_CMP_NEVER;
+    depth_state.depth_write              = flags & ESkrPipelineFlag_WriteZ;
+    rp_desc.depth_state                  = &depth_state;
 
     CGPUBlendStateDescriptor blend_state = {};
     for (uint32_t i = 0; i < 1; i++)
     {
-        blend_state.blend_modes[i] = CGPU_BLEND_MODE_ADD;
+        blend_state.blend_modes[i]       = CGPU_BLEND_MODE_ADD;
         blend_state.blend_alpha_modes[i] = CGPU_BLEND_MODE_ADD;
-        blend_state.masks[i] = CGPU_COLOR_MASK_ALL;
+        blend_state.masks[i]             = CGPU_COLOR_MASK_ALL;
 
-        blend_state.src_factors[i] = CGPU_BLEND_CONST_SRC_ALPHA;
-        blend_state.dst_factors[i] = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA;
+        blend_state.src_factors[i]       = CGPU_BLEND_CONST_SRC_ALPHA;
+        blend_state.dst_factors[i]       = CGPU_BLEND_CONST_ONE_MINUS_SRC_ALPHA;
         blend_state.src_alpha_factors[i] = CGPU_BLEND_CONST_ONE;
         blend_state.dst_alpha_factors[i] = CGPU_BLEND_CONST_ZERO;
     }

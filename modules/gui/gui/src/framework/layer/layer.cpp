@@ -39,7 +39,7 @@ void Layer::mount(NotNull<Layer*> parent) SKR_NOEXCEPT
                 obj->visit_children(_RecursiveHelper{ owner });
             }
         };
-        this->visit_children(_RecursiveHelper{ make_not_null(_parent->owner()) });
+        _RecursiveHelper{ make_not_null(parent->owner()) }(make_not_null(this));
     }
 }
 void Layer::unmount() SKR_NOEXCEPT
@@ -67,8 +67,7 @@ void Layer::destroy() SKR_NOEXCEPT
 void Layer::attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT
 {
     // validate
-    if (owner != nullptr) { SKR_GUI_LOG_ERROR("already attached"); }
-    if (_parent == nullptr) { SKR_GUI_LOG_ERROR("parent is nullptr"); }
+    if (_owner != nullptr) { SKR_GUI_LOG_ERROR("already attached"); }
 
     // attach
     _owner = owner;

@@ -106,7 +106,7 @@ void RenderObjectElement::update_slot(Slot new_slot) SKR_NOEXCEPT
 void RenderObjectElement::attach_render_object_to_parent(Slot slot) SKR_NOEXCEPT
 {
     if (_ancestor_render_object_element != nullptr) SKR_GUI_LOG_ERROR("render_object is already attached");
-    if (_render_object != nullptr) SKR_GUI_LOG_ERROR("_render_object is not nullptr");
+    if (_render_object == nullptr) SKR_GUI_LOG_ERROR("_render_object is nullptr");
     _ancestor_render_object_element = _find_ancestor_render_object_element();
     if (_ancestor_render_object_element == nullptr)
     {

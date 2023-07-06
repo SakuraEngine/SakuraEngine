@@ -110,6 +110,7 @@ int main(void)
         }
         {
             // TODO. call render
+            device->render_all_windows();
         }
     }
 

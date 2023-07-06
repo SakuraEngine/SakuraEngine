@@ -14,12 +14,12 @@ struct IUpdatableImage;
 
 enum ESkrPipelineFlag
 {
-    ESkrPipelineFlag_None = 0,
-    ESkrPipelineFlag_TestZ = 1 << 0,
-    ESkrPipelineFlag_Textured = 1 << 1,
-    ESkrPipelineFlag_WriteZ = 1 << 2,
+    ESkrPipelineFlag_None          = 0,
+    ESkrPipelineFlag_TestZ         = 1 << 0,
+    ESkrPipelineFlag_Textured      = 1 << 1,
+    ESkrPipelineFlag_WriteZ        = 1 << 2,
     ESkrPipelineFlag_CustomSampler = 1 << 3,
-    __Count = 4,
+    __Count                        = 4,
 };
 struct SkrPipelineKey {
     ESkrPipelineFlag flags;
@@ -66,9 +66,9 @@ struct SKR_GUI_RENDERER_API SkrRenderDevice final {
 private:
     // cgpu device
     CGPUInstanceId _cgpu_instance = nullptr;
-    CGPUAdapterId  _cgpu_adapter = nullptr;
-    CGPUDeviceId   _cgpu_device = nullptr;
-    CGPUQueueId    _cgpu_queue = nullptr;
+    CGPUAdapterId  _cgpu_adapter  = nullptr;
+    CGPUDeviceId   _cgpu_device   = nullptr;
+    CGPUQueueId    _cgpu_queue    = nullptr;
 
     // rg
     RenderGraph* _render_graph = nullptr;
