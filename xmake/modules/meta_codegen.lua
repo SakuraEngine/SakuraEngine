@@ -213,8 +213,7 @@ function mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
         },
     }
     -- calculate if strong makos need to be rebuild
-    local need_mako = target:data("reflection.need_mako")
-    local rebuild = need_mako
+    local rebuild = false
     for _, generator in ipairs(mako_generators) do
         local dependfile = target:dependfile(generator[1])
         depend.on_changed(function ()
@@ -224,6 +223,14 @@ function mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
     -- rebuild
     if (rebuild) then
         mako_compile_cmd(target, mako_generators, true, metadir, gendir, opt)
+    else
+        local dependfile = target:dependfile(target:name().."_mako.d")
+        local files = os.files(path.join(metadir, "**.meta"));
+        if #files ~= 0 then
+            depend.on_changed(function ()
+                mako_compile_cmd(target, mako_generators, true, metadir, gendir, opt)
+            end, {dependfile = dependfile, files = files});
+        end
     end
 end
 
