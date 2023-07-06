@@ -56,25 +56,26 @@ end
 
 function meta_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles, opt)
     -- generate headers dummy
-    local changedheaders = target:data("reflection.changedheaders")
-    -- generate dummy .cpp file
-    if(changedheaders ~= nil and #changedheaders > 0) then
-        local verbose = option.get("verbose")
-        -- compile jsons to c++
-        local unity_cpp = io.open(sourcefile, "w")
-        for _, headerfile in ipairs(changedheaders) do
-            headerfile = path.absolute(headerfile)
-            sourcefile = path.absolute(sourcefile)
-            local relative_include = path.relative(headerfile, path.directory(sourcefile))
-            unity_cpp:print("#include \"%s\"", relative_include)
-            if verbose then
-                cprint("${magenta}[%s]: meta.header ${clear}%s", target:name(), path.relative(headerfile))
+    local headerfiles = target:data("reflection.headerfiles")
+    if(headerfiles ~= nil and #headerfiles > 0) then
+        depend.on_changed(function()
+            local unity_cpp = io.open(sourcefile, "w")
+            for _, headerfile in ipairs(headerfiles) do
+                headerfile = path.absolute(headerfile)
+                sourcefile = path.absolute(sourcefile)
+                local relative_include = path.relative(headerfile, path.directory(sourcefile))
+                unity_cpp:print("#include \"%s\"", relative_include)
+                if verbose then
+                    cprint("${magenta}[%s]: meta.header ${clear}%s", target:name(), path.relative(headerfile))
+                end
             end
-        end
-        unity_cpp:close()
-        -- build generated cpp to json
-        meta_cmd_compile(sourcefile, rootdir, metadir, target, opt)
-        target:data_set("reflection.need_mako", true)
+            unity_cpp:close()
+
+            local verbose = option.get("verbose")
+            -- build generated cpp to json
+            meta_cmd_compile(sourcefile, rootdir, metadir, target, opt)
+            target:data_set("reflection.need_mako", true)
+        end, {dependfile = sourcefile .. ".d", files = headerfiles})
     end
 end
 
@@ -120,23 +121,9 @@ function collect_headers_batch(target)
     end
     -- save unit batch
     target:data_set("meta.headers.batch", meta_batch)
-
     -- generate headers dummy
-    local changedheaders = {}
-    local rebuild = false
-    for _, headerfile in ipairs(headerfiles) do
-        local dependfile = target:dependfile(headerfile.."meta")
-        depend.on_changed(function ()
-            table.insert(changedheaders, headerfile);
-        end, {dependfile = dependfile, files = {headerfile}})
-    end
-    if rebuild then
-        changedheaders = headerfiles
-    end
-    -- generate dummy .cpp file
-    if(#changedheaders > 0) then
-        target:data_set("reflection.changedheaders", changedheaders)
-    end
+    target:data_set("reflection.headerfiles", headerfiles)
+    target:data_set("reflection.rebuild", rebuild)
 end
 
 function mako_compile_cmd(target, mako_generators, use_deps_data, metadir, gendir, opt)
