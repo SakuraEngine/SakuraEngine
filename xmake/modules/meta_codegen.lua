@@ -74,7 +74,6 @@ function meta_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
             local verbose = option.get("verbose")
             -- build generated cpp to json
             meta_cmd_compile(sourcefile, rootdir, metadir, target, opt)
-            target:data_set("reflection.need_mako", true)
         end, {dependfile = sourcefile .. ".d", files = headerfiles})
     end
 end

@@ -55,7 +55,7 @@ rule("utils.install-libs")
 
             depend.on_changed(function()
                 archive.extract(zipfile, tmpdir)
-            end, {dependfile = dependfile, files = { zipfile }})
+            end, {dependfile = dependfile, lastmtime = os.mtime(zipfile), files = { zipfile }})
         
             local vfiles = path.join(tmpdir, "**")
             local files = os.files(vfiles)
@@ -70,6 +70,6 @@ rule("utils.install-libs")
             depend.on_changed(function()
                 cprint("${green}[%s]: install.lib ${clear} %s, %d files", target:name(), zipfile, #vfiles)
                 os.cp(vfiles, target:targetdir())
-            end, {dependfile = dependfile2, files = outfiles})
+            end, {dependfile = dependfile2, lastmtime = os.mtime(zipfile), files = outfiles})
         end
     end)
