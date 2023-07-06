@@ -31,37 +31,41 @@ rule("utils.install-libs")
         local libnames = target:extraconf("rules", "utils.install-libs", "libnames")
         for _, libname in pairs(libnames) do
             local zip = find_sdk.find_sdk_lib(libname)
-            target:add("files", zip)
+            target:data_add("lib_zips", zip)
         end
     end)
-    before_buildcmd_file(function (target, batchcmds, zipfile, opt)
+    before_build(function (target)
         import("find_sdk")
         import("core.project.depend")
         import("utils.archive")
 
-        -- unzip to objectdir
-        local tmpdir = path.join(target:objectdir(), path.basename(zipfile))
-        local dependfile = target:dependfile(zipfile)
-
-        depend.on_changed(function()
-            archive.extract(zipfile, tmpdir)
-        end, {dependfile = dependfile, files = { zipfile }})
-    
-        -- copy all files with batchcmds
-        local vfiles = path.join(tmpdir, "**")
-        local files = os.files(vfiles)
-        batchcmds:show_progress(opt.progress, 
-            "${green}[%s]: install.lib ${clear}%s, %d files", 
-            target:name(), zipfile, #files)
-
-        local outfiles = {}
-        for _, file in ipairs(files) do
-            local outfile = path.join(target:targetdir(), path.filename(file))
-            outfile = path.absolute(outfile)
-            table.insert(outfiles, outfile)
+        local lib_zips = target:data("lib_zips")
+        if not lib_zips or #lib_zips == 0 then
+            return
         end
-        batchcmds:cp(vfiles, target:targetdir())
-        batchcmds:add_depfiles(outfiles)
-        batchcmds:set_depcache(target:dependfile(zipfile..".d"))
-        batchcmds:set_depmtime(os.time())
+        
+        for _, zipfile in ipairs(lib_zips) do
+            -- unzip to objectdir
+            local tmpdir = path.join(target:objectdir(), path.basename(zipfile))
+            local dependfile = target:dependfile(zipfile..".unzip")
+
+            depend.on_changed(function()
+                archive.extract(zipfile, tmpdir)
+            end, {dependfile = dependfile, files = { zipfile }})
+        
+            local vfiles = path.join(tmpdir, "**")
+            local files = os.files(vfiles)
+            local outfiles = {}
+            for _, file in ipairs(files) do
+                local outfile = path.join(target:targetdir(), path.filename(file))
+                outfile = path.absolute(outfile)
+                table.insert(outfiles, outfile)
+            end
+
+            local dependfile2 = target:dependfile(zipfile..".cp")
+            depend.on_changed(function()
+                print("[%s]: install.lib: %s, %d files", target:name(), zipfile, #vfiles)
+                os.cp(vfiles, target:targetdir())
+            end, {dependfile = dependfile2, files = outfiles})
+        end
     end)
