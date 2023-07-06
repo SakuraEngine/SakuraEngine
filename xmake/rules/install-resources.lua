@@ -34,7 +34,7 @@ rule("utils.install-libs")
             target:data_add("lib_zips", zip)
         end
     end)
-    before_build(function (target)
+    on_config(function (target)
         import("find_sdk")
         import("core.project.depend")
         import("utils.archive")
@@ -64,7 +64,7 @@ rule("utils.install-libs")
 
             local dependfile2 = target:dependfile(zipfile..".cp")
             depend.on_changed(function()
-                print("[%s]: install.lib: %s, %d files", target:name(), zipfile, #vfiles)
+                cprint("${green}[%s]: install.lib ${clear} %s, %d files", target:name(), zipfile, #vfiles)
                 os.cp(vfiles, target:targetdir())
             end, {dependfile = dependfile2, files = outfiles})
         end

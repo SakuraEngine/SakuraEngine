@@ -102,6 +102,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     libs_to_install = {}
     if(os.host() == "windows") then
         table.insert(libs_to_install, "dstorage-1.2.1")
+        table.insert(libs_to_install, "gns")
         table.insert(libs_to_install, "amdags")
         table.insert(libs_to_install, "nvapi")
         table.insert(libs_to_install, "nsight")
