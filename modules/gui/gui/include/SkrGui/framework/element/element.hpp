@@ -80,18 +80,19 @@ protected:
     void              _detach_render_object_children() SKR_NOEXCEPT;
 
     inline void _cancel_dirty() SKR_NOEXCEPT { _dirty = false; }
+    inline void _set_owner(BuildOwner* owner) SKR_NOEXCEPT { _owner = owner; }
 
 private:
     friend struct BuildOwner;
     // element tree
     Element*    _parent = nullptr;
-    BuildOwner* _owner = nullptr;
-    uint32_t    _depth = 0;
+    BuildOwner* _owner  = nullptr;
+    uint32_t    _depth  = 0;
 
     // dirty marks & lifecycle
-    bool              _dirty = false;
+    bool              _dirty         = false;
     bool              _in_dirty_list = false;
-    EElementLifecycle _lifecycle = EElementLifecycle::Initial;
+    EElementLifecycle _lifecycle     = EElementLifecycle::Initial;
 
     // context
     // TODO. InheritedElement 的广播 CowMap<TYPE_ID, InheritedElement> _inherited_elements;

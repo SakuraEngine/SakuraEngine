@@ -110,6 +110,9 @@ void Element::attach(NotNull<BuildOwner*> owner) SKR_NOEXCEPT
     if (_widget == nullptr) { SKR_GUI_LOG_ERROR("widget is nullptr"); }
     if (_owner == nullptr) { SKR_GUI_LOG_ERROR("owner is nullptr"); }
 
+    // update depth
+    _depth = _parent ? _parent->_depth + 1 : 0;
+
     if (_lifecycle != EElementLifecycle::Initial)
     {
         // TODO. process dependencies
@@ -300,9 +303,9 @@ Element* Element::_update_child(Element* child, Widget* new_widget, Slot new_slo
 void Element::_update_children(Array<Element*>& children, const Array<Widget*>& new_widgets)
 {
     size_t children_match_front = 0;
-    size_t widget_match_front = 0;
-    size_t children_match_end = children.size() - 1;
-    size_t widget_match_end = new_widgets.size() - 1;
+    size_t widget_match_front   = 0;
+    size_t children_match_end   = children.size() - 1;
+    size_t widget_match_end     = new_widgets.size() - 1;
 
     // step 1. update array size
     if (children.size() < new_widgets.size())
@@ -313,7 +316,7 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
     // step 2. walk matched front part of children and update node
     while (children_match_front <= children_match_end && widget_match_front <= widget_match_end)
     {
-        auto& child = children[children_match_front];
+        auto& child      = children[children_match_front];
         auto  new_widget = new_widgets[widget_match_front];
 
         if (child == nullptr || !Widget::can_update(make_not_null(child->widget()), make_not_null(new_widget)))
@@ -331,7 +334,7 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
     // step 3. walk matched back part of children without update node, but move to end
     while (children_match_front <= children_match_end && widget_match_front <= widget_match_end)
     {
-        auto& child = children[children_match_end];
+        auto& child      = children[children_match_end];
         auto  new_widget = new_widgets[widget_match_end];
 
         if (child == nullptr || !Widget::can_update(make_not_null(child->widget()), make_not_null(new_widget)))
@@ -369,7 +372,7 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
     while (widget_match_front <= widget_match_end)
     {
         auto     new_widget = new_widgets[widget_match_front];
-        Element* child = nullptr;
+        Element* child      = nullptr;
 
         // search old child
         auto key_it = old_keyed_children.find(new_widget->key);
@@ -383,7 +386,7 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
         }
 
         // update child
-        Element* new_child = _update_child(child, make_not_null(new_widget), Slot{ widget_match_front });
+        Element* new_child           = _update_child(child, make_not_null(new_widget), Slot{ widget_match_front });
         children[widget_match_front] = new_child;
 
         ++widget_match_front;
@@ -402,7 +405,7 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
     // step 6. walk back part and update
     for (auto i = widget_match_end; i < children.size(); ++i)
     {
-        auto& child = children[i];
+        auto& child      = children[i];
         auto  new_widget = new_widgets[i];
 
         child = _update_child(child, make_not_null(new_widget), Slot{ i });

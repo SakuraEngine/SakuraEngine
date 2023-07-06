@@ -39,7 +39,7 @@ constexpr skr_guid_t make_guid_helper(const char8_t* begin)
     auto Data3 = parse_hex<uint16_t>(begin);
     begin += 4 + 1;
     uint8_t Data4[8] = {};
-    Data4[0] = parse_hex<uint8_t>(begin);
+    Data4[0]         = parse_hex<uint8_t>(begin);
     begin += 2;
     Data4[1] = parse_hex<uint8_t>(begin);
     begin += 2 + 1;
@@ -51,16 +51,16 @@ constexpr skr_guid_t make_guid_helper(const char8_t* begin)
 
 // object & interface base
 struct SKR_GUI_API IObject {
-    virtual ~IObject() = default;
-    virtual skr_guid_t zz_internal_guid() const SKR_NOEXCEPT = 0;
+    virtual ~IObject()                                                                          = default;
+    virtual skr_guid_t zz_internal_guid() const SKR_NOEXCEPT                                    = 0;
     virtual void       zz_internal_base_guid(const skr_guid_t*& p, size_t n) const SKR_NOEXCEPT = 0;
-    virtual void*      zz_internal_cast(skr_guid_t id) const SKR_NOEXCEPT = 0;
+    virtual void*      zz_internal_cast(skr_guid_t id) const SKR_NOEXCEPT                       = 0;
 };
 
 // helper
 template <typename... Super>
 struct BaseGUIDHelper {
-    inline static constexpr size_t     count = sizeof...(Super);
+    inline static constexpr size_t     count       = sizeof...(Super);
     inline static constexpr skr_guid_t base_guid[] = { Super::zz_internal_static_guid()... };
 };
 template <typename Base, typename... Super>
