@@ -221,16 +221,12 @@ function mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
         end, {dependfile = dependfile, files = generator});
     end
     -- rebuild
-    if (rebuild) then
-        mako_compile_cmd(target, mako_generators, true, metadir, gendir, opt)
-    else
-        local dependfile = target:dependfile(target:name().."_mako.d")
-        local files = os.files(path.join(metadir, "**.meta"));
-        if #files ~= 0 then
-            depend.on_changed(function ()
-                mako_compile_cmd(target, mako_generators, true, metadir, gendir, opt)
-            end, {dependfile = dependfile, files = files});
-        end
+    local dependfile = target:dependfile(target:name().."_mako.d")
+    local files = os.files(path.join(metadir, "**.meta"));
+    if #files ~= 0 then
+        depend.on_changed(function ()
+            mako_compile_cmd(target, mako_generators, true, metadir, gendir, opt)
+        end, {dependfile = dependfile, files = files});
     end
 end
 
