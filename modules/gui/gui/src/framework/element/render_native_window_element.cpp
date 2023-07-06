@@ -23,12 +23,12 @@ void RenderNativeWindowElement::update(NotNull<Widget*> new_widget) SKR_NOEXCEPT
 
 void RenderNativeWindowElement::add_render_object_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT
 {
-    auto obj = render_object()->type_cast_fast<ISingleChildRenderObject>();
+    auto obj = render_object()->type_cast<ISingleChildRenderObject>();
     obj->set_child(child);
 }
 void RenderNativeWindowElement::remove_render_object_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT
 {
-    auto obj = render_object()->type_cast_fast<ISingleChildRenderObject>();
+    auto obj = render_object()->type_cast<ISingleChildRenderObject>();
     obj->remove_child();
 }
 void RenderNativeWindowElement::move_render_object_child(NotNull<RenderObject*> child, Slot old_slot, Slot new_slot) SKR_NOEXCEPT

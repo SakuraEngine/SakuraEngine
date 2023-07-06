@@ -7,6 +7,7 @@
 #include "tracy/Tracy.hpp"
 #include "SkrGui/backend/resource/resource.hpp"
 #include "SkrGuiRenderer/resource/skr_updatable_image.hpp"
+#include "misc/make_zeroed.hpp"
 
 namespace skr::gui
 {
@@ -97,9 +98,18 @@ void SkrRenderWindow::render(const Layer* layer, Sizef window_size)
     // step2. upload draw data
     _upload_draw_data();
 
-    // step3. upload textures
+    // step3. declare render resource
+    _declare_render_resources();
 
     // step4. render
+    _render();
+}
+void SkrRenderWindow::present()
+{
+    CGPUQueuePresentDescriptor present_desc = {};
+    present_desc.index                      = _backbuffer_index;
+    present_desc.swapchain                  = _cgpu_swapchain;
+    cgpu_queue_present(_owner->cgpu_queue(), &present_desc);
 }
 
 void SkrRenderWindow::_prepare_draw_data(const Layer* layer, Sizef window_size)
@@ -293,12 +303,71 @@ void SkrRenderWindow::_upload_draw_data()
         });
     }
 }
+void SkrRenderWindow::_declare_render_resources()
+{
+    // acquire frame
+    {
+        ZoneScopedN("WaitPresent");
+        cgpu_wait_fences(&_cgpu_fence, 1);
+    }
+    {
+        ZoneScopedN("AcquireFrame");
+        auto acquire_desc  = make_zeroed<CGPUAcquireNextDescriptor>();
+        acquire_desc.fence = _cgpu_fence;
+        _backbuffer_index  = cgpu_acquire_next_image(_cgpu_swapchain, &acquire_desc);
+    }
+
+    // declare resources
+    const auto    sample_count        = CGPU_SAMPLE_COUNT_1; // TODO. sample count
+    CGPUTextureId imported_backbuffer = _cgpu_swapchain->back_buffers[_backbuffer_index];
+    auto          graph               = _owner->render_graph();
+    if (sample_count != CGPU_SAMPLE_COUNT_1)
+    {
+        _back_buffer = graph->create_texture(
+        [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+            builder.set_name(SKR_UTF8("presentbuffer"))
+            .import(imported_backbuffer, CGPU_RESOURCE_STATE_PRESENT)
+            .allow_render_target();
+        });
+        const auto back_desc  = graph->resolve_descriptor(_back_buffer);
+        auto       msaaTarget = graph->create_texture(
+        [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
+            builder.set_name(SKR_UTF8("backbuffer"))
+            .extent(back_desc->width, back_desc->height)
+            .format(back_desc->format)
+            .sample_count(sample_count)
+            .allow_render_target();
+            if (back_desc->width > 2048) builder.allocate_dedicated();
+        });
+        (void)msaaTarget;
+    }
+    else
+    {
+        _back_buffer = graph->create_texture(
+        [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+            builder.set_name(SKR_UTF8("backbuffer"))
+            .import(imported_backbuffer, CGPU_RESOURCE_STATE_PRESENT)
+            .allow_render_target();
+        });
+    }
+    _depth_buffer = graph->create_texture(
+    [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
+        const auto texInfo = _cgpu_swapchain->back_buffers[0]->info;
+        builder.set_name(SKR_UTF8("depth"))
+        .extent(texInfo->width, texInfo->height)
+        .format(CGPU_FORMAT_D32_SFLOAT)
+        .sample_count(sample_count)
+        .allow_depth_stencil();
+        if (texInfo->width > 2048) builder.allocate_dedicated();
+    });
+}
 void SkrRenderWindow::_render()
 {
     auto rg     = _owner->render_graph();
-    auto target = rg->get_texture(u8"backbuffer");
-    auto depth  = rg->get_texture(u8"depth");
+    auto target = _back_buffer;
+    auto depth  = _depth_buffer;
 
+    // TODO. multi pass
     rg->add_render_pass(
     [&](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
         ZoneScopedN("ConstructRenderPass");
@@ -368,6 +437,14 @@ void SkrRenderWindow::_render()
                                                        cmd.index_count, cmd.index_begin,
                                                        1, 0, 0);
         }
+    });
+
+    // present pass
+    rg->add_present_pass(
+    [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
+        builder.set_name(SKR_UTF8("present"))
+        .swapchain(_cgpu_swapchain, _backbuffer_index)
+        .texture(_back_buffer, true);
     });
 }
 

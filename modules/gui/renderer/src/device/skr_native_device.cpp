@@ -81,9 +81,20 @@ const DisplayMetrics& SkrNativeDevice::display_metrics() const
 
 void SkrNativeDevice::render_all_windows() SKR_NOEXCEPT
 {
+    // combine render graph
     for (auto window : _all_windows)
     {
         window->render_window()->render(window->native_layer(), window->absolute_size());
+    }
+
+    // commit render graph
+    render_device()->render_graph()->compile();
+    render_device()->render_graph()->execute();
+
+    // present
+    for (auto window : _all_windows)
+    {
+        window->render_window()->present();
     }
 }
 
