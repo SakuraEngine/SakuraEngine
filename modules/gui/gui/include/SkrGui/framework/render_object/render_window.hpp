@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrGui/framework/render_object/render_object.hpp"
+#include "SkrGui/framework/render_object/render_box.hpp"
 #include "SkrGui/framework/render_object/single_child_render_object.hpp"
 
 namespace skr::gui
@@ -10,6 +10,13 @@ struct SKR_GUI_API RenderWindow : public RenderObject, public ISingleChildRender
     SKR_GUI_OBJECT(RenderWindow, "564ff723-9f85-4c93-8efd-841700dfe104", RenderObject)
 
     RenderWindow(IWindow* window);
+
+    void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
+
+    NotNull<OffsetLayer*> update_layer(OffsetLayer* old_layer) override;
+
+    // getter
+    inline IWindow* window() const SKR_NOEXCEPT { return _window; }
 
 private:
     IWindow* _window = nullptr;

@@ -27,11 +27,11 @@ SkrNativeWindow::~SkrNativeWindow()
 void SkrNativeWindow::init_normal(const WindowDesc& desc)
 {
     SWindowDescroptor create_desc;
-    create_desc.width = desc.size.width;
+    create_desc.width  = desc.size.width;
     create_desc.height = desc.size.height;
-    create_desc.posx = desc.pos.x;
-    create_desc.posy = desc.pos.y;
-    create_desc.flags = SKR_WINDOW_RESIZABLE;
+    create_desc.posx   = desc.pos.x;
+    create_desc.posy   = desc.pos.y;
+    create_desc.flags  = SKR_WINDOW_RESIZABLE;
     skr_create_window(desc.name.u8_str(), &create_desc);
 }
 void SkrNativeWindow::init_popup(const WindowDesc& desc)
@@ -126,7 +126,7 @@ void SkrNativeWindow::set_absolute_size(Sizef absolute) SKR_NOEXCEPT
 {
     skr_window_set_extent(_window, (int32_t)absolute.width, (int32_t)absolute.height);
 }
-void SkrNativeWindow::update_content(Layer* layer) SKR_NOEXCEPT
+void SkrNativeWindow::update_content(WindowLayer* root_layer) SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION();
 }

@@ -19,6 +19,10 @@ struct SKR_GUI_API Layer SKR_GUI_OBJECT_BASE {
     virtual void detach() SKR_NOEXCEPT;
     virtual void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT = 0;
 
+    // dirty
+    void        mark_needs_composite() SKR_NOEXCEPT;
+    inline bool needs_composite() const SKR_NOEXCEPT { return _needs_composite; }
+
     // getter
     inline Layer*         parent() const SKR_NOEXCEPT { return _parent; }
     inline PipelineOwner* owner() const SKR_NOEXCEPT { return _owner; }
@@ -29,5 +33,8 @@ private:
     Layer*         _parent = nullptr;
     PipelineOwner* _owner  = nullptr;
     int32_t        _depth  = 0;
+
+    // dirty
+    bool _needs_composite = false;
 };
 } // namespace skr::gui

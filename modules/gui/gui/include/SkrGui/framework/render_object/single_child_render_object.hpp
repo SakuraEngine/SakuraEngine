@@ -9,9 +9,9 @@ struct SKR_GUI_API ISingleChildRenderObject SKR_GUI_INTERFACE_BASE {
     SKR_GUI_INTERFACE_ROOT(ISingleChildRenderObject, "5349672b-bfc5-46a9-9a02-40ef563c196d")
     virtual ~ISingleChildRenderObject() = default;
 
-    virtual SKR_GUI_TYPE_ID accept_child_type() const SKR_NOEXCEPT = 0;
+    virtual SKR_GUI_TYPE_ID accept_child_type() const SKR_NOEXCEPT               = 0;
     virtual void            set_child(NotNull<RenderObject*> child) SKR_NOEXCEPT = 0;
-    virtual void            remove_child() SKR_NOEXCEPT = 0;
+    virtual void            remove_child() SKR_NOEXCEPT                          = 0;
 };
 
 template <typename TSelf, typename TChild>

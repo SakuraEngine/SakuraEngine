@@ -81,4 +81,20 @@ void Layer::detach() SKR_NOEXCEPT
     if (_parent != nullptr && _owner != _parent->_owner) { SKR_GUI_LOG_ERROR("detach from owner but parent is still attached"); }
 }
 
+// dirty
+void Layer::mark_needs_composite() SKR_NOEXCEPT
+{
+    if (!_needs_composite)
+    {
+        // TODO. schedule composite
+        _needs_composite = true;
+    }
+
+    auto parent = _parent;
+    while (parent)
+    {
+        parent->mark_needs_composite();
+    }
+}
+
 } // namespace skr::gui

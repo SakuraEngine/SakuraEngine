@@ -1,4 +1,7 @@
 #include "SkrGui/framework/render_object/render_window.hpp"
+#include "SkrGui/framework/painting_context.hpp"
+#include "SkrGui/framework/render_object/render_box.hpp"
+#include "SkrGui/framework/layer/window_layer.hpp"
 
 namespace skr::gui
 {
@@ -7,4 +10,16 @@ RenderWindow::RenderWindow(IWindow* window)
 {
 }
 
+void RenderWindow::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT
+{
+    if (child())
+    {
+        context->paint_child(make_not_null(child()), offset);
+    }
+}
+
+NotNull<OffsetLayer*> RenderWindow::update_layer(OffsetLayer* old_layer)
+{
+    return old_layer ? make_not_null(old_layer) : make_not_null(SkrNew<WindowLayer>(_window));
+}
 } // namespace skr::gui

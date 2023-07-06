@@ -43,6 +43,8 @@ struct Layer;
 struct GeometryLayer;
 struct ContainerLayer;
 struct OffsetLayer;
+struct WindowLayer;
+struct NativeWindowLayer;
 
 // binding
 struct PipelineOwner;
