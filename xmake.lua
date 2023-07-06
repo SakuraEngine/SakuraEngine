@@ -53,17 +53,6 @@ end
 
 target("SkrRoot")
     set_kind("headeronly")
-    -- install sdks for windows platform
-    libs_to_install = {}
-    if(os.host() == "windows") then
-        table.insert(libs_to_install, "dstorage-1.2.1")
-        table.insert(libs_to_install, "amdags")
-        table.insert(libs_to_install, "nvapi")
-        table.insert(libs_to_install, "nsight")
-        table.insert(libs_to_install, "WinPixEventRuntime")
-        table.insert(libs_to_install, "SDL2")
-    end
-    add_rules("utils.install-libs", { libnames = libs_to_install })
     -- core deps
     add_deps("boost", "tracyclient", {public = true})
     -- defs & flags

@@ -113,7 +113,6 @@ MESH_CORE_API
 void EmplaceStaticRawMeshVertices(const SRawMesh* mesh, const CGPUVertexLayout* layout, skr::vector<uint8_t>& buffer, 
     uint32_t buffer_idx, skr::vector<skr_mesh_primitive_t>& out_primitives);
 
-
 // LUT for raw attributes to semantic names
 static const char* kRawAttributeTypeNameLUT[9] = {
     "NONE",
