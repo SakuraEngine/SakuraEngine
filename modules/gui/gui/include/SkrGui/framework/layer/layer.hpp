@@ -7,6 +7,7 @@ namespace skr::gui
 // TODO. Layer
 struct SKR_GUI_API Layer SKR_GUI_OBJECT_BASE {
     SKR_GUI_OBJECT_ROOT(Layer, "04589d18-7688-4b30-8239-c9c91ca6c9f7")
+    SKR_GUI_RAII_MIX_IN()
     using VisitFuncRef = FunctionRef<void(NotNull<Layer*>)>;
 
     // lifecycle & tree

@@ -36,10 +36,6 @@ struct SKR_GUI_API IDevice SKR_GUI_INTERFACE_BASE {
     virtual NotNull<IWindow*> create_window()                        = 0;
     virtual void              destroy_window(NotNull<IWindow*> view) = 0;
 
-    // TODO. resource management
-
-    // 或许 Canvas 与 Text 的管理也完全可以放在此处
-
     // TODO. input
 };
 
@@ -48,6 +44,10 @@ struct SKR_GUI_API INativeDevice : public IDevice {
 
     // display info
     virtual const DisplayMetrics& display_metrics() const = 0;
+
+    // TODO. resource management
+
+    // 或许 Canvas 与 Text 的管理也完全可以放在此处
 };
 
 } // namespace skr::gui
