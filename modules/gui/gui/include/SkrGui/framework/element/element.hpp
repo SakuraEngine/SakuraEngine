@@ -80,7 +80,9 @@ protected:
     void              _detach_render_object_children() SKR_NOEXCEPT;
 
     inline void _cancel_dirty() SKR_NOEXCEPT { _dirty = false; }
-    inline void _set_owner(BuildOwner* owner) SKR_NOEXCEPT { _owner = owner; }
+
+    // for special mount progress
+    friend struct RenderNativeWindowElement;
 
 private:
     friend struct BuildOwner;

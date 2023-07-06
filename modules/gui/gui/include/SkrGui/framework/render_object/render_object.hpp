@@ -97,7 +97,9 @@ protected:
     inline void _set_force_relayout_boundary(bool v) SKR_NOEXCEPT { _force_relayout_boundary = v; }
     inline void _set_constraints_changed(bool v) SKR_NOEXCEPT { _is_constraints_changed = v; }
     inline void _update_was_repaint_boundary() SKR_NOEXCEPT { _was_repaint_boundary = is_repaint_boundary(); }
-    inline void _set_owner(PipelineOwner* owner) SKR_NOEXCEPT { _owner = owner; }
+
+    // for special mount progress
+    friend struct RenderNativeWindow;
 
 private:
     void _flush_relayout_boundary() SKR_NOEXCEPT;

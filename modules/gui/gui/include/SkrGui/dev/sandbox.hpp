@@ -29,15 +29,20 @@ struct SKR_GUI_API Sandbox {
 
 private:
     // backend
-    INativeDevice*  _device = nullptr;
+    INativeDevice*  _device         = nullptr;
     ICanvasService* _canvas_service = nullptr;
-    ITextService*   _text_service = nullptr;
+    ITextService*   _text_service   = nullptr;
 
-    // framework
-    BuildOwner*                _build_owner = nullptr;
-    PipelineOwner*             _pipeline_owner = nullptr;
+    // owner
+    BuildOwner*    _build_owner    = nullptr;
+    PipelineOwner* _pipeline_owner = nullptr;
+
+    // root
     RenderNativeWindow*        _root_render_object = nullptr;
-    RenderNativeWindowElement* _root_element_object = nullptr;
-    Widget*                    _content = nullptr;
+    RenderNativeWindowElement* _root_element       = nullptr;
+    NativeWindowLayer*         _root_layer         = nullptr;
+
+    // content
+    Widget* _content = nullptr;
 };
 } // namespace skr::gui
