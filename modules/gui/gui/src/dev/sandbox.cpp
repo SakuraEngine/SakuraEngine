@@ -54,9 +54,9 @@ void Sandbox::show(const WindowDesc& desc)
 
     // init element bind
     // 使用 root_widget 创建 root_element，并先行初始化
-    _root_element_object = root_widget->create_element()->type_cast_fast<RenderNativeWindowElement>();
-    _root_element_object->setup_owner(_build_owner);
-    _root_element_object->prepare_initial_frame();
+    _root_element = root_widget->create_element()->type_cast_fast<RenderNativeWindowElement>();
+    _root_element->setup_owner(_build_owner);
+    _root_element->prepare_initial_frame();
 }
 
 } // namespace skr::gui
