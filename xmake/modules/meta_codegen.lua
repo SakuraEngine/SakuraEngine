@@ -119,11 +119,8 @@ function collect_headers_batch(target)
             table.insert(sourceinfo.headerfiles, headerfile)
         end
     end
-    -- save unit batch
     target:data_set("meta.headers.batch", meta_batch)
-    -- generate headers dummy
     target:data_set("reflection.headerfiles", headerfiles)
-    target:data_set("reflection.rebuild", rebuild)
 end
 
 function mako_compile_cmd(target, mako_generators, use_deps_data, metadir, gendir, opt)
@@ -213,17 +210,15 @@ function mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
         },
     }
     -- calculate if strong makos need to be rebuild
-    local rebuild = false
-    for _, generator in ipairs(mako_generators) do
-        local dependfile = target:dependfile(generator[1])
-        depend.on_changed(function ()
-            rebuild = true
-        end, {dependfile = dependfile, files = generator});
-    end
-    -- rebuild
     local dependfile = target:dependfile(target:name().."_mako.d")
     local files = os.files(path.join(metadir, "**.meta"));
     if #files ~= 0 then
+        for _, generator_arr in ipairs(mako_generators) do
+            for _, generator in ipairs(generator_arr) do
+                table.insert(files, generator)
+            end
+        end
+
         depend.on_changed(function ()
             mako_compile_cmd(target, mako_generators, true, metadir, gendir, opt)
         end, {dependfile = dependfile, files = files});
