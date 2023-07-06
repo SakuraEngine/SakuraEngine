@@ -16,8 +16,8 @@ struct SKR_GUI_API PaintingContext final {
     void     push_layer(NotNull<ContainerLayer*> layer, ChildPaintingCallback callback, Offsetf offset) SKR_NOEXCEPT;
 
     // repaint layer or just update properties
-    void repaint_composited_child(NotNull<RenderObject*> child);
-    void update_layer_properties(NotNull<RenderObject*> child);
+    static void repaint_composited_child(NotNull<RenderObject*> child);
+    static void update_layer_properties(NotNull<RenderObject*> child);
 
 private:
     // help functions

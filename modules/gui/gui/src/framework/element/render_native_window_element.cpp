@@ -59,6 +59,8 @@ void RenderNativeWindowElement::prepare_initial_frame() SKR_NOEXCEPT
     // fake mount
     if (_lifecycle == EElementLifecycle::Initial)
     {
+        _render_object = widget()->type_cast_fast<RenderNativeWindowWidget>()->create_render_object();
+
         _rebuild();
 
         // recursive call attach()

@@ -24,10 +24,6 @@ void Element::mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT
 
     // mount
     _parent = parent;
-    if (_lifecycle == EElementLifecycle::Initial)
-    {
-        first_mount(parent, slot);
-    }
     if (_parent->_owner)
     {
         // recursive call attach()
@@ -40,6 +36,7 @@ void Element::mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT
                 obj->visit_children(_RecursiveHelper{ owner });
             }
         };
+        _RecursiveHelper{ make_not_null(_parent->_owner) }(make_not_null(this));
         this->visit_children(_RecursiveHelper{ make_not_null(_parent->_owner) });
 
         // attach render object when retake
@@ -51,6 +48,10 @@ void Element::mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT
     else
     {
         SKR_GUI_LOG_ERROR("owner is nullptr");
+    }
+    if (_lifecycle == EElementLifecycle::Initial)
+    {
+        first_mount(parent, slot);
     }
     _lifecycle = EElementLifecycle::Mounted;
 }
@@ -81,6 +82,7 @@ void Element::unmount() SKR_NOEXCEPT
                 obj->visit_children(_RecursiveHelper{});
             }
         };
+        _RecursiveHelper{}(make_not_null(this));
         this->visit_children(_RecursiveHelper{});
     }
     _lifecycle = EElementLifecycle::Unmounted;
@@ -108,9 +110,10 @@ void Element::attach(NotNull<BuildOwner*> owner) SKR_NOEXCEPT
 {
     // validate
     if (_widget == nullptr) { SKR_GUI_LOG_ERROR("widget is nullptr"); }
-    if (_owner == nullptr) { SKR_GUI_LOG_ERROR("owner is nullptr"); }
+    if (owner == nullptr) { SKR_GUI_LOG_ERROR("owner is nullptr"); }
 
     // update depth
+    _owner = owner;
     _depth = _parent ? _parent->_depth + 1 : 0;
 
     if (_lifecycle != EElementLifecycle::Initial)

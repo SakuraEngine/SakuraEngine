@@ -62,9 +62,15 @@ struct SKR_GUI_RENDERER_API SkrNativeWindow final : public INativeWindow {
     void set_show_in_task_bar(bool show_in_task_bar) SKR_NOEXCEPT override;
     void set_title(const String& title) SKR_NOEXCEPT override;
 
+    inline SkrNativeDevice*   device() const SKR_NOEXCEPT { return _device; }
+    inline SWindowHandle      window() const SKR_NOEXCEPT { return _window; }
+    inline SkrRenderWindow*   render_window() const SKR_NOEXCEPT { return _render_window; }
+    inline NativeWindowLayer* native_layer() const SKR_NOEXCEPT { return _native_layer; }
+
 private:
-    SkrNativeDevice* _device;
-    SWindowHandle    _window;
-    SkrRenderWindow* _render_window = nullptr;
+    SkrNativeDevice*   _device        = nullptr;
+    SWindowHandle      _window        = {};
+    SkrRenderWindow*   _render_window = nullptr;
+    NativeWindowLayer* _native_layer  = nullptr;
 };
 } // namespace skr::gui

@@ -73,6 +73,10 @@ struct Offset {
     inline bool operator==(const Offset& rhs) const SKR_NOEXCEPT { return x == rhs.x && y == rhs.y; }
     inline bool operator!=(const Offset& rhs) const SKR_NOEXCEPT { return !(*this == rhs); }
 
+    // cast
+    template <typename U>
+    inline operator Offset<U>() const SKR_NOEXCEPT { return { static_cast<U>(x), static_cast<U>(y) }; }
+
     // arithmetic ops
     inline Offset operator-() const SKR_NOEXCEPT { return { -x, -y }; }
 
@@ -110,7 +114,7 @@ struct Offset {
 
 template <typename T>
 struct Size {
-    T width = { 0 };
+    T width  = { 0 };
     T height = { 0 };
 
     SKR_GUI_MATH_UTILITY_MIXIN(T)
@@ -177,18 +181,22 @@ struct Size {
     // offset ops
     inline bool      contains(const Offset<T>& offset) const SKR_NOEXCEPT { return offset.x >= 0.0 && offset.x <= width && offset.y >= 0.0 && offset.y <= height; }
     inline Offset<T> top_left(const Offset<T>& offset) const SKR_NOEXCEPT { return { offset.x, offset.y }; }
-    inline Offset<T> top_center(const Offset<T>& offset) const SKR_NOEXCEPT { return { offset.x + width / 2.0f, offset.y }; }
+    inline Offset<T> top_center(const Offset<T>& offset) const SKR_NOEXCEPT { return { offset.x + width / T(2), offset.y }; }
     inline Offset<T> top_right(const Offset<T>& offset) const SKR_NOEXCEPT { return { offset.x + width, offset.y }; }
-    inline Offset<T> center_left(const Offset<T>& offset) const SKR_NOEXCEPT { return { offset.x, offset.y + height / 2.0f }; }
-    inline Offset<T> center(const Offset<T>& offset) const SKR_NOEXCEPT { return { offset.x + width / 2.0f, offset.y + height / 2.0f }; }
-    inline Offset<T> center_right(const Offset<T>& offset) const SKR_NOEXCEPT { return { offset.x + width, offset.y + height / 2.0f }; }
+    inline Offset<T> center_left(const Offset<T>& offset) const SKR_NOEXCEPT { return { offset.x, offset.y + height / T(2) }; }
+    inline Offset<T> center(const Offset<T>& offset) const SKR_NOEXCEPT { return { offset.x + width / T(2), offset.y + height / T(2) }; }
+    inline Offset<T> center_right(const Offset<T>& offset) const SKR_NOEXCEPT { return { offset.x + width, offset.y + height / T(2) }; }
     inline Offset<T> bottom_left(const Offset<T>& offset) const SKR_NOEXCEPT { return { offset.x, offset.y + height }; }
-    inline Offset<T> bottom_center(const Offset<T>& offset) const SKR_NOEXCEPT { return { offset.x + width / 2.0f, offset.y + height }; }
+    inline Offset<T> bottom_center(const Offset<T>& offset) const SKR_NOEXCEPT { return { offset.x + width / T(2), offset.y + height }; }
     inline Offset<T> bottom_right(const Offset<T>& offset) const SKR_NOEXCEPT { return { offset.x + width, offset.y + height }; }
 
     // compare
     inline bool operator==(const Size<T>& rhs) const SKR_NOEXCEPT { return width == rhs.width && height == rhs.height; }
     inline bool operator!=(const Size<T>& rhs) const SKR_NOEXCEPT { return !(*this == rhs); }
+
+    // cast
+    template <typename U>
+    inline operator Size<U>() const SKR_NOEXCEPT { return { static_cast<U>(width), static_cast<U>(height) }; }
 
     // arithmetic ops
     inline Size operator+(float rhs) const SKR_NOEXCEPT { return { width + rhs, height + rhs }; }
@@ -241,9 +249,9 @@ struct Size {
 
 template <typename T>
 struct Rect {
-    T left = { 0 };
-    T top = { 0 };
-    T right = { 0 };
+    T left   = { 0 };
+    T top    = { 0 };
+    T right  = { 0 };
     T bottom = { 0 };
 
     SKR_GUI_MATH_UTILITY_MIXIN(T)
@@ -253,7 +261,7 @@ struct Rect {
     inline static Rect Largest() SKR_NOEXCEPT { return { _min(), _min(), _max(), _max() }; }
     inline static Rect LTWH(T left, T top, T width, T height) SKR_NOEXCEPT { return { left, top, left + width, top + height }; }
     inline static Rect Circle(Offset<T> center, T radius) SKR_NOEXCEPT { return { center.x - radius, center.y - radius, center.x + radius, center.y + radius }; }
-    inline static Rect Center(Offset<T> center, Size<T> size) SKR_NOEXCEPT { return { center.x - size.width / 2.0f, center.y - size.height / 2.0f, center.x + size.width / 2.0f, center.y + size.height / 2.0f }; }
+    inline static Rect Center(Offset<T> center, Size<T> size) SKR_NOEXCEPT { return { center.x - size.width / T(2), center.y - size.height / T(2), center.x + size.width / T(2), center.y + size.height / T(2) }; }
     inline static Rect OffsetSize(const Offset<T>& offset, const Size<T>& size) SKR_NOEXCEPT { return { offset.x, offset.y, offset.x + size.width, offset.y + size.height }; }
     inline static Rect Points(const Offset<T>& a, const Offset<T>& b) SKR_NOEXCEPT { return { std::min(a.x, b.x), std::min(a.y, b.y), std::max(a.x, b.x), std::max(a.y, b.y) }; }
 
@@ -288,13 +296,13 @@ struct Rect {
     inline T         height() const SKR_NOEXCEPT { return bottom - top; }
     inline Size<T>   size() const SKR_NOEXCEPT { return { width(), height() }; }
     inline Offset<T> top_left() const SKR_NOEXCEPT { return { left, top }; }
-    inline Offset<T> top_center() const SKR_NOEXCEPT { return { (left + right) / 2.0f, top }; }
+    inline Offset<T> top_center() const SKR_NOEXCEPT { return { (left + right) / T(2), top }; }
     inline Offset<T> top_right() const SKR_NOEXCEPT { return { right, top }; }
-    inline Offset<T> center_left() const SKR_NOEXCEPT { return { left, (top + bottom) / 2.0f }; }
-    inline Offset<T> center() const SKR_NOEXCEPT { return { (left + right) / 2.0f, (top + bottom) / 2.0f }; }
-    inline Offset<T> center_right() const SKR_NOEXCEPT { return { right, (top + bottom) / 2.0f }; }
+    inline Offset<T> center_left() const SKR_NOEXCEPT { return { left, (top + bottom) / T(2) }; }
+    inline Offset<T> center() const SKR_NOEXCEPT { return { (left + right) / T(2), (top + bottom) / T(2) }; }
+    inline Offset<T> center_right() const SKR_NOEXCEPT { return { right, (top + bottom) / T(2) }; }
     inline Offset<T> bottom_left() const SKR_NOEXCEPT { return { left, bottom }; }
-    inline Offset<T> bottom_center() const SKR_NOEXCEPT { return { (left + right) / 2.0f, bottom }; }
+    inline Offset<T> bottom_center() const SKR_NOEXCEPT { return { (left + right) / T(2), bottom }; }
     inline Offset<T> bottom_right() const SKR_NOEXCEPT { return { right, bottom }; }
 
     // offset & size & rect ops
@@ -361,6 +369,10 @@ struct Rect {
         return left == rhs.left && top == rhs.top && right == rhs.right && bottom == rhs.bottom;
     }
     inline bool operator!=(const Rect& rhs) const SKR_NOEXCEPT { return !(*this == rhs); }
+
+    // cast
+    template <typename U>
+    inline operator Rect<U>() const SKR_NOEXCEPT { return { static_cast<U>(left), static_cast<U>(top), static_cast<U>(right), static_cast<U>(bottom) }; }
 
     // arithmetic
     SKR_GUI_MATH_ENABLE_IF_FLOAT(T)
@@ -461,13 +473,13 @@ struct Alignment {
     inline Alignment lerp(const Alignment& rhs, float t) const SKR_NOEXCEPT { return { _lerp(x, rhs.x, t), _lerp(y, rhs.y, t) }; }
 };
 
-using Offsetf = Offset<float>;
-using Sizef = Size<float>;
-using Rectf = Rect<float>;
+using Offsetf     = Offset<float>;
+using Sizef       = Size<float>;
+using Rectf       = Rect<float>;
 using EdgeInsetsf = Rect<float>;
-using Offseti = Offset<int32_t>;
-using Sizei = Size<int32_t>;
-using Recti = Rect<int32_t>;
+using Offseti     = Offset<int32_t>;
+using Sizei       = Size<int32_t>;
+using Recti       = Rect<int32_t>;
 using EdgeInsetsi = Rect<int32_t>;
 
 // TODO. Ray Hit Test

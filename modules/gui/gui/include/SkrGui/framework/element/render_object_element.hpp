@@ -22,8 +22,8 @@ struct SKR_GUI_API RenderObjectElement : public Element {
     RenderObject* render_object() const SKR_NOEXCEPT;
 
     // child render object ops
-    virtual void add_render_object_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT = 0;
-    virtual void remove_render_object_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT = 0;
+    virtual void add_render_object_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT                     = 0;
+    virtual void remove_render_object_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT                  = 0;
     virtual void move_render_object_child(NotNull<RenderObject*> child, Slot old_slot, Slot new_slot) SKR_NOEXCEPT = 0;
 
     // attach & detach & move
@@ -32,12 +32,16 @@ struct SKR_GUI_API RenderObjectElement : public Element {
     void detach_render_object_from_parent() SKR_NOEXCEPT;
 
 private:
+    // for special init
+    friend struct RenderNativeWindowElement;
+
+private:
     // help functions
     void                 _update_render_object() SKR_NOEXCEPT;
     RenderObjectElement* _find_ancestor_render_object_element() const SKR_NOEXCEPT;
 
 private:
-    RenderObject*        _render_object = nullptr;
+    RenderObject*        _render_object                  = nullptr;
     RenderObjectElement* _ancestor_render_object_element = nullptr;
 };
 } // namespace skr::gui

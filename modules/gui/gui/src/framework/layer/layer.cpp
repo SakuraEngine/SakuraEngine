@@ -67,7 +67,7 @@ void Layer::destroy() SKR_NOEXCEPT
 void Layer::attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT
 {
     // validate
-    if (_owner != nullptr) { SKR_GUI_LOG_ERROR("already attached"); }
+    if (owner != nullptr) { SKR_GUI_LOG_ERROR("already attached"); }
     if (_parent == nullptr) { SKR_GUI_LOG_ERROR("parent is nullptr"); }
 
     // attach

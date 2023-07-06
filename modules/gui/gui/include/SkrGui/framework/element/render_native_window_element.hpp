@@ -27,6 +27,6 @@ private:
 
 private:
     Widget*  _new_child_widget = nullptr;
-    Element* _child;
+    Element* _child            = nullptr;
 };
 } // namespace skr::gui

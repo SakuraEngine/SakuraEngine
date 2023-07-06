@@ -1,5 +1,6 @@
 #include "SkrGui/framework/pipeline_owner.hpp"
 #include "SkrGui/framework/render_object/render_object.hpp"
+#include "SkrGui/framework/painting_context.hpp"
 
 namespace skr::gui
 {
@@ -44,7 +45,14 @@ void PipelineOwner::flush_paint()
 
     for (auto node : _nodes_needing_paint)
     {
-        // TODO. after paint context & layer impl
+        if (node->needs_paint())
+        {
+            PaintingContext::repaint_composited_child(make_not_null(node));
+        }
+        else
+        {
+            PaintingContext::update_layer_properties(make_not_null(node));
+        }
     }
 }
 } // namespace skr::gui
