@@ -2,6 +2,14 @@
 
 namespace skr::gui
 {
+void ContainerLayer::visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT
+{
+    for (auto child : _children)
+    {
+        visitor(make_not_null(child));
+    }
+}
+
 void ContainerLayer::add_child(NotNull<Layer*> child) SKR_NOEXCEPT
 {
     child->mount(make_not_null(this));

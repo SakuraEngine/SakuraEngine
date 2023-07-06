@@ -1,4 +1,5 @@
 #include "SkrGui/framework/render_object/render_object.hpp"
+#include "SkrGui/framework/pipeline_owner.hpp"
 
 namespace skr::gui
 {
@@ -90,14 +91,14 @@ void RenderObject::attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT
     {
         // Don't enter this block if we've never laid out at all;
         // scheduleInitialLayout() will handle it
-        _needs_layout = false;
+        cancel_needs_layout();
         mark_needs_layout();
     }
     if (_needs_paint && _layer != nullptr)
     {
         // Don't enter this block if we've never painted at all;
         // scheduleInitialPaint() will handle it
-        _needs_paint = false;
+        cancel_needs_paint();
         mark_needs_paint();
     }
 
@@ -130,13 +131,15 @@ void RenderObject::mark_needs_layout() SKR_NOEXCEPT
         _needs_layout = true;
         if (_owner != nullptr)
         {
-            // TODO.
-            // owner!._nodesNeedingLayout.add(this);
-            // owner!.requestVisualUpdate();
+            _owner->schedule_layout_for(make_not_null(this));
         }
     }
 }
 void RenderObject::mark_needs_paint() SKR_NOEXCEPT
+{
+    SKR_UNIMPLEMENTED_FUNCTION()
+}
+void mark_needs_layer_update() SKR_NOEXCEPT
 {
     SKR_UNIMPLEMENTED_FUNCTION()
 }
@@ -146,7 +149,7 @@ bool RenderObject::is_sized_by_parent() const SKR_NOEXCEPT { return false; }
 void RenderObject::layout(bool parent_uses_size) SKR_NOEXCEPT
 {
     bool          is_relayout_boundary = !parent_uses_size || is_sized_by_parent() || _force_relayout_boundary || !_parent;
-    RenderObject* relayout_boundary = is_relayout_boundary ? this : _parent->_relayout_boundary;
+    RenderObject* relayout_boundary    = is_relayout_boundary ? this : _parent->_relayout_boundary;
 
     if (!_needs_layout && !_is_constraints_changed)
     {
@@ -165,7 +168,7 @@ void RenderObject::layout(bool parent_uses_size) SKR_NOEXCEPT
         }
         perform_layout();
 
-        _needs_layout = false;
+        cancel_needs_layout();
         mark_needs_paint();
     }
 
@@ -176,9 +179,14 @@ void RenderObject::perform_resize() SKR_NOEXCEPT {}
 void RenderObject::perform_layout() SKR_NOEXCEPT {}
 
 // paint process
-void RenderObject::debug_paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT {}
 void RenderObject::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT {}
 bool RenderObject::is_repaint_boundary() const SKR_NOEXCEPT { return false; }
+
+// layer composite
+NotNull<OffsetLayer*> RenderObject::update_layer(OffsetLayer* old_layer)
+{
+    return old_layer != nullptr ? make_not_null(old_layer) : make_not_null(SkrNew<OffsetLayer>());
+}
 
 // transform
 bool    RenderObject::paints_child(NotNull<RenderObject*> child) const SKR_NOEXCEPT { return true; }
@@ -192,11 +200,20 @@ Matrix4 RenderObject::get_transform_to(RenderObject* ancestor) const SKR_NOEXCEP
 // layout & paint marks
 void RenderObject::_mark_parent_needs_layout() SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION()
+    _needs_layout = true;
+    _parent->mark_needs_layout();
+    // TODO. layout call from paint
 }
 void RenderObject::_flush_relayout_boundary() SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION()
+    if (_relayout_boundary != this)
+    {
+        auto parent_relayout_boundary = _parent->_relayout_boundary;
+        if (parent_relayout_boundary != _relayout_boundary)
+        {
+            visit_children([](RenderObject* child) { child->_flush_relayout_boundary(); });
+        }
+    }
 }
 
 } // namespace skr::gui

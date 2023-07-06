@@ -37,6 +37,13 @@ struct SKR_GUI_API RenderObject SKR_GUI_OBJECT_BASE {
     // layout & paint marks
     virtual void mark_needs_layout() SKR_NOEXCEPT;
     virtual void mark_needs_paint() SKR_NOEXCEPT;
+    void         mark_needs_layer_update() SKR_NOEXCEPT;
+    inline bool  needs_layout() const SKR_NOEXCEPT { return _needs_layout; }
+    inline bool  needs_paint() const SKR_NOEXCEPT { return _needs_paint; }
+    inline bool  needs_layer_update() const SKR_NOEXCEPT { return _needs_layer_update; }
+    inline void  cancel_needs_layout() SKR_NOEXCEPT { _needs_layout = false; }
+    inline void  cancel_needs_paint() SKR_NOEXCEPT { _needs_paint = false; }
+    inline void  cancel_needs_layer_update() SKR_NOEXCEPT { _needs_layer_update = false; }
 
     // layout process
     // 1. 传递 constraints 并标记 _is_constraints_changed
@@ -53,9 +60,15 @@ struct SKR_GUI_API RenderObject SKR_GUI_OBJECT_BASE {
 
     // paint process
     // paint 流程由 layer 发起，其调用流程被 PaintingContext 严格封装，不允许直接调用，而是调用 PaintingContext::paintChild
-    virtual void debug_paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT;
-    virtual void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT;
+    virtual void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT; // TODO. perform_paint
     virtual bool is_repaint_boundary() const SKR_NOEXCEPT;
+    inline bool  was_repaint_boundary() const SKR_NOEXCEPT { return _was_repaint_boundary; }
+
+    // layer composite
+    // repaint boundary render object 会持有 layer 来实现局部重绘
+    // 部分 repaint boundary render object 会通过 layer 来实现特效，比如毛玻璃，局部透明，复杂蒙版等等
+    NotNull<OffsetLayer*>  update_layer(OffsetLayer* old_layer);
+    inline ContainerLayer* layer() const SKR_NOEXCEPT { return _layer; }
 
     // transform
     // 用于做坐标点转换，通常用于 hit-test
@@ -74,16 +87,16 @@ struct SKR_GUI_API RenderObject SKR_GUI_OBJECT_BASE {
     inline RenderObject* parent() const SKR_NOEXCEPT { return _parent; }
     inline int32_t       depth() const SKR_NOEXCEPT { return _depth; }
     inline Slot          slot() const SKR_NOEXCEPT { return _slot; }
-    inline bool          needs_layout() const SKR_NOEXCEPT { return _needs_layout; }
-    inline bool          needs_paint() const SKR_NOEXCEPT { return _needs_paint; }
 
     // setter
     inline void set_slot(Slot slot) SKR_NOEXCEPT { _slot = slot; }
+    inline void set_layer(ContainerLayer* layer) SKR_NOEXCEPT { _layer = layer; }
 
 protected:
     void        _mark_parent_needs_layout() SKR_NOEXCEPT;
     inline void _set_force_relayout_boundary(bool v) SKR_NOEXCEPT { _force_relayout_boundary = v; }
     inline void _set_constraints_changed(bool v) SKR_NOEXCEPT { _is_constraints_changed = v; }
+    inline void _update_was_repaint_boundary() SKR_NOEXCEPT { _was_repaint_boundary = is_repaint_boundary(); }
 
 private:
     void _flush_relayout_boundary() SKR_NOEXCEPT;
@@ -91,21 +104,23 @@ private:
 private:
     // render object tree
     RenderObject*  _parent = nullptr;
-    PipelineOwner* _owner = nullptr;
-    int32_t        _depth = 0;
+    PipelineOwner* _owner  = nullptr;
+    int32_t        _depth  = 0;
 
     // dirty marks
-    bool _needs_layout = true;
-    bool _needs_paint = true;
+    bool _needs_layout       = true;
+    bool _needs_paint        = true;
+    bool _needs_layer_update = true;
     // TODO. compositing layer & compositing bits，其中 Bits 是 Flutter Picture 位图化的产物，我们或许只需要标记 Layer 的更新
 
     // layout temporal data
     bool _force_relayout_boundary = false; // 强制自己称为 layout_boundary
-    bool _is_constraints_changed = false;  // 约束发生变化，在 layout 结束后被清理
+    bool _is_constraints_changed  = false; // 约束发生变化，在 layout 结束后被清理
 
     // layout & paint boundary
-    RenderObject* _relayout_boundary = nullptr;
-    Layer*        _layer = nullptr; // TODO. layer
+    bool            _was_repaint_boundary = false;
+    RenderObject*   _relayout_boundary    = nullptr;
+    ContainerLayer* _layer                = nullptr;
 
     // 用于 invoke_layout_callback()
     bool _doing_this_layout_with_callback = false;
