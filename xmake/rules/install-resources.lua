@@ -33,6 +33,10 @@ rule("utils.install-libs")
             local zip = find_sdk.find_sdk_lib(libname)
             target:data_add("lib_zips", zip)
         end
+        local tardir = target:targetdir()
+        if not os.isdir(tardir) then
+            os.mkdir(tardir)
+        end
     end)
     on_config(function (target)
         import("find_sdk")
