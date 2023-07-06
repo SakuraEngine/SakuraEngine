@@ -20,7 +20,7 @@ struct SingleChildRenderObjectMixin {
 
     inline SKR_GUI_TYPE_ID accept_child_type(const TSelf& self) const SKR_NOEXCEPT
     {
-        return SKR_GUI_TYPE_ID_OF_STATIC(TSelf);
+        return SKR_GUI_TYPE_ID_OF_STATIC(TChild);
     }
     inline void set_child(TSelf& self, NotNull<RenderObject*> child) SKR_NOEXCEPT
     {

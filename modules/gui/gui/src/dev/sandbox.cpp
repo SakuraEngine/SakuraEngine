@@ -22,7 +22,7 @@ void Sandbox::init()
 {
     // init owner
     _build_owner    = SkrNew<BuildOwner>();
-    _pipeline_owner = SkrNew<PipelineOwner>();
+    _pipeline_owner = SkrNew<PipelineOwner>(_canvas_service);
 }
 void Sandbox::shutdown()
 {
@@ -77,8 +77,7 @@ void Sandbox::paint()
 }
 void Sandbox::compose()
 {
-    auto root_layer = _root_render_object->layer()->type_cast_fast<NativeWindowLayer>();
-    root_layer->update_window();
+    _root_layer->update_window();
 }
 
 } // namespace skr::gui
