@@ -25,10 +25,43 @@ rule("utils.install-resources")
     end)
 
 rule("utils.install-libs")
-    before_build(function (target)
+    set_extensions(".zip")
+    on_load(function (target)
         import("find_sdk")
         local libnames = target:extraconf("rules", "utils.install-libs", "libnames")
         for _, libname in pairs(libnames) do
-            find_sdk.install_lib(libname)
+            local zip = find_sdk.find_sdk_lib(libname)
+            target:add("files", zip)
         end
+    end)
+    before_buildcmd_file(function (target, batchcmds, zipfile, opt)
+        import("find_sdk")
+        import("core.project.depend")
+        import("utils.archive")
+
+        -- unzip to objectdir
+        local tmpdir = path.join(target:objectdir(), path.basename(zipfile))
+        local dependfile = target:dependfile(zipfile)
+
+        depend.on_changed(function()
+            archive.extract(zipfile, tmpdir)
+        end, {dependfile = dependfile, files = { zipfile }})
+    
+        -- copy all files with batchcmds
+        local vfiles = path.join(tmpdir, "**")
+        local files = os.files(vfiles)
+        batchcmds:show_progress(opt.progress, 
+            "${green}[%s]: install.lib ${clear}%s, %d files", 
+            target:name(), zipfile, #files)
+
+        local outfiles = {}
+        for _, file in ipairs(files) do
+            local outfile = path.join(target:targetdir(), path.filename(file))
+            outfile = path.absolute(outfile)
+            table.insert(outfiles, outfile)
+        end
+        batchcmds:cp(vfiles, target:targetdir())
+        batchcmds:add_depfiles(outfiles)
+        batchcmds:set_depcache(target:dependfile(zipfile..".d"))
+        batchcmds:set_depmtime(os.time())
     end)

@@ -24,19 +24,20 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
     if opt.msvc then
         table.insert(argv, "--driver-mode=cl")
         --table.insert(argv, "/Tp")
+    else
+        --table.insert(argv, "-x c++")
     end
     table.insert(argv, "-I"..os.projectdir()..vformat("/SDKs/tools/$(host)/meta-include"))
 
     local argv2 = {sourcefile, "--output="..path.absolute(outdir), "--root="..rootdir or path.absolute(target:scriptdir()), "--"}
-    
+    -- hack: insert a placeholder to avoid the case where (#argv < limit) and (#argv + #argv2 > limit)
     if is_host("windows") then
         local argv2l = 0
         for _, v in pairs(argv2) do
             argv2l = argv2l + #v
         end
-        local dummy = "-DFUCK_YOU_WINDOWS" .. string.rep("S", argv2l)
-        -- hack: insert a placeholder to avoid the case where (#argv < limit) and (#argv + #argv2 > limit)
-        table.insert(argv, #argv + 1, dummy)
+        local _ = "-DFUCK_YOU_WINDOWS" .. string.rep("S", argv2l)
+        table.insert(argv, #argv + 1, _)
         argv = winos.cmdargv(argv)
     end
     for k,v in pairs(argv2) do  
@@ -47,7 +48,6 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
         cprint("${green}[%s]: compiling.meta ${clear}%s - %s", target:name(), path.relative(outdir), command)
     end
     os.runv(meta.program, argv)
-
     if not opt.quiet then
         local now = os.time()
         cprint("${green}[%s]: finish.meta ${clear}%s cost ${red}%d seconds", target:name(), path.relative(outdir), now - last)

@@ -98,14 +98,23 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     add_includedirs("$(projectdir)/thirdparty/marl/include", {public = true})
     add_includedirs("$(projectdir)/thirdparty/marl/include/marl", {public = true})
 
-    -- install dxc on windows platform
+    -- install sdks for windows platform
+    libs_to_install = {}
+    if(os.host() == "windows") then
+        table.insert(libs_to_install, "dstorage-1.2.1")
+        table.insert(libs_to_install, "amdags")
+        table.insert(libs_to_install, "nvapi")
+        table.insert(libs_to_install, "nsight")
+        table.insert(libs_to_install, "WinPixEventRuntime")
+        table.insert(libs_to_install, "SDL2")
+        table.insert(libs_to_install, "dxc")
+    end
+    add_rules("utils.install-libs", { libnames = libs_to_install })
+
     if (is_os("windows")) then 
-        add_rules("utils.install-libs", { libnames = {"dxc"} })
         add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public=true})
         add_links("nvapi_x64", {public = true})
         add_links("WinPixEventRuntime", {public = true})
-        -- we do not support x86 windows
-        -- add_links("$(buildir)/$(os)/$(arch)/$(mode)/nvapi_x86")
     end
 
     -- cpu info private include dir
