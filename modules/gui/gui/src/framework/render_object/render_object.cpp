@@ -40,12 +40,13 @@ void RenderObject::mount(NotNull<RenderObject*> parent) SKR_NOEXCEPT
         struct _RecursiveHelper {
             NotNull<PipelineOwner*> owner;
 
-            void operator()(NotNull<RenderObject*> obj) const SKR_NOEXCEPT
+            inline void operator()(NotNull<RenderObject*> obj) const SKR_NOEXCEPT
             {
                 obj->attach(owner);
                 obj->visit_children(_RecursiveHelper{ owner });
             }
         };
+        _RecursiveHelper{ make_not_null(_parent->owner()) }(make_not_null(this));
         this->visit_children(_RecursiveHelper{ make_not_null(_parent->owner()) });
     }
     _lifecycle = ERenderObjectLifecycle::Mounted;
@@ -137,7 +138,26 @@ void RenderObject::mark_needs_layout() SKR_NOEXCEPT
 }
 void RenderObject::mark_needs_paint() SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION()
+    if (!_needs_paint)
+    {
+        _needs_paint = true;
+
+        if (is_repaint_boundary() && _was_repaint_boundary)
+        {
+            if (owner())
+            {
+                owner()->schedule_paint_for(make_not_null(this));
+            }
+        }
+        else if (parent() && parent()->type_is<RenderObject>())
+        {
+            parent()->type_cast_fast<RenderObject>()->mark_needs_paint();
+        }
+        else
+        {
+            SKR_UNREACHABLE_CODE()
+        }
+    }
 }
 void mark_needs_layer_update() SKR_NOEXCEPT
 {

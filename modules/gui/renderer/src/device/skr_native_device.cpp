@@ -1,7 +1,9 @@
 #include "SkrGuiRenderer/device/skr_native_device.hpp"
 #include "SkrGuiRenderer/device/skr_native_window.hpp"
 #include "SkrGuiRenderer/render/skr_render_device.hpp"
+#include "SkrGuiRenderer/render/skr_render_window.hpp"
 #include "SkrGuiRenderer/resource/skr_resource_service.hpp"
+#include "SkrGui/framework/layer/native_window_layer.hpp"
 
 namespace skr::gui
 {
@@ -55,16 +57,16 @@ void SkrNativeDevice::shutdown()
 NotNull<IWindow*> SkrNativeDevice::create_window()
 {
     auto view = SkrNew<SkrNativeWindow>(this);
-    _all_views.push_back(view);
+    _all_windows.push_back(view);
     return make_not_null(view);
 }
 void SkrNativeDevice::destroy_window(NotNull<IWindow*> view)
 {
     // erase it
-    auto it = std::find(_all_views.begin(), _all_views.end(), view);
-    if (it != _all_views.end())
+    auto it = std::find(_all_windows.begin(), _all_windows.end(), view);
+    if (it != _all_windows.end())
     {
-        _all_views.erase(it);
+        _all_windows.erase(it);
     }
 
     // delete
@@ -76,4 +78,13 @@ const DisplayMetrics& SkrNativeDevice::display_metrics() const
 {
     return _display_metrics;
 }
+
+void SkrNativeDevice::render_all_windows() SKR_NOEXCEPT
+{
+    for (auto window : _all_windows)
+    {
+        window->render_window()->render(window->native_layer(), window->absolute_size());
+    }
+}
+
 } // namespace skr::gui

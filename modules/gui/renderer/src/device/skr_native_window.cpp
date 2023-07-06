@@ -2,6 +2,7 @@
 #include "SkrGuiRenderer/device/skr_native_device.hpp"
 #include "SkrGuiRenderer/render/skr_render_device.hpp"
 #include "SkrGuiRenderer/render/skr_render_window.hpp"
+#include "SkrGui/framework/layer/native_window_layer.hpp"
 
 namespace skr::gui
 {
@@ -128,7 +129,7 @@ void SkrNativeWindow::set_absolute_size(Sizef absolute) SKR_NOEXCEPT
 }
 void SkrNativeWindow::update_content(WindowLayer* root_layer) SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    _native_layer = root_layer->type_cast_fast<NativeWindowLayer>();
 }
 void SkrNativeWindow::take_focus() SKR_NOEXCEPT
 {

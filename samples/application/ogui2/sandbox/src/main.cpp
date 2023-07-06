@@ -5,6 +5,7 @@
 #include "SkrGui/dev/sandbox.hpp"
 #include "platform/system.h"
 #include "tracy/Tracy.hpp"
+#include "SkrGui/backend/device/window.hpp"
 
 // !!!! TestWidgets !!!!
 #include "SkrGui/widgets/stack.hpp"
@@ -25,7 +26,7 @@ int main(void)
     SkrNativeDevice* device = SkrNew<SkrNativeDevice>();
     device->init();
     ICanvasService* canvas_service = create_embedded_canvas_service();
-    ITextService*   text_service = create_embedded_text_service(device->resource_device());
+    ITextService*   text_service   = create_embedded_text_service(device->resource_device());
 
     // create sandbox
     Sandbox* sandbox = SkrNew<Sandbox>(device, canvas_service, text_service);
@@ -51,7 +52,7 @@ int main(void)
                 p.child = SNewWidget(Flex)
                 {
                     p.cross_axis_alignment = ECrossAxisAlignment::Start;
-                    p.main_axis_alignment = EMainAxisAlignment::Center;
+                    p.main_axis_alignment  = EMainAxisAlignment::Center;
                     SNewChild(p.children, SizedBox)
                     {
                         p.size = { 100, 300 };
@@ -78,8 +79,18 @@ int main(void)
         sandbox->set_content(skr::make_not_null(widget));
     }
 
+    // show window
+    {
+        WindowDesc desc = {};
+        desc.size       = { 600, 600 };
+        desc.anchor     = Alignment::Center();
+        desc.pos        = device->display_metrics().primary_work_area.center();
+        desc.name       = u8"SkrGUI Sandbox";
+        sandbox->show(desc);
+    }
+
     // run application
-    bool quit = false;
+    bool quit    = false;
     auto handler = skr_system_get_default_handler();
     while (!quit)
     {
@@ -90,7 +101,16 @@ int main(void)
             handler->pump_messages(delta);
             handler->process_messages(delta);
         }
-        // TODO. update sandbox
+        {
+            ZoneScopedN("Sandbox");
+            sandbox->update();
+            sandbox->layout();
+            sandbox->paint();
+            sandbox->compose();
+        }
+        {
+            // TODO. call render
+        }
     }
 
     // finalize

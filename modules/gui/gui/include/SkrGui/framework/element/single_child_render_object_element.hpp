@@ -21,7 +21,7 @@ struct SingleChildRenderObjectElement : public RenderObjectElement {
     void move_render_object_child(NotNull<RenderObject*> child, Slot old_slot, Slot new_slot) SKR_NOEXCEPT override;
 
 private:
-    Element* _child;
+    Element* _child = nullptr;
 };
 
 } // namespace skr::gui

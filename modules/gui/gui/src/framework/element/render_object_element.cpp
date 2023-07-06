@@ -21,7 +21,7 @@ void RenderObjectElement::first_mount(NotNull<Element*> parent, Slot slot) SKR_N
     if (render_object_widget)
     {
         _render_object = render_object_widget->create_render_object();
-        _attach_render_object_children(slot);
+        attach_render_object_to_parent(slot);
         _cancel_dirty();
     }
     else

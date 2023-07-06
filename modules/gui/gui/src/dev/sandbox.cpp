@@ -5,6 +5,7 @@
 #include "SkrGui/framework/render_object/render_native_window.hpp"
 #include "SkrGui/framework/element/render_native_window_element.hpp"
 #include "SkrGui/framework/widget/render_native_window_widget.hpp"
+#include "SkrGui/framework/layer/native_window_layer.hpp"
 #include "SkrGui/backend/device/device.hpp"
 #include "SkrGui/backend/device/window.hpp"
 
@@ -52,11 +53,32 @@ void Sandbox::show(const WindowDesc& desc)
         p.native_window_render_object = _root_render_object;
     };
 
-    // init element bind
+    // init element
     // 使用 root_widget 创建 root_element，并先行初始化
     _root_element = root_widget->create_element()->type_cast_fast<RenderNativeWindowElement>();
     _root_element->setup_owner(_build_owner);
     _root_element->prepare_initial_frame();
+
+    // init layer
+    _root_layer = _root_render_object->layer()->type_cast_fast<NativeWindowLayer>();
+}
+
+void Sandbox::update()
+{
+    _build_owner->flush_build();
+}
+void Sandbox::layout()
+{
+    _pipeline_owner->flush_layout();
+}
+void Sandbox::paint()
+{
+    _pipeline_owner->flush_paint();
+}
+void Sandbox::compose()
+{
+    auto root_layer = _root_render_object->layer()->type_cast_fast<NativeWindowLayer>();
+    root_layer->update_window();
 }
 
 } // namespace skr::gui

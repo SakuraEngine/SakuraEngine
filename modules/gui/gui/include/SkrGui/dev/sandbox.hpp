@@ -20,12 +20,10 @@ struct SKR_GUI_API Sandbox {
     void set_content(NotNull<Widget*> content);
     void show(const WindowDesc& desc);
 
-    // void update();
-    // void animation();
-    // void layout();
-    // void paint();
-    // void compose();
-    // void finalize();
+    void update();
+    void layout();
+    void paint();
+    void compose();
 
 private:
     // backend
