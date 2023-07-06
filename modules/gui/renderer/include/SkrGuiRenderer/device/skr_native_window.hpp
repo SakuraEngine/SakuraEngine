@@ -48,7 +48,7 @@ struct SKR_GUI_RENDERER_API SkrNativeWindow final : public INativeWindow {
     void hide() SKR_NOEXCEPT override;
 
     // rendering
-    void update_content(Layer* layer) SKR_NOEXCEPT override;
+    void update_content(WindowLayer* root_layer) SKR_NOEXCEPT override;
 
     // getter
     bool   minimized() SKR_NOEXCEPT override;

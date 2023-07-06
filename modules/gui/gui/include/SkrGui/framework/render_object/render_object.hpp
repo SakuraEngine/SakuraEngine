@@ -67,8 +67,8 @@ struct SKR_GUI_API RenderObject SKR_GUI_OBJECT_BASE {
     // layer composite
     // repaint boundary render object 会持有 layer 来实现局部重绘
     // 部分 repaint boundary render object 会通过 layer 来实现特效，比如毛玻璃，局部透明，复杂蒙版等等
-    NotNull<OffsetLayer*>  update_layer(OffsetLayer* old_layer);
-    inline ContainerLayer* layer() const SKR_NOEXCEPT { return _layer; }
+    virtual NotNull<OffsetLayer*> update_layer(OffsetLayer* old_layer);
+    inline ContainerLayer*        layer() const SKR_NOEXCEPT { return _layer; }
 
     // transform
     // 用于做坐标点转换，通常用于 hit-test
