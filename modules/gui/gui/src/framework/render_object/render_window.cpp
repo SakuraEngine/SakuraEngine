@@ -2,6 +2,7 @@
 #include "SkrGui/framework/painting_context.hpp"
 #include "SkrGui/framework/render_object/render_box.hpp"
 #include "SkrGui/framework/layer/window_layer.hpp"
+#include "SkrGui/backend/device/window.hpp"
 
 namespace skr::gui
 {
@@ -15,6 +16,14 @@ void RenderWindow::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_
     if (child())
     {
         context->paint_child(make_not_null(child()), offset);
+    }
+}
+void RenderWindow::perform_layout() SKR_NOEXCEPT
+{
+    if (child())
+    {
+        child()->set_constraints(BoxConstraints::Tight(_window->to_relative(_window->absolute_size())));
+        child()->layout();
     }
 }
 

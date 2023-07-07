@@ -113,13 +113,13 @@ struct _FlexHelper {
                                       float&            out_allocated_size)
     {
         // collect data
-        const float max_main_size = _get_main_size(self, constraints.max_size());
-        const bool  can_flex = max_main_size < std::numeric_limits<float>::infinity();
+        const float max_main_size    = _get_main_size(self, constraints.max_size());
+        const bool  can_flex         = max_main_size < std::numeric_limits<float>::infinity();
         const bool  is_coord_flipped = _is_coord_flipped(self);
 
-        out_cross_size = 0;
+        out_cross_size     = 0;
         out_allocated_size = 0;
-        float total_flex = 0;
+        float total_flex   = 0;
 
         // Step1. Calculate non-flexible children's size
         for (const auto& slot : self.children())
@@ -232,7 +232,7 @@ struct _FlexHelper {
                 if (slot.data.flex > 0)
                 {
                     const float flex_fraction = child_size_func(slot.child, extent) / slot.data.flex;
-                    max_flex_fraction_so_far = std::max(max_flex_fraction_so_far, flex_fraction);
+                    max_flex_fraction_so_far  = std::max(max_flex_fraction_so_far, flex_fraction);
                 }
                 else
                 {
@@ -261,12 +261,12 @@ struct _FlexHelper {
                     {
                         case EFlexDirection::Row:
                         case EFlexDirection::RowReverse:
-                            main_size = slot.child->get_max_intrinsic_width(std::numeric_limits<float>::infinity());
+                            main_size  = slot.child->get_max_intrinsic_width(std::numeric_limits<float>::infinity());
                             cross_size = child_size_func(slot.child, main_size);
                             break;
                         case EFlexDirection::Column:
                         case EFlexDirection::ColumnReverse:
-                            main_size = slot.child->get_max_intrinsic_height(std::numeric_limits<float>::infinity());
+                            main_size  = slot.child->get_max_intrinsic_height(std::numeric_limits<float>::infinity());
                             cross_size = child_size_func(slot.child, main_size);
                             break;
                     }
@@ -386,7 +386,7 @@ void RenderFlex::perform_layout() SKR_NOEXCEPT
 
     // update self size
     set_size(constraints().constrain(is_coord_flipped ? Sizef{ cross_size, main_size } : Sizef{ main_size, cross_size }));
-    main_size = _FlexHelper::_get_main_size(*this, size());
+    main_size  = _FlexHelper::_get_main_size(*this, size());
     cross_size = _FlexHelper::_get_cross_size(*this, size());
 
     // Step6. Place each child based on main axis alignment and cross axis alignment
@@ -394,8 +394,8 @@ void RenderFlex::perform_layout() SKR_NOEXCEPT
     {
         // calc slack & overflow
         float slack_space = main_size - allocated_size;
-        _overflow = std::max(0.f, -slack_space);
-        slack_space = std::max(0.f, slack_space);
+        _overflow         = std::max(0.f, -slack_space);
+        slack_space       = std::max(0.f, slack_space);
 
         // calc leading space & between space
         const auto child_count = children().size();
@@ -428,14 +428,14 @@ void RenderFlex::perform_layout() SKR_NOEXCEPT
         }
     }
 
-    const bool flip_main_axis = _FlexHelper::_is_main_axis_flipped(*this);
-    const bool flip_cross_axis = _FlexHelper::_is_cross_axis_flipped(*this);
+    const bool flip_main_axis    = _FlexHelper::_is_main_axis_flipped(*this);
+    const bool flip_cross_axis   = _FlexHelper::_is_cross_axis_flipped(*this);
     float      child_main_offset = flip_main_axis ? (main_size - leading_space) : leading_space;
     for (size_t i = 0; i < children().size(); ++i)
     {
-        auto&       slot = children()[i];
-        const Sizef child_size = slot.child->size();
-        const float child_main_size = _FlexHelper::_get_main_size(*this, child_size);
+        auto&       slot             = children()[i];
+        const Sizef child_size       = slot.child->size();
+        const float child_main_size  = _FlexHelper::_get_main_size(*this, child_size);
         const float child_cross_size = _FlexHelper::_get_cross_size(*this, child_size);
 
         // cross axis offset
@@ -485,6 +485,40 @@ void RenderFlex::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NO
         {
             SKR_GUI_LOG_ERROR("RenderFlex::paint: child is nullptr.");
         }
+    }
+}
+
+// setter
+void RenderFlex::set_flex_direction(EFlexDirection value) SKR_NOEXCEPT
+{
+    if (_flex_direction != value)
+    {
+        _flex_direction = value;
+        mark_needs_layout();
+    }
+}
+void RenderFlex::set_main_axis_alignment(EMainAxisAlignment value) SKR_NOEXCEPT
+{
+    if (_main_axis_alignment != value)
+    {
+        _main_axis_alignment = value;
+        mark_needs_layout();
+    }
+}
+void RenderFlex::set_cross_axis_alignment(ECrossAxisAlignment value) SKR_NOEXCEPT
+{
+    if (_cross_axis_alignment != value)
+    {
+        _cross_axis_alignment = value;
+        mark_needs_layout();
+    }
+}
+void RenderFlex::set_main_axis_size(EMainAxisSize value) SKR_NOEXCEPT
+{
+    if (_main_axis_size != value)
+    {
+        _main_axis_size = value;
+        mark_needs_layout();
     }
 }
 } // namespace skr::gui

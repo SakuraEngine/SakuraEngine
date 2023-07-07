@@ -22,7 +22,7 @@ protected:
     void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
 
 private:
-    Offsetf _offset;
+    Offsetf _offset = {};
 
     SKR_GUI_SINGLE_CHILD_RENDER_OBJECT_MIXIN(RenderShiftedBox, RenderBox)
 };

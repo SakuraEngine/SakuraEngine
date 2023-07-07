@@ -13,6 +13,7 @@ void WindowLayer::update_window()
     if (needs_composite())
     {
         _window->update_content(this);
+        cancel_needs_composite();
     }
 }
 

@@ -9,7 +9,10 @@ namespace skr::gui
 void SingleChildRenderObjectElement::first_mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT
 {
     Super::first_mount(parent, slot);
-    _child = _update_child(_child, widget()->type_cast_fast<SingleChildRenderObjectWidget>()->child, slot);
+    if (widget()->type_cast_fast<SingleChildRenderObjectWidget>()->child)
+    {
+        _child = _update_child(_child, widget()->type_cast_fast<SingleChildRenderObjectWidget>()->child, slot);
+    }
 }
 void SingleChildRenderObjectElement::visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT
 {
