@@ -24,19 +24,20 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
     if opt.msvc then
         table.insert(argv, "--driver-mode=cl")
         --table.insert(argv, "/Tp")
+    else
+        --table.insert(argv, "-x c++")
     end
     table.insert(argv, "-I"..os.projectdir()..vformat("/SDKs/tools/$(host)/meta-include"))
 
     local argv2 = {sourcefile, "--output="..path.absolute(outdir), "--root="..rootdir or path.absolute(target:scriptdir()), "--"}
-    
+    -- hack: insert a placeholder to avoid the case where (#argv < limit) and (#argv + #argv2 > limit)
     if is_host("windows") then
         local argv2l = 0
         for _, v in pairs(argv2) do
             argv2l = argv2l + #v
         end
-        local dummy = "-DFUCK_YOU_WINDOWS" .. string.rep("S", argv2l)
-        -- hack: insert a placeholder to avoid the case where (#argv < limit) and (#argv + #argv2 > limit)
-        table.insert(argv, #argv + 1, dummy)
+        local _ = "-DFUCK_YOU_WINDOWS" .. string.rep("S", argv2l)
+        table.insert(argv, #argv + 1, _)
         argv = winos.cmdargv(argv)
     end
     for k,v in pairs(argv2) do  
@@ -47,7 +48,6 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
         cprint("${green}[%s]: compiling.meta ${clear}%s - %s", target:name(), path.relative(outdir), command)
     end
     os.runv(meta.program, argv)
-
     if not opt.quiet then
         local now = os.time()
         cprint("${green}[%s]: finish.meta ${clear}%s cost ${red}%d seconds", target:name(), path.relative(outdir), now - last)
@@ -56,25 +56,25 @@ end
 
 function meta_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles, opt)
     -- generate headers dummy
-    local changedheaders = target:data("reflection.changedheaders")
-    -- generate dummy .cpp file
-    if(changedheaders ~= nil and #changedheaders > 0) then
-        local verbose = option.get("verbose")
-        -- compile jsons to c++
-        local unity_cpp = io.open(sourcefile, "w")
-        for _, headerfile in ipairs(changedheaders) do
-            headerfile = path.absolute(headerfile)
-            sourcefile = path.absolute(sourcefile)
-            local relative_include = path.relative(headerfile, path.directory(sourcefile))
-            unity_cpp:print("#include \"%s\"", relative_include)
-            if verbose then
-                cprint("${magenta}[%s]: meta.header ${clear}%s", target:name(), path.relative(headerfile))
+    local headerfiles = target:data("reflection.headerfiles")
+    if(headerfiles ~= nil and #headerfiles > 0) then
+        depend.on_changed(function()
+            local unity_cpp = io.open(sourcefile, "w")
+            for _, headerfile in ipairs(headerfiles) do
+                headerfile = path.absolute(headerfile)
+                sourcefile = path.absolute(sourcefile)
+                local relative_include = path.relative(headerfile, path.directory(sourcefile))
+                unity_cpp:print("#include \"%s\"", relative_include)
+                if verbose then
+                    cprint("${magenta}[%s]: meta.header ${clear}%s", target:name(), path.relative(headerfile))
+                end
             end
-        end
-        unity_cpp:close()
-        -- build generated cpp to json
-        meta_cmd_compile(sourcefile, rootdir, metadir, target, opt)
-        target:data_set("reflection.need_mako", true)
+            unity_cpp:close()
+
+            local verbose = option.get("verbose")
+            -- build generated cpp to json
+            meta_cmd_compile(sourcefile, rootdir, metadir, target, opt)
+        end, {dependfile = sourcefile .. ".d", files = headerfiles})
     end
 end
 
@@ -118,25 +118,8 @@ function collect_headers_batch(target)
             table.insert(sourceinfo.headerfiles, headerfile)
         end
     end
-    -- save unit batch
     target:data_set("meta.headers.batch", meta_batch)
-
-    -- generate headers dummy
-    local changedheaders = {}
-    local rebuild = false
-    for _, headerfile in ipairs(headerfiles) do
-        local dependfile = target:dependfile(headerfile.."meta")
-        depend.on_changed(function ()
-            table.insert(changedheaders, headerfile);
-        end, {dependfile = dependfile, files = {headerfile}})
-    end
-    if rebuild then
-        changedheaders = headerfiles
-    end
-    -- generate dummy .cpp file
-    if(#changedheaders > 0) then
-        target:data_set("reflection.changedheaders", changedheaders)
-    end
+    target:data_set("reflection.headerfiles", headerfiles)
 end
 
 function mako_compile_cmd(target, mako_generators, use_deps_data, metadir, gendir, opt)
@@ -226,17 +209,18 @@ function mako_compile(target, rootdir, metadir, gendir, sourcefile, headerfiles,
         },
     }
     -- calculate if strong makos need to be rebuild
-    local need_mako = target:data("reflection.need_mako")
-    local rebuild = need_mako
-    for _, generator in ipairs(mako_generators) do
-        local dependfile = target:dependfile(generator[1])
+    local dependfile = target:dependfile(target:name().."_mako.d")
+    local files = os.files(path.join(metadir, "**.meta"));
+    if #files ~= 0 then
+        for _, generator_arr in ipairs(mako_generators) do
+            for _, generator in ipairs(generator_arr) do
+                table.insert(files, generator)
+            end
+        end
+
         depend.on_changed(function ()
-            rebuild = true
-        end, {dependfile = dependfile, files = generator});
-    end
-    -- rebuild
-    if (rebuild) then
-        mako_compile_cmd(target, mako_generators, true, metadir, gendir, opt)
+            mako_compile_cmd(target, mako_generators, true, metadir, gendir, opt)
+        end, {dependfile = dependfile, files = files});
     end
 end
 
@@ -361,9 +345,9 @@ function generate_once(targetname)
                 scheduler.co_group_wait(target:name()..".cpp-codegen")
             end
         end
-        print("wait all sync codegen.")
+        cprint("${dim}[rule]: c++.codegen${clear} wait all sync codegen.")
     else
-        print("use async codegen.")
+        cprint("${dim}[rule]: c++.codegen${clear} use async codegen.")
     end
 end
 
