@@ -1,8 +1,9 @@
 #pragma once
-#include "platform/configure.h"
+#include "misc/types.h"
 #ifdef __cplusplus
 #include "platform/thread.h"
-#include "misc/types.h"
+#include <containers/span.hpp>
+#include <containers/vector.hpp>
 
 extern "C" {
 #endif
@@ -30,6 +31,7 @@ typedef int32_t CrashTerminateCode;
 
 typedef struct SCrashHandler SCrashHandler;
 typedef struct SCrashContext {
+    CrashTerminateCode reason;
     void* usr_data;
     bool continue_execution;
 #ifdef _WIN32
@@ -37,7 +39,7 @@ typedef struct SCrashContext {
 #endif
 } SCrashContext;
 
-typedef int(*SProcCrashCallback)(struct SCrashContext* context);
+typedef int(*SProcCrashCallback)(struct SCrashContext* context, void* usr_data);
 
 typedef struct SCrashHandler* SCrashHandlerId;
 
@@ -59,11 +61,28 @@ typedef struct SCrashHandler {
     virtual bool SetThreadSignalHandlers() SKR_NOEXCEPT;
     virtual bool UnsetThreadSignalHandlers() SKR_NOEXCEPT;
 
+    struct CallbackWrapper
+    {
+        SProcCrashCallback callback;
+        void* usr_data;
+    };
+    template<typename F>
+    void visit_callbacks(F&& f) SKR_NOEXCEPT
+    {
+        SMutexLock _(callbacks_lock);
+        for (auto& cb : callbacks)
+        {
+            f(cb);
+        }
+    }
+    void add_callback(CallbackWrapper callback) SKR_NOEXCEPT;
+
 protected:
     virtual void terminateProcess(int32_t code = 1) SKR_NOEXCEPT;
 
     template<typename F>
     void handleFunction(F&& f, CrashTerminateCode code);
+    virtual SCrashContext* getCrashContext() SKR_NOEXCEPT { return nullptr; }
     
     int crashSetErrorMsg(const char8_t* pszErrorMsg) SKR_NOEXCEPT;
     void crashLock() SKR_NOEXCEPT { skr_mutex_acquire(&crash_lock); }
@@ -87,6 +106,9 @@ protected:
     void (__cdecl *prevSigSEGV)(int);  // Previous illegal storage access handler
 
     skr_guid_t guid;
+
+    skr::vector<CallbackWrapper> callbacks;
+    SMutex callbacks_lock;
 } SCrashHandler;
 
 template<typename F>
@@ -95,9 +117,7 @@ void SCrashHandler::handleFunction(F&& f, CrashTerminateCode code)
     auto& this_ = *skr_crash_handler_get();
     // Acquire lock to avoid other threads (if exist) to crash while we	are inside.
     this_.crashLock();
-
     f();
-
     // Terminate process
     if (!kContinue)
     {

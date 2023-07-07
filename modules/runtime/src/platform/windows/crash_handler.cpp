@@ -28,6 +28,11 @@ struct WinCrashHandler : public SCrashHandler
         TerminateProcess(GetCurrentProcess(), code);
     }
 
+    SCrashContext* getCrashContext() SKR_NOEXCEPT override
+    {
+        return nullptr;
+    }
+
 private:
     skr::string app_name;
     HANDLE dbghelp_dll = nullptr;
@@ -129,7 +134,12 @@ DWORD WINAPI WinCrashHandler::StackOverflowThreadFunction(LPVOID lpParameter) SK
     auto& this_ = windows_crash_handler;
 	PEXCEPTION_POINTERS pExceptionPtrs = reinterpret_cast<PEXCEPTION_POINTERS>(lpParameter);
 	this_.handleFunction([&](){
-        (void)pExceptionPtrs; // TODO: do something here...
+        this_.visit_callbacks([&](const CallbackWrapper& wrapper)
+        {
+            auto ctx = this_.getCrashContext();
+            ctx->exception_pointers = pExceptionPtrs;
+            wrapper.callback(ctx, wrapper.usr_data);
+        });
     }, kCrashCodeStackOverflow);
     return 0;
 }
@@ -138,7 +148,11 @@ void WINAPI WinCrashHandler::TerminateHandler() SKR_NOEXCEPT
 {
     auto& this_ = windows_crash_handler;
     this_.handleFunction([&](){
-        (void)this_; // TODO: do something here...
+        this_.visit_callbacks([&](const CallbackWrapper& wrapper)
+        {
+            auto ctx = this_.getCrashContext();
+            wrapper.callback(ctx, wrapper.usr_data);
+        });
     }, kCrashCodeTerminate);
 }
 
@@ -146,7 +160,11 @@ void WINAPI WinCrashHandler::UnexpectedHandler() SKR_NOEXCEPT
 {
     auto& this_ = windows_crash_handler;
     this_.handleFunction([&](){
-        (void)this_; // TODO: do something here...
+        this_.visit_callbacks([&](const CallbackWrapper& wrapper)
+        {
+            auto ctx = this_.getCrashContext();
+            wrapper.callback(ctx, wrapper.usr_data);
+        });
     }, kCrashCodeUnexpected);
 }
 
@@ -174,7 +192,12 @@ LONG WINAPI WinCrashHandler::SehHandler(PEXCEPTION_POINTERS pExceptionPtrs) SKR_
 		::CloseHandle(thread);
 
         this_.handleFunction([&](){
-            (void)pExceptionPtrs; // TODO: do something here...
+            this_.visit_callbacks([&](const CallbackWrapper& wrapper)
+            {
+                auto ctx = this_.getCrashContext();
+                ctx->exception_pointers = pExceptionPtrs;
+                wrapper.callback(ctx, wrapper.usr_data);
+            });
         }, kCrashCodeUnhandled);
 	}
 
@@ -186,7 +209,11 @@ void WINAPI WinCrashHandler::PureCallHandler() SKR_NOEXCEPT
 {
     auto& this_ = windows_crash_handler;
 	this_.handleFunction([&](){
-        (void)this_; // TODO: do something here...
+        this_.visit_callbacks([&](const CallbackWrapper& wrapper)
+        {
+            auto ctx = this_.getCrashContext();
+            wrapper.callback(ctx, wrapper.usr_data);
+        });
     }, kCrashCodePureVirtual);
 }
 
@@ -194,7 +221,11 @@ int WINAPI WinCrashHandler::NewHandler(size_t sz) SKR_NOEXCEPT
 {
     auto& this_ = windows_crash_handler;
     this_.handleFunction([&](){
-        (void)this_; // TODO: do something here...
+        this_.visit_callbacks([&](const CallbackWrapper& wrapper)
+        {
+            auto ctx = this_.getCrashContext();
+            wrapper.callback(ctx, wrapper.usr_data);
+        });
     }, kCrashCodeOpNewError);
     return 0;
 }
@@ -207,7 +238,11 @@ void WINAPI WinCrashHandler::InvalidParameterHandler(const wchar_t* expression, 
     (void)pReserved;
     auto& this_ = windows_crash_handler;
 	this_.handleFunction([&](){
-        (void)this_; // TODO: do something here...
+        this_.visit_callbacks([&](const CallbackWrapper& wrapper)
+        {
+            auto ctx = this_.getCrashContext();
+            wrapper.callback(ctx, wrapper.usr_data);
+        });
     }, kCrashCodeInvalidParam);
 }
 #endif

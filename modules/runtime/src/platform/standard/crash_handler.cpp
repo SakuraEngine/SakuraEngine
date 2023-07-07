@@ -31,6 +31,7 @@ bool SCrashHandler::Initialize() SKR_NOEXCEPT
 
     skr_make_guid(&guid);
     skr_init_mutex_recursive(&crash_lock);
+    skr_init_mutex_recursive(&callbacks_lock);
     // set process exception handlers 
     if (bool phdls = SetProcessSignalHandlers(); !phdls)
     {
@@ -50,6 +51,9 @@ bool SCrashHandler::Finalize() SKR_NOEXCEPT
 {
     UnsetProcessSignalHandlers();
     UnsetThreadSignalHandlers();
+
+    skr_destroy_mutex(&callbacks_lock);
+    skr_destroy_mutex(&crash_lock);
     return true;
 }
 
@@ -57,7 +61,11 @@ void SCrashHandler::SigabrtHandler(int code)
 {
     auto& this_ = *skr_crash_handler_get();
 	this_.handleFunction([&](){
-        (void)code; // TODO: do something here...
+        this_.visit_callbacks([&](const CallbackWrapper& wrapper)
+        {
+            auto ctx = this_.getCrashContext();
+            wrapper.callback(ctx, wrapper.usr_data);
+        });
     }, kCrashCodeAbort);
 }
 
@@ -65,7 +73,11 @@ void SCrashHandler::SigintHandler(int code)
 {
     auto& this_ = *skr_crash_handler_get();
 	this_.handleFunction([&](){
-        (void)code; // TODO: do something here...
+        this_.visit_callbacks([&](const CallbackWrapper& wrapper)
+        {
+            auto ctx = this_.getCrashContext();
+            wrapper.callback(ctx, wrapper.usr_data);
+        });
     }, kCrashCodeInterrupt);
 }
 
@@ -73,7 +85,11 @@ void SCrashHandler::SigtermHandler(int code)
 {
     auto& this_ = *skr_crash_handler_get();
 	this_.handleFunction([&](){
-        (void)code; // TODO: do something here...
+        this_.visit_callbacks([&](const CallbackWrapper& wrapper)
+        {
+            auto ctx = this_.getCrashContext();
+            wrapper.callback(ctx, wrapper.usr_data);
+        });
     }, kCrashCodeKill);
 }
 
@@ -81,7 +97,11 @@ void SCrashHandler::SigfpeHandler(int code, int subcode)
 {
     auto& this_ = *skr_crash_handler_get();
 	this_.handleFunction([&](){
-        (void)code; // TODO: do something here...
+        this_.visit_callbacks([&](const CallbackWrapper& wrapper)
+        {
+            auto ctx = this_.getCrashContext();
+            wrapper.callback(ctx, wrapper.usr_data);
+        });
     }, kCrashCodeDividedByZero);
 }
 
@@ -89,7 +109,11 @@ void SCrashHandler::SigillHandler(int code)
 {
     auto& this_ = *skr_crash_handler_get();
 	this_.handleFunction([&](){
-        (void)code; // TODO: do something here...
+        this_.visit_callbacks([&](const CallbackWrapper& wrapper)
+        {
+            auto ctx = this_.getCrashContext();
+            wrapper.callback(ctx, wrapper.usr_data);
+        });
     }, kCrashCodeIllInstruction);
 }
 
@@ -97,7 +121,11 @@ void SCrashHandler::SigsegvHandler(int code)
 {
     auto& this_ = *skr_crash_handler_get();
 	this_.handleFunction([&](){
-        (void)code; // TODO: do something here...
+        this_.visit_callbacks([&](const CallbackWrapper& wrapper)
+        {
+            auto ctx = this_.getCrashContext();
+            wrapper.callback(ctx, wrapper.usr_data);
+        });
     }, kCrashCodeSegFault);
 }
 
@@ -140,12 +168,18 @@ bool SCrashHandler::UnsetThreadSignalHandlers() SKR_NOEXCEPT
     return true;
 }
 
+void SCrashHandler::add_callback(SCrashHandler::CallbackWrapper callback) SKR_NOEXCEPT
+{
+    SMutexLock _(callbacks_lock);
+    callbacks.emplace_back(callback);
+}
+
 extern "C"
 {
 
 RUNTIME_API void skr_crash_handler_add_callback(SCrashHandlerId handler, SProcCrashCallback callback, void* usr_data) SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
+    return handler->add_callback({ callback, usr_data });
 }
 
 }
