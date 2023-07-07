@@ -41,6 +41,7 @@ void SkrNativeDevice::init()
     }
 
     // TODO. total data
+    // _display_metrics.primary_display_area = _display_metrics.monitors[0].work_area;
 }
 void SkrNativeDevice::shutdown()
 {

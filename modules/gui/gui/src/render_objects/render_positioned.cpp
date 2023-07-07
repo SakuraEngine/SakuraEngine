@@ -7,7 +7,7 @@ float RenderPositioned::compute_min_intrinsic_width(float height) const SKR_NOEX
 {
     if (positional().is_width_padding())
     {
-        const float width_padding = positional().resolve_padding_width(0);
+        const float width_padding  = positional().resolve_padding_width(0);
         const float height_padding = positional().resolve_padding_width(height);
 
         return child() ? child()->get_min_intrinsic_width(std::max(0.f, height - height_padding)) + width_padding : width_padding;
@@ -21,7 +21,7 @@ float RenderPositioned::compute_max_intrinsic_width(float height) const SKR_NOEX
 {
     if (positional().is_width_padding())
     {
-        const float width_padding = positional().resolve_padding_width(0);
+        const float width_padding  = positional().resolve_padding_width(0);
         const float height_padding = positional().resolve_padding_width(height);
 
         return child() ? child()->get_max_intrinsic_width(std::max(0.f, height - height_padding)) + width_padding : width_padding;
@@ -35,7 +35,7 @@ float RenderPositioned::compute_min_intrinsic_height(float width) const SKR_NOEX
 {
     if (positional().is_height_padding())
     {
-        const float width_padding = positional().resolve_padding_width(width);
+        const float width_padding  = positional().resolve_padding_width(width);
         const float height_padding = positional().resolve_padding_width(0);
 
         return child() ? child()->get_min_intrinsic_height(std::max(0.f, width - width_padding)) + height_padding : height_padding;
@@ -49,7 +49,7 @@ float RenderPositioned::compute_max_intrinsic_height(float width) const SKR_NOEX
 {
     if (positional().is_height_padding())
     {
-        const float width_padding = positional().resolve_padding_width(width);
+        const float width_padding  = positional().resolve_padding_width(width);
         const float height_padding = positional().resolve_padding_width(0);
 
         return child() ? child()->get_max_intrinsic_height(std::max(0.f, width - width_padding)) + height_padding : height_padding;
@@ -66,7 +66,7 @@ Sizef RenderPositioned::compute_dry_layout(BoxConstraints constraints) const SKR
     if (child())
     {
         BoxConstraints child_constraints = positional().resolve_constraints(constraints);
-        Sizef          child_size = child()->get_dry_layout(child_constraints);
+        Sizef          child_size        = child()->get_dry_layout(child_constraints);
         Sizef          parent_size;
 
         // calc horizontal
@@ -98,7 +98,7 @@ Sizef RenderPositioned::compute_dry_layout(BoxConstraints constraints) const SKR
         // calc horizontal
         if (positional().is_width_padding())
         {
-            float left_padding = positional().left.resolve(constraints.min_width);
+            float left_padding  = positional().left.resolve(constraints.min_width);
             float right_padding = positional().right.resolve(constraints.min_width);
 
             width = left_padding + right_padding;
@@ -111,7 +111,7 @@ Sizef RenderPositioned::compute_dry_layout(BoxConstraints constraints) const SKR
         // calc vertical
         if (positional().is_height_padding())
         {
-            float top_padding = positional().top.resolve(constraints.min_height);
+            float top_padding    = positional().top.resolve(constraints.min_height);
             float bottom_padding = positional().bottom.resolve(constraints.min_height);
 
             height = top_padding + bottom_padding;
@@ -157,8 +157,9 @@ void RenderPositioned::perform_layout() SKR_NOEXCEPT
             parent_size.height = shrink_wrap_height() ? child_size.height * (_height_factor ? _height_factor.get() : 1) : std::numeric_limits<float>::infinity();
         }
 
-        set_size(constraints().constrain(parent_size));
-        set_offset(positional().resolve_offset(parent_size, child_size));
+        parent_size = constraints().constrain(parent_size);
+        set_size(parent_size);
+        set_offset(positional().resolve_offset(child_size, parent_size));
     }
     else
     {
@@ -167,30 +168,30 @@ void RenderPositioned::perform_layout() SKR_NOEXCEPT
         // calc horizontal
         if (positional().is_width_padding())
         {
-            float left_padding = positional().left.resolve(constraints().min_width);
+            float left_padding  = positional().left.resolve(constraints().min_width);
             float right_padding = positional().right.resolve(constraints().min_width);
 
-            width = left_padding + right_padding;
+            width    = left_padding + right_padding;
             offset_x = left_padding;
         }
         else
         {
-            width = shrink_wrap_width() ? 0.0 : std::numeric_limits<float>::infinity();
+            width    = shrink_wrap_width() ? 0.0 : std::numeric_limits<float>::infinity();
             offset_x = 0.0;
         }
 
         // calc vertical
         if (positional().is_height_padding())
         {
-            float top_padding = positional().top.resolve(constraints().min_height);
+            float top_padding    = positional().top.resolve(constraints().min_height);
             float bottom_padding = positional().bottom.resolve(constraints().min_height);
 
-            height = top_padding + bottom_padding;
+            height   = top_padding + bottom_padding;
             offset_y = top_padding;
         }
         else
         {
-            height = shrink_wrap_height() ? 0.0 : std::numeric_limits<float>::infinity();
+            height   = shrink_wrap_height() ? 0.0 : std::numeric_limits<float>::infinity();
             offset_y = 0.0;
         }
 

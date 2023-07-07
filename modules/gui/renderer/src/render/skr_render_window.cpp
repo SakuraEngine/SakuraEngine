@@ -8,6 +8,7 @@
 #include "SkrGui/backend/resource/resource.hpp"
 #include "SkrGuiRenderer/resource/skr_updatable_image.hpp"
 #include "misc/make_zeroed.hpp"
+#include "SkrGui/framework/layer/native_window_layer.hpp"
 
 namespace skr::gui
 {
@@ -90,7 +91,7 @@ void SkrRenderWindow::sync_window_size()
     _cgpu_swapchain                    = cgpu_create_swapchain(device, &chain_desc);
 }
 
-void SkrRenderWindow::render(const Layer* layer, Sizef window_size)
+void SkrRenderWindow::render(const NativeWindowLayer* layer, Sizef window_size)
 {
     // step1. prepare draw data
     _prepare_draw_data(layer, window_size);
@@ -112,7 +113,7 @@ void SkrRenderWindow::present()
     cgpu_queue_present(_owner->cgpu_queue(), &present_desc);
 }
 
-void SkrRenderWindow::_prepare_draw_data(const Layer* layer, Sizef window_size)
+void SkrRenderWindow::_prepare_draw_data(const NativeWindowLayer* layer, Sizef window_size)
 {
     // cleanup data
     _vertices.clear();
@@ -120,7 +121,7 @@ void SkrRenderWindow::_prepare_draw_data(const Layer* layer, Sizef window_size)
     _commands.clear();
 
     // copy data
-    auto canvas = SKR_GUI_CAST<GeometryLayer>(layer)->canvas();
+    auto canvas = layer->children().data()[0]->type_cast_fast<GeometryLayer>()->canvas();
     _vertices.assign(canvas->vertices().begin(), canvas->vertices().end());
     _indices.assign(canvas->indices().begin(), canvas->indices().end());
     for (const auto& cmd : canvas->commands())
@@ -128,7 +129,7 @@ void SkrRenderWindow::_prepare_draw_data(const Layer* layer, Sizef window_size)
         // copy command
         DrawCommand draw_cmd     = {};
         draw_cmd.texture         = cmd.texture;
-        draw_cmd.index_count     = cmd.index_count;
+        draw_cmd.index_begin     = cmd.index_begin;
         draw_cmd.index_count     = cmd.index_count;
         draw_cmd.texture_swizzle = cmd.texture_swizzle;
 
@@ -405,7 +406,7 @@ void SkrRenderWindow::_render()
                                         0, 0,
                                         target_desc->width, target_desc->height);
 
-        SkrPipelineKey pipeline_key_cache = { ESkrPipelineFlag_None, CGPU_SAMPLE_COUNT_1 };
+        SkrPipelineKey pipeline_key_cache = { ESkrPipelineFlag::__Count, CGPU_SAMPLE_COUNT_1 };
 
         for (const auto& cmd : _commands)
         {

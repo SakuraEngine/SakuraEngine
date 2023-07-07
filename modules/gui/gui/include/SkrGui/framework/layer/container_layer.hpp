@@ -12,6 +12,8 @@ struct ContainerLayer : public Layer {
     bool has_children() const SKR_NOEXCEPT;
     void remove_all_children() SKR_NOEXCEPT;
 
+    inline Span<Layer* const> children() const SKR_NOEXCEPT { return { _children.data(), _children.size() }; }
+
 private:
     Array<Layer*> _children;
 };

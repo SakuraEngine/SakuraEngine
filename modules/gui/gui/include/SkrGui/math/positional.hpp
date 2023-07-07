@@ -5,7 +5,7 @@
 namespace skr::gui
 {
 struct PositionalUnit {
-    float pixel = 0;
+    float pixel   = 0;
     float percent = 0;
 
 private:
@@ -37,7 +37,7 @@ public:
     inline constexpr bool operator!=(std::nullptr_t) const SKR_NOEXCEPT { return has_value(); }
     inline constexpr bool operator==(const PositionalUnit& rhs) const SKR_NOEXCEPT
     {
-        return (is_null() == rhs.is_null()) || (pixel == rhs.pixel && percent == rhs.percent);
+        return (is_null() && rhs.is_null()) || (has_value() && rhs.has_value() && pixel == rhs.pixel && percent == rhs.percent);
     }
     inline constexpr bool operator!=(const PositionalUnit& rhs) const SKR_NOEXCEPT { return !(*this == rhs); }
 
@@ -98,7 +98,7 @@ public:
     inline float inflate(float child_value) const SKR_NOEXCEPT
     {
         if (is_null()) { SKR_GUI_LOG_ERROR("can't inflate from a null value"); }
-        float child_pct = 1 - percent;
+        float child_pct   = 1 - percent;
         float inner_value = child_value + pixel;
         return child_pct <= 0 ? std::numeric_limits<float>::infinity() : inner_value / child_pct;
     }
@@ -115,14 +115,14 @@ inline constexpr PositionalUnit operator""_pct(unsigned long long value) SKR_NOE
 // 布局定位 + 约束
 struct Positional {
     // 约束定位 or 锚点定位
-    PositionalUnit left = PositionalUnit::null();   // constraints offset (both min and max)
-    PositionalUnit top = PositionalUnit::null();    // constraints offset (both min and max)
-    PositionalUnit right = PositionalUnit::null();  // constraints offset (both min and max)
+    PositionalUnit left   = PositionalUnit::null(); // constraints offset (both min and max)
+    PositionalUnit top    = PositionalUnit::null(); // constraints offset (both min and max)
+    PositionalUnit right  = PositionalUnit::null(); // constraints offset (both min and max)
     PositionalUnit bottom = PositionalUnit::null(); // constraints offset (both min and max)
 
     // 锚点定位中使用的尺寸约束
-    PositionalUnit min_width = PositionalUnit::null();  // min width constraints override(px) or scale(pct)
-    PositionalUnit max_width = PositionalUnit::null();  // max width constraints override(px) or scale(pct)
+    PositionalUnit min_width  = PositionalUnit::null(); // min width constraints override(px) or scale(pct)
+    PositionalUnit max_width  = PositionalUnit::null(); // max width constraints override(px) or scale(pct)
     PositionalUnit min_height = PositionalUnit::null(); // min height constraints override(px) or scale(pct)
     PositionalUnit max_height = PositionalUnit::null(); // max height constraints override(px) of scale(pct)
 
@@ -231,10 +231,10 @@ struct Positional {
             : _positional(positional)
         {
         }
-        PaddingBuilder(const PaddingBuilder&) = delete;
-        PaddingBuilder(PaddingBuilder&&) = delete;
+        PaddingBuilder(const PaddingBuilder&)            = delete;
+        PaddingBuilder(PaddingBuilder&&)                 = delete;
         PaddingBuilder& operator=(const PaddingBuilder&) = delete;
-        PaddingBuilder& operator=(PaddingBuilder&&) = delete;
+        PaddingBuilder& operator=(PaddingBuilder&&)      = delete;
 
         Positional& _positional;
     };
@@ -257,8 +257,8 @@ struct Positional {
         }
         inline constexpr AnchorBuilder& loose(PositionalUnit width, PositionalUnit height) SKR_NOEXCEPT
         {
-            _positional.min_width = 0;
-            _positional.max_width = width;
+            _positional.min_width  = 0;
+            _positional.max_width  = width;
             _positional.min_height = 0;
             _positional.max_height = height;
             return *this;
@@ -340,10 +340,10 @@ struct Positional {
             : _positional(positional)
         {
         }
-        AnchorBuilder(const AnchorBuilder&) = delete;
-        AnchorBuilder(AnchorBuilder&&) = delete;
+        AnchorBuilder(const AnchorBuilder&)            = delete;
+        AnchorBuilder(AnchorBuilder&&)                 = delete;
         AnchorBuilder& operator=(const AnchorBuilder&) = delete;
-        AnchorBuilder& operator=(AnchorBuilder&&) = delete;
+        AnchorBuilder& operator=(AnchorBuilder&&)      = delete;
 
         Positional& _positional;
     };
@@ -370,8 +370,8 @@ struct Positional {
         }
         inline constexpr AlignBuilder& loose(PositionalUnit width, PositionalUnit height) SKR_NOEXCEPT
         {
-            _positional.min_width = 0;
-            _positional.max_width = width;
+            _positional.min_width  = 0;
+            _positional.max_width  = width;
             _positional.min_height = 0;
             _positional.max_height = height;
             return *this;
@@ -450,31 +450,31 @@ struct Positional {
     inline constexpr AnchorBuilder  anchor_LT(PositionalUnit l, PositionalUnit t) SKR_NOEXCEPT
     {
         left = l;
-        top = t;
+        top  = t;
         return AnchorBuilder(*this);
     }
     inline constexpr AnchorBuilder anchor_RT(PositionalUnit r, PositionalUnit t) SKR_NOEXCEPT
     {
         right = r;
-        top = t;
+        top   = t;
         return AnchorBuilder(*this);
     }
     inline constexpr AnchorBuilder anchor_LB(PositionalUnit l, PositionalUnit b) SKR_NOEXCEPT
     {
-        left = l;
+        left   = l;
         bottom = b;
         return AnchorBuilder(*this);
     }
     inline constexpr AnchorBuilder anchor_RB(PositionalUnit r, PositionalUnit b) SKR_NOEXCEPT
     {
-        right = r;
+        right  = r;
         bottom = b;
         return AnchorBuilder(*this);
     }
     inline constexpr AlignBuilder align(Alignment align_point) SKR_NOEXCEPT
     {
-        left = PositionalUnit::pct(align_point.x);
-        top = PositionalUnit::pct(align_point.y);
+        left  = PositionalUnit::pct(align_point.x);
+        top   = PositionalUnit::pct(align_point.y);
         pivot = align_point;
         return AlignBuilder(*this);
     }
@@ -573,12 +573,12 @@ struct Positional {
             {
                 SKR_GUI_LOG_WARN("Both left and right are set, width will be ignored");
             }
-            const float left_padding_min = left.resolve(parent_constraints.min_width);
-            const float left_padding_max = left.resolve(parent_constraints.max_width);
+            const float left_padding_min  = left.resolve(parent_constraints.min_width);
+            const float left_padding_max  = left.resolve(parent_constraints.max_width);
             const float right_padding_min = right.resolve(parent_constraints.min_width);
             const float right_padding_max = right.resolve(parent_constraints.max_width);
-            result.min_width = std::max(0.f, parent_constraints.min_width - left_padding_min - right_padding_min);
-            result.max_width = std::max(result.min_width, parent_constraints.max_width - left_padding_max - right_padding_max);
+            result.min_width              = std::max(0.f, parent_constraints.min_width - left_padding_min - right_padding_min);
+            result.max_width              = std::max(result.min_width, parent_constraints.max_width - left_padding_max - right_padding_max);
         }
         else
         {
@@ -599,12 +599,12 @@ struct Positional {
             {
                 SKR_GUI_LOG_WARN("Both top and bottom are set, height will be ignored");
             }
-            const float top_padding_min = top.resolve(parent_constraints.min_height);
-            const float top_padding_max = top.resolve(parent_constraints.max_height);
+            const float top_padding_min    = top.resolve(parent_constraints.min_height);
+            const float top_padding_max    = top.resolve(parent_constraints.max_height);
             const float bottom_padding_min = bottom.resolve(parent_constraints.min_height);
             const float bottom_padding_max = bottom.resolve(parent_constraints.max_height);
-            result.min_height = std::max(0.f, parent_constraints.min_height - top_padding_min - bottom_padding_min);
-            result.max_height = std::max(result.min_height, parent_constraints.max_height - top_padding_max - bottom_padding_max);
+            result.min_height              = std::max(0.f, parent_constraints.min_height - top_padding_min - bottom_padding_min);
+            result.max_height              = std::max(result.min_height, parent_constraints.max_height - top_padding_max - bottom_padding_max);
         }
         else
         {
@@ -634,21 +634,21 @@ struct Positional {
             if (left)
             {
                 const float anchor_x = left.resolve(parent_size.width);
-                const float pivot_x = pivot.x * child_size.width;
-                offset_x = anchor_x - pivot_x;
+                const float pivot_x  = pivot.x * child_size.width;
+                offset_x             = anchor_x - pivot_x;
             }
             else if (right)
             {
                 const float anchor_x = right.resolve(parent_size.width);
-                const float pivot_x = (1 - pivot.x) * child_size.width;
-                offset_x = parent_size.width - anchor_x - pivot_x;
+                const float pivot_x  = (1 - pivot.x) * child_size.width;
+                offset_x             = parent_size.width - anchor_x - pivot_x;
             }
             else
             {
                 SKR_GUI_LOG_WARN("Both left and right are not set, default to left 0");
                 const float anchor_x = 0;
-                const float pivot_x = pivot.x * child_size.width;
-                offset_x = anchor_x - pivot_x;
+                const float pivot_x  = pivot.x * child_size.width;
+                offset_x             = anchor_x - pivot_x;
             }
         }
 
@@ -662,21 +662,21 @@ struct Positional {
             if (top)
             {
                 const float anchor_y = top.resolve(parent_size.height);
-                const float pivot_y = pivot.y * child_size.height;
-                offset_y = anchor_y - pivot_y;
+                const float pivot_y  = pivot.y * child_size.height;
+                offset_y             = anchor_y - pivot_y;
             }
             else if (bottom)
             {
                 const float anchor_y = bottom.resolve(parent_size.height);
-                const float pivot_y = (1 - pivot.y) * child_size.height;
-                offset_y = parent_size.height - anchor_y - pivot_y;
+                const float pivot_y  = (1 - pivot.y) * child_size.height;
+                offset_y             = parent_size.height - anchor_y - pivot_y;
             }
             else
             {
                 SKR_GUI_LOG_WARN("Both top and bottom are not set, default to top 0");
                 const float anchor_y = 0;
-                const float pivot_y = pivot.y * child_size.height;
-                offset_y = anchor_y - pivot_y;
+                const float pivot_y  = pivot.y * child_size.height;
+                offset_y             = anchor_y - pivot_y;
             }
         }
 

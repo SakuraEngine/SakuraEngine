@@ -26,6 +26,11 @@ public:
     // paint
     void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
 
+    // setter
+    void set_stack_alignment(Alignment alignment) SKR_NOEXCEPT;
+    void set_child_fit(EPositionalFit fit) SKR_NOEXCEPT;
+    void set_stack_size(EStackSize size) SKR_NOEXCEPT;
+
     struct SlotData {
         Offsetf offset = Offsetf::Zero();
     };
@@ -33,8 +38,8 @@ public:
 private:
     friend struct _StackHelper;
     Alignment      _stack_alignment = Alignment::TopLeft();
-    EPositionalFit _child_fit = EPositionalFit::PassThrough;
-    EStackSize     _stack_size = EStackSize::Shrink;
+    EPositionalFit _child_fit       = EPositionalFit::PassThrough;
+    EStackSize     _stack_size      = EStackSize::Shrink;
 
     // MIXIN
     MULTI_CHILD_RENDER_OBJECT_MIX_IN(RenderStack, RenderBox, SlotData)

@@ -22,6 +22,7 @@ struct SKR_GUI_API Layer SKR_GUI_OBJECT_BASE {
     // dirty
     void        mark_needs_composite() SKR_NOEXCEPT;
     inline bool needs_composite() const SKR_NOEXCEPT { return _needs_composite; }
+    inline void cancel_needs_composite() SKR_NOEXCEPT { _needs_composite = false; }
 
     // getter
     inline Layer*         parent() const SKR_NOEXCEPT { return _parent; }
@@ -35,6 +36,6 @@ private:
     int32_t        _depth  = 0;
 
     // dirty
-    bool _needs_composite = false;
+    bool _needs_composite = true;
 };
 } // namespace skr::gui

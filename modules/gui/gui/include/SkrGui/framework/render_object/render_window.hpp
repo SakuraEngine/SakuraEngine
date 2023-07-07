@@ -12,6 +12,7 @@ struct SKR_GUI_API RenderWindow : public RenderObject, public ISingleChildRender
     RenderWindow(IWindow* window);
 
     void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
+    void perform_layout() SKR_NOEXCEPT override;
 
     NotNull<OffsetLayer*> update_layer(OffsetLayer* old_layer) override;
 

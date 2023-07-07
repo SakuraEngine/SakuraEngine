@@ -33,7 +33,9 @@ void SkrNativeWindow::init_normal(const WindowDesc& desc)
     create_desc.posx   = desc.pos.x;
     create_desc.posy   = desc.pos.y;
     create_desc.flags  = SKR_WINDOW_RESIZABLE;
-    skr_create_window(desc.name.u8_str(), &create_desc);
+    _window            = skr_create_window(desc.name.u8_str(), &create_desc);
+
+    _render_window = _device->render_device()->create_window(_window);
 }
 void SkrNativeWindow::init_popup(const WindowDesc& desc)
 {
@@ -51,33 +53,27 @@ void SkrNativeWindow::init_tooltip(const WindowDesc& desc)
 // absolute/relative coordinate
 Offsetf SkrNativeWindow::to_absolute(const Offsetf& relative_to_view) SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return {};
+    return relative_to_view + this->absolute_pos();
 }
 Rectf SkrNativeWindow::to_absolute(const Rectf& relative_to_view) SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return {};
+    return relative_to_view;
 }
 Sizef SkrNativeWindow::to_absolute(const Sizef& relative_to_view) SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return {};
+    return relative_to_view;
 }
 Offsetf SkrNativeWindow::to_relative(const Offsetf& absolute) SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return {};
+    return absolute - this->absolute_pos();
 }
 Rectf SkrNativeWindow::to_relative(const Rectf& absolute) SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return {};
+    return absolute;
 }
 Sizef SkrNativeWindow::to_relative(const Sizef& absolute) SKR_NOEXCEPT
 {
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return {};
+    return absolute;
 }
 
 // info

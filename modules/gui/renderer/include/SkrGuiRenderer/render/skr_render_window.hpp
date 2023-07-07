@@ -10,18 +10,18 @@
 namespace skr::gui
 {
 struct SkrRenderDevice;
-struct Layer;
+struct NativeWindowLayer;
 
 struct SKR_GUI_RENDERER_API SkrRenderWindow final {
     SkrRenderWindow(SkrRenderDevice* owner, SWindowHandle window);
     ~SkrRenderWindow();
 
     void sync_window_size();
-    void render(const Layer* layer, Sizef window_size);
+    void render(const NativeWindowLayer* layer, Sizef window_size);
     void present();
 
 private:
-    void _prepare_draw_data(const Layer* layer, Sizef window_size);
+    void _prepare_draw_data(const NativeWindowLayer* layer, Sizef window_size);
     void _upload_draw_data();
     // void _update_textures(); handled by SkrRenderDevice
     void _declare_render_resources();

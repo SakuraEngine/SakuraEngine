@@ -43,38 +43,38 @@ int main(void)
             };
             SNewChild(p.children, Positioned)
             {
-                p.positional.fill();
-                p.child = SNewWidget(ColorPicker){};
-            };
-            SNewChild(p.children, Positioned)
-            {
-                p.positional.anchor_LT(0, 0).sized(400, 400).pivot({ 0.5, 0 });
+                p.positional.anchor_LT(0.5_pct, 0).sized(400, 400).pivot({ 0.5, 0 });
                 p.child = SNewWidget(Flex)
                 {
                     p.cross_axis_alignment = ECrossAxisAlignment::Start;
                     p.main_axis_alignment  = EMainAxisAlignment::Center;
                     SNewChild(p.children, SizedBox)
                     {
-                        p.size = { 100, 300 };
-                        SNewWidget(ColoredBox) { p.color = Color::SRGB("#F00"); };
+                        p.size  = { 100, 300 };
+                        p.child = SNewWidget(ColoredBox) { p.color = Color::Linear("#F00"); };
                     };
                     SNewChild(p.children, SizedBox)
                     {
-                        p.size = { 100, 200 };
-                        SNewWidget(ColoredBox) { p.color = Color::SRGB("#0F0"); };
+                        p.size  = { 100, 200 };
+                        p.child = SNewWidget(ColoredBox) { p.color = Color::Linear("#0F0"); };
                     };
                     SNewChild(p.children, SizedBox)
                     {
-                        p.size = { 100, 400 };
-                        SNewWidget(ColoredBox) { p.color = Color::SRGB("#00F"); };
+                        p.size  = { 100, 400 };
+                        p.child = SNewWidget(ColoredBox) { p.color = Color::Linear("#00F"); };
                     };
                 };
             };
-            SNewChild(p.children, Positioned)
-            {
-                p.positional.anchor_LT(0.5_pct, 10_px).pivot({ 0.5, 0 });
-                p.child = SNewWidget(Text) { p.text = u8"Hello World!"; };
-            };
+            // SNewChild(p.children, Positioned)
+            // {
+            //     p.positional.fill();
+            //     p.child = SNewWidget(ColorPicker){};
+            // };
+            // SNewChild(p.children, Positioned)
+            // {
+            //     p.positional.anchor_LT(0.5_pct, 10_px).pivot({ 0.5, 0 });
+            //     p.child = SNewWidget(Text) { p.text = u8"Hello World!"; };
+            // };
         };
         sandbox->set_content(skr::make_not_null(widget));
     }
@@ -83,8 +83,7 @@ int main(void)
     {
         WindowDesc desc = {};
         desc.size       = { 600, 600 };
-        desc.anchor     = Alignment::Center();
-        desc.pos        = device->display_metrics().primary_work_area.center();
+        desc.pos        = { 300, 300 };
         desc.name       = u8"SkrGUI Sandbox";
         sandbox->show(desc);
     }
@@ -109,7 +108,6 @@ int main(void)
             sandbox->compose();
         }
         {
-            // TODO. call render
             device->render_all_windows();
         }
     }

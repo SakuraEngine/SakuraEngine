@@ -5,7 +5,9 @@ namespace skr::gui
 {
 NotNull<RenderObject*> ColoredBox::create_render_object() SKR_NOEXCEPT
 {
-    return make_not_null(SkrNew<RenderColoredBox>());
+    auto result = make_not_null(SkrNew<RenderColoredBox>());
+    result->set_color(color);
+    return result;
 }
 void ColoredBox::update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT
 {

@@ -26,9 +26,15 @@ public:
     // paint
     void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
 
+    // setter
+    void set_flex_direction(EFlexDirection value) SKR_NOEXCEPT;
+    void set_main_axis_alignment(EMainAxisAlignment value) SKR_NOEXCEPT;
+    void set_cross_axis_alignment(ECrossAxisAlignment value) SKR_NOEXCEPT;
+    void set_main_axis_size(EMainAxisSize value) SKR_NOEXCEPT;
+
     struct SlotData {
         // slot data
-        float    flex = 1;
+        float    flex     = 1;
         EFlexFit flex_fit = EFlexFit::Loose;
 
         // child data
@@ -37,10 +43,10 @@ public:
 
 private:
     friend struct _FlexHelper;
-    EFlexDirection      _flex_direction = EFlexDirection::Row;
-    EMainAxisAlignment  _main_axis_alignment = EMainAxisAlignment::Start;
+    EFlexDirection      _flex_direction       = EFlexDirection::Row;
+    EMainAxisAlignment  _main_axis_alignment  = EMainAxisAlignment::Start;
     ECrossAxisAlignment _cross_axis_alignment = ECrossAxisAlignment::Start;
-    EMainAxisSize       _main_axis_size = EMainAxisSize::Max;
+    EMainAxisSize       _main_axis_size       = EMainAxisSize::Max;
 
     float _overflow = 0.0f;
 

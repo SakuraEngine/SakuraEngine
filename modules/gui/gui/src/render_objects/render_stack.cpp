@@ -26,13 +26,13 @@ struct _StackHelper {
         if (self._stack_size == EStackSize::Expand) return constraints.biggest();
 
         BoxConstraints fit_constraints = _fit_constraints(self, constraints);
-        float          width = constraints.min_width;
-        float          height = constraints.min_height;
+        float          width           = constraints.min_width;
+        float          height          = constraints.min_height;
         for (const auto& slot : self.children())
         {
             Sizef child_size = layout_func(slot.child, fit_constraints);
-            width = std::max(width, child_size.width);
-            height = std::max(height, child_size.height);
+            width            = std::max(width, child_size.width);
+            height           = std::max(height, child_size.height);
         }
         return { width, height };
     }
@@ -123,6 +123,32 @@ void RenderStack::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_N
         {
             SKR_GUI_LOG_ERROR("RenderFlex::paint: child is nullptr.");
         }
+    }
+}
+
+// setter
+void RenderStack::set_stack_alignment(Alignment alignment) SKR_NOEXCEPT
+{
+    if (_stack_alignment != alignment)
+    {
+        _stack_alignment = alignment;
+        mark_needs_layout();
+    }
+}
+void RenderStack::set_child_fit(EPositionalFit fit) SKR_NOEXCEPT
+{
+    if (_child_fit != fit)
+    {
+        _child_fit = fit;
+        mark_needs_layout();
+    }
+}
+void RenderStack::set_stack_size(EStackSize size) SKR_NOEXCEPT
+{
+    if (_stack_size != size)
+    {
+        _stack_size = size;
+        mark_needs_layout();
     }
 }
 } // namespace skr::gui
