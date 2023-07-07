@@ -7,6 +7,10 @@ namespace skr::gui
 struct IWindow;
 struct ICanvas;
 struct DisplayMetrics;
+struct IUpdatableImage;
+struct IResource;
+struct UpdatableImageDesc;
+struct IParagraph;
 
 // Device/DeviceView 均通过 View/RenderView 注入到上下文中
 // View 代理可以通过创建自己的 View/RenderView 来覆写 BuildOwner/PipelineOwner
@@ -39,15 +43,29 @@ struct SKR_GUI_API IDevice SKR_GUI_INTERFACE_BASE {
     // TODO. input
 };
 
+// 对于一般 APP 来说 native device 是全局唯一的， 但是对于游戏来说，3D UI、离屏的 RT UI 都可以持有一个模拟的 NativeDevice
+// 所以框架并不对此做出任何限制，框架通过 Owner 追溯到顶层 NativeWindow 并通过 NativeWindow 追溯到 NativeDevice
+// 以这样的路径来获取各种资源，这样的设计可以让框架更加灵活，但是也会带来一些问题，即生命周期的管理被转移到了使用方
+//
+// 对使用方来说，无论如何，都有唯一且确定的 NativeDevice 贯穿整个 APP 的生命周期
+// 使用方需要思考这些问题，并将某些 API 转发到这个全局唯一的 NativeDevice 上，而不是另外处理
 struct SKR_GUI_API INativeDevice : public IDevice {
     SKR_GUI_INTERFACE(INativeDevice, "209fefb2-b6dc-4035-ba71-9b5a7fc147d0", IDevice)
 
     // display info
     virtual const DisplayMetrics& display_metrics() const = 0;
 
-    // TODO. resource management
+    // resource management
+    virtual NotNull<IUpdatableImage*> create_updatable_image(const UpdatableImageDesc& desc) = 0;
+    virtual void                      destroy_resource(NotNull<IResource*> resource)         = 0;
 
-    // 或许 Canvas 与 Text 的管理也完全可以放在此处
+    // canvas management
+    virtual NotNull<ICanvas*> create_canvas()                          = 0;
+    virtual void              destroy_canvas(NotNull<ICanvas*> canvas) = 0;
+
+    // text management
+    virtual NotNull<IParagraph*> create_paragraph()                                = 0;
+    virtual void                 destroy_paragraph(NotNull<IParagraph*> paragraph) = 0;
 };
 
 } // namespace skr::gui

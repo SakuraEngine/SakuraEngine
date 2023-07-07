@@ -80,6 +80,8 @@ struct SKR_GUI_API IWindow SKR_GUI_INTERFACE_BASE {
 
     // rendering
     virtual void update_content(WindowLayer* root_layer) SKR_NOEXCEPT = 0;
+
+    // TODO. window call back
 };
 
 struct SKR_GUI_API INativeWindow : public IWindow {

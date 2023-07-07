@@ -1,6 +1,6 @@
 #include "SkrGuiRenderer/device/skr_native_device.hpp"
 #include "SkrGuiRenderer/render/skr_render_device.hpp"
-#include "SkrGuiRenderer/resource/skr_resource_service.hpp"
+#include "SkrGuiRenderer/resource/skr_resource_device.hpp"
 #include "SkrGui/backend/embed_services.hpp"
 #include "SkrGui/dev/sandbox.hpp"
 #include "platform/system.h"
@@ -25,11 +25,9 @@ int main(void)
     // create backends
     SkrNativeDevice* device = SkrNew<SkrNativeDevice>();
     device->init();
-    ICanvasService* canvas_service = create_embedded_canvas_service();
-    ITextService*   text_service   = create_embedded_text_service(device->resource_device());
 
     // create sandbox
-    Sandbox* sandbox = SkrNew<Sandbox>(device, canvas_service, text_service);
+    Sandbox* sandbox = SkrNew<Sandbox>(device);
     sandbox->init();
 
     // setup content
@@ -113,8 +111,6 @@ int main(void)
     }
 
     // finalize
-    destroy_embedded_text_service(make_not_null(text_service));
-    destroy_embedded_canvas_service(make_not_null(canvas_service));
     device->shutdown();
     SkrDelete(device);
 

@@ -28,22 +28,6 @@ struct UpdatableImageDesc {
     Span<const uint8_t> data      = {};
 };
 
-// 不如直接挪到 Device 中，由 Renderer 层决定实现
-// 因为 Resource 本身涉及 Renderer 层的资源管理，单独拆分一个 Service 出来比较隔离
-// 同时，Device 作为一个中心概念，资源管理也是它的职责之一，并且，各种 Service 通常也是全局唯一的
-// Device 本身的接口现在变的过于精简，因此将 ResourceService 的接口合并到 Device 中也是趋于合理的
-struct SKR_GUI_API IResourceService SKR_GUI_INTERFACE_BASE {
-    SKR_GUI_INTERFACE_ROOT(IResourceService, "4d8c09d2-2b06-40c2-979a-213b3f1e08e6")
-    virtual ~IResourceService() = default;
-
-    virtual NotNull<IUpdatableImage*> create_updatable_image(const UpdatableImageDesc& desc) = 0;
-    virtual void                      destroy_resource(NotNull<IResource*> resource)         = 0;
-};
-} // namespace skr::gui
-
-// resource
-namespace skr::gui
-{
 enum class EResourceState : uint32_t
 {
     Entry,          // 入口状态，知晓部分资产信息，但是还未被加载

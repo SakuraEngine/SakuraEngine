@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrGui/backend/text/paragraph.hpp"
+#include "backend/text_server/text_paragraph.h"
 
 namespace godot
 {
@@ -8,13 +9,10 @@ class TextParagraph;
 
 namespace skr::gui
 {
-struct _EmbeddedTextService;
-struct _SkrGodotParagraph;
-
-struct _EmbeddedParagraph : public IParagraph {
+struct _EmbeddedParagraph : public godot::TextParagraph, public IParagraph {
     SKR_GUI_OBJECT(_EmbeddedParagraph, "1d611491-1e27-42cf-9604-4135b6617e21", IParagraph)
 
-    _EmbeddedParagraph(_EmbeddedTextService* service);
+    _EmbeddedParagraph();
 
     void  clear() override;
     void  build() override;
@@ -23,9 +21,10 @@ struct _EmbeddedParagraph : public IParagraph {
     void  paint(NotNull<PaintingContext*> context, Offsetf offset) override;
 
 private:
-    _EmbeddedTextService* _service = nullptr;
-    _SkrGodotParagraph*   _paragraph = nullptr;
-    Array<String>         _texts = {}; // TODO. inline
-    bool                  _dirty = false;
+    void _draw(godot::TextServer::TextDrawProxy* proxy, const skr_float2_t& p_pos, const godot::Color& p_color, const godot::Color& p_dc_color);
+
+private:
+    Array<String> _texts = {}; // TODO. inline
+    bool          _dirty = false;
 };
 } // namespace skr::gui

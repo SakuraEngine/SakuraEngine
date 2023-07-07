@@ -1,38 +1,50 @@
 #include "SkrGui/backend/embed_services.hpp"
-#include "SkrGui/backend/canvas/canvas_service.hpp"
 #include "SkrGui/backend/canvas/canvas.hpp"
-#include "SkrGui/backend/text/text_service.hpp"
-#include "backend/embedded_text/text_service.hpp"
+#include "backend/text_server/text_server_adv.h"
+#include "backend/embedded_text/paragraph.hpp"
+
+namespace godot
+{
+TextServerAdvanced*& _text_server()
+{
+    static TextServerAdvanced* text_server = nullptr;
+    return text_server;
+}
+TextServer* get_text_server()
+{
+    return _text_server();
+}
+} // namespace godot
 
 namespace skr::gui
 {
-struct _EmbeddedCanvasService : public ICanvasService {
-    SKR_GUI_INTERFACE(_EmbeddedCanvasService, "ced19009-748b-448d-aaa2-ecd11274bb55", ICanvasService)
+// canvas
+NotNull<ICanvas*> embedded_create_canvas() SKR_NOEXCEPT
+{
+    return make_not_null(SkrNew<ICanvas>());
+}
+void embedded_destroy_canvas(NotNull<ICanvas*> canvas) SKR_NOEXCEPT
+{
+    SkrDelete(canvas.get());
+}
 
-    NotNull<ICanvas*> create_canvas() override
-    {
-        return make_not_null(SkrNew<ICanvas>());
-    }
-    void destroy_canvas(NotNull<ICanvas*> canvas) override
-    {
-        SkrDelete(canvas.get());
-    }
-};
-
-NotNull<ICanvasService*> create_embedded_canvas_service()
+// text
+void embedded_init_text_service(INativeDevice* native_device)
 {
-    return make_not_null(SkrNew<_EmbeddedCanvasService>());
+    godot::SkrGuiData data;
+    data.resource_service = native_device;
+    godot::_text_server() = SkrNew<godot::TextServerAdvanced>(data);
 }
-NotNull<ITextService*> create_embedded_text_service(NotNull<IResourceService*> resource_service)
+NotNull<IParagraph*> embedded_create_paragraph()
 {
-    return make_not_null(SkrNew<_EmbeddedTextService>(resource_service));
+    return make_not_null(SkrNew<_EmbeddedParagraph>());
 }
-void destroy_embedded_canvas_service(NotNull<ICanvasService*> service)
+void embedded_destroy_paragraph(NotNull<IParagraph*> paragraph)
 {
-    SkrDelete(service.get());
+    SkrDelete(paragraph.get());
 }
-void destroy_embedded_text_service(NotNull<ITextService*> service)
+void embedded_shutdown_text_service()
 {
-    SkrDelete(service.get());
+    SkrDelete(godot::_text_server());
 }
 } // namespace skr::gui

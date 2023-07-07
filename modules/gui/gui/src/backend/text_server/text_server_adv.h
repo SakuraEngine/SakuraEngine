@@ -85,7 +85,7 @@ namespace godot
 {
 
 struct SkrGuiData {
-    ::skr::gui::IResourceService* resource_service = nullptr;
+    ::skr::gui::INativeDevice* resource_service = nullptr;
 };
 
 class TextServerAdvanced : public TextServer
@@ -104,7 +104,7 @@ class TextServerAdvanced : public TextServer
 
     struct FeatureInfo {
         StringName    name;
-        Variant::Type vtype = Variant::INT;
+        Variant::Type vtype  = Variant::INT;
         bool          hidden = false;
     };
 
@@ -118,9 +118,9 @@ class TextServerAdvanced : public TextServer
     // ICU support data.
 
     static bool            icu_data_loaded;
-    mutable USet*          allowed = nullptr;
+    mutable USet*          allowed  = nullptr;
     mutable USpoofChecker* sc_spoof = nullptr;
-    mutable USpoofChecker* sc_conf = nullptr;
+    mutable USpoofChecker* sc_conf  = nullptr;
 
     // Font cache data.
 
@@ -132,8 +132,8 @@ class TextServerAdvanced : public TextServer
 
     struct FontTexturePosition {
         int32_t index = -1;
-        int32_t x = 0;
-        int32_t y = 0;
+        int32_t x     = 0;
+        int32_t y     = 0;
 
         FontTexturePosition() {}
         FontTexturePosition(int32_t p_id, int32_t p_x, int32_t p_y)
@@ -181,8 +181,8 @@ class TextServerAdvanced : public TextServer
 
         FontTexturePosition pack_rect(int32_t p_id, int32_t p_h, int32_t p_w)
         {
-            int32_t y = 0;
-            int32_t waste = 0;
+            int32_t y          = 0;
+            int32_t waste      = 0;
             Shelf*  best_shelf = nullptr;
             int32_t best_waste = std::numeric_limits<std::int32_t>::max();
 
@@ -218,7 +218,7 @@ class TextServerAdvanced : public TextServer
             if (p_h <= (texture_h - y) && p_w <= texture_w)
             {
                 List<Shelf>::value_type& E = shelves.push_back();
-                E = Shelf(0, y, texture_w, p_h);
+                E                          = Shelf(0, y, texture_w, p_h);
                 return E.alloc_shelf(p_id, p_w, p_h);
             }
             return FontTexturePosition(-1, 0, 0);
@@ -233,7 +233,7 @@ class TextServerAdvanced : public TextServer
     };
 
     struct FontGlyph {
-        bool    found = false;
+        bool    found       = false;
         int     texture_idx = -1;
         Rect2   rect;
         Rect2   uv_rect;
@@ -241,12 +241,12 @@ class TextServerAdvanced : public TextServer
     };
 
     struct FontForSizeAdvanced {
-        double ascent = 0.0;
-        double descent = 0.0;
-        double underline_position = 0.0;
+        double ascent              = 0.0;
+        double descent             = 0.0;
+        double underline_position  = 0.0;
         double underline_thickness = 0.0;
-        double scale = 1.0;
-        double oversampling = 1.0;
+        double scale               = 1.0;
+        double oversampling        = 1.0;
 
         Vector2i size;
 
@@ -278,25 +278,25 @@ class TextServerAdvanced : public TextServer
     struct FontAdvanced {
         Mutex mutex;
 
-        TextServer::FontAntialiasing    antialiasing = TextServer::FONT_ANTIALIASING_GRAY;
-        bool                            mipmaps = false;
-        bool                            msdf = false;
-        int                             msdf_range = 14;
-        int                             msdf_source_size = 48;
-        int                             fixed_size = 0;
+        TextServer::FontAntialiasing    antialiasing          = TextServer::FONT_ANTIALIASING_GRAY;
+        bool                            mipmaps               = false;
+        bool                            msdf                  = false;
+        int                             msdf_range            = 14;
+        int                             msdf_source_size      = 48;
+        int                             fixed_size            = 0;
         bool                            allow_system_fallback = true;
-        bool                            force_autohinter = false;
-        TextServer::Hinting             hinting = TextServer::HINTING_LIGHT;
-        TextServer::SubpixelPositioning subpixel_positioning = TextServer::SUBPIXEL_POSITIONING_AUTO;
+        bool                            force_autohinter      = false;
+        TextServer::Hinting             hinting               = TextServer::HINTING_LIGHT;
+        TextServer::SubpixelPositioning subpixel_positioning  = TextServer::SUBPIXEL_POSITIONING_AUTO;
         VariationCoordinates            variation_coordinates;
         double                          oversampling = 0.0;
-        double                          embolden = 0.0;
+        double                          embolden     = 0.0;
         Transform2D                     transform;
 
         BitField<TextServer::FontStyle> style_flags = 0;
         String                          font_name;
         String                          style_name;
-        int                             weight = 400;
+        int                             weight  = 400;
         int                             stretch = 100;
 
         HashMap<Vector2i, FontForSizeAdvanced*> cache;
@@ -467,7 +467,7 @@ class TextServerAdvanced : public TextServer
 
     // Shaped text cache data.
     struct TrimData {
-        int           trim_pos = -1;
+        int           trim_pos     = -1;
         int           ellipsis_pos = -1;
         Vector<Glyph> ellipsis_glyph_buf;
     };
@@ -479,16 +479,16 @@ class TextServerAdvanced : public TextServer
         RID parent; // Substring parent ShapedTextData.
 
         int start = 0; // Substring start offset in the parent string.
-        int end = 0;   // Substring end offset in the parent string.
+        int end   = 0; // Substring end offset in the parent string.
 
         String                  text;
         String                  custom_punct;
-        TextServer::Direction   direction = DIRECTION_LTR; // Desired text direction.
+        TextServer::Direction   direction   = DIRECTION_LTR; // Desired text direction.
         TextServer::Orientation orientation = ORIENTATION_HORIZONTAL;
 
         struct Span {
             int start = -1;
-            int end = -1;
+            int end   = -1;
 
             Vector<RID> fonts;
             int         font_size = 0;
@@ -502,7 +502,7 @@ class TextServerAdvanced : public TextServer
         Vector<Span> spans;
 
         struct EmbeddedObject {
-            int             pos = 0;
+            int             pos          = 0;
             InlineAlignment inline_align = INLINE_ALIGNMENT_CENTER;
             Rect2           rect;
             double          baseline = 0;
@@ -510,20 +510,20 @@ class TextServerAdvanced : public TextServer
         HashMap<Variant, EmbeddedObject> objects;
 
         /* Shaped data */
-        TextServer::Direction para_direction = DIRECTION_LTR;  // Detected text direction.
-        bool                  valid = false;                   // String is shaped.
-        bool                  line_breaks_valid = false;       // Line and word break flags are populated (and virtual zero width spaces inserted).
-        bool                  justification_ops_valid = false; // Virtual elongation glyphs are added to the string.
-        bool                  sort_valid = false;
-        bool                  text_trimmed = false;
+        TextServer::Direction para_direction          = DIRECTION_LTR; // Detected text direction.
+        bool                  valid                   = false;         // String is shaped.
+        bool                  line_breaks_valid       = false;         // Line and word break flags are populated (and virtual zero width spaces inserted).
+        bool                  justification_ops_valid = false;         // Virtual elongation glyphs are added to the string.
+        bool                  sort_valid              = false;
+        bool                  text_trimmed            = false;
 
         bool preserve_invalid = true;  // Draw hex code box instead of missing characters.
         bool preserve_control = false; // Draw control characters.
 
-        double ascent = 0.0;  // Ascent for horizontal layout, 1/2 of width for vertical.
-        double descent = 0.0; // Descent for horizontal layout, 1/2 of width for vertical.
-        double width = 0.0;   // Width for horizontal layout, height for vertical.
-        double width_trimmed = 0.0;
+        double ascent           = 0.0; // Ascent for horizontal layout, 1/2 of width for vertical.
+        double descent          = 0.0; // Descent for horizontal layout, 1/2 of width for vertical.
+        double width            = 0.0; // Width for horizontal layout, height for vertical.
+        double width_trimmed    = 0.0;
         int    extra_spacing[4] = { 0, 0, 0, 0 };
 
         double upos = 0.0;
@@ -540,13 +540,13 @@ class TextServerAdvanced : public TextServer
         Vector<UBiDi*>   bidi_iter;
         Vector<Vector3i> bidi_override;
         ScriptIterator*  script_iter = nullptr;
-        hb_buffer_t*     hb_buffer = nullptr;
+        hb_buffer_t*     hb_buffer   = nullptr;
 
         HashMap<int, bool> jstops;
         HashMap<int, bool> breaks;
-        int                break_inserts = 0;
+        int                break_inserts   = 0;
         bool               break_ops_valid = false;
-        bool               js_ops_valid = false;
+        bool               js_ops_valid    = false;
 
         ~ShapedTextDataAdvanced()
         {
@@ -573,21 +573,21 @@ class TextServerAdvanced : public TextServer
 
     struct SystemFontKey {
         String                          font_name;
-        TextServer::FontAntialiasing    antialiasing = TextServer::FONT_ANTIALIASING_GRAY;
-        bool                            italic = false;
-        bool                            mipmaps = false;
-        bool                            msdf = false;
-        bool                            force_autohinter = false;
-        int                             weight = 400;
-        int                             stretch = 100;
-        int                             msdf_range = 14;
-        int                             msdf_source_size = 48;
-        int                             fixed_size = 0;
-        TextServer::Hinting             hinting = TextServer::HINTING_LIGHT;
+        TextServer::FontAntialiasing    antialiasing         = TextServer::FONT_ANTIALIASING_GRAY;
+        bool                            italic               = false;
+        bool                            mipmaps              = false;
+        bool                            msdf                 = false;
+        bool                            force_autohinter     = false;
+        int                             weight               = 400;
+        int                             stretch              = 100;
+        int                             msdf_range           = 14;
+        int                             msdf_source_size     = 48;
+        int                             fixed_size           = 0;
+        TextServer::Hinting             hinting              = TextServer::HINTING_LIGHT;
         TextServer::SubpixelPositioning subpixel_positioning = TextServer::SUBPIXEL_POSITIONING_AUTO;
         VariationCoordinates            variation_coordinates;
         double                          oversampling = 0.0;
-        double                          embolden = 0.0;
+        double                          embolden     = 0.0;
         Transform2D                     transform;
 
         bool operator==(const SystemFontKey& p_b) const
@@ -597,23 +597,23 @@ class TextServerAdvanced : public TextServer
 
         SystemFontKey(const String& p_font_name, bool p_italic, int p_weight, int p_stretch, RID p_font, const TextServerAdvanced* p_fb)
         {
-            font_name = p_font_name;
-            italic = p_italic;
-            weight = p_weight;
-            stretch = p_stretch;
-            antialiasing = p_fb->_font_get_antialiasing(p_font);
-            mipmaps = p_fb->_font_get_generate_mipmaps(p_font);
-            msdf = p_fb->_font_is_multichannel_signed_distance_field(p_font);
-            msdf_range = p_fb->_font_get_msdf_pixel_range(p_font);
-            msdf_source_size = p_fb->_font_get_msdf_size(p_font);
-            fixed_size = p_fb->_font_get_fixed_size(p_font);
-            force_autohinter = p_fb->_font_is_force_autohinter(p_font);
-            hinting = p_fb->_font_get_hinting(p_font);
-            subpixel_positioning = p_fb->_font_get_subpixel_positioning(p_font);
+            font_name             = p_font_name;
+            italic                = p_italic;
+            weight                = p_weight;
+            stretch               = p_stretch;
+            antialiasing          = p_fb->_font_get_antialiasing(p_font);
+            mipmaps               = p_fb->_font_get_generate_mipmaps(p_font);
+            msdf                  = p_fb->_font_is_multichannel_signed_distance_field(p_font);
+            msdf_range            = p_fb->_font_get_msdf_pixel_range(p_font);
+            msdf_source_size      = p_fb->_font_get_msdf_size(p_font);
+            fixed_size            = p_fb->_font_get_fixed_size(p_font);
+            force_autohinter      = p_fb->_font_is_force_autohinter(p_font);
+            hinting               = p_fb->_font_get_hinting(p_font);
+            subpixel_positioning  = p_fb->_font_get_subpixel_positioning(p_font);
             variation_coordinates = p_fb->_font_get_variation_coordinates(p_font);
-            oversampling = p_fb->_font_get_oversampling(p_font);
-            embolden = p_fb->_font_get_embolden(p_font);
-            transform = p_fb->_font_get_transform(p_font);
+            oversampling          = p_fb->_font_get_oversampling(p_font);
+            embolden              = p_fb->_font_get_embolden(p_font);
+            transform             = p_fb->_font_get_transform(p_font);
         }
     };
 
@@ -631,18 +631,18 @@ class TextServerAdvanced : public TextServer
         _FORCE_INLINE_ static uint32_t hash(const SystemFontKey& p_a)
         {
             uint64_t hash = p_a.font_name.hash();
-            hash = hash_murmur3_one_32(p_a.variation_coordinates.hash32(), hash);
-            hash = hash_murmur3_one_32(p_a.weight, hash);
-            hash = hash_murmur3_one_32(p_a.stretch, hash);
-            hash = hash_murmur3_one_32(p_a.msdf_range, hash);
-            hash = hash_murmur3_one_32(p_a.msdf_source_size, hash);
-            hash = hash_murmur3_one_32(p_a.fixed_size, hash);
-            hash = hash_murmur3_one_double(p_a.oversampling, hash);
-            hash = hash_murmur3_one_double(p_a.embolden, hash);
-            hash = hash_murmur3_one_real(p_a.transform[0].x, hash);
-            hash = hash_murmur3_one_real(p_a.transform[0].y, hash);
-            hash = hash_murmur3_one_real(p_a.transform[1].x, hash);
-            hash = hash_murmur3_one_real(p_a.transform[1].y, hash);
+            hash          = hash_murmur3_one_32(p_a.variation_coordinates.hash32(), hash);
+            hash          = hash_murmur3_one_32(p_a.weight, hash);
+            hash          = hash_murmur3_one_32(p_a.stretch, hash);
+            hash          = hash_murmur3_one_32(p_a.msdf_range, hash);
+            hash          = hash_murmur3_one_32(p_a.msdf_source_size, hash);
+            hash          = hash_murmur3_one_32(p_a.fixed_size, hash);
+            hash          = hash_murmur3_one_double(p_a.oversampling, hash);
+            hash          = hash_murmur3_one_double(p_a.embolden, hash);
+            hash          = hash_murmur3_one_real(p_a.transform[0].x, hash);
+            hash          = hash_murmur3_one_real(p_a.transform[0].y, hash);
+            hash          = hash_murmur3_one_real(p_a.transform[1].x, hash);
+            hash          = hash_murmur3_one_real(p_a.transform[1].y, hash);
             return hash_fmix32(hash_murmur3_one_32(((int)p_a.mipmaps) | ((int)p_a.msdf << 1) | ((int)p_a.italic << 2) | ((int)p_a.force_autohinter << 3) | ((int)p_a.hinting << 4) | ((int)p_a.subpixel_positioning << 8) | ((int)p_a.antialiasing << 12), hash));
         }
         size_t operator()(const SystemFontKey& p_a) const
@@ -670,7 +670,7 @@ class TextServerAdvanced : public TextServer
     static hb_font_funcs_t* funcs;
 
     struct bmp_font_t {
-        TextServerAdvanced::FontForSizeAdvanced* face = nullptr;
+        TextServerAdvanced::FontForSizeAdvanced* face  = nullptr;
         bool                                     unref = false; /* Whether to unmount bm_face when done. */
     };
 
@@ -992,7 +992,7 @@ public: // MODBINDs
     virtual ~TextServerAdvanced();
 
     // ++ SKR GUI
-    ::skr::gui::IResourceService* get_resource_service() override final
+    ::skr::gui::INativeDevice* get_resource_service() override final
     {
         return gui_data.resource_service;
     }

@@ -19,10 +19,10 @@ namespace godot
 using ImageFormat = ::skr::gui::EPixelFormat;
 
 struct FontAtlasImage {
-    using Format = ::skr::gui::EPixelFormat;
-    using Sizei = ::skr::gui::Sizei;
-    using ResourceService = ::skr::gui::IResourceService;
-    using Image = ::skr::gui::IUpdatableImage;
+    using Format          = ::skr::gui::EPixelFormat;
+    using Sizei           = ::skr::gui::Sizei;
+    using ResourceService = ::skr::gui::INativeDevice;
+    using Image           = ::skr::gui::IUpdatableImage;
 
     FontAtlasImage();
     ~FontAtlasImage();
@@ -74,12 +74,12 @@ struct FontAtlasImage {
     inline RID                           get_rid() const SKR_NOEXCEPT { return _rid; }
 
 private:
-    Sizei           _size = {};
-    Format          _format = Format::Unknown;
+    Sizei           _size      = {};
+    Format          _format    = Format::Unknown;
     int32_t         _mip_count = 0;
-    PackedByteArray _data = {};
-    Image*          _image = nullptr;
-    bool            _dirty = true;
-    RID             _rid = {};
+    PackedByteArray _data      = {};
+    Image*          _image     = nullptr;
+    bool            _dirty     = true;
+    RID             _rid       = {};
 };
 } // namespace godot
