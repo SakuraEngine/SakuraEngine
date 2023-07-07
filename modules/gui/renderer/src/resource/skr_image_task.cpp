@@ -153,9 +153,8 @@ void SkrImageDataTask::_async_decode_data()
     }
 }
 
-SkrImageUploadTask::SkrImageUploadTask(SkrResourceDevice* resource_service, SkrRenderDevice* render_device)
-    : _resource_service(resource_service)
-    , _render_device(render_device)
+SkrImageUploadTask::SkrImageUploadTask(SkrRenderDevice* render_device)
+    : _render_device(render_device)
 {
     // PipelineKey key = { GDI_RENDERER_PIPELINE_ATTRIBUTE_TEXTURED, CGPU_SAMPLE_COUNT_1 };
     // texture->async_data.root_signature = pipelines[key]->root_signature;
@@ -220,7 +219,7 @@ void SkrImageUploadTask::from_image(const SkrImageData& image)
         skr_atomicu32_store_release(&task->_async_is_okey, 1);
     };
     vram_io_info.callback_datas[SKR_IO_STAGE_COMPLETED] = this;
-    _resource_service->vram_service()->request(&vram_io_info, &_ram_request, &_vram_destination);
+    _render_device->vram_service()->request(&vram_io_info, &_ram_request, &_vram_destination);
 }
 
 } // namespace skr::gui

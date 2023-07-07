@@ -10,6 +10,6 @@ struct SKR_GUI_API ColoredBox : public SingleChildRenderObjectWidget {
     NotNull<RenderObject*> create_render_object() SKR_NOEXCEPT override;
     void                   update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;
 
-    Color color;
+    Color color = {};
 };
 } // namespace skr::gui

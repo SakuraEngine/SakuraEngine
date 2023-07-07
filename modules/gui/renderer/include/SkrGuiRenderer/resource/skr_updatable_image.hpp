@@ -34,6 +34,6 @@ private:
     CGPUTextureViewId _texture_view = nullptr;
     CGPUXBindTableId  _bind_table   = nullptr;
 
-    UpdatableImageDesc _desc;
+    UpdatableImageDesc _desc = {};
 };
 } // namespace skr::gui

@@ -27,30 +27,30 @@ struct MonitorFeature {
 
 // in physical pixel
 struct MonitorInfo {
-    String name;
-    String device_id;
+    String name      = {};
+    String device_id = {};
 
-    Sizei native_size;
-    Sizei max_resolution;
+    Sizei native_size    = {};
+    Sizei max_resolution = {};
 
-    Recti display_area;
-    Recti work_area;
+    Recti display_area = {};
+    Recti work_area    = {};
 
-    bool is_primary;
+    bool is_primary = false;
 
-    Array<MonitorFeature> features;
+    Array<MonitorFeature> features = {};
 };
 
 // in physical pixel
 struct DisplayMetrics {
-    Recti primary_display_area;
-    Recti primary_work_area;
-    Recti virtual_display_area;
+    Recti primary_display_area = {};
+    Recti primary_work_area    = {};
+    Recti virtual_display_area = {};
 
-    EdgeInsetsf title_safe_padding;
-    EdgeInsetsf action_safe_padding;
+    EdgeInsetsf title_safe_padding  = {};
+    EdgeInsetsf action_safe_padding = {};
 
-    Array<MonitorInfo> monitors;
+    Array<MonitorInfo> monitors = {};
 };
 
 } // namespace skr::gui

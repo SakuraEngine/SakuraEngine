@@ -83,11 +83,11 @@ struct SurfaceBrush : public Brush {
     }
 
     // params
-    ISurface*           _surface = nullptr; // TODO. use ISurface
-    Rectf               _uv_rect = {};
+    ISurface*           _surface  = nullptr; // TODO. use ISurface
+    Rectf               _uv_rect  = {};
     float               _rotation = 0.0f; // in degree
-    Swizzle             _swizzle = {};
-    CustomVertexFuncRef _custom = nullptr;
+    Swizzle             _swizzle  = {};
+    CustomVertexFuncRef _custom   = nullptr;
 
     // builder
     inline SurfaceBrush& surface(ISurface* surface) SKR_NOEXCEPT
@@ -134,12 +134,12 @@ struct SurfaceNineBrush : public Brush {
     }
 
     // params
-    ISurface*           _surface = nullptr; // TODO. use ISurface
-    Rectf               _uv_rect = {};
+    ISurface*           _surface    = nullptr; // TODO. use ISurface
+    Rectf               _uv_rect    = {};
     Rectf               _inner_rect = {};
-    float               _rotation = 0.0f; // in degree
-    Swizzle             _swizzle = {};
-    CustomVertexFuncRef _custom = nullptr;
+    float               _rotation   = 0.0f; // in degree
+    Swizzle             _swizzle    = {};
+    CustomVertexFuncRef _custom     = nullptr;
 
     // builder
     inline SurfaceNineBrush& surface(ISurface* surface) SKR_NOEXCEPT

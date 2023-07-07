@@ -11,6 +11,6 @@ struct SKR_GUI_API OffsetLayer : public ContainerLayer {
     inline Offsetf offset() const noexcept { return _offset; }
 
 private:
-    Offsetf _offset;
+    Offsetf _offset = {};
 };
 } // namespace skr::gui

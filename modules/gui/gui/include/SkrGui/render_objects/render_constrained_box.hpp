@@ -31,6 +31,6 @@ struct RenderConstrainedBox : public RenderProxyBox {
     void perform_layout() SKR_NOEXCEPT override;
 
 private:
-    BoxConstraints _additional_constraint;
+    BoxConstraints _additional_constraint = {};
 };
 } // namespace skr::gui

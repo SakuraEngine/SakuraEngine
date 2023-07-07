@@ -10,6 +10,6 @@ struct SKR_GUI_API Positioned : public SingleChildRenderObjectWidget {
     NotNull<RenderObject*> create_render_object() SKR_NOEXCEPT override;
     void                   update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;
 
-    Positional positional;
+    Positional positional = {};
 };
 } // namespace skr::gui

@@ -21,12 +21,12 @@ enum class EInlineAlignment : uint32_t
 };
 
 struct StyleText {
-    float        font_size;
-    skr_float4_t color;
+    float        font_size = 14.0f;
+    skr_float4_t color     = {};
 };
 
 struct SKR_GUI_API BindText {
-    String text;
+    String text = {};
 };
 struct InlineType : public std::variant<skr::string, RenderObject*, RenderText*, skr::SPtr<BindText>> {
 };

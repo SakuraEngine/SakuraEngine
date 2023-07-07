@@ -68,11 +68,11 @@ int main(void)
             //     p.positional.fill();
             //     p.child = SNewWidget(ColorPicker){};
             // };
-            // SNewChild(p.children, Positioned)
-            // {
-            //     p.positional.anchor_LT(0.5_pct, 10_px).pivot({ 0.5, 0 });
-            //     p.child = SNewWidget(Text) { p.text = u8"Hello World!"; };
-            // };
+            SNewChild(p.children, Positioned)
+            {
+                p.positional.anchor_LT(0.5_pct, 10_px).pivot({ 0.5, 0 });
+                p.child = SNewWidget(Text) { p.text = u8"Hello World!"; };
+            };
         };
         sandbox->set_content(skr::make_not_null(widget));
     }

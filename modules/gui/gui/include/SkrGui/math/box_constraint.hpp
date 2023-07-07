@@ -5,8 +5,8 @@ namespace skr::gui
 {
 // Box 约束器
 struct BoxConstraints {
-    float min_width = 0;
-    float max_width = std::numeric_limits<float>::infinity();
+    float min_width  = 0;
+    float max_width  = std::numeric_limits<float>::infinity();
     float min_height = 0;
     float max_height = std::numeric_limits<float>::infinity();
 
@@ -119,12 +119,12 @@ struct BoxConstraints {
     inline constexpr Sizef max_size() const SKR_NOEXCEPT { return { max_width, max_height }; }
     inline constexpr void  set_min_size(Sizef size) SKR_NOEXCEPT
     {
-        min_width = size.width;
+        min_width  = size.width;
         min_height = size.height;
     }
     inline constexpr void set_max_size(Sizef size) SKR_NOEXCEPT
     {
-        max_width = size.width;
+        max_width  = size.width;
         max_height = size.height;
     }
     inline constexpr Sizef smallest() const SKR_NOEXCEPT { return constrain({ 0, 0 }); }
@@ -155,7 +155,7 @@ struct BoxConstraints {
     }
     inline constexpr Sizef constrain(Sizef size) const SKR_NOEXCEPT
     {
-        size.width = constrain_width(size.width);
+        size.width  = constrain_width(size.width);
         size.height = constrain_height(size.height);
         return size;
     }
