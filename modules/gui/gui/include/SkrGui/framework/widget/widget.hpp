@@ -19,6 +19,6 @@ struct SKR_GUI_API Widget SKR_GUI_OBJECT_BASE {
     // help function
     static bool can_update(NotNull<Widget*> old_widget, NotNull<Widget*> new_widget) SKR_NOEXCEPT;
 
-    Key key;
+    Key key = {};
 };
 } // namespace skr::gui

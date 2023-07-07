@@ -20,8 +20,8 @@ struct SKR_GUI_API PipelineOwner final {
     inline INativeDevice* native_device() const SKR_NOEXCEPT { return _native_device; }
 
 private:
-    Array<RenderObject*> _nodes_needing_layout;
-    Array<RenderObject*> _nodes_needing_paint;
+    Array<RenderObject*> _nodes_needing_layout = {};
+    Array<RenderObject*> _nodes_needing_paint  = {};
 
     INativeDevice* _native_device = nullptr;
 };

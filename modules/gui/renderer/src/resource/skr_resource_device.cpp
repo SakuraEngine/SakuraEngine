@@ -25,13 +25,6 @@ void SkrResourceDevice::init()
         _ram_service->run();
     }
     {
-        auto ioServiceDesc       = make_zeroed<skr_vram_io_service_desc_t>();
-        ioServiceDesc.name       = SKR_UTF8("GUI-VRAMService");
-        ioServiceDesc.sleep_time = 1000 / 60;
-        ioServiceDesc.lockless   = true;
-        _vram_service            = skr_io_vram_service_t::create(&ioServiceDesc);
-    }
-    {
         auto jqDesc         = make_zeroed<skr::JobQueueDesc>();
         jqDesc.thread_count = 2;
         jqDesc.priority     = SKR_THREAD_NORMAL;
@@ -44,18 +37,7 @@ void SkrResourceDevice::shutdown()
 {
     if (_future_launcher) SkrDelete(_future_launcher);
     if (_job_queue) SkrDelete(_job_queue);
-    if (_vram_service) skr_io_vram_service_t::destroy(_vram_service);
     if (_ram_service) skr_io_ram_service_t::destroy(_ram_service);
     if (_vfs) skr_free_vfs(_vfs);
-}
-
-NotNull<IUpdatableImage*> SkrResourceDevice::create_updatable_image(const UpdatableImageDesc& desc)
-{
-    SKR_UNIMPLEMENTED_FUNCTION();
-    return make_not_null<IUpdatableImage*>(nullptr);
-}
-void SkrResourceDevice::destroy_resource(NotNull<IResource*> resource)
-{
-    SkrDelete(resource.get());
 }
 } // namespace skr::gui

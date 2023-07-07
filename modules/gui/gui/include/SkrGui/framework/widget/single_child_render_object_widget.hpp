@@ -9,6 +9,6 @@ struct SKR_GUI_API SingleChildRenderObjectWidget : public RenderObjectWidget {
 
     NotNull<Element*> create_element() SKR_NOEXCEPT override;
 
-    Widget* child;
+    Widget* child = nullptr;
 };
 } // namespace skr::gui

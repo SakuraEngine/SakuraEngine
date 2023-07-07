@@ -57,10 +57,10 @@ struct PaintVertex {
 };
 using PaintIndex = uint16_t;
 struct PaintCommand {
-    IImage*    texture = nullptr;
-    IMaterial* material = nullptr;
-    size_t     index_begin = 0;
-    size_t     index_count = 0;
+    IImage*    texture         = nullptr;
+    IMaterial* material        = nullptr;
+    size_t     index_begin     = 0;
+    size_t     index_count     = 0;
     Swizzle    texture_swizzle = {};
 };
 

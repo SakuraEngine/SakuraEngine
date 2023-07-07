@@ -74,11 +74,11 @@ struct StrokePen : public Pen {
     }
 
     // params
-    float       _width = 1.0f;
+    float       _width       = 1.0f;
     float       _miter_limit = 10.0f;
-    EStrokeCap  _cap = EStrokeCap::Butt;
-    EStrokeJoin _join = EStrokeJoin::Miter;
-    bool        _anti_alias = true;
+    EStrokeCap  _cap         = EStrokeCap::Butt;
+    EStrokeJoin _join        = EStrokeJoin::Miter;
+    bool        _anti_alias  = true;
 
     // builder
     inline StrokePen& anti_alias(bool anti_alias) SKR_NOEXCEPT

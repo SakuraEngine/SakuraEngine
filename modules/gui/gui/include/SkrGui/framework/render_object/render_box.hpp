@@ -59,8 +59,8 @@ private:
     void perform_resize() SKR_NOEXCEPT override; // override compute_dry_layout instead
 
 private:
-    Sizef          _size;
-    BoxConstraints _constraints;
+    Sizef          _size        = {};
+    BoxConstraints _constraints = {};
 
     // TODO. cached data
 };

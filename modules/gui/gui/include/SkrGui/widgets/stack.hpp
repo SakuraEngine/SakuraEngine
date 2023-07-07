@@ -11,7 +11,7 @@ struct SKR_GUI_API Stack : public MultiChildRenderObjectWidget {
     void                   update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;
 
     Alignment      stack_alignment = Alignment::TopLeft();
-    EPositionalFit child_fit = EPositionalFit::PassThrough;
-    EStackSize     stack_size = EStackSize::Shrink;
+    EPositionalFit child_fit       = EPositionalFit::PassThrough;
+    EStackSize     stack_size      = EStackSize::Shrink;
 };
 } // namespace skr::gui

@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrGuiRenderer/module.configure.h"
+#include "cgpu/io.h"
 #include "cgpu/api.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "platform/window.h"
@@ -49,11 +50,12 @@ struct SKR_GUI_RENDERER_API SkrRenderDevice final {
     void             destroy_window(SkrRenderWindow* view);
 
     // getter
-    inline CGPUInstanceId cgpu_instance() const { return _cgpu_instance; }
-    inline CGPUAdapterId  cgpu_adapter() const { return _cgpu_adapter; }
-    inline CGPUDeviceId   cgpu_device() const { return _cgpu_device; }
-    inline CGPUQueueId    cgpu_queue() const { return _cgpu_queue; }
-    inline RenderGraph*   render_graph() const { return _render_graph; }
+    inline CGPUInstanceId         cgpu_instance() const { return _cgpu_instance; }
+    inline CGPUAdapterId          cgpu_adapter() const { return _cgpu_adapter; }
+    inline CGPUDeviceId           cgpu_device() const { return _cgpu_device; }
+    inline CGPUQueueId            cgpu_queue() const { return _cgpu_queue; }
+    inline RenderGraph*           render_graph() const { return _render_graph; }
+    inline skr_io_vram_service_t* vram_service() const { return _vram_service; }
 
     // pipeline
     CGPURenderPipelineId get_pipeline(ESkrPipelineFlag flags, ECGPUSampleCount sample_count);
@@ -70,11 +72,13 @@ private:
     CGPUDeviceId   _cgpu_device   = nullptr;
     CGPUQueueId    _cgpu_queue    = nullptr;
 
+    // vram
+    skr_io_vram_service_t* _vram_service;
+
     // rg
     RenderGraph* _render_graph = nullptr;
 
     // PSO
-
     eastl::vector_map<SkrPipelineKey, CGPURenderPipelineId> _pipelines;
     CGPURootSignaturePoolId                                 _rs_pool;
     CGPUSamplerId                                           _static_color_sampler;

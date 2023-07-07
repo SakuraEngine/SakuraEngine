@@ -21,6 +21,6 @@ struct RenderColoredBox : public RenderProxyBox {
     }
 
 private:
-    Color _color;
+    Color _color = {};
 };
 } // namespace skr::gui

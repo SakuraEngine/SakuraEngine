@@ -90,12 +90,12 @@ private:
     Array<PaintVertex>  _vertices;
     Array<PaintIndex>   _indices;
     Array<PaintCommand> _commands;
-    NVGcontext*         _nvg = nullptr;
+    NVGcontext*         _nvg       = nullptr;
     const Brush*        _tmp_brush = nullptr;
 
     // state & validate
     bool _is_in_paint_scope = false;
-    bool _is_in_path_scope = false;
+    bool _is_in_path_scope  = false;
 };
 
 inline auto ICanvas::paint_scope(float pixel_ratio) SKR_NOEXCEPT

@@ -9,6 +9,6 @@ struct SKR_GUI_API Text : public LeafRenderObjectWidget {
     NotNull<RenderObject*> create_render_object() SKR_NOEXCEPT override;
     void                   update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;
 
-    String text;
+    String text = {};
 };
 } // namespace skr::gui

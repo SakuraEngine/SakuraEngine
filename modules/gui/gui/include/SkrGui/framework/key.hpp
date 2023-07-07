@@ -78,7 +78,7 @@ struct SKR_GUI_API Key final {
     void set_storage(const String& v) SKR_NOEXCEPT;
 
 private:
-    EKeyType _type;
+    EKeyType _type = EKeyType::None;
     union
     {
         State*  _state;
@@ -235,31 +235,31 @@ inline void Key::set_unique() SKR_NOEXCEPT
 inline void Key::set_keep_state(State* state) SKR_NOEXCEPT
 {
     clear();
-    _type = EKeyType::KeepState;
+    _type  = EKeyType::KeepState;
     _state = state;
 }
 inline void Key::set_value(int64_t v) SKR_NOEXCEPT
 {
     clear();
     _type = EKeyType::Int;
-    _int = v;
+    _int  = v;
 }
 inline void Key::set_value(float v) SKR_NOEXCEPT
 {
     clear();
-    _type = EKeyType::Float;
+    _type  = EKeyType::Float;
     _float = v;
 }
 inline void Key::set_storage(int64_t v) SKR_NOEXCEPT
 {
     clear();
     _type = EKeyType::IntStorage;
-    _int = v;
+    _int  = v;
 }
 inline void Key::set_storage(float v) SKR_NOEXCEPT
 {
     clear();
-    _type = EKeyType::FloatStorage;
+    _type  = EKeyType::FloatStorage;
     _float = v;
 }
 } // namespace skr::gui

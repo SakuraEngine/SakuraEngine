@@ -109,14 +109,13 @@ private:
 };
 
 struct SKR_GUI_RENDERER_API SkrImageUploadTask {
-    SkrImageUploadTask(SkrResourceDevice* resource_service, SkrRenderDevice* render_device);
+    SkrImageUploadTask(SkrRenderDevice* render_device);
 
     bool is_okey();
     void from_image(const SkrImageData& data);
 
 private:
-    SkrResourceDevice* _resource_service = nullptr;
-    SkrRenderDevice*   _render_device    = nullptr;
+    SkrRenderDevice* _render_device = nullptr;
 
     // data
     SkrImageData        _image_data     = {};

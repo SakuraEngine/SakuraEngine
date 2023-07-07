@@ -122,9 +122,21 @@ void SkrRenderDevice::init()
     CGPURootSignaturePoolDescriptor rs_pool_desc = {};
     rs_pool_desc.name                            = u8"GUI_RS_POOL";
     _rs_pool                                     = cgpu_create_root_signature_pool(_cgpu_device, &rs_pool_desc);
+
+    // create vram service
+    {
+        auto ioServiceDesc       = make_zeroed<skr_vram_io_service_desc_t>();
+        ioServiceDesc.name       = SKR_UTF8("GUI-VRAMService");
+        ioServiceDesc.sleep_time = 1000 / 60;
+        ioServiceDesc.lockless   = true;
+        _vram_service            = skr_io_vram_service_t::create(&ioServiceDesc);
+    }
 }
 void SkrRenderDevice::shutdown()
 {
+    // destroy vram service
+    if (_vram_service) skr_io_vram_service_t::destroy(_vram_service);
+
     // destroy rg
     if (_render_graph) RenderGraph::destroy(_render_graph);
 

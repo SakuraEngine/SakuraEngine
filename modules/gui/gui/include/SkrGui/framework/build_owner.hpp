@@ -12,9 +12,7 @@ struct SKR_GUI_API BuildOwner final {
     void flush_build() SKR_NOEXCEPT;
 
     // TODO. temporal impl for pass compile, move to global context
-    inline void drop_unmount_element(NotNull<Element*> element) SKR_NOEXCEPT
-    {
-    }
+    inline void drop_unmount_element(NotNull<Element*> element) SKR_NOEXCEPT {}
 
 private:
     Array<Element*> _dirty_elements;

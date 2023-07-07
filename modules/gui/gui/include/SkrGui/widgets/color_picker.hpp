@@ -9,6 +9,6 @@ struct SKR_GUI_API ColorPicker : public LeafRenderObjectWidget {
     NotNull<RenderObject*> create_render_object() SKR_NOEXCEPT override;
     void                   update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT override;
 
-    bool is_srgb;
+    bool is_srgb = true;
 };
 } // namespace skr::gui
