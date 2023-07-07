@@ -11,10 +11,8 @@
 
 namespace skr::gui
 {
-Sandbox::Sandbox(INativeDevice* device, ICanvasService* canvas_service, ITextService* text_service) SKR_NOEXCEPT
-    : _device(device),
-      _canvas_service(canvas_service),
-      _text_service(text_service)
+Sandbox::Sandbox(INativeDevice* device) SKR_NOEXCEPT
+    : _device(device)
 {
 }
 
@@ -22,7 +20,7 @@ void Sandbox::init()
 {
     // init owner
     _build_owner    = SkrNew<BuildOwner>();
-    _pipeline_owner = SkrNew<PipelineOwner>(_canvas_service);
+    _pipeline_owner = SkrNew<PipelineOwner>(_device);
 }
 void Sandbox::shutdown()
 {

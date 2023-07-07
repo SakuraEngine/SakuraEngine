@@ -4,8 +4,8 @@
 
 namespace skr::gui
 {
-PipelineOwner::PipelineOwner(ICanvasService* canvas_service) SKR_NOEXCEPT
-    : _canvas_service(canvas_service)
+PipelineOwner::PipelineOwner(INativeDevice* native_device) SKR_NOEXCEPT
+    : _native_device(native_device)
 {
 }
 

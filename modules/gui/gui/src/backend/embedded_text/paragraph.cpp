@@ -35,141 +35,14 @@ void                         _init_font()
 namespace skr::gui
 {
 struct _SkrGodotParagraph : public godot::TextParagraph {
-    void draw(godot::TextServer::TextDrawProxy* proxy, const skr_float2_t& p_pos, const godot::Color& p_color, const godot::Color& p_dc_color)
-    {
-        const float line_height_scale = 1.f;
-        const int   spacing_top = 0;
-        const int   spacing_bottom = 0;
-        godot::RID  p_canvas = godot::RID::from_uint64((uint64_t)proxy);
-
-        _shape_lines();
-        godot::Vector2 ofs = { p_pos.x, p_pos.y };
-        float          h_offset = 0.f;
-        if (TS->shaped_text_get_orientation(dropcap_rid) == godot::TextServer::ORIENTATION_HORIZONTAL)
-        {
-            h_offset = TS->shaped_text_get_size(dropcap_rid).x + dropcap_margins.size.x + dropcap_margins.position.x;
-        }
-        else
-        {
-            h_offset = TS->shaped_text_get_size(dropcap_rid).y + dropcap_margins.size.y + dropcap_margins.position.y;
-        }
-
-        if (h_offset > 0)
-        {
-            // Draw dropcap.
-            godot::Vector2 dc_off = { ofs.x, ofs.y };
-            if (TS->shaped_text_get_direction(dropcap_rid) == godot::TextServer::DIRECTION_RTL)
-            {
-                if (TS->shaped_text_get_orientation(dropcap_rid) == godot::TextServer::ORIENTATION_HORIZONTAL)
-                {
-                    dc_off.x += (float)width - h_offset;
-                }
-                else
-                {
-                    dc_off.y += (float)width - h_offset;
-                }
-            }
-            godot::Vector2 p_pos = { dc_off.x, dc_off.y };
-            p_pos.y += TS->shaped_text_get_ascent(dropcap_rid) + dropcap_margins.size.y + dropcap_margins.position.y / 2;
-            TS->shaped_text_draw(dropcap_rid, p_canvas, p_pos, -1, -1, p_dc_color);
-        }
-
-        int lines_visible = (max_lines_visible >= 0) ? MIN(max_lines_visible, lines_rid.size()) : lines_rid.size();
-
-        for (int i = 0; i < lines_visible; i++)
-        {
-            float l_width = (float)width;
-            if (TS->shaped_text_get_orientation(lines_rid[i]) == godot::TextServer::ORIENTATION_HORIZONTAL)
-            {
-                ofs.x = p_pos.x;
-                ofs.y += TS->shaped_text_get_ascent(lines_rid[i]) * line_height_scale + spacing_top;
-                if (i < dropcap_lines)
-                {
-                    if (TS->shaped_text_get_direction(dropcap_rid) == godot::TextServer::DIRECTION_LTR ||
-                        TS->shaped_text_get_direction(dropcap_rid) == godot::TextServer::DIRECTION_AUTO)
-                    {
-                        ofs.x += h_offset;
-                    }
-                    l_width -= h_offset;
-                }
-            }
-            else
-            {
-                ofs.y = p_pos.y;
-                ofs.x += TS->shaped_text_get_ascent(lines_rid[i]) * line_height_scale + spacing_top;
-                if (i < dropcap_lines)
-                {
-                    if (TS->shaped_text_get_direction(dropcap_rid) == godot::TextServer::DIRECTION_LTR ||
-                        TS->shaped_text_get_direction(dropcap_rid) == godot::TextServer::DIRECTION_AUTO)
-                    {
-                        ofs.x += h_offset;
-                    }
-                    l_width -= h_offset;
-                }
-            }
-            float line_width = TS->shaped_text_get_width(lines_rid[i]);
-            if (width > 0)
-            {
-                float offset = 0.f;
-                switch (alignment)
-                {
-                    case godot::HORIZONTAL_ALIGNMENT_FILL:
-                    case godot::HORIZONTAL_ALIGNMENT_LEFT:
-                        break;
-                    case godot::HORIZONTAL_ALIGNMENT_CENTER:
-                        offset = std::floor((l_width - line_width) / 2.0);
-                        break;
-                    case godot::HORIZONTAL_ALIGNMENT_RIGHT:
-                        offset = l_width - line_width;
-                        break;
-                }
-
-                if (TS->shaped_text_get_orientation(lines_rid[i]) == godot::TextServer::ORIENTATION_HORIZONTAL)
-                {
-                    ofs.x += offset;
-                }
-                else
-                {
-                    ofs.y += offset;
-                }
-            }
-            float clip_l;
-            if (TS->shaped_text_get_orientation(lines_rid[i]) == godot::TextServer::ORIENTATION_HORIZONTAL)
-            {
-                clip_l = MAX(0, p_pos.x - ofs.x);
-            }
-            else
-            {
-                clip_l = MAX(0, p_pos.y - ofs.y);
-            }
-            TS->shaped_text_draw(lines_rid[i], p_canvas, ofs, clip_l, clip_l + l_width, p_color);
-            if (TS->shaped_text_get_orientation(lines_rid[i]) == godot::TextServer::ORIENTATION_HORIZONTAL)
-            {
-                ofs.x = p_pos.x;
-                ofs.y += TS->shaped_text_get_descent(lines_rid[i]) * line_height_scale + spacing_bottom;
-            }
-            else
-            {
-                ofs.y = p_pos.y;
-                ofs.x += TS->shaped_text_get_descent(lines_rid[i]) * line_height_scale + spacing_bottom;
-            }
-        }
-    }
-    void layout()
-    {
-        _shape_lines();
-    }
 };
 } // namespace skr::gui
 
 namespace skr::gui
 {
 
-_EmbeddedParagraph::_EmbeddedParagraph(_EmbeddedTextService* service)
-    : _service(service)
+_EmbeddedParagraph::_EmbeddedParagraph()
 {
-    _paragraph = SkrNew<_SkrGodotParagraph>();
-
     // TODO. font service
     _init_font();
 }
@@ -182,15 +55,16 @@ void _EmbeddedParagraph::build()
 {
     if (_dirty)
     {
-        _paragraph->clear();
+        this->clear();
 
         for (const auto& text : _texts)
         {
             auto font = static_pointer_cast<godot::Font>(_font);
-            auto ft = godot::Ref<godot::Font>(font);
-            _paragraph->add_string(godot::String::utf8(text.c_str()), ft, 42, "", {});
+            auto ft   = godot::Ref<godot::Font>(font);
+            this->add_string(godot::String::utf8(text.c_str()), ft, 42, "", {});
         }
 
+        _shape_lines();
         _dirty = false;
     }
 }
@@ -202,22 +76,142 @@ void _EmbeddedParagraph::add_text(const String& text, const TextStyle& style)
 Sizef _EmbeddedParagraph::layout(BoxConstraints constraints)
 {
     build();
-    _paragraph->set_width(constraints.max_width);
-    auto text_size = _paragraph->get_size();
+    this->set_width(constraints.max_width);
+    auto text_size = this->get_size();
     return { text_size.x, text_size.y };
 }
 void _EmbeddedParagraph::paint(NotNull<PaintingContext*> context, Offsetf offset)
 {
     build();
     {
-        godot::Color                     p_color = { 1, 0, 1, 1 };
+        godot::Color                     p_color    = { 1, 0, 1, 1 };
         godot::Color                     p_dc_color = { 1.f, 1.f, 1.f };
-        godot::TextServer::TextDrawProxy proxy = { context->canvas() };
+        godot::TextServer::TextDrawProxy proxy      = { context->canvas() };
 
         auto canvas = context->canvas();
         {
             auto _ = canvas->paint_scope();
-            _paragraph->draw(&proxy, { offset.x, offset.y }, p_color, p_dc_color);
+            _draw(&proxy, { offset.x, offset.y }, p_color, p_dc_color);
+        }
+    }
+}
+void _EmbeddedParagraph::_draw(godot::TextServer::TextDrawProxy* proxy, const skr_float2_t& p_pos, const godot::Color& p_color, const godot::Color& p_dc_color)
+{
+    const float line_height_scale = 1.f;
+    const int   spacing_top       = 0;
+    const int   spacing_bottom    = 0;
+    godot::RID  p_canvas          = godot::RID::from_uint64((uint64_t)proxy);
+
+    _shape_lines();
+    godot::Vector2 ofs      = { p_pos.x, p_pos.y };
+    float          h_offset = 0.f;
+    if (TS->shaped_text_get_orientation(dropcap_rid) == godot::TextServer::ORIENTATION_HORIZONTAL)
+    {
+        h_offset = TS->shaped_text_get_size(dropcap_rid).x + dropcap_margins.size.x + dropcap_margins.position.x;
+    }
+    else
+    {
+        h_offset = TS->shaped_text_get_size(dropcap_rid).y + dropcap_margins.size.y + dropcap_margins.position.y;
+    }
+
+    if (h_offset > 0)
+    {
+        // Draw dropcap.
+        godot::Vector2 dc_off = { ofs.x, ofs.y };
+        if (TS->shaped_text_get_direction(dropcap_rid) == godot::TextServer::DIRECTION_RTL)
+        {
+            if (TS->shaped_text_get_orientation(dropcap_rid) == godot::TextServer::ORIENTATION_HORIZONTAL)
+            {
+                dc_off.x += (float)width - h_offset;
+            }
+            else
+            {
+                dc_off.y += (float)width - h_offset;
+            }
+        }
+        godot::Vector2 p_pos = { dc_off.x, dc_off.y };
+        p_pos.y += TS->shaped_text_get_ascent(dropcap_rid) + dropcap_margins.size.y + dropcap_margins.position.y / 2;
+        TS->shaped_text_draw(dropcap_rid, p_canvas, p_pos, -1, -1, p_dc_color);
+    }
+
+    int lines_visible = (max_lines_visible >= 0) ? MIN(max_lines_visible, lines_rid.size()) : lines_rid.size();
+
+    for (int i = 0; i < lines_visible; i++)
+    {
+        float l_width = (float)width;
+        if (TS->shaped_text_get_orientation(lines_rid[i]) == godot::TextServer::ORIENTATION_HORIZONTAL)
+        {
+            ofs.x = p_pos.x;
+            ofs.y += TS->shaped_text_get_ascent(lines_rid[i]) * line_height_scale + spacing_top;
+            if (i < dropcap_lines)
+            {
+                if (TS->shaped_text_get_direction(dropcap_rid) == godot::TextServer::DIRECTION_LTR ||
+                    TS->shaped_text_get_direction(dropcap_rid) == godot::TextServer::DIRECTION_AUTO)
+                {
+                    ofs.x += h_offset;
+                }
+                l_width -= h_offset;
+            }
+        }
+        else
+        {
+            ofs.y = p_pos.y;
+            ofs.x += TS->shaped_text_get_ascent(lines_rid[i]) * line_height_scale + spacing_top;
+            if (i < dropcap_lines)
+            {
+                if (TS->shaped_text_get_direction(dropcap_rid) == godot::TextServer::DIRECTION_LTR ||
+                    TS->shaped_text_get_direction(dropcap_rid) == godot::TextServer::DIRECTION_AUTO)
+                {
+                    ofs.x += h_offset;
+                }
+                l_width -= h_offset;
+            }
+        }
+        float line_width = TS->shaped_text_get_width(lines_rid[i]);
+        if (width > 0)
+        {
+            float offset = 0.f;
+            switch (alignment)
+            {
+                case godot::HORIZONTAL_ALIGNMENT_FILL:
+                case godot::HORIZONTAL_ALIGNMENT_LEFT:
+                    break;
+                case godot::HORIZONTAL_ALIGNMENT_CENTER:
+                    offset = std::floor((l_width - line_width) / 2.0);
+                    break;
+                case godot::HORIZONTAL_ALIGNMENT_RIGHT:
+                    offset = l_width - line_width;
+                    break;
+            }
+
+            if (TS->shaped_text_get_orientation(lines_rid[i]) == godot::TextServer::ORIENTATION_HORIZONTAL)
+            {
+                ofs.x += offset;
+            }
+            else
+            {
+                ofs.y += offset;
+            }
+        }
+        float clip_l;
+        if (TS->shaped_text_get_orientation(lines_rid[i]) == godot::TextServer::ORIENTATION_HORIZONTAL)
+        {
+            clip_l = MAX(0, p_pos.x - ofs.x);
+        }
+        else
+        {
+            clip_l = MAX(0, p_pos.y - ofs.y);
+        }
+        TS->shaped_text_draw(lines_rid[i], p_canvas, ofs, clip_l, clip_l + l_width, p_color);
+        if (TS->shaped_text_get_orientation(lines_rid[i]) == godot::TextServer::ORIENTATION_HORIZONTAL)
+        {
+            ofs.x = p_pos.x;
+            ofs.y += TS->shaped_text_get_descent(lines_rid[i]) * line_height_scale + spacing_bottom;
+        }
+        else
+        {
+            ofs.y = p_pos.y;
+            ofs.x += TS->shaped_text_get_descent(lines_rid[i]) * line_height_scale + spacing_bottom;
         }
     }
 }

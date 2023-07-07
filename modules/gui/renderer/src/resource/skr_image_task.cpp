@@ -1,5 +1,5 @@
 #include "SkrGuiRenderer/resource/skr_image_task.hpp"
-#include "SkrGuiRenderer/resource/skr_resource_service.hpp"
+#include "SkrGuiRenderer/resource/skr_resource_device.hpp"
 #include "SkrImageCoder/skr_image_coder.h"
 #include "tracy/Tracy.hpp"
 #include "SkrGuiRenderer/render/skr_render_device.hpp"
@@ -36,19 +36,19 @@ ECGPUFormat _cgpu_format_from_image_coder_format(EImageCoderFormat format, EImag
 skr::BlobId _image_coder_decode_image(const uint8_t* bytes, uint64_t size, uint32_t& out_height, uint32_t& out_width, uint32_t& out_depth, ECGPUFormat& out_format)
 {
     ZoneScopedN("DirectStoragePNGDecompressor");
-    EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)bytes, size);
+    EImageCoderFormat format  = skr_image_coder_detect_format((const uint8_t*)bytes, size);
     auto              decoder = skr::IImageDecoder::Create(format);
     if (decoder->initialize((const uint8_t*)bytes, size))
     {
         SKR_DEFER({ decoder.reset(); });
         const auto encoded_format = decoder->get_color_format();
-        const auto raw_format = (encoded_format == IMAGE_CODER_COLOR_FORMAT_BGRA) ? IMAGE_CODER_COLOR_FORMAT_RGBA : encoded_format;
+        const auto raw_format     = (encoded_format == IMAGE_CODER_COLOR_FORMAT_BGRA) ? IMAGE_CODER_COLOR_FORMAT_RGBA : encoded_format;
         {
             const auto bit_depth = decoder->get_bit_depth();
-            out_depth = 1;
-            out_height = decoder->get_height();
-            out_width = decoder->get_width();
-            out_format = _cgpu_format_from_image_coder_format(format, raw_format, bit_depth);
+            out_depth            = 1;
+            out_height           = decoder->get_height();
+            out_width            = decoder->get_width();
+            out_format           = _cgpu_format_from_image_coder_format(format, raw_format, bit_depth);
         }
         decoder->decode(raw_format, decoder->get_bit_depth());
         return decoder;
@@ -89,7 +89,7 @@ SkrImageData::SkrImageData(EPixelFormat format, Sizei size, Span<const uint8_t> 
 {
 }
 
-SkrImageDataTask::SkrImageDataTask(SkrResourceService* resource_service)
+SkrImageDataTask::SkrImageDataTask(SkrResourceDevice* resource_service)
     : _owner(resource_service)
 {
 }
@@ -103,7 +103,7 @@ void SkrImageDataTask::from_file(StringView file_path, bool need_decode)
     _need_decode = need_decode;
 
     auto ram_service = _owner->ram_service();
-    auto vfs = _owner->vfs();
+    auto vfs         = _owner->vfs();
 
     auto rq = ram_service->open_request();
     rq->set_vfs(vfs);
@@ -127,7 +127,7 @@ void SkrImageDataTask::from_file(StringView file_path, bool need_decode)
 void SkrImageDataTask::from_data(Span<const uint8_t> data)
 {
     _need_decode = true;
-    _raw_data = IBlob::Create(data.data(), data.size(), false);
+    _raw_data    = IBlob::Create(data.data(), data.size(), false);
     _async_trans_state(EState::Initializing);
     _async_decode_data();
 }
@@ -153,7 +153,7 @@ void SkrImageDataTask::_async_decode_data()
     }
 }
 
-SkrImageUploadTask::SkrImageUploadTask(SkrResourceService* resource_service, SkrRenderDevice* render_device)
+SkrImageUploadTask::SkrImageUploadTask(SkrResourceDevice* resource_service, SkrRenderDevice* render_device)
     : _resource_service(resource_service)
     , _render_device(render_device)
 {
@@ -173,48 +173,48 @@ void SkrImageUploadTask::from_image(const SkrImageData& image)
 
     auto vram_io_info = make_zeroed<skr_vram_texture_io_t>();
 
-    const auto& pixel_data = _image_data.pixel_data();
+    const auto& pixel_data        = _image_data.pixel_data();
     vram_io_info.src_memory.bytes = pixel_data->get_data();
-    vram_io_info.src_memory.size = pixel_data->get_size();
-    vram_io_info.device = _render_device->cgpu_device();
-    vram_io_info.transfer_queue = _render_device->cgpu_queue();
+    vram_io_info.src_memory.size  = pixel_data->get_size();
+    vram_io_info.device           = _render_device->cgpu_device();
+    vram_io_info.transfer_queue   = _render_device->cgpu_queue();
 
-    vram_io_info.vtexture.depth = _image_data.image_depth();
-    vram_io_info.vtexture.height = _image_data.size().height;
-    vram_io_info.vtexture.width = _image_data.size().width;
-    vram_io_info.vtexture.format = _image_data.cgpu_format();
+    vram_io_info.vtexture.depth          = _image_data.image_depth();
+    vram_io_info.vtexture.height         = _image_data.size().height;
+    vram_io_info.vtexture.width          = _image_data.size().width;
+    vram_io_info.vtexture.format         = _image_data.cgpu_format();
     vram_io_info.vtexture.resource_types = CGPU_RESOURCE_TYPE_TEXTURE;
 
     vram_io_info.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata) {
         auto task = static_cast<SkrImageUploadTask*>(usrdata);
 
-        auto        device = task->_render_device->cgpu_device();
+        auto        device     = task->_render_device->cgpu_device();
         const auto& image_data = task->_image_data;
 
-        task->_texture = task->_vram_destination.texture;
+        task->_texture                      = task->_vram_destination.texture;
         CGPUTextureViewDescriptor view_desc = {};
-        view_desc.texture = task->_texture;
-        view_desc.format = image_data.cgpu_format();
-        view_desc.array_layer_count = 1;
-        view_desc.base_array_layer = 0;
-        view_desc.mip_level_count = 1;
-        view_desc.base_mip_level = 0;
-        view_desc.aspects = CGPU_TVA_COLOR;
-        view_desc.dims = CGPU_TEX_DIMENSION_2D;
-        view_desc.usages = CGPU_TVU_SRV;
-        task->_texture_view = cgpu_create_texture_view(device, &view_desc);
+        view_desc.texture                   = task->_texture;
+        view_desc.format                    = image_data.cgpu_format();
+        view_desc.array_layer_count         = 1;
+        view_desc.base_array_layer          = 0;
+        view_desc.mip_level_count           = 1;
+        view_desc.base_mip_level            = 0;
+        view_desc.aspects                   = CGPU_TVA_COLOR;
+        view_desc.dims                      = CGPU_TEX_DIMENSION_2D;
+        view_desc.usages                    = CGPU_TVU_SRV;
+        task->_texture_view                 = cgpu_create_texture_view(device, &view_desc);
 
         const char8_t*           color_texture_name = u8"color_texture";
-        CGPUXBindTableDescriptor bind_table_desc = {};
-        bind_table_desc.root_signature = task->_root_signature;
-        bind_table_desc.names = &color_texture_name;
-        bind_table_desc.names_count = 1;
-        task->_bind_table = cgpux_create_bind_table(device, &bind_table_desc);
-        auto data = make_zeroed<CGPUDescriptorData>();
-        data.name = color_texture_name;
-        data.count = 1;
-        data.binding_type = CGPU_RESOURCE_TYPE_TEXTURE;
-        data.textures = &task->_texture_view;
+        CGPUXBindTableDescriptor bind_table_desc    = {};
+        bind_table_desc.root_signature              = task->_root_signature;
+        bind_table_desc.names                       = &color_texture_name;
+        bind_table_desc.names_count                 = 1;
+        task->_bind_table                           = cgpux_create_bind_table(device, &bind_table_desc);
+        auto data                                   = make_zeroed<CGPUDescriptorData>();
+        data.name                                   = color_texture_name;
+        data.count                                  = 1;
+        data.binding_type                           = CGPU_RESOURCE_TYPE_TEXTURE;
+        data.textures                               = &task->_texture_view;
         cgpux_bind_table_update(task->_bind_table, &data, 1);
 
         skr_atomicu32_store_release(&task->_async_is_okey, 1);

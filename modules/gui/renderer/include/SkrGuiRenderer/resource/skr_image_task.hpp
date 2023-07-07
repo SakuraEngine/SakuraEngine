@@ -48,7 +48,7 @@ inline EPixelFormat cgpu_format_to_pixel_format(ECGPUFormat format)
 
 namespace skr::gui
 {
-struct SkrResourceService;
+struct SkrResourceDevice;
 struct DecodingProgress;
 struct SkrUpdatableImage;
 struct SkrRenderDevice;
@@ -63,10 +63,10 @@ struct SKR_GUI_RENDERER_API SkrImageData {
     inline uint32_t     image_depth() const SKR_NOEXCEPT { return _image_depth; }
     inline BlobId       pixel_data() const SKR_NOEXCEPT { return _pixel_data; }
 
-    ECGPUFormat _format = CGPU_FORMAT_UNDEFINED;
-    Sizei       _size = {};
+    ECGPUFormat _format      = CGPU_FORMAT_UNDEFINED;
+    Sizei       _size        = {};
     uint32_t    _image_depth = 0;
-    BlobId      _pixel_data = nullptr;
+    BlobId      _pixel_data  = nullptr;
 };
 
 struct SKR_GUI_RENDERER_API SkrImageDataTask {
@@ -78,7 +78,7 @@ struct SKR_GUI_RENDERER_API SkrImageDataTask {
         Okey,
     };
 
-    SkrImageDataTask(SkrResourceService* resource_service);
+    SkrImageDataTask(SkrResourceDevice* resource_service);
 
     EState state() const SKR_NOEXCEPT;
     void   from_file(StringView file_path, bool need_decode);
@@ -95,40 +95,40 @@ private:
 
 private:
     friend struct DecodingProgress;
-    SkrResourceService* _owner = nullptr;
+    SkrResourceDevice* _owner = nullptr;
 
     // data
     SkrImageData _image_data = {};
-    BlobId       _raw_data = nullptr;
+    BlobId       _raw_data   = nullptr;
 
     // async
-    EState                 _state = EState::Requested;
-    skr_io_future_t        _ram_request = {};
+    EState                 _state             = EState::Requested;
+    skr_io_future_t        _ram_request       = {};
     SPtr<DecodingProgress> _decoding_progress = nullptr;
-    bool                   _need_decode = false;
+    bool                   _need_decode       = false;
 };
 
 struct SKR_GUI_RENDERER_API SkrImageUploadTask {
-    SkrImageUploadTask(SkrResourceService* resource_service, SkrRenderDevice* render_device);
+    SkrImageUploadTask(SkrResourceDevice* resource_service, SkrRenderDevice* render_device);
 
     bool is_okey();
     void from_image(const SkrImageData& data);
 
 private:
-    SkrResourceService* _resource_service = nullptr;
-    SkrRenderDevice*    _render_device = nullptr;
+    SkrResourceDevice* _resource_service = nullptr;
+    SkrRenderDevice*   _render_device    = nullptr;
 
     // data
-    SkrImageData        _image_data = {};
-    CGPUTextureId       _texture = nullptr;
-    CGPUTextureViewId   _texture_view = nullptr;
-    CGPUXBindTableId    _bind_table = nullptr;
+    SkrImageData        _image_data     = {};
+    CGPUTextureId       _texture        = nullptr;
+    CGPUTextureViewId   _texture_view   = nullptr;
+    CGPUXBindTableId    _bind_table     = nullptr;
     CGPURootSignatureId _root_signature = nullptr;
 
     // async
-    skr_io_future_t                  _ram_request = {};
+    skr_io_future_t                  _ram_request      = {};
     skr_async_vtexture_destination_t _vram_destination = {};
-    uint32_t                         _async_is_okey = false;
+    uint32_t                         _async_is_okey    = false;
 };
 
 } // namespace skr::gui

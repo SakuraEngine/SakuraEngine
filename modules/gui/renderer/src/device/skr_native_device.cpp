@@ -1,8 +1,9 @@
 #include "SkrGuiRenderer/device/skr_native_device.hpp"
+#include "SkrGui/backend/embed_services.hpp"
 #include "SkrGuiRenderer/device/skr_native_window.hpp"
 #include "SkrGuiRenderer/render/skr_render_device.hpp"
 #include "SkrGuiRenderer/render/skr_render_window.hpp"
-#include "SkrGuiRenderer/resource/skr_resource_service.hpp"
+#include "SkrGuiRenderer/resource/skr_resource_device.hpp"
 #include "SkrGui/framework/layer/native_window_layer.hpp"
 
 namespace skr::gui
@@ -14,8 +15,8 @@ void SkrNativeDevice::init()
     _render_device->init();
 
     // init resource service
-    _resource_service = SkrNew<SkrResourceService>();
-    _resource_service->init();
+    _resource_device = SkrNew<SkrResourceDevice>();
+    _resource_device->init();
 
     // get display metrics
     uint32_t       count;
@@ -42,12 +43,18 @@ void SkrNativeDevice::init()
 
     // TODO. total data
     // _display_metrics.primary_display_area = _display_metrics.monitors[0].work_area;
+
+    // init text device
+    embedded_init_text_service(this);
 }
 void SkrNativeDevice::shutdown()
 {
+    // shutdown text device
+    embedded_shutdown_text_service();
+
     // shutdown resource device
-    _resource_service->shutdown();
-    SkrDelete(_resource_service);
+    _resource_device->shutdown();
+    SkrDelete(_resource_device);
 
     // shutdown render device
     _render_device->shutdown();
@@ -74,12 +81,6 @@ void SkrNativeDevice::destroy_window(NotNull<IWindow*> view)
     SkrDelete(view.get());
 }
 
-// display info
-const DisplayMetrics& SkrNativeDevice::display_metrics() const
-{
-    return _display_metrics;
-}
-
 void SkrNativeDevice::render_all_windows() SKR_NOEXCEPT
 {
     // combine render graph
@@ -97,6 +98,43 @@ void SkrNativeDevice::render_all_windows() SKR_NOEXCEPT
     {
         window->render_window()->present();
     }
+}
+
+// display info
+const DisplayMetrics& SkrNativeDevice::display_metrics() const
+{
+    return _display_metrics;
+}
+
+// resource management
+NotNull<IUpdatableImage*> SkrNativeDevice::create_updatable_image(const UpdatableImageDesc& desc)
+{
+    SKR_UNIMPLEMENTED_FUNCTION()
+    return make_not_null<IUpdatableImage*>(nullptr);
+}
+void SkrNativeDevice::destroy_resource(NotNull<IResource*> resource)
+{
+    SKR_UNIMPLEMENTED_FUNCTION();
+}
+
+// canvas management
+NotNull<ICanvas*> SkrNativeDevice::create_canvas()
+{
+    return embedded_create_canvas();
+}
+void SkrNativeDevice::destroy_canvas(NotNull<ICanvas*> canvas)
+{
+    embedded_destroy_canvas(canvas);
+}
+
+// text management
+NotNull<IParagraph*> SkrNativeDevice::create_paragraph()
+{
+    return embedded_create_paragraph();
+}
+void SkrNativeDevice::destroy_paragraph(NotNull<IParagraph*> paragraph)
+{
+    embedded_destroy_paragraph(paragraph);
 }
 
 } // namespace skr::gui

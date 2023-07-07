@@ -6,14 +6,12 @@
 
 namespace skr::gui
 {
-struct SKR_GUI_RENDERER_API SkrResourceService final : public IResourceService {
-    SKR_GUI_OBJECT(SkrResourceService, "5be84757-282b-4a1c-8c5e-4b4d58807d7d", IResourceService)
-
+struct SKR_GUI_RENDERER_API SkrResourceDevice final {
     void init();
     void shutdown();
 
-    NotNull<IUpdatableImage*> create_updatable_image(const UpdatableImageDesc& desc) override;
-    void                      destroy_resource(NotNull<IResource*> resource) override;
+    NotNull<IUpdatableImage*> create_updatable_image(const UpdatableImageDesc& desc);
+    void                      destroy_resource(NotNull<IResource*> resource);
 
     // getter
     inline skr_io_ram_service_t*  ram_service() const SKR_NOEXCEPT { return _ram_service; }
