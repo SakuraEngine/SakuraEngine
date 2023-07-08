@@ -185,7 +185,7 @@ uint32_t cgpu_query_queue_count_vulkan(const CGPUAdapterId adapter, const ECGPUQ
                 const VkQueueFamilyProperties* prop = &A->pQueueFamilyProperties[i];
                 if (prop->queueFlags & VK_QUEUE_GRAPHICS_BIT)
                 {
-                    count += prop->queueCount;
+                    return prop->queueCount;
                 }
             }
         }
@@ -198,7 +198,7 @@ uint32_t cgpu_query_queue_count_vulkan(const CGPUAdapterId adapter, const ECGPUQ
                 {
                     if (!(prop->queueFlags & VK_QUEUE_GRAPHICS_BIT))
                     {
-                        count += prop->queueCount;
+                        return prop->queueCount;
                     }
                 }
             }
@@ -214,7 +214,7 @@ uint32_t cgpu_query_queue_count_vulkan(const CGPUAdapterId adapter, const ECGPUQ
                     {
                         if (!(prop->queueFlags & VK_QUEUE_GRAPHICS_BIT))
                         {
-                            count += prop->queueCount;
+                            return prop->queueCount;
                         }
                     }
                 }
@@ -233,7 +233,7 @@ uint32_t cgpu_query_queue_count_vulkan(const CGPUAdapterId adapter, const ECGPUQ
                         {
                             if (!(prop->queueFlags & VK_QUEUE_GRAPHICS_BIT))
                             {
-                                count += prop->queueCount;
+                                return prop->queueCount;
                             }
                         }
                     }

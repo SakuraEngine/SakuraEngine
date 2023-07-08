@@ -453,7 +453,7 @@ CGPUDeviceId cgpu_create_device_vulkan(CGPUAdapterId adapter, const CGPUDeviceDe
         info.queueFamilyIndex = (uint32_t)A->mQueueFamilyIndices[descriptor.queue_type];
         info.pQueuePriorities = queuePriorities;
 
-        cgpu_assert(cgpu_query_queue_count_vulkan(adapter, descriptor.queue_type) >= descriptor.queue_count && "allocated too many queues!");
+        cgpu_assert(info.queueCount <= A->pQueueFamilyProperties[info.queueFamilyIndex].queueCount && "allocated too many queues!");
     }
     // Create Device
     DECLARE_ZERO(VkDeviceCreateInfo, createInfo)
