@@ -60,7 +60,7 @@ void SkrRuntimeModule::on_unload()
 #endif
 
     SKR_LOG_TRACE("SkrRuntime module unloaded!");
-    skr_log_finalize();
+    skr_log_finalize_async_worker();
     skr_finalize_crash_handler();
 }
 

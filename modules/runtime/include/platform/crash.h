@@ -28,6 +28,7 @@ enum
     kCrashCodeCount
 };
 typedef int32_t CrashTerminateCode;
+RUNTIME_API const char8_t* skr_crash_code_string(CrashTerminateCode code) SKR_NOEXCEPT;
 
 typedef struct SCrashHandler SCrashHandler;
 typedef struct SCrashContext {
@@ -80,6 +81,7 @@ typedef struct SCrashHandler {
 protected:
     virtual void terminateProcess(int32_t code = 1) SKR_NOEXCEPT;
 
+    virtual void beforeHandlingSignal(CrashTerminateCode code) SKR_NOEXCEPT;
     template<typename F>
     void handleFunction(F&& f, CrashTerminateCode code);
     virtual SCrashContext* getCrashContext(CrashTerminateCode reason) SKR_NOEXCEPT { return nullptr; }
@@ -114,6 +116,8 @@ protected:
 template<typename F>
 void SCrashHandler::handleFunction(F&& f, CrashTerminateCode code)
 {
+    beforeHandlingSignal(code);
+    
     auto& this_ = *skr_crash_handler_get();
     // Acquire lock to avoid other threads (if exist) to crash while we	are inside.
     this_.crashLock();

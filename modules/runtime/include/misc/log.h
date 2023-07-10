@@ -29,6 +29,12 @@ enum
     SKR_LOG_LEVEL_BACKTRACE,
 };
 
+enum
+{
+    SKR_LOG_FLUSH_BEHAVIOR_AUTO,
+    SKR_LOG_FLUSH_BEHAVIOR_IMMEDIATE,
+};
+
 #define __LOG_FUNC__ __FUNCTION__ 
 
 #define SKR_LOG_BACKTRACE(...) skr_log_log(SKR_LOG_LEVEL_BACKTRACE, __FILE__, __LOG_FUNC__, SKR_MAKE_STRING(__LINE__), __VA_ARGS__)
@@ -39,16 +45,18 @@ enum
 #define SKR_LOG_ERROR(...) skr_log_log(SKR_LOG_LEVEL_ERROR, __FILE__, __LOG_FUNC__, SKR_MAKE_STRING(__LINE__), __VA_ARGS__)
 #define SKR_LOG_FATAL(...) skr_log_log(SKR_LOG_LEVEL_FATAL, __FILE__, __LOG_FUNC__, SKR_MAKE_STRING(__LINE__), __VA_ARGS__)
 
-RUNTIME_API void skr_log_initialize_async_worker();
-
 RUNTIME_API void skr_log_set_level(int level);
+
+RUNTIME_API void skr_log_set_flush_behavior(int behavior);
 
 RUNTIME_API void skr_log_log(int level, const char* file, const char* func, const char* line, const char* fmt, ...);
 
 // flush logs of this thread
 RUNTIME_API void skr_log_flush();
 
-RUNTIME_API void skr_log_finalize();
+RUNTIME_API void skr_log_initialize_async_worker();
+
+RUNTIME_API void skr_log_finalize_async_worker();
 
 #ifdef __cplusplus
 }

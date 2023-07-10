@@ -34,6 +34,7 @@ struct WinCrashHandler : public SCrashHandler
         ctx.reason = reason;
         return &ctx;
     }
+    int internalHandler(struct SCrashContext* context) SKR_NOEXCEPT;
 
 private:
     skr::string app_name;
@@ -123,7 +124,34 @@ bool WinCrashHandler::Initialize() SKR_NOEXCEPT
 
     crashSetErrorMsg(u8"Sucessfully initialized crash handler.");
     initialized = true;
+
+    skr_crash_handler_add_callback(this, 
+    +[](struct SCrashContext* context, void* usr_data) -> int
+    {
+        auto this_ = reinterpret_cast<WinCrashHandler*>(usr_data);
+        return this_->internalHandler(context);
+    }, this);
+
     return initialized;
+}
+
+int WinCrashHandler::internalHandler(struct SCrashContext* context) SKR_NOEXCEPT
+{
+    const auto type = MB_ABORTRETRYIGNORE | MB_ICONERROR;
+    const auto reason = context->reason;
+    skr::string why = skr::format(
+        u8"Reason: {}",
+        skr_crash_code_string(reason)
+    );
+    
+    SKR_LOG_FATAL(why.c_str());
+
+    ::MessageBoxExA(nullptr, 
+        why.c_str(), 
+        "Crash 了！",
+        type, 0
+    );
+    return 0;
 }
 
 bool WinCrashHandler::Finalize() SKR_NOEXCEPT

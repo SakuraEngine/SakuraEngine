@@ -1,3 +1,4 @@
+#include "misc/log.h"
 #include "platform/crash.h"
 #include "platform/thread.h"
 #include "containers/hashmap.hpp"
@@ -174,6 +175,12 @@ bool SCrashHandler::UnsetThreadSignalHandlers() SKR_NOEXCEPT
     return true;
 }
 
+void SCrashHandler::beforeHandlingSignal(CrashTerminateCode code) SKR_NOEXCEPT
+{
+    skr_log_finalize_async_worker();
+    skr_log_set_flush_behavior(SKR_LOG_FLUSH_BEHAVIOR_IMMEDIATE);
+}
+
 void SCrashHandler::add_callback(SCrashHandler::CallbackWrapper callback) SKR_NOEXCEPT
 {
     SMutexLock _(callbacks_lock);
@@ -182,6 +189,29 @@ void SCrashHandler::add_callback(SCrashHandler::CallbackWrapper callback) SKR_NO
 
 extern "C"
 {
+
+RUNTIME_API const char8_t* skr_crash_code_string(CrashTerminateCode code) SKR_NOEXCEPT
+{
+#define SKR_CCODE_TRANS(code) case kCrashCode##code: return (const char8_t*)#code;
+    switch (code) 
+    {
+        SKR_CCODE_TRANS(Abort);
+        SKR_CCODE_TRANS(Interrupt);
+        SKR_CCODE_TRANS(Kill);
+        SKR_CCODE_TRANS(DividedByZero);
+        SKR_CCODE_TRANS(IllInstruction);
+        SKR_CCODE_TRANS(SegFault);
+        SKR_CCODE_TRANS(StackOverflow);
+        SKR_CCODE_TRANS(Terminate);
+        SKR_CCODE_TRANS(Unexpected);
+        SKR_CCODE_TRANS(Unhandled);
+        SKR_CCODE_TRANS(PureVirtual);
+        SKR_CCODE_TRANS(OpNewError);
+        SKR_CCODE_TRANS(InvalidParam);
+    }
+    return u8"";
+#undef SKR_CCODE_TRANS
+}
 
 RUNTIME_API void skr_crash_handler_add_callback(SCrashHandlerId handler, SProcCrashCallback callback, void* usr_data) SKR_NOEXCEPT
 {

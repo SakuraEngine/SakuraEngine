@@ -544,7 +544,7 @@ int main(int argc, char** argv)
     auto result = RUN_ALL_TESTS();
     dual_shutdown();
 
-    skr_log_finalize();
+    skr_log_finalize_async_worker();
     skr_finalize_crash_handler();
     return result;
 }
