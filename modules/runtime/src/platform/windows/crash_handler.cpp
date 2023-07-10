@@ -28,9 +28,11 @@ struct WinCrashHandler : public SCrashHandler
         TerminateProcess(GetCurrentProcess(), code);
     }
 
-    SCrashContext* getCrashContext() SKR_NOEXCEPT override
+    SCrashContext ctx;
+    SCrashContext* getCrashContext(CrashTerminateCode reason) SKR_NOEXCEPT override
     {
-        return nullptr;
+        ctx.reason = reason;
+        return &ctx;
     }
 
 private:
@@ -133,39 +135,42 @@ DWORD WINAPI WinCrashHandler::StackOverflowThreadFunction(LPVOID lpParameter) SK
 {
     auto& this_ = windows_crash_handler;
 	PEXCEPTION_POINTERS pExceptionPtrs = reinterpret_cast<PEXCEPTION_POINTERS>(lpParameter);
+    const auto reason = kCrashCodeStackOverflow;
 	this_.handleFunction([&](){
         this_.visit_callbacks([&](const CallbackWrapper& wrapper)
         {
-            auto ctx = this_.getCrashContext();
+            auto ctx = this_.getCrashContext(reason);
             ctx->exception_pointers = pExceptionPtrs;
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    }, kCrashCodeStackOverflow);
+    }, reason);
     return 0;
 }
 
 void WINAPI WinCrashHandler::TerminateHandler() SKR_NOEXCEPT
 {
     auto& this_ = windows_crash_handler;
+    const auto reason = kCrashCodeTerminate;
     this_.handleFunction([&](){
         this_.visit_callbacks([&](const CallbackWrapper& wrapper)
         {
-            auto ctx = this_.getCrashContext();
+            auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    }, kCrashCodeTerminate);
+    }, reason);
 }
 
 void WINAPI WinCrashHandler::UnexpectedHandler() SKR_NOEXCEPT
 {
     auto& this_ = windows_crash_handler;
+    const auto reason = kCrashCodeUnexpected;
     this_.handleFunction([&](){
         this_.visit_callbacks([&](const CallbackWrapper& wrapper)
         {
-            auto ctx = this_.getCrashContext();
+            auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    }, kCrashCodeUnexpected);
+    }, reason);
 }
 
 LONG WINAPI WinCrashHandler::SehHandler(PEXCEPTION_POINTERS pExceptionPtrs) SKR_NOEXCEPT
@@ -191,14 +196,15 @@ LONG WINAPI WinCrashHandler::SehHandler(PEXCEPTION_POINTERS pExceptionPtrs) SKR_
 		::WaitForSingleObject(thread, INFINITE);
 		::CloseHandle(thread);
 
+        const auto reason = kCrashCodeUnhandled;
         this_.handleFunction([&](){
             this_.visit_callbacks([&](const CallbackWrapper& wrapper)
             {
-                auto ctx = this_.getCrashContext();
+                auto ctx = this_.getCrashContext(reason);
                 ctx->exception_pointers = pExceptionPtrs;
                 wrapper.callback(ctx, wrapper.usr_data);
             });
-        }, kCrashCodeUnhandled);
+        }, reason);
 	}
 
     return EXCEPTION_EXECUTE_HANDLER;
@@ -208,25 +214,27 @@ LONG WINAPI WinCrashHandler::SehHandler(PEXCEPTION_POINTERS pExceptionPtrs) SKR_
 void WINAPI WinCrashHandler::PureCallHandler() SKR_NOEXCEPT
 {
     auto& this_ = windows_crash_handler;
+    const auto reason = kCrashCodePureVirtual;
 	this_.handleFunction([&](){
         this_.visit_callbacks([&](const CallbackWrapper& wrapper)
         {
-            auto ctx = this_.getCrashContext();
+            auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    }, kCrashCodePureVirtual);
+    }, reason);
 }
 
 int WINAPI WinCrashHandler::NewHandler(size_t sz) SKR_NOEXCEPT
 {
     auto& this_ = windows_crash_handler;
+    const auto reason = kCrashCodeOpNewError;
     this_.handleFunction([&](){
         this_.visit_callbacks([&](const CallbackWrapper& wrapper)
         {
-            auto ctx = this_.getCrashContext();
+            auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    }, kCrashCodeOpNewError);
+    }, reason);
     return 0;
 }
 #endif
@@ -237,13 +245,14 @@ void WINAPI WinCrashHandler::InvalidParameterHandler(const wchar_t* expression, 
 {
     (void)pReserved;
     auto& this_ = windows_crash_handler;
+    const auto reason = kCrashCodeInvalidParam;
 	this_.handleFunction([&](){
         this_.visit_callbacks([&](const CallbackWrapper& wrapper)
         {
-            auto ctx = this_.getCrashContext();
+            auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    }, kCrashCodeInvalidParam);
+    }, reason);
 }
 #endif
 

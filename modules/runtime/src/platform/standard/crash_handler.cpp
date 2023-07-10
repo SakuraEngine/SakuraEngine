@@ -60,73 +60,79 @@ bool SCrashHandler::Finalize() SKR_NOEXCEPT
 void SCrashHandler::SigabrtHandler(int code)
 {
     auto& this_ = *skr_crash_handler_get();
+    const auto reason = kCrashCodeAbort;
 	this_.handleFunction([&](){
         this_.visit_callbacks([&](const CallbackWrapper& wrapper)
         {
-            auto ctx = this_.getCrashContext();
+            auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    }, kCrashCodeAbort);
+    }, reason);
 }
 
 void SCrashHandler::SigintHandler(int code)
 {
     auto& this_ = *skr_crash_handler_get();
+    const auto reason = kCrashCodeInterrupt;
 	this_.handleFunction([&](){
         this_.visit_callbacks([&](const CallbackWrapper& wrapper)
         {
-            auto ctx = this_.getCrashContext();
+            auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    }, kCrashCodeInterrupt);
+    }, reason);
 }
 
 void SCrashHandler::SigtermHandler(int code)
 {
     auto& this_ = *skr_crash_handler_get();
+    const auto reason = kCrashCodeKill;
 	this_.handleFunction([&](){
         this_.visit_callbacks([&](const CallbackWrapper& wrapper)
         {
-            auto ctx = this_.getCrashContext();
+            auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    }, kCrashCodeKill);
+    }, reason);
 }
 
 void SCrashHandler::SigfpeHandler(int code, int subcode)
 {
     auto& this_ = *skr_crash_handler_get();
+    const auto reason = kCrashCodeDividedByZero;
 	this_.handleFunction([&](){
         this_.visit_callbacks([&](const CallbackWrapper& wrapper)
         {
-            auto ctx = this_.getCrashContext();
+            auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    }, kCrashCodeDividedByZero);
+    }, reason);
 }
 
 void SCrashHandler::SigillHandler(int code)
 {
     auto& this_ = *skr_crash_handler_get();
+    const auto reason = kCrashCodeIllInstruction;
 	this_.handleFunction([&](){
         this_.visit_callbacks([&](const CallbackWrapper& wrapper)
         {
-            auto ctx = this_.getCrashContext();
+            auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    }, kCrashCodeIllInstruction);
+    }, reason);
 }
 
 void SCrashHandler::SigsegvHandler(int code)
 {
     auto& this_ = *skr_crash_handler_get();
+    const auto reason = kCrashCodeSegFault;
 	this_.handleFunction([&](){
         this_.visit_callbacks([&](const CallbackWrapper& wrapper)
         {
-            auto ctx = this_.getCrashContext();
+            auto ctx = this_.getCrashContext(reason);
             wrapper.callback(ctx, wrapper.usr_data);
         });
-    }, kCrashCodeSegFault);
+    }, reason);
 }
 
 bool SCrashHandler::SetProcessSignalHandlers() SKR_NOEXCEPT

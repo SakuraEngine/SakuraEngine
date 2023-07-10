@@ -82,7 +82,7 @@ protected:
 
     template<typename F>
     void handleFunction(F&& f, CrashTerminateCode code);
-    virtual SCrashContext* getCrashContext() SKR_NOEXCEPT { return nullptr; }
+    virtual SCrashContext* getCrashContext(CrashTerminateCode reason) SKR_NOEXCEPT { return nullptr; }
     
     int crashSetErrorMsg(const char8_t* pszErrorMsg) SKR_NOEXCEPT;
     void crashLock() SKR_NOEXCEPT { skr_mutex_acquire(&crash_lock); }
