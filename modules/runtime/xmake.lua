@@ -51,7 +51,12 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
     if (is_os("macosx")) then 
         add_files("src/**/build.*.m", "src/**/build.*.mm")
-    else 
+    end
+
+    -- https://github.com/xmake-io/xmake/issues/3912
+    -- need xmake v2.8.1 to enable pch with objcpp
+    local mxx_pch = xmake.version():ge("2.8.1")
+    if (not is_os("macosx") or mxx_pch) then 
         set_pcxxheader("src/pch.hpp")
     end
 

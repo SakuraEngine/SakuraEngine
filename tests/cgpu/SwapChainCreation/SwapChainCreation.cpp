@@ -1,4 +1,5 @@
 #include "gtest/gtest.h"
+#include "platform/crash.h"
 #include "cgpu/api.h"
 #include "misc/log.h"
 #if defined(_WIN32) || defined(_WIN64)
@@ -178,9 +179,13 @@ HWND createWin32Window()
 
 int main(int argc, char** argv)
 {
-    log_initialize_async_worker();
+    skr_initialize_crash_handler();
+    skr_log_initialize_async_worker();
+
     ::testing::InitGoogleTest(&argc, argv);
     auto result = RUN_ALL_TESTS();
-    log_finalize();
+
+    skr_log_finalize_async_worker();
+    skr_finalize_crash_handler();
     return result;
 }

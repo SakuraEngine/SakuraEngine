@@ -1,14 +1,10 @@
-#include "SkrRenderer/pso_key.hpp"
 #include "cgpu/cgpux.hpp"
-#include "SkrRenderer/pso_map.h"
-#include "SkrRenderer/render_device.h"
 #include "platform/atomic.h"
-#include "containers/hashmap.hpp"
-#include "containers/vector.hpp"
 #include "containers/sptr.hpp"
-#include "misc/defer.hpp"
-#include "misc/make_zeroed.hpp"
+#include "containers/hashmap.hpp"
 #include "async/thread_job.hpp"
+#include "SkrRenderer/pso_key.hpp"
+#include "SkrRenderer/pso_map.h"
 
 #include "tracy/Tracy.hpp"
 

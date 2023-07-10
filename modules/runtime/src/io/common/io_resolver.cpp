@@ -17,13 +17,13 @@ void IORequestResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEX
     {
         for (auto request : batch->get_requests())
         {
-            auto rq = skr::static_pointer_cast<IORequestBase>(request);
-            if (!runner->try_cancel(priority, rq))
+            if (auto rq = skr::static_pointer_cast<IORequestBase>(request))
             {
                 rq->setStatus(SKR_IO_STAGE_RESOLVING);
                 for (auto resolver : chain)
                 {
-                    resolver->resolve(priority, request);
+                    if (!runner->try_cancel(priority, rq))
+                        resolver->resolve(priority, request);
                 }
             }
         }
