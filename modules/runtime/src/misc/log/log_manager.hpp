@@ -1,4 +1,5 @@
 #pragma once
+#include "platform/guid.hpp"
 #include "misc/log/log_sink.hpp"
 #include "log_worker.hpp"
 #include "tscns.hpp"

@@ -182,6 +182,10 @@ void LogManager::PatternAndSink(const LogEvent& event, skr::string_view formatte
             }
         }
     }
+    if (LogConstants::gFlushBehavior == LogFlushBehavior::kFlushImmediate)
+    {
+        FlushAllSinks();
+    }
 }
 
 void LogManager::FlushAllSinks() SKR_NOEXCEPT

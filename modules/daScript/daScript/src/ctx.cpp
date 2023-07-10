@@ -30,8 +30,8 @@ bool Sequence::dispatch(Context* ctx) SKR_NOEXCEPT
     return ::das::builtin_iterator_iterate(seq, &dummy, &Ctx->ctx);
 }
 
-void ScriptContext::to_out(const char* message) { log_log(SKR_LOG_LEVEL_INFO, this->name.c_str(), 0, message); }
-void ScriptContext::to_err(const char* message) { log_log(SKR_LOG_LEVEL_ERROR, this->name.c_str(), 0, message); }
+void ScriptContext::to_out(const char* message) { skr_log_log(SKR_LOG_LEVEL_INFO, this->name.c_str(), 0, message); }
+void ScriptContext::to_err(const char* message) { skr_log_log(SKR_LOG_LEVEL_ERROR, this->name.c_str(), 0, message); }
 
 SimFunctionId ContextImpl::find_function(const char8_t* name) SKR_NOEXCEPT
 {

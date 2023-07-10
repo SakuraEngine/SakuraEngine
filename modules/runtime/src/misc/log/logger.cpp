@@ -16,6 +16,7 @@ namespace log {
 using namespace skr::guid::literals;
 const char* kLogMemoryName = "sakura::log";
 skr::log::LogLevel LogConstants::gLogLevel = skr::log::LogLevel::kTrace;
+skr::log::LogFlushBehavior LogConstants::gFlushBehavior = skr::log::LogFlushBehavior::kAuto;
 const skr_guid_t LogConstants::kDefaultPatternId = u8"c236a30a-c91e-4b26-be7c-c7337adae428"_guid;
 const skr_guid_t LogConstants::kDefaultConsolePatternId = u8"e3b22b5d-95ea-462d-93bf-b8b91e7b991b"_guid;
 const skr_guid_t LogConstants::kDefaultConsoleSinkId = u8"11b910c7-de4b-4bba-9dee-5853f35b0c10"_guid;
@@ -67,7 +68,7 @@ void Logger::onLog(const LogEvent& ev) SKR_NOEXCEPT
 {
     if (auto should_backtrace = LogManager::ShouldBacktrace(ev))
     {
-        log_flush();
+        skr_log_flush();
     }
 }
 
@@ -119,14 +120,21 @@ void Logger::notifyWorker() SKR_NOEXCEPT
 } } // namespace skr::log
 
 RUNTIME_EXTERN_C
-void log_set_level(int level)
+void skr_log_set_level(int level)
 {
-    const auto kLogLevel = skr::log::LogConstants::kLogLevelsLUT[level];\
+    const auto kLogLevel = skr::log::LogConstants::kLogLevelsLUT[level];
     skr::log::LogConstants::gLogLevel = kLogLevel;
 }
 
 RUNTIME_EXTERN_C 
-void log_log(int level, const char* file, const char* func, const char* line, const char* fmt, ...)
+void skr_log_set_flush_behavior(int behavior)
+{
+    const auto kLogBehavior = skr::log::LogConstants::kFlushBehaviorLUT[behavior];
+    skr::log::LogConstants::gFlushBehavior = kLogBehavior;
+}
+
+RUNTIME_EXTERN_C 
+void skr_log_log(int level, const char* file, const char* func, const char* line, const char* fmt, ...)
 {
     ZoneScopedN("Log");
     
@@ -144,7 +152,7 @@ void log_log(int level, const char* file, const char* func, const char* line, co
 }
 
 RUNTIME_EXTERN_C 
-void log_finalize()
+void skr_log_finalize_async_worker()
 {
     {
         if (auto worker = skr::log::LogManager::TryGetWorker())

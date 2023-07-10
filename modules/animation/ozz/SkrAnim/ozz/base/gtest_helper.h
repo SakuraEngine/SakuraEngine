@@ -91,12 +91,12 @@ inline int AbortHook(int, char*, int*) { exit(EXIT_FAILURE); }
 // cout outputs, and verbose level option.
 
 // Specialises EXPECT_EQ_LOG* for verbose clog output type.
-#define EXPECT_EQ_LOG_LOGV(_expression, _eq, _re) \
+#define EXPECT_EQ_skr_log_logV(_expression, _eq, _re) \
   EXPECT_EQ_LOG(_expression, _eq, std::clog,      \
                 ozz::log::kVerbose <= ozz::log::GetLevel() ? _re : nullptr)
 
 // Specialises EXPECT_EQ_LOG* for standard clog output type.
-#define EXPECT_EQ_LOG_LOG(_expression, _eq, _re) \
+#define EXPECT_EQ_skr_log_log(_expression, _eq, _re) \
   EXPECT_EQ_LOG(_expression, _eq, std::clog,     \
                 ozz::log::kStandard <= ozz::log::GetLevel() ? _re : nullptr)
 
@@ -124,12 +124,12 @@ inline int AbortHook(int, char*, int*) { exit(EXIT_FAILURE); }
 // cout outputs, and verbose level option.
 
 // Specialises EXPECT_LOG* for verbose clog output type.
-#define EXPECT_LOG_LOGV(_expression, _re) \
+#define EXPECT_skr_log_logV(_expression, _re) \
   EXPECT_LOG(_expression, std::clog,      \
              ozz::log::kVerbose <= ozz::log::GetLevel() ? _re : nullptr)
 
 // Specialises EXPECT_LOG* for standard clog output type.
-#define EXPECT_LOG_LOG(_expression, _re) \
+#define EXPECT_skr_log_log(_expression, _re) \
   EXPECT_LOG(_expression, std::clog,     \
              ozz::log::kStandard <= ozz::log::GetLevel() ? _re : nullptr)
 

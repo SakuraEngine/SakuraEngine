@@ -17,6 +17,12 @@ enum class LogLevel : uint32_t
     kCount
 };
 
+enum class LogFlushBehavior : uint32_t
+{
+    kAuto,
+    kFlushImmediate,
+};
+
 enum class Timezone : uint8_t
 {
     LocalTime,
@@ -51,6 +57,11 @@ protected:
 struct RUNTIME_API LogConstants
 {
     static skr::log::LogLevel gLogLevel;
+    static skr::log::LogFlushBehavior gFlushBehavior;
+    static constexpr skr::log::LogFlushBehavior kFlushBehaviorLUT[] = {
+        skr::log::LogFlushBehavior::kAuto,
+        skr::log::LogFlushBehavior::kFlushImmediate
+    };
     static constexpr skr::log::LogLevel kLogLevelsLUT[] = {
         skr::log::LogLevel::kTrace, 
         skr::log::LogLevel::kDebug, 

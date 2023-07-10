@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "platform/thread.h"
+#include "platform/crash.h"
 #include "misc/make_zeroed.hpp"
 #include "misc/log.h"
 #include <thread>
@@ -107,9 +108,13 @@ TEST(Threads, Atomic)
 
 int main(int argc, char** argv)
 {
-    log_initialize_async_worker();
+    skr_initialize_crash_handler();
+    skr_log_initialize_async_worker();
+
     ::testing::InitGoogleTest(&argc, argv);
     auto result = RUN_ALL_TESTS();
-    log_finalize();
+
+    skr_log_finalize_async_worker();
+    skr_finalize_crash_handler();
     return result;
 }
