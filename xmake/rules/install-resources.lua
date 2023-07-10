@@ -25,10 +25,51 @@ rule("utils.install-resources")
     end)
 
 rule("utils.install-libs")
-    before_build(function (target)
+    set_extensions(".zip")
+    on_load(function (target)
         import("find_sdk")
         local libnames = target:extraconf("rules", "utils.install-libs", "libnames")
         for _, libname in pairs(libnames) do
-            find_sdk.install_lib(libname)
+            local zip = find_sdk.find_sdk_lib(libname)
+            target:data_add("lib_zips", zip)
+        end
+        local tardir = target:targetdir()
+        if not os.isdir(tardir) then
+            os.mkdir(tardir)
+        end
+    end)
+    on_config(function (target)
+        import("find_sdk")
+        import("core.project.depend")
+        import("utils.archive")
+
+        local lib_zips = target:data("lib_zips")
+        if not lib_zips or #lib_zips == 0 then
+            return
+        end
+        
+        for _, zipfile in ipairs(lib_zips) do
+            -- unzip to objectdir
+            local tmpdir = path.join(target:objectdir(), path.basename(zipfile))
+            local dependfile = target:dependfile(zipfile..".unzip")
+
+            depend.on_changed(function()
+                archive.extract(zipfile, tmpdir)
+            end, {dependfile = dependfile, lastmtime = os.mtime(zipfile), files = { zipfile }})
+        
+            local vfiles = path.join(tmpdir, "**")
+            local files = os.files(vfiles)
+            local outfiles = {}
+            for _, file in ipairs(files) do
+                local outfile = path.join(target:targetdir(), path.filename(file))
+                outfile = path.absolute(outfile)
+                table.insert(outfiles, outfile)
+            end
+
+            local dependfile2 = target:dependfile(zipfile..".cp")
+            depend.on_changed(function()
+                cprint("${green}[%s]: install.lib ${clear} %s, %d files", target:name(), zipfile, #vfiles)
+                os.cp(vfiles, target:targetdir())
+            end, {dependfile = dependfile2, lastmtime = os.mtime(zipfile), files = outfiles})
         end
     end)

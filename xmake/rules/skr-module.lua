@@ -18,7 +18,6 @@ rule("skr.shared")
 rule_end()
 
 rule("skr.module")
-    set_sourcekinds("cxx")
     on_load(function (target, opt)
         local api = target:extraconf("rules", "skr.module", "api")
         local version = target:extraconf("rules", "skr.module", "version")
@@ -103,10 +102,6 @@ rule("skr.module")
         module_codegen.skr_module_gen_json(target, target:data("module.meta.json"), dep_modules)
         module_codegen.skr_module_gen_cpp(target, target:data("module.meta.cpp"), dep_modules)
         module_codegen.skr_module_gen_header(target, target:data("module.meta.header"), api)
-    end)
-    before_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
-        -- avoid duplicate linking of object files
-        sourcebatch.objectfiles = {}
     end)
 rule_end()
 

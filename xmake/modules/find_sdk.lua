@@ -1,3 +1,8 @@
+import("net.http")
+import("utils.archive")
+import("lib.detect.find_file")
+import("core.project.config")
+
 find_sdk = find_sdk or {}
 
 function tooldir()
@@ -15,8 +20,6 @@ end
 -- use_lib_cache = true
 
 function file_from_github(zip)
-    import("net.http")
-    import("lib.detect.find_file")
     local sdkdir = sdkdir or os.projectdir().."/SDKs"
     local zip_dir = find_file(zip, {sdkdir})
     if(zip_dir == nil) then
@@ -29,7 +32,6 @@ end
 -- tool
 
 function find_tool_zip(tool_name)
-    import("lib.detect.find_file")
     local sdkdir = sdkdir or os.projectdir().."/SDKs"
     local zip_name = vformat(tool_name.."-$(host)-"..os.arch()..".zip")
     local zip_dir = find_file(zip_name, {sdkdir})
@@ -37,11 +39,7 @@ function find_tool_zip(tool_name)
 end
 
 function install_tool(tool_name)
-    import("utils.archive")
-    import("lib.detect.find_file")
-
     local zip_file = find_tool_zip(tool_name)
-
     if(zip_file.dir ~= nil) then
         print("install: "..zip_file.name)
         archive.extract(zip_file.dir, tooldir())
@@ -76,11 +74,7 @@ end
 
 -- lib
 
-function install_lib_to(lib_name, where)
-    import("utils.archive")
-    import("lib.detect.find_file")
-    import("core.project.config")
-
+function find_sdk_lib(lib_name)
     local sdkdir = sdkdir or os.projectdir().."/SDKs"
     local zip_file = vformat(lib_name.."-$(os)-"..config.arch()..".zip")
     local zip_dir = nil
@@ -91,6 +85,11 @@ function install_lib_to(lib_name, where)
     if(zip_dir == nil) then
         zip_dir = find_file(zip_file, {sdkdir})
     end
+    return zip_dir
+end
+
+function install_lib_to(lib_name, where)
+    local zip_dir = find_sdk_lib(lib_name)
     if(zip_dir ~= nil) then
         print("install: "..path.relative(zip_dir).." to: "..where)
         archive.extract(zip_dir, where)
