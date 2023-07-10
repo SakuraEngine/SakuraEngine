@@ -140,7 +140,7 @@ int WinCrashHandler::internalHandler(struct SCrashContext* context) SKR_NOEXCEPT
     const auto type = MB_ABORTRETRYIGNORE | MB_ICONERROR;
     const auto reason = context->reason;
     skr::string why = skr::format(
-        u8"Reason: {}",
+        u8"Crashed! Reason: {}",
         skr_crash_code_string(reason)
     );
     
