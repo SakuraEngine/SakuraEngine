@@ -2,11 +2,11 @@
 
 #include "MPShared/components.h"
 #include "SkrRenderer/render_effect.h"
-#include "ecs/type_builder.hpp"
-#include "misc/make_zeroed.hpp"
-#include "ecs/set.hpp"
-#include "math/vector.h"
-#include "math/quat.h"
+#include "SkrRT/ecs/type_builder.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/ecs/set.hpp"
+#include "SkrRT/math/vector.h"
+#include "SkrRT/math/quat.h"
 
 #include "tracy/Tracy.hpp"
 

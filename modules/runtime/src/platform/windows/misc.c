@@ -8,9 +8,9 @@
 #endif
 #include "stdint.h"
 #include "stdbool.h"
-#include "platform/win/misc.h"
-#include "platform/debug.h"
-#include "platform/memory.h"
+#include "SkrRT/platform/win/misc.h"
+#include "SkrRT/platform/debug.h"
+#include "SkrRT/platform/memory.h"
 
 HANDLE __GetVolumeHandleForFile(const wchar_t* filePath)
 {

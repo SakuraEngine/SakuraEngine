@@ -1,11 +1,11 @@
 #pragma once
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #include "SkrMeshCore/module.configure.h"
-#include "io/io.h"
+#include "SkrRT/io/io.h"
 #include "SkrRenderer/resources/mesh_resource.h"
-#include <containers/string.hpp>
-#include <containers/span.hpp>
-#include <containers/vector.hpp>
+#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers/span.hpp>
+#include <SkrRT/containers/vector.hpp>
 #ifndef __meta__
 #include "SkrMeshCore/mesh_processing.generated.h"
 #endif

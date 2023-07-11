@@ -1,9 +1,9 @@
 #pragma once
 #include "MPShared/module.configure.h"
-#include "ecs/dual.h"
-#include "containers/bitset.h"
-#include "containers/vector.hpp"
-#include "resource/resource_handle.h"
+#include "SkrRT/ecs/dual.h"
+#include "SkrRT/containers/bitset.h"
+#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/resource/resource_handle.h"
 #ifndef __meta__
 #include "MPShared/components.generated.h"
 #endif

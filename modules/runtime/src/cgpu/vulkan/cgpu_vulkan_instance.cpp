@@ -4,8 +4,8 @@
 #include <EASTL/sort.h>
 #include <EASTL/string.h>
 
-#include <containers/string.hpp>
-#include <containers/hashmap.hpp>
+#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers/hashmap.hpp>
 
 class VkUtil_Blackboard
 {

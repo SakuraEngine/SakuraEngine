@@ -1,11 +1,11 @@
 #include "SkrInput/input.h"
-#include "platform/memory.h"
-#include "platform/atomic.h"
-#include "platform/debug.h"
-#include "misc/log.h"
-#include "misc/defer.hpp"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/platform/atomic.h"
+#include "SkrRT/platform/debug.h"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/defer.hpp"
 #include "GameInput/GameInput.h"
-#include "platform/shared_library.hpp"
+#include "SkrRT/platform/shared_library.hpp"
 
 namespace skr {
 namespace input {

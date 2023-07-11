@@ -7,9 +7,9 @@ extern "C" {
 #include "chunk.hpp"
 #include "archetype.hpp"
 #include "type_registry.hpp"
-#include "ecs/type_builder.hpp"
+#include "SkrRT/ecs/type_builder.hpp"
 
-#include "ecs/array.hpp"
+#include "SkrRT/ecs/array.hpp"
 
 namespace dual
 {

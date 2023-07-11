@@ -1,13 +1,13 @@
 #include "string.h"
 
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRenderer/render_mesh.h"
 
 #include "SkrAnim/components/skin_component.h"
 #include "SkrAnim/components/skeleton_component.h"
 #include "SkrAnim/ozz/geometry/skinning_job.h"
 #include "SkrAnim/ozz/base/span.h"
-#include "containers/sptr.hpp"
+#include "SkrRT/containers/sptr.hpp"
 
 #include "tracy/Tracy.hpp"
 

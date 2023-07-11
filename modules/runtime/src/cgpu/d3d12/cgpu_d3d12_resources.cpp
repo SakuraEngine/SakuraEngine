@@ -3,11 +3,11 @@
 #include "cgpu/drivers/cgpu_nvapi.h"
 #include "cgpu/drivers/cgpu_ags.h"
 #include "d3d12_utils.hpp"
-#include "platform/memory.h"
-#include "misc/make_zeroed.hpp"
-#include "misc/defer.hpp"
-#include <containers/string.hpp>
-#include <containers/concurrent_queue.h>
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/misc/defer.hpp"
+#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers/concurrent_queue.h>
 #include <dxcapi.h>
 
 #include <EASTL/string.h>

@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 
 #define CGPU_USE_VULKAN
 

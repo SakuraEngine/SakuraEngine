@@ -1,5 +1,5 @@
 #include "common/utils.h"
-#include "platform/thread.h"
+#include "SkrRT/platform/thread.h"
 #include "math.h"
 
 // Render objects

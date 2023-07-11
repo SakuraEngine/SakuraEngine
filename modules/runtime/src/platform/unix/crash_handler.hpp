@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/crash.h"
+#include "SkrRT/platform/crash.h"
 
 struct SUnixCrashHandler : public SCrashHandler
 {

@@ -1,18 +1,18 @@
-#include "misc/make_zeroed.hpp"
-#include "misc/log.h"
-#include "io/io.h"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/io/io.h"
 #include "cgpu/io.h"
 
-#include "platform/memory.h"
-#include "platform/debug.h"
-#include "platform/vfs.h"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/platform/debug.h"
+#include "SkrRT/platform/vfs.h"
 
 #include "SkrLive2D/l2d_render_model.h"
 #include "live2d_clipping.hpp"
 #include "live2d_helpers.hpp"
 
 #include <string> // TODO: replace this (std::stoi)
-#include <platform/filesystem.hpp>
+#include <SkrRT/platform/filesystem.hpp>
 
 #include "SkrImageCoder/skr_image_coder.h"
 #ifdef _WIN32

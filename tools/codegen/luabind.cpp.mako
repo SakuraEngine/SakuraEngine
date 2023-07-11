@@ -1,11 +1,11 @@
 // BEGIN LUA GENERATED
-#include "lua/bind.hpp"
+#include "SkrRT/lua/bind.hpp"
 extern "C"
 {
     #include "lua.h"
     #include "lualib.h"
 }
-#include "misc/hash.h"
+#include "SkrRT/misc/hash.h"
 <%
     categories = {}
     for enum in generator.filter_types(db.enums):

@@ -31,7 +31,7 @@
 #include <atomic>
 #include <vector>
 
-#include "platform/memory.h"
+#include "SkrRT/platform/memory.h"
 
 #if defined(FTL_FIBER_STACK_GUARD_PAGES)
     #if defined(FTL_OS_LINUX) || defined(FTL_OS_MAC) || defined(FTL_iOS)

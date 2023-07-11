@@ -2,10 +2,10 @@
 #include <EASTL/optional.h>
 #include <EASTL/vector.h>
 #include <EASTL/fixed_vector.h>
-#include <containers/string.hpp>
-#include "misc/log.h"
-#include "platform/input.h"
-#include "platform/system.h"
+#include <SkrRT/containers/string.hpp>
+#include "SkrRT/misc/log.h"
+#include "SkrRT/platform/input.h"
+#include "SkrRT/platform/system.h"
 
 #include "SkrInput/input.h"
 

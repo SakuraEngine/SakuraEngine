@@ -1,13 +1,13 @@
 #include "scheduler.hpp"
-#include "ecs/SmallVector.h"
+#include "SkrRT/ecs/SmallVector.h"
 
-#include "ecs/constants.hpp"
-#include "ecs/dual.h"
+#include "SkrRT/ecs/constants.hpp"
+#include "SkrRT/ecs/dual.h"
 #include "query.hpp"
 #include "storage.hpp"
 
 #include "type.hpp"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 
 #include "tracy/Tracy.hpp"
 

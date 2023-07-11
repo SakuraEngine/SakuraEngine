@@ -1,12 +1,12 @@
-#include "io/io.h"
-#include "misc/log.h"
-#include "platform/debug.h"
+#include "SkrRT/io/io.h"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/platform/debug.h"
 #include "cgpu/io.h"
-#include "platform/vfs.h"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/platform/vfs.h"
+#include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_mesh.h"
-#include <platform/filesystem.hpp>
+#include <SkrRT/platform/filesystem.hpp>
 
 #include "tracy/Tracy.hpp"
 

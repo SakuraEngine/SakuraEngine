@@ -1,23 +1,23 @@
 #include "type_registry.hpp"
-#include "ecs/SmallVector.h"
+#include "SkrRT/ecs/SmallVector.h"
 #include "archetype.hpp"
 #include "arena.hpp"
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 #include "query.hpp"
 #include "stack.hpp"
 #include "storage.hpp"
 #include "type.hpp"
 #include "set.hpp"
-#include "ecs/constants.hpp"
+#include "SkrRT/ecs/constants.hpp"
 
 #include <EASTL/string.h>
 #include <EASTL/sort.h>
 #include <EASTL/algorithm.h>
 #include <EASTL/numeric.h>
-#include <containers/string.hpp>
-#include "misc/bits.hpp"
+#include <SkrRT/containers/string.hpp>
+#include "SkrRT/misc/bits.hpp"
 #include "scheduler.hpp"
-#include "containers/span.hpp"
+#include "SkrRT/containers/span.hpp"
 #if __SSE2__
     #include <emmintrin.h>
 #endif

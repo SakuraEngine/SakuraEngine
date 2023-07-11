@@ -1,7 +1,7 @@
 #pragma once
 #include "shader_compiler.hpp"
-#include "module/subsystem.hpp"
-#include "platform/shared_library.hpp"
+#include "SkrRT/module/subsystem.hpp"
+#include "SkrRT/platform/shared_library.hpp"
 
 #include <EASTL/string.h>
 

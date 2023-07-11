@@ -1,6 +1,6 @@
 #include "set.hpp"
-#include "ecs/dual.h"
-#include "ecs/entity.hpp"
+#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/entity.hpp"
 #include "hash.hpp"
 
 namespace dual

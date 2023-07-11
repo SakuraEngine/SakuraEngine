@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrToolCore/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
-#include "misc/types.h"
-#include "platform/guid.hpp"
+#include "SkrRT/misc/types.h"
+#include "SkrRT/platform/guid.hpp"
 #ifndef __meta__
 #include "SkrToolCore/assets/config_asset.generated.h"
 #endif

@@ -2,7 +2,7 @@
 #include "../common/common_utils.h"
 #include "vulkan_utils.h"
 #ifdef CGPU_THREAD_SAFETY
-    #include "platform/thread.h"
+    #include "SkrRT/platform/thread.h"
 #endif
 
 CGPU_EXTERN_C uint64_t cgpu_export_shared_texture_handle_vulkan_win32(CGPUDeviceId device, const struct CGPUExportTextureDescriptor* desc)

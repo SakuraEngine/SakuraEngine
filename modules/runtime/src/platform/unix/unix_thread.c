@@ -1,5 +1,5 @@
-#include "platform/thread.h"
-#include "platform/atomic.h"
+#include "SkrRT/platform/thread.h"
+#include "SkrRT/platform/atomic.h"
 #include <pthread.h>
 
 static SCallOnceGuard gKeyInitGuard;

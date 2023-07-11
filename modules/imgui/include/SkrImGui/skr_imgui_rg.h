@@ -1,6 +1,6 @@
 #pragma once
-#include "platform/window.h"
-#include "platform/input.h"
+#include "SkrRT/platform/window.h"
+#include "SkrRT/platform/input.h"
 #include "skr_imgui.config.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 

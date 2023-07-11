@@ -1,12 +1,12 @@
 
 #pragma once
 #include "cgpu/api.h"
-#include "platform/time.h"
+#include "SkrRT/platform/time.h"
 #include "MPShared/shared.h"
 #include "MPShared/world_delta.h"
-#include "serde/json/reader.h"
-#include "async/fib_task.hpp"
-#include "containers/hashmap.hpp"
+#include "SkrRT/serde/json/reader.h"
+#include "SkrRT/async/fib_task.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 
 struct Prefab
 {

@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #include "SkrTextureCompiler/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
 #ifndef __meta__

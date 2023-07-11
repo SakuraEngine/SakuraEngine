@@ -1,8 +1,8 @@
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "dxt_utils.hpp"
-#include "io/io.h"
-#include "misc/log.hpp"
+#include "SkrRT/io/io.h"
+#include "SkrRT/misc/log.hpp"
 
 #include "tracy/Tracy.hpp"
 

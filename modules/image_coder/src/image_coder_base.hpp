@@ -1,7 +1,7 @@
 #pragma once
-#include "platform/atomic.h"
-#include "containers/span.hpp"
-#include "misc/types.h"
+#include "SkrRT/platform/atomic.h"
+#include "SkrRT/containers/span.hpp"
+#include "SkrRT/misc/types.h"
 #include "SkrImageCoder/skr_image_coder.h"
 
 namespace skr

@@ -1,5 +1,5 @@
 #pragma once
-#include "io/io.h"
+#include "SkrRT/io/io.h"
 #include "ram_service.hpp"
 
 namespace skr { template <typename Artifact> struct IFuture; struct JobQueue; }
@@ -55,7 +55,7 @@ struct VFSRAMReader final : public RAMReaderBase<IIORequestProcessor>
 } // namespace io
 } // namespace skr
 
-#include "platform/dstorage.h"
+#include "SkrRT/platform/dstorage.h"
 #include <EASTL/fixed_vector.h>
 
 namespace skr {

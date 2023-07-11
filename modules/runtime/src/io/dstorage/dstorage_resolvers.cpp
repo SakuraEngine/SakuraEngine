@@ -1,7 +1,7 @@
 #include "../../pch.hpp"
 #include "../common/io_resolver.hpp"
 #include "../common/io_request.hpp"
-#include "platform/vfs.h"
+#include "SkrRT/platform/vfs.h"
 
 namespace skr {
 namespace io {

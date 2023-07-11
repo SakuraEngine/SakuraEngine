@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrRenderGraph/module.configure.h"
-#include "containers/hashmap.hpp"
-#include "containers/string.hpp"
-#include "containers/vector.hpp"
+#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/vector.hpp"
 #include <EASTL/fixed_vector.h>
 #include "cgpu/cgpux.hpp"
 

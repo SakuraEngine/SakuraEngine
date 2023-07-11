@@ -1,14 +1,14 @@
 ﻿#include "SkrRenderGraph/backend/graph_backend.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
-#include "platform/debug.h"
-#include "platform/memory.h"
-#include "platform/thread.h"
-#include "misc/hash.h"
-#include "misc/log.h"
+#include "SkrRT/platform/debug.h"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/platform/thread.h"
+#include "SkrRT/misc/hash.h"
+#include "SkrRT/misc/log.h"
 
 #include <EASTL/set.h>
-#include "containers/string.hpp"
+#include "SkrRT/containers/string.hpp"
 
 #include "tracy/Tracy.hpp"
 

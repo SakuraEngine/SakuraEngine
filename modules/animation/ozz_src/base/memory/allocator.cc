@@ -35,7 +35,7 @@
 
 #include "SkrAnim/ozz/base/maths/math_ex.h"
 
-#include "platform/memory.h"
+#include "SkrRT/platform/memory.h"
 
 namespace ozz {
 namespace memory {

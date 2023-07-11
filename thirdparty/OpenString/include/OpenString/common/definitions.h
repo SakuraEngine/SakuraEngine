@@ -4,7 +4,7 @@
 // All rights reserved.
 #pragma once
 
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #define OSTR_USE_CXX20_CHAR8_TYPE
 
 #ifndef OPEN_STRING_NS

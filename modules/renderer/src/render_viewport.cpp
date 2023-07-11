@@ -1,10 +1,10 @@
-#include "containers/hashmap.hpp"
-#include "containers/vector.hpp"
+#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers/vector.hpp"
 
 #include "SkrRenderer/render_viewport.h"
 #include "SkrRenderer/skr_renderer.h"
-#include "math/rtm/vector4f.h"
-#include "math/rtm/rtmx.h"
+#include "SkrRT/math/rtm/vector4f.h"
+#include "SkrRT/math/rtm/rtmx.h"
 
 struct SViewportManagerImpl : public SViewportManager
 {

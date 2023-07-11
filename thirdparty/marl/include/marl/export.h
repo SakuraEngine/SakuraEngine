@@ -45,7 +45,7 @@
 #define MARL_NO_EXPORT
 #endif
 
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #ifdef __cplusplus
 #ifdef TRACY_ENABLE
 #include "tracy/Tracy.hpp"

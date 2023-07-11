@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
-#include "platform/crash.h"
-#include "misc/log.h"
+#include "SkrRT/platform/crash.h"
+#include "SkrRT/misc/log.h"
 
 int main(int argc, char** argv)
 {

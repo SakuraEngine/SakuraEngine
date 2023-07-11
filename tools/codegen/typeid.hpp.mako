@@ -1,5 +1,5 @@
 //BEGIN TYPEID GENERATED
-#include "type/type_id.hpp"
+#include "SkrRT/type/type_id.hpp"
 
 namespace skr::type
 {
