@@ -1,7 +1,7 @@
 #pragma once
-#include "platform/configure.h"
-#include "platform/atomic.h"
-#include "platform/memory.h"
+#include "SkrRT/platform/configure.h"
+#include "SkrRT/platform/atomic.h"
+#include "SkrRT/platform/memory.h"
 
 namespace skr
 {

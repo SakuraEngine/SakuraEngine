@@ -30,7 +30,7 @@
 
 #include <string>
 
-#include "platform/memory.h"
+#include "SkrRT/platform/memory.h"
 
 namespace ozz {
 // Redirects std::basic_string to ozz::string in order to replace std default

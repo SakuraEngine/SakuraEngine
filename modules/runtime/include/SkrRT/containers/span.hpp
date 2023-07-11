@@ -24,10 +24,10 @@ struct SpanSerdeConfig
 }
 
 // binary reader
-#include "platform/debug.h"
+#include "SkrRT/platform/debug.h"
 #include "misc/traits.hpp"
 #include "serde/binary/reader_fwd.h"
-#include "platform/debug.h"
+#include "SkrRT/platform/debug.h"
 
 namespace skr
 {
@@ -167,7 +167,7 @@ struct SpanReaderBitpacked
 
 // binary writer
 #include "serde/binary/writer_fwd.h"
-#include "platform/debug.h"
+#include "SkrRT/platform/debug.h"
 
 namespace skr
 {

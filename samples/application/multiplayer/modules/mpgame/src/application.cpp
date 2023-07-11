@@ -1,8 +1,8 @@
 #include "application.h"
 #include "ecs/type_builder.hpp"
-#include "platform/memory.h"
-#include "platform/vfs.h"
-#include "platform/window.h"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/platform/vfs.h"
+#include "SkrRT/platform/window.h"
 #include "steam/isteamnetworkingutils.h"
 #include "steam/isteamnetworkingsockets.h"
 #include "steam/steamnetworkingsockets.h"
@@ -10,7 +10,7 @@
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
-#include "platform/filesystem.hpp"
+#include "SkrRT/platform/filesystem.hpp"
 #include "cgpu/api.h"
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
@@ -21,7 +21,7 @@
 #include "tracy/Tracy.hpp"
 #include "imgui_impl_sdl.h"
 #include "misc/make_zeroed.hpp"
-#include "platform/guid.hpp"
+#include "SkrRT/platform/guid.hpp"
 
 #include "containers/string.hpp"
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "async/result.hpp"
-#include "platform/thread.h"
-#include "platform/atomic.h"
+#include "SkrRT/platform/thread.h"
+#include "SkrRT/platform/atomic.h"
 
 namespace skr
 {

@@ -1,7 +1,7 @@
 #pragma once
 #include "misc/types.h"
-#include "platform/window.h"
-#include "platform/input.h"
+#include "SkrRT/platform/window.h"
+#include "SkrRT/platform/input.h"
 
 SKR_DECLARE_TYPE_ID_FWD(skr, ISystemHandler, skr_system_handler)
 SKR_DECLARE_TYPE_ID_FWD(skr, ISystemMessageHandler, skr_system_message_handler)

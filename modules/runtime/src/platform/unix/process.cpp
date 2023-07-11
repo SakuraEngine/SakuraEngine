@@ -8,9 +8,9 @@
 #include <sys/file.h>
 #include <signal.h>
 
-#include "platform/debug.h"
-#include "platform/memory.h"
-#include "platform/process.h"
+#include "SkrRT/platform/debug.h"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/platform/process.h"
 #include "misc/log.h"
 
 #include "containers/string.hpp"

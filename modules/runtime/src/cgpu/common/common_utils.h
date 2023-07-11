@@ -1,6 +1,6 @@
 #pragma once
 #include "cgpu/api.h"
-#include "platform/memory.h"
+#include "SkrRT/platform/memory.h"
 
 #ifdef __cplusplus
 extern "C" {

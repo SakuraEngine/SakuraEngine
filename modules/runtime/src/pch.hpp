@@ -3,12 +3,12 @@
 #ifdef _WIN32
 #include <intrin.h>
 #include <new.h>
-#include "platform/windows/winheaders.h"
+#include "SkrRT/platform/windows/winheaders.h"
 #endif
 
 #include <chrono>
-#include "platform/debug.h"
-#include "platform/guid.hpp"
+#include "SkrRT/platform/debug.h"
+#include "SkrRT/platform/guid.hpp"
 #include <platform/filesystem.hpp>
 
 #include "misc/log.h"

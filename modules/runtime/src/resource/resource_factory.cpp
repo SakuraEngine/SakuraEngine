@@ -1,6 +1,6 @@
 #include "resource/resource_factory.h"
 #include "resource/resource_header.hpp"
-#include "platform/debug.h"
+#include "SkrRT/platform/debug.h"
 
 namespace skr
 {

@@ -1,7 +1,7 @@
 #pragma once
 #include "misc/types.h"
 #ifdef __cplusplus
-#include "platform/thread.h"
+#include "SkrRT/platform/thread.h"
 #include <containers/span.hpp>
 #include <containers/vector.hpp>
 

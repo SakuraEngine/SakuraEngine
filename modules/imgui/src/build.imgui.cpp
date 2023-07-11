@@ -1,4 +1,4 @@
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #include "SkrImGui/skr_imgui.config.h"
 #include "misc/log.h"
 #include "imgui_skr_system.cpp"

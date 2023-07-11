@@ -3,9 +3,9 @@
 #include "io/io.h"
 #include "cgpu/io.h"
 
-#include "platform/memory.h"
-#include "platform/debug.h"
-#include "platform/vfs.h"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/platform/debug.h"
+#include "SkrRT/platform/vfs.h"
 
 #include "SkrLive2D/l2d_render_model.h"
 #include "live2d_clipping.hpp"

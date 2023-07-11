@@ -1,7 +1,7 @@
 #pragma once
 #include "misc/log.h"
-#include "platform/time.h"
-#include "platform/thread.h"
+#include "SkrRT/platform/time.h"
+#include "SkrRT/platform/thread.h"
 
 #include "tracy/Tracy.hpp"
 

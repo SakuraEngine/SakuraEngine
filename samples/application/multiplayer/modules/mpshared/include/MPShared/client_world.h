@@ -1,7 +1,7 @@
 
 #pragma once
 #include "cgpu/api.h"
-#include "platform/time.h"
+#include "SkrRT/platform/time.h"
 #include "MPShared/shared.h"
 #include "MPShared/world_delta.h"
 #include "serde/json/reader.h"

@@ -7,11 +7,11 @@
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 
-#include "platform/system.h"
-#include "platform/vfs.h"
-#include "platform/thread.h"
-#include "platform/time.h"
-#include "platform/filesystem.hpp"
+#include "SkrRT/platform/system.h"
+#include "SkrRT/platform/vfs.h"
+#include "SkrRT/platform/thread.h"
+#include "SkrRT/platform/time.h"
+#include "SkrRT/platform/filesystem.hpp"
 #include "async/thread_job.hpp"
 
 #include "misc/log.h"

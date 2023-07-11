@@ -4,13 +4,13 @@
 #include "SkrScene/scene.h"
 #include "MPShared/components.h"
 #include "ecs/type_builder.hpp"
-#include "platform/atomic.h"
+#include "SkrRT/platform/atomic.h"
 #include "misc/make_zeroed.hpp"
 
 #include "math/rtm/quatf.h"
 #include "math/rtm/rtmx.h"
 #include "misc/log.h"
-#include "platform/guid.hpp"
+#include "SkrRT/platform/guid.hpp"
 
 void MPGameWorld::Initialize()
 {

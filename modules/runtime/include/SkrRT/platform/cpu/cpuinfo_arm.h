@@ -18,7 +18,7 @@
 #include <stdint.h>  // uint32_t
 
 #include "cpu_features_cache_info.h"
-#include "platform/cpu/cpu_features_macros.h"
+#include "SkrRT/platform/cpu/cpu_features_macros.h"
 
 CPU_FEATURES_START_CPP_NAMESPACE
 

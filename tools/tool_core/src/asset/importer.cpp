@@ -1,7 +1,7 @@
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
 #include "misc/types.h"
-#include "platform/guid.hpp"
+#include "SkrRT/platform/guid.hpp"
 #include "serde/json/reader.h"
 
 namespace skd::asset

@@ -1,6 +1,6 @@
 #include <platform/filesystem.hpp>
 #include "SkrRenderer/resources/texture_resource.h"
-#include "platform/debug.h"
+#include "SkrRT/platform/debug.h"
 #include "io/io.h"
 #include "cgpu/api.h"
 #include "type/type_id.hpp"
@@ -16,7 +16,7 @@
 #include "containers/hashmap.hpp"
 
 #ifdef _WIN32
-//#include "platform/win/dstorage_windows.h"
+//#include "SkrRT/platform/win/dstorage_windows.h"
 #endif
 
 #include "tracy/Tracy.hpp"

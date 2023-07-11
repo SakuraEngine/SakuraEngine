@@ -1,6 +1,6 @@
 #include "SkrToolCore/project/project.hpp"
 #include "misc/log.h"
-#include "platform/vfs.h"
+#include "SkrRT/platform/vfs.h"
 #include "io/io.h"
 #include "serde/json/reader.h"
 #include "misc/make_zeroed.hpp"

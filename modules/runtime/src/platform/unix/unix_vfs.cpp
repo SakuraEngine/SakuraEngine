@@ -1,7 +1,7 @@
-#include "platform/vfs.h"
+#include "SkrRT/platform/vfs.h"
 #include "misc/log.h"
 #include <platform/filesystem.hpp>
-#include "platform/memory.h"
+#include "SkrRT/platform/memory.h"
 
 struct skr_vfile_cfile_t : public skr_vfile_t {
     FILE* cfile;

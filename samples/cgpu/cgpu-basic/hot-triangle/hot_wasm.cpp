@@ -1,6 +1,6 @@
 #include "cgpu/api.h"
 #include "utils.h"
-#include "platform/thread.h"
+#include "SkrRT/platform/thread.h"
 #include <filesystem>
 #include <fstream>
 #include "filewatch.hpp"

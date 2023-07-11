@@ -3,13 +3,13 @@
 #include "containers/span.hpp"
 #include "misc/types.h"
 #include "ecs/dual.h"
-#include "platform/guid.hpp"
+#include "SkrRT/platform/guid.hpp"
 #include "async/fib_task.hpp"
 #include "containers/hashmap.hpp"
 #include "containers/vector.hpp"
 #include "EASTL/functional.h"
 #include "EASTL/bonus/fixed_ring_buffer.h"
-#include "platform/time.h"
+#include "SkrRT/platform/time.h"
 #include "ecs/entity.hpp"
 
 // override the default serialization of dual_entity_t to use a packed version

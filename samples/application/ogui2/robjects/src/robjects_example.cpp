@@ -3,7 +3,7 @@
 
 #include "containers/string.hpp"
 
-#include "platform/system.h"
+#include "SkrRT/platform/system.h"
 #include "misc/log.h"
 #include "misc/defer.hpp"
 

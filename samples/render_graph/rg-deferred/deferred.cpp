@@ -6,10 +6,10 @@
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
-#include "platform/window.h"
+#include "SkrRT/platform/window.h"
 #include "tracy/Tracy.hpp"
 #include "pass_profiler.h"
-#include "platform/thread.h"
+#include "SkrRT/platform/thread.h"
 #include "math/rtm/qvvf.h"
 
 thread_local SWindowHandle window;

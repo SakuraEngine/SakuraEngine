@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #ifndef __meta__
     #include "SkrRenderer/render_group.generated.h"
 #endif

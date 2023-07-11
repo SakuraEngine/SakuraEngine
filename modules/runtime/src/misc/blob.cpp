@@ -1,5 +1,5 @@
-#include "platform/memory.h"
-#include "platform/atomic.h"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/platform/atomic.h"
 #include "misc/types.h"
 #include "containers/sptr.hpp"
 

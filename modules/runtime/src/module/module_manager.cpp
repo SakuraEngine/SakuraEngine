@@ -1,11 +1,11 @@
 #include "module/module_manager.hpp"
 #include "module/subsystem.hpp"
-#include "platform/memory.h"
-#include "platform/shared_library.hpp"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/platform/shared_library.hpp"
 #include "misc/log.h"
 #include "containers/hashmap.hpp"
 #include "serde/json/reader.h"
-#include "platform/filesystem.hpp"
+#include "SkrRT/platform/filesystem.hpp"
 
 
 #if defined(_MSC_VER)

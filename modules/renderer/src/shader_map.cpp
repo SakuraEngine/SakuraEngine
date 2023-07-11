@@ -5,7 +5,7 @@
 #include "misc/log.h"
 #include "misc/defer.hpp"
 #include "misc/make_zeroed.hpp"
-#include "platform/atomic.h"
+#include "SkrRT/platform/atomic.h"
 #include "async/thread_job.hpp"
 
 #include "containers/hashmap.hpp"

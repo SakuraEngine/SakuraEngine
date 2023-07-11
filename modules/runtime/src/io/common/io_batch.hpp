@@ -1,7 +1,7 @@
 #pragma once
 #include "io/io.h"
 #include "pool.hpp"
-#include "platform/thread.h"
+#include "SkrRT/platform/thread.h"
 #include "misc/defer.hpp"
 #include "containers/vector.hpp"
 #include <EASTL/fixed_vector.h>

@@ -2,7 +2,7 @@
 #ifdef CGPU_USE_D3D12
     #include <d3d12.h>
 #endif
-#include "platform/shared_library.hpp"
+#include "SkrRT/platform/shared_library.hpp"
 #include "cgpu/drivers/cgpu_nvapi.h"
 #include "common_utils.h"
 

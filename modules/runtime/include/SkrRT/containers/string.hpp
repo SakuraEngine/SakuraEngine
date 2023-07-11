@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #include "OpenString/text.h"
 #include "OpenString/format.h"
 #include "misc/types.h"

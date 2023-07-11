@@ -5,7 +5,7 @@ enums = generator.filter_rtti(db.enums)
 
 // BEGIN RTTI GENERATED
 #include "type/type.hpp"
-#include "platform/debug.h"
+#include "SkrRT/platform/debug.h"
 #include "misc/hash.h"
 #include "misc/log.h"
 #include "type/type_helper.hpp"

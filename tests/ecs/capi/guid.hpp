@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/debug.h"
+#include "SkrRT/platform/debug.h"
 #include "ecs/dual.h"
 #include <string>
 

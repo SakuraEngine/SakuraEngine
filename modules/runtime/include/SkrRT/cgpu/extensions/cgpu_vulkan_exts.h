@@ -1,6 +1,6 @@
 #pragma once
 #include "cgpu/api.h"
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 
 // forward declaration for vulkan_core.h
 struct VkDebugUtilsMessengerCreateInfoEXT;

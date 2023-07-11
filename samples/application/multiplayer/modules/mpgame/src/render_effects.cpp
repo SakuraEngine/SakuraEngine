@@ -1,7 +1,7 @@
 #include "misc/log.h"
 #include "misc/make_zeroed.hpp"
 #include "misc/log.hpp"
-#include "platform/memory.h"
+#include "SkrRT/platform/memory.h"
 
 #include "cgpu/api.h"
 #include "cgpu/cgpux.h"
@@ -27,7 +27,7 @@
 #include "SkrAnim/components/skeleton_component.h"
 
 #include "cube.hpp"
-#include "platform/vfs.h"
+#include "SkrRT/platform/vfs.h"
 #include <platform/filesystem.hpp>
 
 #include "misc/parallel_for.hpp"

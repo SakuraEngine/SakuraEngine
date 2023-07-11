@@ -2,7 +2,7 @@
 #include "resource/resource_handle.h"
 #include <EASTL/fixed_vector.h>
 #include <containers/vector.hpp>
-#include "platform/thread.h"
+#include "SkrRT/platform/thread.h"
 
 #include "serde/binary/reader_fwd.h"
 #include "serde/binary/writer_fwd.h"

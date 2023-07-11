@@ -1,11 +1,11 @@
 #pragma once
 #include "module/module_manager.hpp"
-#include "platform/thread.h"
+#include "SkrRT/platform/thread.h"
 #include "misc/log.h"
-#include "platform/shared_library.hpp"
-#include "platform/dstorage.h"
+#include "SkrRT/platform/shared_library.hpp"
+#include "SkrRT/platform/dstorage.h"
 #ifdef _WIN32
-#include "platform/win/dstorage_windows.h"
+#include "SkrRT/platform/win/dstorage_windows.h"
 #endif
 
 class RUNTIME_API SkrRuntimeModule : public skr::IDynamicModule

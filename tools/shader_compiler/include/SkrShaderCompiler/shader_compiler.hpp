@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrShaderCompiler/module.configure.h"
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #include "cgpu/flags.h"
 #include "containers/sptr.hpp"
 #include "containers/span.hpp"

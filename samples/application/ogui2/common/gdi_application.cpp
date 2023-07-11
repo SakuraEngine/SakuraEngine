@@ -1,7 +1,7 @@
 #include "./gdi_application.h"
 #include "misc/make_zeroed.hpp"
-#include "platform/filesystem.hpp"
-#include "platform/vfs.h"
+#include "SkrRT/platform/filesystem.hpp"
+#include "SkrRT/platform/vfs.h"
 #include "io/io.h"
 #include "async/thread_job.hpp"
 

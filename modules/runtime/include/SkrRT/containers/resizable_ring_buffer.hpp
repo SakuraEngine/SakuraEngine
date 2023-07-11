@@ -1,6 +1,6 @@
 #pragma once
 #include <containers/ring_buffer.hpp>
-#include "platform/thread.h"
+#include "SkrRT/platform/thread.h"
 
 namespace skr 
 {

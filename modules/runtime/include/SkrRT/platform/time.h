@@ -1,6 +1,6 @@
 #pragma once
 // #include "../Core/Config.h"
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 
 #ifdef __cplusplus
 extern "C" {

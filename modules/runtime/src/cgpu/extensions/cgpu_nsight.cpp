@@ -4,7 +4,7 @@
 #include <EASTL/set.h>
 #include <containers/string.hpp>
 #include "../common/common_utils.h"
-#include "platform/shared_library.hpp"
+#include "SkrRT/platform/shared_library.hpp"
 #include "cgpu/extensions/cgpu_nsight.h"
 #include "cgpu_nsight_tracker.hpp"
 #include "cgpu/drivers/nsight/GFSDK_Aftermath.h"

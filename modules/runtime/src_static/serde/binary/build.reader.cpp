@@ -1,7 +1,7 @@
 #include "containers/sptr.hpp"
 #include "resource/resource_handle.h"
 #include "serde/binary/reader.h"
-#include "platform/memory.h"
+#include "SkrRT/platform/memory.h"
 #include "misc/bits.hpp"
 #include "misc/log.h"
 #include <cmath>

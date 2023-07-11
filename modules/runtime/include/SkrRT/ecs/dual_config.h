@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 
 #ifdef __cplusplus
 #include <type_traits>
@@ -44,7 +44,7 @@ typedef struct dual_entity_debug_proxy_t {
     #define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
 #endif
 
-#include "platform/memory.h"
+#include "SkrRT/platform/memory.h"
 
 #define dual_malloc sakura_malloc
 #define dual_malloc_aligned sakura_malloc_aligned

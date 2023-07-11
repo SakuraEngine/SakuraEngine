@@ -32,7 +32,7 @@
 #include "containers/string.hpp"
 #include <memory>
 #include <mutex>
-#include "platform/memory.h"
+#include "SkrRT/platform/memory.h"
 #include "tracy/Tracy.hpp"
 #include "misc/log.h"
 

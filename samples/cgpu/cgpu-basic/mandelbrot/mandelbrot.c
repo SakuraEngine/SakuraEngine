@@ -1,8 +1,8 @@
 #include "cgpu/cgpu_config.h"
 #include "math.h"
 #include "lodepng.h"
-#include "platform/configure.h"
-#include "platform/memory.h"
+#include "SkrRT/platform/configure.h"
+#include "SkrRT/platform/memory.h"
 #include "cgpu/api.h"
 #include "stdio.h"
 #include "stdlib.h"
@@ -256,7 +256,7 @@ void ComputeFunc(void* usrdata)
     sakura_free(image);
 }
 
-#include "platform/thread.h"
+#include "SkrRT/platform/thread.h"
 
 int main(void)
 {

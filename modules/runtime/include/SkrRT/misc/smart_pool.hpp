@@ -1,6 +1,6 @@
 #pragma once
 #include "misc/log.h"
-#include "platform/atomic.h"
+#include "SkrRT/platform/atomic.h"
 #include "containers/sptr.hpp"
 #include "containers/concurrent_queue.h"
 

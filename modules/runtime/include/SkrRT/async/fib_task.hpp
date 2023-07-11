@@ -1,7 +1,7 @@
 #pragma once
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #include "misc/defer.hpp"
-#include "platform/debug.h"
+#include "SkrRT/platform/debug.h"
 
 namespace skr::task
 {

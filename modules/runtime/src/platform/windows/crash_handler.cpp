@@ -1,8 +1,8 @@
 #include "../../pch.hpp"
 #include "misc/types.h"
-#include "platform/thread.h"
-#include "platform/process.h"
-#include "platform/crash.h"
+#include "SkrRT/platform/thread.h"
+#include "SkrRT/platform/process.h"
+#include "SkrRT/platform/crash.h"
 
 #include "containers/string.hpp"
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #include <EASTL/internal/move_help.h>
 #include <new> // operator new
 #include <string.h> // ::memset

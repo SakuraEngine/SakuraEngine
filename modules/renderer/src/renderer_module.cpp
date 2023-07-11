@@ -5,7 +5,7 @@
 #include "misc/log.h"
 #include "misc/make_zeroed.hpp"
 #include "SkrImGui/skr_imgui.h"
-#include "platform/guid.hpp"
+#include "SkrRT/platform/guid.hpp"
 #include <string.h>
 #ifdef _WIN32
 #include "cgpu/extensions/cgpu_d3d12_exts.h"

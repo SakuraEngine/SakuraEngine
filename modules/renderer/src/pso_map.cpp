@@ -1,5 +1,5 @@
 #include "cgpu/cgpux.hpp"
-#include "platform/atomic.h"
+#include "SkrRT/platform/atomic.h"
 #include "containers/sptr.hpp"
 #include "containers/hashmap.hpp"
 #include "async/thread_job.hpp"

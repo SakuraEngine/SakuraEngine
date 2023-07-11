@@ -15,7 +15,7 @@ not defined(__cpp_fold_expressions) or not defined(__cpp_static_assert) or \
 not defined(__cpp_delegating_constructors)
     #error "[Boost].TE requires C++17 support"
 #else
-    #include "platform/memory.h"
+    #include "SkrRT/platform/memory.h"
     #include <type_traits>
     #include <utility>
     #include <memory>

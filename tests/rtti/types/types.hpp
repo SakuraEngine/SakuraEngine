@@ -1,7 +1,7 @@
 #pragma once
 #include "containers/detail/sptr.hpp"
 #include "containers/variant.hpp"
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #include "misc/log.hpp"
 #include "resource/config_resource.h"
 #include "resource/resource_handle.h"

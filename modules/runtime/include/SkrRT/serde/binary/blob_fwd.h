@@ -1,6 +1,6 @@
 
 #pragma once
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #include "serde/binary/serde.h"
 #include <type_traits>
 

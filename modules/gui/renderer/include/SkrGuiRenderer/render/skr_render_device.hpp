@@ -3,7 +3,7 @@
 #include "cgpu/io.h"
 #include "cgpu/api.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
-#include "platform/window.h"
+#include "SkrRT/platform/window.h"
 #include "SkrGui/fwd_config.hpp"
 #include <EASTL/vector_map.h>
 

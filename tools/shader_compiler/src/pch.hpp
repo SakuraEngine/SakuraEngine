@@ -1,8 +1,8 @@
 #pragma once
 #include <chrono>
 
-#include "platform/memory.h"
-#include "platform/debug.h"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/platform/debug.h"
 #include "io/io.h"
 #include "misc/make_zeroed.hpp"
 #include "misc/types.h"

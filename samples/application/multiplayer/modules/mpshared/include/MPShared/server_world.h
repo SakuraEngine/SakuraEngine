@@ -5,7 +5,7 @@
 #include "SkrScene/scene.h"
 #include "containers/hashmap.hpp"
 #include "async/fib_task.hpp"
-#include "platform/time.h"
+#include "SkrRT/platform/time.h"
 #include "containers/vector.hpp"
 #include "ecs/entities.hpp"
 

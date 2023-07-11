@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "platform/crash.h"
+#include "SkrRT/platform/crash.h"
 #include "ecs/dual.h"
 #include "guid.hpp" //for guid
 #include "misc/make_zeroed.hpp"

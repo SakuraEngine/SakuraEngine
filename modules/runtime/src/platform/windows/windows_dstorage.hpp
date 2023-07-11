@@ -1,11 +1,11 @@
 #pragma once
-#include "platform/memory.h"
+#include "SkrRT/platform/memory.h"
 #include "misc/log.h"
-#include "platform/windows/dstorage.h"
-#include "platform/dstorage.h"
-#include "platform/shared_library.hpp"
-#include "platform/atomic.h"
-#include "platform/thread.h"
+#include "SkrRT/platform/windows/dstorage.h"
+#include "SkrRT/platform/dstorage.h"
+#include "SkrRT/platform/shared_library.hpp"
+#include "SkrRT/platform/atomic.h"
+#include "SkrRT/platform/thread.h"
 
 #include "EASTL/vector.h"
 

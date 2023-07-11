@@ -1,6 +1,6 @@
 #pragma once
-#include "platform/configure.h"
-#include "platform/memory.h"
+#include "SkrRT/platform/configure.h"
+#include "SkrRT/platform/memory.h"
 // Currently we have only wasm3 as our wasm3 engine
 #define USE_M3
 

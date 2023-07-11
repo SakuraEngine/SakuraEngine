@@ -4,7 +4,7 @@
 #include "resource/resource_factory.h"
 #include "serde/binary/reader_fwd.h"
 #include "serde/binary/writer_fwd.h"
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #ifndef __meta__
     #include "SkrScene/resources/scene_resource.generated.h"
 #endif

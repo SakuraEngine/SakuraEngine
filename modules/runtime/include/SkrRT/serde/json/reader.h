@@ -9,7 +9,7 @@
     #include "containers/string.hpp"
     #include "containers/vector.hpp"
     #include "type/type_id.hpp"
-    #include "platform/guid.hpp"
+    #include "SkrRT/platform/guid.hpp"
     #include "type/type_helper.hpp"
 
 // forward declaration for resources

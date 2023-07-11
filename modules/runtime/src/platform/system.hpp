@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/system.h"
+#include "SkrRT/platform/system.h"
 #include "containers/vector.hpp"
 
 #include <EASTL/vector_map.h>

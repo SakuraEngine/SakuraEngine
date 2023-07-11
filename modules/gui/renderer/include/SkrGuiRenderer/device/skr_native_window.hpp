@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrGuiRenderer/module.configure.h"
 #include "SkrGui/backend/device/window.hpp"
-#include "platform/window.h"
+#include "SkrRT/platform/window.h"
 #include "SkrGui/backend/device/device.hpp"
 
 namespace skr::gui

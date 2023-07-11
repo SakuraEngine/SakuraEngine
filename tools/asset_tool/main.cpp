@@ -5,9 +5,9 @@
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 
-#include "platform/vfs.h"
-#include "platform/thread.h"
-#include "platform/time.h"
+#include "SkrRT/platform/vfs.h"
+#include "SkrRT/platform/thread.h"
+#include "SkrRT/platform/time.h"
 
 #include "misc/log.h"
 #include "cgpu/io.h"
@@ -44,7 +44,7 @@ public:
     skr_vfs_t* resource_vfs = nullptr;
 
 };
-#include "platform/filesystem.hpp"
+#include "SkrRT/platform/filesystem.hpp"
 
 IMPLEMENT_DYNAMIC_MODULE(SAssetImportModule, SkrAssetImport);
 

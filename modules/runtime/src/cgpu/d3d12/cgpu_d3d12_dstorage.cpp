@@ -2,7 +2,7 @@
 #include "d3d12_utils.hpp"
 #include "../common/common_utils.h"
 
-#include "platform/windows/windows_dstorage.hpp"
+#include "SkrRT/platform/windows/windows_dstorage.hpp"
 
 #include "EASTL/vector_map.h"
 #include "EASTL/algorithm.h"

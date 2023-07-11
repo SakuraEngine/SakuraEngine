@@ -1,5 +1,5 @@
-#include "platform/memory.h"
-#include "platform/guid.hpp"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/platform/guid.hpp"
 #include "resource/resource_handle.h"
 #include "serde/binary/reader.h"
 #include "serde/binary/writer.h"

@@ -1,4 +1,4 @@
-#include "platform/crash.h"
+#include "SkrRT/platform/crash.h"
 #include "module_manager.cpp"
 #include "runtime_module.h"
 

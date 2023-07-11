@@ -1,6 +1,6 @@
 #pragma once
 #include <type_traits>
-#include "platform/debug.h"
+#include "SkrRT/platform/debug.h"
 namespace skr
 {
 namespace details

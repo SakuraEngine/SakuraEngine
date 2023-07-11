@@ -3,7 +3,7 @@
 #include "cooker.hpp"
 #include "containers/span.hpp"
 #include "resource/resource_header.hpp"
-#include "platform/filesystem.hpp"
+#include "SkrRT/platform/filesystem.hpp"
 #include "simdjson/padded_string.h"
 #include "misc/log.hpp"
 #include "misc/defer.hpp"

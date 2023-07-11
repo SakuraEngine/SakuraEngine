@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 
 typedef struct SProcess SProcess;
 typedef struct SProcess* SProcessHandle;

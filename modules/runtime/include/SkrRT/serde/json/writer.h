@@ -92,7 +92,7 @@ typedef struct skr_json_writer_t skr_json_writer_t;
 
 #if defined(__cplusplus)
     #include "type/type_id.hpp"
-    #include "platform/guid.hpp"
+    #include "SkrRT/platform/guid.hpp"
 // utils for codegen
 namespace skr
 {

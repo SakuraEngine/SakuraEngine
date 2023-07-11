@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "platform/cpu/cpu_features_macros.h"
+#include "SkrRT/platform/cpu/cpu_features_macros.h"
 
 #if defined(CPU_FEATURES_ARCH_X86)
 #include "cpuinfo_x86.h"

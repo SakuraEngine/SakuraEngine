@@ -1,8 +1,8 @@
 #pragma once
 #include <type_traits>
-#include "platform/atomic.h"
-#include "platform/thread.h"
-#include "platform/memory.h"
+#include "SkrRT/platform/atomic.h"
+#include "SkrRT/platform/thread.h"
+#include "SkrRT/platform/memory.h"
 #include "misc/defer.hpp"
 
 #include <EASTL/atomic.h>

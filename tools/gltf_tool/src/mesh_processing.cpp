@@ -5,8 +5,8 @@
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "cgpu/api.h"
 
-#include "platform/vfs.h"
-#include "platform/filesystem.hpp"
+#include "SkrRT/platform/vfs.h"
+#include "SkrRT/platform/filesystem.hpp"
 #include "tracy/Tracy.hpp"
 
 #define MAGIC_SIZE_GLTF_PARSE_READY ~0

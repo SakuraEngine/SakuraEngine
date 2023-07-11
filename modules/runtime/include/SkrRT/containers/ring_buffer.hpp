@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/atomic.h"
+#include "SkrRT/platform/atomic.h"
 #include <containers/vector.hpp>
 
 namespace skr 

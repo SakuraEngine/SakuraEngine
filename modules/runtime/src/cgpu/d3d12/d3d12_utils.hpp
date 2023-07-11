@@ -1,6 +1,6 @@
 #pragma once
 #include "cgpu/d3d12/D3D12MemAlloc.h"
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "./../common/common_utils.h"
 #ifdef __cplusplus
@@ -9,8 +9,8 @@
     #include <containers/hashmap.hpp>
 #endif
 #ifdef CGPU_THREAD_SAFETY
-    #include "platform/thread.h"
-    #include "platform/atomic.h"
+    #include "SkrRT/platform/thread.h"
+    #include "SkrRT/platform/atomic.h"
 #endif
 
 #define CALC_SUBRESOURCE_INDEX(MipSlice, ArraySlice, PlaneSlice, MipLevels, ArraySize) ((MipSlice) + ((ArraySlice) * (MipLevels)) + ((PlaneSlice) * (MipLevels) * (ArraySize)))

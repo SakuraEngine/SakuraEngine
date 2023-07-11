@@ -1,6 +1,6 @@
 #pragma once
 #include "GameRuntime/module.configure.h"
-#include "platform/vfs.h"
+#include "SkrRT/platform/vfs.h"
 #include "misc/log.h"
 #include "SkrRenderer/skr_renderer.h"
 #ifdef __cplusplus

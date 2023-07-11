@@ -1,6 +1,6 @@
 #include "misc/log.h"
-#include "platform/crash.h"
-#include "platform/thread.h"
+#include "SkrRT/platform/crash.h"
+#include "SkrRT/platform/thread.h"
 #include "containers/hashmap.hpp"
 #include "containers/string.hpp"
 

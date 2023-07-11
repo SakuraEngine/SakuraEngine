@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrGui/module.configure.h"
 #include "misc/types.h"
-#include "platform/guid.hpp"
-#include "platform/configure.h"
+#include "SkrRT/platform/guid.hpp"
+#include "SkrRT/platform/configure.h"
 #include "misc/log.hpp"
 
 namespace skr::gui

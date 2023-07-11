@@ -1,9 +1,9 @@
 #include "resource_request_impl.hpp"
-#include "platform/debug.h"
+#include "SkrRT/platform/debug.h"
 #include "misc/defer.hpp"
 #include "io/io.h"
 #include "misc/log.hpp"
-#include "platform/vfs.h"
+#include "SkrRT/platform/vfs.h"
 #include "resource/resource_factory.h"
 #include "serde/binary/reader.h"
 

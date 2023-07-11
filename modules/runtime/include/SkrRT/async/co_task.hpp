@@ -1,10 +1,10 @@
 #pragma once
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #if __cpp_impl_coroutine
 #include "misc/defer.hpp"
-#include "platform/debug.h"
+#include "SkrRT/platform/debug.h"
 #include "EASTL/functional.h"
-#include "platform/thread.h"
+#include "SkrRT/platform/thread.h"
 #include "containers/sptr.hpp"
 #include "containers/vector.hpp"
 #include <EASTL/array.h>

@@ -1,6 +1,6 @@
 #pragma once
 #include "daScript/daScript.h"
-#include "platform/memory.h"
+#include "SkrRT/platform/memory.h"
 #include "misc/log.h"
 
 #include "SkrDAScript/text_printer.hpp"

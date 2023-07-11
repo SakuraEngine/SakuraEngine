@@ -1,6 +1,6 @@
 #pragma once
-#include "platform/memory.h"
-#include "platform/thread.h"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/platform/thread.h"
 #include "misc/log.h"
 #include "io/io.h"
 #include "misc/defer.hpp"

@@ -1,4 +1,4 @@
-#include "platform/guid.hpp"
+#include "SkrRT/platform/guid.hpp"
 #include "misc/log.h"
 namespace skr {
 namespace guid{

@@ -1,6 +1,6 @@
 #include "common/utils.h"
-#include "platform/thread.h"
-#include "platform/system.h"
+#include "SkrRT/platform/thread.h"
+#include "SkrRT/platform/system.h"
 #include "misc/log.h"
 #include "misc/make_zeroed.hpp"
 #include "module/module.hpp"

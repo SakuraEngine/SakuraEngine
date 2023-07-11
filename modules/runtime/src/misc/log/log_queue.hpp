@@ -1,7 +1,7 @@
 #pragma once
 #include "containers/hashmap.hpp"
-#include "platform/atomic.h"
-#include "platform/thread.h"
+#include "SkrRT/platform/atomic.h"
+#include "SkrRT/platform/thread.h"
 #include "misc/log/log_base.hpp"
 #include "misc/log/log_formatter.hpp"
 

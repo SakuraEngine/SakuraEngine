@@ -5,7 +5,7 @@
 #include "vulkan/vulkan_core.h"
 #include "../common/common_utils.h"
 #ifdef CGPU_THREAD_SAFETY
-    #include "platform/thread.h"
+    #include "SkrRT/platform/thread.h"
 #endif
 
 void cgpu_render_encoder_set_shading_rate_vulkan(CGPURenderPassEncoderId encoder, ECGPUShadingRate shading_rate, ECGPUShadingRateCombiner post_rasterizer_rate, ECGPUShadingRateCombiner final_rate)

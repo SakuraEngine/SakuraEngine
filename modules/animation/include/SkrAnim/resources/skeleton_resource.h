@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrAnim/module.configure.h"
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #ifndef __meta__
     #include "SkrAnim/resources/skeleton_resource.generated.h"
 #endif

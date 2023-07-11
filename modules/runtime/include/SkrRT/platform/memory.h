@@ -1,6 +1,6 @@
 #pragma once
-#include "platform/configure.h"
-#include "platform/debug.h"
+#include "SkrRT/platform/configure.h"
+#include "SkrRT/platform/debug.h"
 #include <string.h>  // memset
 #ifdef __cplusplus
 #include <new>         // 'operator new' function for non-allocating placement new expression

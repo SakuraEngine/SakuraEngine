@@ -1,5 +1,5 @@
 #include "SkrToolCore/asset/cook_system.hpp"
-#include "platform/guid.hpp"
+#include "SkrRT/platform/guid.hpp"
 #include "misc/defer.hpp"
 #include "misc/log.hpp"
 #include "misc/parallel_for.hpp"

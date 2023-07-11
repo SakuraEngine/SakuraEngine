@@ -8,7 +8,7 @@
  * @LastEditTime: 2020-06-08 02:46:16
  */
 #pragma once
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #include <containers/string.hpp>
 
 namespace skr

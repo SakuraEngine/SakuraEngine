@@ -1,7 +1,7 @@
-#include "platform/windows/windows_dstorage.hpp"
+#include "SkrRT/platform/windows/windows_dstorage.hpp"
 #include "cgpu/extensions/cgpu_d3d12_exts.h"
 #include "misc/make_zeroed.hpp"
-#include "platform/win/misc.h"
+#include "SkrRT/platform/win/misc.h"
 
 #include "misc/defer.hpp"
 #include "containers/vector.hpp"

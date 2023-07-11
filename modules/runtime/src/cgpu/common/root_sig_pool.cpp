@@ -2,7 +2,7 @@
 #include <EASTL/vector.h>
 #include <containers/string.hpp>
 #include <containers/hashmap.hpp>
-#include "platform/atomic.h"
+#include "SkrRT/platform/atomic.h"
 
 struct RSCharacteristic
 {

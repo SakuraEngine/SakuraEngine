@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrInputSystem/module.configure.h"
 #include "SkrInput/input.h"
-#include "platform/atomic.h"
+#include "SkrRT/platform/atomic.h"
 #include "containers/detail/sptr.hpp"
 
 namespace skr {

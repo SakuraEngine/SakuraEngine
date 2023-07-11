@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/window.h"
+#include "SkrRT/platform/window.h"
 #include "SkrImGui/skr_imgui.config.h"
 #include "imgui/imgui.h"
 

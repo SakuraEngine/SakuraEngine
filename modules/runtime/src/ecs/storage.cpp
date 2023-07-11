@@ -13,7 +13,7 @@
 #include "scheduler.hpp"
 #include "misc/parallel_for.hpp"
 #include "type_registry.hpp"
-#include "platform/atomic.h"
+#include "SkrRT/platform/atomic.h"
 
 dual_storage_t::dual_storage_t()
     : archetypeArena(dual::get_default_pool())

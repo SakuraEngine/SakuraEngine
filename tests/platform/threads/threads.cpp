@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
-#include "platform/thread.h"
-#include "platform/crash.h"
+#include "SkrRT/platform/thread.h"
+#include "SkrRT/platform/crash.h"
 #include "misc/make_zeroed.hpp"
 #include "misc/log.h"
 #include <thread>
@@ -87,7 +87,7 @@ TEST(Threads, RecursiveCondVar)
     skr_destroy_mutex(&sm);
 }
 
-#include "platform/atomic.h"
+#include "SkrRT/platform/atomic.h"
 
 TEST(Threads, Atomic)
 {

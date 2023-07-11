@@ -4,7 +4,7 @@
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/project/project.hpp"
-#include "platform/guid.hpp"
+#include "SkrRT/platform/guid.hpp"
 #include "containers/string.hpp"
 #include "misc/make_zeroed.hpp"
 #include "misc/defer.hpp"

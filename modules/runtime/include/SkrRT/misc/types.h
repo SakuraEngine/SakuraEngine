@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #ifdef __cplusplus
 #include <initializer_list>
 #endif

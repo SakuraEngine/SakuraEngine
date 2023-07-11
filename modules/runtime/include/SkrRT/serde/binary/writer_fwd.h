@@ -2,7 +2,7 @@
 #include <type_traits>
 #include "serde/binary/blob_fwd.h"
 #include "misc/traits.hpp"
-#include "platform/debug.h"
+#include "SkrRT/platform/debug.h"
 
 // FUCK MSVC COMPILER
 RUNTIME_EXTERN_C RUNTIME_API void skr_debug_output(const char* msg);

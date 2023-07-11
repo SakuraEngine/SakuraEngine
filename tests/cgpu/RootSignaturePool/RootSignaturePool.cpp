@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "platform/crash.h"
+#include "SkrRT/platform/crash.h"
 #include "cgpu/api.h"
 #include "misc/log.h"
 #include "misc/make_zeroed.hpp"

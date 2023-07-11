@@ -3,8 +3,8 @@
 #ifdef TWEAK_USABLE
 #include <fstream>
 #include "efsw/efsw.hpp"
-#include "platform/filesystem.hpp"
-#include "platform/thread.h"
+#include "SkrRT/platform/filesystem.hpp"
+#include "SkrRT/platform/thread.h"
 #include "misc/hash.h"
 #include "misc/log.h"
 #include <containers/hashmap.hpp>

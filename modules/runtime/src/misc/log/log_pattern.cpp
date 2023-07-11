@@ -1,6 +1,6 @@
 #include "../../pch.hpp"
 #include "misc/log/log_manager.hpp"
-#include "platform/process.h"
+#include "SkrRT/platform/process.h"
 #include "misc/log/logger.hpp"
 #include "misc/log/log_pattern.hpp"
 #include "containers/hashmap.hpp"

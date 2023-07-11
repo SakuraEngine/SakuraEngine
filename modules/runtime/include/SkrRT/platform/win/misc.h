@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 
 static const uint32_t kWin7Major = 6;
 static const uint32_t kWin10Major = 10;

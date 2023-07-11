@@ -1,8 +1,8 @@
-#include "platform/memory.h"
-#include "platform/vfs.h"
-#include "platform/time.h"
-#include "platform/guid.hpp"
-#include "platform/thread.h"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/platform/vfs.h"
+#include "SkrRT/platform/time.h"
+#include "SkrRT/platform/guid.hpp"
+#include "SkrRT/platform/thread.h"
 #include "misc/make_zeroed.hpp"
 
 #include "ecs/type_builder.hpp"

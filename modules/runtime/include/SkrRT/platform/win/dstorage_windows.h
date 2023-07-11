@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/dstorage.h"
+#include "SkrRT/platform/dstorage.h"
 
 typedef struct skr_win_dstorage_decompress_service_t skr_win_dstorage_decompress_service_t;
 typedef struct skr_win_dstorage_decompress_service_t* skr_win_dstorage_decompress_service_id;
