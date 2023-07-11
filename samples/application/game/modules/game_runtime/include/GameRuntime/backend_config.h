@@ -1,6 +1,6 @@
 #pragma once
 #include "GameRuntime/module.configure.h"
-#include "resource/config_resource.h"
+#include "SkrRT/resource/config_resource.h"
 #include "SkrRT/containers/function_ref.hpp"
 #ifndef __meta__
     #include "GameRuntime/backend_config.generated.h"

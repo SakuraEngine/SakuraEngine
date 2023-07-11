@@ -34,7 +34,7 @@
 #include <mutex>
 #include "SkrRT/platform/memory.h"
 #include "tracy/Tracy.hpp"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 
 #if defined(FTL_WIN32_THREADS)
     #ifndef WIN32_LEAN_AND_MEAN

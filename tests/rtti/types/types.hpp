@@ -3,7 +3,7 @@
 #include "SkrRT/containers/variant.hpp"
 #include "SkrRT/platform/configure.h"
 #include "SkrRT/misc/log.hpp"
-#include "resource/config_resource.h"
+#include "SkrRT/resource/config_resource.h"
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/type/type.hpp"
 #include <SkrRT/containers/string.hpp>

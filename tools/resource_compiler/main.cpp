@@ -5,7 +5,7 @@
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/platform/thread.h"
-#include "resource/config_resource.h"
+#include "SkrRT/resource/config_resource.h"
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrToolCore/assets/config_asset.hpp"
 #include "SkrRT/type/type.hpp"

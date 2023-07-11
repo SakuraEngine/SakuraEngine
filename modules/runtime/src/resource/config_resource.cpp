@@ -1,4 +1,4 @@
-#include "resource/config_resource.h"
+#include "SkrRT/resource/config_resource.h"
 #include "EASTL/vector.h"
 #include "SkrRT/platform/configure.h"
 #include "SkrRT/platform/debug.h"
