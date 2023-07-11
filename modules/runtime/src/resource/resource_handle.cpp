@@ -1,7 +1,7 @@
 #include "resource/resource_handle.h"
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/misc/types.h"
-#include "resource/resource_header.hpp"
+#include "SkrRT/resource/resource_header.hpp"
 #include "resource/resource_system.h"
 
 static constexpr uint64_t kResourceHandleRecordMask = ~(alignof(skr_resource_record_t) - 1);

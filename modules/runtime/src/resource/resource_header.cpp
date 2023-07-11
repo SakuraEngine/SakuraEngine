@@ -1,4 +1,4 @@
-#include "resource/resource_header.hpp"
+#include "SkrRT/resource/resource_header.hpp"
 #include "SkrRT/serde/binary/writer.h"
 #include "SkrRT/serde/binary/reader.h"
 

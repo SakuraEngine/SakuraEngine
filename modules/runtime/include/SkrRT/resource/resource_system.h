@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/platform/vfs.h"
 #include "resource/resource_handle.h"
-#include "resource/resource_header.hpp"
+#include "SkrRT/resource/resource_header.hpp"
 #include "SkrRT/misc/types.h"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service)

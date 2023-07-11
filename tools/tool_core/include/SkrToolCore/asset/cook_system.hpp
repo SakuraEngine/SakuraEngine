@@ -2,7 +2,7 @@
 #include <EASTL/functional.h>
 #include "cooker.hpp"
 #include "containers/span.hpp"
-#include "resource/resource_header.hpp"
+#include "SkrRT/resource/resource_header.hpp"
 #include "SkrRT/platform/filesystem.hpp"
 #include "simdjson/padded_string.h"
 #include "SkrRT/misc/log.hpp"

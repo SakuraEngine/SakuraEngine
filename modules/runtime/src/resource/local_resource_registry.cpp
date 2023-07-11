@@ -2,7 +2,7 @@
 #include "SkrRT/misc/defer.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "resource/local_resource_registry.hpp"
-#include "resource/resource_header.hpp"
+#include "SkrRT/resource/resource_header.hpp"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/platform/guid.hpp"

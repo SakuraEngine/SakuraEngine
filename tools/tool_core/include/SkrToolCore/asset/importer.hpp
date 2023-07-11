@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrToolCore/fwd_types.hpp"
-#include "resource/resource_header.hpp"
+#include "SkrRT/resource/resource_header.hpp"
 #include "SkrToolCore/asset/cooker.hpp"
 #include "SkrRT/serde/json/reader_fwd.h"
 #ifndef __meta__

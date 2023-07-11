@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/platform/configure.h"
-#include "resource/resource_header.hpp"
+#include "SkrRT/resource/resource_header.hpp"
 
 typedef enum ESkrInstallStatus
 {
