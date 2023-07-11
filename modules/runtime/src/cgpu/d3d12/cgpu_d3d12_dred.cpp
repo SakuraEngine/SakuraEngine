@@ -1,7 +1,7 @@
 #include "d3d12_utils.hpp"
-#include "misc/make_zeroed.hpp"
-#include "containers/string.hpp"
-#include "containers/span.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/span.hpp"
 
 #include <EASTL/string.h>
 #include <EASTL/vector_map.h>

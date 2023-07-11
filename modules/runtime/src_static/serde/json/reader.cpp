@@ -1,7 +1,7 @@
-#include "resource/resource_handle.h"
-#include "serde/json/reader.h"
+#include "SkrRT/resource/resource_handle.h"
+#include "SkrRT/serde/json/reader.h"
 #include "EASTL/string.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #include "tracy/Tracy.hpp"
 
 namespace skr::json

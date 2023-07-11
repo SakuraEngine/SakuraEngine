@@ -1,8 +1,8 @@
-#include "platform/memory.h"
-#include "platform/process.h"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/platform/process.h"
 #include "mdb_utils.h"
-#include <platform/filesystem.hpp>
-#include "containers/string.hpp"
+#include <SkrRT/platform/filesystem.hpp>
+#include "SkrRT/containers/string.hpp"
 #include "common/utils.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 

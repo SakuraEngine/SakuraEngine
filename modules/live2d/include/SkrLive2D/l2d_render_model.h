@@ -1,5 +1,5 @@
 #pragma once
-#include "misc/types.h"
+#include "SkrRT/misc/types.h"
 #include "cgpu/api.h"
 #include "cgpu/io.h"
 #include "SkrRenderer/primitive_draw.h"
@@ -69,7 +69,7 @@ struct skr_live2d_render_model_t {
     eastl::vector_map<CGPUTextureViewId, CGPUXBindTableId> mask_bind_tables;
 };
 
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 template<>
 struct SKR_LIVE2D_API dual_id_of<skr_live2d_render_model_comp_t>
 {

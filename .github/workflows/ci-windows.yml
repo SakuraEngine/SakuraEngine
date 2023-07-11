@@ -33,7 +33,7 @@ jobs:
       - name: Install xmake
         uses: xmake-io/github-action-setup-xmake@v1
         with:
-          xmake-version: latest
+          xmake-version: '2.7.9'
           actions-cache-folder: .xmake-cache-W${{ steps.cache_key.outputs.key }}
 
       # Update xmake repository (in order to have the file that will be cached)
@@ -50,7 +50,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ env.XMAKE_GLOBALDIR }}\.xmake\packages
-          key: Windows-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}-${{ steps.dep_hash.outputs.hash }}-W${{ steps.cache_key.outputs.key }}-8
+          key: Windows-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.cxx }}-${{ steps.dep_hash.outputs.hash }}-W${{ steps.cache_key.outputs.key }}-9
 
       # Run setup script
       - name: Set env

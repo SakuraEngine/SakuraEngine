@@ -1,12 +1,12 @@
 #pragma once
 #include "GameRuntime/module.configure.h"
-#include "platform/vfs.h"
-#include "misc/log.h"
+#include "SkrRT/platform/vfs.h"
+#include "SkrRT/misc/log.h"
 #include "SkrRenderer/skr_renderer.h"
 #ifdef __cplusplus
-    #include "module/module_manager.hpp"
+    #include "SkrRT/module/module_manager.hpp"
     #include "SkrRenderGraph/frontend/render_graph.hpp"
-    #include "io/io.h"
+    #include "SkrRT/io/io.h"
     #include "cgpu/io.h"
 
 struct dual_storage_t;

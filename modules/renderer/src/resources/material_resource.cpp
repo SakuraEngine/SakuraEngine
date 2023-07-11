@@ -1,8 +1,8 @@
 #include <EASTL/fixed_vector.h>
-#include "platform/guid.hpp"
-#include "containers/sptr.hpp"
-#include "misc/make_zeroed.hpp"
-#include "async/thread_job.hpp"
+#include "SkrRT/platform/guid.hpp"
+#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/async/thread_job.hpp"
 
 #include "SkrRenderer/render_device.h"
 #include "SkrRenderer/resources/mesh_resource.h"
@@ -12,7 +12,7 @@
 #include "SkrRenderer/shader_map.h"
 
 #include "SkrRenderer/pso_map.h"
-#include "platform/guid.hpp"
+#include "SkrRT/platform/guid.hpp"
 
 namespace skr
 {

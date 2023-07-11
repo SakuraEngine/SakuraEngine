@@ -2,9 +2,9 @@
 #include "SkrInputSystem/input_action.hpp"
 #include "SkrInputSystem/input_trigger.hpp"
 #include "SkrInputSystem/input_modifier.hpp"
-#include "platform/guid.hpp"
+#include "SkrRT/platform/guid.hpp"
 #include <EASTL/functional.h>
-#include "containers/vector.hpp"
+#include "SkrRT/containers/vector.hpp"
 
 namespace skr
 {

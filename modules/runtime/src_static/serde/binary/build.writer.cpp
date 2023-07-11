@@ -1,11 +1,11 @@
-#include "containers/sptr.hpp"
-#include "resource/resource_handle.h"
-#include "serde/binary/writer.h"
-#include "serde/binary/blob.h"
-#include "misc/bits.hpp"
-#include "math/rtm/scalarf.h"
-#include "math/rtm/scalard.h"
-#include "misc/log.h"
+#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/resource/resource_handle.h"
+#include "SkrRT/serde/binary/writer.h"
+#include "SkrRT/serde/binary/blob.h"
+#include "SkrRT/misc/bits.hpp"
+#include "SkrRT/math/rtm/scalarf.h"
+#include "SkrRT/math/rtm/scalard.h"
+#include "SkrRT/misc/log.h"
 
 namespace skr::binary
 {

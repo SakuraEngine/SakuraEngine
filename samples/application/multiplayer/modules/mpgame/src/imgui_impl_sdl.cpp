@@ -59,7 +59,7 @@
 //  2018-01-18: Inputs: Added mapping for ImGuiKey_Insert.
 //  2017-08-25: Inputs: MousePos set to -FLT_MAX,-FLT_MAX when mouse is unavailable/missing (instead of -1,-1).
 //  2016-10-15: Misc: Added a void* user_data parameter to Clipboard function handlers.
-#include "runtime_configure.h"
+#include "SkrRT/platform/configure.h"
 #include "SkrImGui/skr_imgui.h"
 #include "imgui/imgui.h"
 #include "imgui_impl_sdl.h"

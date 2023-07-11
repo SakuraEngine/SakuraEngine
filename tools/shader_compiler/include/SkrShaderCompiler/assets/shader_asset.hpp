@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrShaderCompiler/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
-#include "platform/configure.h"
-#include "platform/guid.hpp"
+#include "SkrRT/platform/configure.h"
+#include "SkrRT/platform/guid.hpp"
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 #ifndef __meta__
 #include "SkrShaderCompiler/assets/shader_asset.generated.h"

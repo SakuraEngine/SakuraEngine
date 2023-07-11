@@ -1,5 +1,5 @@
 #include "SkrRenderGraph/api.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 
 IMPLEMENT_DYNAMIC_MODULE(SkrRenderGraphModule, SkrRenderGraph);
 

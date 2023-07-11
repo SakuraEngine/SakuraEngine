@@ -1,4 +1,4 @@
-#include "misc/hash.h"
+#include "SkrRT/misc/hash.h"
 #if __has_include("emmintrin.h") && !defined(TARGET_CPU_ARM) && !defined(__EMSCRIPTEN__) && !defined(__wasi__)
     #include <emmintrin.h>
 #endif

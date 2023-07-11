@@ -1,11 +1,11 @@
 #include "./gdi_application.h"
-#include "misc/make_zeroed.hpp"
-#include "platform/filesystem.hpp"
-#include "platform/vfs.h"
-#include "io/io.h"
-#include "async/thread_job.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/platform/filesystem.hpp"
+#include "SkrRT/platform/vfs.h"
+#include "SkrRT/io/io.h"
+#include "SkrRT/async/thread_job.hpp"
 
-#include "containers/string.hpp"
+#include "SkrRT/containers/string.hpp"
 
 // bool initialize_gdi_application(gdi_application_t* app)
 // {

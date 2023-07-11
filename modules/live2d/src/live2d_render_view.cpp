@@ -1,5 +1,5 @@
 #include "SkrLive2D/skr_live2d.h"
-#include "platform/memory.h"
+#include "SkrRT/platform/memory.h"
 #include "Framework/Math/CubismMatrix44.hpp"
 #include "Framework/Math/CubismViewMatrix.hpp"
 #include "live2d_helpers.hpp"

@@ -1,8 +1,8 @@
 #include "../platform/windows/winheaders.h"
 
-#include "platform/time.h"
-#include "platform/debug.h"
-#include "platform/thread.h"
+#include "SkrRT/platform/time.h"
+#include "SkrRT/platform/debug.h"
+#include "SkrRT/platform/thread.h"
 
 #include <time.h>
 #include <stdint.h>

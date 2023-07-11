@@ -1,11 +1,11 @@
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_mesh.h"
 #include "cgpu/api.h"
-#include "module/module_manager.hpp"
-#include "misc/log.h"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/module/module_manager.hpp"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrImGui/skr_imgui.h"
-#include "platform/guid.hpp"
+#include "SkrRT/platform/guid.hpp"
 #include <string.h>
 #ifdef _WIN32
 #include "cgpu/extensions/cgpu_d3d12_exts.h"

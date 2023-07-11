@@ -1,9 +1,9 @@
 #include "SkrInput/input.h"
 #include "common/reading_pool.hpp"
-#include "platform/memory.h"
-#include "platform/debug.h"
-#include "platform/shared_library.hpp"
-#include <containers/vector.hpp>
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/platform/debug.h"
+#include "SkrRT/platform/shared_library.hpp"
+#include <SkrRT/containers/vector.hpp>
 
 namespace skr {
 namespace input {

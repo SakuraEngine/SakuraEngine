@@ -3,7 +3,7 @@
 #include "fwd_types.h"
 #include "cgpu/io.h"
 #ifdef __cplusplus
-#include "platform/window.h"
+#include "SkrRT/platform/window.h"
 
 namespace skr
 {

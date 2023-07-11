@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
-#include "platform/crash.h"
-#include "misc/make_zeroed.hpp"
-#include "async/thread_job.hpp"
+#include "SkrRT/platform/crash.h"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/async/thread_job.hpp"
 
 TEST(Job, JobQueue)
 {
@@ -30,10 +30,10 @@ TEST(Job, JobQueue)
     jq.wait_empty();
 }
 
-#include "misc/log.h"
-#include "async/async_progress.hpp"
-#include <containers/string.hpp>
-#include <containers/sptr.hpp>
+#include "SkrRT/misc/log.h"
+#include "SkrRT/async/async_progress.hpp"
+#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers/sptr.hpp>
 
 using Progress = int;
 using InputParam1 = int;

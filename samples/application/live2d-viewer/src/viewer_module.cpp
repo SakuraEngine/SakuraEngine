@@ -1,26 +1,26 @@
 #include "math.h"
 #include <EASTL/algorithm.h>
-#include <containers/string.hpp>
+#include <SkrRT/containers/string.hpp>
 
 #include "common/utils.h"
 
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 
-#include "platform/system.h"
-#include "platform/vfs.h"
-#include "platform/thread.h"
-#include "platform/time.h"
-#include "platform/filesystem.hpp"
-#include "async/thread_job.hpp"
+#include "SkrRT/platform/system.h"
+#include "SkrRT/platform/vfs.h"
+#include "SkrRT/platform/thread.h"
+#include "SkrRT/platform/time.h"
+#include "SkrRT/platform/filesystem.hpp"
+#include "SkrRT/async/thread_job.hpp"
 
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #include "cgpu/io.h"
 
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
 
-#include "module/module_manager.hpp"
-#include "runtime_module.h"
+#include "SkrRT/module/module_manager.hpp"
+#include "SkrRT/runtime_module.h"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_effect.h"
 
@@ -136,9 +136,9 @@ void SLive2DViewerModule::on_unload()
 
 extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs);
 
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 
-#include "ecs/type_builder.hpp"
+#include "SkrRT/ecs/type_builder.hpp"
 
 void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service, 
     bool bUseCVV, DemoUploadMethod upload_method)

@@ -32,7 +32,7 @@
 
 #include <stdint.h>
 
-#include "platform/debug.h"
+#include "SkrRT/platform/debug.h"
 
 // Temporarly needed while trigonometric functions aren't implemented.
 #include <cmath>

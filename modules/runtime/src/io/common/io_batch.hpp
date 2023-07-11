@@ -1,9 +1,9 @@
 #pragma once
-#include "io/io.h"
+#include "SkrRT/io/io.h"
 #include "pool.hpp"
-#include "platform/thread.h"
-#include "misc/defer.hpp"
-#include "containers/vector.hpp"
+#include "SkrRT/platform/thread.h"
+#include "SkrRT/misc/defer.hpp"
+#include "SkrRT/containers/vector.hpp"
 #include <EASTL/fixed_vector.h>
 
 namespace skr {

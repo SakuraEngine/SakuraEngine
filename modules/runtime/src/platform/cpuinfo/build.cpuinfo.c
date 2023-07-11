@@ -1,4 +1,4 @@
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 
 // utils
 #include "filesystem.c"

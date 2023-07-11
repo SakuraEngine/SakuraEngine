@@ -1,26 +1,26 @@
 //BEGIN STATIC_CTOR GENERATED
-#include "platform/debug.h"
-#include "platform/guid.hpp"
-#include "platform/memory.h"
-#include "type/type.hpp"
+#include "SkrRT/platform/debug.h"
+#include "SkrRT/platform/guid.hpp"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/type/type.hpp"
 #if defined __has_include
     #if  __has_include ("binary/reader_fwd.h")
-    #include "serde/binary/reader.h"
+    #include "SkrRT/serde/binary/reader.h"
     #endif
     #if  __has_include ("binary/writer_fwd.h")
-    #include "serde/binary/writer.h"
+    #include "SkrRT/serde/binary/writer.h"
     #endif
     #if  __has_include ("json/reader_fwd.h")
-    #include "serde/json/reader.h"
+    #include "SkrRT/serde/json/reader.h"
     #endif
     #if  __has_include ("json/writer_fwd.h")
-    #include "serde/json/writer.h"
+    #include "SkrRT/serde/json/writer.h"
     #endif
 #else
-    #include "serde/binary/reader.h"
-    #include "serde/binary/writer.h"
-    #include "serde/json/reader.h"
-    #include "serde/json/writer.h"
+    #include "SkrRT/serde/binary/reader.h"
+    #include "SkrRT/serde/binary/writer.h"
+    #include "SkrRT/serde/json/reader.h"
+    #include "SkrRT/serde/json/writer.h"
 #endif
 
 

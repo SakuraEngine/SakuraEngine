@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRenderer/fwd_types.h"
-#include "io/io.h"
+#include "SkrRT/io/io.h"
 #include "cgpu/io.h"
 
 #ifndef __meta__
@@ -99,7 +99,7 @@ namespace renderer {
 } // namespace renderer
 } // namespace skr
 
-#include "resource/resource_factory.h"
+#include "SkrRT/resource/resource_factory.h"
 
 namespace skr sreflect
 {

@@ -1,11 +1,11 @@
 #include "resource_request_impl.hpp"
-#include "platform/debug.h"
-#include "misc/defer.hpp"
-#include "io/io.h"
-#include "misc/log.hpp"
-#include "platform/vfs.h"
-#include "resource/resource_factory.h"
-#include "serde/binary/reader.h"
+#include "SkrRT/platform/debug.h"
+#include "SkrRT/misc/defer.hpp"
+#include "SkrRT/io/io.h"
+#include "SkrRT/misc/log.hpp"
+#include "SkrRT/platform/vfs.h"
+#include "SkrRT/resource/resource_factory.h"
+#include "SkrRT/serde/binary/reader.h"
 
 namespace skr
 {

@@ -7,8 +7,8 @@
 #include "SkrAnim/ozz/base/memory/unique_ptr.h"
 #include "SkrAnim/ozz/base/io/stream.h"
 #include "SkrAnim/ozz/base/io/archive.h"
-#include "misc/log.hpp"
-#include "serde/json/reader.h"
+#include "SkrRT/misc/log.hpp"
+#include "SkrRT/serde/json/reader.h"
 #include "SkrAnim/resources/skeleton_resource.h"
 
 namespace skd::asset

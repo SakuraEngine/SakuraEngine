@@ -5,7 +5,7 @@
 #include "cgpu/flags.h"
 #include "vulkan/vulkan_core.h"
 #ifdef CGPU_THREAD_SAFETY
-    #include "platform/thread.h"
+    #include "SkrRT/platform/thread.h"
 #endif
 #include "cgpu/shader-reflections/spirv/spirv_reflect.h"
 #include <stdio.h>

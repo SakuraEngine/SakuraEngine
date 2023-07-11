@@ -1,13 +1,13 @@
-#include "misc/log.h"
-#include "misc/make_zeroed.hpp"
-#include "misc/log.hpp"
-#include "platform/memory.h"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/misc/log.hpp"
+#include "SkrRT/platform/memory.h"
 
 #include "cgpu/api.h"
 #include "cgpu/cgpux.h"
 
 
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrScene/scene.h"
@@ -16,7 +16,7 @@
 #include "rfx_mesh.hpp"
 #include "rfx_skmesh.hpp"
 
-#include "containers/string.hpp"
+#include "SkrRT/containers/string.hpp"
 
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/resources/material_resource.hpp"
@@ -27,20 +27,20 @@
 #include "SkrAnim/components/skeleton_component.h"
 
 #include "cube.hpp"
-#include "platform/vfs.h"
-#include <platform/filesystem.hpp>
+#include "SkrRT/platform/vfs.h"
+#include <SkrRT/platform/filesystem.hpp>
 
-#include "misc/parallel_for.hpp"
+#include "SkrRT/misc/parallel_for.hpp"
 
-#include "resource/resource_system.h"
+#include "SkrRT/resource/resource_system.h"
 
 #include "tracy/Tracy.hpp"
 
-#include "math/rtm/quatf.h"
-#include "math/rtm/scalarf.h"
-#include "math/rtm/qvvf.h"
-#include "math/rtm/rtmx.h"
-#include "math/transform.h"
+#include "SkrRT/math/rtm/quatf.h"
+#include "SkrRT/math/rtm/scalarf.h"
+#include "SkrRT/math/rtm/qvvf.h"
+#include "SkrRT/math/rtm/rtmx.h"
+#include "SkrRT/math/transform.h"
 
 void RenderEffectForward::on_register(SRendererId renderer, dual_storage_t* storage)
 {

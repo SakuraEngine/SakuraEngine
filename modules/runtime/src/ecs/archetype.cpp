@@ -1,17 +1,17 @@
 #include "type_registry.hpp"
-#include "ecs/entity.hpp"
-#include "ecs/dual.h"
+#include "SkrRT/ecs/entity.hpp"
+#include "SkrRT/ecs/dual.h"
 #include "mask.hpp"
 #include "storage.hpp"
 #include "archetype.hpp"
 #include "type.hpp"
 
-#include "ecs/constants.hpp"
+#include "SkrRT/ecs/constants.hpp"
 #include "set.hpp"
 #include "type.hpp"
 #include "stack.hpp"
 #include "storage.hpp"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
 #include <EASTL/sort.h>
 #include <EASTL/bitset.h>
 #include "internal/utils.hpp"

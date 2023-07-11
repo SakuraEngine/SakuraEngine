@@ -1,14 +1,14 @@
 #include "cgpu/api.h"
 #include "cgpu/vulkan/vulkan_utils.h"
 #include "float.h"
-#include "platform/atomic.h"
+#include "SkrRT/platform/atomic.h"
 #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #include "../common/common_utils.h"
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #include "vulkan/vulkan_core.h"
 #include "vulkan_utils.h"
 #ifdef CGPU_THREAD_SAFETY
-    #include "platform/thread.h"
+    #include "SkrRT/platform/thread.h"
 #endif
 #include <string.h>
 

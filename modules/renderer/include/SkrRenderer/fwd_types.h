@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
-#include "misc/types.h"
+#include "SkrRT/misc/types.h"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service);
 struct skr_io_vram_service_t;

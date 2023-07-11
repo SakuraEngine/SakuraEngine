@@ -1,17 +1,17 @@
 #include "common/utils.h"
 #include <EASTL/shared_ptr.h>
 #include "GameRuntime/gamert.h"
-#include "misc/make_zeroed.hpp"
-#include "platform/filesystem.hpp"
-#include "platform/system.h"
-#include "platform/configure.h"
-#include "platform/memory.h"
-#include "platform/time.h"
-#include "platform/guid.hpp"
-#include "platform/window.h"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/platform/filesystem.hpp"
+#include "SkrRT/platform/system.h"
+#include "SkrRT/platform/configure.h"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/platform/time.h"
+#include "SkrRT/platform/guid.hpp"
+#include "SkrRT/platform/window.h"
 
-#include "ecs/type_builder.hpp"
-#include "serde/json/writer.h"
+#include "SkrRT/ecs/type_builder.hpp"
+#include "SkrRT/serde/json/writer.h"
 
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/resource_node.hpp"
@@ -20,17 +20,17 @@
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 
-#include "resource/resource_system.h"
+#include "SkrRT/resource/resource_system.h"
 
 #include "SkrScene/scene.h"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRenderer/render_effect.h"
 
-#include <containers/string.hpp>
-#include "async/fib_task.hpp"
+#include <SkrRT/containers/string.hpp>
+#include "SkrRT/async/fib_task.hpp"
 
-#include "resource/local_resource_registry.hpp"
+#include "SkrRT/resource/local_resource_registry.hpp"
 #include "SkrRenderer/shader_map.h"
 #include "SkrRenderer/render_viewport.h"
 #include "SkrRenderer/resources/texture_resource.h"
@@ -45,15 +45,14 @@
 #include "SkrAnim/components/skeleton_component.h"
 #include "GameRuntime/game_animation.h"
 
-#include "async/thread_job.hpp"
+#include "SkrRT/async/thread_job.hpp"
 
 #include "tracy/Tracy.hpp"
-#include "misc/types.h"
+#include "SkrRT/misc/types.h"
+#include "SkrRT/lua/skr_lua.h"
 #include "SkrInspector/inspect_value.h"
 
 #include "SkrScene/resources/scene_resource.h"
-
-#include "lua/skr_lua.h"
 
 uint32_t backbuffer_index;
 extern void create_imgui_resources(skr_vfs_t* resource_vfs, SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph);

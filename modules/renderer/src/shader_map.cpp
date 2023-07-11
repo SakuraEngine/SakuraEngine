@@ -2,15 +2,15 @@
 #include "SkrRenderer/render_device.h"
 #include "SkrRenderer/shader_hash.h"
 
-#include "misc/log.h"
-#include "misc/defer.hpp"
-#include "misc/make_zeroed.hpp"
-#include "platform/atomic.h"
-#include "async/thread_job.hpp"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/defer.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/platform/atomic.h"
+#include "SkrRT/async/thread_job.hpp"
 
-#include "containers/hashmap.hpp"
-#include "containers/string.hpp"
-#include "containers/sptr.hpp"
+#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/sptr.hpp"
 
 namespace skr
 {
