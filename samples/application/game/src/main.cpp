@@ -1,4 +1,4 @@
-#include "module/module_manager.hpp"
+#include "SkrRT/module/module_manager.hpp"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/async/fib_task.hpp"

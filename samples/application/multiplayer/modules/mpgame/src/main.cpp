@@ -1,4 +1,4 @@
-#include "module/module_manager.hpp"
+#include "SkrRT/module/module_manager.hpp"
 #include "MPGame/mp_interface.h"
 #include "SkrRT/platform/filesystem.hpp"
 int main(int argc, char** argv)

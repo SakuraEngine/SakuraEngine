@@ -15,7 +15,7 @@
 #include <EASTL/vector.h>
 #include <imgui/imgui.h>
 #include <EASTL/string_hash_map.h>
-#include "module/module_manager.hpp"
+#include "SkrRT/module/module_manager.hpp"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/window.h"

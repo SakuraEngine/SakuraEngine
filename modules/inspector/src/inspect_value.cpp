@@ -1,6 +1,6 @@
 #include "SkrInspector/inspect_value.h"
 #ifdef INSPECT_USABLE
-#include "module/subsystem.hpp"
+#include "SkrRT/module/subsystem.hpp"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/platform/thread.h"

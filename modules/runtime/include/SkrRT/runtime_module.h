@@ -1,5 +1,5 @@
 #pragma once
-#include "module/module_manager.hpp"
+#include "SkrRT/module/module_manager.hpp"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/platform/shared_library.hpp"

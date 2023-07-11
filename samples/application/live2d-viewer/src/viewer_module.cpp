@@ -19,7 +19,7 @@
 
 #include "SkrRT/misc/make_zeroed.hpp"
 
-#include "module/module_manager.hpp"
+#include "SkrRT/module/module_manager.hpp"
 #include "runtime_module.h"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_effect.h"

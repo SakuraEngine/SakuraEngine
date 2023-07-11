@@ -18,8 +18,8 @@
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 
-#include "module/module.hpp"
-#include "module/module_manager.hpp"
+#include "SkrRT/module/module.hpp"
+#include "SkrRT/module/module_manager.hpp"
 
 #include "tracy/Tracy.hpp"
 

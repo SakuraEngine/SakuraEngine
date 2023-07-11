@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrPhysics/module.configure.h"
-#include "module/module.hpp"
+#include "SkrRT/module/module.hpp"
 
 class SKR_PHYSICS_API SkrPhysicsModule : public skr::IDynamicModule
 {

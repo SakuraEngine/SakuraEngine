@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "module/module_manager.hpp"
+#include "SkrRT/module/module_manager.hpp"
 #include "SkrRT/platform/filesystem.hpp"
 
 class ModuleTest : public ::testing::Test

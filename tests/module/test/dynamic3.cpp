@@ -1,4 +1,4 @@
-#include "module/module_manager.hpp"
+#include "SkrRT/module/module_manager.hpp"
 #include "SkrRT/misc/log.h"
 
 class SDynamicModule3 : public skr::IDynamicModule

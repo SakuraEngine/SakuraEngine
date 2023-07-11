@@ -4,7 +4,7 @@
 #include "SkrRT/misc/log.h"
 #include "SkrRenderer/skr_renderer.h"
 #ifdef __cplusplus
-    #include "module/module_manager.hpp"
+    #include "SkrRT/module/module_manager.hpp"
     #include "SkrRenderGraph/frontend/render_graph.hpp"
     #include "SkrRT/io/io.h"
     #include "cgpu/io.h"

@@ -11,7 +11,7 @@
 #include "SkrRT/type/type.hpp"
 #include "SkrRT/misc/defer.hpp"
 #include "SkrRT/resource/resource_header.hpp"
-#include "module/module_manager.hpp"
+#include "SkrRT/module/module_manager.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/log.hpp"
