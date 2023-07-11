@@ -8,12 +8,12 @@
 namespace skr::algo
 {
 template <typename T, typename TP = Less<>>
-SKR_INLINE void introSort(T begin, T end, TP&& p = TP())
+SKR_INLINE void intro_sort(T begin, T end, TP&& p = TP())
 {
     // simulate stack
     struct Stack {
-        T min;
-        T max;
+        T      min;
+        T      max;
         size_t max_depth;
     };
 
@@ -99,8 +99,8 @@ SKR_INLINE void introSort(T begin, T end, TP&& p = TP())
                 // cache left first
                 if (current.min + 1 < inner.max)
                 {
-                    stack_top->min = current.min;
-                    stack_top->max = inner.max - 1;
+                    stack_top->min       = current.min;
+                    stack_top->max       = inner.max - 1;
                     stack_top->max_depth = current.max_depth;
                     stack_top++;
                 }
@@ -116,8 +116,8 @@ SKR_INLINE void introSort(T begin, T end, TP&& p = TP())
                 // cache right first
                 if (current.max > inner.min)
                 {
-                    stack_top->min = inner.min;
-                    stack_top->max = current.max;
+                    stack_top->min       = inner.min;
+                    stack_top->max       = current.max;
                     stack_top->max_depth = current.max_depth;
                     stack_top++;
                 }
