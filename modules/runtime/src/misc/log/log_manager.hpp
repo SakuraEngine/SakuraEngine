@@ -1,10 +1,10 @@
 #pragma once
-#include "platform/guid.hpp"
-#include "misc/log/log_sink.hpp"
+#include "SkrRT/platform/guid.hpp"
+#include "SkrRT/misc/log/log_sink.hpp"
 #include "log_worker.hpp"
 #include "tscns.hpp"
 
-#include "containers/hashmap.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 #include <EASTL/unique_ptr.h>
 
 namespace skr {

@@ -1,6 +1,6 @@
 #pragma once
 #include "backend/text_server/safe_refcount.h"
-#include "platform/memory.h"
+#include "SkrRT/platform/memory.h"
 #include <new>
 
 namespace godot

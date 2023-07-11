@@ -1,5 +1,5 @@
-#include "misc/types.h"
-#include "platform/atomic.h"
+#include "SkrRT/misc/types.h"
+#include "SkrRT/platform/atomic.h"
 namespace skr {
 uint32_t SObjectHeader::add_refcount()
 {

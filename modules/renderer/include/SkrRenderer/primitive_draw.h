@@ -5,7 +5,7 @@
 #include "cgpu/cgpux.h"
 
 #ifdef __cplusplus
-#include "containers/span.hpp"
+#include "SkrRT/containers/span.hpp"
 extern "C" {
 #endif
 

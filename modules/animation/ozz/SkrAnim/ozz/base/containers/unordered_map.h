@@ -33,7 +33,7 @@
 #pragma warning(disable : 4702)  // warning C4702: unreachable code
 #endif                           // _MSC_VER
 
-#include "containers/hashmap.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 
 #ifdef _MSC_VER
 #pragma warning(pop)

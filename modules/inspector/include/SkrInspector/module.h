@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrInspector/module.configure.h"
-#include "module/module.hpp"
+#include "SkrRT/module/module.hpp"
 
 class SKR_INSPECT_API SkrInspectorModule : public skr::IDynamicModule
 {

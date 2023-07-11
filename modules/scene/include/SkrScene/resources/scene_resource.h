@@ -1,10 +1,10 @@
 #pragma once
 #include "SkrScene/module.configure.h"
-#include "ecs/dual.h"
-#include "resource/resource_factory.h"
-#include "serde/binary/reader_fwd.h"
-#include "serde/binary/writer_fwd.h"
-#include "platform/configure.h"
+#include "SkrRT/ecs/dual.h"
+#include "SkrRT/resource/resource_factory.h"
+#include "SkrRT/serde/binary/reader_fwd.h"
+#include "SkrRT/serde/binary/writer_fwd.h"
+#include "SkrRT/platform/configure.h"
 #ifndef __meta__
     #include "SkrScene/resources/scene_resource.generated.h"
 #endif

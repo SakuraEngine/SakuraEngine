@@ -1,8 +1,8 @@
 #pragma once
 #include "chunk_view.hpp"
-#include "ecs/array.hpp"
+#include "SkrRT/ecs/array.hpp"
 #include "type.hpp"
-#include "ecs/entity.hpp"
+#include "SkrRT/ecs/entity.hpp"
 #include "type.hpp"
 #include "chunk.hpp"
 #include "archetype.hpp"

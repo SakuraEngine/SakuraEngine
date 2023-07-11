@@ -1,10 +1,10 @@
 #pragma once
 #include "SkrShaderCompiler/module.configure.h"
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #include "cgpu/flags.h"
-#include "containers/sptr.hpp"
-#include "containers/span.hpp"
-#include "containers/string.hpp"
+#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers/string.hpp"
 #include <EASTL/functional.h>
 #ifndef __meta__
 #include "SkrShaderCompiler/shader_compiler.generated.h"

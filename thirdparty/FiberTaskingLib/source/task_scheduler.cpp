@@ -29,12 +29,12 @@
 #include "ftl/fiber.h"
 #include "ftl/task_counter.h"
 #include "ftl/thread_abstraction.h"
-#include "containers/string.hpp"
+#include "SkrRT/containers/string.hpp"
 #include <memory>
 #include <mutex>
-#include "platform/memory.h"
+#include "SkrRT/platform/memory.h"
 #include "tracy/Tracy.hpp"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 
 #if defined(FTL_WIN32_THREADS)
     #ifndef WIN32_LEAN_AND_MEAN
@@ -49,7 +49,7 @@
 #endif
 
 #ifdef TRACY_ENABLE
-    #include <containers/string.hpp>
+    #include <SkrRT/containers/string.hpp>
 #endif
 
 namespace ftl

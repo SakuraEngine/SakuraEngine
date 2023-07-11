@@ -1,6 +1,6 @@
 #include "arena.hpp"
 #include "pool.hpp"
-#include "ecs/dual_config.h"
+#include "SkrRT/ecs/dual_config.h"
 
 #include "tracy/Tracy.hpp"
 

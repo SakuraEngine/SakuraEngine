@@ -1,13 +1,13 @@
 #include "SkrRenderer/render_device.h"
-#include "misc/make_zeroed.hpp"
-#include "platform/memory.h"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/platform/memory.h"
 #include "cgpu/io.h"
 #include <EASTL/vector_map.h>
 #include <EASTL/string.h>
 #include <EASTL/fixed_vector.h>
-#include "runtime_module.h"
+#include "SkrRT/runtime_module.h"
 #ifdef _WIN32
-#include "platform/win/dstorage_windows.h"
+#include "SkrRT/platform/win/dstorage_windows.h"
 #endif
 #include "cgpu/extensions/cgpu_nsight.h"
 

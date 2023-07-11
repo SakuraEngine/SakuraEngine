@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrToolCore/fwd_types.hpp"
-#include "platform/filesystem.hpp"
-#include "containers/string.hpp"
+#include "SkrRT/platform/filesystem.hpp"
+#include "SkrRT/containers/string.hpp"
 #ifndef __meta__
 #include "SkrToolCore/project/project.generated.h"
 #endif

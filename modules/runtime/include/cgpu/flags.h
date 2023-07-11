@@ -1,6 +1,6 @@
 #pragma once
 #include "cgpu_config.h"
-#include "platform/dstorage.h"
+#include "SkrRT/platform/dstorage.h"
 
 #ifdef __cplusplus
 CGPU_EXTERN_C_BEGIN

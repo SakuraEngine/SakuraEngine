@@ -89,7 +89,7 @@ function skr_module_gen_cpp(target, filename, dep_modules)
     assert(self_version, "module version not found: "..target:name())
     local delim = "__de___l___im__("
     local delim2 = ")__de___l___im__"
-    local cpp_content = "#include \"module/module.hpp\"\n\nSKR_MODULE_METADATA(u8R\""..delim.."\n{\n"
+    local cpp_content = "#include \"SkrRT/module/module.hpp\"\n\nSKR_MODULE_METADATA(u8R\""..delim.."\n{\n"
     cpp_content = cpp_content.."\t\"api\": \"" .. self_version.."\",\n"
     cpp_content = cpp_content.."\t\"name\": \"" .. target:name() .."\",\n"
     cpp_content = cpp_content.."\t\"prettyname\": \"" .. target:name() .."\",\n"

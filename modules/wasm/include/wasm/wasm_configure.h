@@ -1,6 +1,6 @@
 #pragma once
-#include "platform/configure.h"
-#include "platform/memory.h"
+#include "SkrRT/platform/configure.h"
+#include "SkrRT/platform/memory.h"
 // Currently we have only wasm3 as our wasm3 engine
 #define USE_M3
 
@@ -72,9 +72,9 @@ void swa_delete(T* object)
     #define swa_min(a, b) (((a) < (b)) ? (a) : (b))
 #endif
 
-#include "misc/hash.h"
+#include "SkrRT/misc/hash.h"
 #define swa_hash(buffer, size, seed) skr_hash((buffer), (size), (seed))
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #define swa_trace(...) SKR_LOG_TRACE(__VA_ARGS__)
 #define swa_debug(...) SKR_LOG_DEBUG(__VA_ARGS__)
 #define swa_info(...) SKR_LOG_INFO(__VA_ARGS__)

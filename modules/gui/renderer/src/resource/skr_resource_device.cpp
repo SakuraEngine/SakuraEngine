@@ -1,7 +1,7 @@
 #include "SkrGuiRenderer/resource/skr_resource_device.hpp"
-#include "platform/vfs.h"
-#include "platform/filesystem.hpp"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/platform/vfs.h"
+#include "SkrRT/platform/filesystem.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
 
 namespace skr::gui
 {

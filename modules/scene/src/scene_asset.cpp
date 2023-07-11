@@ -1,13 +1,13 @@
 #include "SkrScene/scene.h"
-#include "misc/parallel_for.hpp"
-#include "platform/guid.hpp"
-#include "serde/json/writer.h"
-#include "serde/json/reader.h"
-#include "ecs/type_builder.hpp"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/parallel_for.hpp"
+#include "SkrRT/platform/guid.hpp"
+#include "SkrRT/serde/json/writer.h"
+#include "SkrRT/serde/json/reader.h"
+#include "SkrRT/ecs/type_builder.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
 
-#include "containers/vector.hpp"
-#include "containers/string.hpp"
+#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers/string.hpp"
 
 #include <numeric> // std::iota
 #include <execution>

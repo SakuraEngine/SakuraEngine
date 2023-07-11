@@ -20,7 +20,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "platform/cpu/cpu_features_macros.h"
+#include "SkrRT/platform/cpu/cpu_features_macros.h"
 
 CPU_FEATURES_START_CPP_NAMESPACE
 

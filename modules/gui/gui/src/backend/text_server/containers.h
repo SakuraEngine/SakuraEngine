@@ -3,16 +3,16 @@
 #include "backend/text_server/memory.h"
 #include "backend/text_server/sort_array.h"
 
-#include "misc/hash.h"
+#include "SkrRT/misc/hash.h"
 
-#include <containers/vector.hpp>
+#include <SkrRT/containers/vector.hpp>
 #include <EASTL/set.h>
 #include <EASTL/map.h>
 #include <EASTL/list.h>
-#include <containers/hashmap.hpp>
+#include <SkrRT/containers/hashmap.hpp>
 #include <EASTL/shared_ptr.h>
 
-#include "containers/sptr.hpp"
+#include "SkrRT/containers/sptr.hpp"
 
 #ifdef DEBUG_ENABLED
     #define SORT_ARRAY_VALIDATE_ENABLED true

@@ -1,16 +1,16 @@
 #include "SkrInspector/inspect_value.h"
 #ifdef INSPECT_USABLE
-#include "module/subsystem.hpp"
-#include "platform/filesystem.hpp"
-#include "containers/hashmap.hpp"
-#include "platform/thread.h"
-#include "containers/btree.hpp"
-#include "containers/optional.hpp"
-#include <containers/variant.hpp>
-#include <containers/string.hpp>
+#include "SkrRT/module/subsystem.hpp"
+#include "SkrRT/platform/filesystem.hpp"
+#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/platform/thread.h"
+#include "SkrRT/containers/btree.hpp"
+#include "SkrRT/containers/optional.hpp"
+#include <SkrRT/containers/variant.hpp>
+#include <SkrRT/containers/string.hpp>
 #include <chrono>
 #include "SkrImGui/skr_imgui.h"
-#include "misc/defer.hpp"
+#include "SkrRT/misc/defer.hpp"
 #include "SkrImGui/imgui_utils.h"
 
 

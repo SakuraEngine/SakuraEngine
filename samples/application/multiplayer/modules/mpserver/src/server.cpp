@@ -1,10 +1,10 @@
 #include "MPServer/server.h"
-#include "platform/thread.h"
-#include "platform/time.h"
+#include "SkrRT/platform/thread.h"
+#include "SkrRT/platform/time.h"
 #include "steam/isteamnetworkingutils.h"
 #include "steam/isteamnetworkingsockets.h"
 #include "steam/steamnetworkingsockets.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #include "MPShared/server_world.h"
 #include "MPShared/signal_client.h"
 

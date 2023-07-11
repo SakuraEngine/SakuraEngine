@@ -1,5 +1,5 @@
 #include "../pch.hpp"
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #include "debug.cpp"
 #include "vfs.cpp"
 #include "guid.cpp"
@@ -30,7 +30,7 @@
     #include "null/null_dstorage.cpp"
 #endif
 
-#include "platform/system.h"
+#include "SkrRT/platform/system.h"
 namespace skr
 {
 ISystemMessageHandler::~ISystemMessageHandler() SKR_NOEXCEPT {}

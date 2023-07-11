@@ -1,6 +1,6 @@
 #pragma once
 #include "cgpu/api.h"
-#include "io/io.h"
+#include "SkrRT/io/io.h"
 
 // no format & stride parameters provided now because we think it's not necessary to support async io with UAV buffers
 // we can add them if necessary in the future

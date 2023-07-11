@@ -1,13 +1,13 @@
 #pragma once
 #include "MPShared/module.configure.h"
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 #include "steam/steamnetworkingtypes.h"
-#include "containers/vector.hpp"
+#include "SkrRT/containers/vector.hpp"
 #include "SkrScene/scene.h"
 #include "components.h"
-#include "misc/traits.hpp"
-#include "platform/guid.hpp"
-#include "containers/hashmap.hpp"
+#include "SkrRT/misc/traits.hpp"
+#include "SkrRT/platform/guid.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 #include "EASTL/fixed_vector.h"
 
 #include "tracy/Tracy.hpp"

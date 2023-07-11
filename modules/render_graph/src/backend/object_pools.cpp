@@ -1,7 +1,7 @@
-#include "platform/debug.h"
-#include "misc/hash.h"
-#include "misc/log.h"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/platform/debug.h"
+#include "SkrRT/misc/hash.h"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/make_zeroed.hpp"
 #include <EASTL/set.h>
 
 #include "SkrRenderGraph/backend/bind_table_pool.hpp"

@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrScene/module.configure.h"
-#include "misc/types.h"
-#include "ecs/dual_types.h"
+#include "SkrRT/misc/types.h"
+#include "SkrRT/ecs/dual_types.h"
 #ifndef __meta__
     #include "SkrScene/scene.generated.h"
 #endif
@@ -125,7 +125,7 @@ SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_save_scene(dual_storage_t* world, stru
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_load_scene(dual_storage_t* world, struct skr_json_reader_t* reader);
 
 #ifdef __cplusplus
-#include "lua/bind.hpp"
+#include "SkrRT/lua/bind.hpp"
 
 namespace skr::lua
 {

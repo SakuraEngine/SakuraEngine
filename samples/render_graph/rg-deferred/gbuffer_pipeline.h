@@ -1,6 +1,6 @@
 #pragma once
 #include "common/utils.h"
-#include "misc/types.h"
+#include "SkrRT/misc/types.h"
 
 const ECGPUFormat gbuffer_formats[] = {
     CGPU_FORMAT_R8G8B8A8_UNORM, CGPU_FORMAT_R16G16B16A16_SNORM

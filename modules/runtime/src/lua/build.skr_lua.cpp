@@ -1,20 +1,20 @@
-#include "containers/hashmap.hpp"
-#include "lua/skr_lua.h"
-#include "platform/memory.h"
-#include "misc/defer.hpp"
-#include "misc/types.h"
-#include "platform/guid.hpp"
-#include "resource/resource_handle.h"
-#include "lua/bind.hpp"
-#include "misc/log.h"
-#include "platform/vfs.h"
-#include "ecs/dual.h"
+#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/lua/skr_lua.h"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/misc/defer.hpp"
+#include "SkrRT/misc/types.h"
+#include "SkrRT/platform/guid.hpp"
+#include "SkrRT/resource/resource_handle.h"
+#include "SkrRT/lua/bind.hpp"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/platform/vfs.h"
+#include "SkrRT/ecs/dual.h"
 extern "C"
 {
 #include "luacode.h"
 }
 
-#include "containers/string.hpp"
+#include "SkrRT/containers/string.hpp"
 #include <EASTL/string.h>
 #include <EASTL/string_view.h>
 

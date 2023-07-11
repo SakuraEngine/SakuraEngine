@@ -1,15 +1,15 @@
 #include "common/utils.h"
-#include "platform/memory.h"
-#include "platform/window.h"
-#include "misc/make_zeroed.hpp"
-#include "misc/log.h"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/platform/window.h"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/misc/log.h"
 
-#include "containers/string.hpp"
+#include "SkrRT/containers/string.hpp"
 
-#include "ecs/dual.h"
-#include "ecs/type_builder.hpp"
+#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/type_builder.hpp"
 
-#include "ecs/array.hpp"
+#include "SkrRT/ecs/array.hpp"
 
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrScene/scene.h"

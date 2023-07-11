@@ -1,5 +1,5 @@
 //BEGIN QUERY GENERATED
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 %for record in generator.filter_records(db.records):
 <% query = generator.parse(record) %>
 #define GENERATED_QUERY_BODY_${db.file_id}_${record.short_name} ${"\\"}

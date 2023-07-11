@@ -1,4 +1,4 @@
-#include "platform/debug.h"
+#include "SkrRT/platform/debug.h"
 #include <stdio.h>
 #include <execinfo.h>
 #include <signal.h>

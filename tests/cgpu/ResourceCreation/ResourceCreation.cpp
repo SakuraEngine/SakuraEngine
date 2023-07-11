@@ -1,10 +1,10 @@
-#include "platform/crash.h"
+#include "SkrRT/platform/crash.h"
 #include "cgpu/cgpu_config.h"
 #include "cgpu/flags.h"
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #include "gtest/gtest.h"
-#include "misc/log.h"
-#include <containers/string.hpp>
+#include "SkrRT/misc/log.h"
+#include <SkrRT/containers/string.hpp>
 #include <EASTL/vector.h>
 #include "cgpu/api.h"
 #include "spirv.h"

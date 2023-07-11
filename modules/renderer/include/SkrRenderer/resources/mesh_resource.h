@@ -2,8 +2,8 @@
 #include "SkrRenderer/module.configure.h"
 #include "SkrRenderer/fwd_types.h"
 
-#include <containers/string.hpp>
-#include <containers/vector.hpp>
+#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers/vector.hpp>
 
 #ifndef __meta__
     #include "SkrRenderer/resources/mesh_resource.generated.h"
@@ -64,7 +64,7 @@ skr_mesh_buffer_t
 };
 
 #ifdef __cplusplus
-#include "resource/resource_factory.h"
+#include "SkrRT/resource/resource_factory.h"
 
 namespace skr sreflect
 {

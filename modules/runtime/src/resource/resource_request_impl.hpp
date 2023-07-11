@@ -1,8 +1,8 @@
 #pragma once
-#include "io/io.h"
+#include "SkrRT/io/io.h"
 #include <EASTL/fixed_vector.h>
-#include "resource/resource_system.h"
-#include "async/fib_task.hpp"
+#include "SkrRT/resource/resource_system.h"
+#include "SkrRT/async/fib_task.hpp"
 #include <atomic>
 
 namespace skr

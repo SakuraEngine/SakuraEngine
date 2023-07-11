@@ -1,5 +1,5 @@
 // BEGIN RTTI GENERATED
-#include "type/type.hpp"
+#include "SkrRT/type/type.hpp"
 
 namespace skr::type
 {

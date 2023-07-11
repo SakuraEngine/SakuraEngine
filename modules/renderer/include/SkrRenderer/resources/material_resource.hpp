@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRenderer/module.configure.h"
 #include "SkrRenderer/resources/shader_resource.hpp"
-#include "resource/resource_factory.h"
+#include "SkrRT/resource/resource_factory.h"
 #include "cgpu/cgpux.h"
 
 #ifndef __meta__

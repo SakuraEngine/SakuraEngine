@@ -1,14 +1,14 @@
 #pragma once
 #include <EASTL/functional.h>
 #include "cooker.hpp"
-#include "containers/span.hpp"
-#include "resource/resource_header.hpp"
-#include "platform/filesystem.hpp"
+#include "SkrRT/containers/span.hpp"
+#include "SkrRT/resource/resource_header.hpp"
+#include "SkrRT/platform/filesystem.hpp"
 #include "simdjson/padded_string.h"
-#include "misc/log.hpp"
-#include "misc/defer.hpp"
-#include "serde/binary/writer.h"
-#include "containers/function_ref.hpp"
+#include "SkrRT/misc/log.hpp"
+#include "SkrRT/misc/defer.hpp"
+#include "SkrRT/serde/binary/writer.h"
+#include "SkrRT/containers/function_ref.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service);
 namespace skr {namespace task { struct event_t; }}

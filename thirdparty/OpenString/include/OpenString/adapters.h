@@ -8,7 +8,7 @@
 #pragma once
 #include <cstddef>
 #include "common/definitions.h"
-#include "platform/memory.h"
+#include "SkrRT/platform/memory.h"
 
 OPEN_STRING_NS_BEGIN
 

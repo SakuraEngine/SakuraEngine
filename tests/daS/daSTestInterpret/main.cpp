@@ -1,6 +1,6 @@
 #include "SkrDAScript/daScript.hpp"
-#include "misc/make_zeroed.hpp"
-#include "containers/string.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/containers/string.hpp"
 
 using namespace das;
 

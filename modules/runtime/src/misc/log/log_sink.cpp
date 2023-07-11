@@ -1,6 +1,6 @@
 #include "../../pch.hpp"
-#include "platform/process.h"
-#include "misc/log/log_sink.hpp"
+#include "SkrRT/platform/process.h"
+#include "SkrRT/misc/log/log_sink.hpp"
 
 #include <stdio.h> // FILE
 #include "tracy/Tracy.hpp"

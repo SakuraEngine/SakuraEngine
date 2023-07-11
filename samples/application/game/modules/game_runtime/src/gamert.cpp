@@ -1,12 +1,12 @@
 #include "GameRuntime/gamert.h"
-#include "misc/make_zeroed.hpp"
-#include "platform/configure.h"
-#include "platform/filesystem.hpp"
-#include "platform/memory.h"
-#include "resource/resource_system.h"
-#include "ecs/dual.h"
-#include "runtime_module.h"
-#include "platform/guid.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/platform/configure.h"
+#include "SkrRT/platform/filesystem.hpp"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/resource/resource_system.h"
+#include "SkrRT/ecs/dual.h"
+#include "SkrRT/runtime_module.h"
+#include "SkrRT/platform/guid.hpp"
 
 IMPLEMENT_DYNAMIC_MODULE(SGameRTModule, GameRuntime);
 

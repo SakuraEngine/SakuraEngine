@@ -1,22 +1,22 @@
-#include <platform/filesystem.hpp>
+#include <SkrRT/platform/filesystem.hpp>
 #include "SkrRenderer/resources/texture_resource.h"
-#include "platform/debug.h"
-#include "io/io.h"
+#include "SkrRT/platform/debug.h"
+#include "SkrRT/io/io.h"
 #include "cgpu/api.h"
-#include "type/type_id.hpp"
-#include "resource/resource_factory.h"
-#include "resource/resource_system.h"
+#include "SkrRT/type/type_id.hpp"
+#include "SkrRT/resource/resource_factory.h"
+#include "SkrRT/resource/resource_system.h"
 #include "SkrRenderer/render_device.h"
 #include "cgpu/io.h"
-#include "misc/log.h"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/make_zeroed.hpp"
 
-#include "containers/string.hpp"
-#include "containers/sptr.hpp"
-#include "containers/hashmap.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 
 #ifdef _WIN32
-//#include "platform/win/dstorage_windows.h"
+//#include "SkrRT/platform/win/dstorage_windows.h"
 #endif
 
 #include "tracy/Tracy.hpp"

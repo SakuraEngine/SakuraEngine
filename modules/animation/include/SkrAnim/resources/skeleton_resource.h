@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrAnim/module.configure.h"
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #ifndef __meta__
     #include "SkrAnim/resources/skeleton_resource.generated.h"
 #endif
@@ -9,8 +9,8 @@ typedef struct skr_skeleton_resource_t skr_skeleton_resource_t;
 
 #ifdef __cplusplus
 #include "SkrAnim/ozz/skeleton.h"
-#include "serde/binary/reader_fwd.h"
-#include "serde/binary/writer_fwd.h"
+#include "SkrRT/serde/binary/reader_fwd.h"
+#include "SkrRT/serde/binary/writer_fwd.h"
 
 sreflect_struct("guid": "1876BF35-E4DC-450B-B9D4-09259397F4BA")
 sattr("rtti" : true)
@@ -32,7 +32,7 @@ struct SKR_ANIM_API WriteTrait<const skr_skeleton_resource_t&> {
 };
 } // namespace skr::binary
 
-#include "resource/resource_factory.h"
+#include "SkrRT/resource/resource_factory.h"
 namespace skr
 {
 namespace resource

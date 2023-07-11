@@ -1,9 +1,9 @@
 #include "../../pch.hpp"
 #include "../unix/crash_handler.hpp"
-#include "platform/process.h"
-#include "platform/crash.h"
+#include "SkrRT/platform/process.h"
+#include "SkrRT/platform/crash.h"
 
-#include "containers/string.hpp"
+#include "SkrRT/containers/string.hpp"
 
 namespace 
 {

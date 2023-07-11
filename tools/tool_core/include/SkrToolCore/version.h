@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #include "SkrToolCore/module.configure.h"
 
 sreflect_struct("guid" : "9DC58264-310C-C98B-DC08-6571E8D07146")

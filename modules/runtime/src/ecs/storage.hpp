@@ -2,22 +2,22 @@
 #include "archetype.hpp"
 #include "chunk.hpp"
 #include "chunk_view.hpp"
-#include "ecs/entity.hpp"
-#include "ecs/dual.h"
+#include "SkrRT/ecs/entity.hpp"
+#include "SkrRT/ecs/dual.h"
 #include "stack.hpp"
 #include "type.hpp"
 #include "query.hpp"
 
 #include "arena.hpp"
 #include "pool.hpp"
-#include "ecs/entities.hpp"
+#include "SkrRT/ecs/entities.hpp"
 #include "cache.hpp"
 #include "type.hpp"
 #include "set.hpp"
-#include "containers/hashmap.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 #include "EASTL/shared_ptr.h"
-#include "async/fib_task.hpp"
-#include "misc/lazy.hpp"
+#include "SkrRT/async/fib_task.hpp"
+#include "SkrRT/misc/lazy.hpp"
 
 namespace dual
 {

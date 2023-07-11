@@ -1,5 +1,5 @@
 #pragma once
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 #include "type.hpp"
 
 namespace dual
