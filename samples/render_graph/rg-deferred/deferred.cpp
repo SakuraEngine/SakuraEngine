@@ -244,7 +244,7 @@ bool fragmentLightingPass = true;
 bool lockFPS = true;
 bool DPIAware = false;
 
-#include "runtime_module.h"
+#include "SkrRT/runtime_module.h"
 
 int main(int argc, char* argv[])
 {

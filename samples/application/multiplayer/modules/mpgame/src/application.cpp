@@ -15,7 +15,7 @@
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 #include "imgui/imgui.h"
-#include "runtime_module.h"
+#include "SkrRT/runtime_module.h"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_effect.h"
 #include "tracy/Tracy.hpp"

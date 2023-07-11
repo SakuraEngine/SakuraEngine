@@ -5,7 +5,7 @@
 #include <EASTL/vector_map.h>
 #include <EASTL/string.h>
 #include <EASTL/fixed_vector.h>
-#include "runtime_module.h"
+#include "SkrRT/runtime_module.h"
 #ifdef _WIN32
 #include "SkrRT/platform/win/dstorage_windows.h"
 #endif

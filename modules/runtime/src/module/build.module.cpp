@@ -1,6 +1,6 @@
 #include "SkrRT/platform/crash.h"
 #include "module_manager.cpp"
-#include "runtime_module.h"
+#include "SkrRT/runtime_module.h"
 
 IMPLEMENT_DYNAMIC_MODULE(SkrRuntimeModule, SkrRT);
 

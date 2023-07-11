@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "runtime_configure.h"
+#include "SkrRT/platform/configure.h"
 #include <string>
 #include <memory>
 

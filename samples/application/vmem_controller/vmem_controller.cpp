@@ -170,7 +170,7 @@ void SVMemCCModule::imgui_ui()
     ImGui::End();
 }
 
-#include "runtime_module.h"
+#include "SkrRT/runtime_module.h"
 
 int SVMemCCModule::main_module_exec(int argc, char8_t** argv)
 {

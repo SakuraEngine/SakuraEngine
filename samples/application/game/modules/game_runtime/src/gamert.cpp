@@ -5,7 +5,7 @@
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRT/ecs/dual.h"
-#include "runtime_module.h"
+#include "SkrRT/runtime_module.h"
 #include "SkrRT/platform/guid.hpp"
 
 IMPLEMENT_DYNAMIC_MODULE(SGameRTModule, GameRuntime);
