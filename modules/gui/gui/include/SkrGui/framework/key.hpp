@@ -1,11 +1,8 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
+#include "SkrGui/framework/fwd_framework.hpp"
 
-SKR_DECLARE_TYPE_ID_FWD(skr::gui, State, skr_gui_state)
-
-namespace skr
-{
-namespace gui
+namespace skr::gui
 {
 // 三种 Key
 // Unique 永远不相等
@@ -16,7 +13,7 @@ enum class EKeyType
 {
     None,      // -
     Unique,    // -
-    KeepState, // State*
+    KeepState, // State* TODO. GlobalKey
 
     Int,   // int64_t
     Float, // float
@@ -24,7 +21,7 @@ enum class EKeyType
 
     IntStorage,   // int64_t
     FloatStorage, // float
-    NameStorage,  // name
+    NameStorage,  // string
 };
 
 struct SKR_GUI_API Key final {
@@ -52,21 +49,21 @@ struct SKR_GUI_API Key final {
 
     // type
     EKeyType type() const SKR_NOEXCEPT;
-    bool is_none() const SKR_NOEXCEPT;
-    bool is_unique() const SKR_NOEXCEPT;
-    bool is_keep_state() const SKR_NOEXCEPT;
-    bool is_value() const SKR_NOEXCEPT;
-    bool is_storage() const SKR_NOEXCEPT;
+    bool     is_none() const SKR_NOEXCEPT;
+    bool     is_unique() const SKR_NOEXCEPT;
+    bool     is_keep_state() const SKR_NOEXCEPT;
+    bool     is_value() const SKR_NOEXCEPT;
+    bool     is_storage() const SKR_NOEXCEPT;
 
     // getter
-    State* get_state() const SKR_NOEXCEPT;
-    int64_t get_int() const SKR_NOEXCEPT;
-    float get_float() const SKR_NOEXCEPT;
+    State*        get_state() const SKR_NOEXCEPT;
+    int64_t       get_int() const SKR_NOEXCEPT;
+    float         get_float() const SKR_NOEXCEPT;
     const String& get_name() const SKR_NOEXCEPT;
-    bool try_get_state(State*& out) const SKR_NOEXCEPT;
-    bool try_get_int(int64_t& out) const SKR_NOEXCEPT;
-    bool try_get_float(float& out) const SKR_NOEXCEPT;
-    bool try_get_name(String& out) const SKR_NOEXCEPT;
+    bool          try_get_state(State*& out) const SKR_NOEXCEPT;
+    bool          try_get_int(int64_t& out) const SKR_NOEXCEPT;
+    bool          try_get_float(float& out) const SKR_NOEXCEPT;
+    bool          try_get_name(String& out) const SKR_NOEXCEPT;
 
     // setter
     void clear() SKR_NOEXCEPT;
@@ -81,13 +78,13 @@ struct SKR_GUI_API Key final {
     void set_storage(const String& v) SKR_NOEXCEPT;
 
 private:
-    EKeyType _type;
+    EKeyType _type = EKeyType::None;
     union
     {
-        State* _state;
+        State*  _state;
         int64_t _int;
-        float _float;
-        String _name;
+        float   _float;
+        String  _name;
     };
 };
 
@@ -238,33 +235,60 @@ inline void Key::set_unique() SKR_NOEXCEPT
 inline void Key::set_keep_state(State* state) SKR_NOEXCEPT
 {
     clear();
-    _type = EKeyType::KeepState;
+    _type  = EKeyType::KeepState;
     _state = state;
 }
 inline void Key::set_value(int64_t v) SKR_NOEXCEPT
 {
     clear();
     _type = EKeyType::Int;
-    _int = v;
+    _int  = v;
 }
 inline void Key::set_value(float v) SKR_NOEXCEPT
 {
     clear();
-    _type = EKeyType::Float;
+    _type  = EKeyType::Float;
     _float = v;
 }
 inline void Key::set_storage(int64_t v) SKR_NOEXCEPT
 {
     clear();
     _type = EKeyType::IntStorage;
-    _int = v;
+    _int  = v;
 }
 inline void Key::set_storage(float v) SKR_NOEXCEPT
 {
     clear();
-    _type = EKeyType::FloatStorage;
+    _type  = EKeyType::FloatStorage;
     _float = v;
 }
+} // namespace skr::gui
 
-} // namespace gui
-} // namespace skr
+// TODO. skr hash
+namespace phmap
+{
+template <>
+struct Hash<::skr::gui::Key> {
+    size_t operator()(const ::skr::gui::Key& key) const SKR_NOEXCEPT
+    {
+        using namespace ::skr::gui;
+        switch (key.type())
+        {
+            case EKeyType::None:
+            case EKeyType::Unique:
+                return 0;
+            case EKeyType::KeepState:
+                return Hash<State*>()(key.get_state());
+            case EKeyType::Int:
+            case EKeyType::IntStorage:
+                return Hash<int64_t>()(key.get_int());
+            case EKeyType::Float:
+            case EKeyType::FloatStorage:
+                return Hash<float>()(key.get_float());
+            case EKeyType::Name:
+            case EKeyType::NameStorage:
+                return key.get_name().get_hash();
+        }
+    }
+};
+} // namespace phmap

@@ -9,16 +9,12 @@
 
 #include "SkrInputSystem/input_system.hpp"
 
-#include "SkrGui/interface/gdi_renderer.hpp"
-#include "SkrGui/framework/window_context.hpp"
+#include "SkrGui/dev/gdi/gdi.hpp"
+#include "SkrGui/dev/window_context.hpp"
 
-#include "SkrGui/render_objects/render_window.hpp"
-#include "SkrGui/render_objects/render_canvas.hpp"
+#include "SkrGui/framework/widget_misc.hpp"
 #include "SkrGui/render_objects/render_grid_paper.hpp"
 #include "SkrGui/render_objects/render_color_picker.hpp"
-#include "SkrGui/render_objects/render_flex.hpp"
-#include "SkrGui/render_objects/render_stack.hpp"
-#include "SkrGui/render_objects/render_image.hpp"
 #include "SkrGui/render_objects/render_text.hpp"
 
 #include "SkrGuiRenderer/gdi_renderer.hpp"
@@ -42,7 +38,7 @@ extern void create_imgui_resources(ECGPUFormat format, CGPUSamplerId sampler, sk
 
 struct robjects_example_application : public robjects_application_t {
     CGPUSamplerId imgui_sampler = nullptr;
-    bool initialize()
+    bool          initialize()
     {
 #ifdef SKR_OS_WINDOWS
         ::SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
@@ -76,39 +72,7 @@ struct robjects_example_application : public robjects_application_t {
         mapping2->action = action2;
         mapping_ctx->add_mapping(mapping2);
 
-        // add objects
-        canvas = SkrNew<skr::gui::RenderCanvas>(gdi.device);
-        grid_paper = SkrNew<skr::gui::RenderGridPaper>(gdi.device);
-        color_picker = SkrNew<skr::gui::RenderColorPicker>(gdi.device);
-        flex = SkrNew<skr::gui::RenderFlex>(gdi.device);
-        flex->set_align_items(skr::gui::AlignItems::FlexStart);
-        flex->set_justify_content(skr::gui::JustifyContent::Center);
-        image1 = SkrNew<skr::gui::RenderImage>(gdi.device);
-        image1->set_color({ 1, 0, 0, 1 });
-        image2 = SkrNew<skr::gui::RenderImage>(gdi.device);
-        image2->set_color({ 0, 1, 0, 1 });
-        image3 = SkrNew<skr::gui::RenderImage>(gdi.device);
-        image3->set_color({ 0, 0, 1, 1 });
-        text = SkrNew<skr::gui::RenderText>(gdi.device);
-        text->add_text(SKR_UTF8("Hello World!"));
-        stack = SkrNew<skr::gui::RenderStack>(gdi.device);
-
-        root_window->add_child(canvas);
-        canvas->add_child(grid_paper);
-        canvas->add_child(color_picker);
-        flex->add_child(image1);
-        image1->set_size({ 100, 300 });
-        flex->add_child(image2);
-        image2->set_size({ 100, 200 });
-        flex->add_child(image3);
-        image3->set_size({ 100, 400 });
-        stack->add_child(flex);
-        stack->set_positional(0, skr::gui::Positional{}.set_left(0).set_right(0).set_top(0).set_height(400));
-        stack->add_child(text);
-        stack->set_positional(1, skr::gui::Positional{}.set_left_percent(0.5).set_top(10).set_pivot(0.5, 0));
-        canvas->add_child(stack);
-
-        stack->layout(skr::gui::BoxConstraint{ { (float)gdi.gfx.window_width, (float)gdi.gfx.window_height }, { 0, 0 } }, true);
+        // TODO. init sandbox
 
         // initialize render graph
         if (graph.initialize(gdi.gfx))
@@ -122,76 +86,14 @@ struct robjects_example_application : public robjects_application_t {
             sampler_desc.mag_filter = CGPU_FILTER_TYPE_NEAREST;
             sampler_desc.compare_func = CGPU_CMP_NEVER;
             imgui_sampler = cgpu_create_sampler(gdi.gfx.device, &sampler_desc);
-            const auto texInfo = gdi.gfx.swapchain->back_buffers[0]->info;
-            const auto backbuffer_format = texInfo->format;
+            const auto backbuffer_format = (ECGPUFormat)gdi.gfx.swapchain->back_buffers[0]->info->format;
             create_imgui_resources(backbuffer_format, imgui_sampler, graph.graph, gdi.resource_vfs);
             return true;
         }
         return false;
     }
 
-    skr::gui::DiagnosticableTreeNode* selected_diagnostic = nullptr;
-    void diagnostics_inspect_recursively(skr::gui::DiagnosticableTreeNode* diagnostic)
-    {
-        ImGui::PushID(diagnostic);
-        auto type_property = static_cast<skr::gui::TextDiagnosticProperty*>(diagnostic->find_property(u8"type"));
-        auto type = type_property ? type_property->get_value() : u8"object";
-        skr::string show_name = skr::format(SKR_UTF8("{}{}{}"), SKR_UTF8("["), type, SKR_UTF8("]"));
-        ImGuiTreeNodeFlags node_flags = (selected_diagnostic == diagnostic) ? ImGuiTreeNodeFlags_Selected : 0;
-        node_flags |= ImGuiTreeNodeFlags_SpanFullWidth;
-        node_flags |= ImGuiTreeNodeFlags_OpenOnArrow;
-        if (diagnostic->get_diagnostics_children().empty())
-        {
-            node_flags |= ImGuiTreeNodeFlags_Leaf;
-        }
-        if (ImGui::TreeNodeEx(show_name.c_str(), node_flags))
-        {
-            if (ImGui::IsItemClicked())
-            {
-                selected_diagnostic = diagnostic;
-            }
-            for (const auto diagnostic_node : diagnostic->get_diagnostics_children())
-            {
-                diagnostics_inspect_recursively(diagnostic_node);
-            }
-            ImGui::TreePop();
-        }
-        ImGui::PopID();
-    }
-
-    void diagnostics_inspect()
-    {
-        ZoneScopedN("ImGUINewFrame");
-
-        auto& io = ImGui::GetIO();
-        const auto texInfo = gdi.gfx.swapchain->back_buffers[0]->info;
-        io.DisplaySize = ImVec2((float)texInfo->width, (float)texInfo->height);
-        skr_imgui_new_frame(gdi.gfx.window_handle, 1.f / 60.f);
-
-        ImGui::Begin("GUI RenderObjects Example");
-        ImGui::Columns(2, "DockSpace");
-        {
-            ImGui::BeginChild("TreeView");
-
-            diagnostics_inspect_recursively(root_window);
-            ImGui::EndChild();
-        }
-        ImGui::NextColumn();
-        {
-            ImGui::BeginChild("Properties");
-            if (selected_diagnostic)
-            {
-                for (const auto property : selected_diagnostic->get_diagnostics_properties())
-                {
-                    ImGui::Text("%s", (const char*)property->get_name());
-                    ImGui::SameLine();
-                    ImGui::Text("%s", (const char*)property->get_value_as_string());
-                }
-            }
-            ImGui::EndChild();
-        }
-        ImGui::End();
-    }
+    // TODO. diagnostic
 
     void tick(float delta)
     {
@@ -201,24 +103,8 @@ struct robjects_example_application : public robjects_application_t {
 
     void draw()
     {
-        auto diagnostic_as_render_box = [&]() {
-            if (selected_diagnostic)
-            {
-                if (auto render_box = selected_diagnostic->type_cast<skr::gui::RenderBox>())
-                {
-                    return render_box;
-                }
-            }
-            return (skr::gui::RenderBox*)nullptr;
-        };
-
-        auto render_box = diagnostic_as_render_box();
-        if (render_box) render_box->enable_debug_draw(true);
-
-        skr::gui::WindowContext::DrawParams draw_params = {};
-        window_context->draw(&draw_params);
-
-        if (render_box) render_box->enable_debug_draw(false);
+        // TODO. draw diagnostic
+        // TODO. draw sandbox
     }
 
     void render()
@@ -227,9 +113,9 @@ struct robjects_example_application : public robjects_application_t {
         graph.declare_render_resources(gdi.gfx);
 
         // render
-        skr::gui::WindowContext::RenderParams render_params = {};
-        skr::gdi::ViewportRenderParams vp_render_params = {};
-        skr::gdi::ViewportRenderParams_RenderGraph vp_render_params2 = {};
+        skr::gui::WindowContext::RenderParams      render_params = {};
+        skr::gui::ViewportRenderParams             vp_render_params = {};
+        skr::gui::ViewportRenderParams_RenderGraph vp_render_params2 = {};
         vp_render_params2.render_graph = graph.graph;
         vp_render_params.usr_data = &vp_render_params2;
         render_params.gdi_params = &vp_render_params;
@@ -256,15 +142,7 @@ struct robjects_example_application : public robjects_application_t {
         if (imgui_sampler) cgpu_free_sampler(imgui_sampler);
         render_graph_imgui_finalize();
 
-        // free render objects
-        SkrDelete(text);
-        SkrDelete(image1);
-        SkrDelete(image2);
-        SkrDelete(image3);
-        SkrDelete(flex);
-        SkrDelete(color_picker);
-        SkrDelete(grid_paper);
-        SkrDelete(canvas);
+        // TODO. free sandbox
 
         skr::input::InputSystem::Destroy(input_system);
         skr::input::Input::Finalize();
@@ -273,15 +151,6 @@ struct robjects_example_application : public robjects_application_t {
         finalize_robjects_application(this);
     }
 
-    skr::gui::RenderCanvas* canvas = nullptr;
-    skr::gui::RenderGridPaper* grid_paper = nullptr;
-    skr::gui::RenderColorPicker* color_picker = nullptr;
-    skr::gui::RenderFlex* flex = nullptr;
-    skr::gui::RenderImage* image1 = nullptr;
-    skr::gui::RenderImage* image2 = nullptr;
-    skr::gui::RenderImage* image3 = nullptr;
-    skr::gui::RenderStack* stack = nullptr;
-    skr::gui::RenderText* text = nullptr;
     gui_render_graph_t graph;
 
     skr::input::InputSystem* input_system = nullptr;
@@ -289,7 +158,7 @@ struct robjects_example_application : public robjects_application_t {
 
 struct KeyboardTest {
     skr::input::InputLayer* pLayer = nullptr;
-    void PollKeyboardInput() noexcept
+    void                    PollKeyboardInput() noexcept
     {
         using namespace skr::input;
         if (auto input = skr::input::Input::GetInstance())
@@ -300,9 +169,9 @@ struct KeyboardTest {
                 const auto currentTimestamp = pLayer->GetCurrentTimestampUSec();
 
                 InputKeyState keystates[16];
-                uint32_t readCount = pLayer->GetKeyState(pReading, 16, keystates);
-                const auto timestamp = pLayer->GetTimestampUSec(pReading);
-                const auto elapsed_us = currentTimestamp - timestamp;
+                uint32_t      readCount = pLayer->GetKeyState(pReading, 16, keystates);
+                const auto    timestamp = pLayer->GetTimestampUSec(pReading);
+                const auto    elapsed_us = currentTimestamp - timestamp;
                 for (uint32_t j = 0; j < readCount; j++)
                 {
                     auto k = keystates[j];
@@ -324,13 +193,13 @@ struct ClickListener {
     {
     }
     // ~ClickListener() { if (Mouse) Mouse->Release(); if (previous) previous->Release(); }
-    skr::input::InputLayer* pLayer = nullptr;
-    skr::input::InputDevice* Mouse = nullptr;
+    skr::input::InputLayer*   pLayer = nullptr;
+    skr::input::InputDevice*  Mouse = nullptr;
     skr::input::InputReading* previous = nullptr;
-    bool WasUp = false;
-    uint32_t Counter = 0;
-    uint32_t ThresholdInMs = 0;
-    bool isDown(const skr::input::InputMouseState& state)
+    bool                      WasUp = false;
+    uint32_t                  Counter = 0;
+    uint32_t                  ThresholdInMs = 0;
+    bool                      isDown(const skr::input::InputMouseState& state)
     {
         return (state.buttons & skr::input::InputMouseLeftButton) && (state.buttons & skr::input::InputMouseRightButton);
     }
@@ -382,7 +251,7 @@ struct ClickListener {
 #include <iostream>
 void UpdateScan(skr::span<uint8_t> write_span)
 {
-    int numkeys;
+    int            numkeys;
     const uint8_t* state = SDL_GetKeyboardState(&numkeys);
     for (int scancode = 0, i = 0; scancode < numkeys && i < write_span.size(); ++scancode)
     {
@@ -393,24 +262,26 @@ void UpdateScan(skr::span<uint8_t> write_span)
 
 int main(int argc, char* argv[])
 {
+    SkrDStorageConfig config = {};
+    skr_create_dstorage_instance(&config);
     auto App = make_zeroed<robjects_example_application>();
     App.initialize();
-    bool quit = false;
-    KeyboardTest keyboard_test;
+    bool          quit = false;
+    KeyboardTest  keyboard_test;
     ClickListener doubleClickListener = ClickListener(500);
-    auto handler = skr_system_get_default_handler();
+    auto          handler = skr_system_get_default_handler();
     handler->add_window_close_handler(
-        +[](SWindowHandle window, void* pQuit) {
-            bool& quit = *(bool*)pQuit;
-            quit = true;
-        },
-        &quit);
+    +[](SWindowHandle window, void* pQuit) {
+        bool& quit = *(bool*)pQuit;
+        quit = true;
+    },
+    &quit);
     handler->add_window_resize_handler(
-        +[](SWindowHandle window, int32_t w, int32_t h, void* usr_data) {
-            robjects_example_application* pApp = (robjects_example_application*)usr_data;
-            app_resize_window(&pApp->gdi.gfx, w, h);
-        },
-        &App);
+    +[](SWindowHandle window, int32_t w, int32_t h, void* usr_data) {
+        robjects_example_application* pApp = (robjects_example_application*)usr_data;
+        app_resize_window(&pApp->gdi.gfx, w, h);
+    },
+    &App);
     skr_imgui_initialize(handler);
     while (!quit)
     {
@@ -427,10 +298,6 @@ int main(int argc, char* argv[])
         {
             keyboard_test.PollKeyboardInput();
             doubleClickListener.PollMouseInput();
-        }
-        {
-            ZoneScopedN("DiagnosticsInspect");
-            App.diagnostics_inspect();
         }
         {
             ZoneScopedN("DrawGUI");
