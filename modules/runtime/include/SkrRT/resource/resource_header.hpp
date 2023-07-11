@@ -4,8 +4,8 @@
 #include <SkrRT/containers/vector.hpp>
 #include "SkrRT/platform/thread.h"
 
-#include "serde/binary/reader_fwd.h"
-#include "serde/binary/writer_fwd.h"
+#include "SkrRT/serde/binary/reader_fwd.h"
+#include "SkrRT/serde/binary/writer_fwd.h"
 
 typedef struct skr_resource_header_t {
     uint32_t version;

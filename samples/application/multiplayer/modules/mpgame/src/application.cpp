@@ -30,7 +30,7 @@
 #include "SkrScene/scene.h"
 #include "SkrRT/misc/parallel_for.hpp"
 #include "EASTL/fixed_vector.h"
-#include "serde/json/writer.h"
+#include "SkrRT/serde/json/writer.h"
 #include "ecs/set.hpp"
 #include "SkrRenderer/render_viewport.h"
 #include "SkrInputSystem/input_modifier.hpp"

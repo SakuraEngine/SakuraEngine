@@ -129,7 +129,7 @@ struct type_of<resource::TResourceHandle<T>> {
 
 
 // binary reader
-#include "serde/binary/reader_fwd.h"
+#include "SkrRT/serde/binary/reader_fwd.h"
 
 namespace skr
 {
@@ -154,7 +154,7 @@ struct RUNTIME_STATIC_API ReadTrait<skr_resource_handle_t> {
 }
 
 // binary writer
-#include "serde/binary/writer_fwd.h"
+#include "SkrRT/serde/binary/writer_fwd.h"
 
 namespace skr
 {

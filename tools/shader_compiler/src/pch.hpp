@@ -14,8 +14,8 @@
 #include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/hashmap.hpp>
 
-#include "serde/json/reader.h"
-#include "serde/json/writer.h"
+#include "SkrRT/serde/json/reader.h"
+#include "SkrRT/serde/json/writer.h"
 
 #ifdef _WIN32
     #ifndef WIN32_LEAN_AND_MEAN

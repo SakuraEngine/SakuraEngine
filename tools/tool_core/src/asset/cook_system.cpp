@@ -10,9 +10,9 @@
 #include "SkrRT/misc/defer.hpp"
 #include "SkrRT/io/io.h"
 
-#include "serde/json/reader.h"
-#include "serde/json/writer.h"
-#include "serde/binary/writer.h"
+#include "SkrRT/serde/json/reader.h"
+#include "SkrRT/serde/json/writer.h"
+#include "SkrRT/serde/binary/writer.h"
 #include <atomic>
 
 #include "tracy/Tracy.hpp"

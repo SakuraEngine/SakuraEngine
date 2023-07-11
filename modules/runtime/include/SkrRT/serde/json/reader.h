@@ -1,5 +1,5 @@
 #pragma once
-#include "serde/json/reader_fwd.h"
+#include "SkrRT/serde/json/reader_fwd.h"
 #if defined(__cplusplus)
     #define SIMDJSON_IMPLEMENTATION_HASWELL 0
     #define SIMDJSON_AVX512_ALLOWED 0

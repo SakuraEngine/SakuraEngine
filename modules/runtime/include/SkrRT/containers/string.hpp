@@ -75,7 +75,7 @@ struct argument_formatter<skr_guid_t>
 }
 }
 
-#include "serde/binary/blob_fwd.h"
+#include "SkrRT/serde/binary/blob_fwd.h"
 namespace skr::binary
 {
 template<>
@@ -86,7 +86,7 @@ struct BlobBuilderType<skr::string_view>
 }
 
 // binary reader
-#include "serde/binary/reader_fwd.h"
+#include "SkrRT/serde/binary/reader_fwd.h"
 
 namespace skr
 {
@@ -105,7 +105,7 @@ struct RUNTIME_STATIC_API ReadTrait<skr::string_view> {
 } // namespace skr
 
 // binary writer
-#include "serde/binary/writer_fwd.h"
+#include "SkrRT/serde/binary/writer_fwd.h"
 
 namespace skr
 {

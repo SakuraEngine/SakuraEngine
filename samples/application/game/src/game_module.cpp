@@ -11,7 +11,7 @@
 #include "SkrRT/platform/window.h"
 
 #include "ecs/type_builder.hpp"
-#include "serde/json/writer.h"
+#include "SkrRT/serde/json/writer.h"
 
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/resource_node.hpp"

@@ -1,6 +1,6 @@
 #pragma once
 #include <type_traits>
-#include "serde/binary/blob_fwd.h"
+#include "SkrRT/serde/binary/blob_fwd.h"
 #include "SkrRT/misc/traits.hpp"
 #include "SkrRT/platform/debug.h"
 

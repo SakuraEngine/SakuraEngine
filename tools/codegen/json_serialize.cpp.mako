@@ -2,8 +2,8 @@
 #include "SkrRT/misc/hash.h"
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/misc/log.h"
-#include "serde/json/reader.h"
-#include "serde/json/writer.h"
+#include "SkrRT/serde/json/reader.h"
+#include "SkrRT/serde/json/writer.h"
 #include "tracy/Tracy.hpp"
 [[maybe_unused]] static const char* JsonArrayJsonFieldArchiveFailedFormat = "[SERDE/JSON] Archive %s.%s[%d] failed: %s";
 [[maybe_unused]] static const char* JsonArrayFieldArchiveWarnFormat = "[SERDE/JSON] %s.%s got too many elements (%d expected, given %d), ignoring overflowed elements";

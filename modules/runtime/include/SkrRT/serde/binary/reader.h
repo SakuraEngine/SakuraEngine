@@ -1,8 +1,8 @@
 #pragma once
-#include "serde/binary/reader_fwd.h"
+#include "SkrRT/serde/binary/reader_fwd.h"
 #include "SkrRT/misc/types.h"
 #include "type/type_helper.hpp"
-#include "serde/binary/serde.h"
+#include "SkrRT/serde/binary/serde.h"
 
 struct skr_binary_reader_t {
     template <class T>

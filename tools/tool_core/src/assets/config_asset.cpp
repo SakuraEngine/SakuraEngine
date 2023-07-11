@@ -3,7 +3,7 @@
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/debug.h"
 #include "resource/config_resource.h"
-#include "serde/json/reader.h"
+#include "SkrRT/serde/json/reader.h"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/misc/defer.hpp"
 #include "SkrRT/io/io.h"

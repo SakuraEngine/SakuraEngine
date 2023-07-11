@@ -1,5 +1,5 @@
 #include "resource/resource_handle.h"
-#include "serde/json/reader.h"
+#include "SkrRT/serde/json/reader.h"
 #include "EASTL/string.h"
 #include "SkrRT/misc/log.h"
 #include "tracy/Tracy.hpp"

@@ -6,9 +6,9 @@ namespace skr
 using eastl::vector;
 }
 
-#include "serde/binary/serde.h"
+#include "SkrRT/serde/binary/serde.h"
 // binary reader
-#include "serde/binary/reader_fwd.h"
+#include "SkrRT/serde/binary/reader_fwd.h"
 
 namespace skr
 {
@@ -65,7 +65,7 @@ struct SerdeCompleteChecker<binary::ReadTrait<skr::vector<V, Allocator>>>
 }
 
 // binary writer
-#include "serde/binary/writer_fwd.h"
+#include "SkrRT/serde/binary/writer_fwd.h"
 
 namespace skr
 {

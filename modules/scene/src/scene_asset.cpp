@@ -1,8 +1,8 @@
 #include "SkrScene/scene.h"
 #include "SkrRT/misc/parallel_for.hpp"
 #include "SkrRT/platform/guid.hpp"
-#include "serde/json/writer.h"
-#include "serde/json/reader.h"
+#include "SkrRT/serde/json/writer.h"
+#include "SkrRT/serde/json/reader.h"
 #include "ecs/type_builder.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 

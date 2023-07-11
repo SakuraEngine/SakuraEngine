@@ -3,7 +3,7 @@
 #include "SkrRT/platform/crash.h"
 #include "SkrRT/platform/guid.hpp"
 #include "containers/sptr.hpp"
-#include "serde/json/writer.h"
+#include "SkrRT/serde/json/writer.h"
 #include "../types/types.hpp"
 
 class RTTI : public ::testing::Test

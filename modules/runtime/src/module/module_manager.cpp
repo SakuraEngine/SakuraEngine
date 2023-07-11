@@ -4,7 +4,7 @@
 #include "SkrRT/platform/shared_library.hpp"
 #include "SkrRT/misc/log.h"
 #include "containers/hashmap.hpp"
-#include "serde/json/reader.h"
+#include "SkrRT/serde/json/reader.h"
 #include "SkrRT/platform/filesystem.hpp"
 
 

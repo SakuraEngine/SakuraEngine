@@ -7,7 +7,7 @@
 #include "simdjson/padded_string.h"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/misc/defer.hpp"
-#include "serde/binary/writer.h"
+#include "SkrRT/serde/binary/writer.h"
 #include "containers/function_ref.hpp"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service);

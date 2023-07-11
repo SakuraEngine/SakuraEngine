@@ -8,7 +8,7 @@
 #include "ecs/type_builder.hpp"
 #include "ecs/set.hpp"
 #include "ecs/array.hpp"
-#include "serde/json/writer.h"
+#include "SkrRT/serde/json/writer.h"
 #include "steam/isteamnetworkingsockets.h"
 #include "steam/steamnetworkingsockets.h"
 #include "lz4.h"

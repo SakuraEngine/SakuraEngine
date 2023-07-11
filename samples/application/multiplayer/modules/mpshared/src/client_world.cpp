@@ -6,7 +6,7 @@
 
 #include "ecs/type_builder.hpp"
 #include "ecs/set.hpp"
-#include "serde/json/writer.h"
+#include "SkrRT/serde/json/writer.h"
 #include "SkrScene/scene.h"
 #include "MPShared/components.h"
 #include "steam/isteamnetworkingutils.h"
