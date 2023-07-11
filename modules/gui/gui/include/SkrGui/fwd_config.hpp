@@ -21,6 +21,7 @@
 #include "containers/vector.hpp"
 #include "containers/string.hpp"
 #include "containers/hashmap.hpp"
+#include "containers/sptr.hpp"
 
 // type system
 #include "SkrGui/dev/type_system.hpp"
@@ -31,25 +32,39 @@
 // not_null
 #include "containers/not_null.hpp"
 
-#define SKR_GUI_RAII_MIX_IN()                                   \
-    template <typename To>                                      \
-    auto type_cast() const SKR_NOEXCEPT                         \
-    {                                                           \
-        return SKR_GUI_CAST<const std::remove_cv_t<To>*>(this); \
-    }                                                           \
-    template <typename To>                                      \
-    auto type_cast() SKR_NOEXCEPT                               \
-    {                                                           \
-        return SKR_GUI_CAST<To>(this);                          \
-    }                                                           \
-    template <typename To>                                      \
-    bool type_is() const SKR_NOEXCEPT                           \
-    {                                                           \
-        return SKR_GUI_CAST<To>(this) != nullptr;               \
-    }                                                           \
-    SKR_GUI_TYPE_ID type_id() const SKR_NOEXCEPT                \
-    {                                                           \
-        return SKR_GUI_TYPE_ID_OF(this);                        \
+#define SKR_GUI_RAII_MIX_IN()                                       \
+    template <typename To>                                          \
+    auto type_cast() const SKR_NOEXCEPT                             \
+    {                                                               \
+        return SKR_GUI_CAST<const std::remove_cv_t<To>>(this);      \
+    }                                                               \
+    template <typename To>                                          \
+    auto type_cast() SKR_NOEXCEPT                                   \
+    {                                                               \
+        return SKR_GUI_CAST<To>(this);                              \
+    }                                                               \
+    template <typename To>                                          \
+    auto type_cast_fast() SKR_NOEXCEPT                              \
+    {                                                               \
+        return SKR_GUI_CAST_FAST<To>(this);                         \
+    }                                                               \
+    template <typename To>                                          \
+    auto type_cast_fast() const SKR_NOEXCEPT                        \
+    {                                                               \
+        return SKR_GUI_CAST_FAST<const std::remove_cv_t<To>>(this); \
+    }                                                               \
+    template <typename To>                                          \
+    bool type_is() const SKR_NOEXCEPT                               \
+    {                                                               \
+        return SKR_GUI_CAST<To>(this) != nullptr;                   \
+    }                                                               \
+    bool type_based_on(SKR_GUI_TYPE_ID id) const SKR_NOEXCEPT       \
+    {                                                               \
+        return SKR_GUI_BASED_ON(this, id);                          \
+    }                                                               \
+    SKR_GUI_TYPE_ID type_id() const SKR_NOEXCEPT                    \
+    {                                                               \
+        return SKR_GUI_TYPE_ID_OF(this);                            \
     }
 
 // assert
@@ -69,28 +84,36 @@
 
 namespace skr::gui
 {
-// function
+// !!! 生命周期无法保证，仅用于参数或局部使用
 template <typename F>
-using Callback = ::skr::function_ref<F>;
+using FunctionRef = ::skr::function_ref<F>;
+
+template <typename F>
+using Function = ::eastl::function<F>;
+
+// smart ptr
+template <typename T>
+using SPtr = ::skr::SPtr<T>;
 
 // not null
 template <typename T>
 using NotNull = ::skr::not_null<T>;
+using ::skr::make_not_null;
 
 // Lite container
-using skr::lite::LiteOptional;
-using skr::lite::LiteSpan;
+template <typename T>
+using Optional = skr::lite::LiteOptional<T>;
+template <typename T>
+using Span = skr::lite::LiteSpan<T>;
 
 // containers
+using String     = skr::string;
+using StringView = skr::string_view;
 template <typename T>
 using Array = skr::vector<T>;
-using String = skr::string;
 template <typename K, typename V>
-using HashMap = skr::flat_hash_map<K, V>;
+using Map = skr::flat_hash_map<K, V>;
 template <typename T>
-using Span = skr::span<T>;
-
-// TODO. use Size class
-using BoxSizeType = skr_float2_t;
+using Set = skr::flat_hash_set<T>;
 
 } // namespace skr::gui

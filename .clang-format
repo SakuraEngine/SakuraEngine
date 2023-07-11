@@ -9,6 +9,8 @@ MaxEmptyLinesToKeep: 1
 AllowShortIfStatementsOnASingleLine: true
 AllowShortBlocksOnASingleLine: true
 
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
 AlignTrailingComments: true
 SpacesBeforeTrailingComments: 1
 SpacesInSquareBrackets: false
@@ -48,9 +50,8 @@ BraceWrapping:
   AfterControlStatement: true
 Cpp11BracedListStyle: false
 
-
-AttributeMacros : ["DUAL_UNLIKELY", "DUAL_FORCEINLINE", "FORCEINLINE"]
-WhitespaceSensitiveMacros : ["sattr", "spush_attr"]
-ForEachMacros : ["forloop"]
+AttributeMacros: ["DUAL_UNLIKELY", "DUAL_FORCEINLINE", "FORCEINLINE"]
+WhitespaceSensitiveMacros: ["sattr", "spush_attr"]
+ForEachMacros: ["forloop"]
 
 SortIncludes: false

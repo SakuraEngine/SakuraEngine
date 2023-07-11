@@ -1,19 +1,17 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_box.hpp"
+#include "SkrGui/math/color.hpp"
 // Avoid including type/type.hpp by including "containers/detail/sptr.hpp" instead.
 // #include "containers/sptr.hpp"
 #include "containers/detail/sptr.hpp"
+#include <variant> // TODO. use skr::variant, here for shit msvc
 
-SKR_DECLARE_TYPE_ID_FWD(skr::gdi, GDIPaint, skr_gdi_paint);
-
-namespace skr
-{
-namespace gui
+namespace skr::gui
 {
 
+struct RenderText;
 struct Paragraph;
 struct FontFile;
-struct InlineType;
 
 enum class EInlineAlignment : uint32_t
 {
@@ -23,45 +21,27 @@ enum class EInlineAlignment : uint32_t
 };
 
 struct StyleText {
-    float font_size;
-    skr_float4_t color;
+    float        font_size = 14.0f;
+    skr_float4_t color     = {};
 };
 
 struct SKR_GUI_API BindText {
-    String text;
+    String text = {};
+};
+struct InlineType : public std::variant<skr::string, RenderObject*, RenderText*, skr::SPtr<BindText>> {
 };
 
 struct SKR_GUI_API RenderText : public RenderBox {
 public:
-    SKR_GUI_TYPE(RenderText, "72e8d4de-c288-4675-a22f-4c7a6487cabd", RenderBox);
-    RenderText(skr_gdi_device_id gdi_device);
-    virtual ~RenderText();
+    SKR_GUI_OBJECT(RenderText, "72e8d4de-c288-4675-a22f-4c7a6487cabd", RenderBox);
+    using Super = RenderBox;
 
-    virtual void layout(BoxConstraint constraints, bool needSize = false) override;
-    virtual void draw(const DrawParams* params) override;
+    RenderText() {}
+    ~RenderText() {}
 
-    void add_text(const char8_t* u8_text);
-
-protected:
-    void BuildParagraph();
-    void DrawParagraph();
-    void MarkLayoutDirty(bool visibility){};
-
-private:
-    void buildParagraphRec(Paragraph* p, const StyleText& txt);
-
-    Array<struct InlineType> inlines_;
-    Paragraph* paragraph_ = nullptr;
-    skr::SPtr<FontFile> font_ = nullptr;
-
-    bool paragraph_dirty_ = true;
-    skr_gdi_device_id gdi_device = nullptr;
-    skr_gdi_element_id gdi_element = nullptr;
-    skr_gdi_paint_id gdi_paint = nullptr;
-    skr_float4_t font_color = { 1.f, 0.f, 1.f, 1.f };
+    void perform_layout() SKR_NOEXCEPT override {}
+    void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override {}
+    void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override {}
 };
 
-} // namespace gui
-} // namespace skr
-
-SKR_DECLARE_TYPE_ID(skr::gui::RenderText, skr_gui_render_text);
+} // namespace skr::gui
