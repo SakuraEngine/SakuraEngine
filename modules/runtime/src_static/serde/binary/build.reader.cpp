@@ -2,8 +2,8 @@
 #include "resource/resource_handle.h"
 #include "serde/binary/reader.h"
 #include "SkrRT/platform/memory.h"
-#include "misc/bits.hpp"
-#include "misc/log.h"
+#include "SkrRT/misc/bits.hpp"
+#include "SkrRT/misc/log.h"
 #include <cmath>
 
 #include <EASTL/fixed_string.h>

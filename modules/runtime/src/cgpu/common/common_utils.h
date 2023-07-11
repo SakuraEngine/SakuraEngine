@@ -37,8 +37,8 @@ void CGPUUtil_FreeRootSignaturePool(CGPURootSignaturePoolId pool);
 } // end extern "C"
 #endif
 
-#include "misc/hash.h"
-#include "misc/log.h"
+#include "SkrRT/misc/hash.h"
+#include "SkrRT/misc/log.h"
 #define cgpu_trace(...) SKR_LOG_TRACE(__VA_ARGS__)
 #define cgpu_debug(...) SKR_LOG_DEBUG(__VA_ARGS__)
 #define cgpu_info(...) SKR_LOG_INFO(__VA_ARGS__)

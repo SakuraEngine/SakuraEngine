@@ -1,6 +1,6 @@
 #pragma once
 #include "module.hpp"
-#include "misc/dependency_graph.hpp"
+#include "SkrRT/misc/dependency_graph.hpp"
 
 RUNTIME_EXTERN_C RUNTIME_API 
 skr::ModuleManager* skr_get_module_manager();

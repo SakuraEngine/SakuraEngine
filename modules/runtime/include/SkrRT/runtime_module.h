@@ -1,7 +1,7 @@
 #pragma once
 #include "module/module_manager.hpp"
 #include "SkrRT/platform/thread.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #include "SkrRT/platform/shared_library.hpp"
 #include "SkrRT/platform/dstorage.h"
 #ifdef _WIN32

@@ -1,6 +1,6 @@
 #pragma once
-#include "misc/types.h"
-#include "misc/log/log_base.hpp"
+#include "SkrRT/misc/types.h"
+#include "SkrRT/misc/log/log_base.hpp"
 #include "containers/string.hpp"
 
 namespace skr {

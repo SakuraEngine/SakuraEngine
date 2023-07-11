@@ -5,7 +5,7 @@
 #include "containers/vector.hpp"
 #include "SkrScene/scene.h"
 #include "components.h"
-#include "misc/traits.hpp"
+#include "SkrRT/misc/traits.hpp"
 #include "SkrRT/platform/guid.hpp"
 #include "containers/hashmap.hpp"
 #include "EASTL/fixed_vector.h"

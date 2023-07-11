@@ -2,7 +2,7 @@
 #include <EASTL/vector.h>
 #include <EASTL/list.h>
 #include <boost/graph/adjacency_list.hpp>
-#include "misc/dependency_graph.hpp"
+#include "SkrRT/misc/dependency_graph.hpp"
 
 namespace skr
 {

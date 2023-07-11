@@ -1,8 +1,8 @@
 #include "gtest/gtest.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/platform/crash.h"
-#include "misc/make_zeroed.hpp"
-#include "misc/log.h"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/misc/log.h"
 #include <thread>
 #include <future>
 

@@ -1,5 +1,5 @@
 #include "SkrRT/platform/vfs.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #include <platform/filesystem.hpp>
 #include "SkrRT/platform/memory.h"
 

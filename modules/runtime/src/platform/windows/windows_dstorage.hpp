@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/platform/memory.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #include "SkrRT/platform/windows/dstorage.h"
 #include "SkrRT/platform/dstorage.h"
 #include "SkrRT/platform/shared_library.hpp"

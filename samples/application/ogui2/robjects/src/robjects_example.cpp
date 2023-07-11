@@ -4,8 +4,8 @@
 #include "containers/string.hpp"
 
 #include "SkrRT/platform/system.h"
-#include "misc/log.h"
-#include "misc/defer.hpp"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/defer.hpp"
 
 #include "SkrInputSystem/input_system.hpp"
 

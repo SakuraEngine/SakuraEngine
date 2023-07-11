@@ -1,6 +1,6 @@
 #include "string.h"
 
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRenderer/render_mesh.h"
 
 #include "SkrAnim/components/skin_component.h"

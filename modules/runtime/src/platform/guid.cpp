@@ -1,5 +1,5 @@
 #include "SkrRT/platform/guid.hpp"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 namespace skr {
 namespace guid{
 

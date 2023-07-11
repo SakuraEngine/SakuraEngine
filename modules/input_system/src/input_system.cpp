@@ -2,7 +2,7 @@
 #include "SkrInputSystem/input_modifier.hpp"
 #include "./input_action_impl.hpp"
 #include "SkrRT/platform/debug.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 
 #include <EASTL/map.h>
 #include <EASTL/vector_map.h>

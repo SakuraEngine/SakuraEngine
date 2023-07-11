@@ -13,7 +13,7 @@
 #include "SkrGui/module.configure.h"
 
 // skr types
-#include "misc/types.h"
+#include "SkrRT/misc/types.h"
 
 // skr containers
 #include "containers/lite.hpp"
@@ -71,7 +71,7 @@
 #define SKR_GUI_ASSERT(__EXPR) SKR_ASSERT(__EXPR)
 
 // log
-#include "misc/log.hpp"
+#include "SkrRT/misc/log.hpp"
 #define SKR_GUI_LOG_ERROR(...) SKR_LOG_ERROR(__VA_ARGS__)
 #define SKR_GUI_LOG_WARN(...) SKR_LOG_WARN(__VA_ARGS__)
 #define SKR_GUI_LOG_INFO(...) SKR_LOG_INFO(__VA_ARGS__)

@@ -3,7 +3,7 @@
 #include "SkrRT/platform/configure.h"
 #include <type_traits>
 #include <utility>
-#include "misc/types.h"
+#include "SkrRT/misc/types.h"
 
 #ifndef VECMATH_FINLINE
 #define VECMATH_FINLINE FORCEINLINE

@@ -1,8 +1,8 @@
 #include "MPShared/client_world.h"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
 #include "EASTL/fixed_vector.h"
-#include "misc/parallel_for.hpp"
-#include "misc/log.h"
+#include "SkrRT/misc/parallel_for.hpp"
+#include "SkrRT/misc/log.h"
 
 #include "ecs/type_builder.hpp"
 #include "ecs/set.hpp"

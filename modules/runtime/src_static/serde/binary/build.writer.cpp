@@ -2,10 +2,10 @@
 #include "resource/resource_handle.h"
 #include "serde/binary/writer.h"
 #include "serde/binary/blob.h"
-#include "misc/bits.hpp"
+#include "SkrRT/misc/bits.hpp"
 #include "math/rtm/scalarf.h"
 #include "math/rtm/scalard.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 
 namespace skr::binary
 {

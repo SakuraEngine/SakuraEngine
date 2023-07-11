@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
-#include "misc/types.h"
-#include "misc/traits.hpp"
+#include "SkrRT/misc/types.h"
+#include "SkrRT/misc/traits.hpp"
 #include "math/quat.h"
 
 #include "containers/string.hpp"

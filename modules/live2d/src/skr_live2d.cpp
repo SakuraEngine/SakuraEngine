@@ -1,4 +1,4 @@
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #include "SkrRT/platform/memory.h"
 #include "SkrLive2D/skr_live2d.h"
 #include "CubismFramework.hpp"

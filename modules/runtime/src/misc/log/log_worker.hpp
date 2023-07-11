@@ -1,6 +1,6 @@
 #pragma once
 #include "async/async_service.h"
-#include "misc/log/log_pattern.hpp"
+#include "SkrRT/misc/log/log_pattern.hpp"
 #include "log_queue.hpp"
 
 #include "containers/vector.hpp"

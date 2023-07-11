@@ -3,8 +3,8 @@
 #include "containers/string.hpp"
 #include "containers/sptr.hpp"
 #include "resource/resource_handle.h"
-#include "misc/traits.hpp"
-#include "misc/join.hpp"
+#include "SkrRT/misc/traits.hpp"
+#include "SkrRT/misc/join.hpp"
 extern "C" {
 #include "lua.h"
 #include "lualib.h"

@@ -14,10 +14,10 @@
 #include "SkrRT/platform/filesystem.hpp"
 #include "async/thread_job.hpp"
 
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #include "cgpu/io.h"
 
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
 
 #include "module/module_manager.hpp"
 #include "runtime_module.h"

@@ -1,6 +1,6 @@
 #include "module/module_manager.hpp"
 #include "SkrRT/platform/filesystem.hpp"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 
 int main(int argc, char** argv)
 {

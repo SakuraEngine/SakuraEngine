@@ -1,5 +1,5 @@
 #include "../../pch.hpp"
-#include "misc/types.h"
+#include "SkrRT/misc/types.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/platform/process.h"
 #include "SkrRT/platform/crash.h"

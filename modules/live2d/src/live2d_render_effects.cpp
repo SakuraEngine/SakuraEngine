@@ -3,7 +3,7 @@
 #include "SkrRT/platform/time.h"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/platform/thread.h"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
 
 #include "ecs/type_builder.hpp"
 

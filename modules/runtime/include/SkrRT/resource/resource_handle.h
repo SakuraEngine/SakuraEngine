@@ -1,5 +1,5 @@
 #pragma once
-#include "misc/types.h"
+#include "SkrRT/misc/types.h"
 
 enum ESkrLoadingStatus : uint32_t;
 struct skr_resource_record_t;

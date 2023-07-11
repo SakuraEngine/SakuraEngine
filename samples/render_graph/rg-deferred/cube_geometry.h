@@ -1,5 +1,5 @@
 #pragma once
-#include "misc/types.h"
+#include "SkrRT/misc/types.h"
 #include "math/rtm/rtmx.h"
 
 struct CubeGeometry {

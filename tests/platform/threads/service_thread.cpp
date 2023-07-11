@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "SkrRT/platform/crash.h"
-#include "misc/make_zeroed.hpp"
-#include "misc/log.h"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/misc/log.h"
 #include "async/async_service.h"
 
 TEST(ServiceThread, AsyncPrint)

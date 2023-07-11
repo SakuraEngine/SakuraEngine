@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "SkrRT/platform/crash.h"
 #include "cgpu/api.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #if defined(_WIN32) || defined(_WIN64)
     #ifndef WIN32_LEAN_AND_MEAN
         #define WIN32_LEAN_AND_MEAN

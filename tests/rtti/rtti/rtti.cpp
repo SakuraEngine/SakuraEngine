@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "misc/log.hpp"
+#include "SkrRT/misc/log.hpp"
 #include "SkrRT/platform/crash.h"
 #include "SkrRT/platform/guid.hpp"
 #include "containers/sptr.hpp"

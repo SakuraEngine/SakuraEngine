@@ -4,9 +4,9 @@
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/debug.h"
 #include "io/io.h"
-#include "misc/make_zeroed.hpp"
-#include "misc/types.h"
-#include "misc/log.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/misc/types.h"
+#include "SkrRT/misc/log.hpp"
 
 #include <platform/filesystem.hpp>
 #include <containers/sptr.hpp>

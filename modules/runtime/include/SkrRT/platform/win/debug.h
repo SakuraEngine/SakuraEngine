@@ -29,7 +29,7 @@
     #endif
 
     #if !SKR_SHIPPING
-        #include "misc/macros.h"
+        #include "SkrRT/misc/macros.h"
 
         #define SKR_TRACE_MSG(msg) skr_debug_output(msg);
         #define SKR_ASSERT(cond)                                                      \

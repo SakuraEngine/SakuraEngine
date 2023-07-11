@@ -1,10 +1,10 @@
 #pragma once
 #include "containers/vector.hpp"
 #include "SkrRT/platform/debug.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #include "containers/string.hpp"
 #include "containers/hashmap.hpp"
-#include "misc/fast_float.h"
+#include "SkrRT/misc/fast_float.h"
 #include <charconv>
 #include <optional>
 

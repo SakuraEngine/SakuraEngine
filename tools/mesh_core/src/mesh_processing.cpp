@@ -1,6 +1,6 @@
 #include "async/fib_task.hpp"
 #include "SkrMeshCore/mesh_processing.hpp"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "cgpu/api.h"
 

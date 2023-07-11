@@ -1,5 +1,5 @@
 #include "GameRuntime/gamert.h"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/configure.h"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/platform/memory.h"

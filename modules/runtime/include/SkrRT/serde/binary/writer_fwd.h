@@ -1,7 +1,7 @@
 #pragma once
 #include <type_traits>
 #include "serde/binary/blob_fwd.h"
-#include "misc/traits.hpp"
+#include "SkrRT/misc/traits.hpp"
 #include "SkrRT/platform/debug.h"
 
 // FUCK MSVC COMPILER

@@ -2,7 +2,7 @@
 #include "containers/detail/sptr.hpp"
 #include "containers/variant.hpp"
 #include "SkrRT/platform/configure.h"
-#include "misc/log.hpp"
+#include "SkrRT/misc/log.hpp"
 #include "resource/config_resource.h"
 #include "resource/resource_handle.h"
 #include "type/type.hpp"

@@ -1,7 +1,7 @@
 #include "../../pch.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/memory.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #include "SkrRT/platform/filesystem.hpp"
 
 inline static char8_t* duplicate_string(const char8_t* src_string) SKR_NOEXCEPT

@@ -5,8 +5,8 @@
 #include "efsw/efsw.hpp"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/platform/thread.h"
-#include "misc/hash.h"
-#include "misc/log.h"
+#include "SkrRT/misc/hash.h"
+#include "SkrRT/misc/log.h"
 #include <containers/hashmap.hpp>
 #include <EASTL/vector.h>
 #include <containers/variant.hpp>

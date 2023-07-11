@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/platform/configure.h"
-#include "misc/types.h"
+#include "SkrRT/misc/types.h"
 #include "SkrImageCoder/module.configure.h"
 
 SKR_DECLARE_TYPE_ID_FWD(skr, IImageInterface, skr_image_interface)

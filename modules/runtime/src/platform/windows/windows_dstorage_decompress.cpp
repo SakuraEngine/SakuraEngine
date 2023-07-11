@@ -2,8 +2,8 @@
 #include "SkrRT/platform/win/dstorage_windows.h"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/thread.h"
-#include "misc/log.h"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/make_zeroed.hpp"
 #include "async/thread_job.hpp"
 
 #include <EASTL/string.h>

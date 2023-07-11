@@ -29,7 +29,7 @@
 /**************************************************************************/
 
 #include "backend/text_server/string_name.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 
 namespace godot
 {

@@ -1,5 +1,5 @@
 #include "module/module.hpp"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 
 class SkrInputSystemModule : public skr::IDynamicModule
 {

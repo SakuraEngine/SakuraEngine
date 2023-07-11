@@ -2,8 +2,8 @@
 
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/platform/memory.h"
-#include "misc/make_zeroed.hpp"
-#include "misc/log.h"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/misc/log.h"
 #include "io/io.h"
 #include "SkrRT/platform/vfs.h"
 

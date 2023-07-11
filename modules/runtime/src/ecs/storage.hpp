@@ -17,7 +17,7 @@
 #include "containers/hashmap.hpp"
 #include "EASTL/shared_ptr.h"
 #include "async/fib_task.hpp"
-#include "misc/lazy.hpp"
+#include "SkrRT/misc/lazy.hpp"
 
 namespace dual
 {

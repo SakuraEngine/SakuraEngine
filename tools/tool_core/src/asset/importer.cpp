@@ -1,6 +1,6 @@
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
-#include "misc/types.h"
+#include "SkrRT/misc/types.h"
 #include "SkrRT/platform/guid.hpp"
 #include "serde/json/reader.h"
 

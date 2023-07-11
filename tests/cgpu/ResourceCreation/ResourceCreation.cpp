@@ -3,7 +3,7 @@
 #include "cgpu/flags.h"
 #include "SkrRT/platform/configure.h"
 #include "gtest/gtest.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #include <containers/string.hpp>
 #include <EASTL/vector.h>
 #include "cgpu/api.h"

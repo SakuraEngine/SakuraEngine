@@ -11,7 +11,7 @@
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/process.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 
 #include "containers/string.hpp"
 #include <EASTL/vector.h>

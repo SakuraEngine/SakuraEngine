@@ -2,8 +2,8 @@
 #include "containers/hashmap.hpp"
 #include "SkrRT/platform/atomic.h"
 #include "SkrRT/platform/thread.h"
-#include "misc/log/log_base.hpp"
-#include "misc/log/log_formatter.hpp"
+#include "SkrRT/misc/log/log_base.hpp"
+#include "SkrRT/misc/log/log_formatter.hpp"
 
 #include "containers/concurrent_queue.h"
 #include "containers/vector.hpp"

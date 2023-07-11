@@ -1,9 +1,9 @@
 #pragma once
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/thread.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #include "io/io.h"
-#include "misc/defer.hpp"
+#include "SkrRT/misc/defer.hpp"
 #include <EASTL/unique_ptr.h>
 #include <EASTL/vector.h>
 #include <EASTL/deque.h>

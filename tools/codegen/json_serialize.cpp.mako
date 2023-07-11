@@ -1,7 +1,7 @@
 // BEGIN JSON IMPLEMENTATION
-#include "misc/hash.h"
+#include "SkrRT/misc/hash.h"
 #include "SkrRT/platform/debug.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #include "serde/json/reader.h"
 #include "serde/json/writer.h"
 #include "tracy/Tracy.hpp"

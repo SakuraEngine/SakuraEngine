@@ -2,9 +2,9 @@
 #include "SkrRenderer/render_device.h"
 #include "SkrRenderer/shader_hash.h"
 
-#include "misc/log.h"
-#include "misc/defer.hpp"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/defer.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/atomic.h"
 #include "async/thread_job.hpp"
 

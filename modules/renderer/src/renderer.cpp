@@ -1,5 +1,5 @@
-#include "misc/log.h"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/make_zeroed.hpp"
 #include "ecs/dual.h"
 #include "ecs/array.hpp"
 

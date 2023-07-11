@@ -8,8 +8,8 @@
 #include "resource/resource_system.h"
 #include "SkrRenderer/render_device.h"
 #include "cgpu/io.h"
-#include "misc/log.h"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/make_zeroed.hpp"
 
 #include "containers/string.hpp"
 #include "containers/sptr.hpp"

@@ -1,6 +1,6 @@
 #include "SkrRT/platform/crash.h"
 #include "test.hpp"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 
 class SPTRCommon : public SPTRBase
 {

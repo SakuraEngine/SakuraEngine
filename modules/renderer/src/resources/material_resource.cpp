@@ -1,7 +1,7 @@
 #include <EASTL/fixed_vector.h>
 #include "SkrRT/platform/guid.hpp"
 #include "containers/sptr.hpp"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
 #include "async/thread_job.hpp"
 
 #include "SkrRenderer/render_device.h"

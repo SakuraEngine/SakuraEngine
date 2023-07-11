@@ -1,5 +1,5 @@
-#include "misc/types.h"
-#include "misc/hash.h"
+#include "SkrRT/misc/types.h"
+#include "SkrRT/misc/hash.h"
 #include <string.h> // memset
 #if defined(__x86_64__) || defined(__i386__)
 #include "SkrRT/platform/cpu/cpuinfo_x86.h"

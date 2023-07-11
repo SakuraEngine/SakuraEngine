@@ -2,8 +2,8 @@
 #include "SkrRT/platform/crash.h"
 #include "ecs/dual.h"
 #include "guid.hpp" //for guid
-#include "misc/make_zeroed.hpp"
-#include "misc/log.h"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/misc/log.h"
 
 #include <memory>
 

@@ -5,11 +5,11 @@
 #include "MPShared/components.h"
 #include "ecs/type_builder.hpp"
 #include "SkrRT/platform/atomic.h"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
 
 #include "math/rtm/quatf.h"
 #include "math/rtm/rtmx.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #include "SkrRT/platform/guid.hpp"
 
 void MPGameWorld::Initialize()

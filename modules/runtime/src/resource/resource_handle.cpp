@@ -1,6 +1,6 @@
 #include "resource/resource_handle.h"
 #include "SkrRT/platform/debug.h"
-#include "misc/types.h"
+#include "SkrRT/misc/types.h"
 #include "resource/resource_header.hpp"
 #include "resource/resource_system.h"
 

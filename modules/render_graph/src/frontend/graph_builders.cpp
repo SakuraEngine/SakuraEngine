@@ -2,7 +2,7 @@
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 
 namespace skr
 {

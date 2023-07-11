@@ -2,7 +2,7 @@
 #include <EASTL/fixed_string.h>
 #include "SkrRT/platform/configure.h"
 #include "SkrRT/platform/memory.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 

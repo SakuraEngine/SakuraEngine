@@ -1,5 +1,5 @@
 #include <exception>
-#include "misc/DAG.boost.hpp"
+#include "SkrRT/misc/DAG.boost.hpp"
 
 namespace boost
 {
@@ -14,7 +14,7 @@ BOOST_NORETURN void throw_exception(std::exception const& e)
 } // namespace boost
 
 #include "boost/graph/named_graph.hpp"
-#include "misc/dependency_graph.hpp"
+#include "SkrRT/misc/dependency_graph.hpp"
 
 namespace skr
 {

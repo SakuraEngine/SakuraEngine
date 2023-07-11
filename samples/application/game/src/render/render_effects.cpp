@@ -1,6 +1,6 @@
-#include "misc/log.h"
-#include "misc/make_zeroed.hpp"
-#include "misc/log.hpp"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/misc/log.hpp"
 #include "SkrRT/platform/memory.h"
 
 #include "cgpu/api.h"
@@ -30,7 +30,7 @@
 #include "SkrRT/platform/vfs.h"
 #include <platform/filesystem.hpp>
 
-#include "misc/parallel_for.hpp"
+#include "SkrRT/misc/parallel_for.hpp"
 
 #include "resource/resource_system.h"
 

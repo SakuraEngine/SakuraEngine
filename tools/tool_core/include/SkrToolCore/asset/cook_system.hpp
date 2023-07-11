@@ -5,8 +5,8 @@
 #include "resource/resource_header.hpp"
 #include "SkrRT/platform/filesystem.hpp"
 #include "simdjson/padded_string.h"
-#include "misc/log.hpp"
-#include "misc/defer.hpp"
+#include "SkrRT/misc/log.hpp"
+#include "SkrRT/misc/defer.hpp"
 #include "serde/binary/writer.h"
 #include "containers/function_ref.hpp"
 

@@ -25,7 +25,7 @@
  * @LastEditTime: 2020-04-15 18:17:34
  */
 #pragma once
-#include "misc/types.h"
+#include "SkrRT/misc/types.h"
 #include "SkrRT/platform/configure.h"
 #ifdef __cplusplus
 #include "SkrRT/platform/shared_library.hpp"

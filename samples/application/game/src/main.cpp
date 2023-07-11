@@ -1,6 +1,6 @@
 #include "module/module_manager.hpp"
 #include "SkrRT/platform/filesystem.hpp"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #include "async/fib_task.hpp"
 
 #include "tracy/Tracy.hpp"

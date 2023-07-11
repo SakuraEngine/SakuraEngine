@@ -1,7 +1,7 @@
 #include "common/utils.h"
 #include <EASTL/shared_ptr.h>
 #include "GameRuntime/gamert.h"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/platform/system.h"
 #include "SkrRT/platform/configure.h"
@@ -48,7 +48,7 @@
 #include "async/thread_job.hpp"
 
 #include "tracy/Tracy.hpp"
-#include "misc/types.h"
+#include "SkrRT/misc/types.h"
 #include "SkrInspector/inspect_value.h"
 
 #include "SkrScene/resources/scene_resource.h"

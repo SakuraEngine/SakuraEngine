@@ -11,8 +11,8 @@
 #include "SkrRT/platform/guid.hpp"
 #include <platform/filesystem.hpp>
 
-#include "misc/log.h"
-#include "misc/log.hpp"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/log.hpp"
 
 #include <containers/concurrent_queue.h>
 #include <containers/sptr.hpp>

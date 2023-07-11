@@ -1,6 +1,6 @@
 #pragma once
 #include "module/module_manager.hpp"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 
 class SStaticModule0 : public skr::IStaticModule
 {

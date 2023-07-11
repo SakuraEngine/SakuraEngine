@@ -1,6 +1,6 @@
 #pragma once
 #include "dual_types.h"
-#include "misc/types.h"
+#include "SkrRT/misc/types.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -828,7 +828,7 @@ struct dual_id_of {
 #include "type/type_helper.hpp"
 #include "ecs/callback.hpp"
 #include "ecs/type_builder.hpp"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 
 namespace dual
 {

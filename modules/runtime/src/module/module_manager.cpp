@@ -2,7 +2,7 @@
 #include "module/subsystem.hpp"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/shared_library.hpp"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #include "containers/hashmap.hpp"
 #include "serde/json/reader.h"
 #include "SkrRT/platform/filesystem.hpp"

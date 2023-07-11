@@ -1,9 +1,9 @@
 #pragma once
 #include "serde/binary/writer_fwd.h"
-#include "misc/types.h"
+#include "SkrRT/misc/types.h"
 #include "type/type_helper.hpp"
 #include <bitset>
-#include "misc/traits.hpp"
+#include "SkrRT/misc/traits.hpp"
 #include "serde/binary/serde.h"
 
 struct skr_binary_writer_t {

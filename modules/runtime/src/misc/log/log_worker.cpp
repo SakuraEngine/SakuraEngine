@@ -1,8 +1,8 @@
 #include "../../pch.hpp"
-#include "misc/log.h"
-#include "misc/defer.hpp"
-#include "misc/log/logger.hpp"
-#include "misc/log/log_manager.hpp"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/defer.hpp"
+#include "SkrRT/misc/log/logger.hpp"
+#include "SkrRT/misc/log/log_manager.hpp"
 
 #include "tracy/Tracy.hpp"
 

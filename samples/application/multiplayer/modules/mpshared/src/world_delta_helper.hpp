@@ -1,6 +1,6 @@
 #pragma once
 #include "MPShared/world_delta.h"
-#include "misc/parallel_for.hpp"
+#include "SkrRT/misc/parallel_for.hpp"
 #include "MPShared/components.h"
 
 #include "containers/string.hpp"

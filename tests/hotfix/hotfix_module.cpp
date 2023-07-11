@@ -1,6 +1,6 @@
 #include "hotfix_module.hpp"
 #include "SkrRT/platform/memory.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 
 namespace hotfix
 {

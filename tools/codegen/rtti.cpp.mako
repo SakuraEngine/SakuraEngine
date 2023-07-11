@@ -6,8 +6,8 @@ enums = generator.filter_rtti(db.enums)
 // BEGIN RTTI GENERATED
 #include "type/type.hpp"
 #include "SkrRT/platform/debug.h"
-#include "misc/hash.h"
-#include "misc/log.h"
+#include "SkrRT/misc/hash.h"
+#include "SkrRT/misc/log.h"
 #include "type/type_helper.hpp"
 
 [[maybe_unused]] static const char* ArgumentNumMisMatchFormat = "Argument number mismatch while calling %s, expected %d, got %d.";
