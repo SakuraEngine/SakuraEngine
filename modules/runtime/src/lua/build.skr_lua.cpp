@@ -5,7 +5,7 @@
 #include "SkrRT/misc/types.h"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/resource/resource_handle.h"
-#include "lua/bind.hpp"
+#include "SkrRT/lua/bind.hpp"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/ecs/dual.h"

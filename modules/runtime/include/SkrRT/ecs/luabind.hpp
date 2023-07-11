@@ -1,6 +1,6 @@
 #pragma once
 #include "dual.h"
-#include "lua/bind.hpp"
+#include "SkrRT/lua/bind.hpp"
 
 namespace dual
 {

@@ -125,7 +125,7 @@ SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_save_scene(dual_storage_t* world, stru
 SKR_SCENE_EXTERN_C SKR_SCENE_API void skr_load_scene(dual_storage_t* world, struct skr_json_reader_t* reader);
 
 #ifdef __cplusplus
-#include "lua/bind.hpp"
+#include "SkrRT/lua/bind.hpp"
 
 namespace skr::lua
 {

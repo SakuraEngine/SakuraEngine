@@ -1,5 +1,5 @@
 #pragma once
-#include "lua/bind_fwd.hpp"
+#include "SkrRT/lua/bind_fwd.hpp"
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/resource/resource_handle.h"
