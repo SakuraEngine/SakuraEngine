@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/platform/configure.h"
 #include "SkrMeshCore/module.configure.h"
-#include "io/io.h"
+#include "SkrRT/io/io.h"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include <containers/string.hpp>
 #include <containers/span.hpp>

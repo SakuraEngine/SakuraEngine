@@ -2,7 +2,7 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/platform/vfs.h"
-#include "io/io.h"
+#include "SkrRT/io/io.h"
 #include "async/thread_job.hpp"
 
 #include "containers/string.hpp"

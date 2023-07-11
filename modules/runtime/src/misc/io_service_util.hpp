@@ -2,7 +2,7 @@
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/misc/log.h"
-#include "io/io.h"
+#include "SkrRT/io/io.h"
 #include "SkrRT/misc/defer.hpp"
 #include <EASTL/unique_ptr.h>
 #include <EASTL/vector.h>

@@ -8,7 +8,7 @@
 #include "containers/string.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/defer.hpp"
-#include "io/io.h"
+#include "SkrRT/io/io.h"
 
 #include "serde/json/reader.h"
 #include "serde/json/writer.h"

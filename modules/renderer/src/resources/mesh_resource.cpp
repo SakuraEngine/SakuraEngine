@@ -3,7 +3,7 @@
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/guid.hpp"
 #include "cgpu/cgpux.hpp"
-#include "io/io.h"
+#include "SkrRT/io/io.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/thread.h"
 #include <platform/filesystem.hpp>

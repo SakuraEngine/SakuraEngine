@@ -1,6 +1,6 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.h"
-#include "io/io.h"
+#include "SkrRT/io/io.h"
 #include "cgpu/io.h"
 
 #include "SkrRT/platform/memory.h"

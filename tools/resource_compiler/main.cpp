@@ -15,7 +15,7 @@
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/log.hpp"
-#include "io/io.h"
+#include "SkrRT/io/io.h"
 #include "resource/resource_system.h"
 #include "resource/local_resource_registry.hpp"
 #include "SkrRenderer/resources/texture_resource.h"

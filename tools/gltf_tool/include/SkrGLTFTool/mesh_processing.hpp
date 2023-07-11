@@ -2,7 +2,7 @@
 #include "SkrGLTFTool/module.configure.h"
 #include "SkrMeshCore/mesh_processing.hpp"
 #include "cgltf/cgltf.h"
-#include "io/io.h"
+#include "SkrRT/io/io.h"
 #include <containers/string.hpp>
 
 namespace skd 

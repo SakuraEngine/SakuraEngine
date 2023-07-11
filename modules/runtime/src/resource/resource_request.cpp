@@ -1,7 +1,7 @@
 #include "resource_request_impl.hpp"
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/misc/defer.hpp"
-#include "io/io.h"
+#include "SkrRT/io/io.h"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "resource/resource_factory.h"
