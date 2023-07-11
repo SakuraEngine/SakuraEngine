@@ -1,5 +1,5 @@
 #pragma once
-#include "resource/resource_handle.h"
+#include "SkrRT/resource/resource_handle.h"
 #include <EASTL/fixed_vector.h>
 #include <SkrRT/containers/vector.hpp>
 #include "SkrRT/platform/thread.h"

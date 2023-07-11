@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/platform/vfs.h"
-#include "resource/resource_handle.h"
+#include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrRT/misc/types.h"
 

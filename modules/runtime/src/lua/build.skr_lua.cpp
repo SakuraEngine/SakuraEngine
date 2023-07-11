@@ -4,7 +4,7 @@
 #include "SkrRT/misc/defer.hpp"
 #include "SkrRT/misc/types.h"
 #include "SkrRT/platform/guid.hpp"
-#include "resource/resource_handle.h"
+#include "SkrRT/resource/resource_handle.h"
 #include "lua/bind.hpp"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/platform/vfs.h"

@@ -16,7 +16,7 @@
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/io/io.h"
-#include "resource/resource_system.h"
+#include "SkrRT/resource/resource_system.h"
 #include "resource/local_resource_registry.hpp"
 #include "SkrRenderer/resources/texture_resource.h"
 #include "SkrRenderer/resources/mesh_resource.h"

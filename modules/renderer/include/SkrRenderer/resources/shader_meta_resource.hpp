@@ -1,5 +1,5 @@
 #pragma once
-#include "resource/resource_factory.h"
+#include "SkrRT/resource/resource_factory.h"
 #include "SkrRenderer/fwd_types.h"
 #ifndef __meta__
     #include "SkrRenderer/resources/shader_meta_resource.generated.h"

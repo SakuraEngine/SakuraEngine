@@ -3,7 +3,7 @@
 #include "SkrRT/platform/configure.h"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/platform/memory.h"
-#include "resource/resource_system.h"
+#include "SkrRT/resource/resource_system.h"
 #include "SkrRT/ecs/dual.h"
 #include "runtime_module.h"
 #include "SkrRT/platform/guid.hpp"

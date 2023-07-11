@@ -99,7 +99,7 @@ namespace renderer {
 } // namespace renderer
 } // namespace skr
 
-#include "resource/resource_factory.h"
+#include "SkrRT/resource/resource_factory.h"
 
 namespace skr sreflect
 {

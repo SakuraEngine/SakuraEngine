@@ -2,7 +2,7 @@
 #include "lua/bind_fwd.hpp"
 #include "containers/string.hpp"
 #include "containers/sptr.hpp"
-#include "resource/resource_handle.h"
+#include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/misc/traits.hpp"
 #include "SkrRT/misc/join.hpp"
 extern "C" {

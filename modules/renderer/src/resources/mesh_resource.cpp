@@ -8,8 +8,8 @@
 #include "SkrRT/platform/thread.h"
 #include <SkrRT/platform/filesystem.hpp>
 #include "SkrRenderer/render_mesh.h"
-#include "resource/resource_factory.h"
-#include "resource/resource_system.h"
+#include "SkrRT/resource/resource_factory.h"
+#include "SkrRT/resource/resource_system.h"
 #include "SkrRenderer/render_device.h"
 #include "SkrRT/misc/log.h"
 #include "cgpu/io.h"

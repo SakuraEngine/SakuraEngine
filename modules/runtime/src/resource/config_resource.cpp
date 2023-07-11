@@ -5,11 +5,11 @@
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/vfs.h"
-#include "resource/resource_factory.h"
+#include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/resource/resource_header.hpp"
 #include "type/type.hpp"
 #include "SkrRT/misc/defer.hpp"
-#include "resource/resource_system.h"
+#include "SkrRT/resource/resource_system.h"
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/serde/binary/writer.h"
 

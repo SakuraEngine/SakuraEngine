@@ -13,7 +13,7 @@
 #include "storage.hpp"
 #include "set.hpp"
 #include "scheduler.hpp"
-#include "resource/resource_handle.h"
+#include "SkrRT/resource/resource_handle.h"
 #include "type_registry.hpp"
 
 namespace dual

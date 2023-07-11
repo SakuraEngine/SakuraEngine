@@ -20,7 +20,7 @@
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 
-#include "resource/resource_system.h"
+#include "SkrRT/resource/resource_system.h"
 
 #include "SkrScene/scene.h"
 #include "SkrRenderer/skr_renderer.h"

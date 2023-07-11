@@ -1,4 +1,4 @@
-#include "resource/resource_factory.h"
+#include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrRT/platform/debug.h"
 

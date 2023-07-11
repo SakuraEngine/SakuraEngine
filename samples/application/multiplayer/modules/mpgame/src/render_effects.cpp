@@ -32,7 +32,7 @@
 
 #include "SkrRT/misc/parallel_for.hpp"
 
-#include "resource/resource_system.h"
+#include "SkrRT/resource/resource_system.h"
 
 #include "tracy/Tracy.hpp"
 

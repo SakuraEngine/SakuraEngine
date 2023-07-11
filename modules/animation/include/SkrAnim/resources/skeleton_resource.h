@@ -32,7 +32,7 @@ struct SKR_ANIM_API WriteTrait<const skr_skeleton_resource_t&> {
 };
 } // namespace skr::binary
 
-#include "resource/resource_factory.h"
+#include "SkrRT/resource/resource_factory.h"
 namespace skr
 {
 namespace resource

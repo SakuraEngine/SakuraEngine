@@ -6,7 +6,7 @@
 #include "containers/hashmap.hpp"
 #include "SkrRT/io/io.h"
 #include "SkrRT/platform/vfs.h"
-#include "resource/resource_factory.h"
+#include "SkrRT/resource/resource_factory.h"
 #include "containers/concurrent_queue.h"
 
 namespace skr::resource

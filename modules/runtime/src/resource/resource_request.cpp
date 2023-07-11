@@ -4,7 +4,7 @@
 #include "SkrRT/io/io.h"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/platform/vfs.h"
-#include "resource/resource_factory.h"
+#include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/serde/binary/reader.h"
 
 namespace skr

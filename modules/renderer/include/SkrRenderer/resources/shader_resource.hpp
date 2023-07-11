@@ -2,7 +2,7 @@
 #include "SkrRenderer/shader_hash.h"
 #include "SkrRT/io/io.h"
 #include "cgpu/api.h"
-#include "resource/resource_factory.h"
+#include "SkrRT/resource/resource_factory.h"
 #include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/hashmap.hpp>
 

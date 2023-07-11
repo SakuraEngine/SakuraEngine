@@ -64,7 +64,7 @@ skr_mesh_buffer_t
 };
 
 #ifdef __cplusplus
-#include "resource/resource_factory.h"
+#include "SkrRT/resource/resource_factory.h"
 
 namespace skr sreflect
 {

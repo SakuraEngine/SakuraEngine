@@ -1,6 +1,6 @@
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/guid.hpp"
-#include "resource/resource_handle.h"
+#include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/serde/binary/writer.h"
 #include "SkrRT/serde/json/reader.h"

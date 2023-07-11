@@ -4,7 +4,7 @@
 #include <SkrRT/containers/sptr.hpp>
 #include <SkrRT/containers/span.hpp>
 #include <SkrRT/containers/variant.hpp>
-#include "resource/resource_handle.h"
+#include "SkrRT/resource/resource_handle.h"
 
 #if defined(__cplusplus)
 namespace skr
