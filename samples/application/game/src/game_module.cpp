@@ -49,11 +49,10 @@
 
 #include "tracy/Tracy.hpp"
 #include "SkrRT/misc/types.h"
+#include "SkrRT/lua/skr_lua.h"
 #include "SkrInspector/inspect_value.h"
 
 #include "SkrScene/resources/scene_resource.h"
-
-#include "lua/skr_lua.h"
 
 uint32_t backbuffer_index;
 extern void create_imgui_resources(skr_vfs_t* resource_vfs, SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph);
