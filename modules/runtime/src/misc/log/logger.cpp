@@ -1,7 +1,7 @@
 #include "../../pch.hpp"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/log/logger.hpp"
-#include "SkrRT/misc/log/log_manager.hpp"
+#include "misc/log/log_manager.hpp"
 
 #include <thread>
 #include <csignal>
