@@ -13,6 +13,8 @@ target("OpenGUI_DemoResources")
     public_dependency("SkrInput", engine_version)
     public_dependency("SkrGui", engine_version)
     public_dependency("SkrGuiRenderer", engine_version)
-    
-includes("gdi/xmake.lua")
-includes("robjects/xmake.lua")
+
+-- TODO. GDI 满门抄斩
+-- includes("gdi/xmake.lua")
+-- includes("robjects/xmake.lua")
+includes("sandbox/xmake.lua")

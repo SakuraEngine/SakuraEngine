@@ -1,9 +1,7 @@
 #include "SkrGui/framework/key.hpp"
 #include "containers/lite.hpp"
 
-namespace skr
-{
-namespace gui
+namespace skr::gui
 {
 Key::Key() SKR_NOEXCEPT : _type(EKeyType::None) {}
 
@@ -170,5 +168,4 @@ void Key::set_storage(const String& value) SKR_NOEXCEPT
     _name = value;
 }
 
-} // namespace gui
-} // namespace skr
+} // namespace skr::gui

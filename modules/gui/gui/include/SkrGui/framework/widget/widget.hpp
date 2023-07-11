@@ -1,16 +1,17 @@
 #pragma once
-#include "SkrGui/framework/diagnostics.hpp"
 #include "SkrGui/framework/key.hpp"
 #include "SkrGui/framework/widget_misc.hpp"
+#include "SkrGui/framework/fwd_framework.hpp"
 
 namespace skr::gui
 {
-struct Element;
+struct SKR_GUI_API Widget SKR_GUI_OBJECT_BASE {
+    SKR_GUI_OBJECT_ROOT(Widget, "9f69910d-ba18-4ff4-bf5f-3966507c56ba");
+    SKR_GUI_RAII_MIX_IN()
 
-struct SKR_GUI_API Widget : public DiagnosticableTreeNode {
-    SKR_GUI_TYPE(Widget, "9f69910d-ba18-4ff4-bf5f-3966507c56ba", DiagnosticableTreeNode);
-
-    inline const Key& key() const SKR_NOEXCEPT { return _key; }
+    // build callback
+    virtual void pre_construct() SKR_NOEXCEPT {}
+    virtual void post_construct() SKR_NOEXCEPT {}
 
     // bind element
     virtual NotNull<Element*> create_element() SKR_NOEXCEPT = 0;
@@ -18,7 +19,6 @@ struct SKR_GUI_API Widget : public DiagnosticableTreeNode {
     // help function
     static bool can_update(NotNull<Widget*> old_widget, NotNull<Widget*> new_widget) SKR_NOEXCEPT;
 
-protected:
-    Key _key;
+    Key key = {};
 };
 } // namespace skr::gui

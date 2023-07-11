@@ -1,78 +1,57 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_box.hpp"
+#include "SkrGui/framework/render_object/multi_child_render_object.hpp"
+#include "SkrGui/math/layout.hpp"
 
-namespace skr
+namespace skr::gui
 {
-namespace gui
-{
-
-// Defines the direction in which the flex container's children are laid out.
-enum class FlexDirection
-{
-    Row,          // Children are laid out horizontally from left to right.
-    RowReverse,   // Children are laid out horizontally from right to left.
-    Column,       // Children are laid out vertically from top to bottom.
-    ColumnReverse // Children are laid out vertically from bottom to top.
-};
-
-// Defines how the children are distributed along the main axis of the flex container.
-enum class JustifyContent
-{
-    FlexStart,    // Children are packed at the start of the main axis.
-    FlexEnd,      // Children are packed at the end of the main axis.
-    Center,       // Children are centered along the main axis.
-    SpaceBetween, // Children are evenly distributed with the first child at the start and the last child at the end.
-    SpaceAround,  // Children are evenly distributed with equal space around them.
-    SpaceEvenly   // Children are evenly distributed with equal space between them.
-};
-
-// Defines how the children are aligned along the cross axis of the flex container.
-enum class AlignItems
-{
-    FlexStart, // Children are aligned at the start of the cross axis.
-    FlexEnd,   // Children are aligned at the end of the cross axis.
-    Center,    // Children are centered along the cross axis.
-    Stretch,   // Children are stretched to fill the cross axis.
-    Baseline   // Children are aligned based on their baseline.
-};
-
-enum class FlexFit
-{
-    Tight,
-    Loose,
-};
-
-struct Flexable {
-    float flex = 1;                    // determines how much the child should grow or shrink relative to other flex items
-    FlexFit flex_fit = FlexFit::Loose; // determines how much the child should be allowed to shrink relative to its own size
-};
-
-class SKR_GUI_API RenderFlex : public RenderBox
+class SKR_GUI_API RenderFlex : public RenderBox, public IMultiChildRenderObject
 {
 public:
-    SKR_GUI_TYPE(RenderFlex, "d3987dfd-24d2-478a-910e-537f24c4bae7", RenderBox);
-    RenderFlex(skr_gdi_device_id gdi_device);
+    SKR_GUI_OBJECT(RenderFlex, "d3987dfd-24d2-478a-910e-537f24c4bae7", RenderBox, IMultiChildRenderObject);
+    using Super = RenderBox;
 
-    virtual void layout(BoxConstraint constraints, bool needSize = false) override;
-    Flexable get_flex(int index); // each child's corresponding flexable property
-    virtual void add_child(RenderObject* child) override;
-    virtual void insert_child(RenderObject* child, int index) override;
-    virtual void remove_child(RenderObject* child) override;
-    void set_flexable(int index, Flexable flexable);
+    // intrinsic size
+    float compute_min_intrinsic_width(float height) const SKR_NOEXCEPT override;
+    float compute_max_intrinsic_width(float height) const SKR_NOEXCEPT override;
+    float compute_min_intrinsic_height(float width) const SKR_NOEXCEPT override;
+    float compute_max_intrinsic_height(float width) const SKR_NOEXCEPT override;
 
-    void set_justify_content(JustifyContent justify_content);
-    void set_flex_direction(FlexDirection flex_direction);
-    void set_align_items(AlignItems align_items);
-    JustifyContent get_justify_content();
-    FlexDirection get_flex_direction();
-    AlignItems get_align_items();
+    // dry layout
+    Sizef compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCEPT override;
+
+    // layout
+    void perform_layout() SKR_NOEXCEPT override;
+
+    // paint
+    void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;
+
+    // setter
+    void set_flex_direction(EFlexDirection value) SKR_NOEXCEPT;
+    void set_main_axis_alignment(EMainAxisAlignment value) SKR_NOEXCEPT;
+    void set_cross_axis_alignment(ECrossAxisAlignment value) SKR_NOEXCEPT;
+    void set_main_axis_size(EMainAxisSize value) SKR_NOEXCEPT;
+
+    struct SlotData {
+        // slot data
+        float    flex     = 1;
+        EFlexFit flex_fit = EFlexFit::Loose;
+
+        // child data
+        Offsetf offset = Offsetf::Zero();
+    };
 
 private:
-    JustifyContent justify_content = JustifyContent::FlexStart;
-    FlexDirection flex_direction = FlexDirection::Row;
-    AlignItems align_items = AlignItems::FlexStart;
-    Array<Flexable> flexables;
+    friend struct _FlexHelper;
+    EFlexDirection      _flex_direction       = EFlexDirection::Row;
+    EMainAxisAlignment  _main_axis_alignment  = EMainAxisAlignment::Start;
+    ECrossAxisAlignment _cross_axis_alignment = ECrossAxisAlignment::Start;
+    EMainAxisSize       _main_axis_size       = EMainAxisSize::Max;
+
+    float _overflow = 0.0f;
+
+    // MIXIN
+    MULTI_CHILD_RENDER_OBJECT_MIX_IN(RenderFlex, RenderBox, SlotData)
 };
 
-} // namespace gui
-} // namespace skr
+} // namespace skr::gui
