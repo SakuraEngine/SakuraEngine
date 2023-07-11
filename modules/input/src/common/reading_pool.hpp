@@ -2,7 +2,7 @@
 #include "common_layer.hpp"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/misc/log.h"
-#include <containers/concurrent_queue.h>
+#include <SkrRT/containers/concurrent_queue.h>
 
 namespace skr {
 namespace input {

@@ -29,7 +29,7 @@
 #include "SkrRT/platform/configure.h"
 #ifdef __cplusplus
 #include "SkrRT/platform/shared_library.hpp"
-#include <containers/string.hpp>
+#include <SkrRT/containers/string.hpp>
 #include <EASTL/vector.h>
 #include <EASTL/unique_ptr.h>
 

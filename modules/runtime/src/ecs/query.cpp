@@ -14,7 +14,7 @@
 #include <EASTL/sort.h>
 #include <EASTL/algorithm.h>
 #include <EASTL/numeric.h>
-#include <containers/string.hpp>
+#include <SkrRT/containers/string.hpp>
 #include "SkrRT/misc/bits.hpp"
 #include "scheduler.hpp"
 #include "containers/span.hpp"

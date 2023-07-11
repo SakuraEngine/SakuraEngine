@@ -11,7 +11,7 @@
     //#include "cgpu/backend/metal/cgpu_metal.h"
 #endif
 #include "common_utils.h"
-#include <containers/hashmap.hpp>
+#include <SkrRT/containers/hashmap.hpp>
 #include <EASTL/vector.h>
 
 // Runtime Table

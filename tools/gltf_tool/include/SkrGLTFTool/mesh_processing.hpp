@@ -3,7 +3,7 @@
 #include "SkrMeshCore/mesh_processing.hpp"
 #include "cgltf/cgltf.h"
 #include "SkrRT/io/io.h"
-#include <containers/string.hpp>
+#include <SkrRT/containers/string.hpp>
 
 namespace skd 
 {

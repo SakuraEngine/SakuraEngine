@@ -9,10 +9,10 @@
 #include "SkrRT/misc/log.hpp"
 
 #include <SkrRT/platform/filesystem.hpp>
-#include <containers/sptr.hpp>
-#include <containers/vector.hpp>
-#include <containers/string.hpp>
-#include <containers/hashmap.hpp>
+#include <SkrRT/containers/sptr.hpp>
+#include <SkrRT/containers/vector.hpp>
+#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers/hashmap.hpp>
 
 #include "serde/json/reader.h"
 #include "serde/json/writer.h"

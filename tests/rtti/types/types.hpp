@@ -6,7 +6,7 @@
 #include "resource/config_resource.h"
 #include "resource/resource_handle.h"
 #include "type/type.hpp"
-#include <containers/string.hpp>
+#include <SkrRT/containers/string.hpp>
 #include <EASTL/unique_ptr.h>
 #include "RTTITestTypes/module.configure.h"
 #if !defined(__meta__)

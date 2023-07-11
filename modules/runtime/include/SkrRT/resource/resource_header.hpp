@@ -1,7 +1,7 @@
 #pragma once
 #include "resource/resource_handle.h"
 #include <EASTL/fixed_vector.h>
-#include <containers/vector.hpp>
+#include <SkrRT/containers/vector.hpp>
 #include "SkrRT/platform/thread.h"
 
 #include "serde/binary/reader_fwd.h"

@@ -14,10 +14,10 @@
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/log.hpp"
 
-#include <containers/concurrent_queue.h>
-#include <containers/sptr.hpp>
-#include <containers/string.hpp>
-#include <containers/vector.hpp>
-#include <containers/hashmap.hpp>
+#include <SkrRT/containers/concurrent_queue.h>
+#include <SkrRT/containers/sptr.hpp>
+#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers/vector.hpp>
+#include <SkrRT/containers/hashmap.hpp>
 
 #include "tracy/Tracy.hpp"

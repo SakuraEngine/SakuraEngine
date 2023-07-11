@@ -27,7 +27,7 @@
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRenderer/render_effect.h"
 
-#include <containers/string.hpp>
+#include <SkrRT/containers/string.hpp>
 #include "async/fib_task.hpp"
 
 #include "resource/local_resource_registry.hpp"

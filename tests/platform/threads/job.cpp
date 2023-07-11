@@ -32,8 +32,8 @@ TEST(Job, JobQueue)
 
 #include "SkrRT/misc/log.h"
 #include "async/async_progress.hpp"
-#include <containers/string.hpp>
-#include <containers/sptr.hpp>
+#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers/sptr.hpp>
 
 using Progress = int;
 using InputParam1 = int;

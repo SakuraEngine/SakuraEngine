@@ -1,6 +1,6 @@
 #include "math.h"
 #include <EASTL/algorithm.h>
-#include <containers/string.hpp>
+#include <SkrRT/containers/string.hpp>
 
 #include "common/utils.h"
 

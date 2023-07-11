@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/platform/configure.h"
-#include <containers/hashmap.hpp>
+#include <SkrRT/containers/hashmap.hpp>
 #include <EASTL/deque.h>
 #include "cgpu/api.h"
 

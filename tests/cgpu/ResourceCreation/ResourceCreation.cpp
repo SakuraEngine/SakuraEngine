@@ -4,7 +4,7 @@
 #include "SkrRT/platform/configure.h"
 #include "gtest/gtest.h"
 #include "SkrRT/misc/log.h"
-#include <containers/string.hpp>
+#include <SkrRT/containers/string.hpp>
 #include <EASTL/vector.h>
 #include "cgpu/api.h"
 #include "spirv.h"

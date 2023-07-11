@@ -2,7 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <EASTL/set.h>
-#include <containers/string.hpp>
+#include <SkrRT/containers/string.hpp>
 #include "../common/common_utils.h"
 #include "SkrRT/platform/shared_library.hpp"
 #include "cgpu/extensions/cgpu_nsight.h"

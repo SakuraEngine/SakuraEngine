@@ -9,7 +9,7 @@
 #include "SkrRenderer/render_effect.h"
 #include "SkrRenderer/skr_renderer.h"
 
-#include <containers/hashmap.hpp>
+#include <SkrRT/containers/hashmap.hpp>
 #include <EASTL/vector.h>
 #include <EASTL/fixed_vector.h>
 
