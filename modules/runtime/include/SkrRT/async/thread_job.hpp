@@ -2,7 +2,7 @@
 #include "SkrRT/async/named_thread.hpp"
 #include "SkrRT/async/async_progress.hpp"
 
-#include "containers/vector.hpp"
+#include "SkrRT/containers/vector.hpp"
 #include <EASTL/list.h>
 
 enum ESkrJobItemStatus

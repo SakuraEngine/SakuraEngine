@@ -4,8 +4,8 @@
 #include "SkrRT/platform/win/misc.h"
 
 #include "SkrRT/misc/defer.hpp"
-#include "containers/vector.hpp"
-#include "containers/concurrent_queue.h"
+#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers/concurrent_queue.h"
 #include "EASTL/vector_map.h"
 #include "EASTL/algorithm.h"
 

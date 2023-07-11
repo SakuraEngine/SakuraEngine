@@ -3,10 +3,10 @@
 #include "MPShared/shared.h"
 #include "MPShared/world_delta.h"
 #include "SkrScene/scene.h"
-#include "containers/hashmap.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/async/fib_task.hpp"
 #include "SkrRT/platform/time.h"
-#include "containers/vector.hpp"
+#include "SkrRT/containers/vector.hpp"
 #include "SkrRT/ecs/entities.hpp"
 
 struct MP_SHARED_API MPServerWorld : MPGameWorld

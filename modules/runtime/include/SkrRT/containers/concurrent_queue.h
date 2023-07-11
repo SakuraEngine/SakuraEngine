@@ -1,5 +1,5 @@
 #pragma once
-#include "containers/detail/concurrent_queue.h"
+#include "SkrRT/containers/detail/concurrent_queue.h"
 #include "SkrRT/platform/configure.h"
 #include "SkrRT/platform/memory.h"
 

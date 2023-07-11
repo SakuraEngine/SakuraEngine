@@ -17,7 +17,7 @@
 #include <SkrRT/containers/string.hpp>
 #include "SkrRT/misc/bits.hpp"
 #include "scheduler.hpp"
-#include "containers/span.hpp"
+#include "SkrRT/containers/span.hpp"
 #if __SSE2__
     #include <emmintrin.h>
 #endif

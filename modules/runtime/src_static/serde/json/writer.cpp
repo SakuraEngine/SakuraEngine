@@ -1,7 +1,7 @@
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/serde/json/writer.h"
 #include "SkrRT/platform/debug.h"
-#include "containers/string.hpp"
+#include "SkrRT/containers/string.hpp"
 #include "tracy/Tracy.hpp"
 
 skr_json_writer_t::skr_json_writer_t(size_t levelDepth, skr_json_format_t format)

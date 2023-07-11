@@ -4,10 +4,10 @@
 #include "EASTL/deque.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "containers/function_ref.hpp"
+#include "SkrRT/containers/function_ref.hpp"
 #include "SkrRT/misc/defer.hpp"
-#include "containers/atomic_queue/atomic_queue.h"
-#include "containers/concurrent_queue.h"
+#include "SkrRT/containers/atomic_queue/atomic_queue.h"
+#include "SkrRT/containers/concurrent_queue.h"
 
 inline void nop() {
 #if defined(_WIN32)

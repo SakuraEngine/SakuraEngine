@@ -1,4 +1,4 @@
-#include "containers/hashmap.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 #include "lua/skr_lua.h"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/misc/defer.hpp"
@@ -14,7 +14,7 @@ extern "C"
 #include "luacode.h"
 }
 
-#include "containers/string.hpp"
+#include "SkrRT/containers/string.hpp"
 #include <EASTL/string.h>
 #include <EASTL/string_view.h>
 

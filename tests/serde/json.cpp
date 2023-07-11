@@ -1,7 +1,7 @@
 #include "SkrRT/serde/json/writer.h"
 #include "SkrRT/serde/json/reader.h"
-#include "containers/span.hpp"
-#include "containers/vector.hpp"
+#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers/vector.hpp"
 #include "gtest/gtest.h"
 
 class JSON : public ::testing::Test

@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/type/type.h"
 #include "enum_as_byte.hpp"
-#include "containers/string.hpp"
+#include "SkrRT/containers/string.hpp"
 #include <string_view> // TODO: replace with skr::string_view
 
 // fwd declares

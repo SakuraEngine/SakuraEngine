@@ -12,9 +12,9 @@ typedef enum ESkrJsonType
 
 #if defined(__cplusplus)
     #include <EASTL/vector.h>
-    #include "containers/variant.hpp"
-    #include "containers/string.hpp"
-    #include "containers/hashmap.hpp"
+    #include "SkrRT/containers/variant.hpp"
+    #include "SkrRT/containers/string.hpp"
+    #include "SkrRT/containers/hashmap.hpp"
     #include "SkrRT/type/type_helper.hpp"
 
 // forward declaration for resources

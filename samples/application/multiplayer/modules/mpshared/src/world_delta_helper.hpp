@@ -3,8 +3,8 @@
 #include "SkrRT/misc/parallel_for.hpp"
 #include "MPShared/components.h"
 
-#include "containers/string.hpp"
-#include "containers/vector.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/vector.hpp"
 
 template<class T, auto F, class H = void, bool bitpacking = false>
 skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWorldDeltaBuildContext ctx, MPWorldDeltaViewBuilder& builder)

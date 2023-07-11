@@ -104,7 +104,7 @@ typedef struct skr_ram_io_service_desc_t {
 } skr_ram_io_service_desc_t;
 
 #ifdef __cplusplus
-#include "containers/sptr.hpp"
+#include "SkrRT/containers/sptr.hpp"
 
 namespace skr {
 namespace io {

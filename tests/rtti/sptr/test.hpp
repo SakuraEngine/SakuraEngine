@@ -1,6 +1,6 @@
 #pragma once
 #include "gtest/gtest.h"
-#include "containers/sptr.hpp"
+#include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/platform/guid.hpp"
 

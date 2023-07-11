@@ -5,7 +5,7 @@
 #include "SkrRT/ecs/entities.hpp"
 #include "SkrRT/platform/thread.h"
 
-#include "containers/hashmap.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 
 namespace dual
 {

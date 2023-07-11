@@ -2,7 +2,7 @@
 #include "SkrInputSystem/module.configure.h"
 #include "SkrInput/input.h"
 #include "SkrRT/platform/atomic.h"
-#include "containers/detail/sptr.hpp"
+#include "SkrRT/containers/detail/sptr.hpp"
 
 namespace skr {
 namespace input {

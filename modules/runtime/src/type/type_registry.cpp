@@ -8,10 +8,10 @@
 #include "SkrRT/type/type.hpp"
 #include "SkrRT/type/type_serde.h"
 
-#include "containers/sptr.hpp"
-#include "containers/vector.hpp"
-#include "containers/hashmap.hpp"
-#include "containers/string.hpp"
+#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers/string.hpp"
 
 static auto& skr_get_type_name_map()
 {

@@ -3,7 +3,7 @@
 #include "SkrRT/misc/traits.hpp"
 #include "math/quat.h"
 
-#include "containers/string.hpp"
+#include "SkrRT/containers/string.hpp"
 
 class CommonMath : public ::testing::Test
 {

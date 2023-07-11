@@ -1,8 +1,8 @@
 #include "SkrRT/serde/binary/writer.h"
 #include "SkrRT/serde/binary/reader.h"
-#include "containers/string.hpp"
-#include "containers/span.hpp"
-#include "containers/vector.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers/vector.hpp"
 #include "gtest/gtest.h"
 
 class BINARY : public ::testing::Test

@@ -5,8 +5,8 @@
 #include "SkrRT/platform/debug.h"
 #include "EASTL/functional.h"
 #include "SkrRT/platform/thread.h"
-#include "containers/sptr.hpp"
-#include "containers/vector.hpp"
+#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/containers/vector.hpp"
 #include <EASTL/array.h>
 #if __cpp_lib_coroutine
     #include <coroutine>

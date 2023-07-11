@@ -1,6 +1,6 @@
 #pragma once
-#include "containers/detail/sptr.hpp"
-#include "containers/variant.hpp"
+#include "SkrRT/containers/detail/sptr.hpp"
+#include "SkrRT/containers/variant.hpp"
 #include "SkrRT/platform/configure.h"
 #include "SkrRT/misc/log.hpp"
 #include "resource/config_resource.h"

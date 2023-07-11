@@ -1,5 +1,5 @@
-#include "containers/hashmap.hpp"
-#include "containers/vector.hpp"
+#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers/vector.hpp"
 
 #include "SkrRenderer/render_viewport.h"
 #include "SkrRenderer/skr_renderer.h"

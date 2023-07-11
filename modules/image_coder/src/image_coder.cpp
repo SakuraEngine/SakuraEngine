@@ -2,7 +2,7 @@
 #include "SkrRT/misc/defer.hpp"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/debug.h"
-#include "containers/sptr.hpp"
+#include "SkrRT/containers/sptr.hpp"
 #include "SkrImageCoder/skr_image_coder.h"
 #include "image_coder_png.hpp"
 #include "image_coder_jpeg.hpp"

@@ -1,5 +1,5 @@
 #pragma once
-#include "containers/concurrent_queue.h"
+#include "SkrRT/containers/concurrent_queue.h"
 
 namespace dual
 {

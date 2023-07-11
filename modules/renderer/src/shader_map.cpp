@@ -8,9 +8,9 @@
 #include "SkrRT/platform/atomic.h"
 #include "SkrRT/async/thread_job.hpp"
 
-#include "containers/hashmap.hpp"
-#include "containers/string.hpp"
-#include "containers/sptr.hpp"
+#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/sptr.hpp"
 
 namespace skr
 {

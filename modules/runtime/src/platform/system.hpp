@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/platform/system.h"
-#include "containers/vector.hpp"
+#include "SkrRT/containers/vector.hpp"
 
 #include <EASTL/vector_map.h>
 

@@ -1,8 +1,8 @@
 #pragma once
 /* #ifdef CONTAINER_LITE_IMPL
-    #include "containers/vector.hpp"
-    #include "containers/string.hpp"
-    #include "containers/hashmap.hpp"
+    #include "SkrRT/containers/vector.hpp"
+    #include "SkrRT/containers/string.hpp"
+    #include "SkrRT/containers/hashmap.hpp"
     #include <new> // placement new operator
 #endif */
 #include "SkrRT/misc/types.h"

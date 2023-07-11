@@ -1,7 +1,7 @@
 #pragma once
 #include "lua/bind_fwd.hpp"
-#include "containers/string.hpp"
-#include "containers/sptr.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/misc/traits.hpp"
 #include "SkrRT/misc/join.hpp"

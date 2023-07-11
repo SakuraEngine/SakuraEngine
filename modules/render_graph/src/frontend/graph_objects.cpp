@@ -5,7 +5,7 @@
 #include <SkrRT/containers/hashmap.hpp>
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/hash.h"
-#include "containers/concurrent_queue.h"
+#include "SkrRT/containers/concurrent_queue.h"
 
 namespace skr
 {

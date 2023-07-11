@@ -2,10 +2,10 @@
 #ifdef INSPECT_USABLE
 #include "module/subsystem.hpp"
 #include "SkrRT/platform/filesystem.hpp"
-#include "containers/hashmap.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/platform/thread.h"
-#include "containers/btree.hpp"
-#include "containers/optional.hpp"
+#include "SkrRT/containers/btree.hpp"
+#include "SkrRT/containers/optional.hpp"
 #include <SkrRT/containers/variant.hpp>
 #include <SkrRT/containers/string.hpp>
 #include <chrono>

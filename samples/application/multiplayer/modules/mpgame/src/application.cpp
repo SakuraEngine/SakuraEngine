@@ -23,7 +23,7 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/guid.hpp"
 
-#include "containers/string.hpp"
+#include "SkrRT/containers/string.hpp"
 
 #include "math/vector.h"
 #include "EASTL/shared_ptr.h"

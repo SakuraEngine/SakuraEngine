@@ -1,7 +1,7 @@
 #pragma once
 #include "blob_fwd.h"
-#include "containers/span.hpp"
-#include "containers/string.hpp"
+#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers/string.hpp"
 #include "SkrRT/type/type_helper.hpp"
 #include "EASTL/vector.h"
 

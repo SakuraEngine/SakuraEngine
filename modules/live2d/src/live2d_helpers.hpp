@@ -13,7 +13,7 @@
 #include "Utils/CubismString.hpp"
 
 #include <EASTL/vector_map.h>
-#include "containers/string.hpp"
+#include "SkrRT/containers/string.hpp"
 
 namespace L2DF = Live2D::Cubism::Framework;
 

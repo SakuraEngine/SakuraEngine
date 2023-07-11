@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/misc/log/log_base.hpp"
-#include "containers/string.hpp"
+#include "SkrRT/containers/string.hpp"
 
 #include <EASTL/array.h>
 

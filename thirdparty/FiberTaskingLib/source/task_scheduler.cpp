@@ -29,7 +29,7 @@
 #include "ftl/fiber.h"
 #include "ftl/task_counter.h"
 #include "ftl/thread_abstraction.h"
-#include "containers/string.hpp"
+#include "SkrRT/containers/string.hpp"
 #include <memory>
 #include <mutex>
 #include "SkrRT/platform/memory.h"

@@ -4,10 +4,10 @@
     #define SIMDJSON_IMPLEMENTATION_HASWELL 0
     #define SIMDJSON_AVX512_ALLOWED 0
     #include "simdjson.h"
-    #include "containers/hashmap.hpp"
-    #include "containers/variant.hpp"
-    #include "containers/string.hpp"
-    #include "containers/vector.hpp"
+    #include "SkrRT/containers/hashmap.hpp"
+    #include "SkrRT/containers/variant.hpp"
+    #include "SkrRT/containers/string.hpp"
+    #include "SkrRT/containers/vector.hpp"
     #include "SkrRT/type/type_id.hpp"
     #include "SkrRT/platform/guid.hpp"
     #include "SkrRT/type/type_helper.hpp"

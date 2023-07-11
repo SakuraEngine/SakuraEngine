@@ -11,9 +11,9 @@
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 
-#include "containers/string.hpp"
-#include "containers/sptr.hpp"
-#include "containers/hashmap.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 
 #ifdef _WIN32
 //#include "SkrRT/platform/win/dstorage_windows.h"

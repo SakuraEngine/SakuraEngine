@@ -5,7 +5,7 @@
 #include "SkrRT/platform/atomic.h"
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/misc/log.h"
-#include "containers/resizable_ring_buffer.hpp"
+#include "SkrRT/containers/resizable_ring_buffer.hpp"
 #include "SDL2/SDL_timer.h"
 
 namespace skr {

@@ -13,7 +13,7 @@
 #include "SkrRT/platform/process.h"
 #include "SkrRT/misc/log.h"
 
-#include "containers/string.hpp"
+#include "SkrRT/containers/string.hpp"
 #include <EASTL/vector.h>
 
 typedef struct SProcess

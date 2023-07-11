@@ -1,5 +1,5 @@
 #include "../pch.hpp"
-#include "containers/hashmap.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 #include "module/module.hpp"
 
 #include "SkrShaderCompiler/module.configure.h"

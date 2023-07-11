@@ -12,7 +12,7 @@
 #include <SkrRT/containers/hashmap.hpp>
 #include <EASTL/shared_ptr.h>
 
-#include "containers/sptr.hpp"
+#include "SkrRT/containers/sptr.hpp"
 
 #ifdef DEBUG_ENABLED
     #define SORT_ARRAY_VALIDATE_ENABLED true

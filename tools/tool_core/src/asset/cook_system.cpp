@@ -5,7 +5,7 @@
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrRT/platform/guid.hpp"
-#include "containers/string.hpp"
+#include "SkrRT/containers/string.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/defer.hpp"
 #include "SkrRT/io/io.h"

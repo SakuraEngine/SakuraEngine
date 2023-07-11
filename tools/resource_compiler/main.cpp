@@ -27,7 +27,7 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrAnim/resources/skeleton_resource.h"
 #include "SkrAnim/resources/animation_resource.h"
-#include "containers/string.hpp"
+#include "SkrRT/containers/string.hpp"
 #include "tracy/Tracy.hpp"
 #include "SkrRT/misc/opt.hpp"
 

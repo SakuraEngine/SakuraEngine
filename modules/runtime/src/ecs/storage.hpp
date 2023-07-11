@@ -14,7 +14,7 @@
 #include "cache.hpp"
 #include "type.hpp"
 #include "set.hpp"
-#include "containers/hashmap.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 #include "EASTL/shared_ptr.h"
 #include "SkrRT/async/fib_task.hpp"
 #include "SkrRT/misc/lazy.hpp"

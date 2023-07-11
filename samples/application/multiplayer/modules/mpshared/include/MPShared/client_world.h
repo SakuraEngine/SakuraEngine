@@ -6,7 +6,7 @@
 #include "MPShared/world_delta.h"
 #include "SkrRT/serde/json/reader.h"
 #include "SkrRT/async/fib_task.hpp"
-#include "containers/hashmap.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 
 struct Prefab
 {

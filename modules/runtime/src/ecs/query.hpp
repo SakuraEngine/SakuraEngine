@@ -3,9 +3,9 @@
 #include "SkrRT/ecs/SmallVector.h"
 #include <EASTL/unique_ptr.h>
 
-#include "containers/string.hpp"
-#include "containers/span.hpp"
-#include "containers/hashmap.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 
 namespace dual
 {

@@ -14,9 +14,9 @@
 #include "SkrRT/misc/log.h"
 #include "cgpu/io.h"
 
-#include "containers/sptr.hpp"
-#include "containers/string.hpp"
-#include "containers/hashmap.hpp"
+#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 
 #include "tracy/Tracy.hpp"
 

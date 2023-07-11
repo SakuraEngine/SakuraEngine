@@ -3,7 +3,7 @@
 #include "pool.hpp"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/misc/defer.hpp"
-#include "containers/vector.hpp"
+#include "SkrRT/containers/vector.hpp"
 #include <EASTL/fixed_vector.h>
 
 namespace skr {
