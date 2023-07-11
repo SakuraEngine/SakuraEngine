@@ -1,5 +1,5 @@
 
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 #include "GameRuntime/gamert.h"
 #include "SkrImGui/skr_imgui.h"
 #include "SkrScene/scene.h"

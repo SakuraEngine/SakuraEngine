@@ -5,7 +5,7 @@
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 
-#include "ecs/type_builder.hpp"
+#include "SkrRT/ecs/type_builder.hpp"
 
 
 #include "SkrLive2D/skr_live2d.h"

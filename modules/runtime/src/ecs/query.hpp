@@ -1,6 +1,6 @@
 #pragma once
-#include "ecs/dual.h"
-#include "ecs/SmallVector.h"
+#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/SmallVector.h"
 #include <EASTL/unique_ptr.h>
 
 #include "containers/string.hpp"

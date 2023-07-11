@@ -1,6 +1,6 @@
 #pragma once
-#include "ecs/dual.h"
-#include "ecs/constants.hpp"
+#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/constants.hpp"
 
 namespace dual
 {

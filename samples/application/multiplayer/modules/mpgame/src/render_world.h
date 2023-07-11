@@ -1,10 +1,10 @@
 #pragma once
 
 #include "SkrRenderer/primitive_draw.h"
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 #include "MPShared/client_world.h"
 #include "SkrRenderGraph/api.h"
-#include "ecs/type_builder.hpp"
+#include "SkrRT/ecs/type_builder.hpp"
 
 struct MPRenderWorld
 {

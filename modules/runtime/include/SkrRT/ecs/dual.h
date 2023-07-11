@@ -826,8 +826,8 @@ struct dual_id_of {
     }
 };
 #include "type/type_helper.hpp"
-#include "ecs/callback.hpp"
-#include "ecs/type_builder.hpp"
+#include "SkrRT/ecs/callback.hpp"
+#include "SkrRT/ecs/type_builder.hpp"
 #include "SkrRT/misc/log.h"
 
 namespace dual

@@ -1,8 +1,8 @@
 #pragma once
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 #include "async/fib_task.hpp"
 #include "archetype.hpp"
-#include "ecs/entities.hpp"
+#include "SkrRT/ecs/entities.hpp"
 #include "SkrRT/platform/thread.h"
 
 #include "containers/hashmap.hpp"

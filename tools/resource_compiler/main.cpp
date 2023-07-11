@@ -2,7 +2,7 @@
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/platform/thread.h"
 #include "resource/config_resource.h"

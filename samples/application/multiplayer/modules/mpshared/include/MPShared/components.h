@@ -1,6 +1,6 @@
 #pragma once
 #include "MPShared/module.configure.h"
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 #include "containers/bitset.h"
 #include "containers/vector.hpp"
 #include "resource/resource_handle.h"

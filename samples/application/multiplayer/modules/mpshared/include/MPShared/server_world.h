@@ -7,7 +7,7 @@
 #include "async/fib_task.hpp"
 #include "SkrRT/platform/time.h"
 #include "containers/vector.hpp"
-#include "ecs/entities.hpp"
+#include "SkrRT/ecs/entities.hpp"
 
 struct MP_SHARED_API MPServerWorld : MPGameWorld
 {

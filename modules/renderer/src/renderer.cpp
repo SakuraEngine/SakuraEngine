@@ -1,7 +1,7 @@
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "ecs/dual.h"
-#include "ecs/array.hpp"
+#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/array.hpp"
 
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 

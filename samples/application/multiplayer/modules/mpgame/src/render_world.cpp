@@ -2,9 +2,9 @@
 
 #include "MPShared/components.h"
 #include "SkrRenderer/render_effect.h"
-#include "ecs/type_builder.hpp"
+#include "SkrRT/ecs/type_builder.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "ecs/set.hpp"
+#include "SkrRT/ecs/set.hpp"
 #include "math/vector.h"
 #include "math/quat.h"
 

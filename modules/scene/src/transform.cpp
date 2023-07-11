@@ -1,7 +1,7 @@
-#include "ecs/array.hpp"
-#include "ecs/dual.h"
+#include "SkrRT/ecs/array.hpp"
+#include "SkrRT/ecs/dual.h"
 
-#include "ecs/dual_config.h"
+#include "SkrRT/ecs/dual_config.h"
 #include "SkrRT/misc/parallel_for.hpp"
 #include "SkrScene/scene.h"
 #include "math/matrix4x4f.h"

@@ -5,9 +5,9 @@
 #include "SkrRT/misc/parallel_for.hpp"
 #include "SkrRT/misc/log.h"
 
-#include "ecs/type_builder.hpp"
-#include "ecs/set.hpp"
-#include "ecs/array.hpp"
+#include "SkrRT/ecs/type_builder.hpp"
+#include "SkrRT/ecs/set.hpp"
+#include "SkrRT/ecs/array.hpp"
 #include "SkrRT/serde/json/writer.h"
 #include "steam/isteamnetworkingsockets.h"
 #include "steam/steamnetworkingsockets.h"

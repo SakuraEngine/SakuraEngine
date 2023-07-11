@@ -10,10 +10,10 @@
     records = generator.filter_records(db.records)
 %>
 // BEGIN DUAL GENERATED
-#include "ecs/dual.h"
-#include "ecs/array.hpp"
-#include "ecs/luabind.hpp"
-#include "ecs/serde.hpp"
+#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/array.hpp"
+#include "SkrRT/ecs/luabind.hpp"
+#include "SkrRT/ecs/serde.hpp"
 
 %for type in records:
 static struct RegisterComponent${type.id}Helper

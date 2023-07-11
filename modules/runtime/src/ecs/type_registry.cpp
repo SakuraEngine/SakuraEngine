@@ -1,8 +1,8 @@
 #include <string.h>
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 #include "pool.hpp"
 #include "type.hpp"
-#include "ecs/constants.hpp"
+#include "SkrRT/ecs/constants.hpp"
 #include "type_registry.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 

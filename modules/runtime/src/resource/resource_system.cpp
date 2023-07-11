@@ -1,7 +1,7 @@
 #include "resource_request_impl.hpp"
 #include "async/fib_task.hpp"
 #include "SkrRT/platform/guid.hpp"
-#include "ecs/entities.hpp"
+#include "SkrRT/ecs/entities.hpp"
 #include "SkrRT/platform/debug.h"
 #include "containers/hashmap.hpp"
 #include "SkrRT/io/io.h"

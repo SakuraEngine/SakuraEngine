@@ -1,14 +1,14 @@
 #include "type_registry.hpp"
-#include "ecs/SmallVector.h"
+#include "SkrRT/ecs/SmallVector.h"
 #include "archetype.hpp"
 #include "arena.hpp"
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 #include "query.hpp"
 #include "stack.hpp"
 #include "storage.hpp"
 #include "type.hpp"
 #include "set.hpp"
-#include "ecs/constants.hpp"
+#include "SkrRT/ecs/constants.hpp"
 
 #include <EASTL/string.h>
 #include <EASTL/sort.h>

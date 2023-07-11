@@ -6,10 +6,10 @@
 
 #include "containers/string.hpp"
 
-#include "ecs/dual.h"
-#include "ecs/type_builder.hpp"
+#include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/type_builder.hpp"
 
-#include "ecs/array.hpp"
+#include "SkrRT/ecs/array.hpp"
 
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrScene/scene.h"

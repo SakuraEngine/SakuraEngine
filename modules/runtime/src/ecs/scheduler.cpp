@@ -1,8 +1,8 @@
 #include "scheduler.hpp"
-#include "ecs/SmallVector.h"
+#include "SkrRT/ecs/SmallVector.h"
 
-#include "ecs/constants.hpp"
-#include "ecs/dual.h"
+#include "SkrRT/ecs/constants.hpp"
+#include "SkrRT/ecs/dual.h"
 #include "query.hpp"
 #include "storage.hpp"
 

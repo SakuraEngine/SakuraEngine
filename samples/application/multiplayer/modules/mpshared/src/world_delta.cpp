@@ -2,14 +2,14 @@
 #include "MPShared/components.h"
 #include "containers/hashmap.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "ecs/type_builder.hpp"
+#include "SkrRT/ecs/type_builder.hpp"
 #include "containers/vector.hpp"
-#include "ecs/set.hpp"
+#include "SkrRT/ecs/set.hpp"
 
-#include "ecs/array.hpp"
+#include "SkrRT/ecs/array.hpp"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/platform/time.h"
-#include "ecs/entity.hpp"
+#include "SkrRT/ecs/entity.hpp"
 
 BandwidthCounter::BandwidthCounter()
     : dataRecord(30)

@@ -1,5 +1,5 @@
 #pragma once
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/serde/binary/writer.h"
 #include "SkrRT/serde/json/reader.h"

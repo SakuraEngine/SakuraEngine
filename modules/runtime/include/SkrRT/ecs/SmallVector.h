@@ -22,7 +22,7 @@
 #include <cstring>
 #include <initializer_list>
 #include <iterator>
-#include "ecs/dual_config.h"
+#include "SkrRT/ecs/dual_config.h"
 
 // LLVM Macros
 #define LLVM_VECSMALL_NODISCARD

@@ -1,5 +1,5 @@
 #pragma once
-#include "ecs/dual_config.h"
+#include "SkrRT/ecs/dual_config.h"
 #include <EASTL/numeric_limits.h>
 
 namespace dual

@@ -1,7 +1,7 @@
 
 #include "chunk.hpp"
 #include "pool.hpp"
-#include "ecs/constants.hpp"
+#include "SkrRT/ecs/constants.hpp"
 #include "pool.hpp"
 #include "archetype.hpp"
 

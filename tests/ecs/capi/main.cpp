@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "SkrRT/platform/crash.h"
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 #include "guid.hpp" //for guid
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.h"

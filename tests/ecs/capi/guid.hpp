@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/platform/debug.h"
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 #include <string>
 
 namespace guid_parse

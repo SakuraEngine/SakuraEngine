@@ -7,7 +7,7 @@
 #include "cgpu/cgpux.h"
 
 
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrScene/scene.h"

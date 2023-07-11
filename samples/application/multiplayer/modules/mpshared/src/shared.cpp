@@ -3,7 +3,7 @@
 #include "math/quat.h"
 #include "SkrScene/scene.h"
 #include "MPShared/components.h"
-#include "ecs/type_builder.hpp"
+#include "SkrRT/ecs/type_builder.hpp"
 #include "SkrRT/platform/atomic.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 

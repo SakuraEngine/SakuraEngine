@@ -1,2 +1,2 @@
 #pragma once
-#include "ecs/dual_types.h"
+#include "SkrRT/ecs/dual_types.h"

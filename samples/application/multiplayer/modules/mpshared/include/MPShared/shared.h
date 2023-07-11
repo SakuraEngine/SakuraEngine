@@ -1,6 +1,6 @@
 #pragma once
 #include "MPShared/module.configure.h"
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 #include "steam/steamnetworkingtypes.h"
 #include "containers/vector.hpp"
 #include "SkrScene/scene.h"
