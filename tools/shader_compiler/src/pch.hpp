@@ -21,7 +21,10 @@
     #ifndef WIN32_LEAN_AND_MEAN
 	#define WIN32_LEAN_AND_MEAN
     #endif
-    #include <atlbase.h>
+    #include <wtypes.h>
+    #include <unknwn.h>
+    #include <winbase.h>
+    #include <winioctl.h>
 #endif
 #include "dxc/dxcapi.h"
 
