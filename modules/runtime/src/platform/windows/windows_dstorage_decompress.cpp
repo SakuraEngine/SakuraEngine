@@ -1,4 +1,3 @@
-#include "SkrRT/platform/windows/windows_dstorage.hpp"
 #include "SkrRT/platform/win/dstorage_windows.h"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/thread.h"
@@ -6,6 +5,7 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/async/thread_job.hpp"
 
+#include "platform/windows/windows_dstorage.hpp"
 #include <EASTL/string.h>
 #include <EASTL/vector_map.h>
 

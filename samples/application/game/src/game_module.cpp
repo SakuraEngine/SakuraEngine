@@ -30,7 +30,7 @@
 #include <SkrRT/containers/string.hpp>
 #include "SkrRT/async/fib_task.hpp"
 
-#include "resource/local_resource_registry.hpp"
+#include "SkrRT/resource/local_resource_registry.hpp"
 #include "SkrRenderer/shader_map.h"
 #include "SkrRenderer/render_viewport.h"
 #include "SkrRenderer/resources/texture_resource.h"
