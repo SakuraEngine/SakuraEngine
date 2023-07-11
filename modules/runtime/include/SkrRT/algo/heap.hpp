@@ -59,6 +59,18 @@ SKR_INLINE TS heap_sift_up(T* heap, TS root_idx, TS node_idx, TP&& p = TP())
     return node_idx;
 }
 
+// is heap
+template <typename T, typename TS, typename TP = Less<>>
+SKR_INLINE bool is_heap(T* heap, TS count, TP&& p = TP())
+{
+    for (TS i = 1; i < count; ++i)
+    {
+        if (p(*(heap + i), *(heap + heapParentIdx(i))))
+            return false;
+    }
+    return true;
+}
+
 // heapify
 template <typename T, typename TS, typename TP = Less<>>
 SKR_INLINE void heapify(T* heap, TS count, TP&& p = TP())
