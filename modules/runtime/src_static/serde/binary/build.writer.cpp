@@ -3,8 +3,8 @@
 #include "SkrRT/serde/binary/writer.h"
 #include "SkrRT/serde/binary/blob.h"
 #include "SkrRT/misc/bits.hpp"
-#include "math/rtm/scalarf.h"
-#include "math/rtm/scalard.h"
+#include "SkrRT/math/rtm/scalarf.h"
+#include "SkrRT/math/rtm/scalard.h"
 #include "SkrRT/misc/log.h"
 
 namespace skr::binary

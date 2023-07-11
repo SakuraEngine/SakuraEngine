@@ -3,8 +3,8 @@
 
 #include "SkrRenderer/render_viewport.h"
 #include "SkrRenderer/skr_renderer.h"
-#include "math/rtm/vector4f.h"
-#include "math/rtm/rtmx.h"
+#include "SkrRT/math/rtm/vector4f.h"
+#include "SkrRT/math/rtm/rtmx.h"
 
 struct SViewportManagerImpl : public SViewportManager
 {

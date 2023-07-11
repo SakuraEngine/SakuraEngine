@@ -24,11 +24,11 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "math/rtm/types.h"
-#include "math/rtm/impl/compiler_utils.h"
-#include "math/rtm/scalarf.h"
-#include "math/rtm/scalard.h"
-#include "math/rtm/version.h"
+#include "SkrRT/math/rtm/types.h"
+#include "SkrRT/math/rtm/impl/compiler_utils.h"
+#include "SkrRT/math/rtm/scalarf.h"
+#include "SkrRT/math/rtm/scalard.h"
+#include "SkrRT/math/rtm/version.h"
 
 #include <cstdint>
 #include <cstring>

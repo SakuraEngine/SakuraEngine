@@ -24,6 +24,6 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "math/rtm/impl/macros.mask4.impl.h"
-#include "math/rtm/impl/macros.matrix.impl.h"
-#include "math/rtm/impl/macros.vector4.impl.h"
+#include "SkrRT/math/rtm/impl/macros.mask4.impl.h"
+#include "SkrRT/math/rtm/impl/macros.matrix.impl.h"
+#include "SkrRT/math/rtm/impl/macros.vector4.impl.h"

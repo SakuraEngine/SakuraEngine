@@ -24,8 +24,8 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "math/rtm/version.h"
-#include "math/rtm/impl/compiler_utils.h"
+#include "SkrRT/math/rtm/version.h"
+#include "SkrRT/math/rtm/impl/compiler_utils.h"
 
 //////////////////////////////////////////////////////////////////////////
 // Include cmath header and polyfill what is missing for proper C++11 support

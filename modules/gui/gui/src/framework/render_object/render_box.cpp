@@ -1,7 +1,7 @@
 #include "SkrGui/framework/render_object/render_box.hpp"
 #include <algorithm>
-#include "math/matrix4x4f.h"
-#include "math/vector.h"
+#include "SkrRT/math/matrix4x4f.h"
+#include "SkrRT/math/vector.h"
 
 namespace skr::gui
 {

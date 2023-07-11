@@ -1,6 +1,6 @@
 #pragma once
-#include "math/rtm/matrix4x4f.h"
-#include "math/rtm/mask4i.h"
+#include "SkrRT/math/rtm/matrix4x4f.h"
+#include "SkrRT/math/rtm/mask4i.h"
 
 // RH
 namespace rtm

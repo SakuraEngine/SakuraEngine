@@ -1,5 +1,5 @@
 #pragma once
-#include "math/rtm/vector4f.h"
+#include "SkrRT/math/rtm/vector4f.h"
 #include "SkrRT/misc/types.h"
 
 namespace skr

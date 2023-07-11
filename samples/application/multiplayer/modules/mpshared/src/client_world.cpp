@@ -12,7 +12,7 @@
 #include "steam/isteamnetworkingutils.h"
 #include "steam/isteamnetworkingsockets.h"
 #include "steam/steamnetworkingsockets.h"
-#include "math/vector.h"
+#include "SkrRT/math/vector.h"
 #include "lz4.h"
 MPClientWorld::MPClientWorld()
 {

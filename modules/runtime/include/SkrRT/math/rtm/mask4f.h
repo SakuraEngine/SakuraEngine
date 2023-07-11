@@ -24,11 +24,11 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "math/rtm/math.h"
-#include "math/rtm/version.h"
-#include "math/rtm/impl/compiler_utils.h"
-#include "math/rtm/impl/macros.mask4.impl.h"
-#include "math/rtm/impl/mask_common.h"
+#include "SkrRT/math/rtm/math.h"
+#include "SkrRT/math/rtm/version.h"
+#include "SkrRT/math/rtm/impl/compiler_utils.h"
+#include "SkrRT/math/rtm/impl/macros.mask4.impl.h"
+#include "SkrRT/math/rtm/impl/mask_common.h"
 
 #if !defined(RTM_SSE2_INTRINSICS)
 	#include <cstring>

@@ -24,10 +24,10 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "math/rtm/math.h"
-#include "math/rtm/version.h"
-#include "math/rtm/impl/compiler_utils.h"
-#include "math/rtm/impl/mask_common.h"
+#include "SkrRT/math/rtm/math.h"
+#include "SkrRT/math/rtm/version.h"
+#include "SkrRT/math/rtm/impl/compiler_utils.h"
+#include "SkrRT/math/rtm/impl/mask_common.h"
 
 RTM_IMPL_FILE_PRAGMA_PUSH
 

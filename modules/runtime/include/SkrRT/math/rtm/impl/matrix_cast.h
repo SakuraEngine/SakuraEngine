@@ -24,11 +24,11 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "math/rtm/math.h"
-#include "math/rtm/vector4f.h"
-#include "math/rtm/vector4d.h"
-#include "math/rtm/version.h"
-#include "math/rtm/impl/compiler_utils.h"
+#include "SkrRT/math/rtm/math.h"
+#include "SkrRT/math/rtm/vector4f.h"
+#include "SkrRT/math/rtm/vector4d.h"
+#include "SkrRT/math/rtm/version.h"
+#include "SkrRT/math/rtm/impl/compiler_utils.h"
 
 RTM_IMPL_FILE_PRAGMA_PUSH
 

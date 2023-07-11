@@ -24,8 +24,8 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "math/rtm/types.h"
-#include "math/rtm/version.h"
+#include "SkrRT/math/rtm/types.h"
+#include "SkrRT/math/rtm/version.h"
 
 namespace rtm
 {

@@ -25,7 +25,7 @@
 
 #include "SkrRT/containers/string.hpp"
 
-#include "math/vector.h"
+#include "SkrRT/math/vector.h"
 #include "EASTL/shared_ptr.h"
 #include "SkrScene/scene.h"
 #include "SkrRT/misc/parallel_for.hpp"

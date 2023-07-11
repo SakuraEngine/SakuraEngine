@@ -1,14 +1,14 @@
 #include "MPShared/shared.h"
-#include "math/vector.h"
-#include "math/quat.h"
+#include "SkrRT/math/vector.h"
+#include "SkrRT/math/quat.h"
 #include "SkrScene/scene.h"
 #include "MPShared/components.h"
 #include "SkrRT/ecs/type_builder.hpp"
 #include "SkrRT/platform/atomic.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 
-#include "math/rtm/quatf.h"
-#include "math/rtm/rtmx.h"
+#include "SkrRT/math/rtm/quatf.h"
+#include "SkrRT/math/rtm/rtmx.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/platform/guid.hpp"
 

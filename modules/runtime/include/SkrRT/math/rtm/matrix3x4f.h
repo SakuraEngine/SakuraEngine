@@ -25,15 +25,15 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "math/rtm/macros.h"
-#include "math/rtm/math.h"
-#include "math/rtm/matrix3x3f.h"
-#include "math/rtm/quatf.h"
-#include "math/rtm/vector4f.h"
-#include "math/rtm/version.h"
-#include "math/rtm/impl/compiler_utils.h"
-#include "math/rtm/impl/matrix_common.h"
-#include "math/rtm/impl/matrix_affine_common.h"
+#include "SkrRT/math/rtm/macros.h"
+#include "SkrRT/math/rtm/math.h"
+#include "SkrRT/math/rtm/matrix3x3f.h"
+#include "SkrRT/math/rtm/quatf.h"
+#include "SkrRT/math/rtm/vector4f.h"
+#include "SkrRT/math/rtm/version.h"
+#include "SkrRT/math/rtm/impl/compiler_utils.h"
+#include "SkrRT/math/rtm/impl/matrix_common.h"
+#include "SkrRT/math/rtm/impl/matrix_affine_common.h"
 
 RTM_IMPL_FILE_PRAGMA_PUSH
 

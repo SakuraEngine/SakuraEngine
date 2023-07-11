@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/misc/types.h"
-#include "math/rtm/rtmx.h"
+#include "SkrRT/math/rtm/rtmx.h"
 
 struct CubeGeometry {
     struct InstanceData {

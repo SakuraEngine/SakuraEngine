@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "SkrRT/misc/types.h"
 #include "SkrRT/misc/traits.hpp"
-#include "math/quat.h"
+#include "SkrRT/math/quat.h"
 
 #include "SkrRT/containers/string.hpp"
 

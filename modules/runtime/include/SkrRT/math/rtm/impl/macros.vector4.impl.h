@@ -26,8 +26,8 @@
 
 // Included only once from macros.h
 
-#include "math/rtm/math.h"
-#include "math/rtm/impl/compiler_utils.h"
+#include "SkrRT/math/rtm/math.h"
+#include "SkrRT/math/rtm/impl/compiler_utils.h"
 
 RTM_IMPL_FILE_PRAGMA_PUSH
 

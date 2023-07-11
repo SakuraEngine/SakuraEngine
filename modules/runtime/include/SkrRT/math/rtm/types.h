@@ -25,8 +25,8 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "math/rtm/math.h"
-#include "math/rtm/version.h"
+#include "SkrRT/math/rtm/math.h"
+#include "SkrRT/math/rtm/version.h"
 
 #include <cstdint>
 
@@ -552,4 +552,4 @@ namespace rtm
 }
 
 // Always include the register passing typedefs
-#include "math/rtm/impl/type_args.h"
+#include "SkrRT/math/rtm/impl/type_args.h"

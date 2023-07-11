@@ -25,14 +25,14 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "math/rtm/macros.h"
-#include "math/rtm/math.h"
-#include "math/rtm/scalarf.h"
-#include "math/rtm/version.h"
-#include "math/rtm/impl/compiler_utils.h"
-#include "math/rtm/impl/macros.mask4.impl.h"
-#include "math/rtm/impl/memory_utils.h"
-#include "math/rtm/impl/vector_common.h"
+#include "SkrRT/math/rtm/macros.h"
+#include "SkrRT/math/rtm/math.h"
+#include "SkrRT/math/rtm/scalarf.h"
+#include "SkrRT/math/rtm/version.h"
+#include "SkrRT/math/rtm/impl/compiler_utils.h"
+#include "SkrRT/math/rtm/impl/macros.mask4.impl.h"
+#include "SkrRT/math/rtm/impl/memory_utils.h"
+#include "SkrRT/math/rtm/impl/vector_common.h"
 
 RTM_IMPL_FILE_PRAGMA_PUSH
 

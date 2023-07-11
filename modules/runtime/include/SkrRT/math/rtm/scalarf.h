@@ -25,13 +25,13 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "math/rtm/constants.h"
-#include "math/rtm/macros.h"
-#include "math/rtm/math.h"
-#include "math/rtm/version.h"
-#include "math/rtm/impl/cmath.impl.h"
-#include "math/rtm/impl/compiler_utils.h"
-#include "math/rtm/impl/scalar_common.h"
+#include "SkrRT/math/rtm/constants.h"
+#include "SkrRT/math/rtm/macros.h"
+#include "SkrRT/math/rtm/math.h"
+#include "SkrRT/math/rtm/version.h"
+#include "SkrRT/math/rtm/impl/cmath.impl.h"
+#include "SkrRT/math/rtm/impl/compiler_utils.h"
+#include "SkrRT/math/rtm/impl/scalar_common.h"
 
 #include <algorithm>
 
