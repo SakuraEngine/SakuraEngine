@@ -14,10 +14,13 @@ struct memory_traits {
     static constexpr bool use_assign = true;
     static constexpr bool use_move_assign = true;
 
-    // can use realloc for fast alloc
+    // special case for move
+    static constexpr bool need_dtor_after_move = true;
+
+    // use realloc for fast alloc
     static constexpr bool use_realloc = false;
 
-    // need call compare operator
+    // need call compare operator (otherwise call memcmp)
     static constexpr bool use_compare = true;
 };
 template <typename T>
@@ -30,10 +33,13 @@ struct memory_traits<T, T> {
     static constexpr bool use_assign = !std::is_trivially_assignable_v<std::add_lvalue_reference_t<T>, std::add_lvalue_reference_t<T>>;
     static constexpr bool use_move_assign = !std::is_trivially_move_assignable_v<T>;
 
-    // can use realloc for fast alloc
+    // special case for move
+    static constexpr bool need_dtor_after_move = use_dtor;
+
+    // use realloc for fast alloc
     static constexpr bool use_realloc = std::is_trivial_v<T> && std::is_trivially_destructible_v<T>;
 
-    // need call compare operator otherwise call memcmp
+    // need call compare operator (otherwise call memcmp)
     static constexpr bool use_compare = !std::is_trivial_v<T>;
 };
 template <typename T>
@@ -46,10 +52,13 @@ struct memory_traits<T*, T*> {
     static constexpr bool use_assign = false;
     static constexpr bool use_move_assign = false;
 
-    // can use realloc for fast alloc
+    // special case for move
+    static constexpr bool need_dtor_after_move = false;
+
+    // use realloc for fast alloc
     static constexpr bool use_realloc = true;
 
-    // need call compare operator
+    // need call compare operator (otherwise call memcmp)
     static constexpr bool use_compare = false;
 };
 template <typename A, typename B>
@@ -60,9 +69,9 @@ struct memory_traits<const A, B> : public memory_traits<A, B> {
 // impl for basic type
 namespace skr::memory
 {
-#define SKR_IMPL_BASIC_MEM_POLICY(dst, src)             \
+#define SKR_IMPL_BASIC_MEM_POLICY(__DST, __SRC)         \
     template <>                                         \
-    struct memory_traits<dst, src> {                    \
+    struct memory_traits<__DST, __SRC> {                \
         static constexpr bool call_ctor = false;        \
         static constexpr bool call_dtor = false;        \
         static constexpr bool call_copy = false;        \

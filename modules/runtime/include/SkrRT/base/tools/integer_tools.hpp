@@ -55,3 +55,13 @@ SKR_INLINE T int_div_round(T a, T b)
     return (a >= 0) ? (a + b / 2) / b : (a - b / 2 + 1) / b;
 }
 } // namespace skr
+
+// npos
+namespace skr
+{
+template <typename T>
+inline constexpr T npos_of = static_cast<T>(-1);
+
+template <typename T>
+inline constexpr T max_size_of = std::is_signed_v<T> ? std::numeric_limits<T>::max() : std::numeric_limits<T>::max() - 1;
+} // namespace skr
