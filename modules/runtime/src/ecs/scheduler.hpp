@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/ecs/dual.h"
-#include "async/fib_task.hpp"
+#include "SkrRT/async/fib_task.hpp"
 #include "archetype.hpp"
 #include "SkrRT/ecs/entities.hpp"
 #include "SkrRT/platform/thread.h"

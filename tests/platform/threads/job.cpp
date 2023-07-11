@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "SkrRT/platform/crash.h"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "async/thread_job.hpp"
+#include "SkrRT/async/thread_job.hpp"
 
 TEST(Job, JobQueue)
 {
@@ -31,7 +31,7 @@ TEST(Job, JobQueue)
 }
 
 #include "SkrRT/misc/log.h"
-#include "async/async_progress.hpp"
+#include "SkrRT/async/async_progress.hpp"
 #include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/sptr.hpp>
 

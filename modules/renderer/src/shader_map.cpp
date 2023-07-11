@@ -6,7 +6,7 @@
 #include "SkrRT/misc/defer.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/atomic.h"
-#include "async/thread_job.hpp"
+#include "SkrRT/async/thread_job.hpp"
 
 #include "containers/hashmap.hpp"
 #include "containers/string.hpp"

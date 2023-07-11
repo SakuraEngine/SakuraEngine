@@ -28,7 +28,7 @@
 #include "SkrRenderer/render_effect.h"
 
 #include <SkrRT/containers/string.hpp>
-#include "async/fib_task.hpp"
+#include "SkrRT/async/fib_task.hpp"
 
 #include "resource/local_resource_registry.hpp"
 #include "SkrRenderer/shader_map.h"
@@ -45,7 +45,7 @@
 #include "SkrAnim/components/skeleton_component.h"
 #include "GameRuntime/game_animation.h"
 
-#include "async/thread_job.hpp"
+#include "SkrRT/async/thread_job.hpp"
 
 #include "tracy/Tracy.hpp"
 #include "SkrRT/misc/types.h"

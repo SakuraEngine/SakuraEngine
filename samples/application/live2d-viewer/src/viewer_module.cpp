@@ -12,7 +12,7 @@
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/platform/time.h"
 #include "SkrRT/platform/filesystem.hpp"
-#include "async/thread_job.hpp"
+#include "SkrRT/async/thread_job.hpp"
 
 #include "SkrRT/misc/log.h"
 #include "cgpu/io.h"

@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrRT/platform/configure.h"
 #ifdef __cplusplus
-#include "async/named_thread.hpp"
-#include "async/condlock.hpp"
+#include "SkrRT/async/named_thread.hpp"
+#include "SkrRT/async/condlock.hpp"
 #endif
 
 typedef enum SkrAsyncServiceStatus

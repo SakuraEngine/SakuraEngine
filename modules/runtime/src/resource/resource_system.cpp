@@ -1,5 +1,5 @@
 #include "resource_request_impl.hpp"
-#include "async/fib_task.hpp"
+#include "SkrRT/async/fib_task.hpp"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/ecs/entities.hpp"
 #include "SkrRT/platform/debug.h"

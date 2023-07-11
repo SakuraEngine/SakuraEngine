@@ -3,7 +3,7 @@
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/io/io.h"
-#include "async/thread_job.hpp"
+#include "SkrRT/async/thread_job.hpp"
 
 #include "containers/string.hpp"
 

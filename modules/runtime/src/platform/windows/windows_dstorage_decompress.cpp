@@ -4,7 +4,7 @@
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "async/thread_job.hpp"
+#include "SkrRT/async/thread_job.hpp"
 
 #include <EASTL/string.h>
 #include <EASTL/vector_map.h>

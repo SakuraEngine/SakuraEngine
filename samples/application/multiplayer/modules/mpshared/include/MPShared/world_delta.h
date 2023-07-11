@@ -4,7 +4,7 @@
 #include "SkrRT/misc/types.h"
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/platform/guid.hpp"
-#include "async/fib_task.hpp"
+#include "SkrRT/async/fib_task.hpp"
 #include "containers/hashmap.hpp"
 #include "containers/vector.hpp"
 #include "EASTL/functional.h"

@@ -5,8 +5,8 @@
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "async/thread_job.hpp"
-#include "async/wait_timeout.hpp"
+#include "SkrRT/async/thread_job.hpp"
+#include "SkrRT/async/wait_timeout.hpp"
 #include "SkrRT/io/io.h"
 #include "gtest/gtest.h"
 
