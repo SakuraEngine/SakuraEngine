@@ -12,7 +12,7 @@
 #include "live2d_helpers.hpp"
 
 #include <string> // TODO: replace this (std::stoi)
-#include <platform/filesystem.hpp>
+#include <SkrRT/platform/filesystem.hpp>
 
 #include "SkrImageCoder/skr_image_coder.h"
 #ifdef _WIN32

@@ -6,7 +6,7 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_mesh.h"
-#include <platform/filesystem.hpp>
+#include <SkrRT/platform/filesystem.hpp>
 
 #include "tracy/Tracy.hpp"
 

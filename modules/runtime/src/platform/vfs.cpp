@@ -1,5 +1,5 @@
 #include "SkrRT/platform/vfs.h"
-#include <platform/filesystem.hpp>
+#include <SkrRT/platform/filesystem.hpp>
 #include "containers/string.hpp"
 
 void skr_vfs_get_parent_path(const char8_t* path, char8_t* output)

@@ -6,7 +6,7 @@
 #include "SkrRT/io/io.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/thread.h"
-#include <platform/filesystem.hpp>
+#include <SkrRT/platform/filesystem.hpp>
 #include "SkrRenderer/render_mesh.h"
 #include "resource/resource_factory.h"
 #include "resource/resource_system.h"

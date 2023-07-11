@@ -8,7 +8,7 @@
 #include "SkrRT/misc/types.h"
 #include "SkrRT/misc/log.hpp"
 
-#include <platform/filesystem.hpp>
+#include <SkrRT/platform/filesystem.hpp>
 #include <containers/sptr.hpp>
 #include <containers/vector.hpp>
 #include <containers/string.hpp>

@@ -1,7 +1,7 @@
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/misc/log.h"
 #include <string.h>
-#include <platform/filesystem.hpp>
+#include <SkrRT/platform/filesystem.hpp>
 #include "SkrRT/platform/memory.h"
 
 #include "tracy/Tracy.hpp"
