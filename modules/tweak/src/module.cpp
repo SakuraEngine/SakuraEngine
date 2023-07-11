@@ -3,14 +3,14 @@
 #ifdef TWEAK_USABLE
 #include <fstream>
 #include "efsw/efsw.hpp"
-#include "platform/filesystem.hpp"
-#include "platform/thread.h"
-#include "misc/hash.h"
-#include "misc/log.h"
-#include <containers/hashmap.hpp>
+#include "SkrRT/platform/filesystem.hpp"
+#include "SkrRT/platform/thread.h"
+#include "SkrRT/misc/hash.h"
+#include "SkrRT/misc/log.h"
+#include <SkrRT/containers/hashmap.hpp>
 #include <EASTL/vector.h>
-#include <containers/variant.hpp>
-#include <containers/string.hpp>
+#include <SkrRT/containers/variant.hpp>
+#include <SkrRT/containers/string.hpp>
 
 struct skr_tweak_value_t
 {

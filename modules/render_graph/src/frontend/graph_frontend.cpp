@@ -2,16 +2,16 @@
 #include "SkrRenderGraph/frontend/resource_node.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
-#include "platform/memory.h"
+#include "SkrRT/platform/memory.h"
 
 // use backend pool for aliasing calculation
 #include "SkrRenderGraph/backend/texture_view_pool.hpp"
 
 #include "tracy/Tracy.hpp"
 
-#include <containers/string.hpp>
-#include <containers/hashmap.hpp>
-#include <containers/btree.hpp>
+#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers/hashmap.hpp>
+#include <SkrRT/containers/btree.hpp>
 
 namespace skr
 {

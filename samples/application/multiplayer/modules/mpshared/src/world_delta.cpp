@@ -1,15 +1,15 @@
 #include "MPShared/world_delta.h"
 #include "MPShared/components.h"
-#include "containers/hashmap.hpp"
-#include "misc/make_zeroed.hpp"
-#include "ecs/type_builder.hpp"
-#include "containers/vector.hpp"
-#include "ecs/set.hpp"
+#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/ecs/type_builder.hpp"
+#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/ecs/set.hpp"
 
-#include "ecs/array.hpp"
-#include "misc/log.hpp"
-#include "platform/time.h"
-#include "ecs/entity.hpp"
+#include "SkrRT/ecs/array.hpp"
+#include "SkrRT/misc/log.hpp"
+#include "SkrRT/platform/time.h"
+#include "SkrRT/ecs/entity.hpp"
 
 BandwidthCounter::BandwidthCounter()
     : dataRecord(30)
@@ -634,7 +634,7 @@ int skr::binary::ReadTrait<packed_entity_t>::Read(skr_binary_reader_t *reader, p
     value.entity = DUAL_ENTITY(id, version);
     return 0;
 }
-#include "serde/json/writer.h"
+#include "SkrRT/serde/json/writer.h"
 void skr::json::WriteTrait<const packed_entity_t&>::Write(skr_json_writer_t *writer, const packed_entity_t &value)
 {
     writer->StartObject();

@@ -1,11 +1,11 @@
-#include "platform/debug.h"
+#include "SkrRT/platform/debug.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
-#include <containers/hashmap.hpp>
-#include "misc/log.h"
-#include "misc/hash.h"
-#include "containers/concurrent_queue.h"
+#include <SkrRT/containers/hashmap.hpp>
+#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/hash.h"
+#include "SkrRT/containers/concurrent_queue.h"
 
 namespace skr
 {

@@ -1,7 +1,7 @@
 #include "../../pch.hpp"
-#include "platform/process.h"
-#include "platform/memory.h"
-#include "platform/atomic.h"
+#include "SkrRT/platform/process.h"
+#include "SkrRT/platform/memory.h"
+#include "SkrRT/platform/atomic.h"
 
 typedef struct SProcess
 {

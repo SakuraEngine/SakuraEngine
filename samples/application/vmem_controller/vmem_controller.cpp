@@ -1,9 +1,9 @@
 #include "common/utils.h"
-#include "platform/thread.h"
-#include "platform/system.h"
-#include "misc/log.h"
-#include "misc/make_zeroed.hpp"
-#include "module/module.hpp"
+#include "SkrRT/platform/thread.h"
+#include "SkrRT/platform/system.h"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/module/module.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
@@ -170,7 +170,7 @@ void SVMemCCModule::imgui_ui()
     ImGui::End();
 }
 
-#include "runtime_module.h"
+#include "SkrRT/runtime_module.h"
 
 int SVMemCCModule::main_module_exec(int argc, char8_t** argv)
 {

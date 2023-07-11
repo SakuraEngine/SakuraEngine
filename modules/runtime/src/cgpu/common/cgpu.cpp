@@ -1,5 +1,5 @@
 #include "EASTL/unordered_map.h"
-#include "platform/shared_library.hpp"
+#include "SkrRT/platform/shared_library.hpp"
 #include "cgpu/api.h"
 #ifdef CGPU_USE_VULKAN
     //#include "cgpu/backend/vulkan/cgpu_vulkan.h"
@@ -11,7 +11,7 @@
     //#include "cgpu/backend/metal/cgpu_metal.h"
 #endif
 #include "common_utils.h"
-#include <containers/hashmap.hpp>
+#include <SkrRT/containers/hashmap.hpp>
 #include <EASTL/vector.h>
 
 // Runtime Table

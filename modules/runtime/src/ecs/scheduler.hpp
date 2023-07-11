@@ -1,11 +1,11 @@
 #pragma once
-#include "ecs/dual.h"
-#include "async/fib_task.hpp"
+#include "SkrRT/ecs/dual.h"
+#include "SkrRT/async/fib_task.hpp"
 #include "archetype.hpp"
-#include "ecs/entities.hpp"
-#include "platform/thread.h"
+#include "SkrRT/ecs/entities.hpp"
+#include "SkrRT/platform/thread.h"
 
-#include "containers/hashmap.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 
 namespace dual
 {

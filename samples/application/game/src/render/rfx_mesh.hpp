@@ -1,9 +1,9 @@
 #pragma once
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_effect.h"
-#include "ecs/type_builder.hpp"
+#include "SkrRT/ecs/type_builder.hpp"
 
 typedef struct forward_effect_identity_t {
     dual_entity_t game_entity;

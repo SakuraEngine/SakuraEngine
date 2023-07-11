@@ -2,9 +2,9 @@
 
 #if __cpp_impl_coroutine
 
-#include "async/co_task.hpp"
-#include "platform/filesystem.hpp"
-#include "module/module_manager.hpp"
+#include "SkrRT/async/co_task.hpp"
+#include "SkrRT/platform/filesystem.hpp"
+#include "SkrRT/module/module_manager.hpp"
 
 class Task2 : public ::testing::Test
 {

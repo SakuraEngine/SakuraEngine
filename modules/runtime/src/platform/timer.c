@@ -1,4 +1,4 @@
-#include "platform/time.h"
+#include "SkrRT/platform/time.h"
 
 void skr_init_timer(STimer* pTimer) { skr_timer_reset(pTimer); }
 

@@ -1,7 +1,7 @@
 #pragma once
-#include "async/thread_job.hpp"
-#include "async/named_thread.hpp"
-#include "async/condlock.hpp"
+#include "SkrRT/async/thread_job.hpp"
+#include "SkrRT/async/named_thread.hpp"
+#include "SkrRT/async/condlock.hpp"
 
 namespace skr
 {

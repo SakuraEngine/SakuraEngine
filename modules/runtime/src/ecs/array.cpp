@@ -1,4 +1,4 @@
-#include "ecs/array.hpp"
+#include "SkrRT/ecs/array.hpp"
 
 extern "C" {
 void* dualA_begin(dual_array_comp_t* array)

@@ -1,7 +1,7 @@
-#include "serde/binary/writer.h"
-#include "serde/binary/reader.h"
-#include "containers/span.hpp"
-#include "containers/vector.hpp"
+#include "SkrRT/serde/binary/writer.h"
+#include "SkrRT/serde/binary/reader.h"
+#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers/vector.hpp"
 #include "gtest/gtest.h"
 
 class BINARY_BITPACK : public ::testing::Test

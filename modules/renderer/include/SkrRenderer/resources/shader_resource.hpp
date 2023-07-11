@@ -1,10 +1,10 @@
 #pragma once
 #include "SkrRenderer/shader_hash.h"
-#include "io/io.h"
+#include "SkrRT/io/io.h"
 #include "cgpu/api.h"
-#include "resource/resource_factory.h"
-#include <containers/string.hpp>
-#include <containers/hashmap.hpp>
+#include "SkrRT/resource/resource_factory.h"
+#include <SkrRT/containers/string.hpp>
+#include <SkrRT/containers/hashmap.hpp>
 
 #ifndef __meta__
     #include "SkrRenderer/resources/shader_resource.generated.h"

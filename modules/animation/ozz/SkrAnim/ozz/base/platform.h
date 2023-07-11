@@ -38,7 +38,7 @@
 
 #include <stdint.h>
 
-#include "platform/debug.h"
+#include "SkrRT/platform/debug.h"
 #include <cstddef>
 
 #include "SkrAnim/ozz/base/export.h"

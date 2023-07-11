@@ -1,9 +1,9 @@
 #include "../pch.hpp"
-#include "platform/shared_library.hpp"
+#include "SkrRT/platform/shared_library.hpp"
 #if defined(SKR_OS_UNIX)
     #include <dlfcn.h>
 #elif defined(SKR_OS_WINDOWS)
-    #include <platform/filesystem.hpp>
+    #include <SkrRT/platform/filesystem.hpp>
 #endif
 
 #if defined(SKR_OS_MACOSX)

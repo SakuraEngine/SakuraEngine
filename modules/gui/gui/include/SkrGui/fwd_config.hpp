@@ -13,24 +13,24 @@
 #include "SkrGui/module.configure.h"
 
 // skr types
-#include "misc/types.h"
+#include "SkrRT/misc/types.h"
 
 // skr containers
-#include "containers/lite.hpp"
-#include "containers/span.hpp"
-#include "containers/vector.hpp"
-#include "containers/string.hpp"
-#include "containers/hashmap.hpp"
-#include "containers/sptr.hpp"
+#include "SkrRT/containers/lite.hpp"
+#include "SkrRT/containers/span.hpp"
+#include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers/sptr.hpp"
 
 // type system
 #include "SkrGui/dev/type_system.hpp"
 
 // function ref
-#include "containers/function_ref.hpp"
+#include "SkrRT/containers/function_ref.hpp"
 
 // not_null
-#include "containers/not_null.hpp"
+#include "SkrRT/containers/not_null.hpp"
 
 #define SKR_GUI_RAII_MIX_IN()                                       \
     template <typename To>                                          \
@@ -71,14 +71,14 @@
 #define SKR_GUI_ASSERT(__EXPR) SKR_ASSERT(__EXPR)
 
 // log
-#include "misc/log.hpp"
+#include "SkrRT/misc/log.hpp"
 #define SKR_GUI_LOG_ERROR(...) SKR_LOG_ERROR(__VA_ARGS__)
 #define SKR_GUI_LOG_WARN(...) SKR_LOG_WARN(__VA_ARGS__)
 #define SKR_GUI_LOG_INFO(...) SKR_LOG_INFO(__VA_ARGS__)
 #define SKR_GUI_LOG_DEBUG(...) SKR_LOG_DEBUG(__VA_ARGS__)
 
 // memory
-#include "platform/memory.h"
+#include "SkrRT/platform/memory.h"
 #define SKR_GUI_NEW SkrNew
 #define SKR_GUI_DELETE SkrDelete
 

@@ -32,7 +32,7 @@
 
 #include "task.h"
 
-#include "runtime_configure.h"
+#include "SkrRT/platform/configure.h"
 
 namespace ftl
 {

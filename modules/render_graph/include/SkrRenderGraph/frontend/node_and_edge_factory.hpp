@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/memory.h"
+#include "SkrRT/platform/memory.h"
 #include "SkrRenderGraph/frontend/base_types.hpp"
 
 #include "tracy/Tracy.hpp"

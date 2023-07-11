@@ -18,7 +18,7 @@ struct SKR_RENDERER_API SRenderer {
 };
 
 #ifdef __cplusplus
-    #include "module/module.hpp"
+    #include "SkrRT/module/module.hpp"
     #include "render_device.h"
 
 class SKR_RENDERER_API SkrRendererModule : public skr::IDynamicModule

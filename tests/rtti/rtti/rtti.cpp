@@ -1,9 +1,9 @@
 #include "gtest/gtest.h"
-#include "misc/log.hpp"
-#include "platform/crash.h"
-#include "platform/guid.hpp"
-#include "containers/sptr.hpp"
-#include "serde/json/writer.h"
+#include "SkrRT/misc/log.hpp"
+#include "SkrRT/platform/crash.h"
+#include "SkrRT/platform/guid.hpp"
+#include "SkrRT/containers/sptr.hpp"
+#include "SkrRT/serde/json/writer.h"
 #include "../types/types.hpp"
 
 class RTTI : public ::testing::Test

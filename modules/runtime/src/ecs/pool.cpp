@@ -1,8 +1,8 @@
 #include "pool.hpp"
-#include "ecs/constants.hpp"
+#include "SkrRT/ecs/constants.hpp"
 #include <EASTL/vector.h>
 #include <EASTL/numeric.h>
-#include "ecs/dual_config.h"
+#include "SkrRT/ecs/dual_config.h"
 
 #include "tracy/Tracy.hpp"
 

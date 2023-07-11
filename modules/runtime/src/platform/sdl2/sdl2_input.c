@@ -1,4 +1,4 @@
-#include "platform/input.h"
+#include "SkrRT/platform/input.h"
 #include "SDL2/SDL.h"
 
 #define KEY_CODE_TRANS(k, sdlk) \

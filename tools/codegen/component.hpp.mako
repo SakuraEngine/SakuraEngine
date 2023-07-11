@@ -1,5 +1,5 @@
 // BEGIN DUAL GENERATED
-#include "ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 
 #ifdef __cplusplus
 %for type in generator.filter_records(db.records):

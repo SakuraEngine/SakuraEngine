@@ -6,11 +6,11 @@
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
-#include "platform/window.h"
+#include "SkrRT/platform/window.h"
 #include "tracy/Tracy.hpp"
 #include "pass_profiler.h"
-#include "platform/thread.h"
-#include "math/rtm/qvvf.h"
+#include "SkrRT/platform/thread.h"
+#include "SkrRT/math/rtm/qvvf.h"
 
 thread_local SWindowHandle window;
 thread_local CGPUSurfaceId surface;
@@ -244,7 +244,7 @@ bool fragmentLightingPass = true;
 bool lockFPS = true;
 bool DPIAware = false;
 
-#include "runtime_module.h"
+#include "SkrRT/runtime_module.h"
 
 int main(int argc, char* argv[])
 {

@@ -1,7 +1,7 @@
 #pragma once
 #include "cgpu/cgpu_config.h"
 #include "cgpu/flags.h"
-#include "platform/dstorage.h"
+#include "SkrRT/platform/dstorage.h"
 
 #define CGPU_ARRAY_LEN(array) ((sizeof(array) / sizeof(array[0])))
 #define CGPU_MAX_MRT_COUNT 8u

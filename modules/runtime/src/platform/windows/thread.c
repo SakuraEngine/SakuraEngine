@@ -1,8 +1,8 @@
 #include "../../platform/windows/winheaders.h"
 #include <process.h> // _beginthreadex
 
-#include "platform/thread.h"
-#include "platform/debug.h"
+#include "SkrRT/platform/thread.h"
+#include "SkrRT/platform/debug.h"
 #include <assert.h>
 #include <synchapi.h>
 

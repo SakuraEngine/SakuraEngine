@@ -1,7 +1,7 @@
 #pragma once
 #include "cgpu/cgpux.h"
-#include "misc/hash.h"
-#include "misc/make_zeroed.hpp"
+#include "SkrRT/misc/hash.h"
+#include "SkrRT/misc/make_zeroed.hpp"
 #include <EASTL/fixed_vector.h>
 
 struct CGPUXBindTableLocation;

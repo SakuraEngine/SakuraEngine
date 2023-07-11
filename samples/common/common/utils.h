@@ -1,10 +1,10 @@
 #pragma once
-#include "platform/configure.h"
+#include "SkrRT/platform/configure.h"
 #include "stdbool.h"
 #include "stdio.h"
 #include "stdlib.h"
 #ifdef TARGET_MACOS
-    #include "platform/apple/macos/window.h"
+    #include "SkrRT/platform/apple/macos/window.h"
 #endif
 #include "cgpu/api.h"
 #define SDL_MAIN_HANDLED

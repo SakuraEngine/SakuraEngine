@@ -1,10 +1,10 @@
 // BEGIN BINARY GENERATED
-#include "misc/hash.h"
-#include "platform/debug.h"
-#include "misc/log.h"
-#include "serde/binary/reader.h"
-#include "serde/binary/writer.h"
-#include "serde/binary/blob.h"
+#include "SkrRT/misc/hash.h"
+#include "SkrRT/platform/debug.h"
+#include "SkrRT/misc/log.h"
+#include "SkrRT/serde/binary/reader.h"
+#include "SkrRT/serde/binary/writer.h"
+#include "SkrRT/serde/binary/blob.h"
 #include "tracy/Tracy.hpp"
 
 [[maybe_unused]] static const char* BinaryArrayBinaryFieldArchiveFailedFormat = "[SERDE/BIN] Failed to %s %s.%s[%d]: %d";

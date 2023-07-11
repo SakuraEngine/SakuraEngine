@@ -1,5 +1,5 @@
 #pragma once
-#include "containers/resizable_ring_buffer.hpp"
+#include "SkrRT/containers/resizable_ring_buffer.hpp"
 
 namespace skr {
 namespace input {

@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
-#include "platform/crash.h"
+#include "SkrRT/platform/crash.h"
 #include "cgpu/api.h"
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 #if defined(_WIN32) || defined(_WIN64)
     #ifndef WIN32_LEAN_AND_MEAN
         #define WIN32_LEAN_AND_MEAN
@@ -10,7 +10,7 @@
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HWND createWin32Window();
 #elif defined(_MACOS)
-    #include "platform/apple/macos/window.h"
+    #include "SkrRT/platform/apple/macos/window.h"
 #endif
 
 class SwapChainCreation : public ::testing::TestWithParam<ECGPUBackend>

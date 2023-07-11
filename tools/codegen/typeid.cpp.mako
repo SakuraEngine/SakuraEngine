@@ -1,5 +1,5 @@
 //BEGIN TYPEID GENERATED
-#include "type/type.hpp"
+#include "SkrRT/type/type.hpp"
 
 <%
 types = generator.filter_types(db.records) + generator.filter_types(db.enums)

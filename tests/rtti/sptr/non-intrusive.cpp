@@ -1,4 +1,4 @@
-#include "platform/crash.h"
+#include "SkrRT/platform/crash.h"
 #include "test.hpp"
 
 class SPTRNonIntrusive : public SPTRBase

@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include <cstdint>
 #include <cmath>
-#include "misc/log.h"
+#include "SkrRT/misc/log.h"
 
 namespace godot
 {
