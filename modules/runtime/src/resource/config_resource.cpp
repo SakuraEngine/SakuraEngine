@@ -7,7 +7,7 @@
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/resource/resource_header.hpp"
-#include "type/type.hpp"
+#include "SkrRT/type/type.hpp"
 #include "SkrRT/misc/defer.hpp"
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRT/serde/binary/reader.h"

@@ -4,11 +4,11 @@ enums = generator.filter_rtti(db.enums)
 %>
 
 // BEGIN RTTI GENERATED
-#include "type/type.hpp"
+#include "SkrRT/type/type.hpp"
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/misc/hash.h"
 #include "SkrRT/misc/log.h"
-#include "type/type_helper.hpp"
+#include "SkrRT/type/type_helper.hpp"
 
 [[maybe_unused]] static const char* ArgumentNumMisMatchFormat = "Argument number mismatch while calling %s, expected %d, got %d.";
 [[maybe_unused]] static const char* ArgumentIncompatibleFormat = "Argument %s is incompatible while calling %s. %s can not be converted to %s.";

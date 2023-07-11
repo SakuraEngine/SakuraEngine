@@ -2,7 +2,7 @@
 #include "detail/sptr.hpp"
 #include "detail/sweak_ptr.hpp"
 
-#include "type/type.hpp"
+#include "SkrRT/type/type.hpp"
 
 namespace skr
 {

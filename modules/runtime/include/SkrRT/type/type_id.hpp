@@ -1,5 +1,5 @@
 #pragma once
-#include "type/type.h"
+#include "SkrRT/type/type.h"
 #include "enum_as_byte.hpp"
 #include "containers/string.hpp"
 #include <string_view> // TODO: replace with skr::string_view

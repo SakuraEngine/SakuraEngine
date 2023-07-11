@@ -1,5 +1,5 @@
 #include "containers/hashmap.hpp"
-#include "type/type.hpp"
+#include "SkrRT/type/type.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/debug.h"
 #include "resource/config_resource.h"

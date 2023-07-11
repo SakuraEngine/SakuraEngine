@@ -1,6 +1,6 @@
 #include "containers/variant.hpp"
 #include "SkrRT/misc/hash.h"
-#include "type/type.hpp"
+#include "SkrRT/type/type.hpp"
 #include "containers/hashmap.hpp"
 #include "containers/vector.hpp"
 

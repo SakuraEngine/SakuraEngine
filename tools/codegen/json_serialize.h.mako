@@ -2,7 +2,7 @@
 #ifdef __cplusplus
 #include "SkrRT/serde/json/reader_fwd.h"
 #include "SkrRT/serde/json/writer_fwd.h"
-#include "type/enum_to_string.hpp"
+#include "SkrRT/type/enum_to_string.hpp"
 namespace skr::json
 {
 %for record in generator.filter_types(db.records):

@@ -108,7 +108,7 @@ RUNTIME_API int skr_is_resource_resolved(skr_resource_handle_t* handle);
 RUNTIME_API void skr_get_resource_guid(skr_resource_handle_t* handle, skr_guid_t* guid);
 RUNTIME_API void skr_get_resource(skr_resource_handle_t* handle, void** guid);
 
-#include "type/type.hpp"
+#include "SkrRT/type/type.hpp"
 
 namespace skr
 {

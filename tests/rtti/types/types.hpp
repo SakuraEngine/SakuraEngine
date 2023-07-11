@@ -5,7 +5,7 @@
 #include "SkrRT/misc/log.hpp"
 #include "resource/config_resource.h"
 #include "SkrRT/resource/resource_handle.h"
-#include "type/type.hpp"
+#include "SkrRT/type/type.hpp"
 #include <SkrRT/containers/string.hpp>
 #include <EASTL/unique_ptr.h>
 #include "RTTITestTypes/module.configure.h"

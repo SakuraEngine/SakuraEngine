@@ -825,7 +825,7 @@ struct dual_id_of {
         static_assert(!sizeof(C), "dual_id_of<C> not implemented for this type, please include the appropriate generated header!");
     }
 };
-#include "type/type_helper.hpp"
+#include "SkrRT/type/type_helper.hpp"
 #include "SkrRT/ecs/callback.hpp"
 #include "SkrRT/ecs/type_builder.hpp"
 #include "SkrRT/misc/log.h"

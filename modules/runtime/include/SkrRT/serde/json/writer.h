@@ -15,7 +15,7 @@ typedef enum ESkrJsonType
     #include "containers/variant.hpp"
     #include "containers/string.hpp"
     #include "containers/hashmap.hpp"
-    #include "type/type_helper.hpp"
+    #include "SkrRT/type/type_helper.hpp"
 
 // forward declaration for resources
 struct skr_resource_handle_t;
@@ -91,7 +91,7 @@ typedef struct skr_json_writer_t skr_json_writer_t;
 #endif
 
 #if defined(__cplusplus)
-    #include "type/type_id.hpp"
+    #include "SkrRT/type/type_id.hpp"
     #include "SkrRT/platform/guid.hpp"
 // utils for codegen
 namespace skr

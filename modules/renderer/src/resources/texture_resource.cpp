@@ -3,7 +3,7 @@
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/io/io.h"
 #include "cgpu/api.h"
-#include "type/type_id.hpp"
+#include "SkrRT/type/type_id.hpp"
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRenderer/render_device.h"

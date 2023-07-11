@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/serde/binary/reader_fwd.h"
 #include "SkrRT/misc/types.h"
-#include "type/type_helper.hpp"
+#include "SkrRT/type/type_helper.hpp"
 #include "SkrRT/serde/binary/serde.h"
 
 struct skr_binary_reader_t {

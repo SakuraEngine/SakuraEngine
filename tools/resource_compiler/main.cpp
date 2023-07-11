@@ -8,7 +8,7 @@
 #include "resource/config_resource.h"
 #include "SkrRT/resource/resource_header.hpp"
 #include "SkrToolCore/assets/config_asset.hpp"
-#include "type/type.hpp"
+#include "SkrRT/type/type.hpp"
 #include "SkrRT/misc/defer.hpp"
 #include "SkrRT/resource/resource_header.hpp"
 #include "module/module_manager.hpp"

@@ -2,7 +2,7 @@
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/platform/memory.h"
-#include "type/type.hpp"
+#include "SkrRT/type/type.hpp"
 #if defined __has_include
     #if  __has_include ("binary/reader_fwd.h")
     #include "SkrRT/serde/binary/reader.h"
