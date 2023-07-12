@@ -106,6 +106,11 @@ const char8_t* RenderGraphNode::get_name() const
     return (const char8_t*)name.c_str();
 }
 
+const skr::string_view RenderGraphNode::get_name_view() const
+{
+    return name.view();
+}
+
 RenderGraphEdge::RenderGraphEdge(ERelationshipType type)
     : type(type)
 {
