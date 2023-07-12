@@ -5,6 +5,7 @@
 #include <type_traits>
 
 // TODO. 使用 built-in 指令优化，Fuck CPP
+// TODO. 抄 EASTL 的 Fallback，更快一点
 namespace skr
 {
 // countLZero & countRZero
@@ -52,9 +53,9 @@ namespace skr::detail
 template <typename T>
 SKR_INLINE T countl_zero_fallback(T v)
 {
-    T ret = 0;
-    auto n = std::numeric_limits<T>::digits;
-    auto c = std::numeric_limits<T>::digits / 2;
+    T    ret = 0;
+    auto n   = std::numeric_limits<T>::digits;
+    auto c   = std::numeric_limits<T>::digits / 2;
     do
     {
         ret = static_cast<T>(v >> c);
@@ -78,10 +79,10 @@ template <typename T>
 SKR_INLINE T pop_count_fallback(T v)
 {
     auto digits = std::numeric_limits<T>::digits;
-    v = static_cast<T>(v - ((v >> 1) & static_cast<T>(0x5555'5555'5555'5555ull)));
-    v = static_cast<T>((v & static_cast<T>(0x3333'3333'3333'3333ull)) + ((v >> 2) & static_cast<T>(0x3333'3333'3333'3333ull)));
-    v = static_cast<T>((v + (v >> 4)) & static_cast<T>(0x0F0F'0F0F'0F0F'0F0Full));
-    v = static_cast<T>(v * static_cast<T>(0x0101'0101'0101'0101ull));
+    v           = static_cast<T>(v - ((v >> 1) & static_cast<T>(0x5555'5555'5555'5555ull)));
+    v           = static_cast<T>((v & static_cast<T>(0x3333'3333'3333'3333ull)) + ((v >> 2) & static_cast<T>(0x3333'3333'3333'3333ull)));
+    v           = static_cast<T>((v + (v >> 4)) & static_cast<T>(0x0F0F'0F0F'0F0F'0F0Full));
+    v           = static_cast<T>(v * static_cast<T>(0x0101'0101'0101'0101ull));
     return static_cast<int>(v >> (digits - 8));
 }
 } // namespace skr::detail
