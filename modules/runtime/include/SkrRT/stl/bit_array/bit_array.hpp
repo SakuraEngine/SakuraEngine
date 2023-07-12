@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrRT/stl/fwd_stl.hpp"
 #include "SkrRT/base/config.hpp"
 #include "SkrRT/algo/bit_algo.hpp"
 #include "SkrRT/stl/allocator/allocator.hpp"
@@ -7,6 +8,7 @@
 
 // BitArray def
 // TODO. 使用 BitArrayDataDef 来替代 SizeType 的返回结构，隐藏 npos 细节，由于 BitRef 的特殊性，这里可能需要自存一个指针与一个 mask
+// TODO. BitSet 定长查询
 namespace skr
 {
 template <typename TBlock, typename Alloc>

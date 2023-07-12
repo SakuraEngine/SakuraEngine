@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrRT/stl/fwd_stl.hpp"
 #include "SkrRT/base/config.hpp"
 #include "arena.hpp"
 #include <limits>
@@ -14,23 +15,23 @@ public:
     using SizeType = TS;
 
     // impl it
-    // SKR_INLINE void  freeRaw(void* p, SizeType align);
-    // SKR_INLINE void* allocRaw(SizeType size, SizeType align);
-    // SKR_INLINE void* reallocRaw(void* p, SizeType size, SizeType align);
+    // SKR_INLINE void  free_raw(void* p, SizeType align);
+    // SKR_INLINE void* alloc_raw(SizeType size, SizeType align);
+    // SKR_INLINE void* realloc_raw(void* p, SizeType size, SizeType align);
 
     // helper
     template <typename T>
-    SKR_INLINE void free(T* p) { static_cast<TDerived*>(this)->freeRaw(p, alignof(T)); }
+    SKR_INLINE void free(T* p) { static_cast<TDerived*>(this)->free_raw(p, alignof(T)); }
     template <typename T>
-    SKR_INLINE T* alloc(SizeType size) { return (T*)static_cast<TDerived*>(this)->allocRaw(size * sizeof(T), alignof(T)); }
+    SKR_INLINE T* alloc(SizeType size) { return (T*)static_cast<TDerived*>(this)->alloc_raw(size * sizeof(T), alignof(T)); }
     template <typename T>
     SKR_INLINE T* realloc(T* p, SizeType size)
     {
-        return (T*)static_cast<TDerived*>(this)->reallocRaw(p, size * sizeof(T), alignof(T));
+        return (T*)static_cast<TDerived*>(this)->realloc_raw(p, size * sizeof(T), alignof(T));
     }
 
     // size > capacity, calc grow
-    SKR_INLINE SizeType getGrow(SizeType size, SizeType capacity)
+    SKR_INLINE SizeType get_grow(SizeType size, SizeType capacity)
     {
         constexpr SizeType first_grow    = 4;
         constexpr SizeType constant_grow = 16;
@@ -53,7 +54,7 @@ public:
         return result;
     }
     // size < capacity, calc shrink
-    SKR_INLINE SizeType getShrink(SizeType size, SizeType capacity)
+    SKR_INLINE SizeType get_shrink(SizeType size, SizeType capacity)
     {
         SKR_Assert(size < capacity);
 
@@ -72,7 +73,7 @@ public:
 
     // resize helper
     template <typename T>
-    SKR_INLINE T* resizeContainer(T* p, SizeType size, SizeType capacity, SizeType new_capacity)
+    SKR_INLINE T* resize_container(T* p, SizeType size, SizeType capacity, SizeType new_capacity)
     {
         SKR_Assert(new_capacity > 0);
         SKR_Assert(size <= capacity);
@@ -89,11 +90,15 @@ public:
         // move memory
         if (size)
         {
+            // TODO. use callback
             // move items
             memory::move(new_memory, p, std::min(size, new_capacity));
 
             // destruct old items
-            memory::destruct(p, size);
+            if (size > new_capacity)
+            {
+                memory::destruct(p + new_capacity, size - new_capacity);
+            }
 
             // release old memory
             free(p);
@@ -121,9 +126,9 @@ public:
     SKR_INLINE PmrAllocator& operator=(PmrAllocator&&)         = default;
 
     // impl
-    SKR_INLINE void  freeRaw(void* p, SizeType align) { _arena->free(p); }
-    SKR_INLINE void* allocRaw(SizeType size, SizeType align) { return _arena->alloc(size, align); }
-    SKR_INLINE void* reallocRaw(void* p, SizeType size, SizeType align) { return _arena->realloc(p, size, align); }
+    SKR_INLINE void  free_raw(void* p, SizeType align) { _arena->free(p); }
+    SKR_INLINE void* alloc_raw(SizeType size, SizeType align) { return _arena->alloc(size, align); }
+    SKR_INLINE void* realloc_raw(void* p, SizeType size, SizeType align) { return _arena->realloc(p, size, align); }
 
 private:
     IArena* _arena;

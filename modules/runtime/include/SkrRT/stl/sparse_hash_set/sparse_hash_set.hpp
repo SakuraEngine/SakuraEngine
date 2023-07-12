@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrRT/stl/fwd_stl.hpp"
 #include "SkrRT/base/config.hpp"
 #include "SkrRT/algo/functor.hpp"
 #include "SkrRT/stl/sparse_array/sparse_array.hpp"

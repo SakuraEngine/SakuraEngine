@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrRT/stl/fwd_stl.hpp"
 #include "SkrRT/base/config.hpp"
 #include "SkrRT/algo/intro_sort.hpp"
 #include "SkrRT/algo/merge_sort.hpp"

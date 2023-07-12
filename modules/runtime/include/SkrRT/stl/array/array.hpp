@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrRT/stl/fwd_stl.hpp"
 #include "SkrRT/base/config.hpp"
 #include "SkrRT/algo/intro_sort.hpp"
 #include "SkrRT/algo/merge_sort.hpp"
@@ -10,6 +11,7 @@
 // Array def
 namespace skr
 {
+// TODO. 可能可以继承出来一个 ArrayMap/ArraySet
 template <typename T, typename Alloc>
 class Array
 {
@@ -19,15 +21,15 @@ public:
     using CDataRef = ArrayDataRef<const T, SizeType>;
 
     // ctor & dtor
-    Array(Alloc alloc = Alloc());
-    Array(SizeType size, Alloc alloc = Alloc());
-    Array(SizeType size, const T& v, Alloc alloc = Alloc());
-    Array(const T* p, SizeType n, Alloc alloc = Alloc());
-    Array(std::initializer_list<T> init_list, Alloc alloc = Alloc());
+    Array(Alloc alloc = {});
+    Array(SizeType size, Alloc alloc = {});
+    Array(SizeType size, const T& v, Alloc alloc = {});
+    Array(const T* p, SizeType n, Alloc alloc = {});
+    Array(std::initializer_list<T> init_list, Alloc alloc = {});
     ~Array();
 
     // copy & move
-    Array(const Array& other, Alloc alloc = Alloc());
+    Array(const Array& other, Alloc alloc = {});
     Array(Array&& other) noexcept;
 
     // assign & move assign
@@ -53,8 +55,8 @@ public:
     const Alloc& allocator() const;
 
     // validate
-    bool isValidIndex(SizeType idx) const;
-    bool isValidPointer(const T* p) const;
+    bool is_valid_index(SizeType idx) const;
+    bool is_valid_pointer(const T* p) const;
 
     // memory op
     void clear();
@@ -62,30 +64,31 @@ public:
     void reserve(SizeType capacity);
     void shrink();
     void resize(SizeType size, const T& new_value);
-    void resizeUnsafe(SizeType size);
-    void resizeDefault(SizeType size);
-    void resizeZeroed(SizeType size);
+    void resize_unsafe(SizeType size);
+    void resize_default(SizeType size);
+    void resize_zeroed(SizeType size);
 
     // add
     DataRef add(const T& v, SizeType n = 1);
     DataRef add(T&& v);
-    DataRef addUnique(const T& v);
-    DataRef addUnsafe(SizeType n = 1);
-    DataRef addDefault(SizeType n = 1);
-    DataRef addZeroed(SizeType n = 1);
+    DataRef add_unique(const T& v);
+    DataRef add_unsafe(SizeType n = 1);
+    DataRef add_default(SizeType n = 1);
+    DataRef add_zeroed(SizeType n = 1);
 
     // add at
-    void addAt(SizeType idx, const T& v, SizeType n = 1);
-    void addAt(SizeType idx, T&& v);
-    void addAtUnsafe(SizeType idx, SizeType n = 1);
-    void addAtDefault(SizeType idx, SizeType n = 1);
-    void addAtZeroed(SizeType idx, SizeType n = 1);
+    void add_at(SizeType idx, const T& v, SizeType n = 1);
+    void add_at(SizeType idx, T&& v);
+    void add_at_unsafe(SizeType idx, SizeType n = 1);
+    void add_at_default(SizeType idx, SizeType n = 1);
+    void add_at_zeroed(SizeType idx, SizeType n = 1);
 
     // emplace
     template <typename... Args>
     DataRef emplace(Args&&... args);
     template <typename... Args>
-    void emplaceAt(SizeType index, Args&&... args);
+    void emplace_at(SizeType index, Args&&... args);
+    // TODO. emplace unique
 
     // append
     DataRef append(const Array& arr);
@@ -93,39 +96,41 @@ public:
     DataRef append(T* p, SizeType n);
 
     // append at
-    void appendAt(SizeType idx, const Array& arr);
-    void appendAt(SizeType idx, std::initializer_list<T> init_list);
-    void appendAt(SizeType idx, T* p, SizeType n);
+    void append_at(SizeType idx, const Array& arr);
+    void append_at(SizeType idx, std::initializer_list<T> init_list);
+    void append_at(SizeType idx, T* p, SizeType n);
 
     // remove
-    void removeAt(SizeType index, SizeType n = 1);
-    void removeAtSwap(SizeType index, SizeType n = 1);
+    void remove_at(SizeType index, SizeType n = 1);
+    void remove_at_swap(SizeType index, SizeType n = 1);
     template <typename TK>
     DataRef remove(const TK& v);
     template <typename TK>
-    DataRef removeSwap(const TK& v);
+    DataRef remove_swap(const TK& v);
     template <typename TK>
-    DataRef removeLast(const TK& v);
+    DataRef remove_last(const TK& v);
     template <typename TK>
-    DataRef removeLastSwap(const TK& v);
+    DataRef remove_last_swap(const TK& v);
     template <typename TK>
-    SizeType removeAll(const TK& v);
+    SizeType remove_all(const TK& v);
     template <typename TK>
-    SizeType removeAllSwap(const TK& v);
+    SizeType remove_all_swap(const TK& v);
 
     // remove if
     template <typename TP>
-    DataRef removeIf(TP&& p);
+    DataRef remove_if(TP&& p);
     template <typename TP>
-    DataRef removeIfSwap(TP&& p);
+    DataRef remove_if_swap(TP&& p);
     template <typename TP>
-    DataRef removeLastIf(TP&& p);
+    DataRef remove_last_if(TP&& p);
     template <typename TP>
-    DataRef removeLastIfSwap(TP&& p);
+    DataRef remove_last_if_swap(TP&& p);
     template <typename TP>
-    SizeType removeAllIf(TP&& p);
+    SizeType remove_all_if(TP&& p);
     template <typename TP>
-    SizeType removeAllIfSwap(TP&& p);
+    SizeType remove_all_if_swap(TP&& p);
+
+    // TODO. move item
 
     // modify
     T&       operator[](SizeType index);
@@ -137,57 +142,59 @@ public:
     template <typename TK>
     DataRef find(const TK& v);
     template <typename TK>
-    DataRef findLast(const TK& v);
+    DataRef find_last(const TK& v);
     template <typename TK>
     CDataRef find(const TK& v) const;
     template <typename TK>
-    CDataRef findLast(const TK& v) const;
+    CDataRef find_last(const TK& v) const;
 
     // find if
     template <typename TP>
-    DataRef findIf(TP&& p);
+    DataRef find_if(TP&& p);
     template <typename TP>
-    DataRef findLastIf(TP&& p);
+    DataRef find_last_if(TP&& p);
     template <typename TP>
-    CDataRef findIf(TP&& p) const;
+    CDataRef find_if(TP&& p) const;
     template <typename TP>
-    CDataRef findLastIf(TP&& p) const;
+    CDataRef find_last_if(TP&& p) const;
+
+    // TODO. binary add & remove & find
 
     // contain
     template <typename TK>
     bool contain(const TK& v) const;
     template <typename TP>
-    bool containIf(TP&& p) const;
+    bool contain_if(TP&& p) const;
 
     // sort
     template <typename TP = Less<T>>
-    void sort(TP&& p = TP());
+    void sort(TP&& p = {});
     template <typename TP = Less<T>>
-    void sortStable(TP&& p = TP());
+    void sort_stable(TP&& p = {});
 
     // support heap
-    T& heapTop();
+    T& heap_top();
     template <typename TP = Less<T>>
-    void heapify(TP&& p = TP());
+    void heapify(TP&& p = {});
     template <typename TP = Less<T>>
-    bool isHeap(TP&& p = TP());
+    bool is_heap(TP&& p = {});
     template <typename TP = Less<T>>
-    SizeType heapPush(T&& v, TP&& p = TP());
+    SizeType heap_push(T&& v, TP&& p = {});
     template <typename TP = Less<T>>
-    SizeType heapPush(const T& v, TP&& p = TP());
+    SizeType heap_push(const T& v, TP&& p = {});
     template <typename TP = Less<T>>
-    void heapPop(TP&& p = TP());
+    void heap_pop(TP&& p = {});
     template <typename TP = Less<T>>
-    T heapPopGet(TP&& p = TP());
+    T heap_pop_get(TP&& p = {});
     template <typename TP = Less<T>>
-    void heapRemoveAt(SizeType index, TP&& p = TP());
+    void heap_remove_at(SizeType index, TP&& p = {});
     template <typename TP = Less<T>>
-    void heapSort(TP&& p = TP());
+    void heap_sort(TP&& p = {});
 
     // support stack
     void     pop(SizeType n = 1);
-    void     popUnsafe(SizeType n = 1);
-    T        popGet();
+    void     pop_unsafe(SizeType n = 1);
+    T        pop_get();
     void     push(const T& v);
     void     push(T&& v);
     T&       top();
@@ -203,7 +210,7 @@ public:
 
 private:
     // helper
-    void _resizeMemory(SizeType new_capacity);
+    void _resize_memory(SizeType new_capacity);
     void _grow(SizeType n);
 
 private:
@@ -219,12 +226,12 @@ namespace skr
 {
 // helper
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::_resizeMemory(SizeType new_capacity)
+SKR_INLINE void Array<T, Alloc>::_resize_memory(SizeType new_capacity)
 {
     if (new_capacity)
     {
         // realloc
-        _data     = _alloc.resizeContainer(_data, _size, _capacity, new_capacity);
+        _data     = _alloc.resize_container(_data, _size, _capacity, new_capacity);
         _size     = std::min(_size, _capacity);
         _capacity = new_capacity;
     }
@@ -271,7 +278,7 @@ SKR_INLINE Array<T, Alloc>::Array(SizeType size, Alloc alloc)
     , _capacity(0)
     , _alloc(std::move(alloc))
 {
-    resizeDefault(size);
+    resize_default(size);
 }
 template <typename T, typename Alloc>
 SKR_INLINE Array<T, Alloc>::Array(SizeType size, const T& v, Alloc alloc)
@@ -289,7 +296,7 @@ SKR_INLINE Array<T, Alloc>::Array(const T* p, SizeType n, Alloc alloc)
     , _capacity(0)
     , _alloc(std::move(alloc))
 {
-    resizeUnsafe(n);
+    resize_unsafe(n);
     memory::copy(_data, p, n);
 }
 template <typename T, typename Alloc>
@@ -299,11 +306,14 @@ SKR_INLINE Array<T, Alloc>::Array(std::initializer_list<T> init_list, Alloc allo
     , _capacity(0)
     , _alloc(std::move(alloc))
 {
-    resizeUnsafe(init_list.size());
+    resize_unsafe(init_list.size());
     memory::copy(_data, init_list.begin(), init_list.size());
 }
 template <typename T, typename Alloc>
-SKR_INLINE Array<T, Alloc>::~Array() { release(); }
+SKR_INLINE Array<T, Alloc>::~Array()
+{
+    release();
+}
 
 // copy & move
 template <typename T, typename Alloc>
@@ -313,7 +323,7 @@ SKR_INLINE Array<T, Alloc>::Array(const Array& other, Alloc alloc)
     , _capacity(0)
     , _alloc(std::move(alloc))
 {
-    resizeUnsafe(other.size());
+    resize_unsafe(other.size());
     memory::copy(_data, other.data(), other.size());
 }
 template <typename T, typename Alloc>
@@ -336,7 +346,7 @@ SKR_INLINE Array<T, Alloc>& Array<T, Alloc>::operator=(const Array& rhs)
     {
         // clear and resize
         clear();
-        resizeUnsafe(rhs._size);
+        resize_unsafe(rhs._size);
 
         // copy items
         memory::copy(_data, rhs._data, rhs._size);
@@ -371,7 +381,7 @@ SKR_INLINE void Array<T, Alloc>::assign(const T* p, SizeType n)
 {
     // clear and resize
     clear();
-    resizeUnsafe(n);
+    resize_unsafe(n);
 
     // copy items
     memory::copy(_data, p, n);
@@ -389,7 +399,10 @@ SKR_INLINE bool Array<T, Alloc>::operator==(const Array& rhs) const
     return _size == rhs._size && memory::compare(_data, rhs._data, _size);
 }
 template <typename T, typename Alloc>
-SKR_INLINE bool Array<T, Alloc>::operator!=(const Array& rhs) const { return !(*this == rhs); }
+SKR_INLINE bool Array<T, Alloc>::operator!=(const Array& rhs) const
+{
+    return !(*this == rhs);
+}
 
 // getter
 template <typename T, typename Alloc>
@@ -411,9 +424,9 @@ SKR_INLINE const Alloc& Array<T, Alloc>::allocator() const { return _alloc; }
 
 // validate
 template <typename T, typename Alloc>
-SKR_INLINE bool Array<T, Alloc>::isValidIndex(SizeType idx) const { return idx >= 0 && idx < _size; }
+SKR_INLINE bool Array<T, Alloc>::is_valid_index(SizeType idx) const { return idx >= 0 && idx < _size; }
 template <typename T, typename Alloc>
-SKR_INLINE bool Array<T, Alloc>::isValidPointer(const T* p) const { return p >= begin() && p < end(); }
+SKR_INLINE bool Array<T, Alloc>::is_valid_pointer(const T* p) const { return p >= begin() && p < end(); }
 
 // memory op
 template <typename T, typename Alloc>
@@ -429,29 +442,29 @@ template <typename T, typename Alloc>
 SKR_INLINE void Array<T, Alloc>::release(SizeType capacity)
 {
     clear();
-    _resizeMemory(capacity);
+    _resize_memory(capacity);
 }
 template <typename T, typename Alloc>
 SKR_INLINE void Array<T, Alloc>::reserve(SizeType capacity)
 {
     if (capacity > _capacity)
     {
-        _resizeMemory(capacity);
+        _resize_memory(capacity);
     }
 }
 template <typename T, typename Alloc>
 SKR_INLINE void Array<T, Alloc>::shrink()
 {
-    auto new_capacity = _alloc.getShrink(_size, _capacity);
-    _resizeMemory(new_capacity);
+    auto new_capacity = _alloc.get_shrink(_size, _capacity);
+    _resize_memory(new_capacity);
 }
 template <typename T, typename Alloc>
 SKR_INLINE void Array<T, Alloc>::resize(SizeType size, const T& new_value)
 {
-    // explicit size
+    // need grow
     if (size > _capacity)
     {
-        _resizeMemory(size);
+        _resize_memory(size);
     }
 
     // add or remove
@@ -461,73 +474,73 @@ SKR_INLINE void Array<T, Alloc>::resize(SizeType size, const T& new_value)
     }
     else if (size < _size)
     {
-        removeAt(size, _size - size);
+        remove_at(size, _size - size);
     }
 
     // set size
     _size = size;
 }
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::resizeUnsafe(SizeType size)
+SKR_INLINE void Array<T, Alloc>::resize_unsafe(SizeType size)
 {
-    // explicit size
+    // need grow
     if (size > _capacity)
     {
-        _resizeMemory(size);
+        _resize_memory(size);
     }
 
     // add or remove
     if (size > _size)
     {
-        addUnsafe(size - _size);
+        add_unsafe(size - _size);
     }
     else if (size < _size)
     {
-        removeAt(size, _size - size);
+        remove_at(size, _size - size);
     }
 
     // set size
     _size = size;
 }
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::resizeDefault(SizeType size)
+SKR_INLINE void Array<T, Alloc>::resize_default(SizeType size)
 {
-    // explicit size
+    // need grow
     if (size > _capacity)
     {
-        _resizeMemory(size);
+        _resize_memory(size);
     }
 
     // add or remove
     if (size > _size)
     {
-        addDefault(size - _size);
+        add_default(size - _size);
     }
     else if (size < _size)
     {
-        removeAt(size, _size - size);
+        remove_at(size, _size - size);
     }
 
     // set size
     _size = size;
 }
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::resizeZeroed(SizeType size)
+SKR_INLINE void Array<T, Alloc>::resize_zeroed(SizeType size)
 {
-    // explicit size
+    // need grow
     if (size > _capacity)
     {
-        _resizeMemory(size);
+        _resize_memory(size);
     }
 
     // add or remove
     if (size > _size)
     {
-        addZeroed(size - _size);
+        add_zeroed(size - _size);
     }
     else if (size < _size)
     {
-        removeAt(size, _size - size);
+        remove_at(size, _size - size);
     }
 
     // set size
@@ -538,7 +551,7 @@ SKR_INLINE void Array<T, Alloc>::resizeZeroed(SizeType size)
 template <typename T, typename Alloc>
 SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::add(const T& v, SizeType n)
 {
-    DataRef ref = addUnsafe(n);
+    DataRef ref = add_unsafe(n);
     for (SizeType i = ref.index; i < _size; ++i)
     {
         new (_data + i) T(v);
@@ -548,12 +561,12 @@ SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::add(const T& v, Si
 template <typename T, typename Alloc>
 SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::add(T&& v)
 {
-    DataRef ref = addUnsafe();
+    DataRef ref = add_unsafe();
     new (ref.data) T(std::move(v));
     return ref;
 }
 template <typename T, typename Alloc>
-SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::addUnique(const T& v)
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::add_unique(const T& v)
 {
     if (DataRef ref = find(v))
     {
@@ -565,16 +578,16 @@ SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::addUnique(const T&
     }
 }
 template <typename T, typename Alloc>
-SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::addUnsafe(SizeType n)
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::add_unsafe(SizeType n)
 {
     auto old_size = _size;
     _grow(n);
     return DataRef(_data + old_size, old_size);
 }
 template <typename T, typename Alloc>
-SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::addDefault(SizeType n)
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::add_default(SizeType n)
 {
-    DataRef ref = addUnsafe(n);
+    DataRef ref = add_unsafe(n);
     for (SizeType i = ref.index; i < _size; ++i)
     {
         new (_data + i) T();
@@ -582,54 +595,54 @@ SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::addDefault(SizeTyp
     return ref;
 }
 template <typename T, typename Alloc>
-SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::addZeroed(SizeType n)
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::add_zeroed(SizeType n)
 {
-    DataRef ref = addUnsafe(n);
+    DataRef ref = add_unsafe(n);
     std::memset(ref.data, 0, n * sizeof(T));
     return ref;
 }
 
 // add at
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::addAt(SizeType idx, const T& v, SizeType n)
+SKR_INLINE void Array<T, Alloc>::add_at(SizeType idx, const T& v, SizeType n)
 {
-    SKR_ASSERT(isValidIndex(idx));
-    addAtUnsafe(idx, n);
+    SKR_ASSERT(is_valid_index(idx));
+    add_at_unsafe(idx, n);
     for (SizeType i = 0; i < n; ++i)
     {
         new (_data + idx + i) T(v);
     }
 }
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::addAt(SizeType idx, T&& v)
+SKR_INLINE void Array<T, Alloc>::add_at(SizeType idx, T&& v)
 {
-    SKR_ASSERT(isValidIndex(idx));
-    addAtUnsafe(idx);
+    SKR_ASSERT(is_valid_index(idx));
+    add_at_unsafe(idx);
     new (_data + idx) T(std::move(v));
 }
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::addAtUnsafe(SizeType idx, SizeType n)
+SKR_INLINE void Array<T, Alloc>::add_at_unsafe(SizeType idx, SizeType n)
 {
-    SKR_ASSERT(isValidIndex(idx));
+    SKR_ASSERT(is_valid_index(idx));
     auto move_n = _size - idx;
     _grow(n);
     memory::move(_data + idx + n, _data + idx, move_n);
 }
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::addAtDefault(SizeType idx, SizeType n)
+SKR_INLINE void Array<T, Alloc>::add_at_default(SizeType idx, SizeType n)
 {
-    SKR_ASSERT(isValidIndex(idx));
-    addAtUnsafe(idx, n);
+    SKR_ASSERT(is_valid_index(idx));
+    add_at_unsafe(idx, n);
     for (SizeType i = 0; i < n; ++i)
     {
         new (_data + idx + i) T();
     }
 }
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::addAtZeroed(SizeType idx, SizeType n)
+SKR_INLINE void Array<T, Alloc>::add_at_zeroed(SizeType idx, SizeType n)
 {
-    SKR_ASSERT(isValidIndex(idx));
-    addAtUnsafe(idx, n);
+    SKR_ASSERT(is_valid_index(idx));
+    add_at_unsafe(idx, n);
     std::memset(_data + idx, 0, n * sizeof(T));
 }
 
@@ -638,15 +651,15 @@ template <typename T, typename Alloc>
 template <typename... Args>
 SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::emplace(Args&&... args)
 {
-    DataRef ref = addUnsafe();
+    DataRef ref = add_unsafe();
     new (ref.data) T(std::forward<Args>(args)...);
     return ref;
 }
 template <typename T, typename Alloc>
 template <typename... Args>
-SKR_INLINE void Array<T, Alloc>::emplaceAt(SizeType index, Args&&... args)
+SKR_INLINE void Array<T, Alloc>::emplace_at(SizeType index, Args&&... args)
 {
-    addAtUnsafe(index);
+    add_at_unsafe(index);
     new (_data + index) T(std::forward<Args>(args)...);
 }
 
@@ -656,7 +669,7 @@ SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::append(const Array
 {
     if (arr._size)
     {
-        DataRef ref = addUnsafe(arr.size());
+        DataRef ref = add_unsafe(arr.size());
         memory::copy(ref.data, arr._data, arr._size);
         return ref;
     }
@@ -667,7 +680,7 @@ SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::append(std::initia
 {
     if (init_list.size())
     {
-        DataRef ref = addUnsafe(init_list.size());
+        DataRef ref = add_unsafe(init_list.size());
         memory::copy(ref.data, init_list.begin(), init_list.size());
         return ref;
     }
@@ -678,7 +691,7 @@ SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::append(T* p, SizeT
 {
     if (n)
     {
-        DataRef ref = addUnsafe(n);
+        DataRef ref = add_unsafe(n);
         memory::copy(ref.data, p, n);
         return ref;
     }
@@ -687,39 +700,39 @@ SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::append(T* p, SizeT
 
 // append at
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::appendAt(SizeType idx, const Array& arr)
+SKR_INLINE void Array<T, Alloc>::append_at(SizeType idx, const Array& arr)
 {
-    SKR_ASSERT(isValidIndex(idx));
+    SKR_ASSERT(is_valid_index(idx));
     if (arr._size)
     {
-        addAtUnsafe(idx, arr._size);
+        add_at_unsafe(idx, arr._size);
         memory::copy(_data + idx, arr._data, arr._size);
     }
 }
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::appendAt(SizeType idx, std::initializer_list<T> init_list)
+SKR_INLINE void Array<T, Alloc>::append_at(SizeType idx, std::initializer_list<T> init_list)
 {
-    SKR_ASSERT(isValidIndex(idx));
+    SKR_ASSERT(is_valid_index(idx));
     if (init_list.size())
     {
-        addAtUnsafe(idx, init_list.size());
+        add_at_unsafe(idx, init_list.size());
         memory::copy(_data + idx, init_list.begin(), init_list.size());
     }
 }
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::appendAt(SizeType idx, T* p, SizeType n)
+SKR_INLINE void Array<T, Alloc>::append_at(SizeType idx, T* p, SizeType n)
 {
-    SKR_ASSERT(isValidIndex(idx));
+    SKR_ASSERT(is_valid_index(idx));
     if (n)
     {
-        addAtUnsafe(idx, n);
+        add_at_unsafe(idx, n);
         memory::copy(_data + idx, p, n);
     }
 }
 
 // remove
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::removeAt(SizeType index, SizeType n)
+SKR_INLINE void Array<T, Alloc>::remove_at(SizeType index, SizeType n)
 {
     SKR_ASSERT(index >= 0 && index + n <= _size);
 
@@ -728,21 +741,21 @@ SKR_INLINE void Array<T, Alloc>::removeAt(SizeType index, SizeType n)
         // calc move size
         auto move_n = _size - index - n;
 
+        // destruct remove items
+        memory::destruct(_data + index, n);
+
         // move data
         if (move_n)
         {
             memory::move(_data + index, _data + _size - move_n, move_n);
         }
 
-        // destruct data
-        memory::destruct(_data + index + move_n, n);
-
         // update size
         _size -= n;
     }
 }
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::removeAtSwap(SizeType index, SizeType n)
+SKR_INLINE void Array<T, Alloc>::remove_at_swap(SizeType index, SizeType n)
 {
     SKR_ASSERT(index >= 0 && index + n <= _size);
     if (n)
@@ -750,14 +763,14 @@ SKR_INLINE void Array<T, Alloc>::removeAtSwap(SizeType index, SizeType n)
         // calc move size
         auto move_n = std::min(_size - index - n, n);
 
+        // destruct remove items
+        memory::destruct(_data + index, n);
+
         // move data
         if (move_n)
         {
             memory::move(_data + index, _data + _size - move_n, move_n);
         }
-
-        // destruct data
-        memory::destruct(_data + index + move_n, n);
 
         // update size
         _size -= n;
@@ -769,125 +782,117 @@ SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::remove(const TK& v
 {
     if (DataRef ref = find(v))
     {
-        removeAt(ref.index);
+        remove_at(ref.index);
         return ref;
     }
     return DataRef();
 }
 template <typename T, typename Alloc>
 template <typename TK>
-SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::removeSwap(const TK& v)
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::remove_swap(const TK& v)
 {
     if (DataRef ref = find(v))
     {
-        removeAtSwap(ref.index);
+        remove_at_swap(ref.index);
         return ref;
     }
     return DataRef();
 }
 template <typename T, typename Alloc>
 template <typename TK>
-SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::removeLast(const TK& v)
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::remove_last(const TK& v)
 {
-    if (DataRef ref = findLast(v))
+    if (DataRef ref = find_last(v))
     {
-        removeAt(ref.index);
+        remove_at(ref.index);
         return ref;
     }
     return DataRef();
 }
 template <typename T, typename Alloc>
 template <typename TK>
-SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::removeLastSwap(const TK& v)
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::remove_last_swap(const TK& v)
 {
-    if (DataRef ref = findLast(v))
+    if (DataRef ref = find_last(v))
     {
-        removeAtSwap(ref.index);
+        remove_at_swap(ref.index);
         return ref;
     }
     return DataRef();
 }
 template <typename T, typename Alloc>
 template <typename TK>
-SKR_INLINE typename Array<T, Alloc>::SizeType Array<T, Alloc>::removeAll(const TK& v)
+SKR_INLINE typename Array<T, Alloc>::SizeType Array<T, Alloc>::remove_all(const TK& v)
 {
-    return removeAllIf([&v](const T& a) { return a == v; });
+    return remove_all_if([&v](const T& a) { return a == v; });
 }
 template <typename T, typename Alloc>
 template <typename TK>
-SKR_INLINE typename Array<T, Alloc>::SizeType Array<T, Alloc>::removeAllSwap(const TK& v)
+SKR_INLINE typename Array<T, Alloc>::SizeType Array<T, Alloc>::remove_all_swap(const TK& v)
 {
-    return removeAllIfSwap([&v](const T& a) { return a == v; });
+    return remove_all_if_swap([&v](const T& a) { return a == v; });
 }
 
 // remove by
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::removeIf(TP&& p)
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::remove_if(TP&& p)
 {
-    if (DataRef ref = findIf(std::forward<TP>(p)))
+    if (DataRef ref = find_if(std::forward<TP>(p)))
     {
-        removeAt(ref.index);
+        remove_at(ref.index);
         return ref;
     }
     return DataRef();
 }
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::removeIfSwap(TP&& p)
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::remove_if_swap(TP&& p)
 {
-    if (DataRef ref = findIf(std::forward<TP>(p)))
+    if (DataRef ref = find_if(std::forward<TP>(p)))
     {
-        removeAtSwap(ref.index);
+        remove_at_swap(ref.index);
         return ref;
     }
     return DataRef();
 }
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::removeLastIf(TP&& p)
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::remove_last_if(TP&& p)
 {
-    if (DataRef ref = findLastIf(std::forward<TP>(p)))
+    if (DataRef ref = find_last_if(std::forward<TP>(p)))
     {
-        removeAt(ref.index);
+        remove_at(ref.index);
         return ref;
     }
     return DataRef();
 }
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::removeLastIfSwap(TP&& p)
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::remove_last_if_swap(TP&& p)
 {
-    if (DataRef ref = findLastIf(std::forward<TP>(p)))
+    if (DataRef ref = find_last_if(std::forward<TP>(p)))
     {
-        removeAtSwap(ref.index);
+        remove_at_swap(ref.index);
         return ref;
     }
     return DataRef();
 }
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE typename Array<T, Alloc>::SizeType Array<T, Alloc>::removeAllIf(TP&& p)
+SKR_INLINE typename Array<T, Alloc>::SizeType Array<T, Alloc>::remove_all_if(TP&& p)
 {
     T*       pos = algo::remove_all(begin(), end(), std::forward<TP>(p));
     SizeType n   = end() - pos;
-    if (n)
-    {
-        memory::destruct(pos, n);
-    }
     _size -= n;
     return n;
 }
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE typename Array<T, Alloc>::SizeType Array<T, Alloc>::removeAllIfSwap(TP&& p)
+SKR_INLINE typename Array<T, Alloc>::SizeType Array<T, Alloc>::remove_all_if_swap(TP&& p)
 {
     T*       pos = algo::remove_all_swap(begin(), end(), p);
     SizeType n   = end() - pos;
-    if (n)
-    {
-        memory::destruct(pos, n);
-    }
     _size -= n;
     return n;
 }
@@ -896,27 +901,27 @@ SKR_INLINE typename Array<T, Alloc>::SizeType Array<T, Alloc>::removeAllIfSwap(T
 template <typename T, typename Alloc>
 SKR_INLINE T& Array<T, Alloc>::operator[](SizeType index)
 {
-    SKR_ASSERT(isValidIndex(index));
+    SKR_ASSERT(is_valid_index(index));
     return *(_data + index);
 }
 template <typename T, typename Alloc>
 SKR_INLINE const T& Array<T, Alloc>::operator[](SizeType index) const
 {
-    SKR_ASSERT(isValidIndex(index));
+    SKR_ASSERT(is_valid_index(index));
     return *(_data + index);
 }
 template <typename T, typename Alloc>
 SKR_INLINE T& Array<T, Alloc>::last(SizeType index)
 {
     index = _size - index;
-    SKR_ASSERT(isValidIndex(index));
+    SKR_ASSERT(is_valid_index(index));
     return *(_data + index);
 }
 template <typename T, typename Alloc>
 SKR_INLINE const T& Array<T, Alloc>::last(SizeType index) const
 {
     index = _size - index;
-    SKR_ASSERT(isValidIndex(index));
+    SKR_ASSERT(is_valid_index(index));
     return *(_data + index);
 }
 
@@ -925,52 +930,52 @@ template <typename T, typename Alloc>
 template <typename TK>
 SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::find(const TK& v)
 {
-    return findIf([&v](const T& a) { return a == v; });
+    return find_if([&v](const T& a) { return a == v; });
 }
 template <typename T, typename Alloc>
 template <typename TK>
-SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::findLast(const TK& v)
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::find_last(const TK& v)
 {
-    return findLastIf([&v](const T& a) { return a == v; });
+    return find_last_if([&v](const T& a) { return a == v; });
 }
 template <typename T, typename Alloc>
 template <typename TK>
 SKR_INLINE typename Array<T, Alloc>::CDataRef Array<T, Alloc>::find(const TK& v) const
 {
-    return findIf([&v](const T& a) { return a == v; });
+    return find_if([&v](const T& a) { return a == v; });
 }
 template <typename T, typename Alloc>
 template <typename TK>
-SKR_INLINE typename Array<T, Alloc>::CDataRef Array<T, Alloc>::findLast(const TK& v) const
+SKR_INLINE typename Array<T, Alloc>::CDataRef Array<T, Alloc>::find_last(const TK& v) const
 {
-    return findLastIf([&v](const T& a) { return a == v; });
+    return find_last_if([&v](const T& a) { return a == v; });
 }
 
 // find by
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::findIf(TP&& p)
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::find_if(TP&& p)
 {
     T* ret = algo::find(begin(), end(), std::forward<TP>(p));
     return ret ? DataRef(ret, ret - data()) : DataRef();
 }
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::findLastIf(TP&& p)
+SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::find_last_if(TP&& p)
 {
     T* ret = algo::find_last(begin(), end(), std::forward<TP>(p));
     return ret ? DataRef(ret, ret - data()) : DataRef();
 }
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE typename Array<T, Alloc>::CDataRef Array<T, Alloc>::findIf(TP&& p) const
+SKR_INLINE typename Array<T, Alloc>::CDataRef Array<T, Alloc>::find_if(TP&& p) const
 {
     const T* ret = algo::find(begin(), end(), std::forward<TP>(p));
     return ret ? CDataRef(ret, ret - data()) : CDataRef();
 }
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE typename Array<T, Alloc>::CDataRef Array<T, Alloc>::findLastIf(TP&& p) const
+SKR_INLINE typename Array<T, Alloc>::CDataRef Array<T, Alloc>::find_last_if(TP&& p) const
 {
     const T* ret = algo::find_last(begin(), end(), std::forward<TP>(p));
     return ret ? CDataRef(ret, ret - data()) : CDataRef();
@@ -982,9 +987,9 @@ template <typename TK>
 SKR_INLINE bool Array<T, Alloc>::contain(const TK& v) const { return (bool)find(v); }
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE bool Array<T, Alloc>::containIf(TP&& p) const
+SKR_INLINE bool Array<T, Alloc>::contain_if(TP&& p) const
 {
-    return (bool)findIf(std::forward<TP>(p));
+    return (bool)find_if(std::forward<TP>(p));
 }
 
 // sort
@@ -996,14 +1001,14 @@ SKR_INLINE void Array<T, Alloc>::sort(TP&& p)
 }
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE void Array<T, Alloc>::sortStable(TP&& p)
+SKR_INLINE void Array<T, Alloc>::sort_stable(TP&& p)
 {
     algo::merge_sort(begin(), end(), std::forward<TP>(p));
 }
 
 // support heap
 template <typename T, typename Alloc>
-SKR_INLINE T& Array<T, Alloc>::heapTop() { return *_data; }
+SKR_INLINE T& Array<T, Alloc>::heap_top() { return *_data; }
 template <typename T, typename Alloc>
 template <typename TP>
 SKR_INLINE void Array<T, Alloc>::heapify(TP&& p)
@@ -1012,51 +1017,51 @@ SKR_INLINE void Array<T, Alloc>::heapify(TP&& p)
 }
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE bool Array<T, Alloc>::isHeap(TP&& p)
+SKR_INLINE bool Array<T, Alloc>::is_heap(TP&& p)
 {
     return algo::is_heap(_data, _size, std::forward<TP>(p));
 }
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE typename Array<T, Alloc>::SizeType Array<T, Alloc>::heapPush(T&& v, TP&& p)
+SKR_INLINE typename Array<T, Alloc>::SizeType Array<T, Alloc>::heap_push(T&& v, TP&& p)
 {
     DataRef ref = emplace(std::move(v));
     return algo::heap_sift_up(_data, (SizeType)0, ref.index, std::forward<TP>(p));
 }
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE typename Array<T, Alloc>::SizeType Array<T, Alloc>::heapPush(const T& v, TP&& p)
+SKR_INLINE typename Array<T, Alloc>::SizeType Array<T, Alloc>::heap_push(const T& v, TP&& p)
 {
     DataRef ref = add(v);
     return algo::heap_sift_up(_data, SizeType(0), ref.index, std::forward<TP>(p));
 }
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE void Array<T, Alloc>::heapPop(TP&& p)
+SKR_INLINE void Array<T, Alloc>::heap_pop(TP&& p)
 {
-    removeAtSwap(0);
+    remove_at_swap(0);
     algo::heap_sift_down(_data, (SizeType)0, _size, std::forward<TP>(p));
 }
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE T Array<T, Alloc>::heapPopGet(TP&& p)
+SKR_INLINE T Array<T, Alloc>::heap_pop_get(TP&& p)
 {
     T result = std::move(*_data);
-    heapPop(std::forward<TP>(p));
+    heap_pop(std::forward<TP>(p));
     return result;
 }
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE void Array<T, Alloc>::heapRemoveAt(SizeType index, TP&& p)
+SKR_INLINE void Array<T, Alloc>::heap_remove_at(SizeType index, TP&& p)
 {
-    removeAtSwap(index);
+    remove_at_swap(index);
 
     algo::heap_sift_down(_data, index, _size, std::forward<TP>(p));
     algo::heap_sift_up(_data, (SizeType)0, std::min(index, _size - 1), std::forward<TP>(p));
 }
 template <typename T, typename Alloc>
 template <typename TP>
-SKR_INLINE void Array<T, Alloc>::heapSort(TP&& p)
+SKR_INLINE void Array<T, Alloc>::heap_sort(TP&& p)
 {
     algo::heap_sort(_data, _size, std::forward<TP>(p));
 }
@@ -1071,14 +1076,14 @@ SKR_INLINE void Array<T, Alloc>::pop(SizeType n)
     _size -= n;
 }
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::popUnsafe(SizeType n)
+SKR_INLINE void Array<T, Alloc>::pop_unsafe(SizeType n)
 {
     SKR_ASSERT(n > 0);
     SKR_ASSERT(n <= _size);
     _size -= n;
 }
 template <typename T, typename Alloc>
-SKR_INLINE T Array<T, Alloc>::popGet()
+SKR_INLINE T Array<T, Alloc>::pop_get()
 {
     T result = std::move(*(_data + _size - 1));
     pop();
