@@ -195,7 +195,7 @@ void RenderGraphBackend::initialize() SKR_NOEXCEPT
     texture_pool.initialize(device);
     texture_view_pool.initialize(device);
 
-    for (auto phase : phases)
+    for (auto& phase : phases)
         phase->on_initialize(this);
 }
 
@@ -210,7 +210,7 @@ void RenderGraphBackend::finalize() SKR_NOEXCEPT
     texture_pool.finalize();
     texture_view_pool.finalize();
     
-    for (auto phase : phases)
+    for (auto& phase : phases)
         phase->on_finalize(this);
 }
 
@@ -906,7 +906,7 @@ void RenderGraphBackend::execute_present_pass(RenderGraphFrameExecutor& executor
 
 uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
 {
-    for (auto phase : phases)
+    for (auto& phase : phases)
         phase->on_execute(this, profiler);
 
     const auto executor_index = frame_index % RG_MAX_FRAME_IN_FLIGHT;
@@ -1020,7 +1020,7 @@ bool RenderGraphBackend::compile() SKR_NOEXCEPT
 {
     RenderGraph::compile();
 
-    for (auto phase : phases)
+    for (auto& phase : phases)
         phase->on_compile(this);
 
     ZoneScopedN("RenderGraphCompile");
@@ -1081,7 +1081,7 @@ uint32_t RenderGraphBackend::collect_garbage(uint64_t critical_frame,
 
 uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame, uint32_t with_tags, uint32_t without_tags) SKR_NOEXCEPT
 {
-    for (auto phase : phases)
+    for (auto& phase : phases)
         phase->on_collect_texture_garbage(this, critical_frame, with_tags, without_tags);
 
     if (critical_frame > get_latest_finished_frame())
@@ -1116,7 +1116,7 @@ uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame, ui
 
 uint32_t RenderGraphBackend::collect_buffer_garbage(uint64_t critical_frame, uint32_t with_tags, uint32_t without_tags) SKR_NOEXCEPT
 {
-     for (auto phase : phases)
+     for (auto& phase : phases)
         phase->on_collect_buffer_garbage(this, critical_frame, with_tags, without_tags);
 
     if (critical_frame > get_latest_finished_frame())
