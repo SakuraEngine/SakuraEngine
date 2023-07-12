@@ -4,14 +4,13 @@
 #ifndef __meta__
     #include "SkrAnim/resources/animation_resource.generated.h"
 #endif
-
 typedef struct skr_anim_resource_t skr_anim_resource_t;
 
 #ifdef __cplusplus
-    #include "SkrAnim/ozz/animation.h"
-    #include "SkrRT/serde/binary/reader_fwd.h"
-    #include "SkrRT/serde/binary/writer_fwd.h"
-    #include "SkrRT/platform/debug.h"
+#include "SkrRT/resource/resource_factory.h"
+#include "SkrRT/serde/binary/reader_fwd.h"
+#include "SkrRT/serde/binary/writer_fwd.h"
+#include "SkrAnim/ozz/animation.h"
 
 sreflect_struct("guid": "5D6DC46B-8696-4DD8-ADE4-C27D07CEDCCD")
 sattr("rtti" : true)
@@ -32,7 +31,6 @@ struct SKR_ANIM_API WriteTrait<const skr_anim_resource_t&> {
 };
 } // namespace skr::binary
 
-    #include "SkrRT/resource/resource_factory.h"
 namespace skr sreflect
 {
 namespace resource sreflect

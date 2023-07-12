@@ -1,19 +1,8 @@
 #include "forward_pass.hpp"
-
-#include "SkrRT/misc/make_zeroed.hpp"
-
-
-
 #include "SkrRenderGraph/frontend/render_graph.hpp"
-
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_viewport.h"
-#include "SkrRenderer/render_mesh.h"
-#include "SkrRenderer/resources/mesh_resource.h"
-#include "SkrRenderer/render_group.h"
 #include "SkrAnim/components/skin_component.h"
-#include "SkrAnim/components/skeleton_component.h"
-
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 
@@ -256,13 +245,9 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                 .read(SKR_UTF8("pass_cb"), cbuffer.range(0, sizeof(skr_float4x4_t)))
                 .write(0, out_color, need_clear ? CGPU_LOAD_ACTION_CLEAR : CGPU_LOAD_ACTION_LOAD);
             if (need_clear)
-            {
                 builder.set_depth_stencil(depth_buffer.clear_depth(1.f));
-            }
             else
-            {
                 builder.set_depth_stencil(depth_buffer, CGPU_LOAD_ACTION_LOAD);
-            }
             need_clear = false;
         },
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& pass_context) {

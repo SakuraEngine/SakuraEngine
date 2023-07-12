@@ -11,7 +11,6 @@
 
 #include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/hashmap.hpp>
-#include <SkrRT/containers/btree.hpp>
 
 namespace skr
 {
@@ -160,10 +159,9 @@ void Blackboard::Destroy(Blackboard* blackboard) SKR_NOEXCEPT
 } // namespace render_graph
 } // namespace skr
 
-namespace skr
-{
-namespace render_graph
-{
+namespace skr {
+namespace render_graph {
+
 RenderGraph::RenderGraph(const RenderGraphBuilder& builder) SKR_NOEXCEPT
     : aliasing_enabled(builder.memory_aliasing)
 {
@@ -219,93 +217,8 @@ const CGPUTextureDescriptor* RenderGraph::resolve_descriptor(TextureHandle hdl) 
     return nullptr;
 }
 
-inline static bool aliasing_capacity(TextureNode* aliased, TextureNode* aliasing) SKR_NOEXCEPT
-{
-    return !aliased->is_imported() &&
-        !aliased->get_desc().is_restrict_dedicated &&
-        aliased->get_size() >= aliasing->get_size() &&
-        aliased->get_sample_count() == aliasing->get_sample_count();
-}
-
 bool RenderGraph::compile() SKR_NOEXCEPT
 {
-    ZoneScopedN("RenderGraphCompile");
-    {
-        ZoneScopedN("RenderGraphCull");
-        // 1.cull
-        resources.erase(
-        eastl::remove_if(resources.begin(), resources.end(),
-        [this](ResourceNode* resource) {
-            ZoneScopedC(tracy::Color::SteelBlue);
-            ZoneName(resource->name.c_str(), resource->name.size());
-
-            const bool lone = !(resource->incoming_edges() + resource->outgoing_edges());
-            {
-                ZoneScopedN("RecordDealloc");
-                if (lone) culled_resources.emplace_back(resource);
-            }
-            return lone;
-        }),
-        resources.end());
-        passes.erase(
-        eastl::remove_if(passes.begin(), passes.end(),
-        [this](PassNode* pass) {
-            ZoneScopedC(tracy::Color::SteelBlue);
-            ZoneName(pass->name.c_str(), pass->name.size());
-
-            const bool lone = !(pass->incoming_edges() + pass->outgoing_edges());
-            const bool can_be_lone = pass->can_be_lone;
-            const bool culled = lone && !can_be_lone;
-            {
-                ZoneScopedN("RecordDealloc");
-                if (culled) culled_passes.emplace_back(pass);
-            }
-            return culled;
-        }),
-        passes.end());
-    }
-    if (aliasing_enabled)
-    {
-        ZoneScopedN("CalculateAliasing");
-        // 2.calc aliasing
-        // - 先在aliasing chain里找一圈，如果有不重合的，直接把它加入到aliasing chain里
-        // - 如果没找到，在所有resource中找一个合适的加入到aliasing chain
-        skr::btree_map<TextureNode*, TextureNode::LifeSpan> alliasing_lifespans;
-        foreach_textures([&](TextureNode* texture) SKR_NOEXCEPT {
-            if (texture->imported) return;
-            for (auto&& [aliased, aliaed_span] : alliasing_lifespans)
-            {
-                if (aliasing_capacity(aliased, texture) &&
-                    aliaed_span.to < texture->lifespan().from)
-                {
-                    if (!texture->frame_aliasing_source ||
-                        texture->frame_aliasing_source->get_size() > aliased->get_size() // always choose smallest block
-                    )
-                    {
-                        texture->descriptor.flags |= CGPU_TCF_ALIASING_RESOURCE;
-                        texture->frame_aliasing_source = aliased;
-                        aliaed_span.to = texture->lifespan().to;
-                    }
-                }
-            }
-            if (texture->frame_aliasing_source) return;
-            foreach_textures([&](TextureNode* aliased) SKR_NOEXCEPT {
-                if (aliasing_capacity(aliased, texture) &&
-                    aliased->lifespan().to < texture->lifespan().from)
-                {
-                    if (!texture->frame_aliasing_source ||
-                        texture->frame_aliasing_source->get_size() > aliased->get_size() // always choose smallest block
-                    )
-                    {
-                        texture->descriptor.flags |= CGPU_TCF_ALIASING_RESOURCE;
-                        texture->frame_aliasing_source = aliased;
-                        alliasing_lifespans[aliased].from = aliased->lifespan().from;
-                        alliasing_lifespans[aliased].to = aliased->lifespan().from;
-                    }
-                }
-            });
-        });
-    }
     return true;
 }
 
@@ -472,14 +385,14 @@ uint64_t RenderGraph::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
 void RenderGraph::initialize() SKR_NOEXCEPT
 {
     graph = DependencyGraph::Create();
-    object_factory = NodeAndEdgeFactory::Create();
+    node_factory = NodeAndEdgeFactory::Create();
     blackboard = Blackboard::Create();
 }
 
 void RenderGraph::finalize() SKR_NOEXCEPT
 {
     Blackboard::Destroy(blackboard);
-    NodeAndEdgeFactory::Destroy(object_factory);
+    NodeAndEdgeFactory::Destroy(node_factory);
     DependencyGraph::Destroy(graph);
 }
 } // namespace render_graph
