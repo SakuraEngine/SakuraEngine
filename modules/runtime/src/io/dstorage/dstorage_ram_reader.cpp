@@ -57,17 +57,26 @@ bool DStorageRAMReader::fetch(SkrAsyncServicePriority priority, IOBatchId batch)
 
 void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    ZoneScopedN("DStorage::EnqueueAndSubmit");
-
     auto queue = f2m_queues[priority];
     auto instance = skr_get_dstorage_instnace();
     IOBatchId batch;
     skr::SObjectPtr<DStorageEvent> event;
+#ifdef TRACY_ENABLE
+    TracyCZoneCtx Zone;
+    bool bZoneSet = false;
+#endif
     while (fetched_batches[priority].try_dequeue(batch))
     {
         auto& eref = event;
         if (!eref)
+        {
+#ifdef TRACY_ENABLE
+            TracyCZoneN(z, "DStorage::EnqueueAndSubmit", 1);
+            Zone = z;
+            bZoneSet = true;
+#endif
             eref = skr::static_pointer_cast<DStorageEvent>(events[priority]->allocate(queue));
+        }
         for (auto&& request : batch->get_requests())
         {
             auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
@@ -79,7 +88,7 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
             }
             else if (rq->getStatus() == SKR_IO_STAGE_RESOLVING)
             {
-                ZoneScopedN("read_request");
+                ZoneScopedN("DStorage::ReadRequest");
                 SKR_ASSERT(rq->dfile);
                 rq->setStatus(SKR_IO_STAGE_LOADING);
                 uint64_t dst_offset = 0u;
@@ -120,6 +129,10 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
             // SKR_ASSERT(0);
         }
     }
+#ifdef TRACY_ENABLE
+    if (bZoneSet)
+        TracyCZoneEnd(Zone);
+#endif
 }
 
 void DStorageRAMReader::pollSubmitted(SkrAsyncServicePriority priority) SKR_NOEXCEPT
