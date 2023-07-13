@@ -23,7 +23,7 @@ struct AllocateIOBufferResolver : public IORequestResolverBase
 {
     virtual void resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
     {
-        ZoneScopedNC("IOBufferAllocate", tracy::Color::BlueViolet);
+        ZoneScopedNC("IOBuffer::Allocate", tracy::Color::BlueViolet);
         auto rq = skr::static_pointer_cast<RAMIORequest>(request);
         auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
         // deal with 0 block size
