@@ -1,6 +1,5 @@
 #include "../ram/ram_request.hpp"
 #include "../ram/ram_buffer.hpp"
-
 #include "../ram/ram_readers.hpp"
 
 namespace skr {
@@ -58,16 +57,21 @@ bool DStorageRAMReader::fetch(SkrAsyncServicePriority priority, IOBatchId batch)
 
 void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
+    ZoneScopedN("DStorage::EnqueueAndSubmit");
+
     auto queue = f2m_queues[priority];
     auto instance = skr_get_dstorage_instnace();
-    auto event = skr::static_pointer_cast<DStorageEvent>(events[priority]->allocate(queue));
     IOBatchId batch;
+    skr::SObjectPtr<DStorageEvent> event;
     while (fetched_batches[priority].try_dequeue(batch))
     {
-        for (auto request : batch->get_requests())
+        auto& eref = event;
+        if (!eref)
+            eref = skr::static_pointer_cast<DStorageEvent>(events[priority]->allocate(queue));
+        for (auto&& request : batch->get_requests())
         {
-            auto rq = skr::static_pointer_cast<RAMIORequest>(request);
-            auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
+            auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
+            auto&& buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
             if (service->runner.try_cancel(priority, rq))
             {
                 skr_dstorage_close_file(instance, rq->dfile);
@@ -104,19 +108,24 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
         }
         event->batches.emplace_back(batch);
     }
-    if (const auto enqueued = event->batches.size())
+    if (event)
     {
-        skr_dstorage_queue_submit(queue, event->event);
-        submitted[priority].emplace_back(event);
-    }
-    else
-    {
-        // SKR_ASSERT(0);
+        if (const auto enqueued = event->batches.size())
+        {
+            skr_dstorage_queue_submit(queue, event->event);
+            submitted[priority].emplace_back(event);
+        }
+        else
+        {
+            // SKR_ASSERT(0);
+        }
     }
 }
 
 void DStorageRAMReader::pollSubmitted(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
+    ZoneScopedN("DStorage::PollSubmitted");
+
     auto instance = skr_get_dstorage_instnace();
     for (auto& e : submitted[priority])
     {

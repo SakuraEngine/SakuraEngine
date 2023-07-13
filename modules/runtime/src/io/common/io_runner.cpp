@@ -80,9 +80,7 @@ void RunnerBase::process_batches() SKR_NOEXCEPT
                 auto bq = skr::static_pointer_cast<IOBatchBase>(batch);
                 for (auto&& request : bq->get_requests())
                 {
-                    // TODO: Remove this check when batch cancel is ready
-                    if (!request->get_future()->is_cancelled())
-                        request_processors.front()->fetch(priority, request);
+                    request_processors.front()->fetch(priority, request);
                 }
             }
             request_processors.front()->dispatch(priority);
@@ -97,9 +95,7 @@ void RunnerBase::process_batches() SKR_NOEXCEPT
             IORequestId request = nullptr;
             while (prev_processor->poll_processed_request(priority, request))
             {
-                // TODO: Remove this check when batch cancel is ready
-                if (!request->get_future()->is_cancelled())
-                    processor->fetch(priority, request);
+                processor->fetch(priority, request);
             }
             processor->dispatch(priority);
         }
