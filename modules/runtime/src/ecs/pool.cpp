@@ -6,6 +6,7 @@
 
 #include "tracy/Tracy.hpp"
 
+const char* kDualMemoryName = "dual";
 namespace dual
 {
 pool_t::pool_t(size_t blockSize, size_t blockCount)
@@ -18,7 +19,7 @@ pool_t::~pool_t()
 {
     void* block;
     while (blocks.try_dequeue(block))
-       dual_free(block);
+        dual_free(block);
 }
 
 void* pool_t::allocate()

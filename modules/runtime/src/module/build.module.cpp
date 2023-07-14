@@ -1,6 +1,9 @@
-#include "SkrRT/platform/crash.h"
 #include "module_manager.cpp"
+#include "SkrRT/platform/crash.h"
 #include "SkrRT/runtime_module.h"
+#include "SKrRT/ecs/dual.h"
+
+#include "tracy/Tracy.hpp"
 
 IMPLEMENT_DYNAMIC_MODULE(SkrRuntimeModule, SkrRT);
 
@@ -42,18 +45,23 @@ void SkrRuntimeModule::on_load(int argc, char8_t** argv)
 
 void SkrRuntimeModule::on_unload()
 {
+    dual_shutdown();
+
     skr_runtime_free_dstorage_instance();
-    
-#ifdef TRACY_ENABLE
-    //std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
-    //tracy::GetProfiler().RequestShutdown();
-    //while( !tracy::GetProfiler().HasShutdownFinished() ) { std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) ); };
-    tracyLibrary.unload();
-#endif
 
     SKR_LOG_TRACE("SkrRuntime module unloaded!");
     skr_log_finalize_async_worker();
     skr_finalize_crash_handler();
+
+#ifdef TRACY_ENABLE
+    if (tracy::GetProfiler().IsConnected())
+    {
+        std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
+        tracy::GetProfiler().RequestShutdown();
+        while( !tracy::GetProfiler().HasShutdownFinished() ) { std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) ); };
+    }
+    tracyLibrary.unload();
+#endif
 }
 
 SkrRuntimeModule* SkrRuntimeModule::Get()

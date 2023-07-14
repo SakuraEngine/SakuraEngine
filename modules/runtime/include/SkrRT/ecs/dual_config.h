@@ -46,11 +46,12 @@ typedef struct dual_entity_debug_proxy_t {
 
 #include "SkrRT/platform/memory.h"
 
-#define dual_malloc sakura_malloc
-#define dual_malloc_aligned sakura_malloc_aligned
-#define dual_calloc sakura_calloc
-#define dual_calloc_aligned sakura_calloc_aligned
-#define dual_memalign sakura_malloc_aligned
-#define dual_free sakura_free
-#define dual_free_aligned sakura_free_aligned
-#define dual_realloc sakura_realloc
+RUNTIME_API extern const char* kDualMemoryName;
+#define dual_malloc(size) sakura_mallocN((size), kDualMemoryName)
+#define dual_malloc_aligned(size, alignment) sakura_malloc_alignedN((size), (alignment), kDualMemoryName)
+#define dual_calloc(count, size) sakura_callocN((count), (size), kDualMemoryName)
+#define dual_calloc_aligned(count, size, alignment) sakura_calloc_alignedN((count), (size), (alignment), kDualMemoryName)
+#define dual_memalign dual_malloc_aligned
+#define dual_free(ptr) sakura_freeN((ptr), kDualMemoryName)
+#define dual_free_aligned(p, alignment) sakura_free_aligned((p), (alignment), kDualMemoryName)
+#define dual_realloc(p, newsize) sakura_reallocN((p), (newsize), kDualMemoryName)
