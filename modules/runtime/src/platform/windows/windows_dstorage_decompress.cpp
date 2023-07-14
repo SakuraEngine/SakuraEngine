@@ -232,7 +232,6 @@ bool skr_win_dstorage_decompress_service_register_callback(skr_win_dstorage_deco
 void skr_win_dstorage_free_decompress_service(skr_win_dstorage_decompress_service_id service)
 {
     SKR_ASSERT(service && "Invalid service");
-    service->decompress_queue->Release();
     SkrDelete(service);
     SKR_LOG_TRACE("Deleted decompress service");
 }

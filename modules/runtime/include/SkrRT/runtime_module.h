@@ -26,6 +26,7 @@ public:
 
 RUNTIME_EXTERN_C RUNTIME_API bool skr_runtime_is_dpi_aware();
 RUNTIME_EXTERN_C RUNTIME_API SkrDStorageInstanceId skr_runtime_get_dstorage_instance();
+RUNTIME_EXTERN_C RUNTIME_API void skr_runtime_free_dstorage_instance();
 
 #ifdef _WIN32
 RUNTIME_EXTERN_C RUNTIME_API skr_win_dstorage_decompress_service_id 
