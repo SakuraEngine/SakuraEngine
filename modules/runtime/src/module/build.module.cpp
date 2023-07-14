@@ -42,16 +42,8 @@ void SkrRuntimeModule::on_load(int argc, char8_t** argv)
 
 void SkrRuntimeModule::on_unload()
 {
-    if (auto inst = skr_runtime_get_dstorage_instance())
-    {
-        skr_free_dstorage_instance(inst);
-    }
-
-#ifdef _WIN32
-    if (dstroageDecompressService)
-        skr_win_dstorage_free_decompress_service(dstroageDecompressService);
-#endif
-
+    skr_runtime_free_dstorage_instance();
+    
 #ifdef TRACY_ENABLE
     //std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
     //tracy::GetProfiler().RequestShutdown();
@@ -92,6 +84,21 @@ SkrDStorageInstanceId skr_runtime_get_dstorage_instance()
         return rtModule->dstorageInstance;
     }
     return nullptr;
+}
+
+void skr_runtime_free_dstorage_instance()
+{
+    if (auto rtModule = SkrRuntimeModule::Get()) 
+    {
+#ifdef _WIN32
+        if (auto service = rtModule->dstroageDecompressService)
+            skr_win_dstorage_free_decompress_service(service);
+#endif
+        if (auto inst = skr_runtime_get_dstorage_instance())
+        {
+            skr_free_dstorage_instance(inst);
+        }
+    }
 }
 
 RUNTIME_EXTERN_C RUNTIME_API skr::ModuleManager* skr_get_module_manager()
