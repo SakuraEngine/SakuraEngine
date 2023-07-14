@@ -354,6 +354,7 @@ void CGPUXMergedBindTable::Free(CGPUXMergedBindTableId table) SKR_NOEXCEPT
         if (table->merged[i]) cgpu_free_descriptor_set(table->merged[i]);
     }
     ((CGPUXMergedBindTable*)table)->~CGPUXMergedBindTable();
+    cgpu_free_aligned((void*)table, alignof(CGPUXMergedBindTable));
 }
 
 CGPUXMergedBindTableId cgpux_create_megred_bind_table(CGPUDeviceId device, const struct CGPUXMergedBindTableDescriptor* desc)
