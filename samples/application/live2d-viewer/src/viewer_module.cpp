@@ -42,7 +42,7 @@ enum DemoUploadMethod
 {
     DEMO_UPLOAD_METHOD_DIRECT_STORAGE_FILE = 0,
     DEMO_UPLOAD_METHOD_DIRECT_STORAGE_MEMORY = 1,
-    DEMO_UPLOAD_METHOD_UPLOAd = 2,
+    DEMO_UPLOAD_METHOD_UPLOAD = 2,
     DEMO_UPLOAD_METHOD_COUNT
 };
 
@@ -56,7 +56,7 @@ public:
     static SLive2DViewerModule* Get();
 
     bool bUseCVV = true;
-    DemoUploadMethod upload_method;
+    DemoUploadMethod upload_method = DEMO_UPLOAD_METHOD_UPLOAD;
 
     CGPUSwapChainId swapchain = nullptr;
     CGPUFenceId present_fence = nullptr;

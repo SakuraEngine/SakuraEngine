@@ -237,9 +237,11 @@ void skr::io::VRAMService::tryUploadBufferResource(skr::io::VRAMService::Task& t
             buffer_barrier.queue_type = buffer_io.transfer_queue->type;
         }
         
+        if (task.task_batch->buffer_barriers_check.find(buffer_barrier.buffer) == task.task_batch->buffer_barriers_check.end())
         {
             ZoneScopedN("Emplace");
             task.task_batch->buffer_barriers.emplace_back(buffer_barrier);
+            task.task_batch->buffer_barriers_check.insert(buffer_barrier.buffer);
         }
 
         buffer_task->upload_task = upload;
@@ -301,9 +303,11 @@ void skr::io::VRAMService::tryUploadTextureResource(skr::io::VRAMService::Task& 
             texture_barrier.queue_type = texture_io.transfer_queue->type;
         }
         
+        if (task.task_batch->texture_barriers_check.find(texture_barrier.texture) == task.task_batch->texture_barriers_check.end())
         {
             ZoneScopedN("Emplace");
             task.task_batch->texture_barriers.emplace_back(texture_barrier);
+            task.task_batch->texture_barriers_check.insert(texture_barrier.texture);
         }
 
         texture_task->upload_task = upload;

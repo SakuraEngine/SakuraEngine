@@ -2,9 +2,11 @@
 #include "cgpu/io.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "io_service_util.hpp"
+
 #include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/variant.hpp>
 #include <EASTL/vector_map.h>
+#include <EASTL/set.h>
 
 namespace skr
 {
@@ -133,7 +135,9 @@ public:
         eastl::vector<Task> tasks;
         // Upload Resources
         eastl::vector<CGPUBufferBarrier> buffer_barriers;
+        eastl::set<CGPUBufferId> buffer_barriers_check;
         eastl::vector<CGPUTextureBarrier> texture_barriers;
+        eastl::set<CGPUTextureId> texture_barriers_check;
         eastl::vector_map<CGPUQueueId, CGPUFenceId> fences;
         eastl::vector_map<CGPUQueueId, CGPUCommandPoolId> cmd_pools;
         eastl::vector_map<CGPUQueueId, CGPUCommandBufferId> cmds;
