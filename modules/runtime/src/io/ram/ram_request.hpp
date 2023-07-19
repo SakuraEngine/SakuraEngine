@@ -17,7 +17,7 @@ struct RAMIORequest final : public IORequestBase
     RAMIOBufferId destination = nullptr;
     eastl::fixed_vector<skr_io_block_t, 1> blocks;
     
-    uint64_t get_fsize() const SKR_NOEXCEPT override
+    uint64_t get_fsize() const SKR_NOEXCEPT
     {
         if (file)
         {
