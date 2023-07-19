@@ -41,7 +41,7 @@ struct RUNTIME_API IVRAMService : public IIOService
     [[nodiscard]] static IVRAMService* create(const VRAMServiceDescriptor* desc) SKR_NOEXCEPT;
     static void destroy(IVRAMService* service) SKR_NOEXCEPT;
 
-    virtual VRAMIOBufferId request(IORequestId request, skr_io_future_t* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
+    virtual VRAMIOBufferId request(IORequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
     
     virtual void request(IOBatchId request) SKR_NOEXCEPT = 0;
 

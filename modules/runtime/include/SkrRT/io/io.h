@@ -2,6 +2,9 @@
 #include "SkrRT/misc/types.h"
 #include "SkrRT/platform/atomic.h"
 #include "SkrRT/async/async_service.h"
+#ifdef __cplusplus
+#include "SkrRT/containers/sptr.hpp"
+#endif
 
 #define SKR_IO_SERVICE_MAX_TASK_COUNT 32
 #define SKR_ASYNC_SERVICE_SLEEP_TIME_MAX UINT32_MAX
@@ -93,13 +96,15 @@ typedef struct skr_io_compressed_block_t
 typedef void (*skr_io_callback_t)(skr_io_future_t* future, skr_io_request_t* request, void* data);
 
 #ifdef __cplusplus
-#include "SkrRT/containers/sptr.hpp"
 
 namespace skr {
 namespace io {
 
 using IOBlock = skr_io_block_t;
 using IOCompressedBlock = skr_io_compressed_block_t;
+using IOFuture = skr_io_future_t;
+using IOCallback = skr_io_callback_t;
+
 struct RUNTIME_API IIORequest : public skr::SInterface
 {
     virtual void set_vfs(skr_vfs_t* vfs) SKR_NOEXCEPT = 0;
@@ -109,10 +114,10 @@ struct RUNTIME_API IIORequest : public skr::SInterface
     virtual void use_async_complete() SKR_NOEXCEPT = 0;
     virtual void use_async_cancel() SKR_NOEXCEPT = 0;
 
-    virtual const skr_io_future_t* get_future() const SKR_NOEXCEPT = 0;
+    virtual const IOFuture* get_future() const SKR_NOEXCEPT = 0;
 
-    virtual void add_callback(ESkrIOStage stage, skr_io_callback_t callback, void* data) SKR_NOEXCEPT = 0;
-    virtual void add_finish_callback(ESkrIOFinishPoint point, skr_io_callback_t callback, void* data) SKR_NOEXCEPT = 0;
+    virtual void add_callback(ESkrIOStage stage, IOCallback callback, void* data) SKR_NOEXCEPT = 0;
+    virtual void add_finish_callback(ESkrIOFinishPoint point, IOCallback callback, void* data) SKR_NOEXCEPT = 0;
 
     virtual skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT = 0;
     virtual void add_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
@@ -128,7 +133,7 @@ using IOResultId = SObjectPtr<skr::SInterface>;
 struct RUNTIME_API IIOBatch : public skr::SInterface
 {
     virtual void reserve(uint64_t size) SKR_NOEXCEPT = 0;
-    virtual IOResultId add_request(IORequestId request, skr_io_future_t* future = nullptr) SKR_NOEXCEPT = 0;
+    virtual IOResultId add_request(IORequestId request, IOFuture* future = nullptr) SKR_NOEXCEPT = 0;
     virtual skr::span<IORequestId> get_requests() SKR_NOEXCEPT = 0;
 
     virtual void set_priority(SkrAsyncServicePriority pri) SKR_NOEXCEPT = 0;
@@ -210,14 +215,8 @@ struct RUNTIME_API IIOService
     // add a resolver to service
     // virtual void set_resolvers(IORequestResolverChainId chain) SKR_NOEXCEPT = 0;
 
-    // open a request for filling
-    [[nodiscard]] virtual IORequestId open_request() SKR_NOEXCEPT = 0;
-
-    // start a request batch
-    [[nodiscard]] virtual IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT = 0;
-
     // cancel request
-    virtual void cancel(skr_io_future_t* future) SKR_NOEXCEPT = 0;
+    virtual void cancel(IOFuture* future) SKR_NOEXCEPT = 0;
 
     // stop service and hang up underground thread
     virtual void stop(bool wait_drain = false) SKR_NOEXCEPT = 0;
