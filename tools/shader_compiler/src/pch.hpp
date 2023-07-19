@@ -3,7 +3,7 @@
 
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/debug.h"
-#include "SkrRT/io/io.h"
+#include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/types.h"
 #include "SkrRT/misc/log.hpp"
