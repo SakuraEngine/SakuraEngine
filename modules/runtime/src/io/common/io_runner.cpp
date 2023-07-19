@@ -7,7 +7,7 @@ namespace io {
 
 void RunnerBase::recycle() SKR_NOEXCEPT
 {
-    ZoneScopedN("recycle");
+    ZoneScopedN("IORunner::Recycle");
     
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
@@ -34,45 +34,48 @@ void RunnerBase::recycle() SKR_NOEXCEPT
 
 void RunnerBase::process_batches() SKR_NOEXCEPT
 {
-    ZoneScopedN("process_batches");
-
     for (uint32_t k = 0; k < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++k)
     {
         const auto priority = (SkrAsyncServicePriority)k;
-        // poll batches across batches processor
-        for (size_t j = 1; j < batch_processors.size(); j++)
         {
-            auto&& processor = batch_processors[j];
-            auto&& prev_processor = batch_processors[j - 1];
-            
-            const uint64_t NBytes = processor->get_prefer_batch_size();
-            uint64_t bytes = 0;
-            BatchPtr batch = nullptr;
-            while ((bytes <= NBytes) && prev_processor->poll_processed_batch(priority, batch))
+            ZoneScopedN("dispatch_batches");
+            // poll batches across batches processor
+            for (size_t j = 1; j < batch_processors.size(); j++)
             {
-                uint64_t batch_size = 0;
-                if (bool sucess = processor->fetch(priority, batch))
+                auto&& processor = batch_processors[j];
+                auto&& prev_processor = batch_processors[j - 1];
+                
+                const uint64_t NBytes = processor->get_prefer_batch_size();
+                uint64_t bytes = 0;
+                BatchPtr batch = nullptr;
+                while ((bytes <= NBytes) && prev_processor->poll_processed_batch(priority, batch))
                 {
-                    SKR_ASSERT(sucess);
-                    for (auto&& request : batch->get_requests())
+                    uint64_t batch_size = 0;
+                    if (bool sucess = processor->fetch(priority, batch))
                     {
-                        for (auto block : request->get_blocks())
-                            batch_size += block.size;
+                        SKR_ASSERT(sucess);
+                        for (auto&& request : batch->get_requests())
+                        {
+                            for (auto block : request->get_blocks())
+                                batch_size += block.size;
+                        }
+                        bytes += batch_size;
                     }
-                    bytes += batch_size;
                 }
+                processor->dispatch(priority);
             }
-            processor->dispatch(priority);
         }
 
         if (!request_processors.size())
         {
+            ZoneScopedN("complete_batches");
             complete_batches(priority);
             continue;
         }
 
         // poll requests from last batches processor
         {
+            ZoneScopedN("split_batches");
             BatchPtr batch = nullptr;
             auto& back_processor = batch_processors.back();
             while (back_processor->poll_processed_batch(priority, batch))
@@ -80,31 +83,33 @@ void RunnerBase::process_batches() SKR_NOEXCEPT
                 auto bq = skr::static_pointer_cast<IOBatchBase>(batch);
                 for (auto&& request : bq->get_requests())
                 {
-                    // TODO: Remove this check when batch cancel is ready
-                    if (!request->get_future()->is_cancelled())
-                        request_processors.front()->fetch(priority, request);
+                    request_processors.front()->fetch(priority, request);
                 }
             }
             request_processors.front()->dispatch(priority);
         }
 
         // poll requests across requests processor
-        for (size_t j = 1; j < request_processors.size(); j++)
         {
-            auto&& processor = request_processors[j];
-            auto&& prev_processor = request_processors[j - 1];
-            
-            IORequestId request = nullptr;
-            while (prev_processor->poll_processed_request(priority, request))
+            ZoneScopedN("dispatch_requests");
+            for (size_t j = 1; j < request_processors.size(); j++)
             {
-                // TODO: Remove this check when batch cancel is ready
-                if (!request->get_future()->is_cancelled())
+                auto&& processor = request_processors[j];
+                auto&& prev_processor = request_processors[j - 1];
+                
+                IORequestId request = nullptr;
+                while (prev_processor->poll_processed_request(priority, request))
+                {
                     processor->fetch(priority, request);
+                }
+                processor->dispatch(priority);
             }
-            processor->dispatch(priority);
         }
 
-        complete_requests(priority);
+        {
+            ZoneScopedN("complete_requests");
+            complete_requests(priority);
+        }
     }
 }
 
@@ -218,11 +223,11 @@ skr::AsyncResult RunnerBase::serve() SKR_NOEXCEPT
     
     {
         setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
-        ZoneScopedNC("Dispatch", tracy::Color::Orchid1);
+        ZoneScopedNC("IORunner::Dispatch", tracy::Color::Orchid1);
         process_batches();
     }
     {
-        ZoneScopedNC("Recycle", tracy::Color::Tan1);
+        ZoneScopedNC("IORunner::Recycle", tracy::Color::Tan1);
         recycle();
     }
     return ASYNC_RESULT_OK;
@@ -233,7 +238,7 @@ void RunnerBase::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     if (priority == SKR_ASYNC_SERVICE_PRIORITY_COUNT)
         return drain();
 
-    ZoneScopedN("runner_drain");
+    ZoneScopedN("IORunner::Drain");
     auto predicate = [this, priority]() {
         uint64_t cnt = 0;
         for (auto processor : batch_processors)

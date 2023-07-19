@@ -13,6 +13,8 @@ struct DStorageFileResolver : public IORequestResolverBase
         auto rq = skr::static_pointer_cast<IORequestBase>(request);
         if (!rq->dfile)
         {
+            ZoneScopedN("DStorage::OpenFile");
+
             SKR_ASSERT(rq->vfs);
             skr::filesystem::path p = rq->vfs->mount_dir;
             p /= rq->path.c_str();

@@ -1,6 +1,5 @@
 #include "../ram/ram_request.hpp"
 #include "../ram/ram_buffer.hpp"
-
 #include "../ram/ram_readers.hpp"
 
 namespace skr {
@@ -60,14 +59,28 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
 {
     auto queue = f2m_queues[priority];
     auto instance = skr_get_dstorage_instnace();
-    auto event = skr::static_pointer_cast<DStorageEvent>(events[priority]->allocate(queue));
     IOBatchId batch;
+    skr::SObjectPtr<DStorageEvent> event;
+#ifdef TRACY_ENABLE
+    TracyCZoneCtx Zone;
+    bool bZoneSet = false;
+#endif
     while (fetched_batches[priority].try_dequeue(batch))
     {
-        for (auto request : batch->get_requests())
+        auto& eref = event;
+        if (!eref)
         {
-            auto rq = skr::static_pointer_cast<RAMIORequest>(request);
-            auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
+#ifdef TRACY_ENABLE
+            TracyCZoneN(z, "DStorage::EnqueueAndSubmit", 1);
+            Zone = z;
+            bZoneSet = true;
+#endif
+            eref = skr::static_pointer_cast<DStorageEvent>(events[priority]->allocate(queue));
+        }
+        for (auto&& request : batch->get_requests())
+        {
+            auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
+            auto&& buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
             if (service->runner.try_cancel(priority, rq))
             {
                 skr_dstorage_close_file(instance, rq->dfile);
@@ -75,7 +88,7 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
             }
             else if (rq->getStatus() == SKR_IO_STAGE_RESOLVING)
             {
-                ZoneScopedN("read_request");
+                ZoneScopedN("DStorage::ReadRequest");
                 SKR_ASSERT(rq->dfile);
                 rq->setStatus(SKR_IO_STAGE_LOADING);
                 uint64_t dst_offset = 0u;
@@ -104,19 +117,28 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
         }
         event->batches.emplace_back(batch);
     }
-    if (const auto enqueued = event->batches.size())
+    if (event)
     {
-        skr_dstorage_queue_submit(queue, event->event);
-        submitted[priority].emplace_back(event);
+        if (const auto enqueued = event->batches.size())
+        {
+            skr_dstorage_queue_submit(queue, event->event);
+            submitted[priority].emplace_back(event);
+        }
+        else
+        {
+            // SKR_ASSERT(0);
+        }
     }
-    else
-    {
-        // SKR_ASSERT(0);
-    }
+#ifdef TRACY_ENABLE
+    if (bZoneSet)
+        TracyCZoneEnd(Zone);
+#endif
 }
 
 void DStorageRAMReader::pollSubmitted(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
+    ZoneScopedN("DStorage::PollSubmitted");
+
     auto instance = skr_get_dstorage_instnace();
     for (auto& e : submitted[priority])
     {
