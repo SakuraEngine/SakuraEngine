@@ -40,8 +40,16 @@ struct RUNTIME_API IRAMService : public IIOService
     [[nodiscard]] static IRAMService* create(const RAMServiceDescriptor* desc) SKR_NOEXCEPT;
     static void destroy(IRAMService* service) SKR_NOEXCEPT;
 
-    virtual RAMIOBufferId request(IORequestId request, skr_io_future_t* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
+    // open a request for filling
+    [[nodiscard]] virtual IORequestId open_request() SKR_NOEXCEPT = 0;
+
+    // start a request batch
+    [[nodiscard]] virtual IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT = 0;
+
+    // submit a request
+    [[nodiscard]] virtual RAMIOBufferId request(IORequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
     
+    // submit a batch
     virtual void request(IOBatchId request) SKR_NOEXCEPT = 0;
 
     virtual ~IRAMService() SKR_NOEXCEPT = default;

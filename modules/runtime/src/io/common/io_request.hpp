@@ -72,7 +72,7 @@ public:
         {
             ZoneScoped;
             ZoneName(callback_names[status], ::strlen(callback_names[status]));
-            callback(future, nullptr, callback_datas[status]);
+            callback(future, this, callback_datas[status]);
         }
     }
 
