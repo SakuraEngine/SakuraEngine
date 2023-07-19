@@ -29,19 +29,19 @@ struct AllocateIOBufferResolver : public IORequestResolverBase
         // deal with 0 block size
         for (auto& block : rq->blocks)
         {
-            if (!block.size)
+            if (block.size == 0)
             {
                 block.size = rq->get_fsize() - block.offset;
             }
-            if (!buf->size)
+            if (buf->size == 0)
             {
                 buf->size += block.size;
             }
         }
         // allocate
-        if (!buf->bytes)
+        if (buf->bytes == nullptr)
         {
-            if (!buf->size)
+            if (buf->size == 0)
             {
                 SKR_ASSERT(0 && "invalid destination size");
             }

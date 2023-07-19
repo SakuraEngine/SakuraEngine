@@ -95,7 +95,6 @@ typedef struct skr_vram_io_service_desc_t {
     bool lockless;
 } skr_vram_io_service_desc_t;
 
-
 #ifdef __cplusplus
 struct CGPU_API skr_io_vram_service_t
 {
