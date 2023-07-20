@@ -24,18 +24,14 @@
 // DEALINGS IN THE SOFTWARE.                                                  //
 //                                                                            //
 //----------------------------------------------------------------------------//
-
+#include "SkrRT/platform/memory.h"
 #include "SkrAnim/ozz/base/memory/allocator.h"
-
-#include <memory.h>
+#include "SkrAnim/ozz/base/maths/math_ex.h"
 
 #include <atomic>
 #include <cassert>
 #include <cstdlib>
 
-#include "SkrAnim/ozz/base/maths/math_ex.h"
-
-#include "SkrRT/platform/memory.h"
 
 namespace ozz {
 namespace memory {
