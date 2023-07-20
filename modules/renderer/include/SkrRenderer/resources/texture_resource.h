@@ -4,7 +4,7 @@
 #include "cgpu/io.h"
 
 #ifndef __meta__
-#include "SkrRenderer/resources/texture_resource.generated.h"
+#include "SkrRenderer/resources/texture_resource.generated.h" // IWYU pragma: export
 #endif
 
 // (GPU) texture resource

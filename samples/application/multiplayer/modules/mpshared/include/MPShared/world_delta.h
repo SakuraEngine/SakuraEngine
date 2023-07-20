@@ -54,7 +54,7 @@ struct WriteTrait<const packed_entity_t&>
 
 
 #ifndef __meta__
-    #include "MPShared/world_delta.generated.h"
+    #include "MPShared/world_delta.generated.h" // IWYU pragma: export
 #endif
 
 using NetEntityId = uint16_t;

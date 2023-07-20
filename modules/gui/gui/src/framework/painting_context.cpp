@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrGui/framework/painting_context.hpp"
 #include "SkrGui/framework/layer/geometry_layer.hpp"
 #include "SkrGui/framework/layer/container_layer.hpp"

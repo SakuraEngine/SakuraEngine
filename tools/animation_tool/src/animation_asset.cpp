@@ -1,3 +1,4 @@
+#include "pch.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrAnimTool/animation_asset.h"
 #include "SkrAnim/ozz/animation.h"
@@ -10,7 +11,6 @@
 #include "SkrAnim/ozz/base/memory/unique_ptr.h"
 #include "SkrAnim/ozz/base/io/stream.h"
 #include "SkrAnim/ozz/base/io/archive.h"
-#include "SkrRT/misc/log.hpp"
 #include "SkrAnim/resources/skeleton_resource.h"
 #include "SkrAnim/resources/animation_resource.h"
 #include "SkrToolCore/asset/json_utils.hpp"

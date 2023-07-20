@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrRT/async/named_thread.hpp"
 #include "SkrRT/async/wait_timeout.hpp"
 #include "SkrRT/misc/log.h"

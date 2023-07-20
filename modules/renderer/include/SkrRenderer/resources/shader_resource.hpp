@@ -7,7 +7,7 @@
 #include <SkrRT/containers/hashmap.hpp>
 
 #ifndef __meta__
-    #include "SkrRenderer/resources/shader_resource.generated.h"
+    #include "SkrRenderer/resources/shader_resource.generated.h" // IWYU pragma: export
 #endif
 
 namespace skr sreflect

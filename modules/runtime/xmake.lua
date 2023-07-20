@@ -35,6 +35,7 @@ target("SkrRTStatic")
     add_defines(defs_list, {public = true})
     add_includedirs(include_dir_list, {public = true})
     add_includedirs(private_include_dir_list, {public = false})
+    set_pcxxheader("src_static/pch.hpp")
     add_files("src_static/**/build.*.cpp")
     add_files("src_static/**/build.*.c")
 

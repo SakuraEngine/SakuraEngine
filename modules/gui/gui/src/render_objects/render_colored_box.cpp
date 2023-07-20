@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrGui/render_objects/render_colored_box.hpp"
 #include "SkrGui/framework/painting_context.hpp"
 #include "SkrGui/backend/canvas/canvas.hpp"

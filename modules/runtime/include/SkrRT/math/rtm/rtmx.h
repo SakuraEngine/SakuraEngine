@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrRT/math/rtm/matrix4x4f.h"
-#include "SkrRT/math/rtm/mask4i.h"
+#include "SkrRT/math/rtm/matrix4x4f.h" // IWYU pragma: export
+#include "SkrRT/math/rtm/mask4i.h" // IWYU pragma: export
 
 // RH
 namespace rtm

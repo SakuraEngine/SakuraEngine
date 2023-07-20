@@ -20,7 +20,7 @@
     #endif
 #endif
 
-#include "inttypes.h"
+#include "inttypes.h" // IWYU pragma: keep
 typedef uint32_t EIndex;
 typedef uint32_t TIndex;
 typedef uint32_t SIndex;

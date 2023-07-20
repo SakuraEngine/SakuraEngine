@@ -7,7 +7,7 @@
 #include <SkrRT/containers/span.hpp>
 #include <SkrRT/containers/vector.hpp>
 #ifndef __meta__
-#include "SkrMeshCore/mesh_processing.generated.h"
+#include "SkrMeshCore/mesh_processing.generated.h" // IWYU pragma: export
 #endif
 
 namespace skd sreflect

@@ -42,13 +42,13 @@ struct RUNTIME_API IVRAMService : public IIOService
     static void destroy(IVRAMService* service) SKR_NOEXCEPT;
 
     // open a texture request for filling
-    // [[nodiscard]] virtual IORequestId open_texture_request() SKR_NOEXCEPT = 0;
+    // [[nodiscard]] virtual IOSliceRequestId open_texture_request() SKR_NOEXCEPT = 0;
 
     // open a buffer request for filling
-    // [[nodiscard]] virtual IORequestId open_buffer_request() SKR_NOEXCEPT = 0;
+    // [[nodiscard]] virtual IOBlockRequestId open_buffer_request() SKR_NOEXCEPT = 0;
 
     // open a tile request for filling
-    // [[nodiscard]] virtual IORequestId open_tile_request() SKR_NOEXCEPT = 0;
+    // [[nodiscard]] virtual IOTileRequestId open_tile_request() SKR_NOEXCEPT = 0;
 
     // start a request batch
     // [[nodiscard]] virtual IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT = 0;

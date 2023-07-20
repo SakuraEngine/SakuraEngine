@@ -1,11 +1,9 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
-#include "d3d12_utils.hpp"
 #include "../common/common_utils.h"
 
 #include "platform/windows/windows_dstorage.hpp"
 
 #include "EASTL/vector_map.h"
-#include "EASTL/algorithm.h"
 
 #define SKR_DSTORAGE_SINGLETON_NAME u8"CGPUDStorageSingleton"
 
