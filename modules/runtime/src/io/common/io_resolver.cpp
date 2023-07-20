@@ -35,7 +35,7 @@ void IORequestResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEX
     }
 }
 
-void VFSFileResolver::resolve(SkrAsyncServicePriority priority,IORequestId request) SKR_NOEXCEPT
+void VFSFileResolver::resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
 {
     auto rq = skr::static_pointer_cast<IORequestBase>(request);
     SKR_ASSERT(rq->vfs);

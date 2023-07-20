@@ -41,8 +41,22 @@ struct RUNTIME_API IVRAMService : public IIOService
     [[nodiscard]] static IVRAMService* create(const VRAMServiceDescriptor* desc) SKR_NOEXCEPT;
     static void destroy(IVRAMService* service) SKR_NOEXCEPT;
 
-    virtual VRAMIOBufferId request(IORequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
+    // open a texture request for filling
+    // [[nodiscard]] virtual IORequestId open_texture_request() SKR_NOEXCEPT = 0;
+
+    // open a buffer request for filling
+    // [[nodiscard]] virtual IORequestId open_buffer_request() SKR_NOEXCEPT = 0;
+
+    // open a tile request for filling
+    // [[nodiscard]] virtual IORequestId open_tile_request() SKR_NOEXCEPT = 0;
+
+    // start a request batch
+    // [[nodiscard]] virtual IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT = 0;
+
+    // submit a request
+    // virtual VRAMIOBufferId request(IORequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
     
+    // submit a batch
     virtual void request(IOBatchId request) SKR_NOEXCEPT = 0;
 
     virtual ~IVRAMService() SKR_NOEXCEPT = default;

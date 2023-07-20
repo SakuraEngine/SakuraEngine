@@ -2,13 +2,15 @@
 #include "../common/io_runnner.hpp"
 #include "../common/processors.hpp"
 #include "SkrRT/io/vram_io.hpp"
+#include "vram_batch.hpp"
+#include "vram_request.hpp"
 
 namespace skr {
 namespace io {
 
 struct VRAMService final : public IVRAMService
 {
-    VRAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
+    VRAMService(const VRAMServiceDescriptor* desc) SKR_NOEXCEPT;
     
     [[nodiscard]] IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT;
     [[nodiscard]] IORequestId open_request() SKR_NOEXCEPT;
@@ -39,7 +41,18 @@ struct VRAMService final : public IVRAMService
         VRAMService* service = nullptr;
     };
 
-    const skr::string name;
+    const skr::string name;    
+    const bool awake_at_request = false;
+    Runner runner;
+    
+    SmartPoolPtr<VRAMIORequest, IIORequest> request_pool = nullptr;
+    // SmartPoolPtr<VRAMIOBuffer, IVRAMIOBuffer> vram_buffer_pool = nullptr;
+    SmartPoolPtr<VRAMIOBatch, IIOBatch> vram_batch_pool = nullptr;
+
+private:
+    static uint32_t global_idx;
+    SAtomicU64 request_sequence = 0;
+    SAtomicU64 batch_sequence = 0;
 };
 
 } // namespace io
