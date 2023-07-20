@@ -1,5 +1,7 @@
+#include "../../pch.hpp"
 #include "SkrRT/async/wait_timeout.hpp"
 #include "../common/io_runnner.hpp"
+#include "../dstorage/dstorage_resolvers.hpp"
 #include "ram_readers.hpp"
 #include "ram_batch.hpp"
 #include "ram_buffer.hpp"
@@ -210,8 +212,17 @@ void RAMService::Runner::enqueueBatch(const IOBatchId& batch) SKR_NOEXCEPT
 
 void RAMService::Runner::set_resolvers() SKR_NOEXCEPT
 {
+    IORequestResolverId openfile = nullptr;
     const bool dstorage = batch_reader.get();
-    auto openfile = dstorage ? create_dstorage_file_resolver() : SObjectPtr<VFSFileResolver>::Create();
+    if (dstorage) 
+    {
+        openfile = SObjectPtr<DStorageFileResolver>::Create();
+    }
+    else
+    {
+        openfile = SObjectPtr<VFSFileResolver>::Create();
+    }   
+
     auto alloc_buffer = SObjectPtr<AllocateIOBufferResolver>::Create();
     auto chain = skr::static_pointer_cast<IORequestResolverChain>(IIORequestResolverChain::Create());
     chain->runner = this;
