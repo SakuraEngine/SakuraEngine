@@ -11,10 +11,12 @@ using VFSReaderFutureLauncher = skr::FutureLauncher<bool>;
 
 bool VFSRAMReader::fetch(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
 {
-    auto rq = skr::static_pointer_cast<RAMIORequest>(request);
-    SKR_ASSERT(rq->getStatus() == SKR_IO_STAGE_RESOLVING);
-    fetched_requests[priority].enqueue(rq);
-    inc_processing(priority);
+    if (auto pComp = get_component<IORequestStatus>(request.get()))
+    {
+        SKR_ASSERT(pComp->getStatus() == SKR_IO_STAGE_RESOLVING);
+        fetched_requests[priority].enqueue(request);
+        inc_processing(priority);
+    }
     return true;
 }
 
@@ -25,53 +27,58 @@ uint64_t VFSRAMReader::get_prefer_batch_size() const SKR_NOEXCEPT
 
 void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORequestId& request) SKR_NOEXCEPT
 {
+    auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+    auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
+    if (auto pFile = get_component<IORequestFile>(request.get()))
     {
-        ZoneScopedN("dispatch_read");
-        auto rq = skr::static_pointer_cast<RAMIORequest>(request);
-        auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
-        if (service->runner.try_cancel(priority, rq))
         {
-            // cancel...
-            if (rq->file) 
+            ZoneScopedN("dispatch_read");
+            if (service->runner.try_cancel(priority, rq))
             {
-                skr_vfs_fclose(rq->file);
-                rq->file = nullptr;
+                // cancel...
+                if (pFile->file) 
+                {
+                    skr_vfs_fclose(pFile->file);
+                    pFile->file = nullptr;
+                }
+                if (buf)
+                {
+                    buf->free_buffer();
+                }
             }
-            if (buf)
+            else if (auto pStatus = get_component<IORequestStatus>(request.get()))
             {
-                buf->free_buffer();
-            }
-        }
-        else if (rq->getStatus() == SKR_IO_STAGE_RESOLVING)
-        {
-            ZoneScopedN("read_request");
+                if (pStatus->getStatus() == SKR_IO_STAGE_RESOLVING)
+                {
+                    ZoneScopedN("read_request");
 
-            rq->setStatus(SKR_IO_STAGE_LOADING);
-            // SKR_LOG_DEBUG("dispatch read request: %s", rq->path.c_str());
-            uint64_t dst_offset = 0u;
-            for (const auto& block : rq->blocks)
-            {
-                const auto address = buf->bytes + dst_offset;
-                skr_vfs_fread(rq->file, address, block.offset, block.size);
-                dst_offset += block.size;
+                    rq->setStatus(SKR_IO_STAGE_LOADING);
+                    // SKR_LOG_DEBUG("dispatch read request: %s", rq->path.c_str());
+                    uint64_t dst_offset = 0u;
+                    for (const auto& block : rq->blocks)
+                    {
+                        const auto address = buf->bytes + dst_offset;
+                        skr_vfs_fread(pFile->file, address, block.offset, block.size);
+                        dst_offset += block.size;
+                    }
+                    rq->setStatus(SKR_IO_STAGE_LOADED);
+                }
             }
-            rq->setStatus(SKR_IO_STAGE_LOADED);
+            else
+            {
+                SKR_UNREACHABLE_CODE();
+            }
         }
-        else
         {
-            SKR_UNREACHABLE_CODE();
-        }
-    }
-    {
-        ZoneScopedN("dispatch_close");
-        auto rq = skr::static_pointer_cast<RAMIORequest>(request);
-        if (rq->file)
-        {
-            // SKR_LOG_DEBUG("dispatch close request: %s", rq->path.c_str());
-            skr_vfs_fclose(rq->file);
-            rq->file = nullptr;
-            loaded_requests[priority].enqueue(rq);
-            inc_processed(priority);
+            ZoneScopedN("dispatch_close");
+            if (pFile->file)
+            {
+                // SKR_LOG_DEBUG("dispatch close request: %s", rq->path.c_str());
+                skr_vfs_fclose(pFile->file);
+                pFile->file = nullptr;
+                loaded_requests[priority].enqueue(rq);
+                inc_processed(priority);
+            }
         }
     }
     dec_processing(priority);
@@ -214,39 +221,46 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
         {
             auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
             auto&& buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
-            if (service->runner.try_cancel(priority, rq))
+            if (auto pFile = get_component<IORequestFile>(request.get()))
             {
-                skr_dstorage_close_file(instance, rq->dfile);
-                rq->dfile = nullptr;
-            }
-            else if (rq->getStatus() == SKR_IO_STAGE_RESOLVING)
-            {
-                ZoneScopedN("DStorage::ReadRequest");
-                SKR_ASSERT(rq->dfile);
-                rq->setStatus(SKR_IO_STAGE_LOADING);
-                uint64_t dst_offset = 0u;
-                for (const auto& block : rq->blocks)
+                if (service->runner.try_cancel(priority, rq))
                 {
-                    const auto address = buf->bytes + dst_offset;
-                    SkrDStorageIODescriptor io = {};
-                    io.name = rq->get_path();
-                    io.event = nullptr;
-                    io.source_type = SKR_DSTORAGE_SOURCE_FILE;
-                    io.compression = SKR_DSTORAGE_COMPRESSION_NONE; // TODO: DECOMPRESS
+                    skr_dstorage_close_file(instance, pFile->dfile);
+                    pFile->dfile = nullptr;
+                }
+                else if (auto pStatus = get_component<IORequestStatus>(request.get()))
+                {
+                    if (pStatus->getStatus() == SKR_IO_STAGE_RESOLVING)
+                    {
+                        ZoneScopedN("DStorage::ReadRequest");
+                        SKR_ASSERT(pFile->dfile);
+                        rq->setStatus(SKR_IO_STAGE_LOADING);
+                        uint64_t dst_offset = 0u;
+                        for (const auto& block : rq->blocks)
+                        {
+                            const auto address = buf->bytes + dst_offset;
+                            SkrDStorageIODescriptor io = {};
+                            io.name = rq->get_path();
+                            io.event = nullptr;
+                            io.source_type = SKR_DSTORAGE_SOURCE_FILE;
+                            io.compression = SKR_DSTORAGE_COMPRESSION_NONE; // TODO: DECOMPRESS
 
-                    io.source_file.file = rq->dfile;
-                    io.source_file.offset = block.offset;
-                    io.source_file.size = block.size;
+                            io.source_file.file = pFile->dfile;
+                            io.source_file.offset = block.offset;
+                            io.source_file.size = block.size;
 
-                    io.destination = address;
-                    io.uncompressed_size = block.size;
-                    skr_dstorage_enqueue_request(queue, &io);
+                            io.destination = address;
+                            io.uncompressed_size = block.size;
+                            skr_dstorage_enqueue_request(queue, &io);
 
-                    dst_offset += block.size;
+                            dst_offset += block.size;
+                        }
+                    }
+                    else
+                        SKR_UNREACHABLE_CODE();
                 }
             }
-            else
-                SKR_UNREACHABLE_CODE();
+
         }
         event->batches.emplace_back(batch);
     }
@@ -282,9 +296,11 @@ void DStorageRAMReader::pollSubmitted(SkrAsyncServicePriority priority) SKR_NOEX
                 for (auto request : batch->get_requests())
                 {
                     auto rq = skr::static_pointer_cast<RAMIORequest>(request);
-                    rq->setStatus(SKR_IO_STAGE_LOADED);
-                    skr_dstorage_close_file(instance, rq->dfile);
-                    rq->dfile = nullptr;
+                    auto pFile = get_component<IORequestFile>(request.get());
+                    auto pStatus = get_component<IORequestStatus>(request.get());
+                    pStatus->setStatus(SKR_IO_STAGE_LOADED);
+                    skr_dstorage_close_file(instance, pFile->dfile);
+                    pFile->dfile = nullptr;
                 }
                 loaded_batches[priority].enqueue(batch);
                 dec_processing(priority);

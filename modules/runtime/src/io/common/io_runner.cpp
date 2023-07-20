@@ -26,7 +26,10 @@ void RunnerBase::poll_finish_callbacks() SKR_NOEXCEPT
     RQPtr rq = nullptr;
     while (finish_queues->try_dequeue(rq))
     {
-        rq->tryPollFinish();
+        if (auto pComp = get_component<IORequestStatus>(rq.get()))
+        {
+            pComp->tryPollFinish();
+        }
     }
 }
 
@@ -181,8 +184,7 @@ void RunnerBase::phaseCompleteBatches(SkrAsyncServicePriority priority) SKR_NOEX
     {
         for (auto&& request : batch->get_requests())
         {
-            auto rq = skr::static_pointer_cast<IORequestBase>(request);
-            dispatch_complete_(priority, rq);
+            dispatch_complete_(priority, request);
         }
     }
 };
@@ -193,51 +195,56 @@ void RunnerBase::phaseCompleteRequests(SkrAsyncServicePriority priority) SKR_NOE
     auto& back_processor = request_processors.back();
     while (back_processor->poll_processed_request(priority, request))
     {
-        auto rq = skr::static_pointer_cast<IORequestBase>(request);
-        dispatch_complete_(priority, rq);
+        dispatch_complete_(priority, request);
     }
 }
 
 bool RunnerBase::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT
 {
-    const auto status = rq->getStatus();
-    if (status == SKR_IO_STAGE_CANCELLED) return true;
-    if (status == SKR_IO_STAGE_LOADING) return false;
-
-    if (bool cancel_requested = rq->getCancelRequested())
+    if (auto pComp = get_component<IORequestStatus>(rq.get()))
     {
-        if (rq->getFinishStep() == SKR_ASYNC_IO_FINISH_STEP_NONE)
+        const auto status = pComp->getStatus();
+        if (status == SKR_IO_STAGE_CANCELLED) return true;
+        if (status == SKR_IO_STAGE_LOADING) return false;
+
+        if (bool cancel_requested = pComp->getCancelRequested())
         {
-            if (rq->async_cancel)
+            if (pComp->getFinishStep() == SKR_ASYNC_IO_FINISH_STEP_NONE)
             {
-                auto cancel = [this, priority, rq] { return cancel_(rq, priority); };
-                finish_futures.emplace_back(skr::FutureLauncher<bool>(job_queue).async(cancel));
+                if (pComp->is_async_cancel())
+                {
+                    auto cancel = [this, priority, rq] { return cancel_(rq, priority); };
+                    finish_futures.emplace_back(skr::FutureLauncher<bool>(job_queue).async(cancel));
+                }
+                else
+                {
+                    cancel_(rq, priority);
+                }
             }
+            // remove from batch
+            if (auto batch = static_cast<IOBatchBase*>(pComp->getOwnerBatch()))
+                batch->removeCancelledRequest(rq);
             else
-            {
-                cancel_(rq, priority);
-            }
+                SKR_UNREACHABLE_CODE();
+            return true;
         }
-        // remove from batch
-        if (auto batch = static_cast<IOBatchBase*>(rq->getOwnerBatch()))
-            batch->removeCancelledRequest(rq);
-        else
-            SKR_UNREACHABLE_CODE();
-        return true;
     }
     return false;
 }
 
-void RunnerBase::dispatch_complete_(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT
+void RunnerBase::dispatch_complete_(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT
 {
-    if (rq->async_complete)
+    if (auto pComp = get_component<IORequestStatus>(rq.get()))
     {
-        auto complete = [this, priority, rq] { return complete_(rq, priority); };
-        finish_futures.emplace_back(skr::FutureLauncher<bool>(job_queue).async(complete));
-    }
-    else
-    {
-        complete_(rq, priority);
+        if (pComp->is_async_complete())
+        {
+            auto complete = [this, priority, rq] { return complete_(rq, priority); };
+            finish_futures.emplace_back(skr::FutureLauncher<bool>(job_queue).async(complete));
+        }
+        else
+        {
+            complete_(rq, priority);
+        }
     }
 }
 
@@ -324,36 +331,42 @@ void RunnerBase::destroy() SKR_NOEXCEPT
     exit();
 }
 
-bool RunnerBase::cancel_(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT
+bool RunnerBase::cancel_(IORequestId rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    rq->setStatus(SKR_IO_STAGE_CANCELLED);
-    if (rq->needPollFinish())
+    if (auto pComp = get_component<IORequestStatus>(rq.get()))
     {
-        finish_queues[priority].enqueue(rq);
-        rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_WAIT_CALLBACK_POLLING);
+        pComp->setStatus(SKR_IO_STAGE_CANCELLED);
+        if (pComp->needPollFinish())
+        {
+            finish_queues[priority].enqueue(rq);
+            pComp->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_WAIT_CALLBACK_POLLING);
+        }
+        else
+        {
+            pComp->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
+        }
+        skr_atomic64_add_relaxed(&processing_request_counts[priority], -1);
     }
-    else
-    {
-        rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
-    }
-    skr_atomic64_add_relaxed(&processing_request_counts[priority], -1);
     return true;
 }
 
-bool RunnerBase::complete_(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT
+bool RunnerBase::complete_(IORequestId rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    SKR_ASSERT(rq->getStatus() == SKR_IO_STAGE_LOADED);
-    rq->setStatus(SKR_IO_STAGE_COMPLETED);
-    if (rq->needPollFinish())
+    if (auto pComp = get_component<IORequestStatus>(rq.get()))
     {
-        finish_queues[priority].enqueue(rq);
-        rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_WAIT_CALLBACK_POLLING);
+        SKR_ASSERT(pComp->getStatus() == SKR_IO_STAGE_LOADED);
+        pComp->setStatus(SKR_IO_STAGE_COMPLETED);
+        if (pComp->needPollFinish())
+        {
+            finish_queues[priority].enqueue(rq);
+            pComp->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_WAIT_CALLBACK_POLLING);
+        }
+        else
+        {
+            pComp->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
+        }
+        skr_atomic64_add_relaxed(&processing_request_counts[priority], -1);
     }
-    else
-    {
-        rq->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
-    }
-    skr_atomic64_add_relaxed(&processing_request_counts[priority], -1);
     return true;
 }
 

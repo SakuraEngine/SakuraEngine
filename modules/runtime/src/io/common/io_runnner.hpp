@@ -23,9 +23,9 @@ struct RunnerBase : public AsyncService
     virtual skr::AsyncResult serve() SKR_NOEXCEPT;
 
 protected:
-    void dispatch_complete_(SkrAsyncServicePriority priority, skr::SObjectPtr<IORequestBase> rq) SKR_NOEXCEPT;
-    virtual bool complete_(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
-    virtual bool cancel_(skr::SObjectPtr<IORequestBase> rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    void dispatch_complete_(SkrAsyncServicePriority priority, IORequestId rq) SKR_NOEXCEPT;
+    virtual bool complete_(IORequestId rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    virtual bool cancel_(IORequestId rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
 
     skr::vector<IOBatchProcessorId> batch_processors; 
     skr::vector<IORequestProcessorId> request_processors; 
