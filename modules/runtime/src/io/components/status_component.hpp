@@ -29,7 +29,7 @@ typedef enum SkrAsyncIOFinishStep
 } SkrAsyncIOFinishStep;
 
 template <>
-struct IORequestComponentTID<struct IORequestStatus> 
+struct IORequestComponentTID<struct IOStatusComponent> 
 {
     static constexpr skr_guid_t Get()
     {
@@ -37,15 +37,15 @@ struct IORequestComponentTID<struct IORequestStatus>
         return u8"3db75617-8027-464b-b241-e4e59f83fd61"_guid;
     } 
 };
-struct IORequestStatus : public IORequestComponent
+struct IOStatusComponent : public IORequestComponent
 {
 public:
-    IORequestStatus(IIORequest* const request) SKR_NOEXCEPT 
+    IOStatusComponent(IIORequest* const request) SKR_NOEXCEPT 
         : IORequestComponent(request) 
     {
         
     }
-    virtual skr_guid_t get_tid() const SKR_NOEXCEPT override { return IORequestComponentTID<IORequestStatus>::Get(); }
+    virtual skr_guid_t get_tid() const SKR_NOEXCEPT override { return IORequestComponentTID<IOStatusComponent>::Get(); }
 
     const skr_io_future_t* get_future() const SKR_NOEXCEPT { return future; }
 

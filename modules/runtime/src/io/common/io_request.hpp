@@ -10,7 +10,7 @@ namespace skr {
 namespace io {
 
 template<typename T>
-const T* get_component(const IIORequest* rq) SKR_NOEXCEPT
+[[nodiscard]] const T* get_component(const IIORequest* rq) SKR_NOEXCEPT
 {
     if (auto c = rq->get_component(IORequestComponentTID<T>::Get()))
         return static_cast<const T*>(c);
@@ -19,7 +19,7 @@ const T* get_component(const IIORequest* rq) SKR_NOEXCEPT
 }
 
 template<typename T>
-T* get_component(IIORequest* rq) SKR_NOEXCEPT
+[[nodiscard]] T* get_component(IIORequest* rq) SKR_NOEXCEPT
 {
     if (auto c = rq->get_component(IORequestComponentTID<T>::Get()))
         return static_cast<T*>(c);
@@ -41,42 +41,48 @@ public:
 
     void set_vfs(skr_vfs_t* _vfs) SKR_NOEXCEPT 
     {
-        get_component<IORequestFile>(this)->set_vfs(_vfs);
+        get_component<IOFileComponent>(this)->set_vfs(_vfs);
     }
+
     void set_path(const char8_t* p) SKR_NOEXCEPT 
     { 
-        get_component<IORequestFile>(this)->set_path(p); 
+        get_component<IOFileComponent>(this)->set_path(p); 
     }
-    const char8_t* get_path() const SKR_NOEXCEPT 
+
+    [[nodiscard]] const char8_t* get_path() const SKR_NOEXCEPT 
     { 
-        return get_component<IORequestFile>(this)->get_path(); 
+        return get_component<IOFileComponent>(this)->get_path(); 
     }
 
     void use_async_complete() SKR_NOEXCEPT 
     { 
-        get_component<IORequestStatus>(this)->use_async_complete(); 
-    }
-    void use_async_cancel() SKR_NOEXCEPT 
-    { 
-        get_component<IORequestStatus>(this)->use_async_cancel(); 
-    }
-    const skr_io_future_t* get_future() const SKR_NOEXCEPT 
-    { 
-        return get_component<IORequestStatus>(this)->get_future(); 
-    }
-    void add_callback(ESkrIOStage stage, IOCallback callback, void* data) SKR_NOEXCEPT
-    {
-        get_component<IORequestStatus>(this)->add_callback(stage, callback, data);
-    }
-    void add_finish_callback(ESkrIOFinishPoint point, IOCallback callback, void* data) SKR_NOEXCEPT
-    {
-        get_component<IORequestStatus>(this)->add_finish_callback(point, callback, data);
+        get_component<IOStatusComponent>(this)->use_async_complete(); 
     }
 
-    virtual IORequestComponent* get_component(skr_guid_t tid) SKR_NOEXCEPT
+    void use_async_cancel() SKR_NOEXCEPT 
+    { 
+        get_component<IOStatusComponent>(this)->use_async_cancel(); 
+    }
+
+    const skr_io_future_t* get_future() const SKR_NOEXCEPT 
+    { 
+        return get_component<IOStatusComponent>(this)->get_future(); 
+    }
+
+    void add_callback(ESkrIOStage stage, IOCallback callback, void* data) SKR_NOEXCEPT
     {
-        return std::apply([&](auto&... args) {
-            IORequestComponent* cs[] = { &args... };
+        get_component<IOStatusComponent>(this)->add_callback(stage, callback, data);
+    }
+    
+    void add_finish_callback(ESkrIOFinishPoint point, IOCallback callback, void* data) SKR_NOEXCEPT
+    {
+        get_component<IOStatusComponent>(this)->add_finish_callback(point, callback, data);
+    }
+
+    [[nodiscard]] virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT
+    {
+        return std::apply([&](const auto&... args) {
+            const IORequestComponent* cs[] = { &args... };
             const skr_guid_t ids[] = { args.get_tid()... };
             for (uint64_t i = 0; i < sizeof...(Components); ++i)
             {
@@ -87,11 +93,10 @@ public:
             return cs[0];
         }, components);
     }
-
-    virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT
+    [[nodiscard]] virtual IORequestComponent* get_component(skr_guid_t tid) SKR_NOEXCEPT
     {
-        return std::apply([&](const auto&... args) {
-            const IORequestComponent* cs[] = { &args... };
+        return std::apply([&](auto&... args) {
+            IORequestComponent* cs[] = { &args... };
             const skr_guid_t ids[] = { args.get_tid()... };
             for (uint64_t i = 0; i < sizeof...(Components); ++i)
             {

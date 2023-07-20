@@ -1,5 +1,6 @@
 #pragma once
 #include "../common/io_request.hpp"
+#include "../components/blocks_component.hpp"
 #include "ram_buffer.hpp"
 #include "SkrRT/platform/vfs.h"
 
@@ -10,16 +11,16 @@
 namespace skr {
 namespace io {
 
-struct RAMIORequest final : public IORequestCRTP<IIORequest, IORequestFile, IORequestStatus>
+struct RAMIORequest final : public IORequestCRTP<IIORequest, 
+    IOFileComponent, IOStatusComponent, IOBlocksComponent>
 {
     friend struct SmartPool<RAMIORequest, IIORequest>;
 
     RAMIOBufferId destination = nullptr;
-    eastl::fixed_vector<skr_io_block_t, 1> blocks;
     
     uint64_t get_fsize() const SKR_NOEXCEPT
     {
-        if (auto pFile = get_component<IORequestFile>(this))
+        if (auto pFile = get_component<IOFileComponent>(this))
         {
             if (pFile->file)
             {
@@ -41,7 +42,7 @@ struct RAMIORequest final : public IORequestCRTP<IIORequest, IORequestFile, IORe
 
     void setStatus(ESkrIOStage status) SKR_NOEXCEPT
     {
-        if (auto pStatus = get_component<IORequestStatus>(this))
+        if (auto pStatus = get_component<IOStatusComponent>(this))
         {
             if (status == SKR_IO_STAGE_CANCELLED)
             {
@@ -54,10 +55,19 @@ struct RAMIORequest final : public IORequestCRTP<IIORequest, IORequestFile, IORe
         }
     }
 
-    skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT override { return blocks; }
-    void add_block(const skr_io_block_t& block) SKR_NOEXCEPT override { blocks.emplace_back(block); }
-    void reset_blocks() SKR_NOEXCEPT override { blocks.clear(); }
-
+    skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT override 
+    { 
+        return get_component<IOBlocksComponent>(this)->get_blocks(); 
+    }
+    void add_block(const skr_io_block_t& block) SKR_NOEXCEPT override 
+    { 
+        get_component<IOBlocksComponent>(this)->add_block(block); 
+    }
+    void reset_blocks() SKR_NOEXCEPT override 
+    { 
+        get_component<IOBlocksComponent>(this)->reset_blocks(); 
+    }
+    
     skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT override { return {}; }
     void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT override {  }
     void reset_compressed_blocks() SKR_NOEXCEPT override {  }

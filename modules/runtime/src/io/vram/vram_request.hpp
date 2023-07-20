@@ -9,7 +9,7 @@
 namespace skr {
 namespace io {
 
-struct VRAMIORequest final : public IORequestCRTP<IIORequest, IORequestFile, IORequestStatus>
+struct VRAMIORequest final : public IORequestCRTP<IIORequest, IOFileComponent, IOStatusComponent>
 {
     friend struct SmartPool<VRAMIORequest, IIORequest>;
 
@@ -17,7 +17,7 @@ struct VRAMIORequest final : public IORequestCRTP<IIORequest, IORequestFile, IOR
     
     uint64_t get_fsize() const SKR_NOEXCEPT
     {
-        if (auto pFile = get_component<IORequestFile>(this))
+        if (auto pFile = get_component<IOFileComponent>(this))
         {
             if (pFile->file)
             {
@@ -39,7 +39,7 @@ struct VRAMIORequest final : public IORequestCRTP<IIORequest, IORequestFile, IOR
 
     void setStatus(ESkrIOStage status) SKR_NOEXCEPT
     {
-        if (auto pStatus = get_component<IORequestStatus>(this))
+        if (auto pStatus = get_component<IOStatusComponent>(this))
         {
             /*
             if (status == SKR_IO_STAGE_CANCELLED)

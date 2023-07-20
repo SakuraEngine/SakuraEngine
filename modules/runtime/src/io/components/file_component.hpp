@@ -8,7 +8,7 @@ namespace skr {
 namespace io {
 
 template <>
-struct IORequestComponentTID<struct IORequestFile> 
+struct IORequestComponentTID<struct IOFileComponent> 
 {
     static constexpr skr_guid_t Get()
     {
@@ -16,14 +16,14 @@ struct IORequestComponentTID<struct IORequestFile>
         return u8"6bf19e92-7180-42d5-9bb7-19cae4e8716d"_guid;
     } 
 };
-struct IORequestFile : public IORequestComponent
+struct IOFileComponent : public IORequestComponent
 {
-    IORequestFile(IIORequest* const request) SKR_NOEXCEPT 
+    IOFileComponent(IIORequest* const request) SKR_NOEXCEPT 
         : IORequestComponent(request) 
     {
         
     }
-    virtual skr_guid_t get_tid() const SKR_NOEXCEPT override { return IORequestComponentTID<IORequestFile>::Get(); }
+    virtual skr_guid_t get_tid() const SKR_NOEXCEPT override { return IORequestComponentTID<IOFileComponent>::Get(); }
 
     void set_vfs(skr_vfs_t* _vfs) SKR_NOEXCEPT { vfs = _vfs; }
     void set_path(const char8_t* p) SKR_NOEXCEPT { path = p; }
