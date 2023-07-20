@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/platform/window.h"
 #include "SkrImGui/skr_imgui.config.h"
-#include "imgui/imgui.h"
+#include "imgui/imgui.h" // IWYU pragma: export
 
 SKR_DECLARE_TYPE_ID_FWD(skr, ISystemHandler, skr_system_handler);
 struct lua_State;

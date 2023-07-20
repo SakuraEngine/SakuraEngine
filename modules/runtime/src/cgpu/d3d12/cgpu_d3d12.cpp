@@ -1,6 +1,5 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "d3d12_utils.hpp"
-#include "SkrRT/misc/defer.hpp"
 #include "../common/common_utils.h"
 
 #include <EASTL/string_hash_map.h>

@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/platform/configure.h" // IWYU pragma: keep
 
 namespace skr
 {

@@ -1,44 +1,42 @@
 #include "application.h"
-#include "SkrRT/ecs/type_builder.hpp"
+#include "SkrRT/runtime_module.h"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/module/module_manager.hpp"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/window.h"
+#include "SkrRT/platform/filesystem.hpp"
+#include "SkrRT/containers/string.hpp"
+
+#include "SkrInputSystem/input_modifier.hpp"
+#include "MPShared/components.h"
+#include "MPShared/signal_client.h"
+
+#include "SkrRenderer/render_viewport.h"
+#include "SkrRenderer/skr_renderer.h"
+#include "SkrScene/scene.h"
+#include "SkrImGui/skr_imgui.h"
+#include "SkrImGui/skr_imgui_rg.h"
+#include "imgui_impl_sdl.h"
+
 #include "steam/isteamnetworkingutils.h"
 #include "steam/isteamnetworkingsockets.h"
 #include "steam/steamnetworkingsockets.h"
+
 #include <numeric>
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
-#include "SkrRT/platform/filesystem.hpp"
 #include "cgpu/api.h"
-#include "SkrImGui/skr_imgui.h"
-#include "SkrImGui/skr_imgui_rg.h"
-#include "imgui/imgui.h"
-#include "SkrRT/runtime_module.h"
-#include "SkrRenderer/skr_renderer.h"
-#include "SkrRenderer/render_effect.h"
+
 #include "tracy/Tracy.hpp"
-#include "imgui_impl_sdl.h"
-#include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/platform/guid.hpp"
 
-#include "SkrRT/containers/string.hpp"
-
-#include "SkrRT/math/vector.h"
 #include "EASTL/shared_ptr.h"
-#include "SkrScene/scene.h"
-#include "SkrRT/misc/parallel_for.hpp"
-#include "EASTL/fixed_vector.h"
-#include "SkrRT/serde/json/writer.h"
-#include "SkrRT/ecs/set.hpp"
-#include "SkrRenderer/render_viewport.h"
-#include "SkrInputSystem/input_modifier.hpp"
-#include "MPShared/components.h"
+
 #ifdef SKR_OS_WINDOWS
     #include <shellscalingapi.h>
 #endif
-#include "MPShared/signal_client.h"
+
 
 #define BACK_BUFFER_WIDTH 1920
 #define BACK_BUFFER_HEIGHT 1080
