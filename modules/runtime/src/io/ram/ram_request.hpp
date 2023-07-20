@@ -11,50 +11,23 @@
 namespace skr {
 namespace io {
 
+struct RAMIOStatusComponent final : public IOStatusComponent
+{
+    RAMIOStatusComponent(IIORequest* const request) SKR_NOEXCEPT 
+        : IOStatusComponent(request) 
+    {
+        
+    }
+    void setStatus(ESkrIOStage status) SKR_NOEXCEPT override;
+};
+
 struct RAMIORequest final : public IORequestCRTP<IIORequest, 
-    IOFileComponent, IOStatusComponent, IOBlocksComponent>
+    IOFileComponent, RAMIOStatusComponent, IOBlocksComponent>
 {
     friend struct SmartPool<RAMIORequest, IIORequest>;
 
     RAMIOBufferId destination = nullptr;
     
-    uint64_t get_fsize() const SKR_NOEXCEPT
-    {
-        if (auto pFile = get_component<IOFileComponent>(this))
-        {
-            if (pFile->file)
-            {
-                SKR_ASSERT(!pFile->dfile);
-                return skr_vfs_fsize(pFile->file);
-            }
-            else
-            {
-                SKR_ASSERT(pFile->dfile);
-                SKR_ASSERT(!pFile->file);
-                auto instance = skr_get_dstorage_instnace();
-                SkrDStorageFileInfo info;
-                skr_dstorage_query_file_info(instance, pFile->dfile, &info);
-                return info.file_size;
-            }
-        }
-        return 0;
-    }
-
-    void setStatus(ESkrIOStage status) SKR_NOEXCEPT
-    {
-        if (auto pStatus = get_component<IOStatusComponent>(this))
-        {
-            if (status == SKR_IO_STAGE_CANCELLED)
-            {
-                if (auto dest = static_cast<RAMIOBuffer*>(destination.get()))
-                {
-                    dest->free_buffer();
-                }
-            }
-            return pStatus->setStatus(status);
-        }
-    }
-
     skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT override 
     { 
         return get_component<IOBlocksComponent>(this)->get_blocks(); 
@@ -81,6 +54,19 @@ protected:
 
     const uint64_t sequence;
 };
+
+inline void RAMIOStatusComponent::setStatus(ESkrIOStage status) SKR_NOEXCEPT
+{
+    auto rq = static_cast<RAMIORequest*>(request);
+    if (status == SKR_IO_STAGE_CANCELLED)
+    {
+        if (auto dest = static_cast<RAMIOBuffer*>(rq->destination.get()))
+        {
+            dest->free_buffer();
+        }
+    }
+    return IOStatusComponent::setStatus(status);
+}
 
 using RAMRQPtr = skr::SObjectPtr<RAMIORequest>;
 

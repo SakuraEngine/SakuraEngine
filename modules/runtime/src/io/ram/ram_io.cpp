@@ -14,24 +14,24 @@ namespace io {
 
 namespace RAMUtils
 {
-    inline static IOReaderId<IIORequestProcessor> CreateReader(RAMService* service, const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
+inline static IOReaderId<IIORequestProcessor> CreateReader(RAMService* service, const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
+{
+    auto reader = skr::SObjectPtr<VFSRAMReader>::Create(service, desc->io_job_queue);
+    return std::move(reader);
+}
+
+inline static IOReaderId<IIOBatchProcessor> CreateBatchReader(RAMService* service, const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
+{
+#ifdef _WIN32
+    if (skr_query_dstorage_availability() == SKR_DSTORAGE_AVAILABILITY_HARDWARE)
     {
-        auto reader = skr::SObjectPtr<VFSRAMReader>::Create(service, desc->io_job_queue);
+        auto reader = skr::SObjectPtr<DStorageRAMReader>::Create(service);
         return std::move(reader);
     }
-
-    inline static IOReaderId<IIOBatchProcessor> CreateBatchReader(RAMService* service, const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
-    {
-    #ifdef _WIN32
-        if (skr_query_dstorage_availability() == SKR_DSTORAGE_AVAILABILITY_HARDWARE)
-        {
-            auto reader = skr::SObjectPtr<DStorageRAMReader>::Create(service);
-            return std::move(reader);
-        }
-    #endif
-        return nullptr;
-    }
+#endif
+    return nullptr;
 }
+} // namespace RAMUtils
 
 const char* kIOBufferMemoryName = "io::buffer";
 
@@ -170,7 +170,7 @@ void RAMService::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     runner.drain(priority);    
     {
-        ZoneScopedN("server_drain");
+        ZoneScopedN("RAMService::drain");
         auto predicate = [this, priority] {
             return !runner.processing_count(priority);
         };

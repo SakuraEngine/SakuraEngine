@@ -53,7 +53,7 @@ void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORe
                 {
                     ZoneScopedN("read_request");
 
-                    rq->setStatus(SKR_IO_STAGE_LOADING);
+                    pStatus->setStatus(SKR_IO_STAGE_LOADING);
                     // SKR_LOG_DEBUG("dispatch read request: %s", rq->path.c_str());
                     uint64_t dst_offset = 0u;
                     for (const auto& block : pBlocks->blocks)
@@ -62,7 +62,7 @@ void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORe
                         skr_vfs_fread(pFile->file, address, block.offset, block.size);
                         dst_offset += block.size;
                     }
-                    rq->setStatus(SKR_IO_STAGE_LOADED);
+                    pStatus->setStatus(SKR_IO_STAGE_LOADED);
                 }
             }
             else
@@ -236,7 +236,7 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
                     {
                         ZoneScopedN("DStorage::ReadRequest");
                         SKR_ASSERT(pFile->dfile);
-                        rq->setStatus(SKR_IO_STAGE_LOADING);
+                        pStatus->setStatus(SKR_IO_STAGE_LOADING);
                         uint64_t dst_offset = 0u;
                         for (const auto& block : pBlocks->blocks)
                         {
