@@ -49,7 +49,8 @@ struct RAMService final : public IRAMService
     SmartPoolPtr<RAMIORequest, IIORequest> request_pool = nullptr;
     SmartPoolPtr<RAMIOBuffer, IRAMIOBuffer> ram_buffer_pool = nullptr;
     SmartPoolPtr<RAMIOBatch, IIOBatch> ram_batch_pool = nullptr;
-protected:
+    
+private:
     RAMIOBuffer allocateBuffer(uint64_t n) SKR_NOEXCEPT;
     void freeBuffer(RAMIOBuffer* buffer) SKR_NOEXCEPT;
 

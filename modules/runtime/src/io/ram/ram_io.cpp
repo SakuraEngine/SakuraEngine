@@ -12,8 +12,28 @@
 namespace skr {
 namespace io {
 
+namespace RAMUtils
+{
+    inline static IOReaderId<IIORequestProcessor> CreateReader(RAMService* service, const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
+    {
+        auto reader = skr::SObjectPtr<VFSRAMReader>::Create(service, desc->io_job_queue);
+        return std::move(reader);
+    }
+
+    inline static IOReaderId<IIOBatchProcessor> CreateBatchReader(RAMService* service, const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
+    {
+    #ifdef _WIN32
+        if (skr_query_dstorage_availability() == SKR_DSTORAGE_AVAILABILITY_HARDWARE)
+        {
+            auto reader = skr::SObjectPtr<DStorageRAMReader>::Create(service);
+            return std::move(reader);
+        }
+    #endif
+        return nullptr;
+    }
+}
+
 const char* kIOBufferMemoryName = "io::buffer";
-uint32_t RAMService::global_idx = 0;
 
 IRAMIOBuffer::~IRAMIOBuffer() SKR_NOEXCEPT {}
 
@@ -54,26 +74,9 @@ IOResultId RAMIOBatch::add_request(IORequestId request, skr_io_future_t* future)
     return buffer;
 }
 
-inline static IOReaderId<IIORequestProcessor> CreateReader(RAMService* service, const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
-{
-    auto reader = skr::SObjectPtr<VFSRAMReader>::Create(service, desc->io_job_queue);
-    return std::move(reader);
-}
-
-inline static IOReaderId<IIOBatchProcessor> CreateBatchReader(RAMService* service, const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
-{
-#ifdef _WIN32
-    if (skr_query_dstorage_availability() == SKR_DSTORAGE_AVAILABILITY_HARDWARE)
-    {
-        auto reader = skr::SObjectPtr<DStorageRAMReader>::Create(service);
-        return std::move(reader);
-    }
-#endif
-    return nullptr;
-}
-
+uint32_t RAMService::global_idx = 0;
 RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
-    : name(desc->name ? skr::string(desc->name) : skr::format(u8"IRAMService-{}", global_idx++)), 
+    : name(desc->name ? skr::string(desc->name) : skr::format(u8"RAMService-{}", global_idx++)), 
       awake_at_request(desc->awake_at_request),
       runner(this, desc->callback_job_queue)
 {
@@ -82,9 +85,9 @@ RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
     ram_batch_pool = SmartPoolPtr<RAMIOBatch, IIOBatch>::Create(kIOPoolObjectsMemoryName);
 
     if (desc->use_dstorage)
-        runner.batch_reader = CreateBatchReader(this, desc);
+        runner.batch_reader = RAMUtils::CreateBatchReader(this, desc);
     if (!runner.batch_reader)
-        runner.reader = CreateReader(this, desc);
+        runner.reader = RAMUtils::CreateReader(this, desc);
     runner.set_resolvers();
 
     if (!desc->awake_at_request)
