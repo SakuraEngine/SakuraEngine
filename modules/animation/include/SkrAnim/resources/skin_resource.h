@@ -2,7 +2,7 @@
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrAnim/resources/skeleton_resource.h"
 #ifndef __meta__
-    #include "SkrAnim/resources/skin_resource.generated.h"
+    #include "SkrAnim/resources/skin_resource.generated.h" // IWYU pragma: export
 #endif
 
 sreflect_struct("guid": "C387FD0E-83BE-4617-9A79-589862F3F941") 

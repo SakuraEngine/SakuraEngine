@@ -3,7 +3,7 @@
 #include "SkrTextureCompiler/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
 #ifndef __meta__
-    #include "SkrTextureCompiler/texture_compiler.generated.h"
+    #include "SkrTextureCompiler/texture_compiler.generated.h" // IWYU pragma: export
 #endif
 
 namespace skd sreflect

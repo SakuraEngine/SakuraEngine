@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/misc/hash.h"
 #include "SkrRT/misc/make_zeroed.hpp"

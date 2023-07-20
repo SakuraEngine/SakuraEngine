@@ -5,7 +5,7 @@
 #include "cgpu/cgpux.h"
 
 #ifndef __meta__
-#include "SkrRenderer/resources/material_resource.generated.h"
+#include "SkrRenderer/resources/material_resource.generated.h" // IWYU pragma: export
 #endif
 
 SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)

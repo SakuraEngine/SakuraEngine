@@ -1,8 +1,8 @@
+#include "../pch.hpp"
 #include "SkrRT/platform/debug.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
-#include "SkrRT/misc/log.h"
 
 namespace skr
 {

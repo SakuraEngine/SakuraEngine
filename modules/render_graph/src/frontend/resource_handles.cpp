@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrRenderGraph/frontend/base_types.hpp"
 
 namespace skr

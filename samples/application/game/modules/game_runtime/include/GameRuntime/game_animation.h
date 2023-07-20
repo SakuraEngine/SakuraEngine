@@ -6,7 +6,7 @@
 #include "SkrAnim/ozz/base/maths/soa_transform.h"
 #include "SkrAnim/ozz/sampling_job.h"
 #ifndef __meta__
-#include "GameRuntime/game_animation.generated.h"
+#include "GameRuntime/game_animation.generated.h" // IWYU pragma: export
 #endif
 
 struct skr_render_anim_comp_t;
