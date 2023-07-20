@@ -86,7 +86,7 @@ RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
       awake_at_request(desc->awake_at_request),
       runner(this, desc->callback_job_queue)
 {
-    request_pool = SmartPoolPtr<RAMIORequest, IIORequest>::Create(kIOPoolObjectsMemoryName);
+    request_pool = SmartPoolPtr<RAMIORequest, IBlocksIORequest>::Create(kIOPoolObjectsMemoryName);
     ram_buffer_pool = SmartPoolPtr<RAMIOBuffer, IRAMIOBuffer>::Create(kIOPoolObjectsMemoryName);
     ram_batch_pool = SmartPoolPtr<RAMIOBatch, IIOBatch>::Create(kIOPoolObjectsMemoryName);
 
@@ -127,10 +127,10 @@ IOBatchId RAMService::open_batch(uint64_t n) SKR_NOEXCEPT
     return skr::static_pointer_cast<IIOBatch>(ram_batch_pool->allocate(this, seq, n));
 }
 
-IORequestId RAMService::open_request() SKR_NOEXCEPT
+BlocksIORequestId RAMService::open_request() SKR_NOEXCEPT
 {
     uint64_t seq = (uint64_t)skr_atomicu64_add_relaxed(&request_sequence, 1);
-    return skr::static_pointer_cast<IIORequest>(request_pool->allocate(seq));
+    return skr::static_pointer_cast<IBlocksIORequest>(request_pool->allocate(seq));
 }
 
 void RAMService::request(IOBatchId batch) SKR_NOEXCEPT

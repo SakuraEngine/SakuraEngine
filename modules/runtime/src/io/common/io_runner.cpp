@@ -119,8 +119,11 @@ void RunnerBase::phaseProcessBatches() SKR_NOEXCEPT
                         SKR_ASSERT(sucess);
                         for (auto&& request : batch->get_requests())
                         {
-                            for (auto block : request->get_blocks())
-                                batch_size += block.size;
+                            if (auto pBlocks = get_component<IOBlocksComponent>(request.get()))
+                            {
+                                for (auto block : pBlocks->get_blocks())
+                                    batch_size += block.size;
+                            }
                         }
                         bytes += batch_size;
                     }

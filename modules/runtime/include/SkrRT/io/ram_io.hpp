@@ -41,7 +41,7 @@ struct RUNTIME_API IRAMService : public IIOService
     static void destroy(IRAMService* service) SKR_NOEXCEPT;
 
     // open a request for filling
-    [[nodiscard]] virtual IORequestId open_request() SKR_NOEXCEPT = 0;
+    [[nodiscard]] virtual BlocksIORequestId open_request() SKR_NOEXCEPT = 0;
 
     // start a request batch
     [[nodiscard]] virtual IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT = 0;

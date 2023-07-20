@@ -9,7 +9,8 @@
 namespace skr {
 namespace io {
 
-struct VRAMIORequest final : public IORequestCRTP<IIORequest, IOFileComponent, IOStatusComponent>
+struct VRAMIORequest final : public IORequestCRTP<
+    IIORequest, IOFileComponent, IOStatusComponent>
 {
     friend struct SmartPool<VRAMIORequest, IIORequest>;
 
@@ -53,14 +54,6 @@ struct VRAMIORequest final : public IORequestCRTP<IIORequest, IOFileComponent, I
             return pStatus->setStatus(status);
         }
     }
-
-    skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT override { return blocks; }
-    void add_block(const skr_io_block_t& block) SKR_NOEXCEPT override { blocks.emplace_back(block); }
-    void reset_blocks() SKR_NOEXCEPT override { blocks.clear(); }
-
-    skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT override { return {}; }
-    void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT override {  }
-    void reset_compressed_blocks() SKR_NOEXCEPT override {  }
 
 protected:
     VRAMIORequest(ISmartPool<IIORequest>* pool, const uint64_t sequence) 
