@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRenderer/module.configure.h"
+#include "SkrRenderer/module.configure.h" // IWYU pragma: export
 #include "SkrRT/platform/configure.h"
 #ifndef __meta__
     #include "SkrRenderer/render_group.generated.h" // IWYU pragma: export
