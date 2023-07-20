@@ -1,4 +1,4 @@
-#include "../../pch.hpp"
+#include "../../pch.hpp" // IWYU pragma: keep
 #include "SkrRT/misc/types.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/platform/process.h"

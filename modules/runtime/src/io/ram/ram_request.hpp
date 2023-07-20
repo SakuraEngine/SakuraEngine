@@ -2,9 +2,9 @@
 #include "../common/io_request.hpp"
 #include "ram_buffer.hpp"
 #include "SkrRT/platform/vfs.h"
+
 #include <EASTL/fixed_vector.h>
 #include <EASTL/variant.h>
-
 #include <string.h> // ::strlen
 
 namespace skr {

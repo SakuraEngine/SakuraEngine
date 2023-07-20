@@ -1,4 +1,4 @@
-#include "../pch.hpp"
+#include "../pch.hpp" // IWYU pragma: keep
 #include "shared_library.cpp"
 #include <stdio.h>
 

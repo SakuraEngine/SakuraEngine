@@ -1,4 +1,4 @@
-#include "../pch.hpp"
+#include "../pch.hpp" // IWYU pragma: keep
 
 #include "io.cpp"
 #include "common/io_runner.cpp"
