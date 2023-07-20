@@ -6,7 +6,9 @@
 
 #include "ram/ram_io.cpp"
 #include "ram/ram_resolvers.cpp"
-#include "ram/vfs_ram_reader.cpp"
+#include "ram/ram_readers.cpp"
+
+#include "vram/vram_io.cpp"
+#include "vram/vram_resolvers.cpp"
 
 #include "dstorage/dstorage_resolvers.cpp"
-#include "dstorage/dstorage_ram_reader.cpp"

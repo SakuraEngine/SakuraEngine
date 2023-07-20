@@ -1,23 +1,18 @@
 #pragma once
 #include "../common/io_runnner.hpp"
 #include "../common/processors.hpp"
-#include "ram_readers.hpp"
-#include "ram_batch.hpp"
-#include "ram_request.hpp"
-#include "ram_buffer.hpp"
+#include "SkrRT/io/vram_io.hpp"
 
 namespace skr {
 namespace io {
 
-IORequestResolverId create_dstorage_file_resolver() SKR_NOEXCEPT;
-
-struct RAMService final : public IRAMService
+struct VRAMService final : public IVRAMService
 {
-    RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
+    VRAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
     
     [[nodiscard]] IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT;
     [[nodiscard]] IORequestId open_request() SKR_NOEXCEPT;
-    RAMIOBufferId request(IORequestId request, skr_io_future_t* future, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    VRAMIOBufferId request(IORequestId request, IOFuture* future, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void request(IOBatchId request) SKR_NOEXCEPT;
     
     void cancel(skr_io_future_t* future) SKR_NOEXCEPT 
@@ -33,8 +28,7 @@ struct RAMService final : public IRAMService
 
     struct Runner final : public RunnerBase
     {
-        Runner(RAMService* service, skr::JobQueue* job_queue) SKR_NOEXCEPT; 
-
+        Runner(VRAMService* service, skr::JobQueue* job_queue) SKR_NOEXCEPT;
         void enqueueBatch(const IOBatchId& batch) SKR_NOEXCEPT;
         void set_resolvers() SKR_NOEXCEPT;
 
@@ -42,22 +36,10 @@ struct RAMService final : public IRAMService
         IOReaderId<IIORequestProcessor> reader = nullptr;
         IOReaderId<IIOBatchProcessor> batch_reader = nullptr;
 
-        RAMService* service = nullptr;
+        VRAMService* service = nullptr;
     };
-    const skr::string name;
-    const bool awake_at_request = false;
-    Runner runner;
-    
-    SmartPoolPtr<RAMIORequest, IIORequest> request_pool = nullptr;
-    SmartPoolPtr<RAMIOBuffer, IRAMIOBuffer> ram_buffer_pool = nullptr;
-    SmartPoolPtr<RAMIOBatch, IIOBatch> ram_batch_pool = nullptr;
-protected:
-    RAMIOBuffer allocateBuffer(uint64_t n) SKR_NOEXCEPT;
-    void freeBuffer(RAMIOBuffer* buffer) SKR_NOEXCEPT;
 
-    static uint32_t global_idx;
-    SAtomicU64 request_sequence = 0;
-    SAtomicU64 batch_sequence = 0;
+    const skr::string name;
 };
 
 } // namespace io
