@@ -7,6 +7,7 @@
 #include "SkrRT/misc/log.h"
 #include <SkrRT/containers/btree.hpp>
 #include "SkrRT/containers/string.hpp"
+#include "cgpu/cgpux.hpp"
 #include <EASTL/set.h>
 
 #include "SkrRenderGraph/phases/cull_phase.hpp"

@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-constexpr uint32_t dead = 2 + (1 << 29);
+[[maybe_unused]] constexpr uint32_t dead = 2 + (1 << 29);
 
 // objects
 #define DUAL_DECLARE(name) typedef struct dual_##name dual_##name
@@ -30,21 +30,21 @@ typedef skr_guid_t dual_guid_t;
 
 namespace dual
 {
-static constexpr size_t kFastBinSize = 64 * 1024;
-static constexpr size_t kSmallBinThreshold = 8;
-static constexpr size_t kSmallBinSize = 1024;
-static constexpr size_t kLargeBinSize = 1024 * 1024;
+[[maybe_unused]] static constexpr size_t kFastBinSize = 64 * 1024;
+[[maybe_unused]] static constexpr size_t kSmallBinThreshold = 8;
+[[maybe_unused]] static constexpr size_t kSmallBinSize = 1024;
+[[maybe_unused]] static constexpr size_t kLargeBinSize = 1024 * 1024;
 
-static constexpr size_t kFastBinCapacity = 800;
-static constexpr size_t kSmallBinCapacity = 200;
-static constexpr size_t kLargeBinCapacity = 80;
-static constexpr SIndex kInvalidSIndex = eastl::numeric_limits<SIndex>::max();
-static constexpr TIndex kInvalidTypeIndex = eastl::numeric_limits<TIndex>::max();
+[[maybe_unused]] static constexpr size_t kFastBinCapacity = 800;
+[[maybe_unused]] static constexpr size_t kSmallBinCapacity = 200;
+[[maybe_unused]] static constexpr size_t kLargeBinCapacity = 80;
+[[maybe_unused]] static constexpr SIndex kInvalidSIndex = eastl::numeric_limits<SIndex>::max();
+[[maybe_unused]] static constexpr TIndex kInvalidTypeIndex = eastl::numeric_limits<TIndex>::max();
 
-static constexpr size_t kGroupBlockSize = 128 * 4;
-static constexpr size_t kGroupBlockCount = 256;
-static constexpr size_t kStorageArenaSize = 128 * 128;
-static constexpr size_t kLinkComponentSize = 8;
+[[maybe_unused]] static constexpr size_t kGroupBlockSize = 128 * 4;
+[[maybe_unused]] static constexpr size_t kGroupBlockCount = 256;
+[[maybe_unused]] static constexpr size_t kStorageArenaSize = 128 * 128;
+[[maybe_unused]] static constexpr size_t kLinkComponentSize = 8;
 
 enum pool_type_t
 {

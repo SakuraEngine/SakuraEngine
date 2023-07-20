@@ -1,7 +1,6 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "cgpu/d3d12/D3D12MemAlloc.h"
 #include "cgpu/drivers/cgpu_nvapi.h"
-#include "cgpu/drivers/cgpu_ags.h"
 #include "d3d12_utils.hpp"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/misc/make_zeroed.hpp"
