@@ -1,192 +1,110 @@
 #pragma once
-#include "SkrRT/io/io.h"
-#include "SkrRT/platform/dstorage.h"
-#include "SkrRT/containers/vector.hpp"
+#include "../components/status_component.hpp"
+#include "../components/file_component.hpp"
+
 #include "pool.hpp"
+#include <tuple>
 #include <string.h> // ::strlen
-#include "tracy/Tracy.hpp"
 
 namespace skr {
 namespace io {
 
-typedef enum SkrAsyncIOFinishStep
+template<typename T>
+const T* get_component(const IIORequest* rq) SKR_NOEXCEPT
 {
-    SKR_ASYNC_IO_FINISH_STEP_NONE = 0,
-    SKR_ASYNC_IO_FINISH_STEP_WAIT_CALLBACK_POLLING = 1,
-    SKR_ASYNC_IO_FINISH_STEP_DONE = 2
-} SkrAsyncIOFinishStep;
+    if (auto c = rq->get_component(IORequestComponentTID<T>::Get()))
+        return static_cast<const T*>(c);
+    SKR_UNREACHABLE_CODE();
+    return nullptr;
+}
 
-constexpr const char* callback_names[] = {
-    "IOCallback(None)",
-    "IOCallback(Enqueued)",
-    "IOCallback(Resolving)",
-    "IOCallback(Loading)",
-    "IOCallback(Loaded)",
-    "IOCallback(Decompressing)",
-    "IOCallback(Decompressed)",
-    "IOCallback(Completed)",
-    "IOCallback(Cancelled)",
-};
-static_assert(sizeof(callback_names) / sizeof(callback_names[0]) == SKR_IO_STAGE_COUNT, "callback_names size mismatch");
-
-struct IORequestComponent
+template<typename T>
+T* get_component(IIORequest* rq) SKR_NOEXCEPT
 {
-    IORequestComponent(IIORequest* const request) SKR_NOEXCEPT 
-        : request(request) 
-    {
+    if (auto c = rq->get_component(IORequestComponentTID<T>::Get()))
+        return static_cast<T*>(c);
+    SKR_UNREACHABLE_CODE();
+    return nullptr;
+}
 
-    }
-protected:
-    IIORequest* const request = nullptr;
-};
-
-struct IORequestStatus : public IORequestComponent
-{
-public:
-    IORequestStatus(IIORequest* const request) SKR_NOEXCEPT 
-        : IORequestComponent(request) 
-    {
-        
-    }
-
-    const skr_io_future_t* get_future() const SKR_NOEXCEPT { return future; }
-
-    void add_callback(ESkrIOStage stage, skr_io_callback_t callback, void* data) SKR_NOEXCEPT 
-    { 
-        callbacks[stage] = callback; 
-        callback_datas[stage] = data; 
-    }
-
-    void add_finish_callback(ESkrIOFinishPoint point, skr_io_callback_t callback, void* data) SKR_NOEXCEPT
-    {
-        finish_callbacks[point] = callback;
-        finish_callback_datas[point] = data;
-    }
-
-    virtual ESkrIOStage getStatus() const SKR_NOEXCEPT
-    {
-        return static_cast<ESkrIOStage>(skr_atomicu32_load_relaxed(&future->status));
-    }
-
-    bool getCancelRequested() const SKR_NOEXCEPT
-    {
-        return skr_atomicu32_load_relaxed(&future->request_cancel);
-    }
-
-    SkrAsyncIOFinishStep getFinishStep() const SKR_NOEXCEPT
-    { 
-        return (SkrAsyncIOFinishStep)skr_atomic32_load_acquire(&finish_step); 
-    }
-
-    void setFinishStep(SkrAsyncIOFinishStep step) SKR_NOEXCEPT
-    { 
-        skr_atomic32_store_release(&finish_step, step); 
-    }
-
-    void tryPollFinish() SKR_NOEXCEPT
-    {
-        if (getStatus() == SKR_IO_STAGE_COMPLETED)
-        {
-            finish_callbacks[SKR_IO_FINISH_POINT_COMPLETE](
-                future, request, finish_callback_datas[SKR_IO_FINISH_POINT_COMPLETE]);
-        }
-        else
-        {
-            finish_callbacks[SKR_IO_FINISH_POINT_CANCEL](
-                future, request, finish_callback_datas[SKR_IO_FINISH_POINT_CANCEL]);
-        }
-        skr_atomic32_store_relaxed(&finish_step, SKR_ASYNC_IO_FINISH_STEP_DONE);
-    }
-
-    bool needPollFinish() SKR_NOEXCEPT
-    {            
-        for (auto f : finish_callbacks)
-            return f;
-        return false;
-    }
-
-    virtual void setStatus(ESkrIOStage status) SKR_NOEXCEPT
-    {
-        skr_atomicu32_store_release(&future->status, status);
-        if (const auto callback = callbacks[status])
-        {
-            ZoneScoped;
-            ZoneName(callback_names[status], ::strlen(callback_names[status]));
-            callback(future, request, callback_datas[status]);
-        }
-    }
-
-    IIOBatch* getOwnerBatch() const SKR_NOEXCEPT { return owner_batch; }
-    void use_async_complete() SKR_NOEXCEPT { async_complete = true; }
-    void use_async_cancel() SKR_NOEXCEPT { async_cancel = true; }
-    bool is_async_complete() const SKR_NOEXCEPT { return async_complete; }
-    bool is_async_cancel() const SKR_NOEXCEPT { return async_cancel; }
-
-protected:
-    friend struct RAMIOBatch;
-    bool async_complete = false;
-    bool async_cancel = false;
-    IIOBatch* owner_batch = nullptr; // avoid circular reference
-
-    skr_io_future_t* future = nullptr;
-    SAtomic32 finish_step = 0;
-    skr_io_callback_t callbacks[SKR_IO_STAGE_COUNT];
-    void* callback_datas[SKR_IO_STAGE_COUNT];
-
-    skr_io_callback_t finish_callbacks[SKR_IO_FINISH_POINT_COUNT];
-    void* finish_callback_datas[SKR_IO_FINISH_POINT_COUNT];
-};
-
-struct IORequestFile : public IORequestComponent
-{
-    IORequestFile(IIORequest* const request) SKR_NOEXCEPT 
-        : IORequestComponent(request) 
-    {
-        
-    }
-
-    void set_vfs(skr_vfs_t* _vfs) SKR_NOEXCEPT { vfs = _vfs; }
-    void set_path(const char8_t* p) SKR_NOEXCEPT { path = p; }
-    const char8_t* get_path() const SKR_NOEXCEPT { return path.u8_str(); }
-
-    skr::string path;
-    skr_vfs_t* vfs = nullptr;
-    skr_io_file_handle file = nullptr;
-    SkrDStorageFileHandle dfile = nullptr;
-};
-
-template<typename Interface>
+template <typename Interface, typename...Components>
 struct IORequestCRTP : public Interface
 {
     IO_RC_OBJECT_BODY
 public:
     IORequestCRTP(ISmartPoolPtr<Interface> pool) 
-        : status_comp(this), file_comp(this), pool(pool) 
+        : components(std::make_tuple(Components(this)...)), pool(pool)
     {
 
     }
     virtual ~IORequestCRTP() = default;
 
-    void set_vfs(skr_vfs_t* _vfs) SKR_NOEXCEPT { file_comp.set_vfs(_vfs); }
-    void set_path(const char8_t* p) SKR_NOEXCEPT { file_comp.set_path(p); }
-    const char8_t* get_path() const SKR_NOEXCEPT { return file_comp.get_path(); }
+    void set_vfs(skr_vfs_t* _vfs) SKR_NOEXCEPT 
+    {
+        get_component<IORequestFile>(this)->set_vfs(_vfs);
+    }
+    void set_path(const char8_t* p) SKR_NOEXCEPT 
+    { 
+        get_component<IORequestFile>(this)->set_path(p); 
+    }
+    const char8_t* get_path() const SKR_NOEXCEPT 
+    { 
+        return get_component<IORequestFile>(this)->get_path(); 
+    }
 
-    void use_async_complete() SKR_NOEXCEPT { status_comp.use_async_complete(); }
-    void use_async_cancel() SKR_NOEXCEPT { status_comp.use_async_cancel(); }
-
-    const skr_io_future_t* get_future() const SKR_NOEXCEPT { return status_comp.get_future(); }
+    void use_async_complete() SKR_NOEXCEPT 
+    { 
+        get_component<IORequestStatus>(this)->use_async_complete(); 
+    }
+    void use_async_cancel() SKR_NOEXCEPT 
+    { 
+        get_component<IORequestStatus>(this)->use_async_cancel(); 
+    }
+    const skr_io_future_t* get_future() const SKR_NOEXCEPT 
+    { 
+        return get_component<IORequestStatus>(this)->get_future(); 
+    }
     void add_callback(ESkrIOStage stage, IOCallback callback, void* data) SKR_NOEXCEPT
     {
-        status_comp.add_callback(stage, callback, data);
+        get_component<IORequestStatus>(this)->add_callback(stage, callback, data);
     }
     void add_finish_callback(ESkrIOFinishPoint point, IOCallback callback, void* data) SKR_NOEXCEPT
     {
-        status_comp.add_finish_callback(point, callback, data);
+        get_component<IORequestStatus>(this)->add_finish_callback(point, callback, data);
+    }
+
+    virtual IORequestComponent* get_component(skr_guid_t tid) SKR_NOEXCEPT
+    {
+        return std::apply([&](auto&... args) {
+            IORequestComponent* cs[] = { &args... };
+            const skr_guid_t ids[] = { args.get_tid()... };
+            for (uint64_t i = 0; i < sizeof...(Components); ++i)
+            {
+                if (ids[i] == tid)
+                    return cs[i];
+            }
+            SKR_UNREACHABLE_CODE();
+            return cs[0];
+        }, components);
+    }
+
+    virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT
+    {
+        return std::apply([&](const auto&... args) {
+            const IORequestComponent* cs[] = { &args... };
+            const skr_guid_t ids[] = { args.get_tid()... };
+            for (uint64_t i = 0; i < sizeof...(Components); ++i)
+            {
+                if (ids[i] == tid)
+                    return cs[i];
+            }
+            SKR_UNREACHABLE_CODE();
+            return cs[0];
+        }, components);
     }
 
 private:
-    IORequestStatus status_comp;
-    IORequestFile file_comp;
+    std::tuple<Components...> components;
 
 public:
     SInterfaceDeleter custom_deleter() const 
@@ -204,32 +122,6 @@ protected:
 using RQPtr = skr::SObjectPtr<IIORequest>;
 using IORequestQueue = IOConcurrentQueue<RQPtr>;  
 using IORequestArray = skr::vector<RQPtr>;
-
-template<typename T>
-const T* get_component(const IIORequest* rq) SKR_NOEXCEPT
-{
-    /*
-    if constexpr (std::is_same_v<T, IORequestStatus>)
-        return &status_comp;
-    else if constexpr (std::is_same_v<T, IORequestFile>)
-        return &file_comp;
-    */
-    SKR_UNREACHABLE_CODE();
-    return nullptr;
-}
-
-template<typename T>
-T* get_component(IIORequest* rq) SKR_NOEXCEPT
-{
-    /*
-    if constexpr (std::is_same_v<T, IORequestStatus>)
-        return &status_comp;
-    else if constexpr (std::is_same_v<T, IORequestFile>)
-        return &file_comp;
-    */
-    SKR_UNREACHABLE_CODE();
-    return nullptr;
-}
 
 } // namespace io
 } // namespace skr

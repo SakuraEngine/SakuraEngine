@@ -9,7 +9,7 @@
 namespace skr {
 namespace io {
 
-struct VRAMIORequest final : public IORequestCRTP<IIORequest>
+struct VRAMIORequest final : public IORequestCRTP<IIORequest, IORequestFile, IORequestStatus>
 {
     friend struct SmartPool<VRAMIORequest, IIORequest>;
 

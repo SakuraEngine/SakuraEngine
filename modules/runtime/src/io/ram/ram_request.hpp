@@ -10,7 +10,7 @@
 namespace skr {
 namespace io {
 
-struct RAMIORequest final : public IORequestCRTP<IIORequest>
+struct RAMIORequest final : public IORequestCRTP<IIORequest, IORequestFile, IORequestStatus>
 {
     friend struct SmartPool<RAMIORequest, IIORequest>;
 
