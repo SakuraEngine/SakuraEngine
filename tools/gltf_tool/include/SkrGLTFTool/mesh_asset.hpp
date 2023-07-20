@@ -4,7 +4,7 @@
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/asset/cooker.hpp"
 #ifndef __meta__
-#include "SkrGLTFTool/mesh_asset.generated.h"
+#include "SkrGLTFTool/mesh_asset.generated.h" // IWYU pragma: export
 #endif
 
 namespace skd sreflect

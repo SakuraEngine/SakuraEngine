@@ -5,7 +5,7 @@
 #include "SkrRT/containers/vector.hpp"
 #include "SkrRT/resource/resource_handle.h"
 #ifndef __meta__
-#include "MPShared/components.generated.h"
+#include "MPShared/components.generated.h" // IWYU pragma: export
 #endif
 
 sreflect_struct(

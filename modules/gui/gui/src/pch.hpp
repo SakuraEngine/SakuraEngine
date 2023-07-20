@@ -3,7 +3,6 @@
 #ifdef _WIN32
 #include <intrin.h> // IWYU pragma: export
 #include <new.h> // IWYU pragma: export
-#include "platform/windows/winheaders.h" // IWYU pragma: export
 #endif
 
 #include <chrono> // IWYU pragma: export

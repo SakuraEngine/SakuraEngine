@@ -1,3 +1,4 @@
+#include "../../pch.hpp"
 #include "SkrGui/framework/element/proxy_element.hpp"
 #include "SkrGui/framework/widget/proxy_widget.hpp"
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrAnim/resources/skeleton_resource.h"
 #ifndef __meta__
-    #include "SkrAnim/components/skeleton_component.generated.h"
+    #include "SkrAnim/components/skeleton_component.generated.h" // IWYU pragma: export
 #endif
 
 sreflect_struct("guid"

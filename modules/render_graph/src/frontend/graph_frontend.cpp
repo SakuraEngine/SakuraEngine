@@ -1,11 +1,9 @@
-﻿#include "SkrRenderGraph/frontend/render_graph.hpp"
+﻿#include "../pch.hpp"
+#include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRenderGraph/frontend/resource_node.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include "SkrRT/platform/memory.h"
-
-// use backend pool for aliasing calculation
-#include "SkrRenderGraph/backend/texture_view_pool.hpp"
 
 #include "tracy/Tracy.hpp"
 

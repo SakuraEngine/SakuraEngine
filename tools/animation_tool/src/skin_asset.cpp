@@ -1,7 +1,7 @@
+#include "pch.hpp"
+#include "SkrAnim/resources/skin_resource.h"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrAnimTool/skin_asset.h"
-#include "SkrMeshCore/mesh_processing.hpp"
-#include "SkrAnim/resources/skin_resource.h"
 #include "cgltf/cgltf.h"
 
 namespace skd::asset
