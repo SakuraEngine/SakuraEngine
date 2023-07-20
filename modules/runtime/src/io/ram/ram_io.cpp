@@ -1,4 +1,4 @@
-#include "../../pch.hpp"
+#include "../../pch.hpp" // IWYU pragma: keep
 #include "SkrRT/async/wait_timeout.hpp"
 #include "../common/io_runnner.hpp"
 #include "../dstorage/dstorage_resolvers.hpp"

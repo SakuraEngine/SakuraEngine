@@ -1,4 +1,4 @@
-#include "../../pch.hpp"
+#include "../../pch.hpp" // IWYU pragma: keep
 #include "ram_readers.hpp"
 #include "SkrRT/async/thread_job.hpp"
 

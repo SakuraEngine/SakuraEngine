@@ -1,4 +1,4 @@
-#include "../../pch.hpp"
+#include "../../pch.hpp" // IWYU pragma: keep
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/defer.hpp"
 #include "SkrRT/misc/log/logger.hpp"
