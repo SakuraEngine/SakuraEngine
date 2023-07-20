@@ -1,6 +1,5 @@
 #pragma once
 #include "cgpu/cgpux.h"
-#include "SkrRT/misc/hash.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include <EASTL/fixed_vector.h>
 

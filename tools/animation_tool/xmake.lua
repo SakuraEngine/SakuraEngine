@@ -15,6 +15,7 @@ shared_module("SkrAnimTool", "SKR_ANIMTOOL", engine_version)
     add_includedirs("ozz", {public=true})
     add_includedirs("src", {public=false})
 
+    set_pcxxheader("src/pch.hpp")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_files("src/*.cc", {unity_group = "utils"})
     add_files("src/tools/*.cc", "src/*.cpp", {unity_group = "tool"})

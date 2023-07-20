@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrGui/backend/canvas/canvas.hpp"
 #include <nanovg.h>
 #include "SkrRT/misc/make_zeroed.hpp"

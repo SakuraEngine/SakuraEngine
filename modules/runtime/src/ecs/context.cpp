@@ -50,11 +50,14 @@ dual_context_t::dual_context_t()
 extern "C" {
 dual_context_t* dual_initialize()
 {
-    return g_dual_ctx = new dual_context_t;
+    if (g_dual_ctx)
+        return g_dual_ctx;
+    return g_dual_ctx = new dual_context_t();
 }
 
 void dual_shutdown()
 {
-    delete dual_get_context();
+    if (auto ctx = g_dual_ctx)
+        delete ctx;
 }
 }

@@ -7,7 +7,7 @@
 #include "SkrRT/containers/string.hpp"
 #include <EASTL/functional.h>
 #ifndef __meta__
-#include "SkrShaderCompiler/shader_compiler.generated.h"
+#include "SkrShaderCompiler/shader_compiler.generated.h" // IWYU pragma: export
 #endif
 
 SKR_DECLARE_TYPE_ID_FWD(skr::renderer, ShaderOptionInstance, skr_shader_option_instance);

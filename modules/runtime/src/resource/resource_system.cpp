@@ -4,7 +4,7 @@
 #include "SkrRT/ecs/entities.hpp"
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/io/io.h"
+#include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/containers/concurrent_queue.h"

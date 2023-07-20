@@ -51,12 +51,18 @@ rule("c++.codegen")
         target:rule_add(rule)
     end)
 
+    before_build_files(function(target, batchjobs, sourcebatch, opt)
+        sourcebatch.objectfiles = {}
+    end, {batch = true}) 
+    
     before_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
         -- avoid duplicate linking of object files
         sourcebatch.objectfiles = {}
     end)
 
     on_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
+        -- avoid duplicate linking of object files
+        sourcebatch.objectfiles = {}
         -- add to sourcebatch
         local gendir = target:data("meta.codegen.dir")
         local sourcebatches = target:sourcebatches()

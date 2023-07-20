@@ -11,7 +11,7 @@
 
 #define USE_PIX
 #ifdef USE_PIX
-#include "cgpu/drivers/WinPixEventRuntime/pix3.h"
+#include "cgpu/drivers/WinPixEventRuntime/pix3.h" // IWYU pragma: keep
 #endif
 
 #if !defined(XBOX) && defined(_WIN32)

@@ -3,7 +3,7 @@
 #include "SkrRenderer/primitive_draw.h"
 #include "SkrAnim/ozz/base/maths/simd_math.h"
 #ifndef __meta__
-    #include "SkrAnim/components/skin_component.generated.h"
+    #include "SkrAnim/components/skin_component.generated.h" // IWYU pragma: export
 #endif
 
 sreflect_struct("guid" : "05B43406-4BCF-4E59-B2D8-ACED7D37E776")

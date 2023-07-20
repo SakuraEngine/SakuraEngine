@@ -1,6 +1,9 @@
-#include "SkrRT/platform/crash.h"
 #include "module_manager.cpp"
+#include "SkrRT/platform/crash.h"
 #include "SkrRT/runtime_module.h"
+#include "SKrRT/ecs/dual.h"
+
+#include "tracy/Tracy.hpp"
 
 IMPLEMENT_DYNAMIC_MODULE(SkrRuntimeModule, SkrRT);
 
@@ -42,26 +45,23 @@ void SkrRuntimeModule::on_load(int argc, char8_t** argv)
 
 void SkrRuntimeModule::on_unload()
 {
-    if (auto inst = skr_runtime_get_dstorage_instance())
-    {
-        skr_free_dstorage_instance(inst);
-    }
+    dual_shutdown();
 
-#ifdef _WIN32
-    if (dstroageDecompressService)
-        skr_win_dstorage_free_decompress_service(dstroageDecompressService);
-#endif
-
-#ifdef TRACY_ENABLE
-    //std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
-    //tracy::GetProfiler().RequestShutdown();
-    //while( !tracy::GetProfiler().HasShutdownFinished() ) { std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) ); };
-    tracyLibrary.unload();
-#endif
+    skr_runtime_free_dstorage_instance();
 
     SKR_LOG_TRACE("SkrRuntime module unloaded!");
     skr_log_finalize_async_worker();
     skr_finalize_crash_handler();
+
+#ifdef TRACY_ENABLE
+    if (tracy::GetProfiler().IsConnected())
+    {
+        std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
+        tracy::GetProfiler().RequestShutdown();
+        while( !tracy::GetProfiler().HasShutdownFinished() ) { std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) ); };
+    }
+    tracyLibrary.unload();
+#endif
 }
 
 SkrRuntimeModule* SkrRuntimeModule::Get()
@@ -92,6 +92,21 @@ SkrDStorageInstanceId skr_runtime_get_dstorage_instance()
         return rtModule->dstorageInstance;
     }
     return nullptr;
+}
+
+void skr_runtime_free_dstorage_instance()
+{
+    if (auto rtModule = SkrRuntimeModule::Get()) 
+    {
+#ifdef _WIN32
+        if (auto service = rtModule->dstroageDecompressService)
+            skr_win_dstorage_free_decompress_service(service);
+#endif
+        if (auto inst = skr_runtime_get_dstorage_instance())
+        {
+            skr_free_dstorage_instance(inst);
+        }
+    }
 }
 
 RUNTIME_EXTERN_C RUNTIME_API skr::ModuleManager* skr_get_module_manager()

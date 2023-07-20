@@ -130,20 +130,27 @@ void RendererDeviceImpl::initialize(const Builder& builder)
 void RendererDeviceImpl::finalize()
 {
     skr_io_vram_service_t::destroy(vram_service);
+
+    // free dstorage queues
+    if(file_dstorage_queue) 
+        cgpu_free_dstorage_queue(file_dstorage_queue);
+    if(memory_dstorage_queue) 
+        cgpu_free_dstorage_queue(memory_dstorage_queue);
+
     for (auto& swapchain : swapchains)
     {
-        if (swapchain.second) cgpu_free_swapchain(swapchain.second);
+        if (swapchain.second) 
+            cgpu_free_swapchain(swapchain.second);
     }
     swapchains.clear();
     for (auto& surface : surfaces)
     {
-        if (surface.second) cgpu_free_surface(device, surface.second);
+        if (surface.second) 
+            cgpu_free_surface(device, surface.second);
     }
     surfaces.clear();
     cgpu_free_sampler(linear_sampler);
-    // free dstorage queues
-    if(file_dstorage_queue) cgpu_free_dstorage_queue(file_dstorage_queue);
-    if(memory_dstorage_queue) cgpu_free_dstorage_queue(memory_dstorage_queue);
+
     // free queues & device
     for (auto& cpy_queue : cpy_queues)
     {
@@ -159,7 +166,8 @@ void RendererDeviceImpl::finalize()
     cgpu_free_queue(gfx_queue);
     cgpu_free_device(device);
     // free nsight tracker
-    if (nsight_tracker) cgpu_free_nsight_tracker(nsight_tracker);
+    if (nsight_tracker) 
+        cgpu_free_nsight_tracker(nsight_tracker);
     cgpu_free_instance(instance);
 }
 

@@ -1,8 +1,7 @@
 #pragma once
-#include "detail/sptr.hpp"
-#include "detail/sweak_ptr.hpp"
-
-#include "SkrRT/type/type.hpp"
+#include "SkrRT/type/type.hpp" // IWYU pragma: keep
+#include "detail/sptr.hpp" // IWYU pragma: export
+#include "detail/sweak_ptr.hpp" // IWYU pragma: keep
 
 namespace skr
 {

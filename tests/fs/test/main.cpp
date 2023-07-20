@@ -7,7 +7,7 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/async/thread_job.hpp"
 #include "SkrRT/async/wait_timeout.hpp"
-#include "SkrRT/io/io.h"
+#include "SkrRT/io/ram_io.hpp"
 #include "gtest/gtest.h"
 
 #include <string>

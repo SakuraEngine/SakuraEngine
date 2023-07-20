@@ -6,7 +6,7 @@
 #include <SkrRT/containers/vector.hpp>
 
 #ifndef __meta__
-    #include "SkrRenderer/resources/mesh_resource.generated.h"
+    #include "SkrRenderer/resources/mesh_resource.generated.h" // IWYU pragma: export
 #endif
 
 sreflect_enum("guid" : "01f05eb7-6d5d-46d8-945e-ce1259d22c8f")
