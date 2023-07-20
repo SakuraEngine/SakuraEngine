@@ -1,9 +1,5 @@
 #include "../pch.hpp"
 #include "SkrRT/async/thread_job.hpp"
-#include "job_thread.hpp"
-#include "SkrRT/containers/vector.hpp"
-#include "SkrRT/misc/defer.hpp"
-#include "SkrRT/misc/log.h"
 
 namespace skr
 {
