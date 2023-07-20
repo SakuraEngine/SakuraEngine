@@ -1,9 +1,9 @@
-#include "../common/io_runnner.hpp"
-
 #include "SkrRT/async/wait_timeout.hpp"
+#include "../common/io_runnner.hpp"
 #include "ram_readers.hpp"
 #include "ram_batch.hpp"
 #include "ram_buffer.hpp"
+#include "ram_resolvers.hpp"
 
 #include <stdlib.h> // abort
 
@@ -185,6 +185,48 @@ SkrAsyncServiceStatus RAMService::get_service_status() const SKR_NOEXCEPT
 void RAMService::poll_finish_callbacks() SKR_NOEXCEPT
 {
     runner.poll_finish_callbacks();
+}
+
+RAMService::Runner::Runner(RAMService* service, skr::JobQueue* job_queue) SKR_NOEXCEPT
+    : RunnerBase({ service->name.u8_str(), SKR_THREAD_ABOVE_NORMAL }, job_queue),
+    service(service)
+{
+
+}
+
+void RAMService::Runner::enqueueBatch(const IOBatchId& batch) SKR_NOEXCEPT
+{
+    const auto priority = batch->get_priority();
+    for (auto&& request : batch->get_requests())
+    {
+        auto rq = skr::static_pointer_cast<IORequestBase>(request);
+        auto status = rq->getStatus();
+        SKR_ASSERT(status == SKR_IO_STAGE_NONE);
+        rq->setStatus(SKR_IO_STAGE_ENQUEUED);
+    }
+    batch_buffer->fetch(priority, batch);
+    skr_atomic64_add_relaxed(&processing_request_counts[priority], 1);
+}
+
+void RAMService::Runner::set_resolvers() SKR_NOEXCEPT
+{
+    const bool dstorage = batch_reader.get();
+    auto openfile = dstorage ? create_dstorage_file_resolver() : SObjectPtr<VFSFileResolver>::Create();
+    auto alloc_buffer = SObjectPtr<AllocateIOBufferResolver>::Create();
+    auto chain = skr::static_pointer_cast<IORequestResolverChain>(IIORequestResolverChain::Create());
+    chain->runner = this;
+    chain->then(openfile)
+        ->then(alloc_buffer);
+    batch_buffer = SObjectPtr<IOBatchBuffer>::Create(); // hold batches
+    if (dstorage)
+    {
+        batch_processors = { batch_buffer, chain, batch_reader };
+    }
+    else
+    {
+        batch_processors = { batch_buffer, chain };
+        request_processors = { reader };
+    }
 }
 
 } // namespace io

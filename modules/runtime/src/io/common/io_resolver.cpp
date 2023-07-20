@@ -1,3 +1,4 @@
+#include "SkrRT/platform/vfs.h"
 #include "io_runnner.hpp"
 #include "io_resolver.hpp"
 #include "processors.hpp"
@@ -30,6 +31,16 @@ void IORequestResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEX
         processed_batches[priority].enqueue(batch);
         dec_processing(priority);
         inc_processed(priority);
+    }
+}
+
+void VFSFileResolver::resolve(SkrAsyncServicePriority priority,IORequestId request) SKR_NOEXCEPT
+{
+    auto rq = skr::static_pointer_cast<IORequestBase>(request);
+    SKR_ASSERT(rq->vfs);
+    if (!rq->file)
+    {
+        rq->file = skr_vfs_fopen(rq->vfs, rq->path.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
     }
 }
 

@@ -44,7 +44,6 @@ public:
         skr_async_vtexture_destination_t* destination;
         CGPUUploadTask* upload_task;
     };
-
     struct CGPUDStorageTask {
         CGPUDStorageQueueId storage_queue = nullptr;
         CGPUDStorageFileHandle ds_file = nullptr;

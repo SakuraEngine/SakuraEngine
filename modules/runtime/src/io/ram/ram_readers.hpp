@@ -99,7 +99,7 @@ protected:
     SkrDStorageEventId event = nullptr;
 };
 
-struct DStorageRAMReader final 
+struct RUNTIME_API DStorageRAMReader final 
     : public RAMReaderBase<IIOBatchProcessor>
 {
     DStorageRAMReader(RAMService* service) SKR_NOEXCEPT;
