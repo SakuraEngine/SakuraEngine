@@ -9,8 +9,6 @@
 namespace skr {
 namespace io {
 
-IORequestResolverId create_dstorage_file_resolver() SKR_NOEXCEPT;
-
 struct RAMService final : public IRAMService
 {
     RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
