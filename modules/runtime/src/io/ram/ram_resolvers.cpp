@@ -11,6 +11,7 @@ void AllocateIOBufferResolver::resolve(SkrAsyncServicePriority priority, IOReque
     ZoneScopedNC("IOBuffer::Allocate", tracy::Color::BlueViolet);
     auto rq = skr::static_pointer_cast<RAMIORequest>(request);
     auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
+    auto pFiles = get_component<IOFileComponent>(rq.get());
     // deal with 0 block size
     if (auto pComp = get_component<IOBlocksComponent>(rq.get()))
     {
@@ -18,7 +19,7 @@ void AllocateIOBufferResolver::resolve(SkrAsyncServicePriority priority, IOReque
         {
             if (block.size == 0)
             {
-                block.size = rq->get_fsize() - block.offset;
+                block.size = pFiles->get_fsize() - block.offset;
             }
             if (buf->size == 0)
             {
