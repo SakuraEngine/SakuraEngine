@@ -48,8 +48,11 @@ void ChunkingVFSReadResolver::resolve(SkrAsyncServicePriority priority,IORequest
 {
     ZoneScopedN("IORequestChunking");
     uint64_t total = 0;
-    for (auto& block : request->get_blocks())
-        total += block.size;
+    if (auto pBlocks = get_component<IOBlocksComponent>(request.get()))
+    {
+        for (auto& block : pBlocks->get_blocks())
+            total += block.size;
+    }
     uint64_t chunk_count = total / chunk_size;
     if (chunk_count > 2)
     {

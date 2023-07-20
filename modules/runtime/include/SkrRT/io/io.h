@@ -104,10 +104,13 @@ using IOBlock = skr_io_block_t;
 using IOCompressedBlock = skr_io_compressed_block_t;
 using IOFuture = skr_io_future_t;
 using IOCallback = skr_io_callback_t;
+using IOResultId = SObjectPtr<skr::SInterface>;
 struct IORequestComponent;
 
 struct RUNTIME_API IIORequest : public skr::SInterface
 {
+    virtual ~IIORequest() SKR_NOEXCEPT;
+
     virtual void set_vfs(skr_vfs_t* vfs) SKR_NOEXCEPT = 0;
     virtual void set_path(const char8_t* path) SKR_NOEXCEPT = 0;
     virtual const char8_t* get_path() const SKR_NOEXCEPT = 0;
@@ -120,6 +123,15 @@ struct RUNTIME_API IIORequest : public skr::SInterface
     virtual void add_callback(ESkrIOStage stage, IOCallback callback, void* data) SKR_NOEXCEPT = 0;
     virtual void add_finish_callback(ESkrIOFinishPoint point, IOCallback callback, void* data) SKR_NOEXCEPT = 0;
 
+    virtual IORequestComponent* get_component(skr_guid_t tid) SKR_NOEXCEPT = 0; 
+    virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT = 0; 
+};
+using IORequestId = SObjectPtr<IIORequest>;
+
+struct RUNTIME_API IBlocksIORequest : public IIORequest
+{
+    virtual ~IBlocksIORequest() SKR_NOEXCEPT;
+
     virtual skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT = 0;
     virtual void add_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
     virtual void reset_blocks() SKR_NOEXCEPT = 0;
@@ -127,12 +139,8 @@ struct RUNTIME_API IIORequest : public skr::SInterface
     virtual skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT = 0;
     virtual void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
     virtual void reset_compressed_blocks() SKR_NOEXCEPT = 0;
-
-    virtual IORequestComponent* get_component(skr_guid_t tid) SKR_NOEXCEPT = 0; 
-    virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT = 0; 
 };
-using IORequestId = SObjectPtr<IIORequest>;
-using IOResultId = SObjectPtr<skr::SInterface>;
+using BlocksIORequestId = SObjectPtr<IBlocksIORequest>;
 
 struct RUNTIME_API IIOBatch : public skr::SInterface
 {
