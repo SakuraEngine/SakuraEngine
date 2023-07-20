@@ -104,6 +104,7 @@ using IOBlock = skr_io_block_t;
 using IOCompressedBlock = skr_io_compressed_block_t;
 using IOFuture = skr_io_future_t;
 using IOCallback = skr_io_callback_t;
+struct IORequestComponent;
 
 struct RUNTIME_API IIORequest : public skr::SInterface
 {
@@ -126,6 +127,9 @@ struct RUNTIME_API IIORequest : public skr::SInterface
     virtual skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT = 0;
     virtual void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
     virtual void reset_compressed_blocks() SKR_NOEXCEPT = 0;
+
+    virtual IORequestComponent* get_component(skr_guid_t tid) SKR_NOEXCEPT = 0; 
+    virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT = 0; 
 };
 using IORequestId = SObjectPtr<IIORequest>;
 using IOResultId = SObjectPtr<skr::SInterface>;
