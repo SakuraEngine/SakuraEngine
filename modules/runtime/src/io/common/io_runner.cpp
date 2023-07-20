@@ -23,10 +23,10 @@ RunnerBase::~RunnerBase() SKR_NOEXCEPT
 
 void RunnerBase::poll_finish_callbacks() SKR_NOEXCEPT
 {
-    RQPtr rq = nullptr;
+    IORequestId rq = nullptr;
     while (finish_queues->try_dequeue(rq))
     {
-        if (auto pComp = get_component<IOStatusComponent>(rq.get()))
+        if (auto pComp = io_component<IOStatusComponent>(rq.get()))
         {
             pComp->tryPollFinish();
         }
@@ -119,7 +119,7 @@ void RunnerBase::phaseProcessBatches() SKR_NOEXCEPT
                         SKR_ASSERT(sucess);
                         for (auto&& request : batch->get_requests())
                         {
-                            if (auto pBlocks = get_component<IOBlocksComponent>(request.get()))
+                            if (auto pBlocks = io_component<IOBlocksComponent>(request.get()))
                             {
                                 for (auto block : pBlocks->get_blocks())
                                     batch_size += block.size;
@@ -202,9 +202,9 @@ void RunnerBase::phaseCompleteRequests(SkrAsyncServicePriority priority) SKR_NOE
     }
 }
 
-bool RunnerBase::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT
+bool RunnerBase::try_cancel(SkrAsyncServicePriority priority, IORequestId rq) SKR_NOEXCEPT
 {
-    if (auto pComp = get_component<IOStatusComponent>(rq.get()))
+    if (auto pComp = io_component<IOStatusComponent>(rq.get()))
     {
         const auto status = pComp->getStatus();
         if (status == SKR_IO_STAGE_CANCELLED) return true;
@@ -235,9 +235,9 @@ bool RunnerBase::try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEX
     return false;
 }
 
-void RunnerBase::dispatch_complete_(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT
+void RunnerBase::dispatch_complete_(SkrAsyncServicePriority priority, IORequestId rq) SKR_NOEXCEPT
 {
-    if (auto pComp = get_component<IOStatusComponent>(rq.get()))
+    if (auto pComp = io_component<IOStatusComponent>(rq.get()))
     {
         if (pComp->is_async_complete())
         {
@@ -336,7 +336,7 @@ void RunnerBase::destroy() SKR_NOEXCEPT
 
 bool RunnerBase::cancel_(IORequestId rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    if (auto pComp = get_component<IOStatusComponent>(rq.get()))
+    if (auto pComp = io_component<IOStatusComponent>(rq.get()))
     {
         pComp->setStatus(SKR_IO_STAGE_CANCELLED);
         if (pComp->needPollFinish())
@@ -355,7 +355,7 @@ bool RunnerBase::cancel_(IORequestId rq, SkrAsyncServicePriority priority) SKR_N
 
 bool RunnerBase::complete_(IORequestId rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    if (auto pComp = get_component<IOStatusComponent>(rq.get()))
+    if (auto pComp = io_component<IOStatusComponent>(rq.get()))
     {
         SKR_ASSERT(pComp->getStatus() == SKR_IO_STAGE_LOADED);
         pComp->setStatus(SKR_IO_STAGE_COMPLETED);

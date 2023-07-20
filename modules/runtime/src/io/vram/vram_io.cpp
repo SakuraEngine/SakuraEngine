@@ -13,6 +13,21 @@ namespace VRAMUtils
 
 }
 
+IVRAMIOResource::~IVRAMIOResource() SKR_NOEXCEPT
+{
+
+}
+
+IVRAMIOBuffer::~IVRAMIOBuffer() SKR_NOEXCEPT
+{
+
+}
+
+IVRAMIOTexture::~IVRAMIOTexture() SKR_NOEXCEPT
+{
+
+}
+
 IOResultId VRAMIOBatch::add_request(IORequestId request, skr_io_future_t* future) SKR_NOEXCEPT
 {
     /*
@@ -164,7 +179,7 @@ void VRAMService::Runner::enqueueBatch(const IOBatchId& batch) SKR_NOEXCEPT
     const auto priority = batch->get_priority();
     for (auto&& request : batch->get_requests())
     {
-        if (auto pStatus = get_component<IOStatusComponent>(request.get()))
+        if (auto pStatus = io_component<IOStatusComponent>(request.get()))
         {
             auto status = pStatus->getStatus();
             SKR_ASSERT(status == SKR_IO_STAGE_NONE);

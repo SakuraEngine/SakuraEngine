@@ -12,7 +12,7 @@ struct RunnerBase : public AsyncService
     RunnerBase(const ServiceThreadDesc& desc, skr::JobQueue* job_queue) SKR_NOEXCEPT;
     virtual ~RunnerBase() SKR_NOEXCEPT;
 
-    bool try_cancel(SkrAsyncServicePriority priority, RQPtr rq) SKR_NOEXCEPT;
+    bool try_cancel(SkrAsyncServicePriority priority, IORequestId rq) SKR_NOEXCEPT;
     uint64_t predicate() const SKR_NOEXCEPT;
     uint64_t processing_count(SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_COUNT) const SKR_NOEXCEPT;
     void poll_finish_callbacks() SKR_NOEXCEPT;

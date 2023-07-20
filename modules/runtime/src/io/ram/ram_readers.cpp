@@ -11,7 +11,7 @@ using VFSReaderFutureLauncher = skr::FutureLauncher<bool>;
 
 bool VFSRAMReader::fetch(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
 {
-    if (auto pComp = get_component<IOStatusComponent>(request.get()))
+    if (auto pComp = io_component<IOStatusComponent>(request.get()))
     {
         SKR_ASSERT(pComp->getStatus() == SKR_IO_STAGE_RESOLVING);
         fetched_requests[priority].enqueue(request);
@@ -29,8 +29,8 @@ void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORe
 {
     auto rq = skr::static_pointer_cast<RAMIORequest>(request);
     auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
-    auto pBlocks = get_component<IOBlocksComponent>(request.get());
-    if (auto pFile = get_component<IOFileComponent>(request.get()))
+    auto pBlocks = io_component<IOBlocksComponent>(request.get());
+    if (auto pFile = io_component<IOFileComponent>(request.get()))
     {
         {
             ZoneScopedN("dispatch_read");
@@ -47,7 +47,7 @@ void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORe
                     buf->free_buffer();
                 }
             }
-            else if (auto pStatus = get_component<IOStatusComponent>(request.get()))
+            else if (auto pStatus = io_component<IOStatusComponent>(request.get()))
             {
                 if (pStatus->getStatus() == SKR_IO_STAGE_RESOLVING)
                 {
@@ -89,7 +89,7 @@ void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORe
 
 void VFSRAMReader::dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    RQPtr rq;
+    IORequestId rq;
     if (fetched_requests[priority].try_dequeue(rq))
     {
         auto launcher = VFSReaderFutureLauncher(job_queue);
@@ -222,15 +222,15 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
         {
             auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
             auto&& buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
-            auto pBlocks = get_component<IOBlocksComponent>(request.get());
-            if (auto pFile = get_component<IOFileComponent>(request.get()))
+            auto pBlocks = io_component<IOBlocksComponent>(request.get());
+            if (auto pFile = io_component<IOFileComponent>(request.get()))
             {
                 if (service->runner.try_cancel(priority, rq))
                 {
                     skr_dstorage_close_file(instance, pFile->dfile);
                     pFile->dfile = nullptr;
                 }
-                else if (auto pStatus = get_component<IOStatusComponent>(request.get()))
+                else if (auto pStatus = io_component<IOStatusComponent>(request.get()))
                 {
                     if (pStatus->getStatus() == SKR_IO_STAGE_RESOLVING)
                     {
@@ -297,8 +297,8 @@ void DStorageRAMReader::pollSubmitted(SkrAsyncServicePriority priority) SKR_NOEX
             {
                 for (auto request : batch->get_requests())
                 {
-                    auto pFile = get_component<IOFileComponent>(request.get());
-                    auto pStatus = get_component<IOStatusComponent>(request.get());
+                    auto pFile = io_component<IOFileComponent>(request.get());
+                    auto pStatus = io_component<IOStatusComponent>(request.get());
                     pStatus->setStatus(SKR_IO_STAGE_LOADED);
                     skr_dstorage_close_file(instance, pFile->dfile);
                     pFile->dfile = nullptr;
