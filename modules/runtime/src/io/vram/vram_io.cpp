@@ -164,7 +164,7 @@ void VRAMService::Runner::enqueueBatch(const IOBatchId& batch) SKR_NOEXCEPT
     const auto priority = batch->get_priority();
     for (auto&& request : batch->get_requests())
     {
-        if (auto pStatus = get_component<IORequestStatus>(request.get()))
+        if (auto pStatus = get_component<IOStatusComponent>(request.get()))
         {
             auto status = pStatus->getStatus();
             SKR_ASSERT(status == SKR_IO_STAGE_NONE);

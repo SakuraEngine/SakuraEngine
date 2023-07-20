@@ -12,15 +12,18 @@ void AllocateIOBufferResolver::resolve(SkrAsyncServicePriority priority, IOReque
     auto rq = skr::static_pointer_cast<RAMIORequest>(request);
     auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
     // deal with 0 block size
-    for (auto& block : rq->blocks)
+    if (auto pComp = get_component<IOBlocksComponent>(rq.get()))
     {
-        if (block.size == 0)
+        for (auto& block : pComp->blocks)
         {
-            block.size = rq->get_fsize() - block.offset;
-        }
-        if (buf->size == 0)
-        {
-            buf->size += block.size;
+            if (block.size == 0)
+            {
+                block.size = rq->get_fsize() - block.offset;
+            }
+            if (buf->size == 0)
+            {
+                buf->size += block.size;
+            }
         }
     }
     // allocate
@@ -43,27 +46,29 @@ ChunkingVFSReadResolver::ChunkingVFSReadResolver(uint64_t chunk_size) SKR_NOEXCE
 void ChunkingVFSReadResolver::resolve(SkrAsyncServicePriority priority,IORequestId request) SKR_NOEXCEPT
 {
     ZoneScopedN("IORequestChunking");
-    auto rq = skr::static_pointer_cast<RAMIORequest>(request);
     uint64_t total = 0;
-    for (auto& block : rq->get_blocks())
+    for (auto& block : request->get_blocks())
         total += block.size;
     uint64_t chunk_count = total / chunk_size;
     if (chunk_count > 2)
     {
-        auto bks = rq->blocks;
-        rq->reset_blocks();
-        rq->blocks.reserve(chunk_count);
-        for (auto& block : bks)
+        if (auto pComp = get_component<IOBlocksComponent>(request.get()))
         {
-            uint64_t acc_size = block.size;
-            uint64_t acc_offset = block.offset;
-            while (acc_size > chunk_size)
+            auto bks = pComp->blocks;
+            pComp->reset_blocks();
+            pComp->blocks.reserve(chunk_count);
+            for (auto& block : bks)
             {
-                rq->add_block({acc_offset, chunk_size});
-                acc_offset += chunk_size;
-                acc_size -= chunk_size;
+                uint64_t acc_size = block.size;
+                uint64_t acc_offset = block.offset;
+                while (acc_size > chunk_size)
+                {
+                    pComp->add_block({acc_offset, chunk_size});
+                    acc_offset += chunk_size;
+                    acc_size -= chunk_size;
+                }
+                pComp->get_blocks().back().size += acc_size;
             }
-            rq->get_blocks().back().size += acc_size;
         }
     }
 }

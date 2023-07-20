@@ -8,7 +8,7 @@ namespace io {
 
 void DStorageFileResolver::resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
 {
-    if (auto pFile = get_component<IORequestFile>(request.get()))
+    if (auto pFile = get_component<IOFileComponent>(request.get()))
     {
         if (!pFile->dfile)
         {

@@ -19,7 +19,7 @@ void IORequestResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEX
     {
         for (auto request : batch->get_requests())
         {
-            if (auto pComp = get_component<IORequestStatus>(request.get()))
+            if (auto pComp = get_component<IOStatusComponent>(request.get()))
             {
                 pComp->setStatus(SKR_IO_STAGE_RESOLVING);
                 for (auto resolver : chain)
@@ -37,7 +37,7 @@ void IORequestResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEX
 
 void VFSFileResolver::resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
 {
-    if (auto pComp = get_component<IORequestFile>(request.get()))
+    if (auto pComp = get_component<IOFileComponent>(request.get()))
     {
         SKR_ASSERT(pComp->vfs);
         if (!pComp->file)
