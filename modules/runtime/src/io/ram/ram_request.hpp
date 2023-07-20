@@ -10,7 +10,7 @@
 namespace skr {
 namespace io {
 
-struct RAMIORequest final : public IORequestBase
+struct RAMIORequest final : public IORequestCRTP<IIORequest>
 {
     friend struct SmartPool<RAMIORequest, IIORequest>;
 
@@ -63,13 +63,16 @@ struct RAMIORequest final : public IORequestBase
     void reset_compressed_blocks() SKR_NOEXCEPT override {  }
 
 protected:
-    RAMIORequest(ISmartPool<IIORequest>* pool, const uint64_t sequence) : IORequestBase(pool), sequence(sequence) {}
+    RAMIORequest(ISmartPool<IIORequest>* pool, const uint64_t sequence) 
+        : IORequestCRTP(pool), sequence(sequence) 
+    {
+
+    }
 
     const uint64_t sequence;
 };
 
-using RAMRQPtr = skr::SObjectPtr<IORequestBase>;
-
+using RAMRQPtr = skr::SObjectPtr<RAMIORequest>;
 
 } // namespace io
 } // namespace skr

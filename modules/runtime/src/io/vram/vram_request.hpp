@@ -9,7 +9,7 @@
 namespace skr {
 namespace io {
 
-struct VRAMIORequest final : public IORequestBase
+struct VRAMIORequest final : public IORequestCRTP<IIORequest>
 {
     friend struct SmartPool<VRAMIORequest, IIORequest>;
 
@@ -64,13 +64,15 @@ struct VRAMIORequest final : public IORequestBase
 
 protected:
     VRAMIORequest(ISmartPool<IIORequest>* pool, const uint64_t sequence) 
-        : IORequestBase(pool), sequence(sequence) {}
+        : IORequestCRTP(pool), sequence(sequence) 
+    {
+
+    }
 
     const uint64_t sequence;
 };
 
-using RAMRQPtr = skr::SObjectPtr<IORequestBase>;
-
+using VRAMRQPtr = skr::SObjectPtr<VRAMIORequest>;
 
 } // namespace io
 } // namespace skr
