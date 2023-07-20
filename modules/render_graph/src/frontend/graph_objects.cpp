@@ -1,9 +1,8 @@
+#include "../pch.hpp"
 #include "SkrRT/platform/debug.h"
-#include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include <SkrRT/containers/hashmap.hpp>
-#include "SkrRT/misc/log.h"
 #include "SkrRT/misc/hash.h"
 #include "SkrRT/containers/concurrent_queue.h"
 
@@ -104,6 +103,11 @@ void RenderGraphNode::set_name(const char8_t* n)
 const char8_t* RenderGraphNode::get_name() const
 {
     return (const char8_t*)name.c_str();
+}
+
+const skr::string_view RenderGraphNode::get_name_view() const
+{
+    return name.view();
 }
 
 RenderGraphEdge::RenderGraphEdge(ERelationshipType type)

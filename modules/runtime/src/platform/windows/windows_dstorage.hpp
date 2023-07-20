@@ -18,6 +18,7 @@ struct SkrWindowsDStorageInstance : public SkrDStorageInstance
     static SkrWindowsDStorageInstance* Get();
     ~SkrWindowsDStorageInstance();
 
+    struct ID3D12Device* pDxDevice = nullptr;
     IDStorageFactory* pFactory = nullptr;
     struct DStorageEventPool* pEventPool = nullptr;
     skr::SharedLibrary dstorage_library;

@@ -6,7 +6,7 @@
 #include "SkrRT/serde/binary/writer_fwd.h"
 #include "SkrRT/platform/configure.h"
 #ifndef __meta__
-    #include "SkrScene/resources/scene_resource.generated.h"
+    #include "SkrScene/resources/scene_resource.generated.h" // IWYU pragma: export
 #endif
 
 sreflect_struct("guid": "EFBA637E-E7E5-4B64-BA26-90AEEE9E3E1A")

@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrGui/backend/embed_services.hpp"
 #include "SkrGui/backend/canvas/canvas.hpp"
 #include "backend/text_server/text_server_adv.h"

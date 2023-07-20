@@ -1,3 +1,4 @@
+#include "../../pch.hpp"
 #include "SkrGui/framework/element/leaf_render_object_element.hpp"
 
 namespace skr::gui

@@ -1,4 +1,4 @@
-#include "../../pch.hpp"
+#include "../../pch.hpp" // IWYU pragma: keep
 #include "SkrRT/platform/process.h"
 #include "SkrRT/misc/log/log_sink.hpp"
 
@@ -83,9 +83,9 @@ LogConsoleWindowSink::LogConsoleWindowSink(skr_guid_t pattern) SKR_NOEXCEPT
                 conInfo.dwSize.Y = minLength;
             ::SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), conInfo.dwSize);
 
-            freopen("CONIN$", "r",stdin);
-            freopen("CONOUT$", "w",stdout);
-            freopen("CONOUT$", "w",stderr);
+            freopen("CONIN$", "r", stdin);
+            freopen("CONOUT$", "w", stdout);
+            freopen("CONOUT$", "w", stderr);
         }
     }
     const auto StdHandle = ::GetStdHandle(STD_OUTPUT_HANDLE);
@@ -257,7 +257,8 @@ void LogConsoleSink::sink(const LogEvent& event, skr::string_view content) SKR_N
 
     // set color
     const auto L = static_cast<uint32_t>(event.get_level());
-    const auto escape = GetAnsiEscapeCode(buf_cache_->buf, color_sets_[L].f, color_sets_[L].b, color_sets_[L].s);
+    const auto& ColorSet = color_sets_[L];
+    const auto escape = GetAnsiEscapeCode(buf_cache_->buf, ColorSet.f, ColorSet.b, ColorSet.s);
 
     // output to console (use '\033[0m' to reset color)
     ::printf("%s%s\033[0m", escape.data(), content.c_str());
@@ -316,8 +317,8 @@ void LogDebugOutputSink::sink(const LogEvent& event, skr::string_view content) S
 
     // set color
     const auto L = static_cast<uint32_t>(event.get_level());
-    [[maybe_unused]] const auto escape = 
-        GetAnsiEscapeCode(buf_cache_->buf, color_sets_[L].f, color_sets_[L].b, color_sets_[L].s);
+    const auto& ColorSet = color_sets_[L];
+    [[maybe_unused]] const auto escape = GetAnsiEscapeCode(buf_cache_->buf, ColorSet.f, ColorSet.b, ColorSet.s);
 
 #ifdef USE_WIN32_CONSOLE
     skr::string output((const char8_t*)buf_cache_->buf.c_str());

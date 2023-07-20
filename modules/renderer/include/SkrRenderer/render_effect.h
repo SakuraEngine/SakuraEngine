@@ -3,7 +3,7 @@
 #include "SkrRT/ecs/dual.h"
 #include "SkrRenderer/primitive_pass.h"
 #ifndef __meta__
-    #include "SkrRenderer/render_effect.generated.h"
+    #include "SkrRenderer/render_effect.generated.h" // IWYU pragma: export
 #endif
 
 typedef const char8_t* skr_render_effect_name_t;

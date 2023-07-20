@@ -1,4 +1,4 @@
-#include "../../pch.hpp"
+#include "../../pch.hpp" // IWYU pragma: keep
 #include "misc/log/log_manager.hpp"
 
 #include <EASTL/fixed_hash_set.h>

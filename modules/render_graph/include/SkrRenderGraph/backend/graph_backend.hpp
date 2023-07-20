@@ -1,12 +1,13 @@
 #pragma once
-#include "SkrRenderGraph/frontend/render_graph.hpp"
-#include "texture_pool.hpp"
-#include "buffer_pool.hpp"
-#include "texture_view_pool.hpp"
-#include "bind_table_pool.hpp"
-#include <EASTL/fixed_set.h>
-
 #include "cgpu/extensions/cgpu_marker_buffer.h"
+#include "SkrRT/containers/sptr.hpp"
+#include "SkrRenderGraph/frontend/render_graph.hpp"
+#include "SkrRenderGraph/backend/texture_pool.hpp"
+#include "SkrRenderGraph/backend/buffer_pool.hpp"
+#include "SkrRenderGraph/backend/texture_view_pool.hpp"
+#include "SkrRenderGraph/backend/bind_table_pool.hpp"
+
+#include <EASTL/fixed_set.h>
 
 namespace skr
 {
@@ -55,9 +56,7 @@ class RenderGraphBackend : public RenderGraph
 {
     friend struct BindablePassContext; 
 public:
-    void devirtualize(TextureNode* node);
-    void devirtualize(PassNode* node);
-
+    bool compile() SKR_NOEXCEPT;    
     virtual uint64_t execute(RenderGraphProfiler* profiler = nullptr) SKR_NOEXCEPT final;
     virtual CGPUDeviceId get_backend_device() SKR_NOEXCEPT final;
     inline virtual CGPUQueueId get_gfx_queue() SKR_NOEXCEPT final { return gfx_queue; }
@@ -94,9 +93,11 @@ protected:
 
     uint64_t get_latest_finished_frame() SKR_NOEXCEPT;
 
-    CGPUQueueId gfx_queue;
-    CGPUDeviceId device;
+    skr::vector<skr::SPtr<IRenderGraphPhase>> phases;
+
     ECGPUBackend backend;
+    CGPUDeviceId device;
+    CGPUQueueId gfx_queue;
     RenderGraphFrameExecutor executors[RG_MAX_FRAME_IN_FLIGHT];
     TexturePool texture_pool;
     BufferPool buffer_pool;

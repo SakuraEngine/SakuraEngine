@@ -28,6 +28,16 @@ namespace io {
 const char* kIOPoolObjectsMemoryName = "io::objects";
 const char* kIOConcurrentQueueName = "io::queue";
 
+IIORequest::~IIORequest() SKR_NOEXCEPT
+{
+    
+}
+
+IBlocksIORequest::~IBlocksIORequest() SKR_NOEXCEPT
+{
+
+}
+
 IIOProcessor::~IIOProcessor() SKR_NOEXCEPT
 {
 

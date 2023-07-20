@@ -4,7 +4,7 @@
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.h"
-#include "SkrRT/io/io.h"
+#include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/platform/vfs.h"
 
 #include "live2d_helpers.hpp"

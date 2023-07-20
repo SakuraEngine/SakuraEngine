@@ -4,7 +4,7 @@
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/containers/vector.hpp"
 #include <EASTL/fixed_vector.h>
-#include "cgpu/cgpux.hpp"
+#include "cgpu/cgpux.h"
 
 namespace skr
 {

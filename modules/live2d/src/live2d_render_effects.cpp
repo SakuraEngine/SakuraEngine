@@ -528,6 +528,7 @@ protected:
             else if (vb_c)
             {
                 uint64_t totalVertexSize = 0;
+                eastl::vector_map<CGPUBufferId, skr::render_graph::BufferHandle> imported_vbs_map;
                 eastl::vector<skr::render_graph::BufferHandle> imported_vbs;
                 eastl::vector<uint64_t> vb_sizes;
                 eastl::vector<uint64_t> vb_offsets;
@@ -542,12 +543,16 @@ protected:
                     auto& view = render_model->vertex_buffer_views[j];
                     uint32_t vcount = 0;
                     const void* pSrc = getVBData(render_model, j, vcount); (void)pSrc;
-                    imported_vbs[j] = render_graph->create_buffer(
+                    if (imported_vbs_map.find(view.buffer) == imported_vbs_map.end())
+                    {
+                        imported_vbs_map[view.buffer] = render_graph->create_buffer(
                             [=](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
                             skr::string name = skr::format(u8"live2d_vb-{}{}", (uint64_t)render_model, j);
                             builder.set_name((const char8_t*)name.c_str())
                                     .import(view.buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
                             });
+                    }
+                    imported_vbs[j] = imported_vbs_map[view.buffer];
                     vb_sizes[j] = vcount * view.stride;
                     vb_offsets[j] = view.offset;
                     totalVertexSize += vcount * view.stride;

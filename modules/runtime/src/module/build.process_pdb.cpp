@@ -1,4 +1,4 @@
-#include "../pch.hpp"
+#include "../pch.hpp" // IWYU pragma: keep
 #if defined(_MSC_VER)
 #include <limits.h>
 #include <stdio.h>

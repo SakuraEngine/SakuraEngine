@@ -8,7 +8,7 @@
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/io/io.h"
+#include "SkrRT/io/ram_io.hpp"
 #include "option_utils.hpp"
 #include "tracy/Tracy.hpp"
 

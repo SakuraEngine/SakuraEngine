@@ -1,4 +1,4 @@
-#include "../../pch.hpp"
+#include "../../pch.hpp" // IWYU pragma: keep
 #include <iostream>
 #include <fstream>
 #include <EASTL/set.h>
@@ -7,7 +7,7 @@
 #include "SkrRT/platform/shared_library.hpp"
 #include "cgpu/extensions/cgpu_nsight.h"
 #include "cgpu_nsight_tracker.hpp"
-#include "cgpu/drivers/nsight/GFSDK_Aftermath.h"
+#include "cgpu/drivers/nsight/GFSDK_Aftermath.h" // IWYU pragma: keep
 #include "cgpu/drivers/nsight/GFSDK_Aftermath_GpuCrashDump.h"
 #include "cgpu/drivers/nsight/GFSDK_Aftermath_GpuCrashDumpDecoding.h"
 

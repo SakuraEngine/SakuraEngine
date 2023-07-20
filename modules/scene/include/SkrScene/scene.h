@@ -3,7 +3,7 @@
 #include "SkrRT/misc/types.h"
 #include "SkrRT/ecs/dual_types.h"
 #ifndef __meta__
-    #include "SkrScene/scene.generated.h"
+    #include "SkrScene/scene.generated.h" // IWYU pragma: export
 #endif
 
 // scene hierarchy

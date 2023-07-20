@@ -4,7 +4,7 @@
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 
 #ifndef __meta__
-#include "SkrRenderer/resources/material_type_resource.generated.h"
+#include "SkrRenderer/resources/material_type_resource.generated.h" // IWYU pragma: export
 #endif
 
 namespace skr sreflect

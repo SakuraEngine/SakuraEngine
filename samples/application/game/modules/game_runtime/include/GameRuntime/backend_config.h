@@ -3,7 +3,7 @@
 #include "SkrRT/resource/config_resource.h"
 #include "SkrRT/containers/function_ref.hpp"
 #ifndef __meta__
-    #include "GameRuntime/backend_config.generated.h"
+    #include "GameRuntime/backend_config.generated.h" // IWYU pragma: export
 #endif
 
 sreflect_enum("guid" : "b4b7f387-d8c2-465c-9b3a-6d83a3d198b1")

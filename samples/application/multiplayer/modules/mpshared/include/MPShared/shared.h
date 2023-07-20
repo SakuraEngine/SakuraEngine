@@ -13,7 +13,7 @@
 #include "tracy/Tracy.hpp"
 
 #ifndef __meta__
-    #include "MPShared/shared.generated.h"
+    #include "MPShared/shared.generated.h" // IWYU pragma: export
 #endif
 
 [[maybe_unused]] static constexpr double serverTickInterval = 1.0 / 30;
