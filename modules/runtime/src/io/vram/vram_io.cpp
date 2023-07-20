@@ -164,10 +164,12 @@ void VRAMService::Runner::enqueueBatch(const IOBatchId& batch) SKR_NOEXCEPT
     const auto priority = batch->get_priority();
     for (auto&& request : batch->get_requests())
     {
-        auto rq = skr::static_pointer_cast<IORequestBase>(request);
-        auto status = rq->getStatus();
-        SKR_ASSERT(status == SKR_IO_STAGE_NONE);
-        rq->setStatus(SKR_IO_STAGE_ENQUEUED);
+        if (auto pStatus = get_component<IORequestStatus>(request.get()))
+        {
+            auto status = pStatus->getStatus();
+            SKR_ASSERT(status == SKR_IO_STAGE_NONE);
+            pStatus->setStatus(SKR_IO_STAGE_ENQUEUED);
+        }
     }
     batch_buffer->fetch(priority, batch);
     skr_atomic64_add_relaxed(&processing_request_counts[priority], 1);

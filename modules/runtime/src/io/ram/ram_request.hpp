@@ -19,32 +19,39 @@ struct RAMIORequest final : public IORequestBase
     
     uint64_t get_fsize() const SKR_NOEXCEPT
     {
-        if (file)
+        if (auto pFile = get_component<IORequestFile>(this))
         {
-            SKR_ASSERT(!dfile);
-            return skr_vfs_fsize(file);
-        }
-        else
-        {
-            SKR_ASSERT(dfile);
-            SKR_ASSERT(!file);
-            auto instance = skr_get_dstorage_instnace();
-            SkrDStorageFileInfo info;
-            skr_dstorage_query_file_info(instance, dfile, &info);
-            return info.file_size;
-        }
-    }
-
-    void setStatus(ESkrIOStage status) SKR_NOEXCEPT override
-    {
-        if (status == SKR_IO_STAGE_CANCELLED)
-        {
-            if (auto dest = static_cast<RAMIOBuffer*>(destination.get()))
+            if (pFile->file)
             {
-                dest->free_buffer();
+                SKR_ASSERT(!pFile->dfile);
+                return skr_vfs_fsize(pFile->file);
+            }
+            else
+            {
+                SKR_ASSERT(pFile->dfile);
+                SKR_ASSERT(!pFile->file);
+                auto instance = skr_get_dstorage_instnace();
+                SkrDStorageFileInfo info;
+                skr_dstorage_query_file_info(instance, pFile->dfile, &info);
+                return info.file_size;
             }
         }
-        return IORequestBase::setStatus(status);
+        return 0;
+    }
+
+    void setStatus(ESkrIOStage status) SKR_NOEXCEPT
+    {
+        if (auto pStatus = get_component<IORequestStatus>(this))
+        {
+            if (status == SKR_IO_STAGE_CANCELLED)
+            {
+                if (auto dest = static_cast<RAMIOBuffer*>(destination.get()))
+                {
+                    dest->free_buffer();
+                }
+            }
+            return pStatus->setStatus(status);
+        }
     }
 
     skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT override { return blocks; }

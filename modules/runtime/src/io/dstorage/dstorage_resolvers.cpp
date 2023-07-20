@@ -8,22 +8,24 @@ namespace io {
 
 void DStorageFileResolver::resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
 {
-    auto rq = skr::static_pointer_cast<IORequestBase>(request);
-    if (!rq->dfile)
+    if (auto pFile = get_component<IORequestFile>(request.get()))
     {
-        ZoneScopedN("DStorage::OpenFile");
+        if (!pFile->dfile)
+        {
+            ZoneScopedN("DStorage::OpenFile");
 
-        SKR_ASSERT(rq->vfs);
-        skr::filesystem::path p = rq->vfs->mount_dir;
-        p /= rq->path.c_str();
+            SKR_ASSERT(pFile->vfs);
+            skr::filesystem::path p = pFile->vfs->mount_dir;
+            p /= pFile->path.c_str();
 
-        auto instance = skr_get_dstorage_instnace();
-        rq->dfile = skr_dstorage_open_file(instance, p.string().c_str());
-        SKR_ASSERT(rq->dfile);
-    }
-    else
-    {
-        SKR_UNREACHABLE_CODE();
+            auto instance = skr_get_dstorage_instnace();
+            pFile->dfile = skr_dstorage_open_file(instance, p.string().c_str());
+            SKR_ASSERT(pFile->dfile);
+        }
+        else
+        {
+            SKR_UNREACHABLE_CODE();
+        }
     }
 }
 

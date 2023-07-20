@@ -66,9 +66,12 @@ IOResultId RAMIOBatch::add_request(IORequestId request, skr_io_future_t* future)
     auto srv = static_cast<RAMService*>(service);
     auto buffer = srv->ram_buffer_pool->allocate();
     auto rq = skr::static_pointer_cast<RAMIORequest>(request);
-    rq->future = future;
+    if (auto pStatus = get_component<IORequestStatus>(request.get()))
+    {
+        pStatus->owner_batch = this;
+        pStatus->future = future;
+    }
     rq->destination = buffer;
-    rq->owner_batch = this;
     SKR_ASSERT(!rq->blocks.empty());
     addRequest(request);
     return buffer;
@@ -204,10 +207,12 @@ void RAMService::Runner::enqueueBatch(const IOBatchId& batch) SKR_NOEXCEPT
     const auto priority = batch->get_priority();
     for (auto&& request : batch->get_requests())
     {
-        auto rq = skr::static_pointer_cast<IORequestBase>(request);
-        auto status = rq->getStatus();
-        SKR_ASSERT(status == SKR_IO_STAGE_NONE);
-        rq->setStatus(SKR_IO_STAGE_ENQUEUED);
+        if (auto pStatus = get_component<IORequestStatus>(request.get()))
+        {
+            auto status = pStatus->getStatus();
+            SKR_ASSERT(status == SKR_IO_STAGE_NONE);
+            pStatus->setStatus(SKR_IO_STAGE_ENQUEUED);
+        }
     }
     batch_buffer->fetch(priority, batch);
     skr_atomic64_add_relaxed(&processing_request_counts[priority], 1);
