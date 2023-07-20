@@ -155,16 +155,17 @@ struct IORequestFile : public IORequestComponent
     SkrDStorageFileHandle dfile = nullptr;
 };
 
-struct IORequestBase : public IIORequest
+template<typename Interface>
+struct IORequestCRTP : public Interface
 {
     IO_RC_OBJECT_BODY
 public:
-    IORequestBase(ISmartPoolPtr<IIORequest> pool) 
+    IORequestCRTP(ISmartPoolPtr<Interface> pool) 
         : status_comp(this), file_comp(this), pool(pool) 
     {
 
     }
-    virtual ~IORequestBase() = default;
+    virtual ~IORequestCRTP() = default;
 
     void set_vfs(skr_vfs_t* _vfs) SKR_NOEXCEPT { file_comp.set_vfs(_vfs); }
     void set_path(const char8_t* p) SKR_NOEXCEPT { file_comp.set_path(p); }
@@ -184,8 +185,6 @@ public:
     }
 
 private:
-    friend struct RAMIOBatch;
-
     IORequestStatus status_comp;
     IORequestFile file_comp;
 
@@ -194,12 +193,12 @@ public:
     { 
         return +[](SInterface* ptr) 
         { 
-            auto* p = static_cast<IORequestBase*>(ptr);
+            auto* p = static_cast<IORequestCRTP*>(ptr);
             p->pool->deallocate(p); 
         };
     }
 protected:
-    ISmartPoolPtr<IIORequest> pool = nullptr;
+    ISmartPoolPtr<Interface> pool = nullptr;
 };
 
 using RQPtr = skr::SObjectPtr<IIORequest>;
