@@ -4,7 +4,7 @@
 #include "SkrRT/misc/types.h"
 #include "SkrRT/platform/guid.hpp"
 #ifndef __meta__
-#include "SkrToolCore/assets/config_asset.generated.h"
+#include "SkrToolCore/assets/config_asset.generated.h" // IWYU pragma: export
 #endif
 
 namespace skd sreflect

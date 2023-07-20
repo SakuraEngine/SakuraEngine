@@ -2,7 +2,7 @@
 #include "SkrAnim/module.configure.h"
 #include "SkrRT/platform/configure.h"
 #ifndef __meta__
-    #include "SkrAnim/resources/animation_resource.generated.h"
+    #include "SkrAnim/resources/animation_resource.generated.h" // IWYU pragma: export
 #endif
 typedef struct skr_anim_resource_t skr_anim_resource_t;
 
