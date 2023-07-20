@@ -11,7 +11,7 @@ namespace skr {
 namespace io {
 
 template<typename T>
-[[nodiscard]] const T* get_component(const IIORequest* rq) SKR_NOEXCEPT
+[[nodiscard]] const T* io_component(const IIORequest* rq) SKR_NOEXCEPT
 {
     if (auto c = rq->get_component(IORequestComponentTID<T>::Get()))
         return static_cast<const T*>(c);
@@ -20,7 +20,7 @@ template<typename T>
 }
 
 template<typename T>
-[[nodiscard]] T* get_component(IIORequest* rq) SKR_NOEXCEPT
+[[nodiscard]] T* io_component(IIORequest* rq) SKR_NOEXCEPT
 {
     if (auto c = rq->get_component(IORequestComponentTID<T>::Get()))
         return static_cast<T*>(c);
@@ -42,7 +42,7 @@ public:
 
     [[nodiscard]] virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT
     {
-        return std::apply([&](const auto&... args) {
+        return std::apply([tid](const auto&... args) {
             const IORequestComponent* cs[] = { &args... };
             const skr_guid_t ids[] = { args.get_tid()... };
             for (uint64_t i = 0; i < sizeof...(Components); ++i)
@@ -56,7 +56,7 @@ public:
     }
     [[nodiscard]] virtual IORequestComponent* get_component(skr_guid_t tid) SKR_NOEXCEPT
     {
-        return std::apply([&](auto&... args) {
+        return std::apply([tid](auto&... args) {
             IORequestComponent* cs[] = { &args... };
             const skr_guid_t ids[] = { args.get_tid()... };
             for (uint64_t i = 0; i < sizeof...(Components); ++i)
@@ -86,7 +86,7 @@ public:
     template <typename C>
     C* safe_comp() SKR_NOEXCEPT
     {
-        auto c = get_component<C>(this);
+        auto c = io_component<C>(this);
         SKR_ASSERT(c && "failed to get component!");
         return c;
     }
@@ -94,7 +94,7 @@ public:
     template <typename C>
     const C* safe_comp() const SKR_NOEXCEPT
     {
-        auto c = get_component<C>(this);
+        auto c = io_component<C>(this);
         SKR_ASSERT(c && "failed to get component!");
         return c;
     }
@@ -170,9 +170,8 @@ public:
     }
 };
 
-using RQPtr = skr::SObjectPtr<IIORequest>;
-using IORequestQueue = IOConcurrentQueue<RQPtr>;  
-using IORequestArray = skr::vector<RQPtr>;
+using IORequestQueue = IOConcurrentQueue<IORequestId>;  
+using IORequestArray = skr::vector<IORequestId>;
 
 } // namespace io
 } // namespace skr

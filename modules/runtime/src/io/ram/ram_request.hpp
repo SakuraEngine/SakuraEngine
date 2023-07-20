@@ -47,7 +47,5 @@ inline void RAMIOStatusComponent::setStatus(ESkrIOStage status) SKR_NOEXCEPT
     return IOStatusComponent::setStatus(status);
 }
 
-using RAMRQPtr = skr::SObjectPtr<RAMIORequest>;
-
 } // namespace io
 } // namespace skr

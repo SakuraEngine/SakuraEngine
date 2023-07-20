@@ -11,9 +11,9 @@ void AllocateIOBufferResolver::resolve(SkrAsyncServicePriority priority, IOReque
     ZoneScopedNC("IOBuffer::Allocate", tracy::Color::BlueViolet);
     auto rq = skr::static_pointer_cast<RAMIORequest>(request);
     auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
-    auto pFiles = get_component<IOFileComponent>(rq.get());
+    auto pFiles = io_component<IOFileComponent>(rq.get());
     // deal with 0 block size
-    if (auto pComp = get_component<IOBlocksComponent>(rq.get()))
+    if (auto pComp = io_component<IOBlocksComponent>(rq.get()))
     {
         for (auto& block : pComp->blocks)
         {
@@ -48,7 +48,7 @@ void ChunkingVFSReadResolver::resolve(SkrAsyncServicePriority priority,IORequest
 {
     ZoneScopedN("IORequestChunking");
     uint64_t total = 0;
-    if (auto pBlocks = get_component<IOBlocksComponent>(request.get()))
+    if (auto pBlocks = io_component<IOBlocksComponent>(request.get()))
     {
         for (auto& block : pBlocks->get_blocks())
             total += block.size;
@@ -56,7 +56,7 @@ void ChunkingVFSReadResolver::resolve(SkrAsyncServicePriority priority,IORequest
     uint64_t chunk_count = total / chunk_size;
     if (chunk_count > 2)
     {
-        if (auto pComp = get_component<IOBlocksComponent>(request.get()))
+        if (auto pComp = io_component<IOBlocksComponent>(request.get()))
         {
             auto bks = pComp->blocks;
             pComp->reset_blocks();

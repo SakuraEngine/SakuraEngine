@@ -18,7 +18,7 @@ struct VRAMIORequest final : public IORequestCRTP<
     
     uint64_t get_fsize() const SKR_NOEXCEPT
     {
-        if (auto pFile = get_component<IOFileComponent>(this))
+        if (auto pFile = io_component<IOFileComponent>(this))
         {
             if (pFile->file)
             {
@@ -40,7 +40,7 @@ struct VRAMIORequest final : public IORequestCRTP<
 
     void setStatus(ESkrIOStage status) SKR_NOEXCEPT
     {
-        if (auto pStatus = get_component<IOStatusComponent>(this))
+        if (auto pStatus = io_component<IOStatusComponent>(this))
         {
             /*
             if (status == SKR_IO_STAGE_CANCELLED)
@@ -64,8 +64,6 @@ protected:
 
     const uint64_t sequence;
 };
-
-using VRAMRQPtr = skr::SObjectPtr<VRAMIORequest>;
 
 } // namespace io
 } // namespace skr
