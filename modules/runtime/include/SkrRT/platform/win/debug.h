@@ -42,8 +42,7 @@
                 if (!(cond))                                                          \
                 {                                                                     \
                     SKR_TRACE_MSG("Skr Assert fired: " #cond " (" SKR_FILE_LINE ")"); \
-                    __debugbreak();                                                   \
-                    abort();                                                          \
+                    assert((cond));                                                   \
                 }                                                                     \
             } while (0)
         #define SKR_BREAK() __debugbreak()
