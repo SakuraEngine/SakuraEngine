@@ -19,7 +19,7 @@
 
 #include <condition_variable>
 
-TEST_F(WithoutBoundScheduler, ConditionVariable) {
+TEST_CASE_METHOD(WithoutBoundScheduler, "ConditionVariable") {
   bool trigger[3] = {false, false, false};
   bool signal[3] = {false, false, false};
   marl::mutex mutex;
@@ -62,7 +62,7 @@ TEST_F(WithoutBoundScheduler, ConditionVariable) {
   thread.join();
 }
 
-TEST_P(WithBoundScheduler, ConditionVariable) {
+TEST_CASE_METHOD(WithBoundScheduler, "ConditionVariable") {
   bool trigger[3] = {false, false, false};
   bool signal[3] = {false, false, false};
   marl::mutex mutex;
@@ -110,7 +110,7 @@ TEST_P(WithBoundScheduler, ConditionVariable) {
 // go to idle before repeating.
 // This is testing to ensure that the scheduler handles timeouts correctly when
 // they are early-unblocked, along with expected lock state.
-TEST_P(WithBoundScheduler, ConditionVariableTimeouts) {
+TEST_CASE_METHOD(WithBoundScheduler, "ConditionVariableTimeouts") {
   for (int i = 0; i < 10; i++) {
     marl::mutex mutex;
     marl::ConditionVariable cv;

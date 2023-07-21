@@ -16,13 +16,13 @@
 
 #include "marl_test.h"
 
-TEST_F(WithoutBoundScheduler, Defer) {
+TEST_CASE_METHOD(WithoutBoundScheduler, "Defer") {
   bool deferCalled = false;
   { defer(deferCalled = true); }
   ASSERT_TRUE(deferCalled);
 }
 
-TEST_F(WithoutBoundScheduler, DeferOrder) {
+TEST_CASE_METHOD(WithoutBoundScheduler, "DeferOrder") {
   int counter = 0;
   int a = 0, b = 0, c = 0;
   {

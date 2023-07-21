@@ -20,7 +20,7 @@
 
 #include <mutex>
 
-TEST_P(WithBoundScheduler, BlockingCallVoidReturn) {
+TEST_CASE_METHOD(WithBoundScheduler, "BlockingCallVoidReturn") {
   auto mutex = std::make_shared<std::mutex>();
   mutex->lock();
 
@@ -39,7 +39,7 @@ TEST_P(WithBoundScheduler, BlockingCallVoidReturn) {
   wg.wait();
 }
 
-TEST_P(WithBoundScheduler, BlockingCallIntReturn) {
+TEST_CASE_METHOD(WithBoundScheduler, "BlockingCallIntReturn") {
   auto mutex = std::make_shared<std::mutex>();
   mutex->lock();
 
@@ -62,7 +62,7 @@ TEST_P(WithBoundScheduler, BlockingCallIntReturn) {
   ASSERT_EQ(n.load(), 4950);
 }
 
-TEST_P(WithBoundScheduler, BlockingCallSchedulesTask) {
+TEST_CASE_METHOD(WithBoundScheduler, "BlockingCallSchedulesTask") {
   marl::WaitGroup wg(1);
   marl::schedule([=] {
     marl::blocking_call([=] { marl::schedule([=] { wg.done(); }); });

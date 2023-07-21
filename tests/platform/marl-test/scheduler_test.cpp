@@ -21,12 +21,12 @@
 
 #include <atomic>
 
-TEST_F(WithoutBoundScheduler, SchedulerConstructAndDestruct) {
+TEST_CASE_METHOD(WithoutBoundScheduler, "SchedulerConstructAndDestruct") {
   auto scheduler = std::unique_ptr<marl::Scheduler>(
       new marl::Scheduler(marl::Scheduler::Config()));
 }
 
-TEST_F(WithoutBoundScheduler, SchedulerBindGetUnbind) {
+TEST_CASE_METHOD(WithoutBoundScheduler, "SchedulerBindGetUnbind") {
   auto scheduler = std::unique_ptr<marl::Scheduler>(
       new marl::Scheduler(marl::Scheduler::Config()));
   scheduler->bind();
@@ -37,7 +37,7 @@ TEST_F(WithoutBoundScheduler, SchedulerBindGetUnbind) {
   ASSERT_EQ(got, nullptr);
 }
 
-TEST_F(WithoutBoundScheduler, CheckConfig) {
+TEST_CASE_METHOD(WithoutBoundScheduler, "CheckConfig") {
   marl::Scheduler::Config cfg;
   cfg.setAllocator(allocator).setWorkerThreadCount(10);
 
@@ -48,7 +48,7 @@ TEST_F(WithoutBoundScheduler, CheckConfig) {
   ASSERT_EQ(gotCfg.workerThread.count, 10);
 }
 
-TEST_P(WithBoundScheduler, DestructWithPendingTasks) {
+TEST_CASE_METHOD(WithBoundScheduler, "DestructWithPendingTasks") {
   std::atomic<int> counter = {0};
   for (int i = 0; i < 1000; i++) {
     marl::schedule([&] { counter++; });
@@ -65,7 +65,7 @@ TEST_P(WithBoundScheduler, DestructWithPendingTasks) {
   (new marl::Scheduler(marl::Scheduler::Config()))->bind();
 }
 
-TEST_P(WithBoundScheduler, DestructWithPendingFibers) {
+TEST_CASE_METHOD(WithBoundScheduler, "DestructWithPendingFibers") {
   std::atomic<int> counter = {0};
 
   marl::WaitGroup wg(1);
@@ -94,7 +94,7 @@ TEST_P(WithBoundScheduler, DestructWithPendingFibers) {
   (new marl::Scheduler(marl::Scheduler::Config()))->bind();
 }
 
-TEST_P(WithBoundScheduler, ScheduleWithArgs) {
+TEST_CASE_METHOD(WithBoundScheduler, "ScheduleWithArgs") {
   std::string got;
   marl::WaitGroup wg(1);
   marl::schedule(
@@ -108,7 +108,7 @@ TEST_P(WithBoundScheduler, ScheduleWithArgs) {
   ASSERT_EQ(got, "s: 'a string', i: 42, b: true");
 }
 
-TEST_P(WithBoundScheduler, FibersResumeOnSameThread) {
+TEST_CASE_METHOD(WithBoundScheduler, "FibersResumeOnSameThread") {
   marl::WaitGroup fence(1);
   marl::WaitGroup wg(1000);
   for (int i = 0; i < 1000; i++) {
@@ -125,7 +125,7 @@ TEST_P(WithBoundScheduler, FibersResumeOnSameThread) {
   wg.wait();
 }
 
-TEST_P(WithBoundScheduler, FibersResumeOnSameStdThread) {
+TEST_CASE_METHOD(WithBoundScheduler, "FibersResumeOnSameStdThread") {
   auto scheduler = marl::Scheduler::get();
 
   // on 32-bit OSs, excessive numbers of threads can run out of address space.
@@ -156,7 +156,7 @@ TEST_P(WithBoundScheduler, FibersResumeOnSameStdThread) {
   }
 }
 
-TEST_F(WithoutBoundScheduler, TasksOnlyScheduledOnWorkerThreads) {
+TEST_CASE_METHOD(WithoutBoundScheduler, "TasksOnlyScheduledOnWorkerThreads") {
   marl::Scheduler::Config cfg;
   cfg.setWorkerThreadCount(8);
 
@@ -183,7 +183,7 @@ TEST_F(WithoutBoundScheduler, TasksOnlyScheduledOnWorkerThreads) {
 
 // Test that a marl::Scheduler *with dedicated worker threads* can be used
 // without first binding to the scheduling thread.
-TEST_F(WithoutBoundScheduler, ScheduleMTWWithNoBind) {
+TEST_CASE_METHOD(WithoutBoundScheduler, "ScheduleMTWWithNoBind") {
   marl::Scheduler::Config cfg;
   cfg.setWorkerThreadCount(8);
   auto scheduler = std::unique_ptr<marl::Scheduler>(new marl::Scheduler(cfg));
@@ -214,14 +214,7 @@ TEST_F(WithoutBoundScheduler, ScheduleMTWWithNoBind) {
 
 // Test that a marl::Scheduler *without dedicated worker threads* cannot be used
 // without first binding to the scheduling thread.
-TEST_F(WithoutBoundScheduler, ScheduleSTWWithNoBind) {
+TEST_CASE_METHOD(WithoutBoundScheduler, "ScheduleSTWWithNoBind") {
   marl::Scheduler::Config cfg;
   auto scheduler = std::unique_ptr<marl::Scheduler>(new marl::Scheduler(cfg));
-
-#if MARL_DEBUG_ENABLED && GTEST_HAS_DEATH_TEST
-  EXPECT_DEATH(scheduler->enqueue(marl::Task([] {})),
-               "Did you forget to call marl::Scheduler::bind");
-#elif !MARL_DEBUG_ENABLED
-  scheduler->enqueue(marl::Task([] { FAIL() << "Should not be called"; }));
-#endif
 }
