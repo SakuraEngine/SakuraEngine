@@ -27,8 +27,7 @@
                 {                                                                     \
                     SKR_TRACE_MSG("Skr Assert fired: " #cond " (" SKR_FILE_LINE ")"); \
                     signal(SIGSEGV, apple_assert_handler);                            \
-                    __builtin_debugtrap();                                            \
-                    abort();                                                          \
+                    assert((cond));                                                   \
                 }                                                                     \
             } while (0)
         #define SKR_BREAK() __builtin_debugtrap()
