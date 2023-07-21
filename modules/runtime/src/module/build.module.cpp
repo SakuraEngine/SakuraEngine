@@ -1,5 +1,6 @@
 #include "../pch.hpp"
 #include "module_manager.cpp"
+#include "SkrRT/platform/configure.h"
 #include "SkrRT/platform/crash.h"
 #include "SkrRT/runtime_module.h"
 #include "SkrRT/ecs/dual.h"
