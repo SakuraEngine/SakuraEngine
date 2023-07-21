@@ -34,7 +34,7 @@ constexpr bool is_complete_v = is_complete(SKR_TYPELIST(T));
 template<std::size_t N, class T>
 [[nodiscard]] constexpr T* assume_aligned(T* ptr)
 {
-#if defined(__clang__) || defined(__GNUC__) || !defined(__ICC)
+#if defined(__clang__) || (defined(__GNUC__) && !defined(__ICC))
     return reinterpret_cast<T*>(__builtin_assume_aligned(ptr, N));
 #elif defined(_MSC_VER)
     if (reinterpret_cast<std::uintptr_t>(ptr) & -static_cast<std::intptr_t>(N) == 0)

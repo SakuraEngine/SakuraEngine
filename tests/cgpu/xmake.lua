@@ -7,17 +7,20 @@ target("CGPUTests")
     public_dependency("SkrRT", engine_version)
     add_deps("SkrTestFramework", {public = false})
     add_packages("catch2", {public = true})
-    add_files("Common.cpp")
-    -- Device Initialize
-    add_files("DeviceInitialize/**.cpp")
-    -- Device Extensions
-    add_files("Exts/**.cpp")
-    -- QueueOps
-    add_files("QueueOperations/QueueOperations.cpp")
-    -- RSPool
-    add_files("RootSignaturePool/RootSignaturePool.cpp")
-    add_files("RootSignaturePool/shaders/**.hlsl")
-    -- ResourceCreation
-    add_files("ResourceCreation/ResourceCreation.cpp")
-    -- SwapChainCreation
-    add_files("SwapChainCreation/SwapChainCreation.cpp")
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    add_files(
+        "Common.cpp",
+        -- Device Initialize
+        "DeviceInitialize/**.cpp",
+        -- Device Extensions
+        "Exts/**.cpp",
+        -- QueueOps
+        "QueueOperations/QueueOperations.cpp",
+        -- RSPool
+        "RootSignaturePool/RootSignaturePool.cpp",
+        "RootSignaturePool/shaders/**.hlsl",
+        -- ResourceCreation
+        "ResourceCreation/ResourceCreation.cpp",
+        -- SwapChainCreation
+        "SwapChainCreation/SwapChainCreation.cpp"
+    , {unity_group = "CPUTests"})
