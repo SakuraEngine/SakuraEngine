@@ -1,4 +1,3 @@
-#include "string.h"
 #include "common_utils.h"
 #include "cgpu/cgpux.hpp"
 
