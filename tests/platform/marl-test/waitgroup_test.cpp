@@ -16,14 +16,14 @@
 
 #include "marl/waitgroup.h"
 
-TEST_F(WithoutBoundScheduler, WaitGroupDone) {
+TEST_CASE_METHOD(WithoutBoundScheduler, "WaitGroupDone") {
   marl::WaitGroup wg(2);  // Should not require a scheduler.
   wg.done();
   wg.done();
 }
 
 #if MARL_DEBUG_ENABLED && GTEST_HAS_DEATH_TEST
-TEST_F(WithoutBoundScheduler, WaitGroupDoneTooMany) {
+TEST_CASE_METHOD(WithoutBoundScheduler, "WaitGroupDoneTooMany") {
   marl::WaitGroup wg(2);  // Should not require a scheduler.
   wg.done();
   wg.done();
@@ -31,7 +31,7 @@ TEST_F(WithoutBoundScheduler, WaitGroupDoneTooMany) {
 }
 #endif  // MARL_DEBUG_ENABLED && GTEST_HAS_DEATH_TEST
 
-TEST_P(WithBoundScheduler, WaitGroup_OneTask) {
+TEST_CASE_METHOD(WithBoundScheduler, "WaitGroup_OneTask") {
   marl::WaitGroup wg(1);
   std::atomic<int> counter = {0};
   marl::schedule([&counter, wg] {
@@ -42,7 +42,7 @@ TEST_P(WithBoundScheduler, WaitGroup_OneTask) {
   ASSERT_EQ(counter.load(), 1);
 }
 
-TEST_P(WithBoundScheduler, WaitGroup_10Tasks) {
+TEST_CASE_METHOD(WithBoundScheduler, "WaitGroup_10Tasks") {
   marl::WaitGroup wg(10);
   std::atomic<int> counter = {0};
   for (int i = 0; i < 10; i++) {

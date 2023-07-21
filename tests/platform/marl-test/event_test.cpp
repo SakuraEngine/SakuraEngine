@@ -29,7 +29,7 @@ std::ostream& operator<<(std::ostream& os, const duration<Rep, Period>& d) {
 }  // namespace chrono
 }  // namespace std
 
-TEST_P(WithBoundScheduler, EventIsSignalled) {
+TEST_CASE_METHOD(WithBoundScheduler, "EventIsSignalled") {
   for (auto mode : {marl::Event::Mode::Manual, marl::Event::Mode::Auto}) {
     auto event = marl::Event(mode);
     ASSERT_EQ(event.isSignalled(), false);
@@ -41,7 +41,7 @@ TEST_P(WithBoundScheduler, EventIsSignalled) {
   }
 }
 
-TEST_P(WithBoundScheduler, EventAutoTest) {
+TEST_CASE_METHOD(WithBoundScheduler, "EventAutoTest") {
   auto event = marl::Event(marl::Event::Mode::Auto);
   ASSERT_EQ(event.test(), false);
   event.signal();
@@ -49,7 +49,7 @@ TEST_P(WithBoundScheduler, EventAutoTest) {
   ASSERT_EQ(event.test(), false);
 }
 
-TEST_P(WithBoundScheduler, EventManualTest) {
+TEST_CASE_METHOD(WithBoundScheduler, "EventManualTest") {
   auto event = marl::Event(marl::Event::Mode::Manual);
   ASSERT_EQ(event.test(), false);
   event.signal();
@@ -57,7 +57,7 @@ TEST_P(WithBoundScheduler, EventManualTest) {
   ASSERT_EQ(event.test(), true);
 }
 
-TEST_P(WithBoundScheduler, EventAutoWait) {
+TEST_CASE_METHOD(WithBoundScheduler, "EventAutoWait") {
   std::atomic<int> counter = {0};
   auto event = marl::Event(marl::Event::Mode::Auto);
   auto done = marl::Event(marl::Event::Mode::Auto);
@@ -82,7 +82,7 @@ TEST_P(WithBoundScheduler, EventAutoWait) {
   ASSERT_EQ(counter.load(), 3);
 }
 
-TEST_P(WithBoundScheduler, EventManualWait) {
+TEST_CASE_METHOD(WithBoundScheduler, "EventManualWait") {
   std::atomic<int> counter = {0};
   auto event = marl::Event(marl::Event::Mode::Manual);
   auto wg = marl::WaitGroup(3);
@@ -98,7 +98,7 @@ TEST_P(WithBoundScheduler, EventManualWait) {
   ASSERT_EQ(counter.load(), 3);
 }
 
-TEST_P(WithBoundScheduler, EventSequence) {
+TEST_CASE_METHOD(WithBoundScheduler, "EventSequence") {
   for (auto mode : {marl::Event::Mode::Manual, marl::Event::Mode::Auto}) {
     std::string sequence;
     auto eventA = marl::Event(mode);
@@ -127,7 +127,7 @@ TEST_P(WithBoundScheduler, EventSequence) {
   }
 }
 
-TEST_P(WithBoundScheduler, EventWaitForUnblocked) {
+TEST_CASE_METHOD(WithBoundScheduler, "EventWaitForUnblocked") {
   auto event = marl::Event(marl::Event::Mode::Manual);
   auto wg = marl::WaitGroup(1000);
   for (int i = 0; i < 1000; i++) {
@@ -141,7 +141,7 @@ TEST_P(WithBoundScheduler, EventWaitForUnblocked) {
   wg.wait();
 }
 
-TEST_P(WithBoundScheduler, EventWaitForTimeTaken) {
+TEST_CASE_METHOD(WithBoundScheduler, "EventWaitForTimeTaken") {
   auto event = marl::Event(marl::Event::Mode::Auto);
   auto wg = marl::WaitGroup(1000);
   for (int i = 0; i < 1000; i++) {
@@ -158,7 +158,7 @@ TEST_P(WithBoundScheduler, EventWaitForTimeTaken) {
   wg.wait();
 }
 
-TEST_P(WithBoundScheduler, EventWaitUntilUnblocked) {
+TEST_CASE_METHOD(WithBoundScheduler, "EventWaitUntilUnblocked") {
   auto event = marl::Event(marl::Event::Mode::Manual);
   auto wg = marl::WaitGroup(1000);
   for (int i = 0; i < 1000; i++) {
@@ -173,7 +173,7 @@ TEST_P(WithBoundScheduler, EventWaitUntilUnblocked) {
   wg.wait();
 }
 
-TEST_P(WithBoundScheduler, EventWaitUntilTimeTaken) {
+TEST_CASE_METHOD(WithBoundScheduler, "EventWaitUntilTimeTaken") {
   auto event = marl::Event(marl::Event::Mode::Auto);
   auto wg = marl::WaitGroup(1000);
   for (int i = 0; i < 1000; i++) {
@@ -196,7 +196,7 @@ TEST_P(WithBoundScheduler, EventWaitUntilTimeTaken) {
 // This is testing to ensure that the scheduler handles timeouts correctly when
 // they are early-unblocked. Specifically, this is to test that fibers are
 // not double-placed into the idle or working lists.
-TEST_P(WithBoundScheduler, EventWaitStressTest) {
+TEST_CASE_METHOD(WithBoundScheduler, "EventWaitStressTest") {
   auto event = marl::Event(marl::Event::Mode::Manual);
   for (int i = 0; i < 10; i++) {
     auto wg = marl::WaitGroup(100);
@@ -212,7 +212,7 @@ TEST_P(WithBoundScheduler, EventWaitStressTest) {
   }
 }
 
-TEST_P(WithBoundScheduler, EventAny) {
+TEST_CASE_METHOD(WithBoundScheduler, "EventAny") {
   for (int i = 0; i < 3; i++) {
     std::array<marl::Event, 3> events = {
         marl::Event(marl::Event::Mode::Auto),

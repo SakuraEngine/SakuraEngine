@@ -16,12 +16,12 @@
 
 #include "marl_test.h"
 
-class AllocatorTest : public testing::Test {
+class AllocatorTest {
  public:
   marl::Allocator* allocator = marl::Allocator::Default;
 };
 
-TEST_F(AllocatorTest, AlignedAllocate) {
+TEST_CASE_METHOD(AllocatorTest, "AlignedAllocate") {
   for (auto useGuards : {false, true}) {
     for (auto alignment : {1, 2, 4, 8, 16, 32, 64, 128}) {
       for (auto size : {1,   2,   3,   4,   5,   7,   8,   14,  16,  17,
@@ -60,7 +60,7 @@ struct alignas(64) StructWith64ByteAlignment {
   uint8_t padding[63];
 };
 
-TEST_F(AllocatorTest, Create) {
+TEST_CASE_METHOD(AllocatorTest, "Create") {
   auto s16 = allocator->create<StructWith16ByteAlignment>();
   auto s32 = allocator->create<StructWith32ByteAlignment>();
   auto s64 = allocator->create<StructWith64ByteAlignment>();
@@ -76,7 +76,7 @@ TEST_F(AllocatorTest, Create) {
 }
 
 #if GTEST_HAS_DEATH_TEST
-TEST_F(AllocatorTest, Guards) {
+TEST_CASE_METHOD(AllocatorTest, "Guards") {
   marl::Allocation::Request request;
   request.alignment = 16;
   request.size = 16;

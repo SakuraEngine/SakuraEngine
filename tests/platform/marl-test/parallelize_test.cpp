@@ -16,7 +16,7 @@
 
 #include "marl/parallelize.h"
 
-TEST_P(WithBoundScheduler, Parallelize) {
+TEST_CASE_METHOD(WithBoundScheduler, "Parallelize") {
   bool a = false;
   bool b = false;
   bool c = false;

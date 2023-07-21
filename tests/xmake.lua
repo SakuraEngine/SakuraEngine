@@ -1,8 +1,7 @@
-add_requires("gtest")
 add_requires("catch2 v3.4.0")
 
 target("SkrTestFramework")
-    set_kind("shared")
+    set_kind("static")
     set_group("05.tests/framework")
     add_packages("catch2", {public = true, inherit = true})
     add_includedirs("framework/include", {public = true})
