@@ -1,6 +1,7 @@
 #include "cgpu/api.h"
 #include <iostream>
 #include "SkrTestFramework/framework.hpp"
+#include "SkrTestFramework/generators.hpp"
 #include <catch2/generators/catch_generators.hpp>
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -67,14 +68,7 @@ protected:
 
     SwapChainCreation() SKR_NOEXCEPT
     {
-        backend = GENERATE(as<ECGPUBackend>{}, 
-    #ifdef CGPU_USE_VULKAN
-        CGPU_BACKEND_VULKAN
-    #endif
-    #ifdef CGPU_USE_D3D12
-        , CGPU_BACKEND_D3D12
-    #endif
-        );
+        backend = GENERATE(CGPUBackendGenerator::Create());
         Initialize(backend);
     }
 

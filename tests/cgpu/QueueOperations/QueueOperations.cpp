@@ -1,20 +1,14 @@
 #include "cgpu/api.h"
 #include "SkrTestFramework/framework.hpp"
-#include <catch2/generators/catch_generators.hpp>
+#include "SkrTestFramework/generators.hpp"
 
 class QueueOperations
 {
 protected:
     QueueOperations()
     {
-        backend = GENERATE(as<ECGPUBackend>{}, 
-    #ifdef CGPU_USE_VULKAN
-        CGPU_BACKEND_VULKAN
-    #endif
-    #ifdef CGPU_USE_D3D12
-        , CGPU_BACKEND_D3D12
-    #endif
-        );
+        backend = GENERATE(CGPUBackendGenerator::Create());
+
         DECLARE_ZERO(CGPUInstanceDescriptor, desc)
         desc.backend = backend;
         desc.enable_debug_layer = true;
