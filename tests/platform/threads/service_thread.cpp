@@ -1,10 +1,38 @@
-#include "gtest/gtest.h"
 #include "SkrRT/platform/crash.h"
-#include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/async/async_service.h"
 
-TEST(ServiceThread, AsyncPrint)
+#include <catch2/catch_test_macros.hpp>
+#define EXPECT_EQ(a, b) REQUIRE(a == b)
+
+static struct ProcInitializer
+{
+    ProcInitializer()
+    {
+        ::skr_initialize_crash_handler();
+        ::skr_log_initialize_async_worker();
+    }
+    ~ProcInitializer()
+    {
+        ::skr_log_finalize_async_worker();
+        ::skr_finalize_crash_handler();
+    }
+} init;
+
+class ServiceThreadTests
+{
+protected:
+    ServiceThreadTests()
+    {
+
+    }
+    ~ServiceThreadTests()
+    {
+
+    }
+};
+
+TEST_CASE_METHOD(ServiceThreadTests, "AsyncPrint")
 {
     struct TestServiceThread : public skr::ServiceThread
     {
@@ -35,7 +63,7 @@ TEST(ServiceThread, AsyncPrint)
     SKR_LOG_DEBUG("Exitted");
 }
 
-TEST(ServiceThread, AsyncPrint2)
+TEST_CASE_METHOD(ServiceThreadTests, "AsyncPrint2")
 {
     struct TestServiceThread : public skr::ServiceThread
     {
@@ -68,17 +96,4 @@ TEST(ServiceThread, AsyncPrint2)
     EXPECT_EQ(srv.times, 21);
     
     srv.exit();
-}
-
-int main(int argc, char** argv)
-{
-    skr_initialize_crash_handler();
-    skr_log_initialize_async_worker();
-
-    ::testing::InitGoogleTest(&argc, argv);
-    auto result = RUN_ALL_TESTS();
-
-    skr_log_finalize_async_worker(); 
-    skr_finalize_crash_handler();
-    return result;
 }

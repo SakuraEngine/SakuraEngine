@@ -23,7 +23,7 @@ rule("c++.codegen.fence")
             import("core.base.scheduler")
             for _, dep in pairs(target:deps()) do
                 if dep:rule("c++.codegen") then
-                    -- scheduler.co_group_wait(dep:name()..".cpp-codegen")
+                    scheduler.co_group_wait(dep:name()..".cpp-codegen")
                 end
             end
             if target:rule("c++.codegen") then
