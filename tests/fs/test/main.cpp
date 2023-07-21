@@ -1,9 +1,8 @@
-#include <catch2/catch_test_macros.hpp>
-#include <catch2/generators/catch_generators.hpp>
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/crash.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/platform/dstorage.h"
+#include <SkrRT/platform/filesystem.hpp>
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
@@ -13,9 +12,11 @@
 
 #include <string>
 #include <iostream>
-#include <SkrRT/platform/filesystem.hpp>
 
 #include "tracy/Tracy.hpp"
+
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
 
 #define EXPECT_EQ(a, b) REQUIRE((a) == (b))
 
