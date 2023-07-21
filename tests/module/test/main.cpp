@@ -1,61 +1,57 @@
-#include "gtest/gtest.h"
 #include "SkrRT/module/module_manager.hpp"
 #include "SkrRT/platform/filesystem.hpp"
 
-class ModuleTest : public ::testing::Test
+#include <catch2/catch_test_macros.hpp>
+#define EXPECT_EQ(a, b) REQUIRE(a == b)
+#define EXPECT_NE(a, b) REQUIRE(a != b)
+
+class ModuleTest
 {
 public:
-    void SetUp() override
+    ModuleTest()
     {
     }
-    void TearDown() override
+    ~ModuleTest()
     {
     }
 };
 
-TEST_F(ModuleTest, single)
+TEST_CASE_METHOD(ModuleTest, "single")
 {
     auto moduleManager = skr_get_module_manager();
     std::error_code ec = {};
     auto path = skr::filesystem::current_path(ec);
     moduleManager->mount(path.u8string().c_str());
     EXPECT_NE(moduleManager->make_module_graph(u8"SkrRT", true), nullptr);
-    EXPECT_TRUE(moduleManager->init_module_graph());
-    EXPECT_TRUE(moduleManager->destroy_module_graph());
+    REQUIRE(moduleManager->init_module_graph(0, (char8_t**)nullptr));
+    REQUIRE(moduleManager->destroy_module_graph());
 }
 
 // dynamic1 -> static0 -> dynamic0
 // static modules must be explicit linked
 #include "static0.hpp"
-TEST_F(ModuleTest, dependency)
+TEST_CASE_METHOD(ModuleTest, "dependency")
 {
     auto moduleManager = skr_get_module_manager();
     std::error_code ec = {};
     auto path = skr::filesystem::current_path(ec);
     moduleManager->mount(path.u8string().c_str());
     EXPECT_NE(moduleManager->make_module_graph(u8"dynamic1", true), nullptr);
-    EXPECT_TRUE(moduleManager->init_module_graph());
-    EXPECT_TRUE(moduleManager->destroy_module_graph());
+    REQUIRE(moduleManager->init_module_graph(0, (char8_t**)nullptr));
+    REQUIRE(moduleManager->destroy_module_graph());
 }
 
 // dynamic3 -> dynamic2 -> dynamic1 ..
-TEST_F(ModuleTest, dynamic_patch)
+TEST_CASE_METHOD(ModuleTest, "dynamic_patch")
 {
     auto moduleManager = skr_get_module_manager();
     std::error_code ec = {};
     auto path = skr::filesystem::current_path(ec);
     moduleManager->mount(path.u8string().c_str());
     EXPECT_NE(moduleManager->make_module_graph(u8"dynamic1", true), nullptr);
-    EXPECT_TRUE(moduleManager->init_module_graph());
+    REQUIRE(moduleManager->init_module_graph(0, (char8_t**)nullptr));
     SKR_LOG_INFO("----begins dynamic patch----");
-    EXPECT_TRUE(moduleManager->patch_module_graph("dynamic3"));
+    REQUIRE(moduleManager->patch_module_graph(u8"dynamic3"));
     SKR_LOG_INFO("----ends dynamic patch----");
-    EXPECT_TRUE(moduleManager->destroy_module_graph());
-}
-
-int main(int argc, char** argv)
-{
-    ::testing::InitGoogleTest(&argc, argv);
-    auto result = RUN_ALL_TESTS();
-    return result;
+    REQUIRE(moduleManager->destroy_module_graph());
 }

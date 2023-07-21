@@ -375,7 +375,7 @@ TEST_CASE_METHOD(ECSTest, "query")
 
 TEST_CASE_METHOD(ECSTest, "query_overload")
 {
-    dual_entity_t e2, e3;
+    [[maybe_unused]] dual_entity_t e2, e3;
     {
         dual_chunk_view_t view;
         dual_entity_type_t entityType;

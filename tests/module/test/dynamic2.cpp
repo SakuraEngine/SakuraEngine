@@ -3,7 +3,7 @@
 
 class SDynamicModule2 : public skr::IDynamicModule
 {
-    virtual void on_load() override
+    virtual void on_load(int argc, char8_t** argv) override
     {
         SKR_LOG_INFO("dynamic module 2 loaded!");
     }
