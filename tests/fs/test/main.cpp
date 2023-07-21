@@ -19,14 +19,31 @@
 
 #define EXPECT_EQ(a, b) REQUIRE((a) == (b))
 
+static struct ProcInitializer
+{
+    ProcInitializer()
+    {
+        skr_initialize_crash_handler();
+        skr_log_initialize_async_worker();
+
+        SkrDStorageConfig config = {};
+        skr_create_dstorage_instance(&config);
+    }
+    ~ProcInitializer()
+    {
+        auto inst = skr_get_dstorage_instnace();
+        skr_free_dstorage_instance(inst);
+
+        skr_log_finalize_async_worker();
+        skr_finalize_crash_handler();
+    }
+} init;
+
 struct VFSTest
 {
     VFSTest()
     {
         idx += 1;
-        skr_initialize_crash_handler();
-        skr_log_initialize_async_worker();
-
         skr_vfs_desc_t abs_fs_desc = {};
         abs_fs_desc.app_name = u8"fs-test";
         abs_fs_desc.mount_type = SKR_MOUNT_TYPE_ABSOLUTE;
@@ -36,18 +53,12 @@ struct VFSTest
         const auto current_path = skr::filesystem::current_path(ec).string();
         REQUIRE(std::string((const char*)abs_fs->mount_dir) == current_path);
 
-        SkrDStorageConfig config = {};
-        skr_create_dstorage_instance(&config);
-
         SKR_LOG_FMT_INFO(u8"Current path: {}", (const char8_t*)current_path.c_str());
     }
 
     ~VFSTest()
     {
         skr_free_vfs(abs_fs);
-
-        skr_log_finalize_async_worker();
-        skr_finalize_crash_handler();
     }
 
     skr_vfs_t* abs_fs = nullptr;
@@ -413,9 +424,3 @@ TEST_CASE_METHOD(VFSTest, "sort")
     }
     SKR_LOG_INFO("sorts tested for %d times", TEST_CYCLES_COUNT);
 }
-
-#ifdef _WIN32
-// TODO: fix DirectStorage on Github Action Machines
-#else
-static const auto permutations = testing::Values( false );
-#endif
