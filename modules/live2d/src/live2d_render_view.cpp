@@ -1,3 +1,4 @@
+#include "pch.hpp"
 #include "SkrLive2D/skr_live2d.h"
 #include "SkrRT/platform/memory.h"
 #include "Framework/Math/CubismMatrix44.hpp"
