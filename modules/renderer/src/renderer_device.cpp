@@ -178,8 +178,8 @@ void RendererDeviceImpl::create_api_objects(const Builder& builder)
     // create instance
     CGPUInstanceDescriptor instance_desc = {};
     instance_desc.backend = builder.backend;
-    instance_desc.enable_debug_layer = builder.enable_debug_layer;
-    instance_desc.enable_gpu_based_validation = builder.enable_gpu_based_validation;
+    instance_desc.enable_debug_layer = true;//builder.enable_debug_layer;
+    instance_desc.enable_gpu_based_validation = true;//builder.enable_gpu_based_validation;
     instance_desc.enable_set_name = builder.enable_set_name;
     instance = cgpu_create_instance(&instance_desc);
 
