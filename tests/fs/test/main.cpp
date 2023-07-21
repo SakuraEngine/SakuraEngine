@@ -24,19 +24,19 @@ static struct ProcInitializer
 {
     ProcInitializer()
     {
-        skr_initialize_crash_handler();
-        skr_log_initialize_async_worker();
+        ::skr_initialize_crash_handler();
+        ::skr_log_initialize_async_worker();
 
         SkrDStorageConfig config = {};
-        skr_create_dstorage_instance(&config);
+        ::skr_create_dstorage_instance(&config);
     }
     ~ProcInitializer()
     {
         auto inst = skr_get_dstorage_instnace();
-        skr_free_dstorage_instance(inst);
+        ::skr_free_dstorage_instance(inst);
 
-        skr_log_finalize_async_worker();
-        skr_finalize_crash_handler();
+        ::skr_log_finalize_async_worker();
+        ::skr_finalize_crash_handler();
     }
 } init;
 
