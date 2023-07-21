@@ -64,7 +64,6 @@ jobs:
       
       - name: TestBaseDebug
         if: success()
-        shell: cmd
         env:
           TRACY_NO_INVARIANT_CHECK: 1
         run: |
@@ -72,7 +71,6 @@ jobs:
           
       - name: TestThreadsDebug
         if: success()
-        shell: cmd
         env:
           TRACY_NO_INVARIANT_CHECK: 1
         run: |
@@ -80,7 +78,6 @@ jobs:
 
       - name: TestTaskDebug
         if: success()
-        shell: cmd
         env:
           TRACY_NO_INVARIANT_CHECK: 1
         run: |
@@ -88,7 +85,6 @@ jobs:
           
       - name: TestMarlDebug
         if: success()
-        shell: cmd
         env:
           TRACY_NO_INVARIANT_CHECK: 1
         run: |
@@ -96,7 +92,6 @@ jobs:
           
       - name: TestRTTIDebug
         if: success()
-        shell: cmd
         env:
           TRACY_NO_INVARIANT_CHECK: 1
         run: |
@@ -112,7 +107,6 @@ jobs:
 
       - name: TestBaseRelease
         if: success()
-        shell: cmd
         env:
           TRACY_NO_INVARIANT_CHECK: 1
         run: |
@@ -120,7 +114,6 @@ jobs:
 
       - name: TestThreadsRelease
         if: success()
-        shell: cmd
         env:
           TRACY_NO_INVARIANT_CHECK: 1
         run: |
@@ -128,7 +121,6 @@ jobs:
 
       - name: TestTaskRelease
         if: success()
-        shell: cmd
         env:
           TRACY_NO_INVARIANT_CHECK: 1
         run: |
@@ -136,7 +128,6 @@ jobs:
           
       - name: TestMarlRelease
         if: success()
-        shell: cmd
         env:
           TRACY_NO_INVARIANT_CHECK: 1
         run: |
@@ -144,7 +135,6 @@ jobs:
           
       - name: TestRTTIRelease
         if: success()
-        shell: cmd
         env:
           TRACY_NO_INVARIANT_CHECK: 1
         run: |
