@@ -317,7 +317,7 @@ TEST_P(VFSTest, cancel)
         // while (!request.is_ready()) {}
         // while (!cancelled && !future2.is_ready()) {}
         ioService->drain();
-        
+
         if (future2.is_cancelled())
         {
             EXPECT_EQ(blob2->get_data(), nullptr);
