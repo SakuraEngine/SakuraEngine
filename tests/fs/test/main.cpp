@@ -15,10 +15,8 @@
 
 #include "tracy/Tracy.hpp"
 
-#include <catch2/catch_test_macros.hpp>
+#include "SkrTestFramework/framework.hpp"
 #include <catch2/generators/catch_generators.hpp>
-
-#define EXPECT_EQ(a, b) REQUIRE((a) == (b))
 
 static struct ProcInitializer
 {

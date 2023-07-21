@@ -4,11 +4,7 @@
 #include "SkrRT/serde/json/writer.h"
 #include "../types/types.hpp"
 
-#include <catch2/catch_test_macros.hpp>
-
-#define EXPECT_EQ(a, b) REQUIRE(a == b)
-#define EXPECT_NE(a, b) REQUIRE(a != b)
-#define EXPECT_FALSE(v) REQUIRE(!(v))
+#include "SkrTestFramework/framework.hpp"
 
 struct RTTITests
 {

@@ -1,9 +1,7 @@
 #include "SkrRT/module/module_manager.hpp"
 #include "SkrRT/platform/filesystem.hpp"
 
-#include <catch2/catch_test_macros.hpp>
-#define EXPECT_EQ(a, b) REQUIRE(a == b)
-#define EXPECT_NE(a, b) REQUIRE(a != b)
+#include "SkrTestFramework/framework.hpp"
 
 class ModuleTest
 {

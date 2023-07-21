@@ -1,8 +1,7 @@
 #include "SkrRT/platform/crash.h"
 #include "SkrRT/misc/log.h"
 
-#include <catch2/catch_test_macros.hpp>
-#define EXPECT_EQ(a, b) REQUIRE(a == b)
+#include "SkrTestFramework/framework.hpp"
 
 static struct ProcInitializer
 {
