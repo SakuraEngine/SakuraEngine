@@ -11,6 +11,9 @@
 #include "SkrRT/platform/guid.hpp" // IWYU pragma: export
 #include <SkrRT/platform/filesystem.hpp> // IWYU pragma: export
 
+#include "SkrRT/ecs/entity.hpp" // IWYU pragma: export
+#include "SkrRT/ecs/dual.h" // IWYU pragma: export
+
 #include "SkrRT/misc/log.h" // IWYU pragma: export
 #include "SkrRT/misc/log.hpp" // IWYU pragma: export
 

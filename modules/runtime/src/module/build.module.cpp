@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "module_manager.cpp"
 #include "SkrRT/platform/crash.h"
 #include "SkrRT/runtime_module.h"

@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/misc/types.h"
 #include "SkrRT/misc/log.h"
