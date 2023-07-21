@@ -1,5 +1,5 @@
 shared_module("RTTITestTypes", "RTTI_TEST_TYPES", engine_version)
-    set_group("05.tests/rtti")
+    set_group("05.tests/framework")
     public_dependency("SkrRT", engine_version)
     add_files("types/types.cpp")
     add_rules("c++.codegen", {
@@ -23,7 +23,7 @@ target("RTTITest")
     })
 
 target("SPtrTest")
-    set_group("05.tests/rtti")
+    set_group("05.tests/sptr")
     set_kind("binary")
     public_dependency("SkrRT", engine_version)
     public_dependency("RTTITestTypes", engine_version)
