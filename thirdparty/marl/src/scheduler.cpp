@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "osfiber.h"  // Must come first. See osfiber_ucontext.h.
+#include "marl/osfiber.h"  // Must come first. See osfiber_ucontext.h.
 
 #include "marl/scheduler.h"
 
