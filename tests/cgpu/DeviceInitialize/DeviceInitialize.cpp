@@ -1,5 +1,6 @@
 #include "cgpu/api.h"
 #include "SkrTestFramework/framework.hpp"
+#include "SkrTestFramework/generators.hpp"
 #include <catch2/generators/catch_generators.hpp>
 #include <iostream>
 
@@ -8,14 +9,7 @@ class DeviceInitializeTest
 protected:
     DeviceInitializeTest()
     {
-        backend = GENERATE(as<ECGPUBackend>{}, 
-    #ifdef CGPU_USE_VULKAN
-        CGPU_BACKEND_VULKAN
-    #endif
-    #ifdef CGPU_USE_D3D12
-        , CGPU_BACKEND_D3D12
-    #endif
-        );
+        backend = GENERATE(CGPUBackendGenerator::Create());
     }
 
     const char* GetBackendName()

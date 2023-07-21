@@ -6,6 +6,7 @@ target("SkrTestFramework")
     add_packages("catch2", {public = true, inherit = true})
     add_includedirs("framework/include", {public = true})
     add_files("framework/src/*.cpp")
+    add_deps("SkrRT")
 
 includes("ecs/xmake.lua")
 includes("fs/xmake.lua")
