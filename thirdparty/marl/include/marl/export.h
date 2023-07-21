@@ -46,10 +46,5 @@
 #endif
 
 #include "SkrRT/platform/configure.h"
-#ifdef __cplusplus
-#ifdef TRACY_ENABLE
-#include "tracy/Tracy.hpp"
-#endif
-#endif
 
 #endif  // marl_export_h

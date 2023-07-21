@@ -1,13 +1,12 @@
-#include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/misc/defer.hpp"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/misc/parallel_for.hpp"
-#include "SkrGLTFTool/mesh_asset.hpp"
-#include "SkrGLTFTool/mesh_processing.hpp"
+#include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/asset/json_utils.hpp"
-
+#include "SkrGLTFTool/mesh_asset.hpp"
+#include "SkrGLTFTool/mesh_processing.hpp"
 #include "MeshOpt/meshoptimizer.h"
 
 #include "tracy/Tracy.hpp"

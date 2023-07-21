@@ -169,7 +169,7 @@ struct EmptyTaskWithProgressFeedback
         auto const n = p1 + p2;
         for (int i = 0; i <= n; ++i)
         {
-            skr_thread_sleep(50);
+            skr_thread_sleep(5);
 
             this->publish_progress(i);
 
@@ -217,7 +217,7 @@ TEST_CASE("AsyncProgress")
     auto txt = skr::format(u8"{}", 1);
     for (int nRender = 0; !AsyncProgress.on_callback_loop(); ++nRender) // if doInBackground() is finished it will stop the loop
     {
-        skr_thread_sleep(120);
+        skr_thread_sleep(12);
 
         if (nRender > 100) // -> Reduce this number to check Cancellation
             AsyncProgress.cancel();
@@ -233,7 +233,7 @@ TEST_CASE("AsyncProgressCancel")
     AsyncProgress.execute(100, 50);
     for (int nRender = 0; !AsyncProgress.on_callback_loop(); ++nRender) // if doInBackground() is finished it will stop the loop
     {
-        skr_thread_sleep(1);
+        skr_thread_sleep(0);
         if (nRender > 20) // -> Reduce this number to check Cancellation
             AsyncProgress.cancel();
     }

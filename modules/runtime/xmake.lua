@@ -102,7 +102,6 @@ shared_module("SkrRT", "RUNTIME", engine_version)
         add_files(marl_source_dir.."/src/**.S")
     end
     add_includedirs("$(projectdir)/thirdparty/marl/include", {public = true})
-    add_includedirs("$(projectdir)/thirdparty/marl/include/marl", {public = true})
 
     -- install sdks for windows platform
     libs_to_install = {}

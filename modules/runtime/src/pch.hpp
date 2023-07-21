@@ -16,11 +16,17 @@
 
 #include "SkrRT/misc/log.h" // IWYU pragma: export
 #include "SkrRT/misc/log.hpp" // IWYU pragma: export
+#include "SkrRT/serde/json/reader.h" // IWYU pragma: export
 
 #include <SkrRT/containers/concurrent_queue.h> // IWYU pragma: export
 #include <SkrRT/containers/sptr.hpp> // IWYU pragma: export
 #include <SkrRT/containers/string.hpp> // IWYU pragma: export
 #include <SkrRT/containers/vector.hpp> // IWYU pragma: export
 #include <SkrRT/containers/hashmap.hpp> // IWYU pragma: export
+
+#include <EASTL/bitset.h> // IWYU pragma: export
+#include <EASTL/string.h> // IWYU pragma: export
+#include <EASTL/vector.h> // IWYU pragma: export
+#include <EASTL/fixed_vector.h> // IWYU pragma: export
 
 #include "tracy/Tracy.hpp" // IWYU pragma: export

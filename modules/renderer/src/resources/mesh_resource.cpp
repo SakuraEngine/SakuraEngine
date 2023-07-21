@@ -11,7 +11,6 @@
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRenderer/render_device.h"
-#include "SkrRT/misc/log.h"
 #include "cgpu/io.h"
 
 #include "SkrRT/containers/sptr.hpp"

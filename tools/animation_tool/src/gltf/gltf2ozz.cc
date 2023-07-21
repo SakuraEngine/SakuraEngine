@@ -29,7 +29,7 @@
 // Initial gltf2ozz implementation author: Alexander Dzhoganov                //
 // https://github.com/guillaumeblanc/ozz-animation/pull/70                    //
 //----------------------------------------------------------------------------//
-
+#include "../pch.hpp"
 #include <cassert>
 #include <cstring>
 
