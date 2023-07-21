@@ -14,6 +14,7 @@ static void initThreadIDKey()
 {
 	int result = pthread_key_create(&gThreadIDKey, NULL);
 	result = atexit(destroyThreadIDKey);
+	(void)result;
 }
 
 SThreadID skrGetCurrentPthreadID() 
@@ -37,6 +38,7 @@ SThreadID skrGetCurrentPthreadID()
 		ptr_id = (uintptr_t)id;
 		ptr = (void*)ptr_id;
 		int result = pthread_setspecific(gThreadIDKey, ptr);
+		(void)result;
 	}
 	return id;
 }

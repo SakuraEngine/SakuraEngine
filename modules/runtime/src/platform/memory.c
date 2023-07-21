@@ -48,7 +48,7 @@ FORCEINLINE static void* calloc_aligned(size_t count, size_t size, size_t alignm
     if (!ptr)
     {
         alignment = (alignment > 16) ? alignment : 16;
-        aligned_alloc(alignment, size * count);
+        ptr = aligned_alloc(alignment, size * count);
     }
     if (!ptr)
     {
@@ -91,7 +91,7 @@ RUNTIME_API void* traced_os_malloc_aligned(size_t size, size_t alignment, const 
     if (!ptr)
     {
         alignment = (alignment > 16) ? alignment : 16;
-        aligned_alloc(alignment, size);
+        ptr = aligned_alloc(alignment, size);
     }
     if (!ptr)
     {
