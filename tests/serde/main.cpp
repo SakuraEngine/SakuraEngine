@@ -1,16 +1,25 @@
-#include "gtest/gtest.h"
 #include "SkrRT/platform/crash.h"
 #include "SkrRT/misc/log.h"
+#include <catch2/catch_test_macros.hpp>
 
-int main(int argc, char** argv)
+#ifndef EXPECT_EQ
+#define EXPECT_EQ(a, b) REQUIRE(a == b)
+#endif
+
+static struct ProcInitializer
 {
-    skr_initialize_crash_handler();
-    skr_log_initialize_async_worker();
+    ProcInitializer()
+    {
+        ::skr_initialize_crash_handler();
+        ::skr_log_initialize_async_worker();
+    }
+    ~ProcInitializer()
+    {
+        ::skr_log_finalize_async_worker();
+        ::skr_finalize_crash_handler();
+    }
+} init;
 
-    ::testing::InitGoogleTest(&argc, argv);
-    auto result = RUN_ALL_TESTS();
-
-    skr_log_finalize_async_worker();
-    skr_finalize_crash_handler();
-    return result;
-}
+#include "binary.cpp"
+#include "json.cpp"
+#include "bitpack.cpp"

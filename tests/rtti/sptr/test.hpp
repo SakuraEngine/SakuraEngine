@@ -1,17 +1,20 @@
 #pragma once
-#include "gtest/gtest.h"
-#include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/misc/log.hpp"
-#include "SkrRT/platform/guid.hpp"
+#include "SkrRT/platform/guid.hpp" // IWYU pragma: export
+#include "SkrRT/platform/crash.h" // IWYU pragma: export
+#include "SkrRT/misc/log.hpp" // IWYU pragma: export
+#include "SkrRT/containers/sptr.hpp" // IWYU pragma: export
 
-class SPTRBase : public ::testing::Test
+#include <catch2/catch_test_macros.hpp>
+
+#define EXPECT_EQ(a, b) REQUIRE(a == b)
+#define EXPECT_NE(a, b) REQUIRE(a != b)
+#define EXPECT_FALSE(v) REQUIRE(!(v))
+
+struct SPTRTestsBase
 {
-protected:
-    void SetUp() override
+    static struct ProcInitializer
     {
-    }
-
-    void TearDown() override
-    {
-    }
+        ProcInitializer();
+        ~ProcInitializer();
+    } init;
 };
