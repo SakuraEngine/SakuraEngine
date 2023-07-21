@@ -39,6 +39,7 @@ target("ModuleTest")
     public_dependency("dynamic2", engine_version)
     public_dependency("dynamic3", engine_version)
     -- actually there is no need to strongly link these dynamic modules
-    add_packages("catch2")
+    add_deps("SkrTestFramework", {public = false})
+    add_packages("catch2", {public = true})
     add_files("test/main.cpp")
 ]]--

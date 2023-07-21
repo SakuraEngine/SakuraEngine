@@ -4,8 +4,7 @@
 #include "SkrRT/async/thread_job.hpp"
 #include <iostream>
 
-#include <catch2/catch_test_macros.hpp>
-#define EXPECT_EQ(a, b) REQUIRE(a == b)
+#include "SkrTestFramework/framework.hpp"
 
 static struct ProcInitializer
 {

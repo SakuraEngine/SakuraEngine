@@ -4,10 +4,7 @@
 #include "SkrRT/containers/span.hpp"
 #include "SkrRT/containers/vector.hpp"
 
-#include <catch2/catch_test_macros.hpp>
-#ifndef EXPECT_EQ
-#define EXPECT_EQ(a, b) REQUIRE(a == b)
-#endif
+#include "SkrTestFramework/framework.hpp"
 
 struct BinarySerdeTests
 {

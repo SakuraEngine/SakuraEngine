@@ -2,11 +2,7 @@
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/containers/span.hpp"
 #include "SkrRT/containers/vector.hpp"
-
-#include <catch2/catch_test_macros.hpp>
-#ifndef EXPECT_EQ
-#define EXPECT_EQ(a, b) REQUIRE(a == b)
-#endif
+#include "SkrTestFramework/framework.hpp"
 
 class BinaryBitpackTests
 {
@@ -104,17 +100,6 @@ TEST_CASE_METHOD(BinaryBitpackTests, "ArchiveAPI")
     // EXPECT_EQ(value3, readValue3);
 }
 
-template<class T>
-typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
-    almost_equal(T x, T y, int ulp = 4)
-{
-    // the machine epsilon has to be scaled to the magnitude of the values used
-    // and multiplied by the desired precision in ULPs (units in the last place)
-    return std::fabs(x - y) <= std::numeric_limits<T>::epsilon() * std::fabs(x + y) * ulp
-        // unless the result is subnormal
-        || std::fabs(x - y) < std::numeric_limits<T>::min();
-}
-
 TEST_CASE_METHOD(BinaryBitpackTests, "VectorPack")
 {
     skr_binary_writer_t archiveWrite(writer);
@@ -130,11 +115,11 @@ TEST_CASE_METHOD(BinaryBitpackTests, "VectorPack")
     skr_float3_t readValue = { 0.0f, 0.0f, 0.0f };
     skr_float3_t readValue2 = { 0.0f, 0.0f, 0.0f };
     skr::binary::Archive(&archiveRead, readValue, skr::binary::VectorPackConfig<float>{});
-    REQUIRE(::almost_equal(value.x, readValue.x));
-    REQUIRE(::almost_equal(value.y, readValue.y));
-    REQUIRE(::almost_equal(value.z, readValue.z));
+    REQUIRE(::test_almost_equal(value.x, readValue.x));
+    REQUIRE(::test_almost_equal(value.y, readValue.y));
+    REQUIRE(::test_almost_equal(value.z, readValue.z));
     skr::binary::Archive(&archiveRead, readValue2, skr::binary::VectorPackConfig<float>{100000});
-    REQUIRE(::almost_equal(value2.x, readValue2.x));
-    REQUIRE(::almost_equal(value2.y, readValue2.y));
-    REQUIRE(::almost_equal(value2.z, readValue2.z));
+    REQUIRE(::test_almost_equal(value2.x, readValue2.x));
+    REQUIRE(::test_almost_equal(value2.y, readValue2.y));
+    REQUIRE(::test_almost_equal(value2.z, readValue2.z));
 }

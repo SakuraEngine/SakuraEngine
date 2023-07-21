@@ -14,7 +14,8 @@ target("RTTITest")
     public_dependency("SkrRT", engine_version)
     public_dependency("RTTITestTypes", engine_version)
     add_files("rtti/rtti.cpp")
-    add_packages("catch2")
+    add_deps("SkrTestFramework", {public = false})
+    add_packages("catch2", {public = true})
     add_rules("c++.codegen", {
         files = {"rtti/**.h", "rtti/**.hpp"},
         rootdir = "rtti/",
@@ -29,4 +30,5 @@ target("SPtrTest")
     add_files("sptr/intrusive.cpp")
     add_files("sptr/common.cpp")
     add_files("sptr/non-intrusive.cpp")
-    add_packages("catch2")
+    add_deps("SkrTestFramework", {public = false})
+    add_packages("catch2", {public = true})

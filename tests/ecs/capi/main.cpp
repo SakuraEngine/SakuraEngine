@@ -4,10 +4,7 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.h"
 
-#include <catch2/catch_test_macros.hpp>
-#define EXPECT_FALSE(v) REQUIRE(!(v))
-#define EXPECT_NE(a, b) REQUIRE(a != b)
-#define EXPECT_EQ(a, b) REQUIRE(a == b)
+#include "SkrTestFramework/framework.hpp"
 
 #include <memory>
 
