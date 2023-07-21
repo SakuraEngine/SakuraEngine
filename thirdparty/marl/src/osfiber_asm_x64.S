@@ -15,7 +15,7 @@
 #if defined(__x86_64__)
 
 #define MARL_BUILD_ASM 1
-#include "osfiber_asm_x64.h"
+#include "marl/osfiber_asm_x64.h"
 
 // void marl_fiber_swap(marl_fiber_context* from, const marl_fiber_context* to)
 // rdi: from

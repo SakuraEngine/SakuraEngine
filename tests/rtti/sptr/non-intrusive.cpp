@@ -1,6 +1,4 @@
-#include "SkrRT/platform/crash.h"
 #include "test.hpp"
-
 
 class SPTRNonIntrusiveTests : public SPTRTestsBase
 {
