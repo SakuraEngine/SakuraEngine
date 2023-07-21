@@ -1,4 +1,6 @@
 add_requires("gtest")
+add_requires("catch2 v3.4.0")
+
 includes("ecs/xmake.lua")
 includes("fs/xmake.lua")
 -- includes("daS/xmake.lua")

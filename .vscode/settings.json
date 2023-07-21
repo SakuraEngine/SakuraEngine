@@ -8,6 +8,6 @@
     ],
     "xmake.customDebugConfig": {
         "visualizerFile": "${workspaceFolder}\\SDKs\\natvis\\EASTL.natvis",
-        "stopAtEntry": false,
+        "stopAtEntry": false
     }
 }

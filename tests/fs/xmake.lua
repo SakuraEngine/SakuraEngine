@@ -1,5 +1,3 @@
-add_requires("catch2 v3.4.0")
-
 target("VFSTest")
     set_group("05.tests/base")
     set_kind("binary")
