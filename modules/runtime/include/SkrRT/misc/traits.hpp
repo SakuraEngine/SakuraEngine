@@ -40,7 +40,7 @@ template<std::size_t N, class T>
     if (reinterpret_cast<std::uintptr_t>(ptr) & -static_cast<std::intptr_t>(N) == 0)
         return ptr;
     else
-        assume(0);
+        __assume(0);
 #elif defined(__ICC)
     switch (N) {
         case 2: __assume_aligned(ptr, 2); break;
