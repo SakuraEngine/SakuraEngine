@@ -22,9 +22,9 @@ CubismMotionQueueEntry::CubismMotionQueueEntry()
     , _stateTimeSeconds(0.0f)
     , _stateWeight(0.0f)
     , _lastEventCheckSeconds(0.0f)
-    , _motionQueueEntryHandle(NULL)
     , _fadeOutSeconds(0.0f)
     , _IsTriggeredFadeOut(false)
+    , _motionQueueEntryHandle(NULL)
 {
     this->_motionQueueEntryHandle = this;
 }

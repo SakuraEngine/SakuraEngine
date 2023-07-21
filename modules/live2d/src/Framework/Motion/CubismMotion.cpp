@@ -90,7 +90,7 @@ csmFloat32 BezierEvaluateBinarySearch(const CubismMotionPoint* points, const csm
     csmFloat32 t = 0.0f;
     int i = 0;
 
-    for (csmBool var33 = true; i < 20; ++i) {
+    for (SKR_UNUSED csmBool var33 = true; i < 20; ++i) {
         if (x < x1 + x_error) {
             t = ta;
             break;

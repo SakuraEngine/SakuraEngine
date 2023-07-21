@@ -87,6 +87,11 @@ void SViewportManager::Free(SViewportManager* viewport_manager)
     SkrDelete(viewport_manager);
 }
 
+SViewportManager::~SViewportManager() SKR_NOEXCEPT
+{
+
+}
+
 void skr_resolve_camera_to_viewport(const skr_camera_comp_t* camera, const skr_translation_comp_t* translation, skr_render_viewport_t* viewport)
 {
     SKR_ASSERT(camera->viewport_id == viewport->index && "viewport id mismatch");
