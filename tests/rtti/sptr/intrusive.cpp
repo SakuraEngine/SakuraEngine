@@ -1,16 +1,9 @@
 #include "SkrRT/platform/crash.h"
 #include "test.hpp"
 
-class SPTRIntrusive : public SPTRBase
+class SPTRIntrusiveTests : public SPTRTestsBase
 {
-protected:
-    void SetUp() override
-    {
-    }
 
-    void TearDown() override
-    {
-    }
 };
 
 struct TestObject : public skr::SInterface
@@ -55,7 +48,7 @@ struct TestSon : public TestObject
     TestSon(Status& code) : TestObject(code) { }
 };
 
-TEST(SPTRIntrusive, CopyIntrusive)
+TEST_CASE_METHOD(SPTRIntrusiveTests, "CopyIntrusive")
 {
     TestObject::Status status = TestObject::Status::Uninitialized;
     {
@@ -69,7 +62,7 @@ TEST(SPTRIntrusive, CopyIntrusive)
     EXPECT_EQ(status, TestObject::Status::Destroyed);
 }
 
-TEST(SPTRIntrusive, CopyIntrusive2)
+TEST_CASE_METHOD(SPTRIntrusiveTests, "CopyIntrusive2")
 {
     TestObject::Status status = TestObject::Status::Uninitialized;
     {
@@ -83,7 +76,7 @@ TEST(SPTRIntrusive, CopyIntrusive2)
     EXPECT_EQ(status, TestObject::Status::Destroyed);
 }
 
-TEST(SPTRIntrusive, SwapIntrusive)
+TEST_CASE_METHOD(SPTRIntrusiveTests, "SwapIntrusive")
 {
     auto one_status = TestObject::Status::Uninitialized;
     auto another_status = TestObject::Status::Uninitialized;
@@ -96,7 +89,7 @@ TEST(SPTRIntrusive, SwapIntrusive)
     EXPECT_EQ(another_status, TestObject::Status::Hosted);
 }
 
-TEST(SPTRIntrusive, SwapIntrusive2)
+TEST_CASE_METHOD(SPTRIntrusiveTests, "SwapIntrusive2")
 {
     auto one_status = TestObject::Status::Uninitialized;
     auto another_status = TestObject::Status::Uninitialized;
@@ -109,7 +102,7 @@ TEST(SPTRIntrusive, SwapIntrusive2)
     EXPECT_EQ(another_status, TestObject::Status::Hosted);
 }
 
-TEST(SPTRIntrusive, MoveIntrusive)
+TEST_CASE_METHOD(SPTRIntrusiveTests, "MoveIntrusive")
 {
     auto one_status = TestObject::Status::Uninitialized;
     auto another_status = TestObject::Status::Uninitialized;
@@ -124,7 +117,7 @@ TEST(SPTRIntrusive, MoveIntrusive)
     EXPECT_EQ(one_status, TestObject::Status::Destroyed);
 }
 
-TEST(SPTRIntrusive, MoveIntrusive2)
+TEST_CASE_METHOD(SPTRIntrusiveTests, "MoveIntrusive2")
 {
     auto one_status = TestObject::Status::Uninitialized;
     auto another_status = TestObject::Status::Uninitialized;
@@ -139,7 +132,7 @@ TEST(SPTRIntrusive, MoveIntrusive2)
     EXPECT_EQ(one_status, TestObject::Status::Destroyed);
 }
 
-TEST(SPTRIntrusive, CastIntrusive)
+TEST_CASE_METHOD(SPTRIntrusiveTests, "CastIntrusive")
 {
     TestObject::Status status = TestObject::Status::Uninitialized;
     skr::SObjectPtr<TestSon> pC(SkrNew<TestSon>(status));
@@ -154,7 +147,7 @@ TEST(SPTRIntrusive, CastIntrusive)
     EXPECT_EQ(pCC3->use_count(), 4);
 }
 
-TEST(SPTRIntrusive, CastIntrusive2)
+TEST_CASE_METHOD(SPTRIntrusiveTests, "CastIntrusive2")
 {
     TestObject::Status status = TestObject::Status::Uninitialized;
     skr::SObjectPtr<TestSon> pC(SkrNew<TestSon>(status));
@@ -169,7 +162,7 @@ TEST(SPTRIntrusive, CastIntrusive2)
     EXPECT_EQ(pCC3->use_count(), 4);
 }
 
-TEST(SPTRIntrusive, VoidPtrCastIntrusive)
+TEST_CASE_METHOD(SPTRIntrusiveTests, "VoidPtrCastIntrusive")
 {
     TestObject::Status status = TestObject::Status::Uninitialized;
     {
@@ -184,7 +177,7 @@ TEST(SPTRIntrusive, VoidPtrCastIntrusive)
     EXPECT_EQ(status, TestObject::Status::Destroyed);
 }
 
-TEST(SPTRIntrusive, BoxedValue)
+TEST_CASE_METHOD(SPTRIntrusiveTests, "BoxedValue")
 {
     skr::SBoxedPtr<uint32_t> upValue;
     {
@@ -197,17 +190,4 @@ TEST(SPTRIntrusive, BoxedValue)
         upValue.reset(skr::box(value));
     }
     EXPECT_EQ(upValue->value, 2);
-}
-
-int main(int argc, char** argv)
-{
-    skr_initialize_crash_handler();
-    skr_log_initialize_async_worker();
-
-    ::testing::InitGoogleTest(&argc, argv);
-    auto result = RUN_ALL_TESTS();
-
-    skr_log_finalize_async_worker();
-    skr_finalize_crash_handler();
-    return result;
 }

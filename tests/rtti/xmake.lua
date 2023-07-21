@@ -14,33 +14,19 @@ target("RTTITest")
     public_dependency("SkrRT", engine_version)
     public_dependency("RTTITestTypes", engine_version)
     add_files("rtti/rtti.cpp")
-    add_packages("gtest")
+    add_packages("catch2")
     add_rules("c++.codegen", {
         files = {"rtti/**.h", "rtti/**.hpp"},
         rootdir = "rtti/",
         api = "RTTI_TEST"
     })
 
-target("SPtrTestCommon")
-    set_group("05.tests/rtti")
-    set_kind("binary")
-    public_dependency("SkrRT", engine_version)
-    public_dependency("RTTITestTypes", engine_version)
-    add_files("sptr/common.cpp")
-    add_packages("gtest")
-
-target("SPtrTestNonIntrusive")
-    set_group("05.tests/rtti")
-    set_kind("binary")
-    public_dependency("SkrRT", engine_version)
-    public_dependency("RTTITestTypes", engine_version)
-    add_files("sptr/non-intrusive.cpp")
-    add_packages("gtest")
-
-target("SPtrTestIntrusive")
+target("SPtrTest")
     set_group("05.tests/rtti")
     set_kind("binary")
     public_dependency("SkrRT", engine_version)
     public_dependency("RTTITestTypes", engine_version)
     add_files("sptr/intrusive.cpp")
-    add_packages("gtest")
+    add_files("sptr/common.cpp")
+    add_files("sptr/non-intrusive.cpp")
+    add_packages("catch2")
