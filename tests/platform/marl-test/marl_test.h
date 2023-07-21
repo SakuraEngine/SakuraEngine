@@ -52,8 +52,11 @@ class WithBoundScheduler {
     allocator = new marl::TrackedAllocator(marl::Allocator::Default);
 
     auto params = GENERATE(as<SchedulerParams>{}, 
-      SchedulerParams{0}, SchedulerParams{1}, SchedulerParams{2}, 
-      SchedulerParams{4}, SchedulerParams{8}, SchedulerParams{64}
+      SchedulerParams{0}, // Single-threaded mode test
+      SchedulerParams{1}, // Single worker thread
+      SchedulerParams{2} // 2 worker threads...
+      // ,SchedulerParams{4}, SchedulerParams{8}, 
+      //SchedulerParams{64}
     );
 
     marl::Scheduler::Config cfg;

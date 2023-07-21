@@ -12,4 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "marl_test.h"
+#include "marl_test.h" // IWYU pragma: export
+#include "SkrRT/platform/crash.h"
+
+static struct ProcInitializer
+{
+    ProcInitializer()
+    {
+        ::skr_initialize_crash_handler();
+    }
+    ~ProcInitializer()
+    {
+        ::skr_finalize_crash_handler();
+    }
+} init;
