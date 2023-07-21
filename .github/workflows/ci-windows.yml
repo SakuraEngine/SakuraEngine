@@ -73,11 +73,11 @@ jobs:
         env:
           TRACY_NO_INVARIANT_CHECK: 1
         run: |
-          xmake run -g 05.tests/base -vD
-          xmake run -g 05.tests/threads -vD
-          xmake run -g 05.tests/task -vD
-          xmake run -g 05.tests/marl -vD
-          xmake run -g 05.tests/rtti -vD
+          xmake run -g 05.tests/base -vD ... -d yes
+          xmake run -g 05.tests/threads -vD ... -d yes
+          xmake run -g 05.tests/task -vD ... -d yes
+          xmake run -g 05.tests/marl -vD ... -d yes
+          xmake run -g 05.tests/rtti -vD ... -d yes
       
       - name: ConfigureRelease
         if: success() || failure()
@@ -95,11 +95,11 @@ jobs:
         env:
           TRACY_NO_INVARIANT_CHECK: 1
         run: |
-          xmake run -g 05.tests/base -vD
-          xmake run -g 05.tests/threads -vD
-          xmake run -g 05.tests/task -vD
-          xmake run -g 05.tests/marl -vD
-          xmake run -g 05.tests/rtti -vD
+          xmake run -g 05.tests/base -vD ... -d yes
+          xmake run -g 05.tests/threads -vD ... -d yes
+          xmake run -g 05.tests/task -vD ... -d yes
+          xmake run -g 05.tests/marl -vD ... -d yes
+          xmake run -g 05.tests/rtti -vD ... -d yes
 
       - name: UploadGeneratedFiles
         if: success() || failure()
