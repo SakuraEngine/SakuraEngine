@@ -1,16 +1,16 @@
 #pragma once
 #include "SkrLive2D/l2d_model_resource.h"
-#include "Framework/CubismFramework.hpp"
-#include "Framework/Type/csmMap.hpp"
-#include "Framework/Effect/CubismBreath.hpp"
-#include "Framework/Model/CubismUserModel.hpp"
-#include "Framework/CubismModelSettingJson.hpp"
-#include "Framework/Effect/CubismEyeBlink.hpp"
-#include "Framework/Effect/CubismBreath.hpp"
-#include "Framework/Motion/CubismMotion.hpp"
-#include "Id/CubismIdManager.hpp"
-#include "CubismDefaultParameterId.hpp"
-#include "Utils/CubismString.hpp"
+#include "Framework/CubismFramework.hpp" // IWYU pragma: export
+#include "Framework/Type/csmMap.hpp" // IWYU pragma: export
+#include "Framework/Effect/CubismBreath.hpp" // IWYU pragma: export
+#include "Framework/Model/CubismUserModel.hpp" // IWYU pragma: export
+#include "Framework/CubismModelSettingJson.hpp" // IWYU pragma: export
+#include "Framework/Effect/CubismEyeBlink.hpp" // IWYU pragma: export
+#include "Framework/Effect/CubismBreath.hpp" // IWYU pragma: export
+#include "Framework/Motion/CubismMotion.hpp" // IWYU pragma: export
+#include "Id/CubismIdManager.hpp" // IWYU pragma: export
+#include "CubismDefaultParameterId.hpp" // IWYU pragma: export
+#include "Utils/CubismString.hpp" // IWYU pragma: export
 
 #include <EASTL/vector_map.h>
 #include "SkrRT/containers/string.hpp"
