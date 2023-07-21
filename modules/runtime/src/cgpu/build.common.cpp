@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "cgpu/cgpu_config.h"
 
 #include "common/root_sig_table.cpp"
