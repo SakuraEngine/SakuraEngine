@@ -1,12 +1,9 @@
-add_requires("lua >=5.4.4-skr")
-
 target("BaseTest")
     set_group("05.tests/base")
     set_kind("binary")
     add_files("base/base.cpp")
     add_deps("SkrTestFramework", {public = false})
     add_packages("catch2", {public = true})
-    add_packages("lua", {public = true, inherit = true})
     add_deps("SkrDependencyGraph", {public = false})
     if is_plat("windows") then
         add_syslinks("advapi32", "Shcore", "user32", "shell32", "Ole32", {public = true})

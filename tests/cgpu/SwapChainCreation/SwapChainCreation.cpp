@@ -1,7 +1,4 @@
 #include "cgpu/api.h"
-#include "SkrRT/platform/crash.h"
-#include "SkrRT/misc/log.h"
-
 #include <iostream>
 #include "SkrTestFramework/framework.hpp"
 #include <catch2/generators/catch_generators.hpp>
@@ -16,20 +13,6 @@ HWND createWin32Window();
 #elif defined(_MACOS)
     #include "SkrRT/platform/apple/macos/window.h"
 #endif
-
-static struct ProcInitializer
-{
-    ProcInitializer()
-    {
-        ::skr_initialize_crash_handler();
-        ::skr_log_initialize_async_worker();
-    }
-    ~ProcInitializer()
-    {
-        ::skr_log_finalize_async_worker();
-        ::skr_finalize_crash_handler();
-    }
-} init;
 
 class SwapChainCreation
 {
@@ -84,13 +67,14 @@ protected:
 
     SwapChainCreation() SKR_NOEXCEPT
     {
-        backend = GENERATE(as<ECGPUBackend>{}, CGPU_BACKEND_VULKAN, CGPU_BACKEND_D3D12);
-    #ifndef CGPU_USE_VULKAN
-        return;
+        backend = GENERATE(as<ECGPUBackend>{}, 
+    #ifdef CGPU_USE_VULKAN
+        CGPU_BACKEND_VULKAN
     #endif
-    #ifndef CGPU_USE_D3D12
-        return;
+    #ifdef CGPU_USE_D3D12
+        , CGPU_BACKEND_D3D12
     #endif
+        );
         Initialize(backend);
     }
 
