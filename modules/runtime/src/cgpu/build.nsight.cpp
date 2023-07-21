@@ -13,7 +13,7 @@
     #endif
     #ifdef CGPU_USE_D3D12
     #include "extensions/cgpu_nsight_d3d12.cpp"
-#endif
+    #endif
 #else
     #include "cgpu/extensions/cgpu_nsight.h"
     CGPUNSightTrackerId cgpu_create_nsight_tracker(CGPUInstanceId instance, const CGPUNSightTrackerDescriptor* descriptor)
