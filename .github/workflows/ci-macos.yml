@@ -61,7 +61,15 @@ jobs:
       - name: BuildDebug
         if: success() || failure()
         run: xmake -y -v
-
+      
+      - name: TestBaseDebug
+        if: success()
+        shell: cmd
+        env:
+          TRACY_NO_INVARIANT_CHECK: 1
+        run: |
+          xmake run -g 05.tests/base -vD ... -d yes
+          
       - name: TestThreadsDebug
         if: success()
         shell: cmd
@@ -101,6 +109,14 @@ jobs:
       - name: BuildRelease
         if: success() || failure()
         run: xmake -y -v
+
+      - name: TestBaseRelease
+        if: success()
+        shell: cmd
+        env:
+          TRACY_NO_INVARIANT_CHECK: 1
+        run: |
+          xmake run -g 05.tests/base -vD ... -d yes
 
       - name: TestThreadsRelease
         if: success()
