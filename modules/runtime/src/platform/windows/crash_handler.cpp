@@ -9,6 +9,8 @@
 #include <signal.h>
 #include <Dbghelp.h>
 
+#pragma comment(lib, "dbghelp.lib")
+
 namespace
 {
 static const char8_t* kDebugHelpDLLName = u8"dbghelp.dll";

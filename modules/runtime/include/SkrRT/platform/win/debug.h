@@ -5,6 +5,7 @@
     #define SKR_WINDOWS_DEBUG_H
 #endif
 #ifdef SKR_WINDOWS_DEBUG_H
+    #include <stdlib.h>
     #include <stdio.h>
 
     #ifdef _DEBUG

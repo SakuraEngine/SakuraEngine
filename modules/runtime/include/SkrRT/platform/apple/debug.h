@@ -13,6 +13,7 @@
     #if !SKR_SHIPPING
         #include "SkrRT/misc/macros.h"
         #include <stdio.h>
+        #include <stdlib.h>
         #include <signal.h>
 
         #define SKR_TRACE_MSG(msg) \
