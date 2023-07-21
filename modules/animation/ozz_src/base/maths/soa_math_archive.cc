@@ -24,7 +24,7 @@
 // DEALINGS IN THE SOFTWARE.                                                  //
 //                                                                            //
 //----------------------------------------------------------------------------//
-
+#include "../../pch.hpp"
 #include "SkrAnim/ozz/base/maths/soa_math_archive.h"
 
 #include "SkrAnim/ozz/base/io/archive.h"
