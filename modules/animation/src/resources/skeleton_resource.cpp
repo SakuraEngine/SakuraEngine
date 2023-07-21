@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrAnim/resources/skeleton_resource.h"
 #include "SkrAnim/ozz/base/io/archive.h"
 
