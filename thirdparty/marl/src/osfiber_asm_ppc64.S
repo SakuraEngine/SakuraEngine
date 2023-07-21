@@ -15,7 +15,7 @@
 #if defined(__powerpc64__)
 
 #define MARL_BUILD_ASM 1
-#include "osfiber_asm_ppc64.h"
+#include "marl/osfiber_asm_ppc64.h"
 
 // void marl_fiber_swap(marl_fiber_context* from, const marl_fiber_context* to)
 // r3: from

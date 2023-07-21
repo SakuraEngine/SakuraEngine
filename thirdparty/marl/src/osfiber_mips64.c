@@ -14,7 +14,7 @@
 
 #if defined(__mips__) && _MIPS_SIM == _ABI64
 
-#include "osfiber_asm_mips64.h"
+#include "marl/osfiber_asm_mips64.h"
 
 #include "marl/export.h"
 

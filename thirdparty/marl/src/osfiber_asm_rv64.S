@@ -15,7 +15,7 @@
 #if defined(__riscv) && __riscv_xlen == 64
 
 #define MARL_BUILD_ASM 1
-#include "osfiber_asm_rv64.h"
+#include "marl/osfiber_asm_rv64.h"
 
 // void marl_fiber_swap(marl_fiber_context* from, const marl_fiber_context* to)
 // a0: from

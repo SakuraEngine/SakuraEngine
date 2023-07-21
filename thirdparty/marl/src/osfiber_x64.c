@@ -14,7 +14,7 @@
 
 #if defined(__x86_64__)
 
-#include "osfiber_asm_x64.h"
+#include "marl/osfiber_asm_x64.h"
 
 #include "marl/export.h"
 

@@ -15,7 +15,7 @@
 #if defined(__arm__)
 
 #define MARL_BUILD_ASM 1
-#include "osfiber_asm_arm.h"
+#include "marl/osfiber_asm_arm.h"
 
 // void marl_fiber_swap(marl_fiber_context* from, const marl_fiber_context* to)
 // x0: from
