@@ -43,8 +43,10 @@ struct FormatArg
     template<typename T>
     void set(const T& v)
     {
-        const std::string_view demangle_name_view = skr::demangle<T>();
-        SKR_ASSERT((demangle_name_view.compare(demangle_name.c_str()) == 0) && "Type mismatch!");
+        static const std::string demangle_name_T = skr::demangle<std::decay_t<T>>();
+        auto n0 = demangle_name_T.c_str();
+        auto n1 = demangle_name.c_str();
+        SKR_ASSERT((::strcmp(n0, n1) == 0) && "Type mismatch!");
 
         if (!data)
         {
