@@ -12,6 +12,8 @@
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/containers/sptr.hpp"
 
+#include "tracy/Tracy.hpp"
+
 namespace skr
 {
 struct ShaderMapImpl;
