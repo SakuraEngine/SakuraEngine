@@ -31,7 +31,10 @@
     #if !SKR_SHIPPING
         #include "SkrRT/misc/macros.h"
 
-        #define SKR_TRACE_MSG(msg) skr_debug_output(msg);
+        #define SKR_TRACE_MSG(msg) \
+            printf(msg);           \
+            printf("\n");
+            
         #define SKR_ASSERT(cond)                                                      \
             do                                                                        \
             {                                                                         \
@@ -39,6 +42,7 @@
                 {                                                                     \
                     SKR_TRACE_MSG("Skr Assert fired: " #cond " (" SKR_FILE_LINE ")"); \
                     __debugbreak();                                                   \
+                    abort();                                                          \
                 }                                                                     \
             } while (0)
         #define SKR_BREAK() __debugbreak()

@@ -1,7 +1,7 @@
 #include "module_manager.cpp"
 #include "SkrRT/platform/crash.h"
 #include "SkrRT/runtime_module.h"
-#include "SKrRT/ecs/dual.h"
+#include "SkrRT/ecs/dual.h"
 
 #include "tracy/Tracy.hpp"
 
