@@ -1,14 +1,17 @@
 #pragma once
 #include <chrono> // IWYU pragma: export
+#include "cgpu/api.h" // IWYU pragma: export
 
 #include "SkrRT/platform/memory.h" // IWYU pragma: export
 #include "SkrRT/platform/debug.h" // IWYU pragma: export
-#include "SkrRT/io/ram_io.hpp" // IWYU pragma: export
+#include <SkrRT/platform/filesystem.hpp> // IWYU pragma: export
 #include "SkrRT/misc/make_zeroed.hpp" // IWYU pragma: export
 #include "SkrRT/misc/types.h" // IWYU pragma: export
 #include "SkrRT/misc/log.hpp" // IWYU pragma: export
+#include "SkrRT/misc/parallel_for.hpp" // IWYU pragma: export
+#include "SkrRT/resource/resource_factory.h" // IWYU pragma: export
+#include "SkrRT/io/ram_io.hpp" // IWYU pragma: export
 
-#include <SkrRT/platform/filesystem.hpp> // IWYU pragma: export
 #include <SkrRT/containers/sptr.hpp> // IWYU pragma: export
 #include <SkrRT/containers/vector.hpp> // IWYU pragma: export
 #include <SkrRT/containers/string.hpp> // IWYU pragma: export
@@ -16,6 +19,8 @@
 
 #include "SkrRT/serde/json/reader.h" // IWYU pragma: export
 #include "SkrRT/serde/json/writer.h" // IWYU pragma: export
+
+#include <EASTL/string.h> // IWYU pragma: export
 
 #ifdef _WIN32
     #ifndef WIN32_LEAN_AND_MEAN

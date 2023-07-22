@@ -1,6 +1,7 @@
 // Client of our dummy trivial signaling server service.
 // Serves as an example of you how to hook up signaling server
 // to SteamNetworkingSockets P2P connections
+#include "pch.hpp"
 
 #include <string>
 #include <mutex>

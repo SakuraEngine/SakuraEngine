@@ -1,10 +1,9 @@
+#include "pch.hpp"
 #include "MPShared/components.h"
 #include "SkrScene/scene.h"
-#include "SkrRT/containers/vector.hpp"
 #include "MPShared/world_delta.h"
 #include "SkrRT/ecs/type_builder.hpp"
 #include "MPShared/shared.h"
-#include "SkrRT/misc/log.h"
 #include "SkrRT/ecs/array.hpp"
 
 #include "world_delta_helper.hpp"

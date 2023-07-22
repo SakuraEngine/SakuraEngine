@@ -1,3 +1,4 @@
+#include "pch.hpp"
 #include "MPShared/shared.h"
 #include "SkrRT/math/vector.h"
 #include "SkrRT/math/quat.h"
