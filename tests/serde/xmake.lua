@@ -1,8 +1,0 @@
-target("SerdeTest")
-    set_group("05.tests/base")
-    set_kind("binary")
-    public_dependency("SkrRT", engine_version)
-    add_deps("SkrTestFramework", {public = false})
-    add_packages("catch2", {public = true})
-    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
-    add_files("main.cpp")
