@@ -1,10 +1,12 @@
+#include "SkrRT/math/rtm/vector4f.h"
+#include "SkrRT/math/rtm/rtmx.h"
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/containers/vector.hpp"
 
 #include "SkrRenderer/render_viewport.h"
 #include "SkrRenderer/skr_renderer.h"
-#include "SkrRT/math/rtm/vector4f.h"
-#include "SkrRT/math/rtm/rtmx.h"
+
+#include "tracy/Tracy.hpp"
 
 struct SViewportManagerImpl : public SViewportManager
 {
@@ -85,6 +87,11 @@ SViewportManager* SViewportManager::Create(dual_storage_t* storage)
 void SViewportManager::Free(SViewportManager* viewport_manager)
 {
     SkrDelete(viewport_manager);
+}
+
+SViewportManager::~SViewportManager() SKR_NOEXCEPT
+{
+
 }
 
 void skr_resolve_camera_to_viewport(const skr_camera_comp_t* camera, const skr_translation_comp_t* translation, skr_render_viewport_t* viewport)

@@ -18,7 +18,7 @@ void CullPhase::on_compile(RenderGraph* graph) SKR_NOEXCEPT
     resources.erase(
     eastl::remove_if(resources.begin(), resources.end(),
     [this](ResourceNode* resource) {
-        const auto name = resource->get_name_view();
+        SKR_UNUSED const auto name = resource->get_name_view();
         ZoneScopedC(tracy::Color::SteelBlue);
         ZoneName(name.c_str(), name.size());
 
@@ -34,7 +34,7 @@ void CullPhase::on_compile(RenderGraph* graph) SKR_NOEXCEPT
     passes.erase(
     eastl::remove_if(passes.begin(), passes.end(),
     [this](PassNode* pass) {
-        const auto name = pass->get_name_view();
+        SKR_UNUSED const auto name = pass->get_name_view();
         ZoneScopedC(tracy::Color::SteelBlue);
         ZoneName(name.c_str(), name.size());
 

@@ -14,7 +14,7 @@
 
 #if defined(__powerpc64__)
 
-#include "osfiber_asm_ppc64.h"
+#include "marl/osfiber_asm_ppc64.h"
 
 #include "marl/export.h"
 

@@ -1,17 +1,16 @@
 #pragma once
-#include "gtest/gtest.h"
-#include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/misc/log.hpp"
-#include "SkrRT/platform/guid.hpp"
+#include "SkrRT/platform/guid.hpp" // IWYU pragma: export
+#include "SkrRT/platform/crash.h" // IWYU pragma: export
+#include "SkrRT/misc/log.hpp" // IWYU pragma: export
+#include "SkrRT/containers/sptr.hpp" // IWYU pragma: export
 
-class SPTRBase : public ::testing::Test
+#include "SkrTestFramework/framework.hpp"
+
+struct SPTRTestsBase
 {
-protected:
-    void SetUp() override
+    static struct ProcInitializer
     {
-    }
-
-    void TearDown() override
-    {
-    }
+        ProcInitializer();
+        ~ProcInitializer();
+    } init;
 };

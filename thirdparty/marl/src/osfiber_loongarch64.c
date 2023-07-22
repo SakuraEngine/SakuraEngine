@@ -14,7 +14,7 @@
 
 #if defined(__loongarch_lp64)
 
-#include "osfiber_asm_loongarch64.h"
+#include "marl/osfiber_asm_loongarch64.h"
 
 #include "marl/export.h"
 

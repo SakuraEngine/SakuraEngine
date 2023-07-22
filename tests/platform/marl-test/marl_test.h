@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #pragma once
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-
 #include "marl/scheduler.h"
+#include "SkrTestFramework/framework.hpp"
+#include <catch2/generators/catch_generators.hpp>
 
 // SchedulerParams holds Scheduler construction parameters for testing.
 struct SchedulerParams {
-  int numWorkerThreads;
+  int numWorkerThreads = 0;
 
   friend std::ostream& operator<<(std::ostream& os,
                                   const SchedulerParams& params) {
@@ -29,16 +28,16 @@ struct SchedulerParams {
 };
 
 // WithoutBoundScheduler is a test fixture that does not bind a scheduler.
-class WithoutBoundScheduler : public testing::Test {
+class WithoutBoundScheduler {
  public:
-  void SetUp() override {
+  WithoutBoundScheduler() {
     allocator = new marl::TrackedAllocator(marl::Allocator::Default);
   }
 
-  void TearDown() override {
+  ~WithoutBoundScheduler() {
     auto stats = allocator->stats();
-    ASSERT_EQ(stats.numAllocations(), 0U);
-    ASSERT_EQ(stats.bytesAllocated(), 0U);
+    EXPECT_EQ(stats.numAllocations(), 0U);
+    EXPECT_EQ(stats.bytesAllocated(), 0U);
     delete allocator;
   }
 
@@ -47,12 +46,18 @@ class WithoutBoundScheduler : public testing::Test {
 
 // WithBoundScheduler is a parameterized test fixture that performs tests with
 // a bound scheduler using a number of different configurations.
-class WithBoundScheduler : public testing::TestWithParam<SchedulerParams> {
+class WithBoundScheduler {
  public:
-  void SetUp() override {
+  WithBoundScheduler() {
     allocator = new marl::TrackedAllocator(marl::Allocator::Default);
 
-    auto& params = GetParam();
+    auto params = GENERATE(as<SchedulerParams>{}, 
+      SchedulerParams{0}, // Single-threaded mode test
+      SchedulerParams{1}, // Single worker thread
+      SchedulerParams{2} // 2 worker threads...
+      // ,SchedulerParams{4}, SchedulerParams{8}, 
+      //SchedulerParams{64}
+    );
 
     marl::Scheduler::Config cfg;
     cfg.setAllocator(allocator);
@@ -63,14 +68,14 @@ class WithBoundScheduler : public testing::TestWithParam<SchedulerParams> {
     scheduler->bind();
   }
 
-  void TearDown() override {
+  ~WithBoundScheduler() {
     auto scheduler = marl::Scheduler::get();
     scheduler->unbind();
     delete scheduler;
 
     auto stats = allocator->stats();
-    ASSERT_EQ(stats.numAllocations(), 0U);
-    ASSERT_EQ(stats.bytesAllocated(), 0U);
+    EXPECT_EQ(stats.numAllocations(), 0U);
+    EXPECT_EQ(stats.bytesAllocated(), 0U);
     delete allocator;
   }
 

@@ -1,10 +1,11 @@
-#include "string.h"
-#include "stdlib.h"
+#include "SkrTestFramework/framework.hpp"
 
-int main()
+class BaseTests
 {
-    char *p = (char*)::malloc(5);
-    p[25] = 'c';
-    
-    return 0;
+
+};
+
+TEST_CASE_METHOD(BaseTests, "Empty")
+{
+    EXPECT_EQ(nullptr, nullptr);
 }

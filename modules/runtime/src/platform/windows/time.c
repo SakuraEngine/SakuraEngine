@@ -1,4 +1,4 @@
-#include "../platform/windows/winheaders.h"
+#include "winheaders.h"
 
 #include "SkrRT/platform/time.h"
 #include "SkrRT/platform/debug.h"

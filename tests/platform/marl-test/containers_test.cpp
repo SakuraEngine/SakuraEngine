@@ -15,20 +15,17 @@
 #include "marl/containers.h"
 #include "marl_test.h"
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-
 #include <cstddef>
 #include <string>
 
 class ContainersVectorTest : public WithoutBoundScheduler {};
 
-TEST_F(ContainersVectorTest, Empty) {
+TEST_CASE_METHOD(ContainersVectorTest, "Empty") {
   marl::containers::vector<std::string, 4> vector(allocator);
   ASSERT_EQ(vector.size(), size_t(0));
 }
 
-TEST_F(ContainersVectorTest, WithinFixedCapIndex) {
+TEST_CASE_METHOD(ContainersVectorTest, "WithinFixedCapIndex") {
   marl::containers::vector<std::string, 4> vector(allocator);
   vector.resize(4);
   vector[0] = "A";
@@ -42,7 +39,7 @@ TEST_F(ContainersVectorTest, WithinFixedCapIndex) {
   ASSERT_EQ(vector[3], "D");
 }
 
-TEST_F(ContainersVectorTest, BeyondFixedCapIndex) {
+TEST_CASE_METHOD(ContainersVectorTest, "BeyondFixedCapIndex") {
   marl::containers::vector<std::string, 1> vector(allocator);
   vector.resize(4);
   vector[0] = "A";
@@ -56,7 +53,7 @@ TEST_F(ContainersVectorTest, BeyondFixedCapIndex) {
   ASSERT_EQ(vector[3], "D");
 }
 
-TEST_F(ContainersVectorTest, WithinFixedCapPushPop) {
+TEST_CASE_METHOD(ContainersVectorTest, "WithinFixedCapPushPop") {
   marl::containers::vector<std::string, 4> vector(allocator);
   vector.push_back("A");
   vector.push_back("B");
@@ -90,7 +87,7 @@ TEST_F(ContainersVectorTest, WithinFixedCapPushPop) {
   ASSERT_EQ(vector.size(), size_t(0));
 }
 
-TEST_F(ContainersVectorTest, BeyondFixedCapPushPop) {
+TEST_CASE_METHOD(ContainersVectorTest, "BeyondFixedCapPushPop") {
   marl::containers::vector<std::string, 2> vector(allocator);
   vector.push_back("A");
   vector.push_back("B");
@@ -124,7 +121,7 @@ TEST_F(ContainersVectorTest, BeyondFixedCapPushPop) {
   ASSERT_EQ(vector.size(), size_t(0));
 }
 
-TEST_F(ContainersVectorTest, CopyConstruct) {
+TEST_CASE_METHOD(ContainersVectorTest, "CopyConstruct") {
   marl::containers::vector<std::string, 4> vectorA(allocator);
 
   vectorA.resize(3);
@@ -139,7 +136,7 @@ TEST_F(ContainersVectorTest, CopyConstruct) {
   ASSERT_EQ(vectorB[2], "C");
 }
 
-TEST_F(ContainersVectorTest, CopyConstructDifferentBaseCapacity) {
+TEST_CASE_METHOD(ContainersVectorTest, "CopyConstructDifferentBaseCapacity") {
   marl::containers::vector<std::string, 4> vectorA(allocator);
 
   vectorA.resize(3);
@@ -154,7 +151,7 @@ TEST_F(ContainersVectorTest, CopyConstructDifferentBaseCapacity) {
   ASSERT_EQ(vectorB[2], "C");
 }
 
-TEST_F(ContainersVectorTest, CopyAssignment) {
+TEST_CASE_METHOD(ContainersVectorTest, "CopyAssignment") {
   marl::containers::vector<std::string, 4> vectorA(allocator);
 
   vectorA.resize(3);
@@ -170,7 +167,7 @@ TEST_F(ContainersVectorTest, CopyAssignment) {
   ASSERT_EQ(vectorB[2], "C");
 }
 
-TEST_F(ContainersVectorTest, CopyAssignmentDifferentBaseCapacity) {
+TEST_CASE_METHOD(ContainersVectorTest, "CopyAssignmentDifferentBaseCapacity") {
   marl::containers::vector<std::string, 4> vectorA(allocator);
 
   vectorA.resize(3);
@@ -186,7 +183,7 @@ TEST_F(ContainersVectorTest, CopyAssignmentDifferentBaseCapacity) {
   ASSERT_EQ(vectorB[2], "C");
 }
 
-TEST_F(ContainersVectorTest, MoveConstruct) {
+TEST_CASE_METHOD(ContainersVectorTest, "MoveConstruct") {
   marl::containers::vector<std::string, 4> vectorA(allocator);
 
   vectorA.resize(3);
@@ -202,7 +199,7 @@ TEST_F(ContainersVectorTest, MoveConstruct) {
   ASSERT_EQ(vectorB[2], "C");
 }
 
-TEST_F(ContainersVectorTest, Copy) {
+TEST_CASE_METHOD(ContainersVectorTest, "Copy") {
   marl::containers::vector<std::string, 4> vectorA(allocator);
   marl::containers::vector<std::string, 2> vectorB(allocator);
 
@@ -221,7 +218,7 @@ TEST_F(ContainersVectorTest, Copy) {
   ASSERT_EQ(vectorB[2], "C");
 }
 
-TEST_F(ContainersVectorTest, Move) {
+TEST_CASE_METHOD(ContainersVectorTest, "Move") {
   marl::containers::vector<std::string, 4> vectorA(allocator);
   marl::containers::vector<std::string, 2> vectorB(allocator);
 
@@ -243,12 +240,12 @@ TEST_F(ContainersVectorTest, Move) {
 
 class ContainersListTest : public WithoutBoundScheduler {};
 
-TEST_F(ContainersListTest, Empty) {
+TEST_CASE_METHOD(ContainersListTest, "Empty") {
   marl::containers::list<std::string> list(allocator);
   ASSERT_EQ(list.size(), size_t(0));
 }
 
-TEST_F(ContainersListTest, EmplaceOne) {
+TEST_CASE_METHOD(ContainersListTest, "EmplaceOne") {
   marl::containers::list<std::string> list(allocator);
   auto itEntry = list.emplace_front("hello world");
   ASSERT_EQ(*itEntry, "hello world");
@@ -259,7 +256,7 @@ TEST_F(ContainersListTest, EmplaceOne) {
   ASSERT_EQ(it, list.end());
 }
 
-TEST_F(ContainersListTest, EmplaceThree) {
+TEST_CASE_METHOD(ContainersListTest, "EmplaceThree") {
   marl::containers::list<std::string> list(allocator);
   auto itA = list.emplace_front("a");
   auto itB = list.emplace_front("b");
@@ -278,7 +275,7 @@ TEST_F(ContainersListTest, EmplaceThree) {
   ASSERT_EQ(it, list.end());
 }
 
-TEST_F(ContainersListTest, EraseFront) {
+TEST_CASE_METHOD(ContainersListTest, "EraseFront") {
   marl::containers::list<std::string> list(allocator);
   auto itA = list.emplace_front("a");
   auto itB = list.emplace_front("b");
@@ -293,7 +290,7 @@ TEST_F(ContainersListTest, EraseFront) {
   ASSERT_EQ(it, list.end());
 }
 
-TEST_F(ContainersListTest, EraseBack) {
+TEST_CASE_METHOD(ContainersListTest, "EraseBack") {
   marl::containers::list<std::string> list(allocator);
   auto itA = list.emplace_front("a");
   auto itB = list.emplace_front("b");
@@ -308,7 +305,7 @@ TEST_F(ContainersListTest, EraseBack) {
   ASSERT_EQ(it, list.end());
 }
 
-TEST_F(ContainersListTest, EraseMid) {
+TEST_CASE_METHOD(ContainersListTest, "EraseMid") {
   marl::containers::list<std::string> list(allocator);
   auto itA = list.emplace_front("a");
   auto itB = list.emplace_front("b");
@@ -323,7 +320,7 @@ TEST_F(ContainersListTest, EraseMid) {
   ASSERT_EQ(it, list.end());
 }
 
-TEST_F(ContainersListTest, Grow) {
+TEST_CASE_METHOD(ContainersListTest, "Grow") {
   marl::containers::list<std::string> list(allocator);
   for (int i = 0; i < 256; i++) {
     list.emplace_front(std::to_string(i));

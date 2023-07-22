@@ -1,24 +1,17 @@
-#include "gtest/gtest.h"
 #include "SkrRT/misc/log.hpp"
-#include "SkrRT/platform/crash.h"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/serde/json/writer.h"
 #include "../types/types.hpp"
 
-class RTTI : public ::testing::Test
-{
-protected:
-    void SetUp() override
-    {
-    }
+#include "SkrTestFramework/framework.hpp"
 
-    void TearDown() override
-    {
-    }
+struct RTTITests
+{
+
 };
 
-TEST_F(RTTI, TypeId)
+TEST_CASE_METHOD(RTTITests, "TypeId")
 {
     using namespace skr::guid::literals;
 
@@ -27,18 +20,18 @@ TEST_F(RTTI, TypeId)
 
     static_assert(skr::type::type_id<Types::TestEnum>::get() == u8"1a0b91c7-6690-41d6-acfd-0c2b61f181f3"_guid, "");
     const bool equal = guid0 == guid1;
-    EXPECT_TRUE(equal);
+    REQUIRE(equal);
     SKR_LOG_FMT_DEBUG(u8"u8 type id: {}", skr::type::type_id<uint32_t>::get());
     SKR_LOG_FMT_DEBUG(u8"TestEnum type id: {}", skr::type::type_id<Types::TestEnum>::get());
 }
 
-TEST_F(RTTI, TestEnumType)
+TEST_CASE_METHOD(RTTITests, "TestEnumType")
 {
     auto registry = skr::type::GetTypeRegistry();
     //auto enumType = skr::type::EnumType::FromName("Types::TestEnum");
     auto type = registry->get_type(skr::type::type_id<Types::TestEnum>::get());
     auto enumType = static_cast<const skr::type::EnumType*>(type);
-    EXPECT_TRUE(enumType != nullptr);
+    REQUIRE(enumType != nullptr);
     EXPECT_EQ(enumType->guid, skr::type::type_id<Types::TestEnum>::get());
     for (auto&& enumerator : enumType->enumerators)
     {
@@ -55,10 +48,10 @@ TEST_F(RTTI, TestEnumType)
     }
 }
 
-TEST_F(RTTI, TestRecordType)
+TEST_CASE_METHOD(RTTITests, "TestRecordType")
 {
     auto recordType = static_cast<const skr::type::RecordType*>(skr::type::type_of<Types::TestSon>::get());
-    EXPECT_TRUE(recordType != nullptr);
+    REQUIRE(recordType != nullptr);
     EXPECT_EQ(recordType->guid, skr::type::type_id<Types::TestSon>::get());
     EXPECT_EQ(recordType->base, skr::type::type_of<Types::TestParent>::get());
     EXPECT_EQ(recordType->size, sizeof(Types::TestSon));
@@ -70,34 +63,44 @@ TEST_F(RTTI, TestRecordType)
     }
 }
 
-#ifdef _WIN32
-TEST_F(RTTI, TestConvert)
+template<class T>
+typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
+    almost_equal(T x, T y, int ulp = 4)
+{
+    // the machine epsilon has to be scaled to the magnitude of the values used
+    // and multiplied by the desired precision in ULPs (units in the last place)
+    return std::fabs(x - y) <= std::numeric_limits<T>::epsilon() * std::fabs(x + y) * ulp
+        // unless the result is subnormal
+        || std::fabs(x - y) < std::numeric_limits<T>::min();
+}
+
+TEST_CASE_METHOD(RTTITests, "TestConvert")
 {
     uint32_t a = 0;
     skr_value_ref_t a_ref{a};
     a = 10;
-    EXPECT_TRUE(a_ref.HasValue());
-    EXPECT_TRUE(a_ref.Is<uint32_t>());
-    EXPECT_TRUE(a_ref.Convertible<float>());
-    EXPECT_FLOAT_EQ(a_ref.Convert<float>(), 10.0f);
-    EXPECT_TRUE(!a_ref.Convertible<skr::SPtr<uint32_t>>());
+    REQUIRE(a_ref.HasValue());
+    REQUIRE(a_ref.Is<uint32_t>());
+    REQUIRE(a_ref.Convertible<float>());
+    REQUIRE(::almost_equal(a_ref.Convert<float>(), 10.0f));
+    REQUIRE(!a_ref.Convertible<skr::SPtr<uint32_t>>());
     skr::vector<uint32_t> vec;
     vec.push_back(1);
     skr_value_ref_t vec_ref{vec};
-    EXPECT_TRUE(vec_ref.HasValue());
-    EXPECT_TRUE(vec_ref.Is<skr::vector<uint32_t>>());
-    EXPECT_TRUE(vec_ref.Convertible<skr::span<uint32_t>>());
+    REQUIRE(vec_ref.HasValue());
+    REQUIRE(vec_ref.Is<skr::vector<uint32_t>>());
+    REQUIRE(vec_ref.Convertible<skr::span<uint32_t>>());
     EXPECT_EQ(vec_ref.Convert<skr::span<uint32_t>>()[0], 1);
     uint32_t arr[3] = {1, 2, 3};
     skr_value_ref_t arr_ref{arr, skr::type::type_of<uint32_t[3]>::get()};
-    EXPECT_TRUE(arr_ref.HasValue());
+    REQUIRE(arr_ref.HasValue());
     vec = arr_ref.Convert<skr::vector<uint32_t>>();
     EXPECT_EQ(vec[0], 1);
     EXPECT_EQ(vec[1], 2);
     EXPECT_EQ(vec[2], 3);
 }
 
-TEST_F(RTTI, TestTextSerialize)
+TEST_CASE_METHOD(RTTITests, "TestTextSerialize")
 {
     auto uint32Type = skr::type::type_of<uint32_t>::get();
     auto dynarrType = (skr::type::DynArrayType*)skr::type::make_dynarray_type(uint32Type);
@@ -118,22 +121,8 @@ TEST_F(RTTI, TestTextSerialize)
     EXPECT_EQ(vec[2], 2);
     dynarrType->Destruct(dynarr);
 }
-#endif
 
-TEST_F(RTTI, DynamicRecord)
+TEST_CASE_METHOD(RTTITests, "DynamicRecord")
 {
     
-}
-
-int main(int argc, char** argv)
-{
-    skr_initialize_crash_handler();
-    skr_log_initialize_async_worker();
-
-    ::testing::InitGoogleTest(&argc, argv);
-    auto result = RUN_ALL_TESTS();
-
-    skr_log_finalize_async_worker();
-    skr_finalize_crash_handler();
-    return result;
 }

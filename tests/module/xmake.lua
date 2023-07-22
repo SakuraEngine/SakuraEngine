@@ -29,7 +29,7 @@ target("dynamic3")
     public_dependency("SkrRT", engine_version)
     add_files("test/dynamic3.cpp")
 
-target("module-test")
+target("ModuleTest")
     set_kind("binary")
     add_rules("skr.module", {api = "MODULE_TEST", version = engine_version})
     public_dependency("SkrRT", engine_version)
@@ -39,6 +39,7 @@ target("module-test")
     public_dependency("dynamic2", engine_version)
     public_dependency("dynamic3", engine_version)
     -- actually there is no need to strongly link these dynamic modules
-    add_packages("gtest")
+    add_deps("SkrTestFramework", {public = false})
+    add_packages("catch2", {public = true})
     add_files("test/main.cpp")
 ]]--

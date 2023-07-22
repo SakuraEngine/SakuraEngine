@@ -1,8 +1,8 @@
+#include "pch.hpp"
 #include <SkrRT/platform/filesystem.hpp>
 
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/platform/memory.h"
-#include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/platform/vfs.h"

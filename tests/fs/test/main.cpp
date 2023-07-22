@@ -2,48 +2,70 @@
 #include "SkrRT/platform/crash.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/platform/dstorage.h"
+#include <SkrRT/platform/filesystem.hpp>
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/async/thread_job.hpp"
 #include "SkrRT/async/wait_timeout.hpp"
 #include "SkrRT/io/ram_io.hpp"
-#include "gtest/gtest.h"
 
 #include <string>
 #include <iostream>
-#include <SkrRT/platform/filesystem.hpp>
 
 #include "tracy/Tracy.hpp"
 
-struct VFSTest : public ::testing::TestWithParam<bool>
+#include "SkrTestFramework/framework.hpp"
+#include <catch2/generators/catch_generators.hpp>
+
+static struct ProcInitializer
 {
-    void SetUp() override
+    ProcInitializer()
     {
+        ::skr_initialize_crash_handler();
+        ::skr_log_initialize_async_worker();
+
+        SkrDStorageConfig config = {};
+        ::skr_create_dstorage_instance(&config);
+    }
+    ~ProcInitializer()
+    {
+        auto inst = skr_get_dstorage_instnace();
+        ::skr_free_dstorage_instance(inst);
+
+        ::skr_log_finalize_async_worker();
+        ::skr_finalize_crash_handler();
+    }
+} init;
+
+struct VFSTest
+{
+    VFSTest()
+    {
+        idx += 1;
         skr_vfs_desc_t abs_fs_desc = {};
         abs_fs_desc.app_name = u8"fs-test";
         abs_fs_desc.mount_type = SKR_MOUNT_TYPE_ABSOLUTE;
         abs_fs = skr_create_vfs(&abs_fs_desc);
-        EXPECT_NE(abs_fs, nullptr);
+        REQUIRE(abs_fs != nullptr);
         std::error_code ec = {};
         const auto current_path = skr::filesystem::current_path(ec).string();
-        EXPECT_EQ(std::string((const char*)abs_fs->mount_dir), current_path);
-
-        SkrDStorageConfig config = {};
-        skr_create_dstorage_instance(&config);
+        REQUIRE(std::string((const char*)abs_fs->mount_dir) == current_path);
 
         SKR_LOG_FMT_INFO(u8"Current path: {}", (const char8_t*)current_path.c_str());
     }
 
-    void TearDown() override
+    ~VFSTest()
     {
         skr_free_vfs(abs_fs);
     }
 
     skr_vfs_t* abs_fs = nullptr;
+    static uint32_t idx;
 };
+uint32_t VFSTest::idx = 0;
 
-TEST_P(VFSTest, mount)
+TEST_CASE_METHOD(VFSTest, "mount")
 {
     ZoneScopedN("mount");
 
@@ -51,12 +73,12 @@ TEST_P(VFSTest, mount)
     fs_desc.app_name = u8"fs-test";
     fs_desc.mount_type = SKR_MOUNT_TYPE_CONTENT;
     auto fs = skr_create_vfs(&fs_desc);
-    EXPECT_NE(fs, nullptr);
-    EXPECT_NE(fs->mount_dir, nullptr);
+    REQUIRE(fs != nullptr);
+    REQUIRE(fs->mount_dir != nullptr);
     skr_free_vfs(fs);
 }
 
-TEST_P(VFSTest, readwrite)
+TEST_CASE_METHOD(VFSTest, "readwrite")
 {
     ZoneScopedN("readwrite");
 
@@ -71,7 +93,7 @@ TEST_P(VFSTest, readwrite)
     EXPECT_EQ(skr_vfs_fclose(f), true);
 }
 
-TEST_P(VFSTest, readwrite2)
+TEST_CASE_METHOD(VFSTest, "readwrite2")
 {
     ZoneScopedN("readwrite2");
 
@@ -86,7 +108,7 @@ TEST_P(VFSTest, readwrite2)
     EXPECT_EQ(skr_vfs_fclose(f), true);
 }
 
-TEST_P(VFSTest, seqread)
+TEST_CASE_METHOD(VFSTest, "seqread")
 {
     ZoneScopedN("seqread");
     
@@ -104,13 +126,14 @@ TEST_P(VFSTest, seqread)
     EXPECT_EQ(skr_vfs_fclose(f), true);
 }
 
-TEST_P(VFSTest, asyncread)
+TEST_CASE_METHOD(VFSTest, "asyncread")
 {
     ZoneScopedN("asyncread");
-
+    
+    auto dstorage = GENERATE(as<bool>{}, true, false);
     skr_ram_io_service_desc_t ioServiceDesc = {};
     ioServiceDesc.name = u8"Test";
-    ioServiceDesc.use_dstorage = GetParam();
+    ioServiceDesc.use_dstorage = dstorage;
     auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
     ioService->run();
 
@@ -140,10 +163,11 @@ TEST_P(VFSTest, asyncread)
     std::cout << "..." << std::endl;
 }
 
-TEST_P(VFSTest, asyncread2)
+TEST_CASE_METHOD(VFSTest, "asyncread2")
 {
     ZoneScopedN("asyncread2");
 
+    auto dstorage = GENERATE(as<bool>{}, true, false);
     auto jqDesc = make_zeroed<skr::JobQueueDesc>();
     jqDesc.thread_count = 1;
     jqDesc.priority = SKR_THREAD_ABOVE_NORMAL;
@@ -152,7 +176,7 @@ TEST_P(VFSTest, asyncread2)
 
     skr_ram_io_service_desc_t ioServiceDesc = {};
     ioServiceDesc.name = u8"Test";
-    ioServiceDesc.use_dstorage = GetParam();
+    ioServiceDesc.use_dstorage = dstorage;
     ioServiceDesc.io_job_queue = io_job_queue;
     ioServiceDesc.callback_job_queue = io_job_queue;
     auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
@@ -186,13 +210,14 @@ TEST_P(VFSTest, asyncread2)
     SkrDelete(io_job_queue);
 }
 
-TEST_P(VFSTest, chunking)
+TEST_CASE_METHOD(VFSTest, "chunking")
 {
     ZoneScopedN("chunking");
 
+    auto dstorage = GENERATE(as<bool>{}, true, false);
     skr_ram_io_service_desc_t ioServiceDesc = {};
     ioServiceDesc.name = u8"Test";
-    ioServiceDesc.use_dstorage = GetParam();
+    ioServiceDesc.use_dstorage = dstorage;
     auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
     ioService->run();
 
@@ -224,16 +249,17 @@ TEST_P(VFSTest, chunking)
 
 #define TEST_CYCLES_COUNT 100
 
-TEST_P(VFSTest, defer_cancel)
+TEST_CASE_METHOD(VFSTest, "defer_cancel")
 {
     ZoneScopedN("defer_cancel");
 
+    auto dstorage = GENERATE(as<bool>{}, true, false);
     uint32_t sucess = 0;
     for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
         ioServiceDesc.name = u8"Test";
-        ioServiceDesc.use_dstorage = GetParam();
+        ioServiceDesc.use_dstorage = dstorage;
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
         ioService->set_sleep_time(0); // make test faster
@@ -279,16 +305,17 @@ TEST_P(VFSTest, defer_cancel)
     SKR_LOG_INFO("defer_cancel tested for %d times, sucess %d", TEST_CYCLES_COUNT, sucess);
 }
 
-TEST_P(VFSTest, cancel)
+TEST_CASE_METHOD(VFSTest, "cancel")
 {
     ZoneScopedN("cancel");
 
+    auto dstorage = GENERATE(as<bool>{}, true, false);
     uint32_t sucess = 0;
     for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
         ioServiceDesc.name = u8"Test";
-        ioServiceDesc.use_dstorage = GetParam();
+        ioServiceDesc.use_dstorage = dstorage;
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
         ioService->set_sleep_time(0); // make test faster
@@ -317,7 +344,7 @@ TEST_P(VFSTest, cancel)
         // while (!request.is_ready()) {}
         // while (!cancelled && !future2.is_ready()) {}
         ioService->drain();
-        
+
         if (future2.is_cancelled())
         {
             EXPECT_EQ(blob2->get_data(), nullptr);
@@ -335,9 +362,10 @@ TEST_P(VFSTest, cancel)
 }
 
 // this test dont works with batch NVMe queue APIs, like windows DirectStorage.
-TEST_P(VFSTest, sort)
+TEST_CASE_METHOD(VFSTest, "sort")
 {
-    if (bool use_dstorage = GetParam()) 
+    auto dstorage = GENERATE(as<bool>{}, true, false);
+    if (dstorage) 
         return;
 
     ZoneScopedN("sort");
@@ -345,7 +373,7 @@ TEST_P(VFSTest, sort)
     {
         skr_ram_io_service_desc_t ioServiceDesc = {};
         ioServiceDesc.name = u8"Test";
-        ioServiceDesc.use_dstorage = GetParam();
+        ioServiceDesc.use_dstorage = dstorage;
         ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
         auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
         ioService->set_sleep_time(0); // make test faster
@@ -362,7 +390,7 @@ TEST_P(VFSTest, sort)
             rq->add_callback(SKR_IO_STAGE_COMPLETED, 
             +[](skr_io_future_t* f, skr_io_request_t* request, void* data) {
                 auto future2 = (skr_io_future_t*)data;
-                EXPECT_TRUE(future2->is_ready());
+                REQUIRE(future2->is_ready());
             }, &future2);
             blob = ioService->request(rq, &future, SKR_ASYNC_SERVICE_PRIORITY_NORMAL);
         }
@@ -374,7 +402,7 @@ TEST_P(VFSTest, sort)
             rq2->add_callback(SKR_IO_STAGE_COMPLETED, 
             +[](skr_io_future_t* f, skr_io_request_t* request, void* data) {
                 auto future = (skr_io_future_t*)data;
-                EXPECT_TRUE(!future->is_ready());
+                REQUIRE(!future->is_ready());
             }, &future);
             blob2 = ioService->request(rq2, &future2, SKR_ASYNC_SERVICE_PRIORITY_URGENT);
         }
@@ -394,26 +422,4 @@ TEST_P(VFSTest, sort)
         skr_io_ram_service_t::destroy(ioService);
     }
     SKR_LOG_INFO("sorts tested for %d times", TEST_CYCLES_COUNT);
-}
-
-#ifdef _WIN32
-// TODO: fix DirectStorage on Github Action Machines
-static const auto permutations = testing::Values( true, false ); 
-#else
-static const auto permutations = testing::Values( false );
-#endif
-
-INSTANTIATE_TEST_SUITE_P(VFSTest, VFSTest, permutations);
-
-int main(int argc, char** argv)
-{
-    skr_initialize_crash_handler();
-    skr_log_initialize_async_worker();
-
-    ::testing::InitGoogleTest(&argc, argv);
-    auto result = RUN_ALL_TESTS();
-    
-    skr_log_finalize_async_worker();
-    skr_finalize_crash_handler();
-    return result;
 }

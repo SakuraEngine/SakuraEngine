@@ -2,25 +2,24 @@
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/containers/span.hpp"
 #include "SkrRT/containers/vector.hpp"
-#include "gtest/gtest.h"
+#include "SkrTestFramework/framework.hpp"
 
-class BINARY_BITPACK : public ::testing::Test
+class BinaryBitpackTests
 {
 protected:
     eastl::vector<uint8_t> buffer;
     skr::binary::VectorWriterBitpacked writer;
     skr::binary::SpanReaderBitpacked reader;
-    void SetUp() override
+    BinaryBitpackTests()
     {
         writer.buffer = &buffer;
     }
-
-    void TearDown() override
+    ~BinaryBitpackTests()
     {
     }
 };
 
-TEST_F(BINARY_BITPACK, Aligned)
+TEST_CASE_METHOD(BinaryBitpackTests, "Aligned")
 {
     uint64_t value = 0x12345678;
     uint64_t value2 = 0x87654321;
@@ -37,7 +36,7 @@ TEST_F(BINARY_BITPACK, Aligned)
     EXPECT_EQ(value2, readValue2);
 }
 
-TEST_F(BINARY_BITPACK, WithinByte)
+TEST_CASE_METHOD(BinaryBitpackTests, "WithinByte")
 {
     uint64_t value = 0b11;
     uint64_t value2 = 0b1010;
@@ -54,7 +53,7 @@ TEST_F(BINARY_BITPACK, WithinByte)
     EXPECT_EQ(value2, readValue2);
 }
 
-TEST_F(BINARY_BITPACK, MultipleBytes)
+TEST_CASE_METHOD(BinaryBitpackTests, "MultipleBytes")
 {
     uint64_t value = 0x03FFFFF00000FFFF;
     uint64_t value2 = 0x0000000000000300;
@@ -71,14 +70,13 @@ TEST_F(BINARY_BITPACK, MultipleBytes)
     EXPECT_EQ(value2, readValue2);
 }
 
-TEST_F(BINARY_BITPACK, ArchiveAPI)
+TEST_CASE_METHOD(BinaryBitpackTests, "ArchiveAPI")
 {
     skr_binary_writer_t archiveWrite(writer);
     skr_binary_reader_t archiveRead(reader);
 
     uint64_t value = 0x03FFFFF00000FFFF;
     uint64_t value2 = 0x0000000000000300;
-    uint64_t value3 = 0x03FFFFF00000FFFF;
     uint32_t value4 = 0x00000003;
     archiveWrite.write_bits(&value, 14*4 + 2);
     archiveWrite.write_bits(&value2, 2*4 + 2);
@@ -89,7 +87,6 @@ TEST_F(BINARY_BITPACK, ArchiveAPI)
     
     uint64_t readValue = 0;
     uint64_t readValue2 = 0;
-    uint64_t readValue3 = 0;
     uint32_t readValue4 = 0;
     archiveRead.read_bits(&readValue, 14*4 + 2);
     EXPECT_EQ(value, readValue);
@@ -97,11 +94,13 @@ TEST_F(BINARY_BITPACK, ArchiveAPI)
     EXPECT_EQ(value2, readValue2);
     archiveRead.read(&readValue4, sizeof(uint32_t));
     EXPECT_EQ(value4, readValue4);
-    //archiveRead.read_bits(&readValue3, 14*4 + 2);
-    //EXPECT_EQ(value3, readValue3);
+    // uint64_t value3 = 0x03FFFFF00000FFFF;
+    // uint64_t readValue3 = 0;
+    // archiveRead.read_bits(&readValue3, 14*4 + 2);
+    // EXPECT_EQ(value3, readValue3);
 }
 
-TEST_F(BINARY_BITPACK, VectorPack)
+TEST_CASE_METHOD(BinaryBitpackTests, "VectorPack")
 {
     skr_binary_writer_t archiveWrite(writer);
     skr_binary_reader_t archiveRead(reader);
@@ -116,11 +115,11 @@ TEST_F(BINARY_BITPACK, VectorPack)
     skr_float3_t readValue = { 0.0f, 0.0f, 0.0f };
     skr_float3_t readValue2 = { 0.0f, 0.0f, 0.0f };
     skr::binary::Archive(&archiveRead, readValue, skr::binary::VectorPackConfig<float>{});
-    EXPECT_FLOAT_EQ(value.x, readValue.x);
-    EXPECT_FLOAT_EQ(value.y, readValue.y);
-    EXPECT_FLOAT_EQ(value.z, readValue.z);
+    REQUIRE(::test_almost_equal(value.x, readValue.x));
+    REQUIRE(::test_almost_equal(value.y, readValue.y));
+    REQUIRE(::test_almost_equal(value.z, readValue.z));
     skr::binary::Archive(&archiveRead, readValue2, skr::binary::VectorPackConfig<float>{100000});
-    EXPECT_FLOAT_EQ(value2.x, readValue2.x);
-    EXPECT_FLOAT_EQ(value2.y, readValue2.y);
-    EXPECT_FLOAT_EQ(value2.z, readValue2.z);
+    REQUIRE(::test_almost_equal(value2.x, readValue2.x));
+    REQUIRE(::test_almost_equal(value2.y, readValue2.y));
+    REQUIRE(::test_almost_equal(value2.z, readValue2.z));
 }

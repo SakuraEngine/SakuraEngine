@@ -26,7 +26,7 @@ marl::Thread::Core core(int idx) {
 
 }  // anonymous namespace
 
-TEST_F(WithoutBoundScheduler, ThreadAffinityCount) {
+TEST_CASE_METHOD(WithoutBoundScheduler, "ThreadAffinityCount") {
   auto affinity = marl::Thread::Affinity(
       {
           core(10),
@@ -38,7 +38,7 @@ TEST_F(WithoutBoundScheduler, ThreadAffinityCount) {
   EXPECT_EQ(affinity.count(), 4U);
 }
 
-TEST_F(WithoutBoundScheduler, ThreadAdd) {
+TEST_CASE_METHOD(WithoutBoundScheduler, "ThreadAdd") {
   auto affinity = marl::Thread::Affinity(
       {
           core(10),
@@ -67,7 +67,7 @@ TEST_F(WithoutBoundScheduler, ThreadAdd) {
   EXPECT_EQ(affinity[6], core(40));
 }
 
-TEST_F(WithoutBoundScheduler, ThreadRemove) {
+TEST_CASE_METHOD(WithoutBoundScheduler, "ThreadRemove") {
   auto affinity = marl::Thread::Affinity(
       {
           core(10),
@@ -91,7 +91,7 @@ TEST_F(WithoutBoundScheduler, ThreadRemove) {
   EXPECT_EQ(affinity[1], core(30));
 }
 
-TEST_F(WithoutBoundScheduler, ThreadAffinityAllCountNonzero) {
+TEST_CASE_METHOD(WithoutBoundScheduler, "ThreadAffinityAllCountNonzero") {
   auto affinity = marl::Thread::Affinity::all(allocator);
   if (marl::Thread::Affinity::supported) {
     EXPECT_NE(affinity.count(), 0U);
@@ -100,7 +100,7 @@ TEST_F(WithoutBoundScheduler, ThreadAffinityAllCountNonzero) {
   }
 }
 
-TEST_F(WithoutBoundScheduler, ThreadAffinityFromVector) {
+TEST_CASE_METHOD(WithoutBoundScheduler, "ThreadAffinityFromVector") {
   marl::containers::vector<marl::Thread::Core, 32> cores(allocator);
   cores.push_back(core(10));
   cores.push_back(core(20));
@@ -114,7 +114,7 @@ TEST_F(WithoutBoundScheduler, ThreadAffinityFromVector) {
   EXPECT_EQ(affinity[3], core(40));
 }
 
-TEST_F(WithoutBoundScheduler, ThreadAffinityPolicyOneOf) {
+TEST_CASE_METHOD(WithoutBoundScheduler, "ThreadAffinityPolicyOneOf") {
   auto all = marl::Thread::Affinity(
       {
           core(10),

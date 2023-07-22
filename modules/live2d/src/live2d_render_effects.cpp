@@ -1,21 +1,16 @@
+#include "pch.hpp"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/time.h"
 #include "SkrRT/platform/guid.hpp"
-#include "SkrRT/platform/thread.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 
 #include "SkrRT/ecs/type_builder.hpp"
 
-
-#include "SkrLive2D/skr_live2d.h"
 #include "SkrLive2D/l2d_render_effect.h"
 #include "SkrLive2D/l2d_render_model.h"
 
 #include "Framework/Math/CubismMatrix44.hpp"
-#include "Framework/Math/CubismViewMatrix.hpp"
-
-#include "SkrRenderGraph/api.h"
 
 #include "SkrRenderer/primitive_draw.h"
 #include "SkrRenderer/skr_renderer.h"

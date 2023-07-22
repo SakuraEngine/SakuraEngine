@@ -1,6 +1,6 @@
+#include "../pch.hpp"
 #include <new>
 #include "SkrRT/containers/detail/shared_rc.hpp"
-#include "SkrRT/platform/memory.h"
 
 void skr::SRCBlock::add_refcount() SKR_NOEXCEPT
 {

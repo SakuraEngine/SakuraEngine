@@ -5,6 +5,7 @@
     #define SKR_WINDOWS_DEBUG_H
 #endif
 #ifdef SKR_WINDOWS_DEBUG_H
+    #include <stdlib.h>
     #include <stdio.h>
 
     #ifdef _DEBUG
@@ -31,14 +32,17 @@
     #if !SKR_SHIPPING
         #include "SkrRT/misc/macros.h"
 
-        #define SKR_TRACE_MSG(msg) skr_debug_output(msg);
+        #define SKR_TRACE_MSG(msg) \
+            printf(msg);           \
+            printf("\n");
+            
         #define SKR_ASSERT(cond)                                                      \
             do                                                                        \
             {                                                                         \
                 if (!(cond))                                                          \
                 {                                                                     \
                     SKR_TRACE_MSG("Skr Assert fired: " #cond " (" SKR_FILE_LINE ")"); \
-                    __debugbreak();                                                   \
+                    assert((cond));                                                   \
                 }                                                                     \
             } while (0)
         #define SKR_BREAK() __debugbreak()

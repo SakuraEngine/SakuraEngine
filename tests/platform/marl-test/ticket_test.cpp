@@ -16,7 +16,7 @@
 
 #include "marl/ticket.h"
 
-TEST_P(WithBoundScheduler, Ticket) {
+TEST_CASE_METHOD(WithBoundScheduler, "Ticket") {
   marl::Ticket::Queue queue;
 
   constexpr int count = 1000;

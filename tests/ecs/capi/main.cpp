@@ -1,13 +1,14 @@
-#include "gtest/gtest.h"
+#include "guid.hpp" //for guid
 #include "SkrRT/platform/crash.h"
 #include "SkrRT/ecs/dual.h"
-#include "guid.hpp" //for guid
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.h"
 
+#include "SkrTestFramework/framework.hpp"
+
 #include <memory>
 
-using test = int;
+using TestComp = int;
 dual_type_index_t type_test;
 dual_type_index_t type_test_arr;
 dual_type_index_t type_test2;
@@ -23,10 +24,36 @@ using pinned = int*;
 dual_type_index_t type_pinned;
 dual_type_index_t type_pinned_arr;
 
-class ECSTest : public ::testing::Test
+void register_test_component();
+void register_ref_component();
+void register_managed_component();
+void register_pinned_component();
+
+static struct ProcInitializer
+{
+    ProcInitializer()
+    {
+        ::skr_initialize_crash_handler();
+        ::skr_log_initialize_async_worker();
+
+        ::register_test_component();
+        ::register_ref_component();
+        ::register_managed_component();
+        ::register_pinned_component();
+    }
+    ~ProcInitializer()
+    {
+        ::dual_shutdown();
+
+        ::skr_log_finalize_async_worker();
+        ::skr_finalize_crash_handler();
+    }
+} init;
+
+class ECSTest
 {
 public:
-    void SetUp() override
+    ECSTest() SKR_NOEXCEPT
     {
         storage = dualS_create();
         {
@@ -36,7 +63,7 @@ public:
             entityType.meta = { nullptr, 0 };
             auto callback = [&](dual_chunk_view_t* inView) {
                 view = *inView;
-                *(test*)dualV_get_owned_rw(&view, type_test) = 123;
+                *(TestComp*)dualV_get_owned_rw(&view, type_test) = 123;
             };
             dualS_allocate_type(storage, &entityType, 1, DUAL_LAMBDA(callback));
 
@@ -44,7 +71,7 @@ public:
         }
     }
 
-    void TearDown() override
+    ~ECSTest() SKR_NOEXCEPT
     {
         dualS_release(storage);
     }
@@ -59,12 +86,12 @@ void zero(T& t)
     std::memset(&t, 0, sizeof(T));
 }
 
-TEST_F(ECSTest, allocate_one)
+TEST_CASE_METHOD(ECSTest, "allocate_one")
 {
-    EXPECT_TRUE(dualS_exist(storage, e1));
+    REQUIRE(dualS_exist(storage, e1));
 }
 
-TEST_F(ECSTest, allocate_100000)
+TEST_CASE_METHOD(ECSTest, "allocate_100000")
 {
     dual_chunk_view_t view;
     dual_entity_type_t entityType;
@@ -72,31 +99,31 @@ TEST_F(ECSTest, allocate_100000)
     entityType.meta = { nullptr, 0 };
     auto callback = [&](dual_chunk_view_t* inView) {
         view = *inView;
-        auto t = (test*)dualV_get_owned_rw(&view, type_test);
+        auto t = (TestComp*)dualV_get_owned_rw(&view, type_test);
         std::fill(t, t + inView->count, 123);
     };
     dualS_allocate_type(storage, &entityType, 100000, DUAL_LAMBDA(callback));
 
     auto e2 = dualV_get_entities(&view)[0];
     (void)e2;
-    auto data = (const test*)dualV_get_owned_ro(&view, type_test);
+    auto data = (const TestComp*)dualV_get_owned_ro(&view, type_test);
     EXPECT_EQ(data[0], 123);
     EXPECT_EQ(data[10], 123);
 }
 
-TEST_F(ECSTest, instantiate_single)
+TEST_CASE_METHOD(ECSTest, "instantiate_single")
 {
     dual_chunk_view_t view;
     auto callback = [&](dual_chunk_view_t* inView) { view = *inView; };
     dualS_instantiate(storage, e1, 10, DUAL_LAMBDA(callback));
 
-    auto data = (const test*)dualV_get_owned_ro(&view, type_test);
+    auto data = (const TestComp*)dualV_get_owned_ro(&view, type_test);
     EXPECT_EQ(data[0], 123);
     EXPECT_EQ(data[5], 123);
     EXPECT_EQ(data[9], 123);
 }
 
-TEST_F(ECSTest, instantiate_group)
+TEST_CASE_METHOD(ECSTest, "instantiate_group")
 {
     dual_entity_t e2;
     {
@@ -117,13 +144,13 @@ TEST_F(ECSTest, instantiate_group)
         dualS_instantiate_entities(storage, group, 2, 10, DUAL_LAMBDA(callback));
         auto ents = dualV_get_entities(&view[0]);
         auto refs = (const ref*)dualV_get_owned_ro(&view[1], type_ref);
-        EXPECT_TRUE(std::equal(ents, ents + 10, refs));
+        REQUIRE(std::equal(ents, ents + 10, refs));
     }
 }
 
-TEST_F(ECSTest, destroy_entity)
+TEST_CASE_METHOD(ECSTest, "destroy_entity")
 {
-    EXPECT_TRUE(dualS_exist(storage, e1));
+    REQUIRE(dualS_exist(storage, e1));
     dual_chunk_view_t view;
     dualS_access(storage, e1, &view);
     dualS_destroy(storage, &view);
@@ -135,12 +162,12 @@ TEST_F(ECSTest, destroy_entity)
         auto callback = [&](dual_chunk_view_t* inView) { view = *inView; };
         dualS_allocate_type(storage, &entityType, 1, DUAL_LAMBDA(callback));
         auto e2 = dualV_get_entities(&view)[0];
-        EXPECT_TRUE(dualS_exist(storage, e2));
+        REQUIRE(dualS_exist(storage, e2));
         EXPECT_FALSE(dualS_exist(storage, e1));
     }
 }
 
-TEST_F(ECSTest, add_component)
+TEST_CASE_METHOD(ECSTest, "add_component")
 {
     dual_chunk_view_t view;
     dualS_access(storage, e1, &view);
@@ -153,7 +180,7 @@ TEST_F(ECSTest, add_component)
     EXPECT_NE(dualV_get_owned_ro(&view, type_test2), nullptr);
 }
 
-TEST_F(ECSTest, remove_component)
+TEST_CASE_METHOD(ECSTest, "remove_component")
 {
     dual_chunk_view_t view;
     dualS_access(storage, e1, &view);
@@ -166,7 +193,7 @@ TEST_F(ECSTest, remove_component)
     EXPECT_EQ(dualV_get_owned_ro(&view, type_test), nullptr);
 }
 
-TEST_F(ECSTest, pin)
+TEST_CASE_METHOD(ECSTest, "pin")
 {
     dual_entity_t e2;
     dual_chunk_view_t view;
@@ -177,7 +204,7 @@ TEST_F(ECSTest, pin)
         entityType.meta = { nullptr, 0 };
         auto callback = [&](dual_chunk_view_t* inView) {
             view = *inView;
-            *(test*)dualV_get_owned_rw(&view, type_test) = 123;
+            *(TestComp*)dualV_get_owned_rw(&view, type_test) = 123;
         };
         dualS_allocate_type(storage, &entityType, 1, DUAL_LAMBDA(callback));
 
@@ -187,10 +214,10 @@ TEST_F(ECSTest, pin)
     dualS_destroy(storage, &view);
     {
         // entity with pinned component will only be marked as dead and keep existing
-        EXPECT_TRUE(dualS_exist(storage, e2));
+        REQUIRE(dualS_exist(storage, e2));
         dual_chunk_view_t view2;
         dualS_access(storage, e2, &view2);
-        EXPECT_EQ(*(test*)dualV_get_owned_ro(&view2, type_test), 123);
+        EXPECT_EQ(*(TestComp*)dualV_get_owned_ro(&view2, type_test), 123);
         //only explicit query can access dead entity
         {
             auto query = dualQ_from_literal(storage, "[in]pinned, [has]dead");
@@ -219,7 +246,7 @@ TEST_F(ECSTest, pin)
     }
 }
 
-TEST_F(ECSTest, manage)
+TEST_CASE_METHOD(ECSTest, "manage")
 {
     std::weak_ptr<int> observer;
     dual_entity_t e2;
@@ -247,7 +274,7 @@ TEST_F(ECSTest, manage)
     }
 }
 
-TEST_F(ECSTest, ref)
+TEST_CASE_METHOD(ECSTest, "ref")
 {
     dual_entity_t e2, e3, e4;
     {
@@ -282,7 +309,7 @@ TEST_F(ECSTest, ref)
     }
 }
 
-TEST_F(ECSTest, batch)
+TEST_CASE_METHOD(ECSTest, "batch")
 {
     dual_chunk_view_t view[2];
     {
@@ -317,7 +344,7 @@ TEST_F(ECSTest, batch)
     dualS_batch(storage, es.data(), 20, DUAL_LAMBDA(callback2));
 }
 
-TEST_F(ECSTest, filter)
+TEST_CASE_METHOD(ECSTest, "filter")
 {
     dual_filter_t filter;
     zero(filter);
@@ -331,7 +358,7 @@ TEST_F(ECSTest, filter)
     EXPECT_EQ(*dualV_get_entities(&view), e1);
 }
 
-TEST_F(ECSTest, query)
+TEST_CASE_METHOD(ECSTest, "query")
 {
     auto query = dualQ_from_literal(storage, "[in]test");
 
@@ -343,9 +370,9 @@ TEST_F(ECSTest, query)
     EXPECT_EQ(*dualV_get_entities(&view), e1);
 }
 
-TEST_F(ECSTest, query_overload)
+TEST_CASE_METHOD(ECSTest, "query_overload")
 {
-    dual_entity_t e2, e3;
+    [[maybe_unused]] dual_entity_t e2, e3;
     {
         dual_chunk_view_t view;
         dual_entity_type_t entityType;
@@ -355,7 +382,7 @@ TEST_F(ECSTest, query_overload)
         entityType.meta = { nullptr, 0 };
         auto callback = [&](dual_chunk_view_t* inView) {
             view = *inView;
-            *(test*)dualV_get_owned_rw(&view, type_test) = 123;
+            *(TestComp*)dualV_get_owned_rw(&view, type_test) = 123;
         };
         dualS_allocate_type(storage, &entityType, 1, DUAL_LAMBDA(callback));
 
@@ -370,7 +397,7 @@ TEST_F(ECSTest, query_overload)
         entityType.meta = { nullptr, 0 };
         auto callback = [&](dual_chunk_view_t* inView) {
             view = *inView;
-            *(test*)dualV_get_owned_rw(&view, type_test) = 123;
+            *(TestComp*)dualV_get_owned_rw(&view, type_test) = 123;
         };
         dualS_allocate_type(storage, &entityType, 1, DUAL_LAMBDA(callback));
 
@@ -379,7 +406,7 @@ TEST_F(ECSTest, query_overload)
     
     auto query1 = dualQ_from_literal(storage, "[inout]test'");
     auto query2 = dualQ_from_literal(storage, "[inout]test',[in]test2");
-    auto query3 = dualQ_from_literal(storage, "[inout]test',[in]test3");
+    SKR_UNUSED auto query3 = dualQ_from_literal(storage, "[inout]test',[in]test3");
 
     {
         dual_chunk_view_t view;
@@ -407,14 +434,14 @@ void register_test_component()
     {
         dual_type_description_t desc = make_zeroed<dual_type_description_t>();
         desc.name = u8"test";
-        desc.size = sizeof(test);
+        desc.size = sizeof(TestComp);
         desc.entityFieldsCount = 0;
         desc.entityFields = 0;
         desc.guid = u8"{3A44728E-66C2-40F9-A3C1-0920A727A94A}"_guid;
         desc.callback = {};
         desc.flags = 0;
         desc.elementSize = 0;
-        desc.alignment = alignof(test);
+        desc.alignment = alignof(TestComp);
         type_test = dualT_register_type(&desc);
         desc.elementSize = desc.size;
         desc.size = desc.size * 10;
@@ -427,14 +454,14 @@ void register_test_component()
 
         dual_type_description_t desc = make_zeroed<dual_type_description_t>();
         desc.name = u8"test2";
-        desc.size = sizeof(test);
+        desc.size = sizeof(TestComp);
         desc.entityFieldsCount = 0;
         desc.entityFields = 0;
         desc.guid = u8"{36B139D5-0492-4EC7-AF72-B440665F2307}"_guid;
         desc.callback = {};
         desc.flags = 0;
         desc.elementSize = 0;
-        desc.alignment = alignof(test);
+        desc.alignment = alignof(TestComp);
         type_test2 = dualT_register_type(&desc);
         desc.guid = u8"{FD70F4BD-52FB-4911-8930-41A80C482DBF}"_guid;
         desc.elementSize = desc.size;
@@ -447,18 +474,19 @@ void register_test_component()
 
         dual_type_description_t desc = make_zeroed<dual_type_description_t>();
         desc.name = u8"test3";
-        desc.size = sizeof(test);
+        desc.size = sizeof(TestComp);
         desc.entityFieldsCount = 0;
         desc.entityFields = 0;
         desc.guid = u8"{3E5A2C5F-7FBE-486C-BCCE-8E6D8933B2C5}"_guid;
         desc.callback = {};
         desc.flags = 0;
         desc.elementSize = 0;
-        desc.alignment = alignof(test);
+        desc.alignment = alignof(TestComp);
         type_test3 = dualT_register_type(&desc);
     }
 }
-auto register_ref_component()
+
+void register_ref_component()
 {
     using namespace guid_parse::literals;
     dual_type_description_t desc = make_zeroed<dual_type_description_t>();
@@ -479,7 +507,8 @@ auto register_ref_component()
     desc.name = u8"ref_arr";
     type_ref_arr = dualT_register_type(&desc);
 }
-auto register_managed_component()
+
+void register_managed_component()
 {
     using namespace guid_parse::literals;
     dual_type_description_t desc = make_zeroed<dual_type_description_t>();
@@ -510,7 +539,8 @@ auto register_managed_component()
     desc.name = u8"managed_arr";
     type_managed_arr = dualT_register_type(&desc);
 }
-auto register_pinned_component()
+
+void register_pinned_component()
 {
     using namespace guid_parse::literals;
     dual_type_description_t desc = make_zeroed<dual_type_description_t>();
@@ -529,22 +559,4 @@ auto register_pinned_component()
     desc.size = desc.size * 10;
     desc.name = u8"pinned_arr";
     type_pinned_arr = dualT_register_type(&desc);
-}
-
-int main(int argc, char** argv)
-{
-    skr_initialize_crash_handler();
-    skr_log_initialize_async_worker();
-
-    ::testing::InitGoogleTest(&argc, argv);
-    register_test_component();
-    register_ref_component();
-    register_managed_component();
-    register_pinned_component();
-    auto result = RUN_ALL_TESTS();
-    dual_shutdown();
-
-    skr_log_finalize_async_worker();
-    skr_finalize_crash_handler();
-    return result;
 }

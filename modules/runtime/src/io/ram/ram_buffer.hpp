@@ -26,12 +26,17 @@ public:
         return +[](SInterface* ptr) 
         { 
             auto* p = static_cast<RAMIOBuffer*>(ptr);
+            SKR_ASSERT(p->pool && "Invalid pool detected!");
             p->pool->deallocate(p); 
         };
     }
     friend struct SmartPool<RAMIOBuffer, IRAMIOBuffer>;
 protected:
-    RAMIOBuffer(ISmartPoolPtr<IRAMIOBuffer> pool) : pool(pool) {}
+    RAMIOBuffer(ISmartPoolPtr<IRAMIOBuffer> pool) 
+        : pool(pool)
+    {
+        SKR_ASSERT(pool && "Invalid pool detected!");
+    }
     ISmartPoolPtr<IRAMIOBuffer> pool = nullptr;
 };
 
