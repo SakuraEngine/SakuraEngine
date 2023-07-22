@@ -1,7 +1,7 @@
 #include "../pch.hpp"
 #include "SkrRT/async/async_service.h"
 #include "SkrRT/async/wait_timeout.hpp"
-#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/log.hpp"
 
 #include "tracy/Tracy.hpp"
 
@@ -63,6 +63,7 @@ void ServiceThread::set_status(Status to_set) SKR_NOEXCEPT
         }
     }
     skr_atomic32_store_release(&status, to_set);
+    SKR_LOG_FMT_BACKTRACE(u8"service: status set to: {}.", (int32_t)to_set);
 }
 
 void ServiceThread::request_stop() SKR_NOEXCEPT
@@ -90,6 +91,8 @@ void ServiceThread::wait_stop(uint32_t fatal_timeout) SKR_NOEXCEPT
     }
 
     wait_timeout([&] { return get_status() == kStatusStopped; }, fatal_timeout);
+
+    SKR_LOG_BACKTRACE(u8"service: wait_stop done.");
 }
 
 void ServiceThread::run() SKR_NOEXCEPT
@@ -195,7 +198,6 @@ RUNNING:
         }
     }
     SKR_UNREACHABLE_CODE();
-    return ASYNC_RESULT_OK;
 }
 
 STOP:
@@ -213,6 +215,7 @@ STOP:
     }
     else if (S == kStatusStopping)
     {
+        SKR_LOG_BACKTRACE(u8"service: stopped.");
         _service->set_status(kStatusStopped);
     }
     else if (S == kStatusExiting)

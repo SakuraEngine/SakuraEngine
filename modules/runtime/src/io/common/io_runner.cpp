@@ -325,11 +325,18 @@ void RunnerBase::drain() SKR_NOEXCEPT
 void RunnerBase::destroy() SKR_NOEXCEPT
 {
     drain();
+
     if (get_status() == skr::ServiceThread::Status::kStatusRunning)
     {
+        SKR_LOG_BACKTRACE(u8"runner: request to stop.");
         setServiceStatus(SKR_ASYNC_SERVICE_STATUS_QUITING);
         stop();
     }
+    else
+    {
+        SKR_LOG_BACKTRACE(u8"runner: stop already requested.");
+    }
+
     wait_stop();
     exit();
 }
