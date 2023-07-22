@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrRT/async/named_thread.hpp"
 #include "SkrRT/async/wait_timeout.hpp"
 #include "SkrRT/misc/log.h"
@@ -17,11 +18,7 @@ NamedThread::NamedThread() SKR_NOEXCEPT
 
 NamedThread::~NamedThread() SKR_NOEXCEPT
 {
-    if (skr_atomic32_load_acquire(&started)) 
-    {
-        skr_destroy_thread(tHandle);
-        skr_atomic32_store_release(&started, false);
-    }
+    finalize();
 }
 
 void NamedThread::threadFunc(void* args)
@@ -42,7 +39,7 @@ AsyncResult NamedThread::start(NamedThreadFunction* pFunc) SKR_NOEXCEPT
 {
     if (skr_atomic32_load_acquire(&started)) 
     {
-        SKR_LOG_ERROR("thread is already started!");
+        SKR_LOG_ERROR(u8"thread is already started!");
         return ASYNC_RESULT_ERROR_THREAD_ALREADY_STARTES;
     }
     
@@ -102,6 +99,11 @@ AsyncResult NamedThread::initialize(const NamedThreadDesc& pdesc) SKR_NOEXCEPT
 
 AsyncResult NamedThread::finalize() SKR_NOEXCEPT
 {
+    if (skr_atomic32_load_acquire(&started)) 
+    {
+        skr_destroy_thread(tHandle);
+        skr_atomic32_store_release(&started, false);
+    }
     return ASYNC_RESULT_OK;
 }
 

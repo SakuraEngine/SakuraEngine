@@ -2,7 +2,7 @@
 #include "SkrRenderer/module.configure.h"
 #include "SkrScene/scene.h"
 #ifndef __meta__
-    #include "SkrRenderer/render_viewport.generated.h"
+    #include "SkrRenderer/render_viewport.generated.h" // IWYU pragma: export
 #endif
 
 sreflect_struct("guid": "96fd4826-cb03-4286-8d14-8a86c9f96ee4", "component" : true)
@@ -29,6 +29,7 @@ struct SKR_RENDERER_API SViewportManager {
 
     static SViewportManager* Create(dual_storage_t* storage);
     static void Free(SViewportManager* viewport_manager);
+    virtual ~SViewportManager() SKR_NOEXCEPT;
 #endif
 };
 

@@ -1,7 +1,8 @@
 #pragma once
-#include <EASTL/vector.h>
 #include "SkrRenderGraph/frontend/base_types.hpp"
 #include "SkrRenderGraph/frontend/blackboard.hpp"
+#include "SkrRT/containers/vector.hpp"
+#include <EASTL/functional.h>
 
 #ifndef RG_MAX_FRAME_IN_FLIGHT
 #define RG_MAX_FRAME_IN_FLIGHT 3
@@ -22,6 +23,20 @@ public:
     virtual void on_pass_end(class RenderGraph&, class RenderGraphFrameExecutor&, class PassNode& pass) {}
     virtual void before_commit(class RenderGraph&, class RenderGraphFrameExecutor&) {}
     virtual void after_commit(class RenderGraph&, class RenderGraphFrameExecutor&) {}
+};
+
+struct SKR_RENDER_GRAPH_API IRenderGraphPhase
+{
+    virtual ~IRenderGraphPhase() SKR_NOEXCEPT;
+    virtual void on_compile(RenderGraph* graph) SKR_NOEXCEPT;
+    virtual void on_execute(RenderGraph* graph, RenderGraphProfiler* profiler) SKR_NOEXCEPT;
+    virtual uint32_t on_collect_texture_garbage(RenderGraph* graph, uint64_t critical_frame, uint32_t with_tags, uint32_t without_flags) SKR_NOEXCEPT;
+    virtual uint32_t on_collect_buffer_garbage(RenderGraph* graph, uint64_t critical_frame, uint32_t with_tags, uint32_t without_flags) SKR_NOEXCEPT;
+    virtual void on_initialize(RenderGraph* graph) SKR_NOEXCEPT;
+    virtual void on_finalize(RenderGraph* graph) SKR_NOEXCEPT;
+
+    skr::vector<ResourceNode*>& get_resources(RenderGraph* graph) SKR_NOEXCEPT;
+    skr::vector<PassNode*>& get_passes(RenderGraph* graph) SKR_NOEXCEPT;
 };
 
 class SKR_RENDER_GRAPH_API RenderGraph
@@ -207,7 +222,6 @@ public:
     TextureHandle get_texture(const char8_t* name) SKR_NOEXCEPT;
     const ECGPUResourceState get_lastest_state(const TextureNode* texture, const PassNode* pending_pass) const SKR_NOEXCEPT;
 
-    bool compile() SKR_NOEXCEPT;    
     BufferNode* resolve(BufferHandle hdl) SKR_NOEXCEPT; 
     TextureNode* resolve(TextureHandle hdl) SKR_NOEXCEPT;
     PassNode* resolve(PassHandle hdl) SKR_NOEXCEPT;
@@ -218,9 +232,10 @@ public:
     {
         return *blackboard;
     }
-    virtual uint64_t execute(RenderGraphProfiler* profiler = nullptr) SKR_NOEXCEPT;
     virtual CGPUDeviceId get_backend_device() SKR_NOEXCEPT { return nullptr; }
     virtual CGPUQueueId get_gfx_queue() SKR_NOEXCEPT { return nullptr; }
+    inline uint64_t get_frame_index() const SKR_NOEXCEPT { return frame_index; }
+    inline struct NodeAndEdgeFactory* get_node_factory() SKR_NOEXCEPT { return node_factory; }
     virtual uint32_t collect_garbage(uint64_t critical_frame,
         uint32_t tex_with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t tex_without_flags = 0,
         uint32_t buf_with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t buf_without_flags = 0) SKR_NOEXCEPT
@@ -228,22 +243,28 @@ public:
         return collect_texture_garbage(critical_frame, tex_with_tags,tex_without_flags)
             + collect_buffer_garbage(critical_frame, buf_with_tags, buf_without_flags);
     }
-    virtual uint32_t collect_texture_garbage(uint64_t critical_frame,
-        uint32_t with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t without_flags = 0) SKR_NOEXCEPT { return 0; }
-    virtual uint32_t collect_buffer_garbage(uint64_t critical_frame,
-        uint32_t with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t without_flags = 0) SKR_NOEXCEPT { return 0; }
-
-
-    inline uint64_t get_frame_index() const SKR_NOEXCEPT { return frame_index; }
 
     inline bool enable_memory_aliasing(bool enabled) SKR_NOEXCEPT
     {
         aliasing_enabled = enabled;
         return aliasing_enabled;
     }
-
     RenderGraph(const RenderGraphBuilder& builder) SKR_NOEXCEPT;
     virtual ~RenderGraph() SKR_NOEXCEPT = default;
+
+// interfaces
+    friend struct IRenderGraphPhase;
+    virtual bool compile() SKR_NOEXCEPT;    
+    virtual uint64_t execute(RenderGraphProfiler* profiler = nullptr) SKR_NOEXCEPT;
+    virtual uint32_t collect_texture_garbage(uint64_t critical_frame,
+        uint32_t with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t without_flags = 0) SKR_NOEXCEPT { return 0; }
+    virtual uint32_t collect_buffer_garbage(uint64_t critical_frame,
+        uint32_t with_tags = kRenderGraphDefaultResourceTag | kRenderGraphDynamicResourceTag, uint32_t without_flags = 0) SKR_NOEXCEPT { return 0; }
+
+protected:
+    virtual void initialize() SKR_NOEXCEPT;
+    virtual void finalize() SKR_NOEXCEPT;
+
 protected:
     uint32_t foreach_textures(eastl::function<void(TextureNode*)> texture) SKR_NOEXCEPT;
     uint32_t foreach_writer_passes(TextureHandle texture,
@@ -255,20 +276,15 @@ protected:
     uint32_t foreach_reader_passes(BufferHandle buffer,
         eastl::function<void(PassNode* reader, BufferNode* buf, RenderGraphEdge* edge)>) const SKR_NOEXCEPT;
 
-    virtual void initialize() SKR_NOEXCEPT;
-    virtual void finalize() SKR_NOEXCEPT;
-
     bool aliasing_enabled;
     uint64_t frame_index = 0;
 
-    struct NodeAndEdgeFactory* object_factory = nullptr;
+    struct NodeAndEdgeFactory* node_factory = nullptr;
     Blackboard* blackboard = nullptr;
     DependencyGraph* graph = nullptr;
 
-    eastl::vector<PassNode*> passes;
-    eastl::vector<ResourceNode*> resources;
-    eastl::vector<PassNode*> culled_passes;
-    eastl::vector<ResourceNode*> culled_resources;
+    skr::vector<PassNode*> passes;
+    skr::vector<ResourceNode*> resources;
 };
 using RenderGraphSetupFunction = RenderGraph::RenderGraphSetupFunction;
 using RenderGraphBuilder = RenderGraph::RenderGraphBuilder;

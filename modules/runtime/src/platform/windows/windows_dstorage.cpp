@@ -6,7 +6,6 @@
 #include "SkrRT/containers/concurrent_queue.h"
 
 #include "platform/windows/windows_dstorage.hpp"
-#include "EASTL/vector_map.h"
 #include "EASTL/algorithm.h"
 
 struct StatusEventArray;
@@ -14,7 +13,7 @@ SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::_this = nullptr;
 
 struct SkrDStorageEvent
 {
-    SkrDStorageEvent(StatusEventArray* array, uint32_t slot) 
+    SkrDStorageEvent(StatusEventArray* array, uint32_t slot) SKR_NOEXCEPT
         : pArray(array), mSlot(slot) 
     {
 
@@ -34,21 +33,20 @@ protected:
 
 struct StatusEventArray
 {
-    StatusEventArray(IDStorageStatusArray* pArray)
+    StatusEventArray(IDStorageStatusArray* pArray) SKR_NOEXCEPT
         : pArray(pArray)
     {
         for (uint32_t i = 0; i < kMaxEvents; i++)
             freeSlots.enqueue(i);
-        pArray->AddRef();
     }
 
-    ~StatusEventArray()
+    ~StatusEventArray() SKR_NOEXCEPT
     {
         if (pArray)
             pArray->Release();
     }
 
-    SkrDStorageEvent* Allocate()
+    SkrDStorageEvent* Allocate() SKR_NOEXCEPT
     {
         uint32_t slot = 0;
         if (freeSlots.try_dequeue(slot))
@@ -58,7 +56,7 @@ struct StatusEventArray
         return nullptr;
     }
 
-    void Deallocate(SkrDStorageEvent* e)
+    void Deallocate(SkrDStorageEvent* e) SKR_NOEXCEPT
     {
         freeSlots.enqueue(e->mSlot);
         SkrDelete(e);
@@ -85,7 +83,7 @@ void SkrDStorageEvent::enqueue_status(IDStorageQueue* Q) SKR_NOEXCEPT
 
 struct DStorageEventPool
 {
-    DStorageEventPool(IDStorageFactory* pFactory)
+    DStorageEventPool(IDStorageFactory* pFactory) SKR_NOEXCEPT
         : pFactory(pFactory)
     {
         pFactory->AddRef();
@@ -93,14 +91,14 @@ struct DStorageEventPool
         addArray();
     }
     
-    ~DStorageEventPool()
+    ~DStorageEventPool() SKR_NOEXCEPT
     {
         removeAllArrays();
         pFactory->Release();
         skr_destroy_rw_mutex(&arrMutex);
     }
 
-    SkrDStorageEvent* Allocate()
+    SkrDStorageEvent* Allocate() SKR_NOEXCEPT
     {
         if (auto e = tryAllocate())
             return e;
@@ -108,7 +106,7 @@ struct DStorageEventPool
         return tryAllocate();
     }
 
-    void Deallocate(SkrDStorageEvent* e)
+    void Deallocate(SkrDStorageEvent* e) SKR_NOEXCEPT
     {
         if (!e) return;
         SKR_ASSERT(e->pArray && "Invalid event");
@@ -119,7 +117,7 @@ struct DStorageEventPool
     }
 
 private:
-    SkrDStorageEvent* tryAllocate()
+    SkrDStorageEvent* tryAllocate() SKR_NOEXCEPT
     {
         skr_rw_mutex_acquire_r(&arrMutex);
         SKR_DEFER({ skr_rw_mutex_release_r(&arrMutex); });
@@ -131,7 +129,7 @@ private:
         return nullptr;
     }
 
-    void addArray()
+    void addArray() SKR_NOEXCEPT
     {
         IDStorageStatusArray* pArray = nullptr;
         pFactory->CreateStatusArray(StatusEventArray::kMaxEvents, "DirectStorageEvents", IID_PPV_ARGS(&pArray));
@@ -142,7 +140,7 @@ private:
         }
     }
 
-    void removeArray(StatusEventArray* pArray)
+    void removeArray(StatusEventArray* pArray) SKR_NOEXCEPT
     {
         skr_rw_mutex_acquire_w(&arrMutex);
         SKR_DEFER({ skr_rw_mutex_release_w(&arrMutex); });
@@ -154,7 +152,7 @@ private:
         }
     }
 
-    void removeAllArrays()
+    void removeAllArrays() SKR_NOEXCEPT
     {
         skr_rw_mutex_acquire_w(&arrMutex);
         SKR_DEFER({ skr_rw_mutex_release_w(&arrMutex); });
@@ -191,13 +189,13 @@ SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Initialize(const SkrDSto
             _this->dstorage_library.load(u8"dstorage.dll");
             if (!_this->dstorage_core.isLoaded() || !_this->dstorage_library.isLoaded())
             {
-                if (!_this->dstorage_core.isLoaded()) SKR_LOG_TRACE("dstoragecore.dll not found, direct storage is disabled");
-                if (!_this->dstorage_library.isLoaded()) SKR_LOG_TRACE("dstorage.dll not found, direct storage is disabled");
+                if (!_this->dstorage_core.isLoaded()) SKR_LOG_TRACE(u8"dstoragecore.dll not found, direct storage is disabled");
+                if (!_this->dstorage_library.isLoaded()) SKR_LOG_TRACE(u8"dstorage.dll not found, direct storage is disabled");
                 _this->initialize_failed = true;
             }
             else
             {
-                SKR_LOG_TRACE("dstorage.dll loaded");
+                SKR_LOG_TRACE(u8"dstorage.dll loaded");
 
                 auto pfn_set_config = SKR_SHARED_LIB_LOAD_API(_this->dstorage_library, DStorageSetConfiguration);
                 if (!pfn_set_config) return nullptr;
@@ -215,7 +213,7 @@ SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Initialize(const SkrDSto
                 }
                 if (!SUCCEEDED(pfn_set_config1(&config1)))
                 {
-                    SKR_LOG_ERROR("Failed to set DStorage config!");
+                    SKR_LOG_ERROR(u8"Failed to set DStorage config!");
                     return nullptr;
                 }
 
@@ -223,7 +221,7 @@ SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Initialize(const SkrDSto
                 if (!pfn_get_factory) return nullptr;
                 if (!SUCCEEDED(pfn_get_factory(IID_PPV_ARGS(&_this->pFactory))))
                 {
-                    SKR_LOG_ERROR("Failed to get DStorage factory!");
+                    SKR_LOG_ERROR(u8"Failed to get DStorage factory!");
                     return nullptr;
                 }
 
@@ -236,12 +234,18 @@ SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Initialize(const SkrDSto
 
 SkrWindowsDStorageInstance::~SkrWindowsDStorageInstance()
 {
-    if (_this->pEventPool) SkrDelete(_this->pEventPool);
-    if (pFactory) pFactory->Release();
-    if (dstorage_core.isLoaded()) dstorage_core.unload();
-    if (dstorage_library.isLoaded()) dstorage_library.unload();
+    if (_this->pEventPool) 
+        SkrDelete(_this->pEventPool);
+    if (pFactory) 
+        pFactory->Release();
+    if (pDxDevice) 
+        pDxDevice->Release();
+    if (dstorage_library.isLoaded()) 
+        dstorage_library.unload();
+    if (dstorage_core.isLoaded()) 
+        dstorage_core.unload();
     
-    SKR_LOG_TRACE("Direct Storage unloaded");
+    SKR_LOG_TRACE(u8"Direct Storage unloaded");
 }
 
 SkrDStorageInstanceId skr_create_dstorage_instance(SkrDStorageConfig* config)
@@ -269,7 +273,7 @@ ESkrDStorageAvailability skr_query_dstorage_availability()
 
 void skr_free_dstorage_instance(SkrDStorageInstanceId inst)
 {
-    SkrDelete(inst);
+    SkrDelete((SkrWindowsDStorageInstance*)inst);
 }
 
 SkrDStorageQueueId skr_create_dstorage_queue(const SkrDStorageQueueDescriptor* desc)
@@ -293,7 +297,7 @@ SkrDStorageQueueId skr_create_dstorage_queue(const SkrDStorageQueueDescriptor* d
     if (!pFactory) return nullptr;
     if (!SUCCEEDED(pFactory->CreateQueue(&queueDesc, IID_PPV_ARGS(&Q->pQueue))))
     {
-        SKR_LOG_ERROR("Failed to create DStorage queue!");
+        SKR_LOG_ERROR(u8"Failed to create DStorage queue!");
         SkrDelete(Q);
         return nullptr;
     }
@@ -302,10 +306,12 @@ SkrDStorageQueueId skr_create_dstorage_queue(const SkrDStorageQueueDescriptor* d
 #endif
     Q->max_size = _this->sDirectStorageStagingBufferSize;
     Q->pFactory = pFactory;
-    Q->pDxDevice = queueDesc.Device ? queueDesc.Device : nullptr;
     Q->pFactory->AddRef();
+    Q->pDxDevice = _this->pDxDevice = queueDesc.Device ? queueDesc.Device : nullptr;
     if (Q->pDxDevice)
         Q->pDxDevice->AddRef();
+    if (_this->pDxDevice)
+        _this->pDxDevice->AddRef();
     Q->device = desc->gpu_device;
     Q->pInstance = _this;
     return Q;
@@ -348,7 +354,7 @@ void skr_dstorage_query_file_info(SkrDStorageInstanceId inst, SkrDStorageFileHan
     IDStorageFile* pFile = (IDStorageFile*)file;
     if (!SUCCEEDED(pFile->GetFileInformation(&fileInfo)))
     {
-        SKR_LOG_ERROR("Failed to get DStorage file info!");
+        SKR_LOG_ERROR(u8"Failed to get DStorage file info!");
         return;
     }
     info->file_size = fileInfo.nFileSizeLow;

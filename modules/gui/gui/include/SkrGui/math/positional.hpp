@@ -61,29 +61,29 @@ public:
     // operator
     inline PositionalUnit operator-()
     {
-        if (is_null()) { SKR_GUI_LOG_ERROR("can't negate a null value"); }
+        if (is_null()) { SKR_GUI_LOG_ERROR(u8"can't negate a null value"); }
         return PositionalUnit{ -pixel, -percent };
     }
     inline PositionalUnit operator+(const PositionalUnit& rhs) const
     {
-        if (is_null() || rhs.is_null()) { SKR_GUI_LOG_ERROR("can't add a null value"); }
+        if (is_null() || rhs.is_null()) { SKR_GUI_LOG_ERROR(u8"can't add a null value"); }
         return PositionalUnit{ pixel + rhs.pixel, percent + rhs.percent };
     }
     inline PositionalUnit operator-(const PositionalUnit& rhs) const
     {
-        if (is_null() || rhs.is_null()) { SKR_GUI_LOG_ERROR("can't subtract a null value"); }
+        if (is_null() || rhs.is_null()) { SKR_GUI_LOG_ERROR(u8"can't subtract a null value"); }
         return PositionalUnit{ pixel - rhs.pixel, percent - rhs.percent };
     }
     inline PositionalUnit& operator+=(const PositionalUnit& rhs)
     {
-        if (is_null() || rhs.is_null()) { SKR_GUI_LOG_ERROR("can't add a null value"); }
+        if (is_null() || rhs.is_null()) { SKR_GUI_LOG_ERROR(u8"can't add a null value"); }
         pixel += rhs.pixel;
         percent += rhs.percent;
         return *this;
     }
     inline PositionalUnit& operator-=(const PositionalUnit& rhs)
     {
-        if (is_null() || rhs.is_null()) { SKR_GUI_LOG_ERROR("can't subtract a null value"); }
+        if (is_null() || rhs.is_null()) { SKR_GUI_LOG_ERROR(u8"can't subtract a null value"); }
         pixel -= rhs.pixel;
         percent -= rhs.percent;
         return *this;
@@ -92,12 +92,12 @@ public:
     // resolve
     inline float resolve(float parent_value) const SKR_NOEXCEPT
     {
-        if (is_null()) { SKR_GUI_LOG_ERROR("can't resolve from a null value"); }
+        if (is_null()) { SKR_GUI_LOG_ERROR(u8"can't resolve from a null value"); }
         return pixel + percent * parent_value;
     }
     inline float inflate(float child_value) const SKR_NOEXCEPT
     {
-        if (is_null()) { SKR_GUI_LOG_ERROR("can't inflate from a null value"); }
+        if (is_null()) { SKR_GUI_LOG_ERROR(u8"can't inflate from a null value"); }
         float child_pct   = 1 - percent;
         float inner_value = child_value + pixel;
         return child_pct <= 0 ? std::numeric_limits<float>::infinity() : inner_value / child_pct;
@@ -571,7 +571,7 @@ struct Positional {
         {
             if (has_width_constraints())
             {
-                SKR_GUI_LOG_WARN("Both left and right are set, width will be ignored");
+                SKR_GUI_LOG_WARN(u8"Both left and right are set, width will be ignored");
             }
             const float left_padding_min  = left.resolve(parent_constraints.min_width);
             const float left_padding_max  = left.resolve(parent_constraints.max_width);
@@ -597,7 +597,7 @@ struct Positional {
         {
             if (has_height_constraints())
             {
-                SKR_GUI_LOG_WARN("Both top and bottom are set, height will be ignored");
+                SKR_GUI_LOG_WARN(u8"Both top and bottom are set, height will be ignored");
             }
             const float top_padding_min    = top.resolve(parent_constraints.min_height);
             const float top_padding_max    = top.resolve(parent_constraints.max_height);
@@ -645,7 +645,7 @@ struct Positional {
             }
             else
             {
-                SKR_GUI_LOG_WARN("Both left and right are not set, default to left 0");
+                SKR_GUI_LOG_WARN(u8"Both left and right are not set, default to left 0");
                 const float anchor_x = 0;
                 const float pivot_x  = pivot.x * child_size.width;
                 offset_x             = anchor_x - pivot_x;
@@ -673,7 +673,7 @@ struct Positional {
             }
             else
             {
-                SKR_GUI_LOG_WARN("Both top and bottom are not set, default to top 0");
+                SKR_GUI_LOG_WARN(u8"Both top and bottom are not set, default to top 0");
                 const float anchor_y = 0;
                 const float pivot_y  = pivot.y * child_size.height;
                 offset_y             = anchor_y - pivot_y;
@@ -684,12 +684,12 @@ struct Positional {
     }
     inline float resolve_padding_width(float parent_width) const SKR_NOEXCEPT
     {
-        if (!is_width_padding()) { SKR_GUI_LOG_ERROR("cannot resolve padding width without left and right"); }
+        if (!is_width_padding()) { SKR_GUI_LOG_ERROR(u8"cannot resolve padding width without left and right"); }
         return left.resolve(parent_width) + right.resolve(parent_width);
     }
     inline float resolve_padding_height(float parent_height) const SKR_NOEXCEPT
     {
-        if (!is_height_padding()) { SKR_GUI_LOG_ERROR("cannot resolve padding height without top and bottom"); }
+        if (!is_height_padding()) { SKR_GUI_LOG_ERROR(u8"cannot resolve padding height without top and bottom"); }
         return top.resolve(parent_height) + bottom.resolve(parent_height);
     }
 };

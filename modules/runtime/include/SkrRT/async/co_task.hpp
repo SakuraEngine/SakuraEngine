@@ -1,9 +1,6 @@
 #pragma once
-#include "SkrRT/platform/configure.h"
+#include "SkrRT/platform/configure.h" // IWYU pragma: keep
 #if __cpp_impl_coroutine
-#include "SkrRT/misc/defer.hpp"
-#include "SkrRT/platform/debug.h"
-#include "EASTL/functional.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/containers/vector.hpp"

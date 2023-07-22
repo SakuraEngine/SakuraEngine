@@ -53,7 +53,7 @@ struct RUNTIME_API Logger
                 sucess = tryPushToQueue(ev, skr::move(s));
             }
         }
-        if (!sucess) // sink immediate
+        if (!sucess && !(ev.get_level() == LogLevel::kBackTrace)) // sink immediate
         {
             skr::string s = skr::format(format, skr::forward<Args>(args)...);
             sinkDefaultImmediate(ev, s.view());
@@ -73,7 +73,7 @@ struct RUNTIME_API Logger
         {
             sucess = tryPushToQueue(ev, skr::string(buffer));
         }
-        if (!sucess) // sink immediate
+        if (!sucess && !(ev.get_level() == LogLevel::kBackTrace)) // sink immediate
         {
             sinkDefaultImmediate(ev, skr::string_view(buffer));
         }

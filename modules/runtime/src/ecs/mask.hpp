@@ -1,5 +1,5 @@
 #pragma once
-#include "concurrentbitset.h"
+#include "concurrentbitset.h" // IWYU pragma: export
 
 namespace dual
 {

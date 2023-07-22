@@ -42,7 +42,7 @@ enum DemoUploadMethod
 {
     DEMO_UPLOAD_METHOD_DIRECT_STORAGE_FILE = 0,
     DEMO_UPLOAD_METHOD_DIRECT_STORAGE_MEMORY = 1,
-    DEMO_UPLOAD_METHOD_UPLOAd = 2,
+    DEMO_UPLOAD_METHOD_UPLOAD = 2,
     DEMO_UPLOAD_METHOD_COUNT
 };
 
@@ -56,7 +56,7 @@ public:
     static SLive2DViewerModule* Get();
 
     bool bUseCVV = true;
-    DemoUploadMethod upload_method;
+    DemoUploadMethod upload_method = DEMO_UPLOAD_METHOD_UPLOAD;
 
     CGPUSwapChainId swapchain = nullptr;
     CGPUFenceId present_fence = nullptr;
@@ -81,7 +81,7 @@ SLive2DViewerModule* SLive2DViewerModule::Get()
 
 void SLive2DViewerModule::on_load(int argc, char8_t** argv)
 {
-    SKR_LOG_INFO("live2d viewer loaded!");
+    SKR_LOG_INFO(u8"live2d viewer loaded!");
 
     std::error_code ec = {};
     auto resourceRoot = (skr::filesystem::current_path(ec) / "../resources").u8string();
@@ -124,7 +124,7 @@ void SLive2DViewerModule::on_load(int argc, char8_t** argv)
 
 void SLive2DViewerModule::on_unload()
 {
-    SKR_LOG_INFO("live2d viewer unloaded!");
+    SKR_LOG_INFO(u8"live2d viewer unloaded!");
 
     skr_io_ram_service_t::destroy(ram_service);
     skr_free_vfs(resource_vfs);
@@ -221,7 +221,7 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
 
 int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
 {
-    SKR_LOG_INFO("live2d viewer executed!");
+    SKR_LOG_INFO(u8"live2d viewer executed!");
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) 
         return -1;
     auto render_device = skr_get_default_render_device();

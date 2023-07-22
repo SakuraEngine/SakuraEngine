@@ -6,7 +6,7 @@
 #ifdef __cplusplus
     #include "SkrRT/module/module_manager.hpp"
     #include "SkrRenderGraph/frontend/render_graph.hpp"
-    #include "SkrRT/io/io.h"
+    #include "SkrRT/io/ram_io.hpp"
     #include "cgpu/io.h"
 
 struct dual_storage_t;

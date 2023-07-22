@@ -1,10 +1,5 @@
-#include "SkrRT/io/io.h"
-#include "SkrRT/misc/log.h"
+#include "pch.hpp"
 #include "SkrRT/platform/debug.h"
-#include "cgpu/io.h"
-#include "SkrRT/platform/vfs.h"
-#include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_mesh.h"
 #include <SkrRT/platform/filesystem.hpp>
 

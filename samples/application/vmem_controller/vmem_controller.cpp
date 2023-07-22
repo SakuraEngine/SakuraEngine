@@ -54,7 +54,7 @@ IMPLEMENT_DYNAMIC_MODULE(SVMemCCModule, VMemController);
 
 void SVMemCCModule::on_load(int argc, char8_t** argv)
 {
-    SKR_LOG_INFO("vmem controller loaded!");
+    SKR_LOG_INFO(u8"vmem controller loaded!");
     for (auto i = 0; i < argc; i++)
     {
         if (::strcmp((const char*)argv[i], "--vulkan") == 0)
@@ -268,7 +268,7 @@ int SVMemCCModule::main_module_exec(int argc, char8_t** argv)
 
 void SVMemCCModule::on_unload()
 {
-    SKR_LOG_INFO("vmem controller unloaded!");
+    SKR_LOG_INFO(u8"vmem controller unloaded!");
     cgpu_wait_queue_idle(gfx_queue);
     skr::render_graph::RenderGraph::destroy(graph);
     render_graph_imgui_finalize();

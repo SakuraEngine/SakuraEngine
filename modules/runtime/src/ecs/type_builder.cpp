@@ -1,5 +1,4 @@
 #include "SkrRT/ecs/type_builder.hpp"
-#include "set.hpp"
 #include <EASTL/algorithm.h>
 
 namespace dual

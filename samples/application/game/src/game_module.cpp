@@ -294,12 +294,12 @@ void SGameModule::uninstallResourceFactories()
     skr_free_vfs(tex_resource_vfs);
     skr_free_vfs(shader_bytes_vfs);
 
-    SKR_LOG_INFO("game runtime unloaded!");
+    SKR_LOG_INFO(u8"game runtime unloaded!");
 }
 
 void SGameModule::on_load(int argc, char8_t** argv)
 {
-    SKR_LOG_INFO("game runtime loaded!");
+    SKR_LOG_INFO(u8"game runtime loaded!");
 
     if (!job_queue)
     {
@@ -380,7 +380,7 @@ void create_test_scene(SRendererId renderer)
     };
     dualS_allocate_type(renderer->get_dual_storage(), &renderableT, 512, DUAL_LAMBDA(primSetup));
 
-    SKR_LOG_DEBUG("Create Scene 0!");
+    SKR_LOG_DEBUG(u8"Create Scene 0!");
 
     // allocate 1 player entity
     auto playerT_builder = make_zeroed<dual::type_builder_t>();
@@ -392,7 +392,7 @@ void create_test_scene(SRendererId renderer)
     playerT.type = playerT_builder.build();
     dualS_allocate_type(renderer->get_dual_storage(), &playerT, 1, DUAL_LAMBDA(primSetup));
 
-    SKR_LOG_DEBUG("Create Scene 1!");
+    SKR_LOG_DEBUG(u8"Create Scene 1!");
 
     // allocate 1 static(unmovable) gltf mesh
     auto static_renderableT_builderT = make_zeroed<dual::type_builder_t>();
@@ -403,7 +403,7 @@ void create_test_scene(SRendererId renderer)
     static_renderableT.type = static_renderableT_builderT.build();
     dualS_allocate_type(renderer->get_dual_storage(), &static_renderableT, 1, DUAL_LAMBDA(primSetup));
 
-    SKR_LOG_DEBUG("Create Scene 2!");
+    SKR_LOG_DEBUG(u8"Create Scene 2!");
 }
 
 void async_attach_skin_mesh(SRendererId renderer)
@@ -506,7 +506,7 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
 {
     ZoneScopedN("GameExecution");
     // auto moduleManager = skr_get_module_manager();
-    SKR_LOG_INFO("game executed as main module!");
+    SKR_LOG_INFO(u8"game executed as main module!");
 
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
         return -1;
@@ -553,7 +553,7 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
     {
         if(lua_pcall(L, 0, 0, 0) != LUA_OK)
         {
-            SKR_LOG_ERROR("lua_pcall error: {}", lua_tostring(L, -1));
+            SKR_LOG_ERROR(u8"lua_pcall error: {}", lua_tostring(L, -1));
             lua_pop(L, 1);
         }
     }
@@ -561,7 +561,7 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
     lua_getglobal(L, "GameMain");
     if (lua_pcall(L, 0, 0, 0) != LUA_OK)
     {
-        SKR_LOG_ERROR("lua_pcall error: {}", lua_tostring(L, -1));
+        SKR_LOG_ERROR(u8"lua_pcall error: {}", lua_tostring(L, -1));
         lua_pop(L, 1);
     }
     namespace res = skr::resource;
@@ -687,7 +687,7 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
                 //{
                 //    if (luaL_dostring(L, "local module = require \"hotfix\"; module.reload({\"game\"})") != LUA_OK)
                 //    {
-                //        SKR_LOG_ERROR("luaL_dostring error: %s", lua_tostring(L, -1));
+                //        SKR_LOG_ERROR(u8"luaL_dostring error: %s", lua_tostring(L, -1));
                 //        lua_pop(L, 1);
                 //    }
                 //}
@@ -718,7 +718,7 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
             lua_getglobal(L, "GameUpdate");
             if (lua_pcall(L, 0, 0, 0) != LUA_OK)
             {
-                SKR_LOG_ERROR("lua_pcall error: %s", lua_tostring(L, -1));
+                SKR_LOG_ERROR(u8"lua_pcall error: %s", lua_tostring(L, -1));
                 lua_pop(L, 1);
             }
         }
@@ -1000,7 +1000,7 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
 void SGameModule::on_unload()
 {
     g_game_module = nullptr;
-    SKR_LOG_INFO("game unloaded!");
+    SKR_LOG_INFO(u8"game unloaded!");
     if (bUseJob)
     {
         dualJ_unbind_storage(game_world);

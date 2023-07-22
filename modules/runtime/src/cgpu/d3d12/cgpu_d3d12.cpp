@@ -1,6 +1,5 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "d3d12_utils.hpp"
-#include "SkrRT/misc/defer.hpp"
 #include "../common/common_utils.h"
 
 #include <EASTL/string_hash_map.h>
@@ -232,7 +231,7 @@ CGPUDeviceId cgpu_create_device_d3d12(CGPUAdapterId adapter, const CGPUDeviceDes
             "RTV",
             "DSV",
         };
-        cgpu_trace("D3D12 descriptor heap type: %s, increment size: %d, Total allocated: %d(bytes)", types[desc.Type], sz, sz * desc.NumDescriptors);
+        cgpu_trace(u8"D3D12 descriptor heap type: %s, increment size: %d, Total allocated: %d(bytes)", types[desc.Type], sz, sz * desc.NumDescriptors);
 #endif
         D3D12Util_CreateDescriptorHeap(D->pDxDevice, &desc, &D->pCPUDescriptorHeaps[i]);
     }
@@ -619,7 +618,7 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
     HRESULT hres = D3D12SerializeVersionedRootSignature(&sig_desc, &rootSignatureString, &error);
     if (!SUCCEEDED(hres))
     {
-        cgpu_error("Failed to serialize root signature with error (%s)", (char*)error->GetBufferPointer());
+        cgpu_error(u8"Failed to serialize root signature with error (%s)", (char*)error->GetBufferPointer());
     }
     // If running Linked Mode (SLI) create root signature for all nodes
     // #NOTE : In non SLI mode, mNodeCount will be 0 which sets nodeMask to
@@ -635,7 +634,7 @@ CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const 
     if (desc->pool)
     {
         CGPURootSignatureId result = CGPUUtil_AddSignature(desc->pool, &RS->super, desc);
-        cgpu_assert(result && "Root signature pool insertion failed!");
+        cgpu_assert(result && u8"Root signature pool insertion failed!");
         return result;
     }
     // [RS POOL] END INSERTION
@@ -1158,11 +1157,11 @@ CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, cons
             result = D->pPipelineLibrary->StorePipeline(pipelineName, PPL->pDxPipelineState);
             if (!SUCCEEDED(result))
             {
-                cgpu_warn("Failed to store pipeline state object to pipeline library %ls. hash: (%lld) hr:(0x%08x)", pipelineName, psoRenderHash, result);
+                cgpu_warn(u8"Failed to store pipeline state object to pipeline library %ls. hash: (%lld) hr:(0x%08x)", pipelineName, psoRenderHash, result);
             }
             else
             {
-                cgpu_trace("Succeeded to store pipeline state object to pipeline library %ls. hash: (%lld) hr:(0x%08x)", pipelineName, psoRenderHash, result);
+                cgpu_trace(u8"Succeeded to store pipeline state object to pipeline library %ls. hash: (%lld) hr:(0x%08x)", pipelineName, psoRenderHash, result);
             }
         }
     }
@@ -1322,7 +1321,7 @@ void cgpu_queue_present_d3d12(CGPUQueueId queue, const struct CGPUQueuePresentDe
     HRESULT hr = S->pDxSwapChain->Present(S->mDxSyncInterval, S->mFlags /*desc->index*/);
     if (FAILED(hr))
     {
-        cgpu_error("Failed to present swapchain render target!");
+        cgpu_error(u8"Failed to present swapchain render target!");
 #if defined(_WIN32)
         ID3D12Device* device = NULL;
         S->pDxSwapChain->GetDevice(IID_ARGS(&device));
@@ -1820,7 +1819,7 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd
         D3D12_RENDER_PASS_FLAG_NONE);
     return (CGPURenderPassEncoderId)&Cmd->super;
 #endif
-    cgpu_warn("ID3D12GraphicsCommandList4 is not defined!");
+    cgpu_warn(u8"ID3D12GraphicsCommandList4 is not defined!");
     return (CGPURenderPassEncoderId)&Cmd->super;
 }
 
@@ -1832,7 +1831,7 @@ void cgpu_cmd_end_render_pass_d3d12(CGPUCommandBufferId cmd, CGPURenderPassEncod
     CmdList4->EndRenderPass();
     return;
 #endif
-    cgpu_warn("ID3D12GraphicsCommandList4 is not defined!");
+    cgpu_warn(u8"ID3D12GraphicsCommandList4 is not defined!");
 }
 
 CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12_fallback(CGPUCommandBufferId cmd, const struct CGPURenderPassDescriptor* desc)
@@ -2085,7 +2084,7 @@ uint32_t cgpu_acquire_next_image_d3d12(CGPUSwapChainId swapchain, const struct C
     HRESULT hr = S_OK;
     if (FAILED(hr))
     {
-        cgpu_error("Failed to acquire next image");
+        cgpu_error(u8"Failed to acquire next image");
         return UINT32_MAX;
     }
     return S->pDxSwapChain->GetCurrentBackBufferIndex();

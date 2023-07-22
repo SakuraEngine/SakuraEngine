@@ -55,7 +55,7 @@ public:
 
         if ( !file.is_open() ) {
 
-            SKR_LOG_ERROR( "Unable to open file for tweak: '%'", path.c_str() );
+            SKR_LOG_ERROR(u8"Unable to open file for tweak: '%'", path.c_str() );
             return;
         }
 

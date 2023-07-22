@@ -1,14 +1,16 @@
-﻿#include "SkrRenderGraph/backend/graph_backend.hpp"
+﻿#include "../pch.hpp"
+#include "SkrRenderGraph/backend/graph_backend.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/thread.h"
-#include "SkrRT/misc/hash.h"
 #include "SkrRT/misc/log.h"
-
-#include <EASTL/set.h>
 #include "SkrRT/containers/string.hpp"
+#include "cgpu/cgpux.hpp"
+#include <EASTL/set.h>
+
+#include "SkrRenderGraph/phases/cull_phase.hpp"
 
 #include "tracy/Tracy.hpp"
 
@@ -98,16 +100,16 @@ void RenderGraphFrameExecutor::print_error_trace(uint64_t frame_index)
 {
     auto fill_data = (const uint32_t*)marker_buffer->cgpu_buffer->info->cpu_mapped_address;
     if (fill_data[0] == 0) return;// begin cmd is unlikely to fail on gpu
-    SKR_LOG_FATAL("Device lost caused by GPU command buffer failure detected %d frames ago, command trace:", frame_index - exec_frame);
+    SKR_LOG_FATAL(u8"Device lost caused by GPU command buffer failure detected %d frames ago, command trace:", frame_index - exec_frame);
     for (uint32_t i = 0; i < marker_messages.size(); i++)
     {
         if (fill_data[i] != valid_marker_val)
         {
-            SKR_LOG_ERROR("\tFailed Command %d: %s (marker %d)", i, marker_messages[i].c_str(), fill_data[i]);
+            SKR_LOG_ERROR(u8"\tFailed Command %d: %s (marker %d)", i, marker_messages[i].c_str(), fill_data[i]);
         }
         else
         {
-            SKR_LOG_INFO("\tCommand %d: %s (marker %d)", i, marker_messages[i].c_str(), fill_data[i]);
+            SKR_LOG_INFO(u8"\tCommand %d: %s (marker %d)", i, marker_messages[i].c_str(), fill_data[i]);
         }
     }
     skr_thread_sleep(2000);
@@ -151,10 +153,13 @@ void RenderGraphFrameExecutor::finalize()
 // Render Graph Backend
 
 RenderGraphBackend::RenderGraphBackend(const RenderGraphBuilder& builder)
-    : RenderGraph(builder)
-    , gfx_queue(builder.gfx_queue)
+    : RenderGraph(builder)    
     , device(builder.device)
+    , gfx_queue(builder.gfx_queue)
 {
+    phases.emplace_back(
+        skr::SPtr<CullPhase>::Create()
+    );
 }
 
 RenderGraph* RenderGraph::create(const RenderGraphSetupFunction& setup) SKR_NOEXCEPT
@@ -190,6 +195,9 @@ void RenderGraphBackend::initialize() SKR_NOEXCEPT
     buffer_pool.initialize(device);
     texture_pool.initialize(device);
     texture_view_pool.initialize(device);
+
+    for (auto& phase : phases)
+        phase->on_initialize(this);
 }
 
 void RenderGraphBackend::finalize() SKR_NOEXCEPT
@@ -202,6 +210,9 @@ void RenderGraphBackend::finalize() SKR_NOEXCEPT
     buffer_pool.finalize();
     texture_pool.finalize();
     texture_view_pool.finalize();
+    
+    for (auto& phase : phases)
+        phase->on_finalize(this);
 }
 
 // memory aliasing:
@@ -896,6 +907,9 @@ void RenderGraphBackend::execute_present_pass(RenderGraphFrameExecutor& executor
 
 uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
 {
+    for (auto& phase : phases)
+        phase->on_execute(this, profiler);
+
     const auto executor_index = frame_index % RG_MAX_FRAME_IN_FLIGHT;
     RenderGraphFrameExecutor& executor = executors[executor_index];
     if (device->is_lost)
@@ -967,36 +981,25 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
     }
     {
         ZoneScopedN("GraphCleanup");
-        // 1.dealloc culled resources
-        for (auto culled_resource : culled_resources)
-        {
-            object_factory->Dealloc(culled_resource);
-        }
-        culled_resources.clear();
-        // 2.dealloc culled passes 
-        for (auto culled_pass : culled_passes)
-        {
-            object_factory->Dealloc(culled_pass);
-        }
-        culled_passes.clear();
+
         // 3.dealloc passes & connected edges 
         for (auto pass : passes)
         {
             pass->foreach_textures(
             [this](TextureNode* t, TextureEdge* e) {
-                object_factory->Dealloc(e);
+                node_factory->Dealloc(e);
             });
             pass->foreach_buffers(
             [this](BufferNode* t, BufferEdge* e) {
-                object_factory->Dealloc(e);
+                node_factory->Dealloc(e);
             });
-            object_factory->Dealloc(pass);
+            node_factory->Dealloc(pass);
         }
         passes.clear();
         // 4.dealloc resource nodes
         for (auto resource : resources)
         {
-            object_factory->Dealloc(resource);
+            node_factory->Dealloc(resource);
         }
         resources.clear();
 
@@ -1004,6 +1007,67 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
         blackboard->clear();
     }
     return frame_index++;
+}
+
+inline static bool aliasing_capacity(TextureNode* aliased, TextureNode* aliasing) SKR_NOEXCEPT
+{
+    return !aliased->is_imported() &&
+        !aliased->get_desc().is_restrict_dedicated &&
+        aliased->get_size() >= aliasing->get_size() &&
+        aliased->get_sample_count() == aliasing->get_sample_count();
+}
+
+bool RenderGraphBackend::compile() SKR_NOEXCEPT
+{
+    RenderGraph::compile();
+
+    for (auto& phase : phases)
+        phase->on_compile(this);
+
+    ZoneScopedN("RenderGraphCompile");
+    if (aliasing_enabled)
+    {
+        ZoneScopedN("CalculateAliasing");
+        // 2.calc aliasing
+        // - 先在aliasing chain里找一圈，如果有不重合的，直接把它加入到aliasing chain里
+        // - 如果没找到，在所有resource中找一个合适的加入到aliasing chain
+        skr::btree_map<TextureNode*, TextureNode::LifeSpan> alliasing_lifespans;
+        foreach_textures([&](TextureNode* texture) SKR_NOEXCEPT {
+            if (texture->imported) return;
+            for (auto&& [aliased, aliaed_span] : alliasing_lifespans)
+            {
+                if (aliasing_capacity(aliased, texture) &&
+                    aliaed_span.to < texture->lifespan().from)
+                {
+                    if (!texture->frame_aliasing_source ||
+                        texture->frame_aliasing_source->get_size() > aliased->get_size() // always choose smallest block
+                    )
+                    {
+                        texture->descriptor.flags |= CGPU_TCF_ALIASING_RESOURCE;
+                        texture->frame_aliasing_source = aliased;
+                        aliaed_span.to = texture->lifespan().to;
+                    }
+                }
+            }
+            if (texture->frame_aliasing_source) return;
+            foreach_textures([&](TextureNode* aliased) SKR_NOEXCEPT {
+                if (aliasing_capacity(aliased, texture) &&
+                    aliased->lifespan().to < texture->lifespan().from)
+                {
+                    if (!texture->frame_aliasing_source ||
+                        texture->frame_aliasing_source->get_size() > aliased->get_size() // always choose smallest block
+                    )
+                    {
+                        texture->descriptor.flags |= CGPU_TCF_ALIASING_RESOURCE;
+                        texture->frame_aliasing_source = aliased;
+                        alliasing_lifespans[aliased].from = aliased->lifespan().from;
+                        alliasing_lifespans[aliased].to = aliased->lifespan().from;
+                    }
+                }
+            });
+        });
+    }
+    return true;
 }
 
 CGPUDeviceId RenderGraphBackend::get_backend_device() SKR_NOEXCEPT { return device; }
@@ -1018,9 +1082,12 @@ uint32_t RenderGraphBackend::collect_garbage(uint64_t critical_frame,
 
 uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame, uint32_t with_tags, uint32_t without_tags) SKR_NOEXCEPT
 {
+    for (auto& phase : phases)
+        phase->on_collect_texture_garbage(this, critical_frame, with_tags, without_tags);
+
     if (critical_frame > get_latest_finished_frame())
     {
-        SKR_LOG_ERROR("undone frame on GPU detected, collect texture garbage may cause GPU Crash!!"
+        SKR_LOG_ERROR(u8"undone frame on GPU detected, collect texture garbage may cause GPU Crash!!"
                       "\n\tcurrent: %d, latest finished: %d", critical_frame, get_latest_finished_frame());
     }
     uint32_t total_count = 0;
@@ -1050,9 +1117,12 @@ uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame, ui
 
 uint32_t RenderGraphBackend::collect_buffer_garbage(uint64_t critical_frame, uint32_t with_tags, uint32_t without_tags) SKR_NOEXCEPT
 {
+     for (auto& phase : phases)
+        phase->on_collect_buffer_garbage(this, critical_frame, with_tags, without_tags);
+
     if (critical_frame > get_latest_finished_frame())
     {
-        SKR_LOG_ERROR("undone frame on GPU detected, collect buffer garbage may cause GPU Crash!!"
+        SKR_LOG_ERROR(u8"undone frame on GPU detected, collect buffer garbage may cause GPU Crash!!"
                       "\n\tcurrent: %d, latest finished: %d", critical_frame, get_latest_finished_frame());
     }
     uint32_t total_count = 0;

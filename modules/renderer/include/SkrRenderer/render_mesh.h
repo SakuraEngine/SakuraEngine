@@ -2,7 +2,7 @@
 #include "resources/mesh_resource.h"
 #include "SkrRenderer/render_effect.h"
 #ifndef __meta__
-    #include "SkrRenderer/render_mesh.generated.h"
+    #include "SkrRenderer/render_mesh.generated.h" // IWYU pragma: export
 #endif
 
 #ifdef __cplusplus

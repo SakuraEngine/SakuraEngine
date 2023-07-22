@@ -132,7 +132,7 @@ void VkUtil_FramebufferTableAdd(struct CGPUVkPassTable* table, const struct VkUt
     const auto& iter = table->cached_framebuffers.find(*desc);
     if (iter != table->cached_framebuffers.end())
     {
-        cgpu_warn("Vulkan Framebuffer with this desc already exists!");
+        cgpu_warn(u8"Vulkan Framebuffer with this desc already exists!");
     }
     // TODO: Add timestamp
     CGPUCachedFramebuffer new_fb = { framebuffer, 0 };
@@ -154,7 +154,7 @@ void VkUtil_RenderPassTableAdd(struct CGPUVkPassTable* table, const struct VkUti
     const auto& iter = table->cached_renderpasses.find(*desc);
     if (iter != table->cached_renderpasses.end())
     {
-        cgpu_warn("Vulkan Pass with this desc already exists!");
+        cgpu_warn(u8"Vulkan Pass with this desc already exists!");
     }
     // TODO: Add timestamp
     CGPUCachedRenderPass new_pass = { pass, 0 };
@@ -332,7 +332,7 @@ CGPUInstanceId cgpu_create_instance_vulkan(CGPUInstanceDescriptor const* desc)
     {
         if (!desc->enable_debug_layer)
         {
-            cgpu_warn("Vulkan GpuBasedValidation enabled while ValidationLayer is closed, there'll be no effect.");
+            cgpu_warn(u8"Vulkan GpuBasedValidation enabled while ValidationLayer is closed, there'll be no effect.");
         }
 #if VK_HEADER_VERSION >= 108
         validationFeaturesExt.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
@@ -347,7 +347,7 @@ CGPUInstanceId cgpu_create_instance_vulkan(CGPUInstanceDescriptor const* desc)
     auto instRes = (int32_t)vkCreateInstance(&createInfo, GLOBAL_VkAllocationCallbacks, &I->pVkInstance);
     if (instRes != VK_SUCCESS)
     {
-        cgpu_fatal("Vulkan: failed to create instance with code %d", instRes);
+        cgpu_fatal(u8"Vulkan: failed to create instance with code %d", instRes);
         cgpu_assert(0 && "Vulkan: failed to create instance!");
     }
     CGPUVkLayersTable::ConstructForInstance(I, blackboard);

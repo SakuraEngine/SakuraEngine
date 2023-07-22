@@ -1,10 +1,10 @@
+#include "pch.hpp"
 #include <SkrRT/platform/filesystem.hpp>
 
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/platform/memory.h"
-#include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.h"
-#include "SkrRT/io/io.h"
+#include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/platform/vfs.h"
 
 #include "live2d_helpers.hpp"
@@ -57,7 +57,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
     cbData = data;
     cbData->model_resource = this;
 
-    SKR_LOG_TRACE("Read Live2D From Home %s", data->u8HomePath.c_str());
+    SKR_LOG_TRACE(u8"Read Live2D From Home %s", data->u8HomePath.c_str());
     auto batch = ioService->open_batch(4); // 4 file requests
     // Model Request
     {
@@ -67,7 +67,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
         modelPath += u8"/";
         modelPath += (const char8_t*)mFile;
 
-        SKR_LOG_TRACE("Live2D Model %s at %s", mFile, modelPath.c_str());
+        SKR_LOG_TRACE(u8"Live2D Model %s at %s", mFile, modelPath.c_str());
         auto rq = ioService->open_request();
         rq->set_vfs(cbData->live2dRequest->vfs_override);
         rq->set_path(modelPath.u8_str());
@@ -97,7 +97,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
         pyhsicsPath += u8"/";
         pyhsicsPath += (const char8_t*)phFile;
 
-        SKR_LOG_TRACE("Live2D Physics %s at %s", phFile, pyhsicsPath.c_str());
+        SKR_LOG_TRACE(u8"Live2D Physics %s at %s", phFile, pyhsicsPath.c_str());
         auto rq = ioService->open_request();
         rq->set_vfs(cbData->live2dRequest->vfs_override);
         rq->set_path(pyhsicsPath.u8_str());
@@ -127,7 +127,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
         posePath += u8"/";
         posePath += (const char8_t*)poFile;
 
-        SKR_LOG_TRACE("Live2D Pose %s at %s", poFile, posePath.c_str());
+        SKR_LOG_TRACE(u8"Live2D Pose %s at %s", poFile, posePath.c_str());
         auto rq = ioService->open_request();
         rq->set_vfs(cbData->live2dRequest->vfs_override);
         rq->set_path(posePath.u8_str());
@@ -157,7 +157,7 @@ void csmUserModel::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
         usrDataPath += u8"/";
         usrDataPath += (const char8_t*)udFile;
         
-        SKR_LOG_TRACE("Live2D UsrData %s at %s", udFile, usrDataPath.c_str());
+        SKR_LOG_TRACE(u8"Live2D UsrData %s at %s", udFile, usrDataPath.c_str());
         auto rq = ioService->open_request();
         rq->set_vfs(cbData->live2dRequest->vfs_override);
         rq->set_path(usrDataPath.u8_str());
@@ -238,7 +238,7 @@ CubismMotionQueueEntryHandle csmUserModel::startMotion(csmMotionMap* motion_map,
     {
         if (_debugMode)
         {
-            SKR_LOG_TRACE("[csmUserModel]can't start motion.");
+            SKR_LOG_TRACE(u8"[csmUserModel]can't start motion.");
         }
         return InvalidMotionQueueEntryHandleValue;
     }
@@ -263,7 +263,7 @@ CubismMotionQueueEntryHandle csmUserModel::startMotion(csmMotionMap* motion_map,
     */
     if (_debugMode)
     {
-        SKR_LOG_TRACE("[APP]start motion: [%s_%d]", group, no);
+        SKR_LOG_TRACE(u8"[APP]start motion: [%s_%d]", group, no);
     }
     return  _motionManager->StartMotionPriority(motion, autoDelete, priority);
 }
@@ -419,7 +419,7 @@ void csmExpressionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallba
         path += u8"/";
         path += (const char8_t*)file;
 
-        SKR_LOG_TRACE("Request Live2D Expression %s at %s", name.c_str(), file);
+        SKR_LOG_TRACE(u8"Request Live2D Expression %s at %s", name.c_str(), file);
 
         auto rq = ioService->open_request();
         rq->set_vfs(cbData->live2dRequest->vfs_override);
@@ -507,7 +507,7 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
         auto& future = motionFutures[i];
         auto&& [pRequest, path] = motionPaths.at(i);
         auto&& [pRequest_, entry] = motionEntries.at(i);
-        SKR_LOG_TRACE("Request Live2D Motion in group %s at %d", entry.first.c_str(), entry.second);
+        SKR_LOG_TRACE(u8"Request Live2D Motion in group %s at %d", entry.first.c_str(), entry.second);
 
         auto rq = ioService->open_request();
         rq->set_vfs(cbData->live2dRequest->vfs_override);
@@ -549,7 +549,7 @@ void csmMotionMap::on_finished() SKR_NOEXCEPT
         const csmChar* group = settings->GetMotionGroupName(i);
         for (uint32_t j = 0; j < (uint32_t)settings->GetMotionCount(group); j++)
         {
-            SKR_LOG_TRACE("Setup Live2D Motion %s at %d", group, j);
+            SKR_LOG_TRACE(u8"Setup Live2D Motion %s at %d", group, j);
             csmMap<csmString, csmVector<ACubismMotion*>>& map = *this;
             auto motion = static_cast<CubismMotion*>(map[group][j]);
             csmFloat32 fadeTime = settings->GetMotionFadeInTimeValue(group, j);
@@ -680,7 +680,7 @@ const skr_live2d_vertex_pos_t* skr_live2d_model_get_drawable_vertex_positions(sk
     auto model = live2d_resource->model->GetModel();
     if (!model)
     {
-        SKR_LOG_ERROR("no valid model");
+        SKR_LOG_ERROR(u8"no valid model");
         return nullptr;
     }
     auto positions = model->GetDrawableVertexPositions(drawable_index);
@@ -694,7 +694,7 @@ const skr_live2d_vertex_uv_t* skr_live2d_model_get_drawable_vertex_uvs(skr_live2
     auto model = live2d_resource->model->GetModel();
     if (!model)
     {
-        SKR_LOG_ERROR("no valid model");
+        SKR_LOG_ERROR(u8"no valid model");
         return nullptr;
     }
     auto uvs = model->GetDrawableVertexUvs(drawable_index);
@@ -708,7 +708,7 @@ bool skr_live2d_model_get_drawable_is_visible(skr_live2d_model_resource_id live2
     auto model = live2d_resource->model->GetModel();
     if (!model)
     {
-        SKR_LOG_ERROR("no valid model");
+        SKR_LOG_ERROR(u8"no valid model");
         return false;
     }
     return model->GetDrawableDynamicFlagIsVisible(drawable_index);

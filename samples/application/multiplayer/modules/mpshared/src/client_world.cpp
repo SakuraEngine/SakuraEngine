@@ -1,19 +1,16 @@
+#include "pch.hpp"
 #include "MPShared/client_world.h"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "EASTL/fixed_vector.h"
-#include "SkrRT/misc/parallel_for.hpp"
-#include "SkrRT/misc/log.h"
 
 #include "SkrRT/ecs/type_builder.hpp"
 #include "SkrRT/ecs/set.hpp"
-#include "SkrRT/serde/json/writer.h"
 #include "SkrScene/scene.h"
 #include "MPShared/components.h"
-#include "steam/isteamnetworkingutils.h"
 #include "steam/isteamnetworkingsockets.h"
-#include "steam/steamnetworkingsockets.h"
-#include "SkrRT/math/vector.h"
 #include "lz4.h"
+
+#include "tracy/Tracy.hpp"
+
 MPClientWorld::MPClientWorld()
 {
 
@@ -95,7 +92,7 @@ void MPClientWorld::ReceiveWorldDelta(const void* data, size_t dataLength)
     // {
     //     skr_json_writer_t jsonWriter(4);
     //     skr::json::Write(&jsonWriter, worldDelta.blob);
-    //     SKR_LOG_DEBUG("Receiving delta %s : ", jsonWriter.Str().c_str());
+    //     SKR_LOG_DEBUG(u8"Receiving delta %s : ", jsonWriter.Str().c_str());
     // }
 }
 

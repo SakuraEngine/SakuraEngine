@@ -5,7 +5,7 @@
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 #ifndef __meta__
-#include "SkrShaderCompiler/assets/shader_asset.generated.h"
+#include "SkrShaderCompiler/assets/shader_asset.generated.h" // IWYU pragma: export
 #endif
 
 namespace skd sreflect

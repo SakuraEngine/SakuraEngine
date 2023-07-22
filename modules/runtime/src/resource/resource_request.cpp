@@ -1,7 +1,7 @@
 #include "resource_request_impl.hpp"
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/misc/defer.hpp"
-#include "SkrRT/io/io.h"
+#include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/resource/resource_factory.h"
@@ -256,7 +256,7 @@ void SResourceRequestImpl::Update()
     }
     auto resourceRegistry = system->GetRegistry();
     auto ioService = system->GetRAMService();
-    SKR_LOG_BACKTRACE("Current reosurce loading phase: %d!", (int32_t)currentPhase);
+    SKR_LOG_BACKTRACE(u8"Current reosurce loading phase: %d!", (int32_t)currentPhase);
     switch (currentPhase)
     {
         case SKR_LOADING_PHASE_REQUEST_RESOURCE: {

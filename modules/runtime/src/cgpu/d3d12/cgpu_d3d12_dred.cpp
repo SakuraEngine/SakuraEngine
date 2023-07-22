@@ -1,6 +1,5 @@
 #include "d3d12_utils.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRT/containers/string.hpp"
 #include "SkrRT/containers/span.hpp"
 
 #include <EASTL/string.h>
@@ -95,15 +94,15 @@ static_assert(D3D12_OpNamesCount == D3D12_AUTO_BREADCRUMB_OP_EXECUTEEXTENSIONCOM
 template<typename T>
 void D3D12Util_LogDREDPageFaultImpl(const T* pageFault)
 {
-    cgpu_error("Gathered page fault allocation output.");
+    cgpu_error(u8"Gathered page fault allocation output.");
     
     D3D12_GPU_VIRTUAL_ADDRESS OutPageFaultGPUAddress = pageFault->PageFaultVA;
-    cgpu_error("DRED: PageFault at VA GPUAddress \"0x%llX\"", (long long)OutPageFaultGPUAddress);
+    cgpu_error(u8"DRED: PageFault at VA GPUAddress \"0x%llX\"", (long long)OutPageFaultGPUAddress);
     
     const auto* Node = pageFault->pHeadExistingAllocationNode;
     if (Node)
     {
-        cgpu_error("DRED: Active objects with VA ranges that match the faulting VA:");
+        cgpu_error(u8"DRED: Active objects with VA ranges that match the faulting VA:");
         while (Node)
         {
             // When tracking all allocations then empty named dummy resources (heap & buffer)
@@ -114,11 +113,11 @@ void D3D12Util_LogDREDPageFaultImpl(const T* pageFault)
                 const TCHAR* AllocTypeName = (alloc_type_index < D3D12_AllocTypesNamesCount) ? D3D12_AllocTypesNames[alloc_type_index] : TEXT("Unknown Alloc");
                 if constexpr (std::is_same_v<std::remove_reference_t<T>, D3D12_DRED_PAGE_FAULT_OUTPUT1>)
                 {
-                    cgpu_error("\tObject: %p, Name: %ls (Type: %ls)", Node->pObject, Node->ObjectNameW, AllocTypeName);
+                    cgpu_error(u8"\tObject: %p, Name: %ls (Type: %ls)", Node->pObject, Node->ObjectNameW, AllocTypeName);
                 }
                 else
                 {
-                    cgpu_error("\tName: %ls (Type: %ls)", Node->ObjectNameW, AllocTypeName);
+                    cgpu_error(u8"\tName: %ls (Type: %ls)", Node->ObjectNameW, AllocTypeName);
                 }
             }
             Node = Node->pNext;
@@ -128,7 +127,7 @@ void D3D12Util_LogDREDPageFaultImpl(const T* pageFault)
     Node = pageFault->pHeadRecentFreedAllocationNode;
     if (Node)
     {
-        cgpu_error("DRED: Recent freed objects with VA ranges that match the faulting VA:");
+        cgpu_error(u8"DRED: Recent freed objects with VA ranges that match the faulting VA:");
         while (Node)
         {
             // See comments above
@@ -138,11 +137,11 @@ void D3D12Util_LogDREDPageFaultImpl(const T* pageFault)
                 const TCHAR* AllocTypeName = (alloc_type_index < D3D12_AllocTypesNamesCount) ? D3D12_AllocTypesNames[alloc_type_index] : TEXT("Unknown Alloc");
                 if constexpr (std::is_same_v<std::remove_reference_t<T>, D3D12_DRED_PAGE_FAULT_OUTPUT1>)
                 {
-                    cgpu_error("\tObject: %p, Name: %ls (Type: %ls)", Node->pObject, Node->ObjectNameW, AllocTypeName);
+                    cgpu_error(u8"\tObject: %p, Name: %ls (Type: %ls)", Node->pObject, Node->ObjectNameW, AllocTypeName);
                 }
                 else
                 {
-                    cgpu_error("\tName: %ls (Type: %ls)", Node->ObjectNameW, AllocTypeName);
+                    cgpu_error(u8"\tName: %ls (Type: %ls)", Node->ObjectNameW, AllocTypeName);
                 }
             }
 
@@ -176,10 +175,10 @@ inline static skr::span<D3D12_DRED_BREADCRUMB_CONTEXT> GetDREDBreadcrumbContexts
 template<typename T>
 void D3D12Util_LogDREDBreadcrumbsImpl(const T* breadcrumbs)
 {
-    cgpu_error("Gathered auto-breadcrumbs output.");
+    cgpu_error(u8"Gathered auto-breadcrumbs output.");
     if (breadcrumbs->pHeadAutoBreadcrumbNode)
     {
-        cgpu_error("DRED: Last tracked GPU operations:");
+        cgpu_error(u8"DRED: Last tracked GPU operations:");
 
         eastl::wstring ContextStr;
         eastl::vector_map<int32_t, const wchar_t*> ContextStrings;
@@ -192,7 +191,7 @@ void D3D12Util_LogDREDBreadcrumbsImpl(const T* breadcrumbs)
 
             if (LastCompletedOp != Node->BreadcrumbCount && LastCompletedOp != 0)
             {
-                cgpu_error("DRED: Commandlist \"%ls\" on CommandQueue \"%ls\", %d completed of %d", 
+                cgpu_error(u8"DRED: Commandlist \"%ls\" on CommandQueue \"%ls\", %d completed of %d", 
                     Node->pCommandListDebugNameW, Node->pCommandQueueDebugNameW, LastCompletedOp, Node->BreadcrumbCount);
                 TracedCommandLists++;
 
@@ -222,7 +221,7 @@ void D3D12Util_LogDREDBreadcrumbsImpl(const T* breadcrumbs)
                     }
 
                     const TCHAR* OpName = ((uint32_t)BreadcrumbOp < D3D12_OpNamesCount) ? D3D12_OpNames[BreadcrumbOp] : TEXT("Unknown Op");
-                    cgpu_error("\tOp: %d, %ls%ls%ls", Op, OpName, ContextStr.c_str(), (Op + 1 == LastCompletedOp) ? TEXT(" - LAST COMPLETED") : TEXT(""));
+                    cgpu_error(u8"\tOp: %d, %ls%ls%ls", Op, OpName, ContextStr.c_str(), (Op + 1 == LastCompletedOp) ? TEXT(" - LAST COMPLETED") : TEXT(""));
                 }
             }
 
@@ -231,12 +230,12 @@ void D3D12Util_LogDREDBreadcrumbsImpl(const T* breadcrumbs)
 
         if (TracedCommandLists == 0)
         {
-            cgpu_error("DRED: No command list found with active outstanding operations (all finished or not started yet).");
+            cgpu_error(u8"DRED: No command list found with active outstanding operations (all finished or not started yet).");
         }
     }
     else
     {
-        cgpu_error("DRED: No breadcrumb head found.");
+        cgpu_error(u8"DRED: No breadcrumb head found.");
     }
 }
 
@@ -263,7 +262,7 @@ void D3D12Util_ReportGPUCrash(ID3D12Device* device)
         removeHr = device->GetDeviceRemovedReason();
         if (FAILED(removeHr))
         {
-            cgpu_error("Device removed, waiting for driver to come back online...");
+            cgpu_error(u8"Device removed, waiting for driver to come back online...");
             Sleep(500); // Wait for a few seconds to allow the driver to come
                         // back online before doing a reset.
             failedCount++;
@@ -271,7 +270,7 @@ void D3D12Util_ReportGPUCrash(ID3D12Device* device)
     }
     if (failedCount >= retryCount)
     {
-        cgpu_fatal("Device driver get lost, unable to get removed reason from DRED.");
+        cgpu_fatal(u8"Device driver get lost, unable to get removed reason from DRED.");
     }
 
 #ifdef __ID3D12DeviceRemovedExtendedData_FWD_DEFINED__

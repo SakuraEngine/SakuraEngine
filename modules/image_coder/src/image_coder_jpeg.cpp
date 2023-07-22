@@ -102,7 +102,7 @@ bool JPEGImageDecoder::decode(EImageCoderColorFormat in_format, uint32_t in_bit_
 		return true;
 	}
 
-	SKR_LOG_FATAL("TurboJPEG Error %d: %s", result, tjGetErrorStr2(Decompressor));
+	SKR_LOG_FATAL(u8"TurboJPEG Error %d: %s", result, tjGetErrorStr2(Decompressor));
     sakura_free(decoded_data);
 	decoded_data = nullptr;
     return false;

@@ -55,7 +55,7 @@ struct robjects_example_application : public robjects_application_t {
         auto trigger = input_system->create_trigger<skr::input::InputTriggerDown>();
         action->add_trigger(trigger);
         action->bind_event<bool>([](const bool& down) {
-            SKR_LOG_INFO("Key F pressed: %d", down);
+            SKR_LOG_INFO(u8"Key F pressed: %d", down);
         });
         mapping->action = action;
         mapping_ctx->add_mapping(mapping);
@@ -67,7 +67,7 @@ struct robjects_example_application : public robjects_application_t {
         action2->bind_event<bool>([](const bool& f2) {
             int x, y;
             skr_cursor_pos(&x, &y, ECursorCoordinate::CURSOR_COORDINATE_WINDOW);
-            SKR_LOG_INFO("Mouse Clicked at: X[%d] Y[%d]", x, y);
+            SKR_LOG_INFO(u8"Mouse Clicked at: X[%d] Y[%d]", x, y);
         });
         mapping2->action = action2;
         mapping_ctx->add_mapping(mapping2);
@@ -175,7 +175,7 @@ struct KeyboardTest {
                 for (uint32_t j = 0; j < readCount; j++)
                 {
                     auto k = keystates[j];
-                    SKR_LOG_INFO("GameInput: Key:0x%02X, Timestamp: %lld, Elapsed: %d us(%d ms), Dead:%d",
+                    SKR_LOG_INFO(u8"GameInput: Key:0x%02X, Timestamp: %lld, Elapsed: %d us(%d ms), Dead:%d",
                                  keystates[j].virtual_key, timestamp, elapsed_us, elapsed_us / 1000, k.is_dead_key);
                 }
                 if (pReading) pLayer->Release(pReading);
@@ -242,7 +242,7 @@ struct ClickListener {
         {
             if (trigger_count)
             {
-                SKR_LOG_INFO("Clicked %d times", trigger_count);
+                SKR_LOG_INFO(u8"Clicked %d times", trigger_count);
             }
         }
     }

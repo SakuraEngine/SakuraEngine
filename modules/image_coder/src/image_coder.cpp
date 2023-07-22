@@ -123,7 +123,7 @@ HRESULT skr_image_coder_win_dstorage_decompressor(skr_win_dstorage_decompress_re
 {
     ZoneScopedN("DirectStoragePNGDecompressor");
     EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)request->src_buffer, request->src_size);
-    SKR_LOG_TRACE("skr_image_coder_win_dstorage_decompressor: format=%d", format);
+    SKR_LOG_TRACE(u8"skr_image_coder_win_dstorage_decompressor: format=%d", format);
     auto decoder = skr::IImageDecoder::Create(format);
     const auto encoded_size = request->src_size;
     if (decoder->initialize((const uint8_t*)request->src_buffer, request->src_size))
@@ -134,7 +134,7 @@ HRESULT skr_image_coder_win_dstorage_decompressor(skr_win_dstorage_decompress_re
         const auto color_format = (encoded_format == IMAGE_CODER_COLOR_FORMAT_BGRA) ? IMAGE_CODER_COLOR_FORMAT_RGBA : encoded_format;
         if (decoder->decode(color_format, decoder->get_bit_depth()))
         {
-            SKR_LOG_TRACE("image decoder: width = %d, height = %d, encoded_size = %d, raw_size = %d", 
+            SKR_LOG_TRACE(u8"image decoder: width = %d, height = %d, encoded_size = %d, raw_size = %d", 
                 decoder->get_width(), decoder->get_height(), encoded_size, decoder->get_size()
             );
             if (auto data = decoder->get_data())

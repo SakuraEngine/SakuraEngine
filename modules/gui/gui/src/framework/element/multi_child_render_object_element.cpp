@@ -1,3 +1,4 @@
+#include "../../pch.hpp"
 #include "SkrGui/framework/element/multi_child_render_object_element.hpp"
 #include "SkrGui/framework/widget/multi_child_render_object_widget.hpp"
 #include "SkrGui/framework/render_object/multi_child_render_object.hpp"
@@ -40,7 +41,7 @@ void MultiChildRenderObjectElement::add_render_object_child(NotNull<RenderObject
     auto multi_child_render_object = render_object()->type_cast<IMultiChildRenderObject>();
     if (!child->type_based_on(multi_child_render_object->accept_child_type()))
     {
-        SKR_GUI_LOG_ERROR("child type not match");
+        SKR_GUI_LOG_ERROR(u8"child type not match");
     }
     multi_child_render_object->add_child(child, slot);
 }

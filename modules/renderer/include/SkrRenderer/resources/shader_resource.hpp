@@ -1,13 +1,13 @@
 #pragma once
 #include "SkrRenderer/shader_hash.h"
-#include "SkrRT/io/io.h"
+#include "SkrRT/io/ram_io.hpp"
 #include "cgpu/api.h"
 #include "SkrRT/resource/resource_factory.h"
 #include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/hashmap.hpp>
 
 #ifndef __meta__
-    #include "SkrRenderer/resources/shader_resource.generated.h"
+    #include "SkrRenderer/resources/shader_resource.generated.h" // IWYU pragma: export
 #endif
 
 namespace skr sreflect

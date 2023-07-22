@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrRT/platform/memory.h"
-#include "SkrRenderGraph/frontend/base_types.hpp"
+#include "SkrRenderGraph/rg_config.h"
 
 #include "tracy/Tracy.hpp"
 

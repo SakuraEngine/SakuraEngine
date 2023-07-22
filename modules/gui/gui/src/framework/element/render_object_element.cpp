@@ -1,3 +1,4 @@
+#include "../../pch.hpp"
 #include "SkrGui/framework/element/render_object_element.hpp"
 #include "SkrGui/framework/widget/render_object_widget.hpp"
 #include "SkrGui/framework/render_object/render_object.hpp"
@@ -11,7 +12,7 @@ void RenderObjectElement::first_mount(NotNull<Element*> parent, Slot slot) SKR_N
     // validate
     if (widget() == nullptr)
     {
-        SKR_GUI_LOG_ERROR("widget is nullptr");
+        SKR_GUI_LOG_ERROR(u8"widget is nullptr");
         _cancel_dirty();
         return;
     }
@@ -26,7 +27,7 @@ void RenderObjectElement::first_mount(NotNull<Element*> parent, Slot slot) SKR_N
     }
     else
     {
-        SKR_GUI_LOG_ERROR("widget is not RenderObjectWidget");
+        SKR_GUI_LOG_ERROR(u8"widget is not RenderObjectWidget");
     }
 }
 void RenderObjectElement::detach() SKR_NOEXCEPT
@@ -34,18 +35,18 @@ void RenderObjectElement::detach() SKR_NOEXCEPT
     Super::detach();
     if (_render_object)
     {
-        if (_render_object->owner()) { SKR_GUI_LOG_ERROR("render_object is not detached"); }
+        if (_render_object->owner()) { SKR_GUI_LOG_ERROR(u8"render_object is not detached"); }
     }
     else
     {
-        SKR_GUI_LOG_ERROR("_render_object is nullptr");
+        SKR_GUI_LOG_ERROR(u8"_render_object is nullptr");
     }
 }
 void RenderObjectElement::destroy() SKR_NOEXCEPT
 {
     if (widget() == nullptr)
     {
-        SKR_GUI_LOG_ERROR("widget is nullptr");
+        SKR_GUI_LOG_ERROR(u8"widget is nullptr");
         Super::destroy();
         return;
     }
@@ -60,12 +61,12 @@ void RenderObjectElement::destroy() SKR_NOEXCEPT
         }
         else
         {
-            SKR_GUI_LOG_ERROR("_render_object is nullptr");
+            SKR_GUI_LOG_ERROR(u8"_render_object is nullptr");
         }
     }
     else
     {
-        SKR_GUI_LOG_ERROR("widget is not RenderObjectWidget");
+        SKR_GUI_LOG_ERROR(u8"widget is not RenderObjectWidget");
     }
     Super::destroy();
 }
@@ -78,14 +79,14 @@ void RenderObjectElement::perform_rebuild() SKR_NOEXCEPT
 void RenderObjectElement::update(NotNull<Widget*> new_widget) SKR_NOEXCEPT
 {
     Super::update(new_widget);
-    if (widget() != new_widget) { SKR_GUI_LOG_ERROR("widget is not equal to new_widget"); }
+    if (widget() != new_widget) { SKR_GUI_LOG_ERROR(u8"widget is not equal to new_widget"); }
     _update_render_object();
 }
 
 // render object
 RenderObject* RenderObjectElement::render_object() const SKR_NOEXCEPT
 {
-    if (_render_object == nullptr) { SKR_GUI_LOG_ERROR("_render_object is nullptr"); }
+    if (_render_object == nullptr) { SKR_GUI_LOG_ERROR(u8"_render_object is nullptr"); }
     return _render_object;
 }
 
@@ -93,10 +94,10 @@ RenderObject* RenderObjectElement::render_object() const SKR_NOEXCEPT
 void RenderObjectElement::update_slot(Slot new_slot) SKR_NOEXCEPT
 {
     // validate
-    if (lifecycle() != EElementLifecycle::Mounted) { SKR_GUI_LOG_ERROR("element is not active"); }
-    if (widget() == nullptr) { SKR_GUI_LOG_ERROR("widget is nullptr"); }
-    if (parent() == nullptr) { SKR_GUI_LOG_ERROR("parent is nullptr"); }
-    if (parent() && parent()->lifecycle() != EElementLifecycle::Mounted) { SKR_GUI_LOG_ERROR("parent is not active"); }
+    if (lifecycle() != EElementLifecycle::Mounted) { SKR_GUI_LOG_ERROR(u8"element is not active"); }
+    if (widget() == nullptr) { SKR_GUI_LOG_ERROR(u8"widget is nullptr"); }
+    if (parent() == nullptr) { SKR_GUI_LOG_ERROR(u8"parent is nullptr"); }
+    if (parent() && parent()->lifecycle() != EElementLifecycle::Mounted) { SKR_GUI_LOG_ERROR(u8"parent is not active"); }
 
     if (_ancestor_render_object_element)
     {
@@ -105,12 +106,12 @@ void RenderObjectElement::update_slot(Slot new_slot) SKR_NOEXCEPT
 }
 void RenderObjectElement::attach_render_object_to_parent(Slot slot) SKR_NOEXCEPT
 {
-    if (_ancestor_render_object_element != nullptr) SKR_GUI_LOG_ERROR("render_object is already attached");
-    if (_render_object == nullptr) SKR_GUI_LOG_ERROR("_render_object is nullptr");
+    if (_ancestor_render_object_element != nullptr) SKR_GUI_LOG_ERROR(u8"render_object is already attached");
+    if (_render_object == nullptr) SKR_GUI_LOG_ERROR(u8"_render_object is nullptr");
     _ancestor_render_object_element = _find_ancestor_render_object_element();
     if (_ancestor_render_object_element == nullptr)
     {
-        SKR_GUI_LOG_ERROR("cannot find ancestor render_object");
+        SKR_GUI_LOG_ERROR(u8"cannot find ancestor render_object");
         return;
     }
     _ancestor_render_object_element->add_render_object_child(make_not_null(_render_object), slot);
@@ -129,7 +130,7 @@ void RenderObjectElement::_update_render_object() SKR_NOEXCEPT
 {
     if (widget() == nullptr)
     {
-        SKR_GUI_LOG_ERROR("widget is nullptr");
+        SKR_GUI_LOG_ERROR(u8"widget is nullptr");
         _cancel_dirty();
         return;
     }
@@ -140,7 +141,7 @@ void RenderObjectElement::_update_render_object() SKR_NOEXCEPT
     }
     else
     {
-        SKR_GUI_LOG_ERROR("widget is not RenderObjectWidget");
+        SKR_GUI_LOG_ERROR(u8"widget is not RenderObjectWidget");
     }
     _cancel_dirty();
 }

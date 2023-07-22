@@ -1,10 +1,13 @@
-#include "../../pch.hpp"
-#include "SkrRT/misc/types.h"
-#include "SkrRT/platform/thread.h"
+#include "../../pch.hpp" // IWYU pragma: keep
 #include "SkrRT/platform/process.h"
 #include "SkrRT/platform/crash.h"
 
 #include "SkrRT/containers/string.hpp"
+
+#include <signal.h>
+#include <Dbghelp.h>
+
+#pragma comment(lib, "dbghelp.lib")
 
 namespace
 {
@@ -137,20 +140,53 @@ bool WinCrashHandler::Initialize() SKR_NOEXCEPT
 
 int WinCrashHandler::internalHandler(struct SCrashContext* context) SKR_NOEXCEPT
 {
+    if (!context->exception_pointers)
+        context->exception_pointers = (PEXCEPTION_POINTERS)_pxcptinfoptrs;
+
     const auto type = MB_ABORTRETRYIGNORE | MB_ICONERROR;
     const auto reason = context->reason;
     skr::string why = skr::format(
         u8"Crashed! Reason: {}",
         skr_crash_code_string(reason)
     );
-    
-    SKR_LOG_FATAL(why.c_str());
 
+    SKR_LOG_FATAL(why.u8_str());
+
+    // save crash minidump
+    {
+        char8_t currentPath[1024];
+        SYSTEMTIME localTime;
+        ::GetCurrentDirectoryA(MAX_PATH, (char*)currentPath);
+        ::GetLocalTime(&localTime);
+
+        skr::string dateTime = skr::format(u8"{}-{}-{}-{}-{}-{}-{}", 
+            localTime.wYear, localTime.wMonth, localTime.wDay, localTime.wHour, 
+            localTime.wMinute, localTime.wSecond, localTime.wMilliseconds);
+
+        skr::string dumpPath = skr::format(u8"{}\\{}-minidump-{}.dmp", 
+            currentPath, skr_get_current_process_name(), dateTime);
+        const char* pDumpPath = dumpPath.c_str();
+
+        HANDLE lhDumpFile = ::CreateFileA(pDumpPath, 
+            GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+        MINIDUMP_EXCEPTION_INFORMATION loExceptionInfo;
+        loExceptionInfo.ExceptionPointers = context->exception_pointers;
+        loExceptionInfo.ThreadId = ::GetCurrentThreadId();
+        loExceptionInfo.ClientPointers = TRUE;
+
+        ::MiniDumpWriteDump(::GetCurrentProcess(), ::GetCurrentProcessId(), lhDumpFile, MiniDumpNormal, &loExceptionInfo, NULL, NULL);
+
+        ::CloseHandle(lhDumpFile);
+    }
+
+    // show message box
     ::MessageBoxExA(nullptr, 
         why.c_str(), 
         "Crash 了！",
         type, 0
     );
+
     return 0;
 }
 

@@ -40,7 +40,7 @@ skr_vfile_t* skr_stdio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mo
         cfile = fopen((const char*)filePathStr, (const char*)modeStr);
     }
     std::error_code ec = {};
-    // SKR_LOG_TRACE("CurrentPath: %s", skr::filesystem::current_path(ec).u8string().c_str());
+    // SKR_LOG_TRACE(u8"CurrentPath: %s", skr::filesystem::current_path(ec).u8string().c_str());
     // Might fail to open the file for read+write if file doesn't exist
     if (!cfile)
     {
@@ -54,7 +54,7 @@ skr_vfile_t* skr_stdio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mo
     }
     if (!cfile)
     {
-        SKR_LOG_ERROR("Error opening file: %s -- %s (error: %s)", filePath.c_str(), modeStr, strerror(errno));
+        SKR_LOG_ERROR(u8"Error opening file: %s -- %s (error: %s)", filePath.c_str(), modeStr, strerror(errno));
         return nullptr;
     }
     {
@@ -92,7 +92,7 @@ size_t skr_stdio_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_
         {
             if (ferror(vfile->fh) != 0)
             {
-                SKR_LOG_WARN("Error reading from system FileStream: %s", strerror(errno));
+                SKR_LOG_WARN(u8"Error reading from system FileStream: %s", strerror(errno));
             }
         }
         return bytesRead;

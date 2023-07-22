@@ -1,9 +1,9 @@
+#include "../pch.hpp"
+#include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/async/fib_task.hpp"
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
-#include "SkrRT/io/io.h"
-#include "SkrRT/serde/json/reader.h"
 
 #include "tracy/Tracy.hpp"
 
@@ -90,12 +90,12 @@ void SCookContextImpl::_Destroy(void* resource)
 {
     if(!importer)
     {
-        SKR_LOG_ERROR("[SCookContext::Cook] importer failed to load, asset path path: %s", record->path.u8string().c_str());
+        SKR_LOG_ERROR(u8"[SCookContext::Cook] importer failed to load, asset path path: %s", record->path.u8string().c_str());
     }
     SKR_DEFER({ SkrDelete(importer); });
     //-----import raw data
     importer->Destroy(resource);
-    SKR_LOG_INFO("[SCookContext::Cook] asset freed for asset: %s", record->path.u8string().c_str());
+    SKR_LOG_INFO(u8"[SCookContext::Cook] asset freed for asset: %s", record->path.u8string().c_str());
 }
 
 void* SCookContextImpl::_Import()
@@ -111,7 +111,7 @@ void* SCookContextImpl::_Import()
         importer = GetImporterRegistry()->LoadImporter(record, std::move(importerJson).value_unsafe(), &importerTypeGuid);
         if(!importer)
         {
-            SKR_LOG_ERROR("[SCookContext::Cook] importer failed to load, asset: %s", record->path.u8string().c_str());
+            SKR_LOG_ERROR(u8"[SCookContext::Cook] importer failed to load, asset: %s", record->path.u8string().c_str());
             return nullptr;
         }
         importerVersion = importer->Version();
@@ -121,7 +121,7 @@ void* SCookContextImpl::_Import()
         const auto type_name = skr_get_type_name(&importerType);
         ZoneName((const char*)type_name, strlen((const char*)type_name));
         auto rawData = importer->Import(ioService, this);
-        SKR_LOG_INFO("[SCookContext::Cook] asset imported for asset: %s", record->path.u8string().c_str());
+        SKR_LOG_INFO(u8"[SCookContext::Cook] asset imported for asset: %s", record->path.u8string().c_str());
         return rawData;
     }
     // auto parentJson = doc["parent"]; // derived from resource

@@ -1,3 +1,4 @@
+#include "pch.hpp"
 #include "MPShared/server_world.h"
 #include "MPShared/components.h"
 #include "SkrRT/misc/make_zeroed.hpp"
@@ -68,7 +69,7 @@ void MPServerWorld::SpawnGameModeEntity()
     spawner_t spawner;
     spawner(storage, 1, [&](spawner_t::View view)
     {
-        auto [gameModeStates, auths, authTypeDatas, dirties] = view.unpack();
+        [[maybe_unused]] auto [gameModeStates, auths, authTypeDatas, dirties] = view.unpack();
         for (uint32_t i = 0; i < view.count(); i++)
         {
         }
@@ -208,7 +209,7 @@ void MPServerWorld::AccumulateInput(uint32_t connectionId, const MPInputFrame &i
     auto maxQueuedFrameCount = sizeof(queuedInputs) / sizeof(queuedInputs[0]);
     if((frame > gameFrame) && (frame - gameFrame > maxQueuedFrameCount))
     {
-        SKR_LOG_WARN("input from %d is too far in the future! currentFrame: %d, recievedFrame %d", connectionId, gameFrame, frame);
+        SKR_LOG_WARN(u8"input from %d is too far in the future! currentFrame: %d, recievedFrame %d", connectionId, gameFrame, frame);
         return;
     }
     uint64_t effectiveFrame = frame > gameFrame ? frame : gameFrame;
@@ -313,6 +314,6 @@ void MPServerWorld::LogNetworkStatics()
             bandwidth += status.m_flOutBytesPerSec;
             estimatedBandwidth = std::max((float)status.m_nSendRateBytesPerSecond, estimatedBandwidth);
         }
-        SKR_LOG_INFO("bandwidth: %f, estimatedBandwidth: %f", bandwidth, estimatedBandwidth);
+        SKR_LOG_INFO(u8"bandwidth: %f, estimatedBandwidth: %f", bandwidth, estimatedBandwidth);
     }
 }

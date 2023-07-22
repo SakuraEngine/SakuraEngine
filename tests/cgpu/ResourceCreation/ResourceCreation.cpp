@@ -1,21 +1,19 @@
-#include "SkrRT/platform/crash.h"
-#include "cgpu/cgpu_config.h"
-#include "cgpu/flags.h"
-#include "SkrRT/platform/configure.h"
-#include "gtest/gtest.h"
-#include "SkrRT/misc/log.h"
-#include <SkrRT/containers/string.hpp>
-#include <EASTL/vector.h>
 #include "cgpu/api.h"
+#include "SkrRT/platform/configure.h"
+#include <SkrRT/containers/string.hpp>
+
+#include <EASTL/vector.h>
 #include "spirv.h"
 #include "dxil.h"
 
-class ResourceCreation : public ::testing::TestWithParam<ECGPUBackend>
+#include "SkrTestFramework/framework.hpp"
+#include "SkrTestFramework/generators.hpp"
+
+class ResourceCreation
 {
 protected:
-    void SetUp() override
+    void Initialize(ECGPUBackend backend) SKR_NOEXCEPT
     {
-        ECGPUBackend backend = GetParam();
         DECLARE_ZERO(CGPUInstanceDescriptor, desc)
         desc.backend = backend;
         desc.enable_debug_layer = true;
@@ -56,12 +54,19 @@ protected:
         compute_shader_sizes[CGPU_BACKEND_D3D12] = sizeof(simple_compute_dxil);
     }
 
-    void TearDown() override
+    ResourceCreation() SKR_NOEXCEPT
+    {
+        backend = GENERATE(CGPUBackendGenerator::Create());
+        Initialize(backend);
+    }
+
+    ~ResourceCreation() SKR_NOEXCEPT
     {
         cgpu_free_device(device);
         cgpu_free_instance(instance);
     }
 
+    ECGPUBackend backend;
     CGPUInstanceId instance;
     CGPUAdapterId adapter;
     CGPUDeviceId device;
@@ -73,7 +78,7 @@ protected:
     uint32_t compute_shader_sizes[ECGPUBackend::CGPU_BACKEND_COUNT];
 };
 
-TEST_P(ResourceCreation, CreateDStorageQueue)
+TEST_CASE_METHOD(ResourceCreation, "CreateDStorageQueue")
 {
     DECLARE_ZERO(CGPUDStorageQueueDescriptor, desc)
     desc.name = u8"DStorageQueue";
@@ -81,7 +86,7 @@ TEST_P(ResourceCreation, CreateDStorageQueue)
     desc.priority = SKR_DSTORAGE_PRIORITY_NORMAL;
     desc.source = SKR_DSTORAGE_SOURCE_FILE;
 #ifdef _WIN32
-    if (GetParam() == CGPU_BACKEND_D3D12)
+    if (backend == CGPU_BACKEND_D3D12)
     {
         SkrDStorageConfig config = {};
         auto dstorageInstance = skr_create_dstorage_instance(&config);(void)dstorageInstance;
@@ -90,11 +95,12 @@ TEST_P(ResourceCreation, CreateDStorageQueue)
         auto dstorageQueue = cgpu_create_dstorage_queue(device, &desc);
         EXPECT_NE(dstorageQueue, nullptr);
         cgpu_free_dstorage_queue(dstorageQueue);
+        skr_free_dstorage_instance(dstorageInstance);
     }
 #endif
 }
 
-TEST_P(ResourceCreation, CreateIndexBuffer)
+TEST_CASE_METHOD(ResourceCreation, "CreateIndexBuffer")
 {
     DECLARE_ZERO(CGPUBufferDescriptor, desc)
     desc.flags = CGPU_BCF_NONE;
@@ -110,7 +116,7 @@ TEST_P(ResourceCreation, CreateIndexBuffer)
     cgpu_free_buffer(buffer);
 }
 
-TEST_P(ResourceCreation, CreateTexture)
+TEST_CASE_METHOD(ResourceCreation, "CreateTexture")
 {
     DECLARE_ZERO(CGPUTextureDescriptor, desc)
     desc.name = u8"Texture";
@@ -126,9 +132,9 @@ TEST_P(ResourceCreation, CreateTexture)
     cgpu_free_texture(texture);
 }
 
-TEST_P(ResourceCreation, CreateTiledTexture)
+TEST_CASE_METHOD(ResourceCreation, "CreateTiledTexture")
 {
-    if (GetParam() == CGPU_BACKEND_D3D12)
+    if (backend == CGPU_BACKEND_D3D12)
     {
         DECLARE_ZERO(CGPUTextureDescriptor, desc)
         desc.name = u8"Texture";
@@ -145,7 +151,7 @@ TEST_P(ResourceCreation, CreateTiledTexture)
     }
 }
 
-TEST_P(ResourceCreation, CreateUploadBuffer)
+TEST_CASE_METHOD(ResourceCreation, "CreateUploadBuffer")
 {
     DECLARE_ZERO(CGPUBufferDescriptor, desc)
     desc.flags = CGPU_BCF_NONE;
@@ -179,7 +185,7 @@ TEST_P(ResourceCreation, CreateUploadBuffer)
     cgpu_free_buffer(buffer);
 }
 
-TEST_P(ResourceCreation, CreateUploadBufferPersistent)
+TEST_CASE_METHOD(ResourceCreation, "CreateUploadBufferPersistent")
 {
     DECLARE_ZERO(CGPUBufferDescriptor, desc)
     desc.flags = CGPU_BCF_PERSISTENT_MAP_BIT;
@@ -195,7 +201,7 @@ TEST_P(ResourceCreation, CreateUploadBufferPersistent)
     cgpu_free_buffer(buffer);
 }
 
-TEST_P(ResourceCreation, CreateHostVisibleDeviceMemory)
+TEST_CASE_METHOD(ResourceCreation, "CreateHostVisibleDeviceMemory")
 {
     DECLARE_ZERO(CGPUBufferDescriptor, desc)
     desc.flags = CGPU_BCF_PERSISTENT_MAP_BIT | CGPU_BCF_HOST_VISIBLE;
@@ -222,7 +228,7 @@ TEST_P(ResourceCreation, CreateHostVisibleDeviceMemory)
     cgpu_free_buffer(buffer);
 }
 
-TEST_P(ResourceCreation, CreateConstantBufferX)
+TEST_CASE_METHOD(ResourceCreation, "CreateConstantBufferX")
 {
     auto buffer = cgpux_create_mapped_constant_buffer(device,
         sizeof(uint16_t) * 3, u8"ConstantBuffer", true);
@@ -231,9 +237,8 @@ TEST_P(ResourceCreation, CreateConstantBufferX)
     cgpu_free_buffer(buffer);
 }
 
-TEST_P(ResourceCreation, CreateModules)
+TEST_CASE_METHOD(ResourceCreation, "CreateModules")
 {
-    ECGPUBackend backend = GetParam();
     DECLARE_ZERO(CGPUShaderLibraryDescriptor, vdesc)
     vdesc.code = vertex_shaders[backend];
     vdesc.code_size = vertex_shader_sizes[backend];
@@ -258,9 +263,8 @@ TEST_P(ResourceCreation, CreateModules)
     cgpu_free_shader_library(fragment_shader);
 }
 
-TEST_P(ResourceCreation, CreateRootSignature)
+TEST_CASE_METHOD(ResourceCreation, "CreateRootSignature")
 {
-    ECGPUBackend backend = GetParam();
     DECLARE_ZERO(CGPUShaderLibraryDescriptor, vdesc)
     vdesc.code = vertex_shaders[backend];
     vdesc.code_size = vertex_shader_sizes[backend];
@@ -296,10 +300,8 @@ TEST_P(ResourceCreation, CreateRootSignature)
     cgpu_free_shader_library(fragment_shader);
 }
 
-TEST_P(ResourceCreation, CreateComputePipeline)
+TEST_CASE_METHOD(ResourceCreation, "CreateComputePipeline")
 {
-    // Create compute shader
-    ECGPUBackend backend = GetParam();
     DECLARE_ZERO(CGPUShaderLibraryDescriptor, csdesc)
     csdesc.code = compute_shaders[backend];
     csdesc.code_size = compute_shader_sizes[backend];
@@ -323,31 +325,7 @@ TEST_P(ResourceCreation, CreateComputePipeline)
     cgpu_free_root_signature(signature);
 }
 
-TEST_P(ResourceCreation, CreateRenderPipeline)
+TEST_CASE_METHOD(ResourceCreation, "CreateRenderPipeline")
 {
-}
 
-static const auto allPlatforms = testing::Values(
-#ifdef CGPU_USE_VULKAN
-CGPU_BACKEND_VULKAN
-#endif
-#ifdef CGPU_USE_D3D12
-,
-CGPU_BACKEND_D3D12
-#endif
-);
-
-INSTANTIATE_TEST_SUITE_P(ResourceCreation, ResourceCreation, allPlatforms);
-
-int main(int argc, char** argv)
-{
-    skr_initialize_crash_handler();
-    skr_log_initialize_async_worker();
-
-    ::testing::InitGoogleTest(&argc, argv);
-    auto result = RUN_ALL_TESTS();
-
-    skr_log_finalize_async_worker();
-    skr_finalize_crash_handler();
-    return result;
 }

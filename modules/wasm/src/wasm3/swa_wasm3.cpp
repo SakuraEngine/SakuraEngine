@@ -14,7 +14,7 @@ const char* WASM3RuntimeFunctionTableAdd(struct WASM3RuntimeFunctionTable* table
     const auto& iter = table->find(name);
     if (iter != table->end())
     {
-        swa_warn("SWA function named %s already exists in table!", name);
+        swa_warn(u8"SWA function named %s already exists in table!", name);
         return SWA_NULLPTR;
     }
     return table->insert(name, function).first->first;

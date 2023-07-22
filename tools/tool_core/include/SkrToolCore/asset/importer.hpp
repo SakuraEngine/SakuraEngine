@@ -4,7 +4,7 @@
 #include "SkrToolCore/asset/cooker.hpp"
 #include "SkrRT/serde/json/reader_fwd.h"
 #ifndef __meta__
-    #include "SkrToolCore/asset/importer.generated.h"
+    #include "SkrToolCore/asset/importer.generated.h" // IWYU pragma: export
 #endif
 
 namespace skd sreflect

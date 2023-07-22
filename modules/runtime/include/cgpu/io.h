@@ -1,6 +1,6 @@
 #pragma once
 #include "cgpu/api.h"
-#include "SkrRT/io/io.h"
+#include "SkrRT/io/ram_io.hpp"
 
 // no format & stride parameters provided now because we think it's not necessary to support async io with UAV buffers
 // we can add them if necessary in the future
@@ -94,7 +94,6 @@ typedef struct skr_vram_io_service_desc_t {
     uint32_t sleep_time;
     bool lockless;
 } skr_vram_io_service_desc_t;
-
 
 #ifdef __cplusplus
 struct CGPU_API skr_io_vram_service_t

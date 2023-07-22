@@ -50,7 +50,7 @@ namespace godot
 
 void print_error(String p_string)
 {
-    SKR_LOG_ERROR(p_string.utf8().get_data());
+    SKR_LOG_ERROR((const char8_t*)p_string.utf8().get_data());
 }
 
 static const int MAX_DECIMALS = 32;

@@ -1,9 +1,10 @@
-#include "SkrToolCore/project/project.hpp"
+#include "../pch.hpp"
 #include "SkrRT/misc/log.h"
-#include "SkrRT/platform/vfs.h"
-#include "SkrRT/io/io.h"
-#include "SkrRT/serde/json/reader.h"
 #include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/platform/vfs.h"
+#include "SkrRT/io/ram_io.hpp"
+#include "SkrRT/serde/json/reader.h"
+#include "SkrToolCore/project/project.hpp"
 
 namespace skd
 {
@@ -69,14 +70,14 @@ SProject* SProject::OpenProject(const skr::filesystem::path& projectFile) noexce
     auto doc = parser.iterate(jsonstring);
     if(doc.error())
     {
-        SKR_LOG_ERROR("Failed to parse project file: %s, error: %s", projectPath.c_str(), simdjson::error_message(doc.error()));
+        SKR_LOG_ERROR(u8"Failed to parse project file: %s, error: %s", projectPath.c_str(), simdjson::error_message(doc.error()));
         return nullptr;
     }
     auto json_value = doc.get_value().value_unsafe();
     skd::SProjectConfig cfg;
     if(skr::json::Read(std::move(json_value), cfg) != skr::json::SUCCESS)
     {
-        SKR_LOG_ERROR("Failed to parse project file: %s", projectPath.c_str());
+        SKR_LOG_ERROR(u8"Failed to parse project file: %s", projectPath.c_str());
         return nullptr;
     }
     

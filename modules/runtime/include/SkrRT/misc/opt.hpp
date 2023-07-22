@@ -40,14 +40,14 @@ struct parser {
             int id = 0;
             if (const auto it = m_shorthands.find(parsed); it == m_shorthands.end())
             {
-                SKR_LOG_ERROR("shorthand '%s' not found", parsed.c_str());
+                SKR_LOG_ERROR(u8"shorthand '%s' not found", parsed.c_str());
                 return abort();
             }
             else
             {
                 if (const auto it = parsed_shorthands.find(parsed); it != parsed_shorthands.end())
                 {
-                    SKR_LOG_ERROR("shorthand '%s' already parsed", parsed.c_str());
+                    SKR_LOG_ERROR(u8"shorthand '%s' already parsed", parsed.c_str());
                     return abort();
                 }
                 parsed_shorthands.emplace(parsed);
@@ -77,21 +77,21 @@ struct parser {
 
     void help() const
     {
-        SKR_LOG_WARN("Usage: %s [-h,--help]", m_argv[0]);
+        SKR_LOG_WARN(u8"Usage: %s [-h,--help]", m_argv[0]);
         const auto print = [this](bool with_description) {
             for (size_t i = 0; i != m_names.size(); ++i)
             {
                 auto const& cmd = m_cmds.at(m_names[i]);
-                SKR_LOG_WARN(" [%s%s]", cmd.shorthand.c_str(), cmd.is_boolean ? m_names[i].c_str() : " <value>");
+                SKR_LOG_WARN(u8" [%s%s]", cmd.shorthand.c_str(), cmd.is_boolean ? m_names[i].c_str() : " <value>");
                 if (with_description)
                 {
-                    SKR_LOG_WARN("%s%s", cmd.descr.c_str(), cmd.is_required ? " (required)" : "");
+                    SKR_LOG_WARN(u8"%s%s", cmd.descr.c_str(), cmd.is_required ? " (required)" : "");
                 }
             }
         };
         print(false);
         print(true);
-        SKR_LOG_WARN(" [-h,--help]\n\tPrint this help text and silently exits.");
+        SKR_LOG_WARN(u8" [-h,--help]\n\tPrint this help text and silently exits.");
     }
 
     bool add(skr::string const& name, skr::string const& descr, skr::string const& shorthand,
@@ -116,7 +116,7 @@ struct parser {
         auto it = m_cmds.find(name);
         if (it == m_cmds.end())
         {
-            SKR_LOG_ERROR("'%s' not found", name.c_str());
+            SKR_LOG_ERROR(u8"'%s' not found", name.c_str());
             //throw std::runtime_error(std::string("error: '") + name.c_str() + "' not found");
         }
         auto const& value = (*it).second.value;
@@ -165,7 +165,7 @@ struct parser {
             if (ret.ec != 0)
             {
                 auto name = typeid(T).name();
-                SKR_LOG_ERROR("failed to parse '%s' as '%s'", value.c_str(), name);
+                SKR_LOG_ERROR(u8"failed to parse '%s' as '%s'", value.c_str(), name);
                 //throw std::runtime_error(std::string("error: failed to parse '") + value.c_str() + "' as '" + name + "'");
             }
             return result;
@@ -178,7 +178,7 @@ struct parser {
             if (ret.ec != 0)
             {
                 auto name = typeid(T).name();
-                SKR_LOG_ERROR("failed to parse '%s' as '%s'", value.c_str(), name);
+                SKR_LOG_ERROR(u8"failed to parse '%s' as '%s'", value.c_str(), name);
                 //throw std::runtime_error(std::string("error: failed to parse '") + value.c_str() + "' as '" + name + "'");
             }
             return result;

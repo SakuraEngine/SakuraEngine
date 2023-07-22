@@ -1,8 +1,8 @@
 #include "cgpu/api.h"
 #ifdef CGPU_USE_D3D12
     #include <d3d12.h>
+    #include <dxgi.h>
 #endif
-#include "SkrRT/platform/shared_library.hpp"
 #include "cgpu/drivers/cgpu_nvapi.h"
 #include "common_utils.h"
 
@@ -28,7 +28,7 @@ uint32_t cgpu_nvapi_get_driver_version(CGPUInstanceId Inst)
     {
         NvAPI_ShortString string;
         NvAPI_GetErrorMessage(Status, string);
-        cgpu_warn("[warn] nvapi failed to get driver version! \n message: %s", string);
+        cgpu_warn(u8"[warn] nvapi failed to get driver version! \n message: %s", string);
         return v;
     }
     return v;

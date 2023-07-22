@@ -1,10 +1,10 @@
 #pragma once
 #include "SkrRenderer/fwd_types.h"
-#include "SkrRT/io/io.h"
+#include "SkrRT/io/ram_io.hpp"
 #include "cgpu/io.h"
 
 #ifndef __meta__
-#include "SkrRenderer/resources/texture_resource.generated.h"
+#include "SkrRenderer/resources/texture_resource.generated.h" // IWYU pragma: export
 #endif
 
 // (GPU) texture resource

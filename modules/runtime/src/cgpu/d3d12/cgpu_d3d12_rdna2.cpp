@@ -1,6 +1,5 @@
 #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #include "d3d12_utils.hpp"
-#include "../common/common_utils.h"
 
 void cgpu_render_encoder_set_shading_rate_d3d12(CGPURenderPassEncoderId encoder, ECGPUShadingRate shading_rate, ECGPUShadingRateCombiner post_rasterizer_rate, ECGPUShadingRateCombiner final_rate)
 {

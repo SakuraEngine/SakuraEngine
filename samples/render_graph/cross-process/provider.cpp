@@ -73,7 +73,7 @@ void ProviderRenderer::create_api_objects()
     adapter = adapters[0];
 
     auto adapter_detail = cgpu_query_adapter_detail(adapter);
-    SKR_LOG_TRACE("Adapter: %s", adapter_detail->vendor_preset.gpu_name);
+    SKR_LOG_TRACE(u8"Adapter: %s", adapter_detail->vendor_preset.gpu_name);
 
     // Create device
     CGPUQueueGroupDescriptor queue_group_desc = {};
@@ -241,7 +241,7 @@ int provider_set_shared_handle(MDB_env* env, MDB_dbi dbi, SProcessId provider_id
         MDB_txn* txn;
         if (const int rc = mdb_txn_begin(env, nullptr, 0, &txn)) 
         {
-            SKR_LOG_ERROR("mdb_txn_begin failed: %d", rc);
+            SKR_LOG_ERROR(u8"mdb_txn_begin failed: %d", rc);
         }
         // Txn body: write db
         {
@@ -252,15 +252,15 @@ int provider_set_shared_handle(MDB_env* env, MDB_dbi dbi, SProcessId provider_id
 
             if (int rc = mdb_put(txn, dbi, &key, &data, 0))
             {
-                SKR_LOG_ERROR("mdb_put failed: %d", rc);
+                SKR_LOG_ERROR(u8"mdb_put failed: %d", rc);
             }
             else
             {
-                SKR_LOG_TRACE("provider_set_shared_handle succeed: %d, proc: %s, shared_handle: %lld", rc, keyString.c_str(), info.shared_handle);
+                SKR_LOG_TRACE(u8"provider_set_shared_handle succeed: %d, proc: %s, shared_handle: %lld", rc, keyString.c_str(), info.shared_handle);
             }
             if (int rc = mdb_txn_commit(txn))
             {
-                SKR_LOG_ERROR("mdb_txn_commit failed: %d", rc);
+                SKR_LOG_ERROR(u8"mdb_txn_commit failed: %d", rc);
             }
         }
     }
@@ -271,16 +271,16 @@ int provider_main(int argc, char* argv[])
 {
     // report process information
     auto id = skr_get_current_process_id();
-    SKR_LOG_DEBUG("exec_mode: %s, process id: %lld", argv[1], id);
+    SKR_LOG_DEBUG(u8"exec_mode: %s, process id: %lld", argv[1], id);
     const SProcessId provider_id = skr_get_current_process_id();
-    SKR_LOG_TRACE("provider id: %d", provider_id);
+    SKR_LOG_TRACE(u8"provider id: %d", provider_id);
 
     // initialize db
     MDB_env* env = nullptr;
     env_create(&env);
     MDB_dbi dbi;
     dbi_create(env, &dbi, false);
-    SKR_LOG_TRACE("db id: %u", dbi);
+    SKR_LOG_TRACE(u8"db id: %u", dbi);
 
     // initialize renderer
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) return -1;
@@ -389,7 +389,7 @@ int provider_main(int argc, char* argv[])
                     CGPUExportTextureDescriptor export_desc = {};
                     export_desc.texture = shared_texture;
                     auto shared_handle = cgpu_export_shared_texture_handle(renderer->device, &export_desc);
-                    SKR_LOG_TRACE("shared texture handle exported: %p", shared_handle);
+                    SKR_LOG_TRACE(u8"shared texture handle exported: %p", shared_handle);
                     cached_shared_texture = shared_texture;
                     CGPUImportTextureDescriptor import_info = {};
                     import_info.backend = renderer->backend;

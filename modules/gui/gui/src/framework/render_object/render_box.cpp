@@ -1,7 +1,6 @@
+#include "../../pch.hpp"
 #include "SkrGui/framework/render_object/render_box.hpp"
 #include <algorithm>
-#include "SkrRT/math/matrix4x4f.h"
-#include "SkrRT/math/vector.h"
 
 namespace skr::gui
 {
@@ -64,7 +63,7 @@ Sizef RenderBox::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXCE
 void RenderBox::perform_resize() SKR_NOEXCEPT
 {
     set_size(compute_dry_layout(constraints()));
-    if (!size().is_finite()) { SKR_GUI_LOG_ERROR("Box that [is_sized_by_parent() == true] must return finite size"); }
+    if (!size().is_finite()) { SKR_GUI_LOG_ERROR(u8"Box that [is_sized_by_parent() == true] must return finite size"); }
 }
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! old code !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

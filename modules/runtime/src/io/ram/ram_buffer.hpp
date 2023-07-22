@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/io/io.h"
+#include "SkrRT/io/ram_io.hpp"
 #include "../common/pool.hpp"
 
 namespace skr {
@@ -26,13 +26,18 @@ public:
         return +[](SInterface* ptr) 
         { 
             auto* p = static_cast<RAMIOBuffer*>(ptr);
+            SKR_ASSERT(p->pool && "Invalid pool detected!");
             p->pool->deallocate(p); 
         };
     }
     friend struct SmartPool<RAMIOBuffer, IRAMIOBuffer>;
 protected:
-    RAMIOBuffer(ISmartPoolPtr<IRAMIOBuffer> pool) : pool(pool) {}
-    ISmartPoolPtr<IRAMIOBuffer> pool = nullptr;
+    RAMIOBuffer(ISmartPoolPtr<IRAMIOBuffer> pool) 
+        : pool(pool)
+    {
+        SKR_ASSERT(pool && "Invalid pool detected!");
+    }
+    const ISmartPoolPtr<IRAMIOBuffer> pool = nullptr;
 };
 
 } // namespace io

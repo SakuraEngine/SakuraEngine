@@ -1,6 +1,11 @@
 #pragma once
 #include "dual_types.h"
 #include "SkrRT/misc/types.h"
+#if defined(__cplusplus)
+#include "SkrRT/misc/log.h"
+#include "SkrRT/async/fib_task.hpp"
+#include "SkrRT/ecs/callback.hpp"
+#endif
 
 #if defined(__cplusplus)
 extern "C" {
@@ -745,7 +750,7 @@ RUNTIME_API void dual_set_bit(uint32_t* mask, int32_t bit);
 #endif
 
 #if defined(__cplusplus)
-#include "SkrRT/async/fib_task.hpp"
+
 /**
  * @brief register a resource to scheduler
  *
@@ -825,10 +830,6 @@ struct dual_id_of {
         static_assert(!sizeof(C), "dual_id_of<C> not implemented for this type, please include the appropriate generated header!");
     }
 };
-#include "SkrRT/type/type_helper.hpp"
-#include "SkrRT/ecs/callback.hpp"
-#include "SkrRT/ecs/type_builder.hpp"
-#include "SkrRT/misc/log.h"
 
 namespace dual
 {
@@ -897,28 +898,28 @@ namespace dual
         {
             if (desc.callback.constructor == nullptr)
             {
-                SKR_LOG_WARN("type %s is not trivially constructible but no contructor was provided.", desc.name);
+                SKR_LOG_WARN(u8"type %s is not trivially constructible but no contructor was provided.", desc.name);
             }
         }
         if constexpr (!std::is_trivially_destructible_v<C>)
         {
             if (desc.callback.destructor == nullptr)
             {
-                SKR_LOG_WARN("type %s is not trivially destructible but no destructor was provided.", desc.name);
+                SKR_LOG_WARN(u8"type %s is not trivially destructible but no destructor was provided.", desc.name);
             }
         }
         if constexpr (!std::is_trivially_copy_constructible_v<C>)
         {
             if (desc.callback.copy == nullptr)
             {
-                SKR_LOG_WARN("type %s is not trivially copy constructible but no copy constructor was provided.", desc.name);
+                SKR_LOG_WARN(u8"type %s is not trivially copy constructible but no copy constructor was provided.", desc.name);
             }
         }
         if constexpr (!std::is_trivially_move_constructible_v<C>)
         {
             if (desc.callback.move == nullptr)
             {
-                SKR_LOG_WARN("type %s is not trivially move constructible but no move constructor was provided.", desc.name);
+                SKR_LOG_WARN(u8"type %s is not trivially move constructible but no move constructor was provided.", desc.name);
             }
         }
     }

@@ -11,7 +11,7 @@
 
 #define USE_PIX
 #ifdef USE_PIX
-#include "cgpu/drivers/WinPixEventRuntime/pix3.h"
+#include "cgpu/drivers/WinPixEventRuntime/pix3.h" // IWYU pragma: keep
 #endif
 
 #if !defined(XBOX) && defined(_WIN32)
@@ -126,7 +126,7 @@ void D3D12Util_Optionalenable_debug_layer(CGPUInstance_D3D12* result, CGPUInstan
     }
     else if (descriptor->enable_gpu_based_validation)
     {
-        cgpu_warn("D3D12 GpuBasedValidation enabled while DebugLayer is closed, there'll be no effect.");
+        cgpu_warn(u8"D3D12 GpuBasedValidation enabled while DebugLayer is closed, there'll be no effect.");
     }
 }
 

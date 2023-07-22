@@ -96,7 +96,7 @@ SProcessHandle skr_run_process(const char8_t* command, const char8_t** arguments
     
 	if (PosixSpawnErrNo != 0)
 	{
-		SKR_LOG_FATAL("skr_run_process: posix_spawn() failed (%d, %s)", PosixSpawnErrNo, strerror(PosixSpawnErrNo));
+		SKR_LOG_FATAL(u8"skr_run_process: posix_spawn() failed (%d, %s)", PosixSpawnErrNo, strerror(PosixSpawnErrNo));
 		return nullptr;
 	}
 

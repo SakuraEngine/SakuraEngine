@@ -1,12 +1,9 @@
-#include "SkrRT/containers/hashmap.hpp"
+#include "../pch.hpp"
 #include "SkrRT/type/type.hpp"
-#include "SkrRT/platform/vfs.h"
-#include "SkrRT/platform/debug.h"
 #include "SkrRT/resource/config_resource.h"
-#include "SkrRT/serde/json/reader.h"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/misc/defer.hpp"
-#include "SkrRT/io/io.h"
+#include "SkrRT/io/ram_io.hpp"
 #include "SkrToolCore/assets/config_asset.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
@@ -22,7 +19,7 @@ void* SJsonConfigImporter::Import(skr_io_ram_service_t* ioService, SCookContext*
     auto type = skr_get_type(&configType);
     if (type == nullptr)
     {
-        SKR_LOG_ERROR("import resource %s failed, rtti is not load", assetRecord->path.u8string().c_str());
+        SKR_LOG_ERROR(u8"import resource %s failed, rtti is not load", assetRecord->path.u8string().c_str());
         return nullptr;
     }
 

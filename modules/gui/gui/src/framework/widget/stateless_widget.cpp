@@ -1,4 +1,5 @@
-#include "SkrGui/framework/widget/stateless_widget.hpp"
+#include "../../pch.hpp"
+#include "SkrGui/framework/widget/stateless_widget.hpp" // IWYU pragma: keep
 
 namespace skr::gui
 {

@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "shared_rc.cpp"
 
 namespace skr

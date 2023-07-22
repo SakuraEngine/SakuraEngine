@@ -230,7 +230,7 @@ static void* VKAPI_PTR cgpu_vulkan_alloc(
 {
     if (size == 0) return CGPU_NULLPTR;
 
-    const char* CZoneN = "vulkan::alloc";
+    SKR_UNUSED const char* CZoneN = "vulkan::alloc";
     TracyCZoneCS(z, SKR_ALLOC_TRACY_MARKER_COLOR, 16, 1);
     TracyCZoneText(z, CZoneN, strlen(CZoneN));
     TracyCZoneName(z, CZoneN, strlen(CZoneN));
@@ -264,7 +264,7 @@ static void VKAPI_PTR cgpu_vulkan_free(
 {
     if (CGPU_NULLPTR == pMemory) return;
 
-    const char* CZoneN = "vulkan::free";
+    SKR_UNUSED const char* CZoneN = "vulkan::free";
     TracyCZoneCS(z, SKR_DEALLOC_TRACY_MARKER_COLOR, 16, 1);
     TracyCZoneText(z, CZoneN, strlen(CZoneN));
     TracyCZoneName(z, CZoneN, strlen(CZoneN));
@@ -289,7 +289,7 @@ static void* VKAPI_PTR cgpu_vulkan_realloc(
     size_t                                      alignment,
     VkSystemAllocationScope                     allocationScope)
 {
-    const char* CZoneN = "vulkan::realloc";
+    SKR_UNUSED const char* CZoneN = "vulkan::realloc";
     TracyCZoneCS(z, SKR_ALLOC_TRACY_MARKER_COLOR, 16, 1);
     TracyCZoneText(z, CZoneN, strlen(CZoneN));
     TracyCZoneName(z, CZoneN, strlen(CZoneN));

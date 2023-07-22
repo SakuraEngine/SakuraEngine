@@ -1,19 +1,21 @@
-#include <SkrRT/platform/filesystem.hpp>
-#include "SkrRenderer/resources/texture_resource.h"
-#include "SkrRT/platform/debug.h"
-#include "SkrRT/io/io.h"
+#include "../pch.hpp"
 #include "cgpu/api.h"
+#include "cgpu/io.h"
+#include "SkrRT/io/ram_io.hpp"
+#include <SkrRT/platform/filesystem.hpp>
+#include "SkrRT/platform/debug.h"
 #include "SkrRT/type/type_id.hpp"
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/resource/resource_system.h"
-#include "SkrRenderer/render_device.h"
-#include "cgpu/io.h"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/containers/hashmap.hpp"
+
+#include "SkrRenderer/render_device.h"
+#include "SkrRenderer/resources/texture_resource.h"
 
 #ifdef _WIN32
 //#include "SkrRT/platform/win/dstorage_windows.h"
@@ -79,7 +81,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
         }
         ~DStorageRequest()
         {
-            SKR_LOG_TRACE("DStorage for texture resource %s finished!", absPath.c_str());
+            SKR_LOG_TRACE(u8"DStorage for texture resource %s finished!", absPath.c_str());
         }
         std::string absPath;
         skr_io_future_t vtexture_request;
@@ -96,7 +98,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
         }
         ~UploadRequest()
         {
-            SKR_LOG_TRACE("Upload for texture resource %s finished!", resource_uri.c_str());
+            SKR_LOG_TRACE(u8"Upload for texture resource %s finished!", resource_uri.c_str());
         }
         STextureFactoryImpl* factory = nullptr;
         std::string resource_uri;

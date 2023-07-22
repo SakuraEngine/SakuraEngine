@@ -1,35 +1,30 @@
-#include "SkrRT/misc/parallel_for.hpp"
-#include "SkrToolCore/project/project.hpp"
-#include "SkrToolCore/asset/cook_system.hpp"
-#include "SkrToolCore/asset/importer.hpp"
-#include "SkrRT/ecs/dual.h"
-#include "SkrRT/platform/filesystem.hpp"
-#include "SkrRT/platform/thread.h"
-#include "SkrRT/resource/config_resource.h"
-#include "SkrRT/resource/resource_header.hpp"
-#include "SkrToolCore/assets/config_asset.hpp"
-#include "SkrRT/type/type.hpp"
-#include "SkrRT/misc/defer.hpp"
-#include "SkrRT/resource/resource_header.hpp"
-#include "SkrRT/module/module_manager.hpp"
 #include "SkrRT/platform/vfs.h"
-#include "SkrRT/misc/log.h"
+#include "SkrRT/platform/filesystem.hpp"
+#include "SkrRT/misc/defer.hpp"
+#include "SkrRT/misc/opt.hpp"
 #include "SkrRT/misc/log.hpp"
-#include "SkrRT/io/io.h"
+#include "SkrRT/misc/parallel_for.hpp"
+#include "SkrRT/containers/string.hpp"
+#include "SkrRT/module/module_manager.hpp"
+#include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRT/resource/local_resource_registry.hpp"
+
 #include "SkrRenderer/resources/texture_resource.h"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 #include "SkrRenderer/resources/material_type_resource.hpp"
 #include "SkrRenderer/resources/material_resource.hpp"
-#include "SkrRT/misc/make_zeroed.hpp"
+
 #include "SkrAnim/resources/skeleton_resource.h"
 #include "SkrAnim/resources/animation_resource.h"
-#include "SkrRT/containers/string.hpp"
+#include "SkrToolCore/project/project.hpp"
+#include "SkrToolCore/asset/cook_system.hpp"
+#include "SkrToolCore/asset/importer.hpp"
+#include "SkrToolCore/assets/config_asset.hpp"
+
 #include "tracy/Tracy.hpp"
-#include "SkrRT/misc/opt.hpp"
 
 bool IsAsset(skr::filesystem::path path)
 {
@@ -93,7 +88,7 @@ skr::vector<skd::SProject*> open_projects(int argc, char** argv)
     parser.add(u8"workspace", u8"workspace path", u8"-w", true);
     if(!parser.parse())
     {
-        SKR_LOG_ERROR("Failed to parse command line arguments.");
+        SKR_LOG_ERROR(u8"Failed to parse command line arguments.");
         return {};
     }
     auto projectPath = parser.get_optional<skr::string>(u8"project");
@@ -138,7 +133,7 @@ int compile_project(skd::SProject* project)
         }
         iter.increment(ec);
     }
-    SKR_LOG_INFO("Project dir scan finished.");
+    SKR_LOG_INFO(u8"Project dir scan finished.");
     //----- import project assets (guid & type & path)
     {
         using iter_t = typename decltype(paths)::iterator;
@@ -149,7 +144,7 @@ int compile_project(skd::SProject* project)
                 system.ImportAsset(project, *i);
         });
     }
-    SKR_LOG_INFO("Project asset import finished.");
+    SKR_LOG_INFO(u8"Project asset import finished.");
     skr::filesystem::create_directories(project->GetOutputPath(), ec);
     skr::filesystem::create_directories(project->GetDependencyPath(), ec);
     //----- schedule cook tasks (checking dependencies)
@@ -163,7 +158,7 @@ int compile_project(skd::SProject* project)
             }
         });
     }
-    SKR_LOG_INFO("Project asset import finished.");
+    SKR_LOG_INFO(u8"Project asset import finished.");
     auto resource_system = skr::resource::GetResourceSystem();
     skr::task::schedule([&]
     {

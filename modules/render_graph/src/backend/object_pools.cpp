@@ -1,6 +1,6 @@
+#include "../pch.hpp"
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/misc/hash.h"
-#include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include <EASTL/set.h>
 
@@ -8,8 +8,6 @@
 #include "SkrRenderGraph/backend/buffer_pool.hpp"
 #include "SkrRenderGraph/backend/texture_pool.hpp"
 #include "SkrRenderGraph/backend/texture_view_pool.hpp"
-
-#include "tracy/Tracy.hpp"
 
 namespace skr
 {
@@ -283,7 +281,7 @@ CGPUTextureViewId TextureViewPool::allocate(const CGPUTextureViewDescriptor& des
     auto found = views.find(key);
     if (found != views.end())
     {
-        // SKR_LOG_TRACE("Reallocating texture view for texture %p (id %lld, old %lld)", desc.texture,
+        // SKR_LOG_TRACE(u8"Reallocating texture view for texture %p (id %lld, old %lld)", desc.texture,
         //    key.texture->unique_id, found->second.texture_view->info.texture->unique_id);
         found->second.mark.frame_index = frame_index;
         SKR_ASSERT(found->first.texture);
@@ -291,7 +289,7 @@ CGPUTextureViewId TextureViewPool::allocate(const CGPUTextureViewDescriptor& des
     }
     else
     {
-        // SKR_LOG_TRACE("Creating texture view for texture %p (tex %p)", desc.texture, key.texture);
+        // SKR_LOG_TRACE(u8"Creating texture view for texture %p (tex %p)", desc.texture, key.texture);
         CGPUTextureViewId new_view = cgpu_create_texture_view(device, &desc);
         AllocationMark mark = {frame_index, 0};
         views[key] = PooledTextureView(new_view, mark);

@@ -42,7 +42,7 @@ struct ReadTrait<skr::vector<V, Allocator>> {
         SKR_ARCHIVE(size);
         if(size > cfg.max || size < cfg.min) 
         {
-            //SKR_LOG_ERROR("array size %d is out of range [%d, %d]", size, cfg.min, cfg.max);
+            //SKR_LOG_ERROR(u8"array size %d is out of range [%d, %d]", size, cfg.min, cfg.max);
             return -2;
         }
 
@@ -88,7 +88,7 @@ struct WriteTrait<const skr::vector<V, Allocator>&> {
     {
         if(vec.size() > cfg.max || vec.size() < cfg.min) 
         {
-            //SKR_LOG_ERROR("array size %d is out of range [%d, %d]", vec.size(), cfg.min, cfg.max);
+            //SKR_LOG_ERROR(u8"array size %d is out of range [%d, %d]", vec.size(), cfg.min, cfg.max);
             return -2;
         }
         SKR_ARCHIVE((uint32_t)vec.size());
