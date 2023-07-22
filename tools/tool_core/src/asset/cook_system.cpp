@@ -1,18 +1,21 @@
+#include "../pch.hpp"
 #include "SkrRT/module/module.hpp"
-#include "SkrRT/misc/parallel_for.hpp"
-#include "SkrRT/async/thread_job.hpp"
-#include "SkrToolCore/asset/cook_system.hpp"
-#include "SkrToolCore/asset/importer.hpp"
-#include "SkrToolCore/project/project.hpp"
 #include "SkrRT/platform/guid.hpp"
-#include "SkrRT/containers/string.hpp"
+#include "SkrRT/misc/parallel_for.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/defer.hpp"
+#include "SkrRT/containers/string.hpp"
 #include "SkrRT/io/ram_io.hpp"
+#include "SkrRT/async/thread_job.hpp"
 
 #include "SkrRT/serde/json/reader.h"
 #include "SkrRT/serde/json/writer.h"
 #include "SkrRT/serde/binary/writer.h"
+
+#include "SkrToolCore/asset/cook_system.hpp"
+#include "SkrToolCore/asset/importer.hpp"
+#include "SkrToolCore/project/project.hpp"
+
 #include <atomic>
 
 #include "tracy/Tracy.hpp"

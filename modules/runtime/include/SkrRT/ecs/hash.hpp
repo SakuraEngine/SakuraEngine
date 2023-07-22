@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/platform/configure.h"
+#include <inttypes.h>
 
 namespace dual
 {
