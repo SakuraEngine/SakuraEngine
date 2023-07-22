@@ -1,11 +1,11 @@
 target("CGPUMandelbrot")
     set_group("04.examples/cgpu")
+    set_kind("binary")
     set_exceptions("no-cxx")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/cgpu-mandelbrot",
         dxil_outdir = "/../resources/shaders/cgpu-mandelbrot"})
-    set_kind("binary")
     public_dependency("SkrRT", engine_version)
     add_includedirs("./../../common", {public = false})
     add_files("mandelbrot/*.c")
@@ -13,12 +13,12 @@ target("CGPUMandelbrot")
 
 target("CGPUIndexedInstance")
     set_group("04.examples/cgpu")
+    set_kind("binary")
     set_exceptions("no-cxx")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/cgpu-indexed-instance",
         dxil_outdir = "/../resources/shaders/cgpu-indexed-instance"})
-    set_kind("binary")
     public_dependency("SkrRT", engine_version)
     add_includedirs("./../../common", {public = false})
     add_files("indexed-instance/*.c")
@@ -26,11 +26,12 @@ target("CGPUIndexedInstance")
 
 target("CGPUTexture")
     set_group("04.examples/cgpu")
+    set_kind("binary")
     set_exceptions("no-cxx")
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/cgpu-texture",
         dxil_outdir = "/../resources/shaders/cgpu-texture"})
-    set_kind("binary")
     public_dependency("SkrRT", engine_version)
     add_includedirs("./../../common", {public = false})
     add_files("texture/texture.c")
@@ -40,6 +41,7 @@ target("CGPUTiledTexture")
     set_group("04.examples/cgpu")
     set_exceptions("no-cxx")
     set_kind("binary")
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     public_dependency("SkrRT", engine_version)
     add_includedirs("./../../common", {public = false})
     add_files("texture/tiled_texture.c")

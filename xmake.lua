@@ -15,7 +15,7 @@ includes("xmake/options.lua")
 --includes("xmake/toolchains/prospero.lua")
 
 engine_version = "0.1.0"
-default_unity_batch_size = 8
+default_unity_batch_size = 16
 
 include_dir_list = {"include"}
 private_include_dir_list = {}
