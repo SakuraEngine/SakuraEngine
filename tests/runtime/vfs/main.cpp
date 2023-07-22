@@ -135,6 +135,8 @@ TEST_CASE_METHOD(VFSTest, "asyncread")
     ZoneScopedN("asyncread");
     
     auto dstorage = GENERATE(as<bool>{}, true, false);
+    SKR_TEST_INFO(u8"dstorage enabled: {}", dstorage);
+    
     skr_ram_io_service_desc_t ioServiceDesc = {};
     ioServiceDesc.name = u8"Test";
     ioServiceDesc.use_dstorage = dstorage;
@@ -172,6 +174,8 @@ TEST_CASE_METHOD(VFSTest, "asyncread2")
     ZoneScopedN("asyncread2");
 
     auto dstorage = GENERATE(as<bool>{}, true, false);
+    SKR_TEST_INFO(u8"dstorage enabled: {}", dstorage);
+
     auto jqDesc = make_zeroed<skr::JobQueueDesc>();
     jqDesc.thread_count = 1;
     jqDesc.priority = SKR_THREAD_ABOVE_NORMAL;
@@ -219,6 +223,8 @@ TEST_CASE_METHOD(VFSTest, "chunking")
     ZoneScopedN("chunking");
 
     auto dstorage = GENERATE(as<bool>{}, true, false);
+    SKR_TEST_INFO(u8"dstorage enabled: {}", dstorage);
+
     skr_ram_io_service_desc_t ioServiceDesc = {};
     ioServiceDesc.name = u8"Test";
     ioServiceDesc.use_dstorage = dstorage;
@@ -258,6 +264,8 @@ TEST_CASE_METHOD(VFSTest, "defer_cancel")
     ZoneScopedN("defer_cancel");
 
     auto dstorage = GENERATE(as<bool>{}, true, false);
+    SKR_TEST_INFO(u8"dstorage enabled: {}", dstorage);
+
     uint32_t sucess = 0;
     for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
     {
@@ -315,6 +323,8 @@ TEST_CASE_METHOD(VFSTest, "cancel")
     ZoneScopedN("cancel");
 
     auto dstorage = GENERATE(as<bool>{}, true, false);
+    SKR_TEST_INFO(u8"dstorage enabled: {}", dstorage);
+
     uint32_t sucess = 0;
     for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
     {
@@ -371,6 +381,8 @@ TEST_CASE_METHOD(VFSTest, "cancel")
 TEST_CASE_METHOD(VFSTest, "sort")
 {
     auto dstorage = GENERATE(as<bool>{}, true, false);
+    SKR_TEST_INFO(u8"dstorage enabled: {}", dstorage);
+
     if (dstorage) 
         return;
 
