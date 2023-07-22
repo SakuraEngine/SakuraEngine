@@ -1,16 +1,8 @@
-#include "SkrRT/platform/crash.h"
 #include "test.hpp"
 
-class SPTRNonIntrusive : public SPTRBase
+class SPTRNonIntrusiveTests : public SPTRTestsBase
 {
-protected:
-    void SetUp() override
-    {
-    }
 
-    void TearDown() override
-    {
-    }
 };
 
 struct TestStruct
@@ -44,7 +36,7 @@ struct TestDerived : public TestStruct
     virtual ~TestDerived() = default;
 };
 
-TEST(SPTRNonIntrusive, CopyNonIntrusive)
+TEST_CASE_METHOD(SPTRNonIntrusiveTests, "CopyNonIntrusive")
 {
     TestStruct::Status status;
     {
@@ -59,7 +51,7 @@ TEST(SPTRNonIntrusive, CopyNonIntrusive)
     EXPECT_EQ(status, TestStruct::Status::Destroyed);
 }
 
-TEST(SPTRNonIntrusive, SwapNonIntrusive)
+TEST_CASE_METHOD(SPTRNonIntrusiveTests, "SwapNonIntrusive")
 {
     auto one_status = TestStruct::Status::Uninitialized;
     auto another_status = TestStruct::Status::Uninitialized;
@@ -72,7 +64,7 @@ TEST(SPTRNonIntrusive, SwapNonIntrusive)
     EXPECT_EQ(another_status, TestStruct::Status::Created);
 }
 
-TEST(SPTRNonIntrusive, MoveNonIntrusive)
+TEST_CASE_METHOD(SPTRNonIntrusiveTests, "MoveNonIntrusive")
 {
     auto one_status = TestStruct::Status::Uninitialized;
     auto another_status = TestStruct::Status::Uninitialized;
@@ -87,7 +79,7 @@ TEST(SPTRNonIntrusive, MoveNonIntrusive)
     EXPECT_EQ(one_status, TestStruct::Status::Destroyed);
 }
 
-TEST(SPTRNonIntrusive, CastNonIntrusive)
+TEST_CASE_METHOD(SPTRNonIntrusiveTests, "CastNonIntrusive")
 {
     TestStruct::Status status;
     skr::SPtr<TestDerived> pC(SkrNew<TestDerived>(status));
@@ -102,7 +94,7 @@ TEST(SPTRNonIntrusive, CastNonIntrusive)
     EXPECT_EQ(pCC3.use_count(), 4);
 }
 
-TEST(SPTRNonIntrusive, WeakNonIntrusive)
+TEST_CASE_METHOD(SPTRNonIntrusiveTests, "WeakNonIntrusive")
 {
     TestStruct::Status status;
     skr::SWeakPtr<TestStruct> mWeak = {};
@@ -115,7 +107,7 @@ TEST(SPTRNonIntrusive, WeakNonIntrusive)
     EXPECT_EQ(status, TestStruct::Status::Destroyed);
 }
 
-TEST(SPTRNonIntrusive, VoidPtrCastNonIntrusive)
+TEST_CASE_METHOD(SPTRNonIntrusiveTests, "VoidPtrCastNonIntrusive")
 {
     TestStruct::Status status = TestStruct::Status::Uninitialized;
     {
@@ -130,7 +122,7 @@ TEST(SPTRNonIntrusive, VoidPtrCastNonIntrusive)
     EXPECT_EQ(status, TestStruct::Status::Destroyed);
 }
 
-TEST(SPTRNonIntrusive, VoidPtrCastNonIntrusive2)
+TEST_CASE_METHOD(SPTRNonIntrusiveTests, "VoidPtrCastNonIntrusive2")
 {
     TestStruct::Status status = TestStruct::Status::Uninitialized;
     {
@@ -159,7 +151,7 @@ TEST(SPTRNonIntrusive, VoidPtrCastNonIntrusive2)
     EXPECT_EQ(status, TestStruct::Status::Destroyed);
 }
 
-TEST(SPTRNonIntrusive, VoidPtrReset)
+TEST_CASE_METHOD(SPTRNonIntrusiveTests, "VoidPtrReset")
 {
     TestStruct::Status status = TestStruct::Status::Uninitialized;
     {
@@ -187,17 +179,4 @@ TEST(SPTRNonIntrusive, VoidPtrReset)
         }
     }
     EXPECT_EQ(status, TestStruct::Status::Destroyed);
-}
-
-int main(int argc, char** argv)
-{
-    skr_initialize_crash_handler();
-    skr_log_initialize_async_worker();
-
-    ::testing::InitGoogleTest(&argc, argv);
-    auto result = RUN_ALL_TESTS();
-    
-    skr_log_finalize_async_worker();
-    skr_finalize_crash_handler();
-    return result;
 }

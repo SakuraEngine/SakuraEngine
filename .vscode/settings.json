@@ -4,10 +4,10 @@
     "xmake.additionalConfigArguments": [
         "--use_tracy=enable",
         "--build_tests=y",
-        "--cxx_version=cxx17"
+        "--cxx_version=cxx20"
     ],
     "xmake.customDebugConfig": {
         "visualizerFile": "${workspaceFolder}\\SDKs\\natvis\\EASTL.natvis",
-        "stopAtEntry": false,
+        "stopAtEntry": false
     }
 }

@@ -1,30 +1,23 @@
-#include "gtest/gtest.h"
 #include "SkrRT/misc/types.h"
 #include "SkrRT/misc/traits.hpp"
 #include "SkrRT/math/quat.h"
-
 #include "SkrRT/containers/string.hpp"
 
-class CommonMath : public ::testing::Test
-{
-protected:
-    void SetUp() override
-    {
-    }
+#include "SkrTestFramework/framework.hpp"
 
-    void TearDown() override
-    {
-    }
+class CommonMathTests
+{
+
 };
 
-TEST(CommonMath, AssumeAligned)
+TEST_CASE_METHOD(CommonMathTests, "AssumeAligned")
 {
     alignas(16) float a[4] = {1, 2, 3, 4};
     auto ptr = skr::assume_aligned<16>(a);
     EXPECT_EQ(ptr, a);
 }
 
-TEST(CommonMath, QuatEuler)
+TEST_CASE_METHOD(CommonMathTests, "QuatEuler")
 {
     skr_rotator_t euler{0, 80.f, 15.f};
     auto quat = skr::math::load(euler);
@@ -35,7 +28,7 @@ TEST(CommonMath, QuatEuler)
     EXPECT_NEAR(euler.roll, loaded.roll, 0.001);
 }
 
-TEST(CommonMath, MD5)
+TEST_CASE_METHOD(CommonMathTests, "MD5")
 {
     // "MD5 Hash Generator" ->
     // 992927e5b1c8a237875c70a302a34e22
@@ -47,11 +40,4 @@ TEST(CommonMath, MD5)
     skr_parse_md5(formatted.u8_str(), &MD5_2);
     EXPECT_EQ(MD5, MD5_2);
     EXPECT_EQ(formatted, u8"992927e5b1c8a237875c70a302a34e22");
-}
-
-int main(int argc, char** argv)
-{
-    ::testing::InitGoogleTest(&argc, argv);
-    auto result = RUN_ALL_TESTS();
-    return result;
 }

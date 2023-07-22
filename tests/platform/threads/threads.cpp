@@ -1,24 +1,40 @@
-#include "gtest/gtest.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/platform/crash.h"
-#include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.h"
 #include <thread>
 #include <future>
+#include <iostream>
 
-class Threads : public ::testing::Test
+#include "SkrTestFramework/framework.hpp"
+
+static struct ProcInitializer
+{
+    ProcInitializer()
+    {
+        ::skr_initialize_crash_handler();
+        ::skr_log_initialize_async_worker();
+    }
+    ~ProcInitializer()
+    {
+        ::skr_log_finalize_async_worker();
+        ::skr_finalize_crash_handler();
+    }
+} init;
+
+class ThreadsTest
 {
 protected:
-    void SetUp() override
+    ThreadsTest()
     {
-    }
 
-    void TearDown() override
+    }
+    ~ThreadsTest()
     {
+
     }
 };
 
-TEST(Threads, CallOnce)
+TEST_CASE_METHOD(ThreadsTest, "CallOnce")
 {
     SCallOnceGuard guard;
     skr_init_call_once_guard(&guard);
@@ -41,7 +57,7 @@ TEST(Threads, CallOnce)
     EXPECT_EQ(counter, 1);
 }
 
-TEST(Threads, CondVar)
+TEST_CASE_METHOD(ThreadsTest, "CondVar")
 {
     SConditionVariable cv;
     SMutex sm;
@@ -64,7 +80,7 @@ TEST(Threads, CondVar)
     skr_destroy_mutex(&sm);
 }
 
-TEST(Threads, RecursiveCondVar)
+TEST_CASE_METHOD(ThreadsTest, "RecursiveCondVar")
 {
     SConditionVariable cv;
     SMutex sm;
@@ -89,7 +105,7 @@ TEST(Threads, RecursiveCondVar)
 
 #include "SkrRT/platform/atomic.h"
 
-TEST(Threads, Atomic)
+TEST_CASE_METHOD(ThreadsTest, "Atomic")
 {
     SAtomicU32 a32 = 0;
     auto addF = [&]() {
@@ -104,17 +120,4 @@ TEST(Threads, Atomic)
     st3.join();
     st4.join();
     EXPECT_EQ(a32, 4);
-}
-
-int main(int argc, char** argv)
-{
-    skr_initialize_crash_handler();
-    skr_log_initialize_async_worker();
-
-    ::testing::InitGoogleTest(&argc, argv);
-    auto result = RUN_ALL_TESTS();
-
-    skr_log_finalize_async_worker();
-    skr_finalize_crash_handler();
-    return result;
 }

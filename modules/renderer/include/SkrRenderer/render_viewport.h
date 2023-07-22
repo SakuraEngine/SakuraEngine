@@ -29,6 +29,7 @@ struct SKR_RENDERER_API SViewportManager {
 
     static SViewportManager* Create(dual_storage_t* storage);
     static void Free(SViewportManager* viewport_manager);
+    virtual ~SViewportManager() SKR_NOEXCEPT;
 #endif
 };
 

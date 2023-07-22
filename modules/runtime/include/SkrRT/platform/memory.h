@@ -264,7 +264,6 @@ struct SkrTracedNew
     template<class F>
     [[nodiscard]] FORCEINLINE F* NewLambda(F&& lambda)
     {
-        using ValueType = std::remove_reference_t<F>;
         void* pMemory = SkrNewAlignedWithCZone(sizeof(F), alignof(F), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE auto(skr::forward<F>(lambda));

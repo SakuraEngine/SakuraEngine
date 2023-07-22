@@ -5,12 +5,9 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/resource/resource_factory.h"
-#include "SkrRT/resource/resource_system.h"
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/containers/sptr.hpp"
-#include "SkrRT/io/ram_io.hpp"
 #include "option_utils.hpp"
-#include "tracy/Tracy.hpp"
 
 skr_stable_shader_hash_t::skr_stable_shader_hash_t(uint32_t a, uint32_t b, uint32_t c, uint32_t d) SKR_NOEXCEPT
     : valuea(a), valueb(b), valuec(c), valued(d)

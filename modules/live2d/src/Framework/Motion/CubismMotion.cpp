@@ -4,7 +4,7 @@
  * Use of this source code is governed by the Live2D Open Software license
  * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
  */
-
+#include "../../pch.hpp"
 #include "CubismMotion.hpp"
 #include <float.h>
 #include "CubismFramework.hpp"
@@ -90,7 +90,7 @@ csmFloat32 BezierEvaluateBinarySearch(const CubismMotionPoint* points, const csm
     csmFloat32 t = 0.0f;
     int i = 0;
 
-    for (csmBool var33 = true; i < 20; ++i) {
+    for (SKR_UNUSED csmBool var33 = true; i < 20; ++i) {
         if (x < x1 + x_error) {
             t = ta;
             break;

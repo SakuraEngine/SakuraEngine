@@ -1,3 +1,4 @@
+#include "pch.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/io/ram_io.hpp"
@@ -140,8 +141,8 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
 {
     auto csmModel = resource->model->GetModel();
     SKR_ASSERT(csmModel && "csmModel is null");
-    auto file_dstorage_queue = request->file_dstorage_queue_override;
-    auto memory_dstorage_queue = request->memory_dstorage_queue_override;
+    SKR_UNUSED auto file_dstorage_queue = request->file_dstorage_queue_override;
+    SKR_UNUSED auto memory_dstorage_queue = request->memory_dstorage_queue_override;
     const uint32_t texture_count = resource->model_setting->GetTextureCount();
     auto render_model = SkrNew<skr_live2d_render_model_async_t>(request, resource);
     request->render_model = render_model;
@@ -164,12 +165,12 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     {
         ZoneScopedN("RequestLive2DTexture");
 
-        auto& texture_destination = render_model->texture_destinations[i];
-        auto& texture_io_request = render_model->texture_io_requests[i];
-        auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();
-        auto texture_path = resource->model_setting->GetTextureFileName(i);
-        auto pngPath = skr::filesystem::path(request->vfs_override->mount_dir) / resource->model->homePath.c_str() / texture_path;
-        auto pngPathStr = pngPath.u8string();
+        SKR_UNUSED auto& texture_destination = render_model->texture_destinations[i];
+        SKR_UNUSED auto& texture_io_request = render_model->texture_io_requests[i];
+        SKR_UNUSED auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();
+        SKR_UNUSED auto texture_path = resource->model_setting->GetTextureFileName(i);
+        SKR_UNUSED auto pngPath = skr::filesystem::path(request->vfs_override->mount_dir) / resource->model->homePath.c_str() / texture_path;
+        SKR_UNUSED auto pngPathStr = pngPath.u8string();
 #ifdef _WIN32
         if (request->file_dstorage_queue_override)
         {

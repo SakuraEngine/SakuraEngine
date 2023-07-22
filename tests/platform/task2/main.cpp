@@ -1,30 +1,44 @@
-#include "gtest/gtest.h"
+#include "SkrRT/platform/crash.h"
+#include "SkrRT/misc/log.h"
+
+#include "SkrTestFramework/framework.hpp"
+
+static struct ProcInitializer
+{
+    ProcInitializer()
+    {
+        ::skr_initialize_crash_handler();
+        ::skr_log_initialize_async_worker();
+    }
+    ~ProcInitializer()
+    {
+        ::skr_log_finalize_async_worker();
+        ::skr_finalize_crash_handler();
+    }
+} init;
 
 #if __cpp_impl_coroutine
-
 #include "SkrRT/async/co_task.hpp"
 #include "SkrRT/platform/filesystem.hpp"
-#include "SkrRT/module/module_manager.hpp"
 
-class Task2 : public ::testing::Test
+class Task2
 {
 protected:
     skr::task2::scheduler_t scheduler;
-    void SetUp() override
+    Task2() SKR_NOEXCEPT
     {
         scheduler.initialize({});
         scheduler.bind();
     }
 
-    void TearDown() override
+    ~Task2() SKR_NOEXCEPT
     {
         scheduler.unbind();
         scheduler.shutdown();
     }
 };
 
-
-TEST_F(Task2, SingleJob)
+TEST_CASE_METHOD(Task2, "SingleJob")
 {
     ZoneScopedN("SingleJob");
     using namespace skr::task2;
@@ -40,7 +54,7 @@ TEST_F(Task2, SingleJob)
     EXPECT_EQ(a, 10);
 }
 
-TEST_F(Task2, MultipleJob)
+TEST_CASE_METHOD(Task2, "MultipleJob")
 {
     ZoneScopedN("MultipleJob");
     using namespace skr::task2;
@@ -68,7 +82,7 @@ TEST_F(Task2, MultipleJob)
     EXPECT_EQ(b, 10);
 }
 
-TEST_F(Task2, JobWithDeps)
+TEST_CASE_METHOD(Task2, "JobWithDeps")
 {
     ZoneScopedN("JobWithDeps");
     using namespace skr::task2;
@@ -94,7 +108,7 @@ TEST_F(Task2, JobWithDeps)
     EXPECT_EQ(a, 20);
 }
 
-TEST_F(Task2, NestedJob)
+TEST_CASE_METHOD(Task2, "NestedJob")
 {
     ZoneScopedN("NestedJob");
     using namespace skr::task2;
@@ -126,7 +140,7 @@ TEST_F(Task2, NestedJob)
     EXPECT_EQ(a, 30);
 }
 
-TEST_F(Task2, ParallelFor)
+TEST_CASE_METHOD(Task2, "ParallelFor")
 {
     ZoneScopedN("ParallelFor");
     using namespace skr::task2;
@@ -158,7 +172,7 @@ TEST_F(Task2, ParallelFor)
     EXPECT_EQ(a, 1010);
 }
 
-TEST_F(Task2, ParallelForMassive)
+TEST_CASE_METHOD(Task2, "ParallelForMassive")
 {
     ZoneScopedN("ParallelForMassive");
     using namespace skr::task2;
@@ -194,7 +208,7 @@ TEST_F(Task2, ParallelForMassive)
     EXPECT_EQ(a, 100100);
 }
 
-TEST_F(Task2, MassiveCoroutine)
+TEST_CASE_METHOD(Task2, "MassiveCoroutine")
 {
     ZoneScopedN("MassiveCoroutine");
     using namespace skr::task2;
@@ -231,28 +245,22 @@ TEST_F(Task2, MassiveCoroutine)
     EXPECT_EQ(a, 1010000);
 }
 
-int main(int argc, char** argv)
-{
-    auto moduleManager = skr_get_module_manager();
-    std::error_code ec = {};
-    auto root = skr::filesystem::current_path(ec);
-    moduleManager->mount(root.u8string().c_str());
-    moduleManager->make_module_graph(u8"Task2Test", true);
-    moduleManager->init_module_graph(argc, argv);
-    //while(!TracyIsConnected);
-    ZoneScopedN("Main");
-    ::testing::InitGoogleTest(&argc, argv);
-    testing::FLAGS_gtest_repeat = 10;
-    auto result = RUN_ALL_TESTS();
-    moduleManager->destroy_module_graph();
-    return result;
-}
-
 #else
-
-int main(int argc, char** argv)
+struct Task2
 {
-    return 0;
-}
+    Task2() SKR_NOEXCEPT
+    {
 
+    }
+
+    ~Task2() SKR_NOEXCEPT
+    {
+
+    }
+};
+
+TEST_CASE_METHOD(Task2, "Empty")
+{
+
+}
 #endif

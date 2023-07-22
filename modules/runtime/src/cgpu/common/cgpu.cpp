@@ -1,18 +1,18 @@
-#include "EASTL/unordered_map.h"
-#include "SkrRT/platform/shared_library.hpp"
 #include "cgpu/api.h"
 #ifdef CGPU_USE_VULKAN
-    //#include "cgpu/backend/vulkan/cgpu_vulkan.h"
+    // #include "cgpu/backend/vulkan/cgpu_vulkan.h"
 #endif
 #ifdef CGPU_USE_D3D12
     // #include "cgpu/backend/d3d12/cgpu_d3d12.h"
 #endif
 #ifdef CGPU_USE_METAL
-    //#include "cgpu/backend/metal/cgpu_metal.h"
+    // #include "cgpu/backend/metal/cgpu_metal.h"
 #endif
 #include "common_utils.h"
+#include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/hashmap.hpp>
 #include <EASTL/vector.h>
+#include <EASTL/functional.h>
 
 // Runtime Table
 struct CGPURuntimeTable {

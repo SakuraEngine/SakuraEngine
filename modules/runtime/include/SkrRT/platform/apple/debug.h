@@ -13,6 +13,7 @@
     #if !SKR_SHIPPING
         #include "SkrRT/misc/macros.h"
         #include <stdio.h>
+        #include <stdlib.h>
         #include <signal.h>
 
         #define SKR_TRACE_MSG(msg) \
@@ -25,8 +26,8 @@
                 if (!(cond))                                                          \
                 {                                                                     \
                     SKR_TRACE_MSG("Skr Assert fired: " #cond " (" SKR_FILE_LINE ")"); \
-                    signal(SIGSEGV, apple_assert_handler);\
-                    __builtin_debugtrap();                                            \
+                    signal(SIGSEGV, apple_assert_handler);                            \
+                    assert((cond));                                                   \
                 }                                                                     \
             } while (0)
         #define SKR_BREAK() __builtin_debugtrap()

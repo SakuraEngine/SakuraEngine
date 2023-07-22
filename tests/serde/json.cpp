@@ -1,25 +1,26 @@
 #include "SkrRT/serde/json/writer.h"
 #include "SkrRT/serde/json/reader.h"
-#include "SkrRT/containers/span.hpp"
 #include "SkrRT/containers/vector.hpp"
-#include "gtest/gtest.h"
 
-class JSON : public ::testing::Test
+#include "SkrTestFramework/framework.hpp"
+
+struct JSONSerdeTests
 {
 protected:
     eastl::vector<uint8_t> buffer;
     skr_json_writer_t writer{3};
     simdjson::ondemand::parser parser;
-    void SetUp() override
+    JSONSerdeTests()
     {
-    }
 
-    void TearDown() override
+    }
+    ~JSONSerdeTests()
     {
+
     }
 };
 
-TEST_F(JSON, primitives)
+TEST_CASE_METHOD(JSONSerdeTests, "primitives")
 {
     uint64_t value = 0x12345678;
     uint64_t value2 = 0x87654321;
@@ -41,7 +42,7 @@ TEST_F(JSON, primitives)
     EXPECT_EQ(value2, readValue2);
 }
 
-TEST_F(JSON, structure)
+TEST_CASE_METHOD(JSONSerdeTests, "structure")
 {
     struct Test
     {

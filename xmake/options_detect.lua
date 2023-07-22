@@ -22,6 +22,7 @@ if is_host("windows") then
 end
 
 if(has_config("is_clang")) then
+    table.insert(project_cxflags, "-Wno-ambiguous-reversed-operator")
     table.insert(project_cxflags, "-Wno-unused-command-line-argument")
     table.insert(project_cxflags, "-Wno-format")
     -- table.insert(project_cxflags, "-Wno-deprecated-builtins")

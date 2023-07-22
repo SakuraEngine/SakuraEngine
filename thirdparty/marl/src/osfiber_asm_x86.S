@@ -15,7 +15,7 @@
 #if defined(__i386__)
 
 #define MARL_BUILD_ASM 1
-#include "osfiber_asm_x86.h"
+#include "marl/osfiber_asm_x86.h"
 
 // void marl_fiber_swap(marl_fiber_context* from, const marl_fiber_context* to)
 // esp+4: from

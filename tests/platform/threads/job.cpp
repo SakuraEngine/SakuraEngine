@@ -1,9 +1,26 @@
-#include "gtest/gtest.h"
 #include "SkrRT/platform/crash.h"
+#include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/async/thread_job.hpp"
+#include <iostream>
 
-TEST(Job, JobQueue)
+#include "SkrTestFramework/framework.hpp"
+
+static struct ProcInitializer
+{
+    ProcInitializer()
+    {
+        ::skr_initialize_crash_handler();
+        ::skr_log_initialize_async_worker();
+    }
+    ~ProcInitializer()
+    {
+        ::skr_log_finalize_async_worker();
+        ::skr_finalize_crash_handler();
+    }
+} init;
+
+TEST_CASE("JobQueue")
 {
     auto jqDesc = make_zeroed<skr::JobQueueDesc>();
     jqDesc.thread_count = 2;
@@ -193,7 +210,7 @@ struct EmptyTaskWithProgressFeedback
     }
 };
 
-TEST(Job, AsyncProgress)
+TEST_CASE("AsyncProgress")
 {
     EmptyTaskWithProgressFeedback<0> AsyncProgress;
     AsyncProgress.execute(1, 5);
@@ -210,7 +227,7 @@ TEST(Job, AsyncProgress)
     EXPECT_EQ(result, kCompleteResultString);
 }
 
-TEST(Job, AsyncProgressCancel)
+TEST_CASE("AsyncProgressCancel")
 {
     EmptyTaskWithProgressFeedback<1> AsyncProgress;
     AsyncProgress.execute(100, 50);
@@ -223,17 +240,4 @@ TEST(Job, AsyncProgressCancel)
     auto result = AsyncProgress.get_result();
     SKR_LOG_DEBUG("Result: %s", result.c_str());
     EXPECT_EQ(result, kCancelledResultString);
-}
-
-int main(int argc, char** argv)
-{
-    skr_initialize_crash_handler();
-    skr_log_initialize_async_worker();
-    
-    ::testing::InitGoogleTest(&argc, argv);
-    auto result = RUN_ALL_TESTS();
-
-    skr_log_finalize_async_worker();
-    skr_finalize_crash_handler();
-    return result;
 }

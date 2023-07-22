@@ -1,21 +1,14 @@
-#include "gtest/gtest.h"
 #include <SkrRT/containers/string.hpp>
 #include "SkrRT/misc/dependency_graph.hpp"
 #include <fstream>
 #include <iostream>
 
-class GraphTest : public ::testing::Test
+#include "SkrTestFramework/framework.hpp"
+
+struct GraphTest
 {
-protected:
-    void SetUp() override
-    {
-    }
 
-    void TearDown() override
-    {
-    }
 };
-
 
 class TestRDGNode : public skr::DependencyGraphNode
 {
@@ -29,7 +22,7 @@ public:
     skr::string name;
 };
 
-TEST(GraphTest, DependencyGraph)
+TEST_CASE_METHOD(GraphTest, "DependencyGraph")
 {
     skr::DependencyGraphEdge edge;
     TestRDGNode node0(u8"node0");
@@ -55,15 +48,13 @@ TEST(GraphTest, DependencyGraph)
 
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 
-TEST(GraphTest, RenderGraphFrontEnd)
+TEST_CASE_METHOD(GraphTest, "RenderGraphFrontEnd")
 {
     namespace render_graph = skr::render_graph;
     auto graph = render_graph::RenderGraph::create(
     [](render_graph::RenderGraphBuilder& builder) {
         builder.frontend_only();
     });
-    CGPUTextureId to_import = (CGPUTextureId)1;
-    CGPUTextureViewId to_import_view = (CGPUTextureViewId)1;
     auto back_buffer = graph->create_texture(
     [=](render_graph::RenderGraph&, render_graph::TextureBuilder& builder) {
         builder.set_name(u8"backbuffer");
@@ -97,11 +88,4 @@ TEST(GraphTest, RenderGraphFrontEnd)
     render_graph::RenderPassExecuteFunction());
     render_graph::RenderGraphViz::write_graphviz(*graph, "render_graph.gv");
     render_graph::RenderGraph::destroy(graph);
-}
-
-int main(int argc, char** argv)
-{
-    ::testing::InitGoogleTest(&argc, argv);
-    auto result = RUN_ALL_TESTS();
-    return result;
 }

@@ -14,7 +14,7 @@
 
 #if defined(__arm__)
 
-#include "osfiber_asm_arm.h"
+#include "marl/osfiber_asm_arm.h"
 
 #include "marl/export.h"
 

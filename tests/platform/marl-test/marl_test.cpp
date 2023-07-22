@@ -12,19 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "marl_test.h"
+#include "marl_test.h" // IWYU pragma: export
+#include "SkrRT/platform/crash.h"
 
-INSTANTIATE_TEST_SUITE_P(
-    SchedulerParams,
-    WithBoundScheduler,
-    testing::Values(SchedulerParams{0},  // Single-threaded mode test
-                    SchedulerParams{1},  // Single worker thread
-                    SchedulerParams{2},  // 2 worker threads...
-                    SchedulerParams{4},
-                    SchedulerParams{8},
-                    SchedulerParams{64}));
-
-int main(int argc, char** argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+static struct ProcInitializer
+{
+    ProcInitializer()
+    {
+        ::skr_initialize_crash_handler();
+    }
+    ~ProcInitializer()
+    {
+        ::skr_finalize_crash_handler();
+    }
+} init;

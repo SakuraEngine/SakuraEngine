@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "archetype.cpp"
 #include "arena.cpp"
 #include "array.cpp"

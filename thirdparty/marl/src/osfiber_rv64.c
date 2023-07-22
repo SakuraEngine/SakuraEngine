@@ -14,7 +14,7 @@
 
 #if defined(__riscv) && __riscv_xlen == 64
 
-#include "osfiber_asm_rv64.h"
+#include "marl/osfiber_asm_rv64.h"
 
 #include "marl/export.h"
 

@@ -24,6 +24,7 @@
 // DEALINGS IN THE SOFTWARE.                                                  //
 //                                                                            //
 //----------------------------------------------------------------------------//
+#include "../../pch.hpp"
 #include "SkrRT/platform/memory.h"
 #include "SkrAnim/ozz/base/memory/allocator.h"
 #include "SkrAnim/ozz/base/maths/math_ex.h"

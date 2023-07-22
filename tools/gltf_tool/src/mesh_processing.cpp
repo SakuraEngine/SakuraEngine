@@ -1,12 +1,11 @@
-#include "SkrRT/async/fib_task.hpp"
-#include "SkrGLTFTool/mesh_processing.hpp"
-#include "SkrMeshCore/mesh_processing.hpp"
-#include "SkrRT/misc/make_zeroed.hpp"
-#include "SkrRenderer/resources/mesh_resource.h"
 #include "cgpu/api.h"
-
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/filesystem.hpp"
+#include "SkrRT/async/fib_task.hpp"
+#include "SkrRenderer/resources/mesh_resource.h"
+#include "SkrMeshCore/mesh_processing.hpp"
+#include "SkrGLTFTool/mesh_processing.hpp"
+
 #include "tracy/Tracy.hpp"
 
 #define MAGIC_SIZE_GLTF_PARSE_READY ~0

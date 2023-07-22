@@ -15,7 +15,7 @@
 #if defined(__loongarch_lp64)
 
 #define MARL_BUILD_ASM 1
-#include "osfiber_asm_loongarch64.h"
+#include "marl/osfiber_asm_loongarch64.h"
 
 // void marl_fiber_swap(marl_fiber_context* from, const marl_fiber_context* to)
 // a0: from

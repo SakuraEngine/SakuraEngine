@@ -1,7 +1,5 @@
 #include "SkrRenderer/resources/texture_resource.h"
 
-#include "tracy/Tracy.hpp"
-
 namespace skr
 {
 namespace resource

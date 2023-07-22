@@ -1,6 +1,6 @@
 #include "static0.hpp"
 
-void SStaticModule0::on_load()
+void SStaticModule0::on_load(int argc, char8_t** argv)
 {
     SKR_LOG_INFO("static module 0 loaded!");
 }
@@ -8,7 +8,7 @@ void SStaticModule0::on_unload()
 {
     SKR_LOG_INFO("static module 0 unloaded!");
 }
-const char* SStaticModule0::get_meta_data(void)
+const char8_t* SStaticModule0::get_meta_data(void)
 {
     return u8R"(
 {

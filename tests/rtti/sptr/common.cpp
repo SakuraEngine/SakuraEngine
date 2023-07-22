@@ -1,20 +1,24 @@
-#include "SkrRT/platform/crash.h"
 #include "test.hpp"
-#include "SkrRT/misc/log.h"
 
-class SPTRCommon : public SPTRBase
+SPTRTestsBase::ProcInitializer::ProcInitializer()
 {
-protected:
-    void SetUp() override
-    {
-    }
+    ::skr_initialize_crash_handler();
+    ::skr_log_initialize_async_worker();
+}
 
-    void TearDown() override
-    {
-    }
+SPTRTestsBase::ProcInitializer::~ProcInitializer()
+{
+    ::skr_log_finalize_async_worker();
+    ::skr_finalize_crash_handler();
+}
+SPTRTestsBase::ProcInitializer SPTRTestsBase::init = {};
+
+class SPTRCommonTests : public SPTRTestsBase
+{
+
 };
 
-TEST(SPTRCommon, Base)
+TEST_CASE_METHOD(SPTRCommonTests, "Base")
 {
     {
         skr::SPtr<int> pT1 = {};
@@ -34,13 +38,13 @@ TEST(SPTRCommon, Base)
         skr::SPtr<int> pT1(SkrNew<int>(5));
         EXPECT_EQ(*pT1, 5);
         EXPECT_EQ(pT1.use_count(), 1);
-        EXPECT_TRUE(pT1.unique());
+        REQUIRE(pT1.unique());
         SKR_LOG_DEBUG("WHY?");
 
         skr::SPtr<int> pT2 = {};
         EXPECT_NE(pT1, pT2);
         EXPECT_EQ(pT2.use_count(), 0);
-        EXPECT_TRUE(!pT2.unique());
+        REQUIRE(!pT2.unique());
 
         pT2 = pT1;
 		EXPECT_EQ(pT1.use_count(), 2);
@@ -55,9 +59,9 @@ TEST(SPTRCommon, Base)
 		EXPECT_EQ(*pT2, 3);
 
         pT2.reset();
-		EXPECT_TRUE(!pT2.unique());
+		REQUIRE(!pT2.unique());
 		EXPECT_EQ(pT2.use_count(), 0);
-		EXPECT_TRUE(pT1.unique());
+		REQUIRE(pT1.unique());
 		EXPECT_EQ(pT1.use_count(), 1);
 		EXPECT_NE(pT1, pT2);
     }
@@ -95,63 +99,63 @@ struct B : public A
 
 #include <memory>
 
-TEST(SPTRCommon, Ctors)
+TEST_CASE_METHOD(SPTRCommonTests, "Ctors")
 {
-    EXPECT_TRUE(A::mCount == 0);
+    REQUIRE(A::mCount == 0);
     {
         skr::SPtr<A> pT2(SkrNew<A>(0));
-        EXPECT_TRUE(A::mCount == 1);
-        EXPECT_TRUE(pT2->mc == 0);
-        EXPECT_TRUE(pT2.use_count() == 1);
-        EXPECT_TRUE(pT2.unique());
+        REQUIRE(A::mCount == 1);
+        REQUIRE(pT2->mc == 0);
+        REQUIRE(pT2.use_count() == 1);
+        REQUIRE(pT2.unique());
 
         pT2.reset(SkrNew<A>(1));
-        EXPECT_TRUE(pT2->mc == 1);
-        EXPECT_TRUE(A::mCount == 1);
-        EXPECT_TRUE(pT2.use_count() == 1);
-        EXPECT_TRUE(pT2.unique());
+        REQUIRE(pT2->mc == 1);
+        REQUIRE(A::mCount == 1);
+        REQUIRE(pT2.use_count() == 1);
+        REQUIRE(pT2.unique());
 
         skr::SPtr<A> pT3(SkrNew<A>(2));
-        EXPECT_TRUE(A::mCount == 2);
+        REQUIRE(A::mCount == 2);
 
         pT2.swap(pT3);
-        EXPECT_TRUE(pT2->mc == 2);
-        EXPECT_TRUE(pT3->mc == 1);
-        EXPECT_TRUE(A::mCount == 2);
+        REQUIRE(pT2->mc == 2);
+        REQUIRE(pT3->mc == 1);
+        REQUIRE(A::mCount == 2);
 
         pT2.swap(pT3);
-        EXPECT_TRUE(pT2->mc == 1);
-        EXPECT_TRUE(pT3->mc == 2);
-        EXPECT_TRUE(A::mCount == 2);
+        REQUIRE(pT2->mc == 1);
+        REQUIRE(pT3->mc == 2);
+        REQUIRE(A::mCount == 2);
         if(!pT2)
-            EXPECT_TRUE(!pT2.get()); // Will fail
+            REQUIRE(!pT2.get()); // Will fail
 
         skr::SPtr<A> pT4;
-        EXPECT_TRUE(pT2.use_count() == 1);
-        EXPECT_TRUE(pT2.unique());
-        EXPECT_TRUE(A::mCount == 2);
+        REQUIRE(pT2.use_count() == 1);
+        REQUIRE(pT2.unique());
+        REQUIRE(A::mCount == 2);
         if(pT4)
-            EXPECT_TRUE(pT4.get()); // Will fail
+            REQUIRE(pT4.get()); // Will fail
         if(!(!pT4))
-            EXPECT_TRUE(pT4.get()); // Will fail
+            REQUIRE(pT4.get()); // Will fail
 
         pT4 = pT2;
-        EXPECT_TRUE(pT2.use_count() == 2);
-        EXPECT_TRUE(pT4.use_count() == 2);
-        EXPECT_TRUE(!pT2.unique());
-        EXPECT_TRUE(!pT4.unique());
-        EXPECT_TRUE(A::mCount == 2);
-        EXPECT_TRUE(pT2 == pT4);
-        EXPECT_TRUE(pT2 != pT3);
-        EXPECT_TRUE(!(pT2 < pT4)); // They should be equal
-        EXPECT_TRUE(!(pT2 > pT4)); // They should be equal
+        REQUIRE(pT2.use_count() == 2);
+        REQUIRE(pT4.use_count() == 2);
+        REQUIRE(!pT2.unique());
+        REQUIRE(!pT4.unique());
+        REQUIRE(A::mCount == 2);
+        REQUIRE(pT2 == pT4);
+        REQUIRE(pT2 != pT3);
+        REQUIRE(!(pT2 < pT4)); // They should be equal
+        REQUIRE(!(pT2 > pT4)); // They should be equal
 
         skr::SPtr<A> pT5(pT4);
-        EXPECT_TRUE(pT4 == pT5);
-        EXPECT_TRUE(pT2.use_count() == 3);
-        EXPECT_TRUE(pT4.use_count() == 3);
-        EXPECT_TRUE(pT5.use_count() == 3);
-        EXPECT_TRUE(!pT5.unique());
+        REQUIRE(pT4 == pT5);
+        REQUIRE(pT2.use_count() == 3);
+        REQUIRE(pT4.use_count() == 3);
+        REQUIRE(pT5.use_count() == 3);
+        REQUIRE(!pT5.unique());
 
         // STL
         std::shared_ptr<A> pTT4 = std::shared_ptr<A>(nullptr);
@@ -164,11 +168,11 @@ TEST(SPTRCommon, Ctors)
 
         // SPtr
         pT4 = skr::SPtr<A>(nullptr);
-        EXPECT_TRUE(!pT4.unique());
+        REQUIRE(!pT4.unique());
         EXPECT_EQ(pT4.use_count(), 0);
 
         pT4 = skr::SPtr<A>((A*)nullptr);
-        EXPECT_TRUE(!pT4.unique()); // 2.1
+        REQUIRE(!pT4.unique()); // 2.1
         EXPECT_EQ(pT4.use_count(), 0); // 2.2
 
         // CAUTION: Look at 1.1/2 & 2.1/2
@@ -176,29 +180,29 @@ TEST(SPTRCommon, Ctors)
 
         EXPECT_EQ(pT2.use_count(), 2);
 
-        EXPECT_TRUE(A::mCount == 2);
+        REQUIRE(A::mCount == 2);
     }
-    EXPECT_TRUE(A::mCount == 0);
+    REQUIRE(A::mCount == 0);
 }
 
-TEST(SPTRCommon, Move)
+TEST_CASE_METHOD(SPTRCommonTests, "Move")
 {
     {
         skr::SPtr<A> rT1(SkrNew<A>(42));
         skr::SPtr<B> rT2(SkrNew<B>());  // default ctor uses 0
         rT2->mc = 115;
 
-        EXPECT_TRUE(rT1->mc == 42);
-        EXPECT_TRUE(rT2->mc == 115);
+        REQUIRE(rT1->mc == 42);
+        REQUIRE(rT2->mc == 115);
 
         rT1 = std::move(rT2);
 
-        EXPECT_TRUE(rT1->mc == 115);
+        REQUIRE(rT1->mc == 115);
         // EATEST_VERIFY(rT2->mc == 115);  // state of object post-move is undefined.
     }
 }
 
-TEST(SPTRCommon, StdWeak)
+TEST_CASE_METHOD(SPTRCommonTests, "StdWeak")
 {
     std::shared_ptr<B> pC(new B (88));
     std::weak_ptr<B> wpC(pC);
@@ -213,7 +217,7 @@ TEST(SPTRCommon, StdWeak)
     EXPECT_EQ(pC2.use_count(), 2);
 }
 
-TEST(SPTRCommon, Weak)
+TEST_CASE_METHOD(SPTRCommonTests, "Weak")
 {
     skr::SPtr<B> pC(SkrNew<B>(88));
     skr::SWeakPtr<B> wpC(pC);
@@ -228,17 +232,4 @@ TEST(SPTRCommon, Weak)
     EXPECT_EQ(pC.get(), pC2.get());
     EXPECT_EQ(pC, pC2);
     EXPECT_EQ(pC2.use_count(), 2);
-}
-
-int main(int argc, char** argv)
-{
-    skr_initialize_crash_handler();
-    skr_log_initialize_async_worker();
-
-    ::testing::InitGoogleTest(&argc, argv);
-    auto result = RUN_ALL_TESTS();
-
-    skr_log_finalize_async_worker();
-    skr_finalize_crash_handler();
-    return result;
 }

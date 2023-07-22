@@ -4,7 +4,7 @@
  * Use of this source code is governed by the Live2D Open Software license
  * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
  */
-
+#include "../../pch.hpp"
 #include "CubismMotionQueueEntry.hpp"
 #include "CubismFramework.hpp"
 
@@ -22,9 +22,9 @@ CubismMotionQueueEntry::CubismMotionQueueEntry()
     , _stateTimeSeconds(0.0f)
     , _stateWeight(0.0f)
     , _lastEventCheckSeconds(0.0f)
-    , _motionQueueEntryHandle(NULL)
     , _fadeOutSeconds(0.0f)
     , _IsTriggeredFadeOut(false)
+    , _motionQueueEntryHandle(NULL)
 {
     this->_motionQueueEntryHandle = this;
 }

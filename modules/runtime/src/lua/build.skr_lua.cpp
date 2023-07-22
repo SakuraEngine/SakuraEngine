@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/lua/skr_lua.h"
 #include "SkrRT/platform/memory.h"
