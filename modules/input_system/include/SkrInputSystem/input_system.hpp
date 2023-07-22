@@ -1,7 +1,7 @@
 #pragma once
+#include "SkrRT/containers/sptr.hpp"
 #include "SkrInputSystem/input_mapping.hpp"
 #include "SkrInputSystem/input_action.hpp"
-#include "SkrInputSystem/input_trigger.hpp"
 
 namespace skr {
 namespace input {

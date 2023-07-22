@@ -6,7 +6,6 @@
     #include <winbase.h>
     #include <winioctl.h>
 #endif
-#include "stdint.h"
 #include "stdbool.h"
 #include "SkrRT/platform/win/misc.h"
 #include "SkrRT/platform/debug.h"

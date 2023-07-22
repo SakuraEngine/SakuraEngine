@@ -1,4 +1,5 @@
 #pragma once
+#include <inttypes.h>
 
 namespace dual
 {

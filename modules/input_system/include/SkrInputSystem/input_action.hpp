@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrInputSystem/input_value.hpp"
-#include "EASTL/functional.h"
+#include "EASTL/functional.h" // IWYU pragma: keep
 
 namespace skr {
 namespace input {

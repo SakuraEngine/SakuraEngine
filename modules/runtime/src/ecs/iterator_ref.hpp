@@ -1,11 +1,9 @@
 #pragma once
+#include "type.hpp"
+#include "archetype.hpp"
+#include "chunk.hpp"
 #include "chunk_view.hpp"
 #include "SkrRT/ecs/array.hpp"
-#include "type.hpp"
-#include "SkrRT/ecs/entity.hpp"
-#include "type.hpp"
-#include "chunk.hpp"
-#include "archetype.hpp"
 #include "type_registry.hpp"
 #include <type_traits>
 

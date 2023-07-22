@@ -1,6 +1,6 @@
 #include "SkrRT/platform/window.h"
-#include "SDL2/SDL_system.h"
 #include "SDL2/SDL_syswm.h"
+#include "SDL2/SDL_mouse.h"
 
 #define SDL_HAS_ALWAYS_ON_TOP SDL_VERSION_ATLEAST(2,0,5)
 

@@ -2,6 +2,7 @@
 #include "SkrTestFramework/framework.hpp"
 #include "SkrTestFramework/generators.hpp"
 #include <catch2/generators/catch_generators.hpp>
+#include <iostream>
 
 #if defined(_WIN32) || defined(_WIN64)
     #ifndef WIN32_LEAN_AND_MEAN

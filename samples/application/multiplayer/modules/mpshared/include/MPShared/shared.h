@@ -1,17 +1,13 @@
 #pragma once
 #include "MPShared/module.configure.h"
-#include "SkrRT/ecs/dual.h"
-#include "steam/steamnetworkingtypes.h"
-#include "SkrRT/containers/vector.hpp"
-#include "SkrScene/scene.h"
-#include "components.h"
 #include "SkrRT/misc/traits.hpp"
 #include "SkrRT/platform/guid.hpp"
+#include "SkrRT/ecs/dual.h"
 #include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/containers/vector.hpp"
+#include "SkrScene/scene.h"
+#include "MPShared/components.h"
 #include "EASTL/fixed_vector.h"
-
-#include "tracy/Tracy.hpp"
-
 #ifndef __meta__
     #include "MPShared/shared.generated.h" // IWYU pragma: export
 #endif

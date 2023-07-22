@@ -1,5 +1,7 @@
 #include "SkrRT/type/type.hpp"
+
 #define CHECK_OUTDATED() SKR_ASSERT(!type || !skr::type::GetTypeRegistry()->is_outdated(type))
+
 skr_value_t::skr_value_t(const skr_value_t& other)
 {
     _Copy(other);

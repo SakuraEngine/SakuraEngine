@@ -1,8 +1,8 @@
 #pragma once
-#include <EASTL/algorithm.h>
-#include <EASTL/bitset.h>
 #include "SkrRT/ecs/dual.h"
 #include "hash.hpp"
+#include <EASTL/algorithm.h>
+#include <EASTL/bitset.h>
 
 namespace dual
 {

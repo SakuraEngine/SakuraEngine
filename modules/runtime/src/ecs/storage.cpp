@@ -1,19 +1,17 @@
+#include "SkrRT/platform/atomic.h"
 #include "SkrRT/ecs/SmallVector.h"
-#include "chunk_view.hpp"
-
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/ecs/entity.hpp"
+#include "SkrRT/misc/parallel_for.hpp"
 #include "query.hpp"
 #include "set.hpp"
 #include "storage.hpp"
-#include "SkrRT/ecs/constants.hpp"
 #include "pool.hpp"
 #include "mask.hpp"
-#include "iterator_ref.hpp"
+#include "chunk_view.hpp"
 #include "scheduler.hpp"
-#include "SkrRT/misc/parallel_for.hpp"
+#include "iterator_ref.hpp"
 #include "type_registry.hpp"
-#include "SkrRT/platform/atomic.h"
 
 dual_storage_t::dual_storage_t()
     : archetypeArena(dual::get_default_pool())

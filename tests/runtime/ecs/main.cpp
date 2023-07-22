@@ -7,6 +7,7 @@
 #include "SkrTestFramework/framework.hpp"
 
 #include <memory>
+#include <algorithm>
 
 using TestComp = int;
 dual_type_index_t type_test;
