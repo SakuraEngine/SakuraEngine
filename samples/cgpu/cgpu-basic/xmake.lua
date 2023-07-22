@@ -1,4 +1,4 @@
-target("Example-CGPUMandelbrot")
+target("CGPUMandelbrot")
     set_group("04.examples/cgpu")
     set_exceptions("no-cxx")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
@@ -11,7 +11,7 @@ target("Example-CGPUMandelbrot")
     add_files("mandelbrot/*.c")
     add_files("mandelbrot/**.hlsl")
 
-target("Example-CGPUIndexedInstance")
+target("CGPUIndexedInstance")
     set_group("04.examples/cgpu")
     set_exceptions("no-cxx")
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
@@ -24,7 +24,7 @@ target("Example-CGPUIndexedInstance")
     add_files("indexed-instance/*.c")
     add_files("indexed-instance/**.hlsl")
 
-target("Example-CGPUTexture")
+target("CGPUTexture")
     set_group("04.examples/cgpu")
     set_exceptions("no-cxx")
     add_rules("utils.dxc", {
@@ -36,7 +36,7 @@ target("Example-CGPUTexture")
     add_files("texture/texture.c")
     add_files("texture/**.hlsl")
 
-target("Example-CGPUTiledTexture")
+target("CGPUTiledTexture")
     set_group("04.examples/cgpu")
     set_exceptions("no-cxx")
     set_kind("binary")
@@ -47,7 +47,7 @@ target("Example-CGPUTiledTexture")
 -- close this demo until we fix exception rule issue
 if has_config("build_cgpu_samples") then 
     if (os.host() == "windows") then
-        target("Example-HotTriangle")
+        target("HotTriangle")
             set_group("04.examples/cgpu")
             add_rules("utils.dxc", {
                 spv_outdir = "/../resources/shaders/hot-triangle",

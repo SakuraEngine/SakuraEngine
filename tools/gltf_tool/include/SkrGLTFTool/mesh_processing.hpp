@@ -1,9 +1,11 @@
 #pragma once
 #include "SkrGLTFTool/module.configure.h"
 #include "SkrMeshCore/mesh_processing.hpp"
-#include "cgltf/cgltf.h"
 #include "SkrRT/io/ram_io.hpp"
 #include <SkrRT/containers/string.hpp>
+
+struct cgltf_data;
+struct cgltf_node;
 
 namespace skd 
 {

@@ -1,4 +1,6 @@
+#include "pch.hpp"
 #include "cgpu/api.h"
+#include "cgltf/cgltf.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/async/fib_task.hpp"
