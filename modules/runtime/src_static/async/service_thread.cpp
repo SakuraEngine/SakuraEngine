@@ -122,6 +122,7 @@ void ServiceThread::exit() SKR_NOEXCEPT
     request_exit();
     // SKR_LOG_TRACE("ServiceThread::destroy: wait runner thread to wait_exit...");
     wait_exit();
+    t.finalize();
 }
 
 void ServiceThread::wait_exit(uint32_t fatal_timeout) SKR_NOEXCEPT
