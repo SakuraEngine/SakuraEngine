@@ -6,7 +6,6 @@
 #include "SkrRT/containers/concurrent_queue.h"
 
 #include "platform/windows/windows_dstorage.hpp"
-#include "EASTL/vector_map.h"
 #include "EASTL/algorithm.h"
 
 struct StatusEventArray;

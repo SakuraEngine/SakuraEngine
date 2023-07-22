@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/vfs.h"

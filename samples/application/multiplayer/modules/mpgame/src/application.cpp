@@ -1,4 +1,5 @@
 #include "application.h"
+#include "steam/steamnetworkingtypes.h"
 #include "SkrRT/runtime_module.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/module/module_manager.hpp"
@@ -8,6 +9,7 @@
 #include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/containers/string.hpp"
 
+#include "SkrInputSystem/input_trigger.hpp"
 #include "SkrInputSystem/input_modifier.hpp"
 #include "MPShared/components.h"
 #include "MPShared/signal_client.h"
@@ -30,8 +32,6 @@
 #include "cgpu/api.h"
 
 #include "tracy/Tracy.hpp"
-
-#include "EASTL/shared_ptr.h"
 
 #ifdef SKR_OS_WINDOWS
     #include <shellscalingapi.h>

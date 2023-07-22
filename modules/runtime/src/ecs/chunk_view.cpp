@@ -1,20 +1,20 @@
 #include <type_traits>
-#include <EASTL/bitset.h>
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/ecs/dual_config.h"
+#include "SkrRT/ecs/array.hpp"
+#include "SkrRT/resource/resource_handle.h"
+
 #include "type.hpp"
 #include "mask.hpp"
-#include "SkrRT/ecs/constants.hpp"
 #include "type.hpp"
-#include "chunk_view.hpp"
 #include "chunk.hpp"
+#include "chunk_view.hpp"
 #include "archetype.hpp"
-#include "SkrRT/ecs/array.hpp"
 #include "storage.hpp"
-#include "set.hpp"
 #include "scheduler.hpp"
-#include "SkrRT/resource/resource_handle.h"
 #include "type_registry.hpp"
+
+#include <EASTL/bitset.h>
 
 namespace dual
 {

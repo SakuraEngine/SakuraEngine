@@ -1,3 +1,4 @@
+#include "pch.hpp"
 #include <string.h>
 #include "cgpu/api.h"
 #ifdef _WIN32
@@ -11,7 +12,6 @@
 #include "SkrImGui/skr_imgui.h"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_mesh.h"
-
 
 IMPLEMENT_DYNAMIC_MODULE(SkrRendererModule, SkrRenderer);
 

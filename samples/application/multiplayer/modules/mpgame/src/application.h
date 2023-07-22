@@ -1,4 +1,5 @@
 #pragma once
+#include "steam/steamnetworkingtypes.h"
 #include "MPShared/client_world.h"
 #include "MPGame/mp_interface.h"
 #include "SkrInputSystem/input_system.hpp"

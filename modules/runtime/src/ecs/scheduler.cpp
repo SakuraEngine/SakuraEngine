@@ -1,22 +1,22 @@
-#include "scheduler.hpp"
 #include "SkrRT/ecs/SmallVector.h"
-
-#include "SkrRT/ecs/constants.hpp"
 #include "SkrRT/ecs/dual.h"
+#include "SkrRT/ecs/entity.hpp"
+#include "type.hpp"
 #include "query.hpp"
 #include "storage.hpp"
-
-#include "type.hpp"
-#include "SkrRT/misc/log.h"
+#include "scheduler.hpp"
+#include <EASTL/bitset.h>
 
 #include "tracy/Tracy.hpp"
 
 dual::scheduler_t::scheduler_t()
 {
+
 }
 
 dual::scheduler_t::~scheduler_t()
 {
+
 }
 
 dual_entity_t dual::scheduler_t::add_resource()

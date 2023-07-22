@@ -1,9 +1,10 @@
-#include "SkrToolCore/project/project.hpp"
+#include "../pch.hpp"
 #include "SkrRT/misc/log.h"
+#include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/serde/json/reader.h"
-#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrToolCore/project/project.hpp"
 
 namespace skd
 {

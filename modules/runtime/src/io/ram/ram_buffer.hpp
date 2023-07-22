@@ -37,7 +37,7 @@ protected:
     {
         SKR_ASSERT(pool && "Invalid pool detected!");
     }
-    ISmartPoolPtr<IRAMIOBuffer> pool = nullptr;
+    const ISmartPoolPtr<IRAMIOBuffer> pool = nullptr;
 };
 
 } // namespace io

@@ -1,7 +1,20 @@
 #pragma once
 #include <cmath>
 #include <limits>
+#include "SkrRT/containers/string.hpp"  // IWYU pragma: export
 #include <catch2/catch_test_macros.hpp> // IWYU pragma: export
+
+#ifndef SkrTestLine
+#  define SkrTestLine __LINE__
+#endif
+
+#ifndef SkrTestConcat
+#  define SkrTestConcat(x,y) SkrTestConcatIndirect(x,y)
+#endif
+
+#ifndef SkrTestConcatIndirect
+#  define SkrTestConcatIndirect(x,y) x##y
+#endif
 
 #define ASSERT_TRUE REQUIRE
 #define ASSERT_FALSE(v) REQUIRE(!(v))
@@ -16,6 +29,9 @@
 #define EXPECT_NE(a, b) REQUIRE((a) != (b))
 #define EXPECT_FALSE(v) REQUIRE(!(v))
 #define EXPECT_NEAR(a, b, c) REQUIRE(std::abs((a) - (b)) <= (c))
+
+#define SKR_TEST_INFO(...) auto SkrTestConcat(scopedTestMsg, SkrTestLine) = skr::format(__VA_ARGS__); INFO(SkrTestConcat(scopedTestMsg, SkrTestLine).c_str());
+#define SKR_TEST_UNSCOPED_INFO(...) { auto SkrTestConcat(msg, SkrTestLine) = skr::format(__VA_ARGS__); UNSCOPED_INFO(SkrTestConcat(msg, SkrTestLine).c_str()); }
 
 template<class T>
 typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type

@@ -1,9 +1,7 @@
+#include "SkrRT/ecs/dual_config.h"
 #include "pool.hpp"
-#include "SkrRT/ecs/constants.hpp"
 #include <EASTL/vector.h>
 #include <EASTL/numeric.h>
-#include "SkrRT/ecs/dual_config.h"
-
 #include "tracy/Tracy.hpp"
 
 const char* kDualMemoryName = "dual";

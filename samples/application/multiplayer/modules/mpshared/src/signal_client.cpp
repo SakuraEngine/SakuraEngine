@@ -1,6 +1,7 @@
 // Client of our dummy trivial signaling server service.
 // Serves as an example of you how to hook up signaling server
 // to SteamNetworkingSockets P2P connections
+#include "pch.hpp"
 
 #include <string>
 #include <mutex>
@@ -100,6 +101,8 @@ class CTrivialSignalingClient : public ITrivialSignalingClient
 			return true;
 		}
 
+		virtual ~ConnectionSignaling() {}
+
 		// Self destruct.  This will be called by SteamNetworkingSockets when it's done with us.
 		virtual void Release() override
 		{
@@ -152,7 +155,7 @@ class CTrivialSignalingClient : public ITrivialSignalingClient
 			return;
 		}
 
-		connect( m_sock, (const sockaddr *)&m_adrServer, (socklen_t )m_adrServerSize );
+		[[maybe_unused]] auto ret = connect( m_sock, (const sockaddr *)&m_adrServer, (socklen_t )m_adrServerSize );
 
 		// And immediate send our greeting.  This just puts in in the buffer and
 		// it will go out once the socket connects.
@@ -372,7 +375,7 @@ next_message:
 		}
 	}
 
-	virtual void Release()
+	virtual void Release() override
 	{
 		// NOTE: Here we are assuming that the calling code has already cleaned
 		// up all the connections, to keep the example simple.

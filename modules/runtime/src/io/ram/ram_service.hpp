@@ -39,7 +39,6 @@ struct RAMService final : public IRAMService
         IOBatchBufferId batch_buffer = nullptr;
         IOReaderId<IIORequestProcessor> reader = nullptr;
         IOReaderId<IIOBatchProcessor> batch_reader = nullptr;
-
         RAMService* service = nullptr;
     };
     const skr::string name;
