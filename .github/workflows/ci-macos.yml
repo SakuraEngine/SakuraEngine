@@ -11,7 +11,7 @@ jobs:
         arch: [ x86_64 ]
         cxx: [ cxx17, cxx20 ]
 
-    name: ${{ matrix.os }} + ${{ matrix.arch }} + ${{ matrix.cxx }}
+    name: ${{ matrix.cxx }} + ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code

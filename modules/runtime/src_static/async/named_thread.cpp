@@ -18,11 +18,7 @@ NamedThread::NamedThread() SKR_NOEXCEPT
 
 NamedThread::~NamedThread() SKR_NOEXCEPT
 {
-    if (skr_atomic32_load_acquire(&started)) 
-    {
-        skr_destroy_thread(tHandle);
-        skr_atomic32_store_release(&started, false);
-    }
+    finalize();
 }
 
 void NamedThread::threadFunc(void* args)
@@ -103,6 +99,11 @@ AsyncResult NamedThread::initialize(const NamedThreadDesc& pdesc) SKR_NOEXCEPT
 
 AsyncResult NamedThread::finalize() SKR_NOEXCEPT
 {
+    if (skr_atomic32_load_acquire(&started)) 
+    {
+        skr_destroy_thread(tHandle);
+        skr_atomic32_store_release(&started, false);
+    }
     return ASYNC_RESULT_OK;
 }
 

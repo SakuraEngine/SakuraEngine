@@ -12,7 +12,7 @@ jobs:
         cxx: [ cxx17, cxx20 ]
         toolchain: [ msvc, clang-cl ]
 
-    name: ${{ matrix.os }} + ${{ matrix.arch }} + ${{ matrix.toolchain }} + ${{ matrix.cxx }}
+    name: ${{ matrix.toolchain }} + ${{ matrix.cxx }} + ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code

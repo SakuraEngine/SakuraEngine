@@ -1,6 +1,6 @@
 #include "test.hpp"
 
-class SPTRNonIntrusiveTests : public SPTRTestsBase
+struct SPTRNonIntrusiveTests
 {
 
 };

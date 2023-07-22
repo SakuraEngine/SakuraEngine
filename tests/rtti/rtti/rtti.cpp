@@ -1,10 +1,25 @@
-#include "SkrRT/misc/log.hpp"
+#include "SkrRT/platform/crash.h"
 #include "SkrRT/platform/guid.hpp"
+#include "SkrRT/misc/log.hpp"
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/serde/json/writer.h"
 #include "../types/types.hpp"
 
 #include "SkrTestFramework/framework.hpp"
+
+static struct ProcInitializer
+{
+    ProcInitializer()
+    {
+        ::skr_initialize_crash_handler();
+        ::skr_log_initialize_async_worker();
+    }
+    ~ProcInitializer()
+    {
+        ::skr_log_finalize_async_worker();
+        ::skr_finalize_crash_handler();
+    }
+} init;
 
 struct RTTITests
 {

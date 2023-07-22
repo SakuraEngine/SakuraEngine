@@ -1,19 +1,6 @@
 #include "test.hpp"
 
-SPTRTestsBase::ProcInitializer::ProcInitializer()
-{
-    ::skr_initialize_crash_handler();
-    ::skr_log_initialize_async_worker();
-}
-
-SPTRTestsBase::ProcInitializer::~ProcInitializer()
-{
-    ::skr_log_finalize_async_worker();
-    ::skr_finalize_crash_handler();
-}
-SPTRTestsBase::ProcInitializer SPTRTestsBase::init = {};
-
-class SPTRCommonTests : public SPTRTestsBase
+struct SPTRCommonTests
 {
 
 };
@@ -187,19 +174,17 @@ TEST_CASE_METHOD(SPTRCommonTests, "Ctors")
 
 TEST_CASE_METHOD(SPTRCommonTests, "Move")
 {
-    {
-        skr::SPtr<A> rT1(SkrNew<A>(42));
-        skr::SPtr<B> rT2(SkrNew<B>());  // default ctor uses 0
-        rT2->mc = 115;
+    skr::SPtr<A> rT1(SkrNew<A>(42));
+    skr::SPtr<B> rT2(SkrNew<B>());  // default ctor uses 0
+    rT2->mc = 115;
 
-        REQUIRE(rT1->mc == 42);
-        REQUIRE(rT2->mc == 115);
+    REQUIRE(rT1->mc == 42);
+    REQUIRE(rT2->mc == 115);
 
-        rT1 = std::move(rT2);
+    rT1 = std::move(rT2);
 
-        REQUIRE(rT1->mc == 115);
-        // EATEST_VERIFY(rT2->mc == 115);  // state of object post-move is undefined.
-    }
+    REQUIRE(rT1->mc == 115);
+    // EATEST_VERIFY(rT2->mc == 115);  // state of object post-move is undefined.
 }
 
 TEST_CASE_METHOD(SPTRCommonTests, "StdWeak")

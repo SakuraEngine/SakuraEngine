@@ -5,12 +5,3 @@
 #include "SkrRT/containers/sptr.hpp" // IWYU pragma: export
 
 #include "SkrTestFramework/framework.hpp"
-
-struct SPTRTestsBase
-{
-    static struct ProcInitializer
-    {
-        ProcInitializer();
-        ~ProcInitializer();
-    } init;
-};
