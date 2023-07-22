@@ -455,6 +455,15 @@ struct argument_formatter<std::nullptr_t>
     }
 };
 
+template<>
+struct argument_formatter<bool>
+{
+    static codeunit_sequence produce(bool v, const codeunit_sequence_view& specification)
+    {
+        return codeunit_sequence{v ? OSTR_UTF8("true"_cuqv) : OSTR_UTF8("false"_cuqv)};
+    }
+};
+
 template<class T> 
 struct argument_formatter<T*>
 {

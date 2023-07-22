@@ -12,7 +12,7 @@ task("run-codegen-jobs")
 rule("c++.codegen.fence")
     on_load(function (target, opt)
         local rule = target:rule("c++.build"):clone()
-        rule:add("deps", "c++.codegen", {order = true})
+        rule:add("deps", "c++.codegen.fence", {order = true})
         target:rule_add(rule)
     end)
     before_buildcmd_files(function (target, batchcmds, sourcebatch, opt)
@@ -23,7 +23,7 @@ rule("c++.codegen.fence")
             import("core.base.scheduler")
             for _, dep in pairs(target:deps()) do
                 if dep:rule("c++.codegen") then
-                    -- scheduler.co_group_wait(dep:name()..".cpp-codegen")
+                    scheduler.co_group_wait(dep:name()..".cpp-codegen")
                 end
             end
             if target:rule("c++.codegen") then
@@ -51,6 +51,10 @@ rule("c++.codegen")
         target:rule_add(rule)
     end)
 
+    before_build_files(function(target, batchjobs, sourcebatch, opt)
+        sourcebatch.objectfiles = {}
+    end, {batch = true}) 
+    
     before_buildcmd_files(function(target, batchcmds, sourcebatch, opt)
         -- avoid duplicate linking of object files
         sourcebatch.objectfiles = {}

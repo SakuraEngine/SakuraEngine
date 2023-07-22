@@ -41,12 +41,12 @@ inline bool kVerbose()
 
 inline void print_line(String p_string)
 {
-    SKR_LOG_INFO(p_string.utf8().get_data());
+    SKR_LOG_INFO((const char8_t*)p_string.utf8().get_data());
 }
 
 inline void print_verbose(String p_string)
 {
-    SKR_LOG_TRACE(p_string.utf8().get_data());
+    SKR_LOG_TRACE((const char8_t*)p_string.utf8().get_data());
 }
 
 StaticCString StaticCString::create(const char* p_ptr)

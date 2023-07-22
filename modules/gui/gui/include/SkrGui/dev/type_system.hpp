@@ -99,7 +99,7 @@ inline To* SkrGUICastFast(From* from) SKR_NOEXCEPT
     void* p = from->zz_internal_cast(To::zz_internal_static_guid());
     if (p == nullptr)
     {
-        SKR_LOG_ERROR("SkrGUICastFast failed, from: %s, to: %s", typeid(From).name(), typeid(To).name());
+        SKR_LOG_ERROR(u8"SkrGUICastFast failed, from: %s, to: %s", typeid(From).name(), typeid(To).name());
         return nullptr;
     }
     else

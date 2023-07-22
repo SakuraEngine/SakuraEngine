@@ -1,6 +1,7 @@
 // Client of our dummy trivial signaling server service.
 // Serves as an example of you how to hook up signaling server
 // to SteamNetworkingSockets P2P connections
+#include "pch.hpp"
 
 #include <string>
 #include <mutex>
@@ -100,6 +101,8 @@ class CTrivialSignalingClient : public ITrivialSignalingClient
 			return true;
 		}
 
+		virtual ~ConnectionSignaling() {}
+
 		// Self destruct.  This will be called by SteamNetworkingSockets when it's done with us.
 		virtual void Release() override
 		{
@@ -139,7 +142,7 @@ class CTrivialSignalingClient : public ITrivialSignalingClient
 		m_sock = socket( m_adrServer.ss_family, sockType, IPPROTO_TCP );
 		if ( m_sock == INVALID_SOCKET )
 		{
-			SKR_LOG_ERROR( "socket() failed, error=%d\n", GetSocketError() );
+			SKR_LOG_ERROR( u8"socket() failed, error=%d\n", GetSocketError() );
 			return;
 		}
 
@@ -148,11 +151,11 @@ class CTrivialSignalingClient : public ITrivialSignalingClient
 		if ( ioctlsocket( m_sock, FIONBIO, &opt ) == -1 )
 		{
 			CloseSocket();
-			SKR_LOG_ERROR( "ioctlsocket() failed, error=%d\n", GetSocketError() );
+			SKR_LOG_ERROR( u8"ioctlsocket() failed, error=%d\n", GetSocketError() );
 			return;
 		}
 
-		connect( m_sock, (const sockaddr *)&m_adrServer, (socklen_t )m_adrServerSize );
+		[[maybe_unused]] auto ret = connect( m_sock, (const sockaddr *)&m_adrServer, (socklen_t )m_adrServerSize );
 
 		// And immediate send our greeting.  This just puts in in the buffer and
 		// it will go out once the socket connects.
@@ -192,7 +195,7 @@ public:
 		// timed them out and queued a retry).
 		while ( m_queueSend.size() > 32 )
 		{
-			SKR_LOG_ERROR( "Signaling send queue is backed up.  Discarding oldest signals\n" );
+			SKR_LOG_ERROR( u8"Signaling send queue is backed up.  Discarding oldest signals\n" );
 			m_queueSend.pop_front();
 		}
 
@@ -208,7 +211,7 @@ public:
 
 		// FIXME - here we really ought to confirm that the string version of the
 		// identity does not have spaces, since our protocol doesn't permit it.
-		SKR_LOG_DEBUG( "Creating signaling session for peer '%s'\n", sIdentityPeer.c_str() );
+		SKR_LOG_DEBUG( u8"Creating signaling session for peer '%s'\n", sIdentityPeer.c_str() );
 
 		// Silence warnings
 		(void)errMsg;
@@ -237,7 +240,7 @@ public:
 					int e = GetSocketError();
 					if ( !IgnoreSocketError( e ) )
 					{
-						SKR_LOG_ERROR( "Failed to recv from trivial signaling server.  recv() returned %d, errno=%d.  Closing and restarting connection\n", r, e );
+						SKR_LOG_ERROR( u8"Failed to recv from trivial signaling server.  recv() returned %d, errno=%d.  Closing and restarting connection\n", r, e );
 						CloseSocket();
 					}
 					break;
@@ -266,7 +269,7 @@ public:
 				{
 					// Socket hosed, or we sent a partial signal.
 					// We need to restart connection
-					SKR_LOG_ERROR( "Failed to send %d bytes to trivial signaling server.  send() returned %d, errno=%d.  Closing and restarting connection.\n",
+					SKR_LOG_ERROR( u8"Failed to send %d bytes to trivial signaling server.  send() returned %d, errno=%d.  Closing and restarting connection.\n",
 						l, r, GetSocketError() );
 					CloseSocket();
 					break;
@@ -372,7 +375,7 @@ next_message:
 		}
 	}
 
-	virtual void Release()
+	virtual void Release() override
 	{
 		// NOTE: Here we are assuming that the calling code has already cleaned
 		// up all the connections, to keep the example simple.

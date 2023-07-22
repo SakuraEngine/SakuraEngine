@@ -5,7 +5,6 @@
 #include "SkrRT/platform/memory.h"
 #include "cgpu/api.h"
 #include "stdio.h"
-#include "stdlib.h"
 #include <stdint.h>
 
 inline static void read_bytes(const char* file_name, char8_t** bytes, uint32_t* length)
@@ -45,6 +44,9 @@ ECGPUBackend backend)
         case CGPU_BACKEND_D3D12:
         case CGPU_BACKEND_XBOX_D3D12:
             strcat(shader_file, ".dxil");
+            break;
+        default:
+            SKR_UNIMPLEMENTED_FUNCTION();
             break;
     }
     read_bytes(shader_file, (char8_t**)bytes, length);

@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrAnim/resources/skin_resource.h"
 
 namespace skr::resource

@@ -3,14 +3,11 @@
 #include "SkrRT/containers/span.hpp"
 #include "SkrRT/misc/types.h"
 #include "SkrRT/ecs/dual.h"
-#include "SkrRT/platform/guid.hpp"
 #include "SkrRT/async/fib_task.hpp"
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/containers/vector.hpp"
-#include "EASTL/functional.h"
 #include "EASTL/bonus/fixed_ring_buffer.h"
 #include "SkrRT/platform/time.h"
-#include "SkrRT/ecs/entity.hpp"
 
 // override the default serialization of dual_entity_t to use a packed version
 struct packed_entity_t
@@ -54,7 +51,7 @@ struct WriteTrait<const packed_entity_t&>
 
 
 #ifndef __meta__
-    #include "MPShared/world_delta.generated.h"
+    #include "MPShared/world_delta.generated.h" // IWYU pragma: export
 #endif
 
 using NetEntityId = uint16_t;

@@ -1,4 +1,4 @@
-#include "../pch.hpp"
+#include "../pch.hpp" // IWYU pragma: keep
 #include "SkrRT/misc/parallel_for.hpp"
 #include "SkrRT/misc/cartesian_product.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
@@ -211,7 +211,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
                                 if (!file)
                                 {
                                     int err_num = errno;
-                                    SKR_LOG_FATAL("Open Shader Output File errno = %d, reason = %s!", err_num, ::strerror(err_num));
+                                    SKR_LOG_FATAL(u8"Open Shader Output File errno = %d, reason = %s!", err_num, ::strerror(err_num));
                                     SKR_UNREACHABLE_CODE();
                                 }
                                 fwrite(bytes.data(), bytes.size(), 1, file);
@@ -227,7 +227,7 @@ bool SShaderCooker::Cook(SCookContext* ctx)
                                 if (!pdb_file) 
                                 {
                                     int err_num = errno;
-                                    SKR_LOG_FATAL("Open PDB File errno = %d, reason = %s!", err_num, ::strerror(err_num));
+                                    SKR_LOG_FATAL(u8"Open PDB File errno = %d, reason = %s!", err_num, ::strerror(err_num));
                                     SKR_UNREACHABLE_CODE();
                                 }
                                 fwrite(pdb.data(), pdb.size(), 1, pdb_file);

@@ -2,7 +2,7 @@
 #include "SkrAnimTool/module.configure.h"
 #include "SkrToolCore/asset/importer.hpp"
 #ifndef __meta__
-    #include "SkrAnimTool/skeleton_asset.generated.h"
+    #include "SkrAnimTool/skeleton_asset.generated.h" // IWYU pragma: export
 #endif
 
 namespace ozz::animation::offline

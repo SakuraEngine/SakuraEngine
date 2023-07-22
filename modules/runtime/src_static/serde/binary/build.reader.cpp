@@ -1,3 +1,4 @@
+#include "../../pch.hpp"
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/serde/binary/reader.h"
@@ -94,7 +95,7 @@ int ReadTrait<bool>::Read(skr_binary_reader_t* reader, bool& value)
     int ret = ReadTrait<uint32_t>::Read(reader, v);
     if (ret != 0)
     {
-        SKR_LOG_FATAL("failed to read boolean value! ret code: %d", ret);
+        SKR_LOG_FATAL(u8"failed to read boolean value! ret code: %d", ret);
         return ret;
     }
     value = v != 0;
@@ -108,7 +109,7 @@ int ReadBitpacked(skr_binary_reader_t* reader, T& value, IntegerPackConfig<T> co
     SKR_ASSERT(reader->vread_bits);
     if(!reader->vread_bits)
     {
-        SKR_LOG_ERROR("vread_bits is not implemented. falling back to vread");
+        SKR_LOG_ERROR(u8"vread_bits is not implemented. falling back to vread");
         return reader->read(&value, sizeof(T));
     }
     auto bits = 64 - skr::CountLeadingZeros64(config.max - config.min);
@@ -172,7 +173,7 @@ int ReadBitpacked(skr_binary_reader_t* reader, T& value, VectorPackConfig<Scalar
             if(ret != 0)
             {
                 auto type = skr::demangle<T>();
-                SKR_LOG_FATAL("failed to read packed bits of type %s! ret code: %d", type.c_str(), ret);
+                SKR_LOG_FATAL(u8"failed to read packed bits of type %s! ret code: %d", type.c_str(), ret);
                 return ret;
             }
         }
@@ -218,7 +219,7 @@ int ReadBitpacked(skr_binary_reader_t* reader, T& value, VectorPackConfig<Scalar
         }
         if(containsNan)
         {
-            SKR_LOG_ERROR("ReadBitpacked: Value isn't finite. Clearing for safety.");
+            SKR_LOG_ERROR(u8"ReadBitpacked: Value isn't finite. Clearing for safety.");
             for(int i = 0; i < size; ++i)
             {
                 array[i] = 0;
@@ -267,7 +268,7 @@ int ReadTrait<skr::string>::Read(skr_binary_reader_t* reader, skr::string& str)
     int ret = ReadTrait<uint32_t>::Read(reader, size);
     if (ret != 0)
     {
-        SKR_LOG_FATAL("failed to read string buffer size! ret code: %d", ret);
+        SKR_LOG_FATAL(u8"failed to read string buffer size! ret code: %d", ret);
         return ret;
     }
     eastl::fixed_string<char8_t, 64> temp;
@@ -275,7 +276,7 @@ int ReadTrait<skr::string>::Read(skr_binary_reader_t* reader, skr::string& str)
     ret = ReadBytes(reader, (void*)temp.c_str(), temp.size());
     if (ret != 0)
     {
-        SKR_LOG_FATAL("failed to read string buffer size! ret code: %d", ret);
+        SKR_LOG_FATAL(u8"failed to read string buffer size! ret code: %d", ret);
         return ret;
     }
 
@@ -298,7 +299,7 @@ int ReadTrait<skr::string_view>::Read(skr_binary_reader_t* reader, skr_blob_aren
     ret = ReadTrait<uint32_t>::Read(reader, offset);
     if (ret != 0)
     {
-        SKR_LOG_FATAL("failed to read string buffer size (inside arena)! ret code: %d", ret);
+        SKR_LOG_FATAL(u8"failed to read string buffer size (inside arena)! ret code: %d", ret);
         return ret;
     }
 
@@ -306,7 +307,7 @@ int ReadTrait<skr::string_view>::Read(skr_binary_reader_t* reader, skr_blob_aren
     ret = ReadBytes(reader, strbuf_start, size);
     if (ret != 0)
     {
-        SKR_LOG_FATAL("failed to read string buffer content (inside arena)! ret code: %d", ret);
+        SKR_LOG_FATAL(u8"failed to read string buffer content (inside arena)! ret code: %d", ret);
         return ret;
     }
 
@@ -332,7 +333,7 @@ int ReadTrait<skr_resource_handle_t>::Read(skr_binary_reader_t* reader, skr_reso
     int ret = ReadTrait<skr_guid_t>::Read(reader, guid);
     if (ret != 0)
     {
-        SKR_LOG_FATAL("failed to read resource handle guid! ret code: %d", ret);
+        SKR_LOG_FATAL(u8"failed to read resource handle guid! ret code: %d", ret);
         return ret;
     }
     handle.set_guid(guid);
@@ -346,20 +347,20 @@ int ReadBlob(skr_binary_reader_t* reader, skr::BlobId& out_id)
     int ret = skr::binary::Read(reader, size);
     if (ret != 0)
     {
-        SKR_LOG_FATAL("failed to read blob size! ret code: %d", ret);
+        SKR_LOG_FATAL(u8"failed to read blob size! ret code: %d", ret);
         return ret;
     }
     auto blob = skr::IBlob::Create(nullptr, size, false);
     if (blob == nullptr)
     {
-        SKR_LOG_FATAL("failed to create blob! ret code: %d", ret);
+        SKR_LOG_FATAL(u8"failed to create blob! ret code: %d", ret);
         return ret;
     }
 
     ret = ReadBytes(reader, blob->get_data(), blob->get_size());
     if (ret != 0)
     {
-        SKR_LOG_FATAL("failed to read blob content! ret code: %d", ret);
+        SKR_LOG_FATAL(u8"failed to read blob content! ret code: %d", ret);
         return ret;
     }
 
@@ -373,7 +374,7 @@ int ReadTrait<skr::IBlob*>::Read(skr_binary_reader_t* reader, skr::IBlob*& out_b
     auto ret = ReadBlob(reader, new_blob);
     if (new_blob == nullptr)
     {
-        SKR_LOG_FATAL("failed to create blob! ret code: %d", ret);
+        SKR_LOG_FATAL(u8"failed to create blob! ret code: %d", ret);
         return ret;
     }
 
@@ -388,7 +389,7 @@ int ReadTrait<skr::BlobId>::Read(skr_binary_reader_t* reader, skr::BlobId& out_b
     auto ret = ReadBlob(reader, out_blob);
     if (out_blob == nullptr)
     {
-        SKR_LOG_FATAL("failed to create blob! ret code: %d", ret);
+        SKR_LOG_FATAL(u8"failed to create blob! ret code: %d", ret);
         return ret;
     }
     return ret;
@@ -400,7 +401,7 @@ int ReadTrait<skr_blob_arena_t>::Read(skr_binary_reader_t* reader, skr_blob_aren
     int ret = ReadTrait<uint32_t>::Read(reader, size);
     if (ret != 0)
     {
-        SKR_LOG_FATAL("failed to read blob arena size! ret code: %d", ret);
+        SKR_LOG_FATAL(u8"failed to read blob arena size! ret code: %d", ret);
         return ret;
     }
     if (size == 0)
@@ -412,7 +413,7 @@ int ReadTrait<skr_blob_arena_t>::Read(skr_binary_reader_t* reader, skr_blob_aren
     ret = ReadTrait<uint32_t>::Read(reader, align);
     if (ret != 0)
     {
-        SKR_LOG_FATAL("failed to read blob arena alignment! ret code: %d", ret);
+        SKR_LOG_FATAL(u8"failed to read blob arena alignment! ret code: %d", ret);
         return ret;
     }
     else

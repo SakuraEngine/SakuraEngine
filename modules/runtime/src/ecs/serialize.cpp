@@ -1,19 +1,18 @@
-#include "storage.hpp"
-#include "archetype.hpp"
-#include "chunk_view.hpp"
 #include "SkrRT/ecs/dual.h"
-#include "pool.hpp"
-#include "stack.hpp"
-#include "type.hpp"
-#include "SkrRT/ecs/constants.hpp"
-#include "iterator_ref.hpp"
 #include "SkrRT/ecs/array.hpp"
-#include "set.hpp"
-#include "scheduler.hpp"
-#include "internal/utils.hpp"
+#include "SkrRT/ecs/entity.hpp"
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/serde/binary/writer.h"
+
+#include "chunk.hpp"
+#include "storage.hpp"
+#include "stack.hpp"
+#include "type.hpp"
+#include "archetype.hpp"
+#include "scheduler.hpp"
 #include "type_registry.hpp"
+
+#include "tracy/Tracy.hpp"
 
 template<class T>
 static void ArchiveBuffer(skr_binary_writer_t* writer, const T* buffer, uint32_t count)
@@ -134,8 +133,11 @@ void dual_storage_t::serialize_type(const dual_entity_type_t& type, skr_binary_w
     // todo: assert(s.is_serialize());
     bin::Archive(s, type.type.length);
     auto& reg = type_registry_t::get();
-    for (auto t : type.type)
+    for (auto i = 0; i < type.type.length; i++)
+    {
+        auto t = type.type.data[i];
         bin::Archive(s, reg.descriptions[type_index_t(t).index()].guid);
+    }
     if(keepMeta)
     {
         bin::Archive(s, type.meta.length);

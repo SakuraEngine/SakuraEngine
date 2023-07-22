@@ -1,6 +1,4 @@
 #pragma once
-#include "SkrRT/ecs/dual.h"
-#include "type.hpp"
 #include "pool.hpp"
 #include "scheduler.hpp"
 #include "type_registry.hpp"

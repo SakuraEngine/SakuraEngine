@@ -1,6 +1,5 @@
 #pragma once
-#include "SkrRT/ecs/constants.hpp"
-#include "SkrRT/ecs/entity.hpp"
+#include "SkrRT/ecs/dual_types.h" // IWYU pragma: keep
 
 namespace dual
 {

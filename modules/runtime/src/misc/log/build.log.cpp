@@ -1,4 +1,4 @@
-#include "../../pch.hpp"
+#include "../../pch.hpp" // IWYU pragma: keep
 #include "logger.cpp"
 #include "log_pattern.cpp"
 #include "log_sink.cpp"

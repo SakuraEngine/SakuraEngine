@@ -1,3 +1,4 @@
+#include "../../pch.hpp"
 #include "SkrGui/framework/widget/widget.hpp"
 #include "SkrRT/platform/guid.hpp"
 

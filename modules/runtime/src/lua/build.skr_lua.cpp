@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/lua/skr_lua.h"
 #include "SkrRT/platform/memory.h"
@@ -64,7 +65,7 @@ int skr_lua_loadfile(lua_State* L, const char* filename)
     }
     if(!file)
     {
-        SKR_LOG_ERROR("[lua] Failed to open file: %s", filename);
+        SKR_LOG_ERROR(u8"[lua] Failed to open file: %s", filename);
         return 0;
     }
     SKR_DEFER({ skr_vfs_fclose(file); });
@@ -80,7 +81,7 @@ int skr_lua_loadfile(lua_State* L, const char* filename)
     }
     else {
         const char* err = lua_tostring(L,-1);
-        SKR_LOG_ERROR("[lua] Failed to load file: %s", err);
+        SKR_LOG_ERROR(u8"[lua] Failed to load file: %s", err);
         lua_pop(L,1);
         lua_pushnil(L);
         return 1;
@@ -429,7 +430,7 @@ void bind_skr_resource_handle(lua_State* L)
                         if (resource->is_resolved())
                             resource->unload();
                         else
-                            SKR_LOG_DEBUG("skr_resource_handle_t::unload called on unresolved resource.");
+                            SKR_LOG_DEBUG(u8"skr_resource_handle_t::unload called on unresolved resource.");
                         return 0;
                     }, "unload");
                     return 1;
@@ -503,11 +504,11 @@ int skr_lua_log(lua_State* L)
         
         const auto modulename = join(tokens, u8".");
         auto lstr = skr::format(u8"{}", line);
-        skr_log_log(level, (const char*)modulename.c_str(), "unknown", lstr.c_str(), str.c_str());
+        skr_log_log(level, (const char*)modulename.c_str(), "unknown", lstr.c_str(), str.u8_str());
     }
     else 
     {
-        skr_log_log(level, "unknown", "unknown", 0, str.c_str());
+        skr_log_log(level, "unknown", "unknown", 0, str.u8_str());
     }
     return 0;
 }
@@ -515,7 +516,7 @@ int skr_lua_log(lua_State* L)
 void bind_skr_log(lua_State* L)
 {
     //lua_atpanic(L, +[](lua_State* L) -> int {
-    //    SKR_LOG_FATAL("Lua panic: %s", lua_tostring(L, -1));
+    //    SKR_LOG_FATAL(u8"Lua panic: %s", lua_tostring(L, -1));
     //    return 0;
     //});
     lua_getglobal(L, "skr");

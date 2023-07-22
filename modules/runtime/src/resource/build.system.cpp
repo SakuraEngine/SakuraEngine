@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "resource_factory.cpp"
 #include "resource_request.cpp"
 #include "resource_system.cpp"

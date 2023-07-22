@@ -1,24 +1,25 @@
-#include "gtest/gtest.h"
-#include "SkrRT/platform/crash.h"
 #include "cgpu/api.h"
-#include "SkrRT/misc/log.h"
+#include "SkrTestFramework/framework.hpp"
+#include "SkrTestFramework/generators.hpp"
+#include <catch2/generators/catch_generators.hpp>
+#include <iostream>
+
 #if defined(_WIN32) || defined(_WIN64)
     #ifndef WIN32_LEAN_AND_MEAN
         #define WIN32_LEAN_AND_MEAN
     #endif
-    #include "windows.h"
+    #include "windows.h" // IWYU pragma: keep
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HWND createWin32Window();
 #elif defined(_MACOS)
     #include "SkrRT/platform/apple/macos/window.h"
 #endif
 
-class SwapChainCreation : public ::testing::TestWithParam<ECGPUBackend>
+class SwapChainCreation
 {
 protected:
-    void SetUp() override
+    void Initialize(ECGPUBackend backend) SKR_NOEXCEPT
     {
-        ECGPUBackend backend = GetParam();
         DECLARE_ZERO(CGPUInstanceDescriptor, desc)
         desc.backend = backend;
         desc.enable_debug_layer = true;
@@ -65,7 +66,13 @@ protected:
         return swapchain;
     }
 
-    void TearDown() override
+    SwapChainCreation() SKR_NOEXCEPT
+    {
+        backend = GENERATE(CGPUBackendGenerator::Create());
+        Initialize(backend);
+    }
+
+    ~SwapChainCreation() SKR_NOEXCEPT
     {
         cgpu_free_device(device);
         cgpu_free_instance(instance);
@@ -74,6 +81,7 @@ protected:
     CGPUInstanceId instance;
     CGPUAdapterId adapter;
     CGPUDeviceId device;
+    ECGPUBackend backend;
 #ifdef _WIN32
     HWND hwnd;
 #elif defined(_MACOS)
@@ -82,7 +90,7 @@ protected:
 };
 
 #if defined(_WIN32) || defined(_WIN64)
-TEST_P(SwapChainCreation, CreateFromHWND)
+TEST_CASE_METHOD(SwapChainCreation, "CreateFromHWND")
 {
     auto surface = cgpu_surface_from_hwnd(device, hwnd);
 
@@ -101,10 +109,9 @@ TEST_P(SwapChainCreation, CreateFromHWND)
     #define BACK_BUFFER_WIDTH 1280
     #define BACK_BUFFER_HEIGHT 720
 
-TEST_P(SwapChainCreation, CreateFromNSView)
+TEST_CASE_METHOD(SwapChainCreation, "CreateFromNSView")
 {
-    auto ns_view = (struct NSView*)nswindow_get_content_view(
-    nswin);
+    auto ns_view = (struct NSView*)nswindow_get_content_view(nswin);
     auto surface = cgpu_surface_from_ns_view(device, (CGPUNSView*)ns_view);
 
     EXPECT_NE(surface, CGPU_NULLPTR);
@@ -119,18 +126,6 @@ TEST_P(SwapChainCreation, CreateFromNSView)
     cgpu_free_surface(device, surface);
 }
 #endif
-
-static const auto allPlatforms = testing::Values(
-#ifdef CGPU_USE_VULKAN
-CGPU_BACKEND_VULKAN
-#endif
-#ifdef CGPU_USE_D3D12
-,
-CGPU_BACKEND_D3D12
-#endif
-);
-
-INSTANTIATE_TEST_SUITE_P(SwapChainCreation, SwapChainCreation, allPlatforms);
 
 #if defined(_WIN32) || defined(_WIN64)
 LRESULT CALLBACK WindowProcedure(HWND window, UINT msg, WPARAM wp, LPARAM lp)
@@ -174,18 +169,3 @@ HWND createWin32Window()
     return CGPU_NULLPTR;
 }
 #endif
-
-// 137900114
-
-int main(int argc, char** argv)
-{
-    skr_initialize_crash_handler();
-    skr_log_initialize_async_worker();
-
-    ::testing::InitGoogleTest(&argc, argv);
-    auto result = RUN_ALL_TESTS();
-
-    skr_log_finalize_async_worker();
-    skr_finalize_crash_handler();
-    return result;
-}

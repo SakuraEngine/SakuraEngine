@@ -1,3 +1,4 @@
+#include "../../pch.hpp"
 #include "SkrGui/framework/element/element.hpp"
 #include "SkrGui/framework/element/render_object_element.hpp"
 #include "SkrGui/framework/render_object/render_object.hpp"
@@ -11,7 +12,7 @@ namespace skr::gui
 Element::Element(Widget* widget) SKR_NOEXCEPT
     : _widget(widget)
 {
-    if (_widget == nullptr) { SKR_GUI_LOG_ERROR("widget is nullptr"); }
+    if (_widget == nullptr) { SKR_GUI_LOG_ERROR(u8"widget is nullptr"); }
 }
 
 // lifecycle & tree
@@ -19,8 +20,8 @@ Element::Element(Widget* widget) SKR_NOEXCEPT
 void Element::mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT
 {
     // validate
-    if (_widget == nullptr) { SKR_GUI_LOG_ERROR("widget is nullptr"); }
-    if (_parent != nullptr) { SKR_GUI_LOG_ERROR("already mounted"); }
+    if (_widget == nullptr) { SKR_GUI_LOG_ERROR(u8"widget is nullptr"); }
+    if (_parent != nullptr) { SKR_GUI_LOG_ERROR(u8"already mounted"); }
 
     // mount
     _parent = parent;
@@ -47,7 +48,7 @@ void Element::mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT
     }
     else
     {
-        SKR_GUI_LOG_ERROR("owner is nullptr");
+        SKR_GUI_LOG_ERROR(u8"owner is nullptr");
     }
     if (_lifecycle == EElementLifecycle::Initial)
     {
@@ -60,7 +61,7 @@ void Element::unmount() SKR_NOEXCEPT
     // validate
     if (_parent == nullptr)
     {
-        SKR_GUI_LOG_ERROR("already unmounted");
+        SKR_GUI_LOG_ERROR(u8"already unmounted");
         return;
     }
 
@@ -90,9 +91,9 @@ void Element::unmount() SKR_NOEXCEPT
 void Element::destroy() SKR_NOEXCEPT
 {
     // validate
-    if (_lifecycle != EElementLifecycle::Unmounted) { SKR_GUI_LOG_ERROR("before destroy, must unmount"); }
-    if (_widget == nullptr) { SKR_GUI_LOG_ERROR("widget is nullptr"); }
-    if (_owner == nullptr) { SKR_GUI_LOG_ERROR("owner is nullptr"); }
+    if (_lifecycle != EElementLifecycle::Unmounted) { SKR_GUI_LOG_ERROR(u8"before destroy, must unmount"); }
+    if (_widget == nullptr) { SKR_GUI_LOG_ERROR(u8"widget is nullptr"); }
+    if (_owner == nullptr) { SKR_GUI_LOG_ERROR(u8"owner is nullptr"); }
 
     // TODO. process global key
     _widget = nullptr;
@@ -109,8 +110,8 @@ void Element::first_mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT
 void Element::attach(NotNull<BuildOwner*> owner) SKR_NOEXCEPT
 {
     // validate
-    if (_widget == nullptr) { SKR_GUI_LOG_ERROR("widget is nullptr"); }
-    if (owner == nullptr) { SKR_GUI_LOG_ERROR("owner is nullptr"); }
+    if (_widget == nullptr) { SKR_GUI_LOG_ERROR(u8"widget is nullptr"); }
+    if (owner == nullptr) { SKR_GUI_LOG_ERROR(u8"owner is nullptr"); }
 
     // update depth
     _owner = owner;
@@ -125,8 +126,8 @@ void Element::attach(NotNull<BuildOwner*> owner) SKR_NOEXCEPT
 void Element::detach() SKR_NOEXCEPT
 {
     // validate
-    if (_widget == nullptr) { SKR_GUI_LOG_ERROR("widget is nullptr"); }
-    if (_owner == nullptr) { SKR_GUI_LOG_ERROR("owner is nullptr"); }
+    if (_widget == nullptr) { SKR_GUI_LOG_ERROR(u8"widget is nullptr"); }
+    if (_owner == nullptr) { SKR_GUI_LOG_ERROR(u8"owner is nullptr"); }
 
     // TODO. process dependencies
 }
@@ -135,11 +136,11 @@ void Element::detach() SKR_NOEXCEPT
 void Element::mark_needs_build() SKR_NOEXCEPT
 {
     // validate
-    if (_lifecycle == EElementLifecycle::Destroyed) { SKR_GUI_LOG_ERROR("already unmounted"); }
+    if (_lifecycle == EElementLifecycle::Destroyed) { SKR_GUI_LOG_ERROR(u8"already unmounted"); }
     if (_lifecycle != EElementLifecycle::Mounted) { return; }
     if (_owner == nullptr)
     {
-        SKR_GUI_LOG_ERROR("owner is nullptr");
+        SKR_GUI_LOG_ERROR(u8"owner is nullptr");
         return;
     }
     if (_dirty) { return; }
@@ -153,7 +154,7 @@ void Element::mark_needs_build() SKR_NOEXCEPT
 void Element::rebuild(bool force) SKR_NOEXCEPT
 {
     // validate
-    if (_lifecycle == EElementLifecycle::Initial) { SKR_GUI_LOG_ERROR("element is incomplete"); }
+    if (_lifecycle == EElementLifecycle::Initial) { SKR_GUI_LOG_ERROR(u8"element is incomplete"); }
     if (_lifecycle != EElementLifecycle::Mounted || (!_dirty && !force))
     {
         return;
@@ -162,15 +163,15 @@ void Element::rebuild(bool force) SKR_NOEXCEPT
     perform_rebuild();
 
     // validate
-    if (_dirty) { SKR_GUI_LOG_ERROR("perform_rebuild() must set dirty to false"); }
+    if (_dirty) { SKR_GUI_LOG_ERROR(u8"perform_rebuild() must set dirty to false"); }
 }
 void Element::update(NotNull<Widget*> new_widget) SKR_NOEXCEPT
 {
     // validate
-    if (_lifecycle != EElementLifecycle::Mounted) { SKR_GUI_LOG_ERROR("element is not active"); }
-    if (_widget == nullptr) { SKR_GUI_LOG_ERROR("widget is nullptr"); }
-    if (new_widget == _widget) { SKR_GUI_LOG_ERROR("new_widget is same as old widget"); }
-    if (_widget && !Widget::can_update(make_not_null(_widget), new_widget)) { SKR_GUI_LOG_ERROR("can not update widget"); }
+    if (_lifecycle != EElementLifecycle::Mounted) { SKR_GUI_LOG_ERROR(u8"element is not active"); }
+    if (_widget == nullptr) { SKR_GUI_LOG_ERROR(u8"widget is nullptr"); }
+    if (new_widget == _widget) { SKR_GUI_LOG_ERROR(u8"new_widget is same as old widget"); }
+    if (_widget && !Widget::can_update(make_not_null(_widget), new_widget)) { SKR_GUI_LOG_ERROR(u8"can not update widget"); }
 
     _widget = new_widget;
 }
@@ -266,7 +267,7 @@ void Element::dispatch_notification(NotNull<Notification*> notification) SKR_NOE
 Element* Element::_update_child(Element* child, Widget* new_widget, Slot new_slot) SKR_NOEXCEPT
 {
     // validate
-    if (_owner == nullptr) { SKR_GUI_LOG_ERROR("owner is nullptr"); }
+    if (_owner == nullptr) { SKR_GUI_LOG_ERROR(u8"owner is nullptr"); }
 
     // new widget is nullptr, just deactivate child
     if (new_widget == nullptr)
@@ -294,7 +295,7 @@ Element* Element::_update_child(Element* child, Widget* new_widget, Slot new_slo
         else
         {
             child->unmount();
-            if (child->_parent != nullptr) { SKR_LOG_ERROR("child's parent is not nullptr after deactivate"); }
+            if (child->_parent != nullptr) { SKR_LOG_ERROR(u8"child's parent is not nullptr after deactivate"); }
             return _inflate_widget(make_not_null(new_widget), new_slot);
         }
     }
@@ -396,8 +397,8 @@ void Element::_update_children(Array<Element*>& children, const Array<Widget*>& 
     }
 
     // validate state
-    if (children_match_front != children_match_end + 1) { SKR_GUI_LOG_ERROR("end of build but walk pointer not close"); }
-    if (widget_match_front != widget_match_end + 1) { SKR_GUI_LOG_ERROR("end of build but walk pointer not close"); }
+    if (children_match_front != children_match_end + 1) { SKR_GUI_LOG_ERROR(u8"end of build but walk pointer not close"); }
+    if (widget_match_front != widget_match_end + 1) { SKR_GUI_LOG_ERROR(u8"end of build but walk pointer not close"); }
 
     // step 5. cleanup unused children
     for (auto& child_pair : old_keyed_children)

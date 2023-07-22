@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrGui/backend/canvas/canvas.hpp"
 #include <nanovg.h>
 #include "SkrRT/misc/make_zeroed.hpp"
@@ -380,7 +381,7 @@ void ICanvas::paint_begin(float pixel_ratio) SKR_NOEXCEPT
     // validate
     if (_is_in_paint_scope)
     {
-        SKR_GUI_LOG_ERROR("ICanvas::paint_begin() called without a matching ICanvas::paint_end() call");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::paint_begin() called without a matching ICanvas::paint_end() call");
     }
 
     // begin frame
@@ -392,7 +393,7 @@ void ICanvas::paint_end() SKR_NOEXCEPT
     // validate
     if (!_is_in_paint_scope)
     {
-        SKR_GUI_LOG_ERROR("ICanvas::paint_end() called without a matching ICanvas::paint_begin() call");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::paint_end() called without a matching ICanvas::paint_begin() call");
     }
 
     // end frame
@@ -408,7 +409,7 @@ void ICanvas::state_save() SKR_NOEXCEPT
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::state_save() called without a matching ICanvas::state_restore() call");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::state_save() called without a matching ICanvas::state_restore() call");
     }
 }
 void ICanvas::state_restore() SKR_NOEXCEPT
@@ -419,7 +420,7 @@ void ICanvas::state_restore() SKR_NOEXCEPT
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::state_restore() called without a matching ICanvas::state_save() call");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::state_restore() called without a matching ICanvas::state_save() call");
     }
 }
 
@@ -432,7 +433,7 @@ void ICanvas::state_reset() SKR_NOEXCEPT
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::state_reset() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::state_reset() called outside of a paint scope");
     }
 }
 void ICanvas::state_translate(Offsetf offset) SKR_NOEXCEPT
@@ -443,7 +444,7 @@ void ICanvas::state_translate(Offsetf offset) SKR_NOEXCEPT
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::state_translate() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::state_translate() called outside of a paint scope");
     }
 }
 void ICanvas::state_rotate(float degree) SKR_NOEXCEPT
@@ -454,7 +455,7 @@ void ICanvas::state_rotate(float degree) SKR_NOEXCEPT
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::state_rotate() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::state_rotate() called outside of a paint scope");
     }
 }
 void ICanvas::state_scale(float scale_x, float scale_y) SKR_NOEXCEPT
@@ -465,7 +466,7 @@ void ICanvas::state_scale(float scale_x, float scale_y) SKR_NOEXCEPT
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::state_scale() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::state_scale() called outside of a paint scope");
     }
 }
 void ICanvas::state_skew_x(float degree) SKR_NOEXCEPT
@@ -476,7 +477,7 @@ void ICanvas::state_skew_x(float degree) SKR_NOEXCEPT
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::state_skew_x() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::state_skew_x() called outside of a paint scope");
     }
 }
 void ICanvas::state_skew_y(float degree) SKR_NOEXCEPT
@@ -487,7 +488,7 @@ void ICanvas::state_skew_y(float degree) SKR_NOEXCEPT
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::state_skew_y() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::state_skew_y() called outside of a paint scope");
     }
 }
 
@@ -500,7 +501,7 @@ void ICanvas::path_begin() SKR_NOEXCEPT
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::path_begin() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::path_begin() called outside of a paint scope");
     }
 
     _is_in_path_scope = true;
@@ -537,7 +538,7 @@ void ICanvas::path_end(const Pen& pen, const Brush& brush) SKR_NOEXCEPT
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::path_fill() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::path_fill() called outside of a paint scope");
     }
 
     _is_in_path_scope = false;
@@ -554,12 +555,12 @@ void ICanvas::path_move_to(Offsetf to) SKR_NOEXCEPT
         }
         else
         {
-            SKR_GUI_LOG_ERROR("ICanvas::path_move_to() called outside of a path scope");
+            SKR_GUI_LOG_ERROR(u8"ICanvas::path_move_to() called outside of a path scope");
         }
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::path_move_to() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::path_move_to() called outside of a paint scope");
     }
 }
 void ICanvas::path_line_to(Offsetf to) SKR_NOEXCEPT
@@ -572,12 +573,12 @@ void ICanvas::path_line_to(Offsetf to) SKR_NOEXCEPT
         }
         else
         {
-            SKR_GUI_LOG_ERROR("ICanvas::path_line_to() called outside of a path scope");
+            SKR_GUI_LOG_ERROR(u8"ICanvas::path_line_to() called outside of a path scope");
         }
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::path_line_to() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::path_line_to() called outside of a paint scope");
     }
 }
 void ICanvas::path_quad_to(Offsetf to, Offsetf control_point) SKR_NOEXCEPT
@@ -590,12 +591,12 @@ void ICanvas::path_quad_to(Offsetf to, Offsetf control_point) SKR_NOEXCEPT
         }
         else
         {
-            SKR_GUI_LOG_ERROR("ICanvas::path_quad_to() called outside of a path scope");
+            SKR_GUI_LOG_ERROR(u8"ICanvas::path_quad_to() called outside of a path scope");
         }
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::path_quad_to() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::path_quad_to() called outside of a paint scope");
     }
 }
 void ICanvas::path_cubic_to(Offsetf to, Offsetf control_point1, Offsetf control_point2) SKR_NOEXCEPT
@@ -608,12 +609,12 @@ void ICanvas::path_cubic_to(Offsetf to, Offsetf control_point1, Offsetf control_
         }
         else
         {
-            SKR_GUI_LOG_ERROR("ICanvas::path_cubic_to() called outside of a path scope");
+            SKR_GUI_LOG_ERROR(u8"ICanvas::path_cubic_to() called outside of a path scope");
         }
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::path_cubic_to() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::path_cubic_to() called outside of a paint scope");
     }
 }
 void ICanvas::path_arc_to(Offsetf to, Offsetf control_point, float radius) SKR_NOEXCEPT
@@ -626,12 +627,12 @@ void ICanvas::path_arc_to(Offsetf to, Offsetf control_point, float radius) SKR_N
         }
         else
         {
-            SKR_GUI_LOG_ERROR("ICanvas::path_arc_to() called outside of a path scope");
+            SKR_GUI_LOG_ERROR(u8"ICanvas::path_arc_to() called outside of a path scope");
         }
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::path_arc_to() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::path_arc_to() called outside of a paint scope");
     }
 }
 void ICanvas::path_close() SKR_NOEXCEPT
@@ -644,12 +645,12 @@ void ICanvas::path_close() SKR_NOEXCEPT
         }
         else
         {
-            SKR_GUI_LOG_ERROR("ICanvas::path_close() called outside of a path scope");
+            SKR_GUI_LOG_ERROR(u8"ICanvas::path_close() called outside of a path scope");
         }
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::path_close() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::path_close() called outside of a paint scope");
     }
 }
 
@@ -664,12 +665,12 @@ void ICanvas::path_arc(Offsetf center, float radius, float start_degree, float e
         }
         else
         {
-            SKR_GUI_LOG_ERROR("ICanvas::path_arc() called outside of a path scope");
+            SKR_GUI_LOG_ERROR(u8"ICanvas::path_arc() called outside of a path scope");
         }
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::path_arc() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::path_arc() called outside of a paint scope");
     }
 }
 void ICanvas::path_rect(Rectf rect) SKR_NOEXCEPT
@@ -682,12 +683,12 @@ void ICanvas::path_rect(Rectf rect) SKR_NOEXCEPT
         }
         else
         {
-            SKR_GUI_LOG_ERROR("ICanvas::path_rect() called outside of a path scope");
+            SKR_GUI_LOG_ERROR(u8"ICanvas::path_rect() called outside of a path scope");
         }
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::path_rect() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::path_rect() called outside of a paint scope");
     }
 }
 void ICanvas::path_circle(Offsetf center, float radius) SKR_NOEXCEPT
@@ -700,12 +701,12 @@ void ICanvas::path_circle(Offsetf center, float radius) SKR_NOEXCEPT
         }
         else
         {
-            SKR_GUI_LOG_ERROR("ICanvas::path_circle() called outside of a path scope");
+            SKR_GUI_LOG_ERROR(u8"ICanvas::path_circle() called outside of a path scope");
         }
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::path_circle() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::path_circle() called outside of a paint scope");
     }
 }
 void ICanvas::path_ellipse(Offsetf center, float radius_x, float radius_y) SKR_NOEXCEPT
@@ -718,12 +719,12 @@ void ICanvas::path_ellipse(Offsetf center, float radius_x, float radius_y) SKR_N
         }
         else
         {
-            SKR_GUI_LOG_ERROR("ICanvas::path_ellipse() called outside of a path scope");
+            SKR_GUI_LOG_ERROR(u8"ICanvas::path_ellipse() called outside of a path scope");
         }
     }
     else
     {
-        SKR_GUI_LOG_ERROR("ICanvas::path_ellipse() called outside of a paint scope");
+        SKR_GUI_LOG_ERROR(u8"ICanvas::path_ellipse() called outside of a paint scope");
     }
 }
 

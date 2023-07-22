@@ -25,7 +25,6 @@ rule("utils.install-resources")
     end)
 
 rule("utils.install-libs")
-    set_extensions(".zip")
     on_load(function (target)
         import("find_sdk")
         local libnames = target:extraconf("rules", "utils.install-libs", "libnames")

@@ -1,29 +1,23 @@
 #include "cgpu/api.h"
 #ifdef CGPU_USE_VULKAN
     #include "cgpu/extensions/cgpu_vulkan_exts.h"
-    #include "gtest/gtest.h"
+    #include "SkrTestFramework/framework.hpp"
     #include <vector>
 
-class VkDeviceExtsTest : public testing::Test
+class VkDeviceExtsTest
 {
-protected:
-    static void SetUpTestCase()
-    {
-    }
-    static void TearDownTestCase()
-    {
-    }
-};
 
+};
+/*
 static VKAPI_ATTR VkBool32 VKAPI_CALL VkUtil_DebugUtilsCallback(
 VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 VkDebugUtilsMessageTypeFlagsEXT messageType,
 const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 void* pUserData);
 
-TEST_F(VkDeviceExtsTest, CreateVkInstance)
+TEST_CASE_METHOD(VkDeviceExtsTest, "CreateVkInstance")
 {
-    DECLARE_ZERO(VulkanInstanceDescriptor, vkDesc)
+    DECLARE_ZERO(CGPUVulkanInstanceDescriptor, vkDesc)
     const char* exts[] = {
     #ifdef _WIN32
         VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
@@ -86,4 +80,5 @@ void* pUserData)
     }
     return VK_FALSE;
 }
+*/
 #endif

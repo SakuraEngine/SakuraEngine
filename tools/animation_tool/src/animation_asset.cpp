@@ -1,3 +1,4 @@
+#include "pch.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrAnimTool/animation_asset.h"
 #include "SkrAnim/ozz/animation.h"
@@ -10,7 +11,6 @@
 #include "SkrAnim/ozz/base/memory/unique_ptr.h"
 #include "SkrAnim/ozz/base/io/stream.h"
 #include "SkrAnim/ozz/base/io/archive.h"
-#include "SkrRT/misc/log.hpp"
 #include "SkrAnim/resources/skeleton_resource.h"
 #include "SkrAnim/resources/animation_resource.h"
 #include "SkrToolCore/asset/json_utils.hpp"
@@ -29,7 +29,7 @@ bool SAnimCooker::Cook(SCookContext *ctx)
     //-----emit static dependencies
     if(settings.skeletonAsset.get_serialized() == skr_guid_t{})
     {
-        SKR_LOG_ERROR("Failed to cook animation asset %s. No skeleton asset specified.", ctx->GetAssetRecord()->path.c_str());
+        SKR_LOG_ERROR(u8"Failed to cook animation asset %s. No skeleton asset specified.", ctx->GetAssetRecord()->path.c_str());
         return false;
     }
     auto idx = ctx->AddStaticDependency(settings.skeletonAsset.get_serialized(), true);
@@ -60,13 +60,13 @@ bool SAnimCooker::Cook(SCookContext *ctx)
                 if (ozz::strmatch(joint_name, override.name.c_str())) {
                     found = true;
 
-                    SKR_LOG_TRACE("Found joint \"%s\" matching pattern \"%s\" for joint optimization setting override.", joint_name, override.name.c_str());
+                    SKR_LOG_TRACE(u8"Found joint \"%s\" matching pattern \"%s\" for joint optimization setting override.", joint_name, override.name.c_str());
 
                     const AnimationOptimizer::JointsSetting::value_type entry(j, optSettings);
                     const bool newly =
                         optimizer.joints_setting_override.insert(entry).second;
                     if (!newly) {
-                        SKR_LOG_TRACE("Redundant optimization setting for pattern \"%s\".", override.name.c_str());
+                        SKR_LOG_TRACE(u8"Redundant optimization setting for pattern \"%s\".", override.name.c_str());
                     }
                 }
             }
@@ -74,13 +74,13 @@ bool SAnimCooker::Cook(SCookContext *ctx)
             optSettings = optimizer.setting;
             
             if (!found) {
-                SKR_LOG_INFO("No joint matching pattern \"%s\" for joint optimization setting override.", override.name.c_str());
+                SKR_LOG_INFO(u8"No joint matching pattern \"%s\" for joint optimization setting override.", override.name.c_str());
             }
         }
         RawAnimation rawOptimizedAnimation;
         if (!optimizer(*rawAnimation, skeleton, &rawOptimizedAnimation))
         {
-            SKR_LOG_ERROR("Failed to optimize animation.");
+            SKR_LOG_ERROR(u8"Failed to optimize animation.");
             return false;
         }
 
@@ -106,7 +106,7 @@ bool SAnimCooker::Cook(SCookContext *ctx)
         }
 
         if (!succeeded) {
-            SKR_LOG_ERROR("Failed to build additive animation.");
+            SKR_LOG_ERROR(u8"Failed to build additive animation.");
             return false;
         }
 
@@ -117,7 +117,7 @@ bool SAnimCooker::Cook(SCookContext *ctx)
     AnimationBuilder builder;
     ozz::unique_ptr<ozz::animation::Animation> animation = builder(*rawAnimation);
     if (!animation) {
-        SKR_LOG_ERROR("Failed to build animation.");
+        SKR_LOG_ERROR(u8"Failed to build animation.");
         return false;
     }
     skr_anim_resource_t resource;

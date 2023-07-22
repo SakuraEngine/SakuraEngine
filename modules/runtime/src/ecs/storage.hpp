@@ -1,23 +1,17 @@
 #pragma once
-#include "archetype.hpp"
-#include "chunk.hpp"
-#include "chunk_view.hpp"
-#include "SkrRT/ecs/entity.hpp"
 #include "SkrRT/ecs/dual.h"
-#include "stack.hpp"
-#include "type.hpp"
-#include "query.hpp"
+#include "SkrRT/ecs/set.hpp"
+#include "SkrRT/ecs/entities.hpp"
+#include "SkrRT/containers/hashmap.hpp"
+#include "SkrRT/async/fib_task.hpp"
+#include "EASTL/shared_ptr.h"
 
+#include "stack.hpp"
+#include "query.hpp"
+#include "archetype.hpp"
 #include "arena.hpp"
 #include "pool.hpp"
-#include "SkrRT/ecs/entities.hpp"
 #include "cache.hpp"
-#include "type.hpp"
-#include "set.hpp"
-#include "SkrRT/containers/hashmap.hpp"
-#include "EASTL/shared_ptr.h"
-#include "SkrRT/async/fib_task.hpp"
-#include "SkrRT/misc/lazy.hpp"
 
 namespace dual
 {

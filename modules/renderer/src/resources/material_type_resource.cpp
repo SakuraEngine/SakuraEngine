@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrRenderer/resources/material_type_resource.hpp"
 
 namespace skr

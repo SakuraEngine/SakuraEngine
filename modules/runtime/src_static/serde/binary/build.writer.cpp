@@ -1,3 +1,4 @@
+#include "../../pch.hpp"
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/serde/binary/writer.h"
@@ -54,13 +55,13 @@ int WriteBitpacked(skr_binary_writer_t* writer, T value, IntegerPackConfig<T> co
 
     if(!writer->vwrite_bits)
     {
-        SKR_LOG_ERROR("vwrite_bits is not implemented. falling back to vwrite");
+        SKR_LOG_ERROR(u8"vwrite_bits is not implemented. falling back to vwrite");
         return writer->write(&value, sizeof(T));
     }
     auto bits = 64 - skr::CountLeadingZeros64(config.max - config.min);
     if(!valid)
     {
-        SKR_LOG_ERROR("value %d is not in range [%d, %d]", value, config.min, config.max);
+        SKR_LOG_ERROR(u8"value %d is not in range [%d, %d]", value, config.min, config.max);
         value = std::clamp(value, config.min, config.max);
     }
     T compressed = (value - config.min) & ((1 << bits) - 1);
@@ -117,12 +118,12 @@ int WriteTrait<const double&>::Write(skr_binary_writer_t* writer, double value)
     
 //     if(!writer->vwrite_bits)
 //     {
-//         SKR_LOG_ERROR("vwrite_bits is not implemented. falling back to vwrite");
+//         SKR_LOG_ERROR(u8"vwrite_bits is not implemented. falling back to vwrite");
 //         return writer->write(&value, sizeof(T));
 //     }
 //     if(!valid)
 //     {
-//         SKR_LOG_ERROR("Value %f is out of range for bitpacked serialization", value);
+//         SKR_LOG_ERROR(u8"Value %f is out of range for bitpacked serialization", value);
 //         scaled = config.max;
 //     }
 //     auto integer = (typename FloatingPackConfig<T>::Integer) rtm::scalar_round_bankers(scaled);
@@ -202,7 +203,7 @@ int WriteBitpacked(skr_binary_writer_t* writer, T value, VectorPackConfig<Scalar
     SKR_ASSERT(!containsNan);
 	if (containsNan)
 	{
-        SKR_LOG_ERROR("WriteBitpacked: Value isn't finite. Clearing for safety.");
+        SKR_LOG_ERROR(u8"WriteBitpacked: Value isn't finite. Clearing for safety.");
 		for(size_t i = 0; i < size; ++i)
         {
             array[i] = 0;

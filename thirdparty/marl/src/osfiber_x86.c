@@ -14,7 +14,7 @@
 
 #if defined(__i386__)
 
-#include "osfiber_asm_x86.h"
+#include "marl/osfiber_asm_x86.h"
 
 #include "marl/export.h"
 

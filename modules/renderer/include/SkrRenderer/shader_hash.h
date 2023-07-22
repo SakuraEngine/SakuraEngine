@@ -6,7 +6,7 @@
 #endif
 
 #ifndef __meta__
-    #include "SkrRenderer/shader_hash.generated.h"
+    #include "SkrRenderer/shader_hash.generated.h" // IWYU pragma: export
 #endif
 
 sreflect_struct("guid" : "5a54720c-34b2-444c-8e3a-5977c94136c3")

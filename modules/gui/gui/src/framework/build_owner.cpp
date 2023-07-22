@@ -1,5 +1,5 @@
+#include "../pch.hpp"
 #include "SkrGui/framework/build_owner.hpp"
-#include "SkrRT/misc/defer.hpp"
 #include "SkrGui/framework/element/element.hpp"
 
 namespace skr::gui
@@ -14,11 +14,11 @@ void BuildOwner::flush_build() SKR_NOEXCEPT
 
     // sort by depth and is_dirty
     std::sort(
-    _dirty_elements.begin(),
-    _dirty_elements.end(),
-    +[](Element* a, Element* b) {
-        return a->depth() == b->depth() ? a->is_dirty() < b->is_dirty() : a->depth() < b->depth();
-    });
+        _dirty_elements.begin(),
+        _dirty_elements.end(),
+        +[](Element* a, Element* b) {
+            return a->depth() == b->depth() ? a->is_dirty() < b->is_dirty() : a->depth() < b->depth();
+        });
 
     // build
     for (auto element : _dirty_elements)

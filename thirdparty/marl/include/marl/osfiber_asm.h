@@ -23,21 +23,21 @@
 // thread throughout their lifetime.
 
 #if defined(__x86_64__)
-#include "osfiber_asm_x64.h"
+#include "marl/osfiber_asm_x64.h"
 #elif defined(__i386__)
-#include "osfiber_asm_x86.h"
+#include "marl/osfiber_asm_x86.h"
 #elif defined(__aarch64__)
-#include "osfiber_asm_aarch64.h"
+#include "marl/osfiber_asm_aarch64.h"
 #elif defined(__arm__)
-#include "osfiber_asm_arm.h"
+#include "marl/osfiber_asm_arm.h"
 #elif defined(__powerpc64__)
-#include "osfiber_asm_ppc64.h"
+#include "marl/osfiber_asm_ppc64.h"
 #elif defined(__mips__) && _MIPS_SIM == _ABI64
-#include "osfiber_asm_mips64.h"
+#include "marl/osfiber_asm_mips64.h"
 #elif defined(__riscv) && __riscv_xlen == 64
-#include "osfiber_asm_rv64.h"
+#include "marl/osfiber_asm_rv64.h"
 #elif defined(__loongarch__) && _LOONGARCH_SIM == _ABILP64
-#include "osfiber_asm_loongarch64.h"
+#include "marl/osfiber_asm_loongarch64.h"
 #else
 #error "Unsupported target"
 #endif

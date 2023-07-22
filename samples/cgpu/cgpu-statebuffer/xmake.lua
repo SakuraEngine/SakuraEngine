@@ -1,4 +1,4 @@
-target("Example-StateBufferTriangle")
+target("StateBufferTriangle")
     set_group("04.examples/cgpu")
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/statebuffer-triangle",

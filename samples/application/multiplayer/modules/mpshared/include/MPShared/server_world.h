@@ -1,13 +1,11 @@
 #pragma once
+#include "steam/steamnetworkingtypes.h"
 #include "MPShared/module.configure.h"
 #include "MPShared/shared.h"
 #include "MPShared/world_delta.h"
 #include "SkrScene/scene.h"
-#include "SkrRT/containers/hashmap.hpp"
-#include "SkrRT/async/fib_task.hpp"
 #include "SkrRT/platform/time.h"
 #include "SkrRT/containers/vector.hpp"
-#include "SkrRT/ecs/entities.hpp"
 
 struct MP_SHARED_API MPServerWorld : MPGameWorld
 {

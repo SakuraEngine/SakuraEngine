@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrGui/render_objects/render_flex.hpp"
 #include "SkrGui/framework/painting_context.hpp"
 
@@ -216,7 +217,7 @@ struct _FlexHelper {
     {
         if (!_can_compute_intrinsics(self))
         {
-            SKR_GUI_LOG_ERROR("Intrinsics are not available for ECrossAxisAlignment.baseline, which requires a full layout.");
+            SKR_GUI_LOG_ERROR(u8"Intrinsics are not available for ECrossAxisAlignment.baseline, which requires a full layout.");
             return 0.0f;
         }
 
@@ -342,7 +343,7 @@ Sizef RenderFlex::compute_dry_layout(BoxConstraints constraints) const SKR_NOEXC
 {
     if (!_FlexHelper::_can_compute_intrinsics(*this))
     {
-        SKR_GUI_LOG_ERROR("Dry layout cannot be computed for ECrossAxisAlignment.baseline, which requires a full layout.");
+        SKR_GUI_LOG_ERROR(u8"Dry layout cannot be computed for ECrossAxisAlignment.baseline, which requires a full layout.");
         return Sizef::Zero();
     }
 
@@ -483,7 +484,7 @@ void RenderFlex::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NO
         }
         else
         {
-            SKR_GUI_LOG_ERROR("RenderFlex::paint: child is nullptr.");
+            SKR_GUI_LOG_ERROR(u8"RenderFlex::paint: child is nullptr.");
         }
     }
 }

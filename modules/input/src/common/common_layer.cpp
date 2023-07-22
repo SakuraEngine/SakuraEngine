@@ -34,7 +34,7 @@ CommonInputReadingPoolBase::~CommonInputReadingPoolBase() SKR_NOEXCEPT
         SkrDeleteN(kInputReadingMemoryPoolName)(ptr);
         ++dcount;
     }
-    SKR_LOG_INFO("CommonInputReadingPoolBase::~CommonInputReadingPoolBase()"
+    SKR_LOG_INFO(u8"CommonInputReadingPoolBase::~CommonInputReadingPoolBase()"
         " - %llu objects deleted, %llu objects leaked", dcount, (count > dcount) ? (count - dcount) : 0);
     ReportLeaking();
 }

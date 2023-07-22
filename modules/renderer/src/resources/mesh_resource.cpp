@@ -1,9 +1,10 @@
+#include "../pch.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/guid.hpp"
 #include "cgpu/cgpux.hpp"
-#include "SkrRT/io/io.h"
+#include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/thread.h"
 #include <SkrRT/platform/filesystem.hpp>
@@ -11,7 +12,6 @@
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRenderer/render_device.h"
-#include "SkrRT/misc/log.h"
 #include "cgpu/io.h"
 
 #include "SkrRT/containers/sptr.hpp"

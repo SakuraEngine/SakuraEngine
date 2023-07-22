@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrAnimTool/skeleton_asset.h"
 #include "SkrToolCore/project/project.hpp"
@@ -24,7 +25,7 @@ void* SSkelGltfImporter::Import(skr_io_ram_service_t*, SCookContext* context)
     auto fullAssetPath = context->GetAssetRecord()->project->GetAssetPath() / path;
     if(!impoter.Load(fullAssetPath.string().c_str()))
     {
-        SKR_LOG_ERROR("Failed to load gltf file %s for asset %s.", assetPath.c_str(), context->GetAssetPath().c_str());
+        SKR_LOG_ERROR(u8"Failed to load gltf file %s for asset %s.", assetPath.c_str(), context->GetAssetPath().c_str());
         return nullptr;
     }
     RawSkeleton* rawSkeleton = SkrNew<RawSkeleton>();

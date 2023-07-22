@@ -1,8 +1,7 @@
 #include "common_utils.h"
-#include <EASTL/vector.h>
 #include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/hashmap.hpp>
-#include "SkrRT/platform/atomic.h"
+#include <EASTL/vector.h>
 
 struct RSCharacteristic
 {

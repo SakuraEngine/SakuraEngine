@@ -1,2 +1,3 @@
-#include "SkrRT/module/module_manager.hpp"
-#include "SkrRT/misc/log.h"
+#include "pch.hpp"
+#include "SkrRT/module/module_manager.hpp" // IWYU pragma: keep
+#include "SkrRT/misc/log.h" // IWYU pragma: keep

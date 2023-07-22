@@ -1,5 +1,8 @@
 #include "SkrRT/platform/input.h"
-#include "SDL2/SDL.h"
+#include "SDL2/SDL_scancode.h"
+
+#include "SDL2/SDL_keyboard.h"
+#include "SDL2/SDL_mouse.h"
 
 #define KEY_CODE_TRANS(k, sdlk) \
     case (k):                   \

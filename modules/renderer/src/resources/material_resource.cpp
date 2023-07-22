@@ -1,10 +1,10 @@
+#include "../pch.hpp"
 #include <EASTL/fixed_vector.h>
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/async/thread_job.hpp"
 
-#include "SkrRenderer/render_device.h"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRenderer/resources/material_resource.hpp"
 #include "SkrRenderer/resources/material_type_resource.hpp"

@@ -24,7 +24,7 @@
 // DEALINGS IN THE SOFTWARE.                                                  //
 //                                                                            //
 //----------------------------------------------------------------------------//
-
+#include "../pch.hpp"
 #include "SkrAnim/ozz/local_to_model_job.h"
 
 #include <cassert>

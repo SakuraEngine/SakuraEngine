@@ -339,7 +339,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
     }
 
     // We should never get here
-    SKR_LOG_ERROR("Error: FiberStart should never return");
+    SKR_LOG_ERROR(u8"Error: FiberStart should never return");
 }
 
 void TaskScheduler::ThreadEndFunc(void* arg)

@@ -1,7 +1,7 @@
-#include "set.hpp"
 #include "SkrRT/ecs/dual.h"
-#include "SkrRT/ecs/entity.hpp"
-#include "hash.hpp"
+#include "SkrRT/ecs/hash.hpp"
+#include "SkrRT/ecs/set.hpp"
+#include <algorithm>
 
 namespace dual
 {

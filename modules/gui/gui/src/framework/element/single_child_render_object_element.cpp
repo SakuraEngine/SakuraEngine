@@ -1,3 +1,4 @@
+#include "../../pch.hpp"
 #include "SkrGui/framework/element/single_child_render_object_element.hpp"
 #include "SkrGui/framework/widget/single_child_render_object_widget.hpp"
 #include "SkrGui/framework/render_object/single_child_render_object.hpp"
@@ -35,7 +36,7 @@ void SingleChildRenderObjectElement::add_render_object_child(NotNull<RenderObjec
     ISingleChildRenderObject* single_child_render_object = render_object()->type_cast<ISingleChildRenderObject>();
     if (!child->type_based_on(single_child_render_object->accept_child_type()))
     {
-        SKR_GUI_LOG_ERROR("child type not match");
+        SKR_GUI_LOG_ERROR(u8"child type not match");
     }
     single_child_render_object->set_child(child);
 }

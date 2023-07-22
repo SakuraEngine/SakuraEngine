@@ -1,3 +1,3 @@
 #pragma once
-#include "SkrRT/ecs/dual.h"
-#include "SkrRT/misc/types.h"
+#include "SkrRT/ecs/dual.h" // IWYU pragma: export
+#include "SkrRT/misc/types.h" // IWYU pragma: export

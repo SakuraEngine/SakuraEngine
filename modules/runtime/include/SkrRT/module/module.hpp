@@ -129,7 +129,7 @@ struct RUNTIME_API IHotfixModule : public IDynamicModule {
 } // namespace skr
 
 #define IMPLEMENT_STATIC_MODULE(ModuleImplClass, ModuleName) \
-    inline static const skr::SStaticallyLinkedModuleRegistrant<ModuleImplClass> ModuleRegistrant##ModuleName(#ModuleName);
+    inline static const skr::SStaticallyLinkedModuleRegistrant<ModuleImplClass> ModuleRegistrant##ModuleName((const char8_t*)#ModuleName);
 
 #define IMPLEMENT_DYNAMIC_MODULE(ModuleImplClass, ModuleName)                \
     extern "C" RUNTIME_EXPORT skr::IModule* __initializeModule##ModuleName() \

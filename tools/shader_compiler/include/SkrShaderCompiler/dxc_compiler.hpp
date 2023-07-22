@@ -7,7 +7,7 @@
 
 #include "SkrRenderer/resources/shader_resource.hpp"
 #ifndef __meta__
-#include "SkrShaderCompiler/dxc_compiler.generated.h"
+#include "SkrShaderCompiler/dxc_compiler.generated.h" // IWYU pragma: export
 #endif 
 
 struct IDxcUtils;

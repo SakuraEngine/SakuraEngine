@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/misc/log/log_sink.hpp"
+#include "SkrRT/misc/log/log_pattern.hpp"
 #include "log_worker.hpp"
 #include "tscns.hpp"
 

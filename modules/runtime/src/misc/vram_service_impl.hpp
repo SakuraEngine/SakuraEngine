@@ -2,9 +2,11 @@
 #include "cgpu/io.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "io_service_util.hpp"
+
 #include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/variant.hpp>
 #include <EASTL/vector_map.h>
+#include <EASTL/set.h>
 
 namespace skr
 {
@@ -20,7 +22,7 @@ enum EVramTaskStep
     kStepFinished
 };
 
-class VRAMService final : public skr_io_vram_service_t
+class VRAMService_ final : public skr_io_vram_service_t
 {
 public:
     struct TaskBatch;
@@ -42,7 +44,6 @@ public:
         skr_async_vtexture_destination_t* destination;
         CGPUUploadTask* upload_task;
     };
-
     struct CGPUDStorageTask {
         CGPUDStorageQueueId storage_queue = nullptr;
         CGPUDStorageFileHandle ds_file = nullptr;
@@ -72,8 +73,8 @@ public:
             return skr::get_if<DStorageBufferTask>(&resource_task) || skr::get_if<DStorageTextureTask>(&resource_task);
         }
     };
-    ~VRAMService() SKR_NOEXCEPT = default;
-    VRAMService(uint32_t sleep_time, bool lockless) SKR_NOEXCEPT
+    ~VRAMService_() SKR_NOEXCEPT = default;
+    VRAMService_(uint32_t sleep_time, bool lockless) SKR_NOEXCEPT
         : tasks(lockless), threaded_service(sleep_time, lockless)
 
     {
@@ -133,7 +134,9 @@ public:
         eastl::vector<Task> tasks;
         // Upload Resources
         eastl::vector<CGPUBufferBarrier> buffer_barriers;
+        eastl::set<CGPUBufferId> buffer_barriers_check;
         eastl::vector<CGPUTextureBarrier> texture_barriers;
+        eastl::set<CGPUTextureId> texture_barriers_check;
         eastl::vector_map<CGPUQueueId, CGPUFenceId> fences;
         eastl::vector_map<CGPUQueueId, CGPUCommandPoolId> cmd_pools;
         eastl::vector_map<CGPUQueueId, CGPUCommandBufferId> cmds;

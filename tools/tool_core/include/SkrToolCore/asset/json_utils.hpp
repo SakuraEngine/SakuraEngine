@@ -1,6 +1,6 @@
 #pragma once
-#include "cook_system.hpp"
 #include "SkrRT/serde/json/reader.h"
+#include "SkrToolCore/asset/cook_system.hpp"
 
 namespace skd::asset
 {

@@ -1,13 +1,13 @@
-#include "SkrToolCore/asset/cook_system.hpp"
+#include "pch.hpp"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/misc/defer.hpp"
 #include "SkrRT/misc/log.hpp"
 #include "SkrRT/misc/parallel_for.hpp"
-#include "SkrGLTFTool/mesh_asset.hpp"
-#include "SkrGLTFTool/mesh_processing.hpp"
+#include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/asset/json_utils.hpp"
-
+#include "SkrGLTFTool/mesh_asset.hpp"
+#include "SkrGLTFTool/mesh_processing.hpp"
 #include "MeshOpt/meshoptimizer.h"
 
 #include "tracy/Tracy.hpp"
@@ -38,7 +38,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
     auto cfg = LoadConfig<SMeshCookConfig>(ctx);
     if(cfg.vertexType == skr_guid_t{})
     {
-        SKR_LOG_ERROR("MeshCooker: VertexType is not specified for asset %s!", ctx->GetAssetPath().c_str());
+        SKR_LOG_ERROR(u8"MeshCooker: VertexType is not specified for asset %s!", ctx->GetAssetPath().c_str());
         return false;
     }
     auto gltf_data = ctx->Import<cgltf_data>();

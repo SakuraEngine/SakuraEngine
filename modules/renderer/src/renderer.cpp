@@ -1,15 +1,14 @@
+#include "pch.hpp"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/ecs/dual.h"
 #include "SkrRT/ecs/array.hpp"
-
-#include "SkrRenderGraph/frontend/render_graph.hpp"
-
+#include <SkrRT/containers/hashmap.hpp>
 #include "SkrRenderer/render_viewport.h"
 #include "SkrRenderer/render_effect.h"
 #include "SkrRenderer/skr_renderer.h"
+#include "SkrRenderGraph/frontend/render_graph.hpp"
 
-#include <SkrRT/containers/hashmap.hpp>
 #include <EASTL/vector.h>
 #include <EASTL/fixed_vector.h>
 
@@ -328,7 +327,7 @@ void skr_render_effect_attach(SRendererId r, dual_chunk_view_t* g_cv, skr_render
         }
         else
         {
-            SKR_LOG_WARN("Render Effect %s privided no valid component types! At least identity type should be provided!", effect_name);
+            SKR_LOG_WARN(u8"Render Effect %s privided no valid component types! At least identity type should be provided!", effect_name);
         }
     }
 }
@@ -359,7 +358,7 @@ void skr_render_effect_detach(SRendererId r, dual_chunk_view_t* cv, skr_render_e
                 }
                 if(!found)
                 {
-                    SKR_LOG_WARN("Render effect %s not attached to entity %d", effect_name, entities[i]);
+                    SKR_LOG_WARN(u8"Render effect %s not attached to entity %d", effect_name, entities[i]);
                 }
             }
         }

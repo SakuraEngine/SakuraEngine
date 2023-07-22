@@ -11,7 +11,7 @@ jobs:
         arch: [ x86_64 ]
         cxx: [ cxx17, cxx20 ]
 
-    name: ${{ matrix.os }} + ${{ matrix.arch }} + ${{ matrix.cxx }}
+    name: ${{ matrix.cxx }} + ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
@@ -29,7 +29,7 @@ jobs:
       - name: Install xmake
         uses: xmake-io/github-action-setup-xmake@v1
         with:
-          xmake-version: '2.7.9'
+          xmake-version: latest
           actions-cache-folder: .xmake-cache-W${{ steps.cache_key.outputs.key }}
 
       # Update xmake repository (in order to have the file that will be cached)
@@ -46,7 +46,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ env.XMAKE_GLOBALDIR }}/.xmake/packages
-          key: macOS-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.cxx }}-${{ steps.dep_hash.outputs.hash }}-W${{ steps.cache_key.outputs.key }}-9
+          key: macOS-${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.cxx }}-${{ steps.dep_hash.outputs.hash }}-W${{ steps.cache_key.outputs.key }}-10
 
       # Run setup script
       - name: Set env
@@ -61,12 +61,13 @@ jobs:
       - name: BuildDebug
         if: success() || failure()
         run: xmake -y -v
-
+      
       - name: TestDebug
         if: success()
         env:
           TRACY_NO_INVARIANT_CHECK: 1
-        run: xmake run -g 05.tests/*
+        run: |
+          xmake test -g 05.tests/* -vD ... -d yes
 
       - name: ConfigureRelease
         if: success() || failure()
@@ -80,7 +81,8 @@ jobs:
         if: success()
         env:
           TRACY_NO_INVARIANT_CHECK: 1
-        run: xmake run -g 05.tests/*
+        run: |
+          xmake run -g 05.tests/* -vD ... -d yes
 
       - name: UploadGeneratedFiles
         if: success() || failure()

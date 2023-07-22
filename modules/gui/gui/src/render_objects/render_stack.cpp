@@ -1,3 +1,4 @@
+#include "../pch.hpp"
 #include "SkrGui/render_objects/render_stack.hpp"
 #include "SkrGui/framework/painting_context.hpp"
 
@@ -121,7 +122,7 @@ void RenderStack::paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_N
         }
         else
         {
-            SKR_GUI_LOG_ERROR("RenderFlex::paint: child is nullptr.");
+            SKR_GUI_LOG_ERROR(u8"RenderFlex::paint: child is nullptr.");
         }
     }
 }

@@ -52,6 +52,7 @@ public:
     {
         return (uint32_t)(in_buffer_edges.size() + out_buffer_edges.size() + ppl_buffer_edges.size());
     }
+    const bool get_can_be_lone() const { return can_be_lone; }
 
     const EPassType pass_type = EPassType::None;
     const uint32_t order;
