@@ -68,7 +68,7 @@ void MPServerWorld::SpawnGameModeEntity()
     spawner_t spawner;
     spawner(storage, 1, [&](spawner_t::View view)
     {
-        auto [gameModeStates, auths, authTypeDatas, dirties] = view.unpack();
+        [[maybe_unused]] auto [gameModeStates, auths, authTypeDatas, dirties] = view.unpack();
         for (uint32_t i = 0; i < view.count(); i++)
         {
         }
