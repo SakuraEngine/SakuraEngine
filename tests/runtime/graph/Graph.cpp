@@ -35,13 +35,15 @@ TEST_CASE_METHOD(GraphTest, "DependencyGraph")
     rdg->link(&node0, &node1, &edge);
     rdg->link(&node0, &node2, &edge);
     rdg->link(&node1, &node2, &edge);
-    std::cout << rdg->outgoing_edges(&node0) << std::endl;
-    std::cout << rdg->incoming_edges(&node2) << std::endl;
+    SKR_TEST_INFO(u8"{}", rdg->outgoing_edges(&node0))
+    SKR_TEST_INFO(u8"{}", rdg->outgoing_edges(&node2))
     using Node = skr::DependencyGraphNode;
     using Edge = skr::DependencyGraphEdge;
     rdg->foreach_incoming_edges(&node1, [](Node* from, Node* to, Edge* e) {
-        std::cout << "edge: " << ((TestRDGNode*)from)->name.c_str()
-                  << " -> " << ((TestRDGNode*)to)->name.c_str() << std::endl;
+        SKR_TEST_INFO(u8"edge: {} -> {}", 
+            (const char8_t*)((TestRDGNode*)from)->name.c_str(), 
+            (const char8_t*)((TestRDGNode*)to)->name.c_str()
+        );
     });
     skr::DependencyGraph::Destroy(rdg);
 }

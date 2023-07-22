@@ -4,7 +4,6 @@
 #include "SkrRT/platform/dstorage.h"
 #include <SkrRT/platform/filesystem.hpp>
 #include "SkrRT/misc/log.h"
-#include "SkrRT/misc/log.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/async/thread_job.hpp"
 #include "SkrRT/async/wait_timeout.hpp"
@@ -22,6 +21,8 @@ static struct ProcInitializer
 {
     ProcInitializer()
     {
+        ::skr_log_set_level(SKR_LOG_LEVEL_WARN);
+        ::skr_log_set_level(SKR_LOG_LEVEL_WARN);
         ::skr_initialize_crash_handler();
         ::skr_log_initialize_async_worker();
 
@@ -48,11 +49,11 @@ struct VFSTest
         abs_fs_desc.mount_type = SKR_MOUNT_TYPE_ABSOLUTE;
         abs_fs = skr_create_vfs(&abs_fs_desc);
         REQUIRE(abs_fs != nullptr);
+
         std::error_code ec = {};
         const auto current_path = skr::filesystem::current_path(ec).string();
         REQUIRE(std::string((const char*)abs_fs->mount_dir) == current_path);
-
-        SKR_LOG_FMT_INFO(u8"Current path: {}", (const char8_t*)current_path.c_str());
+        SKR_TEST_INFO(u8"Current path: {}", (const char8_t*)current_path.c_str());
     }
 
     ~VFSTest()
@@ -76,6 +77,7 @@ TEST_CASE_METHOD(VFSTest, "mount")
     REQUIRE(fs != nullptr);
     REQUIRE(fs->mount_dir != nullptr);
     skr_free_vfs(fs);
+    SUCCEED();
 }
 
 TEST_CASE_METHOD(VFSTest, "readwrite")
@@ -84,13 +86,14 @@ TEST_CASE_METHOD(VFSTest, "readwrite")
 
     auto f = skr_vfs_fopen(abs_fs, u8"testfile", SKR_FM_READ_WRITE, SKR_FILE_CREATION_ALWAYS_NEW);
     const char8_t* string = u8"Hello, World!";
-    skr_vfs_fwrite(f, string, 0, strlen((const char*)string));
+    skr_vfs_fwrite(f, string, 0, strlen((const char*)string) + 1);
     char8_t string_out[256];
     std::memset((void*)string_out, 0, 256);
-    skr_vfs_fread(f, string_out, 0, strlen((const char*)string));
+    skr_vfs_fread(f, string_out, 0, strlen((const char*)string) + 1);
     EXPECT_EQ(std::string((const char*)string_out), std::string("Hello, World!"));
-    EXPECT_EQ(skr_vfs_fsize(f), strlen((const char*)string));
+    EXPECT_EQ(skr_vfs_fsize(f), strlen((const char*)string) + 1);
     EXPECT_EQ(skr_vfs_fclose(f), true);
+    SUCCEED();
 }
 
 TEST_CASE_METHOD(VFSTest, "readwrite2")
@@ -99,13 +102,14 @@ TEST_CASE_METHOD(VFSTest, "readwrite2")
 
     auto f = skr_vfs_fopen(abs_fs, u8"testfile2", SKR_FM_READ_WRITE, SKR_FILE_CREATION_ALWAYS_NEW);
     const char8_t* string = u8"Hello, World2!";
-    skr_vfs_fwrite(f, string, 0, strlen((const char*)string));
+    skr_vfs_fwrite(f, string, 0, strlen((const char*)string) + 1);
     char8_t string_out[256];
     std::memset((void*)string_out, 0, 256);
-    skr_vfs_fread(f, string_out, 0, strlen((const char*)string));
+    skr_vfs_fread(f, string_out, 0, strlen((const char*)string) + 1);
     EXPECT_EQ(std::string((const char*)string_out), std::string("Hello, World2!"));
-    EXPECT_EQ(skr_vfs_fsize(f), strlen((const char*)string));
+    EXPECT_EQ(skr_vfs_fsize(f), strlen((const char*)string) + 1);
     EXPECT_EQ(skr_vfs_fclose(f), true);
+    SUCCEED();
 }
 
 TEST_CASE_METHOD(VFSTest, "seqread")
@@ -122,8 +126,9 @@ TEST_CASE_METHOD(VFSTest, "seqread")
     skr_vfs_fread(f, string_out2, 2, 3);
     EXPECT_EQ(std::string((const char*)string_out), std::string("He"));
     EXPECT_EQ(std::string((const char*)string_out2), std::string("llo"));
-    EXPECT_EQ(skr_vfs_fsize(f), strlen((const char*)string));
+    EXPECT_EQ(skr_vfs_fsize(f), strlen((const char*)string) + 1);
     EXPECT_EQ(skr_vfs_fclose(f), true);
+    SUCCEED();
 }
 
 TEST_CASE_METHOD(VFSTest, "asyncread")
@@ -147,7 +152,7 @@ TEST_CASE_METHOD(VFSTest, "asyncread")
         rq->add_callback(SKR_IO_STAGE_COMPLETED,
             +[](skr_io_future_t* future, skr_io_request_t* request, void* arg){
                 auto pRamIO = (skr_io_request_t*)arg;
-                SKR_LOG_INFO("async read of file %s ok", pRamIO->get_path());
+                SKR_TEST_INFO(u8"async read of file {} ok", pRamIO->get_path());
             }, rq.get());
         blob = ioService->request(rq, &future);
     }
@@ -158,9 +163,9 @@ TEST_CASE_METHOD(VFSTest, "asyncread")
     });
     
     // ioService->drain();
-    std::cout << (const char*)blob->get_data() << std::endl;
+    EXPECT_EQ(std::string((const char*)blob->get_data()), std::string("Hello, World2!"));
     skr_io_ram_service_t::destroy(ioService);
-    std::cout << "..." << std::endl;
+    SUCCEED();
 }
 
 TEST_CASE_METHOD(VFSTest, "asyncread2")
@@ -192,7 +197,7 @@ TEST_CASE_METHOD(VFSTest, "asyncread2")
         rq->add_callback(SKR_IO_STAGE_COMPLETED,
             +[](skr_io_future_t* future, skr_io_request_t* request, void* arg){
                 auto pRamIO = (skr_io_request_t*)arg;
-                SKR_LOG_INFO("async read of file %s ok", pRamIO->get_path());
+                SKR_TEST_INFO(u8"async read of file {} ok", pRamIO->get_path());
             }, rq.get());
         blob = ioService->request(rq, &future);
     }
@@ -203,11 +208,11 @@ TEST_CASE_METHOD(VFSTest, "asyncread2")
     });
     
     ioService->drain();
-    std::cout << (const char*)blob->get_data() << std::endl;
+    EXPECT_EQ(std::string((const char*)blob->get_data()), std::string("Hello, World2!"));
     skr_io_ram_service_t::destroy(ioService);
-    std::cout << "..." << std::endl;
 
     SkrDelete(io_job_queue);
+    SUCCEED();
 }
 
 TEST_CASE_METHOD(VFSTest, "chunking")
@@ -231,7 +236,7 @@ TEST_CASE_METHOD(VFSTest, "chunking")
         rq->add_callback(SKR_IO_STAGE_COMPLETED,
             +[](skr_io_future_t* future, skr_io_request_t* request, void* arg){
                 auto pRamIO = (skr_io_request_t*)arg;
-                SKR_LOG_INFO("async read of file %s ok", pRamIO->get_path());
+                SKR_TEST_INFO(u8"async read of file {} ok", pRamIO->get_path());
             }, rq.get());
         blob = ioService->request(rq, &future);
     }
@@ -242,9 +247,9 @@ TEST_CASE_METHOD(VFSTest, "chunking")
     });
     
     ioService->drain();
-    std::cout << (const char*)blob->get_data() << std::endl;
+    EXPECT_EQ(std::string((const char*)blob->get_data()), std::string("Hello, World2!"));
     skr_io_ram_service_t::destroy(ioService);
-    std::cout << "..." << std::endl;
+    SUCCEED();
 }
 
 #define TEST_CYCLES_COUNT 100
@@ -293,16 +298,17 @@ TEST_CASE_METHOD(VFSTest, "defer_cancel")
         }
         else if (future2.is_ready())
         {
-            EXPECT_EQ(std::string((const char*)blob2->get_data(), blob2->get_size()), std::string("Hello, World!"));
+            EXPECT_EQ(std::string((const char*)blob2->get_data()), std::string("Hello, World!"));
         }
-        SKR_ASSERT(std::string((const char*)blob->get_data(), blob->get_size()) == std::string("Hello, World2!"));
+        REQUIRE(std::string((const char*)blob->get_data()) == std::string("Hello, World2!"));
         
         blob.reset();
         blob2.reset();
 
         skr_io_ram_service_t::destroy(ioService);
     }
-    SKR_LOG_INFO("defer_cancel tested for %d times, sucess %d", TEST_CYCLES_COUNT, sucess);
+    SKR_TEST_INFO(u8"defer_cancel tested for {} times, sucess {}", TEST_CYCLES_COUNT, sucess);
+    SUCCEED();
 }
 
 TEST_CASE_METHOD(VFSTest, "cancel")
@@ -351,14 +357,15 @@ TEST_CASE_METHOD(VFSTest, "cancel")
             sucess++;
         }
         
-        EXPECT_EQ(std::string((const char*)blob->get_data(), blob->get_size()), std::string("Hello, World2!"));
+        EXPECT_EQ(std::string((const char*)blob->get_data()), std::string("Hello, World2!"));
         
         blob.reset();
         blob2.reset();
         
         skr_io_ram_service_t::destroy(ioService);
     }
-    SKR_LOG_INFO("cancel tested for %d times, sucess %d", TEST_CYCLES_COUNT, sucess);
+    SKR_TEST_INFO(u8"cancel tested for {} times, sucess {}", TEST_CYCLES_COUNT, sucess);
+    SUCCEED();
 }
 
 // this test dont works with batch NVMe queue APIs, like windows DirectStorage.
@@ -414,12 +421,13 @@ TEST_CASE_METHOD(VFSTest, "sort")
             return future2.is_ready();
         });
         // while (!cancelled && !future2.is_ready()) {}
-        EXPECT_EQ(std::string((const char*)blob2->get_data(), blob2->get_size()), std::string("Hello, World!"));
+        EXPECT_EQ(std::string((const char*)blob2->get_data()), std::string("Hello, World!"));
         
         blob.reset();
         blob2.reset();
         
         skr_io_ram_service_t::destroy(ioService);
     }
-    SKR_LOG_INFO("sorts tested for %d times", TEST_CYCLES_COUNT);
+    SKR_TEST_INFO(u8"sorts tested for {} times", TEST_CYCLES_COUNT);
+    SUCCEED("sorts tested for {} times");
 }

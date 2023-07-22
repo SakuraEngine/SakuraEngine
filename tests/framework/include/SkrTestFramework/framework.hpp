@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
 #include <limits>
+#include "SkrRT/containers/string.hpp"  // IWYU pragma: export
 #include <catch2/catch_test_macros.hpp> // IWYU pragma: export
 
 #define ASSERT_TRUE REQUIRE
@@ -16,6 +17,8 @@
 #define EXPECT_NE(a, b) REQUIRE((a) != (b))
 #define EXPECT_FALSE(v) REQUIRE(!(v))
 #define EXPECT_NEAR(a, b, c) REQUIRE(std::abs((a) - (b)) <= (c))
+
+#define SKR_TEST_INFO(fmt, ...) { auto msg##__LINE__ = skr::format(fmt, __VA_ARGS__); INFO(msg##__LINE__.c_str()); }
 
 template<class T>
 typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type

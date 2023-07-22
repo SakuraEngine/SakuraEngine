@@ -1,20 +1,18 @@
 set_xmakever("2.8.1")
-add_repositories("skr-xrepo xrepo", {rootdir = os.scriptdir()})
-
 set_project("SakuraEngine")
 
 set_policy("build.ccache", false)
-
 add_rules("plugin.compile_commands.autoupdate", { outputdir = ".vscode" }) -- xmake 2.7.4 
 
-add_rules("mode.debug", "mode.release", "mode.releasedbg", "mode.asan")
 add_moduledirs("xmake/modules")
-
-includes("xmake/options.lua")
-
---includes("xmake/toolchains/prospero.lua")
+add_plugindirs("xmake/plugins")
+add_repositories("skr-xrepo xrepo", {rootdir = os.scriptdir()})
 
 set_languages(get_config("cxx_version"), get_config("c_version"))
+add_rules("mode.debug", "mode.release", "mode.releasedbg", "mode.asan")
+
+includes("xmake/options.lua")
+--includes("xmake/toolchains/prospero.lua")
 
 engine_version = "0.1.0"
 default_unity_batch_size = 8

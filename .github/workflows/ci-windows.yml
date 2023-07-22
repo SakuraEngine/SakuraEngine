@@ -67,45 +67,12 @@ jobs:
         shell: cmd
         run: xmake -y -v
       
-      - name: TestBaseDebug
+      - name: TestDebug
         if: success()
-        shell: cmd
         env:
           TRACY_NO_INVARIANT_CHECK: 1
         run: |
-          xmake run -g 05.tests/base -vD ... -d yes
-
-      - name: TestThreadsDebug
-        if: success()
-        shell: cmd
-        env:
-          TRACY_NO_INVARIANT_CHECK: 1
-        run: |
-          xmake run -g 05.tests/threads -vD ... -d yes
-
-      - name: TestTaskDebug
-        if: success()
-        shell: cmd
-        env:
-          TRACY_NO_INVARIANT_CHECK: 1
-        run: |
-          xmake run -g 05.tests/task -vD ... -d yes
-          
-      - name: TestMarlDebug
-        if: success()
-        shell: cmd
-        env:
-          TRACY_NO_INVARIANT_CHECK: 1
-        run: |
-          xmake run -g 05.tests/marl -vD ... -d yes
-          
-      - name: TestRTTIDebug
-        if: success()
-        shell: cmd
-        env:
-          TRACY_NO_INVARIANT_CHECK: 1
-        run: |
-          xmake run -g 05.tests/rtti -vD ... -d yes
+          xmake test -g 05.tests/* -vD ... -d yes
       
       - name: ConfigureRelease
         if: success() || failure()
@@ -117,45 +84,12 @@ jobs:
         shell: cmd
         run: xmake -y -v
       
-      - name: TestBaseRelease
+      - name: TestRelease
         if: success()
-        shell: cmd
         env:
           TRACY_NO_INVARIANT_CHECK: 1
         run: |
-          xmake run -g 05.tests/base -vD ... -d yes
-
-      - name: TestThreadsRelease
-        if: success()
-        shell: cmd
-        env:
-          TRACY_NO_INVARIANT_CHECK: 1
-        run: |
-          xmake run -g 05.tests/threads -vD ... -d yes
-
-      - name: TestTaskRelease
-        if: success()
-        shell: cmd
-        env:
-          TRACY_NO_INVARIANT_CHECK: 1
-        run: |
-          xmake run -g 05.tests/task -vD ... -d yes
-          
-      - name: TestMarlRelease
-        if: success()
-        shell: cmd
-        env:
-          TRACY_NO_INVARIANT_CHECK: 1
-        run: |
-          xmake run -g 05.tests/marl -vD ... -d yes
-          
-      - name: TestRTTIRelease
-        if: success()
-        shell: cmd
-        env:
-          TRACY_NO_INVARIANT_CHECK: 1
-        run: |
-          xmake run -g 05.tests/rtti -vD ... -d yes
+          xmake run -g 05.tests/* -vD ... -d yes
 
       - name: UploadGeneratedFiles
         if: success() || failure()

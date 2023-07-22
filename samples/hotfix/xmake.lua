@@ -1,5 +1,5 @@
 shared_module("HotfixTest", "HOTFIX_TEST", engine_version)
-    set_group("05.tests/hotfix")
+    set_group("04.examples/hotfix")
     public_dependency("SkrRT", engine_version)
     add_files("hotfix_module.cpp")
     add_rules("c++.codegen", {
@@ -9,7 +9,7 @@ shared_module("HotfixTest", "HOTFIX_TEST", engine_version)
     })
 
 target("HotfixTestHost")
-    set_group("05.tests/hotfix")
+    set_group("04.examples/hotfix")
     set_kind("binary")
     add_deps("SkrRT", {inherit = true})
     add_deps("HotfixTest", {inherit = false})

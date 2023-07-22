@@ -10,6 +10,7 @@ static struct ProcInitializer
 {
     ProcInitializer()
     {
+        ::skr_log_set_level(SKR_LOG_LEVEL_WARN);
         ::skr_initialize_crash_handler();
         ::skr_log_initialize_async_worker();
     }
@@ -30,16 +31,16 @@ TEST_CASE("JobQueue")
     {
         JI() : JobItem(u8"TestJob")
         {
-            std::cout << "Ctor Test Job!" << std::endl;
+            SKR_TEST_INFO(u8"Ctor Test Job!");
         }
         skr::JobResult run() SKR_NOEXCEPT override
         {
-            std::cout << "Hello Test Job!" << std::endl;
+            SKR_TEST_INFO(u8"Hello Test Job!");
             return skr::ASYNC_RESULT_OK;
         }
         void finish(skr::JobResult result) SKR_NOEXCEPT override
         {
-            std::cout << "Finish with result: " << result << std::endl;
+            SKR_TEST_INFO(u8"Finish with result: {}", result);
         }
     } ji;
     jq.enqueue(&ji);
@@ -63,7 +64,7 @@ struct AsyncFuture_ThreadJobQueue : public skr::IFuture<Result>
     skr::JobQueue* Q = nullptr;
     struct JBase : public skr::JobItem
     {
-        virtual ~JBase() { SKR_LOG_DEBUG("Job Base dtor"); }
+        virtual ~JBase() { SKR_TEST_INFO(u8"Job Base dtor"); }
         JBase() : JobItem(u8"TestJob") {}
         void finish(skr::JobResult result) SKR_NOEXCEPT override
         {
@@ -83,7 +84,7 @@ struct AsyncFuture_ThreadJobQueue : public skr::IFuture<Result>
     {
         struct JI : public JBase
         {
-            ~JI() override { SKR_LOG_DEBUG("Job Instance dtor"); }
+            ~JI() override { SKR_TEST_INFO(u8"Job Instance dtor"); }
             skr::JobResult run() SKR_NOEXCEPT override { return runner(); }
             eastl::function<skr::JobResult()> runner;
         };
@@ -93,7 +94,7 @@ struct AsyncFuture_ThreadJobQueue : public skr::IFuture<Result>
         Q->enqueue(jobItem);
     }
 
-    virtual ~AsyncFuture_ThreadJobQueue() { SkrDelete(jobItem); SKR_LOG_DEBUG("Future dtor"); }
+    virtual ~AsyncFuture_ThreadJobQueue() { SkrDelete(jobItem); SKR_TEST_INFO(u8"Future dtor"); }
 
     virtual bool valid() const SKR_NOEXCEPT { return true; }
     virtual void wait() SKR_NOEXCEPT
@@ -119,7 +120,7 @@ struct Launcher_ThreadJobQueue
 {
     ~Launcher_ThreadJobQueue()
     {
-        SKR_LOG_DEBUG("Launcher dtor");
+        SKR_TEST_INFO(u8"Launcher dtor");
     }
     static skr::JobQueue* GetQueue()
     {
@@ -161,7 +162,7 @@ struct EmptyTaskWithProgressFeedback
 {
     ~EmptyTaskWithProgressFeedback() override
     {
-        SKR_LOG_DEBUG("EmptyTaskWithProgressFeedback dtor");
+        SKR_TEST_INFO(u8"EmptyTaskWithProgressFeedback dtor");
     }
 
     Result do_in_background(InputParam1 const& p1, InputParam2 const& p2) override
@@ -187,25 +188,25 @@ struct EmptyTaskWithProgressFeedback
 
     void on_pre_execute() override 
     { 
-        SKR_LOG_DEBUG("Time-consuming calculation:\nProgress: 0%");
+        SKR_TEST_INFO(u8"Time-consuming calculation:\nProgress: 0%");
     }
     void on_progress_update(Progress const& progress) override 
     { 
-        SKR_LOG_DEBUG("Time-consuming calculation:\nProgress: %d%", progress);
+        SKR_TEST_INFO(u8"Time-consuming calculation:\nProgress: {}", progress);
     }
     void on_post_execute(Result const& result) override 
     { 
-        SKR_LOG_DEBUG("Progress is finished.");
+        SKR_TEST_INFO(u8"Progress is finished.");
     }
     void on_cancelled() override 
     {
-        SKR_LOG_DEBUG("Progress is canceled.");
+        SKR_TEST_INFO(u8"Progress is canceled.");
     }
     void on_exception(skr::AsyncProgressException* e) override
     {
         if (e)
         {
-            SKR_LOG_DEBUG("AsyncProgressException: %d", (uint32_t)e->e);
+            SKR_TEST_INFO(u8"AsyncProgressException: %d", (uint32_t)e->e);
         }
     }
 };
@@ -223,7 +224,7 @@ TEST_CASE("AsyncProgress")
             AsyncProgress.cancel();
     }
     auto result = AsyncProgress.get_result();
-    SKR_LOG_DEBUG("Result: %s", result.c_str());
+    SKR_TEST_INFO(u8"Result: {}", result.c_str());
     EXPECT_EQ(result, kCompleteResultString);
 }
 
@@ -238,6 +239,6 @@ TEST_CASE("AsyncProgressCancel")
             AsyncProgress.cancel();
     }
     auto result = AsyncProgress.get_result();
-    SKR_LOG_DEBUG("Result: %s", result.c_str());
+    SKR_TEST_INFO(u8"Result: {}", result.c_str());
     EXPECT_EQ(result, kCancelledResultString);
 }
