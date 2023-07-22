@@ -56,11 +56,18 @@ function _do_test_target(target)
     local args = table.wrap(option.get("arguments") or target:get("runargs"))
 
     -- debugging?
+    local test_time
+    local time = os.mclock()
+    cprint("${color.dump.string}test %s${clear}: %s", target:name(), targetfile)
+    
     if option.get("debug") then
         debugger.run(targetfile, args, {curdir = rundir})
     else
         os.execv(targetfile, args, {curdir = rundir, detach = option.get("detach")})
     end
+
+    test_time = os.mclock() - time
+    cprint("${color.success}test %s ok, spent %ss!${clear}: %s", target:name(), test_time / 1000, targetfile)
 end
 
 -- run target

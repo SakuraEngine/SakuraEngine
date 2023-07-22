@@ -43,6 +43,7 @@ target("ECSTest")
 shared_module("RTTITestTypes", "RTTI_TEST_TYPES", engine_version)
     set_group("05.tests/framework")
     public_dependency("SkrRT", engine_version)
+    add_deps("SkrTestFramework", {public = false})
     add_files("types/types.cpp")
     add_rules("c++.codegen", {
         files = {"types/**.h", "types/**.hpp"},

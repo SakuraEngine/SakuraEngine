@@ -4,5 +4,5 @@
 
 RTTI_TEST_TYPES_API void PrintField(const char* name)
 {
-    printf(name ? name : "types.cpp\n");
+    printf("%s", name ? name : "types.cpp\n");
 }

@@ -1,5 +1,4 @@
 #include "cgpu/api.h"
-#include <iostream>
 #include "SkrTestFramework/framework.hpp"
 #include "SkrTestFramework/generators.hpp"
 #include <catch2/generators/catch_generators.hpp>

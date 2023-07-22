@@ -3,7 +3,6 @@
 #include "SkrRT/misc/log.h"
 #include <thread>
 #include <future>
-#include <iostream>
 
 #include "SkrTestFramework/framework.hpp"
 
@@ -44,7 +43,7 @@ TEST_CASE_METHOD(ThreadsTest, "CallOnce")
         skr_call_once(&guard, []() {
             EXPECT_EQ(1, 1);
             counter++;
-            std::cout << "CallOnce!" << std::endl;
+            SKR_TEST_INFO(u8"CallOnce!");
         });
     };
     std::thread st1(onceF);
@@ -64,14 +63,14 @@ TEST_CASE_METHOD(ThreadsTest, "CondVar")
     SMutex sm;
     skr_init_condition_var(&cv);
     skr_init_mutex(&sm);
-    std::cout << "Hello0" << std::endl;
+    SKR_TEST_INFO(u8"Hello0!");
     auto future = std::async([&]() {
         SMutexLock lock(sm);
         skr_wait_condition_vars(&cv, &sm, UINT32_MAX);
-        std::cout << "Hello2" << std::endl;
+        SKR_TEST_UNSCOPED_INFO(u8"Hello2!");
     });
     skr_thread_sleep(1000);
-    std::cout << "Hello1" << std::endl;
+    SKR_TEST_INFO(u8"Hello1!");
     {
         SMutexLock lock(sm);
         skr_wake_condition_var(&cv);
@@ -87,14 +86,14 @@ TEST_CASE_METHOD(ThreadsTest, "RecursiveCondVar")
     SMutex sm;
     skr_init_condition_var(&cv);
     skr_init_mutex_recursive(&sm);
-    std::cout << "Hello0" << std::endl;
+    SKR_TEST_INFO(u8"Hello0!");
     auto future = std::async([&]() {
         SMutexLock lock(sm);
         skr_wait_condition_vars(&cv, &sm, UINT32_MAX);
-        std::cout << "Hello2" << std::endl;
+        SKR_TEST_INFO(u8"Hello2!");
     });
     skr_thread_sleep(1000);
-    std::cout << "Hello1" << std::endl;
+    SKR_TEST_INFO(u8"Hello1!");
     {
         SMutexLock lock(sm);
         skr_wake_condition_var(&cv);

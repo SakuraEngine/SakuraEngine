@@ -2,7 +2,6 @@
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/async/thread_job.hpp"
-#include <iostream>
 
 #include "SkrTestFramework/framework.hpp"
 

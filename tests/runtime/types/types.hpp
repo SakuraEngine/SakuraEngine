@@ -2,11 +2,9 @@
 #include "SkrRT/containers/detail/sptr.hpp"
 #include "SkrRT/containers/variant.hpp"
 #include "SkrRT/platform/configure.h"
-#include "SkrRT/misc/log.hpp"
-#include "SkrRT/resource/config_resource.h"
 #include "SkrRT/resource/resource_handle.h"
-#include "SkrRT/type/type.hpp"
 #include <SkrRT/containers/string.hpp>
+#include "SkrTestFramework/framework.hpp"
 #include <EASTL/unique_ptr.h>
 #include "RTTITestTypes/module.configure.h"
 #if !defined(__meta__)
@@ -22,8 +20,8 @@ struct SRuntimeAttribute
 template<typename T>
 void XXXInformation()
 {
-    const auto type = skr::type::type_of<T>::get();
-    SKR_LOG_FMT_DEBUG(u8"Static Ctor: {}", type->Name());
+    // const auto type = skr::type::type_of<T>::get();
+    // SKR_TEST_INFO(u8"Static Ctor: {}", type->Name());
 }
 
 RTTI_TEST_TYPES_API void PrintField(const char* name);

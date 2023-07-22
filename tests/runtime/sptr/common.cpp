@@ -13,20 +13,16 @@ TEST_CASE_METHOD(SPTRCommonTests, "Base")
         EXPECT_EQ(pT1.get(), nullptr);
     }
     {
-        SKR_LOG_DEBUG("I wonder ");
         auto ptr = SkrNew<int>(5);
         EXPECT_NE(ptr, nullptr);
         skr::SPtr<int> pT1(ptr);
         EXPECT_EQ(*pT1, 5);
-        SKR_LOG_DEBUG("HOW?");
     }
     {
-        SKR_LOG_DEBUG("I wonder ");
         skr::SPtr<int> pT1(SkrNew<int>(5));
         EXPECT_EQ(*pT1, 5);
         EXPECT_EQ(pT1.use_count(), 1);
         REQUIRE(pT1.unique());
-        SKR_LOG_DEBUG("WHY?");
 
         skr::SPtr<int> pT2 = {};
         EXPECT_NE(pT1, pT2);
