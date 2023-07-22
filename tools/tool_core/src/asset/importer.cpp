@@ -1,12 +1,12 @@
+#include "../pch.hpp"
+#include "SkrRT/platform/guid.hpp"
+#include "SkrRT/misc/types.h"
+#include "SkrRT/serde/json/reader.h"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/asset/importer.hpp"
-#include "SkrRT/misc/types.h"
-#include "SkrRT/platform/guid.hpp"
-#include "SkrRT/serde/json/reader.h"
 
 namespace skd::asset
 {
-    
 struct SImporterRegistryImpl : public SImporterRegistry 
 {
     SImporter* LoadImporter(const SAssetRecord* record, simdjson::ondemand::value&& object, skr_guid_t* pGuid = nullptr) override;

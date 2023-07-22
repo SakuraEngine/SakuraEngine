@@ -1,6 +1,5 @@
 #include "context.hpp"
 #include "SkrRT/ecs/dual.h"
-#include "type.hpp"
 
 dual_context_t* g_dual_ctx;
 

@@ -1,7 +1,5 @@
-
-#include "stack.hpp"
 #include "SkrRT/ecs/dual_config.h"
-#include "stdlib.h"
+#include "stack.hpp"
 
 namespace dual
 {
@@ -9,11 +7,11 @@ fixed_stack_t::fixed_stack_t(size_t cap)
     : size(0)
     , capacity(cap)
 {
-    buffer = ::malloc(cap);
+    buffer = ::dual_malloc(cap);
 }
 fixed_stack_t::~fixed_stack_t()
 {
-    ::free(buffer);
+    ::dual_free(buffer);
 }
 
 void* fixed_stack_t::allocate(size_t inSize)

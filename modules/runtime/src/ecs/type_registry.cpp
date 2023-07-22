@@ -1,10 +1,9 @@
 #include <string.h>
+#include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/ecs/dual.h"
 #include "pool.hpp"
 #include "type.hpp"
-#include "SkrRT/ecs/constants.hpp"
 #include "type_registry.hpp"
-#include "SkrRT/misc/make_zeroed.hpp"
 
 #ifdef SKR_OS_WINDOWS
     #ifndef WIN32_LEAN_AND_MEAN

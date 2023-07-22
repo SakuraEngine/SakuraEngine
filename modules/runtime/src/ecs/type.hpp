@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrRT/ecs/dual.h"
-#include "SkrRT/ecs/constants.hpp"
+#include "SkrRT/ecs/dual.h" // IWYU pragma: export
+#include "SkrRT/ecs/constants.hpp" // IWYU pragma: export
 
 namespace dual
 {

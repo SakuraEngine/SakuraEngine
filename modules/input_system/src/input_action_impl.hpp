@@ -5,6 +5,7 @@
 #include "SkrRT/platform/guid.hpp"
 #include <EASTL/functional.h>
 #include "SkrRT/containers/vector.hpp"
+#include "SkrRT/containers/sptr.hpp"
 
 namespace skr
 {

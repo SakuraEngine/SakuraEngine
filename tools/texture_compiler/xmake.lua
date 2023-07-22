@@ -12,14 +12,15 @@ target("ISPCTextureCompressor")
 
 shared_module("SkrTextureCompiler", "SKR_TEXTURE_COMPILER", engine_version)
     set_group("02.tools")
-    add_includedirs("include", {public=true})
+    add_deps("ISPCTextureCompressor")
     public_dependency("SkrRenderer", engine_version)
     public_dependency("SkrImageCoder", engine_version)
     public_dependency("SkrToolCore", engine_version)
-    add_deps("ISPCTextureCompressor")
-    add_files("src/**.cpp")
     add_rules("c++.codegen", {
         files = {"include/**.h", "include/**.hpp"},
         rootdir = "include/SkrTextureCompiler",
         api = "SKR_TEXTURE_COMPILER"
     })
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
+    add_includedirs("include", {public=true})
+    add_files("src/**.cpp")

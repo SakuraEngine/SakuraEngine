@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/ecs/SmallVector.h"
+#include "SkrRT/ecs/SmallVector.h" // IWYU pragma: export
 
 struct dual_array_comp_t : llvm_vecsmall::SmallVectorBase {
     using SmallVectorBase::SmallVectorBase;

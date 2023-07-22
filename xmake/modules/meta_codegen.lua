@@ -45,7 +45,7 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
     end
     local command = program .. " " .. table.concat(argv, " ")
     if not opt.quiet then
-        cprint("${green}[%s]: compiling.meta ${clear}%s - %s", target:name(), path.relative(outdir), command)
+        cprint("${green}[%s]: compiling.meta ${clear}%ss", target:name(), path.relative(outdir)) -- , command)
     end
     os.runv(meta.program, argv)
     if not opt.quiet then

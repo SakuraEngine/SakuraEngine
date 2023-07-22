@@ -1,6 +1,6 @@
 add_requires("lmdb >=0.9.29-skr")
 
-target("Example-RenderGraphTriangle")
+target("RenderGraphTriangle")
     set_group("04.examples/render_graph")
     set_kind("binary")
     add_rules("utils.dxc", {
@@ -14,7 +14,7 @@ target("Example-RenderGraphTriangle")
     add_files("rg-triangle/*.cpp")
     add_files("rg-triangle/**.hlsl")
 
-target("Example-RenderGraphDeferred")
+target("RenderGraphDeferred")
     set_group("04.examples/render_graph")
     set_kind("binary")
     add_rules("utils.dxc", {
@@ -29,7 +29,7 @@ target("Example-RenderGraphDeferred")
     add_files("rg-deferred/*.cpp")
     add_files("rg-deferred/**.hlsl")
 
-target("Example-RenderGraphCrossProcess")
+target("RenderGraphCrossProcess")
     set_group("04.examples/render_graph")
     set_kind("binary")
     add_rules("utils.dxc", {
