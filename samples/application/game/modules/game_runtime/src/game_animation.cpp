@@ -31,7 +31,7 @@ namespace game
         {
             ZoneScopedN("RunSamplingJob");
             if (!sampling_job.Run()) {
-                SKR_LOG_ERROR("Failed to sample animation %s.", anim->animation.name());
+                SKR_LOG_ERROR(u8"Failed to sample animation %s.", anim->animation.name());
                 return;
             }
         }
@@ -45,7 +45,7 @@ namespace game
         {
             ZoneScopedN("RunLocalToModelJob");
             if (!ltm_job.Run()) {
-                SKR_LOG_ERROR("Failed to convert local space to model space %s.", anim->animation.name());
+                SKR_LOG_ERROR(u8"Failed to convert local space to model space %s.", anim->animation.name());
                 return;
             }
         }

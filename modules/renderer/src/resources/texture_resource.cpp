@@ -81,7 +81,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
         }
         ~DStorageRequest()
         {
-            SKR_LOG_TRACE("DStorage for texture resource %s finished!", absPath.c_str());
+            SKR_LOG_TRACE(u8"DStorage for texture resource %s finished!", absPath.c_str());
         }
         std::string absPath;
         skr_io_future_t vtexture_request;
@@ -98,7 +98,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
         }
         ~UploadRequest()
         {
-            SKR_LOG_TRACE("Upload for texture resource %s finished!", resource_uri.c_str());
+            SKR_LOG_TRACE(u8"Upload for texture resource %s finished!", resource_uri.c_str());
         }
         STextureFactoryImpl* factory = nullptr;
         std::string resource_uri;

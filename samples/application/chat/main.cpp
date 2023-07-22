@@ -124,7 +124,7 @@ int InitializeSockets()
     SteamDatagramErrMsg errMsg;
     if (!GameNetworkingSockets_Init(nullptr, errMsg))
     {
-        SKR_LOG_FATAL("GameNetworkingSockets_Init failed.  %s", errMsg);
+        SKR_LOG_FATAL(u8"GameNetworkingSockets_Init failed.  %s", errMsg);
         return 1;
     }
 
@@ -403,7 +403,7 @@ void Quit(int rc)
         // it's possible that the cleanup packets have already been placed
         // on the wire, and if they don't drop, things will get cleaned up
         // properly.)
-        SKR_LOG_INFO("Waiting for any last cleanup packets.\n");
+        SKR_LOG_INFO(u8"Waiting for any last cleanup packets.\n");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
@@ -420,7 +420,7 @@ static void DebugOutput(ESteamNetworkingSocketsDebugOutputType eType, const char
     SteamNetworkingMicroseconds time = SteamNetworkingUtils()->GetLocalTimestamp() - g_logTimeZero;
     if (eType <= k_ESteamNetworkingSocketsDebugOutputType_Msg)
     {
-        SKR_LOG_INFO("%10.6f %s\n", time * 1e-6, pszMsg);
+        SKR_LOG_INFO(u8"%10.6f %s\n", time * 1e-6, pszMsg);
     }
     if (eType == k_ESteamNetworkingSocketsDebugOutputType_Bug)
     {
@@ -506,7 +506,7 @@ struct ChatClient {
                     // Create the signaling service
                     signaling = CreateTrivialSignalingClient(pszTrivialSignalingService, SteamNetworkingSockets(), errMsg);
                     if (signaling == nullptr)
-                        SKR_LOG_FATAL("Failed to initializing signaling client.  %s", errMsg);
+                        SKR_LOG_FATAL(u8"Failed to initializing signaling client.  %s", errMsg);
 
                     SteamNetworkingUtils()->SetGlobalCallback_SteamNetConnectionStatusChanged(OnSteamNetConnectionStatusChanged);
 
@@ -526,7 +526,7 @@ struct ChatClient {
                     // request arrives before we have started connecting out, then we are forced
                     // to ignore it, as the app has given no indication that it desires to
                     // receive inbound connections at all.
-                    SKR_LOG_INFO("Creating listen socket in symmetric mode, local virtual port %d\n", g_nVirtualPortLocal);
+                    SKR_LOG_INFO(u8"Creating listen socket in symmetric mode, local virtual port %d\n", g_nVirtualPortLocal);
                     SteamNetworkingConfigValue_t opt;
                     opt.SetInt32(k_ESteamNetworkingConfig_SymmetricConnect, 1); // << Note we set symmetric mode on the listen socket
                     g_hListenSock = SteamNetworkingSockets()->CreateListenSocketP2P(g_nVirtualPortLocal, 1, &opt);
@@ -570,7 +570,7 @@ struct ChatClient {
                 SteamNetworkingConfigValue_t opt;
                 opt.SetInt32(k_ESteamNetworkingConfig_SymmetricConnect, 1);
                 vecOpts.push_back(opt);
-                SKR_LOG_INFO("Connecting to '%s' in symmetric mode, virtual port %d, from local virtual port %d.\n",
+                SKR_LOG_INFO(u8"Connecting to '%s' in symmetric mode, virtual port %d, from local virtual port %d.\n",
                 SteamNetworkingIdentityRender(identityRemote).c_str(), g_nVirtualPortRemote,
                 g_nVirtualPortLocal);
 
@@ -647,7 +647,7 @@ void OnSteamNetConnectionStatusChanged(SteamNetConnectionStatusChangedCallback_t
     {
         case k_ESteamNetworkingConnectionState_ClosedByPeer:
         case k_ESteamNetworkingConnectionState_ProblemDetectedLocally: {
-            SKR_LOG_INFO("[%s] %s, reason %d: %s\n",
+            SKR_LOG_INFO(u8"[%s] %s, reason %d: %s\n",
             pInfo->m_info.m_szConnectionDescription,
             (pInfo->m_info.m_eState == k_ESteamNetworkingConnectionState_ClosedByPeer ? "closed by peer" : "problem detected locally"),
             pInfo->m_info.m_eEndReason,
@@ -669,26 +669,26 @@ void OnSteamNetConnectionStatusChanged(SteamNetConnectionStatusChangedCallback_t
             // Is this a connection we initiated, or one that we are receiving?
             if (g_hListenSock != k_HSteamListenSocket_Invalid && pInfo->m_info.m_hListenSocket == g_hListenSock)
             {
-                SKR_LOG_INFO("[%s] Accepting\n", pInfo->m_info.m_szConnectionDescription);
+                SKR_LOG_INFO(u8"[%s] Accepting\n", pInfo->m_info.m_szConnectionDescription);
                 SteamNetworkingSockets()->AcceptConnection(pInfo->m_hConn);
             }
             else
             {
                 // Note that we will get notification when our own connection that
                 // we initiate enters this state.
-                SKR_LOG_INFO("[%s] Entered connecting state\n", pInfo->m_info.m_szConnectionDescription);
+                SKR_LOG_INFO(u8"[%s] Entered connecting state\n", pInfo->m_info.m_szConnectionDescription);
             }
             break;
 
         case k_ESteamNetworkingConnectionState_FindingRoute:
             // P2P connections will spend a brief time here where they swap addresses
             // and try to find a route.
-            SKR_LOG_INFO("[%s] finding route\n", pInfo->m_info.m_szConnectionDescription);
+            SKR_LOG_INFO(u8"[%s] finding route\n", pInfo->m_info.m_szConnectionDescription);
             break;
 
         case k_ESteamNetworkingConnectionState_Connected:
             // We got fully connected
-            SKR_LOG_INFO("[%s] connected\n", pInfo->m_info.m_szConnectionDescription);
+            SKR_LOG_INFO(u8"[%s] connected\n", pInfo->m_info.m_szConnectionDescription);
             g_client->AcceptConnection(pInfo->m_hConn);
             break;
 

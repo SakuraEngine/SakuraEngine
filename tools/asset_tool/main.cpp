@@ -57,7 +57,7 @@ SAssetImportModule* SAssetImportModule::Get()
 
 void SAssetImportModule::on_load(int argc, char8_t** argv)
 {
-    SKR_LOG_INFO("live2d viewer loaded!");
+    SKR_LOG_INFO(u8"live2d viewer loaded!");
 
     std::error_code ec = {};
     auto resourceRoot = (skr::filesystem::current_path(ec) / "../resources").u8string();
@@ -69,7 +69,7 @@ void SAssetImportModule::on_load(int argc, char8_t** argv)
 
 void SAssetImportModule::on_unload()
 {
-    SKR_LOG_INFO("live2d viewer unloaded!");
+    SKR_LOG_INFO(u8"live2d viewer unloaded!");
 
     skr_free_vfs(resource_vfs);
 }
@@ -186,12 +186,12 @@ int SAssetImportModule::main_module_exec(int argc, char8_t** argv)
                         if(factory->CanImport(filePath))
                             availableFactories.push_back(factory);
                     if(availableFactories.empty())
-                        SKR_LOG_ERROR("No importer found for file: %s", filePath.c_str());
+                        SKR_LOG_ERROR(u8"No importer found for file: %s", filePath.c_str());
                     if(availableFactories.size() == 1)
                         if(availableFactories.front()->Import(filePath) != 0)
                         {
                             availableFactories.clear();
-                            SKR_LOG_ERROR("Failed to import file: %s", filePath.c_str());
+                            SKR_LOG_ERROR(u8"Failed to import file: %s", filePath.c_str());
                         }
                 }
             }
@@ -210,7 +210,7 @@ int SAssetImportModule::main_module_exec(int argc, char8_t** argv)
                         else
                         {
                             availableFactories.erase(std::find(availableFactories.begin(), availableFactories.end(), factory));
-                            SKR_LOG_ERROR("Failed to import file: %s", filePath.c_str());
+                            SKR_LOG_ERROR(u8"Failed to import file: %s", filePath.c_str());
                             break;
                         }
                     }
@@ -293,7 +293,7 @@ int main(int argc, char** argv)
     moduleManager->make_module_graph(u8"SkrAssetImport", true);
     auto result = moduleManager->init_module_graph(argc, argv);
     if (result != 0) {
-        SKR_LOG_ERROR("module graph init failed!");
+        SKR_LOG_ERROR(u8"module graph init failed!");
     }
     moduleManager->destroy_module_graph();
     return 0;

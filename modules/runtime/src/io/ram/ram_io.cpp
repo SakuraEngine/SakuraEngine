@@ -101,7 +101,7 @@ RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
         if (desc->sleep_time > 2000)
         {
             SKR_ASSERT(desc->sleep_time <= 2000);
-            SKR_LOG_FATAL("RAMService: too long sleep_time causes 'deadlock' when awake_at_request is false");
+            SKR_LOG_FATAL(u8"RAMService: too long sleep_time causes 'deadlock' when awake_at_request is false");
         }
     }
     runner.set_sleep_time(desc->sleep_time);
@@ -177,7 +177,7 @@ void RAMService::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
         bool fatal = !wait_timeout(predicate, 5);
         if (fatal)
         {
-            SKR_LOG_FATAL("RAMService: drain timeout, %llu requests are still processing", 
+            SKR_LOG_FATAL(u8"RAMService: drain timeout, %llu requests are still processing", 
                 runner.processing_count(priority));
         }
     }

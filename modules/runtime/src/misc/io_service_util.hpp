@@ -104,7 +104,7 @@ public:
             ms++;
             if (ms > timeout * 1000u)
             {
-                SKR_LOG_ERROR("drain timeout, force quit");
+                SKR_LOG_ERROR(u8"drain timeout, force quit");
                 break;
             }
         }
@@ -284,7 +284,7 @@ struct TaskContainer
                 if (criticalTaskCount)
                 {
                     SKR_LOG_WARN(
-                        "ioService %s enqueued too many tasks(over %d)!",
+                        u8"ioService %s enqueued too many tasks(over %d)!",
                         name, SKR_IO_SERVICE_MAX_TASK_COUNT);
                     return;
                 }

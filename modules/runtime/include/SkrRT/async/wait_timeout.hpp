@@ -16,7 +16,7 @@ bool wait_timeout(F f, uint32_t seconds_timeout = 3)
     {
         if (milliseconds > seconds_timeout * 1000)
         {
-            SKR_LOG_ERROR("drain timeout, force quit");
+            SKR_LOG_ERROR(u8"drain timeout, force quit");
             return false;
         }
         for (auto waited = 0; waited < 40; ++waited)

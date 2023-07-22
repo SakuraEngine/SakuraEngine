@@ -48,8 +48,8 @@ TEST_CASE_METHOD(ModuleTest, "dynamic_patch")
     moduleManager->mount(path.u8string().c_str());
     EXPECT_NE(moduleManager->make_module_graph(u8"dynamic1", true), nullptr);
     REQUIRE(moduleManager->init_module_graph(0, (char8_t**)nullptr));
-    SKR_LOG_INFO("----begins dynamic patch----");
+    SKR_LOG_INFO(u8"----begins dynamic patch----");
     REQUIRE(moduleManager->patch_module_graph(u8"dynamic3"));
-    SKR_LOG_INFO("----ends dynamic patch----");
+    SKR_LOG_INFO(u8"----ends dynamic patch----");
     REQUIRE(moduleManager->destroy_module_graph());
 }

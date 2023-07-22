@@ -21,7 +21,7 @@ void CALLBACK OnDeviceEnumerated(
 {
     auto displayName = device->GetDeviceInfo()->displayName;
     const char* displayNameStr = displayName ? displayName->data : "Unknown";
-    SKR_LOG_INFO("GameInput: Device %s Enumerated!", displayNameStr);
+    SKR_LOG_INFO(u8"GameInput: Device %s Enumerated!", displayNameStr);
 }
 
 struct Input_GameInput : public InputLayer
@@ -66,7 +66,7 @@ struct Input_GameInput : public InputLayer
         }
         else
         {
-            SKR_LOG_ERROR("GameInput: Failed to create with both XCurl and GameInputRedist");
+            SKR_LOG_ERROR(u8"GameInput: Failed to create with both XCurl and GameInputRedist");
             Initialized = false;
         }
     }

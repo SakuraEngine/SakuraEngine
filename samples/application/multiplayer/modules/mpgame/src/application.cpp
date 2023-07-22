@@ -215,7 +215,7 @@ static void DebugOutput(ESteamNetworkingSocketsDebugOutputType eType, const char
     SteamNetworkingMicroseconds time = SteamNetworkingUtils()->GetLocalTimestamp() - g_logTimeZero;
     if (eType <= k_ESteamNetworkingSocketsDebugOutputType_Msg)
     {
-        SKR_LOG_INFO("%10.6f %s\n", time * 1e-6, pszMsg);
+        SKR_LOG_INFO(u8"%10.6f %s\n", time * 1e-6, pszMsg);
     }
     if (eType == k_ESteamNetworkingSocketsDebugOutputType_Bug)
     {
@@ -239,7 +239,7 @@ int InitializeSockets()
     SteamDatagramErrMsg errMsg;
     if (!GameNetworkingSockets_Init(nullptr, errMsg))
     {
-        SKR_LOG_FATAL("GameNetworkingSockets_Init failed.  %s", errMsg);
+        SKR_LOG_FATAL(u8"GameNetworkingSockets_Init failed.  %s", errMsg);
         return 1;
     }
 
@@ -472,7 +472,7 @@ void MPApplication::UpdateLogin()
             // Create the signaling service
             signaling = CreateTrivialSignalingClient(pszTrivialSignalingService, SteamNetworkingSockets(), errMsg);
             if (signaling == nullptr)
-                SKR_LOG_FATAL("Failed to initializing signaling client.  %s", errMsg);
+                SKR_LOG_FATAL(u8"Failed to initializing signaling client.  %s", errMsg);
 
             SteamNetworkingUtils()->SetGlobalCallback_SteamNetConnectionStatusChanged(&MPApplication::OnSteamNetConnectionStatusChanged);
             stage = MP_STAGE_MENU;
@@ -505,7 +505,7 @@ void MPApplication::OnSteamNetConnectionStatusChanged( SteamNetConnectionStatusC
 	case k_ESteamNetworkingConnectionState_ClosedByPeer:
 	case k_ESteamNetworkingConnectionState_ProblemDetectedLocally:
     {
-		SKR_LOG_INFO( "[%s] %s, reason %d: %s\n",
+		SKR_LOG_INFO( u8"[%s] %s, reason %d: %s\n",
 			pInfo->m_info.m_szConnectionDescription,
 			( pInfo->m_info.m_eState == k_ESteamNetworkingConnectionState_ClosedByPeer ? "closed by peer" : "problem detected locally" ),
 			pInfo->m_info.m_eEndReason,
@@ -526,26 +526,26 @@ void MPApplication::OnSteamNetConnectionStatusChanged( SteamNetConnectionStatusC
 		// Is this a connection we initiated, or one that we are receiving?
 		if ( g_hListenSock != k_HSteamListenSocket_Invalid && pInfo->m_info.m_hListenSocket == g_hListenSock )
 		{
-			SKR_LOG_INFO( "[%s] Accepting\n", pInfo->m_info.m_szConnectionDescription );
+			SKR_LOG_INFO( u8"[%s] Accepting\n", pInfo->m_info.m_szConnectionDescription );
             SteamNetworkingSockets()->AcceptConnection( pInfo->m_hConn );
 		}
 		else
 		{
 			// Note that we will get notification when our own connection that
 			// we initiate enters this state.
-			SKR_LOG_INFO( "[%s] Entered connecting state\n", pInfo->m_info.m_szConnectionDescription );
+			SKR_LOG_INFO( u8"[%s] Entered connecting state\n", pInfo->m_info.m_szConnectionDescription );
 		}
 		break;
 
 	case k_ESteamNetworkingConnectionState_FindingRoute:
 		// P2P connections will spend a brief time here where they swap addresses
 		// and try to find a route.
-		SKR_LOG_INFO( "[%s] finding route\n", pInfo->m_info.m_szConnectionDescription );
+		SKR_LOG_INFO( u8"[%s] finding route\n", pInfo->m_info.m_szConnectionDescription );
 		break;
 
 	case k_ESteamNetworkingConnectionState_Connected:
 		// We got fully connected
-		SKR_LOG_INFO( "[%s] connected\n", pInfo->m_info.m_szConnectionDescription );
+		SKR_LOG_INFO( u8"[%s] connected\n", pInfo->m_info.m_szConnectionDescription );
 		break;
 
 	default:
@@ -585,7 +585,7 @@ void MPApplication::UpdateMenu()
         // we create that use the same local virtual port will automatically inherit
         // this setting.  However, this is really not recommended.  It is best to be
         // explicit.
-        SKR_LOG_INFO("Connecting to '%s', virtual port %d, from local virtual port %d.\n",
+        SKR_LOG_INFO(u8"Connecting to '%s', virtual port %d, from local virtual port %d.\n",
         SteamNetworkingIdentityRender(identityRemote).c_str(), virtualPortRemote,
         virtualPortLocal);
 
@@ -702,7 +702,7 @@ void MPApplication::UpdateEnteringGame()
                 }
                 break;
                 default:
-                    SKR_LOG_FATAL("[MPClientWorld::Process] Unknown event: %d", (int)type);
+                    SKR_LOG_FATAL(u8"[MPClientWorld::Process] Unknown event: %d", (int)type);
                     break;
             }
             pMessage->Release();
@@ -798,7 +798,7 @@ void MPApplication::UpdateGame()
                 }
                 break;
                 default:
-                    SKR_LOG_FATAL("[MPClientWorld::Process] Unknown event: %d", (int)type);
+                    SKR_LOG_FATAL(u8"[MPClientWorld::Process] Unknown event: %d", (int)type);
                     break;
             }
             pMessage->Release();

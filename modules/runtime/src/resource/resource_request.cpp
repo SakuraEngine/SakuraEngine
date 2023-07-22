@@ -256,7 +256,7 @@ void SResourceRequestImpl::Update()
     }
     auto resourceRegistry = system->GetRegistry();
     auto ioService = system->GetRAMService();
-    SKR_LOG_BACKTRACE("Current reosurce loading phase: %d!", (int32_t)currentPhase);
+    SKR_LOG_BACKTRACE(u8"Current reosurce loading phase: %d!", (int32_t)currentPhase);
     switch (currentPhase)
     {
         case SKR_LOADING_PHASE_REQUEST_RESOURCE: {

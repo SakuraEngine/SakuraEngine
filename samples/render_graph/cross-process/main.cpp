@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
     exec_name = (const char8_t*)argv[0];
     if (argc == 1)
     {
-        SKR_LOG_DEBUG("exec_name: %s", exec_name);
+        SKR_LOG_DEBUG(u8"exec_name: %s", exec_name);
     
         const char8_t* provider_arguments[] = { u8"provider", u8"-1"};
         auto provider = skr_run_process(exec_name, 
@@ -35,13 +35,13 @@ int main(int argc, char* argv[])
     else
     {
         auto id = skr_get_current_process_id();
-        SKR_LOG_DEBUG("exec_mode: %s, process id: %lld", argv[1], id);
+        SKR_LOG_DEBUG(u8"exec_mode: %s, process id: %lld", argv[1], id);
         auto is_receiver = (strcmp(argv[1], "receiver") == 0);
 
         std::error_code ec = {};
         if (!skr::filesystem::exists("./cross-proc", ec))
         {
-            SKR_LOG_INFO("subdir cross-proc not existed, create it");
+            SKR_LOG_INFO(u8"subdir cross-proc not existed, create it");
             skr::filesystem::create_directories(skr::filesystem::path("./cross-proc"), ec);
         }
 

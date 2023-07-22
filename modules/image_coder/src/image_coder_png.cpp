@@ -64,12 +64,12 @@ struct PNGImageCoderHelper
     {
         PNGImageDecoder* decoder = (PNGImageDecoder*)png_get_error_ptr(png_ptr);
         decoder->error = (const char8_t*)error_msg;
-        SKR_LOG_ERROR("[libPNG] PNGImageDecoder: %s", error_msg);
+        SKR_LOG_ERROR(u8"[libPNG] PNGImageDecoder: %s", error_msg);
     }
 
     inline static void user_warning_fn(png_structp png_ptr, png_const_charp warning_msg)
     {
-        SKR_LOG_WARN("[libPNG] PNGImageDecoder: %s", warning_msg);
+        SKR_LOG_WARN(u8"[libPNG] PNGImageDecoder: %s", warning_msg);
     }
 
     inline static void* user_malloc(png_structp png_ptr, png_size_t size)

@@ -5,15 +5,15 @@
 #include "SkrRT/serde/json/reader.h"
 #include "SkrRT/serde/json/writer.h"
 #include "tracy/Tracy.hpp"
-[[maybe_unused]] static const char* JsonArrayJsonFieldArchiveFailedFormat = "[SERDE/JSON] Archive %s.%s[%d] failed: %s";
-[[maybe_unused]] static const char* JsonArrayFieldArchiveWarnFormat = "[SERDE/JSON] %s.%s got too many elements (%d expected, given %d), ignoring overflowed elements";
-[[maybe_unused]] static const char* JsonFieldArchiveFailedFormat = "[SERDE/JSON] Archive %s.%s failed: %s";
-[[maybe_unused]] static const char* JsonFieldNotFoundErrorFormat = "[SERDE/JSON] %s.%s not found";
-[[maybe_unused]] static const char* JsonFieldNotFoundFormat = "[SERDE/JSON] %s.%s not found, using default value";
+[[maybe_unused]] static const char8_t* JsonArrayJsonFieldArchiveFailedFormat = u8"[SERDE/JSON] Archive %s.%s[%d] failed: %s";
+[[maybe_unused]] static const char8_t* JsonArrayFieldArchiveWarnFormat = u8"[SERDE/JSON] %s.%s got too many elements (%d expected, given %d), ignoring overflowed elements";
+[[maybe_unused]] static const char8_t* JsonFieldArchiveFailedFormat = u8"[SERDE/JSON] Archive %s.%s failed: %s";
+[[maybe_unused]] static const char8_t* JsonFieldNotFoundErrorFormat = u8"[SERDE/JSON] %s.%s not found";
+[[maybe_unused]] static const char8_t* JsonFieldNotFoundFormat = u8"[SERDE/JSON] %s.%s not found, using default value";
 
-[[maybe_unused]] static const char* JsonArrayFieldNotEnoughErrorFormat = "[SERDE/JSON] %s.%s has too few elements (%d expected, given %d)";
-[[maybe_unused]] static const char* JsonArrayFieldNotEnoughWarnFormat = "[SERDE/JSON] %s.%s got too few elements (%d expected, given %d), using default value";
-[[maybe_unused]] static const char* JsonBaseArchiveFailedFormat = "[SERDE/JSON] Archive %s base %s failed: %d";
+[[maybe_unused]] static const char8_t* JsonArrayFieldNotEnoughErrorFormat = u8"[SERDE/JSON] %s.%s has too few elements (%d expected, given %d)";
+[[maybe_unused]] static const char8_t* JsonArrayFieldNotEnoughWarnFormat = u8"[SERDE/JSON] %s.%s got too few elements (%d expected, given %d), using default value";
+[[maybe_unused]] static const char8_t* JsonBaseArchiveFailedFormat = u8"[SERDE/JSON] Archive %s base %s failed: %d";
 
 namespace skr::type
 {
@@ -56,7 +56,7 @@ error_code ReadTrait<${enum.name}>::Read(value_t&& json, ${enum.name}& e)
     const auto enumStr = skr::string_view((const char8_t*)rawView.data(), rawView.size());
     if(!skr::type::enum_from_string(enumStr, e))
     {
-        SKR_LOG_ERROR("Unknown enumerator while reading enum ${enum.name}: %s", enumStr);
+        SKR_LOG_ERROR(u8"Unknown enumerator while reading enum ${enum.name}: %s", enumStr);
         return error_code::ENUMERATOR_ERROR;
     }
     return error_code::SUCCESS;

@@ -49,7 +49,7 @@ RUNTIME_API void skr_log_set_level(int level);
 
 RUNTIME_API void skr_log_set_flush_behavior(int behavior);
 
-RUNTIME_API void skr_log_log(int level, const char* file, const char* func, const char* line, const char* fmt, ...);
+RUNTIME_API void skr_log_log(int level, const char* file, const char* func, const char* line, const char8_t* fmt, ...);
 
 // flush logs of this thread
 RUNTIME_API void skr_log_flush();

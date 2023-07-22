@@ -134,7 +134,7 @@ void skr_log_set_flush_behavior(int behavior)
 }
 
 RUNTIME_EXTERN_C 
-void skr_log_log(int level, const char* file, const char* func, const char* line, const char* fmt, ...)
+void skr_log_log(int level, const char* file, const char* func, const char* line, const char8_t* fmt, ...)
 {
     ZoneScopedN("Log");
     
@@ -147,7 +147,7 @@ void skr_log_log(int level, const char* file, const char* func, const char* line
 
     va_list va_args;
     va_start(va_args, fmt);
-    logger->log(Event, (const char8_t*)fmt, va_args);
+    logger->log(Event, fmt, va_args);
     va_end(va_args);
 }
 

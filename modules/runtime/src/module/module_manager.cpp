@@ -27,7 +27,7 @@ static bool ProcessPDB(const skr::filesystem::path& dst)
     skr::filesystem::copy(orig_pdb, pdbDst, skr::filesystem::copy_options::overwrite_existing, ec);
     if(ec)
     {
-        SKR_LOG_ERROR("copy pdb file failed: %s", ec.message().c_str());
+        SKR_LOG_ERROR(u8"copy pdb file failed: %s", ec.message().c_str());
         result = false;
     }
     return result;
@@ -149,16 +149,16 @@ public:
     SDefaultDynamicModule(const char8_t* name) : name(name) {}
     virtual void on_load(int argc, char8_t** argv) override
     {
-        SKR_LOG_TRACE("[default implementation] dynamic module %s loaded!", name.c_str());
+        SKR_LOG_TRACE(u8"[default implementation] dynamic module %s loaded!", name.c_str());
     }
     virtual int main_module_exec(int argc, char8_t** argv) override
     {
-        SKR_LOG_TRACE("[default implementation] dynamic module %s executed!", name.c_str());
+        SKR_LOG_TRACE(u8"[default implementation] dynamic module %s executed!", name.c_str());
         return 0;
     }
     virtual void on_unload() override
     {
-        SKR_LOG_TRACE("[default implementation] dynamic module %s unloaded!", name.c_str());
+        SKR_LOG_TRACE(u8"[default implementation] dynamic module %s unloaded!", name.c_str());
     }
 
     skr::string name = u8"";
@@ -192,7 +192,7 @@ bool ModuleManagerImpl::loadHotfixModule(SharedLibrary& lib, const skr::string& 
     std::error_code ec;
     if(!skr::filesystem::exists(path, ec))
     {
-        SKR_LOG_ERROR("hotfix module %s not found!", path.c_str());
+        SKR_LOG_ERROR(u8"hotfix module %s not found!", path.c_str());
         return false;
     }
     skr::filesystem::path new_path = GetVersionPath(path, ctx.version, ctx.temppath);
@@ -201,21 +201,21 @@ bool ModuleManagerImpl::loadHotfixModule(SharedLibrary& lib, const skr::string& 
         skr::filesystem::copy(path, new_path, skr::filesystem::copy_options::overwrite_existing, ec);
         if(ec)
         {
-            SKR_LOG_ERROR("hotfix module %s rename failed! reason: %s", path.c_str(), ec.message().c_str());
+            SKR_LOG_ERROR(u8"hotfix module %s rename failed! reason: %s", path.c_str(), ec.message().c_str());
             return false;
         }
         ctx.next_version = ctx.next_version + 1;
 #if defined(_MSC_VER)
         if(!ProcessPDB(new_path))
         {
-            SKR_LOG_ERROR("hotfix module %s pdb process failed, debugging may be "
+            SKR_LOG_ERROR(u8"hotfix module %s pdb process failed, debugging may be "
                          "affected and/or reload may fail", path.c_str());
         }
 #endif
     }
     if(!lib.load(new_path.u8string().c_str()))
     {
-        SKR_LOG_ERROR("hotfix module %s load failed!", new_path.c_str());
+        SKR_LOG_ERROR(u8"hotfix module %s load failed!", new_path.c_str());
         return false;
     }
     //TODO: validate sections
@@ -246,7 +246,7 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const skr::string& name, bool hot
     }
     if (hotfix && (is_proc_mod || func))
     {
-        SKR_LOG_ERROR("Hotfix module %s failed, module already loaded!", name.c_str());
+        SKR_LOG_ERROR(u8"Hotfix module %s failed, module already loaded!", name.c_str());
     }
 #ifndef SHIPPING_ONE_ARCHIVE
     if (!is_proc_mod && func == nullptr)
@@ -261,11 +261,11 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const skr::string& name, bool hot
         {
             if (!sharedLib->load((const char8_t*)finalPath.c_str()))
             {
-                SKR_LOG_DEBUG("%s\nLoad Shared Lib Error:%s", filename.c_str(), sharedLib->errorString().c_str());
+                SKR_LOG_DEBUG(u8"%s\nLoad Shared Lib Error:%s", filename.c_str(), sharedLib->errorString().c_str());
             }
             else
             {
-                SKR_LOG_TRACE("Load dll success: %s", filename.c_str());
+                SKR_LOG_TRACE(u8"Load dll success: %s", filename.c_str());
                 if (sharedLib->hasSymbol(initName.u8_str()))
                 {
                     func = sharedLib->get<IModule*()>(initName.u8_str());
@@ -276,11 +276,11 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const skr::string& name, bool hot
         {
             if(!loadHotfixModule(*sharedLib, name))
             {
-                SKR_LOG_ERROR("Hotfix module %s failed, load failed!", name.c_str());
+                SKR_LOG_ERROR(u8"Hotfix module %s failed, load failed!", name.c_str());
             }
             else
             {
-                SKR_LOG_TRACE("Hotfix module %s success!", name.c_str());
+                SKR_LOG_TRACE(u8"Hotfix module %s success!", name.c_str());
                 if (sharedLib->hasSymbol(initName.u8_str()))
                 {
                     func = sharedLib->get<IModule*()>(initName.u8_str());
@@ -295,7 +295,7 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const skr::string& name, bool hot
     }
     else
     {
-        SKR_LOG_TRACE("no user defined symbol: %s", initName.c_str());
+        SKR_LOG_TRACE(u8"no user defined symbol: %s", initName.c_str());
         modulesMap[name] = eastl::make_unique<SDefaultDynamicModule>(name.u8_str());
     }
     IDynamicModule* module = (IDynamicModule*)modulesMap[name].get();
@@ -333,7 +333,7 @@ ModuleInfo ModuleManagerImpl::parseMetaData(const char8_t* metadata)
     }
     else
     {
-        SKR_LOG_FATAL("parse module meta error!");
+        SKR_LOG_FATAL(u8"parse module meta error!");
         abort();
     }
     return info;
@@ -491,7 +491,7 @@ bool ModuleManagerImpl::__internal_UpdateModuleGraph(const skr::string& entry)
     if(!changed)
         return true;
     //reload module
-    SKR_LOG_DEBUG("Hotfix module: %s", entry.c_str());
+    SKR_LOG_DEBUG(u8"Hotfix module: %s", entry.c_str());
     
     eastl::unique_ptr<SharedLibrary> sharedLib = eastl::make_unique<SharedLibrary>();
     //unload old module
@@ -514,7 +514,7 @@ bool ModuleManagerImpl::__internal_UpdateModuleGraph(const skr::string& entry)
     IModule* (*func)() = nullptr;
     if(!loadHotfixModule(*sharedLib, entry))
     {
-        SKR_LOG_ERROR("Failed to load hotfix module: %s", entry.c_str());
+        SKR_LOG_ERROR(u8"Failed to load hotfix module: %s", entry.c_str());
         return false;
     }
     else 
@@ -528,7 +528,7 @@ bool ModuleManagerImpl::__internal_UpdateModuleGraph(const skr::string& entry)
         }
         if(!func)
         {
-            SKR_LOG_ERROR("Failed to load hotfix module: %s", entry.c_str());
+            SKR_LOG_ERROR(u8"Failed to load hotfix module: %s", entry.c_str());
             return false;
         }
     }

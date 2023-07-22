@@ -297,8 +297,8 @@ void RunnerBase::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
                 processing_message += skr::format(u8"{} ", processor->processing_count(priority));
                 processed_message += skr::format(u8"{} ", processor->processed_count(priority));
             }
-            SKR_LOG_FATAL(processing_message.c_str());
-            SKR_LOG_FATAL(processed_message.c_str());
+            SKR_LOG_FATAL(processing_message.u8_str());
+            SKR_LOG_FATAL(processed_message.u8_str());
         }
         {
             skr::string processing_message = u8"request processing: ";
@@ -308,8 +308,8 @@ void RunnerBase::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
                 processing_message += skr::format(u8"{} ", processor->processing_count(priority));
                 processed_message += skr::format(u8"{} ", processor->processed_count(priority));
             }
-            SKR_LOG_FATAL(processing_message.c_str());
-            SKR_LOG_FATAL(processed_message.c_str());
+            SKR_LOG_FATAL(processing_message.u8_str());
+            SKR_LOG_FATAL(processed_message.u8_str());
         }
     }
 }

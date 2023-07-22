@@ -115,7 +115,7 @@ static void __decompressTask_DirectStorage(skr_win_dstorage_decompress_service_i
                     }
                     else
                     {
-                        SKR_LOG_WARN("Unable to find decompression resolver for format %d\n", request.CompressionFormat);
+                        SKR_LOG_WARN(u8"Unable to find decompression resolver for format %d\n", request.CompressionFormat);
                         DSTORAGE_CUSTOM_DECOMPRESSION_RESULT failResult = {};
                         failResult.Result = S_FALSE;
                         failResult.Id = request.Id;
@@ -214,7 +214,7 @@ skr_win_dstorage_decompress_service_id skr_win_dstorage_create_decompress_servic
         return nullptr;
     }
     auto service = SkrNew<skr_win_dstorage_decompress_service_t>(pCompressionQueue, desc);
-    SKR_LOG_TRACE("Created decompress service");
+    SKR_LOG_TRACE(u8"Created decompress service");
     return service;
 }
 
@@ -233,5 +233,5 @@ void skr_win_dstorage_free_decompress_service(skr_win_dstorage_decompress_servic
 {
     SKR_ASSERT(service && "Invalid service");
     SkrDelete(service);
-    SKR_LOG_TRACE("Deleted decompress service");
+    SKR_LOG_TRACE(u8"Deleted decompress service");
 }

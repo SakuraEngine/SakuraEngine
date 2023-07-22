@@ -52,7 +52,7 @@ void* nswindow_get_content_view(void* window)
     NSBundle* bundle = [NSBundle bundleWithPath:@"/System/Library/Frameworks/QuartzCore.framework"];
     if (!bundle)
     {
-        SKR_LOG_FATAL("Cocoa: Failed to find QuartzCore.framework\n");
+        SKR_LOG_FATAL(u8"Cocoa: Failed to find QuartzCore.framework\n");
         return nullptr;
     }
 
@@ -60,7 +60,7 @@ void* nswindow_get_content_view(void* window)
     nsview.layer = [[bundle classNamed:@"CAMetalLayer"] layer];
     if (!nsview.layer)
     {
-        SKR_LOG_FATAL("Cocoa: Failed to create layer for view\n");
+        SKR_LOG_FATAL(u8"Cocoa: Failed to create layer for view\n");
         return nullptr;
     }
     [nsview setWantsLayer:YES];

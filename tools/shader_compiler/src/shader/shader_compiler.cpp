@@ -15,7 +15,7 @@ struct SKR_SHADER_COMPILER_API SShaderCompilerModule : public skr::IDynamicModul
     {
         for (auto&& [name, load_event] : on_load_events)
         {
-            // SKR_LOG_DEBUG("ShaderCompilerModule load event %s invoked", name.c_str());
+            // SKR_LOG_DEBUG(u8"ShaderCompilerModule load event %s invoked", name.c_str());
             load_event();
         }
     }
@@ -24,7 +24,7 @@ struct SKR_SHADER_COMPILER_API SShaderCompilerModule : public skr::IDynamicModul
     {
         for (auto&& [name, unload_event] : on_unload_events)
         {
-            // SKR_LOG_DEBUG("ShaderCompilerModule unload event %s invoked", name.c_str());
+            // SKR_LOG_DEBUG(u8"ShaderCompilerModule unload event %s invoked", name.c_str());
             unload_event();
         }
     }

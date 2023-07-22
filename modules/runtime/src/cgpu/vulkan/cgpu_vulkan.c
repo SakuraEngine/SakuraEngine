@@ -1253,7 +1253,7 @@ void cgpu_submit_queue_vulkan(CGPUQueueId queue, const struct CGPUQueueSubmitDes
     VkResult res = D->mVkDeviceTable.vkQueueSubmit(Q->pVkQueue, 1, &submit_info, F ? F->pVkFence : VK_NULL_HANDLE);
     if(res != VK_SUCCESS)
     {
-        SKR_LOG_FATAL("CGPU VULKAN: Failed to submit queue! Error code: %d", res);
+        SKR_LOG_FATAL(u8"CGPU VULKAN: Failed to submit queue! Error code: %d", res);
         if (res == VK_ERROR_DEVICE_LOST)
         {
             ((CGPUDevice*)queue->device)->is_lost = true;

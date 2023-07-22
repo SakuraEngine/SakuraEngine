@@ -42,11 +42,11 @@ SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderStage shader_stage, EC
     result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&bytecode), &outputName);
     if (bytecode == nullptr)
     {
-        SKR_LOG_ERROR("[DXCCompiler]Unknown Error: Failed to get bytecode!");
+        SKR_LOG_ERROR(u8"[DXCCompiler]Unknown Error: Failed to get bytecode!");
     }
     if (errors != nullptr && errors->GetStringLength() != 0)
     {
-        SKR_LOG_ERROR("[DXCCompiler]Warnings and Errors:\n%s\n", errors->GetStringPointer());
+        SKR_LOG_ERROR(u8"[DXCCompiler]Warnings and Errors:\n%s\n", errors->GetStringPointer());
         if (bytecode == nullptr) goto FAIL;
     }
     result->GetOutput(DXC_OUT_PDB, IID_PPV_ARGS(&pdb), &pdbName);
@@ -65,7 +65,7 @@ SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderStage shader_stage, EC
         }
         else
         {
-            SKR_LOG_ERROR("[DXCCompiler]Unknown Error: Failed to get hash data! HRESULT: %u, Target IL: %d", hres, type);
+            SKR_LOG_ERROR(u8"[DXCCompiler]Unknown Error: Failed to get hash data! HRESULT: %u, Target IL: %d", hres, type);
             goto FAIL;
         }
     }
@@ -73,7 +73,7 @@ SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderStage shader_stage, EC
     //if (SUCCEEDED(utils->GetPDBContents(pdb, &hashDigestBlob, &debugDxilContainer)));
     if (auto hres = result->GetOutput(DXC_OUT_REFLECTION, IID_PPV_ARGS(&reflectionData), nullptr);!is_spv && !SUCCEEDED(hres))
     {
-        SKR_LOG_ERROR("[DXCCompiler]Unknown Error: Failed to get reflection data! HRESULT: %u", hres);
+        SKR_LOG_ERROR(u8"[DXCCompiler]Unknown Error: Failed to get reflection data! HRESULT: %u", hres);
     }
     compiled->shader_stage = shader_stage;
     compiled->code_type = type;
@@ -244,7 +244,7 @@ eastl::wstring utf8_to_utf16(const skr::string& utf8)
         }
         else if (ch <= 0xBF)
         {
-            SKR_LOG_FATAL("not a UTF-8 string");
+            SKR_LOG_FATAL(u8"not a UTF-8 string");
             return L"";
         }
         else if (ch <= 0xDF)
@@ -264,20 +264,20 @@ eastl::wstring utf8_to_utf16(const skr::string& utf8)
         }
         else
         {
-            SKR_LOG_FATAL("not a UTF-8 string");
+            SKR_LOG_FATAL(u8"not a UTF-8 string");
             return L"";
         }
         for (size_t j = 0; j < todo; ++j)
         {
             if (i == utf8.size())
             {
-                SKR_LOG_FATAL("not a UTF-8 string");
+                SKR_LOG_FATAL(u8"not a UTF-8 string");
                 return L"";
             }
             unsigned char ch = utf8.c_str()[i++];
             if (ch < 0x80 || ch > 0xBF)
             {
-                SKR_LOG_FATAL("not a UTF-8 string");
+                SKR_LOG_FATAL(u8"not a UTF-8 string");
                 return L"";
             }
             uni <<= 6;
@@ -285,12 +285,12 @@ eastl::wstring utf8_to_utf16(const skr::string& utf8)
         }
         if (uni >= 0xD800 && uni <= 0xDFFF)
         {
-            SKR_LOG_FATAL("not a UTF-8 string");
+            SKR_LOG_FATAL(u8"not a UTF-8 string");
             return L"";
         }
         if (uni > 0x10FFFF)
         {
-            SKR_LOG_FATAL("not a UTF-8 string");
+            SKR_LOG_FATAL(u8"not a UTF-8 string");
             return L"";
         }
         unicode.push_back(uni);
@@ -329,7 +329,7 @@ void SDXCCompiler::createDefArgsFromOptions(skr::span<skr_shader_option_template
         }
         if (!optdef)
         {
-            SKR_LOG_ERROR("option not found: %s", option.key.c_str());
+            SKR_LOG_ERROR(u8"option not found: %s", option.key.c_str());
             continue;
         }
 
@@ -381,7 +381,7 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
     IDxcResult* pDxcResult = nullptr;
     if (auto hr = utils->CreateBlobFromPinned(source.blob->get_data(), (uint32_t)source.blob->get_size(), DXC_CP_ACP, &pSourceBlob);!SUCCEEDED(hr))
     {
-        SKR_LOG_ERROR("DXC Compiler: Failed to create blob from pinned memory, HRESULT: %u!", hr);
+        SKR_LOG_ERROR(u8"DXC Compiler: Failed to create blob from pinned memory, HRESULT: %u!", hr);
     }
     DxcBuffer SourceBuffer;
     SourceBuffer.Ptr = pSourceBlob->GetBufferPointer();
@@ -489,7 +489,7 @@ void SDXCLibrary::LoadDXCLibrary() SKR_NOEXCEPT
     if (auto result = dxc_library.load(filename.u8_str()));
     else
     {
-        SKR_LOG_ERROR("failed to load dxc library!");
+        SKR_LOG_ERROR(u8"failed to load dxc library!");
     }
     auto pDxcCreateInstance = SKR_SHARED_LIB_LOAD_API(dxc_library, DxcCreateInstance);
     dxcInstance->pDxcCreateInstance = (void*)pDxcCreateInstance;
@@ -521,7 +521,7 @@ void SDXCLibrary::LoadDXILLibrary() SKR_NOEXCEPT
     if (auto result = dxcInstance->dxil_library.load(filename.u8_str()));
     else
     {
-        SKR_LOG_ERROR("failed to load dxil library!"
+        SKR_LOG_ERROR(u8"failed to load dxil library!"
         "no correct signature will be assigned to the dxil files that shaders will be rejected by runtime driver!");
     }
 }

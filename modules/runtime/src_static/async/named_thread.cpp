@@ -39,7 +39,7 @@ AsyncResult NamedThread::start(NamedThreadFunction* pFunc) SKR_NOEXCEPT
 {
     if (skr_atomic32_load_acquire(&started)) 
     {
-        SKR_LOG_ERROR("thread is already started!");
+        SKR_LOG_ERROR(u8"thread is already started!");
         return ASYNC_RESULT_ERROR_THREAD_ALREADY_STARTES;
     }
     

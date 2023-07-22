@@ -13,7 +13,7 @@ constexpr int parse_hex_digit(const char8_t c)
     else if ('A' <= c && c <= 'F')
         return 10 + c - 'A';
     else
-        SKR_LOG_ERROR("Invalid character in GUID. Expected hex digit, got %c", c);
+        SKR_LOG_ERROR(u8"Invalid character in GUID. Expected hex digit, got %c", c);
     return -1;
 }
 
@@ -69,7 +69,7 @@ bool make_guid(const skr::string_view& str, skr_guid_t& value)
     if (str.size() != long_guid_form_length && str.size() != short_guid_form_length)
     {
         skr::string str2(skr::string_view(str.u8_str(), (size_t)str.size()));
-        SKR_LOG_ERROR("String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected, got %s", str2.c_str());
+        SKR_LOG_ERROR(u8"String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected, got %s", str2.c_str());
         return false;
     }
 
@@ -78,7 +78,7 @@ bool make_guid(const skr::string_view& str, skr_guid_t& value)
         if (str.u8_str()[0] != u8'{' || str.u8_str()[long_guid_form_length - 1] != u8'}')
         {
             skr::string str2(skr::string_view(str.u8_str(), (size_t)str.size()));
-            SKR_LOG_ERROR("Opening or closing brace is expected, got %s", str2.c_str());
+            SKR_LOG_ERROR(u8"Opening or closing brace is expected, got %s", str2.c_str());
             return false;
         }
     }

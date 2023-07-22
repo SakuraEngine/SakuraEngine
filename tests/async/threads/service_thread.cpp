@@ -41,7 +41,7 @@ TEST_CASE_METHOD(ServiceThreadTests, "AsyncPrint")
         {
             if (times <= 5)
             {
-                SKR_LOG_DEBUG("Hello World! %d", times++);
+                SKR_LOG_DEBUG(u8"Hello World! %d", times++);
             }
             else
             {
@@ -52,15 +52,15 @@ TEST_CASE_METHOD(ServiceThreadTests, "AsyncPrint")
         int32_t times = 0;
     };
     auto srv = TestServiceThread();
-    SKR_LOG_DEBUG("Request Run");
+    SKR_LOG_DEBUG(u8"Request Run");
     srv.run();
-    SKR_LOG_DEBUG("Wait Stop");
+    SKR_LOG_DEBUG(u8"Wait Stop");
     srv.wait_stop();
-    SKR_LOG_DEBUG("Stopped");
+    SKR_LOG_DEBUG(u8"Stopped");
     EXPECT_EQ(srv.times, 6);
-    SKR_LOG_DEBUG("Wait Exit");
+    SKR_LOG_DEBUG(u8"Wait Exit");
     srv.exit();
-    SKR_LOG_DEBUG("Exitted");
+    SKR_LOG_DEBUG(u8"Exitted");
 }
 
 TEST_CASE_METHOD(ServiceThreadTests, "AsyncPrint2")
@@ -75,7 +75,7 @@ TEST_CASE_METHOD(ServiceThreadTests, "AsyncPrint2")
                 ((times <= 20) && (times >= 15))
             )
             {
-                SKR_LOG_DEBUG("Hello World! %d", times++);
+                SKR_LOG_DEBUG(u8"Hello World! %d", times++);
             }
             else
             {
