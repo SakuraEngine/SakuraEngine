@@ -898,28 +898,28 @@ namespace dual
         {
             if (desc.callback.constructor == nullptr)
             {
-                SKR_LOG_WARN("type %s is not trivially constructible but no contructor was provided.", desc.name);
+                SKR_LOG_WARN(u8"type %s is not trivially constructible but no contructor was provided.", desc.name);
             }
         }
         if constexpr (!std::is_trivially_destructible_v<C>)
         {
             if (desc.callback.destructor == nullptr)
             {
-                SKR_LOG_WARN("type %s is not trivially destructible but no destructor was provided.", desc.name);
+                SKR_LOG_WARN(u8"type %s is not trivially destructible but no destructor was provided.", desc.name);
             }
         }
         if constexpr (!std::is_trivially_copy_constructible_v<C>)
         {
             if (desc.callback.copy == nullptr)
             {
-                SKR_LOG_WARN("type %s is not trivially copy constructible but no copy constructor was provided.", desc.name);
+                SKR_LOG_WARN(u8"type %s is not trivially copy constructible but no copy constructor was provided.", desc.name);
             }
         }
         if constexpr (!std::is_trivially_move_constructible_v<C>)
         {
             if (desc.callback.move == nullptr)
             {
-                SKR_LOG_WARN("type %s is not trivially move constructible but no move constructor was provided.", desc.name);
+                SKR_LOG_WARN(u8"type %s is not trivially move constructible but no move constructor was provided.", desc.name);
             }
         }
     }

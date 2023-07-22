@@ -171,7 +171,7 @@ SObjectPtr<InputMappingContext> InputSystemImpl::add_mapping_context(SObjectPtr<
     auto it = contexts.emplace(priority, ctx);
     if (!it.second)
     {
-        SKR_LOG_ERROR("InputSystemImpl::add_mapping_context: priority already exists");
+        SKR_LOG_ERROR(u8"InputSystemImpl::add_mapping_context: priority already exists");
         SKR_ASSERT(it.second);
     }
     return it.first->second;

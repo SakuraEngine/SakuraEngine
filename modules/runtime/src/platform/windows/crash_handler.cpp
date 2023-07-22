@@ -150,7 +150,7 @@ int WinCrashHandler::internalHandler(struct SCrashContext* context) SKR_NOEXCEPT
         skr_crash_code_string(reason)
     );
 
-    SKR_LOG_FATAL(why.c_str());
+    SKR_LOG_FATAL(why.u8_str());
 
     // save crash minidump
     {

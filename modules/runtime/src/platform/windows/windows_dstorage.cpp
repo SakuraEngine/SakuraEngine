@@ -189,13 +189,13 @@ SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Initialize(const SkrDSto
             _this->dstorage_library.load(u8"dstorage.dll");
             if (!_this->dstorage_core.isLoaded() || !_this->dstorage_library.isLoaded())
             {
-                if (!_this->dstorage_core.isLoaded()) SKR_LOG_TRACE("dstoragecore.dll not found, direct storage is disabled");
-                if (!_this->dstorage_library.isLoaded()) SKR_LOG_TRACE("dstorage.dll not found, direct storage is disabled");
+                if (!_this->dstorage_core.isLoaded()) SKR_LOG_TRACE(u8"dstoragecore.dll not found, direct storage is disabled");
+                if (!_this->dstorage_library.isLoaded()) SKR_LOG_TRACE(u8"dstorage.dll not found, direct storage is disabled");
                 _this->initialize_failed = true;
             }
             else
             {
-                SKR_LOG_TRACE("dstorage.dll loaded");
+                SKR_LOG_TRACE(u8"dstorage.dll loaded");
 
                 auto pfn_set_config = SKR_SHARED_LIB_LOAD_API(_this->dstorage_library, DStorageSetConfiguration);
                 if (!pfn_set_config) return nullptr;
@@ -213,7 +213,7 @@ SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Initialize(const SkrDSto
                 }
                 if (!SUCCEEDED(pfn_set_config1(&config1)))
                 {
-                    SKR_LOG_ERROR("Failed to set DStorage config!");
+                    SKR_LOG_ERROR(u8"Failed to set DStorage config!");
                     return nullptr;
                 }
 
@@ -221,7 +221,7 @@ SkrWindowsDStorageInstance* SkrWindowsDStorageInstance::Initialize(const SkrDSto
                 if (!pfn_get_factory) return nullptr;
                 if (!SUCCEEDED(pfn_get_factory(IID_PPV_ARGS(&_this->pFactory))))
                 {
-                    SKR_LOG_ERROR("Failed to get DStorage factory!");
+                    SKR_LOG_ERROR(u8"Failed to get DStorage factory!");
                     return nullptr;
                 }
 
@@ -245,7 +245,7 @@ SkrWindowsDStorageInstance::~SkrWindowsDStorageInstance()
     if (dstorage_core.isLoaded()) 
         dstorage_core.unload();
     
-    SKR_LOG_TRACE("Direct Storage unloaded");
+    SKR_LOG_TRACE(u8"Direct Storage unloaded");
 }
 
 SkrDStorageInstanceId skr_create_dstorage_instance(SkrDStorageConfig* config)
@@ -297,7 +297,7 @@ SkrDStorageQueueId skr_create_dstorage_queue(const SkrDStorageQueueDescriptor* d
     if (!pFactory) return nullptr;
     if (!SUCCEEDED(pFactory->CreateQueue(&queueDesc, IID_PPV_ARGS(&Q->pQueue))))
     {
-        SKR_LOG_ERROR("Failed to create DStorage queue!");
+        SKR_LOG_ERROR(u8"Failed to create DStorage queue!");
         SkrDelete(Q);
         return nullptr;
     }
@@ -354,7 +354,7 @@ void skr_dstorage_query_file_info(SkrDStorageInstanceId inst, SkrDStorageFileHan
     IDStorageFile* pFile = (IDStorageFile*)file;
     if (!SUCCEEDED(pFile->GetFileInformation(&fileInfo)))
     {
-        SKR_LOG_ERROR("Failed to get DStorage file info!");
+        SKR_LOG_ERROR(u8"Failed to get DStorage file info!");
         return;
     }
     info->file_size = fileInfo.nFileSizeLow;

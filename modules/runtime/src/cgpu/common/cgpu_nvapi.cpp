@@ -28,7 +28,7 @@ uint32_t cgpu_nvapi_get_driver_version(CGPUInstanceId Inst)
     {
         NvAPI_ShortString string;
         NvAPI_GetErrorMessage(Status, string);
-        cgpu_warn("[warn] nvapi failed to get driver version! \n message: %s", string);
+        cgpu_warn(u8"[warn] nvapi failed to get driver version! \n message: %s", string);
         return v;
     }
     return v;

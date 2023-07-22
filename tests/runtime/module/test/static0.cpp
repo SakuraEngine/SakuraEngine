@@ -2,11 +2,11 @@
 
 void SStaticModule0::on_load(int argc, char8_t** argv)
 {
-    SKR_LOG_INFO("static module 0 loaded!");
+    SKR_LOG_INFO(u8"static module 0 loaded!");
 }
 void SStaticModule0::on_unload()
 {
-    SKR_LOG_INFO("static module 0 unloaded!");
+    SKR_LOG_INFO(u8"static module 0 unloaded!");
 }
 const char8_t* SStaticModule0::get_meta_data(void)
 {

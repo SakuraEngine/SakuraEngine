@@ -100,16 +100,16 @@ void RenderGraphFrameExecutor::print_error_trace(uint64_t frame_index)
 {
     auto fill_data = (const uint32_t*)marker_buffer->cgpu_buffer->info->cpu_mapped_address;
     if (fill_data[0] == 0) return;// begin cmd is unlikely to fail on gpu
-    SKR_LOG_FATAL("Device lost caused by GPU command buffer failure detected %d frames ago, command trace:", frame_index - exec_frame);
+    SKR_LOG_FATAL(u8"Device lost caused by GPU command buffer failure detected %d frames ago, command trace:", frame_index - exec_frame);
     for (uint32_t i = 0; i < marker_messages.size(); i++)
     {
         if (fill_data[i] != valid_marker_val)
         {
-            SKR_LOG_ERROR("\tFailed Command %d: %s (marker %d)", i, marker_messages[i].c_str(), fill_data[i]);
+            SKR_LOG_ERROR(u8"\tFailed Command %d: %s (marker %d)", i, marker_messages[i].c_str(), fill_data[i]);
         }
         else
         {
-            SKR_LOG_INFO("\tCommand %d: %s (marker %d)", i, marker_messages[i].c_str(), fill_data[i]);
+            SKR_LOG_INFO(u8"\tCommand %d: %s (marker %d)", i, marker_messages[i].c_str(), fill_data[i]);
         }
     }
     skr_thread_sleep(2000);
@@ -1087,7 +1087,7 @@ uint32_t RenderGraphBackend::collect_texture_garbage(uint64_t critical_frame, ui
 
     if (critical_frame > get_latest_finished_frame())
     {
-        SKR_LOG_ERROR("undone frame on GPU detected, collect texture garbage may cause GPU Crash!!"
+        SKR_LOG_ERROR(u8"undone frame on GPU detected, collect texture garbage may cause GPU Crash!!"
                       "\n\tcurrent: %d, latest finished: %d", critical_frame, get_latest_finished_frame());
     }
     uint32_t total_count = 0;
@@ -1122,7 +1122,7 @@ uint32_t RenderGraphBackend::collect_buffer_garbage(uint64_t critical_frame, uin
 
     if (critical_frame > get_latest_finished_frame())
     {
-        SKR_LOG_ERROR("undone frame on GPU detected, collect buffer garbage may cause GPU Crash!!"
+        SKR_LOG_ERROR(u8"undone frame on GPU detected, collect buffer garbage may cause GPU Crash!!"
                       "\n\tcurrent: %d, latest finished: %d", critical_frame, get_latest_finished_frame());
     }
     uint32_t total_count = 0;

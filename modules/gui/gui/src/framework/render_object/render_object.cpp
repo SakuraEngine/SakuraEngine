@@ -20,7 +20,7 @@ void RenderObject::mount(NotNull<RenderObject*> parent) SKR_NOEXCEPT
     if (_parent != nullptr)
     {
         unmount();
-        SKR_GUI_LOG_ERROR("already mounted");
+        SKR_GUI_LOG_ERROR(u8"already mounted");
     }
     {
         RenderObject* node = parent;
@@ -29,7 +29,7 @@ void RenderObject::mount(NotNull<RenderObject*> parent) SKR_NOEXCEPT
             node = node->_parent;
             if (node == this)
             {
-                SKR_GUI_LOG_ERROR("cycle in the tree");
+                SKR_GUI_LOG_ERROR(u8"cycle in the tree");
                 break;
             }
         }
@@ -56,7 +56,7 @@ void RenderObject::mount(NotNull<RenderObject*> parent) SKR_NOEXCEPT
 void RenderObject::unmount() SKR_NOEXCEPT
 {
     // validate
-    if (_parent == nullptr) { SKR_GUI_LOG_ERROR("already unmounted"); }
+    if (_parent == nullptr) { SKR_GUI_LOG_ERROR(u8"already unmounted"); }
 
     // unmount
     _parent = nullptr;
@@ -81,8 +81,8 @@ void RenderObject::destroy() SKR_NOEXCEPT
 void RenderObject::attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT
 {
     // validate
-    if (_owner != nullptr) { SKR_GUI_LOG_ERROR("already attached"); }
-    if (_parent == nullptr) { SKR_GUI_LOG_ERROR("parent is nullptr"); }
+    if (_owner != nullptr) { SKR_GUI_LOG_ERROR(u8"already attached"); }
+    if (_parent == nullptr) { SKR_GUI_LOG_ERROR(u8"parent is nullptr"); }
 
     // attach
     _owner = owner;
@@ -109,9 +109,9 @@ void RenderObject::attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT
 }
 void RenderObject::detach() SKR_NOEXCEPT
 {
-    if (_owner == nullptr) { SKR_GUI_LOG_ERROR("already detached"); }
+    if (_owner == nullptr) { SKR_GUI_LOG_ERROR(u8"already detached"); }
     _owner = nullptr;
-    if (_parent != nullptr && _owner != _parent->_owner) { SKR_GUI_LOG_ERROR("detach from owner but parent is still attached"); }
+    if (_parent != nullptr && _owner != _parent->_owner) { SKR_GUI_LOG_ERROR(u8"detach from owner but parent is still attached"); }
 }
 
 // layout & paint marks

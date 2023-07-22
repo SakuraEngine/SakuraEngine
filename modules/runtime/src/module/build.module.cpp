@@ -42,7 +42,7 @@ void SkrRuntimeModule::on_load(int argc, char8_t** argv)
     DPIAware = true;
 #endif
 
-    SKR_LOG_TRACE("SkrRuntime module loaded!");
+    SKR_LOG_TRACE(u8"SkrRuntime module loaded!");
 }
 
 void SkrRuntimeModule::on_unload()
@@ -51,7 +51,7 @@ void SkrRuntimeModule::on_unload()
 
     skr_runtime_free_dstorage_instance();
 
-    SKR_LOG_TRACE("SkrRuntime module unloaded!");
+    SKR_LOG_TRACE(u8"SkrRuntime module unloaded!");
     skr_log_finalize_async_worker();
     skr_finalize_crash_handler();
 

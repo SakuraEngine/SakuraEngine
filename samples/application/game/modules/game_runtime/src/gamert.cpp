@@ -13,7 +13,7 @@ IMPLEMENT_DYNAMIC_MODULE(SGameRTModule, GameRuntime);
 
 void SGameRTModule::on_load(int argc, char8_t** argv)
 {
-    SKR_LOG_INFO("game runtime loaded!");
+    SKR_LOG_INFO(u8"game runtime loaded!");
 }
 
 

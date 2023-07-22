@@ -54,7 +54,7 @@ void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORe
                     ZoneScopedN("read_request");
 
                     pStatus->setStatus(SKR_IO_STAGE_LOADING);
-                    // SKR_LOG_DEBUG("dispatch read request: %s", rq->path.c_str());
+                    // SKR_LOG_DEBUG(u8"dispatch read request: %s", rq->path.c_str());
                     uint64_t dst_offset = 0u;
                     for (const auto& block : pBlocks->blocks)
                     {
@@ -74,7 +74,7 @@ void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORe
             ZoneScopedN("dispatch_close");
             if (pFile->file)
             {
-                // SKR_LOG_DEBUG("dispatch close request: %s", rq->path.c_str());
+                // SKR_LOG_DEBUG(u8"dispatch close request: %s", rq->path.c_str());
                 skr_vfs_fclose(pFile->file);
                 pFile->file = nullptr;
                 loaded_requests[priority].enqueue(rq);

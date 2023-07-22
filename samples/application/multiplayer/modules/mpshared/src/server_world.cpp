@@ -209,7 +209,7 @@ void MPServerWorld::AccumulateInput(uint32_t connectionId, const MPInputFrame &i
     auto maxQueuedFrameCount = sizeof(queuedInputs) / sizeof(queuedInputs[0]);
     if((frame > gameFrame) && (frame - gameFrame > maxQueuedFrameCount))
     {
-        SKR_LOG_WARN("input from %d is too far in the future! currentFrame: %d, recievedFrame %d", connectionId, gameFrame, frame);
+        SKR_LOG_WARN(u8"input from %d is too far in the future! currentFrame: %d, recievedFrame %d", connectionId, gameFrame, frame);
         return;
     }
     uint64_t effectiveFrame = frame > gameFrame ? frame : gameFrame;
@@ -314,6 +314,6 @@ void MPServerWorld::LogNetworkStatics()
             bandwidth += status.m_flOutBytesPerSec;
             estimatedBandwidth = std::max((float)status.m_nSendRateBytesPerSecond, estimatedBandwidth);
         }
-        SKR_LOG_INFO("bandwidth: %f, estimatedBandwidth: %f", bandwidth, estimatedBandwidth);
+        SKR_LOG_INFO(u8"bandwidth: %f, estimatedBandwidth: %f", bandwidth, estimatedBandwidth);
     }
 }

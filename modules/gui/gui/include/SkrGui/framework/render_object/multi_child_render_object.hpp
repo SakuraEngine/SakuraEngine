@@ -56,14 +56,14 @@ struct MultiChildRenderObjectMixin {
     inline void remove_child(TSelf& self, NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT
     {
         auto& child_slot = _children[child->slot().index];
-        if (child_slot.desired_slot != slot) { SKR_GUI_LOG_ERROR("slot miss match when remove child"); }
+        if (child_slot.desired_slot != slot) { SKR_GUI_LOG_ERROR(u8"slot miss match when remove child"); }
         child_slot.child->unmount();
         child_slot.child    = nullptr;
         _need_flush_updates = true;
     }
     inline void move_child(TSelf& self, NotNull<RenderObject*> child, Slot from, Slot to) SKR_NOEXCEPT
     {
-        if (from != _children[child->slot().index].desired_slot) SKR_GUI_LOG_ERROR("slot miss match when move child");
+        if (from != _children[child->slot().index].desired_slot) SKR_GUI_LOG_ERROR(u8"slot miss match when move child");
         _children[child->slot().index].desired_slot = to;
         _need_flush_updates                         = true;
     }
@@ -91,7 +91,7 @@ struct MultiChildRenderObjectMixin {
             for (size_t i = 0; i < _children.size(); ++i)
             {
                 const auto& slot = _children[i];
-                if (slot.desired_slot.index != i) SKR_GUI_LOG_ERROR("slot index miss match");
+                if (slot.desired_slot.index != i) SKR_GUI_LOG_ERROR(u8"slot index miss match");
                 slot.child->set_slot(slot.desired_slot);
             }
         }

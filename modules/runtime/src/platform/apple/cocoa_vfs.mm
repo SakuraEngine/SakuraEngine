@@ -48,7 +48,7 @@ skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc) SKR_NOEXCEPT
         }
         else
         {
-            SKR_LOG_ERROR("Error retrieving user documents directory: %s", [[error description] UTF8String]);
+            SKR_LOG_ERROR(u8"Error retrieving user documents directory: %s", [[error description] UTF8String]);
             success = false;
         }
     }
@@ -65,7 +65,7 @@ skr_vfs_t* skr_create_vfs(const skr_vfs_desc_t* desc) SKR_NOEXCEPT
         }
         else
         {
-            SKR_LOG_ERROR("Error retrieving application support directory: %s", [[error description] UTF8String]);
+            SKR_LOG_ERROR(u8"Error retrieving application support directory: %s", [[error description] UTF8String]);
         }
 #else
         const char8_t* path = (const char8_t*)[[[NSBundle mainBundle] bundlePath] UTF8String];

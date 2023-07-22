@@ -89,7 +89,7 @@ void RenderEffectForward::on_unregister(SRendererId renderer, dual_storage_t* st
             if (status == ESkrLoadingStatus::SKR_LOADING_STATUS_INSTALLED)
             {
                 auto mesh_resource = (skr_mesh_resource_id)meshes[i].mesh_resource.get_ptr();
-                SKR_LOG_TRACE("Mesh Loaded: name - %s", mesh_resource->name.c_str());
+                SKR_LOG_TRACE(u8"Mesh Loaded: name - %s", mesh_resource->name.c_str());
                 resource_system->UnloadResource(meshes[i].mesh_resource);
                 resource_system->Update();
                 while (meshes[i].mesh_resource.get_status() != SKR_LOADING_STATUS_UNLOADED)
@@ -190,7 +190,7 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
         auto gBatchCallback = [&](dual_chunk_view_t* g_cv) {
             ZoneScopedN("BatchedEnts");
 
-            //SKR_LOG_DEBUG("batch: %d -> %d", g_cv->start, g_cv->count);
+            //SKR_LOG_DEBUG(u8"batch: %d -> %d", g_cv->start, g_cv->count);
             const auto l2ws = dual::get_component_ro<skr_transform_comp_t>(g_cv);
             const auto translations = dual::get_component_ro<skr_translation_comp_t>(g_cv);
             const auto rotations = dual::get_component_ro<skr_rotation_comp_t>(g_cv);(void)rotations;

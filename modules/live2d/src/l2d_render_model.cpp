@@ -223,7 +223,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                 {
                     const auto encoded_format = decoder->get_color_format();
                     const auto raw_format = (encoded_format == IMAGE_CODER_COLOR_FORMAT_BGRA) ? IMAGE_CODER_COLOR_FORMAT_RGBA : encoded_format;
-                    SKR_LOG_TRACE("image coder: width = %d, height = %d, encoded_size = %d, raw_size = %d", 
+                    SKR_LOG_TRACE(u8"image coder: width = %d, height = %d, encoded_size = %d, raw_size = %d", 
                         decoder->get_width(), decoder->get_height(), 
                         png_blob->get_size(), decoder->get_size());
                     if (decoder->decode(raw_format, decoder->get_bit_depth()))

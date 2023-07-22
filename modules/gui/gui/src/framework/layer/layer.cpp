@@ -12,7 +12,7 @@ void Layer::mount(NotNull<Layer*> parent) SKR_NOEXCEPT
     if (_parent != nullptr)
     {
         unmount();
-        SKR_GUI_LOG_ERROR("already mounted");
+        SKR_GUI_LOG_ERROR(u8"already mounted");
     }
     {
         Layer* node = parent;
@@ -21,7 +21,7 @@ void Layer::mount(NotNull<Layer*> parent) SKR_NOEXCEPT
             node = node->_parent;
             if (node == this)
             {
-                SKR_GUI_LOG_ERROR("cycle in the tree");
+                SKR_GUI_LOG_ERROR(u8"cycle in the tree");
                 break;
             }
         }
@@ -46,7 +46,7 @@ void Layer::mount(NotNull<Layer*> parent) SKR_NOEXCEPT
 void Layer::unmount() SKR_NOEXCEPT
 {
     // validate
-    if (_parent == nullptr) { SKR_GUI_LOG_ERROR("already unmounted"); }
+    if (_parent == nullptr) { SKR_GUI_LOG_ERROR(u8"already unmounted"); }
 
     // unmount
     _parent = nullptr;
@@ -68,7 +68,7 @@ void Layer::destroy() SKR_NOEXCEPT
 void Layer::attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT
 {
     // validate
-    if (_owner != nullptr) { SKR_GUI_LOG_ERROR("already attached"); }
+    if (_owner != nullptr) { SKR_GUI_LOG_ERROR(u8"already attached"); }
 
     // attach
     _owner = owner;
@@ -76,9 +76,9 @@ void Layer::attach(NotNull<PipelineOwner*> owner) SKR_NOEXCEPT
 }
 void Layer::detach() SKR_NOEXCEPT
 {
-    if (_owner == nullptr) { SKR_GUI_LOG_ERROR("already detached"); }
+    if (_owner == nullptr) { SKR_GUI_LOG_ERROR(u8"already detached"); }
     _owner = nullptr;
-    if (_parent != nullptr && _owner != _parent->_owner) { SKR_GUI_LOG_ERROR("detach from owner but parent is still attached"); }
+    if (_parent != nullptr && _owner != _parent->_owner) { SKR_GUI_LOG_ERROR(u8"detach from owner but parent is still attached"); }
 }
 
 // dirty

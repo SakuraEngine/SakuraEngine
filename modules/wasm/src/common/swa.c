@@ -52,7 +52,7 @@ SWARuntimeId swa_create_runtime(SWAInstanceId instance, const struct SWARuntimeD
     runtime->name = SWAObjectTableAdd(instance->runtimes, desc->name, runtime);
     if (desc->name == SWA_NULLPTR)
     {
-        swa_warn("warn: No name in swa runtime desc, created with fallback name %s."
+        swa_warn(u8"warn: No name in swa runtime desc, created with fallback name %s."
                  " It's preferred to set an actual name.",
             runtime->name);
     }

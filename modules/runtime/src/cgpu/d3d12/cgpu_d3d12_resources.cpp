@@ -117,7 +117,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             B->pDxResource = nullptr;
         else if (log_allocation)
         {
-            SKR_LOG_TRACE("[D3D12] Create CVV Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
+            SKR_LOG_TRACE(u8"[D3D12] Create CVV Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
                 desc->name ? desc->name : u8"", allocationSize, desc->format);
         }
     }
@@ -137,7 +137,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             &bufDesc, res_states, NULL, IID_ARGS(&B->pDxResource)));
             if (log_allocation)
             {
-                SKR_LOG_TRACE("[D3D12] Create Committed Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
+                SKR_LOG_TRACE(u8"[D3D12] Create Committed Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
                     desc->name ? desc->name : u8"", allocationSize, desc->format);
             }
         }
@@ -151,7 +151,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             if (log_allocation)
             {
                 ZoneScopedN("Log(Allocation)");
-                SKR_LOG_TRACE("[D3D12] Create Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
+                SKR_LOG_TRACE(u8"[D3D12] Create Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
                     desc->name ? desc->name : u8"", allocationSize, desc->format);
             }
         }
@@ -165,7 +165,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
         auto mapResult = B->pDxResource->Map(0, NULL, &pInfo->cpu_mapped_address);
         if (!SUCCEEDED(mapResult))
         {
-            cgpu_warn("[D3D12] Map Buffer Resource Failed %d! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
+            cgpu_warn(u8"[D3D12] Map Buffer Resource Failed %d! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
                 mapResult, desc->name ? desc->name : u8"", allocationSize, desc->format);
         }
     }
@@ -211,7 +211,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             {
                 if (desc->format != CGPU_FORMAT_UNDEFINED)
                 {
-                    cgpu_warn("Raw buffers use R32 typeless format. Format will be ignored");
+                    cgpu_warn(u8"Raw buffers use R32 typeless format. Format will be ignored");
                 }
                 srvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
                 srvDesc.Buffer.Flags |= D3D12_BUFFER_SRV_FLAG_RAW;
@@ -240,7 +240,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             {
                 if (desc->format != CGPU_FORMAT_UNDEFINED)
                 {
-                    cgpu_warn("Raw buffers use R32 typeless format. Format will be ignored");
+                    cgpu_warn(u8"Raw buffers use R32 typeless format. Format will be ignored");
                 }
                 uavDesc.Format = DXGI_FORMAT_R32_TYPELESS;
                 uavDesc.Buffer.Flags |= D3D12_BUFFER_UAV_FLAG_RAW;
@@ -256,7 +256,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
                     !(FormatSupport.Support2 & D3D12_FORMAT_SUPPORT2_UAV_TYPED_STORE))
                 {
                     // Format does not support UAV Typed Load
-                    cgpu_warn("Cannot use Typed UAV for buffer format %u", (uint32_t)desc->format);
+                    cgpu_warn(u8"Cannot use Typed UAV for buffer format %u", (uint32_t)desc->format);
                     uavDesc.Format = DXGI_FORMAT_UNKNOWN;
                 }
             }
@@ -558,7 +558,7 @@ inline uint32_t D3D12Util_CalculateTextureSampleCount(ID3D12Device* pDxDevice, D
         D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &msaaFeature, sizeof(msaaFeature));
         while (msaaFeature.NumQualityLevels == 0 && msaaFeature.SampleCount > 0)
         {
-            cgpu_warn("Sample Count (%u) not supported. Trying a lower sample count (%u)",
+            cgpu_warn(u8"Sample Count (%u) not supported. Trying a lower sample count (%u)",
                 msaaFeature.SampleCount, msaaFeature.SampleCount / 2);
             msaaFeature.SampleCount = Count / 2;
             pDxDevice->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
@@ -604,11 +604,11 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateFromAllocator(CGPUAdapter_D3D12* A, 
     if (hres != S_OK)
     {
         auto fallbackHres = hres;
-        SKR_LOG_ERROR("[D3D12] Create Texture Resorce Failed With HRESULT %d! \n\t With Name: %s\n\t Size: %dx%d \n\t Format: %d \n\t Sample Count: %d", 
+        SKR_LOG_ERROR(u8"[D3D12] Create Texture Resorce Failed With HRESULT %d! \n\t With Name: %s\n\t Size: %dx%d \n\t Format: %d \n\t Sample Count: %d", 
             hres,
             desc->name ? desc->name : u8"", desc->width, desc->height, 
             desc->format, desc->sample_count);
-        SKR_LOG_ERROR("[D3D12] Format Support For this Format: RenderTarget %d Read %d Write %d", 
+        SKR_LOG_ERROR(u8"[D3D12] Format Support For this Format: RenderTarget %d Read %d Write %d", 
             A->adapter_detail.format_supports[desc->format].render_target_write,
             A->adapter_detail.format_supports[desc->format].shader_read,
             A->adapter_detail.format_supports[desc->format].shader_write);
@@ -629,11 +629,11 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateFromAllocator(CGPUAdapter_D3D12* A, 
                 is_restrict_dedicated = true;
                 can_alias_allocation = false;
                 pDxAllocation = nullptr;
-                SKR_LOG_TRACE("[D3D12] Create Texture With Fallback Driver API Succeed!");
+                SKR_LOG_TRACE(u8"[D3D12] Create Texture With Fallback Driver API Succeed!");
             }
             else
             {
-                SKR_LOG_FATAL("[D3D12] Create Texture With Fallback Driver API Failed! Please Update Your Driver or Contact With us!");
+                SKR_LOG_FATAL(u8"[D3D12] Create Texture With Fallback Driver API Failed! Please Update Your Driver or Contact With us!");
             }
         }
         CHECK_HRESULT(fallbackHres);
@@ -641,10 +641,10 @@ inline CGPUTexture_D3D12* D3D12Util_AllocateFromAllocator(CGPUAdapter_D3D12* A, 
     }
     else
     {
-        SKR_LOG_TRACE("[D3D12] Create Texture Resource Succeed! \n\t With Name: %s\n\t Size: %dx%d \n\t Format: %d \n\t Sample Count: %d", 
+        SKR_LOG_TRACE(u8"[D3D12] Create Texture Resource Succeed! \n\t With Name: %s\n\t Size: %dx%d \n\t Format: %d \n\t Sample Count: %d", 
             desc->name ? desc->name : u8"", desc->width, desc->height, 
             desc->format, desc->sample_count);
-        SKR_LOG_TRACE("[D3D12] Format Support For this Format: RenderTarget %d Read %d Write %d", 
+        SKR_LOG_TRACE(u8"[D3D12] Format Support For this Format: RenderTarget %d Read %d Write %d", 
             A->adapter_detail.format_supports[desc->format].render_target_write,
             A->adapter_detail.format_supports[desc->format].shader_read,
             A->adapter_detail.format_supports[desc->format].shader_write);
@@ -1215,12 +1215,12 @@ uint64_t cgpu_export_shared_texture_handle_d3d12(CGPUDeviceId device, const stru
     const auto pInfo = T->super.info;
     if (FAILED(result))
     {
-        cgpu_error("Create Shared Handle Failed! Error Code: %d\n\tcan_export: %d\n\tsize:%dx%dx%d" ,
+        cgpu_error(u8"Create Shared Handle Failed! Error Code: %d\n\tcan_export: %d\n\tsize:%dx%dx%d" ,
             result, pInfo->can_export, pInfo->width, pInfo->height, pInfo->depth);
     }
     else
     {
-        cgpu_trace("Create Shared Handle Success! Handle: %lld(Windows handle %lld, As Long %d)\n\tcan_export: %d\n\tsize:%dx%dx%d",
+        cgpu_trace(u8"Create Shared Handle Success! Handle: %lld(Windows handle %lld, As Long %d)\n\tcan_export: %d\n\tsize:%dx%dx%d",
             hdl, winHdl, winHdlLong, pInfo->can_export, pInfo->width, pInfo->height, pInfo->depth);
     }
     return hdl;
@@ -1239,13 +1239,13 @@ CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const
     result = D->pDxDevice->OpenSharedHandleByName(name.c_str(), GENERIC_ALL, &namedResourceHandle);
     if (FAILED(result))
     {
-        cgpu_error("Open Shared Handle %ls Failed! Error Code: %d size:%dx%dx%d" ,
+        cgpu_error(u8"Open Shared Handle %ls Failed! Error Code: %d size:%dx%dx%d" ,
             name.c_str(), result, desc->width, desc->height, desc->depth);
         return CGPU_NULLPTR;
     }
     else
     {
-        cgpu_trace("Open Shared Handle %ls Success! Handle: %lld backend: %d", 
+        cgpu_trace(u8"Open Shared Handle %ls Success! Handle: %lld backend: %d", 
             name.c_str(), desc->shared_handle, desc->backend);
     }
 
@@ -1256,7 +1256,7 @@ CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const
     else if (desc->backend == CGPU_BACKEND_D3D12)
     {
         CloseHandle(namedResourceHandle);
-        cgpu_warn("Not implementated!");
+        cgpu_warn(u8"Not implementated!");
         return nullptr;
         // result = D->pDxDevice->OpenSharedHandle(namedResourceHandle, IID_PPV_ARGS(&imported_heap));
     }
@@ -1268,13 +1268,13 @@ CGPUTextureId cgpu_import_shared_texture_handle_d3d12(CGPUDeviceId device, const
     if (FAILED(result) && !imported)
     {
         auto winHdlLong = HandleToLong(namedResourceHandle);
-        cgpu_error("Import Shared Handle %ls(Windows handle %lld, As Long %d) Failed! Error Code: %d", 
+        cgpu_error(u8"Import Shared Handle %ls(Windows handle %lld, As Long %d) Failed! Error Code: %d", 
             name.c_str(), namedResourceHandle, winHdlLong, result);
         return nullptr;
     }
     else
     {
-        cgpu_trace("Import Shared Handle %ls(Windows handle %lld, As Long %d) Succeed!", 
+        cgpu_trace(u8"Import Shared Handle %ls(Windows handle %lld, As Long %d) Succeed!", 
             name.c_str(), namedResourceHandle, desc->shared_handle);
     }
     CloseHandle(namedResourceHandle);

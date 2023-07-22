@@ -5,16 +5,16 @@ class SMPModule : public skr::IDynamicModule
 {
     virtual void on_load(int argc, char8_t** argv) override
     {
-        SKR_LOG_INFO("mpgame loaded!");
+        SKR_LOG_INFO(u8"mpgame loaded!");
     }
     virtual int main_module_exec(int argc, char8_t** argv) override
     {
-        SKR_LOG_INFO("mpgame executed as main module!");
+        SKR_LOG_INFO(u8"mpgame executed as main module!");
         return 0;
     }
     virtual void on_unload() override
     {
-        SKR_LOG_INFO("mpgame unloaded!");
+        SKR_LOG_INFO(u8"mpgame unloaded!");
     }
 };
 IMPLEMENT_DYNAMIC_MODULE(SMPModule, MPGame);

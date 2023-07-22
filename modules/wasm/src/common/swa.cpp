@@ -42,7 +42,7 @@ const char* SWAObjectTableAdd(struct SWANamedObjectTable* table, const char* nam
     const auto& iter = table->find(name);
     if (iter != table->end())
     {
-        swa_warn("SWA object named %s already exists in table!", name);
+        swa_warn(u8"SWA object named %s already exists in table!", name);
         return SWA_NULLPTR;
     }
     return table->insert(name, object).first->first;

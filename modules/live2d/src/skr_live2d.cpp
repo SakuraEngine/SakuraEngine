@@ -13,7 +13,7 @@ static void Cubism_Log(const char* message)
     // replace the last '\n' with '\0'
     if (buf[buf.size() - 1] == '\n')
         buf[buf.size() - 1] = '\0';
-	SKR_LOG_TRACE("[Live2D] %s", buf.c_str());
+	SKR_LOG_TRACE(u8"[Live2D] %s", buf.c_str());
 }
 
 class CubismFrameWorkAllocator : public Csm::ICubismAllocator
@@ -65,11 +65,11 @@ void SkrLive2DModule::on_load(int argc, char8_t** argv)
         }
         else
         {
-            SKR_LOG_ERROR("[Live2D] Failed to initialize framework");
+            SKR_LOG_ERROR(u8"[Live2D] Failed to initialize framework");
         }
     }
 
-    SKR_LOG_TRACE("live2d module loaded!");
+    SKR_LOG_TRACE(u8"live2d module loaded!");
 }
 
 void SkrLive2DModule::on_unload()
@@ -77,7 +77,7 @@ void SkrLive2DModule::on_unload()
     Csm::CubismFramework::Dispose();
     Csm::CubismFramework::CleanUp();
 
-    SKR_LOG_TRACE("live2d module unloaded!");
+    SKR_LOG_TRACE(u8"live2d module unloaded!");
 }
 
 IMPLEMENT_DYNAMIC_MODULE(SkrLive2DModule, SkrLive2D);

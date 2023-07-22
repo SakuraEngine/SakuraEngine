@@ -88,7 +88,7 @@ skr::vector<skd::SProject*> open_projects(int argc, char** argv)
     parser.add(u8"workspace", u8"workspace path", u8"-w", true);
     if(!parser.parse())
     {
-        SKR_LOG_ERROR("Failed to parse command line arguments.");
+        SKR_LOG_ERROR(u8"Failed to parse command line arguments.");
         return {};
     }
     auto projectPath = parser.get_optional<skr::string>(u8"project");
@@ -133,7 +133,7 @@ int compile_project(skd::SProject* project)
         }
         iter.increment(ec);
     }
-    SKR_LOG_INFO("Project dir scan finished.");
+    SKR_LOG_INFO(u8"Project dir scan finished.");
     //----- import project assets (guid & type & path)
     {
         using iter_t = typename decltype(paths)::iterator;
@@ -144,7 +144,7 @@ int compile_project(skd::SProject* project)
                 system.ImportAsset(project, *i);
         });
     }
-    SKR_LOG_INFO("Project asset import finished.");
+    SKR_LOG_INFO(u8"Project asset import finished.");
     skr::filesystem::create_directories(project->GetOutputPath(), ec);
     skr::filesystem::create_directories(project->GetDependencyPath(), ec);
     //----- schedule cook tasks (checking dependencies)
@@ -158,7 +158,7 @@ int compile_project(skd::SProject* project)
             }
         });
     }
-    SKR_LOG_INFO("Project asset import finished.");
+    SKR_LOG_INFO(u8"Project asset import finished.");
     auto resource_system = skr::resource::GetResourceSystem();
     skr::task::schedule([&]
     {

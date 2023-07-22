@@ -139,7 +139,7 @@ class CTrivialSignalingClient : public ITrivialSignalingClient
 		m_sock = socket( m_adrServer.ss_family, sockType, IPPROTO_TCP );
 		if ( m_sock == INVALID_SOCKET )
 		{
-			SKR_LOG_ERROR( "socket() failed, error=%d\n", GetSocketError() );
+			SKR_LOG_ERROR( u8"socket() failed, error=%d\n", GetSocketError() );
 			return;
 		}
 
@@ -148,7 +148,7 @@ class CTrivialSignalingClient : public ITrivialSignalingClient
 		if ( ioctlsocket( m_sock, FIONBIO, &opt ) == -1 )
 		{
 			CloseSocket();
-			SKR_LOG_ERROR( "ioctlsocket() failed, error=%d\n", GetSocketError() );
+			SKR_LOG_ERROR( u8"ioctlsocket() failed, error=%d\n", GetSocketError() );
 			return;
 		}
 
@@ -192,7 +192,7 @@ public:
 		// timed them out and queued a retry).
 		while ( m_queueSend.size() > 32 )
 		{
-			SKR_LOG_ERROR( "Signaling send queue is backed up.  Discarding oldest signals\n" );
+			SKR_LOG_ERROR( u8"Signaling send queue is backed up.  Discarding oldest signals\n" );
 			m_queueSend.pop_front();
 		}
 
@@ -208,7 +208,7 @@ public:
 
 		// FIXME - here we really ought to confirm that the string version of the
 		// identity does not have spaces, since our protocol doesn't permit it.
-		SKR_LOG_ERROR( "Creating signaling session for peer '%s'\n", sIdentityPeer.c_str() );
+		SKR_LOG_ERROR( u8"Creating signaling session for peer '%s'\n", sIdentityPeer.c_str() );
 
 		// Silence warnings
 		(void)errMsg;
@@ -237,7 +237,7 @@ public:
 					int e = GetSocketError();
 					if ( !IgnoreSocketError( e ) )
 					{
-						SKR_LOG_ERROR( "Failed to recv from trivial signaling server.  recv() returned %d, errno=%d.  Closing and restarting connection\n", r, e );
+						SKR_LOG_ERROR( u8"Failed to recv from trivial signaling server.  recv() returned %d, errno=%d.  Closing and restarting connection\n", r, e );
 						CloseSocket();
 					}
 					break;
@@ -266,7 +266,7 @@ public:
 				{
 					// Socket hosed, or we sent a partial signal.
 					// We need to restart connection
-					SKR_LOG_ERROR( "Failed to send %d bytes to trivial signaling server.  send() returned %d, errno=%d.  Closing and restarting connection.\n",
+					SKR_LOG_ERROR( u8"Failed to send %d bytes to trivial signaling server.  send() returned %d, errno=%d.  Closing and restarting connection.\n",
 						l, r, GetSocketError() );
 					CloseSocket();
 					break;

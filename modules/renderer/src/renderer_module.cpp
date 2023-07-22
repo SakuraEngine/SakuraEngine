@@ -25,7 +25,7 @@ const auto kGLTFVertexLayoutWithJointId = u8"C35BD99A-B0A8-4602-AFCC-6BBEACC9032
 
 void SkrRendererModule::on_load(int argc, char8_t** argv)
 {
-    SKR_LOG_TRACE("skr renderer loaded!");
+    SKR_LOG_TRACE(u8"skr renderer loaded!");
 #ifdef _WIN32
     cgpu_d3d12_enable_DRED();
 #endif
@@ -78,7 +78,7 @@ void SkrRendererModule::on_load(int argc, char8_t** argv)
 
 void SkrRendererModule::on_unload()
 {
-    SKR_LOG_TRACE("skr renderer unloaded!");
+    SKR_LOG_TRACE(u8"skr renderer unloaded!");
 
     render_device->finalize();
     skr::RendererDevice::Free(render_device);

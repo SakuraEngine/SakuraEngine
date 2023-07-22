@@ -81,7 +81,7 @@ void ReceiverRenderer::create_api_objects()
     }
 
     auto adapter_detail = cgpu_query_adapter_detail(adapter);
-    SKR_LOG_TRACE("Adapter: %s", adapter_detail->vendor_preset.gpu_name);
+    SKR_LOG_TRACE(u8"Adapter: %s", adapter_detail->vendor_preset.gpu_name);
 
     // Create device
     CGPUQueueGroupDescriptor queue_group_desc = {};
@@ -202,12 +202,12 @@ CGPUImportTextureDescriptor receiver_get_shared_handle(MDB_env* env, MDB_dbi dbi
     MDB_txn* txn = nullptr;
     if (const int rc = mdb_txn_begin(env, nullptr, MDB_RDONLY, &txn)) 
     {
-        SKR_LOG_ERROR("mdb_txn_begin failed: %d", rc);
+        SKR_LOG_ERROR(u8"mdb_txn_begin failed: %d", rc);
     }
     MDB_cursor *cursor;
     if (int rc = mdb_cursor_open(txn, dbi, &cursor)) 
     {
-        SKR_LOG_ERROR("mdb_cursor_open failed: %d", rc);
+        SKR_LOG_ERROR(u8"mdb_cursor_open failed: %d", rc);
     }
 
     //Initialize the key with the key we're looking for
@@ -219,7 +219,7 @@ CGPUImportTextureDescriptor receiver_get_shared_handle(MDB_env* env, MDB_dbi dbi
     if (int rc = mdb_cursor_get(cursor, &key, &data, MDB_SET_KEY)) 
     {
         //No value found
-        SKR_LOG_TRACE("query proc-links with key %s found no value: %d", keyString.c_str(), rc);
+        SKR_LOG_TRACE(u8"query proc-links with key %s found no value: %d", keyString.c_str(), rc);
         mdb_cursor_close(cursor);
     }
     else
@@ -234,9 +234,9 @@ CGPUImportTextureDescriptor receiver_get_shared_handle(MDB_env* env, MDB_dbi dbi
 int receiver_main(int argc, char* argv[])
 {
     auto id = skr_get_current_process_id();
-    SKR_LOG_DEBUG("exec_mode: %s, process id: %lld", argv[1], id);
+    SKR_LOG_DEBUG(u8"exec_mode: %s, process id: %lld", argv[1], id);
     const SProcessId provider_id = std::stol(argv[2]);
-    SKR_LOG_TRACE("provider id: %lld", provider_id);
+    SKR_LOG_TRACE(u8"provider id: %lld", provider_id);
 
     MDB_env* env = nullptr;
     MDB_dbi dbi = ~0;
@@ -271,7 +271,7 @@ int receiver_main(int argc, char* argv[])
             if (elapsed_ms >= 500)
             {
                 dbi_create(env, &dbi, true);
-                SKR_LOG_TRACE("db id: %u", dbi);
+                SKR_LOG_TRACE(u8"db id: %u", dbi);
                 elapsed_ms = 0;
             }
         }
@@ -327,9 +327,9 @@ int receiver_main(int argc, char* argv[])
             cached_shared_handle != imported_info.shared_handle && imported_info.shared_handle != UINT64_MAX)
         {
             if (cached_texture) cgpu_free_texture(cached_texture);
-            SKR_LOG_DEBUG("Receiver try to import shared texture with handle %llu", imported_info.shared_handle);
+            SKR_LOG_DEBUG(u8"Receiver try to import shared texture with handle %llu", imported_info.shared_handle);
             auto imported = cgpu_import_shared_texture_handle(renderer->device, &imported_info);
-            SKR_LOG_DEBUG("Receiver imported shared texture with handle %llu", imported_info.shared_handle);
+            SKR_LOG_DEBUG(u8"Receiver imported shared texture with handle %llu", imported_info.shared_handle);
             if (imported)
             {
                 cached_shared_handle = imported_info.shared_handle;

@@ -27,7 +27,7 @@ bool BaseImageEncoder::initialize(const uint8_t* _data, uint64_t _size, uint32_t
 {
     if (_data == nullptr || _size == 0 || _width == 0 || _height == 0 || _format == IMAGE_CODER_COLOR_FORMAT_INVALID || _bit_depth == 0)
     {
-        SKR_LOG_ERROR("BaseImageEncoder::initialize() - Invalid parameters.");
+        SKR_LOG_ERROR(u8"BaseImageEncoder::initialize() - Invalid parameters.");
         return false;
     }
     decoded_view = { _data, _size };
