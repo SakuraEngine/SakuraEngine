@@ -80,14 +80,13 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     add_links(links_list, {public = true})
     if (is_os("windows")) then 
         add_syslinks("advapi32", "user32", "shell32", "Ole32", "Shlwapi", {public = true})
+    else
+        add_syslinks("pthread")
     end
     if (is_os("macosx")) then 
         add_mxflags(project_cxflags, project_mxflags, {public = true, force = true})
         add_mxflags("-fno-objc-arc", {force = true})
         add_frameworks("CoreFoundation", "Cocoa", "Metal", "IOKit", {public = true})
-    end
-    if has_config("is_unix") then 
-        add_syslinks("pthread")
     end
     
     -- add FTL source 
