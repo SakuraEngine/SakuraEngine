@@ -53,9 +53,6 @@ target("SkrRoot")
     -- core deps
     add_deps("SkrCompileFlags", {public = true})
     add_deps("boost", "tracyclient", {public = true})
-    -- defs & flags
-    add_ldflags(project_ldflags, {public = true, force = true})
-    add_shflags(project_ldflags, {public = true, force = true})
     -- generate codegen fences
     after_load(function(target)
         import("meta_codegen")
