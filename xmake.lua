@@ -25,7 +25,7 @@ defs_list = {}
 links_list = {}
 generator_list = {}
 
-includes("xmake/options_detect.lua")
+includes("xmake/compile_flags.lua")
 includes("xmake/rules.lua")
 
 if (is_os("windows")) then 
@@ -45,17 +45,17 @@ if (is_os("windows")) then
 elseif (is_os("macosx") or is_os("linux")) then
     add_requires("libsdl")
 else
-
+    -- ...
 end
 
 target("SkrRoot")
     set_kind("headeronly")
     -- core deps
+    add_deps("SkrCompileFlags", {public = true})
     add_deps("boost", "tracyclient", {public = true})
     -- defs & flags
     add_ldflags(project_ldflags, {public = true, force = true})
     add_shflags(project_ldflags, {public = true, force = true})
-    add_cxflags(project_cxflags, {public = true, force = true})
     -- generate codegen fences
     after_load(function(target)
         import("meta_codegen")
