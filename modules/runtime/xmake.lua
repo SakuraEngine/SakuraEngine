@@ -6,9 +6,9 @@ end
 
 add_requires("parallel-hashmap >=1.3.4-skr")
 add_requires("boost-context >=0.1.0-skr")
+add_requires("simdjson >=3.0.0-skr")
 -- add_requires("lua >=5.4.4-skr")
 add_requires("luau", { configs = { extern_c = true }})
-add_requires("simdjson >=3.0.0-skr")
 
 target("SkrDependencyGraph")
     set_group("01.modules")
