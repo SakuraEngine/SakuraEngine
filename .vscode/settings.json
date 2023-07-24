@@ -1,13 +1,4 @@
 {
     "dascript.experimental": true,
-    "dascript.server.connectTimeout": 10,
-    "xmake.additionalConfigArguments": [
-        "--use_tracy=enable",
-        "--build_tests=y",
-        "--cxx_version=cxx20"
-    ],
-    "xmake.customDebugConfig": {
-        "visualizerFile": "${workspaceFolder}\\SDKs\\natvis\\EASTL.natvis",
-        "stopAtEntry": false
-    }
+    "dascript.server.connectTimeout": 10
 }
