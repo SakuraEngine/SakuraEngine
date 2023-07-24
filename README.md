@@ -48,7 +48,7 @@ https://user-images.githubusercontent.com/39457738/192722537-6ab035a5-2789-43d0-
 | `runtime/platform` | - | 核心子模块, 系统接口 |
 | `runtime/resource` | - | 核心子模块, 异步资源管理 |
 | `runtime/type` | - | 核心子模块, 提供 rtti 相关功能 |
-| `runtime/lua` | [lua] | 核心子模块，使用 lua 作为胶水语言 |
+| `runtime/lua` | [lua], [luau] | 核心子模块，使用 lua 作为胶水语言 |
 | `SkrScene` | - | 场景模块，场景资源管理 |
 | `SkrRenderer` | - | 渲染器模块，渲染资源管理，驱动渲染管线 |
 | `SkrImgui` | [imgui] | 用于调试的运行时UI |
@@ -77,6 +77,7 @@ https://user-images.githubusercontent.com/39457738/192722537-6ab035a5-2789-43d0-
 [FiberTaskingLib]: https://github.com/RichieSams/FiberTaskingLib
 [marl]: https://github.com/google/marl
 [lua]: https://github.com/lua/lua
+[luau]: https://luau-lang.org/
 
 ## 组件支持矩阵
 
