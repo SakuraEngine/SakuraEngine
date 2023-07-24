@@ -119,6 +119,9 @@ void SkrRenderWindow::_prepare_draw_data(const NativeWindowLayer* layer, Sizef w
     _vertices.clear();
     _indices.clear();
     _commands.clear();
+    _transforms.clear();
+    _projections.clear();
+    _render_data.clear();
 
     // copy data
     auto canvas = layer->children().data()[0]->type_cast_fast<GeometryLayer>()->canvas();
