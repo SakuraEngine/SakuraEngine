@@ -1492,8 +1492,8 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             }
             else
             {
-                size.x = luaL_checknumber(L, 2);
-                size.y = luaL_checknumber(L, 2 + 1);
+                size.x = (float)luaL_checknumber(L, 2);
+                size.y = (float)luaL_checknumber(L, 2 + 1);
             }
 
             bool border;
@@ -1634,8 +1634,8 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
         auto trampoline = +[](lua_State* L) -> int {
             ImVec2 pos;
 
-            pos.x = luaL_checknumber(L, 1);
-            pos.y = luaL_checknumber(L, 1 + 1);
+            pos.x = (float)luaL_checknumber(L, 1);
+            pos.y = (float)luaL_checknumber(L, 1 + 1);
 
             int cond;
 
@@ -1651,8 +1651,8 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
         auto trampoline = +[](lua_State* L) -> int {
             ImVec2 pos;
 
-            pos.x = luaL_checknumber(L, 1);
-            pos.y = luaL_checknumber(L, 1 + 1);
+            pos.x = (float)luaL_checknumber(L, 1);
+            pos.y = (float)luaL_checknumber(L, 1 + 1);
 
             int cond;
 
@@ -1666,8 +1666,8 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
             }
             else
             {
-                pivot.x = luaL_checknumber(L, 4);
-                pivot.y = luaL_checknumber(L, 4 + 1);
+                pivot.x = (float)luaL_checknumber(L, 4);
+                pivot.y = (float)luaL_checknumber(L, 4 + 1);
             }
 
             ImGui_SetNextWindowPosEx(pos, cond, pivot);
@@ -1680,8 +1680,8 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
         auto trampoline = +[](lua_State* L) -> int {
             ImVec2 size;
 
-            size.x = luaL_checknumber(L, 1);
-            size.y = luaL_checknumber(L, 1 + 1);
+            size.x = (float)luaL_checknumber(L, 1);
+            size.y = (float)luaL_checknumber(L, 1 + 1);
 
             int cond;
 
@@ -1697,8 +1697,8 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
         auto trampoline = +[](lua_State* L) -> int {
             ImVec2 size;
 
-            size.x = luaL_checknumber(L, 1);
-            size.y = luaL_checknumber(L, 1 + 1);
+            size.x = (float)luaL_checknumber(L, 1);
+            size.y = (float)luaL_checknumber(L, 1 + 1);
 
             ImGui_SetNextWindowContentSize(size);
             return 0;
@@ -1734,7 +1734,7 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
         auto trampoline = +[](lua_State* L) -> int {
             float alpha;
 
-            alpha = luaL_checknumber(L, 1);
+            alpha = (float)luaL_checknumber(L, 1);
 
             ImGui_SetNextWindowBgAlpha(alpha);
             return 0;
@@ -1746,8 +1746,8 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
         auto trampoline = +[](lua_State* L) -> int {
             ImVec2 pos;
 
-            pos.x = luaL_checknumber(L, 1);
-            pos.y = luaL_checknumber(L, 1 + 1);
+            pos.x = (float)luaL_checknumber(L, 1);
+            pos.y = (float)luaL_checknumber(L, 1 + 1);
 
             int cond;
 
@@ -1763,8 +1763,8 @@ SKR_IMGUI_EXTERN_C SKR_IMGUI_API void skr_lua_bind_imgui(lua_State* L)
         auto trampoline = +[](lua_State* L) -> int {
             ImVec2 size;
 
-            size.x = luaL_checknumber(L, 1);
-            size.y = luaL_checknumber(L, 1 + 1);
+            size.x = (float)luaL_checknumber(L, 1);
+            size.y = (float)luaL_checknumber(L, 1 + 1);
 
             int cond;
 
