@@ -133,7 +133,7 @@ void dual_storage_t::serialize_type(const dual_entity_type_t& type, skr_binary_w
     // todo: assert(s.is_serialize());
     bin::Archive(s, type.type.length);
     auto& reg = type_registry_t::get();
-    for (auto i = 0; i < type.type.length; i++)
+    for (SIndex i = 0; i < type.type.length; i++)
     {
         auto t = type.type.data[i];
         bin::Archive(s, reg.descriptions[type_index_t(t).index()].guid);

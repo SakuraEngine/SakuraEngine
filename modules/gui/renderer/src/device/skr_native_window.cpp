@@ -28,10 +28,10 @@ SkrNativeWindow::~SkrNativeWindow()
 void SkrNativeWindow::init_normal(const WindowDesc& desc)
 {
     SWindowDescroptor create_desc;
-    create_desc.width  = desc.size.width;
-    create_desc.height = desc.size.height;
-    create_desc.posx   = desc.pos.x;
-    create_desc.posy   = desc.pos.y;
+    create_desc.width  = (int32_t)desc.size.width;
+    create_desc.height = (int32_t)desc.size.height;
+    create_desc.posx   = (int32_t)desc.pos.x;
+    create_desc.posy   = (int32_t)desc.pos.y;
     create_desc.flags  = SKR_WINDOW_RESIZABLE;
     _window            = skr_create_window(desc.name.u8_str(), &create_desc);
 

@@ -187,7 +187,7 @@ void* DynArrayType::Insert(void* addr, uint64_t index) const
             for(int i = 0; i < index; i++) {
                 elementType->Move(new_begin + i * elementType->Size(), storage.begin + i * elementType->Size());
             }
-            for(int i = index + 1; i <= old_size; i++) {
+            for(int64_t i = index + 1; i <= (int64_t)old_size; i++) {
                 elementType->Move(new_begin + i * elementType->Size(), storage.begin + (i - 1) * elementType->Size());
             }
             if(storage.begin != nullptr)
@@ -199,7 +199,7 @@ void* DynArrayType::Insert(void* addr, uint64_t index) const
         }
         else
         {
-            for(int i = old_size - 1; i >= index; i--) {
+            for(int64_t i = old_size - 1; i >= (int64_t)index; i--) {
                 if(i != old_size - 1)
                     elementType->Destruct(storage.begin + (i + 1) * elementType->Size());
                 elementType->Move(storage.begin + (i + 1) * elementType->Size(), storage.begin + i * elementType->Size());
@@ -216,7 +216,7 @@ void DynArrayType::Erase(void* addr, uint64_t index, bool bKeepOrder) const
     uint64_t old_size = Num(addr);
     SKR_ASSERT(old_size > index);
     if(bKeepOrder) {
-        for(int i = index + 1; i < old_size; i++) {
+        for(int64_t i = index + 1; i < (int64_t)old_size; i++) {
             elementType->Destruct(storage.begin + (i - 1) * elementType->Size());
             elementType->Move(storage.begin + (i - 1) * elementType->Size(), storage.begin + i * elementType->Size());
         }
