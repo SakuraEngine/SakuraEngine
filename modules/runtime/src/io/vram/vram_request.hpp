@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrRT/io/io.h"
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/io/vram_io.hpp"
@@ -21,29 +22,36 @@ struct VRAMIOStatusComponent final : public IOStatusComponent
 template <typename Interface>
 struct VRAMRequestMixin final : public IORequestMixin<Interface, 
     // components...
-    FileSrcComponent, IOStatusComponent, 
-    VRAMIOStagingComponent, VRAMIOResourceComponent>
+    IOStatusComponent, 
+    FileSrcComponent, // Src
+    VRAMIOStagingComponent, // Transfer
+    TextureSlicesComponent //Dst
+>
 {
     using Super = IORequestMixin<Interface, 
         // components...
-        FileSrcComponent, IOStatusComponent, 
-        VRAMIOStagingComponent, VRAMIOResourceComponent>;
+        IOStatusComponent, 
+        FileSrcComponent, // Src
+        VRAMIOStagingComponent, // Transfer
+        TextureSlicesComponent //Dst
+    >;
 
     void set_transfer_queue(CGPUQueueId queue) SKR_NOEXCEPT
     {
-        SKR_UNIMPLEMENTED_FUNCTION();
+        Super::template safe_comp<VRAMIOStagingComponent>()->set_transfer_queue(queue); 
     }
 
     void set_dstorage_queue(CGPUDStorageQueueId queue) SKR_NOEXCEPT
     {
-        SKR_UNIMPLEMENTED_FUNCTION();
+        Super::template safe_comp<VRAMIOStagingComponent>()->set_dstorage_queue(queue); 
     }
 
     void set_memory_src(uint8_t* memory, uint64_t bytes) SKR_NOEXCEPT
     {
-        SKR_UNIMPLEMENTED_FUNCTION();
+        Super::template safe_comp<VRAMIOStagingComponent>()->set_memory_src(memory, bytes); 
     }
 
+#pragma region IOVRAMResourceComponent
     void set_buffer(CGPUTextureId texture) SKR_NOEXCEPT
     {
         SKR_UNIMPLEMENTED_FUNCTION();
@@ -54,7 +62,6 @@ struct VRAMRequestMixin final : public IORequestMixin<Interface,
         SKR_UNIMPLEMENTED_FUNCTION();
     }
 
-#pragma region IOVRAMResourceComponent
     void set_texture(CGPUTextureId texture) SKR_NOEXCEPT
     {
         SKR_UNIMPLEMENTED_FUNCTION();
