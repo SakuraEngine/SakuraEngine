@@ -33,7 +33,7 @@ protected:
 
 struct CommonVRAMReader final : public VRAMReaderBase<IIORequestProcessor>
 {
-    CommonVRAMReader(VRAMService* service, RAMService* ram_service) SKR_NOEXCEPT 
+    CommonVRAMReader(VRAMService* service, IRAMService* ram_service) SKR_NOEXCEPT 
         : VRAMReaderBase(service), ram_service(ram_service) 
     {
 
@@ -51,7 +51,7 @@ struct CommonVRAMReader final : public VRAMReaderBase<IIORequestProcessor>
     bool is_async(SkrAsyncServicePriority priority) const SKR_NOEXCEPT { return ram_service; }
     void dispatchFunction(SkrAsyncServicePriority priority, const IORequestId& request) SKR_NOEXCEPT;
 
-    RAMService* ram_service = nullptr;
+    IRAMService* ram_service = nullptr;
     IORequestQueue fetched_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IORequestQueue loaded_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     skr::vector<skr::IFuture<bool>*> loaded_futures[SKR_ASYNC_SERVICE_PRIORITY_COUNT];

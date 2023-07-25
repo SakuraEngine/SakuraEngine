@@ -13,7 +13,7 @@ struct RAMService final : public IRAMService
     RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
     
     [[nodiscard]] IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT;
-    [[nodiscard]] BlocksIORequestId open_request() SKR_NOEXCEPT;
+    [[nodiscard]] BlocksRAMRequestId open_request() SKR_NOEXCEPT;
     RAMIOBufferId request(IORequestId request, skr_io_future_t* future, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void request(IOBatchId request) SKR_NOEXCEPT;
     
@@ -44,7 +44,7 @@ struct RAMService final : public IRAMService
     const bool awake_at_request = false;
     Runner runner;
     
-    SmartPoolPtr<RAMRequestMixin, IBlocksIORequest> request_pool = nullptr;
+    SmartPoolPtr<RAMRequestMixin, IBlocksRAMRequest> request_pool = nullptr;
     SmartPoolPtr<RAMIOBuffer, IRAMIOBuffer> ram_buffer_pool = nullptr;
     SmartPoolPtr<RAMIOBatch, IIOBatch> ram_batch_pool = nullptr;
     

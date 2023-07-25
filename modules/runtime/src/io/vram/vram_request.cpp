@@ -9,12 +9,22 @@ VRAMRequestMixin::VRAMRequestMixin(ISmartPool<IIORequest>* pool, const uint64_t 
 
 }
 
-ISlicesIORequest::~ISlicesIORequest() SKR_NOEXCEPT
+IVRAMIORequest::~IVRAMIORequest() SKR_NOEXCEPT
 {
 
 }
 
-ITilesIORequest::~ITilesIORequest() SKR_NOEXCEPT
+IBlocksVRAMRequest::~IBlocksVRAMRequest() SKR_NOEXCEPT
+{
+
+}
+
+ISlicesVRAMRequest::~ISlicesVRAMRequest() SKR_NOEXCEPT
+{
+
+}
+
+ITilesVRAMRequest::~ITilesVRAMRequest() SKR_NOEXCEPT
 {
 
 }

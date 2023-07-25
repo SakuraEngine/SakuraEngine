@@ -131,24 +131,6 @@ struct RUNTIME_API IIORequest : public skr::SInterface
 };
 using IORequestId = SObjectPtr<IIORequest>;
 
-struct RUNTIME_API IBlocksIORequest : public IIORequest
-{
-    virtual ~IBlocksIORequest() SKR_NOEXCEPT;
-
-#pragma region IOBlocksComponent
-    virtual skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT = 0;
-    virtual void add_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
-    virtual void reset_blocks() SKR_NOEXCEPT = 0;
-#pragma endregion
-
-#pragma region IOCompressedBlocksComponent
-    virtual skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT = 0;
-    virtual void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
-    virtual void reset_compressed_blocks() SKR_NOEXCEPT = 0;
-#pragma endregion
-};
-using BlocksIORequestId = SObjectPtr<IBlocksIORequest>;
-
 struct RUNTIME_API IIOBatch : public skr::SInterface
 {
     virtual void reserve(uint64_t size) SKR_NOEXCEPT = 0;
