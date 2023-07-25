@@ -119,6 +119,9 @@ void SkrRenderWindow::_prepare_draw_data(const NativeWindowLayer* layer, Sizef w
     _vertices.clear();
     _indices.clear();
     _commands.clear();
+    _transforms.clear();
+    _projections.clear();
+    _render_data.clear();
 
     // copy data
     auto canvas = layer->children().data()[0]->type_cast_fast<GeometryLayer>()->canvas();
@@ -404,7 +407,8 @@ void SkrRenderWindow::_render()
                                          0.f, 1.f);
         cgpu_render_encoder_set_scissor(ctx.encoder,
                                         0, 0,
-                                        target_desc->width, target_desc->height);
+                                        (uint32_t)target_desc->width, 
+                                        (uint32_t)target_desc->height);
 
         SkrPipelineKey pipeline_key_cache = { ESkrPipelineFlag::__Count, CGPU_SAMPLE_COUNT_1 };
 
@@ -435,7 +439,7 @@ void SkrRenderWindow::_render()
             cgpu_render_encoder_bind_vertex_buffers(ctx.encoder,
                                                     4, vertex_streams, vertex_stream_strides, vertex_stream_offsets);
             cgpu_render_encoder_draw_indexed_instanced(ctx.encoder,
-                                                       cmd.index_count, cmd.index_begin,
+                                                       (uint32_t)cmd.index_count, (uint32_t)cmd.index_begin,
                                                        1, 0, 0);
         }
     });
