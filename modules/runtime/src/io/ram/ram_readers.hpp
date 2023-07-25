@@ -78,7 +78,7 @@ struct RUNTIME_API DStorageRAMReader final
     SkrDStorageQueueId m2m_queue;
     
     IOBatchQueue fetched_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    IOBatchQueue loaded_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    IOBatchQueue processed_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     eastl::vector<skr::SObjectPtr<DStorageEvent>> submitted[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
     SmartPoolPtr<DStorageEvent> events[SKR_ASYNC_SERVICE_PRIORITY_COUNT] = { nullptr, nullptr, nullptr };

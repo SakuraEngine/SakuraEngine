@@ -58,7 +58,7 @@ IIORequestResolver::~IIORequestResolver() SKR_NOEXCEPT
 
 }
 
-void IIORequestResolver::resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
+void IIORequestResolver::resolve(SkrAsyncServicePriority priority, IOBatchId batch, IORequestId request) SKR_NOEXCEPT
 {
 
 }

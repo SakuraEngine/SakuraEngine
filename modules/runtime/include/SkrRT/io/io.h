@@ -144,7 +144,7 @@ using IOBatchId = SObjectPtr<IIOBatch>;
 
 struct RUNTIME_API IIORequestResolver : public skr::SInterface
 {
-    virtual void resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT;
+    virtual void resolve(SkrAsyncServicePriority priority, IOBatchId batch, IORequestId request) SKR_NOEXCEPT;
 
     virtual ~IIORequestResolver() SKR_NOEXCEPT;
 };

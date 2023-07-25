@@ -42,9 +42,9 @@ RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
     ram_batch_pool = SmartPoolPtr<RAMIOBatch, IIOBatch>::Create(kIOPoolObjectsMemoryName);
 
     if (desc->use_dstorage)
-        runner.batch_reader = RAMUtils::CreateBatchReader(this, desc);
-    if (!runner.batch_reader)
-        runner.reader = RAMUtils::CreateReader(this, desc);
+        runner.ds_reader = RAMUtils::CreateBatchReader(this, desc);
+    runner.vfs_reader = RAMUtils::CreateReader(this, desc);
+
     runner.set_resolvers();
 
     if (!desc->awake_at_request)
@@ -174,32 +174,30 @@ void RAMService::Runner::enqueueBatch(const IOBatchId& batch) SKR_NOEXCEPT
 
 void RAMService::Runner::set_resolvers() SKR_NOEXCEPT
 {
-    IORequestResolverId openfile = nullptr;
-    const bool dstorage = batch_reader.get();
-    if (dstorage) 
-    {
-        openfile = SObjectPtr<DStorageFileResolver>::Create();
-    }
-    else
-    {
-        openfile = SObjectPtr<VFSFileResolver>::Create();
-    }   
-
     auto alloc_buffer = SObjectPtr<AllocateIOBufferResolver>::Create();
     auto chain = skr::static_pointer_cast<IORequestResolverChain>(IIORequestResolverChain::Create());
     chain->runner = this;
-    chain->then(openfile)
+
+    IORequestResolverId open_file = nullptr;
+    open_file = SObjectPtr<VFSFileResolver>::Create();
+
+    IORequestResolverId open_dfile = nullptr;
+    const bool dstorage = ds_reader.get();
+    if (dstorage) 
+    {
+        open_dfile = SObjectPtr<DStorageFileResolver>::Create();
+        chain->then(open_dfile);
+    }
+
+    chain->then(open_file)
         ->then(alloc_buffer);
+        
     batch_buffer = SObjectPtr<IOBatchBuffer>::Create(); // hold batches
+
+    batch_processors = { batch_buffer, chain };
     if (dstorage)
-    {
-        batch_processors = { batch_buffer, chain, batch_reader };
-    }
-    else
-    {
-        batch_processors = { batch_buffer, chain };
-        request_processors = { reader };
-    }
+        batch_processors.push_back(ds_reader);
+    request_processors = { vfs_reader };
 }
 
 } // namespace skr::io

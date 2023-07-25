@@ -25,7 +25,7 @@ void IORequestResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEX
                 for (auto resolver : chain)
                 {
                     if (!runner->try_cancel(priority, request))
-                        resolver->resolve(priority, request);
+                        resolver->resolve(priority, batch, request);
                 }
             }
         }
@@ -35,13 +35,13 @@ void IORequestResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEX
     }
 }
 
-void VFSFileResolver::resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
+void VFSFileResolver::resolve(SkrAsyncServicePriority priority, IOBatchId batch, IORequestId request) SKR_NOEXCEPT
 {
     if (auto pComp = io_component<FileSrcComponent>(request.get()))
     {
-        SKR_ASSERT(pComp->vfs);
-        if (!pComp->file)
+        if (!pComp->dfile && !pComp->file)
         {
+            SKR_ASSERT(pComp->vfs);
             pComp->file = skr_vfs_fopen(pComp->vfs, pComp->path.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
         }
     }
