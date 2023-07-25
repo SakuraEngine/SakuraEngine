@@ -7,6 +7,7 @@ namespace skr { template <typename Artifact> struct IFuture; struct JobQueue; }
 
 namespace skr {
 namespace io {
+struct RAMService;
 struct VRAMService;
 
 template<typename I = IIORequestProcessor>
@@ -30,14 +31,14 @@ protected:
     VRAMService* service = nullptr;
 };
 
-struct VFSVRAMReader final : public VRAMReaderBase<IIORequestProcessor>
+struct CommonVRAMReader final : public VRAMReaderBase<IIORequestProcessor>
 {
-    VFSVRAMReader(VRAMService* service, skr::JobQueue* job_queue) SKR_NOEXCEPT 
-        : VRAMReaderBase(service), job_queue(job_queue) 
+    CommonVRAMReader(VRAMService* service, RAMService* ram_service) SKR_NOEXCEPT 
+        : VRAMReaderBase(service), ram_service(ram_service) 
     {
 
     }
-    ~VFSVRAMReader() SKR_NOEXCEPT {}
+    ~CommonVRAMReader() SKR_NOEXCEPT {}
 
     [[nodiscard]] uint8_t* allocate_staging_buffer(uint64_t size) SKR_NOEXCEPT;
     void free_staging_buffer(uint8_t* buffer) SKR_NOEXCEPT;
@@ -47,10 +48,10 @@ struct VFSVRAMReader final : public VRAMReaderBase<IIORequestProcessor>
     void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     bool poll_processed_request(SkrAsyncServicePriority priority, IORequestId& request) SKR_NOEXCEPT;
-    bool is_async(SkrAsyncServicePriority priority) const SKR_NOEXCEPT { return job_queue; }
+    bool is_async(SkrAsyncServicePriority priority) const SKR_NOEXCEPT { return ram_service; }
     void dispatchFunction(SkrAsyncServicePriority priority, const IORequestId& request) SKR_NOEXCEPT;
 
-    skr::JobQueue* job_queue = nullptr;
+    RAMService* ram_service = nullptr;
     IORequestQueue fetched_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IORequestQueue loaded_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     skr::vector<skr::IFuture<bool>*> loaded_futures[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
