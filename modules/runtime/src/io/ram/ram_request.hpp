@@ -19,15 +19,15 @@ struct RAMIOStatusComponent final : public IOStatusComponent
     void setStatus(ESkrIOStage status) SKR_NOEXCEPT override;
 };
 
-struct RAMRequestMixin final : public IORequestCRTP<IBlocksRAMRequest, 
+struct RAMRequestMixin final : public IORequestMixin<IBlocksRAMRequest, 
     IOFileComponent, RAMIOStatusComponent, IOBlocksComponent>
 {
     friend struct SmartPool<RAMRequestMixin, IBlocksRAMRequest>;
 
     RAMIOBufferId destination = nullptr;
 protected:
-    RAMRequestMixin(ISmartPool<IBlocksRAMRequest>* pool, const uint64_t sequence) 
-        : IORequestCRTP(pool), sequence(sequence) 
+    RAMRequestMixin(ISmartPoolPtr<IBlocksRAMRequest> pool, const uint64_t sequence) 
+        : IORequestMixin(pool), sequence(sequence) 
     {
 
     }

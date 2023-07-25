@@ -37,7 +37,9 @@ VRAMService::VRAMService(const VRAMServiceDescriptor* desc) SKR_NOEXCEPT
       awake_at_request(desc->awake_at_request),
       runner(this, desc->callback_job_queue)
 {
-    request_pool = SmartPoolPtr<VRAMRequestMixin, IIORequest>::Create(kIOPoolObjectsMemoryName);
+    slices_pool = VRAMRequestPool<ISlicesVRAMRequest>::Create(kIOPoolObjectsMemoryName);
+    tiles_pool = VRAMRequestPool<ITilesVRAMRequest>::Create(kIOPoolObjectsMemoryName);
+    blocks_pool = VRAMRequestPool<IBlocksVRAMRequest>::Create(kIOPoolObjectsMemoryName);
     // vram_buffer_pool = SmartPoolPtr<VRAMIOBuffer, IRAMIOBuffer>::Create(kIOPoolObjectsMemoryName);
     vram_batch_pool = SmartPoolPtr<VRAMIOBatch, IIOBatch>::Create(kIOPoolObjectsMemoryName);
 
@@ -83,13 +85,13 @@ IOBatchId VRAMService::open_batch(uint64_t n) SKR_NOEXCEPT
 SlicesIORequestId VRAMService::open_texture_request() SKR_NOEXCEPT
 {
     uint64_t seq = (uint64_t)skr_atomicu64_add_relaxed(&request_sequence, 1);
-    return skr::static_pointer_cast<ISlicesVRAMRequest>(request_pool->allocate(seq));
+    return skr::static_pointer_cast<ISlicesVRAMRequest>(slices_pool->allocate(seq));
 }
 
 BlocksVRAMRequestId VRAMService::open_buffer_request() SKR_NOEXCEPT
 {
     uint64_t seq = (uint64_t)skr_atomicu64_add_relaxed(&request_sequence, 1);
-    return skr::static_pointer_cast<IBlocksVRAMRequest>(request_pool->allocate(seq));
+    return skr::static_pointer_cast<IBlocksVRAMRequest>(blocks_pool->allocate(seq));
 }
 
 void VRAMService::request(IOBatchId batch) SKR_NOEXCEPT
