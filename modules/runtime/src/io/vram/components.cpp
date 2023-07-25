@@ -22,15 +22,15 @@ skr_guid_t VRAMIOStagingComponent::get_tid() const SKR_NOEXCEPT
     return IORequestComponentTID<VRAMIOStagingComponent>::Get(); 
 }
 
-VRAMBlocksComponent::VRAMBlocksComponent(IIORequest* const request) SKR_NOEXCEPT 
+VRAMBufferComponent::VRAMBufferComponent(IIORequest* const request) SKR_NOEXCEPT 
     : IORequestComponent(request) 
 {
     
 }
 
-skr_guid_t VRAMBlocksComponent::get_tid() const SKR_NOEXCEPT 
+skr_guid_t VRAMBufferComponent::get_tid() const SKR_NOEXCEPT 
 { 
-    return IORequestComponentTID<VRAMBlocksComponent>::Get(); 
+    return IORequestComponentTID<VRAMBufferComponent>::Get(); 
 }
 
 TextureComponent::TextureComponent(IIORequest* const request) SKR_NOEXCEPT 

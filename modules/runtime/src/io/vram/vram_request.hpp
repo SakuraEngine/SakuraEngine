@@ -27,7 +27,7 @@ struct VRAMRequestMixin final : public IORequestMixin<Interface,
     IOStatusComponent, 
     FileSrcComponent, // Src
     VRAMIOStagingComponent, // Transfer
-    VRAMBlocksComponent, TextureComponent //Dst
+    VRAMBufferComponent, TextureComponent //Dst
 >
 {
     using Super = IORequestMixin<Interface, 
@@ -35,7 +35,7 @@ struct VRAMRequestMixin final : public IORequestMixin<Interface,
         IOStatusComponent, 
         FileSrcComponent, // Src
         VRAMIOStagingComponent, // Transfer
-        VRAMBlocksComponent, TextureComponent //Dst
+        VRAMBufferComponent, TextureComponent //Dst
     >;
 
     void set_transfer_queue(CGPUQueueId queue) SKR_NOEXCEPT
@@ -53,15 +53,15 @@ struct VRAMRequestMixin final : public IORequestMixin<Interface,
         Super::template safe_comp<VRAMIOStagingComponent>()->set_memory_src(memory, bytes); 
     }
 
-#pragma region VRAMBlocksComponent
+#pragma region VRAMBufferComponent
     void set_buffer(CGPUBufferId buffer) SKR_NOEXCEPT
     {        
-        Super::template safe_comp<VRAMBlocksComponent>()->set_buffer(buffer); 
+        Super::template safe_comp<VRAMBufferComponent>()->set_buffer(buffer); 
     }
 
     void set_buffer(CGPUDeviceId device, const CGPUBufferDescriptor* desc) SKR_NOEXCEPT
     {
-        Super::template safe_comp<VRAMBlocksComponent>()->set_buffer(device, desc); 
+        Super::template safe_comp<VRAMBufferComponent>()->set_buffer(device, desc); 
     }
 #pragma endregion
 

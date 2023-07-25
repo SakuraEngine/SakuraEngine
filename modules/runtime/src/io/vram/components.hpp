@@ -42,13 +42,13 @@ struct VRAMIOStagingComponent final : public IORequestComponent
 };
 
 template <>
-struct IORequestComponentTID<struct VRAMBlocksComponent> 
+struct IORequestComponentTID<struct VRAMBufferComponent> 
 {
     static constexpr skr_guid_t Get();
 };
-struct VRAMBlocksComponent final : public IORequestComponent
+struct VRAMBufferComponent final : public IORequestComponent
 {
-    VRAMBlocksComponent(IIORequest* const request) SKR_NOEXCEPT;
+    VRAMBufferComponent(IIORequest* const request) SKR_NOEXCEPT;
     virtual skr_guid_t get_tid() const SKR_NOEXCEPT override;
 
     void set_buffer(CGPUBufferId buffer) SKR_NOEXCEPT
@@ -92,7 +92,7 @@ struct TextureComponent final : public IORequestComponent
     CGPUTexture* texture;
 };
 
-constexpr skr_guid_t IORequestComponentTID<struct VRAMBlocksComponent>::Get()
+constexpr skr_guid_t IORequestComponentTID<struct VRAMBufferComponent>::Get()
 {
     using namespace skr::guid::literals;
     return u8"78e4e3f0-5983-43b0-8567-f1a2653f8ea0"_guid;
