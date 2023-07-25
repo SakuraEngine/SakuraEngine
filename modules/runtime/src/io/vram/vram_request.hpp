@@ -4,7 +4,9 @@
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/io/vram_io.hpp"
 #include "../common/io_request.hpp"
+#include "cgpu/api.h"
 #include "components.hpp"
+#include "io/vram/components.hpp"
 
 #include <EASTL/fixed_vector.h>
 #include <EASTL/variant.h>
@@ -25,7 +27,7 @@ struct VRAMRequestMixin final : public IORequestMixin<Interface,
     IOStatusComponent, 
     FileSrcComponent, // Src
     VRAMIOStagingComponent, // Transfer
-    TextureSlicesComponent //Dst
+    VRAMBlocksComponent, TextureComponent //Dst
 >
 {
     using Super = IORequestMixin<Interface, 
@@ -33,7 +35,7 @@ struct VRAMRequestMixin final : public IORequestMixin<Interface,
         IOStatusComponent, 
         FileSrcComponent, // Src
         VRAMIOStagingComponent, // Transfer
-        TextureSlicesComponent //Dst
+        VRAMBlocksComponent, TextureComponent //Dst
     >;
 
     void set_transfer_queue(CGPUQueueId queue) SKR_NOEXCEPT
@@ -51,30 +53,32 @@ struct VRAMRequestMixin final : public IORequestMixin<Interface,
         Super::template safe_comp<VRAMIOStagingComponent>()->set_memory_src(memory, bytes); 
     }
 
-#pragma region IOVRAMResourceComponent
-    void set_buffer(CGPUTextureId texture) SKR_NOEXCEPT
-    {
-        SKR_UNIMPLEMENTED_FUNCTION();
+#pragma region VRAMBlocksComponent
+    void set_buffer(CGPUBufferId buffer) SKR_NOEXCEPT
+    {        
+        Super::template safe_comp<VRAMBlocksComponent>()->set_buffer(buffer); 
     }
 
     void set_buffer(CGPUDeviceId device, const CGPUBufferDescriptor* desc) SKR_NOEXCEPT
     {
-        SKR_UNIMPLEMENTED_FUNCTION();
+        Super::template safe_comp<VRAMBlocksComponent>()->set_buffer(device, desc); 
     }
+#pragma endregion
 
+#pragma region TextureComponent
     void set_texture(CGPUTextureId texture) SKR_NOEXCEPT
     {
-        SKR_UNIMPLEMENTED_FUNCTION();
+        Super::template safe_comp<TextureComponent>()->set_texture(texture); 
     }
     
     void set_texture(CGPUDeviceId device, const CGPUTextureDescriptor* desc) SKR_NOEXCEPT
     {
-        SKR_UNIMPLEMENTED_FUNCTION();
+        Super::template safe_comp<TextureComponent>()->set_texture(device, desc); 
     }
 
     void set_slices(uint32_t first_slice, uint32_t slice_count) SKR_NOEXCEPT
     {
-        SKR_UNIMPLEMENTED_FUNCTION();
+        Super::template safe_comp<TextureComponent>()->set_slices(first_slice, slice_count); 
     }
 #pragma endregion
 

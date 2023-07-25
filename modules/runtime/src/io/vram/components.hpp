@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrRT/io/vram_io.hpp"
 #include "../components/status_component.hpp"
+#include "SkrRT/platform/debug.h"
 
 struct CGPUBuffer;
 struct CGPUTexture;
@@ -50,18 +51,43 @@ struct VRAMBlocksComponent final : public IORequestComponent
     VRAMBlocksComponent(IIORequest* const request) SKR_NOEXCEPT;
     virtual skr_guid_t get_tid() const SKR_NOEXCEPT override;
 
+    void set_buffer(CGPUBufferId buffer) SKR_NOEXCEPT
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+    }
+
+    void set_buffer(CGPUDeviceId device, const CGPUBufferDescriptor* desc) SKR_NOEXCEPT
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+    }
+
     CGPUBuffer* buffer;
 };
 
 template <>
-struct IORequestComponentTID<struct TextureSlicesComponent> 
+struct IORequestComponentTID<struct TextureComponent> 
 {
     static constexpr skr_guid_t Get();
 };
-struct TextureSlicesComponent final : public IORequestComponent
+struct TextureComponent final : public IORequestComponent
 {
-    TextureSlicesComponent(IIORequest* const request) SKR_NOEXCEPT;
+    TextureComponent(IIORequest* const request) SKR_NOEXCEPT;
     virtual skr_guid_t get_tid() const SKR_NOEXCEPT override;
+
+    void set_texture(CGPUTextureId texture) SKR_NOEXCEPT
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+    }
+    
+    void set_texture(CGPUDeviceId device, const CGPUTextureDescriptor* desc) SKR_NOEXCEPT
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+    }
+
+    void set_slices(uint32_t first_slice, uint32_t slice_count) SKR_NOEXCEPT
+    {
+        SKR_UNIMPLEMENTED_FUNCTION();
+    }
 
     CGPUTexture* texture;
 };
@@ -72,7 +98,7 @@ constexpr skr_guid_t IORequestComponentTID<struct VRAMBlocksComponent>::Get()
     return u8"78e4e3f0-5983-43b0-8567-f1a2653f8ea0"_guid;
 } 
 
-constexpr skr_guid_t IORequestComponentTID<struct TextureSlicesComponent>::Get()
+constexpr skr_guid_t IORequestComponentTID<struct TextureComponent>::Get()
 {
     using namespace skr::guid::literals;
     return u8"2d517d3b-3c08-4e6d-9b2b-189b0f591171"_guid;
