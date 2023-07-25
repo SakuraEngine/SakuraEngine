@@ -1,4 +1,4 @@
-#include "../pch.hpp" // IWYU pragma: keep
+#include "../pch.hpp"
 
 #include "io.cpp"
 #include "common/io_runner.cpp"
@@ -14,6 +14,7 @@
 #include "vram/vram_io.cpp"
 #include "vram/vram_request.cpp"
 #include "vram/vram_resolvers.cpp"
+#include "vram/vram_readers.cpp"
 #include "vram/vram_service.cpp"
 #include "vram/components.cpp"
 

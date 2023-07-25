@@ -11,20 +11,20 @@
 namespace skr {
 namespace io {
 
-struct VRAMRequestMixin final : public IORequestCRTP<
-    IIORequest, IOFileComponent, IOStatusComponent, VRAMIOStagingComponent>
+struct VRAMIOStatusComponent final : public IOStatusComponent
+{
+    VRAMIOStatusComponent(IIORequest* const request) SKR_NOEXCEPT;
+    void setStatus(ESkrIOStage status) SKR_NOEXCEPT override;
+};
+
+struct VRAMRequestMixin final : public IORequestCRTP<IIORequest, 
+    // components...
+    IOFileComponent, IOStatusComponent, 
+    VRAMIOStagingComponent, VRAMIOResourceComponent>
 {
     friend struct SmartPool<VRAMRequestMixin, IIORequest>;
-
-    eastl::fixed_vector<skr_io_block_t, 1> blocks;
-    
 protected:
-    VRAMRequestMixin(ISmartPool<IIORequest>* pool, const uint64_t sequence) 
-        : IORequestCRTP(pool), sequence(sequence) 
-    {
-
-    }
-
+    VRAMRequestMixin(ISmartPool<IIORequest>* pool, const uint64_t sequence) SKR_NOEXCEPT;
     const uint64_t sequence;
 };
 

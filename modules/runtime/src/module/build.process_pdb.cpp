@@ -1,4 +1,4 @@
-#include "../pch.hpp" // IWYU pragma: keep
+#include "../pch.hpp"
 #include "SkrRT/platform/debug.h"
 #if defined(_MSC_VER)
 #include <limits.h>

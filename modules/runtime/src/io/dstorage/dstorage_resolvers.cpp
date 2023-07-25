@@ -1,4 +1,4 @@
-#include "../../pch.hpp" // IWYU pragma: keep
+#include "../../pch.hpp"
 #include "SkrRT/platform/vfs.h"
 #include <SkrRT/platform/filesystem.hpp>
 #include "../common/io_request.hpp"
