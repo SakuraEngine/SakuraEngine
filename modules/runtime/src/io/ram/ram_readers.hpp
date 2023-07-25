@@ -6,7 +6,6 @@ namespace skr { template <typename Artifact> struct IFuture; struct JobQueue; }
 
 namespace skr {
 namespace io {
-struct RAMService;
 
 template<typename I = IIORequestProcessor>
 struct RAMReaderBase : public IIOReader<I>
