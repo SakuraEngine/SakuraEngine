@@ -1,14 +1,11 @@
 #pragma once
 #include "../components/status_component.hpp"
 
+struct CGPUBuffer;
+struct CGPUTexture;
+
 namespace skr {
 namespace io {
-
-struct VRAMIOStatusComponent final : public IOStatusComponent
-{
-    VRAMIOStatusComponent(IIORequest* const request) SKR_NOEXCEPT;
-    void setStatus(ESkrIOStage status) SKR_NOEXCEPT override;
-};
 
 template <>
 struct IORequestComponentTID<struct VRAMIOStagingComponent> 
@@ -19,6 +16,9 @@ struct VRAMIOStagingComponent final : public IOStatusComponent
 {
     VRAMIOStagingComponent(IIORequest* const request) SKR_NOEXCEPT;
     virtual skr_guid_t get_tid() const SKR_NOEXCEPT override;
+
+    uint8_t* buffer = nullptr;
+    uint64_t size = 0;
 };
 
 template <>
@@ -30,6 +30,16 @@ struct VRAMIOResourceComponent final : public IOStatusComponent
 {
     VRAMIOResourceComponent(IIORequest* const request) SKR_NOEXCEPT;
     virtual skr_guid_t get_tid() const SKR_NOEXCEPT override;
+
+    enum class Type : uint32_t 
+    {
+        Buffer,
+        Texture,
+        TiledTexture
+    };
+    Type type;
+    CGPUBuffer* buffer;
+    CGPUTexture* texture;
 };
 
 constexpr skr_guid_t IORequestComponentTID<struct VRAMIOResourceComponent>::Get()

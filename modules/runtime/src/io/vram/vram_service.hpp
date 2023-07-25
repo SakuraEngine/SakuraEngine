@@ -35,8 +35,8 @@ struct VRAMService final : public IVRAMService
         void set_resolvers() SKR_NOEXCEPT;
 
         IOBatchBufferId batch_buffer = nullptr;
-        IOReaderId<IIORequestProcessor> reader = nullptr;
         IOReaderId<IIOBatchProcessor> batch_reader = nullptr;
+        IOReaderId<IIORequestProcessor> reader = nullptr;
 
         VRAMService* service = nullptr;
     };

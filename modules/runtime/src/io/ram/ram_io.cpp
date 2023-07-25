@@ -1,4 +1,4 @@
-#include "../../pch.hpp" // IWYU pragma: keep
+#include "../../pch.hpp"
 
 #include "ram_service.hpp"
 #include "ram_batch.hpp"

@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrRT/io/vram_io.hpp"
 #include "vram_service.hpp"
+#include <stdint.h>
 
 namespace skr { template <typename Artifact> struct IFuture; struct JobQueue; }
 
@@ -37,6 +38,9 @@ struct VFSVRAMReader final : public VRAMReaderBase<IIORequestProcessor>
 
     }
     ~VFSVRAMReader() SKR_NOEXCEPT {}
+
+    [[nodiscard]] uint8_t* allocate_staging_buffer(uint64_t size) SKR_NOEXCEPT;
+    void free_staging_buffer(uint8_t* buffer) SKR_NOEXCEPT;
 
     uint64_t get_prefer_batch_size() const SKR_NOEXCEPT;
     bool fetch(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT;

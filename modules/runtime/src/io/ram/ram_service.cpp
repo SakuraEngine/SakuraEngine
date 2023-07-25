@@ -1,4 +1,4 @@
-#include "../../pch.hpp" // IWYU pragma: keep
+#include "../../pch.hpp"
 #include "SkrRT/async/wait_timeout.hpp"
 #include "../dstorage/dstorage_resolvers.hpp"
 
@@ -65,7 +65,7 @@ skr_io_ram_service_t* IRAMService::create(const skr_ram_io_service_desc_t* desc)
 
 void IRAMService::destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT
 {
-    ZoneScopedN("destroy");
+    ZoneScopedN("RAMService::destroy");
 
     auto S = static_cast<RAMService*>(service);
     S->runner.destroy();
