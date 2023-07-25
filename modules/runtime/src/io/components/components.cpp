@@ -17,37 +17,37 @@ skr_guid_t IOStatusComponent::get_tid() const SKR_NOEXCEPT
     return IORequestComponentTID<IOStatusComponent>::Get(); 
 }
 
-IOFileComponent::IOFileComponent(IIORequest* const request) SKR_NOEXCEPT 
+FileSrcComponent::FileSrcComponent(IIORequest* const request) SKR_NOEXCEPT 
     : IORequestComponent(request) 
 {
     
 }
 
-skr_guid_t IOFileComponent::get_tid() const SKR_NOEXCEPT 
+skr_guid_t FileSrcComponent::get_tid() const SKR_NOEXCEPT 
 { 
-    return IORequestComponentTID<IOFileComponent>::Get(); 
+    return IORequestComponentTID<FileSrcComponent>::Get(); 
 }
 
-IOBlocksComponent::IOBlocksComponent(IIORequest* const request) SKR_NOEXCEPT 
+BlocksComponent::BlocksComponent(IIORequest* const request) SKR_NOEXCEPT 
     : IORequestComponent(request) 
 {
     
 }
 
-skr_guid_t IOBlocksComponent::get_tid() const SKR_NOEXCEPT 
+skr_guid_t BlocksComponent::get_tid() const SKR_NOEXCEPT 
 { 
-    return IORequestComponentTID<IOBlocksComponent>::Get(); 
+    return IORequestComponentTID<BlocksComponent>::Get(); 
 }
 
-IOCompressedBlocksComponent::IOCompressedBlocksComponent(IIORequest* const request) SKR_NOEXCEPT 
+CompressedBlocksComponent::CompressedBlocksComponent(IIORequest* const request) SKR_NOEXCEPT 
     : IORequestComponent(request) 
 {
     
 }
 
-skr_guid_t IOCompressedBlocksComponent::get_tid() const SKR_NOEXCEPT 
+skr_guid_t CompressedBlocksComponent::get_tid() const SKR_NOEXCEPT 
 { 
-    return IORequestComponentTID<IOCompressedBlocksComponent>::Get(); 
+    return IORequestComponentTID<CompressedBlocksComponent>::Get(); 
 }
 
 } // namespace io

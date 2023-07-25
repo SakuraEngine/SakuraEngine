@@ -21,12 +21,12 @@ struct VRAMIOStatusComponent final : public IOStatusComponent
 template <typename Interface>
 struct VRAMRequestMixin final : public IORequestMixin<Interface, 
     // components...
-    IOFileComponent, IOStatusComponent, 
+    FileSrcComponent, IOStatusComponent, 
     VRAMIOStagingComponent, VRAMIOResourceComponent>
 {
     using Super = IORequestMixin<Interface, 
         // components...
-        IOFileComponent, IOStatusComponent, 
+        FileSrcComponent, IOStatusComponent, 
         VRAMIOStagingComponent, VRAMIOResourceComponent>;
 
     void set_transfer_queue(CGPUQueueId queue) SKR_NOEXCEPT

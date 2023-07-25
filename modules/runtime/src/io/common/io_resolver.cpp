@@ -37,7 +37,7 @@ void IORequestResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEX
 
 void VFSFileResolver::resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
 {
-    if (auto pComp = io_component<IOFileComponent>(request.get()))
+    if (auto pComp = io_component<FileSrcComponent>(request.get()))
     {
         SKR_ASSERT(pComp->vfs);
         if (!pComp->file)
