@@ -64,7 +64,7 @@ struct RUNTIME_API IBlocksVRAMRequest : public IVRAMIORequest
 #pragma endregion
 
 #pragma region IOVRAMResourceComponent
-    virtual void set_buffer(CGPUTextureId texture) SKR_NOEXCEPT = 0;
+    virtual void set_buffer(CGPUBufferId buffer) SKR_NOEXCEPT = 0;
     virtual void set_buffer(CGPUDeviceId device, const CGPUBufferDescriptor* desc) SKR_NOEXCEPT = 0;
 #pragma endregion
 };
