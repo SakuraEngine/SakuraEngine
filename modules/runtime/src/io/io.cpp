@@ -33,7 +33,7 @@ IIORequest::~IIORequest() SKR_NOEXCEPT
     
 }
 
-IBlocksIORequest::~IBlocksIORequest() SKR_NOEXCEPT
+IBlocksRAMRequest::~IBlocksRAMRequest() SKR_NOEXCEPT
 {
 
 }

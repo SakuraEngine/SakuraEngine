@@ -14,7 +14,7 @@ namespace VRAMUtils
 {
 inline static IOReaderId<IIORequestProcessor> CreateReader(VRAMService* service, const VRAMServiceDescriptor* desc) SKR_NOEXCEPT
 {
-    auto reader = skr::SObjectPtr<CommonVRAMReader>::Create(service, desc->io_job_queue);
+    auto reader = skr::SObjectPtr<CommonVRAMReader>::Create(service, desc->ram_service);
     return std::move(reader);
 }
 
