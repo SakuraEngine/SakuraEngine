@@ -12,13 +12,13 @@ namespace skr::io {
 
 namespace VRAMUtils
 {
-inline static IOReaderId<IIORequestProcessor> CreateReader(VRAMService* service, const VRAMServiceDescriptor* desc) SKR_NOEXCEPT
+inline static IOReaderId<IIOBatchProcessor> CreateCommonReader(VRAMService* service, const VRAMServiceDescriptor* desc) SKR_NOEXCEPT
 {
     auto reader = skr::SObjectPtr<CommonVRAMReader>::Create(service, desc->ram_service);
     return std::move(reader);
 }
 
-inline static IOReaderId<IIOBatchProcessor> CreateBatchReader(VRAMService* service, const VRAMServiceDescriptor* desc) SKR_NOEXCEPT
+inline static IOReaderId<IIOBatchProcessor> CreateDSReader(VRAMService* service, const VRAMServiceDescriptor* desc) SKR_NOEXCEPT
 {
 #ifdef _WIN32
     if (skr_query_dstorage_availability() == SKR_DSTORAGE_AVAILABILITY_HARDWARE)
@@ -43,11 +43,11 @@ VRAMService::VRAMService(const VRAMServiceDescriptor* desc) SKR_NOEXCEPT
 
     /*
     if (desc->use_dstorage)
-        runner.batch_reader = VRAMUtils::CreateBatchReader(this, desc);
-    if (!runner.batch_reader)
-        runner.reader = VRAMUtils::CreateReader(this, desc);
-    runner.set_resolvers();
+        runner.ds_reader = VRAMUtils::CreateDSReader(this, desc);
+    if (!runner.ds_reader)
+        runner.cpy_reader = VRAMUtils::CreateCommonReader(this, desc);
     */
+    runner.set_resolvers();
 
     if (!desc->awake_at_request)
     {
@@ -80,10 +80,16 @@ IOBatchId VRAMService::open_batch(uint64_t n) SKR_NOEXCEPT
     return skr::static_pointer_cast<IIOBatch>(vram_batch_pool->allocate(this, seq, n));
 }
 
-IORequestId VRAMService::open_request() SKR_NOEXCEPT
+SlicesIORequestId VRAMService::open_texture_request() SKR_NOEXCEPT
 {
     uint64_t seq = (uint64_t)skr_atomicu64_add_relaxed(&request_sequence, 1);
-    return skr::static_pointer_cast<IIORequest>(request_pool->allocate(seq));
+    return skr::static_pointer_cast<ISlicesVRAMRequest>(request_pool->allocate(seq));
+}
+
+BlocksVRAMRequestId VRAMService::open_buffer_request() SKR_NOEXCEPT
+{
+    uint64_t seq = (uint64_t)skr_atomicu64_add_relaxed(&request_sequence, 1);
+    return skr::static_pointer_cast<IBlocksVRAMRequest>(request_pool->allocate(seq));
 }
 
 void VRAMService::request(IOBatchId batch) SKR_NOEXCEPT
@@ -95,6 +101,26 @@ void VRAMService::request(IOBatchId batch) SKR_NOEXCEPT
     }
 }
 
+VRAMIOBufferId VRAMService::request(BlocksVRAMRequestId request, IOFuture* future, SkrAsyncServicePriority priority) SKR_NOEXCEPT
+{
+    auto batch = open_batch(1);
+    auto result = batch->add_request(request, future);
+    auto buffer = skr::static_pointer_cast<IVRAMIOBuffer>(result);
+    batch->set_priority(priority);
+    this->request(batch);
+    return buffer;
+}
+    
+VRAMIOTextureId VRAMService::request(SlicesIORequestId request, IOFuture* future, SkrAsyncServicePriority priority) SKR_NOEXCEPT
+{
+    auto batch = open_batch(1);
+    auto result = batch->add_request(request, future);
+    auto texture = skr::static_pointer_cast<IVRAMIOTexture>(result);
+    batch->set_priority(priority);
+    this->request(batch);
+    return texture;
+}
+    
 /*
 RAMIOBufferId VRAMService::request(IORequestId request, skr_io_future_t* future, SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
@@ -180,7 +206,7 @@ void VRAMService::Runner::enqueueBatch(const IOBatchId& batch) SKR_NOEXCEPT
 void VRAMService::Runner::set_resolvers() SKR_NOEXCEPT
 {
     IORequestResolverId openfile = nullptr;
-    const bool dstorage = batch_reader.get();
+    const bool dstorage = ds_reader.get();
     if (dstorage) 
     {
         openfile = SObjectPtr<DStorageFileResolver>::Create();
@@ -198,12 +224,11 @@ void VRAMService::Runner::set_resolvers() SKR_NOEXCEPT
     batch_buffer = SObjectPtr<IOBatchBuffer>::Create(); // hold batches
     if (dstorage)
     {
-        batch_processors = { batch_buffer, chain, batch_reader };
+        batch_processors = { batch_buffer, chain, ds_reader };
     }
     else
     {
-        batch_processors = { batch_buffer, chain };
-        request_processors = { reader };
+        batch_processors = { batch_buffer, chain, cpy_reader };
     }
 }
 } // namespace skr::io

@@ -68,7 +68,6 @@ struct RUNTIME_API IBlocksVRAMRequest : public IVRAMIORequest
     virtual void set_buffer(CGPUDeviceId device, const CGPUBufferDescriptor* desc) SKR_NOEXCEPT = 0;
 #pragma endregion
 };
-using BlocksVRAMRequestId = SObjectPtr<IBlocksVRAMRequest>;
 
 struct RUNTIME_API ISlicesVRAMRequest : public IVRAMIORequest
 {
@@ -90,6 +89,7 @@ using VRAMIOBufferId = SObjectPtr<IVRAMIOBuffer>;
 using VRAMIOTextureId = SObjectPtr<IVRAMIOTexture>;
 using SlicesIORequestId = SObjectPtr<ISlicesVRAMRequest>;
 using TilesIORequestId = SObjectPtr<ITilesVRAMRequest>;
+using BlocksVRAMRequestId = SObjectPtr<IBlocksVRAMRequest>;
 
 struct RUNTIME_API IVRAMService : public IIOService
 {
@@ -97,19 +97,22 @@ struct RUNTIME_API IVRAMService : public IIOService
     static void destroy(IVRAMService* service) SKR_NOEXCEPT;
 
     // open a texture request for filling
-    // [[nodiscard]] virtual SlicesIORequestId open_texture_request() SKR_NOEXCEPT = 0;
+    [[nodiscard]] virtual SlicesIORequestId open_texture_request() SKR_NOEXCEPT = 0;
 
     // open a buffer request for filling
-    // [[nodiscard]] virtual BlocksVRAMRequestId open_buffer_request() SKR_NOEXCEPT = 0;
+    [[nodiscard]] virtual BlocksVRAMRequestId open_buffer_request() SKR_NOEXCEPT = 0;
 
     // open a tile request for filling
     // [[nodiscard]] virtual TilesIORequestId open_tile_request() SKR_NOEXCEPT = 0;
 
     // start a request batch
-    // [[nodiscard]] virtual IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT = 0;
+    [[nodiscard]] virtual IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT = 0;
 
-    // submit a request
-    // virtual VRAMIOBufferId request(IORequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
+    // submit a buffer request
+    virtual VRAMIOBufferId request(BlocksVRAMRequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
+    
+    // submit a texture request
+    virtual VRAMIOTextureId request(SlicesIORequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
     
     // submit a batch
     virtual void request(IOBatchId request) SKR_NOEXCEPT = 0;

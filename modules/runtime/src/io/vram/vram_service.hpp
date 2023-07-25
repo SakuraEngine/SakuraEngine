@@ -13,8 +13,10 @@ struct VRAMService final : public IVRAMService
     VRAMService(const VRAMServiceDescriptor* desc) SKR_NOEXCEPT;
     
     [[nodiscard]] IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT;
-    [[nodiscard]] IORequestId open_request() SKR_NOEXCEPT;
-    VRAMIOBufferId request(IORequestId request, IOFuture* future, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    [[nodiscard]] virtual SlicesIORequestId open_texture_request() SKR_NOEXCEPT;
+    [[nodiscard]] virtual BlocksVRAMRequestId open_buffer_request() SKR_NOEXCEPT;
+    VRAMIOBufferId request(BlocksVRAMRequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT;
+    VRAMIOTextureId request(SlicesIORequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT;
     void request(IOBatchId request) SKR_NOEXCEPT;
     
     void cancel(skr_io_future_t* future) SKR_NOEXCEPT 
@@ -35,8 +37,8 @@ struct VRAMService final : public IVRAMService
         void set_resolvers() SKR_NOEXCEPT;
 
         IOBatchBufferId batch_buffer = nullptr;
-        IOReaderId<IIOBatchProcessor> batch_reader = nullptr;
-        IOReaderId<IIORequestProcessor> reader = nullptr;
+        IOReaderId<IIOBatchProcessor> ds_reader = nullptr;
+        IOReaderId<IIOBatchProcessor> cpy_reader = nullptr;
 
         VRAMService* service = nullptr;
     };

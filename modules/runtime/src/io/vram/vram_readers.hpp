@@ -31,7 +31,7 @@ protected:
     VRAMService* service = nullptr;
 };
 
-struct CommonVRAMReader final : public VRAMReaderBase<IIORequestProcessor>
+struct CommonVRAMReader final : public VRAMReaderBase<IIOBatchProcessor>
 {
     CommonVRAMReader(VRAMService* service, IRAMService* ram_service) SKR_NOEXCEPT 
         : VRAMReaderBase(service), ram_service(ram_service) 
@@ -43,12 +43,11 @@ struct CommonVRAMReader final : public VRAMReaderBase<IIORequestProcessor>
     [[nodiscard]] uint8_t* allocate_staging_buffer(uint64_t size) SKR_NOEXCEPT;
     void free_staging_buffer(uint8_t* buffer) SKR_NOEXCEPT;
 
-    uint64_t get_prefer_batch_size() const SKR_NOEXCEPT;
-    bool fetch(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT;
+    bool fetch(SkrAsyncServicePriority priority, IOBatchId request) SKR_NOEXCEPT;
     void dispatch(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
-    bool poll_processed_request(SkrAsyncServicePriority priority, IORequestId& request) SKR_NOEXCEPT;
-    bool is_async(SkrAsyncServicePriority priority) const SKR_NOEXCEPT { return ram_service; }
+    bool poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT;
+    bool is_async(SkrAsyncServicePriority priority) const SKR_NOEXCEPT { return false; }
     void dispatchFunction(SkrAsyncServicePriority priority, const IORequestId& request) SKR_NOEXCEPT;
 
     IRAMService* ram_service = nullptr;
