@@ -45,7 +45,7 @@ struct RAMService final : public IRAMService
     const bool awake_at_request = false;
     Runner runner;
     
-    SmartPoolPtr<RAMIORequest, IBlocksIORequest> request_pool = nullptr;
+    SmartPoolPtr<RAMRequestMixin, IBlocksIORequest> request_pool = nullptr;
     SmartPoolPtr<RAMIOBuffer, IRAMIOBuffer> ram_buffer_pool = nullptr;
     SmartPoolPtr<RAMIOBatch, IIOBatch> ram_batch_pool = nullptr;
     

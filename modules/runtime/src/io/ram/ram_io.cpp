@@ -65,7 +65,7 @@ IOResultId RAMIOBatch::add_request(IORequestId request, skr_io_future_t* future)
 {
     auto srv = static_cast<RAMService*>(service);
     auto buffer = srv->ram_buffer_pool->allocate();
-    auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+    auto rq = skr::static_pointer_cast<RAMRequestMixin>(request);
     if (auto pStatus = io_component<IOStatusComponent>(request.get()))
     {
         pStatus->owner_batch = this;
@@ -86,7 +86,7 @@ RAMService::RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT
       awake_at_request(desc->awake_at_request),
       runner(this, desc->callback_job_queue)
 {
-    request_pool = SmartPoolPtr<RAMIORequest, IBlocksIORequest>::Create(kIOPoolObjectsMemoryName);
+    request_pool = SmartPoolPtr<RAMRequestMixin, IBlocksIORequest>::Create(kIOPoolObjectsMemoryName);
     ram_buffer_pool = SmartPoolPtr<RAMIOBuffer, IRAMIOBuffer>::Create(kIOPoolObjectsMemoryName);
     ram_batch_pool = SmartPoolPtr<RAMIOBatch, IIOBatch>::Create(kIOPoolObjectsMemoryName);
 

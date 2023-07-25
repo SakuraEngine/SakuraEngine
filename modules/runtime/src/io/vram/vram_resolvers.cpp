@@ -9,7 +9,7 @@ void AllocateVRAMResourceResolver::resolve(SkrAsyncServicePriority priority, IOR
     ZoneScopedNC("VRAMResource::Allocate", tracy::Color::BlueViolet);
     SKR_UNIMPLEMENTED_FUNCTION();
     /*
-    auto rq = skr::static_pointer_cast<VRAMIORequest>(request);
+    auto rq = skr::static_pointer_cast<VRAMRequestMixin>(request);
     auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
     // deal with 0 block size
     for (auto& block : rq->blocks)

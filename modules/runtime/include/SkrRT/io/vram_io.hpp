@@ -22,19 +22,32 @@ struct RUNTIME_API IVRAMIOResource : public skr::SInterface
 {
     virtual ~IVRAMIOResource() SKR_NOEXCEPT;
 };
-using VRAMIOResourceId = SObjectPtr<IVRAMIOResource>;
 
 struct RUNTIME_API IVRAMIOBuffer : public IVRAMIOResource
 {
     virtual ~IVRAMIOBuffer() SKR_NOEXCEPT;
 };
-using VRAMIOBufferId = SObjectPtr<IVRAMIOBuffer>;
 
 struct RUNTIME_API IVRAMIOTexture : public IVRAMIOResource
 {
     virtual ~IVRAMIOTexture() SKR_NOEXCEPT;
 };
+
+struct RUNTIME_API ISlicesIORequest : public IIORequest
+{
+    virtual ~ISlicesIORequest() SKR_NOEXCEPT;
+};
+
+struct RUNTIME_API ITilesIORequest : public IIORequest
+{
+    virtual ~ITilesIORequest() SKR_NOEXCEPT;
+};
+
+using VRAMIOResourceId = SObjectPtr<IVRAMIOResource>;
+using VRAMIOBufferId = SObjectPtr<IVRAMIOBuffer>;
 using VRAMIOTextureId = SObjectPtr<IVRAMIOTexture>;
+using SlicesIORequestId = SObjectPtr<ISlicesIORequest>;
+using TilesIORequestId = SObjectPtr<ITilesIORequest>;
 
 struct RUNTIME_API IVRAMService : public IIOService
 {
@@ -42,13 +55,13 @@ struct RUNTIME_API IVRAMService : public IIOService
     static void destroy(IVRAMService* service) SKR_NOEXCEPT;
 
     // open a texture request for filling
-    // [[nodiscard]] virtual IOSliceRequestId open_texture_request() SKR_NOEXCEPT = 0;
+    // [[nodiscard]] virtual SlicesIORequestId open_texture_request() SKR_NOEXCEPT = 0;
 
     // open a buffer request for filling
-    // [[nodiscard]] virtual IOBlockRequestId open_buffer_request() SKR_NOEXCEPT = 0;
+    // [[nodiscard]] virtual BlocksIORequestId open_buffer_request() SKR_NOEXCEPT = 0;
 
     // open a tile request for filling
-    // [[nodiscard]] virtual IOTileRequestId open_tile_request() SKR_NOEXCEPT = 0;
+    // [[nodiscard]] virtual TilesIORequestId open_tile_request() SKR_NOEXCEPT = 0;
 
     // start a request batch
     // [[nodiscard]] virtual IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT = 0;

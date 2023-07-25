@@ -33,7 +33,7 @@ IOResultId VRAMIOBatch::add_request(IORequestId request, skr_io_future_t* future
     /*
     auto srv = static_cast<VRAMService*>(service);
     auto buffer = srv->vram_buffer_pool->allocate();
-    auto rq = skr::static_pointer_cast<VRAMIORequest>(request);
+    auto rq = skr::static_pointer_cast<VRAMRequestMixin>(request);
     rq->future = future;
     rq->destination = buffer;
     rq->owner_batch = this;
@@ -51,7 +51,7 @@ VRAMService::VRAMService(const VRAMServiceDescriptor* desc) SKR_NOEXCEPT
       awake_at_request(desc->awake_at_request),
       runner(this, desc->callback_job_queue)
 {
-    request_pool = SmartPoolPtr<VRAMIORequest, IIORequest>::Create(kIOPoolObjectsMemoryName);
+    request_pool = SmartPoolPtr<VRAMRequestMixin, IIORequest>::Create(kIOPoolObjectsMemoryName);
     // vram_buffer_pool = SmartPoolPtr<VRAMIOBuffer, IRAMIOBuffer>::Create(kIOPoolObjectsMemoryName);
     vram_batch_pool = SmartPoolPtr<VRAMIOBatch, IIOBatch>::Create(kIOPoolObjectsMemoryName);
 

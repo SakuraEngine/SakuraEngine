@@ -45,7 +45,7 @@ struct VRAMService final : public IVRAMService
     const bool awake_at_request = false;
     Runner runner;
     
-    SmartPoolPtr<VRAMIORequest, IIORequest> request_pool = nullptr;
+    SmartPoolPtr<VRAMRequestMixin, IIORequest> request_pool = nullptr;
     // SmartPoolPtr<VRAMIOBuffer, IVRAMIOBuffer> vram_buffer_pool = nullptr;
     SmartPoolPtr<VRAMIOBatch, IIOBatch> vram_batch_pool = nullptr;
 
