@@ -4,7 +4,7 @@
 namespace skr {
 namespace io {
 
-void AllocateVRAMResourceResolver::resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
+void AllocateVRAMResourceResolver::resolve(SkrAsyncServicePriority priority, IOBatchId batch, IORequestId request) SKR_NOEXCEPT
 {
     ZoneScopedNC("VRAMResource::Allocate", tracy::Color::BlueViolet);
     SKR_UNIMPLEMENTED_FUNCTION();

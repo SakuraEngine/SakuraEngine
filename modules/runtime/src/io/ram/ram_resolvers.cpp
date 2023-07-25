@@ -6,7 +6,7 @@
 namespace skr {
 namespace io {
 
-void AllocateIOBufferResolver::resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
+void AllocateIOBufferResolver::resolve(SkrAsyncServicePriority priority, IOBatchId batch, IORequestId request) SKR_NOEXCEPT
 {
     ZoneScopedNC("IOBuffer::Allocate", tracy::Color::BlueViolet);
     auto rq = skr::static_pointer_cast<RAMRequestMixin>(request);
@@ -44,7 +44,7 @@ ChunkingVFSReadResolver::ChunkingVFSReadResolver(uint64_t chunk_size) SKR_NOEXCE
     
 }
 
-void ChunkingVFSReadResolver::resolve(SkrAsyncServicePriority priority,IORequestId request) SKR_NOEXCEPT
+void ChunkingVFSReadResolver::resolve(SkrAsyncServicePriority priority, IOBatchId batch, IORequestId request) SKR_NOEXCEPT
 {
     ZoneScopedN("IORequestChunking");
     uint64_t total = 0;

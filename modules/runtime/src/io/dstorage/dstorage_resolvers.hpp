@@ -6,7 +6,7 @@ namespace io {
 
 struct DStorageFileResolver final : public IORequestResolverBase
 {
-    void resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT;
+    void resolve(SkrAsyncServicePriority priority, IOBatchId batch, IORequestId request) SKR_NOEXCEPT;
 };
 
 } // namespace io
