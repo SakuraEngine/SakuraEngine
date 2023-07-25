@@ -55,49 +55,10 @@ struct VFSRAMReader final : public RAMReaderBase<IIORequestProcessor>
 } // namespace io
 } // namespace skr
 
-#include "SkrRT/platform/dstorage.h"
-#include <EASTL/fixed_vector.h>
+#include "../dstorage/dstorage_event.hpp"
 
 namespace skr {
 namespace io {
-
-struct RUNTIME_API DStorageEvent : public skr::SInterface
-{
-    IO_RC_OBJECT_BODY
-public:
-    SInterfaceDeleter custom_deleter() const 
-    { 
-        return +[](SInterface* ptr) 
-        { 
-            auto* p = static_cast<DStorageEvent*>(ptr);
-            p->pool->deallocate(p); 
-        };
-    }
-
-    bool okay() { return skr_dstorage_event_test(event); }
-
-    friend struct SmartPool<DStorageEvent, DStorageEvent>;
-protected:
-    DStorageEvent(ISmartPoolPtr<DStorageEvent> pool, SkrDStorageQueueId queue) 
-        : queue(queue), pool(pool)
-    {
-        if (!event)
-            event = skr_dstorage_queue_create_event(queue);
-    }
-    ~DStorageEvent() SKR_NOEXCEPT 
-    {
-        if (event)
-        {
-            skr_dstorage_queue_free_event(queue, event);
-        }
-        queue = nullptr;
-    }
-    friend struct DStorageRAMReader;
-    eastl::fixed_vector<IOBatchId, 32> batches;
-    SkrDStorageQueueId queue = nullptr;
-    ISmartPoolPtr<DStorageEvent> pool = nullptr;
-    SkrDStorageEventId event = nullptr;
-};
 
 struct RUNTIME_API DStorageRAMReader final 
     : public RAMReaderBase<IIOBatchProcessor>
