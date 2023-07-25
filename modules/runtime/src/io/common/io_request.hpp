@@ -29,16 +29,16 @@ template<typename T>
 }
 
 template <typename Interface, typename...Components>
-struct IORequestCRTP : public Interface
+struct IORequestMixin : public Interface
 {
     IO_RC_OBJECT_BODY
 public:
-    IORequestCRTP(ISmartPoolPtr<Interface> pool) 
+    IORequestMixin(ISmartPoolPtr<Interface> pool) 
         : components(std::make_tuple(Components(this)...)), pool(pool)
     {
 
     }
-    virtual ~IORequestCRTP() = default;
+    virtual ~IORequestMixin() = default;
 
     [[nodiscard]] virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT
     {
@@ -73,7 +73,7 @@ public:
     { 
         return +[](SInterface* ptr) 
         { 
-            auto* p = static_cast<IORequestCRTP*>(ptr);
+            auto* p = static_cast<IORequestMixin*>(ptr);
             p->pool->deallocate(p); 
         };
     }
