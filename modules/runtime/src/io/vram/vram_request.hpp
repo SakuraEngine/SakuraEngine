@@ -1,6 +1,7 @@
 #pragma once
 #include "../common/io_request.hpp"
 #include "SkrRT/platform/vfs.h"
+#include "SkrRT/io/vram_io.hpp"
 
 #include <EASTL/fixed_vector.h>
 #include <EASTL/variant.h>
@@ -9,10 +10,10 @@
 namespace skr {
 namespace io {
 
-struct VRAMIORequest final : public IORequestCRTP<
+struct VRAMRequestMixin final : public IORequestCRTP<
     IIORequest, IOFileComponent, IOStatusComponent>
 {
-    friend struct SmartPool<VRAMIORequest, IIORequest>;
+    friend struct SmartPool<VRAMRequestMixin, IIORequest>;
 
     eastl::fixed_vector<skr_io_block_t, 1> blocks;
     
@@ -56,7 +57,7 @@ struct VRAMIORequest final : public IORequestCRTP<
     }
 
 protected:
-    VRAMIORequest(ISmartPool<IIORequest>* pool, const uint64_t sequence) 
+    VRAMRequestMixin(ISmartPool<IIORequest>* pool, const uint64_t sequence) 
         : IORequestCRTP(pool), sequence(sequence) 
     {
 

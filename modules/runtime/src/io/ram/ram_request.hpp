@@ -19,14 +19,14 @@ struct RAMIOStatusComponent final : public IOStatusComponent
     void setStatus(ESkrIOStage status) SKR_NOEXCEPT override;
 };
 
-struct RAMIORequest final : public IORequestCRTP<IBlocksIORequest, 
+struct RAMRequestMixin final : public IORequestCRTP<IBlocksIORequest, 
     IOFileComponent, RAMIOStatusComponent, IOBlocksComponent>
 {
-    friend struct SmartPool<RAMIORequest, IBlocksIORequest>;
+    friend struct SmartPool<RAMRequestMixin, IBlocksIORequest>;
 
     RAMIOBufferId destination = nullptr;
 protected:
-    RAMIORequest(ISmartPool<IBlocksIORequest>* pool, const uint64_t sequence) 
+    RAMRequestMixin(ISmartPool<IBlocksIORequest>* pool, const uint64_t sequence) 
         : IORequestCRTP(pool), sequence(sequence) 
     {
 
@@ -36,7 +36,7 @@ protected:
 
 inline void RAMIOStatusComponent::setStatus(ESkrIOStage status) SKR_NOEXCEPT
 {
-    auto rq = static_cast<RAMIORequest*>(request);
+    auto rq = static_cast<RAMRequestMixin*>(request);
     if (status == SKR_IO_STAGE_CANCELLED)
     {
         if (auto dest = static_cast<RAMIOBuffer*>(rq->destination.get()))

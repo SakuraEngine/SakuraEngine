@@ -9,7 +9,7 @@ namespace io {
 void AllocateIOBufferResolver::resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
 {
     ZoneScopedNC("IOBuffer::Allocate", tracy::Color::BlueViolet);
-    auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+    auto rq = skr::static_pointer_cast<RAMRequestMixin>(request);
     auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
     auto pFiles = io_component<IOFileComponent>(rq.get());
     // deal with 0 block size

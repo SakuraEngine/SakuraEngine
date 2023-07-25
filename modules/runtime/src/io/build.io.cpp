@@ -9,6 +9,7 @@
 #include "ram/ram_readers.cpp"
 
 #include "vram/vram_io.cpp"
+#include "vram/vram_request.cpp"
 #include "vram/vram_resolvers.cpp"
 
 #include "dstorage/dstorage_resolvers.cpp"

@@ -27,7 +27,7 @@ uint64_t VFSRAMReader::get_prefer_batch_size() const SKR_NOEXCEPT
 
 void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORequestId& request) SKR_NOEXCEPT
 {
-    auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+    auto rq = skr::static_pointer_cast<RAMRequestMixin>(request);
     auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
     auto pBlocks = io_component<IOBlocksComponent>(request.get());
     if (auto pFile = io_component<IOFileComponent>(request.get()))
@@ -220,7 +220,7 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
         }
         for (auto&& request : batch->get_requests())
         {
-            auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
+            auto&& rq = skr::static_pointer_cast<RAMRequestMixin>(request);
             auto&& buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
             auto pBlocks = io_component<IOBlocksComponent>(request.get());
             if (auto pFile = io_component<IOFileComponent>(request.get()))
