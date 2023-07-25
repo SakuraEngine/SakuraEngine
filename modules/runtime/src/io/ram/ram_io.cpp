@@ -49,7 +49,7 @@ IOResultId RAMIOBatch::add_request(IORequestId request, skr_io_future_t* future)
         pStatus->future = future;
     }
     rq->destination = buffer;
-    if (auto pComp = io_component<IOBlocksComponent>(rq.get()))
+    if (auto pComp = io_component<BlocksComponent>(rq.get()))
     {
         SKR_ASSERT(!pComp->blocks.empty());
     }

@@ -20,7 +20,7 @@ struct RAMIOStatusComponent final : public IOStatusComponent
 };
 
 struct RAMRequestMixin final : public IORequestMixin<IBlocksRAMRequest, 
-    IOFileComponent, RAMIOStatusComponent, IOBlocksComponent>
+    FileSrcComponent, RAMIOStatusComponent, BlocksComponent>
 {
     friend struct SmartPool<RAMRequestMixin, IBlocksRAMRequest>;
 

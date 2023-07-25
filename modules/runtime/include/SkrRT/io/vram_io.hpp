@@ -51,13 +51,13 @@ struct RUNTIME_API IBlocksVRAMRequest : public IVRAMIORequest
 {
     virtual ~IBlocksVRAMRequest() SKR_NOEXCEPT;
 
-#pragma region IOBlocksComponent
+#pragma region BlocksComponent
     virtual skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT = 0;
     virtual void add_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
     virtual void reset_blocks() SKR_NOEXCEPT = 0;
 #pragma endregion
 
-#pragma region IOCompressedBlocksComponent
+#pragma region CompressedBlocksComponent
     virtual skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT = 0;
     virtual void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
     virtual void reset_compressed_blocks() SKR_NOEXCEPT = 0;
