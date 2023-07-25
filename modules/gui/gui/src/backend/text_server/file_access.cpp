@@ -61,7 +61,7 @@ Vector<uint8_t> FileAccess::get_file_as_bytes(const String& p_path)
     skr_vfs_fclose(file);
     return ret;
 }
-FileAccess::~FileAccess()
+FileAccess::~FileAccess() SKR_NOEXCEPT
 {
     skr_vfs_fclose(file);
 }

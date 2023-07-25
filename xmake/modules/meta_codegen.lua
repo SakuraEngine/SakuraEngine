@@ -21,7 +21,9 @@ function meta_cmd_compile(sourcefile, rootdir, outdir, target, opt)
     end
     local compiler_inst = compiler.load(sourcekind, opt)
     local program, argv = compiler_inst:compargv(sourcefile, sourcefile..".o", opt)
-    if opt.msvc then
+    local msvc = target:toolchain("msvc")
+    local clang_cl = target:toolchain("clang-cl")
+    if msvc or clang_cl then
         table.insert(argv, "--driver-mode=cl")
         --table.insert(argv, "/Tp")
     else
@@ -300,9 +302,6 @@ function generate_once(targetname)
     
     -- parameters
     local opt = opt or {}
-    if has_config("is_msvc") then
-        opt.msvc = true
-    end
 
     -- collect header batch
     for _, target in ipairs(targets) do

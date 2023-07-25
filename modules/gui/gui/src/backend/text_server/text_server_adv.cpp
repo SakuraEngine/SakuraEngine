@@ -3163,7 +3163,7 @@ bool TextServerAdvanced::_font_get_glyph_contours(const RID& p_font_rid, int64_t
 
     int32_t index = p_index & 0xffffff; // Remove subpixel shifts.
 
-    int error = FT_Load_Glyph(fd->cache[size]->face, index, FT_LOAD_NO_BITMAP | (fd->force_autohinter ? FT_LOAD_FORCE_AUTOHINT : 0));
+    [[maybe_unused]] int error = FT_Load_Glyph(fd->cache[size]->face, index, FT_LOAD_NO_BITMAP | (fd->force_autohinter ? FT_LOAD_FORCE_AUTOHINT : 0));
 
     if (fd->embolden != 0.f)
     {
@@ -3560,7 +3560,7 @@ void TextServerAdvanced::_font_draw_glyph(const RID& p_font_rid, const RID& p_ca
                 {
                     Point2 cpos = p_pos;
                     cpos += gl.rect.position * (double)p_size / (double)fd->msdf_source_size;
-                    Size2 csize = gl.rect.size * (double)p_size / (double)fd->msdf_source_size;
+                    [[maybe_unused]] Size2 csize = gl.rect.size * (double)p_size / (double)fd->msdf_source_size;
                     SKR_UNIMPLEMENTED_FUNCTION();
                     // RenderingServer::get_singleton()->canvas_item_add_msdf_texture_rect_region(p_canvas, Rect2(cpos, csize), texture, gl.uv_rect, modulate, 0, fd->msdf_range, (double)p_size / (double)fd->msdf_source_size);
                 }
@@ -3593,7 +3593,7 @@ void TextServerAdvanced::_font_draw_glyph(const RID& p_font_rid, const RID& p_ca
                         struct float8 {
                             float x, y, w, h, u, v, u2, v2;
                         };
-                        skr_float4_t color = { p_color.r, p_color.g, p_color.b, p_color.a };
+                        [[maybe_unused]] skr_float4_t color = { p_color.r, p_color.g, p_color.b, p_color.a };
 
                         auto image_texture = FontAtlasImage::texture_owner().get_or_null(texture);
                         auto draw_texture = image_texture->render_image();
@@ -3705,12 +3705,12 @@ void TextServerAdvanced::_font_draw_glyph_outline(const RID& p_font_rid, const R
                 {
                     tex.atlas->flush_update();
                 }
-                RID texture = tex.atlas->get_rid();
+                [[maybe_unused]] RID texture = tex.atlas->get_rid();
                 if (fd->msdf)
                 {
                     Point2 cpos = p_pos;
                     cpos += gl.rect.position * (double)p_size / (double)fd->msdf_source_size;
-                    Size2 csize = gl.rect.size * (double)p_size / (double)fd->msdf_source_size;
+                    [[maybe_unused]] Size2 csize = gl.rect.size * (double)p_size / (double)fd->msdf_source_size;
                     SKR_UNIMPLEMENTED_FUNCTION();
                     // RenderingServer::get_singleton()->canvas_item_add_msdf_texture_rect_region(p_canvas, Rect2(cpos, csize), texture, gl.uv_rect, modulate, p_outline_size, fd->msdf_range, (double)p_size / (double)fd->msdf_source_size);
                 }
@@ -3732,7 +3732,7 @@ void TextServerAdvanced::_font_draw_glyph_outline(const RID& p_font_rid, const R
                         cpos.x = ::floor(cpos.x);
                     }
                     cpos += gl.rect.position;
-                    Size2 csize = gl.rect.size;
+                    [[maybe_unused]] Size2 csize = gl.rect.size;
                     if (lcd_aa)
                     {
                         SKR_UNIMPLEMENTED_FUNCTION();
@@ -5279,13 +5279,13 @@ bool TextServerAdvanced::_shaped_text_update_breaks(const RID& p_shaped)
         return true; // Nothing to do.
     }
 
-    const UChar* data = sd->utf16.get_data();
+    [[maybe_unused]] const UChar* data = sd->utf16.get_data();
 
     if (!sd->break_ops_valid)
     {
         sd->breaks.clear();
         sd->break_inserts = 0;
-        UErrorCode err = U_ZERO_ERROR;
+        [[maybe_unused]] UErrorCode err = U_ZERO_ERROR;
         int        i = 0;
         while (i < sd->spans.size())
         {

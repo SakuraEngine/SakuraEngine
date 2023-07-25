@@ -83,6 +83,8 @@ void SkrNativeDevice::destroy_window(NotNull<IWindow*> view)
 
 void SkrNativeDevice::render_all_windows() SKR_NOEXCEPT
 {
+    auto render_graph = render_device()->render_graph();
+
     // combine render graph
     for (auto window : _all_windows)
     {
@@ -90,9 +92,13 @@ void SkrNativeDevice::render_all_windows() SKR_NOEXCEPT
     }
 
     // commit render graph
-    render_device()->render_graph()->compile();
-    render_device()->render_graph()->execute();
-
+    render_graph->compile();
+    auto frame_index = render_device()->render_graph()->execute();
+    
+    // TODO: 更优雅地回收垃圾
+    if (frame_index >= RG_MAX_FRAME_IN_FLIGHT * 10)
+        render_graph->collect_garbage(frame_index - RG_MAX_FRAME_IN_FLIGHT * 10);
+            
     // present
     for (auto window : _all_windows)
     {
