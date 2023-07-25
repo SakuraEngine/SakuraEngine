@@ -40,24 +40,22 @@ VRAMService::VRAMService(const VRAMServiceDescriptor* desc) SKR_NOEXCEPT
     slices_pool = VRAMRequestPool<ISlicesVRAMRequest>::Create(kIOPoolObjectsMemoryName);
     tiles_pool = VRAMRequestPool<ITilesVRAMRequest>::Create(kIOPoolObjectsMemoryName);
     blocks_pool = VRAMRequestPool<IBlocksVRAMRequest>::Create(kIOPoolObjectsMemoryName);
-    // vram_buffer_pool = SmartPoolPtr<VRAMIOBuffer, IRAMIOBuffer>::Create(kIOPoolObjectsMemoryName);
+
     vram_batch_pool = SmartPoolPtr<VRAMIOBatch, IIOBatch>::Create(kIOPoolObjectsMemoryName);
+    
+    // vram_buffer_pool = SmartPoolPtr<VRAMIOBuffer, IRAMIOBuffer>::Create(kIOPoolObjectsMemoryName);
 
     /*
     if (desc->use_dstorage)
         runner.ds_reader = VRAMUtils::CreateDSReader(this, desc);
-    if (!runner.ds_reader)
-        runner.cpy_reader = VRAMUtils::CreateCommonReader(this, desc);
+    runner.common_reader = VRAMUtils::CreateCommonReader(this, desc);
     */
     runner.set_resolvers();
 
-    if (!desc->awake_at_request)
+    if ((!desc->awake_at_request) && (desc->sleep_time > 2000))
     {
-        if (desc->sleep_time > 2000)
-        {
-            SKR_ASSERT(desc->sleep_time <= 2000);
-            SKR_LOG_FATAL(u8"RAMService: too long sleep_time causes 'deadlock' when awake_at_request is false");
-        }
+        SKR_ASSERT(desc->sleep_time <= 2000);
+        SKR_LOG_FATAL(u8"RAMService: too long sleep_time causes 'deadlock' when awake_at_request is false");
     }
     runner.set_sleep_time(desc->sleep_time);
 }
@@ -123,18 +121,6 @@ VRAMIOTextureId VRAMService::request(SlicesIORequestId request, IOFuture* future
     return texture;
 }
     
-/*
-RAMIOBufferId VRAMService::request(IORequestId request, skr_io_future_t* future, SkrAsyncServicePriority priority) SKR_NOEXCEPT
-{
-    auto batch = open_batch(1);
-    auto result = batch->add_request(request, future);
-    auto buffer = skr::static_pointer_cast<RAMIOBuffer>(result);
-    batch->set_priority(priority);
-    this->request(batch);
-    return buffer;
-}
-*/
-
 void VRAMService::stop(bool wait_drain) SKR_NOEXCEPT
 {
     if (wait_drain)
@@ -204,33 +190,27 @@ void VRAMService::Runner::enqueueBatch(const IOBatchId& batch) SKR_NOEXCEPT
     skr_atomic64_add_relaxed(&processing_request_counts[priority], 1);
 }
 
-
 void VRAMService::Runner::set_resolvers() SKR_NOEXCEPT
 {
-    IORequestResolverId openfile = nullptr;
+    auto chain = skr::static_pointer_cast<IORequestResolverChain>(IIORequestResolverChain::Create());
+    chain->runner = this;
+
     const bool dstorage = ds_reader.get();
     if (dstorage) 
     {
-        openfile = SObjectPtr<DStorageFileResolver>::Create();
+        auto open_dfile = SObjectPtr<DStorageFileResolver>::Create();
+        chain->then(open_dfile);
     }
-    else
-    {
-        openfile = SObjectPtr<VFSFileResolver>::Create();
-    }   
 
     auto alloc_resource = SObjectPtr<AllocateVRAMResourceResolver>::Create();
-    auto chain = skr::static_pointer_cast<IORequestResolverChain>(IIORequestResolverChain::Create());
-    chain->runner = this;
-    chain->then(openfile)
-        ->then(alloc_resource);
+    chain->then(alloc_resource);
     batch_buffer = SObjectPtr<IOBatchBuffer>::Create(); // hold batches
+
+    batch_processors = { batch_buffer, chain };
     if (dstorage)
     {
-        batch_processors = { batch_buffer, chain, ds_reader };
+        batch_processors.push_back(ds_reader);
     }
-    else
-    {
-        batch_processors = { batch_buffer, chain, cpy_reader };
-    }
+    batch_processors.push_back(common_reader);
 }
 } // namespace skr::io

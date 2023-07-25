@@ -38,7 +38,7 @@ struct VRAMService final : public IVRAMService
 
         IOBatchBufferId batch_buffer = nullptr;
         IOReaderId<IIOBatchProcessor> ds_reader = nullptr;
-        IOReaderId<IIOBatchProcessor> cpy_reader = nullptr;
+        IOReaderId<IIOBatchProcessor> common_reader = nullptr;
 
         VRAMService* service = nullptr;
     };
