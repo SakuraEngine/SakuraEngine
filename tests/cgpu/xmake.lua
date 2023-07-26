@@ -6,7 +6,6 @@ target("CGPUTests")
     set_group("05.vid_tests/cgpu")
     public_dependency("SkrRT", engine_version)
     add_deps("SkrTestFramework", {public = false})
-    add_packages("catch2", {public = true})
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_files(
         "Common.cpp",

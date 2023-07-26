@@ -1,4 +1,4 @@
-#include "../pch.hpp" // IWYU pragma: keep
+#include "../pch.hpp"
 #include "SkrRT/platform/configure.h"
 #include "debug.cpp"
 #include "vfs.cpp"

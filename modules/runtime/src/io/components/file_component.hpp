@@ -9,22 +9,14 @@ namespace skr {
 namespace io {
 
 template <>
-struct IORequestComponentTID<struct IOFileComponent> 
+struct IORequestComponentTID<struct FileSrcComponent> 
 {
-    static constexpr skr_guid_t Get()
-    {
-        using namespace skr::guid::literals;
-        return u8"6bf19e92-7180-42d5-9bb7-19cae4e8716d"_guid;
-    } 
+    static constexpr skr_guid_t Get();
 };
-struct IOFileComponent : public IORequestComponent
+struct FileSrcComponent : public IORequestComponent
 {
-    IOFileComponent(IIORequest* const request) SKR_NOEXCEPT 
-        : IORequestComponent(request) 
-    {
-        
-    }
-    virtual skr_guid_t get_tid() const SKR_NOEXCEPT override { return IORequestComponentTID<IOFileComponent>::Get(); }
+    FileSrcComponent(IIORequest* const request) SKR_NOEXCEPT;
+    virtual skr_guid_t get_tid() const SKR_NOEXCEPT override;
     
     uint64_t get_fsize() const SKR_NOEXCEPT
     {
@@ -54,6 +46,12 @@ struct IOFileComponent : public IORequestComponent
     skr_io_file_handle file = nullptr;
     SkrDStorageFileHandle dfile = nullptr;
 };
+
+constexpr skr_guid_t IORequestComponentTID<struct FileSrcComponent>::Get()
+{
+    using namespace skr::guid::literals;
+    return u8"6bf19e92-7180-42d5-9bb7-19cae4e8716d"_guid;
+} 
 
 } // namespace io
 } // namespace skr

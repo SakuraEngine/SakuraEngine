@@ -1,4 +1,5 @@
-#include "../../pch.hpp" // IWYU pragma: keep
+#include "../../pch.hpp"
+#include "SkrRT/io/io.h"
 #include "ram_readers.hpp"
 #include "SkrRT/async/thread_job.hpp"
 
@@ -11,7 +12,15 @@ using VFSReaderFutureLauncher = skr::FutureLauncher<bool>;
 
 bool VFSRAMReader::fetch(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
 {
-    if (auto pComp = io_component<IOStatusComponent>(request.get()))
+    auto pStatus = io_component<IOStatusComponent>(request.get());
+    const auto loaded = (pStatus->getStatus() == SKR_IO_STAGE_LOADED);
+    const auto cancelled = (pStatus->getStatus() == SKR_IO_STAGE_CANCELLED);
+    if (loaded || cancelled) // already processed by other readers
+    {
+        loaded_requests[priority].enqueue(request);
+        inc_processed(priority);
+    }
+    else if (auto pComp = io_component<IOStatusComponent>(request.get()))
     {
         SKR_ASSERT(pComp->getStatus() == SKR_IO_STAGE_RESOLVING);
         fetched_requests[priority].enqueue(request);
@@ -27,10 +36,10 @@ uint64_t VFSRAMReader::get_prefer_batch_size() const SKR_NOEXCEPT
 
 void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORequestId& request) SKR_NOEXCEPT
 {
-    auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+    auto rq = skr::static_pointer_cast<RAMRequestMixin>(request);
     auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
-    auto pBlocks = io_component<IOBlocksComponent>(request.get());
-    if (auto pFile = io_component<IOFileComponent>(request.get()))
+    auto pBlocks = io_component<BlocksComponent>(request.get());
+    if (auto pFile = io_component<FileSrcComponent>(request.get()))
     {
         {
             ZoneScopedN("dispatch_read");
@@ -191,8 +200,17 @@ DStorageRAMReader::~DStorageRAMReader() SKR_NOEXCEPT
 
 bool DStorageRAMReader::fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT
 {
-    fetched_batches[priority].enqueue(batch);
-    inc_processing(priority);
+    auto B = static_cast<IOBatchBase*>(batch.get());
+    if (B->can_use_dstorage)
+    {
+        fetched_batches[priority].enqueue(batch);
+        inc_processing(priority);
+    }
+    else
+    {
+        processed_batches[priority].enqueue(batch);
+        inc_processed(priority);
+    }
     return true;
 }
 
@@ -220,10 +238,10 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
         }
         for (auto&& request : batch->get_requests())
         {
-            auto&& rq = skr::static_pointer_cast<RAMIORequest>(request);
+            auto&& rq = skr::static_pointer_cast<RAMRequestMixin>(request);
             auto&& buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
-            auto pBlocks = io_component<IOBlocksComponent>(request.get());
-            if (auto pFile = io_component<IOFileComponent>(request.get()))
+            auto pBlocks = io_component<BlocksComponent>(request.get());
+            if (auto pFile = io_component<FileSrcComponent>(request.get()))
             {
                 if (service->runner.try_cancel(priority, rq))
                 {
@@ -297,13 +315,13 @@ void DStorageRAMReader::pollSubmitted(SkrAsyncServicePriority priority) SKR_NOEX
             {
                 for (auto request : batch->get_requests())
                 {
-                    auto pFile = io_component<IOFileComponent>(request.get());
+                    auto pFile = io_component<FileSrcComponent>(request.get());
                     auto pStatus = io_component<IOStatusComponent>(request.get());
                     pStatus->setStatus(SKR_IO_STAGE_LOADED);
                     skr_dstorage_close_file(instance, pFile->dfile);
                     pFile->dfile = nullptr;
                 }
-                loaded_batches[priority].enqueue(batch);
+                processed_batches[priority].enqueue(batch);
                 dec_processing(priority);
                 inc_processed(priority);
             }
@@ -329,7 +347,7 @@ void DStorageRAMReader::recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 
 bool DStorageRAMReader::poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT
 {
-    if (loaded_batches[priority].try_dequeue(batch))
+    if (processed_batches[priority].try_dequeue(batch))
     {
         dec_processed(priority);
         return batch.get();

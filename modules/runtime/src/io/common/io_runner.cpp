@@ -1,4 +1,4 @@
-#include "../../pch.hpp" // IWYU pragma: keep
+#include "../../pch.hpp"
 #include "SkrRT/async/thread_job.hpp"
 #include "SkrRT/async/wait_timeout.hpp"
 #include "../common/io_runnner.hpp"
@@ -119,7 +119,7 @@ void RunnerBase::phaseProcessBatches() SKR_NOEXCEPT
                         SKR_ASSERT(sucess);
                         for (auto&& request : batch->get_requests())
                         {
-                            if (auto pBlocks = io_component<IOBlocksComponent>(request.get()))
+                            if (auto pBlocks = io_component<BlocksComponent>(request.get()))
                             {
                                 for (auto block : pBlocks->get_blocks())
                                     batch_size += block.size;

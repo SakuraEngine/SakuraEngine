@@ -1,4 +1,4 @@
-#include "../pch.hpp" // IWYU pragma: keep
+#include "../pch.hpp"
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrToolCore/project/project.hpp"

@@ -1,4 +1,4 @@
-#include "../../pch.hpp" // IWYU pragma: keep
+#include "../../pch.hpp"
 #include "SkrRT/platform/process.h"
 #include "SkrRT/misc/log/log_sink.hpp"
 

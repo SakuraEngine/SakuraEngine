@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #pragma once
+#include <iostream>
 #include "marl/scheduler.h"
 #include "SkrTestFramework/framework.hpp"
-#include <catch2/generators/catch_generators.hpp>
 
 // SchedulerParams holds Scheduler construction parameters for testing.
 struct SchedulerParams {
@@ -46,18 +46,12 @@ class WithoutBoundScheduler {
 
 // WithBoundScheduler is a parameterized test fixture that performs tests with
 // a bound scheduler using a number of different configurations.
+template<uint32_t N_THREADS>
 class WithBoundScheduler {
  public:
   WithBoundScheduler() {
     allocator = new marl::TrackedAllocator(marl::Allocator::Default);
-
-    auto params = GENERATE(as<SchedulerParams>{}, 
-      SchedulerParams{0}, // Single-threaded mode test
-      SchedulerParams{1}, // Single worker thread
-      SchedulerParams{2} // 2 worker threads...
-      // ,SchedulerParams{4}, SchedulerParams{8}, 
-      //SchedulerParams{64}
-    );
+    auto params = SchedulerParams{ N_THREADS };
 
     marl::Scheduler::Config cfg;
     cfg.setAllocator(allocator);
@@ -78,6 +72,12 @@ class WithBoundScheduler {
     EXPECT_EQ(stats.bytesAllocated(), 0U);
     delete allocator;
   }
+
+  void TestCondVars();
+  void TestCalls();
+  void TestEvents();
+  void TestUnboundedPool();
+  void TestTicket();
 
   marl::TrackedAllocator* allocator = nullptr;
 };

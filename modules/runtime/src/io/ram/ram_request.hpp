@@ -11,41 +11,22 @@ namespace io {
 
 struct RAMIOStatusComponent final : public IOStatusComponent
 {
-    RAMIOStatusComponent(IIORequest* const request) SKR_NOEXCEPT 
-        : IOStatusComponent(request) 
-    {
-        
-    }
+    RAMIOStatusComponent(IIORequest* const request) SKR_NOEXCEPT;
     void setStatus(ESkrIOStage status) SKR_NOEXCEPT override;
 };
 
-struct RAMIORequest final : public IORequestCRTP<IBlocksIORequest, 
-    IOFileComponent, RAMIOStatusComponent, IOBlocksComponent>
+struct RAMRequestMixin final : public IORequestMixin<IBlocksRAMRequest, 
+    // components...
+    RAMIOStatusComponent, 
+    FileSrcComponent, BlocksComponent>
 {
-    friend struct SmartPool<RAMIORequest, IBlocksIORequest>;
+    friend struct SmartPool<RAMRequestMixin, IBlocksRAMRequest>;
 
     RAMIOBufferId destination = nullptr;
 protected:
-    RAMIORequest(ISmartPool<IBlocksIORequest>* pool, const uint64_t sequence) 
-        : IORequestCRTP(pool), sequence(sequence) 
-    {
-
-    }
-    const uint64_t sequence;
+    RAMRequestMixin(ISmartPoolPtr<IBlocksRAMRequest> pool, const uint64_t sequence) SKR_NOEXCEPT;
+    const uint64_t sequence = UINT64_MAX;
 };
-
-inline void RAMIOStatusComponent::setStatus(ESkrIOStage status) SKR_NOEXCEPT
-{
-    auto rq = static_cast<RAMIORequest*>(request);
-    if (status == SKR_IO_STAGE_CANCELLED)
-    {
-        if (auto dest = static_cast<RAMIOBuffer*>(rq->destination.get()))
-        {
-            dest->free_buffer();
-        }
-    }
-    return IOStatusComponent::setStatus(status);
-}
 
 } // namespace io
 } // namespace skr
