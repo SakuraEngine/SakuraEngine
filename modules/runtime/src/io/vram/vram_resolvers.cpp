@@ -1,5 +1,8 @@
 #include "../../pch.hpp"
+#include "../common/io_request.hpp"
+#include "io/vram/components.hpp"
 #include "vram_resolvers.hpp"
+#include "components.hpp"
 
 namespace skr {
 namespace io {
@@ -7,32 +10,19 @@ namespace io {
 void AllocateVRAMResourceResolver::resolve(SkrAsyncServicePriority priority, IOBatchId batch, IORequestId request) SKR_NOEXCEPT
 {
     ZoneScopedNC("VRAMResource::Allocate", tracy::Color::BlueViolet);
-    SKR_UNIMPLEMENTED_FUNCTION();
-    /*
-    auto rq = skr::static_pointer_cast<VRAMRequestMixin>(request);
-    auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
-    // deal with 0 block size
-    for (auto& block : rq->blocks)
+    auto buffer = io_component<VRAMBufferComponent>(request.get());
+    auto texture = io_component<VRAMTextureComponent>(request.get());
+    if (buffer && (buffer->type == VRAMBufferComponent::Type::ServiceCreated))
     {
-        if (block.size == 0)
-        {
-            block.size = rq->get_fsize() - block.offset;
-        }
-        if (buf->size == 0)
-        {
-            buf->size += block.size;
-        }
+        cgpu_create_buffer(buffer->device, &buffer->desc);
+        return;
     }
-    // allocate
-    if (buf->bytes == nullptr)
+
+    if (texture && (texture->type == VRAMTextureComponent::Type::ServiceCreated))
     {
-        if (buf->size == 0)
-        {
-            SKR_ASSERT(0 && "invalid destination size");
-        }
-        buf->allocate_buffer(buf->size);
+        cgpu_create_texture(texture->device, &texture->desc);
+        return;
     }
-    */
 }
 
 } // namespace io
