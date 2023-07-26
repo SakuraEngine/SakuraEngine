@@ -88,10 +88,10 @@ protected:
 #endif
 };
 
-#if defined(_WIN32) || defined(_WIN64)
 template <ECGPUBackend backend>
 void SwapChainCreation<backend>::test_all()
 {
+#if defined(_WIN32) || defined(_WIN64)
 SUBCASE("CreateFromHWND")
 {
     auto surface = cgpu_surface_from_hwnd(device, hwnd);
