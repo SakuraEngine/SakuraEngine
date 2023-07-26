@@ -20,7 +20,11 @@ shared_module("SkrGui", "SKR_GUI", engine_version)
     add_files("src/render_objects/**.cpp", {unity_group = "render_objects"})
     add_files("src/widgets/**.cpp", {unity_group = "widgets"})
     add_files("src/dev/**.cpp", {unity_group = "dev"})
-    add_files("src/backend/**.cpp", {unity_ignored  = true})
+    
+    add_files("src/backend/*.cpp")
+    add_files("src/backend/paragraph/*.cpp", {unity_group  = "text"})
+    add_files("src/backend/text_server/*.cpp", {unity_group  = "text"})
+    add_files("src/backend/text_server_adv/*.cpp", {unity_ignored  = true})
 
     remove_files("src/dev/deprecated/**.cpp")
     if (is_plat("windows")) then

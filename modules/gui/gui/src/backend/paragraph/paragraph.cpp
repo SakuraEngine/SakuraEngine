@@ -1,4 +1,4 @@
-#include "backend/embedded_text/paragraph.hpp"
+#include "backend/paragraph/paragraph.hpp"
 #include "SkrGui/backend/canvas/canvas.hpp"
 #include "SkrGui/framework/painting_context.hpp"
 #include "backend/text_server/text_paragraph.h"
