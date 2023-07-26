@@ -6,10 +6,26 @@
 namespace skr {
 namespace io {
 
+IORequestComponent::IORequestComponent(IIORequest* const request) SKR_NOEXCEPT 
+    : request(request) 
+{
+
+}
+
+IORequestComponent::~IORequestComponent() SKR_NOEXCEPT
+{
+
+}
+
 IOStatusComponent::IOStatusComponent(IIORequest* const request) SKR_NOEXCEPT 
     : IORequestComponent(request) 
 {
     
+}
+
+IOStatusComponent::~IOStatusComponent() SKR_NOEXCEPT
+{
+
 }
 
 skr_guid_t IOStatusComponent::get_tid() const SKR_NOEXCEPT 

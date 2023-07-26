@@ -4,6 +4,7 @@
 #include "SkrRT/io/vram_io.hpp"
 #include "vram_batch.hpp"
 #include "vram_request.hpp"
+#include "vram_resources.hpp"
 
 namespace skr {
 namespace io {
@@ -48,13 +49,15 @@ struct VRAMService final : public IVRAMService
     Runner runner;
     
     template <typename Interface>
-    using VRAMRequestPool = SmartPoolPtr<VRAMRequestMixin<Interface>, Interface>;
+    using VRAMRequestPool = SmartPoolPtr<VRAMRequest<Interface>, Interface>;
     VRAMRequestPool<ISlicesVRAMRequest> slices_pool = nullptr;
     VRAMRequestPool<ITilesVRAMRequest> tiles_pool = nullptr;
     VRAMRequestPool<IBlocksVRAMRequest> blocks_pool = nullptr;
-    // SmartPoolPtr<VRAMIOBuffer, IVRAMIOBuffer> vram_buffer_pool = nullptr;
+
     SmartPoolPtr<VRAMIOBatch, IIOBatch> vram_batch_pool = nullptr;
 
+    SmartPoolPtr<VRAMBuffer, IVRAMIOBuffer> vram_buffer_pool = nullptr;
+    SmartPoolPtr<VRAMTexture, IVRAMIOTexture> vram_texture_pool = nullptr;
 private:
     static uint32_t global_idx;
     SAtomicU64 request_sequence = 0;

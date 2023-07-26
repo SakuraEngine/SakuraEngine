@@ -21,22 +21,10 @@ struct VRAMIOStatusComponent final : public IOStatusComponent
     void setStatus(ESkrIOStage status) SKR_NOEXCEPT override;
 };
 
-template <typename Interface>
-struct VRAMRequestMixin final : public IORequestMixin<Interface, 
-    // components...
-    IOStatusComponent, 
-    FileSrcComponent, // Src
-    VRAMIOStagingComponent, // Transfer
-    VRAMBufferComponent, VRAMTextureComponent //Dst
->
+template <typename Interface, typename... Components>
+struct VRAMRequestMixin : public IORequestMixin<Interface, Components...>
 {
-    using Super = IORequestMixin<Interface, 
-        // components...
-        IOStatusComponent, 
-        FileSrcComponent, // Src
-        VRAMIOStagingComponent, // Transfer
-        VRAMBufferComponent, VRAMTextureComponent //Dst
-    >;
+    using Super = IORequestMixin<Interface, Components...>;
 
     void set_transfer_queue(CGPUQueueId queue) SKR_NOEXCEPT
     {
@@ -82,7 +70,6 @@ struct VRAMRequestMixin final : public IORequestMixin<Interface,
     }
 #pragma endregion
 
-    friend struct SmartPool<VRAMRequestMixin<Interface>, Interface>;
 protected:
     VRAMRequestMixin(ISmartPoolPtr<Interface> pool, const uint64_t sequence) SKR_NOEXCEPT
         : Super(pool), sequence(sequence) 
@@ -90,6 +77,63 @@ protected:
 
     }
     const uint64_t sequence;
+};
+
+template <typename T>
+struct VRAMRequest
+{
+
+};
+
+template <>
+struct VRAMRequest<ISlicesVRAMRequest> final : public VRAMRequestMixin<ISlicesVRAMRequest,
+    IOStatusComponent, 
+    FileSrcComponent, // Src
+    VRAMIOStagingComponent, // Transfer
+    VRAMTextureComponent //Dst
+>
+{
+    friend struct SmartPool<VRAMRequest<ISlicesVRAMRequest>, ISlicesVRAMRequest>;
+protected:
+    VRAMRequest(ISmartPoolPtr<ISlicesVRAMRequest> pool, const uint64_t sequence) SKR_NOEXCEPT
+        : VRAMRequestMixin(pool, sequence)
+    {
+
+    }
+};
+
+template <>
+struct VRAMRequest<ITilesVRAMRequest> final : public VRAMRequestMixin<ITilesVRAMRequest,
+    IOStatusComponent, 
+    FileSrcComponent, // Src
+    VRAMIOStagingComponent, // Transfer
+    VRAMTextureComponent //Dst
+>
+{
+    friend struct SmartPool<VRAMRequest<ITilesVRAMRequest>, ITilesVRAMRequest>;
+protected:
+    VRAMRequest(ISmartPoolPtr<ITilesVRAMRequest> pool, const uint64_t sequence) SKR_NOEXCEPT
+        : VRAMRequestMixin(pool, sequence)
+    {
+
+    }
+};
+
+template <>
+struct VRAMRequest<IBlocksVRAMRequest> final : public VRAMRequestMixin<IBlocksVRAMRequest,
+    IOStatusComponent, 
+    FileSrcComponent, // Src
+    VRAMIOStagingComponent, // Transfer
+    VRAMBufferComponent //Dst
+>
+{
+    friend struct SmartPool<VRAMRequest<IBlocksVRAMRequest>, IBlocksVRAMRequest>;
+protected:
+    VRAMRequest(ISmartPoolPtr<IBlocksVRAMRequest> pool, const uint64_t sequence) SKR_NOEXCEPT
+        : VRAMRequestMixin(pool, sequence)
+    {
+
+    }
 };
 
 inline void VRAMIOStatusComponent::setStatus(ESkrIOStage status) SKR_NOEXCEPT

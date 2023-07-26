@@ -33,10 +33,12 @@ struct IORequestComponentTID<struct IOStatusComponent>
 {
     static constexpr skr_guid_t Get();
 };
-struct IOStatusComponent : public IORequestComponent
+struct RUNTIME_API IOStatusComponent : public IORequestComponent
 {
 public:
     IOStatusComponent(IIORequest* const request) SKR_NOEXCEPT;
+    virtual ~IOStatusComponent() SKR_NOEXCEPT;
+
     virtual skr_guid_t get_tid() const SKR_NOEXCEPT override;
 
     const skr_io_future_t* get_future() const SKR_NOEXCEPT { return future; }

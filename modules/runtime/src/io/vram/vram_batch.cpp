@@ -10,35 +10,22 @@
 namespace skr {
 namespace io {
 
-IVRAMIOResource::~IVRAMIOResource() SKR_NOEXCEPT
-{
-
-}
-
-IVRAMIOBuffer::~IVRAMIOBuffer() SKR_NOEXCEPT
-{
-
-}
-
-IVRAMIOTexture::~IVRAMIOTexture() SKR_NOEXCEPT
-{
-
-}
-
 IOResultId VRAMIOBatch::add_request(IORequestId request, skr_io_future_t* future) SKR_NOEXCEPT
 {
-    /*
     auto srv = static_cast<VRAMService*>(service);
-    auto buffer = srv->vram_buffer_pool->allocate();
-    auto rq = skr::static_pointer_cast<VRAMRequestMixin>(request);
-    rq->future = future;
-    rq->destination = buffer;
-    rq->owner_batch = this;
-    SKR_ASSERT(!rq->blocks.empty());
-    addRequest(request);
-    return buffer;
-    */
-    SKR_UNIMPLEMENTED_FUNCTION();
+    if (auto pBufferComp = io_component<VRAMBufferComponent>(request.get()))
+    {
+        pBufferComp->artifact = srv->vram_buffer_pool->allocate();
+        addRequest(request);
+        return pBufferComp->artifact;
+    }
+    if (auto pTextureComp = io_component<VRAMTextureComponent>(request.get()))
+    {
+        pTextureComp->artifact = srv->vram_texture_pool->allocate();
+        addRequest(request);
+        return pTextureComp->artifact;
+    }
+    SKR_UNREACHABLE_CODE();
     return nullptr;
 }
 

@@ -4,6 +4,21 @@
 namespace skr::io 
 {
 
+IVRAMIOResource::~IVRAMIOResource() SKR_NOEXCEPT
+{
+
+}
+
+IVRAMIOBuffer::~IVRAMIOBuffer() SKR_NOEXCEPT
+{
+
+}
+
+IVRAMIOTexture::~IVRAMIOTexture() SKR_NOEXCEPT
+{
+
+}
+
 VRAMBuffer::~VRAMBuffer() SKR_NOEXCEPT
 {
 

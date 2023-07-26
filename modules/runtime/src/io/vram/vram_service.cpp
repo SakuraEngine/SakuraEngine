@@ -43,7 +43,8 @@ VRAMService::VRAMService(const VRAMServiceDescriptor* desc) SKR_NOEXCEPT
 
     vram_batch_pool = SmartPoolPtr<VRAMIOBatch, IIOBatch>::Create(kIOPoolObjectsMemoryName);
     
-    // vram_buffer_pool = SmartPoolPtr<VRAMIOBuffer, IRAMIOBuffer>::Create(kIOPoolObjectsMemoryName);
+    vram_buffer_pool = SmartPoolPtr<VRAMBuffer, IVRAMIOBuffer>::Create(kIOPoolObjectsMemoryName);
+    vram_texture_pool = SmartPoolPtr<VRAMTexture, IVRAMIOTexture>::Create(kIOPoolObjectsMemoryName);
 
     /*
     if (desc->use_dstorage)
