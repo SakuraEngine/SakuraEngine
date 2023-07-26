@@ -1,3 +1,4 @@
+#include "../../pch.hpp"
 #include "backend/text_server/image_texture.h"
 #include "backend/text_server/char_utils.h"
 #include "backend/text_server/file_access.h"
