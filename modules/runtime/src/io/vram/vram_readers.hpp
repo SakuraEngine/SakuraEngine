@@ -33,12 +33,8 @@ protected:
 
 struct CommonVRAMReader final : public VRAMReaderBase<IIOBatchProcessor>
 {
-    CommonVRAMReader(VRAMService* service, IRAMService* ram_service) SKR_NOEXCEPT 
-        : VRAMReaderBase(service), ram_service(ram_service) 
-    {
-
-    }
-    ~CommonVRAMReader() SKR_NOEXCEPT {}
+    CommonVRAMReader(VRAMService* service, IRAMService* ram_service) SKR_NOEXCEPT;
+    ~CommonVRAMReader() SKR_NOEXCEPT;
 
     [[nodiscard]] uint8_t* allocate_staging_buffer(uint64_t size) SKR_NOEXCEPT;
     void free_staging_buffer(uint8_t* buffer) SKR_NOEXCEPT;

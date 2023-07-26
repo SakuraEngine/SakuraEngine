@@ -29,8 +29,7 @@ std::ostream& operator<<(std::ostream& os, const duration<Rep, Period>& d) {
 }  // namespace chrono
 }  // namespace std
 
-template<uint32_t N_THREADS>
-void WithBoundScheduler<N_THREADS>::TestEvents()
+void WithBoundSchedulerBase::TestEvents()
 {
   SUBCASE("EventIsSignalled") {
     for (auto mode : {marl::Event::Mode::Manual, marl::Event::Mode::Auto}) {

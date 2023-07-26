@@ -13,14 +13,14 @@ void AllocateVRAMResourceResolver::resolve(SkrAsyncServicePriority priority, IOB
     auto buffer = io_component<VRAMBufferComponent>(request.get());
     if (buffer && (buffer->type == VRAMBufferComponent::Type::ServiceCreated))
     {
-        cgpu_create_buffer(buffer->device, &buffer->desc);
+        buffer->buffer = cgpu_create_buffer(buffer->device, &buffer->desc);
         return;
     }
     
     auto texture = io_component<VRAMTextureComponent>(request.get());
     if (texture && (texture->type == VRAMTextureComponent::Type::ServiceCreated))
     {
-        cgpu_create_texture(texture->device, &texture->desc);
+        texture->texture = cgpu_create_texture(texture->device, &texture->desc);
         return;
     }
 }

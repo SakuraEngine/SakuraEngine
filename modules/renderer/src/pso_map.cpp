@@ -230,7 +230,7 @@ struct PSOMapImpl : public skr_pso_map_t
         for (const auto& key : sets)
         {
             mPSOProgresses.erase_if(key.get(), [](auto&& iter) {
-                return iter.get()->progress_done();
+                return iter.second.get()->progress_done();
             });
         }
     }

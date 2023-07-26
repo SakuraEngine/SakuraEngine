@@ -8,7 +8,18 @@
 namespace skr {
 namespace io {
 
-using VFSReaderFutureLauncher = skr::FutureLauncher<bool>;
+/*
+CommonVRAMReader::CommonVRAMReader(VRAMService* service, IRAMService* ram_service) SKR_NOEXCEPT 
+    : VRAMReaderBase(service), ram_service(ram_service) 
+{
+
+}
+
+CommonVRAMReader::~CommonVRAMReader() SKR_NOEXCEPT
+{
+    
+}
+*/
 
 } // namespace io
 } // namespace skr

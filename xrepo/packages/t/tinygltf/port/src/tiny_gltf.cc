@@ -6,7 +6,6 @@
 #pragma warning(disable : 4267)  // conversion from 'size_t' to 'type'
 #endif                           // _MSC_VER
 
-#include "../pch.hpp"
 #include "tiny_gltf.h" // IWYU pragma: keep
 
 #ifdef _MSC_VER
