@@ -6,7 +6,7 @@ shared_module("SkrLive2D", "SKR_LIVE2D", engine_version)
     add_includedirs("src/Framework", {public=false})
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     set_pcxxheader("src/pch.hpp")
-    add_files("src/*.cpp", {unity_group = "integrate"})
+    add_files("src/*.cpp")
     add_files("src/Framework/**.cpp", {unity_group = "framework"})
     add_files("src/Renderer/**.cpp", {unity_group = "framework"})
     -- link to cubism core

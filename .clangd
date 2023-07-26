@@ -1,3 +1,7 @@
 CompileFlags:
   Add: [-D__skr_clangd__, -Wno-ignored-attributes, -Wno-unused-function, -xc++]
-  Compiler: clang++
+
+Diagnostics:
+  Suppress:
+    - pragma_attribute_no_pop_eof
+    - pragma_attribute_stack_mismatch

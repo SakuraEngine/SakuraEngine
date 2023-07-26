@@ -1,4 +1,4 @@
-#include "../../pch.hpp" // IWYU pragma: keep
+#include "../../pch.hpp"
 #include "ram_resolvers.hpp"
 #include "ram_request.hpp"
 #include "ram_buffer.hpp"
@@ -6,14 +6,14 @@
 namespace skr {
 namespace io {
 
-void AllocateIOBufferResolver::resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
+void AllocateIOBufferResolver::resolve(SkrAsyncServicePriority priority, IOBatchId batch, IORequestId request) SKR_NOEXCEPT
 {
     ZoneScopedNC("IOBuffer::Allocate", tracy::Color::BlueViolet);
-    auto rq = skr::static_pointer_cast<RAMIORequest>(request);
+    auto rq = skr::static_pointer_cast<RAMRequestMixin>(request);
     auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
-    auto pFiles = io_component<IOFileComponent>(rq.get());
+    auto pFiles = io_component<FileSrcComponent>(rq.get());
     // deal with 0 block size
-    if (auto pComp = io_component<IOBlocksComponent>(rq.get()))
+    if (auto pComp = io_component<BlocksComponent>(rq.get()))
     {
         for (auto& block : pComp->blocks)
         {
@@ -44,11 +44,11 @@ ChunkingVFSReadResolver::ChunkingVFSReadResolver(uint64_t chunk_size) SKR_NOEXCE
     
 }
 
-void ChunkingVFSReadResolver::resolve(SkrAsyncServicePriority priority,IORequestId request) SKR_NOEXCEPT
+void ChunkingVFSReadResolver::resolve(SkrAsyncServicePriority priority, IOBatchId batch, IORequestId request) SKR_NOEXCEPT
 {
     ZoneScopedN("IORequestChunking");
     uint64_t total = 0;
-    if (auto pBlocks = io_component<IOBlocksComponent>(request.get()))
+    if (auto pBlocks = io_component<BlocksComponent>(request.get()))
     {
         for (auto& block : pBlocks->get_blocks())
             total += block.size;
@@ -56,7 +56,7 @@ void ChunkingVFSReadResolver::resolve(SkrAsyncServicePriority priority,IORequest
     uint64_t chunk_count = total / chunk_size;
     if (chunk_count > 2)
     {
-        if (auto pComp = io_component<IOBlocksComponent>(request.get()))
+        if (auto pComp = io_component<BlocksComponent>(request.get()))
         {
             auto bks = pComp->blocks;
             pComp->reset_blocks();

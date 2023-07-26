@@ -1,7 +1,6 @@
 #pragma once
 #include "../common/io_runnner.hpp"
 #include "../common/processors.hpp"
-#include "ram_readers.hpp"
 #include "ram_batch.hpp"
 #include "ram_request.hpp"
 #include "ram_buffer.hpp"
@@ -14,7 +13,7 @@ struct RAMService final : public IRAMService
     RAMService(const skr_ram_io_service_desc_t* desc) SKR_NOEXCEPT;
     
     [[nodiscard]] IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT;
-    [[nodiscard]] BlocksIORequestId open_request() SKR_NOEXCEPT;
+    [[nodiscard]] BlocksRAMRequestId open_request() SKR_NOEXCEPT;
     RAMIOBufferId request(IORequestId request, skr_io_future_t* future, SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void request(IOBatchId request) SKR_NOEXCEPT;
     
@@ -37,15 +36,15 @@ struct RAMService final : public IRAMService
         void set_resolvers() SKR_NOEXCEPT;
 
         IOBatchBufferId batch_buffer = nullptr;
-        IOReaderId<IIORequestProcessor> reader = nullptr;
-        IOReaderId<IIOBatchProcessor> batch_reader = nullptr;
+        IOReaderId<IIORequestProcessor> vfs_reader = nullptr;
+        IOReaderId<IIOBatchProcessor> ds_reader = nullptr;
         RAMService* service = nullptr;
     };
     const skr::string name;
     const bool awake_at_request = false;
     Runner runner;
     
-    SmartPoolPtr<RAMIORequest, IBlocksIORequest> request_pool = nullptr;
+    SmartPoolPtr<RAMRequestMixin, IBlocksRAMRequest> request_pool = nullptr;
     SmartPoolPtr<RAMIOBuffer, IRAMIOBuffer> ram_buffer_pool = nullptr;
     SmartPoolPtr<RAMIOBatch, IIOBatch> ram_batch_pool = nullptr;
     

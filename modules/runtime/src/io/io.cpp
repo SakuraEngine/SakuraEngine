@@ -33,7 +33,7 @@ IIORequest::~IIORequest() SKR_NOEXCEPT
     
 }
 
-IBlocksIORequest::~IBlocksIORequest() SKR_NOEXCEPT
+IBlocksRAMRequest::~IBlocksRAMRequest() SKR_NOEXCEPT
 {
 
 }
@@ -58,7 +58,7 @@ IIORequestResolver::~IIORequestResolver() SKR_NOEXCEPT
 
 }
 
-void IIORequestResolver::resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
+void IIORequestResolver::resolve(SkrAsyncServicePriority priority, IOBatchId batch, IORequestId request) SKR_NOEXCEPT
 {
 
 }

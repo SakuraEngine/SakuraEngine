@@ -29,16 +29,16 @@ template<typename T>
 }
 
 template <typename Interface, typename...Components>
-struct IORequestCRTP : public Interface
+struct IORequestMixin : public Interface
 {
     IO_RC_OBJECT_BODY
 public:
-    IORequestCRTP(ISmartPoolPtr<Interface> pool) 
+    IORequestMixin(ISmartPoolPtr<Interface> pool) 
         : components(std::make_tuple(Components(this)...)), pool(pool)
     {
 
     }
-    virtual ~IORequestCRTP() = default;
+    virtual ~IORequestMixin() = default;
 
     [[nodiscard]] virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT
     {
@@ -73,7 +73,7 @@ public:
     { 
         return +[](SInterface* ptr) 
         { 
-            auto* p = static_cast<IORequestCRTP*>(ptr);
+            auto* p = static_cast<IORequestMixin*>(ptr);
             p->pool->deallocate(p); 
         };
     }
@@ -101,17 +101,17 @@ public:
 
     void set_vfs(skr_vfs_t* _vfs) SKR_NOEXCEPT
     {
-        safe_comp<IOFileComponent>()->set_vfs(_vfs);
+        safe_comp<FileSrcComponent>()->set_vfs(_vfs);
     }
 
     void set_path(const char8_t* p) SKR_NOEXCEPT 
     { 
-        safe_comp<IOFileComponent>()->set_path(p); 
+        safe_comp<FileSrcComponent>()->set_path(p); 
     }
 
     [[nodiscard]] const char8_t* get_path() const SKR_NOEXCEPT 
     { 
-        return safe_comp<IOFileComponent>()->get_path(); 
+        return safe_comp<FileSrcComponent>()->get_path(); 
     }
 
     void use_async_complete() SKR_NOEXCEPT 
@@ -141,32 +141,32 @@ public:
 
     skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT 
     { 
-        return safe_comp<IOBlocksComponent>()->get_blocks(); 
+        return safe_comp<BlocksComponent>()->get_blocks(); 
     }
 
     void add_block(const skr_io_block_t& block) SKR_NOEXCEPT 
     { 
-        safe_comp<IOBlocksComponent>()->add_block(block); 
+        safe_comp<BlocksComponent>()->add_block(block); 
     }
 
     void reset_blocks() SKR_NOEXCEPT 
     { 
-        safe_comp<IOBlocksComponent>()->reset_blocks(); 
+        safe_comp<BlocksComponent>()->reset_blocks(); 
     }
 
     skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT 
     { 
-        return safe_comp<IOCompressedBlocksComponent>()->get_compressed_blocks(); 
+        return safe_comp<CompressedBlocksComponent>()->get_compressed_blocks(); 
     }
 
     void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT
     {
-        safe_comp<IOCompressedBlocksComponent>()->add_compressed_block(block); 
+        safe_comp<CompressedBlocksComponent>()->add_compressed_block(block); 
     }
 
     void reset_compressed_blocks() SKR_NOEXCEPT
     {
-        safe_comp<IOCompressedBlocksComponent>()->reset_compressed_blocks(); 
+        safe_comp<CompressedBlocksComponent>()->reset_compressed_blocks(); 
     }
 };
 

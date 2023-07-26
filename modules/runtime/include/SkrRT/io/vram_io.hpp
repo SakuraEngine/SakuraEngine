@@ -1,12 +1,15 @@
 #pragma once
 #include "SkrRT/io/io.h"
+#include "cgpu/api.h"
+#include <stdint.h>
 
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IVRAMService, skr_io_vram_service)
+SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service)
 
 typedef struct skr_vram_io_service_desc_t {
     const char8_t* name SKR_IF_CPP(= nullptr);
     uint32_t sleep_time SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_TIME_MAX);
-    skr_job_queue_id io_job_queue SKR_IF_CPP(= nullptr);
+    skr_io_ram_service_id ram_service SKR_IF_CPP(= nullptr);
     skr_job_queue_id callback_job_queue SKR_IF_CPP(= nullptr);
     bool awake_at_request SKR_IF_CPP(= true);
     bool use_dstorage SKR_IF_CPP(= true);
@@ -22,19 +25,71 @@ struct RUNTIME_API IVRAMIOResource : public skr::SInterface
 {
     virtual ~IVRAMIOResource() SKR_NOEXCEPT;
 };
-using VRAMIOResourceId = SObjectPtr<IVRAMIOResource>;
 
 struct RUNTIME_API IVRAMIOBuffer : public IVRAMIOResource
 {
     virtual ~IVRAMIOBuffer() SKR_NOEXCEPT;
 };
-using VRAMIOBufferId = SObjectPtr<IVRAMIOBuffer>;
 
 struct RUNTIME_API IVRAMIOTexture : public IVRAMIOResource
 {
     virtual ~IVRAMIOTexture() SKR_NOEXCEPT;
 };
+
+struct RUNTIME_API IVRAMIORequest : public IIORequest
+{
+    virtual ~IVRAMIORequest() SKR_NOEXCEPT;
+
+#pragma region Transfer
+    virtual void set_transfer_queue(CGPUQueueId queue) SKR_NOEXCEPT = 0;
+    virtual void set_dstorage_queue(CGPUDStorageQueueId queue) SKR_NOEXCEPT = 0;
+    virtual void set_memory_src(uint8_t* memory, uint64_t bytes) SKR_NOEXCEPT = 0;
+#pragma endregion
+};
+
+struct RUNTIME_API IBlocksVRAMRequest : public IVRAMIORequest
+{
+    virtual ~IBlocksVRAMRequest() SKR_NOEXCEPT;
+
+#pragma region BlocksComponent
+    virtual skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT = 0;
+    virtual void add_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
+    virtual void reset_blocks() SKR_NOEXCEPT = 0;
+#pragma endregion
+
+#pragma region CompressedBlocksComponent
+    virtual skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT = 0;
+    virtual void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
+    virtual void reset_compressed_blocks() SKR_NOEXCEPT = 0;
+#pragma endregion
+
+#pragma region IOVRAMResourceComponent
+    virtual void set_buffer(CGPUBufferId buffer) SKR_NOEXCEPT = 0;
+    virtual void set_buffer(CGPUDeviceId device, const CGPUBufferDescriptor* desc) SKR_NOEXCEPT = 0;
+#pragma endregion
+};
+
+struct RUNTIME_API ISlicesVRAMRequest : public IVRAMIORequest
+{
+    virtual ~ISlicesVRAMRequest() SKR_NOEXCEPT;
+#pragma region IOVRAMResourceComponent
+    virtual void set_texture(CGPUTextureId texture) SKR_NOEXCEPT = 0;
+    virtual void set_texture(CGPUDeviceId device, const CGPUTextureDescriptor* desc) SKR_NOEXCEPT = 0;
+    virtual void set_slices(uint32_t first_slice, uint32_t slice_count) SKR_NOEXCEPT = 0;
+#pragma endregion
+};
+
+struct RUNTIME_API ITilesVRAMRequest : public IVRAMIORequest
+{
+    virtual ~ITilesVRAMRequest() SKR_NOEXCEPT;
+};
+
+using VRAMIOResourceId = SObjectPtr<IVRAMIOResource>;
+using VRAMIOBufferId = SObjectPtr<IVRAMIOBuffer>;
 using VRAMIOTextureId = SObjectPtr<IVRAMIOTexture>;
+using SlicesIORequestId = SObjectPtr<ISlicesVRAMRequest>;
+using TilesIORequestId = SObjectPtr<ITilesVRAMRequest>;
+using BlocksVRAMRequestId = SObjectPtr<IBlocksVRAMRequest>;
 
 struct RUNTIME_API IVRAMService : public IIOService
 {
@@ -42,19 +97,22 @@ struct RUNTIME_API IVRAMService : public IIOService
     static void destroy(IVRAMService* service) SKR_NOEXCEPT;
 
     // open a texture request for filling
-    // [[nodiscard]] virtual IOSliceRequestId open_texture_request() SKR_NOEXCEPT = 0;
+    [[nodiscard]] virtual SlicesIORequestId open_texture_request() SKR_NOEXCEPT = 0;
 
     // open a buffer request for filling
-    // [[nodiscard]] virtual IOBlockRequestId open_buffer_request() SKR_NOEXCEPT = 0;
+    [[nodiscard]] virtual BlocksVRAMRequestId open_buffer_request() SKR_NOEXCEPT = 0;
 
     // open a tile request for filling
-    // [[nodiscard]] virtual IOTileRequestId open_tile_request() SKR_NOEXCEPT = 0;
+    // [[nodiscard]] virtual TilesIORequestId open_tile_request() SKR_NOEXCEPT = 0;
 
     // start a request batch
-    // [[nodiscard]] virtual IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT = 0;
+    [[nodiscard]] virtual IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT = 0;
 
-    // submit a request
-    // virtual VRAMIOBufferId request(IORequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
+    // submit a buffer request
+    virtual VRAMIOBufferId request(BlocksVRAMRequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
+    
+    // submit a texture request
+    virtual VRAMIOTextureId request(SlicesIORequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
     
     // submit a batch
     virtual void request(IOBatchId request) SKR_NOEXCEPT = 0;

@@ -62,8 +62,10 @@ TEST_CASE_METHOD(WithoutBoundScheduler, "ConditionVariable") {
   thread.join();
 }
 
-TEST_CASE_METHOD(WithBoundScheduler, "ConditionVariable") {
-  SECTION("ConditionVariable") {
+template<uint32_t N_THREADS>
+void WithBoundScheduler<N_THREADS>::TestCondVars()
+{
+  SUBCASE("ConditionVariable") {
     bool trigger[3] = {false, false, false};
     bool signal[3] = {false, false, false};
     marl::mutex mutex;
@@ -111,7 +113,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "ConditionVariable") {
   // go to idle before repeating.
   // This is testing to ensure that the scheduler handles timeouts correctly when
   // they are early-unblocked, along with expected lock state.
-  SECTION("ConditionVariableTimeouts") {
+  SUBCASE("ConditionVariableTimeouts") {
     for (int i = 0; i < 10; i++) {
       marl::mutex mutex;
       marl::ConditionVariable cv;
@@ -142,3 +144,9 @@ TEST_CASE_METHOD(WithBoundScheduler, "ConditionVariable") {
     }
   }
 }
+
+TEST_CASE_METHOD(WithBoundScheduler<0>, "ConditionVariable-0") { TestCondVars(); };
+TEST_CASE_METHOD(WithBoundScheduler<1>, "ConditionVariable-1") { TestCondVars(); };
+TEST_CASE_METHOD(WithBoundScheduler<2>, "ConditionVariable-2") { TestCondVars(); };
+TEST_CASE_METHOD(WithBoundScheduler<8>, "ConditionVariable-8") { TestCondVars(); };
+TEST_CASE_METHOD(WithBoundScheduler<32>, "ConditionVariable-32") { TestCondVars(); };
