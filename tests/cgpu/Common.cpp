@@ -1,7 +1,6 @@
 #include "SkrRT/misc/log.h"
 #include "SkrRT/platform/crash.h"
 #include "SkrTestFramework/framework.hpp"
-#include <catch2/generators/catch_generators.hpp>
 
 static struct ProcInitializer
 {

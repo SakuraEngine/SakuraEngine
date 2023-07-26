@@ -67,7 +67,7 @@ TEST_CASE_METHOD(ThreadsTest, "CondVar")
     auto future = std::async([&]() {
         SMutexLock lock(sm);
         skr_wait_condition_vars(&cv, &sm, UINT32_MAX);
-        SKR_TEST_UNSCOPED_INFO(u8"Hello2!");
+        SKR_TEST_INFO(u8"Hello2!");
     });
     skr_thread_sleep(1000);
     SKR_TEST_INFO(u8"Hello1!");

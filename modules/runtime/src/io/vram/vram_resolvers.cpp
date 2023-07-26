@@ -11,13 +11,13 @@ void AllocateVRAMResourceResolver::resolve(SkrAsyncServicePriority priority, IOB
 {
     ZoneScopedNC("VRAMResource::Allocate", tracy::Color::BlueViolet);
     auto buffer = io_component<VRAMBufferComponent>(request.get());
-    auto texture = io_component<VRAMTextureComponent>(request.get());
     if (buffer && (buffer->type == VRAMBufferComponent::Type::ServiceCreated))
     {
         cgpu_create_buffer(buffer->device, &buffer->desc);
         return;
     }
-
+    
+    auto texture = io_component<VRAMTextureComponent>(request.get());
     if (texture && (texture->type == VRAMTextureComponent::Type::ServiceCreated))
     {
         cgpu_create_texture(texture->device, &texture->desc);

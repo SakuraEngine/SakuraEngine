@@ -88,7 +88,7 @@ struct VRAMRequest
 template <>
 struct VRAMRequest<ISlicesVRAMRequest> final : public VRAMRequestMixin<ISlicesVRAMRequest,
     IOStatusComponent, 
-    FileSrcComponent, // Src
+    FileSrcComponent, // DStorage
     VRAMIOStagingComponent, // Transfer
     VRAMTextureComponent //Dst
 >
@@ -105,7 +105,7 @@ protected:
 template <>
 struct VRAMRequest<ITilesVRAMRequest> final : public VRAMRequestMixin<ITilesVRAMRequest,
     IOStatusComponent, 
-    FileSrcComponent, // Src
+    FileSrcComponent, // DStorage
     VRAMIOStagingComponent, // Transfer
     VRAMTextureComponent //Dst
 >
@@ -122,7 +122,7 @@ protected:
 template <>
 struct VRAMRequest<IBlocksVRAMRequest> final : public VRAMRequestMixin<IBlocksVRAMRequest,
     IOStatusComponent, 
-    FileSrcComponent, // Src
+    FileSrcComponent, // DStorage
     VRAMIOStagingComponent, // Transfer
     VRAMBufferComponent //Dst
 >
