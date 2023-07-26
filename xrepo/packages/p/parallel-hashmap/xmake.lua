@@ -4,7 +4,7 @@ package("parallel-hashmap")
     set_description("A family of header-only, very fast and memory-friendly hashmap and btree containers.")
     set_license("Apache-2.0")
 
-    add_versions("1.3.4-skr", "656f2ec5a39ad6aef8635ae78cd1c10325a5e1a37b53983b78999b8973bb0bf1")
+    add_versions("1.3.11-skr", "656f2ec5a39ad6aef8635ae78cd1c10325a5e1a37b53983b78999b8973bb0bf1")
 
     on_install(function (package)
         os.mkdir(package:installdir())
