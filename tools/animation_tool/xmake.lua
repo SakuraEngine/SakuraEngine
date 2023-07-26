@@ -1,9 +1,10 @@
 add_requires("cgltf >=1.13.0-skr", {system = false})
+add_requires("tinygltf >=2.8.14-skr", {system = false})
 
 shared_module("SkrAnimTool", "SKR_ANIMTOOL", engine_version)
     set_group("02.tools")
     set_exceptions("cxx")
-    add_packages("cgltf")
+    add_packages("cgltf", "tinygltf")
     public_dependency("SkrToolCore", engine_version)
     public_dependency("SkrGLTFTool", engine_version)
     public_dependency("SkrAnim", engine_version)
@@ -21,5 +22,4 @@ shared_module("SkrAnimTool", "SKR_ANIMTOOL", engine_version)
 
     add_files("src/*.cc", {unity_group = "utils"})
     add_files("src/tools/*.cc", "src/*.cpp", {unity_group = "tool"})
-    add_files("src/gltf/**.cpp", {unity_ignored = false})
-    add_files("src/gltf/**.cc", {unity_ignored = true})
+    add_files("src/gltf/**.cc", "src/gltf/**.cpp", {unity_ignored = false})
