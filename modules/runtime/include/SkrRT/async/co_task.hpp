@@ -1,10 +1,13 @@
 #pragma once
 #include "SkrRT/platform/configure.h" // IWYU pragma: keep
+
 #if __cpp_impl_coroutine
+#include <atomic>
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/containers/sptr.hpp"
 #include "SkrRT/containers/vector.hpp"
 #include <EASTL/array.h>
+
 #if __cpp_lib_coroutine
     #include <coroutine>
 #else
