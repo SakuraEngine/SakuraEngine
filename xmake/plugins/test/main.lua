@@ -27,7 +27,6 @@ import("core.project.project")
 import("core.platform.platform")
 import("devel.debugger")
 import("private.async.runjobs")
-import("private.action.run.runenvs")
 import("private.service.remote_build.action", {alias = "remote_build_action"})
 
 -- run target
@@ -42,9 +41,6 @@ function _do_test_target(target)
 
     -- get the absolute target file path
     local targetfile = path.absolute(target:targetfile())
-
-    -- add run environments
-    local addenvs, setenvs = runenvs.make(target)
 
     -- get run arguments
     local args = table.wrap(option.get("arguments") or target:get("runargs"))
