@@ -2,7 +2,7 @@
 #include <cmath>
 #include <limits>
 #include "SkrRT/containers/string.hpp"  // IWYU pragma: export
-#include "doctest.h" // IWYU pragma: export
+#include "doctest_fwd.h" // IWYU pragma: export
 
 #ifndef SkrTestLine
 #  define SkrTestLine __LINE__
@@ -44,6 +44,3 @@ typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
         // unless the result is subnormal
         || std::fabs(x - y) < std::numeric_limits<T>::min();
 }
-
-
-int test_framework_dummy();
