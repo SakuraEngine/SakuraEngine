@@ -132,8 +132,7 @@ namespace priv {
 template <typename AllocType>
 void SwapAlloc(AllocType& lhs, AllocType& rhs,
                std::true_type /* propagate_on_container_swap */) {
-  using std::swap;
-  swap(lhs, rhs);
+  std::swap(lhs, rhs);
 }
 
 template <typename AllocType>
@@ -194,8 +193,7 @@ struct IsDecomposable<
 // --------------------------------------------------------------------------
 template <class T>
 constexpr bool IsNoThrowSwappable(std::true_type = {} /* is_swappable */) {
-    using std::swap;
-    return noexcept(swap(std::declval<T&>(), std::declval<T&>()));
+    return noexcept(std::swap(std::declval<T&>(), std::declval<T&>()));
 }
 
 template <class T>
@@ -1671,15 +1669,14 @@ public:
         IsNoThrowSwappable<hasher>() && IsNoThrowSwappable<key_equal>() &&
         (!AllocTraits::propagate_on_container_swap::value ||
          IsNoThrowSwappable<allocator_type>(typename AllocTraits::propagate_on_container_swap{}))) {
-        using std::swap;
-        swap(ctrl_, that.ctrl_);
-        swap(slots_, that.slots_);
-        swap(size_, that.size_);
-        swap(capacity_, that.capacity_);
-        swap(growth_left(), that.growth_left());
-        swap(hash_ref(), that.hash_ref());
-        swap(eq_ref(), that.eq_ref());
-        swap(infoz_, that.infoz_);
+        std::swap(ctrl_, that.ctrl_);
+        std::swap(slots_, that.slots_);
+        std::swap(size_, that.size_);
+        std::swap(capacity_, that.capacity_);
+        std::swap(growth_left(), that.growth_left());
+        std::swap(hash_ref(), that.hash_ref());
+        std::swap(eq_ref(), that.eq_ref());
+        std::swap(infoz_, that.infoz_);
         SwapAlloc(alloc_ref(), that.alloc_ref(), typename AllocTraits::propagate_on_container_swap{});
     }
 
@@ -3512,14 +3509,13 @@ public:
                  (!AllocTraits::propagate_on_container_swap::value ||
                   IsNoThrowSwappable<allocator_type>(typename AllocTraits::propagate_on_container_swap{})))
     {
-        using std::swap;
         using Lockable2 = phmap::LockableImpl<Mtx2_>;
          
         for (size_t i=0; i<num_tables; ++i)
         {
             typename Lockable::UniqueLock l(sets_[i]);
             typename Lockable2::UniqueLock l2(that.get_inner(i));
-            swap(sets_[i].set_, that.get_inner(i).set_);
+            std::swap(sets_[i].set_, that.get_inner(i).set_);
         }
     }
 
