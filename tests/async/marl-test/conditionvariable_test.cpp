@@ -62,8 +62,7 @@ TEST_CASE_METHOD(WithoutBoundScheduler, "ConditionVariable") {
   thread.join();
 }
 
-template<uint32_t N_THREADS>
-void WithBoundScheduler<N_THREADS>::TestCondVars()
+void WithBoundSchedulerBase::TestCondVars()
 {
   SUBCASE("ConditionVariable") {
     bool trigger[3] = {false, false, false};

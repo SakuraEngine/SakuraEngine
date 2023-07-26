@@ -1,8 +1,7 @@
-#include "../pch.hpp"
-#include "SkrGui/backend/embed_services.hpp"
-#include "SkrGui/backend/canvas/canvas.hpp"
-#include "backend/text_server/text_server_adv.h"
-#include "backend/embedded_text/paragraph.hpp"
+#include "../../pch.hpp"
+#include "SkrRT/platform/memory.h"
+#include "backend/paragraph/paragraph.hpp"
+#include "backend/text_server_adv/text_server_adv.h"
 
 namespace godot
 {
@@ -19,16 +18,6 @@ TextServer* get_text_server()
 
 namespace skr::gui
 {
-// canvas
-NotNull<ICanvas*> embedded_create_canvas() SKR_NOEXCEPT
-{
-    return make_not_null(SkrNew<ICanvas>());
-}
-void embedded_destroy_canvas(NotNull<ICanvas*> canvas) SKR_NOEXCEPT
-{
-    SkrDelete(canvas.get());
-}
-
 // text
 void embedded_init_text_service(INativeDevice* native_device)
 {

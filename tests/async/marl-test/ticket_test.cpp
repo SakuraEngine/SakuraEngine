@@ -16,8 +16,7 @@
 
 #include "marl/ticket.h"
 
-template<uint32_t N_THREADS>
-void WithBoundScheduler<N_THREADS>::TestTicket()
+void WithBoundSchedulerBase::TestTicket()
 {
   marl::Ticket::Queue queue;
 
