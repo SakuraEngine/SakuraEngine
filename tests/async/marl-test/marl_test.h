@@ -44,10 +44,22 @@ class WithoutBoundScheduler {
   marl::TrackedAllocator* allocator = nullptr;
 };
 
+struct WithBoundSchedulerBase
+{
+  void TestCondVars();
+  void TestCalls();
+  void TestEvents();
+  void TestUnboundedPool();
+  void TestTicket();
+
+  marl::TrackedAllocator* allocator = nullptr;
+};
+
 // WithBoundScheduler is a parameterized test fixture that performs tests with
 // a bound scheduler using a number of different configurations.
 template<uint32_t N_THREADS>
-class WithBoundScheduler {
+class WithBoundScheduler : public WithBoundSchedulerBase
+{
  public:
   WithBoundScheduler() {
     allocator = new marl::TrackedAllocator(marl::Allocator::Default);
@@ -72,12 +84,4 @@ class WithBoundScheduler {
     EXPECT_EQ(stats.bytesAllocated(), 0U);
     delete allocator;
   }
-
-  void TestCondVars();
-  void TestCalls();
-  void TestEvents();
-  void TestUnboundedPool();
-  void TestTicket();
-
-  marl::TrackedAllocator* allocator = nullptr;
 };

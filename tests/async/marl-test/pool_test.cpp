@@ -32,8 +32,7 @@ struct CtorDtorCounter {
 int CtorDtorCounter::ctor_count = -1;
 int CtorDtorCounter::dtor_count = -1;
 
-template<uint32_t N_THREADS>
-void WithBoundScheduler<N_THREADS>::TestUnboundedPool()
+void WithBoundSchedulerBase::TestUnboundedPool()
 {
   SUBCASE("UnboundedPool_ConstructDestruct") {
     marl::UnboundedPool<int> pool;

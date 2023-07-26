@@ -40,8 +40,7 @@ std::vector<T> slice(const std::vector<T>& in, size_t from, size_t to) {
 
 }  // namespace
 
-template<uint32_t N_THREADS>
-void WithBoundScheduler<N_THREADS>::TestCalls()
+void WithBoundSchedulerBase::TestCalls()
 {
   SUBCASE("BlockingCallVoidReturn") {
     auto mutex = std::make_shared<std::mutex>();
