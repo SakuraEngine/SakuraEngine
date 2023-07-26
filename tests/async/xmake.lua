@@ -26,7 +26,6 @@ executable_module("Task2Test", "TASK2_TEST", engine_version)
     add_deps("SkrTestFramework", {public = false})
     add_files("task2/**.cpp")
 
---[[
 target("MarlTest")
     set_kind("binary")
     set_group("05.tests/marl")
@@ -34,4 +33,3 @@ target("MarlTest")
     add_deps("SkrTestFramework", {public = false})
     add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_files("marl-test/**.cpp")
-]]--

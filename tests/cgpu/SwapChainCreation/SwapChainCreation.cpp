@@ -1,6 +1,5 @@
 #include "cgpu/api.h"
 #include "SkrTestFramework/framework.hpp"
-#include "SkrTestFramework/generators.hpp"
 #include <iostream>
 
 #if defined(_WIN32) || defined(_WIN64)

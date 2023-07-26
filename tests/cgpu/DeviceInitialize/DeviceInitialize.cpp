@@ -1,6 +1,5 @@
 #include "cgpu/api.h"
 #include "SkrTestFramework/framework.hpp"
-#include "SkrTestFramework/generators.hpp"
 #include <iostream>
 
 template <ECGPUBackend backend>

@@ -1,6 +1,5 @@
 #define DOCTEST_CONFIG_IMPLEMENT
 #include "SkrTestFramework/framework.hpp"
-#include "SkrTestFramework/generators.hpp"
 
 int test_framework_dummy()
 {
