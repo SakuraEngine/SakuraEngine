@@ -21,4 +21,5 @@ shared_module("SkrAnimTool", "SKR_ANIMTOOL", engine_version)
 
     add_files("src/*.cc", {unity_group = "utils"})
     add_files("src/tools/*.cc", "src/*.cpp", {unity_group = "tool"})
-    add_files("src/gltf/**.cpp", "src/gltf/**.cc", {unity_ignored = true})
+    add_files("src/gltf/**.cpp", {unity_ignored = false})
+    add_files("src/gltf/**.cc", {unity_ignored = true})

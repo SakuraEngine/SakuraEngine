@@ -19,7 +19,7 @@ target("JobTest")
     add_deps("SkrTestFramework", {public = false})
     add_files("threads/job.cpp")
 
-executable_module("Task2Test", "TASK2_TEST", engine_version)
+target("Task2Test")
     set_kind("binary")
     set_group("05.tests/task")
     public_dependency("SkrRT", engine_version)

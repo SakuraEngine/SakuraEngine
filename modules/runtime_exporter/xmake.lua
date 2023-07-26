@@ -6,6 +6,7 @@ shared_module("SkrRTExporter", "SKR_RUNTIME_EXPORTER", engine_version)
         rootdir = "include/SkrRuntimeExporter",
         api = "SKR_RUNTIME_EXPORTER"
     })    
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     on_load(function (target, opt)
         local depend = import("core.project.depend")
         local includedir = path.join(os.scriptdir(), "include", "SkrRuntimeExporter", "exporters")
