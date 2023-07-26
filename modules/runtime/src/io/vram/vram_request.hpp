@@ -27,7 +27,7 @@ struct VRAMRequestMixin final : public IORequestMixin<Interface,
     IOStatusComponent, 
     FileSrcComponent, // Src
     VRAMIOStagingComponent, // Transfer
-    VRAMBufferComponent, TextureComponent //Dst
+    VRAMBufferComponent, VRAMTextureComponent //Dst
 >
 {
     using Super = IORequestMixin<Interface, 
@@ -35,7 +35,7 @@ struct VRAMRequestMixin final : public IORequestMixin<Interface,
         IOStatusComponent, 
         FileSrcComponent, // Src
         VRAMIOStagingComponent, // Transfer
-        VRAMBufferComponent, TextureComponent //Dst
+        VRAMBufferComponent, VRAMTextureComponent //Dst
     >;
 
     void set_transfer_queue(CGPUQueueId queue) SKR_NOEXCEPT
@@ -65,20 +65,20 @@ struct VRAMRequestMixin final : public IORequestMixin<Interface,
     }
 #pragma endregion
 
-#pragma region TextureComponent
+#pragma region VRAMTextureComponent
     void set_texture(CGPUTextureId texture) SKR_NOEXCEPT
     {
-        Super::template safe_comp<TextureComponent>()->set_texture(texture); 
+        Super::template safe_comp<VRAMTextureComponent>()->set_texture(texture); 
     }
     
     void set_texture(CGPUDeviceId device, const CGPUTextureDescriptor* desc) SKR_NOEXCEPT
     {
-        Super::template safe_comp<TextureComponent>()->set_texture(device, desc); 
+        Super::template safe_comp<VRAMTextureComponent>()->set_texture(device, desc); 
     }
 
     void set_slices(uint32_t first_slice, uint32_t slice_count) SKR_NOEXCEPT
     {
-        Super::template safe_comp<TextureComponent>()->set_slices(first_slice, slice_count); 
+        Super::template safe_comp<VRAMTextureComponent>()->set_slices(first_slice, slice_count); 
     }
 #pragma endregion
 

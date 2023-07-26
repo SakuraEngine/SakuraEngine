@@ -53,43 +53,71 @@ struct VRAMBufferComponent final : public IORequestComponent
 
     void set_buffer(CGPUBufferId buffer) SKR_NOEXCEPT
     {
-        SKR_UNIMPLEMENTED_FUNCTION();
+        this->buffer = buffer;
+        this->device = buffer->device;
+        this->type = Type::Imported;
     }
 
     void set_buffer(CGPUDeviceId device, const CGPUBufferDescriptor* desc) SKR_NOEXCEPT
     {
-        SKR_UNIMPLEMENTED_FUNCTION();
+        this->device = device;
+        this->desc = *desc;
+        this->type = Type::ServiceCreated;
     }
 
-    CGPUBuffer* buffer;
+    enum class Type
+    {
+        Imported,
+        ServiceCreated
+    };
+    Type type;
+    CGPUBufferId buffer;
+    CGPUDeviceId device;
+    CGPUBufferDescriptor desc;
 };
 
 template <>
-struct IORequestComponentTID<struct TextureComponent> 
+struct IORequestComponentTID<struct VRAMTextureComponent> 
 {
     static constexpr skr_guid_t Get();
 };
-struct TextureComponent final : public IORequestComponent
+struct VRAMTextureComponent final : public IORequestComponent
 {
-    TextureComponent(IIORequest* const request) SKR_NOEXCEPT;
+    VRAMTextureComponent(IIORequest* const request) SKR_NOEXCEPT;
     virtual skr_guid_t get_tid() const SKR_NOEXCEPT override;
 
     void set_texture(CGPUTextureId texture) SKR_NOEXCEPT
     {
-        SKR_UNIMPLEMENTED_FUNCTION();
+        this->texture = texture;
+        this->device = texture->device;
+        this->type = Type::Imported;
     }
     
     void set_texture(CGPUDeviceId device, const CGPUTextureDescriptor* desc) SKR_NOEXCEPT
     {
-        SKR_UNIMPLEMENTED_FUNCTION();
+        this->device = device;
+        this->desc = *desc;
+        this->type = Type::ServiceCreated;
     }
 
     void set_slices(uint32_t first_slice, uint32_t slice_count) SKR_NOEXCEPT
     {
-        SKR_UNIMPLEMENTED_FUNCTION();
+        this->first_slice = first_slice;
+        this->slice_count = slice_count;
     }
 
-    CGPUTexture* texture;
+    enum class Type
+    {
+        Imported,
+        ServiceCreated
+    };
+    Type type;
+    CGPUTextureId texture;
+    CGPUDeviceId device;
+    CGPUTextureDescriptor desc;
+
+    uint32_t first_slice = 0;
+    uint32_t slice_count = 0;
 };
 
 constexpr skr_guid_t IORequestComponentTID<struct VRAMBufferComponent>::Get()
@@ -98,7 +126,7 @@ constexpr skr_guid_t IORequestComponentTID<struct VRAMBufferComponent>::Get()
     return u8"78e4e3f0-5983-43b0-8567-f1a2653f8ea0"_guid;
 } 
 
-constexpr skr_guid_t IORequestComponentTID<struct TextureComponent>::Get()
+constexpr skr_guid_t IORequestComponentTID<struct VRAMTextureComponent>::Get()
 {
     using namespace skr::guid::literals;
     return u8"2d517d3b-3c08-4e6d-9b2b-189b0f591171"_guid;
