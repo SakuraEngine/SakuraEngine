@@ -1,3 +1,4 @@
+#include "../../pch.hpp"
 #include "SkrRT/platform/memory.h"
 #include "backend/paragraph/paragraph.hpp"
 #include "backend/text_server_adv/text_server_adv.h"
