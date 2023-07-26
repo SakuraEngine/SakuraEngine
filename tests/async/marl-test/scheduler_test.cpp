@@ -22,12 +22,12 @@
 #include <atomic>
 
 TEST_CASE_METHOD(WithoutBoundScheduler, "Destruct") {
-  SECTION("SchedulerConstructAndDestruct") {
+  SUBCASE("SchedulerConstructAndDestruct") {
     auto scheduler = std::unique_ptr<marl::Scheduler>(
         new marl::Scheduler(marl::Scheduler::Config()));
   }
 
-  SECTION("SchedulerBindGetUnbind") {
+  SUBCASE("SchedulerBindGetUnbind") {
     auto scheduler = std::unique_ptr<marl::Scheduler>(
         new marl::Scheduler(marl::Scheduler::Config()));
     scheduler->bind();
@@ -38,7 +38,7 @@ TEST_CASE_METHOD(WithoutBoundScheduler, "Destruct") {
     ASSERT_EQ(got, nullptr);
   }
 
-  SECTION("CheckConfig") {
+  SUBCASE("CheckConfig") {
     marl::Scheduler::Config cfg;
     cfg.setAllocator(allocator).setWorkerThreadCount(10);
 
@@ -49,7 +49,7 @@ TEST_CASE_METHOD(WithoutBoundScheduler, "Destruct") {
     ASSERT_EQ(gotCfg.workerThread.count, 10);
   }
 
-  SECTION("TasksOnlyScheduledOnWorkerThreads") {
+  SUBCASE("TasksOnlyScheduledOnWorkerThreads") {
     marl::Scheduler::Config cfg;
     cfg.setWorkerThreadCount(8);
 
@@ -76,7 +76,7 @@ TEST_CASE_METHOD(WithoutBoundScheduler, "Destruct") {
 
   // Test that a marl::Scheduler *with dedicated worker threads* can be used
   // without first binding to the scheduling thread.
-  SECTION("ScheduleMTWWithNoBind") {
+  SUBCASE("ScheduleMTWWithNoBind") {
     marl::Scheduler::Config cfg;
     cfg.setWorkerThreadCount(8);
     auto scheduler = std::unique_ptr<marl::Scheduler>(new marl::Scheduler(cfg));
@@ -107,7 +107,7 @@ TEST_CASE_METHOD(WithoutBoundScheduler, "Destruct") {
 
   // Test that a marl::Scheduler *without dedicated worker threads* cannot be used
   // without first binding to the scheduling thread.
-  SECTION("ScheduleSTWWithNoBind") {
+  SUBCASE("ScheduleSTWWithNoBind") {
     marl::Scheduler::Config cfg;
     auto scheduler = std::unique_ptr<marl::Scheduler>(new marl::Scheduler(cfg));
   }
