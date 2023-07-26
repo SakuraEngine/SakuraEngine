@@ -4,10 +4,11 @@
 #include "SkrTestFramework/framework.hpp"
 #include "SkrTestFramework/generators.hpp"
 
+template <ECGPUBackend backend>
 class RootSignaturePool
 {
 protected:
-    void Initialize(ECGPUBackend backend) SKR_NOEXCEPT
+    void Initialize() SKR_NOEXCEPT
     {
         DECLARE_ZERO(CGPUInstanceDescriptor, desc)
         desc.backend = backend;
@@ -52,8 +53,7 @@ protected:
 
     RootSignaturePool() SKR_NOEXCEPT
     {
-        backend = GENERATE(CGPUBackendGenerator::Create());
-        Initialize(backend);
+        Initialize();
     }
 
     ~RootSignaturePool() 
@@ -62,10 +62,11 @@ protected:
         cgpu_free_instance(instance);
     }
 
+    void test_all();
+
     CGPUInstanceId instance;
     CGPUAdapterId adapter;
     CGPUDeviceId device;
-    ECGPUBackend backend;
 };
 
 inline static void read_bytes(const char* file_name, char8_t** bytes, uint32_t* length)
@@ -144,8 +145,11 @@ CGPURootSignatureId create_root_sig_with_shaders(CGPUDeviceId device,
     return root_sig;
 }
 
+template <ECGPUBackend backend>
+void RootSignaturePool<backend>::test_all()
+{
 // y
-TEST_CASE_METHOD(RootSignaturePool, "PS00")
+SUBCASE("PS00")
 {
     CGPURootSignaturePoolDescriptor pool_desc = {};
     pool_desc.name = u8"RSPool";
@@ -160,7 +164,7 @@ TEST_CASE_METHOD(RootSignaturePool, "PS00")
     cgpu_free_root_signature_pool(pool);
 }
 
-TEST_CASE_METHOD(RootSignaturePool, "RC")
+SUBCASE("RC")
 {
     CGPURootSignaturePoolDescriptor pool_desc = {};
     pool_desc.name = u8"RSPool";
@@ -187,7 +191,7 @@ TEST_CASE_METHOD(RootSignaturePool, "RC")
 }
 
 // y
-TEST_CASE_METHOD(RootSignaturePool, "PS01")
+SUBCASE("PS01")
 {
     CGPURootSignaturePoolDescriptor pool_desc = {};
     pool_desc.name = u8"RSPool";
@@ -203,7 +207,7 @@ TEST_CASE_METHOD(RootSignaturePool, "PS01")
 }
 
 // n
-TEST_CASE_METHOD(RootSignaturePool, "PS02")
+SUBCASE("PS02")
 {
     CGPURootSignaturePoolDescriptor pool_desc = {};
     pool_desc.name = u8"RSPool";
@@ -220,7 +224,7 @@ TEST_CASE_METHOD(RootSignaturePool, "PS02")
 }
 
 // n
-TEST_CASE_METHOD(RootSignaturePool, "PS03")
+SUBCASE("PS03")
 {
     CGPURootSignaturePoolDescriptor pool_desc = {};
     pool_desc.name = u8"RSPool";
@@ -235,3 +239,18 @@ TEST_CASE_METHOD(RootSignaturePool, "PS03")
     REQUIRE(rs1->pool_sig == nullptr);
     cgpu_free_root_signature_pool(pool);
 }
+}
+
+#ifdef CGPU_USE_D3D12
+TEST_CASE_METHOD(RootSignaturePool<CGPU_BACKEND_D3D12>, "RootSignaturePool-d3d12")
+{
+    test_all();
+}
+#endif
+
+#ifdef CGPU_USE_VULKAN
+TEST_CASE_METHOD(RootSignaturePool<CGPU_BACKEND_VULKAN>, "RootSignaturePool-vulkan")
+{
+    test_all();
+}
+#endif
