@@ -4,7 +4,7 @@ else
     add_requires("eastl >=2023.5.18-skr", { configs = { runtime_shared = true } })
 end
 
-add_requires("parallel-hashmap >=1.3.4-skr")
+add_requires("parallel-hashmap >=1.3.11-skr")
 add_requires("boost-context >=0.1.0-skr")
 add_requires("simdjson >=3.0.0-skr")
 -- add_requires("lua >=5.4.4-skr")
