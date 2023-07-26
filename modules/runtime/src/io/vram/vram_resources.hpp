@@ -11,7 +11,6 @@ struct RUNTIME_API VRAMBuffer : public IVRAMIOBuffer
 public:
     virtual ~VRAMBuffer() SKR_NOEXCEPT;
 
-    
 public:
     SInterfaceDeleter custom_deleter() const 
     { 

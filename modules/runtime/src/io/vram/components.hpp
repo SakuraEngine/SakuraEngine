@@ -49,6 +49,8 @@ struct IORequestComponentTID<struct VRAMBufferComponent>
 struct VRAMBufferComponent final : public IORequestComponent
 {
     VRAMBufferComponent(IIORequest* const request) SKR_NOEXCEPT;
+    ~VRAMBufferComponent() SKR_NOEXCEPT;
+
     virtual skr_guid_t get_tid() const SKR_NOEXCEPT override;
 
     void set_buffer(CGPUBufferId buffer) SKR_NOEXCEPT
@@ -64,6 +66,8 @@ struct VRAMBufferComponent final : public IORequestComponent
         this->desc = *desc;
         this->type = Type::ServiceCreated;
     }
+
+    SObjectPtr<IVRAMIOBuffer> artifact;
 
     enum class Type
     {
@@ -84,6 +88,8 @@ struct IORequestComponentTID<struct VRAMTextureComponent>
 struct VRAMTextureComponent final : public IORequestComponent
 {
     VRAMTextureComponent(IIORequest* const request) SKR_NOEXCEPT;
+    ~VRAMTextureComponent() SKR_NOEXCEPT;
+    
     virtual skr_guid_t get_tid() const SKR_NOEXCEPT override;
 
     void set_texture(CGPUTextureId texture) SKR_NOEXCEPT
@@ -105,6 +111,8 @@ struct VRAMTextureComponent final : public IORequestComponent
         this->first_slice = first_slice;
         this->slice_count = slice_count;
     }
+
+    SObjectPtr<IVRAMIOTexture> artifact;
 
     enum class Type
     {

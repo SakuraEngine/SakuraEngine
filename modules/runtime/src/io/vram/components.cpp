@@ -28,6 +28,11 @@ VRAMBufferComponent::VRAMBufferComponent(IIORequest* const request) SKR_NOEXCEPT
     
 }
 
+VRAMBufferComponent::~VRAMBufferComponent() SKR_NOEXCEPT
+{
+
+}
+
 skr_guid_t VRAMBufferComponent::get_tid() const SKR_NOEXCEPT 
 { 
     return IORequestComponentTID<VRAMBufferComponent>::Get(); 
@@ -35,6 +40,11 @@ skr_guid_t VRAMBufferComponent::get_tid() const SKR_NOEXCEPT
 
 VRAMTextureComponent::VRAMTextureComponent(IIORequest* const request) SKR_NOEXCEPT 
     : IORequestComponent(request) 
+{
+    
+}
+
+VRAMTextureComponent::~VRAMTextureComponent() SKR_NOEXCEPT
 {
     
 }
