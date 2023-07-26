@@ -6,7 +6,7 @@
 
 namespace tinygltf
 {
-static inline int32_t GetTypeSizeInBytes(uint32_t ty) {
+inline static int32_t GetTypeSizeInBytes(uint32_t ty) {
   if (ty == TINYGLTF_TYPE_SCALAR) {
     return 1;
   } else if (ty == TINYGLTF_TYPE_VEC2) {
