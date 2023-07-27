@@ -135,7 +135,8 @@ void SLive2DViewerModule::on_load(int argc, char8_t** argv)
 void SLive2DViewerModule::on_unload()
 {
     SKR_LOG_INFO(u8"live2d viewer unloaded!");
-
+    
+    skr_io_vram_service2_t::destroy(vram_service2);
     skr_io_ram_service_t::destroy(ram_service);
     skr_free_vfs(resource_vfs);
 
