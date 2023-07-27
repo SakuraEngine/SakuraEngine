@@ -114,7 +114,7 @@ struct RUNTIME_API IIORequest : public skr::SInterface
     virtual IORequestComponent* get_component(skr_guid_t tid) SKR_NOEXCEPT = 0; 
     virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT = 0; 
 
-#pragma region FileSrcComponent
+#pragma region PathSrcComponent
     virtual void set_vfs(skr_vfs_t* vfs) SKR_NOEXCEPT = 0;
     virtual void set_path(const char8_t* path) SKR_NOEXCEPT = 0;
     virtual const char8_t* get_path() const SKR_NOEXCEPT = 0;

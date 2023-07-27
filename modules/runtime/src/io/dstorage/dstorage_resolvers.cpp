@@ -11,17 +11,18 @@ namespace io {
 void DStorageFileResolver::resolve(SkrAsyncServicePriority priority, IOBatchId batch, IORequestId request) SKR_NOEXCEPT
 {
     auto B = static_cast<IOBatchBase*>(batch.get());
-    auto pFile = io_component<FileSrcComponent>(request.get());
+    auto pPath = io_component<PathSrcComponent>(request.get());
+    auto pFile = io_component<FileComponent>(request.get());
     if (!B->can_use_dstorage) 
         return;
 
-    if (!pFile->dfile)
+    if (pPath && !pFile->dfile)
     {
         ZoneScopedN("DStorage::OpenFile");
 
-        SKR_ASSERT(pFile->vfs);
-        skr::filesystem::path p = pFile->vfs->mount_dir;
-        p /= pFile->path.c_str();
+        SKR_ASSERT(pPath->vfs);
+        skr::filesystem::path p = pPath->vfs->mount_dir;
+        p /= pPath->path.c_str();
 
         auto instance = skr_get_dstorage_instnace();
         pFile->dfile = skr_dstorage_open_file(instance, p.string().c_str());

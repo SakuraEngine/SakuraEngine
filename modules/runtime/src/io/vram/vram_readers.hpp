@@ -44,12 +44,16 @@ struct CommonVRAMReader final : public VRAMReaderBase<IIOBatchProcessor>
     void recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     bool poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT;
     bool is_async(SkrAsyncServicePriority priority) const SKR_NOEXCEPT { return false; }
-    void dispatchFunction(SkrAsyncServicePriority priority, const IORequestId& request) SKR_NOEXCEPT;
+
+    void addRAMRequests(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    void ensureRAMRequests(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    void addUploadRequests(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    void ensureUploadRequests(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
 
     IRAMService* ram_service = nullptr;
-    IORequestQueue fetched_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    IORequestQueue loaded_requests[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    skr::vector<skr::IFuture<bool>*> loaded_futures[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    IOBatchQueue fetched_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    IOBatchQueue processed_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    skr::vector<RAMIOBufferId> ram_buffers[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 };
 
 } // namespace io

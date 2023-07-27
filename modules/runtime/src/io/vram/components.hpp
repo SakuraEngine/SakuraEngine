@@ -10,13 +10,13 @@ namespace skr {
 namespace io {
 
 template <>
-struct IORequestComponentTID<struct VRAMQueuesComponent> 
+struct IORequestComponentTID<struct VRAMUploadComponent> 
 {
     static constexpr skr_guid_t Get();
 };
-struct VRAMQueuesComponent final : public IORequestComponent
+struct VRAMUploadComponent final : public IORequestComponent
 {
-    VRAMQueuesComponent(IIORequest* const request) SKR_NOEXCEPT;
+    VRAMUploadComponent(IIORequest* const request) SKR_NOEXCEPT;
     virtual skr_guid_t get_tid() const SKR_NOEXCEPT override;
 
     void set_transfer_queue(CGPUQueueId queue) SKR_NOEXCEPT
@@ -24,33 +24,25 @@ struct VRAMQueuesComponent final : public IORequestComponent
         transfer_queue = queue;
     }
 
+    CGPUQueueId transfer_queue = nullptr;
+};
+
+template <>
+struct IORequestComponentTID<struct VRAMDStorageComponent> 
+{
+    static constexpr skr_guid_t Get();
+};
+struct VRAMDStorageComponent final : public IORequestComponent
+{
+    VRAMDStorageComponent(IIORequest* const request) SKR_NOEXCEPT;
+    virtual skr_guid_t get_tid() const SKR_NOEXCEPT override;
+
     void set_dstorage_queue(CGPUDStorageQueueId queue) SKR_NOEXCEPT
     {
         dstorage_queue = queue;
     }
 
-    CGPUQueueId transfer_queue = nullptr;
     CGPUDStorageQueueId dstorage_queue = nullptr;
-};
-
-template <>
-struct IORequestComponentTID<struct MemorySrcComponent> 
-{
-    static constexpr skr_guid_t Get();
-};
-struct MemorySrcComponent final : public IORequestComponent
-{
-    MemorySrcComponent(IIORequest* const request) SKR_NOEXCEPT;
-    virtual skr_guid_t get_tid() const SKR_NOEXCEPT override;
-
-    void set_memory_src(uint8_t* memory, uint64_t bytes) SKR_NOEXCEPT
-    {
-        buffer = memory;
-        size = bytes;
-    }
-
-    uint8_t* buffer = nullptr;
-    uint64_t size = 0;
 };
 
 template <>
@@ -113,16 +105,16 @@ struct VRAMTextureComponent final : public IORequestComponent
     uint32_t slice_count = 0;
 };
 
-constexpr skr_guid_t IORequestComponentTID<struct VRAMQueuesComponent>::Get()
+constexpr skr_guid_t IORequestComponentTID<struct VRAMUploadComponent>::Get()
 {
     using namespace skr::guid::literals;
     return u8"15a2c517-fc77-4938-90df-2842a75b82a9"_guid;
 } 
 
-constexpr skr_guid_t IORequestComponentTID<struct MemorySrcComponent>::Get()
+constexpr skr_guid_t IORequestComponentTID<struct VRAMDStorageComponent>::Get()
 {
     using namespace skr::guid::literals;
-    return u8"3fd925a5-8f53-427c-aa8b-c30c385d4cec"_guid;
+    return u8"5063c4b2-a197-496d-b058-b7a71656c8c1"_guid;
 } 
 
 constexpr skr_guid_t IORequestComponentTID<struct VRAMBufferComponent>::Get()
