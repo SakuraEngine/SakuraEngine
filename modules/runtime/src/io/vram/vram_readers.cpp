@@ -146,6 +146,8 @@ void CommonVRAMReader::ensureRAMRequests(SkrAsyncServicePriority priority) SKR_N
 
 void CommonVRAMReader::addUploadRequests(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
+    ZoneScopedN("VRAMReader::UploadRequests");
+
     auto&& batches = to_upload_batches[priority];
     for (auto&& batch : batches)
     {
@@ -172,6 +174,8 @@ void CommonVRAMReader::addUploadRequests(SkrAsyncServicePriority priority) SKR_N
             auto&& cmd = cmds[pUpload->transfer_queue];
             if (cmd.pool == nullptr)
             {
+                ZoneScopedN("PrepareCmd");
+
                 CGPUCommandPoolDescriptor pdesc = { /*.name = */u8"VRAMUploadCmdPool" };
                 CGPUCommandBufferDescriptor bdesc = { /*.is_secondary = */false };
                 cmd.pool = cgpu_create_command_pool(cmd.queue, &pdesc);
@@ -277,16 +281,19 @@ void CommonVRAMReader::addUploadRequests(SkrAsyncServicePriority priority) SKR_N
             }
         }
         // submit all cmds
-        for (auto&& [queue, cmd] : cmds)
         {
-            gpu_uploads[priority].emplace_back(cmd);
+            ZoneScopedN("SubmitCmds");
+            for (auto&& [queue, cmd] : cmds)
+            {
+                gpu_uploads[priority].emplace_back(cmd);
 
-            CGPUQueueSubmitDescriptor submit = {};
-            submit.cmds = &cmd.cmdbuf;
-            submit.cmds_count = 1;
-            submit.signal_fence = cmd.fence;
-            cgpu_cmd_end(cmd.cmdbuf);
-            cgpu_submit_queue(queue, &submit);
+                CGPUQueueSubmitDescriptor submit = {};
+                submit.cmds = &cmd.cmdbuf;
+                submit.cmds_count = 1;
+                submit.signal_fence = cmd.fence;
+                cgpu_cmd_end(cmd.cmdbuf);
+                cgpu_submit_queue(queue, &submit);
+            }
         }
     }
     batches.clear();

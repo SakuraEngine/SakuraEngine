@@ -22,6 +22,7 @@ struct RAMRequestMixin final : public IORequestMixin<IBlocksRAMRequest,
     BlocksComponent>
 {
     friend struct SmartPool<RAMRequestMixin, IBlocksRAMRequest>;
+    ~RAMRequestMixin() SKR_NOEXCEPT;
 
     RAMIOBufferId destination = nullptr;
 protected:

@@ -46,7 +46,6 @@ struct skr_live2d_render_model_impl_t : public skr_live2d_render_model_t {
     eastl::vector<skr_io_future_t> texture_io_requests;
     eastl::vector<skr::io::VRAMIOTextureId> texture_destinations;
     eastl::vector<skr_io_future_t> png_futures;
-    eastl::vector<skr::BlobId> png_blobs;
 
     eastl::vector<skr_io_future_t> buffer_io_requests;
     eastl::vector<skr::io::VRAMIOBufferId> buffer_destinations;
@@ -99,10 +98,10 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
             view_desc.usages = CGPU_TVU_SRV;
             texture_views[i] = cgpu_create_texture_view(textures[i]->device, &view_desc);
         }
+        for (auto&& png_blob : png_blobs)
+            png_blob.reset();
         for (auto&& decoder : decoders)
-        {
             decoder.reset();
-        }
         skr_atomicu32_store_relaxed(&request->io_status, SKR_IO_STAGE_COMPLETED);
         request = nullptr;
     }
@@ -123,6 +122,7 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
     CGPUDeviceId device;
     CGPUQueueId transfer_queue;
     eastl::vector<skr::ImageDecoderId> decoders;
+    eastl::vector<skr::BlobId> png_blobs;
 };
 
 bool skr_live2d_render_model_request_t::is_ready() const SKR_NOEXCEPT
@@ -209,14 +209,13 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
 #endif
         */
         {
-            auto& png_blob = render_model->png_blobs[i];
             auto& png_future = render_model->png_futures[i];
             const auto on_complete = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
                 ZoneScopedN("Decode PNG");
                 auto render_model = (skr_live2d_render_model_async_t*)data;
                 auto idx = future - render_model->png_futures.data();
 
-                auto& png_blob = render_model->png_blobs[idx];
+                auto png_blob = render_model->png_blobs[idx];
                 auto vram_service = render_model->vram_service;
                 // decompress
                 EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)png_blob->get_data(), png_blob->get_size());
@@ -254,7 +253,6 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                         texture_destination = vram_service->request(request, &texture_io_request);
                     }
                 }
-                png_blob.reset();
             };
             auto ramrq = ram_service->open_request();
             ramrq->set_vfs(request->vfs_override);
@@ -262,7 +260,8 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
             ramrq->add_block({}); // read all
             ramrq->use_async_complete();
             ramrq->add_callback(SKR_IO_STAGE_COMPLETED, on_complete, render_model);
-            png_blob = ram_service->request(ramrq, &png_future);
+            auto blob = ram_service->request(ramrq, &png_future);
+            render_model->png_blobs[i] = blob;
         }
     }
     

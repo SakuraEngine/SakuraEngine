@@ -15,6 +15,11 @@ RAMRequestMixin::RAMRequestMixin(ISmartPoolPtr<IBlocksRAMRequest> pool, const ui
 
 }
 
+RAMRequestMixin::~RAMRequestMixin() SKR_NOEXCEPT
+{
+    destination.reset();
+}
+
 void RAMIOStatusComponent::setStatus(ESkrIOStage status) SKR_NOEXCEPT
 {
     auto rq = static_cast<RAMRequestMixin*>(request);
