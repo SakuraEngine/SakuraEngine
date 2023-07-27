@@ -36,7 +36,7 @@ public:
     {
 
     }
-    virtual ~IORequestMixin() = default;
+    virtual ~IORequestMixin() SKR_NOEXCEPT = default;
 
     [[nodiscard]] virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT
     {
