@@ -80,6 +80,10 @@
 #include <hb-icu.h>
 #include <hb.h>
 
+// godot marks some glyph functions as _FORCE_INLINE_
+// it compiles extremely slow, but seems provide no performance improvement?
+#define _WHY_GODOT_INLINE_
+
 /*************************************************************************/
 namespace godot
 {
@@ -113,7 +117,7 @@ class TextServerAdvanced : public TextServer
 
     void                _insert_num_systems_lang();
     void                _insert_feature_sets();
-    _FORCE_INLINE_ void _insert_feature(const StringName& p_name, int32_t p_tag, Variant::Type p_vtype = Variant::INT, bool p_hidden = false);
+    _WHY_GODOT_INLINE_ void _insert_feature(const StringName& p_name, int32_t p_tag, Variant::Type p_vtype = Variant::INT, bool p_hidden = false);
 
     // ICU support data.
 
@@ -328,13 +332,13 @@ class TextServerAdvanced : public TextServer
 
     _FORCE_INLINE_ FontTexturePosition find_texture_pos_for_glyph(FontForSizeAdvanced* p_data, int p_color_size, ImageFormat p_image_format, int p_width, int p_height, bool p_msdf) const;
 #ifdef MODULE_MSDFGEN_ENABLED
-    _FORCE_INLINE_ FontGlyph rasterize_msdf(FontAdvanced* p_font_data, FontForSizeAdvanced* p_data, int p_pixel_range, int p_rect_margin, FT_Outline* outline, const Vector2& advance) const;
+    _WHY_GODOT_INLINE_ FontGlyph rasterize_msdf(FontAdvanced* p_font_data, FontForSizeAdvanced* p_data, int p_pixel_range, int p_rect_margin, FT_Outline* outline, const Vector2& advance) const;
 #endif
 #ifdef MODULE_FREETYPE_ENABLED
-    _FORCE_INLINE_ FontGlyph rasterize_bitmap(FontForSizeAdvanced* p_data, int p_rect_margin, FT_Bitmap bitmap, int yofs, int xofs, const Vector2& advance, bool p_bgra) const;
+    _WHY_GODOT_INLINE_ FontGlyph rasterize_bitmap(FontForSizeAdvanced* p_data, int p_rect_margin, FT_Bitmap bitmap, int yofs, int xofs, const Vector2& advance, bool p_bgra) const;
 #endif
-    _FORCE_INLINE_ bool _ensure_glyph(FontAdvanced* p_font_data, const Vector2i& p_size, int32_t p_glyph) const;
-    _FORCE_INLINE_ bool _ensure_cache_for_size(FontAdvanced* p_font_data, const Vector2i& p_size) const;
+    _WHY_GODOT_INLINE_ bool _ensure_glyph(FontAdvanced* p_font_data, const Vector2i& p_size, int32_t p_glyph) const;
+    _WHY_GODOT_INLINE_ bool _ensure_cache_for_size(FontAdvanced* p_font_data, const Vector2i& p_size) const;
     _FORCE_INLINE_ void _font_clear_cache(FontAdvanced* p_font_data);
     static void         _generateMTSDF_threaded(void* p_td, uint32_t p_y);
 
@@ -374,7 +378,7 @@ class TextServerAdvanced : public TextServer
     // TODO: Variant
     // _FORCE_INLINE_ Variant::Type _get_tag_type(int64_t p_tag) const;
     _FORCE_INLINE_ bool _get_tag_hidden(int64_t p_tag) const;
-    _FORCE_INLINE_ int  _font_get_weight_by_name(const String& p_sty_name) const
+    _WHY_GODOT_INLINE_ int  _font_get_weight_by_name(const String& p_sty_name) const
     {
         String sty_name = p_sty_name.replace(" ", "").replace("-", "");
         if (sty_name.find("thin") >= 0 || sty_name.find("hairline") >= 0)
@@ -423,7 +427,7 @@ class TextServerAdvanced : public TextServer
         }
         return 400;
     }
-    _FORCE_INLINE_ int _font_get_stretch_by_name(const String& p_sty_name) const
+    _WHY_GODOT_INLINE_ int _font_get_stretch_by_name(const String& p_sty_name) const
     {
         String sty_name = p_sty_name.replace(" ", "").replace("-", "");
         if (sty_name.find("ultracondensed") >= 0)
