@@ -257,6 +257,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
             };
             auto ramrq = ram_service->open_request();
             ramrq->set_vfs(request->vfs_override);
+            ramrq->use_async_complete();
             ramrq->set_path(pngPathStr.c_str());
             ramrq->add_block({}); // read all
             ramrq->add_callback(SKR_IO_STAGE_COMPLETED, on_complete, render_model);
