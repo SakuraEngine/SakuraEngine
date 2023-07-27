@@ -1,7 +1,6 @@
 #pragma once
 #include "SkrRT/misc/types.h"
-#include "cgpu/api.h"
-#include "cgpu/io.h"
+#include "SkrRT/io/vram_io.hpp"
 #include "SkrRenderer/primitive_draw.h"
 #include "l2d_model_resource.h"
 #include <EASTL/vector_map.h>
@@ -36,7 +35,7 @@ typedef struct skr_live2d_render_model_comp_t skr_live2d_render_model_comp_t;
 
 #ifndef SKR_SERIALIZE_GURAD
 SKR_LIVE2D_EXTERN_C SKR_LIVE2D_API void 
-skr_live2d_render_model_create_from_raw(skr_io_ram_service_t*, skr_io_vram_service_t*, CGPUDeviceId device,
+skr_live2d_render_model_create_from_raw(skr_io_ram_service_t*, skr_io_vram_service2_t*, CGPUDeviceId device,
     skr_live2d_model_resource_id resource, skr_live2d_render_model_request_t* request);
 #endif
 

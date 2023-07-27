@@ -15,8 +15,7 @@ template<typename T>
 {
     if (auto c = rq->get_component(IORequestComponentTID<T>::Get()))
         return static_cast<const T*>(c);
-    SKR_UNREACHABLE_CODE();
-    return nullptr;
+    return (T*)nullptr;
 }
 
 template<typename T>
@@ -24,8 +23,7 @@ template<typename T>
 {
     if (auto c = rq->get_component(IORequestComponentTID<T>::Get()))
         return static_cast<T*>(c);
-    SKR_UNREACHABLE_CODE();
-    return nullptr;
+    return (T*)nullptr;
 }
 
 template <typename Interface, typename...Components>
@@ -51,8 +49,7 @@ public:
                 if (ids[i] == tid)
                     return cs[i];
             }
-            SKR_UNREACHABLE_CODE();
-            return cs[0];
+            return (const IORequestComponent*)nullptr;
         }, components);
     }
     [[nodiscard]] virtual IORequestComponent* get_component(skr_guid_t tid) SKR_NOEXCEPT
@@ -66,8 +63,7 @@ public:
                 if (ids[i] == tid)
                     return cs[i];
             }
-            SKR_UNREACHABLE_CODE();
-            return cs[0];
+            return (IORequestComponent*)nullptr;
         }, components);
     }
 

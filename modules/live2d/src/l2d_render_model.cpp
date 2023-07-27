@@ -2,7 +2,7 @@
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/io/ram_io.hpp"
-#include "cgpu/io.h"
+#include "SkrRT/io/vram_io.hpp"
 
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/platform/debug.h"
@@ -44,12 +44,12 @@ struct skr_live2d_render_model_impl_t : public skr_live2d_render_model_t {
     CGPUBufferId uv_buffer;
 
     eastl::vector<skr_io_future_t> texture_io_requests;
-    eastl::vector<skr_async_vtexture_destination_t> texture_destinations;
+    eastl::vector<skr::io::VRAMIOTextureId> texture_destinations;
     eastl::vector<skr_io_future_t> png_futures;
     eastl::vector<skr::BlobId> png_blobs;
 
     eastl::vector<skr_io_future_t> buffer_io_requests;
-    eastl::vector<skr_async_vbuffer_destination_t> buffer_destinations;
+    eastl::vector<skr::io::VRAMIOBufferId> buffer_destinations;
 };
 
 struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
@@ -86,7 +86,7 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
     {
         for (uint32_t i = 0; i < textures.size(); i++)
         {
-            textures[i] = texture_destinations[i].texture;
+            textures[i] = texture_destinations[i]->get_texture();
             CGPUTextureViewDescriptor view_desc = {};
             view_desc.texture = textures[i];
             view_desc.array_layer_count = 1;
@@ -118,8 +118,8 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
     uint32_t finished_texture_request = 0;
     uint32_t finished_buffer_request = 0;
     skr_live2d_render_model_request_t* request = nullptr;
-    skr_io_vram_service_t* vram_service = nullptr;
-    skr_io_ram_service_t* ram_service = nullptr;
+    skr::io::IVRAMService* vram_service = nullptr;
+    skr::io::IRAMService* ram_service = nullptr;
     CGPUDeviceId device;
     CGPUQueueId transfer_queue;
     eastl::vector<skr::ImageDecoderId> decoders;
@@ -136,7 +136,7 @@ ESkrIOStage skr_live2d_render_model_request_t::get_status() const SKR_NOEXCEPT
 }
 
 #ifndef SKR_SERIALIZE_GURAD
-void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service, 
+void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, skr_io_vram_service2_t* vram_service, 
     CGPUDeviceId device, skr_live2d_model_resource_id resource, skr_live2d_render_model_request_t* request)
 {
     auto csmModel = resource->model->GetModel();
@@ -168,10 +168,11 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
 
         SKR_UNUSED auto& texture_destination = render_model->texture_destinations[i];
         SKR_UNUSED auto& texture_io_request = render_model->texture_io_requests[i];
-        SKR_UNUSED auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();
+        // SKR_UNUSED auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();
         SKR_UNUSED auto texture_path = resource->model_setting->GetTextureFileName(i);
         SKR_UNUSED auto pngPath = skr::filesystem::path(request->vfs_override->mount_dir) / resource->model->homePath.c_str() / texture_path;
         SKR_UNUSED auto pngPathStr = pngPath.u8string();
+        /* TODO: IMPLEMENT THIS
 #ifdef _WIN32
         if (request->file_dstorage_queue_override)
         {
@@ -206,11 +207,12 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         }
         else
 #endif
+        */
         {
             auto& png_blob = render_model->png_blobs[i];
             auto& png_future = render_model->png_futures[i];
             const auto on_complete = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
-                ZoneScopedN("Load PNG");
+                ZoneScopedN("Decode PNG");
                 auto render_model = (skr_live2d_render_model_async_t*)data;
                 auto idx = future - render_model->png_futures.data();
 
@@ -232,25 +234,24 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                         // upload texture
                         auto& texture_io_request = render_model->texture_io_requests[idx];
                         auto& texture_destination = render_model->texture_destinations[idx];
-                        auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();
-                        vram_texture_io.device = render_model->device;
-                        vram_texture_io.transfer_queue = render_model->transfer_queue;
 
-                        vram_texture_io.vtexture.texture_name = nullptr;
-                        vram_texture_io.vtexture.resource_types = CGPU_RESOURCE_TYPE_TEXTURE;
-                        vram_texture_io.vtexture.width = decoder->get_width();
-                        vram_texture_io.vtexture.height = decoder->get_height();
-                        vram_texture_io.vtexture.depth = 1;
-                        vram_texture_io.vtexture.format = CGPU_FORMAT_R8G8B8A8_UNORM;
-
-                        vram_texture_io.src_memory.size = decoder->get_width() * decoder->get_height() * 4;
-                        vram_texture_io.src_memory.bytes = decoder->get_data();
-                        vram_texture_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data){
+                        auto request = vram_service->open_texture_request();
+                        CGPUTextureDescriptor tdesc = {};
+                        tdesc.name = nullptr;
+                        tdesc.descriptors = CGPU_RESOURCE_TYPE_TEXTURE;
+                        tdesc.width = decoder->get_width();
+                        tdesc.height = decoder->get_height();
+                        tdesc.depth = 1;
+                        tdesc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
+                        request->set_texture(render_model->device, &tdesc);
+                        request->set_transfer_queue(render_model->transfer_queue);
+                        request->set_memory_src(decoder->get_data(), decoder->get_width() * decoder->get_height() * 4);
+                        request->add_callback(SKR_IO_STAGE_COMPLETED, 
+                        +[](skr_io_future_t* future, skr_io_request_t* request, void* data){
                             auto render_model = (skr_live2d_render_model_async_t*)data;
                             render_model->texture_finish(future);
-                        };
-                        vram_texture_io.callback_datas[SKR_IO_STAGE_COMPLETED] = render_model;
-                        vram_service->request(&vram_texture_io, &texture_io_request, &texture_destination);
+                        }, render_model);
+                        texture_destination = vram_service->request(request, &texture_io_request);
                     }
                 }
                 png_blob.reset();
@@ -374,31 +375,25 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                 ZoneScopedN("RequestLive2DIndexBuffer");
 
                 const auto indices = csmModel->GetDrawableVertexIndices(i);
-                auto ib_io = make_zeroed<skr_vram_buffer_io_t>();
                 auto& io_request = render_model->buffer_io_requests[i];
                 auto& buffer_destination = render_model->buffer_destinations[i];
-                buffer_destination.buffer = render_model->index_buffer;
+                auto request = vram_service->open_buffer_request();
 
-                ib_io.device = device;
-                ib_io.transfer_queue = memory_dstorage_queue ? nullptr : request->queue_override;
-
+                /* TODO: IMPLEMENT THIS
                 ib_io.dstorage.queue = memory_dstorage_queue;
                 ib_io.dstorage.source_type = SKR_DSTORAGE_SOURCE_MEMORY;
                 ib_io.dstorage.uncompressed_size = sizeof(Csm::csmUint16) * icount;
+                */
 
-                ib_io.vbuffer.offset = index_buffer_cursor;
-                ib_io.vbuffer.resource_types = CGPU_RESOURCE_TYPE_INDEX_BUFFER;
-                ib_io.vbuffer.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
-                ib_io.vbuffer.buffer_size = total_index_count * sizeof(Csm::csmUint16);
-                
-                ib_io.src_memory.bytes = (uint8_t*)indices;
-                ib_io.src_memory.size = sizeof(Csm::csmUint16) * icount;
-                ib_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data){
+                request->set_buffer(render_model->index_buffer, index_buffer_cursor);
+                request->set_transfer_queue(render_model->transfer_queue);
+                request->set_memory_src((uint8_t*)indices, sizeof(Csm::csmUint16) * icount);
+                request->add_callback(SKR_IO_STAGE_COMPLETED, 
+                +[](skr_io_future_t* future, skr_io_request_t* request, void* data){
                     auto render_model = (skr_live2d_render_model_async_t*)data;
                     render_model->buffer_finish(future);
-                };
-                ib_io.callback_datas[SKR_IO_STAGE_COMPLETED] = render_model;
-                vram_service->request(&ib_io, &io_request, &buffer_destination);
+                }, render_model);
+                buffer_destination = vram_service->request(request, &io_request);
                 index_buffer_cursor += icount * sizeof(Csm::csmUint16);
             }
             else

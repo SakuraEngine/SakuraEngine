@@ -1,4 +1,5 @@
 #pragma once
+#include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/io/vram_io.hpp"
 #include "../components/status_component.hpp"
 #include "SkrRT/platform/debug.h"
@@ -25,6 +26,11 @@ struct VRAMUploadComponent final : public IORequestComponent
     }
 
     CGPUQueueId transfer_queue = nullptr;
+    RAMIOBufferId buffer = nullptr;
+    IOFuture ram_future;
+
+    uint8_t* data = nullptr;
+    uint64_t size = 0;
 };
 
 template <>
@@ -57,7 +63,7 @@ struct VRAMBufferComponent final : public IORequestComponent
 
     virtual skr_guid_t get_tid() const SKR_NOEXCEPT override;
 
-    void set_buffer(CGPUBufferId buffer) SKR_NOEXCEPT;
+    void set_buffer(CGPUBufferId buffer, uint64_t offset) SKR_NOEXCEPT;
     void set_buffer(CGPUDeviceId device, const CGPUBufferDescriptor* desc) SKR_NOEXCEPT;
 
     SObjectPtr<IVRAMIOBuffer> artifact;
@@ -68,6 +74,7 @@ struct VRAMBufferComponent final : public IORequestComponent
         ServiceCreated
     };
     Type type;
+    uint64_t offset;
     CGPUBufferId buffer;
     CGPUDeviceId device;
     CGPUBufferDescriptor desc;

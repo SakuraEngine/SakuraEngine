@@ -67,6 +67,7 @@ public:
     SRendererId l2d_renderer = nullptr;
     skr_vfs_t* resource_vfs = nullptr;
     skr_io_ram_service_t* ram_service = nullptr;
+    skr_io_vram_service2_t* vram_service2 = nullptr;
     skr::JobQueue* io_job_queue = nullptr;
 };
 
@@ -110,6 +111,15 @@ void SLive2DViewerModule::on_load(int argc, char8_t** argv)
     ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
     ram_service->run();
     
+    auto vram_service2_desc = make_zeroed<skr_vram_io_service2_desc_t>();
+    vram_service2_desc.name = u8"Live2DViewer-VRAMIOService";
+    vram_service2_desc.awake_at_request = true;
+    vram_service2_desc.ram_service = ram_service;
+    vram_service2_desc.callback_job_queue = SLive2DViewerModule::Get()->io_job_queue;
+    vram_service2_desc.use_dstorage = false;
+    vram_service2 = skr_io_vram_service2_t::create(&vram_service2_desc);
+    vram_service2->run();
+
 #ifdef _WIN32
     skr_win_dstorage_decompress_desc_t decompress_desc = {};
     decompress_desc.job_queue = io_job_queue;
@@ -205,10 +215,10 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
                     auto pRendermodelFuture = (skr_live2d_render_model_request_t*)data;
                     auto ram_service = SLive2DViewerModule::Get()->ram_service;
                     auto renderer = SLive2DViewerModule::Get()->l2d_renderer;
+                    auto vram_service2 = SLive2DViewerModule::Get()->vram_service2;
                     auto render_device = renderer->get_render_device();
-                    auto vram_service = render_device->get_vram_service();
                     auto cgpu_device = render_device->get_cgpu_device();
-                    skr_live2d_render_model_create_from_raw(ram_service, vram_service, cgpu_device, request->model_resource, pRendermodelFuture);
+                    skr_live2d_render_model_create_from_raw(ram_service, vram_service2, cgpu_device, request->model_resource, pRendermodelFuture);
                 };
                 // skr_live2d_model_create_from_json(ram_service, u8"Live2DViewer/Mao/mao_pro_t02.model3.json", &ram_request);
                 skr_live2d_model_create_from_json(ram_service, u8"Live2DViewer/Hiyori/Hiyori.model3.json", &ram_request);

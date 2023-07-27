@@ -42,9 +42,9 @@ struct VRAMRequestMixin : public IORequestMixin<Interface, Components...>
     }
 
 #pragma region VRAMBufferComponent
-    void set_buffer(CGPUBufferId buffer) SKR_NOEXCEPT
+    void set_buffer(CGPUBufferId buffer, uint64_t offset) SKR_NOEXCEPT
     {        
-        Super::template safe_comp<VRAMBufferComponent>()->set_buffer(buffer); 
+        Super::template safe_comp<VRAMBufferComponent>()->set_buffer(buffer, offset); 
     }
 
     void set_buffer(CGPUDeviceId device, const CGPUBufferDescriptor* desc) SKR_NOEXCEPT

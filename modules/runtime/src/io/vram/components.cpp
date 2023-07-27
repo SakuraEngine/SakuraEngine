@@ -49,8 +49,9 @@ skr_guid_t VRAMBufferComponent::get_tid() const SKR_NOEXCEPT
     return IORequestComponentTID<VRAMBufferComponent>::Get(); 
 }
 
-void VRAMBufferComponent::set_buffer(CGPUBufferId buffer) SKR_NOEXCEPT
+void VRAMBufferComponent::set_buffer(CGPUBufferId buffer, uint64_t offset) SKR_NOEXCEPT
 {
+    this->offset = offset;
     this->buffer = buffer;
     this->device = buffer->device;
     this->type = Type::Imported;

@@ -116,6 +116,7 @@ public:
 
 protected:
     friend struct RAMIOBatch;
+    friend struct VRAMIOBatch;
     bool async_complete = false;
     bool async_cancel = false;
     IIOBatch* owner_batch = nullptr; // avoid circular reference

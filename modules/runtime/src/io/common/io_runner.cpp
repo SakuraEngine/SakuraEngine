@@ -362,18 +362,18 @@ bool RunnerBase::cancel_(IORequestId rq, SkrAsyncServicePriority priority) SKR_N
 
 bool RunnerBase::complete_(IORequestId rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    if (auto pComp = io_component<IOStatusComponent>(rq.get()))
+    if (auto pStatus = io_component<IOStatusComponent>(rq.get()))
     {
-        SKR_ASSERT(pComp->getStatus() == SKR_IO_STAGE_LOADED);
-        pComp->setStatus(SKR_IO_STAGE_COMPLETED);
-        if (pComp->needPollFinish())
+        SKR_ASSERT(pStatus->getStatus() == SKR_IO_STAGE_LOADED);
+        pStatus->setStatus(SKR_IO_STAGE_COMPLETED);
+        if (pStatus->needPollFinish())
         {
             finish_queues[priority].enqueue(rq);
-            pComp->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_WAIT_CALLBACK_POLLING);
+            pStatus->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_WAIT_CALLBACK_POLLING);
         }
         else
         {
-            pComp->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
+            pStatus->setFinishStep(SKR_ASYNC_IO_FINISH_STEP_DONE);
         }
         skr_atomic64_add_relaxed(&processing_request_counts[priority], -1);
     }
