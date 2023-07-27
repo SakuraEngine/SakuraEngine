@@ -152,6 +152,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     render_model->vram_service = vram_service;
     render_model->ram_service = ram_service;
     // request load textures
+    render_model->decoders.reserve(texture_count);
     render_model->textures.resize(texture_count);
     render_model->texture_views.resize(texture_count);
     render_model->texture_destinations.resize(texture_count);
@@ -246,7 +247,6 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                         vram_texture_io.src_memory.bytes = decoder->get_data();
                         vram_texture_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data){
                             auto render_model = (skr_live2d_render_model_async_t*)data;
-
                             render_model->texture_finish(future);
                         };
                         vram_texture_io.callback_datas[SKR_IO_STAGE_COMPLETED] = render_model;
@@ -257,9 +257,9 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
             };
             auto ramrq = ram_service->open_request();
             ramrq->set_vfs(request->vfs_override);
-            ramrq->use_async_complete();
             ramrq->set_path(pngPathStr.c_str());
             ramrq->add_block({}); // read all
+            ramrq->use_async_complete();
             ramrq->add_callback(SKR_IO_STAGE_COMPLETED, on_complete, render_model);
             png_blob = ram_service->request(ramrq, &png_future);
         }
