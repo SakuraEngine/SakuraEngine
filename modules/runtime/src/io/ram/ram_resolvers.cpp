@@ -21,16 +21,16 @@ void AllocateIOBufferResolver::resolve(SkrAsyncServicePriority priority, IOBatch
             {
                 block.size = pFiles->get_fsize() - block.offset;
             }
-            if (buf->size == 0)
+            if (buf->get_size() == 0)
             {
                 buf->size += block.size;
             }
         }
     }
     // allocate
-    if (buf->bytes == nullptr)
+    if (buf->get_data() == nullptr)
     {
-        if (buf->size == 0)
+        if (buf->get_size() == 0)
         {
             SKR_ASSERT(0 && "invalid destination size");
         }

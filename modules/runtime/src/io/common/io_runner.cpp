@@ -77,7 +77,7 @@ void RunnerBase::phaseRecycle() SKR_NOEXCEPT
         const auto priority = (SkrAsyncServicePriority)i;
 
         auto& futures = finish_futures;
-        for (auto& future : futures)
+        for (auto&& [future, rq] : futures)
         {
             auto status = future->wait_for(0);
             if (status == skr::FutureStatus::Ready)
@@ -86,13 +86,14 @@ void RunnerBase::phaseRecycle() SKR_NOEXCEPT
                 future = nullptr;
             }
         }
-        auto cleaner = [](skr::IFuture<bool>* future) { return (future == nullptr); };
+        auto cleaner = [](auto& future_kv) { return (future_kv.first == nullptr); };
         auto it = eastl::remove_if(futures.begin(), futures.end(), cleaner);
         futures.erase(it, futures.end());
 
         for (auto processor : batch_processors)
             processor->recycle(priority);
     }
+
 }
 
 void RunnerBase::phaseProcessBatches() SKR_NOEXCEPT
@@ -216,12 +217,12 @@ bool RunnerBase::try_cancel(SkrAsyncServicePriority priority, IORequestId rq) SK
             {
                 if (pComp->is_async_cancel())
                 {
-                    auto cancel = [this, priority, rq] { return cancel_(rq, priority); };
-                    finish_futures.emplace_back(skr::FutureLauncher<bool>(job_queue).async(cancel));
+                    auto cancel = [this, priority, rq = rq.get()] { return cancel_(rq, priority); };
+                    finish_futures.emplace_back(skr::FutureLauncher<bool>(job_queue).async(cancel), rq);
                 }
                 else
                 {
-                    cancel_(rq, priority);
+                    cancel_(rq.get(), priority);
                 }
             }
             // remove from batch
@@ -241,12 +242,12 @@ void RunnerBase::dispatch_complete_(SkrAsyncServicePriority priority, IORequestI
     {
         if (pComp->is_async_complete())
         {
-            auto complete = [this, priority, rq] { return complete_(rq, priority); };
-            finish_futures.emplace_back(skr::FutureLauncher<bool>(job_queue).async(complete));
+            auto complete = [this, priority, rq = rq.get()] { return complete_(rq, priority); };
+            finish_futures.emplace_back(skr::FutureLauncher<bool>(job_queue).async(complete), rq);
         }
         else
         {
-            complete_(rq, priority);
+            complete_(rq.get(), priority);
         }
     }
 }
@@ -341,9 +342,9 @@ void RunnerBase::destroy() SKR_NOEXCEPT
     exit();
 }
 
-bool RunnerBase::cancel_(IORequestId rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT
+bool RunnerBase::cancel_(IIORequest* rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    if (auto pComp = io_component<IOStatusComponent>(rq.get()))
+    if (auto pComp = io_component<IOStatusComponent>(rq))
     {
         pComp->setStatus(SKR_IO_STAGE_CANCELLED);
         if (pComp->needPollFinish())
@@ -360,9 +361,9 @@ bool RunnerBase::cancel_(IORequestId rq, SkrAsyncServicePriority priority) SKR_N
     return true;
 }
 
-bool RunnerBase::complete_(IORequestId rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT
+bool RunnerBase::complete_(IIORequest* rq, SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    if (auto pStatus = io_component<IOStatusComponent>(rq.get()))
+    if (auto pStatus = io_component<IOStatusComponent>(rq))
     {
         SKR_ASSERT(pStatus->getStatus() == SKR_IO_STAGE_LOADED);
         pStatus->setStatus(SKR_IO_STAGE_COMPLETED);

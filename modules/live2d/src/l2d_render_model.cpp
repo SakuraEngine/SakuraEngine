@@ -152,7 +152,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     render_model->vram_service = vram_service;
     render_model->ram_service = ram_service;
     // request load textures
-    render_model->decoders.reserve(texture_count);
+    render_model->decoders.resize(texture_count);
     render_model->textures.resize(texture_count);
     render_model->texture_views.resize(texture_count);
     render_model->texture_destinations.resize(texture_count);
@@ -220,7 +220,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                 // decompress
                 EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)png_blob->get_data(), png_blob->get_size());
                 auto decoder = skr::IImageDecoder::Create(format);
-                render_model->decoders.emplace_back(decoder);
+                render_model->decoders[idx] = decoder;
                 if (decoder->initialize((const uint8_t*)png_blob->get_data(), png_blob->get_size()))
                 {
                     const auto encoded_format = decoder->get_color_format();

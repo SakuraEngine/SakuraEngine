@@ -67,7 +67,7 @@ void VFSRAMReader::dispatchFunction(SkrAsyncServicePriority priority, const IORe
                     uint64_t dst_offset = 0u;
                     for (const auto& block : pBlocks->blocks)
                     {
-                        const auto address = buf->bytes + dst_offset;
+                        const auto address = buf->get_data() + dst_offset;
                         skr_vfs_fread(pFile->file, address, block.offset, block.size);
                         dst_offset += block.size;
                     }
@@ -238,8 +238,8 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
         }
         for (auto&& request : batch->get_requests())
         {
-            auto&& rq = skr::static_pointer_cast<RAMRequestMixin>(request);
-            auto&& buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
+            auto rq = skr::static_pointer_cast<RAMRequestMixin>(request);
+            auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
             auto pBlocks = io_component<BlocksComponent>(request.get());
             if (auto pFile = io_component<FileComponent>(request.get()))
             {
@@ -258,7 +258,7 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
                         uint64_t dst_offset = 0u;
                         for (const auto& block : pBlocks->blocks)
                         {
-                            const auto address = buf->bytes + dst_offset;
+                            const auto address = buf->get_data() + dst_offset;
                             SkrDStorageIODescriptor io = {};
                             io.name = rq->get_path();
                             io.event = nullptr;
