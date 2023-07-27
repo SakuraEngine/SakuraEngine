@@ -11,26 +11,26 @@ VRAMIOStatusComponent::VRAMIOStatusComponent(IIORequest* const request) SKR_NOEX
     
 }
 
-VRAMQueuesComponent::VRAMQueuesComponent(IIORequest* const request) SKR_NOEXCEPT 
+VRAMUploadComponent::VRAMUploadComponent(IIORequest* const request) SKR_NOEXCEPT 
     : IORequestComponent(request) 
 {
     
 }
 
-skr_guid_t VRAMQueuesComponent::get_tid() const SKR_NOEXCEPT 
+skr_guid_t VRAMUploadComponent::get_tid() const SKR_NOEXCEPT 
 { 
-    return IORequestComponentTID<VRAMQueuesComponent>::Get(); 
+    return IORequestComponentTID<VRAMUploadComponent>::Get(); 
 }
 
-MemorySrcComponent::MemorySrcComponent(IIORequest* const request) SKR_NOEXCEPT 
+VRAMDStorageComponent::VRAMDStorageComponent(IIORequest* const request) SKR_NOEXCEPT 
     : IORequestComponent(request) 
 {
     
 }
 
-skr_guid_t MemorySrcComponent::get_tid() const SKR_NOEXCEPT 
+skr_guid_t VRAMDStorageComponent::get_tid() const SKR_NOEXCEPT 
 { 
-    return IORequestComponentTID<MemorySrcComponent>::Get(); 
+    return IORequestComponentTID<VRAMDStorageComponent>::Get(); 
 }
 
 VRAMBufferComponent::VRAMBufferComponent(IIORequest* const request) SKR_NOEXCEPT 

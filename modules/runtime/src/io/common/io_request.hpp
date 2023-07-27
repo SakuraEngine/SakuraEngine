@@ -1,11 +1,11 @@
 #pragma once
 #include "../components/status_component.hpp"
-#include "../components/file_component.hpp"
+#include "../components/src_components.hpp"
 #include "../components/blocks_component.hpp"
 
 #include "pool.hpp"
 #include <tuple>
-#include <string.h> // ::strlen
+#include "tracy/Tracy.hpp"
 
 namespace skr {
 namespace io {
@@ -42,6 +42,7 @@ public:
 
     [[nodiscard]] virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT
     {
+        ZoneScopedN("IORequestMixin::get_component");
         return std::apply([tid](const auto&... args) {
             const IORequestComponent* cs[] = { &args... };
             const skr_guid_t ids[] = { args.get_tid()... };
@@ -56,6 +57,7 @@ public:
     }
     [[nodiscard]] virtual IORequestComponent* get_component(skr_guid_t tid) SKR_NOEXCEPT
     {
+        ZoneScopedN("IORequestMixin::get_component");
         return std::apply([tid](auto&... args) {
             IORequestComponent* cs[] = { &args... };
             const skr_guid_t ids[] = { args.get_tid()... };
@@ -101,17 +103,17 @@ public:
 
     void set_vfs(skr_vfs_t* _vfs) SKR_NOEXCEPT
     {
-        safe_comp<FileSrcComponent>()->set_vfs(_vfs);
+        safe_comp<PathSrcComponent>()->set_vfs(_vfs);
     }
 
     void set_path(const char8_t* p) SKR_NOEXCEPT 
     { 
-        safe_comp<FileSrcComponent>()->set_path(p); 
+        safe_comp<PathSrcComponent>()->set_path(p); 
     }
 
     [[nodiscard]] const char8_t* get_path() const SKR_NOEXCEPT 
     { 
-        return safe_comp<FileSrcComponent>()->get_path(); 
+        return safe_comp<PathSrcComponent>()->get_path(); 
     }
 
     void use_async_complete() SKR_NOEXCEPT 

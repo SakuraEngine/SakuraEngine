@@ -28,12 +28,12 @@ struct VRAMRequestMixin : public IORequestMixin<Interface, Components...>
 
     void set_transfer_queue(CGPUQueueId queue) SKR_NOEXCEPT
     {
-        Super::template safe_comp<VRAMQueuesComponent>()->set_transfer_queue(queue); 
+        Super::template safe_comp<VRAMUploadComponent>()->set_transfer_queue(queue); 
     }
 
     void set_dstorage_queue(CGPUDStorageQueueId queue) SKR_NOEXCEPT
     {
-        Super::template safe_comp<VRAMQueuesComponent>()->set_dstorage_queue(queue); 
+        Super::template safe_comp<VRAMDStorageComponent>()->set_dstorage_queue(queue); 
     }
 
     void set_memory_src(uint8_t* memory, uint64_t bytes) SKR_NOEXCEPT
@@ -87,9 +87,10 @@ struct VRAMRequest
 
 template <>
 struct VRAMRequest<ISlicesVRAMRequest> final : public VRAMRequestMixin<ISlicesVRAMRequest,
-    IOStatusComponent, VRAMQueuesComponent, 
-    MemorySrcComponent, FileSrcComponent,
-    VRAMTextureComponent //Dst
+    IOStatusComponent, 
+    PathSrcComponent, MemorySrcComponent, // Src
+    VRAMUploadComponent, VRAMDStorageComponent, // Method
+    VRAMTextureComponent // Dst
 >
 {
     friend struct SmartPool<VRAMRequest<ISlicesVRAMRequest>, ISlicesVRAMRequest>;
@@ -103,8 +104,9 @@ protected:
 
 template <>
 struct VRAMRequest<ITilesVRAMRequest> final : public VRAMRequestMixin<ITilesVRAMRequest,
-    IOStatusComponent, VRAMQueuesComponent, 
-    MemorySrcComponent, FileSrcComponent,
+    IOStatusComponent, 
+    PathSrcComponent, MemorySrcComponent, // Src
+    VRAMUploadComponent, VRAMDStorageComponent, // Method
     VRAMTextureComponent //Dst
 >
 {
@@ -119,8 +121,9 @@ protected:
 
 template <>
 struct VRAMRequest<IBlocksVRAMRequest> final : public VRAMRequestMixin<IBlocksVRAMRequest,
-    IOStatusComponent, VRAMQueuesComponent, 
-    MemorySrcComponent, FileSrcComponent,
+    IOStatusComponent, 
+    PathSrcComponent, MemorySrcComponent, // Src
+    VRAMUploadComponent, VRAMDStorageComponent, // Method
     VRAMBufferComponent //Dst
 >
 {
