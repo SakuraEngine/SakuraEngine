@@ -38,11 +38,11 @@ struct MemorySrcComponent final : public IORequestComponent
 
     void set_memory_src(uint8_t* memory, uint64_t bytes) SKR_NOEXCEPT
     {
-        buffer = memory;
+        data = memory;
         size = bytes;
     }
 
-    uint8_t* buffer = nullptr;
+    uint8_t* data = nullptr;
     uint64_t size = 0;
 };
 

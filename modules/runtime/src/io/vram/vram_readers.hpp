@@ -2,6 +2,7 @@
 #include "SkrRT/io/vram_io.hpp"
 #include "vram_service.hpp"
 #include <stdint.h>
+#include <EASTL/fixed_vector.h>
 
 namespace skr { template <typename Artifact> struct IFuture; struct JobQueue; }
 
@@ -53,7 +54,19 @@ struct CommonVRAMReader final : public VRAMReaderBase<IIOBatchProcessor>
     IRAMService* ram_service = nullptr;
     IOBatchQueue fetched_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IOBatchQueue processed_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    skr::vector<RAMIOBufferId> ram_buffers[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    skr::vector<IOBatchId> ramloading_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    skr::vector<IOBatchId> to_upload_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    struct GPUUploadCmd
+    {
+        CGPUQueueId queue = nullptr;
+        IOBatchId batch = nullptr;
+        bool okay = false;
+        CGPUCommandPoolId pool = nullptr;
+        CGPUCommandBufferId cmdbuf = nullptr;
+        CGPUFenceId fence = nullptr;
+        eastl::fixed_vector<CGPUBufferId, 4> upload_buffers;
+    };
+    skr::vector<GPUUploadCmd> gpu_uploads[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 };
 
 } // namespace io
