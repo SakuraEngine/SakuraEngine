@@ -9,6 +9,12 @@
 namespace skr {
 namespace io {
 
+VRAMIOBatch::VRAMIOBatch(ISmartPool<IIOBatch>* pool, IIOService* service, uint64_t seq, uint64_t n) SKR_NOEXCEPT
+    : IOBatchBase(pool, service, seq)
+{
+    reserve(n);
+}
+
 IOResultId VRAMIOBatch::add_request(IORequestId request, skr_io_future_t* future) SKR_NOEXCEPT
 {
     auto srv = static_cast<VRAMService*>(service);

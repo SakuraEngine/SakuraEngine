@@ -96,28 +96,28 @@ void SLive2DViewerModule::on_load(int argc, char8_t** argv)
     auto render_device = skr_get_default_render_device();
     l2d_renderer = skr_create_renderer(render_device, l2d_world);
 
-    auto jqDesc = make_zeroed<skr::JobQueueDesc>();
-    jqDesc.thread_count = 2;
-    jqDesc.priority = SKR_THREAD_ABOVE_NORMAL;
-    jqDesc.name = u8"Live2DViewer-RAMIOJobQueue";
-    io_job_queue = SkrNew<skr::JobQueue>(jqDesc);
+    auto jobQueueDesc = make_zeroed<skr::JobQueueDesc>();
+    jobQueueDesc.thread_count = 2;
+    jobQueueDesc.priority = SKR_THREAD_ABOVE_NORMAL;
+    jobQueueDesc.name = u8"Live2DViewer-RAMIOJobQueue";
+    io_job_queue = SkrNew<skr::JobQueue>(jobQueueDesc);
 
-    auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
-    ioServiceDesc.name = u8"Live2DViewer-RAMIOService";
-    ioServiceDesc.sleep_time = 1000 / 100; // tick rate: 100
-    ioServiceDesc.io_job_queue = io_job_queue;
-    ioServiceDesc.callback_job_queue = io_job_queue;
-    ioServiceDesc.awake_at_request = false; // add latency but reduce CPU usage & batch IO requests
-    ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
+    auto ramServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
+    ramServiceDesc.name = u8"Live2DViewer-RAMIOService";
+    ramServiceDesc.sleep_time = 1000 / 100; // tick rate: 100
+    ramServiceDesc.io_job_queue = io_job_queue;
+    ramServiceDesc.callback_job_queue = io_job_queue;
+    ramServiceDesc.awake_at_request = false; // add latency but reduce CPU usage & batch IO requests
+    ram_service = skr_io_ram_service_t::create(&ramServiceDesc);
     ram_service->run();
     
-    auto vram_service2_desc = make_zeroed<skr_vram_io_service2_desc_t>();
-    vram_service2_desc.name = u8"Live2DViewer-VRAMIOService";
-    vram_service2_desc.awake_at_request = true;
-    vram_service2_desc.ram_service = ram_service;
-    vram_service2_desc.callback_job_queue = SLive2DViewerModule::Get()->io_job_queue;
-    vram_service2_desc.use_dstorage = false;
-    vram_service2 = skr_io_vram_service2_t::create(&vram_service2_desc);
+    auto vramServiceDesc = make_zeroed<skr_vram_io_service2_desc_t>();
+    vramServiceDesc.name = u8"Live2DViewer-VRAMIOService";
+    vramServiceDesc.awake_at_request = true;
+    vramServiceDesc.ram_service = ram_service;
+    vramServiceDesc.callback_job_queue = SLive2DViewerModule::Get()->io_job_queue;
+    vramServiceDesc.use_dstorage = false;
+    vram_service2 = skr_io_vram_service2_t::create(&vramServiceDesc);
     vram_service2->run();
 
 #ifdef _WIN32
@@ -172,10 +172,10 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
                 auto mesh_comps = dual::get_owned_rw<skr_live2d_render_model_comp_t>(view);
                 for (uint32_t i = 0; i < view->count; i++)
                 {
-                    while (!mesh_comps[i].vram_request.is_ready()) {}
-                    skr_live2d_render_model_free(mesh_comps[i].vram_request.render_model);
-                    while (!mesh_comps[i].ram_request.is_ready()) {}
-                    skr_live2d_model_free(mesh_comps[i].ram_request.model_resource);
+                    while (!mesh_comps[i].vram_future.is_ready()) {}
+                    skr_live2d_render_model_free(mesh_comps[i].vram_future.render_model);
+                    while (!mesh_comps[i].ram_future.is_ready()) {}
+                    skr_live2d_model_free(mesh_comps[i].ram_future.model_resource);
                 }
             };
             skr_render_effect_access(renderer, view, u8"Live2DEffect", DUAL_LAMBDA(modelFree));
@@ -196,8 +196,8 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
             auto mesh_comps = dual::get_owned_rw<skr_live2d_render_model_comp_t>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {
-                auto& vram_request = mesh_comps[i].vram_request;
-                auto& ram_request = mesh_comps[i].ram_request;
+                auto& vram_request = mesh_comps[i].vram_future;
+                auto& ram_request = mesh_comps[i].ram_future;
                 if (upload_method == DEMO_UPLOAD_METHOD_DIRECT_STORAGE_FILE)
                 {
                     vram_request.file_dstorage_queue_override = file_dstorage_queue;
@@ -211,9 +211,9 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
                 ram_request.vfs_override = resource_vfs;
                 ram_request.callback_data = &vram_request;
                 vram_request.use_dynamic_buffer = bUseCVV;
-                ram_request.finish_callback = +[](skr_live2d_ram_io_request_t* request, void* data)
+                ram_request.finish_callback = +[](skr_live2d_ram_io_future_t* request, void* data)
                 {
-                    auto pRendermodelFuture = (skr_live2d_render_model_request_t*)data;
+                    auto pRendermodelFuture = (skr_live2d_render_model_future_t*)data;
                     auto ram_service = SLive2DViewerModule::Get()->ram_service;
                     auto renderer = SLive2DViewerModule::Get()->l2d_renderer;
                     auto vram_service2 = SLive2DViewerModule::Get()->vram_service2;

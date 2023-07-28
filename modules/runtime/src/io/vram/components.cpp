@@ -10,6 +10,16 @@ VRAMIOStatusComponent::VRAMIOStatusComponent(IIORequest* const request) SKR_NOEX
     
 }
 
+void VRAMIOStatusComponent::setStatus(ESkrIOStage status) SKR_NOEXCEPT
+{
+    if (status == SKR_IO_STAGE_CANCELLED)
+    {
+        // if (auto dest = static_cast<RAMIOBuffer*>(rq->destination.get()))
+            // dest->free_resource();
+    }
+    return IOStatusComponent::setStatus(status);
+}
+
 VRAMUploadComponent::VRAMUploadComponent(IIORequest* const request) SKR_NOEXCEPT 
     : IORequestComponent(request) 
 {

@@ -42,17 +42,17 @@ struct skr_live2d_render_model_impl_t : public skr_live2d_render_model_t {
     CGPUBufferId pos_buffer;
     CGPUBufferId uv_buffer;
 
-    eastl::vector<skr_io_future_t> texture_io_requests;
-    eastl::vector<skr::io::VRAMIOTextureId> texture_destinations;
     eastl::vector<skr_io_future_t> png_futures;
+    eastl::vector<skr_io_future_t> texture_futures;
+    eastl::vector<skr::io::VRAMIOTextureId> io_textures;
 
-    eastl::vector<skr_io_future_t> buffer_io_requests;
-    eastl::vector<skr::io::VRAMIOBufferId> buffer_destinations;
+    eastl::vector<skr_io_future_t> buffer_futures;
+    eastl::vector<skr::io::VRAMIOBufferId> io_buffers;
 };
 
 struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
     skr_live2d_render_model_async_t() = delete;
-    skr_live2d_render_model_async_t(skr_live2d_render_model_request_t* request, skr_live2d_model_resource_id model_resource)
+    skr_live2d_render_model_async_t(skr_live2d_render_model_future_t* request, skr_live2d_model_resource_id model_resource)
         : skr_live2d_render_model_impl_t(), request(request)
     {
         model_resource_id = model_resource;
@@ -84,7 +84,7 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
     {
         for (uint32_t i = 0; i < textures.size(); i++)
         {
-            textures[i] = texture_destinations[i]->get_texture();
+            textures[i] = io_textures[i]->get_texture();
             CGPUTextureViewDescriptor view_desc = {};
             view_desc.texture = textures[i];
             view_desc.array_layer_count = 1;
@@ -107,15 +107,15 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
 
     void try_finish()
     {
-        if (finished_texture_request < texture_io_requests.size()) return;
-        const auto bios = buffer_io_requests.size();
+        if (finished_texture_request < texture_futures.size()) return;
+        const auto bios = buffer_futures.size();
         if (finished_buffer_request < bios) return;
         finish();
     }
 
     uint32_t finished_texture_request = 0;
     uint32_t finished_buffer_request = 0;
-    skr_live2d_render_model_request_t* request = nullptr;
+    skr_live2d_render_model_future_t* request = nullptr;
     skr::io::IVRAMService* vram_service = nullptr;
     skr::io::IRAMService* ram_service = nullptr;
     CGPUDeviceId device;
@@ -124,19 +124,19 @@ struct skr_live2d_render_model_async_t : public skr_live2d_render_model_impl_t {
     eastl::vector<skr::BlobId> png_blobs;
 };
 
-bool skr_live2d_render_model_request_t::is_ready() const SKR_NOEXCEPT
+bool skr_live2d_render_model_future_t::is_ready() const SKR_NOEXCEPT
 {
     return get_status() == SKR_IO_STAGE_COMPLETED;
 }
 
-ESkrIOStage skr_live2d_render_model_request_t::get_status() const SKR_NOEXCEPT
+ESkrIOStage skr_live2d_render_model_future_t::get_status() const SKR_NOEXCEPT
 {
     return (ESkrIOStage)skr_atomicu32_load_acquire(&io_status);
 }
 
 #ifndef SKR_SERIALIZE_GURAD
 void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, skr_io_vram_service2_t* vram_service, 
-    CGPUDeviceId device, skr_live2d_model_resource_id resource, skr_live2d_render_model_request_t* request)
+    CGPUDeviceId device, skr_live2d_model_resource_id resource, skr_live2d_render_model_future_t* request)
 {
     auto csmModel = resource->model->GetModel();
     SKR_ASSERT(csmModel && "csmModel is null");
@@ -154,8 +154,8 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     render_model->decoders.resize(texture_count);
     render_model->textures.resize(texture_count);
     render_model->texture_views.resize(texture_count);
-    render_model->texture_destinations.resize(texture_count);
-    render_model->texture_io_requests.resize(texture_count);
+    render_model->io_textures.resize(texture_count);
+    render_model->texture_futures.resize(texture_count);
     if (!request->file_dstorage_queue_override)
     {
         render_model->png_blobs.resize(texture_count);
@@ -165,8 +165,8 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     {
         ZoneScopedN("RequestLive2DTexture");
 
-        SKR_UNUSED auto& texture_destination = render_model->texture_destinations[i];
-        SKR_UNUSED auto& texture_io_request = render_model->texture_io_requests[i];
+        SKR_UNUSED auto& texture = render_model->io_textures[i];
+        SKR_UNUSED auto& texture_io_request = render_model->texture_futures[i];
         // SKR_UNUSED auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();
         SKR_UNUSED auto texture_path = resource->model_setting->GetTextureFileName(i);
         SKR_UNUSED auto pngPath = skr::filesystem::path(request->vfs_override->mount_dir) / resource->model->homePath.c_str() / texture_path;
@@ -202,7 +202,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                 render_model->texture_finish(future);
             };
             vram_texture_io.callback_datas[SKR_IO_STAGE_COMPLETED] = render_model;
-            vram_service->request(&vram_texture_io, &texture_io_request, &texture_destination);
+            vram_service->request(&vram_texture_io, &texture_io_request, &texture);
         }
         else
 #endif
@@ -230,8 +230,8 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                     if (decoder->decode(raw_format, decoder->get_bit_depth()))
                     {
                         // upload texture
-                        auto& texture_io_request = render_model->texture_io_requests[idx];
-                        auto& texture_destination = render_model->texture_destinations[idx];
+                        auto& texture_future = render_model->texture_futures[idx];
+                        auto& io_texture = render_model->io_textures[idx];
 
                         auto request = vram_service->open_texture_request();
                         CGPUTextureDescriptor tdesc = {};
@@ -249,7 +249,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                             auto render_model = (skr_live2d_render_model_async_t*)data;
                             render_model->texture_finish(future);
                         }, render_model);
-                        texture_destination = vram_service->request(request, &texture_io_request);
+                        io_texture = vram_service->request(request, &texture_future);
                     }
                 }
             };
@@ -362,8 +362,8 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     }
     // Request indices I/O
     {
-        render_model->buffer_io_requests.resize(drawable_count);
-        render_model->buffer_destinations.resize(drawable_count);
+        render_model->buffer_futures.resize(drawable_count);
+        render_model->io_buffers.resize(drawable_count);
         uint32_t index_buffer_cursor = 0;
         auto batch = vram_service->open_batch(drawable_count);
         for(uint32_t i = 0; i < (uint32_t)drawable_count; i++)
@@ -374,8 +374,8 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                 ZoneScopedN("RequestLive2DIndexBuffer");
 
                 const auto indices = csmModel->GetDrawableVertexIndices(i);
-                auto& io_request = render_model->buffer_io_requests[i];
-                auto& buffer_destination = render_model->buffer_destinations[i];
+                auto& buffer_future = render_model->buffer_futures[i];
+                auto& io_buffer = render_model->io_buffers[i];
                 auto request = vram_service->open_buffer_request();
 
                 /* TODO: IMPLEMENT THIS
@@ -392,15 +392,15 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                     auto render_model = (skr_live2d_render_model_async_t*)data;
                     render_model->buffer_finish(future);
                 }, render_model);
-                auto result = batch->add_request(request, &io_request);
-                buffer_destination = skr::static_pointer_cast<skr::io::IVRAMIOBuffer>(result);
+                auto result = batch->add_request(request, &buffer_future);
+                io_buffer = skr::static_pointer_cast<skr::io::IVRAMIOBuffer>(result);
                 index_buffer_cursor += icount * sizeof(Csm::csmUint16);
             }
             else
             {
-                auto& io_request = render_model->buffer_io_requests[i];
-                io_request.status = SKR_IO_STAGE_COMPLETED;
-                render_model->buffer_finish(&io_request);    
+                auto& buffer_future = render_model->buffer_futures[i];
+                buffer_future.status = SKR_IO_STAGE_COMPLETED;
+                render_model->buffer_finish(&buffer_future);    
             }
         }
         if (!batch->get_requests().empty())
