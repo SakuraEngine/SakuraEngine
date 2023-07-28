@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "components.hpp"
 #include "vram_request.hpp"
 

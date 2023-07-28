@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "SkrRT/platform/debug.h"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"

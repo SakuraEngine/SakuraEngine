@@ -6,6 +6,7 @@
 #include "platform/windows/winheaders.h" // IWYU pragma: export
 #endif
 
+#include <random> // IWYU pragma: export
 #include <chrono> // IWYU pragma: export
 #include "SkrRT/platform/debug.h" // IWYU pragma: export
 #include "SkrRT/platform/guid.hpp" // IWYU pragma: export

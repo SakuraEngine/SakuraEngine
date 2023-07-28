@@ -1,4 +1,3 @@
-#include "pch.hpp"
 #include "MPShared/components.h"
 #include "SkrScene/scene.h"
 #include "MPShared/world_delta.h"

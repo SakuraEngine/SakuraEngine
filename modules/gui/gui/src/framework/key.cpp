@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "SkrGui/framework/key.hpp"
 
 namespace skr::gui

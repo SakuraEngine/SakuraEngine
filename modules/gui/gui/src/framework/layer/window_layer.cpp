@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "SkrGui/framework/layer/window_layer.hpp"
 #include "SkrGui/backend/device/window.hpp"
 

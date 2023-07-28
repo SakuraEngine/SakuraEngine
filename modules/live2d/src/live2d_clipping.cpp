@@ -1,4 +1,3 @@
-#include "pch.hpp"
 #include "live2d_clipping.hpp"
 #include "live2d_helpers.hpp"
 #include "Framework/Model/CubismModel.hpp"

@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "shared_library.cpp"
 #include <stdio.h>
 

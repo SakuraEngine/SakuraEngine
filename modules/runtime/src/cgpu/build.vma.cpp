@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "cgpu/cgpu_config.h"
 #ifdef _WIN32
     #ifndef WIN32_LEAN_AND_MEAN

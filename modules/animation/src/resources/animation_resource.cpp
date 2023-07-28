@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "SkrAnim/resources/animation_resource.h"
 #include "SkrAnim/ozz/base/io/archive.h"
 

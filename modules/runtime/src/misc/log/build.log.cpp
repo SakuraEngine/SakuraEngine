@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "logger.cpp"
 #include "log_pattern.cpp"
 #include "log_sink.cpp"

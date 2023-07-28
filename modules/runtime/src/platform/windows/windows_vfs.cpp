@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/memory.h"
 #include "SkrRT/misc/log.h"
