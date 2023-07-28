@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/serde/json/writer.h"
 #include "SkrRT/platform/debug.h"

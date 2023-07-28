@@ -199,12 +199,12 @@ struct is_random_access<skr::DAG::____::pmrListS> {
 
 namespace skr
 {
-class DependencyGraphBase : public DAG::Graph<DependencyGraph::Node*, DependencyGraph::Edge*>
+class SKR_STATIC_API DependencyGraphBase : public DAG::Graph<DependencyGraph::Node*, DependencyGraph::Edge*>
 {
 public:
     using DAGVertex = DAG::GraphVertex<DependencyGraph::Node*, DependencyGraph::Edge*>;
     using DAGEdge = DAG::GraphEdge<DependencyGraph::Node*, DependencyGraph::Edge*>;
 
-    static RUNTIME_API DependencyGraphBase* as(DependencyGraph* graph) SKR_NOEXCEPT;
+    static DependencyGraphBase* as(DependencyGraph* graph) SKR_NOEXCEPT;
 };
 } // namespace skr

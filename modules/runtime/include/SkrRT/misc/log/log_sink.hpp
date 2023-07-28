@@ -6,7 +6,7 @@
 namespace skr {
 namespace log {
 
-struct RUNTIME_API LogSink
+struct SKR_RUNTIME_API LogSink
 {
     LogSink(skr_guid_t pattern) SKR_NOEXCEPT;
     virtual ~LogSink() SKR_NOEXCEPT;
@@ -35,7 +35,7 @@ enum class EConsoleStyle : uint16_t
     HIGHLIGHT
 };
 
-struct RUNTIME_API LogConsoleSink : public LogSink
+struct SKR_RUNTIME_API LogConsoleSink : public LogSink
 {
     LogConsoleSink(skr_guid_t pattern = LogConstants::kDefaultConsolePatternId) SKR_NOEXCEPT;
     virtual ~LogConsoleSink() SKR_NOEXCEPT;
@@ -58,13 +58,13 @@ protected:
     uint64_t bufSize = 2048;
 };
 
-struct RUNTIME_API LogANSIOutputSink : public LogConsoleSink
+struct SKR_RUNTIME_API LogANSIOutputSink : public LogConsoleSink
 {
     LogANSIOutputSink(skr_guid_t pattern = LogConstants::kDefaultConsolePatternId) SKR_NOEXCEPT;
     virtual ~LogANSIOutputSink() SKR_NOEXCEPT;
 };
 
-struct RUNTIME_API LogConsoleWindowSink : public LogConsoleSink
+struct SKR_RUNTIME_API LogConsoleWindowSink : public LogConsoleSink
 {
     LogConsoleWindowSink(skr_guid_t pattern = LogConstants::kDefaultConsolePatternId) SKR_NOEXCEPT;
     virtual ~LogConsoleWindowSink() SKR_NOEXCEPT;
@@ -72,7 +72,7 @@ struct RUNTIME_API LogConsoleWindowSink : public LogConsoleSink
     virtual void flush() SKR_NOEXCEPT override;
 };
 
-struct RUNTIME_API LogDebugOutputSink : public LogConsoleSink
+struct SKR_RUNTIME_API LogDebugOutputSink : public LogConsoleSink
 {
     LogDebugOutputSink(skr_guid_t pattern = LogConstants::kDefaultConsolePatternId) SKR_NOEXCEPT;
     virtual ~LogDebugOutputSink() SKR_NOEXCEPT;
@@ -80,7 +80,7 @@ struct RUNTIME_API LogDebugOutputSink : public LogConsoleSink
     virtual void flush() SKR_NOEXCEPT override;
 };
 
-struct RUNTIME_API LogFileSink : public LogSink
+struct SKR_RUNTIME_API LogFileSink : public LogSink
 {
     LogFileSink() SKR_NOEXCEPT;
     virtual ~LogFileSink() SKR_NOEXCEPT;

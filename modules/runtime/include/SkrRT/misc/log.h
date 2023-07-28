@@ -45,18 +45,18 @@ enum
 #define SKR_LOG_ERROR(...) skr_log_log(SKR_LOG_LEVEL_ERROR, __FILE__, __LOG_FUNC__, SKR_MAKE_STRING(__LINE__), __VA_ARGS__)
 #define SKR_LOG_FATAL(...) skr_log_log(SKR_LOG_LEVEL_FATAL, __FILE__, __LOG_FUNC__, SKR_MAKE_STRING(__LINE__), __VA_ARGS__)
 
-RUNTIME_API void skr_log_set_level(int level);
+SKR_RUNTIME_API void skr_log_set_level(int level);
 
-RUNTIME_API void skr_log_set_flush_behavior(int behavior);
+SKR_RUNTIME_API void skr_log_set_flush_behavior(int behavior);
 
-RUNTIME_API void skr_log_log(int level, const char* file, const char* func, const char* line, const char8_t* fmt, ...);
+SKR_RUNTIME_API void skr_log_log(int level, const char* file, const char* func, const char* line, const char8_t* fmt, ...);
 
 // flush logs of this thread
-RUNTIME_API void skr_log_flush();
+SKR_RUNTIME_API void skr_log_flush();
 
-RUNTIME_API void skr_log_initialize_async_worker();
+SKR_RUNTIME_API void skr_log_initialize_async_worker();
 
-RUNTIME_API void skr_log_finalize_async_worker();
+SKR_RUNTIME_API void skr_log_finalize_async_worker();
 
 #ifdef __cplusplus
 }

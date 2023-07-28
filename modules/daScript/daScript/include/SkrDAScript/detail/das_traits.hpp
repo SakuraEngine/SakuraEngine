@@ -5,16 +5,16 @@ namespace das
 {
 class Context; struct SimNode; struct LineInfoArg;
 
-RUNTIME_EXTERN_C SKR_DASCRIPT_API void ThrowCtxError(::das::Context& context, const char8_t* msg);
-RUNTIME_EXTERN_C SKR_DASCRIPT_API skr::das::reg4f EvalNode(::das::Context& context, ::das::SimNode* node);
-RUNTIME_EXTERN_C SKR_DASCRIPT_API int32_t EvalInt(::das::Context& context, ::das::SimNode* node);
-RUNTIME_EXTERN_C SKR_DASCRIPT_API uint32_t EvalUInt(::das::Context& context, ::das::SimNode* node);
-RUNTIME_EXTERN_C SKR_DASCRIPT_API int64_t EvalInt64(::das::Context& context, ::das::SimNode* node);
-RUNTIME_EXTERN_C SKR_DASCRIPT_API int64_t EvalUInt64(::das::Context& context, ::das::SimNode* node);
-RUNTIME_EXTERN_C SKR_DASCRIPT_API int64_t EvalFloat(::das::Context& context, ::das::SimNode* node);
-RUNTIME_EXTERN_C SKR_DASCRIPT_API double EvalDouble(::das::Context& context, ::das::SimNode* node);
-RUNTIME_EXTERN_C SKR_DASCRIPT_API float EvalBool(::das::Context& context, ::das::SimNode* node);
-RUNTIME_EXTERN_C SKR_DASCRIPT_API char* EvalPtr(::das::Context& context, ::das::SimNode* node);
+SKR_EXTERN_C SKR_DASCRIPT_API void ThrowCtxError(::das::Context& context, const char8_t* msg);
+SKR_EXTERN_C SKR_DASCRIPT_API skr::das::reg4f EvalNode(::das::Context& context, ::das::SimNode* node);
+SKR_EXTERN_C SKR_DASCRIPT_API int32_t EvalInt(::das::Context& context, ::das::SimNode* node);
+SKR_EXTERN_C SKR_DASCRIPT_API uint32_t EvalUInt(::das::Context& context, ::das::SimNode* node);
+SKR_EXTERN_C SKR_DASCRIPT_API int64_t EvalInt64(::das::Context& context, ::das::SimNode* node);
+SKR_EXTERN_C SKR_DASCRIPT_API int64_t EvalUInt64(::das::Context& context, ::das::SimNode* node);
+SKR_EXTERN_C SKR_DASCRIPT_API int64_t EvalFloat(::das::Context& context, ::das::SimNode* node);
+SKR_EXTERN_C SKR_DASCRIPT_API double EvalDouble(::das::Context& context, ::das::SimNode* node);
+SKR_EXTERN_C SKR_DASCRIPT_API float EvalBool(::das::Context& context, ::das::SimNode* node);
+SKR_EXTERN_C SKR_DASCRIPT_API char* EvalPtr(::das::Context& context, ::das::SimNode* node);
 
 } // namespace das
 

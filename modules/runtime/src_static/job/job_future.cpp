@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "SkrRT/async/thread_job.hpp"
 
 namespace skr

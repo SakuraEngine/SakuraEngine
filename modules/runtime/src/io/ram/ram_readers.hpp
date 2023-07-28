@@ -59,7 +59,7 @@ struct VFSRAMReader final : public RAMReaderBase<IIORequestProcessor>
 namespace skr {
 namespace io {
 
-struct RUNTIME_API DStorageRAMReader final 
+struct SKR_RUNTIME_API DStorageRAMReader final 
     : public RAMReaderBase<IIOBatchProcessor>
 {
     DStorageRAMReader(RAMService* service) SKR_NOEXCEPT;

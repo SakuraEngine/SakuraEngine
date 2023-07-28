@@ -14,7 +14,7 @@ namespace log {
 using LogPatternMap = skr::parallel_flat_hash_map<skr_guid_t, eastl::unique_ptr<LogPattern>, skr::guid::hash>;
 using LogSinkMap = skr::parallel_flat_hash_map<skr_guid_t, eastl::unique_ptr<LogSink>, skr::guid::hash>;
 
-struct RUNTIME_API LogManager
+struct SKR_RUNTIME_API LogManager
 {
     static void Initialize() SKR_NOEXCEPT;
     static void Finalize() SKR_NOEXCEPT;

@@ -3,7 +3,7 @@
 
 dual_context_t* g_dual_ctx;
 
-RUNTIME_API dual_context_t* dual_get_context()
+SKR_RUNTIME_API dual_context_t* dual_get_context()
 {
     static dual_context_t* ctx = dual_initialize();
     return ctx;

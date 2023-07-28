@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "SkrGui/framework/render_object/render_box.hpp"
 #include <algorithm>
 

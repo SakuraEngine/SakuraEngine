@@ -1,4 +1,3 @@
-#include "pch.hpp"
 #include "SkrRT/module/module.hpp"
 
 class SkrGuiModule : public skr::IDynamicModule

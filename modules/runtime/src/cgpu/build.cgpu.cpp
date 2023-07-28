@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "cgpu/cgpu_config.h" // IWYU pragma: keep
 
 #include "common/root_sig_table.cpp"

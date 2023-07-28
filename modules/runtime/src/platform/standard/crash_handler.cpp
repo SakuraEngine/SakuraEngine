@@ -190,7 +190,7 @@ void SCrashHandler::add_callback(SCrashHandler::CallbackWrapper callback) SKR_NO
 extern "C"
 {
 
-RUNTIME_API const char8_t* skr_crash_code_string(CrashTerminateCode code) SKR_NOEXCEPT
+SKR_RUNTIME_API const char8_t* skr_crash_code_string(CrashTerminateCode code) SKR_NOEXCEPT
 {
 #define SKR_CCODE_TRANS(code) case kCrashCode##code: return (const char8_t*)#code;
     switch (code) 
@@ -213,7 +213,7 @@ RUNTIME_API const char8_t* skr_crash_code_string(CrashTerminateCode code) SKR_NO
 #undef SKR_CCODE_TRANS
 }
 
-RUNTIME_API void skr_crash_handler_add_callback(SCrashHandlerId handler, SProcCrashCallback callback, void* usr_data) SKR_NOEXCEPT
+SKR_RUNTIME_API void skr_crash_handler_add_callback(SCrashHandlerId handler, SProcCrashCallback callback, void* usr_data) SKR_NOEXCEPT
 {
     return handler->add_callback({ callback, usr_data });
 }

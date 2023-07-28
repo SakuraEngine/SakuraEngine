@@ -24,7 +24,6 @@
 // DEALINGS IN THE SOFTWARE.                                                  //
 //                                                                            //
 //----------------------------------------------------------------------------//
-#include "../../pch.hpp"
 #include "SkrAnim/ozz/base/io/archive.h"
 
 #include <cassert>

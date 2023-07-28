@@ -11,7 +11,7 @@
 
 namespace skr::resource
 {
-struct RUNTIME_API SResourceSystemImpl : public SResourceSystem
+struct SKR_RUNTIME_API SResourceSystemImpl : public SResourceSystem
 {
     friend struct ::skr_resource_handle_t;
 public:

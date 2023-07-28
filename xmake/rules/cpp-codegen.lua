@@ -49,10 +49,6 @@ rule("c++.codegen")
         local rule = target:rule("c++.build"):clone()
         rule:add("deps", "c++.codegen", {order = true})
         target:rule_add(rule)
-
-        local pch = target:get("pcxxheader") 
-        pch = pch and path.absolute(pch) or "stdint.h"
-        target:add("defines", "__SKR_CODEGEN_PCH__=\""..pch.."\"")
     end)
 
     before_build_files(function(target, batchjobs, sourcebatch, opt)

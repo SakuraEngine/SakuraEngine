@@ -9,6 +9,11 @@
 namespace skr {
 namespace io {
 
+template <>
+struct CID<struct RAMIOStatusComponent> 
+{
+    static constexpr skr_guid_t Get() { return CID<IOStatusComponent>::Get(); } 
+};
 struct RAMIOStatusComponent final : public IOStatusComponent
 {
     RAMIOStatusComponent(IIORequest* const request) SKR_NOEXCEPT;
@@ -18,9 +23,11 @@ struct RAMIOStatusComponent final : public IOStatusComponent
 struct RAMRequestMixin final : public IORequestMixin<IBlocksRAMRequest, 
     // components...
     RAMIOStatusComponent, 
-    FileSrcComponent, BlocksComponent>
+    PathSrcComponent, FileComponent,
+    BlocksComponent>
 {
     friend struct SmartPool<RAMRequestMixin, IBlocksRAMRequest>;
+    ~RAMRequestMixin() SKR_NOEXCEPT;
 
     RAMIOBufferId destination = nullptr;
 protected:

@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "components.hpp"
 #include "vram_request.hpp"
 
@@ -11,26 +10,26 @@ VRAMIOStatusComponent::VRAMIOStatusComponent(IIORequest* const request) SKR_NOEX
     
 }
 
-VRAMQueuesComponent::VRAMQueuesComponent(IIORequest* const request) SKR_NOEXCEPT 
+void VRAMIOStatusComponent::setStatus(ESkrIOStage status) SKR_NOEXCEPT
+{
+    if (status == SKR_IO_STAGE_CANCELLED)
+    {
+        // if (auto dest = static_cast<RAMIOBuffer*>(rq->destination.get()))
+            // dest->free_resource();
+    }
+    return IOStatusComponent::setStatus(status);
+}
+
+VRAMUploadComponent::VRAMUploadComponent(IIORequest* const request) SKR_NOEXCEPT 
     : IORequestComponent(request) 
 {
     
 }
 
-skr_guid_t VRAMQueuesComponent::get_tid() const SKR_NOEXCEPT 
-{ 
-    return IORequestComponentTID<VRAMQueuesComponent>::Get(); 
-}
-
-MemorySrcComponent::MemorySrcComponent(IIORequest* const request) SKR_NOEXCEPT 
+VRAMDStorageComponent::VRAMDStorageComponent(IIORequest* const request) SKR_NOEXCEPT 
     : IORequestComponent(request) 
 {
     
-}
-
-skr_guid_t MemorySrcComponent::get_tid() const SKR_NOEXCEPT 
-{ 
-    return IORequestComponentTID<MemorySrcComponent>::Get(); 
 }
 
 VRAMBufferComponent::VRAMBufferComponent(IIORequest* const request) SKR_NOEXCEPT 
@@ -44,13 +43,9 @@ VRAMBufferComponent::~VRAMBufferComponent() SKR_NOEXCEPT
 
 }
 
-skr_guid_t VRAMBufferComponent::get_tid() const SKR_NOEXCEPT 
-{ 
-    return IORequestComponentTID<VRAMBufferComponent>::Get(); 
-}
-
-void VRAMBufferComponent::set_buffer(CGPUBufferId buffer) SKR_NOEXCEPT
+void VRAMBufferComponent::set_buffer(CGPUBufferId buffer, uint64_t offset) SKR_NOEXCEPT
 {
+    this->offset = offset;
     this->buffer = buffer;
     this->device = buffer->device;
     this->type = Type::Imported;
@@ -72,11 +67,6 @@ VRAMTextureComponent::VRAMTextureComponent(IIORequest* const request) SKR_NOEXCE
 VRAMTextureComponent::~VRAMTextureComponent() SKR_NOEXCEPT
 {
     
-}
-
-skr_guid_t VRAMTextureComponent::get_tid() const SKR_NOEXCEPT 
-{ 
-    return IORequestComponentTID<VRAMTextureComponent>::Get(); 
 }
 
 void VRAMTextureComponent::set_texture(CGPUTextureId texture) SKR_NOEXCEPT

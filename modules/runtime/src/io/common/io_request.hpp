@@ -1,31 +1,31 @@
 #pragma once
 #include "../components/status_component.hpp"
-#include "../components/file_component.hpp"
+#include "../components/src_components.hpp"
 #include "../components/blocks_component.hpp"
+#include "SkrRT/platform/guid.hpp"
+#include "SkrRT/containers/hashmap.hpp"
 
-#include "pool.hpp"
 #include <tuple>
-#include <string.h> // ::strlen
+#include "pool.hpp"
+#include "tracy/Tracy.hpp"
 
 namespace skr {
 namespace io {
 
 template<typename T>
-[[nodiscard]] const T* io_component(const IIORequest* rq) SKR_NOEXCEPT
+[[nodiscard]] FORCEINLINE const T* io_component(const IIORequest* rq) SKR_NOEXCEPT
 {
-    if (auto c = rq->get_component(IORequestComponentTID<T>::Get()))
+    if (auto c = rq->get_component(CID<T>::Get()))
         return static_cast<const T*>(c);
-    SKR_UNREACHABLE_CODE();
-    return nullptr;
+    return (T*)nullptr;
 }
 
 template<typename T>
-[[nodiscard]] T* io_component(IIORequest* rq) SKR_NOEXCEPT
+[[nodiscard]] FORCEINLINE T* io_component(IIORequest* rq) SKR_NOEXCEPT
 {
-    if (auto c = rq->get_component(IORequestComponentTID<T>::Get()))
+    if (auto c = rq->get_component(CID<T>::Get()))
         return static_cast<T*>(c);
-    SKR_UNREACHABLE_CODE();
-    return nullptr;
+    return (T*)nullptr;
 }
 
 template <typename Interface, typename...Components>
@@ -38,35 +38,30 @@ public:
     {
 
     }
-    virtual ~IORequestMixin() = default;
+    virtual ~IORequestMixin() SKR_NOEXCEPT = default;
 
     [[nodiscard]] virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT
     {
-        return std::apply([tid](const auto&... args) {
-            const IORequestComponent* cs[] = { &args... };
-            const skr_guid_t ids[] = { args.get_tid()... };
-            for (uint64_t i = 0; i < sizeof...(Components); ++i)
-            {
-                if (ids[i] == tid)
-                    return cs[i];
-            }
-            SKR_UNREACHABLE_CODE();
-            return cs[0];
-        }, components);
+        ZoneScopedN("IORequestMixin::get_component");
+        auto& map = acquire_cmap();
+        auto&& iter = map.find(tid);
+        if (iter != map.end())
+        {
+            return dynamic_get(components, iter->second);
+        }
+        return nullptr;
     }
+
     [[nodiscard]] virtual IORequestComponent* get_component(skr_guid_t tid) SKR_NOEXCEPT
     {
-        return std::apply([tid](auto&... args) {
-            IORequestComponent* cs[] = { &args... };
-            const skr_guid_t ids[] = { args.get_tid()... };
-            for (uint64_t i = 0; i < sizeof...(Components); ++i)
-            {
-                if (ids[i] == tid)
-                    return cs[i];
-            }
-            SKR_UNREACHABLE_CODE();
-            return cs[0];
-        }, components);
+        ZoneScopedN("IORequestMixin::get_component");
+        auto& map = acquire_cmap();
+        auto&& iter = map.find(tid);
+        if (iter != map.end())
+        {
+            return dynamic_get(components, iter->second);
+        }
+        return nullptr;
     }
 
     SInterfaceDeleter custom_deleter() const 
@@ -101,17 +96,17 @@ public:
 
     void set_vfs(skr_vfs_t* _vfs) SKR_NOEXCEPT
     {
-        safe_comp<FileSrcComponent>()->set_vfs(_vfs);
+        safe_comp<PathSrcComponent>()->set_vfs(_vfs);
     }
 
     void set_path(const char8_t* p) SKR_NOEXCEPT 
     { 
-        safe_comp<FileSrcComponent>()->set_path(p); 
+        safe_comp<PathSrcComponent>()->set_path(p); 
     }
 
     [[nodiscard]] const char8_t* get_path() const SKR_NOEXCEPT 
     { 
-        return safe_comp<FileSrcComponent>()->get_path(); 
+        return safe_comp<PathSrcComponent>()->get_path(); 
     }
 
     void use_async_complete() SKR_NOEXCEPT 
@@ -167,6 +162,62 @@ public:
     void reset_compressed_blocks() SKR_NOEXCEPT
     {
         safe_comp<CompressedBlocksComponent>()->reset_compressed_blocks(); 
+    }
+
+private:
+    auto& acquire_cmap() const SKR_NOEXCEPT
+    {
+        static bool initialized = false;
+        static skr::flat_hash_map<skr_guid_t, uint32_t, skr::guid::hash> map = {};
+        if (!initialized)
+        {
+            std::apply([&](const auto&... args) {
+                uint32_t i = 0;
+                (map.emplace(args, i++), ...);
+            }, std::make_tuple(CID<Components>::Get()...));
+            initialized = true;
+        }
+        return map;
+    }
+
+    template <size_t n, typename... T>
+    FORCEINLINE auto dynamic_get_impl(std::tuple<T...>& tpl, uint64_t i)
+    {
+        if (i == n)
+            return static_cast<IORequestComponent*>(&std::get<n>(tpl));
+        else if (n == sizeof...(T) - 1)
+        {
+            SKR_ASSERT(0 && "Tuple element out of range.");
+            return (IORequestComponent*)nullptr;
+        }
+        else
+            return dynamic_get_impl<(n < sizeof...(T)-1 ? n+1 : 0)>(tpl, i);
+    }
+
+    template <typename... T>
+    FORCEINLINE auto dynamic_get(std::tuple<T...>& tpl, uint64_t i)
+    {
+        return dynamic_get_impl<0>(tpl, i);
+    }
+
+    template <size_t n, typename... T>
+    FORCEINLINE auto dynamic_get_impl(const std::tuple<T...>& tpl, uint64_t i) const
+    {
+        if (i == n)
+            return static_cast<const IORequestComponent*>(&std::get<n>(tpl));
+        else if (n == sizeof...(T) - 1)
+        {
+            SKR_ASSERT(0 && "Tuple element out of range.");
+            return (const IORequestComponent*)nullptr;
+        }
+        else
+            return dynamic_get_impl<(n < sizeof...(T)-1 ? n+1 : 0)>(tpl, i);
+    }
+
+    template <typename... T>
+    FORCEINLINE auto dynamic_get(const std::tuple<T...>& tpl, uint64_t i) const
+    {
+        return dynamic_get_impl<0>(tpl, i);
     }
 };
 

@@ -26,31 +26,31 @@ typedef struct skr_resource_handle_t {
         };
     };
 #if defined(__cplusplus)
-    RUNTIME_API skr_resource_handle_t();
-    RUNTIME_API ~skr_resource_handle_t();
-    RUNTIME_API skr_resource_handle_t(const skr_guid_t& other);
-    RUNTIME_API skr_resource_handle_t(const skr_resource_handle_t& other);
-    RUNTIME_API skr_resource_handle_t(const skr_resource_handle_t& other, uint64_t requester, ESkrRequesterType requesterType);
-    RUNTIME_API skr_resource_handle_t(skr_resource_handle_t&& other);
-    RUNTIME_API skr_resource_handle_t& operator=(const skr_resource_handle_t& other);
-    RUNTIME_API skr_resource_handle_t& operator=(const skr_guid_t& other);
-    RUNTIME_API skr_resource_handle_t& operator=(skr_resource_handle_t&& other);
-    RUNTIME_API void set_ptr(void* ptr);
-    RUNTIME_API void set_guid(const skr_guid_t& guid);
-    RUNTIME_API bool is_resolved() const;
-    RUNTIME_API void* get_resolved(bool requireInstalled = true) const;
-    RUNTIME_API skr_guid_t get_serialized() const;
-    RUNTIME_API void resolve(bool requireInstalled, uint64_t requester, ESkrRequesterType requesterType);
+    SKR_RUNTIME_API skr_resource_handle_t();
+    SKR_RUNTIME_API ~skr_resource_handle_t();
+    SKR_RUNTIME_API skr_resource_handle_t(const skr_guid_t& other);
+    SKR_RUNTIME_API skr_resource_handle_t(const skr_resource_handle_t& other);
+    SKR_RUNTIME_API skr_resource_handle_t(const skr_resource_handle_t& other, uint64_t requester, ESkrRequesterType requesterType);
+    SKR_RUNTIME_API skr_resource_handle_t(skr_resource_handle_t&& other);
+    SKR_RUNTIME_API skr_resource_handle_t& operator=(const skr_resource_handle_t& other);
+    SKR_RUNTIME_API skr_resource_handle_t& operator=(const skr_guid_t& other);
+    SKR_RUNTIME_API skr_resource_handle_t& operator=(skr_resource_handle_t&& other);
+    SKR_RUNTIME_API void set_ptr(void* ptr);
+    SKR_RUNTIME_API void set_guid(const skr_guid_t& guid);
+    SKR_RUNTIME_API bool is_resolved() const;
+    SKR_RUNTIME_API void* get_resolved(bool requireInstalled = true) const;
+    SKR_RUNTIME_API skr_guid_t get_serialized() const;
+    SKR_RUNTIME_API void resolve(bool requireInstalled, uint64_t requester, ESkrRequesterType requesterType);
     void resolve(bool requireInstalled, struct dual_storage_t* requester)
     {
         resolve(requireInstalled, (uint64_t)requester, SKR_REQUESTER_ENTITY);
     }
-    RUNTIME_API void unload();
-    RUNTIME_API skr_guid_t get_guid() const;
-    RUNTIME_API skr_guid_t get_type() const;
-    RUNTIME_API void* get_ptr() const;
-    RUNTIME_API bool is_null() const;
-    RUNTIME_API void reset();
+    SKR_RUNTIME_API void unload();
+    SKR_RUNTIME_API skr_guid_t get_guid() const;
+    SKR_RUNTIME_API skr_guid_t get_type() const;
+    SKR_RUNTIME_API void* get_ptr() const;
+    SKR_RUNTIME_API bool is_null() const;
+    SKR_RUNTIME_API void reset();
     skr_resource_handle_t clone(uint64_t requester, ESkrRequesterType requesterType) 
     {
         return { *this, requester, requesterType };
@@ -59,13 +59,13 @@ typedef struct skr_resource_handle_t {
     {
         return { *this, (uint64_t)requester, SKR_REQUESTER_ENTITY };
     }
-    RUNTIME_API uint32_t get_requester_id() const;
-    RUNTIME_API ESkrRequesterType get_requester_type() const;
+    SKR_RUNTIME_API uint32_t get_requester_id() const;
+    SKR_RUNTIME_API ESkrRequesterType get_requester_type() const;
     //if resolve is false, then unresolve handle will always return SKR_LOADING_STATUS_UNLOADED
-    RUNTIME_API ESkrLoadingStatus get_status(bool resolve = false) const;
-    RUNTIME_API skr_resource_record_t* get_record() const;
-    RUNTIME_API void set_record(skr_resource_record_t* record);
-    RUNTIME_API void set_resolved(skr_resource_record_t* record, uint32_t requesterId, ESkrRequesterType requesterType);
+    SKR_RUNTIME_API ESkrLoadingStatus get_status(bool resolve = false) const;
+    SKR_RUNTIME_API skr_resource_record_t* get_record() const;
+    SKR_RUNTIME_API void set_record(skr_resource_record_t* record);
+    SKR_RUNTIME_API void set_resolved(skr_resource_record_t* record, uint32_t requesterId, ESkrRequesterType requesterType);
 #endif
 } skr_resource_handle_t;
 
@@ -104,9 +104,9 @@ struct TResourceHandle : skr_resource_handle_t {
 #define SKR_RESOURCE_FIELD(type, name) skr_resource_handle_t name
 #endif
 
-RUNTIME_API int skr_is_resource_resolved(skr_resource_handle_t* handle);
-RUNTIME_API void skr_get_resource_guid(skr_resource_handle_t* handle, skr_guid_t* guid);
-RUNTIME_API void skr_get_resource(skr_resource_handle_t* handle, void** guid);
+SKR_RUNTIME_API int skr_is_resource_resolved(skr_resource_handle_t* handle);
+SKR_RUNTIME_API void skr_get_resource_guid(skr_resource_handle_t* handle, skr_guid_t* guid);
+SKR_RUNTIME_API void skr_get_resource(skr_resource_handle_t* handle, void** guid);
 
 #include "SkrRT/type/type.hpp"
 
@@ -147,7 +147,7 @@ struct ReadTrait<skr::resource::TResourceHandle<T>> {
 };
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<skr_resource_handle_t> {
+struct SKR_STATIC_API ReadTrait<skr_resource_handle_t> {
     static int Read(skr_binary_reader_t* reader, skr_resource_handle_t& handle);
 };
 }
@@ -170,7 +170,7 @@ struct WriteTrait<const skr::resource::TResourceHandle<T>&> {
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const skr_resource_handle_t&> {
+struct SKR_STATIC_API WriteTrait<const skr_resource_handle_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_resource_handle_t& handle);
 };
 

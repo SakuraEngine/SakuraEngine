@@ -4,7 +4,7 @@
 
 namespace skr
 {
-struct RUNTIME_API ModuleSubsystem : public ModuleSubsystemBase
+struct SKR_RUNTIME_API ModuleSubsystem : public ModuleSubsystemBase
 {
     virtual ~ModuleSubsystem() SKR_NOEXCEPT = default;
     

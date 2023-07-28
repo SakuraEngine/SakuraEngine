@@ -10,7 +10,7 @@ sreflect_enum("guid" : "b4b7f387-d8c2-465c-9b3a-6d83a3d198b1")
 sattr("serialize" : ["json", "bin"])
 sattr("rtti" : true)
 sattr("scriptable" : true)
-ECGPUBackEnd SKRENUM(uint32_t){ 
+ECGPUBackEnd SKR_ENUM(uint32_t){ 
     Vulkan, 
     DX12, 
     Metal

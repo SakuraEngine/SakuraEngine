@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "ram_resolvers.hpp"
 #include "ram_request.hpp"
 #include "ram_buffer.hpp"
@@ -11,26 +10,26 @@ void AllocateIOBufferResolver::resolve(SkrAsyncServicePriority priority, IOBatch
     ZoneScopedNC("IOBuffer::Allocate", tracy::Color::BlueViolet);
     auto rq = skr::static_pointer_cast<RAMRequestMixin>(request);
     auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
-    auto pFiles = io_component<FileSrcComponent>(rq.get());
+    auto pFiles = io_component<FileComponent>(rq.get());
     // deal with 0 block size
-    if (auto pComp = io_component<BlocksComponent>(rq.get()))
+    if (auto pBlocks = io_component<BlocksComponent>(rq.get()))
     {
-        for (auto& block : pComp->blocks)
+        for (auto& block : pBlocks->blocks)
         {
             if (block.size == 0)
             {
                 block.size = pFiles->get_fsize() - block.offset;
             }
-            if (buf->size == 0)
+            if (buf->get_size() == 0)
             {
                 buf->size += block.size;
             }
         }
     }
     // allocate
-    if (buf->bytes == nullptr)
+    if (buf->get_data() == nullptr)
     {
-        if (buf->size == 0)
+        if (buf->get_size() == 0)
         {
             SKR_ASSERT(0 && "invalid destination size");
         }

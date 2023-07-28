@@ -1,4 +1,3 @@
-#include "pch.hpp"
 #include "MPShared/server_world.h"
 #include "MPShared/components.h"
 #include "SkrRT/misc/make_zeroed.hpp"

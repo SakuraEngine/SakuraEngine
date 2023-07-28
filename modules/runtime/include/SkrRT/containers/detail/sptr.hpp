@@ -319,7 +319,7 @@ inline bool operator==(std::nullptr_t, const skr::SPtrHelper<T, EmbedRC>& b) SKR
 template <typename T, bool EmbedRC>
 inline bool operator!=(const skr::SPtrHelper<T, EmbedRC>& a, std::nullptr_t) SKR_NOEXCEPT
 {
-    return a;
+    return a.get();
 }
 
 template <typename T, bool EmbedRC>

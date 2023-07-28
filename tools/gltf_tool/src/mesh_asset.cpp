@@ -1,4 +1,3 @@
-#include "pch.hpp"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/misc/defer.hpp"
 #include "SkrRT/misc/log.hpp"

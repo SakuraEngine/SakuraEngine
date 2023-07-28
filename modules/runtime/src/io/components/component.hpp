@@ -6,13 +6,12 @@ namespace io {
 struct IIORequest;
 
 template <typename Component>
-struct IORequestComponentTID { };
+struct CID { };
 
-struct RUNTIME_API IORequestComponent
+struct SKR_RUNTIME_API IORequestComponent
 {
     IORequestComponent(IIORequest* const request) SKR_NOEXCEPT;
     virtual ~IORequestComponent() SKR_NOEXCEPT;
-    virtual skr_guid_t get_tid() const SKR_NOEXCEPT = 0;
 protected:
     IIORequest* const request = nullptr;
 };

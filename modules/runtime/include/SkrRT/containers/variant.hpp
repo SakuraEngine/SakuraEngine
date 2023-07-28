@@ -33,9 +33,9 @@ struct VariantType : skr_type_t {
     size_t align;
     size_t padding;
     skr::string name;
-    RUNTIME_API void Set(void* dst, size_t index, const void* src) const;
-    RUNTIME_API void* Get(void* data, size_t index) const;
-    RUNTIME_API size_t Index(void* data) const;
+    SKR_RUNTIME_API void Set(void* dst, size_t index, const void* src) const;
+    SKR_RUNTIME_API void* Get(void* data, size_t index) const;
+    SKR_RUNTIME_API size_t Index(void* data) const;
     VariantType(const skr::span<const skr_type_t*> types, size_t size, size_t align, size_t padding)
         : skr_type_t{ SKR_TYPE_CATEGORY_VARIANT }
         , types(types)
@@ -45,7 +45,7 @@ struct VariantType : skr_type_t {
     {
     }
 };
-RUNTIME_API const skr_type_t* make_variant_type(const skr::span<const skr_type_t*> types);
+SKR_RUNTIME_API const skr_type_t* make_variant_type(const skr::span<const skr_type_t*> types);
 template <class... Ts>
 struct type_of<skr::variant<Ts...>> {
     

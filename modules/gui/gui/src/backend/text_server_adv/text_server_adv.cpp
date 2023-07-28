@@ -1,14 +1,9 @@
-#include "../../pch.hpp"
 #include "backend/text_server/image_texture.h"
 #include "backend/text_server/char_utils.h"
 #include "backend/text_server/file_access.h"
 #include "backend/text_server_adv/text_server_adv.h"
 #include "SkrGui/backend/canvas/canvas.hpp"
 #include <new>
-
-// godot marks some glyph functions as _FORCE_INLINE_
-// it compiles extremely slow, but seems provide no performance improvement?
-#define _WHY_GODOT_FORCE_INLINE_
 
 namespace godot
 {
@@ -763,7 +758,7 @@ void TextServerAdvanced::_insert_feature_sets()
     _insert_feature("weight", HB_TAG('w', 'g', 'h', 't'), Variant::Type::INT, false);
 }
 
-_WHY_GODOT_FORCE_INLINE_ void TextServerAdvanced::_insert_feature(const StringName& p_name, int32_t p_tag, Variant::Type p_vtype, bool p_hidden)
+_WHY_GODOT_INLINE_ void TextServerAdvanced::_insert_feature(const StringName& p_name, int32_t p_tag, Variant::Type p_vtype, bool p_hidden)
 {
     FeatureInfo fi;
     fi.name = p_name;
@@ -821,7 +816,7 @@ String TextServerAdvanced::_tag_to_name(int64_t p_tag) const
 /*************************************************************************/
 /* Font Glyph Rendering                                                  */
 /*************************************************************************/
-_WHY_GODOT_FORCE_INLINE_ TextServerAdvanced::FontTexturePosition TextServerAdvanced::find_texture_pos_for_glyph(FontForSizeAdvanced* p_data, int p_color_size, ImageFormat p_image_format, int p_width, int p_height, bool p_msdf) const
+_WHY_GODOT_INLINE_ TextServerAdvanced::FontTexturePosition TextServerAdvanced::find_texture_pos_for_glyph(FontForSizeAdvanced* p_data, int p_color_size, ImageFormat p_image_format, int p_width, int p_height, bool p_msdf) const
 {
     FontTexturePosition ret;
 
@@ -917,7 +912,7 @@ _WHY_GODOT_FORCE_INLINE_ TextServerAdvanced::FontTexturePosition TextServerAdvan
 #endif
 
 #ifdef MODULE_FREETYPE_ENABLED
-_WHY_GODOT_FORCE_INLINE_ TextServerAdvanced::FontGlyph TextServerAdvanced::rasterize_bitmap(FontForSizeAdvanced* p_data, int p_rect_margin, FT_Bitmap bitmap, int yofs, int xofs, const Vector2& advance, bool p_bgra) const
+_WHY_GODOT_INLINE_ TextServerAdvanced::FontGlyph TextServerAdvanced::rasterize_bitmap(FontForSizeAdvanced* p_data, int p_rect_margin, FT_Bitmap bitmap, int yofs, int xofs, const Vector2& advance, bool p_bgra) const
 {
     int w = bitmap.width;
     int h = bitmap.rows;
@@ -1051,7 +1046,7 @@ _WHY_GODOT_FORCE_INLINE_ TextServerAdvanced::FontGlyph TextServerAdvanced::raste
 /*************************************************************************/
 /* Font Cache                                                            */
 /*************************************************************************/
-_WHY_GODOT_FORCE_INLINE_ bool TextServerAdvanced::_ensure_glyph(FontAdvanced* p_font_data, const Vector2i& p_size, int32_t p_glyph) const
+_WHY_GODOT_INLINE_ bool TextServerAdvanced::_ensure_glyph(FontAdvanced* p_font_data, const Vector2i& p_size, int32_t p_glyph) const
 {
     ERR_FAIL_COND_V(!_ensure_cache_for_size(p_font_data, p_size), false);
 
@@ -1248,7 +1243,7 @@ _WHY_GODOT_FORCE_INLINE_ bool TextServerAdvanced::_ensure_glyph(FontAdvanced* p_
     return false;
 }
 
-_WHY_GODOT_FORCE_INLINE_ bool TextServerAdvanced::_ensure_cache_for_size(FontAdvanced* p_font_data, const Vector2i& p_size) const
+_WHY_GODOT_INLINE_ bool TextServerAdvanced::_ensure_cache_for_size(FontAdvanced* p_font_data, const Vector2i& p_size) const
 {
     ERR_FAIL_COND_V(p_size.x <= 0, false);
     if (p_font_data->cache.has(p_size))
@@ -1858,7 +1853,7 @@ _WHY_GODOT_FORCE_INLINE_ bool TextServerAdvanced::_ensure_cache_for_size(FontAdv
     return true;
 }
 
-_WHY_GODOT_FORCE_INLINE_ void TextServerAdvanced::_font_clear_cache(FontAdvanced* p_font_data)
+_WHY_GODOT_INLINE_ void TextServerAdvanced::_font_clear_cache(FontAdvanced* p_font_data)
 {
     MutexLock ftlock(ft_mutex);
 
@@ -5493,7 +5488,7 @@ bool TextServerAdvanced::_shaped_text_update_breaks(const RID& p_shaped)
     return sd->line_breaks_valid;
 }
 
-_WHY_GODOT_FORCE_INLINE_ int64_t _generate_kashida_justification_opportunies(const String& p_data, int64_t p_start, int64_t p_end)
+_WHY_GODOT_INLINE_ int64_t _generate_kashida_justification_opportunies(const String& p_data, int64_t p_start, int64_t p_end)
 {
     int64_t kashida_pos = -1;
     int8_t  priority = 100;
@@ -5851,7 +5846,7 @@ Glyph TextServerAdvanced::_shape_single_glyph(ShapedTextDataAdvanced* p_sd, char
     return gl;
 }
 
-_WHY_GODOT_FORCE_INLINE_ void TextServerAdvanced::_add_features(const TextServerFeatures& p_source, Vector<hb_feature_t>& r_ftrs)
+_WHY_GODOT_INLINE_ void TextServerAdvanced::_add_features(const TextServerFeatures& p_source, Vector<hb_feature_t>& r_ftrs)
 {
     auto keys = p_source.keys();
     auto values = p_source.values();

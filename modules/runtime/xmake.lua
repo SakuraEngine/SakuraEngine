@@ -10,31 +10,16 @@ add_requires("simdjson >=3.0.0-skr")
 -- add_requires("lua >=5.4.4-skr")
 add_requires("luau", { configs = { extern_c = true }})
 
-target("SkrDependencyGraph")
-    set_group("01.modules")
-    add_deps("SkrRoot", {public = true})
-    add_packages("eastl", {public = true, inherit = true})
-    set_exceptions("no-cxx")
-    add_rules("skr.static_module", {api = "SKR_DEPENDENCY_GRAPH"})
-    set_optimize("fastest")
-    add_files("dependency_graph/**/dependency_graph.cpp")
-    add_defines(defs_list, {public = true})
-    add_includedirs("dependency_graph", {public = true})
-    add_includedirs(include_dir_list, {public = true})
-    add_includedirs(private_include_dir_list, {public = false})
-
 target("SkrRTStatic")
     set_group("01.modules")
     set_optimize("fastest")
     set_exceptions("no-cxx")
-    add_deps("SkrRoot", {public = true})
-    add_defines("RUNTIME_API=RUNTIME_IMPORT", "RUNTIME_LOCAL=error")
+    add_deps("SkrRoot", "SkrBase", {public = true})
+    add_defines("SKR_RUNTIME_API=SKR_IMPORT", "SKR_RUNTIME_LOCAL=error")
     add_packages("eastl", {public = true, inherit = true})
     add_packages("parallel-hashmap", "simdjson", {public = true, inherit = true})
     add_rules("skr.static_module", {api = "SKR_RUNTIME_STATIC"})
-    add_defines(defs_list, {public = true})
-    add_includedirs(include_dir_list, {public = true})
-    add_includedirs(private_include_dir_list, {public = false})
+    add_includedirs("include", {public = true})
     set_pcxxheader("src_static/pch.hpp")
     add_files("src_static/**/build.*.cpp")
     add_files("src_static/**/build.*.c")
@@ -42,13 +27,12 @@ target("SkrRTStatic")
 shared_module("SkrRT", "RUNTIME", engine_version)
     set_group("01.modules")
     add_deps("SkrRTStatic", {public = true, inherit = true})
-    add_includedirs(private_include_dir_list, {public = false})
+    add_defines("SKR_RUNTIME_API=SKR_EXPORT", "SKR_RUNTIME_LOCAL=error")
 
     -- internal packages
     add_packages("boost-context", "luau", {public = true, inherit = true})
 
     -- add source files
-    add_files(source_list)
     add_files("src/**/build.*.c", "src/**/build.*.cpp")
     if (is_os("macosx")) then 
         add_files("src/**/build.*.m", "src/**/build.*.mm")
@@ -62,9 +46,8 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     end
 
     -- add deps & links
-    add_deps("SkrDependencyGraph", "mimalloc", {public = false})
+    add_deps("mimalloc", {public = false})
     add_deps("vulkan", {public = true})
-    add_packages(packages_list, {public = true})
 
     -- runtime compile definitions
     after_load(function (target,  opt)
@@ -77,7 +60,6 @@ shared_module("SkrRT", "RUNTIME", engine_version)
 
     -- link system libs/frameworks
     add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public = true})
-    add_links(links_list, {public = true})
     if (is_os("windows")) then 
         add_syslinks("advapi32", "user32", "shell32", "Ole32", "Shlwapi", {public = true})
     else

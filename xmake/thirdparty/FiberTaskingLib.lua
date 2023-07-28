@@ -1,6 +1,7 @@
 ftl_includes_dir = "$(projectdir)/thirdparty/FiberTaskingLib/include"
 
-table.insert(include_dir_list, ftl_includes_dir)
+target("SkrRoot")
+    add_includedirs(ftl_includes_dir, {public = true})
 
 option("ftl_fiber_canary_bytes")
     set_default(false)

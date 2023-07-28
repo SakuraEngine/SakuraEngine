@@ -6,7 +6,7 @@
 
 namespace skr {
 
-struct RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
+struct SKR_RUNTIME_API SystemMessageHandlerProxy : public ISystemMessageHandler
 {
     template <typename T>
     using Handler = eastl::pair<T, void*>;
