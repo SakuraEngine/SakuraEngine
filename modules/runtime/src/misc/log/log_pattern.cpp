@@ -1,4 +1,3 @@
-#include "../../pch.hpp" // IWYU pragma: keep
 #include "misc/log/log_manager.hpp"
 #include "SkrRT/platform/process.h"
 #include "SkrRT/misc/log/logger.hpp"
@@ -273,7 +272,7 @@ skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view f
         t /= 60;
         const uint64_t minute = (t % 60);
         t /= 60;
-        uint32_t h = t;
+        uint32_t h = (uint32_t)t;
         if (h > 23) {
             h %= 24;
             LogManager::datetime_.reset_date();

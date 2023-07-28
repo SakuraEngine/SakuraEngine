@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/misc/types.h"
 #include "SkrRT/serde/json/reader.h"

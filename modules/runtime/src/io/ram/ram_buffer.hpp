@@ -8,7 +8,6 @@ namespace io {
 struct RUNTIME_API RAMIOBuffer : public IRAMIOBuffer
 {
     IO_RC_OBJECT_BODY
-public:
     virtual ~RAMIOBuffer() SKR_NOEXCEPT;
 
     uint8_t* get_data() const SKR_NOEXCEPT { return bytes; }
@@ -16,9 +15,6 @@ public:
 
     void allocate_buffer(uint64_t n) SKR_NOEXCEPT;
     void free_buffer() SKR_NOEXCEPT;
-
-    uint8_t* bytes = nullptr;
-    uint64_t size = 0;
 
 public:
     SInterfaceDeleter custom_deleter() const 
@@ -30,8 +26,11 @@ public:
             p->pool->deallocate(p); 
         };
     }
+    friend struct AllocateIOBufferResolver;
     friend struct SmartPool<RAMIOBuffer, IRAMIOBuffer>;
 protected:
+    uint8_t* bytes = nullptr;
+    uint64_t size = 0;
     RAMIOBuffer(ISmartPoolPtr<IRAMIOBuffer> pool) 
         : pool(pool)
     {

@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/vfs.h"

@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRenderer/render_mesh.h"

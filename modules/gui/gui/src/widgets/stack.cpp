@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "SkrGui/widgets/stack.hpp"
 #include "SkrGui/render_objects/render_stack.hpp"
 

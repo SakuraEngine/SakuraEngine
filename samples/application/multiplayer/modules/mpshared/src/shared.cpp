@@ -1,4 +1,3 @@
-#include "pch.hpp"
 #include "MPShared/shared.h"
 #include "SkrRT/math/vector.h"
 #include "SkrRT/math/quat.h"
@@ -226,7 +225,7 @@ void MPGameWorld::ZombieAI()
                 auto phealths = dual::get_owned_rw<CHealth>(view);
                 auto healthId = dualV_get_local_type(view, dual_id_of<CHealth>::get());
                 auto pdirties = dual::get_owned_rw<dual::dirty_comp_t>(view);
-                auto entities = (dual_entity_t*)dualV_get_entities(view);
+                // auto entities = (dual_entity_t*)dualV_get_entities(view);
                 for(int j=0; j<view->count; ++j)
                 {
                     auto ptranslation = skr::math::load(skr_float2_t{ptranslations[j].value.x, ptranslations[j].value.z});
@@ -368,7 +367,7 @@ void MPGameWorld::PlayerHealthCheck()
     if(authoritative)
     {
         dual::schedule_task(healthCheckQuery, 512,
-        [this](QHeathCheck::TaskContext ctx)
+        [](QHeathCheck::TaskContext ctx)
         {
             auto [healths, translations, rotations, weapons, dirtyMasks] = ctx.unpack();
             for(int i=0; i<ctx.count(); ++i)

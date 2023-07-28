@@ -28,7 +28,7 @@ public:
 	virtual uint64_t get_length() const; ///< get size of the file
 	Vector<uint8_t> get_buffer(int64_t p_length) const;
     
-    ~FileAccess();
+    virtual ~FileAccess() SKR_NOEXCEPT;
     skr_vfile_t* file;
 };
 }

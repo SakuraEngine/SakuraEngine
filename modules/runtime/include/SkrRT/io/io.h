@@ -114,7 +114,7 @@ struct RUNTIME_API IIORequest : public skr::SInterface
     virtual IORequestComponent* get_component(skr_guid_t tid) SKR_NOEXCEPT = 0; 
     virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT = 0; 
 
-#pragma region IOFileComponent
+#pragma region PathSrcComponent
     virtual void set_vfs(skr_vfs_t* vfs) SKR_NOEXCEPT = 0;
     virtual void set_path(const char8_t* path) SKR_NOEXCEPT = 0;
     virtual const char8_t* get_path() const SKR_NOEXCEPT = 0;
@@ -131,28 +131,10 @@ struct RUNTIME_API IIORequest : public skr::SInterface
 };
 using IORequestId = SObjectPtr<IIORequest>;
 
-struct RUNTIME_API IBlocksIORequest : public IIORequest
-{
-    virtual ~IBlocksIORequest() SKR_NOEXCEPT;
-
-#pragma region IOBlocksComponent
-    virtual skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT = 0;
-    virtual void add_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
-    virtual void reset_blocks() SKR_NOEXCEPT = 0;
-#pragma endregion
-
-#pragma region IOCompressedBlocksComponent
-    virtual skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT = 0;
-    virtual void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
-    virtual void reset_compressed_blocks() SKR_NOEXCEPT = 0;
-#pragma endregion
-};
-using BlocksIORequestId = SObjectPtr<IBlocksIORequest>;
-
 struct RUNTIME_API IIOBatch : public skr::SInterface
 {
     virtual void reserve(uint64_t size) SKR_NOEXCEPT = 0;
-    virtual IOResultId add_request(IORequestId request, IOFuture* future = nullptr) SKR_NOEXCEPT = 0;
+    virtual IOResultId add_request(IORequestId request, IOFuture* future) SKR_NOEXCEPT = 0;
     virtual skr::span<IORequestId> get_requests() SKR_NOEXCEPT = 0;
 
     virtual void set_priority(SkrAsyncServicePriority pri) SKR_NOEXCEPT = 0;
@@ -162,7 +144,7 @@ using IOBatchId = SObjectPtr<IIOBatch>;
 
 struct RUNTIME_API IIORequestResolver : public skr::SInterface
 {
-    virtual void resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT;
+    virtual void resolve(SkrAsyncServicePriority priority, IOBatchId batch, IORequestId request) SKR_NOEXCEPT;
 
     virtual ~IIORequestResolver() SKR_NOEXCEPT;
 };

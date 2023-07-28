@@ -1,5 +1,4 @@
-﻿#include "../pch.hpp"
-#include "SkrRenderGraph/backend/graph_backend.hpp"
+﻿#include "SkrRenderGraph/backend/graph_backend.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include "SkrRT/platform/debug.h"

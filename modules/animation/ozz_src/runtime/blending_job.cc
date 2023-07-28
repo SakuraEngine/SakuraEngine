@@ -24,7 +24,6 @@
 // DEALINGS IN THE SOFTWARE.                                                  //
 //                                                                            //
 //----------------------------------------------------------------------------//
-#include "../pch.hpp"
 #include "SkrAnim/ozz/blending_job.h"
 
 #include <cassert>

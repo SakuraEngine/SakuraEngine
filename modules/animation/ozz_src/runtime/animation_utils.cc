@@ -24,7 +24,6 @@
 // DEALINGS IN THE SOFTWARE.                                                  //
 //                                                                            //
 //----------------------------------------------------------------------------//
-#include "../pch.hpp"
 #include "SkrAnim/ozz/animation_utils.h"
 
 // Internal include file

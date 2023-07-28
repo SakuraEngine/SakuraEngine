@@ -1,7 +1,5 @@
 #include "cgpu/api.h"
 #include "SkrTestFramework/framework.hpp"
-#include "SkrTestFramework/generators.hpp"
-#include <catch2/generators/catch_generators.hpp>
 #include <iostream>
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -15,10 +13,11 @@ HWND createWin32Window();
     #include "SkrRT/platform/apple/macos/window.h"
 #endif
 
+template <ECGPUBackend backend>
 class SwapChainCreation
 {
 protected:
-    void Initialize(ECGPUBackend backend) SKR_NOEXCEPT
+    void Initialize() SKR_NOEXCEPT
     {
         DECLARE_ZERO(CGPUInstanceDescriptor, desc)
         desc.backend = backend;
@@ -68,8 +67,7 @@ protected:
 
     SwapChainCreation() SKR_NOEXCEPT
     {
-        backend = GENERATE(CGPUBackendGenerator::Create());
-        Initialize(backend);
+        Initialize();
     }
 
     ~SwapChainCreation() SKR_NOEXCEPT
@@ -78,10 +76,11 @@ protected:
         cgpu_free_instance(instance);
     }
 
+    void test_all();
+
     CGPUInstanceId instance;
     CGPUAdapterId adapter;
     CGPUDeviceId device;
-    ECGPUBackend backend;
 #ifdef _WIN32
     HWND hwnd;
 #elif defined(_MACOS)
@@ -89,8 +88,11 @@ protected:
 #endif
 };
 
+template <ECGPUBackend backend>
+void SwapChainCreation<backend>::test_all()
+{
 #if defined(_WIN32) || defined(_WIN64)
-TEST_CASE_METHOD(SwapChainCreation, "CreateFromHWND")
+SUBCASE("CreateFromHWND")
 {
     auto surface = cgpu_surface_from_hwnd(device, hwnd);
 
@@ -109,7 +111,7 @@ TEST_CASE_METHOD(SwapChainCreation, "CreateFromHWND")
     #define BACK_BUFFER_WIDTH 1280
     #define BACK_BUFFER_HEIGHT 720
 
-TEST_CASE_METHOD(SwapChainCreation, "CreateFromNSView")
+SUBCASE("CreateFromNSView")
 {
     auto ns_view = (struct NSView*)nswindow_get_content_view(nswin);
     auto surface = cgpu_surface_from_ns_view(device, (CGPUNSView*)ns_view);
@@ -126,6 +128,7 @@ TEST_CASE_METHOD(SwapChainCreation, "CreateFromNSView")
     cgpu_free_surface(device, surface);
 }
 #endif
+}
 
 #if defined(_WIN32) || defined(_WIN64)
 LRESULT CALLBACK WindowProcedure(HWND window, UINT msg, WPARAM wp, LPARAM lp)
@@ -167,5 +170,19 @@ HWND createWin32Window()
         return window;
     }
     return CGPU_NULLPTR;
+}
+#endif
+
+#ifdef CGPU_USE_D3D12
+TEST_CASE_METHOD(SwapChainCreation<CGPU_BACKEND_D3D12>, "SwapChainCreation-d3d12")
+{
+    test_all();
+}
+#endif
+
+#ifdef CGPU_USE_VULKAN
+TEST_CASE_METHOD(SwapChainCreation<CGPU_BACKEND_VULKAN>, "SwapChainCreation-vulkan")
+{
+    test_all();
 }
 #endif

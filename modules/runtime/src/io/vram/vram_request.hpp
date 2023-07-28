@@ -1,6 +1,12 @@
 #pragma once
-#include "../common/io_request.hpp"
+#include "SkrRT/io/io.h"
+#include "SkrRT/platform/debug.h"
 #include "SkrRT/platform/vfs.h"
+#include "SkrRT/io/vram_io.hpp"
+#include "../common/io_request.hpp"
+#include "cgpu/api.h"
+#include "components.hpp"
+#include "io/vram/components.hpp"
 
 #include <EASTL/fixed_vector.h>
 #include <EASTL/variant.h>
@@ -9,60 +15,127 @@
 namespace skr {
 namespace io {
 
-struct VRAMIORequest final : public IORequestCRTP<
-    IIORequest, IOFileComponent, IOStatusComponent>
+template <>
+struct CID<struct VRAMIOStatusComponent> 
 {
-    friend struct SmartPool<VRAMIORequest, IIORequest>;
+    static constexpr skr_guid_t Get() { return CID<IOStatusComponent>::Get(); } 
+};
+struct VRAMIOStatusComponent final : public IOStatusComponent
+{
+    VRAMIOStatusComponent(IIORequest* const request) SKR_NOEXCEPT;
+    void setStatus(ESkrIOStage status) SKR_NOEXCEPT override;
+};
 
-    eastl::fixed_vector<skr_io_block_t, 1> blocks;
+template <typename Interface, typename... Components>
+struct VRAMRequestMixin : public IORequestMixin<Interface, Components...>
+{
+    using Super = IORequestMixin<Interface, Components...>;
+
+    void set_transfer_queue(CGPUQueueId queue) SKR_NOEXCEPT
+    {
+        Super::template safe_comp<VRAMUploadComponent>()->set_transfer_queue(queue); 
+    }
+
+    void set_dstorage_queue(CGPUDStorageQueueId queue) SKR_NOEXCEPT
+    {
+        Super::template safe_comp<VRAMDStorageComponent>()->set_dstorage_queue(queue); 
+    }
+
+    void set_memory_src(uint8_t* memory, uint64_t bytes) SKR_NOEXCEPT
+    {
+        Super::template safe_comp<MemorySrcComponent>()->set_memory_src(memory, bytes); 
+    }
+
+#pragma region VRAMBufferComponent
+    void set_buffer(CGPUBufferId buffer, uint64_t offset) SKR_NOEXCEPT
+    {        
+        Super::template safe_comp<VRAMBufferComponent>()->set_buffer(buffer, offset); 
+    }
+
+    void set_buffer(CGPUDeviceId device, const CGPUBufferDescriptor* desc) SKR_NOEXCEPT
+    {
+        Super::template safe_comp<VRAMBufferComponent>()->set_buffer(device, desc); 
+    }
+#pragma endregion
+
+#pragma region VRAMTextureComponent
+    void set_texture(CGPUTextureId texture) SKR_NOEXCEPT
+    {
+        Super::template safe_comp<VRAMTextureComponent>()->set_texture(texture); 
+    }
     
-    uint64_t get_fsize() const SKR_NOEXCEPT
+    void set_texture(CGPUDeviceId device, const CGPUTextureDescriptor* desc) SKR_NOEXCEPT
     {
-        if (auto pFile = io_component<IOFileComponent>(this))
-        {
-            if (pFile->file)
-            {
-                SKR_ASSERT(!pFile->dfile);
-                return skr_vfs_fsize(pFile->file);
-            }
-            else
-            {
-                SKR_ASSERT(pFile->dfile);
-                SKR_ASSERT(!pFile->file);
-                auto instance = skr_get_dstorage_instnace();
-                SkrDStorageFileInfo info;
-                skr_dstorage_query_file_info(instance, pFile->dfile, &info);
-                return info.file_size;
-            }
-        }
-        return 0;
+        Super::template safe_comp<VRAMTextureComponent>()->set_texture(device, desc); 
     }
 
-    void setStatus(ESkrIOStage status) SKR_NOEXCEPT
+    void set_slices(uint32_t first_slice, uint32_t slice_count) SKR_NOEXCEPT
     {
-        if (auto pStatus = io_component<IOStatusComponent>(this))
-        {
-            /*
-            if (status == SKR_IO_STAGE_CANCELLED)
-            {
-                if (auto dest = static_cast<RAMIOBuffer*>(destination.get()))
-                {
-                    dest->free_buffer();
-                }
-            }
-            */
-            return pStatus->setStatus(status);
-        }
+        Super::template safe_comp<VRAMTextureComponent>()->set_slices(first_slice, slice_count); 
     }
+#pragma endregion
 
 protected:
-    VRAMIORequest(ISmartPool<IIORequest>* pool, const uint64_t sequence) 
-        : IORequestCRTP(pool), sequence(sequence) 
+    VRAMRequestMixin(ISmartPoolPtr<Interface> pool, const uint64_t sequence) SKR_NOEXCEPT
+        : Super(pool), sequence(sequence) 
     {
 
     }
-
     const uint64_t sequence;
+};
+
+template <typename T>
+struct VRAMRequest {};
+
+template <>
+struct VRAMRequest<ISlicesVRAMRequest> final : public VRAMRequestMixin<ISlicesVRAMRequest,
+    IOStatusComponent, 
+    PathSrcComponent, MemorySrcComponent, // Src
+    VRAMUploadComponent, VRAMDStorageComponent, // Method
+    VRAMTextureComponent // Dst
+>
+{
+    friend struct SmartPool<VRAMRequest<ISlicesVRAMRequest>, ISlicesVRAMRequest>;
+protected:
+    VRAMRequest(ISmartPoolPtr<ISlicesVRAMRequest> pool, const uint64_t sequence) SKR_NOEXCEPT
+        : VRAMRequestMixin(pool, sequence)
+    {
+
+    }
+};
+
+template <>
+struct VRAMRequest<ITilesVRAMRequest> final : public VRAMRequestMixin<ITilesVRAMRequest,
+    IOStatusComponent, 
+    PathSrcComponent, MemorySrcComponent, // Src
+    VRAMUploadComponent, VRAMDStorageComponent, // Method
+    VRAMTextureComponent //Dst
+>
+{
+    friend struct SmartPool<VRAMRequest<ITilesVRAMRequest>, ITilesVRAMRequest>;
+protected:
+    VRAMRequest(ISmartPoolPtr<ITilesVRAMRequest> pool, const uint64_t sequence) SKR_NOEXCEPT
+        : VRAMRequestMixin(pool, sequence)
+    {
+
+    }
+};
+
+template <>
+struct VRAMRequest<IBlocksVRAMRequest> final : public VRAMRequestMixin<IBlocksVRAMRequest,
+    IOStatusComponent, 
+    PathSrcComponent, MemorySrcComponent, // Src
+    VRAMUploadComponent, VRAMDStorageComponent, // Method
+    VRAMBufferComponent //Dst
+>
+{
+    friend struct SmartPool<VRAMRequest<IBlocksVRAMRequest>, IBlocksVRAMRequest>;
+protected:
+    VRAMRequest(ISmartPoolPtr<IBlocksVRAMRequest> pool, const uint64_t sequence) SKR_NOEXCEPT
+        : VRAMRequestMixin(pool, sequence)
+    {
+
+    }
 };
 
 } // namespace io

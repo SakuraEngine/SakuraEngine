@@ -1,4 +1,3 @@
-#include "pch.hpp"
 #include "SkrRenderer/pso_key.hpp"
 
 namespace skr {

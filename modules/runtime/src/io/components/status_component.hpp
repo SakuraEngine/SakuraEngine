@@ -29,23 +29,15 @@ typedef enum SkrAsyncIOFinishStep
 } SkrAsyncIOFinishStep;
 
 template <>
-struct IORequestComponentTID<struct IOStatusComponent> 
+struct CID<struct IOStatusComponent> 
 {
-    static constexpr skr_guid_t Get()
-    {
-        using namespace skr::guid::literals;
-        return u8"3db75617-8027-464b-b241-e4e59f83fd61"_guid;
-    } 
+    static constexpr skr_guid_t Get();
 };
-struct IOStatusComponent : public IORequestComponent
+struct RUNTIME_API IOStatusComponent : public IORequestComponent
 {
 public:
-    IOStatusComponent(IIORequest* const request) SKR_NOEXCEPT 
-        : IORequestComponent(request) 
-    {
-        
-    }
-    virtual skr_guid_t get_tid() const SKR_NOEXCEPT override { return IORequestComponentTID<IOStatusComponent>::Get(); }
+    IOStatusComponent(IIORequest* const request) SKR_NOEXCEPT;
+    virtual ~IOStatusComponent() SKR_NOEXCEPT;
 
     const skr_io_future_t* get_future() const SKR_NOEXCEPT { return future; }
 
@@ -122,6 +114,7 @@ public:
 
 protected:
     friend struct RAMIOBatch;
+    friend struct VRAMIOBatch;
     bool async_complete = false;
     bool async_cancel = false;
     IIOBatch* owner_batch = nullptr; // avoid circular reference
@@ -134,6 +127,12 @@ protected:
     skr_io_callback_t finish_callbacks[SKR_IO_FINISH_POINT_COUNT] = { nullptr };
     void* finish_callback_datas[SKR_IO_FINISH_POINT_COUNT];
 };
+
+constexpr skr_guid_t CID<struct IOStatusComponent>::Get()
+{
+    using namespace skr::guid::literals;
+    return u8"3db75617-8027-464b-b241-e4e59f83fd61"_guid;
+} 
 
 } // namespace io
 } // namespace skr

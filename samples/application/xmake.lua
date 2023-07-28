@@ -14,6 +14,7 @@ if(has_config("build_tools")) then
         add_includedirs("gametool/include", {public=true})
         add_includedirs("./../common", {public = false})
         add_files("gametool/src/**.cpp")
+        add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
         on_config(function (target, opt)
             local dep = target:dep("GameRuntime");
             local toolgendir = path.join(dep:autogendir({root = true}), dep:plat(), "codegen", dep:name(), "tool")
@@ -35,6 +36,7 @@ executable_module("VMemController", "VMEM_CONTROLLER", engine_version)
     public_dependency("SkrImGui", engine_version)
     set_exceptions("no-cxx")
     add_includedirs("./../common", {public = false})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_files("vmem_controller/**.cpp")
 
 if (os.host() == "windows" and has_config("build_chat")) then

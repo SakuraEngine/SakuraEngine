@@ -1,17 +1,11 @@
 #include "cgpu/api.h"
 #include "SkrTestFramework/framework.hpp"
-#include "SkrTestFramework/generators.hpp"
-#include <catch2/generators/catch_generators.hpp>
 #include <iostream>
 
+template <ECGPUBackend backend>
 class DeviceInitializeTest
 {
 protected:
-    DeviceInitializeTest()
-    {
-        backend = GENERATE(CGPUBackendGenerator::Create());
-    }
-
     const char* GetBackendName()
     {
         switch (backend)
@@ -28,7 +22,8 @@ protected:
                 return "UNKNOWN";
         }
     }
-    ECGPUBackend backend;
+
+    void test_all();
 };
 
 CGPUInstanceId init_instance(ECGPUBackend backend, bool enable_debug_layer, bool enableGPUValidation)
@@ -105,99 +100,117 @@ void test_create_device(CGPUInstanceId instance, bool enable_debug_layer, bool e
     }
 }
 
-TEST_CASE_METHOD(DeviceInitializeTest, "InstanceCreationDbgGpu")
+template <ECGPUBackend backend>
+void DeviceInitializeTest<backend>::test_all()
 {
-    auto inst = init_instance(backend, true, true);
-    EXPECT_NE(inst, CGPU_NULLPTR);
-    cgpu_free_instance(inst);
-}
-
-TEST_CASE_METHOD(DeviceInitializeTest, "InstanceCreationDbg")
-{
-    auto inst = init_instance(backend, true, false);
-    EXPECT_NE(inst, CGPU_NULLPTR);
-    cgpu_free_instance(inst);
-}
-
-TEST_CASE_METHOD(DeviceInitializeTest, "InstanceCreation")
-{
-    auto inst = init_instance(backend, false, false);
-    EXPECT_NE(inst, CGPU_NULLPTR);
-    cgpu_free_instance(inst);
-}
-
-TEST_CASE_METHOD(DeviceInitializeTest, "AdapterEnum")
-{
-    auto instance = init_instance(backend, true, true);
-    REQUIRE(enum_adapters(instance) > 0);
-    cgpu_free_instance(instance);
-}
-
-TEST_CASE_METHOD(DeviceInitializeTest, "CreateDeviceDbgGpu")
-{
-    auto inst = init_instance(backend, true, true);
-    EXPECT_NE(inst, CGPU_NULLPTR);
-    test_create_device(inst, false, false);
-    cgpu_free_instance(inst);
-}
-
-TEST_CASE_METHOD(DeviceInitializeTest, "CreateDevice")
-{
-    auto inst = init_instance(backend, false, false);
-    EXPECT_NE(inst, CGPU_NULLPTR);
-    test_create_device(inst, false, false);
-    cgpu_free_instance(inst);
-}
-
-TEST_CASE_METHOD(DeviceInitializeTest, "CreateDeviceDbg")
-{
-    auto inst = init_instance(backend, true, false);
-    EXPECT_NE(inst, CGPU_NULLPTR);
-    test_create_device(inst, false, false);
-    cgpu_free_instance(inst);
-}
-
-TEST_CASE_METHOD(DeviceInitializeTest, "QueryQueueCount")
-{
-    auto instance = init_instance(backend, true, true);
-    uint32_t adapters_count = 0;
-    cgpu_enum_adapters(instance, nullptr, &adapters_count);
-    std::vector<CGPUAdapterId> adapters;
-    adapters.resize(adapters_count);
-    cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
-    for (auto adapter : adapters)
+    SUBCASE("InstanceCreationDbgGpu")
     {
-        const CGPUAdapterDetail* prop = cgpu_query_adapter_detail(adapter);
-        auto gQueue = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_GRAPHICS);
-        auto cQueue = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_COMPUTE);
-        auto tQueue = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_TRANSFER);
-        std::cout << prop->vendor_preset.gpu_name
-                  << " of backend " << GetBackendName() << "  \n"
-                  << "    GraphicsQueue: " << gQueue << "  \n"
-                  << "    ComputeQueue: " << cQueue << "  \n"
-                  << "    TransferQueue: " << tQueue << std::endl;
+        auto inst = init_instance(backend, true, true);
+        EXPECT_NE(inst, CGPU_NULLPTR);
+        cgpu_free_instance(inst);
     }
-    cgpu_free_instance(instance);
+
+    SUBCASE("InstanceCreationDbg")
+    {
+        auto inst = init_instance(backend, true, false);
+        EXPECT_NE(inst, CGPU_NULLPTR);
+        cgpu_free_instance(inst);
+    }
+
+    SUBCASE("InstanceCreation")
+    {
+        auto inst = init_instance(backend, false, false);
+        EXPECT_NE(inst, CGPU_NULLPTR);
+        cgpu_free_instance(inst);
+    }
+
+    SUBCASE("AdapterEnum")
+    {
+        auto instance = init_instance(backend, true, true);
+        REQUIRE(enum_adapters(instance) > 0);
+        cgpu_free_instance(instance);
+    }
+
+    SUBCASE("CreateDeviceDbgGpu")
+    {
+        auto inst = init_instance(backend, true, true);
+        EXPECT_NE(inst, CGPU_NULLPTR);
+        test_create_device(inst, false, false);
+        cgpu_free_instance(inst);
+    }
+
+    SUBCASE("CreateDevice")
+    {
+        auto inst = init_instance(backend, false, false);
+        EXPECT_NE(inst, CGPU_NULLPTR);
+        test_create_device(inst, false, false);
+        cgpu_free_instance(inst);
+    }
+
+    SUBCASE("CreateDeviceDbg")
+    {
+        auto inst = init_instance(backend, true, false);
+        EXPECT_NE(inst, CGPU_NULLPTR);
+        test_create_device(inst, false, false);
+        cgpu_free_instance(inst);
+    }
+
+    SUBCASE("QueryQueueCount")
+    {
+        auto instance = init_instance(backend, true, true);
+        uint32_t adapters_count = 0;
+        cgpu_enum_adapters(instance, nullptr, &adapters_count);
+        std::vector<CGPUAdapterId> adapters;
+        adapters.resize(adapters_count);
+        cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
+        for (auto adapter : adapters)
+        {
+            const CGPUAdapterDetail* prop = cgpu_query_adapter_detail(adapter);
+            auto gQueue = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_GRAPHICS);
+            auto cQueue = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_COMPUTE);
+            auto tQueue = cgpu_query_queue_count(adapter, CGPU_QUEUE_TYPE_TRANSFER);
+            std::cout << prop->vendor_preset.gpu_name
+                    << " of backend " << GetBackendName() << "  \n"
+                    << "    GraphicsQueue: " << gQueue << "  \n"
+                    << "    ComputeQueue: " << cQueue << "  \n"
+                    << "    TransferQueue: " << tQueue << std::endl;
+        }
+        cgpu_free_instance(instance);
+    }
+
+    SUBCASE("QueryVendorInfo")
+    {
+        auto instance = init_instance(backend, true, true);
+        uint32_t adapters_count = 0;
+        cgpu_enum_adapters(instance, nullptr, &adapters_count);
+        std::vector<CGPUAdapterId> adapters;
+        adapters.resize(adapters_count);
+        cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
+        for (auto adapter : adapters)
+        {
+            const CGPUAdapterDetail* prop = cgpu_query_adapter_detail(adapter);
+            std::cout << prop->vendor_preset.gpu_name << " Vendor Information (" << GetBackendName() << ")  \n"
+                    << "    GPU Name: " << prop->vendor_preset.gpu_name << "\n"
+                    << "    Is UMA: " << prop->is_uma << "\n"
+                    << "    Device ID: " << prop->vendor_preset.device_id << "\n"
+                    << "    Vendor ID: " << prop->vendor_preset.vendor_id << "\n"
+                    << "    Driver Version: " << prop->vendor_preset.driver_version << "\n"
+                    << std::endl;
+        }
+        cgpu_free_instance(instance);
+    }
 }
 
-TEST_CASE_METHOD(DeviceInitializeTest, "QueryVendorInfo")
+#ifdef CGPU_USE_D3D12
+TEST_CASE_METHOD(DeviceInitializeTest<CGPU_BACKEND_D3D12>, "DeviceInitializeTest-d3d12")
 {
-    auto instance = init_instance(backend, true, true);
-    uint32_t adapters_count = 0;
-    cgpu_enum_adapters(instance, nullptr, &adapters_count);
-    std::vector<CGPUAdapterId> adapters;
-    adapters.resize(adapters_count);
-    cgpu_enum_adapters(instance, adapters.data(), &adapters_count);
-    for (auto adapter : adapters)
-    {
-        const CGPUAdapterDetail* prop = cgpu_query_adapter_detail(adapter);
-        std::cout << prop->vendor_preset.gpu_name << " Vendor Information (" << GetBackendName() << ")  \n"
-                  << "    GPU Name: " << prop->vendor_preset.gpu_name << "\n"
-                  << "    Is UMA: " << prop->is_uma << "\n"
-                  << "    Device ID: " << prop->vendor_preset.device_id << "\n"
-                  << "    Vendor ID: " << prop->vendor_preset.vendor_id << "\n"
-                  << "    Driver Version: " << prop->vendor_preset.driver_version << "\n"
-                  << std::endl;
-    }
-    cgpu_free_instance(instance);
+    test_all();
 }
+#endif
+
+#ifdef CGPU_USE_VULKAN
+TEST_CASE_METHOD(DeviceInitializeTest<CGPU_BACKEND_VULKAN>, "DeviceInitializeTest-vulkan")
+{
+    test_all();
+}
+#endif

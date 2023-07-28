@@ -1,4 +1,3 @@
-#include "../../pch.hpp" // IWYU pragma: keep
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/log/logger.hpp"
 #include "misc/log/log_manager.hpp"
@@ -295,7 +294,7 @@ void LogWorker::patternAndSink(const LogElement& e) SKR_NOEXCEPT
         if (auto should_backtrace = LogManager::ShouldBacktrace(e.event))
         {
             ZoneScopedNC("Backtrace", tracy::Color::Orchid2);
-            const auto tid = e.event.get_thread_id();
+            const auto tid = (SThreadID)e.event.get_thread_id();
             if (auto token = queue_->query_token(tid))
             {
                 for (int64_t i = token->backtraces_.get_size() - 1; i >= 0; i--)

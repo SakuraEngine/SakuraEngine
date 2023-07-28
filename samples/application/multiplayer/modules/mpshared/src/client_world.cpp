@@ -1,4 +1,3 @@
-#include "pch.hpp"
 #include "MPShared/client_world.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 
@@ -459,7 +458,7 @@ float MPClientWorld::GetPlayerHealth()
     auto DisplayHealth = [&](dual_chunk_view_t* view)
     {
         auto healths = (const CHealth*)dualV_get_owned_ro(view, dual_id_of<CHealth>::get());
-        auto entities = dualV_get_entities(view);
+        // auto entities = dualV_get_entities(view);
         for(int i=0; i<view->count; ++i)
         {
             result = healths[i].health;

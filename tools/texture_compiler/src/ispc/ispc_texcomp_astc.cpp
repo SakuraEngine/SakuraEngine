@@ -187,7 +187,7 @@ void set_bits(uint32_t data[4], int* pos, int bits, uint32_t value)
     assert(bits <= 25);
     uint32_t word = *(uint32_t*)(((uint8_t*)data) + *pos / 8);
 
-    uint32_t mask = (1 << bits) - 1;
+    // uint32_t mask = (1 << bits) - 1;
     word |= value << (*pos % 8);
 
     *(uint32_t*)(((uint8_t*)data) + *pos / 8) = word;

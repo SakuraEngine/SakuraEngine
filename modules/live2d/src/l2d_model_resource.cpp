@@ -1,4 +1,3 @@
-#include "pch.hpp"
 #include <SkrRT/platform/filesystem.hpp>
 
 #include "SkrRT/platform/debug.h"
@@ -485,17 +484,12 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             auto& request = motionFutures[slot];
             auto&& [pRequest, path] = motionPaths.at(slot);
             auto&& [pRequest_, entry] = motionEntries.at(slot);
-
             entry.first = (const char8_t*)group;
             entry.second = j;
-            auto file = settings->GetMotionFileName(group, j);
             pRequest = &request;
             pRequest_ = &request;
-
-            path = data->u8HomePath;
-            path += u8"/";
-            path += (const char8_t*)file;
-
+            auto file = settings->GetMotionFileName(group, j);
+            path = skr::format("{}/{}", data->u8HomePath, (const char8_t*)file);
             slot++;
         }
     }
@@ -566,7 +560,7 @@ void csmMotionMap::on_finished() SKR_NOEXCEPT
 }}}
 
 #ifndef SKR_SERIALIZE_GURAD
-void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const char8_t* path, skr_live2d_ram_io_request_t* live2dRequest)
+void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const char8_t* path, skr_live2d_ram_io_future_t* live2dRequest)
 {
     ZoneScopedN("ioRAM Live2D Request");
 
@@ -587,19 +581,19 @@ void skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const ch
             = SkrNew<L2DF::CubismModelSettingJson>(cbData->settingBlob->get_data(), (L2DF::csmSizeInt)cbData->settingBlob->get_size());
         cbData->settingBlob.reset();
         // setup models & expressions count
-        if (auto _ = skr::string((const char8_t*)model_setting->GetModelFileName()); _.size())
+        if (auto _ = skr::string((const char8_t*)model_setting->GetModelFileName()); !_.is_empty())
         {
             cbData->model_count = 1;
         }
-        if (auto _ = skr::string((const char8_t*)model_setting->GetPhysicsFileName()); _.size())
+        if (auto _ = skr::string((const char8_t*)model_setting->GetPhysicsFileName()); !_.is_empty())
         {
             cbData->phys_count = 1;
         }
-        if (auto _ = skr::string((const char8_t*)model_setting->GetPoseFileName()); _.size())
+        if (auto _ = skr::string((const char8_t*)model_setting->GetPoseFileName()); !_.is_empty())
         {
             cbData->pose_count = 1;
         }
-        if (auto _ = skr::string((const char8_t*)model_setting->GetUserDataFile()); _.size())
+        if (auto _ = skr::string((const char8_t*)model_setting->GetUserDataFile()); !_.is_empty())
         {
             cbData->usr_data_count = 1;
         }

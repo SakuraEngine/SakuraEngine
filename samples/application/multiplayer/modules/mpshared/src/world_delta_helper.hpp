@@ -19,7 +19,7 @@ skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWor
     skr::task::event_t counter;
     static dual_type_index_t historyComponent = ctx.historyComponent;
     static uint32_t historyComponentSize = withHistory ? dualT_get_desc(historyComponent)->size : 0;skr::task::event_t result{nullptr};
-    dual::schedual_custom(query, [ctx, &comps, &builder, type](dual::task_context_t tctx)
+    dual::schedual_custom(query, [=, &comps, &builder](dual::task_context_t tctx)
     {
         ZoneScopedN("BuildDelta");
         if(comps.entities.empty())
@@ -59,7 +59,7 @@ skr::task::event_t BuildDelta(dual_type_index_t type, dual_query_t* query, MPWor
                     auth = (const CAuth*)((const char*)lastAuth + sizeof(CAuth) * offset);
                 }
             }
-            if constexpr(withHistory)
+            if constexpr (withHistory)
             {
                 if(history->size() < ctx.totalConnections + 1)
                     history->resize(ctx.totalConnections + 1);
@@ -92,7 +92,7 @@ skr::task::event_t ApplyDelta(dual_type_index_t type, dual_query_t* query, const
         return skr::task::event_t(nullptr);
     auto& comps = *iter;
     skr::task::event_t result{nullptr};
-    dual::schedual_custom(query, [type, &delta, &map, &comps](dual::task_context_t ctx)
+    dual::schedual_custom(query, [/*type, */&delta, &map, &comps](dual::task_context_t ctx)
     {
         dual_chunk_view_t lastView {nullptr, 0, 0};
         const T* lastComp = nullptr;

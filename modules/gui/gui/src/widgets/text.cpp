@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "SkrGui/widgets/text.hpp"
 #include "SkrGui/render_objects/render_text.hpp"
 

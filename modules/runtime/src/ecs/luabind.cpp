@@ -552,7 +552,7 @@ namespace skr::lua
                     if(strcmp(field, "length") == 0)
                     {
                         auto size = ((uint8_t*)view->arr.EndX - (uint8_t*)view->arr.BeginX) / view->stride;
-                        lua_pushinteger(L, size);
+                        lua_pushinteger(L, (int)size);
                         return 1;
                     }
                     else if(strcmp(field, "get") == 0)

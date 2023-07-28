@@ -29,8 +29,9 @@ std::ostream& operator<<(std::ostream& os, const duration<Rep, Period>& d) {
 }  // namespace chrono
 }  // namespace std
 
-TEST_CASE_METHOD(WithBoundScheduler, "Events") {
-  SECTION("EventIsSignalled") {
+void WithBoundSchedulerBase::TestEvents()
+{
+  SUBCASE("EventIsSignalled") {
     for (auto mode : {marl::Event::Mode::Manual, marl::Event::Mode::Auto}) {
       auto event = marl::Event(mode);
       ASSERT_EQ(event.isSignalled(), false);
@@ -42,7 +43,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Events") {
     }
   }
 
-  SECTION("EventAutoTest") {
+  SUBCASE("EventAutoTest") {
     auto event = marl::Event(marl::Event::Mode::Auto);
     ASSERT_EQ(event.test(), false);
     event.signal();
@@ -50,7 +51,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Events") {
     ASSERT_EQ(event.test(), false);
   }
 
-  SECTION("EventManualTest") {
+  SUBCASE("EventManualTest") {
     auto event = marl::Event(marl::Event::Mode::Manual);
     ASSERT_EQ(event.test(), false);
     event.signal();
@@ -58,7 +59,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Events") {
     ASSERT_EQ(event.test(), true);
   }
 
-  SECTION("EventAutoWait") {
+  SUBCASE("EventAutoWait") {
     std::atomic<int> counter = {0};
     auto event = marl::Event(marl::Event::Mode::Auto);
     auto done = marl::Event(marl::Event::Mode::Auto);
@@ -83,7 +84,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Events") {
     ASSERT_EQ(counter.load(), 3);
   }
 
-  SECTION("EventManualWait") {
+  SUBCASE("EventManualWait") {
     std::atomic<int> counter = {0};
     auto event = marl::Event(marl::Event::Mode::Manual);
     auto wg = marl::WaitGroup(3);
@@ -99,7 +100,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Events") {
     ASSERT_EQ(counter.load(), 3);
   }
 
-  SECTION("EventSequence") {
+  SUBCASE("EventSequence") {
     for (auto mode : {marl::Event::Mode::Manual, marl::Event::Mode::Auto}) {
       std::string sequence;
       auto eventA = marl::Event(mode);
@@ -128,7 +129,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Events") {
     }
   }
 
-  SECTION("EventWaitForUnblocked") {
+  SUBCASE("EventWaitForUnblocked") {
     auto event = marl::Event(marl::Event::Mode::Manual);
     auto wg = marl::WaitGroup(1000);
     for (int i = 0; i < 1000; i++) {
@@ -142,7 +143,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Events") {
     wg.wait();
   }
 
-  SECTION("EventWaitForTimeTaken") {
+  SUBCASE("EventWaitForTimeTaken") {
     auto event = marl::Event(marl::Event::Mode::Auto);
     auto wg = marl::WaitGroup(1000);
     for (int i = 0; i < 1000; i++) {
@@ -159,7 +160,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Events") {
     wg.wait();
   }
 
-  SECTION("EventWaitUntilUnblocked") {
+  SUBCASE("EventWaitUntilUnblocked") {
     auto event = marl::Event(marl::Event::Mode::Manual);
     auto wg = marl::WaitGroup(1000);
     for (int i = 0; i < 1000; i++) {
@@ -174,7 +175,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Events") {
     wg.wait();
   }
 
-  SECTION("EventWaitUntilTimeTaken") {
+  SUBCASE("EventWaitUntilTimeTaken") {
     auto event = marl::Event(marl::Event::Mode::Auto);
     auto wg = marl::WaitGroup(1000);
     for (int i = 0; i < 1000; i++) {
@@ -197,7 +198,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Events") {
   // This is testing to ensure that the scheduler handles timeouts correctly when
   // they are early-unblocked. Specifically, this is to test that fibers are
   // not double-placed into the idle or working lists.
-  SECTION("EventWaitStressTest") {
+  SUBCASE("EventWaitStressTest") {
     auto event = marl::Event(marl::Event::Mode::Manual);
     for (int i = 0; i < 10; i++) {
       auto wg = marl::WaitGroup(100);
@@ -213,7 +214,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Events") {
     }
   }
 
-  SECTION("EventAny") {
+  SUBCASE("EventAny") {
     for (int i = 0; i < 3; i++) {
       std::array<marl::Event, 3> events = {
           marl::Event(marl::Event::Mode::Auto),
@@ -226,3 +227,9 @@ TEST_CASE_METHOD(WithBoundScheduler, "Events") {
     }
   }
 }
+
+TEST_CASE_METHOD(WithBoundScheduler<0>, "TestEvents-0") { TestEvents(); };
+TEST_CASE_METHOD(WithBoundScheduler<1>, "TestEvents-1") { TestEvents(); };
+TEST_CASE_METHOD(WithBoundScheduler<2>, "TestEvents-2") { TestEvents(); };
+TEST_CASE_METHOD(WithBoundScheduler<8>, "TestEvents-8") { TestEvents(); };
+TEST_CASE_METHOD(WithBoundScheduler<32>, "TestEvents-32") { TestEvents(); };
