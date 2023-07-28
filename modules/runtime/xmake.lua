@@ -10,17 +10,6 @@ add_requires("simdjson >=3.0.0-skr")
 -- add_requires("lua >=5.4.4-skr")
 add_requires("luau", { configs = { extern_c = true }})
 
-target("SkrDependencyGraph")
-    set_group("01.modules")
-    add_deps("SkrRoot", "SkrBase", {public = true})
-    add_packages("eastl", {public = true, inherit = true})
-    set_exceptions("no-cxx")
-    add_rules("skr.static_module", {api = "SKR_DEPENDENCY_GRAPH"})
-    set_optimize("fastest")
-    add_files("dependency_graph/**/dependency_graph.cpp")
-    add_includedirs("include", {public = true})
-    add_includedirs("dependency_graph", {public = true})
-
 target("SkrRTStatic")
     set_group("01.modules")
     set_optimize("fastest")
@@ -57,7 +46,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     end
 
     -- add deps & links
-    add_deps("SkrDependencyGraph", "mimalloc", {public = false})
+    add_deps("mimalloc", {public = false})
     add_deps("vulkan", {public = true})
 
     -- runtime compile definitions
