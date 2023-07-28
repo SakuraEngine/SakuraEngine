@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "ram_request.hpp"
 
 namespace skr::io {
@@ -13,6 +12,11 @@ RAMRequestMixin::RAMRequestMixin(ISmartPoolPtr<IBlocksRAMRequest> pool, const ui
     : IORequestMixin(pool), sequence(sequence) 
 {
 
+}
+
+RAMRequestMixin::~RAMRequestMixin() SKR_NOEXCEPT
+{
+    destination.reset();
 }
 
 void RAMIOStatusComponent::setStatus(ESkrIOStage status) SKR_NOEXCEPT

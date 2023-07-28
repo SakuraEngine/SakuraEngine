@@ -29,13 +29,13 @@ namespace io {
 struct IRAMService;
 using RAMServiceDescriptor = skr_ram_io_service_desc_t;
 
-struct RUNTIME_API IRAMIOBuffer : public skr::IBlob
+struct SKR_RUNTIME_API IRAMIOBuffer : public skr::IBlob
 {
     virtual ~IRAMIOBuffer() SKR_NOEXCEPT;
 };
 using RAMIOBufferId = SObjectPtr<IRAMIOBuffer>;
 
-struct RUNTIME_API IBlocksRAMRequest : public IIORequest
+struct SKR_RUNTIME_API IBlocksRAMRequest : public IIORequest
 {
     virtual ~IBlocksRAMRequest() SKR_NOEXCEPT;
 
@@ -53,7 +53,7 @@ struct RUNTIME_API IBlocksRAMRequest : public IIORequest
 };
 using BlocksRAMRequestId = SObjectPtr<IBlocksRAMRequest>;
 
-struct RUNTIME_API IRAMService : public IIOService
+struct SKR_RUNTIME_API IRAMService : public IIOService
 {
     [[nodiscard]] static IRAMService* create(const RAMServiceDescriptor* desc) SKR_NOEXCEPT;
     static void destroy(IRAMService* service) SKR_NOEXCEPT;

@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 
 #include "io.cpp"
 #include "common/io_runner.cpp"

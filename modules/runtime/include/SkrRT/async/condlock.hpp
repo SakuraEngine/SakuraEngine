@@ -11,7 +11,7 @@ struct CondLockDesc
     int32_t __nothing__;
 };
 
-struct RUNTIME_STATIC_API CondLock
+struct SKR_STATIC_API CondLock
 {
     CondLock() SKR_NOEXCEPT;
     virtual ~CondLock() SKR_NOEXCEPT;

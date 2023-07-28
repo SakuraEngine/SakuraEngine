@@ -1,4 +1,3 @@
-#include "pch.hpp"
 #include "SkrAnim/resources/skin_resource.h"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrAnimTool/skin_asset.h"

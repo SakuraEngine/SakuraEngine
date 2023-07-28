@@ -33,7 +33,7 @@ struct ServiceThreadDesc
     SThreadPriority priority = SKR_THREAD_NORMAL;
 };
 
-struct RUNTIME_STATIC_API ServiceThread
+struct SKR_STATIC_API ServiceThread
 {
 public:
     ServiceThread(const ServiceThreadDesc& desc) SKR_NOEXCEPT;
@@ -79,7 +79,7 @@ private:
     SAtomic32 status = kStatusStopped;
 };
 
-struct RUNTIME_STATIC_API AsyncService : public skr::ServiceThread
+struct SKR_STATIC_API AsyncService : public skr::ServiceThread
 {
     AsyncService(const ServiceThreadDesc& desc) SKR_NOEXCEPT
         : skr::ServiceThread(desc)

@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-RUNTIME_API void* nswindow_create();
-RUNTIME_API void* nswindow_get_content_view(void*);
+SKR_RUNTIME_API void* nswindow_create();
+SKR_RUNTIME_API void* nswindow_get_content_view(void*);
 
 #ifdef __cplusplus
 }

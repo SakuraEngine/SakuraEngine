@@ -17,14 +17,6 @@ includes("xmake/options.lua")
 engine_version = "0.1.0"
 default_unity_batch_size = 16
 
-include_dir_list = {"include"}
-private_include_dir_list = {}
-source_list = {}
-packages_list = {}
-defs_list = {}
-links_list = {}
-generator_list = {}
-
 includes("xmake/compile_flags.lua")
 includes("xmake/rules.lua")
 
@@ -38,7 +30,7 @@ if (is_os("windows")) then
     if (is_mode("release")) then
         set_runtimes("MD")
     elseif (is_mode("asan")) then
-        table.insert(defs_list, "_DISABLE_VECTOR_ANNOTATION")
+        add_defines("_DISABLE_VECTOR_ANNOTATION")
     else
         set_runtimes("MDd")
     end

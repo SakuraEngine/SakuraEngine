@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "SkrGui/framework/render_object/render_proxy_box.hpp"
 #include "SkrGui/framework/painting_context.hpp"
 

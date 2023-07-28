@@ -1,16 +1,16 @@
 tracy_includes_dir = "$(projectdir)/thirdparty/tracy"
-table.insert(include_dir_list, tracy_includes_dir)
-table.insert(defs_list, "TRACY_IMPORTS")
-table.insert(defs_list, "TRACY_ON_DEMAND")
-table.insert(defs_list, "TRACY_FIBERS")
 
-if (is_config("use_tracy", "enable")) then
-    table.insert(defs_list, "TRACY_OVERRIDE_ENABLE")
-end
+target("SkrRoot")
+    add_includedirs(tracy_includes_dir, {public = true})
 
-if (is_config("use_tracy", "disable")) then
-    table.insert(defs_list, "TRACY_OVERRIDE_DISABLE")
-end
+target("SkrCompileFlags")
+    add_defines("TRACY_IMPORTS", "TRACY_ON_DEMAND", "TRACY_FIBERS", {public = true})
+    if (is_config("use_tracy", "enable")) then
+        add_defines("TRACY_OVERRIDE_ENABLE", {public = true})
+    end
+    if (is_config("use_tracy", "disable")) then
+        add_defines("TRACY_OVERRIDE_DISABLE", {public = true})
+    end
 
 target("tracyclient")
     -- version("0.9.2alpha")

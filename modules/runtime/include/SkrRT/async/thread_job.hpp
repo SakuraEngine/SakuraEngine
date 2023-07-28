@@ -41,7 +41,7 @@ struct JobItemDesc
 
 using EJobStatus = ESkrJobItemStatus;
 
-struct RUNTIME_STATIC_API JobItem
+struct SKR_STATIC_API JobItem
 {
     friend struct JobQueue;
     friend struct JobThreadFunction;
@@ -92,7 +92,7 @@ private:
 
 using JobQueueThreadList = eastl::list<JobQueueThread*>;
 
-struct RUNTIME_STATIC_API JobQueue
+struct SKR_STATIC_API JobQueue
 {
 public:
     JobQueue(const JobQueueDesc& desc) SKR_NOEXCEPT;
@@ -150,7 +150,7 @@ private:
     SAtomic32 cancel_requested = 0;
 };
 
-struct RUNTIME_STATIC_API ThreadedJobQueueFutureJob : public skr::JobItem
+struct SKR_STATIC_API ThreadedJobQueueFutureJob : public skr::JobItem
 {
     ThreadedJobQueueFutureJob(JobQueue* Q) SKR_NOEXCEPT;
     virtual ~ThreadedJobQueueFutureJob() SKR_NOEXCEPT;
@@ -169,7 +169,7 @@ struct RUNTIME_STATIC_API ThreadedJobQueueFutureJob : public skr::JobItem
 };
 
 template<typename Artifact, typename JobBaseType = ThreadedJobQueueFutureJob>
-struct RUNTIME_STATIC_API ThreadedJobQueueFuture : public skr::IFuture<Artifact>
+struct SKR_STATIC_API ThreadedJobQueueFuture : public skr::IFuture<Artifact>
 {
     template<typename F, typename... Args>
     ThreadedJobQueueFuture(skr::JobQueue* Q, F&& _f, Args&&... args)

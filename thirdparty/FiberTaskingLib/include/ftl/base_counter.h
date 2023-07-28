@@ -57,7 +57,7 @@ TaskScheduler* GetScheduler();
  *
  * You should never use this class directly. Use the other AtomicCounter-type classes
  */
-class RUNTIME_API BaseCounter
+class SKR_RUNTIME_API BaseCounter
 {
 
 public:

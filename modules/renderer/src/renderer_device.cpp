@@ -1,4 +1,3 @@
-#include "pch.hpp"
 #include "cgpu/io.h"
 #include "cgpu/extensions/cgpu_nsight.h"
 #include "SkrRT/misc/make_zeroed.hpp"

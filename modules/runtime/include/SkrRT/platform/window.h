@@ -28,25 +28,25 @@ typedef struct SWindowDescroptor {
 extern "C" {
 #endif
 
-RUNTIME_API void skr_get_all_monitors(uint32_t* count, SMonitorHandle* monitors);
-RUNTIME_API void skr_monitor_get_extent(SMonitorHandle monitor, int32_t* width, int32_t* height);
-RUNTIME_API void skr_monitor_get_position(SMonitorHandle monitor, int32_t* x, int32_t* y);
-RUNTIME_API bool skr_monitor_get_ddpi(SMonitorHandle monitor, float* ddpi, float* hdpi, float* vdpi);
+SKR_RUNTIME_API void skr_get_all_monitors(uint32_t* count, SMonitorHandle* monitors);
+SKR_RUNTIME_API void skr_monitor_get_extent(SMonitorHandle monitor, int32_t* width, int32_t* height);
+SKR_RUNTIME_API void skr_monitor_get_position(SMonitorHandle monitor, int32_t* x, int32_t* y);
+SKR_RUNTIME_API bool skr_monitor_get_ddpi(SMonitorHandle monitor, float* ddpi, float* hdpi, float* vdpi);
 
-RUNTIME_API SWindowHandle skr_create_window(const char8_t* name, const SWindowDescroptor* desc);
-RUNTIME_API void skr_show_window(SWindowHandle window);
-RUNTIME_API void skr_window_set_title(SWindowHandle window, const char8_t* name);
-RUNTIME_API void skr_window_set_extent(SWindowHandle window, int32_t width, int32_t height);
-RUNTIME_API void skr_window_set_position(SWindowHandle window, int32_t x, int32_t y);
-RUNTIME_API void skr_window_get_extent(SWindowHandle window, int32_t* width, int32_t* height);
-RUNTIME_API void skr_window_get_position(SWindowHandle window, int32_t* x, int32_t* y);
-RUNTIME_API bool skr_window_is_minimized(SWindowHandle window);
-RUNTIME_API bool skr_window_is_focused(SWindowHandle window);
+SKR_RUNTIME_API SWindowHandle skr_create_window(const char8_t* name, const SWindowDescroptor* desc);
+SKR_RUNTIME_API void skr_show_window(SWindowHandle window);
+SKR_RUNTIME_API void skr_window_set_title(SWindowHandle window, const char8_t* name);
+SKR_RUNTIME_API void skr_window_set_extent(SWindowHandle window, int32_t width, int32_t height);
+SKR_RUNTIME_API void skr_window_set_position(SWindowHandle window, int32_t x, int32_t y);
+SKR_RUNTIME_API void skr_window_get_extent(SWindowHandle window, int32_t* width, int32_t* height);
+SKR_RUNTIME_API void skr_window_get_position(SWindowHandle window, int32_t* x, int32_t* y);
+SKR_RUNTIME_API bool skr_window_is_minimized(SWindowHandle window);
+SKR_RUNTIME_API bool skr_window_is_focused(SWindowHandle window);
 
-RUNTIME_API SWindowHandle skr_get_mouse_focused_window();
-RUNTIME_API void* skr_window_get_native_handle(SWindowHandle window);
-RUNTIME_API void* skr_window_get_native_view(SWindowHandle window);
-RUNTIME_API void skr_free_window(SWindowHandle window);
+SKR_RUNTIME_API SWindowHandle skr_get_mouse_focused_window();
+SKR_RUNTIME_API void* skr_window_get_native_handle(SWindowHandle window);
+SKR_RUNTIME_API void* skr_window_get_native_view(SWindowHandle window);
+SKR_RUNTIME_API void skr_free_window(SWindowHandle window);
 
 #ifdef __cplusplus
 }

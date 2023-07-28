@@ -22,26 +22,26 @@ struct STypeRegistry
     virtual void invalidate_type(skr_guid_t tid) = 0;
     virtual bool is_outdated(const skr_type_t* type) = 0;
 };
-RUNTIME_API STypeRegistry* GetTypeRegistry();
+SKR_RUNTIME_API STypeRegistry* GetTypeRegistry();
 
-RUNTIME_API uint64_t Hash(bool value, uint64_t base);
-RUNTIME_API uint64_t Hash(int32_t value, uint64_t base);
-RUNTIME_API uint64_t Hash(int64_t value, uint64_t base);
-RUNTIME_API uint64_t Hash(uint32_t value, uint64_t base);
-RUNTIME_API uint64_t Hash(uint64_t value, uint64_t base);
-RUNTIME_API uint64_t Hash(float value, uint64_t base);
-RUNTIME_API uint64_t Hash(const skr_float2_t& value, uint64_t base);
-RUNTIME_API uint64_t Hash(const skr_float3_t& value, uint64_t base);
-RUNTIME_API uint64_t Hash(const skr_float4_t& value, uint64_t base);
-RUNTIME_API uint64_t Hash(const skr_float4x4_t& value, uint64_t base);
-RUNTIME_API uint64_t Hash(const skr_quaternion_t& value, uint64_t base);
-RUNTIME_API uint64_t Hash(const skr_rotator_t& value, uint64_t base);
-RUNTIME_API uint64_t Hash(double value, uint64_t base);
-RUNTIME_API uint64_t Hash(const skr_guid_t& value, uint64_t base);
-RUNTIME_API uint64_t Hash(const skr_md5_t& value, uint64_t base);
-RUNTIME_API uint64_t Hash(const skr_resource_handle_t& value, uint64_t base);
-RUNTIME_API uint64_t Hash(const skr::string& value, uint64_t base);
-RUNTIME_API uint64_t Hash(const skr::string_view& value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(bool value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(int32_t value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(int64_t value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(uint32_t value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(uint64_t value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(float value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(const skr_float2_t& value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(const skr_float3_t& value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(const skr_float4_t& value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(const skr_float4x4_t& value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(const skr_quaternion_t& value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(const skr_rotator_t& value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(double value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(const skr_guid_t& value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(const skr_md5_t& value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(const skr_resource_handle_t& value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(const skr::string& value, uint64_t base);
+SKR_RUNTIME_API uint64_t Hash(const skr::string_view& value, uint64_t base);
 
 template <class T>
 auto GetCopyCtor();
@@ -51,7 +51,7 @@ auto GetMoveCtor();
 } // namespace skr
 #endif
 
-struct RUNTIME_API skr_type_t {
+struct SKR_RUNTIME_API skr_type_t {
     skr_type_category_t type SKR_IF_CPP(= SKR_TYPE_CATEGORY_INVALID);
 #ifdef __cplusplus
     skr_type_t() = default;
@@ -87,13 +87,13 @@ struct RUNTIME_API skr_type_t {
 #endif
 };
 
-struct RUNTIME_API skr_field_t {
+struct SKR_RUNTIME_API skr_field_t {
     const char8_t* name SKR_IF_CPP(= nullptr);
     const skr_type_t* type SKR_IF_CPP(= nullptr);
     uint64_t offset SKR_IF_CPP(= 0);
 };
 
-struct SKR_ALIGNAS(16) RUNTIME_API skr_value_t {
+struct SKR_ALIGNAS(16) SKR_RUNTIME_API skr_value_t {
     const skr_type_t* type SKR_IF_CPP(= nullptr);
     union
     {
@@ -150,7 +150,7 @@ private:
 #endif
 };
 
-struct SKR_ALIGNAS(16) RUNTIME_API skr_poly_value_t {
+struct SKR_ALIGNAS(16) SKR_RUNTIME_API skr_poly_value_t {
     const skr_type_t* type SKR_IF_CPP(= nullptr);
     union
     {
@@ -159,7 +159,7 @@ struct SKR_ALIGNAS(16) RUNTIME_API skr_poly_value_t {
     };
 };
 
-struct RUNTIME_API skr_value_ref_t {
+struct SKR_RUNTIME_API skr_value_ref_t {
     void* ptr = nullptr;
     const skr_type_t* type = nullptr;
 #ifdef __cplusplus
@@ -195,7 +195,7 @@ struct RUNTIME_API skr_value_ref_t {
 #endif
 };
 
-struct RUNTIME_API skr_method_t {
+struct SKR_RUNTIME_API skr_method_t {
     const char* name SKR_IF_CPP(= nullptr);
     const skr_type_t* retType SKR_IF_CPP(= nullptr);
     const skr_field_t* parameters SKR_IF_CPP(= nullptr);
@@ -314,7 +314,7 @@ struct MD5Type : skr_type_t {
     }
 };
 // handle
-struct RUNTIME_API HandleType : skr_type_t {
+struct SKR_RUNTIME_API HandleType : skr_type_t {
     const struct skr_type_t* pointee;
     HandleType(const skr_type_t* pointee)
         : skr_type_t{ SKR_TYPE_CATEGORY_HANDLE }
@@ -323,21 +323,21 @@ struct RUNTIME_API HandleType : skr_type_t {
     }
 };
 // skr::string
-struct RUNTIME_API StringType : skr_type_t {
+struct SKR_RUNTIME_API StringType : skr_type_t {
     StringType()
         : skr_type_t{ SKR_TYPE_CATEGORY_STR }
     {
     }
 };
 // skr::string_view
-struct RUNTIME_API StringViewType : skr_type_t {
+struct SKR_RUNTIME_API StringViewType : skr_type_t {
     StringViewType()
         : skr_type_t{ SKR_TYPE_CATEGORY_STRV }
     {
     }
 };
 // T[]
-struct RUNTIME_API ArrayType : skr_type_t {
+struct SKR_RUNTIME_API ArrayType : skr_type_t {
     const struct skr_type_t* elementType;
     uint64_t num;
     uint64_t size;
@@ -363,7 +363,7 @@ struct ObjectMethodTable {
     json::error_code (*DeserializeText)(void* self, json::value_t&& reader);
 };
 // skr::span<T>
-struct RUNTIME_API ArrayViewType : skr_type_t {
+struct SKR_RUNTIME_API ArrayViewType : skr_type_t {
     const struct skr_type_t* elementType;
     skr::string name;
     ArrayViewType(const skr_type_t* elementType)
@@ -383,13 +383,13 @@ struct DynArrayStorage
 struct DynArrayType : skr_type_t {
     const struct skr_type_t* elementType;
     skr::string name;
-    RUNTIME_API uint64_t Num(void* data) const;
-    RUNTIME_API void* Get(void* data, uint64_t index) const;
-    RUNTIME_API void Reset(void* data, uint64_t size) const;
-    RUNTIME_API void Reserve(void* data, uint64_t size) const;
-    RUNTIME_API void Resize(void* data, uint64_t size) const;
-    RUNTIME_API void* Insert(void* data, uint64_t index) const;
-    RUNTIME_API void Erase(void* data, uint64_t index, bool bKeepOrder) const;
+    SKR_RUNTIME_API uint64_t Num(void* data) const;
+    SKR_RUNTIME_API void* Get(void* data, uint64_t index) const;
+    SKR_RUNTIME_API void Reset(void* data, uint64_t size) const;
+    SKR_RUNTIME_API void Reserve(void* data, uint64_t size) const;
+    SKR_RUNTIME_API void Resize(void* data, uint64_t size) const;
+    SKR_RUNTIME_API void* Insert(void* data, uint64_t index) const;
+    SKR_RUNTIME_API void Erase(void* data, uint64_t index, bool bKeepOrder) const;
     DynArrayType(const skr_type_t* elementType)
         : skr_type_t{ SKR_TYPE_CATEGORY_DYNARR }
         , elementType(elementType)
@@ -399,7 +399,7 @@ private:
     void Grow(void* data, uint64_t size) const;
 };
 // struct/class T
-struct RUNTIME_API RecordType : skr_type_t {
+struct SKR_RUNTIME_API RecordType : skr_type_t {
     uint64_t size = 0;
     uint64_t align = 0;
     skr_guid_t guid = {};
@@ -428,7 +428,7 @@ struct RUNTIME_API RecordType : skr_type_t {
     }
 };
 // enum T
-struct RUNTIME_API EnumType : skr_type_t {
+struct SKR_RUNTIME_API EnumType : skr_type_t {
     const skr_type_t* underlyingType;
     const skr::string_view name = {};
     skr_guid_t guid;
@@ -455,7 +455,7 @@ struct RUNTIME_API EnumType : skr_type_t {
     }
 };
 // T*, T&, skr::SPtr<T>
-struct RUNTIME_API ReferenceType : skr_type_t {
+struct SKR_RUNTIME_API ReferenceType : skr_type_t {
     enum Ownership
     {
         Observed,
@@ -484,12 +484,12 @@ namespace type
 // void*
 template <>
 struct type_of<void*> {
-    RUNTIME_API static const skr_type_t* get();
+    SKR_RUNTIME_API static const skr_type_t* get();
 };
 // SInterface*
 template<>
 struct type_of<SInterface> {
-    RUNTIME_API static const skr_type_t* get();
+    SKR_RUNTIME_API static const skr_type_t* get();
 };
 // const wrapper
 template <class T>
@@ -508,7 +508,7 @@ struct type_of<volatile T> {
     }
 };
 // ptr wrapper
-RUNTIME_API const skr_type_t* make_pointer_type(const skr_type_t* type);
+SKR_RUNTIME_API const skr_type_t* make_pointer_type(const skr_type_t* type);
 template <class T>
 struct type_of<T*> {
     static const skr_type_t* get()
@@ -517,7 +517,7 @@ struct type_of<T*> {
     }
 };
 // ref wrapper
-RUNTIME_API const skr_type_t* make_reference_type(const skr_type_t* type);
+SKR_RUNTIME_API const skr_type_t* make_reference_type(const skr_type_t* type);
 template <class T>
 struct type_of<T&> {
     static const skr_type_t* get()
@@ -526,7 +526,7 @@ struct type_of<T&> {
     }
 };
 
-RUNTIME_API const skr_type_t* make_dynarray_type(const skr_type_t* type);
+SKR_RUNTIME_API const skr_type_t* make_dynarray_type(const skr_type_t* type);
 template <class V, class T>
 struct type_of_vector {
     static const skr_type_t* get()
@@ -540,7 +540,7 @@ struct type_of<skr::vector<T, Allocator>> : type_of_vector<skr::vector<T, Alloca
 {
 };
 
-RUNTIME_API const skr_type_t* make_array_type(const skr_type_t* type, uint64_t num, uint64_t size);
+SKR_RUNTIME_API const skr_type_t* make_array_type(const skr_type_t* type, uint64_t num, uint64_t size);
 template <class T, uint64_t N>
 struct type_of<T[N]> {
     static const skr_type_t* get()
@@ -549,7 +549,7 @@ struct type_of<T[N]> {
     }
 };
 
-RUNTIME_API const skr_type_t* make_array_view_type(const skr_type_t* type);
+SKR_RUNTIME_API const skr_type_t* make_array_view_type(const skr_type_t* type);
 template <class T, uint64_t size>
 struct type_of<skr::span<T, size>> {
     static const skr_type_t* get()

@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "SkrShaderCompiler/dxc_compiler.hpp"
 #include "SkrShaderCompiler/assets/shader_asset.hpp"
 

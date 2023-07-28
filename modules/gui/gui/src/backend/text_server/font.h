@@ -180,7 +180,7 @@ public:
     virtual int64_t            get_face_count() const;
 
     Font();
-    ~Font();
+    virtual ~Font();
 };
 
 /*************************************************************************/
@@ -378,7 +378,7 @@ public:
     virtual int32_t get_glyph_index(int p_size, char32_t p_char, char32_t p_variation_selector = 0x0000) const;
 
     FontFile();
-    ~FontFile();
+    virtual ~FontFile();
 };
 
 } // namespace godot

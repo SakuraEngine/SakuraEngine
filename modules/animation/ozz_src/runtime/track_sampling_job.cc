@@ -24,7 +24,6 @@
 // DEALINGS IN THE SOFTWARE.                                                  //
 //                                                                            //
 //----------------------------------------------------------------------------//
-#include "../pch.hpp"
 #include "SkrAnim/ozz/track_sampling_job.h"
 #include "SkrAnim/ozz/track.h"
 #include "SkrAnim/ozz/base/maths/math_ex.h"

@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include <EASTL/fixed_vector.h>
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/containers/sptr.hpp"

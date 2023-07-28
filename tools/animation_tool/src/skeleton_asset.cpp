@@ -1,4 +1,3 @@
-#include "pch.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 #include "SkrAnimTool/skeleton_asset.h"
 #include "SkrAnim/ozz/skeleton.h"

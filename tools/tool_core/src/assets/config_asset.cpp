@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "SkrRT/type/type.hpp"
 #include "SkrRT/resource/config_resource.h"
 #include "SkrRT/misc/log.hpp"

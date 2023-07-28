@@ -147,7 +147,7 @@ inline static SDL_Scancode KeyCodeTranslator(EKeyCode keycode)
     }
 }
 
-RUNTIME_API bool skr_key_down(EKeyCode key_code)
+SKR_RUNTIME_API bool skr_key_down(EKeyCode key_code)
 {
     const Uint8* keystate = SDL_GetKeyboardState(NULL);
     switch (key_code)
@@ -178,7 +178,7 @@ Uint32 MouseKeyCodeTranslator(EMouseKey keycode)
     }
 }
 
-RUNTIME_API bool skr_mouse_key_down(EMouseKey key_code)
+SKR_RUNTIME_API bool skr_mouse_key_down(EMouseKey key_code)
 {
     int x, y;
     Uint32 button = SDL_GetGlobalMouseState(&x, &y);
@@ -187,7 +187,7 @@ RUNTIME_API bool skr_mouse_key_down(EMouseKey key_code)
     return false;
 }
 
-RUNTIME_API bool skr_set_cursor_pos(int32_t x, int32_t y)
+SKR_RUNTIME_API bool skr_set_cursor_pos(int32_t x, int32_t y)
 {
     SDL_WarpMouseInWindow(NULL, x, y);
     return true;
@@ -213,7 +213,7 @@ SDL_SystemCursor MouseCursorTranslator(EMouseCursor cursor)
     }
 }
 
-RUNTIME_API bool skr_set_cursor(EMouseCursor cursor)
+SKR_RUNTIME_API bool skr_set_cursor(EMouseCursor cursor)
 {
     if (cursor == MOUSE_CURSOR_Hide)
     {

@@ -24,7 +24,6 @@
 // DEALINGS IN THE SOFTWARE.                                                  //
 //                                                                            //
 //----------------------------------------------------------------------------//
-#include "../../pch.hpp"
 #include "SkrAnim/ozz/base/maths/simd_math.h"
 
 namespace ozz {

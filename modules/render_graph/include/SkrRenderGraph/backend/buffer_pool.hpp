@@ -17,8 +17,8 @@ public:
     };
     struct PooledBuffer
     {
-        RUNTIME_FORCEINLINE PooledBuffer() = delete;
-        RUNTIME_FORCEINLINE PooledBuffer(CGPUBufferId buffer, ECGPUResourceState state, AllocationMark mark)
+        SKR_FORCEINLINE PooledBuffer() = delete;
+        SKR_FORCEINLINE PooledBuffer(CGPUBufferId buffer, ECGPUResourceState state, AllocationMark mark)
             : buffer(buffer), state(state), mark(mark)
         {
 

@@ -151,7 +151,7 @@ CGPUFenceId cgpu_create_fence_metal(CGPUDeviceId device)
     return &MF->super;
 }
 
-RUNTIME_API void cgpu_free_fence_metal(CGPUFenceId fence)
+SKR_RUNTIME_API void cgpu_free_fence_metal(CGPUFenceId fence)
 {
     CGPUFence_Metal* MF = (CGPUFence_Metal*)fence;
     MF->pMtlSemaphore = nil;

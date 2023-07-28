@@ -123,33 +123,33 @@ extern const char* $name;
 #endif
 
 #ifdef __cplusplus
-    #define RUNTIME_EXTERN_C extern "C"
+    #define SKR_EXTERN_C extern "C"
 #else
-    #define RUNTIME_EXTERN_C extern
+    #define SKR_EXTERN_C extern
 #endif
 
 #if defined(__cplusplus)
-    #define SKRENUM(inttype) : inttype
+    #define SKR_ENUM(inttype) : inttype
 #else
-    #define SKRENUM(inttype)
+    #define SKR_ENUM(inttype)
 #endif
 
-#ifndef RUNTIME_IMPORT
+#ifndef SKR_IMPORT
     #if defined(_MSC_VER)
-        #define RUNTIME_IMPORT __declspec(dllimport)
+        #define SKR_IMPORT __declspec(dllimport)
     #else
-        #define RUNTIME_IMPORT __attribute__((visibility("default")))
+        #define SKR_IMPORT __attribute__((visibility("default")))
     #endif
 #endif
 
-#ifndef RUNTIME_EXPORT
+#ifndef SKR_EXPORT
     #if defined(_MSC_VER)
         // MSVC linker trims symbols, the 'dllexport' attribute prevents this.
         // But we are not archiving DLL files with SHIPPING_ONE_ARCHIVE mode.
         // TODO: do something with this workaround
-        #define RUNTIME_EXPORT __declspec(dllexport)
+        #define SKR_EXPORT __declspec(dllexport)
     #else
-        #define RUNTIME_EXPORT __attribute__((visibility("default")))
+        #define SKR_EXPORT __attribute__((visibility("default")))
     #endif
 #endif
 
@@ -177,39 +177,33 @@ extern const char* $name;
     #endif
 #endif
 
-#ifndef RUNTIME_STATIC_API
-    #define RUNTIME_STATIC_API
+#ifndef SKR_STATIC_API
+    #define SKR_STATIC_API
 #endif
 
-#ifdef RUNTIME_IMPL
-    #ifndef RUNTIME_API
-        #define RUNTIME_API RUNTIME_EXPORT
-    #endif
-#endif
-
-#ifndef RUNTIME_API // If the build file hasn't already defined this to be dllexport...
+#ifndef SKR_RUNTIME_API // If the build file hasn't already defined this to be dllexport...
     #ifdef RUNTIME_SHARED
         #if defined(_MSC_VER)
-            #define RUNTIME_API __declspec(dllimport)
-            #define RUNTIME_LOCAL
+            #define SKR_RUNTIME_API __declspec(dllimport)
+            #define SKR_RUNTIME_LOCAL
         #elif defined(__CYGWIN__)
-            #define RUNTIME_API __attribute__((dllimport))
-            #define RUNTIME_LOCAL
+            #define SKR_RUNTIME_API __attribute__((dllimport))
+            #define SKR_RUNTIME_LOCAL
         #elif (defined(__GNUC__) && (__GNUC__ >= 4))
-            #define RUNTIME_API __attribute__((visibility("default")))
-            #define RUNTIME_LOCAL __attribute__((visibility("hidden")))
+            #define SKR_RUNTIME_API __attribute__((visibility("default")))
+            #define SKR_RUNTIME_LOCAL __attribute__((visibility("hidden")))
         #else
-            #define RUNTIME_API
-            #define RUNTIME_LOCAL
+            #define SKR_RUNTIME_API
+            #define SKR_RUNTIME_LOCAL
         #endif
     #else
-        #define RUNTIME_API
-        #define RUNTIME_LOCAL
+        #define SKR_RUNTIME_API
+        #define SKR_RUNTIME_LOCAL
     #endif
 #endif
 
 #ifndef SKR_IMPORT_API
-    #define SKR_IMPORT_API RUNTIME_EXTERN_C RUNTIME_IMPORT
+    #define SKR_IMPORT_API SKR_EXTERN_C SKR_IMPORT
 #endif
 
 #if defined(__cplusplus)
@@ -326,7 +320,7 @@ typedef int64_t host_ptr_t;
     #error Unknown language dialect
 #endif
 
-#ifndef RUNTIME_MANUAL_CONFIG_CPU_TRAITS
+#ifndef SKR_MANUAL_CONFIG_CPU_TRAITS
     #if defined(__AVX__)
         #define SKR_PLATFORM_AVX
     #endif
@@ -371,73 +365,73 @@ typedef int64_t host_ptr_t;
     #endif
 #endif
 
-#ifndef RUNTIME_MANUAL_CONFIG_COMPILER
+#ifndef SKR_MANUAL_CONFIG_COMPILER
     #if defined(_MSC_VER)
-        #define RUNTIME_COMPILER_MSVC
+        #define SKR_COMPILER_MSVC
     #endif
 
     #if defined(__clang__)
-        #define RUNTIME_COMPILER_CLANG
+        #define SKR_COMPILER_CLANG
     #elif defined(__GNUC__)
-        #define RUNTIME_COMPILER_GCC
+        #define SKR_COMPILER_GCC
     #elif defined(_MSC_VER)
     #else
         #error Unrecognized compiler was used.
     #endif
 #endif
 
-#if defined(RUNTIME_COMPILER_MSVC) && !defined(RUNTIME_COMPILER_CLANG)
+#if defined(SKR_COMPILER_MSVC) && !defined(SKR_COMPILER_CLANG)
 #define SKR_TEMPLATE
 #else
 #define SKR_TEMPLATE template
 #endif
 
-#ifndef RUNTIME_MANUAL_CONFIG_COMPILER_TRAITS
-    #if defined(RUNTIME_COMPILER_MSVC)
-        #define RUNTIME_COMPILER_VERSION _MSC_VER
-    #elif defined(RUNTIME_COMPILER_CLANG)
-        #define RUNTIME_COMPILER_VERSION (__clang_major__ * 100 + __clang_minor__)
-    #elif defined(RUNTIME_COMPILER_GCC)
-        #define RUNTIME_COMPILER_VERSION (__GNUC__ * 1000 + __GNUC_MINOR__)
+#ifndef SKR_MANUAL_CONFIG_COMPILER_TRAITS
+    #if defined(SKR_COMPILER_MSVC)
+        #define SKR_COMPILER_VERSION _MSC_VER
+    #elif defined(SKR_COMPILER_CLANG)
+        #define SKR_COMPILER_VERSION (__clang_major__ * 100 + __clang_minor__)
+    #elif defined(SKR_COMPILER_GCC)
+        #define SKR_COMPILER_VERSION (__GNUC__ * 1000 + __GNUC_MINOR__)
     #endif
 #endif
 
-#ifndef RUNTIME_MANUAL_CONFIG_CPP_STANDARD
-    #if (defined(RUNTIME_COMPILER_CLANG) || defined(RUNTIME_COMPILER_GCC))
+#ifndef SKR_MANUAL_CONFIG_CPP_STANDARD
+    #if (defined(SKR_COMPILER_CLANG) || defined(SKR_COMPILER_GCC))
         #if __cplusplus >= 201703L
-            #define RUNTIME_COMPILER_CPP17
+            #define SKR_COMPILER_CPP17
         #endif
         #if __cplusplus >= 201402L
-            #define RUNTIME_COMPILER_CPP14
+            #define SKR_COMPILER_CPP14
         #endif
-    #elif defined(RUNTIME_COMPILER_MSVC)
-        #if (RUNTIME_COMPILER_VERSION >= 1920) // VS 2019
-            #define RUNTIME_COMPILER_CPP17
+    #elif defined(SKR_COMPILER_MSVC)
+        #if (SKR_COMPILER_VERSION >= 1920) // VS 2019
+            #define SKR_COMPILER_CPP17
         #endif
-        #if (RUNTIME_COMPILER_VERSION >= 1910) // VS 2017
-            #define RUNTIME_COMPILER_CPP14
+        #if (SKR_COMPILER_VERSION >= 1910) // VS 2017
+            #define SKR_COMPILER_CPP14
         #endif
     #else
         #error "Failed to delect C++ standard version."
     #endif
-#endif // RUNTIME_MANUAL_CONFIG_CPP_STANDARD_VERSION
+#endif // SKR_MANUAL_CONFIG_CPP_STANDARD_VERSION
 
 // no vtable
 #ifdef _MSC_VER
-    #define RUNTIME_NOVTABLE __declspec(novtable)
+    #define SKR_NOVTABLE __declspec(novtable)
 #else
-    #define RUNTIME_NOVTABLE
+    #define SKR_NOVTABLE
 #endif
 
 // inline defs
-#ifndef RUNTIME_FORCEINLINE
-    #ifdef RUNTIME_COMPILER_MSVC
-        #define RUNTIME_FORCEINLINE __forceinline
+#ifndef SKR_FORCEINLINE
+    #ifdef SKR_COMPILER_MSVC
+        #define SKR_FORCEINLINE __forceinline
     #else
-        #define RUNTIME_FORCEINLINE inline
+        #define SKR_FORCEINLINE inline
     #endif
 #endif
-#define RUNTIME_INLINE inline
+#define SKR_INLINE inline
 #ifdef __cplusplus
     // By Default we use cpp-standard above 2011XXL
     #define SKR_NOEXCEPT noexcept

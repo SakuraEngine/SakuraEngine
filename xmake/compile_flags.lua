@@ -13,6 +13,11 @@ target("SkrCompileFlags")
             end
 
             if is_clang then
+                -- table.insert(project_cxflags, "-Werror")
+                -- table.insert(project_cxflags, "-Wno-invalid-offsetof")
+                table.insert(project_cxflags, "-Wno-unused-private-field")
+                table.insert(project_cxflags, "-Wno-deprecated-builtins")
+                table.insert(project_cxflags, "-Wno-pragma-system-header-outside-header")
                 table.insert(project_cxflags, "-Wno-ambiguous-reversed-operator")
                 table.insert(project_cxflags, "-Wno-unused-command-line-argument")
                 table.insert(project_cxflags, "-Wno-format")
@@ -28,8 +33,9 @@ target("SkrCompileFlags")
                 table.insert(project_cxflags, "-Werror=return-type")
                 -- enable time trace with clang compiler
                 table.insert(project_cxflags, "-ftime-trace")
-                if(has_config("is_msvc")) then
+                if is_msvc then
                     table.insert(project_cxflags, "-Wno-microsoft-cast")
+                    table.insert(project_cxflags, "-Wno-microsoft-include")
                     table.insert(project_cxflags, "-Wno-microsoft-enum-forward-reference")
                     if (is_mode("asan")) then
                         table.insert(project_ldflags, "-fsanitize=address")

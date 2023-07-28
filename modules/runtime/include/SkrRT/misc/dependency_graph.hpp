@@ -6,7 +6,7 @@ namespace skr
 {
 typedef uint64_t dep_graph_handle_t;
 class DependencyGraphEdge;
-class DependencyGraphNode
+class SKR_STATIC_API DependencyGraphNode
 {
     friend class DependencyGraphImpl;
 public:
@@ -30,7 +30,7 @@ private:
     dep_graph_handle_t id;
 };
 
-class DependencyGraphEdge
+class SKR_STATIC_API DependencyGraphEdge
 {
     friend class DependencyGraphImpl;
 
@@ -51,7 +51,7 @@ protected:
     dep_graph_handle_t to_node;
 };
 
-class DependencyGraph
+class SKR_STATIC_API DependencyGraph
 {
 public:
     using Node = DependencyGraphNode;

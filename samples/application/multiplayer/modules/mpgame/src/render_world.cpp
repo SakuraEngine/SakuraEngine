@@ -241,7 +241,7 @@ void MPRenderWorld::Update()
                 auto gameRotation = gameRotations[i].euler.yaw;
                 auto gameTranslation = skr::math::load(gameTranslations[i].value);
                 auto gameScale = skr::math::load(gameScales[i].value);
-                auto rotation = rotations[r_id + i].euler.yaw;
+                // auto rotation = rotations[r_id + i].euler.yaw;
                 auto translation = skr::math::load(translations[r_id + i].value);
                 auto scale = skr::math::load(scales[r_id + i].value);
                 //TODO: angle interpolation

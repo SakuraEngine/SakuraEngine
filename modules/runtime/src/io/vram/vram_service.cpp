@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "SkrRT/async/wait_timeout.hpp"
 #include "../dstorage/dstorage_resolvers.hpp"
 
@@ -49,8 +48,8 @@ VRAMService::VRAMService(const VRAMServiceDescriptor* desc) SKR_NOEXCEPT
     /*
     if (desc->use_dstorage)
         runner.ds_reader = VRAMUtils::CreateDSReader(this, desc);
-    runner.common_reader = VRAMUtils::CreateCommonReader(this, desc);
     */
+    runner.common_reader = VRAMUtils::CreateCommonReader(this, desc);
     runner.set_resolvers();
 
     if ((!desc->awake_at_request) && (desc->sleep_time > 2000))

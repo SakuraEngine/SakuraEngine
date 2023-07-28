@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "SkrGui/framework/widget/slot_widget.hpp"
 #include "SkrGui/framework/element/slot_element.hpp"
 

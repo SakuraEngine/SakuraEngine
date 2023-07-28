@@ -5,11 +5,17 @@
 namespace skr {
 namespace io {
 
-struct RUNTIME_API VRAMBuffer : public IVRAMIOBuffer
+struct SKR_RUNTIME_API VRAMBuffer : public IVRAMIOBuffer
 {
     IO_RC_OBJECT_BODY
 public:
     virtual ~VRAMBuffer() SKR_NOEXCEPT;
+
+    CGPUBufferId get_buffer() const SKR_NOEXCEPT
+    {
+        return buffer;
+    }
+    CGPUBufferId buffer = nullptr;
 
 public:
     SInterfaceDeleter custom_deleter() const 
@@ -31,12 +37,17 @@ protected:
     const ISmartPoolPtr<IVRAMIOBuffer> pool = nullptr;
 };
 
-struct RUNTIME_API VRAMTexture : public IVRAMIOTexture
+struct SKR_RUNTIME_API VRAMTexture : public IVRAMIOTexture
 {
     IO_RC_OBJECT_BODY
 public:
     virtual ~VRAMTexture() SKR_NOEXCEPT;
 
+    CGPUTextureId get_texture() const SKR_NOEXCEPT
+    {
+        return texture;
+    }
+    CGPUTextureId texture = nullptr;
     
 public:
     SInterfaceDeleter custom_deleter() const 

@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "SkrGui/backend/canvas/canvas.hpp"
 #include "SkrGui/framework/painting_context.hpp"
 #include "backend/paragraph/paragraph.hpp"

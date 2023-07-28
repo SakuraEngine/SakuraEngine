@@ -23,7 +23,7 @@ static const uint32_t kWin11_DevBuild = 21996;
 static const uint32_t kWin11_21H2 = 22000;
 static const uint32_t kWin11_22H2 = 22621;
 
-RUNTIME_EXTERN_C RUNTIME_API bool skr_win_is_file_on_ssd(const char8_t* file_path);
-RUNTIME_EXTERN_C RUNTIME_API bool skr_win_is_executable_on_ssd();
-RUNTIME_EXTERN_C RUNTIME_API bool skr_win_is_wine();
-RUNTIME_EXTERN_C RUNTIME_API bool skr_win_verify_version(uint32_t major, uint32_t minor);
+SKR_EXTERN_C SKR_RUNTIME_API bool skr_win_is_file_on_ssd(const char8_t* file_path);
+SKR_EXTERN_C SKR_RUNTIME_API bool skr_win_is_executable_on_ssd();
+SKR_EXTERN_C SKR_RUNTIME_API bool skr_win_is_wine();
+SKR_EXTERN_C SKR_RUNTIME_API bool skr_win_verify_version(uint32_t major, uint32_t minor);

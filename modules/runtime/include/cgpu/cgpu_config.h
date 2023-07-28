@@ -68,7 +68,7 @@
 #endif
 
 #ifndef CGPU_API
-#define CGPU_API RUNTIME_API
+#define CGPU_API SKR_RUNTIME_API
 #endif
 
 #ifndef CGPU_EXTERN_C

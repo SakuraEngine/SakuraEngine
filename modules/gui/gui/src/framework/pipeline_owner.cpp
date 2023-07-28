@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "SkrGui/framework/pipeline_owner.hpp"
 #include "SkrGui/framework/render_object/render_object.hpp"
 #include "SkrGui/framework/painting_context.hpp"

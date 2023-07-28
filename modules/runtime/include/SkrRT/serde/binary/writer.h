@@ -58,116 +58,116 @@ struct WriteTrait<const T&, std::enable_if_t<std::is_enum_v<T>>> {
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const bool&> {
+struct SKR_STATIC_API WriteTrait<const bool&> {
     static int Write(skr_binary_writer_t* writer, bool value);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const uint8_t&> {
+struct SKR_STATIC_API WriteTrait<const uint8_t&> {
     static int Write(skr_binary_writer_t* writer, uint8_t value);
     static int Write(skr_binary_writer_t* writer, uint8_t value, IntegerPackConfig<uint8_t> config);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const uint16_t&> {
+struct SKR_STATIC_API WriteTrait<const uint16_t&> {
     static int Write(skr_binary_writer_t* writer, uint16_t value);
     static int Write(skr_binary_writer_t* writer, uint16_t value, IntegerPackConfig<uint16_t> config);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const uint32_t&> {
+struct SKR_STATIC_API WriteTrait<const uint32_t&> {
     static int Write(skr_binary_writer_t* writer, uint32_t value);
     static int Write(skr_binary_writer_t* writer, uint32_t value, IntegerPackConfig<uint32_t> config);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const uint64_t&> {
+struct SKR_STATIC_API WriteTrait<const uint64_t&> {
     static int Write(skr_binary_writer_t* writer, uint64_t value);
     static int Write(skr_binary_writer_t* writer, uint64_t value, IntegerPackConfig<uint64_t> config);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const int32_t&> {
+struct SKR_STATIC_API WriteTrait<const int32_t&> {
     static int Write(skr_binary_writer_t* writer, int32_t value);
     static int Write(skr_binary_writer_t* writer, int32_t value, IntegerPackConfig<int32_t> config);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const int64_t&> {
+struct SKR_STATIC_API WriteTrait<const int64_t&> {
     static int Write(skr_binary_writer_t* writer, int64_t value);
     static int Write(skr_binary_writer_t* writer, int64_t value, IntegerPackConfig<int64_t> config);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const float&> {
+struct SKR_STATIC_API WriteTrait<const float&> {
     static int Write(skr_binary_writer_t* writer, float value);
     static int Write(skr_binary_writer_t* writer, float value, FloatingPackConfig<float> config);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const double&> {
+struct SKR_STATIC_API WriteTrait<const double&> {
     static int Write(skr_binary_writer_t* writer, double value);
     static int Write(skr_binary_writer_t* writer, double value, FloatingPackConfig<double> config);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const skr_float2_t&> {
+struct SKR_STATIC_API WriteTrait<const skr_float2_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_float2_t& value);
     static int Write(skr_binary_writer_t* writer, const skr_float2_t& value, VectorPackConfig<float> config);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const skr_float3_t&> {
+struct SKR_STATIC_API WriteTrait<const skr_float3_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_float3_t& value);
     static int Write(skr_binary_writer_t* writer, const skr_float3_t& value, VectorPackConfig<float> config);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const skr_rotator_t&> {
+struct SKR_STATIC_API WriteTrait<const skr_rotator_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_rotator_t& value);
     static int Write(skr_binary_writer_t* writer, const skr_rotator_t& value, VectorPackConfig<float> config);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const skr_float4_t&> {
+struct SKR_STATIC_API WriteTrait<const skr_float4_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_float4_t& value);
     static int Write(skr_binary_writer_t* writer, const skr_float4_t& value, VectorPackConfig<float> config);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const skr_quaternion_t&> {
+struct SKR_STATIC_API WriteTrait<const skr_quaternion_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_quaternion_t& value);
     static int Write(skr_binary_writer_t* writer, const skr_quaternion_t& value, VectorPackConfig<float> config);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const skr_float4x4_t&> {
+struct SKR_STATIC_API WriteTrait<const skr_float4x4_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_float4x4_t& value);
     static int Write(skr_binary_writer_t* writer, const skr_float4x4_t& value, VectorPackConfig<float> config);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const skr_guid_t&> {
+struct SKR_STATIC_API WriteTrait<const skr_guid_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_guid_t& guid);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const skr_md5_t&> {
+struct SKR_STATIC_API WriteTrait<const skr_md5_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_md5_t& MD5);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const skr::IBlob*&> {
+struct SKR_STATIC_API WriteTrait<const skr::IBlob*&> {
     static int Write(skr_binary_writer_t* writer, const skr::IBlob*& blob);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const skr::BlobId&> {
+struct SKR_STATIC_API WriteTrait<const skr::BlobId&> {
     static int Write(skr_binary_writer_t* writer, const skr::BlobId& blob);
 };
 
 template <>
-struct RUNTIME_STATIC_API WriteTrait<const skr_blob_arena_t&> {
+struct SKR_STATIC_API WriteTrait<const skr_blob_arena_t&> {
     static int Write(skr_binary_writer_t* writer, const skr_blob_arena_t& blob);
 };
 

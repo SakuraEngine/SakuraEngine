@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/log/logger.hpp"
 #include "misc/log/log_manager.hpp"
@@ -119,21 +118,21 @@ void Logger::notifyWorker() SKR_NOEXCEPT
 
 } } // namespace skr::log
 
-RUNTIME_EXTERN_C
+SKR_EXTERN_C
 void skr_log_set_level(int level)
 {
     const auto kLogLevel = skr::log::LogConstants::kLogLevelsLUT[level];
     skr::log::LogConstants::gLogLevel = kLogLevel;
 }
 
-RUNTIME_EXTERN_C 
+SKR_EXTERN_C 
 void skr_log_set_flush_behavior(int behavior)
 {
     const auto kLogBehavior = skr::log::LogConstants::kFlushBehaviorLUT[behavior];
     skr::log::LogConstants::gFlushBehavior = kLogBehavior;
 }
 
-RUNTIME_EXTERN_C 
+SKR_EXTERN_C 
 void skr_log_log(int level, const char* file, const char* func, const char* line, const char8_t* fmt, ...)
 {
     ZoneScopedN("Log");
@@ -151,7 +150,7 @@ void skr_log_log(int level, const char* file, const char* func, const char* line
     va_end(va_args);
 }
 
-RUNTIME_EXTERN_C 
+SKR_EXTERN_C 
 void skr_log_finalize_async_worker()
 {
     {

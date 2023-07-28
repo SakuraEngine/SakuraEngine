@@ -18,22 +18,22 @@ static inline int64_t int64MulDiv(int64_t value, int64_t numer, int64_t denom)
 }
 
 // High res timer functions
-RUNTIME_API int64_t skr_sys_get_usec(bool precise);
-RUNTIME_API int64_t skr_sys_get_timer_freq(void);
+SKR_RUNTIME_API int64_t skr_sys_get_usec(bool precise);
+SKR_RUNTIME_API int64_t skr_sys_get_timer_freq(void);
 
 // Time related functions
-RUNTIME_API uint32_t skr_sys_get_time(void);
-RUNTIME_API uint32_t skr_sys_get_time_since_start(void);
+SKR_RUNTIME_API uint32_t skr_sys_get_time(void);
+SKR_RUNTIME_API uint32_t skr_sys_get_time_since_start(void);
 
 /// Low res OS timer
 typedef struct STimer {
     uint32_t mStartTime;
 } STimer;
 
-RUNTIME_API void skr_init_timer(STimer* pTimer);
-RUNTIME_API void skr_timer_reset(STimer* pTimer);
-RUNTIME_API uint32_t skr_timer_get_msec(STimer* pTimer, bool reset);
-RUNTIME_API double skr_timer_get_seconds(STimer* pTimer, bool reset);
+SKR_RUNTIME_API void skr_init_timer(STimer* pTimer);
+SKR_RUNTIME_API void skr_timer_reset(STimer* pTimer);
+SKR_RUNTIME_API uint32_t skr_timer_get_msec(STimer* pTimer, bool reset);
+SKR_RUNTIME_API double skr_timer_get_seconds(STimer* pTimer, bool reset);
 
 /// High-resolution OS timer
 #define HIRES_TIMER_LENGTH_OF_HISTORY 60
@@ -44,12 +44,12 @@ typedef struct SHiresTimer {
     uint32_t mHistoryIndex;
 } SHiresTimer;
 
-RUNTIME_API void skr_init_hires_timer(SHiresTimer* pTimer);
-RUNTIME_API int64_t skr_hires_timer_get_usec(SHiresTimer* pTimer, bool reset);
-RUNTIME_API int64_t skr_hires_timer_get_usec_average(SHiresTimer* pTimer);
-RUNTIME_API double skr_hires_timer_get_seconds(SHiresTimer* pTimer, bool reset);
-RUNTIME_API double skr_hires_timer_get_secondsAverage(SHiresTimer* pTimer);
-RUNTIME_API void skr_hires_timer_reset(SHiresTimer* pTimer);
+SKR_RUNTIME_API void skr_init_hires_timer(SHiresTimer* pTimer);
+SKR_RUNTIME_API int64_t skr_hires_timer_get_usec(SHiresTimer* pTimer, bool reset);
+SKR_RUNTIME_API int64_t skr_hires_timer_get_usec_average(SHiresTimer* pTimer);
+SKR_RUNTIME_API double skr_hires_timer_get_seconds(SHiresTimer* pTimer, bool reset);
+SKR_RUNTIME_API double skr_hires_timer_get_secondsAverage(SHiresTimer* pTimer);
+SKR_RUNTIME_API void skr_hires_timer_reset(SHiresTimer* pTimer);
 
 #ifdef __cplusplus
 }

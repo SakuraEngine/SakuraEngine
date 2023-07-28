@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "SkrGui/render_objects/render_color_picker.hpp"
 #include "SkrGui/dev/gdi/color.hpp" // TODO. move to color
 #include "SkrGui/framework/painting_context.hpp"

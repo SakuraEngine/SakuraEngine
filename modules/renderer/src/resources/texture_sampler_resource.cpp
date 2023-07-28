@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "SkrRenderer/resources/texture_resource.h"
 
 namespace skr

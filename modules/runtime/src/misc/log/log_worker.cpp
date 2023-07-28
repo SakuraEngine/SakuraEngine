@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "SkrRT/misc/log.h"
 #include "SkrRT/misc/log/logger.hpp"
 #include "misc/log/log_manager.hpp"
@@ -319,7 +318,7 @@ void LogWorker::patternAndSink(const LogElement& e) SKR_NOEXCEPT
 
 } } // namespace skr::log
 
-RUNTIME_EXTERN_C 
+SKR_EXTERN_C 
 void skr_log_flush()
 {
     auto worker = skr::log::LogManager::TryGetWorker();
@@ -330,7 +329,7 @@ void skr_log_flush()
     }    
 }
 
-RUNTIME_EXTERN_C
+SKR_EXTERN_C
 void skr_log_initialize_async_worker()
 {
     skr::log::LogManager::Initialize();
