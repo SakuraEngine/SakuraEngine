@@ -59,7 +59,6 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     -- add deps & links
     add_deps("SkrDependencyGraph", "mimalloc", {public = false})
     add_deps("vulkan", {public = true})
-    add_packages(packages_list, {public = true})
 
     -- runtime compile definitions
     after_load(function (target,  opt)
@@ -72,7 +71,6 @@ shared_module("SkrRT", "RUNTIME", engine_version)
 
     -- link system libs/frameworks
     add_linkdirs("$(buildir)/$(os)/$(arch)/$(mode)", {public = true})
-    add_links(links_list, {public = true})
     if (is_os("windows")) then 
         add_syslinks("advapi32", "user32", "shell32", "Ole32", "Shlwapi", {public = true})
     else

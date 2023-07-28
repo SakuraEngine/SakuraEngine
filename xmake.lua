@@ -17,10 +17,6 @@ includes("xmake/options.lua")
 engine_version = "0.1.0"
 default_unity_batch_size = 16
 
-packages_list = {}
-links_list = {}
-generator_list = {}
-
 includes("xmake/compile_flags.lua")
 includes("xmake/rules.lua")
 
