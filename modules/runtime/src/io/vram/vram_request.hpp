@@ -15,6 +15,11 @@
 namespace skr {
 namespace io {
 
+template <>
+struct CID<struct VRAMIOStatusComponent> 
+{
+    static constexpr skr_guid_t Get() { return CID<IOStatusComponent>::Get(); } 
+};
 struct VRAMIOStatusComponent final : public IOStatusComponent
 {
     VRAMIOStatusComponent(IIORequest* const request) SKR_NOEXCEPT;

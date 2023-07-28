@@ -365,6 +365,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         render_model->buffer_io_requests.resize(drawable_count);
         render_model->buffer_destinations.resize(drawable_count);
         uint32_t index_buffer_cursor = 0;
+        auto batch = vram_service->open_batch(drawable_count);
         for(uint32_t i = 0; i < (uint32_t)drawable_count; i++)
         {
             const int32_t icount = csmModel->GetDrawableVertexIndexCount(i);
@@ -391,7 +392,8 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                     auto render_model = (skr_live2d_render_model_async_t*)data;
                     render_model->buffer_finish(future);
                 }, render_model);
-                buffer_destination = vram_service->request(request, &io_request);
+                auto result = batch->add_request(request, &io_request);
+                buffer_destination = skr::static_pointer_cast<skr::io::IVRAMIOBuffer>(result);
                 index_buffer_cursor += icount * sizeof(Csm::csmUint16);
             }
             else
@@ -400,6 +402,10 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
                 io_request.status = SKR_IO_STAGE_COMPLETED;
                 render_model->buffer_finish(&io_request);    
             }
+        }
+        if (!batch->get_requests().empty())
+        {
+            vram_service->request(batch);
         }
     }
 }
