@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "vram_request.hpp"
 
 namespace skr::io {

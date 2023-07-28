@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "SkrRT/platform/shared_library.hpp"
 #if defined(SKR_OS_UNIX)
     #include <dlfcn.h>

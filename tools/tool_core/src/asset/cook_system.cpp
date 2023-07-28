@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "SkrRT/module/module.hpp"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/misc/parallel_for.hpp"

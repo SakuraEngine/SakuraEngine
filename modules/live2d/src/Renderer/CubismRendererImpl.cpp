@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "Rendering/CubismRenderer.hpp"
 #include "CubismFramework.hpp"
 #include "Model/CubismModel.hpp"

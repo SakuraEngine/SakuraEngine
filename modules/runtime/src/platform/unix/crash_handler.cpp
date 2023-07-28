@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "../unix/crash_handler.hpp"
 
 SUnixCrashHandler::SUnixCrashHandler() SKR_NOEXCEPT

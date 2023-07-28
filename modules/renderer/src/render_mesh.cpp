@@ -1,4 +1,3 @@
-#include "pch.hpp"
 #include "SkrRT/platform/debug.h"
 #include "SkrRenderer/render_mesh.h"
 #include <SkrRT/platform/filesystem.hpp>

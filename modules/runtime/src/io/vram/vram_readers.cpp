@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "vram_readers.hpp"

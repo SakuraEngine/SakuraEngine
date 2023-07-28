@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "status_component.hpp"
 #include "blocks_component.hpp"
 #include "src_components.hpp"

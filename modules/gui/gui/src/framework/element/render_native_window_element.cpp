@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "SkrGui/framework/element/render_native_window_element.hpp"
 #include "SkrGui/framework/render_object/single_child_render_object.hpp"
 #include "SkrGui/framework/render_object/render_object.hpp"

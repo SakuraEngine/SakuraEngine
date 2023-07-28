@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/async/fib_task.hpp"
 #include "SkrToolCore/asset/importer.hpp"
