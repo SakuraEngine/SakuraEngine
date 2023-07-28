@@ -1,5 +1,7 @@
 sdl2_includes_dir = "$(projectdir)/thirdparty/SDL2"
-table.insert(include_dir_list, sdl2_includes_dir)
+
+target("SkrRoot")
+    add_includedirs(sdl2_includes_dir, {public = true})
 
 if (is_os("windows")) then 
     table.insert(links_list, "SDL2")

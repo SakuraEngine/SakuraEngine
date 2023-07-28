@@ -489,7 +489,7 @@ void csmMotionMap::request(skr_io_ram_service_t* ioService, L2DRequestCallbackDa
             pRequest = &request;
             pRequest_ = &request;
             auto file = settings->GetMotionFileName(group, j);
-            path = skr::format("{}/{}", data->u8HomePath, (const char8_t*)file);
+            path = skr::format(u8"{}/{}", data->u8HomePath, (const char8_t*)file);
             slot++;
         }
     }
