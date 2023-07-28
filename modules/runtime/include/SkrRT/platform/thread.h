@@ -17,11 +17,11 @@ typedef uint32_t SThreadID;
         #define THREAD_ID_MAX UINT32_MAX
         #define THREAD_ID_MIN ((uint32_t)0)
     #endif // !NX64
-    RUNTIME_EXTERN_C RUNTIME_API SThreadID skrGetCurrentPthreadID();
+    SKR_EXTERN_C SKR_RUNTIME_API SThreadID skrGetCurrentPthreadID();
 #endif
 
 #if defined(_WIN32) || defined(XBOX)
-    #define THREADS_API RUNTIME_API
+    #define THREADS_API SKR_RUNTIME_API
 typedef struct SCallOnceGuard {
     // INIT_ONCE
     unsigned char gdStorage_[sizeof(void*)];

@@ -5,7 +5,7 @@
 namespace skr {
 namespace io {
 
-struct RUNTIME_API VRAMBuffer : public IVRAMIOBuffer
+struct SKR_RUNTIME_API VRAMBuffer : public IVRAMIOBuffer
 {
     IO_RC_OBJECT_BODY
 public:
@@ -37,7 +37,7 @@ protected:
     const ISmartPoolPtr<IVRAMIOBuffer> pool = nullptr;
 };
 
-struct RUNTIME_API VRAMTexture : public IVRAMIOTexture
+struct SKR_RUNTIME_API VRAMTexture : public IVRAMIOTexture
 {
     IO_RC_OBJECT_BODY
 public:

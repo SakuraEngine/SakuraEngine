@@ -29,93 +29,93 @@ struct error_code_info {
     error_code code;
     const char* message; // do not use a fancy std::string where a simple C string will do (no alloc, no destructor)
 };
-RUNTIME_STATIC_API const char* error_message(error_code err) noexcept;
-RUNTIME_STATIC_API void set_error_message(error_code err) noexcept;
+SKR_STATIC_API const char* error_message(error_code err) noexcept;
+SKR_STATIC_API void set_error_message(error_code err) noexcept;
 template <class T>
 error_code Read(simdjson::ondemand::value&& json, T& value);
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<bool> {
+struct SKR_STATIC_API ReadTrait<bool> {
     static error_code Read(simdjson::ondemand::value&& json, bool& value);
 };
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<uint32_t> {
+struct SKR_STATIC_API ReadTrait<uint32_t> {
     static error_code Read(simdjson::ondemand::value&& json, uint32_t& value);
 };
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<uint64_t> {
+struct SKR_STATIC_API ReadTrait<uint64_t> {
     static error_code Read(simdjson::ondemand::value&& json, uint64_t& value);
 };
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<int32_t> {
+struct SKR_STATIC_API ReadTrait<int32_t> {
     static error_code Read(simdjson::ondemand::value&& json, int32_t& value);
 };
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<int64_t> {
+struct SKR_STATIC_API ReadTrait<int64_t> {
     static error_code Read(simdjson::ondemand::value&& json, int64_t& value);
 };
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<float> {
+struct SKR_STATIC_API ReadTrait<float> {
     static error_code Read(simdjson::ondemand::value&& json, float& value);
 };
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<double> {
+struct SKR_STATIC_API ReadTrait<double> {
     static error_code Read(simdjson::ondemand::value&& json, double& value);
 };
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<skr::string> {
+struct SKR_STATIC_API ReadTrait<skr::string> {
     static error_code Read(simdjson::ondemand::value&& json, skr::string& value);
 };
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<skr_guid_t> {
+struct SKR_STATIC_API ReadTrait<skr_guid_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_guid_t& value);
 };
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<skr_md5_t> {
+struct SKR_STATIC_API ReadTrait<skr_md5_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_md5_t& md5);
 };
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<skr_float2_t> {
+struct SKR_STATIC_API ReadTrait<skr_float2_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_float2_t& value);
 };
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<skr_float3_t> {
+struct SKR_STATIC_API ReadTrait<skr_float3_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_float3_t& value);
 };
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<skr_float4_t> {
+struct SKR_STATIC_API ReadTrait<skr_float4_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_float4_t& value);
 };
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<skr_float4x4_t> {
+struct SKR_STATIC_API ReadTrait<skr_float4x4_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_float4x4_t& value);
 };
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<skr_rotator_t> {
+struct SKR_STATIC_API ReadTrait<skr_rotator_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_rotator_t& value);
 };
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<skr_quaternion_t> {
+struct SKR_STATIC_API ReadTrait<skr_quaternion_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_quaternion_t& value);
 };
 
 template <>
-struct RUNTIME_STATIC_API ReadTrait<skr_resource_handle_t> {
+struct SKR_STATIC_API ReadTrait<skr_resource_handle_t> {
     static error_code Read(simdjson::ondemand::value&& json, skr_resource_handle_t& value);
 };
 

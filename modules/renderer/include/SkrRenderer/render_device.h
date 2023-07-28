@@ -43,44 +43,44 @@ struct SKR_RENDERER_API RendererDevice
 } // namespace skr
 #endif
 
-RUNTIME_EXTERN_C SKR_RENDERER_API 
+SKR_EXTERN_C SKR_RENDERER_API 
 CGPUSwapChainId skr_render_device_register_window(SRenderDeviceId device, SWindowHandle window);
 
-RUNTIME_EXTERN_C SKR_RENDERER_API 
+SKR_EXTERN_C SKR_RENDERER_API 
 CGPUSwapChainId skr_render_device_recreate_window_swapchain(SRenderDeviceId device, SWindowHandle window);
 
-RUNTIME_EXTERN_C SKR_RENDERER_API 
+SKR_EXTERN_C SKR_RENDERER_API 
 ECGPUFormat skr_render_device_get_swapchain_format(SRenderDeviceId device);
 
-RUNTIME_EXTERN_C SKR_RENDERER_API 
+SKR_EXTERN_C SKR_RENDERER_API 
 CGPUSamplerId skr_render_device_get_linear_sampler(SRenderDeviceId device);
 
-RUNTIME_EXTERN_C SKR_RENDERER_API 
+SKR_EXTERN_C SKR_RENDERER_API 
 CGPURootSignaturePoolId skr_render_device_get_root_signature_pool(SRenderDeviceId device);
 
-RUNTIME_EXTERN_C SKR_RENDERER_API 
+SKR_EXTERN_C SKR_RENDERER_API 
 CGPUQueueId skr_render_device_get_gfx_queue(SRenderDeviceId device);
 
-RUNTIME_EXTERN_C SKR_RENDERER_API 
+SKR_EXTERN_C SKR_RENDERER_API 
 CGPUDStorageQueueId skr_render_device_get_file_dstorage_queue(SRenderDeviceId device);
 
-RUNTIME_EXTERN_C SKR_RENDERER_API 
+SKR_EXTERN_C SKR_RENDERER_API 
 CGPUDStorageQueueId skr_render_device_get_memory_dstorage_queue(SRenderDeviceId device);
 
-RUNTIME_EXTERN_C SKR_RENDERER_API 
+SKR_EXTERN_C SKR_RENDERER_API 
 CGPUQueueId skr_render_device_get_cpy_queue(SRenderDeviceId device);
 
-RUNTIME_EXTERN_C SKR_RENDERER_API 
+SKR_EXTERN_C SKR_RENDERER_API 
 CGPUQueueId skr_render_device_get_nth_cpy_queue(SRenderDeviceId device, uint32_t n);
 
-RUNTIME_EXTERN_C SKR_RENDERER_API 
+SKR_EXTERN_C SKR_RENDERER_API 
 CGPUQueueId skr_render_device_get_compute_queue(SRenderDeviceId device);
 
-RUNTIME_EXTERN_C SKR_RENDERER_API 
+SKR_EXTERN_C SKR_RENDERER_API 
 CGPUQueueId skr_render_device_get_nth_compute_queue(SRenderDeviceId device, uint32_t n);
 
-RUNTIME_EXTERN_C SKR_RENDERER_API 
+SKR_EXTERN_C SKR_RENDERER_API 
 CGPUDeviceId skr_render_device_get_cgpu_device(SRenderDeviceId device);
 
-RUNTIME_EXTERN_C SKR_RENDERER_API 
+SKR_EXTERN_C SKR_RENDERER_API 
 skr_io_vram_service_t* skr_render_device_get_vram_service(SRenderDeviceId device);

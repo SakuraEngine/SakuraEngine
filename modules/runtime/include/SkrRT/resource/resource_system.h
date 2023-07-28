@@ -45,7 +45,7 @@ struct SResourceFactory;
 struct SResourceSystem;
 struct SResourceSystemImpl;
 
-struct RUNTIME_API SResourceRequest {
+struct SKR_RUNTIME_API SResourceRequest {
     virtual ~SResourceRequest() = default;
 public:
     virtual skr_guid_t GetGuid() const = 0;
@@ -76,7 +76,7 @@ protected:
     virtual void _UnloadResource() = 0;
 };
 
-struct RUNTIME_API SResourceRegistry {
+struct SKR_RUNTIME_API SResourceRegistry {
 public:
     virtual bool RequestResourceFile(SResourceRequest* request) = 0;
     virtual void CancelRequestFile(SResourceRequest* requst) = 0;
@@ -84,7 +84,7 @@ public:
     void FillRequest(SResourceRequest* request, skr_resource_header_t header, skr_vfs_t* vfs, const char8_t* uri);
 };
 
-struct RUNTIME_API SResourceSystem {
+struct SKR_RUNTIME_API SResourceSystem {
     friend struct ::skr_resource_handle_t;
 public:
     virtual ~SResourceSystem() = default;
@@ -113,7 +113,7 @@ protected:
     virtual skr_resource_record_t* _GetRecord(void* resource) = 0;
     virtual void _DestroyRecord(skr_resource_record_t* record) = 0;
 };
-RUNTIME_API SResourceSystem* GetResourceSystem();
+SKR_RUNTIME_API SResourceSystem* GetResourceSystem();
 } // namespace resource
 } // namespace skr
 #endif

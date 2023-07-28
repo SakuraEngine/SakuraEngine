@@ -36,7 +36,7 @@ struct LogSourceData
     const char* line_;
 };
 
-struct RUNTIME_API LogEvent
+struct SKR_RUNTIME_API LogEvent
 {
     LogEvent(struct Logger* logger, LogLevel level, const LogSourceData& src_data) SKR_NOEXCEPT;
     
@@ -54,7 +54,7 @@ protected:
     LogSourceData src_data;
 };
 
-struct RUNTIME_API LogConstants
+struct SKR_RUNTIME_API LogConstants
 {
     static skr::log::LogLevel gLogLevel;
     static skr::log::LogFlushBehavior gFlushBehavior;

@@ -7,7 +7,7 @@ struct CGPUNSightSingleton
 {
     CGPUNSightSingleton() SKR_NOEXCEPT = default;
     virtual ~CGPUNSightSingleton() SKR_NOEXCEPT = default;
-    RUNTIME_API static CGPUNSightSingleton* Get(CGPUInstanceId instance) SKR_NOEXCEPT;
+    SKR_RUNTIME_API static CGPUNSightSingleton* Get(CGPUInstanceId instance) SKR_NOEXCEPT;
 
     virtual void register_tracker(CGPUNSightTrackerId tracker) SKR_NOEXCEPT;
     virtual void remove_tracker(CGPUNSightTrackerId tracker) SKR_NOEXCEPT;

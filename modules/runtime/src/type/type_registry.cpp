@@ -122,7 +122,7 @@ struct STypeRegistryImpl final : public STypeRegistry {
     skr::flat_hash_map<skr_guid_t, const skr_type_t*, skr::guid::hash> types;
 };
 
-RUNTIME_API STypeRegistry* GetTypeRegistry()
+SKR_RUNTIME_API STypeRegistry* GetTypeRegistry()
 {
     static STypeRegistryImpl registry = {};
     return &registry;

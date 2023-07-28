@@ -5,7 +5,7 @@
 #include "SkrRT/platform/debug.h"
 
 // FUCK MSVC COMPILER
-RUNTIME_EXTERN_C RUNTIME_API void skr_debug_output(const char* msg);
+SKR_EXTERN_C SKR_RUNTIME_API void skr_debug_output(const char* msg);
 
 struct skr_binary_reader_t;
 

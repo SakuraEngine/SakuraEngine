@@ -205,6 +205,6 @@ public:
     using DAGVertex = DAG::GraphVertex<DependencyGraph::Node*, DependencyGraph::Edge*>;
     using DAGEdge = DAG::GraphEdge<DependencyGraph::Node*, DependencyGraph::Edge*>;
 
-    static RUNTIME_API DependencyGraphBase* as(DependencyGraph* graph) SKR_NOEXCEPT;
+    static SKR_RUNTIME_API DependencyGraphBase* as(DependencyGraph* graph) SKR_NOEXCEPT;
 };
 } // namespace skr

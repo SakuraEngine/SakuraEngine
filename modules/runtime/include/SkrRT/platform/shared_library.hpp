@@ -20,7 +20,7 @@ using NativeLibHandle = void*;
  * access to shared library
  * @author: SaeruHikari
  */
-class RUNTIME_API SharedLibrary
+class SKR_RUNTIME_API SharedLibrary
 {
 public:
     SharedLibrary() = default;

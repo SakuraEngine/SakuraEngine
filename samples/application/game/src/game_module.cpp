@@ -501,7 +501,7 @@ void imgui_button_spawn_girl(SRendererId renderer)
     }
 }
 
-RUNTIME_EXTERN_C int luaopen_clonefunc(lua_State* L);
+SKR_EXTERN_C int luaopen_clonefunc(lua_State* L);
 int SGameModule::main_module_exec(int argc, char8_t** argv)
 {
     ZoneScopedN("GameExecution");

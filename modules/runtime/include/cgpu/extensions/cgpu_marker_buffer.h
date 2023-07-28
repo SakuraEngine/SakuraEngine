@@ -14,14 +14,14 @@ typedef struct CGPUMarkerBuffer {
     uint32_t used_count;
 } CGPUMarkerBuffer;
 
-RUNTIME_EXTERN_C RUNTIME_API
+SKR_EXTERN_C SKR_RUNTIME_API
 bool cgpu_device_support_marker_buffer(CGPUDeviceId device);
 
-RUNTIME_EXTERN_C RUNTIME_API
+SKR_EXTERN_C SKR_RUNTIME_API
 CGPUMarkerBufferId cgpu_create_marker_buffer(CGPUDeviceId device, CGPUMarkerBufferDescriptor const* descriptor);
 
-RUNTIME_EXTERN_C RUNTIME_API
+SKR_EXTERN_C SKR_RUNTIME_API
 void cgpu_marker_buffer_write(CGPUCommandBufferId cmd, CGPUMarkerBufferId buffer, uint32_t index, uint32_t value);
 
-RUNTIME_EXTERN_C RUNTIME_API
+SKR_EXTERN_C SKR_RUNTIME_API
 void cgpu_free_marker_buffer(CGPUMarkerBufferId buffer);

@@ -5,7 +5,7 @@
 namespace skr {
 namespace io {
 
-struct RUNTIME_API RAMIOBuffer : public IRAMIOBuffer
+struct SKR_RUNTIME_API RAMIOBuffer : public IRAMIOBuffer
 {
     IO_RC_OBJECT_BODY
     virtual ~RAMIOBuffer() SKR_NOEXCEPT;

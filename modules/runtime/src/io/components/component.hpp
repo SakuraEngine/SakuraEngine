@@ -8,7 +8,7 @@ struct IIORequest;
 template <typename Component>
 struct CID { };
 
-struct RUNTIME_API IORequestComponent
+struct SKR_RUNTIME_API IORequestComponent
 {
     IORequestComponent(IIORequest* const request) SKR_NOEXCEPT;
     virtual ~IORequestComponent() SKR_NOEXCEPT;

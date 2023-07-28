@@ -68,7 +68,7 @@ struct ModuleInfo {
     eastl::vector<ModuleDependency> dependencies;
 };
 
-struct RUNTIME_API ModuleSubsystemBase
+struct SKR_RUNTIME_API ModuleSubsystemBase
 {
     using CreatePFN = ModuleSubsystemBase*(*)();
     virtual ~ModuleSubsystemBase() SKR_NOEXCEPT = default;
@@ -82,7 +82,7 @@ struct RUNTIME_API ModuleSubsystemBase
  * @description: Base of all plugins
  * @author: SaeruHikari
  */
-struct RUNTIME_API IModule {
+struct SKR_RUNTIME_API IModule {
     friend class ModuleManagerImpl;
 
 public:
@@ -105,7 +105,7 @@ protected:
     eastl::vector<ModuleSubsystemBase*> subsystems;
 };
 
-struct RUNTIME_API IDynamicModule : public IModule {
+struct SKR_RUNTIME_API IDynamicModule : public IModule {
     eastl::unique_ptr<SharedLibrary> sharedLib;
     virtual const char8_t* get_meta_data(void) override
     {
@@ -117,7 +117,7 @@ struct RUNTIME_API IDynamicModule : public IModule {
 };
 struct IStaticModule : public IModule {
 };
-struct RUNTIME_API IHotfixModule : public IDynamicModule {
+struct SKR_RUNTIME_API IHotfixModule : public IDynamicModule {
     void* state = nullptr;
     virtual void on_reload_begin() = 0;
     virtual void on_reload_finish() = 0;
@@ -132,10 +132,10 @@ struct RUNTIME_API IHotfixModule : public IDynamicModule {
     inline static const skr::SStaticallyLinkedModuleRegistrant<ModuleImplClass> ModuleRegistrant##ModuleName((const char8_t*)#ModuleName);
 
 #define IMPLEMENT_DYNAMIC_MODULE(ModuleImplClass, ModuleName)                \
-    extern "C" RUNTIME_EXPORT skr::IModule* __initializeModule##ModuleName() \
+    extern "C" SKR_EXPORT skr::IModule* __initializeModule##ModuleName() \
     {                                                                        \
         return new ModuleImplClass();                                        \
     }
 #endif // #ifdef __cplusplus
 
-#define SKR_MODULE_METADATA(stringdec, ModuleName) RUNTIME_EXTERN_C RUNTIME_EXPORT const char8_t* __skr_module_meta__##ModuleName = stringdec;
+#define SKR_MODULE_METADATA(stringdec, ModuleName) SKR_EXTERN_C SKR_EXPORT const char8_t* __skr_module_meta__##ModuleName = stringdec;

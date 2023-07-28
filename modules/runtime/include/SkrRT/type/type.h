@@ -44,44 +44,44 @@ enum skr_type_category_t
 };
 typedef enum skr_type_category_t skr_type_category_t;
 
-RUNTIME_EXTERN_C RUNTIME_API 
+SKR_EXTERN_C SKR_RUNTIME_API 
 const char8_t* skr_get_type_name(const skr_guid_t* type);
 
-RUNTIME_EXTERN_C RUNTIME_API 
+SKR_EXTERN_C SKR_RUNTIME_API 
 const struct skr_type_t* skr_get_type(const skr_type_id_t* id);
 
-RUNTIME_EXTERN_C RUNTIME_API 
+SKR_EXTERN_C SKR_RUNTIME_API 
 void skr_register_type_name(const skr_guid_t* type, const char8_t* name);
 
-RUNTIME_EXTERN_C RUNTIME_API 
+SKR_EXTERN_C SKR_RUNTIME_API 
 void skr_get_derived_types(const struct skr_type_t* type, void (*callback)(void* u, struct skr_type_t* type), void* u);
 
-RUNTIME_EXTERN_C RUNTIME_API 
+SKR_EXTERN_C SKR_RUNTIME_API 
 void skr_get_type_id(const struct skr_type_t* type, skr_type_id_t* id);
 
-RUNTIME_EXTERN_C RUNTIME_API
+SKR_EXTERN_C SKR_RUNTIME_API
 uint64_t skr_get_type_size(const struct skr_type_t* type);
 
-RUNTIME_EXTERN_C RUNTIME_API 
+SKR_EXTERN_C SKR_RUNTIME_API 
 void skr_get_fields(const struct skr_type_t* type, void (*callback)(void* u, skr_field_t* field), void* u);
 
-RUNTIME_EXTERN_C RUNTIME_API 
+SKR_EXTERN_C SKR_RUNTIME_API 
 skr_field_t* skr_get_field(const struct skr_type_t* type, const char8_t* name);
 
-RUNTIME_EXTERN_C RUNTIME_API 
+SKR_EXTERN_C SKR_RUNTIME_API 
 skr_method_t* skr_get_method(const struct skr_type_t* type, const char8_t* name);
 
-RUNTIME_EXTERN_C RUNTIME_API 
+SKR_EXTERN_C SKR_RUNTIME_API 
 struct skr_type_t* skr_get_field_type(const skr_field_t* field);
 
-RUNTIME_EXTERN_C RUNTIME_API 
+SKR_EXTERN_C SKR_RUNTIME_API 
 const char8_t* skr_get_field_name(const skr_field_t* field);
 
 extern const skr_type_t* $type;
 extern const skr_field_t* $field;
 extern const skr_method_t* $method;
 
-// RUNTIME_EXTERN_C RUNTIME_API
+// SKR_EXTERN_C SKR_RUNTIME_API
 // void skr_free_record_type(const skr_guid_t* type_id);
 
 #ifdef __cplusplus

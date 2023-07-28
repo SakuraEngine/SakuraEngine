@@ -8,7 +8,7 @@ namespace skr
 namespace type
 {
 // SPtr wrapper
-RUNTIME_API const skr_type_t* make_sptr_type(const skr_type_t* type);
+SKR_RUNTIME_API const skr_type_t* make_sptr_type(const skr_type_t* type);
 template <class T>
 struct type_of<skr::SPtr<T>> {
     static const skr_type_t* get()
@@ -18,7 +18,7 @@ struct type_of<skr::SPtr<T>> {
 };
 
 // SObjectPtr wrapper
-RUNTIME_API const skr_type_t* make_sobject_ptr_type(const skr_type_t* type);
+SKR_RUNTIME_API const skr_type_t* make_sobject_ptr_type(const skr_type_t* type);
 template <class T>
 struct type_of<skr::SObjectPtr<T>> {
     static const skr_type_t* get()

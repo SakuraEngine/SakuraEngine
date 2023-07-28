@@ -2,7 +2,7 @@
 #include "module.hpp"
 #include "SkrRT/misc/dependency_graph.hpp"
 
-RUNTIME_EXTERN_C RUNTIME_API 
+SKR_EXTERN_C SKR_RUNTIME_API 
 skr::ModuleManager* skr_get_module_manager();
 
 namespace skr
