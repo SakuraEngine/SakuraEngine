@@ -338,7 +338,7 @@ void CubismMotion::DoUpdateParameters(CubismModel* model, csmFloat32 userTimeSec
         }
     }
 
-    csmInt32 parameterMotionCurveCount = 0;
+    [[maybe_unused]] csmInt32 parameterMotionCurveCount = 0;
 
     for (; c < _motionData->CurveCount && curves[c].Type == CubismMotionCurveTarget_Parameter; ++c)
     {
