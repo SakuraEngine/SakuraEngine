@@ -71,8 +71,8 @@ void SVMemCCModule::on_load(int argc, char8_t** argv)
 void SVMemCCModule::imgui_ui()
 {
     ImGui::Begin("VideoMemoryController");
-    const float TEXT_BASE_WIDTH = ImGui::CalcTextSize("A").x;
-    const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
+    SKR_UNUSED const float TEXT_BASE_WIDTH = ImGui::CalcTextSize("A").x;
+    SKR_UNUSED const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
 
     auto adapter_detail = cgpu_query_adapter_detail(adapter);
     // information
