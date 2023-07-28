@@ -1,4 +1,3 @@
-#include "pch.hpp"
 #include "cgpu/api.h"
 #include "cgltf/cgltf.h"
 #include "SkrRT/platform/vfs.h"

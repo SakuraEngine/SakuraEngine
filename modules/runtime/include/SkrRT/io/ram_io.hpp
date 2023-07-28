@@ -35,13 +35,31 @@ struct RUNTIME_API IRAMIOBuffer : public skr::IBlob
 };
 using RAMIOBufferId = SObjectPtr<IRAMIOBuffer>;
 
+struct RUNTIME_API IBlocksRAMRequest : public IIORequest
+{
+    virtual ~IBlocksRAMRequest() SKR_NOEXCEPT;
+
+#pragma region BlocksComponent
+    virtual skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT = 0;
+    virtual void add_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
+    virtual void reset_blocks() SKR_NOEXCEPT = 0;
+#pragma endregion
+
+#pragma region CompressedBlocksComponent
+    virtual skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT = 0;
+    virtual void add_compressed_block(const skr_io_block_t& block) SKR_NOEXCEPT = 0;
+    virtual void reset_compressed_blocks() SKR_NOEXCEPT = 0;
+#pragma endregion
+};
+using BlocksRAMRequestId = SObjectPtr<IBlocksRAMRequest>;
+
 struct RUNTIME_API IRAMService : public IIOService
 {
     [[nodiscard]] static IRAMService* create(const RAMServiceDescriptor* desc) SKR_NOEXCEPT;
     static void destroy(IRAMService* service) SKR_NOEXCEPT;
 
     // open a request for filling
-    [[nodiscard]] virtual BlocksIORequestId open_request() SKR_NOEXCEPT = 0;
+    [[nodiscard]] virtual BlocksRAMRequestId open_request() SKR_NOEXCEPT = 0;
 
     // start a request batch
     [[nodiscard]] virtual IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT = 0;

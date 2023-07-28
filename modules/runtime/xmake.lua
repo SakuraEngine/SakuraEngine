@@ -4,11 +4,11 @@ else
     add_requires("eastl >=2023.5.18-skr", { configs = { runtime_shared = true } })
 end
 
-add_requires("parallel-hashmap >=1.3.4-skr")
+add_requires("parallel-hashmap >=1.3.11-skr")
 add_requires("boost-context >=0.1.0-skr")
+add_requires("simdjson >=3.0.0-skr")
 -- add_requires("lua >=5.4.4-skr")
 add_requires("luau", { configs = { extern_c = true }})
-add_requires("simdjson >=3.0.0-skr")
 
 target("SkrDependencyGraph")
     set_group("01.modules")
@@ -80,14 +80,13 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     add_links(links_list, {public = true})
     if (is_os("windows")) then 
         add_syslinks("advapi32", "user32", "shell32", "Ole32", "Shlwapi", {public = true})
+    else
+        add_syslinks("pthread")
     end
     if (is_os("macosx")) then 
-        add_mxflags(project_cxflags, project_mxflags, {public = true, force = true})
+        -- add_mxflags(project_mxflags, {public = true, force = true})
         add_mxflags("-fno-objc-arc", {force = true})
         add_frameworks("CoreFoundation", "Cocoa", "Metal", "IOKit", {public = true})
-    end
-    if has_config("is_unix") then 
-        add_syslinks("pthread")
     end
     
     -- add FTL source 
@@ -97,7 +96,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
     add_defines("MARL_USE_EASTL", {public = true})
     local marl_source_dir = "$(projectdir)/thirdparty/marl"
     add_files(marl_source_dir.."/src/build.*.cpp")
-    if not has_config("is_msvc") then 
+    if not is_os("windows") then 
         add_files(marl_source_dir.."/src/**.c")
         add_files(marl_source_dir.."/src/**.S")
     end

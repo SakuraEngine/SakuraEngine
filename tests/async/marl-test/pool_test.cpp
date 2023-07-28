@@ -32,33 +32,34 @@ struct CtorDtorCounter {
 int CtorDtorCounter::ctor_count = -1;
 int CtorDtorCounter::dtor_count = -1;
 
-TEST_CASE_METHOD(WithBoundScheduler, "UnboundedPool") {
-  SECTION("UnboundedPool_ConstructDestruct") {
+void WithBoundSchedulerBase::TestUnboundedPool()
+{
+  SUBCASE("UnboundedPool_ConstructDestruct") {
     marl::UnboundedPool<int> pool;
   }
 
-  SECTION("BoundedPool_ConstructDestruct") {
+  SUBCASE("BoundedPool_ConstructDestruct") {
     marl::BoundedPool<int, 10> pool;
   }
 
-  SECTION("UnboundedPoolLoan_GetNull") {
+  SUBCASE("UnboundedPoolLoan_GetNull") {
     marl::UnboundedPool<int>::Loan loan;
     ASSERT_EQ(loan.get(), nullptr);
   }
 
-  SECTION("BoundedPoolLoan_GetNull") {
+  SUBCASE("BoundedPoolLoan_GetNull") {
     marl::BoundedPool<int, 10>::Loan loan;
     ASSERT_EQ(loan.get(), nullptr);
   }
 
-  SECTION("UnboundedPool_Borrow") {
+  SUBCASE("UnboundedPool_Borrow") {
     marl::UnboundedPool<int> pool;
     for (int i = 0; i < 100; i++) {
       pool.borrow();
     }
   }
 
-  SECTION("UnboundedPool_ConcurrentBorrow") {
+  SUBCASE("UnboundedPool_ConcurrentBorrow") {
     marl::UnboundedPool<int> pool;
     constexpr int iterations = 10000;
     marl::WaitGroup wg(iterations);
@@ -71,14 +72,14 @@ TEST_CASE_METHOD(WithBoundScheduler, "UnboundedPool") {
     wg.wait();
   }
 
-  SECTION("BoundedPool_Borrow") {
+  SUBCASE("BoundedPool_Borrow") {
     marl::BoundedPool<int, 100> pool;
     for (int i = 0; i < 100; i++) {
       pool.borrow();
     }
   }
 
-  SECTION("BoundedPool_ConcurrentBorrow") {
+  SUBCASE("BoundedPool_ConcurrentBorrow") {
     marl::BoundedPool<int, 10> pool;
     constexpr int iterations = 10000;
     marl::WaitGroup wg(iterations);
@@ -91,7 +92,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "UnboundedPool") {
     wg.wait();
   }
 
-  SECTION("UnboundedPool_PolicyReconstruct") {
+  SUBCASE("UnboundedPool_PolicyReconstruct") {
     CtorDtorCounter::reset();
     marl::UnboundedPool<CtorDtorCounter, marl::PoolPolicy::Reconstruct> pool;
     ASSERT_EQ(CtorDtorCounter::ctor_count, 0);
@@ -112,7 +113,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "UnboundedPool") {
     ASSERT_EQ(CtorDtorCounter::dtor_count, 2);
   }
 
-  SECTION("BoundedPool_PolicyReconstruct") {
+  SUBCASE("BoundedPool_PolicyReconstruct") {
     CtorDtorCounter::reset();
     marl::BoundedPool<CtorDtorCounter, 10, marl::PoolPolicy::Reconstruct> pool;
     ASSERT_EQ(CtorDtorCounter::ctor_count, 0);
@@ -133,7 +134,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "UnboundedPool") {
     ASSERT_EQ(CtorDtorCounter::dtor_count, 2);
   }
 
-  SECTION("UnboundedPool_PolicyPreserve") {
+  SUBCASE("UnboundedPool_PolicyPreserve") {
     CtorDtorCounter::reset();
     {
       marl::UnboundedPool<CtorDtorCounter, marl::PoolPolicy::Preserve> pool;
@@ -157,7 +158,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "UnboundedPool") {
     ASSERT_EQ(CtorDtorCounter::ctor_count, CtorDtorCounter::dtor_count);
   }
 
-  SECTION("BoundedPool_PolicyPreserve") {
+  SUBCASE("BoundedPool_PolicyPreserve") {
     CtorDtorCounter::reset();
     {
       marl::BoundedPool<CtorDtorCounter, 10, marl::PoolPolicy::Preserve> pool;
@@ -186,7 +187,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "UnboundedPool") {
     uint8_t padding[63];
   };
 
-  SECTION("BoundedPool_AlignedTypes") {
+  SUBCASE("BoundedPool_AlignedTypes") {
     marl::BoundedPool<StructWithAlignment, 100> pool;
     for (int i = 0; i < 100; i++) {
       auto loan = pool.borrow();
@@ -196,7 +197,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "UnboundedPool") {
     }
   }
 
-  SECTION("UnboundedPool_AlignedTypes") {
+  SUBCASE("UnboundedPool_AlignedTypes") {
     marl::UnboundedPool<StructWithAlignment> pool;
     for (int i = 0; i < 100; i++) {
       auto loan = pool.borrow();
@@ -206,3 +207,9 @@ TEST_CASE_METHOD(WithBoundScheduler, "UnboundedPool") {
     }
   }
 }
+
+TEST_CASE_METHOD(WithBoundScheduler<0>, "TestUnboundedPool-0") { TestUnboundedPool(); };
+TEST_CASE_METHOD(WithBoundScheduler<1>, "TestUnboundedPool-1") { TestUnboundedPool(); };
+TEST_CASE_METHOD(WithBoundScheduler<2>, "TestUnboundedPool-2") { TestUnboundedPool(); };
+TEST_CASE_METHOD(WithBoundScheduler<8>, "TestUnboundedPool-8") { TestUnboundedPool(); };
+TEST_CASE_METHOD(WithBoundScheduler<32>, "TestUnboundedPool-32") { TestUnboundedPool(); };

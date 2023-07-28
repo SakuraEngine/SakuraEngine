@@ -4,7 +4,6 @@
  * Use of this source code is governed by the Live2D Open Software license
  * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
  */
-#include "../../pch.hpp"
 #include "CubismMotion.hpp"
 #include <float.h>
 #include "CubismFramework.hpp"
@@ -339,7 +338,7 @@ void CubismMotion::DoUpdateParameters(CubismModel* model, csmFloat32 userTimeSec
         }
     }
 
-    csmInt32 parameterMotionCurveCount = 0;
+    [[maybe_unused]] csmInt32 parameterMotionCurveCount = 0;
 
     for (; c < _motionData->CurveCount && curves[c].Type == CubismMotionCurveTarget_Parameter; ++c)
     {

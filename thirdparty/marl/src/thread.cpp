@@ -33,7 +33,9 @@ namespace marl { using std::sort; using std::vector; }
 #include <cstdio>
 
 #if defined(_WIN32)
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
+#endif
 #include <windows.h>
 #include <cstdlib>  // mbstowcs
 #undef max

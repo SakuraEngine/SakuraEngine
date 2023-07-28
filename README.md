@@ -48,7 +48,7 @@ https://user-images.githubusercontent.com/39457738/192722537-6ab035a5-2789-43d0-
 | `runtime/platform` | - | 核心子模块, 系统接口 |
 | `runtime/resource` | - | 核心子模块, 异步资源管理 |
 | `runtime/type` | - | 核心子模块, 提供 rtti 相关功能 |
-| `runtime/lua` | [lua] | 核心子模块，使用 lua 作为胶水语言 |
+| `runtime/lua` | [lua], [luau] | 核心子模块，使用 lua 作为胶水语言 |
 | `SkrScene` | - | 场景模块，场景资源管理 |
 | `SkrRenderer` | - | 渲染器模块，渲染资源管理，驱动渲染管线 |
 | `SkrImgui` | [imgui] | 用于调试的运行时UI |
@@ -77,6 +77,7 @@ https://user-images.githubusercontent.com/39457738/192722537-6ab035a5-2789-43d0-
 [FiberTaskingLib]: https://github.com/RichieSams/FiberTaskingLib
 [marl]: https://github.com/google/marl
 [lua]: https://github.com/lua/lua
+[luau]: https://luau-lang.org/
 
 ## 组件支持矩阵
 
@@ -217,7 +218,6 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 
 ## 嵌入源码的开源库和版本
 - LMDB v0.9.29 (BSD)
-- log.c f9ea349 (MIT)
 - mimalloc v2.1.2 (MIT)
 - xxhash 0.8.1 (BSD)
 - concurrentqueue d49fa2b Simplified BSD
@@ -227,7 +227,7 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - RealtimeMath 80d08a8 (MIT)
 - FiberTaskingLib 9d7b27d (Apache-2.0)
 - sole 1.0.1 (zlib License)
-- parallel-hashmap 1.3.4 (Apache-2.0)
+- parallel-hashmap 1.3.11 (Apache-2.0)
 - folly (Apache-2.0)
 - simdjson v3.0.0 (Apache-2.0)
 - fast_float v3.4.0
@@ -239,6 +239,7 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - EASTL v3.19.05, master-db16065 (BSD-3-Clause)
 - OpenString 81926cc (MIT)
 - godot 5dccc940e7 (MIT)
+- doctest v2.4.11
 - freetype 2.13.0 (GNU)
 - icu 72.1 ([LICENSE](https://github.com/unicode-org/icu/blob/main/icu4c/LICENSE))
 - harfbuzz 7.1.0 ([LICENSE](https://github.com/harfbuzz/harfbuzz/blob/main/COPYING))

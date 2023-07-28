@@ -16,7 +16,8 @@
 
 #include "marl/ticket.h"
 
-TEST_CASE_METHOD(WithBoundScheduler, "Ticket") {
+void WithBoundSchedulerBase::TestTicket()
+{
   marl::Ticket::Queue queue;
 
   constexpr int count = 1000;
@@ -38,3 +39,9 @@ TEST_CASE_METHOD(WithBoundScheduler, "Ticket") {
     ASSERT_EQ(result[i], i);
   }
 }
+
+TEST_CASE_METHOD(WithBoundScheduler<0>, "TestTicket-0") { TestTicket(); };
+TEST_CASE_METHOD(WithBoundScheduler<1>, "TestTicket-1") { TestTicket(); };
+TEST_CASE_METHOD(WithBoundScheduler<2>, "TestTicket-2") { TestTicket(); };
+TEST_CASE_METHOD(WithBoundScheduler<8>, "TestTicket-8") { TestTicket(); };
+TEST_CASE_METHOD(WithBoundScheduler<32>, "TestTicket-32") { TestTicket(); };

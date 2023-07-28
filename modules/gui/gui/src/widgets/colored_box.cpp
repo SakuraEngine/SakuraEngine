@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "SkrGui/widgets/colored_box.hpp"
 #include "SkrGui/render_objects/render_colored_box.hpp"
 

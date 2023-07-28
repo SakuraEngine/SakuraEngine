@@ -1,4 +1,3 @@
-#include "../pch.hpp" // IWYU pragma: keep
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/module/module.hpp"
 

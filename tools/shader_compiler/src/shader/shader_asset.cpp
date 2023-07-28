@@ -1,4 +1,3 @@
-#include "../pch.hpp" // IWYU pragma: keep
 #include "SkrRT/misc/parallel_for.hpp"
 #include "SkrRT/misc/cartesian_product.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"

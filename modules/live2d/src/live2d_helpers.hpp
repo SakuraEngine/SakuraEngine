@@ -26,7 +26,7 @@ struct L2DRequestCallbackData
     skr_io_ram_service_t* ioService;
     IAsyncL2DResourceInterface* model_resource;
     IAsyncL2DResourceInterface* motions_resource;
-    skr_live2d_ram_io_request_t* live2dRequest;   
+    skr_live2d_ram_io_future_t* live2dRequest;   
     skr::string u8HomePath;
 
     skr::BlobId settingBlob;

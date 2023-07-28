@@ -1,7 +1,8 @@
 #pragma once
+#define TINYGLTF_NO_INCLUDE_JSON
 #include "SkrAnimTool/ozz/raw_animation_utils.h"
 #include "SkrAnimTool/ozz/tools/import2ozz.h"
-#include "tiny_gltf.h"
+#include "tinygltf/tiny_gltf.h"
 
 class GltfImporter : public ozz::animation::offline::OzzImporter {
  public:

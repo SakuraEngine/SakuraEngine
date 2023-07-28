@@ -1,4 +1,3 @@
-#include "../../pch.hpp" // IWYU pragma: keep
 #include "SkrRT/platform/process.h"
 #include "SkrRT/misc/log/log_sink.hpp"
 
@@ -80,7 +79,7 @@ LogConsoleWindowSink::LogConsoleWindowSink(skr_guid_t pattern) SKR_NOEXCEPT
             CONSOLE_SCREEN_BUFFER_INFO conInfo;
             ::GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &conInfo);
             if (conInfo.dwSize.Y < minLength)
-                conInfo.dwSize.Y = minLength;
+                conInfo.dwSize.Y = (SHORT)minLength;
             ::SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), conInfo.dwSize);
 
             freopen("CONIN$", "r", stdin);
@@ -283,7 +282,7 @@ void LogConsoleWindowSink::sink(const LogEvent& event, skr::string_view content)
 
     // set color
     const auto L = static_cast<uint32_t>(event.get_level());
-    const auto attrs = GetTextAttribute(color_sets_[L].f, color_sets_[L].b, color_sets_[L].s);
+    const auto attrs = (WORD)GetTextAttribute(color_sets_[L].f, color_sets_[L].b, color_sets_[L].s);
     if (csbiInfo.wAttributes != attrs)
         ::SetConsoleTextAttribute(StdHandle, attrs);
 

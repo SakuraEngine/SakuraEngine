@@ -3,7 +3,7 @@
 
 namespace skr::gui
 {
-struct ContainerLayer : public Layer {
+struct SKR_GUI_API ContainerLayer : public Layer {
     SKR_GUI_OBJECT(ContainerLayer, "bb5a6b46-30b2-49f3-b445-260f9372bbb5", Layer)
 
     void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override;

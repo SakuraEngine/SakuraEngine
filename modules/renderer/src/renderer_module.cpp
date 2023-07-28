@@ -1,4 +1,3 @@
-#include "pch.hpp"
 #include <string.h>
 #include "cgpu/api.h"
 #ifdef _WIN32

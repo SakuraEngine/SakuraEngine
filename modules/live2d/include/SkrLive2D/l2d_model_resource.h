@@ -56,8 +56,8 @@ typedef struct skr_live2d_vertex_uv_t {
 
 #include "SkrRT/io/ram_io.hpp"
 
-typedef void (*skr_async_live2d_io_callback_t)(struct skr_live2d_ram_io_request_t* request, void* data);
-typedef struct skr_live2d_ram_io_request_t {
+typedef void (*skr_async_live2d_io_callback_t)(struct skr_live2d_ram_io_future_t* request, void* data);
+typedef struct skr_live2d_ram_io_future_t {
     struct skr_vfs_t* vfs_override;
     skr_io_future_t settingsRequest;
     SAtomicU32 liv2d_status;
@@ -74,11 +74,11 @@ typedef struct skr_live2d_ram_io_request_t {
         return (ESkrIOStage)skr_atomicu32_load_acquire(&liv2d_status);
     }
 #endif
-} skr_live2d_ram_io_request_t;
+} skr_live2d_ram_io_future_t;
 
 #ifndef SKR_SERIALIZE_GURAD
 SKR_LIVE2D_EXTERN_C SKR_LIVE2D_API void 
-skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const char8_t* path, skr_live2d_ram_io_request_t* request);
+skr_live2d_model_create_from_json(skr_io_ram_service_t* ioService, const char8_t* path, skr_live2d_ram_io_future_t* request);
 #endif
 
 SKR_LIVE2D_EXTERN_C SKR_LIVE2D_API void 

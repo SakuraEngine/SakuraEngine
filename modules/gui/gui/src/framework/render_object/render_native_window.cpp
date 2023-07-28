@@ -1,4 +1,3 @@
-#include "../../pch.hpp"
 #include "SkrGui/framework/render_object/render_native_window.hpp"
 #include "SkrGui/backend/device/window.hpp"
 #include "SkrGui/framework/layer/native_window_layer.hpp"

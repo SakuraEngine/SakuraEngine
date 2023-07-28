@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include <SkrRT/containers/hashmap.hpp>
 #include "option_utils.hpp"
 

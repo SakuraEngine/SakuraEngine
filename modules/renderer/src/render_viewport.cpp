@@ -1,4 +1,3 @@
-#include "pch.hpp"
 #include "SkrRT/math/rtm/vector4f.h"
 #include "SkrRT/math/rtm/rtmx.h"
 #include "SkrRT/containers/hashmap.hpp"

@@ -24,7 +24,6 @@
 // DEALINGS IN THE SOFTWARE.                                                  //
 //                                                                            //
 //----------------------------------------------------------------------------//
-#include "../../pch.hpp"
 #include "SkrAnim/ozz/base/containers/string_archive.h"
 
 #include "SkrAnim/ozz/base/io/archive.h"

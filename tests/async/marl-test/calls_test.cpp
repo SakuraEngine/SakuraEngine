@@ -40,8 +40,9 @@ std::vector<T> slice(const std::vector<T>& in, size_t from, size_t to) {
 
 }  // namespace
 
-TEST_CASE_METHOD(WithBoundScheduler, "Calls") {
-  SECTION("BlockingCallVoidReturn") {
+void WithBoundSchedulerBase::TestCalls()
+{
+  SUBCASE("BlockingCallVoidReturn") {
     auto mutex = std::make_shared<std::mutex>();
     mutex->lock();
 
@@ -60,7 +61,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Calls") {
     wg.wait();
   }
 
-  SECTION("BlockingCallIntReturn") {
+  SUBCASE("BlockingCallIntReturn") {
     auto mutex = std::make_shared<std::mutex>();
     mutex->lock();
 
@@ -83,7 +84,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Calls") {
     ASSERT_EQ(n.load(), 4950);
   }
 
-  SECTION("BlockingCallSchedulesTask") {
+  SUBCASE("BlockingCallSchedulesTask") {
     marl::WaitGroup wg(1);
     marl::schedule([=] {
       marl::blocking_call([=] { marl::schedule([=] { wg.done(); }); });
@@ -91,7 +92,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Calls") {
     wg.wait();
   }
 
-  SECTION("Parallelize") {
+  SUBCASE("Parallelize") {
     bool a = false;
     bool b = false;
     bool c = false;
@@ -102,7 +103,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Calls") {
   }
 
   //  [A] --> [B] --> [C]                                                        |
-  SECTION("DAGChainNoArg") {
+  SUBCASE("DAGChainNoArg") {
     marl::DAG<>::Builder builder;
 
     Data data;
@@ -120,7 +121,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Calls") {
   }
 
   //  [A] --> [B] --> [C]                                                        |
-  SECTION("DAGChain") {
+  SUBCASE("DAGChain") {
     marl::DAG<Data&>::Builder builder;
 
     builder.root()
@@ -139,7 +140,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Calls") {
   }
 
   //  [A] --> [B] --> [C]                                                        |
-  SECTION("DAGRunRepeat") {
+  SUBCASE("DAGRunRepeat") {
     marl::DAG<Data&>::Builder builder;
 
     builder.root()
@@ -169,7 +170,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Calls") {
   //           /--> [A]                                                          |
   //  [root] --|--> [B]                                                          |
   //           \--> [C]                                                          |
-  SECTION("DAGFanOutFromRoot") {
+  SUBCASE("DAGFanOutFromRoot") {
     marl::DAG<Data&>::Builder builder;
 
     auto root = builder.root();
@@ -189,7 +190,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Calls") {
   //                /--> [A]                                                     |
   // [root] -->[N]--|--> [B]                                                     |
   //                \--> [C]                                                     |
-  SECTION("DAGFanOutFromNonRoot") {
+  SUBCASE("DAGFanOutFromNonRoot") {
     marl::DAG<Data&>::Builder builder;
 
     auto root = builder.root();
@@ -213,7 +214,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Calls") {
   // [root] --|--> [A1] --|-->[B]--|--> [C1] --|-->[D]--|--> [E1] --|-->[F]      |
   //                               \--> [C2] --/        |--> [E2] --|            |
   //                                                    \--> [E3] --/            |
-  SECTION("DAGFanOutFanIn") {
+  SUBCASE("DAGFanOutFanIn") {
     marl::DAG<Data&>::Builder builder;
 
     auto root = builder.root();
@@ -253,7 +254,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Calls") {
     ASSERT_EQ(data.order[11], "F");
   }
 
-  SECTION("WaitGroup_OneTask") {
+  SUBCASE("WaitGroup_OneTask") {
     marl::WaitGroup wg(1);
     std::atomic<int> counter = {0};
     marl::schedule([&counter, wg] {
@@ -264,7 +265,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Calls") {
     ASSERT_EQ(counter.load(), 1);
   }
 
-  SECTION("WaitGroup_10Tasks") {
+  SUBCASE("WaitGroup_10Tasks") {
     marl::WaitGroup wg(10);
     std::atomic<int> counter = {0};
     for (int i = 0; i < 10; i++) {
@@ -277,7 +278,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Calls") {
     ASSERT_EQ(counter.load(), 10);
   }
 
-  SECTION("DestructWithPendingTasks") {
+  SUBCASE("DestructWithPendingTasks") {
     std::atomic<int> counter = {0};
     for (int i = 0; i < 1000; i++) {
       marl::schedule([&] { counter++; });
@@ -294,7 +295,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Calls") {
     (new marl::Scheduler(marl::Scheduler::Config()))->bind();
   }
 
-  SECTION("DestructWithPendingFibers") {
+  SUBCASE("DestructWithPendingFibers") {
     std::atomic<int> counter = {0};
 
     marl::WaitGroup wg(1);
@@ -323,7 +324,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Calls") {
     (new marl::Scheduler(marl::Scheduler::Config()))->bind();
   }
 
-  SECTION("ScheduleWithArgs") {
+  SUBCASE("ScheduleWithArgs") {
     std::string got;
     marl::WaitGroup wg(1);
     marl::schedule(
@@ -337,7 +338,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Calls") {
     ASSERT_EQ(got, "s: 'a string', i: 42, b: true");
   }
 
-  SECTION("FibersResumeOnSameThread") {
+  SUBCASE("FibersResumeOnSameThread") {
     marl::WaitGroup fence(1);
     marl::WaitGroup wg(1000);
     for (int i = 0; i < 1000; i++) {
@@ -354,7 +355,7 @@ TEST_CASE_METHOD(WithBoundScheduler, "Calls") {
     wg.wait();
   }
 
-  SECTION("FibersResumeOnSameStdThread") {
+  SUBCASE("FibersResumeOnSameStdThread") {
     auto scheduler = marl::Scheduler::get();
 
     // on 32-bit OSs, excessive numbers of threads can run out of address space.
@@ -391,3 +392,9 @@ TEST_CASE_METHOD(WithoutBoundScheduler, "WaitGroupDone") {
   wg.done();
   wg.done();
 }
+
+TEST_CASE_METHOD(WithBoundScheduler<0>, "TestCalls-0") { TestCalls(); };
+TEST_CASE_METHOD(WithBoundScheduler<1>, "TestCalls-1") { TestCalls(); };
+TEST_CASE_METHOD(WithBoundScheduler<2>, "TestCalls-2") { TestCalls(); };
+TEST_CASE_METHOD(WithBoundScheduler<8>, "TestCalls-8") { TestCalls(); };
+TEST_CASE_METHOD(WithBoundScheduler<32>, "TestCalls-32") { TestCalls(); };

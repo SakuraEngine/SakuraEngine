@@ -1,4 +1,3 @@
-#include "../../pch.hpp" // IWYU pragma: keep
 #include "SkrRT/platform/vfs.h"
 #include "io_runnner.hpp"
 #include "io_resolver.hpp"
@@ -25,7 +24,7 @@ void IORequestResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEX
                 for (auto resolver : chain)
                 {
                     if (!runner->try_cancel(priority, request))
-                        resolver->resolve(priority, request);
+                        resolver->resolve(priority, batch, request);
                 }
             }
         }
@@ -35,14 +34,16 @@ void IORequestResolverChain::dispatch(SkrAsyncServicePriority priority) SKR_NOEX
     }
 }
 
-void VFSFileResolver::resolve(SkrAsyncServicePriority priority, IORequestId request) SKR_NOEXCEPT
+void VFSFileResolver::resolve(SkrAsyncServicePriority priority, IOBatchId batch, IORequestId request) SKR_NOEXCEPT
 {
-    if (auto pComp = io_component<IOFileComponent>(request.get()))
+    auto pPath = io_component<PathSrcComponent>(request.get());
+    auto pFile = io_component<FileComponent>(request.get());
+    if (pPath && pFile)
     {
-        SKR_ASSERT(pComp->vfs);
-        if (!pComp->file)
+        if (!pFile->dfile && !pFile->file)
         {
-            pComp->file = skr_vfs_fopen(pComp->vfs, pComp->path.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+            SKR_ASSERT(pPath->vfs);
+            pFile->file = skr_vfs_fopen(pPath->vfs, pPath->path.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
         }
     }
 }

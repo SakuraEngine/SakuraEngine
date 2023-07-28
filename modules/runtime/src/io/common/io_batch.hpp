@@ -28,6 +28,8 @@ public:
     void set_priority(SkrAsyncServicePriority pri) SKR_NOEXCEPT { priority = pri; }
     SkrAsyncServicePriority get_priority() const SKR_NOEXCEPT { return priority; }
 
+    const bool can_use_dstorage = true; // TODO: make it configurable
+
 protected:
     friend struct RunnerBase;
     void addRequest(IORequestId rq) SKR_NOEXCEPT

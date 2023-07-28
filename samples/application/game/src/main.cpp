@@ -6,7 +6,7 @@
 #include "tracy/Tracy.hpp"
 
 int main(int argc, char** argv)
- {
+{
     ZoneScopedN("Main");
 
     auto moduleManager = skr_get_module_manager();

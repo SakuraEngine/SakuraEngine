@@ -1,4 +1,3 @@
-#include "../pch.hpp"
 #include "SkrRT/module/module.hpp"
 #include "SkrRT/platform/guid.hpp"
 #include "SkrRT/misc/parallel_for.hpp"
@@ -182,7 +181,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
     {
         skr::task::event_t result{nullptr};
         cooking.lazy_emplace_l(guid,
-        [&](SCookContext* ctx) { result = ctx->GetCounter(); },
+        [&](const auto& ctx_kv) { result = ctx_kv.second->GetCounter(); },
         [&](const CookingMap::constructor& ctor) {
             jobContext = SCookContext::Create(getIOService());
             ctor(guid, jobContext);
@@ -217,7 +216,7 @@ skr::task::event_t SCookSystemImpl::AddCookTask(skr_guid_t guid)
         SKR_DEFER({
             auto system = static_cast<SCookSystemImpl*>(GetCookSystem());
             auto guid = jobContext->record->guid;
-            system->cooking.erase_if(guid, [](SCookContext* context) { SCookContext::Destroy(context); return true; });
+            system->cooking.erase_if(guid, [](const auto& ctx_kv) { SCookContext::Destroy(ctx_kv.second); return true; });
             system->mainCounter.decrement();
         });
 
@@ -327,8 +326,8 @@ skr::task::event_t SCookSystemImpl::EnsureCooked(skr_guid_t guid)
     ZoneScoped;
     {
         skr::task::event_t result{nullptr};
-        cooking.if_contains(guid, [&](SCookContext* ctx) {
-            result = ctx->GetCounter();
+        cooking.if_contains(guid, [&](const auto& ctx_kv) {
+            result = ctx_kv.second->GetCounter();
         });
         if (result)
             return result;

@@ -27,6 +27,7 @@ executable_module("Game", "GAME", engine_version)
     add_rules("utils.dxc", {
         spv_outdir = "/../resources/shaders/Game",
         dxil_outdir = "/../resources/shaders/Game"})
+    add_rules("c++.unity_build", {batchsize = default_unity_batch_size})
     add_includedirs("./../../common", {public = false})
     add_files("src/**.cpp")
     add_files("shaders/**.hlsl")
