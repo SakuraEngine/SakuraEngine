@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrRT/base/config.hpp"
-#include "memory_traits.hpp"
+#include "SkrBase/base/config.h"
+#include "SkrBase/memory/memory_traits.hpp"
 #include <memory>
 
 // for single element

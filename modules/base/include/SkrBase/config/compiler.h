@@ -15,7 +15,7 @@
 //
 //-------------------------------------------------------------------------------
 
-#include "platform.hpp"
+#include "platform.h"
 
 // compiler def
 #if defined(__clang__) && !defined(_MSC_VER)

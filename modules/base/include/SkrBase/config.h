@@ -1,7 +1,7 @@
 #pragma once
 // platform & compiler marcos
-#include "./config/platform.hpp"
-#include "./config/compiler.hpp"
+#include "SkrBase/config/platform.h"
+#include "SkrBase/config/compiler.h"
 
 // inline
 #ifndef SKR_INLINE

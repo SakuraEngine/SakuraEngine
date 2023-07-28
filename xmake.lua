@@ -17,7 +17,7 @@ includes("xmake/options.lua")
 engine_version = "0.1.0"
 default_unity_batch_size = 16
 
-include_dir_list = {"include"}
+include_dir_list = {}
 private_include_dir_list = {}
 source_list = {}
 packages_list = {}
