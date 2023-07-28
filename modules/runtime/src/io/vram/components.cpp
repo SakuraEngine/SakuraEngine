@@ -16,20 +16,10 @@ VRAMUploadComponent::VRAMUploadComponent(IIORequest* const request) SKR_NOEXCEPT
     
 }
 
-skr_guid_t VRAMUploadComponent::get_tid() const SKR_NOEXCEPT 
-{ 
-    return IORequestComponentTID<VRAMUploadComponent>::Get(); 
-}
-
 VRAMDStorageComponent::VRAMDStorageComponent(IIORequest* const request) SKR_NOEXCEPT 
     : IORequestComponent(request) 
 {
     
-}
-
-skr_guid_t VRAMDStorageComponent::get_tid() const SKR_NOEXCEPT 
-{ 
-    return IORequestComponentTID<VRAMDStorageComponent>::Get(); 
 }
 
 VRAMBufferComponent::VRAMBufferComponent(IIORequest* const request) SKR_NOEXCEPT 
@@ -41,11 +31,6 @@ VRAMBufferComponent::VRAMBufferComponent(IIORequest* const request) SKR_NOEXCEPT
 VRAMBufferComponent::~VRAMBufferComponent() SKR_NOEXCEPT
 {
 
-}
-
-skr_guid_t VRAMBufferComponent::get_tid() const SKR_NOEXCEPT 
-{ 
-    return IORequestComponentTID<VRAMBufferComponent>::Get(); 
 }
 
 void VRAMBufferComponent::set_buffer(CGPUBufferId buffer, uint64_t offset) SKR_NOEXCEPT
@@ -72,11 +57,6 @@ VRAMTextureComponent::VRAMTextureComponent(IIORequest* const request) SKR_NOEXCE
 VRAMTextureComponent::~VRAMTextureComponent() SKR_NOEXCEPT
 {
     
-}
-
-skr_guid_t VRAMTextureComponent::get_tid() const SKR_NOEXCEPT 
-{ 
-    return IORequestComponentTID<VRAMTextureComponent>::Get(); 
 }
 
 void VRAMTextureComponent::set_texture(CGPUTextureId texture) SKR_NOEXCEPT

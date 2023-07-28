@@ -29,7 +29,7 @@ typedef enum SkrAsyncIOFinishStep
 } SkrAsyncIOFinishStep;
 
 template <>
-struct IORequestComponentTID<struct IOStatusComponent> 
+struct CID<struct IOStatusComponent> 
 {
     static constexpr skr_guid_t Get();
 };
@@ -38,8 +38,6 @@ struct RUNTIME_API IOStatusComponent : public IORequestComponent
 public:
     IOStatusComponent(IIORequest* const request) SKR_NOEXCEPT;
     virtual ~IOStatusComponent() SKR_NOEXCEPT;
-
-    virtual skr_guid_t get_tid() const SKR_NOEXCEPT override;
 
     const skr_io_future_t* get_future() const SKR_NOEXCEPT { return future; }
 
@@ -130,7 +128,7 @@ protected:
     void* finish_callback_datas[SKR_IO_FINISH_POINT_COUNT];
 };
 
-constexpr skr_guid_t IORequestComponentTID<struct IOStatusComponent>::Get()
+constexpr skr_guid_t CID<struct IOStatusComponent>::Get()
 {
     using namespace skr::guid::literals;
     return u8"3db75617-8027-464b-b241-e4e59f83fd61"_guid;
