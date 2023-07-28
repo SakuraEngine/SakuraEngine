@@ -128,7 +128,7 @@ public:
     SkrAsyncServiceSortMethod sortMethod = SKR_ASYNC_SERVICE_SORT_METHOD_PARTIAL;
 };
 
-RUNTIME_API extern const char* kIOTaskQueueName;
+SKR_RUNTIME_API extern const char* kIOTaskQueueName;
 struct TaskBase
 {
     SkrAsyncServicePriority priority;
@@ -337,7 +337,7 @@ struct TaskContainer
 
     const bool isLockless = false;
     SMutex taskMutex;
-    struct RUNTIME_API IOTaskConcurrentQueueTraits : public skr::ConcurrentQueueDefaultTraits
+    struct SKR_RUNTIME_API IOTaskConcurrentQueueTraits : public skr::ConcurrentQueueDefaultTraits
     {
         static const bool RECYCLE_ALLOCATED_BLOCKS = true;
         static inline void* malloc(size_t size) { return sakura_mallocN(size, kIOTaskQueueName); }

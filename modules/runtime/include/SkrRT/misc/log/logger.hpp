@@ -27,7 +27,7 @@ static constexpr bool checkArgsCopyable() SKR_NOEXCEPT
     return (IsCopyableArgument<Args>::value && ...);
 }
 
-struct RUNTIME_API Logger
+struct SKR_RUNTIME_API Logger
 {
     Logger(const char8_t* name) SKR_NOEXCEPT;
     ~Logger() SKR_NOEXCEPT;

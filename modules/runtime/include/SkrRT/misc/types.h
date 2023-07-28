@@ -45,7 +45,7 @@ typedef struct skr_guid_t {
     uint32_t Storage3 SKR_IF_CPP( = 0);
 } skr_guid_t;
 
-RUNTIME_EXTERN_C RUNTIME_API void skr_make_guid(skr_guid_t* out_guid);
+SKR_EXTERN_C SKR_RUNTIME_API void skr_make_guid(skr_guid_t* out_guid);
 
 #define SKR_MD5_DIGEST_LENGTH 128 / sizeof(uint8_t)
 typedef struct skr_md5_t {
@@ -59,8 +59,8 @@ typedef struct skr_md5_u32x4_view_t {
     uint32_t d;
 } skr_md5_u32x4_view_t;
 
-RUNTIME_EXTERN_C RUNTIME_API bool skr_parse_md5(const char8_t* str32, skr_md5_t* out_md5);
-RUNTIME_EXTERN_C RUNTIME_API void skr_make_md5(const char8_t* str, uint32_t str_size, skr_md5_t* out_md5);
+SKR_EXTERN_C SKR_RUNTIME_API bool skr_parse_md5(const char8_t* str32, skr_md5_t* out_md5);
+SKR_EXTERN_C SKR_RUNTIME_API void skr_make_md5(const char8_t* str, uint32_t str_size, skr_md5_t* out_md5);
 
 extern const skr_guid_t $guid;
 
@@ -213,7 +213,7 @@ template <typename T>
 using SObjectPtr = SPtrHelper<T, false>;
 
 using SInterfaceDeleter = void(*)(struct SInterface*);
-struct RUNTIME_API SInterface
+struct SKR_RUNTIME_API SInterface
 {
     virtual ~SInterface() SKR_NOEXCEPT = default;
     virtual uint32_t add_refcount() = 0;
@@ -224,7 +224,7 @@ struct RUNTIME_API SInterface
 template <class T>
 constexpr bool is_object_v = std::is_base_of_v<skr::SInterface, T>;
 
-struct RUNTIME_API SObjectHeader : public SInterface
+struct SKR_RUNTIME_API SObjectHeader : public SInterface
 {
     uint32_t rc = 1;
     skr_guid_t type = {};
@@ -259,7 +259,7 @@ SBoxed<T>* box(T* ptr)
     return SBoxed<T>::from(ptr);
 }
 
-struct RUNTIME_API IBlob : public SInterface
+struct SKR_RUNTIME_API IBlob : public SInterface
 {
     static SObjectPtr<IBlob> Create(const uint8_t* data, uint64_t size, bool move, const char* name = nullptr) SKR_NOEXCEPT;
     static SObjectPtr<IBlob> CreateAligned(const uint8_t* data, uint64_t size, uint64_t alignment, bool move, const char* name = nullptr) SKR_NOEXCEPT;

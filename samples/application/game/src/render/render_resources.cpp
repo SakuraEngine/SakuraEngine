@@ -19,7 +19,7 @@
 #include "SkrImGui/skr_imgui_rg.h"
 #include "GameRuntime/gamert.h"
 
-RUNTIME_EXTERN_C RUNTIME_API bool skr_runtime_is_dpi_aware();
+SKR_EXTERN_C SKR_RUNTIME_API bool skr_runtime_is_dpi_aware();
 
 void create_imgui_resources(skr_vfs_t* resource_vfs, SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph)
 {

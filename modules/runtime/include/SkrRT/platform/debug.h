@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRT/platform/configure.h"
 
-RUNTIME_EXTERN_C RUNTIME_API void skr_debug_output(const char* msg);
+SKR_EXTERN_C SKR_RUNTIME_API void skr_debug_output(const char* msg);
 
 #if SKR_SHIPPING
 // Platform specific, need to be defined in Platform/Defines_XXX.h

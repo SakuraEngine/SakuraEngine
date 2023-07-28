@@ -13,7 +13,7 @@
 
 #include "SkrRT/containers/string.hpp"
 
-RUNTIME_EXTERN_C RUNTIME_API bool skr_runtime_is_dpi_aware();
+SKR_EXTERN_C SKR_RUNTIME_API bool skr_runtime_is_dpi_aware();
 
 void create_imgui_resources(SRenderDeviceId render_device, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs)
 {

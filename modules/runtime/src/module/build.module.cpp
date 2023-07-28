@@ -72,7 +72,7 @@ SkrRuntimeModule* SkrRuntimeModule::Get()
     return rm;
 }
 
-RUNTIME_EXTERN_C RUNTIME_API bool skr_runtime_is_dpi_aware()
+SKR_EXTERN_C SKR_RUNTIME_API bool skr_runtime_is_dpi_aware()
 {
     if (!SkrRuntimeModule::Get()) 
     {
@@ -110,7 +110,7 @@ void skr_runtime_free_dstorage_instance()
     }
 }
 
-RUNTIME_EXTERN_C RUNTIME_API skr::ModuleManager* skr_get_module_manager()
+SKR_EXTERN_C SKR_RUNTIME_API skr::ModuleManager* skr_get_module_manager()
 {
     static auto sModuleManager = eastl::make_unique<skr::ModuleManagerImpl>();
     return sModuleManager.get();

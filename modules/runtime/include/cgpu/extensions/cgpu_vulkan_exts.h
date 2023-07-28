@@ -27,8 +27,8 @@ typedef struct CGPUVulkanInstanceDescriptor {
     const struct VkDebugReportCallbackCreateInfoEXT* pDebugReportMessenger;
 } CGPUVulkanInstanceDescriptor;
 
-RUNTIME_EXTERN_C RUNTIME_API 
+SKR_EXTERN_C SKR_RUNTIME_API 
 VkCommandBuffer cgpu_vulkan_get_command_buffer(CGPUCommandBufferId cmd);
 
-RUNTIME_EXTERN_C RUNTIME_API 
+SKR_EXTERN_C SKR_RUNTIME_API 
 VkBuffer cgpu_vulkan_get_buffer(CGPUBufferId buffer);

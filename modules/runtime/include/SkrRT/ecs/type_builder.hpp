@@ -45,7 +45,7 @@ struct static_type_set_T {
     }
 };
 
-struct RUNTIME_API type_builder_t {
+struct SKR_RUNTIME_API type_builder_t {
     type_builder_t();
     ~type_builder_t();
     type_builder_t(const type_builder_t&);

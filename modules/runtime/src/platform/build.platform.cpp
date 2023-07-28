@@ -38,13 +38,13 @@ ISystemHandler::~ISystemHandler() SKR_NOEXCEPT {}
 
 #ifdef RUNTIME_SHARED
 extern "C" {
-RUNTIME_API bool mi_allocator_init(const char** message)
+SKR_RUNTIME_API bool mi_allocator_init(const char** message)
 {
     if (message != NULL) *message = NULL;
     return true;
 }
 
-RUNTIME_API void mi_allocator_done(void)
+SKR_RUNTIME_API void mi_allocator_done(void)
 {
     // nothing to do
 }
@@ -173,7 +173,7 @@ void skr_system_remove_text_input_handler(skr_system_handler_id handler, int64_t
 #endif
 
 #include "sdl2/sdl2_system.cpp"
-RUNTIME_EXTERN_C RUNTIME_API
+SKR_EXTERN_C SKR_RUNTIME_API
 skr_system_handler_id skr_system_get_default_handler()
 {
     return skr::SystemHandler_SDL2::Get();

@@ -22,12 +22,12 @@ namespace io {
 struct IVRAMService;
 using VRAMServiceDescriptor = skr_vram_io_service2_desc_t;
 
-struct RUNTIME_API IVRAMIOResource : public skr::SInterface
+struct SKR_RUNTIME_API IVRAMIOResource : public skr::SInterface
 {
     virtual ~IVRAMIOResource() SKR_NOEXCEPT;
 };
 
-struct RUNTIME_API IVRAMIOBuffer : public IVRAMIOResource
+struct SKR_RUNTIME_API IVRAMIOBuffer : public IVRAMIOResource
 {
     virtual ~IVRAMIOBuffer() SKR_NOEXCEPT;
 
@@ -36,7 +36,7 @@ struct RUNTIME_API IVRAMIOBuffer : public IVRAMIOResource
     // virtual CGPUBufferId acquire_buffer(CGPUQueueId owner, CGPUCommandBufferId cmd) const SKR_NOEXCEPT = 0;
 };
 
-struct RUNTIME_API IVRAMIOTexture : public IVRAMIOResource
+struct SKR_RUNTIME_API IVRAMIOTexture : public IVRAMIOResource
 {
     virtual ~IVRAMIOTexture() SKR_NOEXCEPT;
 
@@ -44,7 +44,7 @@ struct RUNTIME_API IVRAMIOTexture : public IVRAMIOResource
     // virtual CGPUTextureId acquire_texture(CGPUQueueId owner, CGPUCommandBufferId cmd) const SKR_NOEXCEPT = 0;
 };
 
-struct RUNTIME_API IVRAMIORequest : public IIORequest
+struct SKR_RUNTIME_API IVRAMIORequest : public IIORequest
 {
     virtual ~IVRAMIORequest() SKR_NOEXCEPT;
 
@@ -55,7 +55,7 @@ struct RUNTIME_API IVRAMIORequest : public IIORequest
 #pragma endregion
 };
 
-struct RUNTIME_API IBlocksVRAMRequest : public IVRAMIORequest
+struct SKR_RUNTIME_API IBlocksVRAMRequest : public IVRAMIORequest
 {
     virtual ~IBlocksVRAMRequest() SKR_NOEXCEPT;
 
@@ -77,7 +77,7 @@ struct RUNTIME_API IBlocksVRAMRequest : public IVRAMIORequest
 #pragma endregion
 };
 
-struct RUNTIME_API ISlicesVRAMRequest : public IVRAMIORequest
+struct SKR_RUNTIME_API ISlicesVRAMRequest : public IVRAMIORequest
 {
     virtual ~ISlicesVRAMRequest() SKR_NOEXCEPT;
 #pragma region IOVRAMResourceComponent
@@ -87,7 +87,7 @@ struct RUNTIME_API ISlicesVRAMRequest : public IVRAMIORequest
 #pragma endregion
 };
 
-struct RUNTIME_API ITilesVRAMRequest : public IVRAMIORequest
+struct SKR_RUNTIME_API ITilesVRAMRequest : public IVRAMIORequest
 {
     virtual ~ITilesVRAMRequest() SKR_NOEXCEPT;
 };
@@ -99,7 +99,7 @@ using SlicesIORequestId = SObjectPtr<ISlicesVRAMRequest>;
 using TilesIORequestId = SObjectPtr<ITilesVRAMRequest>;
 using BlocksVRAMRequestId = SObjectPtr<IBlocksVRAMRequest>;
 
-struct RUNTIME_API IVRAMService : public IIOService
+struct SKR_RUNTIME_API IVRAMService : public IIOService
 {
     [[nodiscard]] static IVRAMService* create(const VRAMServiceDescriptor* desc) SKR_NOEXCEPT;
     static void destroy(IVRAMService* service) SKR_NOEXCEPT;

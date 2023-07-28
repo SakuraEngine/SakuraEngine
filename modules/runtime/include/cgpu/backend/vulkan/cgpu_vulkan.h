@@ -7,7 +7,7 @@
 
 #include "cgpu/backend/vulkan/volk.h"
 
-RUNTIME_EXTERN_C CGPU_API const VkAllocationCallbacks GCGPUVkAllocationCallbacks;
+SKR_EXTERN_C CGPU_API const VkAllocationCallbacks GCGPUVkAllocationCallbacks;
 
 #ifdef __cplusplus
 extern "C" {

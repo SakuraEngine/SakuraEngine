@@ -35,14 +35,14 @@ protected:
 };
 #endif
 
-RUNTIME_EXTERN_C SKR_RENDERER_API 
+SKR_EXTERN_C SKR_RENDERER_API 
 SRendererId skr_create_renderer(SRenderDeviceId render_device, dual_storage_t* storage);
 
-RUNTIME_EXTERN_C SKR_RENDERER_API 
+SKR_EXTERN_C SKR_RENDERER_API 
 void skr_free_renderer(SRendererId renderer);
 
-RUNTIME_EXTERN_C SKR_RENDERER_API 
+SKR_EXTERN_C SKR_RENDERER_API 
 SRenderDeviceId skr_get_default_render_device();
 
-RUNTIME_EXTERN_C SKR_RENDERER_API 
+SKR_EXTERN_C SKR_RENDERER_API 
 void skr_renderer_render_frame(SRendererId renderer, skr::render_graph::RenderGraph* render_graph);

@@ -5,7 +5,7 @@
 namespace skr
 {
 template <class _Ty>
-class RUNTIME_API skr_allocator
+class SKR_RUNTIME_API skr_allocator
 {
 public:
     static_assert(!std::is_const_v<_Ty>, "The C++ Standard forbids containers of const elements "

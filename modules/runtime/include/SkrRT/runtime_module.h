@@ -6,7 +6,7 @@
 #include "SkrRT/platform/win/dstorage_windows.h"
 #endif
 
-class RUNTIME_API SkrRuntimeModule : public skr::IDynamicModule
+class SKR_RUNTIME_API SkrRuntimeModule : public skr::IDynamicModule
 {
 public:
     virtual void on_load(int argc, char8_t** argv) override;
@@ -22,14 +22,14 @@ public:
 #endif
 };
 
-RUNTIME_EXTERN_C RUNTIME_API bool skr_runtime_is_dpi_aware();
-RUNTIME_EXTERN_C RUNTIME_API SkrDStorageInstanceId skr_runtime_get_dstorage_instance();
-RUNTIME_EXTERN_C RUNTIME_API void skr_runtime_free_dstorage_instance();
+SKR_EXTERN_C SKR_RUNTIME_API bool skr_runtime_is_dpi_aware();
+SKR_EXTERN_C SKR_RUNTIME_API SkrDStorageInstanceId skr_runtime_get_dstorage_instance();
+SKR_EXTERN_C SKR_RUNTIME_API void skr_runtime_free_dstorage_instance();
 
 #ifdef _WIN32
-RUNTIME_EXTERN_C RUNTIME_API skr_win_dstorage_decompress_service_id 
+SKR_EXTERN_C SKR_RUNTIME_API skr_win_dstorage_decompress_service_id 
 skr_runtime_create_win_dstorage_decompress_service(const skr_win_dstorage_decompress_desc_t* desc);
 
-RUNTIME_EXTERN_C RUNTIME_API skr_win_dstorage_decompress_service_id 
+SKR_EXTERN_C SKR_RUNTIME_API skr_win_dstorage_decompress_service_id 
 skr_runtime_get_win_dstorage_decompress_service();
 #endif

@@ -5,7 +5,7 @@
 struct skr_vfs_t;
 namespace skr::resource
 {
-struct RUNTIME_API SLocalResourceRegistry : SResourceRegistry {
+struct SKR_RUNTIME_API SLocalResourceRegistry : SResourceRegistry {
     SLocalResourceRegistry(skr_vfs_t* vfs);
     virtual ~SLocalResourceRegistry() = default;
     bool RequestResourceFile(SResourceRequest* request) override;

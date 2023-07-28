@@ -2,5 +2,5 @@
 
 namespace skr
 {
-    RUNTIME_API const char* kConcurrentQueueMemoryName = "ConcurrentQueues";
+    SKR_RUNTIME_API const char* kConcurrentQueueMemoryName = "ConcurrentQueues";
 }

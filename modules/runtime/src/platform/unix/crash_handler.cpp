@@ -18,19 +18,19 @@ namespace
 }
 extern "C"
 {
-RUNTIME_API SCrashHandlerId skr_initialize_crash_handler() SKR_NOEXCEPT
+SKR_RUNTIME_API SCrashHandlerId skr_initialize_crash_handler() SKR_NOEXCEPT
 {
     auto& this_ = ::unix_crash_handler;
     this_.Initialize();
     return &this_;
 }
 
-RUNTIME_API SCrashHandlerId skr_crash_handler_get() SKR_NOEXCEPT
+SKR_RUNTIME_API SCrashHandlerId skr_crash_handler_get() SKR_NOEXCEPT
 {
     return &::unix_crash_handler;
 }
 
-RUNTIME_API void skr_finalize_crash_handler() SKR_NOEXCEPT
+SKR_RUNTIME_API void skr_finalize_crash_handler() SKR_NOEXCEPT
 {
     auto& this_ = ::unix_crash_handler;
     this_.Finalize();

@@ -33,7 +33,7 @@ struct CID<struct IOStatusComponent>
 {
     static constexpr skr_guid_t Get();
 };
-struct RUNTIME_API IOStatusComponent : public IORequestComponent
+struct SKR_RUNTIME_API IOStatusComponent : public IORequestComponent
 {
 public:
     IOStatusComponent(IIORequest* const request) SKR_NOEXCEPT;

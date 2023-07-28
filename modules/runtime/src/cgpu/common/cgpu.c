@@ -30,7 +30,7 @@
 
 #include "tracy/TracyC.h"
 
-RUNTIME_API CGPUInstanceId cgpu_create_instance(const CGPUInstanceDescriptor* desc)
+SKR_RUNTIME_API CGPUInstanceId cgpu_create_instance(const CGPUInstanceDescriptor* desc)
 {
     TracyCZoneN(zz, "CGPUCreateInstance", 1);
     
@@ -75,12 +75,12 @@ RUNTIME_API CGPUInstanceId cgpu_create_instance(const CGPUInstanceDescriptor* de
     return instance;
 }
 
-RUNTIME_API ECGPUBackend cgpu_instance_get_backend(CGPUInstanceId instance)
+SKR_RUNTIME_API ECGPUBackend cgpu_instance_get_backend(CGPUInstanceId instance)
 {
     return instance->backend;
 }
 
-RUNTIME_API void cgpu_query_instance_features(CGPUInstanceId instance, struct CGPUInstanceFeatures* features)
+SKR_RUNTIME_API void cgpu_query_instance_features(CGPUInstanceId instance, struct CGPUInstanceFeatures* features)
 {
     cgpu_assert(instance != CGPU_NULLPTR && "fatal: can't destroy NULL instance!");
     cgpu_assert(instance->proc_table->query_instance_features && "query_instance_features Proc Missing!");
@@ -88,7 +88,7 @@ RUNTIME_API void cgpu_query_instance_features(CGPUInstanceId instance, struct CG
     instance->proc_table->query_instance_features(instance, features);
 }
 
-RUNTIME_API void cgpu_free_instance(CGPUInstanceId instance)
+SKR_RUNTIME_API void cgpu_free_instance(CGPUInstanceId instance)
 {
     TracyCZoneN(zz, "CGPUFreeInstance", 1);
 
@@ -570,7 +570,7 @@ void cgpu_free_queue(CGPUQueueId queue)
     return;
 }
 
-RUNTIME_API CGPUCommandPoolId cgpu_create_command_pool(CGPUQueueId queue,
+SKR_RUNTIME_API CGPUCommandPoolId cgpu_create_command_pool(CGPUQueueId queue,
 const CGPUCommandPoolDescriptor* desc)
 {
     cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
@@ -582,7 +582,7 @@ const CGPUCommandPoolDescriptor* desc)
     return pool;
 }
 
-RUNTIME_API CGPUCommandBufferId cgpu_create_command_buffer(CGPUCommandPoolId pool, const struct CGPUCommandBufferDescriptor* desc)
+SKR_RUNTIME_API CGPUCommandBufferId cgpu_create_command_buffer(CGPUCommandPoolId pool, const struct CGPUCommandBufferDescriptor* desc)
 {
     cgpu_assert(pool != CGPU_NULLPTR && "fatal: call on NULL pool!");
     cgpu_assert(pool->queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
@@ -597,7 +597,7 @@ RUNTIME_API CGPUCommandBufferId cgpu_create_command_buffer(CGPUCommandPoolId poo
     return cmd;
 }
 
-RUNTIME_API void cgpu_reset_command_pool(CGPUCommandPoolId pool)
+SKR_RUNTIME_API void cgpu_reset_command_pool(CGPUCommandPoolId pool)
 {
     cgpu_assert(pool != CGPU_NULLPTR && "fatal: call on NULL pool!");
     cgpu_assert(pool->queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
@@ -608,7 +608,7 @@ RUNTIME_API void cgpu_reset_command_pool(CGPUCommandPoolId pool)
     return;
 }
 
-RUNTIME_API void cgpu_free_command_buffer(CGPUCommandBufferId cmd)
+SKR_RUNTIME_API void cgpu_free_command_buffer(CGPUCommandBufferId cmd)
 {
     cgpu_assert(cmd != CGPU_NULLPTR && "fatal: call on NULL cmdbuffer!");
     CGPUCommandPoolId pool = cmd->pool;
@@ -622,7 +622,7 @@ RUNTIME_API void cgpu_free_command_buffer(CGPUCommandBufferId cmd)
     fn_free_cmd(cmd);
 }
 
-RUNTIME_API void cgpu_free_command_pool(CGPUCommandPoolId pool)
+SKR_RUNTIME_API void cgpu_free_command_pool(CGPUCommandPoolId pool)
 {
     cgpu_assert(pool != CGPU_NULLPTR && "fatal: call on NULL pool!");
     cgpu_assert(pool->queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
@@ -859,7 +859,7 @@ const CGPUBufferId* buffers, const uint32_t* strides, const uint32_t* offsets)
     fn_bind_vertex_buffers(encoder, buffer_count, buffers, strides, offsets);
 }
 
-RUNTIME_API void cgpu_render_encoder_bind_index_buffer(CGPURenderPassEncoderId encoder, CGPUBufferId buffer, uint32_t index_stride, uint64_t offset)
+SKR_RUNTIME_API void cgpu_render_encoder_bind_index_buffer(CGPURenderPassEncoderId encoder, CGPUBufferId buffer, uint32_t index_stride, uint64_t offset)
 {
     cgpu_assert(encoder != CGPU_NULLPTR && "fatal: call on NULL compute encoder!");
     cgpu_assert(buffer != CGPU_NULLPTR && "fatal: call on NULL buffer!");
@@ -1300,7 +1300,7 @@ uint64_t size, const char8_t* name, bool device_local_preferred)
     return cgpu_create_buffer(device, &buf_desc);
 }
 
-RUNTIME_API CGPUBufferId cgpux_create_mapped_upload_buffer(CGPUDeviceId device,
+SKR_RUNTIME_API CGPUBufferId cgpux_create_mapped_upload_buffer(CGPUDeviceId device,
 uint64_t size, const char8_t* name)
 {
     DECLARE_ZERO(CGPUBufferDescriptor, buf_desc)
@@ -1472,7 +1472,7 @@ CGPULinkedShaderId cgpu_compile_and_link_shaders(CGPURootSignatureId signature, 
     return linked;
 }
 
-RUNTIME_API void cgpu_compile_shaders(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* descs, uint32_t count, CGPUCompiledShaderId* out_isas)
+SKR_RUNTIME_API void cgpu_compile_shaders(CGPURootSignatureId signature, const struct CGPUCompiledShaderDescriptor* descs, uint32_t count, CGPUCompiledShaderId* out_isas)
 {
     cgpu_assert(signature != CGPU_NULLPTR && "fatal: call on NULL signature!");
     cgpu_assert(signature->device != CGPU_NULLPTR && "fatal: call on NULL device!");

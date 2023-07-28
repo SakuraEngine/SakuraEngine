@@ -34,7 +34,7 @@ namespace ftl
  * A fiber aware mutex. Does not block in the traditional way. Methods do not follow the lowerCamelCase convention
  * of the rest of the library in order to comply with C++'s named requirement Basic Lockable and Lockable.
  */
-class RUNTIME_API Fibtex
+class SKR_RUNTIME_API Fibtex
 {
 public:
     /**

@@ -122,7 +122,7 @@ struct CommonVRAMReader final : public VRAMReaderBase<IIOBatchProcessor>
 namespace skr {
 namespace io {
 
-struct RUNTIME_API DStorageVRAMReader final 
+struct SKR_RUNTIME_API DStorageVRAMReader final 
     : public VRAMReaderBase<IIOBatchProcessor>
 {
     DStorageVRAMReader(VRAMService* service) SKR_NOEXCEPT;

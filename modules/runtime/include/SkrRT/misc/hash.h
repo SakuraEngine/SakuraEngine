@@ -13,13 +13,13 @@ extern "C" {
 #define SKR_DEFAULT_HASH_SEED SKR_DEFAULT_HASH_SEED_64
 #endif
 
-RUNTIME_EXTERN_C RUNTIME_STATIC_API 
+SKR_EXTERN_C SKR_STATIC_API 
 size_t skr_hash(const void* buffer, size_t size, size_t seed);
 
-RUNTIME_EXTERN_C RUNTIME_STATIC_API 
+SKR_EXTERN_C SKR_STATIC_API 
 uint64_t skr_hash64(const void* buffer, uint64_t size, uint64_t seed);
 
-RUNTIME_EXTERN_C RUNTIME_STATIC_API 
+SKR_EXTERN_C SKR_STATIC_API 
 uint32_t skr_hash32(const void* buffer, uint32_t size, uint32_t seed);
 
 #ifdef __cplusplus

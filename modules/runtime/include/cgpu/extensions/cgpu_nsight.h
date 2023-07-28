@@ -24,8 +24,8 @@ struct CGPUNSightTracker
 #endif
 };
 
-RUNTIME_EXTERN_C RUNTIME_API
+SKR_EXTERN_C SKR_RUNTIME_API
 CGPUNSightTrackerId cgpu_create_nsight_tracker(CGPUInstanceId instance, const CGPUNSightTrackerDescriptor* descriptor);
 
-RUNTIME_EXTERN_C RUNTIME_API
+SKR_EXTERN_C SKR_RUNTIME_API
 void cgpu_free_nsight_tracker(CGPUNSightTrackerId tracker);

@@ -6,7 +6,7 @@
 namespace skr {
 namespace io {
 
-struct RUNTIME_API DStorageEvent : public skr::SInterface
+struct SKR_RUNTIME_API DStorageEvent : public skr::SInterface
 {
     IO_RC_OBJECT_BODY
 public:

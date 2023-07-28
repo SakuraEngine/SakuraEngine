@@ -389,19 +389,19 @@ bool WinCrashHandler::UnsetThreadSignalHandlers() SKR_NOEXCEPT
 extern "C"
 {
     
-RUNTIME_API SCrashHandlerId skr_initialize_crash_handler() SKR_NOEXCEPT
+SKR_RUNTIME_API SCrashHandlerId skr_initialize_crash_handler() SKR_NOEXCEPT
 {
     auto& this_ = ::windows_crash_handler;
     this_.Initialize();
     return &this_;
 }
 
-RUNTIME_API SCrashHandlerId skr_crash_handler_get() SKR_NOEXCEPT
+SKR_RUNTIME_API SCrashHandlerId skr_crash_handler_get() SKR_NOEXCEPT
 {
     return &::windows_crash_handler;
 }
 
-RUNTIME_API void skr_finalize_crash_handler() SKR_NOEXCEPT
+SKR_RUNTIME_API void skr_finalize_crash_handler() SKR_NOEXCEPT
 {
     auto& this_ = ::windows_crash_handler;
     this_.Finalize();

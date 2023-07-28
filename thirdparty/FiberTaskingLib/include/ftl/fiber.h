@@ -39,7 +39,7 @@ namespace ftl
 
 using FiberStartRoutine = void (*)(void* arg);
 
-class RUNTIME_API Fiber
+class SKR_RUNTIME_API Fiber
 {
 public:
     /**

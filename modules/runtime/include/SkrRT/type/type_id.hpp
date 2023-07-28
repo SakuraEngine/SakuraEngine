@@ -32,7 +32,7 @@ struct type_of;
     };                                               \
     template <>                                      \
     struct type_of<name> {                           \
-        RUNTIME_API static const skr_type_t* get();  \
+        SKR_RUNTIME_API static const skr_type_t* get();  \
     };
 
 // {d58efbca-9a6c-4f82-b04f-1c057aa924d5}

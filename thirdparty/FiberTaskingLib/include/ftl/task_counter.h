@@ -36,7 +36,7 @@ class TaskScheduler;
  * It is used to create dependencies between Tasks, and is how you wait
  * for a set of Tasks to finish.
  */
-class RUNTIME_API TaskCounter : public BaseCounter
+class SKR_RUNTIME_API TaskCounter : public BaseCounter
 {
     bool inverse;
 public:

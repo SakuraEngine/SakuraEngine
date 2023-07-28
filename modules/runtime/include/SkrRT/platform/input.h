@@ -203,12 +203,12 @@ typedef enum ECursorCoordinate {
 #ifdef __cplusplus
 extern "C" {
 #endif
-RUNTIME_API bool
+SKR_RUNTIME_API bool
 skr_key_down(EKeyCode key_code);
-RUNTIME_API bool skr_mouse_key_down(EMouseKey key_code);
-RUNTIME_API bool skr_set_cursor_pos(int32_t x, int32_t y);
-RUNTIME_API bool skr_set_cursor(EMouseCursor cursor);
-RUNTIME_API void skr_cursor_pos(int32_t* x, int32_t* y, ECursorCoordinate corrdinate);
+SKR_RUNTIME_API bool skr_mouse_key_down(EMouseKey key_code);
+SKR_RUNTIME_API bool skr_set_cursor_pos(int32_t x, int32_t y);
+SKR_RUNTIME_API bool skr_set_cursor(EMouseCursor cursor);
+SKR_RUNTIME_API void skr_cursor_pos(int32_t* x, int32_t* y, ECursorCoordinate corrdinate);
 #ifdef __cplusplus
 }
 #endif

@@ -32,7 +32,7 @@ namespace task2
     using state_ptr_t = SPtr<T>;
     template<class T>
     using state_weak_ptr_t = SWeakPtr<T>;
-    struct RUNTIME_API scheudler_config_t
+    struct SKR_RUNTIME_API scheudler_config_t
     {
         scheudler_config_t();
         bool setAffinity = true;
@@ -51,7 +51,7 @@ namespace task2
     {
         struct promise_type
         {
-            RUNTIME_API skr_task_t get_return_object();
+            SKR_RUNTIME_API skr_task_t get_return_object();
             std::suspend_always initial_suspend() { return {}; }
 #ifdef TRACY_ENABLE
             std::suspend_never final_suspend() noexcept
@@ -64,7 +64,7 @@ namespace task2
             std::suspend_never final_suspend() noexcept { return {}; }
 #endif
             void return_void() {}
-            RUNTIME_API void unhandled_exception();
+            SKR_RUNTIME_API void unhandled_exception();
 #ifdef TRACY_ENABLE
             std::suspend_never yield_value(task_name_t tn) { name = tn.name; return {}; }
 #endif
@@ -137,8 +137,8 @@ namespace task2
         ~event_t()
         {
         }
-        RUNTIME_API void notify();
-        RUNTIME_API void reset();
+        SKR_RUNTIME_API void notify();
+        SKR_RUNTIME_API void reset();
         size_t hash() const { return (size_t)state.get(); }
         bool done() const 
         { 
@@ -202,9 +202,9 @@ namespace task2
         ~counter_t()
         {
         }
-        RUNTIME_API void add(uint32_t count);
+        SKR_RUNTIME_API void add(uint32_t count);
         size_t hash() const { return (size_t)state.get(); }
-        RUNTIME_API bool decrease();
+        SKR_RUNTIME_API bool decrease();
         bool done() const 
         { 
             if(!state) 
@@ -230,7 +230,7 @@ namespace task2
         state_weak_ptr_t<counter_t::State> state;
     };
 
-    struct RUNTIME_API scheduler_t
+    struct SKR_RUNTIME_API scheduler_t
     {
         void initialize(const scheudler_config_t&);
         void bind();
@@ -239,7 +239,7 @@ namespace task2
         static scheduler_t* instance();
         void schedule(skr_task_t&& task);
         void schedule(eastl::function<void()>&& function);
-        struct RUNTIME_API EventAwaitable
+        struct SKR_RUNTIME_API EventAwaitable
         {
             EventAwaitable(scheduler_t& s, event_t event, int workerIdx = -1);
             bool await_ready() const;
@@ -249,7 +249,7 @@ namespace task2
             event_t event;
             int workerIdx = -1;
         };
-        struct RUNTIME_API CounterAwaitable
+        struct SKR_RUNTIME_API CounterAwaitable
         {
             CounterAwaitable(scheduler_t& s, counter_t counter, int workerIdx = -1);
             bool await_ready() const;
@@ -279,10 +279,10 @@ namespace task2
     {
         scheduler_t::instance()->schedule(std::move(function));
     }
-    RUNTIME_API scheduler_t::EventAwaitable co_wait(event_t event, bool pinned = false);
-    RUNTIME_API scheduler_t::CounterAwaitable co_wait(counter_t counter, bool pinned = false);
-    RUNTIME_API void wait(event_t event);
-    RUNTIME_API void wait(counter_t counter);
+    SKR_RUNTIME_API scheduler_t::EventAwaitable co_wait(event_t event, bool pinned = false);
+    SKR_RUNTIME_API scheduler_t::CounterAwaitable co_wait(counter_t counter, bool pinned = false);
+    SKR_RUNTIME_API void wait(event_t event);
+    SKR_RUNTIME_API void wait(counter_t counter);
     inline void sync(event_t event)
     {
         scheduler_t::instance()->sync(std::move(event));

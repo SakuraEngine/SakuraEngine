@@ -9,7 +9,7 @@ typedef struct skr_config_resource_t skr_config_resource_t;
 #if defined(__cplusplus)
 sreflect_struct("guid" : "8F2DE9A2-FE05-4EB7-A07F-A973E3E92B74")
 sattr("rtti" : true)
-RUNTIME_API skr_config_resource_t 
+SKR_RUNTIME_API skr_config_resource_t 
 {
     sattr("no-rtti" : true)
     skr_type_id_t configType;
@@ -22,14 +22,14 @@ RUNTIME_API skr_config_resource_t
 namespace skr::binary
 {
     template<>
-    struct RUNTIME_API ReadTrait<skr_config_resource_t>
+    struct SKR_RUNTIME_API ReadTrait<skr_config_resource_t>
     {
     public:
         static int Read(skr_binary_reader_t* reader, skr_config_resource_t& config);
     };
 
     template<>
-    struct RUNTIME_API WriteTrait<const skr_config_resource_t&>
+    struct SKR_RUNTIME_API WriteTrait<const skr_config_resource_t&>
     {
     public:
         static int Write(skr_binary_writer_t* writer, const skr_config_resource_t& config);
@@ -50,7 +50,7 @@ template <> struct type_id<skr_config_resource_t> {
 };
 }
 namespace resource
-{struct RUNTIME_API SConfigFactory : public SResourceFactory {
+{struct SKR_RUNTIME_API SConfigFactory : public SResourceFactory {
     skr_type_id_t GetResourceType() override;
 
     bool AsyncIO() override { return false; }
