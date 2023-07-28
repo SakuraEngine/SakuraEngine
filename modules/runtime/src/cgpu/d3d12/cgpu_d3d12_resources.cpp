@@ -90,8 +90,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
     {
         start_state = CGPU_RESOURCE_STATE_COPY_DEST;
     }
-    D3D12_RESOURCE_STATES res_states = D3D12Util_TranslateResourceState(start_state);
-
+    D3D12_RESOURCE_STATES InitialState = D3D12Util_TranslateResourceState(start_state);
     // Do Allocation
     const bool log_allocation = false;
     D3D12MA::ALLOCATION_DESC alloc_desc = D3D12Util_CreateAllocationDesc(desc);
@@ -108,9 +107,11 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
         heapProps.CreationNodeMask = CGPU_SINGLE_GPU_NODE_MASK;
         NV_RESOURCE_PARAMS nvParams = {};
         nvParams.NVResourceFlags = NV_D3D12_RESOURCE_FLAGS::NV_D3D12_RESOURCE_FLAG_CPUVISIBLE_VIDMEM;
+        if (InitialState == D3D12_RESOURCE_STATE_GENERIC_READ)
+            InitialState = D3D12_RESOURCE_STATE_COMMON; // [STATE_CREATION WARNING #1328: CREATERESOURCE_STATE_IGNORED]
         NvAPI_D3D12_CreateCommittedResource(D->pDxDevice, &heapProps,
             alloc_desc.ExtraHeapFlags,
-            &bufDesc, res_states,
+            &bufDesc, InitialState,
             nullptr, &nvParams, IID_ARGS(&B->pDxResource),
             &cpuVisibleVRamSupported);
         if (!cpuVisibleVRamSupported)
@@ -133,8 +134,10 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
             heapProps.VisibleNodeMask = CGPU_SINGLE_GPU_NODE_MASK;
             heapProps.CreationNodeMask = CGPU_SINGLE_GPU_NODE_MASK;
+            if (InitialState == D3D12_RESOURCE_STATE_GENERIC_READ)
+                InitialState = D3D12_RESOURCE_STATE_COMMON; // [STATE_CREATION WARNING #1328: CREATERESOURCE_STATE_IGNORED]
             CHECK_HRESULT(D->pDxDevice->CreateCommittedResource(&heapProps, alloc_desc.ExtraHeapFlags, 
-            &bufDesc, res_states, NULL, IID_ARGS(&B->pDxResource)));
+            &bufDesc, InitialState, NULL, IID_ARGS(&B->pDxResource)));
             if (log_allocation)
             {
                 SKR_LOG_TRACE(u8"[D3D12] Create Committed Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
@@ -145,7 +148,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
         {
             {
                 ZoneScopedN("Allocation(Buffer)");
-                CHECK_HRESULT(D->pResourceAllocator->CreateResource(&alloc_desc, &bufDesc, res_states, 
+                CHECK_HRESULT(D->pResourceAllocator->CreateResource(&alloc_desc, &bufDesc, InitialState, 
                     NULL, &B->pDxAllocation, IID_ARGS(&B->pDxResource)));
             }            
             if (log_allocation)
@@ -248,8 +251,11 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
             else if (desc->format != CGPU_FORMAT_UNDEFINED)
             {
                 uavDesc.Format = (DXGI_FORMAT)DXGIUtil_TranslatePixelFormat(desc->format);
-                D3D12_FEATURE_DATA_FORMAT_SUPPORT FormatSupport = { uavDesc.Format, D3D12_FORMAT_SUPPORT1_NONE,
-                    D3D12_FORMAT_SUPPORT2_NONE };
+                D3D12_FEATURE_DATA_FORMAT_SUPPORT FormatSupport = { 
+                    uavDesc.Format, 
+                    D3D12_FORMAT_SUPPORT1_NONE,
+                    D3D12_FORMAT_SUPPORT2_NONE 
+                };
                 HRESULT hr =
                 D->pDxDevice->CheckFeatureSupport(D3D12_FEATURE_FORMAT_SUPPORT, &FormatSupport, sizeof(FormatSupport));
                 if (!SUCCEEDED(hr) || !(FormatSupport.Support2 & D3D12_FORMAT_SUPPORT2_UAV_TYPED_LOAD) ||

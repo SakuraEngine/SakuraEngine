@@ -98,15 +98,15 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         auto meshes = dual::get_owned_rw<skr_live2d_render_model_comp_t>(r_cv);
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
-                while (!meshes[i].vram_request.is_ready()) {}
-                if (meshes[i].vram_request.render_model)
+                while (!meshes[i].vram_future.is_ready()) {}
+                if (meshes[i].vram_future.render_model)
                 {
-                    skr_live2d_render_model_free(meshes[i].vram_request.render_model);
+                    skr_live2d_render_model_free(meshes[i].vram_future.render_model);
                 }
-                while (!meshes[i].ram_request.is_ready()) {}
-                if (meshes[i].ram_request.model_resource)
+                while (!meshes[i].ram_future.is_ready()) {}
+                if (meshes[i].ram_future.model_resource)
                 {
-                    skr_live2d_model_free(meshes[i].ram_request.model_resource);
+                    skr_live2d_model_free(meshes[i].ram_future.model_resource);
                 }
             }
         };
@@ -186,13 +186,13 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
             const auto proper_pipeline = get_pipeline();
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
-                if (models[i].vram_request.is_ready())
+                if (models[i].vram_future.is_ready())
                 {
-                    auto&& render_model = models[i].vram_request.render_model;
+                    auto&& render_model = models[i].vram_future.render_model;
                     const auto& cmds = render_model->primitive_commands;
                     push_constants[render_model].resize(0);
 
-                    auto&& model_resource = models[i].ram_request.model_resource;
+                    auto&& model_resource = models[i].ram_future.model_resource;
                     const auto list = skr_live2d_model_get_sorted_drawable_list(model_resource);
                     if(!list) continue;
                     auto drawable_list = sorted_drawable_list[render_model] = { list , render_model->index_buffer_views.size() };
@@ -277,10 +277,10 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
             auto models = dual::get_owned_rw<skr_live2d_render_model_comp_t>(r_cv);
             for (uint32_t i = 0; i < r_cv->count; i++)
             {
-                if (models[i].vram_request.is_ready())
+                if (models[i].vram_future.is_ready())
                 {
-                    auto&& render_model = models[i].vram_request.render_model;
-                    auto&& model_resource = models[i].ram_request.model_resource;
+                    auto&& render_model = models[i].vram_future.render_model;
+                    auto&& model_resource = models[i].ram_future.model_resource;
                     mask_push_constants[render_model].resize(0);
 
                     // TODO: move this to (some manager?) other than update morph/phys in a render pass
