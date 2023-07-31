@@ -71,7 +71,7 @@ void skr::io::VRAMService_::tryCreateBufferResource(skr::io::VRAMService_::Task 
         if (ds_buffer_task->buffer_io.dstorage.source_type == SKR_DSTORAGE_SOURCE_FILE)
         {
             SKR_ASSERT( (ds_buffer_task->buffer_io.dstorage.path) && "buffer_io.path must be set");
-            auto ds_file = cgpu_dstorage_open_file(buffer_io.dstorage.queue, task.path.c_str());
+            auto ds_file = cgpu_dstorage_open_file(buffer_io.dstorage.queue, task.path.u8_str());
             SKR_ASSERT( (ds_file) && "file must be opened");
             ds_buffer_task->dstorage_task = allocateCGPUDStorageTask(buffer_io.device, buffer_io.dstorage.queue, ds_file);
             if (destination->buffer) 
@@ -138,7 +138,7 @@ void skr::io::VRAMService_::tryCreateTextureResource(skr::io::VRAMService_::Task
             SKR_ASSERT( (ds_texture_task->texture_io.dstorage.path) && "texture_io.path must be set");
             const auto& texture_io = ds_texture_task->texture_io;
             const auto& destination = ds_texture_task->destination;
-            auto ds_file = cgpu_dstorage_open_file(texture_io.dstorage.queue, task.path.c_str());
+            auto ds_file = cgpu_dstorage_open_file(texture_io.dstorage.queue, task.path.u8_str());
             SKR_ASSERT( (ds_file) && "file must be opened");
             ds_texture_task->dstorage_task = allocateCGPUDStorageTask(texture_io.device, texture_io.dstorage.queue, ds_file);
             if (destination->texture) 

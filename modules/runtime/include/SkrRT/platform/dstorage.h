@@ -108,7 +108,7 @@ SKR_RUNTIME_API void skr_free_dstorage_instance(SkrDStorageInstanceId inst);
 SKR_RUNTIME_API SkrDStorageQueueId skr_create_dstorage_queue(const SkrDStorageQueueDescriptor* desc);
 SKR_RUNTIME_API void skr_free_dstorage_queue(SkrDStorageQueueId queue);
 
-SKR_RUNTIME_API SkrDStorageFileHandle skr_dstorage_open_file(SkrDStorageInstanceId instance, const char* abs_path);
+SKR_RUNTIME_API SkrDStorageFileHandle skr_dstorage_open_file(SkrDStorageInstanceId instance, const char8_t* abs_path);
 SKR_RUNTIME_API void skr_dstorage_query_file_info(SkrDStorageInstanceId instance, SkrDStorageFileHandle file, SkrDStorageFileInfo* info);
 SKR_RUNTIME_API void skr_dstorage_close_file(SkrDStorageInstanceId instance, SkrDStorageFileHandle file);
 

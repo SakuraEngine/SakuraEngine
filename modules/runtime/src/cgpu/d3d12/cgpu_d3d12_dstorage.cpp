@@ -71,7 +71,7 @@ void cgpu_free_dstorage_queue_d3d12(CGPUDStorageQueueId queue)
 
 #include <filesystem>
 
-CGPUDStorageFileHandle cgpu_dstorage_open_file_d3d12(CGPUDStorageQueueId queue, const char* abs_path)
+CGPUDStorageFileHandle cgpu_dstorage_open_file_d3d12(CGPUDStorageQueueId queue, const char8_t* abs_path)
 {
     CGPUDStorageQueueD3D12* Q = (CGPUDStorageQueueD3D12*)queue;
     return skr_dstorage_open_file(Q->pInstance, abs_path);

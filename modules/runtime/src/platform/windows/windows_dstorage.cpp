@@ -339,7 +339,7 @@ void skr_free_dstorage_queue(SkrDStorageQueueId queue)
 
 #include <filesystem>
 
-SkrDStorageFileHandle skr_dstorage_open_file(SkrDStorageInstanceId inst, const char* abs_path)
+SkrDStorageFileHandle skr_dstorage_open_file(SkrDStorageInstanceId inst, const char8_t* abs_path)
 {
     IDStorageFile* pFile = nullptr;
     auto I = (SkrWindowsDStorageInstance*)inst;
