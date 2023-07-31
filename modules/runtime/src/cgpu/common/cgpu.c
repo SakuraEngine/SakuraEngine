@@ -1398,7 +1398,7 @@ CGPUDStorageQueueId cgpu_create_dstorage_queue(CGPUDeviceId device, const CGPUDS
     return device->proc_table_cache->create_dstorage_queue(device, descriptor);    
 }
 
-CGPUDStorageFileHandle cgpu_dstorage_open_file(CGPUDStorageQueueId queue, const char* abs_path)
+CGPUDStorageFileHandle cgpu_dstorage_open_file(CGPUDStorageQueueId queue, const char8_t* abs_path)
 {
     cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
     cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");

@@ -1,6 +1,7 @@
+#include "SkrRT/platform/dstorage.h"
 #include "../common/io_request.hpp"
-#include "io/vram/components.hpp"
-#include "vram_resolvers.hpp"
+#include "../vram/components.hpp"
+#include "../vram/vram_resolvers.hpp"
 #include "components.hpp"
 
 namespace skr {

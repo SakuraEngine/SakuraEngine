@@ -24,7 +24,7 @@ void DStorageFileResolver::resolve(SkrAsyncServicePriority priority, IOBatchId b
         p /= pPath->path.c_str();
 
         auto instance = skr_get_dstorage_instnace();
-        pFile->dfile = skr_dstorage_open_file(instance, p.string().c_str());
+        pFile->dfile = skr_dstorage_open_file(instance, p.u8string().c_str());
         SKR_ASSERT(pFile->dfile);
     }
     else
