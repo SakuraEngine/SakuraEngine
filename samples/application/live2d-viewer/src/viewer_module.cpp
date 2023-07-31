@@ -117,6 +117,7 @@ void SLive2DViewerModule::on_load(int argc, char8_t** argv)
     vramServiceDesc.ram_service = ram_service;
     vramServiceDesc.callback_job_queue = SLive2DViewerModule::Get()->io_job_queue;
     vramServiceDesc.use_dstorage = false;
+    vramServiceDesc.gpu_device = render_device->get_cgpu_device();
     vram_service2 = skr_io_vram_service2_t::create(&vramServiceDesc);
     vram_service2->run();
 

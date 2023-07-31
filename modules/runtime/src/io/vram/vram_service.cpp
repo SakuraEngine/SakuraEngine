@@ -22,7 +22,7 @@ inline static IOReaderId<IIOBatchProcessor> CreateDSReader(VRAMService* service,
 #ifdef _WIN32
     if (skr_query_dstorage_availability() == SKR_DSTORAGE_AVAILABILITY_HARDWARE)
     {
-        auto reader = skr::SObjectPtr<DStorageVRAMReader>::Create(service);
+        auto reader = skr::SObjectPtr<DStorageVRAMReader>::Create(service, desc->gpu_device);
         return std::move(reader);
     }
 #endif
@@ -45,10 +45,8 @@ VRAMService::VRAMService(const VRAMServiceDescriptor* desc) SKR_NOEXCEPT
     vram_buffer_pool = SmartPoolPtr<VRAMBuffer, IVRAMIOBuffer>::Create(kIOPoolObjectsMemoryName);
     vram_texture_pool = SmartPoolPtr<VRAMTexture, IVRAMIOTexture>::Create(kIOPoolObjectsMemoryName);
 
-    /*
     if (desc->use_dstorage)
         runner.ds_reader = VRAMUtils::CreateDSReader(this, desc);
-    */
     runner.common_reader = VRAMUtils::CreateCommonReader(this, desc);
     runner.set_resolvers();
 
@@ -196,14 +194,8 @@ void VRAMService::Runner::set_resolvers() SKR_NOEXCEPT
     chain->runner = this;
 
     const bool dstorage = ds_reader.get();
-    if (dstorage) 
-    {
-        auto open_dfile = SObjectPtr<DStorageFileResolver>::Create();
-        chain->then(open_dfile);
-    }
-
     auto alloc_resource = SObjectPtr<AllocateVRAMResourceResolver>::Create();
-    chain->then(alloc_resource);
+    chain->then(alloc_resource); // VRAMService: we open dstorage files in this resolver
     batch_buffer = SObjectPtr<IOBatchBuffer>::Create(); // hold batches
 
     batch_processors = { batch_buffer, chain };

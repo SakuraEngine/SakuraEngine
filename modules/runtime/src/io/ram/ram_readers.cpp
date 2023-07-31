@@ -154,16 +154,16 @@ void VFSRAMReader::recycle(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 namespace skr {
 namespace io {
 
-static const ESkrDStoragePriority DStoragePriorityLUT[] = 
+static const ESkrDStoragePriority DStoragePriorityLUT_RAM[] = 
 {
     SKR_DSTORAGE_PRIORITY_LOW,
     SKR_DSTORAGE_PRIORITY_NORMAL,
     SKR_DSTORAGE_PRIORITY_HIGH
 };
-static_assert(sizeof(DStoragePriorityLUT) / sizeof(DStoragePriorityLUT[0]) == SKR_ASYNC_SERVICE_PRIORITY_COUNT);
+static_assert(sizeof(DStoragePriorityLUT_RAM) / sizeof(DStoragePriorityLUT_RAM[0]) == SKR_ASYNC_SERVICE_PRIORITY_COUNT);
 
-static const char8_t* DStorageNames[] = { u8"F2M-Low", u8"F2M-Normal", u8"F2M-High" };
-static_assert(sizeof(DStorageNames) / sizeof(DStorageNames[0]) == SKR_ASYNC_SERVICE_PRIORITY_COUNT);
+static const char8_t* DStorageNames_RAM[] = { u8"F2M-Low", u8"F2M-Normal", u8"F2M-High" };
+static_assert(sizeof(DStorageNames_RAM) / sizeof(DStorageNames_RAM[0]) == SKR_ASYNC_SERVICE_PRIORITY_COUNT);
 
 DStorageRAMReader::DStorageRAMReader(RAMService* service) SKR_NOEXCEPT 
     : RAMReaderBase(service)
@@ -175,11 +175,11 @@ DStorageRAMReader::DStorageRAMReader(RAMService* service) SKR_NOEXCEPT
     }
     for (auto i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
-        const auto dpriority = DStoragePriorityLUT[i];
+        const auto dpriority = DStoragePriorityLUT_RAM[i];
         desc.source = SKR_DSTORAGE_SOURCE_FILE;
         desc.capacity = SKR_DSTORAGE_MAX_QUEUE_CAPACITY;
         desc.priority = dpriority;
-        desc.name = DStorageNames[i];
+        desc.name = DStorageNames_RAM[i];
         f2m_queues[i] = skr_create_dstorage_queue(&desc);
     }
     desc.source = SKR_DSTORAGE_SOURCE_MEMORY;
@@ -289,10 +289,6 @@ void DStorageRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_N
         {
             skr_dstorage_queue_submit(queue, event->event);
             submitted[priority].emplace_back(event);
-        }
-        else
-        {
-            // SKR_ASSERT(0);
         }
     }
 #ifdef TRACY_ENABLE

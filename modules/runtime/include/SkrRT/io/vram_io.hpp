@@ -11,6 +11,7 @@ typedef struct skr_vram_io_service2_desc_t {
     uint32_t sleep_time SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_TIME_MAX);
     skr_io_ram_service_id ram_service SKR_IF_CPP(= nullptr);
     skr_job_queue_id callback_job_queue SKR_IF_CPP(= nullptr);
+    CGPUDeviceId gpu_device SKR_IF_CPP(= nullptr);
     bool awake_at_request SKR_IF_CPP(= true);
     bool use_dstorage SKR_IF_CPP(= true);
 } skr_vram_io_service2_desc_t;

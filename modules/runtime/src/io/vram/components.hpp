@@ -47,6 +47,7 @@ struct VRAMDStorageComponent final : public IORequestComponent
     }
 
     CGPUDStorageQueueId dstorage_queue = nullptr;
+    SkrDStorageFileHandle dfile = nullptr;
 };
 
 template <>
