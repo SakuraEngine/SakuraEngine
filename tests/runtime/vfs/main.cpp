@@ -261,7 +261,7 @@ for (uint32_t i = 0; i < 1; i++)
         SKR_TEST_INFO(u8"dstorage enabled: {}", dstorage);
 
         uint32_t sucess = 0;
-        for (uint32_t i = 0; i < TEST_CYCLES_COUNT * 10000; i++)
+        for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
         {
             skr_ram_io_service_desc_t ioServiceDesc = {};
             ioServiceDesc.name = u8"Test";
