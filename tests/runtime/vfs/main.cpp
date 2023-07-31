@@ -254,14 +254,14 @@ for (uint32_t i = 0; i < 1; i++)
 
     #define TEST_CYCLES_COUNT 100
 
-    SUBCASE("defer_cancel")
+    SUBCASE("cancel")
     {
-        ZoneScopedN("defer_cancel");
+        ZoneScopedN("cancel");
 
         SKR_TEST_INFO(u8"dstorage enabled: {}", dstorage);
 
         uint32_t sucess = 0;
-        for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
+        for (uint32_t i = 0; i < TEST_CYCLES_COUNT * 10000; i++)
         {
             skr_ram_io_service_desc_t ioServiceDesc = {};
             ioServiceDesc.name = u8"Test";
@@ -301,63 +301,6 @@ for (uint32_t i = 0; i < 1; i++)
             {
                 EXPECT_EQ(std::string((const char*)blob2->get_data()), std::string("Hello, World!"));
             }
-            REQUIRE(std::string((const char*)blob->get_data()) == std::string("Hello, World2!"));
-            
-            blob.reset();
-            blob2.reset();
-
-            skr_io_ram_service_t::destroy(ioService);
-        }
-        SKR_TEST_INFO(u8"defer_cancel tested for {} times, sucess {}", TEST_CYCLES_COUNT, sucess);
-    }
-
-    SUBCASE("cancel")
-    {
-        ZoneScopedN("cancel");
-
-        SKR_TEST_INFO(u8"dstorage enabled: {}", dstorage);
-
-        uint32_t sucess = 0;
-        for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
-        {
-            skr_ram_io_service_desc_t ioServiceDesc = {};
-            ioServiceDesc.name = u8"Test";
-            ioServiceDesc.use_dstorage = dstorage;
-            ioServiceDesc.sleep_time = SKR_ASYNC_SERVICE_SLEEP_TIME_MAX;
-            auto ioService = skr_io_ram_service_t::create(&ioServiceDesc);
-            ioService->set_sleep_time(0); // make test faster
-            ioService->run();
-
-            skr_io_future_t future = {};
-            skr::BlobId blob = nullptr;
-            skr_io_future_t future2 = {};
-            skr::BlobId blob2 = nullptr;
-            {
-                auto rq = ioService->open_request();
-                rq->set_vfs(abs_fs);
-                rq->set_path(u8"testfile2");
-                rq->add_block({}); // read all
-                blob = ioService->request(rq, &future);
-            }
-            {
-                auto rq2 = ioService->open_request();
-                rq2->set_vfs(abs_fs);
-                rq2->set_path(u8"testfile");
-                rq2->add_block({}); // read all
-                blob2 = ioService->request(rq2, &future2);
-            }
-            // try cancel io of testfile
-            ioService->cancel(&future2);
-            // while (!request.is_ready()) {}
-            // while (!cancelled && !future2.is_ready()) {}
-            ioService->drain();
-
-            if (future2.is_cancelled())
-            {
-                EXPECT_EQ(blob2->get_data(), nullptr);
-                sucess++;
-            }
-            
             EXPECT_EQ(std::string((const char*)blob->get_data()), std::string("Hello, World2!"));
             
             blob.reset();
