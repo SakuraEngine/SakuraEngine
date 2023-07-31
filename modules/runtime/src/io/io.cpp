@@ -1,4 +1,4 @@
-#include "common/io_resolver.hpp"
+#include "SkrRT/io/io.h"
 #include "common/processors.hpp"
 
 bool skr_io_future_t::is_ready() const SKR_NOEXCEPT
@@ -31,11 +31,6 @@ const char* kIOConcurrentQueueName = "io::queue";
 IIORequest::~IIORequest() SKR_NOEXCEPT
 {
     
-}
-
-IBlocksRAMRequest::~IBlocksRAMRequest() SKR_NOEXCEPT
-{
-
 }
 
 IIOProcessor::~IIOProcessor() SKR_NOEXCEPT

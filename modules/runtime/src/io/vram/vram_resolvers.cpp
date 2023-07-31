@@ -9,6 +9,19 @@ namespace io {
 void AllocateVRAMResourceResolver::resolve(SkrAsyncServicePriority priority, IOBatchId batch, IORequestId request) SKR_NOEXCEPT
 {
     ZoneScopedNC("VRAMResource::Allocate", tracy::Color::BlueViolet);
+    // try open dstorage files first
+    if (auto pMem = io_component<MemorySrcComponent>(request.get()); !pMem->data)
+    {
+        if (auto pDS = io_component<VRAMDStorageComponent>(request.get()))
+        {
+            auto pPath = io_component<PathSrcComponent>(request.get());
+            auto instance = skr_get_dstorage_instnace();
+            pDS->dfile = skr_dstorage_open_file(instance, pPath->get_path());
+            SKR_ASSERT(pDS->dfile);
+        }
+    }
+
+    // allocate vram buffers
     auto buffer = io_component<VRAMBufferComponent>(request.get());
     if (buffer && (buffer->type == VRAMBufferComponent::Type::ServiceCreated))
     {
@@ -16,6 +29,7 @@ void AllocateVRAMResourceResolver::resolve(SkrAsyncServicePriority priority, IOB
         return;
     }
     
+    // allocate vram textures
     auto texture = io_component<VRAMTextureComponent>(request.get());
     if (texture && (texture->type == VRAMTextureComponent::Type::ServiceCreated))
     {

@@ -1,6 +1,12 @@
+#include "SkrRT/io/ram_io.hpp"
 #include "ram_request.hpp"
 
 namespace skr::io {
+
+IBlocksRAMRequest::~IBlocksRAMRequest() SKR_NOEXCEPT
+{
+
+}
 
 RAMIOStatusComponent::RAMIOStatusComponent(IIORequest* const request) SKR_NOEXCEPT 
     : IOStatusComponent(request) 
