@@ -1,7 +1,7 @@
 #pragma once
+#include "SkrRT/io/vram_io.hpp"
 #include "SkrRenderer/module.configure.h"
 #include "fwd_types.h"
-#include "cgpu/io.h"
 #ifdef __cplusplus
 #include "SkrRT/platform/window.h"
 
@@ -38,7 +38,6 @@ struct SKR_RENDERER_API RendererDevice
     virtual ECGPUFormat get_swapchain_format() const = 0;
     virtual CGPUSamplerId get_linear_sampler() const = 0;
     virtual CGPURootSignaturePoolId get_root_signature_pool() const = 0;
-    virtual skr_io_vram_service_t* get_vram_service() const = 0;
 };
 } // namespace skr
 #endif
@@ -81,6 +80,3 @@ CGPUQueueId skr_render_device_get_nth_compute_queue(SRenderDeviceId device, uint
 
 SKR_EXTERN_C SKR_RENDERER_API 
 CGPUDeviceId skr_render_device_get_cgpu_device(SRenderDeviceId device);
-
-SKR_EXTERN_C SKR_RENDERER_API 
-skr_io_vram_service_t* skr_render_device_get_vram_service(SRenderDeviceId device);

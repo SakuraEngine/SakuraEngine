@@ -1,5 +1,6 @@
 #include "cgpu/extensions/cgpu_d3d12_exts.h"
 #include "SkrRT/platform/win/misc.h"
+#include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/defer.hpp"
 #include "SkrRT/containers/vector.hpp"
@@ -337,13 +338,11 @@ void skr_free_dstorage_queue(SkrDStorageQueueId queue)
     SkrDelete(Q);
 }
 
-#include <filesystem>
-
 SkrDStorageFileHandle skr_dstorage_open_file(SkrDStorageInstanceId inst, const char8_t* abs_path)
 {
     IDStorageFile* pFile = nullptr;
     auto I = (SkrWindowsDStorageInstance*)inst;
-    auto absPath = std::filesystem::path(abs_path);
+    auto absPath = skr::filesystem::path(abs_path);
     I->pFactory->OpenFile(absPath.c_str(), IID_PPV_ARGS(&pFile));
     return (SkrDStorageFileHandle)pFile;
 }

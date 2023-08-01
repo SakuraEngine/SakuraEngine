@@ -135,7 +135,7 @@ ESkrIOStage skr_live2d_render_model_future_t::get_status() const SKR_NOEXCEPT
 }
 
 #ifndef SKR_SERIALIZE_GURAD
-void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, skr_io_vram_service2_t* vram_service, 
+void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service, 
     CGPUDeviceId device, skr_live2d_model_resource_id resource, skr_live2d_render_model_future_t* request)
 {
     auto csmModel = resource->model->GetModel();

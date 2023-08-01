@@ -67,13 +67,14 @@ struct VRAMBufferComponent final : public IORequestComponent
 
     enum class Type
     {
+        None,
         Imported,
         ServiceCreated
     };
-    Type type;
-    uint64_t offset;
-    CGPUBufferId buffer;
-    CGPUDeviceId device;
+    Type type = Type::None;
+    uint64_t offset = 0;
+    CGPUBufferId buffer = nullptr;
+    CGPUDeviceId device = nullptr;
     CGPUBufferDescriptor desc;
 };
 
@@ -95,12 +96,13 @@ struct VRAMTextureComponent final : public IORequestComponent
 
     enum class Type
     {
+        None,
         Imported,
         ServiceCreated
     };
-    Type type;
-    CGPUTextureId texture;
-    CGPUDeviceId device;
+    Type type = Type::None;
+    CGPUTextureId texture = nullptr;
+    CGPUDeviceId device = nullptr;
     CGPUTextureDescriptor desc;
 
     uint32_t first_slice = 0;
