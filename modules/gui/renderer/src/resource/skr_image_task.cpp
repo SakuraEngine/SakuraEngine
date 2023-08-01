@@ -170,27 +170,25 @@ void SkrImageUploadTask::from_image(const SkrImageData& image)
 
     ZoneScopedN("CreateGUITexture(VRAMService)");
 
-    auto vram_io_info = make_zeroed<skr_vram_texture_io_t>();
-
+    auto vram_service = _render_device->vram_service();
+    auto request = vram_service->open_texture_request();
     const auto& pixel_data        = _image_data.pixel_data();
-    vram_io_info.src_memory.bytes = pixel_data->get_data();
-    vram_io_info.src_memory.size  = pixel_data->get_size();
-    vram_io_info.device           = _render_device->cgpu_device();
-    vram_io_info.transfer_queue   = _render_device->cgpu_queue();
-
-    vram_io_info.vtexture.depth          = _image_data.image_depth();
-    vram_io_info.vtexture.height         = _image_data.size().height;
-    vram_io_info.vtexture.width          = _image_data.size().width;
-    vram_io_info.vtexture.format         = _image_data.cgpu_format();
-    vram_io_info.vtexture.resource_types = CGPU_RESOURCE_TYPE_TEXTURE;
-
-    vram_io_info.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata) {
+    CGPUTextureDescriptor tdesc = {};
+    tdesc.descriptors = CGPU_RESOURCE_TYPE_TEXTURE;
+    tdesc.depth          = _image_data.image_depth();
+    tdesc.height         = _image_data.size().height;
+    tdesc.width          = _image_data.size().width;
+    tdesc.format         = _image_data.cgpu_format();
+    request->set_transfer_queue(_render_device->cgpu_queue());
+    request->set_memory_src(pixel_data->get_data(), pixel_data->get_size());
+    request->set_texture(_render_device->cgpu_device(), &tdesc);
+    request->add_callback(SKR_IO_STAGE_COMPLETED, +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata) {
         auto task = static_cast<SkrImageUploadTask*>(usrdata);
 
         auto        device     = task->_render_device->cgpu_device();
         const auto& image_data = task->_image_data;
 
-        task->_texture                      = task->_vram_destination.texture;
+        task->_texture                      = task->_vram_destination->get_texture();
         CGPUTextureViewDescriptor view_desc = {};
         view_desc.texture                   = task->_texture;
         view_desc.format                    = image_data.cgpu_format();
@@ -217,9 +215,8 @@ void SkrImageUploadTask::from_image(const SkrImageData& image)
         cgpux_bind_table_update(task->_bind_table, &data, 1);
 
         skr_atomicu32_store_release(&task->_async_is_okey, 1);
-    };
-    vram_io_info.callback_datas[SKR_IO_STAGE_COMPLETED] = this;
-    _render_device->vram_service()->request(&vram_io_info, &_ram_request, &_vram_destination);
+    }, this);
+    _vram_destination = vram_service->request(request, &_ram_request);
 }
 
 } // namespace skr::gui

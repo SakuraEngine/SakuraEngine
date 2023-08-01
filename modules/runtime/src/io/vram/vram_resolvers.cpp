@@ -13,7 +13,7 @@ void AllocateVRAMResourceResolver::resolve(SkrAsyncServicePriority priority, IOB
     // try open dstorage files first
     if (auto pMem = io_component<MemorySrcComponent>(request.get()); !pMem->data)
     {
-        if (auto pDS = io_component<VRAMDStorageComponent>(request.get()))
+        if (auto pDS = io_component<VRAMDStorageComponent>(request.get()); pDS && pDS->dstorage_queue)
         {
             auto pPath = io_component<PathSrcComponent>(request.get());
             auto instance = skr_get_dstorage_instnace();

@@ -1,11 +1,8 @@
 #include "SkrRenderer/shader_map.h"
-#include "SkrRenderer/render_device.h"
 #include "SkrRenderer/shader_hash.h"
-
-#include "SkrRT/misc/log.h"
-#include "SkrRT/misc/defer.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/atomic.h"
+#include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/async/thread_job.hpp"
 
 #include "SkrRT/containers/hashmap.hpp"

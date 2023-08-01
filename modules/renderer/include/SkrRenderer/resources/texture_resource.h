@@ -1,7 +1,7 @@
 #pragma once
-#include "SkrRenderer/fwd_types.h"
 #include "SkrRT/io/ram_io.hpp"
-#include "cgpu/io.h"
+#include "SkrRT/io/vram_io.hpp"
+#include "SkrRenderer/fwd_types.h"
 
 #ifndef __meta__
 #include "SkrRenderer/resources/texture_resource.generated.h" // IWYU pragma: export

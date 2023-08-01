@@ -3,10 +3,10 @@
 #include "cgpu/api.h"
 #include <stdint.h>
 
-SKR_DECLARE_TYPE_ID_FWD(skr::io, IVRAMService, skr_io_vram_service2)
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service)
+SKR_DECLARE_TYPE_ID_FWD(skr::io, IVRAMService, skr_io_vram_service)
 
-typedef struct skr_vram_io_service2_desc_t {
+typedef struct skr_vram_io_service_desc_t {
     const char8_t* name SKR_IF_CPP(= nullptr);
     uint32_t sleep_time SKR_IF_CPP(= SKR_ASYNC_SERVICE_SLEEP_TIME_MAX);
     skr_io_ram_service_id ram_service SKR_IF_CPP(= nullptr);
@@ -14,14 +14,14 @@ typedef struct skr_vram_io_service2_desc_t {
     CGPUDeviceId gpu_device SKR_IF_CPP(= nullptr);
     bool awake_at_request SKR_IF_CPP(= true);
     bool use_dstorage SKR_IF_CPP(= true);
-} skr_vram_io_service2_desc_t;
+} skr_vram_io_service_desc_t;
 
 #ifdef __cplusplus
 namespace skr {
 namespace io {
 
 struct IVRAMService;
-using VRAMServiceDescriptor = skr_vram_io_service2_desc_t;
+using VRAMServiceDescriptor = skr_vram_io_service_desc_t;
 
 struct SKR_RUNTIME_API IVRAMIOResource : public skr::SInterface
 {
@@ -118,10 +118,10 @@ struct SKR_RUNTIME_API IVRAMService : public IIOService
     [[nodiscard]] virtual IOBatchId open_batch(uint64_t n) SKR_NOEXCEPT = 0;
 
     // submit a buffer request
-    virtual VRAMIOBufferId request(BlocksVRAMRequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
+    [[nodiscard]] virtual VRAMIOBufferId request(BlocksVRAMRequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
     
     // submit a texture request
-    virtual VRAMIOTextureId request(SlicesIORequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
+    [[nodiscard]] virtual VRAMIOTextureId request(SlicesIORequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT = 0;
     
     // submit a batch
     virtual void request(IOBatchId request) SKR_NOEXCEPT = 0;
