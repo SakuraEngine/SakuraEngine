@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/misc/types.h"
+#include "SkrRT/misc/types.h" // IWYU pragma: keep
 
 namespace skr {
 namespace io {

@@ -106,6 +106,7 @@ using IOFuture = skr_io_future_t;
 using IOCallback = skr_io_callback_t;
 using IOResultId = SObjectPtr<skr::SInterface>;
 struct IORequestComponent;
+struct IIOService;
 
 struct SKR_RUNTIME_API IIORequest : public skr::SInterface
 {
@@ -113,6 +114,7 @@ struct SKR_RUNTIME_API IIORequest : public skr::SInterface
     
     virtual IORequestComponent* get_component(skr_guid_t tid) SKR_NOEXCEPT = 0; 
     virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT = 0; 
+    virtual IIOService* get_service() const SKR_NOEXCEPT = 0;
 
 #pragma region PathSrcComponent
     virtual void set_vfs(skr_vfs_t* vfs) SKR_NOEXCEPT = 0;

@@ -1,7 +1,6 @@
 #pragma once
-#include "SkrRT/io/io.h"
+#include "SkrRT/io/ram_io.hpp"
 #include "cgpu/api.h"
-#include <stdint.h>
 
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service)
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IVRAMService, skr_io_vram_service)
@@ -53,6 +52,7 @@ struct SKR_RUNTIME_API IVRAMIORequest : public IIORequest
     virtual void set_transfer_queue(CGPUQueueId queue) SKR_NOEXCEPT = 0;
     virtual void set_dstorage_queue(CGPUDStorageQueueId queue) SKR_NOEXCEPT = 0;
     virtual void set_memory_src(uint8_t* memory, uint64_t bytes) SKR_NOEXCEPT = 0;
+    virtual RAMIOBufferId pin_staging_buffer() SKR_NOEXCEPT = 0;
 #pragma endregion
 };
 
@@ -125,6 +125,9 @@ struct SKR_RUNTIME_API IVRAMService : public IIOService
     
     // submit a batch
     virtual void request(IOBatchId request) SKR_NOEXCEPT = 0;
+
+    // get underlying ram service
+    virtual IRAMService* get_ram_service() SKR_NOEXCEPT = 0;
 
     virtual ~IVRAMService() SKR_NOEXCEPT = default;
     IVRAMService() SKR_NOEXCEPT = default;

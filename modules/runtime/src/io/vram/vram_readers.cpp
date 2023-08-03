@@ -141,7 +141,7 @@ bool CommonVRAMReader::poll_processed_batch(SkrAsyncServicePriority priority, IO
 
 void CommonVRAMReader::addRAMRequests(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
-    IOBatchId ram_batch = nullptr;
+    RAMBatchPtr ram_batch = nullptr;
     IOBatchId vram_batch = nullptr;
     while (fetched_batches[priority].try_dequeue(vram_batch))
     {
@@ -164,15 +164,21 @@ void CommonVRAMReader::addRAMRequests(SkrAsyncServicePriority priority) SKR_NOEX
                     auto ram_request = ram_service->open_request();
                     if (!ram_batch)
                     {
-                        ram_batch = ram_service->open_batch(8);
+                        ram_batch = skr::static_pointer_cast<RAMIOBatch>(ram_service->open_batch(8));
                     }
                     if (pPath->vfs)
                         ram_request->set_vfs(pPath->vfs);
                     ram_request->set_path(pPath->path.u8_str());
                     // TODO: READ PARTIAL DATA ONLY NEEDED FROM FILE
                     ram_request->add_block({});
-                    auto result = ram_batch->add_request(ram_request, &pUpload->ram_future);
-                    pUpload->buffer = skr::static_pointer_cast<IRAMIOBuffer>(result);
+                    if (auto pinnedBuffer = pUpload->ram_buffer) // pinned result
+                    {
+                        ram_batch->add_request(ram_request, pinnedBuffer, &pUpload->ram_future);
+                    }
+                    else if (auto result = ram_batch->add_request(ram_request, &pUpload->ram_future))
+                    {
+                        pUpload->ram_buffer = skr::static_pointer_cast<IRAMIOBuffer>(result);
+                    }
                 }
                 auto pMemory = io_component<MemorySrcComponent>(vram_request.get());
                 if (pMemory && pMemory->data && pMemory->size)
@@ -208,10 +214,10 @@ void CommonVRAMReader::ensureRAMRequests(SkrAsyncServicePriority priority) SKR_N
         for (auto&& request : requests)
         {
             auto pUpload = io_component<VRAMUploadComponent>(request.get());
-            if (pUpload->buffer && pUpload->ram_future.is_ready())
+            if (pUpload->ram_buffer && pUpload->ram_future.is_ready())
             {
-                pUpload->data = pUpload->buffer->get_data();
-                pUpload->size = pUpload->buffer->get_size();
+                pUpload->data = pUpload->ram_buffer->get_data();
+                pUpload->size = pUpload->ram_buffer->get_size();
             }
             if (pUpload->data && pUpload->size)
             {
