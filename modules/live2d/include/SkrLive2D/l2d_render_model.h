@@ -14,8 +14,6 @@ typedef struct skr_live2d_render_model_future_t {
     const char* model_name;
     skr_vfs_t* vfs_override;
     CGPUQueueId queue_override;
-    CGPUDStorageQueueId file_dstorage_queue_override;
-    CGPUDStorageQueueId memory_dstorage_queue_override;
     ECGPUDStorageSource dstorage_source;
     skr_live2d_render_model_id render_model;
     SAtomicU32 io_status;

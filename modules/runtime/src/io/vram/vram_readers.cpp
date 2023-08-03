@@ -572,14 +572,6 @@ void DStorageVRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_
     while (fetched_batches[priority].try_dequeue(batch))
     {
         auto addOrGetEvent = [&](SkrDStorageQueueId queue) {
-#ifdef TRACY_ENABLE
-            if (!bZoneSet)
-            {
-                TracyCZoneN(z, "DStorage::EnqueueAndSubmit", 1);
-                Zone = z;
-                bZoneSet = true;
-            }
-#endif
             auto&& iter = _events.find(queue);
             if (iter == _events.end())
             {
@@ -592,6 +584,15 @@ void DStorageVRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_
         {
             if (!shouldUseDStorage(vram_request.get())) 
                 continue;
+
+#ifdef TRACY_ENABLE
+            if (!bZoneSet)
+            {
+                TracyCZoneN(z, "DStorage::EnqueueAndSubmit", 1);
+                Zone = z;
+                bZoneSet = true;
+            }
+#endif
             auto pStatus = io_component<IOStatusComponent>(vram_request.get());
             auto pDS = io_component<VRAMDStorageComponent>(vram_request.get());
             auto pMemory = io_component<MemorySrcComponent>(vram_request.get());
@@ -628,6 +629,7 @@ void DStorageVRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_
                     io.uncompressed_size = fInfo.file_size;
                     queue = f2v_queues[priority];
                 }
+                pDS->get_dstorage_compression(io.compression, io.uncompressed_size);
                 io.buffer = pBuffer->buffer;
                 io.offset = pBuffer->offset;
                 addOrGetEvent(queue);
@@ -664,6 +666,7 @@ void DStorageVRAMReader::enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_
                     io.uncompressed_size = fInfo.file_size;
                     queue = f2v_queues[priority];
                 }
+                pDS->get_dstorage_compression(io.compression, io.uncompressed_size);
                 io.texture = pTexture->texture;
                 const auto pInfo = io.texture->info;
                 io.width = (uint32_t)pInfo->width;
