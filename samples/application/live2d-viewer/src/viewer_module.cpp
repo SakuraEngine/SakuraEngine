@@ -31,14 +31,6 @@
 
 namespace skr { struct JobQueue; }
 
-enum DemoUploadMethod
-{
-    DEMO_UPLOAD_METHOD_DIRECT_STORAGE_FILE = 0,
-    DEMO_UPLOAD_METHOD_DIRECT_STORAGE_MEMORY = 1,
-    DEMO_UPLOAD_METHOD_UPLOAD = 2,
-    DEMO_UPLOAD_METHOD_COUNT
-};
-
 class SLive2DViewerModule : public skr::IDynamicModule
 {
     virtual void on_load(int argc, char8_t** argv) override;
@@ -49,7 +41,6 @@ public:
     static SLive2DViewerModule* Get();
 
     bool bUseCVV = true;
-    DemoUploadMethod upload_method = DEMO_UPLOAD_METHOD_UPLOAD;
 
     CGPUSwapChainId swapchain = nullptr;
     CGPUFenceId present_fence = nullptr;
@@ -146,7 +137,7 @@ extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_gr
 #include "SkrRT/ecs/type_builder.hpp"
 
 void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_service, 
-    bool bUseCVV, DemoUploadMethod upload_method)
+    bool bUseCVV)
 {
     auto storage = renderer->get_dual_storage();
     auto renderableT_builder = make_zeroed<dual::type_builder_t>();
@@ -185,21 +176,11 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
         
         auto modelSetup = [=](dual_chunk_view_t* view) {
             auto render_device = renderer->get_render_device();
-            auto file_dstorage_queue = render_device->get_file_dstorage_queue();
-            auto memory_dstorage_queue = render_device->get_memory_dstorage_queue();
             auto mesh_comps = dual::get_owned_rw<skr_live2d_render_model_comp_t>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {
                 auto& vram_request = mesh_comps[i].vram_future;
                 auto& ram_request = mesh_comps[i].ram_future;
-                if (upload_method == DEMO_UPLOAD_METHOD_DIRECT_STORAGE_FILE)
-                {
-                    vram_request.file_dstorage_queue_override = file_dstorage_queue;
-                }
-                else if (upload_method == DEMO_UPLOAD_METHOD_DIRECT_STORAGE_MEMORY)
-                {
-                    vram_request.memory_dstorage_queue_override = memory_dstorage_queue;
-                }
                 vram_request.vfs_override = resource_vfs;
                 vram_request.queue_override = render_device->get_gfx_queue();
                 ram_request.vfs_override = resource_vfs;
@@ -255,7 +236,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
     });
     create_imgui_resources(render_device, renderGraph, resource_vfs);
     skr_live2d_initialize_render_effects(l2d_renderer, renderGraph, resource_vfs);
-    create_test_scene(l2d_renderer, resource_vfs, ram_service, bUseCVV, upload_method);
+    create_test_scene(l2d_renderer, resource_vfs, ram_service, bUseCVV);
     uint64_t frame_index = 0;
     SHiresTimer tick_timer;
     int64_t elapsed_us = 0;
@@ -332,6 +313,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
             ImGui::Text("UseCVV");
             ImGui::SameLine();
             ImGui::Checkbox("##UseCVV", &bUseCVV);
+            /*
             {
                 const char* items[] = { "DirectStorage(File)", "DirectStorage(Memory)", "UploadBuffer" };
                 ImGui::Text("UploadMethod");
@@ -352,6 +334,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
                     ImGui::EndCombo();
                 }
             }
+            */
             {
                 static int sample_index = 0;
                 const char* items[] = { "1x", "2x", "4x", "8x" };
@@ -379,7 +362,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
         if (bPrevUseCVV != bUseCVV)
         {
             cgpu_wait_queue_idle(gfx_queue);
-            create_test_scene(l2d_renderer, resource_vfs, ram_service, bUseCVV, upload_method);
+            create_test_scene(l2d_renderer, resource_vfs, ram_service, bUseCVV);
         }
         {
             ZoneScopedN("RegisterPasses");

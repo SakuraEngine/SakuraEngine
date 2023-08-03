@@ -52,7 +52,9 @@ struct SKR_RUNTIME_API IVRAMIORequest : public IIORequest
     virtual void set_transfer_queue(CGPUQueueId queue) SKR_NOEXCEPT = 0;
     virtual void set_memory_src(uint8_t* memory, uint64_t bytes) SKR_NOEXCEPT = 0;
     virtual RAMIOBufferId pin_staging_buffer() SKR_NOEXCEPT = 0;
+
     virtual void set_enable_dstorage(bool enable) SKR_NOEXCEPT = 0;
+    virtual void set_dstorage_compression(SkrDStorageCompression compression, uint64_t uncompressed_size) SKR_NOEXCEPT = 0;
 #pragma endregion
 };
 

@@ -38,6 +38,11 @@ struct VRAMRequestMixin : public IORequestMixin<Interface, Components...>
         Super::template safe_comp<VRAMDStorageComponent>()->set_enable_dstorage(enable); 
     }
     
+    void set_dstorage_compression(SkrDStorageCompression compression, uint64_t uncompressed_size) SKR_NOEXCEPT
+    {
+        Super::template safe_comp<VRAMDStorageComponent>()->set_dstorage_compression(compression, uncompressed_size); 
+    }
+
     void set_memory_src(uint8_t* memory, uint64_t bytes) SKR_NOEXCEPT
     {
         Super::template safe_comp<MemorySrcComponent>()->set_memory_src(memory, bytes); 

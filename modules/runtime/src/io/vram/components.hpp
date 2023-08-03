@@ -66,6 +66,21 @@ struct VRAMDStorageComponent final : public IORequestComponent
         enabled = enable;
     }
 
+    void set_dstorage_compression(SkrDStorageCompression compression, uint64_t uncompressed_size) SKR_NOEXCEPT
+    {
+        this->compression = compression;
+        this->uncompressed_size = uncompressed_size;
+    }
+
+    void get_dstorage_compression(SkrDStorageCompression& c, uint64_t& sz) const SKR_NOEXCEPT
+    {
+        if (this->compression != SKR_DSTORAGE_COMPRESSION_NONE)
+        {
+            c = this->compression;
+            sz = this->uncompressed_size;
+        }
+    }
+
     bool should_use_dstorage() SKR_NOEXCEPT
     {
         bool _enabled = enabled;
@@ -80,10 +95,12 @@ struct VRAMDStorageComponent final : public IORequestComponent
 private:
     friend struct DStorageVRAMReader;
     friend struct AllocateVRAMResourceResolver;
+    SkrDStorageFileHandle dfile = nullptr;
+    SkrDStorageCompression compression = SKR_DSTORAGE_COMPRESSION_NONE;
+    uint64_t uncompressed_size = 0;
     bool use_force = false;
     bool force_enabled = true;
     bool enabled = true;
-    SkrDStorageFileHandle dfile = nullptr;
 };
 
 template <>
