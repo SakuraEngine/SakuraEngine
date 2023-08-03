@@ -33,8 +33,8 @@ struct IORequestMixin : public Interface
 {
     IO_RC_OBJECT_BODY
 public:
-    IORequestMixin(ISmartPoolPtr<Interface> pool) 
-        : components(std::make_tuple(Components(this)...)), pool(pool)
+    IORequestMixin(ISmartPoolPtr<Interface> pool, IIOService* service) 
+        : service(service), components(std::make_tuple(Components(this)...)), pool(pool)
     {
 
     }
@@ -64,6 +64,12 @@ public:
         return nullptr;
     }
 
+    IIOService* get_service() const SKR_NOEXCEPT
+    {
+        SKR_ASSERT(service && "service is null!");
+        return service;
+    }
+
     SInterfaceDeleter custom_deleter() const 
     { 
         return +[](SInterface* ptr) 
@@ -73,6 +79,8 @@ public:
         };
     }
     
+protected:
+    IIOService* service = nullptr;
 private:
     std::tuple<Components...> components;
     ISmartPoolPtr<Interface> pool = nullptr;

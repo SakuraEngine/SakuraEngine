@@ -31,7 +31,7 @@ struct RAMRequestMixin final : public IORequestMixin<IBlocksRAMRequest,
 
     RAMIOBufferId destination = nullptr;
 protected:
-    RAMRequestMixin(ISmartPoolPtr<IBlocksRAMRequest> pool, const uint64_t sequence) SKR_NOEXCEPT;
+    RAMRequestMixin(ISmartPoolPtr<IBlocksRAMRequest> pool, IIOService* service, const uint64_t sequence) SKR_NOEXCEPT;
     const uint64_t sequence = UINT64_MAX;
 };
 

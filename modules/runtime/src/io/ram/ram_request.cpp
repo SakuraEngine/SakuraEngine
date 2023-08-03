@@ -14,8 +14,8 @@ RAMIOStatusComponent::RAMIOStatusComponent(IIORequest* const request) SKR_NOEXCE
         
 }
 
-RAMRequestMixin::RAMRequestMixin(ISmartPoolPtr<IBlocksRAMRequest> pool, const uint64_t sequence) SKR_NOEXCEPT
-    : IORequestMixin(pool), sequence(sequence) 
+RAMRequestMixin::RAMRequestMixin(ISmartPoolPtr<IBlocksRAMRequest> pool, IIOService* service, const uint64_t sequence) SKR_NOEXCEPT
+    : IORequestMixin(pool, service), sequence(sequence) 
 {
 
 }

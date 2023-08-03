@@ -1,8 +1,9 @@
 #pragma once
+#include "SkrRT/misc/types.h"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/io/vram_io.hpp"
-#include "../components/status_component.hpp"
-#include "SkrRT/platform/debug.h"
+#include "io/ram/ram_service.hpp"
+#include "io/components/component.hpp"
 
 struct CGPUBuffer;
 struct CGPUTexture;
@@ -24,8 +25,15 @@ struct VRAMUploadComponent final : public IORequestComponent
         transfer_queue = queue;
     }
 
+    RAMIOBufferId pin_staging_buffer(RAMService* ram_service) SKR_NOEXCEPT
+    {
+        ram_buffer = ram_service->ram_buffer_pool->allocate();
+        return ram_buffer;
+    }
+
+    // TODO: protect these fields
     CGPUQueueId transfer_queue = nullptr;
-    RAMIOBufferId buffer = nullptr;
+    RAMIOBufferId ram_buffer = nullptr;
     IOFuture ram_future;
 
     uint8_t* data = nullptr;
