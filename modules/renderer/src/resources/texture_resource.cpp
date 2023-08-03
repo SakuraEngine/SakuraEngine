@@ -187,8 +187,6 @@ ESkrInstallStatus STextureFactoryImpl::InstallImpl(skr_resource_record_t* record
             request->set_path(compressedBin.u8_str());
             request->set_texture(render_device->get_cgpu_device(), &tdesc);
             request->set_transfer_queue(render_device->get_cpy_queue());
-            // TODO: DSTORAGE
-            // request->set_dstorage_queue(dsqueue);
             auto result = batch->add_request(request, &dRequest->vtexture_future);
             dRequest->io_texture = skr::static_pointer_cast<skr::io::IVRAMIOTexture>(result);
         }

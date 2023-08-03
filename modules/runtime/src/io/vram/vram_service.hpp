@@ -23,7 +23,8 @@ struct VRAMService final : public IVRAMService
     {
         return ram_service;
     }
-    
+    bool get_dstoage_available() const SKR_NOEXCEPT { return runner.ds_reader.get(); }
+
     void cancel(skr_io_future_t* future) SKR_NOEXCEPT 
     { 
         skr_atomicu32_store_relaxed(&future->request_cancel, 1); 

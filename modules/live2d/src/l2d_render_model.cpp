@@ -166,104 +166,66 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         ZoneScopedN("RequestLive2DTexture");
 
         SKR_UNUSED auto& texture = render_model->io_textures[i];
-        SKR_UNUSED auto& texture_io_request = render_model->texture_futures[i];
+        SKR_UNUSED auto& texture_future = render_model->texture_futures[i];
         // SKR_UNUSED auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();
-        SKR_UNUSED auto texture_path = resource->model_setting->GetTextureFileName(i);
-        SKR_UNUSED auto pngPath = skr::filesystem::path(request->vfs_override->mount_dir) / resource->model->homePath.c_str() / texture_path;
-        SKR_UNUSED auto pngPathStr = pngPath.u8string();
-        /* TODO: IMPLEMENT THIS
-#ifdef _WIN32
-        if (request->file_dstorage_queue_override)
-        {
-            std::string p = texture_path;
-            auto p1 = p.find(".");
-            auto p2 = p.find("/");
-            std::string number = p.substr(p1 + 1, p2 - p1 - 1);
-            auto resolution = std::stoi(number);
-            vram_texture_io.device = device;
-        
-            vram_texture_io.dstorage.path = pngPathStr.c_str();
-            vram_texture_io.dstorage.compression = SKR_WIN_DSTORAGE_COMPRESSION_TYPE_IMAGE;
-            vram_texture_io.dstorage.source_type = SKR_DSTORAGE_SOURCE_FILE;
-            vram_texture_io.dstorage.queue = file_dstorage_queue;
-            vram_texture_io.dstorage.uncompressed_size = resolution * resolution * 4;
+        const auto texture_path = resource->model_setting->GetTextureFileName(i);
+        const auto pngPath = skr::filesystem::path(request->vfs_override->mount_dir) / resource->model->homePath.c_str() / texture_path;
+        const auto pngPathStr = pngPath.u8string();
+        const auto pngPathCStr = pngPathStr.c_str();
+        auto& png_future = render_model->png_futures[i];
+        const auto on_complete = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
+            ZoneScopedN("Decode PNG");
+            auto render_model = (skr_live2d_render_model_async_t*)data;
+            auto idx = future - render_model->png_futures.data();
 
-            vram_texture_io.vtexture.texture_name = (const char8_t*)texture_path;
-            vram_texture_io.vtexture.resource_types = CGPU_RESOURCE_TYPE_TEXTURE;
-            vram_texture_io.vtexture.width = resolution;
-            vram_texture_io.vtexture.height = resolution;
-            vram_texture_io.vtexture.depth = 1;
-            vram_texture_io.vtexture.format = CGPU_FORMAT_R8G8B8A8_UNORM;
-            
-            vram_texture_io.src_memory.size = resolution * resolution * 4;
-
-            vram_texture_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data){
-                auto render_model = (skr_live2d_render_model_async_t*)data;
-                render_model->texture_finish(future);
-            };
-            vram_texture_io.callback_datas[SKR_IO_STAGE_COMPLETED] = render_model;
-            vram_service->request(&vram_texture_io, &texture_io_request, &texture);
-        }
-        else
-#endif
-        */
-        {
-            auto& png_future = render_model->png_futures[i];
-            const auto on_complete = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
-                ZoneScopedN("Decode PNG");
-                auto render_model = (skr_live2d_render_model_async_t*)data;
-                auto idx = future - render_model->png_futures.data();
-
-                auto png_blob = render_model->png_blobs[idx];
-                auto vram_service = render_model->vram_service;
-                // decompress
-                EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)png_blob->get_data(), png_blob->get_size());
-                auto decoder = skr::IImageDecoder::Create(format);
-                render_model->decoders[idx] = decoder;
-                if (decoder->initialize((const uint8_t*)png_blob->get_data(), png_blob->get_size()))
+            auto png_blob = render_model->png_blobs[idx];
+            auto vram_service = render_model->vram_service;
+            // decompress
+            EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)png_blob->get_data(), png_blob->get_size());
+            auto decoder = skr::IImageDecoder::Create(format);
+            render_model->decoders[idx] = decoder;
+            if (decoder->initialize((const uint8_t*)png_blob->get_data(), png_blob->get_size()))
+            {
+                const auto encoded_format = decoder->get_color_format();
+                const auto raw_format = (encoded_format == IMAGE_CODER_COLOR_FORMAT_BGRA) ? IMAGE_CODER_COLOR_FORMAT_RGBA : encoded_format;
+                SKR_LOG_TRACE(u8"image coder: width = %d, height = %d, encoded_size = %d, raw_size = %d", 
+                    decoder->get_width(), decoder->get_height(), 
+                    png_blob->get_size(), decoder->get_size());
+                if (decoder->decode(raw_format, decoder->get_bit_depth()))
                 {
-                    const auto encoded_format = decoder->get_color_format();
-                    const auto raw_format = (encoded_format == IMAGE_CODER_COLOR_FORMAT_BGRA) ? IMAGE_CODER_COLOR_FORMAT_RGBA : encoded_format;
-                    SKR_LOG_TRACE(u8"image coder: width = %d, height = %d, encoded_size = %d, raw_size = %d", 
-                        decoder->get_width(), decoder->get_height(), 
-                        png_blob->get_size(), decoder->get_size());
-                    if (decoder->decode(raw_format, decoder->get_bit_depth()))
-                    {
-                        // upload texture
-                        auto& texture_future = render_model->texture_futures[idx];
-                        auto& io_texture = render_model->io_textures[idx];
+                    // upload texture
+                    auto& texture_future = render_model->texture_futures[idx];
+                    auto& io_texture = render_model->io_textures[idx];
 
-                        auto request = vram_service->open_texture_request();
-                        CGPUTextureDescriptor tdesc = {};
-                        tdesc.name = nullptr;
-                        tdesc.descriptors = CGPU_RESOURCE_TYPE_TEXTURE;
-                        tdesc.width = decoder->get_width();
-                        tdesc.height = decoder->get_height();
-                        tdesc.depth = 1;
-                        tdesc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
-                        request->set_texture(render_model->device, &tdesc);
-                        request->set_transfer_queue(render_model->transfer_queue);
-                        request->set_memory_src(decoder->get_data(), decoder->get_width() * decoder->get_height() * 4);
-                        request->add_callback(SKR_IO_STAGE_COMPLETED, 
-                        +[](skr_io_future_t* future, skr_io_request_t* request, void* data){
-                            auto render_model = (skr_live2d_render_model_async_t*)data;
-                            render_model->texture_finish(future);
-                        }, render_model);
-                        io_texture = vram_service->request(request, &texture_future);
-                    }
+                    auto request = vram_service->open_texture_request();
+                    CGPUTextureDescriptor tdesc = {};
+                    tdesc.name = nullptr;
+                    tdesc.descriptors = CGPU_RESOURCE_TYPE_TEXTURE;
+                    tdesc.width = decoder->get_width();
+                    tdesc.height = decoder->get_height();
+                    tdesc.depth = 1;
+                    tdesc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
+                    request->set_texture(render_model->device, &tdesc);
+                    request->set_transfer_queue(render_model->transfer_queue);
+                    request->set_memory_src(decoder->get_data(), decoder->get_width() * decoder->get_height() * 4);
+                    request->add_callback(SKR_IO_STAGE_COMPLETED, 
+                    +[](skr_io_future_t* future, skr_io_request_t* request, void* data){
+                        auto render_model = (skr_live2d_render_model_async_t*)data;
+                        render_model->texture_finish(future);
+                    }, render_model);
+                    io_texture = vram_service->request(request, &texture_future);
                 }
-            };
-            auto ramrq = ram_service->open_request();
-            ramrq->set_vfs(request->vfs_override);
-            ramrq->set_path(pngPathStr.c_str());
-            ramrq->add_block({}); // read all
-            ramrq->use_async_complete();
-            ramrq->add_callback(SKR_IO_STAGE_COMPLETED, on_complete, render_model);
-            auto blob = ram_service->request(ramrq, &png_future);
-            render_model->png_blobs[i] = blob;
-        }
+            }
+        };
+        auto ramrq = ram_service->open_request();
+        ramrq->set_vfs(request->vfs_override);
+        ramrq->set_path(pngPathCStr);
+        ramrq->add_block({}); // read all
+        ramrq->use_async_complete();
+        ramrq->add_callback(SKR_IO_STAGE_COMPLETED, on_complete, render_model);
+        auto blob = ram_service->request(ramrq, &png_future);
+        render_model->png_blobs[i] = blob;
     }
-    
     // request load buffers
     const auto use_dynamic_buffer = render_model->use_dynamic_buffer;
     const auto drawable_count = csmModel->GetDrawableCount();

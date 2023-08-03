@@ -324,8 +324,6 @@ ESkrInstallStatus SMeshFactoryImpl::InstallImpl(skr_resource_record_t* record)
                     mesh_resource->bins[i].blob = blob.get();
                     blob->add_refcount();
                 }
-                // TODO: DSTORAGE
-                // request->set_dstorage_queue(dsqueue);
                 auto result = batch->add_request(request, &thisFuture);
                 thisDestination = skr::static_pointer_cast<skr::io::IVRAMIOBuffer>(result);
             }

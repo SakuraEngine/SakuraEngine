@@ -129,7 +129,7 @@ void SGameModule::installResourceFactories()
     vramServiceDesc.awake_at_request = true;
     vramServiceDesc.ram_service = ram_service;
     vramServiceDesc.callback_job_queue = job_queue.get();
-    vramServiceDesc.use_dstorage = false;
+    vramServiceDesc.use_dstorage = true;
     vramServiceDesc.gpu_device = game_render_device->get_cgpu_device();
     vram_service = skr_io_vram_service_t::create(&vramServiceDesc);
     vram_service->run();
