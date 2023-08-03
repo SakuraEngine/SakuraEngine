@@ -105,6 +105,8 @@ protected:
     void ensureRAMRequests(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void addUploadRequests(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void ensureUploadRequests(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    void finishBatch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT;
+    bool shouldUseUpload(IIORequest* request) const SKR_NOEXCEPT;
 
     IRAMService* ram_service = nullptr;
     IOBatchQueue fetched_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
@@ -137,6 +139,7 @@ struct SKR_RUNTIME_API DStorageVRAMReader final
 
     void enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void pollSubmitted(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    bool shouldUseDStorage(IIORequest* request) const SKR_NOEXCEPT;
 
     SkrDStorageQueueId f2v_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     SkrDStorageQueueId m2v_queue;

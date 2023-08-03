@@ -1,4 +1,5 @@
 #include "SkrRT/platform/dstorage.h"
+#include "SkrRT/platform/filesystem.hpp"
 #include "../common/io_request.hpp"
 #include "../vram/components.hpp"
 #include "../vram/vram_resolvers.hpp"
@@ -13,11 +14,20 @@ void AllocateVRAMResourceResolver::resolve(SkrAsyncServicePriority priority, IOB
     // try open dstorage files first
     if (auto pMem = io_component<MemorySrcComponent>(request.get()); !pMem->data)
     {
-        if (auto pDS = io_component<VRAMDStorageComponent>(request.get()); pDS && pDS->dstorage_queue)
+        if (auto pDS = io_component<VRAMDStorageComponent>(request.get()); pDS && pDS->should_use_dstorage())
         {
             auto pPath = io_component<PathSrcComponent>(request.get());
+            const auto pathStr = pPath->get_path();
             auto instance = skr_get_dstorage_instnace();
-            pDS->dfile = skr_dstorage_open_file(instance, pPath->get_path());
+            if (auto isFile = skr::filesystem::is_regular_file(pathStr))
+            {
+                pDS->dfile = skr_dstorage_open_file(instance, pathStr);
+            }
+            else
+            {
+                const auto Path = skr::filesystem::path(pPath->get_vfs()->mount_dir) / pathStr;
+                pDS->dfile = skr_dstorage_open_file(instance, Path.u8string().c_str());
+            }
             SKR_ASSERT(pDS->dfile);
         }
     }

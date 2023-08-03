@@ -47,7 +47,9 @@ VRAMService::VRAMService(const VRAMServiceDescriptor* desc) SKR_NOEXCEPT
     vram_texture_pool = SmartPoolPtr<VRAMTexture, IVRAMIOTexture>::Create(kIOPoolObjectsMemoryName);
 
     if (desc->use_dstorage)
+    {
         runner.ds_reader = VRAMUtils::CreateDSReader(this, desc);
+    }
     runner.common_reader = VRAMUtils::CreateCommonReader(this, desc);
     runner.set_resolvers();
 
@@ -194,16 +196,13 @@ void VRAMService::Runner::set_resolvers() SKR_NOEXCEPT
     auto chain = skr::static_pointer_cast<IORequestResolverChain>(IIORequestResolverChain::Create());
     chain->runner = this;
 
-    const bool dstorage = ds_reader.get();
     auto alloc_resource = SObjectPtr<AllocateVRAMResourceResolver>::Create();
     chain->then(alloc_resource); // VRAMService: we open dstorage files in this resolver
     batch_buffer = SObjectPtr<IOBatchBuffer>::Create(); // hold batches
-
-    batch_processors = { batch_buffer, chain };
-    if (dstorage)
+    batch_processors = { batch_buffer, chain, common_reader };
+    if (const bool ds_available = ds_reader.get())
     {
         batch_processors.push_back(ds_reader);
     }
-    batch_processors.push_back(common_reader);
 }
 } // namespace skr::io

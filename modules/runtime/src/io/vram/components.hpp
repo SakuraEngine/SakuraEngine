@@ -18,11 +18,17 @@ struct CID<struct VRAMUploadComponent>
 };
 struct VRAMUploadComponent final : public IORequestComponent
 {
+public:
     VRAMUploadComponent(IIORequest* const request) SKR_NOEXCEPT;
 
     void set_transfer_queue(CGPUQueueId queue) SKR_NOEXCEPT
     {
         transfer_queue = queue;
+    }
+
+    CGPUQueueId get_transfer_queue() const SKR_NOEXCEPT
+    {
+        return transfer_queue;
     }
 
     RAMIOBufferId pin_staging_buffer(RAMService* ram_service) SKR_NOEXCEPT
@@ -31,13 +37,13 @@ struct VRAMUploadComponent final : public IORequestComponent
         return ram_buffer;
     }
 
-    // TODO: protect these fields
+protected:
+    friend struct CommonVRAMReader;
     CGPUQueueId transfer_queue = nullptr;
     RAMIOBufferId ram_buffer = nullptr;
-    IOFuture ram_future;
-
-    uint8_t* data = nullptr;
-    uint64_t size = 0;
+    IOFuture ram_future = {};
+    uint8_t* src_data = nullptr;
+    uint64_t src_size = 0;
 };
 
 template <>
@@ -49,12 +55,34 @@ struct VRAMDStorageComponent final : public IORequestComponent
 {
     VRAMDStorageComponent(IIORequest* const request) SKR_NOEXCEPT;
 
-    void set_dstorage_queue(CGPUDStorageQueueId queue) SKR_NOEXCEPT
+    void set_force_enable_dstorage(bool enable) SKR_NOEXCEPT
     {
-        dstorage_queue = queue;
+        use_force = true;
+        force_enabled = enable;
     }
 
-    CGPUDStorageQueueId dstorage_queue = nullptr;
+    void set_enable_dstorage(bool enable) SKR_NOEXCEPT
+    {
+        enabled = enable;
+    }
+
+    bool should_use_dstorage() SKR_NOEXCEPT
+    {
+        bool _enabled = enabled;
+        if (use_force)
+        {
+            _enabled = force_enabled;
+        }
+        auto vram_service = static_cast<IVRAMService*>(this->request->get_service());
+        return _enabled && vram_service->get_dstoage_available();
+    }
+
+private:
+    friend struct DStorageVRAMReader;
+    friend struct AllocateVRAMResourceResolver;
+    bool use_force = false;
+    bool force_enabled = true;
+    bool enabled = true;
     SkrDStorageFileHandle dfile = nullptr;
 };
 

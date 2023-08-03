@@ -50,9 +50,9 @@ struct SKR_RUNTIME_API IVRAMIORequest : public IIORequest
 
 #pragma region Transfer
     virtual void set_transfer_queue(CGPUQueueId queue) SKR_NOEXCEPT = 0;
-    virtual void set_dstorage_queue(CGPUDStorageQueueId queue) SKR_NOEXCEPT = 0;
     virtual void set_memory_src(uint8_t* memory, uint64_t bytes) SKR_NOEXCEPT = 0;
     virtual RAMIOBufferId pin_staging_buffer() SKR_NOEXCEPT = 0;
+    virtual void set_enable_dstorage(bool enable) SKR_NOEXCEPT = 0;
 #pragma endregion
 };
 
@@ -128,6 +128,9 @@ struct SKR_RUNTIME_API IVRAMService : public IIOService
 
     // get underlying ram service
     virtual IRAMService* get_ram_service() SKR_NOEXCEPT = 0;
+
+    // get avability of dstorage
+    [[nodiscard]] virtual bool get_dstoage_available() const SKR_NOEXCEPT = 0;
 
     virtual ~IVRAMService() SKR_NOEXCEPT = default;
     IVRAMService() SKR_NOEXCEPT = default;

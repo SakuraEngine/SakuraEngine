@@ -33,11 +33,11 @@ struct VRAMRequestMixin : public IORequestMixin<Interface, Components...>
         Super::template safe_comp<VRAMUploadComponent>()->set_transfer_queue(queue); 
     }
 
-    void set_dstorage_queue(CGPUDStorageQueueId queue) SKR_NOEXCEPT
+    void set_enable_dstorage(bool enable) SKR_NOEXCEPT
     {
-        Super::template safe_comp<VRAMDStorageComponent>()->set_dstorage_queue(queue); 
+        Super::template safe_comp<VRAMDStorageComponent>()->set_enable_dstorage(enable); 
     }
-
+    
     void set_memory_src(uint8_t* memory, uint64_t bytes) SKR_NOEXCEPT
     {
         Super::template safe_comp<MemorySrcComponent>()->set_memory_src(memory, bytes); 
@@ -47,6 +47,7 @@ struct VRAMRequestMixin : public IORequestMixin<Interface, Components...>
     {
         auto vram_service = static_cast<IVRAMService*>(this->service);
         auto ram_service = static_cast<RAMService*>(vram_service->get_ram_service());
+        Super::template safe_comp<VRAMDStorageComponent>()->set_force_enable_dstorage(false); 
         return Super::template safe_comp<VRAMUploadComponent>()->pin_staging_buffer(ram_service); 
     }
 
