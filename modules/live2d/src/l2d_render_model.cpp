@@ -154,7 +154,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     render_model->texture_views.resize(texture_count);
     render_model->io_textures.resize(texture_count);
     render_model->texture_futures.resize(texture_count);
-    const bool dstorage_available = vram_service->get_dstoage_available();
+    [[maybe_unused]] const bool dstorage_available = vram_service->get_dstoage_available();
     if (!dstorage_available)
     {
         render_model->png_blobs.resize(texture_count);
@@ -199,6 +199,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         const auto pngPath = skr::filesystem::path(request->vfs_override->mount_dir) / resource->model->homePath.c_str() / texture_path;
         const auto pngPathStr = pngPath.u8string();
         const auto pngPathCStr = pngPathStr.c_str();
+#ifdef _WIN32
         if (dstorage_available)
         {
             std::string p = texture_path;
@@ -229,6 +230,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
             io_texture = vram_service->request(request, &texture_future);
         }
         else
+#endif
         {
             auto& png_future = render_model->png_futures[i];
             const auto on_complete = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
