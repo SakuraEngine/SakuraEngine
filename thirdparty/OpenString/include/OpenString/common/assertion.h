@@ -1,6 +1,5 @@
 
 #pragma once
-
-#include "platforms.h"
+#include "OpenString/common/platforms.h" // IWYU pragma: export
 #include "OpenString/common/definitions.h"
-#include "format.h"
+#include "OpenString/format.h" // IWYU pragma: export

@@ -1,6 +1,5 @@
 
 #pragma once
-
 #include "OpenString/common/basic_types.h"
 
 namespace ostr

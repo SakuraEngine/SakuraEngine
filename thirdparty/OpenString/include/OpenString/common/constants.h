@@ -1,7 +1,5 @@
-
 #pragma once
-
-#include "basic_types.h"
+#include "OpenString/common/basic_types.h"
 #include <limits>
 
 namespace ostr::global_constant

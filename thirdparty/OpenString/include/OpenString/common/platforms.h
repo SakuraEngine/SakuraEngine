@@ -1,6 +1,6 @@
 
 #pragma once
-#include "definitions.h"
+#include "OpenString/common/definitions.h"
 
 namespace ostr
 {
