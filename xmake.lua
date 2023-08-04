@@ -21,11 +21,8 @@ includes("xmake/compile_flags.lua")
 includes("xmake/rules.lua")
 
 if (is_os("windows")) then 
+    add_defines("UNICODE", "NOMINMAX", "_WINDOWS")
     add_defines("_GAMING_DESKTOP")
-    add_defines("_WINDOWS")
-    add_defines("UNICODE")
-    add_defines("_UNICODE")
-    add_defines("NOMINMAX")
     add_defines("_CRT_SECURE_NO_WARNINGS")
     if (is_mode("release")) then
         set_runtimes("MD")
