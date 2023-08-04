@@ -10,7 +10,7 @@
 namespace ostr
 {
 	template<class T, u64 I = 0>
-	struct OPEN_STRING_API sequence
+	struct sequence
 	{
 	public:
 		sequence() noexcept;
