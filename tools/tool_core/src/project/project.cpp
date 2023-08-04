@@ -27,15 +27,14 @@ SProject* SProject::OpenProject(const skr::filesystem::path& projectFile) noexce
         //resolved.append(view);
         while(true)
         {
-            /*
-            resolved.append(view.subview({'[', 0, i, ')'}));
-            auto j = view.index_of(u8"}", {'[', i, view.size(), ')'});
+            resolved.append(view.subview(0, i - 1));
+            auto j = view.index_of(u8"}", i, view.size() - 1);
             if (j == ostr::global_constant::INDEX_INVALID)
             {
-                resolved.append(view.subview({'[', i, view.size(), ')'}));
+                resolved.append(view.subview(i, view.size() - 1));
                 break;
             }
-            auto var = view.subview({'[', i + 2, j, ')'});
+            auto var = view.subview(i + 2, j - 1);
             if (var == u8"workspace")
             {
                 resolved.append(Workspace.u8string().c_str());
@@ -44,14 +43,13 @@ SProject* SProject::OpenProject(const skr::filesystem::path& projectFile) noexce
             {
                 resolved.append(SKR_RESOURCE_PLATFORM);
             }
-            view = view.subview({'[', j + 1, view.size(), ')'});
+            view = view.subview(j + 1, view.size() - 1);
             i = view.index_of(u8"${");
             if (i == ostr::global_constant::INDEX_INVALID)
             {
                 resolved.append(view);
                 break;
             }
-            */
         }
         return resolved;
     };
