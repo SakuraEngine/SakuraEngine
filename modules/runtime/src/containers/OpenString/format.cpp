@@ -1,7 +1,7 @@
 
-#include "common/definitions.h"
-#include "format.h"
-#include "text.h"
+#include "OpenString/common/definitions.h"
+#include "OpenString/format.h"
+#include "OpenString/text.h"
 
 namespace ostr
 {

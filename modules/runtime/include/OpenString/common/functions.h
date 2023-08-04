@@ -1,7 +1,8 @@
 
 #pragma once
-#include <algorithm>
 #include <math.h>
+#include <algorithm>
+#include "OpenString/common/basic_types.h"
 
 namespace ostr
 {

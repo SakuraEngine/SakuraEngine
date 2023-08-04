@@ -1,9 +1,7 @@
-
-#include "text.h"
-
 #include <algorithm>
-#include "common/functions.h"
-#include "wide_text.h"
+#include "OpenString/common/functions.h"
+#include "OpenString/text.h"
+#include "OpenString/wide_text.h"
 
 namespace ostr
 {

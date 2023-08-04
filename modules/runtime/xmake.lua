@@ -71,6 +71,9 @@ shared_module("SkrRT", "RUNTIME", engine_version)
         add_frameworks("CoreFoundation", "Cocoa", "Metal", "IOKit", {public = true})
     end
     
+    -- add OpenString source
+    add_defines("OPEN_STRING_API=SKR_RUNTIME_API", {public = true})
+
     -- add FTL source 
     add_files("$(projectdir)/thirdparty/FiberTaskingLib/source/build.*.cpp")
     
