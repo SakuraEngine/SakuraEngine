@@ -1050,6 +1050,8 @@ bool RenderGraphBackend::compile() SKR_NOEXCEPT
             }
             if (texture->frame_aliasing_source) return;
             foreach_textures([&](TextureNode* aliased) SKR_NOEXCEPT {
+                if (texture == aliased) return;
+
                 const auto lifespan = texture->lifespan();
                 const auto aliased_lifespan = aliased->lifespan();
                 if (aliasing_capacity(aliased, texture) && aliased_lifespan.to < lifespan.from)

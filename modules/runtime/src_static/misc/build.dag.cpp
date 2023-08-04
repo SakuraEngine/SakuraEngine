@@ -122,7 +122,7 @@ public:
         for (ListDigraph::InArcIt arcIt(graph, node); arcIt != INVALID; ++arcIt) 
         {
             auto edge = edge_map[arcIt];
-            f(edge->to());
+            f(edge->from());
             count++;
         }
         return count;
@@ -135,7 +135,7 @@ public:
         for (ListDigraph::InArcIt arcIt(graph, node); arcIt != INVALID; ++arcIt) 
         {
             const auto edge = edge_map[arcIt];
-            f(edge->to());
+            f(edge->from());
             count++;
         }
         return count;
