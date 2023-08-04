@@ -1,9 +1,8 @@
 
 #pragma once
-
-#include "text_view.h"
-#include "codeunit_sequence.h"
-#include "common/sequence.h"
+#include "OpenString/common/sequence.h"
+#include "OpenString/text_view.h"
+#include "OpenString/codeunit_sequence.h"
 
 namespace ostr
 {

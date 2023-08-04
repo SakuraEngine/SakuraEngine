@@ -1,6 +1,6 @@
 #pragma once
 #include <cstddef>
-#include "common/definitions.h"
+#include "OpenString/common/definitions.h"
 #include "SkrRT/platform/memory.h"
 
 namespace ostr {

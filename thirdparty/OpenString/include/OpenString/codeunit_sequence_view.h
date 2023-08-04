@@ -1,14 +1,12 @@
 
 #pragma once
-#include "common/definitions.h"
-
 #include <cstddef>
 #include <vector>
-
-#include "common/basic_types.h"
-#include "common/constants.h"
 #include "unicode.h"
-#include "common/functions.h"
+#include "OpenString/common/definitions.h"
+#include "OpenString/common/basic_types.h"
+#include "OpenString/common/constants.h"
+#include "OpenString/common/functions.h"
 
 namespace ostr
 {

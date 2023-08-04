@@ -1,7 +1,6 @@
 
 #pragma once
-
-#include "common/basic_types.h"
+#include "OpenString/common/basic_types.h"
 #include <array>
 
 namespace ostr
