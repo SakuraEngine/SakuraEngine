@@ -293,9 +293,9 @@ const char8_t* skr_type_t::Name() const
             return arr.name.u8_str();
         }
         case SKR_TYPE_CATEGORY_OBJ:
-            return ((RecordType*)this)->name.u8_str();
+            return ((RecordType*)this)->name.raw().data();
         case SKR_TYPE_CATEGORY_ENUM:
-            return ((EnumType*)this)->name.u8_str();
+            return ((EnumType*)this)->name.raw().data();
         case SKR_TYPE_CATEGORY_REF: {
             auto& ref = (ReferenceType&)(*this);
             if (!ref.name.is_empty())
@@ -664,9 +664,9 @@ void skr_type_t::Convert(void* dst, const void* src, const skr_type_t* srcType, 
         break;
 #define STR_CONVERT                                                    \
     case SKR_TYPE_CATEGORY_STR:                                        \
-        { const auto& txt = *(skr::string*)src; FromString(dst, skr::string_view(txt.u8_str()), policy); } break;\
+        { const auto& txt = *(skr::string*)src; FromString(dst, txt.view(), policy); } break;\
     case SKR_TYPE_CATEGORY_STRV:                                       \
-        { const auto& txt = *(skr::string_view*)src; FromString(dst, skr::string_view(txt.u8_str()), policy); } break;
+        { const auto& txt = *(skr::string_view*)src; FromString(dst, txt, policy); } break;
         
 #define ENUM_CONVERT                                   \
     case SKR_TYPE_CATEGORY_ENUM: {                     \
