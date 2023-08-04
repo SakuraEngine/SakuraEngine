@@ -2,7 +2,7 @@
 #pragma once
 #include <cstddef>
 #include <vector>
-#include "unicode.h"
+#include "OpenString/unicode.h"
 #include "OpenString/common/definitions.h"
 #include "OpenString/common/basic_types.h"
 #include "OpenString/common/constants.h"

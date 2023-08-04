@@ -12,6 +12,7 @@ void SProject::SetWorkspace(const skr::filesystem::path& path) noexcept
 {
     Workspace = path;
 }
+
 SProject* SProject::OpenProject(const skr::filesystem::path& projectFile) noexcept
 {
     std::error_code ec = {};
@@ -19,16 +20,17 @@ SProject* SProject::OpenProject(const skr::filesystem::path& projectFile) noexce
     {
         auto view = path.view();
         auto i = view.index_of(u8"${");
-        if(i == ostr::index_invalid)
+        if(i == ostr::global_constant::INDEX_INVALID)
             return path;
         skr::string resolved;
         resolved.raw().reserve(path.raw().size());
         //resolved.append(view);
         while(true)
         {
+            /*
             resolved.append(view.subview({'[', 0, i, ')'}));
             auto j = view.index_of(u8"}", {'[', i, view.size(), ')'});
-            if (j == ostr::index_invalid)
+            if (j == ostr::global_constant::INDEX_INVALID)
             {
                 resolved.append(view.subview({'[', i, view.size(), ')'}));
                 break;
@@ -44,11 +46,12 @@ SProject* SProject::OpenProject(const skr::filesystem::path& projectFile) noexce
             }
             view = view.subview({'[', j + 1, view.size(), ')'});
             i = view.index_of(u8"${");
-            if (i == ostr::index_invalid)
+            if (i == ostr::global_constant::INDEX_INVALID)
             {
                 resolved.append(view);
                 break;
             }
+            */
         }
         return resolved;
     };
