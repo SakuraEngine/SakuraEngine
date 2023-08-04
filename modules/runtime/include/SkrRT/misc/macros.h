@@ -71,7 +71,7 @@
     #define TRACY_ENABLE
 #endif
 
-#if defined(TRACY_ENABLE) || defined(TRACY_OVERRIDE_ENABLE)
+#if defined(TRACY_ENABLE)
     #ifndef TRACY_IMPORTS
     #define TRACY_IMPORTS
     #endif
