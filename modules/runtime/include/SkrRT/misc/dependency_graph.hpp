@@ -65,11 +65,10 @@ public:
     virtual bool remove(Node* node) SKR_NOEXCEPT = 0;
     virtual bool clear() SKR_NOEXCEPT = 0;
     virtual bool link(Node* from, Node* to, Edge* edge = nullptr) SKR_NOEXCEPT = 0;
-    virtual Edge* linkage(Node* from, Node* to) SKR_NOEXCEPT = 0;
-    virtual Edge* linkage(dep_graph_handle_t from, dep_graph_handle_t to) SKR_NOEXCEPT = 0;
-    virtual bool unlink(Node* from, Node* to) SKR_NOEXCEPT = 0;
-    virtual bool unlink(dep_graph_handle_t from, dep_graph_handle_t to) SKR_NOEXCEPT = 0;
-    virtual Node* node_at(dep_graph_handle_t ID) SKR_NOEXCEPT = 0;
+    // virtual Edge* linkage(Node* from, Node* to) SKR_NOEXCEPT = 0;
+    // virtual Edge* linkage(dep_graph_handle_t from, dep_graph_handle_t to) SKR_NOEXCEPT = 0;
+    // virtual bool unlink(Node* from, Node* to) SKR_NOEXCEPT = 0;
+    // virtual bool unlink(dep_graph_handle_t from, dep_graph_handle_t to) SKR_NOEXCEPT = 0;
     virtual Node* from_node(Edge* edge) SKR_NOEXCEPT = 0;
     virtual Node* to_node(Edge* edge) SKR_NOEXCEPT = 0;
     virtual uint32_t foreach_neighbors(Node* node, eastl::function<void(Node* neig)>) SKR_NOEXCEPT = 0;
@@ -97,11 +96,11 @@ public:
 
 inline DependencyGraphNode* DependencyGraphEdge::from() SKR_NOEXCEPT
 {
-    return graph->node_at(from_node);
+    return graph->access_node(from_node);
 }
 inline DependencyGraphNode* DependencyGraphEdge::to() SKR_NOEXCEPT
 {
-    return graph->node_at(to_node);
+    return graph->access_node(to_node);
 }
 
 } // namespace skr

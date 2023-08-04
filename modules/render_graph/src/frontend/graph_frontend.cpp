@@ -189,13 +189,14 @@ const ResourceNode::LifeSpan ResourceNode::lifespan() const SKR_NOEXCEPT
             to = (to >= pass_node->order) ? to : pass_node->order;
         }
     });
+    from = (from > to) ? to : from;
     frame_lifespan = { from, to };
     return frame_lifespan;
 }
 
-BufferNode* RenderGraph::resolve(BufferHandle hdl) SKR_NOEXCEPT { return static_cast<BufferNode*>(graph->node_at(hdl)); }
-TextureNode* RenderGraph::resolve(TextureHandle hdl) SKR_NOEXCEPT { return static_cast<TextureNode*>(graph->node_at(hdl)); }
-PassNode* RenderGraph::resolve(PassHandle hdl) SKR_NOEXCEPT { return static_cast<PassNode*>(graph->node_at(hdl)); }
+BufferNode* RenderGraph::resolve(BufferHandle hdl) SKR_NOEXCEPT { return static_cast<BufferNode*>(graph->access_node(hdl)); }
+TextureNode* RenderGraph::resolve(TextureHandle hdl) SKR_NOEXCEPT { return static_cast<TextureNode*>(graph->access_node(hdl)); }
+PassNode* RenderGraph::resolve(PassHandle hdl) SKR_NOEXCEPT { return static_cast<PassNode*>(graph->access_node(hdl)); }
 const CGPUBufferDescriptor* RenderGraph::resolve_descriptor(BufferHandle hdl) SKR_NOEXCEPT 
 {
     if (const auto node = resolve(hdl))

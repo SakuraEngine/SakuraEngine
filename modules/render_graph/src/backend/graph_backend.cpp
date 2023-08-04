@@ -1050,8 +1050,9 @@ bool RenderGraphBackend::compile() SKR_NOEXCEPT
             }
             if (texture->frame_aliasing_source) return;
             foreach_textures([&](TextureNode* aliased) SKR_NOEXCEPT {
-                if (aliasing_capacity(aliased, texture) &&
-                    aliased->lifespan().to < texture->lifespan().from)
+                const auto lifespan = texture->lifespan();
+                const auto aliased_lifespan = aliased->lifespan();
+                if (aliasing_capacity(aliased, texture) && aliased_lifespan.to < lifespan.from)
                 {
                     if (!texture->frame_aliasing_source ||
                         texture->frame_aliasing_source->get_size() > aliased->get_size() // always choose smallest block
