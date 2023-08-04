@@ -128,7 +128,7 @@ skr::NativeLibHandle skr::SharedLibrary::handle() const
     {
         auto tchar_to_utf8 = +[](const TCHAR* str, char8_t* str8)
         {
-        #ifdef _UNICODE
+        #ifdef UNICODE
             auto size = WideCharToMultiByte(CP_UTF8, 0, str, (int)wcslen(str), NULL, 0, NULL, NULL);
             WideCharToMultiByte(CP_UTF8, 0, str, (int)wcslen(str), (char*)str8, size, NULL, NULL);
             str8[size] = '\0';
