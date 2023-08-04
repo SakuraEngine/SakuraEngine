@@ -30,11 +30,9 @@ TEST_CASE_METHOD(CommonMathTests, "QuatEuler")
 
 TEST_CASE_METHOD(CommonMathTests, "MD5")
 {
+    EXPECT_EQ(u8"02", skr::format(u8"{:02x}", 2));
     uint8_t hex = 2;
     EXPECT_EQ(u8"02", skr::format(u8"{:02x}", hex));
-
-    EXPECT_EQ(u8"02", skr::format(u8"{:02x}", 2));
-    const auto fuck = skr::format(u8"{:02x}", 2);
 
     // "MD5 Hash Generator" ->
     // 992927e5b1c8a237875c70a302a34e22
