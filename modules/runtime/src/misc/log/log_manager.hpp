@@ -16,38 +16,42 @@ using LogSinkMap = skr::parallel_flat_hash_map<skr_guid_t, eastl::unique_ptr<Log
 
 struct SKR_RUNTIME_API LogManager
 {
-    static void Initialize() SKR_NOEXCEPT;
-    static void Finalize() SKR_NOEXCEPT;
+    LogManager() SKR_NOEXCEPT;
+    static LogManager* Get() SKR_NOEXCEPT;
 
-    static LogWorker* TryGetWorker() SKR_NOEXCEPT;
-    static Logger* GetDefaultLogger() SKR_NOEXCEPT;
+    void Initialize() SKR_NOEXCEPT;
+    void InitializeAsyncWorker() SKR_NOEXCEPT;
+    void FinalizeAsyncWorker() SKR_NOEXCEPT;
 
-    static skr_guid_t RegisterPattern(eastl::unique_ptr<LogPattern> pattern);
-    static bool RegisterPattern(skr_guid_t guid, eastl::unique_ptr<LogPattern> pattern);
-    static LogPattern* QueryPattern(skr_guid_t guid);
+    LogWorker* TryGetWorker() SKR_NOEXCEPT;
+    Logger* GetDefaultLogger() SKR_NOEXCEPT;
 
-    static skr_guid_t RegisterSink(eastl::unique_ptr<LogSink> sink);
-    static bool RegisterSink(skr_guid_t guid, eastl::unique_ptr<LogSink> sink);
-    static LogSink* QuerySink(skr_guid_t guid);
+    skr_guid_t RegisterPattern(eastl::unique_ptr<LogPattern> pattern);
+    bool RegisterPattern(skr_guid_t guid, eastl::unique_ptr<LogPattern> pattern);
+    LogPattern* QueryPattern(skr_guid_t guid);
 
-    static void PatternAndSink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT;
-    static void FlushAllSinks() SKR_NOEXCEPT;
-    static bool ShouldBacktrace(const LogEvent& event) SKR_NOEXCEPT;
+    skr_guid_t RegisterSink(eastl::unique_ptr<LogSink> sink);
+    bool RegisterSink(skr_guid_t guid, eastl::unique_ptr<LogSink> sink);
+    LogSink* QuerySink(skr_guid_t guid);
 
-    static SAtomic64 available_;
-    static eastl::unique_ptr<LogWorker> worker_;
-    static LogPatternMap patterns_;
-    static LogSinkMap sinks_;
-    static eastl::unique_ptr<skr::log::Logger> logger_;
+    void PatternAndSink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT;
+    void FlushAllSinks() SKR_NOEXCEPT;
+    bool ShouldBacktrace(const LogEvent& event) SKR_NOEXCEPT;
 
-    static TSCNS tscns_;
-    static struct DateTime {
+    SAtomic64 available_ = 0;
+    eastl::unique_ptr<LogWorker> worker_ = nullptr;
+    LogPatternMap patterns_ = {};
+    LogSinkMap sinks_ = {};
+    eastl::unique_ptr<skr::log::Logger> logger_ = nullptr;
+
+    TSCNS tscns_ = {};
+    struct DateTime {
         void reset_date() SKR_NOEXCEPT;
-        int64_t midnightNs;
-        uint32_t year;
-        uint32_t month;
-        uint32_t day;
-    } datetime_;
+        int64_t midnightNs = 0;
+        uint32_t year = 0;
+        uint32_t month = 0;
+        uint32_t day = 0;
+    } datetime_ = {};
 };
 
 } } // namespace skr::log

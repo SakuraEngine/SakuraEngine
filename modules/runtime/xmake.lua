@@ -4,10 +4,10 @@ else
     add_requires("eastl >=2023.5.18-skr", { configs = { runtime_shared = true } })
 end
 
+add_requires("lemon 1.3.1")
 add_requires("parallel-hashmap >=1.3.11-skr")
 add_requires("boost-context >=0.1.0-skr")
 add_requires("simdjson >=3.0.0-skr")
--- add_requires("lua >=5.4.4-skr")
 add_requires("luau", { configs = { extern_c = true }})
 
 target("SkrRTStatic")
@@ -16,8 +16,8 @@ target("SkrRTStatic")
     set_exceptions("no-cxx")
     add_deps("SkrRoot", "SkrBase", {public = true})
     add_defines("SKR_RUNTIME_API=SKR_IMPORT", "SKR_RUNTIME_LOCAL=error")
-    add_packages("eastl", {public = true, inherit = true})
-    add_packages("parallel-hashmap", "simdjson", {public = true, inherit = true})
+    add_packages("eastl", "parallel-hashmap", "simdjson", {public = true, inherit = true})
+    add_packages("lemon", {public = false, inherit = false})
     add_rules("skr.static_module", {api = "SKR_RUNTIME_STATIC"})
     add_includedirs("include", {public = true})
     set_pcxxheader("src_static/pch.hpp")
@@ -70,7 +70,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
         add_mxflags("-fno-objc-arc", {force = true})
         add_frameworks("CoreFoundation", "Cocoa", "Metal", "IOKit", {public = true})
     end
-    
+
     -- add FTL source 
     add_files("$(projectdir)/thirdparty/FiberTaskingLib/source/build.*.cpp")
     

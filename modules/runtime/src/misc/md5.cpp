@@ -5,12 +5,12 @@
 constexpr int parse_hex_digit(const char8_t c)
 {
     using namespace skr::string_literals;
-    if ('0' <= c && c <= '9')
-        return c - '0';
-    else if ('a' <= c && c <= 'f')
-        return 10 + c - 'a';
-    else if ('A' <= c && c <= 'F')
-        return 10 + c - 'A';
+    if (u8'0' <= c && c <= u8'9')
+        return c - u8'0';
+    else if (u8'a' <= c && c <= u8'f')
+        return 10 + c - u8'a';
+    else if (u8'A' <= c && c <= u8'F')
+        return 10 + c - u8'A';
     else
         SKR_LOG_ERROR(u8"Invalid character in GUID. Expected hex digit, got %c", c);
     return -1;
@@ -38,11 +38,11 @@ bool make_md5(const skr::string_view& str, skr_md5_t& value)
 
     if (str.size() != md5_form_length)
     {
-        skr::string str2(skr::string_view(str.u8_str(), (size_t)str.size()));
+        skr::string str2(str);
         SKR_LOG_ERROR(u8"String MD5 of the form XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX is expected, got %s", str2.c_str());
         return false;
     }
-    const auto begin = str.u8_str();
+    const auto begin = str.raw().data();
     if (!parse_hex(begin, value.digest[0])) return false;
     if (!parse_hex(begin + 2, value.digest[1])) return false;
     if (!parse_hex(begin + 4, value.digest[2])) return false;

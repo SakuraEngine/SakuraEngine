@@ -320,12 +320,12 @@ int WriteTrait<const skr::string_view&>::Write(skr_binary_writer_t* writer, cons
     int ret = WriteTrait<const uint32_t&>::Write(writer, (uint32_t)str.size());
     if (ret != 0)
         return ret;
-    return WriteBytes(writer, str.u8_str(), str.size());
+    return WriteBytes(writer, str.raw().data(), str.size());
 }
 
 int WriteTrait<const skr::string_view&>::Write(skr_binary_writer_t* writer, skr_blob_arena_t& arena, const skr::string_view& str)
 {
-    auto ptr = (ochar8_t*)str.u8_str();
+    auto ptr = (ochar8_t*)str.raw().data();
     auto buffer = (ochar8_t*)arena.get_buffer();
     SKR_ASSERT(ptr >= buffer);
     auto offset = (uint32_t)(ptr - buffer);
@@ -340,7 +340,7 @@ int WriteTrait<const skr::string_view&>::Write(skr_binary_writer_t* writer, skr_
     if (ret != 0) {
         return ret;
     }
-    return WriteBytes(writer, str.u8_str(), str.size());
+    return WriteBytes(writer, str.raw().data(), str.size());
 }
 
 int WriteTrait<const skr_guid_t&>::Write(skr_binary_writer_t* writer, const skr_guid_t& guid)
@@ -399,7 +399,7 @@ void BlobTrait<skr::string_view>::BuildArena(skr_blob_arena_builder_t& arena, sk
 
 void BlobTrait<skr::string_view>::Remap(skr_blob_arena_t& arena, skr::string_view& dst)
 {
-    const auto unmapped_addr = (std::uintptr_t)dst.raw().u8_str();
+    const auto unmapped_addr = (std::uintptr_t)dst.raw().data();
     const auto offset_in_arena = (std::uintptr_t)arena.base();
     const auto base_ptr = arena.get_buffer();
     const auto str_ptr = reinterpret_cast<const char8_t*>(base_ptr);

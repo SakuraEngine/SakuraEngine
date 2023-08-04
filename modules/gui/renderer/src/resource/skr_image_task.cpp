@@ -55,6 +55,7 @@ skr::BlobId _image_coder_decode_image(const uint8_t* bytes, uint64_t size, uint3
     }
     return {};
 }
+
 struct DecodingProgress : public skr::AsyncProgress<skr::FutureLauncher<bool>, int, bool> {
     DecodingProgress(SkrImageDataTask* image)
         : owner(image)
@@ -98,6 +99,7 @@ SkrImageDataTask::EState SkrImageDataTask::state() const SKR_NOEXCEPT
 {
     return (EState)skr_atomicu32_load_relaxed((uint32_t*)&_state);
 }
+
 void SkrImageDataTask::from_file(StringView file_path, bool need_decode)
 {
     _need_decode = need_decode;
@@ -107,7 +109,7 @@ void SkrImageDataTask::from_file(StringView file_path, bool need_decode)
 
     auto rq = ram_service->open_request();
     rq->set_vfs(vfs);
-    rq->set_path(file_path.u8_str());
+    rq->set_path(file_path.raw().data());
     rq->add_block({}); // read all
     rq->add_callback(
     SKR_IO_STAGE_ENQUEUED, +[](skr_io_future_t* future, skr_io_request_t* request, void* usrdata) {
@@ -124,6 +126,7 @@ void SkrImageDataTask::from_file(StringView file_path, bool need_decode)
     this);
     _raw_data = ram_service->request(rq, &_ram_request);
 }
+
 void SkrImageDataTask::from_data(Span<const uint8_t> data)
 {
     _need_decode = true;
@@ -136,6 +139,7 @@ void SkrImageDataTask::_async_trans_state(EState target)
 {
     skr_atomicu32_store_release((uint32_t*)&_state, (uint32_t)target);
 }
+
 void SkrImageDataTask::_async_decode_data()
 {
     if (_need_decode)
@@ -164,6 +168,7 @@ bool SkrImageUploadTask::is_okey()
 {
     return skr_atomicu32_load_relaxed(&_async_is_okey);
 }
+
 void SkrImageUploadTask::from_image(const SkrImageData& image)
 {
     _image_data = image;

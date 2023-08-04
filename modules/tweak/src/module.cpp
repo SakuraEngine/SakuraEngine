@@ -136,12 +136,12 @@ public:
 
     void ParseTweak(int& value, skr::string_view str)
     {
-        value = std::stoi({str.c_str(), (size_t)str.size()});
+        value = std::stoi({(const char*)str.raw().data(), (size_t)str.size()});
     }
 
     void ParseTweak(float& value, skr::string_view str)
     {
-        value = std::stof({str.c_str(), (size_t)str.size()});
+        value = std::stof({(const char*)str.raw().data(), (size_t)str.size()});
     }
 
     void ParseTweak(bool& value, skr::string_view str)

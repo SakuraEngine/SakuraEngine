@@ -217,32 +217,35 @@ Shipping Build 的最终呈现帧数可以轻松地突破数千帧，这是 Cubi
 - cgpu: [[api]](include/cgpu/api.h) [[design]](include/cgpu/README.md)
 
 ## 嵌入源码的开源库和版本
-- LMDB v0.9.29 (BSD)
-- mimalloc v2.1.2 (MIT)
+- sole 1.0.1 (zlib License)
+- marl e007bd3 (Apache-2.0)
+- folly (Apache-2.0)
 - xxhash 0.8.1 (BSD)
-- concurrentqueue d49fa2b Simplified BSD
+- fast_float v3.4.0
+- mimalloc v2.1.2 (MIT)
+- godot 5dccc940e7 (MIT)
+- OpenString 81926cc (MIT)
+- concurrentqueue d49fa2b (Simplified BSD)
 - VulkanMemoryAllocator 3.0.1, release
 - D3D12MemoryAllocator 2.0.1 release
 - SPIRV-Reflect b68b5a8 (Apache-2.0)
 - RealtimeMath 80d08a8 (MIT)
 - FiberTaskingLib 9d7b27d (Apache-2.0)
-- sole 1.0.1 (zlib License)
 - parallel-hashmap 1.3.11 (Apache-2.0)
-- folly (Apache-2.0)
+- [TSCNS](https://github.com/MengRao/tscns) v2.0 (MIT)
+- cpu_features v0.7.0 (Apache-2.0)
+
+## 在自定义包管理引入的开源库和版本
+- LEMON v1.3.1 (Boost Software License)
+- LMDB v0.9.29 (BSD)
 - simdjson v3.0.0 (Apache-2.0)
-- fast_float v3.4.0
 - zlib v1.2.8
 - cgltf v1.13 (MIT)
-- [TSCNS](https://github.com/MengRao/tscns) v2.0 (MIT)
-- marl e007bd3 (Apache-2.0)
-- cpu_features v0.7.0 (Apache-2.0)
 - EASTL v3.19.05, master-db16065 (BSD-3-Clause)
-- OpenString 81926cc (MIT)
-- godot 5dccc940e7 (MIT)
-- doctest v2.4.11
 - freetype 2.13.0 (GNU)
 - icu 72.1 ([LICENSE](https://github.com/unicode-org/icu/blob/main/icu4c/LICENSE))
 - harfbuzz 7.1.0 ([LICENSE](https://github.com/harfbuzz/harfbuzz/blob/main/COPYING))
+- doctest v2.4.11
 
 ## 参考和借鉴的开源库
 - [quill](https://github.com/odygrd/quill) v3.0.2 (MIT)

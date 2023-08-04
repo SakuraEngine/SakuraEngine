@@ -23,7 +23,7 @@ const skr_guid_t LogConstants::kDefaultFilePatternId = u8"75871d37-ba78-4a75-bb7
 const skr_guid_t LogConstants::kDefaultFileSinkId = u8"289d0408-dec8-4ceb-ae32-55d4793df983"_guid;
 
 LogEvent::LogEvent(Logger* logger, LogLevel level, const LogSourceData& src_data) SKR_NOEXCEPT
-    : level(level), timestamp(LogManager::tscns_.rdtsc()), 
+    : level(level), timestamp(LogManager::Get()->tscns_.rdtsc()), 
       thread_id(skr_current_thread_id()), thread_name(skr_current_thread_get_name()),
       logger(logger), src_data(src_data)
 {
@@ -44,7 +44,7 @@ skr::string const& LogFormatter::format(const skr::string& format, const ArgsLis
 Logger::Logger(const char8_t* name) SKR_NOEXCEPT
     : name(name)
 {
-    if (auto worker = LogManager::TryGetWorker())
+    if (auto worker = LogManager::Get()->TryGetWorker())
     {
         worker->add_logger(this);
     }
@@ -52,20 +52,23 @@ Logger::Logger(const char8_t* name) SKR_NOEXCEPT
 
 Logger::~Logger() SKR_NOEXCEPT
 {
-    if (auto worker = LogManager::TryGetWorker())
+    if (auto manager = LogManager::Get())
     {
-        worker->remove_logger(this);
+        if (auto worker = manager->TryGetWorker())
+        {
+            worker->remove_logger(this);
+        }
     }
 }
 
 Logger* Logger::GetDefault() SKR_NOEXCEPT
 {
-    return LogManager::GetDefaultLogger();
+    return LogManager::Get()->GetDefaultLogger();
 }
 
 void Logger::onLog(const LogEvent& ev) SKR_NOEXCEPT
 {
-    if (auto should_backtrace = LogManager::ShouldBacktrace(ev))
+    if (auto should_backtrace = LogManager::Get()->ShouldBacktrace(ev))
     {
         skr_log_flush();
     }
@@ -73,18 +76,18 @@ void Logger::onLog(const LogEvent& ev) SKR_NOEXCEPT
 
 void Logger::sinkDefaultImmediate(const LogEvent& e, skr::string_view what) const SKR_NOEXCEPT
 {
-    skr::log::LogManager::PatternAndSink(e, what);
+    skr::log::LogManager::Get()->PatternAndSink(e, what);
 }
 
 bool Logger::canPushToQueue() const SKR_NOEXCEPT
 {
-    auto worker = LogManager::TryGetWorker();
+    auto worker = LogManager::Get()->TryGetWorker();
     return worker;
 }
 
 bool Logger::tryPushToQueue(LogEvent ev, skr::string_view format, ArgsList&& args_list) SKR_NOEXCEPT
 {
-    auto worker = LogManager::TryGetWorker();
+    auto worker = LogManager::Get()->TryGetWorker();
     if (worker)
     {
         auto queue_ = worker->queue_;
@@ -97,7 +100,7 @@ bool Logger::tryPushToQueue(LogEvent ev, skr::string_view format, ArgsList&& arg
 
 bool Logger::tryPushToQueue(LogEvent ev, skr::string&& what) SKR_NOEXCEPT
 {
-    auto worker = LogManager::TryGetWorker();
+    auto worker = LogManager::Get()->TryGetWorker();
     if (worker)
     {
         auto queue_ = worker->queue_;
@@ -110,7 +113,7 @@ bool Logger::tryPushToQueue(LogEvent ev, skr::string&& what) SKR_NOEXCEPT
 
 void Logger::notifyWorker() SKR_NOEXCEPT
 {
-    if (auto worker = LogManager::TryGetWorker())
+    if (auto worker = LogManager::Get()->TryGetWorker())
     {
         worker->awake();
     }
@@ -140,7 +143,7 @@ void skr_log_log(int level, const char* file, const char* func, const char* line
     const auto kLogLevel = skr::log::LogConstants::kLogLevelsLUT[level];
     if (kLogLevel < skr::log::LogConstants::gLogLevel) return;
 
-    auto logger = skr::log::LogManager::GetDefaultLogger();
+    auto logger = skr::log::LogManager::Get()->GetDefaultLogger();
     const skr::log::LogSourceData Src = { file, func, line  };
     const auto Event = skr::log::LogEvent(logger, kLogLevel, Src);
 
@@ -154,11 +157,11 @@ SKR_EXTERN_C
 void skr_log_finalize_async_worker()
 {
     {
-        if (auto worker = skr::log::LogManager::TryGetWorker())
+        if (auto worker = skr::log::LogManager::Get()->TryGetWorker())
             worker->drain();
     }
-    skr::log::LogManager::Finalize();
+    skr::log::LogManager::Get()->FinalizeAsyncWorker();
 
-    auto worker = skr::log::LogManager::TryGetWorker();
+    auto worker = skr::log::LogManager::Get()->TryGetWorker();
     SKR_ASSERT(!worker && "worker must be null & properly stopped at exit!");
 }

@@ -41,7 +41,9 @@ target("SkrRoot")
     set_kind("headeronly")
     -- core deps
     add_deps("SkrCompileFlags", {public = true})
-    add_deps("boost", "tracyclient", {public = true})
+    add_deps("tracyclient", {public = true})
+    -- add OpenString defines
+    add_defines("OPEN_STRING_API=SKR_RUNTIME_API", {public = true})
     -- generate codegen fences
     after_load(function(target)
         import("meta_codegen")

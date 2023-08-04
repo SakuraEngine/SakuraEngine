@@ -64,7 +64,7 @@ bool skr_json_writer_t::RawNumber(const TChar* str, TSize length)
     return _WriteRawValue(str, length);
 }
 
-bool skr_json_writer_t::RawNumber(skr::string_view view) { return RawNumber(view.u8_str(), view.size()); }
+bool skr_json_writer_t::RawNumber(skr::string_view view) { return RawNumber(view.raw().data(), view.size()); }
 
 bool skr_json_writer_t::String(const TChar* str, TSize length)
 {
@@ -72,9 +72,9 @@ bool skr_json_writer_t::String(const TChar* str, TSize length)
     return _WriteString(str, length);
 }
 
-bool skr_json_writer_t::String(skr::string_view view) { return String(view.u8_str(), view.size()); }
+bool skr_json_writer_t::String(skr::string_view view) { return String(view.raw().data(), view.size()); }
 bool skr_json_writer_t::Key(const TChar* str, TSize length) { return String(str, length); }
-bool skr_json_writer_t::Key(skr::string_view view) { return String(view.u8_str(), view.size()); }
+bool skr_json_writer_t::Key(skr::string_view view) { return String(view.raw().data(), view.size()); }
 
 bool skr_json_writer_t::StartObject()
 {
@@ -115,7 +115,7 @@ bool skr_json_writer_t::RawValue(const TChar* str, TSize length, ESkrJsonType ty
 
 bool skr_json_writer_t::RawValue(skr::string_view view, ESkrJsonType type)
 {
-    return RawValue(view.u8_str(), view.size(), type);
+    return RawValue(view.raw().data(), view.size(), type);
 }
 
 bool skr_json_writer_t::_WriteBool(bool b)

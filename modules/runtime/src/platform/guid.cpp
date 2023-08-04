@@ -68,22 +68,22 @@ bool make_guid(const skr::string_view& str, skr_guid_t& value)
 
     if (str.size() != long_guid_form_length && str.size() != short_guid_form_length)
     {
-        skr::string str2(skr::string_view(str.u8_str(), (size_t)str.size()));
+        skr::string str2(str);
         SKR_LOG_ERROR(u8"String GUID of the form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} or XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX is expected, got %s", str2.c_str());
         return false;
     }
 
     if (str.size() == (long_guid_form_length + 1))
     {
-        if (str.u8_str()[0] != u8'{' || str.u8_str()[long_guid_form_length - 1] != u8'}')
+        if (str.raw().data()[0] != u8'{' || str.raw().data()[long_guid_form_length - 1] != u8'}')
         {
-            skr::string str2(skr::string_view(str.u8_str(), (size_t)str.size()));
+            skr::string str2(str);
             SKR_LOG_ERROR(u8"Opening or closing brace is expected, got %s", str2.c_str());
             return false;
         }
     }
 
-    return make_guid_helper(str.u8_str() + (str.size() == (long_guid_form_length + 1) ? 1 : 0), value);
+    return make_guid_helper(str.raw().data() + (str.size() == (long_guid_form_length + 1) ? 1 : 0), value);
 }
 
 }

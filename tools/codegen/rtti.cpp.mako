@@ -165,7 +165,7 @@ namespace skr::type
                 +[](void* self, skr::string_view enumStr)
                 {
                     auto& This = *((${enum.name}*)self);
-                    auto hash = hash_crc32<char>({enumStr.c_str(), (size_t)enumStr.size()});
+                    auto hash = hash_crc32<char8_t>({enumStr.raw().data(), (size_t)enumStr.size()});
                     switch(hash)
                     {
                     %for name, enumerator in vars(enum.values).items():

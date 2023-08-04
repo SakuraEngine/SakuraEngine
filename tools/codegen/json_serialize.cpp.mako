@@ -30,7 +30,7 @@ skr::string_view EnumToStringTrait<${enum.name}>::ToString(${enum.name} value)
 }
 bool EnumToStringTrait<${enum.name}>::FromString(skr::string_view enumStr, ${enum.name}& e)
 {
-    const std::string_view enumStrV = {(const char*)enumStr.u8_str(), (size_t)enumStr.size()};
+    const std::string_view enumStrV = {(const char*)enumStr.raw().data(), (size_t)enumStr.size()};
     const auto hash = hash_crc32(enumStrV);
     switch(hash)
     {
@@ -56,7 +56,7 @@ error_code ReadTrait<${enum.name}>::Read(value_t&& json, ${enum.name}& e)
     const auto enumStr = skr::string_view((const char8_t*)rawView.data(), (int32_t)rawView.size());
     if(!skr::type::enum_from_string(enumStr, e))
     {
-        SKR_LOG_ERROR(u8"Unknown enumerator while reading enum ${enum.name}: %s", enumStr);
+        SKR_LOG_ERROR(u8"Unknown enumerator while reading enum ${enum.name}: %s", enumStr.raw().data());
         return error_code::ENUMERATOR_ERROR;
     }
     return error_code::SUCCESS;

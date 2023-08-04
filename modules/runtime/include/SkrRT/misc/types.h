@@ -47,7 +47,7 @@ typedef struct skr_guid_t {
 
 SKR_EXTERN_C SKR_RUNTIME_API void skr_make_guid(skr_guid_t* out_guid);
 
-#define SKR_MD5_DIGEST_LENGTH 128 / sizeof(uint8_t)
+#define SKR_MD5_DIGEST_LENGTH 128 / 8
 typedef struct skr_md5_t {
     uint8_t digest[SKR_MD5_DIGEST_LENGTH];
 } skr_md5_t;
