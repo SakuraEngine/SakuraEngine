@@ -189,7 +189,6 @@ const ResourceNode::LifeSpan ResourceNode::lifespan() const SKR_NOEXCEPT
             to = (to >= pass_node->order) ? to : pass_node->order;
         }
     });
-    from = (from > to) ? to : from;
     frame_lifespan = { from, to };
     return frame_lifespan;
 }
