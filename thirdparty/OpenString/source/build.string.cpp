@@ -1,5 +1,0 @@
-#include "platforms.cpp"
-#include "codeunit_sequence.cpp"
-#include "text.cpp"
-#include "wide_text.cpp"
-#include "format.cpp"

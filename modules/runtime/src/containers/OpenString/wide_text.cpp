@@ -1,8 +1,6 @@
-
-#include "wide_text.h"
-
-#include "text.h"
-#include "text_view.h"
+#include "OpenString/text.h"
+#include "OpenString/wide_text.h"
+#include "OpenString/text_view.h"
 
 namespace ostr
 {

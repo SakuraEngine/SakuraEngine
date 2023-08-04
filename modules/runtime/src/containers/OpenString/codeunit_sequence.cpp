@@ -1,9 +1,8 @@
-
-#include "codeunit_sequence.h"
 #include <algorithm>
-#include "common/basic_types.h"
-#include "common/adapters.h"
-#include "common/functions.h"
+#include "OpenString/codeunit_sequence.h"
+#include "OpenString/common/basic_types.h"
+#include "OpenString/common/adapters.h"
+#include "OpenString/common/functions.h"
 
 namespace ostr
 {
