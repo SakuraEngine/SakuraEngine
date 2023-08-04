@@ -8,8 +8,8 @@ class DependencyGraphImpl : public DependencyGraph
 {
 public:
     using DAGVertex = ListDigraph::Node;
-    using DAGVertMap = ListDigraph::NodeMap<Node*>;
     using DAGEdge = ListDigraph::Arc;
+    using DAGVertMap = ListDigraph::NodeMap<Node*>;
     using DAGEdgeMap = ListDigraph::ArcMap<Edge*>;
     using DAG = ListDigraph;
     DependencyGraphImpl() SKR_NOEXCEPT
@@ -21,25 +21,25 @@ public:
     DAGVertMap vert_map;
     DAGEdgeMap edge_map;
 
-    virtual dep_graph_handle_t insert(Node* node) SKR_NOEXCEPT final
+    virtual dag_id_t insert(Node* node) SKR_NOEXCEPT final
     {
         const auto dag_node = graph.addNode();
         node->id = graph.id(dag_node);
         node->graph = this;
-        vert_map[dag_node] = node;
+        vert_map.set(dag_node, node);
         node->on_insert();
         return node->id;
     }
 
-    virtual Node* access_node(dep_graph_handle_t handle) SKR_NOEXCEPT final
+    virtual Node* access_node(dag_id_t id) SKR_NOEXCEPT final
     {
-        const auto dag_node = graph.nodeFromId(handle);
+        const auto dag_node = graph.nodeFromId((int)id);
         return vert_map[dag_node];
     }
 
-    virtual bool remove(dep_graph_handle_t handle) SKR_NOEXCEPT final
+    virtual bool remove(dag_id_t id) SKR_NOEXCEPT final
     {
-        auto dag_node = graph.nodeFromId(handle);
+        auto dag_node = graph.nodeFromId((int)id);
         vert_map[dag_node]->on_remove();
         graph.erase(dag_node);
         return true;
@@ -58,15 +58,15 @@ public:
 
     virtual bool link(Node* from, Node* to, Edge* edge) SKR_NOEXCEPT final
     {
-        const auto from_node = graph.nodeFromId(from->get_id());
-        const auto to_node = graph.nodeFromId(to->get_id());
+        const auto from_node = graph.nodeFromId((int)from->get_id());
+        const auto to_node = graph.nodeFromId((int)to->get_id());
         SKR_UNUSED const auto dag_arc = graph.addArc(from_node, to_node);
         if (edge)
         {
             edge->graph = this;
             edge->from_node = from->get_id();
             edge->to_node = to->get_id();
-            edge_map[dag_arc] = edge;
+            edge_map.set(dag_arc, edge);
             edge->on_link();
             return edge;
         }
@@ -79,7 +79,7 @@ public:
         return linkage(from->id, to->id);
     }
 
-    virtual Edge* linkage(dep_graph_handle_t from, dep_graph_handle_t to) SKR_NOEXCEPT final
+    virtual Edge* linkage(dag_id_t from, dag_id_t to) SKR_NOEXCEPT final
     {
         graph.addArc(Node s, Node t)
         auto find_edge = boost::edge((vertex_descriptor)from, (vertex_descriptor)to, *this);
@@ -95,7 +95,7 @@ public:
         return unlink(from->id, to->id);
     }
     
-    virtual bool unlink(dep_graph_handle_t from, dep_graph_handle_t to) SKR_NOEXCEPT final
+    virtual bool unlink(dag_id_t from, dag_id_t to) SKR_NOEXCEPT final
     {
         auto find_edge = boost::edge((vertex_descriptor)from, (vertex_descriptor)to, *this);
         if (!find_edge.second) return false;
@@ -115,11 +115,11 @@ public:
         return access_node(edge->to_node);
     }
 
-    virtual uint32_t foreach_neighbors(dep_graph_handle_t handle, eastl::function<void(DependencyGraphNode*)> f) SKR_NOEXCEPT final
+    virtual uint32_t foreach_neighbors(dag_id_t id, eastl::function<void(DependencyGraphNode*)> f) SKR_NOEXCEPT final
     {
-        const auto node = graph.nodeFromId(handle);
+        const auto node = graph.nodeFromId((int)id);
         uint32_t count = 0;
-        for (ListDigraph::OutArcIt arcIt(graph, node); arcIt != INVALID; ++arcIt) 
+        for (ListDigraph::InArcIt arcIt(graph, node); arcIt != INVALID; ++arcIt) 
         {
             auto edge = edge_map[arcIt];
             f(edge->to());
@@ -128,11 +128,11 @@ public:
         return count;
     }
 
-    virtual uint32_t foreach_neighbors(const dep_graph_handle_t handle, eastl::function<void(const DependencyGraphNode*)> f) const SKR_NOEXCEPT final
+    virtual uint32_t foreach_neighbors(const dag_id_t id, eastl::function<void(const DependencyGraphNode*)> f) const SKR_NOEXCEPT final
     {
-        const auto node = graph.nodeFromId(handle);
+        const auto node = graph.nodeFromId((int)id);
         uint32_t count = 0;
-        for (ListDigraph::OutArcIt arcIt(graph, node); arcIt != INVALID; ++arcIt) 
+        for (ListDigraph::InArcIt arcIt(graph, node); arcIt != INVALID; ++arcIt) 
         {
             const auto edge = edge_map[arcIt];
             f(edge->to());
@@ -151,11 +151,11 @@ public:
         return foreach_neighbors(node->get_id(), f);
     }
 
-    virtual uint32_t foreach_inv_neighbors(dep_graph_handle_t handle, eastl::function<void(DependencyGraphNode*)> f) SKR_NOEXCEPT final
+    virtual uint32_t foreach_inv_neighbors(dag_id_t id, eastl::function<void(DependencyGraphNode*)> f) SKR_NOEXCEPT final
     {
-        const auto node = graph.nodeFromId(handle);
+        const auto node = graph.nodeFromId((int)id);
         uint32_t count = 0;
-        for (ListDigraph::InArcIt arcIt(graph, node); arcIt != INVALID; ++arcIt) 
+        for (ListDigraph::OutArcIt arcIt(graph, node); arcIt != INVALID; ++arcIt) 
         {
             const auto edge = edge_map[arcIt];
             f(edge->to());
@@ -164,11 +164,11 @@ public:
         return count;
     }
 
-    virtual uint32_t foreach_inv_neighbors(const dep_graph_handle_t handle, eastl::function<void(const DependencyGraphNode*)> f) const SKR_NOEXCEPT final
+    virtual uint32_t foreach_inv_neighbors(const dag_id_t id, eastl::function<void(const DependencyGraphNode*)> f) const SKR_NOEXCEPT final
     {
-        const auto node = graph.nodeFromId(handle);
+        const auto node = graph.nodeFromId((int)id);
         uint32_t count = 0;
-        for (ListDigraph::InArcIt arcIt(graph, node); arcIt != INVALID; ++arcIt) 
+        for (ListDigraph::OutArcIt arcIt(graph, node); arcIt != INVALID; ++arcIt) 
         {
             const auto edge = edge_map[arcIt];
             f(edge->to());
@@ -187,11 +187,11 @@ public:
         return foreach_inv_neighbors(node->get_id(), f);
     }
 
-    virtual uint32_t foreach_outgoing_edges(dep_graph_handle_t handle, eastl::function<void(Node* from, Node* to, Edge* edge)> f) SKR_NOEXCEPT final
+    virtual uint32_t foreach_outgoing_edges(dag_id_t id, eastl::function<void(Node* from, Node* to, Edge* edge)> f) SKR_NOEXCEPT final
     {
-        const auto node = graph.nodeFromId(handle);
+        const auto node = graph.nodeFromId((int)id);
         uint32_t count = 0;
-        for (ListDigraph::OutArcIt arcIt(graph, node); arcIt != INVALID; ++arcIt) 
+        for (ListDigraph::InArcIt arcIt(graph, node); arcIt != INVALID; ++arcIt) 
         {
             auto edge = edge_map[arcIt];
             f(edge->from(), edge->to(), edge);
@@ -205,11 +205,11 @@ public:
         return foreach_outgoing_edges(node->id, func);
     }
 
-    virtual uint32_t foreach_incoming_edges(dep_graph_handle_t handle, eastl::function<void(Node* from, Node* to, Edge* edge)> f) SKR_NOEXCEPT final
+    virtual uint32_t foreach_incoming_edges(dag_id_t id, eastl::function<void(Node* from, Node* to, Edge* edge)> f) SKR_NOEXCEPT final
     {
-        const auto node = graph.nodeFromId(handle);
+        const auto node = graph.nodeFromId((int)id);
         uint32_t count = 0;
-        for (ListDigraph::InArcIt arcIt(graph, node); arcIt != INVALID; ++arcIt) 
+        for (ListDigraph::OutArcIt arcIt(graph, node); arcIt != INVALID; ++arcIt) 
         {
             auto edge = edge_map[arcIt];
             f(edge->from(), edge->to(), edge);
@@ -236,11 +236,11 @@ public:
         return count;
     }
 
-    virtual uint32_t outgoing_edges(dep_graph_handle_t handle) SKR_NOEXCEPT final
+    virtual uint32_t outgoing_edges(dag_id_t id) SKR_NOEXCEPT final
     {
-        const auto node = graph.nodeFromId(handle);
+        const auto node = graph.nodeFromId((int)id);
         uint32_t count = 0;
-        for (ListDigraph::OutArcIt arcIt(graph, node); arcIt != INVALID; ++arcIt) 
+        for (ListDigraph::InArcIt arcIt(graph, node); arcIt != INVALID; ++arcIt) 
         {
             count++;
         }
@@ -257,11 +257,11 @@ public:
         return incoming_edges(node->id);
     }
 
-    virtual uint32_t incoming_edges(dep_graph_handle_t handle) SKR_NOEXCEPT final
+    virtual uint32_t incoming_edges(dag_id_t id) SKR_NOEXCEPT final
     {
-        const auto node = graph.nodeFromId(handle);
+        const auto node = graph.nodeFromId((int)id);
         uint32_t count = 0;
-        for (ListDigraph::InArcIt arcIt(graph, node); arcIt != INVALID; ++arcIt) 
+        for (ListDigraph::OutArcIt arcIt(graph, node); arcIt != INVALID; ++arcIt) 
         {
             count++;
         }
