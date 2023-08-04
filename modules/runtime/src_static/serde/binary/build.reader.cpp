@@ -2,8 +2,9 @@
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/serde/binary/reader.h"
 #include "SkrRT/platform/memory.h"
-#include "SkrRT/misc/bits.hpp"
 #include "SkrRT/misc/log.h"
+#include "SkrRT/misc/bits.hpp"
+#include "SkrRT/misc/demangle.hpp"
 #include <cmath>
 
 #include <EASTL/fixed_string.h>
