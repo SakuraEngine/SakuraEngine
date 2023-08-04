@@ -70,7 +70,7 @@ shared_module("SkrRT", "RUNTIME", engine_version)
         add_mxflags("-fno-objc-arc", {force = true})
         add_frameworks("CoreFoundation", "Cocoa", "Metal", "IOKit", {public = true})
     end
-    
+
     -- add FTL source 
     add_files("$(projectdir)/thirdparty/FiberTaskingLib/source/build.*.cpp")
     
