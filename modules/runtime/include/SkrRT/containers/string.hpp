@@ -6,31 +6,27 @@
 
 namespace skr
 {
-using string = skr::text::text;
-using string_view = skr::text::text_view;
-using skr::text::format;
-
-namespace string_literals
-{
-	
-}
+using namespace ostr;
+using string = ostr::text;
+using string_view = ostr::text_view;
 
 template <>
 struct hash<string>
 {
-	inline size_t operator()(const string& x) const { return x.get_hash(); }
+	inline size_t operator()(const string& x) const { return ostr::hash_sequence_crc64(x.c_str(), x.size()); }
 };
 
 template <>
 struct hash<string_view>
 {
-	inline size_t operator()(const string_view& x) const { return x.get_hash(); }
+	inline size_t operator()(const string_view& x) const { return ostr::hash_sequence_crc64(x.raw().data(), x.size()); }
 };
+
+namespace string_literals { }
 
 namespace text {
 
 #if __cpp_char8_t
-
 template<> 
 struct argument_formatter<const char*>
 {
@@ -40,7 +36,6 @@ struct argument_formatter<const char*>
         return skr::format(u8"{}", (const ochar8_t*)raw);
     }
 };
-
 #endif
 
 template<> 

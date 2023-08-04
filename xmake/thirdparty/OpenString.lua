@@ -4,7 +4,6 @@ ostring_source_dir = "$(projectdir)/thirdparty/OpenString/source"
 
 target("SkrCompileFlags")
     add_defines(
-        "OPEN_STRING_NS=skr::text",
         "OPEN_STRING_API=SKR_RUNTIME_API"
     , {public = true})
 

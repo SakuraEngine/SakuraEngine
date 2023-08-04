@@ -6,6 +6,7 @@
 
 #ifdef _WIN32
 #define USE_WIN32_CONSOLE
+#include "platform/windows/winheaders.h"
 #endif
 
 namespace skr {
@@ -260,7 +261,7 @@ void LogConsoleSink::sink(const LogEvent& event, skr::string_view content) SKR_N
     const auto escape = GetAnsiEscapeCode(buf_cache_->buf, ColorSet.f, ColorSet.b, ColorSet.s);
 
     // output to console (use '\033[0m' to reset color)
-    ::printf("%s%s\033[0m", escape.data(), content.c_str());
+    ::printf("%s%s\033[0m", escape.data(), content.raw().data());
 }
 
 void LogConsoleSink::flush() SKR_NOEXCEPT
@@ -287,7 +288,7 @@ void LogConsoleWindowSink::sink(const LogEvent& event, skr::string_view content)
         ::SetConsoleTextAttribute(StdHandle, attrs);
 
     // output to console
-    ::WriteConsoleA(StdHandle, content.c_str(),
+    ::WriteConsoleA(StdHandle, content.raw().data(),
         static_cast<DWORD>(content.size()), nullptr, nullptr);
 
     // reset origin
@@ -348,7 +349,7 @@ struct CFILE
     void write(const skr::string_view content)
     {
         ZoneScopedN("CFILE::write");
-        fwrite(content.u8_str(), sizeof(char8_t), content.size(), fp);
+        fwrite(content.raw().data(), sizeof(char8_t), content.size(), fp);
     }
 
     void flush() SKR_NOEXCEPT 
