@@ -24,7 +24,9 @@ struct hash<string_view>
 
 namespace string_literals { }
 
-namespace text {
+}
+
+namespace ostr {
 
 #if __cpp_char8_t
 template<> 
@@ -67,7 +69,6 @@ struct argument_formatter<skr_guid_t>
     }
 };
 
-}
 }
 
 #include "SkrRT/serde/binary/blob_fwd.h"

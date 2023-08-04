@@ -5,12 +5,12 @@
 constexpr int parse_hex_digit(const char8_t c)
 {
     using namespace skr::string_literals;
-    if ('0' <= c && c <= '9')
-        return c - '0';
-    else if ('a' <= c && c <= 'f')
-        return 10 + c - 'a';
-    else if ('A' <= c && c <= 'F')
-        return 10 + c - 'A';
+    if (u8'0' <= c && c <= u8'9')
+        return c - u8'0';
+    else if (u8'a' <= c && c <= u8'f')
+        return 10 + c - u8'a';
+    else if (u8'A' <= c && c <= u8'F')
+        return 10 + c - u8'A';
     else
         SKR_LOG_ERROR(u8"Invalid character in GUID. Expected hex digit, got %c", c);
     return -1;

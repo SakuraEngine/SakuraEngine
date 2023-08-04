@@ -118,8 +118,9 @@ namespace ostr
             const u64 holder_count = preserve - digit_count;
             codeunit_sequence result( prefix.size() + preserve );
             result
-            .append(prefix)
-            .append(holder, holder_count);
+                .append(prefix)
+                .append(holder, holder_count);
+            const u64 digits_start = result.size();
             u64 remaining = value;
             for(u64 i = 0; i < digit_count; ++i)
             {
@@ -127,13 +128,13 @@ namespace ostr
                 remaining /= base;
                 result.append(digit);
             }
-            result.reverse();
+            result.reverse(digits_start);
             return result;
         }
 
         codeunit_sequence format_integer(const i64& value, const codeunit_sequence_view& specification)
         {
-            ochar8_t type = 'd';
+            ochar8_t type = u8'd';
             u64 holding = global_constant::SIZE_INVALID;
             bool with_prefix = false;
             if (!specification.is_empty())
@@ -206,9 +207,9 @@ namespace ostr
             const u64 zero_count = preserve - digit_count;
             codeunit_sequence result( sign.size() + prefix.size() + preserve );
             result
-            .append(sign)
-            .append(prefix)
-            .append('0', zero_count);
+                .append(sign)
+                .append(prefix)
+                .append('0', zero_count);
             const u64 digits_start = result.size();
             i64 remaining = value >= 0 ? value : -value;
             for(u64 i = 0; i < digit_count; ++i)

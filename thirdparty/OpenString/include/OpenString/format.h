@@ -19,7 +19,7 @@ namespace ostr
     template<class Format, class...Args>
     [[nodiscard]] codeunit_sequence format(const Format& format_mold_literal, const Args&...args);
 
-    template<class T, typename=void>
+    template<class T, typename = void>
     struct argument_formatter
     {
         static codeunit_sequence produce(const T& value, const codeunit_sequence_view& specification)
