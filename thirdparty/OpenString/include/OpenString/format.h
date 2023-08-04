@@ -1,12 +1,11 @@
 
 #pragma once
-
 #include <array>
 #include <cmath>
 #include <charconv>
-#include "common/platforms.h"
-#include "common/definitions.h"
-#include "codeunit_sequence.h"
+#include "OpenString/common/platforms.h"
+#include "OpenString/common/definitions.h"
+#include "OpenString/codeunit_sequence.h"
 
 namespace ostr
 {

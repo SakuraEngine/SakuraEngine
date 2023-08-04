@@ -1,11 +1,11 @@
 
 #pragma once
 #include <array>
-#include "common/adapters.h"
-#include "common/basic_types.h"
-#include "common/assertion.h"
-#include "common/functions.h"
-#include "common/linear_iterator.h"
+#include "OpenString/common/adapters.h"
+#include "OpenString/common/basic_types.h"
+#include "OpenString/common/assertion.h"  // IWYU pragma: export
+#include "OpenString/common/functions.h"
+#include "OpenString/common/linear_iterator.h"
 
 namespace ostr
 {
