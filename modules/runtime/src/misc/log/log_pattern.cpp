@@ -3,8 +3,8 @@
 #include "SkrRT/misc/log/logger.hpp"
 #include "SkrRT/misc/log/log_pattern.hpp"
 #include "SkrRT/containers/hashmap.hpp"
-
 #include <EASTL/string.h>
+#include "tracy/Tracy.hpp"
 
 namespace skr::log
 {
@@ -259,9 +259,9 @@ skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view f
     {
         ZoneScopedN("LogPattern::Time");
 
-        const auto& dt = LogManager::datetime_;
+        const auto& dt = LogManager::Get()->datetime_;
         const auto midnightNs = dt.midnightNs;
-        const auto ts = LogManager::tscns_.tsc2ns(event.timestamp);
+        const auto ts = LogManager::Get()->tscns_.tsc2ns(event.timestamp);
         auto t =  (ts > midnightNs) ? (ts - midnightNs) : 0;
         t /= 1'000;
         const uint64_t us = t % 1'000;
@@ -275,7 +275,7 @@ skr::string const& LogPattern::pattern(const LogEvent& event, skr::string_view f
         uint32_t h = (uint32_t)t;
         if (h > 23) {
             h %= 24;
-            LogManager::datetime_.reset_date();
+            LogManager::Get()->datetime_.reset_date();
         }
         timestring = skr::format(
             u8"{}/{}/{} {}:{}:{}({}:{})",

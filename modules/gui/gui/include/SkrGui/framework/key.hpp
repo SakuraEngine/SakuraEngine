@@ -287,7 +287,15 @@ struct Hash<::skr::gui::Key> {
                 return Hash<float>()(key.get_float());
             case EKeyType::Name:
             case EKeyType::NameStorage:
-                return key.get_name().get_hash();
+            {
+                const auto& x = key.get_name();
+                return ostr::hash_sequence_crc64(x.c_str(), x.size());
+            }
+            default:
+            {
+                SKR_UNREACHABLE_CODE();
+                return UINT64_MAX;
+            }
         }
     }
 };

@@ -71,7 +71,7 @@ cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr_io_ram_service_t*
     // prepare callback
     skr::task::event_t counter;
     skr::BlobId blob = nullptr;
-    skr::string u8Path = assetPath.u8_str();
+    skr::string u8Path = assetPath;
     struct CallbackData
     {
         skr::task::event_t* pCounter;   

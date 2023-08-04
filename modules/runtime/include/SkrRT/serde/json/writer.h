@@ -177,7 +177,7 @@ template <>
 struct WriteTrait<const skr::string_view&> {
     static void Write(skr_json_writer_t* writer, const skr::string_view& str)
     {
-        writer->String(str.u8_str(), str.size());
+        writer->String(str.raw().begin().data(), str.size());
     }
 };
 
