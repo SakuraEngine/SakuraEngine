@@ -215,7 +215,7 @@ bool LogWorker::predicate() SKR_NOEXCEPT
 
 void LogWorker::process_logs() SKR_NOEXCEPT
 {
-    LogManager::tscns_.calibrate();
+    LogManager::Get()->tscns_.calibrate();
     LogElement e;
 
     // try flush
@@ -242,7 +242,7 @@ void LogWorker::process_logs() SKR_NOEXCEPT
     }
 
     // flush sinks
-    LogManager::FlushAllSinks();
+    LogManager::Get()->FlushAllSinks();
 }
 
 void LogWorker::flush(SThreadID tid) SKR_NOEXCEPT
@@ -257,7 +257,7 @@ void LogWorker::flush(SThreadID tid) SKR_NOEXCEPT
             skr_thread_sleep(0);
         }
         SKR_ASSERT(skr_atomic64_load_relaxed(&tok->tls_cnt_) == 0);
-        LogManager::FlushAllSinks();
+        LogManager::Get()->FlushAllSinks();
         skr_atomic32_cas_relaxed(&tok->flush_status_, kFlushed, kNoFlush);
     }
     else
@@ -289,9 +289,9 @@ void LogWorker::patternAndSink(const LogElement& e) SKR_NOEXCEPT
         const auto& what = e.need_format ? 
             formatter_.format(e.format, e.args) :
             e.format;
-        skr::log::LogManager::PatternAndSink(e.event, what.view());
+        skr::log::LogManager::Get()->PatternAndSink(e.event, what.view());
         
-        if (auto should_backtrace = LogManager::ShouldBacktrace(e.event))
+        if (auto should_backtrace = LogManager::Get()->ShouldBacktrace(e.event))
         {
             ZoneScopedNC("Backtrace", tracy::Color::Orchid2);
             const auto tid = (SThreadID)e.event.get_thread_id();
@@ -305,7 +305,7 @@ void LogWorker::patternAndSink(const LogElement& e) SKR_NOEXCEPT
                         const auto& bt_what = bt_e.need_format ? 
                             formatter_.format(bt_e.format, bt_e.args) :
                             bt_e.format;
-                        skr::log::LogManager::PatternAndSink(bt_e.event, bt_what.view());
+                        skr::log::LogManager::Get()->PatternAndSink(bt_e.event, bt_what.view());
                     }
                 }
                 token->backtraces_.zero();
@@ -321,7 +321,7 @@ void LogWorker::patternAndSink(const LogElement& e) SKR_NOEXCEPT
 SKR_EXTERN_C 
 void skr_log_flush()
 {
-    auto worker = skr::log::LogManager::TryGetWorker();
+    auto worker = skr::log::LogManager::Get()->TryGetWorker();
     if (worker)
     {
         auto tid = skr_current_thread_id();
@@ -332,13 +332,13 @@ void skr_log_flush()
 SKR_EXTERN_C
 void skr_log_initialize_async_worker()
 {
-    skr::log::LogManager::Initialize();
+    skr::log::LogManager::Get()->InitializeAsyncWorker();
 
-    auto worker = skr::log::LogManager::TryGetWorker();
+    auto worker = skr::log::LogManager::Get()->TryGetWorker();
     SKR_ASSERT(worker && "worker must not be null & something is wrong with initialization!");
 
     ::atexit(+[]() {
-        auto worker = skr::log::LogManager::TryGetWorker();
+        auto worker = skr::log::LogManager::Get()->TryGetWorker();
         SKR_ASSERT(!worker && "worker must be null & properly stopped at exit!");
     });
 }
