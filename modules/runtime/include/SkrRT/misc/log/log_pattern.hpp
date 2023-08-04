@@ -155,9 +155,11 @@ protected:
 static constexpr uint64_t kAttributeCount = LogPattern::kAttributeCount;
 
 } // namespace log
+} // namespace skr
 
-namespace text
+namespace ostr
 {
+
 template<>
 struct argument_formatter<skr::log::FormatArg>
 {
@@ -167,6 +169,4 @@ struct argument_formatter<skr::log::FormatArg>
     }
 };
     
-} // namespace text
-
-} // namespace skr
+} // namespace ostr

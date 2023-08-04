@@ -20,6 +20,7 @@
 #include "marl/waitgroup.h"
 
 #include <mutex>
+#include <string>
 
 namespace {
 
