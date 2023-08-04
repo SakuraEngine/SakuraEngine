@@ -1,5 +1,6 @@
 #include <exception>
 #include "SkrRT/misc/DAG.boost.hpp"
+#include "lemon/list_graph.h"
 
 namespace boost
 {
