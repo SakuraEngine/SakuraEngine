@@ -10,7 +10,7 @@ namespace log {
 
 struct FormatArg
 {
-    using FormatFunc = text::codeunit_sequence(*)(const FormatArg&, const text::codeunit_sequence_view&);
+    using FormatFunc = ostr::codeunit_sequence(*)(const FormatArg&, const ostr::codeunit_sequence_view&);
     FormatArg() SKR_NOEXCEPT = default;
     ~FormatArg() SKR_NOEXCEPT
     {
@@ -25,16 +25,16 @@ struct FormatArg
         name = n;
         
         const std::string_view demangle_name_view = skr::demangle<T>();
-        demangle_name = skr::text::codeunit_sequence((const char8_t*)demangle_name_view.data(), 
+        demangle_name = ostr::codeunit_sequence((const char8_t*)demangle_name_view.data(), 
             (const char8_t*)(demangle_name_view.data() + demangle_name_view.size()));
 
-        formatter = +[](const FormatArg& a, const text::codeunit_sequence_view& spec)
+        formatter = +[](const FormatArg& a, const ostr::codeunit_sequence_view& spec)
         {
             if (!a.data) 
-                return text::codeunit_sequence();
+                return ostr::codeunit_sequence();
 
             const T& arg = *(const T*)a.data;
-            return text::argument_formatter<T>::produce(arg, spec);
+            return ostr::argument_formatter<T>::produce(arg, spec);
         };
         setter = +[](FormatArg* p, void* v) { *(T*)p->data = *(T*)v; };
         deleter = +[](void* p) { SkrDelete((T*)p); };

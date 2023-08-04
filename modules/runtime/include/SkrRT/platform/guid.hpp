@@ -98,11 +98,11 @@ constexpr skr_guid_t make_guid_unsafe(const skr::string_view& str)
 
     if (str.size() == (long_guid_form_length + 1))
     {
-        if (str.u8_str()[0] != u8'{' || str.u8_str()[long_guid_form_length - 1] != u8'}')
+        if (str.raw().data()[0] != u8'{' || str.raw().data()[long_guid_form_length - 1] != u8'}')
             SKR_ASSERT(0 && "Missing opening or closing brace");
     }
 
-    return make_guid_helper(str.u8_str() + (str.size() == (long_guid_form_length + 1) ? 1 : 0));
+    return make_guid_helper(str.raw().data() + (str.size() == (long_guid_form_length + 1) ? 1 : 0));
 }
 
 } // namespace details

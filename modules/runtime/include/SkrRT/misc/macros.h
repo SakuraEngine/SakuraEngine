@@ -16,7 +16,6 @@
 
 #pragma endregion
 
-
 #pragma region utf-8
 
 #if __cplusplus >= 201100L
@@ -27,6 +26,7 @@
 
 #if __cpp_char8_t
 #define CHAR8_T_DEFINED
+#define OSTR_USE_CXX20_CHAR8_TYPE
 #endif
 
 #ifndef CHAR8_T_DEFINED // If the user hasn't already defined these...

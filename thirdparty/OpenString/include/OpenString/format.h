@@ -1,499 +1,353 @@
-// OpenString - formatting library
-//
-// Copyright (c) 2022 - present, [Hoshizora Ming]
-// All rights reserved.
 
 #pragma once
 
 #include <array>
 #include <cmath>
 #include <charconv>
+#include "common/platforms.h"
+#include "common/definitions.h"
 #include "codeunit_sequence.h"
-#include "SkrRT/misc/demangle.hpp"
 
-OPEN_STRING_NS_BEGIN
-
-template<class Format, class...Args>
-[[nodiscard]] codeunit_sequence format(const Format& format_mold_literal, Args&&...args);
-
-template<class T>
-struct argument_formatter
+namespace ostr
 {
-    static codeunit_sequence produce(const T& value, const codeunit_sequence_view& specification);
-};
-
-namespace details
-{
-    class format_mold_view
+    namespace details
     {
-    public:
-    // code-region-start: constructors
+        codeunit_sequence OPEN_STRING_API format_integer(const u64& value, const codeunit_sequence_view& specification);
+        codeunit_sequence OPEN_STRING_API format_integer(const i64& value, const codeunit_sequence_view& specification);
+        codeunit_sequence OPEN_STRING_API format_float(const f64& value, const codeunit_sequence_view& specification);
+    }
+    
+    template<class Format, class...Args>
+    [[nodiscard]] codeunit_sequence format(const Format& format_mold_literal, const Args&...args);
 
-        explicit constexpr format_mold_view(const codeunit_sequence_view& format_mold) noexcept
-            : format_mold_(format_mold)
-        { }
-
-    // code-region-end: constructors
-
-    // code-region-start: iterators
-
-        enum class run_type : u8
+    template<class T, typename=void>
+    struct argument_formatter
+    {
+        static codeunit_sequence produce(const T& value, const codeunit_sequence_view& specification)
         {
-            plain_text,
-            escaped_brace,
-            formatter,
-            ending
-        };
+            constexpr u64 size = sizeof(T);
+            const auto reader = reinterpret_cast<const byte*>(&value);
+            codeunit_sequence raw;
+            for(u64 i = 0; i < size; ++i)
+            {
+                if(!raw.is_empty())
+                    raw += u8" "_cuqv;
+                const byte memory = reader[i];
+                raw += details::format_integer(static_cast<u64>(memory), u8"02x"_cuqv);
+            }
+    
+            if(specification == u8"r"_cuqv)   // output raw memory bytes
+                return raw;
 
-        struct const_iterator
+            OPEN_STRING_CHECK(false, u8"Undefined format with raw memory bytes:{}!", raw);
+            return { };
+        }
+    };
+
+    namespace details
+    {
+        class format_mold_view
         {
-            constexpr const_iterator() noexcept = default;
+        public:
+            // code-region-start: constructors
 
-            explicit constexpr const_iterator(const codeunit_sequence_view& v) noexcept
-                : format_mold(v)
+            explicit constexpr format_mold_view(codeunit_sequence_view format_mold) noexcept
+                : format_mold_(std::move(format_mold))
             { }
 
-            constexpr const_iterator& initialize() noexcept
-            {
-                const auto [ first_type, first_range ] = this->parse_run(0);
-                this->type = first_type;
-                this->range = first_range;
-                return *this;
-            }
+            // code-region-end: constructors
 
-            [[nodiscard]] constexpr std::tuple<run_type, codeunit_sequence_view> operator*() const noexcept
-            {
-                return { this->type, this->format_mold.subview(this->range) };
-            }
+            // code-region-start: iterators
 
-            constexpr const_iterator& operator++()
+            enum class run_type : u8
             {
-                if(this->range.is_infinity())
+                plain_text,
+                escaped_brace,
+                formatter,
+                ending
+            };
+
+            struct const_iterator
+            {
+                constexpr const_iterator() noexcept = default;
+
+                explicit constexpr const_iterator(codeunit_sequence_view v) noexcept
+                    : format_mold(std::move(v))
+                { }
+
+                constexpr const_iterator& initialize() noexcept
                 {
-                    this->type = run_type::ending;
-                    this->range = index_interval::empty();
+                    const auto [ first_type, first_from, first_size ] = this->parse_run(0);
+                    this->type = first_type;
+                    this->from = first_from;
+                    this->size = first_size;
                     return *this;
                 }
-                const auto [ next_type, next_range ] = this->parse_run(this->range.get_exclusive_max());
-                this->type = next_type;
-                this->range = next_range;
-                return *this;
-            }
 
-            constexpr const_iterator operator++(int) noexcept
-            {
-                const const_iterator tmp = *this;
-                ++*this;
-                return tmp;
-            }
+                [[nodiscard]] constexpr std::tuple<run_type, codeunit_sequence_view> operator*() const noexcept
+                {
+                    return { this->type, this->format_mold.subview(this->from, this->size) };
+                }
 
-            [[nodiscard]] constexpr bool operator==(const const_iterator& rhs) const noexcept
-            {
-                return this->type == rhs.type && this->range == rhs.range;
-            }
+                constexpr const_iterator& operator++()
+                {
+                    if(this->from == global_constant::INDEX_INVALID)
+                    {
+                        this->type = run_type::ending;
+                        this->from = global_constant::INDEX_INVALID;
+                        this->size = SIZE_MAX;
+                        return *this;
+                    }
+                    const auto [ next_type, next_from, next_size ] = this->parse_run(this->from + this->size);
+                    this->type = next_type;
+                    this->from = next_from;
+                    this->size = next_size;
+                    return *this;
+                }
 
-            [[nodiscard]] constexpr bool operator!=(const const_iterator& rhs) const noexcept
-            {
-                return !(*this == rhs);
-            }
+                constexpr const_iterator operator++(int) noexcept
+                {
+                    const_iterator tmp = *this;
+                    ++*this;
+                    return tmp;
+                }
 
-            [[nodiscard]] constexpr std::tuple<run_type, index_interval> parse_run(const i32 from) const
-            {
-                const i32 index = this->format_mold.index_any_of(OSTR_UTF8("{}"_cuqv), { '[', from, '~' });
-                if(index == index_invalid)
-                    return { run_type::plain_text, { '[', from, '~' } };
-                if(from != index)
-                    return { run_type::plain_text, { '[', from, index, ')' } };
-                if(format_mold[index] == format_mold[index+1])
-                    return { run_type::escaped_brace, { '[', index, index + 1, ']' } };
-                OPEN_STRING_CHECK(format_mold[index] != '}', OSTR_UTF8("Unclosed right brace is not allowed!"))
-                const i32 index_next = this->format_mold.index_any_of(OSTR_UTF8("{}"_cuqv), { '(', index, '~' });
-                OPEN_STRING_CHECK(index_next != index_invalid && format_mold[index_next] != '{', OSTR_UTF8("Unclosed left brace is not allowed!"))
-                return { run_type::formatter, { '[', index, index_next, ']' } };
-            }
+                [[nodiscard]] constexpr bool operator==(const const_iterator& rhs) const noexcept
+                {
+                    return this->type == rhs.type && this->from == rhs.from && this->size == rhs.size;
+                }
+
+                [[nodiscard]] constexpr bool operator!=(const const_iterator& rhs) const noexcept
+                {
+                    return !(*this == rhs);
+                }
+
+                struct result_parse_run
+                {
+                    run_type type = run_type::plain_text;
+                    u64 from = global_constant::INDEX_INVALID;
+                    u64 size = SIZE_MAX;
+                };
+                [[nodiscard]] constexpr result_parse_run parse_run(const u64 from_index) const
+                {
+                    const u64 index = this->format_mold.index_of_any(u8"{}"_cuqv, from_index);
+                    if(index == global_constant::INDEX_INVALID)
+                    {
+                        if(from_index == this->format_mold.size())
+                            return { run_type::ending };
+                        return { run_type::plain_text, from_index, this->format_mold.size() - from_index };
+                    }
+                    if(from_index != index)
+                        return { run_type::plain_text, from_index, index - from_index };
+                    if(format_mold.read_at(index) == format_mold.read_at(index + 1))
+                        return { run_type::escaped_brace, index, 2 };
+                    OPEN_STRING_CHECK(format_mold.read_at(index) != u8'}', u8"Unclosed right brace is not allowed!");
+                    const u64 index_next = this->format_mold.index_of_any(u8"{}"_cuqv, index + 1);
+                    OPEN_STRING_CHECK(index_next != global_constant::INDEX_INVALID && format_mold.read_at(index_next) != u8'{', u8"Unclosed left brace is not allowed!");
+                    return { run_type::formatter, index, index_next - index + 1 };
+                }
             
-            codeunit_sequence_view format_mold;
-            run_type type = run_type::ending;
-            index_interval range = index_interval::empty();
-        };
+                codeunit_sequence_view format_mold;
+                run_type type = run_type::ending;
+                u64 from = global_constant::INDEX_INVALID;
+                u64 size = SIZE_MAX;
+            };
         
-        [[nodiscard]] constexpr const_iterator begin() const noexcept
-        {
-            return const_iterator{ this->format_mold_ }.initialize();
-        }
-
-        [[nodiscard]] constexpr const_iterator end() const noexcept
-        {
-            return const_iterator{ this->format_mold_ };
-        }
-
-        [[nodiscard]] constexpr const_iterator cbegin() const noexcept
-        {
-            return this->begin();
-        }
-
-        [[nodiscard]] constexpr const_iterator cend() const noexcept
-        {
-            return this->end();
-        }
-
-    // code-region-end: iterators
-    
-    private:
-        codeunit_sequence_view format_mold_;
-    };
-
-    template <class T>
-    codeunit_sequence format_argument_value(const void* value, const codeunit_sequence_view specification)
-    {
-        return argument_formatter<T>::produce(*static_cast<const T*>(value), specification);
-    }
-
-    struct argument_value_package
-    {
-        using argument_value_formatter_type = codeunit_sequence(*)(const void* value, codeunit_sequence_view specification);
-
-        const void* value;
-        argument_value_formatter_type argument_value_formatter;
-
-        template<class T>
-        explicit constexpr argument_value_package(const T& v) noexcept
-            : value(static_cast<const void*>(&v))
-            , argument_value_formatter(format_argument_value<T>)
-        { }
-
-        [[nodiscard]] codeunit_sequence produce(const codeunit_sequence_view specification) const
-        {
-            return this->argument_value_formatter(this->value, specification);
-        }
-    };
-
-    template<class...Args>
-    codeunit_sequence produce_format(const format_mold_view& format_mold, const Args&...args)
-    {
-        constexpr i32 argument_count = sizeof...(Args);
-        const std::array<argument_value_package, argument_count> arguments {{ argument_value_package{ args } ... }};
-
-        constexpr i32 manual_index = -1;
-        i32 next_index = 0;
-        codeunit_sequence result;
-        for(const auto [ type, run ] : format_mold)
-        {
-            switch (type) 
+            [[nodiscard]] constexpr const_iterator begin() const noexcept
             {
-            case format_mold_view::run_type::plain_text:
-                result += run;
-                break;
-            case format_mold_view::run_type::escaped_brace:
-                result += run[0];
-                break;
-            case format_mold_view::run_type::formatter:
-            {    
-                const auto [ index_run, specification ] = run.subview({ '[', 1, -2, ']' }).split(OSTR_UTF8(":"_cuqv));
-                i32 current_index = next_index;
-                if (index_run.is_empty())
-                {
-                    OPEN_STRING_CHECK(next_index != manual_index, OSTR_UTF8("Manual index is not allowed mixing with automatic index!"))
-                    ++next_index;
-                }
-                else
-                {
-                    OPEN_STRING_CHECK(next_index <= 0, OSTR_UTF8("Automatic index is not allowed mixing with manual index!"))
-                    [[maybe_unused]] const auto [ last, error ] = 
-                        std::from_chars(index_run.c_str(), (const char*)index_run.last(), current_index);
-                    OPEN_STRING_CHECK(last == (const char*)index_run.last(), OSTR_UTF8("Invalid format index [{}]!"), index_run)
-                    next_index = manual_index;
-                }
-                OPEN_STRING_CHECK(current_index >= 0, OSTR_UTF8("Invalid format index [{}]: Index should not be negative!"), current_index)
-                OPEN_STRING_CHECK(current_index < argument_count, OSTR_UTF8("Invalid format index [{}]: Index should be less than count of argument [{}]!"), current_index, argument_count)
-                result += arguments[current_index].produce(specification);
+                return const_iterator{ this->format_mold_ }.initialize();
             }
-                break;
-            case format_mold_view::run_type::ending:
-                // Unreachable
-                break;
+
+            [[nodiscard]] constexpr const_iterator end() const noexcept
+            {
+                return const_iterator{ this->format_mold_ };
             }
-        }
-        return result;
-    }
-}
 
-template<class Format, class...Args>
-[[nodiscard]] codeunit_sequence format(const Format& format_mold_literal, Args&&...args)
-{
-    return details::produce_format(details::format_mold_view{ details::view_sequence(format_mold_literal) }, args...);
-}
+            [[nodiscard]] constexpr const_iterator cbegin() const noexcept
+            {
+                return this->begin();
+            }
 
-// code-region-start: formatter specializations for built-in types
+            [[nodiscard]] constexpr const_iterator cend() const noexcept
+            {
+                return this->end();
+            }
 
-namespace details
-{
-    codeunit_sequence OPEN_STRING_API format_integer(const i64& value, const codeunit_sequence_view& specification);
-    codeunit_sequence OPEN_STRING_API format_float(const float& value, const codeunit_sequence_view& specification);
-    codeunit_sequence OPEN_STRING_API format_double(const double& value, const codeunit_sequence_view& specification);
-}
-
-template<> 
-struct argument_formatter<i8>
-{
-    static codeunit_sequence produce(const i8& value, const codeunit_sequence_view& specification)
-    {
-        return details::format_integer(value, specification);
-    }
-};
-
-#if defined(_MSC_VER)
-
-template<> 
-struct argument_formatter<long>
-{
-    static codeunit_sequence produce(const long& value, const codeunit_sequence_view& specification)
-    {
-        return details::format_integer(value, specification);
-    }
-};
-
-template<> 
-struct argument_formatter<unsigned long>
-{
-    static codeunit_sequence produce(const unsigned long& value, const codeunit_sequence_view& specification)
-    {
-        return details::format_integer(value, specification);
-    }
-};
-
-#endif
-
-#if defined(__linux__)
-
-template<> 
-struct argument_formatter<long long int>
-{
-    static codeunit_sequence produce(const long long int& value, const codeunit_sequence_view& specification)
-    {
-        return details::format_integer(value, specification);
-    }
-};
-
-template<> 
-struct argument_formatter<<unsigned long long int>
-{
-    static codeunit_sequence produce(const <unsigned long long int& value, const codeunit_sequence_view& specification)
-    {
-        return details::format_integer(value, specification);
-    }
-};
-
-#endif
-
-template<> 
-struct argument_formatter<u8>
-{
-    static codeunit_sequence produce(const u8& value, const codeunit_sequence_view& specification)
-    {
-        return details::format_integer(value, specification);
-    }
-};
-
-template<> 
-struct argument_formatter<i16>
-{
-    static codeunit_sequence produce(const i16& value, const codeunit_sequence_view& specification)
-    {
-        return details::format_integer(value, specification);
-    }
-};
-
-template<> 
-struct argument_formatter<u16>
-{
-    static codeunit_sequence produce(const u16& value, const codeunit_sequence_view& specification)
-    {
-        return details::format_integer(value, specification);
-    }
-};
-
-template<> 
-struct argument_formatter<i32>
-{
-    static codeunit_sequence produce(const i32& value, const codeunit_sequence_view& specification)
-    {
-        return details::format_integer(value, specification);
-    }
-};
-
-template<> 
-struct argument_formatter<u32>
-{
-    static codeunit_sequence produce(const u32& value, const codeunit_sequence_view& specification)
-    {
-        return details::format_integer(value, specification);
-    }
-};
-
-template<> 
-struct argument_formatter<i64>
-{
-    static codeunit_sequence produce(const i64& value, const codeunit_sequence_view& specification)
-    {
-        return details::format_integer(value, specification);
-    }
-};
-
-template<> 
-struct argument_formatter<u64>
-{
-    static codeunit_sequence produce(const u64& value, const codeunit_sequence_view& specification)
-    {
-        return details::format_integer(value, specification);
-    }
-};
-
-template<> 
-struct argument_formatter<float>
-{
-    static codeunit_sequence produce(const float& value, const codeunit_sequence_view& specification)
-    {
-        return details::format_float(value, specification);
-    }
-};
-
-template<> 
-struct argument_formatter<double>
-{
-    static codeunit_sequence produce(const float& value, const codeunit_sequence_view& specification)
-    {
-        return details::format_double(value, specification);
-    }
-};
-
-template<> 
-struct argument_formatter<index_interval>
-{
-    static codeunit_sequence produce(const index_interval& value, const codeunit_sequence_view& specification)
-    {
-        if(value.is_empty())
-            return codeunit_sequence{ OSTR_UTF8("∅"_cuqv) };
-        const index_interval::bound lower = value.get_lower_bound();
-        codeunit_sequence lower_part;
-        switch(lower.type)
-        {
-        case index_interval::bound::inclusion::inclusive:
-            lower_part = OSTR_UTF8("["_cuqv);
-            lower_part += details::format_integer(lower.value, { });
-            break;
-        case index_interval::bound::inclusion::exclusive:
-            lower_part = OSTR_UTF8("("_cuqv);
-            lower_part += details::format_integer(lower.value, { });
-            break;
-        case index_interval::bound::inclusion::infinity:
-            lower_part = OSTR_UTF8("(-∞"_cuqv);
-            break;
-        }
-        const index_interval::bound upper = value.get_upper_bound();
-        codeunit_sequence upper_part;
-        switch(upper.type)
-        {
-        case index_interval::bound::inclusion::inclusive:
-            upper_part = details::format_integer(upper.value, { });
-            upper_part += OSTR_UTF8("]"_cuqv);
-            break;
-        case index_interval::bound::inclusion::exclusive:
-            upper_part = details::format_integer(upper.value, { });
-            upper_part += OSTR_UTF8(")"_cuqv);
-            break;
-        case index_interval::bound::inclusion::infinity:
-            upper_part = OSTR_UTF8("+∞)"_cuqv);
-            break;
-        }
-        return format(OSTR_UTF8("{},{}"_cuqv), lower_part, upper_part);
-    }
-};
-
-template<> 
-struct argument_formatter<const ochar8_t*>
-{
-    static codeunit_sequence produce(const ochar8_t* value, const codeunit_sequence_view& specification)
-    {
-        return codeunit_sequence{value};
-    }
-};
-
-template<size_t N> 
-struct argument_formatter<ochar8_t[N]>
-{
-    static codeunit_sequence produce(const ochar8_t (&value)[N], const codeunit_sequence_view& specification)
-    {
-        return codeunit_sequence{value};
-    }
-};
-
-template<> 
-struct argument_formatter<codeunit_sequence_view>
-{
-    static codeunit_sequence produce(const codeunit_sequence_view& value, const codeunit_sequence_view& specification)
-    {
-        return codeunit_sequence{value};
-    }
-};
-
-template<> 
-struct argument_formatter<codeunit_sequence>
-{
-    static const codeunit_sequence& produce(const codeunit_sequence& value, const codeunit_sequence_view& specification)
-    {
-        return value;
-    }
-};
-
-template<>
-struct argument_formatter<std::nullptr_t>
-{
-    static codeunit_sequence produce(std::nullptr_t, const codeunit_sequence_view& specification)
-    {
-        return codeunit_sequence{OSTR_UTF8("nullptr"_cuqv)};
-    }
-};
-
-template<>
-struct argument_formatter<bool>
-{
-    static codeunit_sequence produce(bool v, const codeunit_sequence_view& specification)
-    {
-        return codeunit_sequence{v ? OSTR_UTF8("true"_cuqv) : OSTR_UTF8("false"_cuqv)};
-    }
-};
-
-template<class T> 
-struct argument_formatter<T*>
-{
-    static codeunit_sequence produce(const T* value, const codeunit_sequence_view& specification)
-    {
-        return details::format_integer(reinterpret_cast<i64>(value), OSTR_UTF8("#016x"_cuqv));
-    }
-};
-
-// code-region-end: formatter specializations for built-in types
-
-template <class T>
-codeunit_sequence argument_formatter<T>::produce(const T& value, const codeunit_sequence_view& specification)
-{
-    constexpr i32 size = sizeof(T);
-    const auto reader = reinterpret_cast<const u8*>(&value);
-    codeunit_sequence raw;
-    for(i32 i = 0; i < size; ++i)
-    {
-        const u8 memory = reader[i];
-        raw += OSTR_UTF8(" "_cuqv);
-        raw += details::format_integer(memory, OSTR_UTF8("02x"_cuqv));
-    }
+            // code-region-end: iterators
     
-    if(specification == OSTR_UTF8("r"_cuqv))   // output raw memory bytes
-        return format(OSTR_UTF8("[Undefined type (raw:{})]"_cuqv), raw);
+        private:
+            codeunit_sequence_view format_mold_{ };
+        };
 
-    const auto t = skr::demangle<T>();
-    OPEN_STRING_CHECK(false, OSTR_UTF8("Undefined format with raw memory bytes:{}, with cplusplus type {}!"), raw, (const ochar8_t*)t.c_str());
-    return { };
+        template <class T>
+        codeunit_sequence format_argument_value(const void* value, const codeunit_sequence_view specification)
+        {
+            return argument_formatter<T>::produce(*static_cast<const T*>(value), specification);
+        }
+
+        struct argument_value_package
+        {
+            using argument_value_formatter_type = codeunit_sequence(*)(const void* value, codeunit_sequence_view specification);
+
+            const void* value;
+            argument_value_formatter_type argument_value_formatter;
+
+            template<class T>
+            explicit constexpr argument_value_package(const T& v) noexcept
+                : value(static_cast<const void*>(&v))
+                , argument_value_formatter(format_argument_value<T>)
+            { }
+
+            [[nodiscard]] codeunit_sequence produce(const codeunit_sequence_view& specification) const
+            {
+                return this->argument_value_formatter(this->value, specification);
+            }
+        };
+
+        template<class...Args>
+        codeunit_sequence produce_format(const format_mold_view& format_mold, const Args&...args)
+        {
+            constexpr u64 argument_count = sizeof...(Args);
+            const std::array<argument_value_package, argument_count> arguments {{ argument_value_package{ args } ... }};
+
+            enum class indexing_type : u8
+            {
+                unknown,
+                manual,
+                automatic
+            };
+            indexing_type index_type = indexing_type::unknown;
+            u64 next_index = 0;
+            codeunit_sequence result;
+            for(const auto [ type, run ] : format_mold)
+            {
+                switch (type) 
+                {
+                case format_mold_view::run_type::plain_text:
+                    result += run;
+                    break;
+                case format_mold_view::run_type::escaped_brace:
+                    result += run.read_at(0);
+                    break;
+                case format_mold_view::run_type::formatter:
+                    {    
+                        const auto [ index_run, specification ] = run.subview(1, run.size() - 2).split(u8":"_cuqv);
+                        u64 current_index = next_index;
+                        if (index_run.is_empty())
+                        {
+                            OPEN_STRING_CHECK(index_type != indexing_type::manual, u8"Manual index is not allowed mixing with automatic index!");
+                            index_type = indexing_type::automatic;
+                            ++next_index;
+                        }
+                        else
+                        {
+                            OPEN_STRING_CHECK(index_type != indexing_type::automatic, u8"Automatic index is not allowed mixing with manual index!");
+                            index_type = indexing_type::manual;
+                            [[maybe_unused]] const auto [ last, error ] = 
+                                std::from_chars((const char*)index_run.data(), (const char*)index_run.cend().data(), current_index);
+                            OPEN_STRING_CHECK(last == (const char*)index_run.cend().data(), u8"Invalid format index [{}]!", index_run);
+                        }
+                        OPEN_STRING_CHECK(current_index < argument_count, u8"Invalid format index [{}]: Index should be less than count of argument [{}]!", current_index, argument_count);
+                        result += arguments[current_index].produce(specification);
+                    }
+                    break;
+                case format_mold_view::run_type::ending:
+                    // Unreachable
+                    break;
+                }
+            }
+            return result;
+        }
+    }
+
+    template<class Format, class...Args>
+    [[nodiscard]] codeunit_sequence format(const Format& format_mold_literal, const Args&...args)
+    {
+        return details::produce_format(details::format_mold_view{ details::view_sequence(format_mold_literal) }, args...);
+    }
+
+    // code-region-start: formatter specializations for built-in types
+
+    template<class T>
+    struct argument_formatter<T, std::enable_if_t<std::is_integral_v<T> && std::is_signed_v<T>>>
+    {
+        static codeunit_sequence produce(const T& value, const codeunit_sequence_view& specification)
+        {
+            return details::format_integer(static_cast<i64>(value), specification);
+        }
+    };
+
+    template<class T>
+    struct argument_formatter<T, std::enable_if_t<std::is_integral_v<T> && std::is_unsigned_v<T>>>
+    {
+        static codeunit_sequence produce(const T& value, const codeunit_sequence_view& specification)
+        {
+            return details::format_integer(static_cast<u64>(value), specification);
+        }
+    };
+
+    template<class T> 
+    struct argument_formatter<T, std::enable_if_t<std::is_floating_point_v<T>>>
+    {
+        static codeunit_sequence produce(const T& value, const codeunit_sequence_view& specification)
+        {
+            return details::format_float(static_cast<f64>(value), specification);
+        }
+    };
+
+    template<> 
+    struct argument_formatter<const ochar8_t*>
+    {
+        static codeunit_sequence produce(const ochar8_t* value, const codeunit_sequence_view& specification)
+        {
+            return codeunit_sequence{value};
+        }
+    };
+
+    template<size_t N> 
+    struct argument_formatter<ochar8_t[N]>
+    {
+        static codeunit_sequence produce(const ochar8_t (&value)[N], const codeunit_sequence_view& specification)
+        {
+            return codeunit_sequence{value};
+        }
+    };
+
+    template<> 
+    struct argument_formatter<codeunit_sequence_view>
+    {
+        static codeunit_sequence produce(const codeunit_sequence_view& value, const codeunit_sequence_view& specification)
+        {
+            return codeunit_sequence{value};
+        }
+    };
+
+    template<> 
+    struct argument_formatter<codeunit_sequence>
+    {
+        static const codeunit_sequence& produce(const codeunit_sequence& value, const codeunit_sequence_view& specification)
+        {
+            return value;
+        }
+    };
+
+    template<>
+    struct argument_formatter<std::nullptr_t>
+    {
+        static codeunit_sequence produce(std::nullptr_t, const codeunit_sequence_view& specification)
+        {
+            return codeunit_sequence{u8"nullptr"_cuqv};
+        }
+    };
+
+    template<class T> 
+    struct argument_formatter<T*>
+    {
+        static codeunit_sequence produce(const T* value, const codeunit_sequence_view& specification)
+        {
+            return details::format_integer(reinterpret_cast<i64>(value), u8"#016x"_cuqv);
+        }
+    };
+
+    // code-region-end: formatter specializations for built-in types
 }
-
-OPEN_STRING_NS_END

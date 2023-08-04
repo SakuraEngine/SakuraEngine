@@ -197,7 +197,7 @@ uint64_t Hash(const skr::string& value, uint64_t base)
 }
 uint64_t Hash(const skr::string_view& value, uint64_t base)
 {
-    return skr_hash(value.c_str(), value.size(), base);
+    return skr_hash(value.raw().data(), value.size(), base);
 }
 } // namespace type
 } // namespace skr

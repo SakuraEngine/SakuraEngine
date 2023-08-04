@@ -2,8 +2,12 @@
 //
 // Copyright (c) 2023 - present, [Hoshizora Ming]
 // All rights reserved.
-#include "text.h"
-#include "adapters.h"
+#include "OpenString/common/definitions.h"
+
+namespace ostr 
+{
+    const ochar8_t* kOpenStringMemory = u8"OpenString";
+}
 
 #if _WIN64
 
@@ -14,23 +18,24 @@
 #include <Windows.h>
 #include <debugapi.h>
 
-OPEN_STRING_NS_BEGIN
 
-void PlatformReportError(const char* str)
+namespace ostr
 {
-	OutputDebugStringA(str);
+void PlatformReportError(const ochar8_t* str)
+{
+	OutputDebugStringA((const char*)str);
 }
-
-OPEN_STRING_NS_END
+}
 
 #else
+#include "stdio.h"
 
-OPEN_STRING_NS_BEGIN
-
-void PlatformReportError(const char* str)
+namespace ostr
 {
+void PlatformReportError(const ochar8_t* str)
+{
+    printf("%s\n", str);
 }
-
-OPEN_STRING_NS_END
+}
 
 #endif
