@@ -19,7 +19,12 @@ struct VRAMService final : public IVRAMService
     VRAMIOBufferId request(BlocksVRAMRequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT;
     VRAMIOTextureId request(SlicesIORequestId request, IOFuture* future, SkrAsyncServicePriority priority = SKR_ASYNC_SERVICE_PRIORITY_NORMAL) SKR_NOEXCEPT;
     void request(IOBatchId request) SKR_NOEXCEPT;
-    
+    IRAMService* get_ram_service() SKR_NOEXCEPT
+    {
+        return ram_service;
+    }
+    bool get_dstoage_available() const SKR_NOEXCEPT { return runner.ds_reader.get(); }
+
     void cancel(skr_io_future_t* future) SKR_NOEXCEPT 
     { 
         skr_atomicu32_store_relaxed(&future->request_cancel, 1); 
@@ -40,7 +45,6 @@ struct VRAMService final : public IVRAMService
         IOBatchBufferId batch_buffer = nullptr;
         IOReaderId<IIOBatchProcessor> ds_reader = nullptr;
         IOReaderId<IIOBatchProcessor> common_reader = nullptr;
-
         VRAMService* service = nullptr;
     };
 
@@ -59,6 +63,7 @@ struct VRAMService final : public IVRAMService
     SmartPoolPtr<VRAMBuffer, IVRAMIOBuffer> vram_buffer_pool = nullptr;
     SmartPoolPtr<VRAMTexture, IVRAMIOTexture> vram_texture_pool = nullptr;
 private:
+    IRAMService* ram_service = nullptr;
     static uint32_t global_idx;
     SAtomicU64 request_sequence = 0;
     SAtomicU64 batch_sequence = 0;

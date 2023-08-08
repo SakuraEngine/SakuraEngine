@@ -7,7 +7,8 @@
     #include "SkrRT/module/module_manager.hpp"
     #include "SkrRenderGraph/frontend/render_graph.hpp"
     #include "SkrRT/io/ram_io.hpp"
-    #include "cgpu/io.h"
+    #include "SkrRT/io/vram_io.hpp"
+
 
 struct dual_storage_t;
 namespace skr::resource

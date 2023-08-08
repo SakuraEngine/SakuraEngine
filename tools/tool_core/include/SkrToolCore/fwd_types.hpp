@@ -5,7 +5,7 @@
 struct skr_vfs_t;
 struct SkrToolCoreModule;
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service);
-struct skr_io_vram_service_t;
+SKR_DECLARE_TYPE_ID_FWD(skr::io, IVRAMService, skr_io_vram_service);
 
 namespace skd sreflect
 {

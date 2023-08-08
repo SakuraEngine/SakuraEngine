@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrRT/platform/atomic.h"
-#include "SkrRT/io/vram_io.hpp"
 #include "vram_service.hpp"
 
 #include <EASTL/fixed_vector.h>
@@ -61,6 +60,7 @@ private:
     SAtomic32 rcs[2] = { 0, 0 };
     uint32_t index = 0;
 };
+using SwapableCmdPoolMap = eastl::vector_map<CGPUQueueId, SwapableCmdPool>;
 
 struct GPUUploadCmd
 {
@@ -100,17 +100,20 @@ struct CommonVRAMReader final : public VRAMReaderBase<IIOBatchProcessor>
     bool poll_processed_batch(SkrAsyncServicePriority priority, IOBatchId& batch) SKR_NOEXCEPT;
     bool is_async(SkrAsyncServicePriority priority) const SKR_NOEXCEPT { return false; }
 
+protected:
     void addRAMRequests(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void ensureRAMRequests(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void addUploadRequests(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void ensureUploadRequests(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    void finishBatch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT;
+    bool shouldUseUpload(IIORequest* request) const SKR_NOEXCEPT;
 
     IRAMService* ram_service = nullptr;
     IOBatchQueue fetched_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     IOBatchQueue processed_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     skr::vector<IOBatchId> ramloading_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     skr::vector<IOBatchId> to_upload_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    eastl::vector_map<CGPUQueueId, SwapableCmdPool> cmdpools;
+    SwapableCmdPoolMap cmdpools;
     skr::vector<GPUUploadCmd> gpu_uploads[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 };
 
@@ -125,7 +128,7 @@ namespace io {
 struct SKR_RUNTIME_API DStorageVRAMReader final 
     : public VRAMReaderBase<IIOBatchProcessor>
 {
-    DStorageVRAMReader(VRAMService* service) SKR_NOEXCEPT;
+    DStorageVRAMReader(VRAMService* service, CGPUDeviceId device) SKR_NOEXCEPT;
     ~DStorageVRAMReader() SKR_NOEXCEPT;
 
     bool fetch(SkrAsyncServicePriority priority, IOBatchId batch) SKR_NOEXCEPT;
@@ -136,12 +139,13 @@ struct SKR_RUNTIME_API DStorageVRAMReader final
 
     void enqueueAndSubmit(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
     void pollSubmitted(SkrAsyncServicePriority priority) SKR_NOEXCEPT;
+    bool shouldUseDStorage(IIORequest* request) const SKR_NOEXCEPT;
 
     SkrDStorageQueueId f2v_queues[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     SkrDStorageQueueId m2v_queue;
     
     IOBatchQueue fetched_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
-    IOBatchQueue loaded_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
+    IOBatchQueue processed_batches[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
     eastl::vector<skr::SObjectPtr<DStorageEvent>> submitted[SKR_ASYNC_SERVICE_PRIORITY_COUNT];
 
     SmartPoolPtr<DStorageEvent> events[SKR_ASYNC_SERVICE_PRIORITY_COUNT] = { nullptr, nullptr, nullptr };

@@ -1,6 +1,12 @@
+#include "SkrRT/io/ram_io.hpp"
 #include "ram_request.hpp"
 
 namespace skr::io {
+
+IBlocksRAMRequest::~IBlocksRAMRequest() SKR_NOEXCEPT
+{
+
+}
 
 RAMIOStatusComponent::RAMIOStatusComponent(IIORequest* const request) SKR_NOEXCEPT 
     : IOStatusComponent(request) 
@@ -8,8 +14,8 @@ RAMIOStatusComponent::RAMIOStatusComponent(IIORequest* const request) SKR_NOEXCE
         
 }
 
-RAMRequestMixin::RAMRequestMixin(ISmartPoolPtr<IBlocksRAMRequest> pool, const uint64_t sequence) SKR_NOEXCEPT
-    : IORequestMixin(pool), sequence(sequence) 
+RAMRequestMixin::RAMRequestMixin(ISmartPoolPtr<IBlocksRAMRequest> pool, IIOService* service, const uint64_t sequence) SKR_NOEXCEPT
+    : IORequestMixin(pool, service), sequence(sequence) 
 {
 
 }

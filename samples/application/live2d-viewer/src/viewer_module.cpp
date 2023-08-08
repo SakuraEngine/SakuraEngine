@@ -1,31 +1,24 @@
 #include "math.h"
 #include <EASTL/algorithm.h>
-#include <SkrRT/containers/string.hpp>
-
 #include "common/utils.h"
-
-#include "SkrImGui/skr_imgui.h"
-#include "SkrImGui/skr_imgui_rg.h"
-
+#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/system.h"
 #include "SkrRT/platform/vfs.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/platform/time.h"
 #include "SkrRT/platform/filesystem.hpp"
+#include <SkrRT/containers/string.hpp>
+#include "SkrRT/io/ram_io.hpp"
+#include "SkrRT/io/vram_io.hpp"
 #include "SkrRT/async/thread_job.hpp"
-
-#include "SkrRT/misc/log.h"
-#include "cgpu/io.h"
-
-#include "SkrRT/misc/make_zeroed.hpp"
-
 #include "SkrRT/module/module_manager.hpp"
 #include "SkrRT/runtime_module.h"
+#include "SkrInput/input.h"
+#include "SkrImGui/skr_imgui.h"
+#include "SkrImGui/skr_imgui_rg.h"
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderer/render_effect.h"
-
-#include "SkrInput/input.h"
-
 #include "SkrLive2D/l2d_model_resource.h"
 #include "SkrLive2D/l2d_render_model.h"
 #include "SkrLive2D/l2d_render_effect.h"
@@ -38,14 +31,6 @@
 
 namespace skr { struct JobQueue; }
 
-enum DemoUploadMethod
-{
-    DEMO_UPLOAD_METHOD_DIRECT_STORAGE_FILE = 0,
-    DEMO_UPLOAD_METHOD_DIRECT_STORAGE_MEMORY = 1,
-    DEMO_UPLOAD_METHOD_UPLOAD = 2,
-    DEMO_UPLOAD_METHOD_COUNT
-};
-
 class SLive2DViewerModule : public skr::IDynamicModule
 {
     virtual void on_load(int argc, char8_t** argv) override;
@@ -56,7 +41,6 @@ public:
     static SLive2DViewerModule* Get();
 
     bool bUseCVV = true;
-    DemoUploadMethod upload_method = DEMO_UPLOAD_METHOD_UPLOAD;
 
     CGPUSwapChainId swapchain = nullptr;
     CGPUFenceId present_fence = nullptr;
@@ -67,7 +51,7 @@ public:
     SRendererId l2d_renderer = nullptr;
     skr_vfs_t* resource_vfs = nullptr;
     skr_io_ram_service_t* ram_service = nullptr;
-    skr_io_vram_service2_t* vram_service2 = nullptr;
+    skr_io_vram_service_t* vram_service = nullptr;
     skr::JobQueue* io_job_queue = nullptr;
 };
 
@@ -111,14 +95,15 @@ void SLive2DViewerModule::on_load(int argc, char8_t** argv)
     ram_service = skr_io_ram_service_t::create(&ramServiceDesc);
     ram_service->run();
     
-    auto vramServiceDesc = make_zeroed<skr_vram_io_service2_desc_t>();
+    auto vramServiceDesc = make_zeroed<skr_vram_io_service_desc_t>();
     vramServiceDesc.name = u8"Live2DViewer-VRAMIOService";
     vramServiceDesc.awake_at_request = true;
     vramServiceDesc.ram_service = ram_service;
     vramServiceDesc.callback_job_queue = SLive2DViewerModule::Get()->io_job_queue;
-    vramServiceDesc.use_dstorage = false;
-    vram_service2 = skr_io_vram_service2_t::create(&vramServiceDesc);
-    vram_service2->run();
+    vramServiceDesc.use_dstorage = true;
+    vramServiceDesc.gpu_device = render_device->get_cgpu_device();
+    vram_service = skr_io_vram_service_t::create(&vramServiceDesc);
+    vram_service->run();
 
 #ifdef _WIN32
     skr_win_dstorage_decompress_desc_t decompress_desc = {};
@@ -136,7 +121,7 @@ void SLive2DViewerModule::on_unload()
 {
     SKR_LOG_INFO(u8"live2d viewer unloaded!");
     
-    skr_io_vram_service2_t::destroy(vram_service2);
+    skr_io_vram_service_t::destroy(vram_service);
     skr_io_ram_service_t::destroy(ram_service);
     skr_free_vfs(resource_vfs);
 
@@ -151,8 +136,8 @@ extern void create_imgui_resources(SRenderDeviceId render_device, skr::render_gr
 
 #include "SkrRT/ecs/type_builder.hpp"
 
-void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_service, skr_io_vram_service_t* vram_service, 
-    bool bUseCVV, DemoUploadMethod upload_method)
+void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_service, 
+    bool bUseCVV)
 {
     auto storage = renderer->get_dual_storage();
     auto renderableT_builder = make_zeroed<dual::type_builder_t>();
@@ -191,21 +176,11 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
         
         auto modelSetup = [=](dual_chunk_view_t* view) {
             auto render_device = renderer->get_render_device();
-            auto file_dstorage_queue = render_device->get_file_dstorage_queue();
-            auto memory_dstorage_queue = render_device->get_memory_dstorage_queue();
             auto mesh_comps = dual::get_owned_rw<skr_live2d_render_model_comp_t>(view);
             for (uint32_t i = 0; i < view->count; i++)
             {
                 auto& vram_request = mesh_comps[i].vram_future;
                 auto& ram_request = mesh_comps[i].ram_future;
-                if (upload_method == DEMO_UPLOAD_METHOD_DIRECT_STORAGE_FILE)
-                {
-                    vram_request.file_dstorage_queue_override = file_dstorage_queue;
-                }
-                else if (upload_method == DEMO_UPLOAD_METHOD_DIRECT_STORAGE_MEMORY)
-                {
-                    vram_request.memory_dstorage_queue_override = memory_dstorage_queue;
-                }
                 vram_request.vfs_override = resource_vfs;
                 vram_request.queue_override = render_device->get_gfx_queue();
                 ram_request.vfs_override = resource_vfs;
@@ -216,10 +191,10 @@ void create_test_scene(SRendererId renderer, skr_vfs_t* resource_vfs, skr_io_ram
                     auto pRendermodelFuture = (skr_live2d_render_model_future_t*)data;
                     auto ram_service = SLive2DViewerModule::Get()->ram_service;
                     auto renderer = SLive2DViewerModule::Get()->l2d_renderer;
-                    auto vram_service2 = SLive2DViewerModule::Get()->vram_service2;
+                    auto vram_service = SLive2DViewerModule::Get()->vram_service;
                     auto render_device = renderer->get_render_device();
                     auto cgpu_device = render_device->get_cgpu_device();
-                    skr_live2d_render_model_create_from_raw(ram_service, vram_service2, cgpu_device, request->model_resource, pRendermodelFuture);
+                    skr_live2d_render_model_create_from_raw(ram_service, vram_service, cgpu_device, request->model_resource, pRendermodelFuture);
                 };
                 // skr_live2d_model_create_from_json(ram_service, u8"Live2DViewer/Mao/mao_pro_t02.model3.json", &ram_request);
                 skr_live2d_model_create_from_json(ram_service, u8"Live2DViewer/Hiyori/Hiyori.model3.json", &ram_request);
@@ -249,7 +224,6 @@ int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
         &window_desc);
 
     auto ram_service = SLive2DViewerModule::Get()->ram_service;
-    auto vram_service = render_device->get_vram_service();
     // Initialize renderer
     swapchain = skr_render_device_register_window(render_device, main_window);
     present_fence = cgpu_create_fence(cgpu_device);
@@ -262,7 +236,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
     });
     create_imgui_resources(render_device, renderGraph, resource_vfs);
     skr_live2d_initialize_render_effects(l2d_renderer, renderGraph, resource_vfs);
-    create_test_scene(l2d_renderer, resource_vfs, ram_service, vram_service, bUseCVV, upload_method);
+    create_test_scene(l2d_renderer, resource_vfs, ram_service, bUseCVV);
     uint64_t frame_index = 0;
     SHiresTimer tick_timer;
     int64_t elapsed_us = 0;
@@ -339,6 +313,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
             ImGui::Text("UseCVV");
             ImGui::SameLine();
             ImGui::Checkbox("##UseCVV", &bUseCVV);
+            /*
             {
                 const char* items[] = { "DirectStorage(File)", "DirectStorage(Memory)", "UploadBuffer" };
                 ImGui::Text("UploadMethod");
@@ -359,6 +334,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
                     ImGui::EndCombo();
                 }
             }
+            */
             {
                 static int sample_index = 0;
                 const char* items[] = { "1x", "2x", "4x", "8x" };
@@ -386,7 +362,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
         if (bPrevUseCVV != bUseCVV)
         {
             cgpu_wait_queue_idle(gfx_queue);
-            create_test_scene(l2d_renderer, resource_vfs, ram_service, vram_service, bUseCVV, upload_method);
+            create_test_scene(l2d_renderer, resource_vfs, ram_service, bUseCVV);
         }
         {
             ZoneScopedN("RegisterPasses");
