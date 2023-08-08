@@ -1,9 +1,9 @@
 #pragma once
-#include "SkrRenderer/module.configure.h"
+#include "SkrRenderer/module.configure.h" // IWYU pragma: export
 #include "SkrRT/misc/types.h"
 
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service);
-struct skr_io_vram_service_t;
+SKR_DECLARE_TYPE_ID_FWD(skr::io, IVRAMService, skr_io_vram_service);
 #ifdef __cplusplus
 namespace skr { struct RendererDevice; }
 typedef struct skr::RendererDevice SRenderDevice;

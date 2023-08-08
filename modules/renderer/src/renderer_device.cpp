@@ -1,10 +1,10 @@
-#include "cgpu/io.h"
 #include "cgpu/extensions/cgpu_nsight.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/memory.h"
 #ifdef _WIN32
 #include "SkrRT/platform/win/dstorage_windows.h"
 #endif
+#include "SkrRT/io/vram_io.hpp"
 #include "SkrRenderer/render_device.h"
 
 #include <EASTL/vector_map.h>
@@ -82,11 +82,6 @@ struct SKR_RENDERER_API RendererDeviceImpl : public RendererDevice
         return root_signature_pool;
     }
 
-    skr_io_vram_service_t* get_vram_service() const override
-    {
-        return vram_service;
-    }
-
 protected:
     // Device objects
     uint32_t backbuffer_index = 0;
@@ -99,7 +94,6 @@ protected:
     eastl::vector<CGPUQueueId> cpy_queues;
     eastl::vector<CGPUQueueId> cmpt_queues;
     CGPUSamplerId linear_sampler = nullptr;
-    skr_io_vram_service_t* vram_service = nullptr;
     CGPUDStorageQueueId file_dstorage_queue = nullptr;
     CGPUDStorageQueueId memory_dstorage_queue = nullptr;
     CGPURootSignaturePoolId root_signature_pool = nullptr;
@@ -119,18 +113,10 @@ void RendererDevice::Free(RendererDevice* device) SKR_NOEXCEPT
 void RendererDeviceImpl::initialize(const Builder& builder)
 {
     create_api_objects(builder);
-
-    auto vram_service_desc = make_zeroed<skr_vram_io_service_desc_t>();
-    vram_service_desc.lockless = true;
-    vram_service_desc.name = u8"vram_service";
-    vram_service_desc.sleep_time = 1000 / 60;
-    vram_service = skr_io_vram_service_t::create(&vram_service_desc);
 }
 
 void RendererDeviceImpl::finalize()
 {
-    skr_io_vram_service_t::destroy(vram_service);
-
     // free dstorage queues
     if(file_dstorage_queue) 
         cgpu_free_dstorage_queue(file_dstorage_queue);

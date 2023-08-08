@@ -1,7 +1,6 @@
 #pragma once
+#include "SkrRT/io/ram_io.hpp"
 #include "SkrGuiRenderer/module.configure.h"
-#include "cgpu/io.h"
-#include "SkrGui/backend/resource/resource.hpp"
 #include "SkrRT/async/thread_job.hpp"
 
 namespace skr::gui

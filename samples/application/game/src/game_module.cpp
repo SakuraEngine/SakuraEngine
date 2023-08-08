@@ -88,6 +88,7 @@ class SGameModule : public skr::IDynamicModule
     skr_vfs_t* tex_resource_vfs = nullptr;
     skr_vfs_t* shader_bytes_vfs = nullptr;
     skr_io_ram_service_t* ram_service = nullptr;
+    skr_io_vram_service_t* vram_service = nullptr;
     skr_shader_map_t* shadermap = nullptr;
 
     skr::resource::SLocalResourceRegistry* registry;
@@ -118,10 +119,20 @@ void SGameModule::installResourceFactories()
     resource_vfs = skr_create_vfs(&vfs_desc);
 
     auto ioServiceDesc = make_zeroed<skr_ram_io_service_desc_t>();
-    ioServiceDesc.name = u8"GameRuntimeRAMIOService";
+    ioServiceDesc.name = u8"GameRuntime-RAMIOService";
     ioServiceDesc.sleep_time = 1000 / 60;
     ram_service = skr_io_ram_service_t::create(&ioServiceDesc);
     ram_service->run();
+
+    auto vramServiceDesc = make_zeroed<skr_vram_io_service_desc_t>();
+    vramServiceDesc.name = u8"GameRuntime-VRAMIOService";
+    vramServiceDesc.awake_at_request = true;
+    vramServiceDesc.ram_service = ram_service;
+    vramServiceDesc.callback_job_queue = job_queue.get();
+    vramServiceDesc.use_dstorage = true;
+    vramServiceDesc.gpu_device = game_render_device->get_cgpu_device();
+    vram_service = skr_io_vram_service_t::create(&vramServiceDesc);
+    vram_service->run();
 
     registry = SkrNew<skr::resource::SLocalResourceRegistry>(resource_vfs);
     skr::resource::GetResourceSystem()->Initialize(registry, ram_service);
@@ -151,7 +162,7 @@ void SGameModule::installResourceFactories()
         factoryRoot.dstorage_root = RootStr.c_str();
         factoryRoot.vfs = tex_resource_vfs;
         factoryRoot.ram_service = ram_service;
-        factoryRoot.vram_service = game_render_device->get_vram_service();
+        factoryRoot.vram_service = vram_service;
         factoryRoot.render_device = game_render_device;
         textureFactory = skr::resource::STextureFactory::Create(factoryRoot);
         resource_system->RegisterFactory(textureFactory);
@@ -163,7 +174,7 @@ void SGameModule::installResourceFactories()
         factoryRoot.dstorage_root = RootStr.c_str();
         factoryRoot.vfs = tex_resource_vfs;
         factoryRoot.ram_service = ram_service;
-        factoryRoot.vram_service = game_render_device->get_vram_service();
+        factoryRoot.vram_service = vram_service;
         factoryRoot.render_device = game_render_device;
         meshFactory = skr::renderer::SMeshFactory::Create(factoryRoot);
         resource_system->RegisterFactory(meshFactory);
@@ -290,6 +301,7 @@ void SGameModule::uninstallResourceFactories()
     SkrDelete(registry);
 
     skr_io_ram_service_t::destroy(ram_service);
+    skr_io_vram_service_t::destroy(vram_service);
     skr_free_vfs(resource_vfs);
     skr_free_vfs(tex_resource_vfs);
     skr_free_vfs(shader_bytes_vfs);
@@ -659,8 +671,8 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
                 const auto pInfo = swapchain->back_buffers[0]->info;
                 cameras[i].renderer = game_renderer;
                 cameras[i].viewport_id = 0u; // TODO: viewport id
-                cameras[i].viewport_width = pInfo->width;
-                cameras[i].viewport_height = pInfo->height;
+                cameras[i].viewport_width = (uint32_t)pInfo->width;
+                cameras[i].viewport_height = (uint32_t)pInfo->height;
             }
         };
         dualQ_get_views(cameraQuery, DUAL_LAMBDA(cameraUpdate));

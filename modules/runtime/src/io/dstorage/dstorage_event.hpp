@@ -38,6 +38,7 @@ protected:
         queue = nullptr;
     }
     friend struct DStorageRAMReader;
+    friend struct DStorageVRAMReader;
     eastl::fixed_vector<IOBatchId, 32> batches;
     SkrDStorageQueueId queue = nullptr;
     ISmartPoolPtr<DStorageEvent> pool = nullptr;

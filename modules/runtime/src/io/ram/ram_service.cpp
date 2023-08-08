@@ -80,7 +80,7 @@ IOBatchId RAMService::open_batch(uint64_t n) SKR_NOEXCEPT
 BlocksRAMRequestId RAMService::open_request() SKR_NOEXCEPT
 {
     uint64_t seq = (uint64_t)skr_atomicu64_add_relaxed(&request_sequence, 1);
-    return skr::static_pointer_cast<IBlocksRAMRequest>(request_pool->allocate(seq));
+    return skr::static_pointer_cast<IBlocksRAMRequest>(request_pool->allocate(this, seq));
 }
 
 void RAMService::request(IOBatchId batch) SKR_NOEXCEPT
