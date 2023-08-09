@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "functor.hpp"
+#include "utils.hpp"
 
 namespace skr::algo
 {
