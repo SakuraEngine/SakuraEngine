@@ -12,9 +12,7 @@
 namespace skr
 {
 template <typename TBlock, typename Alloc>
-class BitArray final
-{
-public:
+struct BitArray final {
     using SizeType = typename Alloc::SizeType;
     using Algo     = algo::BitAlgo<TBlock>;
     using It       = BitIt<TBlock, SizeType, false>;

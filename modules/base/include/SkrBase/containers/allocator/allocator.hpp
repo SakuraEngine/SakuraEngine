@@ -1,10 +1,10 @@
 #pragma once
 #include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/config.h"
-#include "arena.hpp"
-#include <limits>
+#include "SkrBase/tools/assert.h"
 #include "SkrBase/memory.hpp"
 #include "SkrBase/tools/assert.h"
+#include "arena.hpp"
 
 namespace skr
 {
@@ -34,7 +34,7 @@ struct AllocTemplate {
         constexpr SizeType first_grow    = 4;
         constexpr SizeType constant_grow = 16;
 
-        SKR_Assert(size > capacity && size > 0);
+        SKR_ASSERT(size > capacity && size > 0);
 
         // init data
         SizeType result = first_grow;
@@ -54,7 +54,7 @@ struct AllocTemplate {
     // size < capacity, calc shrink
     SKR_INLINE SizeType get_shrink(SizeType size, SizeType capacity)
     {
-        SKR_Assert(size < capacity);
+        SKR_ASSERT(size < capacity);
 
         SizeType result;
         if ((3 * size < 2 * capacity) && (capacity - size > 64 || !size))
@@ -73,9 +73,9 @@ struct AllocTemplate {
     template <typename T>
     SKR_INLINE T* resize_container(T* p, SizeType size, SizeType capacity, SizeType new_capacity)
     {
-        SKR_Assert(new_capacity > 0);
-        SKR_Assert(size <= capacity);
-        SKR_Assert((capacity > 0 && p != nullptr) || (capacity == 0 && p == nullptr));
+        SKR_ASSERT(new_capacity > 0);
+        SKR_ASSERT(size <= capacity);
+        SKR_ASSERT((capacity > 0 && p != nullptr) || (capacity == 0 && p == nullptr));
 
         if constexpr (memory::memory_traits<T>::use_realloc)
         {
@@ -109,7 +109,7 @@ struct AllocTemplate {
 
 namespace skr
 {
-struct PmrAllocator : public AllocTemplate<PmrAllocator, size_t> {
+struct PmrAllocator : AllocTemplate<PmrAllocator, size_t> {
     // ctor...
     SKR_INLINE PmrAllocator(IArena* res = default_arena())
         : _arena(res)

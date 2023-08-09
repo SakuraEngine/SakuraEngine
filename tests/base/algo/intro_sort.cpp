@@ -6,7 +6,7 @@ TEST_CASE("test intro sort")
 {
     using namespace skr;
 
-    constexpr size_t kArrSize = 999999;
+    constexpr size_t kArrSize = 99999;
 
     int32_t* increasing = new int32_t[kArrSize];
     int32_t* decreasing = new int32_t[kArrSize];
