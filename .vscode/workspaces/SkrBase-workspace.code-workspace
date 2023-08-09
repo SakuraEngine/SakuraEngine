@@ -18,6 +18,9 @@
 		"xmake.additionalConfigArguments": [
 			"--build_tests=y",
 			"--cxx_version=cxx17"
-		]
+		],
+		"xmake.customDebugConfig": {
+			"stopAtEntry": false,
+		}
 	}
 }

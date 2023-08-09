@@ -8,7 +8,7 @@
 namespace skr::algo
 {
 template <typename T, typename TP = Less<>>
-SKR_INLINE void intro_sort(T begin, T end, TP&& p = TP())
+SKR_INLINE void intro_sort(T begin, T end, TP&& p = {})
 {
     // simulate stack
     struct Stack {

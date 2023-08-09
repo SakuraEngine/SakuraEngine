@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "functor.hpp"
 #include "utils.hpp"
 
 namespace skr::algo
@@ -65,7 +64,7 @@ SKR_INLINE bool is_heap(T* heap, TS count, TP&& p = TP())
 {
     for (TS i = 1; i < count; ++i)
     {
-        if (p(*(heap + i), *(heap + heapParentIdx(i))))
+        if (p(*(heap + i), *(heap + heap_parent_idx(i))))
             return false;
     }
     return true;
