@@ -4,7 +4,6 @@
 #include "SkrBase/algo/intro_sort.hpp"
 #include "SkrBase/algo/merge_sort.hpp"
 #include "SkrBase/algo/remove.hpp"
-#include "SkrBase/algo/find.hpp"
 #include "SkrBase/containers/allocator/allocator.hpp"
 #include "SkrBase/containers/array/array_def.hpp"
 
@@ -12,10 +11,11 @@
 namespace skr
 {
 // TODO. 可能可以继承出来一个 ArrayMap/ArraySet
+// TODO. find/remove with range
+// TODO. move item
+// TODO. binary add & remove & find
 template <typename T, typename Alloc>
-class Array
-{
-public:
+struct Array {
     using SizeType = typename Alloc::SizeType;
     using DataRef  = ArrayDataRef<T, SizeType>;
     using CDataRef = ArrayDataRef<const T, SizeType>;
@@ -88,7 +88,6 @@ public:
     DataRef emplace(Args&&... args);
     template <typename... Args>
     void emplace_at(SizeType index, Args&&... args);
-    // TODO. emplace unique
 
     // append
     DataRef append(const Array& arr);
@@ -130,13 +129,11 @@ public:
     template <typename TP>
     SizeType remove_all_if_swap(TP&& p);
 
-    // TODO. move item
-
     // modify
     T&       operator[](SizeType index);
     const T& operator[](SizeType index) const;
-    T&       last(SizeType index);
-    const T& last(SizeType index) const;
+    T&       last(SizeType index = 0);
+    const T& last(SizeType index = 0) const;
 
     // find
     template <typename TK>
@@ -157,8 +154,6 @@ public:
     CDataRef find_if(TP&& p) const;
     template <typename TP>
     CDataRef find_last_if(TP&& p) const;
-
-    // TODO. binary add & remove & find
 
     // contain
     template <typename TK>
@@ -192,15 +187,15 @@ public:
     void heap_sort(TP&& p = {});
 
     // support stack
-    void     pop(SizeType n = 1);
-    void     pop_unsafe(SizeType n = 1);
-    T        pop_get();
-    void     push(const T& v);
-    void     push(T&& v);
-    T&       top();
-    const T& top() const;
-    T&       bottom();
-    const T& bottom() const;
+    void     stack_pop(SizeType n = 1);
+    void     stack_pop_unsafe(SizeType n = 1);
+    T        stack_pop_get();
+    void     stack_push(const T& v);
+    void     stack_push(T&& v);
+    T&       stack_top();
+    const T& stack_top() const;
+    T&       stack_bottom();
+    const T& stack_bottom() const;
 
     // support foreach
     T*       begin();
@@ -253,8 +248,8 @@ SKR_INLINE void Array<T, Alloc>::_grow(SizeType n)
     // grow memory
     if (new_size > _capacity)
     {
-        auto new_capacity = _alloc.getGrow(new_size, _capacity);
-        _data             = _alloc.resizeContainer(_data, _size, _capacity, new_capacity);
+        auto new_capacity = _alloc.get_grow(new_size, _capacity);
+        _data             = _alloc.resize_container(_data, _size, _capacity, new_capacity);
         _capacity         = new_capacity;
     }
 
@@ -956,29 +951,47 @@ template <typename T, typename Alloc>
 template <typename TP>
 SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::find_if(TP&& p)
 {
-    T* ret = algo::find(begin(), end(), std::forward<TP>(p));
-    return ret ? DataRef(ret, ret - data()) : DataRef();
+    auto p_begin = _data;
+    auto p_end   = _data + _size;
+
+    for (; p_begin < p_end; ++p_begin)
+    {
+        if (p(*p_begin))
+        {
+            return { p_begin, static_cast<SizeType>(p_begin - _data) };
+        }
+    }
+    return {};
 }
 template <typename T, typename Alloc>
 template <typename TP>
 SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::find_last_if(TP&& p)
 {
-    T* ret = algo::find_last(begin(), end(), std::forward<TP>(p));
-    return ret ? DataRef(ret, ret - data()) : DataRef();
+    auto p_begin = _data;
+    auto p_end   = _data + _size - 1;
+
+    for (; p_end >= p_begin; --p_end)
+    {
+        if (p(*p_end))
+        {
+            return { p_end, static_cast<SizeType>(p_end - _data) };
+        }
+    }
+    return {};
 }
 template <typename T, typename Alloc>
 template <typename TP>
 SKR_INLINE typename Array<T, Alloc>::CDataRef Array<T, Alloc>::find_if(TP&& p) const
 {
-    const T* ret = algo::find(begin(), end(), std::forward<TP>(p));
-    return ret ? CDataRef(ret, ret - data()) : CDataRef();
+    auto ref = const_cast<Array<T, Alloc>*>(this)->find_if(std::forward<TP>(p));
+    return { ref.data, ref.index };
 }
 template <typename T, typename Alloc>
 template <typename TP>
 SKR_INLINE typename Array<T, Alloc>::CDataRef Array<T, Alloc>::find_last_if(TP&& p) const
 {
-    const T* ret = algo::find_last(begin(), end(), std::forward<TP>(p));
-    return ret ? CDataRef(ret, ret - data()) : CDataRef();
+    auto ref = const_cast<Array<T, Alloc>*>(this)->find_last_if(std::forward<TP>(p));
+    return { ref.data, ref.index };
 }
 
 // contain
@@ -1068,7 +1081,7 @@ SKR_INLINE void Array<T, Alloc>::heap_sort(TP&& p)
 
 // support stack
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::pop(SizeType n)
+SKR_INLINE void Array<T, Alloc>::stack_pop(SizeType n)
 {
     SKR_ASSERT(n > 0);
     SKR_ASSERT(n <= _size);
@@ -1076,31 +1089,31 @@ SKR_INLINE void Array<T, Alloc>::pop(SizeType n)
     _size -= n;
 }
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::pop_unsafe(SizeType n)
+SKR_INLINE void Array<T, Alloc>::stack_pop_unsafe(SizeType n)
 {
     SKR_ASSERT(n > 0);
     SKR_ASSERT(n <= _size);
     _size -= n;
 }
 template <typename T, typename Alloc>
-SKR_INLINE T Array<T, Alloc>::pop_get()
+SKR_INLINE T Array<T, Alloc>::stack_pop_get()
 {
     T result = std::move(*(_data + _size - 1));
-    pop();
+    stack_pop();
     return result;
 }
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::push(const T& v) { add(v); }
+SKR_INLINE void Array<T, Alloc>::stack_push(const T& v) { add(v); }
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::push(T&& v) { add(std::move(v)); }
+SKR_INLINE void Array<T, Alloc>::stack_push(T&& v) { add(std::move(v)); }
 template <typename T, typename Alloc>
-SKR_INLINE T& Array<T, Alloc>::top() { return *(_data + _size - 1); }
+SKR_INLINE T& Array<T, Alloc>::stack_top() { return *(_data + _size - 1); }
 template <typename T, typename Alloc>
-SKR_INLINE const T& Array<T, Alloc>::top() const { return *(_data + _size - 1); }
+SKR_INLINE const T& Array<T, Alloc>::stack_top() const { return *(_data + _size - 1); }
 template <typename T, typename Alloc>
-SKR_INLINE T& Array<T, Alloc>::bottom() { return *_data; }
+SKR_INLINE T& Array<T, Alloc>::stack_bottom() { return *_data; }
 template <typename T, typename Alloc>
-SKR_INLINE const T& Array<T, Alloc>::bottom() const { return *_data; }
+SKR_INLINE const T& Array<T, Alloc>::stack_bottom() const { return *_data; }
 
 // support foreach
 template <typename T, typename Alloc>

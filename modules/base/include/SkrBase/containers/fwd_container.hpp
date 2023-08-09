@@ -6,19 +6,19 @@ namespace skr
 using DefaultBitBlock = uint64_t;
 
 // allocator
-class PmrAllocator;
+struct PmrAllocator;
 
 // array & bit array & sparse array
 template <typename T, typename Alloc>
-class Array;
+struct Array;
 template <typename TBlock, typename Alloc>
-class BitArray;
+struct BitArray;
 template <typename T, typename TBitBlock, typename Alloc>
-class SparseArray;
+struct SparseArray;
 
 // unordered set
 template <typename T, bool MultiKey = false>
 struct USetConfigDefault;
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-class USet;
+struct USet;
 } // namespace skr
