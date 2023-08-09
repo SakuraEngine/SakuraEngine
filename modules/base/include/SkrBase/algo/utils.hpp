@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/base/config.hpp"
+#include "SkrBase/config.h"
 
 namespace skr::algo
 {
@@ -10,8 +10,8 @@ SKR_INLINE T gcd(T a, T b)
     while (b != 0)
     {
         T tmp = b;
-        b = a % b;
-        a = tmp;
+        b     = a % b;
+        a     = tmp;
     }
     return a;
 }

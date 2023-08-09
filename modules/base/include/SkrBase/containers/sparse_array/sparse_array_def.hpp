@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrRT/base/config.hpp"
-#include "SkrRT/stl/array/array_def.hpp"
+#include "SkrBase/config.h"
+#include "SkrBase/containers/array/array_def.hpp"
 
 // SparseArray structs
 namespace skr

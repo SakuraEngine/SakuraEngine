@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/base/config.hpp"
+#include "SkrBase/config.h"
 #include "binary_search.hpp"
 #include "rotate.hpp"
 #include <utility>
@@ -17,7 +17,7 @@ SKR_INLINE void merge(T begin, T mid, T end, TP&& p)
     {
         // find insert location for first element of right part head in left part
         T new_l_start = upper_bound(l_start, r_start, *r_start, std::forward<TP>(p));
-        l_start = new_l_start;
+        l_start       = new_l_start;
 
         // check done
         if (l_start >= r_start)
@@ -31,8 +31,8 @@ SKR_INLINE void merge(T begin, T mid, T end, TP&& p)
         // step.1 update left part, all '.' is less than any  ','                                |....LLLLLL|,,,,,,,,,|
         // step.2 update right part, all 'R' is less than any 'L'                                |....LLLLLL|RRRRR,,,,|
         // step.3 rotate, new bound is after 'R', because any 'R' is less than 'L' and ','       |....RRRRR|LLLLLL,,,,|
-        T new_r_start = lower_bound(r_start, end, *l_start, std::forward<TP>(p));
-        size_t r_offset = new_r_start - r_start;
+        T      new_r_start = lower_bound(r_start, end, *l_start, std::forward<TP>(p));
+        size_t r_offset    = new_r_start - r_start;
 
         // rotate mid part
         rotate(l_start, (size_t)(new_r_start - l_start), r_offset);
@@ -51,7 +51,7 @@ template <typename T, typename TP = Less<>, int MinMergeSubgroupSize = 2>
 SKR_INLINE void merge_sort(T begin, T end, TP&& p = TP())
 {
     size_t subgroup_start = 0;
-    size_t count = end - begin;
+    size_t count          = end - begin;
 
     // step1. sort per group
     if constexpr (MinMergeSubgroupSize > 1)
@@ -94,7 +94,7 @@ SKR_INLINE void merge_sort(T begin, T end, TP&& p = TP())
     while (subgroup_size < count)
     {
         auto next_group_size = subgroup_size << 1;
-        subgroup_start = 0;
+        subgroup_start       = 0;
         do
         {
             auto cur_start = begin + subgroup_start;

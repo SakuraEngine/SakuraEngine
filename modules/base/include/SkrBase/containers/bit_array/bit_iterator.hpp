@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrRT/base/config.hpp"
-#include "SkrRT/algo/bit_algo.hpp"
+#include "SkrBase/config.h"
+#include "SkrBase/algo/bit_algo.hpp"
 #include "bit_ref.hpp"
 
 // bit iterator

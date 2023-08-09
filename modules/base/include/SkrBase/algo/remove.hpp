@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrRT/base/config.hpp"
-#include "SkrRT/base/memory.hpp"
+#include "SkrBase/config.h"
+#include "SkrBase/memory.hpp"
 #include "utils.hpp"
 #include <type_traits>
 
@@ -11,8 +11,8 @@ SKR_INLINE T remove_all(T begin, T end, TP&& p = TP())
 {
     if (begin < end)
     {
-        auto write = begin;
-        auto read = begin;
+        auto write     = begin;
+        auto read      = begin;
         bool do_remove = p(*read);
 
         do

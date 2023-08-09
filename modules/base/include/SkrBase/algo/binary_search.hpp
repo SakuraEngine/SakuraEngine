@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/base/config.hpp"
+#include "SkrBase/config.h"
 #include "functor.hpp"
 
 namespace skr::algo
@@ -10,14 +10,14 @@ SKR_INLINE T lower_bound(T begin, T end, const TF& v, TP p = TP())
 {
     while (end > begin)
     {
-        const size_t size = (end - begin);
+        const size_t size           = (end - begin);
         const size_t left_over_size = size % 2;
-        auto middle = begin + (size / 2);
+        auto         middle         = begin + (size / 2);
 
         bool pass_check = p(*middle, v);
 
         begin = pass_check ? middle + left_over_size : begin;
-        end = pass_check ? end : middle;
+        end   = pass_check ? end : middle;
     }
     return begin;
 }
@@ -28,14 +28,14 @@ SKR_INLINE T upper_bound(T begin, T end, const TF& v, TP p = TP())
 {
     while (end > begin)
     {
-        const size_t size = (end - begin);
+        const size_t size           = (end - begin);
         const size_t left_over_size = size % 2;
-        auto middle = begin + (size / 2);
+        auto         middle         = begin + (size / 2);
 
         bool pass_check = !p(v, *middle);
 
         begin = pass_check ? middle + left_over_size : begin;
-        end = pass_check ? end : middle;
+        end   = pass_check ? end : middle;
     }
     return begin;
 }

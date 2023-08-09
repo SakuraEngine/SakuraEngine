@@ -1,10 +1,10 @@
 #pragma once
-#include "SkrRT/stl/fwd_stl.hpp"
-#include "SkrRT/base/config.hpp"
+#include "SkrBase/containers/fwd_container.hpp"
+#include "SkrBase/config.h"
 #include "arena.hpp"
 #include <limits>
-#include "SkrRT/base/memory.hpp"
-#include "SkrRT/base/tools/assert.hpp"
+#include "SkrBase/memory.hpp"
+#include "SkrBase/tools/assert.h"
 
 namespace skr
 {

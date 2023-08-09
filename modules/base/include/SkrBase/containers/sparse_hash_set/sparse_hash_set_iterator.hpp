@@ -1,8 +1,8 @@
 #pragma once
-#include "SkrRT/base/config.hpp"
-#include "SkrRT/base/tools/integer_tools.hpp"
+#include "SkrBase/config.h"
+#include "SkrBase/tools/integer_tools.hpp"
 #include "sparse_hash_set_def.hpp"
-#include "SkrRT/stl/sparse_array/sparse_array_iterator.hpp"
+#include "SkrBase/containers/sparse_array/sparse_array_iterator.hpp"
 
 // USet iterator
 namespace skr

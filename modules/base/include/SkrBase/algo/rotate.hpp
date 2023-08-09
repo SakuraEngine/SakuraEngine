@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/base/config.hpp"
+#include "SkrBase/config.h"
 #include <type_traits>
 
 namespace skr::algo
@@ -18,8 +18,8 @@ SKR_INLINE void rotate(T p, TS count, TS amount)
         // move per complete system of residues
         for (TS i = 0; i < loc_gcd; ++i)
         {
-            auto buf_object = std::move(*(p + i));
-            TS index_to_fill = i;
+            auto buf_object    = std::move(*(p + i));
+            TS   index_to_fill = i;
             // move per element of complete system of residues by amount
             for (TS j = 0; j < cycle_size; ++j)
             {
