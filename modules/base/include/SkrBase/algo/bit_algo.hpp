@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrBase/tools/integer_tools.hpp"
+#include "SkrBase/tools/bit.hpp"
 #include <limits>
 #include <type_traits>
 #include <memory>
@@ -14,6 +15,7 @@ private:
 
 public:
     static_assert(std::is_integral_v<T> && !std::is_signed_v<T>);
+    using BlockType = T;
 
     // constant
     static inline constexpr T PerBlockSize     = std::numeric_limits<T>::digits;
@@ -174,7 +176,7 @@ SKR_INLINE void BitAlgo<T>::set_range(T* data, TS start, TS num, bool v)
 
     // calculate block index and count
     TS block_start = start >> PerBlockSizeLog2;
-    TS block_count = intDivCeil(start + num, static_cast<TS>(PerBlockSize)) - block_start;
+    TS block_count = int_div_ceil(start + num, static_cast<TS>(PerBlockSize)) - block_start;
 
     // calculate mask
     TS end        = start + num;
@@ -241,7 +243,7 @@ SKR_INLINE TS BitAlgo<T>::find(const T* data, TS start, TS num, bool v)
 
     // calculate block index and count
     TS block_start = start >> PerBlockSizeLog2;
-    TS block_count = intDivCeil(start + num, static_cast<TS>(PerBlockSize)) - block_start;
+    TS block_count = int_div_ceil(start + num, static_cast<TS>(PerBlockSize)) - block_start;
 
     // calculate mask
     TS end        = start + num;
