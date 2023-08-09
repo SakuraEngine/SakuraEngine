@@ -9,9 +9,7 @@
 namespace skr
 {
 template <typename TDerived, typename TS>
-class AllocTemplate
-{
-public:
+struct AllocTemplate {
     using SizeType = TS;
 
     // impl it
@@ -111,9 +109,7 @@ public:
 
 namespace skr
 {
-class PmrAllocator : public AllocTemplate<PmrAllocator, size_t>
-{
-public:
+struct PmrAllocator : public AllocTemplate<PmrAllocator, size_t> {
     // ctor...
     SKR_INLINE PmrAllocator(IArena* res = default_arena())
         : _arena(res)
