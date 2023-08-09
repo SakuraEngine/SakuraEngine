@@ -1,17 +1,16 @@
 #pragma once
 #include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/config.h"
-#include "SkrBase/algo/functor.hpp"
 #include "SkrBase/containers/sparse_array/sparse_array.hpp"
 #include "sparse_hash_set_iterator.hpp"
 #include "SkrBase/containers/allocator/allocator.hpp"
 #include "SkrBase/tools/hash.hpp"
 
-// USet config
+// SparseHashSet config
 namespace skr
 {
 template <typename T, bool MultiKey>
-struct USetConfigDefault {
+struct SparseHashSetConfigDefault {
     using KeyType       = T;
     using KeyMapperType = MapFwd<T>;
     using HashType      = size_t;
@@ -22,13 +21,14 @@ struct USetConfigDefault {
 };
 } // namespace skr
 
-// USet def
+// SparseHashSet def
+// TODO. bucket 与碰撞统计，以及更好的 bucket 分配策略
+// TODO. 完善 bucket 系列操作
+// TODO. 完善 hashed 与 as 系列的校验
 namespace skr
 {
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-class USet
-{
-public:
+struct SparseHashSet {
     // from config
     using HashType      = typename Config::HashType;
     using KeyType       = typename Config::KeyType;
@@ -38,47 +38,47 @@ public:
 
     // basic
     using SizeType                        = typename Alloc::SizeType;
-    using DataType                        = USetData<T, SizeType, HashType>;
+    using DataType                        = SparseHashSetData<T, SizeType, HashType>;
     using DataArr                         = SparseArray<DataType, TBitBlock, Alloc>;
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
     // data ref & iterator
-    using DataRef  = USetDataRef<T, SizeType>;
-    using CDataRef = USetDataRef<const T, SizeType>;
-    using It       = USetIt<T, TBitBlock, SizeType, HashType, false>;
-    using CIt      = USetIt<T, TBitBlock, SizeType, HashType, true>;
+    using DataRef  = SparseHashSetDataRef<T, SizeType>;
+    using CDataRef = SparseHashSetDataRef<const T, SizeType>;
+    using It       = SparseHashSetIt<T, TBitBlock, SizeType, HashType, false>;
+    using CIt      = SparseHashSetIt<T, TBitBlock, SizeType, HashType, true>;
 
 public:
     // ctor & dtor
-    USet(Alloc alloc = Alloc());
-    USet(SizeType reserve_size, Alloc alloc = Alloc());
-    USet(const T* p, SizeType n, Alloc alloc = Alloc());
-    USet(std::initializer_list<T> init_list, Alloc alloc = Alloc());
-    ~USet();
+    SparseHashSet(Alloc alloc = Alloc());
+    SparseHashSet(SizeType reserve_size, Alloc alloc = Alloc());
+    SparseHashSet(const T* p, SizeType n, Alloc alloc = Alloc());
+    SparseHashSet(std::initializer_list<T> init_list, Alloc alloc = Alloc());
+    ~SparseHashSet();
 
     // copy & move
-    USet(const USet& other, Alloc alloc = Alloc());
-    USet(USet&& other);
+    SparseHashSet(const SparseHashSet& other, Alloc alloc = Alloc());
+    SparseHashSet(SparseHashSet&& other);
 
     // assign & move assign
-    USet& operator=(const USet& rhs);
-    USet& operator=(USet&& rhs);
+    SparseHashSet& operator=(const SparseHashSet& rhs);
+    SparseHashSet& operator=(SparseHashSet&& rhs);
 
     // compare
-    bool operator==(const USet& rhs) const;
-    bool operator!=(const USet& rhs) const;
+    bool operator==(const SparseHashSet& rhs) const;
+    bool operator!=(const SparseHashSet& rhs) const;
 
     // getter
     SizeType        size() const;
     SizeType        capacity() const;
     SizeType        slack() const;
-    SizeType        sparseSize() const;
-    SizeType        holeSize() const;
-    SizeType        bitArraySize() const;
-    SizeType        freelistHead() const;
-    SizeType        bucketSize() const;
-    SizeType        bucketMask() const;
-    bool            isCompact() const;
+    SizeType        sparse_size() const;
+    SizeType        hole_size() const;
+    SizeType        bit_array_size() const;
+    SizeType        free_list_head() const;
+    SizeType        bucket_size() const;
+    SizeType        bucket_mask() const;
+    bool            is_compact() const;
     bool            empty() const;
     DataArr&        data();
     const DataArr&  data() const;
@@ -88,10 +88,10 @@ public:
     const Alloc&    allocator() const;
 
     // validate
-    bool hasData(SizeType idx) const;
-    bool isHole(SizeType idx) const;
-    bool isValidIndex(SizeType idx) const;
-    bool isValidPointer(const T* p) const;
+    bool has_data(SizeType idx) const;
+    bool is_hole(SizeType idx) const;
+    bool is_valid_index(SizeType idx) const;
+    bool is_valid_pointer(const T* p) const;
 
     // memory op
     void clear();
@@ -99,113 +99,94 @@ public:
     void reserve(SizeType capacity);
     void shrink();
     bool compact();
-    bool compactStable();
-    bool compactTop();
+    bool compact_stable();
+    bool compact_top();
 
     // data op
-    KeyType&       keyOf(T& v) const;
-    const KeyType& keyOf(const T& v) const;
-    bool           keyEqual(const T& a, const T& b) const;
-    HashType       hashOf(const T& v) const;
+    KeyType&       key_of(T& v) const;
+    const KeyType& key_of(const T& v) const;
+    bool           key_equal(const T& a, const T& b) const;
+    HashType       hash_of(const T& v) const;
 
     // rehash
-    bool needRehash() const;
+    bool need_rehash() const;
     void rehash() const;
-    bool rehashIfNeed() const;
+    bool rehash_if_need() const;
 
-    // per element hash op
-    bool    isInBucket(SizeType index) const;
-    DataRef addToBucketOrAssign(SizeType index);
-    void    addToBucketAnyway(SizeType index);
-    void    removeFromBucket(SizeType index);
+    // add/remove node to bucket
+    bool    is_in_bucket(SizeType index) const;
+    DataRef add_to_bucket_or_assign(SizeType index);
+    void    add_to_bucket(SizeType index);
+    void    remove_from_bucket(SizeType index);
 
-    // add (add or assign)
+    // add
+    // check existence then add
     DataRef add(const T& v);
     DataRef add(T&& v);
-    DataRef addHashed(const T& v, HashType hash);
-    DataRef addHashed(T&& v, HashType hash);
-
-    // add anyway (add but never check existence)
-    DataRef addAnyway(const T& v);
-    DataRef addAnyway(T&& v);
-    DataRef addAnywayHashed(const T& v, HashType hash);
-    DataRef addAnywayHashed(T&& v, HashType hash);
-
-    // try to add (first check existence, then add, never assign)
-    DataRef tryAdd(const T& v);
-    DataRef tryAdd(T&& v);
-    DataRef tryAddHashed(const T& v, HashType hash);
-    DataRef tryAddHashed(T&& v, HashType hash);
+    DataRef add_hashed(const T& v, HashType hash);
+    DataRef add_hashed(T&& v, HashType hash);
     template <typename AsType, typename AsHasher = Hash<AsType>, typename AsComparer = Equal<>>
-    DataRef tryAddAs(AsType&& v, AsHasher&& hasher = AsHasher(), AsComparer&& comparer = AsComparer());
+    DataRef add_as(AsType&& v, AsHasher&& hasher = AsHasher(), AsComparer&& comparer = AsComparer());
 
     // emplace
     template <typename... Args>
     DataRef emplace(Args&&... args);
     template <typename... Args>
-    DataRef emplaceHashed(HashType hash, Args&&... args);
-    template <typename... Args>
-    DataRef emplaceAnyway(Args&&... args);
-    template <typename... Args>
-    DataRef emplaceAnywayHashed(HashType hash, Args&&... args);
+    DataRef emplace_hashed(HashType hash, Args&&... args);
 
     // append
-    void append(const USet& set);
+    void append(const SparseHashSet& set);
     void append(std::initializer_list<T> init_list);
     void append(T* p, SizeType n);
 
     // remove
     DataRef  remove(const KeyType& key);
-    DataRef  removeHashed(const KeyType& key, HashType hash);
-    SizeType removeAll(const KeyType& key);                      // [multi set extend]
-    SizeType removeAllHashed(const KeyType& key, HashType hash); // [multi set extend]
+    DataRef  remove_hashed(const KeyType& key, HashType hash);
+    SizeType remove_all(const KeyType& key);                       // [multi set extend]
+    SizeType remove_all_hashed(const KeyType& key, HashType hash); // [multi set extend]
 
     // remove as
     template <typename AsType, typename AsHasher = Hash<AsType>, typename AsComparer = Equal<>>
-    SizeType removeAs(AsType&& v, AsHasher&& hasher = AsHasher(), AsComparer&& comparer = AsComparer());
+    SizeType remove_as(AsType&& v, AsHasher&& hasher = AsHasher(), AsComparer&& comparer = AsComparer());
     template <typename AsType, typename AsHasher = Hash<AsType>, typename AsComparer = Equal<>>
-    SizeType removeAllAs(AsType&& v, AsHasher&& hasher = AsHasher(), AsComparer&& comparer = AsComparer()); // [multi set extend]
-
-    // modify
-    T&       operator[](SizeType index);
-    const T& operator[](SizeType index) const;
+    SizeType remove_all_as(AsType&& v, AsHasher&& hasher = AsHasher(), AsComparer&& comparer = AsComparer()); // [multi set extend]
 
     // find
     DataRef  find(const KeyType& key);
     CDataRef find(const KeyType& key) const;
-    DataRef  findHashed(const KeyType& key, HashType hash);
-    CDataRef findHashed(const KeyType& key, HashType hash) const;
+    DataRef  find_hashed(const KeyType& key, HashType hash);
+    CDataRef find_hashed(const KeyType& key, HashType hash) const;
 
     // find as
     template <typename AsType, typename AsHasher = Hash<AsType>, typename AsComparer = Equal<>>
-    DataRef findAs(AsType&& v, AsHasher&& hasher = AsHasher(), AsComparer&& comparer = AsComparer());
+    DataRef find_as(AsType&& v, AsHasher&& hasher = AsHasher(), AsComparer&& comparer = AsComparer());
     template <typename AsType, typename AsHasher = Hash<AsType>, typename AsComparer = Equal<>>
-    CDataRef findAs(AsType&& v, AsHasher&& hasher = AsHasher(), AsComparer&& comparer = AsComparer()) const;
+    CDataRef find_as(AsType&& v, AsHasher&& hasher = AsHasher(), AsComparer&& comparer = AsComparer()) const;
 
     // contain
     bool     contain(const KeyType& key) const;
-    bool     containHashed(const KeyType& key, HashType hash) const;
-    SizeType count(const KeyType& key) const;                      // [multi set extend]
-    SizeType countHashed(const KeyType& key, HashType hash) const; // [multi set extend]
+    bool     contain_hashed(const KeyType& key, HashType hash) const;
+    SizeType count(const KeyType& key) const;                       // [multi set extend]
+    SizeType count_hashed(const KeyType& key, HashType hash) const; // [multi set extend]
 
     // contain as
     template <typename AsType, typename AsHasher = Hash<AsType>, typename AsComparer = Equal<>>
-    bool containAs(AsType&& v, AsHasher&& hasher = AsHasher(), AsComparer&& comparer = AsComparer()) const;
+    bool contain_as(AsType&& v, AsHasher&& hasher = AsHasher(), AsComparer&& comparer = AsComparer()) const;
     template <typename AsType, typename AsHasher = Hash<AsType>, typename AsComparer = Equal<>>
-    SizeType countAs(AsType&& v, AsHasher&& hasher = AsHasher(), AsComparer&& comparer = AsComparer()) const; // [multi set extend]
+    SizeType count_as(AsType&& v, AsHasher&& hasher = AsHasher(), AsComparer&& comparer = AsComparer()) const; // [multi set extend]
 
     // sort
     template <typename TP = Less<T>>
     void sort(TP&& p = TP());
     template <typename TP = Less<T>>
-    void sortStable(TP&& p = TP());
+    void sort_stable(TP&& p = TP());
 
     // set ops
-    USet operator&(const USet& rhs) const;  // intersect
-    USet operator|(const USet& rhs) const;  // union
-    USet operator^(const USet& rhs) const;  // difference
-    USet operator-(const USet& rhs) const;  // sub
-    bool isSubsetOf(const USet& rhs) const; // sub set
+    SparseHashSet operator&(const SparseHashSet& rhs) const;     // intersect
+    SparseHashSet operator|(const SparseHashSet& rhs) const;     // union
+    SparseHashSet operator^(const SparseHashSet& rhs) const;     // difference
+    SparseHashSet operator-(const SparseHashSet& rhs) const;     // sub
+    bool          is_sub_set_of(const SparseHashSet& rhs) const; // sub set
 
     // support foreach
     It  begin();
@@ -215,26 +196,26 @@ public:
 
 private:
     // helpers
-    SizeType  _calcBucketSize(SizeType data_size) const;
-    void      _cleanBucket() const;
-    bool      _resizeBucket() const;
-    SizeType  _bucketIndex(SizeType hash) const;
-    SizeType& _bucketData(SizeType hash) const;
+    SizeType  _calc_bucket_size(SizeType data_size) const;
+    void      _clean_bucket() const;
+    bool      _resize_bucket() const;
+    SizeType  _bucket_index(SizeType hash) const;
+    SizeType& _bucket_data(SizeType hash) const;
 
 private:
-    mutable SizeType* m_bucket;
-    mutable SizeType  m_bucket_size;
-    mutable SizeType  m_bucket_mask;
+    mutable SizeType* m_bucket      = nullptr;
+    mutable SizeType  m_bucket_size = 0;
+    mutable SizeType  m_bucket_mask = 0;
     DataArr           m_data;
 };
 } // namespace skr
 
-// USet impl
+// SparseHashSet impl
 namespace skr
 {
 // helpers
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBlock, Config, Alloc>::_calcBucketSize(SizeType data_size) const
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::_calc_bucket_size(SizeType data_size) const
 {
     static constexpr SizeType min_size_to_hash    = 4;
     static constexpr SizeType basic_bucket_size   = 8;
@@ -242,7 +223,7 @@ SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBloc
 
     if (data_size >= min_size_to_hash)
     {
-        return ceilPowerOf2(SizeType(data_size / avg_bucket_capacity) + basic_bucket_size);
+        return bit_ceil_log2(SizeType(data_size / avg_bucket_capacity) + basic_bucket_size);
     }
     else if (data_size)
     {
@@ -254,7 +235,7 @@ SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBloc
     }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE void USet<T, TBitBlock, Config, Alloc>::_cleanBucket() const
+SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::_clean_bucket() const
 {
     if (m_bucket)
     {
@@ -267,15 +248,15 @@ SKR_INLINE void USet<T, TBitBlock, Config, Alloc>::_cleanBucket() const
     }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::_resizeBucket() const
+SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::_resize_bucket() const
 {
-    SizeType new_bucket_size = _calcBucketSize(m_data.capacity());
+    SizeType new_bucket_size = _calc_bucket_size(m_data.capacity());
 
     if (new_bucket_size != m_bucket_size)
     {
         if (new_bucket_size)
         {
-            m_bucket      = m_data.resizeContainer(m_bucket, m_bucket_size, m_bucket_size, new_bucket_size);
+            m_bucket      = m_data.resize_container(m_bucket, m_bucket_size, m_bucket_size, new_bucket_size);
             m_bucket_size = new_bucket_size;
             m_bucket_mask = new_bucket_size - 1;
         }
@@ -297,67 +278,52 @@ SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::_resizeBucket() const
     }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBlock, Config, Alloc>::_bucketIndex(SizeType hash) const
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::_bucket_index(SizeType hash) const
 {
     return hash & m_bucket_mask;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType& USet<T, TBitBlock, Config, Alloc>::_bucketData(SizeType hash) const
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType& SparseHashSet<T, TBitBlock, Config, Alloc>::_bucket_data(SizeType hash) const
 {
-    return m_bucket[_bucketIndex(hash)];
+    return m_bucket[_bucket_index(hash)];
 }
 
 // ctor & dtor
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE USet<T, TBitBlock, Config, Alloc>::USet(Alloc alloc)
-    : m_bucket(nullptr)
-    , m_bucket_size(0)
-    , m_bucket_mask(0)
-    , m_data(std::move(alloc))
+SKR_INLINE SparseHashSet<T, TBitBlock, Config, Alloc>::SparseHashSet(Alloc alloc)
+    : m_data(std::move(alloc))
 {
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE USet<T, TBitBlock, Config, Alloc>::USet(SizeType reserve_size, Alloc alloc)
-    : m_bucket(nullptr)
-    , m_bucket_size(0)
-    , m_bucket_mask(0)
-    , m_data(std::move(alloc))
+SKR_INLINE SparseHashSet<T, TBitBlock, Config, Alloc>::SparseHashSet(SizeType reserve_size, Alloc alloc)
+    : m_data(std::move(alloc))
 {
     reserve(reserve_size);
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE USet<T, TBitBlock, Config, Alloc>::USet(const T* p, SizeType n, Alloc alloc)
-    : m_bucket(nullptr)
-    , m_bucket_size(0)
-    , m_bucket_mask(0)
-    , m_data(std::move(alloc))
+SKR_INLINE SparseHashSet<T, TBitBlock, Config, Alloc>::SparseHashSet(const T* p, SizeType n, Alloc alloc)
+    : m_data(std::move(alloc))
 {
     append(p, n);
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE USet<T, TBitBlock, Config, Alloc>::USet(std::initializer_list<T> init_list, Alloc alloc)
-    : m_bucket(nullptr)
-    , m_bucket_size(0)
-    , m_bucket_mask(0)
-    , m_data(std::move(alloc))
+SKR_INLINE SparseHashSet<T, TBitBlock, Config, Alloc>::SparseHashSet(std::initializer_list<T> init_list, Alloc alloc)
+    : m_data(std::move(alloc))
 {
     append(init_list);
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE USet<T, TBitBlock, Config, Alloc>::~USet() { release(); }
+SKR_INLINE SparseHashSet<T, TBitBlock, Config, Alloc>::~SparseHashSet() { release(); }
 
 // copy & move
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE USet<T, TBitBlock, Config, Alloc>::USet(const USet& other, Alloc alloc)
-    : m_bucket(nullptr)
-    , m_bucket_size(0)
-    , m_bucket_mask(0)
-    , m_data(std::move(alloc))
+SKR_INLINE SparseHashSet<T, TBitBlock, Config, Alloc>::SparseHashSet(const SparseHashSet& other, Alloc alloc)
+    : m_data(std::move(alloc))
 {
     *this = other;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE USet<T, TBitBlock, Config, Alloc>::USet(USet&& other)
+SKR_INLINE SparseHashSet<T, TBitBlock, Config, Alloc>::SparseHashSet(SparseHashSet&& other)
     : m_bucket(other.m_bucket)
     , m_bucket_size(other.m_bucket_size)
     , m_bucket_mask(other.m_bucket_mask)
@@ -370,7 +336,7 @@ SKR_INLINE USet<T, TBitBlock, Config, Alloc>::USet(USet&& other)
 
 // assign & move assign
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE USet<T, TBitBlock, Config, Alloc>& USet<T, TBitBlock, Config, Alloc>::operator=(const USet& rhs)
+SKR_INLINE SparseHashSet<T, TBitBlock, Config, Alloc>& SparseHashSet<T, TBitBlock, Config, Alloc>::operator=(const SparseHashSet& rhs)
 {
     if (this != &rhs)
     {
@@ -396,7 +362,7 @@ SKR_INLINE USet<T, TBitBlock, Config, Alloc>& USet<T, TBitBlock, Config, Alloc>:
     }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE USet<T, TBitBlock, Config, Alloc>& USet<T, TBitBlock, Config, Alloc>::operator=(USet&& rhs)
+SKR_INLINE SparseHashSet<T, TBitBlock, Config, Alloc>& SparseHashSet<T, TBitBlock, Config, Alloc>::operator=(SparseHashSet&& rhs)
 {
     if (this != &rhs)
     {
@@ -418,11 +384,11 @@ SKR_INLINE USet<T, TBitBlock, Config, Alloc>& USet<T, TBitBlock, Config, Alloc>:
 
 // compare
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::operator==(const USet& rhs) const
+SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::operator==(const SparseHashSet& rhs) const
 {
     if (size() == rhs.size())
     {
-        return isSubsetOf(rhs);
+        return is_sub_set_of(rhs);
     }
     else
     {
@@ -430,151 +396,151 @@ SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::operator==(const USet& rhs) c
     }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::operator!=(const USet& rhs) const
+SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::operator!=(const SparseHashSet& rhs) const
 {
     return !(*this == rhs);
 }
 
 // getter
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBlock, Config, Alloc>::size() const
+typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::size() const
 {
     return m_data.size();
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBlock, Config, Alloc>::capacity() const
+typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::capacity() const
 {
     return m_data.capacity();
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBlock, Config, Alloc>::slack() const
+typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::slack() const
 {
     return m_data.slack();
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBlock, Config, Alloc>::sparseSize() const
+typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::sparse_size() const
 {
-    return m_data.sparseSize();
+    return m_data.sparse_size();
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBlock, Config, Alloc>::holeSize() const
+typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::hole_size() const
 {
-    return m_data.holeSize();
+    return m_data.hole_size();
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBlock, Config, Alloc>::bitArraySize() const
+typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::bit_array_size() const
 {
-    return m_data.bitArraySize();
+    return m_data.bit_array_size();
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBlock, Config, Alloc>::freelistHead() const
+typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::free_list_head() const
 {
-    return m_data.freelistHead();
+    return m_data.free_list_head();
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBlock, Config, Alloc>::bucketSize() const
+typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::bucket_size() const
 {
     return m_bucket_size;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBlock, Config, Alloc>::bucketMask() const
+typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::bucket_mask() const
 {
     return m_bucket_mask;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-bool USet<T, TBitBlock, Config, Alloc>::isCompact() const
+bool SparseHashSet<T, TBitBlock, Config, Alloc>::is_compact() const
 {
-    return m_data.isCompact();
+    return m_data.is_compact();
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-bool USet<T, TBitBlock, Config, Alloc>::empty() const
+bool SparseHashSet<T, TBitBlock, Config, Alloc>::empty() const
 {
     return m_data.empty();
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-typename USet<T, TBitBlock, Config, Alloc>::DataArr& USet<T, TBitBlock, Config, Alloc>::data()
+typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataArr& SparseHashSet<T, TBitBlock, Config, Alloc>::data()
 {
     return m_data;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-const typename USet<T, TBitBlock, Config, Alloc>::DataArr& USet<T, TBitBlock, Config, Alloc>::data() const
+const typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataArr& SparseHashSet<T, TBitBlock, Config, Alloc>::data() const
 {
     return m_data;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-typename USet<T, TBitBlock, Config, Alloc>::SizeType* USet<T, TBitBlock, Config, Alloc>::bucket()
+typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType* SparseHashSet<T, TBitBlock, Config, Alloc>::bucket()
 {
     return m_bucket;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-const typename USet<T, TBitBlock, Config, Alloc>::SizeType* USet<T, TBitBlock, Config, Alloc>::bucket() const
+const typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType* SparseHashSet<T, TBitBlock, Config, Alloc>::bucket() const
 {
     return m_bucket;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-Alloc& USet<T, TBitBlock, Config, Alloc>::allocator()
+Alloc& SparseHashSet<T, TBitBlock, Config, Alloc>::allocator()
 {
     return m_data.allocator();
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-const Alloc& USet<T, TBitBlock, Config, Alloc>::allocator() const
+const Alloc& SparseHashSet<T, TBitBlock, Config, Alloc>::allocator() const
 {
     return m_data.allocator();
 }
 
 // validate
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::hasData(SizeType idx) const
+SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::has_data(SizeType idx) const
 {
-    return m_data.hasData(idx);
+    return m_data.has_data(idx);
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::isHole(SizeType idx) const
+SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::is_hole(SizeType idx) const
 {
-    return m_data.isHole(idx);
+    return m_data.is_hole(idx);
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::isValidIndex(SizeType idx) const
+SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::is_valid_index(SizeType idx) const
 {
-    return m_data.isValidIndex(idx);
+    return m_data.is_valid_index(idx);
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::isValidPointer(const T* p) const
+SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::is_valid_pointer(const T* p) const
 {
-    return m_data.isValidPointer(p);
+    return m_data.is_valid_pointer(p);
 }
 
 // memory op
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE void USet<T, TBitBlock, Config, Alloc>::clear()
+SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::clear()
 {
     m_data.clear();
-    _cleanBucket();
+    _clean_bucket();
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE void USet<T, TBitBlock, Config, Alloc>::release(SizeType capacity)
+SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::release(SizeType capacity)
 {
     m_data.release(capacity);
-    _resizeBucket();
-    _cleanBucket();
+    _resize_bucket();
+    _clean_bucket();
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE void USet<T, TBitBlock, Config, Alloc>::reserve(SizeType capacity)
+SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::reserve(SizeType capacity)
 {
     m_data.reserve(capacity);
-    rehashIfNeed();
+    rehash_if_need();
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE void USet<T, TBitBlock, Config, Alloc>::shrink()
+SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::shrink()
 {
     m_data.shrink();
-    if (_resizeBucket())
+    if (_resize_bucket())
     {
         rehash();
     }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::compact()
+SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::compact()
 {
     if (m_data.compact())
     {
@@ -587,9 +553,9 @@ SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::compact()
     }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::compactStable()
+SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::compact_stable()
 {
-    if (m_data.compactStable())
+    if (m_data.compact_stable())
     {
         rehash();
         return true;
@@ -600,62 +566,62 @@ SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::compactStable()
     }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::compactTop()
+SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::compact_top()
 {
-    return m_data.compactTop();
+    return m_data.compact_top();
 }
 
 // data op
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::KeyType& USet<T, TBitBlock, Config, Alloc>::keyOf(T& v) const
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::KeyType& SparseHashSet<T, TBitBlock, Config, Alloc>::key_of(T& v) const
 {
     return keyMapperType()(v);
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE const typename USet<T, TBitBlock, Config, Alloc>::KeyType& USet<T, TBitBlock, Config, Alloc>::keyOf(const T& v) const
+SKR_INLINE const typename SparseHashSet<T, TBitBlock, Config, Alloc>::KeyType& SparseHashSet<T, TBitBlock, Config, Alloc>::key_of(const T& v) const
 {
     return keyMapperType()(v);
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::keyEqual(const T& a, const T& b) const
+SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::key_equal(const T& a, const T& b) const
 {
-    return ComparerType()(keyOf(a), keyOf(b));
+    return ComparerType()(key_of(a), key_of(b));
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::HashType USet<T, TBitBlock, Config, Alloc>::hashOf(const T& v) const
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::HashType SparseHashSet<T, TBitBlock, Config, Alloc>::hash_of(const T& v) const
 {
-    return HasherType()(keyOf(v));
+    return HasherType()(key_of(v));
 }
 
 // rehash
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::needRehash() const
+SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::need_rehash() const
 {
-    SizeType new_bucket_size = _calcBucketSize(m_data.capacity());
+    SizeType new_bucket_size = _calc_bucket_size(m_data.capacity());
     return m_data.size() > 0 && (new_bucket_size != m_bucket_size);
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE void USet<T, TBitBlock, Config, Alloc>::rehash() const
+SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::rehash() const
 {
     // try resize bucket
-    _resizeBucket();
+    _resize_bucket();
 
     // rehash
     if (m_bucket)
     {
-        _cleanBucket();
+        _clean_bucket();
         for (auto it = m_data.begin(); it; ++it)
         {
-            SizeType& id_ref = _bucketData(it->hash);
+            SizeType& id_ref = _bucket_data(it->hash);
             it->next         = id_ref;
             id_ref           = it.index();
         }
     }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::rehashIfNeed() const
+SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::rehash_if_need() const
 {
-    if (needRehash())
+    if (need_rehash())
     {
         rehash();
         return true;
@@ -668,12 +634,12 @@ SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::rehashIfNeed() const
 
 // per element hash op
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::isInBucket(SizeType index) const
+SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::is_in_bucket(SizeType index) const
 {
-    if (hasData(index))
+    if (has_data(index))
     {
         DataType& data = m_data[index];
-        SizeType  id   = _bucketData(data.hash);
+        SizeType  id   = _bucket_data(data.hash);
 
         while (id != npos)
         {
@@ -691,10 +657,10 @@ SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::isInBucket(SizeType index) co
     }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::addToBucketOrAssign(SizeType index)
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHashSet<T, TBitBlock, Config, Alloc>::add_to_bucket_or_assign(SizeType index)
 {
-    SKR_Assert(hasData(index));
-    SKR_Assert(!isInBucket(index));
+    SKR_ASSERT(has_data(index));
+    SKR_ASSERT(!is_in_bucket(index));
 
     DataType& data = m_data[index];
 
@@ -702,13 +668,13 @@ SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock
     if constexpr (!Config::multi_key)
     {
         // check if data has been added to set
-        if (DataRef& found_info = findHashed(keyOf(data.data), data.hash))
+        if (DataRef& found_info = find_hashed(key_of(data.data), data.hash))
         {
             // cover the old data
             memory::move(&found_info.data, &data.data, 1);
 
             // remove old data
-            m_data.removeAt(index);
+            m_data.remove_at(index);
 
             // modify data
             info               = found_info;
@@ -717,9 +683,9 @@ SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock
         else
         {
             // link to bucket
-            if (!rehashIfNeed())
+            if (!rehash_if_need())
             {
-                SizeType& id_ref = _bucketData(data.hash);
+                SizeType& id_ref = _bucket_data(data.hash);
                 data.next        = id_ref;
                 id_ref           = index;
             }
@@ -728,9 +694,9 @@ SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock
     else
     {
         // link to bucket
-        if (!rehashIfNeed())
+        if (!rehash_if_need())
         {
-            SizeType& id_ref = _bucketData(data.hash);
+            SizeType& id_ref = _bucket_data(data.hash);
             data.next        = id_ref;
             id_ref           = index;
         }
@@ -738,24 +704,24 @@ SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock
     return info;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE void USet<T, TBitBlock, Config, Alloc>::addToBucketAnyway(SizeType index)
+SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::add_to_bucket(SizeType index)
 {
-    SKR_Assert(hasData(index));
-    SKR_Assert(!isInBucket(index));
+    SKR_ASSERT(has_data(index));
+    SKR_ASSERT(!is_in_bucket(index));
 
     DataType& data   = m_data[index];
-    SizeType& id_ref = _bucketData(data.hash);
+    SizeType& id_ref = _bucket_data(data.hash);
     data->next       = id_ref;
     id_ref           = index;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE void USet<T, TBitBlock, Config, Alloc>::removeFromBucket(SizeType index)
+SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::remove_from_bucket(SizeType index)
 {
-    SKR_Assert(hasData(index));
-    SKR_Assert(isInBucket(index));
+    SKR_ASSERT(has_data(index));
+    SKR_ASSERT(is_in_bucket(index));
 
     DataType& data = m_data[index];
-    for (SizeType& id_ref = _bucketData(data.hash); id_ref != npos; id_ref = m_data[id_ref].next)
+    for (SizeType& id_ref = _bucket_data(data.hash); id_ref != npos; id_ref = m_data[id_ref].next)
     {
         if (id_ref == index)
         {
@@ -765,221 +731,151 @@ SKR_INLINE void USet<T, TBitBlock, Config, Alloc>::removeFromBucket(SizeType ind
     }
 }
 
-// add (add or assign)
-template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::add(const T& v)
-{
-    // create node
-    auto info = m_data.addUnsafe();
-    new (&info->data) T(v);
-    info->hash = hashOf(info->data);
-
-    // link or assign
-    addToBucketOrAssign(info.index);
-}
-template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::add(T&& v)
-{
-    // create node
-    auto info = m_data.addUnsafe();
-    new (&info->data) T(std::move(v));
-    info->hash = hashOf(info->data);
-
-    // link or assign
-    addToBucketOrAssign(info.index);
-}
-template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::addHashed(const T& v, HashType hash)
-{
-    SKR_Assert(hashOf(v) == hash);
-
-    // create node
-    auto info = m_data.addUnsafe();
-    new (&info->data) T(v);
-    info->hash = hash;
-
-    // link or assign
-    addToBucketOrAssign(info.index);
-}
-template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::addHashed(T&& v, HashType hash)
-{
-    SKR_Assert(hashOf(v) == hash);
-
-    // create node
-    auto info = m_data.addUnsafe();
-    new (&info->data) T(std::move(v));
-    info->hash = hash;
-
-    // link or assign
-    addToBucketOrAssign(info.index);
-}
-
-// add anyway (add but never check existence)
-template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::addAnyway(const T& v)
-{
-    // create node
-    auto info = m_data.addUnsafe();
-    new (&info->data) T(v);
-    info->hash = hashOf(info->data);
-
-    // link directly
-    addToBucketAnyway(info.index);
-}
-template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::addAnyway(T&& v)
-{
-    // create node
-    auto info = m_data.addUnsafe();
-    new (&info->data) T(std::move(v));
-    info->hash = hashOf(info->data);
-
-    // link directly
-    addToBucketAnyway(info.index);
-}
-template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::addAnywayHashed(const T& v, HashType hash)
-{
-    SKR_Assert(hashOf(v) == hash);
-
-    // create node
-    auto info = m_data.addUnsafe();
-    new (&info->data) T(v);
-    info->hash = hash;
-
-    // link directly
-    addToBucketAnyway(info.index);
-}
-template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::addAnywayHashed(T&& v, HashType hash)
-{
-
-    SKR_Assert(hashOf(v) == hash);
-
-    // create node
-    auto info = m_data.addUnsafe();
-    new (&info->data) T(std::move(v));
-    info->hash = hash;
-
-    // link directly
-    addToBucketAnyway(info.index);
-}
-
 // try to add (first check existence, then add, never assign)
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::tryAdd(const T& v)
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHashSet<T, TBitBlock, Config, Alloc>::add(const T& v)
 {
-    HashType hash = hashOf(v);
-    if (!containHashed(v, hash))
+    HashType hash = hash_of(v);
+
+    if (DataRef ref = find_hashed(v, hash))
     {
-        return addHashed(v, hash);
+        ref.already_exist = true;
+        return ref;
     }
-    return DataRef();
+    else
+    {
+        auto info = m_data.addUnsafe();
+        new (&info->data) T(std::forward(v));
+        info->hash = hash;
+        SKR_ASSERT(info->hash == hash_of(*info->data));
+
+        add_to_bucket(info.index());
+
+        return { info->data, info.index, false };
+    }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::tryAdd(T&& v)
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHashSet<T, TBitBlock, Config, Alloc>::add(T&& v)
 {
-    HashType hash = hashOf(v);
-    if (!containHashed(v, hash))
+    HashType hash = hash_of(v);
+
+    if (DataRef ref = find_hashed(v, hash))
     {
-        return addHashed(std::move(v), hash);
+        ref.already_exist = true;
+        return ref;
     }
-    return DataRef();
+    else
+    {
+        auto info = m_data.addUnsafe();
+        new (&info->data) T(std::forward(v));
+        info->hash = hash;
+        SKR_ASSERT(info->hash == hash_of(*info->data));
+
+        add_to_bucket(info.index());
+
+        return { info->data, info.index, false };
+    }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::tryAddHashed(const T& v, HashType hash)
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHashSet<T, TBitBlock, Config, Alloc>::add_hashed(const T& v, HashType hash)
 {
-    if (!containHashed(v, hash))
+    SKR_ASSERT(hash == hash_of(v));
+
+    if (DataRef ref = find_hashed(v, hash))
     {
-        return addHashed(std::move(v), hash);
+        ref.already_exist = true;
+        return ref;
     }
-    return DataRef();
+    else
+    {
+        auto info = m_data.addUnsafe();
+        new (&info->data) T(std::forward(v));
+        info->hash = hash;
+        SKR_ASSERT(info->hash == hash_of(*info->data));
+
+        add_to_bucket(info.index());
+
+        return { info->data, info.index, false };
+    }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::tryAddHashed(T&& v, HashType hash)
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHashSet<T, TBitBlock, Config, Alloc>::add_hashed(T&& v, HashType hash)
 {
-    if (!containHashed(v, hash))
+    SKR_ASSERT(hash == hash_of(v));
+
+    if (DataRef ref = find_hashed(v, hash))
     {
-        return addHashed(std::move(v), hash);
+        ref.already_exist = true;
+        return ref;
     }
-    return DataRef();
+    else
+    {
+        auto info = m_data.addUnsafe();
+        new (&info->data) T(std::forward(v));
+        info->hash = hash;
+        SKR_ASSERT(info->hash == hash_of(*info->data));
+
+        add_to_bucket(info.index());
+
+        return { info->data, info.index, false };
+    }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
 template <typename AsType, typename AsHasher, typename AsComparer>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::tryAddAs(AsType&& v, AsHasher&& hasher,
-                                                                                                           AsComparer&& comparer)
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHashSet<T, TBitBlock, Config, Alloc>::add_as(AsType&& v, AsHasher&& hasher,
+                                                                                                                           AsComparer&& comparer)
 {
     HashType hash            = hasher(v);
     auto     constant_hasher = [hash](auto& a) { return hash; };
-    if (!containAs(std::forward<AsType>(v), constant_hasher, std::forward<AsComparer>(comparer)))
-    {
-        // create node
-        auto info = m_data.addUnsafe();
-        new (&info->data) T(v);
-        info->hash = hash;
 
-        // link directly
-        addToBucketAnyway(info.index);
+    if (DataRef ref = find_as(std::forward<AsType>(v), constant_hasher, std::forward<AsComparer>(comparer)))
+    {
+        ref.already_exist = true;
+        return ref;
     }
-    return DataRef();
+    else
+    {
+        auto info = m_data.addUnsafe();
+        new (&info->data) T(std::forward(v));
+        info->hash = hash;
+        SKR_ASSERT(info->hash == hash_of(*info->data));
+
+        add_to_bucket(info.index());
+
+        return { info->data, info.index, false };
+    }
 }
 
 // emplace
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
 template <typename... Args>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::emplace(Args&&... args)
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHashSet<T, TBitBlock, Config, Alloc>::emplace(Args&&... args)
 {
     // create node
     auto info = m_data.addUnsafe();
     new (&info->data) T(std::forward<Args>(args)...);
-    info->hash = hashOf(info->data);
+    info->hash = hash_of(info->data);
 
     // link or assign
-    addToBucketOrAssign(info.index);
+    add_to_bucket_or_assign(info.index);
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
 template <typename... Args>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::emplaceHashed(HashType hash, Args&&... args)
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHashSet<T, TBitBlock, Config, Alloc>::emplace_hashed(HashType hash, Args&&... args)
 {
     // create node
     auto info = m_data.addUnsafe();
     new (&info->data) T(std::forward<Args>(args)...);
     info->hash = hash;
-    SKR_Assert(hashOf(info->data) == hash);
+    SKR_ASSERT(info->hash == hash_of(*info->data));
 
     // link or assign
-    addToBucketOrAssign(info.index);
-}
-template <typename T, typename TBitBlock, typename Config, typename Alloc>
-template <typename... Args>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::emplaceAnyway(Args&&... args)
-{
-    // create node
-    auto info = m_data.addUnsafe();
-    new (&info->data) T(std::forward<Args>(args)...);
-    info->hash = hashOf(info->data);
-
-    // link directly
-    addToBucketAnyway(info.index);
-}
-template <typename T, typename TBitBlock, typename Config, typename Alloc>
-template <typename... Args>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::emplaceAnywayHashed(HashType hash, Args&&... args)
-{
-    // create node
-    auto info = m_data.addUnsafe();
-    new (&info->data) T(std::forward<Args>(args)...);
-    info->hash = hash;
-    SKR_Assert(hashOf(info->data) == hash);
-
-    // link directly
-    addToBucketAnyway(info.index);
+    add_to_bucket_or_assign(info.index);
 }
 
 // append
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE void USet<T, TBitBlock, Config, Alloc>::append(const USet& set)
+SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::append(const SparseHashSet& set)
 {
     for (const auto& v : set)
     {
@@ -987,7 +883,7 @@ SKR_INLINE void USet<T, TBitBlock, Config, Alloc>::append(const USet& set)
     }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE void USet<T, TBitBlock, Config, Alloc>::append(std::initializer_list<T> init_list)
+SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::append(std::initializer_list<T> init_list)
 {
     for (const auto& v : init_list)
     {
@@ -995,7 +891,7 @@ SKR_INLINE void USet<T, TBitBlock, Config, Alloc>::append(std::initializer_list<
     }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE void USet<T, TBitBlock, Config, Alloc>::append(T* p, SizeType n)
+SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::append(T* p, SizeType n)
 {
     for (SizeType i = 0; i < n; ++i)
     {
@@ -1005,40 +901,40 @@ SKR_INLINE void USet<T, TBitBlock, Config, Alloc>::append(T* p, SizeType n)
 
 // remove
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::remove(const KeyType& key)
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHashSet<T, TBitBlock, Config, Alloc>::remove(const KeyType& key)
 {
     if (DataRef ref = find(key))
     {
         memory::destruct(ref.data, 1);
-        removeFromBucket(ref.index);
+        remove_from_bucket(ref.index);
         return ref;
     }
     return DataRef();
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::removeHashed(const KeyType& key, HashType hash)
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHashSet<T, TBitBlock, Config, Alloc>::remove_hashed(const KeyType& key, HashType hash)
 {
-    if (DataRef ref = findHashed(key, hash))
+    if (DataRef ref = find_hashed(key, hash))
     {
         memory::destruct(ref.data, 1);
-        removeFromBucket(ref.index);
+        remove_from_bucket(ref.index);
         return ref;
     }
     return DataRef();
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBlock, Config, Alloc>::removeAll(const KeyType& key)
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::remove_all(const KeyType& key)
 {
     HashType  hash   = HasherType()(key);
-    SizeType& id_ref = _bucketData(hash);
+    SizeType& id_ref = _bucket_data(hash);
     SizeType  count  = 0;
     while (id_ref != npos)
     {
         DataType& data = m_data[id_ref];
-        if (ComparerType()(keyOf(data.data), key))
+        if (ComparerType()(key_of(data.data), key))
         {
             memory::destruct(&data.data, 1);
-            removeFromBucket(id_ref);
+            remove_from_bucket(id_ref);
             ++count;
         }
         id_ref = data.next;
@@ -1046,19 +942,19 @@ SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBloc
     return count;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBlock, Config, Alloc>::removeAllHashed(const KeyType& key, HashType hash)
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::remove_all_hashed(const KeyType& key, HashType hash)
 {
-    SKR_Assert(HasherType()(key) == hash);
+    SKR_ASSERT(HasherType()(key) == hash);
 
-    SizeType& id_ref = _bucketData(hash);
+    SizeType& id_ref = _bucket_data(hash);
     SizeType  count  = 0;
     while (id_ref != npos)
     {
         DataType& data = m_data[id_ref];
-        if (ComparerType()(keyOf(data.data), key))
+        if (ComparerType()(key_of(data.data), key))
         {
             memory::destruct(&data.data, 1);
-            removeFromBucket(id_ref);
+            remove_from_bucket(id_ref);
             ++count;
         }
         id_ref = data.next;
@@ -1069,24 +965,24 @@ SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBloc
 // remove as
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
 template <typename AsType, typename AsHasher, typename AsComparer>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBlock, Config, Alloc>::removeAs(AsType&& v, AsHasher&& hasher,
-                                                                                                            AsComparer&& comparer)
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::remove_as(AsType&& v, AsHasher&& hasher,
+                                                                                                                               AsComparer&& comparer)
 {
-    if (DataRef info = findAs(std::forward<AsType>(v), std::forward<AsHasher>(hasher), std::forward<AsComparer>(comparer)))
+    if (DataRef info = find_as(std::forward<AsType>(v), std::forward<AsHasher>(hasher), std::forward<AsComparer>(comparer)))
     {
         memory::destruct(info.data, 1);
-        removeFromBucket(info.index);
+        remove_from_bucket(info.index);
         return info.index;
     }
     return npos;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
 template <typename AsType, typename AsHasher, typename AsComparer>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBlock, Config, Alloc>::removeAllAs(AsType&& v, AsHasher&& hasher,
-                                                                                                               AsComparer&& comparer)
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::remove_all_as(AsType&& v, AsHasher&& hasher,
+                                                                                                                                   AsComparer&& comparer)
 {
     HashType  hash   = hasher(v);
-    SizeType& id_ref = _bucketData(hash);
+    SizeType& id_ref = _bucket_data(hash);
     SizeType  count  = 0;
     while (id_ref != npos)
     {
@@ -1094,7 +990,7 @@ SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBloc
         if (comparer(data.data, v))
         {
             memory::destruct(&data.data, 1);
-            removeFromBucket(id_ref);
+            remove_from_bucket(id_ref);
             ++count;
         }
         id_ref = data.next;
@@ -1102,31 +998,17 @@ SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBloc
     return count;
 }
 
-// modify
-template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE T& USet<T, TBitBlock, Config, Alloc>::operator[](SizeType index)
-{
-    SKR_Assert(hasData(index));
-    return m_data[index].data;
-}
-template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE const T& USet<T, TBitBlock, Config, Alloc>::operator[](SizeType index) const
-{
-    SKR_Assert(hasData(index));
-    return m_data[index].data;
-}
-
 // find
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::find(const KeyType& key)
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHashSet<T, TBitBlock, Config, Alloc>::find(const KeyType& key)
 {
     HashType hash   = HasherType()(key);
-    SizeType id_ref = _bucketData(hash);
+    SizeType id_ref = _bucket_data(hash);
     DataRef  info;
     while (id_ref != npos)
     {
         DataType& data = m_data[id_ref];
-        if (ComparerType()(keyOf(data.data), key))
+        if (ComparerType()(key_of(data.data), key))
         {
             info.data  = &data.data;
             info.index = id_ref;
@@ -1137,22 +1019,22 @@ SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock
     return info;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::CDataRef USet<T, TBitBlock, Config, Alloc>::find(const KeyType& key) const
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::CDataRef SparseHashSet<T, TBitBlock, Config, Alloc>::find(const KeyType& key) const
 {
-    DataRef info = const_cast<USet*>(this)->find(key);
+    DataRef info = const_cast<SparseHashSet*>(this)->find(key);
     return CDataRef(info.data, info.index);
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::findHashed(const KeyType& key, HashType hash)
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHashSet<T, TBitBlock, Config, Alloc>::find_hashed(const KeyType& key, HashType hash)
 {
-    SKR_Assert(HasherType()(key) == hash);
+    SKR_ASSERT(HasherType()(key) == hash);
 
-    SizeType id_ref = _bucketData(hash);
+    SizeType id_ref = _bucket_data(hash);
     DataRef  info;
     while (id_ref != npos)
     {
         DataType& data = m_data[id_ref];
-        if (ComparerType()(keyOf(data.data), key))
+        if (ComparerType()(key_of(data.data), key))
         {
             info.data  = &data.data;
             info.index = id_ref;
@@ -1163,25 +1045,25 @@ SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock
     return info;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::CDataRef USet<T, TBitBlock, Config, Alloc>::findHashed(const KeyType& key, HashType hash) const
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::CDataRef SparseHashSet<T, TBitBlock, Config, Alloc>::find_hashed(const KeyType& key, HashType hash) const
 {
-    DataRef info = const_cast<USet*>(this)->findHashed(key, hash);
+    DataRef info = const_cast<SparseHashSet*>(this)->find_hashed(key, hash);
     return CDataRef(info.data, info.index);
 }
 
 // find as
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
 template <typename AsType, typename AsHasher, typename AsComparer>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock, Config, Alloc>::findAs(AsType&& v, AsHasher&& hasher,
-                                                                                                         AsComparer&& comparer)
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHashSet<T, TBitBlock, Config, Alloc>::find_as(AsType&& v, AsHasher&& hasher,
+                                                                                                                            AsComparer&& comparer)
 {
     HashType hash   = hasher(v);
-    SizeType id_ref = _bucketData(hash);
+    SizeType id_ref = _bucket_data(hash);
     DataRef  info;
     while (id_ref != npos)
     {
         DataType& data = m_data[id_ref];
-        if (comparer(keyOf(data.data), v))
+        if (comparer(key_of(data.data), v))
         {
             info.data  = &data.data;
             info.index = id_ref;
@@ -1193,34 +1075,34 @@ SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::DataRef USet<T, TBitBlock
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
 template <typename AsType, typename AsHasher, typename AsComparer>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::CDataRef USet<T, TBitBlock, Config, Alloc>::findAs(AsType&& v, AsHasher&& hasher,
-                                                                                                          AsComparer&& comparer) const
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::CDataRef SparseHashSet<T, TBitBlock, Config, Alloc>::find_as(AsType&& v, AsHasher&& hasher,
+                                                                                                                             AsComparer&& comparer) const
 {
-    DataRef info = const_cast<USet*>(this)->findAs(std::forward<AsType>(v), std::forward<AsHasher>(hasher), std::forward<AsComparer>(comparer));
+    DataRef info = const_cast<SparseHashSet*>(this)->find_as(std::forward<AsType>(v), std::forward<AsHasher>(hasher), std::forward<AsComparer>(comparer));
     return CDataRef(info.data, info.index);
 }
 
 // contain
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::contain(const KeyType& key) const
+SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::contain(const KeyType& key) const
 {
     return (bool)find(key);
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::containHashed(const KeyType& key, HashType hash) const
+SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::contain_hashed(const KeyType& key, HashType hash) const
 {
-    return (bool)findHashed(key, hash);
+    return (bool)find_hashed(key, hash);
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBlock, Config, Alloc>::count(const KeyType& key) const
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::count(const KeyType& key) const
 {
     HashType  hash   = HasherType()(key);
-    SizeType& id_ref = _bucketData(hash);
+    SizeType& id_ref = _bucket_data(hash);
     SizeType  count  = 0;
     while (id_ref != npos)
     {
         DataType& data = m_data[id_ref];
-        if (ComparerType()(keyOf(data.data), key))
+        if (ComparerType()(key_of(data.data), key))
         {
             ++count;
         }
@@ -1229,17 +1111,17 @@ SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBloc
     return count;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBlock, Config, Alloc>::countHashed(const KeyType& key,
-                                                                                                               HashType       hash) const
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::count_hashed(const KeyType& key,
+                                                                                                                                  HashType       hash) const
 {
-    SKR_Assert(HasherType()(key) == hash);
+    SKR_ASSERT(HasherType()(key) == hash);
 
-    SizeType& id_ref = _bucketData(hash);
+    SizeType& id_ref = _bucket_data(hash);
     SizeType  count  = 0;
     while (id_ref != npos)
     {
         DataType& data = m_data[id_ref];
-        if (ComparerType()(keyOf(data.data), key))
+        if (ComparerType()(key_of(data.data), key))
         {
             ++count;
         }
@@ -1251,22 +1133,22 @@ SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBloc
 // contain as
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
 template <typename AsType, typename AsHasher, typename AsComparer>
-SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::containAs(AsType&& v, AsHasher&& hasher, AsComparer&& comparer) const
+SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::contain_as(AsType&& v, AsHasher&& hasher, AsComparer&& comparer) const
 {
-    return (bool)findAs(std::forward<AsType>(v), std::forward<AsHasher>(hasher), std::forward<AsComparer>(comparer));
+    return (bool)find_as(std::forward<AsType>(v), std::forward<AsHasher>(hasher), std::forward<AsComparer>(comparer));
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
 template <typename AsType, typename AsHasher, typename AsComparer>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBlock, Config, Alloc>::countAs(AsType&& v, AsHasher&& hasher,
-                                                                                                           AsComparer&& comparer) const
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::count_as(AsType&& v, AsHasher&& hasher,
+                                                                                                                              AsComparer&& comparer) const
 {
     HashType  hash   = hasher(v);
-    SizeType& id_ref = _bucketData(hash);
+    SizeType& id_ref = _bucket_data(hash);
     SizeType  count  = 0;
     while (id_ref != npos)
     {
         DataType& data = m_data[id_ref];
-        if (comparer(keyOf(data.data), v))
+        if (comparer(key_of(data.data), v))
         {
             ++count;
         }
@@ -1278,33 +1160,33 @@ SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::SizeType USet<T, TBitBloc
 // sort
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
 template <typename TP>
-SKR_INLINE void USet<T, TBitBlock, Config, Alloc>::sort(TP&& p)
+SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::sort(TP&& p)
 {
-    m_data.template sort([&](const DataType& a, const DataType& b) { return p(keyOf(a), keyOf(b)); });
+    m_data.template sort([&](const DataType& a, const DataType& b) { return p(key_of(a), key_of(b)); });
     rehash();
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
 template <typename TP>
-SKR_INLINE void USet<T, TBitBlock, Config, Alloc>::sortStable(TP&& p)
+SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::sort_stable(TP&& p)
 {
-    m_data.template sortStable([&](const DataType& a, const DataType& b) { return p(keyOf(a), keyOf(b)); });
+    m_data.template sort_stable([&](const DataType& a, const DataType& b) { return p(key_of(a), key_of(b)); });
     rehash();
 }
 
 // set ops
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE USet<T, TBitBlock, Config, Alloc> USet<T, TBitBlock, Config, Alloc>::operator&(const USet& rhs) const
+SKR_INLINE SparseHashSet<T, TBitBlock, Config, Alloc> SparseHashSet<T, TBitBlock, Config, Alloc>::operator&(const SparseHashSet& rhs) const
 {
-    bool        rhs_smaller = size() > rhs.size();
-    const USet& a           = rhs_smaller ? rhs : *this;
-    const USet& b           = rhs_smaller ? *this : rhs;
+    bool                 rhs_smaller = size() > rhs.size();
+    const SparseHashSet& a           = rhs_smaller ? rhs : *this;
+    const SparseHashSet& b           = rhs_smaller ? *this : rhs;
 
-    USet result;
+    SparseHashSet result;
     result.reserve(a.size());
 
     for (const auto& v : a)
     {
-        if (b.contain(keyOf(v)))
+        if (b.contain(key_of(v)))
         {
             result.add(v);
         }
@@ -1313,9 +1195,9 @@ SKR_INLINE USet<T, TBitBlock, Config, Alloc> USet<T, TBitBlock, Config, Alloc>::
     return result;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE USet<T, TBitBlock, Config, Alloc> USet<T, TBitBlock, Config, Alloc>::operator|(const USet& rhs) const
+SKR_INLINE SparseHashSet<T, TBitBlock, Config, Alloc> SparseHashSet<T, TBitBlock, Config, Alloc>::operator|(const SparseHashSet& rhs) const
 {
-    USet result(*this);
+    SparseHashSet result(*this);
     for (const auto& v : rhs)
     {
         result.add(v);
@@ -1323,13 +1205,13 @@ SKR_INLINE USet<T, TBitBlock, Config, Alloc> USet<T, TBitBlock, Config, Alloc>::
     return result;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE USet<T, TBitBlock, Config, Alloc> USet<T, TBitBlock, Config, Alloc>::operator^(const USet& rhs) const
+SKR_INLINE SparseHashSet<T, TBitBlock, Config, Alloc> SparseHashSet<T, TBitBlock, Config, Alloc>::operator^(const SparseHashSet& rhs) const
 {
-    USet result(size());
+    SparseHashSet result(size());
 
     for (const auto& v : *this)
     {
-        if (!rhs.contain(keyOf(v)))
+        if (!rhs.contain(key_of(v)))
         {
             result.add(v);
         }
@@ -1346,13 +1228,13 @@ SKR_INLINE USet<T, TBitBlock, Config, Alloc> USet<T, TBitBlock, Config, Alloc>::
     return result;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE USet<T, TBitBlock, Config, Alloc> USet<T, TBitBlock, Config, Alloc>::operator-(const USet& rhs) const
+SKR_INLINE SparseHashSet<T, TBitBlock, Config, Alloc> SparseHashSet<T, TBitBlock, Config, Alloc>::operator-(const SparseHashSet& rhs) const
 {
-    USet result(size());
+    SparseHashSet result(size());
 
     for (const auto& v : *this)
     {
-        if (!rhs.contain(keyOf(v)))
+        if (!rhs.contain(key_of(v)))
         {
             result.add(v);
         }
@@ -1361,13 +1243,13 @@ SKR_INLINE USet<T, TBitBlock, Config, Alloc> USet<T, TBitBlock, Config, Alloc>::
     return result;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::isSubsetOf(const USet& rhs) const
+SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::is_sub_set_of(const SparseHashSet& rhs) const
 {
     if (rhs.size() <= size())
     {
         for (const auto& v : rhs)
         {
-            if (!contain(keyOf(v)))
+            if (!contain(key_of(v)))
             {
                 return false;
             }
@@ -1382,23 +1264,23 @@ SKR_INLINE bool USet<T, TBitBlock, Config, Alloc>::isSubsetOf(const USet& rhs) c
 
 // support foreach
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::It USet<T, TBitBlock, Config, Alloc>::begin()
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::It SparseHashSet<T, TBitBlock, Config, Alloc>::begin()
 {
-    return It(m_data.data(), m_data.sparseSize(), m_data.bitArray());
+    return It(m_data.data(), m_data.sparse_size(), m_data.bitArray());
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::It USet<T, TBitBlock, Config, Alloc>::end()
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::It SparseHashSet<T, TBitBlock, Config, Alloc>::end()
 {
-    return It(m_data.data(), m_data.sparseSize(), m_data.bitArray(), m_data.sparseSize());
+    return It(m_data.data(), m_data.sparse_size(), m_data.bitArray(), m_data.sparse_size());
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::CIt USet<T, TBitBlock, Config, Alloc>::begin() const
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::CIt SparseHashSet<T, TBitBlock, Config, Alloc>::begin() const
 {
-    return CIt(m_data.data(), m_data.sparseSize(), m_data.bitArray());
+    return CIt(m_data.data(), m_data.sparse_size(), m_data.bitArray());
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE typename USet<T, TBitBlock, Config, Alloc>::CIt USet<T, TBitBlock, Config, Alloc>::end() const
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::CIt SparseHashSet<T, TBitBlock, Config, Alloc>::end() const
 {
-    return CIt(m_data.data(), m_data.sparseSize(), m_data.bitArray(), m_data.sparseSize());
+    return CIt(m_data.data(), m_data.sparse_size(), m_data.bitArray(), m_data.sparse_size());
 }
 } // namespace skr

@@ -18,7 +18,7 @@ struct SparseArray;
 
 // unordered set
 template <typename T, bool MultiKey = false>
-struct USetConfigDefault;
+struct SparseHashSetConfigDefault;
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-struct USet;
+struct SparseHashSet;
 } // namespace skr
