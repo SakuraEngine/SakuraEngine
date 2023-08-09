@@ -209,10 +209,10 @@ private:
     void _grow(SizeType n);
 
 private:
-    T*       _data;
-    SizeType _size;
-    SizeType _capacity;
-    Alloc    _alloc;
+    T*       _data     = nullptr;
+    SizeType _size     = 0;
+    SizeType _capacity = 0;
+    Alloc    _alloc    = {};
 };
 } // namespace skr
 
@@ -260,46 +260,31 @@ SKR_INLINE void Array<T, Alloc>::_grow(SizeType n)
 // ctor & dtor
 template <typename T, typename Alloc>
 SKR_INLINE Array<T, Alloc>::Array(Alloc alloc)
-    : _data(nullptr)
-    , _size(0)
-    , _capacity(0)
-    , _alloc(std::move(alloc))
+    : _alloc(std::move(alloc))
 {
 }
 template <typename T, typename Alloc>
 SKR_INLINE Array<T, Alloc>::Array(SizeType size, Alloc alloc)
-    : _data(nullptr)
-    , _size(0)
-    , _capacity(0)
-    , _alloc(std::move(alloc))
+    : _alloc(std::move(alloc))
 {
     resize_default(size);
 }
 template <typename T, typename Alloc>
 SKR_INLINE Array<T, Alloc>::Array(SizeType size, const T& v, Alloc alloc)
-    : _data(nullptr)
-    , _size(0)
-    , _capacity(0)
-    , _alloc(std::move(alloc))
+    : _alloc(std::move(alloc))
 {
     resize(size, v);
 }
 template <typename T, typename Alloc>
 SKR_INLINE Array<T, Alloc>::Array(const T* p, SizeType n, Alloc alloc)
-    : _data(nullptr)
-    , _size(0)
-    , _capacity(0)
-    , _alloc(std::move(alloc))
+    : _alloc(std::move(alloc))
 {
     resize_unsafe(n);
     memory::copy(_data, p, n);
 }
 template <typename T, typename Alloc>
 SKR_INLINE Array<T, Alloc>::Array(std::initializer_list<T> init_list, Alloc alloc)
-    : _data(nullptr)
-    , _size(0)
-    , _capacity(0)
-    , _alloc(std::move(alloc))
+    : _alloc(std::move(alloc))
 {
     resize_unsafe(init_list.size());
     memory::copy(_data, init_list.begin(), init_list.size());
@@ -313,10 +298,7 @@ SKR_INLINE Array<T, Alloc>::~Array()
 // copy & move
 template <typename T, typename Alloc>
 SKR_INLINE Array<T, Alloc>::Array(const Array& other, Alloc alloc)
-    : _data(nullptr)
-    , _size(0)
-    , _capacity(0)
-    , _alloc(std::move(alloc))
+    : _alloc(std::move(alloc))
 {
     resize_unsafe(other.size());
     memory::copy(_data, other.data(), other.size());

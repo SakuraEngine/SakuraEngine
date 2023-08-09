@@ -84,7 +84,7 @@ public:
         , _block_mask(TBlock(1) << (start & Algo::PerBlockSizeMask))
         , _step_mask(Algo::FullMask << (start & Algo::PerBlockSizeMask))
     {
-        SKR_Assert(start >= 0 && start <= size);
+        SKR_ASSERT(start >= 0 && start <= size);
         _findFirstSetBit();
     }
 
@@ -140,7 +140,7 @@ private:
         // set block mask & bit index
         const TBlock newVal = test_val & (test_val - 1);
         _block_mask         = newVal ^ test_val;
-        _bit_index          = _block_index * Algo::PerBlockSize + countRZero(_block_mask);
+        _bit_index          = _block_index * Algo::PerBlockSize + countr_zero(_block_mask);
 
         // check bound
         if (_bit_index > _bit_size)
@@ -155,6 +155,6 @@ private:
     TS      _bit_index;
     TS      _block_index;
     TBlock  _block_mask;
-    TBlock  _step_mask;
+    TBlock  _step_mask; // 用于快速的起步搜索
 };
 } // namespace skr
