@@ -281,7 +281,7 @@ TEST_CASE("test array")
         REQUIRE_EQ(a.capacity(), old_capacity);
     }
 
-    // add at
+    SUBCASE("add at")
     {
         TestArray a(10, 114514);
 
@@ -342,7 +342,7 @@ TEST_CASE("test array")
         }
     }
 
-    // emplace
+    SUBCASE("emplace")
     {
         TestArray a(10, 114514);
         a.emplace(10);
@@ -367,7 +367,7 @@ TEST_CASE("test array")
         REQUIRE_EQ(a[11], 10);
     }
 
-    // append
+    SUBCASE("append")
     {
         TestArray a(20, 114514);
         TestArray b(10, 114);
@@ -425,7 +425,7 @@ TEST_CASE("test array")
         }
     }
 
-    // append at
+    SUBCASE("append at")
     {
         TestArray a(20, 114514);
         TestArray b(10, 114);
@@ -491,7 +491,7 @@ TEST_CASE("test array")
         }
     }
 
-    // remove
+    SUBCASE("remove")
     {
         TestArray a = { 1, 1, 4, 5, 1, 4 };
         a.add(114514, 20);
@@ -601,7 +601,7 @@ TEST_CASE("test array")
 
     // [needn't test] modify
 
-    // find
+    SUBCASE("find")
     {
         TestArray a({ 1, 1, 4, 5, 1, 4 });
 
@@ -619,7 +619,7 @@ TEST_CASE("test array")
 
     // [test in find] contain
 
-    // sort
+    SUBCASE("sort")
     {
         TestArray a(100);
         for (int i = 0; i < 100; ++i)
@@ -640,7 +640,7 @@ TEST_CASE("test array")
         }
     }
 
-    // heap
+    SUBCASE("heap")
     {
         TestArray a({ 1, 1, 4, 5, 1, 4, 1 });
 
