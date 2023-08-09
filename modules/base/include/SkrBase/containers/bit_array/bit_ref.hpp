@@ -5,11 +5,9 @@
 namespace skr
 {
 template <typename TBlock>
-class BitRef
-{
+struct BitRef {
     static_assert(std::is_integral_v<TBlock> && !std::is_signed_v<TBlock>);
 
-public:
     SKR_INLINE BitRef(TBlock& data, TBlock mask)
         : _data(data)
         , _mask(mask)

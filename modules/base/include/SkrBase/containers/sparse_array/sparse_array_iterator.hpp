@@ -7,9 +7,7 @@
 namespace skr
 {
 template <typename T, typename TBitBlock, typename TS, bool Const>
-class SparseArrayIt
-{
-public:
+struct SparseArrayIt {
     using DataType  = std::conditional_t<Const, const SparseArrayData<T, TS>, SparseArrayData<T, TS>>;
     using ValueType = std::conditional_t<Const, const T, T>;
     using BitItType = TrueBitIt<TBitBlock, TS, true>;

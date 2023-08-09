@@ -69,9 +69,7 @@ private:
 namespace skr
 {
 template <typename TBlock, typename TS, bool Const>
-class TrueBitIt
-{
-public:
+struct TrueBitIt {
     using DataPtr = std::conditional_t<Const, const TBlock*, TBlock*>;
     using RefType = std::conditional_t<Const, bool, BitRef<TBlock>>;
     using Algo    = algo::BitAlgo<TBlock>;

@@ -70,6 +70,7 @@ struct AllocTemplate {
     }
 
     // resize helper
+    // TODO. move to container
     template <typename T>
     SKR_INLINE T* resize_container(T* p, SizeType size, SizeType capacity, SizeType new_capacity)
     {
