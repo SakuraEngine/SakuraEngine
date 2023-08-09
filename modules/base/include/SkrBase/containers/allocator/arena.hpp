@@ -3,8 +3,7 @@
 
 namespace skr
 {
-class IArena
-{
+struct IArena {
 public:
     virtual ~IArena() = default;
 
