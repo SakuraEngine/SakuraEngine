@@ -1,7 +1,7 @@
 #pragma once
-#include "SkrRT/base/config.hpp"
+#include "SkrBase/config.h"
 #include "sparse_array_def.hpp"
-#include "SkrRT/stl/bit_array/bit_iterator.hpp"
+#include "SkrBase/containers/bit_array/bit_iterator.hpp"
 
 // SparseArray iterator
 namespace skr

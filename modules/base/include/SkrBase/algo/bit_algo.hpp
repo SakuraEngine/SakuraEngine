@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrRT/base/config.hpp"
-#include "SkrRT/base/tools/integer_tools.hpp"
+#include "SkrBase/config.h"
+#include "SkrBase/tools/integer_tools.hpp"
 #include <limits>
 #include <type_traits>
 #include <memory>
@@ -16,11 +16,11 @@ public:
     static_assert(std::is_integral_v<T> && !std::is_signed_v<T>);
 
     // constant
-    static inline constexpr T PerBlockSize = std::numeric_limits<T>::digits;
+    static inline constexpr T PerBlockSize     = std::numeric_limits<T>::digits;
     static inline constexpr T PerBlockSizeMask = PerBlockSize - 1;
     static inline constexpr T PerBlockSizeLog2 = _per_block_size_log2();
-    static inline constexpr T EmptyMask = 0;
-    static inline constexpr T FullMask = ~EmptyMask;
+    static inline constexpr T EmptyMask        = 0;
+    static inline constexpr T FullMask         = ~EmptyMask;
 
     // 存储 bit 需要的 block 数量
     template <typename TS>
@@ -177,12 +177,12 @@ SKR_INLINE void BitAlgo<T>::set_range(T* data, TS start, TS num, bool v)
     TS block_count = intDivCeil(start + num, static_cast<TS>(PerBlockSize)) - block_start;
 
     // calculate mask
-    TS end = start + num;
-    T start_mask = first_block_mask(start);
-    T end_mask = last_block_mask(end);
+    TS end        = start + num;
+    T  start_mask = first_block_mask(start);
+    T  end_mask   = last_block_mask(end);
 
     T& block_v_start = *(data + block_start);
-    T& block_v_end = *(data + block_start + block_count - 1);
+    T& block_v_end   = *(data + block_start + block_count - 1);
     if (block_count == 1)
     {
         T mask = start_mask & end_mask;
@@ -203,7 +203,7 @@ template <typename TS>
 SKR_INLINE void BitAlgo<T>::set(T* data, TS index, bool v)
 {
     T& block = data[index >> PerBlockSizeLog2];
-    T mask = T(1) << (index & static_cast<TS>(PerBlockSizeMask));
+    T  mask  = T(1) << (index & static_cast<TS>(PerBlockSizeMask));
     set_block_masked(block, mask, v);
 }
 template <typename T>
@@ -244,9 +244,9 @@ SKR_INLINE TS BitAlgo<T>::find(const T* data, TS start, TS num, bool v)
     TS block_count = intDivCeil(start + num, static_cast<TS>(PerBlockSize)) - block_start;
 
     // calculate mask
-    TS end = start + num;
-    T start_mask = first_block_mask(start);
-    T end_mask = last_block_mask(end);
+    TS end        = start + num;
+    T  start_mask = first_block_mask(start);
+    T  end_mask   = last_block_mask(end);
 
     if (block_count == 1)
     {
@@ -268,8 +268,8 @@ SKR_INLINE TS BitAlgo<T>::find(const T* data, TS start, TS num, bool v)
         const T test = v ? EmptyMask : FullMask;
         for (TS i = 1; i < block_count; ++i)
         {
-            TS block_idx = block_start + i;
-            T block_value = data[block_idx];
+            TS block_idx   = block_start + i;
+            T  block_value = data[block_idx];
             if (block_value != test)
             {
                 T idx = find_block_masked(block_value, FullMask, v);
@@ -280,7 +280,7 @@ SKR_INLINE TS BitAlgo<T>::find(const T* data, TS start, TS num, bool v)
         // tail
         {
             TS block_last = block_start + block_count - 1;
-            T idx = find_block_masked(data[block_last], end_mask, v);
+            T  idx        = find_block_masked(data[block_last], end_mask, v);
             return idx == npos_of<T> ? npos_of<TS> : static_cast<TS>(idx) + (block_last << PerBlockSizeLog2);
         }
     }
@@ -300,9 +300,9 @@ SKR_INLINE TS BitAlgo<T>::find_last(const T* data, TS start, TS num, bool v)
     TS block_count = int_div_ceil(start + num, static_cast<TS>(PerBlockSize)) - block_start;
 
     // calculate mask
-    TS end = start + num;
-    T start_mask = first_block_mask(start);
-    T end_mask = last_block_mask(end);
+    TS end        = start + num;
+    T  start_mask = first_block_mask(start);
+    T  end_mask   = last_block_mask(end);
 
     if (block_count == 1)
     {
@@ -314,7 +314,7 @@ SKR_INLINE TS BitAlgo<T>::find_last(const T* data, TS start, TS num, bool v)
         // tail
         {
             TS block_last = block_start + block_count - 1;
-            T idx = find_last_block_masked(data[block_last], end_mask, v);
+            T  idx        = find_last_block_masked(data[block_last], end_mask, v);
             if (idx != npos_of<T>)
             {
                 return static_cast<TS>(idx) + (block_last << PerBlockSizeLog2);
@@ -326,8 +326,8 @@ SKR_INLINE TS BitAlgo<T>::find_last(const T* data, TS start, TS num, bool v)
         const T test = v ? EmptyMask : FullMask;
         for (TS i = block_count - 1; i >= 1; --i)
         {
-            TS block_idx = block_start + i;
-            T block_value = data[block_idx];
+            TS block_idx   = block_start + i;
+            T  block_value = data[block_idx];
             if (block_value != test)
             {
                 T idx = find_last_block_masked(block_value, FullMask, v);
@@ -355,7 +355,7 @@ SKR_INLINE T BitAlgo<T>::find_flip_block_masked(T& b, T mask, bool v)
     if (idx != npos_of<T>)
     {
         T set_mask = T(1) << (idx & static_cast<T>(PerBlockSizeMask));
-        b = v ? b & ~set_mask : b | set_mask;
+        b          = v ? b & ~set_mask : b | set_mask;
     }
     return idx;
 }
@@ -366,7 +366,7 @@ SKR_INLINE T BitAlgo<T>::find_flip_last_block_masked(T& b, T mask, bool v)
     if (idx != npos_of<T>)
     {
         T set_mask = T(1) << (idx & static_cast<T>(PerBlockSizeMask));
-        b = v ? b & ~set_mask : b | set_mask;
+        b          = v ? b & ~set_mask : b | set_mask;
     }
     return idx;
 }

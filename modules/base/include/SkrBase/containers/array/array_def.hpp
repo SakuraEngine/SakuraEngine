@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrRT/base/config.hpp"
-#include "SkrRT/base/tools/integer_tools.hpp"
+#include "SkrBase/config.h"
+#include "SkrBase/tools/integer_tools.hpp"
 
 namespace skr
 {

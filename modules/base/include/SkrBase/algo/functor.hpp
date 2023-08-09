@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/base/config.hpp"
+#include "SkrBase/config.h"
 #include <type_traits>
 
 // map functor
@@ -7,7 +7,7 @@ namespace skr
 {
 template <typename T>
 struct MapFwd {
-    SKR_INLINE constexpr T& operator()(T& v) const { return v; }
+    SKR_INLINE constexpr T&       operator()(T& v) const { return v; }
     SKR_INLINE constexpr const T& operator()(const T& v) const { return v; }
 };
 } // namespace skr
