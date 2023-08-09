@@ -1,7 +1,8 @@
 #include "SkrTestFramework/framework.hpp"
+#include "skr_test_allocator.hpp"
+
 #include "SkrBase/containers/sparse_array/sparse_array.hpp"
 #include "SkrBase/containers/array/array.hpp"
-#include "skr_test_allocator.hpp"
 
 TEST_CASE("test sparse array")
 {
