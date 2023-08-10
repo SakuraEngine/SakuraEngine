@@ -8,18 +8,18 @@ public:
     virtual ~IArena() = default;
 
     // alloc
-    virtual void* alloc(size_t size, size_t alignment)            = 0;
-    virtual void* realloc(void* p, size_t size, size_t alignment) = 0;
-    virtual void  free(void* p)                                   = 0;
+    virtual void* alloc(size_t size, size_t alignment) const            = 0;
+    virtual void* realloc(void* p, size_t size, size_t alignment) const = 0;
+    virtual void  free(void* p) const                                   = 0;
     // TODO. max capacity
 
     // help
     template <typename T>
-    SKR_INLINE T* alloc(size_t count = 1) { return (T*)alloc(count * sizeof(T), alignof(T)); }
+    SKR_INLINE T* alloc(size_t count = 1) const { return (T*)alloc(count * sizeof(T), alignof(T)); }
     template <typename T>
-    SKR_INLINE T* realloc(T* p, size_t count = 1) { return (T*)realloc(p, count * sizeof(T), alignof(T)); }
+    SKR_INLINE T* realloc(T* p, size_t count = 1) const { return (T*)realloc(p, count * sizeof(T), alignof(T)); }
     template <typename T>
-    SKR_INLINE void free(T* p) { free(p); }
+    SKR_INLINE void free(T* p) const { free(p); }
 };
 } // namespace skr
 

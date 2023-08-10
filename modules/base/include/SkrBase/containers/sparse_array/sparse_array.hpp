@@ -171,13 +171,13 @@ private:
     void _grow(SizeType n);
 
 private:
-    TBitBlock* _bit_array;
-    SizeType   _bit_array_size;
-    SizeType   _num_hole;
-    SizeType   _freelist_head;
-    SizeType   _sparse_size;
-    SizeType   _capacity;
-    DataType*  _data;
+    TBitBlock* _bit_array      = nullptr;
+    SizeType   _bit_array_size = 0;
+    SizeType   _num_hole       = 0;
+    SizeType   _freelist_head  = npos;
+    SizeType   _sparse_size    = 0;
+    SizeType   _capacity       = 0;
+    DataType*  _data           = nullptr;
     Alloc      _alloc;
 };
 } // namespace skr
@@ -382,26 +382,12 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::_grow(SizeType n)
 // ctor & dtor
 template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE SparseArray<T, TBitBlock, Alloc>::SparseArray(Alloc alloc)
-    : _bit_array(nullptr)
-    , _bit_array_size(0)
-    , _num_hole(0)
-    , _freelist_head(npos)
-    , _sparse_size(0)
-    , _capacity(0)
-    , _data(nullptr)
-    , _alloc(std::move(alloc))
+    : _alloc(std::move(alloc))
 {
 }
 template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE SparseArray<T, TBitBlock, Alloc>::SparseArray(SizeType size, Alloc alloc)
-    : _bit_array(nullptr)
-    , _bit_array_size(0)
-    , _num_hole(0)
-    , _freelist_head(npos)
-    , _sparse_size(0)
-    , _capacity(0)
-    , _data(nullptr)
-    , _alloc(std::move(alloc))
+    : _alloc(std::move(alloc))
 {
     if (size)
     {
@@ -419,14 +405,7 @@ SKR_INLINE SparseArray<T, TBitBlock, Alloc>::SparseArray(SizeType size, Alloc al
 }
 template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE SparseArray<T, TBitBlock, Alloc>::SparseArray(SizeType size, const T& v, Alloc alloc)
-    : _bit_array(nullptr)
-    , _bit_array_size(0)
-    , _num_hole(0)
-    , _freelist_head(npos)
-    , _sparse_size(0)
-    , _capacity(0)
-    , _data(nullptr)
-    , _alloc(std::move(alloc))
+    : _alloc(std::move(alloc))
 {
     if (size)
     {
@@ -444,14 +423,7 @@ SKR_INLINE SparseArray<T, TBitBlock, Alloc>::SparseArray(SizeType size, const T&
 }
 template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE SparseArray<T, TBitBlock, Alloc>::SparseArray(const T* p, SizeType n, Alloc alloc)
-    : _bit_array(nullptr)
-    , _bit_array_size(0)
-    , _num_hole(0)
-    , _freelist_head(npos)
-    , _sparse_size(0)
-    , _capacity(0)
-    , _data(nullptr)
-    , _alloc(std::move(alloc))
+    : _alloc(std::move(alloc))
 {
     if (n)
     {
@@ -469,14 +441,7 @@ SKR_INLINE SparseArray<T, TBitBlock, Alloc>::SparseArray(const T* p, SizeType n,
 }
 template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE SparseArray<T, TBitBlock, Alloc>::SparseArray(std::initializer_list<T> init_list, Alloc alloc)
-    : _bit_array(nullptr)
-    , _bit_array_size(0)
-    , _num_hole(0)
-    , _freelist_head(npos)
-    , _sparse_size(0)
-    , _capacity(0)
-    , _data(nullptr)
-    , _alloc(std::move(alloc))
+    : _alloc(std::move(alloc))
 {
     SizeType size = init_list.size();
     if (size)
@@ -499,14 +464,7 @@ SKR_INLINE SparseArray<T, TBitBlock, Alloc>::~SparseArray() { release(); }
 // copy & move
 template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE SparseArray<T, TBitBlock, Alloc>::SparseArray(const SparseArray& other, Alloc alloc)
-    : _bit_array(nullptr)
-    , _bit_array_size(0)
-    , _num_hole(0)
-    , _freelist_head(npos)
-    , _sparse_size(0)
-    , _capacity(0)
-    , _data(nullptr)
-    , _alloc(std::move(alloc))
+    : _alloc(std::move(alloc))
 {
     (*this) = other;
 }
