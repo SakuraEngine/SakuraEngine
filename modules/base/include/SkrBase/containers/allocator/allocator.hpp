@@ -8,28 +8,50 @@
 
 namespace skr
 {
+// TODO. container specific allocator
+// [Array]
+//  1. grow/shrink policy
+//  2. alloc/free/realloc
+// [SparseArray]
+//  1. [Array] grow/shrink policy
+//  2. [Array] alloc/free/realloc
+//  3. resize_bit_array
+// [SparseHashSet]
+//  1. [Array] grow/shrink policy
+//  2. [Array] alloc/free/realloc
+//  3. [SparseArray] resize_bit_bucket
+//  4. resize_hash_bucket
+// [SparseHashMap]
+//  same as [SparseHashSet]
+
 template <typename TDerived, typename TS>
 struct AllocTemplate {
     using SizeType = TS;
 
     // impl it
-    // SKR_INLINE void  free_raw(void* p, SizeType align);
-    // SKR_INLINE void* alloc_raw(SizeType size, SizeType align);
-    // SKR_INLINE void* realloc_raw(void* p, SizeType size, SizeType align);
+    // SKR_INLINE void  free_raw(void* p, SizeType align) const;
+    // SKR_INLINE void* alloc_raw(SizeType size, SizeType align) const;
+    // SKR_INLINE void* realloc_raw(void* p, SizeType size, SizeType align) const;
 
     // helper
     template <typename T>
-    SKR_INLINE void free(T* p) { static_cast<TDerived*>(this)->free_raw(p, alignof(T)); }
-    template <typename T>
-    SKR_INLINE T* alloc(SizeType size) { return (T*)static_cast<TDerived*>(this)->alloc_raw(size * sizeof(T), alignof(T)); }
-    template <typename T>
-    SKR_INLINE T* realloc(T* p, SizeType size)
+    SKR_INLINE void free(T* p) const
     {
-        return (T*)static_cast<TDerived*>(this)->realloc_raw(p, size * sizeof(T), alignof(T));
+        static_cast<const TDerived*>(this)->free_raw(p, alignof(T));
+    }
+    template <typename T>
+    SKR_INLINE T* alloc(SizeType size) const
+    {
+        return (T*)static_cast<const TDerived*>(this)->alloc_raw(size * sizeof(T), alignof(T));
+    }
+    template <typename T>
+    SKR_INLINE T* realloc(T* p, SizeType size) const
+    {
+        return (T*)static_cast<const TDerived*>(this)->realloc_raw(p, size * sizeof(T), alignof(T));
     }
 
     // size > capacity, calc grow
-    SKR_INLINE SizeType get_grow(SizeType size, SizeType capacity)
+    SKR_INLINE SizeType get_grow(SizeType size, SizeType capacity) const
     {
         constexpr SizeType first_grow    = 4;
         constexpr SizeType constant_grow = 16;
@@ -52,7 +74,7 @@ struct AllocTemplate {
         return result;
     }
     // size < capacity, calc shrink
-    SKR_INLINE SizeType get_shrink(SizeType size, SizeType capacity)
+    SKR_INLINE SizeType get_shrink(SizeType size, SizeType capacity) const
     {
         SKR_ASSERT(size < capacity);
 
@@ -72,7 +94,7 @@ struct AllocTemplate {
     // resize helper
     // TODO. move to container
     template <typename T>
-    SKR_INLINE T* resize_container(T* p, SizeType size, SizeType capacity, SizeType new_capacity)
+    SKR_INLINE T* resize_container(T* p, SizeType size, SizeType capacity, SizeType new_capacity) const
     {
         SKR_ASSERT(new_capacity > 0);
         SKR_ASSERT(size <= capacity);
@@ -123,9 +145,18 @@ struct PmrAllocator : AllocTemplate<PmrAllocator, size_t> {
     SKR_INLINE PmrAllocator& operator=(PmrAllocator&&)         = default;
 
     // impl
-    SKR_INLINE void  free_raw(void* p, SizeType align) { _arena->free(p); }
-    SKR_INLINE void* alloc_raw(SizeType size, SizeType align) { return _arena->alloc(size, align); }
-    SKR_INLINE void* realloc_raw(void* p, SizeType size, SizeType align) { return _arena->realloc(p, size, align); }
+    SKR_INLINE void free_raw(void* p, SizeType align) const
+    {
+        _arena->free(p);
+    }
+    SKR_INLINE void* alloc_raw(SizeType size, SizeType align) const
+    {
+        return _arena->alloc(size, align);
+    }
+    SKR_INLINE void* realloc_raw(void* p, SizeType size, SizeType align) const
+    {
+        return _arena->realloc(p, size, align);
+    }
 
 private:
     IArena* _arena;
