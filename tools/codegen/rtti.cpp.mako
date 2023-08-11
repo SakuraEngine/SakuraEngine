@@ -124,7 +124,7 @@ namespace skr::type
         %else:
             static skr::span<skr_method_t> methods;
         %endif
-            type->initialize(size, align, name, guid, skr::is_object_v<${record.name}>, base, nativeMethods, fields, methods);
+            type->initialize(size, align, name, skr::is_object_v<${record.name}>, base, nativeMethods, fields, methods);
         }
     }
 }
@@ -156,9 +156,9 @@ namespace skr::type
                 {u8"${db.short_name(name)}", ${enumerator.value}},
             %endfor
             };
-            new (type_of_${enum.id}) EnumType{
+            type->initialize(
                 type_of<std::underlying_type_t<${enum.name}>>::get(),
-                u8"${enum.name}", guid,
+                u8"${enum.name}",
                 +[](void* self, skr::string_view enumStr)
                 {
                     auto& This = *((${enum.name}*)self);
@@ -184,7 +184,7 @@ namespace skr::type
                     return skr::string(u8"${enum.name}::INVALID_ENUMERATOR");
                 },
                 enumerators
-            };
+            );
         }
     }
 }

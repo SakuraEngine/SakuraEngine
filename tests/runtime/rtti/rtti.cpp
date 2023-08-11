@@ -49,7 +49,7 @@ TEST_CASE_METHOD(RTTITests, "TestEnumType")
     auto enumType = static_cast<const skr::type::EnumType*>(type);
     REQUIRE(enumType != nullptr);
     EXPECT_EQ(enumType->guid, skr::type::type_id<Types::TestEnum>::get());
-    for (auto&& enumerator : enumType->enumerators)
+    for (auto&& enumerator : enumType->GetEnumerators())
     {
         SKR_LOG_FMT_DEBUG(u8"enumerator: {} -> {}", enumerator.name, enumerator.value);
         auto fieldName = skr::format(u8"Value{}", enumerator.value);
