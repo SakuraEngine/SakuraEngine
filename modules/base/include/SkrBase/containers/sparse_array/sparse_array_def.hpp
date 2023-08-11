@@ -14,12 +14,12 @@ union SparseArrayData
     // free linked list
     struct
     {
-        TS prev;
-        TS next;
+        TS _sparse_array_freelist_prev;
+        TS _sparse_array_freelist_next;
     };
 
     // data
-    T data;
+    T _sparse_array_data;
 };
 
 // SparseArray 的数据引用，代替单纯的指针/Index返回
