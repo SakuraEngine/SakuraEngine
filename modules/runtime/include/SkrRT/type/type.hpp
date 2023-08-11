@@ -409,16 +409,19 @@ private:
 // struct/class T
 struct SKR_RUNTIME_API RecordType : skr_type_t 
 {
-    RecordType() = default;
+    RecordType(skr_guid_t guid)
+        : guid(guid)
+    {
+
+    }
     RecordType(RecordType&&) = default;
-    void initialize(uint64_t size, uint64_t align, skr::string_view name, skr_guid_t guid, 
+    void initialize(uint64_t size, uint64_t align, skr::string_view name, 
         bool object, const RecordType* base, ObjectMethodTable nativeMethods,
         const skr::span<struct skr_field_t> fields, const skr::span<struct skr_method_t> methods)
     {
         this->type = SKR_TYPE_CATEGORY_OBJ;
         this->size = size;
         this->align = align;
-        this->guid = guid;
         this->object = object;
         this->name = name;
         this->base = base;
@@ -436,10 +439,10 @@ struct SKR_RUNTIME_API RecordType : skr_type_t
     const RecordType* GetBaseType() const { return base; }
     bool IsBaseOf(const RecordType& other) const;
 
+    const skr_guid_t guid = {};
 private:
     uint64_t size = 0;
     uint64_t align = 0;
-    skr_guid_t guid = {};
     bool object = false; // true if inherits from SInterface
 
     skr::string_view name = u8"";
@@ -451,31 +454,43 @@ private:
 
 // enum T
 struct SKR_RUNTIME_API EnumType : skr_type_t {
-    const skr_type_t* underlyingType;
-    const skr::string_view name = {};
-    skr_guid_t guid;
-    void (*FromString)(void* self, skr::string_view str);
-    skr::string (*ToString)(const void* self);
     struct Enumerator {
         const skr::string_view name;
         int64_t value;
     };
-    const skr::span<Enumerator> enumerators;
-    EnumType() = default;
-    EnumType(EnumType&&) = default;
-    EnumType(const skr_type_t* underlyingType, const skr::string_view name,
-    skr_guid_t guid, void (*FromString)(void* self, skr::string_view str),
-    skr::string (*ToString)(const void* self), const skr::span<Enumerator> enumerators)
-        : skr_type_t{ SKR_TYPE_CATEGORY_ENUM }
-        , underlyingType(underlyingType)
-        , name(name)
-        , guid(guid)
-        , FromString(FromString)
-        , ToString(ToString)
-        , enumerators(enumerators)
+    EnumType(skr_guid_t guid)
+        : guid(guid)
     {
+
     }
+    EnumType(EnumType&&) = default;
+    void initialize(const skr_type_t* underlyingType, const skr::string_view name,
+        void (*fromString)(void* self, skr::string_view str),
+        skr::string (*toString)(const void* self), const skr::span<Enumerator> enumerators)
+    {
+        this->type = SKR_TYPE_CATEGORY_ENUM;
+        this->underlyingType = underlyingType;
+        this->name = name;
+        this->fromString = fromString;
+        this->toString = toString;
+        this->enumerators = enumerators;
+    }
+    const skr_guid_t guid = {};
+    
+    const skr_type_t* GetUnderlyingType() const { return underlyingType; }
+    skr_guid_t GetGuid() const { return guid; }
+    void FromString(void* self, skr::string_view str) const { fromString(self, str); }
+    auto ToString(const void* self) const { return toString(self); }
+    const skr::string_view GetName() const { return name; }
+    const skr::span<const Enumerator> GetEnumerators() const { return enumerators; }
+private:
+    const skr_type_t* underlyingType = nullptr;
+    skr::string_view name = {};
+    void (*fromString)(void* self, skr::string_view str);
+    skr::string (*toString)(const void* self);
+    skr::span<Enumerator> enumerators;
 };
+
 // T*, T&, skr::SPtr<T>
 struct SKR_RUNTIME_API ReferenceType : skr_type_t {
     enum Ownership
