@@ -23,7 +23,7 @@
 
 #include "SkrRT/math/rtm/matrix4x4f.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 static struct RegisterComponentskr_live2d_render_model_comp_tHelper
 {
@@ -265,13 +265,13 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
     void produce_mask_drawcall(const skr_primitive_draw_context_t* context, dual_storage_t* storage) 
     {
         {
-            ZoneScopedN("FrameCleanUp");
+            SkrZoneScopedN("FrameCleanUp");
 
             mask_drawcalls.resize(0);
             sorted_mask_drawable_lists.resize(0);
         }
         auto updateMaskF = [&](dual_chunk_view_t* r_cv) {
-            ZoneScopedN("UpdateMaskF");
+            SkrZoneScopedN("UpdateMaskF");
 
             const auto proper_pipeline = get_mask_pipeline();
             auto models = dual::get_owned_rw<skr_live2d_render_model_comp_t>(r_cv);
@@ -395,7 +395,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         skr_primitive_draw_packet_t packet = {};
         if (strcmp((const char*)pass->identity(), (const char*)live2d_mask_pass_name) == 0)
         {
-            ZoneScopedN("ProduceMaskDrawPackets");
+            SkrZoneScopedN("ProduceMaskDrawPackets");
 
             produce_mask_drawcall(context, storage);
             mask_draw_list.drawcalls = mask_drawcalls.data();
@@ -405,7 +405,7 @@ struct RenderEffectLive2D : public IRenderEffectProcessor {
         }
         if (strcmp((const char*)pass->identity(), (const char*)live2d_pass_name) == 0)
         {
-            ZoneScopedN("ProduceModelDrawPackets");
+            SkrZoneScopedN("ProduceModelDrawPackets");
 
             produce_model_drawcall(context, storage);
             model_draw_list.drawcalls = model_drawcalls.data();
@@ -420,7 +420,7 @@ protected:
     const char8_t* color_texture_name = u8"color_texture";
     void updateTexture(skr_live2d_render_model_id render_model)
     {
-        ZoneScopedN("Live2D::updateTexture");
+        SkrZoneScopedN("Live2D::updateTexture");
 
         // create descriptor sets if not existed
         const auto ib_c = render_model->index_buffer_views.size();
@@ -431,7 +431,7 @@ protected:
                 auto iter = render_model->bind_tables.find(texture_view);
                 if (iter == render_model->bind_tables.end())
                 {
-                    ZoneScopedN("Live2D::createBindTable");
+                    SkrZoneScopedN("Live2D::createBindTable");
 
                     CGPUXBindTableDescriptor bind_table_desc = {};
                     bind_table_desc.root_signature = pipeline->root_signature;
@@ -453,7 +453,7 @@ protected:
                 auto iter = render_model->mask_bind_tables.find(texture_view);
                 if (iter == render_model->mask_bind_tables.end())
                 {
-                    ZoneScopedN("Live2D::createBindTable");
+                    SkrZoneScopedN("Live2D::createBindTable");
 
                     CGPUXBindTableDescriptor bind_table_desc = {};
                     bind_table_desc.root_signature = mask_pipeline->root_signature;
@@ -494,7 +494,7 @@ protected:
 
     void updateModelMotion(skr::render_graph::RenderGraph* render_graph, skr_live2d_render_model_id render_model)
     {
-        ZoneScopedN("Live2D::updateModelMotion");
+        SkrZoneScopedN("Live2D::updateModelMotion");
 
         const auto model_resource = render_model->model_resource_id;
         last_ms = skr_timer_get_msec(&motion_timers[render_model], true);
@@ -557,7 +557,7 @@ protected:
 
                 auto upload_buffer = render_graph->create_buffer(
                     [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
-                    ZoneScopedN("ConstructUploadPass");
+                    SkrZoneScopedN("ConstructUploadPass");
 
                     skr::string name = skr::format(u8"live2d_upload-{}", (uint64_t)render_model);
                     builder.set_name((const char8_t*)name.c_str())
@@ -567,7 +567,7 @@ protected:
                     });
                 render_graph->add_copy_pass(
                 [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
-                    ZoneScopedN("ConstructCopyPass");
+                    SkrZoneScopedN("ConstructCopyPass");
                     skr::string name = skr::format(u8"live2d_copy-{}", (uint64_t)render_model);
                     builder.set_name((const char8_t*)name.c_str());
                     uint64_t range_cursor = 0;

@@ -34,7 +34,7 @@ inline static void dbi_create(MDB_env* env, MDB_dbi* pdb, bool readonly)
     }
     // Txn body: open db
     {
-        // ZoneScopedN("MDBQuery");
+        // SkrZoneScopedN("MDBQuery");
 
         auto dbi_flags = MDB_CREATE;
         if (const int rc = mdb_dbi_open(txn, "proc-links", dbi_flags, pdb)) 

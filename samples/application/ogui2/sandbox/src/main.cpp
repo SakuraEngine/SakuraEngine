@@ -4,7 +4,7 @@
 #include "SkrGui/backend/embed_services.hpp"
 #include "SkrGui/dev/sandbox.hpp"
 #include "SkrRT/platform/system.h"
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 #include "SkrGui/backend/device/window.hpp"
 
 // !!!! TestWidgets !!!!
@@ -94,12 +94,12 @@ int main(void)
         FrameMark;
         float delta = 1.f / 60.f;
         {
-            ZoneScopedN("SystemEvents");
+            SkrZoneScopedN("SystemEvents");
             handler->pump_messages(delta);
             handler->process_messages(delta);
         }
         {
-            ZoneScopedN("Sandbox");
+            SkrZoneScopedN("Sandbox");
             sandbox->update();
             sandbox->layout();
             sandbox->paint();

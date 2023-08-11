@@ -10,7 +10,7 @@
 //
 
 // Define TRACY_ENABLE to enable profiler.
-
+#include "SkrProfile/profile.h"
 #include "common/TracySystem.cpp"
 #ifdef TRACY_ENABLE
 

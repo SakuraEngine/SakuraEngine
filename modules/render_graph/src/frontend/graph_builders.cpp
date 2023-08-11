@@ -46,7 +46,7 @@ RenderGraph::RenderGraphBuilder& RenderGraph::RenderGraphBuilder::frontend_only(
 
 PassHandle RenderGraph::add_render_pass(const RenderPassSetupFunction& setup, const RenderPassExecuteFunction& executor) SKR_NOEXCEPT
 {
-    ZoneScopedN("CopyPassBuilder::add_render_pass");
+    SkrZoneScopedN("CopyPassBuilder::add_render_pass");
 
     const uint32_t passes_size = static_cast<uint32_t>(passes.size());
     auto newPass = node_factory->Allocate<RenderPassNode>(passes_size);
@@ -248,7 +248,7 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::can_be_lone() SKR_NO
 
 RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_buffer(BufferRangeHandle src, BufferRangeHandle dst, ECGPUResourceState out_state) SKR_NOEXCEPT
 {
-    ZoneScopedN("CopyPassBuilder::buffer_to_buffer");
+    SkrZoneScopedN("CopyPassBuilder::buffer_to_buffer");
 
     auto allocated_in = graph.node_factory->Allocate<BufferReadEdge>(u8"CopySrc", src, CGPU_RESOURCE_STATE_COPY_SOURCE);
     auto allocated_out = graph.node_factory->Allocate<BufferReadWriteEdge>(dst, CGPU_RESOURCE_STATE_COPY_DEST);
@@ -266,7 +266,7 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_buffer(Buf
 
 RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_texture(BufferRangeHandle src, TextureSubresourceHandle dst, ECGPUResourceState out_state) SKR_NOEXCEPT
 {
-    ZoneScopedN("CopyPassBuilder::buffer_to_texture");
+    SkrZoneScopedN("CopyPassBuilder::buffer_to_texture");
 
     auto allocated_in = graph.node_factory->Allocate<BufferReadEdge>(u8"CopySrc", src, CGPU_RESOURCE_STATE_COPY_SOURCE);
     auto allocated_out = graph.node_factory->Allocate<TextureRenderEdge>(0u, dst._this, fastclear_0000, CGPU_RESOURCE_STATE_COPY_DEST);
@@ -284,7 +284,7 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::buffer_to_texture(Bu
 
 RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::texture_to_texture(TextureSubresourceHandle src, TextureSubresourceHandle dst, ECGPUResourceState out_state) SKR_NOEXCEPT
 {
-    ZoneScopedN("CopyPassBuilder::texture_to_texture");
+    SkrZoneScopedN("CopyPassBuilder::texture_to_texture");
 
     auto allocated_in = graph.node_factory->Allocate<TextureReadEdge>(u8"CopySrc", src._this, CGPU_RESOURCE_STATE_COPY_SOURCE);
     auto allocated_out = graph.node_factory->Allocate<TextureRenderEdge>(0u, dst._this, fastclear_0000, CGPU_RESOURCE_STATE_COPY_DEST);
@@ -302,7 +302,7 @@ RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::texture_to_texture(T
 
 RenderGraph::CopyPassBuilder& RenderGraph::CopyPassBuilder::from_buffer(BufferRangeHandle src) SKR_NOEXCEPT
 {
-    ZoneScopedN("CopyPassBuilder::from_buffer");
+    SkrZoneScopedN("CopyPassBuilder::from_buffer");
 
     auto allocated_in = graph.node_factory->Allocate<BufferReadEdge>(u8"CopySrc", src, CGPU_RESOURCE_STATE_COPY_SOURCE);
     auto&& in_edge = node.in_buffer_edges.emplace_back(allocated_in);
@@ -493,7 +493,7 @@ RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::prefer_on_host() SKR_NOE
 
 BufferHandle RenderGraph::create_buffer(const BufferSetupFunction& setup) SKR_NOEXCEPT
 {
-    ZoneScopedN("RenderGraph::create_buffer(handle)");
+    SkrZoneScopedN("RenderGraph::create_buffer(handle)");
 
     auto newBuf = node_factory->Allocate<BufferNode>();
     resources.emplace_back(newBuf);
@@ -621,7 +621,7 @@ RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_lone() SKR_NOEXC
 
 TextureHandle RenderGraph::create_texture(const TextureSetupFunction& setup) SKR_NOEXCEPT
 {
-    ZoneScopedN("RenderGraph::create_texture(handle)");
+    SkrZoneScopedN("RenderGraph::create_texture(handle)");
 
     auto newTex = node_factory->Allocate<TextureNode>();
     resources.emplace_back(newTex);

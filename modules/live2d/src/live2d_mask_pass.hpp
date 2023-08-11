@@ -3,7 +3,7 @@
 #include "SkrRenderer/primitive_pass.h"
 #include "live2d_helpers.hpp"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 const skr_render_pass_name_t live2d_mask_pass_name = u8"Live2DMaskPass";
 
@@ -90,7 +90,7 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
                 for (uint32_t j = 0; j < drawcalls[i].count; j++)
                     for (uint32_t k = 0; k < drawcalls[i].lists[j].count; k++)
                     {
-                        ZoneScopedN("UpdateBindTables");
+                        SkrZoneScopedN("UpdateBindTables");
                         auto&& dc = drawcalls[i].lists[j].drawcalls[k];
                         if (!dc.bind_table || dc.desperated || (dc.index_buffer.buffer == nullptr) || (dc.vertex_buffer_count == 0)) continue;
                         
@@ -107,18 +107,18 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
             for (uint32_t j = 0; j < drawcalls[i].count; j++)
             for (uint32_t k = 0; k < drawcalls[i].lists[j].count; k++)
             {
-                ZoneScopedN("DrawCall");
+                SkrZoneScopedN("DrawCall");
 
                 auto&& dc = drawcalls[i].lists[j].drawcalls[k];
                 if (dc.desperated || (dc.index_buffer.buffer == nullptr) || (dc.vertex_buffer_count == 0)) continue;
                 {
-                    ZoneScopedN("BindTextures");
+                    SkrZoneScopedN("BindTextures");
 
                     CGPUXBindTableId tables[2] = { dc.bind_table, pass_context.bind_table };
                     pass_context.merge_and_bind_tables(tables, 2);
                 }
                 {
-                    ZoneScopedN("BindGeometry");
+                    SkrZoneScopedN("BindGeometry");
                     cgpu_render_encoder_bind_index_buffer(pass_context.encoder, dc.index_buffer.buffer, dc.index_buffer.stride, dc.index_buffer.offset);
                     CGPUBufferId vertex_buffers[2] = {
                         dc.vertex_buffers[0].buffer, dc.vertex_buffers[1].buffer
@@ -132,11 +132,11 @@ struct MaskPassLive2D : public IPrimitiveRenderPass {
                     cgpu_render_encoder_bind_vertex_buffers(pass_context.encoder, 2, vertex_buffers, strides, offsets);
                 }
                 {
-                    ZoneScopedN("PushConstants");
+                    SkrZoneScopedN("PushConstants");
                     cgpu_render_encoder_push_constants(pass_context.encoder, dc.pipeline->root_signature, dc.push_const_name, dc.push_const);
                 }
                 {
-                    ZoneScopedN("DrawIndexed");
+                    SkrZoneScopedN("DrawIndexed");
                     cgpu_render_encoder_draw_indexed_instanced(pass_context.encoder, dc.index_buffer.index_count, dc.index_buffer.first_index, 1, 0, 0);
                 }
             }

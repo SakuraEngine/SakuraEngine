@@ -41,13 +41,13 @@ protected:
 
 TEST_CASE_METHOD(Task2, "SingleJob")
 {
-    ZoneScopedN("SingleJob");
+    SkrZoneScopedN("SingleJob");
     using namespace skr::task2;
     int a = 0;
     event_t event;
     schedule([&]()
     {
-        ZoneScopedN("Task");
+        SkrZoneScopedN("Task");
         a = 10;
         event.notify();
     });
@@ -57,14 +57,14 @@ TEST_CASE_METHOD(Task2, "SingleJob")
 
 TEST_CASE_METHOD(Task2, "MultipleJob")
 {
-    ZoneScopedN("MultipleJob");
+    SkrZoneScopedN("MultipleJob");
     using namespace skr::task2;
     int a = 0;
     int b = 0;
     event_t event;
     schedule([&]()
     {
-        ZoneScopedN("Task1");
+        SkrZoneScopedN("Task1");
         a = 10;
         event.notify();
     });
@@ -72,7 +72,7 @@ TEST_CASE_METHOD(Task2, "MultipleJob")
 
     schedule([&]()
     {
-        ZoneScopedN("Task2");
+        SkrZoneScopedN("Task2");
         b = 10;
         event2.notify();
     });
@@ -85,22 +85,22 @@ TEST_CASE_METHOD(Task2, "MultipleJob")
 
 TEST_CASE_METHOD(Task2, "JobWithDeps")
 {
-    ZoneScopedN("JobWithDeps");
+    SkrZoneScopedN("JobWithDeps");
     using namespace skr::task2;
     int a = 0;
     event_t event;
 
     schedule([&]()
     {
-        ZoneScopedN("Task1");
+        SkrZoneScopedN("Task1");
         a = 10;
         event.notify();
     });
     event_t event2;
     schedule([](int& a, event_t event, event_t event2) mutable -> skr_task_t
     {
-        TracyTask("Task2");
-        ZoneScopedN("Task2");
+        SkrProfileTask("Task2");
+        SkrZoneScopedN("Task2");
         co_await co_wait(event);
         a += 10;
         event2.notify();
@@ -111,28 +111,28 @@ TEST_CASE_METHOD(Task2, "JobWithDeps")
 
 TEST_CASE_METHOD(Task2, "NestedJob")
 {
-    ZoneScopedN("NestedJob");
+    SkrZoneScopedN("NestedJob");
     using namespace skr::task2;
     int a = 0;
     event_t event;
     schedule([](int& a, event_t event) -> skr_task_t
     {
-        TracyTask("Task1");
-        ZoneScopedN("Task1");
+        SkrProfileTask("Task1");
+        SkrZoneScopedN("Task1");
         {
-            ZoneScopedN("Task1-1");
+            SkrZoneScopedN("Task1-1");
             a = 10;
         }
         event_t event2;
         schedule([&]()
         {
-            ZoneScopedN("Task2");
+            SkrZoneScopedN("Task2");
             a += 10;
             event2.notify();
         });
         co_await co_wait(event2);
         {
-            ZoneScopedN("Task1-2");
+            SkrZoneScopedN("Task1-2");
             a += 10;
             event.notify();
         }
@@ -143,22 +143,22 @@ TEST_CASE_METHOD(Task2, "NestedJob")
 
 TEST_CASE_METHOD(Task2, "ParallelFor")
 {
-    ZoneScopedN("ParallelFor");
+    SkrZoneScopedN("ParallelFor");
     using namespace skr::task2;
     std::atomic<int> a = 0;
     event_t event;
     auto coro = [](std::atomic<int>& a, event_t event, const char* name) -> skr_task_t
     {
-        TracyTask(name);
+        SkrProfileTask(name);
         counter_t counter;
         counter.add(100);
         {
-            ZoneScopedN("ScheduleLoop");
+            SkrZoneScopedN("ScheduleLoop");
             for(int i=0; i<100; ++i)
             {
                 schedule([=, &a]() mutable
                 {
-                    ZoneScopedN("LoopBody");
+                    SkrZoneScopedN("LoopBody");
                     a += 10;
                     counter.decrease();
                 });
@@ -175,18 +175,18 @@ TEST_CASE_METHOD(Task2, "ParallelFor")
 
 TEST_CASE_METHOD(Task2, "ParallelForMassive")
 {
-    ZoneScopedN("ParallelForMassive");
+    SkrZoneScopedN("ParallelForMassive");
     using namespace skr::task2;
     std::atomic<int> a = 0;
     counter_t event;
     event.add(10);
     auto coro = [](std::atomic<int>& a, counter_t event, const char* name) -> skr_task_t
     {
-        TracyTask(name);
+        SkrProfileTask(name);
         counter_t counter;
         counter.add(1000);
         {
-            ZoneScopedN("ScheduleLoop");
+            SkrZoneScopedN("ScheduleLoop");
             for(int i=0; i<1000; ++i)
             {
                 schedule([=, &a]() mutable
@@ -211,19 +211,19 @@ TEST_CASE_METHOD(Task2, "ParallelForMassive")
 
 TEST_CASE_METHOD(Task2, "MassiveCoroutine")
 {
-    ZoneScopedN("MassiveCoroutine");
+    SkrZoneScopedN("MassiveCoroutine");
     using namespace skr::task2;
     std::atomic<int> a = 0;
     counter_t event;
     event.add(1000);
     auto coro = [](std::atomic<int>& a, counter_t event) -> skr_task_t
     {
-        //ZoneScopedN("Coroutine");
+        //SkrZoneScopedN("Coroutine");
         counter_t counter;
         SKR_ASSERT(counter);
         counter.add(100);
         {
-            ZoneScopedN("ScheduleLoop");
+            SkrZoneScopedN("ScheduleLoop");
             for(int i=0; i<100; ++i)
             {
                 schedule([=, &a]() mutable

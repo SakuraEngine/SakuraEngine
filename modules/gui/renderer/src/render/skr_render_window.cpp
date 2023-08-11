@@ -4,7 +4,7 @@
 #include "SkrGui/framework/layer/geometry_layer.hpp"
 #include "SkrGui/backend/canvas/canvas.hpp"
 #include "SkrRT/math/rtm/qvvf.h"
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 #include "SkrGui/backend/resource/resource.hpp"
 #include "SkrGuiRenderer/resource/skr_updatable_image.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
@@ -258,7 +258,7 @@ void SkrRenderWindow::_upload_draw_data()
     {
         auto upload_buffer_handle = rg->create_buffer(
         [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
-            ZoneScopedN("ConstructUploadPass");
+            SkrZoneScopedN("ConstructUploadPass");
             builder.set_name(u8"gui_upload_buffer")
             .size(indices_size + vertices_size + transform_size + projection_size + render_data_size)
             .with_tags(kRenderGraphDynamicResourceTag)
@@ -266,7 +266,7 @@ void SkrRenderWindow::_upload_draw_data()
         });
         rg->add_copy_pass(
         [=](render_graph::RenderGraph& g, render_graph::CopyPassBuilder& builder) {
-            ZoneScopedN("ConstructCopyPass");
+            SkrZoneScopedN("ConstructCopyPass");
             builder.set_name(u8"gui_copy_pass");
             uint64_t cursor = 0;
             builder.buffer_to_buffer(upload_buffer_handle.range(cursor, vertices_size), vertex_buffer.range(0, vertices_size));
@@ -311,11 +311,11 @@ void SkrRenderWindow::_declare_render_resources()
 {
     // acquire frame
     {
-        ZoneScopedN("WaitPresent");
+        SkrZoneScopedN("WaitPresent");
         cgpu_wait_fences(&_cgpu_fence, 1);
     }
     {
-        ZoneScopedN("AcquireFrame");
+        SkrZoneScopedN("AcquireFrame");
         auto acquire_desc  = make_zeroed<CGPUAcquireNextDescriptor>();
         acquire_desc.fence = _cgpu_fence;
         _backbuffer_index  = cgpu_acquire_next_image(_cgpu_swapchain, &acquire_desc);
@@ -374,7 +374,7 @@ void SkrRenderWindow::_render()
     // TODO. multi pass
     rg->add_render_pass(
     [&](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
-        ZoneScopedN("ConstructRenderPass");
+        SkrZoneScopedN("ConstructRenderPass");
         const auto back_desc = g.resolve_descriptor(target);
         builder.set_name(u8"gui_render_pass")
             .use_buffer(_vertex_buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER)
@@ -390,7 +390,7 @@ void SkrRenderWindow::_render()
             builder.resolve_msaa(0, real_target);
         } },
     [this, target](render_graph::RenderGraph& g, render_graph::RenderPassContext& ctx) {
-        ZoneScopedN("GUI-RenderPass");
+        SkrZoneScopedN("GUI-RenderPass");
         const auto     target_desc              = g.resolve_descriptor(target);
         auto           resolved_ib              = ctx.resolve(_index_buffer);
         auto           resolved_vb              = ctx.resolve(_vertex_buffer);

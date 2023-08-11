@@ -8,7 +8,7 @@
 #include "SkrRT/math/rtm/quatf.h"
 #include "SkrRT/math/rtm/rtmx.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 void MPGameWorld::Initialize()
 {
@@ -505,7 +505,7 @@ void MPGameWorld::RelevenceUpdate()
 
 void MPGameWorld::Tick(const MPInputFrame &inInput)
 {
-    ZoneScopedN("MP Tick");
+    SkrZoneScopedN("MP Tick");
     input = inInput;
     SpawnZombie();
     ClearDeadBall();

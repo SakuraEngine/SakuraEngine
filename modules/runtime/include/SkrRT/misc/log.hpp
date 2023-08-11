@@ -2,13 +2,13 @@
 #include "log.h"
 #include "log/logger.hpp"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 #ifdef __cplusplus
     template <typename...Args>
     void skr_log_log_cxx(int level, const char* file, const char* func, const char* line, const char8_t* fmt, Args&&... args)
     {
-        ZoneScopedN("LogCxx");
+        SkrZoneScopedN("LogCxx");
 
         const auto kLogLevel = skr::log::LogConstants::kLogLevelsLUT[level];
         if (kLogLevel < skr::log::LogConstants::gLogLevel) return;

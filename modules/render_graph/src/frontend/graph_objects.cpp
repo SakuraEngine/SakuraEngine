@@ -46,7 +46,7 @@ struct SKR_RENDER_GRAPH_API NodeAndEdgeFactoryImpl final : public NodeAndEdgeFac
             if (blocks.try_dequeue(block))
                 return block;
             {
-                ZoneScopedN("DualPoolAllocation");
+                SkrZoneScopedN("DualPoolAllocation");
                 return sakura_calloc(1, blockSize);
             }
         }
