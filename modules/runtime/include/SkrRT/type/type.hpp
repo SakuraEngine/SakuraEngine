@@ -17,8 +17,8 @@ namespace type
 struct STypeRegistry 
 {
     virtual const skr_type_t* get_type(skr_guid_t tid) = 0;
-    virtual RecordType* register_record(skr_guid_t tid) = 0;
-    virtual EnumType* register_enum(skr_guid_t tid) = 0;
+    virtual RecordType* register_record(skr_guid_t tid, void(*initializer)(RecordType*)) = 0;
+    virtual EnumType* register_enum(skr_guid_t tid, void(*initializer)(EnumType*)) = 0;
     virtual void invalidate_type(skr_guid_t tid) = 0;
     virtual bool is_outdated(const skr_type_t* type) = 0;
 };
@@ -322,6 +322,7 @@ struct SKR_RUNTIME_API HandleType : skr_type_t {
     {
     }
 };
+
 // skr::string
 struct SKR_RUNTIME_API StringType : skr_type_t {
     StringType()
@@ -329,6 +330,7 @@ struct SKR_RUNTIME_API StringType : skr_type_t {
     {
     }
 };
+
 // skr::string_view
 struct SKR_RUNTIME_API StringViewType : skr_type_t {
     StringViewType()
@@ -351,6 +353,7 @@ struct SKR_RUNTIME_API ArrayType : skr_type_t {
     {
     }
 };
+
 // Object
 struct ObjectMethodTable {
     void (*dtor)(void* self);
@@ -484,16 +487,7 @@ namespace skr
 {
 namespace type
 {
-// void*
-template <>
-struct type_of<void*> {
-    SKR_RUNTIME_API static const skr_type_t* get();
-};
-// SInterface*
-template<>
-struct type_of<SInterface> {
-    SKR_RUNTIME_API static const skr_type_t* get();
-};
+
 // const wrapper
 template <class T>
 struct type_of<const T> {
@@ -502,6 +496,7 @@ struct type_of<const T> {
         return type_of<T>::get();
     }
 };
+
 // volatile wrapper
 template <class T>
 struct type_of<volatile T> {
@@ -510,6 +505,7 @@ struct type_of<volatile T> {
         return type_of<T>::get();
     }
 };
+
 // ptr wrapper
 SKR_RUNTIME_API const skr_type_t* make_pointer_type(const skr_type_t* type);
 template <class T>

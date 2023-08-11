@@ -5,9 +5,9 @@ namespace skr::type
 {
 %for record in generator.filter_rtti(db.records):
     template<>
-    struct type_of<::${record.name}>
+    struct type_register<::${record.name}>
     {
-        ${api} static const skr_type_t* get();
+        ${api} static void instantiate_type(RecordType* type);
     };
 %if hasattr(record.attrs, "hashable"):
     uint64_t Hash(const ${record.name}& value, uint64_t base);
@@ -16,9 +16,9 @@ namespace skr::type
 
 %for enum in generator.filter_rtti(db.enums):
     template<>
-    struct type_of <::${enum.name}>
+    struct type_register<::${enum.name}>
     {
-        ${api} static const skr_type_t* get();
+        ${api} static void instantiate_type(EnumType* type);
     };
 %endfor
 }

@@ -9,34 +9,69 @@
 namespace skr {
 namespace type {
 
+struct EnumType;
+struct RecordType;
 struct ValueSerializePolicy;
 using Value = skr_value_t;
 using ValueRef = skr_value_ref_t;
 
-template <class T>
-struct type_id;
+SKR_RUNTIME_API skr_type_t* InitializeAndAddToRegistry(skr_guid_t tid, void(*)(RecordType*));
+SKR_RUNTIME_API skr_type_t* InitializeAndAddToRegistry(skr_guid_t tid, void(*)(EnumType*));
+
+// TODO: REMOVE THIS
+SKR_RUNTIME_API skr_type_t* InitializeAndAddToRegistry(skr_guid_t tid, void(*)());
 
 template <class T>
-struct type_of;
+struct type_register;
+
+template <class T>
+struct type_id
+{
+    inline static constexpr skr_type_t* get() {
+        return type_register<T>::get_id();
+    }
+};
+
+template <class T>
+struct type_of
+{
+    inline static const skr_type_t* get()
+    {
+        constexpr auto id = type_id<T>::get();
+        if (auto type = skr_get_type(&id))
+            return type;
+        else
+            return InitializeAndAddToRegistry(id, &type_register<T>::instantiate_type);
+    }
+};
 
 #define SKR_RTTI_INLINE_REGISTER_BASE_TYPE(name, s)             \
-    template <>                                      \
-    struct type_id<name> {                           \
-        inline static SKR_CONSTEXPR skr_guid_t get() \
-        {                                            \
-            using namespace skr::guid::literals;                                                                      \
-            return u8##s##_guid;                          \
-        }                                            \
-        inline static SKR_CONSTEXPR std::string_view str()\
-        {                                            \
-            return s;                                \
-        }                                            \
-    };                                               \
-    template <>                                      \
-    struct type_of<name> {                           \
-        SKR_RUNTIME_API static const skr_type_t* get();  \
-    };
+    template <>                                                 \
+    struct type_id<name> {                                      \
+        inline static SKR_CONSTEXPR skr_guid_t get()            \
+        {                                                       \
+            using namespace skr::guid::literals;                \
+            return u8##s##_guid;                                \
+        }                                                       \
+        inline static SKR_CONSTEXPR std::string_view str()      \
+        {                                                       \
+            return s;                                           \
+        }                                                       \
+    };                                                          \
+    template <>                                                 \
+    struct SKR_RUNTIME_API type_register<name> {                \
+        static void instantiate_type(RecordType* type);            \
+        inline static constexpr skr_guid_t get_id()             \
+        {                                                       \
+            using namespace skr::guid::literals;                \
+            return u8##s##_guid;                                \
+        }                                                       \
+    };                                                                                                                    
 
+// {873cc4ad-6a4c-4a7f-b59f-57089a3d6cba}
+SKR_RTTI_INLINE_REGISTER_BASE_TYPE(void*, "873cc4ad-6a4c-4a7f-b59f-57089a3d6cba");
+// {244617fe-5274-47bc-aa3d-acd76dbbeddd}
+SKR_RTTI_INLINE_REGISTER_BASE_TYPE(SInterface, "244617fe-5274-47bc-aa3d-acd76dbbeddd");
 // {d58efbca-9a6c-4f82-b04f-1c057aa924d5}
 SKR_RTTI_INLINE_REGISTER_BASE_TYPE(bool, "D58EFBCA-9A6C-4F82-B04F-1C057AA924D5");
 // {7307e684-fc42-4280-92c1-267e32abe57e}

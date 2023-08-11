@@ -56,7 +56,7 @@ struct STypeRegistryImpl final : public STypeRegistry {
         return nullptr;
     }
     
-    RecordType* register_record(skr_guid_t tid) final
+    RecordType* register_record(skr_guid_t tid, void(*initializer)(RecordType*)) final
     {
         auto iter = types.find(tid);
         auto iter2 = outdatedTypesMap.find(tid);
@@ -72,15 +72,16 @@ struct STypeRegistryImpl final : public STypeRegistry {
         }
         else 
         {
-            auto record = SkrNew<RecordType>();
-            record->guid = tid;
-            record->type = SKR_TYPE_CATEGORY_OBJ;
-            types.insert({ tid, record });
-            return record;
+            auto recordType = SkrNew<RecordType>();
+            recordType->guid = tid;
+            recordType->type = SKR_TYPE_CATEGORY_OBJ;
+            types.insert({ tid, recordType });
+            initializer(recordType);
+            return recordType;
         }
     }
 
-    EnumType* register_enum(skr_guid_t tid) final
+    EnumType* register_enum(skr_guid_t tid, void(*initializer)(EnumType*)) final
     {
         auto iter = types.find(tid);
         auto iter2 = outdatedTypesMap.find(tid);
@@ -100,6 +101,7 @@ struct STypeRegistryImpl final : public STypeRegistry {
             enumType->guid = tid;
             enumType->type = SKR_TYPE_CATEGORY_ENUM;
             types.insert({ tid, enumType });
+            initializer(enumType);
             return enumType;
         }
     }
@@ -127,6 +129,21 @@ SKR_RUNTIME_API STypeRegistry* GetTypeRegistry()
     static STypeRegistryImpl registry = {};
     return &registry;
 }
+
+SKR_RUNTIME_API skr_type_t* InitializeAndAddToRegistry(skr_guid_t tid, void(*initializer)(RecordType*))
+{
+    auto registry = GetTypeRegistry();
+    auto type = registry->register_record(tid, initializer);
+    return type;
+}
+
+SKR_RUNTIME_API skr_type_t* InitializeAndAddToRegistry(skr_guid_t tid, void(*initializer)(EnumType*))
+{
+    auto registry = GetTypeRegistry();
+    auto type = registry->register_enum(tid, initializer);
+    return type;
+}
+
 } // namespace skr::type
 
 skr_type_t::skr_type_t(skr_type_category_t type)
