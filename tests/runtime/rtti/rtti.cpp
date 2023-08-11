@@ -68,12 +68,12 @@ TEST_CASE_METHOD(RTTITests, "TestRecordType")
 {
     auto recordType = static_cast<const skr::type::RecordType*>(skr::type::type_of<Types::TestSon>::get());
     REQUIRE(recordType != nullptr);
-    EXPECT_EQ(recordType->guid, skr::type::type_id<Types::TestSon>::get());
-    EXPECT_EQ(recordType->base, skr::type::type_of<Types::TestParent>::get());
-    EXPECT_EQ(recordType->size, sizeof(Types::TestSon));
-    EXPECT_EQ(recordType->align, alignof(Types::TestSon));
-    EXPECT_EQ(recordType->fields.size(), 17);
-    for(auto&& field : recordType->fields)
+    EXPECT_EQ(recordType->GetGuid(), skr::type::type_id<Types::TestSon>::get());
+    EXPECT_EQ(recordType->GetBaseType(), skr::type::type_of<Types::TestParent>::get());
+    EXPECT_EQ(recordType->GetSize(), sizeof(Types::TestSon));
+    EXPECT_EQ(recordType->GetAlign(), alignof(Types::TestSon));
+    EXPECT_EQ(recordType->GetFields().size(), 17);
+    for(auto&& field : recordType->GetFields())
     {
         SKR_LOG_FMT_DEBUG(u8"field {}: {} -> offset {}, size {}, align {}", field.name, field.type->Name(), field.offset, field.type->Size(), field.type->Align());
     }

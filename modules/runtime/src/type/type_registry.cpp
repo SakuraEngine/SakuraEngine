@@ -73,8 +73,6 @@ struct STypeRegistryImpl final : public STypeRegistry {
         else 
         {
             auto recordType = SkrNew<RecordType>();
-            recordType->guid = tid;
-            recordType->type = SKR_TYPE_CATEGORY_OBJ;
             types.insert({ tid, recordType });
             initializer(recordType);
             return recordType;
@@ -195,7 +193,7 @@ uint64_t skr_type_t::Size() const
         case SKR_TYPE_CATEGORY_ARRV:
             return sizeof(skr::span<char8_t>);
         case SKR_TYPE_CATEGORY_OBJ:
-            return ((RecordType*)this)->size;
+            return ((RecordType*)this)->GetSize();
         case SKR_TYPE_CATEGORY_ENUM:
             return ((EnumType*)this)->underlyingType->Size();
         case SKR_TYPE_CATEGORY_REF: {
@@ -236,7 +234,7 @@ uint64_t skr_type_t::Align() const
         case SKR_TYPE_CATEGORY_ARRV:
             return alignof(skr::span<char8_t>);
         case SKR_TYPE_CATEGORY_OBJ:
-            return ((RecordType*)this)->align;
+            return ((RecordType*)this)->GetAlign();
         case SKR_TYPE_CATEGORY_ENUM:
             return ((EnumType*)this)->underlyingType->Align();
         case SKR_TYPE_CATEGORY_REF: {
@@ -270,7 +268,7 @@ skr_guid_t skr_type_t::Id() const
         SKR_TYPE_TRIVAL(TRIVAL_TYPE_IMPL)
 #undef TRIVAL_TYPE_IMPL
         case SKR_TYPE_CATEGORY_OBJ:
-            return ((RecordType*)this)->guid;
+            return ((RecordType*)this)->GetGuid();
         default:
             SKR_UNREACHABLE_CODE();
             break;
@@ -310,7 +308,7 @@ const char8_t* skr_type_t::Name() const
             return arr.name.u8_str();
         }
         case SKR_TYPE_CATEGORY_OBJ:
-            return ((RecordType*)this)->name.raw().data();
+            return ((RecordType*)this)->GetName().raw().data();
         case SKR_TYPE_CATEGORY_ENUM:
             return ((EnumType*)this)->name.raw().data();
         case SKR_TYPE_CATEGORY_REF: {
@@ -603,7 +601,7 @@ bool skr_type_t::Convertible(const skr_type_t* srcType, bool format) const
                     if (ptr.pointee->Same(sptr.pointee))
                         return true;
                     auto& sobj = (const RecordType&)(*sptr.pointee);
-                    if (!(!obs && ptr.object && sobj.object))
+                    if (!(!obs && ptr.object && sobj.IsObject()))
                         return false;
                     auto& obj = (const RecordType&)(*ptr.pointee);
                     if (obj.IsBaseOf(sobj))
@@ -1129,7 +1127,7 @@ void skr_type_t::Construct(void* dst, skr::type::Value* args, uint64_t nargs) co
         break;
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
-            obj.nativeMethods.ctor(dst, args, nargs);
+            obj.GetObjectMethods().ctor(dst, args, nargs);
         }
         break;
         case SKR_TYPE_CATEGORY_VARIANT: {
@@ -1196,8 +1194,8 @@ uint64_t skr_type_t::Hash(const void* dst, uint64_t base) const
         }
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
-            if (obj.nativeMethods.Hash)
-                return obj.nativeMethods.Hash(dst, base);
+            if (auto hash = obj.GetObjectMethods().Hash)
+                return hash(dst, base);
             else
                 return 0;
         }
@@ -1240,8 +1238,8 @@ void skr_type_t::Destruct(void* address) const
 #undef TRIVAL_TYPE_IMPL
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = ((const RecordType&)(*this));
-            if (obj.nativeMethods.dtor)
-                obj.nativeMethods.dtor(address);
+            if (auto dtor = obj.GetObjectMethods().dtor)
+                dtor(address);
             break;
         }
         case SKR_TYPE_CATEGORY_HANDLE: {
@@ -1351,7 +1349,7 @@ void skr_type_t::Copy(void* dst, const void* src) const
             break;
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
-            obj.nativeMethods.copy(dst, src);
+            obj.GetObjectMethods().copy(dst, src);
             break;
         }
         case SKR_TYPE_CATEGORY_ENUM: {
@@ -1429,7 +1427,7 @@ void skr_type_t::Move(void* dst, void* src) const
             break;
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
-            obj.nativeMethods.move(dst, src);
+            obj.GetObjectMethods().move(dst, src);
             break;
         }
         case SKR_TYPE_CATEGORY_ENUM: {
@@ -1575,7 +1573,7 @@ int skr_type_t::Serialize(const void* dst, skr_binary_writer_t* writer) const
         }
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
-            return obj.nativeMethods.Serialize(dst, writer);
+            return obj.GetObjectMethods().Serialize(dst, writer);
             break;
         }
         case SKR_TYPE_CATEGORY_ENUM: {
@@ -1660,7 +1658,7 @@ void skr_type_t::SerializeText(const void* dst, skr_json_writer_t* writer) const
         }
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
-            obj.nativeMethods.SerializeText(dst, writer);
+            obj.GetObjectMethods().SerializeText(dst, writer);
             break;
         }
         case SKR_TYPE_CATEGORY_ENUM: {
@@ -1749,7 +1747,7 @@ int skr_type_t::Deserialize(void* dst, skr_binary_reader_t* reader) const
         }
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
-            return obj.nativeMethods.Deserialize(dst, reader);
+            return obj.GetObjectMethods().Deserialize(dst, reader);
             break;
         }
         case SKR_TYPE_CATEGORY_ENUM: {
@@ -1870,7 +1868,7 @@ skr::json::error_code skr_type_t::DeserializeText(void* dst, skr::json::value_t&
             break;
         case SKR_TYPE_CATEGORY_OBJ: {
             auto& obj = (const RecordType&)(*this);
-            return obj.nativeMethods.DeserializeText(dst, std::move(reader));
+            return obj.GetObjectMethods().DeserializeText(dst, std::move(reader));
         }
         case SKR_TYPE_CATEGORY_ENUM: {
             auto& enm = (const EnumType&)(*this);
