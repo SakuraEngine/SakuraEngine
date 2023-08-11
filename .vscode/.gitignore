@@ -1,0 +1,13 @@
+# ignore all
+/*
+
+# self
+!.gitignore
+
+# vscode settings
+!extensions.json
+!launch.json
+!settings.json
+
+# workspaces
+!/workspaces

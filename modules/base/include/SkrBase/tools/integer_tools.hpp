@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/base/config.hpp"
+#include "SkrBase/config.h"
 #include <cstdint>
 #include <limits>
 #include <type_traits>

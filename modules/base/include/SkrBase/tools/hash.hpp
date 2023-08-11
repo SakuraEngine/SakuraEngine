@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrRT/base/config.hpp"
-#include "SkrRT/base/tools/is_detected.hpp"
+#include "SkrBase/config.h"
+#include "SkrBase/tools/is_detected.hpp"
 #include <type_traits>
 
 namespace skr

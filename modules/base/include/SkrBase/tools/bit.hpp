@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/base/config.hpp"
+#include "SkrBase/config.h"
 #include <cstdint>
 #include <limits>
 #include <type_traits>
@@ -72,7 +72,7 @@ template <typename T>
 SKR_INLINE T countr_zero_fallback(T v)
 {
     auto digits = std::numeric_limits<T>::digits;
-    return digits - countLZero(static_cast<T>(static_cast<T>(~v) & static_cast<T>(v - 1)));
+    return digits - countl_zero(static_cast<T>(static_cast<T>(~v) & static_cast<T>(v - 1)));
 }
 
 template <typename T>
