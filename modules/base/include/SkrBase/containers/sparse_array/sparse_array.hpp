@@ -8,6 +8,7 @@
 #include "SkrBase/containers/allocator/allocator.hpp"
 
 // SparseArray def
+// TODO. auto compact_top when remove items
 namespace skr
 {
 template <typename T, typename TBitBlock, typename Alloc>
@@ -773,7 +774,10 @@ template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::shrink()
 {
     auto new_capacity = _alloc.get_shrink(_sparse_size, _capacity);
-    _resize_memory(new_capacity);
+    if (new_capacity < _capacity)
+    {
+        _resize_memory(new_capacity);
+    }
 }
 template <typename T, typename TBitBlock, typename Alloc>
 SKR_INLINE bool SparseArray<T, TBitBlock, Alloc>::compact()
@@ -785,7 +789,7 @@ SKR_INLINE bool SparseArray<T, TBitBlock, Alloc>::compact()
         SizeType search_index    = _sparse_size;
         while (_freelist_head != npos)
         {
-            SizeType next_index = (_data + _freelist_head)->next;
+            SizeType next_index = _data[_freelist_head].next;
             if (_freelist_head < compacted_index)
             {
                 // find last allocated element
@@ -795,14 +799,14 @@ SKR_INLINE bool SparseArray<T, TBitBlock, Alloc>::compact()
                 } while (!has_data(search_index));
 
                 // move element to the hole
-                *(_data + _freelist_head) = std::move(*(_data + search_index));
-                (_data + search_index)->data.~T();
+                memory::move<T, T>(&_data[_freelist_head].data, &_data[search_index].data);
             }
             _freelist_head = next_index;
         }
 
         // setup bit array
         _set_bit_range(compacted_index, _num_hole, false);
+        _set_bit_range(0, compacted_index, true);
 
         // setup data
         _num_hole    = 0;

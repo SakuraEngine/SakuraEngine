@@ -197,16 +197,6 @@ TEST_CASE("test sparse array")
         TestSparseArray a({ 1, 1, 4, 5, 1, 4 });
         TestSparseArray b({ 114514, 114514, 1, 1, 4 });
         TestSparseArray c({ 1, 1, 4, 514, 514, 514 });
-        REQUIRE_EQ(a.size(), 6);
-        REQUIRE_EQ(a.sparse_size(), 6);
-        REQUIRE_EQ(a.hole_size(), 0);
-        REQUIRE_GE(a.capacity(), 6);
-        REQUIRE_EQ(a[0], 1);
-        REQUIRE_EQ(a[1], 1);
-        REQUIRE_EQ(a[2], 4);
-        REQUIRE_EQ(a[3], 5);
-        REQUIRE_EQ(a[4], 1);
-        REQUIRE_EQ(a[5], 4);
 
         b = a;
         REQUIRE_EQ(b.size(), 6);
@@ -415,6 +405,7 @@ TEST_CASE("test sparse array")
         REQUIRE_EQ(a.sparse_size(), 0);
         REQUIRE_EQ(a.hole_size(), 0);
         REQUIRE_EQ(a.capacity(), 0);
+        REQUIRE_EQ(a.data(), nullptr);
 
         a.release(5);
         REQUIRE_EQ(a.size(), 0);

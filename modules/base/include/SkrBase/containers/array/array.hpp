@@ -433,7 +433,10 @@ template <typename T, typename Alloc>
 SKR_INLINE void Array<T, Alloc>::shrink()
 {
     auto new_capacity = _alloc.get_shrink(_size, _capacity);
-    _resize_memory(new_capacity);
+    if (new_capacity < _capacity)
+    {
+        _resize_memory(new_capacity);
+    }
 }
 template <typename T, typename Alloc>
 SKR_INLINE void Array<T, Alloc>::resize(SizeType size, const T& new_value)
