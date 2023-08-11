@@ -22,10 +22,13 @@ struct SparseHashSetConfigDefault {
 } // namespace skr
 
 // SparseHashSet def
+// set 在 add/emplace 时候从不覆盖既存元素，主要是 key 是元素的某个 Field 的情况比较少见，出现这种情况时，覆盖行为也需要用户自己关注，不应该 by default
+// 除了 add 需要完整的元素方便添加操作外，其余的操作（find/remove/contain/count）均使用 key 进行操作以便在不构造完整元素的前提下进行查询
+// xxx_as 是异构查询的便利函数，用于一些构造开销巨大的对象（比如使用字面量查询 string），更复杂的异构查找需要使用 xxx_ex，异构查找需要保证 hash 的求值方式一致
+// add_unsafe 是一个非常底层的 add 操作，它不会做任何构造行为，如果没有既存的查询元素，它会在申请空间后直接返回，在这种情况下，需要用户自行进行初始化和 add to bucket
+// TODO. 对外暴露的 bucket 操作
 // TODO. bucket 与碰撞统计，以及更好的 bucket 分配策略
-// TODO. find/contain/add/emplace/remove as 的操作重新统一
-//      主要问题在于 emplace_as 无法给出一个明确的 as 值，as 操作本质上是一种糖，find 本质上只需要提供一个 hash 与 compare 即可
-//      那么是否可以将 API 重新细分为 -/as/ex 的组织，as 作为 ex 的形式存在，而考虑到使用频次，hashed 可以通过 ex 的形式代替，这样所有 API 最后都会归纳到 xxx_ex
+// TODO. xxxx_as 依旧需要，除了异构查询之外，还有使用某个特定成员作为 key 的情况，这时候，我们会需要使用便利的异构查找
 namespace skr
 {
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
@@ -184,7 +187,7 @@ private:
     void     _clean_bucket() const;              // remove all elements from bucket
     bool     _resize_bucket() const;             // resize hash bucket
     bool     _is_in_bucket(SizeType index) const;
-    void     _add_to_bucket(SizeType index);
+    void     _add_to_bucket(const DataType& data, SizeType index);
     void     _remove_from_bucket(SizeType index);
 
 private:
@@ -291,14 +294,13 @@ SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::_is_in_bucket(SizeTy
     }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::_add_to_bucket(SizeType index)
+SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::_add_to_bucket(const DataType& data, SizeType index)
 {
     SKR_ASSERT(has_data(index));
     SKR_ASSERT(!_bucket || !_is_in_bucket(index));
 
     if (!rehash_if_need())
     {
-        DataType& data             = _data[index];
         SizeType& index_ref        = _bucket[_bucket_index(data._sparse_hash_set_hash)];
         data._sparse_hash_set_next = index_ref;
         index_ref                  = index;
@@ -698,7 +700,6 @@ SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHa
     {
         constructor(add_result.data);
         SKR_ASSERT(_data[add_result.index]._sparse_hash_set_hash == hash_of(*add_result.data));
-        _add_to_bucket(add_result.index);
     }
 
     return add_result;
@@ -719,6 +720,7 @@ SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHa
         {
             auto data_arr_ref                   = _data.add_unsafe();
             data_arr_ref->_sparse_hash_set_hash = hash;
+            _add_to_bucket(*data_arr_ref, data_arr_ref.index);
             return { &data_arr_ref->_sparse_hash_set_data, data_arr_ref.index, false };
         }
     }
@@ -726,6 +728,7 @@ SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHa
     {
         auto data_arr_ref  = _data.add_unsafe();
         data_arr_ref->hash = hash;
+        _add_to_bucket(*data_arr_ref, data_arr_ref.index);
         return { &data_arr_ref->data, data_arr_ref.index, false };
     }
 }
@@ -754,7 +757,7 @@ SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHa
         }
     }
 
-    _add_to_bucket(data_arr_ref.index);
+    _add_to_bucket(*data_arr_ref, data_arr_ref.index);
 
     return { &data_arr_ref->data, data_arr_ref.index, false };
 }
@@ -769,7 +772,6 @@ SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHa
     {
         new (add_result.data) T(std::forward<Args>(args)...);
         SKR_ASSERT(_data[add_result.index].hash == hash_of(*add_result.data));
-        _add_to_bucket(add_result.index);
     }
 
     return add_result;
