@@ -124,7 +124,7 @@ namespace skr::type
         %else:
             static skr::span<skr_method_t> methods;
         %endif
-            new (type_of_${record.id}) RecordType(size, align, name, guid, skr::is_object_v<${record.name}>, base, nativeMethods, fields, methods);
+            type->initialize(size, align, name, guid, skr::is_object_v<${record.name}>, base, nativeMethods, fields, methods);
         }
     }
 }

@@ -385,6 +385,7 @@ struct DynArrayStorage
     uint8_t* end;
     uint8_t* capacity;
 };
+
 // skr::vector<T>
 struct DynArrayType : skr_type_t {
     const struct skr_type_t* elementType;
@@ -404,35 +405,50 @@ struct DynArrayType : skr_type_t {
 private:
     void Grow(void* data, uint64_t size) const;
 };
+
 // struct/class T
-struct SKR_RUNTIME_API RecordType : skr_type_t {
+struct SKR_RUNTIME_API RecordType : skr_type_t 
+{
+    RecordType() = default;
+    RecordType(RecordType&&) = default;
+    void initialize(uint64_t size, uint64_t align, skr::string_view name, skr_guid_t guid, 
+        bool object, const RecordType* base, ObjectMethodTable nativeMethods,
+        const skr::span<struct skr_field_t> fields, const skr::span<struct skr_method_t> methods)
+    {
+        this->type = SKR_TYPE_CATEGORY_OBJ;
+        this->size = size;
+        this->align = align;
+        this->guid = guid;
+        this->object = object;
+        this->name = name;
+        this->base = base;
+        this->nativeMethods = nativeMethods;
+        this->fields = fields;
+        this->methods = methods;
+    }
+    uint64_t GetSize() const { return size; }
+    uint64_t GetAlign() const { return align; }
+    skr_guid_t GetGuid() const { return guid; }
+    bool IsObject() const { return object; }
+    const ObjectMethodTable& GetObjectMethods() const { return nativeMethods; }
+    const skr::span<const skr_field_t> GetFields() const { return fields; }
+    const skr::string_view GetName() const { return name; }
+    const RecordType* GetBaseType() const { return base; }
+    bool IsBaseOf(const RecordType& other) const;
+
+private:
     uint64_t size = 0;
     uint64_t align = 0;
     skr_guid_t guid = {};
     bool object = false; // true if inherits from SInterface
-    const skr::string_view name = u8"";
+
+    skr::string_view name = u8"";
     const RecordType* base = nullptr;
+    skr::span<struct skr_field_t> fields = {};
+    skr::span<struct skr_method_t> methods = {};
     ObjectMethodTable nativeMethods = {};
-    const skr::span<struct skr_field_t> fields = {};
-    const skr::span<struct skr_method_t> methods = {};
-    bool IsBaseOf(const RecordType& other) const;
-    RecordType() = default;
-    RecordType(RecordType&&) = default;
-    RecordType(uint64_t size, uint64_t align, skr::string_view name, skr_guid_t guid, bool object, const RecordType* base, ObjectMethodTable nativeMethods,
-    const skr::span<struct skr_field_t> fields, const skr::span<struct skr_method_t> methods)
-        : skr_type_t{ SKR_TYPE_CATEGORY_OBJ }
-        , size(size)
-        , align(align)
-        , guid(guid)
-        , object(object)
-        , name(name)
-        , base(base)
-        , nativeMethods(nativeMethods)
-        , fields(fields)
-        , methods(methods)
-    {
-    }
 };
+
 // enum T
 struct SKR_RUNTIME_API EnumType : skr_type_t {
     const skr_type_t* underlyingType;
