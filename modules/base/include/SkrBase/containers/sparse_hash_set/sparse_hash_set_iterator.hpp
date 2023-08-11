@@ -30,12 +30,12 @@ struct SparseHashSetIt {
     SKR_INLINE bool operator!=(const SparseHashSetIt& rhs) const { return !(*this == rhs); }
     SKR_INLINE operator bool() const { return (bool)_bit_it; }
     SKR_INLINE bool       operator!() const { return !(bool)*this; }
-    SKR_INLINE ValueType& operator*() const { return _array[index()]._sparse_array_data.data; }
-    SKR_INLINE ValueType* operator->() const { return &_array[index()]._sparse_array_data.data; }
+    SKR_INLINE ValueType& operator*() const { return _array[index()]._sparse_array_data._sparse_hash_set_data; }
+    SKR_INLINE ValueType* operator->() const { return &_array[index()]._sparse_array_data._sparse_hash_set_data; }
 
     // other data
     SKR_INLINE TS index() const { return _bit_it.index(); }
-    SKR_INLINE TH hash() const { return _array[index()].data.hash; }
+    SKR_INLINE TH hash() const { return _array[index()]._sparse_array_data._sparse_hash_set_hash; }
 
 private:
     SparseDataType* _array;
