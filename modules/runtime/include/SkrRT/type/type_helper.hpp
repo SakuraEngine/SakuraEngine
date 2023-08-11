@@ -69,7 +69,7 @@ namespace skr
     }
 
     template<class T>
-    constexpr auto GetTextSerialize() -> void(*)(const void*, skr_json_writer_t* writer)
+    constexpr auto GetJsonSerialize() -> void(*)(const void*, skr_json_writer_t* writer)
     {
         if constexpr(is_complete_serde_v<skr::json::WriteTrait<const T&>>)
             return [](const void* address, skr_json_writer_t* archive) {
@@ -80,7 +80,7 @@ namespace skr
     }
 
     template<class T>
-    constexpr auto GetTextDeserialize() -> json::error_code(*)(void*, json::value_t&& reader)
+    constexpr auto GetJsonDeserialize() -> json::error_code(*)(void*, json::value_t&& reader)
     {
         if constexpr(is_complete_serde_v<skr::json::ReadTrait<T>>)
             return [](void* address, json::value_t&& archive) {

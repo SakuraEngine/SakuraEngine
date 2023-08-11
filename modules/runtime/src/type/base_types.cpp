@@ -1,4 +1,5 @@
 #include "SkrRT/misc/hash.h"
+#include "SkrRT/platform/guid.hpp"
 #include "SkrRT/resource/resource_handle.h"
 #include "SkrRT/type/type.hpp"
 

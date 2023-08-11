@@ -336,6 +336,7 @@ struct SKR_RUNTIME_API StringViewType : skr_type_t {
     {
     }
 };
+
 // T[]
 struct SKR_RUNTIME_API ArrayType : skr_type_t {
     const struct skr_type_t* elementType;
@@ -362,6 +363,7 @@ struct ObjectMethodTable {
     void (*SerializeText)(const void*, skr_json_writer_t* writer);
     json::error_code (*DeserializeText)(void* self, json::value_t&& reader);
 };
+
 // skr::span<T>
 struct SKR_RUNTIME_API ArrayViewType : skr_type_t {
     const struct skr_type_t* elementType;
@@ -373,6 +375,7 @@ struct SKR_RUNTIME_API ArrayViewType : skr_type_t {
     }
 };
 // vector storage
+// TODO: REMOVE THIS
 struct DynArrayStorage
 {
     uint8_t* begin;
