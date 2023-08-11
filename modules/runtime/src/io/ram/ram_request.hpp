@@ -1,6 +1,6 @@
 #pragma once
 #include "../common/io_request.hpp"
-#include "ram_buffer.hpp"
+#include "ram_buffer.hpp" // IWYU pragma: keep
 
 #include <EASTL/fixed_vector.h>
 #include <EASTL/variant.h>
@@ -31,7 +31,7 @@ struct RAMRequestMixin final : public IORequestMixin<IBlocksRAMRequest,
 
     RAMIOBufferId destination = nullptr;
 protected:
-    RAMRequestMixin(ISmartPoolPtr<IBlocksRAMRequest> pool, const uint64_t sequence) SKR_NOEXCEPT;
+    RAMRequestMixin(ISmartPoolPtr<IBlocksRAMRequest> pool, IIOService* service, const uint64_t sequence) SKR_NOEXCEPT;
     const uint64_t sequence = UINT64_MAX;
 };
 

@@ -1,3 +1,4 @@
+includes("profile/xmake.lua")
 includes("base/xmake.lua")
 includes("runtime/xmake.lua")
 includes("runtime_exporter/xmake.lua")

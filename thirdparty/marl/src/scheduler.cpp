@@ -241,7 +241,7 @@ Scheduler::Config Scheduler::Config::allCores() {
 Scheduler::Fiber::Fiber(Allocator::unique_ptr<OSFiber>&& impl, uint32_t id)
     : id(id), impl(std::move(impl)), worker(Worker::getCurrent()) {
   MARL_ASSERT(worker != nullptr, "No Scheduler::Worker bound");
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
   name = skr::format(u8"fiber", (uint64_t)this->impl.get());
 #endif
 }
@@ -267,14 +267,14 @@ void Scheduler::Fiber::switchTo(Fiber* to) {
               "Scheduler::Fiber::switchTo() must only be called on the "
               "currently executing fiber");
   if (to != this) {
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
     //Leave current fiber
-    if( id ) TracyFiberLeave;
+    if( id ) SkrFiberLeave;
 #endif
     impl->switchTo(to->impl.get());
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
     //We are back
-    if( to->id ) TracyFiberEnter(name.c_str());
+    if( to->id ) SkrFiberEnter(name.c_str());
 #endif
   }
 }
@@ -592,8 +592,8 @@ bool Scheduler::Worker::steal(Task& out) {
 
 void Scheduler::Worker::run() {
   //Enter worker fiber
-#ifdef TRACY_ENABLE
-  if( Fiber::current()->id ) TracyFiberEnter(Fiber::current()->name.c_str());
+#ifdef SKR_PROFILE_ENABLE
+  if( Fiber::current()->id ) SkrFiberEnter(Fiber::current()->name.c_str());
 #endif
   if (mode == Mode::MultiThreaded) {
     MARL_NAME_THREAD("Thread<%.2d> Fiber<%.2d>", int(id), Fiber::current()->id);

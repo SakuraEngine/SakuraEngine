@@ -155,11 +155,6 @@ CGPUDeviceId skr_render_device_get_cgpu_device(SRenderDeviceId device)
     return device->get_cgpu_device();
 }
 
-skr_io_vram_service_t* skr_render_device_get_vram_service(SRenderDeviceId device)
-{
-    return device->get_vram_service();
-}
-
 CGPUDStorageQueueId skr_render_device_get_file_dstorage_queue(SRenderDeviceId device)
 {
     return device->get_file_dstorage_queue();

@@ -8,12 +8,12 @@
 
 #include <EASTL/vector_map.h>
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 void RenderPassForward::on_update(const skr_primitive_pass_context_t* context) 
 {
     namespace rg = skr::render_graph;
-    ZoneScopedN("ForwardPass Update");
+    SkrZoneScopedN("ForwardPass Update");
 
     need_clear = true;
 
@@ -29,7 +29,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
     {
         uint64_t skinVerticesSize = 0; 
         {
-            ZoneScopedN("CalculateSkinMeshSize");
+            SkrZoneScopedN("CalculateSkinMeshSize");
 
             auto calcUploadBufferSize = [&](dual_chunk_view_t* r_cv) {
                 const auto anims = dual::get_component_ro<skr_render_anim_comp_t>(r_cv);
@@ -63,12 +63,12 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
                 .can_be_lone();
         },
         [this, upload_buffer_handle](rg::RenderGraph& g, rg::CopyPassContext& context) {
-            ZoneScopedN("CopySkinMesh");
+            SkrZoneScopedN("CopySkinMesh");
 
             auto uploadVertices = [&](dual_chunk_view_t* r_cv) {
                 const skr_render_anim_comp_t* anims = nullptr;
                 {
-                    ZoneScopedN("FetchAnims");
+                    SkrZoneScopedN("FetchAnims");
 
                     // duel to dependency, anims fetch here may block a bit, waiting CPU skinning job done
                     anims = dual::get_owned_ro<skr_render_anim_comp_t>(r_cv);
@@ -79,7 +79,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
 
                 // barrier from vb to copy dest
                 {
-                    ZoneScopedN("Barriers");
+                    SkrZoneScopedN("Barriers");
                     CGPUResourceBarrierDescriptor barrier_desc = {};
                     eastl::vector<CGPUBufferBarrier> barriers;
                     for (uint32_t i = 0; i < r_cv->count; i++)
@@ -104,7 +104,7 @@ void RenderPassForward::on_update(const skr_primitive_pass_context_t* context)
 
                 // upload
                 {
-                    ZoneScopedN("MemCopies");
+                    SkrZoneScopedN("MemCopies");
                     uint64_t cursor = 0;
                     for (uint32_t i = 0; i < r_cv->count; i++)
                     {
@@ -192,13 +192,13 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                 .can_be_lone();
         },
         [=](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassContext& context){
-            ZoneScopedN("BarrierSkinMeshes");
+            SkrZoneScopedN("BarrierSkinMeshes");
             CGPUResourceBarrierDescriptor barrier_desc = {};
             eastl::vector<CGPUBufferBarrier> barriers;
             auto barrierVertices = [&](dual_chunk_view_t* r_cv) {
                 const skr_render_anim_comp_t* anims = nullptr;
                 {
-                    ZoneScopedN("FetchAnims");
+                    SkrZoneScopedN("FetchAnims");
                     // duel to dependency, anims fetch here may block a bit, waiting CPU skinning job done
                     anims = dual::get_owned_ro<skr_render_anim_comp_t>(r_cv);
                 }
@@ -218,7 +218,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                     }
                 }
                 {
-                    ZoneScopedN("RecordBarrier");
+                    SkrZoneScopedN("RecordBarrier");
                     barrier_desc.buffer_barriers = barriers.data();
                     barrier_desc.buffer_barriers_count = (uint32_t)barriers.size();
                     cgpu_cmd_resource_barrier(context.cmd, &barrier_desc);
@@ -263,7 +263,7 @@ void RenderPassForward::execute(const skr_primitive_pass_context_t* context, skr
                 viewport->viewport_width, viewport->viewport_height);
             
             {
-            ZoneScopedN("DrawCalls");
+            SkrZoneScopedN("DrawCalls");
             CGPURenderPipelineId old_pipeline = nullptr;
             eastl::vector_map<CGPURootSignatureId, CGPUXBindTableId> bind_tables;
             for (uint32_t i = 0; i < drawcalls.size(); i++)

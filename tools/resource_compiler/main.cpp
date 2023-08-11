@@ -24,7 +24,7 @@
 #include "SkrToolCore/asset/importer.hpp"
 #include "SkrToolCore/assets/config_asset.hpp"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 bool IsAsset(skr::filesystem::path path)
 {
@@ -139,7 +139,7 @@ int compile_project(skd::SProject* project)
         using iter_t = typename decltype(paths)::iterator;
         skr::parallel_for(paths.begin(), paths.end(), 20,
         [&](iter_t begin, iter_t end) {
-            ZoneScopedN("Import");
+            SkrZoneScopedN("Import");
             for (auto i = begin; i != end; ++i)
                 system.ImportAsset(project, *i);
         });
@@ -151,7 +151,7 @@ int compile_project(skd::SProject* project)
     {
         system.ParallelForEachAsset(1,
         [&](skr::span<skd::asset::SAssetRecord*> assets) {
-            ZoneScopedN("Cook");
+            SkrZoneScopedN("Cook");
             for (auto asset : assets)
             {
                 system.EnsureCooked(asset->guid);
@@ -206,19 +206,19 @@ int main(int argc, char** argv)
     auto root = skr::filesystem::current_path(ec);
     {
         FrameMark;
-        ZoneScopedN("Initialize");
+        SkrZoneScopedN("Initialize");
         moduleManager->mount(root.u8string().c_str());
         moduleManager->make_module_graph(u8"SkrResourceCompiler", true);
         moduleManager->init_module_graph(argc, argv);
     }
     {
         FrameMark;
-        ZoneScopedN("CompileAll");
+        SkrZoneScopedN("CompileAll");
         compile_all(argc, argv);
     }
     {
         FrameMark;
-        ZoneScopedN("ThreadExit");
+        SkrZoneScopedN("ThreadExit");
         moduleManager->destroy_module_graph();
     }
     return 0;

@@ -29,4 +29,4 @@
 #include <EASTL/string.h> // IWYU pragma: export
 #include <EASTL/fixed_vector.h> // IWYU pragma: export
 
-#include "tracy/Tracy.hpp"  // IWYU pragma: export
+#include "SkrProfile/profile.h"  // IWYU pragma: export

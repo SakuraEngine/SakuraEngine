@@ -128,7 +128,6 @@ void SkrRenderDevice::init()
         auto ioServiceDesc       = make_zeroed<skr_vram_io_service_desc_t>();
         ioServiceDesc.name       = SKR_UTF8("GUI-VRAMService");
         ioServiceDesc.sleep_time = 1000 / 60;
-        ioServiceDesc.lockless   = true;
         _vram_service            = skr_io_vram_service_t::create(&ioServiceDesc);
     }
 }
@@ -343,7 +342,7 @@ CGPURenderPipelineId SkrRenderDevice::create_pipeline(ESkrPipelineFlag flags, EC
 
 //     graph->add_copy_pass(
 //     [&](render_graph::RenderGraph& g, render_graph::CopyPassBuilder& builder) {
-//         ZoneScopedN("UpdateTextures");
+//         SkrZoneScopedN("UpdateTextures");
 //         builder.set_name(u8"gdi_texture_update_pass")
 //         .can_be_lone();
 //         for (auto copy : copies)

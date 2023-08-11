@@ -39,7 +39,7 @@
 #include "SkrRT/serde/json/reader.h" // IWYU pragma: export
 #include "SkrRT/serde/json/writer.h" // IWYU pragma: export
 
-#include "tracy/Tracy.hpp" // IWYU pragma: export
+#include "SkrProfile/profile.h" // IWYU pragma: export
 
 /* TODO: MAYBE THIS IS AN XMAKE PCH BUG
 #include "cgltf/cgltf.h" // IWYU pragma: export

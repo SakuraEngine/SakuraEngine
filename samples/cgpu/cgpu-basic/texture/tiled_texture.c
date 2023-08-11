@@ -178,37 +178,37 @@ void update_streaming_map(CGPUCommandBufferId cmd, uint32_t MipLevel)
             }
         };
         {
-            TracyCZone(z, 1);
-            TracyCZoneName(z, "map", strlen("map"));
+            SkrCZone(z, 1);
+            SkrCZoneName(z, "map", strlen("map"));
             CGPUTiledTextureRegions mapping = {
                 .texture = sampled_texture,
                 .regions = coordinates,
                 .region_count = 1
             };
             cgpu_queue_map_tiled_texture(App.gfx_queue, &mapping);
-            TracyCZoneEnd(z);
+            SkrCZoneEnd(z);
         }
         {
-            TracyCZone(z, 1);
-            TracyCZoneName(z, "unmap", strlen("unmap"));
+            SkrCZone(z, 1);
+            SkrCZoneName(z, "unmap", strlen("unmap"));
             CGPUTiledTextureRegions unmapping = {
                 .texture = sampled_texture,
                 .regions = coordinates + 1,
                 .region_count = 1
             };
             cgpu_queue_unmap_tiled_texture(App.gfx_queue, &unmapping);
-            TracyCZoneEnd(z);
+            SkrCZoneEnd(z);
         }
         {
-            TracyCZone(z, 1);
-            TracyCZoneName(z, "map", strlen("map"));
+            SkrCZone(z, 1);
+            SkrCZoneName(z, "map", strlen("map"));
             CGPUTiledTextureRegions mapping1 = {
                 .texture = sampled_texture,
                 .regions = coordinates + 2,
                 .region_count = 1
             };
             cgpu_queue_map_tiled_texture(App.gfx_queue, &mapping1);
-            TracyCZoneEnd(z);
+            SkrCZoneEnd(z);
         }
     }
     mapped_mip = MipLevel;

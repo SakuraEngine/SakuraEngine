@@ -3,12 +3,12 @@
 #include "SkrRT/platform/time.h"
 #include "SkrRT/platform/thread.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 template<typename F>
 bool wait_timeout(F f, uint32_t seconds_timeout = 3)
 {
-    ZoneScopedN("WaitTimeOut");
+    SkrZoneScopedN("WaitTimeOut");
     uint64_t milliseconds = 0;
     const auto start = skr_sys_get_usec(true);
     auto current = start;

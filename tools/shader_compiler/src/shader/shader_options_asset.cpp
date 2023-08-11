@@ -6,7 +6,7 @@
 
 #include <EASTL/array.h>
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skd
 {

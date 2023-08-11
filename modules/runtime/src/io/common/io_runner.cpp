@@ -69,7 +69,7 @@ uint64_t RunnerBase::processing_count(SkrAsyncServicePriority priority) const SK
 
 void RunnerBase::phaseRecycle() SKR_NOEXCEPT
 {
-    ZoneScopedN("IORunner::Recycle");
+    SkrZoneScopedN("IORunner::Recycle");
     
     for (uint32_t i = 0; i < SKR_ASYNC_SERVICE_PRIORITY_COUNT; ++i)
     {
@@ -101,7 +101,7 @@ void RunnerBase::phaseProcessBatches() SKR_NOEXCEPT
     {
         const auto priority = (SkrAsyncServicePriority)k;
         {
-            ZoneScopedN("dispatch_batches");
+            SkrZoneScopedN("dispatch_batches");
             // poll batches across batches processor
             for (size_t j = 1; j < batch_processors.size(); j++)
             {
@@ -134,14 +134,14 @@ void RunnerBase::phaseProcessBatches() SKR_NOEXCEPT
 
         if (!request_processors.size())
         {
-            ZoneScopedN("phaseCompleteBatches");
+            SkrZoneScopedN("phaseCompleteBatches");
             phaseCompleteBatches(priority);
             continue;
         }
 
         // poll requests from last batches processor
         {
-            ZoneScopedN("split_batches");
+            SkrZoneScopedN("split_batches");
             BatchPtr batch = nullptr;
             auto& back_processor = batch_processors.back();
             while (back_processor->poll_processed_batch(priority, batch))
@@ -157,7 +157,7 @@ void RunnerBase::phaseProcessBatches() SKR_NOEXCEPT
 
         // poll requests across requests processor
         {
-            ZoneScopedN("dispatch_requests");
+            SkrZoneScopedN("dispatch_requests");
             for (size_t j = 1; j < request_processors.size(); j++)
             {
                 auto&& processor = request_processors[j];
@@ -173,7 +173,7 @@ void RunnerBase::phaseProcessBatches() SKR_NOEXCEPT
         }
 
         {
-            ZoneScopedN("phaseCompleteRequests");
+            SkrZoneScopedN("phaseCompleteRequests");
             phaseCompleteRequests(priority);
         }
     }
@@ -262,11 +262,11 @@ skr::AsyncResult RunnerBase::serve() SKR_NOEXCEPT
     
     {
         setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
-        ZoneScopedNC("IORunner::Dispatch", tracy::Color::Orchid1);
+        SkrZoneScopedNC("IORunner::Dispatch", tracy::Color::Orchid1);
         phaseProcessBatches();
     }
     {
-        ZoneScopedNC("IORunner::Recycle", tracy::Color::Tan1);
+        SkrZoneScopedNC("IORunner::Recycle", tracy::Color::Tan1);
         phaseRecycle();
     }
     return ASYNC_RESULT_OK;
@@ -277,7 +277,7 @@ void RunnerBase::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
     if (priority == SKR_ASYNC_SERVICE_PRIORITY_COUNT)
         return drain();
 
-    ZoneScopedN("IORunner::Drain");
+    SkrZoneScopedN("IORunner::Drain");
     auto predicate = [this, priority]() {
         uint64_t cnt = 0;
         for (auto processor : batch_processors)

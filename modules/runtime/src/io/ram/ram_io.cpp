@@ -37,10 +37,8 @@ void RAMIOBuffer::free_buffer() SKR_NOEXCEPT
     size = 0;
 }
 
-IOResultId RAMIOBatch::add_request(IORequestId request, skr_io_future_t* future) SKR_NOEXCEPT
+void RAMIOBatch::add_request(IORequestId request, RAMIOBufferId buffer, skr_io_future_t* future) SKR_NOEXCEPT
 {
-    auto srv = static_cast<RAMService*>(service);
-    auto buffer = srv->ram_buffer_pool->allocate();
     auto rq = skr::static_pointer_cast<RAMRequestMixin>(request);
     if (auto pStatus = io_component<IOStatusComponent>(request.get()))
     {
@@ -53,6 +51,13 @@ IOResultId RAMIOBatch::add_request(IORequestId request, skr_io_future_t* future)
         SKR_ASSERT(!pComp->blocks.empty());
     }
     addRequest(request);
+}
+
+IOResultId RAMIOBatch::add_request(IORequestId request, skr_io_future_t* future) SKR_NOEXCEPT
+{
+    auto srv = static_cast<RAMService*>(service);
+    auto buffer = srv->ram_buffer_pool->allocate();
+    add_request(request, buffer, future);
     return buffer;
 }
 

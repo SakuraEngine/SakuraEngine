@@ -4,7 +4,7 @@
 #include <EASTL/string.h> //sv::starts_with
 #include <EASTL/unique_ptr.h>
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 // helper
 namespace skd
@@ -422,7 +422,7 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
     createDefArgsFromOptions(switch_defs, switches, allArgs);
     createDefArgsFromOptions(option_defs, options, allArgs);
 
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
     eastl::wstring wArgsString;
     for (auto&& arg : allArgs)
     {
@@ -430,7 +430,7 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
     }
     eastl::string msg;
     for(char x : wArgsString) msg += x;
-    TracyMessage(msg.c_str(), msg.size());
+    SkrMessage(msg.c_str(), msg.size());
 #endif
 
     // do compile
@@ -534,7 +534,7 @@ void SDXCLibrary::UnloadLibraries() SKR_NOEXCEPT
 
 void SDXCLibrary::Initialize()
 {
-    ZoneScopedNS("SDXCLibrary::Initialize", 4);
+    SkrZoneScopedNS("SDXCLibrary::Initialize", 4);
 
     SDXCLibrary::LoadDXCLibrary();
     SDXCLibrary::LoadDXILLibrary();

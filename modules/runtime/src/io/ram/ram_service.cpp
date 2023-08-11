@@ -64,7 +64,7 @@ skr_io_ram_service_t* IRAMService::create(const skr_ram_io_service_desc_t* desc)
 
 void IRAMService::destroy(skr_io_ram_service_t* service) SKR_NOEXCEPT
 {
-    ZoneScopedN("RAMService::destroy");
+    SkrZoneScopedN("RAMService::destroy");
 
     auto S = static_cast<RAMService*>(service);
     S->runner.destroy();
@@ -80,7 +80,7 @@ IOBatchId RAMService::open_batch(uint64_t n) SKR_NOEXCEPT
 BlocksRAMRequestId RAMService::open_request() SKR_NOEXCEPT
 {
     uint64_t seq = (uint64_t)skr_atomicu64_add_relaxed(&request_sequence, 1);
-    return skr::static_pointer_cast<IBlocksRAMRequest>(request_pool->allocate(seq));
+    return skr::static_pointer_cast<IBlocksRAMRequest>(request_pool->allocate(this, seq));
 }
 
 void RAMService::request(IOBatchId batch) SKR_NOEXCEPT
@@ -120,7 +120,7 @@ void RAMService::drain(SkrAsyncServicePriority priority) SKR_NOEXCEPT
 {
     runner.drain(priority);    
     {
-        ZoneScopedN("RAMService::drain");
+        SkrZoneScopedN("RAMService::drain");
         auto predicate = [this, priority] {
             return !runner.processing_count(priority);
         };

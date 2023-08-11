@@ -37,7 +37,7 @@ void cgpu_create_shader_objs_vulkan_impl(CGPURootSignatureId signature,
             isaInfos[i].codeSize = descs[i].code_size;
         }
         CHECK_VKRESULT(D->mVkDeviceTable.vkCreateShadersEXT(D->pVkDevice, count, isaInfos, GLOBAL_VkAllocationCallbacks, outShaders));
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
         if (D->mVkDeviceTable.vkGetShaderBinaryDataEXT)
         {
             for (uint32_t i = 0; i < count; i++)
@@ -48,7 +48,7 @@ void cgpu_create_shader_objs_vulkan_impl(CGPURootSignatureId signature,
                 // D->mVkDeviceTable.vkGetShaderBinaryDataEXT(D->pVkDevice, outShaders[i], &size, ISA);
                 if ((res == VK_SUCCESS) && (size > 0))
                 {
-                    TracyCAllocN(outShaders[i], size, kVkShaderISAMemoryPoolName)
+                    SkrCAllocN(outShaders[i], size, kVkShaderISAMemoryPoolName)
                 }
             }
         }
@@ -110,12 +110,12 @@ void cgpu_free_compiled_shader_vulkan(CGPUCompiledShaderId shader)
     const CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)shader->device;
     if (S)
     {
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
         if (D->mVkDeviceTable.vkGetShaderBinaryDataEXT)
         {
             void* data; size_t size;
             D->mVkDeviceTable.vkGetShaderBinaryDataEXT(D->pVkDevice, S->pVkShader, &size, &data);
-            TracyCFreeN(data, kVkShaderISAMemoryPoolName)
+            SkrCFreeN(data, kVkShaderISAMemoryPoolName)
         }
 #endif
         if (D->mVkDeviceTable.vkDestroyShaderEXT)
@@ -134,12 +134,12 @@ void cgpu_free_linked_shader_vulkan(CGPULinkedShaderId shader)
     {
         for (uint32_t i = 0; i < CGPU_SHADER_STAGE_COUNT; i++)
         {
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
             if (D->mVkDeviceTable.vkGetShaderBinaryDataEXT)
             {
                 void* data; size_t size;
                 D->mVkDeviceTable.vkGetShaderBinaryDataEXT(D->pVkDevice, S->pVkShaders[i], &size, &data);
-                TracyCFreeN(data, kVkShaderISAMemoryPoolName)
+                SkrCFreeN(data, kVkShaderISAMemoryPoolName)
             }
 #endif
             if (D->mVkDeviceTable.vkDestroyShaderEXT)

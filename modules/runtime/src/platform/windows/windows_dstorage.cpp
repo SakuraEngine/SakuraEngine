@@ -1,5 +1,6 @@
 #include "cgpu/extensions/cgpu_d3d12_exts.h"
 #include "SkrRT/platform/win/misc.h"
+#include "SkrRT/platform/filesystem.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/misc/defer.hpp"
 #include "SkrRT/containers/vector.hpp"
@@ -337,13 +338,11 @@ void skr_free_dstorage_queue(SkrDStorageQueueId queue)
     SkrDelete(Q);
 }
 
-#include <filesystem>
-
-SkrDStorageFileHandle skr_dstorage_open_file(SkrDStorageInstanceId inst, const char* abs_path)
+SkrDStorageFileHandle skr_dstorage_open_file(SkrDStorageInstanceId inst, const char8_t* abs_path)
 {
     IDStorageFile* pFile = nullptr;
     auto I = (SkrWindowsDStorageInstance*)inst;
-    auto absPath = std::filesystem::path(abs_path);
+    auto absPath = skr::filesystem::path(abs_path);
     I->pFactory->OpenFile(absPath.c_str(), IID_PPV_ARGS(&pFile));
     return (SkrDStorageFileHandle)pFile;
 }
@@ -401,7 +400,7 @@ void skr_dstorage_queue_submit(SkrDStorageQueueId queue, SkrDStorageEventId even
 
 void skr_dstorage_enqueue_request(SkrDStorageQueueId queue, const SkrDStorageIODescriptor* desc)
 {
-    ZoneScopedN("EnqueueDStorage(Memory)");
+    SkrZoneScopedN("EnqueueDStorage(Memory)");
 
     DSTORAGE_REQUEST request = {};
     DStorageQueueWindows* Q = (DStorageQueueWindows*)queue;
@@ -479,22 +478,22 @@ void skr_dstorage_queue_trace_submit(SkrDStorageQueueId queue)
         auto tracer = (DStorageQueueWindows::ProfileTracer*)arg;
         auto Q = tracer->Q;
         const auto event_handle = tracer->fence_event;
-        TracyFiberEnter(tracer->name.c_str());
+        SkrFiberEnter(tracer->name.c_str());
         if (Q->source_type == DSTORAGE_REQUEST_SOURCE_FILE)
         {
-            ZoneScopedN("Working(File)");
+            SkrZoneScopedN("Working(File)");
             WaitForSingleObject(event_handle, INFINITE);
         }
         else if (Q->source_type == DSTORAGE_REQUEST_SOURCE_MEMORY)
         {
-            ZoneScopedN("Working(Memory)");
+            SkrZoneScopedN("Working(Memory)");
             WaitForSingleObject(event_handle, INFINITE);
         }
         else
         {
             WaitForSingleObject(event_handle, INFINITE);
         }
-        TracyFiberLeave;
+        SkrFiberLeave;
         CloseHandle(event_handle);
         skr_atomicu32_store_release(&tracer->finished, 1);
     };

@@ -3,7 +3,7 @@
 #include "common/render_application.h"
 #include "SkrRT/misc/make_zeroed.hpp"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 struct gui_render_graph_t 
 {
@@ -24,11 +24,11 @@ struct gui_render_graph_t
         namespace render_graph = skr::render_graph;
         // acquire frame
         {
-            ZoneScopedN("WaitPresent");
+            SkrZoneScopedN("WaitPresent");
             cgpu_wait_fences(&render_app.present_fence, 1);
         }
         {
-            ZoneScopedN("AcquireFrame");
+            SkrZoneScopedN("AcquireFrame");
             auto acquire_desc = make_zeroed<CGPUAcquireNextDescriptor>();
             acquire_desc.fence = render_app.present_fence;
             render_app.backbuffer_index = cgpu_acquire_next_image(render_app.swapchain, &acquire_desc);

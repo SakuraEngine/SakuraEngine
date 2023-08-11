@@ -1,8 +1,9 @@
 #pragma once
-#include "SkrGuiRenderer/module.configure.h"
-#include "cgpu/io.h"
-#include "SkrGui/backend/resource/resource.hpp"
 #include "cgpu/cgpux.h"
+#include "SkrRT/io/ram_io.hpp"
+#include "SkrRT/io/vram_io.hpp"
+#include "SkrGuiRenderer/module.configure.h"
+#include "SkrGui/backend/resource/resource.hpp"
 
 // format helper
 namespace skr::gui
@@ -126,7 +127,7 @@ private:
 
     // async
     skr_io_future_t                  _ram_request      = {};
-    skr_async_vtexture_destination_t _vram_destination = {};
+    skr::io::VRAMIOTextureId         _vram_destination = {};
     uint32_t                         _async_is_okey    = false;
 };
 

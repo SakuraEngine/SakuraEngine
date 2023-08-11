@@ -14,8 +14,6 @@ typedef struct skr_live2d_render_model_future_t {
     const char* model_name;
     skr_vfs_t* vfs_override;
     CGPUQueueId queue_override;
-    CGPUDStorageQueueId file_dstorage_queue_override;
-    CGPUDStorageQueueId memory_dstorage_queue_override;
     ECGPUDStorageSource dstorage_source;
     skr_live2d_render_model_id render_model;
     SAtomicU32 io_status;
@@ -35,7 +33,7 @@ typedef struct skr_live2d_render_model_comp_t skr_live2d_render_model_comp_t;
 
 #ifndef SKR_SERIALIZE_GURAD
 SKR_LIVE2D_EXTERN_C SKR_LIVE2D_API void 
-skr_live2d_render_model_create_from_raw(skr_io_ram_service_t*, skr_io_vram_service2_t*, CGPUDeviceId device,
+skr_live2d_render_model_create_from_raw(skr_io_ram_service_t*, skr_io_vram_service_t*, CGPUDeviceId device,
     skr_live2d_model_resource_id resource, skr_live2d_render_model_future_t* request);
 #endif
 
