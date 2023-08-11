@@ -75,12 +75,8 @@
     #define SKR_CXX_VER 17
 #elif defined(SKR_CXX_14)
     #define SKR_CXX_VER 14
-    #error unsupported cpp version, must be 17+
 #elif defined(SKR_CXX_11)
     #define SKR_CXX_VER 11
-    #error unsupported cpp version, must be 17+
-#else
-    #error unknown cpp version
 #endif
 
 // fall back
