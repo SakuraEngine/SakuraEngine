@@ -34,7 +34,7 @@
 
 #include "SkrRT/resource/resource_system.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 #include "SkrRT/math/rtm/quatf.h"
 #include "SkrRT/math/rtm/scalarf.h"
@@ -139,10 +139,10 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
     // 1. calculate primitive count
     uint32_t primitiveCount = 0;
     auto counterF = [&](dual_chunk_view_t* r_cv) {
-        ZoneScopedN("PreCalculateDrawCallCount");
+        SkrZoneScopedN("PreCalculateDrawCallCount");
         const skr_render_mesh_comp_t* meshes = nullptr;
         {
-            ZoneScopedN("FetchRenderMeshes");
+            SkrZoneScopedN("FetchRenderMeshes");
             meshes = dual::get_component_ro<skr_render_mesh_comp_t>(r_cv);
         }
         for (uint32_t i = 0; i < r_cv->count; i++)
@@ -180,17 +180,17 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
         const skr_render_mesh_comp_t* meshes = nullptr;
         const skr_render_anim_comp_t* anims = nullptr;
         {
-            ZoneScopedN("FetchRenderMeshes");
+            SkrZoneScopedN("FetchRenderMeshes");
             meshes = dual::get_component_ro<skr_render_mesh_comp_t>(r_cv);
         }
         {
-            ZoneScopedN("FetchAnimComps");
+            SkrZoneScopedN("FetchAnimComps");
             anims = dual::get_component_ro<skr_render_anim_comp_t>(r_cv);
         }
         if (!unbatched_g_ents) return;
 
         auto gBatchCallback = [&](dual_chunk_view_t* g_cv) {
-            ZoneScopedN("BatchedEnts");
+            SkrZoneScopedN("BatchedEnts");
 
             //SKR_LOG_DEBUG(u8"batch: %d -> %d", g_cv->start, g_cv->count);
             const auto l2ws = dual::get_component_ro<skr_transform_comp_t>(g_cv);
@@ -199,7 +199,7 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
             const auto scales = dual::get_component_ro<skr_scale_comp_t>(g_cv);
             // 3.1 calculate model matrices
             {
-                ZoneScopedN("ComputeModelMatrices");
+                SkrZoneScopedN("ComputeModelMatrices");
 #ifdef NDEBUG
                 const size_t batch_size = 256u;
 #else
@@ -207,7 +207,7 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
 #endif
                 skr::parallel_for(translations, translations + g_cv->count, batch_size, 
                 [translations, rotations, scales, l2ws, this] (auto&& begin, auto&& end){
-                    ZoneScopedN("ModelMatrixJob");
+                    SkrZoneScopedN("ModelMatrixJob");
                 
                     const auto base_cursor = begin - translations;
                     uint32_t i = 0;
@@ -237,7 +237,7 @@ skr_primitive_draw_packet_t RenderEffectForward::produce_draw_packets(const skr_
             }
             // 3.2 fill draw calls
             {
-            ZoneScopedN("RecordDrawList");
+            SkrZoneScopedN("RecordDrawList");
             for (uint32_t g_idx = 0; g_idx < g_cv->count; g_idx++, r_idx++)
             {
                 const auto& model_matrix = model_matrices[g_idx];

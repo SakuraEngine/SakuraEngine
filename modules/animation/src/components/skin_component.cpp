@@ -8,7 +8,7 @@
 #include "SkrAnim/ozz/base/span.h"
 #include "SkrRT/containers/sptr.hpp"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 skr_render_anim_comp_t::~skr_render_anim_comp_t()
 {
@@ -117,7 +117,7 @@ void skr_init_anim_buffers(CGPUDeviceId device, skr_render_anim_comp_t* anim, co
         const bool use_dynamic_buffer = anim->use_dynamic_buffer;
         if (!anim->vbs[j])
         {
-            ZoneScopedN("CreateVB");
+            SkrZoneScopedN("CreateVB");
 
             auto vb_desc = make_zeroed<CGPUBufferDescriptor>();
             vb_desc.name = (const char8_t*)mesh_resource->name.c_str(); // TODO: buffer name
@@ -168,7 +168,7 @@ void skr_init_anim_buffers(CGPUDeviceId device, skr_render_anim_comp_t* anim, co
         const auto vertex_size = anim->buffers[j]->get_size();
         if (use_dynamic_buffer)
         {                        
-            ZoneScopedN("CVVUpdateVB");
+            SkrZoneScopedN("CVVUpdateVB");
 
             void* vtx_dst = anim->vbs[j]->info->cpu_mapped_address;
             memcpy(vtx_dst, anim->buffers[j]->get_data(), vertex_size);

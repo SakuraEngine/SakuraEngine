@@ -4,7 +4,7 @@
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 #include "SkrRT/platform/memory.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 #include <SkrRT/containers/string.hpp>
 #include <SkrRT/containers/hashmap.hpp>
@@ -287,7 +287,7 @@ uint32_t RenderGraph::foreach_reader_passes(BufferHandle buffer,
 
 const ECGPUResourceState RenderGraph::get_lastest_state(const TextureNode* texture, const PassNode* pending_pass) const SKR_NOEXCEPT
 {
-    ZoneScopedN("CaclulateLatestState-Texture");
+    SkrZoneScopedN("CaclulateLatestState-Texture");
 
     if (passes[0] == pending_pass)
         return texture->init_state;
@@ -331,7 +331,7 @@ const ECGPUResourceState RenderGraph::get_lastest_state(const TextureNode* textu
 
 const ECGPUResourceState RenderGraph::get_lastest_state(const BufferNode* buffer, const PassNode* pending_pass) const SKR_NOEXCEPT
 {
-    ZoneScopedN("CaclulateLatestState-Buffer");
+    SkrZoneScopedN("CaclulateLatestState-Buffer");
 
     if (passes[0] == pending_pass)
         return buffer->init_state;

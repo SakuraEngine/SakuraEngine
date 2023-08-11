@@ -28,10 +28,10 @@
 #include <string>
 #include <memory>
 
-#include "tracy/TracyC.h"
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
+#include "SkrProfile/profile.h"
 
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
     #define FTL_TASK_NAME(...) __VA_ARGS__
 #else
     #define FTL_TASK_NAME(...)

@@ -5,7 +5,7 @@
 #include "cgpu/api.h"
 
 #include <EASTL/string.h>
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skd
 {

@@ -7,7 +7,7 @@
 #include <stdarg.h> // va_start
 #include <stdio.h> // ::atexit
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skr {
 namespace log {
@@ -138,7 +138,7 @@ void skr_log_set_flush_behavior(int behavior)
 SKR_EXTERN_C 
 void skr_log_log(int level, const char* file, const char* func, const char* line, const char8_t* fmt, ...)
 {
-    ZoneScopedN("Log");
+    SkrZoneScopedN("Log");
     
     const auto kLogLevel = skr::log::LogConstants::kLogLevelsLUT[level];
     if (kLogLevel < skr::log::LogConstants::gLogLevel) return;

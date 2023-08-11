@@ -9,7 +9,7 @@
 #include "SkrGLTFTool/mesh_processing.hpp"
 #include "MeshOpt/meshoptimizer.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 void* skd::asset::SGltfMeshImporter::Import(skr_io_ram_service_t* ioService, SCookContext* context) 
 {
@@ -68,7 +68,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
 
     //----- optimize mesh
     {
-    ZoneScopedN("WaitOptimizeMesh");
+    SkrZoneScopedN("WaitOptimizeMesh");
 
     // allow up to 1% worse ACMR to get more reordering opportunities for overdraw
 	const float kOverDrawThreshold = 1.01f; 
@@ -76,7 +76,7 @@ bool skd::asset::SMeshCooker::Cook(SCookContext* ctx)
     skr::parallel_for(mesh.primitives.begin(), mesh.primitives.end(), 1, 
     [&](auto begin, auto end)
     {
-        ZoneScopedN("OptimizeMesh");
+        SkrZoneScopedN("OptimizeMesh");
 
         const auto& prim = *begin;
         auto& indices_blob = blobs[prim.index_buffer.buffer_index];

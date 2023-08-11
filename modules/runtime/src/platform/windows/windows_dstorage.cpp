@@ -400,7 +400,7 @@ void skr_dstorage_queue_submit(SkrDStorageQueueId queue, SkrDStorageEventId even
 
 void skr_dstorage_enqueue_request(SkrDStorageQueueId queue, const SkrDStorageIODescriptor* desc)
 {
-    ZoneScopedN("EnqueueDStorage(Memory)");
+    SkrZoneScopedN("EnqueueDStorage(Memory)");
 
     DSTORAGE_REQUEST request = {};
     DStorageQueueWindows* Q = (DStorageQueueWindows*)queue;
@@ -478,22 +478,22 @@ void skr_dstorage_queue_trace_submit(SkrDStorageQueueId queue)
         auto tracer = (DStorageQueueWindows::ProfileTracer*)arg;
         auto Q = tracer->Q;
         const auto event_handle = tracer->fence_event;
-        TracyFiberEnter(tracer->name.c_str());
+        SkrFiberEnter(tracer->name.c_str());
         if (Q->source_type == DSTORAGE_REQUEST_SOURCE_FILE)
         {
-            ZoneScopedN("Working(File)");
+            SkrZoneScopedN("Working(File)");
             WaitForSingleObject(event_handle, INFINITE);
         }
         else if (Q->source_type == DSTORAGE_REQUEST_SOURCE_MEMORY)
         {
-            ZoneScopedN("Working(Memory)");
+            SkrZoneScopedN("Working(Memory)");
             WaitForSingleObject(event_handle, INFINITE);
         }
         else
         {
             WaitForSingleObject(event_handle, INFINITE);
         }
-        TracyFiberLeave;
+        SkrFiberLeave;
         CloseHandle(event_handle);
         skr_atomicu32_store_release(&tracer->finished, 1);
     };

@@ -2,7 +2,7 @@
 #include "SkrRT/platform/memory.h"
 #include "SkrRenderGraph/rg_config.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skr
 {
@@ -17,8 +17,8 @@ struct SKR_RENDER_GRAPH_API NodeAndEdgeFactory
     template<typename T, typename... Args>
     T* Allocate(Args&&... args) SKR_NOEXCEPT
     {
-#ifdef TRACY_ENABLE
-        ZoneScopedN("RennderGraph::AllocateObject");
+#ifdef SKR_PROFILE_ENABLE
+        SkrZoneScopedN("RennderGraph::AllocateObject");
 #endif
         if (auto allocated = InternalAlloc<T>())
         {

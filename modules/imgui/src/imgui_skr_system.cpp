@@ -17,7 +17,7 @@
 #include <windows.h>
 #endif
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skr::imgui
 {
@@ -64,7 +64,7 @@ static void imgui_update_mouse_and_buttons(SWindowHandle window)
         {
             // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
             {
-                ZoneScopedN("UpdateMouseButton");
+                SkrZoneScopedN("UpdateMouseButton");
                 io.MouseDown[0] = mouse_state.buttons & EMouseKey::MOUSE_KEY_LB;
                 io.MouseDown[1] = mouse_state.buttons & EMouseKey::MOUSE_KEY_RB;
                 io.MouseDown[2] = mouse_state.buttons & EMouseKey::MOUSE_KEY_MB;
@@ -74,7 +74,7 @@ static void imgui_update_mouse_and_buttons(SWindowHandle window)
     }
     else // fallback
     {
-        ZoneScopedN("UpdateMouseButton-Fallback");
+        SkrZoneScopedN("UpdateMouseButton-Fallback");
         // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
         io.MouseDown[0] = skr_mouse_key_down(EMouseKey::MOUSE_KEY_LB);
         io.MouseDown[1] = skr_mouse_key_down(EMouseKey::MOUSE_KEY_RB);
@@ -84,7 +84,7 @@ static void imgui_update_mouse_and_buttons(SWindowHandle window)
     // Update viewport events
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {
-        ZoneScopedN("UpdateMouseEvents-1");
+        SkrZoneScopedN("UpdateMouseEvents-1");
         // Multi-viewport mode: mouse position in OS absolute coordinates (io.MousePos is (0,0) when the mouse is on the upper-left of the primary monitor)
         // This is the position you can get with GetCursorPos(). In theory adding viewport->Pos is also the reverse operation of doing ScreenToClient().
         if (ImGui::FindViewportByPlatformHandle(window) != NULL)
@@ -100,7 +100,7 @@ static void imgui_update_mouse_and_buttons(SWindowHandle window)
     }
     else
     {
-        ZoneScopedN("UpdateMouseEvents-2");
+        SkrZoneScopedN("UpdateMouseEvents-2");
         // Single viewport mode: mouse position in client window coordinates (io.MousePos is (0,0) when the mouse is on the upper-left corner of the app window.)
         // This is the position you can get with GetCursorPos() + ScreenToClient() or from WM_MOUSEMOVE.
         if (skr_get_mouse_focused_window() == window)
@@ -114,7 +114,7 @@ static void imgui_update_mouse_and_buttons(SWindowHandle window)
 #ifdef _WIN32
     if (io.BackendFlags & ImGuiBackendFlags_HasMouseHoveredViewport)
     {
-        ZoneScopedN("UpdateViewportEvents");
+        SkrZoneScopedN("UpdateViewportEvents");
 
         ImGuiID mouse_viewport_id = 0;
         POINT mouse_screen_pos;
@@ -245,7 +245,7 @@ void skr_imgui_new_frame(SWindowHandle window, float delta_time)
 
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {
-        ZoneScopedN("UpdateMonitors");
+        SkrZoneScopedN("UpdateMonitors");
 
         // Register platform interface (will be coupled with a renderer interface)
         ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
@@ -294,7 +294,7 @@ void skr_imgui_new_frame(SWindowHandle window, float delta_time)
     // ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
     // for (int i = 0; i < platform_io.Viewports.Size; i++)
     {
-        ZoneScopedN("UpdateInput");
+        SkrZoneScopedN("UpdateInput");
 
         imgui_update_mouse_and_buttons(window);
     }

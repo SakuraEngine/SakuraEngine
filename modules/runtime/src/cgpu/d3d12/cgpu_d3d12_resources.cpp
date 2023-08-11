@@ -11,7 +11,7 @@
 
 #include <EASTL/string.h>
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 // Inline Utils
 D3D12_RESOURCE_DESC D3D12Util_CreateBufferDesc(CGPUAdapter_D3D12* A, CGPUDevice_D3D12* D, const struct CGPUBufferDescriptor* desc);
@@ -147,13 +147,13 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
         else
         {
             {
-                ZoneScopedN("Allocation(Buffer)");
+                SkrZoneScopedN("Allocation(Buffer)");
                 CHECK_HRESULT(D->pResourceAllocator->CreateResource(&alloc_desc, &bufDesc, InitialState, 
                     NULL, &B->pDxAllocation, IID_ARGS(&B->pDxResource)));
             }            
             if (log_allocation)
             {
-                ZoneScopedN("Log(Allocation)");
+                SkrZoneScopedN("Log(Allocation)");
                 SKR_LOG_TRACE(u8"[D3D12] Create Buffer Resource Succeed! \n\t With Name: %s\n\t Size: %lld \n\t Format: %d", 
                     desc->name ? desc->name : u8"", allocationSize, desc->format);
             }
@@ -163,7 +163,7 @@ CGPUBufferId cgpu_create_buffer_d3d12(CGPUDeviceId device, const struct CGPUBuff
     // MemMaps
     if (desc->flags & CGPU_BCF_PERSISTENT_MAP_BIT)
     {
-        ZoneScopedN("Map(Buffer)");
+        SkrZoneScopedN("Map(Buffer)");
 
         auto mapResult = B->pDxResource->Map(0, NULL, &pInfo->cpu_mapped_address);
         if (!SUCCEEDED(mapResult))

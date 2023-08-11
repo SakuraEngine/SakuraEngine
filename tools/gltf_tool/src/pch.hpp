@@ -24,4 +24,4 @@
 #include "SkrRT/serde/json/writer.h" // IWYU pragma: export
 #include "SkrRT/serde/binary/writer.h" // IWYU pragma: export
 
-#include "tracy/Tracy.hpp" // IWYU pragma: export
+#include "SkrProfile/profile.h" // IWYU pragma: export

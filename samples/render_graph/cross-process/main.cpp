@@ -4,7 +4,7 @@
 #include <SkrRT/platform/filesystem.hpp>
 #include <SkrRT/containers/string.hpp>
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 static const char8_t* exec_name;
 

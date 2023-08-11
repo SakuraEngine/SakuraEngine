@@ -2,7 +2,7 @@
 #include "SkrRT/misc/log/log_sink.hpp"
 
 #include <stdio.h> // FILE
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 #ifdef _WIN32
 #define USE_WIN32_CONSOLE
@@ -253,7 +253,7 @@ void LogConsoleSink::set_style(LogLevel level, EConsoleStyle style) SKR_NOEXCEPT
 
 void LogConsoleSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
 {
-    ZoneScopedN("ANSI::Print");
+    SkrZoneScopedN("ANSI::Print");
 
     // set color
     const auto L = static_cast<uint32_t>(event.get_level());
@@ -266,14 +266,14 @@ void LogConsoleSink::sink(const LogEvent& event, skr::string_view content) SKR_N
 
 void LogConsoleSink::flush() SKR_NOEXCEPT
 {
-    ZoneScopedN("ANSI::Flush");
+    SkrZoneScopedN("ANSI::Flush");
 
     ::fflush(stdout);
 }
 
 void LogConsoleWindowSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
 {
-    ZoneScopedN("Console::Write");
+    SkrZoneScopedN("Console::Write");
 
 #ifdef USE_WIN32_CONSOLE
     const auto StdHandle = ::GetStdHandle(STD_OUTPUT_HANDLE);
@@ -301,7 +301,7 @@ void LogConsoleWindowSink::sink(const LogEvent& event, skr::string_view content)
 
 void LogConsoleWindowSink::flush() SKR_NOEXCEPT
 {
-    ZoneScopedN("Console::Flush");
+    SkrZoneScopedN("Console::Flush");
 
 #ifdef USE_WIN32_CONSOLE
     const auto StdHandle = ::GetStdHandle(STD_OUTPUT_HANDLE);
@@ -313,7 +313,7 @@ void LogConsoleWindowSink::flush() SKR_NOEXCEPT
 
 void LogDebugOutputSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
 {
-    ZoneScopedN("DebugOutput::Print");
+    SkrZoneScopedN("DebugOutput::Print");
 
     // set color
     const auto L = static_cast<uint32_t>(event.get_level());
@@ -331,7 +331,7 @@ void LogDebugOutputSink::sink(const LogEvent& event, skr::string_view content) S
 
 void LogDebugOutputSink::flush() SKR_NOEXCEPT
 {
-    ZoneScopedN("DebugOutput::Flush");
+    SkrZoneScopedN("DebugOutput::Flush");
 
 #ifdef USE_WIN32_CONSOLE
     const auto StdHandle = ::GetStdHandle(STD_OUTPUT_HANDLE);
@@ -348,13 +348,13 @@ struct CFILE
 
     void write(const skr::string_view content)
     {
-        ZoneScopedN("CFILE::write");
+        SkrZoneScopedN("CFILE::write");
         fwrite(content.raw().data(), sizeof(char8_t), content.size(), fp);
     }
 
     void flush() SKR_NOEXCEPT 
     { 
-        ZoneScopedN("CFILE::flush");
+        SkrZoneScopedN("CFILE::flush");
         fflush(fp); 
     }
 private:
@@ -388,14 +388,14 @@ LogFileSink::~LogFileSink() SKR_NOEXCEPT
 
 void LogFileSink::sink(const LogEvent& event, skr::string_view content) SKR_NOEXCEPT
 {
-    ZoneScopedN("FileSink::Print");
+    SkrZoneScopedN("FileSink::Print");
 
     file_->write(content);
 }
 
 void LogFileSink::flush() SKR_NOEXCEPT
 {
-    ZoneScopedN("FileSink::Flush");
+    SkrZoneScopedN("FileSink::Flush");
 
     file_->flush();
 }

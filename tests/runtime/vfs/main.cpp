@@ -11,7 +11,7 @@
 
 #include <string>
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 #include "SkrTestFramework/framework.hpp"
 
@@ -68,7 +68,7 @@ TEST_CASE_METHOD(VFSTest, "VFSTest")
 {
 SUBCASE("mount")
 {
-    ZoneScopedN("mount");
+    SkrZoneScopedN("mount");
 
     skr_vfs_desc_t fs_desc = {};
     fs_desc.app_name = u8"fs-test";
@@ -82,7 +82,7 @@ SUBCASE("mount")
 
 SUBCASE("readwrite")
 {
-    ZoneScopedN("readwrite");
+    SkrZoneScopedN("readwrite");
 
     auto f = skr_vfs_fopen(abs_fs, u8"testfile", SKR_FM_READ_WRITE, SKR_FILE_CREATION_ALWAYS_NEW);
     const char8_t* string = u8"Hello, World!";
@@ -97,7 +97,7 @@ SUBCASE("readwrite")
 
 SUBCASE("readwrite2")
 {
-    ZoneScopedN("readwrite2");
+    SkrZoneScopedN("readwrite2");
 
     auto f = skr_vfs_fopen(abs_fs, u8"testfile2", SKR_FM_READ_WRITE, SKR_FILE_CREATION_ALWAYS_NEW);
     const char8_t* string = u8"Hello, World2!";
@@ -112,7 +112,7 @@ SUBCASE("readwrite2")
 
 SUBCASE("seqread")
 {
-    ZoneScopedN("seqread");
+    SkrZoneScopedN("seqread");
     
     auto f = skr_vfs_fopen(abs_fs, u8"testfile2", SKR_FM_READ_WRITE, SKR_FILE_CREATION_OPEN_EXISTING);
     const char8_t* string = u8"Hello, World2!";
@@ -133,7 +133,7 @@ for (uint32_t i = 0; i < 1; i++)
     const auto dstorage = (i == 0);
     SUBCASE("asyncread")
     {
-        ZoneScopedN("asyncread");
+        SkrZoneScopedN("asyncread");
         
         SKR_TEST_INFO(u8"dstorage enabled: {}", dstorage);
         
@@ -170,7 +170,7 @@ for (uint32_t i = 0; i < 1; i++)
 
     SUBCASE("asyncread2")
     {
-        ZoneScopedN("asyncread2");
+        SkrZoneScopedN("asyncread2");
 
         SKR_TEST_INFO(u8"dstorage enabled: {}", dstorage);
 
@@ -217,7 +217,7 @@ for (uint32_t i = 0; i < 1; i++)
 
     SUBCASE("chunking")
     {
-        ZoneScopedN("chunking");
+        SkrZoneScopedN("chunking");
 
         SKR_TEST_INFO(u8"dstorage enabled: {}", dstorage);
 
@@ -256,7 +256,7 @@ for (uint32_t i = 0; i < 1; i++)
 
     SUBCASE("cancel")
     {
-        ZoneScopedN("cancel");
+        SkrZoneScopedN("cancel");
 
         SKR_TEST_INFO(u8"dstorage enabled: {}", dstorage);
 
@@ -319,7 +319,7 @@ for (uint32_t i = 0; i < 1; i++)
         if (dstorage) 
             return;
 
-        ZoneScopedN("sort");
+        SkrZoneScopedN("sort");
         for (uint32_t i = 0; i < TEST_CYCLES_COUNT; i++)
         {
             skr_ram_io_service_desc_t ioServiceDesc = {};

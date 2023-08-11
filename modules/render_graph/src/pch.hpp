@@ -17,4 +17,4 @@
 #include <SkrRT/containers/btree.hpp> // IWYU pragma: export
 #include <SkrRT/containers/concurrent_queue.h> // IWYU pragma: export
 
-#include "tracy/Tracy.hpp" // IWYU pragma: export
+#include "SkrProfile/profile.h" // IWYU pragma: export

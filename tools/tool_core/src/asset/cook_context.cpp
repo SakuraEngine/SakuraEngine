@@ -4,7 +4,7 @@
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/asset/cook_system.hpp"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skd::asset
 {
@@ -99,7 +99,7 @@ void SCookContextImpl::_Destroy(void* resource)
 
 void* SCookContextImpl::_Import()
 {
-    ZoneScoped;
+    SkrZoneScoped;
     //-----load importer
     simdjson::ondemand::parser parser;
     auto doc = parser.iterate(record->meta);
@@ -116,7 +116,7 @@ void* SCookContextImpl::_Import()
         importerVersion = importer->Version();
         importerType = importerTypeGuid;
         //-----import raw data
-        ZoneScopedN("Importer.Import");
+        SkrZoneScopedN("Importer.Import");
         const auto type_name = skr_get_type_name(&importerType);
         ZoneName((const char*)type_name, strlen((const char*)type_name));
         auto rawData = importer->Import(ioService, this);
@@ -190,7 +190,7 @@ skr::filesystem::path SCookContextImpl::AddFileDependencyAndLoad(skr_io_ram_serv
     rq->add_block({}); // read all
     rq->add_callback(SKR_IO_STAGE_COMPLETED,
     +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
-        ZoneScopedN("SignalCounter");
+        SkrZoneScopedN("SignalCounter");
         auto pCounter = (skr::task::event_t*)data;
         pCounter->signal();
     }, &counter);

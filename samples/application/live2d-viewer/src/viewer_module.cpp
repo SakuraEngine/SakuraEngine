@@ -23,7 +23,7 @@
 #include "SkrLive2D/l2d_render_model.h"
 #include "SkrLive2D/l2d_render_effect.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 #ifdef _WIN32
 #include "SkrImageCoder/extensions/win_dstorage_decompressor.h"
@@ -269,7 +269,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
         FrameMark;
         
         // LoopBody
-        ZoneScopedN("LoopBody");
+        SkrZoneScopedN("LoopBody");
         int64_t us = skr_hires_timer_get_usec(&tick_timer, true);
         elapsed_us += us;
         elapsed_frame += 1;
@@ -281,13 +281,13 @@ int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
         }
         float delta = 1.f / (float)fps;
         {
-            ZoneScopedN("PollEvent");
+            SkrZoneScopedN("PollEvent");
             handler->pump_messages(delta);
             handler->process_messages(delta);
             skr::input::Input::GetInstance()->Tick();
         }
         {
-            ZoneScopedN("ImGUINewFrame");
+            SkrZoneScopedN("ImGUINewFrame");
 
             auto& io = ImGui::GetIO();
             const auto texInfo = swapchain->back_buffers[0]->info;
@@ -365,12 +365,12 @@ int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
             create_test_scene(l2d_renderer, resource_vfs, ram_service, bUseCVV);
         }
         {
-            ZoneScopedN("RegisterPasses");
+            SkrZoneScopedN("RegisterPasses");
 
             skr_live2d_register_render_effects(l2d_renderer, renderGraph, (uint32_t)sample_count);
         }
         {
-            ZoneScopedN("AcquireFrame");
+            SkrZoneScopedN("AcquireFrame");
 
             // acquire frame
             cgpu_wait_fences(&present_fence, 1);
@@ -387,11 +387,11 @@ int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
             .allow_render_target();
         });
         {
-            ZoneScopedN("RenderScene");
+            SkrZoneScopedN("RenderScene");
             skr_renderer_render_frame(l2d_renderer, renderGraph);
         }
         {
-            ZoneScopedN("RenderIMGUI");
+            SkrZoneScopedN("RenderIMGUI");
             render_graph_imgui_add_render_pass(renderGraph, back_buffer, CGPU_LOAD_ACTION_LOAD);
         }
         renderGraph->add_present_pass(
@@ -401,22 +401,22 @@ int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
             .texture(back_buffer, true);
         });
         {
-            ZoneScopedN("CompileRenderGraph");
+            SkrZoneScopedN("CompileRenderGraph");
             renderGraph->compile();
         }
         {
-            ZoneScopedN("ExecuteRenderGraph");
+            SkrZoneScopedN("ExecuteRenderGraph");
             if (frame_index == 1000)
                 render_graph::RenderGraphViz::write_graphviz(*renderGraph, "render_graph_L2D.gv");
             frame_index = renderGraph->execute();
             {
-                ZoneScopedN("CollectGarbage");
+                SkrZoneScopedN("CollectGarbage");
                 if (frame_index >= RG_MAX_FRAME_IN_FLIGHT * 10)
                     renderGraph->collect_garbage(frame_index - RG_MAX_FRAME_IN_FLIGHT * 10);
             }
         }
         {
-            ZoneScopedN("QueuePresentSwapchain");
+            SkrZoneScopedN("QueuePresentSwapchain");
             // present
             CGPUQueuePresentDescriptor present_desc = {};
             present_desc.index = backbuffer_index;

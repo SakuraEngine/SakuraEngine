@@ -342,7 +342,7 @@ CGPURenderPipelineId SkrRenderDevice::create_pipeline(ESkrPipelineFlag flags, EC
 
 //     graph->add_copy_pass(
 //     [&](render_graph::RenderGraph& g, render_graph::CopyPassBuilder& builder) {
-//         ZoneScopedN("UpdateTextures");
+//         SkrZoneScopedN("UpdateTextures");
 //         builder.set_name(u8"gdi_texture_update_pass")
 //         .can_be_lone();
 //         for (auto copy : copies)

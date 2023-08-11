@@ -4,7 +4,7 @@
 #include <SkrRT/platform/filesystem.hpp>
 #include "SkrRT/platform/memory.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 struct skr_vfile_stdio_t : public skr_vfile_t {
     FILE* fh;
@@ -16,7 +16,7 @@ skr_vfile_t* skr_stdio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mo
 {
     skr::filesystem::path p;
     {
-        ZoneScopedN("CalculatePath");
+        SkrZoneScopedN("CalculatePath");
         if(auto in_p = skr::filesystem::path(path); in_p.is_absolute())
         {
             p = in_p;
@@ -35,8 +35,8 @@ skr_vfile_t* skr_stdio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mo
     const char8_t* modeStr = skr_vfs_filemode_to_string(mode);
     FILE* cfile = nullptr;
     {
-        ZoneScopedN("stdio::fopen");
-        TracyMessage((const char*)filePath.c_str(), filePath.size());
+        SkrZoneScopedN("stdio::fopen");
+        SkrMessage((const char*)filePath.c_str(), filePath.size());
         cfile = fopen((const char*)filePathStr, (const char*)modeStr);
     }
     std::error_code ec = {};
@@ -46,7 +46,7 @@ skr_vfile_t* skr_stdio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mo
     {
         if ((mode & SKR_FM_READ_WRITE) == SKR_FM_READ_WRITE)
         {
-            ZoneScopedN("RetryOpenRW");
+            SkrZoneScopedN("RetryOpenRW");
 
             modeStr = skr_vfs_overwirte_filemode_to_string(mode);
             cfile = fopen((const char*)filePath.c_str(), (const char*)modeStr);
@@ -58,7 +58,7 @@ skr_vfile_t* skr_stdio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mo
         return nullptr;
     }
     {
-        ZoneScopedN("WrapHandle");
+        SkrZoneScopedN("WrapHandle");
         skr_vfile_stdio_t* vfile = SkrNew<skr_vfile_stdio_t>();
         vfile->mode = mode;
         vfile->fs = fs;
@@ -72,19 +72,19 @@ size_t skr_stdio_fread(skr_vfile_t* file, void* out_buffer, size_t offset, size_
 {
     if (file)
     {
-        ZoneScopedN("vfs::fread");
+        SkrZoneScopedN("vfs::fread");
 
         auto vfile = (skr_vfile_stdio_t*)file;
         if (vfile->offset != offset)
         {
-            ZoneScopedN("stdio::fseek(offset)");
+            SkrZoneScopedN("stdio::fseek(offset)");
             fseek(vfile->fh, (long)offset, SEEK_SET); // seek to offset of file
             vfile->offset = offset;
         }
         size_t bytesRead = 0;
         {
-            ZoneScopedN("stdio::fread");
-            TracyMessage((const char*)vfile->filePath.c_str(), vfile->filePath.size());
+            SkrZoneScopedN("stdio::fread");
+            SkrMessage((const char*)vfile->filePath.c_str(), vfile->filePath.size());
             bytesRead = fread(out_buffer, 1, byte_count, vfile->fh);
             vfile->offset += bytesRead;
         }

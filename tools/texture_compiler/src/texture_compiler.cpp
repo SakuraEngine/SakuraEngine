@@ -4,7 +4,7 @@
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/misc/log.hpp"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skd
 {
@@ -36,12 +36,12 @@ void* STextureImporter::Import(skr_io_ram_service_t* ioService, SCookContext* co
 {
     skr::BlobId blob = nullptr;
     {
-        ZoneScopedN("LoadFileDependencies");
+        SkrZoneScopedN("LoadFileDependencies");
         context->AddFileDependencyAndLoad(ioService, assetPath.c_str(), blob);
     }
 
     {
-        ZoneScopedN("TryDecodeTexture");
+        SkrZoneScopedN("TryDecodeTexture");
         // try decode texture
         const auto uncompressed_data = blob->get_data();
         const auto uncompressed_size = blob->get_size();
@@ -88,7 +88,7 @@ bool STextureCooker::Cook(SCookContext *ctx)
     // DXT
     skr::vector<uint8_t> compressed_data;
     {
-        ZoneScopedN("DXTCompress");
+        SkrZoneScopedN("DXTCompress");
         compressed_data = Util_DXTCompressWithImageCoder(decoder, compressed_format);
     }
     // TODO: ASTC
@@ -101,13 +101,13 @@ bool STextureCooker::Cook(SCookContext *ctx)
     resource.width = decoder->get_width();
     resource.depth = 1;
     {
-        ZoneScopedN("SaveToCtx");
+        SkrZoneScopedN("SaveToCtx");
         if(!ctx->Save(resource))
             return false;
     }
     // write compressed files
     {
-        ZoneScopedN("SaveToDisk");
+        SkrZoneScopedN("SaveToDisk");
 
         auto extension = Util_CompressedTypeString(compressed_format);
         auto compressed_path = outputPath;

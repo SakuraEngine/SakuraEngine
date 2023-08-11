@@ -7,7 +7,7 @@
 #include "SkrMeshCore/mesh_processing.hpp"
 #include "SkrGLTFTool/mesh_processing.hpp"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 #define MAGIC_SIZE_GLTF_PARSE_READY ~0
 
@@ -92,7 +92,7 @@ cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr_io_ram_service_t*
     counter.wait(false);
     struct cgltf_data* gltf_data_ = nullptr;
     {
-        ZoneScopedN("ParseGLTF");
+        SkrZoneScopedN("ParseGLTF");
         cgltf_options options = {};
         if (blob->get_data())
         {
@@ -103,7 +103,7 @@ cgltf_data* ImportGLTFWithData(skr::string_view assetPath, skr_io_ram_service_t*
             }
             else
             {
-                ZoneScopedN("LoadGLTFBuffer");
+                SkrZoneScopedN("LoadGLTFBuffer");
                 auto fullPath = skr::filesystem::path(vfs->mount_dir) / u8Path.u8_str();
                 result = cgltf_load_buffers(&options, gltf_data_, fullPath.string().c_str());
                 result = cgltf_validate(gltf_data_);

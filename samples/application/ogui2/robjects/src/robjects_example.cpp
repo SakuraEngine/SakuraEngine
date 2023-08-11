@@ -32,7 +32,7 @@
 
 #include "SkrInput/input.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 extern void create_imgui_resources(ECGPUFormat format, CGPUSamplerId sampler, skr::render_graph::RenderGraph* renderGraph, skr_vfs_t* vfs);
 
@@ -123,7 +123,7 @@ struct robjects_example_application : public robjects_application_t {
 
         // imgui pass
         {
-            ZoneScopedN("RenderIMGUI");
+            SkrZoneScopedN("RenderIMGUI");
             render_graph_imgui_add_render_pass(graph.graph, graph.back_buffer, CGPU_LOAD_ACTION_LOAD);
         }
 
@@ -288,7 +288,7 @@ int main(int argc, char* argv[])
         FrameMark;
         float delta = 1.f / 60.f;
         {
-            ZoneScopedN("SystemEvents");
+            SkrZoneScopedN("SystemEvents");
             handler->pump_messages(delta);
             handler->process_messages(delta);
         }
@@ -300,11 +300,11 @@ int main(int argc, char* argv[])
             doubleClickListener.PollMouseInput();
         }
         {
-            ZoneScopedN("DrawGUI");
+            SkrZoneScopedN("DrawGUI");
             App.draw();
         }
         {
-            ZoneScopedN("RenderGUI");
+            SkrZoneScopedN("RenderGUI");
             App.render();
         }
     }

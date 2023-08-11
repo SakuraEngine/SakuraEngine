@@ -38,4 +38,4 @@
     #include <dxgi.h>  // IWYU pragma: export
 #endif
 
-#include "tracy/Tracy.hpp" // IWYU pragma: export
+#include "SkrProfile/profile.h" // IWYU pragma: export

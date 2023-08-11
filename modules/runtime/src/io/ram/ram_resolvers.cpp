@@ -7,7 +7,7 @@ namespace io {
 
 void AllocateIOBufferResolver::resolve(SkrAsyncServicePriority priority, IOBatchId batch, IORequestId request) SKR_NOEXCEPT
 {
-    ZoneScopedNC("IOBuffer::Allocate", tracy::Color::BlueViolet);
+    SkrZoneScopedNC("IOBuffer::Allocate", tracy::Color::BlueViolet);
     auto rq = skr::static_pointer_cast<RAMRequestMixin>(request);
     auto buf = skr::static_pointer_cast<RAMIOBuffer>(rq->destination);
     auto pFiles = io_component<FileComponent>(rq.get());
@@ -45,7 +45,7 @@ ChunkingVFSReadResolver::ChunkingVFSReadResolver(uint64_t chunk_size) SKR_NOEXCE
 
 void ChunkingVFSReadResolver::resolve(SkrAsyncServicePriority priority, IOBatchId batch, IORequestId request) SKR_NOEXCEPT
 {
-    ZoneScopedN("IORequestChunking");
+    SkrZoneScopedN("IORequestChunking");
     uint64_t total = 0;
     if (auto pBlocks = io_component<BlocksComponent>(request.get()))
     {

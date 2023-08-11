@@ -19,7 +19,7 @@
 #include "SkrImageCoder/extensions/win_dstorage_decompressor.h"
 #endif
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 struct skr_live2d_render_model_impl_t : public skr_live2d_render_model_t {
     virtual ~skr_live2d_render_model_impl_t() SKR_NOEXCEPT
@@ -174,7 +174,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     }
     // create index buffer
     {
-        ZoneScopedN("CreateLive2DIndexBuffer");
+        SkrZoneScopedN("CreateLive2DIndexBuffer");
 
         auto ib_desc = make_zeroed<CGPUBufferDescriptor>();
         skr::string name = (const char8_t*)resource->model_setting->GetModelFileName();
@@ -190,7 +190,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     // request textures 
     for (uint32_t i = 0; i < texture_count; i++)
     {
-        ZoneScopedN("RequestLive2DTexture");
+        SkrZoneScopedN("RequestLive2DTexture");
 
         SKR_UNUSED auto& texture = render_model->io_textures[i];
         SKR_UNUSED auto& texture_future = render_model->texture_futures[i];
@@ -234,7 +234,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
         {
             auto& png_future = render_model->png_futures[i];
             const auto on_complete = +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
-                ZoneScopedN("Decode PNG");
+                SkrZoneScopedN("Decode PNG");
                 auto render_model = (skr_live2d_render_model_async_t*)data;
                 auto idx = future - render_model->png_futures.data();
                 auto png_blob = render_model->png_blobs[idx];
@@ -298,7 +298,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
             const int32_t icount = csmModel->GetDrawableVertexIndexCount(i);
             if (icount != 0)
             {
-                ZoneScopedN("RequestLive2DIndexBuffer");
+                SkrZoneScopedN("RequestLive2DIndexBuffer");
 
                 const auto indices = csmModel->GetDrawableVertexIndices(i);
                 auto& buffer_future = render_model->buffer_futures[i];
@@ -330,7 +330,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
     }
     // create vertex buffer
     {
-        ZoneScopedN("CreateLive2DVertexBuffer");
+        SkrZoneScopedN("CreateLive2DVertexBuffer");
 
         auto vb_desc = make_zeroed<CGPUBufferDescriptor>();
         skr::string name = (const char8_t*)resource->model_setting->GetModelFileName();
@@ -360,7 +360,7 @@ void skr_live2d_render_model_create_from_raw(skr_io_ram_service_t* ram_service, 
             const int32_t vcount = csmModel->GetDrawableVertexCount(i);
             if (vcount != 0)
             {
-                ZoneScopedN("FillLive2DVertexBufferViews");
+                SkrZoneScopedN("FillLive2DVertexBufferViews");
                 auto pos_slot = 2 * i;
                 auto uv_slot = 2 * i + 1;
                 render_model->vertex_buffer_views[pos_slot].offset = pos_buffer_cursor;

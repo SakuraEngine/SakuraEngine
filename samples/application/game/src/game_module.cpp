@@ -47,7 +47,7 @@
 
 #include "SkrRT/async/thread_job.hpp"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 #include "SkrRT/misc/types.h"
 #include "SkrRT/lua/skr_lua.h"
 #include "SkrInspector/inspect_value.h"
@@ -516,7 +516,7 @@ void imgui_button_spawn_girl(SRendererId renderer)
 SKR_EXTERN_C int luaopen_clonefunc(lua_State* L);
 int SGameModule::main_module_exec(int argc, char8_t** argv)
 {
-    ZoneScopedN("GameExecution");
+    SkrZoneScopedN("GameExecution");
     // auto moduleManager = skr_get_module_manager();
     SKR_LOG_INFO(u8"game executed as main module!");
 
@@ -632,20 +632,20 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
     while (!quit)
     {
         FrameMark;
-        ZoneScopedN("LoopBody");
+        SkrZoneScopedN("LoopBody");
         static auto main_thread_id = skr_current_thread_id();
         auto current_thread_id = skr_current_thread_id();
         SKR_ASSERT(main_thread_id == current_thread_id && "This is not the main thread");
 
         float delta = 1.f / 60.f;
         {
-            ZoneScopedN("PollEvent");
+            SkrZoneScopedN("PollEvent");
             handler->pump_messages(delta);
             handler->process_messages(delta);
         }
 
         {
-            ZoneScopedN("dualJ GC");
+            SkrZoneScopedN("dualJ GC");
             dualJ_gc();
         }
         int64_t us = skr_hires_timer_get_usec(&tick_timer, true);
@@ -680,12 +680,12 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
         // Input
         if (auto scene = scene_handle.get_resolved())
         {
-            ZoneScopedN("MergeScene");
+            SkrZoneScopedN("MergeScene");
             dualS_merge(game_renderer->get_dual_storage(), scene->storage);
             scene_handle.reset();
         }
         {
-            ZoneScopedN("ImGUI");
+            SkrZoneScopedN("ImGUI");
 
             skr_imgui_new_frame(main_window, (float)deltaTime);
             {
@@ -726,7 +726,7 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
             // quit |= skg::GameLoop(ctx);
         }
         {
-            ZoneScopedN("Lua");
+            SkrZoneScopedN("Lua");
             lua_getglobal(L, "GameUpdate");
             if (lua_pcall(L, 0, 0, 0) != LUA_OK)
             {
@@ -739,13 +739,13 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
         // [has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_scale_comp_t, [in]skr_index_comp_t, !skr_camera_comp_t
         if (bUseJob)
         {
-            ZoneScopedN("MoveSystem");
+            SkrZoneScopedN("MoveSystem");
             auto timer = clock();
             auto total_sec = (double)timer / CLOCKS_PER_SEC;
 
             auto moveJob = SkrNewLambda(
                 [=](dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
-                ZoneScopedN("MoveJob");
+                SkrZoneScopedN("MoveJob");
 
                 float lerps[] = { 12.5, 20 };
                 auto translations = (skr_translation_comp_t*)dualV_get_owned_rw_local(view, localTypes[0]);
@@ -772,15 +772,15 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
 
         // sync all jobs here ?
         {
-            // ZoneScopedN("DualJSync");
+            // SkrZoneScopedN("DualJSync");
             // dualJ_wait_all();
         }
 
         // [inout]skr_render_anim_comp_t, [in]game::anim_state_t, [in]skr_render_skel_comp_t
         {
-            ZoneScopedN("AnimSystem");
+            SkrZoneScopedN("AnimSystem");
             auto animJob = SkrNewLambda([=](dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
-                ZoneScopedN("AnimJob");
+                SkrZoneScopedN("AnimJob");
                 auto states = (game::anim_state_t*)dualV_get_owned_ro_local(view, localTypes[1]);
                 uint32_t g_id = 0;
                 auto syncEffect = [&](dual_chunk_view_t* view) {
@@ -798,11 +798,11 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
                             continue;
                         if (state.sampling_context.max_tracks() == 0)
                         {
-                            ZoneScopedN("InitializeAnimState");
+                            SkrZoneScopedN("InitializeAnimState");
                             game::InitializeAnimState(&state, skeleton_resource);
                         }
                         {
-                            ZoneScopedN("UpdateAnimState");
+                            SkrZoneScopedN("UpdateAnimState");
                             game::UpdateAnimState(&state, skeleton_resource, (float)deltaTime, &anim);
                         }
                     }
@@ -812,7 +812,7 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
             dualJ_schedule_ecs(animQuery, 128, DUAL_LAMBDA_POINTER(animJob), nullptr, nullptr);
         }
         {
-            ZoneScopedN("SkinSystem");
+            SkrZoneScopedN("SkinSystem");
 
             auto initAnimSkinComps = [&](dual_chunk_view_t* r_cv) {
                 const auto meshes = dual::get_component_ro<skr_render_mesh_comp_t>(r_cv);
@@ -820,7 +820,7 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
                 const auto anims = dual::get_owned_rw<skr_render_anim_comp_t>(r_cv);
                 const auto skins = dual::get_owned_rw<skr_render_skin_comp_t>(r_cv);
                 
-                ZoneScopedN("InitializeAnimSkinComponents");
+                SkrZoneScopedN("InitializeAnimSkinComponents");
                 for (uint32_t i = 0; i < r_cv->count; i++)
                 {
                     const auto mesh_resource = meshes[i].mesh_resource.get_resolved();
@@ -863,7 +863,7 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
                         continue;
                     if (!skins[i].joint_remaps.empty() && !anims[i].buffers.empty())
                     {
-                        ZoneScopedN("CPU Skin");
+                        SkrZoneScopedN("CPU Skin");
 
                         skr_cpu_skin(skins + i, anims + i, mesh_resource);
                     }
@@ -874,10 +874,10 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
         // [has]skr_movement_comp_t, [inout]skr_translation_comp_t, [in]skr_camera_comp_t
         if (bUseJob)
         {
-            ZoneScopedN("PlayerSystem");
+            SkrZoneScopedN("PlayerSystem");
 
             auto playerJob = SkrNewLambda([=](dual_query_t* query, dual_chunk_view_t* view, dual_type_index_t* localTypes, EIndex entityIndex) {
-                ZoneScopedN("PlayerJob");
+                SkrZoneScopedN("PlayerJob");
 
                 auto translations = (skr_translation_comp_t*)dualV_get_owned_rw_local(view, localTypes[0]);
                 auto forward = skr_float3_t{ 0.f, 1.f, 0.f };
@@ -911,7 +911,7 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
 
         // register passes
         {
-            ZoneScopedN("RegisterPasses");
+            SkrZoneScopedN("RegisterPasses");
             game_register_render_effects(game_renderer, renderGraph);
         }
 
@@ -923,7 +923,7 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
                 .allow_render_target();
         });
         {
-            ZoneScopedN("RenderScene");
+            SkrZoneScopedN("RenderScene");
             skr_renderer_render_frame(game_renderer, renderGraph);
         }
 
@@ -931,7 +931,7 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
         static bool bHasFrameToPresent = false;
         if (bHasFrameToPresent)
         {
-            ZoneScopedN("QueuePresentSwapchain");
+            SkrZoneScopedN("QueuePresentSwapchain");
             // present
             CGPUQueuePresentDescriptor present_desc = {};
             present_desc.index = backbuffer_index;
@@ -946,7 +946,7 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
 
         // render graph setup & compile & exec
         {
-            ZoneScopedN("RenderIMGUI");
+            SkrZoneScopedN("RenderIMGUI");
             render_graph_imgui_add_render_pass(renderGraph, back_buffer, CGPU_LOAD_ACTION_LOAD);
         }
 
@@ -960,14 +960,14 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
         
         // compile render graph
         {
-            ZoneScopedN("CompileRenderGraph");
+            SkrZoneScopedN("CompileRenderGraph");
             renderGraph->compile();
         }
 
         // acquire & reimport underlying buffer just before graph execution
         // prevents the main timeline from blocking by the acquire image call
         {
-            ZoneScopedN("AcquireFrame");
+            SkrZoneScopedN("AcquireFrame");
 
             // acquire frame
             cgpu_wait_fences(&present_fence, 1);
@@ -983,10 +983,10 @@ int SGameModule::main_module_exec(int argc, char8_t** argv)
 
         // execute render graph
         {
-            ZoneScopedN("ExecuteRenderGraph");
+            SkrZoneScopedN("ExecuteRenderGraph");
             auto frame_index = renderGraph->execute();
             {
-                ZoneScopedN("CollectGarbage");
+                SkrZoneScopedN("CollectGarbage");
                 if ((frame_index > (RG_MAX_FRAME_IN_FLIGHT * 10)) && (frame_index % (RG_MAX_FRAME_IN_FLIGHT * 10) == 0))
                     renderGraph->collect_garbage(frame_index - 10 * RG_MAX_FRAME_IN_FLIGHT);
             }

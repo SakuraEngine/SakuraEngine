@@ -110,10 +110,10 @@ namespace task2
             }
             else
             {
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
                 // the first fiber enter is in coroutine body
                 if(coro.promise().name != nullptr)
-                    TracyFiberEnter(coro.promise().name);
+                    SkrFiberEnter(coro.promise().name);
 #endif
                 SKR_ASSERT(!coro.done());
                 coro.resume();
@@ -211,7 +211,7 @@ namespace task2
             auto numThreads = scheduler->config.numThreads;
             if(numThreads > 1)
             {
-                ZoneScopedN("Worker::StealWork");
+                SkrZoneScopedN("Worker::StealWork");
                 // Try to steal from other workers
                 while(rand == id)
                     rand = rnd() % numThreads;
@@ -231,7 +231,7 @@ namespace task2
 
         void spinForWork()
         {
-            ZoneScopedN("Worker::SpinForWork");
+            SkrZoneScopedN("Worker::SpinForWork");
             constexpr auto duration = std::chrono::milliseconds(1);
             auto start = std::chrono::high_resolution_clock::now();
             int lastStolen = id;
@@ -281,7 +281,7 @@ namespace task2
 
         void runUntilIdle() 
         {
-            ZoneScopedN("Worker::RunUntilIdle");
+            SkrZoneScopedN("Worker::RunUntilIdle");
             while(!work.pinnedTask.empty())
             {
                 auto task = std::move(work.pinnedTask.front());
@@ -339,7 +339,7 @@ namespace task2
 
         void enqueuePinnedAndUnlock(Task&& task)
         {
-            ZoneScopedN("EnqueueTaskWorker");
+            SkrZoneScopedN("EnqueueTaskWorker");
             auto notify = work.notifyAdded;
             work.pinnedTask.push_back(std::move(task));
             work.num++;
@@ -411,7 +411,7 @@ namespace task2
 
     void enqueue(Task&& task, int workerIdx)
     {
-        //ZoneScopedN("EnqueueTask");
+        //SkrZoneScopedN("EnqueueTask");
         scheduler_t* scheduler = scheduler_t::instance();
         SKR_ASSERT(scheduler != nullptr);
         size_t workerCount = scheduler->config.numThreads;
@@ -471,9 +471,9 @@ namespace task2
         SMutexLock guard(event.state->mutex);
         if(event.state->signalled)
             return false;
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
         if(handle.promise().name != nullptr)
-            TracyFiberLeave;
+            SkrFiberLeave;
 #endif
         event.state->cv.add_waiter(handle, workerIdx);
         return true;
@@ -513,9 +513,9 @@ namespace task2
         SMutexLock guard(counter.state->mutex);
         if(counter.state->count == 0)
             return false;
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
         if(handle.promise().name != nullptr)
-            TracyFiberLeave;
+            SkrFiberLeave;
 #endif
         counter.state->cv.add_waiter(handle, workerIdx);
         return true;
@@ -542,7 +542,7 @@ namespace task2
 
     void scheduler_t::sync(event_t event)
     {
-        ZoneScopedN("SyncEvent");
+        SkrZoneScopedN("SyncEvent");
         auto worker = currentWorker;
         SKR_ASSERT(worker == nullptr);
         worker = (Worker*)mainWorker;
@@ -559,7 +559,7 @@ namespace task2
 
     void scheduler_t::sync(counter_t counter)
     {
-        ZoneScopedN("SyncEvent");
+        SkrZoneScopedN("SyncEvent");
         auto worker = currentWorker;
         SKR_ASSERT(worker == nullptr);
         worker = (Worker*)mainWorker;
@@ -646,7 +646,7 @@ namespace task2
 
     void scheduler_t::initialize(const scheudler_config_t & cfg)
     {
-        ZoneScopedN("Scheduler::Initialize");
+        SkrZoneScopedN("Scheduler::Initialize");
         config = cfg;
         for(size_t i = 0; i < spinningWorkers.size(); ++i)
             spinningWorkers[i] = -1;
@@ -667,7 +667,7 @@ namespace task2
 
     void scheduler_t::shutdown()
     {
-        ZoneScopedN("Scheduler::Shutdown");
+        SkrZoneScopedN("Scheduler::Shutdown");
         SKR_ASSERT(initialized);
         for(size_t i = 0; i < config.numThreads; ++i)
             ((Worker*)workers[i])->signalStop();
