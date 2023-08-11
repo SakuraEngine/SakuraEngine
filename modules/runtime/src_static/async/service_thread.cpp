@@ -2,7 +2,7 @@
 #include "SkrRT/async/wait_timeout.hpp"
 #include "SkrRT/misc/log.hpp"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skr
 {
@@ -72,7 +72,7 @@ void ServiceThread::request_stop() SKR_NOEXCEPT
 
 void ServiceThread::stop() SKR_NOEXCEPT
 {
-    ZoneScopedN("stop");
+    SkrZoneScopedN("stop");
 
     request_stop();
     wait_stop();
@@ -80,7 +80,7 @@ void ServiceThread::stop() SKR_NOEXCEPT
 
 void ServiceThread::wait_stop(uint32_t fatal_timeout) SKR_NOEXCEPT
 {
-    ZoneScopedN("wait_stop");
+    SkrZoneScopedN("wait_stop");
 
     const auto tid = skr_current_thread_id();
     if (tid == t.get_id())
@@ -118,7 +118,7 @@ void ServiceThread::request_exit() SKR_NOEXCEPT
 
 void ServiceThread::exit() SKR_NOEXCEPT
 {
-    ZoneScopedN("exit");
+    SkrZoneScopedN("exit");
 
     // SKR_LOG_TRACE(u8"ServiceThread::destroy: wait runner thread to request_exit...");
     request_exit();
@@ -129,7 +129,7 @@ void ServiceThread::exit() SKR_NOEXCEPT
 
 void ServiceThread::wait_exit(uint32_t fatal_timeout) SKR_NOEXCEPT
 {
-    ZoneScopedN("wait_exit");
+    SkrZoneScopedN("wait_exit");
 
     const auto tid = skr_current_thread_id();
     if (tid == t.get_id())
@@ -158,7 +158,7 @@ AsyncResult ServiceThread::ServiceFunc::run() SKR_NOEXCEPT
 {
 WAKING:    
 {
-    ZoneScopedN("WAKING");
+    SkrZoneScopedN("WAKING");
     auto S = _service->get_status();
     if (S == kStatusWaking)
     {
@@ -168,7 +168,7 @@ WAKING:
 
 RUNNING:
 {
-    ZoneScopedN("RUNNING");
+    SkrZoneScopedN("RUNNING");
     _service->set_status(kStatusRunning);
     skr_atomic32_add_relaxed(&_service->rid, 1);
     for (;;)
@@ -201,7 +201,7 @@ RUNNING:
 
 STOP:
 {
-    ZoneScopedN("STOP");
+    SkrZoneScopedN("STOP");
 
     auto S = _service->get_status();
     if (S == kStatusWaking)
@@ -232,7 +232,7 @@ STOP:
 
 EXIT:
 {
-    ZoneScopedN("EXIT");
+    SkrZoneScopedN("EXIT");
 
     _service->set_status(kStatusExitted);
     // SKR_LOG_TRACE(u8"Service Thread exited!");
@@ -243,7 +243,7 @@ EXIT:
 void AsyncService::sleep() SKR_NOEXCEPT
 {
     const auto ms = skr_atomicu32_load_relaxed(&sleep_time);
-    ZoneScopedNC("ioServiceSleep(Cond)", tracy::Color::Gray55);
+    SkrZoneScopedNC("ioServiceSleep(Cond)", tracy::Color::Gray55);
 
     condlock.lock();
     if (!event)

@@ -2,26 +2,23 @@
 
 #include "../../../../samples/common/common/utils.h"
 
+#include "SkrRT/platform/time.h"
+#include "SkrRT/platform/vfs.h"
+#include <SkrRT/containers/string.hpp>
+#include "SkrRT/misc/log.h"
+#include "SkrRT/misc/make_zeroed.hpp"
+#include "SkrRT/io/vram_io.hpp"
+#include "SkrRT/module/module_manager.hpp"
+
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
-
-#include "SkrRT/platform/vfs.h"
-#include "SkrRT/platform/thread.h"
-#include "SkrRT/platform/time.h"
-
-#include "SkrRT/misc/log.h"
-#include "cgpu/io.h"
-
-#include <SkrRT/containers/string.hpp>
-#include "SkrRT/misc/make_zeroed.hpp"
 
 #include "SkrRenderer/skr_renderer.h"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 
-#include "SkrRT/module/module.hpp"
-#include "SkrRT/module/module_manager.hpp"
 
-#include "tracy/Tracy.hpp"
+
+#include "SkrProfile/profile.h"
 
 #include "SkrAssetTool/gltf_factory.h"
 #include "imgui_impl_sdl.h"
@@ -151,9 +148,9 @@ int SAssetImportModule::main_module_exec(int argc, char8_t** argv)
             }
         }
         // LoopBody
-        ZoneScopedN("LoopBody");
+        SkrZoneScopedN("LoopBody");
         {
-            ZoneScopedN("ImGUINewFrame");
+            SkrZoneScopedN("ImGUINewFrame");
 
             ImGui_ImplSDL2_NewFrame();
             ImGui::NewFrame();
@@ -224,7 +221,7 @@ int SAssetImportModule::main_module_exec(int argc, char8_t** argv)
             ImGui::End();
         }
         {
-            ZoneScopedN("AcquireFrame");
+            SkrZoneScopedN("AcquireFrame");
 
             // acquire frame
             cgpu_wait_fences(&present_fence, 1);
@@ -241,7 +238,7 @@ int SAssetImportModule::main_module_exec(int argc, char8_t** argv)
             .allow_render_target();
         });
         {
-            ZoneScopedN("RenderIMGUI");
+            SkrZoneScopedN("RenderIMGUI");
             render_graph_imgui_add_render_pass(renderGraph, back_buffer, CGPU_LOAD_ACTION_CLEAR);
         }
         renderGraph->add_present_pass(
@@ -251,22 +248,22 @@ int SAssetImportModule::main_module_exec(int argc, char8_t** argv)
             .texture(back_buffer, true);
         });
         {
-            ZoneScopedN("CompileRenderGraph");
+            SkrZoneScopedN("CompileRenderGraph");
             renderGraph->compile();
         }
         {
-            ZoneScopedN("ExecuteRenderGraph");
+            SkrZoneScopedN("ExecuteRenderGraph");
             if (frame_index == 1000)
                 render_graph::RenderGraphViz::write_graphviz(*renderGraph, "render_graph_L2D.gv");
             frame_index = renderGraph->execute();
             {
-                ZoneScopedN("CollectGarbage");
+                SkrZoneScopedN("CollectGarbage");
                 if (frame_index >= RG_MAX_FRAME_IN_FLIGHT * 10)
                     renderGraph->collect_garbage(frame_index - RG_MAX_FRAME_IN_FLIGHT * 10);
             }
         }
         {
-            ZoneScopedN("QueuePresentSwapchain");
+            SkrZoneScopedN("QueuePresentSwapchain");
             // present
             CGPUQueuePresentDescriptor present_desc = {};
             present_desc.index = backbuffer_index;

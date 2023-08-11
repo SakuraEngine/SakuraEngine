@@ -14,14 +14,14 @@
 #include "SkrAnim/resources/animation_resource.h"
 #include "SkrToolCore/asset/json_utils.hpp"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skd::asset
 {
 bool SAnimCooker::Cook(SCookContext *ctx)
 {
     using namespace ozz::animation::offline;
-    ZoneScopedNS("SAnimCooker::Cook", 4);
+    SkrZoneScopedNS("SAnimCooker::Cook", 4);
 
     //-----load config
     auto settings = LoadConfig<SAnimCookSettings>(ctx);

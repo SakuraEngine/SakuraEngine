@@ -2,7 +2,7 @@
 #include "SkrRT/serde/json/writer.h"
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/containers/string.hpp"
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 skr_json_writer_t::skr_json_writer_t(size_t levelDepth, skr_json_format_t format)
     : _format(format)
@@ -165,7 +165,7 @@ bool skr_json_writer_t::_WriteDouble(double d)
 
 bool skr_json_writer_t::_WriteString(const TChar* str, TSize length)
 {
-    ZoneScopedN("skr_json_writer_t::_WriteString");
+    SkrZoneScopedN("skr_json_writer_t::_WriteString");
     static const char hexDigits[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
     static const char escape[256] = {
 #define Z16 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0

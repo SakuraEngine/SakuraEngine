@@ -71,7 +71,7 @@ void cgpu_free_dstorage_queue_d3d12(CGPUDStorageQueueId queue)
 
 #include <filesystem>
 
-CGPUDStorageFileHandle cgpu_dstorage_open_file_d3d12(CGPUDStorageQueueId queue, const char* abs_path)
+CGPUDStorageFileHandle cgpu_dstorage_open_file_d3d12(CGPUDStorageQueueId queue, const char8_t* abs_path)
 {
     CGPUDStorageQueueD3D12* Q = (CGPUDStorageQueueD3D12*)queue;
     return skr_dstorage_open_file(Q->pInstance, abs_path);
@@ -85,7 +85,7 @@ void cgpu_dstorage_query_file_info_d3d12(CGPUDStorageQueueId queue, CGPUDStorage
 
 void cgpu_dstorage_enqueue_buffer_request_d3d12(CGPUDStorageQueueId queue, const CGPUDStorageBufferIODescriptor* desc)
 {
-    ZoneScopedN("D3D12EnqueueDStorage(Buffer)");
+    SkrZoneScopedN("D3D12EnqueueDStorage(Buffer)");
 
     DSTORAGE_REQUEST request = {};
     CGPUDStorageQueueD3D12* Q = (CGPUDStorageQueueD3D12*)queue;
@@ -126,7 +126,7 @@ void cgpu_dstorage_enqueue_buffer_request_d3d12(CGPUDStorageQueueId queue, const
 
 void cgpu_dstorage_enqueue_texture_request_d3d12(CGPUDStorageQueueId queue, const CGPUDStorageTextureIODescriptor* desc)
 {
-    ZoneScopedN("D3D12EnqueueDStorage(Texture)");
+    SkrZoneScopedN("D3D12EnqueueDStorage(Texture)");
 
     DSTORAGE_REQUEST request = {};
     CGPUDStorageQueueD3D12* Q = (CGPUDStorageQueueD3D12*)queue;

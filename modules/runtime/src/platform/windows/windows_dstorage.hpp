@@ -10,7 +10,7 @@
 #include "EASTL/vector.h"
 
 // #define TRACY_PROFILE_DIRECT_STORAGE
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 struct SkrWindowsDStorageInstance : public SkrDStorageInstance
 {

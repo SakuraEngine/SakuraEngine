@@ -22,7 +22,7 @@
     }
 #endif
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skr
 {
@@ -38,14 +38,14 @@ namespace task2
         bool setAffinity = true;
         uint32_t numThreads = 0;
     };
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
     struct task_name_t
     {
         const char* name;
     };
-    #define TracyTask(name) TracyFiberEnter(name); co_yield task_name_t{name}
+    #define SkrProfileTask(name) SkrFiberEnter(name); co_yield task_name_t{name}
 #else
-    #define TracyTask(name)
+    #define SkrProfileTask(name)
 #endif
     struct skr_task_t
     {
@@ -53,11 +53,11 @@ namespace task2
         {
             SKR_RUNTIME_API skr_task_t get_return_object();
             std::suspend_always initial_suspend() { return {}; }
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
             std::suspend_never final_suspend() noexcept
             {
                 if(name != nullptr)
-                    TracyFiberLeave;
+                    SkrFiberLeave;
                 return {};
             }
 #else
@@ -65,13 +65,13 @@ namespace task2
 #endif
             void return_void() {}
             SKR_RUNTIME_API void unhandled_exception();
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
             std::suspend_never yield_value(task_name_t tn) { name = tn.name; return {}; }
 #endif
 
             void* operator new(size_t size) { return sakura_malloc(size); }
             void operator delete(void* ptr, size_t size) { sakura_free(ptr); }
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
             const char* name = nullptr;
 #endif
         };

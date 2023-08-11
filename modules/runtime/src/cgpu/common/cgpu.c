@@ -28,11 +28,11 @@
 #elif defined _WIN32 || defined _WIN64
 #endif
 
-#include "tracy/TracyC.h"
+#include "SkrProfile/profile.h"
 
 SKR_RUNTIME_API CGPUInstanceId cgpu_create_instance(const CGPUInstanceDescriptor* desc)
 {
-    TracyCZoneN(zz, "CGPUCreateInstance", 1);
+    SkrCZoneN(zz, "CGPUCreateInstance", 1);
     
     cgpu_assert((desc->backend == CGPU_BACKEND_VULKAN || desc->backend == CGPU_BACKEND_D3D12 || desc->backend == CGPU_BACKEND_METAL) && "CGPU support only vulkan & d3d12 & metal currently!");
     const CGPUProcTable* tbl = CGPU_NULLPTR;
@@ -70,7 +70,7 @@ SKR_RUNTIME_API CGPUInstanceId cgpu_create_instance(const CGPUInstanceDescriptor
     if(!instance->runtime_table) 
         instance->runtime_table = cgpu_create_runtime_table();
     
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 
     return instance;
 }
@@ -90,7 +90,7 @@ SKR_RUNTIME_API void cgpu_query_instance_features(CGPUInstanceId instance, struc
 
 SKR_RUNTIME_API void cgpu_free_instance(CGPUInstanceId instance)
 {
-    TracyCZoneN(zz, "CGPUFreeInstance", 1);
+    SkrCZoneN(zz, "CGPUFreeInstance", 1);
 
     cgpu_assert(instance != CGPU_NULLPTR && "fatal: can't destroy NULL instance!");
     cgpu_assert(instance->proc_table->free_instance && "free_instance Proc Missing!");
@@ -100,12 +100,12 @@ SKR_RUNTIME_API void cgpu_free_instance(CGPUInstanceId instance)
     instance->proc_table->free_instance(instance);
     cgpu_free_runtime_table(runtime_table);
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 }
 
 void cgpu_enum_adapters(CGPUInstanceId instance, CGPUAdapterId* const adapters, uint32_t* adapters_num)
 {
-    TracyCZoneN(zz, "CGPUEnumAdapters", 1);
+    SkrCZoneN(zz, "CGPUEnumAdapters", 1);
 
     cgpu_assert(instance != CGPU_NULLPTR && "fatal: can't destroy NULL instance!");
     cgpu_assert(instance->proc_table->enum_adapters && "enum_adapters Proc Missing!");
@@ -122,7 +122,7 @@ void cgpu_enum_adapters(CGPUInstanceId instance, CGPUAdapterId* const adapters, 
     }
     // -- proc_table_cache
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 }
 
 const char* unknownAdapterName = "UNKNOWN";
@@ -145,7 +145,7 @@ uint32_t cgpu_query_queue_count(const CGPUAdapterId adapter, const ECGPUQueueTyp
 
 CGPUDeviceId cgpu_create_device(CGPUAdapterId adapter, const CGPUDeviceDescriptor* desc)
 {
-    TracyCZoneN(zz, "CGPUCreateDevice", 1);
+    SkrCZoneN(zz, "CGPUCreateDevice", 1);
 
     cgpu_assert(adapter != CGPU_NULLPTR && "fatal: call on NULL adapter!");
     cgpu_assert(adapter->proc_table_cache->create_device && "create_device Proc Missing!");
@@ -159,7 +159,7 @@ CGPUDeviceId cgpu_create_device(CGPUAdapterId adapter, const CGPUDeviceDescripto
     }
     // -- proc_table_cache
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 
     return device;
 }
@@ -241,21 +241,21 @@ void cgpu_free_semaphore(CGPUSemaphoreId semaphore)
 
 CGPURootSignatureId cgpu_create_root_signature(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc)
 {
-    TracyCZoneN(zz, "CGPUCreateRootSignature", 1);
+    SkrCZoneN(zz, "CGPUCreateRootSignature", 1);
 
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_root_signature && "create_root_signature Proc Missing!");
     CGPURootSignature* signature = (CGPURootSignature*)device->proc_table_cache->create_root_signature(device, desc);
     signature->device = device;
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 
     return signature;
 }
 
 void cgpu_free_root_signature(CGPURootSignatureId signature)
 {
-    TracyCZoneN(zz, "CGPUFreeRootSignature", 1);
+    SkrCZoneN(zz, "CGPUFreeRootSignature", 1);
 
     cgpu_assert(signature != CGPU_NULLPTR && "fatal: call on NULL signature!");
     const CGPUDeviceId device = signature->device;
@@ -263,26 +263,26 @@ void cgpu_free_root_signature(CGPURootSignatureId signature)
     cgpu_assert(device->proc_table_cache->free_root_signature && "free_root_signature Proc Missing!");
     device->proc_table_cache->free_root_signature(signature);
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 }
 
 CGPURootSignaturePoolId cgpu_create_root_signature_pool(CGPUDeviceId device, const struct CGPURootSignaturePoolDescriptor* desc)
 {
-    TracyCZoneN(zz, "CGPUCreateRSPool", 1);
+    SkrCZoneN(zz, "CGPUCreateRSPool", 1);
 
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_root_signature_pool && "create_root_signature_pool Proc Missing!");
     CGPURootSignaturePool* pool = (CGPURootSignaturePool*)device->proc_table_cache->create_root_signature_pool(device, desc);
     pool->device = device;
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 
     return pool;
 }
 
 void cgpu_free_root_signature_pool(CGPURootSignaturePoolId pool)
 {
-    TracyCZoneN(zz, "CGPUFreeRSPool", 1);
+    SkrCZoneN(zz, "CGPUFreeRSPool", 1);
 
     cgpu_assert(pool != CGPU_NULLPTR && "fatal: call on NULL signature pool!");
     const CGPUDeviceId device = pool->device;
@@ -290,12 +290,12 @@ void cgpu_free_root_signature_pool(CGPURootSignaturePoolId pool)
     cgpu_assert(device->proc_table_cache->free_root_signature_pool && "free_root_signature_pool Proc Missing!");
     device->proc_table_cache->free_root_signature_pool(pool);
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 }
 
 CGPUDescriptorSetId cgpu_create_descriptor_set(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc)
 {
-    TracyCZoneN(zz, "CGPUCreateDescriptorSet", 1);
+    SkrCZoneN(zz, "CGPUCreateDescriptorSet", 1);
 
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_descriptor_set && "create_descriptor_set Proc Missing!");
@@ -303,14 +303,14 @@ CGPUDescriptorSetId cgpu_create_descriptor_set(CGPUDeviceId device, const struct
     set->root_signature = desc->root_signature;
     set->index = desc->set_index;
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 
     return set;
 }
 
 void cgpu_update_descriptor_set(CGPUDescriptorSetId set, const struct CGPUDescriptorData* datas, uint32_t count)
 {
-    TracyCZoneN(zz, "CGPUUpdateDescSet", 1);
+    SkrCZoneN(zz, "CGPUUpdateDescSet", 1);
 
     cgpu_assert(set != CGPU_NULLPTR && "fatal: call on NULL descriptor set!");
     const CGPUDeviceId device = set->root_signature->device;
@@ -318,12 +318,12 @@ void cgpu_update_descriptor_set(CGPUDescriptorSetId set, const struct CGPUDescri
     cgpu_assert(device->proc_table_cache->update_descriptor_set && "update_descriptor_set Proc Missing!");
     device->proc_table_cache->update_descriptor_set(set, datas, count);
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 }
 
 void cgpu_free_descriptor_set(CGPUDescriptorSetId set)
 {
-    TracyCZoneN(zz, "CGPUFreeDescSet", 1);
+    SkrCZoneN(zz, "CGPUFreeDescSet", 1);
 
     cgpu_assert(set != CGPU_NULLPTR && "fatal: call on NULL signature!");
     const CGPUDeviceId device = set->root_signature->device;
@@ -331,12 +331,12 @@ void cgpu_free_descriptor_set(CGPUDescriptorSetId set)
     cgpu_assert(device->proc_table_cache->free_descriptor_set && "free_descriptor_set Proc Missing!");
     device->proc_table_cache->free_descriptor_set(set);
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 }
 
 CGPUComputePipelineId cgpu_create_compute_pipeline(CGPUDeviceId device, const struct CGPUComputePipelineDescriptor* desc)
 {
-    TracyCZoneN(zz, "CGPUCreatePSO(C)", 1);
+    SkrCZoneN(zz, "CGPUCreatePSO(C)", 1);
 
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_compute_pipeline && "create_compute_pipeline Proc Missing!");
@@ -344,14 +344,14 @@ CGPUComputePipelineId cgpu_create_compute_pipeline(CGPUDeviceId device, const st
     pipeline->device = device;
     pipeline->root_signature = desc->root_signature;
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 
     return pipeline;
 }
 
 void cgpu_free_compute_pipeline(CGPUComputePipelineId pipeline)
 {
-    TracyCZoneN(zz, "CGPUFreePSO(C)", 1);
+    SkrCZoneN(zz, "CGPUFreePSO(C)", 1);
 
     cgpu_assert(pipeline != CGPU_NULLPTR && "fatal: call on NULL signature!");
     const CGPUDeviceId device = pipeline->device;
@@ -359,7 +359,7 @@ void cgpu_free_compute_pipeline(CGPUComputePipelineId pipeline)
     cgpu_assert(device->proc_table_cache->free_compute_pipeline && "free_compute_pipeline Proc Missing!");
     device->proc_table_cache->free_compute_pipeline(pipeline);
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 }
 
 static const CGPUBlendStateDescriptor defaultBlendStateDesc = {
@@ -388,7 +388,7 @@ static const CGPUDepthStateDescriptor defaultDepthStateDesc = {
 };
 CGPURenderPipelineId cgpu_create_render_pipeline(CGPUDeviceId device, const struct CGPURenderPipelineDescriptor* desc)
 {
-    TracyCZoneN(zz, "CGPUCreatePSO(G)", 1);
+    SkrCZoneN(zz, "CGPUCreatePSO(G)", 1);
 
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_render_pipeline && "create_render_pipeline Proc Missing!");
@@ -407,14 +407,14 @@ CGPURenderPipelineId cgpu_create_render_pipeline(CGPUDeviceId device, const stru
     pipeline->device = device;
     pipeline->root_signature = desc->root_signature;
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 
     return pipeline;
 }
 
 void cgpu_free_render_pipeline(CGPURenderPipelineId pipeline)
 {
-    TracyCZoneN(zz, "CGPUFreePSO(G)", 1);
+    SkrCZoneN(zz, "CGPUFreePSO(G)", 1);
 
     cgpu_assert(pipeline != CGPU_NULLPTR && "fatal: call on NULL signature!");
     const CGPUDeviceId device = pipeline->device;
@@ -422,7 +422,7 @@ void cgpu_free_render_pipeline(CGPURenderPipelineId pipeline)
     cgpu_assert(device->proc_table_cache->free_render_pipeline && "free_render_pipeline Proc Missing!");
     device->proc_table_cache->free_render_pipeline(pipeline);
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 }
 
 CGPUQueryPoolId cgpu_create_query_pool(CGPUDeviceId device, const struct CGPUQueryPoolDescriptor* desc)
@@ -487,7 +487,7 @@ void cgpu_submit_queue(CGPUQueueId queue, const struct CGPUQueueSubmitDescriptor
 
 void cgpu_queue_present(CGPUQueueId queue, const struct CGPUQueuePresentDescriptor* desc)
 {
-    TracyCZoneN(zz, "CGPUPresent", 1);
+    SkrCZoneN(zz, "CGPUPresent", 1);
 
     cgpu_assert(desc != CGPU_NULLPTR && "fatal: call on NULL desc!");
     cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
@@ -497,12 +497,12 @@ void cgpu_queue_present(CGPUQueueId queue, const struct CGPUQueuePresentDescript
 
     fn_queue_present(queue, desc);
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 }
 
 void cgpu_wait_queue_idle(CGPUQueueId queue)
 {
-    TracyCZoneN(zz, "CGPUWaitQueueIdle", 1);
+    SkrCZoneN(zz, "CGPUWaitQueueIdle", 1);
 
     cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
     cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -511,7 +511,7 @@ void cgpu_wait_queue_idle(CGPUQueueId queue)
 
     wait_queue_idle(queue);
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 }
 
 float cgpu_queue_get_timestamp_period_ns(CGPUQueueId queue)
@@ -982,7 +982,7 @@ void cgpu_cmd_end_event(CGPUCommandBufferId cmd)
 // Shader APIs
 CGPUShaderLibraryId cgpu_create_shader_library(CGPUDeviceId device, const struct CGPUShaderLibraryDescriptor* desc)
 {
-    TracyCZoneN(zz, "CGPUCreateShaderLibrary", 1);
+    SkrCZoneN(zz, "CGPUCreateShaderLibrary", 1);
 
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_shader_library && "create_shader_library Proc Missing!");
@@ -996,14 +996,14 @@ CGPUShaderLibraryId cgpu_create_shader_library(CGPUDeviceId device, const struct
     shader->name = (char8_t*)cgpu_calloc(1, str_size * sizeof(char8_t));
     memcpy((void*)shader->name, desc->name, str_size);
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 
     return shader;
 }
 
 void cgpu_free_shader_library(CGPUShaderLibraryId library)
 {
-    TracyCZoneN(zz, "CGPUFreeShaderLibrary", 1);
+    SkrCZoneN(zz, "CGPUFreeShaderLibrary", 1);
 
     cgpu_assert(library != CGPU_NULLPTR && "fatal: call on NULL shader library!");
     const CGPUDeviceId device = library->device;
@@ -1015,13 +1015,13 @@ void cgpu_free_shader_library(CGPUShaderLibraryId library)
     cgpu_assert(fn_free_shader_library && "free_shader_library Proc Missing!");
     fn_free_shader_library(library);
     
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 }
 
 // Buffer APIs
 CGPUBufferId cgpu_create_buffer(CGPUDeviceId device, const struct CGPUBufferDescriptor* desc)
 {
-    TracyCZoneN(zz, "CGPUCreateBuffer", 1);
+    SkrCZoneN(zz, "CGPUCreateBuffer", 1);
 
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_buffer && "create_buffer Proc Missing!");
@@ -1035,7 +1035,7 @@ CGPUBufferId cgpu_create_buffer(CGPUDeviceId device, const struct CGPUBufferDesc
     CGPUBuffer* buffer = (CGPUBuffer*)fn_create_buffer(device, &new_desc);
     buffer->device = device;
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 
     return buffer;
 }
@@ -1064,7 +1064,7 @@ void cgpu_unmap_buffer(CGPUBufferId buffer)
 
 void cgpu_free_buffer(CGPUBufferId buffer)
 {
-    TracyCZoneN(zz, "CGPUFreeBuffer", 1);
+    SkrCZoneN(zz, "CGPUFreeBuffer", 1);
 
     cgpu_assert(buffer != CGPU_NULLPTR && "fatal: call on NULL buffer!");
     const CGPUDeviceId device = buffer->device;
@@ -1074,13 +1074,13 @@ void cgpu_free_buffer(CGPUBufferId buffer)
     cgpu_assert(fn_free_buffer && "free_buffer Proc Missing!");
     fn_free_buffer(buffer);
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 }
 
 // Texture/TextureView APIs
 CGPUTextureId cgpu_create_texture(CGPUDeviceId device, const struct CGPUTextureDescriptor* desc)
 {
-    TracyCZoneN(zz, "CGPUCreateTexture", 1);
+    SkrCZoneN(zz, "CGPUCreateTexture", 1);
 
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_texture && "create_texture Proc Missing!");
@@ -1096,14 +1096,14 @@ CGPUTextureId cgpu_create_texture(CGPUDeviceId device, const struct CGPUTextureD
     texture->device = device;
     info->sample_count = desc->sample_count;
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 
     return texture;
 }
 
 void cgpu_free_texture(CGPUTextureId texture)
 {
-    TracyCZoneN(zz, "CGPUFreeTexture", 1);
+    SkrCZoneN(zz, "CGPUFreeTexture", 1);
 
     cgpu_assert(texture != CGPU_NULLPTR && "fatal: call on NULL texture!");
     const CGPUDeviceId device = texture->device;
@@ -1113,12 +1113,12 @@ void cgpu_free_texture(CGPUTextureId texture)
     cgpu_assert(fn_free_texture && "free_texture Proc Missing!");
     fn_free_texture(texture);
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 }
 
 CGPUSamplerId cgpu_create_sampler(CGPUDeviceId device, const struct CGPUSamplerDescriptor* desc)
 {
-    TracyCZoneN(zz, "CGPUCreateSampler", 1);
+    SkrCZoneN(zz, "CGPUCreateSampler", 1);
 
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_sampler && "create_sampler Proc Missing!");
@@ -1126,14 +1126,14 @@ CGPUSamplerId cgpu_create_sampler(CGPUDeviceId device, const struct CGPUSamplerD
     CGPUSampler* sampler = (CGPUSampler*)fn_create_sampler(device, desc);
     sampler->device = device;
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
     
     return sampler;
 }
 
 void cgpu_free_sampler(CGPUSamplerId sampler)
 {
-    TracyCZoneN(zz, "CGPUFreeSampler", 1);
+    SkrCZoneN(zz, "CGPUFreeSampler", 1);
 
     cgpu_assert(sampler != CGPU_NULLPTR && "fatal: call on NULL sampler!");
     const CGPUDeviceId device = sampler->device;
@@ -1143,12 +1143,12 @@ void cgpu_free_sampler(CGPUSamplerId sampler)
     cgpu_assert(fn_free_sampler && "free_sampler Proc Missing!");
     fn_free_sampler(sampler);
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 }
 
 CGPUTextureViewId cgpu_create_texture_view(CGPUDeviceId device, const struct CGPUTextureViewDescriptor* desc)
 {
-    TracyCZoneN(zz, "CGPUCreateTexView", 1);
+    SkrCZoneN(zz, "CGPUCreateTexView", 1);
 
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_texture_view && "create_texture_view Proc Missing!");
@@ -1161,14 +1161,14 @@ CGPUTextureViewId cgpu_create_texture_view(CGPUDeviceId device, const struct CGP
     texture_view->device = device;
     texture_view->info = *desc;
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 
     return texture_view;
 }
 
 void cgpu_free_texture_view(CGPUTextureViewId render_target)
 {
-    TracyCZoneN(zz, "CGPUFreeTexView", 1);
+    SkrCZoneN(zz, "CGPUFreeTexView", 1);
 
     cgpu_assert(render_target != CGPU_NULLPTR && "fatal: call on NULL render_target!");
     const CGPUDeviceId device = render_target->device;
@@ -1178,7 +1178,7 @@ void cgpu_free_texture_view(CGPUTextureViewId render_target)
     cgpu_assert(fn_free_texture_view && "free_texture_view Proc Missing!");
     fn_free_texture_view(render_target);
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 }
 
 bool cgpu_try_bind_aliasing_texture(CGPUDeviceId device, const struct CGPUTextureAliasingBindDescriptor* desc)
@@ -1216,7 +1216,7 @@ CGPUTextureId cgpu_import_shared_texture_handle(CGPUDeviceId device, const struc
 // SwapChain APIs
 CGPUSwapChainId cgpu_create_swapchain(CGPUDeviceId device, const CGPUSwapChainDescriptor* desc)
 {
-    TracyCZoneN(zz, "CGPUCreateSwapchain", 1);
+    SkrCZoneN(zz, "CGPUCreateSwapchain", 1);
 
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_swapchain && "create_swapchain Proc Missing!");
@@ -1245,27 +1245,27 @@ CGPUSwapChainId cgpu_create_swapchain(CGPUDeviceId device, const CGPUSwapChainDe
         info->unique_id = ((CGPUDevice*)device)->next_texture_id++;
     }
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 
     return swapchain;
 }
 
 uint32_t cgpu_acquire_next_image(CGPUSwapChainId swapchain, const struct CGPUAcquireNextDescriptor* desc)
 {
-    TracyCZoneN(zz, "CGPUAcquireNext", 1);
+    SkrCZoneN(zz, "CGPUAcquireNext", 1);
 
     cgpu_assert(swapchain != CGPU_NULLPTR && "fatal: call on NULL swapchain!");
     cgpu_assert(swapchain->device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(swapchain->device->proc_table_cache->acquire_next_image && "acquire_next_image Proc Missing!");
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 
     return swapchain->device->proc_table_cache->acquire_next_image(swapchain, desc);
 }
 
 void cgpu_free_swapchain(CGPUSwapChainId swapchain)
 {
-    TracyCZoneN(zz, "CGPUFreeSwapchain", 1);
+    SkrCZoneN(zz, "CGPUFreeSwapchain", 1);
 
     cgpu_assert(swapchain != CGPU_NULLPTR && "fatal: call on NULL swapchain!");
     cgpu_assert(swapchain->device != CGPU_NULLPTR && "fatal: call on NULL device!");
@@ -1276,7 +1276,7 @@ void cgpu_free_swapchain(CGPUSwapChainId swapchain)
         pInfo->width, pInfo->height, swapchain,
         swapchain->back_buffers[0], swapchain->back_buffers[1]);
 
-    TracyCZoneEnd(zz);
+    SkrCZoneEnd(zz);
 
     swapchain->device->proc_table_cache->free_swapchain(swapchain);
 }
@@ -1398,7 +1398,7 @@ CGPUDStorageQueueId cgpu_create_dstorage_queue(CGPUDeviceId device, const CGPUDS
     return device->proc_table_cache->create_dstorage_queue(device, descriptor);    
 }
 
-CGPUDStorageFileHandle cgpu_dstorage_open_file(CGPUDStorageQueueId queue, const char* abs_path)
+CGPUDStorageFileHandle cgpu_dstorage_open_file(CGPUDStorageQueueId queue, const char8_t* abs_path)
 {
     cgpu_assert(queue != CGPU_NULLPTR && "fatal: call on NULL queue!");
     cgpu_assert(queue->device != CGPU_NULLPTR && "fatal: call on NULL device!");

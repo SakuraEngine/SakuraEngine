@@ -494,11 +494,11 @@ struct WorldDeltaApplier : IWorldDeltaApplier
 
     void ApplyDelta(const MPWorldDeltaView& delta, entity_map_t& map) override
     {
-        ZoneScopedN("WorldDeltaApplier::ApplyDelta");
+        SkrZoneScopedN("WorldDeltaApplier::ApplyDelta");
         SKR_ASSERT(initialized);
         map.clear();
         {
-            ZoneScopedN("Build Entity Map");
+            SkrZoneScopedN("Build Entity Map");
             auto callback = [&](dual_chunk_view_t* view) {
                 auto networks = (CNetwork*)dualV_get_owned_ro(view, dual_id_of<CNetwork>::get());
                 auto ents = dualV_get_entities(view);
@@ -508,7 +508,7 @@ struct WorldDeltaApplier : IWorldDeltaApplier
             dualQ_get_views(worldDeltaQuery, DUAL_LAMBDA(callback));
         }
         {
-            ZoneScopedN("Apply Structural Changes");
+            SkrZoneScopedN("Apply Structural Changes");
             for (auto& pair : delta.changed)
             {
                 auto iter = map.find(delta.entities[pair.entity]);
@@ -558,7 +558,7 @@ struct WorldDeltaApplier : IWorldDeltaApplier
             }
         }
         {
-            ZoneScopedN("Apply Component Changes");
+            SkrZoneScopedN("Apply Component Changes");
             for (auto& component : components)
             {
                 auto event = component.ApplyDelta(delta, map);
@@ -566,7 +566,7 @@ struct WorldDeltaApplier : IWorldDeltaApplier
                     dependencies.emplace_back(std::move(event));
             }
             {
-                ZoneScopedN("Syncing");
+                SkrZoneScopedN("Syncing");
                 for (auto& dependency : dependencies)
                 {
                     dependency.wait(true);

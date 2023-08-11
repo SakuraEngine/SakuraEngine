@@ -2,7 +2,7 @@
 #include "SkrRenderer/render_mesh.h"
 #include <SkrRT/platform/filesystem.hpp>
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 void skr_render_mesh_initialize(skr_render_mesh_id render_mesh, skr_mesh_resource_id mesh_resource)
 {
@@ -81,10 +81,10 @@ skr_primitive_draw_packet_t IMeshRenderEffect::produce_draw_packets(const skr_pr
     // 1. calculate primitive count
     uint32_t primitiveCount = 0;
     auto counterF = [&](dual_chunk_view_t* r_cv) {
-        ZoneScopedN("PreCalculateDrawCallCount");
+        SkrZoneScopedN("PreCalculateDrawCallCount");
         const skr_render_mesh_comp_t* meshes = nullptr;
         {
-            ZoneScopedN("FetchRenderMeshes");
+            SkrZoneScopedN("FetchRenderMeshes");
             meshes = dual::get_component_ro<skr_render_mesh_comp_t>(r_cv);
         }
         for (uint32_t i = 0; i < r_cv->count; i++)

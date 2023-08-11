@@ -7,7 +7,7 @@
 #include "SkrRenderer/pso_key.hpp"
 #include "SkrRenderer/pso_map.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skr {
 namespace renderer {
@@ -272,7 +272,7 @@ struct PSOMapImpl : public skr_pso_map_t
 
 bool PSOProgress::do_in_background()
 {
-    ZoneScopedN("CreatePSO");
+    SkrZoneScopedN("CreatePSO");
 
     key->pso = cgpu_create_render_pipeline(map->root.device, &key->descriptor);
     if (key->pso)

@@ -6,7 +6,7 @@
 #include "SkrRenderer/render_viewport.h"
 #include "SkrRenderer/skr_renderer.h"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 struct SViewportManagerImpl : public SViewportManager
 {
@@ -121,7 +121,7 @@ void skr_resolve_cameras_to_viewport(struct SViewportManager* viewport_manager, 
 {
     dual_query_t* camera_query = static_cast<SViewportManagerImpl*>(viewport_manager)->camera_query;
     auto cameraSetup = [&](dual_chunk_view_t* g_cv) {
-        ZoneScopedN("CameraResolve");
+        SkrZoneScopedN("CameraResolve");
 
         auto cameras = dual::get_owned_ro<skr_camera_comp_t>(g_cv);
         auto camera_transforms = dual::get_owned_ro<skr_translation_comp_t>(g_cv);

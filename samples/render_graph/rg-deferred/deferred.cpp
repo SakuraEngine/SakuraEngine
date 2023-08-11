@@ -7,7 +7,7 @@
 #include "SkrImGui/skr_imgui.h"
 #include "SkrImGui/skr_imgui_rg.h"
 #include "SkrRT/platform/window.h"
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 #include "pass_profiler.h"
 #include "SkrRT/platform/thread.h"
 #include "SkrRT/math/rtm/qvvf.h"
@@ -380,10 +380,10 @@ int main(int argc, char* argv[])
                 }
             }
         }
-        ZoneScopedN("FrameTime");
+        SkrZoneScopedN("FrameTime");
         static uint64_t frame_index = 0;
         {
-            ZoneScopedN("ImGui");
+            SkrZoneScopedN("ImGui");
             auto& io = ImGui::GetIO();
             io.DisplaySize = ImVec2(
                 (float)swapchain->back_buffers[0]->info->width,
@@ -433,7 +433,7 @@ int main(int argc, char* argv[])
         }
         {
             // acquire frame
-            ZoneScopedN("AcquireFrame");
+            SkrZoneScopedN("AcquireFrame");
             cgpu_wait_fences(&present_fence, 1);
             CGPUAcquireNextDescriptor acquire_desc = {};
             acquire_desc.fence = present_fence;
@@ -441,7 +441,7 @@ int main(int argc, char* argv[])
         }
         CGPUTextureId native_backbuffer = swapchain->back_buffers[backbuffer_index];
         {
-            ZoneScopedN("GraphSetup");
+            SkrZoneScopedN("GraphSetup");
             // render graph setup & compile & exec
             auto back_buffer = graph->create_texture(
             [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
@@ -612,7 +612,7 @@ int main(int argc, char* argv[])
                 });
         }
         {
-            ZoneScopedN("GraphCompile");
+            SkrZoneScopedN("GraphCompile");
             graph->compile();
             if (frame_index == 0)
                 render_graph::RenderGraphViz::write_graphviz(*graph, "render_graph_deferred_cs.gv");
@@ -620,18 +620,18 @@ int main(int argc, char* argv[])
                 render_graph::RenderGraphViz::write_graphviz(*graph, "render_graph_deferred.gv");
         }
         {
-            ZoneScopedN("GraphExecute");
+            SkrZoneScopedN("GraphExecute");
             auto profiler_index = frame_index % RG_MAX_FRAME_IN_FLIGHT;
             frame_index = graph->execute(profilers + profiler_index);
         }
         // present
         {
-            ZoneScopedN("CollectGarbage");
+            SkrZoneScopedN("CollectGarbage");
             if (frame_index >= RG_MAX_FRAME_IN_FLIGHT * 10)
                 graph->collect_garbage(frame_index - RG_MAX_FRAME_IN_FLIGHT * 10);
         }
         {
-            ZoneScopedN("Present");
+            SkrZoneScopedN("Present");
             CGPUQueuePresentDescriptor present_desc = {};
             present_desc.index = backbuffer_index;
             present_desc.swapchain = swapchain;

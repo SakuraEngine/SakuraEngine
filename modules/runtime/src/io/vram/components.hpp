@@ -1,8 +1,9 @@
 #pragma once
+#include "SkrRT/misc/types.h"
 #include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/io/vram_io.hpp"
-#include "../components/status_component.hpp"
-#include "SkrRT/platform/debug.h"
+#include "io/ram/ram_service.hpp"
+#include "io/components/component.hpp"
 
 struct CGPUBuffer;
 struct CGPUTexture;
@@ -17,6 +18,7 @@ struct CID<struct VRAMUploadComponent>
 };
 struct VRAMUploadComponent final : public IORequestComponent
 {
+public:
     VRAMUploadComponent(IIORequest* const request) SKR_NOEXCEPT;
 
     void set_transfer_queue(CGPUQueueId queue) SKR_NOEXCEPT
@@ -24,12 +26,24 @@ struct VRAMUploadComponent final : public IORequestComponent
         transfer_queue = queue;
     }
 
-    CGPUQueueId transfer_queue = nullptr;
-    RAMIOBufferId buffer = nullptr;
-    IOFuture ram_future;
+    CGPUQueueId get_transfer_queue() const SKR_NOEXCEPT
+    {
+        return transfer_queue;
+    }
 
-    uint8_t* data = nullptr;
-    uint64_t size = 0;
+    RAMIOBufferId pin_staging_buffer(RAMService* ram_service) SKR_NOEXCEPT
+    {
+        ram_buffer = ram_service->ram_buffer_pool->allocate();
+        return ram_buffer;
+    }
+
+protected:
+    friend struct CommonVRAMReader;
+    CGPUQueueId transfer_queue = nullptr;
+    RAMIOBufferId ram_buffer = nullptr;
+    IOFuture ram_future = {};
+    uint8_t* src_data = nullptr;
+    uint64_t src_size = 0;
 };
 
 template <>
@@ -41,12 +55,52 @@ struct VRAMDStorageComponent final : public IORequestComponent
 {
     VRAMDStorageComponent(IIORequest* const request) SKR_NOEXCEPT;
 
-    void set_dstorage_queue(CGPUDStorageQueueId queue) SKR_NOEXCEPT
+    void set_force_enable_dstorage(bool enable) SKR_NOEXCEPT
     {
-        dstorage_queue = queue;
+        use_force = true;
+        force_enabled = enable;
     }
 
-    CGPUDStorageQueueId dstorage_queue = nullptr;
+    void set_enable_dstorage(bool enable) SKR_NOEXCEPT
+    {
+        enabled = enable;
+    }
+
+    void set_dstorage_compression(SkrDStorageCompression compression, uint64_t uncompressed_size) SKR_NOEXCEPT
+    {
+        this->compression = compression;
+        this->uncompressed_size = uncompressed_size;
+    }
+
+    void get_dstorage_compression(SkrDStorageCompression& c, uint64_t& sz) const SKR_NOEXCEPT
+    {
+        if (this->compression != SKR_DSTORAGE_COMPRESSION_NONE)
+        {
+            c = this->compression;
+            sz = this->uncompressed_size;
+        }
+    }
+
+    bool should_use_dstorage() SKR_NOEXCEPT
+    {
+        bool _enabled = enabled;
+        if (use_force)
+        {
+            _enabled = force_enabled;
+        }
+        auto vram_service = static_cast<IVRAMService*>(this->request->get_service());
+        return _enabled && vram_service->get_dstoage_available();
+    }
+
+private:
+    friend struct DStorageVRAMReader;
+    friend struct AllocateVRAMResourceResolver;
+    SkrDStorageFileHandle dfile = nullptr;
+    SkrDStorageCompression compression = SKR_DSTORAGE_COMPRESSION_NONE;
+    uint64_t uncompressed_size = 0;
+    bool use_force = false;
+    bool force_enabled = true;
+    bool enabled = true;
 };
 
 template <>
@@ -66,13 +120,14 @@ struct VRAMBufferComponent final : public IORequestComponent
 
     enum class Type
     {
+        None,
         Imported,
         ServiceCreated
     };
-    Type type;
-    uint64_t offset;
-    CGPUBufferId buffer;
-    CGPUDeviceId device;
+    Type type = Type::None;
+    uint64_t offset = 0;
+    CGPUBufferId buffer = nullptr;
+    CGPUDeviceId device = nullptr;
     CGPUBufferDescriptor desc;
 };
 
@@ -94,12 +149,13 @@ struct VRAMTextureComponent final : public IORequestComponent
 
     enum class Type
     {
+        None,
         Imported,
         ServiceCreated
     };
-    Type type;
-    CGPUTextureId texture;
-    CGPUDeviceId device;
+    Type type = Type::None;
+    CGPUTextureId texture = nullptr;
+    CGPUDeviceId device = nullptr;
     CGPUTextureDescriptor desc;
 
     uint32_t first_slice = 0;

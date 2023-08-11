@@ -43,7 +43,7 @@ option("use_async_codegen")
     set_description("Toggle to use async codegen")
 option_end()
 
-option("use_tracy")
+option("use_profile")
     -- "auto", "enable", "disable"
     set_default("auto")
     set_values("auto", "enable", "disable")

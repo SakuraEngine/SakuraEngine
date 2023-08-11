@@ -11,7 +11,7 @@
     #include <shellscalingapi.h>
 #endif
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 class SVMemCCModule : public skr::IDynamicModule
 {
@@ -213,7 +213,7 @@ int SVMemCCModule::main_module_exec(int argc, char8_t** argv)
         FrameMark;
         float delta = 1.f / 60.f;
         {
-            ZoneScopedN("SystemEvents");
+            SkrZoneScopedN("SystemEvents");
             handler->pump_messages(delta);
             handler->process_messages(delta);
         }

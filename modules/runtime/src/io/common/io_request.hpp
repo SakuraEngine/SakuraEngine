@@ -7,7 +7,7 @@
 
 #include <tuple>
 #include "pool.hpp"
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skr {
 namespace io {
@@ -33,8 +33,8 @@ struct IORequestMixin : public Interface
 {
     IO_RC_OBJECT_BODY
 public:
-    IORequestMixin(ISmartPoolPtr<Interface> pool) 
-        : components(std::make_tuple(Components(this)...)), pool(pool)
+    IORequestMixin(ISmartPoolPtr<Interface> pool, IIOService* service) 
+        : service(service), components(std::make_tuple(Components(this)...)), pool(pool)
     {
 
     }
@@ -42,7 +42,7 @@ public:
 
     [[nodiscard]] virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT
     {
-        ZoneScopedN("IORequestMixin::get_component");
+        SkrZoneScopedN("IORequestMixin::get_component");
         auto& map = acquire_cmap();
         auto&& iter = map.find(tid);
         if (iter != map.end())
@@ -54,7 +54,7 @@ public:
 
     [[nodiscard]] virtual IORequestComponent* get_component(skr_guid_t tid) SKR_NOEXCEPT
     {
-        ZoneScopedN("IORequestMixin::get_component");
+        SkrZoneScopedN("IORequestMixin::get_component");
         auto& map = acquire_cmap();
         auto&& iter = map.find(tid);
         if (iter != map.end())
@@ -62,6 +62,12 @@ public:
             return dynamic_get(components, iter->second);
         }
         return nullptr;
+    }
+
+    IIOService* get_service() const SKR_NOEXCEPT
+    {
+        SKR_ASSERT(service && "service is null!");
+        return service;
     }
 
     SInterfaceDeleter custom_deleter() const 
@@ -73,6 +79,8 @@ public:
         };
     }
     
+protected:
+    IIOService* service = nullptr;
 private:
     std::tuple<Components...> components;
     ISmartPoolPtr<Interface> pool = nullptr;

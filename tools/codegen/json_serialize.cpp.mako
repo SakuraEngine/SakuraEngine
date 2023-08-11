@@ -4,7 +4,7 @@
 #include "SkrRT/misc/log.h"
 #include "SkrRT/serde/json/reader.h"
 #include "SkrRT/serde/json/writer.h"
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 [[maybe_unused]] static const char8_t* JsonArrayJsonFieldArchiveFailedFormat = u8"[SERDE/JSON] Archive %s.%s[%d] failed: %s";
 [[maybe_unused]] static const char8_t* JsonArrayFieldArchiveWarnFormat = u8"[SERDE/JSON] %s.%s got too many elements (%d expected, given %d), ignoring overflowed elements";
 [[maybe_unused]] static const char8_t* JsonFieldArchiveFailedFormat = u8"[SERDE/JSON] Archive %s.%s failed: %s";
@@ -48,7 +48,7 @@ namespace skr::json {
 %for enum in generator.filter_types(db.enums):
 error_code ReadTrait<${enum.name}>::Read(value_t&& json, ${enum.name}& e)
 {
-    ZoneScopedN("json::ReadTrait<${enum.name}>::Read");
+    SkrZoneScopedN("json::ReadTrait<${enum.name}>::Read");
     auto value = json.get_string();
     if (value.error() != simdjson::SUCCESS)
         return (error_code)value.error();
@@ -64,7 +64,7 @@ error_code ReadTrait<${enum.name}>::Read(value_t&& json, ${enum.name}& e)
 
 void WriteTrait<const ${enum.name}&>::Write(skr_json_writer_t* writer, ${enum.name} e)
 {
-    ZoneScopedN("json::WriteTrait<${enum.name}>::Write");
+    SkrZoneScopedN("json::WriteTrait<${enum.name}>::Write");
     writer->String(skr::type::enum_to_string(e));
 } 
 %endfor
@@ -73,7 +73,7 @@ void WriteTrait<const ${enum.name}&>::Write(skr_json_writer_t* writer, ${enum.na
 %if not generator.filter_debug_type(record):
 error_code ReadTrait<${record.name}>::Read(value_t&& json, ${record.name}& record)
 {
-    ZoneScopedN("json::ReadTrait<${record.name}>::Read");
+    SkrZoneScopedN("json::ReadTrait<${record.name}>::Read");
     %for base in record.bases:
     {
         auto baseJson = json;
@@ -171,7 +171,7 @@ void WriteTrait<const ${record.name}&>::WriteFields(skr_json_writer_t* writer, c
 } 
 void WriteTrait<const ${record.name}&>::Write(skr_json_writer_t* writer, const ${record.name}& record)
 {
-    ZoneScopedN("json::WriteTrait<${record.name}>::Write");
+    SkrZoneScopedN("json::WriteTrait<${record.name}>::Write");
     writer->StartObject();
     WriteFields(writer, record);
     writer->EndObject();

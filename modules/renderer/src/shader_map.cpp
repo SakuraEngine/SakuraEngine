@@ -1,18 +1,15 @@
 #include "SkrRenderer/shader_map.h"
-#include "SkrRenderer/render_device.h"
 #include "SkrRenderer/shader_hash.h"
-
-#include "SkrRT/misc/log.h"
-#include "SkrRT/misc/defer.hpp"
 #include "SkrRT/misc/make_zeroed.hpp"
 #include "SkrRT/platform/atomic.h"
+#include "SkrRT/io/ram_io.hpp"
 #include "SkrRT/async/thread_job.hpp"
 
 #include "SkrRT/containers/hashmap.hpp"
 #include "SkrRT/containers/string.hpp"
 #include "SkrRT/containers/sptr.hpp"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skr
 {
@@ -81,7 +78,7 @@ struct ShaderMapImpl : public skr_shader_map_t
 
 bool ShaderProgress::do_in_background()
 {
-    ZoneScopedN("CreateShader");
+    SkrZoneScopedN("CreateShader");
 
     auto device = factory->root.device;
     auto& shader = factory->mShaderMap[identifier];
@@ -183,7 +180,7 @@ ESkrShaderMapShaderStatus ShaderMapImpl::install_shader_from_vfs(const skr_platf
     request->set_path(sRequest->bytes_uri.u8_str());
     request->add_block({}); // read all
     request->add_callback(SKR_IO_STAGE_COMPLETED, +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
-        ZoneScopedN("CreateShaderFromBytes");
+        SkrZoneScopedN("CreateShaderFromBytes");
         
         auto progress = (ShaderProgress*)data;
         auto factory = progress->factory;

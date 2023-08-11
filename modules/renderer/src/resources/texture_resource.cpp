@@ -1,9 +1,9 @@
 #include "cgpu/api.h"
-#include "cgpu/io.h"
 #include "SkrRT/io/ram_io.hpp"
 #include <SkrRT/platform/filesystem.hpp>
 #include "SkrRT/platform/debug.h"
 #include "SkrRT/type/type_id.hpp"
+#include "SkrRT/io/vram_io.hpp"
 #include "SkrRT/resource/resource_factory.h"
 #include "SkrRT/resource/resource_system.h"
 #include "SkrRT/misc/log.h"
@@ -20,7 +20,7 @@
 //#include "SkrRT/platform/win/dstorage_windows.h"
 #endif
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skr
 {
@@ -48,15 +48,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
     bool Uninstall(skr_resource_record_t* record) override;
     ESkrInstallStatus UpdateInstall(skr_resource_record_t* record) override;
     
-    ESkrInstallStatus InstallWithDStorage(skr_resource_record_t* record);
-    ESkrInstallStatus InstallWithUpload(skr_resource_record_t* record);
-
-    enum class EInstallMethod : uint32_t
-    {
-        DSTORAGE,
-        UPLOAD,
-        COUNT
-    };
+    ESkrInstallStatus InstallImpl(skr_resource_record_t* record);
 
     enum class ECompressMethod : uint32_t
     {
@@ -68,44 +60,18 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
 
     struct InstallType
     {
-        EInstallMethod install_method;
         ECompressMethod compress_method;
     };
 
-    struct DStorageRequest
+    struct TextureRequest
     {
-        DStorageRequest()
-        {
-            texture_destination.texture = nullptr;
-        }
-        ~DStorageRequest()
+        ~TextureRequest()
         {
             SKR_LOG_TRACE(u8"DStorage for texture resource %s finished!", absPath.c_str());
         }
         std::string absPath;
-        skr_io_future_t vtexture_request;
-        skr_async_vtexture_destination_t texture_destination = {};
-    };
-
-    struct UploadRequest
-    {
-        UploadRequest() = default;
-        UploadRequest(STextureFactoryImpl* factory, const char* resource_uri, skr_texture_resource_id texture_resource)
-            : factory(factory), resource_uri(resource_uri), texture_resource(texture_resource)
-        {
-            texture_destination.texture = nullptr;
-        }
-        ~UploadRequest()
-        {
-            SKR_LOG_TRACE(u8"Upload for texture resource %s finished!", resource_uri.c_str());
-        }
-        STextureFactoryImpl* factory = nullptr;
-        std::string resource_uri;
-        skr_texture_resource_id texture_resource = nullptr;
-        skr_io_future_t ram_request;
-        skr::BlobId blob = nullptr;
-        skr_io_future_t vram_request;
-        skr_async_vtexture_destination_t texture_destination = {};
+        skr_io_future_t vtexture_future;
+        skr::io::VRAMIOTextureId io_texture = nullptr;
     };
 
     // TODO: refactor this
@@ -145,8 +111,7 @@ struct SKR_RENDERER_API STextureFactoryImpl : public STextureFactory
     skr::string dstorage_root;
     Root root;
     skr::flat_hash_map<skr_texture_resource_id, InstallType> mInstallTypes;
-    skr::flat_hash_map<skr_texture_resource_id, SPtr<UploadRequest>> mUploadRequests;
-    skr::flat_hash_map<skr_texture_resource_id, SPtr<DStorageRequest>> mDStorageRequests;
+    skr::flat_hash_map<skr_texture_resource_id, SPtr<TextureRequest>> mTextureRequests;
 };
 
 STextureFactory* STextureFactory::Create(const Root& root)
@@ -178,15 +143,7 @@ ESkrInstallStatus STextureFactoryImpl::Install(skr_resource_record_t* record)
 {
     if (auto render_device = root.render_device)
     {
-        // direct storage
-        if (auto file_dstorage_queue = render_device->get_file_dstorage_queue())
-        {
-            return InstallWithDStorage(record);
-        }
-        else
-        {
-            return InstallWithUpload(record);
-        }
+        return InstallImpl(record);
     }
     else
     {
@@ -195,119 +152,54 @@ ESkrInstallStatus STextureFactoryImpl::Install(skr_resource_record_t* record)
     return ESkrInstallStatus::SKR_INSTALL_STATUS_FAILED;
 }
 
-ESkrInstallStatus STextureFactoryImpl::InstallWithDStorage(skr_resource_record_t* record)
+ESkrInstallStatus STextureFactoryImpl::InstallImpl(skr_resource_record_t* record)
 {
     const auto gpuCompressOnly = true;
+    auto vram_service = root.vram_service;
     auto texture_resource = (skr_texture_resource_t*)record->resource;
     auto guid = record->activeRequest->GetGuid();
     if (auto render_device = root.render_device)
     {
-        // direct storage
-        if (auto file_dstorage_queue = render_device->get_file_dstorage_queue())
-        {
-            if (gpuCompressOnly)
-            {
-                const char* suffix = GetSuffixWithCompressionFormat((ECGPUFormat)texture_resource->format);
-                auto compressedBin = skr::format(u8"{}{}", guid, suffix); //TODO: choose compression format
-                auto compressedPath = skr::filesystem::path(root.dstorage_root) / compressedBin.c_str();
-                auto dRequest = SPtr<DStorageRequest>::Create();
-                InstallType installType = {EInstallMethod::DSTORAGE, ECompressMethod::BC_OR_ASTC};
-                auto found = mDStorageRequests.find(texture_resource);
-                SKR_ASSERT(found == mDStorageRequests.end());
-                mDStorageRequests.emplace(texture_resource, dRequest);
-                mInstallTypes.emplace(texture_resource, installType);
-                dRequest->absPath = compressedPath.string();
-
-                auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();
-                vram_texture_io.device = render_device->get_cgpu_device();
-                vram_texture_io.dstorage.path = (const char8_t*)dRequest->absPath.c_str();
-                vram_texture_io.dstorage.compression = SKR_DSTORAGE_COMPRESSION_NONE;
-                vram_texture_io.dstorage.source_type = SKR_DSTORAGE_SOURCE_FILE;
-                vram_texture_io.dstorage.queue = file_dstorage_queue;
-                vram_texture_io.dstorage.uncompressed_size = texture_resource->data_size;
-                
-                vram_texture_io.vtexture.resource_types = CGPU_RESOURCE_TYPE_NONE;
-                vram_texture_io.vtexture.texture_name = nullptr; // TODO: Name
-                vram_texture_io.vtexture.width = texture_resource->width;
-                vram_texture_io.vtexture.height = texture_resource->height;
-                vram_texture_io.vtexture.depth = texture_resource->depth;
-                vram_texture_io.vtexture.format = (ECGPUFormat)texture_resource->format;
-
-                vram_texture_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data){
-
-                };
-                vram_texture_io.callback_datas[SKR_IO_STAGE_COMPLETED] = nullptr;
-                
-                root.vram_service->request(&vram_texture_io, &dRequest->vtexture_request, &dRequest->texture_destination);
-            }
-            else
-            {
-                SKR_UNIMPLEMENTED_FUNCTION();
-            }        
-        }
-    }
-    return ESkrInstallStatus::SKR_INSTALL_STATUS_INPROGRESS;
-}
-
-ESkrInstallStatus STextureFactoryImpl::InstallWithUpload(skr_resource_record_t* record)
-{
-    const auto gpuCompressOnly = true;
-    auto texture_resource = (skr_texture_resource_t*)record->resource;
-    auto guid = record->activeRequest->GetGuid();
-    if (auto render_device = root.render_device)
-    {
+        auto batch = vram_service->open_batch(1);
         if (gpuCompressOnly)
         {
             const char* suffix = GetSuffixWithCompressionFormat((ECGPUFormat)texture_resource->format);
-            auto uRequest = SPtr<UploadRequest>::Create(
-                this, skr::format(u8"{}{}", guid, suffix).c_str(), texture_resource);
-            InstallType installType = {EInstallMethod::UPLOAD, ECompressMethod::BC_OR_ASTC};
-            auto found = mUploadRequests.find(texture_resource);
-            SKR_ASSERT(found == mUploadRequests.end());
-            mUploadRequests.emplace(texture_resource, uRequest);
+            auto compressedBin = skr::format(u8"{}{}", guid, suffix); //TODO: choose compression format
+            auto dRequest = SPtr<TextureRequest>::Create();
+            InstallType installType = { ECompressMethod::BC_OR_ASTC };
+            auto found = mTextureRequests.find(texture_resource);
+            SKR_ASSERT(found == mTextureRequests.end());
+            mTextureRequests.emplace(texture_resource, dRequest);
             mInstallTypes.emplace(texture_resource, installType);
+            // auto compressedPath = skr::filesystem::path(root.dstorage_root) / compressedBin.c_str();
+            // dRequest->absPath = compressedPath.string();
 
-            // emit ram request
-            auto rq = root.ram_service->open_request();
-            rq->set_vfs(root.vfs);
-            rq->set_path((const char8_t*)uRequest->resource_uri.c_str());
-            rq->add_block({}); // read all
-            rq->add_callback(SKR_IO_STAGE_COMPLETED,
-            +[](skr_io_future_t* future, skr_io_request_t* request, void* data) noexcept {
-                ZoneScopedN("Upload Image");
-                // upload
-                auto uRequest = (UploadRequest*)data;
-                auto factory = uRequest->factory;
-                auto render_device = factory->root.render_device;
-                auto texture_resource = uRequest->texture_resource;
+            CGPUTextureDescriptor tdesc = {};
+            tdesc.descriptors = CGPU_RESOURCE_TYPE_NONE;
+            tdesc.name = nullptr; // TODO: Name
+            tdesc.width = texture_resource->width;
+            tdesc.height = texture_resource->height;
+            tdesc.depth = texture_resource->depth;
+            tdesc.format = (ECGPUFormat)texture_resource->format;
 
-                auto& texture_io_request = uRequest->vram_request;
-                auto& texture_destination = uRequest->texture_destination;
-                auto vram_texture_io = make_zeroed<skr_vram_texture_io_t>();
-                vram_texture_io.device = render_device->get_cgpu_device();
-                vram_texture_io.transfer_queue = render_device->get_cpy_queue();
-
-                SKR_ASSERT(texture_resource->data_size == uRequest->blob->get_size());
-
-                vram_texture_io.vtexture.texture_name = nullptr; // TODO: debug name
-                vram_texture_io.vtexture.resource_types = CGPU_RESOURCE_TYPE_TEXTURE;
-                vram_texture_io.vtexture.width = texture_resource->width;
-                vram_texture_io.vtexture.height = texture_resource->height;
-                vram_texture_io.vtexture.depth = texture_resource->depth;
-                vram_texture_io.vtexture.format = (ECGPUFormat)texture_resource->format;
-                vram_texture_io.src_memory.size = texture_resource->data_size;
-                vram_texture_io.src_memory.bytes = uRequest->blob->get_data();
-                vram_texture_io.callbacks[SKR_IO_STAGE_COMPLETED] = +[](skr_io_future_t* future, skr_io_request_t* request, void* data){};
-                vram_texture_io.callback_datas[SKR_IO_STAGE_COMPLETED] = nullptr;
-                factory->root.vram_service->request(&vram_texture_io, &texture_io_request, &texture_destination);
-            }, uRequest.get());
-            uRequest->blob = root.ram_service->request(rq, &uRequest->ram_request);
+            auto request = vram_service->open_texture_request();
+            request->set_vfs(root.vfs);
+            request->set_path(compressedBin.u8_str());
+            request->set_texture(render_device->get_cgpu_device(), &tdesc);
+            request->set_transfer_queue(render_device->get_cpy_queue());
+            auto result = batch->add_request(request, &dRequest->vtexture_future);
+            dRequest->io_texture = skr::static_pointer_cast<skr::io::IVRAMIOTexture>(result);
         }
         else
         {
             SKR_UNIMPLEMENTED_FUNCTION();
-        }
+        }        
+        vram_service->request(batch);
     }
+    else
+    {
+        SKR_UNREACHABLE_CODE();
+    } 
     return ESkrInstallStatus::SKR_INSTALL_STATUS_INPROGRESS;
 }
 
@@ -319,76 +211,36 @@ bool STextureFactoryImpl::Uninstall(skr_resource_record_t* record)
 ESkrInstallStatus STextureFactoryImpl::UpdateInstall(skr_resource_record_t* record)
 {
     auto texture_resource = (skr_texture_resource_t*)record->resource;
-    auto installType = mInstallTypes[texture_resource];
-    if (installType.install_method == EInstallMethod::DSTORAGE)
+    [[maybe_unused]] auto installType = mInstallTypes[texture_resource];
+    auto dRequest = mTextureRequests.find(texture_resource);
+    if (dRequest != mTextureRequests.end())
     {
-        auto dRequest = mDStorageRequests.find(texture_resource);
-        if (dRequest != mDStorageRequests.end())
+        bool okay = dRequest->second->vtexture_future.is_ready();
+        auto status = okay ? ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED : ESkrInstallStatus::SKR_INSTALL_STATUS_INPROGRESS;
+        if (okay)
         {
-            bool okay = dRequest->second->vtexture_request.is_ready();
-            auto status = okay ? ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED : ESkrInstallStatus::SKR_INSTALL_STATUS_INPROGRESS;
-            if (okay)
-            {
-                texture_resource->texture = dRequest->second->texture_destination.texture;
-                // TODO: mipmap view
-                CGPUTextureViewDescriptor view_desc = {};
-                view_desc.texture = texture_resource->texture;
-                view_desc.array_layer_count = 1;
-                view_desc.base_array_layer = 0;
-                view_desc.mip_level_count = 1;
-                view_desc.base_mip_level = 0;
-                view_desc.aspects = CGPU_TVA_COLOR;
-                view_desc.dims = CGPU_TEX_DIMENSION_2D;
-                view_desc.format = (ECGPUFormat)texture_resource->format;
-                view_desc.usages = CGPU_TVU_SRV;
-                texture_resource->texture_view = cgpu_create_texture_view(root.render_device->get_cgpu_device(), &view_desc);
+            texture_resource->texture = dRequest->second->io_texture->get_texture();
+            // TODO: mipmap view
+            CGPUTextureViewDescriptor view_desc = {};
+            view_desc.texture = texture_resource->texture;
+            view_desc.array_layer_count = 1;
+            view_desc.base_array_layer = 0;
+            view_desc.mip_level_count = 1;
+            view_desc.base_mip_level = 0;
+            view_desc.aspects = CGPU_TVA_COLOR;
+            view_desc.dims = CGPU_TEX_DIMENSION_2D;
+            view_desc.format = (ECGPUFormat)texture_resource->format;
+            view_desc.usages = CGPU_TVU_SRV;
+            texture_resource->texture_view = cgpu_create_texture_view(root.render_device->get_cgpu_device(), &view_desc);
 
-                mDStorageRequests.erase(texture_resource);
-                mInstallTypes.erase(texture_resource);
-            }
-            return status;
+            mTextureRequests.erase(texture_resource);
+            mInstallTypes.erase(texture_resource);
         }
-        else
-        {
-            SKR_UNREACHABLE_CODE();
-        }
+        return status;
     }
-    else if (installType.install_method == EInstallMethod::UPLOAD)
+    else
     {
-        auto uRequest = mUploadRequests.find(texture_resource);
-        if (uRequest != mUploadRequests.end())
-        {
-            bool okay = uRequest->second->vram_request.is_ready();
-            auto status = okay ? ESkrInstallStatus::SKR_INSTALL_STATUS_SUCCEED : ESkrInstallStatus::SKR_INSTALL_STATUS_INPROGRESS;
-            if (okay)
-            {
-                texture_resource->texture = uRequest->second->texture_destination.texture;
-                // TODO: mipmap view
-                CGPUTextureViewDescriptor view_desc = {};
-                view_desc.texture = texture_resource->texture;
-                view_desc.array_layer_count = 1;
-                view_desc.base_array_layer = 0;
-                view_desc.mip_level_count = 1;
-                view_desc.base_mip_level = 0;
-                view_desc.aspects = CGPU_TVA_COLOR;
-                view_desc.dims = CGPU_TEX_DIMENSION_2D;
-                view_desc.format = (ECGPUFormat)texture_resource->format;
-                view_desc.usages = CGPU_TVU_SRV;
-                texture_resource->texture_view = cgpu_create_texture_view(root.render_device->get_cgpu_device(), &view_desc);
-
-                if (auto rq = mUploadRequests[texture_resource])
-                {
-                    rq->blob.reset();
-                }
-                mUploadRequests.erase(texture_resource);
-                mInstallTypes.erase(texture_resource);
-            }
-            return status;
-        }
-        else
-        {
-            SKR_UNREACHABLE_CODE();
-        }
+        SKR_UNREACHABLE_CODE();
     }
 
     return ESkrInstallStatus::SKR_INSTALL_STATUS_INPROGRESS;

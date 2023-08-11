@@ -42,8 +42,8 @@ void VFSFileResolver::resolve(SkrAsyncServicePriority priority, IOBatchId batch,
     {
         if (!pFile->dfile && !pFile->file)
         {
-            SKR_ASSERT(pPath->vfs);
-            pFile->file = skr_vfs_fopen(pPath->vfs, pPath->path.u8_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+            SKR_ASSERT(pPath->get_vfs());
+            pFile->file = skr_vfs_fopen(pPath->get_vfs(), pPath->get_path(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
         }
     }
 }

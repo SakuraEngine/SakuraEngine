@@ -50,8 +50,8 @@ struct SmartPool : public ISmartPool<I>
         const auto N = skr_atomic64_load_acquire(&objcnt);
         if (N != 0)
         {
-            SKR_LOG_ERROR(u8"object leaking detected!");
-            SKR_ASSERT(0 && "object leaking detected!");
+            SKR_LOG_ERROR(u8"object leak detected!");
+            SKR_ASSERT(0 && u8"object leak detected!");
         }
         T* ptr = nullptr;
         while (blocks.try_dequeue(ptr))

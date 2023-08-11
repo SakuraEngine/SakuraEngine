@@ -2,7 +2,7 @@
 #include "SkrRT/misc/log/logger.hpp"
 #include "misc/log/log_manager.hpp"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skr {
 namespace log {
@@ -275,7 +275,7 @@ skr::AsyncResult LogWorker::serve() SKR_NOEXCEPT
     
     {
         setServiceStatus(SKR_ASYNC_SERVICE_STATUS_RUNNING);
-        ZoneScopedNC("Dispatch", tracy::Color::Orchid3);
+        SkrZoneScopedNC("Dispatch", tracy::Color::Orchid3);
         process_logs();
     }
     return ASYNC_RESULT_OK;
@@ -285,7 +285,7 @@ void LogWorker::patternAndSink(const LogElement& e) SKR_NOEXCEPT
 {
     if (e.valid)
     {
-        ZoneScopedNC("LogSingle", tracy::Color::Orchid1);
+        SkrZoneScopedNC("LogSingle", tracy::Color::Orchid1);
         const auto& what = e.need_format ? 
             formatter_.format(e.format, e.args) :
             e.format;
@@ -293,7 +293,7 @@ void LogWorker::patternAndSink(const LogElement& e) SKR_NOEXCEPT
         
         if (auto should_backtrace = LogManager::Get()->ShouldBacktrace(e.event))
         {
-            ZoneScopedNC("Backtrace", tracy::Color::Orchid2);
+            SkrZoneScopedNC("Backtrace", tracy::Color::Orchid2);
             const auto tid = (SThreadID)e.event.get_thread_id();
             if (auto token = queue_->query_token(tid))
             {

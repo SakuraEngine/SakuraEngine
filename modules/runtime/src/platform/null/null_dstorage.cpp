@@ -34,7 +34,7 @@ void skr_free_dstorage_queue(SkrDStorageQueueId queue)
 
 }
 
-SkrDStorageFileHandle skr_dstorage_open_file(SkrDStorageInstanceId instance, const char* abs_path)
+SkrDStorageFileHandle skr_dstorage_open_file(SkrDStorageInstanceId instance, const char8_t* abs_path)
 {
     return nullptr;
 }

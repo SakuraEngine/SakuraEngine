@@ -1,23 +1,20 @@
 #pragma once
+#include "SkrProfile/profile.h"
 #include "SkrRT/platform/configure.h"
 #include "SkrRT/platform/debug.h"
 #include <string.h>  // memset
 #ifdef __cplusplus
-#include <new>         // 'operator new' function for non-allocating placement new expression
-#include <string.h>    // memset
-#include <cstddef>     // std::size_t
-#include <cstdint>     // PTRDIFF_MAX
-#include <type_traits> // std::true_type
-#include <EASTL/internal/move_help.h>     // skr::forward
-namespace skr { using eastl::forward; using eastl::move; }
-
-#if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
-#include "SkrRT/misc/demangle.hpp"
+    #include <new>         // 'operator new' function for non-allocating placement new expression
+    #include <string.h>    // memset
+    #include <cstddef>     // std::size_t
+    #include <cstdint>     // PTRDIFF_MAX
+    #include <type_traits> // std::true_type
+    #include <EASTL/internal/move_help.h>     // skr::forward
+    namespace skr { using eastl::forward; using eastl::move; }
+    #if defined(SKR_PROFILE_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
+    #include "SkrRT/misc/demangle.hpp"
+    #endif
 #endif
-
-#endif
-
-#include "tracy/TracyC.h"
 
 SKR_EXTERN_C SKR_RUNTIME_API void* _sakura_malloc(size_t size, const char* pool_name);
 SKR_EXTERN_C SKR_RUNTIME_API void* _sakura_calloc(size_t count, size_t size, const char* pool_name);
@@ -43,93 +40,93 @@ SKR_EXTERN_C SKR_RUNTIME_API void containers_free_aligned(void* p, size_t alignm
 
 #define SKR_ALLOC_TRACY_MARKER_COLOR 0xff0000
 #define SKR_DEALLOC_TRACY_MARKER_COLOR 0x0000ff
-#if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
+#if defined(SKR_PROFILE_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
 
 FORCEINLINE void* SkrMallocWithCZone(size_t size, const char* line, const char* pool_name)
 {
-    TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
-    TracyCZoneText(z, line, strlen(line));
-    TracyCZoneName(z, line, strlen(line));
+    SkrCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
+    SkrCZoneText(z, line, strlen(line));
+    SkrCZoneName(z, line, strlen(line));
     void* ptr = _sakura_malloc(size, pool_name);
-    TracyCZoneEnd(z);
+    SkrCZoneEnd(z);
     return ptr;
 }
 
 FORCEINLINE void* SkrCallocWithCZone(size_t count, size_t size, const char* line, const char* pool_name)
 {
-    TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
-    TracyCZoneText(z, line, strlen(line));
-    TracyCZoneName(z, line, strlen(line));
+    SkrCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
+    SkrCZoneText(z, line, strlen(line));
+    SkrCZoneName(z, line, strlen(line));
     void* ptr = _sakura_calloc(count, size, pool_name);
-    TracyCZoneEnd(z);
+    SkrCZoneEnd(z);
     return ptr;
 }
 
 FORCEINLINE void* SkrMallocAlignedWithCZone(size_t size, size_t alignment, const char* line, const char* pool_name)
 {
-    TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
-    TracyCZoneText(z, line, strlen(line));
-    TracyCZoneName(z, line, strlen(line));
+    SkrCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
+    SkrCZoneText(z, line, strlen(line));
+    SkrCZoneName(z, line, strlen(line));
     void* ptr = _sakura_malloc_aligned(size, alignment, pool_name);
-    TracyCZoneEnd(z);
+    SkrCZoneEnd(z);
     return ptr;
 }
 
 FORCEINLINE void* SkrCallocAlignedWithCZone(size_t count, size_t size, size_t alignment, const char* line, const char* pool_name)
 {
-    TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
-    TracyCZoneText(z, line, strlen(line));
-    TracyCZoneName(z, line, strlen(line));
+    SkrCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
+    SkrCZoneText(z, line, strlen(line));
+    SkrCZoneName(z, line, strlen(line));
     void* ptr = _sakura_calloc_aligned(count, size, alignment, pool_name);
-    TracyCZoneEnd(z);
+    SkrCZoneEnd(z);
     return ptr;
 }
 
 FORCEINLINE void* SkrNewNWithCZone(size_t count, size_t size, const char* line, const char* pool_name)
 {
-    TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
-    TracyCZoneText(z, line, strlen(line));
-    TracyCZoneName(z, line, strlen(line));
+    SkrCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
+    SkrCZoneText(z, line, strlen(line));
+    SkrCZoneName(z, line, strlen(line));
     void* ptr = _sakura_new_n(count, size, pool_name);
-    TracyCZoneEnd(z);
+    SkrCZoneEnd(z);
     return ptr;
 }
 
 FORCEINLINE void* SkrNewAlignedWithCZone(size_t size, size_t alignment, const char* line, const char* pool_name)
 {
-    TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
-    TracyCZoneText(z, line, strlen(line));
-    TracyCZoneName(z, line, strlen(line));
+    SkrCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
+    SkrCZoneText(z, line, strlen(line));
+    SkrCZoneName(z, line, strlen(line));
     void* ptr = _sakura_new_aligned(size, alignment, pool_name);
-    TracyCZoneEnd(z);
+    SkrCZoneEnd(z);
     return ptr;
 }
 
 FORCEINLINE void SkrFreeWithCZone(void* p, const char* line, const char* pool_name)
 {
-    TracyCZoneC(z, SKR_DEALLOC_TRACY_MARKER_COLOR, 1);
-    TracyCZoneText(z, line, strlen(line));
-    TracyCZoneName(z, line, strlen(line));
+    SkrCZoneC(z, SKR_DEALLOC_TRACY_MARKER_COLOR, 1);
+    SkrCZoneText(z, line, strlen(line));
+    SkrCZoneName(z, line, strlen(line));
     _sakura_free(p, pool_name);
-    TracyCZoneEnd(z);
+    SkrCZoneEnd(z);
 }
 
 FORCEINLINE void SkrFreeAlignedWithCZone(void* p, size_t alignment, const char* line, const char* pool_name)
 {
-    TracyCZoneC(z, SKR_DEALLOC_TRACY_MARKER_COLOR, 1);
-    TracyCZoneText(z, line, strlen(line));
-    TracyCZoneName(z, line, strlen(line));
+    SkrCZoneC(z, SKR_DEALLOC_TRACY_MARKER_COLOR, 1);
+    SkrCZoneText(z, line, strlen(line));
+    SkrCZoneName(z, line, strlen(line));
     _sakura_free_aligned(p, alignment, pool_name);
-    TracyCZoneEnd(z);
+    SkrCZoneEnd(z);
 }
 
 FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line, const char* pool_name)
 {
-    TracyCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
-    TracyCZoneText(z, line, strlen(line));
-    TracyCZoneName(z, line, strlen(line));
+    SkrCZoneC(z, SKR_ALLOC_TRACY_MARKER_COLOR, 1);
+    SkrCZoneText(z, line, strlen(line));
+    SkrCZoneName(z, line, strlen(line));
     void* ptr = _sakura_realloc(p, newsize, pool_name);
-    TracyCZoneEnd(z);
+    SkrCZoneEnd(z);
     return ptr;
 }
 
@@ -190,7 +187,7 @@ FORCEINLINE void* SkrReallocWithCZone(void* p, size_t newsize, const char* line,
 
 #if defined(__cplusplus)
 
-#if defined(TRACY_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
+#if defined(SKR_PROFILE_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
 
 struct SkrTracedNew
 {
@@ -203,7 +200,7 @@ struct SkrTracedNew
     [[nodiscard]] FORCEINLINE T* New()
     {
         const std::string_view name = skr::demangle<T>();
-        TracyCMessage(name.data(), name.size());
+        SkrCMessage(name.data(), name.size());
         void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T();
@@ -213,7 +210,7 @@ struct SkrTracedNew
     [[nodiscard]] FORCEINLINE T* New(TArgs&&... params)
     {
         const std::string_view name = skr::demangle<T>();
-        TracyCMessage(name.data(), name.size());
+        SkrCMessage(name.data(), name.size());
         void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
         return new (pMemory) DEBUG_NEW_SOURCE_LINE T{ skr::forward<TArgs>(params)... };
@@ -223,7 +220,7 @@ struct SkrTracedNew
     [[nodiscard]] FORCEINLINE T* NewZeroed(TArgs&&... params)
     {
         const std::string_view name = skr::demangle<T>();
-        TracyCMessage(name.data(), name.size());
+        SkrCMessage(name.data(), name.size());
         void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname);
         memset(pMemory, 0, sizeof(T));
         SKR_ASSERT(pMemory != nullptr);
@@ -234,7 +231,7 @@ struct SkrTracedNew
     [[nodiscard]] FORCEINLINE T* NewZeroed()
     {
         const std::string_view name = skr::demangle<T>();
-        TracyCMessage(name.data(), name.size());
+        SkrCMessage(name.data(), name.size());
         void* pMemory = SkrNewAlignedWithCZone(sizeof(T), alignof(T), sourcelocation.data(), poolname);
         memset(pMemory, 0, sizeof(T));
         SKR_ASSERT(pMemory != nullptr);
@@ -245,7 +242,7 @@ struct SkrTracedNew
     [[nodiscard]] FORCEINLINE T* NewSized(size_t size, TArgs&&... params)
     {
         const std::string_view name = skr::demangle<T>();
-        TracyCMessage(name.data(), name.size());
+        SkrCMessage(name.data(), name.size());
         SKR_ASSERT(size >= sizeof(T));
         void* pMemory = SkrNewAlignedWithCZone(size, alignof(T), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
@@ -256,7 +253,7 @@ struct SkrTracedNew
     [[nodiscard]] FORCEINLINE T* NewSized(size_t size)
     {
         const std::string_view name = skr::demangle<T>();
-        TracyCMessage(name.data(), name.size());
+        SkrCMessage(name.data(), name.size());
         SKR_ASSERT(size >= sizeof(T));
         void* pMemory = SkrNewAlignedWithCZone(size, alignof(T), sourcelocation.data(), poolname);
         SKR_ASSERT(pMemory != nullptr);
@@ -277,7 +274,7 @@ struct SkrTracedNew
         if (pType != nullptr)
         {
             const std::string_view name = skr::demangle<T>();
-            TracyCMessage(name.data(), name.size());
+            SkrCMessage(name.data(), name.size());
             pType->~T();
             SkrFreeAlignedWithCZone((void*)pType, alignof(T), sourcelocation.data(), poolname);
         }

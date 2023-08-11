@@ -3,7 +3,7 @@
 #include "SkrRT/platform/guid.hpp"
 #include "../components/component.hpp"
 
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 
 namespace skr {
 namespace io {
@@ -100,7 +100,7 @@ public:
         skr_atomicu32_store_release(&future->status, status);
         if (const auto callback = callbacks[status])
         {
-            ZoneScoped;
+            SkrZoneScoped;
             ZoneName(callback_names[status], ::strlen(callback_names[status]));
             callback(future, request, callback_datas[status]);
         }

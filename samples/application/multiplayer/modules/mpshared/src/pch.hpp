@@ -34,7 +34,7 @@
 
 #include <EASTL/string.h> // IWYU pragma: export
 
-#include "tracy/Tracy.hpp" // IWYU pragma: export
+#include "SkrProfile/profile.h" // IWYU pragma: export
 
 #ifdef VALVE_POSIX
 	#include <unistd.h> // IWYU pragma: export

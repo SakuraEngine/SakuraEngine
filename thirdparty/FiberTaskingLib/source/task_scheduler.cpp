@@ -33,7 +33,7 @@
 #include <memory>
 #include <mutex>
 #include "SkrRT/platform/memory.h"
-#include "tracy/Tracy.hpp"
+#include "SkrProfile/profile.h"
 #include "SkrRT/misc/log.h"
 
 #if defined(FTL_WIN32_THREADS)
@@ -48,7 +48,7 @@
     #include <pthread.h>
 #endif
 
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
     #include <SkrRT/containers/string.hpp>
 #endif
 
@@ -93,12 +93,12 @@ FTL_THREAD_FUNC_RETURN_TYPE TaskScheduler::ThreadStartFunc(void* const arg)
     // Initialize tls
     taskScheduler->m_tls[index].CurrentFiber = freeFiber;
     // Switch
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
     {
         ::skr::string threadId = ::skr::format(u8"worker-{}", index);
-        TracyFiberEnter(threadId.c_str());
+        SkrFiberEnter(threadId.c_str());
         taskScheduler->m_tls[index].ThreadFiber.SwitchToFiber(freeFiber);
-        TracyFiberLeave;
+        SkrFiberLeave;
     }
 #endif
 
@@ -143,7 +143,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
 
     if (threadIndex == 0 && dispatch_depth == 0) 
     {
-        TracyFiberEnter("MainThreadAsFiber");
+        SkrFiberEnter("MainThreadAsFiber");
     }
     dispatch_depth++;
 
@@ -230,7 +230,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
                 if (threadIndex == 0 && waitingFiber == &taskScheduler->m_mainFiber) dispatch_depth = 0;
                 if (threadIndex == 0 && dispatch_depth == 0) 
                 {
-                    TracyFiberLeave;
+                    SkrFiberLeave;
                 }
                 tls->OldFiber->SwitchToFiber(tls->CurrentFiber);
             }
@@ -253,15 +253,15 @@ void TaskScheduler::FiberStartFunc(void* const arg)
                 tls->FailedQueuePopAttempts = 0;
 
                 {
-                    ZoneScopedNC("Task", DISPATCH_GRAY);
+                    SkrZoneScopedNC("Task", DISPATCH_GRAY);
                     nextTask.TaskToExecute.Function(taskScheduler, nextTask.TaskToExecute.ArgData);
                     if (nextTask.Counter != nullptr)
                     {
-                        ZoneScopedNC("TaskEnd", DISPATCH_GRAY);
+                        SkrZoneScopedNC("TaskEnd", DISPATCH_GRAY);
 
                         nextTask.Counter->Decrement();
                         {
-                            ZoneScopedNC("PostTask", DISPATCH_GRAY);
+                            SkrZoneScopedNC("PostTask", DISPATCH_GRAY);
 
                             nextTask.TaskToExecute.RefCounter.reset();
                         }
@@ -325,7 +325,7 @@ void TaskScheduler::FiberStartFunc(void* const arg)
     dispatch_depth--;
     if (threadIndex == 0 && dispatch_depth == 0) 
     {
-        TracyFiberLeave;
+        SkrFiberLeave;
     }
 
     if (taskScheduler->m_callbacks.OnFiberDetached != nullptr)
@@ -536,7 +536,7 @@ void TaskScheduler::AddTask(Task const task, TaskPriority priority, eastl::share
     auto threadIndex = GetCurrentThreadIndex();
     threadIndex = threadIndex == kInvalidIndex ? 0 : threadIndex;
     TaskBundle bundle = { task, counter };
-#ifdef TRACY_ENABLE
+#ifdef SKR_PROFILE_ENABLE
     if (name)
     {
         bundle.name = name;
@@ -928,7 +928,7 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter* counter, unsigned value,
     // Fast out
     if (counter->m_value.load(std::memory_order_relaxed) == value)
     {
-        ZoneScopedN("WaitThread");
+        SkrZoneScopedN("WaitThread");
 
         // wait for threads to drain from counter logic, otherwise we might continue too early
         while (counter->m_lock.load() > 0)
@@ -962,7 +962,7 @@ void TaskScheduler::WaitForCounterInternal(BaseCounter* counter, unsigned value,
     // Just trivially return
     if (alreadyDone)
     {
-        ZoneScopedN("ReleaseFiberBundle");
+        SkrZoneScopedN("ReleaseFiberBundle");
 
         ReleaseFiberBundle(readyFiberBundle);
         return;
