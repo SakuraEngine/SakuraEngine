@@ -6,121 +6,104 @@
 namespace skr {
 namespace type {
 
-const skr_type_t* type_of<bool>::get()
+void type_register<bool>::instantiate_type(RecordType* type)
 {
-    static BoolType type;
-    return &type;
+    type->type = SKR_TYPE_CATEGORY_BOOL;
 }
 
-const skr_type_t* type_of<int32_t>::get()
+void type_register<int32_t>::instantiate_type(RecordType* type)
 {
-    static Int32Type type;
-    return &type;
+    type->type = SKR_TYPE_CATEGORY_I32;
 }
 
-const skr_type_t* type_of<int64_t>::get()
+void type_register<int64_t>::instantiate_type(RecordType* type)
 {
-    static Int64Type type;
-    return &type;
+    type->type = SKR_TYPE_CATEGORY_I64;
 }
 
-const skr_type_t* type_of<uint32_t>::get()
+void type_register<uint32_t>::instantiate_type(RecordType* type)
 {
-    static UInt32Type type;
-    return &type;
+    type->type = SKR_TYPE_CATEGORY_U32;
 }
 
-const skr_type_t* type_of<uint64_t>::get()
+void type_register<uint64_t>::instantiate_type(RecordType* type)
 {
-    static UInt64Type type;
-    return &type;
+    type->type = SKR_TYPE_CATEGORY_U64;
 }
 
-const skr_type_t* type_of<float>::get()
+void type_register<float>::instantiate_type(RecordType* type)
 {
-    static Float32Type type;
-    return &type;
-}
-const skr_type_t* type_of<skr_float2_t>::get()
-{
-    static Float32x2Type type;
-    return &type;
-}
-const skr_type_t* type_of<skr_float3_t>::get()
-{
-    static Float32x3Type type;
-    return &type;
-}
-const skr_type_t* type_of<skr_float4_t>::get()
-{
-    static Float32x4Type type;
-    return &type;
-}
-const skr_type_t* type_of<skr_rotator_t>::get()
-{
-    static RotType type;
-    return &type;
-}
-const skr_type_t* type_of<skr_quaternion_t>::get()
-{
-    static QuaternionType type;
-    return &type;
-}
-const skr_type_t* type_of<skr_float4x4_t>::get()
-{
-    static Float32x4x4Type type;
-    return &type;
-}
-const skr_type_t* type_of<double>::get()
-{
-    static Float64Type type;
-    return &type;
+    type->type = SKR_TYPE_CATEGORY_F32;
 }
 
-const skr_type_t* type_of<skr_guid_t>::get()
+void type_register<skr_float2_t>::instantiate_type(RecordType* type)
 {
-    static GUIDType type;
-    return &type;
+    type->type = SKR_TYPE_CATEGORY_F32_2;
 }
 
-const skr_type_t* type_of<skr_md5_t>::get()
+void type_register<skr_float3_t>::instantiate_type(RecordType* type)
 {
-    static MD5Type type;
-    return &type;
+    type->type = SKR_TYPE_CATEGORY_F32_3;
 }
 
-const skr_type_t* type_of<skr_resource_handle_t>::get()
+void type_register<skr_float4_t>::instantiate_type(RecordType* type)
 {
-    static HandleType type{nullptr};
-    return &type;
+    type->type = SKR_TYPE_CATEGORY_F32_4;
 }
 
-const skr_type_t* type_of<skr::string>::get()
+void type_register<skr_rotator_t>::instantiate_type(RecordType* type)
 {
-    static StringType type;
-    return &type;
+    type->type = SKR_TYPE_CATEGORY_ROT;
 }
 
-const skr_type_t* type_of<skr::string_view>::get()
+void type_register<skr_quaternion_t>::instantiate_type(RecordType* type)
 {
-    static StringViewType type;
-    return &type;
+    type->type = SKR_TYPE_CATEGORY_QUAT;
 }
 
-const skr_type_t* type_of<void*>::get()
+void type_register<skr_float4x4_t>::instantiate_type(RecordType* type)
 {
-    static ReferenceType type{
-        ReferenceType::Observed,
-        true,
-        false,
-        nullptr
-    };
-    return &type;
+    type->type = SKR_TYPE_CATEGORY_F32_4x4;
 }
 
-const skr_type_t* type_of<SInterface>::get()
+void type_register<double>::instantiate_type(RecordType* type)
 {
-    return nullptr;
+    type->type = SKR_TYPE_CATEGORY_F64;
+}
+
+void type_register<skr_guid_t>::instantiate_type(RecordType* type)
+{
+    type->type = SKR_TYPE_CATEGORY_GUID;
+}
+
+void type_register<skr_md5_t>::instantiate_type(RecordType* type)
+{
+    type->type = SKR_TYPE_CATEGORY_MD5;
+}
+
+void type_register<skr_resource_handle_t>::instantiate_type(RecordType* type)
+{
+    type->type = SKR_TYPE_CATEGORY_HANDLE;
+}
+
+void type_register<skr::string>::instantiate_type(RecordType* type)
+{
+    type->type = SKR_TYPE_CATEGORY_STR;
+}
+
+void type_register<skr::string_view>::instantiate_type(RecordType* type)
+{
+    type->type = SKR_TYPE_CATEGORY_STRV;
+}
+
+void type_register<void*>::instantiate_type(RecordType* type)
+{
+    type->type = SKR_TYPE_CATEGORY_I64;
+}
+
+void type_register<SInterface>::instantiate_type(RecordType* type)
+{
+    type->type = SKR_TYPE_CATEGORY_OBJ;
 }
 
 uint64_t Hash(bool value, uint64_t base)
