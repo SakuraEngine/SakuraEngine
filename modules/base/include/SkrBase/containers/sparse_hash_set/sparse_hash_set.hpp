@@ -273,7 +273,7 @@ SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::_is_in_bucket(SizeTy
     if (has_data(index))
     {
         const auto& node         = _data[index];
-        auto        search_index = _bucket[_bucket_index(node.hash)];
+        auto        search_index = _bucket[_bucket_index(node._sparse_hash_set_hash)];
 
         while (search_index != npos)
         {
@@ -281,7 +281,7 @@ SKR_INLINE bool SparseHashSet<T, TBitBlock, Config, Alloc>::_is_in_bucket(SizeTy
             {
                 return true;
             }
-            search_index = _data[search_index].next;
+            search_index = _data[search_index]._sparse_hash_set_next;
         }
         return false;
     }
@@ -298,10 +298,10 @@ SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::_add_to_bucket(SizeT
 
     if (!rehash_if_need())
     {
-        DataType& data      = _data[index];
-        SizeType& index_ref = _bucket[_bucket_index(data.hash)];
-        data.next           = index_ref;
-        index_ref           = index;
+        DataType& data             = _data[index];
+        SizeType& index_ref        = _bucket[_bucket_index(data._sparse_hash_set_hash)];
+        data._sparse_hash_set_next = index_ref;
+        index_ref                  = index;
     }
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
@@ -311,11 +311,11 @@ SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::_remove_from_bucket(
     SKR_ASSERT(_is_in_bucket(index));
 
     DataType& data = _data[index];
-    for (SizeType& index_ref = _bucket[_bucket_index(data.hash)]; index_ref != npos; index_ref = _data[index_ref].next)
+    for (SizeType& index_ref = _bucket[_bucket_index(data._sparse_hash_set_hash)]; index_ref != npos; index_ref = _data[index_ref]._sparse_hash_set_next)
     {
         if (index_ref == index)
         {
-            index_ref = data.next;
+            index_ref = data._sparse_hash_set_next;
             break;
         }
     }
@@ -648,9 +648,9 @@ SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::rehash() const
         for (auto it = _data.begin(); it; ++it)
         {
             // link to head
-            SizeType& index_ref = _bucket[_bucket_index(it->hash)];
-            it->next            = index_ref;
-            index_ref           = it.index();
+            SizeType& index_ref       = _bucket[_bucket_index(it->_sparse_hash_set_hash)];
+            it->_sparse_hash_set_next = index_ref;
+            index_ref                 = it.index();
         }
     }
 }
@@ -697,7 +697,7 @@ SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHa
     if (!add_result.already_exist)
     {
         constructor(add_result.data);
-        SKR_ASSERT(_data[add_result.index].hash == hash_of(*add_result.data));
+        SKR_ASSERT(_data[add_result.index]._sparse_hash_set_hash == hash_of(*add_result.data));
         _add_to_bucket(add_result.index);
     }
 
@@ -717,9 +717,9 @@ SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHa
         }
         else
         {
-            auto data_arr_ref  = _data.add_unsafe();
-            data_arr_ref->hash = hash;
-            return { &data_arr_ref->data, data_arr_ref.index, false };
+            auto data_arr_ref                   = _data.add_unsafe();
+            data_arr_ref->_sparse_hash_set_hash = hash;
+            return { &data_arr_ref->_sparse_hash_set_data, data_arr_ref.index, false };
         }
     }
     else
@@ -835,8 +835,8 @@ SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseH
     while (search_index != npos)
     {
         DataType& data = _data[search_index];
-        SizeType  next = data.next;
-        if (data.hash == hash && comparer(key_of(data.data)))
+        SizeType  next = data._sparse_hash_set_next;
+        if (data._sparse_hash_set_hash == hash && comparer(key_of(data._sparse_hash_set_data)))
         {
             _remove_from_bucket(search_index);
             _data.remove_at(search_index);
@@ -870,11 +870,11 @@ SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHa
     while (search_index != npos)
     {
         auto& node = _data[search_index];
-        if (node.hash == hash && comparer(key_of(node.data)))
+        if (node._sparse_hash_set_hash == hash && comparer(key_of(node._sparse_hash_set_data)))
         {
-            return { &node.data, search_index };
+            return { &node._sparse_hash_set_data, search_index };
         }
-        search_index = node.next;
+        search_index = node._sparse_hash_set_next;
     }
     return {};
 }
@@ -914,11 +914,11 @@ SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseH
     while (search_index != npos)
     {
         DataType& data = _data[search_index];
-        if (data.hash == hash && comparer(key_of(data.data)))
+        if (data._sparse_hash_set_hash == hash && comparer(key_of(data._sparse_hash_set_data)))
         {
             ++count;
         }
-        search_index = data.next;
+        search_index = data._sparse_hash_set_next;
     }
     return count;
 }

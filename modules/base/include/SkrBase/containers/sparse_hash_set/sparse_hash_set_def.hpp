@@ -9,9 +9,9 @@ namespace skr
 // 存储的 hash 用于快速比较，next 用于查找 hash 链表
 template <typename T, typename TS, typename HashType>
 struct SparseHashSetData {
-    T          data;
-    HashType   hash;
-    mutable TS next;
+    T          _sparse_hash_set_data;
+    HashType   _sparse_hash_set_hash;
+    mutable TS _sparse_hash_set_next;
 };
 
 // SparseHashSet 的数据引用，代替单纯的指针/Index返回
