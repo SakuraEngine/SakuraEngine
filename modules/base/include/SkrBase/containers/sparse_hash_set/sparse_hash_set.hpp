@@ -54,14 +54,14 @@ struct SparseHashSet {
     using CIt      = SparseHashSetIt<T, TBitBlock, SizeType, HashType, true>;
 
     // ctor & dtor
-    SparseHashSet(Alloc alloc = Alloc());
-    SparseHashSet(SizeType reserve_size, Alloc alloc = Alloc());
-    SparseHashSet(const T* p, SizeType n, Alloc alloc = Alloc());
-    SparseHashSet(std::initializer_list<T> init_list, Alloc alloc = Alloc());
+    SparseHashSet(Alloc alloc = {});
+    SparseHashSet(SizeType reserve_size, Alloc alloc = {});
+    SparseHashSet(const T* p, SizeType n, Alloc alloc = {});
+    SparseHashSet(std::initializer_list<T> init_list, Alloc alloc = {});
     ~SparseHashSet();
 
     // copy & move
-    SparseHashSet(const SparseHashSet& other, Alloc alloc = Alloc());
+    SparseHashSet(const SparseHashSet& other, Alloc alloc = {});
     SparseHashSet(SparseHashSet&& other);
 
     // assign & move assign

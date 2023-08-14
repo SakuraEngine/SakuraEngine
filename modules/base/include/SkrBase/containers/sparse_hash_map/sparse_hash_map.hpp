@@ -56,23 +56,19 @@ struct SparseHashMap : private SparseHashSet<KVPair<K, V>, TBitBlock, Config, Al
     using CIt      = typename Base::CIt;
 
     // ctor & dtor
-    SparseHashMap(Alloc alloc = Alloc());
-    SparseHashMap(SizeType reserve_size, Alloc alloc = Alloc());
-    SparseHashMap(const DataType* p, SizeType n, Alloc alloc = Alloc());
-    SparseHashMap(std::initializer_list<DataType> init_list, Alloc alloc = Alloc());
+    SparseHashMap(Alloc alloc = {});
+    SparseHashMap(SizeType reserve_size, Alloc alloc = {});
+    SparseHashMap(const DataType* p, SizeType n, Alloc alloc = {});
+    SparseHashMap(std::initializer_list<DataType> init_list, Alloc alloc = {});
     ~SparseHashMap();
 
     // copy & move
-    SparseHashMap(const SparseHashMap& other, Alloc alloc = Alloc());
+    SparseHashMap(const SparseHashMap& other, Alloc alloc = {});
     SparseHashMap(SparseHashMap&& other);
 
     // assign & move assign
     SparseHashMap& operator=(const SparseHashMap& rhs);
     SparseHashMap& operator=(SparseHashMap&& rhs);
-
-    // compare
-    bool operator==(const SparseHashMap& rhs) const;
-    bool operator!=(const SparseHashMap& rhs) const;
 
     // getter
     SizeType       size() const;
@@ -185,4 +181,197 @@ struct SparseHashMap : private SparseHashSet<KVPair<K, V>, TBitBlock, Config, Al
     CIt begin() const;
     CIt end() const;
 };
+} // namespace skr
+
+// SparseHashMap impl
+namespace skr
+{
+// ctor & dtor
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE SparseHashMap<K, V, TBitBlock, Config, Alloc>::SparseHashMap(Alloc alloc)
+    : Base(std::move(alloc))
+{
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE SparseHashMap<K, V, TBitBlock, Config, Alloc>::SparseHashMap(SizeType reserve_size, Alloc alloc)
+    : Base(reserve_size, std::move(alloc))
+{
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE SparseHashMap<K, V, TBitBlock, Config, Alloc>::SparseHashMap(const DataType* p, SizeType n, Alloc alloc)
+    : Base(p, n, std::move(alloc))
+{
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE SparseHashMap<K, V, TBitBlock, Config, Alloc>::SparseHashMap(std::initializer_list<DataType> init_list, Alloc alloc)
+    : Base(init_list, std::move(alloc))
+{
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE SparseHashMap<K, V, TBitBlock, Config, Alloc>::~SparseHashMap()
+{
+}
+
+// copy & move
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE SparseHashMap<K, V, TBitBlock, Config, Alloc>::SparseHashMap(const SparseHashMap& other, Alloc alloc)
+    : Base(other, std::move(alloc))
+{
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE SparseHashMap<K, V, TBitBlock, Config, Alloc>::SparseHashMap(SparseHashMap&& other)
+    : Base(std::move(other))
+{
+}
+
+// assign & move assign
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE SparseHashMap<K, V, TBitBlock, Config, Alloc>& SparseHashMap<K, V, TBitBlock, Config, Alloc>::operator=(const SparseHashMap& rhs)
+{
+    Base::operator=(rhs);
+    return *this;
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE SparseHashMap<K, V, TBitBlock, Config, Alloc>& SparseHashMap<K, V, TBitBlock, Config, Alloc>::operator=(SparseHashMap&& rhs)
+{
+    Base::operator=(std::move(rhs));
+    return *this;
+}
+
+// getter
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, Config, Alloc>::size() const
+{
+    return Base::size();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, Config, Alloc>::capacity() const
+{
+    return Base::capacity();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, Config, Alloc>::slack() const
+{
+    return Base::slack();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, Config, Alloc>::sparse_size() const
+{
+    return Base::sparse_size();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, Config, Alloc>::hole_size() const
+{
+    return Base::hole_size();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, Config, Alloc>::bit_array_size() const
+{
+    return Base::bit_array_size();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, Config, Alloc>::free_list_head() const
+{
+    return Base::free_list_head();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, Config, Alloc>::bucket_size() const
+{
+    return Base::bucket_size();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE bool SparseHashMap<K, V, TBitBlock, Config, Alloc>::is_compact() const
+{
+    return Base::is_compact();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE bool SparseHashMap<K, V, TBitBlock, Config, Alloc>::empty() const
+{
+    return Base::empty();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataArr& SparseHashMap<K, V, TBitBlock, Config, Alloc>::data_arr()
+{
+    return Base::data_arr();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE const typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataArr& SparseHashMap<K, V, TBitBlock, Config, Alloc>::data_arr() const
+{
+    return Base::data_arr();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::Base& SparseHashMap<K, V, TBitBlock, Config, Alloc>::data_set()
+{
+    return (*this);
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE const typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::Base& SparseHashMap<K, V, TBitBlock, Config, Alloc>::data_set() const
+{
+    return (*this);
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE Alloc& SparseHashMap<K, V, TBitBlock, Config, Alloc>::allocator()
+{
+    return Base::allocator();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE const Alloc& SparseHashMap<K, V, TBitBlock, Config, Alloc>::allocator() const
+{
+    return Base::allocator();
+}
+
+// memory op
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE void SparseHashMap<K, V, TBitBlock, Config, Alloc>::clear()
+{
+    Base::clear();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE void SparseHashMap<K, V, TBitBlock, Config, Alloc>::release(SizeType capacity)
+{
+    Base::release(capacity);
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE void SparseHashMap<K, V, TBitBlock, Config, Alloc>::reserve(SizeType capacity)
+{
+    Base::reserve(capacity);
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE void SparseHashMap<K, V, TBitBlock, Config, Alloc>::shrink()
+{
+    Base::shrink();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE bool SparseHashMap<K, V, TBitBlock, Config, Alloc>::compact()
+{
+    return Base::compact();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE bool SparseHashMap<K, V, TBitBlock, Config, Alloc>::compact_stable()
+{
+    return Base::compact_stable();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE bool SparseHashMap<K, V, TBitBlock, Config, Alloc>::compact_top()
+{
+    return Base::compact_top();
+}
+
+// rehash
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE bool SparseHashMap<K, V, TBitBlock, Config, Alloc>::need_rehash() const
+{
+    return Base::need_rehash();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE void SparseHashMap<K, V, TBitBlock, Config, Alloc>::rehash() const
+{
+    Base::rehash();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE bool SparseHashMap<K, V, TBitBlock, Config, Alloc>::rehash_if_need() const
+{
+    return Base::rehash_if_need();
+}
+
 } // namespace skr
