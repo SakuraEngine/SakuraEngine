@@ -4,15 +4,12 @@
 #include "SkrBase/algo/intro_sort.hpp"
 #include "SkrBase/algo/merge_sort.hpp"
 #include "SkrBase/algo/remove.hpp"
-#include "SkrBase/containers/allocator/allocator.hpp"
 #include "SkrBase/containers/array/array_def.hpp"
 
 // Array def
 namespace skr
 {
-// TODO. 可能可以继承出来一个 ArrayMap/ArraySet
-// TODO. find/remove with range
-// TODO. move item
+// TODO. move item，swap item
 // TODO. binary add & remove & find
 template <typename T, typename Alloc>
 struct Array {

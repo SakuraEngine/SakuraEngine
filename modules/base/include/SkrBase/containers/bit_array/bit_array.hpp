@@ -6,7 +6,7 @@
 #include "bit_iterator.hpp"
 
 // BitArray def
-// TODO. 使用 BitArrayDataDef 来替代 SizeType 的返回结构，隐藏 npos 细节，由于 BitRef 的特殊性，这里可能需要自存一个指针与一个 mask
+// TODO. 包装一个更安全的 SizeType 作为查找返回
 namespace skr
 {
 template <typename TBlock, typename Alloc>
@@ -18,12 +18,12 @@ struct BitArray final {
     using TIt      = TrueBitIt<TBlock, SizeType, true>;
 
     // ctor & dtor
-    BitArray(Alloc alloc = Alloc());
-    BitArray(SizeType size, bool v, Alloc alloc = Alloc());
+    BitArray(Alloc alloc = {});
+    BitArray(SizeType size, bool v, Alloc alloc = {});
     ~BitArray();
 
     // copy & move ctor
-    BitArray(const BitArray& other, Alloc alloc = Alloc());
+    BitArray(const BitArray& other, Alloc alloc = {});
     BitArray(BitArray&& other) noexcept;
 
     // copy & move assign
