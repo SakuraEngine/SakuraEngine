@@ -119,7 +119,6 @@ struct SparseHashMap : private SparseHashSet<KVPair<K, V>, TBitBlock, Config, Al
     DataRef add_default(K&& key);
     DataRef add_zeroed(const K& key);
     DataRef add_zeroed(K&& key);
-    DataRef add_default_unsafe(const K& key);
     template <typename Comparer, typename Constructor>
     DataRef add_ex(HashType hash, Comparer&& comparer, Constructor&& constructor);
     template <typename Comparer>
@@ -130,8 +129,6 @@ struct SparseHashMap : private SparseHashSet<KVPair<K, V>, TBitBlock, Config, Al
     DataRef emplace(const K& key, Args&&... args);
     template <typename... Args>
     DataRef emplace(K&& key, Args&&... args);
-    template <typename Comparer, typename... Args>
-    DataRef emplace_ex(HashType hash, Comparer&& comparer, Args&&... args);
 
     // append
     void append(const SparseHashMap& set);
@@ -374,4 +371,371 @@ SKR_INLINE bool SparseHashMap<K, V, TBitBlock, Config, Alloc>::rehash_if_need() 
     return Base::rehash_if_need();
 }
 
+// add
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::add(const K& key, const V& value)
+{
+    HashType hash = hash_of(key);
+    auto     ref  = Base::add_ex_unsafe(
+    hash,
+    [&key](const K& k) { return ComparerType()(k, key); });
+
+    if (!ref.already_exist)
+    {
+        new (&ref->key) K(key);
+        new (&ref->value) V(value);
+    }
+
+    return { &ref->key, &ref->value, ref.index, ref.already_exist };
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::add(const K& key, V&& value)
+{
+    HashType hash = hash_of(key);
+    auto     ref  = Base::add_ex_unsafe(
+    hash,
+    [&key](const K& k) { return ComparerType()(k, key); });
+
+    if (!ref.already_exist)
+    {
+        new (&ref->key) K(key);
+        new (&ref->value) V(std::move(value));
+    }
+
+    return { &ref->key, &ref->value, ref.index, ref.already_exist };
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::add(K&& key, const V& value)
+{
+    HashType hash = hash_of(key);
+    auto     ref  = Base::add_ex_unsafe(
+    hash,
+    [&key](const K& k) { return ComparerType()(k, key); });
+
+    if (!ref.already_exist)
+    {
+        new (&ref->key) K(std::move(key));
+        new (&ref->value) V(value);
+    }
+
+    return { &ref->key, &ref->value, ref.index, ref.already_exist };
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::add(K&& key, V&& value)
+{
+    HashType hash = hash_of(key);
+    auto     ref  = Base::add_ex_unsafe(
+    hash,
+    [&key](const K& k) { return ComparerType()(k, key); });
+
+    if (!ref.already_exist)
+    {
+        new (&ref->key) K(std::move(key));
+        new (&ref->value) V(std::move(value));
+    }
+
+    return { &ref->key, &ref->value, ref.index, ref.already_exist };
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::add_unsafe(const K& key)
+{
+    HashType hash = hash_of(key);
+    auto     ref  = Base::add_ex_unsafe(
+    hash,
+    [&key](const K& k) { return ComparerType()(k, key); });
+
+    if (!ref.already_exist)
+    {
+        new (&ref->key) K(std::move(key));
+    }
+
+    return { &ref->key, &ref->value, ref.index, ref.already_exist };
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::add_unsafe(K&& key)
+{
+    HashType hash = hash_of(key);
+    auto     ref  = Base::add_ex_unsafe(
+    hash,
+    [&key](const K& k) { return ComparerType()(k, key); });
+
+    if (!ref.already_exist)
+    {
+        new (&ref->key) K(std::move(key));
+    }
+
+    return { &ref->key, &ref->value, ref.index, ref.already_exist };
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::add_default(const K& key)
+{
+    HashType hash = hash_of(key);
+    auto     ref  = Base::add_ex_unsafe(
+    hash,
+    [&key](const K& k) { return ComparerType()(k, key); });
+
+    if (!ref.already_exist)
+    {
+        new (&ref->key) K(key);
+        new (&ref->value) V();
+    }
+
+    return { &ref->key, &ref->value, ref.index, ref.already_exist };
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::add_default(K&& key)
+{
+    HashType hash = hash_of(key);
+    auto     ref  = Base::add_ex_unsafe(
+    hash,
+    [&key](const K& k) { return ComparerType()(k, key); });
+
+    if (!ref.already_exist)
+    {
+        new (&ref->key) K(std::move(key));
+        new (&ref->value) V();
+    }
+
+    return { &ref->key, &ref->value, ref.index, ref.already_exist };
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::add_zeroed(const K& key)
+{
+    HashType hash = hash_of(key);
+    auto     ref  = Base::add_ex_unsafe(
+    hash,
+    [&key](const K& k) { return ComparerType()(k, key); });
+
+    if (!ref.already_exist)
+    {
+        new (&ref->key) K(key);
+        memset(&ref->value, 0, sizeof(V));
+    }
+
+    return { &ref->key, &ref->value, ref.index, ref.already_exist };
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::add_zeroed(K&& key)
+{
+    HashType hash = hash_of(key);
+    auto     ref  = Base::add_ex_unsafe(
+    hash,
+    [&key](const K& k) { return ComparerType()(k, key); });
+
+    if (!ref.already_exist)
+    {
+        new (&ref->key) K(std::move(key));
+        memset(&ref->value, 0, sizeof(V));
+    }
+
+    return { &ref->key, &ref->value, ref.index, ref.already_exist };
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+template <typename Comparer, typename Constructor>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::add_ex(HashType hash, Comparer&& comparer, Constructor&& constructor)
+{
+    auto ref = Base::add_ex_unsafe(hash, std::forward<Comparer>(comparer));
+
+    if (!ref.already_exist)
+    {
+        constructor(ref->key, ref->value);
+    }
+
+    return { &ref->key, &ref->value, ref.index, ref.already_exist };
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+template <typename Comparer>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::add_ex_unsafe(HashType hash, Comparer&& comparer)
+{
+    auto ref = Base::add_ex_unsafe(hash, std::forward<Comparer>(comparer));
+    return { &ref->key, &ref->value, ref.index, ref.already_exist };
+}
+
+// emplace
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+template <typename... Args>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::emplace(const K& key, Args&&... args)
+{
+    HashType hash = hash_of(key);
+    auto     ref  = Base::add_ex_unsafe(
+    hash,
+    [&key](const K& k) { return ComparerType()(k, key); });
+
+    if (!ref.already_exist)
+    {
+        new (&ref->key) K(key);
+        new (&ref->value) V(std::forward<Args>(args)...);
+    }
+
+    return { &ref->key, &ref->value, ref.index, ref.already_exist };
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+template <typename... Args>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::emplace(K&& key, Args&&... args)
+{
+    HashType hash = hash_of(key);
+    auto     ref  = Base::add_ex_unsafe(
+    hash,
+    [&key](const K& k) { return ComparerType()(k, key); });
+
+    if (!ref.already_exist)
+    {
+        new (&ref->key) K(std::move(key));
+        new (&ref->value) V(std::forward<Args>(args)...);
+    }
+
+    return { &ref->key, &ref->value, ref.index, ref.already_exist };
+}
+
+// append
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE void SparseHashMap<K, V, TBitBlock, Config, Alloc>::append(const SparseHashMap& set)
+{
+    Base::append(set);
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE void SparseHashMap<K, V, TBitBlock, Config, Alloc>::append(std::initializer_list<DataType> init_list)
+{
+    Base::append(init_list);
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE void SparseHashMap<K, V, TBitBlock, Config, Alloc>::append(const DataType* p, SizeType n)
+{
+    Base::append(p, n);
+}
+
+// remove
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::remove(const K& key)
+{
+    return Base::remove(key);
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, Config, Alloc>::remove_all(const K& key)
+{
+    return Base::remove_all(key);
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+template <typename Comparer>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::remove_ex(HashType hash, Comparer&& comparer)
+{
+    return Base::remove_ex(hash, std::forward<Comparer>(comparer));
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+template <typename Comparer>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, Config, Alloc>::remove_all_ex(HashType hash, Comparer&& comparer)
+{
+    return Base::remove_all_ex(hash, std::forward<Comparer>(comparer));
+}
+
+// find
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::find(const K& key)
+{
+    return Base::find(key);
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::CDataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::find(const K& key) const
+{
+    return Base::find(key);
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+template <typename Comparer>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::DataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::find_ex(HashType hash, Comparer&& comparer)
+{
+    return Base::find_ex(hash, std::forward<Comparer>(comparer));
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+template <typename Comparer>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::CDataRef SparseHashMap<K, V, TBitBlock, Config, Alloc>::find_ex(HashType hash, Comparer&& comparer) const
+{
+    return Base::find_ex(hash, std::forward<Comparer>(comparer));
+}
+
+// contain
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE bool SparseHashMap<K, V, TBitBlock, Config, Alloc>::contains(const K& key) const
+{
+    return Base::contains(key);
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, Config, Alloc>::count(const K& key) const
+{
+    return Base::count(key);
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+template <typename Comparer>
+SKR_INLINE bool SparseHashMap<K, V, TBitBlock, Config, Alloc>::contains_ex(HashType hash, Comparer&& comparer) const
+{
+    return Base::contains_ex(hash, std::forward<Comparer>(comparer));
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+template <typename Comparer>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::SizeType SparseHashMap<K, V, TBitBlock, Config, Alloc>::count_ex(HashType hash, Comparer&& comparer) const
+{
+    return Base::count_ex(hash, std::forward<Comparer>(comparer));
+}
+
+// sort
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+template <typename TP>
+SKR_INLINE void SparseHashMap<K, V, TBitBlock, Config, Alloc>::sort(TP&& p)
+{
+    Base::sort(std::forward<TP>(p));
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+template <typename TP>
+SKR_INLINE void SparseHashMap<K, V, TBitBlock, Config, Alloc>::sort_stable(TP&& p)
+{
+    Base::sort_stable(std::forward<TP>(p));
+}
+
+// set ops
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE SparseHashMap<K, V, TBitBlock, Config, Alloc> SparseHashMap<K, V, TBitBlock, Config, Alloc>::operator&(const SparseHashMap& rhs) const
+{
+    return Base::operator&(rhs);
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE SparseHashMap<K, V, TBitBlock, Config, Alloc> SparseHashMap<K, V, TBitBlock, Config, Alloc>::operator|(const SparseHashMap& rhs) const
+{
+    return Base::operator|(rhs);
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE SparseHashMap<K, V, TBitBlock, Config, Alloc> SparseHashMap<K, V, TBitBlock, Config, Alloc>::operator^(const SparseHashMap& rhs) const
+{
+    return Base::operator^(rhs);
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE SparseHashMap<K, V, TBitBlock, Config, Alloc> SparseHashMap<K, V, TBitBlock, Config, Alloc>::operator-(const SparseHashMap& rhs) const
+{
+    return Base::operator-(rhs);
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE bool SparseHashMap<K, V, TBitBlock, Config, Alloc>::is_sub_set_of(const SparseHashMap& rhs) const
+{
+    return Base::is_sub_set_of(rhs);
+}
+
+// support foreach
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::It SparseHashMap<K, V, TBitBlock, Config, Alloc>::begin()
+{
+    return Base::begin();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::It SparseHashMap<K, V, TBitBlock, Config, Alloc>::end()
+{
+    return Base::end();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::CIt SparseHashMap<K, V, TBitBlock, Config, Alloc>::begin() const
+{
+    return Base::begin();
+}
+template <typename K, typename V, typename TBitBlock, typename Config, typename Alloc>
+SKR_INLINE typename SparseHashMap<K, V, TBitBlock, Config, Alloc>::CIt SparseHashMap<K, V, TBitBlock, Config, Alloc>::end() const
+{
+    return Base::end();
+}
 } // namespace skr

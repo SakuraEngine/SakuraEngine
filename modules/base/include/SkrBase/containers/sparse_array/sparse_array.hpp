@@ -1,6 +1,7 @@
 #pragma once
-#include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/config.h"
+#include "SkrBase/containers/fwd_container.hpp"
+#include "SkrBase/memory/memory_ops.hpp"
 #include "SkrBase/algo/intro_sort.hpp"
 #include "SkrBase/algo/merge_sort.hpp"
 #include "sparse_array_iterator.hpp"
