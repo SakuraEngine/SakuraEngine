@@ -4,8 +4,7 @@
 #include <limits>
 #include <type_traits>
 
-// TODO. 使用 built-in 指令优化，Fuck CPP
-// TODO. 抄 EASTL 的 Fallback，更快一点
+// TODO. 使用 EASTL 的实现
 namespace skr
 {
 // countLZero & countRZero

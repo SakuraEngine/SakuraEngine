@@ -111,7 +111,6 @@ struct AllocTemplate {
         // move memory
         if (size)
         {
-            // TODO. use callback
             // move items
             memory::move(new_memory, p, std::min(size, new_capacity));
 

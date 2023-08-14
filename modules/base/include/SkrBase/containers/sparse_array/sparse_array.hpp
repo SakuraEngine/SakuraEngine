@@ -3,11 +3,11 @@
 #include "SkrBase/config.h"
 #include "SkrBase/algo/intro_sort.hpp"
 #include "SkrBase/algo/merge_sort.hpp"
-#include "SkrBase/algo/remove.hpp"
 #include "sparse_array_iterator.hpp"
 
 // SparseArray def
 // TODO. auto compact_top when remove items
+// TODO. better remove all
 namespace skr
 {
 template <typename T, typename TBitBlock, typename Alloc>
@@ -22,15 +22,15 @@ struct SparseArray {
     static inline constexpr SizeType npos = npos_of<SizeType>;
 
     // ctor & dtor
-    SparseArray(Alloc alloc = Alloc());
-    SparseArray(SizeType size, Alloc alloc = Alloc());
-    SparseArray(SizeType size, const T& v, Alloc alloc = Alloc());
-    SparseArray(const T* p, SizeType n, Alloc alloc = Alloc());
-    SparseArray(std::initializer_list<T> init_list, Alloc alloc = Alloc());
+    SparseArray(Alloc alloc = {});
+    SparseArray(SizeType size, Alloc alloc = {});
+    SparseArray(SizeType size, const T& v, Alloc alloc = {});
+    SparseArray(const T* p, SizeType n, Alloc alloc = {});
+    SparseArray(std::initializer_list<T> init_list, Alloc alloc = {});
     ~SparseArray();
 
     // copy & move
-    SparseArray(const SparseArray& other, Alloc alloc = Alloc());
+    SparseArray(const SparseArray& other, Alloc alloc = {});
     SparseArray(SparseArray&& other) noexcept;
 
     // assign & move assign
