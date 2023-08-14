@@ -1,9 +1,8 @@
 #pragma once
-#include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/config.h"
+#include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/containers/sparse_array/sparse_array.hpp"
 #include "sparse_hash_set_iterator.hpp"
-#include "SkrBase/containers/allocator/allocator.hpp"
 #include "SkrBase/tools/hash.hpp"
 
 // SparseHashSet config
@@ -25,10 +24,12 @@ struct SparseHashSetConfigDefault {
 // set 在 add/emplace 时候从不覆盖既存元素，主要是 key 是元素的某个 Field 的情况比较少见，出现这种情况时，覆盖行为也需要用户自己关注，不应该 by default
 // 除了 add 需要完整的元素方便添加操作外，其余的操作（find/remove/contain/count）均使用 key 进行操作以便在不构造完整元素的前提下进行查询
 // xxx_as 是异构查询的便利函数，用于一些构造开销巨大的对象（比如使用字面量查询 string），更复杂的异构查找需要使用 xxx_ex，异构查找需要保证 hash 的求值方式一致
-// add_unsafe 是一个非常底层的 add 操作，它不会做任何构造行为，如果没有既存的查询元素，它会在申请空间后直接返回，在这种情况下，需要用户自行进行初始化和 add to bucket
+// add_ex_unsafe 是一个非常底层的 add 操作，它不会做任何构造行为，如果没有既存的查询元素，它会在申请空间后直接返回，在这种情况下，需要用户自行进行初始化和 add to bucket
 // TODO. 对外暴露的 bucket 操作
 // TODO. bucket 与碰撞统计，以及更好的 bucket 分配策略
 // TODO. xxxx_as 依旧需要，除了异构查询之外，还有使用某个特定成员作为 key 的情况，这时候，我们会需要使用便利的异构查找
+// TODO. compare 成本较小的情况下可以省去 hash 先行比较，可以通过 traits 实现
+// TODO. xxx_ex 给出的 comparer 输入应当是整个元素，而不是 key
 namespace skr
 {
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
@@ -52,7 +53,6 @@ struct SparseHashSet {
     using It       = SparseHashSetIt<T, TBitBlock, SizeType, HashType, false>;
     using CIt      = SparseHashSetIt<T, TBitBlock, SizeType, HashType, true>;
 
-public:
     // ctor & dtor
     SparseHashSet(Alloc alloc = Alloc());
     SparseHashSet(SizeType reserve_size, Alloc alloc = Alloc());
@@ -73,23 +73,20 @@ public:
     bool operator!=(const SparseHashSet& rhs) const;
 
     // getter
-    SizeType        size() const;
-    SizeType        capacity() const;
-    SizeType        slack() const;
-    SizeType        sparse_size() const;
-    SizeType        hole_size() const;
-    SizeType        bit_array_size() const;
-    SizeType        free_list_head() const;
-    SizeType        bucket_size() const;
-    SizeType        bucket_mask() const;
-    bool            is_compact() const;
-    bool            empty() const;
-    DataArr&        data_arr();
-    const DataArr&  data_arr() const;
-    SizeType*       bucket();
-    const SizeType* bucket() const;
-    Alloc&          allocator();
-    const Alloc&    allocator() const;
+    SizeType       size() const;
+    SizeType       capacity() const;
+    SizeType       slack() const;
+    SizeType       sparse_size() const;
+    SizeType       hole_size() const;
+    SizeType       bit_array_size() const;
+    SizeType       free_list_head() const;
+    SizeType       bucket_size() const;
+    bool           is_compact() const;
+    bool           empty() const;
+    DataArr&       data_arr();
+    const DataArr& data_arr() const;
+    Alloc&         allocator();
+    const Alloc&   allocator() const;
 
     // validate
     bool has_data(SizeType idx) const;
@@ -124,7 +121,7 @@ public:
     template <typename Comparer, typename Constructor>
     DataRef add_ex(HashType hash, Comparer&& comparer, Constructor&& constructor);
     template <typename Comparer>
-    DataRef add_unsafe(HashType hash, Comparer&& comparer);
+    DataRef add_ex_unsafe(HashType hash, Comparer&& comparer);
 
     // emplace
     template <typename... Args>
@@ -162,10 +159,10 @@ public:
     SizeType count_ex(HashType hash, Comparer&& comparer) const; // [multi set extend]
 
     // sort
-    template <typename TP = Less<T>>
-    void sort(TP&& p = TP());
-    template <typename TP = Less<T>>
-    void sort_stable(TP&& p = TP());
+    template <typename TP = Less<KeyType>>
+    void sort(TP&& p = {});
+    template <typename TP = Less<KeyType>>
+    void sort_stable(TP&& p = {});
 
     // set ops
     SparseHashSet operator&(const SparseHashSet& rhs) const;     // intersect
@@ -480,11 +477,6 @@ typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, T
     return _bucket_size;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
-typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType SparseHashSet<T, TBitBlock, Config, Alloc>::bucket_mask() const
-{
-    return _bucket_mask;
-}
-template <typename T, typename TBitBlock, typename Config, typename Alloc>
 bool SparseHashSet<T, TBitBlock, Config, Alloc>::is_compact() const
 {
     return _data.is_compact();
@@ -503,16 +495,6 @@ template <typename T, typename TBitBlock, typename Config, typename Alloc>
 const typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataArr& SparseHashSet<T, TBitBlock, Config, Alloc>::data_arr() const
 {
     return _data;
-}
-template <typename T, typename TBitBlock, typename Config, typename Alloc>
-typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType* SparseHashSet<T, TBitBlock, Config, Alloc>::bucket()
-{
-    return _bucket;
-}
-template <typename T, typename TBitBlock, typename Config, typename Alloc>
-const typename SparseHashSet<T, TBitBlock, Config, Alloc>::SizeType* SparseHashSet<T, TBitBlock, Config, Alloc>::bucket() const
-{
-    return _bucket;
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
 Alloc& SparseHashSet<T, TBitBlock, Config, Alloc>::allocator()
@@ -693,7 +675,7 @@ template <typename T, typename TBitBlock, typename Config, typename Alloc>
 template <typename Comparer, typename Constructor>
 SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHashSet<T, TBitBlock, Config, Alloc>::add_ex(HashType hash, Comparer&& comparer, Constructor&& constructor)
 {
-    DataRef add_result = add_unsafe(hash, std::forward<Comparer>(comparer));
+    DataRef add_result = add_ex_unsafe(hash, std::forward<Comparer>(comparer));
 
     // if not exist, construct it
     if (!add_result.already_exist)
@@ -706,7 +688,7 @@ SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHa
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
 template <typename Comparer>
-SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHashSet<T, TBitBlock, Config, Alloc>::add_unsafe(HashType hash, Comparer&& comparer)
+SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHashSet<T, TBitBlock, Config, Alloc>::add_ex_unsafe(HashType hash, Comparer&& comparer)
 {
     if constexpr (!Config::multi_key)
     {
@@ -726,7 +708,7 @@ SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHa
     }
     else
     {
-        auto data_arr_ref  = _data.add_unsafe();
+        auto data_arr_ref  = _data.add_ex_unsafe();
         data_arr_ref->hash = hash;
         _add_to_bucket(*data_arr_ref, data_arr_ref.index);
         return { &data_arr_ref->data, data_arr_ref.index, false };
@@ -740,13 +722,13 @@ SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHa
 {
     // emplace to data array
     auto data_arr_ref = _data.add_unsafe();
-    new (&data_arr_ref->data) T(std::forward<Args>(args)...);
-    data_arr_ref->hash = hash_of(data_arr_ref->data);
+    new (&data_arr_ref->_sparse_hash_set_data) T(std::forward<Args>(args)...);
+    data_arr_ref->_sparse_hash_set_hash = hash_of(data_arr_ref->_sparse_hash_set_data);
 
     if constexpr (!Config::multi_key)
     {
         // check if data has been added to set
-        if (DataRef found_info = find_ex(data_arr_ref->hash, [&data_arr_ref, this](const KeyType& k) { return ComparerType()(k, key_of(data_arr_ref->data)); }))
+        if (DataRef found_info = find_ex(data_arr_ref->_sparse_hash_set_hash, [&data_arr_ref, this](const KeyType& k) { return ComparerType()(k, key_of(data_arr_ref->_sparse_hash_set_data)); }))
         {
             // remove new data
             _data.remove_at(data_arr_ref.index);
@@ -759,19 +741,19 @@ SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHa
 
     _add_to_bucket(*data_arr_ref, data_arr_ref.index);
 
-    return { &data_arr_ref->data, data_arr_ref.index, false };
+    return { &data_arr_ref->_sparse_hash_set_data, data_arr_ref.index, false };
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
 template <typename Comparer, typename... Args>
 SKR_INLINE typename SparseHashSet<T, TBitBlock, Config, Alloc>::DataRef SparseHashSet<T, TBitBlock, Config, Alloc>::emplace_ex(HashType hash, Comparer&& comparer, Args&&... args)
 {
-    DataRef add_result = add_unsafe(hash, comparer);
+    DataRef add_result = add_ex_unsafe(hash, comparer);
 
     // if not exist, construct it
     if (!add_result.already_exist)
     {
         new (add_result.data) T(std::forward<Args>(args)...);
-        SKR_ASSERT(_data[add_result.index].hash == hash_of(*add_result.data));
+        SKR_ASSERT(_data[add_result.index]._sparse_hash_set_hash == hash_of(*add_result.data));
     }
 
     return add_result;

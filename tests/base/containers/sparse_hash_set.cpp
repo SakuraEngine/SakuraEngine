@@ -6,6 +6,7 @@
 TEST_CASE("test sparse hash set (Single)")
 {
     using namespace skr;
+    using ElementType = int32_t;
     using TestHashSet = SparseHashSet<int32_t, uint64_t, SparseHashSetConfigDefault<int32_t>, SkrTestAllocator>;
 
     SUBCASE("ctor & dtor")
@@ -246,9 +247,116 @@ TEST_CASE("test sparse hash set (Single)")
     // [needn't test] data op
     // [needn't test] bucket op
 
-    SUBCASE("add") {}
-    SUBCASE("emplace") {}
-    SUBCASE("append") {}
+    SUBCASE("add")
+    {
+        TestHashSet a({ 1, 1, 4, 5, 1, 4 });
+        a.add(1);
+        a.add(4);
+        a.add(10);
+        REQUIRE_EQ(a.size(), 4);
+        REQUIRE_EQ(a.sparse_size(), 4);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), 4);
+        REQUIRE_GE(a.bucket_size(), 4);
+        REQUIRE(a.contain(1));
+        REQUIRE(a.contain(4));
+        REQUIRE(a.contain(5));
+        REQUIRE(a.contain(10));
+
+        a.add_ex(
+        Hash<ElementType>()(100),
+        [](const ElementType& v) { return v == 100; },
+        [](void* p) { new (p) ElementType(100); });
+        REQUIRE_EQ(a.size(), 5);
+        REQUIRE_EQ(a.sparse_size(), 5);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), 5);
+        REQUIRE_GE(a.bucket_size(), 8);
+        REQUIRE(a.contain(1));
+        REQUIRE(a.contain(4));
+        REQUIRE(a.contain(5));
+        REQUIRE(a.contain(10));
+        REQUIRE(a.contain(100));
+
+        auto ref = a.add_ex_unsafe(Hash<ElementType>()(114514), [](const ElementType& v) { return v == 114514; });
+        new (ref.data) ElementType(114514);
+        REQUIRE_EQ(a.size(), 6);
+        REQUIRE_EQ(a.sparse_size(), 6);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), 6);
+        REQUIRE_GE(a.bucket_size(), 8);
+        REQUIRE(a.contain(1));
+        REQUIRE(a.contain(4));
+        REQUIRE(a.contain(5));
+        REQUIRE(a.contain(10));
+        REQUIRE(a.contain(100));
+    }
+
+    SUBCASE("emplace")
+    {
+        TestHashSet a({ { 1, 1, 4, 5, 1, 4 } });
+        a.emplace(1);
+        a.emplace(1);
+        a.emplace(4);
+        a.emplace(5);
+        a.emplace(10);
+        REQUIRE_EQ(a.size(), 4);
+        REQUIRE_EQ(a.sparse_size(), 4);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), 4);
+        REQUIRE_GE(a.bucket_size(), 4);
+        REQUIRE(a.contain(1));
+        REQUIRE(a.contain(4));
+        REQUIRE(a.contain(5));
+        REQUIRE(a.contain(10));
+
+        a.emplace_ex(
+        Hash<ElementType>()(100),
+        [](const ElementType& v) { return v == 100; },
+        100);
+        REQUIRE_EQ(a.size(), 5);
+        REQUIRE_EQ(a.sparse_size(), 5);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), 5);
+        REQUIRE_GE(a.bucket_size(), 8);
+        REQUIRE(a.contain(1));
+        REQUIRE(a.contain(4));
+        REQUIRE(a.contain(5));
+        REQUIRE(a.contain(10));
+        REQUIRE(a.contain(100));
+    }
+
+    SUBCASE("append")
+    {
+        TestHashSet a;
+        a.append({ 1, 1, 4, 5, 1, 4 });
+        a.append({ 114514, 114514, 114514, 114, 514 });
+        REQUIRE_EQ(a.size(), 6);
+        REQUIRE_EQ(a.sparse_size(), 6);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_GE(a.capacity(), 6);
+        REQUIRE_GE(a.bucket_size(), 8);
+        REQUIRE(a.contain(1));
+        REQUIRE(a.contain(4));
+        REQUIRE(a.contain(5));
+        REQUIRE(a.contain(114));
+        REQUIRE(a.contain(514));
+        REQUIRE(a.contain(114514));
+
+        TestHashSet b;
+        b.append(a);
+        REQUIRE_EQ(b.size(), 6);
+        REQUIRE_EQ(b.sparse_size(), 6);
+        REQUIRE_EQ(b.hole_size(), 0);
+        REQUIRE_GE(b.capacity(), 6);
+        REQUIRE_GE(b.bucket_size(), 8);
+        REQUIRE(b.contain(1));
+        REQUIRE(b.contain(4));
+        REQUIRE(b.contain(5));
+        REQUIRE(b.contain(114));
+        REQUIRE(b.contain(514));
+        REQUIRE(b.contain(114514));
+    }
     SUBCASE("remove") {}
     SUBCASE("find") {}
     SUBCASE("contain") {}

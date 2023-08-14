@@ -10,11 +10,11 @@ template <typename T, typename TS>
 struct ArrayDataRef {
     // add/append/emplace: 指向（第一个）添加的元素
     // find: 指向找到的元素
-    // remove: 始终为空
+    // remove: nullptr // TODO. check it
     T* data = nullptr;
 
     // add/append/emplace: （第一个）添加的元素下标
-    // find: 找到的元素下表
+    // find: 找到的元素下标
     // remove: 移除的元素下标
     TS index = npos_of<TS>;
 
