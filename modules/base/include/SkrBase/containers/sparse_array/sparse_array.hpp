@@ -506,7 +506,7 @@ SKR_INLINE SparseArray<T, TBitBlock, Alloc>& SparseArray<T, TBitBlock, Alloc>::o
 
                 if (rhs.has_data(i))
                 {
-                    new (dst_data) T(*src_data);
+                    new (&dst_data->_sparse_array_data) T(src_data->_sparse_array_data);
                 }
                 else
                 {
