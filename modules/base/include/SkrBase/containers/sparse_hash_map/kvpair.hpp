@@ -61,19 +61,19 @@ SKR_INLINE KVPair<K, V>::KVPair(const K& k, const V& v)
 template <typename K, typename V>
 SKR_INLINE KVPair<K, V>::KVPair(const K& k, V&& v)
     : key(k)
-    , value(std::forward(v))
+    , value(std::move(v))
 {
 }
 template <typename K, typename V>
 SKR_INLINE KVPair<K, V>::KVPair(K&& k, const V& v)
-    : key(std::forward(k))
+    : key(std::move(k))
     , value(v)
 {
 }
 template <typename K, typename V>
 SKR_INLINE KVPair<K, V>::KVPair(K&& k, V&& v)
-    : key(std::forward(k))
-    , value(std::forward(value))
+    : key(std::move(k))
+    , value(std::move(v))
 {
 }
 template <typename K, typename V>
