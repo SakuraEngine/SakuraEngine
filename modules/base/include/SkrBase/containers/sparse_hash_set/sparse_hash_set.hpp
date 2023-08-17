@@ -29,7 +29,6 @@ struct SparseHashSetConfigDefault {
 // TODO. bucket 与碰撞统计，以及更好的 bucket 分配策略
 // TODO. xxxx_as 依旧需要，除了异构查询之外，还有使用某个特定成员作为 key 的情况，这时候，我们会需要使用便利的异构查找
 // TODO. compare 成本较小的情况下可以省去 hash 先行比较，可以通过 traits 实现
-// TODO. xxx_ex 给出的 comparer 输入应当是整个元素，而不是 key
 namespace skr
 {
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
@@ -309,14 +308,18 @@ SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::_remove_from_bucket(
     SKR_ASSERT(has_data(index));
     SKR_ASSERT(_is_in_bucket(index));
 
-    DataType& data = _data[index];
-    for (SizeType& index_ref = _bucket[_bucket_index(data._sparse_hash_set_hash)]; index_ref != npos; index_ref = _data[index_ref]._sparse_hash_set_next)
+    DataType* pdata      = &_data[index];
+    SizeType* pindex_ref = &_bucket[_bucket_index(pdata->_sparse_hash_set_hash)];
+
+    while (*pindex_ref != npos)
     {
-        if (index_ref == index)
+        if (*pindex_ref == index)
         {
-            index_ref = data._sparse_hash_set_next;
+            *pindex_ref = pdata->_sparse_hash_set_next;
             break;
         }
+        pindex_ref = &_data[*pindex_ref]._sparse_hash_set_next;
+        pdata      = &_data[*pindex_ref];
     }
 }
 
@@ -912,14 +915,14 @@ template <typename T, typename TBitBlock, typename Config, typename Alloc>
 template <typename TP>
 SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::sort(TP&& p)
 {
-    _data.template sort([&](const DataType& a, const DataType& b) { return p(key_of(a), key_of(b)); });
+    _data.template sort([&](const DataType& a, const DataType& b) { return p(key_of(a._sparse_hash_set_data), key_of(b._sparse_hash_set_data)); });
     rehash();
 }
 template <typename T, typename TBitBlock, typename Config, typename Alloc>
 template <typename TP>
 SKR_INLINE void SparseHashSet<T, TBitBlock, Config, Alloc>::sort_stable(TP&& p)
 {
-    _data.template sort_stable([&](const DataType& a, const DataType& b) { return p(key_of(a), key_of(b)); });
+    _data.template sort_stable([&](const DataType& a, const DataType& b) { return p(key_of(a._sparse_hash_set_data), key_of(b._sparse_hash_set_data)); });
     rehash();
 }
 

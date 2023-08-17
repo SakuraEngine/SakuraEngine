@@ -6,8 +6,8 @@
 TEST_CASE("test sparse hash set (Single)")
 {
     using namespace skr;
-    using ElementType = int32_t;
-    using TestHashSet = SparseHashSet<ElementType, uint64_t, SparseHashSetConfigDefault<ElementType>, SkrTestAllocator>;
+    using ValueType   = int32_t;
+    using TestHashSet = SparseHashSet<ValueType, uint64_t, SparseHashSetConfigDefault<ValueType>, SkrTestAllocator>;
 
     SUBCASE("ctor & dtor")
     {
@@ -264,9 +264,9 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE(a.contain(10));
 
         a.add_ex(
-        Hash<ElementType>()(100),
-        [](const ElementType& v) { return v == 100; },
-        [](void* p) { new (p) ElementType(100); });
+        Hash<ValueType>()(100),
+        [](const ValueType& v) { return v == 100; },
+        [](void* p) { new (p) ValueType(100); });
         REQUIRE_EQ(a.size(), 5);
         REQUIRE_EQ(a.sparse_size(), 5);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -278,8 +278,8 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE(a.contain(10));
         REQUIRE(a.contain(100));
 
-        auto ref = a.add_ex_unsafe(Hash<ElementType>()(114514), [](const ElementType& v) { return v == 114514; });
-        new (ref.data) ElementType(114514);
+        auto ref = a.add_ex_unsafe(Hash<ValueType>()(114514), [](const ValueType& v) { return v == 114514; });
+        new (ref.data) ValueType(114514);
         REQUIRE_EQ(a.size(), 6);
         REQUIRE_EQ(a.sparse_size(), 6);
         REQUIRE_EQ(a.hole_size(), 0);
@@ -311,8 +311,8 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE(a.contain(10));
 
         a.emplace_ex(
-        Hash<ElementType>()(100),
-        [](const ElementType& v) { return v == 100; },
+        Hash<ValueType>()(100),
+        [](const ValueType& v) { return v == 100; },
         100);
         REQUIRE_EQ(a.size(), 5);
         REQUIRE_EQ(a.sparse_size(), 5);
@@ -357,9 +357,106 @@ TEST_CASE("test sparse hash set (Single)")
         REQUIRE(b.contain(514));
         REQUIRE(b.contain(114514));
     }
-    SUBCASE("remove") {}
-    SUBCASE("find") {}
-    SUBCASE("contain") {}
-    SUBCASE("sort") {}
-    SUBCASE("set ops") {}
+
+    SUBCASE("remove")
+    {
+        TestHashSet a({ 1, 1, 4, 5, 1, 4 });
+        a.remove(1);
+        a.remove(4);
+        REQUIRE_EQ(a.size(), 1);
+        REQUIRE_LE(a.sparse_size(), 3);
+        REQUIRE_LE(a.hole_size(), 2);
+        REQUIRE_GE(a.capacity(), 3);
+        REQUIRE_GE(a.bucket_size(), 4);
+        REQUIRE(a.contain(5));
+        REQUIRE_FALSE(a.contain(1));
+        REQUIRE_FALSE(a.contain(4));
+
+        a.append({ 114514, 114514, 114, 514 });
+        a.remove_ex(Hash<ValueType>()(114514), [](const ValueType& v) { return v == 114514; });
+        REQUIRE(a.contain(5));
+        REQUIRE(a.contain(114));
+        REQUIRE(a.contain(514));
+        REQUIRE_FALSE(a.contain(114514));
+    }
+
+    SUBCASE("find")
+    {
+        TestHashSet a({ 1, 1, 4, 5, 1, 4 });
+        {
+            auto ref = a.find(1);
+            REQUIRE(ref);
+            REQUIRE_EQ(*ref, 1);
+        }
+        {
+            auto ref = a.find_ex(Hash<ValueType>()(5), [](const ValueType& key) { return key == 5; });
+            REQUIRE(ref);
+            REQUIRE_EQ(*ref, 5);
+        }
+    }
+
+    SUBCASE("contain")
+    {
+        TestHashSet a({ 1, 1, 4, 5, 1, 4 });
+        REQUIRE(a.contain(1));
+        REQUIRE(a.contain(4));
+        REQUIRE(a.contain(5));
+        REQUIRE_FALSE(a.contain(114514));
+        REQUIRE(a.contain_ex(Hash<ValueType>()(1), [](const ValueType& key) { return key == 1; }));
+        REQUIRE(a.contain_ex(Hash<ValueType>()(4), [](const ValueType& key) { return key == 4; }));
+        REQUIRE(a.contain_ex(Hash<ValueType>()(5), [](const ValueType& key) { return key == 5; }));
+        REQUIRE_FALSE(a.contain_ex(Hash<ValueType>()(114514), [](const ValueType& key) { return key == 114514; }));
+    }
+
+    SUBCASE("sort")
+    {
+        srand(std::chrono::system_clock::now().time_since_epoch().count());
+        TestHashSet a(100);
+        for (auto i = 0; i < 100; ++i)
+        {
+            auto k = rand() % 100;
+            while (a.contain(k))
+            {
+                k = rand() % 100;
+            }
+            a.add(k);
+        }
+        a.sort();
+        REQUIRE_EQ(a.size(), 100);
+        REQUIRE_EQ(a.sparse_size(), 100);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_EQ(a.capacity(), 100);
+        REQUIRE_GE(a.bucket_size(), 64);
+        for (auto i = 0; i < 100; ++i)
+        {
+            REQUIRE(a.contain(i));
+            REQUIRE_EQ(a.data_arr()[i]._sparse_hash_set_data, i);
+        }
+    }
+
+    SUBCASE("set ops")
+    {
+        TestHashSet a({ 1, 1, 4, 5, 1, 4 });
+        TestHashSet b({ 1, 1, 4 });
+        TestHashSet c({ 1, 11, 114, 1145, 11451, 114514 });
+
+        TestHashSet intersect_a_b  = a & b;
+        TestHashSet union_a_c      = a | c;
+        TestHashSet difference_a_c = a ^ c;
+        TestHashSet sub_a_c        = a - c;
+
+        REQUIRE(b.is_sub_set_of(a));
+
+        REQUIRE_EQ(intersect_a_b.size(), 2);
+        REQUIRE(intersect_a_b == TestHashSet({ 1, 4 }));
+
+        REQUIRE_EQ(union_a_c.size(), 8);
+        REQUIRE(union_a_c == TestHashSet({ 1, 4, 5, 11, 114, 1145, 11451, 114514 }));
+
+        REQUIRE_EQ(difference_a_c.size(), 7);
+        REQUIRE(difference_a_c == TestHashSet({ 4, 5, 11, 114, 1145, 11451, 114514 }));
+
+        REQUIRE_EQ(sub_a_c.size(), 2);
+        REQUIRE(sub_a_c == TestHashSet({ 4, 5 }));
+    }
 }

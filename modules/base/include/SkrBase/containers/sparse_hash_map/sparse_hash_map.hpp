@@ -13,7 +13,7 @@ namespace skr
 template <typename K, typename V>
 struct MapKey {
     SKR_INLINE constexpr K&       operator()(KVPair<K, V>& pair) const { return pair.key; }
-    SKR_INLINE constexpr const K& operator()(const KVPair<K, V>& pair) const { return std::move(pair.value); }
+    SKR_INLINE constexpr const K& operator()(const KVPair<K, V>& pair) const { return pair.key; }
 };
 
 template <typename K, typename V, bool MultiKey = false>

@@ -2,6 +2,7 @@
 #include "skr_test_allocator.hpp"
 
 #include "SkrBase/containers/sparse_hash_map/sparse_hash_map.hpp"
+#include <chrono>
 
 TEST_CASE("test sparse hash map")
 {
@@ -320,18 +321,82 @@ TEST_CASE("test sparse hash map")
 
     SUBCASE("remove")
     {
+        TestHashMap a({ { { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 5 }, { 1, 1 }, { 4, 4 } } });
+        a.remove(1);
+        a.remove(4);
+        REQUIRE_EQ(a.size(), 1);
+        REQUIRE_LE(a.sparse_size(), 3);
+        REQUIRE_LE(a.hole_size(), 2);
+        REQUIRE_GE(a.capacity(), 3);
+        REQUIRE_GE(a.bucket_size(), 4);
+        REQUIRE(a.contain(5));
+        REQUIRE_FALSE(a.contain(1));
+        REQUIRE_FALSE(a.contain(4));
+
+        a.append({ { 114514, 114514 }, { 114514, 114514 }, { 114514, 114514 }, { 114, 114 }, { 514, 514 } });
+        a.remove_ex(Hash<KeyType>()(114514), [](const KeyType& v) { return v == 114514; });
+        REQUIRE(a.contain(5));
+        REQUIRE(a.contain(114));
+        REQUIRE(a.contain(514));
+        REQUIRE_FALSE(a.contain(114514));
     }
 
     SUBCASE("find")
     {
+        TestHashMap a({ { { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 114514 }, { 1, 1 }, { 4, 4 } } });
+        {
+            auto ref = a.find(1);
+            REQUIRE(ref);
+            REQUIRE_EQ(ref->key, 1);
+            REQUIRE_EQ(ref->value, 1);
+        }
+        {
+            auto ref = a.find_ex(Hash<KeyType>()(5), [](const KeyType& key) { return key == 5; });
+            REQUIRE(ref);
+            REQUIRE_EQ(ref->key, 5);
+            REQUIRE_EQ(ref->value, 114514);
+        }
     }
 
     SUBCASE("contain")
     {
+        TestHashMap a({ { { 1, 1 }, { 1, 1 }, { 4, 4 }, { 5, 114514 }, { 1, 1 }, { 4, 4 } } });
+        REQUIRE(a.contain(1));
+        REQUIRE(a.contain(4));
+        REQUIRE(a.contain(5));
+        REQUIRE_FALSE(a.contain(114514));
+        REQUIRE(a.contain_ex(Hash<KeyType>()(1), [](const KeyType& key) { return key == 1; }));
+        REQUIRE(a.contain_ex(Hash<KeyType>()(4), [](const KeyType& key) { return key == 4; }));
+        REQUIRE(a.contain_ex(Hash<KeyType>()(5), [](const KeyType& key) { return key == 5; }));
+        REQUIRE_FALSE(a.contain_ex(Hash<KeyType>()(114514), [](const KeyType& key) { return key == 114514; }));
     }
 
     SUBCASE("sort")
     {
+        srand(std::chrono::system_clock::now().time_since_epoch().count());
+        TestHashMap a(100);
+        for (auto i = 0; i < 100; ++i)
+        {
+            auto k = rand() % 100;
+            while (a.contain(k))
+            {
+                k = rand() % 100;
+            }
+            a.add(k, k * 5);
+        }
+        a.sort();
+        REQUIRE_EQ(a.size(), 100);
+        REQUIRE_EQ(a.sparse_size(), 100);
+        REQUIRE_EQ(a.hole_size(), 0);
+        REQUIRE_EQ(a.capacity(), 100);
+        REQUIRE_GE(a.bucket_size(), 64);
+        for (auto i = 0; i < 100; ++i)
+        {
+            REQUIRE(a.contain(i));
+            REQUIRE(a.find(i)->value == i * 5);
+            REQUIRE_EQ(a.data_arr()[i]._sparse_hash_set_data.key, i);
+            REQUIRE_EQ(a.data_arr()[i]._sparse_hash_set_data.value, i * 5);
+        }
     }
 
     // [needn't test] set ops
