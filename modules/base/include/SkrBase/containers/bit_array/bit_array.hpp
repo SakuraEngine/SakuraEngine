@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrBase/containers/fwd_container.hpp"
 #include "SkrBase/config.h"
+#include "SkrBase/memory/memory_ops.hpp"
 #include "SkrBase/algo/bit_algo.hpp"
 #include "bit_ref.hpp"
 #include "bit_iterator.hpp"
@@ -84,13 +85,13 @@ struct BitArray final {
 private:
     // helper
     void _grow(SizeType size);
-    void _resize_memory(SizeType new_capacity);
+    void _realloc(SizeType new_capacity);
 
 private:
-    TBlock*  m_data     = nullptr;
-    SizeType m_size     = 0;
-    SizeType m_capacity = 0;
-    Alloc    m_alloc    = {};
+    TBlock*  _data     = nullptr;
+    SizeType _size     = 0;
+    SizeType _capacity = 0;
+    Alloc    _alloc    = {};
 };
 } // namespace skr
 
@@ -101,62 +102,73 @@ namespace skr
 template <typename TBlock, typename Alloc>
 SKR_INLINE void BitArray<TBlock, Alloc>::_grow(SizeType size)
 {
-    if (m_size + size > m_capacity)
+    if (_size + size > _capacity)
     {
         // calc new capacity
-        SizeType old_block_size     = Algo::num_blocks(m_size);
-        SizeType old_block_capacity = Algo::num_blocks(m_capacity);
-        SizeType new_block_size     = Algo::num_blocks(m_size + size);
-        SizeType new_block_capacity = m_alloc.get_grow(new_block_size, old_block_capacity);
+        SizeType old_block_size     = Algo::num_blocks(_size);
+        SizeType old_block_capacity = Algo::num_blocks(_capacity);
+        SizeType new_block_size     = Algo::num_blocks(_size + size);
+        SizeType new_block_capacity = _alloc.get_grow(new_block_size, old_block_capacity);
 
         // realloc
-        m_data = m_alloc.resize_container(m_data, old_block_size, old_block_capacity, new_block_capacity);
+        _data = _alloc.resize_container(_data, old_block_size, old_block_capacity, new_block_capacity);
 
         // update capacity
-        m_capacity = new_block_capacity << Algo::PerBlockSizeLog2;
+        _capacity = new_block_capacity << Algo::PerBlockSizeLog2;
     }
     // update size
-    m_size += size;
+    _size += size;
 }
 template <typename TBlock, typename Alloc>
-SKR_INLINE void BitArray<TBlock, Alloc>::_resize_memory(SizeType new_capacity)
+SKR_INLINE void BitArray<TBlock, Alloc>::_realloc(SizeType new_capacity)
 {
-    SizeType block_size         = Algo::num_blocks(m_size);
-    SizeType old_block_capacity = Algo::num_blocks(m_capacity);
+    SKR_ASSERT(new_capacity != _capacity);
+    SKR_ASSERT(new_capacity > 0);
+    SKR_ASSERT(_size < new_capacity);
+    SKR_ASSERT((_capacity > 0 && _data != nullptr) || (_capacity == 0 && _data == nullptr));
+
+    SizeType old_block_capacity = Algo::num_blocks(_capacity);
     SizeType new_block_capacity = Algo::num_blocks(new_capacity);
 
-    if (new_block_capacity)
-    {
-        // realloc
-        m_data = m_alloc.resize_container(m_data, block_size, old_block_capacity, new_block_capacity);
+    SKR_ASSERT(new_block_capacity > 0);
 
-        // clean new memory
-        if (new_block_capacity > old_block_capacity)
-            std::memset(data() + old_block_capacity, 0, (new_block_capacity - old_block_capacity) * sizeof(TBlock));
-
-        // update size and capacity
-        m_size     = std::min(m_size, m_capacity);
-        m_capacity = new_block_capacity * Algo::PerBlockSize;
-    }
-    else if (m_data)
+    if (new_block_capacity > old_block_capacity)
     {
-        // free
-        m_alloc.free(m_data);
-        m_data     = nullptr;
-        m_size     = 0;
-        m_capacity = 0;
+        if constexpr (memory::memory_traits<TBlock>::use_realloc)
+        {
+            _data     = _alloc.template realloc<TBlock>(_data, new_capacity);
+            _capacity = new_capacity;
+        }
+        else
+        {
+            // alloc new memory
+            TBlock* new_memory = _alloc.template alloc<TBlock>(new_capacity);
+
+            // move items
+            if (_size)
+            {
+                // move items
+                memory::move(new_memory, _data, Algo::num_blocks(_size));
+            }
+
+            // release old memory
+            _alloc.template free<TBlock>(_data);
+            _data = new_memory;
+
+            _capacity = new_capacity;
+        }
     }
 }
 
 // ctor & dtor
 template <typename TBlock, typename Alloc>
 SKR_INLINE BitArray<TBlock, Alloc>::BitArray(Alloc alloc)
-    : m_alloc(std::move(alloc))
+    : _alloc(std::move(alloc))
 {
 }
 template <typename TBlock, typename Alloc>
 SKR_INLINE BitArray<TBlock, Alloc>::BitArray(SizeType size, bool v, Alloc alloc)
-    : m_alloc(std::move(alloc))
+    : _alloc(std::move(alloc))
 {
     resize(size, v);
 }
@@ -166,26 +178,26 @@ SKR_INLINE BitArray<TBlock, Alloc>::~BitArray() { release(); }
 // copy & move ctor
 template <typename TBlock, typename Alloc>
 SKR_INLINE BitArray<TBlock, Alloc>::BitArray(const BitArray& other, Alloc alloc)
-    : m_alloc(std::move(alloc))
+    : _alloc(std::move(alloc))
 {
     // resize
-    _resize_memory(other.m_capacity);
+    _realloc(other._capacity);
 
     // copy
-    m_size = other.size();
-    if (other.m_size)
-        std::memcpy(m_data, other.m_data, Algo::num_blocks(m_size) * sizeof(TBlock));
+    _size = other.size();
+    if (other._size)
+        std::memcpy(_data, other._data, Algo::num_blocks(_size) * sizeof(TBlock));
 }
 template <typename TBlock, typename Alloc>
 SKR_INLINE BitArray<TBlock, Alloc>::BitArray(BitArray&& other) noexcept
-    : m_data(other.m_data)
-    , m_size(other.m_size)
-    , m_capacity(other.m_capacity)
-    , m_alloc(std::move(other.m_alloc))
+    : _data(other._data)
+    , _size(other._size)
+    , _capacity(other._capacity)
+    , _alloc(std::move(other._alloc))
 {
-    other.m_data     = nullptr;
-    other.m_size     = 0;
-    other.m_capacity = 0;
+    other._data     = nullptr;
+    other._size     = 0;
+    other._capacity = 0;
 }
 
 // copy & move assign
@@ -194,10 +206,10 @@ SKR_INLINE BitArray<TBlock, Alloc>& BitArray<TBlock, Alloc>::operator=(const Bit
 {
     if (this != &rhs)
     {
-        _resize_memory(rhs.m_size);
-        m_size = rhs.m_size;
-        if (m_size)
-            std::memcpy(m_data, rhs.m_data, Algo::num_blocks(m_size) * sizeof(TBlock));
+        _realloc(rhs._size);
+        _size = rhs._size;
+        if (_size)
+            std::memcpy(_data, rhs._data, Algo::num_blocks(_size) * sizeof(TBlock));
     }
 
     return *this;
@@ -211,15 +223,15 @@ SKR_INLINE BitArray<TBlock, Alloc>& BitArray<TBlock, Alloc>::operator=(BitArray&
         release();
 
         // copy data
-        m_data     = rhs.m_data;
-        m_size     = rhs.m_size;
-        m_capacity = rhs.m_capacity;
-        m_alloc    = std::move(rhs.m_alloc);
+        _data     = rhs._data;
+        _size     = rhs._size;
+        _capacity = rhs._capacity;
+        _alloc    = std::move(rhs._alloc);
 
         // invalidate rhs
-        rhs.m_data     = nullptr;
-        rhs.m_size     = 0;
-        rhs.m_capacity = 0;
+        rhs._data     = nullptr;
+        rhs._size     = 0;
+        rhs._capacity = 0;
     }
 
     return *this;
@@ -229,13 +241,13 @@ SKR_INLINE BitArray<TBlock, Alloc>& BitArray<TBlock, Alloc>::operator=(BitArray&
 template <typename TBlock, typename Alloc>
 SKR_INLINE bool BitArray<TBlock, Alloc>::operator==(const BitArray& rhs) const
 {
-    if (m_size != rhs.m_size)
+    if (_size != rhs._size)
         return false;
 
-    auto block_count   = int_div_floor(m_size, (SizeType)Algo::PerBlockSize);
-    auto last_mask     = Algo::last_block_mask(m_size);
-    bool memcmp_result = std::memcmp(m_data, rhs.m_data, block_count * sizeof(TBlock)) == 0;
-    bool last_result   = last_mask == Algo::FullMask || (m_data[block_count] & last_mask) == (rhs.m_data[block_count] & last_mask);
+    auto block_count   = int_div_floor(_size, (SizeType)Algo::PerBlockSize);
+    auto last_mask     = Algo::last_block_mask(_size);
+    bool memcmp_result = std::memcmp(_data, rhs._data, block_count * sizeof(TBlock)) == 0;
+    bool last_result   = last_mask == Algo::FullMask || (_data[block_count] & last_mask) == (rhs._data[block_count] & last_mask);
     return memcmp_result && last_result;
 }
 template <typename TBlock, typename Alloc>
@@ -243,79 +255,89 @@ SKR_INLINE bool BitArray<TBlock, Alloc>::operator!=(const BitArray& rhs) const {
 
 // getter
 template <typename TBlock, typename Alloc>
-SKR_INLINE TBlock* BitArray<TBlock, Alloc>::data() { return m_data; }
+SKR_INLINE TBlock* BitArray<TBlock, Alloc>::data() { return _data; }
 template <typename TBlock, typename Alloc>
-SKR_INLINE const TBlock* BitArray<TBlock, Alloc>::data() const { return m_data; }
+SKR_INLINE const TBlock* BitArray<TBlock, Alloc>::data() const { return _data; }
 template <typename TBlock, typename Alloc>
 SKR_INLINE typename BitArray<TBlock, Alloc>::SizeType BitArray<TBlock, Alloc>::size() const
 {
-    return m_size;
+    return _size;
 }
 template <typename TBlock, typename Alloc>
 SKR_INLINE typename BitArray<TBlock, Alloc>::SizeType BitArray<TBlock, Alloc>::capacity() const
 {
-    return m_capacity;
+    return _capacity;
 }
 template <typename TBlock, typename Alloc>
-SKR_INLINE Alloc& BitArray<TBlock, Alloc>::allocator() { return m_alloc; }
+SKR_INLINE Alloc& BitArray<TBlock, Alloc>::allocator() { return _alloc; }
 template <typename TBlock, typename Alloc>
-SKR_INLINE const Alloc& BitArray<TBlock, Alloc>::allocator() const { return m_alloc; }
+SKR_INLINE const Alloc& BitArray<TBlock, Alloc>::allocator() const { return _alloc; }
 template <typename TBlock, typename Alloc>
-SKR_INLINE bool BitArray<TBlock, Alloc>::empty() { return m_size == 0; }
+SKR_INLINE bool BitArray<TBlock, Alloc>::empty() { return _size == 0; }
 
 // validate
 template <typename TBlock, typename Alloc>
-SKR_INLINE bool BitArray<TBlock, Alloc>::is_valid_index(SizeType idx) { return idx >= 0 && idx < m_size; }
+SKR_INLINE bool BitArray<TBlock, Alloc>::is_valid_index(SizeType idx) { return idx >= 0 && idx < _size; }
 
 // memory op
 template <typename TBlock, typename Alloc>
 SKR_INLINE void BitArray<TBlock, Alloc>::clear()
 {
-    Algo::set_blocks(m_data, SizeType(0), Algo::num_blocks(m_size), false);
-    m_size = 0;
+    Algo::set_blocks(_data, SizeType(0), Algo::num_blocks(_size), false);
+    _size = 0;
 }
 template <typename TBlock, typename Alloc>
 SKR_INLINE void BitArray<TBlock, Alloc>::release(SizeType capacity)
 {
-    m_size = 0;
-    _resize_memory(capacity);
+    _size = 0;
+    if (capacity)
+    {
+        _realloc(capacity);
+    }
+    else
+    {
+        _alloc.template free(_data);
+        _data     = nullptr;
+        _capacity = 0;
+    }
 }
 template <typename TBlock, typename Alloc>
 SKR_INLINE void BitArray<TBlock, Alloc>::reserve(SizeType capacity)
 {
-    if (capacity > m_capacity)
-        _resize_memory(capacity);
+    if (capacity > _capacity)
+    {
+        _realloc(capacity);
+    }
 }
 template <typename TBlock, typename Alloc>
 SKR_INLINE void BitArray<TBlock, Alloc>::resize(SizeType size, bool new_value)
 {
-    // do resize
-    if (size > m_capacity)
+    // realloc memory if need
+    if (size > _capacity)
     {
-        _resize_memory(size);
+        _realloc(size);
+    }
+
+    // init if need
+    if (size > _size)
+    {
+        Algo::set_range(_data, _size, size - _size, new_value);
     }
 
     // set size
-    auto old_size = m_size;
-    m_size        = size;
-
-    // try init
-    if (size > old_size)
-    {
-        set_range(old_size, size - old_size, new_value);
-    }
+    _size = size;
 }
 template <typename TBlock, typename Alloc>
 SKR_INLINE void BitArray<TBlock, Alloc>::resize_unsafe(SizeType size)
 {
-    // do resize
-    if (size > m_capacity)
+    // do resize if need
+    if (size > _capacity)
     {
-        _resize_memory(size);
+        _realloc(size);
     }
 
     // set size
-    m_size = size;
+    _size = size;
 }
 
 // add
@@ -323,7 +345,7 @@ template <typename TBlock, typename Alloc>
 SKR_INLINE typename BitArray<TBlock, Alloc>::SizeType BitArray<TBlock, Alloc>::add(bool v)
 {
     // do grow
-    auto old_size = m_size;
+    auto old_size = _size;
     _grow(1);
 
     // set value
@@ -334,7 +356,7 @@ template <typename TBlock, typename Alloc>
 SKR_INLINE typename BitArray<TBlock, Alloc>::SizeType BitArray<TBlock, Alloc>::add(bool v, SizeType n)
 {
     // do grow
-    auto old_size = m_size;
+    auto old_size = _size;
     _grow(n);
 
     // set value
@@ -346,8 +368,8 @@ SKR_INLINE typename BitArray<TBlock, Alloc>::SizeType BitArray<TBlock, Alloc>::a
 template <typename TBlock, typename Alloc>
 SKR_INLINE void BitArray<TBlock, Alloc>::remove_at(SizeType start, SizeType n)
 {
-    SKR_ASSERT(start >= 0 && n > 0 && start + n < m_size);
-    if (start + n != m_size)
+    SKR_ASSERT(start >= 0 && n > 0 && start + n < _size);
+    if (start + n != _size)
     {
         It write(data(), size(), start);
         It read(data(), size(), start + n);
@@ -359,24 +381,24 @@ SKR_INLINE void BitArray<TBlock, Alloc>::remove_at(SizeType start, SizeType n)
             ++read;
         }
     }
-    m_size -= n;
+    _size -= n;
 }
 template <typename TBlock, typename Alloc>
 SKR_INLINE void BitArray<TBlock, Alloc>::remove_at_swap(SizeType start, SizeType n)
 {
-    SKR_ASSERT(start >= 0 && n > 0 && start + n < m_size);
-    if (start + n != m_size)
+    SKR_ASSERT(start >= 0 && n > 0 && start + n < _size);
+    if (start + n != _size)
     {
         // adjust n
-        auto move_n = std::min(n, m_size - start - n);
+        auto move_n = std::min(n, _size - start - n);
 
         // copy items
         for (SizeType i = 0; i < move_n; ++i)
         {
-            (*this)[start + i] = (*this)[m_size - move_n + i];
+            (*this)[start + i] = (*this)[_size - move_n + i];
         }
     }
-    m_size -= n;
+    _size -= n;
 }
 
 // modify
@@ -384,25 +406,25 @@ template <typename TBlock, typename Alloc>
 SKR_INLINE BitRef<TBlock> BitArray<TBlock, Alloc>::operator[](SizeType idx)
 {
     SKR_ASSERT(is_valid_index(idx));
-    return BitRef<TBlock>(m_data[idx >> Algo::PerBlockSizeLog2], TBlock(1) << (idx & Algo::PerBlockSizeMask));
+    return BitRef<TBlock>(_data[idx >> Algo::PerBlockSizeLog2], TBlock(1) << (idx & Algo::PerBlockSizeMask));
 }
 template <typename TBlock, typename Alloc>
 SKR_INLINE bool BitArray<TBlock, Alloc>::operator[](SizeType idx) const
 {
     SKR_ASSERT(is_valid_index(idx));
-    return m_data[idx >> Algo::PerBlockSizeLog2] & (1 << (idx & Algo::PerBlockSizeMask));
+    return _data[idx >> Algo::PerBlockSizeLog2] & (1 << (idx & Algo::PerBlockSizeMask));
 }
 
 // find
 template <typename TBlock, typename Alloc>
 SKR_INLINE typename BitArray<TBlock, Alloc>::SizeType BitArray<TBlock, Alloc>::find(bool v) const
 {
-    return Algo::find(m_data, SizeType(0), m_size, v);
+    return Algo::find(_data, SizeType(0), _size, v);
 }
 template <typename TBlock, typename Alloc>
 SKR_INLINE typename BitArray<TBlock, Alloc>::SizeType BitArray<TBlock, Alloc>::find_last(bool v) const
 {
-    return Algo::find_last(m_data, SizeType(0), m_size, v);
+    return Algo::find_last(_data, SizeType(0), _size, v);
 }
 
 // contain
@@ -413,8 +435,8 @@ SKR_INLINE bool BitArray<TBlock, Alloc>::contain(bool v) const { return find(v) 
 template <typename TBlock, typename Alloc>
 SKR_INLINE void BitArray<TBlock, Alloc>::set_range(SizeType start, SizeType n, bool v)
 {
-    SKR_ASSERT(start >= 0 && n > 0 && start + n <= m_size);
-    Algo::set_range(m_data, start, n, v);
+    SKR_ASSERT(start >= 0 && n > 0 && start + n <= _size);
+    Algo::set_range(_data, start, n, v);
 }
 
 // support foreach
@@ -426,7 +448,7 @@ SKR_INLINE typename BitArray<TBlock, Alloc>::It BitArray<TBlock, Alloc>::begin()
 template <typename TBlock, typename Alloc>
 SKR_INLINE typename BitArray<TBlock, Alloc>::It BitArray<TBlock, Alloc>::end()
 {
-    return It(data(), size(), m_size);
+    return It(data(), size(), _size);
 }
 template <typename TBlock, typename Alloc>
 SKR_INLINE typename BitArray<TBlock, Alloc>::CIt BitArray<TBlock, Alloc>::begin() const
@@ -436,7 +458,7 @@ SKR_INLINE typename BitArray<TBlock, Alloc>::CIt BitArray<TBlock, Alloc>::begin(
 template <typename TBlock, typename Alloc>
 SKR_INLINE typename BitArray<TBlock, Alloc>::CIt BitArray<TBlock, Alloc>::end() const
 {
-    return CIt(data(), size(), m_size);
+    return CIt(data(), size(), _size);
 }
 
 } // namespace skr
