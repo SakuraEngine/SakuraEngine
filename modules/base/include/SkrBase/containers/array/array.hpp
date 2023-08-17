@@ -202,8 +202,7 @@ struct Array {
 
 private:
     // helper
-    void _resize_memory(SizeType new_capacity);
-    void _grow(SizeType n);
+    void _realloc(SizeType new_capacity);
 
 private:
     T*       _data     = nullptr;
@@ -218,40 +217,36 @@ namespace skr
 {
 // helper
 template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::_resize_memory(SizeType new_capacity)
+SKR_INLINE void Array<T, Alloc>::_realloc(SizeType new_capacity)
 {
-    if (new_capacity)
+    SKR_ASSERT(new_capacity != _capacity);
+    SKR_ASSERT(new_capacity > 0);
+    SKR_ASSERT(_size < new_capacity);
+    SKR_ASSERT((_capacity > 0 && _data != nullptr) || (_capacity == 0 && _data == nullptr));
+
+    if constexpr (memory::memory_traits<T>::use_realloc)
     {
-        // realloc
-        _data     = _alloc.resize_container(_data, _size, _capacity, new_capacity);
-        _size     = std::min(_size, _capacity);
+        _data     = _alloc.template realloc<T>(_data, new_capacity);
         _capacity = new_capacity;
     }
-    else if (_data)
+    else
     {
-        // free
-        memory::destruct(_data, _size);
-        _alloc.free(_data);
-        _data     = nullptr;
-        _size     = 0;
-        _capacity = 0;
-    }
-}
-template <typename T, typename Alloc>
-SKR_INLINE void Array<T, Alloc>::_grow(SizeType n)
-{
-    auto new_size = _size + n;
+        // alloc new memory
+        T* new_memory = _alloc.template alloc<T>(new_capacity);
 
-    // grow memory
-    if (new_size > _capacity)
-    {
-        auto new_capacity = _alloc.get_grow(new_size, _capacity);
-        _data             = _alloc.resize_container(_data, _size, _capacity, new_capacity);
-        _capacity         = new_capacity;
-    }
+        // move items
+        if (_size)
+        {
+            // move items
+            memory::move(new_memory, _data, _size);
+        }
 
-    // update size
-    _size = new_size;
+        // release old memory
+        _alloc.template free<T>(_data);
+        _data = new_memory;
+
+        _capacity = new_capacity;
+    }
 }
 
 // ctor & dtor
@@ -406,52 +401,77 @@ SKR_INLINE bool Array<T, Alloc>::is_valid_pointer(const T* p) const { return p >
 template <typename T, typename Alloc>
 SKR_INLINE void Array<T, Alloc>::clear()
 {
-    if (_size)
-    {
-        memory::destruct(_data, _size);
-        _size = 0;
-    }
+    memory::destruct(_data, _size);
+    _size = 0;
 }
 template <typename T, typename Alloc>
 SKR_INLINE void Array<T, Alloc>::release(SizeType capacity)
 {
     clear();
-    _resize_memory(capacity);
+    if (capacity)
+    {
+        _realloc(capacity);
+    }
+    else
+    {
+        if (_capacity)
+        {
+            _alloc.template free<T>(_data);
+            _data     = nullptr;
+            _capacity = 0;
+        }
+    }
 }
 template <typename T, typename Alloc>
 SKR_INLINE void Array<T, Alloc>::reserve(SizeType capacity)
 {
     if (capacity > _capacity)
     {
-        _resize_memory(capacity);
+        _realloc(capacity);
     }
 }
 template <typename T, typename Alloc>
 SKR_INLINE void Array<T, Alloc>::shrink()
 {
     auto new_capacity = _alloc.get_shrink(_size, _capacity);
+    SKR_ASSERT(new_capacity >= _size);
     if (new_capacity < _capacity)
     {
-        _resize_memory(new_capacity);
+        if (new_capacity)
+        {
+            _realloc(new_capacity);
+        }
+        else
+        {
+            if (_capacity)
+            {
+                _alloc.template free<T>(_data);
+                _data     = nullptr;
+                _capacity = 0;
+            }
+        }
     }
 }
 template <typename T, typename Alloc>
 SKR_INLINE void Array<T, Alloc>::resize(SizeType size, const T& new_value)
 {
-    // need grow
+    // realloc memory if need
     if (size > _capacity)
     {
-        _resize_memory(size);
+        _realloc(size);
     }
 
-    // add or remove
+    // construct item or destruct item if need
     if (size > _size)
     {
-        add(new_value, size - _size);
+        for (SizeType i = _size; i < size; ++i)
+        {
+            new (_data + i) T(new_value);
+        }
     }
     else if (size < _size)
     {
-        remove_at(size, _size - size);
+        memory::destruct(_data + size, _size - size);
     }
 
     // set size
@@ -460,20 +480,16 @@ SKR_INLINE void Array<T, Alloc>::resize(SizeType size, const T& new_value)
 template <typename T, typename Alloc>
 SKR_INLINE void Array<T, Alloc>::resize_unsafe(SizeType size)
 {
-    // need grow
+    // realloc memory if need
     if (size > _capacity)
     {
-        _resize_memory(size);
+        _realloc(size);
     }
 
-    // add or remove
-    if (size > _size)
+    // destruct items if need
+    if (size < _size)
     {
-        add_unsafe(size - _size);
-    }
-    else if (size < _size)
-    {
-        remove_at(size, _size - size);
+        memory::destruct(_data + size, _size - size);
     }
 
     // set size
@@ -482,20 +498,20 @@ SKR_INLINE void Array<T, Alloc>::resize_unsafe(SizeType size)
 template <typename T, typename Alloc>
 SKR_INLINE void Array<T, Alloc>::resize_default(SizeType size)
 {
-    // need grow
+    // realloc memory if need
     if (size > _capacity)
     {
-        _resize_memory(size);
+        _realloc(size);
     }
 
-    // add or remove
+    // construct item or destruct item if need
     if (size > _size)
     {
-        add_default(size - _size);
+        memory::construct(_data + _size, size - _size);
     }
     else if (size < _size)
     {
-        remove_at(size, _size - size);
+        memory::destruct(_data + size, _size - size);
     }
 
     // set size
@@ -504,20 +520,20 @@ SKR_INLINE void Array<T, Alloc>::resize_default(SizeType size)
 template <typename T, typename Alloc>
 SKR_INLINE void Array<T, Alloc>::resize_zeroed(SizeType size)
 {
-    // need grow
+    // realloc memory if need
     if (size > _capacity)
     {
-        _resize_memory(size);
+        _realloc(size);
     }
 
-    // add or remove
+    // construct item or destruct item if need
     if (size > _size)
     {
-        add_zeroed(size - _size);
+        std::memset(_data + _size, 0, (size - _size) * sizeof(T));
     }
     else if (size < _size)
     {
-        remove_at(size, _size - size);
+        memory::destruct(_data + size, _size - size);
     }
 
     // set size
@@ -558,8 +574,22 @@ template <typename T, typename Alloc>
 SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::add_unsafe(SizeType n)
 {
     auto old_size = _size;
-    _grow(n);
-    return DataRef(_data + old_size, old_size);
+    auto new_size = _size + n;
+
+    // grow memory
+    if (new_size > _capacity)
+    {
+        auto new_capacity = _alloc.get_grow(new_size, _capacity);
+        SKR_ASSERT(new_capacity >= _capacity);
+        if (new_capacity > _capacity)
+        {
+            _realloc(new_capacity);
+        }
+    }
+
+    // update size
+    _size = new_size;
+    return { _data + old_size, old_size };
 }
 template <typename T, typename Alloc>
 SKR_INLINE typename Array<T, Alloc>::DataRef Array<T, Alloc>::add_default(SizeType n)
@@ -602,7 +632,7 @@ SKR_INLINE void Array<T, Alloc>::add_at_unsafe(SizeType idx, SizeType n)
 {
     SKR_ASSERT(is_valid_index(idx));
     auto move_n = _size - idx;
-    _grow(n);
+    add_unsafe(n);
     memory::move(_data + idx + n, _data + idx, move_n);
 }
 template <typename T, typename Alloc>
