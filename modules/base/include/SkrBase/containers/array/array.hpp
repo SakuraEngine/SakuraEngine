@@ -11,6 +11,7 @@ namespace skr
 {
 // TODO. move item，swap item
 // TODO. binary add & remove & find
+// TODO. release 本质上就是 resize + shrink/clear + shrink，可以移除这个 API
 template <typename T, typename Alloc>
 struct Array {
     using SizeType = typename Alloc::SizeType;
