@@ -16,6 +16,7 @@ struct SparseHashSetData {
 
 // SparseHashSet 的数据引用，代替单纯的指针/Index返回
 // 提供足够的信息，并将 npos 封装起来简化调用防止出错
+// TODO. memory traits 穿透
 template <typename T, typename TS>
 struct SparseHashSetDataRef {
     // add/emplace: 添加的元素指针
