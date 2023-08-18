@@ -11,8 +11,6 @@ namespace skr
 {
 // TODO. move item，swap item
 // TODO. binary add & remove & find
-// TODO. [所有容器] release 本质上就是 resize + shrink/clear + shrink，可以移除这个 API
-// TODO. [所有容器] 标准内存操作 _realloc & free
 // TODO. [所有容器] append 优化
 template <typename T, typename Alloc>
 struct Array {
@@ -206,6 +204,7 @@ struct Array {
 private:
     // helper
     void _realloc(SizeType new_capacity);
+    void _free();
 
 private:
     T*       _data     = nullptr;
@@ -249,6 +248,16 @@ SKR_INLINE void Array<T, Alloc>::_realloc(SizeType new_capacity)
 
         _data     = new_memory;
         _capacity = new_capacity;
+    }
+}
+template <typename T, typename Alloc>
+SKR_INLINE void Array<T, Alloc>::_free()
+{
+    if (_data)
+    {
+        _alloc.template free<T>(_data);
+        _data     = nullptr;
+        _capacity = 0;
     }
 }
 
@@ -417,12 +426,7 @@ SKR_INLINE void Array<T, Alloc>::release(SizeType capacity)
     }
     else
     {
-        if (_capacity)
-        {
-            _alloc.template free<T>(_data);
-            _data     = nullptr;
-            _capacity = 0;
-        }
+        _free();
     }
 }
 template <typename T, typename Alloc>
@@ -446,12 +450,7 @@ SKR_INLINE void Array<T, Alloc>::shrink()
         }
         else
         {
-            if (_capacity)
-            {
-                _alloc.template free<T>(_data);
-                _data     = nullptr;
-                _capacity = 0;
-            }
+            _free();
         }
     }
 }

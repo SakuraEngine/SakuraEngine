@@ -84,8 +84,9 @@ struct BitArray final {
 
 private:
     // helper
-    void _grow(SizeType size);
     void _realloc(SizeType new_capacity);
+    void _free();
+    void _grow(SizeType size);
 
 private:
     TBlock*  _data     = nullptr;
@@ -99,26 +100,6 @@ private:
 namespace skr
 {
 // helper
-template <typename TBlock, typename Alloc>
-SKR_INLINE void BitArray<TBlock, Alloc>::_grow(SizeType size)
-{
-    if (_size + size > _capacity)
-    {
-        // calc new capacity
-        SizeType old_block_capacity = Algo::num_blocks(_capacity);
-        SizeType new_block_size     = Algo::num_blocks(_size + size);
-        SizeType new_block_capacity = _alloc.get_grow(new_block_size, old_block_capacity);
-
-        // realloc
-        _realloc(new_block_capacity);
-
-        // update capacity
-        _capacity = new_block_capacity << Algo::PerBlockSizeLog2;
-    }
-
-    // update size
-    _size += size;
-}
 template <typename TBlock, typename Alloc>
 SKR_INLINE void BitArray<TBlock, Alloc>::_realloc(SizeType new_capacity)
 {
@@ -157,6 +138,36 @@ SKR_INLINE void BitArray<TBlock, Alloc>::_realloc(SizeType new_capacity)
             _capacity = new_capacity;
         }
     }
+}
+template <typename TBlock, typename Alloc>
+SKR_INLINE void BitArray<TBlock, Alloc>::_free()
+{
+    if (_data)
+    {
+        _alloc.template free(_data);
+        _data     = nullptr;
+        _capacity = 0;
+    }
+}
+template <typename TBlock, typename Alloc>
+SKR_INLINE void BitArray<TBlock, Alloc>::_grow(SizeType size)
+{
+    if (_size + size > _capacity)
+    {
+        // calc new capacity
+        SizeType old_block_capacity = Algo::num_blocks(_capacity);
+        SizeType new_block_size     = Algo::num_blocks(_size + size);
+        SizeType new_block_capacity = _alloc.get_grow(new_block_size, old_block_capacity);
+
+        // realloc
+        _realloc(new_block_capacity);
+
+        // update capacity
+        _capacity = new_block_capacity << Algo::PerBlockSizeLog2;
+    }
+
+    // update size
+    _size += size;
 }
 
 // ctor & dtor
@@ -295,9 +306,7 @@ SKR_INLINE void BitArray<TBlock, Alloc>::release(SizeType capacity)
     }
     else
     {
-        _alloc.template free(_data);
-        _data     = nullptr;
-        _capacity = 0;
+        _free();
     }
 }
 template <typename TBlock, typename Alloc>

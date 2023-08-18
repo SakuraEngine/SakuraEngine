@@ -279,7 +279,7 @@ SKR_INLINE void SparseArray<T, TBitBlock, Alloc>::_free()
             }
         }
 
-        // free memory
+        // release memory
         _alloc.free(_data);
         _alloc.free(_bit_array);
 
@@ -1163,7 +1163,7 @@ template <typename T, typename TBitBlock, typename Alloc>
 template <typename TP>
 SKR_INLINE typename SparseArray<T, TBitBlock, Alloc>::DataRef SparseArray<T, TBitBlock, Alloc>::find_last_if(TP&& p)
 {
-    // TODO. reserve it
+    // TODO. reserve iterator
     // for (auto it = begin(); it != end(); ++it)
     // {
     //     if (p(*it))

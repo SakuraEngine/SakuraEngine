@@ -7,6 +7,7 @@ namespace skr
 {
 // SparseHashSet 的数据定义，存储于 SparseArray 中
 // 存储的 hash 用于快速比较，next 用于查找 hash 链表
+// TODO. memory traits 穿透
 template <typename T, typename TS, typename HashType>
 struct SparseHashSetData {
     T          _sparse_hash_set_data;
@@ -16,7 +17,6 @@ struct SparseHashSetData {
 
 // SparseHashSet 的数据引用，代替单纯的指针/Index返回
 // 提供足够的信息，并将 npos 封装起来简化调用防止出错
-// TODO. memory traits 穿透
 template <typename T, typename TS>
 struct SparseHashSetDataRef {
     // add/emplace: 添加的元素指针
